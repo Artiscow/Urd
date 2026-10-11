@@ -552,25 +552,31 @@ function arcPath(cx, cy, r, a0, a1) {
 /** 08 Year wheel: twelve months on a ring, a dot per event, the past months dimmed and the current one in the accent; a list for the picked month. */
 export function yearWheel(host, occs, props, ics, ui) {
   const today = ui.today();
-  const year = today.getFullYear();
   let picked = today.getMonth();
+  // The month at the top of the wheel is the owner's choice, and the wheel reads the season that starts there and holds today:
+  // with August at the top, August this year to July next year. A month's place is counted from the top.
+  const firstMonth = ics.seasonTop(ui.opt.firstMonth, today);
+  const season = ics.seasonRange(firstMonth, today.getTime());
+  const first = new Date(season.from).getFullYear();
+  const label = firstMonth === 0 ? String(first) : `${first}/${String((first + 1) % 100).padStart(2, '0')}`;
+  const place = (m) => (m - firstMonth + 12) % 12;
   const wrap = ui.el('div', 'urd-cal-wheel');
   const figure = ui.el('div', 'urd-cal-wheel-figure');
   const size = 440;
   const c = size / 2;
   const r = 178;
-  const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, role: 'group', 'aria-label': String(year), class: 'urd-cal-wheel-svg' });
+  const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, role: 'group', 'aria-label': label, class: 'urd-cal-wheel-svg' });
   const months = dates().monthsShort;
-  const inYear = ui.all.filter((occ) => dayOf(occ).getFullYear() === year);
-  // The month at the top of the wheel is the owner's choice; a month's place is counted from it.
-  const firstMonth = ui.opt.firstMonth === 'now' ? today.getMonth() : Number(ui.opt.firstMonth) || 0;
-  const place = (m) => (m - firstMonth + 12) % 12;
+  const inYear = ui.all.filter((occ) => {
+    const day = dayOf(occ).getTime();
+    return day >= season.from && day < season.to;
+  });
   const segments = [];
   for (let m = 0; m < 12; m++) {
     const a0 = (place(m) / 12) * 2 * Math.PI + 0.012;
     const a1 = ((place(m) + 1) / 12) * 2 * Math.PI - 0.012;
     const seg = svgEl('path', { d: arcPath(c, c, r, a0, a1), class: 'urd-cal-wheel-seg', fill: 'none', 'stroke-width': 40, role: 'button', tabindex: 0 });
-    if (m < today.getMonth()) seg.classList.add('urd-cal-wheel-past');
+    if (place(m) < place(today.getMonth())) seg.classList.add('urd-cal-wheel-past');
     if (m === today.getMonth()) seg.classList.add('urd-cal-wheel-now');
     seg.setAttribute('aria-label', dates().months[m]);
     seg.setAttribute('aria-pressed', m === picked ? 'true' : 'false');
@@ -587,8 +593,10 @@ export function yearWheel(host, occs, props, ics, ui) {
     svg.appendChild(seg);
     segments.push(seg);
     const [lx, ly] = polar(c, c, r + 42, (place(m) + 0.5) / 12 * 2 * Math.PI);
+    // The month's name picks the month too; the ring segment is the button a screen reader and the keyboard reach.
     const text = svgEl('text', { x: lx.toFixed(1), y: (ly + 4).toFixed(1), class: 'urd-cal-wheel-month', 'text-anchor': 'middle', 'aria-hidden': 'true' });
     text.textContent = months[m];
+    text.addEventListener('click', pick);
     svg.appendChild(text);
   }
   for (const occ of inYear) {
@@ -603,7 +611,7 @@ export function yearWheel(host, occs, props, ics, ui) {
   const centre = ui.el('div', 'urd-cal-wheel-centre');
   const kicker = ui.el('span', 'urd-cal-wheel-kicker');
   kicker.appendChild(ui.tx('wheel'));
-  centre.append(kicker, ui.field('strong', 'number', String(year), 'urd-cal-wheel-year'), ui.el('span', 'urd-cal-wheel-total', ui.tx('count', null, { n: inYear.length })));
+  centre.append(kicker, ui.field('strong', 'number', label, 'urd-cal-wheel-year'), ui.el('span', 'urd-cal-wheel-total', ui.tx('count', null, { n: inYear.length })));
   figure.append(svg, centre);
   const side = ui.el('div', 'urd-cal-wheel-side');
   const sideLabel = ui.el('span', 'urd-cal-wheel-label');

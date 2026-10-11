@@ -19,8 +19,11 @@ de viste står beskrevet under, med kjernens kode som lesestoff.
 
 ## Utvikle en plugin lokalt
 
-1. Start en lokal server fra `template/` (f.eks. `python3 -m http.server`)
-   og åpne `http://localhost:8000/admin/`.
+1. Start den lokale serveren fra nettstedets mappe (`python3 dev-server.py`;
+   i Urd-repoet fra repo-roten) og åpne `http://localhost:8000/admin/`. Den
+   sender ingenting som kan caches, så en vanlig oppdatering laster alltid den
+   nyeste koden i pluginen din; en vanlig statisk server lar nettleseren beholde
+   gamle filer til cachen tømmes.
 2. Legg mappen din her (`plugins/<din-id>/` med `plugin.json` + `index.js`).
 3. Aktiver den i Plugins-panelet (skriv mappenavnet hvis panelet ikke kan
    liste mapper lokalt). Forhåndsvisningen laster pluginen fra UTKASTET,

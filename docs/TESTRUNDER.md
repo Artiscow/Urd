@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.45): the bug round
+
+- [ ] On the deployed test site: a video background layer, an audio block and a video block with an unpublished file (added in the editor, not yet published) play in the preview (this replaces the expectation in batch 0.7.13.12 that they are blocked until published); after the next release, a site updated from the template gets the `media-src` line as a «change by hand» note
+- [ ] A calendar fed by a Google Calendar with a fortnightly event on Sunday and another weekday shows the same dates as Google Calendar; a «last Friday of the year» event and a «Friday the 13th» event show where Google shows them
+- [ ] A «Coming up» design with a countdown (Billboard, Ring, Dark glass) edited many times in a row: the countdown keeps ticking each minute and the editor stays as quick as before
+- [ ] The Year wheel with August at the top: the middle reads «2026/27», August to July hold this season's events, and only the months of the season that have passed are dimmed; with January at the top it reads «2026» as before
+- [ ] The Year wheel: a press on a month's ring or its name shows that month's events beside the wheel, in the Clean view at once and in the editor after the first press has selected the calendar; every month name stands whole, also at the sides; the wheel stays put when the list beside it changes height
+- [ ] On a phone (or a block narrower than 540 px), with long titles and places: List on navy puts its sign-up on its own line, Coming up on navy puts the date above the text, Regular event and Billboard set their titles smaller, Poster wall shows one column, and no page scrolls sideways; a very long word breaks inside the block; the search field is never wider than the block
+- [ ] The Band design: «Pause» shows under «Roll» only while «Roll» is on; «Pause button» draws a round button at the band's edge that pauses and plays, and the pause stays after a search; «Pointer and touch» draws no button, a touch on the band pauses it, a tap on an event still opens it, a tap on empty space plays again, and Tab into the band shows the button; with reduced motion the band stands still and scrolls sideways
+- [ ] `python3 dev-server.py` from the repo root, and from `template/`, serves the site; after a change to an engine file a plain reload of admin shows it, without emptying the cache
+
 ### Test batch (0.7.21.3): the block's own height, the map in its frame, and the section line
 
 - [ ] The map on Hjem fills its frame with the «Larger map» line under it, on the desktop and in the mobile view; dragging the frame taller and shorter resizes the map; its Properties no longer have «Height (pixels)»; a new map from the palette and from the «Find us» preset fills its box from the start

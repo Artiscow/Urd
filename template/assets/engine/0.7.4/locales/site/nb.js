@@ -196,6 +196,8 @@ export default {
     'calendar.dayNone': 'Ingenting denne dagen',
     'calendar.earlier': 'Tidligere ({n})',
     'calendar.search': 'Søk i arrangementene',
+    'calendar.bandPause': 'Sett arrangementene på pause',
+    'calendar.bandPlay': 'Spill av arrangementene',
     'calendar.noMatch': 'Ingen arrangementer passer',
     'calendar.onMap': 'Vis i kart',
     'calendar.viewsLabel': 'Visning',

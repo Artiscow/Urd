@@ -616,8 +616,9 @@ export const CAL_DESIGNS = [
  * A `choice` holds one of its values, a `switch` true or false, an `hour` a whole hour from 0 to 24 or nothing (the design then finds the span itself).
  * `def` is what a block without the option draws.
  * The label key is `calendar.opt.<key>`, a choice's values `calendar.opt.<key>.<value>`.
+ * `when` names the values of the design's other options the option needs to matter, so the editor shows it only then (calOptionShown).
  */
-const choice = (key, values, def) => ({ key, kind: 'choice', values, def, labelKey: `calendar.opt.${key}` });
+const choice = (key, values, def, when) => ({ key, kind: 'choice', values, def, labelKey: `calendar.opt.${key}`, ...(when ? { when } : {}) });
 const toggle = (key, def) => ({ key, kind: 'switch', def, labelKey: `calendar.opt.${key}` });
 const hour = (key) => ({ key, kind: 'hour', def: null, labelKey: `calendar.opt.${key}` });
 const MONTHS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
@@ -632,7 +633,7 @@ export const CAL_OPTIONS = {
   // The month at the top of the wheel: one of the twelve, or `now` for the month the visitor is in.
   yearWheel: [choice('firstMonth', [...MONTHS, 'now'], '0')],
   numbered: [toggle('pad', true)],
-  band: [toggle('roll', true)],
+  band: [toggle('roll', true), choice('pause', ['button', 'touch'], 'button', { roll: true })],
 };
 
 /**
@@ -692,6 +693,16 @@ export function calOptions(props) {
     else out[def.key] = Number.isInteger(value) && value >= 0 && value <= 24 ? value : null;
   }
   return out;
+}
+
+/**
+ * Whether an option matters with the design's other options as they are (its `when`), so the editor shows it.
+ * @param {{when?: Record<string, unknown>}} def
+ * @param {Record<string, unknown>} opt The design's options as calOptions gives them
+ * @returns {boolean}
+ */
+export function calOptionShown(def, opt) {
+  return !def.when || Object.entries(def.when).every(([key, value]) => opt?.[key] === value);
 }
 
 /** The bounds of a calendar's size: the whole design, text included, drawn smaller or larger than it is. */

@@ -155,6 +155,8 @@ export default {
     'calendar.dayNone': 'Ingenting denne dagen',
     'calendar.earlier': 'Tidlegare ({n})',
     'calendar.search': 'Søk i arrangementa',
+    'calendar.bandPause': 'Set arrangementa på pause',
+    'calendar.bandPlay': 'Spel av arrangementa',
     'calendar.noMatch': 'Ingen arrangement passar',
     'calendar.onMap': 'Vis i kart',
     'calendar.viewsLabel': 'Vising',

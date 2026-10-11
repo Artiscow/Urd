@@ -192,6 +192,8 @@ export default {
     'calendar.dayNone': 'Bu gün etkinlik yok',
     'calendar.earlier': 'Geçmiş ({n})',
     'calendar.search': 'Etkinliklerde ara',
+    'calendar.bandPause': 'Etkinlikleri duraklat',
+    'calendar.bandPlay': 'Etkinlikleri oynat',
     'calendar.noMatch': 'Eşleşen etkinlik yok',
     'calendar.onMap': 'Haritada göster',
     'calendar.viewsLabel': 'Görünüm',

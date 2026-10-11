@@ -262,6 +262,10 @@ function parseRrule(value) {
     bymonthday: intList(rule.BYMONTHDAY, (n) => n !== 0 && Math.abs(n) <= 31),
     bymonth: intList(rule.BYMONTH, (n) => n >= 1 && n <= 12),
     bysetpos: intList(rule.BYSETPOS, (n) => n !== 0 && Math.abs(n) <= 366),
+    // The day a week starts on (RFC 5545 WKST), Monday unless the rule names another.
+    wkst: BYDAY_CODES[String(rule.WKST ?? '').toUpperCase()] ?? BYDAY_CODES.MO,
+    // Week numbers and days of the year are not supported; a yearly rule with them keeps to the start's month.
+    weekOrYearDays: Boolean(rule.BYWEEKNO || rule.BYYEARDAY),
   };
 }
 
@@ -296,14 +300,17 @@ function* ruleStarts(startParts, rule, skipTo = null) {
       produced++;
     }
   } else if (rule.freq === 'WEEKLY') {
-    const days = (rule.byday?.length ? rule.byday.map((b) => b.day) : [weekday(startParts)]).sort();
-    // The week is anchored in the week of the DTSTART day (weeks start on Sunday, like getUTCDay).
-    const weekAnchor = addDays(startParts, -weekday(startParts));
+    // A week starts on the rule's WKST day, and its days are taken in that order, so the starts come out in date order.
+    const fromWkst = (day) => (day - rule.wkst + 7) % 7;
+    const days = [...new Set(rule.byday?.length ? rule.byday.map((b) => b.day) : [weekday(startParts)])].sort((a, b) => fromWkst(a) - fromWkst(b));
+    // The weeks are counted from the one that holds the DTSTART day.
+    const weekAnchor = addDays(startParts, -fromWkst(weekday(startParts)));
     const firstWeek = ahead != null ? periodsBefore(Math.floor((ahead - partsToMs(weekAnchor)) / (7 * DAY_MS)) - 1, rule.interval) : 0;
     for (let week = firstWeek, turns = 0; produced < guard && turns < guard * 2; week += rule.interval, turns++) {
-      for (const day of days) {
-        const candidate = addDays(weekAnchor, week * 7 + day);
-        if (partsToMs(candidate) < partsToMs(startParts) || !inMonths(candidate)) continue;
+      // BYSETPOS picks among the week's days the other parts leave, before the days ahead of DTSTART are dropped.
+      const weekDays = days.map((day) => addDays(weekAnchor, week * 7 + fromWkst(day))).filter(inMonths);
+      for (const candidate of setPositions(weekDays, rule.bysetpos)) {
+        if (partsToMs(candidate) < partsToMs(startParts)) continue;
         yield candidate;
         produced++;
       }
@@ -320,13 +327,18 @@ function* ruleStarts(startParts, rule, skipTo = null) {
       }
     }
   } else if (rule.freq === 'YEARLY') {
+    const spansYear = !rule.bymonth && !rule.weekOrYearDays && Boolean(rule.byday?.length || rule.bymonthday?.length);
     const firstYear = aheadParts ? periodsBefore(aheadParts.y - startParts.y - 1, rule.interval) : 0;
     for (let i = firstYear, turns = 0; produced < guard && turns < guard; i += rule.interval, turns++) {
-      // The year's days: in each of the rule's months (else the start's own), the days the rule names.
-      const year = [];
-      for (const mo of rule.bymonth ?? [startParts.mo]) {
-        const month = { ...startParts, y: startParts.y + i, mo };
-        for (const d of monthDays(month, startParts, rule)) year.push({ ...month, d });
+      // The year's days: over the whole year when the rule names weekdays or month days without months,
+      // else in each of the rule's months (or the start's own) the days the rule names.
+      let year = [];
+      if (spansYear) year = yearDays(startParts.y + i, startParts, rule);
+      else {
+        for (const mo of rule.bymonth ?? [startParts.mo]) {
+          const month = { ...startParts, y: startParts.y + i, mo };
+          for (const d of monthDays(month, startParts, rule)) year.push({ ...month, d });
+        }
       }
       for (const candidate of setPositions(year, rule.bysetpos)) {
         if (partsToMs(candidate) < partsToMs(startParts)) continue;
@@ -365,6 +377,35 @@ function monthDays(month, startParts, rule) {
     candidates = [startParts.d];
   }
   return [...new Set(candidates)].sort((a, b) => a - b);
+}
+
+/**
+ * The days of a year a yearly rule without BYMONTH names, in order (RFC 5545 §3.3.10): BYMONTHDAY in every month, with BYDAY
+ * as a limit; else BYDAY over the whole year, where an ordinal counts from 1 January (-1 the year's last such weekday) and no
+ * ordinal means every such weekday.
+ */
+function yearDays(y, startParts, rule) {
+  if (rule.bymonthday?.length) {
+    const days = [];
+    for (let mo = 1; mo <= 12; mo++) {
+      const month = { ...startParts, y, mo };
+      for (const d of monthDays(month, startParts, rule)) days.push({ ...month, d });
+    }
+    return days;
+  }
+  const newYear = { ...startParts, y, mo: 1, d: 1 };
+  const first = weekday(newYear);
+  const length = Math.round((Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)) / DAY_MS);
+  const picked = new Set();
+  for (const { ord, day } of rule.byday) {
+    // The days of the year (0 is 1 January) that fall on this weekday.
+    const matches = [];
+    for (let n = (day - first + 7) % 7; n < length; n += 7) matches.push(n);
+    if (ord > 0 && matches[ord - 1] != null) picked.add(matches[ord - 1]);
+    else if (ord < 0 && matches[matches.length + ord] != null) picked.add(matches[matches.length + ord]);
+    else if (ord === 0) matches.forEach((n) => picked.add(n));
+  }
+  return [...picked].sort((a, b) => a - b).map((n) => addDays(newYear, n));
 }
 
 /** BYSETPOS: of a period's days in order, the ones at the named positions (1 the first, -1 the last); without it, all of them. */
@@ -574,9 +615,38 @@ export function isoWeek(ms) {
 /**
  * Where the occurrence window starts for a view: the whole year for a year view, the current month, week or day for those views, and six hours back for the lists and the card, so an event under way still shows.
  */
-export function windowStart(view, now = Date.now()) {
+/**
+ * The twelve months a year view shows: from the first day of `firstMonth` (0 is January) in the season that holds `now`, so with
+ * August at the top a day in March belongs to the season that began the August before.
+ * @param {number} [firstMonth] The month at the top, 0 to 11
+ * @param {number} [now]
+ * @returns {{from: number, to: number}} Local midnight of the season's first day, and of the next season's
+ */
+export function seasonRange(firstMonth = 0, now = Date.now()) {
   const d = new Date(now);
-  if (view === 'year') return new Date(d.getFullYear(), 0, 1).getTime();
+  const top = Number.isInteger(firstMonth) && firstMonth >= 0 && firstMonth <= 11 ? firstMonth : 0;
+  const y = d.getFullYear() - (d.getMonth() < top ? 1 : 0);
+  return { from: new Date(y, top, 1).getTime(), to: new Date(y + 1, top, 1).getTime() };
+}
+
+/**
+ * The month a year design puts at the top, from its `firstMonth` option: a month number as text (0 is January), or `now` for
+ * the month of `today`; January without the option.
+ * @param {string|undefined} option
+ * @param {Date} [today]
+ * @returns {number}
+ */
+export function seasonTop(option, today = new Date()) {
+  return option === 'now' ? today.getMonth() : Number(option) || 0;
+}
+
+/**
+ * Where a view's window starts: the season for a year view (the calendar year unless `firstMonth` names another top month), the
+ * month, the week or the day for those views, and six hours back for a list.
+ */
+export function windowStart(view, now = Date.now(), firstMonth = 0) {
+  const d = new Date(now);
+  if (view === 'year') return seasonRange(firstMonth, now).from;
   if (view === 'month') return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
   if (view === 'week') return startOfWeek(now);
   if (view === 'day') return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();

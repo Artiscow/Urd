@@ -200,6 +200,8 @@ export default {
     'calendar.dayNone': 'Ingenting den här dagen',
     'calendar.earlier': 'Tidigare ({n})',
     'calendar.search': 'Sök bland evenemangen',
+    'calendar.bandPause': 'Pausa evenemangen',
+    'calendar.bandPlay': 'Spela upp evenemangen',
     'calendar.noMatch': 'Inga evenemang matchar',
     'calendar.onMap': 'Visa på kartan',
     'calendar.viewsLabel': 'Vy',

@@ -3711,9 +3711,11 @@ function enhanceBlock(el, block, section, grid, host) {
         if (target?.closest('.urd-cart-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
         // In the Clean view a calendar event keeps its click: it opens the event in full, as on the published page.
         // So does an event of the selected calendar while editing, where the card's words are rewritten.
-        // An unselected calendar drags from its events too.
-        if (document.body.classList.contains('urd-chrome-off') && target?.closest('.urd-cal-event')) return;
-        if (target?.closest('.urd-cal-event') && selectedBlockId === block.id && multiIds.size <= 1) return;
+        // The Year wheel's months are buttons drawn in SVG and follow the same two steps: a click picks the month.
+        // An unselected calendar drags from its events and months too.
+        const calendarPress = target?.closest('.urd-cal-event, .urd-cal-wheel-seg, .urd-cal-wheel-month');
+        if (document.body.classList.contains('urd-chrome-off') && calendarPress) return;
+        if (calendarPress && selectedBlockId === block.id && multiIds.size <= 1) return;
         // The plugin config panels are guarded by class name, the old
         // reference plugin names included: plugin copies in user repos
         // keep them forever (see the compatibility surface in SCHEMA.md).

@@ -29,7 +29,7 @@ cd Urd
 # View the website locally (no Node needed):
 python3 dev-server.py 8000
 # open http://localhost:8000/admin
-# dev-server.py serves template/ with caching OFF: without it the browser guesses file freshness and the preview's engine files linger even on a hard reload. `cd template && python3 -m http.server` still works, but requires manual cache clearing after engine changes.
+# dev-server.py serves template/ with caching OFF: without it the browser guesses file freshness and the preview's engine files linger even on a hard reload. The server itself is template/dev-server.py, which every site gets with the template (run from the site's folder there); the root file starts it. A plain `python3 -m http.server` keeps old engine files until the browser's cache is emptied.
 
 # Editor development (requires Node):
 cd editor

@@ -1171,6 +1171,8 @@ textarea.urd-form-input {
   --urd-cal-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-color-text) 12%, transparent));
   position: relative;
   display: grid;
+  /* One column as wide as the block: no child can widen the calendar past it, whatever it holds. */
+  grid-template-columns: minmax(0, 1fr);
   zoom: var(--urd-cal-zoom, 1);
   gap: 12px;
   width: 100%;
@@ -2125,7 +2127,8 @@ textarea.urd-form-input {
 .urd-cal-search {
   box-sizing: border-box;
   width: 100%;
-  max-width: 22em;
+  min-width: 0;
+  max-width: min(22em, 100%);
   margin-left: auto;
   padding: 0.45em 0.9em;
   font: inherit;
@@ -3003,6 +3006,7 @@ textarea.urd-form-input {
 
 .urd-cal-ap-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1.4em;
   padding: 1em 1.4em;
@@ -3227,7 +3231,7 @@ textarea.urd-form-input {
 /* 02 Poster wall */
 .urd-cal-posters {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
   grid-auto-flow: dense;
   grid-auto-rows: minmax(150px, auto);
   gap: 14px;
@@ -4787,7 +4791,8 @@ textarea.urd-form-input {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(12em, 1fr);
   gap: 1.6em;
-  align-items: center;
+  /* The wheel stays where it is when the month's list beside it grows or shrinks, so it never moves under the pointer. */
+  align-items: start;
 }
 
 .urd-cal-wheel-figure {
@@ -4800,6 +4805,8 @@ textarea.urd-form-input {
   display: block;
   width: 100%;
   height: auto;
+  /* The month names sit on the drawing's edge; the ones at the sides reach a little past it. */
+  overflow: visible;
 }
 
 .urd-cal-wheel-seg {
@@ -4829,7 +4836,7 @@ textarea.urd-form-input {
   text-transform: uppercase;
   fill: currentcolor;
   opacity: 0.6;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 .urd-cal-wheel-dot {
@@ -5227,6 +5234,87 @@ textarea.urd-form-input {
   grid-column: auto;
 }
 
+/* A word wider than the calendar breaks inside the event's text fields instead of running out of the block. `anywhere`, not
+   `break-word`: only it lets the break points count towards an item's smallest width, so a flex or grid item can shrink. */
+.urd-cal :is(.urd-cal-f-title, .urd-cal-f-place, .urd-cal-f-description, .urd-cal-f-category) {
+  overflow-wrap: anywhere;
+}
+
+/* The designs that stood wider than a phone with long titles: the sign-up of List on navy takes its own line, the large titles
+   of Regular event and Billboard are set smaller, and Billboard's frame and its tiles' units take less room. */
+.urd-cal-phone.urd-cal-d-apList .urd-cal-signup {
+  flex-basis: 100%;
+}
+
+.urd-cal-phone .urd-cal-ap-row {
+  gap: 0.8em;
+  padding: 0.8em 0.9em;
+}
+
+.urd-cal-phone .urd-cal-ap-when {
+  flex-basis: 3em;
+  padding-right: 0.7em;
+}
+
+.urd-cal-phone .urd-cal-ap-when strong {
+  font-size: 1.6em;
+}
+
+.urd-cal-phone .urd-cal-ap-title {
+  font-size: 1.15em;
+}
+
+.urd-cal-phone .urd-cal-apv {
+  padding: 1em 0.8em;
+}
+
+.urd-cal-phone :is(.urd-cal-apv-first, .urd-cal-apv-tile) {
+  flex-wrap: wrap;
+  gap: 0.5em;
+  padding: 0.9em;
+}
+
+.urd-cal-phone .urd-cal-apv-when {
+  display: flex;
+  gap: 0.5em;
+  align-items: baseline;
+  text-align: left;
+}
+
+.urd-cal-phone .urd-cal-apv-when strong {
+  font-size: 1.8em;
+}
+
+.urd-cal-phone .urd-cal-apv-body {
+  flex-basis: 100%;
+}
+
+.urd-cal-phone .urd-cal-apv-title {
+  font-size: 1.25em;
+}
+
+.urd-cal-phone .urd-cal-aps {
+  gap: 1.4em;
+  padding: 1.4em 1.2em;
+}
+
+.urd-cal-phone .urd-cal-aps-title {
+  font-size: 1.8em;
+}
+
+.urd-cal-phone .urd-cal-bb {
+  padding: 1.2em;
+}
+
+.urd-cal-phone .urd-cal-bb-title {
+  font-size: 1.7em;
+}
+
+.urd-cal-phone .urd-cal-bb-tile > span {
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
 /* The phone design (calPhoneDesign, `.urd-cal-phone-design` on the host): one stacked agenda drawn from the set's variables, with the set's words for the dates and the set's type for the titles. */
 .urd-cal-pa {
   display: grid;
@@ -5598,6 +5686,7 @@ textarea.urd-form-input {
 /* N1 Billboard */
 .urd-cal-bb {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1em;
   padding: 1.8em;
   color: var(--urd-cal-s-text, var(--urd-color-bg));
@@ -6154,8 +6243,48 @@ textarea.urd-form-input {
 }
 
 .urd-cal-band-rolling:hover .urd-cal-band-run,
-.urd-cal-band-rolling:focus-within .urd-cal-band-run {
+.urd-cal-band-rolling:focus-within .urd-cal-band-run,
+.urd-cal-band-rolling.urd-cal-band-paused .urd-cal-band-run {
   animation-play-state: paused;
+}
+
+/* The band's pause (blocks/calendar-next.js bandPause): a round button at the band's right edge, in the band's own colours.
+   In the touch form it is drawn only while it has focus, which only the keyboard can give a one-pixel button; a touch on the
+   band pauses it there. */
+.urd-cal-band-pause {
+  display: grid;
+  flex: none;
+  place-items: center;
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  margin: 0 0.6em;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, currentcolor 55%, transparent);
+  border-radius: 50%;
+}
+
+.urd-cal-band-pause:hover {
+  background: color-mix(in srgb, currentcolor 14%, transparent);
+}
+
+.urd-cal-band-pause:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+.urd-cal-band-touch .urd-cal-band-pause:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip-path: inset(50%);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -7134,6 +7263,10 @@ textarea.urd-form-input {
   display: flex;
   justify-content: space-between;
   gap: 1em;
+}
+
+.urd-cal-apv-row > * {
+  min-width: 0;
 }
 
 .urd-cal-apv-row .urd-cal-f-date {

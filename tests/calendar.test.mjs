@@ -8,7 +8,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl, eventJsonLd, placeName, matchesSearch, meetingLinkOf,
-  splitCategory, findSignupLink, signupLinkOf, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart,
+  splitCategory, findSignupLink, signupLinkOf, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart, seasonRange, seasonTop,
   nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry, calendarEntry, resolveSources,
 } = await engineImport('ics.js');
 
@@ -255,6 +255,21 @@ test('windowStart: the year, the month, the week or the day for those views, six
   assert.equal(windowStart('day', now), new Date(2026, 9, 8).getTime());
   assert.equal(windowStart('list', now), now - 6 * 3600 * 1000);
   assert.equal(windowStart('next', now), now - 6 * 3600 * 1000);
+});
+
+test('seasonRange and seasonTop: a year view reads the twelve months from its top month, in the season that holds today', () => {
+  const october = new Date(2026, 9, 11, 12).getTime();
+  const march = new Date(2027, 2, 3, 12).getTime();
+  assert.deepEqual(seasonRange(0, october), { from: new Date(2026, 0, 1).getTime(), to: new Date(2027, 0, 1).getTime() });
+  // August at the top: October and the March after it belong to the season that began on 1 August 2026.
+  assert.deepEqual(seasonRange(7, october), { from: new Date(2026, 7, 1).getTime(), to: new Date(2027, 7, 1).getTime() });
+  assert.deepEqual(seasonRange(7, march), seasonRange(7, october));
+  // A broken month is January.
+  assert.deepEqual(seasonRange(12, october), seasonRange(0, october));
+  assert.equal(windowStart('year', october, 7), new Date(2026, 7, 1).getTime());
+  assert.equal(seasonTop('7'), 7);
+  assert.equal(seasonTop('now', new Date(2026, 9, 11)), 9);
+  assert.equal(seasonTop(undefined), 0);
 });
 
 test('an occurrence carries the event\'s picture and address', () => {
@@ -528,6 +543,55 @@ test('rule parts: a broken interval is one, a day from the month end, a signed w
   assert.deepEqual(daysOf(one(['UID:n3', 'DTSTART:20261001T100000Z', 'RRULE:FREQ=MONTHLY;BYMONTHDAY=-1;COUNT=3', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1) })), ['2026-10-31', '2026-11-30', '2026-12-31']);
   assert.deepEqual(daysOf(one(['UID:n4', 'DTSTART:20261001T100000Z', 'RRULE:FREQ=MONTHLY;BYDAY=+1MO;COUNT=2', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1) })), ['2026-10-5', '2026-11-2']);
   assert.deepEqual(daysOf(one(['UID:n5', 'DTSTART:20261002T100000Z', 'RRULE:FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR;COUNT=3', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1) })), ['2026-10-2', '2026-10-5', '2026-10-6']);
+});
+
+test('WKST: a fortnightly rule counts its weeks from the rule\'s week start, Monday unless it names another (RFC 5545 examples)', () => {
+  const window = { from: Date.UTC(1997, 7, 1), to: Date.UTC(1997, 8, 30) };
+  const monday = one(['UID:w1', 'DTSTART:19970805T090000Z', 'RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO', 'SUMMARY:A'], window);
+  assert.deepEqual(daysOf(monday), ['1997-8-5', '1997-8-10', '1997-8-19', '1997-8-24']);
+  const sunday = one(['UID:w2', 'DTSTART:19970805T090000Z', 'RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU', 'SUMMARY:A'], window);
+  assert.deepEqual(daysOf(sunday), ['1997-8-5', '1997-8-17', '1997-8-19', '1997-8-31']);
+  // Without WKST the week starts on Monday, so a Sunday start belongs to the week before the next Monday.
+  const fromSunday = one(['UID:w3', 'DTSTART:20261011T100000Z', 'RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=SU,MO', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 10, 3) });
+  assert.deepEqual(daysOf(fromSunday), ['2026-10-11', '2026-10-19', '2026-10-25', '2026-11-2']);
+  // A rule that began years ago keeps the same weeks when the window skips ahead to it.
+  const later = one(['UID:w4', 'DTSTART:20150104T100000Z', 'RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=SU,TU', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 9, 31) });
+  const steps = later.map((occ) => Math.round((occ.start - Date.UTC(2015, 0, 4, 10)) / (24 * 3600 * 1000)));
+  assert.ok(steps.length > 0);
+  // DTSTART is a Sunday, the last day of its Monday week: every start is that Sunday plus whole fortnights,
+  // or the Tuesday at the start of a later counted week (nine days after a counted Sunday).
+  for (const step of steps) assert.ok(step % 14 === 0 || step % 14 === 9, String(step));
+});
+
+test('BYSETPOS in a weekly rule picks among the week\'s days: the last weekday of every week', () => {
+  const fridays = one(['UID:p1', 'DTSTART:20261005T160000Z', 'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1', 'SUMMARY:Week done'], { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 9, 25) });
+  assert.deepEqual(daysOf(fridays), ['2026-10-9', '2026-10-16', '2026-10-23']);
+});
+
+test('a yearly rule with weekdays and no months spans the whole year (RFC 5545 §3.3.10)', () => {
+  // The 20th Monday of the year, the RFC's own example.
+  const twentieth = one(['UID:y1', 'DTSTART:19970519T090000Z', 'RRULE:FREQ=YEARLY;BYDAY=20MO;COUNT=3', 'SUMMARY:A'], { from: Date.UTC(1997, 0, 1), to: Date.UTC(2000, 0, 1) });
+  assert.deepEqual(daysOf(twentieth), ['1997-5-19', '1998-5-18', '1999-5-17']);
+  // The last Friday of the year counts back from 31 December.
+  const lastFriday = one(['UID:y2', 'DTSTART:20260101T120000Z', 'RRULE:FREQ=YEARLY;BYDAY=-1FR;COUNT=3', 'SUMMARY:A'], { from: Date.UTC(2026, 0, 1), to: Date.UTC(2029, 0, 31) });
+  assert.deepEqual(daysOf(lastFriday), ['2026-12-25', '2027-12-31', '2028-12-29']);
+  // No ordinal: every Monday of the year from the start on, not only those of the start's month.
+  const mondays = one(['UID:y3', 'DTSTART:20261012T100000Z', 'RRULE:FREQ=YEARLY;BYDAY=MO', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 11, 1) });
+  assert.deepEqual(daysOf(mondays), ['2026-10-12', '2026-10-19', '2026-10-26', '2026-11-2', '2026-11-9', '2026-11-16', '2026-11-23', '2026-11-30']);
+  // BYSETPOS picks among the whole year's days: the year's last Monday.
+  const lastMonday = one(['UID:y4', 'DTSTART:20260101T100000Z', 'RRULE:FREQ=YEARLY;BYDAY=MO;BYSETPOS=-1;COUNT=2', 'SUMMARY:A'], { from: Date.UTC(2026, 0, 1), to: Date.UTC(2028, 0, 31) });
+  assert.deepEqual(daysOf(lastMonday), ['2026-12-28', '2027-12-27']);
+  // Month days without months: every Friday the 13th, in any month.
+  const fridays13 = one(['UID:y5', 'DTSTART:20260213T120000Z', 'RRULE:FREQ=YEARLY;BYDAY=FR;BYMONTHDAY=13', 'SUMMARY:A'], { from: Date.UTC(2026, 0, 1), to: Date.UTC(2027, 11, 31) });
+  assert.deepEqual(daysOf(fridays13), ['2026-2-13', '2026-3-13', '2026-11-13', '2027-8-13']);
+  // With months the ordinal still counts within each month.
+  const spring = one(['UID:y6', 'DTSTART:20260510T100000Z', 'RRULE:FREQ=YEARLY;BYMONTH=5;BYDAY=2SU', 'SUMMARY:A'], { from: Date.UTC(2026, 0, 1), to: Date.UTC(2027, 11, 31) });
+  assert.deepEqual(daysOf(spring), ['2026-5-10', '2027-5-9']);
+});
+
+test('a yearly rule with week numbers is not spread over the year, since week numbers are not supported', () => {
+  const weekNo = one(['UID:y7', 'DTSTART:20260511T100000Z', 'RRULE:FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO', 'SUMMARY:A'], { from: Date.UTC(2026, 0, 1), to: Date.UTC(2026, 11, 31) });
+  assert.ok(weekNo.every((occ) => new Date(occ.start).getUTCMonth() === 4), daysOf(weekNo).join(' '));
 });
 
 test('ATTACH is a picture only when its type or its address says so, and GEO needs both numbers', () => {

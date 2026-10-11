@@ -131,7 +131,7 @@
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
   import { meetingHostList } from '$engine/meeting-links.js';
-  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, calDesign, calView, calStripe, calHasTextOverrides, calResetTexts, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
+  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, calDesign, calView, calStripe, calHasTextOverrides, calResetTexts, calDesignGroups, calOptionDefs, calOptionShown, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
 
   /** The background layer types in the order they are offered in the panel. */
   const BG_TYPES = [
@@ -10540,7 +10540,7 @@
       <!-- The design's own settings, directly under the design they belong to -->
       {#if calOptionDefs(selectedBlock.props.design).length}
         {@const calOpt = calOptions(selectedBlock.props)}
-        {#each calOptionDefs(selectedBlock.props.design) as def (def.key)}
+        {#each calOptionDefs(selectedBlock.props.design).filter((def) => calOptionShown(def, calOpt)) as def (def.key)}
           {#if def.kind === 'switch'}
             <label class="gridmenu-snap">
               <input type="checkbox" checked={calOpt[def.key]} onchange={(e) => setCalOption(def, e.target.checked)} />

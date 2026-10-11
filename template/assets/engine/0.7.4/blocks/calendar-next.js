@@ -3,7 +3,7 @@
  * The announcement (`props.notice` with the texts `noticeLabel`, `noticeTitle` and `noticeText`) is an optional part of the designs that declare `notice`.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
-import { dates } from '../i18n.js';
+import { t, dates } from '../i18n.js';
 
 const DAY = 24 * 3600 * 1000;
 const two = (n) => String(n).padStart(2, '0');
@@ -18,13 +18,28 @@ function countdownParts(occ, now = Date.now()) {
   return { days: Math.floor(left / DAY), hours: Math.floor((left % DAY) / 3600000), minutes: Math.floor((left % 3600000) / 60000) };
 }
 
-/** Runs fn now and once a minute while the node stays on the page. */
+/** The minute timers running, each under the node it draws into. */
+const TICKERS = new Map();
+
+/**
+ * Runs fn now and once a minute while the node stays on the page. A new
+ * timer first stops the ones whose node a redraw has taken off the page, so
+ * a calendar drawn again keeps one timer, not one per drawing.
+ */
 function everyMinute(node, fn) {
+  for (const [old, id] of TICKERS) {
+    if (!old.isConnected) {
+      clearInterval(id);
+      TICKERS.delete(old);
+    }
+  }
   fn();
   const id = setInterval(() => {
-    if (!node.isConnected) clearInterval(id);
-    else fn();
+    if (node.isConnected) return fn();
+    clearInterval(id);
+    TICKERS.delete(node);
   }, 60000);
+  TICKERS.set(node, id);
 }
 
 /** «Sunday 4 October at 18:00 · The clubhouse» as fields. */
@@ -254,6 +269,53 @@ export function split(host, occs, props, ics, ui) {
   host.appendChild(card);
 }
 
+/** The bands a visitor has paused, by block id, so a band drawn again (a search, a filter) stays paused. */
+const PAUSED_BANDS = new Set();
+
+const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
+const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
+
+/**
+ * The band's pause (WCAG 2.2.2: moving content that lasts more than five seconds needs a pause that stays). A real button with
+ * aria-pressed, shown at the band's edge in the «button» form; in the «touch» form it is there for the keyboard only, shown when
+ * it has focus, while a touch on the band pauses it and a tap on its empty space plays it again. A pointer over the band and focus
+ * inside it pause it for as long as they stay (base.css).
+ */
+function bandPause(wrap, track, key, touch) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'urd-cal-band-pause';
+  const paint = () => {
+    const paused = PAUSED_BANDS.has(key);
+    track.classList.toggle('urd-cal-band-paused', paused);
+    button.setAttribute('aria-pressed', String(paused));
+    button.setAttribute('aria-label', t(paused ? 'calendar.bandPlay' : 'calendar.bandPause'));
+    button.title = button.getAttribute('aria-label');
+    button.innerHTML = paused ? PLAY_ICON : PAUSE_ICON;
+  };
+  const set = (paused) => {
+    if (paused) PAUSED_BANDS.add(key);
+    else PAUSED_BANDS.delete(key);
+    paint();
+  };
+  button.addEventListener('click', () => set(!PAUSED_BANDS.has(key)));
+  if (touch) {
+    wrap.classList.add('urd-cal-band-touch');
+    // The touch that pauses is not the tap that plays: only a later tap on the band's empty space does.
+    let pausedByThisTouch = false;
+    track.addEventListener('pointerdown', (event) => {
+      pausedByThisTouch = event.pointerType === 'touch' && !PAUSED_BANDS.has(key);
+      if (pausedByThisTouch) set(true);
+    });
+    track.addEventListener('click', (event) => {
+      if (pausedByThisTouch) pausedByThisTouch = false;
+      else if (PAUSED_BANDS.has(key) && !event.target.closest('.urd-cal-band-item')) set(false);
+    });
+  }
+  paint();
+  wrap.appendChild(button);
+}
+
 /** N5 Band: one band with the tag at the left and the next events rolling past, a dot between them. */
 export function band(host, occs, props, ics, ui) {
   const shown = occs.slice(0, ics.nextCount(props.nextCount) + ics.laterCount(props.laterCount));
@@ -274,9 +336,10 @@ export function band(host, occs, props, ics, ui) {
     run.appendChild(item);
   });
   track.appendChild(run);
-  // The run rolls when it is wider than the band: a copy follows it so the loop has no seam.
-  // With rolling switched off the band stands still and scrolls sideways by hand.
-  if (ui.opt.roll === false) track.classList.add('urd-cal-band-still');
+  // The run rolls when it is wider than the band: a copy follows it so the loop has no seam, and the band gets its pause.
+  // With rolling switched off, or with reduced motion, the band stands still and scrolls sideways by hand.
+  const still = ui.opt.roll === false || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (still) track.classList.add('urd-cal-band-still');
   else requestAnimationFrame(() => {
     if (!track.isConnected) return;
     if (run.scrollWidth > track.clientWidth) {
@@ -286,6 +349,7 @@ export function band(host, occs, props, ics, ui) {
       track.appendChild(copy);
       track.classList.add('urd-cal-band-rolling');
       track.style.setProperty('--urd-cal-band-s', `${Math.max(12, Math.round(run.scrollWidth / 60))}s`);
+      bandPause(wrap, track, host.closest('[data-block-id]')?.dataset.blockId ?? '', ui.opt.pause === 'touch');
     }
   });
   wrap.append(tag, track);

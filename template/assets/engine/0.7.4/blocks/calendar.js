@@ -52,7 +52,7 @@ async function fetchSource(url) {
 }
 
 /** All sources (resolved, ics.resolveSources) → sorted occurrences with category and signup link. */
-async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetingHosts) {
+async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetingHosts, to = undefined) {
   const errors = [];
   const events = [];
   let feedZone = null;
@@ -70,7 +70,7 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
   }));
   // The window follows the view: a year design wants the whole year, a month, week or day design its own span.
   const wide = ['year', 'month', 'week', 'day'].includes(view) || from < ics.windowStart('list');
-  const expanded = ics.expandEvents(events, { from, max: wide ? 600 : Math.max(limit * 4, 120) })
+  const expanded = ics.expandEvents(events, { from, to, max: wide ? 600 : Math.max(limit * 4, 120) })
     .map((occ) => {
       // A named calendar is the category; otherwise the feed's own first category, and last «Category: Title» in the event itself.
       const source = occ.source ?? null;
@@ -1823,9 +1823,11 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   // The switcher needs the week and the month from their start, whichever is the earlier.
   // The week begins on the day the site's language starts it on, which can be the day before Monday.
   const weekFrom = Math.min(ics.windowStart('week'), ui.weekStartOf(Date.now()));
-  const viewFrom = switcher ? Math.min(weekFrom, ics.windowStart('month')) : view === 'week' ? weekFrom : ics.windowStart(view);
+  // A year design with another month at the top reads a season: twelve months from that month, through the season's end.
+  const season = view === 'year' ? ics.seasonRange(ics.seasonTop(ui.opt.firstMonth, ui.today()), ui.today().getTime()) : null;
+  const viewFrom = switcher ? Math.min(weekFrom, ics.windowStart('month')) : view === 'week' ? weekFrom : season ? season.from : ics.windowStart(view);
   const from = props.showEarlier === true ? Math.min(viewFrom, Date.now() - EARLIER_DAYS * 24 * 3600 * 1000) : viewFrom;
-  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone, ui.meetingHosts).then(({ occurrences, errors, feedZone: fz }) => {
+  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone, ui.meetingHosts, season && !switcher ? season.to : undefined).then(({ occurrences, errors, feedZone: fz }) => {
     if (!host.isConnected) return;
     feedZone = fz;
     if (!occurrences.length && errors.length) {

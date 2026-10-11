@@ -10,7 +10,7 @@ import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
-  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptions, CAL_SCALE, calScale, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
+  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, CAL_SCALE, calScale, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
   CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign, CAL_FAMILIES, calDesignFamilies,
 } = await engineImport('calendar-designs.js');
@@ -280,6 +280,9 @@ test('calOptions: every option of the design with its default, the valid stored 
   assert.deepEqual(calOptions({ design: 'table', options: { zebra: 'no', colPlace: false } }), { colTime: true, colPlace: false, zebra: true });
   assert.deepEqual(calOptions({ design: 'yearWheel', options: { firstMonth: '8' } }), { firstMonth: '8' });
   assert.deepEqual(calOptionDefs('no-such-design'), []);
+  assert.deepEqual(calOptions({ design: 'band' }), { roll: true, pause: 'button' });
+  assert.deepEqual(calOptions({ design: 'band', options: { pause: 'touch' } }), { roll: true, pause: 'touch' });
+  assert.deepEqual(calOptions({ design: 'band', options: { pause: 'hover' } }), { roll: true, pause: 'button' });
 });
 
 test('CAL_OPTIONS: every key names a design, and every default is a value the option can hold', () => {
@@ -375,4 +378,12 @@ test('every design has a picture for the design picker', () => {
     assert.ok(existsSync(file), `${design.id}: ${file.pathname}`);
     assert.ok(statSync(file).size > 1000 && statSync(file).size < 120000, `${design.id}: picture size`);
   }
+});
+
+test('calOptionShown: an option with a `when` shows only while the design\'s other options match it (the band\'s pause while it rolls)', () => {
+  const [roll, pause] = calOptionDefs('band');
+  assert.equal(calOptionShown(roll, calOptions({ design: 'band' })), true);
+  assert.equal(calOptionShown(pause, calOptions({ design: 'band' })), true);
+  assert.equal(calOptionShown(pause, calOptions({ design: 'band', options: { roll: false } })), false);
+  assert.equal(calOptionShown({ key: 'x' }, {}), true);
 });

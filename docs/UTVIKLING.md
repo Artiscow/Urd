@@ -27,7 +27,7 @@ cd Urd
 # Se nettsiden lokalt (ingen Node nødvendig):
 python3 dev-server.py 8000
 # åpne http://localhost:8000/admin
-# dev-server.py serverer template/ med caching AV: uten den gjetter nettleseren fil-ferskhet og forhåndsvisningens motorfiler blir hengende igjen selv ved hard reload. `cd template && python3 -m http.server` virker fortsatt, men krever manuell cache-tømming etter motorendringer.
+# dev-server.py serverer template/ med caching AV: uten den gjetter nettleseren fil-ferskhet og forhåndsvisningens motorfiler blir hengende igjen selv ved hard reload. Selve serveren er template/dev-server.py, som hvert nettsted får med malen (kjøres fra nettstedets mappe der); rotfilen starter den. En vanlig `python3 -m http.server` beholder gamle motorfiler til nettleserens cache tømmes.
 
 # Editor-utvikling (krever Node):
 cd editor

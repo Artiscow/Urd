@@ -17,9 +17,9 @@ const blobSha = (text) => {
   return createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
 };
 
-// The template repo's _headers at v0.7.4 (read from the GitHub API, 7 October 2026).
+// The template's _headers as the next release writes it: the file at v0.7.4 (read from the GitHub API, 7 October 2026) with `media-src 'self' data:` in its CSP (11 October 2026).
 // A deliberate change of the template's _headers updates this SHA, and the updater then shows the owner of every site with the earlier file a «change by hand» note.
-const RELEASED_BLOB = 'a20e6b5999a32b5c1b0614969b34e3c327124fa8';
+const RELEASED_BLOB = '34e5b6376e2d19dbc3fe7879e3ca0a1d9a7e5296';
 
 test('the release gives the template\'s _headers byte for byte', () => {
   assert.equal(blobSha(releaseHeaders(MONOREPO)), RELEASED_BLOB);

@@ -166,7 +166,7 @@ test('matchesPattern: exact path and prefix/**', () => {
 });
 
 test('isOwnedPath/isUserPath: examples and path tricks', () => {
-  for (const path of ['urd.json', '_headers', 'speculation-rules.json', 'index.html',
+  for (const path of ['urd.json', '_headers', 'speculation-rules.json', 'dev-server.py', 'index.html',
     'admin/assets/editor.js', 'assets/engine/0.6.10/urd.js', 'assets/urd/i18n.js',
     'assets/styles/base.css', 'functions/api/github/update.js']) {
     assert.equal(isOwnedPath(path), true, path);
