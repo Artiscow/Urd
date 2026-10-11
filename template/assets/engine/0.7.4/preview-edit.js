@@ -5,8 +5,8 @@
  * Loaded ONLY in preview mode (dynamic import in urd.js) - visitors never
  * load this file. Changes are reported to the editor, which owns the
  * draft:
- *   page → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey, coalesce?, groupKey?, minHeight? }  (frameKey 'mobile': frame is a row-grid placement, ADR-0019; minHeight: the section's own height a settle wrote, settleFrames)
- *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey?, fromMinHeight? }  (a block dropped in another section; groupKey joins the settle's moves in the source)
+ *   page → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (frameKey 'mobile': frame is a row-grid placement, ADR-0019)
+ *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey? }  (a block dropped in another section; groupKey joins the settle's moves in the source)
  *                  { type: 'urd-delete', sectionId, blockId | blockIds }  (blockIds: multi-selection in one undo step)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
@@ -19,7 +19,7 @@
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
 import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
-import { followsContent, fitMovesAll, ownHeightPx } from './push-model.js';
+import { followsContent, fitMovesAll } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -77,21 +77,20 @@ function drawFrame(el, frame) {
  * pass draws for them (ADR-0025): a block that follows its content takes its
  * content's height at rest as a visitor sees it, and any other block whose
  * content grew past its frame takes that growth. The data then says what the
- * pass drew: the blocks below move, and a section with a height of its own
- * grows, exactly as far as they are already drawn (fitMovesAll), so nothing
- * changes on screen, and the gesture places a block whose frame is its box,
- * which never stretches the section it is dragged in. Only growth is
- * settled; a block drawn shorter than its frame keeps it until an edit fits
- * it. Written into the section the push pass and this layer hold: the
- * gesture sends the settled frames with its own (postSettled), or calls
- * `undo` when it changes nothing.
+ * pass drew: the blocks below move exactly as far as they are already drawn
+ * (fitMovesAll), so nothing changes on screen, and the gesture places a
+ * block whose frame is its box, which never stretches the section it is
+ * dragged in. The section's own height is the owner's and is never written
+ * by a settle. Only growth is settled; a block drawn shorter than its frame
+ * keeps it until an edit fits it. Written into the section the push pass and
+ * this layer hold: the gesture sends the settled frames with its own
+ * (postSettled), or calls `undo` when it changes nothing.
  * @param {HTMLElement} host The section element
  * @param {object} section The section data
  * @param {Iterable<string>} ids The blocks under the gesture
- * @returns {{ids: string[], minHeight: string|undefined, grown: Map<string, number>, undo: () => void} | null}
- *   The blocks whose frames changed, the section's new height of its own,
- *   the growth the settled blocks still show (an unfolded FAQ answer), and
- *   the way back
+ * @returns {{ids: string[], grown: Map<string, number>, undo: () => void} | null}
+ *   The blocks whose frames changed, the growth the settled blocks still
+ *   show (an unfolded FAQ answer), and the way back
  */
 function settleFrames(host, section, ids) {
   const canvas = canvasOf(host);
@@ -119,7 +118,7 @@ function settleFrames(host, section, ids) {
     }
   }
   if (!fits.size) return null;
-  const { moves, minHeight } = fitMovesAll(section.blocks, fits, ownHeightPx(section));
+  const moves = fitMovesAll(section.blocks, fits);
   const before = new Map();
   const written = new Map();
   for (const block of section.blocks) {
@@ -130,23 +129,15 @@ function settleFrames(host, section, ids) {
     block.frames.desktop = { ...block.frames.desktop, ...(h === undefined ? {} : { h }), ...(y === undefined ? {} : { y }) };
     written.set(block.id, block.frames.desktop);
   }
-  const height = minHeight ? `${minHeight}px` : undefined;
-  const sizeBefore = section.size;
-  if (height) section.size = { ...section.size, minHeight: height };
   syncSectionHeight(host);
   return {
     ids: [...written.keys()],
-    minHeight: height,
     grown,
     undo() {
       for (const [id, frame] of before) {
         const block = section.blocks.find((b) => b.id === id);
         // A fit that landed during the gesture (urd-frames) wins over the settle.
         if (block && block.frames.desktop === written.get(id)) block.frames.desktop = frame;
-      }
-      if (height && section.size?.minHeight === height) {
-        if (sizeBefore === undefined) delete section.size;
-        else section.size = sizeBefore;
       }
       syncSectionHeight(host);
     },
@@ -2767,7 +2758,7 @@ window.addEventListener('keydown', (event) => {
       if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
       p.ctx.block.frames.desktop = frame;
       drawFrame(p.el, frame);
-      post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow', ...(i === 0 && settle?.minHeight ? { minHeight: settle.minHeight } : {}) });
+      post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow' });
     }
     resumeSticky();
     resumePush();
@@ -2788,7 +2779,7 @@ window.addEventListener('keydown', (event) => {
   // coalesce: a burst of arrow-key presses becomes one undo step, the
   // settled frames included (their groupKey is the block's own key).
   postSettled(ctx.section, settle, [ctx.block.id], ctx.block.id);
-  post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true, ...(settle?.minHeight ? { minHeight: settle.minHeight } : {}) });
+  post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
 
 // Active section: the editor's palette puts new blocks in the last
@@ -3128,8 +3119,6 @@ function applySelectionMoves(moves, settle = null) {
   const key = makeId('malign');
   const section = selectedEls()[0]?._urdCtx?.section;
   if (section) postSettled(section, settle, moves.map((m) => m.id), key);
-  // The section height a settle wrote rides on the first message.
-  let minHeight = settle?.minHeight;
   for (const move of moves) {
     const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(move.id)}"]`);
     const ctx = el?._urdCtx;
@@ -3139,8 +3128,7 @@ function applySelectionMoves(moves, settle = null) {
     if (typeof move.y === 'number') frame.y = move.y;
     ctx.block.frames.desktop = frame;
     drawFrame(el, frame);
-    post({ type: 'urd-move', sectionId: ctx.section.id, blockId: move.id, frame, frameKey: 'desktop', coalesce: true, groupKey: key, ...(minHeight ? { minHeight } : {}) });
-    minHeight = undefined;
+    post({ type: 'urd-move', sectionId: ctx.section.id, blockId: move.id, frame, frameKey: 'desktop', coalesce: true, groupKey: key });
   }
   resumeSticky();
   resumePush();
@@ -4046,7 +4034,7 @@ function enhanceBlock(el, block, section, grid, host) {
           const own = [block.id, ...groupParts.map((g) => g.block.id)];
           postSettled(section, settle, own, groupKey);
           block.frames.desktop = current;
-          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey: 'desktop', coalesce: true, groupKey, minHeight: settle?.minHeight });
+          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey: 'desktop', coalesce: true, groupKey });
           for (const g of groupParts) {
             const frame = { ...g.block.frames.desktop, x: r2(g.orig.x + dx), y: g.orig.y + dyPx };
             g.block.frames.desktop = frame;
@@ -4081,7 +4069,7 @@ function enhanceBlock(el, block, section, grid, host) {
               toSectionId: target.dataset.sectionId,
               blockId: block.id,
               frame,
-              ...(placeKey ? { groupKey: placeKey, fromMinHeight: settle.minHeight } : {}),
+              ...(placeKey ? { groupKey: placeKey } : {}),
             });
             return;
           }
@@ -4090,7 +4078,7 @@ function enhanceBlock(el, block, section, grid, host) {
         block.frames[frameKey] = current;
         if (placeKey) {
           postSettled(section, settle, [block.id], placeKey);
-          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey, coalesce: true, groupKey: placeKey, minHeight: settle.minHeight });
+          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey, coalesce: true, groupKey: placeKey });
         } else {
           post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey });
         }

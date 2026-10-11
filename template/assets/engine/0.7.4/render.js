@@ -14,7 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, FIT_BY_WIDTH, PUSH_SECTION_PAD } from './push-model.js';
+import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -178,10 +178,15 @@ function writePush(host, items, skipBox) {
   // The section's own height, the line a block has to stay inside to have a
   // say in it. A block placed past it lies across the sections below instead
   // of stretching the one it belongs to; a section with no height of its own
-  // still follows every block.
+  // still follows every block. The height is the owner's: in the editor the
+  // growth never raises it, and a block that outgrows it lies over the
+  // section below, where the owner sees it; on the published page the
+  // growth raises it, so a visitor's content never lies over the next
+  // section (ADR-0025 addendum of 11 October 2026).
   host.style.minHeight = host.dataset.urdMinHeight ?? '';
   const designPx = Number.parseFloat(getComputedStyle(host).minHeight) || 0;
-  const inside = (it) => designPx <= 0 || it.y + it.h <= designPx;
+  const held = host._urdPushPreview && Boolean(host._urdPushSection?.size?.minHeight);
+  const inside = (it) => !held && (designPx <= 0 || it.y + it.h <= designPx);
   let grew = false;
   let bottom = 0;
   for (const it of items) {
@@ -214,8 +219,8 @@ function writePush(host, items, skipBox) {
  * nothing the owner has not already seen. A block whose content changes
  * height under the drag (one that follows its content, dragged narrower)
  * brings its growth as it is now in `grown`. The blocks being moved are left
- * out of the section height by default; a resize keeps its block in it, so
- * content that grows under the drag raises the section as it will on release.
+ * out of the section height by default; a resize keeps its block in it, so a
+ * section that follows its blocks follows the resize.
  * @param {HTMLElement} host The section element
  * @param {Map<string, {x: number, y: number, w: number, h: number}>} frames
  * @param {Map<string, number>} [grown] Block id to its growth past its frame, in px
@@ -244,16 +249,14 @@ export function pushPreview(host, frames, grown, skip = new Set(frames.keys())) 
  * and the pass draws the heights and the places from them.
  * @param {HTMLElement} host The section element
  * @param {Object<string, {x: number, y: number, w: number, h: number}>} frames Block id to desktop frame
- * @param {string} [minHeight] The section's new height of its own, a CSS length
  */
-export function updateFrames(host, frames, minHeight) {
+export function updateFrames(host, frames) {
   const section = host?._urdPushSection;
   if (!section || !frames) return;
   for (const block of section.blocks) {
     const frame = frames[block.id];
     if (frame && block.frames) block.frames.desktop = frame;
   }
-  if (typeof minHeight === 'string' && minHeight) section.size = { ...section.size, minHeight };
   syncSectionHeight(host);
   schedulePush(host);
 }
@@ -468,7 +471,7 @@ function schedulePush(host) {
  * @param {HTMLElement} host The section element
  * @param {object} section The section data
  */
-function wirePush(host, section) {
+function wirePush(host, section, preview) {
   for (const old of pushHosts) {
     if (!old.isConnected) {
       old._urdPushRo?.disconnect();
@@ -477,6 +480,7 @@ function wirePush(host, section) {
   }
   host._urdPushRo?.disconnect();
   host._urdPushSection = section;
+  host._urdPushPreview = Boolean(preview);
   pushHosts.add(host);
   const ro = new ResizeObserver(() => {
     if (host._urdPushRaf) {
@@ -789,8 +793,11 @@ export function renderSection(section, site, host, opts = {}) {
       const def = Urd.blocks.get(block.type);
       const autoGrow = block.type === 'text' || Boolean(def?.autoGrow);
       Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow }));
-      // A block with columns or cards lays itself out by its own width (base.css).
+      // A block with columns or cards lays itself out by its own width (base.css),
+      // and a block with its own height places its content in the box.
       if (followsWidth(block)) el.dataset.urdWidth = 'own';
+      const align = heightAlign(block);
+      if (align !== 'top') el.dataset.urdAlign = align;
       // Screen docking applies on mobile too: sticky.js docks the block
       // against its own measured size. Scroll pinning is desktop-only
       // (the row grid is document flow), so that mode is not marked here.
@@ -826,8 +833,11 @@ export function renderSection(section, site, host, opts = {}) {
       applyFrameCss(el, frame, fitFloorPx(block, site.layout));
       // The push pass draws this block at its content's height (ADR-0025),
       // and the editing layer stops a drag of its height at the content. A
-      // block with columns or cards lays itself out by its own width (base.css).
+      // block with its own height places its content in the box (base.css),
+      // and a block with columns or cards lays itself out by its own width.
       if (followsContent(block)) el.dataset.urdHeight = 'content';
+      const align = heightAlign(block);
+      if (align !== 'top') el.dataset.urdAlign = align;
       if (followsWidth(block)) el.dataset.urdWidth = 'own';
       // Sticky ("pin on scroll", additive field): only marking here; the
       // pinning itself is done by sticky.js on scroll. The mobile branch
@@ -854,7 +864,7 @@ export function renderSection(section, site, host, opts = {}) {
     // (base.css), so the content surface keeps this height when pushed down.
     host.style.minHeight = sectionMinHeight(section, maxBottomPx);
     host.dataset.urdMinHeight = host.style.minHeight;
-    wirePush(host, section);
+    wirePush(host, section, ctx.preview);
   }
 
   // Optional section animation (additive field). The entrance animation

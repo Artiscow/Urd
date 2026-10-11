@@ -126,7 +126,7 @@
   import { FONT_STACKS } from '$engine/fonts.js';
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
-  import { FOLLOWS_CONTENT, fitMoves, ownHeightPx } from '$engine/push-model.js';
+  import { FOLLOWS_CONTENT, STRETCHES, followsContent, fitMoves } from '$engine/push-model.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
@@ -1017,6 +1017,7 @@
       hideMobile: Boolean(block.hideMobile),
       fit: block.fit === 'shrink' ? 'shrink' : undefined,
       fitMin: typeof block.fitMin === 'number' ? block.fitMin : undefined,
+      height: block.height ? JSON.parse(JSON.stringify(block.height)) : null,
       props: JSON.parse(JSON.stringify(block.props)),
       frame: { ...block.frames.desktop },
       animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
@@ -1275,7 +1276,7 @@
   const fitSeq = new Map();
   let fitCount = 0;
   function fitBlockSoon(sectionId, block) {
-    if (viewMode !== 'desktop' || !FOLLOWS_CONTENT.has(block?.type)) return;
+    if (viewMode !== 'desktop' || !followsContent(block)) return;
     clearTimeout(fitTimers.get(block.id));
     const seq = ++fitCount;
     fitSeq.set(block.id, seq);
@@ -1389,6 +1390,33 @@
   }
   function setBlockFitMin(value) {
     mutateBlock(`edit:${selectedBlock.blockId}:fitMin`, (b) => { b.fitMin = value; });
+  }
+
+  /* The height of a block whose height follows its content by default
+     (ADR-0025 decision 3): «Own height» is stored as `height: { mode: 'own' }`
+     with the content's place in the box beside it, and the frame keeps the
+     height it has until it is dragged. Back to the content removes the field,
+     and the fit that follows the edit takes the frame to the content. */
+  function setBlockHeightMode(mode) {
+    mutateBlock(`edit:${selectedBlock.blockId}:height`, (b) => {
+      if (mode === 'own') b.height = { mode: 'own' };
+      else delete b.height;
+    });
+  }
+  function setBlockHeightAlign(align) {
+    mutateBlock(`edit:${selectedBlock.blockId}:heightAlign`, (b) => {
+      b.height = { mode: 'own' };
+      if (align !== 'top') b.height.align = align;
+    });
+  }
+  /** Whether stretch is offered: the block types that fill their box, and the
+   *  calendar in the plain list and card views, which spread their rows and cards. */
+  function canStretch() {
+    const b = selectedBlock;
+    if (STRETCHES.has(b.type)) return true;
+    if (b.type !== 'calendar') return false;
+    const def = calDesign(b.props.design);
+    return !def.module && ['list', 'cards'].includes(def.view);
   }
 
   /* The field contract (plugin blocks, `fields` in urd-plugin-blocks):
@@ -5453,9 +5481,6 @@
     const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
     const width = block.frames.desktop?.w;
     block.frames[key] = msg.frame;
-    // A gesture that settled the frames under it (settleFrames in the
-    // preview) brings the section's own height as the push pass drew it.
-    if (key === 'desktop' && typeof msg.minHeight === 'string' && msg.minHeight) section.size = { ...section.size, minHeight: msg.minHeight };
     if (key === 'desktop') markDesktopChange(section, 'desktop-changed-after-mobile');
     store.save();
     updateDirty();
@@ -5499,12 +5524,12 @@
   /** The frame of a block that follows its content, fitted to the height the
    *  content takes (ADR-0025 decision 5). The fit is part of the edit that
    *  asked for it: no undo step of its own, and it is a change to publish
-   *  like the edit. A taller frame moves the blocks below and a section with
-   *  a height of its own in px as far as the push pass already showed them
-   *  (fitMoves), so the page does not move; the preview gets the frames
+   *  like the edit. A taller frame moves the blocks below as far as the push
+   *  pass already showed them (fitMoves), so the page does not move, and the
+   *  section's own height stays the owner's; the preview gets the frames
    *  without drawing the section again. */
   function applyFit(section, block, h) {
-    const { moves, minHeight } = fitMoves(section.blocks, block.id, h, ownHeightPx(section));
+    const moves = fitMoves(section.blocks, block.id, h);
     const frames = {};
     block.frames.desktop = { ...block.frames.desktop, h };
     frames[block.id] = block.frames.desktop;
@@ -5514,12 +5539,11 @@
       other.frames.desktop = { ...other.frames.desktop, y };
       frames[id] = other.frames.desktop;
     }
-    if (minHeight) section.size = { ...section.size, minHeight: `${minHeight}px` };
     markDesktopChange(section, 'block-edited');
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === block.id) syncSelectedBlock();
-    bridge?.sendFrames(section.id, $state.snapshot(frames), minHeight ? `${minHeight}px` : undefined);
+    bridge?.sendFrames(section.id, $state.snapshot(frames));
   }
 
   /** ↺ in mobile view: reset mobile overrides, the whole section or one
@@ -5665,7 +5689,6 @@
     // groupKey: the drop belongs to the undo step of the frames its drag
     // settled in the source section.
     pushHistory(msg.groupKey ? `edit:${msg.groupKey}` : 'move-block');
-    if (typeof msg.fromMinHeight === 'string' && msg.fromMinHeight) from.size = { ...from.size, minHeight: msg.fromMinHeight };
     from.blocks = from.blocks.filter((b) => b.id !== msg.blockId);
     block.frames.desktop = msg.frame;
     // The mobile layout is re-derived in the new section.
@@ -5718,7 +5741,7 @@
     'shape-triangle': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
     image: { type: 'image', props: { src: '', alt: '', fit: 'cover', radius: 'md', href: null }, w: 30, h: 220 },
     video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
-    map: { type: 'map', props: { location: '', zoom: 15, height: 320 }, w: 60, h: 360 },
+    map: { type: 'map', props: { location: '', zoom: 15 }, w: 60, h: 360 },
     form: {
       type: 'form',
       props: {
@@ -5922,7 +5945,6 @@
     map: [
       { key: 'location', type: 'place', label: ta('lbl.mapLocation'), placeholder: ta('ph.mapLocation') },
       { key: 'zoom', type: 'number', label: ta('lbl.mapZoom'), min: 1, max: 19 },
-      { key: 'height', type: 'number', label: ta('lbl.mapHeight'), min: 120, max: 900, step: 10 },
     ],
   };
 
@@ -11148,7 +11170,22 @@
         </label>
   {/snippet}
   {#snippet menuPlacement()}
-    <!-- The narrow-screen fit, the phone switch and the pinning stand open; motion and the frame are groups -->
+    <!-- The height, the narrow-screen fit, the phone switch and the pinning stand open; motion and the frame are groups -->
+    {#if FOLLOWS_CONTENT.has(selectedBlock.type)}
+      <!-- The height (ADR-0025 decision 3): the box is the content's, or the block's own with the content placed in it -->
+      <label title={ta('tip.height')}>{ta('lbl.height')}
+        <Dropdown value={selectedBlock.height?.mode === 'own' ? 'own' : 'content'}
+          options={[['content', ta('opt.height.content')], ['own', ta('opt.height.own')]]}
+          onchange={(v) => setBlockHeightMode(v)} /></label>
+      {#if selectedBlock.height?.mode === 'own'}
+        {@const align = ['middle', 'bottom', 'stretch'].includes(selectedBlock.height.align) ? selectedBlock.height.align : 'top'}
+        <label title={ta('tip.heightAlign')}>{ta('lbl.heightAlign')}
+          <Dropdown value={align}
+            options={[['top', ta('opt.heightAlign.top')], ['middle', ta('opt.heightAlign.middle')], ['bottom', ta('opt.heightAlign.bottom')],
+              ...(canStretch() || align === 'stretch' ? [['stretch', ta('opt.heightAlign.stretch')]] : [])]}
+            onchange={(v) => setBlockHeightAlign(v)} /></label>
+      {/if}
+    {/if}
     {@render menuFit()}
     <label class="gridmenu-snap" title={ta('tip.hideMobile')}>
       <input type="checkbox" checked={selectedBlock.hideMobile}

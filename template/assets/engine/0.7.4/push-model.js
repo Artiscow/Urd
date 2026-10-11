@@ -31,12 +31,33 @@ export const PUSH_SECTION_PAD = 24;
 export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout', 'collection', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
 
 /**
- * Whether a block's height follows its content (ADR-0025).
- * @param {{type?: string}} block
+ * Whether a block's height follows its content (ADR-0025): one of the types
+ * above, unless the block has been given its own height (`height.mode`).
+ * @param {{type?: string, height?: {mode?: string}}} block
  * @returns {boolean}
  */
 export function followsContent(block) {
-  return FOLLOWS_CONTENT.has(block?.type);
+  return FOLLOWS_CONTENT.has(block?.type) && block.height?.mode !== 'own';
+}
+
+/**
+ * The block types that can use the height of a box taller than their content
+ * (ADR-0025 decision 3, «stretch»): the figure and the countdown's units fill
+ * the box, and a quote's card does. The calendar stretches too, by design:
+ * the plain list and card views spread their rows and cards (blocks/calendar.js).
+ */
+export const STRETCHES = new Set(['countdown', 'quote', 'stats']);
+
+/**
+ * How a block with its own height places its content in the box (ADR-0025
+ * decision 3): `top` (the default, also for a block that follows its
+ * content), `middle`, `bottom` or `stretch`.
+ * @param {{height?: {mode?: string, align?: string}}} block
+ * @returns {'top'|'middle'|'bottom'|'stretch'}
+ */
+export function heightAlign(block) {
+  const align = block?.height?.mode === 'own' ? block.height.align : null;
+  return ['middle', 'bottom', 'stretch'].includes(align) ? align : 'top';
 }
 
 /**
@@ -130,31 +151,28 @@ export function pushLayout(items, opts = {}) {
  * A frame fitted to its content is an edit of the design (ADR-0025 decision
  * 5), so the data takes over what the push pass drew before the fit: a
  * taller frame moves the blocks below by the push rules, exactly as far as
- * the pass had shifted them, and a section with a height of its own grows
- * the way the pass raised it. A shorter frame moves nothing, since the push
- * moves blocks down only.
+ * the pass had shifted them. A shorter frame moves nothing, since the push
+ * moves blocks down only. A section's own height is never written by a fit:
+ * it is the owner's, and a block moved past it lies over the section below.
  * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} blocks The section's blocks
  * @param {string} id The block whose frame is fitted
  * @param {number} h The fitted height in px
- * @param {number} [designPx] The section's own height in px, 0 when it follows its blocks
- * @returns {{moves: Map<string, number>, minHeight: number}} The new y of each block that
- *   moves, and the section's new height in px (0 when it keeps the one it has)
+ * @returns {Map<string, number>} The new y of each block that moves
  */
-export function fitMoves(blocks, id, h, designPx = 0) {
-  return fitMovesAll(blocks, new Map([[id, h]]), designPx);
+export function fitMoves(blocks, id, h) {
+  return fitMovesAll(blocks, new Map([[id, h]]));
 }
 
 /**
  * The same for several frames at once (the blocks under one gesture, settled
  * to the boxes the push pass draws for them): each block's growth counts as
- * the pass counted it, so the moves and the section's height are the ones
- * the pass drew with all of them grown.
+ * the pass counted it, so the moves are the ones the pass drew with all of
+ * them grown.
  * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} blocks The section's blocks
  * @param {Map<string, number>} fits Block id to its fitted height in px
- * @param {number} [designPx] The section's own height in px, 0 when it follows its blocks
- * @returns {{moves: Map<string, number>, minHeight: number}}
+ * @returns {Map<string, number>}
  */
-export function fitMovesAll(blocks, fits, designPx = 0) {
+export function fitMovesAll(blocks, fits) {
   const items = [];
   for (const block of blocks ?? []) {
     const frame = block?.frames?.desktop;
@@ -164,34 +182,11 @@ export function fitMovesAll(blocks, fits, designPx = 0) {
     items.push({ id: block.id, x: frame.x ?? 0, y: frame.y, h: frame.h, grow });
   }
   const moves = new Map();
-  if (!items.some((it) => it.grow > 0)) return { moves, minHeight: 0 };
+  if (!items.some((it) => it.grow > 0)) return moves;
   const { shifts } = pushLayout(items);
-  // The section line as the push pass draws it: a block counts towards the
-  // section's height only while its design bottom is inside it.
-  const inside = (it) => designPx <= 0 || it.y + it.h <= designPx;
-  let grew = false;
-  let bottom = 0;
   for (const it of items) {
     const shift = shifts.get(it.id) ?? 0;
     if (shift) moves.set(it.id, it.y + shift);
-    if (inside(it)) {
-      grew = grew || it.grow > 0;
-      bottom = Math.max(bottom, it.y + shift + it.h + it.grow);
-    }
   }
-  const minHeight = grew && designPx > 0 && bottom + PUSH_SECTION_PAD > designPx ? Math.round(bottom + PUSH_SECTION_PAD) : 0;
-  return { moves, minHeight };
-}
-
-/**
- * A section's own height in px (`size.minHeight` written in px), or 0 when it
- * has none or one in another unit: the height the fits raise, and the line a
- * block must stay inside to have a say in it.
- * @param {{size?: {minHeight?: string}}} section
- * @returns {number}
- */
-export function ownHeightPx(section) {
-  const size = String(section?.size?.minHeight ?? '').trim();
-  if (!/^\d+(?:\.\d+)?px$/.test(size)) return 0;
-  return Number.parseFloat(size);
+  return moves;
 }

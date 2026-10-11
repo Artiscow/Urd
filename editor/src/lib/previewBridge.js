@@ -12,7 +12,7 @@
  *                  { type: 'urd-viewport', mode }              (the editor's viewport choice: desktop/mobile)
  *                  { type: 'urd-duplicate' }                   (Ctrl+D in admin: duplicate the selected block)
  *   page → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (click-to-type/image editor)
- *                  { type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey?, minHeight? }  (drag/resize; minHeight: the section's own height a settled gesture wrote)
+ *                  { type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (drag/resize)
  *                  { type: 'urd-grow', sectionId, blockId, h, fit?, seq? }  (a plugin copy's own height, or the answer to urd-fit-block: ONLY h, never x/y)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder } (arrow moves in the mobile reading order)
@@ -33,7 +33,7 @@
  *                  { type: 'urd-add-block', sectionId, block } (block placed from the palette)
  *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
  *                  { type: 'urd-request-block', sectionId, kind, at? } ("+ Add block"; at = click point {x in %, y in px}, without = centered)
- *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey?, fromMinHeight? } (block dropped in another section; groupKey joins the frames its drag settled in the source)
+ *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey? } (block dropped in another section; groupKey joins the frames its drag settled in the source)
  *                  { type: 'urd-collection-edit', collection, entryId, field, value } (click-to-type/image swap in the collection block)
  *                  { type: 'urd-collection-add', collection } (new entry from the "+ Product" adder in the product block)
  *                  { type: 'urd-nav-width', width }           (side-by-side column width dragged in the preview)
@@ -59,7 +59,7 @@
  *                  { type: 'urd-demo-motion' } (let the ribbons roll for a few seconds while editing)
  *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
  *                  { type: 'urd-fit-block', sectionId, blockId, seq } (ask for the height of a block that follows its content, ADR-0025; answered with urd-grow)
- *                  { type: 'urd-frames', sectionId, frames, minHeight? } (frames fitted to their content, block id to desktop frame: put in place without drawing the section again)
+ *                  { type: 'urd-frames', sectionId, frames } (frames fitted to their content, block id to desktop frame: put in place without drawing the section again)
  */
 
 /**
@@ -173,8 +173,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
       post({ type: 'urd-fit-block', sectionId, blockId, seq });
     },
     /** Frames fitted to their content (block id to desktop frame) and the section's new height, put in place without drawing the section again. */
-    sendFrames(sectionId, frames, minHeight) {
-      post({ type: 'urd-frames', sectionId, frames, minHeight });
+    sendFrames(sectionId, frames) {
+      post({ type: 'urd-frames', sectionId, frames });
     },
     sendPlaceBlock(block) {
       post({ type: 'urd-place-block', block });

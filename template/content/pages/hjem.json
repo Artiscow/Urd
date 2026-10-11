@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "meta": {
     "id": "hjem",
     "title": "Hjem",
@@ -277,13 +277,12 @@
         {
           "id": "blk-2d9ebc4e",
           "type": "map",
-          "version": 1,
+          "version": 2,
           "props": {
             "location": "https://www.openstreetmap.org/#map=18/63.426891/10.396446",
             "lat": 63.426891,
             "lon": 10.396446,
-            "zoom": 18,
-            "height": 600
+            "zoom": 18
           },
           "animation": null,
           "frames": {
@@ -291,7 +290,7 @@
               "x": 56.72,
               "y": 144,
               "w": 36.57,
-              "h": 608,
+              "h": 626,
               "z": 3,
               "rot": 0
             },

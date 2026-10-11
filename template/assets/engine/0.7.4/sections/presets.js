@@ -78,8 +78,8 @@ const icon = (fr, glyph, size = 40) => ({
 const map = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'map',
-  version: 1,
-  props: { location: '', zoom: 15, height: 320, ...props },
+  version: 2,
+  props: { location: '', zoom: 15, ...props },
   animation: null,
   frames: fr,
 });

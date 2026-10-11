@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.21.3): the block's own height, the map in its frame, and the section line
+
+- [ ] The map on Hjem fills its frame with the «Larger map» line under it, on the desktop and in the mobile view; dragging the frame taller and shorter resizes the map; its Properties no longer have «Height (pixels)»; a new map from the palette and from the «Find us» preset fills its box from the start
+- [ ] A block that follows its content (FAQ, stats, table, calendar) shows «Height» at the top of the Placement area with «Follows the content» chosen; image, text and button do not show it
+- [ ] «Own height»: the box keeps its height, the lower handle resizes freely without the stop bar, and «Content in the box» appears under it with Top, Middle and Bottom, each placing the content in a box dragged taller than it
+- [ ] «Stretch» stands as the fourth choice on stats, countdown and quote (the card or the units fill the box) and on the calendar in the Plain and Cards designs (the rows or cards spread, the subscribe row at the bottom); a «Coming up» design offers no Stretch
+- [ ] Back to «Follows the content»: the frame shrinks or grows to the content again and the stop bar with its label returns; undo of each choice works; the choices survive a save and a reload
+- [ ] A map saved before today looks as tall as before after loading (the page migration), and a page saved today loads unchanged
+- [ ] A block whose content grows past the bottom of a section with its own height (a calendar made narrower until its phone layout, more FAQ items, a longer feed) lies over the section below in the editor and the section keeps its height; on the published page the section grows instead; a section with no height of its own grows in both
+- [ ] The selection outline sits tight against a text box with a background, with no light line between them on any side, in the editor's scaled preview and at browser zoom
+
 ### Test batch (0.7.19.29): the site's calendars
 
 - [ ] The Site panel has the group «Calendars» with the example calendar «Apeiron»; «New calendar» at the top adds a row that opens with the caret in its name; pressing the head folds it together and opens it again with a smooth slide and a turning chevron, one row open at a time, and the panel never jumps while a row opens or closes

@@ -57,16 +57,20 @@ function watchCspBlock(host, frame, ctx, largerUrl) {
 }
 
 export const mapBlock = {
-  version: 1,
-  // Natural height in the mobile row grid (the iframe's height is the block's own).
-  autoGrow: true,
+  version: 2,
   label: 'Map',
   labelKey: 'blocks.map',
-  defaults: () => ({ location: '', zoom: 15, height: 320 }),
-  migrations: {},
+  defaults: () => ({ location: '', zoom: 15 }),
+  migrations: {
+    // 1 -> 2 (ADR-0025): the map's box is its frame, so the height setting
+    // goes. The page lift has already moved it into the frame (migrate.js).
+    1: ({ height, ...props }) => props,
+  },
   /**
+   * The map's box is its frame (ADR-0025 decision 2): the iframe fills the
+   * height the frame leaves over the «Larger map» line (base.css).
    * @param {HTMLElement} el
-   * @param {{location?: string, lat?: number, lon?: number, zoom?: number, height?: number}} props
+   * @param {{location?: string, lat?: number, lon?: number, zoom?: number}} props
    *   `lat`/`lon` are written by the address search in admin; `location` is
    *   parsed at render when they are missing (coordinates or an OSM link).
    * @param {object} ctx Render context
@@ -83,7 +87,6 @@ export const mapBlock = {
       const largerUrl = buildLargerMapUrl({ lat: loc.lat, lon: loc.lon, zoom });
       const frame = el2('iframe', 'urd-map-frame');
       frame.src = buildEmbedUrl({ lat: loc.lat, lon: loc.lon, zoom });
-      frame.style.height = `${props.height ?? 320}px`;
       frame.loading = 'lazy';
       frame.title = t('map.mapTitle');
       frame.setAttribute('referrerpolicy', 'no-referrer');

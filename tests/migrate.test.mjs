@@ -6,7 +6,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift, liftSiteFile, liftPageFile, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW } = await engineImport('migrate.js');
+const { lift, liftSiteFile, liftPageFile, liftMapHeights, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW } = await engineImport('migrate.js');
+const { mapBlock } = await engineImport('blocks/map.js');
 
 const textV3 = {
   version: 3,
@@ -311,4 +312,59 @@ test('plugin preset ids pass the preset lift untouched', () => {
   page.sections[0].preset = 'hva-skjer';
   const lifted = liftPageFile(page, {});
   assert.equal(lifted.sections[0].preset, 'hva-skjer');
+});
+
+/* 4 -> 5 (ADR-0025): the map's height setting into the frame. */
+const v4Page = () => ({
+  schemaVersion: 4,
+  meta: { id: 'kontakt', title: 'Kontakt' },
+  sections: [{
+    id: 'sec-1',
+    version: 1,
+    size: { minHeight: '900px' },
+    blocks: [
+      { id: 'map', type: 'map', version: 1, props: { location: '', zoom: 18, height: 600 }, frames: { desktop: { x: 10, y: 144, w: 40, h: 608 } } },
+      { id: 'below', type: 'text', version: 1, props: {}, frames: { desktop: { x: 10, y: 760, w: 40, h: 100 } } },
+      { id: 'beside', type: 'text', version: 1, props: {}, frames: { desktop: { x: 60, y: 144, w: 30, h: 100 } } },
+      { id: 'legacy', type: 'kart', version: 1, props: { location: '', height: 200 }, frames: { desktop: { x: 60, y: 300, w: 30, h: 300 } } },
+    ],
+  }],
+});
+
+test('page v4 -> v5: the map frame takes the height the map showed, and the blocks below follow as for a fit', () => {
+  const lifted = liftPageFile(v4Page(), {});
+  assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
+  const [map, below, beside, legacy] = lifted.sections[0].blocks;
+  // The iframe's 600 px with the 26 px gap and line under it stood out of a 608 px frame by 18 px.
+  assert.equal(map.frames.desktop.h, 626);
+  assert.equal('height' in map.props, false);
+  assert.equal(map.props.zoom, 18);
+  // The block under the map was drawn 18 px lower by the push pass; the section's own height is the owner's and stays.
+  assert.equal(below.frames.desktop.y, 778);
+  assert.equal(beside.frames.desktop.y, 144);
+  assert.equal(lifted.sections[0].size.minHeight, '900px');
+  // A frame taller than the map keeps its height; the legacy id is lifted the same way.
+  assert.equal(legacy.frames.desktop.h, 300);
+  assert.equal('height' in legacy.props, false);
+});
+
+test('page v4 -> v5 is idempotent, leaves a map without the setting alone and never mutates the original', () => {
+  const original = v4Page();
+  const once = liftPageFile(original, {});
+  assert.deepEqual(liftPageFile(once, {}), once);
+  assert.equal(original.schemaVersion, 4);
+  assert.equal(original.sections[0].blocks[0].props.height, 600);
+  assert.equal(original.sections[0].blocks[0].frames.desktop.h, 608);
+  const section = { blocks: [{ id: 'm', type: 'map', version: 2, props: { location: '', zoom: 15 }, frames: { desktop: { x: 0, y: 0, w: 50, h: 360 } } }] };
+  liftMapHeights(section);
+  assert.equal(section.blocks[0].frames.desktop.h, 360);
+});
+
+test('the map block lifts 1 -> 2 by dropping the height setting', () => {
+  assert.equal(mapBlock.version, 2);
+  const lifted = lift({ type: 'map', version: 1, props: { location: 'Oslo', zoom: 12, height: 320 } }, mapBlock);
+  assert.equal(lifted.ok, true);
+  assert.equal(lifted.version, 2);
+  assert.deepEqual(lifted.props, { location: 'Oslo', zoom: 12 });
+  assert.equal('height' in mapBlock.defaults(), false);
 });

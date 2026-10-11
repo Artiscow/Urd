@@ -231,6 +231,63 @@ html {
   container: urd-block / inline-size;
 }
 
+/* A block with its own height places its content in the box (ADR-0025
+   decision 3; heightAlign in push-model.js): at the top by default, in the
+   middle, at the bottom, or stretched over the whole box. The box is a grid
+   of one row for the content, so the content keeps its own height and only
+   moves, and stretch gives it the row's height, which the block's own layout
+   then fills. The editing handles and badges are absolutely placed and stay
+   out of the row. */
+.urd-block[data-urd-align="middle"],
+.urd-block[data-urd-align="bottom"],
+.urd-block[data-urd-align="stretch"] {
+  display: grid;
+}
+
+.urd-block[data-urd-align="middle"] {
+  align-content: center;
+}
+
+.urd-block[data-urd-align="bottom"] {
+  align-content: end;
+}
+
+.urd-block[data-urd-align="stretch"] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+/* What stretch gives each block type that can use the height (STRETCHES in
+   push-model.js, and the calendar by design): the figure stands in the
+   middle of its box, the countdown's units grow with the box and keep their
+   digits in the middle, a quote's text stands in the middle of its card, and
+   the plain list and card calendar views spread their rows and cards over the
+   height left under the finding tools and over the subscribe row. */
+.urd-block[data-urd-align="stretch"] > .urd-stats {
+  justify-content: center;
+}
+
+.urd-block[data-urd-align="stretch"] > .urd-countdown .urd-countdown-unit {
+  align-content: center;
+}
+
+.urd-block[data-urd-align="stretch"] > .urd-quote {
+  align-items: center;
+}
+
+.urd-block[data-urd-align="stretch"] > .urd-quote-large {
+  justify-content: center;
+}
+
+.urd-block[data-urd-align="stretch"] > .urd-cal {
+  display: flex;
+  flex-direction: column;
+}
+
+.urd-block[data-urd-align="stretch"] > .urd-cal > .urd-collection-list,
+.urd-block[data-urd-align="stretch"] > .urd-cal > .urd-collection-cards {
+  flex: 1;
+}
+
 /* A block's ruler (blocks/calendar.js): no height and the block's full width,
    so a ResizeObserver on it hears the width alone and a layout chosen in
    script by the block's width follows a drag, while the push pass changes the
@@ -916,16 +973,23 @@ html {
 
 /* The map block: OpenStreetMap's own iframe with a "larger map" link; the
    empty state and the CSP note share one dashed box. */
+/* The map's box is its frame (ADR-0025 decision 2): the iframe takes the
+   height left over the «Larger map» line. */
 .urd-map {
   position: relative;
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 6px;
   width: 100%;
+  height: 100%;
 }
 
 .urd-map-frame {
   display: block;
+  box-sizing: border-box;
   width: 100%;
+  height: 100%;
+  min-height: 0;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
   border-radius: var(--urd-radius-md);
 }
@@ -11831,7 +11895,7 @@ body.urd-marqueeing {
 
 .urd-preview .urd-block.urd-multi-selected {
   outline: calc(2px * var(--urd-chrome-scale, 1)) dashed var(--urd-admin-accent, #5f6a75);
-  outline-offset: 0;
+  outline-offset: -1px;
 }
 
 .urd-multi-toolbar {
@@ -13195,9 +13259,13 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 /* Selected block: a persistent outline and always visible handles */
+/* The selection outline overlaps the box edge by a pixel: the preview is
+   scaled, so a box edge can fall between device pixels, and an outline drawn
+   just outside it would leave a seam of the section's background between
+   the two. */
 .urd-preview .urd-block.urd-selected {
   outline: calc(2px * var(--urd-chrome-scale, 1)) solid var(--urd-admin-accent, #5f6a75);
-  outline-offset: 0;
+  outline-offset: -1px;
 }
 
 /* The whole block surface can be dragged directly; editable text keeps the text cursor */

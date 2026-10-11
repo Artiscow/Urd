@@ -10,7 +10,7 @@
  */
 import { slugify } from './imageTools.js';
 import { groupDelta } from './selection.js';
-import { liftMobileFrame, liftContractTokens } from './migrate.js';
+import { liftMobileFrame, liftContractTokens, liftMapHeights } from './migrate.js';
 
 /** Current version of the template file format (content/maler/*.json). */
 export const TEMPLATE_SCHEMA_VERSION = 1;
@@ -49,8 +49,10 @@ export function cloneSectionForInsert(section, makeId) {
     liftBlockMobile(block);
   }
   // Templates saved before v3 carry the old Norwegian contract tokens
-  // (ADR-0021); renamed here since payloads bypass the page lift.
+  // (ADR-0021); renamed here since payloads bypass the page lift. A map saved
+  // before page v5 carries its height as a setting, lifted into the frame.
   liftContractTokens(out);
+  liftMapHeights(out);
   return out;
 }
 
@@ -69,6 +71,7 @@ export function clonePageForInsert(page, makeId, { id, title }) {
   for (const section of out.sections ?? []) {
     section.id = makeId('sec');
     for (const block of section.blocks ?? []) block.id = makeId('blk');
+    liftMapHeights(section);
   }
   return out;
 }
@@ -92,6 +95,7 @@ export function cloneBlocksForInsert(blocks, makeId, { anchor = null } = {}) {
     liftBlockMobile(block);
   }
   liftContractTokens(out);
+  liftMapHeights({ blocks: out });
   const frames = out.map((b) => b.frames.desktop);
   const minX = Math.min(...frames.map((f) => f.x));
   const minY = Math.min(...frames.map((f) => f.y));

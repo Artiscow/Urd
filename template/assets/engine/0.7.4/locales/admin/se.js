@@ -1085,7 +1085,6 @@ export default {
     'lbl.mapLocation': 'Báiki',
     'ph.mapLocation': 'Čujuhus, koordináhtat dahje OSM-liŋka',
     'lbl.mapZoom': 'Zoom (1 gitta 19)',
-    'lbl.mapHeight': 'Allodat (piksélat)',
     'canvas.mapCspBlocked': 'Kárta lea caggojuvvon neahttabáikki CSP:s.',
     'canvas.mapCspFix': 'Bija dán verddi frame-src:ii _headers fiillas, de kárta čájehuvvo:',
     'hintMap.title': 'Kártablohkka',

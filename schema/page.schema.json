@@ -215,6 +215,16 @@
         },
         "fit": { "enum": ["shrink"], "description": "Shrink instead of wrap (additive from v0.7.3, ADR-0024): when the frame is too narrow for the content at full size, the content is zoomed only as much as the design height needs, down to fitMin, and wraps only past it. Omitted = the content wraps and the blocks below are pushed. Desktop only." },
         "fitMin": { "type": "number", "minimum": 0.01, "maximum": 1, "description": "The floor of the shrink as a share of the design size (default 0.6)." },
+        "height": {
+          "type": "object",
+          "required": ["mode"],
+          "additionalProperties": false,
+          "description": "The block's height behaviour (additive from 0.7.21.3, ADR-0025 decision 3), on the block types whose height follows their content by default (FOLLOWS_CONTENT in push-model.js). Omitted = the type's default. 'own' makes the frame decide: the block takes the dragged height and the content is placed in the box by align.",
+          "properties": {
+            "mode": { "enum": ["own", "content"] },
+            "align": { "enum": ["top", "middle", "bottom", "stretch"], "description": "Where the content stands in a box taller than it (default top). 'stretch' lets it use the whole height on the block types that can (STRETCHES in push-model.js, and the calendar's plain list and card views)." }
+          }
+        },
         "frames": {
           "type": "object",
           "required": ["desktop"],

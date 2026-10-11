@@ -312,7 +312,7 @@ function enablePreview(state, opts) {
       // below: the new frames are put in place without drawing the section
       // again, so a caret in the block stays where it is.
       const host = root.querySelector(`[data-section-id="${CSS.escape(msg.sectionId)}"]`);
-      if (host) updateFrames(host, msg.frames, msg.minHeight);
+      if (host) updateFrames(host, msg.frames);
     } else if (msg?.type === 'urd-announce-reset') {
       // The Announcement panel: forget the dismissal, so the strip returns
       // in the preview and for this browser on the published page.

@@ -50,8 +50,10 @@ export function lift(data, def) {
   return { ok: true, version, props };
 }
 
+import { fitMoves } from './push-model.js';
+
 /** Current version of the page file format (content/pages/*.json). */
-export const PAGE_SCHEMA_VERSION = 4;
+export const PAGE_SCHEMA_VERSION = 5;
 
 /**
  * The row height of the mobile row grid (ADR-0019), in px. A model
@@ -204,6 +206,41 @@ export function liftContractTokens(target) {
   return target;
 }
 
+/**
+ * The gap and the «Larger map» line under a map's iframe before v5, in px: the
+ * 6 px gap of `.urd-map` and a line of text at 0.82 em (base.css).
+ */
+const MAP_LINK_PX = 26;
+
+/**
+ * Lifts the map blocks of one section from the height setting the map had
+ * before page v5 (`props.height`, the iframe's own height) to the frame
+ * (ADR-0025 decision 2: the map's box decides, and the iframe fills it). The
+ * frame takes the height the map showed, the iframe with the line under it or
+ * the frame when that was taller, and the blocks below follow as for a fit
+ * (fitMoves), so nothing moves on screen. The legacy id `kart` resolves to
+ * the map block and is lifted the same way.
+ * Used by the page migration AND by template insertion (templates-model.js),
+ * which inserts stored payloads outside the page lift.
+ * @param {{blocks?: Array<object>}} section The section (mutated)
+ */
+export function liftMapHeights(section) {
+  for (const block of section?.blocks ?? []) {
+    if ((block.type !== 'map' && block.type !== 'kart') || !Number.isFinite(block.props?.height)) continue;
+    const frame = block.frames?.desktop;
+    if (frame && Number.isFinite(frame.h)) {
+      const shown = Math.max(frame.h, Math.round(block.props.height + MAP_LINK_PX));
+      const moves = fitMoves(section.blocks, block.id, shown);
+      frame.h = shown;
+      for (const other of section.blocks) {
+        const y = moves.get(other.id);
+        if (Number.isFinite(y) && other.frames?.desktop) other.frames.desktop.y = y;
+      }
+    }
+    delete block.props.height;
+  }
+}
+
 const pageMigrations = {
   // 1 -> 2 (synced mobile model, ADR-0019): frames.mobile changes shape
   // from a full frame {x,y,w,h} to a partial row-grid placement
@@ -236,6 +273,11 @@ const pageMigrations = {
   // step is its no-op second pass; pages written at exactly v3 need it.
   3: (page) => {
     for (const section of page.sections ?? []) liftContractTokens(section);
+    return page;
+  },
+  // 4 -> 5 (ADR-0025): the map's height setting moves into the frame.
+  4: (page) => {
+    for (const section of page.sections ?? []) liftMapHeights(section);
     return page;
   },
 };

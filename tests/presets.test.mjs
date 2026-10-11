@@ -19,7 +19,7 @@ const overlaps = (a, b) => {
 const assertBlock = (block, presetId) => {
   assert.ok(block.id, `${presetId}: block missing id`);
   assert.ok(block.type, `${presetId}: block missing type`);
-  assert.equal(block.version, 1, `${presetId}: block missing version`);
+  assert.ok(Number.isInteger(block.version) && block.version >= 1, `${presetId}: block missing version`);
   assert.ok(block.props, `${presetId}: block missing props`);
   const d = block.frames?.desktop;
   assert.ok(d, `${presetId}: block missing desktop frame`);
