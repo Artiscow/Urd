@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.47 - A rule in AGENTS.md to read the comparison maps before a backlog item is built, and the delivered bugs cleared from BACKLOG - 12 October 2026
+
+- The backlog asked for the comparison maps only at the start of a phase («HUSK: Se /comparison før vi starter»), so an item could be built without what the field and the platform say about it. AGENTS.md (Workflow) now asks for the item's IDs, category, element row, design pattern and CODE.md's platform gates to be read before work starts, a finding that changes the item to be written into it first, and a delivered recommendation to get the status Delivered with its commit number at «commit».
+- The six bugs delivered in 0.7.0.45 are cleared from BACKLOG's Bugs section.
+
 ### 0.7.0.46 - The comparison maps rewritten in English as docs/comparison/, refreshed from the research of 11 October 2026, and sorted into the backlog and the roadmap - 12 October 2026
 
 - The three maps in `docs/sammenligning/` were Norwegian with English surveys, told delivery status in place and carried stale facts (a «Safari 19» that never existed; ADR-0011 and 0016 cited parts that did not exist). They are replaced by `docs/comparison/` in English: README (the index, source marks, ID scheme and a map from every old number), FEATURES (C1-C114), ELEMENTS (E1-E37), DESIGN (D1-D62, new), CODE (T1-T113) and SURVEYS (the dated surveys the ADRs cite, kept as decided).
