@@ -86,7 +86,7 @@ Three threads: a performance and size review of the whole product, the media wor
 - **Speed for visitors:** measure and lower weight and load time (engine size, critical CSS, caching headers, `content-visibility` for sections below the fold, a Lighthouse budget as a CI check?), and show the engine's lightness measurably.
 - **Speed in the editor:** profile rendering and rerendering with many sections and blocks, a finer patch protocol in the preview (one block or attribute instead of a section rerender), bundle size and startup time, drag and resize at 60 fps on large pages, and an index layer so admin queries stay fast as collections grow.
 - **Media:** responsive pictures (`srcset`, the picture's own ratio, AVIF), a media library panel (from the feature map), an image editor in admin, a longer content hash in media file names, and possibly recompressing existing media files.
-- **Baked pages:** «baked HTML on publishing» (the SEO/no-JS point from the risk list), with collection data baked in, and entry pages (a permalink per collection entry, from the feature map) generated with it.
+- **Baked pages:** «baked HTML on publishing» (the SEO/no-JS point from the risk list), with collection data baked in, and entry pages (a permalink per collection entry, from the feature map) and a page per product (linked from the shop's quick view) generated with it.
 - **Content:** events as a collection kind (date, time and place, an upcoming filter and a month view), for an association that keeps its programme in Urd rather than in a calendar feed; and the template model: a template or a group of templates exported as a plugin, and whole site templates kept in Urd.
 - **Alongside:** the MCP server's read part ([ADR-0017](../adr/0017-ai-via-local-mcp-server.md)), a dependency-free local process with read tools and `urd_validate`; and the updater offering the refreshed shipped plugins as opt-in files.
 
@@ -98,10 +98,10 @@ We use Urd as an outside user, without shortcuts:
 
 - Create a real site (working name: Urd-Design) via the «Use this template» button, in its own repo with its own Cloudflare setup, set up ONLY by following [the setup guide](setup-publication/SETUP-en-GB.md). All friction that is discovered is a finding that shall be fixed.
 - Build the site to completion through admin alone.
-- Hosting beyond Cloudflare Pages: the site served from any static host (GitHub Pages, Netlify, an own server), with a way for the sign-in and the publishing from `/admin` to work there (added 6 October 2026; details in BACKLOG).
+- Hosting beyond Cloudflare Pages: the site served from any static host (GitHub Pages, Netlify, an own server), with a way for the sign-in and the publishing from `/admin` to work there, and an answer to how such a site gets Urd updates (added 6 October 2026; details in BACKLOG).
 - Then release an Urd update that contains a **real block change (v1→v2 with migration)**, and run the update button on the Urd-Design site.
 
-Also in the phase (details in [BACKLOG.md](../BACKLOG.md)): the documentation round (setup guide friction, troubleshooting, the readme structure) and the user guide finished, and the release and updater hardening, both gathered here on 9 August 2026 because they cover the guides and the code the dress rehearsal tries out; the MCP server's write tools (ADR-0017); the translation round for nn and se; touch-friendliness for admin and the published page; and starting a new site from a blank page or a full page template.
+Also in the phase (details in [BACKLOG.md](../BACKLOG.md)): the documentation round (setup guide friction, troubleshooting, the readme structure) and the user guide finished, and the release and updater hardening, both gathered here on 9 August 2026 because they cover the guides and the code the dress rehearsal tries out; the MCP server's write tools (ADR-0017); the translation round for nn and se; touch-friendliness for admin and the published page; one editing size per site, shared between editors; the code comments reviewed before outside developers read them; and starting a new site from a blank page or a full page template.
 
 Until v0.6, `template/` was both workshop and demo (urdweb); from v0.6 the template is its own repo, and Urd-Design is the first site that lives as a real user's.
 
@@ -119,7 +119,7 @@ Unprioritised, depends on community and needs: import from existing sites,
 multilingual CONTENT (nb/nn/en variants of the pages themselves; the UI and the documentation
 are multilingual from 0.6.8), more UI languages (French, German, Spanish, Finnish, Danish),
 export of a built site, concurrency view in admin, gallery website for templates and
-plugins (urd.dev), GitLab/Gitea adapter, external media storage (R2),
+plugins (urd.dev), GitLab/Gitea adapter (publishing and updates for a repo outside GitHub), external media storage (R2),
 PR-per-draft/deploy-preview workflow (from [LAERDOMMER.md](../sammenligning/LAERDOMMER.md)),
 shop extensions beyond the ApeironLF needs (prices and stock per variant and more) and a
 shop/merch template. Details in [BACKLOG.md](../BACKLOG.md).

@@ -84,7 +84,7 @@ Tre tråder: en ytelses- og størrelsesgjennomgang av hele produktet, mediearbei
 - **Fart for besøkende:** mål og senk vekt og lastetid (motorstørrelse, kritisk CSS, caching-headere, `content-visibility` for seksjoner under folden, Lighthouse-budsjett som CI-sjekk?), og vis motorens letthet målbart.
 - **Fart i editoren:** profiler rendering og rerendering med mange seksjoner og blokker, en finere patch-protokoll i preview (én blokk eller ett attributt i stedet for å tegne seksjonen på nytt), bundle-størrelse og oppstartstid, dra og resize i 60 fps på store sider, og et indekslag så admin-spørringer holder farten når samlingene vokser.
 - **Media:** responsive bilder (`srcset`, bildets egne mål, AVIF), et mediebibliotek-panel (fra funksjonskartet), en bildeeditor i admin, lengre innholdshash i mediefilnavn, og eventuelt rekomprimering av eksisterende media/-filer.
-- **Bakte sider:** «bakt HTML ved publisering» (SEO/no-JS-punktet fra risikolisten), med samlingsdata bakt inn, og innslagssider (en permalenke per samlingsinnslag, fra funksjonskartet) generert sammen med den.
+- **Bakte sider:** «bakt HTML ved publisering» (SEO/no-JS-punktet fra risikolisten), med samlingsdata bakt inn, og innslagssider (en permalenke per samlingsinnslag, fra funksjonskartet) og en side per produkt (lenket fra butikkens quick view) generert sammen med den.
 - **Innhold:** arrangementer som samlingstype (dato, tid og sted, et kommende-filter og en månedsvisning), for en forening som holder programmet sitt i Urd og ikke i en kalenderfeed; og malmodellen: en mal eller en gruppe maler eksportert som plugin, og hele nettstedsmaler holdt i Urd.
 - **Ved siden av:** MCP-serverens lesedel ([ADR-0017](adr/0017-ai-via-local-mcp-server.md)), en avhengighetsfri lokal prosess med leseverktøy og `urd_validate`; og at oppdatereren tilbyr de oppfriskede medfølgende pluginene som valgfrie filer.
 
@@ -96,10 +96,10 @@ Vi bruker Urd som en fremmed bruker, uten snarveier:
 
 - Lag en ekte side (arbeidsnavn: Urd-Design) via «Use this template»-knappen, i eget repo med eget Cloudflare-oppsett, satt opp KUN ved å følge [oppsettsguiden](languages/setup-publication/SETUP-nb.md). All friksjon som oppdages er funn som skal fikses.
 - Bygg siden ferdig gjennom admin alene.
-- Hosting utover Cloudflare Pages: siden servert fra hvilken som helst statisk host (GitHub Pages, Netlify, egen server), med en måte for innloggingen og publiseringen fra `/admin` å virke der (lagt til 6. oktober 2026; detaljer i BACKLOG).
+- Hosting utover Cloudflare Pages: siden servert fra hvilken som helst statisk host (GitHub Pages, Netlify, egen server), med en måte for innloggingen og publiseringen fra `/admin` å virke der, og et svar på hvordan en slik side får Urd-oppdateringer (lagt til 6. oktober 2026; detaljer i BACKLOG).
 - Slipp deretter en Urd-oppdatering som inneholder en **ekte blokkendring (v1→v2 med migrering)**, og kjør oppdater-knappen på Urd-Design-siden.
 
-Også i fasen (detaljer i [BACKLOG.md](BACKLOG.md)): dokumentasjonsrunden (oppsettsguide-friksjon, feilsøking, readme-strukturen) og en ferdig brukerveiledning, og utgivelses- og oppdaterer-herdingen, begge samlet hit 9. august 2026 fordi de dekker guidene og koden generalprøven prøver ut; MCP-serverens skriveverktøy (ADR-0017); oversettelsesrunden for nn og se; touchvennlighet for admin og publisert side; og å starte et nytt nettsted fra en blank side eller en full sidemal.
+Også i fasen (detaljer i [BACKLOG.md](BACKLOG.md)): dokumentasjonsrunden (oppsettsguide-friksjon, feilsøking, readme-strukturen) og en ferdig brukerveiledning, og utgivelses- og oppdaterer-herdingen, begge samlet hit 9. august 2026 fordi de dekker guidene og koden generalprøven prøver ut; MCP-serverens skriveverktøy (ADR-0017); oversettelsesrunden for nn og se; touchvennlighet for admin og publisert side; én redigeringsstørrelse per nettsted, delt mellom editorene; kodekommentarene gjennomgått før utenforstående utviklere leser dem; og å starte et nytt nettsted fra en blank side eller en full sidemal.
 
 Frem til v0.6 var `template/` både verksted og demo (urdweb); fra v0.6 er malen et eget repo, og Urd-Design er den første siden som lever som en ekte brukers.
 
@@ -117,7 +117,7 @@ Uprioritert, avhenger av community og behov: import fra eksisterende sider,
 flerspråklig INNHOLD (nb/nn/en-varianter av sidene selv; UI-et og dokumentasjonen
 er flerspråklige fra 0.6.8), flere UI-språk (fransk, tysk, spansk, finsk, dansk),
 eksport av et bygget nettsted, samtidighetsvisning i admin, galleri-nettsted for maler og
-plugins (urd.dev), GitLab/Gitea-adapter, ekstern medialagring (R2),
+plugins (urd.dev), GitLab/Gitea-adapter (publisering og oppdateringer for et repo utenfor GitHub), ekstern medialagring (R2),
 PR-per-utkast-/deploy-preview-arbeidsflyt (fra [LAERDOMMER.md](sammenligning/LAERDOMMER.md)),
 butikk-utvidelser utover ApeironLFs behov (pris og varelager per variant med mer) og
 butikk/merch-mal. Detaljer i [BACKLOG.md](BACKLOG.md).
