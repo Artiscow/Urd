@@ -93,6 +93,49 @@ export function clampFitMin(value) {
 export const FIT_BY_WIDTH = new Set(['image', 'video', 'shape', 'icon']);
 
 /**
+ * The block types whose size is their frame: a picture, a video, a shape, an
+ * icon and a map are as large as the box the owner dragged, so a scale of
+ * their content would only crop or blur it. Every other type takes «Size».
+ */
+export const SIZE_BY_FRAME = new Set(['image', 'video', 'shape', 'icon', 'map']);
+
+/** The bounds of a block's size: the whole block, text included, drawn smaller or larger than it is. */
+export const SIZE = { min: 0.4, max: 2 };
+
+/** The bounds of the text inside a sized block, in px, and their defaults: the base text never passes them, whatever the size. */
+export const SIZE_TEXT = { min: 6, max: 200, minDefault: 12, maxDefault: 96 };
+
+/**
+ * A block's size as a factor (ADR-0025 decision 6): the owner's `size`
+ * inside the bounds, else 1. The frame-sized types are always 1.
+ * @param {{type?: string, size?: number}} block
+ * @returns {number}
+ */
+export function blockSize(block) {
+  if (!block || SIZE_BY_FRAME.has(block.type)) return 1;
+  const size = Number(block.size);
+  if (!Number.isFinite(size) || size <= 0) return 1;
+  return Math.round(Math.min(SIZE.max, Math.max(SIZE.min, size)) * 100) / 100;
+}
+
+/**
+ * The smallest and largest size in px the base text of a sized block may
+ * take (block.sizeMin, block.sizeMax), inside SIZE_TEXT and never crossed:
+ * a largest size under the smallest is raised to it.
+ * @param {{sizeMin?: number, sizeMax?: number}} block
+ * @returns {{min: number, max: number}}
+ */
+export function sizeBounds(block) {
+  const px = (value, fallback) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? Math.min(SIZE_TEXT.max, Math.max(SIZE_TEXT.min, Math.round(n))) : fallback;
+  };
+  const min = px(block?.sizeMin, SIZE_TEXT.minDefault);
+  const max = Math.max(min, px(block?.sizeMax, SIZE_TEXT.maxDefault));
+  return { min, max };
+}
+
+/**
  * The smallest width in px a block set to shrink may take, for the types in
  * FIT_BY_WIDTH: its share of the design width times the floor. 0 (no floor)
  * for every other block, for a block without the field, and for a site

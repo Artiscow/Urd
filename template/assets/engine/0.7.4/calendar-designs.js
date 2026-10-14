@@ -1,7 +1,7 @@
 /**
  * The calendar block's designs: the pure model behind the Design picker and the Style tab in the Properties panel, and the renderer's look-up.
  * A design is a look on top of a data view (list, cards, month, agenda or next): it names the colour slots the owner can override, the static texts the owner can rewrite in the preview, and whether its boxes carry an edge stripe.
- * The owner's choices are additive props on the block (`design`, `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`, `programHref`, `showOpen`, `options`, `scale`); a block without them renders the plain design on the theme's colours.
+ * The owner's choices are additive props on the block (`design`, `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`, `programHref`, `showOpen`, `options`); a block without them renders the plain design on the theme's colours.
  * The module is bundled by the editor and loaded by the block on its first render (with ics.js, outside the visitor closure), so it never touches the DOM and never calls ta().
  *
  * A design is five things, added together: an entry in CAL_DESIGNS below (its view, the colour slots by section with the plain colours first, the static texts, the stripe and the flags); a renderer exported under the design's id from its blocks/calendar-<module>.js; its rules in base.css, under its own class names, that read every slot as `--urd-cal-s-<slot>` with the design's own default; a drawing in calendar-thumb.js; a picture under template/admin/designs/<id>.webp made by scripts/design-pictures.mjs for the design picker; and the label, slot and section keys in the nb, en-GB and tr admin dictionaries. tests/calendar-designs.test.mjs holds the entries, the renderers, the drawings and the keys against each other; the style sheet is checked by eye.
@@ -703,16 +703,6 @@ export function calOptions(props) {
  */
 export function calOptionShown(def, opt) {
   return !def.when || Object.entries(def.when).every(([key, value]) => opt?.[key] === value);
-}
-
-/** The bounds of a calendar's size: the whole design, text included, drawn smaller or larger than it is. */
-export const CAL_SCALE = { min: 0.4, max: 2 };
-
-/** The calendar's size as a factor: the owner's `scale` inside the bounds, else 1. */
-export function calScale(props) {
-  const scale = Number(props?.scale);
-  if (!Number.isFinite(scale) || scale <= 0) return 1;
-  return Math.round(Math.min(CAL_SCALE.max, Math.max(CAL_SCALE.min, scale)) * 100) / 100;
 }
 
 /** The renderer modules a design can name (the block maps each to a literal import). */

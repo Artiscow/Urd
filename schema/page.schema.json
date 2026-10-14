@@ -213,8 +213,11 @@
             { "$ref": "#/$defs/typedProps" }
           ]
         },
-        "fit": { "enum": ["shrink"], "description": "Shrink instead of wrap (additive from v0.7.3, ADR-0024): when the frame is too narrow for the content at full size, the content is zoomed only as much as the design height needs, down to fitMin, and wraps only past it. Omitted = the content wraps and the blocks below are pushed. Desktop only." },
+        "fit": { "enum": ["shrink", "both"], "description": "What the block does below the design width (additive from v0.7.3, ADR-0024; both from 0.7.21.5): shrink zooms the content in proportion to the canvas, so its lines stay as they are, down to fitMin; both zooms it only as much as the design height needs and lets it wrap. Omitted = the content wraps and the blocks below are pushed. Desktop only." },
         "fitMin": { "type": "number", "minimum": 0.01, "maximum": 1, "description": "The floor of the shrink as a share of the design size (default 0.6)." },
+        "size": { "type": "number", "minimum": 0.4, "maximum": 2, "description": "The block's size (additive from 0.7.21.5, ADR-0025 decision 6): the whole block, text included, drawn smaller or larger than it is, as a factor. Omitted = 1. Ignored on the frame-sized types (SIZE_BY_FRAME in push-model.js: image, video, shape, icon, map), whose size is their frame." },
+        "sizeMin": { "type": "integer", "minimum": 6, "maximum": 200, "description": "The smallest size in px the base text of a sized block may take (default 12)." },
+        "sizeMax": { "type": "integer", "minimum": 6, "maximum": 200, "description": "The largest size in px the base text of a sized block may take (default 96; never under sizeMin)." },
         "height": {
           "type": "object",
           "required": ["mode"],

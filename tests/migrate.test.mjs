@@ -368,3 +368,35 @@ test('the map block lifts 1 -> 2 by dropping the height setting', () => {
   assert.deepEqual(lifted.props, { location: 'Oslo', zoom: 12 });
   assert.equal('height' in mapBlock.defaults(), false);
 });
+
+/* 5 -> 6 (ADR-0025 decision 6): the calendar's own size becomes the block's. */
+test('page v5 -> v6: a calendar scale moves to the block-level size inside its bounds, and a calendar without one gets no field', () => {
+  const page = {
+    schemaVersion: 5,
+    meta: { id: 'hjem', title: 'Hjem' },
+    sections: [{
+      id: 'sec-1',
+      version: 1,
+      blocks: [
+        { id: 'small', type: 'calendar', version: 1, props: { sources: [], scale: 0.7 }, frames: { desktop: { x: 10, y: 10, w: 40, h: 300 } } },
+        { id: 'wild', type: 'calendar', version: 1, props: { sources: [], scale: 9 }, frames: { desktop: { x: 10, y: 10, w: 40, h: 300 } } },
+        { id: 'one', type: 'calendar', version: 1, props: { sources: [], scale: 1 }, frames: { desktop: { x: 10, y: 10, w: 40, h: 300 } } },
+        { id: 'plain', type: 'calendar', version: 1, props: { sources: [] }, frames: { desktop: { x: 10, y: 10, w: 40, h: 300 } } },
+        { id: 'text', type: 'text', version: 1, props: { scale: 0.5 }, frames: { desktop: { x: 10, y: 10, w: 40, h: 100 } } },
+      ],
+    }],
+  };
+  const lifted = liftPageFile(page, {});
+  assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
+  const [small, wild, one, plain, text] = lifted.sections[0].blocks;
+  assert.equal(small.size, 0.7);
+  assert.equal('scale' in small.props, false);
+  assert.equal(wild.size, 2);
+  assert.equal('size' in one, false);
+  assert.equal('scale' in one.props, false);
+  assert.equal('size' in plain, false);
+  // Another block's props are its own: the step reads the calendar only.
+  assert.equal(text.props.scale, 0.5);
+  assert.equal('size' in text, false);
+  assert.equal(page.sections[0].blocks[0].props.scale, 0.7);
+});

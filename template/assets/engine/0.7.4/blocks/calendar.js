@@ -1645,9 +1645,6 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   // The text on the calendar's accent follows the accent the owner picked.
   const accentInk = props.colors?.accent ? inkOn(props.colors.accent) : null;
   if (accentInk) host.style.setProperty('--urd-cal-accent-text', accentInk);
-  // The calendar's size: the whole design, text included, drawn smaller or larger (the Style tab's size).
-  const scale = cd.calScale(props);
-  if (scale !== 1) host.style.setProperty('--urd-cal-zoom', String(scale));
   const stripe = cd.calStripe(design, props.stripe);
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);

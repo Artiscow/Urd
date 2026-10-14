@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "meta": {
     "id": "hjem",
     "title": "Hjem",
@@ -116,9 +116,9 @@
             "showSubscribe": false,
             "design": "apNow",
             "nextCount": 3,
-            "laterCount": 3,
-            "scale": 0.7
+            "laterCount": 3
           },
+          "size": 0.7,
           "animation": null,
           "frames": {
             "desktop": {

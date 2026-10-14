@@ -151,7 +151,7 @@ So a page-layout pattern becomes a section preset of placed blocks on the deskto
 - **Examples.** Everywhere. Squarespace adds background image animations ([Applet Studio](https://www.applet.studio/blog/new-squarespace-features), secondary).
 - **Build.** The hero image loads eager with `fetchpriority="high"` and with its `width` and `height`. A scrim sits under the text.
 - **Cost.**
-  - The hero is usually the page's Largest Contentful Paint. Horizon, Squarespace, WordPress and Astro load it eager with `fetchpriority="high"` (measured). Urd lazy-loads every image, the hero too, with no `width` or `height` (measured on urdweb.pages.dev). The fix belongs to responsive pictures in v0.8 ([CODE.md](CODE.md)).
+  - The hero is usually the page's Largest Contentful Paint. Horizon, Squarespace, WordPress and Astro load it eager with `fetchpriority="high"` (measured). Urd lazy-loads every image, the hero too, with no `width` or `height` (measured on urdweb.pages.dev). The eager first image is taken in 0.7.0, and `width` and `height` recorded at upload belong to responsive pictures in v0.8 (T44 and T45 in [CODE.md](CODE.md)).
   - Text on a photograph must still meet 4.5:1 (WCAG 1.4.3), which is what the scrim is for.
 - **Lasting or fad.** Lasting.
 - **Urd today.** The hero-image and hero-photos presets. Background layers stack, so a colour layer over the image layer is the scrim.

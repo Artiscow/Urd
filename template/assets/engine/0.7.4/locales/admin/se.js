@@ -1342,7 +1342,6 @@ export default {
     'calendar.programHref': 'Oppa prográmma čujuhus',
     'calendar.showOpen': 'Čájet «Rabas buohkaide»',
     'calendar.section.options': 'Hábmema heivehusat',
-    'calendar.scale': 'Sturrodat',
     'calendar.opt.panelSide': 'Panela sadji',
     'calendar.opt.panelSide.right': 'Olgeš',
     'calendar.opt.panelSide.left': 'Gurut',

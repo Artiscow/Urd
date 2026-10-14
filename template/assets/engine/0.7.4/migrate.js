@@ -50,10 +50,10 @@ export function lift(data, def) {
   return { ok: true, version, props };
 }
 
-import { fitMoves } from './push-model.js';
+import { fitMoves, blockSize } from './push-model.js';
 
 /** Current version of the page file format (content/pages/*.json). */
-export const PAGE_SCHEMA_VERSION = 5;
+export const PAGE_SCHEMA_VERSION = 6;
 
 /**
  * The row height of the mobile row grid (ADR-0019), in px. A model
@@ -278,6 +278,19 @@ const pageMigrations = {
   // 4 -> 5 (ADR-0025): the map's height setting moves into the frame.
   4: (page) => {
     for (const section of page.sections ?? []) liftMapHeights(section);
+    return page;
+  },
+  // 5 -> 6 (ADR-0025 decision 6): the calendar's own size (props.scale)
+  // becomes the block-level size every block type takes.
+  5: (page) => {
+    for (const section of page.sections ?? []) {
+      for (const block of section.blocks ?? []) {
+        if (block.type !== 'calendar' || !block.props || !('scale' in block.props)) continue;
+        const size = blockSize({ type: 'calendar', size: block.props.scale });
+        delete block.props.scale;
+        if (size !== 1) block.size = size;
+      }
+    }
     return page;
   },
 };

@@ -1173,7 +1173,6 @@ textarea.urd-form-input {
   display: grid;
   /* One column as wide as the block: no child can widen the calendar past it, whatever it holds. */
   grid-template-columns: minmax(0, 1fr);
-  zoom: var(--urd-cal-zoom, 1);
   gap: 12px;
   width: 100%;
 }

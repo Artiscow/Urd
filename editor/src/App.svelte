@@ -126,12 +126,12 @@
   import { FONT_STACKS } from '$engine/fonts.js';
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
-  import { FOLLOWS_CONTENT, STRETCHES, followsContent, fitMoves } from '$engine/push-model.js';
+  import { FOLLOWS_CONTENT, STRETCHES, followsContent, fitMoves, SIZE, SIZE_BY_FRAME, SIZE_TEXT, blockSize, sizeBounds } from '$engine/push-model.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
   import { meetingHostList } from '$engine/meeting-links.js';
-  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, calDesign, calView, calStripe, calHasTextOverrides, calResetTexts, calDesignGroups, calOptionDefs, calOptionShown, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
+  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, calDesign, calView, calStripe, calHasTextOverrides, calResetTexts, calDesignGroups, calOptionDefs, calOptionShown, calOptions } from '$engine/calendar-designs.js';
 
   /** The background layer types in the order they are offered in the panel. */
   const BG_TYPES = [
@@ -1015,8 +1015,11 @@
       type: block.type,
       decor: Boolean(block.decor),
       hideMobile: Boolean(block.hideMobile),
-      fit: block.fit === 'shrink' ? 'shrink' : undefined,
+      fit: block.fit === 'shrink' || block.fit === 'both' ? block.fit : undefined,
       fitMin: typeof block.fitMin === 'number' ? block.fitMin : undefined,
+      size: typeof block.size === 'number' ? block.size : undefined,
+      sizeMin: typeof block.sizeMin === 'number' ? block.sizeMin : undefined,
+      sizeMax: typeof block.sizeMax === 'number' ? block.sizeMax : undefined,
       height: block.height ? JSON.parse(JSON.stringify(block.height)) : null,
       props: JSON.parse(JSON.stringify(block.props)),
       frame: { ...block.frames.desktop },
@@ -1103,8 +1106,8 @@
       items.push({ id: 'subscribe', label: ta('quick.subscribe'), kind: 'choice', value: b.props.showSubscribe !== false ? 'on' : 'off', options: [['on', ta('common.on')], ['off', ta('common.off')]], set: (v) => setBlockProp('showSubscribe', v === 'on') });
     }
     const byWidth = FIT_BY_WIDTH.has(b.type);
-    items.push({ id: 'fit', label: ta('quick.fit'), kind: 'choice', value: b.fit === 'shrink' ? 'shrink' : 'wrap',
-      options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]] : [['wrap', ta('quick.fit.wrap')], ['shrink', ta('quick.fit.shrink')]],
+    items.push({ id: 'fit', label: ta('quick.fit'), kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
+      options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]] : [['wrap', ta('quick.fit.wrap')], ['shrink', ta('quick.fit.shrink')], ['both', ta('quick.fit.both')]],
       set: (v) => setBlockFit(v) });
     items.push({ id: 'phone', label: ta('quick.phone'), kind: 'choice', value: b.hideMobile ? 'off' : 'on', options: [['on', ta('quick.phone.show')], ['off', ta('quick.phone.hide')]], set: (v) => setBlockHideMobile(v === 'off') });
     return items;
@@ -1126,7 +1129,7 @@
     const on = [!def.ownFilter && p.showCategories === true, p.showSubscribe !== false, p.showSignup === true, p.showSearch === true, p.showEarlier === true].filter(Boolean).length;
     const buttonsChanged = on > 0 || p.showOpen === false || p.showAdd === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
-    const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length + (calScale(p) !== 1 ? 1 : 0);
+    const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length;
     const colorCount = def.slots.filter((slot) => p.colors?.[slot.key]).length;
     const fieldCount = Object.keys(p.fieldStyle ?? {}).length;
     return {
@@ -1140,7 +1143,7 @@
       notice: p.notice?.show === true ? ta('common.on') : ta('common.off'),
       noticeReset: p.notice ? reset('cal-notice', { notice: undefined }) : null,
       opts: optCount ? ta('menu.changed', { n: optCount }) : ta('menu.standard'),
-      optsReset: optCount ? reset('cal-opts', { options: undefined, scale: undefined }) : null,
+      optsReset: optCount ? reset('cal-opts', { options: undefined }) : null,
       colors: colorCount ? ta('menu.changedOf', { n: colorCount, m: def.slots.length }) : ta('menu.standard'),
       colorsReset: colorCount ? reset('cal-colors', { colors: undefined }) : null,
       stripe: calStripe(def, p.stripe).show ? ta('common.on') : ta('common.off'),
@@ -1185,6 +1188,7 @@
   function menuFitValue() {
     const byWidth = FIT_BY_WIDTH.has(selectedBlock.type);
     if (selectedBlock.fit === 'shrink') return byWidth ? ta('opt.fit.floor') : ta('opt.fit.shrink');
+    if (selectedBlock.fit === 'both') return ta('opt.fit.both');
     return byWidth ? ta('opt.fit.fluid') : ta('opt.fit.wrap');
   }
   function menuMotionValue() {
@@ -1379,8 +1383,8 @@
   const FIT_BY_WIDTH = new Set(['image', 'video', 'shape', 'icon']);
   function setBlockFit(mode) {
     mutateBlock(`edit:${selectedBlock.blockId}:fit`, (b) => {
-      if (mode === 'shrink') {
-        b.fit = 'shrink';
+      if (mode === 'shrink' || mode === 'both') {
+        b.fit = mode;
         b.fitMin ??= 0.6;
       } else {
         delete b.fit;
@@ -1390,6 +1394,47 @@
   }
   function setBlockFitMin(value) {
     mutateBlock(`edit:${selectedBlock.blockId}:fitMin`, (b) => { b.fitMin = value; });
+  }
+
+  /* The block's size (ADR-0025 decision 6): the whole block, text included,
+     drawn smaller or larger, with the bounds its base text never passes.
+     The default is stored as nothing, and a block back at full size drops
+     its bounds with it. The frame follows the size, so the content keeps
+     its lines: the width by the ratio, capped at the canvas edge, and the
+     height the same way where the block owns it, with the blocks below
+     moved as for a fit; a block whose height follows its content is fitted
+     by the preview after the edit (fitBlockSoon). */
+  function setBlockSize(value) {
+    mutateBlock(`edit:${selectedBlock.blockId}:size`, (b, section) => {
+      const before = blockSize(b);
+      if (value === 1) {
+        delete b.size;
+        delete b.sizeMin;
+        delete b.sizeMax;
+      } else {
+        b.size = value;
+      }
+      const ratio = blockSize(b) / before;
+      const f = b.frames?.desktop;
+      if (ratio === 1 || !f) return;
+      const frame = { ...f, w: Math.min(Math.round(f.w * ratio * 100) / 100, Math.round((100 - f.x) * 100) / 100) };
+      if (!followsContent(b)) {
+        frame.h = Math.max(1, Math.round(f.h * ratio));
+        for (const [id, y] of fitMoves(section.blocks, b.id, frame.h)) {
+          const other = section.blocks.find((x) => x.id === id);
+          if (other?.frames?.desktop) other.frames.desktop = { ...other.frames.desktop, y };
+        }
+      }
+      b.frames.desktop = frame;
+    });
+  }
+  function setBlockSizeBound(name, value) {
+    const fallback = name === 'sizeMin' ? SIZE_TEXT.minDefault : SIZE_TEXT.maxDefault;
+    mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => {
+      const n = Math.round(Number(value));
+      if (Number.isFinite(n) && n > 0 && n !== fallback) b[name] = Math.min(SIZE_TEXT.max, Math.max(SIZE_TEXT.min, n));
+      else delete b[name];
+    });
   }
 
   /* The height of a block whose height follows its content by default
@@ -1478,6 +1523,23 @@
     if (!Number.isFinite(value)) return;
     mutateBlock(`edit:frame-${selectedBlock.blockId}:${field}`, (b) => {
       b.frames.desktop = { ...b.frames.desktop, [field]: value };
+    });
+  }
+
+  /* A shape's size in px at the design width (ADR-0018): the frame's width
+     is stored in percent of the content surface, so px and percent convert
+     through the content width. A line takes the width alone; a shape's
+     height follows its own ratio. */
+  function shapePx(pct) {
+    return Math.round((pct / 100) * layoutWidth);
+  }
+  function setShapeSizePx(px, keepRatio) {
+    if (!Number.isFinite(px) || px < 4) return;
+    const { x, w, h } = selectedBlock.frame;
+    const nw = Math.max(0.5, Math.min(Math.round((px / layoutWidth) * 200) / 2, Math.round((100 - x) * 2) / 2));
+    const nh = keepRatio ? Math.max(1, Math.round(h * (nw / w))) : h;
+    mutateBlock(`edit:frame-${selectedBlock.blockId}:size`, (b) => {
+      b.frames.desktop = { ...b.frames.desktop, w: nw, h: nh };
     });
   }
 
@@ -10530,13 +10592,6 @@
       </button>
       {@const cm = calMenu()}
       {#snippet calOpts()}
-      <!-- The calendar's size: the whole design, text included, drawn smaller or larger -->
-      <div class="ctl-row" title={ta('tip.calendar.scale')}>
-        <span class="mini-label">{ta('calendar.scale')}</span>
-        <input type="range" min={CAL_SCALE.min * 100} max={CAL_SCALE.max * 100} step="5" value={Math.round(calScale(selectedBlock.props) * 100)}
-          aria-label={ta('calendar.scale')} onchange={(e) => setBlockProp('scale', e.target.valueAsNumber === 100 ? undefined : e.target.valueAsNumber / 100)} />
-        <span class="gridmenu-value">{Math.round(calScale(selectedBlock.props) * 100)} %</span>
-      </div>
       <!-- The design's own settings, directly under the design they belong to -->
       {#if calOptionDefs(selectedBlock.props.design).length}
         {@const calOpt = calOptions(selectedBlock.props)}
@@ -11041,11 +11096,16 @@
         <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
           onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
       {#if selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
-        <!-- A line's length is its frame width, in percent of the content
-             surface, so it can be set without reaching the resize corner. -->
-        <label>{ta('lbl.length')}
-          <input type="number" min="1" max={Math.max(1, Math.round(100 - selectedBlock.frame.x))} step="0.5" value={selectedBlock.frame.w}
-            onchange={(e) => setBlockFrame('w', Math.max(1, Math.min(Number(e.target.value), 100 - selectedBlock.frame.x)))} /></label>
+        <!-- A line's length is its frame width, shown in px at the design
+             width, so it can be set without reaching the resize corner. -->
+        <label title={ta('tip.shapeSize')}>{ta('lbl.length')}
+          <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
+            onchange={(e) => setShapeSizePx(Number(e.target.value), false)} /></label>
+      {:else}
+        <!-- A shape's size is its frame, shown in px at the design width; the height follows the shape's own ratio -->
+        <label title={ta('tip.shapeSize')}>{ta('lbl.sizePx')}
+          <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
+            onchange={(e) => setShapeSizePx(Number(e.target.value), true)} /></label>
       {/if}
       {#if selectedBlock.props.kind === 'line'}
         <label title={ta('tip.shape.label')}>{ta('lbl.shapeLabel')}
@@ -11063,15 +11123,33 @@
   {/snippet}
 
   <!-- Placement: how the block sits on the page and behaves there, each part a group that shows its value while closed -->
+  {#snippet menuSize()}
+    <!-- The block's size (ADR-0025 decision 6): the whole block, text included, drawn smaller or larger; no drag changes it -->
+    <div class="ctl-row" title={ta('tip.scale')}>
+      <span class="mini-label">{ta('lbl.scale')}</span>
+      <input type="range" min={SIZE.min * 100} max={SIZE.max * 100} step="5" value={Math.round(blockSize(selectedBlock) * 100)}
+        aria-label={ta('lbl.scale')} oninput={(e) => setBlockSize(e.target.valueAsNumber / 100)} />
+      <span class="gridmenu-value">{Math.round(blockSize(selectedBlock) * 100)} %</span>
+    </div>
+    {#if blockSize(selectedBlock) !== 1}
+      <!-- The bounds the base text never passes, shown only while a size is set, side by side so the menu keeps its height -->
+      <div class="frame-grid">
+        <label title={ta('tip.scaleMin')}>{ta('lbl.scaleMin')}<input type="number" min={SIZE_TEXT.min} max={SIZE_TEXT.max} value={sizeBounds(selectedBlock).min}
+          onchange={(e) => setBlockSizeBound('sizeMin', e.target.value)} /></label>
+        <label title={ta('tip.scaleMax')}>{ta('lbl.scaleMax')}<input type="number" min={SIZE_TEXT.min} max={SIZE_TEXT.max} value={sizeBounds(selectedBlock).max}
+          onchange={(e) => setBlockSizeBound('sizeMax', e.target.value)} /></label>
+      </div>
+    {/if}
+  {/snippet}
   {#snippet menuFit()}
-    <!-- Shrink on narrower screens: block-level on every block (ADR-0024); the content zooms to fit, or the frame keeps a floor -->
+    <!-- Below the design width: block-level on every block (ADR-0024); the content wraps, shrinks in proportion, or shrinks as little as it can and wraps, or the frame keeps a floor -->
     <label title={ta('tip.fit')}>{ta('lbl.fit')}
-      <Dropdown value={selectedBlock.fit === 'shrink' ? 'shrink' : 'wrap'}
+      <Dropdown value={selectedBlock.fit ?? 'wrap'}
         options={FIT_BY_WIDTH.has(selectedBlock.type)
           ? [['wrap', ta('opt.fit.fluid')], ['shrink', ta('opt.fit.floor')]]
-          : [['wrap', ta('opt.fit.wrap')], ['shrink', ta('opt.fit.shrink')]]}
+          : [['wrap', ta('opt.fit.wrap')], ['shrink', ta('opt.fit.shrink')], ['both', ta('opt.fit.both')]]}
         onchange={(v) => setBlockFit(v)} /></label>
-    {#if selectedBlock.fit === 'shrink'}
+    {#if selectedBlock.fit}
       <div class="ctl-row" title={ta('tip.fitMin')}>
         <span class="mini-label">{ta('lbl.fitMin')}</span>
         <input type="range" min="1" max="100" step="1"
@@ -11185,6 +11263,9 @@
               ...(canStretch() || align === 'stretch' ? [['stretch', ta('opt.heightAlign.stretch')]] : [])]}
             onchange={(v) => setBlockHeightAlign(v)} /></label>
       {/if}
+    {/if}
+    {#if !SIZE_BY_FRAME.has(selectedBlock.type)}
+      {@render menuSize()}
     {/if}
     {@render menuFit()}
     <label class="gridmenu-snap" title={ta('tip.hideMobile')}>

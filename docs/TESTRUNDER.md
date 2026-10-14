@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.21.5): «Size» for every block and the three fit choices
+
+- [ ] A text block, a FAQ and a collection show «Size» (40 to 200 %) in the element menu's Placement area, right above «On narrower screens»; an image, a video, a shape, an icon and a map show none
+- [ ] The slider at 150 % and at 70 % on a text block: the box and the text scale together with the same line breaks as at 100 %, the blocks below move down and nothing overlaps; on a FAQ the frame is fitted to the scaled content; the menu keeps its height when the two text fields appear
+- [ ] «Smallest text» 16 on a text block at 40 %: the text stops at 16 px while the box and the spacing keep shrinking; «Largest text» 24 at 200 %: the text stops at 24 px while the rest grows
+- [ ] A drag of the outline (width and height) on a block at 150 % leaves the slider at 150 %; the slider dragged back and forth undoes as one step with Ctrl+Z; back at 100 % the two text fields disappear
+- [ ] The home page's calendar, stored at 0.7 before the change, looks as before, shows 70 % in Placement and has no size left in the Style tab
+- [ ] On the published page, on the desktop and on a phone, a sized block is the size the preview showed
+- [ ] On the published page in a window narrower than the content width: a text block set to «Shrink the content» gets smaller with the same line breaks all the way down to its smallest scale; «Shrink and wrap the content» gets smaller and wraps; «Wrap the content» keeps its text size and wraps; a block at 150 % with shrink shrinks from 150 % down, never jumping to 100 % first, and no block flickers between wrapped and unwrapped
+- [ ] A square shape with «Size px» set to 300 takes 300 px of width at the content width and keeps its ratio; a line with «Length» 500 takes 500 px; the tooltips on «Size» and «On narrower screens» read as plain words
+
 ### Test batch (0.7.0.45): the bug round
 
 - [ ] On the deployed test site: a video background layer, an audio block and a video block with an unpublished file (added in the editor, not yet published) play in the preview (this replaces the expectation in batch 0.7.13.12 that they are blocked until published); after the next release, a site updated from the template gets the `media-src` line as a «change by hand» note

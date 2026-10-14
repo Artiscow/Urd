@@ -1995,8 +1995,6 @@ export default {
     'calendar.showOpen': 'Visa «Öppet för alla»',
     'tip.calendar.showOpen': 'Texten på biljetter utan anmälan. Orden skrivs om genom att klicka på dem i förhandsvisningen',
     'calendar.section.options': 'Designens inställningar',
-    'calendar.scale': 'Storlek',
-    'tip.calendar.scale': 'Hela kalendern, även texten, ritad mindre eller större. Att dra i konturen ändrar bara rutan, inte den här',
     'calendar.opt.panelSide': 'Panelens sida',
     'calendar.opt.panelSide.right': 'Höger',
     'calendar.opt.panelSide.left': 'Vänster',

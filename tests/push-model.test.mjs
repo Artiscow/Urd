@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, followsContent, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD } = await engineImport('push-model.js');
+const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, followsContent, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, blockSize, sizeBounds } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -68,6 +68,27 @@ test('clampFitMin: a share of the design size between 0.01 and 1, default 0.6', 
   assert.equal(clampFitMin(3), 1);
   assert.equal(clampFitMin(undefined), 0.6);
   assert.equal(clampFitMin('x'), 0.6);
+});
+
+test('blockSize: the stored size inside its bounds, 1 for anything else and for the frame-sized types', () => {
+  assert.deepEqual([...SIZE_BY_FRAME].sort(), ['icon', 'image', 'map', 'shape', 'video']);
+  assert.equal(blockSize({ type: 'text' }), 1);
+  assert.equal(blockSize({ type: 'text', size: 0.75 }), 0.75);
+  assert.equal(blockSize({ type: 'calendar', size: 0.1 }), SIZE.min);
+  assert.equal(blockSize({ type: 'calendar', size: 9 }), SIZE.max);
+  assert.equal(blockSize({ type: 'text', size: 'big' }), 1);
+  assert.equal(blockSize({ type: 'text', size: -1 }), 1);
+  assert.equal(blockSize({ type: 'image', size: 1.5 }), 1);
+  assert.equal(blockSize(undefined), 1);
+});
+
+test('sizeBounds: the text bounds in px with their defaults, inside SIZE_TEXT, the largest never under the smallest', () => {
+  assert.deepEqual(sizeBounds({}), { min: SIZE_TEXT.minDefault, max: SIZE_TEXT.maxDefault });
+  assert.deepEqual(sizeBounds({ sizeMin: 14, sizeMax: 40 }), { min: 14, max: 40 });
+  assert.deepEqual(sizeBounds({ sizeMin: 2, sizeMax: 900 }), { min: SIZE_TEXT.min, max: SIZE_TEXT.max });
+  assert.deepEqual(sizeBounds({ sizeMin: 50, sizeMax: 20 }), { min: 50, max: 50 });
+  assert.deepEqual(sizeBounds({ sizeMin: 'x', sizeMax: null }), { min: 12, max: 96 });
+  assert.deepEqual(sizeBounds({ sizeMin: 13.6 }), { min: 14, max: 96 });
 });
 
 test('fitFloorPx: the width-floor types get their share of the design width times the floor, everything else 0', () => {

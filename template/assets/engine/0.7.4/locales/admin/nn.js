@@ -1554,8 +1554,6 @@ export default {
     'calendar.showOpen': 'Vis «Ope for alle»',
     'tip.calendar.showOpen': 'Teksten på billettar utan påmelding. Orda blir skrivne om ved å klikke på dei i førehandsvisinga',
     'calendar.section.options': 'Innstillingane til designet',
-    'calendar.scale': 'Storleik',
-    'tip.calendar.scale': 'Heile kalenderen, også teksten, teikna mindre eller større. Å dra i omrisset endrar berre boksen, ikkje denne',
     'calendar.opt.panelSide': 'Sida til panelet',
     'calendar.opt.panelSide.right': 'Høgre',
     'calendar.opt.panelSide.left': 'Venstre',

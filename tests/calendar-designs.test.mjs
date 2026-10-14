@@ -10,7 +10,7 @@ import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
-  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, CAL_SCALE, calScale, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
+  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
   CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign, CAL_FAMILIES, calDesignFamilies,
 } = await engineImport('calendar-designs.js');
@@ -309,15 +309,6 @@ test('the option labels are in the three core admin dictionaries', async () => {
       }
     }
   }
-});
-
-test('calScale: the stored size inside its bounds, 1 for anything else', () => {
-  assert.equal(calScale({}), 1);
-  assert.equal(calScale({ scale: 0.75 }), 0.75);
-  assert.equal(calScale({ scale: 0.1 }), CAL_SCALE.min);
-  assert.equal(calScale({ scale: 9 }), CAL_SCALE.max);
-  assert.equal(calScale({ scale: 'big' }), 1);
-  assert.equal(calScale({ scale: -1 }), 1);
 });
 
 test('every design belongs to a colour set, and base.css defines every set', () => {

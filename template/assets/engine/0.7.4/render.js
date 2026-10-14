@@ -14,7 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD } from './push-model.js';
+import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, blockSize, sizeBounds } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -262,36 +262,45 @@ export function updateFrames(host, frames) {
 }
 
 /**
- * Shrink instead of wrap (ADR-0024, block.fit): the block's content is
- * zoomed only as much as its frame needs, whatever the block type. The
- * largest zoom from 1 down to the block's floor (block.fitMin, a share of
- * the design size) at which the content fits the design height is found
- * by bisection; content that fits at full size is left alone, and content
- * that does not fit at the floor keeps the floor, wraps, and is pushed like
- * any other. A block without the field, or of a type that shrinks by its
- * frame instead, gets its zoom cleared, so a switch back needs no
- * re-render. Measured with the box at the design
- * height and the content's min-height off, since the content otherwise
- * fills the box.
+ * The content's zoom on the desktop: the block's size (ADR-0025 decision 6,
+ * block.size) times its fit below the design width (ADR-0024, block.fit).
+ * «Shrink» follows the canvas in proportion: the zoom is the canvas width
+ * over the design width, down to the block's floor (block.fitMin, a share
+ * of the design size), so the content keeps its lines and nothing is
+ * measured; under the floor the box is narrower than the content and it
+ * wraps like any other. «Both» zooms only as much as the frame needs and
+ * lets the content wrap: the largest zoom from 1 down to the floor at which
+ * the content fits the design height is found by bisection; content that
+ * fits at full size is left alone, and content that does not fit at the
+ * floor keeps the floor, wraps, and is pushed like any other. A block
+ * without the field (wrap), or of a type that shrinks by its frame instead,
+ * is drawn at its size alone, so a switch back needs no re-render. The
+ * bisection measures with the box at the design height and the content's
+ * min-height off, since the content otherwise fills the box.
  * @param {HTMLElement} el The block element
  * @param {number} designH The frame's design height in px
  * @param {object} block The block data
  */
 function fitContent(el, designH, block) {
-  const child = [...el.children].find((c) => !c.matches(BLOCK_CHROME));
+  const child = contentChild(el);
   if (!child) return;
+  const size = blockSize(block);
   // The width-floor types (image, video, shape, icon) shrink by their frame
   // (fitFloorPx), never by a zoom of the content.
-  if (block.fit !== 'shrink' || FIT_BY_WIDTH.has(block.type)) {
-    if (child.style.zoom) child.style.zoom = '';
+  if ((block.fit !== 'shrink' && block.fit !== 'both') || FIT_BY_WIDTH.has(block.type)) {
+    applyZoom(child, block, size);
     return;
   }
   const floor = clampFitMin(block.fitMin);
+  if (block.fit === 'shrink') {
+    applyZoom(child, block, Math.max(floor, canvasRatio(el)) * size);
+    return;
+  }
   const minHeight = child.style.minHeight;
   child.style.minHeight = '0';
   const fitsAt = (z) => {
-    child.style.zoom = z === 1 ? '' : String(z);
-    return child.scrollHeight * z <= designH + 1;
+    applyZoom(child, block, z * size);
+    return child.scrollHeight * z * size <= designH + 1;
   };
   if (!fitsAt(1) && fitsAt(floor)) {
     let lo = floor;
@@ -304,6 +313,56 @@ function fitContent(el, designH, block) {
     fitsAt(Math.round(lo * 1000) / 1000);
   }
   child.style.minHeight = minHeight;
+}
+
+/**
+ * How much narrower than its design width the block's canvas is: 1 at the
+ * design width and above, and where nothing has a design size (a
+ * full-width site or section, renderSection).
+ * @param {HTMLElement} el The block element
+ * @returns {number}
+ */
+function canvasRatio(el) {
+  const canvas = el.closest('.urd-canvas');
+  const designW = canvas?._urdDesignW;
+  if (!canvas || !(designW > 0)) return 1;
+  return Math.min(1, canvas.clientWidth / designW);
+}
+
+/** The block's content: its first child that is not editing chrome. */
+function contentChild(el) {
+  return [...el.children].find((c) => !c.matches(BLOCK_CHROME));
+}
+
+/**
+ * Draws the content at a zoom and keeps the base text of a sized block
+ * inside its bounds (block.sizeMin, block.sizeMax): the content's own base
+ * size (a text block's size, else the inherited one as 1em) is kept in
+ * --urd-font, and the font size becomes a clamp around it in the content's
+ * own px, so the text a visitor sees stops at the bounds while the rest
+ * keeps scaling. Text sized from the base in em follows it; text in px or
+ * rem scales with the zoom alone. The bounds hold against the size alone:
+ * the shrink below the design width scales the text with everything else,
+ * so the content keeps its lines whatever the shrink and the fit's measure
+ * is monotone. A block at size 1 gets its own base back.
+ * @param {HTMLElement} child The content element
+ * @param {object} block The block data
+ * @param {number} zoom The size times the shrink
+ */
+function applyZoom(child, block, zoom) {
+  const z = Math.round(zoom * 1000) / 1000;
+  child.style.zoom = z === 1 ? '' : String(z);
+  const own = child.style.fontSize;
+  if (own && !own.startsWith('clamp(')) child.style.setProperty('--urd-font', own);
+  const size = blockSize(block);
+  if (size === 1) {
+    if (own.startsWith('clamp(')) child.style.fontSize = child.style.getPropertyValue('--urd-font');
+    child.style.removeProperty('--urd-font');
+    return;
+  }
+  const { min, max } = sizeBounds(block);
+  const px = (n) => `${Math.round((n / size) * 100) / 100}px`;
+  child.style.fontSize = `clamp(${px(min)}, var(--urd-font, 1em), ${px(max)})`;
 }
 
 /** The editing chrome inside a block never counts as content, and neither
@@ -771,6 +830,13 @@ export function renderSection(section, site, host, opts = {}) {
   // dividers), a CSS length gives this section a width of its own.
   const secWidth = section.size?.maxWidth;
   if (secWidth) canvas.style.setProperty('--urd-canvas-w', secWidth === 'full' ? '100%' : secWidth);
+  // The width the canvas has at the design width, for the proportional
+  // shrink (fitContent): the site's content width, or the section's own px
+  // width when that is narrower; none on a full-width site or section,
+  // where nothing has a design size.
+  const siteW = typeof site.layout?.contentWidth === 'number' ? site.layout.contentWidth : 0;
+  const secPx = typeof secWidth === 'string' && /^\d+(\.\d+)?px$/.test(secWidth) ? parseFloat(secWidth) : 0;
+  canvas._urdDesignW = secWidth === 'full' ? 0 : (secPx && siteW ? Math.min(secPx, siteW) : secPx || siteW);
   host.appendChild(canvas);
 
   if (viewport === 'mobile') {
@@ -809,6 +875,10 @@ export function renderSection(section, site, host, opts = {}) {
         el.dataset.stickyGroup = block.sticky.group ?? '';
       }
       renderBlock(Urd, el, block, ctx);
+      // The block's size applies on the phone too (ADR-0025 decision 6);
+      // the shrink does not, since the row grid wraps.
+      const sized = blockSize(block) !== 1 ? contentChild(el) : null;
+      if (sized) applyZoom(sized, block, blockSize(block));
       flow.appendChild(el);
     }
     canvas.appendChild(flow);
