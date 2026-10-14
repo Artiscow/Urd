@@ -26,8 +26,13 @@ export const RIBBON_SIZES = ['sm', 'md', 'lg', 'xl'];
  */
 export const RIBBON_MOTIONS = ['roll', 'sway', 'step', 'none'];
 
-/** How wide the band is: the content surface, or the whole page. */
-export const RIBBON_WIDTHS = ['content', 'page'];
+/**
+ * How far the band reaches: `canvas` the content surface (the default for a
+ * new band or gallery band), `page` the window's full width, and `content`
+ * the block's own box, which bands stored before 0.7.20.5 hold, so they keep
+ * their look.
+ */
+export const RIBBON_WIDTHS = ['canvas', 'page', 'content'];
 
 /**
  * What a stripe holds. The main stripe is never absent, so it has no `none`:
@@ -156,9 +161,24 @@ export function ribbonMotion(motion) {
   return RIBBON_MOTIONS.includes(motion) ? motion : 'roll';
 }
 
-/** The width, bound to the content surface unless the page is asked for. */
+/** The band's reach (RIBBON_WIDTHS); anything else, an absent value included, is the block's own box. */
 export function ribbonWidth(width) {
-  return width === 'page' ? 'page' : 'content';
+  return width === 'canvas' || width === 'page' ? width : 'content';
+}
+
+/**
+ * Where a band that reaches past its block is laid out, in px from the
+ * block's own left edge: across the content surface, or across the section,
+ * which spans the window. Null for the block's own box.
+ * @param {'canvas'|'page'|'content'} width From ribbonWidth
+ * @param {{sectionW: number, canvasW: number, canvasLeft: number, blockLeft: number}} m
+ *   The section's and the canvas's widths, the canvas's left edge in the section, and the block's in the canvas
+ * @returns {{width: number, offset: number}|null}
+ */
+export function bandReach(width, m) {
+  if (width === 'page') return { width: m.sectionW, offset: -(m.blockLeft + m.canvasLeft) };
+  if (width === 'canvas') return { width: m.canvasW, offset: -m.blockLeft };
+  return null;
 }
 
 /**

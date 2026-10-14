@@ -18,7 +18,7 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
+import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
@@ -3750,8 +3750,7 @@ function enhanceBlock(el, block, section, grid, host) {
       el.style.zIndex = '';
       el.classList.remove('urd-block-flow');
       el.classList.add('urd-block-pinned');
-      const def = window.Urd.blocks.get(block.type);
-      const autoGrow = block.type === 'text' || Boolean(def?.autoGrow);
+      const autoGrow = autoGrows(block, window.Urd.blocks.get(block.type));
       Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { autoGrow }));
 
       post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile' });

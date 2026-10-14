@@ -10,7 +10,7 @@
  */
 import { slugify } from './imageTools.js';
 import { groupDelta } from './selection.js';
-import { liftMobileFrame, liftContractTokens, liftMapHeights, liftCalendarScale } from './migrate.js';
+import { liftMobileFrame, liftContractTokens, liftMapHeights, liftCalendarScale, liftGalleryBands } from './migrate.js';
 
 /** Current version of the template file format (content/maler/*.json). */
 export const TEMPLATE_SCHEMA_VERSION = 1;
@@ -50,11 +50,13 @@ export function cloneSectionForInsert(section, makeId) {
   }
   // Templates saved before v3 carry the old Norwegian contract tokens
   // (ADR-0021); renamed here since payloads bypass the page lift. A map saved
-  // before page v5 carries its height as a setting, lifted into the frame, and
-  // a calendar saved before page v6 its own size, lifted to the block.
+  // before page v5 carries its height as a setting, lifted into the frame, a
+  // calendar saved before page v6 its own size, lifted to the block, and a
+  // gallery band saved before page v7 its height, lifted into the frame.
   liftContractTokens(out);
   liftMapHeights(out);
   liftCalendarScale(out);
+  liftGalleryBands(out);
   return out;
 }
 
@@ -75,6 +77,7 @@ export function clonePageForInsert(page, makeId, { id, title }) {
     for (const block of section.blocks ?? []) block.id = makeId('blk');
     liftMapHeights(section);
     liftCalendarScale(section);
+    liftGalleryBands(section);
   }
   return out;
 }
@@ -100,6 +103,7 @@ export function cloneBlocksForInsert(blocks, makeId, { anchor = null } = {}) {
   liftContractTokens(out);
   liftMapHeights({ blocks: out });
   liftCalendarScale({ blocks: out });
+  liftGalleryBands({ blocks: out });
   const frames = out.map((b) => b.frames.desktop);
   const minX = Math.min(...frames.map((f) => f.x));
   const minY = Math.min(...frames.map((f) => f.y));

@@ -22,8 +22,8 @@ import {
   stepIndex, canAutoplay, normalizeInterval, gridColumns, galleryView, GRID_VIEWS, mosaicRowHeight, mosaicWall, polaroidTilts,
 } from '../gallery-model.js';
 import { resolveColor, inkOn } from '../theme.js';
-import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll } from '../ribbon-model.js';
-import { syncTrackCopies } from './ribbon.js';
+import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll, ribbonWidth } from '../ribbon-model.js';
+import { syncTrackCopies, fitBandReach } from './ribbon.js';
 import { isSafeHref } from '../nav-model.js';
 // ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
@@ -233,7 +233,10 @@ function renderSlides(host, props, ctx, blockEl) {
 
 /**
  * The ribbon view: the tiles roll past in a band, one row or two running
- * against each other. The motion is the ribbon block's (ribbon-model.js and
+ * against each other. The band fills the block's box (ADR-0025 decision 2),
+ * the rows share its height, and a tile is as tall as its row with the image
+ * at its own aspect (base.css), so the owner sets the height by the frame.
+ * The motion is the ribbon block's (ribbon-model.js and
  * the .urd-ribbon rules in base.css): each row's track holds the tiles in two
  * periods, each as wide as the band needs (syncTrackCopies), and is
  * translated by half its width, so the loop has no seam. Still under reduced
@@ -243,7 +246,6 @@ function renderSlides(host, props, ctx, blockEl) {
 function renderRibbon(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-ribbon');
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
-  host.style.setProperty('--urd-ribbon-h', `${Math.min(400, Math.max(80, Number(props.bandHeight) || 160))}px`);
   const rows = ribbonRows(props.rows);
   // The editing chrome's hold is a CSS rule on the body (base.css), so Clean
   // view takes effect without a re-render.
@@ -290,6 +292,23 @@ function renderRibbon(host, props, ctx, blockEl) {
       ro.observe(band);
     }
   }
+  // The band's reach (the content surface, the window, or the block's own
+  // box) is laid out once the block is in the page, and again when the
+  // section changes width.
+  if (ribbonWidth(props.width) !== 'content') host.classList.add('urd-ribbon-wide');
+  requestAnimationFrame(() => {
+    const sectionEl = fitBandReach(host, blockEl, props.width);
+    if (sectionEl && typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(() => {
+        if (!host.isConnected) {
+          ro.disconnect();
+          return;
+        }
+        fitBandReach(host, blockEl, props.width);
+      });
+      ro.observe(sectionEl);
+    }
+  });
 }
 
 /**
@@ -353,11 +372,13 @@ const VIEWS = {
 
 export const galleryBlock = {
   version: 1,
-  autoGrow: true,
+  // The grid views grow with their pictures on the phone; the ribbon keeps
+  // the height of its frame there too, since the band fills the box.
+  autoGrow: (props) => galleryView(props?.view) !== 'ribbon',
   label: 'Gallery',
   labelKey: 'blocks.gallery',
   defaults: () => ({
-    images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5,
+    images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5, width: 'canvas',
   }),
   migrations: {},
   /**
@@ -365,7 +386,7 @@ export const galleryBlock = {
    * @param {{images: Array<{src: string, alt?: string, href?: string|null, style?: object}>,
    *          view: 'grid'|'carousel'|'slides'|'ribbon'|'mosaic'|'polaroid', columns: number, gap: number,
    *          speed?: number, direction?: 'left'|'right', pauseOnHover?: boolean,
-   *          rows?: number, bandHeight?: number, fade?: boolean,
+   *          rows?: number, fade?: boolean,
    *          rowHeight?: number, seed?: number, tilt?: number, frameColor?: string, captions?: boolean,
    *          radius: string|null, lightbox: boolean, interval: number}} props
    * @param {object} ctx

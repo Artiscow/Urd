@@ -26,7 +26,7 @@
 import { growSectionTo } from '../render.js';
 import {
   ribbonItems, ribbonDuration, ribbonStepDuration, ribbonPeriods, separatorMark, clampTilt, ribbonSize,
-  ribbonMotion, ribbonWidth, ribbonMoves, mainMode, stripeMode, stripePlace, clampThickness,
+  ribbonMotion, ribbonWidth, ribbonMoves, mainMode, stripeMode, stripePlace, clampThickness, bandReach,
 } from '../ribbon-model.js';
 import { resolveColor } from '../theme.js';
 // ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
@@ -86,6 +86,29 @@ function buildRun(mode, items, sep, editable) {
     if (sep.kind !== 'none') run.appendChild(sepNode(sep));
   });
   return run;
+}
+
+/**
+ * Lays a band out over its reach (ribbonWidth, bandReach): the content
+ * surface or the window's full width, measured from the section and the
+ * canvas, since vw would count the scrollbar too. The block's own box needs
+ * nothing. The ancestors are looked up when called, after the block is in
+ * the page.
+ * @param {HTMLElement} host The band's element inside the block
+ * @param {HTMLElement} el The block element
+ * @param {string} [width] The block's `width`
+ * @returns {HTMLElement|null} The section, to observe for a change of reach; null when nothing was laid out
+ */
+export function fitBandReach(host, el, width) {
+  const mode = ribbonWidth(width);
+  if (mode === 'content' || !el.isConnected) return null;
+  const sectionEl = el.closest('.urd-section');
+  const canvasEl = el.closest('.urd-canvas');
+  if (!sectionEl || !canvasEl) return null;
+  const reach = bandReach(mode, { sectionW: sectionEl.offsetWidth, canvasW: canvasEl.clientWidth, canvasLeft: canvasEl.offsetLeft, blockLeft: el.offsetLeft });
+  host.style.width = `${reach.width}px`;
+  host.style.marginLeft = `${reach.offset}px`;
+  return sectionEl;
 }
 
 /**
@@ -220,7 +243,7 @@ export const ribbonBlock = {
     items: [ta('seed.ribbonBlock.a'), ta('seed.ribbonBlock.b'), ta('seed.ribbonBlock.c')],
     sep: 'dot',
     motion: 'roll',
-    width: 'content',
+    width: 'canvas',
     main: 'text',
     above: 'none',
     below: 'none',
@@ -310,21 +333,11 @@ export const ribbonBlock = {
     add(below, opposed, ['urd-ribbon-thin', 'urd-ribbon-below'], false, props.belowColor);
     el.appendChild(host);
 
-    // Full page width: the canvas binds the content (ADR-0018), so a band that
-    // should reach the window's edges is measured out to the section's width
-    // instead of guessing with vw, which would count the scrollbar too. The
-    // ancestors are looked up in the frame below: render runs before the block
-    // is in the DOM.
-    const wide = ribbonWidth(props.width) === 'page';
+    // A band that reaches past its block (the content surface or the window)
+    // is laid out in the frame below: render runs before the block is in the DOM.
+    const wide = ribbonWidth(props.width) !== 'content';
     if (wide) host.classList.add('urd-ribbon-wide');
-    const fitWide = () => {
-      if (!wide || !el.isConnected) return;
-      const sectionEl = el.closest('.urd-section');
-      const canvasEl = el.closest('.urd-canvas');
-      if (!sectionEl || !canvasEl) return;
-      host.style.width = `${sectionEl.offsetWidth}px`;
-      host.style.marginLeft = `${-(el.offsetLeft + canvasEl.offsetLeft)}px`;
-    };
+    const fitWide = () => fitBandReach(host, el, props.width);
 
     if (editable && main === 'text') {
       // Click-and-type on each word in the main stripe; the list and its order

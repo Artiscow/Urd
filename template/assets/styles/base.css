@@ -9853,7 +9853,8 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   animation: none;
 }
 
-/* The full page width (the content surface is left behind): the block measures
+/* A band that reaches past its block, across the content surface or the
+   window (fitBandReach in blocks/ribbon.js): the block measures the canvas or
    the section and sets the width and the offset, since vw would count the
    scrollbar as well. */
 .urd-ribbon-wide {
@@ -9937,15 +9938,24 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
 }
 
 /* The gallery's ribbon view: the same motion with the tiles as the items. The
-   band's height is the tile height, and the images keep their aspect. */
+   band fills the block's box (ADR-0025 decision 2) and its rows share the
+   height, so a drag of the frame sets it. The height reaches the tiles
+   through the stripe, the track and the run, since a tile takes its width
+   from its height and the image keeps its aspect. Size containment keeps the
+   images' own height out of the box's, so a box with no height of its own (a
+   row track on the phone) is never stretched by a large picture. */
 .urd-gallery-ribbon {
   display: grid;
+  grid-auto-rows: minmax(0, 1fr);
   gap: var(--urd-gallery-gap, 12px);
   width: 100%;
+  contain: size;
 }
 
-.urd-gallery-ribbon .urd-ribbon-stripe {
-  height: var(--urd-ribbon-h, 160px);
+.urd-gallery-ribbon .urd-ribbon-stripe,
+.urd-gallery-ribbon .urd-ribbon-track,
+.urd-gallery-ribbon .urd-ribbon-run {
+  height: 100%;
 }
 
 .urd-gallery-ribbon .urd-ribbon-run {
@@ -9955,7 +9965,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
 
 .urd-gallery-ribbon .urd-gallery-tile {
   flex: 0 0 auto;
-  height: var(--urd-ribbon-h, 160px);
+  height: 100%;
   width: auto;
 }
 

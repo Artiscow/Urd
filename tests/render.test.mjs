@@ -5,7 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { frameToCss, stackOrder, mobilePlacementToCss, reorderMobileKey, EDITOR_ONLY } = await engineImport('render.js');
+const { frameToCss, stackOrder, mobilePlacementToCss, autoGrows, reorderMobileKey, EDITOR_ONLY } = await engineImport('render.js');
+const { galleryBlock } = await engineImport('blocks/gallery.js');
 const { MOBILE_ROW, MOBILE_GAP } = await engineImport('migrate.js');
 
 test('x/w become percent, y/h become px', () => {
@@ -161,4 +162,18 @@ test('the editor-only parts the push and the fit leave out are the ones base.css
   const hidden = rule[1].split(',').map((sel) => sel.trim().replace('.urd-preview .urd-fit-measure ', '')).sort();
   const listed = EDITOR_ONLY.split(',').map((sel) => sel.trim()).sort();
   assert.deepEqual(hidden, listed);
+});
+
+test('autoGrows: text always, else the definition\'s flag or its answer for the props', () => {
+  assert.equal(autoGrows({ type: 'text', props: {} }, undefined), true);
+  assert.equal(autoGrows({ type: 'faq', props: {} }, { autoGrow: true }), true);
+  assert.equal(autoGrows({ type: 'image', props: {} }, {}), false);
+  assert.equal(autoGrows({ type: 'nobody', props: {} }, undefined), false);
+  // The gallery grows in its grid views and keeps its frame's height as a band.
+  assert.equal(autoGrows({ type: 'gallery', props: { view: 'grid' } }, galleryBlock), true);
+  assert.equal(autoGrows({ type: 'gallery', props: { view: 'mosaic' } }, galleryBlock), true);
+  assert.equal(autoGrows({ type: 'gallery', props: { view: 'ribbon' } }, galleryBlock), false);
+  assert.equal(autoGrows({ type: 'gallery' }, galleryBlock), true);
+  const css = mobilePlacementToCss(null, { x: 0, y: 0, w: 50, h: 240 }, { autoGrow: autoGrows({ type: 'gallery', props: { view: 'ribbon' } }, galleryBlock) });
+  assert.equal(css.height, '240px');
 });

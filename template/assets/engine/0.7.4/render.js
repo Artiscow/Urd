@@ -701,6 +701,20 @@ export function reorderMobileKey(blocks, blockId, dir) {
 }
 
 /**
+ * Whether a block's height on the phone follows its content in the row grid:
+ * text always, and a type that says so with `autoGrow` on its definition,
+ * either a flag or a function of the block's props (a gallery grows in its
+ * grid views and keeps its frame's height as a ribbon).
+ * @param {{type?: string, props?: object}} block
+ * @param {{autoGrow?: boolean|((props: object) => boolean)}|undefined} def
+ * @returns {boolean}
+ */
+export function autoGrows(block, def) {
+  if (block?.type === 'text') return true;
+  return typeof def?.autoGrow === 'function' ? Boolean(def.autoGrow(block.props ?? {})) : Boolean(def?.autoGrow);
+}
+
+/**
  * Translates a mobile placement to CSS for the row grid (ADR-0019).
  * Pure function (no DOM), tested in tests/render.test.mjs.
  *
@@ -857,8 +871,7 @@ export function renderSection(section, site, host, opts = {}) {
       // Auto-growing blocks (text, and def.autoGrow: faq/gallery/collection
       // and plugin blocks with content of their own) get natural height: a
       // fixed desktop height would clip taller mobile content.
-      const def = Urd.blocks.get(block.type);
-      const autoGrow = block.type === 'text' || Boolean(def?.autoGrow);
+      const autoGrow = autoGrows(block, Urd.blocks.get(block.type));
       Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow }));
       // A block with columns or cards lays itself out by its own width (base.css),
       // and a block with its own height places its content in the box.

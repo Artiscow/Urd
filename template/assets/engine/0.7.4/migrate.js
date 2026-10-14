@@ -53,7 +53,7 @@ export function lift(data, def) {
 import { fitMoves, blockSize } from './push-model.js';
 
 /** Current version of the page file format (content/pages/*.json). */
-export const PAGE_SCHEMA_VERSION = 6;
+export const PAGE_SCHEMA_VERSION = 7;
 
 /**
  * The row height of the mobile row grid (ADR-0019), in px. A model
@@ -258,6 +258,42 @@ export function liftMapHeights(section) {
   }
 }
 
+/**
+ * Lifts the gallery blocks of one section from the band height the ribbon
+ * view had before page v7 (`props.bandHeight`, 80-400 px a row, 160 when
+ * absent) to the frame (ADR-0025 decision 2: the gallery's box decides, and
+ * the band fills it). The frame takes the height the band showed, its rows
+ * and the gap between them at the block's size: a shorter frame grows to it
+ * and the blocks below follow as for a fit (fitMoves), and a taller one
+ * shrinks to it and moves nothing, so the band keeps its look. Every view
+ * drops the field.
+ * Used by the page migration AND by template insertion (templates-model.js),
+ * which inserts stored payloads outside the page lift. A payload of unknown
+ * age is lifted only where it carries the field; `old` lifts every ribbon
+ * gallery, for data known to be from before page v7.
+ * @param {{blocks?: Array<object>}} section The section (mutated)
+ * @param {boolean} [old] The data is from before page v7
+ */
+export function liftGalleryBands(section, old = false) {
+  for (const block of section?.blocks ?? []) {
+    if (block.type !== 'gallery' || !block.props) continue;
+    const frame = block.frames?.desktop;
+    if ((old || 'bandHeight' in block.props) && block.props.view === 'ribbon' && frame && Number.isFinite(frame.h)) {
+      const band = Math.min(400, Math.max(80, Number(block.props.bandHeight) || 160));
+      const rows = Number(block.props.rows) === 2 ? 2 : 1;
+      const gap = Number(block.props.gap) || 0;
+      const shown = Math.round((rows * band + (rows - 1) * gap) * blockSize(block));
+      const moves = fitMoves(section.blocks, block.id, shown);
+      frame.h = shown;
+      for (const other of section.blocks) {
+        const y = moves.get(other.id);
+        if (Number.isFinite(y) && other.frames?.desktop) other.frames.desktop.y = y;
+      }
+    }
+    delete block.props.bandHeight;
+  }
+}
+
 const pageMigrations = {
   // 1 -> 2 (synced mobile model, ADR-0019): frames.mobile changes shape
   // from a full frame {x,y,w,h} to a partial row-grid placement
@@ -300,6 +336,11 @@ const pageMigrations = {
   // 5 -> 6 (ADR-0025 decision 6): the calendar's own size becomes the block's.
   5: (page) => {
     for (const section of page.sections ?? []) liftCalendarScale(section);
+    return page;
+  },
+  // 6 -> 7 (ADR-0025 decision 2): the gallery band's height moves into the frame.
+  6: (page) => {
+    for (const section of page.sections ?? []) liftGalleryBands(section, true);
     return page;
   },
 };

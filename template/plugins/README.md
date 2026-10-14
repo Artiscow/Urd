@@ -141,7 +141,10 @@ visningene sine).
 Blokker der innholdet selv bestemmer høyden (som kalender, skjema og kart
 i kjernen) skal sette `autoGrow: true` på blokk-defen: da får blokken
 naturlig høyde i mobilvisningens autostabling i stedet for den faste
-desktophøyden, så høyere mobilinnhold aldri klippes. På desktop eier
+desktophøyden, så høyere mobilinnhold aldri klippes. `autoGrow` kan også
+være en funksjon av blokkens props, for en blokk som vokser i noen
+visninger og fyller rammen i andre (kjernens galleri vokser som rutenett
+og holder rammens høyde som bånd). På desktop eier
 motorens dytt-pass boksens høyde (ADR-0024): en plugin-blokk trenger ikke
 måle seg selv, og skal aldri skrive målt høyde inn i rammen.
 

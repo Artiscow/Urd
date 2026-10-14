@@ -78,7 +78,7 @@ Saved block groups and templates appear in the same menus under «My templates»
 - collapsible groups that show their value while closed, a quick row of the most used settings, and a search;
 - Placement holds the same settings for every block in the same order, and there is no «Advanced» drawer.
 
-The groups exist for the calendar block; the other block families are 0.7.20.5, pins in the quick row in 0.7.20.3, and a menu placed beside the block and dragged by its head in 0.7.20.6.
+The groups exist for the calendar, text, button, image, video, icon, shape, gallery and ribbon blocks (0.7.20.5.1 and 0.7.20.5.2), and the quick row has pins (0.7.20.3). The other block families are 0.7.20.5, built in the element menu once it is split out of App.svelte (0.7.26.2), and a menu placed beside the block and dragged by its head is 0.7.20.6.
 
 On the canvas, text is edited by clicking and writing. A floating text toolbar appears on a selection, with headings, B/I/U/S, colours, highlight, links (external, internal, mailto), alignment, lists and quote. Explanations live in «?» tooltips and the help chip, never in panel prose ([ADR-0008](../adr/0008-help-chip-rule.md)), and every choice list is a themed dropdown or segment buttons ([ADR-0009](../adr/0009-themed-ui-rule.md)).
 

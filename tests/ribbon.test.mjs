@@ -11,7 +11,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   ribbonItems, normalizeSpeed, ribbonDuration, ribbonPeriods, separatorMark, ribbonRows,
-  clampTilt, ribbonSize, canRoll, ribbonMotion, ribbonWidth, ribbonMoves,
+  clampTilt, ribbonSize, canRoll, ribbonMotion, ribbonWidth, ribbonMoves, bandReach,
   mainMode, stripeMode, stripePlace, clampThickness, normalizeDwell, ribbonStepDuration,
   RIBBON_MARKS, RIBBON_SEPARATORS, RIBBON_SIZES, RIBBON_SPEED, RIBBON_MOTIONS, RIBBON_WIDTHS,
   RIBBON_MAIN_MODES, RIBBON_STRIPE_MODES, RIBBON_THICKNESS, RIBBON_DWELL, RIBBON_STRIPE_PLACES,
@@ -102,9 +102,9 @@ test('the ribbon block: the def contract', () => {
   assert.deepEqual(separatorMark(a.sep, a.sepText).kind, 'draw');
 });
 
-test('ribbonMotion and ribbonWidth: allowlisted, with the roll and the content surface as defaults', () => {
+test('ribbonMotion and ribbonWidth: allowlisted, with the roll and the block\'s own box as defaults', () => {
   assert.deepEqual(RIBBON_MOTIONS, ['roll', 'sway', 'step', 'none']);
-  assert.deepEqual(RIBBON_WIDTHS, ['content', 'page']);
+  assert.deepEqual(RIBBON_WIDTHS, ['canvas', 'page', 'content']);
   assert.equal(ribbonMotion('sway'), 'sway');
   assert.equal(ribbonMotion('none'), 'none');
   assert.equal(ribbonMotion('spin'), 'roll');
@@ -112,6 +112,15 @@ test('ribbonMotion and ribbonWidth: allowlisted, with the roll and the content s
   assert.equal(ribbonWidth('page'), 'page');
   assert.equal(ribbonWidth('content'), 'content');
   assert.equal(ribbonWidth('window'), 'content');
+  assert.equal(ribbonWidth('canvas'), 'canvas');
+  assert.equal(ribbonWidth(undefined), 'content');
+});
+
+test('bandReach: across the content surface or the section from the block\'s own edge, nothing for its own box', () => {
+  const m = { sectionW: 1920, canvasW: 1440, canvasLeft: 240, blockLeft: 160 };
+  assert.deepEqual(bandReach('canvas', m), { width: 1440, offset: -160 });
+  assert.deepEqual(bandReach('page', m), { width: 1920, offset: -400 });
+  assert.equal(bandReach('content', m), null);
 });
 
 test('ribbonMoves: the motion, the words and reduced motion all have a veto', () => {

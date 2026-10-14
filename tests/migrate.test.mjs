@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift, liftSiteFile, liftPageFile, liftMapHeights, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW } = await engineImport('migrate.js');
+const { lift, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW } = await engineImport('migrate.js');
 const { mapBlock } = await engineImport('blocks/map.js');
 
 const textV3 = {
@@ -399,4 +399,56 @@ test('page v5 -> v6: a calendar scale moves to the block-level size inside its b
   assert.equal(text.props.scale, 0.5);
   assert.equal('size' in text, false);
   assert.equal(page.sections[0].blocks[0].props.scale, 0.7);
+});
+
+/* 6 -> 7 (ADR-0025 decision 2): the gallery band's height moves into the frame. */
+const v6Galleries = () => ({
+  schemaVersion: 6,
+  meta: { id: 'hjem', title: 'Hjem' },
+  sections: [{
+    id: 'sec-1',
+    version: 1,
+    size: { minHeight: '900px' },
+    blocks: [
+      { id: 'tall', type: 'gallery', version: 1, props: { images: [], view: 'ribbon' }, frames: { desktop: { x: 0, y: 0, w: 40, h: 320 } } },
+      { id: 'short', type: 'gallery', version: 1, size: 1.5, props: { images: [], view: 'ribbon', rows: 2, bandHeight: 200, gap: 12 }, frames: { desktop: { x: 50, y: 0, w: 40, h: 300 } } },
+      { id: 'below', type: 'text', version: 1, props: {}, frames: { desktop: { x: 50, y: 330, w: 40, h: 60 } } },
+      { id: 'grid', type: 'gallery', version: 1, props: { images: [], view: 'grid', bandHeight: 240 }, frames: { desktop: { x: 0, y: 2000, w: 40, h: 320 } } },
+    ],
+  }],
+});
+
+test('page v6 -> v7: a gallery band takes the height it showed as its frame, and the blocks below follow a frame that grew', () => {
+  const original = v6Galleries();
+  const lifted = liftPageFile(original, {});
+  assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
+  const [tall, short, below, grid] = lifted.sections[0].blocks;
+  // A frame taller than the band shrinks to the default band of 160 px, and nothing moves.
+  assert.equal(tall.frames.desktop.h, 160);
+  // Two rows of 200 px with a 12 px gap, at size 1.5, in a frame that was shorter.
+  assert.equal(short.frames.desktop.h, 618);
+  assert.equal('bandHeight' in short.props, false);
+  // The block under it was drawn 318 px lower by the push pass, and stays there.
+  assert.equal(below.frames.desktop.y, 648);
+  // Another view only drops the field, and a far block keeps its place.
+  assert.equal(grid.frames.desktop.h, 320);
+  assert.equal(grid.frames.desktop.y, 2000);
+  assert.equal('bandHeight' in grid.props, false);
+  // The section's own height is the owner's.
+  assert.equal(lifted.sections[0].size.minHeight, '900px');
+  assert.equal(original.sections[0].blocks[1].props.bandHeight, 200);
+  assert.equal(original.sections[0].blocks[0].frames.desktop.h, 320);
+});
+
+test('page v6 -> v7 is idempotent, and a payload lifts only a gallery that still carries the field', () => {
+  const once = liftPageFile(v6Galleries(), {});
+  assert.deepEqual(liftPageFile(once, {}), once);
+  const payload = { blocks: [
+    { id: 'new', type: 'gallery', version: 1, props: { images: [], view: 'ribbon' }, frames: { desktop: { x: 0, y: 0, w: 40, h: 320 } } },
+    { id: 'old', type: 'gallery', version: 1, props: { images: [], view: 'ribbon', bandHeight: 120 }, frames: { desktop: { x: 50, y: 0, w: 40, h: 320 } } },
+  ] };
+  liftGalleryBands(payload);
+  assert.equal(payload.blocks[0].frames.desktop.h, 320);
+  assert.equal(payload.blocks[1].frames.desktop.h, 120);
+  assert.equal('bandHeight' in payload.blocks[1].props, false);
 });

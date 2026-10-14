@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.20.5.2): the gallery and the ribbon in groups, a band's reach and the gallery band's height
+
+- [ ] A gallery's menu has «Bilder» in Content and «Visning», «Rulling» and «Bildene» in Style; «Rulling» shows only in the ribbon view
+- [ ] A ribbon's menu has «Ord i båndet» and «Skilletegn» in Content and «Rulling», «Striper», «Form og bredde», «Tekst» and «Farger» in Style; no card is called «Bevegelse»
+- [ ] A new ribbon starts at «Innholdsbredde» and spans the content surface; «Hele sidebredden» reaches the window's edges, and «Egen bredde» keeps the band in the block's box
+- [ ] A gallery in the ribbon view offers the same three reaches under «Visning», and they work the same way
+- [ ] Dragging a gallery band's height changes the band and its pictures while the drag is held, in all three reaches; «Høyde på båndet» moves the block's edge, and two rows share the height
+- [ ] On a phone a gallery band keeps the height it has on the desktop
+- [ ] A page with a ribbon and a gallery band made before this change looks as it did, on the desktop and on a phone
+
 ### Test batch (0.7.20.5.1): the element menu in groups for the first two families
 
 - [ ] An image's menu has «Bilde» and «Lenke og klikk» in Content and «Utsnitt», «Filtre» and «Hjørner» in Style; the crop choice reads «Tilpasning»; moving the focus gives «Utsnitt» the dot and «1 endret», and its reset brings the defaults back; «Åpne bildeeditoren» opens the editor on the canvas
