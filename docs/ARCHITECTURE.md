@@ -86,7 +86,7 @@ Key mechanisms (patterns validated in ApeironLF):
 
 - **Draft:** all editing is written continuously to `localStorage`. A «baseline» (the published state) is compared against the draft; if they are equal, the draft is removed - this keeps the «unpublished changes» marker always honest.
 - **Preview:** the editor shows the real site in an iframe with `?preview=1` and pushes the draft via `postMessage`. The engine listens and re-renders incrementally.
-- **Panel registry:** the editor's panels (pages, nav, theme, …) are registered with the same define pattern the engine uses, so that plugins can provide admin panels later.
+- **Panels:** the rail lists the panels (pages, nav, site, theme, blocks, grid, properties, footer, collections, plugins, history, update), and the one shown is `activePanel`; the Properties panel follows the selection in the preview. There is no panel registry, and plugins provide blocks and language packs, never panels.
 - **Mobile review:** the editor enforces the flag rules in [SCHEMA.md](SCHEMA.md#mobile-review) - if you change the desktop layout in a section with a manual mobile layout, the section is flagged until you have looked over the mobile view. The mobile messages between editor and engine are `urd-mobile-reset {sectionId, blockId?}` (per block when `blockId` is given, per section otherwise); sections have no mobile mode, so there is no manual/auto message. In mobile view Delete and Backspace are guarded in `preview-edit.js` and the delete button is hidden, so deletion happens only on desktop; the per-section reset asks for a second click before it runs.
 - **Collections:** edited in the Collections panel with a draftStore per collection; images are materialised at publish, and the preview renders from the draft via the bridge, which posts a `$state.snapshot` of it (a `$state` proxy gives DataCloneError).
 - **Themed components (ADR-0009):** admin uses `<Dropdown value={…} options={[[value, label], …]} onchange={(v) => …} />` (Dropdown.svelte). The canvas and plugins use `createDropdown({ value, options, onchange, title })` from the engine's `dropdown.js` (`/assets/urd/dropdown.js` for plugins); it does not steal focus (mousedown prevented), so a text selection survives the choice. Segment buttons cover small option sets of two to five short labels.
@@ -95,6 +95,51 @@ Key mechanisms (patterns validated in ApeironLF):
 - **The editor's own ids (ADR-0021):** the site themes' preset ids are English (well, stone, plum, ocean, night, with the `themePreset.*` keys in all five dictionaries) and are never persisted, since the active preset is derived from the stored tokens. The admin themes' ids (purple, well, gold, grey, aurora, dusk, ember) are persisted only in the browser's localStorage under `urd-admin-theme` and are migrated on read, as the draft keys are: the editor reads the old key when the new one is missing, writes the new key and deletes the old one, so no browser draft is lost. Custom CSS written by a site owner against old class names (`urd-handlekurv-*`, `urd-produkt-*` and the like) has to be updated to the English class names; the classes are runtime-generated and never persisted.
 - **The preview's Screen device (ADR-0018):** the mode (My window or Editing size, with the editing width and optional height) is kept per browser in localStorage under `urd-admin-screen`, read and written by `editor/src/lib/own-screen.js`. The binding limit of the content width (`contentWidth / (1 - 2 * gutter / 100)`) is the pure function `bindingWidth` in `editor/src/lib/content-width.js`, with its own test; the Site panel shows the width as four quick choices plus free adjustment from 960 to 1920, the side margin as a scale (None, Small, Medium, Large) with the raw vw number under Advanced, and a live sample against three real screen widths showing where the width binds.
 - **The editor measures the canvas, never the section:** every geometry site in `preview-edit.js` (drag, resize, arrow keys, marquee, group drag, grid overlay, block menu, materialisation of mobile frames) takes its width from the shared `canvasOf` helper, so a forgotten measurement is mechanically searchable. `sticky.js` derives the block's left edge and width from the canvas rect and the release limit from the section's top and bottom, in separate variables; it reads the left edge with `parseFloat(el.style.left)`, so the inline `left` must stay a plain percentage (a `calc()` string yields NaN), which is one reason the content width is a canvas node and not a `calc()` in `frameToCss`.
+
+### The editor's parts (0.7.26)
+
+Recorded before the split, 14 October 2026: `editor/src/App.svelte` held the whole editor in one file of 14,676 lines (the script to line 6928, the markup to line 11699, the CSS to the end) with 109 `$state` and 41 `$derived` declarations, 28 effects, 420 functions, 58 snippets and the twelve panels as branches on `activePanel`. The build (`npm run build`: Vite 8.3, vite-plugin-svelte 7.3, Svelte 5.57) took 9 m 31 s on the development machine, of which 573 s was the Svelte compile of this one file, and every family added to the element menu made it longer. The split gives every part one job, lets the compiler work file by file, and changes nothing a site owner sees.
+
+**The parts and what they own.** A part reads the state it shows and writes only through the functions of the module that owns the state; the state a part alone uses (a panel's own fields, a drag in progress) stays inside the part.
+
+| Part | Files | Owns on screen | Reads | Writes through |
+|---|---|---|---|---|
+| The shell | `App.svelte` | the layout (rail, panel, preview), the choice of panel, the startup (`init`, `checkAuth`, the admin theme and language), the keyboard, the status toast | shell | `shell`, `history` (undo and redo keys) |
+| The top bar | `shell/TopBar.svelte` | the tool clusters with the fold steps (`FOLD_MQ`), the draft status, Publish, Discard with its arming | shell, preview, the drafts' dirty flag | `preview` (view, device, zoom, chrome, guides, grid), `publish` |
+| The preview stage | `shell/PreviewStage.svelte` | the iframe, the device and zoom frame, the pan, the Screen setting (`own-screen.js`), the iframe load that creates the bridge | preview, page, site | `preview` |
+| The dialogs | `shell/ConfirmDialog.svelte`, `shell/SetupWizard.svelte` | the confirmation and prompt, the first-run wizard | shell | `shell`, `site` |
+| The site panels | `panels/Pages.svelte`, `Nav.svelte` (with the size rows, the launcher and the drag list), `Site.svelte` (with the site's calendars), `Theme.svelte`, `Grid.svelte`, `Footer.svelte` | one panel each | site, page (Pages: the page list and the SEO draft) | `site` (`siteMutate`, `navBgMutate`, `footerMutate`, the token setters), `page` (Pages) |
+| The content and system panels | `panels/Blocks.svelte`, `Properties.svelte`, `Collections.svelte`, `Plugins.svelte`, `History.svelte`, `Update.svelte` | one panel each; Properties holds the section's settings and hosts the element menu | page, collections, templates, plugins, shell (auth) | `page` (`mutateSection`), `collections`, `templates`, `plugins`, the panel's own fetches (history, the updater) |
+| The section editors | `section/BackgroundEditor.svelte`, `section/AnimationFields.svelte` | the background layers (gradient stops, the focal point, the shared folder), the animation and hover fields | the section or the nav they edit | a mutator the host passes (`mutateSection`, `navBgMutate`) |
+| The element menu | `menu/ElementMenu.svelte` (the areas, the search, the quick row, the pins, `menuGroup`), `menu/Placement.svelte`, `menu/families/*.svelte` (text, button, image, video, icon, shape, gallery, ribbon, calendar, and the families still to come) | a block's settings, in the Properties panel and in the floating block menu | page (`selectedBlock`), site (the site's calendars, the collections for a collection block), plugins (plugin blocks) | `page` (`setBlockProp`, `setBlockProps`, `mutateBlock`, `setBlockFrame`, `setBlockSize`) |
+
+**The state modules** (`editor/src/state/`). Each `.svelte.js` module exports one object with `$state` fields and the functions that change it; a component imports the object and reads its fields where it needs them (the object stays reactive, a copy does not), and writes through the module's functions, so every piece of state has one owner.
+
+- `shell.svelte.js`: `site` (the loaded site.json), `auth`, `status`, `dirty`, `activePanel` and the panels preference, the admin theme and language, `askConfirm` and `askPrompt`.
+- `page.svelte.js`: the page draft (`store`, from `draftStore.js`), `pageId`, `selectPage`, `selectedBlock` and `syncSelectedBlock`, the section mirrors, `mutateBlock`, `mutateSection`, `setBlockProp`, `setBlockProps`, `setBlockFrame`, the fit (`fitBlockSoon`, `phoneFitSoon`, `applyPhoneHeight`, `dropFits`).
+- `site.svelte.js`: `siteDraft`, `linkSiteDraft`, `siteMutate`, `pushSiteToPreview`, the page list.
+- `collections.svelte.js`, `templates.svelte.js`, `plugins.svelte.js`: their drafts, lists and pushes to the preview.
+- `history.svelte.js`: `snapshot`, `pushHistory`, `undo`, `redo` and the `restore*` functions. It imports every draft module, since one undo step covers them all, and `updateDirty` lives with it.
+- `preview.svelte.js`: the iframe, the bridge, the device, the zoom, the chrome, the guides, the grid, the Screen setting. `bridge.js` beside it holds the handlers of the preview's messages (`handleEdit` to `handleDelete`, `onReady`, `onNavigate`, `handleAddSection`, `handleRequestBlock`), which write the drafts.
+- `publish.js`: `publish`, `discard`, `confirmNoConflict`, `refreshBaseSha`, the `materialize*` functions; `media.js`: `addImage`, `compressMany`, `reportUpload`, the video and SVG helpers.
+- `lib/block-catalog.js` (pure, tested): `BLOCK_DEFAULTS`, `BLOCK_LABELS` and `panelBlockItems`, which `tests/palette.test.mjs` reads out of App.svelte's text today and imports once they are a module.
+
+**The CSS.** The admin themes, the scrollbar, the buttons and the panel language's class contract (ADR-0016) are global, in `editor/src/app.css` imported once by `main.js`, since every panel uses the classes; a rule only one part uses moves into that part's `<style>`, where Svelte scopes it. `tests/topbar-fold.test.mjs` pins the fold steps and `FOLD_MQ`, and `tests/styled-blocks.test.mjs` pins the variant labels: the tests follow the text they pin.
+
+**The folder layout.**
+
+```
+editor/src/
+  main.js  App.svelte  app.css
+  shell/    TopBar, PreviewStage, ConfirmDialog, SetupWizard
+  panels/   Pages, Nav, Site, Theme, Blocks, Grid, Properties, Footer, Collections, Plugins, History, Update
+  section/  BackgroundEditor, AnimationFields
+  menu/     ElementMenu, QuickRow, Placement, families/
+  state/    shell, page, site, collections, templates, plugins, history, preview (.svelte.js), bridge.js, publish.js, media.js
+  lib/      the pickers and the pure modules, as today
+```
+
+**The order.** The element menu first (0.7.26.2), since the families still to come are built in it; then the site panels (0.7.26.3), the content and system panels (0.7.26.4), and last the shell's own parts (0.7.26.5). Each step moves one part with its state module and its CSS, rebuilds, and runs the tests; the build time is measured again at the end against the figure above.
 
 ## The publishing flow (`template/functions/`)
 

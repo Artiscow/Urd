@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.26.1 - App.svelte mapped by function, the state modules and the folder layout decided, and the build time recorded before the split - 14 October 2026
+
+- ARCHITECTURE.md gets «The editor's parts»: the shape of App.svelte before the split (lines, state, effects, functions, snippets and panels, with the build at 9 m 31 s of which 573 s is the compile of the one file), a table of the parts with what each owns on screen, reads and writes through, the state modules under `editor/src/state/` with one owner per piece of state, the CSS rule (the panel language global, a part's own rules in the part), the folder layout and the order of the split. The three tests that pin text in App.svelte are named, so they follow the text they pin.
+- ARCHITECTURE.md said the panels were registered with the engine's define pattern so plugins could provide admin panels. There is no such registry: the shown panel is `activePanel`, and plugins provide blocks and language packs. The bullet now says so.
+
 ### 0.7.20.5.2 - The gallery and the ribbon in groups, three reaches for a band, the gallery band's height set by its frame, and the milestone 0.7.26 «App.svelte split into functional parts» - 14 October 2026
 
 - The gallery's and the ribbon's menus were loose controls. They now follow the group map: the gallery has «Bilder» in Content and «Visning», «Rulling» (ribbon view only) and «Bildene» in Style, and the ribbon has «Ord i båndet» and «Skilletegn» in Content and «Rulling», «Striper», «Form og bredde», «Tekst» and «Farger» in Style. The ribbon's «Bevegelse» card, which shared its name with the Placement group, is renamed «Rulling», and the view, columns, motion and speed carry pins.
