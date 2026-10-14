@@ -13,7 +13,7 @@
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "ajv": "^8.17.0",
     "ajv-formats": "^3.0.0",
-    "svelte": "^5.57.1",
-    "vite": "^8.3.2"
+    "svelte": "^5.57.2",
+    "vite": "^8.3.4"
   }
 }
