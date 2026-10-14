@@ -13,12 +13,14 @@ const all = (...ids) => new Set(ids);
 
 test('quickDefaults: a type\'s own tiles first, then the shared ones', () => {
   assert.deepEqual(quickDefaults('calendar'), ['design', 'limit', 'subscribe', 'fit', 'phone']);
-  assert.deepEqual(quickDefaults('text'), ['fit', 'phone']);
+  assert.deepEqual(quickDefaults('text'), ['align', 'textBox', 'fit', 'phone']);
+  assert.deepEqual(quickDefaults('some-plugin-block'), ['fit', 'phone']);
 });
 
 test('quickIds: the defaults, then the pins in pin order, only those the block has now', () => {
   const choice = { pinned: ['size', 'design'], removed: ['fit'] };
   assert.deepEqual(quickIds('text', choice, all('fit', 'phone', 'size')), ['phone', 'size']);
+  assert.deepEqual(quickIds('text', NO_CHOICE, all('align', 'textBox', 'fit', 'phone')), ['align', 'textBox', 'fit', 'phone']);
   assert.deepEqual(quickIds('calendar', NO_CHOICE, all('design', 'subscribe', 'fit', 'phone')), ['design', 'subscribe', 'fit', 'phone']);
 });
 

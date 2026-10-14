@@ -3492,6 +3492,7 @@ function enhanceBlock(el, block, section, grid, host) {
     const DUP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
     if (block.type === 'image') {
       const imgBtn = document.createElement('button');
+      imgBtn.className = 'urd-edit-image';
       imgBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>';
       imgBtn.title = ta('canvas.editImage');
       imgBtn.addEventListener('click', () => openBlockImageEditor());

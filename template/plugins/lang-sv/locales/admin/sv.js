@@ -659,6 +659,7 @@ export default {
     'lbl.textAlign': 'Textjustering',
     'lbl.textBoxToggle': 'Textruta (kort med bakgrund)',
     'lbl.fit': 'Vid smalare skärm',
+    'lbl.imageFit': 'Anpassning',
     'opt.fit.wrap': 'Bryt innehållet',
     'opt.fit.shrink': 'Krymp innehållet',
     'opt.fit.fluid': 'Följ bredden',

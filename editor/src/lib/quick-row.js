@@ -13,6 +13,28 @@ export const QUICK_KEY = 'urd-quick-row';
 const SHARED = ['fit', 'phone'];
 const OWN = {
   calendar: ['design', 'limit', 'subscribe'],
+  text: ['align', 'textBox'],
+  button: ['goesTo', 'btnStyle'],
+  image: ['imgFit', 'radius'],
+  video: ['videoSource'],
+  icon: ['iconSize', 'iconColor'],
+  shape: ['shapeColor', 'thickness'],
+  gallery: ['galleryView', 'columns'],
+  ribbon: ['ribbonMotion', 'speed'],
+  table: ['tableLines'],
+  quote: ['variant'],
+  stats: ['variant'],
+  faq: ['variant'],
+  timeline: ['variant'],
+  form: ['sendMode'],
+  collection: ['collectionView', 'limit'],
+  product: ['columns'],
+  cart: ['cartView'],
+  checkout: ['vippsButton'],
+  share: ['variant'],
+  countdown: ['seconds'],
+  audio: ['loop'],
+  map: ['zoom'],
 };
 
 /**

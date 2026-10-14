@@ -503,7 +503,7 @@ export default {
     'lbl.durationMs': 'Varigheit ms',
     'lbl.faqMulti': 'Fleire svar opne samtidig',
     'lbl.filled': 'Fylt',
-    'lbl.fit': 'Tilpassing',
+    'lbl.imageFit': 'Tilpassing',
     'lbl.focusX': 'Fokus X',
     'lbl.focusY': 'Fokus Y',
     'lbl.glass': 'Glaseffekt (frosta)',

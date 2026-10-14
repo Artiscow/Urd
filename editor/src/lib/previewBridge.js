@@ -60,6 +60,7 @@
  *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
  *                  { type: 'urd-fit-block', sectionId, blockId, seq } (ask for the height of a block that follows its content, ADR-0025; answered with urd-grow)
  *                  { type: 'urd-frames', sectionId, frames } (frames fitted to their content, block id to desktop frame: put in place without drawing the section again)
+ *                  { type: 'urd-open-image-editor', blockId } (open an image block's editor in the preview, from its menu)
  */
 
 /**
@@ -193,6 +194,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Play the ribbons' motion for a few seconds, which stands still while editing. */
     sendDemoMotion() {
       post({ type: 'urd-demo-motion' });
+    },
+    /** Open an image block's editor in the preview, from its menu. */
+    sendOpenImageEditor(blockId) {
+      post({ type: 'urd-open-image-editor', blockId });
     },
     /** Open a plugin block's settings (the config panel) in the preview. */
     sendOpenConfig(blockId) {

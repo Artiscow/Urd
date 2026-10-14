@@ -356,6 +356,9 @@ function enablePreview(state, opts) {
       // The plugin block's settings open from Properties: click the hidden
       // config toggle in the block.
       root.querySelector(`[data-block-id="${msg.blockId}"] .urd-cfg-toggle`)?.click();
+    } else if (msg?.type === 'urd-open-image-editor' && msg.blockId) {
+      // An image block's editor opened from its menu: press the block's own image button.
+      root.querySelector(`[data-block-id="${CSS.escape(msg.blockId)}"] .urd-edit-image`)?.click();
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
       // The editor detected desktop drift in an overridden section: mark it live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)

@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.20.5.1 - The element menu in groups for text, button, image, video, icon and shape, and the image fit no longer labelled «Ved smalere skjerm» - 14 October 2026
+
+- Only the calendar's menu was in groups; the other blocks showed loose controls. Text, button, image, video, icon and shape now follow the group map on the Design canvas: each group shows its value while closed, and a group that differs from its defaults carries the dot and «Tilbakestill denne gruppen» (`groupReset` and `groupChanged` in App.svelte). The image's «Nullstill justeringer» button gives way to the reset of its «Filtre» group, «Utsnitt» opens the image editor in the preview (`urd-open-image-editor`), and the divider line that ended these blocks' Style areas is gone.
+- Each block type starts its quick row with its own defaults from the group map (`quickDefaults` in quick-row.js, with tests), the tiles can now hold a dropdown and a colour picker, and the settings behind them carry pins.
+- `lbl.fit` stood twice in nb, en-GB and tr, so the image's crop choice and the background layers' fit choices read «Ved smalere skjerm», while in nn and se the narrow-screen setting read «Tilpassing». The crop and fit choices now use `lbl.imageFit` («Tilpasning»), in every dictionary and the Swedish pack.
+
 ### 0.7.20.3 - Pins in the quick row, the element menu's next stages chosen on the Design canvas, and the calendar's loading state recorded - 14 October 2026
 
 - The element menu's quick row held fixed tiles (the calendar's three, and «Smal skjerm» and «På mobil» for every block) that the owner could not change. A pin now stands beside each setting that can stand in the row and on each tile (proposal G on the Design canvas «Urd elementmeny»): it adds the setting at the end of the row or takes it out, a default tile too, and «Tilbakestill hurtigraden» appears while the row differs from the defaults. The choice is kept per block type in the browser (`editor/src/lib/quick-row.js`, with tests). Pins stand by the calendar's design, count and subscribe button and by the shared size, narrow-screen fit and phone visibility; the other settings get theirs with their groups in 0.7.20.5. Keys in nb, en-GB and tr.

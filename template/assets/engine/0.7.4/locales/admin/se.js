@@ -426,7 +426,7 @@ export default {
     'lbl.durationMs': 'Bistu ms',
     'lbl.faqMulti': 'Máŋga vástádusa rabas oktanaga',
     'lbl.filled': 'Devdojuvvon',
-    'lbl.fit': 'Heiveheapmi',
+    'lbl.imageFit': 'Heiveheapmi',
     'lbl.focusX': 'Fokus X',
     'lbl.focusY': 'Fokus Y',
     'lbl.glass': 'Glássaeffeakta (galmmihuvvon)',

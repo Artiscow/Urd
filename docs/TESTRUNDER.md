@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.20.5.1): the element menu in groups for the first two families
+
+- [ ] An image's menu has «Bilde» and «Lenke og klikk» in Content and «Utsnitt», «Filtre» and «Hjørner» in Style; the crop choice reads «Tilpasning»; moving the focus gives «Utsnitt» the dot and «1 endret», and its reset brings the defaults back; «Åpne bildeeditoren» opens the editor on the canvas
+- [ ] A text block, a button, a video (as a link and as a file), an icon and a shape show their groups as on the group map, each with its value while closed and a reset only when changed; no divider line ends their Style areas
+- [ ] Each of these block types starts its quick row with its own settings (for example «Justering» and «Tekstboks» on a text, «Størrelse px» and «Farge» on an icon), and a dropdown and a colour picker work in the quick row
+- [ ] A background image layer's fit choice reads «Tilpasning»; in nynorsk the narrow-screen setting reads its own words, not «Tilpassing»
+
 ### Test batch (0.7.20.3): pins in the quick row
 
 - [ ] In a text block's element menu, the pin beside «Størrelse» puts it at the end of the quick row and turns filled; another text block shows it too, and it is still there after a reload

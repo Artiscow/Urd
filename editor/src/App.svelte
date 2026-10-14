@@ -1136,6 +1136,30 @@
         : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
       set: (v) => setBlockFit(v) });
     items.push({ id: 'phone', label: ta('quick.phone'), kind: 'choice', value: b.hideMobile ? 'off' : 'on', options: [['on', ta('quick.phone.show')], ['off', ta('quick.phone.hide')]], set: (v) => setBlockHideMobile(v === 'off') });
+    const p = b.props;
+    if (b.type === 'text') {
+      items.push({ id: 'align', label: ta('lbl.align'), kind: 'choice', value: p.align ?? 'left',
+        options: [['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]], set: (v) => setBlockProp('align', v) });
+      items.push({ id: 'textBox', label: ta('group.textBox'), kind: 'choice', value: p.box ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('box', v === 'on') });
+    } else if (b.type === 'button') {
+      items.push({ id: 'goesTo', label: ta('lbl.goesTo'), kind: 'select', value: p.page ?? '__href', options: buttonTargets(), set: setButtonTarget });
+      items.push({ id: 'btnStyle', label: ta('lbl.style'), kind: 'select', value: p.style ?? 'primary',
+        options: [['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]], set: (v) => setBlockProp('style', v) });
+    } else if (b.type === 'image') {
+      items.push({ id: 'imgFit', label: ta('lbl.imageFit'), kind: 'select', value: p.fit ?? 'cover',
+        options: [['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]], set: (v) => setBlockProp('fit', v) });
+      items.push({ id: 'radius', label: ta('group.corners'), kind: 'choice', value: p.radius ?? '',
+        options: [['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]], set: (v) => setBlockProp('radius', v || null) });
+    } else if (b.type === 'video') {
+      items.push({ id: 'videoSource', label: ta('lbl.videoSource'), kind: 'choice', value: p.source === 'file' ? 'file' : 'embed',
+        options: [['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]], set: (v) => setBlockProp('source', v) });
+    } else if (b.type === 'icon') {
+      items.push({ id: 'iconSize', label: ta('lbl.sizePx'), kind: 'number', min: 8, max: 400, value: p.size ?? 48, set: (v) => setBlockProp('size', Math.max(8, Math.min(400, Number(v) || 48))) });
+      items.push({ id: 'iconColor', label: ta('lbl.color'), kind: 'color', value: p.color ?? 'accent', set: (v) => setBlockProp('color', v) });
+    } else if (b.type === 'shape') {
+      items.push({ id: 'shapeColor', label: ta('lbl.color'), kind: 'select', value: p.color ?? 'accent', options: COLOR_TOKENS, set: (v) => setBlockProp('color', v) });
+      items.push({ id: 'thickness', label: ta('lbl.thickness'), kind: 'number', min: 1, max: 40, value: p.thickness ?? 2, set: (v) => setBlockProp('thickness', Math.max(1, Math.min(40, Number(v) || 2))) });
+    }
     if (!SIZE_BY_FRAME.has(b.type)) {
       items.push({ id: 'size', label: ta('lbl.scale'), kind: 'number', min: SIZE.min * 100, max: SIZE.max * 100, step: 5, value: Math.round(blockSize(b) * 100),
         set: (v) => { sizeGesture = null; setBlockSize(Math.min(SIZE.max, Math.max(SIZE.min, (Number(v) || 100) / 100))); sizeGesture = null; } });
@@ -1298,6 +1322,40 @@
   /** Multiple props in ONE undo step (the field contract's place field writes three). */
   function setBlockProps(name, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
+  }
+
+  /** A group's reset (0.7.20.5): when any of its settings holds a value other
+   *  than its default, the patch that brings the defaults back as one undo
+   *  step; else null, so the group carries no mark. An absent setting is its
+   *  default. */
+  function groupReset(id, defaults) {
+    const p = selectedBlock.props;
+    const changed = Object.entries(defaults).some(([k, d]) => p[k] !== undefined && JSON.stringify(p[k]) !== JSON.stringify(d));
+    return changed ? () => setBlockProps(id, { ...defaults }) : null;
+  }
+  /** How many of a group's settings hold their own value, for its closed value. */
+  function groupChanged(defaults) {
+    const p = selectedBlock.props;
+    return Object.entries(defaults).filter(([k, d]) => p[k] !== undefined && JSON.stringify(p[k]) !== JSON.stringify(d)).length;
+  }
+  const onOff = () => [['on', ta('common.on')], ['off', ta('common.off')]];
+
+  /** Where a button goes: a page of the site, or an address of its own. */
+  function buttonTargets() {
+    return [...siteDraft.pages.map((pg) => [pg.id, pg.title]), ['__href', ta('opt.externalLink')]];
+  }
+  function setButtonTarget(v) {
+    const page = v === '__href' ? null : v;
+    mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+      b.props.page = page;
+      if (page) b.props.href = null;
+    });
+  }
+
+  /** The image editor in the preview, opened from the block's menu (the floating menu steps aside for it). */
+  function openImageEditor() {
+    bridge?.sendOpenImageEditor(selectedBlock.blockId);
+    blockMenu = null;
   }
 
   /** A block whose height follows its content (ADR-0025) has its frame fitted
@@ -9652,7 +9710,7 @@
           <input type="file" accept="image/*" onchange={(e) => setBgImage(bg, i, e)} />
         </label>
         {@const isTile = layer.props.fit === 'tile' || layer.props.fit === 'repeat'}
-        <label title={ta('tip.bg.fit')}>{ta('lbl.fit')}
+        <label title={ta('tip.bg.fit')}>{ta('lbl.imageFit')}
           <Dropdown value={isTile ? 'tile' : 'plain'}
             options={[['plain', ta('opt.img.plain')], ['tile', ta('opt.img.tile')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
@@ -9719,7 +9777,7 @@
             options={GALLERY_STYLES.map((st) => [st, ta(`opt.galleryStyle.${st}`)])}
             onchange={(v) => setBgProp(bg, i, 'style', v)} /></label>
         {#if gstyle === 'fill'}
-          <label>{ta('lbl.fit')}
+          <label>{ta('lbl.imageFit')}
             <Dropdown value={gp.fit ?? 'cover'}
               options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
               onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
@@ -9849,7 +9907,7 @@
           {layer.props.poster ? ta('ui.changeImage') : ta('ui.choosePoster')}
           <input type="file" accept="image/*" onchange={(e) => setBgPoster(bg, i, e)} />
         </label>
-        <label title={ta('tip.bg.fit')}>{ta('lbl.fit')}
+        <label title={ta('tip.bg.fit')}>{ta('lbl.imageFit')}
           <Dropdown value={layer.props.fit ?? 'cover'}
             options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
@@ -10445,60 +10503,72 @@
         {ta('lbl.audioLoop')}
       </label>
     {:else if selectedBlock.type === 'button'}
-      <label>{ta('blocks.text')}
-        <input value={selectedBlock.props.label}
-          onchange={(e) => setBlockProp('label', e.target.value)} /></label>
-      <label>{ta('lbl.goesTo')}
-        <Dropdown value={selectedBlock.props.page ?? '__href'}
-          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.externalLink')]]}
-          onchange={(v) => {
-            const page = v === '__href' ? null : v;
-            mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-              b.props.page = page;
-              if (page) b.props.href = null;
-            });
-          }} /></label>
-      {#if !selectedBlock.props.page}
-        <input placeholder={ta('ph.url')}
-          value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
-          onchange={(e) => setBlockProp('href', e.target.value || null)} />
-      {/if}
+      {#snippet btnLink()}
+        <label>{ta('blocks.text')}
+          <input value={selectedBlock.props.label}
+            onchange={(e) => setBlockProp('label', e.target.value)} /></label>
+        <div class="pin-line">
+          <label>{ta('lbl.goesTo')}
+            <Dropdown value={selectedBlock.props.page ?? '__href'} options={buttonTargets()} onchange={setButtonTarget} /></label>
+          {@render pinFor('goesTo')}
+        </div>
+        {#if !selectedBlock.props.page}
+          <input placeholder={ta('ph.url')}
+            value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
+            onchange={(e) => setBlockProp('href', e.target.value || null)} />
+        {/if}
+      {/snippet}
+      {@render menuGroup('btn-link', ta('group.textLink'), buttonTargets().find(([id]) => id === (selectedBlock.props.page ?? '__href'))?.[1] ?? '', btnLink)}
     {:else if selectedBlock.type === 'image'}
-      <label class="ghost filepick">
-        {ta('ui.changeImage')}
-        <input type="file" accept="image/*" onchange={replaceImage} />
-      </label>
-      <label>{ta('lbl.description')}
-        <input value={selectedBlock.props.alt ?? ''} placeholder={ta('ph.altText')}
-          onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
-      <label>{ta('lbl.link')}
-        <input value={selectedBlock.props.href ?? ''} placeholder={ta('ph.optionalImageLink')}
-          onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
-      {#if !selectedBlock.props.href}
-        <label class="gridmenu-snap" title={ta('tip.lightbox')}>
-          <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
-            onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
-          {ta('lbl.lightbox')}
+      {#snippet imgImage()}
+        <label class="ghost filepick">
+          {ta('ui.changeImage')}
+          <input type="file" accept="image/*" onchange={replaceImage} />
         </label>
-      {/if}
+        <label>{ta('lbl.description')}
+          <input value={selectedBlock.props.alt ?? ''} placeholder={ta('ph.altText')}
+            onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
+      {/snippet}
+      {#snippet imgLink()}
+        <label>{ta('lbl.link')}
+          <input value={selectedBlock.props.href ?? ''} placeholder={ta('ph.optionalImageLink')}
+            onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
+        {#if !selectedBlock.props.href}
+          <label class="gridmenu-snap" title={ta('tip.lightbox')}>
+            <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
+              onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
+            {ta('lbl.lightbox')}
+          </label>
+        {/if}
+      {/snippet}
+      {@render menuGroup('img-image', ta('blocks.image'), selectedBlock.props.alt || ta('menu.noAlt'), imgImage)}
+      {@render menuGroup('img-link', ta('group.linkClick'), selectedBlock.props.href || (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none')), imgLink,
+        groupReset('img-link', { href: null, lightbox: false }))}
     {:else if selectedBlock.type === 'video'}
       {@const vsource = selectedBlock.props.source === 'file' ? 'file' : 'embed'}
-      <Choice label={ta('lbl.videoSource')} value={vsource}
-        options={[['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]]}
-        onchange={(v) => setBlockProp('source', v)} />
-      {#if vsource === 'embed'}
-        <label title={ta('hint.video')}>{ta('lbl.videoUrl')}</label>
-        <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
-          onchange={(e) => setBlockProp('url', e.target.value)} />
-      {:else}
-        <label class="ghost filepick" title={ta('tip.video.file')}>
-          {selectedBlock.props.src ? ta('ui.changeVideo') : ta('ui.chooseVideo')}
-          <input type="file" accept="video/mp4,video/webm" onchange={setBlockVideoFile} />
-        </label>
-        <label class="ghost filepick" title={ta('tip.bg.poster')}>
-          {selectedBlock.props.poster ? ta('ui.changeImage') : ta('ui.choosePoster')}
-          <input type="file" accept="image/*" onchange={setBlockVideoPoster} />
-        </label>
+      {#snippet videoSource()}
+        <div class="pin-line">
+          <Choice label={ta('lbl.videoSource')} value={vsource}
+            options={[['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]]}
+            onchange={(v) => setBlockProp('source', v)} />
+          {@render pinFor('videoSource')}
+        </div>
+        {#if vsource === 'embed'}
+          <label title={ta('hint.video')}>{ta('lbl.videoUrl')}</label>
+          <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
+            onchange={(e) => setBlockProp('url', e.target.value)} />
+        {:else}
+          <label class="ghost filepick" title={ta('tip.video.file')}>
+            {selectedBlock.props.src ? ta('ui.changeVideo') : ta('ui.chooseVideo')}
+            <input type="file" accept="video/mp4,video/webm" onchange={setBlockVideoFile} />
+          </label>
+          <label class="ghost filepick" title={ta('tip.bg.poster')}>
+            {selectedBlock.props.poster ? ta('ui.changeImage') : ta('ui.choosePoster')}
+            <input type="file" accept="image/*" onchange={setBlockVideoPoster} />
+          </label>
+        {/if}
+      {/snippet}
+      {#snippet videoPlay()}
         <label class="gridmenu-snap">
           <input type="checkbox" checked={selectedBlock.props.loop === true}
             onchange={(e) => setBlockProp('loop', e.target.checked)} />
@@ -10517,41 +10587,53 @@
             {ta('lbl.videoAutoplay')}
           </label>
         {/if}
+      {/snippet}
+      {#snippet videoA11y()}
+        <label>{ta('lbl.videoTitle')}
+          <input value={selectedBlock.props.title ?? ''}
+            onchange={(e) => setBlockProp('title', e.target.value)} /></label>
+      {/snippet}
+      {@render menuGroup('video-source', ta('lbl.videoSource'), vsource === 'file' ? ta('opt.videoSource.file') : ta('opt.videoSource.embed'), videoSource)}
+      {#if vsource === 'file'}
+        {@const playOn = [selectedBlock.props.loop === true, selectedBlock.props.muted === true, selectedBlock.props.autoplay === true].filter(Boolean).length}
+        {@render menuGroup('video-play', ta('group.playback'), playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off'), videoPlay,
+          groupReset('video-play', { loop: false, muted: false, autoplay: false }))}
       {/if}
-      <label>{ta('lbl.videoTitle')}
-        <input value={selectedBlock.props.title ?? ''}
-          onchange={(e) => setBlockProp('title', e.target.value)} /></label>
+      {@render menuGroup('video-a11y', ta('group.accessibility'), selectedBlock.props.title || ta('menu.noTitle'), videoA11y)}
     {:else if selectedBlock.type === 'icon'}
-      <label>{ta('blocks.icon')}
-        <span class="toolbar-row">
-          <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
-            icon={selectedBlock.props.icon ?? null}
-            image={selectedBlock.props.image ?? null}
-            onpick={(glyph) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-              b.props.glyph = glyph;
-              b.props.icon = null;
-              b.props.image = null;
-            })}
-            onicon={(id) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-              b.props.icon = id;
-              b.props.image = null;
-            })}
-            onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
-          {#if !selectedBlock.props.icon}
-            <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
-              title={ta('tip.icon.typeGlyph')}
-              onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
-          {:else}
-            <button class="ghost" title={ta('tip.icon.backToGlyph')}
-              onclick={() => setBlockProp('icon', null)}>{ta('ui.removeDrawnIcon')}</button>
-          {/if}
-        </span></label>
-      {#if selectedBlock.props.image}
-        <span class="toolbar-row" title={ta('hint.icon.ownImage')}>
-          <img class="site-icon-preview" src={selectedBlock.props.image} alt={ta('gp.ownIcon')} />
-          <button class="ghost" onclick={() => setBlockProp('image', null)}>{ta('ui.removeOwnIcon')}</button>
-        </span>
-      {/if}
+      {#snippet iconIcon()}
+        <label>{ta('blocks.icon')}
+          <span class="toolbar-row">
+            <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
+              icon={selectedBlock.props.icon ?? null}
+              image={selectedBlock.props.image ?? null}
+              onpick={(glyph) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                b.props.glyph = glyph;
+                b.props.icon = null;
+                b.props.image = null;
+              })}
+              onicon={(id) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                b.props.icon = id;
+                b.props.image = null;
+              })}
+              onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
+            {#if !selectedBlock.props.icon}
+              <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
+                title={ta('tip.icon.typeGlyph')}
+                onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
+            {:else}
+              <button class="ghost" title={ta('tip.icon.backToGlyph')}
+                onclick={() => setBlockProp('icon', null)}>{ta('ui.removeDrawnIcon')}</button>
+            {/if}
+          </span></label>
+        {#if selectedBlock.props.image}
+          <span class="toolbar-row" title={ta('hint.icon.ownImage')}>
+            <img class="site-icon-preview" src={selectedBlock.props.image} alt={ta('gp.ownIcon')} />
+            <button class="ghost" onclick={() => setBlockProp('image', null)}>{ta('ui.removeOwnIcon')}</button>
+          </span>
+        {/if}
+      {/snippet}
+      {@render menuGroup('icon-icon', ta('blocks.icon'), selectedBlock.props.image ? ta('gp.ownIcon') : selectedBlock.props.icon ? ta('menu.drawnIcon') : (selectedBlock.props.glyph ?? '★'), iconIcon)}
     {:else if selectedBlock.type === 'collection'}
       <label title={ta('tip.collection.source')}>{ta('blocks.collection')}
         <Dropdown value={selectedBlock.props.collection ?? ''}
@@ -10638,10 +10720,18 @@
         </div>
       {/each}
     {:else if selectedBlock.type === 'shape'}
-      <label>{ta('blocks.shape')}
-        <Dropdown value={selectedBlock.props.kind}
-          options={SHAPE_KINDS}
-          onchange={(v) => setBlockProp('kind', v)} /></label>
+      {#snippet shapeShape()}
+        <label>{ta('blocks.shape')}
+          <Dropdown value={selectedBlock.props.kind}
+            options={SHAPE_KINDS}
+            onchange={(v) => setBlockProp('kind', v)} /></label>
+        {#if selectedBlock.props.kind === 'line'}
+          <label title={ta('tip.shape.label')}>{ta('lbl.shapeLabel')}
+            <input value={selectedBlock.props.label ?? ''}
+              onchange={(e) => setBlockProp('label', e.target.value.trim() || undefined)} /></label>
+        {/if}
+      {/snippet}
+      {@render menuGroup('shape-shape', ta('blocks.shape'), SHAPE_KINDS.find(([v]) => v === selectedBlock.props.kind)?.[1] ?? '', shapeShape)}
     {:else}
       <!-- The field contract: core blocks listed in CORE_FIELDS and plugin
            defs with `fields` get their settings rendered here; a plugin
@@ -10691,19 +10781,32 @@
   {/snippet}
   {#snippet menuStyle()}
     {#if selectedBlock.type === 'text'}
-      <label>{ta('lbl.align')}
-        <Dropdown value={selectedBlock.props.align ?? 'left'}
-          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-          onchange={(v) => setBlockProp('align', v)} /></label>
-      <label class="gridmenu-snap">
-        <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
-          onchange={(e) => setBlockProp('box', e.target.checked)} />
-        {ta('lbl.textBoxToggle')}
-      </label>
-      {#if selectedBlock.props.box}
-        {@render kortstilUI()}
-      {/if}
-      <hr class="gridmenu-divider" />
+      {#snippet textAlign()}
+        <div class="pin-line">
+          <label>{ta('lbl.align')}
+            <Dropdown value={selectedBlock.props.align ?? 'left'}
+              options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+              onchange={(v) => setBlockProp('align', v)} /></label>
+          {@render pinFor('align')}
+        </div>
+      {/snippet}
+      {#snippet textBox()}
+        <div class="pin-line">
+          <label class="gridmenu-snap">
+            <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
+              onchange={(e) => setBlockProp('box', e.target.checked)} />
+            {ta('lbl.textBoxToggle')}
+          </label>
+          {@render pinFor('textBox')}
+        </div>
+        {#if selectedBlock.props.box}
+          {@render kortstilUI()}
+        {/if}
+      {/snippet}
+      {@render menuGroup('text-align', ta('lbl.align'), { left: ta('common.left'), center: ta('common.center'), right: ta('common.right') }[selectedBlock.props.align ?? 'left'], textAlign,
+        groupReset('text-align', { align: 'left' }))}
+      {@render menuGroup('text-box', ta('group.textBox'), selectedBlock.props.box ? ta('common.on') : ta('common.off'), textBox,
+        groupReset('text-box', { box: false, boxStyle: null }))}
     {:else if selectedBlock.type === 'calendar'}
       {@const calDef = calDesign(selectedBlock.props.design)}
       <!-- The design: a row naming it, opening the picker over the whole menu -->
@@ -11041,57 +11144,88 @@
       </label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'button'}
-      <label>{ta('lbl.style')}
-        <Dropdown value={selectedBlock.props.style}
-          options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
-          onchange={(v) => setBlockProp('style', v)} /></label>
-      <hr class="gridmenu-divider" />
+      {#snippet btnLook()}
+        <div class="pin-line">
+          <label>{ta('lbl.style')}
+            <Dropdown value={selectedBlock.props.style}
+              options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
+              onchange={(v) => setBlockProp('style', v)} /></label>
+          {@render pinFor('btnStyle')}
+        </div>
+      {/snippet}
+      {@render menuGroup('btn-look', ta('group.appearance'), selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary'), btnLook,
+        groupReset('btn-look', { style: 'primary' }))}
     {:else if selectedBlock.type === 'image'}
-      <label>{ta('lbl.fit')}
-        <Dropdown value={selectedBlock.props.fit ?? 'cover'}
-          options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
-          onchange={(v) => setBlockProp('fit', v)} /></label>
-      <label>{ta('lbl.radius')}
-        <Dropdown value={selectedBlock.props.radius ?? ''}
-          options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
-          onchange={(v) => setBlockProp('radius', v || null)} /></label>
-      <label>{ta('lbl.focusX')}
-        <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
-      <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.x ?? 0.5}
-        oninput={(e) => setBlockProp('x', Number(e.target.value))} />
-      <label>{ta('lbl.focusY')}
-        <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
-      <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.y ?? 0.5}
-        oninput={(e) => setBlockProp('y', Number(e.target.value))} />
-      <label title={ta('tip.zoomCrop')}>{ta('lbl.zoom')}
-        <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
-      <input type="range" min="1" max="3" step="0.01" value={selectedBlock.props.zoom ?? 1}
-        oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
-      <label>{ta('lbl.brightness')}
-        <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
-      <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
-        oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
-      <label>{ta('lbl.contrast')}
-        <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
-      <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
-        oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
-      <label>{ta('lbl.saturate')}
-        <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
-      <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.saturate ?? 1}
-        oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
-      <button class="ghost action" title={ta('tip.resetAdjust')}
-        onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-          b.props.brightness = 1; b.props.contrast = 1; b.props.saturate = 1;
-        })}>{ta('ui.resetAdjust')}</button>
-      <hr class="gridmenu-divider" />
+      {#snippet imgCrop()}
+        <div class="pin-line">
+          <label>{ta('lbl.imageFit')}
+            <Dropdown value={selectedBlock.props.fit ?? 'cover'}
+              options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
+              onchange={(v) => setBlockProp('fit', v)} /></label>
+          {@render pinFor('imgFit')}
+        </div>
+        <label>{ta('lbl.focusX')}
+          <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
+        <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.x ?? 0.5}
+          oninput={(e) => setBlockProp('x', Number(e.target.value))} />
+        <label>{ta('lbl.focusY')}
+          <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
+        <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.y ?? 0.5}
+          oninput={(e) => setBlockProp('y', Number(e.target.value))} />
+        <label title={ta('tip.zoomCrop')}>{ta('lbl.zoom')}
+          <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
+        <input type="range" min="1" max="3" step="0.01" value={selectedBlock.props.zoom ?? 1}
+          oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
+        <button type="button" class="linkish" onclick={openImageEditor}>{ta('ui.openImageEditor')}</button>
+      {/snippet}
+      {#snippet imgFilters()}
+        <label>{ta('lbl.brightness')}
+          <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
+        <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
+          oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
+        <label>{ta('lbl.contrast')}
+          <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
+        <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
+          oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
+        <label>{ta('lbl.saturate')}
+          <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
+        <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.saturate ?? 1}
+          oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
+      {/snippet}
+      {#snippet imgCorners()}
+        <div class="pin-line">
+          <label>{ta('lbl.radius')}
+            <Dropdown value={selectedBlock.props.radius ?? ''}
+              options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
+              onchange={(v) => setBlockProp('radius', v || null)} /></label>
+          {@render pinFor('radius')}
+        </div>
+      {/snippet}
+      {@const cropN = groupChanged({ fit: 'cover', x: 0.5, y: 0.5, zoom: 1 })}
+      {@const filterN = groupChanged({ brightness: 1, contrast: 1, saturate: 1 })}
+      {@render menuGroup('img-crop', ta('group.crop'), cropN ? ta('menu.changed', { n: cropN }) : ta('menu.standard'), imgCrop,
+        groupReset('img-crop', { fit: 'cover', x: 0.5, y: 0.5, zoom: 1 }))}
+      {@render menuGroup('img-filters', ta('group.filters'), filterN ? ta('menu.changed', { n: filterN }) : ta('menu.standard'), imgFilters,
+        groupReset('img-filters', { brightness: 1, contrast: 1, saturate: 1 }))}
+      {@render menuGroup('img-corners', ta('group.corners'), { '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? ''], imgCorners,
+        groupReset('img-corners', { radius: 'md' }))}
     {:else if selectedBlock.type === 'icon'}
-      <label>{ta('lbl.sizePx')}
-        <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
-          onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
-      <label title={ta('hint.icon.color')}>{ta('lbl.color')}
-        <ColorPicker value={selectedBlock.props.color ?? 'accent'} tokens={themeSwatches()}
-          onchange={(v) => setBlockProp('color', v)} /></label>
-      <hr class="gridmenu-divider" />
+      {#snippet iconLook()}
+        <div class="pin-line">
+          <label>{ta('lbl.sizePx')}
+            <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
+              onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
+          {@render pinFor('iconSize')}
+        </div>
+        <div class="pin-line">
+          <label title={ta('hint.icon.color')}>{ta('lbl.color')}
+            <ColorPicker value={selectedBlock.props.color ?? 'accent'} tokens={themeSwatches()}
+              onchange={(v) => setBlockProp('color', v)} /></label>
+          {@render pinFor('iconColor')}
+        </div>
+      {/snippet}
+      {@render menuGroup('icon-look', ta('group.appearance'), `${selectedBlock.props.size ?? 48} px`, iconLook,
+        groupReset('icon-look', { size: 48, color: 'accent' }))}
     {:else if selectedBlock.type === 'collection'}
       <label>{ta('lbl.view')}
         <Dropdown value={selectedBlock.props.view ?? 'cards'}
@@ -11211,41 +11345,51 @@
       </label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'shape'}
-      <label>{ta('lbl.color')}
-        <Dropdown value={selectedBlock.props.color}
-          options={COLOR_TOKENS}
-          onchange={(v) => setBlockProp('color', v)} /></label>
-      <label>{ta('lbl.thickness')}
-        <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
-          onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
-      {#if (selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow') && designWidth()}
-        <!-- A line's length is its frame width, shown in px at the design
-             width, so it can be set without reaching the resize corner. -->
-        <label title={ta('tip.shapeSize')}>{ta('lbl.length')}
-          <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
-            onchange={(e) => setShapeSizePx(Number(e.target.value), false)} /></label>
-      {:else if selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
-        <!-- Without a design width the length stays in percent of the content surface -->
-        <label>{ta('lbl.length')}
-          <input type="number" min="1" max={Math.max(1, Math.round(100 - selectedBlock.frame.x))} step="0.5" value={selectedBlock.frame.w}
-            onchange={(e) => setBlockFrame('w', Math.max(1, Math.min(Number(e.target.value), 100 - selectedBlock.frame.x)))} /></label>
-      {:else if designWidth()}
-        <!-- A shape's size is its frame, shown in px at the design width; the height follows the shape's own ratio -->
-        <label title={ta('tip.shapeSize')}>{ta('lbl.sizePx')}
-          <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
-            onchange={(e) => setShapeSizePx(Number(e.target.value), true)} /></label>
+      {#snippet shapeStroke()}
+        <div class="pin-line">
+          <label>{ta('lbl.color')}
+            <Dropdown value={selectedBlock.props.color}
+              options={COLOR_TOKENS}
+              onchange={(v) => setBlockProp('color', v)} /></label>
+          {@render pinFor('shapeColor')}
+        </div>
+        <div class="pin-line">
+          <label>{ta('lbl.thickness')}
+            <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
+              onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
+          {@render pinFor('thickness')}
+        </div>
+        <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
+          <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
+            onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
+          {ta('lbl.filled')}
+        </label>
+      {/snippet}
+      {#snippet shapeSize()}
+        {#if (selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow') && designWidth()}
+          <!-- A line's length is its frame width, shown in px at the design
+               width, so it can be set without reaching the resize corner. -->
+          <label title={ta('tip.shapeSize')}>{ta('lbl.length')}
+            <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
+              onchange={(e) => setShapeSizePx(Number(e.target.value), false)} /></label>
+        {:else if selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
+          <!-- Without a design width the length stays in percent of the content surface -->
+          <label>{ta('lbl.length')}
+            <input type="number" min="1" max={Math.max(1, Math.round(100 - selectedBlock.frame.x))} step="0.5" value={selectedBlock.frame.w}
+              onchange={(e) => setBlockFrame('w', Math.max(1, Math.min(Number(e.target.value), 100 - selectedBlock.frame.x)))} /></label>
+        {:else}
+          <!-- A shape's size is its frame, shown in px at the design width; the height follows the shape's own ratio -->
+          <label title={ta('tip.shapeSize')}>{ta('lbl.sizePx')}
+            <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
+              onchange={(e) => setShapeSizePx(Number(e.target.value), true)} /></label>
+        {/if}
+      {/snippet}
+      {@const lineKind = selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
+      {@render menuGroup('shape-stroke', ta('group.strokeFill'), `${COLOR_TOKENS.find(([v]) => v === selectedBlock.props.color)?.[1] ?? ''} · ${selectedBlock.props.thickness ?? 2} px`, shapeStroke,
+        groupReset('shape-stroke', { color: 'accent', thickness: 2, fill: null }))}
+      {#if lineKind || designWidth()}
+        {@render menuGroup('shape-size', ta('group.measures'), designWidth() ? `${shapePx(selectedBlock.frame.w)} px` : `${selectedBlock.frame.w} %`, shapeSize)}
       {/if}
-      {#if selectedBlock.props.kind === 'line'}
-        <label title={ta('tip.shape.label')}>{ta('lbl.shapeLabel')}
-          <input value={selectedBlock.props.label ?? ''}
-            onchange={(e) => setBlockProp('label', e.target.value.trim() || undefined)} /></label>
-      {/if}
-      <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
-        <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
-          onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
-        {ta('lbl.filled')}
-      </label>
-      <hr class="gridmenu-divider" />
     {/if}
 
   {/snippet}
@@ -11424,6 +11568,10 @@
             <button type="button" class="menu-quick-open" onclick={item.run}>{item.value}</button>
           {:else if item.kind === 'number'}
             <input type="number" min={item.min} max={item.max} step={item.step ?? 1} value={item.value} aria-label={item.label} onchange={(e) => item.set(e.target.value)} />
+          {:else if item.kind === 'select'}
+            <Dropdown value={item.value} options={item.options} title={item.label} compact onchange={(v) => item.set(v)} />
+          {:else if item.kind === 'color'}
+            <ColorPicker value={item.value} tokens={themeSwatches()} label={item.label} onchange={(v) => item.set(v)} />
           {:else}
             <span class="seg" role="group" aria-label={item.label}>
               {#each item.options as [v, text] (v)}
