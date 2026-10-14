@@ -789,7 +789,7 @@ export default {
     'canvas.mobileReviewed': 'Merke mobiila-layouta geahčaduvvon',
     'canvas.newBlock': '+ Ođđa blohkka',
     'canvas.newSection': '+ Ođđa sekšuvdna',
-    'canvas.newSectionDrag': 'Coahkkal: ođđa sekšuvdna dása. Gease: sirdde sekšuvdnaráji (Shift = friddja allodat)',
+    'canvas.newSectionDrag': 'Coahkkal: ođđa sekšuvdna dása. Gease: sirdde sekšuvdnaráji (Ctrl dahje Cmd = friddja allodat)',
     'canvas.newSectionTitle': 'Ođđa sekšuvdna',
     'canvas.sectionDown': 'Sirdde sekšuvnna vulos',
     'canvas.sectionHeightDrag': 'Gease rievdadit sekšuvnna allodaga',

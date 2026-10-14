@@ -35,6 +35,7 @@ import { FONT_STACKS } from './fonts.js';
 import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { frameAtPoint, toolbarAnchor } from './place.js';
 import { topDrag } from './section-size.js';
+import { snapTolerance, edgeSnap, gapSnap, lockAxis } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky } from './sticky.js';
 import { nearestDock } from './sticky-model.js';
@@ -445,6 +446,7 @@ export function closeMenus() {
  * @param {{columns: number, rowHeight: number}} grid Effective grid
  */
 export function enhanceSection(host, section, grid) {
+  host._urdGrid = grid;
   for (const el of host.querySelectorAll('.urd-block')) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
@@ -644,15 +646,20 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
       moved = true;
       cursor.move(ev.clientY);
       px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
-      // Pixel-precise when snapping is off or Shift is held.
-      const free = grid.snap === false || ev.shiftKey;
+      // Pixel-precise when snapping is off or Ctrl or Cmd is held.
+      const free = grid.snap === false || ev.ctrlKey || ev.metaKey;
       px = free ? Math.round(px) : Math.round(px / grid.size) * grid.size;
       setMinHeight(host, px);
     };
-    const onUp = () => {
+    const done = () => {
       target.removeEventListener('pointermove', onMove);
       target.removeEventListener('pointerup', onUp);
+      target.removeEventListener('pointercancel', done);
+      target.removeEventListener('lostpointercapture', done);
       cursor.clear();
+    };
+    const onUp = () => {
+      done();
       if (!moved) return;
       opts.onDragged?.();
       if (Math.abs(px - startHeight) < 2) return;
@@ -662,6 +669,8 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
     };
     target.addEventListener('pointermove', onMove);
     target.addEventListener('pointerup', onUp);
+    target.addEventListener('pointercancel', done);
+    target.addEventListener('lostpointercapture', done);
   });
 }
 
@@ -1074,7 +1083,7 @@ function addSectionTopHandle(host, section, grid) {
         minHeightPx: startHeight,
         blockYs: parts.map((p) => p.y),
         grid,
-        free: ev.shiftKey,
+        free: ev.ctrlKey || ev.metaKey,
       });
       setMinHeight(host, result.minHeightPx);
       for (const p of parts) p.el.style.top = `${p.y + result.dy}px`;
@@ -1087,9 +1096,15 @@ function addSectionTopHandle(host, section, grid) {
       // scroll-behavior: smooth.
       window.scrollTo({ top: Math.max(0, startScrollY + result.dy), behavior: 'instant' });
     };
-    const onUp = () => {
+    const done = () => {
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onUp);
+      handle.removeEventListener('pointercancel', done);
+      handle.removeEventListener('lostpointercapture', done);
+      cursor.clear();
+    };
+    const onUp = () => {
+      done();
       if (!moved || !result || result.dy === 0) return;
       section.size = { ...section.size, minHeight: `${result.minHeightPx}px` };
       for (const p of parts) {
@@ -1104,6 +1119,8 @@ function addSectionTopHandle(host, section, grid) {
     };
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', done);
+    handle.addEventListener('lostpointercapture', done);
   });
   host.appendChild(handle);
 }
@@ -3941,66 +3958,121 @@ function enhanceBlock(el, block, section, grid, host) {
       const pctPerPx = 100 / canvas.clientWidth;
       const colStep = grid.size * pctPerPx;
       const r2 = (v) => Math.round(v * 100) / 100;
-      const overlay = showGridOverlay(host, grid);
+      // The grid: on this section, and under a move on every other section
+      // too, since a block released over another section moves there.
+      const overlays = [showGridOverlay(host, grid)];
+      if (kind === 'move') {
+        for (const other of document.querySelectorAll('.urd-section')) {
+          if (other !== host) overlays.push(showGridOverlay(other, other._urdGrid ?? grid));
+        }
+      }
       let current = orig;
 
-      // Smart guides (Wix-style): neighboring blocks' edges/centers + the
-      // content surface's quarters, midline included, as snap lines. The
-      // targets are collected at drag start.
-      const GUIDE_TOL = 5;
-      const xTargets = [0.25, 0.5, 0.75].map((share) => canvas.clientWidth * share);
-      const yTargets = [];
-      for (const other of canvas.querySelectorAll(':scope > .urd-block')) {
-        if (other === el) continue;
-        const left = other.offsetLeft;
-        const top = other.offsetTop;
-        xTargets.push(left, left + other.offsetWidth / 2, left + other.offsetWidth);
-        yTargets.push(top, top + other.offsetHeight / 2, top + other.offsetHeight);
-      }
+      // Smart guides (snap-model.js): the neighbours' edges and centres, the
+      // content surface's quarters and midline, and the gaps the neighbours
+      // keep between them, as snap lines, within a distance that follows the
+      // preview's zoom. The targets come from the section the block came
+      // from and the section it is held over, measured in this canvas's px,
+      // and the lines are drawn here, where they may run into that section.
+      // A line between the block and a neighbour spans the two; a line of the
+      // content surface spans its section; an equal gap is a band with its size.
+      const tol = snapTolerance(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'));
       const guideEls = [];
       const clearGuides = () => {
         for (const g of guideEls) g.remove();
         guideEls.length = 0;
       };
-      const drawGuide = (axis, px) => {
+      let targetHost = host;
+      let targets = { xs: [], ys: [], boxes: [] };
+      const collectTargets = () => {
+        const xs = [];
+        const ys = [];
+        const boxes = [];
+        const here = canvas.getBoundingClientRect();
+        for (const sectionHost of new Set([host, targetHost])) {
+          const c = canvasOf(sectionHost);
+          const cr = c.getBoundingClientRect();
+          const ox = cr.left - here.left;
+          const oy = cr.top - here.top;
+          const secTop = sectionHost.getBoundingClientRect().top - here.top;
+          const secBottom = secTop + sectionHost.offsetHeight;
+          for (const share of [0.25, 0.5, 0.75]) xs.push({ at: ox + c.clientWidth * share, from: secTop, to: secBottom });
+          ys.push({ at: oy + c.clientHeight / 2, from: ox, to: ox + c.clientWidth });
+          for (const other of c.querySelectorAll(':scope > .urd-block')) {
+            if (other === el || groupParts.some((g) => g.el === other)) continue;
+            // Measured as drawn, push shift included: the guides compare what is shown.
+            const left = ox + other.offsetLeft;
+            const top = oy + other.offsetTop;
+            const w = other.offsetWidth;
+            const h = other.offsetHeight;
+            for (const at of [left, left + w / 2, left + w]) xs.push({ at, from: top, to: top + h });
+            for (const at of [top, top + h / 2, top + h]) ys.push({ at, from: left, to: left + w });
+            boxes.push({ left, top, right: left + w, bottom: top + h });
+          }
+        }
+        targets = { xs, ys, boxes };
+      };
+      collectTargets();
+      const drawLine = (axis, at, from, to) => {
         const g = document.createElement('div');
         g.className = `urd-smart-guide urd-smart-guide-${axis}`;
-        if (axis === 'v') g.style.left = `${px}px`;
-        else g.style.top = `${px}px`;
+        if (axis === 'v') {
+          g.style.left = `${at}px`;
+          g.style.top = `${from}px`;
+          g.style.height = `${to - from}px`;
+        } else {
+          g.style.top = `${at}px`;
+          g.style.left = `${from}px`;
+          g.style.width = `${to - from}px`;
+        }
         canvas.appendChild(g);
         guideEls.push(g);
       };
-      /** Adjusts current toward the nearest snap line and draws it. */
+      const drawGap = (axis, from, to, across) => {
+        const g = document.createElement('div');
+        g.className = `urd-smart-gap urd-smart-gap-${axis}`;
+        if (axis === 'v') {
+          g.style.left = `${from}px`;
+          g.style.width = `${to - from}px`;
+          g.style.top = `${across.from}px`;
+          g.style.height = `${across.to - across.from}px`;
+        } else {
+          g.style.top = `${from}px`;
+          g.style.height = `${to - from}px`;
+          g.style.left = `${across.from}px`;
+          g.style.width = `${across.to - across.from}px`;
+        }
+        const label = document.createElement('span');
+        label.textContent = String(Math.round(to - from));
+        g.appendChild(label);
+        canvas.appendChild(g);
+        guideEls.push(g);
+      };
+      /** Adjusts current toward the nearest snap line or equal gap and draws it. */
       const applyGuides = () => {
         clearGuides();
         if (kind !== 'move') return;
         const wPx = (current.w / 100) * canvas.clientWidth;
-        let leftPx = (current.x / 100) * canvas.clientWidth;
-        let best = null;
-        for (const t of xTargets) {
-          for (const edge of [0, wPx / 2, wPx]) {
-            const d = t - (leftPx + edge);
-            if (Math.abs(d) <= GUIDE_TOL && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, line: t };
-          }
-        }
-        if (best) {
-          leftPx += best.d;
-          current = { ...current, x: clamp(r2((leftPx * 100) / canvas.clientWidth), 0, r2(100 - current.w)) };
-          drawGuide('v', best.line);
-        }
-        best = null;
-        for (const t of yTargets) {
-          for (const edge of [0, current.h / 2, current.h]) {
-            // The block is drawn with its push shift (live, from the last
-            // move); the guides compare what is shown.
-            const d = t - (current.y + pushShiftOf(el) + edge);
-            if (Math.abs(d) <= GUIDE_TOL && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, line: t };
-          }
-        }
-        if (best) {
-          current = { ...current, y: current.y + best.d };
-          drawGuide('h', best.line);
-        }
+        const hPx = current.h;
+        const leftPx = (current.x / 100) * canvas.clientWidth;
+        const topPx = current.y + pushShiftOf(el);
+        const box = { left: leftPx, top: topPx, right: leftPx + wPx, bottom: topPx + hPx };
+        const besideX = targets.boxes.filter((b) => b.bottom > box.top && b.top < box.bottom).map((b) => ({ start: b.left, end: b.right }));
+        const besideY = targets.boxes.filter((b) => b.right > box.left && b.left < box.right).map((b) => ({ start: b.top, end: b.bottom }));
+        // A line wins over a gap on each axis.
+        const ex = edgeSnap(leftPx, wPx, targets.xs, tol);
+        const gx = ex ? null : gapSnap(leftPx, wPx, besideX, tol);
+        const ey = edgeSnap(topPx, hPx, targets.ys, tol);
+        const gy = ey ? null : gapSnap(topPx, hPx, besideY, tol);
+        const dx = ex?.d ?? gx?.d ?? 0;
+        const dy = ey?.d ?? gy?.d ?? 0;
+        if (dx) current = { ...current, x: clamp(r2(((leftPx + dx) * 100) / canvas.clientWidth), 0, r2(100 - current.w)) };
+        if (dy) current = { ...current, y: current.y + dy };
+        const snapped = { left: leftPx + dx, top: topPx + dy, right: leftPx + dx + wPx, bottom: topPx + dy + hPx };
+        if (ex) drawLine('v', ex.target.at, Math.min(snapped.top, ex.target.from), Math.max(snapped.bottom, ex.target.to));
+        if (gx) for (const gap of gx.gaps) drawGap('v', gap.from, gap.to, { from: snapped.top, to: snapped.bottom });
+        if (ey) drawLine('h', ey.target.at, Math.min(snapped.left, ey.target.from), Math.max(snapped.right, ey.target.to));
+        if (gy) for (const gap of gy.gaps) drawGap('h', gap.from, gap.to, { from: snapped.left, to: snapped.right });
       };
 
       const onMove = (ev) => {
@@ -4010,15 +4082,30 @@ function enhanceBlock(el, block, section, grid, host) {
           holdSticky();
         }
         if (!settled) settleOnce();
-        // Shift held = temporary free placement (0.1% / 1 px); otherwise
-        // grid.snap decides. On a resize that keeps the ratio, Shift is
-        // the ratio lock instead, and the grid decides as usual.
+        // Ctrl or Cmd held = the grid and the guides off for this drag (0.1 %
+        // / 1 px); otherwise grid.snap decides. Shift holds a move to one
+        // axis, and on a resize of a block whose size is its frame it keeps
+        // the ratio.
         const keepRatio = Boolean(ratio) && ev.shiftKey;
-        const free = grid.snap === false || (ev.shiftKey && !keepRatio);
+        const free = grid.snap === false || ev.ctrlKey || ev.metaKey;
         const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
         const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
-        const dx = (ev.clientX - start.x) * pctPerPx;
-        const dy = ev.clientY - start.y;
+        let dxPx = ev.clientX - start.x;
+        let dyPx = ev.clientY - start.y;
+        if (kind === 'move' && ev.shiftKey) ({ dx: dxPx, dy: dyPx } = lockAxis(dxPx, dyPx));
+        const dx = dxPx * pctPerPx;
+        const dy = dyPx;
+        // The section the block is held over gives its lines too, from the
+        // moment the block's centre enters it.
+        if (kind === 'move') {
+          const rect = el.getBoundingClientRect();
+          const under = document.elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
+            .find((n) => n instanceof HTMLElement && n.classList.contains('urd-section')) ?? host;
+          if (under !== targetHost) {
+            targetHost = under;
+            collectTargets();
+          }
+        }
         const w = hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX ? orig.w : clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x));
         current = kind === 'move'
           ? {
@@ -4035,7 +4122,7 @@ function enhanceBlock(el, block, section, grid, host) {
               w,
               h: hug ? orig.h : keepRatio ? Math.max(4, Math.round(w * ratio)) : Math.max(4, snapPx(orig.h + dy)),
             };
-        // Shift = fully free: then smart guides are skipped too.
+        // Free = the smart guides are off too.
         if (!free) applyGuides();
         else clearGuides();
         const frames = new Map([[block.id, current]]);
@@ -4082,7 +4169,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         handle.removeEventListener('pointercancel', onCancel);
-        overlay.remove();
+        for (const o of overlays) o.remove();
         clearGuides();
         stop?.remove();
         readout?.remove();
@@ -4094,7 +4181,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         handle.removeEventListener('pointercancel', onCancel);
-        overlay.remove();
+        for (const o of overlays) o.remove();
         clearGuides();
         stop?.remove();
         readout?.remove();

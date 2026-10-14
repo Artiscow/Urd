@@ -64,8 +64,12 @@ completely without editor frames. Click the **Edit** button to come back.
 - **Keyboard on a selected block**: the arrow keys move one grid step
   (Shift = 1 px), Delete deletes, Esc deselects, Ctrl+D duplicates.
 - **Snap lines**: when you drag a block near the edge or centre of
-  another block, a line appears and the block snaps into place (hold Shift
-  for completely free placement).
+  another block, a line appears between the two and the block snaps into
+  place; when its distance to a neighbour equals the distance between two
+  neighbours, the distances are shown as bands with the number in them. The
+  lines also come from the section you hold the block over. Hold Shift to
+  move straight across or straight down, and Ctrl (Cmd on a Mac) for
+  completely free placement without the grid and the lines.
 - **Undo**: Ctrl+Z (and Ctrl+Shift+Z to redo) works on everything: moving,
   size, text, deletion, sections and grid.
 
@@ -223,8 +227,8 @@ The **Grid** panel controls the grid that blocks snap to when you drag them.
 The grid is shown in the preview for as long as the panel is open.
 
 - **Cell size**: how tight the grid is.
-- **Snap to grid**: switch it off to place completely freely. Hold Shift while you
-  drag to override the snapping temporarily.
+- **Snap to grid**: switch it off to place completely freely. Hold Ctrl (Cmd on
+  a Mac) while you drag to override the snapping temporarily.
 - A section can have its own grid, independent of the rest of the page.
 
 The grid is only an aid while editing: changing it never moves

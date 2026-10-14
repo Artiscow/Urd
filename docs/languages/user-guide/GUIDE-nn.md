@@ -56,8 +56,11 @@ heilt utan editor-rammer. Klikk **Rediger**-knappen for å kome tilbake.
 - **Tastatur på markert blokk**: piltastane flyttar eitt grid-steg
   (Shift = 1 px), Delete slettar, Esc avmarkerer, Ctrl+D dupliserer.
 - **Snappelinjer**: når du dreg ei blokk nær kanten eller midten av ei
-  anna blokk, blir ei linje vist og blokka snappar på plass (hald Shift
-  for heilt fri plassering).
+  anna blokk, blir ei linje vist mellom dei to og blokka snappar på plass;
+  når avstanden til ein nabo blir lik avstanden mellom to naboar, blir
+  avstandane viste som band med talet i. Linjene gjeld òg seksjonen du dreg
+  blokka over. Hald Shift for å flytte rett bortover eller rett nedover, og
+  Ctrl (Cmd på Mac) for heilt fri plassering utan rutenett og linjer.
 - **Angre**: Ctrl+Z (og Ctrl+Shift+Z for å gjenta) verkar på alt: flytting,
   storleik, tekst, sletting, seksjonar og grid.
 
@@ -207,8 +210,8 @@ utover seksjonskanten; ingenting blir klipt.
 Gridet blir vist i førehandsvisinga så lenge panelet er ope.
 
 - **Rutestorleik**: kor tett rutenettet er.
-- **Snapp til grid**: skru av for å plassere heilt fritt. Hald Shift medan du
-  dreg for å overstyre snappinga mellombels.
+- **Snapp til grid**: skru av for å plassere heilt fritt. Hald Ctrl (Cmd på
+  Mac) medan du dreg for å overstyre snappinga mellombels.
 - Ein seksjon kan få sitt eige grid, uavhengig av resten av sida.
 
 Gridet er berre eit hjelpemiddel ved redigering: å endre det flyttar aldri

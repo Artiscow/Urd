@@ -56,8 +56,12 @@ düzenleyici çerçeveleri olmadan görürsün. Geri dönmek için **Düzenle** 
 - **Seçili blokta klavye**: ok tuşları bir ızgara adımı taşır
   (Shift = 1 px), Delete siler, Esc seçimi kaldırır, Ctrl+D çoğaltır.
 - **Hizalama çizgileri**: bir bloğu başka bir bloğun kenarına ya da ortasına
-  yaklaştırdığında bir çizgi belirir ve blok yerine oturur (tamamen serbest
-  yerleşim için Shift'i basılı tut).
+  yaklaştırdığında ikisinin arasında bir çizgi belirir ve blok yerine oturur;
+  bir komşuya olan uzaklık iki komşu arasındaki uzaklığa eşit olduğunda,
+  uzaklıklar içinde sayı olan bantlar olarak gösterilir. Çizgiler bloğu
+  üzerinde tuttuğun bölümden de gelir. Düz yatay ya da düz dikey taşımak için
+  Shift'i, ızgarasız ve çizgisiz tamamen serbest yerleşim için Ctrl'yi (Mac'te
+  Cmd) basılı tut.
 - **Geri alma**: Ctrl+Z (ve yinelemek için Ctrl+Shift+Z) her şeyde çalışır: taşıma,
   boyut, metin, silme, bölümler ve ızgara.
 
@@ -207,7 +211,7 @@ Panel açık olduğu sürece ızgara önizlemede gösterilir.
 
 - **Hücre boyutu**: ızgaranın ne kadar sık olduğu.
 - **Izgaraya hizala**: tamamen serbest yerleştirmek için kapat. Hizalamayı geçici olarak
-  devre dışı bırakmak için sürüklerken Shift'i basılı tut.
+  devre dışı bırakmak için sürüklerken Ctrl'yi (Mac'te Cmd) basılı tut.
 - Bir bölüm, sayfanın geri kalanından bağımsız olarak kendi ızgarasına sahip olabilir.
 
 Izgara yalnızca düzenleme sırasında bir yardımcıdır: onu değiştirmek hiçbir zaman

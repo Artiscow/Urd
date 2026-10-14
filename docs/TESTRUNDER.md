@@ -2,6 +2,19 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.26.3): the site panels as components, and the guides rework
+
+- [ ] Pages: a new page from a template, the kebab menu (rename, slug, delete, save as template), the search text and the sharing image, and the warning on a page without a description
+- [ ] Nav: the menu rows dragged up, down and in under each other, «new page as a menu item», the logo and its type, the variant, the sizes, the mobile settings, the launcher, the announcement and the nav background
+- [ ] Site: the name, the icon through the icon editor, the content width with its sample, the language, the calendars with an open row and the focus on a new one, the map service and the time zone
+- [ ] Theme: the colours in light and dark, the suggestions, the fonts and the corners; Grid: the size and the snapping; Footer: the templates, the columns, the links, the social icons and the background
+- [ ] «Rediger nettstedets kalendere» in a calendar block's Kilder group opens the Site panel with the calendars unfolded
+- [ ] A block dragged near a neighbour's edge or centre shows a line between the two; dragged to the section's midline, a line across the section
+- [ ] Three blocks in a row with equal distances show the bands with the number when the third stands right; the bands and lines are gone when the drag ends
+- [ ] A block dragged over another section: the grid on every section, and lines from the section it is over; released there, it moves there
+- [ ] Shift while moving holds the axis; Ctrl (Cmd on a Mac) places freely without the grid and the lines; at 60 % zoom a snap feels as strong as at 100 %
+- [ ] The top edge of a section dragged and released leaves the pointer normal; the same for the bottom edge and the «+ Ny seksjon» bar, where Ctrl frees the height
+
 ### Test batch (0.7.26.2): the element menu as components, the global stylesheet and the design pictures
 
 - [ ] Every block type's menu, in the Properties panel and in the floating menu, shows the same groups, quick row and pins as before, and every control writes to the block

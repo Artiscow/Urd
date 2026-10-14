@@ -12006,7 +12006,9 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-hover-pill:not(.urd-na
   }
 }
 
-/* Smart guides: snap lines against neighboring blocks while dragging (preview only) */
+/* Smart guides: snap lines while a block is dragged (preview only). A line
+   between the block and a neighbour spans the two, a line of the content
+   surface spans its section, so preview-edit sets the span inline. */
 .urd-preview .urd-smart-guide {
   position: absolute;
   z-index: 1001;
@@ -12021,15 +12023,32 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-hover-pill:not(.urd-na
 }
 
 .urd-preview .urd-smart-guide-v {
-  top: 0;
-  bottom: 0;
   width: calc(3px * var(--urd-chrome-scale, 1));
 }
 
 .urd-preview .urd-smart-guide-h {
-  left: 0;
-  right: 0;
   height: calc(3px * var(--urd-chrome-scale, 1));
+}
+
+/* Equal gaps: a band over each gap that becomes equal, with its size in px,
+   in the same magenta as the lines */
+.urd-preview .urd-smart-gap {
+  position: absolute;
+  z-index: 1001;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: color-mix(in srgb, #ff2d87 22%, transparent);
+  outline: calc(1px * var(--urd-chrome-scale, 1)) solid #ff2d87;
+  outline-offset: calc(-1px * var(--urd-chrome-scale, 1));
+}
+
+.urd-preview .urd-smart-gap span {
+  padding: calc(1px * var(--urd-chrome-scale, 1)) calc(4px * var(--urd-chrome-scale, 1));
+  font: 600 calc(11px * var(--urd-chrome-scale, 1)) / 1.2 system-ui, sans-serif;
+  color: #fff;
+  background: #ff2d87;
+  border-radius: calc(3px * var(--urd-chrome-scale, 1));
 }
 
 /* Multi-selection: the selection frame (marquee), member highlighting and the
@@ -14150,6 +14169,7 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview.urd-chrome-off .urd-section-resize,
 .urd-preview.urd-chrome-off .urd-section-resize-top,
 .urd-preview.urd-chrome-off .urd-smart-guide,
+.urd-preview.urd-chrome-off .urd-smart-gap,
 .urd-preview.urd-chrome-off .urd-page-guide,
 .urd-preview.urd-chrome-off .urd-marquee,
 .urd-preview.urd-chrome-off .urd-multi-toolbar,

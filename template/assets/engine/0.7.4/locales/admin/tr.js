@@ -1591,7 +1591,7 @@ export default {
     'canvas.mobileReviewed': 'Mobil düzeni gözden geçirildi olarak işaretle',
     'canvas.newBlock': '+ Yeni blok',
     'canvas.newSection': '+ Yeni bölüm',
-    'canvas.newSectionDrag': 'Tıkla: buraya yeni bölüm. Sürükle: bölüm sınırını taşı (Shift = serbest yükseklik)',
+    'canvas.newSectionDrag': 'Tıkla: buraya yeni bölüm. Sürükle: bölüm sınırını taşı (Ctrl veya Cmd = serbest yükseklik)',
     'canvas.newSectionTitle': 'Yeni bölüm',
     'canvas.sectionDown': 'Bölümü aşağı taşı',
     'canvas.sectionHeightDrag': 'Bölümün yüksekliğini değiştirmek için sürükle',

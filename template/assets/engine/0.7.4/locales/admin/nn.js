@@ -878,7 +878,7 @@ export default {
     'canvas.mobileReviewed': 'Set mobil-layouten som gjennomgått',
     'canvas.newBlock': '+ Ny blokk',
     'canvas.newSection': '+ Ny seksjon',
-    'canvas.newSectionDrag': 'Klikk: ny seksjon her. Dra: flytt seksjonsgrensa (Shift = fri høgd)',
+    'canvas.newSectionDrag': 'Klikk: ny seksjon her. Dra: flytt seksjonsgrensa (Ctrl eller Cmd = fri høgd)',
     'canvas.newSectionTitle': 'Ny seksjon',
     'canvas.sectionDown': 'Flytt seksjonen ned',
     'canvas.sectionHeightDrag': 'Dra for å endre høgda på seksjonen',

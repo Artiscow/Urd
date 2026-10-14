@@ -1591,7 +1591,7 @@ export default {
     'canvas.mobileReviewed': 'Mark the mobile layout as reviewed',
     'canvas.newBlock': '+ New block',
     'canvas.newSection': '+ New section',
-    'canvas.newSectionDrag': 'Click: new section here. Drag: move the section boundary (Shift = free height)',
+    'canvas.newSectionDrag': 'Click: new section here. Drag: move the section boundary (Ctrl or Cmd = free height)',
     'canvas.newSectionTitle': 'New section',
     'canvas.sectionDown': 'Move the section down',
     'canvas.sectionHeightDrag': 'Drag to change the section height',

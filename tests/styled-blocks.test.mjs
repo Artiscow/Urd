@@ -15,7 +15,8 @@ const { shapeBlock } = await engineImport('blocks/shape.js');
 const { FOOTER_DESIGNS, footerDesign } = await engineImport('footer-model.js');
 const { footerThumb } = await engineImport('footer-thumb.js');
 
-const editor = readFileSync(new URL('../editor/src/App.svelte', import.meta.url), 'utf8');
+// The footer's template picker stands in the Footer panel (0.7.26.3).
+const editor = readFileSync(new URL('../editor/src/panels/FooterPanel.svelte', import.meta.url), 'utf8');
 // The variant lists stand in the block families of the element menu (0.7.26.2).
 const families = ['Stats', 'Faq'].map((f) => readFileSync(new URL(`../editor/src/menu/families/${f}.svelte`, import.meta.url), 'utf8')).join('\n');
 

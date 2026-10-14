@@ -58,8 +58,10 @@ git-máhttu dárbbašuvvo: buot dáhpáhuvvá fierpmádatlohkkis du iežat siidd
 - **Boallobeavdi merkejuvvon blohkas**: njuolat sirdet ovtta grid-lávkki
   (Shift = 1 px), Delete sihko, Esc lokte merkema, Ctrl+D máŋge.
 - **Snáhpenlinnjá**: go geasát blohka lahka eará blohka ravdda dahje gaskka,
-  čájehuvvo linnjá ja blohkka snáhpe sadjái (doala Shift
-  áibbas friddja sajádaga várás).
+  čájehuvvo linnjá guovtti gaskii ja blohkka snáhpe sadjái; go gaska
+  ránnjái lea seamma go gaska guovtti ránnjá gaskkas, čájehuvvojit gaskkat
+  bánddan loguin. Doala Shift sirdit njuolga guvlui dahje njuolga vulos, ja
+  Ctrl (Cmd Mac:as) áibbas friddja sajádaga várás.
 - **Gáđaheapmi**: Ctrl+Z (ja Ctrl+Shift+Z ođđasit dahkat) doaibmá buot ektui: sirdin,
   sturrodat, teaksta, sihkkun, sekšuvnnat ja grid.
 
@@ -209,7 +211,7 @@ sekšuvdnaravdda badjel; ii mihkkege čuhppojuvvo.
 Grid čájehuvvo ovdačájeheamis nu guhká go panela lea rabas.
 
 - **Ruvttu sturrodat**: man čavga ruvttu lea.
-- **Snáhpe gridii**: jáddat jus háliidat bidjat áibbas friddja. Doala Shift dan botta go
+- **Snáhpe gridii**: jáddat jus háliidat bidjat áibbas friddja. Doala Ctrl (Cmd Mac:as) dan botta go
   geasát vai badjelgeahčat snáhpema gaskaboddosaččat.
 - Sekšuvdna sáhttá oažžut iežas grid, sorjjasmeahttun siiddu eará osiin.
 
