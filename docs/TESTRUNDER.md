@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.21.7): the phone height of a block that fetches its content
+
+- [ ] On the home page, change the calendar's design, publish, and open the published page on a phone in a new private window: the calendar stands at its final height while it loads and the page below does not jump (a small difference is expected if the feed changed since the edit)
+- [ ] Change the calendar's design or the number of events in the desktop view and publish again: the phone height follows without any drag
+- [ ] The same for a collection block and a product block on a phone: no jump when the entries arrive, and a collection with no entries leaves no empty space under its empty state
+- [ ] On the desktop a collection and a product block hold their frame's height while the entries load, and then follow the content as before
+- [ ] A page saved before this change loads as it did, on the desktop and on a phone
+
 ### Test batch (0.7.21.6): drags that show their result
 
 - [ ] A Shift-drag of the resize corner on an image, a video, a shape and an icon keeps the ratio, with the width snapping to the grid; without Shift the height is free as before; the handle's tooltip says Shift keeps the ratio

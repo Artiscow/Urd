@@ -14,7 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, blockSize, sizeBounds } from './push-model.js';
+import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, blockSize, sizeBounds, mobileLoadingHeight } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -182,7 +182,7 @@ function writePush(host, items, skipBox) {
   // growth never raises it, and a block that outgrows it lies over the
   // section below, where the owner sees it; on the published page the
   // growth raises it, so a visitor's content never lies over the next
-  // section (ADR-0025 addendum of 11 October 2026).
+  // section (ADR-0025 decision 8).
   host.style.minHeight = host.dataset.urdMinHeight ?? '';
   const designPx = Number.parseFloat(getComputedStyle(host).minHeight) || 0;
   const held = host._urdPushPreview && Boolean(host._urdPushSection?.size?.minHeight);
@@ -367,7 +367,7 @@ function applyZoom(child, block, zoom) {
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
-const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-cal-note, .urd-block-ruler, dialog';
+const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-cal-note, .urd-block-ruler, dialog';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -832,11 +832,12 @@ export function renderSection(section, site, host, opts = {}) {
   if (secWidth) canvas.style.setProperty('--urd-canvas-w', secWidth === 'full' ? '100%' : secWidth);
   // The width the canvas has at the design width, for the proportional
   // shrink (fitContent): the site's content width, or the section's own px
-  // width when that is narrower; none on a full-width site or section,
-  // where nothing has a design size.
+  // width when that is narrower; none on a full-width site or section, or a
+  // section width that is not in px, where nothing has a design size. The
+  // editor's designWidth() computes the same.
   const siteW = typeof site.layout?.contentWidth === 'number' ? site.layout.contentWidth : 0;
   const secPx = typeof secWidth === 'string' && /^\d+(\.\d+)?px$/.test(secWidth) ? parseFloat(secWidth) : 0;
-  canvas._urdDesignW = secWidth === 'full' ? 0 : (secPx && siteW ? Math.min(secPx, siteW) : secPx || siteW);
+  canvas._urdDesignW = !secWidth ? siteW : secPx ? (siteW ? Math.min(secPx, siteW) : secPx) : 0;
   host.appendChild(canvas);
 
   if (viewport === 'mobile') {
@@ -864,6 +865,12 @@ export function renderSection(section, site, host, opts = {}) {
       if (followsWidth(block)) el.dataset.urdWidth = 'own';
       const align = heightAlign(block);
       if (align !== 'top') el.dataset.urdAlign = align;
+      // A block that fetches its content stands at the height the editor
+      // measured at the phone width while it loads (0.7.21.7, base.css).
+      // The reserve stands inside the content, which the block's size zooms,
+      // so it is written in the content's own px.
+      const loadingH = mobileLoadingHeight(block);
+      if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / blockSize(block))}px`);
       // Screen docking applies on mobile too: sticky.js docks the block
       // against its own measured size. Scroll pinning is desktop-only
       // (the row grid is document flow), so that mode is not marked here.

@@ -41,6 +41,28 @@ export function followsContent(block) {
 }
 
 /**
+ * The block types that follow their content and fetch it (a feed, a
+ * collection), so their height on the phone is unknown until the content is
+ * drawn. The editor measures each at the phone width after an edit and
+ * stores it as `mobileHeight` (0.7.21.7); the loading state stands at it on
+ * the phone, so the first load of a session does not jump.
+ */
+export const FETCHES_CONTENT = new Set(['calendar', 'collection', 'product']);
+
+/**
+ * The height in px the loading state of a block stands at on the phone: the
+ * stored `mobileHeight` of a block that fetches its content, else 0 (its
+ * loading state's own height).
+ * @param {{type?: string, mobileHeight?: number}} block
+ * @returns {number}
+ */
+export function mobileLoadingHeight(block) {
+  if (!block || !FETCHES_CONTENT.has(block.type)) return 0;
+  const h = Number(block.mobileHeight);
+  return Number.isFinite(h) && h > 0 ? Math.round(h) : 0;
+}
+
+/**
  * The block types that can use the height of a box taller than their content
  * (ADR-0025 decision 3, «stretch»): the figure and the countdown's units fill
  * the box, and a quote's card does. The calendar stretches too, by design:

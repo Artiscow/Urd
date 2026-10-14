@@ -217,6 +217,7 @@
         "fitMin": { "type": "number", "minimum": 0.01, "maximum": 1, "description": "The floor of the shrink as a share of the design size (default 0.6)." },
         "size": { "type": "number", "minimum": 0.4, "maximum": 2, "description": "The block's size (additive from 0.7.21.5, ADR-0025 decision 6): the whole block, text included, drawn smaller or larger than it is, as a factor. Omitted = 1. Ignored on the frame-sized types (SIZE_BY_FRAME in push-model.js: image, video, shape, icon, map), whose size is their frame." },
         "sizeMin": { "type": "integer", "minimum": 6, "maximum": 200, "description": "The smallest size in px the base text of a sized block may take (default 12)." },
+        "mobileHeight": { "type": "integer", "minimum": 1, "description": "The height in px a block that fetches its content takes at the phone width, measured by the editor after an edit (additive from 0.7.21.7; FETCHES_CONTENT in push-model.js: calendar, collection, product). The loading state stands at it on the phone, so the first load of a session does not jump. Omitted = the loading state's own height." },
         "sizeMax": { "type": "integer", "minimum": 6, "maximum": 200, "description": "The largest size in px the base text of a sized block may take (default 96; never under sizeMin)." },
         "height": {
           "type": "object",

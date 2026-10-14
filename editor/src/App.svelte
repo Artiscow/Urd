@@ -10,6 +10,7 @@
   import GlyphPicker from './lib/GlyphPicker.svelte';
   import MarkPicker from './lib/MarkPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
+  import { createPhoneFit } from './lib/phone-fit.js';
   import { previewScale } from './lib/preview-scale.js';
   import { deployTargets, awaitServed } from './lib/deploy-wait.js';
   import { menuSearch } from './lib/menu-search.js';
@@ -126,7 +127,7 @@
   import { FONT_STACKS } from '$engine/fonts.js';
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
-  import { FOLLOWS_CONTENT, STRETCHES, followsContent, fitMoves, SIZE, SIZE_BY_FRAME, SIZE_TEXT, blockSize, sizeBounds } from '$engine/push-model.js';
+  import { FOLLOWS_CONTENT, FETCHES_CONTENT, STRETCHES, followsContent, fitMoves, SIZE, SIZE_BY_FRAME, SIZE_TEXT, blockSize, sizeBounds } from '$engine/push-model.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
@@ -1107,7 +1108,8 @@
     }
     const byWidth = FIT_BY_WIDTH.has(b.type);
     items.push({ id: 'fit', label: ta('quick.fit'), kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
-      options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]] : [['wrap', ta('quick.fit.wrap')], ['shrink', ta('quick.fit.shrink')], ['both', ta('quick.fit.both')]],
+      options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
+        : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
       set: (v) => setBlockFit(v) });
     items.push({ id: 'phone', label: ta('quick.phone'), kind: 'choice', value: b.hideMobile ? 'off' : 'on', options: [['on', ta('quick.phone.show')], ['off', ta('quick.phone.hide')]], set: (v) => setBlockHideMobile(v === 'off') });
     return items;
@@ -1280,17 +1282,58 @@
   const fitSeq = new Map();
   let fitCount = 0;
   function fitBlockSoon(sectionId, block) {
+    phoneFitSoon(sectionId, block);
     if (viewMode !== 'desktop' || !followsContent(block)) return;
     clearTimeout(fitTimers.get(block.id));
     const seq = ++fitCount;
     fitSeq.set(block.id, seq);
     fitTimers.set(block.id, setTimeout(() => bridge?.sendFitBlock(sectionId, block.id, seq), 60));
   }
-  /** Forgets the fits still waiting: their answers would measure a draft that is gone. */
+  /* The phone height of a block that fetches its content (0.7.21.7,
+     lib/phone-fit.js): after every edit that can change it, a hidden preview
+     at the phone width is asked for the height the block takes there, and it
+     is stored as the block's mobileHeight, which the loading state stands at
+     on the phone. Like the desktop fit it is part of the edit that asked for
+     it: no undo step of its own. */
+  const phoneSeq = new Map();
+  let phoneFit = null;
+  let phonePlugins = '';
+  function phoneFitSoon(sectionId, block) {
+    if (!FETCHES_CONTENT.has(block.type) || !followsContent(block)) return;
+    phoneFit ??= createPhoneFit({
+      title: () => ta('canvas.phoneMeasure'),
+      prepare: (post, first) => {
+        // The plugins only when they changed: the preview loads them anew.
+        const enabled = $state.snapshot(pluginsView)?.enabled ?? [];
+        const key = JSON.stringify(enabled);
+        if (first || key !== phonePlugins) post({ type: 'urd-plugins', enabled });
+        phonePlugins = key;
+        post({ type: 'urd-site', site: $state.snapshot(siteDraft) });
+        post({ type: 'urd-collections', collections: $state.snapshot(collectionsView) ?? {} });
+      },
+      onHeight: applyPhoneHeight,
+    });
+    const seq = ++fitCount;
+    phoneSeq.set(block.id, seq);
+    phoneFit.request(pageId, $state.snapshot(store.data), sectionId, block.id, seq);
+  }
+  function applyPhoneHeight(forPage, blockId, h, seq) {
+    if (forPage !== pageId || seq !== phoneSeq.get(blockId)) return;
+    const block = store.data.sections.flatMap((s) => s.blocks).find((b) => b.id === blockId);
+    const next = Math.round(h);
+    if (!block || !(next > 0) || block.mobileHeight === next) return;
+    block.mobileHeight = next;
+    store.save();
+    updateDirty();
+  }
+
+  /** Forgets the fits still waiting, on the desktop and the phone: their answers would measure a draft that is gone. */
   function dropFits() {
     for (const timer of fitTimers.values()) clearTimeout(timer);
     fitTimers.clear();
     fitSeq.clear();
+    phoneSeq.clear();
+    phoneFit?.cancel();
   }
 
   /* The calendar block's Style tab (calendar-designs.js): the design, its
@@ -1404,9 +1447,21 @@
      height the same way where the block owns it, with the blocks below
      moved as for a fit; a block whose height follows its content is fitted
      by the preview after the edit (fitBlockSoon). */
+  /* One slider gesture is computed from where it began (sizeGesture: the
+     block's size, its frame and the other blocks' places then), so a slide
+     up and back returns the frame and the blocks below to where they were,
+     also when the width met the canvas edge on the way. */
+  let sizeGesture = null;
   function setBlockSize(value) {
     mutateBlock(`edit:${selectedBlock.blockId}:size`, (b, section) => {
-      const before = blockSize(b);
+      if (sizeGesture?.blockId !== b.id) {
+        sizeGesture = {
+          blockId: b.id,
+          size: blockSize(b),
+          frame: { ...b.frames.desktop },
+          ys: new Map(section.blocks.filter((x) => x.frames?.desktop).map((x) => [x.id, x.frames.desktop.y])),
+        };
+      }
       if (value === 1) {
         delete b.size;
         delete b.sizeMin;
@@ -1414,12 +1469,17 @@
       } else {
         b.size = value;
       }
-      const ratio = blockSize(b) / before;
-      const f = b.frames?.desktop;
-      if (ratio === 1 || !f) return;
-      const frame = { ...f, w: Math.min(Math.round(f.w * ratio * 100) / 100, Math.round((100 - f.x) * 100) / 100) };
+      const g = sizeGesture;
+      // Back to where the gesture began, then scaled from there.
+      for (const x of section.blocks) {
+        if (x.id !== b.id && x.frames?.desktop && g.ys.has(x.id)) x.frames.desktop = { ...x.frames.desktop, y: g.ys.get(x.id) };
+      }
+      b.frames.desktop = { ...g.frame };
+      const ratio = blockSize(b) / g.size;
+      if (ratio === 1) return;
+      const frame = { ...g.frame, w: Math.min(Math.round(g.frame.w * ratio * 100) / 100, Math.round((100 - g.frame.x) * 100) / 100) };
       if (!followsContent(b)) {
-        frame.h = Math.max(1, Math.round(f.h * ratio));
+        frame.h = Math.max(1, Math.round(g.frame.h * ratio));
         for (const [id, y] of fitMoves(section.blocks, b.id, frame.h)) {
           const other = section.blocks.find((x) => x.id === id);
           if (other?.frames?.desktop) other.frames.desktop = { ...other.frames.desktop, y };
@@ -1526,18 +1586,34 @@
     });
   }
 
-  /* A shape's size in px at the design width (ADR-0018): the frame's width
-     is stored in percent of the content surface, so px and percent convert
-     through the content width. A line takes the width alone; a shape's
-     height follows its own ratio. */
+  /** The width in px the selected block's canvas has at the design width
+   *  (ADR-0018): the site's content width, or its section's own px width
+   *  when that is narrower; 0 on a full-width site or section, or a section
+   *  width that is not in px, where nothing has a design size. The engine
+   *  computes the same in renderSection. */
+  function designWidth() {
+    const section = store.data.sections.find((s) => s.id === selectedBlock?.sectionId);
+    const sec = section?.size?.maxWidth;
+    const site = typeof layoutWidth === 'number' ? layoutWidth : 0;
+    if (sec === 'full') return 0;
+    if (sec) return /^\d+(\.\d+)?px$/.test(sec) ? Math.min(parseFloat(sec), site || Infinity) : 0;
+    return site;
+  }
+
+  /* A shape's size in px at the design width: the frame's width is stored
+     in percent of the content surface, so px and percent convert through
+     designWidth(). A line takes the width alone; a shape's height follows
+     its own ratio. Where there is no design width the fields are not shown. */
   function shapePx(pct) {
-    return Math.round((pct / 100) * layoutWidth);
+    return Math.round((pct / 100) * designWidth());
   }
   function setShapeSizePx(px, keepRatio) {
-    if (!Number.isFinite(px) || px < 4) return;
+    const dw = designWidth();
+    if (!Number.isFinite(px) || px < 4 || !(dw > 0)) return;
     const { x, w, h } = selectedBlock.frame;
-    const nw = Math.max(0.5, Math.min(Math.round((px / layoutWidth) * 200) / 2, Math.round((100 - x) * 2) / 2));
+    const nw = Math.max(0.5, Math.min(Math.round((px / dw) * 200) / 2, Math.round((100 - x) * 2) / 2));
     const nh = keepRatio ? Math.max(1, Math.round(h * (nw / w))) : h;
+    if (!Number.isFinite(nw) || !Number.isFinite(nh)) return;
     mutateBlock(`edit:frame-${selectedBlock.blockId}:size`, (b) => {
       b.frames.desktop = { ...b.frames.desktop, w: nw, h: nh };
     });
@@ -5550,6 +5626,8 @@
     // A block that follows its content flows in its new width, and its frame
     // is fitted to the height the content takes there (ADR-0025).
     if (key === 'desktop' && msg.frame?.w !== width) fitBlockSoon(section.id, block);
+    // A block pinned to a new width in the row grid takes a new height on the phone.
+    else if (key === 'mobile') phoneFitSoon(section.id, block);
   }
 
   /** A height the preview reports for a block (urd-grow): from a plugin copy
@@ -6979,7 +7057,7 @@
                 <Dropdown value={panelsPref}
                   options={[['remember', ta('settings.panelsRemember')], ['reset', ta('settings.panelsReset')]]}
                   onchange={setPanelsPref} /></label>
-              <!-- The Screen device (ADR-0018 addendum): its own window
+              <!-- The Screen device (ADR-0018, Consequences): its own window
                    width, or an editing size with an optional height. An
                    admin preference like the theme and the language, so it
                    lives here and not in the device strip. -->
@@ -9878,7 +9956,7 @@
 {/snippet}
 
 {#snippet blockPropsUI(wide, query = '')}
-  <!-- The element menu (ADR-0016 with its addendum): Content is what the
+  <!-- The element menu (ADR-0016 decision 3): Content is what the
        block says and shows, Style is how it looks, Placement is where it
        sits and how it behaves there. Wide, the three stand as columns;
        narrow, they are tabs. -->
@@ -11095,13 +11173,18 @@
       <label>{ta('lbl.thickness')}
         <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
           onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
-      {#if selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
+      {#if (selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow') && designWidth()}
         <!-- A line's length is its frame width, shown in px at the design
              width, so it can be set without reaching the resize corner. -->
         <label title={ta('tip.shapeSize')}>{ta('lbl.length')}
           <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
             onchange={(e) => setShapeSizePx(Number(e.target.value), false)} /></label>
-      {:else}
+      {:else if selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
+        <!-- Without a design width the length stays in percent of the content surface -->
+        <label>{ta('lbl.length')}
+          <input type="number" min="1" max={Math.max(1, Math.round(100 - selectedBlock.frame.x))} step="0.5" value={selectedBlock.frame.w}
+            onchange={(e) => setBlockFrame('w', Math.max(1, Math.min(Number(e.target.value), 100 - selectedBlock.frame.x)))} /></label>
+      {:else if designWidth()}
         <!-- A shape's size is its frame, shown in px at the design width; the height follows the shape's own ratio -->
         <label title={ta('tip.shapeSize')}>{ta('lbl.sizePx')}
           <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
@@ -11128,7 +11211,7 @@
     <div class="ctl-row" title={ta('tip.scale')}>
       <span class="mini-label">{ta('lbl.scale')}</span>
       <input type="range" min={SIZE.min * 100} max={SIZE.max * 100} step="5" value={Math.round(blockSize(selectedBlock) * 100)}
-        aria-label={ta('lbl.scale')} oninput={(e) => setBlockSize(e.target.valueAsNumber / 100)} />
+        aria-label={ta('lbl.scale')} oninput={(e) => setBlockSize(e.target.valueAsNumber / 100)} onchange={() => (sizeGesture = null)} />
       <span class="gridmenu-value">{Math.round(blockSize(selectedBlock) * 100)} %</span>
     </div>
     {#if blockSize(selectedBlock) !== 1}
@@ -11147,7 +11230,7 @@
       <Dropdown value={selectedBlock.fit ?? 'wrap'}
         options={FIT_BY_WIDTH.has(selectedBlock.type)
           ? [['wrap', ta('opt.fit.fluid')], ['shrink', ta('opt.fit.floor')]]
-          : [['wrap', ta('opt.fit.wrap')], ['shrink', ta('opt.fit.shrink')], ['both', ta('opt.fit.both')]]}
+          : [['wrap', ta('opt.fit.wrap')], ...(designWidth() || selectedBlock.fit === 'shrink' ? [['shrink', ta('opt.fit.shrink')]] : []), ['both', ta('opt.fit.both')]]}
         onchange={(v) => setBlockFit(v)} /></label>
     {#if selectedBlock.fit}
       <div class="ctl-row" title={ta('tip.fitMin')}>

@@ -1551,7 +1551,10 @@ function phoneDays(ui, grid, panel, year, month, occs, cellClass) {
 /** The height the calendar last had in this viewport, kept for the session so the loading state can stand at it. */
 const heightKey = (el, ctx) => `urd-cal-h:${el.dataset.blockId ?? ''}:${ctx.viewport === 'mobile' ? 'm' : 'd'}`;
 
-/** The loading state: quiet bars at the height the calendar will have, with the word for a screen reader. */
+/**
+ * The loading state: quiet bars at the height the calendar will have, with the word for a screen reader.
+ * The height the session saw is the closest; without it the phone takes the height the editor measured there (`--urd-loading-h`, base.css).
+ */
 function loadingNode(el, ctx) {
   const box = el2('div', 'urd-cal-loading');
   box.setAttribute('role', 'status');

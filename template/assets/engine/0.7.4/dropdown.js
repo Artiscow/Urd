@@ -10,7 +10,7 @@
  * The buttons do not steal focus (mousedown is prevented), so a text field's
  * selection survives the choice - which is why it fits in the text toolbar.
  *
- * Two branches (ADR-0011 addendum, anchored.js decides): with the Popover
+ * Two branches (ADR-0011 decisions 1 and 2, anchored.js decides): with the Popover
  * API and anchor positioning the menu opens in the top layer under its
  * button, flipped by the browser when it does not fit, with light dismiss
  * for the outside click and Escape; otherwise it is appended to body,

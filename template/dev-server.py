@@ -16,6 +16,7 @@ the repo root starts this file too):
 """
 
 import contextlib
+import errno
 import functools
 import http.server
 import os
@@ -71,12 +72,12 @@ def main():
         try:
             server = DualStackServer(('::', port), handler)
         except OSError as err:
-            if err.errno == 98:  # EADDRINUSE
+            if err.errno == errno.EADDRINUSE:
                 raise
             # IPv6 unavailable on this machine: fall back to plain IPv4.
             server = http.server.ThreadingHTTPServer(('0.0.0.0', port), handler)
     except OSError as err:
-        if err.errno == 98:
+        if err.errno == errno.EADDRINUSE:
             print(f'Port {port} is busy (is another server still running?).')
             print(f'Stop it, or pick another port: python3 dev-server.py {port + 1}')
             sys.exit(1)

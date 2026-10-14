@@ -213,6 +213,23 @@ export function liftContractTokens(target) {
 const MAP_LINK_PX = 26;
 
 /**
+ * The calendar's own size (`props.scale`, 0.7.20.1 to 0.7.21.4) becomes the
+ * block-level `size` every block type takes (ADR-0025 decision 6), inside
+ * its bounds; a size of 1 leaves no field.
+ * Used by the page migration AND by template insertion (templates-model.js),
+ * which inserts stored payloads outside the page lift.
+ * @param {{blocks?: Array<object>}} section The section (mutated)
+ */
+export function liftCalendarScale(section) {
+  for (const block of section?.blocks ?? []) {
+    if (block.type !== 'calendar' || !block.props || !('scale' in block.props)) continue;
+    const size = blockSize({ type: 'calendar', size: block.props.scale });
+    delete block.props.scale;
+    if (size !== 1) block.size = size;
+  }
+}
+
+/**
  * Lifts the map blocks of one section from the height setting the map had
  * before page v5 (`props.height`, the iframe's own height) to the frame
  * (ADR-0025 decision 2: the map's box decides, and the iframe fills it). The
@@ -280,17 +297,9 @@ const pageMigrations = {
     for (const section of page.sections ?? []) liftMapHeights(section);
     return page;
   },
-  // 5 -> 6 (ADR-0025 decision 6): the calendar's own size (props.scale)
-  // becomes the block-level size every block type takes.
+  // 5 -> 6 (ADR-0025 decision 6): the calendar's own size becomes the block's.
   5: (page) => {
-    for (const section of page.sections ?? []) {
-      for (const block of section.blocks ?? []) {
-        if (block.type !== 'calendar' || !block.props || !('scale' in block.props)) continue;
-        const size = blockSize({ type: 'calendar', size: block.props.scale });
-        delete block.props.scale;
-        if (size !== 1) block.size = size;
-      }
-    }
+    for (const section of page.sections ?? []) liftCalendarScale(section);
     return page;
   },
 };

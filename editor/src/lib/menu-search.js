@@ -1,5 +1,5 @@
 /**
- * The element menu's search (ADR-0016 addendum, decision 6): a field in the
+ * The element menu's search (ADR-0016 decision 3): a field in the
  * menu's head narrows the menu to the settings whose label or tooltip holds
  * the words, with the groups that hold them open. It reads the menu as it is
  * drawn, so every block type has it without a list kept beside the markup:

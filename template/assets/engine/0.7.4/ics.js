@@ -613,9 +613,6 @@ export function isoWeek(ms) {
 }
 
 /**
- * Where the occurrence window starts for a view: the whole year for a year view, the current month, week or day for those views, and six hours back for the lists and the card, so an event under way still shows.
- */
-/**
  * The twelve months a year view shows: from the first day of `firstMonth` (0 is January) in the season that holds `now`, so with
  * August at the top a day in March belongs to the season that began the August before.
  * @param {number} [firstMonth] The month at the top, 0 to 11

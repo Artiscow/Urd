@@ -321,9 +321,14 @@ export const productBlock = {
       return;
     }
 
+    // Busy while the entries are fetched: the block holds its frame's height
+    // on the desktop and the height measured for the phone there (base.css),
+    // and the editor's fit waits for it.
+    host.setAttribute('aria-busy', 'true');
     getCollection(props.collection).then((data) => {
       // The block may have been re-rendered or removed while the data was fetched.
       if (!host.isConnected) return;
+      host.removeAttribute('aria-busy');
 
       const all = Array.isArray(data?.entries) ? data.entries : [];
       let entries = all;

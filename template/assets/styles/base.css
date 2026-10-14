@@ -2340,7 +2340,10 @@ textarea.urd-form-input {
   gap: 12px;
   align-content: start;
   height: 100%;
-  min-height: 9rem;
+  /* On the phone a calendar stands at the height the editor measured there
+     (--urd-loading-h, render.js), unless the session has seen it drawn on
+     this device (the inline min-height, blocks/calendar.js). */
+  min-height: var(--urd-loading-h, 9rem);
   overflow: hidden;
 }
 
@@ -9176,6 +9179,14 @@ body.urd-chrome-off .urd-imged {
 
 /* The collection block (ADR-0007): three views over structured entries.
    The inner layout is flow and grid, never frames per entry. */
+/* A collection or product block is busy while it fetches its entries; on the
+   phone it stands at the height the editor measured there (--urd-loading-h,
+   render.js), so the page below does not jump. */
+.urd-collection[aria-busy="true"],
+.urd-product[aria-busy="true"] {
+  min-height: var(--urd-loading-h, 0px);
+}
+
 .urd-collection {
   width: 100%;
 }

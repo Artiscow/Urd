@@ -1174,7 +1174,6 @@ export default {
     'lbl.mapLocation': 'Stad',
     'ph.mapLocation': 'Adresse, koordinatar eller OSM-lenkje',
     'lbl.mapZoom': 'Zoom (1 til 19)',
-    'lbl.height': 'Høgd',
     'opt.height.content': 'Følgjer innhaldet',
     'opt.height.own': 'Eiga høgd',
     'tip.height': 'Følgjer innhaldet: boksen er så høg som innhaldet, og ei draging i høgda stoppar der innhaldet sluttar. Eiga høgd: boksen tek høgda han vert dregen til, og innhaldet vert plassert i han.',

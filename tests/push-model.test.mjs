@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, followsContent, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, blockSize, sizeBounds } = await engineImport('push-model.js');
+const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, followsContent, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, blockSize, sizeBounds, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -195,4 +195,16 @@ test('a stale block settled where it stands moves nothing', () => {
   // and the section's own height is not the fit's to write.
   const blocks = [blk('text', 256, 80), blk('calendar', 176, 435, 55), blk('collection', 960, 240, 20)];
   assert.equal(fitMoves(blocks, 'collection', 590).size, 0);
+});
+
+test('mobileLoadingHeight: the stored phone height of a block that fetches its content, 0 otherwise', () => {
+  assert.deepEqual([...FETCHES_CONTENT].sort(), ['calendar', 'collection', 'product']);
+  for (const type of FETCHES_CONTENT) assert.ok(FOLLOWS_CONTENT.has(type), `${type} follows its content`);
+  assert.equal(mobileLoadingHeight({ type: 'calendar', mobileHeight: 353 }), 353);
+  assert.equal(mobileLoadingHeight({ type: 'collection', mobileHeight: 412.6 }), 413);
+  assert.equal(mobileLoadingHeight({ type: 'calendar' }), 0);
+  assert.equal(mobileLoadingHeight({ type: 'calendar', mobileHeight: -5 }), 0);
+  assert.equal(mobileLoadingHeight({ type: 'calendar', mobileHeight: 'tall' }), 0);
+  assert.equal(mobileLoadingHeight({ type: 'text', mobileHeight: 200 }), 0);
+  assert.equal(mobileLoadingHeight(undefined), 0);
 });

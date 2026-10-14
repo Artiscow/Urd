@@ -1,5 +1,5 @@
 /**
- * The Screen device of the editing canvas (ADR-0018 addendum): its width is
+ * The Screen device of the editing canvas (ADR-0018, Consequences): its width is
  * the owner's own browser window in CSS px, the same window the published
  * page is compared in, or an editing size chosen per browser, the Wix
  * Studio model. Only an editing size can carry a height; the own window

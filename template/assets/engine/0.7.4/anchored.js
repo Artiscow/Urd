@@ -1,5 +1,5 @@
 /**
- * The modern branch for the editor's floating menus (ADR-0011 addendum):
+ * The modern branch for the editor's floating menus (ADR-0011 decisions 1 and 2):
  * the Popover API puts a menu in the top layer, so the panels' overflow
  * never clips it, and CSS anchor positioning places it against its
  * button with the browser flipping it away from the viewport edge. The
