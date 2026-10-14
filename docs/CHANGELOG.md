@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.50 - CI installs the editor's dependencies before the tests, and Svelte 5.57.2 and Vite 8.3.4 with the bundle rebuilt - 14 October 2026
+
+- The Tests workflow failed on every push since 0.7.26.2: the render tests compile the editor's Svelte files through the compiler in `editor/node_modules`, and the job ran `node --test` before `npm ci`. The install step now comes first (tests.yml, pushed 14 October 2026 as «Update tests.yml»).
+- Dependabot's #27 (svelte 5.57.1 → 5.57.2, vite 8.3.2 → 8.3.4) stayed red after the fix, since the bundled Svelte runtime changes with the version and the committed bundle no longer matched. The two bumps are taken in with the bundle rebuilt from them, so the pull request closes on its own.
+
 ### 0.7.0.49 - The CodeQL alerts after the split: the import check through Svelte's parser, and the scatter seed from Math.random - 14 October 2026
 
 - CodeQL read tests/editor-imports.test.mjs's regexes that stripped `<script>`, `<style>` and comments before the markup scan as HTML sanitising (five alerts). The test now reads each file through Svelte's own parser and walks the trees: component tags and `transition`, `use` and `animate` directives in the markup, imports, declarations and snippets in the script, with a test that proves an unimported tag and transition are still caught.
