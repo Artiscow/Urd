@@ -19,7 +19,7 @@
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
 import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
-import { followsContent, fitMovesAll } from './push-model.js';
+import { followsContent, fitMovesAll, FIT_BY_WIDTH } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -33,7 +33,7 @@ import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
 import { FONT_STACKS } from './fonts.js';
 import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
-import { frameAtPoint } from './place.js';
+import { frameAtPoint, toolbarAnchor } from './place.js';
 import { topDrag } from './section-size.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky } from './sticky.js';
@@ -208,6 +208,29 @@ const isMobile = () => document.body.classList.contains('urd-mobile');
 
 /** How far the pointer pulls a block that follows its content up or down before the mark at its edge shows (ADR-0025). */
 const STOP_MARK_PX = 6;
+
+/**
+ * The size readout beside the resize handle while a block is dragged: the
+ * width in percent of the content surface and the height in px, as they
+ * change, so what stands on release is what was shown (ADR-0025 decision 7).
+ * @param {HTMLElement} el The block element
+ * @returns {{show(w: number, h: number): void, remove(): void}}
+ */
+function sizeReadout(el) {
+  const chip = document.createElement('div');
+  chip.className = 'urd-edit-readout';
+  chip.hidden = true;
+  el.appendChild(chip);
+  return {
+    show(w, h) {
+      chip.hidden = false;
+      chip.textContent = `${Math.round(w * 10) / 10} % × ${Math.round(h)} px`;
+    },
+    remove() {
+      chip.remove();
+    },
+  };
+}
 
 /** The template drafts from the editor (the urd-templates message): {id, name, kind, section?, blocks?}.
  *  The editor owns the list; here it feeds the My templates tab in "+ New section". */
@@ -3306,7 +3329,26 @@ function enhanceBlock(el, block, section, grid, host) {
     const navH = Number.parseFloat(cs.getPropertyValue('--urd-nav-h-base'))
       || Number.parseFloat(cs.getPropertyValue('--urd-nav-h')) || 0;
     const scale = Number.parseFloat(cs.getPropertyValue('--urd-chrome-scale')) || 1;
-    toolbar.classList.toggle('urd-toolbar-under', el.getBoundingClientRect().top < navH + 34 * scale);
+    const under = el.getBoundingClientRect().top < navH + 34 * scale;
+    toolbar.classList.toggle('urd-toolbar-under', under);
+    placeToolbar(under);
+  };
+  // On a rotated block the toolbar is anchored at the block's bounding box
+  // on the screen (toolbarAnchor), clear of the content, and turns itself
+  // upright there; unrotated, base.css places it at the block's own edge.
+  const placeToolbar = (under = toolbar.classList.contains('urd-toolbar-under')) => {
+    const rot = Number.parseFloat(el.style.getPropertyValue('--urd-block-rot')) || 0;
+    if (!rot) {
+      toolbar.style.left = '';
+      toolbar.style.top = '';
+      toolbar.style.bottom = '';
+      return;
+    }
+    const { left, top } = toolbarAnchor(el.offsetWidth, el.offsetHeight, rot, under);
+    toolbar.style.left = `${left}px`;
+    // Above, the toolbar hangs from its bottom edge; under, from its top.
+    toolbar.style.top = under ? `${top}px` : 'auto';
+    toolbar.style.bottom = under ? 'auto' : `${el.offsetHeight - top}px`;
   };
   updateToolbarSide();
   el.addEventListener('pointerenter', updateToolbarSide);
@@ -3501,9 +3543,11 @@ function enhanceBlock(el, block, section, grid, host) {
 
   const resizeHandle = document.createElement('div');
   resizeHandle.className = 'urd-edit-resize';
-  // On the desktop the handle of a block that follows its content changes
-  // its width only (ADR-0025), and says so.
-  resizeHandle.title = !mobile && followsContent(block) ? ta('canvas.dragResizeWidth') : ta('canvas.dragResize');
+  // The handle of a block that follows its content changes its width only
+  // (ADR-0025), and says so; on a block whose size is its frame it says that
+  // Shift keeps the ratio.
+  resizeHandle.title = followsContent(block) ? ta('canvas.dragResizeWidth')
+    : FIT_BY_WIDTH.has(block.type) ? ta('canvas.dragResizeRatio') : ta('canvas.dragResize');
   el.appendChild(resizeHandle);
 
   // Pinning is otherwise invisible until you scroll: a pin in the corner
@@ -3558,6 +3602,7 @@ function enhanceBlock(el, block, section, grid, host) {
         if (rot < -180) rot += 360;
         el.style.transform = rot ? `rotate(${rot}deg)` : '';
         el.style.setProperty('--urd-block-rot', `${rot}deg`);
+        placeToolbar();
       };
       const onUp = () => {
         rotHandle.removeEventListener('pointermove', onMove);
@@ -3600,6 +3645,14 @@ function enhanceBlock(el, block, section, grid, host) {
     // A surface drag only starts after a small threshold, so clicks remain clicks.
     const threshold = opts.surface ? 4 : 0;
     let started = false;
+    // A block that follows its content keeps its height in the row grid too
+    // (ADR-0025): the handle changes the width, and a pull up or down is
+    // stopped at the content's edge with the same mark as on the desktop.
+    const hug = kind === 'resize' && followsContent(block);
+    // Shift keeps the ratio of a block whose size is its frame (FIT_BY_WIDTH).
+    const ratio = kind === 'resize' && FIT_BY_WIDTH.has(block.type) && orig.w > 0 ? orig.h / orig.w : 0;
+    let stop = null;
+    let readout = null;
 
     const begin = () => {
       started = true;
@@ -3608,9 +3661,21 @@ function enhanceBlock(el, block, section, grid, host) {
       el.style.left = `${orig.left}px`;
       el.style.top = `${orig.top}px`;
       el.style.width = `${orig.w}px`;
-      if (kind === 'resize') el.style.height = `${orig.h}px`;
+      if (kind === 'resize' && !hug) el.style.height = `${orig.h}px`;
       el.style.marginLeft = '0';
       el.style.zIndex = '100001';
+      if (kind === 'resize') {
+        readout = sizeReadout(el);
+        if (hug) {
+          stop = document.createElement('div');
+          stop.className = 'urd-edit-stop';
+          stop.hidden = true;
+          const label = document.createElement('span');
+          label.textContent = ta('canvas.followsContent');
+          stop.appendChild(label);
+          el.appendChild(stop);
+        }
+      }
     };
     if (threshold === 0) begin();
 
@@ -3630,13 +3695,16 @@ function enhanceBlock(el, block, section, grid, host) {
         el.style.left = `${current.left}px`;
         el.style.top = `${current.top}px`;
       } else {
+        const w = clamp(orig.w + dx, 24, canvas.clientWidth - orig.left);
         current = {
           ...orig,
-          w: clamp(orig.w + dx, 24, canvas.clientWidth - orig.left),
-          h: Math.max(MOBILE_ROW, orig.h + dy),
+          w,
+          h: hug ? orig.h : ratio && ev.shiftKey ? Math.max(MOBILE_ROW, Math.round(w * ratio)) : Math.max(MOBILE_ROW, orig.h + dy),
         };
         el.style.width = `${current.w}px`;
-        el.style.height = `${current.h}px`;
+        if (!hug) el.style.height = `${current.h}px`;
+        else stop.hidden = Math.abs(dy) < STOP_MARK_PX;
+        readout.show((current.w / canvas.clientWidth) * 100, hug ? el.getBoundingClientRect().height : current.h);
       }
     };
 
@@ -3644,6 +3712,8 @@ function enhanceBlock(el, block, section, grid, host) {
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onUp);
       handle.removeEventListener('pointercancel', finish);
+      stop?.remove();
+      readout?.remove();
     };
 
     const onUp = () => {
@@ -3834,6 +3904,11 @@ function enhanceBlock(el, block, section, grid, host) {
         stop.appendChild(label);
         el.appendChild(stop);
       }
+      // The size readout beside the handle, and Shift keeping the ratio of a
+      // block whose size is its frame (FIT_BY_WIDTH): the width drives, and
+      // the height follows it in the design's px.
+      const readout = kind === 'resize' ? sizeReadout(el) : null;
+      const ratio = kind === 'resize' && FIT_BY_WIDTH.has(block.type) && orig.w > 0 ? orig.h / orig.w : 0;
       // Group drag: if the block is part of a multi-selection, the rest
       // follow (same delta, clamped so the whole group stays within the
       // width).
@@ -3936,12 +4011,15 @@ function enhanceBlock(el, block, section, grid, host) {
         }
         if (!settled) settleOnce();
         // Shift held = temporary free placement (0.1% / 1 px); otherwise
-        // grid.snap decides.
-        const free = grid.snap === false || ev.shiftKey;
+        // grid.snap decides. On a resize that keeps the ratio, Shift is
+        // the ratio lock instead, and the grid decides as usual.
+        const keepRatio = Boolean(ratio) && ev.shiftKey;
+        const free = grid.snap === false || (ev.shiftKey && !keepRatio);
         const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
         const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
         const dx = (ev.clientX - start.x) * pctPerPx;
         const dy = ev.clientY - start.y;
+        const w = hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX ? orig.w : clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x));
         current = kind === 'move'
           ? {
               ...orig,
@@ -3954,8 +4032,8 @@ function enhanceBlock(el, block, section, grid, host) {
               ...orig,
               // A pull straight up or down on a block that follows its content
               // leaves its width as it is, unsnapped, so the release changes nothing.
-              w: hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX ? orig.w : clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x)),
-              h: hug ? orig.h : Math.max(4, snapPx(orig.h + dy)),
+              w,
+              h: hug ? orig.h : keepRatio ? Math.max(4, Math.round(w * ratio)) : Math.max(4, snapPx(orig.h + dy)),
             };
         // Shift = fully free: then smart guides are skipped too.
         if (!free) applyGuides();
@@ -3986,6 +4064,9 @@ function enhanceBlock(el, block, section, grid, host) {
           grown = new Map([...(settle?.grown ?? []), [block.id, Math.max(0, (seen || current.h) - current.h)]]);
           stop.hidden = Math.abs(dy) < STOP_MARK_PX;
         }
+        // The readout shows the box as drawn: the dragged height, or the
+        // content's own for a block that follows it.
+        readout?.show(current.w, hug ? parseFloat(el.style.height) || current.h : current.h);
         // The push as it will be after release, drawn live: the block is
         // shown where it lands, and the blocks it pushes move with it. A
         // moved block is left out of the section height; a resized one is
@@ -4004,6 +4085,7 @@ function enhanceBlock(el, block, section, grid, host) {
         overlay.remove();
         clearGuides();
         stop?.remove();
+        readout?.remove();
         settle?.undo();
         dropSticky();
       };
@@ -4015,6 +4097,7 @@ function enhanceBlock(el, block, section, grid, host) {
         overlay.remove();
         clearGuides();
         stop?.remove();
+        readout?.remove();
         // A fit can land while a block that follows its content is dragged
         // (urd-frames writes into the same block): its height is the fit's,
         // never the one the drag began with.

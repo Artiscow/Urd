@@ -278,8 +278,7 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.21.3 «Follow the content» or «Own height» per block DELIVERED 0.7.21.3 (11 October 2026)
   - [x] 0.7.21.4 The block follows its own width DELIVERED 0.7.21.4 (4 October 2026)
   - [x] 0.7.21.5 «Size» for every block DELIVERED 0.7.21.5 (14 October 2026): the block-level `size` with its text bounds in the Placement area, the frame scaled with it, the three fit choices below the design width (wrap, shrink in proportion, shrink and wrap), and a px size for shapes and lines; «Shrink the content» on the phone went to 0.7.3
-  - [ ] 0.7.21.6 Drags that show their result: the aspect ratio kept with Shift on image, video, shape and icon, the size readout beside the handle while dragging (width in percent, height in px), and the same stop at the content in the mobile view's row grid
-    Done when: a Shift-drag of a picture keeps its ratio; the readout shows both numbers as they change; and what stands when the pointer is released is what stood the moment before.
+  - [x] 0.7.21.6 Drags that show their result DELIVERED 0.7.21.6 (14 October 2026): Shift keeps the ratio on image, video, shape and icon, the size readout beside the handle on the desktop and the phone, and the content stop in the mobile row grid; the toolbar of a rotated block anchored clear of its content
   - [ ] 0.7.21.7 The phone height of a block that fetches its content (added 3 October 2026, from 0.7.19.12: the calendar's loading state stands at the frame's height on the desktop, but on the phone the block has its natural height, which is unknown until the events are drawn, so the first load of a session jumps; measured 298 px while loading against 353 px drawn). When the editor fits the frame of a block that follows its content (`urd-fit-block`, 0.7.21.2), it also asks the preview for the content's height at the phone width and stores it as one additive field beside the mobile placement; the loading state of a block that fetches its content stands at that height on the phone, before the height remembered for the session. The calendar first, and the same path for every block type that draws content it fetches
     Done when: a calendar with a feed, opened on a phone for the first time in a session, has the same height while it loads and after the events are drawn, within the difference a change in the feed since the last edit gives; the stored height follows a change of design or settings without a drag; and a page saved before the stage loads as it does today.
 
@@ -426,7 +425,7 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
 ## Liten huskeliste
 What comes, in order (brought up to date 11 October 2026):
 
-1. The rest of 0.7.21 (21.6 and 21.7) and of 0.7.20 (20.3, 20.5 and 20.6). None of them holds up the design round. Delivered from 0.7.21 so far: the survey (21.1), the height that follows the content (21.2), the block's own height (21.3), the block's own width (21.4) and «Size» for every block (21.5).
+1. The rest of 0.7.21 (21.7) and of 0.7.20 (20.3, 20.5 and 20.6). None of them holds up the design round. Delivered from 0.7.21 so far: the survey (21.1), the height that follows the content (21.2), the block's own height (21.3), the block's own width (21.4), «Size» for every block (21.5) and drags that show their result (21.6).
 2. The rest of 0.7.19: the stylised families (19.23 to 19.27, 53 designs, each drawing and building its own sets for the card, the switcher's week and month, the tools and the phone view) and the text colour per surface (19.28). Delivered so far from the round: the words (19.18), the sets with the card, the switcher's views and the tools (19.19), the description setting (19.20), the phone design (19.21), the design picker (19.22) and the site's calendars (19.29).
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
@@ -435,6 +434,7 @@ What comes, in order (brought up to date 11 October 2026):
   Done when: on a phone, every rolling ribbon and every slideshow on a published page can be paused by a touch or a button and stays paused until the visitor resumes it, without relying on emulated hover; the keyboard reaches the same pause; and a redraw after an edit, a search or a filter keeps the paused state.
 - [ ] The preview's message listener (`template/assets/engine/0.7.4/urd.js:264`) checks only `event.origin`; it should also check `event.source === window.parent`, as the editor side does (`editor/src/lib/previewBridge.js:73`). Found 11 October 2026 in the source study (TinaCMS checks both)
 - [ ] The eight HTML shells carry a Norwegian `<noscript>` literal («Denne siden trenger JavaScript for å vises.», `template/index.html:100`), shown to every visitor without JavaScript whatever the site's language: English for now, the site's language once pages are baked. Found 11 October 2026
+- [ ] Dra sticky element til øverst på side setter den bak nav istedenfor nedenfor - umulig å dra elementet manuelt tilbake pga at det er bak nav  
 
 
 ## Suggestions, Ideas and Wishes

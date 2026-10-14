@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.21.6 - Drags that show their result: Shift keeps the ratio, a size readout, the content stop on the phone, and the toolbar of a rotated block clear of its content - 14 October 2026
+
+- A picture, video, shape or icon could only be resized freely, so its proportions were lost by hand; Shift now keeps the ratio on those four (`FIT_BY_WIDTH`), the width driving and the grid snapping as usual, and their handle says so. Shift stays «free» on the other block types.
+- Nothing showed the size while dragging: a readout under the block (`sizeReadout` in preview-edit.js, width in percent and height in px) follows the drag on the desktop and the phone, and shows the drawn height of a block that follows its content.
+- In the mobile row grid a block that follows its content could be dragged to any height; it now keeps its height there too, the handle changing the width and a pull up or down showing the same stop bar as on the desktop (ADR-0025).
+- Test finding the same day, fixed before the commit: the toolbar of a rotated block was anchored at the block's own corner and turned upright there, so it lay over the content whenever that corner was not the block's highest point. It is now anchored at the block's bounding box on the screen, above or flipped under (`toolbarAnchor` in place.js, with tests), and follows a rotation drag.
+
 ### 0.7.0.48 - Design from other tools: a survey, and the milestones 0.7.25 «Own looks from design tools» and v0.8 «Animation files» - 14 October 2026
 
 - The comparison maps had Lottie, Rive, Spline, custom HTML and iframes as Not taken, with no answer for a site owner who designs an element elsewhere. A survey of 14 October 2026 (SURVEYS.md «Design from other tools»: what each tool exports for self-hosting, the players' licences, sizes and CSP needs, sandboxed frames on Cloudflare Pages, design tokens, 9-slice faces, SVG sanitising and pointer effects) gave three tracks, written as two milestones: 0.7.25 «Own looks from design tools» (the pointer as custom properties, an allowlist sanitiser for inline SVG, faces by `border-image` with state files, scoped CSS styles pasted whole, a tokens importer with a mapping step) and v0.8 «Animation files» (Lottie, Rive and glTF as files in `media/` with vendored MIT players as shipped plugins, and a sandboxed portal with a CSP of its own for exported code). Spline's runtime is never vendored (no licence); Framer, Figma Sites and Penpot prototypes have no self-hostable export. Both roadmaps follow; the maps' statuses change, with new rows E38-E40 and T114-T116.

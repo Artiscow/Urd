@@ -1535,6 +1535,7 @@ export default {
     'canvas.dragMove': 'Drag to move (snaps to the grid)',
     'canvas.dragResize': 'Drag to resize',
     'canvas.dragResizeWidth': 'Drag to change the width; the height follows the content',
+    'canvas.dragResizeRatio': 'Drag to resize; Shift keeps the ratio',
     'canvas.dragRotate': 'Drag to rotate (15° steps; Shift = free)',
     'canvas.duplicate': 'Duplicate the block (Ctrl+D)',
     'canvas.editImage': 'Edit the image (or double-click it)',

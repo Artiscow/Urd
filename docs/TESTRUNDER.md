@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.21.6): drags that show their result
+
+- [ ] A Shift-drag of the resize corner on an image, a video, a shape and an icon keeps the ratio, with the width snapping to the grid; without Shift the height is free as before; the handle's tooltip says Shift keeps the ratio
+- [ ] While resizing a text block and a FAQ, a readout under the block shows the width in percent and the height in px as they change, and what stands on release is the last value shown
+- [ ] In the mobile view, a pinned FAQ dragged up or down by its corner keeps its height with the stop bar shown; dragged sideways it changes width and the readout follows
+- [ ] A text block rotated to -15° and to 15°: the toolbar stands upright above the block, left-aligned with its outermost edge, and covers none of the text; on a rotated block at the very top of the page it stands under; it follows while the rotation handle is dragged
+
 ### Test batch (0.7.21.5): «Size» for every block and the three fit choices
 
 - [ ] A text block, a FAQ and a collection show «Size» (40 to 200 %) in the element menu's Placement area, right above «On narrower screens»; an image, a video, a shape, an icon and a map show none

@@ -1535,6 +1535,7 @@ export default {
     'canvas.dragMove': 'Taşımak için sürükle (ızgaraya oturur)',
     'canvas.dragResize': 'Boyutu değiştirmek için sürükle',
     'canvas.dragResizeWidth': 'Genişliği değiştirmek için sürükle; yükseklik içeriği izler',
+    'canvas.dragResizeRatio': 'Boyutu değiştirmek için sürükle; Shift oranı korur',
     'canvas.dragRotate': 'Döndürmek için sürükle (15° adımlar; Shift = serbest)',
     'canvas.duplicate': 'Bloğu çoğalt (Ctrl+D)',
     'canvas.editImage': 'Görseli düzenle (ya da çift tıkla)',

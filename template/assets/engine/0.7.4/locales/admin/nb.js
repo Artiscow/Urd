@@ -1538,6 +1538,7 @@ export default {
     'canvas.dragMove': 'Dra for å flytte (snapper til grid)',
     'canvas.dragResize': 'Dra for å endre størrelse',
     'canvas.dragResizeWidth': 'Dra for å endre bredden; høyden følger innholdet',
+    'canvas.dragResizeRatio': 'Dra for å endre størrelse; Shift holder forholdet',
     'canvas.dragRotate': 'Dra for å rotere (15°-steg; Shift = fritt)',
     'canvas.duplicate': 'Dupliser blokken (Ctrl+D)',
     'canvas.editImage': 'Rediger bildet (eller dobbeltklikk på det)',

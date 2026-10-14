@@ -13355,6 +13355,27 @@ body.urd-mobile .urd-section-resize-top {
   white-space: nowrap;
 }
 
+/* The size readout while a block is resized (ADR-0025 decision 7): the width
+   in percent and the height in px, under the block's bottom left corner so
+   it stays clear of the stop bar's label at the right. Drag feedback, so it
+   takes the guides' magenta like the bar. */
+.urd-preview .urd-edit-readout {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px * var(--urd-chrome-scale, 1));
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));
+  transform-origin: top left;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ff2d87;
+  color: #fff;
+  font: 600 11px/1.5 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1001;
+}
+
 /* Rotation handle: a small circle at the block's top right corner */
 .urd-preview .urd-edit-rotate {
   /* Counter-scaling and counter-rotation, as for the toolbar above.
