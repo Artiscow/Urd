@@ -1811,7 +1811,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Hide UI, distraction-free, spotlight | WE, TI, WT, WP, WF, WS, EL | Shift+F, `⌘\`, Distraction Free, Spotlight, focus mode | Has: Clean view | - |
 | Movable panels, toolbar or workspaces | BR, CA, SQ, DV, WP | Toolbar on any side; move the UI; draggable panels; workspaces | Planned | 0.7.20.6 |
 | Dark editor UI | DV, WF, FR | Builder light/dark setting | Has: themed admin (ADR-0009) | - |
-| Right-click context menu | SQ, SH, WH, HO, BR, OX, DV | Contextual actions | Partial: the element menu | 0.7.20 |
+| Right-click context menu | SQ, SH, WH, HO, BR, OX, DV | Contextual actions | Partial: the element menu | 0.7.20.8: a right-click menu on a block |
 
 #### 2. Insertion
 
@@ -1893,7 +1893,7 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 | Child or sub-selector styling | BR, OX, WS | Selector UI and Detector; nested selectors; semantic part classes | n/a: free placement | - |
 | Classes and combo or global classes | WF, EL, BR, OX, WT, WS | Reusable class stacks | Missing | Not taken: class-based cascade not adopted |
 | Class manager or unused-style cleanup | WF, EL, BR, OX | Organise, rename, prioritise; remove unused | Missing | Not taken: class-based cascade not adopted |
-| Inheritance indicators | BR, OX, TI, WT | Coloured indicators; inherited placeholders; computed values | Missing | 0.7.20, to be weighed with 0.7.20.5 |
+| Inheritance indicators | BR, OX, TI, WT | Coloured indicators; inherited placeholders; computed values | Missing | 0.7.20.7: marks on own values |
 | Reset style | WT, WP, DV, BR | Alt+click; Clear; reset across breakpoints | Has | - |
 | Style presets | DV, BD, OX, WP, CA | Element and option-group presets; button presets; Element Styles | Partial: box styles | 0.7.9 design gallery |
 | Apply an instance's style globally | WP, DV | Apply Globally; convert to variable | Missing | 0.7.9: «use this block's style as the site default» |

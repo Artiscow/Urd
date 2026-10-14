@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.20.3): pins in the quick row
+
+- [ ] In a text block's element menu, the pin beside «Størrelse» puts it at the end of the quick row and turns filled; another text block shows it too, and it is still there after a reload
+- [ ] The pin on the «Smal skjerm» tile takes it out of the row and the pin beside the setting in Placement turns empty; pressing that pin brings the tile back to its own place
+- [ ] «Tilbakestill hurtigraden» shows only while the row differs from the defaults, and brings the defaults back
+- [ ] On a calendar, taking «Design» out and pinning «Skjul på mobil» leaves an image block's row as it was
+- [ ] The pin is a small icon without a frame, dimmed until the pointer or the keyboard reaches it, with a visible focus ring; in the calendar's Style area «Design» and its value stand side by side without overlapping, in both widths
+
 ### Test batch (0.7.21.7): the phone height of a block that fetches its content
 
 - [ ] On the home page, change the calendar's design, publish, and open the published page on a phone in a new private window: the calendar stands at its final height while it loads and the page below does not jump (a small difference is expected if the feed changed since the edit)

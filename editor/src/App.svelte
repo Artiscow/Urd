@@ -11,6 +11,7 @@
   import MarkPicker from './lib/MarkPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
   import { createPhoneFit } from './lib/phone-fit.js';
+  import { quickIds, isInRow, togglePin, choiceChanged, readChoices, writeChoices, NO_CHOICE } from './lib/quick-row.js';
   import { previewScale } from './lib/preview-scale.js';
   import { deployTargets, awaitServed } from './lib/deploy-wait.js';
   import { menuSearch } from './lib/menu-search.js';
@@ -158,6 +159,8 @@
     up: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4"/><path d="M5 11l7-7 7 7"/></svg>',
     down: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M5 13l7 7 7-7"/></svg>',
     right: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M13 5l7 7-7 7"/></svg>',
+    pin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3l7 7-3 1-4 4 1 4-3 1-3-5-5 5v-2l4-4-5-3 1-3 4 1 4-4z"/></svg>',
+    pinOn: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3l7 7-3 1-4 4 1 4-3 1-3-5-5 5v-2l4-4-5-3 1-3 4 1 4-4z"/></svg>',
     cross: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>',
     plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
     minus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
@@ -1096,7 +1099,28 @@
    * subscribe button), then the two every block has (how it fits a narrower
    * screen, and whether it shows on a phone).
    */
+  /* The quick row (0.7.20.3, lib/quick-row.js): the settings a block can
+     show there, its type's defaults, and what the owner pinned or took out,
+     kept per block type in the browser. */
+  let quickChoices = $state(readChoices(localStorage));
+  function quickChoice() {
+    return quickChoices[selectedBlock.type] ?? NO_CHOICE;
+  }
+  function setQuickChoice(choice) {
+    quickChoices = { ...quickChoices, [selectedBlock.type]: choice };
+    writeChoices(localStorage, quickChoices);
+  }
+  /** The pin beside a setting, or on its tile: the setting joins the row or leaves it. */
+  function pinToggle(id) {
+    setQuickChoice(togglePin(selectedBlock.type, quickChoice(), id));
+  }
   function menuQuickItems() {
+    const choice = quickChoice();
+    const items = new Map(quickItemsAvailable().map((item) => [item.id, item]));
+    return quickIds(selectedBlock.type, choice, new Set(items.keys())).map((id) => items.get(id));
+  }
+  /** Every setting the selected block can show in its quick row now, as a tile. */
+  function quickItemsAvailable() {
     const b = selectedBlock;
     const items = [];
     if (b.type === 'calendar') {
@@ -1112,6 +1136,10 @@
         : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
       set: (v) => setBlockFit(v) });
     items.push({ id: 'phone', label: ta('quick.phone'), kind: 'choice', value: b.hideMobile ? 'off' : 'on', options: [['on', ta('quick.phone.show')], ['off', ta('quick.phone.hide')]], set: (v) => setBlockHideMobile(v === 'off') });
+    if (!SIZE_BY_FRAME.has(b.type)) {
+      items.push({ id: 'size', label: ta('lbl.scale'), kind: 'number', min: SIZE.min * 100, max: SIZE.max * 100, step: 5, value: Math.round(blockSize(b) * 100),
+        set: (v) => { sizeGesture = null; setBlockSize(Math.min(SIZE.max, Math.max(SIZE.min, (Number(v) || 100) / 100))); sizeGesture = null; } });
+    }
     return items;
   }
 
@@ -9928,6 +9956,14 @@
   </label>
 {/snippet}
 
+{#snippet pinFor(id)}
+  <!-- The pin beside a setting that can stand in the quick row: filled while it does (0.7.20.3) -->
+  {@const on = isInRow(selectedBlock.type, quickChoice(), id)}
+  <button type="button" class="menu-pin" class:on aria-pressed={on}
+    title={on ? ta('menu.unpin') : ta('menu.pin')} aria-label={on ? ta('menu.unpin') : ta('menu.pin')}
+    onclick={() => pinToggle(id)}>{@html on ? ICONS.pinOn : ICONS.pin}</button>
+{/snippet}
+
 {#snippet menuGroup(id, title, value, body, reset = null)}
   <!-- A collapsible group of the element menu: the title, the current value while closed, the controls inside.
        A group that differs from the defaults is handed its reset: it carries a mark, and the reset stands under its controls.
@@ -10111,9 +10147,12 @@
           onchange={(v) => setBlockProp('description', v === 'rows' ? undefined : v)} />
       {/if}
       {#if ['list', 'cards', 'agenda'].includes(selectedBlock.props.view ?? 'list')}
-        <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
-          <input type="number" min="1" max="50" value={selectedBlock.props.limit ?? 6}
-            onchange={(e) => setBlockProp('limit', Math.max(1, Math.min(50, Number(e.target.value) || 6)))} /></label>
+        <div class="pin-line">
+          <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
+            <input type="number" min="1" max="50" value={selectedBlock.props.limit ?? 6}
+              onchange={(e) => setBlockProp('limit', Math.max(1, Math.min(50, Number(e.target.value) || 6)))} /></label>
+          {@render pinFor('limit')}
+        </div>
         <!-- A list folds the events beyond the max count; the regular-event design folds its own dates -->
         {#if calView(selectedBlock.props) === 'list' && calDesign(selectedBlock.props.design).module !== 'more'}
           <label class="gridmenu-snap" title={ta('tip.calendar.showMore')}>
@@ -10177,11 +10216,14 @@
           {ta('calendar.showEarlier')}
         </label>
       {/if}
-      <label class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.showSubscribe !== false}
-          onchange={(e) => setBlockProp('showSubscribe', e.target.checked)} />
-        {ta('calendar.showSubscribe')}
-      </label>
+      <div class="pin-line">
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={selectedBlock.props.showSubscribe !== false}
+            onchange={(e) => setBlockProp('showSubscribe', e.target.checked)} />
+          {ta('calendar.showSubscribe')}
+        </label>
+        {@render pinFor('subscribe')}
+      </div>
       <label class="gridmenu-snap">
         <input type="checkbox" checked={selectedBlock.props.showSignup === true}
           onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
@@ -10665,9 +10707,12 @@
     {:else if selectedBlock.type === 'calendar'}
       {@const calDef = calDesign(selectedBlock.props.design)}
       <!-- The design: a row naming it, opening the picker over the whole menu -->
-      <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.design')} onclick={() => (designPicker = { mode: 'set' })}>
-        <span class="menu-group-title">{ta('calendar.design')}</span><span class="menu-group-value">{ta(calDef.labelKey)}</span>
-      </button>
+      <div class="pin-line">
+        <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.design')} onclick={() => (designPicker = { mode: 'set' })}>
+          <span class="menu-group-title">{ta('calendar.design')}</span><span class="menu-group-value">{ta(calDef.labelKey)}</span>
+        </button>
+        {@render pinFor('design')}
+      </div>
       {@const cm = calMenu()}
       {#snippet calOpts()}
       <!-- The design's own settings, directly under the design they belong to -->
@@ -11213,6 +11258,7 @@
       <input type="range" min={SIZE.min * 100} max={SIZE.max * 100} step="5" value={Math.round(blockSize(selectedBlock) * 100)}
         aria-label={ta('lbl.scale')} oninput={(e) => setBlockSize(e.target.valueAsNumber / 100)} onchange={() => (sizeGesture = null)} />
       <span class="gridmenu-value">{Math.round(blockSize(selectedBlock) * 100)} %</span>
+      {@render pinFor('size')}
     </div>
     {#if blockSize(selectedBlock) !== 1}
       <!-- The bounds the base text never passes, shown only while a size is set, side by side so the menu keeps its height -->
@@ -11226,12 +11272,15 @@
   {/snippet}
   {#snippet menuFit()}
     <!-- Below the design width: block-level on every block (ADR-0024); the content wraps, shrinks in proportion, or shrinks as little as it can and wraps, or the frame keeps a floor -->
-    <label title={ta('tip.fit')}>{ta('lbl.fit')}
-      <Dropdown value={selectedBlock.fit ?? 'wrap'}
-        options={FIT_BY_WIDTH.has(selectedBlock.type)
-          ? [['wrap', ta('opt.fit.fluid')], ['shrink', ta('opt.fit.floor')]]
-          : [['wrap', ta('opt.fit.wrap')], ...(designWidth() || selectedBlock.fit === 'shrink' ? [['shrink', ta('opt.fit.shrink')]] : []), ['both', ta('opt.fit.both')]]}
-        onchange={(v) => setBlockFit(v)} /></label>
+    <div class="pin-line">
+      <label title={ta('tip.fit')}>{ta('lbl.fit')}
+        <Dropdown value={selectedBlock.fit ?? 'wrap'}
+          options={FIT_BY_WIDTH.has(selectedBlock.type)
+            ? [['wrap', ta('opt.fit.fluid')], ['shrink', ta('opt.fit.floor')]]
+            : [['wrap', ta('opt.fit.wrap')], ...(designWidth() || selectedBlock.fit === 'shrink' ? [['shrink', ta('opt.fit.shrink')]] : []), ['both', ta('opt.fit.both')]]}
+          onchange={(v) => setBlockFit(v)} /></label>
+      {@render pinFor('fit')}
+    </div>
     {#if selectedBlock.fit}
       <div class="ctl-row" title={ta('tip.fitMin')}>
         <span class="mini-label">{ta('lbl.fitMin')}</span>
@@ -11351,11 +11400,14 @@
       {@render menuSize()}
     {/if}
     {@render menuFit()}
-    <label class="gridmenu-snap" title={ta('tip.hideMobile')}>
-      <input type="checkbox" checked={selectedBlock.hideMobile}
-        onchange={(e) => setBlockHideMobile(e.target.checked)} />
-      {ta('lbl.hideMobile')}
-    </label>
+    <div class="pin-line">
+      <label class="gridmenu-snap" title={ta('tip.hideMobile')}>
+        <input type="checkbox" checked={selectedBlock.hideMobile}
+          onchange={(e) => setBlockHideMobile(e.target.checked)} />
+        {ta('lbl.hideMobile')}
+      </label>
+      {@render pinFor('phone')}
+    </div>
     {@render menuSticky()}
     {@render menuGroup('motion', ta('group.motion'), menuMotionValue(), menuMotion)}
     {@render menuGroup('frame', ta('group.placement'), viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : '', menuFrame)}
@@ -11367,11 +11419,11 @@
     <div class="menu-quick">
       {#each menuQuickItems() as item (item.id)}
         <div class="menu-quick-item">
-          <span class="mini-label">{item.label}</span>
+          <span class="menu-quick-head"><span class="mini-label">{item.label}</span>{@render pinFor(item.id)}</span>
           {#if item.kind === 'open'}
             <button type="button" class="menu-quick-open" onclick={item.run}>{item.value}</button>
           {:else if item.kind === 'number'}
-            <input type="number" min={item.min} max={item.max} value={item.value} aria-label={item.label} onchange={(e) => item.set(e.target.value)} />
+            <input type="number" min={item.min} max={item.max} step={item.step ?? 1} value={item.value} aria-label={item.label} onchange={(e) => item.set(e.target.value)} />
           {:else}
             <span class="seg" role="group" aria-label={item.label}>
               {#each item.options as [v, text] (v)}
@@ -11381,6 +11433,9 @@
           {/if}
         </div>
       {/each}
+      {#if choiceChanged(quickChoice())}
+        <button type="button" class="linkish menu-quick-reset" onclick={() => setQuickChoice(NO_CHOICE)}>{ta('menu.quickReset')}</button>
+      {/if}
     </div>
   {/if}
   {#if query.trim()}
@@ -12076,6 +12131,73 @@
     display: flex;
   }
 
+  /* A tile's label with the pin that takes it out of the row */
+  .menu-quick-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .menu-quick-head .mini-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .menu-quick-reset {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: 0.75rem;
+  }
+
+  /* A setting that can stand in the quick row, with its pin at the end */
+  .pin-line {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .pin-line > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* The pin itself: the icon alone on a square the size of a small target,
+     quiet until the pointer or the keyboard reaches it, and in the accent
+     while its setting stands in the row */
+  .menu-pin {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    opacity: 0.4;
+    cursor: pointer;
+  }
+
+  .menu-pin:hover,
+  .menu-pin:focus-visible {
+    opacity: 1;
+    background: rgb(255 255 255 / 8%);
+  }
+
+  .menu-pin:focus-visible {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: 1px;
+  }
+
+  .menu-pin.on {
+    color: var(--urd-color-accent, #7c5cff);
+    opacity: 1;
+  }
+
   .menu-quick-item .seg button {
     flex: 1;
     padding: 4px 2px;
@@ -12160,6 +12282,9 @@
   }
 
   .menu-group-value {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 55%;
     font-size: 0.75rem;
     font-weight: 400;
     opacity: 0.65;
