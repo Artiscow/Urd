@@ -164,6 +164,47 @@ The width is the same for all: the dragged width in percent of the content surfa
 
 **What Urd takes (0.7.21):** the dragged width for every block; a height that either follows the content or is the block's own, with a default per block type and a choice per block; the frame of a block that follows its content set by the editor after an edit; and «Size» as the explicit scale (ADR-0025).
 
+## Design from other tools (14 October 2026)
+
+From the question of how an element designed in another tool, with the behaviour built into it, reaches an Urd page. Four passes: what each tool exports for self-hosting, the players' licences, sizes and CSP needs, sandboxed frames on Cloudflare Pages, and design tokens, 9-slice faces, SVG sanitising and pointer effects.
+
+**What the tools export for self-hosting**
+
+| Tool | Export that keeps the design or its motion | Self-hostable |
+|---|---|---|
+| Figma | Static SVG; Motion (open beta): MP4, WebM, GIF, SVG, Lottie JSON, dotLottie; the LottieFiles plugin: `.lottie` with hover, click and press as state machines; Dev Mode copies CSS (paid seats) | Yes; Figma Sites cannot export code, Figma Make gives a React project, Dev Mode and MCP output is «not production-ready» |
+| Penpot | SVG, HTML and CSS from the Code tab (free); design tokens since 2.6, reportedly in the Tokens Studio shape rather than DTCG 2025.10 | Yes; prototypes have no export |
+| Framer | None («Framer does not offer HTML export for self-hosting», 15 September 2026); React export through a third-party plugin for React apps only | No |
+| Webflow | Code export (HTML, CSS, JS and assets) on Workspace plans; jQuery from Webflow's CDN; DevLink React components with GSAP | Only as a code bundle |
+| Claude Design, Bolt, v0, Lovable, Figma Make | A zip of website files, or a React project that needs a build | Only as a code bundle |
+| After Effects (Bodymovin), Jitter, Linearity Move, Cavalry, Lottielab, Keyshape, Flow, Phase | Lottie JSON or dotLottie | Yes, with a player |
+| Rive | `.riv` (paid plan to export since 20 October 2025); files do not phone home | Yes, with a player |
+| SVGator | SVG with CSS only (load and hover), SVG with an inline JS player (click, scroll), Lottie, video | CSS-only yes; the JS player is code |
+| Spline | Public URL; «code export» on Pro with the scene on prod.spline.design; a fully offline zip on Enterprise only; glTF/GLB export | GLB yes; the runtime has no licence and its terms forbid redistribution |
+| Blender, Cinema 4D | glTF/GLB | Yes, with a player |
+| Canva, Motion Canvas, Procreate Dreams | Video or image sequences | Yes, natively |
+| Adobe Animate (CreateJS, maintenance mode since February 2026), Tumult Hype, Godot, Unity, p5.js | HTML and JS bundles | Only as a code bundle |
+
+**The players**
+
+| Player | Licence, size | Needs |
+|---|---|---|
+| lottie-web light 5.13.0 | MIT; 46 KB gz; no WASM | Nothing beyond today's CSP; no expressions, nine SVG effects or the canvas renderer |
+| dotlottie-web 0.81.0 | MIT; 33 KB gz plus 496 KB gz WASM | `'wasm-unsafe-eval'`; `setWasmUrl` and `setWorkerUrl` point at own files; state machines attach pointer listeners themselves |
+| @rive-app/canvas 2.44 | MIT; 109 KB gz plus 850 KB gz WASM (canvas-lite drops text, layout, audio and scripting) | `'wasm-unsafe-eval'`; `setWasmUrl`, `setWasmFallbackUrl(null)`, `enableRiveAssetCDN: false`; UMD, a classic script; a `.riv` from a newer editor can need a newer runtime |
+| @google/model-viewer | Apache 2.0; 2.4 M npm downloads a month; the 73 KB gz figure is the wrapper, three.js is bundled | WebGL; Draco and KTX2 decoders (WASM, from Google's CDN by default, pointable); fetches the file, so a draft `blob:` URL needs `connect-src blob:` |
+| @splinetool/runtime 2.0.79 | No licence field and no LICENSE; 580 KB gz standalone; WASM per scene feature | `blob:` workers, Draco from gstatic, fonts and hooks from Spline's hosts |
+| Spark (Gaussian splats) | MIT; 1.1 M downloads | Watched, not built |
+| Unicorn Studio, Cavalry web player, Spine, Remotion, Motion Canvas | No published licence, or a commercial one; or video anyway | Not taken |
+
+None of the players handles `prefers-reduced-motion` itself; the block pauses them. Animated SVG plays as an image in «secure animated mode» (SMIL and CSS, no scripts, no hover) in Chrome and Firefox, Safari unverified; inline it needs a sanitiser (DOMPurify's `svg` lists as the reference; `<animate>` on `href` is the known vector), and a `<style>` inside an inline SVG applies to the whole document. CSS `border-image` with an SVG is Baseline 9-slice; the SVG needs `viewBox` plus `width`/`height`. CSS cannot read the pointer (csswg-drafts #6733 open; `pointer()` is only an animation timeline). The DTCG format module 2025.10 is the first stable tokens format (28 October 2025); Figma's Variables REST API needs an Enterprise seat, and Tokens Studio writes DTCG only when asked.
+
+**The sandboxed frame on Cloudflare Pages.** Rules in `_headers` apply in file order; two values for one header are joined with a comma, which for a CSP means both are enforced, so a rule after `/*` must first detach the site's policy (`! Content-Security-Policy`) and then set its own. By CSP3 `'self'` is the response URL's origin, so `script-src 'self'` holds in an opaque-origin frame; Safari 26.5 still refuses it there, so the origin is named beside it. An opaque origin has no cookies or storage; `fetch` to the site works through Pages' default `Access-Control-Allow-Origin: *`; `allow-scripts` alone covers canvas, WebGL, pointer events and `requestAnimationFrame`; `prefers-reduced-motion` is visible inside. Urd's guard denies `.html`, `.js`, `.css`, `.wasm`, `.json` and `.zip` under `media/` today, the updater never writes `_headers`, and `dev-server.py` applies no headers, so the CSP cannot be tested locally.
+
+**How the builders take such files.** Webflow has Lottie, Rive and Spline elements; Framer has Rive and LottieFiles plugins and takes Spline through its Embed; Wix's HTML component is a sandboxed frame on a separate Wix domain; Readymag's code widget has an iframe toggle; Tilda's Zero block and Ghost's HTML card run the code on the page. No builder takes an uploaded code bundle and isolates it.
+
+**What Urd takes:** three tracks. (1) Design in, on Urd's own elements (0.7.25): faces by `border-image`, scoped CSS styles, tokens, and the pointer as custom properties. (2) Lottie, Rive and glTF as files in `media/` with vendored MIT players as shipped plugins, on the page, no frame and no CDN (v0.8 Animation files). (3) Exported code in a sandboxed frame with a CSP of its own, the portal, with no promise beyond isolation. Spline's runtime is never vendored. Framer, Figma Sites and Penpot prototypes cannot come at all.
+
 ## Sources
 
 Each list is the survey's own sources, as cited in its text, and belongs to the survey dated in its heading. The kind is marked after each link: (primary) vendor, official or standards documentation, (secondary) a third-party blog, tutorial or user forum, (code) read in source.
@@ -303,3 +344,56 @@ Each list is the survey's own sources, as cited in its text, and belongs to the 
 - [Elementor: flexbox container size](https://elementor.com/help/set-flexbox-container-size-behavior) (primary)
 - [Modern CSS: container query units and fluid typography](https://moderncss.dev/container-query-units-and-fluid-typography/) (secondary)
 - [web.dev: container queries in action](https://web.dev/articles/baseline-in-action-container-queries) (primary)
+
+### Survey 14 October 2026 (design from other tools)
+
+- [Figma: export animations from Figma](https://help.figma.com/hc/en-us/articles/41307983648407-Export-animations-from-Figma) (primary)
+- [Figma: Figma Sites export](https://help.figma.com/hc/en-us/articles/31242845959703) (primary)
+- [Figma: Dev Mode](https://help.figma.com/hc/en-us/articles/15023124644247) (primary)
+- [Figma: export variables](https://help.figma.com/hc/en-us/articles/15343816063383) (primary)
+- [Figma REST API: variables](https://developers.figma.com/docs/rest-api/variables/) (primary)
+- [LottieFiles plugin for Figma](https://lottiefiles.com/plugins/figma) (primary)
+- [Penpot: inspect](https://help.penpot.app/user-guide/inspect/) (primary)
+- [Penpot: design tokens](https://help.penpot.app/user-guide/design-tokens/) (primary)
+- [Penpot community: the token export is the Tokens Studio format](https://community.penpot.app/t/token-export-is-tokens-studio-format-not-dtcg-2025-10/10544) (secondary)
+- [Framer: can I export my website](https://www.framer.com/help/articles/can-i-export-my-website-to-html-and-self-host-it/) (primary)
+- [Figment: Webflow code export](https://figment.so/blog/webflow-code-export) (secondary)
+- [Webflow DevLink: interactions](https://developers.webflow.com/devlink/docs/component-export/design-guidelines/interactions) (primary)
+- [Claude Design: export](https://support.claude.com/en/articles/14604416) (primary)
+- [Rive: the $9 plan](https://rive.app/blog/rive-s-new-9-mo-plan) (primary)
+- [Rive: canvas vs WebGL](https://rive.app/docs/runtimes/web/canvas-vs-webgl) (primary)
+- [Rive: reduced motion](https://rive.app/docs/editor/accessibility/reduced-motion) (primary)
+- [rive-wasm licence](https://github.com/rive-app/rive-wasm/blob/master/LICENSE) (code)
+- [lottie-web](https://github.com/airbnb/lottie-web) (code)
+- [dotlottie-web README](https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web@0.81.0/README.md) (primary)
+- [dotLottie spec 2.0](https://dotlottie.io/spec/2.0/) (primary)
+- [Spline: exporting as code](https://docs.spline.design/exporting-your-scene/web/exporting-as-code.md) (primary)
+- [Spline: self-hosted project](https://docs.spline.design/exporting-your-scene/web/exporting-as-self-hosted-project.md) (primary)
+- [Spline: glTF/GLB export](https://docs.spline.design/exporting-your-scene/files/exporting-as-gtlf-glb.md) (primary)
+- [Spline terms](https://spline.design/terms) (primary)
+- [SVGator: export options](https://www.svgator.com/help/export-and-file-formats/what-export-options-are-available) (primary)
+- [Jitter: export](https://help.jitter.video/en/articles/5369843-export-your-work) (primary)
+- [Cavalry: Lottie export](https://cavalry.studio/docs/user-interface/menus/window-menu/render-manager/lottie-export/) (primary)
+- [Cavalry: web player](https://cavalry.studio/docs/web-player/) (primary)
+- [Lottielab: file download](https://docs.lottielab.com/export-and-hand-off/file-download) (primary)
+- [model-viewer on npm](https://api.npmjs.org/downloads/point/last-month/@google/model-viewer) (primary)
+- [Spark](https://registry.npmjs.org/@sparkjsdev/spark/latest) (primary)
+- [Adobe Animate in maintenance mode](https://techcrunch.com/2026/02/04/after-backlash-adobe-cancels-adobe-animate-shutdown-and-puts-app-on-maintenance-mode) (secondary)
+- [Godot: exporting for the web](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html) (primary)
+- [Webflow: Lottie](https://help.webflow.com/hc/en-us/articles/33961351058835) (primary)
+- [Framer: Rive plugin](https://www.framer.com/marketplace/plugins/rive/) (primary)
+- [Wix: the HTML component](https://dev.wix.com/docs/velo/velo-only-apis/$w/html-component/introduction) (primary)
+- [Readymag: custom code](https://help.readymag.com/hc/en-us/articles/360020844171-Adding-custom-code) (primary)
+- [Cloudflare Pages: headers](https://developers.cloudflare.com/pages/configuration/headers/) (primary)
+- [Cloudflare workers-sdk: the asset server's rules engine](https://github.com/cloudflare/workers-sdk/blob/main/packages/workers-shared/asset-worker/src/utils/rules-engine.ts) (code)
+- [CSP3](https://w3c.github.io/webappsec-csp/) (primary)
+- [GitLab: Safari and 'self' in sandboxed frames](https://gitlab.com/gitlab-org/gitlab/-/work_items/601981) (secondary)
+- [MDN: CSP script-src](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/script-src) (primary)
+- [DTCG format module 2025.10](https://www.designtokens.org/tr/2025.10/format/) (primary)
+- [Tokens Studio: token format](https://docs.tokens.studio/manage-settings/token-format) (primary)
+- [MDN: border-image](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/border-image) (primary)
+- [W3C: SVG integration](https://www.w3.org/TR/svg-integration/) (primary)
+- [PortSwigger: the SVG animate XSS vector](https://portswigger.net/research/svg-animate-xss-vector) (secondary)
+- [DOMPurify source](https://github.com/cure53/DOMPurify/tree/main/src) (code)
+- [MDN: the Sanitizer API's default configuration](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API/Default_sanitizer_configuration) (primary)
+- [csswg-drafts #6733: pointer position in CSS](https://github.com/w3c/csswg-drafts/issues/6733) (primary)

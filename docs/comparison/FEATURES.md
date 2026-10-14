@@ -836,7 +836,7 @@ The C-IDs below are the ones named in Part 1. C1 to C26, C4b and C7b keep their 
 | C38 | Desktop and phone canvases side by side | Webflow breakpoint canvas, 2 Sep 2026 ([we-r.co](https://www.we-r.co/en/blog/nouveautes-designer-webflow-conf-2026), secondary) | Two iframes on the same postMessage bridge | Taken: 0.7.3 mobile rethink (to be weighed once the row grid stands) |
 | C39 | An element manager that hides unused block types, widened from the «shop is on» gating | Bricks 2.0 Element Manager ([bricksbuilder.io](https://bricksbuilder.io/release/bricks-2-0/), primary) | A smaller palette for a club that needs no shop | Taken: 0.7.10 Intuitiveness review and editor polish |
 | C40 | Page duplication in the Pages panel | Wix ([wix.com/features/main](https://www.wix.com/features/main), primary); Webstudio ([Part 2](#part-2-the-function-catalogue)) | Cheap: a page is a JSON file | Taken: 0.7.10 Intuitiveness review and editor polish |
-| C41 | Classes and custom CSS per element or site-wide, custom attributes, class managers | Webflow ([developers.webflow.com](https://developers.webflow.com/reference/the-style-object), primary); Elementor 4 ([v4 FAQ](https://elementor.com/products/website-builder/v4-faq/), primary); Bricks ([bricksbuilder.io](https://bricksbuilder.io/release/bricks-2-0/), primary) | The content holds no CSS, and a class-based cascade is not adopted ([CODE.md](CODE.md)) | Not taken: no CSS in the content |
+| C41 | Classes and custom CSS per element or site-wide, custom attributes, class managers | Webflow ([developers.webflow.com](https://developers.webflow.com/reference/the-style-object), primary); Elementor 4 ([v4 FAQ](https://elementor.com/products/website-builder/v4-faq/), primary); Bricks ([bricksbuilder.io](https://bricksbuilder.io/release/bricks-2-0/), primary) | The content holds no CSS, and a class-based cascade is not adopted ([CODE.md](CODE.md)); a look copied from a design tool becomes a scoped style in the theme | Taken in part: a scoped style per look in 0.7.25; site-wide CSS and classes stay not taken |
 | C42 | A list of the images that lack alt text, edited in one view | Duda Alt Text Manager ([duda.co/features/seo-tools](https://duda.co/features/seo-tools), primary); Webflow's Audit panel over the asset library ([webflow.com/updates](https://webflow.com/updates/find-and-fix-accessibility-issues-with-new-audit-panel), primary) | A scan of the JSON | Taken: 0.7.11 Accessibility round (the audit panel's alt-text list) |
 | C43 | Responsive pictures: 2 to 4 widths in AVIF and WebP made at upload, `width` and `height` recorded at upload, the first image eager at `fetchpriority=high`, `sizes="auto"`; JPEG XL noted for later | WordPress, Squarespace, Shopify Horizon and Astro (measured, 11 Oct 2026); Webflow AVIF ([webflow.com/updates](https://webflow.com/updates/avif-image-support-conversion-tool), primary) | Pages has no resizing on the fly, so the variants are made at upload | Taken: v0.8 responsive pictures |
 | C44 | An image editor with crop and aspect presets, rotate and flip | WordPress 7.1 media editor ([Roadmap to 7.1](https://make.wordpress.org/core/2026/06/19/roadmap-to-7-1/), primary); Duda photo editor ([Part 2](#part-2-the-function-catalogue)) | Extends the shared image editor | Taken: v0.8 image editor |
@@ -866,7 +866,7 @@ The C-IDs below are the ones named in Part 1. C1 to C26, C4b and C7b keep their 
 | C68 | Commerce at gateway scale: gateways besides Vipps, discount codes, subscriptions, gift cards, tax, live shipping rates, customer accounts, point of sale | Shopify ([shopify.com/pricing](https://www.shopify.com/pricing), primary); Squarespace ([squarespace.com/pricing](https://www.squarespace.com/pricing), primary); Wix ([wix.com/ecommerce/features](https://www.wix.com/ecommerce/features), primary) | Needs a server and a gateway | Not taken: a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer-vipps-checkout.md)); orders arrive by email or through Vipps |
 | C69 | A static product feed for Google Shopping | Squarespace on Core ([squarespace.com/pricing](https://www.squarespace.com/pricing), primary); Wix Google Merchant Center ([wix.com/ecommerce/features](https://www.wix.com/ecommerce/features), primary) | A feed file can be written at publish | Watch: a static product feed is possible |
 | C70 | A scroll-scrubbed entrance as a choice of its own | Webflow ScrollTrigger ([webflow.com/updates](https://webflow.com/updates/more-control-over-interactions-with-gsap), primary); Webstudio ([webstudio.is/blog](https://webstudio.is/blog/native-scroll-driven-animations), primary); Elementor 4 ([elementor.com/blog](https://elementor.com/blog/editor-40-atomic-forms-pro-interactions/), primary) | `animation-timeline: view()` behind `@supports`, with the end state as the fallback ([ADR-0011](../adr/0011-native-css-first.md)) | Taken: v0.8 Element round, ER-H |
-| C71 | Mouse and cursor effects, keyframe timelines, shaders and WebGL, Lottie, 3D | Framer ([framer.com/features/design](https://framer.com/features/design/), primary); Wix Studio ([support.wix.com](https://support.wix.com/en/article/studio-editor-about-animations), primary); Readymag Lottie ([blog.readymag.com](https://blog.readymag.com/recap-2025/), primary) | Needs a runtime library or a GPU, and adds complexity for the audience | Not taken: library, GPU or complexity |
+| C71 | Mouse and cursor effects, keyframe timelines, shaders and WebGL, Lottie, 3D | Framer ([framer.com/features/design](https://framer.com/features/design/), primary); Wix Studio ([support.wix.com](https://support.wix.com/en/article/studio-editor-about-animations), primary); Readymag Lottie ([blog.readymag.com](https://blog.readymag.com/recap-2025/), primary) | Lottie, Rive and 3D as data files with vendored MIT players; the pointer as custom properties; keyframe timelines, shaders and cursor effects add complexity for the audience | Taken in part: Lottie and 3D in v0.8 Animation files, the pointer in 0.7.25; cursor effects, keyframe timelines and shaders stay not taken |
 | C72 | The template model: export a template or a group of templates as a plugin; whole-site templates and examples kept in Urd | WordPress theme export ([wordpress.org](https://wordpress.org/documentation/article/site-editor/), primary); Bricks 2.4 ZIP transfer ([bricksbuilder.io](https://bricksbuilder.io/release/bricks-2-4/), primary); Squarespace Site Themes ([searchenginejournal](https://www.searchenginejournal.com/squarespace-rolls-out-new-ai-tools-for-seo-and-design/557220/), secondary) | Keeps the site owner's repo small | Taken: v0.8 template model |
 | C73 | Wireframes: grey presets for laying out a page | Bricks wireframes and design sets ([bricksbuilder.io](https://bricksbuilder.io/release/bricks-2-0/), primary) | Cheap as presets | Watch: grey presets |
 | C74 | A gallery site for community templates and plugins | Template galleries at every large builder (earlier survey, no URL) | Needs a community first | Taken: After v1.0 gallery site |
@@ -1675,7 +1675,7 @@ The consent and privacy-page items belong to 0.7.24 Privacy defaults, where a co
 | Code export | WF (workspace Core+), TI (Business), DU (Agency), GD (React/TS), CA (download) | Leave the platform | no | Has: everything is code | - |
 | Static HTML export | TI | Archive download | no | Partial: the site is static files, but the text renders only when JS runs | v0.8 baking |
 | Video hosting quotas | SQ (30 min / 5 h / unlimited), WP (VideoPress 250 GB) | Video storage | yes | Has: media limits; Cloudflare free tier | Docs |
-| Code injection and custom code | SQ (Core+), FR, CA, TI, ZO, SU, WN | Header and footer scripts | no | Missing | Not taken in the core: a plugin |
+| Code injection and custom code | SQ (Core+), FR, CA, TI, ZO, SU, WN | Header and footer scripts | no | Missing | Not taken for head and footer scripts; a code bundle goes in the portal, v0.8 Animation files |
 | SFTP, SSH, WP-CLI, Git deploys | WP (Business+) | Developer access | yes | Has: Git deploys | - |
 | Automatic platform updates | WP, GH | Managed updates | yes | Partial: the updater, started by the site owner in admin; `_headers` changes by hand ([ADR-0014](../adr/0014-updater-model.md)) | - |
 | App backend or full-stack hosting | WX (Velo, HTTP functions, secrets), DU (Vibe), GD (Airo), WF (secondary) | Server code | yes | Has: Pages Functions | - |
@@ -1828,7 +1828,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Design sets or kits | BR, BD, OX | Install pages, templates and components as sets | Partial: page starter packs | v0.8: whole-site templates |
 | Saved reusable assets | WS, RM, DV, FS | Save sections or pages; Preset Manager; libraries | Has: «Save as template» (My templates) | - |
 | Paste HTML/CSS as native elements | BR, WT, BD | Converter to elements, classes and variables | Missing | 0.7.10 paste |
-| Figma import | WS, TI, FS | Figma plugin; copy-paste | Missing | Not taken |
+| Figma import | WS, TI, FS | Figma plugin; copy-paste | Missing | Not taken as an import; Figma arrives as SVG, CSS and tokens (0.7.25) or Lottie (v0.8 Animation files) |
 | Markdown input | WT, CA, EL | Paste markdown; markdown formatting; markdown rendering (alpha) | Missing | 0.7.10 paste |
 | AI section generation | WH, DU, WN, HO | A prompt creates a section | Missing | Not taken: MCP is the way (ADR-0017) |
 | AI element, block or widget generator | WH, DU, SH, WF, FS, FR, TI | Generated custom element (code-backed) | Missing | Not taken: MCP is the way (ADR-0017) |
@@ -1860,7 +1860,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 
 #### 4. Inspector and styling
 
-Urd places blocks freely on a grid, so the flex, grid and selector controls of the class-based builders do not apply. Custom CSS and classes are not taken: the content files hold no CSS, and the class-based cascade was not adopted (see [CODE.md](CODE.md)).
+Urd places blocks freely on a grid, so the flex, grid and selector controls of the class-based builders do not apply. Site-wide custom CSS and classes are not taken: the content files hold no CSS, and the class-based cascade was not adopted (see [CODE.md](CODE.md)); a look copied from a design tool becomes a scoped style in the theme (0.7.25).
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
@@ -1883,7 +1883,7 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 | Overflow or clip | FR, FS | Overflow: Clip; clip content | n/a: free placement | - |
 | Pointer events or user-select | FR | Disable per layer | n/a: free placement | - |
 | Opacity by number keys | TI, RM | 0-9 or 0-10 keys | Missing | Not taken: low value |
-| Custom CSS per element or block | WP, BD, CA, WS, BR, WF, DU, WT | Block CSS; Advanced > Custom CSS; custom CSS properties | Missing | Not taken: no CSS in the content |
+| Custom CSS per element or block | WP, BD, CA, WS, BR, WF, DU, WT | Block CSS; Advanced > Custom CSS; custom CSS properties | Missing | 0.7.25: a scoped style per look, pasted whole; the content files still hold no CSS |
 | Site-wide custom CSS | WP, WS, BR, SQ, WF | Additional CSS; global.css; theme stylesheet | Missing | Not taken: no CSS in the content |
 | Custom attributes | WF, CA, DV, OX, WT | Name/value pairs in settings | Missing | Not taken: no CSS in the content |
 | Custom IDs or anchors | CA, WP, DV | Fixed IDs; HTML anchor | Has: section ids | - |
@@ -2006,7 +2006,7 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | Lightbox | FS, WP | Overlay or gallery lightbox | Has | - |
 | Sticky | FR, FS, EL, OX | Pin within the scroll | Has | - |
 | Shrinking header | DU | The header changes on scroll | Has: scroll shrink in the nav | - |
-| Lottie | DV | Lottie module | Missing | Not taken: library, GPU or complexity |
+| Lottie | DV | Lottie module | Missing | v0.8 Animation files |
 | Reduced motion | FR, WT | Setting or media condition | Has | - |
 | Component state interactions | FR, FS | Variant change on a trigger | n/a | - |
 | Copy animation settings | RM | ⇧⌘C/V | Missing | 0.7.10: paste styles |
@@ -2145,7 +2145,7 @@ Head, page and element code, and JavaScript triggers, are not taken in the core:
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Site-wide head and body code | WF, SQ, RM, CA, WN, FR | Code injection | Missing | Not taken in the core: plugin route |
+| Site-wide head and body code | WF, SQ, RM, CA, WN, FR | Code injection | Missing | Not taken for head and body scripts; a code bundle goes in the portal, v0.8 Animation files |
 | Per-page code | WF | Page head or before the body end | Missing | Not taken in the core: plugin route |
 | Per-element code embed | WF, RM, CA, WP, DU, TI | Embed or HTML element | Missing | Not taken in the core: plugin route |
 | Code components | WF, FR, FS, WS, DU, SH, OX | React, Velo, Liquid, Twig | Has: plugin blocks | - |

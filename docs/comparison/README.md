@@ -9,9 +9,9 @@ The maps replace `docs/sammenligning/` (FUNKSJONSKART, ELEMENTKART and LAERDOMME
 | File | Answers | IDs |
 |---|---|---|
 | [FEATURES.md](FEATURES.md) | What the field offers and what Urd has, in 17 categories (from text editing to privacy, handover, AI and associations), and the full function catalogue: about 594 rows of site and business functions at 26 builders and club platforms, and 338 rows of editor and design functions at 24 builders | C1-C114 |
-| [ELEMENTS.md](ELEMENTS.md) | How features are offered in the editor (delivery patterns), the keyboard-shortcut sets of 19 builders against Urd's own, and the full element catalogue: 313 elements from 39 builders and the main component libraries, plus 11 found elsewhere, each with its native build and Urd's status | E1-E37 |
+| [ELEMENTS.md](ELEMENTS.md) | How features are offered in the editor (delivery patterns), the keyboard-shortcut sets of 19 builders against Urd's own, and the full element catalogue: 313 elements from 39 builders and the main component libraries, plus 11 found elsewhere, each with its native build and Urd's status | E1-E40 |
 | [DESIGN.md](DESIGN.md) | What modern sites look like in 2025-2026 (layout, typography, colour, surfaces, motion, backgrounds, imagery), how each pattern is built natively, what usability research says, and the patterns of association, club and event sites | D1-D62 |
-| [CODE.md](CODE.md) | How the builders are built: the editors read from their source code, the published output measured, the web platform as of October 2026 with Baseline dates, publishing and deploy, and what Urd takes and does not take | T1-T113 |
+| [CODE.md](CODE.md) | How the builders are built: the editors read from their source code, the published output measured, the web platform as of October 2026 with Baseline dates, publishing and deploy, and what Urd takes and does not take | T1-T116 |
 | [SURVEYS.md](SURVEYS.md) | The dated surveys the ADRs and milestones cite, kept as decided | - |
 
 ## How the maps were made
