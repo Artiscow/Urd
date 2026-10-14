@@ -17,12 +17,14 @@ jobs:
           cache: npm
           cache-dependency-path: editor/package-lock.json
 
-      - name: Engine and guard tests
-        run: node --test tests/*.mjs
-
+      # Before the tests: the render tests compile the editor's Svelte files
+      # through the compiler in editor/node_modules.
       - name: Install editor dependencies
         working-directory: editor
         run: npm ci
+
+      - name: Engine and guard tests
+        run: node --test tests/*.mjs
 
       - name: Validate example data against the schemas
         working-directory: editor
