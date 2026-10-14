@@ -100,8 +100,8 @@ function readVideoFile(file, formatKey, done) {
   reader.readAsDataURL(file);
 }
 
-/** A fresh seed for a scatter the owner wants to keep: never 0, which means the visit's. */
-const newSeed = () => 1 + (crypto.getRandomValues(new Uint32Array(1))[0] % 1000000);
+/** A fresh seed for a scatter the owner wants to keep: never 0, which means the visit's. Not a secret, so Math.random is enough. */
+const newSeed = () => 1 + Math.floor(Math.random() * 1000000);
 
 /** Multiple images in one upload (the galleries): compress all;
  *  one unreadable image does not stop the rest of the batch. */

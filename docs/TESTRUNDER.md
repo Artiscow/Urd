@@ -2,6 +2,10 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.49): the scatter seed
+
+- [ ] A gallery in scatter or mosaic view: «Shuffle» gives a different layout each press, and the kept layout survives a reload and a publish
+
 ### Test batch (0.7.26.5): the shell's parts and the state modules
 
 - [ ] Admin loads with the panel remembered from last time, and with none; on a fresh clone the setup wizard comes up, and its name and colours land in the site

@@ -26377,7 +26377,7 @@ function PA(e, t, n) {
 		n(String(r.result ?? "")), e.size > 4e6 && kA.setStatus(K("status.videoLarge", { mb: (e.size / 1e6).toFixed(1) }), "error");
 	}, r.onerror = () => kA.setStatus(K("status.imageReadError"), "error"), r.readAsDataURL(e);
 }
-var FA = () => 1 + crypto.getRandomValues(/* @__PURE__ */ new Uint32Array(1))[0] % 1e6;
+var FA = () => 1 + Math.floor(Math.random() * 1e6);
 async function IA(e) {
 	let t = [], n = 0, r = 0;
 	for (let i of e) try {

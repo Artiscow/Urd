@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.49 - The CodeQL alerts after the split: the import check through Svelte's parser, and the scatter seed from Math.random - 14 October 2026
+
+- CodeQL read tests/editor-imports.test.mjs's regexes that stripped `<script>`, `<style>` and comments before the markup scan as HTML sanitising (five alerts). The test now reads each file through Svelte's own parser and walks the trees: component tags and `transition`, `use` and `animate` directives in the markup, imports, declarations and snippets in the script, with a test that proves an unimported tag and transition are still caught.
+- The gallery's scatter seed was drawn as `crypto.getRandomValues(...) % 1000000`, a biased draw from a cryptographic source (one alert). The seed is not a secret and comes from `Math.random` (`newSeed` in media.svelte.js).
+
 ### 0.7.20.3-0.7.26.5p - Push preparation: the element-menu stages and the App.svelte split reviewed, and three reads of the editor handle mended - 14 October 2026
 
 - Independent review of the span (a fresh agent, the whole diff against AGENTS.md and the ADRs with its own build, tests, validation, stamp, three-places, i18n and em dash checks). Three defects, all left by the split and found by code reading, fixed before the push.
