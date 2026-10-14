@@ -1,6 +1,8 @@
 /**
  * The design picker's pictures: every calendar design drawn by the engine with its sample events, one WebP each under
- * template/admin/designs/<id>.webp (outside admin/assets, which the editor build empties) (16:9 from the design's top, the block's own width scaled to 1120 px).
+ * template/admin/designs/<id>.webp (outside admin/assets, which the editor build empties): the block's own box, its width scaled to
+ * 1120 px and its height as drawn, cut at 16:9 from the top for a design taller than that, so the picker shows each design in
+ * its own proportions on the tile's dark surface rather than at the top of a white page.
  *
  * Run from the repo root with the local server up (python3 dev-server.py 8123) and a Chromium-family browser on the machine:
  *
@@ -112,8 +114,8 @@ try {
       const r = el.getBoundingClientRect();
       return { x: Math.round(r.left), y: Math.round(r.top + window.scrollY), w: Math.round(r.width), h: Math.round(r.height) };
     })()`);
-    // The block's own width (the page's bound content width), 16:9 from its top.
-    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, captureBeyondViewport: true, clip: { x: box.x, y: box.y, width: box.w, height: Math.round(box.w * 9 / 16), scale: PIC_W / box.w } });
+    // The block's own box (the page's bound content width), at most 16:9 from its top.
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, captureBeyondViewport: true, clip: { x: box.x, y: box.y, width: box.w, height: Math.min(box.h, Math.round(box.w * 9 / 16)), scale: PIC_W / box.w } });
     const data = shot.result?.data;
     if (!data) throw new Error(`${id}: no picture (${JSON.stringify(shot)})`);
     writeFileSync(join(OUT, `${id}.webp`), Buffer.from(data, 'base64'));

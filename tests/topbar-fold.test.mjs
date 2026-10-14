@@ -24,8 +24,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
+/* The top bar's rules live in the admin's global stylesheet, and the thresholds that swap a cluster for a menu in App.svelte (0.7.26.2). */
 const SRC = readFileSync(new URL('../editor/src/App.svelte', import.meta.url), 'utf-8');
-const NO_COMMENTS = SRC.replace(/\/\*[\s\S]*?\*\//g, '');
+const CSS = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf-8');
+const NO_COMMENTS = CSS.replace(/\/\*[\s\S]*?\*\//g, '');
 
 /** The declarations in the rule for one selector, comments stripped.
  *  All regex metacharacters are escaped, not just dots (CodeQL
@@ -50,12 +52,12 @@ for (const selector of ['.topbar', '.topbar-group']) {
 
 /* The fold steps are delimited by their own heading, so an unrelated media
    query elsewhere in the file does not count as a step. */
-const FOLD = SRC.slice(SRC.indexOf('---- Foldetrinnene'));
+const FOLD = CSS.slice(CSS.indexOf('---- Foldetrinnene'));
 
 const cssSteps = () => [...FOLD.matchAll(/@media \(max-width:\s*(\d+)px\)/g)].map((m) => Number(m[1]));
 
 test('the fold steps exist and are strictly decreasing', () => {
-  assert.ok(FOLD.length > 0, 'could not find the fold-step section in App.svelte');
+  assert.ok(FOLD.length > 0, 'could not find the fold-step section in app.css');
   const steps = cssSteps();
   assert.ok(steps.length >= 6, `expected at least six fold steps, found ${steps.length}`);
   for (let i = 1; i < steps.length; i += 1) {

@@ -11,6 +11,8 @@
 import { mount } from 'svelte';
 import { initAdminLocale } from '$engine/i18n.js';
 import App from './App.svelte';
+// The admin's global stylesheet, after the components so its rules win a tie with theirs.
+import './app.css';
 
 // The document lang is set from what was ACTUALLY loaded: a chosen
 // language-pack language that is no longer installed falls back to the base

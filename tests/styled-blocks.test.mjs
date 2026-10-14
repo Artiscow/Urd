@@ -16,6 +16,8 @@ const { FOOTER_DESIGNS, footerDesign } = await engineImport('footer-model.js');
 const { footerThumb } = await engineImport('footer-thumb.js');
 
 const editor = readFileSync(new URL('../editor/src/App.svelte', import.meta.url), 'utf8');
+// The variant lists stand in the block families of the element menu (0.7.26.2).
+const families = ['Stats', 'Faq'].map((f) => readFileSync(new URL(`../editor/src/menu/families/${f}.svelte`, import.meta.url), 'utf8')).join('\n');
 
 test('statVariant: bare, a card or a band, and bare for anything unknown', () => {
   assert.deepEqual(STAT_VARIANTS, ['plain', 'cards', 'band']);
@@ -40,7 +42,7 @@ test('the variants are additive: the blocks keep their versions and their defaul
 });
 
 test('the editor offers the same variants as the blocks', () => {
-  const list = (name) => JSON.parse(new RegExp(`const ${name} = (\\[[^\\]]*\\]);`).exec(editor)[1].replaceAll("'", '"'));
+  const list = (name) => JSON.parse(new RegExp(`const ${name} = (\\[[^\\]]*\\]);`).exec(families)[1].replaceAll("'", '"'));
   assert.deepEqual(list('STAT_VARIANT_IDS'), STAT_VARIANTS);
   assert.deepEqual(list('FAQ_VARIANT_IDS'), FAQ_VARIANTS);
 });

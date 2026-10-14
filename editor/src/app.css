@@ -1,0 +1,2987 @@
+/*
+ * The admin's global stylesheet (0.7.26.2): the admin themes, the top bar,
+ * the panels and their language (ADR-0016), the element menu and the preview
+ * stage. Global, since the parts of the editor share the classes; a rule
+ * whose subject is a form element, a .ghost or a .primary keeps out of the
+ * lib components (Dropdown, ColorPicker, GlyphPicker, MarkPicker,
+ * DesignPicker, IconEditor, Choice), which draw their own controls; the
+ * guard is a :where(), so it adds no specificity and every rule keeps its
+ * place against the others.
+ */
+  /* The admin's color themes: override the engine's default variables
+     ONLY in the admin document (the preview iframe has its own document
+     and follows the user's theme). Picked in the top bar. */
+  /* The Urd brand palette (logo/mark): well-teal primary, with all the
+     color variants kept. A fixed brand color, independent of the admin theme. */
+  :root {
+    --urd-brand: #15b39a;         /* well-teal (primary, Urd's well + Yggdrasil) */
+    --urd-brand-bronze: #c9a227;  /* runestone bronze */
+    --urd-brand-indigo: #7c5cff;  /* fate indigo */
+    --urd-brand-mono: #eaf1ed;    /* monochrome (off-white) */
+  }
+
+  :root[data-admin-theme='purple'] {
+    --urd-color-bg: #0b0e17;
+    --urd-color-surface: #151a2b;
+    --urd-color-accent: #7c5cff;
+    --urd-color-text: #e8eaf0;
+  }
+
+  :root[data-admin-theme='well'] {
+    --urd-color-bg: #0b1418;
+    --urd-color-surface: #13232a;
+    --urd-color-accent: #2ec8b5;
+    --urd-color-text: #e4eef0;
+  }
+
+  :root[data-admin-theme='gold'] {
+    --urd-color-bg: #100e0a;
+    --urd-color-surface: #1c1812;
+    --urd-color-accent: #d9a441;
+    --urd-color-text: #ede8dc;
+  }
+
+  :root[data-admin-theme='grey'] {
+    --urd-color-bg: #0e0f11;
+    --urd-color-surface: #191b1e;
+    --urd-color-accent: #5f6a75;
+    --urd-color-text: #e6e8ea;
+  }
+
+  /* Nordlys: the Nord palette (arctic, low saturation) */
+  :root[data-admin-theme='aurora'] {
+    --urd-color-bg: #232831;
+    --urd-color-surface: #2e3440;
+    --urd-color-accent: #5e81ac;
+    --urd-color-text: #eceff4;
+  }
+
+  /* Skumring: Tokyo Night (neon night, blue) */
+  :root[data-admin-theme='dusk'] {
+    --urd-color-bg: #16161e;
+    --urd-color-surface: #1a1b26;
+    --urd-color-accent: #3d59a1;
+    --urd-color-text: #c0caf5;
+  }
+
+  /* Glo: Gruvbox (warm, glowing orange) */
+  :root[data-admin-theme='ember'] {
+    --urd-color-bg: #1d2021;
+    --urd-color-surface: #282828;
+    --urd-color-accent: #d65d0e;
+    --urd-color-text: #ebdbb2;
+  }
+
+  /* Our own slim, dark scrollbar across the admin, so it does not stand out */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 22%) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 22%);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .editor {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .topbar.hidden,
+  .rail.hidden,
+  .panel.hidden {
+    display: none;
+  }
+
+  .chrome-restore {
+    position: fixed;
+    /* Below the site's own top bar, clear of both nav and scrollbar */
+    top: 64px;
+    right: 28px;
+    z-index: 200;
+    font: inherit;
+    color: #fff;
+    background: var(--urd-color-accent, #7c5cff);
+    border: 0;
+    border-radius: 999px;
+    padding: 0.4em 1em;
+    cursor: pointer;
+    opacity: 0.55;
+  }
+
+  .chrome-restore:hover {
+    opacity: 1;
+  }
+
+  .topbar {
+    display: flex;
+    /* The bar NEVER wraps to two rows: the height is fixed, and what does
+       not fit is folded away in steps (see the fold steps at the bottom of
+       the file). */
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    /* More air on the right: Publish is the last thing the eye lands on
+       and must not stick to the window edge. */
+    padding: 0.6rem 1.4rem 0.6rem 1rem;
+    background: var(--urd-color-surface, #151a23);
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+    font-size: 0.9rem;
+  }
+
+  /* .rail-brand owns the mark's shape; only the glyph's and word's own sizes live here. */
+  .brand-mark {
+    width: 1.4rem;
+    height: 1.4rem;
+    flex: none;
+  }
+  .brand-word {
+    letter-spacing: 0.01em;
+  }
+
+  /* Three groups on one row: left (tools), middle (draft status) and
+     right (view/publishing). None of them wrap. */
+  .topbar-group {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    /* min-width: auto (inherited) stops the group at min-content, i.e.
+       the page-name button's min-width plus the rest of the controls. */
+  }
+
+  /* The controls keep their natural width: the fold steps, not shrinking,
+     make room. Only the page name below is allowed to give way. */
+  .topbar-group > * {
+    flex: none;
+  }
+
+  /* The page name is free text and is therefore the only thing allowed to
+     shrink. Block display gives an ellipsis instead of the buttons' inline-flex. */
+  .topbar .page-btn {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-right {
+    margin-left: auto;
+    justify-content: flex-end;
+    flex: none;
+  }
+
+  /* Buttons with an SVG icon: icon and text in line, vertically centered */
+  .topbar .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .chrome-restore,
+  .badge.attention {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+
+  .badge {
+    background: var(--urd-color-accent, #7c5cff);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.15em 0.7em;
+    font-size: 0.78rem;
+  }
+
+  /* Status messages as a toast in the bottom right: does not disturb the
+     top bar and can be read wherever you are working */
+  .toast {
+    position: fixed;
+    bottom: 22px;
+    /* Clear of the preview's scrollbar and the right edge */
+    right: 34px;
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    max-width: 44ch;
+    padding: 0.6em 0.9em;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  }
+
+  .toast.ok {
+    border-color: rgb(46 204 113 / 45%);
+    color: #7ee2a8;
+  }
+
+  .toast.error {
+    border-color: rgb(231 76 60 / 45%);
+    color: #f5a09a;
+  }
+
+  .toast-x {
+    border: 0;
+    padding: 0 0.2em;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.6;
+  }
+
+  .toast-x:hover {
+    opacity: 1;
+  }
+
+  .who {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    opacity: 0.7;
+    font-size: 0.82rem;
+  }
+
+  /* The workspace: panel picker rail | panel (optional) | preview */
+  .workspace {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  /* A tight rail: narrow, no gaps between the items, and monospace that
+     ties the rail to Urd's own tone. Twelve items should take a small
+     corner of the canvas height, not most of it. */
+  .rail {
+    display: flex;
+    flex-direction: column;
+    /* The longest label is "Oppdatering": eleven characters in 0.74rem
+       monospace is just over 80 px, plus twice 0.9rem indent. 8.5rem gives
+       air without the rail taking space from the canvas. */
+    width: 8.5rem;
+    flex: none;
+    gap: 0;
+    padding: 0.55rem 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.74rem;
+    background: var(--urd-color-surface, #151a23);
+    border-right: 1px solid rgb(255 255 255 / 8%);
+    overflow-y: auto;
+  }
+
+  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0.24rem 0.9rem;
+    /* The global button style makes all buttons inline-flex with
+       justify-content: center. On a flex container that overrides all
+       text alignment, so text-align alone has no effect here. */
+    justify-content: flex-start;
+    text-align: left;
+    border-radius: 0;
+    opacity: 0.75;
+  }
+
+  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    opacity: 1;
+    background: rgb(255 255 255 / 6%);
+  }
+
+  /* Active is marked by background + edge alone: the font weight does NOT
+     change, otherwise the text shifts slightly on every selection. */
+  /* The settings gear at the bottom of the rail + the popover above it.
+     position: fixed is not clipped by the rail's overflow. */
+  /* Uppercase label above each group, so the three levels read as groups
+     and not as one long list. */
+  .rail-group {
+    font-size: 0.54rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    padding: 0.8rem 0.9rem 0.15rem;
+  }
+
+  .rail-group:first-child { padding-top: 0.2rem; }
+
+  /* The mark lives at the bottom by the gear: mark on the left, settings
+     on the right, with a divider above. */
+  .rail-settings {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0 0.1rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    margin-inline: 0.9rem;
+  }
+
+  .rail-brand {
+    display: inline-flex;
+    /* The rune stands on the word's baseline: the svg (with no baseline of
+       its own) is aligned by its bottom edge, which is the glyph's foot
+       thanks to the cropped viewBox. */
+    align-items: baseline;
+    gap: 0.35rem;
+    min-width: 0;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+
+  /* Height in em: the rune stays just above cap height, as in the logo file. */
+  .rail-brand .brand-mark { width: auto; height: 0.8em; flex: none; }
+
+  .rail-gear {
+    /* The mark stands on the left and takes the width; the gear is square. */
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em !important;
+  }
+
+  .rail-gear.active {
+    border-color: var(--urd-color-accent, #7c5cff) !important;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent) !important;
+  }
+
+  .settings-pop {
+    position: fixed;
+    left: 10px;
+    bottom: 52px;
+    z-index: 100002;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 178px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgb(255 255 255 / 12%);
+    background: var(--urd-color-surface, #151a23);
+    box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  }
+
+  .settings-pop label:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+  }
+
+  /* Active is colored text with a line at the left edge, not a filled
+     pill: twelve filled pills stacked read heavy, and the line reads more
+     clearly as "you are here" in a list. */
+  .rail button.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    opacity: 1;
+    background: transparent;
+    color: var(--urd-color-accent, #7c5cff);
+    box-shadow: inset 2px 0 0 var(--urd-color-accent, #7c5cff);
+  }
+
+
+  .panel {
+    width: 300px;
+    flex-shrink: 0;
+    /* The scrollbar's gutter is always reserved (a thin one), so the
+       content keeps its width whether the panel scrolls or not; the gutter
+       itself gives the air at the right edge. */
+    padding: 0.9rem 0.6rem 0.9rem 0.9rem;
+    background: var(--urd-color-surface, #151a23);
+    border-right: 1px solid rgb(255 255 255 / 8%);
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    font-size: 0.88rem;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0 0 0.8rem;
+  }
+
+  .panel h2 {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .fold-sub {
+    margin-left: auto;
+    margin-right: 0.6em;
+  }
+
+  /* The fold-all toggle: the chevrons point outwards (expand) and flip
+     inwards (collapse) around their own centres. */
+  .fold-toggle .ft-top,
+  .fold-toggle .ft-bot {
+    transform-box: view-box;
+    transition: transform 0.2s ease;
+  }
+
+  .fold-toggle .ft-top { transform-origin: 12px 7px; }
+  .fold-toggle .ft-bot { transform-origin: 12px 17px; }
+
+  .fold-toggle.collapse .ft-top,
+  .fold-toggle.collapse .ft-bot {
+    transform: scaleY(-1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fold-toggle .ft-top,
+    .fold-toggle .ft-bot {
+      transition: none;
+    }
+  }
+
+  .fold-all,
+  .fold-sub {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 5px;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 5px;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+  }
+
+  .fold-all:hover,
+  .fold-sub:hover {
+    opacity: 1;
+  }
+
+  .panel-body {
+    display: grid;
+    /* minmax(0, 1fr): the column can never grow wider than the panel, so
+       the rows are squeezed instead of causing horizontal scrolling */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.6rem;
+  }
+
+  /* The block menu: a floating version of the Properties content next to the block */
+  .block-menu {
+    --menu-w: min(400px, 100vw - var(--menu-min, 8px) - 8px);
+    position: fixed;
+    z-index: 320;
+    left: clamp(var(--menu-min, 8px), var(--menu-left), 100vw - var(--menu-w) - 8px);
+    top: clamp(8px, var(--menu-top), 100vh - min(72vh, 620px) - 8px);
+    width: var(--menu-w);
+    max-height: min(72vh, 620px);
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgb(0 0 0 / 50%);
+  }
+
+  .block-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.8rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  /* Wide: as wide as its columns, an area without settings taking none */
+  .block-menu.wide {
+    --menu-w: min(740px, 100vw - var(--menu-min, 8px) - 8px);
+    width: fit-content;
+    max-width: var(--menu-w);
+  }
+
+  .block-menu-head .menu-width {
+    margin-left: auto;
+  }
+
+  /* The title gives way to the search field where the head is narrow */
+  .block-menu-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The element menu's search field, in the menu's head and over the menu in the Properties panel */
+  .menu-search {
+    flex: 1 1 9rem;
+    min-width: 6rem;
+    max-width: 16rem;
+    box-sizing: border-box;
+    height: 1.9rem;
+    padding: 0 0.6em;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: inherit;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 7px;
+  }
+
+  .panel-body > .menu-search {
+    max-width: none;
+    height: 2.2rem;
+  }
+
+  /* The search's copy of the areas: what does not match is left out, an area
+     with nothing left says so, and in the narrow menu the areas stand under each other */
+  .emenu-search .menu-miss {
+    display: none !important;
+  }
+
+  .emenu-none {
+    display: none;
+    margin: 0;
+    font-size: 0.78rem;
+    opacity: 0.6;
+  }
+
+  .emenu-search .emenu-col.menu-empty > .emenu-none {
+    display: block;
+  }
+
+  .emenu-cols.stacked {
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Wide: Content, Style and Placement side by side, each column scrolling with the menu */
+  .emenu-cols {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 224px);
+    grid-template-columns: none;
+    gap: 0.6rem;
+    align-items: start;
+  }
+
+  .emenu-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.6rem;
+    background: rgb(0 0 0 / 18%);
+    border-radius: 10px;
+  }
+
+  .emenu-col:not(:has(> :not(.panel-strong, .emenu-none))) {
+    display: none;
+  }
+
+  /* The colour slots of a design: swatches in rows, the name under each, the clear button on the swatch's corner */
+  .cal-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+    gap: 0.6rem 0.4rem;
+  }
+
+  .cal-slot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .cal-slot .mini-label {
+    overflow-wrap: anywhere;
+  }
+
+  .cal-slot .cp {
+    position: relative;
+  }
+
+  .cal-slot .cp-clear {
+    position: absolute;
+    top: -7px;
+    right: -9px;
+    background: var(--urd-color-surface, #151a23);
+    border-radius: 50%;
+  }
+
+  /* The quick row: a tile per setting, the label over its control */
+  .menu-quick {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 0.5rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  .menu-quick-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.45rem 0.5rem;
+    background: rgb(0 0 0 / 18%);
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 8px;
+  }
+
+  .menu-quick-item .seg {
+    display: flex;
+  }
+
+  /* A tile's label with the pin that takes it out of the row */
+  .menu-quick-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .menu-quick-head .mini-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .menu-quick-reset {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: 0.75rem;
+  }
+
+  /* A setting that can stand in the quick row, with its pin at the end */
+  .pin-line {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .pin-line > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* The pin itself: the icon alone on a square the size of a small target,
+     quiet until the pointer or the keyboard reaches it, and in the accent
+     while its setting stands in the row */
+  .menu-pin {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    opacity: 0.4;
+    cursor: pointer;
+  }
+
+  .menu-pin:hover,
+  .menu-pin:focus-visible {
+    opacity: 1;
+    background: rgb(255 255 255 / 8%);
+  }
+
+  .menu-pin:focus-visible {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: 1px;
+  }
+
+  .menu-pin.on {
+    color: var(--urd-color-accent, #7c5cff);
+    opacity: 1;
+  }
+
+  .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex: 1;
+    padding: 4px 2px;
+    font-size: 0.75rem;
+  }
+
+  .menu-quick-item input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .menu-quick-open {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+  }
+
+  /* A block, not the flex box a button is: the ellipsis needs one, and the words start at the left */
+  .menu-quick-open {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  /* A row that opens something over the menu: looks like a closed group */
+  .menu-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.45rem 0.7rem;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+  }
+
+  .menu-row:hover {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+
+  /* A group of the element menu: the title to the left, the current value muted to the right */
+  .menu-group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    gap: 0.6rem;
+  }
+
+  .menu-group-title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* The mark on a group that differs from the defaults, and the reset under its controls */
+  .menu-group-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    background: #f2b84b;
+    border-radius: 50%;
+  }
+
+  .menu-group-reset {
+    align-self: flex-start;
+    font-size: 0.78rem;
+  }
+
+  /* In a column a label stands over its control: the row is too narrow for both */
+  .emenu-cols:not(.stacked) .emenu-col label:not(.gridmenu-snap):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .panel-body .emenu-cols:not(.stacked) .emenu-col label:not(.gridmenu-snap) > * {
+    flex: none;
+  }
+
+  .menu-group-value {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 55%;
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.65;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .block-menu-body {
+    padding: 0.7rem 0.8rem 0.9rem;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  /* Checkboxes as modern toggles: a pill with a sliding knob */
+  input[type='checkbox']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    appearance: none;
+    width: 2.1rem;
+    height: 1.2rem;
+    flex-shrink: 0;
+    position: relative;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 10%);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  input[type='checkbox']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: calc(1.2rem - 6px);
+    height: calc(1.2rem - 6px);
+    border-radius: 50%;
+    background: #e8eaf0;
+    transition: transform 0.15s ease;
+  }
+
+  input[type='checkbox']:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    background: var(--urd-color-accent, #7c5cff);
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  input[type='checkbox']:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+    transform: translateX(0.9rem);
+  }
+
+  /* All the "row buttons" in the panel (blocks, groups, file picker)
+     share the same height and layout, so the list looks even */
+  .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: flex;
+    align-items: center;
+    min-height: 2.2rem;
+    padding: 0.35em 0.8em;
+    box-sizing: border-box;
+  }
+
+  /* List buttons in the panels are left-aligned (the rows must read as a
+     list), even though buttons otherwise center their content. Action
+     buttons (.action: create page, add layer, etc.) are centered like
+     regular buttons. */
+  .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    justify-content: flex-start;
+  }
+
+  .panel-body .ghost.action:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    justify-content: center;
+    text-align: center;
+  }
+
+  .panel-body label:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .panel-body input[type='range']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 100%;
+    accent-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .panel-body button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .panel-body .filepick {
+    text-align: left;
+  }
+
+  .panel-body.locked {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  /* Shared control height (2.2rem) and size in the panels: fields and
+     buttons must line up wherever they stand */
+  .panel-body input:not([type]):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .panel-body input[type='text']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .panel-body input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    font: inherit;
+    font-size: 0.85rem;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    height: 2.2rem;
+    padding: 0 0.5em;
+    min-width: 0;
+  }
+
+  /* Number stepper (−/[number]/+), like the size field in the text editor. */
+  .num-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 3.4rem;
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::-webkit-outer-spin-button,
+  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::-webkit-inner-spin-button{
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .num-stepper button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 2.2rem;
+    height: 2.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .num-stepper button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    background: rgb(255 255 255 / 10%);
+  }
+
+  /* The page and nav rows: title/label takes the space, the tools are narrow */
+  .page-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  /* The warning marker for pages without a meta description (Search and sharing) */
+  .seo-warn {
+    display: inline-flex;
+    flex: none;
+    color: #e2b84a;
+  }
+
+  .collection-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .plugin-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .plugin-row.plugin-broken {
+    border-color: color-mix(in srgb, #e05252 55%, transparent);
+  }
+
+  .plugin-head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .plugin-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .plugin-meta {
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+
+  .plugin-head .row-tools {
+    margin-left: auto;
+    align-items: center;
+  }
+
+  .plugin-toggle {
+    font-size: 0.8rem;
+  }
+
+  .plugin-warn {
+    color: #e2b84a;
+  }
+
+  .page-row.current {
+    border-left: 2px solid var(--urd-color-accent, #7c5cff);
+    padding-left: 0.4rem;
+  }
+
+  /* The list of menu items, with a strip under the last row to drop on. */
+  .nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 14px;
+  }
+
+  /* The menu items as compact rows: grip, name over target, marker, actions. */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.4rem 0.3rem 0.3rem;
+    border-radius: 7px;
+    background: color-mix(in srgb, currentColor 3%, transparent);
+  }
+
+  .nav-item.selected {
+    background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
+  }
+
+  .nav-item.child {
+    margin-left: 1.3rem;
+  }
+
+  .nav-grip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.1rem;
+    opacity: 0.45;
+    cursor: grab;
+  }
+
+  .nav-item:hover .nav-grip,
+  .nav-item.selected .nav-grip {
+    opacity: 0.8;
+  }
+
+  .nav-item-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* The name is the row's text: no frame until it has focus (the selector
+     outranks the panel's shared field rule) */
+  .panel-body input.nav-item-name:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    height: 1.5rem;
+    padding: 0 0.2rem;
+    border-color: transparent;
+    background: transparent;
+    font-size: 0.85rem;
+  }
+
+  .panel-body input.nav-item-name:focus:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    border-color: var(--urd-color-accent);
+    outline: none;
+  }
+
+  /* Where a dragged row lands: a faint clone of it, dashed, in the gap or
+     indented as a child */
+  .nav-item.ghost {
+    opacity: 0.55;
+    border: 1px dashed var(--urd-color-accent);
+    background: color-mix(in srgb, var(--urd-color-accent) 10%, transparent);
+    min-height: 2.9rem;
+  }
+
+  .ghost-name {
+    display: block;
+    height: 1.5rem;
+    line-height: 1.5rem;
+    padding: 0 0.2rem;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ghost-target {
+    display: block;
+    padding: 0 0.2rem;
+    font-size: 0.72rem;
+    opacity: 0.75;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-item.dragging {
+    opacity: 0.3;
+  }
+
+  /* The row that takes the dragged row in as a child */
+  .nav-item.drop-target {
+    background: color-mix(in srgb, var(--urd-color-accent) 18%, transparent);
+    outline: 1px dashed var(--urd-color-accent);
+    outline-offset: -1px;
+  }
+
+  /* The actions: a two-by-two grid of small buttons at the right, shown on the
+     row under the pointer and on the selected row; the other rows show the dots */
+  .nav-actions {
+    flex: 0 0 auto;
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+  }
+
+  .nav-item:hover .nav-actions,
+  .nav-item.selected .nav-actions {
+    display: grid;
+  }
+
+  .nav-item:hover .nav-more,
+  .nav-item.selected .nav-more {
+    display: none;
+  }
+
+  .panel-body .nav-act {
+    width: 1.5rem;
+    height: 1.4rem;
+    min-height: 0;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-item-target {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .nav-item-target > .dd {
+    flex: 0 1 auto;
+    max-width: 100%;
+  }
+
+  .panel-body input.nav-item-href:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex: 1 1 4rem;
+    min-width: 3rem;
+    height: 1.5rem;
+    font-size: 0.72rem;
+    padding: 0 0.3rem;
+  }
+
+  .nav-item-sub {
+    flex: 0 0 auto;
+    display: inline-flex;
+    opacity: 0.55;
+  }
+
+  .panel-body .nav-more {
+    height: 1.8rem;
+    width: 1.8rem;
+    opacity: 0.55;
+  }
+
+  .nav-item:hover .nav-more {
+    opacity: 1;
+  }
+
+  /* The social icon's preview in the Footer panel */
+  /* A shortcut row (B3): closed it is one line, open it is a card with the
+     tile drawn as the menu draws it. The preview is the mark picker's own
+     trigger, so a click on the tile changes the mark. */
+  .lrow {
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 9px;
+    background: rgb(255 255 255 / 4%);
+  }
+
+  .lrow + .lrow {
+    margin-top: 5px;
+  }
+
+  .lrow.open {
+    border-color: var(--urd-admin-accent, #6c5ce7);
+    box-shadow: 0 8px 22px rgb(0 0 0 / 30%);
+  }
+
+  .lrow-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 7px;
+    cursor: pointer;
+  }
+
+  .lrow-mark {
+    flex: 0 0 auto;
+    width: 1.7rem;
+    height: 1.7rem;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    background: rgb(255 255 255 / 7%);
+    overflow: hidden;
+    opacity: 0.9;
+  }
+
+  .lrow-mark svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .lrow-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .lrow-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.85rem;
+  }
+
+  .lrow-warn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    color: #f5a09a;
+  }
+
+  .lrow-chev {
+    flex: 0 0 auto;
+    display: inline-flex;
+    opacity: 0.6;
+    transition: transform 0.15s ease;
+  }
+
+  .lrow.open .lrow-chev {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lrow-chev { transition: none; }
+  }
+
+  .lrow-body {
+    display: grid;
+    grid-template-columns: 5.2rem minmax(0, 1fr);
+    gap: 9px;
+    padding: 2px 8px 9px;
+  }
+
+  /* The live tile: the mark above the name, as in the menu's grid. */
+  .lrow-tile {
+    display: grid !important;
+    align-self: start;
+    justify-items: center;
+    gap: 5px;
+    padding: 9px 5px;
+    border: 1px solid rgb(255 255 255 / 12%) !important;
+    border-radius: 9px;
+    background: rgb(255 255 255 / 4%) !important;
+  }
+
+  .lrow-tile:hover {
+    border-color: var(--urd-admin-accent, #6c5ce7) !important;
+  }
+
+  .lrow-tile-mark {
+    width: 2.6rem;
+    height: 2.6rem;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    overflow: hidden;
+    color: var(--urd-admin-accent, #6c5ce7);
+    background: color-mix(in srgb, var(--urd-admin-accent, #6c5ce7) 18%, transparent);
+  }
+
+  .lrow-tile-mark svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .lrow-tile-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .lrow-tile-name {
+    font-size: 0.68rem;
+    line-height: 1.2;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    opacity: 0.85;
+  }
+
+  .lrow-fields {
+    display: grid;
+    gap: 5px;
+    align-content: start;
+  }
+
+  .lrow-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* The text buttons on the open row and in the picker's trigger. */
+  .linkish {
+    background: none;
+    border: 0;
+    padding: 2px 0;
+    color: inherit;
+    font: inherit;
+    font-size: 0.78rem;
+    opacity: 0.7;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .linkish:hover { opacity: 1; }
+  .linkish.danger:hover { color: #f5a09a; opacity: 1; }
+
+  /* The launcher button's own mark beside its name. */
+  .lbtn-pick {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* The site's calendars in the Site panel: a list of rows, each a head that opens its body; one open at a time.
+     The body slides between its heights with a grid row that goes from 0fr to 1fr (no measuring), clipped by its own wrapper. */
+  .site-cal-add {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.55rem;
+    font: inherit;
+    font-weight: 600;
+    color: var(--urd-color-accent, #7c5cff);
+    cursor: pointer;
+    background: transparent;
+    border: 1.5px dashed var(--urd-color-accent, #7c5cff);
+    border-radius: 0.6rem;
+  }
+  .site-cal-list {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 0.6rem;
+    /* The browser's scroll anchoring must not follow the rows while they slide, or the panel jumps with them. */
+    overflow-anchor: none;
+  }
+  .site-cal-row {
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    transition: background-color 240ms ease;
+  }
+  .site-cal-row:first-child {
+    border-top: 0;
+  }
+  .site-cal-row.open {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 8%, transparent);
+  }
+  .site-cal-row .site-cal-head {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    width: 100%;
+    padding: 0.6rem 0.5rem 0.6rem 0.7rem;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+  }
+  .site-cal-row .site-cal-head:hover {
+    background: rgb(255 255 255 / 4%);
+  }
+  .site-cal-dot {
+    flex: none;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 999px;
+  }
+  .site-cal-text {
+    display: grid;
+    flex: 1;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+  .site-cal-name {
+    font-weight: 600;
+  }
+  .site-cal-row.open .site-cal-name {
+    font-weight: 700;
+  }
+  .site-cal-addr {
+    overflow: hidden;
+    font-size: 0.74rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.65;
+  }
+  .site-cal-chev {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    line-height: 0;
+    opacity: 0.7;
+    transition: transform 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .site-cal-chev svg {
+    display: block;
+  }
+  .site-cal-row.open .site-cal-chev {
+    transform: rotate(180deg);
+  }
+  .site-cal-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .site-cal-row.open .site-cal-body {
+    grid-template-rows: 1fr;
+  }
+  .site-cal-clip {
+    min-height: 0;
+    overflow: clip;
+  }
+  .site-cal-fields {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0 0.5rem 0.6rem 0.7rem;
+  }
+  .site-cal-section {
+    margin-top: 0.5rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgb(255 255 255 / 12%);
+  }
+  .site-cal-fields > .site-cal-section:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .site-cal-row .site-cal-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+    align-items: stretch;
+    font-size: 0.78rem;
+    opacity: 0.85;
+  }
+  .site-cal-field input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 100%;
+    min-width: 0;
+  }
+  .site-cal-colors {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+  .site-cal-color {
+    display: grid;
+    grid-template-rows: auto 2.4em;
+    gap: 0.25rem;
+    align-items: start;
+    justify-items: center;
+    font-size: 0.68rem;
+    line-height: 1.15;
+    text-align: center;
+    opacity: 0.85;
+  }
+  .site-cal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+  }
+  .site-cal-remove {
+    padding: 0.4rem 0.7rem;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ff9a9a;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgb(255 154 154 / 35%);
+    border-radius: 0.5rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-cal-row,
+    .site-cal-chev,
+    .site-cal-body {
+      transition: none;
+    }
+  }
+  /* A row that points at one of the site's calendars: its colour and name, read-only */
+  .cal-ref-swatch {
+    flex: none;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 999px;
+  }
+  .cal-ref-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cal-ref-name.muted {
+    opacity: 0.6;
+  }
+  .lbtn-mark {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 1px solid rgb(255 255 255 / 18%) !important;
+    border-radius: 8px;
+    background: rgb(255 255 255 / 6%) !important;
+    overflow: hidden;
+  }
+
+  .lbtn-mark:hover {
+    border-color: var(--urd-admin-accent, #6c5ce7) !important;
+  }
+
+  .lbtn-mark svg { width: 1.05rem; height: 1.05rem; }
+  .lbtn-mark img { width: 100%; height: 100%; object-fit: cover; }
+
+  .lbtn-name {
+    font-size: 0.82rem;
+    opacity: 0.8;
+  }
+
+  /* Each tool's header in the Tools group: its name, and the arrows that move
+     it in the cluster. The panel's order is the menu's order. */
+  .tool-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .tool-move {
+    display: flex;
+    gap: 0.15rem;
+    flex-shrink: 0;
+  }
+
+  /* A target that can never become a link: the row is kept, but it is drawn
+     as unusable, since the shortcut is silently left out of the menu. */
+  .bad-target {
+    border-color: #e05252;
+  }
+
+  .bad-target-note {
+    display: block;
+    padding: 0.1rem 0.2rem 0;
+    font-size: 0.72rem;
+    color: #f5a09a;
+  }
+
+  /* The answer from a shared folder: how many pictures it holds, or why it
+     could not be read. */
+  .folder-status {
+    margin: 0.2rem 0 0;
+    padding: 0 0.2rem;
+    font-size: 0.74rem;
+    opacity: 0.75;
+  }
+
+  .folder-status.err {
+    color: #f5a09a;
+  }
+
+  /* A switch that cannot be used until another is on. */
+  .gridmenu-snap.muted {
+    opacity: 0.45;
+  }
+
+  .footer-soc-preview {
+    flex: 0 0 1.15rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: inherit;
+    opacity: 0.85;
+  }
+  .footer-soc-preview svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* The visual footer template picker: a thumbnail grid (footerThumb SVG). */
+  .footer-tpick {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+  .footer-tp {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0.35rem;
+    border: 1.5px solid rgb(255 255 255 / 12%);
+    border-radius: 0.5rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .footer-tp:hover,
+  .footer-tp.on {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+  .footer-tp-thumb {
+    display: block;
+    border-radius: 0.35rem;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 10%);
+    aspect-ratio: 16 / 8;
+  }
+  .footer-tp-thumb svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .footer-tp-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* Submenu rows: indented under the parent item, with a marked edge */
+  .nav-line {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .page-title,
+  .nav-line input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .page-slug {
+    flex: 0 0 5.5rem;
+    min-width: 0;
+    opacity: 0.8;
+  }
+
+  /* The timeline panel's year field: narrow, the title takes the rest of the row. */
+  .nav-line input.tl-year:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex: 0 0 3.6rem;
+  }
+
+  .page-path {
+    opacity: 0.6;
+    padding: 0 0.4rem;
+  }
+
+  .row-tools {
+    display: flex;
+    gap: 0.2rem;
+    flex-shrink: 0;
+    /* Stretch to the row's height, so the buttons match the field's height */
+    align-self: stretch;
+  }
+
+  /* The gradient colors' drag handle: the order is dragged with the
+     pointer (startStopDrag); the row is dimmed and the insertion line follows */
+  .grad-grip {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    cursor: grab;
+    opacity: 0.55;
+    touch-action: none;
+  }
+
+  .grad-grip:hover {
+    opacity: 1;
+  }
+
+  .grad-stop {
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .grad-stop.dragging {
+    opacity: 0.45;
+  }
+
+  .grad-stop.drop-above {
+    box-shadow: 0 -2px 0 0 var(--urd-color-accent);
+  }
+
+  .grad-stop.drop-below {
+    box-shadow: 0 2px 0 0 var(--urd-color-accent);
+  }
+
+  /* Compact color buttons in the gradient rows (same height as the row buttons) */
+  .grad-stop .cp-swatch {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  .row-tool {
+    padding: 0.2em 0.5em;
+    font-size: 0.8rem;
+  }
+
+  /* Row buttons (arrows/cross): fixed square width and centered glyph,
+     follows the field's height - not the block buttons' min height or the
+     panel list's left alignment */
+  .panel-body .row-tool {
+    min-height: 0;
+    height: 100%;
+    width: 2.1rem;
+    padding: 0;
+    justify-content: center;
+  }
+
+  /* The kebab menu per page row: anchored in the row, floats above the
+     panel; closing (outside click/Escape/blur) is handled in the script. */
+  .page-menu-wrap {
+    position: relative;
+    display: inline-flex;
+    align-self: stretch;
+  }
+
+  .page-menu {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    z-index: 40;
+    min-width: 10.5rem;
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.3rem;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 9px;
+    box-shadow: 0 14px 30px -16px rgb(0 0 0 / 80%);
+  }
+
+  .page-menu .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    white-space: nowrap;
+  }
+
+  .page-menu .ghost.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    color: #e05252;
+  }
+
+  /* The "new page from template" grid: cards with a page thumbnail; the
+     picked card decides what + Create page starts from. */
+  .page-template-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .page-template-card {
+    position: relative;
+    min-width: 0;
+  }
+
+  .page-template-pick {
+    width: 100%;
+    display: grid;
+    gap: 0.3rem;
+    justify-items: center;
+    padding: 0.4rem;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 9px;
+    cursor: pointer;
+  }
+
+  .page-template-card.picked .page-template-pick {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .page-template-thumb {
+    width: 100%;
+  }
+
+  .page-template-thumb svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+  }
+
+  .page-template-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    opacity: 0.85;
+  }
+
+  .page-template-del {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: rgb(0 0 0 / 55%);
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.75;
+  }
+
+  .page-template-del:hover {
+    opacity: 1;
+  }
+
+  /* The section theme picker: live samples in the site's actual theme
+     colors - a background with a text line, card chip and accent dot. */
+  .rs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .rs-card {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.3rem;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .rs-card.on {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .rs-sample {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 2rem;
+    padding: 0 6px;
+    border-radius: 5px;
+    border: 1px solid rgb(0 0 0 / 15%);
+  }
+
+  .rs-sample i {
+    display: block;
+    border-radius: 2px;
+  }
+
+  .rs-line {
+    flex: 1;
+    height: 3px;
+    opacity: 0.75;
+  }
+
+  .rs-chip {
+    width: 15px;
+    height: 11px;
+    border: 1px solid rgb(0 0 0 / 10%);
+  }
+
+  .rs-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+  }
+
+  .rs-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .token-input {
+    width: 5rem;
+    text-align: right;
+  }
+
+  .panel-strong {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .site-icon-preview {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+
+  /* The background layers in the section properties */
+  .bg-layer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    padding: 0.4rem 0 0.5rem 0.5rem;
+    border-left: 2px solid rgb(255 255 255 / 12%);
+  }
+
+  /* Compact toolbar rows (word-processor style) in the panels */
+  .toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .panel-body .toolbar-row .tb-num,
+  .panel-body .ctl-row .tb-num {
+    width: 3.4rem;
+    flex: 0 0 auto;
+    padding: 0 0.3em;
+    text-align: center;
+  }
+
+  /* The Nav panel's size rows: a fixed-width name, the slider, an editable
+     number; two number fields side by side; the section folds inside
+     Appearance keep the group indent once. */
+  .ctl-row .ctl-name { flex: 0 0 4.4rem; }
+  .ctl-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; align-items: end; }
+  .ctl-field { display: grid; gap: 4px; min-width: 0; }
+  .panel-body .ctl-field .tb-num { width: 100%; padding: 0 0.3em; text-align: center; }
+  .toolbar-row.ctl-end { justify-content: flex-end; gap: 0.4rem; }
+  .nav-view-seg { align-self: flex-start; }
+  .sub-fold .group-items { padding-left: 0.2rem; }
+  .sub-fold summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ min-height: 1.8rem; }
+
+  .panel-body .toolbar-row .tbtn {
+    flex: 0 0 auto;
+    width: 2.2rem;
+    min-height: 0;
+    height: 2.2rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .toolbar-row .tbtn.active {
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent);
+  }
+
+  .panel-body .toolbar-row .tb-grow {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* The History panel */
+  .history-row {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.35rem 0 0.4rem 0.5rem;
+    border-left: 2px solid rgb(255 255 255 / 12%);
+    font-size: 0.83rem;
+  }
+
+  .history-row.head {
+    border-left-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .history-msg {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .history-meta {
+    opacity: 0.55;
+    font-size: 0.76rem;
+  }
+
+  /* The Update panel: version card, folded groups and file rows in the
+     panel idiom. */
+  .update-versions { display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; }
+  .update-from { opacity: 0.7; }
+  .update-arrow { display: inline-flex; opacity: 0.55; }
+  .update-summary { margin: -0.25rem 0 0; font-size: 0.78rem; opacity: 0.65; }
+  .update-notes { margin: 0; font-size: 0.78rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  .update-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.16rem 0;
+    font-size: 0.78rem;
+  }
+
+  .update-path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl; /* long paths are clipped at the START, the file name is what matters */
+    text-align: left;
+  }
+
+  .update-path.skipped {
+    opacity: 0.45;
+    text-decoration: line-through;
+  }
+
+  .update-flags { display: flex; align-items: center; gap: 0.4rem; flex: none; }
+
+  .update-warn { color: #e0b04a; display: inline-flex; }
+
+  .update-opt-head { margin-top: 0.2rem; }
+
+  .update-headers {
+    max-height: 10rem;
+    overflow: auto;
+    font-size: 0.7rem;
+    background: rgb(0 0 0 / 25%);
+    border-radius: 6px;
+    padding: 0.5rem;
+    user-select: all;
+    margin: 0;
+  }
+
+  .update-run { margin-top: 0.5rem; width: 100%; }
+
+  /* The setup wizard */
+  .confirm-line {
+    opacity: 0.9;
+    margin: 0;
+  }
+
+  .setup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: grid;
+    place-items: center;
+    background: rgb(0 0 0 / 55%);
+  }
+
+  .setup-card {
+    display: grid;
+    gap: 0.8rem;
+    width: min(26rem, calc(100vw - 2rem));
+    padding: 1.4rem;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgb(0 0 0 / 55%);
+  }
+
+  .setup-card h2 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+
+  .setup-card label:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+  }
+
+  .setup-card input:not([type='color']):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex: 1 1 55%;
+    min-width: 0;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    height: 2.2rem;
+    padding: 0 0.6em;
+  }
+
+  .setup-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+  }
+
+  /* Fields inside panel labels must never blow up the width */
+  .panel-body label > input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Picture choices: a grid of drawn tiles, the chosen one on the accent. */
+  .tile-grid { display: grid; gap: 6px; }
+  .tile-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tile-grid.cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .tile-grid.cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .tile {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 8px 2px 6px; min-width: 0;
+    background: color-mix(in srgb, currentColor 5%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    border-radius: 8px; cursor: pointer; color: inherit; opacity: 0.75;
+    font: 600 10px system-ui, sans-serif; text-align: center;
+  }
+  .tile span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile.on { opacity: 1; border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent); }
+  .tile:focus-visible { outline: 2px solid var(--urd-color-accent); outline-offset: -2px; }
+  /* The hover samples draw the menu word with the style itself. */
+  .hover-sample { display: inline-block; font: 13px Georgia, serif; color: var(--urd-color-accent); height: 22px; line-height: 22px; }
+  .hover-sample.hover-underline { text-decoration: underline; text-underline-offset: 3px; }
+  .hover-sample.hover-pill { color: var(--urd-color-bg); background: var(--urd-color-accent); padding: 0 8px; border-radius: 999px; }
+  .hover-sample.hover-lift-plain { translate: 0 -2px; }
+  .hover-sample.hover-lift { text-shadow: 0 3px 10px color-mix(in srgb, var(--urd-color-accent) 70%, transparent); }
+  /* Colours as a row of swatches with the name beneath each. */
+  .swatch-row { display: flex; justify-content: space-around; gap: 8px; }
+  .swatch-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; min-width: 0; }
+  /* The logo's thumbnail beside its picker, and three sizes on one row. */
+  .logo-pick { display: flex; align-items: center; gap: 12px; }
+  .logo-thumb {
+    width: 52px; height: 52px; flex: 0 0 auto; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, currentColor 8%, transparent); border: 1px solid color-mix(in srgb, currentColor 14%, transparent); overflow: hidden;
+  }
+  .logo-thumb img { max-width: 44px; max-height: 44px; }
+  .logo-pick-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+  .logo-file { font-size: 11px; opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ctl-triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; }
+  /* A small titled card inside a fold (Behaviour). */
+  .mini-card {
+    display: flex; flex-direction: column; gap: 10px; padding: 10px 12px;
+    background: color-mix(in srgb, currentColor 4%, transparent); border: 1px solid color-mix(in srgb, currentColor 10%, transparent); border-radius: 9px;
+  }
+  /* The Adjust fold inside Size: the free values behind the presets. */
+  .sub-inset > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ cursor: pointer; font-size: 0.85rem; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+  .sub-inset > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{ content: ''; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; rotate: 45deg; opacity: 0.6; margin-right: 4px; }
+  .sub-inset[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{ rotate: -135deg; }
+  .sub-inset-body { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; padding: 10px 12px; background: color-mix(in srgb, currentColor 4%, transparent); border-radius: 8px; }
+
+  /* A text field with its label above in capitals (the announcement's text and
+     address): filled, without a frame, an accent underline while it has focus. */
+  .panel-body label.field-stack:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+
+  .panel-body .field-filled {
+    background: color-mix(in srgb, currentColor 7%, transparent);
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 6px 6px 2px 2px;
+  }
+
+  .panel-body .field-filled:focus {
+    outline: none;
+    border-bottom-color: var(--urd-color-accent);
+  }
+
+  /* A dropdown under a stacked label fills the row. */
+  .panel-body label.field-stack > .dd {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  /* A dropdown beside its label: bounded, never the whole remaining width, so
+     the row reads label then control; the label text wraps if it must. */
+  .panel-body label > .dd {
+    flex: 0 1 11rem;
+    min-width: 8rem;
+  }
+
+  .panel-body textarea:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    font: inherit;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0.4em 0.5em;
+    min-width: 0;
+    resize: vertical;
+  }
+
+  /* The position/size fields in Properties: two columns of narrow fields */
+  .frame-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.4rem 0.6rem;
+  }
+
+  .frame-grid input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 4.2rem;
+  }
+
+  /* Groups in the panel (Text, Shapes): look like the block buttons, but
+     with an arrow - open into a vertical list of blocks below */
+  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    list-style: none;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+  }
+
+  /* The fold marker: a drawn chevron that points along the row while the
+     group is closed and turns down when it opens. Child combinators keep a
+     closed group inside an open one at its own state. */
+  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+    content: '';
+    flex-shrink: 0;
+    width: 0.55em;
+    height: 0.55em;
+    background: currentColor;
+    opacity: 0.6;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: transform 0.18s ease;
+  }
+
+  .group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+    transform: rotate(90deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+      transition: none;
+    }
+  }
+
+  .group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  /* The placement group is a SECTION fold, not a chip: drop the pill
+     frame, let it read as a simple heading row. */
+  .frame-group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    border: 0;
+    border-radius: 0;
+    padding-left: 0.1em;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  .frame-group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    border-color: transparent;
+  }
+
+  /* Groups are grid items: without min-width 0 they refuse to shrink to
+     the panel width, and the content (color pickers, toggles) is cut at the edge */
+  .group {
+    min-width: 0;
+  }
+
+  .group-items {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+    padding-left: 0.8rem;
+  }
+
+  .panel-hint {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.65;
+  }
+
+  /* The field contract's search status (place fields): errors in destructive red. */
+  .panel-hint.place-error {
+    color: #e05252;
+    opacity: 1;
+  }
+
+  /* The panel language (ADR-0016): shared building blocks all the panels
+     compose. The context classes further down carry only margins and
+     child styles, never their own copies of these recipes. */
+  .ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .mini-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.6; }
+  .chip { border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 999px; padding: 2px 9px; font: 600 10px system-ui, sans-serif; background: transparent; color: inherit; opacity: 0.75; }
+  button.chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ cursor: pointer; }
+  .chip.accent { border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 20%, transparent); opacity: 1; }
+  .sample { padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
+
+  /* The content-width sample (ADR-0018): one strip per common screen
+     width. The track is the screen, the fill is the content surface, so
+     the ratio between them IS the setting. A fluid strip (the width does
+     not bind there) is drawn dimmed, so it is visible where the setting
+     actually has effect. */
+  .cw-sample { display: grid; gap: 5px; }
+  .cw-row { display: grid; grid-template-columns: 2.6rem 1fr 2.2rem; align-items: center; gap: 8px; }
+  .cw-screen { text-align: right; opacity: 0.55; }
+  .cw-bar {
+    position: relative;
+    display: block;
+    height: 13px;
+    border-radius: 3px;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+    overflow: hidden;
+  }
+  .cw-fill {
+    display: block;
+    height: 100%;
+    margin-inline: auto;
+    background: var(--urd-color-accent);
+    transition: width 0.12s ease;
+  }
+  .cw-bar.fluid .cw-fill { background: color-mix(in srgb, var(--urd-color-accent) 35%, transparent); }
+  .cw-margin { text-align: right; font-size: 10px; opacity: 0.7; }
+  .cw-legend { display: flex; justify-content: space-between; padding-top: 2px; opacity: 0.45; }
+  .cw-binds { padding-top: 7px; text-transform: none; letter-spacing: 0; opacity: 0.55; }
+  .cw-seg { display: flex; width: 100%; }
+  .cw-seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ flex: 1; white-space: nowrap; }
+  /* The sliders in the control rows: the label on the left, the value at
+     the far right, the track takes the rest. */
+  .ctl-row input[type="range"]:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ flex: 1; min-width: 0; }
+
+  /* The Content/Style tabs at the top of the block properties (ADR-0016):
+     full width, otherwise the segment control's usual recipe. */
+  .props-tabs { display: flex; margin-bottom: 2px; }
+  .props-tabs .seg { flex: 1; }
+  .props-tabs .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ flex: 1; padding: 5px 0; font-size: 12px; }
+
+  /* Theme suggestions: a row of palette thumbnails (all on one row) */
+  .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }
+  .theme-preset {
+    flex: 1; min-width: 0; padding: 0; cursor: pointer; color: inherit; background: transparent;
+    display: flex; flex-direction: column; align-items: stretch;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 9px; overflow: hidden;
+  }
+  .theme-preset:hover { border-color: var(--urd-color-accent); }
+  .theme-preset.sel { outline: 2px solid var(--urd-color-accent); outline-offset: 1px; }
+  .theme-preset .tp-band { display: flex; height: 22px; }
+  .theme-preset .tp-band i { flex: 1; }
+  .theme-preset small { display: block; text-align: center; font-size: 9px; padding: 2px 0 3px; opacity: 0.8; }
+
+  /* Colors: Auto/Custom, palette rows (Light+Dark), Standard chip */
+  .autorow { margin: 8px 0 2px; }
+  .autorow .autolbl { font-size: 0.85rem; opacity: 0.75; }
+  .seg { display: inline-flex; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
+  .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
+  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ background: var(--urd-color-accent); color: var(--urd-color-bg); }
+  .palhead { margin: 13px 0 6px; }
+  .palcells { display: flex; gap: 6px; }
+  .palcells .palcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+  .palcells .cp { display: block; width: 100%; }
+  .palcells .cp-swatch { width: 100%; height: 32px; }
+  .palcells .palcap { text-align: center; font-size: 9px; opacity: 0.6; }
+  .palcells .palhex { text-align: center; font: 400 9px ui-monospace, monospace; opacity: 0.7; letter-spacing: -0.02em; }
+  .palauto-row { margin-top: 8px; }
+  .palauto-row .palauto { font-size: 11px; padding: 2px 9px; }
+  .palcells.autopal .palcol { opacity: 0.7; }
+
+  /* Preview: how each color affects the page (light + dark with dual mode) */
+  .theme-previews { display: flex; gap: 10px; margin-top: 13px; }
+  .theme-pvw { flex: 1; min-width: 0; }
+  .tpv-cap { margin-bottom: 5px; }
+  .tpv-demo { border-radius: 9px; border: 1px solid color-mix(in srgb, currentColor 12%, transparent); background: var(--tv-bg); color: var(--tv-text); padding: 9px 10px 10px; }
+  .tpv-h { font-weight: 700; font-size: 12px; margin-bottom: 5px; }
+  .tpv-card { background: var(--tv-surface); border: 1px solid color-mix(in srgb, var(--tv-text) 12%, transparent); border-radius: 7px; padding: 6px 8px; font-size: 10px; color: color-mix(in srgb, var(--tv-text) 62%, transparent); margin-bottom: 8px; }
+  .tpv-row { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .tpv-btn { background: var(--tv-accent); color: var(--tv-accent-ink); font: 600 10.5px system-ui, sans-serif; padding: 5px 11px; border-radius: 999px; }
+  .tpv-lnk { color: var(--tv-accent); font: 600 10.5px system-ui, sans-serif; border-bottom: 1.5px solid currentColor; }
+
+  /* Typography sample + shape corner sample (the surface comes from .sample) */
+  .typo-sample { margin-top: 10px; }
+  .typo-sample .ts-h { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .typo-sample .ts-b { font-size: 12.5px; opacity: 0.7; line-height: 1.5; }
+  .form-prev { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .form-prev .fp-btn { background: var(--urd-color-accent); color: var(--urd-color-bg); font: 600 12px system-ui, sans-serif; padding: 8px 15px; border-radius: var(--r-sm); }
+  .form-prev .fp-card { flex: 1; height: 42px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: var(--r-md); display: grid; place-items: center; font-size: 11px; opacity: 0.7; }
+
+  /* Toggle rows as modern settings: text on the left, the toggle at the
+     far right (the markup has the input first; row-reverse flips it) */
+  .gridmenu-snap {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .gridmenu-value {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.75;
+  }
+
+  /* Image background layer: focal-point pad (drag), sub-sliders and size stepper */
+  .focalpad {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin: 4px 0 6px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, currentColor 7%, transparent);
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .focaldot {
+    position: absolute;
+    left: var(--fx, 50%);
+    top: var(--fy, 50%);
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--urd-color-accent, #15b39a);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--urd-color-accent, #15b39a) 30%, transparent);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 45%);
+    pointer-events: none;
+  }
+  label.sub:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    font-size: 0.85em;
+    opacity: 0.8;
+  }
+  .sizestep {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 6px;
+  }
+  .sizestep button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 28px;
+    height: 28px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 7px;
+    background: transparent;
+    color: inherit;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .sizestep button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border-color: var(--urd-color-accent); }
+  .sizestep input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 60px;
+    text-align: center;
+    padding: 5px 4px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 7px;
+    background: transparent;
+    color: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+  .sizeunit { opacity: 0.6; }
+  /* "Cover" / "Show all" quick buttons for Size */
+  .sizefill { display: flex; gap: 6px; margin: 0 0 8px; }
+  .sizefill button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 7px;
+    background: transparent;
+    color: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+  }
+  .sizefill button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border-color: var(--urd-color-accent); }
+
+  .gridmenu-divider {
+    border: 0;
+    border-top: 1px solid rgb(255 255 255 / 12%);
+    margin: 0.2rem 0;
+  }
+
+  .filepick {
+    cursor: pointer;
+  }
+
+  .filepick input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: none;
+  }
+
+  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0.35em 0.8em;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  /* Buttons must LOOK like buttons: a filled surface, clear hover and a
+     small press on click. Fields (input) stay flat. */
+  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    background: rgb(255 255 255 / 7%);
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+  }
+
+  button:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .ghost:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    background: rgb(255 255 255 / 13%);
+    border-color: rgb(255 255 255 / 38%);
+  }
+
+  button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    transform: translateY(1px);
+  }
+
+  /* Controls must not inherit the page's airy line-height (1.6 from
+     base.css via font: inherit): a tight line box gives even centering */
+  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    line-height: 1.3;
+  }
+
+  button:disabled:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .primary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    background: var(--urd-color-accent, #7c5cff);
+    border-color: transparent;
+    color: #fff;
+  }
+
+
+
+
+  .frame-wrap {
+    flex: 1;
+    min-height: 0;
+    /* No scrollbar around the canvas: the page scrolls inside the iframe
+       with its OWN scrollbar, so one here would be the second. Only
+       manual zoom past the surface enables panning (.pan). */
+    overflow: hidden;
+    display: flex;
+    /* 'safe' keeps the top/left from being clipped when the canvas is
+       larger than the surface (100% mode): it is then anchored instead of
+       centered away. */
+    justify-content: safe center;
+    align-items: safe center;
+    background: #08090d;            /* letterbox surface around the canvas */
+  }
+
+  /* Manual zoom past the surface: then panning MUST be possible to reach the rest. */
+  .frame-wrap.pan {
+    overflow: auto;
+  }
+
+  /* A pinned viewport height (an editing size with a height set): the stage
+     sits at the top, its bottom edge is the fold, and the surface below it
+     is the letterbox that reads as "below the fold". */
+  .frame-wrap.fold {
+    align-items: safe flex-start;
+  }
+
+  /* The stage box has the SCALED size; the iframe inside stands in the
+     full target viewport and is scaled with transform (see markup), so
+     the render is identical to the published page - only the display
+     size changes. */
+  .stage {
+    flex: 0 0 auto;
+    position: relative;
+  }
+
+  iframe {
+    border: 0;
+    background: #fff;
+    display: block;
+  }
+
+  /* Mobile view: the iframe stands at 390px (the engine's matchMedia is
+     driven by urd-viewport, not the width) and is scaled to fit; dark backdrop. */
+  .frame-wrap.mobile {
+    background: #08090d;
+  }
+
+  .frame-wrap.mobile .stage {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .viewswitch,
+  .zoomswitch {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+
+  /* The tool clusters: a light frame around each group, with an
+     uppercase label in front. The buttons inside lose their own border,
+     so the group reads as one unit instead of three or four loose buttons. */
+  .toolgrp {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid rgb(255 255 255 / 11%);
+    border-radius: 8px;
+  }
+
+  .toolgrp .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border-color: transparent; }
+  .toolgrp .ghost.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border-color: var(--urd-color-accent, #7c5cff); }
+
+  .tool-cap {
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    white-space: nowrap;
+  }
+
+  /* The draft status stands in its own group between the tools and
+     publishing, so it does not read as part of either. */
+  .topbar-draft {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: none;
+    /* Anchor for the confirmation pill, which floats below the bar. */
+    position: relative;
+  }
+
+  /* Shell for the exit transition: chip + discard slide out as ONE piece. */
+  .draft-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .draft-chip {
+    /* Flex, not inline: the short form "!" must center in a circle with a
+       set width and height at the narrowest fold step. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-color: color-mix(in srgb, #e2b84a 55%, transparent);
+    background: color-mix(in srgb, #e2b84a 13%, transparent);
+    color: #e2b84a;
+    opacity: 1;
+    /* .chip is 10px, sized for the panels where the surrounding text is
+       small. In the top bar the buttons use font: inherit (0.9rem), so
+       the chip must go up to avoid being half the size of everything
+       next to it. */
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.3em 0.8em;
+  }
+
+  /* Widest: a full pill with the text. From the first fold step: just the
+     circle. Armed, it grows TO THE LEFT, so everything to the right
+     stands still as you click. */
+  .discard-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    height: 1.7rem;
+    padding: 0 0.75rem 0 0.6rem;
+    flex: none;
+    border: 1px solid color-mix(in srgb, #e2705f 55%, transparent);
+    background: color-mix(in srgb, #e2705f 12%, transparent);
+    color: #e2705f;
+    border-radius: 999px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+  }
+
+  /* :not(:disabled) gives the hover rules in the discard family as many
+     parts as the global `button:hover:not(:disabled)`, so the red surface
+     wins over the white veil there. */
+  .discard-dot:hover:not(:disabled) {
+    background: color-mix(in srgb, #e2705f 22%, transparent);
+    border-color: color-mix(in srgb, #e2705f 70%, transparent);
+  }
+
+  /* Armed changes color, not width: the confirmation lives in the pill below. */
+  .discard-dot.armed,
+  .discard-dot.armed:hover:not(:disabled) {
+    background: #d94f3d;
+    border-color: #d94f3d;
+    color: #fff;
+  }
+
+  .discard-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* The confirmation floats below the top bar, centered under the button
+     it belongs to. Its own surface and its own click target: a new
+     position requires a deliberate hit, so a quick double click on the
+     discard button cannot throw away the draft by accident. */
+  .discard-confirm {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 50%;
+    /* Centred with the translate property, not transform: the global
+       button:active rule sets transform, and a transform here would be
+       replaced by it while the pointer is held down, moving the pill out
+       from under the pointer before the release. */
+    translate: -50% 0;
+    z-index: 100002;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    padding: 0.4rem 0.95rem;
+    border: 1px solid color-mix(in srgb, #e2705f 55%, transparent);
+    border-radius: 999px;
+    /* Rest borrows the discard button's resting dress: dark surface, red
+       border, red text. A solid surface here keeps the pill readable
+       without frost support; the frost is added in @supports below. */
+    background: var(--urd-color-surface, #151a23);
+    color: #e2705f;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgb(0 0 0 / 40%);
+  }
+
+  /* Under the pointer it fills completely: the dangerous action flares
+     into color the moment it can be triggered. */
+  .discard-confirm:hover:not(:disabled) {
+    background: #d94f3d;
+    border-color: #d94f3d;
+    color: #fff;
+  }
+
+  @supports (backdrop-filter: blur(1px)) {
+    .discard-confirm {
+      background: color-mix(in srgb, var(--urd-color-surface, #151a23) 72%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    /* The frost applies to the resting state. Hover is solid red,
+       regardless of what lies behind. */
+    .discard-confirm:hover:not(:disabled) {
+      background: #d94f3d;
+      backdrop-filter: none;
+    }
+  }
+
+  /* ---- Foldetrinnene (the fold steps; tests/topbar-fold.test.mjs anchors
+     on this heading) ---------------------------------------------------------
+     The top bar keeps one height and folds in fixed steps, in this order:
+     the discard text, the group labels, the button texts on the right,
+     and then the clusters ONE AT A TIME. The thresholds are calibrated
+     for the LONGEST language (Turkish), not Bokmål, so a step never kicks
+     in too late and forces the bar to wrap. The last three each have a
+     twin in FOLD_MQ. The short forms are hidden here, before the steps
+     that turn them on: equal specificity means source order decides. */
+  .badge-mini,
+  .chip-mini { display: none; }
+
+  /* Step 1: the discard button drops its text and becomes the circle. */
+  @media (max-width: 1499px) {
+    .discard-dot {
+      width: 1.7rem;
+      padding: 0;
+    }
+    .discard-label { display: none; }
+  }
+
+  /* Step 2: the uppercase labels above the clusters disappear. The
+     cluster frames remain, so the three groups still read separately. */
+  @media (max-width: 1359px) {
+    .tool-cap { display: none; }
+  }
+
+  /* Step 3: the buttons on the right become pure icons, and the GitHub
+     user yields. Publish always keeps its word: it is the bar's only
+     dangerous action. */
+  @media (max-width: 1179px) {
+    .btn-label { display: none; }
+    .badge-mini { display: inline; }
+    .who { display: none; }
+  }
+
+  /* Step 4: the View cluster becomes a menu (FOLD_MQ.view). Grid and
+     guides are toggled rarely, so it yields first of the three. */
+  @media (max-width: 1079px) {
+    .topbar { gap: 0.5rem; }
+    .topbar-group { gap: 0.5rem; }
+  }
+
+  /* Step 5: the Device cluster becomes a menu (FOLD_MQ.device) and the status becomes "!". */
+  @media (max-width: 999px) {
+    .chip-full { display: none; }
+    .chip-mini { display: inline; }
+    /* The status becomes a circle the size of the discard circle next to
+       it, so the two read as one pair instead of pill plus dot. */
+    .draft-chip {
+      width: 1.7rem;
+      height: 1.7rem;
+      padding: 0;
+    }
+  }
+
+  /* Step 6: the Zoom cluster becomes a menu (FOLD_MQ.zoom). Zoom is
+     adjusted most often of the three and therefore keeps plus and minus
+     the longest. Gaps and edge margins are tightened fully at the same
+     time: now they are the last thing left to take. */
+  @media (max-width: 919px) {
+    .topbar {
+      gap: 0.4rem;
+      padding-inline: 0.7rem;
+    }
+    .topbar-group { gap: 0.4rem; }
+  }
+
+  /* The shell around the clusters exists only as ONE node for the
+     outside-click test; it must not create a box, so the children sit
+     directly in the top bar's flex. */
+  .toolset { display: contents; }
+
+  /* The folded clusters: a button carrying the current value, and a
+     popover below. Only one is open at a time. */
+  .toolmenu {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .toolmenu > .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    gap: 0.25em;
+    padding: 0.35em 0.55em;
+  }
+
+  /* The zoom number alternates between two and three digits. A fixed
+     width with tabular figures keeps the button equally wide across the
+     whole scale and fills the surface. */
+  .zoom-cap {
+    min-width: 2.6em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tool-pop {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 100002;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 10.5rem;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgb(255 255 255 / 12%);
+    background: var(--urd-color-surface, #151a23);
+    box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  }
+
+  /* Vertical menu: icon and text start at the left edge, not centered
+     as the global button style does. */
+  .tool-pop .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    justify-content: flex-start;
+    width: 100%;
+    border-color: transparent;
+  }
+
+  .tool-pop .ghost.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
+  }
+
+  /* The Screen setting inside a tool menu: the mode segment and the size
+     fields on one compact row. */
+  .tool-pop .seg {
+    align-self: flex-start;
+    margin: 2px 4px 4px;
+  }
+
+  .tool-pop .tb-num {
+    width: 3.6rem;
+    padding: 0 0.3em;
+    text-align: center;
+  }
+
+  .tool-pop .mini-label {
+    margin: 0 2px 0 6px;
+  }
+
+  .tool-pop-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .tool-pop-row .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: auto;
+    justify-content: center;
+  }
+
+  .viewswitch .active,
+  .zoomswitch .active {
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
+  }
+
+  .zoom-readout {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    padding: 0 0.3em;
+    min-width: 3.2em;
+    text-align: right;
+  }
+
+  .badge.attention {
+    background: rgb(226 184 74 / 20%);
+    color: #e2b84a;
+    border: 0;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+
+  .loading {
+    padding: 2rem;
+    text-align: center;
+  }

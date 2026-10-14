@@ -1,7 +1,7 @@
 <script>
   /**
    * The design picker (0.7.19.22): every calendar design with its picture, grouped by family, over the editor.
-   * The pictures are the engine's own drawings of each design with the sample events (template/admin/designs/<id>.webp, made by scripts/design-pictures.mjs); a design without one shows its schematic thumbnail.
+   * The pictures are the engine's own drawings of each design with the sample events (template/admin/designs/<id>.webp, made by scripts/design-pictures.mjs), each the design's own box, shown whole and centred on the tile's dark surface; a design without one shows its schematic thumbnail.
    * The marked design is drawn live in a preview iframe of its own, in the site's theme and language, so the owner sees it before it is applied.
    * `mode` 'set' changes the selected calendar's design, 'add' adds a calendar in the chosen one; `onpick(id)` applies, `onclose` leaves.
    */
@@ -368,6 +368,16 @@
     display: block;
     width: 100%;
     height: 100%;
+  }
+
+  /* The picture is the design's own box: shown whole, in its proportions, centred on the dark surface */
+  .dp-pic img {
+    object-fit: contain;
+    object-position: center;
+  }
+
+  /* The schematic thumbnail is drawn to the tile */
+  .dp-pic :global(svg) {
     object-fit: cover;
     object-position: top;
   }

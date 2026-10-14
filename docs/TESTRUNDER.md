@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.26.2): the element menu as components, the global stylesheet and the design pictures
+
+- [ ] Every block type's menu, in the Properties panel and in the floating menu, shows the same groups, quick row and pins as before, and every control writes to the block
+- [ ] The pin looks as before (the icon alone, dimmed until reached), and the close and width buttons in the floating menu's head are the same size
+- [ ] A calendar whose sources include one of the site's calendars opens its menu, and «Rediger kalendere» opens the Site panel at the calendars; a product block's «Rediger katalog» opens the Collections panel
+- [ ] The menu's search in both places, Escape in it, the width button, the setting in the gear, and groups and the tab remembered across blocks
+- [ ] The design tile in a calendar's quick row starts its words at the left and ends them with «…»
+- [ ] The colour picker, the dropdowns, the icon and mark pickers, the design picker and the icon editor look as before, their checkboxes included
+- [ ] The top bar, the rail, every panel and the preview stage look as before, since the whole stylesheet moved
+- [ ] The design picker shows each design in its own proportions, centred on the dark tile, with no white below a short design
+
 ### Test batch (0.7.20.5.2): the gallery and the ribbon in groups, a band's reach and the gallery band's height
 
 - [ ] A gallery's menu has «Bilder» in Content and «Visning», «Rulling» and «Bildene» in Style; «Rulling» shows only in the ribbon view
