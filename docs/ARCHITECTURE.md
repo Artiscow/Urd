@@ -105,44 +105,48 @@ Recorded before the split, 14 October 2026: `editor/src/App.svelte` held the who
 
 | Part | Files | Owns on screen | Reads | Writes through |
 |---|---|---|---|---|
-| The shell | `App.svelte` | the layout (rail, panel, preview), the choice of panel, the startup (`init`, `checkAuth`, the admin theme and language), the keyboard, the status toast | shell | `shell`, `history` (undo and redo keys) |
-| The top bar | `shell/TopBar.svelte` | the tool clusters with the fold steps (`FOLD_MQ`), the draft status, Publish, Discard with its arming | shell, preview, the drafts' dirty flag | `preview` (view, device, zoom, chrome, guides, grid), `publish` |
-| The preview stage | `shell/PreviewStage.svelte` | the iframe, the device and zoom frame, the pan, the Screen setting (`own-screen.js`), the iframe load that creates the bridge | preview, page, site | `preview` |
+| The shell | `App.svelte` | the layout, the choice of panel, the merge of the module handles into the editor handle, the modules' effects, and the startup on mount | every module | the handle |
+| The top bar | `shell/TopBar.svelte` | the page name, the view, device and zoom clusters with the fold steps (`FOLD_MQ` in `state/shell.svelte.js`), the draft status, Publish, Discard with its arming, the tools | shell, preview, history (dirty) | `preview`, `publish`, `shell` |
+| The rail | `shell/Rail.svelte` | the panels in their groups, the mark, the settings gear with its popover | shell, preview | `shell`, `preview` (the Screen setting) |
+| The preview stage | `shell/PreviewStage.svelte` | the iframe with the real page, scaled to the device and the zoom, inside the frame that pans | preview | `preview` (the iframe element) |
 | The dialogs | `shell/ConfirmDialog.svelte`, `shell/SetupWizard.svelte` | the confirmation and prompt, the first-run wizard | shell | `shell`, `site` |
 | The site panels | `panels/PagesPanel.svelte`, `NavPanel.svelte` (with the size rows, the launcher and the drag list), `SitePanel.svelte` (with the site's calendars), `ThemePanel.svelte`, `GridPanel.svelte`, `FooterPanel.svelte` (with the footer's link lists) | one panel each; Nav and Footer take the background editor as a snippet prop | site, page (Pages: the page list and the SEO draft) | `site` (`siteMutate`, `footerMutate`, the token setters), `page` (Pages: the page functions App keeps) |
 | The content and system panels | `panels/BlocksPanel.svelte`, `PropertiesPanel.svelte`, `CollectionsPanel.svelte`, `PluginsPanel.svelte`, `HistoryPanel.svelte`, `UpdatePanel.svelte` | one panel each; Properties holds the section's settings and hosts the element menu | page, collections, templates, plugins, shell (auth) | `page` (`mutateSection`), `collections`, `templates`, `plugins`, the fetches App keeps (the history, the updater, the plugin discovery) |
 | The background editor | `section/BackgroundEditor.svelte` | the background layers of a section, the nav or the footer: the layer list, the gradient stops, the focal point, the sizes, the shared folder | `bg` (the target: mutate, keyPrefix, keyId) and `layers` as props; the section box and the theme swatches from the handle | the target's `mutate` |
 | The element menu | `menu/ElementMenu.svelte` (the areas, the quick row), `menu/FloatingMenu.svelte`, `menu/MenuGroup.svelte`, `menu/Pin.svelte`, `menu/SearchField.svelte`, `menu/BoxStyle.svelte`, `menu/Placement.svelte`, `menu/families/*.svelte` (one per block type, and `Fields.svelte` for the field contract), with `menu/state.svelte.js` (the width, the room, the queries, the tab, the open groups, the quick row's choices), `menu/options.js` and `menu/groups.js` | a block's settings, in the Properties panel and in the floating block menu | page (`selectedBlock`), site (the site's calendars, the collections for a collection block), plugins (plugin blocks) | `page` (`setBlockProp`, `setBlockProps`, `mutateBlock`, `setBlockFrame`, `setBlockSize`) |
 
-**The state modules** (`editor/src/state/`). Each `.svelte.js` module exports one object with `$state` fields and the functions that change it; a component imports the object and reads its fields where it needs them (the object stays reactive, a copy does not), and writes through the module's functions, so every piece of state has one owner.
+**The state modules** (`editor/src/state/`, since 0.7.26.5). Each `.svelte.js` module holds its state as module-level `$state` and `$derived` with the functions that change it, and exports two things: a handle, `<name>State`, with a getter and a setter for every variable and its functions and constants as they are, and `effects()`, the module's `$effect` blocks, which the shell runs once at its start. Inside a module the names are bare; another module reaches them through the handle (`pageState.selectedBlock`), never through a copy, so every piece of state has one owner and a read follows it. The modules import each other freely; a read of another handle at load time would meet the import cycle, so loads read nothing across modules (tests/app-render.test.mjs loads them all).
 
-- `shell.svelte.js`: `site` (the loaded site.json), `auth`, `status`, `dirty`, `activePanel` and the panels preference, the admin theme and language, `askConfirm` and `askPrompt`.
-- `page.svelte.js`: the page draft (`store`, from `draftStore.js`), `pageId`, `selectPage`, `selectedBlock` and `syncSelectedBlock`, the section mirrors, `mutateBlock`, `mutateSection`, `setBlockProp`, `setBlockProps`, `setBlockFrame`, the fit (`fitBlockSoon`, `phoneFitSoon`, `applyPhoneHeight`, `dropFits`).
-- `site.svelte.js`: `siteDraft`, `linkSiteDraft`, `siteMutate`, `pushSiteToPreview`, the page list.
-- `collections.svelte.js`, `templates.svelte.js`, `plugins.svelte.js`: their drafts, lists and pushes to the preview.
-- `history.svelte.js`: `snapshot`, `pushHistory`, `undo`, `redo` and the `restore*` functions. It imports every draft module, since one undo step covers them all, and `updateDirty` lives with it.
-- `preview.svelte.js`: the iframe, the bridge, the device, the zoom, the chrome, the guides, the grid, the Screen setting. `bridge.js` beside it holds the handlers of the preview's messages (`handleEdit` to `handleDelete`, `onReady`, `onNavigate`, `handleAddSection`, `handleRequestBlock`), which write the drafts.
-- `publish.js`: `publish`, `discard`, `confirmNoConflict`, `refreshBaseSha`, the `materialize*` functions; `media.js`: `addImage`, `compressMany`, `reportUpload`, the video and SVG helpers.
-- `lib/block-catalog.js` (pure, tested): `BLOCK_DEFAULTS`, `BLOCK_LABELS` and `panelBlockItems`, which `tests/palette.test.mjs` reads out of App.svelte's text today and imports once they are a module.
+- `shell`: the admin theme and language, the status toast, the sign-in (`auth`, `checkAuth`), the confirmation dialog, the setup wizard, `activePanel` and the panels preference, the top bar's fold steps (`FOLD_MQ`), the guides and the grid buttons, the keyboard, and `init`.
+- `preview`: the iframe and the bridge to it (`onIframeLoad`, `onReady`), the device and the zoom, the Screen setting, the chrome, and the light or dark preview mode.
+- `page`: the page draft (`store`), `pageId`, `selectPage`, `selectedBlock` and its mutators, the fits, the section mirrors and their mutators, the animations.
+- `site`: `siteDraft` and `siteStore`, `siteMutate` and the nav, footer and theme mutators, the grid, the pages list with their slugs and search text, the icon, the calendars, the theme suggestions, the background contexts.
+- `history`: one undo stack over every draft (`snapshot`, `pushHistory`, `undo`, `redo`, the `restore*` functions) and the dirty flag.
+- `collections`, `templates`, `plugins`: their draft stores, views and mutators; `plugins` also the discovery, the live CSP and the plugin blocks.
+- `updater`: the publish history and its revert, the update check and the update, the publish baseline.
+- `publish`: the images materialised into media/, the commit, the deploy wait, the discard.
+- `media`: the SVG trim, the image compression, the video reading and the upload report.
+- `blocks`: `BLOCK_DEFAULTS` and `BLOCK_LABELS` (tests/palette.test.mjs reads them there), building and placing a new block, the calendar designs as blocks.
+- `bridge`: the handlers of the preview's messages (`handleEdit` to `handleDelete`, the sections, the sticky dock).
 
 **The CSS.** The admin's stylesheet is global, in `editor/src/app.css`, imported by `main.js` after the components so that it wins a tie with a lib component's rule as it did when its specificity was one class higher. It moved out of App.svelte as one block in its order (0.7.26.2), with the `:global()` wrappers unwrapped, so the cascade among its own rules stays as it was, and a rule whose subject is a form element, a `.ghost` or a `.primary` carries a guard that keeps it out of the lib components (`Dropdown`, `ColorPicker`, `GlyphPicker`, `MarkPicker`, `DesignPicker`, `IconEditor`, `Choice`), which draw their own controls and were never reached by the scoped rules. A rule only one part uses moves into that part's `<style>` once the part is split out and no rule of its ties with a shared one. `tests/topbar-fold.test.mjs` pins the fold steps in app.css and `FOLD_MQ` in App.svelte, and `tests/styled-blocks.test.mjs` pins the variant lists in the menu's families.
 
-**The editor handle.** Until the drafts and their mutators stand in the state modules, the element menu takes them from App.svelte through a context object (`setContext('urd-editor', …)` at the end of its script): the state it reads as getters, so a read follows the state, and the functions it writes through. A family or a panel reads the state into a `$derived`, destructures the functions once, and writes the few states it assigns (the page menu, the new page's title, the site calendars' open row) through setters on the handle. The handle grows with each stage; when the state modules land, the parts import them in place of it. `tests/menu-render.test.mjs` and `tests/panels-render.test.mjs` render the parts in node with a stand-in for the handle.
+**The editor handle.** App.svelte merges every module's handle into one object with `Object.defineProperties`, so the getters and setters carry over, adds the few closures that cross the modules (`openPanel`, `openCollection`, `openDesignPicker`, `blockLabel`), and sets it as the context `urd-editor`. A part reads the state into a `$derived`, destructures the functions once, and writes the states it assigns through the setters. `tests/menu-render.test.mjs` and `tests/panels-render.test.mjs` render the parts in node with a stand-in for the handle, and `tests/app-render.test.mjs` renders the shell itself.
 
 **The folder layout.**
 
 ```
 editor/src/
   main.js  App.svelte  app.css
-  shell/    TopBar, PreviewStage, ConfirmDialog, SetupWizard
-  panels/   Pages, Nav, Site, Theme, Blocks, Grid, Properties, Footer, Collections, Plugins, History, Update
-  section/  BackgroundEditor, AnimationFields
-  menu/     ElementMenu, QuickRow, Placement, families/
-  state/    shell, page, site, collections, templates, plugins, history, preview (.svelte.js), bridge.js, publish.js, media.js
-  lib/      the pickers and the pure modules, as today
+  shell/    TopBar, Rail, PreviewStage, ConfirmDialog, SetupWizard
+  panels/   PagesPanel, NavPanel, SitePanel, ThemePanel, BlocksPanel, GridPanel, PropertiesPanel, FooterPanel, CollectionsPanel, PluginsPanel, HistoryPanel, UpdatePanel
+  section/  BackgroundEditor
+  menu/     ElementMenu, FloatingMenu, MenuGroup, Pin, SearchField, BoxStyle, Placement, families/, state.svelte.js, options.js, groups.js
+  state/    shell, preview, page, site, history, collections, templates, plugins, updater, publish, media, blocks, bridge (.svelte.js)
+  lib/      the pickers and the pure modules, as before
 ```
 
-**The order.** The element menu first (0.7.26.2), since the families still to come are built in it; then the site panels (0.7.26.3), the content and system panels (0.7.26.4), and last the shell's own parts (0.7.26.5). Each step moves one part with its state module and its CSS, rebuilds, and runs the tests; the build time is measured again at the end against the figure above. After the element menu and the stylesheet left the file (0.7.26.2, App.svelte at 9,438 lines) the same build took 1.3 to 2.5 s, recorded 14 October 2026.
+**The order it was done in.** The element menu first (0.7.26.2), since the families still to come are built in it; then the site panels (0.7.26.3), the content and system panels (0.7.26.4), and last the shell's own parts and the state modules (0.7.26.5). After the element menu and the stylesheet left the file (0.7.26.2, App.svelte at 9,438 lines) the same build took 1.3 to 2.5 s; after the split was complete (App.svelte at 148 lines, the state in thirteen modules, the shell in five parts) it took 0.4 s, recorded 14 October 2026.
 
 ## The publishing flow (`template/functions/`)
 

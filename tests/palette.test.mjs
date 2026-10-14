@@ -14,7 +14,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { ENGINE_DIR } from './_engine.mjs';
 
-const APP = new URL('../editor/src/App.svelte', import.meta.url);
+// The seeds and the names stand in the blocks module (0.7.26.5).
+const APP = new URL('../editor/src/state/blocks.svelte.js', import.meta.url);
 // The palette's items stand in the Blocks panel (0.7.26.4).
 const BLOCKS = new URL('../editor/src/panels/BlocksPanel.svelte', import.meta.url);
 const read = (url) => readFileSync(url, 'utf8');
@@ -36,7 +37,7 @@ const app = read(APP);
 
 /** The editor's seeds: the props and the frame a new block is built from. */
 function seeds() {
-  return new Set([...slice(app, 'const BLOCK_DEFAULTS', 'function buildBlock').matchAll(/^ {4}'?([a-z-]+)'?: \{/gm)].map((m) => m[1]));
+  return new Set([...slice(app, 'const BLOCK_DEFAULTS', 'function buildBlock').matchAll(/^ {2}'?([a-z-]+)'?: \{/gm)].map((m) => m[1]));
 }
 
 /** The palette search's block entries. */
@@ -46,7 +47,7 @@ function paletteKinds() {
 
 /** The labels the Properties header reads. */
 function labels() {
-  return new Set([...slice(app, 'const BLOCK_LABELS', '};').matchAll(/([a-z-]+): ta\(/g)].map((m) => m[1]));
+  return new Set([...slice(app, 'const BLOCK_LABELS', '});').matchAll(/([a-z-]+): ta\(/g)].map((m) => m[1]));
 }
 
 // The deliberate exceptions, each for a reason, not an oversight.
@@ -70,7 +71,7 @@ test('every core block can be inserted from the canvas menu', () => {
 test('every core block has a seed in the editor', () => {
   const seeded = seeds();
   const missing = coreBlocks().filter((type) => !seeded.has(type) && !allowed(type, 'seed'));
-  assert.deepEqual(missing, [], `missing in BLOCK_DEFAULTS (App.svelte): ${missing.join(', ')}`);
+  assert.deepEqual(missing, [], `missing in BLOCK_DEFAULTS (blocks.svelte.js): ${missing.join(', ')}`);
 });
 
 test('every core block is found by the palette search', () => {
@@ -82,7 +83,7 @@ test('every core block is found by the palette search', () => {
 test('every core block has a name in the Properties header', () => {
   const named = labels();
   const missing = coreBlocks().filter((type) => !named.has(type) && !allowed(type, 'label'));
-  assert.deepEqual(missing, [], `missing in BLOCK_LABELS (App.svelte): ${missing.join(', ')}`);
+  assert.deepEqual(missing, [], `missing in BLOCK_LABELS (blocks.svelte.js): ${missing.join(', ')}`);
 });
 
 test('the lists name no block the engine does not define', () => {

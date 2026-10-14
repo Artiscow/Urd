@@ -24,8 +24,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-/* The top bar's rules live in the admin's global stylesheet, and the thresholds that swap a cluster for a menu in App.svelte (0.7.26.2). */
-const SRC = readFileSync(new URL('../editor/src/App.svelte', import.meta.url), 'utf-8');
+/* The top bar's rules live in the admin's global stylesheet, and the thresholds that swap a cluster for a menu in the shell's state module (0.7.26.5). */
+const SRC = readFileSync(new URL('../editor/src/state/shell.svelte.js', import.meta.url), 'utf-8');
 const CSS = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf-8');
 const NO_COMMENTS = CSS.replace(/\/\*[\s\S]*?\*\//g, '');
 
@@ -71,7 +71,7 @@ test('the fold steps exist and are strictly decreasing', () => {
 /** The thresholds in FOLD_MQ, that is the steps that swap a cluster for a menu. */
 function jsSteps() {
   const block = SRC.match(/const FOLD_MQ = \{([^}]*)\}/);
-  assert.ok(block, 'could not find FOLD_MQ in App.svelte');
+  assert.ok(block, 'could not find FOLD_MQ in shell.svelte.js');
   return Object.fromEntries(
     [...block[1].matchAll(/(\w+):\s*(\d+)/g)].map((m) => [m[1], Number(m[2])]),
   );

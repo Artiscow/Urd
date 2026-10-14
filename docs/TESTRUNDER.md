@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.26.5): the shell's parts and the state modules
+
+- [ ] Admin loads with the panel remembered from last time, and with none; on a fresh clone the setup wizard comes up, and its name and colours land in the site
+- [ ] The rail opens every panel, the gear opens the settings popover, and the admin theme and language chosen there hold after a reload
+- [ ] The top bar: the page name, the view, device and zoom clusters, the fold steps when the window narrows, the guides and the grid, Clean view and back with the panel's scroll kept
+- [ ] The draft status: Discard arms, Escape disarms, the confirmation discards and the status says so; Publish on the deployed site
+- [ ] Undo and redo across the page, the site, the collections, the templates and the plugins, with the keys and the buttons
+- [ ] An image background's «Cover» and «Show all», which measure the section box in an effect; the page kebab menu closing on an outside click; a new site calendar taking the focus
+- [ ] The Blocks panel's seeds and names, the animation choices in Placement and in a section, the theme suggestions and the admin theme list read from the dictionary, in every admin language
+- [ ] A block selected in the preview shows the element menu in Properties; the gear opens the floating menu; a drag, a resize and a delete reach the draft
+
 ### Test batch (0.7.26.4): the content and system panels as components, and the drag over a section edge
 
 - [ ] Properties for a section: the height, the grid, the theme, the anchor, background layers of every type with the focal point, the sizes and the gradient stops, the dividers and the animation; then a selected block shows the element menu as before
