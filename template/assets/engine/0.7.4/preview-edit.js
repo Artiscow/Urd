@@ -3959,7 +3959,7 @@ function enhanceBlock(el, block, section, grid, host) {
       const colStep = grid.size * pctPerPx;
       const r2 = (v) => Math.round(v * 100) / 100;
       // The grid: on this section, and under a move on every other section
-      // too, since a block released over another section moves there.
+      // too, since a block released wholly outside its own section moves there.
       const overlays = [showGridOverlay(host, grid)];
       if (kind === 'move') {
         for (const other of document.querySelectorAll('.urd-section')) {
@@ -4217,14 +4217,18 @@ function enhanceBlock(el, block, section, grid, host) {
         // A settled drag is one undo step with the frames it settled.
         const placeKey = settle ? makeId('place') : null;
 
-        // If the block's CENTER is released over another section, the
-        // block moves there - grid and ownership must follow the section
-        // it actually sits in, not the one it came from.
+        // A block released with its whole box outside the section it came
+        // from moves to the section under its centre: grid and ownership
+        // follow the section it actually sits in. A block that still
+        // overlaps its own section stays and lies over the neighbour, as a
+        // block placed past the edge does (ADR-0025 decision 8).
         if (kind === 'move') {
           const rect = el.getBoundingClientRect();
-          const target = document
+          const own = host.getBoundingClientRect();
+          const left = rect.bottom <= own.top || rect.top >= own.bottom;
+          const target = left ? document
             .elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
-            .find((n) => n instanceof HTMLElement && n.classList.contains('urd-section'));
+            .find((n) => n instanceof HTMLElement && n.classList.contains('urd-section')) : null;
           if (target && target.dataset.sectionId !== section.id) {
             // Against the target's content surface, not its outer box: block
             // y is relative to the canvas, which a menu out of the flow

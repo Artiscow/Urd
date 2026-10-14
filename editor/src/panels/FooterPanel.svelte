@@ -8,11 +8,11 @@
   import { footerThumb } from '$engine/footer-thumb.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { ICONS } from '../lib/icons.js';
+  import BackgroundEditor from '../section/BackgroundEditor.svelte';
   const ed = getContext('urd-editor');
   const pageId = $derived(ed.pageId);
   const siteDraft = $derived(ed.siteDraft);
   const { compressOrTrim, footerBgCtx, footerMutate, setStatus } = ed;
-  let { backgroundLayers } = $props();
 
   function setFooterBrand(field, value) {
     footerMutate(`edit:footer-brand-${field}`, (f) => {
@@ -573,7 +573,7 @@
         <hr class="gridmenu-divider" />
       {/if}
       <p class="panel-strong">{ta('lbl.background')}</p>
-      {@render backgroundLayers(footerBgCtx, siteDraft.footer?.background?.layers ?? [])}
+      <BackgroundEditor bg={footerBgCtx} layers={siteDraft.footer?.background?.layers ?? []} />
     </div>
   </details>
 

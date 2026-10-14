@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.26.4): the content and system panels as components, and the drag over a section edge
+
+- [ ] Properties for a section: the height, the grid, the theme, the anchor, background layers of every type with the focal point, the sizes and the gradient stops, the dividers and the animation; then a selected block shows the element menu as before
+- [ ] The nav background and the footer background, drawn by the same editor
+- [ ] Blocks: a block of each kind, an image and a gallery with pictures, a calendar from the design picker, a plugin block and a saved template, and the panel's search
+- [ ] Collections: a new collection, new entries, a product's images, sizes and colours, and CSV out and in
+- [ ] Plugins: one switched off and on, one added from the found list and one by id, and the CSP warning against the live headers
+- [ ] History with the revert of the last publish, and the Update panel with an update available, its skipped files and the update itself
+- [ ] A block dragged down over the section's bottom edge stays in its section and lies over the one below; dragged wholly into the section below, it moves there; the same upward
+
 ### Test batch (0.7.26.3): the site panels as components, and the guides rework
 
 - [ ] Pages: a new page from a template, the kebab menu (rename, slug, delete, save as template), the search text and the sharing image, and the warning on a page without a description

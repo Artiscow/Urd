@@ -13,7 +13,14 @@
   import { DOCK_OPTIONS } from './menu/options.js';
   import ElementMenu from './menu/ElementMenu.svelte';
   import FloatingMenu from './menu/FloatingMenu.svelte';
-  import SearchField from './menu/SearchField.svelte';
+
+  import BlocksPanel from './panels/BlocksPanel.svelte';
+  import PropertiesPanel from './panels/PropertiesPanel.svelte';
+  import CollectionsPanel from './panels/CollectionsPanel.svelte';
+  import PluginsPanel from './panels/PluginsPanel.svelte';
+  import HistoryPanel from './panels/HistoryPanel.svelte';
+  import UpdatePanel from './panels/UpdatePanel.svelte';
+
   import PagesPanel from './panels/PagesPanel.svelte';
   import NavPanel from './panels/NavPanel.svelte';
   import SitePanel from './panels/SitePanel.svelte';
@@ -32,38 +39,37 @@
   // The editor shares the migration code with the engine (same file, bundled in).
   import { defaultFormFields } from '$engine/blocks/form.js';
   import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
-  import { ta, tp, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
+  import { ta, taApiError } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
   import { templateId, TEMPLATE_SCHEMA_VERSION, TEMPLATE_KINDS, clonePageForInsert } from '$engine/templates-model.js';
-  import { entriesToCsv, csvToEntries } from '$engine/collections-csv.js';
+
   import { buildSitemapXml, buildRobotsTxt, buildRssXml, FEED_KINDS } from '$engine/feeds.js';
 
   import { buildPagePreset } from '$engine/page-presets.js';
-  import { searchItems as searchBlockItems } from '$engine/palette-search.js';
+
   // The background and animation definitions are reused for labels and
   // defaults, so the editor and the engine never drift apart.
   import { colorLayer } from '$engine/backgrounds/color.js';
   import { gradientLayer } from '$engine/backgrounds/gradient.js';
   import { glowLayer } from '$engine/backgrounds/glow.js';
   import { grainLayer } from '$engine/backgrounds/grain.js';
-  import { patternLayer, BG_PATTERNS, PATTERN_SIZE, PATTERN_OPACITY, bgPattern } from '$engine/backgrounds/pattern.js';
-  import { DIVIDER_SHAPES, DIVIDER_HEIGHT } from '$engine/divider-model.js';
+  import { patternLayer } from '$engine/backgrounds/pattern.js';
+
   import { imageLayer } from '$engine/backgrounds/image.js';
   import { slideshowLayer } from '$engine/backgrounds/slideshow.js';
-  import { GALLERY_STYLES, GALLERY_SHAPES, GALLERY_LOOKS, GALLERY_TONES, styleMotion, motionsFor, frameSize, roundable, colouredLook, frameColor } from '$engine/gallery-layout.js';
-  import { loadFolderPhotos, parsePhotoSource } from '$engine/photo-source.js';
+
   import { videoLayer } from '$engine/backgrounds/video.js';
 
   import { coreAnimations } from '$engine/animations/core.js';
-  import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss, resolveThemeMode, activeTokens } from '$engine/theme.js';
+  import { contrastRatio, relativeLuminance, buildThemeCss, resolveThemeMode, activeTokens } from '$engine/theme.js';
   import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES, VIDEO_WARN_BYTES, VIDEO_MAX_BYTES, ANIMATED_WARN_BYTES, ANIMATED_MAX_BYTES } from '$engine/imageTools.js';
   import { FONT_STACKS } from '$engine/fonts.js';
 
   import { frameAtPoint } from '$engine/place.js';
   import { FETCHES_CONTENT, STRETCHES, followsContent, fitMoves, SIZE_TEXT, blockSize } from '$engine/push-model.js';
 
-  import { calDesign, calView, calDesignGroups } from '$engine/calendar-designs.js';
+  import { calDesign, calView } from '$engine/calendar-designs.js';
 
   /** The background layer types in the order they are offered in the panel. */
   const BG_TYPES = [
@@ -1348,7 +1354,6 @@
      and the image's natural size let us compute the scale that exactly
      fills/shows the whole image. */
   let secBox = $state(null);            // { w, h } for the selected section
-  const imgNat = $state({});            // src -> { w, h } (natural image size)
 
   function measureSecBox() {
     try {
@@ -1372,47 +1377,6 @@
     ro.observe(el);
     return () => ro.disconnect();
   });
-  // Load the images' natural sizes (for the space calculation).
-  $effect(() => {
-    for (const l of sectionBg) {
-      const src = l?.props?.src;
-      if (l?.type === 'image' && src && !imgNat[src]) {
-        const im = new Image();
-        im.onload = () => { imgNat[src] = { w: im.naturalWidth, h: im.naturalHeight }; };
-        im.src = src;
-      }
-    }
-  });
-
-  /** Ready-made section theme (role set): presentation, no mobile invalidation. */
-  function setSectionTheme(role) {
-    mutateSection('section-theme', (s) => {
-      if (role) s.theme = role; else delete s.theme;
-    });
-  }
-
-  /** The role-set samples in Properties: substitute the page's ACTUAL
-   *  theme colors into the role recipes, so each sample is live
-   *  (ADR-0016). The recipes reference only the --urd-base-* copies, so a
-   *  plain text substitution yields valid CSS colors (color-mix survives). */
-  function sectionThemeSample(role) {
-    // The samples follow the preview's active mode (previewPalette merges
-    // alt tokens via the engine's activeTokens, so scheme: 'dark' resolves correctly).
-    const pal = previewPalette;
-    const subst = (v) => v
-      .replaceAll('var(--urd-base-bg)', pal.bg)
-      .replaceAll('var(--urd-base-surface)', pal.surface)
-      .replaceAll('var(--urd-base-text)', pal.text)
-      .replaceAll('var(--urd-base-accent)', pal.accent)
-      .replaceAll('var(--urd-base-accent-text)', pal['accent-text'] ?? readableOn(themeHex(pal.accent ?? '#000000', pal)));
-    const vars = sectionThemeVars(role);
-    return {
-      bg: vars['--urd-color-bg'] ? subst(vars['--urd-color-bg']) : pal.bg,
-      surface: vars['--urd-color-surface'] ? subst(vars['--urd-color-surface']) : pal.surface,
-      text: vars['--urd-color-text'] ? subst(vars['--urd-color-text']) : pal.text,
-      accent: vars['--urd-color-accent'] ? subst(vars['--urd-color-accent']) : pal.accent,
-    };
-  }
 
   function onSelectSection(msg) {
     activeSectionId = msg.sectionId;
@@ -1431,233 +1395,12 @@
     syncSectionMirrors(section);
   }
 
-  /* ---------- The background editor ---------- */
+  /* ---------- The uploads ---------- */
 
-  /** Selected layer type for "+ Add layer" */
-  let newBgType = $state('color');
+  /* The background editor itself is section/BackgroundEditor.svelte; what
+     stays here is shared by every upload in the editor: the SVG trim, the
+     image compression and the video reading. */
 
-  /* The background editor is shared between section, nav and footer via a
-     snippet (backgroundLayers) that shares this component's scoped styles.
-     Each handler takes a `bg` context {mutate, keyPrefix, keyId}:
-     `mutate(key, fn)` where fn(target) mutates target.background
-     (section / nav.style / footer), keyPrefix/keyId give stable history
-     coalescing keys per target. */
-
-  function addBgLayer(bg, type) {
-    bg.mutate(bg.keyPrefix, (t) => {
-      t.background ??= { version: 1, layers: [] };
-      t.background.layers.push({ type, version: BG_DEFS[type].version ?? 1, props: BG_DEFS[type].defaults() });
-    });
-  }
-
-  function removeBgLayer(bg, i) {
-    bg.mutate(bg.keyPrefix, (t) => {
-      t.background.layers.splice(i, 1);
-      // An empty layer list cleans background away entirely, so targets
-      // without a background do not carry an empty {version,layers} object
-      // (and nav/footer fall back to flat).
-      if (!t.background.layers.length) delete t.background;
-    });
-  }
-
-  function moveBgLayer(bg, i, dir) {
-    const j = i + dir;
-    bg.mutate(bg.keyPrefix, (t) => {
-      const layers = t.background.layers;
-      if (j < 0 || j >= layers.length) return;
-      [layers[i], layers[j]] = [layers[j], layers[i]];
-    });
-  }
-
-  /** Several props of one layer in one undo step: for switches that imply each other. */
-  function setBgProps(bg, i, patch) {
-    bg.mutate(`edit:${bg.keyPrefix}-${bg.keyId}-${i}-${Object.keys(patch).join('+')}`, (t) => {
-      Object.assign(t.background.layers[i].props, patch);
-    });
-  }
-
-  function setBgProp(bg, i, name, value) {
-    bg.mutate(`edit:${bg.keyPrefix}-${bg.keyId}-${i}-${name}`, (t) => {
-      t.background.layers[i].props[name] = value;
-    });
-  }
-
-  /* Focal-point drag on the image background layer: a small preview box
-     where dragging a point sets x/y (0..1) at once. Same focus idea as the
-     image editor. */
-  function startFocalDrag(event, bg, i, axes = 'xy') {
-    event.preventDefault();
-    const pad = event.currentTarget;
-    // Pointer capture on the pad element: it then gets ALL pointer events
-    // until the button is released, also when the mouse drags across the
-    // preview iframe (which otherwise eats them, so the drag "sticks"
-    // after releasing outside).
-    pad.setPointerCapture?.(event.pointerId);
-    const move = (e) => {
-      const r = pad.getBoundingClientRect();
-      if (axes.includes('x')) {
-        const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-        setBgProp(bg, i, 'x', Math.round(x * 100) / 100);
-      }
-      if (axes.includes('y')) {
-        const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
-        setBgProp(bg, i, 'y', Math.round(y * 100) / 100);
-      }
-    };
-    move(event);
-    const up = () => {
-      pad.removeEventListener('pointermove', move);
-      pad.removeEventListener('pointerup', up);
-      pad.removeEventListener('pointercancel', up);
-    };
-    pad.addEventListener('pointermove', move);
-    pad.addEventListener('pointerup', up);
-    pad.addEventListener('pointercancel', up);
-  }
-
-  /* Size (custom size mode): the stepper/number field writes `size` as a
-     fraction, clamped to 10-400 %. */
-  const clampBgSize = (v) => Math.min(4, Math.max(0.1, v));
-  function stepBgSize(bg, i, cur, delta) {
-    setBgProp(bg, i, 'size', clampBgSize(Math.round((cur + delta) * 100) / 100));
-  }
-  function setBgSizePct(bg, i, pct) {
-    const n = Number(pct);
-    if (Number.isFinite(n)) setBgProp(bg, i, 'size', clampBgSize(n / 100));
-  }
-  /* "Cover"/"Show all": compute the scale from the image and section sizes
-     and set it, so Fill/Show-all become presets that can be fine-tuned
-     further (not separate modes). r = the height/width ratio between
-     section and image at 100 % width. */
-  function setBgFillSize(bg, i, layer, mode) {
-    const nat = imgNat[layer.props.src];
-    if (!nat?.w || !nat?.h || !secBox?.w || !secBox?.h) return;
-    const r = (secBox.h * nat.w) / (secBox.w * nat.h);
-    const size = mode === 'cover' ? Math.max(1, r) : Math.min(1, r);
-    if (layer.props.fit === 'tile' || layer.props.fit === 'repeat') setBgProp(bg, i, 'fit', 'plain');
-    setBgProp(bg, i, 'size', clampBgSize(Math.round(size * 100) / 100));
-  }
-
-  /* The gradient editor (free stops + linear/radial). */
-
-  function gradientProps(layer) {
-    return layer.props;
-  }
-
-  function mutateGradient(bg, i, key, fn) {
-    bg.mutate(key, (t) => {
-      fn(t.background.layers[i].props);
-    });
-  }
-
-  function setGradProp(bg, i, name, value) {
-    mutateGradient(bg, i, `edit:${bg.keyPrefix}-${bg.keyId}-${i}-${name}`, (p) => { p[name] = value; });
-  }
-
-  /** A shape switch resets the animation if it does not exist for the new shape. */
-  const GRAD_ANIMATIONS = {
-    linear: [['none', ta('common.none')], ['pan', ta('opt.gradAnim.pan')], ['pan-loop', ta('opt.gradAnim.panLoop')], ['rotate', ta('opt.gradAnim.rotate')]],
-    radial: [['none', ta('common.none')], ['pulse', ta('opt.gradAnim.pulse')], ['orbit', ta('opt.gradAnim.orbit')]],
-  };
-
-  function setGradKind(bg, i, kind) {
-    mutateGradient(bg, i, bg.keyPrefix, (p) => {
-      p.kind = kind;
-      if (!GRAD_ANIMATIONS[kind].some(([id]) => id === (p.animation ?? 'none'))) p.animation = 'none';
-    });
-  }
-
-  function setGradStop(bg, i, si, patch) {
-    mutateGradient(bg, i, `edit:${bg.keyPrefix}-${bg.keyId}-${i}-stop${si}`, (p) => {
-      p.stops[si] = { ...p.stops[si], ...patch };
-    });
-  }
-
-  /** New color at the bottom of the list, with a share equal to the average. */
-  function addGradStop(bg, i) {
-    mutateGradient(bg, i, bg.keyPrefix, (p) => {
-      const avg = Math.round(p.stops.reduce((a, s) => a + (Number(s.share) || 0), 0) / p.stops.length) || 50;
-      p.stops.push({ color: p.stops[p.stops.length - 1]?.color ?? '#ffffff', share: avg });
-    });
-  }
-
-  function removeGradStop(bg, i, si) {
-    mutateGradient(bg, i, bg.keyPrefix, (p) => {
-      if (p.stops.length > 2) p.stops.splice(si, 1);
-    });
-  }
-
-  function reorderGradStop(bg, i, from, to) {
-    mutateGradient(bg, i, bg.keyPrefix, (p) => {
-      const [moved] = p.stops.splice(from, 1);
-      p.stops.splice(to, 0, moved);
-    });
-  }
-
-  /** Ongoing drag reordering of gradient colors: {layer, from, insert}
-   *  or null. insert is the insertion slot (0..count), drawn as a line
-   *  above the row (or below the last one). */
-  let stopDrag = $state(null);
-
-  /** Pointer-based drag (not HTML5 dnd: it gives neither a visual
-   *  indicator nor a reliable drop on the neighboring row). The dragged
-   *  row is dimmed, and the insertion line follows the pointer; the drop
-   *  performs ONE undo step. */
-  function startStopDrag(bg, event, layerI, si) {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    const container = event.currentTarget.closest('.bg-layer');
-    const row = event.currentTarget.closest('.grad-stop');
-    stopDrag = { layer: layerI, from: si, insert: si };
-
-    // Ghost row: a copy of the whole row (with the color) follows the
-    // pointer, so you see WHAT you are dragging, not just where it lands.
-    // Inline style, since the copy lives on document.body outside the
-    // component tree.
-    const rect = row.getBoundingClientRect();
-    const grabY = event.clientY - rect.top;
-    const ghost = row.cloneNode(true);
-    ghost.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;`
-      + `width:${rect.width}px;display:flex;align-items:center;gap:0.4rem;`
-      + 'pointer-events:none;z-index:1000;opacity:0.92;padding:2px 4px;'
-      + 'background:var(--urd-color-surface);border:1px solid var(--urd-color-accent);border-radius:6px;';
-    document.body.appendChild(ghost);
-
-    const move = (ev) => {
-      ghost.style.top = `${ev.clientY - grabY}px`;
-      const rects = [...container.querySelectorAll('.grad-stop')].map((r) => r.getBoundingClientRect());
-      let insert = rects.length;
-      for (let k = 0; k < rects.length; k++) {
-        if (ev.clientY < rects[k].top + rects[k].height / 2) {
-          insert = k;
-          break;
-        }
-      }
-      stopDrag = { ...stopDrag, insert };
-    };
-    const up = () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-      ghost.remove();
-      const drag = stopDrag;
-      stopDrag = null;
-      if (!drag) return;
-      const to = drag.insert > drag.from ? drag.insert - 1 : drag.insert;
-      if (to !== drag.from) reorderGradStop(bg, drag.layer, drag.from, to);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  }
-
-  /** Change the layer type afterwards (the layer keeps its slot, props reset). */
-  function changeBgLayerType(bg, i, type) {
-    bg.mutate(bg.keyPrefix, (t) => {
-      if (t.background.layers[i].type === type) return;
-      t.background.layers[i] = { type, version: BG_DEFS[type].version ?? 1, props: BG_DEFS[type].defaults() };
-    });
-  }
-
-  /** Background image: same webp flow as the image block. */
   /* Measures the subject's extent in an SVG via canvas pixels (the SVG is
      rendered as an IMAGE, not live DOM - safe: no script execution, and
      svgToDataUrl has already rejected script SVGs). Returns the bounding
@@ -1768,96 +1511,12 @@
     }
   }
 
-  async function setBgImage(bg, i, event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    try {
-      const img = await compressOrTrim(file);
-      setBgProp(bg, i, 'src', img.dataUrl);
-    } catch (err) {
-      setStatus(imageErrorText(err), 'error');
-    }
-  }
-
-  /** The video layer's film (readVideoFile holds the limits). */
-  function setBgVideo(bg, i, event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (file) readVideoFile(file, 'status.videoFormat', (dataUrl) => setBgProp(bg, i, 'src', dataUrl));
-  }
-
-  /** The poster image for the video layer (the still shown with reduced motion). */
-  async function setBgPoster(bg, i, event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    try {
-      const img = await compressOrTrim(file);
-      setBgProp(bg, i, 'poster', img.dataUrl);
-    } catch (err) {
-      setStatus(imageErrorText(err), 'error');
-    }
-  }
-
-  /* The shared folder: the panel reads the folder through the site's own
-     proxy, the same call the layer in the preview makes for itself. The
-     button always goes out again, so a share the owner has just opened is
-     seen at once. One readout per layer, keyed like the history entries. */
-  let folderStatus = $state({});
-
-  const folderKey = (bg, i) => `${bg.keyPrefix}-${bg.keyId}-${i}`;
-
   /** A fresh seed for a scatter the owner wants to keep: never 0, which means the visit's. */
   const newSeed = () => 1 + (crypto.getRandomValues(new Uint32Array(1))[0] % 1000000);
-
-  async function checkBgFolder(bg, i, layer) {
-    const key = folderKey(bg, i);
-    folderStatus[key] = { text: ta('status.folderChecking'), err: false };
-    const answer = await loadFolderPhotos(layer.props.folder, layer.props.order, { force: true });
-    folderStatus[key] = answer.photos.length
-      ? { text: tp('status.folderFound', answer.photos.length, { count: answer.photos.length }), err: false }
-      : { text: taApiError(answer) ?? ta('status.folderNone'), err: true };
-  }
 
   /* The slideshow layer: the image list is edited like the other
      background layers, but with multi-select upload (the whole batch in
      ONE undo step). */
-
-  async function addBgGalleryImages(bg, i, event) {
-    const files = [...(event.target.files ?? [])];
-    event.target.value = '';
-    if (!files.length) return;
-    setStatus(ta('status.compressingImages'));
-    const { images, failed, big } = await compressMany(files);
-    if (images.length) {
-      bg.mutate(bg.keyPrefix, (t) => {
-        const props = t.background.layers[i].props;
-        props.images ??= [];
-        props.images.push(...images.map(({ src }) => ({ src, x: 0.5, y: 0.5 })));
-      });
-    }
-    reportUpload(images.length, failed, big);
-  }
-
-  function moveBgGalleryImage(bg, i, j, dir) {
-    bg.mutate(bg.keyPrefix, (t) => {
-      const arr = t.background.layers[i].props.images;
-      const k = j + dir;
-      if (k < 0 || k >= arr.length) return;
-      [arr[j], arr[k]] = [arr[k], arr[j]];
-    });
-  }
-
-  function removeBgGalleryImage(bg, i, j) {
-    bg.mutate(bg.keyPrefix, (t) => { t.background.layers[i].props.images.splice(j, 1); });
-  }
-
-  function setBgGalleryImageProp(bg, i, j, name, value) {
-    bg.mutate(`edit:${bg.keyPrefix}g-${bg.keyId}-${i}-${j}-${name}`, (t) => {
-      t.background.layers[i].props.images[j][name] = value;
-    });
-  }
 
   /** The bg contexts for the three targets (section/nav/footer). The
    *  section uses the sectionBg mirror; nav/footer read reactively from
@@ -1949,54 +1608,6 @@
       if (b.animation) b.animation.props[name] = value;
     });
     if (selectedBlock) bridge?.sendDemoAnim(selectedBlock.sectionId, selectedBlock.blockId);
-  }
-
-  function setSectionAnimation(type) {
-    mutateSection('section-anim', (s) => {
-      normalizeAnim(s);
-      s.animation = type ? animObj(type) : null;
-    });
-    bridge?.sendDemoAnim(activeSectionId);
-  }
-
-  /** One field of one edge's divider. A shape of '' removes the edge, and an emptied object the field. */
-  function setSectionDivider(edge, key, value) {
-    mutateSection(`section-divider-${edge}-${key}`, (s) => {
-      const divider = { ...(s.divider ?? {}) };
-      if (key === 'shape' && !value) {
-        delete divider[edge];
-      } else {
-        const own = { ...(divider[edge] ?? { shape: 'wave' }) };
-        if (value === undefined || value === false || value === '') delete own[key];
-        else own[key] = value;
-        divider[edge] = own;
-      }
-      if (Object.keys(divider).length) s.divider = divider;
-      else delete s.divider;
-    });
-  }
-
-  function setSectionHover(type) {
-    mutateSection('section-hover', (s) => {
-      normalizeAnim(s);
-      s.hover = type ? animObj(type) : null;
-    });
-  }
-
-  function setSectionAnimProp(name, value) {
-    if (!Number.isFinite(value)) return;
-    mutateSection('edit:section-anim', (s) => {
-      if (s.animation) s.animation.props[name] = value;
-    });
-    bridge?.sendDemoAnim(activeSectionId);
-  }
-
-  /** String prop on the section animation (stagger pattern and effect). */
-  function setSectionAnimStr(name, value) {
-    mutateSection('edit:section-anim', (s) => {
-      if (s.animation) s.animation.props[name] = value;
-    });
-    bridge?.sendDemoAnim(activeSectionId);
   }
 
   /** Height from the Properties panel: px number or CSS value (40vh, 50%). */
@@ -2145,7 +1756,6 @@
   /** null = not loaded yet; [] = loaded and empty */
   let historyList = $state(null);
   let historyError = $state('');
-  let historyBusy = $state(false);
 
   async function loadHistory() {
     historyError = '';
@@ -2166,18 +1776,6 @@
     }
   }
 
-  // The history dates follow the admin language (Intl has all the
-  // built-ins). A language-pack language can be a code Intl rejects: then
-  // we fall back to the browser's own format instead of taking down the panel.
-  const historyDate = (() => {
-    const opts = { dateStyle: 'short', timeStyle: 'short' };
-    try {
-      return new Intl.DateTimeFormat(currentAdminLang(), opts);
-    } catch {
-      return new Intl.DateTimeFormat(undefined, opts);
-    }
-  })();
-
   /**
    * After a revert the editor still shows the content from BEFORE the
    * revert (the restored version exists on the server only after deploy).
@@ -2185,86 +1783,6 @@
    * reverted - so publishing is blocked until the admin is reloaded.
    */
   let revertedSinceLoad = false;
-
-  async function revertLast() {
-    const last = historyList?.[0];
-    if (!last || historyBusy) return;
-    const ok = await askConfirm({
-      title: ta('confirm.revert.title'),
-      lines: [
-        `«${last.message}»`,
-        ta('confirm.revert.body'),
-      ],
-      okLabel: ta('confirm.revert.ok'),
-      cancelLabel: ta('confirm.cancel'),
-    });
-    if (!ok) return;
-    historyBusy = true;
-    setStatus(ta('status.reverting'));
-    try {
-      const res = await fetch('/api/github/revert', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ expect: last.sha }),
-      });
-      if (res.ok) {
-        const { sha } = await res.json().catch(() => ({}));
-        if (sha) baseSha = sha;
-        else refreshBaseSha();
-        revertedSinceLoad = true;
-        setStatus(ta('status.revertDone'), 'ok');
-        awaitRevertDeploy();
-      } else if (res.status === 409) {
-        setStatus(ta('status.revertConflict'), 'error');
-      } else {
-        setStatus(taApiError(await res.json().catch(() => null)) ?? ta('status.revertFailed'), 'error');
-      }
-    } catch {
-      setStatus(ta('status.publishLayerUnreachable'), 'error');
-    }
-    historyBusy = false;
-    loadHistory();
-  }
-
-  /**
-   * After a revert: poll the served content files until the deploy is
-   * actually out, discard the drafts (the server is now the source of
-   * truth) and reload the admin automatically - instead of asking the
-   * owner to reload. If none of the files change within the deadline
-   * (slow rollout, or a publish that only touched files we do not poll),
-   * the current block and message are kept.
-   */
-  async function awaitRevertDeploy() {
-    const paths = ['/content/site.json', ...siteDraft.pages.map((p) => `/${p.file}`)];
-    const snap = async () => {
-      const out = {};
-      for (const path of paths) {
-        try {
-          out[path] = await (await fetch(path, { cache: 'no-store' })).text();
-        } catch {
-          out[path] = null;
-        }
-      }
-      return out;
-    };
-    const before = await snap();
-    for (let attempt = 0; attempt < 18; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, 10_000));
-      const now = await snap();
-      if (paths.some((path) => now[path] !== null && before[path] !== null && now[path] !== before[path])) {
-        setStatus(ta('status.revertDeployed'), 'ok');
-        // The drafts describe the state from BEFORE the revert; the server
-        // is the source of truth now.
-        for (const key of Object.keys(localStorage).filter((k) => k.startsWith('urd-draft-'))) {
-          localStorage.removeItem(key);
-        }
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        location.reload();
-        return;
-      }
-    }
-    setStatus(ta('status.revertDeployTimeout'), 'error');
-  }
 
   /** The publish whose deploy is being awaited: a newer publish makes an
    *  older wait fall silent instead of reporting a stale result. */
@@ -2315,82 +1833,6 @@
       updateError = ta('status.publishLayerUnreachable');
     }
     updateBusy = false;
-  }
-
-  function toggleUpdateSkip(path) {
-    const next = new Set(updateSkip);
-    if (next.has(path)) next.delete(path);
-    else next.add(path);
-    updateSkip = next;
-  }
-
-  async function runUpdate() {
-    if (!updateInfo || updateInfo.upToDate || updateBusy) return;
-    const skipped = [...updateSkip];
-    const applied = updateInfo.changes.filter((c) => !updateSkip.has(c.path));
-    const editedAtom = applied.filter((c) => c.atom && c.conflict);
-    const ok = await askConfirm({
-      title: ta('confirm.update.title'),
-      lines: [
-        ta('confirm.update.body', {
-          target: updateInfo.target,
-          writes: applied.filter((c) => c.action === 'write').length,
-          deletes: applied.filter((c) => c.action === 'delete').length,
-        }),
-        ...(editedAtom.length > 0
-          ? [ta('confirm.update.warnEdited', { paths: editedAtom.map((c) => c.path).join(', ') })]
-          : []),
-      ],
-      okLabel: ta('confirm.update.ok'),
-      cancelLabel: ta('confirm.cancel'),
-    });
-    if (!ok) return;
-    updateBusy = true;
-    setStatus(ta('update.running', { target: updateInfo.target }));
-    try {
-      const res = await fetch('/api/github/update', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ to: updateInfo.target, expect: updateInfo.head, skip: skipped }),
-      });
-      const data = await res.json().catch(() => null);
-      if (res.ok) {
-        setStatus(ta('update.committed', { target: updateInfo.target }), 'ok');
-        await awaitUpdateDeploy(updateInfo.target.replace(/^v/, ''));
-      } else if (res.status === 409) {
-        setStatus(taApiError(data) ?? ta('update.checkFailed'), 'error');
-        // Awaited: otherwise updateBusy is cleared during the re-check, and
-        // the panel sits blank in a window where an extra check can slip through.
-        await loadUpdateCheck();
-      } else {
-        setStatus(taApiError(data) ?? ta('update.failed'), 'error');
-      }
-    } catch {
-      setStatus(ta('status.publishLayerUnreachable'), 'error');
-    }
-    updateBusy = false;
-  }
-
-  /**
-   * After the update commit: poll /urd.json until the engine field reports
-   * the target version (the deploy is out), and reload the admin so the
-   * new bundle and engine take effect. The drafts are kept: the updater
-   * never touches user-owned files, so they are just as valid afterwards.
-   */
-  async function awaitUpdateDeploy(version) {
-    for (let attempt = 0; attempt < 18; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, 10_000));
-      try {
-        const data = await (await fetch('/urd.json', { cache: 'no-store' })).json();
-        if (data?.engine === version) {
-          setStatus(ta('update.deployed'), 'ok');
-          await new Promise((resolve) => setTimeout(resolve, 800));
-          location.reload();
-          return;
-        }
-      } catch { /* temporarily down during rollout: keep polling */ }
-    }
-    setStatus(ta('update.deployTimeout'), 'error');
   }
 
   /** Runs while a page's data loads; urd-ready waits on this. */
@@ -3013,11 +2455,6 @@
     });
   }
 
-  /** A gallery layer's props as the engine draws them: the editor keeps a layer at the version
-      it was stored with, so one from before the styles is read through the layer's own lift. */
-  const galleryView = (layer) => ((layer.version ?? 1) < slideshowLayer.version
-    ? slideshowLayer.migrations[1](layer.props ?? {}) : (layer.props ?? {}));
-
   /* ---------- The Collections panel (ADR-0007) ---------- */
 
   // Collections are shared site data (like nav/footer): an index file +
@@ -3034,14 +2471,6 @@
   let activeCollection = $state(null);
   let newCollectionName = $state('');
   let newCollectionKind = $state('news');
-
-  const COLLECTION_KINDS = [
-    ['news', ta('collectionKind.news')],
-    ['notices', ta('collectionKind.notices')],
-    ['publications', ta('collectionKind.publications')],
-    ['products', ta('collectionKind.products')],
-    ['custom', ta('collectionKind.custom')],
-  ];
 
   /* ---------- Templates: user templates in content/maler/ ---------- */
   // Same pattern as collections: an index store + one store per template
@@ -3341,112 +2770,6 @@
     });
   }
 
-  function setEntryField(id, entryId, field, value) {
-    mutateCollection(id, `edit:collection:${id}:${entryId}:${field}`, (data) => {
-      const entry = data.entries.find((e) => e.id === entryId);
-      if (!entry) return;
-      if (value === '' && field !== 'title') delete entry[field];
-      else entry[field] = value;
-    });
-  }
-
-  function moveEntry(id, index, dir) {
-    mutateCollection(id, `collection:${id}:move-entry`, (data) => {
-      const j = index + dir;
-      if (j < 0 || j >= data.entries.length) return;
-      [data.entries[index], data.entries[j]] = [data.entries[j], data.entries[index]];
-    });
-  }
-
-  function removeEntry(id, entryId) {
-    mutateCollection(id, `collection:${id}:remove-entry`, (data) => {
-      data.entries = data.entries.filter((e) => e.id !== entryId);
-    });
-  }
-
-  /** Entry image: same webp flow as block images; materialized on publish. */
-  async function setEntryImage(id, entryId, event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    const img = await compressOrTrim(file);
-    setEntryField(id, entryId, 'image', img.dataUrl);
-  }
-
-  /** The product fields (kind products): the size list is written comma-separated. */
-  function setEntrySizes(id, entryId, text) {
-    const sizes = text.split(',').map((s) => s.trim()).filter(Boolean);
-    setEntryField(id, entryId, 'sizes', sizes.length ? sizes : '');
-  }
-
-  function addEntryColor(id, entryId) {
-    mutateCollection(id, `collection:${id}:${entryId}:colors`, (data) => {
-      const entry = data.entries.find((e) => e.id === entryId);
-      if (!entry) return;
-      entry.colors = [...(entry.colors ?? []), { name: ta('ph.colorName') }];
-    });
-  }
-
-  function setEntryColor(id, entryId, index, field, value) {
-    mutateCollection(id, `edit:collection:${id}:${entryId}:color:${index}:${field}`, (data) => {
-      const color = data.entries.find((e) => e.id === entryId)?.colors?.[index];
-      if (!color) return;
-      // The name can never be emptied (the schema requires it); the image can be removed.
-      if (field === 'image' && !value) delete color.image;
-      else if (value) color[field] = value;
-    });
-  }
-
-  async function setEntryColorImage(id, entryId, index, event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    const img = await compressOrTrim(file);
-    setEntryColor(id, entryId, index, 'image', img.dataUrl);
-  }
-
-  function removeEntryColor(id, entryId, index) {
-    mutateCollection(id, `collection:${id}:${entryId}:colors`, (data) => {
-      const entry = data.entries.find((e) => e.id === entryId);
-      if (!entry?.colors) return;
-      entry.colors = entry.colors.filter((_, i) => i !== index);
-      if (!entry.colors.length) delete entry.colors;
-    });
-  }
-
-  /** CSV export: the entries are downloaded as <id>.csv. */
-  function exportCollectionCsv(id) {
-    const data = collectionStores[id]?.data;
-    if (!data) return;
-    const url = URL.createObjectURL(new Blob([entriesToCsv(data.entries)], { type: 'text/csv' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${id}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  /** CSV import: REPLACES the collection's entries with the rows from the
-   *  file (undo exists). Missing/invalid ids get new ones; pure parsing
-   *  lives in engine/collections-csv.js. */
-  async function importCollectionCsv(id, event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    const parsed = csvToEntries(await file.text());
-    if (!parsed) {
-      setStatus(ta('status.csvInvalid'), 'error');
-      return;
-    }
-    const used = new Set();
-    for (const entry of parsed.entries) {
-      if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || used.has(entry.id)) entry.id = makeId('entry');
-      used.add(entry.id);
-    }
-    mutateCollection(id, `collection:${id}:import`, (data) => { data.entries = parsed.entries; });
-    setStatus(ta('status.csvImported', { count: String(parsed.entries.length) }), 'ok');
-  }
-
   /* ---------- The Plugins panel ---------- */
 
   // plugins.json goes through the same draft flow as the rest: changes are
@@ -3460,8 +2783,6 @@
   let pluginsView = $state(null);
   let pluginInfo = $state({});
   let pluginEngine = $state('0.0.0');
-  let newPluginId = $state('');
-  let pluginError = $state('');
   /** Plugin directories found in the repo (via the publishing layer) that are not in plugins.json yet. */
   let pluginsFound = $state([]);
   /** The plugins enabled in the PUBLISHED plugins.json (not the draft):
@@ -3497,19 +2818,6 @@
     } catch {
       liveCsp = { unknown: true };
     }
-  }
-
-  /** Manifest CSP needs NOT already in the live CSP: only those are shown
-   *  in the instructions (settings are shown only when relevant). */
-  function cspMissing(csp) {
-    const need = [
-      ...(csp.scriptSrc ?? []).map((host) => ['script-src', host]),
-      ...(csp.connectSrc ?? []).map((host) => ['connect-src', host]),
-      ...(csp.frameSrc ?? []).map((host) => ['frame-src', host]),
-    ];
-    if (!liveCsp || liveCsp.unknown) return [];
-    const present = { 'script-src': liveCsp.scriptSrc, 'connect-src': liveCsp.connectSrc, 'frame-src': liveCsp.frameSrc };
-    return need.filter(([dir, host]) => !present[dir]?.has(host)).map(([dir, host]) => `${dir} ${host}`);
   }
 
   async function initPlugins() {
@@ -3610,31 +2918,6 @@
     updateDirty();
     syncPluginsView();
     reloadPreview();
-  }
-
-  async function addPlugin() {
-    pluginError = '';
-    const id = newPluginId.trim().toLowerCase();
-    if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) {
-      pluginError = ta('plugin.invalidId');
-      return;
-    }
-    if (knownPlugins().includes(id)) {
-      pluginError = ta('plugin.alreadyListed');
-      return;
-    }
-    await loadPluginInfo(id);
-    if (pluginInfo[id].errors.length) {
-      pluginError = ta('plugin.invalidManifest', { errors: pluginInfo[id].errors.join('; ') });
-      return;
-    }
-    setPluginEnabled(id, true);
-    newPluginId = '';
-  }
-
-  function addFoundPlugin(id) {
-    pluginsFound = pluginsFound.filter((x) => x !== id);
-    setPluginEnabled(id, true);
   }
 
   /* ---------- The Footer panel ---------- */
@@ -4325,10 +3608,6 @@
     bridge?.sendSection(pageId, section);
   }
 
-  function addBlock(kind) {
-    requestPlacement(buildBlock(kind));
-  }
-
   /** The size a new calendar starts at, by the view its design shows; the frame is fitted to the design once it is placed. */
   const CAL_KIND_BY_VIEW = { list: 'calendar', cards: 'calendar-cards', month: 'calendar-month', next: 'calendar-next', agenda: 'calendar-agenda', week: 'calendar-month', day: 'calendar', year: 'calendar-month' };
 
@@ -4350,89 +3629,6 @@
    *  type/label/defaults at plugin load (urd-plugin-blocks), so the block
    *  can be built here. */
   let pluginBlocks = $state([]);
-  /** Core blocks whose Content panel is the field contract (the same
-   *  renderer as plugin fields): place search, numbers, toggles, selects. */
-  function addPluginBlock(entry, extraProps = {}) {
-    // pluginBlocks is $state: structuredClone on a reactive proxy throws
-    // DataCloneError (same trap as postMessage). Snapshot yields plain
-    // objects; it also works on non-reactive values.
-    const raw = $state.snapshot(entry);
-    requestPlacement({
-      id: makeId('blk'),
-      type: raw.type,
-      version: raw.version ?? 1,
-      decor: false,
-      props: { ...(raw.defaults ?? {}), ...$state.snapshot(extraProps) },
-      animation: null,
-      frames: { desktop: { x: 25, y: 40, w: 50, h: 260, z: 1, rot: 0 }, mobile: null },
-    });
-  }
-
-  /* The block search in the panel (a flat hit list). The index is built
-     from the VISIBLE labels the panel already shows: core blocks, shapes,
-     block-group templates and plugin blocks (variants flattened). */
-  let blockSearch = $state('');
-
-  function panelBlockItems() {
-    const items = [
-      { label: ta('blocks.text'), act: 'block', kind: 'text' },
-      { label: ta('ui.textBox'), act: 'block', kind: 'text-box' },
-      { label: ta('blocks.button'), act: 'block', kind: 'button' },
-      { label: ta('blocks.image'), act: 'image' },
-      { label: ta('blocks.video'), act: 'block', kind: 'video' },
-      { label: ta('blocks.icon'), act: 'block', kind: 'icon' },
-      { label: ta('blocks.map'), act: 'block', kind: 'map' },
-      { label: ta('blocks.form'), act: 'block', kind: 'form' },
-      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewList')}`, act: 'block', kind: 'calendar' },
-      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewCards')}`, act: 'block', kind: 'calendar-cards' },
-      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewMonth')}`, act: 'block', kind: 'calendar-month' },
-      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewNext')}`, act: 'block', kind: 'calendar-next' },
-      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewAgenda')}`, act: 'block', kind: 'calendar-agenda' },
-      ...calDesignGroups().flatMap((group) => group.designs).filter((d) => d.id !== 'plain')
-        .map((d) => ({ label: `${ta('blocks.calendar')}: ${ta(d.labelKey)}`, act: 'calendarDesign', design: d.id })),
-      { label: ta('blocks.collection'), act: 'block', kind: 'collection' },
-      { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
-      { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
-      { label: ta('blocks.quote'), act: 'block', kind: 'quote' },
-      { label: ta('blocks.stats'), act: 'block', kind: 'stats' },
-    { label: ta('blocks.ribbon'), act: 'block', kind: 'ribbon' },
-      { label: ta('blocks.table'), act: 'block', kind: 'table' },
-      { label: ta('blocks.share'), act: 'block', kind: 'share' },
-      { label: ta('blocks.countdown'), act: 'block', kind: 'countdown' },
-      { label: ta('blocks.audio'), act: 'block', kind: 'audio' },
-      { label: ta('blocks.product'), act: 'block', kind: 'product' },
-      { label: ta('blocks.cart'), act: 'block', kind: 'cart' },
-      { label: ta('blocks.checkout'), act: 'block', kind: 'checkout' },
-      { label: ta('ui.emptyGallery'), act: 'block', kind: 'gallery' },
-      { label: ta('ui.galleryWithImages'), act: 'galleryImages' },
-      { label: ta('shape.line'), act: 'block', kind: 'shape-line' },
-      { label: ta('shape.arrow'), act: 'block', kind: 'shape-arrow' },
-      { label: ta('shape.circle'), act: 'block', kind: 'shape-circle' },
-      { label: ta('shape.rect'), act: 'block', kind: 'shape-rect' },
-      { label: ta('shape.triangle'), act: 'block', kind: 'shape-triangle' },
-    ];
-    for (const id of templateIds) {
-      const tpl = templateStores[id]?.data?.mal;
-      if (tpl?.kind === 'blocks') items.push({ label: tpl.name, act: 'template', id });
-    }
-    for (const entry of pluginBlocks) {
-      if (entry.variants?.length) {
-        for (const variant of entry.variants) {
-          items.push({ label: `${entry.label}: ${variant.label}`, act: 'plugin', entry, props: variant.props });
-        }
-      } else {
-        items.push({ label: entry.label, act: 'plugin', entry });
-      }
-    }
-    return items;
-  }
-
-  function runPanelItem(item) {
-    if (item.act === 'block') addBlock(item.kind);
-    else if (item.act === 'calendarDesign') addCalendarDesign(item.design);
-    else if (item.act === 'plugin') addPluginBlock(item.entry, item.props ?? {});
-    else if (item.act === 'template') bridge?.sendInsertTemplate(item.id);
-  }
 
   /** "+ Add block" in a section: build the block and put it there. With a
    *  click point (msg.at, from a double click on the section surface) the
@@ -4468,40 +3664,6 @@
     if (msg.kind === 'gallery') setStatus(ta('status.galleryBlockAdded'));
   }
 
-  /** + Image: compress to webp and put in the draft as a data URL.
-   *  On publish it is materialized to a file in media/. */
-  async function addImage(event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-
-    setStatus(ta('status.compressingImage'));
-    let img;
-    try {
-      img = await compressOrTrim(file);
-    } catch (err) {
-      setStatus(imageErrorText(err), 'error');
-      return;
-    }
-
-    // Start width 30 % of the section; the height follows the image's
-    // aspect ratio with an assumed section width (freely adjusted afterwards anyway).
-    const height = Math.round((img.height / img.width) * 0.3 * (iframeEl?.clientWidth ?? 1280));
-    requestPlacement({
-      id: makeId('blk'),
-      type: 'image',
-      version: 1,
-      props: { src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), fit: 'cover', radius: 'md', href: null },
-      animation: null,
-      frames: { desktop: { x: 4, y: 8, w: 30, h: Math.max(40, height), z: 1, rot: 0 }, mobile: null },
-    });
-    if (img.bytes > WARN_BYTES) {
-      setStatus(ta('status.imageLarge', { kb: Math.round(img.bytes / 1024) }), 'error');
-    } else {
-      setStatus('');
-    }
-  }
-
   /** Multiple images in one upload (the galleries): compress all;
    *  one unreadable image does not stop the rest of the batch. */
   async function compressMany(fileList) {
@@ -4534,23 +3696,6 @@
     setStatus(ta('status.compressingImages'));
     const { images, failed, big } = await compressMany(files);
     if (images.length) mutateBlock('gallery-add', (b) => { b.props.images.push(...images); });
-    reportUpload(images.length, failed, big);
-  }
-
-  /** "Gallery with images" in the palette: build the block pre-filled. */
-  async function addGalleryBlock(event) {
-    const files = [...(event.target.files ?? [])];
-    event.target.value = '';
-    if (!files.length) return;
-    setStatus(ta('status.compressingImages'));
-    const { images, failed, big } = await compressMany(files);
-    if (!images.length) {
-      reportUpload(0, failed, big);
-      return;
-    }
-    const block = buildBlock('gallery');
-    block.props.images = images;
-    requestPlacement(block);
     reportUpload(images.length, failed, big);
   }
 
@@ -5211,6 +4356,77 @@
     setGrid,
     footerBgCtx,
     footerMutate,
+    /* What the site panels (panels/*.svelte) read and write through, 0.7.26.3. */
+    get iframeEl() { return iframeEl; },
+    get designPicker() { return designPicker; },
+    set designPicker(v) { designPicker = v; },
+    addCalendarDesign,
+    buildBlock,
+    compressMany,
+    reportUpload,
+    requestPlacement,
+    get activeSectionId() { return activeSectionId; },
+    get previewPalette() { return previewPalette; },
+    get sectionAnim() { return sectionAnim; },
+    get sectionBg() { return sectionBg; },
+    get sectionBgCtx() { return sectionBgCtx; },
+    get sectionDivider() { return sectionDivider; },
+    get sectionGrid() { return sectionGrid; },
+    get sectionHover() { return sectionHover; },
+    get sectionMinHeight() { return sectionMinHeight; },
+    get sectionTheme() { return sectionTheme; },
+    BLOCK_LABELS,
+    ENTRANCE_OPTIONS,
+    HOVER_OPTIONS,
+    animObj,
+    mutateSection,
+    normalizeAnim,
+    setSectionGrid,
+    setSectionHeight,
+    toggleSectionGrid,
+    get collectionStores() { return collectionStores; },
+    get activeCollection() { return activeCollection; },
+    set activeCollection(v) { activeCollection = v; },
+    get newCollectionKind() { return newCollectionKind; },
+    set newCollectionKind(v) { newCollectionKind = v; },
+    get newCollectionName() { return newCollectionName; },
+    set newCollectionName(v) { newCollectionName = v; },
+    addCollection,
+    mutateCollection,
+    plainTitle,
+    removeCollection,
+    get liveCsp() { return liveCsp; },
+    get pluginDiscovery() { return pluginDiscovery; },
+    get pluginEngine() { return pluginEngine; },
+    get pluginInfo() { return pluginInfo; },
+    get pluginsView() { return pluginsView; },
+    get pluginsFound() { return pluginsFound; },
+    set pluginsFound(v) { pluginsFound = v; },
+    knownPlugins,
+    loadPluginInfo,
+    removePlugin,
+    setPluginEnabled,
+    get auth() { return auth; },
+    get historyError() { return historyError; },
+    get historyList() { return historyList; },
+    get baseSha() { return baseSha; },
+    set baseSha(v) { baseSha = v; },
+    get revertedSinceLoad() { return revertedSinceLoad; },
+    set revertedSinceLoad(v) { revertedSinceLoad = v; },
+    askConfirm,
+    loadHistory,
+    refreshBaseSha,
+    get updateError() { return updateError; },
+    get updateInfo() { return updateInfo; },
+    get updateBusy() { return updateBusy; },
+    set updateBusy(v) { updateBusy = v; },
+    get updateSkip() { return updateSkip; },
+    set updateSkip(v) { updateSkip = v; },
+    loadUpdateCheck,
+    get secBox() { return secBox; },
+    BG_DEFS,
+    BG_TYPES,
+    readVideoFile,
   });
 </script>
 
@@ -5500,572 +4716,27 @@
           {#if activePanel === 'pages'}
             <PagesPanel />
           {:else if activePanel === 'nav'}
-            <NavPanel {backgroundLayers} />
+            <NavPanel />
           {:else if activePanel === 'site'}
             <SitePanel />
           {:else if activePanel === 'theme'}
             <ThemePanel />
           {:else if activePanel === 'blocks'}
-            <div class="panel-body" class:locked={viewMode === 'mobile'}
-              title={viewMode === 'mobile' ? ta('tip.blocks.mobileLocked') : undefined}>
-              <input type="text" bind:value={blockSearch}
-                placeholder={ta('canvas.searchBlocks')} title={ta('canvas.searchBlocks')} />
-              {#if blockSearch.trim()}
-                <!-- An active search shows a flat, ranked hit list instead
-                     of the groups. -->
-                {#each searchBlockItems(panelBlockItems(), blockSearch, (item) => item.label) as item (item.label)}
-                  {#if item.act === 'image'}
-                    <label class="ghost filepick" title={ta('tip.webpAuto')}>
-                      {item.label}
-                      <input type="file" accept="image/*" onchange={addImage} />
-                    </label>
-                  {:else if item.act === 'galleryImages'}
-                    <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
-                      {item.label}
-                      <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
-                    </label>
-                  {:else}
-                    <button class="ghost" onclick={() => runPanelItem(item)}>{item.label}</button>
-                  {/if}
-                {:else}
-                  <p class="panel-hint">{ta('canvas.searchEmpty')}</p>
-                {/each}
-              {:else}
-              <details class="group">
-                <summary>{ta('blocks.text')}</summary>
-                <div class="group-items">
-                  <button class="ghost" onclick={() => addBlock('text')}>{ta('blocks.text')}</button>
-                  <button class="ghost" onclick={() => addBlock('text-box')}
-                    title={ta('tip.blocks.textBox')}>{ta('ui.textBox')}</button>
-                </div>
-              </details>
-              <button class="ghost" onclick={() => addBlock('button')}>{ta('blocks.button')}</button>
-              <label class="ghost filepick" title={ta('tip.webpAuto')}>
-                {ta('blocks.image')}
-                <input type="file" accept="image/*" onchange={addImage} />
-              </label>
-              <button class="ghost" title={ta('tip.blocks.video')}
-                onclick={() => addBlock('video')}>{ta('blocks.video')}</button>
-              <button class="ghost" title={ta('tip.blocks.icon')}
-                onclick={() => addBlock('icon')}>{ta('blocks.icon')}</button>
-              <button class="ghost" title={ta('tip.blocks.map')}
-                onclick={() => addBlock('map')}>{ta('blocks.map')}</button>
-              <button class="ghost" title={ta('tip.blocks.form')}
-                onclick={() => addBlock('form')}>{ta('blocks.form')}</button>
-              <button class="ghost" title={ta('tip.blocks.collection')}
-                onclick={() => addBlock('collection')}>{ta('blocks.collection')}</button>
-              <button class="ghost" title={ta('tip.blocks.faq')}
-                onclick={() => addBlock('faq')}>{ta('blocks.faq')}</button>
-              <button class="ghost" title={ta('tip.blocks.timeline')}
-                onclick={() => addBlock('timeline')}>{ta('blocks.timeline')}</button>
-              <button class="ghost" title={ta('tip.blocks.quote')}
-                onclick={() => addBlock('quote')}>{ta('blocks.quote')}</button>
-              <button class="ghost" title={ta('tip.blocks.stats')}
-                onclick={() => addBlock('stats')}>{ta('blocks.stats')}</button>
-              <button class="ghost" title={ta('tip.blocks.ribbon')}
-                onclick={() => addBlock('ribbon')}>{ta('blocks.ribbon')}</button>
-              <button class="ghost" title={ta('tip.blocks.table')}
-                onclick={() => addBlock('table')}>{ta('blocks.table')}</button>
-              <button class="ghost" title={ta('tip.blocks.share')}
-                onclick={() => addBlock('share')}>{ta('blocks.share')}</button>
-              <button class="ghost" title={ta('tip.blocks.countdown')}
-                onclick={() => addBlock('countdown')}>{ta('blocks.countdown')}</button>
-              <button class="ghost" title={ta('tip.blocks.audio')}
-                onclick={() => addBlock('audio')}>{ta('blocks.audio')}</button>
-              <button class="ghost" title={ta('tip.blocks.product')}
-                onclick={() => addBlock('product')}>{ta('blocks.product')}</button>
-              <button class="ghost" title={ta('tip.blocks.cart')}
-                onclick={() => addBlock('cart')}>{ta('blocks.cart')}</button>
-              <button class="ghost" title={ta('tip.blocks.checkout')}
-                onclick={() => addBlock('checkout')}>{ta('blocks.checkout')}</button>
-              <details class="group">
-                <summary>{ta('blocks.gallery')}</summary>
-                <div class="group-items">
-                  <button class="ghost" title={ta('tip.blocks.gallery')}
-                    onclick={() => addBlock('gallery')}>{ta('ui.emptyGallery')}</button>
-                  <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
-                    {ta('ui.galleryWithImages')}
-                    <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
-                  </label>
-                </div>
-              </details>
-              <details class="group">
-                <summary>{ta('blocks.calendar')}</summary>
-                <div class="group-items">
-                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar')}>{ta('calendar.viewList')}</button>
-                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-cards')}>{ta('calendar.viewCards')}</button>
-                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-month')}>{ta('calendar.viewMonth')}</button>
-                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-next')}>{ta('calendar.viewNext')}</button>
-                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-agenda')}>{ta('calendar.viewAgenda')}</button>
-                </div>
-                <!-- Every design with its picture, in the design picker: a choice adds a calendar in that design -->
-                <div class="group-items">
-                  <button class="ghost" title={ta('tip.calendar.picker.open')} onclick={() => (designPicker = { mode: 'add' })}>{ta('calendar.picker.open')}</button>
-                </div>
-              </details>
-              <details class="group">
-                <summary>{ta('group.shapes')}</summary>
-                <div class="group-items">
-                  <button class="ghost" onclick={() => addBlock('shape-line')}>{ta('shape.line')}</button>
-                  <button class="ghost" onclick={() => addBlock('shape-arrow')}>{ta('shape.arrow')}</button>
-                  <button class="ghost" onclick={() => addBlock('shape-circle')}>{ta('shape.circle')}</button>
-                  <button class="ghost" onclick={() => addBlock('shape-rect')}>{ta('shape.rect')}</button>
-                  <button class="ghost" onclick={() => addBlock('shape-triangle')}>{ta('shape.triangle')}</button>
-                </div>
-              </details>
-              {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
-                {@const blockGroupTemplates = templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
-                <details class="group">
-                  <summary>{ta('canvas.tabMyTemplates')}</summary>
-                  <div class="group-items">
-                    {#each blockGroupTemplates as id (id)}
-                      <button class="ghost" title={ta('canvas.insertGroup')}
-                        onclick={() => bridge?.sendInsertTemplate(id)}>{templateStores[id].data.mal.name}</button>
-                    {/each}
-                  </div>
-                </details>
-              {/if}
-              {#if pluginBlocks.length}
-                <details class="group">
-                  <summary>{ta('panel.plugins')}</summary>
-                  <div class="group-items">
-                    {#each pluginBlocks as entry (entry.type)}
-                      {#if entry.variants?.length}
-                        <details class="group">
-                          <summary>{entry.label}</summary>
-                          <div class="group-items">
-                            {#each entry.variants as variant (variant.label)}
-                              <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
-                                onclick={() => addPluginBlock(entry, variant.props)}>{variant.label}</button>
-                            {/each}
-                          </div>
-                        </details>
-                      {:else}
-                        <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
-                          onclick={() => addPluginBlock(entry)}>{entry.label}</button>
-                      {/if}
-                    {/each}
-                  </div>
-                </details>
-              {/if}
-              {/if}
-            </div>
+            <BlocksPanel />
           {:else if activePanel === 'grid'}
             <GridPanel />
           {:else if activePanel === 'properties'}
-            <div class="panel-body">
-              {#if selectedBlock}
-                <p class="panel-strong">{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</p>
-                <SearchField get={() => menu.propsQuery} set={(v) => (menu.propsQuery = v)} />
-                <ElementMenu wide={false} query={menu.propsQuery} />
-              {:else if activeSectionId}
-                <p class="panel-strong">{ta('lbl.section')}</p>
-                <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
-                  <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
-                    onchange={(e) => setSectionHeight(e.target.value)} /></label>
-                <hr class="gridmenu-divider" />
-                <label class="gridmenu-snap">
-                  <input type="checkbox" checked={sectionGrid !== null}
-                    onchange={(e) => toggleSectionGrid(e.target.checked)} />
-                  {ta('lbl.sectionGrid')}
-                </label>
-                {#if sectionGrid}
-                  <label>
-                    {ta('lbl.gridSize')}
-                    <span class="gridmenu-value">{sectionGrid.size} px</span>
-                  </label>
-                  <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
-                    oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
-                {/if}
-
-                <hr class="gridmenu-divider" />
-                <p class="panel-strong" title={ta('tip.props.sectionTheme')}>{ta('lbl.sectionTheme')}</p>
-                <div class="rs-grid">
-                  {#each [['', 'common.standard'], ...Object.entries(SECTION_THEME_LABELS)] as [id, key] (id)}
-                    {@const c = sectionThemeSample(id)}
-                    <button class="rs-card" class:on={sectionTheme === id}
-                      title={ta('tip.props.sectionTheme')} onclick={() => setSectionTheme(id)}>
-                      <span class="rs-sample" style="background: {c.bg}">
-                        <i class="rs-line" style="background: {c.text}"></i>
-                        <i class="rs-chip" style="background: {c.surface}"></i>
-                        <i class="rs-dot" style="background: {c.accent}"></i>
-                      </span>
-                      <span class="rs-name">{ta(key)}</span>
-                    </button>
-                  {/each}
-                </div>
-                <label title={ta('tip.props.anchor')}>{ta('lbl.anchor')}
-                  <span class="row-tools">
-                    <span class="gridmenu-value">#{activeSectionId}</span>
-                    <button class="ghost row-tool" title={ta('tip.props.copyAnchor')}
-                      onclick={() => navigator.clipboard?.writeText(`#${activeSectionId}`)}>{@html ICONS.copy}</button>
-                  </span></label>
-
-                <hr class="gridmenu-divider" />
-                <p class="panel-strong">{ta('lbl.background')}</p>
-                {@render backgroundLayers(sectionBgCtx, sectionBg)}
-
-                <hr class="gridmenu-divider" />
-                <p class="panel-strong" title={ta('tip.props.dividers')}>{ta('lbl.sectionDividers')}</p>
-                {#each [['top', 'lbl.dividerTop'], ['bottom', 'lbl.dividerBottom']] as [edge, key] (edge)}
-                  {@const own = sectionDivider[edge]}
-                  <label title={ta('tip.props.dividers')}>{ta(key)}
-                    <Dropdown value={own?.shape ?? ''}
-                      options={[['', ta('common.none')], ...DIVIDER_SHAPES.map((id) => [id, ta(`opt.divider.${id}`)])]}
-                      onchange={(v) => setSectionDivider(edge, 'shape', v)} /></label>
-                  <!-- The edge's own settings, only while it has a shape -->
-                  {#if own?.shape}
-                    <div class="ctl-row">
-                      <span class="mini-label ctl-name">{ta('lbl.height')}</span>
-                      <input type="range" min={DIVIDER_HEIGHT.min} max={DIVIDER_HEIGHT.max} step="4" value={own.height ?? DIVIDER_HEIGHT.dflt}
-                        oninput={(e) => setSectionDivider(edge, 'height', e.target.valueAsNumber)} />
-                      <span class="gridmenu-value">{own.height ?? DIVIDER_HEIGHT.dflt} px</span>
-                    </div>
-                    <label title={ta('tip.divider.color')}>{ta('lbl.color')}
-                      <ColorPicker value={own.color ?? 'bg'} tokens={themeSwatches()}
-                        label={ta('tip.divider.color')} onchange={(hex) => setSectionDivider(edge, 'color', hex)} /></label>
-                    <label class="gridmenu-snap" title={ta('tip.divider.flip')}>
-                      <input type="checkbox" checked={own.flip === true}
-                        onchange={(e) => setSectionDivider(edge, 'flip', e.target.checked)} />
-                      {ta('lbl.dividerFlip')}
-                    </label>
-                    <label class="gridmenu-snap" title={ta('tip.divider.invert')}>
-                      <input type="checkbox" checked={own.invert === true}
-                        onchange={(e) => setSectionDivider(edge, 'invert', e.target.checked)} />
-                      {ta('lbl.patternInvert')}
-                    </label>
-                  {/if}
-                {/each}
-
-                <hr class="gridmenu-divider" />
-                <label title={ta('tip.props.sectionAnim')}>{ta('lbl.animIn')}
-                  <Dropdown value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
-                    options={ENTRANCE_OPTIONS}
-                    onchange={(v) => setSectionAnimation(v || null)} /></label>
-                {#if isEntrance(sectionAnim)}
-                  <label>{ta('lbl.durationMs')}
-                    <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
-                      onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
-                  <label>{ta('lbl.delayMs')}
-                    <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay ?? 0}
-                      onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
-                  {#if sectionAnim.type === 'stagger'}
-                    <label title={ta('tip.props.staggerEffect')}>{ta('lbl.staggerEffect')}
-                      <Dropdown value={sectionAnim.props.effect ?? 'slide-up'}
-                        options={[['fade-in', ta('anim.fadeIn')], ['slide-up', ta('anim.slideUp')], ['zoom-in', ta('anim.zoomIn')]]}
-                        onchange={(v) => setSectionAnimStr('effect', v)} /></label>
-                    <label title={ta('tip.props.staggerStep')}>{ta('lbl.stepMs')}
-                      <input type="number" min="0" max="1000" step="10" value={sectionAnim.props.step ?? 90}
-                        onchange={(e) => setSectionAnimProp('step', Number(e.target.value))} /></label>
-                    <label title={ta('tip.props.staggerPattern')}>{ta('lbl.pattern')}
-                      <Dropdown value={sectionAnim.props.pattern ?? 'sequence'}
-                        options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')],
-                          ['rows', ta('opt.stagger.rows')], ['center', ta('opt.stagger.center')]]}
-                        onchange={(v) => setSectionAnimStr('pattern', v)} /></label>
-                  {/if}
-                {/if}
-                <label title={ta('tip.props.sectionHover')}>{ta('lbl.onHover')}
-                  <Dropdown value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
-                    options={HOVER_OPTIONS}
-                    onchange={(v) => setSectionHover(v || null)} /></label>
-              {:else}
-                <p class="panel-hint">{ta('hint.props.empty')}</p>
-              {/if}
-            </div>
+            <PropertiesPanel />
           {:else if activePanel === 'footer'}
-            <FooterPanel {backgroundLayers} />
+            <FooterPanel />
           {:else if activePanel === 'collections'}
-            <div class="panel-body">
-              {#if collectionIds.length}
-                <label>{ta('blocks.collection')}
-                  <Dropdown value={activeCollection ?? ''}
-                    options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
-                    onchange={(v) => (activeCollection = v || null)} /></label>
-              {/if}
-              {#if activeCollection && collectionsView[activeCollection]}
-                {@const collectionView = collectionsView[activeCollection]}
-                <span class="toolbar-row">
-                  <button class="ghost action" onclick={() => addCollectionEntry(activeCollection)}>{ta('ui.addEntry')}</button>
-                  <button class="ghost action" title={ta('tip.collections.exportCsv')}
-                    onclick={() => exportCollectionCsv(activeCollection)}>{ta('ui.exportCsv')}</button>
-                  <label class="ghost filepick" title={ta('tip.collections.importCsv')}>
-                    {ta('ui.importCsv')}
-                    <input type="file" accept=".csv,text/csv" onchange={(e) => importCollectionCsv(activeCollection, e)} />
-                  </label>
-                  <button class="ghost row-tool" title={ta('tip.collections.deleteCollection')}
-                    onclick={() => removeCollection(activeCollection)}>{@html ICONS.cross}</button>
-                </span>
-                {#each collectionView.entries as entry, i (entry.id)}
-                  <!-- Collapsible entry: title + date in the summary, the fields inside (panel space) -->
-                  <details class="group collection-entry">
-                    <summary>{plainTitle(entry.title)}{collectionView.kind === 'products'
-                      ? (entry.price != null ? ` · ${entry.price}` : '')
-                      : (entry.date ? ` · ${entry.date}` : '')}</summary>
-                    <div class="group-items">
-                      <span class="toolbar-row">
-                        <input value={entry.title} title={ta('lbl.title')}
-                          onchange={(e) => setEntryField(activeCollection, entry.id, 'title', e.target.value || ta('ui.untitled'))} />
-                        <span class="row-tools">
-                          <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-                          <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, 1)}
-                            disabled={i === collectionView.entries.length - 1}>{@html ICONS.down}</button>
-                          <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')}
-                            onclick={() => removeEntry(activeCollection, entry.id)}>{@html ICONS.cross}</button>
-                        </span>
-                      </span>
-                      {#if collectionView.kind !== 'products'}
-                        <label>{ta('lbl.date')}
-                          <input type="date" value={entry.date ?? ''}
-                            onchange={(e) => setEntryField(activeCollection, entry.id, 'date', e.target.value)} /></label>
-                      {/if}
-                      <textarea rows="3" placeholder={ta('ph.collections.text')}
-                        value={entry.text ?? ''}
-                        onchange={(e) => setEntryField(activeCollection, entry.id, 'text', e.target.value)}></textarea>
-                      {#if collectionView.kind !== 'products'}
-                        <label>{ta('lbl.link')}
-                          <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
-                            onchange={(e) => setEntryField(activeCollection, entry.id, 'href', e.target.value)} /></label>
-                      {/if}
-                      <span class="toolbar-row">
-                        <label class="ghost filepick">
-                          {entry.image ? ta('ui.changeImage') : ta('ui.addImage')}
-                          <input type="file" accept="image/*" onchange={(e) => setEntryImage(activeCollection, entry.id, e)} />
-                        </label>
-                        {#if entry.image}
-                          <img class="site-icon-preview" src={entry.image} alt="" />
-                          <button class="ghost row-tool" title={ta('tip.removeImage')}
-                            onclick={() => setEntryField(activeCollection, entry.id, 'image', '')}>{@html ICONS.cross}</button>
-                        {/if}
-                      </span>
-                      {#if collectionView.kind === 'products'}
-                        <!-- The product fields (the shop): price, member price, badge, sizes and colors. -->
-                        <label>{ta('lbl.price')}
-                          <input type="number" min="0" step="0.01" value={entry.price ?? ''}
-                            onchange={(e) => setEntryField(activeCollection, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
-                        <label title={ta('tip.entry.memberPrice')}>{ta('lbl.memberPrice')}
-                          <input type="number" min="0" step="0.01" value={entry.memberPrice ?? ''}
-                            onchange={(e) => setEntryField(activeCollection, entry.id, 'memberPrice', e.target.value === '' ? '' : Number(e.target.value))} /></label>
-                        <label title={ta('tip.entry.badge')}>{ta('lbl.productBadge')}
-                          <input value={entry.badge ?? ''}
-                            onchange={(e) => setEntryField(activeCollection, entry.id, 'badge', e.target.value)} /></label>
-                        <label title={ta('tip.entry.sizes')}>{ta('lbl.sizes')}
-                          <input value={(entry.sizes ?? []).join(', ')} placeholder={ta('ph.sizes')}
-                            onchange={(e) => setEntrySizes(activeCollection, entry.id, e.target.value)} /></label>
-                        {#each entry.colors ?? [] as color, ci (ci)}
-                          <span class="toolbar-row">
-                            <input value={color.name} placeholder={ta('ph.colorName')}
-                              onchange={(e) => setEntryColor(activeCollection, entry.id, ci, 'name', e.target.value)} />
-                            <label class="ghost filepick">
-                              {color.image ? ta('ui.changeImage') : ta('ui.addImage')}
-                              <input type="file" accept="image/*" onchange={(e) => setEntryColorImage(activeCollection, entry.id, ci, e)} />
-                            </label>
-                            {#if color.image}
-                              <img class="site-icon-preview" src={color.image} alt="" />
-                            {/if}
-                            <button class="ghost row-tool" onclick={() => removeEntryColor(activeCollection, entry.id, ci)}>{@html ICONS.cross}</button>
-                          </span>
-                        {/each}
-                        <button class="ghost action" title={ta('tip.entry.colors')}
-                          onclick={() => addEntryColor(activeCollection, entry.id)}>{ta('ui.addColor')}</button>
-                      {/if}
-                    </div>
-                  </details>
-                {/each}
-                {#if !collectionView.entries.length}
-                  <p class="panel-hint">{ta('hint.collections.empty')}</p>
-                {/if}
-                <hr class="gridmenu-divider" />
-              {/if}
-              <label>{ta('lbl.newCollectionName')}
-                <input bind:value={newCollectionName} placeholder={ta('ph.collections.name')}
-                  onkeydown={(e) => e.key === 'Enter' && addCollection()} /></label>
-              <label>{ta('common.type')}
-                <Dropdown value={newCollectionKind}
-                  options={COLLECTION_KINDS}
-                  onchange={(v) => (newCollectionKind = v)} /></label>
-              <button class="ghost action" onclick={addCollection} disabled={!newCollectionName.trim()}>{ta('ui.createCollection')}</button>
-            </div>
+            <CollectionsPanel />
           {:else if activePanel === 'plugins'}
-            <div class="panel-body">
-              {#if !knownPlugins().length}
-                <p class="panel-hint">{ta('hint.plugins.empty')}</p>
-              {/if}
-              {#each knownPlugins() as id (id)}
-                {@const info = pluginInfo[id]}
-                {@const enabled = (pluginsView?.enabled ?? []).includes(id)}
-                <div class="plugin-row" class:plugin-broken={info?.errors?.length}>
-                  <span class="plugin-head">
-                    <span class="plugin-name">{info?.names?.[currentAdminLang()] ?? info?.name ?? id}</span>
-                    {#if info?.version}<span class="plugin-meta">v{info.version}</span>{/if}
-                    <span class="row-tools">
-                      <label class="gridmenu-snap plugin-toggle" title={enabled ? ta('tip.plugins.on') : ta('tip.plugins.off')}>
-                        <input type="checkbox" checked={enabled} disabled={Boolean(info?.errors?.length)}
-                          onchange={(e) => setPluginEnabled(id, e.target.checked)} />
-                        {enabled ? ta('ui.on') : ta('ui.off')}
-                      </label>
-                      <button class="ghost row-tool" title={ta('tip.plugins.remove')}
-                        onclick={() => removePlugin(id)}>{@html ICONS.cross}</button>
-                    </span>
-                  </span>
-                  {#if info?.errors?.length}
-                    <p class="panel-hint plugin-warn">{info.errors.join('; ')}</p>
-                  {:else if info && !info.satisfied}
-                    <p class="panel-hint plugin-warn">{ta('plugin.engineMismatch', { required: info.requiresEngine, current: pluginEngine })}</p>
-                  {:else if info?.csp && cspMissing(info.csp).length}
-                    <p class="panel-hint plugin-warn">{ta('plugin.cspNeeded', { list: cspMissing(info.csp).join(', ') })}</p>
-                  {/if}
-                  {#if info?.languages?.length}
-                    <p class="panel-hint">{ta('plugin.languages', { list: info.languages.map((l) => l.name).join(', ') })}</p>
-                  {/if}
-                </div>
-              {/each}
-              {#if pluginsFound.length}
-                <hr class="gridmenu-divider" />
-                <p class="panel-strong">{ta('hint.plugins.found')}</p>
-                {#each pluginsFound as id (id)}
-                  <div class="plugin-row">
-                    <span class="plugin-head">
-                      <span class="plugin-name">{pluginInfo[id]?.names?.[currentAdminLang()] ?? pluginInfo[id]?.name ?? id}</span>
-                      {#if pluginInfo[id]?.version}<span class="plugin-meta">v{pluginInfo[id].version}</span>{/if}
-                      <span class="row-tools">
-                        <button class="ghost row-tool" title={ta('tip.plugins.addFound')}
-                          onclick={() => addFoundPlugin(id)}>{@html ICONS.right}</button>
-                      </span>
-                    </span>
-                  </div>
-                {/each}
-              {/if}
-              {#if pluginDiscovery === 'ok'}
-                {#if !pluginsFound.length}
-                  <p class="panel-hint">{ta('hint.plugins.autoDiscover')}</p>
-                {/if}
-              {:else}
-                <!-- Fallback when repo discovery is unavailable (local server / not logged in) -->
-                <hr class="gridmenu-divider" />
-                <input placeholder={ta('ph.plugins.folder')} bind:value={newPluginId}
-                  onkeydown={(e) => e.key === 'Enter' && addPlugin()} />
-                <button class="ghost action" onclick={addPlugin} disabled={!newPluginId.trim()}>{ta('ui.addPlugin')}</button>
-                {#if pluginError}
-                  <p class="panel-hint plugin-warn">{pluginError}</p>
-                {/if}
-              {/if}
-            </div>
+            <PluginsPanel />
           {:else if activePanel === 'history'}
-            <div class="panel-body">
-              {#if historyList === null}
-                <p class="panel-hint">{ta('hint.history.loading')}</p>
-              {:else}
-                {#if historyError}
-                  <p class="panel-hint">{historyError}</p>
-                {/if}
-                {#if historyList.length > 0}
-                  <button class="ghost" onclick={revertLast}
-                    disabled={historyBusy || !auth?.allowed}
-                    title={auth?.allowed ? ta('tip.history.revert') : ta('tip.history.needsAccess')}>
-                    {ta('ui.revertLast')}
-                  </button>
-                  {#each historyList as c, i (c.sha)}
-                    <div class="history-row" class:head={i === 0}>
-                      <span class="history-msg" title={c.sha}>{c.message}</span>
-                      <span class="history-meta">
-                        {c.author}{c.date ? ` · ${historyDate.format(new Date(c.date))}` : ''}
-                      </span>
-                    </div>
-                  {/each}
-                {/if}
-              {/if}
-            </div>
+            <HistoryPanel />
           {:else if activePanel === 'update'}
-            <div class="panel-body">
-              {#if updateBusy && !updateInfo}
-                <p class="panel-hint">{ta('update.checking')}</p>
-              {:else if updateError}
-                <p class="panel-hint">{updateError}</p>
-                <button class="ghost" onclick={loadUpdateCheck}>{ta('update.retry')}</button>
-              {:else if updateInfo}
-                <div class="update-versions">
-                  <span class="update-from">{ta('update.current', { version: updateInfo.current })}</span>
-                  {#if !updateInfo.upToDate}
-                    <span class="update-arrow">{@html ICONS.right}</span>
-                    <span class="badge">{updateInfo.target}</span>
-                  {/if}
-                </div>
-                {#if updateInfo.upToDate}
-                  <p class="panel-hint">{ta('update.upToDate')}</p>
-                {:else}
-                  <p class="update-summary">{ta('update.summary', {
-                    writes: updateInfo.changes.filter((c) => c.action === 'write').length,
-                    deletes: updateInfo.changes.filter((c) => c.action === 'delete').length,
-                  })}</p>
-                  {#if updateInfo.notes}
-                    <details class="group">
-                      <summary>{ta('update.aboutVersion', { target: updateInfo.target })}</summary>
-                      <div class="group-items">
-                        <p class="update-notes">{updateInfo.notes}</p>
-                      </div>
-                    </details>
-                  {/if}
-                  {#if updateInfo.headers?.upstream}
-                    <details class="group">
-                      <summary title={ta('update.headersManual')}>
-                        <span class="update-warn">{@html ICONS.warn}</span> {ta('update.headersTitle')}
-                      </summary>
-                      <div class="group-items">
-                        <pre class="update-headers">{updateInfo.headers.upstream}</pre>
-                      </div>
-                    </details>
-                  {/if}
-                  <!-- Hand-edited engine files must be seen without a click;
-                       the rest of the atom group is one combined swap and
-                       is folded away. -->
-                  {#each updateInfo.changes.filter((c) => c.atom && c.conflict) as c (c.path)}
-                    <div class="update-row">
-                      <span class="update-path" title={c.path}>{c.path}</span>
-                      <span class="update-flags">
-                        {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
-                        <span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>
-                      </span>
-                    </div>
-                  {/each}
-                  <details class="group">
-                    <summary title={ta('update.atomGroup.title')}>
-                      {ta('update.atomTitle')} · {updateInfo.changes.filter((c) => c.atom).length}
-                    </summary>
-                    <div class="group-items">
-                      {#each updateInfo.changes.filter((c) => c.atom && !c.conflict) as c (c.path)}
-                        <div class="update-row">
-                          <span class="update-path" title={c.path}>{c.path}</span>
-                          {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
-                        </div>
-                      {/each}
-                    </div>
-                  </details>
-                  {#if updateInfo.changes.some((c) => !c.atom)}
-                    <div class="ctl-row update-opt-head">
-                      <p class="panel-strong">{ta('update.optionalTitle')}</p>
-                      <span class="mini-label">{ta('update.keepMine')}</span>
-                    </div>
-                    {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
-                      <div class="update-row">
-                        <span class="update-path" class:skipped={updateSkip.has(c.path)} title={c.path}>{c.path}</span>
-                        <span class="update-flags">
-                          {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
-                          {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
-                          <input type="checkbox" checked={updateSkip.has(c.path)}
-                            onchange={() => toggleUpdateSkip(c.path)}
-                            title={ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
-                        </span>
-                      </div>
-                    {/each}
-                  {/if}
-                  <button class="primary update-run" onclick={runUpdate}
-                    disabled={updateBusy || !auth?.allowed}
-                    title={auth?.allowed ? ta('update.run.title') : ta('tip.history.needsAccess')}>
-                    {ta('update.run', { target: updateInfo.target })}
-                  </button>
-                {/if}
-              {/if}
-            </div>
+            <UpdatePanel />
           {/if}
         </aside>
       {/if}
@@ -6155,447 +4826,6 @@
     </div>
   {/if}
 </div>
-
-{#snippet bgImageRows(bg, i, layer)}
-  {#if (layer.props.source ?? 'upload') !== 'folder'}
-    <label class="ghost filepick" title={ta('tip.bg.addImages')}>
-      {ta('ui.addImages')}
-      <input type="file" accept="image/*" multiple onchange={(e) => addBgGalleryImages(bg, i, e)} />
-    </label>
-    {#each layer.props.images ?? [] as img, j (j)}
-      <span class="toolbar-row">
-        <img class="site-icon-preview" src={img.src} alt="" />
-        <span class="row-tools">
-          <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
-          <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, 1)}
-            disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
-          <button class="ghost row-tool" title={ta('tip.removeImage')}
-            onclick={() => removeBgGalleryImage(bg, i, j)}>{@html ICONS.cross}</button>
-        </span>
-      </span>
-      <label>{ta('lbl.focusX')}
-        <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
-      <input type="range" min="0" max="1" step="0.01" value={img.x ?? 0.5}
-        oninput={(e) => setBgGalleryImageProp(bg, i, j, 'x', Number(e.target.value))} />
-      <label>{ta('lbl.focusY')}
-        <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
-      <input type="range" min="0" max="1" step="0.01" value={img.y ?? 0.5}
-        oninput={(e) => setBgGalleryImageProp(bg, i, j, 'y', Number(e.target.value))} />
-    {/each}
-  {/if}
-{/snippet}
-
-{#snippet bgFolderRows(bg, i, layer)}
-  {@const fp = galleryView(layer)}
-  <label title={ta('tip.bg.photoSource')}>{ta('lbl.photoSource')}
-    <Dropdown value={fp.source ?? 'upload'}
-      options={[['upload', ta('opt.photoSource.upload')], ['folder', ta('opt.photoSource.folder')]]}
-      onchange={(v) => setBgProp(bg, i, 'source', v)} /></label>
-  {#if (fp.source ?? 'upload') === 'folder'}
-    {@const parsed = parsePhotoSource(fp.folder ?? '')}
-    <!-- A Google Photos album and a picture list come in their own order: there is no name or date to sort by -->
-    {@const sortable = !parsed || parsed.provider === 'drive' || parsed.provider === 'nextcloud'}
-    <label title={ta('tip.bg.photoFolder')}>{ta('lbl.photoFolder')}
-      <input type="text" class:bad-target={(fp.folder ?? '').trim() && !parsed}
-        value={fp.folder ?? ''} placeholder="https://drive.google.com/drive/folders/..."
-        onchange={(e) => setBgProp(bg, i, 'folder', e.target.value.trim())} /></label>
-    <label title={ta('tip.bg.folderOrder')}>{ta('lbl.folderOrder')}
-      <Dropdown value={sortable || fp.order === 'random' ? (fp.order ?? 'name') : 'name'}
-        options={sortable
-          ? [['name', ta('opt.folderOrder.name')], ['newest', ta('opt.folderOrder.newest')], ['random', ta('opt.folderOrder.random')]]
-          : [['name', ta('opt.folderOrder.listed')], ['random', ta('opt.folderOrder.random')]]}
-        onchange={(v) => setBgProp(bg, i, 'order', v)} /></label>
-    <label title={ta('tip.bg.folderMax')}>{ta('lbl.folderMax')}
-      <input type="number" min="1" max="60" value={fp.folderMax ?? 24}
-        onchange={(e) => setBgProp(bg, i, 'folderMax', Number(e.target.value))} /></label>
-    <button type="button" class="ghost action" disabled={!parsed} onclick={() => checkBgFolder(bg, i, layer)}>
-      {@html ICONS.eye} {ta('ui.checkFolder')}
-    </button>
-    {#if folderStatus[folderKey(bg, i)]}
-      <p class="folder-status" class:err={folderStatus[folderKey(bg, i)].err}>{folderStatus[folderKey(bg, i)].text}</p>
-    {/if}
-  {/if}
-{/snippet}
-
-{#snippet bgMotionRows(bg, i, layer)}
-  <label title={ta('tip.bg.imageMotion')}>{ta('lbl.motion')}
-    <Dropdown value={layer.props.motion ?? 'none'}
-      options={[['none', ta('common.none')], ['kenburns', ta('opt.bgMotion.kenburns')], ['drift', ta('opt.bgMotion.drift')]]}
-      onchange={(v) => setBgProp(bg, i, 'motion', v)} /></label>
-  {#if (layer.props.motion ?? 'none') !== 'none'}
-    <label>{ta('lbl.motionSpeed')}
-      <span class="gridmenu-value">{layer.props.motionSpeed ?? 20} s</span></label>
-    <input type="range" min="6" max="60" step="1" value={layer.props.motionSpeed ?? 20}
-      oninput={(e) => setBgProp(bg, i, 'motionSpeed', Number(e.target.value))} />
-  {/if}
-{/snippet}
-
-{#snippet backgroundLayers(bg, layers)}
-  {#each layers as layer, i (i)}
-    <div class="bg-layer">
-      <span class="nav-line">
-        <Dropdown value={layer.type} title={ta('tip.bg.changeType')}
-          options={BG_TYPES.map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])}
-          onchange={(v) => changeBgLayerType(bg, i, v)} />
-        <span class="row-tools">
-          <button class="ghost row-tool" title={ta('hint.bg.order')}
-            onclick={() => moveBgLayer(bg, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-          <button class="ghost row-tool" title={ta('hint.bg.order')}
-            onclick={() => moveBgLayer(bg, i, 1)}
-            disabled={i === layers.length - 1}>{@html ICONS.down}</button>
-          <button class="ghost row-tool" title={ta('tip.bg.removeLayer')} onclick={() => removeBgLayer(bg, i)}>{@html ICONS.cross}</button>
-        </span>
-      </span>
-      {#if layer.type === 'color'}
-        <label>{ta('lbl.color')}
-          <ColorPicker value={layer.props.value} tokens={themeSwatches()}
-            label={ta('tip.bg.layerColor')} onchange={(hex) => setBgProp(bg, i, 'value', hex)} /></label>
-        <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
-          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-      {:else if layer.type === 'gradient'}
-        {@const g = gradientProps(layer)}
-        {@const shareSum = g.stops.reduce((a, s) => a + Math.max(0, Number(s.share) || 0), 0)}
-        <label>{ta('blocks.shape')}
-          <Dropdown value={g.kind ?? 'linear'}
-            options={[['linear', ta('opt.grad.linear')], ['radial', ta('opt.grad.radial')]]}
-            onchange={(v) => setGradKind(bg, i, v)} /></label>
-        {#each g.stops as stop, si (si)}
-          <span class="nav-line grad-stop"
-            class:dragging={stopDrag?.layer === i && stopDrag.from === si}
-            class:drop-above={stopDrag?.layer === i && stopDrag.insert === si}
-            class:drop-below={stopDrag?.layer === i && stopDrag.insert === g.stops.length && si === g.stops.length - 1}>
-            <span class="grad-grip" title={ta('tip.bg.dragStop')}
-              onpointerdown={(e) => startStopDrag(bg, e, i, si)}>
-              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"/><circle cx="11" cy="3" r="1.4"/><circle cx="5" cy="8" r="1.4"/><circle cx="11" cy="8" r="1.4"/><circle cx="5" cy="13" r="1.4"/><circle cx="11" cy="13" r="1.4"/></svg>
-            </span>
-            <ColorPicker value={stop.color} tokens={themeSwatches()}
-              label={ta('tip.bg.stopColor')} onchange={(hex) => setGradStop(bg, i, si, { color: hex })} />
-            <input type="range" class="tb-grow" min="0" max="100" step="1" value={stop.share ?? 50}
-              title={ta('tip.bg.stopShare')}
-              oninput={(e) => setGradStop(bg, i, si, { share: Number(e.target.value) })} />
-            <span class="gridmenu-value">{shareSum > 0 ? Math.round((Math.max(0, Number(stop.share) || 0) / shareSum) * 100) : Math.round(100 / g.stops.length)}%</span>
-            {#if g.stops.length > 2}
-              <button class="ghost row-tool" title={ta('tip.bg.removeStop')}
-                onclick={() => removeGradStop(bg, i, si)}>{@html ICONS.cross}</button>
-            {/if}
-          </span>
-        {/each}
-        <button class="ghost action" title={ta('tip.bg.addStop')}
-          onclick={() => addGradStop(bg, i)}>{ta('ui.addStop')}</button>
-        {#if (g.kind ?? 'linear') === 'radial'}
-          <label>{ta('lbl.centerX')}
-            <span class="gridmenu-value">{Math.round((g.x ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.01" value={g.x ?? 0.5}
-            oninput={(e) => setGradProp(bg, i, 'x', Number(e.target.value))} />
-          <label>{ta('lbl.centerY')}
-            <span class="gridmenu-value">{Math.round((g.y ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.01" value={g.y ?? 0.5}
-            oninput={(e) => setGradProp(bg, i, 'y', Number(e.target.value))} />
-        {:else}
-          <label>{ta('lbl.angle')}
-            <span class="gridmenu-value">{g.angle}°</span></label>
-          <input type="range" min="0" max="360" step="5" value={g.angle}
-            oninput={(e) => setGradProp(bg, i, 'angle', Number(e.target.value))} />
-        {/if}
-        <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round((g.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.01" value={g.opacity ?? 1}
-          oninput={(e) => setGradProp(bg, i, 'opacity', Number(e.target.value))} />
-        <label title={ta('tip.bg.motion')}>{ta('lbl.motion')}
-          <Dropdown value={g.animation ?? 'none'}
-            options={GRAD_ANIMATIONS[(g.kind ?? 'linear') === 'radial' ? 'radial' : 'linear']}
-            onchange={(v) => setGradProp(bg, i, 'animation', v)} /></label>
-      {:else if layer.type === 'glow'}
-        <label>{ta('lbl.color')}
-          <ColorPicker value={layer.props.color} tokens={themeSwatches()}
-            label={ta('tip.bg.glowColor')} onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
-        <label>{ta('lbl.posX')}
-          <span class="gridmenu-value">{Math.round(layer.props.x * 100)}%</span></label>
-        <input type="range" min="0" max="1" step="0.01" value={layer.props.x}
-          oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-        <label>{ta('lbl.posY')}
-          <span class="gridmenu-value">{Math.round(layer.props.y * 100)}%</span></label>
-        <input type="range" min="0" max="1" step="0.01" value={layer.props.y}
-          oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
-        <label>{ta('lbl.size')}
-          <span class="gridmenu-value">{Math.round(layer.props.radius * 100)}%</span></label>
-        <input type="range" min="0.1" max="1" step="0.01" value={layer.props.radius}
-          oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
-        <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity}
-          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-      {:else if layer.type === 'grain'}
-        <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
-        <input type="range" min="0" max="1" step="0.01" value={layer.props.opacity}
-          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-      {:else if layer.type === 'pattern'}
-        <label>{ta('lbl.bgPattern')}
-          <Dropdown value={bgPattern(layer.props.pattern)}
-            options={BG_PATTERNS.map((id) => [id, ta(`opt.bgPattern.${id}`)])}
-            onchange={(v) => setBgProp(bg, i, 'pattern', v)} /></label>
-        <label>{ta('lbl.color')}
-          <ColorPicker value={layer.props.color ?? 'text'} tokens={themeSwatches()}
-            label={ta('lbl.color')} onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
-        <label>{ta('lbl.size')}
-          <span class="gridmenu-value">{layer.props.size ?? PATTERN_SIZE.dflt} px</span></label>
-        <input type="range" min={PATTERN_SIZE.min} max={PATTERN_SIZE.max} step="2" value={layer.props.size ?? PATTERN_SIZE.dflt}
-          oninput={(e) => setBgProp(bg, i, 'size', Number(e.target.value))} />
-        <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? PATTERN_OPACITY) * 100)}%</span></label>
-        <input type="range" min="0" max="1" step="0.01" value={layer.props.opacity ?? PATTERN_OPACITY}
-          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-        <label>{ta('lbl.patternRotation')}
-          <span class="gridmenu-value">{layer.props.rotation ?? 0}&deg;</span></label>
-        <input type="range" min="0" max="180" step="5" value={layer.props.rotation ?? 0}
-          oninput={(e) => setBgProp(bg, i, 'rotation', Number(e.target.value))} />
-        <label class="gridmenu-snap" title={ta('tip.bg.patternInvert')}>
-          <input type="checkbox" checked={layer.props.invert === true}
-            onchange={(e) => setBgProp(bg, i, 'invert', e.target.checked)} />
-          {ta('lbl.patternInvert')}
-        </label>
-      {:else if layer.type === 'image'}
-        <label class="ghost filepick" title={ta('tip.webpAuto')}>
-          {layer.props.src ? ta('ui.changeImage') : ta('ui.chooseImage')}
-          <input type="file" accept="image/*" onchange={(e) => setBgImage(bg, i, e)} />
-        </label>
-        {@const isTile = layer.props.fit === 'tile' || layer.props.fit === 'repeat'}
-        <label title={ta('tip.bg.fit')}>{ta('lbl.imageFit')}
-          <Dropdown value={isTile ? 'tile' : 'plain'}
-            options={[['plain', ta('opt.img.plain')], ['tile', ta('opt.img.tile')]]}
-            onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-        <label title={ta('tip.bg.size')}>{ta('lbl.size')}</label>
-        <div class="sizestep">
-          <button type="button" title={ta('tip.smaller')} onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, -0.05)}>−</button>
-          <input type="number" min="10" max="400" value={Math.round((layer.props.size ?? 1) * 100)}
-            onchange={(e) => setBgSizePct(bg, i, e.target.value)} />
-          <span class="sizeunit">%</span>
-          <button type="button" title={ta('tip.larger')} onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, 0.05)}>+</button>
-        </div>
-        {#if !isTile}
-          <div class="sizefill">
-            <button type="button" class="ghost" title={ta('tip.bg.cover')} onclick={() => setBgFillSize(bg, i, layer, 'cover')}>{ta('ui.cover')}</button>
-            <button type="button" class="ghost" title={ta('opt.fitFrame.contain')} onclick={() => setBgFillSize(bg, i, layer, 'contain')}>{ta('opt.fit.contain')}</button>
-          </div>
-          <label title={ta('tip.bg.position')}>{ta('lbl.position')}</label>
-          <div class="focalpad" onpointerdown={(e) => startFocalDrag(e, bg, i, 'xy')}
-            style="--fx:{Math.max(0, Math.min(1, layer.props.x ?? 0.5)) * 100}%; --fy:{Math.max(0, Math.min(1, layer.props.y ?? 0.5)) * 100}%">
-            <span class="focaldot"></span>
-          </div>
-          <label class="sub">{ta('lbl.horizontal')}
-            <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="-0.5" max="1.5" step="0.01" value={layer.props.x ?? 0.5}
-            oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-          <label class="sub">{ta('lbl.vertical')}
-            <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="-0.5" max="1.5" step="0.01" value={layer.props.y ?? 0.5}
-            oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
-        {/if}
-        <label>{ta('lbl.blur')}
-          <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
-        <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
-          oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
-        <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
-          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-        {@render bgMotionRows(bg, i, layer)}
-        <label class="gridmenu-snap" title={ta('tip.bg.parallax')}>
-          <input type="checkbox" checked={(layer.props.parallax ?? 0) > 0}
-            onchange={(e) => setBgProp(bg, i, 'parallax', e.target.checked ? 0.3 : 0)} />
-          {ta('lbl.parallax')}
-        </label>
-        {#if (layer.props.parallax ?? 0) > 0}
-          <label>{ta('lbl.parallaxStrength')}
-            <span class="gridmenu-value">{Math.round((layer.props.parallax ?? 0) * 100)}%</span></label>
-          <input type="range" min="0.1" max="1" step="0.01" value={layer.props.parallax ?? 0.3}
-            oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
-          <label title={ta('tip.bg.bleed')}>{ta('lbl.bleed')}
-            <Dropdown value={layer.props.bleed ?? 'none'}
-              options={[['none', ta('common.none')], ['up', ta('opt.bleed.up')], ['down', ta('opt.bleed.down')], ['both', ta('opt.brand.both')]]}
-              onchange={(v) => setBgProp(bg, i, 'bleed', v)} /></label>
-        {/if}
-      {:else if layer.type === 'slideshow'}
-        {@const gp = galleryView(layer)}
-        {@const gstyle = gp.style ?? 'floating'}
-        {@const gmotion = styleMotion(gstyle, gp.motion)}
-        {@const fixedSeed = (gp.seed ?? 0) > 0}
-        {@render bgFolderRows(bg, i, layer)}
-        {@render bgImageRows(bg, i, layer)}
-        <label title={ta('tip.bg.galleryStyle')}>{ta('lbl.galleryStyle')}
-          <Dropdown value={gstyle}
-            options={GALLERY_STYLES.map((st) => [st, ta(`opt.galleryStyle.${st}`)])}
-            onchange={(v) => setBgProp(bg, i, 'style', v)} /></label>
-        {#if gstyle === 'fill'}
-          <label>{ta('lbl.imageFit')}
-            <Dropdown value={gp.fit ?? 'cover'}
-              options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
-              onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-          <label>{ta('lbl.secondsPerImage')}
-            <span class="gridmenu-value">{gp.interval ?? 12} s</span></label>
-          <input type="range" min="0.5" max="90" step="0.5" value={gp.interval ?? 12}
-            oninput={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} />
-          <label>{ta('lbl.transition')}
-            <span class="gridmenu-value">{(gp.fade ?? 1.5).toFixed(1)} s</span></label>
-          <input type="range" min="0" max="5" step="0.1" value={gp.fade ?? 1.5}
-            oninput={(e) => setBgProp(bg, i, 'fade', Number(e.target.value))} />
-          <label>{ta('lbl.blur')}
-            <span class="gridmenu-value">{gp.blur ?? 0} px</span></label>
-          <input type="range" min="0" max="20" step="1" value={gp.blur ?? 0}
-            oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
-        {:else}
-          {#if gstyle === 'band'}
-            <label>{ta('lbl.galleryRows')}
-              <Dropdown value={String(gp.rows ?? 2)} options={[['1', '1'], ['2', '2']]}
-                onchange={(v) => setBgProp(bg, i, 'rows', Number(v))} /></label>
-            <label>{ta('lbl.photoDirection')}
-              <Dropdown value={gp.direction ?? 'left'}
-                options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
-                onchange={(v) => setBgProp(bg, i, 'direction', v)} /></label>
-          {:else}
-            <label title={ta('tip.bg.photoCount')}>{ta('lbl.photoCount')}
-              <input type="number" min={gstyle === 'mosaic' ? 4 : 1} max="20"
-                value={gp.count ?? (gstyle === 'mosaic' ? 12 : 8)}
-                onchange={(e) => setBgProp(bg, i, 'count', Number(e.target.value))} /></label>
-            <label title={ta('tip.bg.galleryRepeat')}>{ta('lbl.galleryRepeat')}
-              <Dropdown value={gp.repeat === true ? 'repeat' : 'once'}
-                options={[['once', ta('opt.galleryRepeat.once')], ['repeat', ta('opt.galleryRepeat.repeat')]]}
-                onchange={(v) => setBgProp(bg, i, 'repeat', v === 'repeat')} /></label>
-            <label title={ta('tip.bg.galleryPlace')}>{ta('lbl.galleryPlace')}
-              <Dropdown value={fixedSeed ? 'fixed' : 'random'}
-                options={[['random', ta('opt.galleryPlace.random')], ['fixed', ta('opt.galleryPlace.fixed')]]}
-                onchange={(v) => setBgProp(bg, i, 'seed', v === 'fixed' ? newSeed() : 0)} /></label>
-            {#if fixedSeed}
-              <button type="button" class="ghost action" title={ta('tip.bg.photoSeed')}
-                onclick={() => setBgProp(bg, i, 'seed', newSeed())}>
-                {@html ICONS.shuffle} {ta('ui.shufflePhotos')}
-              </button>
-            {/if}
-          {/if}
-          <label>{ta('lbl.size')}
-            <span class="gridmenu-value">{frameSize(gp.size, gstyle)} px</span></label>
-          <input type="range" min="60" max="400" step="2" value={frameSize(gp.size, gstyle)}
-            oninput={(e) => setBgProp(bg, i, 'size', Number(e.target.value))} />
-          {#if gstyle === 'floating'}
-            <label title={ta('tip.bg.photoSpread')}>{ta('lbl.photoSpread')}
-              <span class="gridmenu-value">{Math.round((gp.spread ?? 0.85) * 100)}%</span></label>
-            <input type="range" min="0" max="1" step="0.01" value={gp.spread ?? 0.85}
-              oninput={(e) => setBgProp(bg, i, 'spread', Number(e.target.value))} />
-            <label>{ta('lbl.photoTilt')}
-              <span class="gridmenu-value">{gp.tilt ?? 5}°</span></label>
-            <input type="range" min="0" max="15" step="1" value={gp.tilt ?? 5}
-              oninput={(e) => setBgProp(bg, i, 'tilt', Number(e.target.value))} />
-          {/if}
-          <label title={ta('tip.bg.galleryShape')}>{ta('lbl.galleryShape')}
-            <Dropdown value={gp.shape ?? 'rect'}
-              options={GALLERY_SHAPES.map((sh) => [sh, ta(`opt.galleryShape.${sh}`)])}
-              onchange={(v) => setBgProp(bg, i, 'shape', v)} /></label>
-          <label title={ta('tip.bg.galleryLook')}>{ta('lbl.galleryLook')}
-            <Dropdown value={gp.look ?? 'shadow'}
-              options={GALLERY_LOOKS.map((lk) => [lk, ta(`opt.galleryLook.${lk}`)])}
-              onchange={(v) => setBgProp(bg, i, 'look', v)} /></label>
-          {#if colouredLook(gp.look)}
-            <label>{ta('lbl.frameColor')}
-              <ColorPicker value={frameColor(gp.look, gp.frameColor)} tokens={themeSwatches()} allowClear
-                label={ta('tip.bg.frameColor')} onchange={(hex) => setBgProp(bg, i, 'frameColor', hex ?? '')} /></label>
-          {/if}
-          {#if roundable(gp.shape) && (gp.look ?? 'shadow') !== 'polaroid'}
-            <label>{ta('lbl.rounding')}
-              <span class="gridmenu-value">{gp.radius ?? 5} px</span></label>
-            <input type="range" min="0" max="48" step="1" value={gp.radius ?? 5}
-              oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
-          {/if}
-        {/if}
-        <label title={ta('tip.bg.galleryTone')}>{ta('lbl.galleryTone')}
-          <Dropdown value={gp.tone ?? 'natural'}
-            options={GALLERY_TONES.map((tn) => [tn, ta(`opt.galleryTone.${tn}`)])}
-            onchange={(v) => setBgProp(bg, i, 'tone', v)} /></label>
-        {#if motionsFor(gstyle).length > 1}
-          <label title={ta('tip.bg.photoMotion')}>{ta('lbl.motion')}
-            <Dropdown value={gmotion}
-              options={motionsFor(gstyle).map((m) => [m, m === 'none' ? ta('common.none') : ta(`opt.galleryMotion.${m}`)])}
-              onchange={(v) => setBgProp(bg, i, 'motion', v)} /></label>
-        {/if}
-        {#if gmotion === 'crossfade' && gstyle !== 'fill'}
-          <label>{ta('lbl.secondsPerImage')}
-            <span class="gridmenu-value">{gp.interval ?? 12} s</span></label>
-          <input type="range" min="0.5" max="90" step="0.5" value={gp.interval ?? 12}
-            oninput={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} />
-        {:else if gmotion !== 'none' || gstyle === 'band'}
-          <label>{ta('lbl.motionSpeed')}
-            <span class="gridmenu-value">{gp.motionSpeed ?? 30} s</span></label>
-          <input type="range" min="0.5" max="90" step="0.5" value={gp.motionSpeed ?? 30}
-            oninput={(e) => setBgProp(bg, i, 'motionSpeed', Number(e.target.value))} />
-        {/if}
-        <label class="gridmenu-snap" title={ta('tip.bg.underNav')}>
-          <input type="checkbox" checked={gp.underNav !== false}
-            onchange={(e) => (e.target.checked
-              ? setBgProp(bg, i, 'underNav', true)
-              : setBgProps(bg, i, { underNav: false, underAnnounce: false }))} />
-          {ta('lbl.underNav')}
-        </label>
-        {#if siteDraft.nav?.announcement?.text}
-          <!-- The strip sits above the menu: behind the strip means behind the menu too. -->
-          <label class="gridmenu-snap" class:muted={gp.underNav === false} title={ta('tip.bg.underAnnounce')}>
-            <input type="checkbox" checked={gp.underAnnounce === true} disabled={gp.underNav === false}
-              onchange={(e) => (e.target.checked
-                ? setBgProps(bg, i, { underAnnounce: true, underNav: true })
-                : setBgProp(bg, i, 'underAnnounce', false))} />
-            {ta('lbl.underAnnounce')}
-          </label>
-        {/if}
-        <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round((gp.opacity ?? 0.85) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.01" value={gp.opacity ?? 0.85}
-          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-      {:else if layer.type === 'video'}
-        <label class="ghost filepick" title={ta('tip.bg.videoFile')}>
-          {layer.props.src ? ta('ui.changeVideo') : ta('ui.chooseVideo')}
-          <input type="file" accept="video/mp4,video/webm" onchange={(e) => setBgVideo(bg, i, e)} />
-        </label>
-        <label class="ghost filepick" title={ta('tip.bg.poster')}>
-          {layer.props.poster ? ta('ui.changeImage') : ta('ui.choosePoster')}
-          <input type="file" accept="image/*" onchange={(e) => setBgPoster(bg, i, e)} />
-        </label>
-        <label title={ta('tip.bg.fit')}>{ta('lbl.imageFit')}
-          <Dropdown value={layer.props.fit ?? 'cover'}
-            options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
-            onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-        <label class="sub">{ta('lbl.horizontal')}
-          <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
-        <input type="range" min="0" max="1" step="0.01" value={layer.props.x ?? 0.5}
-          oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-        <label class="sub">{ta('lbl.vertical')}
-          <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
-        <input type="range" min="0" max="1" step="0.01" value={layer.props.y ?? 0.5}
-          oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
-        <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
-          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-        <label class="gridmenu-snap" title={ta('tip.bg.parallax')}>
-          <input type="checkbox" checked={(layer.props.parallax ?? 0) > 0}
-            onchange={(e) => setBgProp(bg, i, 'parallax', e.target.checked ? 0.3 : 0)} />
-          {ta('lbl.parallax')}
-        </label>
-        {#if (layer.props.parallax ?? 0) > 0}
-          <label>{ta('lbl.parallaxStrength')}
-            <span class="gridmenu-value">{Math.round((layer.props.parallax ?? 0) * 100)}%</span></label>
-          <input type="range" min="0.1" max="1" step="0.01" value={layer.props.parallax ?? 0.3}
-            oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
-        {/if}
-      {/if}
-    </div>
-  {/each}
-  <label>{ta('lbl.newLayer')}
-    <Dropdown value={newBgType}
-      options={BG_TYPES.map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])}
-      onchange={(v) => (newBgType = v)} /></label>
-  <button class="ghost action" onclick={() => addBgLayer(bg, newBgType)}>{ta('ui.addLayer')}</button>
-{/snippet}
 
 {#if blockMenu && selectedBlock}
   <FloatingMenu pos={blockMenu} onclose={() => (blockMenu = null)} />

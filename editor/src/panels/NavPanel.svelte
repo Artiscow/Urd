@@ -11,11 +11,11 @@
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { iconSvg, ICON_LIBRARY } from '$engine/icons.js';
   import { ICONS } from '../lib/icons.js';
+  import BackgroundEditor from '../section/BackgroundEditor.svelte';
   const ed = getContext('urd-editor');
   const grid = $derived(ed.grid);
   const siteDraft = $derived(ed.siteDraft);
   const { addPage, bridge, compressOrTrim, navBgCtx, setStatus, siteMutate, themeSwatches } = ed;
-  let { backgroundLayers } = $props();
 
   // Drawn tiles for the Nav panel's picture choices (ADR-0009: drawn SVG, never characters).
   const navSvg = (body) => `<svg width="40" height="26" viewBox="0 0 40 26" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${body}</svg>`;
@@ -1232,7 +1232,7 @@
       <details class="group frame-group sub-fold">
         <summary>{ta('lbl.background')}</summary>
         <div class="group-items">
-          {@render backgroundLayers(navBgCtx, siteDraft.nav?.style?.background?.layers ?? [])}
+          <BackgroundEditor bg={navBgCtx} layers={siteDraft.nav?.style?.background?.layers ?? []} />
         </div>
       </details>
     </div>

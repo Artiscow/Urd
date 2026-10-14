@@ -15,6 +15,8 @@ import { readFileSync } from 'node:fs';
 import { ENGINE_DIR } from './_engine.mjs';
 
 const APP = new URL('../editor/src/App.svelte', import.meta.url);
+// The palette's items stand in the Blocks panel (0.7.26.4).
+const BLOCKS = new URL('../editor/src/panels/BlocksPanel.svelte', import.meta.url);
 const read = (url) => readFileSync(url, 'utf8');
 const slice = (text, from, to) => text.slice(text.indexOf(from), text.indexOf(to, text.indexOf(from)));
 
@@ -39,7 +41,7 @@ function seeds() {
 
 /** The palette search's block entries. */
 function paletteKinds() {
-  return new Set([...app.matchAll(/act: 'block', kind: '([a-z-]+)'/g)].map((m) => m[1]));
+  return new Set([...read(BLOCKS).matchAll(/act: 'block', kind: '([a-z-]+)'/g)].map((m) => m[1]));
 }
 
 /** The labels the Properties header reads. */
@@ -74,7 +76,7 @@ test('every core block has a seed in the editor', () => {
 test('every core block is found by the palette search', () => {
   const kinds = paletteKinds();
   const missing = coreBlocks().filter((type) => !kinds.has(type) && !allowed(type, 'palette'));
-  assert.deepEqual(missing, [], `missing in panelBlockItems (App.svelte): ${missing.join(', ')}`);
+  assert.deepEqual(missing, [], `missing in panelBlockItems (BlocksPanel.svelte): ${missing.join(', ')}`);
 });
 
 test('every core block has a name in the Properties header', () => {
