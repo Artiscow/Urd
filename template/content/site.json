@@ -9,9 +9,11 @@
     "setup": true,
     "calendars": [
       {
-        "id": "apeiron",
+        "id": "cal-5ed2f6ab",
         "url": "https://calendar.google.com/calendar/ical/apeironlinjeforening%40gmail.com/public/basic.ics",
-        "name": "Apeiron"
+        "name": "Apeiron",
+        "subscribable": false,
+        "inFilter": false
       }
     ]
   },
@@ -185,11 +187,9 @@
         ]
       },
       "topGap": false,
-      "inset": true,
       "textColor": "#ffffff",
       "hoverTextColor": "#00fff5",
       "blur": true,
-      "size": "sm",
       "hover": "underline",
       "hoverGlow": 1,
       "atTop": "clear",
@@ -209,10 +209,14 @@
         "bg": "#0e1a27",
         "bgOpacity": 0.95,
         "blur": false
+      },
+      "border": {
+        "side": "bottom",
+        "color": "accent",
+        "width": 2
       }
     },
-    "overlay": true,
-    "variant": "floating-tab"
+    "overlay": true
   },
   "footer": {
     "version": 1,
