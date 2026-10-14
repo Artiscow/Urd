@@ -12,6 +12,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] An image background's «Cover» and «Show all», which measure the section box in an effect; the page kebab menu closing on an outside click; a new site calendar taking the focus
 - [ ] The Blocks panel's seeds and names, the animation choices in Placement and in a section, the theme suggestions and the admin theme list read from the dictionary, in every admin language
 - [ ] A block selected in the preview shows the element menu in Properties; the gear opens the floating menu; a drag, a resize and a delete reach the draft
+- [ ] Push preparation 0.7.20.3-0.7.26.5p: «Update» in the Update panel runs with files skipped; a sticky block's «until» choice lists the sections below it; the Nav panel opened before the preview has loaded, and after a preview reload, still reaches the preview («Show the strip again» brings a dismissed announcement back)
 
 ### Test batch (0.7.26.4): the content and system panels as components, and the drag over a section edge
 

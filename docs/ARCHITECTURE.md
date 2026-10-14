@@ -146,7 +146,7 @@ editor/src/
   lib/      the pickers and the pure modules, as before
 ```
 
-**The order it was done in.** The element menu first (0.7.26.2), since the families still to come are built in it; then the site panels (0.7.26.3), the content and system panels (0.7.26.4), and last the shell's own parts and the state modules (0.7.26.5). After the element menu and the stylesheet left the file (0.7.26.2, App.svelte at 9,438 lines) the same build took 1.3 to 2.5 s; after the split was complete (App.svelte at 148 lines, the state in thirteen modules, the shell in five parts) it took 0.4 s, recorded 14 October 2026.
+**The order it was done in.** The element menu first (0.7.26.2), since the families still to come are built in it; then the site panels (0.7.26.3), the content and system panels (0.7.26.4), and last the shell's own parts and the state modules (0.7.26.5). After the element menu and the stylesheet left the file (0.7.26.2, App.svelte at 9,438 lines) the same build took 1.3 to 2.5 s; after the split was complete (App.svelte at 162 lines, the state in thirteen modules, the shell in five parts) it took 0.4 s, recorded 14 October 2026.
 
 ## The publishing flow (`template/functions/`)
 

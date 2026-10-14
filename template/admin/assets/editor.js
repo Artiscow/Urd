@@ -8405,7 +8405,7 @@ Vr([
 var af = /* @__PURE__ */ R("<input/> <span class=\"toolbar-row\"><!> <input type=\"number\" class=\"tb-num\" min=\"8\" max=\"96\" placeholder=\"px\"/> <button><b> </b></button> <button><i> </i></button></span>", 1), of = /* @__PURE__ */ R("<img alt=\"\"/>"), sf = /* @__PURE__ */ R("<span class=\"logo-file\"> </span>"), cf = /* @__PURE__ */ R("<div class=\"logo-pick\"><span class=\"logo-thumb\"><!></span> <span class=\"logo-pick-col\"><label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\"/></label> <!></span></div> <div class=\"ctl-triple\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\" min=\"12\" max=\"128\"/></div> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\" min=\"0\" max=\"64\"/></div></div>", 1), lf = /* @__PURE__ */ R("<button type=\"button\"><!><span> </span></button>"), uf = /* @__PURE__ */ R("<span class=\"toolbar-row\"><span class=\"mini-label tb-grow\"> </span> <input type=\"number\" class=\"tb-num\" placeholder=\"1100\"/></span>"), df = /* @__PURE__ */ R("<!> <!> <span class=\"toolbar-row\"><span class=\"mini-label tb-grow\"> </span> <input type=\"number\" class=\"tb-num\"/></span>", 1), ff = /* @__PURE__ */ R("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), pf = /* @__PURE__ */ R("<!> <span class=\"toolbar-row\"><span class=\"mini-label tb-grow\"> </span> <input type=\"number\" class=\"tb-num\"/></span>", 1), mf = /* @__PURE__ */ R("<button> </button>"), hf = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\"/> <input type=\"number\" class=\"tb-num\"/></div>"), gf = /* @__PURE__ */ R("<div class=\"ctl-pair\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div></div>"), _f = /* @__PURE__ */ R("<span class=\"toolbar-row ctl-end\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\" min=\"1\" max=\"8\"/> <span class=\"mini-label\"> </span> <!></span>"), vf = /* @__PURE__ */ R("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-5\" role=\"group\"></div></div> <!>", 1), yf = /* @__PURE__ */ R("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), bf = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"30\" max=\"80\" step=\"5\"/> <span class=\"gridmenu-value\"> </span></div> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0\" max=\"400\" step=\"10\"/> <span class=\"gridmenu-value\"> </span></div> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0\" max=\"1200\" step=\"20\"/> <span class=\"gridmenu-value\"> </span></div> <!>", 1), xf = /* @__PURE__ */ R("<!> <!>", 1), Sf = /* @__PURE__ */ R("<div class=\"mini-card\"><span class=\"mini-label\"> </span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label></div>"), Cf = /* @__PURE__ */ R("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div>"), wf = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label>"), Tf = /* @__PURE__ */ R("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <!> <!> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <!> <input type=\"range\" min=\"0\" max=\"100\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label> <!></label>", 1), Ef = /* @__PURE__ */ R("<button type=\"button\"><span> </span><span> </span></button>"), Df = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0.1\" max=\"1\" step=\"0.01\"/> <span class=\"gridmenu-value\"> </span></div>"), Of = /* @__PURE__ */ R("<div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div>"), kf = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input type=\"text\" class=\"field-filled\" placeholder=\"https://\"/></label>"), Af = /* @__PURE__ */ R("<button class=\"ghost\"> </button>"), jf = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input type=\"text\" class=\"field-filled\"/></label> <label> <!></label> <!> <!> <!> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <label> <!></label> <label> <!></label>", 1), Mf = /* @__PURE__ */ R("<span class=\"tool-move\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span>"), Nf = /* @__PURE__ */ R("<div class=\"mini-card\"><span class=\"tool-head\"><span class=\"mini-label\"> </span><!></span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label></div>"), Pf = /* @__PURE__ */ R("<div class=\"mini-card\"><span class=\"tool-head\"><span class=\"mini-label\"> </span><!></span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div>"), Ff = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input type=\"text\" class=\"field-filled\"/></label>"), If = /* @__PURE__ */ R("<span class=\"lrow-warn\"></span>"), Lf = /* @__PURE__ */ R("<span class=\"lrow-tile-mark\"><!></span> <span class=\"lrow-tile-name\"> </span>", 1), Rf = /* @__PURE__ */ R("<span class=\"bad-target-note\"> </span>"), zf = /* @__PURE__ */ R("<div class=\"lrow-body\"><!> <div class=\"lrow-fields\"><input class=\"field-filled\"/> <input/> <!> <span class=\"lrow-actions\"><!> <button class=\"linkish danger\"> </button></span></div></div>"), Bf = /* @__PURE__ */ R("<div><div class=\"lrow-head\" role=\"button\" tabindex=\"0\"><span class=\"lrow-mark\" aria-hidden=\"true\"><!></span> <span class=\"lrow-name\"> </span> <!> <span class=\"row-tools\" role=\"none\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span> <span class=\"lrow-chev\" aria-hidden=\"true\"></span></div> <!></div>"), Vf = /* @__PURE__ */ R("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-3\" role=\"group\"></div></div> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"1\" max=\"24\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <div class=\"mini-card\"><span class=\"mini-label\"> </span> <span class=\"lbtn-pick\"><!> <span class=\"lbtn-name\"><!></span></span></div> <!> <button class=\"ghost action\"> </button>", 1), Hf = /* @__PURE__ */ R("<details class=\"group sub-fold\"><summary><span class=\"tool-head\"> <!></span></summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div></details>"), Uf = /* @__PURE__ */ R("<label> <!></label>"), Wf = /* @__PURE__ */ R("<div aria-hidden=\"true\"><span class=\"nav-grip\"></span> <div class=\"nav-item-main\"><span class=\"nav-item-name ghost-name\"> </span> <span class=\"ghost-target\"> </span></div></div>"), Gf = /* @__PURE__ */ R("<input class=\"nav-item-href\"/>"), Kf = /* @__PURE__ */ R("<span class=\"nav-item-sub\"></span>"), qf = /* @__PURE__ */ R("<!> <div><span class=\"nav-grip\" draggable=\"true\"></span> <div class=\"nav-item-main\"><input class=\"nav-item-name\"/> <div class=\"nav-item-target\"><!> <!></div></div> <span class=\"nav-actions\"><button class=\"ghost nav-act\"></button> <button class=\"ghost nav-act\"></button> <button class=\"ghost nav-act\"></button></span> <button class=\"ghost row-tool nav-more\"></button></div> <!>", 1), Jf = /* @__PURE__ */ R("<!> <div><span class=\"nav-grip\" draggable=\"true\"></span> <div class=\"nav-item-main\"><input class=\"nav-item-name\"/> <div class=\"nav-item-target\"><!> <!></div></div> <!> <span class=\"nav-actions\"><button class=\"ghost nav-act\"></button> <button class=\"ghost nav-act\"></button> <button class=\"ghost nav-act\"></button> <button class=\"ghost nav-act\"></button></span> <button class=\"ghost row-tool nav-more\"></button></div> <!> <!> <!>", 1), Yf = /* @__PURE__ */ R("<div class=\"panel-body\"><details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <!> <!> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><details class=\"group frame-group sub-fold\"><summary> </summary> <div class=\"group-items\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-3\" role=\"group\"></div></div> <!> <!> <!> <!> <!></div></details> <hr class=\"gridmenu-divider\"/> <details class=\"group frame-group sub-fold\"><summary> </summary> <div class=\"group-items\"><div class=\"seg cw-seg\"></div> <details class=\"sub-inset\"><summary> </summary> <div class=\"sub-inset-body\"><!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\"/> <input type=\"number\" class=\"tb-num\"/></div> <!></div></details></div></details> <hr class=\"gridmenu-divider\"/> <details class=\"group frame-group sub-fold\"><summary> </summary> <div class=\"group-items\"><!> <!></div></details> <hr class=\"gridmenu-divider\"/> <details class=\"group frame-group sub-fold\"><summary> </summary> <div class=\"group-items\"><!></div></details> <hr class=\"gridmenu-divider\"/> <details class=\"group frame-group sub-fold\"><summary> </summary> <div class=\"group-items\"><div class=\"ctl-pair\"><!> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div></div> <div class=\"ctl-pair\"><label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label></div> <div class=\"ctl-pair\"><label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <!></div> <div class=\"ctl-pair\"><label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label></div> <!> <div class=\"ctl-pair\"><label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <!></div> <!> <!></div></details> <hr class=\"gridmenu-divider\"/> <details class=\"group frame-group sub-fold\"><summary> </summary> <div class=\"group-items\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-5\" role=\"group\"></div></div> <!> <div class=\"swatch-row\"><!> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div></div> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label></div></details> <hr class=\"gridmenu-divider\"/> <details class=\"group frame-group sub-fold\"><summary> </summary> <div class=\"group-items\"><!></div></details></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!>  <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div role=\"group\"></div></div> <!> <!> <label> <input type=\"number\" min=\"1\" max=\"4\"/></label></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"nav-list\" role=\"list\"></div> <button class=\"ghost action\"> </button> <span class=\"toolbar-row\"><input class=\"tb-grow\"/> <button class=\"ghost action\"> </button></span></div></details></div>");
 function Xf(e, t) {
 	it(t, !0);
-	let n = nt("urd-editor"), r = /* @__PURE__ */ O(() => n.siteDraft), { addPage: i, bridge: a, compressOrTrim: o, navBgCtx: s, setStatus: c, siteMutate: l, themeSwatches: u } = n, d = (e) => `<svg width="40" height="26" viewBox="0 0 40 26" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${e}</svg>`, p = {
+	let n = nt("urd-editor"), r = /* @__PURE__ */ O(() => n.siteDraft), i = /* @__PURE__ */ O(() => n.bridge), { addPage: a, compressOrTrim: o, navBgCtx: s, setStatus: c, siteMutate: l, themeSwatches: u } = n, d = (e) => `<svg width="40" height="26" viewBox="0 0 40 26" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${e}</svg>`, p = {
 		bar: d("<rect x=\"1\" y=\"1\" width=\"38\" height=\"7\" rx=\"1\"/><rect x=\"1\" y=\"11\" width=\"38\" height=\"14\" rx=\"1\" stroke-opacity=\"0.35\"/>"),
 		floating: d("<rect x=\"5\" y=\"2\" width=\"30\" height=\"7\" rx=\"3.5\"/><rect x=\"1\" y=\"11\" width=\"38\" height=\"14\" rx=\"1\" stroke-opacity=\"0.35\"/>"),
 		"floating-square": d("<rect x=\"5\" y=\"2\" width=\"30\" height=\"7\"/><rect x=\"1\" y=\"11\" width=\"38\" height=\"14\" rx=\"1\" stroke-opacity=\"0.35\"/>"),
@@ -8430,7 +8430,7 @@ function Xf(e, t) {
 		cover: h("<rect x=\"1\" y=\"1\" width=\"46\" height=\"32\" rx=\"3\" stroke-opacity=\"0.35\"/><rect x=\"6\" y=\"6\" width=\"16\" height=\"12\" rx=\"2.5\" fill=\"currentColor\" fill-opacity=\"0.3\" stroke=\"none\"/><rect x=\"26\" y=\"6\" width=\"16\" height=\"12\" rx=\"2.5\" fill=\"currentColor\" fill-opacity=\"0.3\" stroke=\"none\"/><path d=\"M6 14h16M26 14h16\" stroke-opacity=\"0.55\" stroke-width=\"3\"/><path d=\"M6 23h12M26 23h12\" stroke-opacity=\"0.35\"/>")
 	}, y = /* @__PURE__ */ k("");
 	function b() {
-		I(y).trim() && (n.newPageTitle = I(y), n.newPageTemplate = null, i() !== !1 && A(y, ""));
+		I(y).trim() && (n.newPageTitle = I(y), n.newPageTemplate = null, a() !== !1 && A(y, ""));
 	}
 	function x(e) {
 		l("edit:nav-logo", () => {
@@ -9829,7 +9829,7 @@ function Xf(e, t) {
 	var ti = P(ei);
 	D($r);
 	var ni = P($r, 2), ri = (e) => {
-		var t = jf(), n = M(t), i = j(n), o = N(i, !0), s = P(i, 2);
+		var t = jf(), n = M(t), a = j(n), o = N(a, !0), s = P(a, 2);
 		U(s), D(n);
 		var c = P(n, 2), d = j(c), f = P(d);
 		{
@@ -9918,7 +9918,7 @@ function Xf(e, t) {
 			var t = Af(), n = N(t, !0);
 			F((e, r) => {
 				G(t, "title", e), B(n, r);
-			}, [() => K("tip.nav.announceShowAgain"), () => K("lbl.announceShowAgain")]), L("click", t, () => a?.sendAnnounceReset()), z(e, t);
+			}, [() => K("tip.nav.announceShowAgain"), () => K("lbl.announceShowAgain")]), L("click", t, () => I(i)?.sendAnnounceReset()), z(e, t);
 		};
 		V(w, (e) => {
 			I(r).nav.announcement?.dismiss !== !1 && e(T);
@@ -20916,7 +20916,7 @@ function Tx(e, t) {
 	}
 	async function u() {
 		if (!I(a) || I(a).upToDate || n.updateBusy) return;
-		let e = [...updateSkip], t = I(a).changes.filter((e) => !n.updateSkip.has(e.path)), r = t.filter((e) => e.atom && e.conflict);
+		let e = [...n.updateSkip], t = I(a).changes.filter((e) => !n.updateSkip.has(e.path)), r = t.filter((e) => e.atom && e.conflict);
 		if (await o({
 			title: K("confirm.update.title"),
 			lines: [K("confirm.update.body", {
@@ -24230,7 +24230,7 @@ var FT = /* @__PURE__ */ k("desktop"), IT = /* @__PURE__ */ O(() => I(NT).find((
 function KT(e) {
 	A(HT, Math.min(400, Math.max(10, (Math.round(Math.round(I(GT) * 100) / 10) + e) * 10)) / 100), A(VT, "manual");
 }
-var qT = /* @__PURE__ */ O(() => I(WT) > 0 ? I(WT) : I(GT) > 0 ? I(BT) / I(GT) : I(BT)), JT = /* @__PURE__ */ O(() => I(UT) * I(GT)), YT = /* @__PURE__ */ O(() => I(WT) > 0 ? I(WT) * I(GT) : I(BT)), XT = /* @__PURE__ */ O(() => I(JT) > I(zT) + 1 || I(YT) > I(BT) + 1), ZT = null, QT = () => {
+var qT = /* @__PURE__ */ O(() => I(WT) > 0 ? I(WT) : I(GT) > 0 ? I(BT) / I(GT) : I(BT)), JT = /* @__PURE__ */ O(() => I(UT) * I(GT)), YT = /* @__PURE__ */ O(() => I(WT) > 0 ? I(WT) * I(GT) : I(BT)), XT = /* @__PURE__ */ O(() => I(JT) > I(zT) + 1 || I(YT) > I(BT) + 1), ZT = /* @__PURE__ */ k(null), QT = () => {
 	let e = null;
 	try {
 		e = localStorage.getItem("urd-theme-mode");
@@ -24238,9 +24238,9 @@ var qT = /* @__PURE__ */ O(() => I(WT) > 0 ? I(WT) : I(GT) > 0 ? I(BT) / I(GT) :
 	return sc(Q.siteDraft?.theme?.scheme, e, window.matchMedia("(prefers-color-scheme: dark)").matches);
 }, $T = /* @__PURE__ */ k("light");
 function eE() {
-	ZT?.destroy(), I(wT)?.contentDocument?.addEventListener("pointerdown", () => {
+	I(ZT)?.destroy(), I(wT)?.contentDocument?.addEventListener("pointerdown", () => {
 		$.blockMenu &&= null;
-	}, !0), ZT = oC(I(wT), {
+	}, !0), A(ZT, oC(I(wT), {
 		onEdit: CT.handleEdit,
 		onMove: CT.handleMove,
 		onGrow: CT.handleGrow,
@@ -24276,12 +24276,12 @@ function eE() {
 		onNavWidth: (e) => Q.siteMutate("edit:nav-width", () => {
 			Q.siteDraft.nav.style ??= {}, Q.siteDraft.nav.style.width = e.width;
 		})
-	});
+	}));
 }
 async function tE() {
-	await $.pageLoading, await OE.pluginsReady, ZT?.sendPlugins(Xe(OE.pluginsView)?.enabled ?? []), ZT?.sendViewport(I(LT)), ZT?.sendZoom(I(GT)), XO.pushCollectionsToPreview(), BC.pushTemplatesToPreview(), Q.siteStore.hasDraft() && Q.pushSiteToPreview();
+	await $.pageLoading, await OE.pluginsReady, I(ZT)?.sendPlugins(Xe(OE.pluginsView)?.enabled ?? []), I(ZT)?.sendViewport(I(LT)), I(ZT)?.sendZoom(I(GT)), XO.pushCollectionsToPreview(), BC.pushTemplatesToPreview(), Q.siteStore.hasDraft() && Q.pushSiteToPreview();
 	let e = !Q.site.pages.some((e) => e.id === $.pageId);
-	($.store.hasDraft() || e) && ZT?.sendPage($.pageId, $.store.data), I(TT) || ZT?.sendChrome(!1), kA.gridOn && ZT?.sendShowGrid(!0), kA.guidesOn && ZT?.sendShowGuides(!0), kA.sendAdminTheme();
+	($.store.hasDraft() || e) && I(ZT)?.sendPage($.pageId, $.store.data), I(TT) || I(ZT)?.sendChrome(!1), kA.gridOn && I(ZT)?.sendShowGrid(!0), kA.guidesOn && I(ZT)?.sendShowGuides(!0), kA.sendAdminTheme();
 }
 function nE(e) {
 	let t = e.path.replace(/\/$/, "") || "/", n = Q.siteDraft.pages.find((e) => e.path === t);
@@ -24292,20 +24292,20 @@ function rE() {
 }
 var iE = 0;
 async function aE() {
-	I(TT) && (iE = kA.panelEl?.scrollTop ?? 0), A(TT, !I(TT)), ZT?.sendChrome(I(TT)), I(TT) || ($.blockMenu = null), I(TT) && (await Dr(), requestAnimationFrame(() => {
+	I(TT) && (iE = kA.panelEl?.scrollTop ?? 0), A(TT, !I(TT)), I(ZT)?.sendChrome(I(TT)), I(TT) || ($.blockMenu = null), I(TT) && (await Dr(), requestAnimationFrame(() => {
 		kA.panelEl && (kA.panelEl.scrollTop = iE);
 	}));
 }
 function oE() {
 	Nn(() => {
-		let e = () => ZT?.sendCloseMenus();
+		let e = () => I(ZT)?.sendCloseMenus();
 		return document.addEventListener("pointerdown", e, !0), () => document.removeEventListener("pointerdown", e, !0);
 	}), Nn(() => {
 		let e = I(LT);
-		ZT?.sendViewport(e);
+		I(ZT)?.sendViewport(e);
 	}), Nn(() => {
 		let e = I(GT);
-		ZT?.sendZoom(e);
+		I(ZT)?.sendZoom(e);
 	}), Nn(() => {
 		let e = () => {
 			A(ET, kS(window) ?? I(ET), !0);
@@ -24464,10 +24464,10 @@ var sE = {
 		A(XT, e);
 	},
 	get bridge() {
-		return ZT;
+		return I(ZT);
 	},
 	set bridge(e) {
-		ZT = e;
+		A(ZT, e);
 	},
 	readPreviewMode: QT,
 	get previewMode() {
@@ -25153,6 +25153,9 @@ function mO() {
 	});
 }
 var $ = {
+	get sections() {
+		return NE?.data.sections ?? [];
+	},
 	get pageId() {
 		return I(kE);
 	},

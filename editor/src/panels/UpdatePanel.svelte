@@ -19,7 +19,7 @@
 
   async function runUpdate() {
     if (!updateInfo || updateInfo.upToDate || ed.updateBusy) return;
-    const skipped = [...updateSkip];
+    const skipped = [...ed.updateSkip];
     const applied = updateInfo.changes.filter((c) => !ed.updateSkip.has(c.path));
     const editedAtom = applied.filter((c) => c.atom && c.conflict);
     const ok = await askConfirm({

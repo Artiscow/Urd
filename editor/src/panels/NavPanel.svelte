@@ -15,7 +15,8 @@
   const ed = getContext('urd-editor');
   const grid = $derived(ed.grid);
   const siteDraft = $derived(ed.siteDraft);
-  const { addPage, bridge, compressOrTrim, navBgCtx, setStatus, siteMutate, themeSwatches } = ed;
+  const bridge = $derived(ed.bridge);
+  const { addPage, compressOrTrim, navBgCtx, setStatus, siteMutate, themeSwatches } = ed;
 
   // Drawn tiles for the Nav panel's picture choices (ADR-0009: drawn SVG, never characters).
   const navSvg = (body) => `<svg width="40" height="26" viewBox="0 0 40 26" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${body}</svg>`;

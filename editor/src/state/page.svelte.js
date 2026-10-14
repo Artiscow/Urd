@@ -860,6 +860,8 @@ export function effects() {
 
 /** What the other parts read and write through, and the effects the shell runs once. */
 export const pageState = {
+  /** The page's sections, for the parts that list them (the sticky «until» choice). */
+  get sections() { return store?.data.sections ?? []; },
   get pageId() { return pageId; },
   set pageId(v) { pageId = v; },
   handleApplyLayout,

@@ -140,7 +140,8 @@ let stageH = $derived(targetH > 0 ? targetH * scale : frameH);
  *  tolerance keeps it from flipping back and forth right at the edge. */
 let canPan = $derived(stageW > frameW + 1 || stageH > frameH + 1);
 
-let bridge = null;
+// Raw state, so a part that keeps the bridge in a $derived follows a reload of the preview; the bridge is a plain object, never proxied.
+let bridge = $state.raw(null);
 
 /** The preview's light/dark mode: a stored choice wins, otherwise the OS
  *  (same resolution as the engine's applyTheme). The iframe toggle
