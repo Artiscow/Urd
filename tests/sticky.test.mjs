@@ -82,6 +82,29 @@ test('groupBox: the group pins as the box, and the members keep their spacing', 
 const VIEW = { w: 1000, h: 800 };
 const BOX = { w: 200, h: 100 };
 
+test('dockPosition: the docks keep clear of the menu\'s band (a top bar, a side column)', () => {
+  const bar = { ...VIEW, inset: { top: 60 } };
+  assert.deepEqual(dockPosition('top-right', 24, BOX, bar), { left: 776, top: 84 });
+  assert.deepEqual(dockPosition('middle-center', 24, BOX, bar), { left: 400, top: 60 + (800 - 60 - 100) / 2 });
+  assert.deepEqual(dockPosition('bottom-right', 24, BOX, bar), { left: 776, top: 676 });
+  const column = { ...VIEW, inset: { left: 240 } };
+  assert.deepEqual(dockPosition('top-left', 24, BOX, column), { left: 264, top: 24 });
+  assert.deepEqual(dockPosition('middle-center', 0, BOX, column), { left: 240 + (1000 - 240 - 200) / 2, top: 350 });
+  const right = { ...VIEW, inset: { right: 240 } };
+  assert.deepEqual(dockPosition('bottom-right', 24, BOX, right), { left: 1000 - 240 - 200 - 24, top: 676 });
+  // A box taller than the free area keeps its top under the bar.
+  assert.deepEqual(dockPosition('bottom-left', 0, { w: 200, h: 900 }, bar).top, 60);
+});
+
+test('nearestDock: the thirds are of the free area inside the menu\'s band', () => {
+  const bar = { ...VIEW, inset: { top: 300 } };
+  // A box dropped just under the bar is in the free area's top third, not its middle.
+  assert.equal(nearestDock({ left: 900, top: 320, w: 50, h: 50 }, bar), 'top-right');
+  assert.equal(nearestDock({ left: 900, top: 320, w: 50, h: 50 }, VIEW), 'middle-right');
+  const column = { ...VIEW, inset: { left: 600 } };
+  assert.equal(nearestDock({ left: 620, top: 10, w: 50, h: 50 }, column), 'top-left');
+});
+
 test('dockPosition: the corners are measured from their own edges', () => {
   assert.deepEqual(dockPosition('top-left', 24, BOX, VIEW), { left: 24, top: 24 });
   assert.deepEqual(dockPosition('top-right', 24, BOX, VIEW), { left: 776, top: 24 });

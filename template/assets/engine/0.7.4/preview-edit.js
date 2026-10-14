@@ -37,7 +37,7 @@ import { frameAtPoint, toolbarAnchor } from './place.js';
 import { topDrag } from './section-size.js';
 import { snapTolerance, edgeSnap, gapSnap, lockAxis } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
-import { suspendSticky, resumeSticky } from './sticky.js';
+import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
 import { nearestDock } from './sticky-model.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
@@ -2811,7 +2811,7 @@ window.addEventListener('keydown', (event) => {
   const settle = settleFrames(ctx.host, ctx.section, [ctx.block.id]);
   const frame = { ...ctx.block.frames.desktop };
   if (dir[0]) frame.x = clamp(r1(frame.x + dir[0] * stepPx * pctPerPx), 0, r1(100 - frame.w));
-  if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
+  if (dir[1]) frame.y = Math.max(yFloor(ctx.host), frame.y + dir[1] * stepPx);
   ctx.block.frames.desktop = frame;
   drawFrame(el, frame);
   resumeSticky();
@@ -2940,6 +2940,17 @@ document.addEventListener('pointerdown', (event) => {
   document.addEventListener('pointermove', onMove);
   document.addEventListener('pointerup', onUp);
 });
+
+/**
+ * The floor for a block's y in its section. The first section has nothing
+ * above it but the menu, so a block there never goes under the menu, where it
+ * is drawn behind it and cannot be taken hold of; in any other section a block
+ * may hang above the top and lie over the section before it (ADR-0025
+ * decision 8), as the group drag and the transfer at a drop already allow.
+ */
+function yFloor(host) {
+  return document.querySelector('.urd-section') === host ? 0 : -Infinity;
+}
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -3852,9 +3863,10 @@ function enhanceBlock(el, block, section, grid, host) {
           handle.removeEventListener('pointercancel', onDockCancel);
           if (commit && started) {
             const rect = el.getBoundingClientRect();
+            // The same view as the pinning docks against, so a drop under the menu's band docks below it.
             const dock = nearestDock(
               { left: rect.left, top: rect.top, w: rect.width, h: rect.height },
-              { w: document.documentElement.clientWidth, h: window.innerHeight },
+              { w: document.documentElement.clientWidth, h: window.innerHeight, inset: dockInset() },
             );
             // The dock group comes along: applySticky reads the leader's
             // dock, and published data must say the same for every member.
@@ -3958,6 +3970,7 @@ function enhanceBlock(el, block, section, grid, host) {
       const pctPerPx = 100 / canvas.clientWidth;
       const colStep = grid.size * pctPerPx;
       const r2 = (v) => Math.round(v * 100) / 100;
+      const yMin = yFloor(host);
       // The grid: on this section, and under a move on every other section
       // too, since a block released wholly outside its own section moves there.
       const overlays = [showGridOverlay(host, grid)];
@@ -4067,7 +4080,7 @@ function enhanceBlock(el, block, section, grid, host) {
         const dx = ex?.d ?? gx?.d ?? 0;
         const dy = ey?.d ?? gy?.d ?? 0;
         if (dx) current = { ...current, x: clamp(r2(((leftPx + dx) * 100) / canvas.clientWidth), 0, r2(100 - current.w)) };
-        if (dy) current = { ...current, y: current.y + dy };
+        if (dy) current = { ...current, y: Math.max(yMin, current.y + dy) };
         const snapped = { left: leftPx + dx, top: topPx + dy, right: leftPx + dx + wPx, bottom: topPx + dy + hPx };
         if (ex) drawLine('v', ex.target.at, Math.min(snapped.top, ex.target.from), Math.max(snapped.bottom, ex.target.to));
         if (gx) for (const gap of gx.gaps) drawGap('v', gap.from, gap.to, { from: snapped.top, to: snapped.bottom });
@@ -4111,9 +4124,10 @@ function enhanceBlock(el, block, section, grid, host) {
           ? {
               ...orig,
               x: clamp(snapPct(orig.x + dx), 0, r2(100 - orig.w)),
-              // y is unbounded in both directions: blocks can deliberately
-              // hang above the section top, just as below the bottom.
-              y: snapPx(orig.y + dy),
+              // y is open downwards, and upwards too except in the first
+              // section (yFloor): a block may hang above its section's top,
+              // just as below the bottom.
+              y: Math.max(yMin, snapPx(orig.y + dy)),
             }
           : {
               ...orig,

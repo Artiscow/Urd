@@ -2620,6 +2620,10 @@ var oa = {
 		"gallery.prevImage": "Forrige bilde",
 		"gallery.nextImage": "Neste bilde",
 		"gallery.imageN": "Bilde {n}",
+		"gallery.pause": "Sett lysbildene på pause",
+		"gallery.play": "Spill av lysbildene",
+		"ribbon.pause": "Sett båndet på pause",
+		"ribbon.play": "Spill av båndet",
 		"video.unknownUrl": "Ukjent videolenke (YouTube og Vimeo støttes)",
 		"video.emptyHint": "Lim inn en YouTube- eller Vimeo-lenke i Egenskaper",
 		"share.share": "Del på {service}",
@@ -15284,7 +15288,7 @@ function S_(e, t) {
 Br(["change"]);
 //#endregion
 //#region src/menu/families/Gallery.svelte
-var C_ = /* @__PURE__ */ R("<div class=\"bg-layer\"><span class=\"toolbar-row\"><img class=\"site-icon-preview\" alt=\"\"/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span> <label> <input/></label> <label> <input/></label></div>"), w_ = /* @__PURE__ */ R("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\" multiple=\"\"/></label> <!>", 1), T_ = /* @__PURE__ */ R("<div class=\"pin-line\"><label> <input type=\"number\" min=\"1\" max=\"6\"/></label> <!></div> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"32\" step=\"2\"/>", 1), E_ = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" step=\"10\"/> <span class=\"gridmenu-value\"> </span></div> <button type=\"button\" class=\"ghost action\"><!> </button>", 1), D_ = /* @__PURE__ */ R("<button type=\"button\" class=\"ghost action\"><!> </button>"), O_ = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div> <!> <label> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), k_ = /* @__PURE__ */ R("<label> <input type=\"number\" min=\"2\" max=\"60\"/></label>"), A_ = /* @__PURE__ */ R("<div class=\"pin-line\"><label> <!></label> <!></div> <!> <!> <!> <!> <!>", 1), j_ = /* @__PURE__ */ R("<!> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"10\" max=\"300\" step=\"5\"/> <span class=\"gridmenu-value\"> </span></div> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"60\" max=\"800\" step=\"10\"/> <span class=\"gridmenu-value\"> </span></div> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"32\" step=\"2\"/> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), M_ = /* @__PURE__ */ R("<label> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), N_ = /* @__PURE__ */ R("<!> <!> <!>", 1);
+var C_ = /* @__PURE__ */ R("<div class=\"bg-layer\"><span class=\"toolbar-row\"><img class=\"site-icon-preview\" alt=\"\"/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span> <label> <input/></label> <label> <input/></label></div>"), w_ = /* @__PURE__ */ R("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\" multiple=\"\"/></label> <!>", 1), T_ = /* @__PURE__ */ R("<div class=\"pin-line\"><label> <input type=\"number\" min=\"1\" max=\"6\"/></label> <!></div> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"32\" step=\"2\"/>", 1), E_ = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" step=\"10\"/> <span class=\"gridmenu-value\"> </span></div> <button type=\"button\" class=\"ghost action\"><!> </button>", 1), D_ = /* @__PURE__ */ R("<button type=\"button\" class=\"ghost action\"><!> </button>"), O_ = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div> <!> <label> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), k_ = /* @__PURE__ */ R("<label> <input type=\"number\" min=\"2\" max=\"60\"/></label>"), A_ = /* @__PURE__ */ R("<div class=\"pin-line\"><label> <!></label> <!></div> <!> <!> <!> <!> <!>", 1), j_ = /* @__PURE__ */ R("<!> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"10\" max=\"300\" step=\"5\"/> <span class=\"gridmenu-value\"> </span></div> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"60\" max=\"800\" step=\"10\"/> <span class=\"gridmenu-value\"> </span></div> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"32\" step=\"2\"/> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), M_ = /* @__PURE__ */ R("<label> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), N_ = /* @__PURE__ */ R("<!> <!> <!>", 1);
 function P_(e, t) {
 	it(t, !0);
 	let n = nt("urd-editor"), r = /* @__PURE__ */ O(() => n.selectedBlock), { setBlockProp: i, setBlockProps: a, setBlockFrame: o, addGalleryImages: s, moveGalleryImage: c, removeGalleryImage: l, setGalleryImageField: u, themeSwatches: d, newSeed: f } = n, { groupReset: p, groupChanged: m } = mg(() => I(r).props, a);
@@ -15509,11 +15513,30 @@ function P_(e, t) {
 			U(S);
 			var C = P(S);
 			D(x);
-			var w = P(x, 2), T = j(w);
-			U(T);
-			var E = P(T);
-			D(w), F((e, t, n, i, a, o, c, p, _) => {
-				G(s, "title", e), B(l, t), W(u, I(r).props.speed ?? 60), B(d, I(r).props.speed ?? 60), G(f, "title", n), B(m, i), W(h, I(r).frame.h), B(g, `${I(r).frame.h ?? ""} px`), B(v, `${a ?? ""} `), B(y, `${I(r).props.gap ?? 12 ?? ""} px`), W(b, I(r).props.gap ?? 12), G(x, "title", o), Vi(S, I(r).props.pauseOnHover !== !1), B(C, ` ${c ?? ""}`), G(w, "title", p), Vi(T, I(r).props.fade !== !1), B(E, ` ${_ ?? ""}`);
+			var w = P(x, 2);
+			{
+				let e = /* @__PURE__ */ O(() => K("lbl.bandPause")), t = /* @__PURE__ */ O(() => I(r).props.pause ?? "button"), n = /* @__PURE__ */ O(() => K("tip.ribbon.pauseMode")), a = /* @__PURE__ */ O(() => [["button", K("opt.bandPause.button")], ["touch", K("opt.bandPause.touch")]]);
+				jl(w, {
+					get label() {
+						return I(e);
+					},
+					get value() {
+						return I(t);
+					},
+					get title() {
+						return I(n);
+					},
+					get options() {
+						return I(a);
+					},
+					onchange: (e) => i("pause", e)
+				});
+			}
+			var T = P(w, 2), E = j(T);
+			U(E);
+			var ee = P(E);
+			D(T), F((e, t, n, i, a, o, c, p, _) => {
+				G(s, "title", e), B(l, t), W(u, I(r).props.speed ?? 60), B(d, I(r).props.speed ?? 60), G(f, "title", n), B(m, i), W(h, I(r).frame.h), B(g, `${I(r).frame.h ?? ""} px`), B(v, `${a ?? ""} `), B(y, `${I(r).props.gap ?? 12 ?? ""} px`), W(b, I(r).props.gap ?? 12), G(x, "title", o), Vi(S, I(r).props.pauseOnHover !== !1), B(C, ` ${c ?? ""}`), G(T, "title", p), Vi(E, I(r).props.fade !== !1), B(ee, ` ${_ ?? ""}`);
 			}, [
 				() => K("tip.ribbon.speed"),
 				() => K("lbl.ribbonSpeed"),
@@ -15524,7 +15547,7 @@ function P_(e, t) {
 				() => K("lbl.ribbonPause"),
 				() => K("tip.ribbon.fade"),
 				() => K("lbl.ribbonFade")
-			]), L("input", u, (e) => i("speed", e.target.valueAsNumber)), L("input", h, (e) => o("h", e.target.valueAsNumber)), L("input", b, (e) => i("gap", Number(e.target.value))), L("change", S, (e) => i("pauseOnHover", e.target.checked)), L("change", T, (e) => i("fade", e.target.checked)), z(e, t);
+			]), L("input", u, (e) => i("speed", e.target.valueAsNumber)), L("input", h, (e) => o("h", e.target.valueAsNumber)), L("input", b, (e) => i("gap", Number(e.target.value))), L("change", S, (e) => i("pauseOnHover", e.target.checked)), L("change", E, (e) => i("fade", e.target.checked)), z(e, t);
 		}, a = (e) => {
 			var t = M_(), n = M(t), a = j(n), o = P(a);
 			{
@@ -15592,6 +15615,7 @@ function P_(e, t) {
 					direction: void 0,
 					speed: void 0,
 					pauseOnHover: void 0,
+					pause: void 0,
 					fade: void 0
 				}));
 				Jh(e, {
@@ -15655,7 +15679,7 @@ Br([
 ]);
 //#endregion
 //#region src/menu/families/Ribbon.svelte
-var F_ = /* @__PURE__ */ R("<span class=\"nav-line\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span>"), I_ = /* @__PURE__ */ R("<!> <button class=\"ghost action\"> </button>", 1), L_ = /* @__PURE__ */ R("<button type=\"button\"></button>"), R_ = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input class=\"field-filled\"/></label>"), z_ = /* @__PURE__ */ R("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-6\" role=\"group\"></div></div> <!>", 1), B_ = /* @__PURE__ */ R("<!> <!>", 1), V_ = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0.5\" max=\"10\" step=\"0.5\"/> <span class=\"gridmenu-value\"> </span></div>"), H_ = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"10\" max=\"300\" step=\"5\"/> <span class=\"gridmenu-value\"> </span> <!></div>"), U_ = /* @__PURE__ */ R("<button class=\"ghost action\"> </button> <!> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), W_ = /* @__PURE__ */ R("<div class=\"pin-line\"><!> <!></div> <!>", 1), G_ = /* @__PURE__ */ R("<label> <!></label>"), K_ = /* @__PURE__ */ R("<!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"2\" max=\"40\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>", 1), q_ = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <!> <label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <!> <!>", 1), J_ = /* @__PURE__ */ R("<!> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"-10\" max=\"10\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>", 1), Y_ = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"8\" max=\"120\" step=\"2\"/> <span class=\"gridmenu-value\"> </span></div>", 1), X_ = /* @__PURE__ */ R("<div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div>"), Z_ = /* @__PURE__ */ R("<div class=\"swatch-row\"><!> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div></div>"), Q_ = /* @__PURE__ */ R("<!> <!> <!> <!> <!>", 1);
+var F_ = /* @__PURE__ */ R("<span class=\"nav-line\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span>"), I_ = /* @__PURE__ */ R("<!> <button class=\"ghost action\"> </button>", 1), L_ = /* @__PURE__ */ R("<button type=\"button\"></button>"), R_ = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input class=\"field-filled\"/></label>"), z_ = /* @__PURE__ */ R("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-6\" role=\"group\"></div></div> <!>", 1), B_ = /* @__PURE__ */ R("<!> <!>", 1), V_ = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0.5\" max=\"10\" step=\"0.5\"/> <span class=\"gridmenu-value\"> </span></div>"), H_ = /* @__PURE__ */ R("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"10\" max=\"300\" step=\"5\"/> <span class=\"gridmenu-value\"> </span> <!></div>"), U_ = /* @__PURE__ */ R("<button class=\"ghost action\"> </button> <!> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), W_ = /* @__PURE__ */ R("<div class=\"pin-line\"><!> <!></div> <!>", 1), G_ = /* @__PURE__ */ R("<label> <!></label>"), K_ = /* @__PURE__ */ R("<!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"2\" max=\"40\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>", 1), q_ = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <!> <label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <!> <!>", 1), J_ = /* @__PURE__ */ R("<!> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"-10\" max=\"10\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>", 1), Y_ = /* @__PURE__ */ R("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"8\" max=\"120\" step=\"2\"/> <span class=\"gridmenu-value\"> </span></div>", 1), X_ = /* @__PURE__ */ R("<div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div>"), Z_ = /* @__PURE__ */ R("<div class=\"swatch-row\"><!> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div></div>"), Q_ = /* @__PURE__ */ R("<!> <!> <!> <!> <!>", 1);
 function $_(e, t) {
 	it(t, !0);
 	let n = nt("urd-editor"), r = /* @__PURE__ */ O(() => n.selectedBlock), { mutateBlock: i, setBlockProp: a, setBlockProps: o, themeSwatches: s } = n, { groupReset: c, groupChanged: l } = mg(() => I(r).props, o);
@@ -15666,7 +15690,7 @@ function $_(e, t) {
 	}
 	function d() {
 		i("ribbon-item", (e) => {
-			(e.props.items ??= []).push(K("seed.ribbonBlock.new"));
+			e.props.items ??= [], e.props.items.push(K("seed.ribbonBlock.new"));
 		});
 	}
 	function f(e) {
@@ -15822,11 +15846,30 @@ function $_(e, t) {
 				U(p);
 				var m = P(p);
 				D(d);
-				var h = P(d, 2), g = j(h);
-				U(g);
-				var _ = P(g);
-				D(h), F((e, t, n, a, s, c) => {
-					G(i, "title", e), B(o, t), G(d, "title", n), Vi(p, I(r).props.pauseOnHover !== !1), B(m, ` ${a ?? ""}`), G(h, "title", s), Vi(g, I(r).props.fade !== !1), B(_, ` ${c ?? ""}`);
+				var h = P(d, 2);
+				{
+					let e = /* @__PURE__ */ O(() => K("lbl.bandPause")), t = /* @__PURE__ */ O(() => I(r).props.pause ?? "button"), n = /* @__PURE__ */ O(() => K("tip.ribbon.pauseMode")), i = /* @__PURE__ */ O(() => [["button", K("opt.bandPause.button")], ["touch", K("opt.bandPause.touch")]]);
+					jl(h, {
+						get label() {
+							return I(e);
+						},
+						get value() {
+							return I(t);
+						},
+						get title() {
+							return I(n);
+						},
+						get options() {
+							return I(i);
+						},
+						onchange: (e) => a("pause", e)
+					});
+				}
+				var g = P(h, 2), _ = j(g);
+				U(_);
+				var v = P(_);
+				D(g), F((e, t, n, a, s, c) => {
+					G(i, "title", e), B(o, t), G(d, "title", n), Vi(p, I(r).props.pauseOnHover !== !1), B(m, ` ${a ?? ""}`), G(g, "title", s), Vi(_, I(r).props.fade !== !1), B(v, ` ${c ?? ""}`);
 				}, [
 					() => K("tip.ribbon.play"),
 					() => K("ui.ribbonPlay"),
@@ -15834,7 +15877,7 @@ function $_(e, t) {
 					() => K("lbl.ribbonPause"),
 					() => K("tip.ribbon.fade"),
 					() => K("lbl.ribbonFade")
-				]), L("click", i, () => n.bridge?.sendDemoMotion()), L("change", p, (e) => a("pauseOnHover", e.target.checked)), L("change", g, (e) => a("fade", e.target.checked)), z(e, t);
+				]), L("click", i, () => n.bridge?.sendDemoMotion()), L("change", p, (e) => a("pauseOnHover", e.target.checked)), L("change", _, (e) => a("fade", e.target.checked)), z(e, t);
 			};
 			V(s, (e) => {
 				I(f) !== "none" && e(c);
@@ -16118,6 +16161,7 @@ function $_(e, t) {
 				speed: 60,
 				dwell: 2.5,
 				pauseOnHover: !0,
+				pause: "button",
 				fade: !0
 			}));
 			Jh(g, {
@@ -17429,7 +17473,7 @@ function Nv(e, t) {
 	}
 	function d() {
 		i("form-field", (e) => {
-			(e.props.fields ??= []).push({
+			e.props.fields ??= [], e.props.fields.push({
 				id: c(),
 				label: K("form.newField"),
 				type: "text",
@@ -17568,7 +17612,7 @@ function Rv(e, t) {
 	}
 	function c() {
 		i("faq-item", (e) => {
-			(e.props.items ??= []).push({
+			e.props.items ??= [], e.props.items.push({
 				q: K("seed.faq.newQ"),
 				a: K("seed.faq.answer")
 			});
@@ -17659,7 +17703,7 @@ function Hv(e, t) {
 	}
 	function c() {
 		i("tl-item", (e) => {
-			(e.props.items ??= []).push({
+			e.props.items ??= [], e.props.items.push({
 				year: "",
 				title: K("seed.timeline.newTitle"),
 				text: ""
@@ -22981,7 +23025,7 @@ function jw(e = {}) {
 		...e
 	};
 	return tw("site", () => {
-		(I(KC).site.calendars ??= []).unshift(t);
+		I(KC).site.calendars ??= [], I(KC).site.calendars.unshift(t);
 	}), A(Dw, t.id, !0), A(Ow, t.id, !0), A(Ew, !0), t.id;
 }
 var Mw = /* @__PURE__ */ k(!1), Nw = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19.2 49.6V14.4l25.6 10.4V49.6' fill='none' stroke='%2315b39a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E", Pw = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;

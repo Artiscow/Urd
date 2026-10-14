@@ -22,7 +22,7 @@
 
   function addTlItem() {
     mutateBlock('tl-item', (b) => {
-      (b.props.items ??= []).push({ year: '', title: ta('seed.timeline.newTitle'), text: '' });
+      b.props.items ??= []; b.props.items.push({ year: '', title: ta('seed.timeline.newTitle'), text: '' });
     });
   }
 

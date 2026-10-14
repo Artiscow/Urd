@@ -48,24 +48,33 @@ export function groupBox(items) {
  * @param {string} dock 'top-left' … 'bottom-right' (vertical-horizontal)
  * @param {number} margin distance from the docked edges in px
  * @param {{w: number, h: number}} box the box measurements in px
- * @param {{w: number, h: number}} view the window measurements in px
+ * @param {{w: number, h: number, inset?: {top?: number, left?: number, right?: number}}} view the window
+ *   measurements in px, and the menu's own band (a sticky top bar's height, a side column's width):
+ *   the docks lie inside it, so a docked box is never drawn behind the menu
  * @returns {{left: number, top: number}} position in px from the window's left/top
  */
 export function dockPosition(dock, margin, box, view) {
   const [vert, horz] = String(dock || 'bottom-right').split('-');
   const m = Number.isFinite(margin) ? margin : 0;
+  const inset = viewInset(view);
   // If the box is larger than the window, the top/left edge wins: centering
   // is then meaningless, and the content must not be pushed off screen.
   const center = (available) => Math.max(0, available / 2);
   let top;
-  if (vert === 'top') top = m;
-  else if (vert === 'bottom') top = Math.max(0, view.h - box.h - m);
-  else top = center(view.h - box.h);
+  if (vert === 'top') top = inset.top + m;
+  else if (vert === 'bottom') top = Math.max(inset.top, view.h - box.h - m);
+  else top = inset.top + center(view.h - inset.top - box.h);
   let left;
-  if (horz === 'left') left = m;
-  else if (horz === 'right') left = Math.max(0, view.w - box.w - m);
-  else left = center(view.w - box.w);
+  if (horz === 'left') left = inset.left + m;
+  else if (horz === 'right') left = Math.max(inset.left, view.w - inset.right - box.w - m);
+  else left = inset.left + center(view.w - inset.left - inset.right - box.w);
   return { left, top };
+}
+
+/** The view's inset with every side a number. */
+function viewInset(view) {
+  const inset = view.inset ?? {};
+  return { top: Math.max(0, inset.top || 0), left: Math.max(0, inset.left || 0), right: Math.max(0, inset.right || 0) };
 }
 
 /**
@@ -74,14 +83,18 @@ export function dockPosition(dock, margin, box, view) {
  * The keys match the schema's dock enum (the middle row is 'middle').
  * Pure function, tested in tests/sticky.test.mjs.
  * @param {{left: number, top: number, w: number, h: number}} box the box in window px
- * @param {{w: number, h: number}} view the window measurements in px
+ * @param {{w: number, h: number, inset?: {top?: number, left?: number, right?: number}}} view the window
+ *   measurements in px, with the menu's band as in dockPosition: the thirds are of the free area
  * @returns {string} dock key ('top-left' … 'bottom-right')
  */
 export function nearestDock(box, view) {
-  const cx = box.left + box.w / 2;
-  const cy = box.top + box.h / 2;
-  const horz = cx < view.w / 3 ? 'left' : cx > (2 * view.w) / 3 ? 'right' : 'center';
-  const vert = cy < view.h / 3 ? 'top' : cy > (2 * view.h) / 3 ? 'bottom' : 'middle';
+  const inset = viewInset(view);
+  const cx = box.left + box.w / 2 - inset.left;
+  const cy = box.top + box.h / 2 - inset.top;
+  const w = view.w - inset.left - inset.right;
+  const h = view.h - inset.top;
+  const horz = cx < w / 3 ? 'left' : cx > (2 * w) / 3 ? 'right' : 'center';
+  const vert = cy < h / 3 ? 'top' : cy > (2 * h) / 3 ? 'bottom' : 'middle';
   return `${vert}-${horz}`;
 }
 

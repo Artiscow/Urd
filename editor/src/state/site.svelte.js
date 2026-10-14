@@ -396,7 +396,11 @@ const siteCalendarById = (id) => siteCalendars().find((cal) => cal.id === id) ??
 /** Adds a calendar and returns its id; `seed` carries an address, a name and a colour from a block's row. */
 function addSiteCalendar(seed = {}) {
   const cal = { id: makeId('cal'), url: '', ...seed };
-  siteMutate('site', () => { (siteDraft.site.calendars ??= []).unshift(cal); });
+  // The list is read back after `??=`: the expression's own value is the raw array, which the draft's $state proxy does not see.
+  siteMutate('site', () => {
+    siteDraft.site.calendars ??= [];
+    siteDraft.site.calendars.unshift(cal);
+  });
   openSiteCalendar = cal.id;
   focusSiteCalendar = cal.id;
   siteCalendarsOpen = true;

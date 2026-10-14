@@ -34,7 +34,7 @@
   }
   function addFormField() {
     mutateBlock('form-field', (b) => {
-      (b.props.fields ??= []).push({ id: formFieldId(), label: ta('form.newField'), type: 'text', required: false });
+      b.props.fields ??= []; b.props.fields.push({ id: formFieldId(), label: ta('form.newField'), type: 'text', required: false });
     });
   }
   function removeFormField(i) {

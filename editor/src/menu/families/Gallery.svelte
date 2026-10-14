@@ -147,6 +147,9 @@
         onchange={(e) => setBlockProp('pauseOnHover', e.target.checked)} />
       {ta('lbl.ribbonPause')}
     </label>
+    <Choice label={ta('lbl.bandPause')} value={selectedBlock.props.pause ?? 'button'} title={ta('tip.ribbon.pauseMode')}
+      options={[['button', ta('opt.bandPause.button')], ['touch', ta('opt.bandPause.touch')]]}
+      onchange={(v) => setBlockProp('pause', v)} />
     <label class="gridmenu-snap" title={ta('tip.ribbon.fade')}>
       <input type="checkbox" checked={selectedBlock.props.fade !== false}
         onchange={(e) => setBlockProp('fade', e.target.checked)} />
@@ -167,7 +170,7 @@
   {/snippet}
   <MenuGroup id="gallery-view" title={ta('lbl.view')} value={ta(`opt.galleryView.${gview}`)} reset={groupReset('gallery-view', { view: 'grid', columns: 3, gap: 12, interval: 5, width: 'canvas', rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined })}>{@render galleryView()}</MenuGroup>
   {#if gview === 'ribbon'}
-    <MenuGroup id="gallery-roll" title={ta('lbl.ribbonMotion')} value={`${selectedBlock.props.speed ?? 60} px/s`} reset={groupReset('gallery-roll', { rows: undefined, direction: undefined, speed: undefined, pauseOnHover: undefined, fade: undefined })}>{@render galleryRoll()}</MenuGroup>
+    <MenuGroup id="gallery-roll" title={ta('lbl.ribbonMotion')} value={`${selectedBlock.props.speed ?? 60} px/s`} reset={groupReset('gallery-roll', { rows: undefined, direction: undefined, speed: undefined, pauseOnHover: undefined, pause: undefined, fade: undefined })}>{@render galleryRoll()}</MenuGroup>
   {/if}
   <MenuGroup id="gallery-look" title={ta('group.galleryImages')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} reset={groupReset('gallery-look', { radius: 'md', lightbox: true })}>{@render galleryLook()}</MenuGroup>
 {/if}

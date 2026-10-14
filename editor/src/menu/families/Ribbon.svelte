@@ -27,7 +27,7 @@
   }
 
   function addRibbonItem() {
-    mutateBlock('ribbon-item', (b) => { (b.props.items ??= []).push(ta('seed.ribbonBlock.new')); });
+    mutateBlock('ribbon-item', (b) => { b.props.items ??= []; b.props.items.push(ta('seed.ribbonBlock.new')); });
   }
 
   function removeRibbonItem(i) {
@@ -122,6 +122,9 @@
             onchange={(e) => setBlockProp('pauseOnHover', e.target.checked)} />
           {ta('lbl.ribbonPause')}
         </label>
+        <Choice label={ta('lbl.bandPause')} value={selectedBlock.props.pause ?? 'button'} title={ta('tip.ribbon.pauseMode')}
+          options={[['button', ta('opt.bandPause.button')], ['touch', ta('opt.bandPause.touch')]]}
+          onchange={(v) => setBlockProp('pause', v)} />
         <label class="gridmenu-snap" title={ta('tip.ribbon.fade')}>
           <input type="checkbox" checked={selectedBlock.props.fade !== false}
             onchange={(e) => setBlockProp('fade', e.target.checked)} />
@@ -230,7 +233,7 @@
         </div>
       </div>
   {/snippet}
-  <MenuGroup id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''} reset={groupReset('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, fade: true })}>{@render ribbonMotion()}</MenuGroup>
+  <MenuGroup id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''} reset={groupReset('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true })}>{@render ribbonMotion()}</MenuGroup>
   <MenuGroup id="ribbon-stripes" title={ta('lbl.ribbonStripes')} value={stripesOn ? ta('menu.onCount', { n: stripesOn }) : ta('common.off')} reset={groupReset('ribbon-stripes', { above: 'none', below: 'none', main: 'text', aboveColor: undefined, belowColor: undefined, stripePlace: 'stack', thickness: 8 })}>{@render ribbonStripes()}</MenuGroup>
   <MenuGroup id="ribbon-shape" title={ta('lbl.ribbonShape')} value={ribbonReaches().find(([v]) => v === ribbonReach(selectedBlock.props.width))?.[1] ?? ''} reset={groupReset('ribbon-shape', { width: 'canvas', variant: 'band', tilt: 0 })}>{@render ribbonShape()}</MenuGroup>
   <MenuGroup id="ribbon-text" title={ta('lbl.ribbonText')} value={{ sm: ta('opt.size.sm'), md: ta('opt.size.md'), lg: ta('opt.size.lg'), xl: ta('opt.size.xl') }[selectedBlock.props.size ?? 'md']} reset={groupReset('ribbon-text', { size: 'md', caps: false, weight: 'normal', outline: false, gap: 40 })}>{@render ribbonText()}</MenuGroup>

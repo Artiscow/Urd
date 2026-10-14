@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.51): the bug list
+
+- [ ] A ribbon block on a published page: the pause button at the band's right edge pauses and plays it (the label reads «Pause the band» / «Play the band» in the site's language), the state survives an edit of the words, and with «Pause» set to «Touch» the button is invisible until it gets keyboard focus, a touch on the band pauses it and a tap on its empty space plays it again
+- [ ] A gallery in band view: the same button and the same touch form; a gallery in slides view: the pause button at the foot, a step on an arrow or a dot stops the advance for good, the button plays it again, and the pointer over the show holds it
+- [ ] With reduced motion on, no pause button is drawn (nothing moves)
+- [ ] «Pin to screen»: a block dragged into the menu's band docks in the top row under the menu, never behind it; with a side column the left or right docks keep clear of the column; the middle row is centred in the free area; the phone view the same
+- [ ] A block in the first section cannot be dragged above the canvas top (under an overlay menu); a block in a later section still can hang above its section's top
+- [ ] Site panel, a site without calendars: one press of «New calendar» adds the row with the caret in its name; the first item added to an empty ribbon, form, timeline or FAQ shows at once
+- [ ] A page without JavaScript shows the English noscript line
+
 ### Test batch (0.7.0.49): the scatter seed
 
 - [ ] A gallery in scatter or mosaic view: «Shuffle» gives a different layout each press, and the kept layout survives a reload and a publish

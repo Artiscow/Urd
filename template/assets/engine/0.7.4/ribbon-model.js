@@ -34,6 +34,9 @@ export const RIBBON_MOTIONS = ['roll', 'sway', 'step', 'none'];
  */
 export const RIBBON_WIDTHS = ['canvas', 'page', 'content'];
 
+/** The pause a visitor can count on (WCAG 2.2.2): a button at the band's edge, or a touch on the band with the button for the keyboard only. */
+export const RIBBON_PAUSES = ['button', 'touch'];
+
 /**
  * What a stripe holds. The main stripe is never absent, so it has no `none`:
  * `text` is the words, `marks` only the separator over and over (a dotted
@@ -164,6 +167,11 @@ export function ribbonMotion(motion) {
 /** The band's reach (RIBBON_WIDTHS); anything else, an absent value included, is the block's own box. */
 export function ribbonWidth(width) {
   return width === 'canvas' || width === 'page' ? width : 'content';
+}
+
+/** The pause form, with the button for anything unknown. */
+export function ribbonPause(pause) {
+  return RIBBON_PAUSES.includes(pause) ? pause : 'button';
 }
 
 /**

@@ -56,6 +56,29 @@ export function initSticky() {
   applySticky();
 }
 
+/**
+ * The menu's own band in the window, which the screen docks keep clear of:
+ * a sticky top bar's clearance (as nav.js measures it, with the page-wide
+ * announcement when the menu is a side column) at the top, and a side
+ * column's width on its side. The menu stands above a docked block, so a
+ * block docked inside the band would be drawn behind it and could not be
+ * taken hold of. Read fresh at every call, since the bar changes height.
+ * @param {boolean} mobile the phone view, where the column is a bar
+ * @returns {{top: number, left: number, right: number}}
+ */
+export function dockInset(mobile = document.body.classList.contains('urd-mobile')) {
+  const rootVar = (name) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+  const nav = document.querySelector('header#urd-nav.urd-nav-sticky');
+  const side = Boolean(nav) && !mobile && nav.classList.contains('urd-nav-side-host');
+  const top = nav && !side ? (rootVar('--urd-nav-h') || nav.offsetHeight) : rootVar('--urd-announce-page-h');
+  const width = side ? (parseFloat(getComputedStyle(document.body).getPropertyValue('--urd-nav-side-width')) || nav.offsetWidth) : 0;
+  return {
+    top,
+    left: side && nav.classList.contains('urd-nav-side-host-left') ? width : 0,
+    right: side && nav.classList.contains('urd-nav-side-host-right') ? width : 0,
+  };
+}
+
 /** Called after a re-render and when toggling clean view (urd-chrome). */
 export function refreshSticky() {
   if (wired) applySticky();
@@ -142,9 +165,8 @@ function applySticky() {
   // away is not part of what stays on screen.
   // A side column takes no top height itself, but an announcement fixed
   // across the whole page above it does (--urd-announce-page-h).
-  const stickyNav = document.querySelector('header#urd-nav.urd-nav-sticky:not(.urd-nav-side-host)');
-  const rootVar = (name) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
-  const navH = stickyNav ? (rootVar('--urd-nav-h') || stickyNav.offsetHeight) : rootVar('--urd-announce-page-h');
+  const inset = dockInset(mobile);
+  const navH = inset.top;
 
   // Blocks with the same sticky-group are pinned as ONE unit; the rest are
   // groups of one member each, so the whole loop below has the same shape.
@@ -170,7 +192,7 @@ function applySticky() {
     // Mobile screen docking: each block docks on its own against its own
     // measured size (the row grid has no frames to compute group geometry from).
     if (mobile) {
-      const view = { w: document.documentElement.clientWidth, h: window.innerHeight };
+      const view = { w: document.documentElement.clientWidth, h: window.innerHeight, inset };
       for (const el of members) {
         const base = el._urdStickyBase ?? readGeom(el);
         const w = el.offsetWidth;
@@ -231,7 +253,7 @@ function applySticky() {
     // Pin to screen: the group docks at a fixed point in the window and
     // stays there regardless of scrolling. The release limit does not apply here.
     if (lead.dataset.stickyMode === 'screen') {
-      const view = { w: document.documentElement.clientWidth, h: window.innerHeight };
+      const view = { w: document.documentElement.clientWidth, h: window.innerHeight, inset };
       const pos = dockPosition(lead.dataset.stickyDock, Number(lead.dataset.stickyOffset) || 0, box, view);
       for (const b of boxes) {
         b.el.style.width = `${b.w}px`;

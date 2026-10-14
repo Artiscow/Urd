@@ -12,11 +12,20 @@ import { engineImport } from './_engine.mjs';
 const {
   ribbonItems, normalizeSpeed, ribbonDuration, ribbonPeriods, separatorMark, ribbonRows,
   clampTilt, ribbonSize, canRoll, ribbonMotion, ribbonWidth, ribbonMoves, bandReach,
-  mainMode, stripeMode, stripePlace, clampThickness, normalizeDwell, ribbonStepDuration,
+  mainMode, stripeMode, stripePlace, clampThickness, normalizeDwell, ribbonStepDuration, ribbonPause, RIBBON_PAUSES,
   RIBBON_MARKS, RIBBON_SEPARATORS, RIBBON_SIZES, RIBBON_SPEED, RIBBON_MOTIONS, RIBBON_WIDTHS,
   RIBBON_MAIN_MODES, RIBBON_STRIPE_MODES, RIBBON_THICKNESS, RIBBON_DWELL, RIBBON_STRIPE_PLACES,
 } = await engineImport('ribbon-model.js');
 const { ribbonBlock } = await engineImport('blocks/ribbon.js');
+
+test('ribbonPause: the button or a touch, and the button for anything unknown', () => {
+  assert.deepEqual(RIBBON_PAUSES, ['button', 'touch']);
+  assert.equal(ribbonPause('touch'), 'touch');
+  assert.equal(ribbonPause('button'), 'button');
+  assert.equal(ribbonPause(undefined), 'button');
+  assert.equal(ribbonPause('hover'), 'button');
+  assert.equal(ribbonBlock.defaults().pause, 'button');
+});
 
 // Deliberately Norwegian item texts: user data stays Norwegian (ADR-0021).
 test('ribbonItems: trims, drops the empty ones and keeps the order', () => {

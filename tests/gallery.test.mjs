@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const {
-  stepIndex, canAutoplay, normalizeInterval, gridColumns, GALLERY_VIEWS, GRID_VIEWS, MOSAIC_ROW, POLAROID_TILT,
+  stepIndex, canAutoplay, slidesRun, normalizeInterval, gridColumns, GALLERY_VIEWS, GRID_VIEWS, MOSAIC_ROW, POLAROID_TILT,
   galleryView, gallerySeed, mosaicRowHeight, tileSpans, mosaicWall, polaroidTilts,
 } = await engineImport('gallery-model.js');
 const { mosaicSpan, mosaicSpans, frameTilt, photoLayout } = await engineImport('gallery-layout.js');
@@ -28,6 +28,14 @@ test('stepIndex: an empty or invalid list always gives 0', () => {
   assert.equal(stepIndex(4, 1, 1), 0);
   assert.equal(stepIndex(0, 1, Number.NaN), 0);
   assert.equal(stepIndex(Number.NaN, 1, 3), 1);
+});
+
+test('slidesRun: the timer advances only with autoplay, no stop by the visitor and no hold', () => {
+  assert.equal(slidesRun({ count: 3 }), true);
+  assert.equal(slidesRun({ count: 3, stopped: true }), false);
+  assert.equal(slidesRun({ count: 3, held: true }), false);
+  assert.equal(slidesRun({ count: 3, reducedMotion: true }), false);
+  assert.equal(slidesRun({ count: 1 }), false);
 });
 
 test('canAutoplay: never with fewer than two images or reduced motion', () => {

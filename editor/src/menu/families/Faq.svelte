@@ -23,7 +23,7 @@
 
   function addFaqItem() {
     mutateBlock('faq-item', (b) => {
-      (b.props.items ??= []).push({ q: ta('seed.faq.newQ'), a: ta('seed.faq.answer') });
+      b.props.items ??= []; b.props.items.push({ q: ta('seed.faq.newQ'), a: ta('seed.faq.answer') });
     });
   }
 

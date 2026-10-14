@@ -185,6 +185,16 @@ export function canAutoplay({ count = 0, reducedMotion = false } = {}) {
   return count >= 2 && !reducedMotion;
 }
 
+/**
+ * Whether the slideshow's timer may advance right now: it needs the autoplay
+ * at all, and neither a stop the visitor made (the pause button or a step by
+ * hand, which lasts) nor a hold (the pointer over the show or focus inside it,
+ * which lasts as long as it stays).
+ */
+export function slidesRun({ count = 0, reducedMotion = false, stopped = false, held = false } = {}) {
+  return canAutoplay({ count, reducedMotion }) && !stopped && !held;
+}
+
 /** Seconds between changes, with a floor and a safe default for junk values. */
 export function normalizeInterval(seconds, { min = 2, fallback = 5 } = {}) {
   const n = Number(seconds);

@@ -261,7 +261,8 @@ function enablePreview(state, opts) {
   const fitTimers = new Map();
 
   window.addEventListener('message', (event) => {
-    if (event.origin !== location.origin) return; // only the editor on the same site
+    // Only the editor on the same site, and only through the frame it holds: a window the page opened shares the origin but is not the editor.
+    if (event.origin !== location.origin || event.source !== window.parent) return;
     const msg = event.data;
     if (msg?.type === 'urd-preview' && msg.section) {
       const host = root.querySelector(`[data-section-id="${msg.section.id}"]`);

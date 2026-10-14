@@ -27,10 +27,11 @@ import { growSectionTo } from '../render.js';
 import {
   ribbonItems, ribbonDuration, ribbonStepDuration, ribbonPeriods, separatorMark, clampTilt, ribbonSize,
   ribbonMotion, ribbonWidth, ribbonMoves, mainMode, stripeMode, stripePlace, clampThickness, bandReach,
+  ribbonPause,
 } from '../ribbon-model.js';
 import { resolveColor } from '../theme.js';
 // ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
-import { ta, adminLocaleReady } from '../i18n.js';
+import { t, ta, adminLocaleReady } from '../i18n.js';
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -187,6 +188,68 @@ function stepFrames(stripe, run, periods, runWidth) {
  * back with its one copy.
  * @returns {{el: HTMLElement, measure: () => void, run: HTMLElement|null}}
  */
+export const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
+export const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
+
+/** The bands the visitor has paused, by block id: the choice outlives a re-render of the block. */
+const PAUSED_BANDS = new Set();
+
+/**
+ * The band's pause (WCAG 2.2.2: moving content that lasts more than five
+ * seconds needs a pause that stays). A real button with aria-pressed at the
+ * band's right edge in the «button» form; in the «touch» form it is there for
+ * the keyboard only, shown while it has focus, and a touch on the band pauses
+ * it, a later tap on its empty space plays it again. The pointer over the band
+ * and focus inside it hold it for as long as they stay (urd-ribbon-pausable in
+ * base.css). Shared with the gallery's band view; the calendar's Band design
+ * has its own (bandPause in calendar-next.js).
+ * @param {HTMLElement} host The band's box: urd-ribbon-paused goes here, and the button into it
+ * @param {'button'|'touch'} mode The form, from ribbonPause
+ * @param {{pause: string, play: string}} keys The visitor dictionary keys for the two labels
+ */
+export function bandPauseControl(host, mode, keys) {
+  // The block is in the page only after the render, so the id is read when it is needed.
+  const keyOf = () => host.closest('[data-block-id]')?.dataset.blockId ?? '';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'urd-ribbon-pause';
+  const paint = () => {
+    const paused = PAUSED_BANDS.has(keyOf());
+    host.classList.toggle('urd-ribbon-paused', paused);
+    button.setAttribute('aria-pressed', String(paused));
+    button.setAttribute('aria-label', t(paused ? keys.play : keys.pause));
+    button.title = button.getAttribute('aria-label');
+    button.innerHTML = paused ? PLAY_ICON : PAUSE_ICON;
+  };
+  const set = (paused) => {
+    if (paused) PAUSED_BANDS.add(keyOf());
+    else PAUSED_BANDS.delete(keyOf());
+    paint();
+  };
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    set(!PAUSED_BANDS.has(keyOf()));
+  });
+  if (mode === 'touch') {
+    host.classList.add('urd-ribbon-touch');
+    // The touch that pauses is not the tap that plays: only a later tap on the band's empty space does.
+    let pausedByThisTouch = false;
+    host.addEventListener('pointerdown', (event) => {
+      if (button.contains(event.target)) return;
+      pausedByThisTouch = event.pointerType === 'touch' && !PAUSED_BANDS.has(keyOf());
+      if (pausedByThisTouch) set(true);
+    });
+    host.addEventListener('click', (event) => {
+      if (pausedByThisTouch) pausedByThisTouch = false;
+      else if (PAUSED_BANDS.has(keyOf()) && !event.target.closest('a, button, [contenteditable], .urd-gallery-tile')) set(false);
+    });
+  }
+  paint();
+  requestAnimationFrame(paint);
+  host.appendChild(button);
+  return button;
+}
+
 function buildStripe({ mode, items, sep, motion, still, props, editable, count, colour }) {
   const el = document.createElement('div');
   el.className = `urd-ribbon-stripe urd-ribbon-motion-${motion}`;
@@ -253,6 +316,7 @@ export const ribbonBlock = {
     dwell: 2.5,
     direction: 'left',
     pauseOnHover: true,
+    pause: 'button',
     variant: 'band',
     size: 'md',
     caps: false,
@@ -331,6 +395,10 @@ export const ribbonBlock = {
     add(above, opposed, ['urd-ribbon-thin', 'urd-ribbon-above'], false, props.aboveColor);
     add(main, props, ['urd-ribbon-main'], editable && main === 'text', null);
     add(below, opposed, ['urd-ribbon-thin', 'urd-ribbon-below'], false, props.belowColor);
+    // The pause that stays, where something actually moves.
+    if (host.querySelector('.urd-ribbon-stripe:not(.urd-ribbon-still) .urd-ribbon-track')) {
+      bandPauseControl(host, ribbonPause(props.pause), { pause: 'ribbon.pause', play: 'ribbon.play' });
+    }
     el.appendChild(host);
 
     // A band that reaches past its block (the content surface or the window)

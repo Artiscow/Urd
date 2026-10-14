@@ -20,10 +20,11 @@ import { applyImageStyle } from './image.js';
 import { growSectionTo, WIDTH_QUERIES } from '../render.js';
 import {
   stepIndex, canAutoplay, normalizeInterval, gridColumns, galleryView, GRID_VIEWS, mosaicRowHeight, mosaicWall, polaroidTilts,
+  slidesRun,
 } from '../gallery-model.js';
 import { resolveColor, inkOn } from '../theme.js';
-import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll, ribbonWidth } from '../ribbon-model.js';
-import { syncTrackCopies, fitBandReach } from './ribbon.js';
+import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll, ribbonWidth, ribbonPause } from '../ribbon-model.js';
+import { syncTrackCopies, fitBandReach, bandPauseControl, PAUSE_ICON, PLAY_ICON } from './ribbon.js';
 import { isSafeHref } from '../nav-model.js';
 // ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
@@ -167,9 +168,15 @@ function renderCarousel(host, props, ctx, blockEl) {
   }
 }
 
+/** The slideshows the visitor has stopped, by block id: a pause or a step by hand lasts, through a re-render too. */
+const STOPPED_SLIDES = new Set();
+
 function renderSlides(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-slides');
   const count = props.images.length;
+  const keyOf = () => blockEl?.dataset.blockId ?? host.closest('[data-block-id]')?.dataset.blockId ?? '';
+  // The pointer over the show or focus inside it holds the timer while it stays (the APG carousel pattern).
+  let held = false;
   const slides = props.images.map((_, i) => {
     const slide = el2('div', 'urd-gallery-slide');
     slide.appendChild(makeTile(props, i, ctx, blockEl));
@@ -200,17 +207,48 @@ function renderSlides(host, props, ctx, blockEl) {
       // In preview the slide advances only in Clean view: while editing, nothing
       // should move under the pointer.
       if (ctx.preview && !chromeOff()) return;
+      if (!slidesRun({ count, reducedMotion: reducedMotion(), stopped: STOPPED_SLIDES.has(keyOf()), held })) return;
       show(stepIndex(current, 1, count));
     }, normalizeInterval(props.interval) * 1000);
   };
+  // The pause that stays (WCAG 2.2.2, the APG carousel's rotation control): a
+  // step by hand stops the timer for good as well, and the button plays it again.
+  const pauseButton = el2('button', 'urd-gallery-nav urd-gallery-pause');
+  pauseButton.type = 'button';
+  const paintPause = () => {
+    const stopped = STOPPED_SLIDES.has(keyOf());
+    pauseButton.setAttribute('aria-pressed', String(stopped));
+    pauseButton.setAttribute('aria-label', t(stopped ? 'gallery.play' : 'gallery.pause'));
+    pauseButton.title = pauseButton.getAttribute('aria-label');
+    pauseButton.innerHTML = stopped ? PLAY_ICON : PAUSE_ICON;
+  };
+  const stop = (on) => {
+    if (on) STOPPED_SLIDES.add(keyOf());
+    else STOPPED_SLIDES.delete(keyOf());
+    paintPause();
+  };
+  pauseButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    stop(!STOPPED_SLIDES.has(keyOf()));
+  });
   const manual = (delta) => {
     show(stepIndex(current, delta, count));
-    startTimer();
+    stop(true);
   };
 
   if (count > 1) {
     host.appendChild(navButton('prev', t('gallery.prevImage'), () => manual(-1)));
     host.appendChild(navButton('next', t('gallery.nextImage'), () => manual(1)));
+    if (canAutoplay({ count, reducedMotion: reducedMotion() })) {
+      paintPause();
+      requestAnimationFrame(paintPause);
+      host.appendChild(pauseButton);
+      host.addEventListener('pointerenter', (event) => { if (event.pointerType === 'mouse') held = true; });
+      host.addEventListener('pointerleave', () => { held = false; });
+      host.addEventListener('focusin', () => { held = true; });
+      host.addEventListener('focusout', (event) => { held = host.contains(event.relatedTarget); });
+    }
     const dotRow = el2('div', 'urd-gallery-dots');
     props.images.forEach((_, i) => {
       const dot = el2('button', 'urd-gallery-dot urd-gallery-nav');
@@ -220,7 +258,7 @@ function renderSlides(host, props, ctx, blockEl) {
         event.preventDefault();
         event.stopPropagation();
         show(i);
-        startTimer();
+        stop(true);
       });
       dots.push(dot);
       dotRow.appendChild(dot);
@@ -292,6 +330,8 @@ function renderRibbon(host, props, ctx, blockEl) {
       ro.observe(band);
     }
   }
+  // The pause that stays, where the band actually rolls.
+  if (!still) bandPauseControl(host, ribbonPause(props.pause), { pause: 'ribbon.pause', play: 'ribbon.play' });
   // The band's reach (the content surface, the window, or the block's own
   // box) is laid out once the block is in the page, and again when the
   // section changes width.
