@@ -28,7 +28,7 @@
           onchange={(e) => setBlockProp('label', e.target.value.trim() || undefined)} /></label>
     {/if}
   {/snippet}
-  <MenuGroup id="shape-shape" title={ta('blocks.shape')} value={shapeKinds().find(([v]) => v === selectedBlock.props.kind)?.[1] ?? ''}>{@render shapeShape()}</MenuGroup>
+  <MenuGroup id="shape-shape" defaultOpen title={ta('blocks.shape')} value={shapeKinds().find(([v]) => v === selectedBlock.props.kind)?.[1] ?? ''}>{@render shapeShape()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet shapeStroke()}
     <div class="pin-line">

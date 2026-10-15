@@ -5,6 +5,7 @@
  */
 
 import { resolveItem, isSafeUrl } from './nav-model.js';
+import { siteLinks } from './links-model.js';
 
 // The safe-URL guard lives in nav-model (shared with resolveItem); re-exported
 // here for footer.js and the tests that import it from here.
@@ -118,16 +119,14 @@ export function footerCta(site) {
 }
 
 /**
- * Social links: only safe URLs pass through (footer.js additionally verifies
- * the icon id via iconSvg and drops unknown ones).
+ * The footer's row of the site's links (site.links, links-model.js; before
+ * 0.7.0.52 the footer's own `social`, lifted by the site migration 4 -> 5),
+ * unless the footer leaves them out (`footer.links: false`).
  * @param {object} site
- * @returns {Array<{icon: string, url: string}>}
+ * @returns {Array<{id: string, icon: string, image: string, label: string, url: string}>}
  */
 export function footerSocial(site) {
-  const social = Array.isArray(site.footer?.social) ? site.footer.social : [];
-  return social
-    .filter((s) => s && typeof s.icon === 'string' && s.icon.trim() && isSafeUrl(s.url))
-    .map((s) => ({ icon: s.icon.trim(), url: s.url.trim() }));
+  return site.footer?.links === false ? [] : siteLinks(site);
 }
 
 /**

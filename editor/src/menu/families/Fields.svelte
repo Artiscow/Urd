@@ -14,6 +14,8 @@
      a plugin block's own config panel in the preview. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
+  import MenuGroup from '../MenuGroup.svelte';
+  import Pin from '../Pin.svelte';
   import { ta, taApiError } from '$engine/i18n.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
@@ -79,7 +81,7 @@
        block without fields gets the button that opens its own config
        panel in the preview (a plugin copy of the former calendar or form). -->
   {@const pluginFields = CORE_FIELDS[selectedBlock.type] ?? pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
-  {#if pluginFields.length}
+  {#snippet fieldList()}
     {#each pluginFields as f (f.key)}
       {#if f.type === 'place'}
         {@const k = `${selectedBlock.blockId}:${f.key}`}
@@ -93,10 +95,13 @@
           <p class="panel-hint" class:place-error={placeStatus[k].err}>{placeStatus[k].text}</p>
         {/if}
       {:else if f.type === 'number'}
-        <label>{f.label}
-          <input type="number" min={f.min} max={f.max} step={f.step ?? 1}
-            value={selectedBlock.props[f.key]}
-            onchange={(e) => setBlockProp(f.key, clampField(f, Number(e.target.value)))} /></label>
+        <div class="pin-line">
+          <label>{f.label}
+            <input type="number" min={f.min} max={f.max} step={f.step ?? 1}
+              value={selectedBlock.props[f.key]}
+              onchange={(e) => setBlockProp(f.key, clampField(f, Number(e.target.value)))} /></label>
+          {#if selectedBlock.type === 'map' && f.key === 'zoom'}<Pin id="zoom" />{/if}
+        </div>
       {:else if f.type === 'toggle'}
         <label class="gridmenu-snap">
           <input type="checkbox" checked={Boolean(selectedBlock.props[f.key])}
@@ -114,6 +119,11 @@
             onchange={(e) => setBlockProp(f.key, e.target.value)} /></label>
       {/if}
     {/each}
+  {/snippet}
+  {#if selectedBlock.type === 'map'}
+    <MenuGroup id="map-place" defaultOpen title={ta('group.place')} value={selectedBlock.props.location || ta('common.none')}>{@render fieldList()}</MenuGroup>
+  {:else if pluginFields.length}
+    {@render fieldList()}
   {:else}
     <button class="ghost" title={ta('hint.pluginBlock')}
       onclick={() => ed.bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>

@@ -109,6 +109,44 @@
     } else if (b.type === 'shape') {
       items.push({ id: 'shapeColor', label: ta('lbl.color'), kind: 'select', value: p.color ?? 'accent', options: colorTokens(), set: (v) => setBlockProp('color', v) });
       items.push({ id: 'thickness', label: ta('lbl.thickness'), kind: 'number', min: 1, max: 40, value: p.thickness ?? 2, set: (v) => setBlockProp('thickness', Math.max(1, Math.min(40, Number(v) || 2))) });
+    } else if (b.type === 'table') {
+      items.push({ id: 'tableLines', label: ta('lbl.tableLines'), kind: 'select', value: p.lines ?? 'rows',
+        options: [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]], set: (v) => setBlockProp('lines', v) });
+    } else if (b.type === 'quote') {
+      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: p.variant ?? 'large',
+        options: [['large', ta('opt.quote.large')], ['short', ta('opt.quote.short')]], set: (v) => setBlockProp('variant', v) });
+    } else if (b.type === 'stats') {
+      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: ['plain', 'cards', 'band'].includes(p.variant) ? p.variant : 'plain',
+        options: ['plain', 'cards', 'band'].map((v) => [v, ta(`opt.statVariant.${v}`)]), set: (v) => setBlockProp('variant', v) });
+    } else if (b.type === 'faq') {
+      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: p.variant === 'list' ? 'list' : 'cards',
+        options: ['cards', 'list'].map((v) => [v, ta(`opt.faqVariant.${v}`)]), set: (v) => setBlockProp('variant', v) });
+    } else if (b.type === 'timeline') {
+      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: p.variant ?? 'left',
+        options: [['left', ta('opt.timeline.left')], ['alternating', ta('opt.timeline.alternating')]], set: (v) => setBlockProp('variant', v) });
+    } else if (b.type === 'form') {
+      items.push({ id: 'sendMode', label: ta('form.mode'), kind: 'select', value: p.mode === 'endpoint' ? 'endpoint' : 'mailto',
+        options: [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]], set: (v) => setBlockProp('mode', v) });
+    } else if (b.type === 'collection') {
+      items.push({ id: 'collectionView', label: ta('lbl.view'), kind: 'select', value: p.view ?? 'cards',
+        options: [['cards', ta('opt.collectionView.cards')], ['list', ta('opt.collectionView.list')], ['archive', ta('opt.collectionView.archive')]], set: (v) => setBlockProp('view', v) });
+      items.push({ id: 'limit', label: ta('lbl.maxCount'), kind: 'number', min: 0, max: 100, value: p.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(0, Math.min(100, Number(v) || 0))) });
+    } else if (b.type === 'product') {
+      items.push({ id: 'columns', label: ta('lbl.columns'), kind: 'number', min: 0, max: 6, value: p.columns ?? 0, set: (v) => setBlockProp('columns', Math.max(0, Math.min(6, Number(v) || 0))) });
+    } else if (b.type === 'cart') {
+      items.push({ id: 'cartView', label: ta('lbl.view'), kind: 'select', value: p.variant ?? 'button',
+        options: [['button', ta('opt.cart.button')], ['icon', ta('opt.cart.icon')]], set: (v) => setBlockProp('variant', v) });
+    } else if (b.type === 'checkout') {
+      items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), kind: 'choice', value: p.vippsCheckout === true ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('vippsCheckout', v === 'on') });
+    } else if (b.type === 'share') {
+      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: p.variant ?? 'icons',
+        options: [['icons', ta('opt.share.icons')], ['labels', ta('opt.share.labels')]], set: (v) => setBlockProp('variant', v) });
+    } else if (b.type === 'countdown') {
+      items.push({ id: 'seconds', label: ta('lbl.countdownSeconds'), kind: 'choice', value: p.showSeconds !== false ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('showSeconds', v === 'on') });
+    } else if (b.type === 'audio') {
+      items.push({ id: 'loop', label: ta('lbl.audioLoop'), kind: 'choice', value: p.loop ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('loop', v === 'on') });
+    } else if (b.type === 'map') {
+      items.push({ id: 'zoom', label: ta('lbl.mapZoom'), kind: 'number', min: 1, max: 19, value: p.zoom ?? 15, set: (v) => setBlockProp('zoom', Math.max(1, Math.min(19, Number(v) || 15))) });
     }
     if (!SIZE_BY_FRAME.has(b.type)) {
       items.push({ id: 'size', label: ta('lbl.scale'), kind: 'number', min: SIZE.min * 100, max: SIZE.max * 100, step: 5, value: Math.round(blockSize(b) * 100),

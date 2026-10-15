@@ -6,7 +6,6 @@
   import { glowLayer } from '$engine/backgrounds/glow.js';
   import { grainLayer } from '$engine/backgrounds/grain.js';
   import { footerThumb } from '$engine/footer-thumb.js';
-  import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
   const ed = getContext('urd-editor');
@@ -90,16 +89,15 @@
     const title = ta('seed.orgName');
     const pages = siteDraft.pages ?? [];
     const pageLinks = (n) => pages.slice(0, n).map((p) => ({ label: p.title || p.id, page: p.id }));
-    const soc = (ids) => ids.map((icon) => ({ icon, url: `https://${icon}.com` }));
     const ext = (label, href) => ({ label, href });
     const copyright = `© ${title}`;
     if (name === 'minimal') {
-      return { align: 'center', brand: { title }, social: soc(['facebook', 'instagram']),
+      return { align: 'center', brand: { title },
         copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
     if (name === 'centered') {
       return { align: 'center', brand: { title }, linkRow: pageLinks(5),
-        social: soc(['facebook', 'instagram', 'x']), copyright: `${copyright} · ${ta('seed.footer.madeWith')}` };
+        copyright: `${copyright} · ${ta('seed.footer.madeWith')}` };
     }
     if (name === 'columns') {
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline1') },
@@ -108,7 +106,7 @@
           { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.join'), '#'), ext(ta('seed.footer.press'), '#')] },
           { title: ta('seed.footer.colResources'), links: [ext(ta('seed.footer.bylaws'), '#'), ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.contact'), '#')] },
         ],
-        social: soc(['facebook', 'instagram', 'linkedin']), copyright,
+        copyright,
         baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'sitemap') {
@@ -119,7 +117,7 @@
           { title: ta('seed.footer.colSupport'), links: [ext(ta('seed.join'), '#'), ext(ta('seed.footer.faq'), '#'), ext(ta('seed.footer.help'), '#')] },
           { title: ta('seed.footer.colLegal'), links: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.bylaws'), '#')] },
         ],
-        social: soc(['facebook', 'instagram', 'linkedin', 'youtube']), copyright,
+        copyright,
         baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.cookies'), '#')] };
     }
     if (name === 'newsletter') {
@@ -129,12 +127,12 @@
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
           { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), ext(ta('seed.footer.privacy'), '#')] },
         ],
-        social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
+        copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
     if (name === 'bigcta') {
       return { align: 'center',
         cta: { kind: 'button', big: true, heading: ta('seed.footer.ctaHeading'), sub: ta('seed.footer.ctaSub'), label: ta('seed.join'), href: '#' },
-        linkRow: pageLinks(4), social: soc(['facebook', 'instagram', 'x']), copyright,
+        linkRow: pageLinks(4), copyright,
         baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'contact') {
@@ -144,7 +142,7 @@
           { title: ta('seed.footer.colHours'), links: [ext(ta('seed.footer.hours1'), '#'), ext(ta('seed.footer.hours2'), '#')] },
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
         ],
-        social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
+        copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
     if (name === 'chapters') {
       // The link columns as numbered chapters under a rule each (footer.design).
@@ -164,7 +162,7 @@
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
           { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), ext(ta('seed.footer.privacy'), '#')] },
         ],
-        social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
+        copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
     // mega: columns + background layers (glow + grain).
     return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline5') },
@@ -172,7 +170,7 @@
         { title: ta('seed.footer.colExplore'), links: pageLinks(4) },
         { title: ta('seed.footer.colFollow'), links: [ext(ta('seed.footer.newsletter'), '#'), ext(ta('seed.email'), `mailto:${ta('seed.email')}`)] },
       ],
-      social: soc(['facebook', 'instagram', 'linkedin', 'youtube']), copyright,
+      copyright,
       baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.madeWith'), '#')],
       background: { version: 1, layers: [
         { type: 'glow', version: glowLayer.version ?? 1, props: { ...glowLayer.defaults(), color: 'accent', x: 0.12, y: 0, radius: 0.6, opacity: 0.45 } },
@@ -324,35 +322,6 @@
     footerMutate(`edit:footer-link-href-${ci}-${li}`, (f) => { f.columns[ci].links[li].href = value; });
   }
 
-  function addFooterSocial() {
-    footerMutate('footer', (f) => { f.social ??= []; f.social.push({ icon: 'facebook', url: 'https://' }); });
-  }
-
-  function removeFooterSocial(si) {
-    footerMutate('footer', (f) => { f.social.splice(si, 1); if (!f.social.length) delete f.social; });
-  }
-
-  function moveFooterSocial(si, dir) {
-    footerMutate('footer', (f) => {
-      const j = si + dir;
-      if (j < 0 || j >= f.social.length) return;
-      [f.social[si], f.social[j]] = [f.social[j], f.social[si]];
-    });
-  }
-
-  function setFooterSocialIcon(si, id) {
-    footerMutate('footer', (f) => { f.social[si].icon = id; });
-  }
-
-  function setFooterSocialUrl(si, value) {
-    footerMutate(`edit:footer-social-url-${si}`, (f) => { f.social[si].url = value; });
-  }
-
-  // The social icons in the dropdown: the social and communication
-  // categories from the icon library.
-  const SOCIAL_ICON_OPTIONS = ICON_CATEGORIES
-    .filter(([cat]) => cat === 'iconCat.social' || cat === 'iconCat.communication')
-    .flatMap(([, ids]) => ids.map((id) => [id, ta(ICON_LIBRARY[id].labelKey)]));
 </script>
 
 <div class="panel-body">
@@ -477,27 +446,15 @@
   </details>
 
   <details class="group">
-    <summary>{ta('group.social')}</summary>
+    <summary title={ta('tip.footer.links')}>{ta('group.social')}</summary>
     <div class="group-items">
-      {#each siteDraft.footer?.social ?? [] as soc, si}
-        <div class="nav-row">
-          <span class="nav-line">
-            <span class="footer-soc-preview" aria-hidden="true">{@html iconSvg(soc.icon) || ''}</span>
-            <Dropdown value={soc.icon} title={ta('blocks.icon')} options={SOCIAL_ICON_OPTIONS}
-              onchange={(v) => setFooterSocialIcon(si, v)} />
-          </span>
-          <span class="row-tools">
-            <button class="ghost row-tool" onclick={() => moveFooterSocial(si, -1)} disabled={si === 0}>{@html ICONS.up}</button>
-            <button class="ghost row-tool" onclick={() => moveFooterSocial(si, 1)}
-              disabled={si === siteDraft.footer.social.length - 1}>{@html ICONS.down}</button>
-            <button class="ghost row-tool" title={ta('tip.removeLink')}
-              onclick={() => removeFooterSocial(si)}>{@html ICONS.cross}</button>
-          </span>
-          <input class="nav-target" value={soc.url} placeholder={ta('ph.hrefMailto')}
-            onchange={(e) => setFooterSocialUrl(si, e.target.value)} />
-        </div>
-      {/each}
-      <button class="ghost action" onclick={addFooterSocial}>{ta('ui.addSocial')}</button>
+      <!-- The row shows the site's links (site.links), edited in the Site panel -->
+      <label class="gridmenu-snap" title={ta('tip.footer.links')}>
+        <input type="checkbox" checked={siteDraft.footer?.links !== false}
+          onchange={(e) => footerMutate('footer', (f) => { if (e.target.checked) delete f.links; else f.links = false; })} />
+        {ta('ui.footerLinks')}
+      </label>
+      <button class="ghost action" onclick={() => { ed.siteLinksOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteLinks')}</button>
     </div>
   </details>
 

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "site": {
     "title": "Urd",
     "lang": "no",
@@ -14,6 +14,32 @@
         "name": "Apeiron",
         "subscribable": false,
         "inFilter": false
+      }
+    ],
+    "links": [
+      {
+        "id": "link-1",
+        "icon": "facebook",
+        "label": "Facebook",
+        "url": "https://facebook.com"
+      },
+      {
+        "id": "link-2",
+        "icon": "instagram",
+        "label": "Instagram",
+        "url": "https://instagram.com"
+      },
+      {
+        "id": "link-3",
+        "icon": "linkedin",
+        "label": "LinkedIn",
+        "url": "https://linkedin.com"
+      },
+      {
+        "id": "link-4",
+        "icon": "youtube",
+        "label": "YouTube",
+        "url": "https://youtube.com"
       }
     ]
   },
@@ -263,24 +289,6 @@
             "href": "#"
           }
         ]
-      }
-    ],
-    "social": [
-      {
-        "icon": "facebook",
-        "url": "https://facebook.com"
-      },
-      {
-        "icon": "instagram",
-        "url": "https://instagram.com"
-      },
-      {
-        "icon": "linkedin",
-        "url": "https://linkedin.com"
-      },
-      {
-        "icon": "youtube",
-        "url": "https://youtube.com"
       }
     ],
     "background": {

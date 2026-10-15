@@ -5,12 +5,17 @@
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import BoxStyle from '../BoxStyle.svelte';
+  import MenuGroup from '../MenuGroup.svelte';
+  import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
+  import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { mutateBlock, setBlockProp } = ed;
+  const { mutateBlock, setBlockProp, setBlockProps } = ed;
+  const { groupReset, groupChanged } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
+  const variant = $derived(selectedBlock.props.variant === 'list' ? 'list' : 'cards');
 
   /** The variants, as the block's own FAQ_VARIANTS lists them: tests/styled-blocks.test.mjs holds the lists equal. */
   const FAQ_VARIANT_IDS = ['cards', 'list'];
@@ -41,33 +46,43 @@
 </script>
 
 {#if area === 'content'}
-  <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
-    <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
-      onchange={(e) => setBlockProp('multi', e.target.checked)} />
-    {ta('lbl.faqMulti')}
-  </label>
-  <p class="panel-strong">{ta('lbl.questions')}</p>
-  {#each selectedBlock.props.items ?? [] as item, i (i)}
-    <span class="nav-line">
-      <input value={item.q} title={ta('tip.faq.question')}
-        onchange={(e) => setFaqItem(i, { q: e.target.value })} />
-      <span class="row-tools">
-        <button class="ghost row-tool" onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-        <button class="ghost row-tool" onclick={() => moveFaqItem(i, 1)}
-          disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
-        <button class="ghost row-tool" title={ta('tip.faq.remove')} onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
+  {#snippet faqQuestions()}
+    {#each selectedBlock.props.items ?? [] as item, i (i)}
+      <span class="nav-line">
+        <input value={item.q} title={ta('tip.faq.question')}
+          onchange={(e) => setFaqItem(i, { q: e.target.value })} />
+        <span class="row-tools">
+          <button class="ghost row-tool" onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+          <button class="ghost row-tool" onclick={() => moveFaqItem(i, 1)}
+            disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
+          <button class="ghost row-tool" title={ta('tip.faq.remove')} onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
+        </span>
       </span>
-    </span>
-  {/each}
-  <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
+    {/each}
+    <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
+    <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
+      <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
+        onchange={(e) => setBlockProp('multi', e.target.checked)} />
+      {ta('lbl.faqMulti')}
+    </label>
+  {/snippet}
+  <MenuGroup id="faq-questions" defaultOpen title={ta('lbl.questions')} value={String(selectedBlock.props.items?.length ?? 0)} reset={groupReset('faq-questions', { multi: false })}>{@render faqQuestions()}</MenuGroup>
 {:else if area === 'style'}
-  <Choice label={ta('lbl.variant')} value={selectedBlock.props.variant === 'list' ? 'list' : 'cards'}
-    options={FAQ_VARIANT_IDS.map((v) => [v, ta(`opt.faqVariant.${v}`)])}
-    onchange={(v) => setBlockProp('variant', v)} />
-  <!-- The card style belongs to the cards; the list's rows are bare -->
-  {#if selectedBlock.props.variant !== 'list'}
-    <p class="panel-strong">{ta('lbl.cardStyle')}</p>
+  {#snippet faqVariant()}
+    <div class="pin-line">
+      <Choice label={ta('lbl.variant')} value={variant}
+        options={FAQ_VARIANT_IDS.map((v) => [v, ta(`opt.faqVariant.${v}`)])}
+        onchange={(v) => setBlockProp('variant', v)} />
+      <Pin id="variant" />
+    </div>
+  {/snippet}
+  {#snippet faqCard()}
     <BoxStyle />
+  {/snippet}
+  {@const cardN = groupChanged({ boxStyle: undefined })}
+  <MenuGroup id="faq-variant" title={ta('lbl.variant')} value={ta(`opt.faqVariant.${variant}`)} reset={groupReset('faq-variant', { variant: 'cards' })}>{@render faqVariant()}</MenuGroup>
+  <!-- The card style belongs to the cards; the list's rows are bare -->
+  {#if variant !== 'list'}
+    <MenuGroup id="faq-card" title={ta('lbl.cardStyle')} value={cardN ? ta('menu.changed', { n: cardN }) : ta('menu.standard')} reset={groupReset('faq-card', { boxStyle: undefined })}>{@render faqCard()}</MenuGroup>
   {/if}
-  <hr class="gridmenu-divider" />
 {/if}

@@ -755,15 +755,15 @@ test('launcherModel: the switch alone decides, and an empty list is a launcher t
 });
 
 test('toolOrder: the owner\'s order first, the rest in the default order, each tool once', () => {
-  assert.deepEqual(TOOL_IDS, ['launcher', 'cart', 'theme']);
-  assert.deepEqual(toolOrder(), ['launcher', 'cart', 'theme']);
-  assert.deepEqual(toolOrder({}), ['launcher', 'cart', 'theme']);
-  assert.deepEqual(toolOrder({ tools: { order: ['theme', 'cart', 'launcher'] } }), ['theme', 'cart', 'launcher']);
+  assert.deepEqual(TOOL_IDS, ['launcher', 'cart', 'theme', 'links']);
+  assert.deepEqual(toolOrder(), ['launcher', 'cart', 'theme', 'links']);
+  assert.deepEqual(toolOrder({}), ['launcher', 'cart', 'theme', 'links']);
+  assert.deepEqual(toolOrder({ tools: { order: ['theme', 'cart', 'launcher'] } }), ['theme', 'cart', 'launcher', 'links']);
   // One named tool pulls ahead; the others keep their order behind it.
-  assert.deepEqual(toolOrder({ tools: { order: ['theme'] } }), ['theme', 'launcher', 'cart']);
+  assert.deepEqual(toolOrder({ tools: { order: ['theme'] } }), ['theme', 'launcher', 'cart', 'links']);
   // Unknown ids and repeats never add or drop a tool.
-  assert.deepEqual(toolOrder({ tools: { order: ['cart', 'cart', 'burger', 42] } }), ['cart', 'launcher', 'theme']);
-  assert.deepEqual(toolOrder({ tools: { order: 'theme' } }), ['launcher', 'cart', 'theme']);
+  assert.deepEqual(toolOrder({ tools: { order: ['cart', 'cart', 'burger', 42] } }), ['cart', 'launcher', 'theme', 'links']);
+  assert.deepEqual(toolOrder({ tools: { order: 'theme' } }), ['launcher', 'cart', 'theme', 'links']);
 });
 
 test('launcherModel: the mobile design falls back to the desktop one, both allowlisted', () => {

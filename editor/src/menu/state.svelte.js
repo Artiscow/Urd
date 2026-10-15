@@ -47,6 +47,9 @@ export function measureMenuRoom(left) {
 /** The groups of the element menu that stand open, by id; a group stays as it was left when another block is selected. */
 export const menuOpen = new SvelteSet();
 
+/** The groups that have had their first showing this session: a group that starts open does so once, and is then left as the owner leaves it. */
+export const menuSeen = new Set();
+
 /* The quick row (0.7.20.3, lib/quick-row.js): what the owner pinned or took
    out, kept per block type in the browser. */
 const quick = $state({ choices: readChoices(localStorage) });

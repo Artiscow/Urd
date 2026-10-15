@@ -119,6 +119,26 @@ test('site v3 without nav.style.inset gets the old default written in', () => {
   assert.equal(lifted.nav.style.inset, false);
 });
 
+// 4 -> 5: the footer's social links became the site's links.
+
+test('site v4 footer.social is lifted into site.links with the brand names as labels', () => {
+  const lifted = liftSiteFile({ schemaVersion: 4, site: { title: 'T' }, footer: { version: 1, social: [{ icon: 'facebook', url: 'https://f.com/x' }, { icon: 'mail', url: 'mailto:a@b.no' }] } });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.deepEqual(lifted.site.links, [
+    { id: 'link-1', icon: 'facebook', label: 'Facebook', url: 'https://f.com/x' },
+    { id: 'link-2', icon: 'mail', label: 'Email', url: 'mailto:a@b.no' },
+  ]);
+  assert.equal(lifted.footer.social, undefined, 'the footer field is dropped');
+  assert.equal(lifted.footer.version, 1, 'the rest of the footer survives');
+});
+
+test('site v4 without footer.social gets no links and no footer change', () => {
+  const lifted = liftSiteFile({ schemaVersion: 4, site: { title: 'T' }, footer: { version: 1, text: 'x' } });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.equal(lifted.site.links, undefined);
+  assert.equal(lifted.footer.text, 'x');
+});
+
 test('site v3 that set nav.style.inset keeps its own value', () => {
   const lifted = liftSiteFile({ schemaVersion: 3, nav: { version: 1, items: [], style: { inset: true, size: 'lg' } } });
   assert.equal(lifted.nav.style.inset, true);

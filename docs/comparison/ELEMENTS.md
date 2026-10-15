@@ -884,8 +884,8 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |139|Reviews (third-party) (Reviews, Yelp Reviews, Review, Product Review, review)|EL DU SP OT SH S1|schema|-|Missing|Not taken: third party|
 |140|Team member (Person, Team Members, Team)|DV BR SP ST TL WF|social links|a `<ul>` of `<article>`s: `<img alt="">` (the name is already text), `<h3>`, role and a `mailto:` link; a «vacant» state|Has: team preset|0.7.16.4 people kind|
 |141|Logo list / partners (Logo List, Partners, Logos)|BD TL WF SH|carousel/grid|a `<ul>` of linked logos with the sponsor's name as `alt`, `flex-wrap`, equal optical size from `max-block-size` and `aspect-ratio`; a scrolling row duplicates the list with `aria-hidden` and `inert`, has a pause control and stands still under reduced motion|Has: sponsors preset, gallery ribbon|ER-F: sponsor tiers|
-|142|Social icons / follow (Social Icons, Social Media Follow, Social Bar, Social links)|EL WP DV BD HO WX DO NP SH SQ WH|brand colours|drawn SVG icons inside links with accessible names|Has: footer social links, icons|-|
-|143|Share buttons (Share Buttons, Social Sharing, Social Share (Buttons), Social Buttons, Sharing Icons, Share)|EL BR BD SP ST OT DU WX JI WH|networks, counts|plain share links with no SDK; «copy link» through the Clipboard API|Has|-|
+|142|Social icons / follow (Social Icons, Social Media Follow, Social Bar, Social links)|EL WP DV BD HO WX DO NP SH SQ WH|brand colours|drawn SVG icons inside links with accessible names|Has (0.7.20.5.3): the site's links, registered once in the Site panel with a library icon or an own image, drawn by the footer, the menu's tools and the links block|-|
+|143|Share buttons (Share Buttons, Social Sharing, Social Share (Buttons), Social Buttons, Sharing Icons, Share)|EL BR BD SP ST OT DU WX JI WH|networks, counts|plain share links with no SDK; «copy link» through the Clipboard API|Missing: had them v0.7 to 0.7.20.5.2; removed 15 October 2026, since the share links led nowhere a visitor wants, and the block became the row of the site's links (#142)|-|
 |144|Instagram feed (Instagram Feed, Instagram)|DV BR SP HO SQ RM SK|grid/carousel|needs an API token a static site cannot hold; a manual gallery plus a profile link instead|Missing|Not taken: needs an API token, which a static site cannot keep|
 |145|Facebook embeds (Facebook Button/Comments/Embed/Page, Facebook Page Plugin/Post/Like/Share, Facebook)|EL BR BD WF DU|-|needs Facebook's SDK, which tracks|Missing|Not taken: SDK and tracking|
 |146|X / Twitter embeds (Twitter Button, Embed Tweet, Timeline, Twitter Feed, X Follow)|BD WF DU WX SK|-|-|Missing|Not taken|
@@ -1176,7 +1176,7 @@ The element research ranked what Urd lacks by value to clubs and associations. C
 |24|Embeds (Spotify, SoundCloud, an Instagram post) with click-to-load|low-medium|Squarespace, Ghost|a privacy facade|Partial: YouTube and Vimeo only, and their iframe loads at once rather than behind a facade, as the research assumed|0.7.24|
 |25|Link preview / bookmark card|low-medium|Ghost Bookmark, Squarespace Content Link|OpenGraph read at publish|Missing|ER-G|
 |26|Charts|low-medium|Squarespace Chart, Divi Chart|SVG drawn at publish, plus the table|Missing|ER-C|
-|27|Copy to clipboard|low-medium|Flowbite|the Clipboard API|Partial: the share block's «copy»|ER-G|
+|27|Copy to clipboard|low-medium|Flowbite|the Clipboard API|Missing: the share block's «copy» went with the share buttons (0.7.20.5.3)|ER-G|
 |28|QR code|low-medium|Flowbite, Untitled UI|SVG generated at publish|Missing|Watch: needs a QR encoder|
 |29|Before/after|low|Divi, Aceternity UI Compare|a range input plus `clip-path`|Missing|ER-B|
 |30|Image hotspots|low|Elementor Hotspot|buttons plus popovers|Missing|ER-B|

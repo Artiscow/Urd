@@ -4,11 +4,23 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
+  import MenuGroup from '../MenuGroup.svelte';
+  import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
+  import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { mutateBlock, setBlockProp } = ed;
+  const { mutateBlock, setBlockProp, setBlockProps } = ed;
+  const { groupReset } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
+
+  /** The grid's shape as the closed group reads it: rows × columns. */
+  const shape = $derived.by(() => {
+    const rows = Array.isArray(selectedBlock.props.rows) ? selectedBlock.props.rows : [];
+    const cols = Math.max(1, ...rows.map((row) => (Array.isArray(row) ? row.length : 1)), 1);
+    return `${Math.max(1, rows.length)} × ${cols}`;
+  });
+  const lineOptions = () => [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]];
 
   /** The table's shape: rows/columns are added and removed at the end;
    *  the row set is rectangularized first, so hand-edited data is tolerated. */
@@ -28,29 +40,36 @@
 </script>
 
 {#if area === 'content'}
-  <!-- The cells are typed directly on the canvas; the panel owns the grid's shape. -->
-  <span class="toolbar-row">
-    <button class="ghost" onclick={() => tableResize(1, 0)}>{ta('ui.addRow')}</button>
-    <button class="ghost" onclick={() => tableResize(-1, 0)}>{ta('ui.removeRow')}</button>
-  </span>
-  <span class="toolbar-row">
-    <button class="ghost" onclick={() => tableResize(0, 1)}>{ta('ui.addColumn')}</button>
-    <button class="ghost" onclick={() => tableResize(0, -1)}>{ta('ui.removeColumn')}</button>
-  </span>
-  <label class="gridmenu-snap" title={ta('tip.table.header')}>
-    <input type="checkbox" checked={selectedBlock.props.header !== false}
-      onchange={(e) => setBlockProp('header', e.target.checked)} />
-    {ta('lbl.tableHeader')}
-  </label>
+  {#snippet tableShape()}
+    <!-- The cells are typed directly on the canvas; the menu owns the grid's shape. -->
+    <span class="toolbar-row">
+      <button class="ghost" onclick={() => tableResize(1, 0)}>{ta('ui.addRow')}</button>
+      <button class="ghost" onclick={() => tableResize(-1, 0)}>{ta('ui.removeRow')}</button>
+    </span>
+    <span class="toolbar-row">
+      <button class="ghost" onclick={() => tableResize(0, 1)}>{ta('ui.addColumn')}</button>
+      <button class="ghost" onclick={() => tableResize(0, -1)}>{ta('ui.removeColumn')}</button>
+    </span>
+    <label class="gridmenu-snap" title={ta('tip.table.header')}>
+      <input type="checkbox" checked={selectedBlock.props.header !== false}
+        onchange={(e) => setBlockProp('header', e.target.checked)} />
+      {ta('lbl.tableHeader')}
+    </label>
+  {/snippet}
+  <MenuGroup id="table-shape" defaultOpen title={ta('group.rowsColumns')} value={shape} reset={groupReset('table-shape', { header: true })}>{@render tableShape()}</MenuGroup>
 {:else if area === 'style'}
-  <label>{ta('lbl.tableLines')}
-    <Dropdown value={selectedBlock.props.lines ?? 'rows'}
-      options={[['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]]}
-      onchange={(v) => setBlockProp('lines', v)} /></label>
-  <label class="gridmenu-snap">
-    <input type="checkbox" checked={Boolean(selectedBlock.props.striped)}
-      onchange={(e) => setBlockProp('striped', e.target.checked)} />
-    {ta('lbl.tableStriped')}
-  </label>
-  <hr class="gridmenu-divider" />
+  {#snippet tableLines()}
+    <div class="pin-line">
+      <label>{ta('lbl.tableLines')}
+        <Dropdown value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
+          onchange={(v) => setBlockProp('lines', v)} /></label>
+      <Pin id="tableLines" />
+    </div>
+    <label class="gridmenu-snap">
+      <input type="checkbox" checked={Boolean(selectedBlock.props.striped)}
+        onchange={(e) => setBlockProp('striped', e.target.checked)} />
+      {ta('lbl.tableStriped')}
+    </label>
+  {/snippet}
+  <MenuGroup id="table-lines" defaultOpen title={ta('lbl.tableLines')} value={lineOptions().find(([v]) => v === (selectedBlock.props.lines ?? 'rows'))?.[1] ?? ''} reset={groupReset('table-lines', { lines: 'rows', striped: false })}>{@render tableLines()}</MenuGroup>
 {/if}

@@ -856,6 +856,12 @@ html {
   gap: 10px;
 }
 
+/* Nothing to draw yet: the editor's own line where the row would be (the published page draws nothing). */
+.urd-share-empty {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
 .urd-share-button {
   display: inline-flex;
   align-items: center;
@@ -12461,6 +12467,37 @@ body.urd-marqueeing {
   place-items: center;
   color: color-mix(in srgb, var(--urd-color-text) 70%, transparent);
 }
+.urd-footer-soc img,
+.urd-share-icon img,
+.urd-nav-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* The site's links as a tool in the menu's cluster (nav.js): the same box
+   as the theme button, one per link, the label spoken and shown in the sheet. */
+.urd-nav-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.urd-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.urd-nav-link svg,
+.urd-nav-link img {
+  width: 1.25em;
+  height: 1.25em;
+}
+
 .urd-footer-soc:hover {
   color: var(--urd-color-text);
   border-color: color-mix(in srgb, var(--urd-color-text) 40%, transparent);
@@ -13522,12 +13559,15 @@ body.urd-mobile .urd-section-resize-top {
   outline-offset: -1px;
 }
 
-/* The whole block surface can be dragged directly; editable text keeps the text cursor */
+/* The whole block surface can be dragged directly; editable text keeps the
+   text cursor, the rich text block's and the plain-text cells, numbers,
+   quotes and events the other blocks mark with plaintext-only (the same set
+   the drag lets through in preview-edit.js). */
 .urd-preview .urd-editable {
   cursor: move;
 }
 
-.urd-preview .urd-editable .urd-text[contenteditable='true'] {
+.urd-preview .urd-editable :is([contenteditable='true'], [contenteditable='plaintext-only']) {
   cursor: text;
 }
 

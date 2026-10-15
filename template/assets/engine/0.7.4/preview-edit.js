@@ -2661,10 +2661,14 @@ document.addEventListener('click', (event) => {
   // published page (a new tab, a file to save).
   if (a.closest('.urd-cal-dialog')) return;
   // In the Clean view a calendar's own links (a place, an address in a
-  // description, a sign-up) are followed too; every other link in a block
-  // waits for «View page».
-  const cleanCalendar = document.body.classList.contains('urd-chrome-off') && a.closest('.urd-cal');
-  if (a.closest('.urd-block') && !cleanCalendar) {
+  // description, a sign-up) are followed too, and so is a links block's row,
+  // which in the editing view works once its block is selected (the first
+  // click selects, the next follows, the cart button's model); every other
+  // link in a block waits for «View page».
+  const chromeOff = document.body.classList.contains('urd-chrome-off');
+  const cleanCalendar = chromeOff && a.closest('.urd-cal');
+  const linksRow = a.classList.contains('urd-share-button') && (chromeOff || a.closest('.urd-block')?.classList.contains('urd-selected'));
+  if (a.closest('.urd-block') && !cleanCalendar && !linksRow) {
     event.preventDefault();
     return;
   }
@@ -2680,7 +2684,7 @@ document.addEventListener('click', (event) => {
   }
   // A calendar link to another site that opens in a tab of its own is left
   // to the browser; only a link to a page of this site goes through the editor.
-  if (cleanCalendar && url.origin !== location.origin && a.target === '_blank') return;
+  if ((cleanCalendar || linksRow) && url.origin !== location.origin && a.target === '_blank') return;
   event.preventDefault();
   if (url.origin === location.origin) {
     post({ type: 'urd-navigate', path: url.pathname });
@@ -3794,19 +3798,26 @@ function enhanceBlock(el, block, section, grid, host) {
    * grid units and rounded continuously, so the block snaps visibly while
    * dragging. On release the new frame is reported to the editor.
    */
-  function wireDrag(handle, kind, opts = {}) {
+  /** The text a block lets the owner type in on the canvas, whichever editing mode it asked for. */
+const EDITABLE_TEXT = '[contenteditable="true"], [contenteditable="plaintext-only"]';
+
+function wireDrag(handle, kind, opts = {}) {
     handle.addEventListener('pointerdown', (event) => {
       if (opts.surface) {
         const target = eventTarget(event);
         // Editable text is only exempt when the block is ALREADY selected
         // (then the text is being edited). An unselected block drags
         // freely from the text too - a click without a drag selects it,
-        // another click edits.
-        if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id && multiIds.size <= 1) return;
+        // another click edits. Every block's own editable text counts: the
+        // rich text block's, and the plain-text cells, numbers, quotes and
+        // events the other blocks mark with plaintext-only.
+        if (target?.closest(EDITABLE_TEXT) && selectedBlockId === block.id && multiIds.size <= 1) return;
         // The cart button follows the text block's two-step model: selected
         // block = native click (the drawer opens), unselected block =
         // surface drag and selection.
-        if (target?.closest('.urd-cart-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
+        if (target?.closest('.urd-cart-button, .urd-share-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
+        // In the Clean view a links row keeps its click too, as the calendar's links do.
+        if (document.body.classList.contains('urd-chrome-off') && target?.closest('.urd-share-button')) return;
         // In the Clean view a calendar event keeps its click: it opens the event in full, as on the published page.
         // So does an event of the selected calendar while editing, where the card's words are rewritten.
         // The Year wheel's months are buttons drawn in SVG and follow the same two steps: a click picks the month.

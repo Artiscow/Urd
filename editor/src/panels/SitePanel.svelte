@@ -16,7 +16,8 @@
   const layoutWidth = $derived(ed.layoutWidth);
   const site = $derived(ed.site);
   const siteDraft = $derived(ed.siteDraft);
-  const { addSiteCalendar, setStatus, siteCalendars, siteLangOptions, siteLangValue, siteMutate, svgAutoTrim, themeSwatches } = ed;
+  import LinkList from '../lib/LinkList.svelte';
+  const { addSiteCalendar, setStatus, siteCalendars, siteLangOptions, siteLangValue, siteMutate, svgAutoTrim, themeSwatches, siteLinks, addSiteLink, removeSiteLink, moveSiteLink, setSiteLink } = ed;
 
   async function uploadSiteIcon(event) {
     const file = event.target.files?.[0];
@@ -263,6 +264,16 @@
           {/each}
         </div>
       {/if}
+    </div>
+  </details>
+
+  <!-- The site's links (site.links): the owner's addresses with an icon, drawn by the footer, the menu's tools and the share block -->
+  <details class="group" bind:open={() => ed.siteLinksOpen, (v) => (ed.siteLinksOpen = v)}>
+    <summary title={ta('tip.site.links')}>{ta('group.siteLinks')}</summary>
+    <div class="group-items">
+      <LinkList links={siteLinks()}
+        onchange={(i, patch) => setSiteLink(i, patch)} onadd={() => addSiteLink()}
+        onremove={(i) => removeSiteLink(i)} onmove={(i, dir) => moveSiteLink(i, dir)} />
     </div>
   </details>
   <hr class="gridmenu-divider" />

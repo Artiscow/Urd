@@ -1354,6 +1354,16 @@
             </label>
           </div>
           {/if}
+        {:else if id === 'links'}
+        <div class="mini-card">
+          <span class="tool-head"><span class="mini-label">{ta('lbl.navToolLinks')}</span>{@render toolMove(id, n)}</span>
+          <label class="gridmenu-snap" title={ta('tip.nav.toolLinks')}>
+            <input type="checkbox" checked={siteDraft.nav.style?.tools?.links === true}
+              onchange={(e) => setNavTools('links', e.target.checked ? true : undefined)} />
+            {ta('lbl.showInMenu')}
+          </label>
+          <button class="ghost action" onclick={() => { ed.siteLinksOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteLinks')}</button>
+        </div>
         {:else if id === 'cart'}
         <div class="mini-card">
           <span class="tool-head"><span class="mini-label">{ta('lbl.cart')}</span>{@render toolMove(id, n)}</span>

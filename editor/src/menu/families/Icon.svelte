@@ -50,7 +50,7 @@
       </span>
     {/if}
   {/snippet}
-  <MenuGroup id="icon-icon" title={ta('blocks.icon')} value={selectedBlock.props.image ? ta('gp.ownIcon') : selectedBlock.props.icon ? ta('menu.drawnIcon') : (selectedBlock.props.glyph ?? '★')}>{@render iconIcon()}</MenuGroup>
+  <MenuGroup id="icon-icon" defaultOpen title={ta('blocks.icon')} value={selectedBlock.props.image ? ta('gp.ownIcon') : selectedBlock.props.icon ? ta('menu.drawnIcon') : (selectedBlock.props.glyph ?? '★')}>{@render iconIcon()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet iconLook()}
     <div class="pin-line">
@@ -66,5 +66,5 @@
       <Pin id="iconColor" />
     </div>
   {/snippet}
-  <MenuGroup id="icon-look" title={ta('group.appearance')} value={`${selectedBlock.props.size ?? 48} px`} reset={groupReset('icon-look', { size: 48, color: 'accent' })}>{@render iconLook()}</MenuGroup>
+  <MenuGroup id="icon-look" defaultOpen title={ta('group.appearance')} value={`${selectedBlock.props.size ?? 48} px`} reset={groupReset('icon-look', { size: 48, color: 'accent' })}>{@render iconLook()}</MenuGroup>
 {/if}

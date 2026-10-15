@@ -83,6 +83,7 @@ function handleFor(selectedBlock, viewMode = 'desktop') {
     isEntrance: (a) => a?.type === 'fade-in',
     themeSwatches: () => [['accent', '#7c5cff']],
     siteCalendars: () => calendars,
+    siteLinks: () => [],
     siteCalendarById: (id) => calendars.find((c) => c.id === id) ?? null,
     addSiteCalendar: noop,
     newSeed: () => 1,

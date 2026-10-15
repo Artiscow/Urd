@@ -93,21 +93,26 @@ test('footerColumns: an unknown page gives # with missing', () => {
   assert.equal(cols[0].links[0].missing, true);
 });
 
-test('footerSocial: requires an icon and a safe URL', () => {
-  const social = footerSocial({
-    footer: {
-      social: [
-        { icon: 'facebook', url: 'https://facebook.com/x' },
-        { icon: 'x', url: 'javascript:alert(1)' },
-        { icon: '', url: 'https://y.no' },
-        { icon: 'mail', url: 'mailto:a@b.no' },
+test('footerSocial: the site\'s links, each with an icon or an image, a safe URL and a name', () => {
+  const file = {
+    site: {
+      links: [
+        { id: 'a', icon: 'facebook', url: 'https://facebook.com/x' },
+        { id: 'b', icon: 'x', url: 'javascript:alert(1)' },
+        { id: 'c', icon: '', url: 'https://y.no' },
+        { id: 'd', icon: 'mail', label: 'Write to us', url: 'mailto:a@b.no' },
+        { id: 'e', image: '/media/own-icon.svg', url: 'https://z.no' },
       ],
     },
-  });
-  assert.deepEqual(social, [
-    { icon: 'facebook', url: 'https://facebook.com/x' },
-    { icon: 'mail', url: 'mailto:a@b.no' },
+    footer: {},
+  };
+  assert.deepEqual(footerSocial(file), [
+    { id: 'a', icon: 'facebook', image: '', label: 'Facebook', url: 'https://facebook.com/x' },
+    { id: 'd', icon: 'mail', image: '', label: 'Write to us', url: 'mailto:a@b.no' },
+    { id: 'e', icon: '', image: '/media/own-icon.svg', label: 'https://z.no', url: 'https://z.no' },
   ]);
+  assert.deepEqual(footerSocial({ ...file, footer: { links: false } }), [], 'the footer can leave the row out');
+  assert.deepEqual(footerSocial({ footer: { social: [{ icon: 'facebook', url: 'https://f.com' }] } }), [], 'the footer\'s old list is read only through the migration');
 });
 
 test('footerBaseline: copyright wins, otherwise text lines', () => {

@@ -98,6 +98,8 @@ function materializeSiteImages(site) {
   materializeBackground(site.nav?.style?.background, files);
   materializeBackground(site.footer?.background, files);
   if (site.footer?.brand) materializeField(site.footer.brand, 'logo', 'footer-logo', files);
+  // The site's links' own icons.
+  for (const link of Array.isArray(site.site?.links) ? site.site.links : []) materializeField(link, 'image', 'link-icon', files);
   // The launcher's own mark on the button, and one per shortcut.
   if (site.nav?.launcher) {
     materializeField(site.nav.launcher, 'image', 'snarvei', files);

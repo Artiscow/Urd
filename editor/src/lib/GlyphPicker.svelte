@@ -2,7 +2,8 @@
   /**
    * Glyph/emoji picker: a button showing the current glyph that opens a broad, categorized menu with recent glyphs at the top.
    * The glyph set and the recent-glyph logic live in the engine's glyphs.js (shared with the text editor bar's glyph menu, same localStorage key).
-   * With onicon set, the engine's icon library (drawn SVGs) is shown at the top as well; with onimage set, a custom icon image can be uploaded (webp-compressed).
+   * With onicon set, the engine's icon library (drawn SVGs) is shown at the top as well; with onimage set, a custom icon image can be uploaded (webp-compressed);
+   * with iconsOnly the glyphs are left out, so the picker offers the library and an own image alone (the links' icons).
    * Two branches (ADR-0011 addendum, anchored.js decides): in the top layer, anchored under the button's right edge with the browser flipping it away from the viewport edge and light dismiss; otherwise position: fixed (the panels clip absolute content), placed by measuring, closing on a click outside, Escape or a scroll outside. The same pattern as ColorPicker.
    */
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
@@ -11,7 +12,7 @@
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '$engine/icons.js';
   import { ta } from '$engine/i18n.js';
 
-  let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage } = $props();
+  let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage, iconsOnly = false } = $props();
 
   const native = nativeAnchoring();
   const anchor = anchorName('urd-gp');
@@ -139,9 +140,11 @@
               class:active={id === icon}
               onclick={() => pickIcon(id)}><span class="gp-svg">{@html iconSvg(id)}</span></button>
           {/each}
-          {#each recent as glyph (glyph)}
-            <button type="button" class="gp-cell" onclick={() => pick(glyph)}>{glyph}</button>
-          {/each}
+          {#if !iconsOnly}
+            {#each recent as glyph (glyph)}
+              <button type="button" class="gp-cell" onclick={() => pick(glyph)}>{glyph}</button>
+            {/each}
+          {/if}
         </div>
       {/if}
       {#if onicon}
@@ -156,15 +159,17 @@
           </div>
         {/each}
       {/if}
-      {#each GLYPH_CATEGORIES as [name, glyphs] (name)}
-        <div class="gp-group">{ta(name)}</div>
-        <div class="gp-grid">
-          {#each glyphs.split(' ') as glyph (glyph)}
-            <button type="button" class="gp-cell" class:active={glyph === value}
-              onclick={() => pick(glyph)}>{glyph}</button>
-          {/each}
-        </div>
-      {/each}
+      {#if !iconsOnly}
+        {#each GLYPH_CATEGORIES as [name, glyphs] (name)}
+          <div class="gp-group">{ta(name)}</div>
+          <div class="gp-grid">
+            {#each glyphs.split(' ') as glyph (glyph)}
+              <button type="button" class="gp-cell" class:active={glyph === value}
+                onclick={() => pick(glyph)}>{glyph}</button>
+            {/each}
+          </div>
+        {/each}
+      {/if}
       {#if onimage}
         <div class="gp-group">{ta('gp.ownIcon')}</div>
         <button type="button" class="ghost gp-upload" onclick={() => fileEl.click()}>{ta('gp.upload')}</button>

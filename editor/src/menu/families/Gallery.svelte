@@ -47,7 +47,7 @@
       </div>
     {/each}
   {/snippet}
-  <MenuGroup id="gallery-images" title={ta('group.images')} value={ta('menu.imageCount', { n: selectedBlock.props.images?.length ?? 0 })}>{@render galleryImages()}</MenuGroup>
+  <MenuGroup id="gallery-images" defaultOpen title={ta('group.images')} value={ta('menu.imageCount', { n: selectedBlock.props.images?.length ?? 0 })}>{@render galleryImages()}</MenuGroup>
 {:else if area === 'style'}
   {@const gview = blockGalleryView(selectedBlock.props.view)}
   {#snippet galleryView()}

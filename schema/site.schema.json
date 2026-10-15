@@ -18,6 +18,22 @@
         "timeZone": { "type": "string", "description": "Additive from 0.7.19.10: an IANA time zone (Europe/Oslo). When set, the calendar block shows every time on this zone's clock to every visitor; omitted, each visitor sees the times in their own zone." },
         "mapService": { "type": "string", "enum": ["osm", "duckduckgo", "brave", "here", "google", "apple", "norgeskart", "finn"], "description": "Additive from 0.7.0.39: the map service a place written as text links to (the calendar's places). Omitted is OpenStreetMap." },
         "meetingHosts": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$" }, "description": "Additive from 0.7.19.16: the hosts of the site's own video meeting servers (meet.example.org). A link to one of them in a calendar event is a meeting link, beside the services known by their host." },
+        "links": {
+          "type": "array",
+          "description": "The site's links (additive from 0.7.0.52): the owner's addresses with an icon, drawn by the footer, the menu's tools and the share block. Lifted from footer.social by the site migration 4 -> 5.",
+          "items": {
+            "type": "object",
+            "required": ["id", "url"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "description": "Made by the editor" },
+              "icon": { "type": "string", "description": "Id from the icon library (icons.js); image wins when both are set" },
+              "image": { "type": "string", "description": "An own icon: a /media/ path (a data URL in the draft until publishing)" },
+              "label": { "type": "string", "description": "The accessible name; empty falls back to the icon's brand name" },
+              "url": { "type": "string", "description": "http/https/mailto/tel, or a site path or anchor" }
+            }
+          }
+        },
         "calendars": {
           "type": "array",
           "description": "Additive from 0.7.19.29: the calendars the site uses, registered once and picked by the calendar blocks as { \"calendar\": \"<id>\" } in their sources. Described in docs/SCHEMA.md.",
@@ -374,7 +390,8 @@
               "properties": {
                 "side": { "enum": ["end", "start"], "default": "end", "description": "end = after the menu items on the right; start = before the logo on the left. In the side column: end = at the bottom, start = at the top" },
                 "theme": { "type": "boolean", "default": true, "description": "The light/dark button stands in the cluster (additive from v0.7); false takes it out. It exists only when the theme has an alt counterpart" },
-                "order": { "type": "array", "description": "The tools' order in the cluster (additive from v0.7), e.g. [\"cart\", \"theme\", \"launcher\"]. Tools left out keep their default place after the named ones; the burger is the mobile opener and always ends the cluster.", "items": { "enum": ["launcher", "cart", "theme"] } },
+                "links": { "type": "boolean", "default": false, "description": "The site's links (site.links) as icons in the cluster (additive from 0.7.0.52)" },
+                "order": { "type": "array", "description": "The tools' order in the cluster (additive from v0.7), e.g. [\"cart\", \"theme\", \"launcher\"]. Tools left out keep their default place after the named ones; the burger is the mobile opener and always ends the cluster.", "items": { "enum": ["launcher", "cart", "theme", "links"] } },
                 "align": { "enum": ["start", "center", "end", "spread"], "default": "center", "description": "The cluster's alignment across the side column (additive from v0.7): left, centred, right, or spread to both edges; the bar ignores it" }
               }
             },
@@ -533,9 +550,10 @@
             }
           }
         },
+        "links": { "type": "boolean", "default": true, "description": "The site's links (site.links) as a row in the footer (additive from 0.7.0.52); false leaves the row out" },
         "social": {
           "type": "array",
-          "description": "Social links (additive from v0.6): icon id from the icon library + URL (http/https/mailto/tel).",
+          "description": "Social links (v0.6 to 0.7.0.51; lifted into site.links by the site migration 4 -> 5, never written by the editor since): icon id from the icon library + URL (http/https/mailto/tel).",
           "items": {
             "type": "object",
             "required": ["icon", "url"],

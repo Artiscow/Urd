@@ -103,7 +103,7 @@ export const LAUNCHER_VIEWS = ['grid', 'list', 'cover'];
  * otherwise. The burger is not among them: it is the mobile menu's opener
  * and always ends the cluster.
  */
-export const TOOL_IDS = ['launcher', 'cart', 'theme'];
+export const TOOL_IDS = ['launcher', 'cart', 'theme', 'links'];
 
 /**
  * The cluster's order (nav.style.tools.order, additive since v0.7): the

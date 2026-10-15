@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.20.5.3): the last families in groups, and the site's links
+
+- [ ] Table, quote, statistic, FAQ, timeline, form, collection, product, cart, checkout, share (now Links), countdown, audio and map: every setting stands in a group on the Design canvas's map, the closed value reads right, the dot and «Reset this group» appear and work, the pins put the mapped settings in the quick row, and no divider line ends a Style area
+- [ ] A block whose area holds one group (statistic, table, timeline, button, icon, and the Content of quote, FAQ, shape, gallery, collection, cart, share, countdown, map) opens that group at the first showing; a group closed by hand stays closed for the session
+- [ ] A second click on a selected table cell, a statistic's number or label, a quote and a timeline's year, title or text puts the caret there, and the pointer shows the text cursor over all of them; the first click still selects and drags
+- [ ] Site panel, Links: a link with a library icon and one with an own uploaded image, with and without a label, moved and removed; «+ New link» puts the caret in the label; the footer draws the row with the names spoken, and «Show the site's links» in the Footer panel takes it out; a site from before the lift keeps its old footer links as site links with the brand names
+- [ ] Nav panel, tools: the links tool off by default, on shows the links as icons in the cluster and in the mobile sheet with their names, moved with the arrows
+- [ ] The Links block: the site's links first, each of them switchable off for that block alone, then the block's own list with the whole icon library and an own image; a link to a page of the site, an external one (new tab) and a mailto; followed by one click in the Clean view and by the second click when editing, never by the click that selects; «Edit the site's links» opens the Site panel with the Links group open; a page stored with the old share buttons shows the site's links; publishing writes own icons to media/
+- [ ] The three new backlog items read right: the themed date and time picker under 0.7.10, and «Reactions on elements» under v0.8
+
 ### Test batch (0.7.0.51): the bug list
 
 - [ ] A ribbon block on a published page: the pause button at the band's right edge pauses and plays it (the label reads «Pause the band» / «Play the band» in the site's language), the state survives an edit of the words, and with «Pause» set to «Touch» the button is invisible until it gets keyboard focus, a touch on the band pauses it and a tap on its empty space plays it again

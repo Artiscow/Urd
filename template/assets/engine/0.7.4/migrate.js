@@ -50,6 +50,7 @@ export function lift(data, def) {
   return { ok: true, version, props };
 }
 
+import { liftFooterSocial } from './links-model.js';
 import { fitMoves, blockSize } from './push-model.js';
 
 /** Current version of the page file format (content/pages/*.json). */
@@ -66,7 +67,7 @@ export const MOBILE_ROW = 8;
 export const MOBILE_GAP = 16;
 
 /** Current version of the site.json format. */
-export const SITE_SCHEMA_VERSION = 4;
+export const SITE_SCHEMA_VERSION = 5;
 
 /**
  * File-level migrations. Each function lifts exactly one version and
@@ -364,6 +365,9 @@ const siteMigrations = {
   3: (site) => (site.nav && site.nav.style?.inset === undefined
     ? { ...site, nav: { ...site.nav, style: { ...(site.nav.style ?? {}), inset: false } } }
     : site),
+  // 4 -> 5: the footer's social links became the site's links (site.links),
+  // drawn by the footer, the menu's tools and the share block.
+  4: (site) => liftFooterSocial(site),
 };
 
 /**

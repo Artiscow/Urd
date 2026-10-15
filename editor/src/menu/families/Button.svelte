@@ -31,7 +31,7 @@
         onchange={(e) => setBlockProp('href', e.target.value || null)} />
     {/if}
   {/snippet}
-  <MenuGroup id="btn-link" title={ta('group.textLink')} value={buttonTargets().find(([id]) => id === (selectedBlock.props.page ?? '__href'))?.[1] ?? ''}>{@render btnLink()}</MenuGroup>
+  <MenuGroup id="btn-link" defaultOpen title={ta('group.textLink')} value={buttonTargets().find(([id]) => id === (selectedBlock.props.page ?? '__href'))?.[1] ?? ''}>{@render btnLink()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet btnLook()}
     <div class="pin-line">
@@ -42,5 +42,5 @@
       <Pin id="btnStyle" />
     </div>
   {/snippet}
-  <MenuGroup id="btn-look" title={ta('group.appearance')} value={selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary')} reset={groupReset('btn-look', { style: 'primary' })}>{@render btnLook()}</MenuGroup>
+  <MenuGroup id="btn-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary')} reset={groupReset('btn-look', { style: 'primary' })}>{@render btnLook()}</MenuGroup>
 {/if}

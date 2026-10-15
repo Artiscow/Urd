@@ -8,7 +8,7 @@
 
 import { resolveColor } from './theme.js';
 import { isSafeImage } from './nav-model.js';
-import { iconSvg, ICON_LIBRARY } from './icons.js';
+import { linkIconHtml, leavesSite } from './links-model.js';
 import { t } from './i18n.js';
 import { renderBackgroundLayers } from './render.js';
 import {
@@ -46,23 +46,21 @@ function mountFooterBg(footer, inner) {
   return true;
 }
 
-/** Social row: one anchor per link, the icon is the engine's own drawn SVG. */
+/** The links row: one anchor per link, the icon the engine's own drawn SVG or the owner's own image. */
 function buildSocial(social) {
   const row = document.createElement('div');
   row.className = 'urd-footer-social';
   for (const s of social) {
-    const svg = iconSvg(s.icon);
-    if (!svg) continue; // an unknown icon id is dropped silently
     const a = document.createElement('a');
     a.className = 'urd-footer-soc';
     a.href = s.url;
     a.rel = 'noopener noreferrer';
-    // The icon's display name (brand name, language neutral) as the accessible
-    // name, never the raw icon id.
-    a.setAttribute('aria-label', ICON_LIBRARY[s.icon]?.label ?? s.icon);
-    // iconSvg is the engine's own, self-authored SVG (same pattern as
-    // blocks/icon.js), not user content, so it is safe to set as innerHTML.
-    a.innerHTML = svg;
+    if (leavesSite(s.url)) a.target = '_blank';
+    a.setAttribute('aria-label', s.label);
+    a.title = s.label;
+    // The drawn SVG is the engine's own, and an own image has passed the
+    // image guard and is quoted (linkIconHtml), so the markup is safe to set.
+    a.innerHTML = linkIconHtml(s);
     row.appendChild(a);
   }
   return row;

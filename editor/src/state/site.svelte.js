@@ -393,6 +393,52 @@ const siteCalendars = () => siteDraft?.site?.calendars ?? [];
 
 const siteCalendarById = (id) => siteCalendars().find((cal) => cal.id === id) ?? null;
 
+/** The site's links (site.links, links-model.js): the owner's addresses with an icon, read by the footer, the menu's tools and the share block. */
+const siteLinks = () => siteDraft?.site?.links ?? [];
+
+/** The link whose label gets the caret once its row is drawn: the one just added. */
+let focusSiteLink = $state(null);
+
+/** Whether the Site panel's Links group stands open; the buttons that lead there open it. */
+let siteLinksOpen = $state(false);
+
+function addSiteLink() {
+  const link = { id: makeId('link'), icon: 'globe', label: '', url: '' };
+  siteMutate('site', () => {
+    siteDraft.site.links ??= [];
+    siteDraft.site.links.push(link);
+  });
+  focusSiteLink = link.id;
+  return link.id;
+}
+
+function removeSiteLink(i) {
+  siteMutate('site', () => {
+    siteDraft.site.links.splice(i, 1);
+    if (!siteDraft.site.links.length) delete siteDraft.site.links;
+  });
+}
+
+function moveSiteLink(i, dir) {
+  const j = i + dir;
+  siteMutate('site', () => {
+    const list = siteDraft.site.links;
+    if (j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+  });
+}
+
+/** Writes the fields of `patch` onto a link; an empty value removes the field, except the address, which stays as a string. */
+function setSiteLink(i, patch) {
+  siteMutate(`edit:site-link-${i}`, () => {
+    const link = siteDraft.site.links[i];
+    for (const [key, value] of Object.entries(patch)) {
+      if (value || key === 'url') link[key] = value;
+      else delete link[key];
+    }
+  });
+}
+
 /** Adds a calendar and returns its id; `seed` carries an address, a name and a colour from a block's row. */
 function addSiteCalendar(seed = {}) {
   const cal = { id: makeId('cal'), url: '', ...seed };
@@ -590,6 +636,13 @@ export function effects() {
   });
 
   $effect(() => {
+    const id = focusSiteLink;
+    if (!id) return;
+    focusSiteLink = null;
+    tick().then(() => document.querySelector(`[data-link-label="${id}"]`)?.focus());
+  });
+
+  $effect(() => {
     // Until the draft is loaded, favicon-boot.js controls the tab;
     // touching it here would make the icon flash.
     if (!siteDraft?.site) return;
@@ -666,6 +719,15 @@ export const siteState = {
   set openSiteCalendar(v) { openSiteCalendar = v; },
   get focusSiteCalendar() { return focusSiteCalendar; },
   set focusSiteCalendar(v) { focusSiteCalendar = v; },
+  siteLinks,
+  addSiteLink,
+  removeSiteLink,
+  moveSiteLink,
+  setSiteLink,
+  get focusSiteLink() { return focusSiteLink; },
+  set focusSiteLink(v) { focusSiteLink = v; },
+  get siteLinksOpen() { return siteLinksOpen; },
+  set siteLinksOpen(v) { siteLinksOpen = v; },
   siteCalendars,
   siteCalendarById,
   addSiteCalendar,

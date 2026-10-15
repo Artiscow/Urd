@@ -1,59 +1,42 @@
 /**
- * Core block: share buttons. Plain, static share links without tracking
- * (never vendor SDKs): each service is an ordinary `<a>` to the service's
- * share URL with the page address as a parameter, drawn with the icon
- * library's SVGs. "Copy link" uses the Clipboard API and appears only where
- * that API exists (ADR-0011: feature check, never a half-dead element).
+ * Core block: a row of links with icons (type id `share`, the share buttons
+ * it was until 0.7.0.52). The site's links from the Site panel, with the
+ * block's own after them, each an ordinary `<a>` with the link's name, drawn
+ * with the icon library's SVGs or the owner's own image. Nothing is loaded
+ * from anywhere (never a vendor SDK).
  */
 // Only called in preview (after the admin dictionary has loaded): never at module level.
-import { ta, adminLocaleReady, t } from '../i18n.js';
-import { iconSvg } from '../icons.js';
-
-/** Service id (data contract) to icon id and brand name (never translated). */
-export const SHARE_SERVICES = [
-  ['facebook', 'facebook', 'Facebook'],
-  ['x', 'x', 'X'],
-  ['linkedin', 'linkedin', 'LinkedIn'],
-  ['whatsapp', 'whatsapp', 'WhatsApp'],
-  ['email', 'mail', null],
-  ['copy', 'share', null],
-];
-
-/**
- * Share URL for a service (pure, node-testable). Everything is URL-encoded;
- * 'copy' and unknown services give null (copying is a button, not a link).
- * @param {string} service Service id from SHARE_SERVICES
- * @param {string} pageUrl The page's full address
- * @param {string} title The page title (included in text-based shares)
- * @returns {string|null}
- */
-export function shareUrl(service, pageUrl, title) {
-  const url = encodeURIComponent(String(pageUrl ?? ''));
-  const text = encodeURIComponent(String(title ?? ''));
-  if (service === 'facebook') return `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-  if (service === 'x') return `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
-  if (service === 'linkedin') return `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
-  if (service === 'whatsapp') return `https://wa.me/?text=${text}%20${url}`;
-  if (service === 'email') return `mailto:?subject=${text}&body=${url}`;
-  return null;
-}
+import { ta, adminLocaleReady } from '../i18n.js';
+import { blockLinks, linkIconHtml, leavesSite } from '../links-model.js';
 
 export const shareBlock = {
-  version: 1,
-  // Natural height in the mobile row grid (the buttons wrap on narrow screens).
+  version: 2,
+  // Natural height in the mobile row grid (the links wrap on narrow screens).
   autoGrow: true,
-  label: 'Share buttons',
+  label: 'Links',
   labelKey: 'blocks.share',
   defaults: () => ({
-    services: ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'],
+    useSite: true,
+    hidden: [],
+    links: [],
     variant: 'icons',
     size: 38,
     color: '',
   }),
-  migrations: {},
+  migrations: {
+    // 1 -> 2: the share buttons (services for the page's address) became the
+    // links row. A block that showed the site's links keeps them, one that
+    // held its own list keeps that; the share services are dropped, since the
+    // block no longer shares a page.
+    1: ({ mode, services, source, links, ...rest }) => ({
+      ...rest,
+      useSite: source !== 'own',
+      links: Array.isArray(links) ? links : [],
+    }),
+  },
   /**
    * @param {HTMLElement} el
-   * @param {{services?: string[], variant?: string, size?: number, color?: string}} props
+   * @param {{useSite?: boolean, hidden?: string[], links?: object[], variant?: string, size?: number, color?: string}} props
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
@@ -68,62 +51,31 @@ export const shareBlock = {
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
-    const wanted = Array.isArray(props.services) ? props.services : [];
-    for (const [service, icon, brand] of SHARE_SERVICES) {
-      if (!wanted.includes(service)) continue;
-      const label = brand ?? t(service === 'copy' ? 'share.copy' : 'share.email');
-      const inner = `<span class="urd-share-icon">${iconSvg(icon) ?? ''}</span><span class="urd-share-name"></span>`;
-      if (service === 'copy') {
-        // Copy link: only with the Clipboard API (feature check, ADR-0011).
-        if (!navigator.clipboard?.writeText) continue;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'urd-share-button';
-        btn.innerHTML = inner;
-        btn.querySelector('.urd-share-name').textContent = label;
-        btn.title = label;
-        btn.setAttribute('aria-label', label);
-        btn.addEventListener('click', async () => {
-          try {
-            await navigator.clipboard.writeText(location.href);
-            btn.querySelector('.urd-share-name').textContent = t('share.copied');
-            btn.classList.add('urd-share-copied');
-            setTimeout(() => {
-              btn.querySelector('.urd-share-name').textContent = label;
-              btn.classList.remove('urd-share-copied');
-            }, 1600);
-          } catch {
-            // Permission denied: the button stays as it was, no error state to show.
-          }
-        });
-        host.appendChild(btn);
-        continue;
-      }
-      const link = document.createElement('a');
-      link.className = 'urd-share-button';
-      // The address and title are read on click, not at render: client-side
-      // navigation may have swapped the page since the block was drawn.
-      link.href = '#';
-      link.addEventListener('click', (event) => {
-        event.preventDefault();
-        // Never open share windows from the editor, not even in the mobile view
-        // (ctx.preview, never editable: that one is false in the mobile viewport).
-        if (ctx.preview) return;
-        const target = shareUrl(service, location.href, document.title);
-        if (!target) return;
-        if (service === 'email') location.href = target;
-        else window.open(target, '_blank', 'noopener');
-      });
-      link.innerHTML = inner;
-      link.querySelector('.urd-share-name').textContent = label;
-      const aria = brand ? t('share.share', { service: brand }) : label;
-      link.title = aria;
-      link.setAttribute('aria-label', aria);
-      host.appendChild(link);
+    const links = blockLinks(props, ctx.site);
+    for (const link of links) {
+      const a = document.createElement('a');
+      a.className = 'urd-share-button';
+      a.href = link.url;
+      a.rel = 'noopener noreferrer';
+      if (leavesSite(link.url)) a.target = '_blank';
+      // The drawn SVG is the engine's own, and an own image has passed the
+      // image guard and is quoted (linkIconHtml), so the markup is safe to set.
+      a.innerHTML = `<span class="urd-share-icon">${linkIconHtml(link)}</span><span class="urd-share-name"></span>`;
+      a.querySelector('.urd-share-name').textContent = link.label;
+      a.title = link.label;
+      a.setAttribute('aria-label', link.label);
+      host.appendChild(a);
+    }
+    // Nothing to draw: the editor says so where the row would be; the published page shows nothing.
+    if (!links.length && ctx.preview) {
+      const empty = document.createElement('span');
+      empty.className = 'urd-share-empty';
+      empty.textContent = ta('canvas.linksEmpty');
+      host.appendChild(empty);
     }
 
     if (editable) {
-      // The help chip (ADR-0008): the absence of tracking is the block's distinguishing trait.
+      // The help chip (ADR-0008): where the links come from, and that nothing is loaded.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {

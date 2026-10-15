@@ -20,6 +20,7 @@ import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
 import { createCartDrawer } from './blocks/cart.js';
 import { iconSvg } from './icons.js';
+import { siteLinks, linkIconHtml, leavesSite } from './links-model.js';
 import { t, ta } from './i18n.js';
 
 /** How long the submenu stays open after the pointer leaves the item. */
@@ -415,7 +416,7 @@ export function renderNav(site, host) {
   const tools = document.createElement('span');
   tools.className = 'urd-nav-tools';
   /** @type {Record<string, HTMLElement|null>} The built tools, by id */
-  const toolEls = { launcher: null, cart: null, theme: null };
+  const toolEls = { launcher: null, cart: null, theme: null, links: null };
 
   // The link launcher (nav.launcher): the shortcuts behind a launcher button.
   // The button is the desktop opener; on mobile the same shortcuts are a
@@ -477,6 +478,29 @@ export function renderNav(site, host) {
       paintToggle();
     }, { signal });
     toolEls.theme = themeBtn;
+  }
+
+  // The site's links (links-model.js) as icons in the cluster, when the
+  // owner switched the tool on.
+  if (site.nav?.style?.tools?.links === true) {
+    const links = siteLinks(site);
+    if (links.length) {
+      const wrap = document.createElement('span');
+      wrap.className = 'urd-nav-links';
+      for (const link of links) {
+        const a = document.createElement('a');
+        a.className = 'urd-nav-link';
+        a.href = link.url;
+        a.rel = 'noopener noreferrer';
+        if (leavesSite(link.url)) a.target = '_blank';
+        a.setAttribute('aria-label', link.label);
+        a.title = link.label;
+        a.innerHTML = `${linkIconHtml(link)}<span class="urd-nav-tool-label"></span>`;
+        a.querySelector('.urd-nav-tool-label').textContent = link.label;
+        wrap.appendChild(a);
+      }
+      toolEls.links = wrap;
+    }
   }
 
   for (const id of toolOrder(site.nav.style)) {

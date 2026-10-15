@@ -128,6 +128,8 @@ function handleFor(panel, siteDraft, extra = {}) {
     readableOn: () => '#ffffff',
     suggestAltColors: () => ({}),
     siteCalendars: () => calendars,
+    siteLinks: () => site.site.links ?? [],
+    addSiteLink: noop, removeSiteLink: noop, moveSiteLink: noop, setSiteLink: noop, focusSiteLink: null,
     siteCalendarById: (id) => calendars.find((c) => c.id === id) ?? null,
     siteLangOptions: () => [['nb', 'Norsk bokmål'], ['en-GB', 'English']],
     siteLangValue: () => siteDraft.site?.lang ?? 'nb',

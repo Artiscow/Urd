@@ -4,12 +4,18 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
+  import MenuGroup from '../MenuGroup.svelte';
+  import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
+  import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { mutateBlock, setBlockProp } = ed;
+  const { mutateBlock, setBlockProp, setBlockProps } = ed;
+  const { groupReset } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
+  const mode = $derived((selectedBlock.props.mode ?? 'mailto') === 'endpoint' ? 'endpoint' : 'mailto');
+  const modeOptions = () => [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]];
 
   /* The form block (Content): send mode, recipient or endpoint, the field
      list and the texts. The field ids follow the engine's shape (a short
@@ -50,23 +56,27 @@
 </script>
 
 {#if area === 'content'}
-  <label title={ta('form.modeTitle')}>{ta('form.mode')}
-    <Dropdown value={selectedBlock.props.mode ?? 'mailto'}
-      options={[['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]]}
-      onchange={(v) => setBlockProp('mode', v)} /></label>
-  {#if (selectedBlock.props.mode ?? 'mailto') === 'endpoint'}
-    <label title={ta('form.endpointNote')}>{ta('form.endpoint')}
-      <input value={selectedBlock.props.endpoint ?? ''} placeholder={ta('form.endpointPh')}
-        onchange={(e) => setBlockProp('endpoint', e.target.value.trim())} /></label>
-  {:else}
-    <label>{ta('form.recipient')}
-      <input value={selectedBlock.props.recipient ?? ''} placeholder={ta('form.recipientPh')}
-        onchange={(e) => setBlockProp('recipient', e.target.value.trim())} /></label>
-    <label>{ta('form.subject')}
-      <input value={selectedBlock.props.subject ?? ''} placeholder={ta('form.subjectPh')}
-        onchange={(e) => setBlockProp('subject', e.target.value.trim())} /></label>
-  {/if}
-  <p class="panel-strong">{ta('form.fields')}</p>
+  {#snippet formSending()}
+    <div class="pin-line">
+      <label title={ta('form.modeTitle')}>{ta('form.mode')}
+        <Dropdown value={mode} options={modeOptions()}
+          onchange={(v) => setBlockProp('mode', v)} /></label>
+      <Pin id="sendMode" />
+    </div>
+    {#if mode === 'endpoint'}
+      <label title={ta('form.endpointNote')}>{ta('form.endpoint')}
+        <input value={selectedBlock.props.endpoint ?? ''} placeholder={ta('form.endpointPh')}
+          onchange={(e) => setBlockProp('endpoint', e.target.value.trim())} /></label>
+    {:else}
+      <label>{ta('form.recipient')}
+        <input value={selectedBlock.props.recipient ?? ''} placeholder={ta('form.recipientPh')}
+          onchange={(e) => setBlockProp('recipient', e.target.value.trim())} /></label>
+      <label>{ta('form.subject')}
+        <input value={selectedBlock.props.subject ?? ''} placeholder={ta('form.subjectPh')}
+          onchange={(e) => setBlockProp('subject', e.target.value.trim())} /></label>
+    {/if}
+  {/snippet}
+  {#snippet formFields()}
   {#each selectedBlock.props.fields ?? [] as field, i (field.id ?? i)}
     <span class="nav-line">
       <input value={field.label} placeholder={ta('form.fieldNamePh')}
@@ -92,10 +102,16 @@
     {/if}
   {/each}
   <button class="ghost action" onclick={addFormField}>{ta('form.addField')}</button>
-  <label>{ta('lbl.buttonText')}
-    <input value={selectedBlock.props.submitLabel ?? ''} placeholder={ta('form.sendDefault')}
-      onchange={(e) => setBlockProp('submitLabel', e.target.value.trim() || ta('form.sendDefault'))} /></label>
-  <label>{ta('form.receipt')}
-    <input value={selectedBlock.props.successText ?? ''} placeholder={ta('form.thanksDefault')}
-      onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
+  {/snippet}
+  {#snippet formReceipt()}
+    <label>{ta('lbl.buttonText')}
+      <input value={selectedBlock.props.submitLabel ?? ''} placeholder={ta('form.sendDefault')}
+        onchange={(e) => setBlockProp('submitLabel', e.target.value.trim() || ta('form.sendDefault'))} /></label>
+    <label>{ta('form.receipt')}
+      <input value={selectedBlock.props.successText ?? ''} placeholder={ta('form.thanksDefault')}
+        onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
+  {/snippet}
+  <MenuGroup id="form-sending" title={ta('group.sending')} value={mode === 'endpoint' ? (selectedBlock.props.endpoint || ta('form.modeEndpoint')) : (selectedBlock.props.recipient || ta('form.modeMailto'))} reset={groupReset('form-sending', { mode: 'mailto' })}>{@render formSending()}</MenuGroup>
+  <MenuGroup id="form-fields" title={ta('form.fields')} value={String(selectedBlock.props.fields?.length ?? 0)}>{@render formFields()}</MenuGroup>
+  <MenuGroup id="form-receipt" title={ta('group.buttonReceipt')} value={selectedBlock.props.submitLabel || ta('form.sendDefault')}>{@render formReceipt()}</MenuGroup>
 {/if}
