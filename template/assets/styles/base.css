@@ -1358,6 +1358,27 @@ textarea.urd-form-input {
   --urd-cal-set-label-spacing: 0.1em;
 }
 
+/* The retro sets: each stylised design draws its set from its own slots, with the values the Design canvas drew. */
+.urd-cal-set-pad {
+  --urd-cal-set-bg: var(--urd-cal-s-paper, #fbf7ee);
+  --urd-cal-set-surface: color-mix(in srgb, var(--urd-cal-s-paper, #fbf7ee) 90%, var(--urd-cal-s-ink, #1d1b18));
+  --urd-cal-set-ink: var(--urd-cal-s-ink, #1d1b18);
+  --urd-cal-set-muted: color-mix(in srgb, var(--urd-cal-s-ink, #1d1b18) 65%, transparent);
+  --urd-cal-set-line: var(--urd-cal-s-rule, #cfc6b3);
+  --urd-cal-set-accent: var(--urd-cal-s-head, #c4302b);
+  --urd-cal-set-accent-text: var(--urd-cal-s-paper, #fbf7ee);
+  --urd-cal-set-label: var(--urd-cal-s-head, #c4302b);
+  --urd-cal-set-radius: 4px;
+  --urd-cal-set-chip-radius: 0;
+  --urd-cal-set-frame: none;
+  --urd-cal-set-shadow: 0 18px 40px rgb(0 0 0 / 45%);
+  --urd-cal-set-font: 'Libre Baskerville', Baskerville, Georgia, 'Times New Roman', serif;
+  --urd-cal-set-title-font: Oswald, 'Roboto Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  --urd-cal-set-title-weight: 700;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.1em;
+}
+
 .urd-cal .urd-collection-card {
   background: var(--urd-cal-surface);
   border-color: var(--urd-cal-line);
@@ -1657,6 +1678,43 @@ textarea.urd-form-input {
 /* The card lies over its calendar, under the navigation bar: the calendar is shaded, the page behind is left alone. */
 .urd-cal-dialog {
   z-index: 4000;
+}
+
+/* R1 Tear-off pad's card: a pad page with the perforation holes along its top edge, the date as the month bar, and the close cross on the bar. */
+.urd-cal-dlg-pad {
+  padding-top: 0;
+}
+
+.urd-cal-dlg-pad::before {
+  content: '';
+  display: block;
+  height: 16px;
+  margin: 0 -1.3rem;
+  background: radial-gradient(circle at center, rgb(10 10 14 / 55%) 5px, transparent 5.5px) 50% 0 / 34px 16px repeat-x;
+}
+
+.urd-cal-dlg-pad .urd-cal-dialog-date {
+  margin: 0.4rem -1.3rem 0.9rem;
+  padding: 0.55rem 3.4rem 0.55rem 1.3rem;
+  font-family: var(--urd-cal-set-title-font);
+  font-stretch: condensed;
+  font-size: 0.95em;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--urd-cal-set-accent-text);
+  background: var(--urd-cal-set-accent);
+}
+
+.urd-cal-dlg-pad .urd-cal-dialog-close {
+  top: 1.5rem;
+  color: var(--urd-cal-set-accent-text);
+  border-color: transparent;
+}
+
+.urd-cal-dlg-pad .urd-cal-dialog-title {
+  font-stretch: condensed;
+  font-size: 1.6em;
+  line-height: 1.1;
 }
 
 .urd-cal-shade {
@@ -5635,6 +5693,182 @@ textarea.urd-form-input {
 .urd-cal-apm .urd-cal-daylist-row {
   background: var(--urd-cal-s-pill, color-mix(in srgb, var(--urd-cal-s-gold, #d0a74a) 18%, transparent));
   border-left-color: var(--urd-cal-color, var(--urd-cal-ap-gold));
+}
+
+/* ---- The retro designs (blocks/calendar-retro.js) ---- */
+
+/* R1 Tear-off pad: the paper page with its stack of torn pages under it; the display face is a condensed sans where the device has one, the page a serif. */
+.urd-cal-pad {
+  --urd-cal-pad-paper: var(--urd-cal-s-paper, #fbf7ee);
+  --urd-cal-pad-head: var(--urd-cal-s-head, #c4302b);
+  --urd-cal-pad-ink: var(--urd-cal-s-ink, #1d1b18);
+  --urd-cal-pad-rule: var(--urd-cal-s-rule, #cfc6b3);
+  --urd-cal-pad-edge: var(--urd-cal-s-edge, #d9d0bd);
+  --urd-cal-pad-display: var(--urd-cal-set-title-font);
+  position: relative;
+  max-width: 30em;
+  margin: 0 auto 14px;
+  overflow: hidden;
+  font-family: var(--urd-cal-set-font);
+  color: var(--urd-cal-pad-ink);
+  background: var(--urd-cal-pad-paper);
+  border-radius: 6px 6px 3px 3px;
+  box-shadow: 0 2px 0 var(--urd-cal-pad-edge), 0 5px 0 var(--urd-cal-pad-paper), 0 7px 0 var(--urd-cal-pad-edge), 0 10px 0 var(--urd-cal-pad-paper), 0 12px 0 var(--urd-cal-pad-edge), 0 22px 30px rgb(0 0 0 / 35%);
+}
+
+.urd-cal-pad-head {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75em 1.4em;
+  font-family: var(--urd-cal-pad-display);
+  font-stretch: condensed;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--urd-cal-pad-paper);
+  text-transform: uppercase;
+  background: var(--urd-cal-pad-head);
+}
+
+.urd-cal-pad-day {
+  padding: 0.6em 1.4em 0;
+  text-align: center;
+  border-bottom: 2px dotted var(--urd-cal-pad-rule);
+}
+
+.urd-cal-pad-num {
+  display: block;
+  font-family: var(--urd-cal-pad-display);
+  font-stretch: condensed;
+  font-size: 9.4em;
+  font-weight: 700;
+  line-height: 0.95;
+}
+
+.urd-cal-pad-wd {
+  display: block;
+  padding: 0.35em 0 0.8em;
+  font-family: var(--urd-cal-pad-display);
+  font-stretch: condensed;
+  font-size: 1.1em;
+  letter-spacing: 0.3em;
+  color: var(--urd-cal-pad-head);
+  text-transform: uppercase;
+}
+
+.urd-cal-pad-body {
+  padding: 1em 1.4em 1.25em;
+}
+
+.urd-cal-pad-in {
+  display: block;
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--urd-cal-pad-head);
+  text-transform: uppercase;
+}
+
+.urd-cal-pad-title {
+  display: block;
+  margin-top: 0.2em;
+  font-size: 1.4em;
+  line-height: 1.2;
+}
+
+.urd-cal-pad .urd-cal-pad-when {
+  margin-top: 0.3em;
+  font-size: 0.9em;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.urd-cal-pad-text {
+  margin: 0.45em 0 0;
+  font-size: 0.82em;
+  line-height: 1.4;
+}
+
+.urd-cal-pad-text a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.urd-cal-pad-more {
+  white-space: nowrap;
+}
+
+.urd-cal-pad-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 0.9em;
+}
+
+.urd-cal-pad .urd-cal-pad-signup,
+.urd-cal-pad-add {
+  margin: 0;
+  padding: 0.6em 1em;
+  font-family: var(--urd-cal-pad-display);
+  font-stretch: condensed;
+  font-size: 0.82em;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.urd-cal-pad .urd-cal-pad-signup {
+  color: var(--urd-cal-pad-paper);
+  background: var(--urd-cal-pad-head);
+  border: 1px solid var(--urd-cal-pad-head);
+}
+
+.urd-cal-pad-add {
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--urd-cal-pad-ink);
+}
+
+.urd-cal-pad-later {
+  margin-top: 1em;
+}
+
+/* A row that runs out of width keeps its title whole and lets the time wrap under it. */
+.urd-cal-pad-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2em 10px;
+  align-items: baseline;
+  padding: 0.6em 0;
+  border-top: 1px dashed var(--urd-cal-pad-rule);
+}
+
+.urd-cal-pad-row-date {
+  flex: 0 0 4.8em;
+  font-family: var(--urd-cal-pad-display);
+  font-stretch: condensed;
+  font-size: 0.95em;
+  letter-spacing: 0.04em;
+  color: var(--urd-cal-pad-head);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.urd-cal-pad-row-title {
+  flex: 1 1 5em;
+  min-width: 0;
+  font-size: 0.92em;
+}
+
+.urd-cal-pad-row-time {
+  margin-left: auto;
+  font-size: 0.8em;
+  opacity: 0.7;
 }
 
 /* ---- The «Coming up» designs (blocks/calendar-next.js) ---- */

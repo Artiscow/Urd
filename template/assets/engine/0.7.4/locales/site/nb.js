@@ -97,6 +97,7 @@ export default {
     'calendar.empty': 'Ingen kommende arrangementer',
     'calendar.inDays.one': 'Om {n} dag',
     'calendar.inDays.other': 'Om {n} dager',
+    'calendar.theme.pad.inDays.other': 'I dag om {n} dager',
     'calendar.more': '+{n}',
     'calendar.next': 'Neste arrangement',
     'calendar.now': 'Akkurat nå',

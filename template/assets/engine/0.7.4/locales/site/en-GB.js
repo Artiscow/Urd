@@ -94,6 +94,7 @@ export default {
     'calendar.empty': 'No upcoming events',
     'calendar.inDays.one': 'In {n} day',
     'calendar.inDays.other': 'In {n} days',
+    'calendar.theme.pad.inDays.other': 'Today in {n} days',
     'calendar.more': '+{n}',
     'calendar.next': 'Next event',
     'calendar.now': 'Coming up',

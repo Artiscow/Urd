@@ -13,6 +13,7 @@ const {
   CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
   CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign, CAL_FAMILIES, calDesignFamilies,
+  CAL_SHARED_OPTIONS, calThemeKey, calThemeTexts, calRewrites,
 } = await engineImport('calendar-designs.js');
 import { readFileSync, existsSync, statSync } from 'node:fs';
 
@@ -181,7 +182,7 @@ test('the renderers write no words, no clock halves and no capitals of their own
   const engine = readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8');
   const version = JSON.parse(engine).engine;
   const read = (name) => readFileSync(new URL(`${version}/${name}`, dir), 'utf8');
-  const files = ['blocks/calendar.js', 'blocks/calendar-list.js', 'blocks/calendar-cards.js', 'blocks/calendar-next.js', 'blocks/calendar-time.js', 'blocks/calendar-more.js', 'calendar-format.js'];
+  const files = ['blocks/calendar.js', ...CAL_MODULES.map((module) => `blocks/calendar-${module}.js`), 'calendar-format.js'];
   for (const name of files) {
     const src = read(name);
     assert.doesNotMatch(src, /['"`](?:am|pm)['"`]/, `${name}: a clock half written in the code`);
@@ -192,7 +193,7 @@ test('the renderers write no words, no clock halves and no capitals of their own
   // A design's words are drawn through ui.tx, so the owner can rewrite them; the dictionary is read directly only for a screen reader's label.
   const allowed = new Set(['calendar.moreInfo', 'calendar.count', 'calendar.unnamed']);
   const wordKeys = new Set(Object.values(CAL_TEXTS).filter(Boolean));
-  for (const name of files.slice(1, 6)) {
+  for (const name of files.slice(1, -1)) {
     for (const m of read(name).matchAll(/\bt[p]?\('(calendar\.[A-Za-z]+)'/g)) {
       assert.ok(!wordKeys.has(m[1]) || allowed.has(m[1]), `${name}: ${m[1]} drawn without ui.tx`);
     }
@@ -298,14 +299,69 @@ test('CAL_OPTIONS: every key names a design, and every default is a value the op
   }
 });
 
-test('the option labels are in the three core admin dictionaries', async () => {
+test('the option labels are in the three core admin dictionaries, the shared options\' «?» texts too', async () => {
   for (const lang of ['nb', 'en-GB', 'tr']) {
     const { strings } = (await engineImport(`locales/admin/${lang}.js`)).default;
     assert.ok('calendar.section.options' in strings, lang);
-    for (const defs of Object.values(CAL_OPTIONS)) {
+    for (const defs of [...Object.values(CAL_OPTIONS), Object.values(CAL_SHARED_OPTIONS)]) {
       for (const def of defs) {
         assert.ok(def.labelKey in strings, `${lang}: ${def.labelKey}`);
         if (def.kind === 'choice' && def.key !== 'firstMonth') for (const v of def.values) assert.ok(`${def.labelKey}.${v}` in strings, `${lang}: ${def.labelKey}.${v}`);
+        if (def.tipKey) assert.ok(def.tipKey in strings, `${lang}: ${def.tipKey}`);
+      }
+    }
+  }
+});
+
+test('the shared options follow the design\'s traits: the word choice with theme words, the rewriting switch with rewriting', () => {
+  assert.deepEqual(calOptionDefs('plain'), []);
+  assert.deepEqual(calOptionDefs('pad').map((def) => def.key), ['wordChoice']);
+  assert.deepEqual(calOptions({ design: 'pad' }), { wordChoice: 'theme' });
+  assert.deepEqual(calOptions({ design: 'pad', options: { wordChoice: 'neutral', rewrite: false } }), { wordChoice: 'neutral' }, 'a design that never rewrites has no rewriting switch');
+  assert.deepEqual(calOptions({ design: 'pad', options: { wordChoice: 'loud' } }), { wordChoice: 'theme' });
+  assert.equal(CAL_SHARED_OPTIONS.rewrites.kind, 'switch');
+  assert.equal(CAL_SHARED_OPTIONS.rewrites.def, true);
+  assert.equal(CAL_SHARED_OPTIONS.theme.def, 'theme');
+  // The shared options come after the design's own, and never twice.
+  for (const design of CAL_DESIGNS) {
+    const keys = calOptionDefs(design.id).map((def) => def.key);
+    assert.equal(new Set(keys).size, keys.length, design.id);
+    const own = (CAL_OPTIONS[design.id] ?? []).map((def) => def.key);
+    assert.deepEqual(keys.slice(0, own.length), own, design.id);
+    assert.equal(keys.includes('wordChoice'), Boolean(design.theme?.length), design.id);
+    assert.equal(keys.includes('rewrite'), design.rewrites === true, design.id);
+  }
+});
+
+test('calThemeTexts and calRewrites: the design\'s own words until the owner picks the neutral ones; rewriting on until switched off', () => {
+  assert.deepEqual(calThemeTexts({ design: 'pad' }), ['inDays']);
+  assert.deepEqual(calThemeTexts({ design: 'pad', options: { wordChoice: 'neutral' } }), []);
+  assert.deepEqual(calThemeTexts({ design: 'plain' }), []);
+  assert.deepEqual(calThemeTexts(undefined), []);
+  assert.equal(calThemeKey('pad', 'inDays'), 'calendar.theme.pad.inDays');
+  assert.equal(calRewrites({ design: 'pad' }), true);
+  assert.equal(calRewrites({ design: 'pad', options: { rewrite: false } }), true, 'the switch counts only on a design that rewrites');
+  assert.equal(calRewrites(undefined), true);
+});
+
+test('every theme word names a text the design draws, and the three core site dictionaries hold it with the common text\'s placeholders', async () => {
+  const themed = CAL_DESIGNS.filter((design) => design.theme?.length);
+  assert.ok(themed.length >= 1);
+  for (const lang of ['nb', 'en-GB', 'tr']) {
+    const site = (await engineImport(`locales/site/${lang}.js`)).default.strings;
+    for (const design of themed) {
+      for (const key of design.theme) {
+        assert.ok(design.texts.includes(key), `${design.id} draws ${key}`);
+        const base = CAL_TEXTS[key];
+        const theme = calThemeKey(design.id, key);
+        const forms = CAL_PLURAL_TEXTS.includes(key) ? Object.keys(site).filter((k) => k.startsWith(`${theme}.`)) : [theme];
+        assert.ok(forms.length && forms.every((k) => k in site), `${lang}: ${theme}`);
+        if (CAL_PLURAL_TEXTS.includes(key)) assert.ok(`${theme}.other` in site, `${lang}: ${theme}.other`);
+        for (const form of forms) {
+          const tokens = [...site[form].matchAll(/\{([a-z]+)\}/gi)].map((m) => m[1]).sort();
+          assert.deepEqual(tokens, [...(CAL_TEXT_PARAMS[key] ?? [])].sort(), `${lang} ${form}: placeholders`);
+        }
+        assert.ok(base, `${key} has common words`);
       }
     }
   }

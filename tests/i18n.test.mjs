@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, existsSync, readFileSync } from 'node:fs';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 const {
-  t, tp, pluralForm, matchLang, requestedLang, initSiteLocale, dates,
+  t, tp, pluralForm, themeString, matchLang, requestedLang, initSiteLocale, dates,
   SUPPORTED_LANGS, validateLanguages, isBuiltinLang,
 } = await engineImport('i18n.js');
 const { registerPackLanguages, loadPackStrings, packLanguages } = await engineImport('language-packs.js');
@@ -266,6 +266,20 @@ test('pluralForm: the form a count takes, falling back to other where the langua
   assert.deepEqual(pluralForm('calendar.inDays', 2), { form: 'other', key: 'calendar.inDays.other' });
   await initSiteLocale('nb');
   assert.deepEqual(pluralForm('x.days', 1), { form: 'one', key: 'x.days.one' }, 'an unknown key keeps its category, so tp shows it');
+});
+
+test('themeString: the design\'s own word in the site language, else the common word there, before bokmål\'s own', async () => {
+  await initSiteLocale('nb');
+  assert.equal(themeString('calendar.theme.pad.inDays', 'calendar.inDays', 'other'), 'I dag om {n} dager');
+  assert.equal(themeString('calendar.theme.pad.inDays', 'calendar.inDays', 'one'), 'I dag om {n} dager', 'a form the theme has no key for takes its other form');
+  assert.equal(themeString('calendar.theme.none.today', 'calendar.today'), 'I dag!', 'a design without the word speaks the common one');
+  await initSiteLocale('en');
+  assert.equal(themeString('calendar.theme.pad.inDays', 'calendar.inDays', 'other'), 'Today in {n} days');
+  await initSiteLocale('nn');
+  assert.equal(themeString('calendar.theme.pad.inDays', 'calendar.inDays', 'other'), 'Om {n} dagar', 'a language without the theme word speaks its own common word, never bokmål\'s theme word');
+  assert.equal(themeString('calendar.theme.pad.inDays', 'nothing.here', 'other'), 'I dag om {n} dager', 'with no common word of its own either, bokmål\'s theme word');
+  assert.equal(themeString('nothing.theme', 'nothing.here'), 'nothing.here');
+  await initSiteLocale('nb');
 });
 
 test('api error codes: every code in functions has an api. key in the admin base', () => {

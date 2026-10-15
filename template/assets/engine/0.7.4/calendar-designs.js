@@ -151,9 +151,32 @@ const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle
 
 /**
  * The design families the picker groups by (`family` in the list), in the picker's order; the label key is `calendar.family.<id>`.
- * The stylised families (retro, fairy tale, future, graphic styles, nature, objects) join the list as they are built.
+ * The stylised families (fairy tale, future, graphic styles, nature, objects) join the list after retro as they are built.
  */
-export const CAL_FAMILIES = ['modern', 'next', 'ap'];
+export const CAL_FAMILIES = ['modern', 'next', 'ap', 'retro'];
+
+/**
+ * A design's own theme words (`theme` in the list): the texts the design has words of its own for («Departures» for «Coming up»), each under the dictionary key `calendar.theme.<design>.<text>` (with the plural forms after it, as the common key has them).
+ * The block draws the theme word in the site's own language, else the common word in that language, else the bokmål theme word (themeString in i18n.js), and the owner's rewrite stands over both.
+ * «Word choice: neutral» (the shared option `wordChoice`) swaps every theme word for the common one.
+ */
+export function calThemeKey(designId, key) {
+  return `calendar.theme.${designId}.${key}`;
+}
+
+/** The texts the block draws with the design's own words: the design's theme words while the owner keeps the design's word choice, else none. */
+export function calThemeTexts(props) {
+  const design = calDesign(props?.design);
+  return calOptions(props).wordChoice === 'neutral' ? [] : (design.theme ?? []);
+}
+
+/**
+ * True when a design that rewrites calendar data (`rewrites` in the list: a date as 04.10, a title in capitals in the text itself, a place cut to the row's width, a sentence built around the time and place) may do so: the shared option `rewrite`, on unless the owner switched it off.
+ * Off, the design shows the calendar's own text; a design without `rewrites` never rewrites and reads true.
+ */
+export function calRewrites(props) {
+  return calOptions(props).rewrite !== false;
+}
 
 /** The designs by family, in the families' order: every design once, the plain design first in its family. */
 export function calDesignFamilies() {
@@ -175,7 +198,8 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * `ownSubscribe` marks a design that places the subscribe buttons inside its own layout, so the block draws no row under it, `ownFilter` one that draws its own calendar switches instead of the chip row, and `notice` one that can show the announcement note (`props.notice { show, href, as }` with the texts noticeLabel, noticeTitle and noticeText; `noticeBand` marks a design that can draw it as an alert band instead, `as: 'band'`).
  * `empty: 'ap'` gives the design ApeironLF's empty state (a pill, a dashed box and the subscribe button) in place of the plain one.
  * `program` marks a design that draws a link to the whole programme when the block has an address for it (`props.programHref`), and `open` one that writes «Open to everyone» on an event without a sign-up (`props.showOpen`).
- * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, family: string, phone: string, stripe: boolean, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
+ * `theme` lists the texts a design has words of its own for (calThemeKey), and `rewrites` marks a design that rewrites calendar data unless the owner switches it off (calRewrites).
+ * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, family: string, phone: string, stripe: boolean, theme?: string[], rewrites?: boolean, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
 export const CAL_DESIGNS = [
   {
@@ -597,6 +621,20 @@ export const CAL_DESIGNS = [
     texts: ['series', 'forWhom', 'openAll', 'allDates', ...NOTICE_TEXTS, ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
+    id: 'pad',
+    labelKey: 'calendar.design.pad',
+    set: 'pad',
+    family: 'retro',
+    phone: 'fits',
+    excerpt: true,
+    view: 'next',
+    module: 'retro',
+    stripe: false,
+    theme: ['inDays'],
+    slots: [slot('paper'), slot('head'), slot('ink'), slot('rule'), slot('edge')],
+    texts: ['later', 'addEvent', 'moreInfo', ...COMMON_TEXTS],
+  },
+  {
     id: 'mobileAgenda',
     labelKey: 'calendar.design.mobileAgenda',
     set: 'agendaDark',
@@ -620,6 +658,8 @@ export const CAL_DESIGNS = [
  */
 const choice = (key, values, def, when) => ({ key, kind: 'choice', values, def, labelKey: `calendar.opt.${key}`, ...(when ? { when } : {}) });
 const toggle = (key, def) => ({ key, kind: 'switch', def, labelKey: `calendar.opt.${key}` });
+/** An option with a «?» text of its own in the admin dictionary (`tip.calendar.opt.<key>`). */
+const tipped = (def) => ({ ...def, tipKey: `tip.calendar.opt.${def.key}` });
 const hour = (key) => ({ key, kind: 'hour', def: null, labelKey: `calendar.opt.${key}` });
 const MONTHS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
 
@@ -637,10 +677,18 @@ export const CAL_OPTIONS = {
 };
 
 /**
+ * The options every design with the trait has, stored under `options` like the design's own and listed after them (calOptionDefs): the word choice on a design with theme words (`theme`), and the rewriting switch on a design that rewrites calendar data (`rewrites`).
+ */
+export const CAL_SHARED_OPTIONS = {
+  theme: tipped(choice('wordChoice', ['theme', 'neutral'], 'theme')),
+  rewrites: tipped(toggle('rewrite', true)),
+};
+
+/**
  * The colour sets: every design belongs to one, and the event card, the switcher's week and month, the finding tools and the phone view are drawn per set in base.css (`urd-cal-set-<id>` on the block, ADR-0011).
  * A design overrides its set by redefining a set variable under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
  */
-export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass'];
+export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad'];
 
 /** The designs a switcher button can stand behind: the week strip and the week designs, the plain month and the month designs. */
 export const CAL_SWITCH_WEEKS = ['weekStrip', 'weekPlan', 'layers'];
@@ -673,9 +721,14 @@ export function calHasExcerpt(props) {
   return design.excerpt === true || (design.id === 'plain' && calView(props) === 'cards');
 }
 
-/** The option definitions of a design; an empty list for a design without settings of its own. */
+/** The option definitions of a design: its own, then the shared ones its traits give it; an empty list for a design without settings. */
 export function calOptionDefs(designId) {
-  return CAL_OPTIONS[calDesign(designId).id] ?? [];
+  const design = calDesign(designId);
+  const own = CAL_OPTIONS[design.id] ?? [];
+  const shared = [];
+  if (design.theme?.length) shared.push(CAL_SHARED_OPTIONS.theme);
+  if (design.rewrites) shared.push(CAL_SHARED_OPTIONS.rewrites);
+  return shared.length ? [...own, ...shared] : own;
 }
 
 /**
@@ -706,7 +759,7 @@ export function calOptionShown(def, opt) {
 }
 
 /** The renderer modules a design can name (the block maps each to a literal import). */
-export const CAL_MODULES = ['list', 'cards', 'time', 'next', 'more'];
+export const CAL_MODULES = ['list', 'cards', 'time', 'next', 'more', 'retro'];
 
 /** The design for an id; the plain one for anything unknown. */
 export function calDesign(id) {

@@ -93,6 +93,7 @@ export default {
     'calendar.empty': 'Yaklaşan etkinlik yok',
     'calendar.inDays.one': '{n} gün sonra',
     'calendar.inDays.other': '{n} gün sonra',
+    'calendar.theme.pad.inDays.other': 'Bugün, {n} gün sonra',
     'calendar.more': '+{n}',
     'calendar.next': 'Sonraki etkinlik',
     'calendar.now': 'Sırada',

@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.23.1): the stylised designs' foundation and Tear-off pad
+
+- [ ] The design picker has a «Retro» family with «Avrivningsblokk» and its picture; chosen, the block draws the pad: the month bar, the huge day and weekday, the next event with its countdown, time and place, excerpt and «Les mer», the sign-up (with sign-up buttons on) and «Legg i kalender», and the later events as dashed rows, a cancelled one struck
+- [ ] «Legg i kalender» opens the event's card dressed as a pad page (the perforation along the top, the date as the red bar with the close cross on it), with the add-to-calendar choices inside
+- [ ] With the next event two or more days away the countdown reads «I dag om {n} dager» (English: «Today in {n} days»); in Style → Designets innstillinger, «Ordvalg: Nøytrale» gives «Om {n} dager»; clicking the words in the preview still rewrites them, and the «?» text on the choice reads right
+- [ ] A site in nynorsk or Northern Sami shows the common word in that language, never bokmål's theme word; a bokmål site shows the theme word
+- [ ] No rewriting switch on the pad (it never rewrites); the Style area's colour slots are paper, head, ink, rule and edge, and the empty state, the switcher's week and month and the finding tools take the pad's colours
+- [ ] On a phone the pad fits its width, and a later row with a long title keeps the title whole with the time under it
+
 ### Test batch (0.7.20.9): keys for the menu's areas
 
 - [ ] A block selected on the canvas: 1, 2 and 3 open Properties on Content, Style and Placement, or switch the floating menu's area when it is open; the arrows, Delete and Shift+F10 work right after the click, with no focus ring on the block; a second click still gives the caret, and the arrows then move the caret

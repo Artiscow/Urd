@@ -16,7 +16,7 @@
  * The sources, the view and the count are edited in the Properties panel; the help chip (ADR-0008) explains the conventions.
  */
 // t() for visitor texts (the site language), ta() for the editor chrome (the admin language), dates() for month and weekday names, tp() for plurals; never called at module level.
-import { t, ta, tp, pluralForm, taApiError, dates, adminLocaleReady } from '../i18n.js';
+import { t, ta, tp, pluralForm, themeString, taApiError, dates, adminLocaleReady } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
 import { stripActiveContent, safeHtmlFragment } from '../sanitize.js';
@@ -210,8 +210,15 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
 
   const params = (key) => cd.CAL_TEXT_PARAMS[key] ?? [];
   const formOf = (key, values) => (cd.CAL_PLURAL_TEXTS.includes(key) ? pluralForm(cd.CAL_TEXTS[key], Number(values?.n ?? 0)).form : null);
-  /** The dictionary's words for a text in the site language, with its placeholders left in. */
-  const defaultWords = (key, form) => (cd.CAL_TEXTS[key] ? t(form ? `${cd.CAL_TEXTS[key]}.${form}` : cd.CAL_TEXTS[key]) : '');
+  // The texts the design has words of its own for, while the owner keeps its word choice (calThemeTexts).
+  const themed = new Set(cd.calThemeTexts(props));
+  /** The dictionary's words for a text in the site language, with its placeholders left in: the design's own words where it has them (themeString), else the common ones. */
+  const defaultWords = (key, form) => {
+    const base = cd.CAL_TEXTS[key];
+    if (!base) return '';
+    if (themed.has(key)) return themeString(cd.calThemeKey(cd.calDesign(props.design).id, key), base, form);
+    return t(form ? `${base}.${form}` : base);
+  };
   /** A value in a text: a whole of its own, which the owner's words keep and a tick updates in place. */
   const valueNode = (name, values) => {
     const span = el2('span', 'urd-cal-n', String(values?.[name] ?? ''));
@@ -602,6 +609,8 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     phone: false,
     /** True when the design shows a span (a week, month, day or year) rather than what is coming. */
     spanView: SPAN_VIEWS.includes(cd.calView(props)),
+    /** True when a design that rewrites calendar data may do so (calRewrites); off, the design draws the calendar's own text. */
+    rewrite: cd.calRewrites(props),
     /** A label that names the week, month or day shown: a change of it is read out by a screen reader. */
     live: (node) => {
       node.setAttribute('aria-live', 'polite');
@@ -1605,7 +1614,7 @@ function renderCalendar(el, props, ctx) {
     host.appendChild(loadingNode(el, ctx));
   }
   // The parser and the design model are loaded together, on the first render, and a design's renderer module with them (literal paths, so the modules stay out of the visitor closure and the preload list).
-  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js') };
+  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
   Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js')]).then(async ([ics, cd, cf, maps, links]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;

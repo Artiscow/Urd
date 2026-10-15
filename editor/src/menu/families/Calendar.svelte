@@ -441,7 +441,7 @@
     {@const calOpt = calOptions(selectedBlock.props)}
     {#each calOptionDefs(selectedBlock.props.design).filter((def) => calOptionShown(def, calOpt)) as def (def.key)}
       {#if def.kind === 'switch'}
-        <label class="gridmenu-snap">
+        <label class="gridmenu-snap" title={def.tipKey ? ta(def.tipKey) : undefined}>
           <input type="checkbox" checked={calOpt[def.key]} onchange={(e) => setCalOption(def, e.target.checked)} />
           {ta(def.labelKey)}
         </label>
@@ -455,7 +455,7 @@
           <Dropdown value={calOpt[def.key]} options={def.values.map((v) => [v, calOptionLabel(def, v)])} onchange={(v) => setCalOption(def, v)} />
         </div>
       {:else}
-        <Choice label={ta(def.labelKey)} value={calOpt[def.key]} options={def.values.map((v) => [v, calOptionLabel(def, v)])} onchange={(v) => setCalOption(def, v)} />
+        <Choice label={ta(def.labelKey)} title={def.tipKey ? ta(def.tipKey) : undefined} value={calOpt[def.key]} options={def.values.map((v) => [v, calOptionLabel(def, v)])} onchange={(v) => setCalOption(def, v)} />
       {/if}
     {/each}
   {/if}

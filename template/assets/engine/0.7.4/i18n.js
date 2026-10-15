@@ -130,7 +130,8 @@ async function loadPack(code, kind) {
   }
 }
 
-const site = { lang: 'nb', dict: { ...nb.strings }, dates: null };
+// `own` is the language's own strings alone, with nothing of bokmål under them, for the look-up that must know whether the language has a word of its own (themeString).
+const site = { lang: 'nb', dict: { ...nb.strings }, own: nb.strings, dates: null };
 const admin = { lang: 'nb', dict: {} };
 
 /** {var} interpolation: simple and predictable, no ICU syntax. */
@@ -160,6 +161,25 @@ export function pluralForm(baseKey, n) {
   try { cat = new Intl.PluralRules(site.lang).select(n); } catch { /* unknown language: other */ }
   const form = site.dict[`${baseKey}.${cat}`] !== undefined || site.dict[`${baseKey}.other`] === undefined ? cat : 'other';
   return { form, key: `${baseKey}.${form}` };
+}
+
+/**
+ * A design's own words for a text (a calendar design's theme words, `calendar.theme.<design>.<text>`), with the placeholders left in: the theme key in the site's own language, else the common key in the site's own language, else the theme key in bokmål, else the common key there.
+ * So a design without a translation still speaks the site's language, with the common words, and a bokmål site gets the design's own.
+ * With a plural form, the form's key is tried before the `other` form at every step.
+ * @param {string} themeKey The design's own key
+ * @param {string} baseKey The common key the text falls back to
+ * @param {string|null} [form] The plural form (pluralForm), for a text with forms
+ * @returns {string}
+ */
+export function themeString(themeKey, baseKey, form) {
+  const keysOf = (key) => (form ? [`${key}.${form}`, `${key}.other`] : [key]);
+  for (const dict of [site.own, nb.strings]) {
+    for (const key of [...keysOf(themeKey), ...keysOf(baseKey)]) {
+      if (dict[key] !== undefined) return dict[key];
+    }
+  }
+  return baseKey;
 }
 
 /**
@@ -219,6 +239,7 @@ export async function initSiteLocale(rawLang) {
   // inherit the previous language.
   site.lang = lang === 'nb' || strings ? lang : 'nb';
   site.dict = { ...nb.strings, ...(strings ?? {}) };
+  site.own = strings ?? nb.strings;
   site.dates = null;
   return site.lang;
 }
