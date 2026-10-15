@@ -70,6 +70,8 @@ const THUMBS = {
   apSeries: () => r(12, 8, 136, 64, '#f5efdd', 1, 2) + l(20, 17, 34, 17, GOLD, 1) + r(38, 15, 26, 3.5, GOLD, 0.9) + r(20, 24, 58, 8, '#7a1a1a') + r(20, 38, 64, 3, NAVY, 0.6) + r(20, 44, 52, 3, NAVY, 0.6) + [20, 46, 72].map((x) => r(x, 54, 12, 2.5, GOLD, 0.9) + r(x, 60, 20, 3.5, NAVY, 0.8)).join('') + l(100, 14, 100, 66, GOLD, 0.8, 0.6) + r(108, 18, 30, 8, '#7a1a1a', 0.85) + r(108, 32, 32, 2.5, NAVY, 0.5) + r(108, 38, 26, 2.5, NAVY, 0.5),
   // R1 Tear-off pad: the paper page with its red month bar, the day as a block of ink, and the dashed rows under the dotted rule.
   pad: () => r(34, 2, 92, 72, '#fbf7ee', 1, 2) + r(34, 2, 92, 9, '#c4302b', 1, 0) + r(82, 15, 5, 24, '#1d1b18', 1, 0) + r(70, 29, 18, 4, '#1d1b18', 1, 0) + l(72, 30, 83, 16, '#1d1b18', 4) + l(40, 44, 120, 44, '#cfc6b3', 1.2) + rows(3, 50, 8, (y) => r(40, y, 14, 3, '#c4302b', 0.9) + r(58, y, 40, 3, '#1d1b18', 0.8) + r(104, y, 16, 3, '#1d1b18', 0.45)) + r(36, 76, 88, 2, '#d9d0bd', 1, 0),
+  // R2 Index cards: four askew cards with the rule under their heads and typewritten lines, a stamp across the last.
+  index: () => [[12, 6], [84, 6], [12, 42], [84, 42]].map(([x, y], i) => r(x, y, 64, 32, '#fdfbf3', 1, 1) + l(x + 4, y + 9, x + 60, y + 9, '#c9483b', 1.2) + rows(3, y + 14, 6, (yy) => r(x + 4, yy, 44, 2, '#2a2622', 0.7)) + (i === 3 ? r(x + 40, y + 20, 18, 7, '#c9483b', 0.8, 0) : '')).join(''),
   mobileAgenda: () => r(50, 4, 60, 72, '#121216', 1, 8) + r(56, 10, 22, 4, PAPER, 0.9) + Array.from({ length: 7 }, (_, i) => r(56 + i * 7.1, 18, 5.6, 9, i === 2 ? ACC : DIM, 1, 2)).join('') + rows(3, 32, 14, (y) => r(56, y, 48, 11, '#1c1c22', 1, 3) + l(67, y + 2, 67, y + 9, ACC, 1.4) + r(58, y + 4, 6, 3, MUT, 0.8) + r(70, y + 3, 26, 3, PAPER, 0.85)),
 };
 

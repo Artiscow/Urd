@@ -6,6 +6,7 @@
 import { dates } from '../i18n.js';
 
 const dayOf = (occ) => new Date(occ.start);
+const two = (n) => String(n).padStart(2, '0');
 
 /** The events after the featured one, as the block's nextCount and laterCount say (the same slice as the «Coming up» designs). */
 const laterOf = (occs, props, ics) => occs.slice(ics.nextCount(props.nextCount), ics.nextCount(props.nextCount) + ics.laterCount(props.laterCount));
@@ -83,4 +84,50 @@ export function pad(host, occs, props, ics, ui) {
   }
   page.append(head, day, body);
   host.appendChild(page);
+}
+
+/**
+ * R2 Index cards: typewritten cards on lined paper, each a little askew, numbered in their head with the category beside, the event as «Date:», «Time:» and «Place:» lines with the sign-up or «Open to everyone» and «Repeats» as lines of the same kind, the excerpt under them, and a stamp across a cancelled event.
+ * The line words and the number are the design's own (the theme words cardNo, colDate, colTime, colPlace, signup, openToAll and recurring).
+ */
+export function index(host, occs, props, ics, ui) {
+  const box = ui.el('div', 'urd-cal-index');
+  const line = (key, content) => {
+    const row = ui.el('div', 'urd-cal-index-line');
+    row.append(ui.tx(key, 'urd-cal-index-key'), document.createTextNode(' '), content);
+    return row;
+  };
+  occs.forEach((occ, i) => {
+    const d = dayOf(occ);
+    const card = ui.tint(ui.el('article', `urd-cal-index-card urd-cal-index-tilt-${i % 4}`), occ);
+    const head = ui.el('div', 'urd-cal-index-head');
+    head.appendChild(ui.el('span', 'urd-cal-index-no', ui.tx('cardNo', null, { n: two(ui.offset + i + 1) })));
+    if (occ.category) head.appendChild(ui.field('span', 'category', occ.category, 'urd-cal-index-cat'));
+    const body = ui.el('div', 'urd-cal-index-body');
+    body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-index-title'));
+    body.appendChild(line('colDate', ui.field('span', 'date', `${ui.dayMonth(d)} (${dates().weekdaysShort[(d.getDay() + 6) % 7]})`, null, d)));
+    // The time line is left out of a cancelled event: its stamp says what the time would.
+    if (!occ.cancelled && ui.hasTime(occ)) body.appendChild(line('colTime', ui.field('span', 'time', ui.time(occ), null, occ)));
+    if (occ.location) body.appendChild(line('colPlace', ui.field('span', 'place', occ.location)));
+    const signup = ui.signup(occ) ?? ui.openToAll(occ);
+    if (signup) body.appendChild(signup);
+    const recurring = ui.recurring(occ);
+    if (recurring) body.appendChild(recurring);
+    const excerpt = ui.excerpt(occ.description, 160);
+    if (excerpt && ui.descriptionIn !== 'card') {
+      const text = ui.field('p', 'description', excerpt, 'urd-cal-index-text');
+      const href = ui.href(occ);
+      if (href) {
+        const more = ui.link('urd-cal-index-more', 'moreInfo', href, '');
+        more.target = '_blank';
+        more.rel = 'noopener';
+        text.append(document.createTextNode(' '), more);
+      }
+      body.appendChild(text);
+    }
+    card.append(head, body);
+    if (occ.cancelled) card.appendChild(ui.el('span', 'urd-cal-index-stamp', ui.tx('cancelled')));
+    box.appendChild(card);
+  });
+  host.appendChild(box);
 }

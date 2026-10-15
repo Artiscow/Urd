@@ -2564,6 +2564,7 @@ export default {
     'calendar.family.ap': 'ApeironLF',
     'calendar.family.retro': 'Retro',
     'calendar.design.pad': 'Tear-off pad',
+    'calendar.design.index': 'Index cards',
     'calendar.slot.paper': 'Paper',
     'calendar.slot.ink': 'Ink',
     'calendar.opt.wordChoice': 'Word choice',

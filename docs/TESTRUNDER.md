@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.23.2): Index cards
+
+- [ ] «Kartotekkort» in the picker's Retro family with its picture; chosen, the block draws typewritten cards on lined paper, each a little askew, numbered «Kort nr. 01», «02» … with the category in the head, and the writing sits on the lines
+- [ ] Each card reads «Dato:», «Tid:» (left out of a cancelled event) and «Sted:» lines, «Påmelding: ja, se lenke» as the sign-up link (with sign-up buttons on) or «Påmelding: ikke nødvendig» (unless «Open to everyone» is off), «Gjentas: ja» on a repeating event, the excerpt with «Les mer», and a rotated «Avlyst» stamp across a cancelled card with its title struck
+- [ ] «Ordvalg: Nøytrale» gives «Nr. 01», «Dato», «Tid», «Sted», «Meld deg på», «Åpent for alle» and «Gjentas»; the «Kolonner» option sets two, three or four columns; on a phone the cards flow into one column
+- [ ] A press on a card opens the event card with the punched hole at the top, the date as the head over the red rule, the facts on the lines, and the common words on its button and labels («Meld deg på», «Når», «Hvor»), never the design's line words
+
 ### Test batch (0.7.19.23.1): the stylised designs' foundation and Tear-off pad
 
 - [ ] The design picker has a «Retro» family with «Avrivningsblokk» and its picture; chosen, the block draws the pad: the month bar, the huge day and weekday, the next event with its countdown, time and place, excerpt and «Les mer», the sign-up (with sign-up buttons on) and «Legg i kalender», and the later events as dashed rows, a cancelled one struck

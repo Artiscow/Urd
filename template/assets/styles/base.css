@@ -1379,6 +1379,26 @@ textarea.urd-form-input {
   --urd-cal-set-label-spacing: 0.1em;
 }
 
+.urd-cal-set-index {
+  --urd-cal-set-bg: var(--urd-cal-s-card, #fdfbf3);
+  --urd-cal-set-surface: color-mix(in srgb, var(--urd-cal-s-card, #fdfbf3) 92%, var(--urd-cal-s-ink, #2a2622));
+  --urd-cal-set-ink: var(--urd-cal-s-ink, #2a2622);
+  --urd-cal-set-muted: color-mix(in srgb, var(--urd-cal-s-ink, #2a2622) 65%, transparent);
+  --urd-cal-set-line: var(--urd-cal-s-line, #b9d2e8);
+  --urd-cal-set-accent: var(--urd-cal-s-rule, #c9483b);
+  --urd-cal-set-accent-text: var(--urd-cal-s-card, #fdfbf3);
+  --urd-cal-set-label: var(--urd-cal-s-rule, #c9483b);
+  --urd-cal-set-radius: 0 4px 4px 4px;
+  --urd-cal-set-chip-radius: 0;
+  --urd-cal-set-frame: none;
+  --urd-cal-set-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+  --urd-cal-set-font: 'Special Elite', 'Courier Prime', 'Courier New', Courier, monospace;
+  --urd-cal-set-title-font: 'Special Elite', 'Courier Prime', 'Courier New', Courier, monospace;
+  --urd-cal-set-title-weight: 400;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.14em;
+}
+
 .urd-cal .urd-collection-card {
   background: var(--urd-cal-surface);
   border-color: var(--urd-cal-line);
@@ -1715,6 +1735,50 @@ textarea.urd-form-input {
   font-stretch: condensed;
   font-size: 1.6em;
   line-height: 1.1;
+}
+
+/* R2 Index cards' card: a typewritten card with the punched hole at its top, the date as the head over the rule, and the facts and the text on the lines. */
+.urd-cal-dlg-index {
+  padding-top: 1.7rem;
+  line-height: 26px;
+}
+
+.urd-cal-dlg-index::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  background: rgb(10 10 14 / 55%);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / 50%);
+}
+
+.urd-cal-dlg-index .urd-cal-dialog-date {
+  padding-bottom: 2px;
+  font-weight: 400;
+  color: var(--urd-cal-set-ink);
+  border-bottom: 2px solid var(--urd-cal-set-accent);
+}
+
+.urd-cal-dlg-index .urd-cal-dialog-title {
+  margin-top: 0.4rem;
+  font-size: 1.45em;
+  line-height: 26px;
+}
+
+.urd-cal-dlg-index .urd-cal-dialog-facts,
+.urd-cal-dlg-index .urd-cal-dialog-text {
+  gap: 0 12px;
+  line-height: 26px;
+  background-image: linear-gradient(transparent 25px, var(--urd-cal-set-line) 25px, var(--urd-cal-set-line) 26px);
+  background-size: 100% 26px;
+}
+
+.urd-cal-dlg-index .urd-cal-dialog-facts dt {
+  opacity: 1;
 }
 
 .urd-cal-shade {
@@ -5148,15 +5212,15 @@ textarea.urd-form-input {
       border-left: 0;
     }
 
-    .urd-cal-o-columns-2 :is(.urd-cal-posters, .urd-cal-photos) {
+    .urd-cal-o-columns-2 :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .urd-cal-o-columns-3 :is(.urd-cal-posters, .urd-cal-photos) {
+    .urd-cal-o-columns-3 :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .urd-cal-o-columns-4 :is(.urd-cal-posters, .urd-cal-photos) {
+    .urd-cal-o-columns-4 :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index) {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
@@ -5173,15 +5237,15 @@ textarea.urd-form-input {
     border-left: 0;
   }
 
-  .urd-cal-o-columns-2 :is(.urd-cal-posters, .urd-cal-photos) {
+  .urd-cal-o-columns-2 :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .urd-cal-o-columns-3 :is(.urd-cal-posters, .urd-cal-photos) {
+  .urd-cal-o-columns-3 :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .urd-cal-o-columns-4 :is(.urd-cal-posters, .urd-cal-photos) {
+  .urd-cal-o-columns-4 :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
@@ -5291,7 +5355,7 @@ textarea.urd-form-input {
 }
 
 /* The poster wall and the picture cards flow into one column on a phone, whatever the columns option says, and the first poster spans no more than the column. */
-.urd-cal-phone :is(.urd-cal-posters, .urd-cal-photos) {
+.urd-cal-phone :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index) {
   grid-template-columns: minmax(0, 1fr);
 }
 
@@ -5869,6 +5933,128 @@ textarea.urd-form-input {
   margin-left: auto;
   font-size: 0.8em;
   opacity: 0.7;
+}
+
+/* R2 Index cards: typewritten cards on lined paper, the lines in pixels so the writing sits on them, each card a little askew. */
+.urd-cal-index {
+  --urd-cal-index-card: var(--urd-cal-s-card, #fdfbf3);
+  --urd-cal-index-rule: var(--urd-cal-s-rule, #c9483b);
+  --urd-cal-index-line: var(--urd-cal-s-line, #b9d2e8);
+  --urd-cal-index-ink: var(--urd-cal-s-ink, #2a2622);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 22px 26px;
+  padding: 8px;
+  font-family: var(--urd-cal-set-font);
+  color: var(--urd-cal-index-ink);
+}
+
+.urd-cal-index-card {
+  position: relative;
+  padding: 0 16px 14px;
+  font-size: 15px;
+  line-height: 28px;
+  background-color: var(--urd-cal-index-card);
+  background-image: repeating-linear-gradient(var(--urd-cal-index-card) 0 27px, var(--urd-cal-index-line) 27px 28px);
+  background-position: 0 46px;
+  box-shadow: 0 6px 14px rgb(0 0 0 / 22%);
+}
+
+.urd-cal-index-tilt-0 {
+  rotate: -0.8deg;
+}
+
+.urd-cal-index-tilt-1 {
+  rotate: 0.6deg;
+}
+
+.urd-cal-index-tilt-2 {
+  rotate: -0.4deg;
+}
+
+.urd-cal-index-tilt-3 {
+  rotate: 0.9deg;
+}
+
+.urd-cal-index-head {
+  display: flex;
+  gap: 1em;
+  align-items: baseline;
+  justify-content: space-between;
+  height: 44px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--urd-cal-index-rule);
+}
+
+.urd-cal-index-head > * {
+  padding-top: 16px;
+}
+
+.urd-cal-index-cat {
+  color: var(--urd-cal-index-rule);
+}
+
+.urd-cal-index-title {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.urd-cal-index-line {
+  display: block;
+}
+
+.urd-cal-index .urd-cal-signup,
+.urd-cal-index .urd-cal-open,
+.urd-cal-index .urd-cal-rec {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: 0;
+  color: inherit;
+  text-transform: none;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  opacity: 1;
+}
+
+.urd-cal-index .urd-cal-signup {
+  text-decoration: underline;
+}
+
+.urd-cal-index-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 28px;
+}
+
+.urd-cal-index-text a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.urd-cal-index-more {
+  white-space: nowrap;
+}
+
+.urd-cal-index-stamp {
+  position: absolute;
+  right: 14px;
+  bottom: 30px;
+  padding: 4px 12px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  color: var(--urd-cal-index-rule);
+  text-transform: uppercase;
+  border: 3px solid var(--urd-cal-index-rule);
+  opacity: 0.85;
+  rotate: -12deg;
 }
 
 /* ---- The «Coming up» designs (blocks/calendar-next.js) ---- */

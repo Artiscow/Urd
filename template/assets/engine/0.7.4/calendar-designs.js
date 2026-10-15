@@ -98,6 +98,7 @@ export const CAL_TEXTS = {
   unnamed: 'calendar.unnamed',
   zoneOf: 'calendar.zoneOf',
   zoneYours: 'calendar.zoneYours',
+  cardNo: 'calendar.cardNo',
 };
 
 /** The texts with plural forms: the dictionary holds one key per form, and the owner's words are stored per form. */
@@ -129,6 +130,7 @@ export const CAL_TEXT_PARAMS = {
   range: ['from', 'to'],
   zoneOf: ['zone'],
   zoneYours: ['zone'],
+  cardNo: ['n'],
 };
 
 /** The texts of the ApeironLF empty state (the designs with `empty: 'ap'`). */
@@ -635,6 +637,21 @@ export const CAL_DESIGNS = [
     texts: ['later', 'addEvent', 'moreInfo', ...COMMON_TEXTS],
   },
   {
+    id: 'index',
+    labelKey: 'calendar.design.index',
+    set: 'index',
+    family: 'retro',
+    phone: 'flows',
+    excerpt: true,
+    view: 'cards',
+    module: 'retro',
+    stripe: false,
+    open: true,
+    theme: ['cardNo', 'colDate', 'colTime', 'colPlace', 'signup', 'openToAll', 'recurring'],
+    slots: [slot('card'), slot('rule'), slot('line'), slot('ink')],
+    texts: ['cardNo', 'colDate', 'colTime', 'colPlace', 'openToAll', 'moreInfo', ...COMMON_TEXTS],
+  },
+  {
     id: 'mobileAgenda',
     labelKey: 'calendar.design.mobileAgenda',
     set: 'agendaDark',
@@ -674,6 +691,7 @@ export const CAL_OPTIONS = {
   yearWheel: [choice('firstMonth', [...MONTHS, 'now'], '0')],
   numbered: [toggle('pad', true)],
   band: [toggle('roll', true), choice('pause', ['button', 'touch'], 'button', { roll: true })],
+  index: [choice('columns', ['auto', '2', '3', '4'], 'auto')],
 };
 
 /**
@@ -688,7 +706,7 @@ export const CAL_SHARED_OPTIONS = {
  * The colour sets: every design belongs to one, and the event card, the switcher's week and month, the finding tools and the phone view are drawn per set in base.css (`urd-cal-set-<id>` on the block, ADR-0011).
  * A design overrides its set by redefining a set variable under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
  */
-export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad'];
+export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad', 'index'];
 
 /** The designs a switcher button can stand behind: the week strip and the week designs, the plain month and the month designs. */
 export const CAL_SWITCH_WEEKS = ['weekStrip', 'weekPlan', 'layers'];

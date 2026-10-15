@@ -2567,6 +2567,7 @@ export default {
     'calendar.family.ap': 'ApeironLF',
     'calendar.family.retro': 'Retro',
     'calendar.design.pad': 'Avrivningsblokk',
+    'calendar.design.index': 'Kartotekkort',
     'calendar.slot.paper': 'Papir',
     'calendar.slot.ink': 'Blekk',
     'calendar.opt.wordChoice': 'Ordvalg',

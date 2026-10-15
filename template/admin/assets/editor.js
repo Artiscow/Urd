@@ -2679,6 +2679,14 @@ var oa = {
 		"calendar.inDays.one": "Om {n} dag",
 		"calendar.inDays.other": "Om {n} dager",
 		"calendar.theme.pad.inDays.other": "I dag om {n} dager",
+		"calendar.cardNo": "Nr. {n}",
+		"calendar.theme.index.cardNo": "Kort nr. {n}",
+		"calendar.theme.index.colDate": "Dato:",
+		"calendar.theme.index.colTime": "Tid:",
+		"calendar.theme.index.colPlace": "Sted:",
+		"calendar.theme.index.signup": "Påmelding: ja, se lenke",
+		"calendar.theme.index.openToAll": "Påmelding: ikke nødvendig",
+		"calendar.theme.index.recurring": "Gjentas: ja",
 		"calendar.more": "+{n}",
 		"calendar.next": "Neste arrangement",
 		"calendar.now": "Akkurat nå",
@@ -12995,6 +13003,42 @@ var X = (e, t = "colors") => ({
 		]
 	},
 	{
+		id: "index",
+		labelKey: "calendar.design.index",
+		set: "index",
+		family: "retro",
+		phone: "flows",
+		excerpt: !0,
+		view: "cards",
+		module: "retro",
+		stripe: !1,
+		open: !0,
+		theme: [
+			"cardNo",
+			"colDate",
+			"colTime",
+			"colPlace",
+			"signup",
+			"openToAll",
+			"recurring"
+		],
+		slots: [
+			X("card"),
+			X("rule"),
+			X("line"),
+			X("ink")
+		],
+		texts: [
+			"cardNo",
+			"colDate",
+			"colTime",
+			"colPlace",
+			"openToAll",
+			"moreInfo",
+			...Vm
+		]
+	},
+	{
 		id: "mobileAgenda",
 		labelKey: "calendar.design.mobileAgenda",
 		set: "agendaDark",
@@ -13083,7 +13127,13 @@ var X = (e, t = "colors") => ({
 		"now"
 	], "0")],
 	numbered: [Km("pad", !0)],
-	band: [Km("roll", !0), Gm("pause", ["button", "touch"], "button", { roll: !0 })]
+	band: [Km("roll", !0), Gm("pause", ["button", "touch"], "button", { roll: !0 })],
+	index: [Gm("columns", [
+		"auto",
+		"2",
+		"3",
+		"4"
+	], "auto")]
 }, Xm = {
 	theme: qm(Gm("wordChoice", ["theme", "neutral"], "theme")),
 	rewrites: qm(Km("rewrite", !0))
@@ -22986,6 +23036,12 @@ var ZS = {
 		72
 	].map((e) => Z(e, 54, 12, 2.5, WS, .9) + Z(e, 60, 20, 3.5, HS, .8)).join("") + qS(100, 14, 100, 66, WS, .8, .6) + Z(108, 18, 30, 8, "#7a1a1a", .85) + Z(108, 32, 32, 2.5, HS, .5) + Z(108, 38, 26, 2.5, HS, .5),
 	pad: () => Z(34, 2, 92, 72, "#fbf7ee", 1, 2) + Z(34, 2, 92, 9, "#c4302b", 1, 0) + Z(82, 15, 5, 24, "#1d1b18", 1, 0) + Z(70, 29, 18, 4, "#1d1b18", 1, 0) + qS(72, 30, 83, 16, "#1d1b18", 4) + qS(40, 44, 120, 44, "#cfc6b3", 1.2) + JS(3, 50, 8, (e) => Z(40, e, 14, 3, "#c4302b", .9) + Z(58, e, 40, 3, "#1d1b18", .8) + Z(104, e, 16, 3, "#1d1b18", .45)) + Z(36, 76, 88, 2, "#d9d0bd", 1, 0),
+	index: () => [
+		[12, 6],
+		[84, 6],
+		[12, 42],
+		[84, 42]
+	].map(([e, t], n) => Z(e, t, 64, 32, "#fdfbf3", 1, 1) + qS(e + 4, t + 9, e + 60, t + 9, "#c9483b", 1.2) + JS(3, t + 14, 6, (t) => Z(e + 4, t, 44, 2, "#2a2622", .7)) + (n === 3 ? Z(e + 40, t + 20, 18, 7, "#c9483b", .8, 0) : "")).join(""),
 	mobileAgenda: () => Z(50, 4, 60, 72, "#121216", 1, 8) + Z(56, 10, 22, 4, BS, .9) + Array.from({ length: 7 }, (e, t) => Z(56 + t * 7.1, 18, 5.6, 9, t === 2 ? LS : zS, 1, 2)).join("") + JS(3, 32, 14, (e) => Z(56, e, 48, 11, "#1c1c22", 1, 3) + qS(67, e + 2, 67, e + 9, LS, 1.4) + Z(58, e + 4, 6, 3, RS, .8) + Z(70, e + 3, 26, 3, BS, .85))
 };
 Object.keys(ZS);

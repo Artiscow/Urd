@@ -2564,6 +2564,7 @@ export default {
     'calendar.family.ap': 'ApeironLF',
     'calendar.family.retro': 'Retro',
     'calendar.design.pad': 'Yırtmalı takvim',
+    'calendar.design.index': 'Fiş kartları',
     'calendar.slot.paper': 'Kâğıt',
     'calendar.slot.ink': 'Mürekkep',
     'calendar.opt.wordChoice': 'Sözcük seçimi',

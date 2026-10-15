@@ -211,12 +211,14 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const params = (key) => cd.CAL_TEXT_PARAMS[key] ?? [];
   const formOf = (key, values) => (cd.CAL_PLURAL_TEXTS.includes(key) ? pluralForm(cd.CAL_TEXTS[key], Number(values?.n ?? 0)).form : null);
   // The texts the design has words of its own for, while the owner keeps its word choice (calThemeTexts).
+  // The event's card is the block's, not the design's: the texts drawn inside plainWords take the common words, and keep them when painted again.
   const themed = new Set(cd.calThemeTexts(props));
+  let plainScope = false;
   /** The dictionary's words for a text in the site language, with its placeholders left in: the design's own words where it has them (themeString), else the common ones. */
-  const defaultWords = (key, form) => {
+  const defaultWords = (key, form, plain = false) => {
     const base = cd.CAL_TEXTS[key];
     if (!base) return '';
-    if (themed.has(key)) return themeString(cd.calThemeKey(cd.calDesign(props.design).id, key), base, form);
+    if (!plain && themed.has(key)) return themeString(cd.calThemeKey(cd.calDesign(props.design).id, key), base, form);
     return t(form ? `${base}.${form}` : base);
   };
   /** A value in a text: a whole of its own, which the owner's words keep and a tick updates in place. */
@@ -246,10 +248,10 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     return copy.innerHTML.replace(/\u200b/g, '');
   };
   /** An empty text's hint in the editor: a removed line's default words, or the prompt of a text that has no words of its own. */
-  const hintFor = (node, key, form) => {
+  const hintFor = (node, key, form, plain) => {
     const hint = cd.CAL_HINT_TEXTS[key];
     if (hint) adminLocaleReady.then(() => { node.dataset.placeholder = ta(hint); });
-    else node.dataset.placeholder = defaultWords(key, form).replace(/\{([a-z]+)\}/gi, '').trim();
+    else node.dataset.placeholder = defaultWords(key, form, plain).replace(/\{([a-z]+)\}/gi, '').trim();
   };
   /** The line and the group a content text stands in follow its words: gone when it is empty. */
   const markLine = (node, blank) => {
@@ -265,13 +267,14 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const paintText = (node, key, values) => {
     const form = formOf(key, values);
     const own = cd.calTextValue(rewritten, key, form);
-    TEXTS.set(node, { key, values, form });
+    const plain = TEXTS.get(node)?.plain ?? plainScope;
+    TEXTS.set(node, { key, values, form, plain });
     if (editable) node.dataset.calText = cd.calTextSlot(key, form);
     const blank = own === false || (own === null && Boolean(cd.CAL_HINT_TEXTS[key]));
     node.classList.toggle('urd-cal-blank', blank);
     if (blank) {
       node.replaceChildren();
-      if (editable) hintFor(node, key, form);
+      if (editable) hintFor(node, key, form, plain);
       return;
     }
     if (own) {
@@ -279,7 +282,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
       // Visitor protection: executable code is always stripped on render.
       stripActiveContent(node);
     } else {
-      node.textContent = defaultWords(key, form);
+      node.textContent = defaultWords(key, form, plain);
     }
     fillValues(node, key, values);
   };
@@ -317,7 +320,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
         else if (blank) delete rewritten[slot];
         else rewritten[slot] = html;
         node.classList.toggle('urd-cal-blank', blank);
-        if (blank) hintFor(node, key, form);
+        if (blank) hintFor(node, key, form, TEXTS.get(node)?.plain);
         markLine(node, blank);
         for (const other of drawn) {
           if (!other.isConnected) {
@@ -567,8 +570,17 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     });
     return node;
   };
-  /** The event in full, in a native dialog over the page (ADR-0011). */
-  const openEvent = (occ, from) => showEventDialog(occ, from, ics, ui, props);
+  /** The texts drawn while fn runs take the common words, never the design's own: the event's card. */
+  const plainWords = (fn) => {
+    plainScope = true;
+    try {
+      return fn();
+    } finally {
+      plainScope = false;
+    }
+  };
+  /** The event in full, in a native dialog over the page (ADR-0011), in the common words. */
+  const openEvent = (occ, from) => plainWords(() => showEventDialog(occ, from, ics, ui, props));
   /** The mark on an event that repeats, with words the owner can rewrite; null on a single event. */
   const recurring = (occ) => {
     if (!occ.recurring) return null;

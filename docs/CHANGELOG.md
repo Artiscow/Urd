@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.23.2 - Index cards, and the event card that keeps the common words - 15 October 2026
+
+- Index cards (`index`, set `index`, the slots card, rule, line and ink, the `columns` option): typewritten cards on lined paper, each a little askew, numbered in the head («Kort nr. 01») with the category beside, the event as «Dato:», «Tid:» and «Sted:» lines, the sign-up as «Påmelding: ja, se lenke» or «Påmelding: ikke nødvendig», «Gjentas: ja» on a repeating event, the excerpt with «Les mer», and a stamp across a cancelled card; its card has the punched hole, the date as the head over the rule and the facts on the lines. The seven line words are theme words, and the number got a common text of its own (`cardNo`, «Nr. {n}», in nb, en-GB and tr).
+- Found while building: the card's sign-up button read the design's line word («Påmelding: ja, se lenke»), since a theme word applies wherever its text is drawn. The event's card is the block's, not the design's, and now draws the common words (`plainWords` in blocks/calendar.js, kept on repaint); SCHEMA.md says so.
+
 ### 0.7.19.23.1 - The stylised designs' foundation (theme words, the word choice, the rewriting switch) and the first retro design, Tear-off pad - 15 October 2026
 
 - A design can have words of its own (`theme` in calendar-designs.js, the site keys `calendar.theme.<design>.<text>` with the plural forms after it): the block draws the theme word in the site's own language, else the common word in that language, else the bokmål theme word (`themeString` in i18n.js, which keeps the language's own strings beside the merged dictionary for the look-up), and the owner's rewrite stands over both. «Word choice» (the design's own, neutral) is a shared option a design with theme words gets after its own (`CAL_SHARED_OPTIONS`, under `options`), and the rewriting switch, on by default, joins a design that rewrites calendar data (`rewrites`; the renderer reads `ui.rewrite`). Both carry a «?» text, and tests hold the keys, the fallback chain and the shared options per design.
