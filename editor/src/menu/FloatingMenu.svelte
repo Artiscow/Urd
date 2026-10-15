@@ -4,7 +4,7 @@
      same ElementMenu as the Properties panel, so the two never diverge. Wide
      shows the three areas as columns, narrow as tabs; the admin setting
      chooses which a menu opens in. */
-  import { getContext } from 'svelte';
+  import { getContext, onMount } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import { menu, menuIsWide } from './state.svelte.js';
@@ -21,6 +21,9 @@
      puts the menu back beside the block. A press on a control in the head
      is that control's, never a drag. */
   let dragging = $state(false);
+  /** The menu opens ready to type in: the focus goes to the search field, where 1, 2 and 3 still choose the areas. */
+  let rootEl;
+  onMount(() => rootEl?.querySelector('.menu-search')?.focus());
   function dragHead(event) {
     if (event.button !== 0 || event.target.closest('button, input, label')) return;
     event.preventDefault();
@@ -47,7 +50,7 @@
   const MENU_NARROW_ICON = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4l4 5-4 5M16 4l-4 5 4 5"/></svg>';
 </script>
 
-<div class="block-menu" class:wide={menuIsWide()} class:dragging style="--menu-left: {pos.left}px; --menu-top: {pos.top}px; --menu-min: {menu.min}px">
+<div class="block-menu" bind:this={rootEl} class:wide={menuIsWide()} class:dragging style="--menu-left: {pos.left}px; --menu-top: {pos.top}px; --menu-min: {menu.min}px">
   <header class="block-menu-head" title={ta('tip.menu.dragHead')} onpointerdown={dragHead}>
     <span class="block-menu-grip" aria-hidden="true">{@html GRIP_ICON}</span>
     <span class="block-menu-title">{ta('blocks.suffix', { label: ed.blockLabel(selectedBlock.type) })}</span>

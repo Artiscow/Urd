@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.20.9): keys for the menu's areas
+
+- [ ] A block selected on the canvas: 1, 2 and 3 open Properties on Content, Style and Placement, or switch the floating menu's area when it is open; the arrows, Delete and Shift+F10 work right after the click, with no focus ring on the block; a second click still gives the caret, and the arrows then move the caret
+- [ ] The floating menu opens with the focus in its search field: typing searches at once; 1, 2 and 3 in the empty field choose the area without being typed; with words in the field a digit is typed; / in the panel and the floating menu goes to that menu's own field; Esc empties the field, the next Esc closes
+- [ ] In the wide menu an area key scrolls the column into view and focuses its first head or button; in the narrow one the tab switches; a digit in a number field or in editable text switches nothing
+- [ ] No key caps anywhere: the tabs and the close cross as before, the dimmed / at the search field's end hidden while it holds words
+- [ ] The welcome on a fresh clone has the keys line; the search field's «?» text names /; the user guide (English, bokmål, nynorsk) has the two new bullets; nb, en-GB and tr read right, nn and se fall back
+- [ ] «Section settings» in a section's right-click menu opens the Properties panel on that section, also with another panel open
+
 ### Test batch (0.7.20.8): the right-click menu
 
 - [ ] A right click on a block opens the menu at the pointer with Settings first and Delete last; every item does what it says (Settings opens the element menu, Duplicate, To the front and To the back, Hide and Show on mobile, Save as template, Delete); the arrows, Home, End, Escape and Tab behave; a click outside closes it; Shift+F10 and the context-menu key open it for the selected block

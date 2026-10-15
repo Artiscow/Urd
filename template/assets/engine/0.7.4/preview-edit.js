@@ -17,6 +17,8 @@
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
+ *                  urd-select-section carries `open: true` from the right-click menu's «Section settings»: the editor opens the Properties panel on the section
+ *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
 import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
@@ -273,7 +275,11 @@ function openSectionContextMenu(host, x, y) {
     item(ta('canvas.ctx.newBlockHere'), '/', () => openBlockMenuAt(host, x, y)).classList.add('urd-ctx-first');
     item(ta('canvas.ctx.paste'), 'Ctrl+V', () => pasteClipboard(), { disabled: !clipboard?.blocks?.length });
     sep();
-    item(ta('canvas.ctx.sectionSettings'), '', () => { markActive(host); host.scrollIntoView({ block: 'nearest' }); });
+    // The section's settings: the section selected, and the Properties panel opened on it.
+    item(ta('canvas.ctx.sectionSettings'), '', () => {
+      markActiveVisual(host);
+      post({ type: 'urd-select-section', sectionId: section.id, open: true });
+    });
     item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: !adderBelow() });
     item(ta('canvas.ctx.sectionUp'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     item(ta('canvas.ctx.sectionDown'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
@@ -2891,6 +2897,15 @@ function selectBlock(el, opts = {}) {
     if (b !== el) b.classList.remove('urd-selected');
   });
   el?.classList.add('urd-selected');
+  // The selected block takes the keyboard focus, so the keys on a selected
+  // block (the arrows, Delete, 1, 2 and 3, Shift+F10) work right after the
+  // click: the press that selects prevents its default, which would
+  // otherwise have moved the focus into the frame. Text with the caret
+  // keeps it.
+  if (el && !el.contains(document.activeElement)) {
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+    el.focus({ preventScroll: true });
+  }
   if (previous !== selectedBlockId) {
     post({
       type: 'urd-select-block',
@@ -3015,6 +3030,14 @@ window.addEventListener('keydown', (event) => {
   const el = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`);
   const ctx = el?._urdCtx;
   if (!ctx) return;
+
+  // The element menu's areas from the canvas: 1, 2 and 3 on a selected block
+  // choose Content, Style and Placement in the editor's menu (0.7.20.9).
+  if (['1', '2', '3'].includes(event.key) && !ctrl && !event.altKey) {
+    event.preventDefault();
+    post({ type: 'urd-menu-area', area: ['content', 'style', 'placement'][Number(event.key) - 1] });
+    return;
+  }
 
   // The right-click menu from the keyboard: the context-menu key, or Shift+F10.
   if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {

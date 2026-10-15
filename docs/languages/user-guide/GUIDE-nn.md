@@ -54,7 +54,12 @@ heilt utan editor-rammer. Klikk **Rediger**-knappen for å kome tilbake.
   (snappar til 15°-steg; hald Shift for fri vinkel). Nøyaktig gradtal
   kan òg setjast i Eigenskapar.
 - **Tastatur på markert blokk**: piltastane flyttar eitt grid-steg
-  (Shift = 1 px), Delete slettar, Esc avmarkerer, Ctrl+D dupliserer.
+  (Shift = 1 px), Delete slettar, Esc avmarkerer, Ctrl+D dupliserer,
+  Ctrl+Alt+C og Ctrl+Alt+V kopierer og limer inn stilen til blokka, Ctrl+Shift+↑
+  og ↓ legg henne øvst eller nedst, Shift+F10 opnar høgreklikkmenyen til
+  blokka (høgreklikk på tom seksjonsflate opnar menyen til seksjonen).
+- **Tastatur i blokkmenyen**: 1, 2 og 3 vel Innhald, Stil og
+  Plassering, / går til søket, Esc lukkar den flytande menyen.
 - **Snappelinjer**: når du dreg ei blokk nær kanten eller midten av ei
   anna blokk, blir ei linje vist mellom dei to og blokka snappar på plass;
   når avstanden til ein nabo blir lik avstanden mellom to naboar, blir

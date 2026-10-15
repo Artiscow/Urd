@@ -15,7 +15,7 @@
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize } from '$engine/push-model.js';
   import { ribbonMotions, colorTokens, onOff } from './options.js';
-  import { menu, quickChoice, setQuickChoice } from './state.svelte.js';
+  import { menu, quickChoice, setQuickChoice, chooseArea, MENU_AREAS } from './state.svelte.js';
   import { quickIds, choiceChanged, NO_CHOICE } from '../lib/quick-row.js';
   import { matchWords } from '$engine/palette-search.js';
   import { menuSearch } from '../lib/menu-search.js';
@@ -154,7 +154,34 @@
     }
     return items;
   }
+
+  /* The keys of the menu's areas (0.7.20.9, proposal O on the Design canvas):
+     with the focus in the menu and not in a field, 1, 2 and 3 choose Content,
+     Style and Placement (the tab when narrow, the column when wide), and /
+     goes to the search field of the menu the focus is in. No key caps are
+     drawn; the keys are told in the welcome and the user guide. */
+  function menuKeys(event) {
+    const t = event.target;
+    if (t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const root = event.currentTarget;
+    if (['1', '2', '3'].includes(event.key)) {
+      event.preventDefault();
+      chooseArea(MENU_AREAS[Number(event.key) - 1], root.closest('.block-menu') ?? root.closest('.panel-body'));
+      return;
+    }
+    if (event.key === '/') {
+      event.preventDefault();
+      // The floating menu's field stands in its head, above the body; the panel's over the menu.
+      const field = (root.closest('.block-menu') ?? root.closest('.panel-body'))?.querySelector('.menu-search');
+      field?.focus();
+      field?.select();
+    }
+  }
 </script>
+
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="emenu-root" onkeydown={menuKeys}>
 
 {#snippet menuContent()}
   <Family area="content" />
@@ -227,3 +254,4 @@
     {@render menuPlacement()}
   {/if}
 {/if}
+</div>

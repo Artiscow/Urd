@@ -46,6 +46,25 @@ export function measureMenuRoom(left) {
   menu.room = window.innerWidth - menu.min - 8;
 }
 
+/** The three areas, in the order of the keys 1, 2 and 3. */
+export const MENU_AREAS = ['content', 'style', 'placement'];
+
+/**
+ * The keys of the areas (0.7.20.9): chooses the tab of the narrow menu, and
+ * in the wide menu scrolls the column into view and, unless the focus is in
+ * the search field, puts it on the column's first head or button, never a
+ * field, so the next key is still the menu's. `root` is the menu the key was
+ * pressed in (the floating menu, or the Properties panel's body).
+ */
+export function chooseArea(area, root = null) {
+  if (!MENU_AREAS.includes(area)) return;
+  menu.tab = area;
+  const col = root?.querySelectorAll('.emenu-col')[MENU_AREAS.indexOf(area)];
+  if (!col) return;
+  col.scrollIntoView({ block: 'nearest' });
+  if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button')?.focus();
+}
+
 /** The groups of the element menu that stand open, by id; a group stays as it was left when another block is selected. */
 export const menuOpen = new SvelteSet();
 

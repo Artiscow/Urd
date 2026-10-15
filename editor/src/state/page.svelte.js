@@ -2,7 +2,8 @@
  * The page draft: the store, the selected block and its mutators, the fits, the section mirrors and their mutators, the animations, and the page switch.
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
-import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W } from '../menu/state.svelte.js';
+import { tick } from 'svelte';
+import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea } from '../menu/state.svelte.js';
 import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, SIZE_TEXT, STRETCHES } from '$engine/push-model.js';
@@ -157,6 +158,13 @@ let designPicker = $state(null);
 /** The element menu's search belongs to one block's menu, so another
  *  block, or the floating menu closing, empties it (menu/state.svelte.js). */
 let searchBlockId = null;
+
+/** 1, 2 or 3 pressed on a selected block in the preview: the area in the floating menu when it is open, else in the Properties panel, which is opened. */
+function onMenuArea(msg) {
+  if (!selectedBlock) return;
+  if (!blockMenu) shellState.activePanel = 'properties';
+  tick().then(() => chooseArea(msg.area, document.querySelector('.block-menu') ?? document.querySelector('.panel-body')));
+}
 
 /** The block the floating menu was opened at, in the iframe's own coordinates, so «back beside the block» can place the menu again. */
 let menuAnchor = null;
@@ -594,6 +602,8 @@ function measureSecBox() {
 function onSelectSection(msg) {
   activeSectionId = msg.sectionId;
   syncSectionMirrors(store?.data.sections.find((s) => s.id === msg.sectionId));
+  // «Section settings» in the preview's right-click menu: the Properties panel on the section.
+  if (msg.open) shellState.activePanel = 'properties';
 }
 
 /** Shared flow for section changes from the Properties panel. */
@@ -912,6 +922,7 @@ export const pageState = {
   set blockMenu(v) { blockMenu = v; },
   moveBlockMenu,
   menuBackToBlock,
+  onMenuArea,
   measureMenuRoom,
   get designPicker() { return designPicker; },
   set designPicker(v) { designPicker = v; },

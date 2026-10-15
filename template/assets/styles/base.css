@@ -13637,6 +13637,15 @@ body.urd-mobile .urd-section-resize-top {
   outline-offset: -1px;
 }
 
+/* The selected block holds the keyboard focus (selectBlock); the selection outline is its mark */
+.urd-preview .urd-block:focus {
+  outline: none;
+}
+
+.urd-preview .urd-block.urd-selected:focus {
+  outline: calc(2px * var(--urd-chrome-scale, 1)) solid var(--urd-admin-accent, #5f6a75);
+}
+
 /* The whole block surface can be dragged directly; editable text keeps the
    text cursor, the rich text block's and the plain-text cells, numbers,
    quotes and events the other blocks mark with plaintext-only (the same set

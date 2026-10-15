@@ -19,6 +19,8 @@
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
+ *                  { type: 'urd-select-section', sectionId, open? }  (open: the Properties panel is opened on the section)
+ *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-delete', sectionId, blockId | blockIds } (blockIds from a multi-selection: the whole selection in one undo step)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
@@ -85,6 +87,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-undo') handlers.onUndo?.(msg);
     if (msg?.type === 'urd-select-section') handlers.onSelectSection?.(msg);
     if (msg?.type === 'urd-select-block') handlers.onSelectBlock?.(msg);
+    if (msg?.type === 'urd-menu-area') handlers.onMenuArea?.(msg);
     if (msg?.type === 'urd-block-menu') handlers.onBlockMenu?.(msg);
     if (msg?.type === 'urd-plugin-blocks') handlers.onPluginBlocks?.(msg);
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);

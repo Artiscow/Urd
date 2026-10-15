@@ -178,6 +178,7 @@ function onIframeLoad() {
     onSelectSection: pageState.onSelectSection,
     onSelectBlock: pageState.onSelectBlock,
     onBlockMenu: pageState.onBlockMenu,
+    onMenuArea: pageState.onMenuArea,
     onReady,
     onNavigate,
     onAddBlock: (msg) => blocksState.insertBlock(msg.sectionId, msg.block),

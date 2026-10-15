@@ -20,6 +20,7 @@
       <label>{ta('setup.bgLabel')}
         <ColorPicker value={ed.setupBg} label={ta('setup.bgLabel')} onchange={(hex) => (ed.setupBg = hex)} /></label>
       <p class="panel-hint">{ta('setup.outro')}</p>
+      <p class="panel-hint">{ta('setup.keys')}</p>
       <span class="setup-actions">
         <button class="ghost" onclick={ed.closeSetup}>{ta('setup.skip')}</button>
         <button class="primary" onclick={ed.applySetup} disabled={!ed.setupName.trim()}>{ta('setup.start')}</button>

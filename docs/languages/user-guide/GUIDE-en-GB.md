@@ -62,7 +62,12 @@ completely without editor frames. Click the **Edit** button to come back.
   (snaps to 15° steps; hold Shift for a free angle). An exact number of degrees
   can also be set in Properties.
 - **Keyboard on a selected block**: the arrow keys move one grid step
-  (Shift = 1 px), Delete deletes, Esc deselects, Ctrl+D duplicates.
+  (Shift = 1 px), Delete deletes, Esc deselects, Ctrl+D duplicates,
+  Ctrl+Alt+C and Ctrl+Alt+V copy and paste the block's style, Ctrl+Shift+↑
+  and ↓ put it in front or behind, Shift+F10 opens the block's right-click
+  menu (a right click on the section's empty surface opens the section's).
+- **Keyboard in the block menu**: 1, 2 and 3 choose Content, Style and
+  Placement, / goes to the search, Esc closes the floating menu.
 - **Snap lines**: when you drag a block near the edge or centre of
   another block, a line appears between the two and the block snaps into
   place; when its distance to a neighbour equals the distance between two
