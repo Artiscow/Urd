@@ -5,13 +5,14 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps } = ed;
-  const { groupReset } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 
   /** The grid's shape as the closed group reads it: rows × columns. */
@@ -50,26 +51,32 @@
       <button class="ghost" onclick={() => tableResize(0, 1)}>{ta('ui.addColumn')}</button>
       <button class="ghost" onclick={() => tableResize(0, -1)}>{ta('ui.removeColumn')}</button>
     </span>
-    <label class="gridmenu-snap" title={ta('tip.table.header')}>
-      <input type="checkbox" checked={selectedBlock.props.header !== false}
-        onchange={(e) => setBlockProp('header', e.target.checked)} />
-      {ta('lbl.tableHeader')}
-    </label>
+    <Setting key="header" shown={ta('common.on')}>
+      <label class="gridmenu-snap" title={ta('tip.table.header')}>
+        <input type="checkbox" checked={selectedBlock.props.header !== false}
+          onchange={(e) => setBlockProp('header', e.target.checked)} />
+        {ta('lbl.tableHeader')}
+      </label>
+    </Setting>
   {/snippet}
-  <MenuGroup id="table-shape" defaultOpen title={ta('group.rowsColumns')} value={shape} reset={groupReset('table-shape', { header: true })}>{@render tableShape()}</MenuGroup>
+  <MenuGroup id="table-shape" defaultOpen title={ta('group.rowsColumns')} value={shape} group={groupOf('table-shape', { header: true })}>{@render tableShape()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet tableLines()}
-    <div class="pin-line">
-      <label>{ta('lbl.tableLines')}
-        <Dropdown value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
-          onchange={(v) => setBlockProp('lines', v)} /></label>
-      <Pin id="tableLines" />
-    </div>
-    <label class="gridmenu-snap">
-      <input type="checkbox" checked={Boolean(selectedBlock.props.striped)}
-        onchange={(e) => setBlockProp('striped', e.target.checked)} />
-      {ta('lbl.tableStriped')}
-    </label>
+    <Setting key="lines">
+      <div class="pin-line">
+        <label>{ta('lbl.tableLines')}
+          <Dropdown value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
+            onchange={(v) => setBlockProp('lines', v)} /></label>
+        <Pin id="tableLines" />
+      </div>
+    </Setting>
+    <Setting key="striped" shown={ta('common.off')}>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={Boolean(selectedBlock.props.striped)}
+          onchange={(e) => setBlockProp('striped', e.target.checked)} />
+        {ta('lbl.tableStriped')}
+      </label>
+    </Setting>
   {/snippet}
-  <MenuGroup id="table-lines" defaultOpen title={ta('lbl.tableLines')} value={lineOptions().find(([v]) => v === (selectedBlock.props.lines ?? 'rows'))?.[1] ?? ''} reset={groupReset('table-lines', { lines: 'rows', striped: false })}>{@render tableLines()}</MenuGroup>
+  <MenuGroup id="table-lines" defaultOpen title={ta('lbl.tableLines')} value={lineOptions().find(([v]) => v === (selectedBlock.props.lines ?? 'rows'))?.[1] ?? ''} group={groupOf('table-lines', { lines: 'rows', striped: false })}>{@render tableLines()}</MenuGroup>
 {/if}

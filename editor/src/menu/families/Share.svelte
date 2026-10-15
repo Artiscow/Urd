@@ -7,6 +7,7 @@
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import LinkList from '../../lib/LinkList.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeId } from '$engine/sections/presets.js';
@@ -34,7 +35,7 @@
       fn(b.props.links);
     });
   }
-  const { groupReset } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
   const variantOptions = () => [['icons', ta('opt.share.icons')], ['labels', ta('opt.share.labels')]];
 
@@ -43,11 +44,13 @@
 {#if area === 'content'}
   {#snippet shareLinks()}
     <!-- The site's links from the Site panel first, then the block's own after them -->
-    <label class="gridmenu-snap" title={ta('tip.share.useSite')}>
-      <input type="checkbox" checked={useSite}
-        onchange={(e) => setBlockProp('useSite', e.target.checked)} />
-      {ta('lbl.useSiteLinks')}
-    </label>
+    <Setting key="useSite" shown={ta('common.on')}>
+      <label class="gridmenu-snap" title={ta('tip.share.useSite')}>
+        <input type="checkbox" checked={useSite}
+          onchange={(e) => setBlockProp('useSite', e.target.checked)} />
+        {ta('lbl.useSiteLinks')}
+      </label>
+    </Setting>
     {#if useSite}
       <!-- Each of the site's links can be left out of this block alone (hidden, by id) -->
       {#each siteLinks() as link (link.id)}
@@ -69,21 +72,27 @@
   {/snippet}
   <MenuGroup id="share-services" defaultOpen title={ta('group.siteLinks')}
     value={String((useSite ? siteLinks().filter((l) => !(selectedBlock.props.hidden ?? []).includes(l.id)).length : 0) + (selectedBlock.props.links ?? []).length)}
-    reset={groupReset('share-services', { useSite: true, hidden: [] })}>{@render shareLinks()}</MenuGroup>
+    group={groupOf('share-services', { useSite: true, hidden: [] })}>{@render shareLinks()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet shareLook()}
-    <div class="pin-line">
-      <label>{ta('lbl.variant')}
-        <Dropdown value={selectedBlock.props.variant ?? 'icons'} options={variantOptions()}
-          onchange={(v) => setBlockProp('variant', v)} /></label>
-      <Pin id="variant" />
-    </div>
-    <label>{ta('lbl.size')}
-      <input type="number" min="24" max="64" value={selectedBlock.props.size ?? 38}
-        onchange={(e) => setBlockProp('size', Number(e.target.value) || 38)} /></label>
-    <label>{ta('lbl.color')}
-      <ColorPicker value={selectedBlock.props.color || 'accent'} tokens={themeSwatches()}
-        onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} /></label>
+    <Setting key="variant">
+      <div class="pin-line">
+        <label>{ta('lbl.variant')}
+          <Dropdown value={selectedBlock.props.variant ?? 'icons'} options={variantOptions()}
+            onchange={(v) => setBlockProp('variant', v)} /></label>
+        <Pin id="variant" />
+      </div>
+    </Setting>
+    <Setting key="size" shown="38">
+      <label>{ta('lbl.size')}
+        <input type="number" min="24" max="64" value={selectedBlock.props.size ?? 38}
+          onchange={(e) => setBlockProp('size', Number(e.target.value) || 38)} /></label>
+    </Setting>
+    <Setting key="color" source="theme">
+      <label>{ta('lbl.color')}
+        <ColorPicker value={selectedBlock.props.color || 'accent'} tokens={themeSwatches()}
+          onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} /></label>
+    </Setting>
   {/snippet}
-  <MenuGroup id="share-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'icons'))?.[1] ?? ''} reset={groupReset('share-look', { variant: 'icons', size: 38, color: '' })}>{@render shareLook()}</MenuGroup>
+  <MenuGroup id="share-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'icons'))?.[1] ?? ''} group={groupOf('share-look', { variant: 'icons', size: 38, color: '' })}>{@render shareLook()}</MenuGroup>
 {/if}

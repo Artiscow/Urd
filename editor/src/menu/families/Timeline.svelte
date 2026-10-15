@@ -6,6 +6,7 @@
   import Dropdown from '../../lib/Dropdown.svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
@@ -13,7 +14,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps, themeSwatches } = ed;
-  const { groupReset } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
   const variantOptions = () => [['left', ta('opt.timeline.left')], ['alternating', ta('opt.timeline.alternating')]];
 
@@ -67,19 +68,25 @@
   <MenuGroup id="tl-events" defaultOpen title={ta('lbl.timelineItems')} value={String(selectedBlock.props.items?.length ?? 0)}>{@render tlEvents()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet tlLook()}
-    <div class="pin-line">
-      <label>{ta('lbl.variant')}
-        <Dropdown value={selectedBlock.props.variant ?? 'left'} options={variantOptions()}
-          onchange={(v) => setBlockProp('variant', v)} /></label>
-      <Pin id="variant" />
-    </div>
-    <label>{ta('lbl.timelineMarker')}
-      <Dropdown value={selectedBlock.props.marker ?? 'filled'}
-        options={[['filled', ta('opt.timeline.filled')], ['ring', ta('opt.timeline.ring')]]}
-        onchange={(v) => setBlockProp('marker', v)} /></label>
-    <label>{ta('lbl.color')}
-      <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
-        onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
+    <Setting key="variant">
+      <div class="pin-line">
+        <label>{ta('lbl.variant')}
+          <Dropdown value={selectedBlock.props.variant ?? 'left'} options={variantOptions()}
+            onchange={(v) => setBlockProp('variant', v)} /></label>
+        <Pin id="variant" />
+      </div>
+    </Setting>
+    <Setting key="marker">
+      <label>{ta('lbl.timelineMarker')}
+        <Dropdown value={selectedBlock.props.marker ?? 'filled'}
+          options={[['filled', ta('opt.timeline.filled')], ['ring', ta('opt.timeline.ring')]]}
+          onchange={(v) => setBlockProp('marker', v)} /></label>
+    </Setting>
+    <Setting key="accent" source="theme">
+      <label>{ta('lbl.color')}
+        <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
+          onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
+    </Setting>
   {/snippet}
-  <MenuGroup id="tl-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'left'))?.[1] ?? ''} reset={groupReset('tl-look', { variant: 'left', marker: 'filled', accent: null })}>{@render tlLook()}</MenuGroup>
+  <MenuGroup id="tl-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'left'))?.[1] ?? ''} group={groupOf('tl-look', { variant: 'left', marker: 'filled', accent: null })}>{@render tlLook()}</MenuGroup>
 {/if}

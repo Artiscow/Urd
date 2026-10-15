@@ -13,7 +13,8 @@
   const selectedBlock = $derived(ed.selectedBlock);
   const viewMode = $derived(ed.viewMode);
   const sections = $derived(ed.sections);
-  const { mutateBlock, setBlockFrame, setBlockFit, setBlockFitMin, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions, designWidth } = ed;
+  const { mutateBlock, setBlockFrame, setBlockFit, setBlockFitMin, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions, designWidth, handleMobileReset } = ed;
+  const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** What a closed group shows: how the block fits a narrower screen, and its motion. */
   function menuFitValue() {
@@ -162,6 +163,20 @@
             onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
           <label>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
             onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
+        </div>
+      {:else}
+        <!-- The phone: a block flows in the reading order as on desktop, or holds its own place in the row grid (ADR-0019) -->
+        {@const pinned = selectedBlock.mobileRow !== null}
+        <div class="setting" class:own={pinned}>
+          <i class="setting-dot" aria-hidden="true"></i>
+          <div class="setting-body">
+            <span class="mini-label">{ta('lbl.phonePlacement')}</span>
+            <span class="setting-source">{pinned ? ta('menu.phoneRow', { n: selectedBlock.mobileRow + 1 }) : ta('menu.followsDesktop', { v: ta('menu.phoneFlow') })}</span>
+          </div>
+          {#if pinned}
+            <button type="button" class="setting-reset" title={ta('menu.resetPhone')} aria-label={ta('menu.resetPhone')}
+              onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })}>{@html RESET_ICON}</button>
+          {/if}
         </div>
       {/if}
       <label class="gridmenu-snap" title={ta('tip.decor')}>

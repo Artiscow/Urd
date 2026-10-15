@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.20.7 - Marks on own values: the dot and a reset on every setting a block has made its own, the inherited value with its source, and the phone's placement row - 15 October 2026
+
+- Only a group carried the dot and a reset; which setting in it held the block's own value could not be seen, and one setting could not be put back alone. Every setting with a default now stands in a `Setting` row (editor/src/menu/Setting.svelte): the amber dot in the left column and a reset at the right while the value is the block's own, otherwise a dimmed line with where the value comes from («Default: On», «From the theme: …»), where the family can say. The group (`groupOf` in groups.js) carries its defaults and tells each row whether it is own; the 21 families with groups pass them, and 74 rows got the mark (proposal M on the Design canvas «Urd elementmeny»; the inheritance indicators of the field, FEATURES.md).
+- In the phone view the Placement group has a row «Place on the phone»: «As on desktop: in the reading order» while the block flows, «pinned to row N» with the dot and «Back to the reading order» when it holds a place of its own (ADR-0019). Keys in nb, en-GB and tr.
+
 ### 0.7.20.6 - The floating menu beside its block and never over it, dragged by its head, kept for the session, and put back beside the block - 15 October 2026
 
 - The floating element menu opened to the right of the block, else to the left clamped into the window, which could lay it over the block. It now takes the first of right, left and below that covers none of the block once clamped, else the one that covers the least (`placeBesideBlock` in the new editor/src/lib/menu-place.js, with tests; proposal J on the Design canvas «Urd elementmeny»).

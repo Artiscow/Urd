@@ -113,6 +113,8 @@ function syncSelectedBlock() {
     height: block.height ? JSON.parse(JSON.stringify(block.height)) : null,
     props: JSON.parse(JSON.stringify(block.props)),
     frame: { ...block.frames.desktop },
+    // The phone placement: the row the block is pinned to, or null while it flows in the reading order (ADR-0019).
+    mobileRow: Number.isFinite(block.frames.mobile?.row) ? block.frames.mobile.row : null,
     animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
     hover: block.hover ? JSON.parse(JSON.stringify(block.hover)) : null,
     sticky: block.sticky ? JSON.parse(JSON.stringify(block.sticky)) : null,

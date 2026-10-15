@@ -5,13 +5,14 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps } = ed;
-  const { groupReset } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
   const variantOptions = () => [['boxes', ta('opt.countdown.boxes')], ['plain', ta('opt.countdown.plain')]];
 </script>
@@ -28,17 +29,21 @@
   <MenuGroup id="countdown-target" defaultOpen title={ta('group.target')} value={selectedBlock.props.target ? selectedBlock.props.target.replace('T', ' ') : ta('common.none')}>{@render countdownTarget()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet countdownLook()}
-    <label>{ta('lbl.variant')}
-      <Dropdown value={selectedBlock.props.variant ?? 'boxes'} options={variantOptions()}
-        onchange={(v) => setBlockProp('variant', v)} /></label>
-    <div class="pin-line">
-      <label class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.showSeconds !== false}
-          onchange={(e) => setBlockProp('showSeconds', e.target.checked)} />
-        {ta('lbl.countdownSeconds')}
-      </label>
-      <Pin id="seconds" />
-    </div>
+    <Setting key="variant">
+      <label>{ta('lbl.variant')}
+        <Dropdown value={selectedBlock.props.variant ?? 'boxes'} options={variantOptions()}
+          onchange={(v) => setBlockProp('variant', v)} /></label>
+    </Setting>
+    <Setting key="showSeconds" shown={ta('common.on')}>
+      <div class="pin-line">
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={selectedBlock.props.showSeconds !== false}
+            onchange={(e) => setBlockProp('showSeconds', e.target.checked)} />
+          {ta('lbl.countdownSeconds')}
+        </label>
+        <Pin id="seconds" />
+      </div>
+    </Setting>
   {/snippet}
-  <MenuGroup id="countdown-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'boxes'))?.[1] ?? ''} reset={groupReset('countdown-look', { variant: 'boxes', showSeconds: true })}>{@render countdownLook()}</MenuGroup>
+  <MenuGroup id="countdown-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'boxes'))?.[1] ?? ''} group={groupOf('countdown-look', { variant: 'boxes', showSeconds: true })}>{@render countdownLook()}</MenuGroup>
 {/if}

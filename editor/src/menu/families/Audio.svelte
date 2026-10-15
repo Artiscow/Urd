@@ -5,13 +5,14 @@
   import { getContext } from 'svelte';
   import { WARN_BYTES } from '$engine/imageTools.js';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setStatus } = ed;
-  const { groupReset } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 
   /** Audio file to data URL in the draft; publishing writes it to media/.
@@ -46,15 +47,17 @@
         onchange={(e) => setBlockProp('title', e.target.value)} /></label>
   {/snippet}
   {#snippet audioPlayback()}
-    <div class="pin-line">
-      <label class="gridmenu-snap">
-        <input type="checkbox" checked={Boolean(selectedBlock.props.loop)}
-          onchange={(e) => setBlockProp('loop', e.target.checked)} />
-        {ta('lbl.audioLoop')}
-      </label>
-      <Pin id="loop" />
-    </div>
+    <Setting key="loop" shown={ta('common.off')}>
+      <div class="pin-line">
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={Boolean(selectedBlock.props.loop)}
+            onchange={(e) => setBlockProp('loop', e.target.checked)} />
+          {ta('lbl.audioLoop')}
+        </label>
+        <Pin id="loop" />
+      </div>
+    </Setting>
   {/snippet}
   <MenuGroup id="audio-file" title={ta('group.audioFile')} value={selectedBlock.props.title || (selectedBlock.props.src ? ta('blocks.audio') : ta('common.none'))}>{@render audioFile()}</MenuGroup>
-  <MenuGroup id="audio-playback" title={ta('group.playback')} value={selectedBlock.props.loop ? ta('lbl.audioLoop') : ta('menu.standard')} reset={groupReset('audio-playback', { loop: false })}>{@render audioPlayback()}</MenuGroup>
+  <MenuGroup id="audio-playback" title={ta('group.playback')} value={selectedBlock.props.loop ? ta('lbl.audioLoop') : ta('menu.standard')} group={groupOf('audio-playback', { loop: false })}>{@render audioPlayback()}</MenuGroup>
 {/if}

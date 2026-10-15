@@ -5,6 +5,7 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -13,7 +14,7 @@
   const collectionIds = $derived(ed.collectionIds);
   const collectionsView = $derived(ed.collectionsView);
   const { setBlockProp, setBlockProps, addCollectionEntry, createCatalogForBlock } = ed;
-  const { groupReset } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 </script>
 
@@ -34,25 +35,31 @@
       <button class="ghost action" title={ta('tip.product.createCatalog')}
         onclick={createCatalogForBlock}>{ta('ui.createCatalog')}</button>
     {/if}
-    <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
-      <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 0}
-        onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
+    <Setting key="limit" shown="0">
+      <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
+        <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 0}
+          onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
+    </Setting>
   {/snippet}
   {#snippet productPrice()}
-    <label title={ta('tip.product.currency')}>{ta('lbl.currency')}
-      <input value={selectedBlock.props.currency ?? 'kr'}
-        onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
+    <Setting key="currency">
+      <label title={ta('tip.product.currency')}>{ta('lbl.currency')}
+        <input value={selectedBlock.props.currency ?? 'kr'}
+          onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
+    </Setting>
   {/snippet}
-  <MenuGroup id="product-catalog" title={ta('group.catalog')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} reset={groupReset('product-catalog', { limit: 0 })}>{@render productCatalog()}</MenuGroup>
-  <MenuGroup id="product-price" title={ta('lbl.price')} value={selectedBlock.props.currency ?? 'kr'} reset={groupReset('product-price', { currency: 'kr' })}>{@render productPrice()}</MenuGroup>
+  <MenuGroup id="product-catalog" title={ta('group.catalog')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('product-catalog', { limit: 0 })}>{@render productCatalog()}</MenuGroup>
+  <MenuGroup id="product-price" title={ta('lbl.price')} value={selectedBlock.props.currency ?? 'kr'} group={groupOf('product-price', { currency: 'kr' })}>{@render productPrice()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet productGrid()}
-    <div class="pin-line">
-      <label title={ta('tip.product.columns')}>{ta('lbl.columns')}
-        <input type="number" min="0" max="6" value={selectedBlock.props.columns ?? 0}
-          onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
-      <Pin id="columns" />
-    </div>
+    <Setting key="columns" shown="0">
+      <div class="pin-line">
+        <label title={ta('tip.product.columns')}>{ta('lbl.columns')}
+          <input type="number" min="0" max="6" value={selectedBlock.props.columns ?? 0}
+            onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
+        <Pin id="columns" />
+      </div>
+    </Setting>
   {/snippet}
-  <MenuGroup id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('menu.standard')} reset={groupReset('product-grid', { columns: 0 })}>{@render productGrid()}</MenuGroup>
+  <MenuGroup id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('menu.standard')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</MenuGroup>
 {/if}

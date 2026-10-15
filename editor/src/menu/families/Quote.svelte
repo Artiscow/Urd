@@ -6,13 +6,14 @@
   import Dropdown from '../../lib/Dropdown.svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps, compressOrTrim, imageErrorText, setStatus, themeSwatches } = ed;
-  const { groupReset, groupChanged } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 
   const variantOptions = () => [['large', ta('opt.quote.large')], ['short', ta('opt.quote.short')]];
@@ -53,12 +54,14 @@
   <MenuGroup id="quote-words" defaultOpen title={ta('group.quote')} value={quoteValue}>{@render quoteWords()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet quoteVariant()}
-    <div class="pin-line">
-      <label>{ta('lbl.variant')}
-        <Dropdown value={selectedBlock.props.variant ?? 'large'} options={variantOptions()}
-          onchange={(v) => setBlockProp('variant', v)} /></label>
-      <Pin id="variant" />
-    </div>
+    <Setting key="variant">
+      <div class="pin-line">
+        <label>{ta('lbl.variant')}
+          <Dropdown value={selectedBlock.props.variant ?? 'large'} options={variantOptions()}
+            onchange={(v) => setBlockProp('variant', v)} /></label>
+        <Pin id="variant" />
+      </div>
+    </Setting>
     {#if selectedBlock.props.variant === 'short'}
       <label class="ghost filepick">
         {ta('ui.quotePortrait')}
@@ -69,19 +72,23 @@
       {/if}
     {:else}
       <!-- The large spread can stand in a card; the short one already is one -->
-      <label class="gridmenu-snap" title={ta('tip.quote.card')}>
-        <input type="checkbox" checked={selectedBlock.props.card === true}
-          onchange={(e) => setBlockProp('card', e.target.checked)} />
-        {ta('lbl.quoteCard')}
-      </label>
+      <Setting key="card" shown={ta('common.off')}>
+        <label class="gridmenu-snap" title={ta('tip.quote.card')}>
+          <input type="checkbox" checked={selectedBlock.props.card === true}
+            onchange={(e) => setBlockProp('card', e.target.checked)} />
+          {ta('lbl.quoteCard')}
+        </label>
+      </Setting>
     {/if}
   {/snippet}
   {#snippet quoteColour()}
-    <label>{ta('lbl.color')}
-      <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
-        onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
+    <Setting key="accent" source="theme">
+      <label>{ta('lbl.color')}
+        <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
+          onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
+    </Setting>
   {/snippet}
   {@const colourN = groupChanged({ accent: null })}
-  <MenuGroup id="quote-variant" title={ta('lbl.variant')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'large'))?.[1] ?? ''} reset={groupReset('quote-variant', { variant: 'large', card: false, image: '' })}>{@render quoteVariant()}</MenuGroup>
-  <MenuGroup id="quote-colour" title={ta('lbl.color')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} reset={groupReset('quote-colour', { accent: null })}>{@render quoteColour()}</MenuGroup>
+  <MenuGroup id="quote-variant" title={ta('lbl.variant')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'large'))?.[1] ?? ''} group={groupOf('quote-variant', { variant: 'large', card: false, image: '' })}>{@render quoteVariant()}</MenuGroup>
+  <MenuGroup id="quote-colour" title={ta('lbl.color')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('quote-colour', { accent: null })}>{@render quoteColour()}</MenuGroup>
 {/if}

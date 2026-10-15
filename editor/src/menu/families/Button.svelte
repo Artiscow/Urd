@@ -5,13 +5,14 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, buttonTargets, setButtonTarget } = ed;
-  const { groupReset, groupChanged } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 </script>
 
@@ -34,13 +35,15 @@
   <MenuGroup id="btn-link" defaultOpen title={ta('group.textLink')} value={buttonTargets().find(([id]) => id === (selectedBlock.props.page ?? '__href'))?.[1] ?? ''}>{@render btnLink()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet btnLook()}
-    <div class="pin-line">
-      <label>{ta('lbl.style')}
-        <Dropdown value={selectedBlock.props.style}
-          options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
-          onchange={(v) => setBlockProp('style', v)} /></label>
-      <Pin id="btnStyle" />
-    </div>
+    <Setting key="style">
+      <div class="pin-line">
+        <label>{ta('lbl.style')}
+          <Dropdown value={selectedBlock.props.style}
+            options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
+            onchange={(v) => setBlockProp('style', v)} /></label>
+        <Pin id="btnStyle" />
+      </div>
+    </Setting>
   {/snippet}
-  <MenuGroup id="btn-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary')} reset={groupReset('btn-look', { style: 'primary' })}>{@render btnLook()}</MenuGroup>
+  <MenuGroup id="btn-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary')} group={groupOf('btn-look', { style: 'primary' })}>{@render btnLook()}</MenuGroup>
 {/if}

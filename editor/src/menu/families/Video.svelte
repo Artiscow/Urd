@@ -5,6 +5,7 @@
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
@@ -12,7 +13,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setBlockVideoFile, setBlockVideoPoster } = ed;
-  const { groupReset, groupChanged } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 </script>
 
@@ -41,23 +42,29 @@
     {/if}
   {/snippet}
   {#snippet videoPlay()}
-    <label class="gridmenu-snap">
-      <input type="checkbox" checked={selectedBlock.props.loop === true}
-        onchange={(e) => setBlockProp('loop', e.target.checked)} />
-      {ta('lbl.videoLoop')}
-    </label>
-    <!-- Unmuting takes the self-start with it: only a muted film may start by itself -->
-    <label class="gridmenu-snap">
-      <input type="checkbox" checked={selectedBlock.props.muted === true}
-        onchange={(e) => setBlockProps('muted', e.target.checked ? { muted: true } : { muted: false, autoplay: false })} />
-      {ta('lbl.videoMuted')}
-    </label>
-    {#if selectedBlock.props.muted === true}
-      <label class="gridmenu-snap" title={ta('tip.video.autoplay')}>
-        <input type="checkbox" checked={selectedBlock.props.autoplay === true}
-          onchange={(e) => setBlockProp('autoplay', e.target.checked)} />
-        {ta('lbl.videoAutoplay')}
+    <Setting key="loop" shown={ta('common.off')}>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.loop === true}
+          onchange={(e) => setBlockProp('loop', e.target.checked)} />
+        {ta('lbl.videoLoop')}
       </label>
+    </Setting>
+    <!-- Unmuting takes the self-start with it: only a muted film may start by itself -->
+    <Setting key="muted" shown={ta('common.off')}>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.muted === true}
+          onchange={(e) => setBlockProps('muted', e.target.checked ? { muted: true } : { muted: false, autoplay: false })} />
+        {ta('lbl.videoMuted')}
+      </label>
+    </Setting>
+    {#if selectedBlock.props.muted === true}
+      <Setting key="autoplay" shown={ta('common.off')}>
+        <label class="gridmenu-snap" title={ta('tip.video.autoplay')}>
+          <input type="checkbox" checked={selectedBlock.props.autoplay === true}
+            onchange={(e) => setBlockProp('autoplay', e.target.checked)} />
+          {ta('lbl.videoAutoplay')}
+        </label>
+      </Setting>
     {/if}
   {/snippet}
   {#snippet videoA11y()}
@@ -68,7 +75,7 @@
   <MenuGroup id="video-source" title={ta('lbl.videoSource')} value={vsource === 'file' ? ta('opt.videoSource.file') : ta('opt.videoSource.embed')}>{@render videoSource()}</MenuGroup>
   {#if vsource === 'file'}
     {@const playOn = [selectedBlock.props.loop === true, selectedBlock.props.muted === true, selectedBlock.props.autoplay === true].filter(Boolean).length}
-    <MenuGroup id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')} reset={groupReset('video-play', { loop: false, muted: false, autoplay: false })}>{@render videoPlay()}</MenuGroup>
+    <MenuGroup id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')} group={groupOf('video-play', { loop: false, muted: false, autoplay: false })}>{@render videoPlay()}</MenuGroup>
   {/if}
   <MenuGroup id="video-a11y" title={ta('group.accessibility')} value={selectedBlock.props.title || ta('menu.noTitle')}>{@render videoA11y()}</MenuGroup>
 {/if}

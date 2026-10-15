@@ -1893,7 +1893,7 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 | Child or sub-selector styling | BR, OX, WS | Selector UI and Detector; nested selectors; semantic part classes | n/a: free placement | - |
 | Classes and combo or global classes | WF, EL, BR, OX, WT, WS | Reusable class stacks | Missing | Not taken: class-based cascade not adopted |
 | Class manager or unused-style cleanup | WF, EL, BR, OX | Organise, rename, prioritise; remove unused | Missing | Not taken: class-based cascade not adopted |
-| Inheritance indicators | BR, OX, TI, WT | Coloured indicators; inherited placeholders; computed values | Missing | 0.7.20.7: marks on own values |
+| Inheritance indicators | BR, OX, TI, WT | Coloured indicators; inherited placeholders; computed values | Has (0.7.20.7): the amber dot and a reset on every setting a block made its own, the inherited value with its source under the control | - |
 | Reset style | WT, WP, DV, BR | Alt+click; Clear; reset across breakpoints | Has | - |
 | Style presets | DV, BD, OX, WP, CA | Element and option-group presets; button presets; Element Styles | Partial: box styles | 0.7.9 design gallery |
 | Apply an instance's style globally | WP, DV | Apply Globally; convert to variable | Missing | 0.7.9: «use this block's style as the site default» |

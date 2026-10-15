@@ -5,6 +5,7 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import BoxStyle from '../BoxStyle.svelte';
   import { ta } from '$engine/i18n.js';
@@ -12,7 +13,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps } = ed;
-  const { groupReset, groupChanged } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 </script>
 
@@ -22,27 +23,31 @@
   <p class="panel-hint">{ta('hint.textInline')}</p>
 {:else if area === 'style'}
   {#snippet textAlign()}
-    <div class="pin-line">
-      <label>{ta('lbl.align')}
-        <Dropdown value={selectedBlock.props.align ?? 'left'}
-          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-          onchange={(v) => setBlockProp('align', v)} /></label>
-      <Pin id="align" />
-    </div>
+    <Setting key="align">
+      <div class="pin-line">
+        <label>{ta('lbl.align')}
+          <Dropdown value={selectedBlock.props.align ?? 'left'}
+            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+            onchange={(v) => setBlockProp('align', v)} /></label>
+        <Pin id="align" />
+      </div>
+    </Setting>
   {/snippet}
   {#snippet textBox()}
-    <div class="pin-line">
-      <label class="gridmenu-snap">
-        <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
-          onchange={(e) => setBlockProp('box', e.target.checked)} />
-        {ta('lbl.textBoxToggle')}
-      </label>
-      <Pin id="textBox" />
-    </div>
+    <Setting key="box" shown={ta('common.off')}>
+      <div class="pin-line">
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
+            onchange={(e) => setBlockProp('box', e.target.checked)} />
+          {ta('lbl.textBoxToggle')}
+        </label>
+        <Pin id="textBox" />
+      </div>
+    </Setting>
     {#if selectedBlock.props.box}
       <BoxStyle />
     {/if}
   {/snippet}
-  <MenuGroup id="text-align" title={ta('lbl.align')} value={{ left: ta('common.left'), center: ta('common.center'), right: ta('common.right') }[selectedBlock.props.align ?? 'left']} reset={groupReset('text-align', { align: 'left' })}>{@render textAlign()}</MenuGroup>
-  <MenuGroup id="text-box" title={ta('group.textBox')} value={selectedBlock.props.box ? ta('common.on') : ta('common.off')} reset={groupReset('text-box', { box: false, boxStyle: null })}>{@render textBox()}</MenuGroup>
+  <MenuGroup id="text-align" title={ta('lbl.align')} value={{ left: ta('common.left'), center: ta('common.center'), right: ta('common.right') }[selectedBlock.props.align ?? 'left']} group={groupOf('text-align', { align: 'left' })}>{@render textAlign()}</MenuGroup>
+  <MenuGroup id="text-box" title={ta('group.textBox')} value={selectedBlock.props.box ? ta('common.on') : ta('common.off')} group={groupOf('text-box', { box: false, boxStyle: null })}>{@render textBox()}</MenuGroup>
 {/if}

@@ -5,6 +5,7 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
+  import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { colorTokens, shapeKinds } from '../options.js';
@@ -12,7 +13,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setBlockFrame, designWidth, shapePx, setShapeSizePx } = ed;
-  const { groupReset, groupChanged } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 </script>
 
@@ -31,24 +32,30 @@
   <MenuGroup id="shape-shape" defaultOpen title={ta('blocks.shape')} value={shapeKinds().find(([v]) => v === selectedBlock.props.kind)?.[1] ?? ''}>{@render shapeShape()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet shapeStroke()}
-    <div class="pin-line">
-      <label>{ta('lbl.color')}
-        <Dropdown value={selectedBlock.props.color}
-          options={colorTokens()}
-          onchange={(v) => setBlockProp('color', v)} /></label>
-      <Pin id="shapeColor" />
-    </div>
-    <div class="pin-line">
-      <label>{ta('lbl.thickness')}
-        <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
-          onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
-      <Pin id="thickness" />
-    </div>
-    <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
-      <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
-        onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
-      {ta('lbl.filled')}
-    </label>
+    <Setting key="color">
+      <div class="pin-line">
+        <label>{ta('lbl.color')}
+          <Dropdown value={selectedBlock.props.color}
+            options={colorTokens()}
+            onchange={(v) => setBlockProp('color', v)} /></label>
+        <Pin id="shapeColor" />
+      </div>
+    </Setting>
+    <Setting key="thickness" shown="2">
+      <div class="pin-line">
+        <label>{ta('lbl.thickness')}
+          <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
+            onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
+        <Pin id="thickness" />
+      </div>
+    </Setting>
+    <Setting key="fill">
+      <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
+        <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
+          onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
+        {ta('lbl.filled')}
+      </label>
+    </Setting>
   {/snippet}
   {#snippet shapeSize()}
     {#if (selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow') && designWidth()}
@@ -70,7 +77,7 @@
     {/if}
   {/snippet}
   {@const lineKind = selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
-  <MenuGroup id="shape-stroke" title={ta('group.strokeFill')} value={`${colorTokens().find(([v]) => v === selectedBlock.props.color)?.[1] ?? ''} · ${selectedBlock.props.thickness ?? 2} px`} reset={groupReset('shape-stroke', { color: 'accent', thickness: 2, fill: null })}>{@render shapeStroke()}</MenuGroup>
+  <MenuGroup id="shape-stroke" title={ta('group.strokeFill')} value={`${colorTokens().find(([v]) => v === selectedBlock.props.color)?.[1] ?? ''} · ${selectedBlock.props.thickness ?? 2} px`} group={groupOf('shape-stroke', { color: 'accent', thickness: 2, fill: null })}>{@render shapeStroke()}</MenuGroup>
   {#if lineKind || designWidth()}
     <MenuGroup id="shape-size" title={ta('group.measures')} value={designWidth() ? `${shapePx(selectedBlock.frame.w)} px` : `${selectedBlock.frame.w} %`}>{@render shapeSize()}</MenuGroup>
   {/if}

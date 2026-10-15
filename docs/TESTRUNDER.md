@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.20.7): marks on own values
+
+- [ ] In every group of every block type: a setting at its default shows no dot; under switches and numbers a dimmed «Default: …» line; a changed setting gets the amber dot and the reset at the right, the group its dot; the row's reset puts that one setting back and leaves the others; the group's reset still puts all back
+- [ ] Colour settings that fall back to the theme (the quote's and the timeline's colour, the share block's colour, the box styles) say «Back to the theme's» on their reset
+- [ ] The phone view, Placement: «Place on the phone» reads «As on desktop: in the reading order» for a flowing block; a block dragged to a row reads «pinned to row N» with the dot, and «Back to the reading order» lets it flow again
+- [ ] Narrow and wide menu, the Properties panel and the floating menu, and the search's copy of the areas all draw the rows the same
+
 ### Test batch (0.7.20.6): the floating menu's place
 
 - [ ] The gear opens the floating menu beside the block: to the right, to the left when the right has no room, below when neither side is free, and never over the block; narrow and wide, at every zoom and in the device views

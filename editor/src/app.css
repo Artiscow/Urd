@@ -796,6 +796,68 @@
     border-radius: 50%;
   }
 
+  /* A setting's row (Setting.svelte): the dot's column at the left, the
+     control, and the reset on the right while the value is the block's own;
+     the inherited value and its source as a dimmed line under the control */
+  .setting {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .setting-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    margin-top: 0.9rem;
+    border-radius: 50%;
+    background: transparent;
+  }
+
+  .setting.own .setting-dot {
+    background: #f2b84b;
+  }
+
+  .setting-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .setting-source {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.72rem;
+    font-style: italic;
+    opacity: 0.6;
+  }
+
+  .setting-reset {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-top: 0.55rem;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    opacity: 0.6;
+    cursor: pointer;
+  }
+
+  .setting-reset:hover,
+  .setting-reset:focus-visible {
+    opacity: 1;
+    background: rgb(255 255 255 / 8%);
+  }
+
+  .setting-reset:focus-visible {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: 1px;
+  }
+
   .menu-group-reset {
     align-self: flex-start;
     font-size: 0.78rem;
