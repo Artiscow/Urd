@@ -24033,7 +24033,7 @@ function hw(e, t = {}) {
 	let n = (n) => {
 		if (n.origin !== location.origin || n.source !== e.contentWindow) return;
 		let r = n.data;
-		r?.type === "urd-edit" && t.onEdit?.(r), r?.type === "urd-move" && t.onMove?.(r), r?.type === "urd-grow" && t.onGrow?.(r), r?.type === "urd-delete" && t.onDelete?.(r), r?.type === "urd-add-section" && t.onAddSection?.(r), r?.type === "urd-move-section" && t.onMoveSection?.(r), r?.type === "urd-delete-section" && t.onDeleteSection?.(r), r?.type === "urd-section-size" && t.onSectionSize?.(r), r?.type === "urd-undo" && t.onUndo?.(r), r?.type === "urd-select-section" && t.onSelectSection?.(r), r?.type === "urd-select-block" && t.onSelectBlock?.(r), r?.type === "urd-block-menu" && t.onBlockMenu?.(r), r?.type === "urd-plugin-blocks" && t.onPluginBlocks?.(r), r?.type === "urd-ready" && t.onReady?.(r), r?.type === "urd-navigate" && t.onNavigate?.(r), r?.type === "urd-add-block" && t.onAddBlock?.(r), r?.type === "urd-add-blocks" && t.onAddBlocks?.(r), r?.type === "urd-request-block" && t.onRequestBlock?.(r), r?.type === "urd-move-block-section" && t.onMoveBlockSection?.(r), r?.type === "urd-mobile-reset" && t.onMobileReset?.(r), r?.type === "urd-mobile-order" && t.onMobileOrder?.(r), r?.type === "urd-review-done" && t.onReviewDone?.(r), r?.type === "urd-block-flag" && t.onBlockFlag?.(r), r?.type === "urd-collection-edit" && t.onCollectionEdit?.(r), r?.type === "urd-collection-add" && t.onCollectionAdd?.(r), r?.type === "urd-nav-width" && t.onNavWidth?.(r), r?.type === "urd-save-template" && t.onSaveTemplate?.(r), r?.type === "urd-sticky-group" && t.onStickyGroup?.(r), r?.type === "urd-sticky-dock" && t.onStickyDock?.(r), r?.type === "urd-delete-template" && t.onDeleteTemplate?.(r), r?.type === "urd-apply-layout" && t.onApplyLayout?.(r);
+		r?.type === "urd-edit" && t.onEdit?.(r), r?.type === "urd-move" && t.onMove?.(r), r?.type === "urd-grow" && t.onGrow?.(r), r?.type === "urd-delete" && t.onDelete?.(r), r?.type === "urd-add-section" && t.onAddSection?.(r), r?.type === "urd-move-section" && t.onMoveSection?.(r), r?.type === "urd-delete-section" && t.onDeleteSection?.(r), r?.type === "urd-section-size" && t.onSectionSize?.(r), r?.type === "urd-undo" && t.onUndo?.(r), r?.type === "urd-select-section" && t.onSelectSection?.(r), r?.type === "urd-select-block" && t.onSelectBlock?.(r), r?.type === "urd-block-menu" && t.onBlockMenu?.(r), r?.type === "urd-plugin-blocks" && t.onPluginBlocks?.(r), r?.type === "urd-ready" && t.onReady?.(r), r?.type === "urd-navigate" && t.onNavigate?.(r), r?.type === "urd-add-block" && t.onAddBlock?.(r), r?.type === "urd-add-blocks" && t.onAddBlocks?.(r), r?.type === "urd-request-block" && t.onRequestBlock?.(r), r?.type === "urd-move-block-section" && t.onMoveBlockSection?.(r), r?.type === "urd-mobile-reset" && t.onMobileReset?.(r), r?.type === "urd-mobile-order" && t.onMobileOrder?.(r), r?.type === "urd-review-done" && t.onReviewDone?.(r), r?.type === "urd-block-flag" && t.onBlockFlag?.(r), r?.type === "urd-block-style" && t.onBlockStyle?.(r), r?.type === "urd-collection-edit" && t.onCollectionEdit?.(r), r?.type === "urd-collection-add" && t.onCollectionAdd?.(r), r?.type === "urd-nav-width" && t.onNavWidth?.(r), r?.type === "urd-save-template" && t.onSaveTemplate?.(r), r?.type === "urd-sticky-group" && t.onStickyGroup?.(r), r?.type === "urd-sticky-dock" && t.onStickyDock?.(r), r?.type === "urd-delete-template" && t.onDeleteTemplate?.(r), r?.type === "urd-apply-layout" && t.onApplyLayout?.(r);
 	};
 	window.addEventListener("message", n);
 	let r = (t) => e.contentWindow?.postMessage(t, location.origin);
@@ -24440,13 +24440,13 @@ async function Ww() {
 	try {
 		e = await (await fetch("/content/maler.json")).json();
 	} catch {}
-	zw = $C("urd-draft-templates", () => e, Xj.draftSaveError, "urd-draft-maler"), k(Uw, [...zw.data.maler ?? []], !0);
+	zw = $C("urd-draft-templates", () => e, Qj.draftSaveError, "urd-draft-maler"), k(Uw, [...zw.data.maler ?? []], !0);
 	for (let e of F(Uw)) {
 		let t = null;
 		try {
 			t = await (await fetch(`/content/maler/${e}.json`)).json();
 		} catch {}
-		Vw[e] = t, Bw[e] = $C(`urd-draft-template-${e}`, () => t, Xj.draftSaveError, `urd-draft-mal-${e}`), (Bw[e].data?.schemaVersion ?? 1) > 1 && Bw[e].reset();
+		Vw[e] = t, Bw[e] = $C(`urd-draft-template-${e}`, () => t, Qj.draftSaveError, `urd-draft-mal-${e}`), (Bw[e].data?.schemaVersion ?? 1) > 1 && Bw[e].reset();
 	}
 	Hw = !0, Gw();
 }
@@ -24462,7 +24462,7 @@ function Gw() {
 		blocks: r,
 		page: i
 	}));
-	CD.bridge?.sendTemplates(e);
+	TD.bridge?.sendTemplates(e);
 }
 function Kw(e) {
 	let t = Iw.includes(e.kind) ? e.kind : "section";
@@ -24470,21 +24470,21 @@ function Kw(e) {
 }
 async function qw(e, t) {
 	if (!t || !zw) return;
-	let n = (await Xj.askPrompt({
+	let n = (await Qj.askPrompt({
 		title: K("canvas.templateNamePrompt"),
 		placeholder: K("ph.templateName")
 	}))?.trim();
 	if (!n) return;
 	let r = Lw(n);
 	if (!r) {
-		Xj.setStatus(K("status.invalidName"), "error");
+		Qj.setStatus(K("status.invalidName"), "error");
 		return;
 	}
 	if (F(Uw).includes(r)) {
-		Xj.setStatus(K("status.templateExists"), "error");
+		Qj.setStatus(K("status.templateExists"), "error");
 		return;
 	}
-	Yk.pushHistory("templates");
+	Zk.pushHistory("templates");
 	let i = {
 		schemaVersion: 1,
 		mal: {
@@ -24493,11 +24493,11 @@ async function qw(e, t) {
 		},
 		[e]: t
 	};
-	Bw[r] = $C(`urd-draft-template-${r}`, () => null, Xj.draftSaveError, `urd-draft-mal-${r}`), Bw[r].replace(i), Bw[r].save(), zw.data.maler = [...F(Uw), r], zw.save(), k(Uw, [...F(Uw), r], !0), Xj.setStatus(K("status.templateSaved", { name: n }), "ok"), Yk.updateDirty(), Gw();
+	Bw[r] = $C(`urd-draft-template-${r}`, () => null, Qj.draftSaveError, `urd-draft-mal-${r}`), Bw[r].replace(i), Bw[r].save(), zw.data.maler = [...F(Uw), r], zw.save(), k(Uw, [...F(Uw), r], !0), Qj.setStatus(K("status.templateSaved", { name: n }), "ok"), Zk.updateDirty(), Gw();
 }
 async function Jw(e) {
 	let t = Bw[e.id]?.data?.mal;
-	t && await Xj.askConfirm({ title: K("confirm.deleteTemplate", { name: t.name }) }) && (Yk.pushHistory("templates"), Q.newPageTemplate === e.id && (Q.newPageTemplate = null), localStorage.removeItem(`urd-draft-template-${e.id}`), localStorage.removeItem(`urd-draft-mal-${e.id}`), delete Bw[e.id], zw.data.maler = F(Uw).filter((t) => t !== e.id), zw.save(), k(Uw, F(Uw).filter((t) => t !== e.id), !0), Yk.updateDirty(), Gw());
+	t && await Qj.askConfirm({ title: K("confirm.deleteTemplate", { name: t.name }) }) && (Zk.pushHistory("templates"), Q.newPageTemplate === e.id && (Q.newPageTemplate = null), localStorage.removeItem(`urd-draft-template-${e.id}`), localStorage.removeItem(`urd-draft-mal-${e.id}`), delete Bw[e.id], zw.data.maler = F(Uw).filter((t) => t !== e.id), zw.save(), k(Uw, F(Uw).filter((t) => t !== e.id), !0), Zk.updateDirty(), Gw());
 }
 var Yw = {
 	get templatesIndexStore() {
@@ -24552,7 +24552,7 @@ function rT() {
 	k(nT, tT.data, !0), tT.replace(F(nT));
 }
 function iT() {
-	CD.bridge?.sendSite(Ze(F(nT)));
+	TD.bridge?.sendSite(Ze(F(nT)));
 }
 function aT(e, t) {
 	dT(e, () => {
@@ -24567,18 +24567,18 @@ var oT = {
 	mutate: $T,
 	keyPrefix: "footerbg",
 	keyId: "footer"
-}, cT = /* @__PURE__ */ D(() => F(nT)?.theme ? ks(F(nT).theme, CD.previewMode).color ?? {} : {}), lT = () => Object.entries(F(cT));
+}, cT = /* @__PURE__ */ D(() => F(nT)?.theme ? ks(F(nT).theme, TD.previewMode).color ?? {} : {}), lT = () => Object.entries(F(cT));
 function uT(e, t) {
-	Yk.pushHistory("grid:site"), k($w, {
+	Zk.pushHistory("grid:site"), k($w, {
 		...F($w),
 		[e]: t
 	}, !0), tT.data.grid = {
 		...tT.data.grid,
 		[e]: t
-	}, tT.save(), Yk.updateDirty(), iT(), Xj.gridOn && CD.bridge?.sendShowGrid(!0);
+	}, tT.save(), Zk.updateDirty(), iT(), Qj.gridOn && TD.bridge?.sendShowGrid(!0);
 }
 function dT(e, t) {
-	Yk.pushHistory(e), t(), tT.save(), Yk.updateDirty(), iT();
+	Zk.pushHistory(e), t(), tT.save(), Zk.updateDirty(), iT();
 }
 var fT = /* @__PURE__ */ O(""), pT = /* @__PURE__ */ O(null), mT = /* @__PURE__ */ O(null), hT = [
 	"admin",
@@ -24595,7 +24595,7 @@ function gT(e, t = null) {
 }
 function _T() {
 	let e = F(fT).trim(), t = Fp(e), n = gT(t);
-	if (n) return Xj.setStatus(n, "error"), !1;
+	if (n) return Qj.setStatus(n, "error"), !1;
 	let r = F(pT) && !F(pT).startsWith("preset:") ? Yw.templateStores[F(pT)]?.data?.page : null, i = F(pT)?.startsWith("preset:") ? Ac(F(pT).slice(7), {
 		pageId: t,
 		title: e
@@ -24619,7 +24619,7 @@ function _T() {
 			label: e,
 			page: t
 		});
-	}), Xj.writeDraftKey(`urd-draft-${t}`, JSON.stringify(i)), Yk.updateDirty(), k(fT, ""), k(pT, null), $.selectPage(t);
+	}), Qj.writeDraftKey(`urd-draft-${t}`, JSON.stringify(i)), Zk.updateDirty(), k(fT, ""), k(pT, null), $.selectPage(t);
 }
 async function vT(e) {
 	k(mT, null);
@@ -24633,7 +24633,7 @@ function yT(e, t) {
 	dT("pages", () => {
 		e.title = n;
 		for (let t of F(nT).nav.items) t.page === e.id && t.label === r && (t.label = n);
-	}), e.id === $.pageId ? ($.store.data.meta.title = n, $.store.save(), Yk.updateDirty(), CD.bridge?.sendPage($.pageId, $.store.data)) : $.patchPageDraft(e, (e) => {
+	}), e.id === $.pageId ? ($.store.data.meta.title = n, $.store.save(), Zk.updateDirty(), TD.bridge?.sendPage($.pageId, $.store.data)) : $.patchPageDraft(e, (e) => {
 		e.meta.title = n;
 	});
 }
@@ -24663,7 +24663,7 @@ function ST(e, t) {
 		}[e], r = { ...$.store.data.meta.og ?? {} };
 		n ? r[t] = n : delete r[t], Object.keys(r).length ? $.store.data.meta.og = r : delete $.store.data.meta.og;
 	}
-	$.store.save(), Yk.updateDirty(), xT();
+	$.store.save(), Zk.updateDirty(), xT();
 	let r = F(nT).pages.find((e) => e.id === $.pageId);
 	F(wT)[$.pageId] = !r?.noindex && !$.store.data.meta.description;
 }
@@ -24690,16 +24690,16 @@ async function TT() {
 async function ET(e) {
 	let t = e.target.files?.[0];
 	if (e.target.value = "", t) try {
-		ST("ogImage", (await aM.compressOrTrim(t)).dataUrl);
+		ST("ogImage", (await sM.compressOrTrim(t)).dataUrl);
 	} catch (e) {
-		Xj.setStatus(aM.imageErrorText(e), "error");
+		Qj.setStatus(sM.imageErrorText(e), "error");
 	}
 }
 function DT(e, t) {
 	let n = Fp(t);
 	if (e.path === "/" || `/${n}` === e.path) return;
 	let r = gT(n, e.id);
-	r ? Xj.setStatus(r, "error") : dT("pages", () => {
+	r ? Qj.setStatus(r, "error") : dT("pages", () => {
 		e.path = `/${n}`;
 	});
 }
@@ -24708,7 +24708,7 @@ function OT(e) {
 		F(nT).pages = F(nT).pages.filter((t) => t.id !== e.id), F(nT).nav.items = F(nT).nav.items.filter((t) => t.page !== e.id || t.children);
 		for (let t of F(nT).nav.items) t.page === e.id && delete t.page, t.children && (t.children = t.children.filter((t) => t.page !== e.id), t.children.length === 0 && delete t.children);
 		F(nT).nav.items = F(nT).nav.items.filter((e) => e.page || e.href || e.children);
-	}), e.id === $.pageId && $.selectPage(F(nT).pages[0].id), Xj.setStatus(K("status.pageRemoved")));
+	}), e.id === $.pageId && $.selectPage(F(nT).pages[0].id), Qj.setStatus(K("status.pageRemoved")));
 }
 var kT = /* @__PURE__ */ O(null);
 function AT(e) {
@@ -24728,7 +24728,7 @@ function PT() {
 	return e === "no" ? "nb" : e;
 }
 function FT() {
-	let e = PT(), t = Xj.sortLangs([...Xj.LANG_OPTIONS, ...Xj.sitePackLangs()]);
+	let e = PT(), t = Qj.sortLangs([...Qj.LANG_OPTIONS, ...Qj.sitePackLangs()]);
 	return [...t.some(([t]) => t === e) ? [] : [[e, e]], ...t];
 }
 var IT = /* @__PURE__ */ O(!1), LT = /* @__PURE__ */ O(null), RT = /* @__PURE__ */ O(null), zT = () => F(nT)?.site?.calendars ?? [], BT = (e) => zT().find((t) => t.id === e) ?? null, VT = () => F(nT)?.site?.links ?? [], HT = /* @__PURE__ */ O(null), UT = /* @__PURE__ */ O(!1);
@@ -25007,7 +25007,7 @@ function fE() {
 			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t), window.removeEventListener("blur", n);
 		};
 	}), Pn(() => {
-		Xj.activePanel === "pages" && $.pageId && TT();
+		Qj.activePanel === "pages" && $.pageId && TT();
 	}), Pn(() => {
 		let e = F(RT);
 		e && (k(RT, null), Dr().then(() => document.querySelector(`[data-cal-name="${e}"]`)?.focus()));
@@ -25686,22 +25686,22 @@ function hE(e) {
 	} : null;
 }
 function gE(e) {
-	CD.bridge ? CD.bridge.sendPlaceBlock(e) : _E($.targetSection()?.id, e);
+	TD.bridge ? TD.bridge.sendPlaceBlock(e) : _E($.targetSection()?.id, e);
 }
 function _E(e, t) {
 	let n = $.store.data.sections.find((t) => t.id === e) ?? $.store.data.sections[0];
 	if (!n) return;
-	Yk.pushHistory("add-block");
+	Zk.pushHistory("add-block");
 	let r = Math.max(0, ...n.blocks.map((e) => e.frames?.desktop?.z ?? 1)) + 1;
 	t.frames?.desktop && (t.frames.desktop = {
 		...t.frames.desktop,
 		z: r
-	}), n.blocks.push(t), $.markDesktopChange(n, "block-added"), $.store.save(), Yk.updateDirty(), CD.bridge?.sendSection($.pageId, n), $.fitBlockSoon(n.id, t);
+	}), n.blocks.push(t), $.markDesktopChange(n, "block-added"), $.store.save(), Zk.updateDirty(), TD.bridge?.sendSection($.pageId, n), $.fitBlockSoon(n.id, t);
 }
 function vE(e, t, n, r) {
 	let i = $.store.data.sections.find((t) => t.id === e);
 	if (!i || !t?.length) return;
-	Yk.pushHistory("add-blocks");
+	Zk.pushHistory("add-blocks");
 	for (let e of r ?? []) {
 		let t = i.blocks.find((t) => t.id === e.blockId);
 		t && typeof e.dy == "number" && (t.frames.desktop = {
@@ -25714,7 +25714,7 @@ function vE(e, t, n, r) {
 	n && a.endsWith("px") && Number.parseFloat(a) < n && (i.size = {
 		...i.size,
 		minHeight: `${n}px`
-	}), $.markDesktopChange(i, "block-added"), $.store.save(), Yk.updateDirty(), CD.bridge?.sendSection($.pageId, i);
+	}), $.markDesktopChange(i, "block-added"), $.store.save(), Zk.updateDirty(), TD.bridge?.sendSection($.pageId, i);
 }
 var yE = {
 	list: "calendar",
@@ -25751,7 +25751,7 @@ function xE(e) {
 			});
 			t.frames.desktop.x = r.x, t.frames.desktop.y = r.y;
 		} else t.frames.desktop.x = Math.round((100 - t.frames.desktop.w) / 2 * 100) / 100, t.frames.desktop.y = 40;
-		_E(e.sectionId, t), CD.bridge?.sendSelect(t.id), e.kind === "image" && Xj.setStatus(K("status.imageBlockAdded")), e.kind === "gallery" && Xj.setStatus(K("status.galleryBlockAdded"));
+		_E(e.sectionId, t), TD.bridge?.sendSelect(t.id), e.kind === "image" && Qj.setStatus(K("status.imageBlockAdded")), e.kind === "gallery" && Qj.setStatus(K("status.galleryBlockAdded"));
 	}
 }
 var SE = {
@@ -25773,15 +25773,15 @@ var SE = {
 //#region src/state/bridge.svelte.js
 function CE(e) {
 	let { section: t, block: n } = $.readBlock(e.sectionId, e.blockId);
-	t && n?.sticky && pg.some(([t]) => t === e.dock) && (Yk.pushHistory(`sticky-dock:${e.blockId}`), n.sticky = {
+	t && n?.sticky && pg.some(([t]) => t === e.dock) && (Zk.pushHistory(`sticky-dock:${e.blockId}`), n.sticky = {
 		...n.sticky,
 		dock: e.dock
-	}, $.store.save(), Yk.updateDirty(), CD.bridge?.sendSection($.pageId, t), $.syncSelectedBlock());
+	}, $.store.save(), Zk.updateDirty(), TD.bridge?.sendSection($.pageId, t), $.syncSelectedBlock());
 }
 function wE(e) {
 	let t = e.blockIds ?? [], { section: n } = $.readBlock(e.sectionId, t[0]);
 	if (!n || !t.length) return;
-	Yk.pushHistory(`sticky-group:${e.sectionId}`);
+	Zk.pushHistory(`sticky-group:${e.sectionId}`);
 	let r = e.on ? es("stk") : null;
 	for (let e of n.blocks) t.includes(e.id) && (e.sticky = r ? {
 		offset: 16,
@@ -25789,25 +25789,25 @@ function wE(e) {
 		...e.sticky,
 		group: r
 	} : null);
-	$.markDesktopChange(n, "block-edited"), $.store.save(), Yk.updateDirty(), CD.bridge?.sendSection($.pageId, n), $.syncSelectedBlock(), Xj.setStatus(K(e.on ? "status.stickyGrouped" : "status.stickyUngrouped"));
+	$.markDesktopChange(n, "block-edited"), $.store.save(), Zk.updateDirty(), TD.bridge?.sendSection($.pageId, n), $.syncSelectedBlock(), Qj.setStatus(K(e.on ? "status.stickyGrouped" : "status.stickyUngrouped"));
 }
 function TE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n && (Yk.pushHistory(`edit:${e.blockId}`), n.props = e.props, $.store.save(), Yk.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock(), e.rerender && CD.bridge?.sendSection($.pageId, t), Xj.status = "", $.fitBlockSoon(t.id, n));
+	n && (Zk.pushHistory(`edit:${e.blockId}`), n.props = e.props, $.store.save(), Zk.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock(), e.rerender && TD.bridge?.sendSection($.pageId, t), Qj.status = "", $.fitBlockSoon(t.id, n));
 }
 function EE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
 	if (!n) return;
-	Yk.pushHistory(e.coalesce ? `edit:${e.groupKey ?? e.blockId}` : "move-block");
+	Zk.pushHistory(e.coalesce ? `edit:${e.groupKey ?? e.blockId}` : "move-block");
 	let r = e.frameKey === "mobile" ? "mobile" : "desktop", i = n.frames.desktop?.w;
-	n.frames[r] = e.frame, r === "desktop" && $.markDesktopChange(t, "desktop-changed-after-mobile"), $.store.save(), Yk.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock(), r === "desktop" && e.frame?.w !== i ? $.fitBlockSoon(t.id, n) : r === "mobile" && $.phoneFitSoon(t.id, n);
+	n.frames[r] = e.frame, r === "desktop" && $.markDesktopChange(t, "desktop-changed-after-mobile"), $.store.save(), Zk.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock(), r === "desktop" && e.frame?.w !== i ? $.fitBlockSoon(t.id, n) : r === "mobile" && $.phoneFitSoon(t.id, n);
 }
 function DE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n?.frames?.desktop && n.frames.desktop.h !== e.h && (e.fit ? CD.viewMode === "desktop" && e.seq === $.fitSeq.get(e.blockId) && OE(t, n, e.h) : ($.store.amendBaseline((t) => {
+	n?.frames?.desktop && n.frames.desktop.h !== e.h && (e.fit ? TD.viewMode === "desktop" && e.seq === $.fitSeq.get(e.blockId) && OE(t, n, e.h) : ($.store.amendBaseline((t) => {
 		let n = t.sections.find((t) => t.id === e.sectionId)?.blocks.find((t) => t.id === e.blockId);
 		n?.frames?.desktop && (n.frames.desktop.h = e.h);
-	}), $.store.hasDraft() && Yk.pushHistory(`edit:${e.blockId}`), n.frames.desktop.h = e.h, $.store.save(), Yk.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock()));
+	}), $.store.hasDraft() && Zk.pushHistory(`edit:${e.blockId}`), n.frames.desktop.h = e.h, $.store.save(), Zk.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock()));
 }
 function OE(e, t, n) {
 	let r = uc(e.blocks, t.id, n), i = {};
@@ -25822,44 +25822,62 @@ function OE(e, t, n) {
 			y: n
 		}, i[t] = r.frames.desktop);
 	}
-	$.markDesktopChange(e, "block-edited"), $.store.save(), Yk.updateDirty(), $.selectedBlock?.blockId === t.id && $.syncSelectedBlock(), CD.bridge?.sendFrames(e.id, Ze(i));
+	$.markDesktopChange(e, "block-edited"), $.store.save(), Zk.updateDirty(), $.selectedBlock?.blockId === t.id && $.syncSelectedBlock(), TD.bridge?.sendFrames(e.id, Ze(i));
 }
 function kE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId);
 	if (t) {
-		if (Yk.pushHistory("mobile-reset"), e.blockId) {
+		if (Zk.pushHistory("mobile-reset"), e.blockId) {
 			let n = t.blocks.find((t) => t.id === e.blockId);
 			n && (n.frames.mobile = null);
 		} else for (let e of t.blocks) e.frames.mobile = null;
-		!$.hasMobileOverrides(t) && t.responsive?.mobile && (t.responsive.mobile.attention = null), $.store.save(), Yk.updateDirty(), Xj.updateAttention(), CD.bridge?.sendSection($.pageId, t);
+		!$.hasMobileOverrides(t) && t.responsive?.mobile && (t.responsive.mobile.attention = null), $.store.save(), Zk.updateDirty(), Qj.updateAttention(), TD.bridge?.sendSection($.pageId, t);
 	}
 }
 function AE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n && typeof e.mobileOrder == "number" && (Yk.pushHistory("mobile-order"), n.mobileOrder = e.mobileOrder, $.store.save(), Yk.updateDirty(), CD.bridge?.sendSection($.pageId, t));
+	n && typeof e.mobileOrder == "number" && (Zk.pushHistory("mobile-order"), n.mobileOrder = e.mobileOrder, $.store.save(), Zk.updateDirty(), TD.bridge?.sendSection($.pageId, t));
 }
 function jE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId);
-	t?.responsive?.mobile && (Yk.pushHistory("review-done"), t.responsive.mobile.attention = null, $.store.save(), Yk.updateDirty(), Xj.updateAttention());
+	t?.responsive?.mobile && (Zk.pushHistory("review-done"), t.responsive.mobile.attention = null, $.store.save(), Zk.updateDirty(), Qj.updateAttention());
 }
-function ME(e) {
-	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n && (Yk.pushHistory("block-flag"), typeof e.decor == "boolean" && (n.decor = e.decor), typeof e.hideMobile == "boolean" && (n.hideMobile = e.hideMobile), $.store.save(), Yk.updateDirty(), typeof e.hideMobile == "boolean" && CD.viewMode === "mobile" && CD.bridge?.sendSection($.pageId, t), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock());
-}
+var ME = [
+	"animation",
+	"hover",
+	"size",
+	"sizeMin",
+	"sizeMax",
+	"height",
+	"fit",
+	"fitMin"
+];
 function NE(e) {
-	Yk.pushHistory("add-section"), e.section.id || (e.section.id = es("sec")), $.store.data.sections.splice(e.index, 0, e.section), $.store.save(), Yk.updateDirty(), CD.bridge?.sendPage($.pageId, $.store.data), $.activeSectionId = e.section.id, $.syncSectionMirrors(e.section), Xj.activePanel = "properties";
+	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
+	if (n && e.fields && typeof e.fields == "object") {
+		Zk.pushHistory("block-style");
+		for (let t of ME) t in e.fields && (e.fields[t] === null || e.fields[t] === void 0 ? delete n[t] : n[t] = structuredClone(e.fields[t]));
+		$.store.save(), Zk.updateDirty(), TD.bridge?.sendSection($.pageId, t), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock();
+	}
 }
 function PE(e) {
-	let t = $.store.data.sections, n = t.findIndex((t) => t.id === e.sectionId), r = n + e.dir;
-	n < 0 || r < 0 || r >= t.length || (Yk.pushHistory("move-section"), [t[n], t[r]] = [t[r], t[n]], $.store.save(), Yk.updateDirty(), CD.bridge?.sendPage($.pageId, $.store.data));
+	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
+	n && (Zk.pushHistory("block-flag"), typeof e.decor == "boolean" && (n.decor = e.decor), typeof e.hideMobile == "boolean" && (n.hideMobile = e.hideMobile), $.store.save(), Zk.updateDirty(), typeof e.hideMobile == "boolean" && TD.viewMode === "mobile" && TD.bridge?.sendSection($.pageId, t), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock());
 }
 function FE(e) {
-	Yk.pushHistory("delete-section"), e.sectionId === $.activeSectionId && ($.activeSectionId = null, $.sectionGrid = null), $.selectedBlock?.sectionId === e.sectionId && ($.selectedBlock = null), $.store.data.sections = $.store.data.sections.filter((t) => t.id !== e.sectionId), $.store.save(), Yk.updateDirty(), CD.bridge?.sendPage($.pageId, $.store.data);
+	Zk.pushHistory("add-section"), e.section.id || (e.section.id = es("sec")), $.store.data.sections.splice(e.index, 0, e.section), $.store.save(), Zk.updateDirty(), TD.bridge?.sendPage($.pageId, $.store.data), $.activeSectionId = e.section.id, $.syncSectionMirrors(e.section), Qj.activePanel = "properties";
 }
 function IE(e) {
+	let t = $.store.data.sections, n = t.findIndex((t) => t.id === e.sectionId), r = n + e.dir;
+	n < 0 || r < 0 || r >= t.length || (Zk.pushHistory("move-section"), [t[n], t[r]] = [t[r], t[n]], $.store.save(), Zk.updateDirty(), TD.bridge?.sendPage($.pageId, $.store.data));
+}
+function LE(e) {
+	Zk.pushHistory("delete-section"), e.sectionId === $.activeSectionId && ($.activeSectionId = null, $.sectionGrid = null), $.selectedBlock?.sectionId === e.sectionId && ($.selectedBlock = null), $.store.data.sections = $.store.data.sections.filter((t) => t.id !== e.sectionId), $.store.save(), Zk.updateDirty(), TD.bridge?.sendPage($.pageId, $.store.data);
+}
+function RE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId);
 	if (t) {
-		Yk.pushHistory("section-size"), t.size = {
+		Zk.pushHistory("section-size"), t.size = {
 			...t.size,
 			minHeight: e.minHeight
 		};
@@ -25870,23 +25888,23 @@ function IE(e) {
 				y: e.frames.desktop.y + n.dy
 			});
 		}
-		e.moves?.length && ($.markDesktopChange(t, "section-height"), $.selectedBlock?.sectionId === e.sectionId && $.syncSelectedBlock()), e.sectionId === $.activeSectionId && ($.sectionMinHeight = e.minHeight), $.store.save(), Yk.updateDirty();
+		e.moves?.length && ($.markDesktopChange(t, "section-height"), $.selectedBlock?.sectionId === e.sectionId && $.syncSelectedBlock()), e.sectionId === $.activeSectionId && ($.sectionMinHeight = e.minHeight), $.store.save(), Zk.updateDirty();
 	}
 }
-function LE(e) {
+function zE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.fromSectionId), n = $.store.data.sections.find((t) => t.id === e.toSectionId), r = t?.blocks.find((t) => t.id === e.blockId);
-	t && n && r && (Yk.pushHistory(e.groupKey ? `edit:${e.groupKey}` : "move-block"), t.blocks = t.blocks.filter((t) => t.id !== e.blockId), r.frames.desktop = e.frame, r.frames.mobile = null, n.blocks.push(r), $.markDesktopChange(t, "block-moved"), $.markDesktopChange(n, "block-moved"), $.store.save(), Yk.updateDirty(), Xj.updateAttention(), CD.bridge?.sendSection($.pageId, t), CD.bridge?.sendSection($.pageId, n), $.selectedBlock?.blockId === e.blockId && ($.selectedBlock = {
+	t && n && r && (Zk.pushHistory(e.groupKey ? `edit:${e.groupKey}` : "move-block"), t.blocks = t.blocks.filter((t) => t.id !== e.blockId), r.frames.desktop = e.frame, r.frames.mobile = null, n.blocks.push(r), $.markDesktopChange(t, "block-moved"), $.markDesktopChange(n, "block-moved"), $.store.save(), Zk.updateDirty(), Qj.updateAttention(), TD.bridge?.sendSection($.pageId, t), TD.bridge?.sendSection($.pageId, n), $.selectedBlock?.blockId === e.blockId && ($.selectedBlock = {
 		...$.selectedBlock,
 		sectionId: e.toSectionId
 	}, $.syncSelectedBlock()));
 }
-function RE(e) {
+function BE(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId);
 	if (!t) return;
 	let n = e.blockIds ?? [e.blockId];
-	Yk.pushHistory("delete-block"), t.blocks = t.blocks.filter((e) => !n.includes(e.id)), n.includes($.selectedBlock?.blockId) && ($.selectedBlock = null), $.markDesktopChange(t, "block-deleted"), $.store.save(), Yk.updateDirty(), CD.bridge?.sendSection($.pageId, t);
+	Zk.pushHistory("delete-block"), t.blocks = t.blocks.filter((e) => !n.includes(e.id)), n.includes($.selectedBlock?.blockId) && ($.selectedBlock = null), $.markDesktopChange(t, "block-deleted"), $.store.save(), Zk.updateDirty(), TD.bridge?.sendSection($.pageId, t);
 }
-var zE = {
+var VE = {
 	handleStickyDock: CE,
 	handleStickyGroup: wE,
 	handleEdit: TE,
@@ -25896,34 +25914,35 @@ var zE = {
 	handleMobileReset: kE,
 	handleMobileOrder: AE,
 	handleReviewDone: jE,
-	handleBlockFlag: ME,
-	handleAddSection: NE,
-	handleMoveSection: PE,
-	handleDeleteSection: FE,
-	handleSectionSize: IE,
-	handleMoveBlockSection: LE,
-	handleDelete: RE
-}, BE = /* @__PURE__ */ O(null), VE = /* @__PURE__ */ O(!0), HE = /* @__PURE__ */ O(mn(FC(typeof window < "u" ? window : null) ?? 1920)), UE = "urd-admin-screen";
-function WE() {
+	handleBlockFlag: PE,
+	handleBlockStyle: NE,
+	handleAddSection: FE,
+	handleMoveSection: IE,
+	handleDeleteSection: LE,
+	handleSectionSize: RE,
+	handleMoveBlockSection: zE,
+	handleDelete: BE
+}, HE = /* @__PURE__ */ O(null), UE = /* @__PURE__ */ O(!0), WE = /* @__PURE__ */ O(mn(FC(typeof window < "u" ? window : null) ?? 1920)), GE = "urd-admin-screen";
+function KE() {
 	let e = null;
 	try {
-		e = JSON.parse(localStorage.getItem(UE) ?? "null");
+		e = JSON.parse(localStorage.getItem(GE) ?? "null");
 	} catch {
 		e = null;
 	}
-	return IC(e, F(HE));
+	return IC(e, F(WE));
 }
-var GE = /* @__PURE__ */ O(mn(WE()));
-function KE(e) {
-	k(GE, IC({
-		...Ze(F(GE)),
+var qE = /* @__PURE__ */ O(mn(KE()));
+function JE(e) {
+	k(qE, IC({
+		...Ze(F(qE)),
 		...e
-	}, F(HE)), !0);
+	}, F(WE)), !0);
 	try {
-		localStorage.setItem(UE, JSON.stringify(F(GE)));
+		localStorage.setItem(GE, JSON.stringify(F(qE)));
 	} catch {}
 }
-var qE = /* @__PURE__ */ D(() => LC(F(GE), F(HE))), JE = [
+var YE = /* @__PURE__ */ D(() => LC(F(qE), F(WE))), XE = [
 	{
 		id: "laptop",
 		width: 1280,
@@ -25942,308 +25961,309 @@ var qE = /* @__PURE__ */ D(() => LC(F(GE), F(HE))), JE = [
 		height: null,
 		viewport: "mobile"
 	}
-], YE = /* @__PURE__ */ D(() => [{
+], ZE = /* @__PURE__ */ D(() => [{
 	id: "desktop",
-	width: F(qE).width,
-	height: F(qE).height || null,
+	width: F(YE).width,
+	height: F(YE).height || null,
 	viewport: "desktop"
-}, ...JE]);
-function XE(e) {
+}, ...XE]);
+function QE(e) {
 	let t = ap(Q.layoutWidth, Q.layoutGutter, e.width).width;
-	return K(e.id === "desktop" ? F(GE).mode === "own" ? "tip.view.desktop" : e.height ? "tip.view.desktopSizeH" : "tip.view.desktopSize" : `tip.view.${e.id}`, {
+	return K(e.id === "desktop" ? F(qE).mode === "own" ? "tip.view.desktop" : e.height ? "tip.view.desktopSizeH" : "tip.view.desktopSize" : `tip.view.${e.id}`, {
 		w: e.width,
 		h: e.height ?? 0,
 		c: t
 	});
 }
-var ZE = /* @__PURE__ */ O("desktop"), QE = /* @__PURE__ */ D(() => F(YE).find((e) => e.id === F(ZE)) ?? F(YE)[0]), $E = /* @__PURE__ */ D(() => F(QE).viewport === "mobile" || F(QE).width <= (Q.siteDraft?.breakpoints?.mobile ?? 640) ? "mobile" : "desktop"), eD = /* @__PURE__ */ O(null), tD = /* @__PURE__ */ O(0), nD = /* @__PURE__ */ O(0), rD = /* @__PURE__ */ O("fit"), iD = /* @__PURE__ */ O(1), aD = /* @__PURE__ */ D(() => F(QE).width), oD = /* @__PURE__ */ D(() => F(QE).height ?? 0), sD = /* @__PURE__ */ D(() => F(rD) === "manual" ? F(iD) : mw(F(tD), F(aD), "fit", F(nD), F(oD)));
-function cD(e) {
-	k(iD, Math.min(400, Math.max(10, (Math.round(Math.round(F(sD) * 100) / 10) + e) * 10)) / 100), k(rD, "manual");
+var $E = /* @__PURE__ */ O("desktop"), eD = /* @__PURE__ */ D(() => F(ZE).find((e) => e.id === F($E)) ?? F(ZE)[0]), tD = /* @__PURE__ */ D(() => F(eD).viewport === "mobile" || F(eD).width <= (Q.siteDraft?.breakpoints?.mobile ?? 640) ? "mobile" : "desktop"), nD = /* @__PURE__ */ O(null), rD = /* @__PURE__ */ O(0), iD = /* @__PURE__ */ O(0), aD = /* @__PURE__ */ O("fit"), oD = /* @__PURE__ */ O(1), sD = /* @__PURE__ */ D(() => F(eD).width), cD = /* @__PURE__ */ D(() => F(eD).height ?? 0), lD = /* @__PURE__ */ D(() => F(aD) === "manual" ? F(oD) : mw(F(rD), F(sD), "fit", F(iD), F(cD)));
+function uD(e) {
+	k(oD, Math.min(400, Math.max(10, (Math.round(Math.round(F(lD) * 100) / 10) + e) * 10)) / 100), k(aD, "manual");
 }
-var lD = /* @__PURE__ */ D(() => F(oD) > 0 ? F(oD) : F(sD) > 0 ? F(nD) / F(sD) : F(nD)), uD = /* @__PURE__ */ D(() => F(aD) * F(sD)), dD = /* @__PURE__ */ D(() => F(oD) > 0 ? F(oD) * F(sD) : F(nD)), fD = /* @__PURE__ */ D(() => F(uD) > F(tD) + 1 || F(dD) > F(nD) + 1), pD = /* @__PURE__ */ O(null), mD = () => {
+var dD = /* @__PURE__ */ D(() => F(cD) > 0 ? F(cD) : F(lD) > 0 ? F(iD) / F(lD) : F(iD)), fD = /* @__PURE__ */ D(() => F(sD) * F(lD)), pD = /* @__PURE__ */ D(() => F(cD) > 0 ? F(cD) * F(lD) : F(iD)), mD = /* @__PURE__ */ D(() => F(fD) > F(rD) + 1 || F(pD) > F(iD) + 1), hD = /* @__PURE__ */ O(null), gD = () => {
 	let e = null;
 	try {
 		e = localStorage.getItem("urd-theme-mode");
 	} catch {}
 	return Os(Q.siteDraft?.theme?.scheme, e, window.matchMedia("(prefers-color-scheme: dark)").matches);
-}, hD = /* @__PURE__ */ O("light");
-function gD() {
-	F(pD)?.destroy(), F(BE)?.contentDocument?.addEventListener("pointerdown", () => {
+}, _D = /* @__PURE__ */ O("light");
+function vD() {
+	F(hD)?.destroy(), F(HE)?.contentDocument?.addEventListener("pointerdown", () => {
 		$.blockMenu &&= null;
-	}, !0), k(pD, hw(F(BE), {
-		onEdit: zE.handleEdit,
-		onMove: zE.handleMove,
-		onGrow: zE.handleGrow,
-		onDelete: zE.handleDelete,
-		onAddSection: zE.handleAddSection,
-		onMoveSection: zE.handleMoveSection,
-		onDeleteSection: zE.handleDeleteSection,
-		onSectionSize: zE.handleSectionSize,
-		onUndo: (e) => e.redo ? Yk.redo() : Yk.undo(),
+	}, !0), k(hD, hw(F(HE), {
+		onEdit: VE.handleEdit,
+		onMove: VE.handleMove,
+		onGrow: VE.handleGrow,
+		onDelete: VE.handleDelete,
+		onAddSection: VE.handleAddSection,
+		onMoveSection: VE.handleMoveSection,
+		onDeleteSection: VE.handleDeleteSection,
+		onSectionSize: VE.handleSectionSize,
+		onUndo: (e) => e.redo ? Zk.redo() : Zk.undo(),
 		onSelectSection: $.onSelectSection,
 		onSelectBlock: $.onSelectBlock,
 		onBlockMenu: $.onBlockMenu,
-		onReady: _D,
-		onNavigate: vD,
+		onReady: yD,
+		onNavigate: bD,
 		onAddBlock: (e) => SE.insertBlock(e.sectionId, e.block),
 		onAddBlocks: (e) => SE.insertBlocks(e.sectionId, e.blocks, e.minBottom, e.moves),
 		onRequestBlock: SE.handleRequestBlock,
-		onMoveBlockSection: zE.handleMoveBlockSection,
-		onMobileReset: zE.handleMobileReset,
-		onMobileOrder: zE.handleMobileOrder,
-		onReviewDone: zE.handleReviewDone,
-		onBlockFlag: zE.handleBlockFlag,
-		onCollectionEdit: _A.handleCollectionEdit,
-		onCollectionAdd: _A.handleCollectionAdd,
+		onMoveBlockSection: VE.handleMoveBlockSection,
+		onMobileReset: VE.handleMobileReset,
+		onMobileOrder: VE.handleMobileOrder,
+		onReviewDone: VE.handleReviewDone,
+		onBlockFlag: VE.handleBlockFlag,
+		onBlockStyle: VE.handleBlockStyle,
+		onCollectionEdit: yA.handleCollectionEdit,
+		onCollectionAdd: yA.handleCollectionAdd,
 		onSaveTemplate: Yw.handleSaveTemplate,
-		onStickyGroup: zE.handleStickyGroup,
-		onStickyDock: zE.handleStickyDock,
+		onStickyGroup: VE.handleStickyGroup,
+		onStickyDock: VE.handleStickyDock,
 		onDeleteTemplate: Yw.handleDeleteTemplate,
 		onApplyLayout: $.handleApplyLayout,
 		onPluginBlocks: (e) => {
-			WD.pluginBlocks = e.blocks ?? [];
+			KD.pluginBlocks = e.blocks ?? [];
 		},
 		onNavWidth: (e) => Q.siteMutate("edit:nav-width", () => {
 			Q.siteDraft.nav.style ??= {}, Q.siteDraft.nav.style.width = e.width;
 		})
 	}));
 }
-async function _D() {
-	await $.pageLoading, await WD.pluginsReady, F(pD)?.sendPlugins(Ze(WD.pluginsView)?.enabled ?? []), F(pD)?.sendViewport(F($E)), F(pD)?.sendZoom(F(sD)), _A.pushCollectionsToPreview(), Yw.pushTemplatesToPreview(), Q.siteStore.hasDraft() && Q.pushSiteToPreview();
+async function yD() {
+	await $.pageLoading, await KD.pluginsReady, F(hD)?.sendPlugins(Ze(KD.pluginsView)?.enabled ?? []), F(hD)?.sendViewport(F(tD)), F(hD)?.sendZoom(F(lD)), yA.pushCollectionsToPreview(), Yw.pushTemplatesToPreview(), Q.siteStore.hasDraft() && Q.pushSiteToPreview();
 	let e = !Q.site.pages.some((e) => e.id === $.pageId);
-	($.store.hasDraft() || e) && F(pD)?.sendPage($.pageId, $.store.data), F(VE) || F(pD)?.sendChrome(!1), Xj.gridOn && F(pD)?.sendShowGrid(!0), Xj.guidesOn && F(pD)?.sendShowGuides(!0), Xj.sendAdminTheme();
+	($.store.hasDraft() || e) && F(hD)?.sendPage($.pageId, $.store.data), F(UE) || F(hD)?.sendChrome(!1), Qj.gridOn && F(hD)?.sendShowGrid(!0), Qj.guidesOn && F(hD)?.sendShowGuides(!0), Qj.sendAdminTheme();
 }
-function vD(e) {
+function bD(e) {
 	let t = e.path.replace(/\/$/, "") || "/", n = Q.siteDraft.pages.find((e) => e.path === t);
 	n && n.id !== $.pageId && $.selectPage(n.id);
 }
-function yD() {
-	F(BE) && (F(BE).src = F(BE).src);
+function xD() {
+	F(HE) && (F(HE).src = F(HE).src);
 }
-var bD = 0;
-async function xD() {
-	F(VE) && (bD = Xj.panelEl?.scrollTop ?? 0), k(VE, !F(VE)), F(pD)?.sendChrome(F(VE)), F(VE) || ($.blockMenu = null), F(VE) && (await Dr(), requestAnimationFrame(() => {
-		Xj.panelEl && (Xj.panelEl.scrollTop = bD);
+var SD = 0;
+async function CD() {
+	F(UE) && (SD = Qj.panelEl?.scrollTop ?? 0), k(UE, !F(UE)), F(hD)?.sendChrome(F(UE)), F(UE) || ($.blockMenu = null), F(UE) && (await Dr(), requestAnimationFrame(() => {
+		Qj.panelEl && (Qj.panelEl.scrollTop = SD);
 	}));
 }
-function SD() {
+function wD() {
 	Pn(() => {
-		let e = () => F(pD)?.sendCloseMenus();
+		let e = () => F(hD)?.sendCloseMenus();
 		return document.addEventListener("pointerdown", e, !0), () => document.removeEventListener("pointerdown", e, !0);
 	}), Pn(() => {
-		let e = F($E);
-		F(pD)?.sendViewport(e);
+		let e = F(tD);
+		F(hD)?.sendViewport(e);
 	}), Pn(() => {
-		let e = F(sD);
-		F(pD)?.sendZoom(e);
+		let e = F(lD);
+		F(hD)?.sendZoom(e);
 	}), Pn(() => {
 		let e = () => {
-			k(HE, FC(window) ?? F(HE), !0);
+			k(WE, FC(window) ?? F(WE), !0);
 		};
 		return window.addEventListener("resize", e), () => window.removeEventListener("resize", e);
 	}), Pn(() => {
-		let e = F(eD);
+		let e = F(nD);
 		if (!e || typeof ResizeObserver > "u") return;
 		let t = () => {
-			k(tD, e.clientWidth, !0), k(nD, e.clientHeight, !0);
+			k(rD, e.clientWidth, !0), k(iD, e.clientHeight, !0);
 		};
 		t();
 		let n = new ResizeObserver(t);
 		return n.observe(e), () => n.disconnect();
 	}), Pn(() => {
-		k(hD, mD(), !0);
+		k(_D, gD(), !0);
 		let e = window.matchMedia("(prefers-color-scheme: dark)"), t = (e) => {
-			e instanceof StorageEvent && e.key && e.key !== "urd-theme-mode" || k(hD, mD(), !0);
+			e instanceof StorageEvent && e.key && e.key !== "urd-theme-mode" || k(_D, gD(), !0);
 		};
 		return e.addEventListener("change", t), window.addEventListener("storage", t), () => {
 			e.removeEventListener("change", t), window.removeEventListener("storage", t);
 		};
 	});
 }
-var CD = {
+var TD = {
 	get iframeEl() {
-		return F(BE);
-	},
-	set iframeEl(e) {
-		k(BE, e, !0);
-	},
-	get chromeVisible() {
-		return F(VE);
-	},
-	set chromeVisible(e) {
-		k(VE, e, !0);
-	},
-	get ownWidth() {
 		return F(HE);
 	},
-	set ownWidth(e) {
+	set iframeEl(e) {
 		k(HE, e, !0);
 	},
-	SCREEN_PREF_KEY: UE,
-	readScreenPref: WE,
+	get chromeVisible() {
+		return F(UE);
+	},
+	set chromeVisible(e) {
+		k(UE, e, !0);
+	},
+	get ownWidth() {
+		return F(WE);
+	},
+	set ownWidth(e) {
+		k(WE, e, !0);
+	},
+	SCREEN_PREF_KEY: GE,
+	readScreenPref: KE,
 	get screenPref() {
-		return F(GE);
-	},
-	set screenPref(e) {
-		k(GE, e, !0);
-	},
-	setScreenPref: KE,
-	get screenTarget() {
 		return F(qE);
 	},
-	set screenTarget(e) {
-		k(qE, e);
+	set screenPref(e) {
+		k(qE, e, !0);
 	},
-	FIXED_DEVICES: JE,
-	get devices() {
+	setScreenPref: JE,
+	get screenTarget() {
 		return F(YE);
 	},
-	set devices(e) {
+	set screenTarget(e) {
 		k(YE, e);
 	},
-	deviceTip: XE,
-	get deviceId() {
+	FIXED_DEVICES: XE,
+	get devices() {
 		return F(ZE);
 	},
-	set deviceId(e) {
-		k(ZE, e, !0);
+	set devices(e) {
+		k(ZE, e);
 	},
-	get device() {
-		return F(QE);
-	},
-	set device(e) {
-		k(QE, e);
-	},
-	get viewMode() {
+	deviceTip: QE,
+	get deviceId() {
 		return F($E);
 	},
-	set viewMode(e) {
-		k($E, e);
+	set deviceId(e) {
+		k($E, e, !0);
 	},
-	get frameWrapEl() {
+	get device() {
 		return F(eD);
 	},
-	set frameWrapEl(e) {
-		k(eD, e, !0);
+	set device(e) {
+		k(eD, e);
 	},
-	get frameW() {
+	get viewMode() {
 		return F(tD);
 	},
-	set frameW(e) {
-		k(tD, e, !0);
+	set viewMode(e) {
+		k(tD, e);
 	},
-	get frameH() {
+	get frameWrapEl() {
 		return F(nD);
 	},
-	set frameH(e) {
+	set frameWrapEl(e) {
 		k(nD, e, !0);
 	},
-	get zoomMode() {
+	get frameW() {
 		return F(rD);
 	},
-	set zoomMode(e) {
+	set frameW(e) {
 		k(rD, e, !0);
 	},
-	get manualZoom() {
+	get frameH() {
 		return F(iD);
 	},
-	set manualZoom(e) {
+	set frameH(e) {
 		k(iD, e, !0);
 	},
-	get targetW() {
+	get zoomMode() {
 		return F(aD);
 	},
-	set targetW(e) {
-		k(aD, e);
+	set zoomMode(e) {
+		k(aD, e, !0);
 	},
-	get targetH() {
+	get manualZoom() {
 		return F(oD);
 	},
-	set targetH(e) {
-		k(oD, e);
+	set manualZoom(e) {
+		k(oD, e, !0);
 	},
-	get scale() {
+	get targetW() {
 		return F(sD);
 	},
-	set scale(e) {
+	set targetW(e) {
 		k(sD, e);
 	},
-	stepZoom: cD,
-	get iframeH() {
+	get targetH() {
+		return F(cD);
+	},
+	set targetH(e) {
+		k(cD, e);
+	},
+	get scale() {
 		return F(lD);
 	},
-	set iframeH(e) {
+	set scale(e) {
 		k(lD, e);
 	},
-	get stageW() {
-		return F(uD);
-	},
-	set stageW(e) {
-		k(uD, e);
-	},
-	get stageH() {
+	stepZoom: uD,
+	get iframeH() {
 		return F(dD);
 	},
-	set stageH(e) {
+	set iframeH(e) {
 		k(dD, e);
 	},
-	get canPan() {
+	get stageW() {
 		return F(fD);
 	},
-	set canPan(e) {
+	set stageW(e) {
 		k(fD, e);
 	},
-	get bridge() {
+	get stageH() {
 		return F(pD);
 	},
-	set bridge(e) {
+	set stageH(e) {
 		k(pD, e);
 	},
-	readPreviewMode: mD,
-	get previewMode() {
+	get canPan() {
+		return F(mD);
+	},
+	set canPan(e) {
+		k(mD, e);
+	},
+	get bridge() {
 		return F(hD);
 	},
-	set previewMode(e) {
-		k(hD, e, !0);
+	set bridge(e) {
+		k(hD, e);
 	},
-	onIframeLoad: gD,
-	onReady: _D,
-	onNavigate: vD,
-	reloadPreview: yD,
+	readPreviewMode: gD,
+	get previewMode() {
+		return F(_D);
+	},
+	set previewMode(e) {
+		k(_D, e, !0);
+	},
+	onIframeLoad: vD,
+	onReady: yD,
+	onNavigate: bD,
+	reloadPreview: xD,
 	get panelScroll() {
-		return bD;
+		return SD;
 	},
 	set panelScroll(e) {
-		bD = e;
+		SD = e;
 	},
-	toggleChrome: xD,
-	effects: SD
-}, wD = null, TD, ED = new Promise((e) => {
-	TD = e;
-}), DD = /* @__PURE__ */ O(null), OD = /* @__PURE__ */ O(mn({})), kD = /* @__PURE__ */ O("0.0.0"), AD = /* @__PURE__ */ O(mn([])), jD = /* @__PURE__ */ O(mn([])), MD = /* @__PURE__ */ O("pending"), ND = () => [.../* @__PURE__ */ new Set([...F(DD)?.enabled ?? [], ...F(DD)?.disabled ?? []])];
-function PD() {
-	k(DD, JSON.parse(JSON.stringify(wD.data)), !0);
+	toggleChrome: CD,
+	effects: wD
+}, ED = null, DD, OD = new Promise((e) => {
+	DD = e;
+}), kD = /* @__PURE__ */ O(null), AD = /* @__PURE__ */ O(mn({})), jD = /* @__PURE__ */ O("0.0.0"), MD = /* @__PURE__ */ O(mn([])), ND = /* @__PURE__ */ O(mn([])), PD = /* @__PURE__ */ O("pending"), FD = () => [.../* @__PURE__ */ new Set([...F(kD)?.enabled ?? [], ...F(kD)?.disabled ?? []])];
+function ID() {
+	k(kD, JSON.parse(JSON.stringify(ED.data)), !0);
 }
-var FD = /* @__PURE__ */ O(null);
-async function ID() {
+var LD = /* @__PURE__ */ O(null);
+async function RD() {
 	try {
 		let e = (await fetch("/urd.json", { cache: "no-store" })).headers.get("content-security-policy");
 		if (!e) {
-			k(FD, { unknown: !0 }, !0);
+			k(LD, { unknown: !0 }, !0);
 			return;
 		}
 		let t = (t) => new Set((e.split(";").map((e) => e.trim()).find((e) => e.startsWith(`${t} `)) ?? "").split(/\s+/).slice(1));
-		k(FD, {
+		k(LD, {
 			frameSrc: t("frame-src"),
 			connectSrc: t("connect-src"),
 			scriptSrc: t("script-src")
 		}, !0);
 	} catch {
-		k(FD, { unknown: !0 }, !0);
+		k(LD, { unknown: !0 }, !0);
 	}
 }
-async function LD() {
-	ID();
+async function zD() {
+	RD();
 	let e = {
 		version: 1,
 		enabled: []
@@ -26251,142 +26271,142 @@ async function LD() {
 	try {
 		e = await (await fetch("/plugins/plugins.json")).json();
 	} catch {}
-	k(jD, e.enabled ?? [], !0), wD = $C("urd-draft-plugins", () => e, Xj.draftSaveError), PD();
+	k(ND, e.enabled ?? [], !0), ED = $C("urd-draft-plugins", () => e, Qj.draftSaveError), ID();
 	try {
-		k(kD, (await (await fetch("/urd.json")).json()).engine ?? "0.0.0", !0);
+		k(jD, (await (await fetch("/urd.json")).json()).engine ?? "0.0.0", !0);
 	} catch {}
-	for (let e of ND()) BD(e);
-	RD(), TD(), CD.bridge?.sendPlugins(Ze(F(DD))?.enabled ?? []);
+	for (let e of FD()) HD(e);
+	BD(), DD(), TD.bridge?.sendPlugins(Ze(F(kD))?.enabled ?? []);
 }
-async function RD() {
+async function BD() {
 	try {
 		let e = await fetch("/api/github/plugins");
 		if (!e.ok) {
-			zD();
+			VD();
 			return;
 		}
 		let { plugins: t } = await e.json();
-		localStorage.setItem("urd-plugins-found", JSON.stringify(t ?? [])), k(AD, (t ?? []).filter((e) => !ND().includes(e)), !0);
-		for (let e of F(AD)) BD(e);
-		k(MD, "ok");
+		localStorage.setItem("urd-plugins-found", JSON.stringify(t ?? [])), k(MD, (t ?? []).filter((e) => !FD().includes(e)), !0);
+		for (let e of F(MD)) HD(e);
+		k(PD, "ok");
 	} catch {
-		zD();
+		VD();
 	}
 }
-function zD() {
+function VD() {
 	try {
 		let e = JSON.parse(localStorage.getItem("urd-plugins-found") ?? "[]");
 		if (Array.isArray(e) && e.length) {
-			k(AD, e.filter((e) => !ND().includes(e)), !0);
-			for (let e of F(AD)) BD(e);
-			k(MD, "ok");
+			k(MD, e.filter((e) => !FD().includes(e)), !0);
+			for (let e of F(MD)) HD(e);
+			k(PD, "ok");
 			return;
 		}
 	} catch {}
-	k(MD, "unavailable");
+	k(PD, "unavailable");
 }
-async function BD(e) {
+async function HD(e) {
 	try {
 		let t = await (await fetch(`/plugins/${e}/plugin.json`)).json(), n = fw(t);
-		F(OD)[e] = {
+		F(AD)[e] = {
 			...t,
 			errors: n,
-			satisfied: n.length === 0 && uw(F(kD), t.requiresEngine)
+			satisfied: n.length === 0 && uw(F(jD), t.requiresEngine)
 		};
 	} catch {
-		F(OD)[e] = {
+		F(AD)[e] = {
 			name: e,
 			errors: [K("plugin.manifestNotFound", { id: e })],
 			satisfied: !1
 		};
 	}
 }
-function VD(e, t) {
-	Yk.pushHistory("plugins");
-	let n = wD.data;
-	n.enabled = (n.enabled ?? []).filter((t) => t !== e), n.disabled = (n.disabled ?? []).filter((t) => t !== e), t ? n.enabled.push(e) : n.disabled.push(e), wD.save(), Yk.updateDirty(), PD(), CD.reloadPreview();
+function UD(e, t) {
+	Zk.pushHistory("plugins");
+	let n = ED.data;
+	n.enabled = (n.enabled ?? []).filter((t) => t !== e), n.disabled = (n.disabled ?? []).filter((t) => t !== e), t ? n.enabled.push(e) : n.disabled.push(e), ED.save(), Zk.updateDirty(), ID(), TD.reloadPreview();
 }
-function HD(e) {
-	Yk.pushHistory("plugins");
-	let t = wD.data;
-	t.enabled = (t.enabled ?? []).filter((t) => t !== e), t.disabled = (t.disabled ?? []).filter((t) => t !== e), wD.save(), Yk.updateDirty(), PD(), CD.reloadPreview();
+function WD(e) {
+	Zk.pushHistory("plugins");
+	let t = ED.data;
+	t.enabled = (t.enabled ?? []).filter((t) => t !== e), t.disabled = (t.disabled ?? []).filter((t) => t !== e), ED.save(), Zk.updateDirty(), ID(), TD.reloadPreview();
 }
-var UD = /* @__PURE__ */ O(mn([])), WD = {
+var GD = /* @__PURE__ */ O(mn([])), KD = {
 	get pluginsStore() {
-		return wD;
+		return ED;
 	},
 	set pluginsStore(e) {
-		wD = e;
+		ED = e;
 	},
 	get resolvePluginsReady() {
-		return TD;
+		return DD;
 	},
 	set resolvePluginsReady(e) {
-		TD = e;
+		DD = e;
 	},
-	pluginsReady: ED,
+	pluginsReady: OD,
 	get pluginsView() {
-		return F(DD);
-	},
-	set pluginsView(e) {
-		k(DD, e, !0);
-	},
-	get pluginInfo() {
-		return F(OD);
-	},
-	set pluginInfo(e) {
-		k(OD, e, !0);
-	},
-	get pluginEngine() {
 		return F(kD);
 	},
-	set pluginEngine(e) {
+	set pluginsView(e) {
 		k(kD, e, !0);
 	},
-	get pluginsFound() {
+	get pluginInfo() {
 		return F(AD);
 	},
-	set pluginsFound(e) {
+	set pluginInfo(e) {
 		k(AD, e, !0);
 	},
-	get publishedPluginIds() {
+	get pluginEngine() {
 		return F(jD);
 	},
-	set publishedPluginIds(e) {
+	set pluginEngine(e) {
 		k(jD, e, !0);
 	},
-	get pluginDiscovery() {
+	get pluginsFound() {
 		return F(MD);
 	},
-	set pluginDiscovery(e) {
+	set pluginsFound(e) {
 		k(MD, e, !0);
 	},
-	knownPlugins: ND,
-	syncPluginsView: PD,
+	get publishedPluginIds() {
+		return F(ND);
+	},
+	set publishedPluginIds(e) {
+		k(ND, e, !0);
+	},
+	get pluginDiscovery() {
+		return F(PD);
+	},
+	set pluginDiscovery(e) {
+		k(PD, e, !0);
+	},
+	knownPlugins: FD,
+	syncPluginsView: ID,
 	get liveCsp() {
-		return F(FD);
+		return F(LD);
 	},
 	set liveCsp(e) {
-		k(FD, e, !0);
+		k(LD, e, !0);
 	},
-	loadLiveCsp: ID,
-	initPlugins: LD,
-	discoverPlugins: RD,
-	useCachedDiscovery: zD,
-	loadPluginInfo: BD,
-	setPluginEnabled: VD,
-	removePlugin: HD,
+	loadLiveCsp: RD,
+	initPlugins: zD,
+	discoverPlugins: BD,
+	useCachedDiscovery: VD,
+	loadPluginInfo: HD,
+	setPluginEnabled: UD,
+	removePlugin: WD,
 	get pluginBlocks() {
-		return F(UD);
+		return F(GD);
 	},
 	set pluginBlocks(e) {
-		k(UD, e, !0);
+		k(GD, e, !0);
 	}
-}, GD = /* @__PURE__ */ O(null);
-function KD(e) {
-	let t = YD.data.sections.find((t) => t.id === e.sectionId);
+}, qD = /* @__PURE__ */ O(null);
+function JD(e) {
+	let t = ZD.data.sections.find((t) => t.id === e.sectionId);
 	if (t) {
-		Yk.pushHistory("layout");
+		Zk.pushHistory("layout");
 		for (let n of e.frames ?? []) {
 			let e = t.blocks.find((e) => e.id === n.blockId);
 			e && (e.frames.desktop = {
@@ -26397,14 +26417,14 @@ function KD(e) {
 		t.size = {
 			...t.size,
 			minHeight: e.minHeight
-		}, JD(t, "layout-changed"), e.sectionId === F(XO) && k(QO, e.minHeight, !0), F(QD)?.sectionId === e.sectionId && eO(), YD.save(), Yk.updateDirty(), CD.bridge?.sendSection(F(GD), t);
+		}, XD(t, "layout-changed"), e.sectionId === F(QO) && k(ek, e.minHeight, !0), F(eO)?.sectionId === e.sectionId && nO(), ZD.save(), Zk.updateDirty(), TD.bridge?.sendSection(F(qD), t);
 	}
 }
-function qD(e) {
+function YD(e) {
 	return e?.blocks?.some((e) => e.frames?.mobile) ?? !1;
 }
-function JD(e, t) {
-	e && qD(e) && (e.responsive?.mobile?.attention?.needed || (e.responsive = {
+function XD(e, t) {
+	e && YD(e) && (e.responsive?.mobile?.attention?.needed || (e.responsive = {
 		...e.responsive ?? {},
 		mobile: {
 			...e.responsive?.mobile ?? { mode: "auto" },
@@ -26414,22 +26434,22 @@ function JD(e, t) {
 				since: (/* @__PURE__ */ new Date()).toISOString()
 			}
 		}
-	}, Xj.updateAttention(), CD.bridge?.sendAttention(e.id, !0)));
+	}, Qj.updateAttention(), TD.bridge?.sendAttention(e.id, !0)));
 }
-var YD = null, XD = /* @__PURE__ */ new Set(), ZD = () => Q.siteDraft.pages.find((e) => e.id === F(GD)), QD = /* @__PURE__ */ O(null);
-function $D(e, t) {
-	let n = YD?.data.sections.find((t) => t.id === e);
+var ZD = null, QD = /* @__PURE__ */ new Set(), $D = () => Q.siteDraft.pages.find((e) => e.id === F(qD)), eO = /* @__PURE__ */ O(null);
+function tO(e, t) {
+	let n = ZD?.data.sections.find((t) => t.id === e);
 	return {
 		section: n,
 		block: n?.blocks.find((e) => e.id === t)
 	};
 }
-function eO() {
-	if (!F(QD)) return;
-	let { block: e } = $D(F(QD).sectionId, F(QD).blockId);
-	e ? k(QD, {
-		sectionId: F(QD).sectionId,
-		blockId: F(QD).blockId,
+function nO() {
+	if (!F(eO)) return;
+	let { block: e } = tO(F(eO).sectionId, F(eO).blockId);
+	e ? k(eO, {
+		sectionId: F(eO).sectionId,
+		blockId: F(eO).blockId,
 		type: e.type,
 		decor: !!e.decor,
 		hideMobile: !!e.hideMobile,
@@ -26445,40 +26465,40 @@ function eO() {
 		animation: e.animation ? JSON.parse(JSON.stringify(e.animation)) : null,
 		hover: e.hover ? JSON.parse(JSON.stringify(e.hover)) : null,
 		sticky: e.sticky ? JSON.parse(JSON.stringify(e.sticky)) : null
-	}, !0) : k(QD, null);
+	}, !0) : k(eO, null);
 }
-function tO(e) {
-	k(nO, null), e.blockId ? (k(QD, {
+function rO(e) {
+	k(iO, null), e.blockId ? (k(eO, {
 		sectionId: e.sectionId,
 		blockId: e.blockId
-	}, !0), e.sectionId && k(XO, e.sectionId, !0), eO()) : k(QD, null);
+	}, !0), e.sectionId && k(QO, e.sectionId, !0), nO()) : k(eO, null);
 }
-var nO = /* @__PURE__ */ O(null);
-function rO() {
-	Kh(CD.frameWrapEl?.getBoundingClientRect().left ?? 0);
+var iO = /* @__PURE__ */ O(null);
+function aO() {
+	Kh(TD.frameWrapEl?.getBoundingClientRect().left ?? 0);
 }
-var iO = /* @__PURE__ */ O(null), aO = null, oO = null;
-function sO(e) {
-	tO(e), F(QD) && (oO = e.rect, k(nO, lO(e.rect), !0));
+var oO = /* @__PURE__ */ O(null), sO = null, cO = null;
+function lO(e) {
+	rO(e), F(eO) && (cO = e.rect, k(iO, dO(e.rect), !0));
 }
-function cO() {
-	return rO(), {
+function uO() {
+	return aO(), {
 		w: Math.min(Uh.wide && Uh.room >= 740 ? 740 : 400, window.innerWidth - 16),
 		h: Math.min(window.innerHeight * .72, 620)
 	};
 }
-function lO(e) {
-	let t = cO(), n = {
+function dO(e) {
+	let t = uO(), n = {
 		w: window.innerWidth,
 		h: window.innerHeight
 	};
 	if (Uh.place) return ew(Uh.place, t, n, Uh.min);
-	let r = CD.iframeEl?.getBoundingClientRect();
+	let r = TD.iframeEl?.getBoundingClientRect();
 	if (!r) return {
 		left: Uh.min,
 		top: 8
 	};
-	let i = CD.scale, { left: a, top: o } = nw({
+	let i = TD.scale, { left: a, top: o } = nw({
 		left: r.left + i * e.left,
 		top: r.top + i * e.top,
 		right: r.left + i * e.right,
@@ -26489,137 +26509,137 @@ function lO(e) {
 		top: o
 	};
 }
-function uO(e, t = cO()) {
+function fO(e, t = uO()) {
 	let n = ew(e, t, {
 		w: window.innerWidth,
 		h: window.innerHeight
 	}, Uh.min);
-	Uh.place = n, k(nO, n, !0);
+	Uh.place = n, k(iO, n, !0);
 }
-function dO() {
-	Uh.place = null, oO && k(nO, lO(oO), !0);
+function pO() {
+	Uh.place = null, cO && k(iO, dO(cO), !0);
 }
-function fO(e, t) {
-	let { section: n, block: r } = $D(F(QD)?.sectionId, F(QD)?.blockId);
-	r && (e && Yk.pushHistory(e), t(r, n), JD(n, "block-edited"), YD.save(), Yk.updateDirty(), CD.bridge?.sendSection(F(GD), n), eO(), DO(n.id, r));
+function mO(e, t) {
+	let { section: n, block: r } = tO(F(eO)?.sectionId, F(eO)?.blockId);
+	r && (e && Zk.pushHistory(e), t(r, n), XD(n, "block-edited"), ZD.save(), Zk.updateDirty(), TD.bridge?.sendSection(F(qD), n), nO(), kO(n.id, r));
 }
-function pO(e, t) {
-	fO(`edit:${F(QD).blockId}:${e}`, (n) => {
+function hO(e, t) {
+	mO(`edit:${F(eO).blockId}:${e}`, (n) => {
 		n.props[e] = t;
 	});
 }
-function mO(e, t) {
-	fO(`edit:${F(QD).blockId}:${e}`, (e) => {
+function gO(e, t) {
+	mO(`edit:${F(eO).blockId}:${e}`, (e) => {
 		Object.assign(e.props, t);
 	});
 }
-function hO(e, t) {
-	let n = F(QD).props;
-	return Object.entries(t).some(([e, t]) => n[e] !== void 0 && JSON.stringify(n[e]) !== JSON.stringify(t)) ? () => mO(e, { ...t }) : null;
+function _O(e, t) {
+	let n = F(eO).props;
+	return Object.entries(t).some(([e, t]) => n[e] !== void 0 && JSON.stringify(n[e]) !== JSON.stringify(t)) ? () => gO(e, { ...t }) : null;
 }
-function gO(e) {
-	let t = F(QD).props;
+function vO(e) {
+	let t = F(eO).props;
 	return Object.entries(e).filter(([e, n]) => t[e] !== void 0 && JSON.stringify(t[e]) !== JSON.stringify(n)).length;
 }
-var _O = () => [["on", K("common.on")], ["off", K("common.off")]], vO = () => [
+var yO = () => [["on", K("common.on")], ["off", K("common.off")]], bO = () => [
 	["canvas", K("opt.ribbonWidth.content")],
 	["page", K("opt.ribbonWidth.page")],
 	["content", K("opt.ribbonWidth.own")]
-], yO = (e) => e === "canvas" || e === "page" ? e : "content", bO = () => [
+], xO = (e) => e === "canvas" || e === "page" ? e : "content", SO = () => [
 	["roll", K("opt.ribbonMotion.roll")],
 	["sway", K("opt.ribbonMotion.sway")],
 	["step", K("opt.ribbonMotion.step")],
 	["none", K("opt.ribbonMotion.none")]
 ];
-function xO() {
+function CO() {
 	return [...Q.siteDraft.pages.map((e) => [e.id, e.title]), ["__href", K("opt.externalLink")]];
 }
-function SO(e) {
+function wO(e) {
 	let t = e === "__href" ? null : e;
-	fO(`edit:${F(QD).blockId}`, (e) => {
+	mO(`edit:${F(eO).blockId}`, (e) => {
 		e.props.page = t, t && (e.props.href = null);
 	});
 }
-function CO() {
-	CD.bridge?.sendOpenImageEditor(F(QD).blockId), k(nO, null);
+function TO() {
+	TD.bridge?.sendOpenImageEditor(F(eO).blockId), k(iO, null);
 }
-var wO = /* @__PURE__ */ new Map(), TO = /* @__PURE__ */ new Map(), EO = 0;
-function DO(e, t) {
-	if (jO(e, t), CD.viewMode !== "desktop" || !ec(t)) return;
-	clearTimeout(wO.get(t.id));
-	let n = ++EO;
-	TO.set(t.id, n), wO.set(t.id, setTimeout(() => CD.bridge?.sendFitBlock(e, t.id, n), 60));
+var EO = /* @__PURE__ */ new Map(), DO = /* @__PURE__ */ new Map(), OO = 0;
+function kO(e, t) {
+	if (NO(e, t), TD.viewMode !== "desktop" || !ec(t)) return;
+	clearTimeout(EO.get(t.id));
+	let n = ++OO;
+	DO.set(t.id, n), EO.set(t.id, setTimeout(() => TD.bridge?.sendFitBlock(e, t.id, n), 60));
 }
-var OO = /* @__PURE__ */ new Map(), kO = null, AO = "";
-function jO(e, t) {
+var AO = /* @__PURE__ */ new Map(), jO = null, MO = "";
+function NO(e, t) {
 	if (!tc.has(t.type) || !ec(t)) return;
-	kO ??= iw({
+	jO ??= iw({
 		title: () => K("canvas.phoneMeasure"),
 		prepare: (e, t) => {
-			let n = Ze(WD.pluginsView)?.enabled ?? [], r = JSON.stringify(n);
-			(t || r !== AO) && e({
+			let n = Ze(KD.pluginsView)?.enabled ?? [], r = JSON.stringify(n);
+			(t || r !== MO) && e({
 				type: "urd-plugins",
 				enabled: n
-			}), AO = r, e({
+			}), MO = r, e({
 				type: "urd-site",
 				site: Ze(Q.siteDraft)
 			}), e({
 				type: "urd-collections",
-				collections: Ze(_A.collectionsView) ?? {}
+				collections: Ze(yA.collectionsView) ?? {}
 			});
 		},
-		onHeight: MO
+		onHeight: PO
 	});
-	let n = ++EO;
-	OO.set(t.id, n), kO.request(F(GD), Ze(YD.data), e, t.id, n);
+	let n = ++OO;
+	AO.set(t.id, n), jO.request(F(qD), Ze(ZD.data), e, t.id, n);
 }
-function MO(e, t, n, r) {
-	if (e !== F(GD) || r !== OO.get(t)) return;
-	let i = YD.data.sections.flatMap((e) => e.blocks).find((e) => e.id === t), a = Math.round(n);
-	i && a > 0 && i.mobileHeight !== a && (i.mobileHeight = a, YD.save(), Yk.updateDirty());
+function PO(e, t, n, r) {
+	if (e !== F(qD) || r !== AO.get(t)) return;
+	let i = ZD.data.sections.flatMap((e) => e.blocks).find((e) => e.id === t), a = Math.round(n);
+	i && a > 0 && i.mobileHeight !== a && (i.mobileHeight = a, ZD.save(), Zk.updateDirty());
 }
-function NO() {
-	for (let e of wO.values()) clearTimeout(e);
-	wO.clear(), TO.clear(), OO.clear(), kO?.cancel();
+function FO() {
+	for (let e of EO.values()) clearTimeout(e);
+	EO.clear(), DO.clear(), AO.clear(), jO?.cancel();
 }
-function PO(e) {
+function IO(e) {
 	let t = rh(e), n = t.view === "next" ? {
-		nextCount: F(QD).props.nextCount ?? 3,
-		laterCount: F(QD).props.laterCount ?? 3
+		nextCount: F(eO).props.nextCount ?? 3,
+		laterCount: F(eO).props.laterCount ?? 3
 	} : {}, r = t.id === "plain" && ![
 		"list",
 		"cards",
 		"month",
 		"agenda",
 		"next"
-	].includes(ih(F(QD).props)) ? { view: "list" } : {};
-	mO("design", {
+	].includes(ih(F(eO).props)) ? { view: "list" } : {};
+	gO("design", {
 		design: t.id === "plain" ? void 0 : t.id,
 		...t.view ? { view: t.view } : {},
 		...r,
 		...n
 	});
 }
-function FO(e) {
-	fO(`edit:${F(QD).blockId}:fit`, (t) => {
+function LO(e) {
+	mO(`edit:${F(eO).blockId}:fit`, (t) => {
 		e === "shrink" || e === "both" ? (t.fit = e, t.fitMin ??= .6) : (delete t.fit, delete t.fitMin);
 	});
 }
-function IO(e) {
-	fO(`edit:${F(QD).blockId}:fitMin`, (t) => {
+function RO(e) {
+	mO(`edit:${F(eO).blockId}:fitMin`, (t) => {
 		t.fitMin = e;
 	});
 }
-var LO = null;
-function RO(e) {
-	fO(`edit:${F(QD).blockId}:size`, (t, n) => {
-		LO?.blockId !== t.id && (LO = {
+var zO = null;
+function BO(e) {
+	mO(`edit:${F(eO).blockId}:size`, (t, n) => {
+		zO?.blockId !== t.id && (zO = {
 			blockId: t.id,
 			size: sc(t),
 			frame: { ...t.frames.desktop },
 			ys: new Map(n.blocks.filter((e) => e.frames?.desktop).map((e) => [e.id, e.frames.desktop.y]))
 		}), e === 1 ? (delete t.size, delete t.sizeMin, delete t.sizeMax) : t.size = e;
-		let r = LO;
+		let r = zO;
 		for (let e of n.blocks) e.id !== t.id && e.frames?.desktop && r.ys.has(e.id) && (e.frames.desktop = {
 			...e.frames.desktop,
 			y: r.ys.get(e.id)
@@ -26644,50 +26664,50 @@ function RO(e) {
 		t.frames.desktop = a;
 	});
 }
-function zO(e, t) {
+function VO(e, t) {
 	let n = e === "sizeMin" ? oc.minDefault : oc.maxDefault;
-	fO(`edit:${F(QD).blockId}:${e}`, (r) => {
+	mO(`edit:${F(eO).blockId}:${e}`, (r) => {
 		let i = Math.round(Number(t));
 		Number.isFinite(i) && i > 0 && i !== n ? r[e] = Math.min(oc.max, Math.max(oc.min, i)) : delete r[e];
 	});
 }
-function BO(e) {
-	fO(`edit:${F(QD).blockId}:height`, (t) => {
+function HO(e) {
+	mO(`edit:${F(eO).blockId}:height`, (t) => {
 		e === "own" ? t.height = { mode: "own" } : delete t.height;
 	});
 }
-function VO(e) {
-	fO(`edit:${F(QD).blockId}:heightAlign`, (t) => {
+function UO(e) {
+	mO(`edit:${F(eO).blockId}:heightAlign`, (t) => {
 		t.height = { mode: "own" }, e !== "top" && (t.height.align = e);
 	});
 }
-function HO() {
-	let e = F(QD);
+function WO() {
+	let e = F(eO);
 	if (nc.has(e.type)) return !0;
 	if (e.type !== "calendar") return !1;
 	let t = rh(e.props.design);
 	return !t.module && ["list", "cards"].includes(t.view);
 }
-function UO(e, t) {
-	Number.isFinite(t) && fO(`edit:frame-${F(QD).blockId}:${e}`, (n) => {
+function GO(e, t) {
+	Number.isFinite(t) && mO(`edit:frame-${F(eO).blockId}:${e}`, (n) => {
 		n.frames.desktop = {
 			...n.frames.desktop,
 			[e]: t
 		};
 	});
 }
-function WO() {
-	let e = YD.data.sections.find((e) => e.id === F(QD)?.sectionId)?.size?.maxWidth, t = typeof Q.layoutWidth == "number" ? Q.layoutWidth : 0;
+function KO() {
+	let e = ZD.data.sections.find((e) => e.id === F(eO)?.sectionId)?.size?.maxWidth, t = typeof Q.layoutWidth == "number" ? Q.layoutWidth : 0;
 	return e === "full" ? 0 : e ? /^\d+(\.\d+)?px$/.test(e) ? Math.min(parseFloat(e), t || Infinity) : 0 : t;
 }
-function GO(e) {
-	return Math.round(e / 100 * WO());
+function qO(e) {
+	return Math.round(e / 100 * KO());
 }
-function KO(e, t) {
-	let n = WO();
+function JO(e, t) {
+	let n = KO();
 	if (!Number.isFinite(e) || e < 4 || !(n > 0)) return;
-	let { x: r, w: i, h: a } = F(QD).frame, o = Math.max(.5, Math.min(Math.round(e / n * 200) / 2, Math.round((100 - r) * 2) / 2)), s = t ? Math.max(1, Math.round(o / i * a)) : a;
-	Number.isFinite(o) && Number.isFinite(s) && fO(`edit:frame-${F(QD).blockId}:size`, (e) => {
+	let { x: r, w: i, h: a } = F(eO).frame, o = Math.max(.5, Math.min(Math.round(e / n * 200) / 2, Math.round((100 - r) * 2) / 2)), s = t ? Math.max(1, Math.round(o / i * a)) : a;
+	Number.isFinite(o) && Number.isFinite(s) && mO(`edit:frame-${F(eO).blockId}:size`, (e) => {
 		e.frames.desktop = {
 			...e.frames.desktop,
 			w: o,
@@ -26695,8 +26715,8 @@ function KO(e, t) {
 		};
 	});
 }
-function qO(e) {
-	fO(`edit:${F(QD).blockId}:boxStyle`, (t) => {
+function YO(e) {
+	mO(`edit:${F(eO).blockId}:boxStyle`, (t) => {
 		let n = {
 			...t.props.boxStyle ?? {},
 			...e
@@ -26705,108 +26725,108 @@ function qO(e) {
 		Object.keys(n).length ? t.props.boxStyle = n : delete t.props.boxStyle;
 	});
 }
-function JO(e) {
-	fO("decor", (t) => {
+function XO(e) {
+	mO("decor", (t) => {
 		t.decor = e;
 	});
 }
-function YO(e) {
-	let { section: t, block: n } = $D(F(QD)?.sectionId, F(QD)?.blockId);
-	n && (Yk.pushHistory("hide-mobile"), n.hideMobile = e, YD.save(), Yk.updateDirty(), CD.bridge?.sendSection(F(GD), t), eO());
+function ZO(e) {
+	let { section: t, block: n } = tO(F(eO)?.sectionId, F(eO)?.blockId);
+	n && (Zk.pushHistory("hide-mobile"), n.hideMobile = e, ZD.save(), Zk.updateDirty(), TD.bridge?.sendSection(F(qD), t), nO());
 }
-var XO = /* @__PURE__ */ O(null), ZO = /* @__PURE__ */ O(null), QO = /* @__PURE__ */ O(""), $O = /* @__PURE__ */ O(mn([])), ek = /* @__PURE__ */ O(null), tk = /* @__PURE__ */ O(null), nk = /* @__PURE__ */ O(""), rk = /* @__PURE__ */ O(mn({}));
-function ik(e) {
-	k(ZO, e?.grid ? { ...e.grid } : null, !0), k(QO, e?.size?.minHeight ?? "", !0), k($O, JSON.parse(JSON.stringify(e?.background?.layers ?? [])), !0), k(ek, e?.animation ? JSON.parse(JSON.stringify(e.animation)) : null, !0), k(tk, e?.hover ? JSON.parse(JSON.stringify(e.hover)) : null, !0), k(nk, e?.theme ?? "", !0), k(rk, e?.divider ? JSON.parse(JSON.stringify(e.divider)) : {}, !0);
+var QO = /* @__PURE__ */ O(null), $O = /* @__PURE__ */ O(null), ek = /* @__PURE__ */ O(""), tk = /* @__PURE__ */ O(mn([])), nk = /* @__PURE__ */ O(null), rk = /* @__PURE__ */ O(null), ik = /* @__PURE__ */ O(""), ak = /* @__PURE__ */ O(mn({}));
+function ok(e) {
+	k($O, e?.grid ? { ...e.grid } : null, !0), k(ek, e?.size?.minHeight ?? "", !0), k(tk, JSON.parse(JSON.stringify(e?.background?.layers ?? [])), !0), k(nk, e?.animation ? JSON.parse(JSON.stringify(e.animation)) : null, !0), k(rk, e?.hover ? JSON.parse(JSON.stringify(e.hover)) : null, !0), k(ik, e?.theme ?? "", !0), k(ak, e?.divider ? JSON.parse(JSON.stringify(e.divider)) : {}, !0);
 }
-var ak = /* @__PURE__ */ O(null);
-function ok() {
+var sk = /* @__PURE__ */ O(null);
+function ck() {
 	try {
-		let e = ((CD.iframeEl?.contentDocument)?.querySelector(`.urd-section[data-section-id="${F(XO)}"]`))?.getBoundingClientRect();
-		k(ak, e && e.width ? {
+		let e = ((TD.iframeEl?.contentDocument)?.querySelector(`.urd-section[data-section-id="${F(QO)}"]`))?.getBoundingClientRect();
+		k(sk, e && e.width ? {
 			w: e.width,
 			h: e.height
 		} : null, !0);
 	} catch {
-		k(ak, null);
+		k(sk, null);
 	}
-}
-function sk(e) {
-	k(XO, e.sectionId, !0), ik(YD?.data.sections.find((t) => t.id === e.sectionId));
-}
-function ck(e, t) {
-	let n = YD.data.sections.find((e) => e.id === F(XO));
-	n && (Yk.pushHistory(e), t(n), YD.save(), Yk.updateDirty(), CD.bridge?.sendSection(F(GD), n), ik(n));
 }
 function lk(e) {
-	let t = e.target.files?.[0];
-	e.target.value = "", t && aM.readVideoFile(t, "status.videoFileFormat", (e) => pO("src", e));
+	k(QO, e.sectionId, !0), ok(ZD?.data.sections.find((t) => t.id === e.sectionId));
 }
-async function uk(e) {
+function uk(e, t) {
+	let n = ZD.data.sections.find((e) => e.id === F(QO));
+	n && (Zk.pushHistory(e), t(n), ZD.save(), Zk.updateDirty(), TD.bridge?.sendSection(F(qD), n), ok(n));
+}
+function dk(e) {
+	let t = e.target.files?.[0];
+	e.target.value = "", t && sM.readVideoFile(t, "status.videoFileFormat", (e) => hO("src", e));
+}
+async function fk(e) {
 	let t = e.target.files?.[0];
 	if (e.target.value = "", t) try {
-		pO("poster", (await aM.compressOrTrim(t)).dataUrl);
+		hO("poster", (await sM.compressOrTrim(t)).dataUrl);
 	} catch (e) {
-		Xj.setStatus(aM.imageErrorText(e), "error");
+		Qj.setStatus(sM.imageErrorText(e), "error");
 	}
 }
-var dk = /* @__PURE__ */ D(() => ({
-	mutate: ck,
+var pk = /* @__PURE__ */ D(() => ({
+	mutate: uk,
 	keyPrefix: "bg",
-	keyId: F(XO)
+	keyId: F(QO)
 }));
-function fk(e) {
+function mk(e) {
 	return {
 		type: e,
 		version: sw[e].version,
 		props: sw[e].defaults()
 	};
 }
-var pk = (e) => !!(e && sw[e.type]?.entrance), mk = /* @__PURE__ */ D(() => [["", K("common.none")], ...Object.entries(sw).filter(([, e]) => e.entrance).map(([e, t]) => [e, t.labelKey ? K(t.labelKey) : t.label])]), hk = /* @__PURE__ */ D(() => F(mk).filter(([e]) => !sw[e]?.group)), gk = /* @__PURE__ */ D(() => [["", K("common.none")], ...Object.entries(sw).filter(([, e]) => !e.entrance).map(([e, t]) => [e, t.labelKey ? K(t.labelKey) : t.label])]);
-function _k(e) {
-	e.animation && !pk(e.animation) && (e.hover ??= e.animation, e.animation = null);
-}
-function vk(e) {
-	fO(`edit:anim-${F(QD).blockId}`, (t) => {
-		_k(t), t.animation = e ? fk(e) : null;
-	}), F(QD) && CD.bridge?.sendDemoAnim(F(QD).sectionId, F(QD).blockId);
-}
+var hk = (e) => !!(e && sw[e.type]?.entrance), gk = /* @__PURE__ */ D(() => [["", K("common.none")], ...Object.entries(sw).filter(([, e]) => e.entrance).map(([e, t]) => [e, t.labelKey ? K(t.labelKey) : t.label])]), _k = /* @__PURE__ */ D(() => F(gk).filter(([e]) => !sw[e]?.group)), vk = /* @__PURE__ */ D(() => [["", K("common.none")], ...Object.entries(sw).filter(([, e]) => !e.entrance).map(([e, t]) => [e, t.labelKey ? K(t.labelKey) : t.label])]);
 function yk(e) {
-	fO(`edit:hover-${F(QD).blockId}`, (t) => {
-		_k(t), t.hover = e ? fk(e) : null;
-	});
+	e.animation && !hk(e.animation) && (e.hover ??= e.animation, e.animation = null);
 }
-function bk(e, t) {
-	Number.isFinite(t) && (fO(`edit:anim-${F(QD).blockId}:${e}`, (n) => {
-		n.animation && (n.animation.props[e] = t);
-	}), F(QD) && CD.bridge?.sendDemoAnim(F(QD).sectionId, F(QD).blockId));
+function bk(e) {
+	mO(`edit:anim-${F(eO).blockId}`, (t) => {
+		yk(t), t.animation = e ? mk(e) : null;
+	}), F(eO) && TD.bridge?.sendDemoAnim(F(eO).sectionId, F(eO).blockId);
 }
 function xk(e) {
-	let t = YD.data.sections.find((e) => e.id === F(XO));
+	mO(`edit:hover-${F(eO).blockId}`, (t) => {
+		yk(t), t.hover = e ? mk(e) : null;
+	});
+}
+function Sk(e, t) {
+	Number.isFinite(t) && (mO(`edit:anim-${F(eO).blockId}:${e}`, (n) => {
+		n.animation && (n.animation.props[e] = t);
+	}), F(eO) && TD.bridge?.sendDemoAnim(F(eO).sectionId, F(eO).blockId));
+}
+function Ck(e) {
+	let t = ZD.data.sections.find((e) => e.id === F(QO));
 	if (!t) return;
 	let n = e.trim();
 	if (!n) return;
 	let r = /^\d+$/.test(n) ? `${n}px` : n;
-	Yk.pushHistory("section-size"), t.size = {
+	Zk.pushHistory("section-size"), t.size = {
 		...t.size,
 		minHeight: r
-	}, k(QO, r, !0), YD.save(), Yk.updateDirty(), CD.bridge?.sendSection(F(GD), t);
+	}, k(ek, r, !0), ZD.save(), Zk.updateDirty(), TD.bridge?.sendSection(F(qD), t);
 }
-function Sk() {
-	return YD.data.sections.find((e) => e.id === F(XO)) ?? YD.data.sections[0];
+function wk() {
+	return ZD.data.sections.find((e) => e.id === F(QO)) ?? ZD.data.sections[0];
 }
-function Ck(e) {
-	let t = YD.data.sections.find((e) => e.id === F(XO));
-	t && (Yk.pushHistory("grid:section"), t.grid = e ? { ...Q.siteStore.data.grid } : null, k(ZO, t.grid ? { ...t.grid } : null, !0), YD.save(), Yk.updateDirty(), CD.bridge?.sendSection(F(GD), t), Xj.gridOn && CD.bridge?.sendShowGrid(!0));
+function Tk(e) {
+	let t = ZD.data.sections.find((e) => e.id === F(QO));
+	t && (Zk.pushHistory("grid:section"), t.grid = e ? { ...Q.siteStore.data.grid } : null, k($O, t.grid ? { ...t.grid } : null, !0), ZD.save(), Zk.updateDirty(), TD.bridge?.sendSection(F(qD), t), Qj.gridOn && TD.bridge?.sendShowGrid(!0));
 }
-function wk(e, t) {
-	let n = YD.data.sections.find((e) => e.id === F(XO));
-	n?.grid && (Yk.pushHistory("grid:section"), n.grid = {
+function Ek(e, t) {
+	let n = ZD.data.sections.find((e) => e.id === F(QO));
+	n?.grid && (Zk.pushHistory("grid:section"), n.grid = {
 		...n.grid,
 		[e]: t
-	}, k(ZO, { ...n.grid }, !0), YD.save(), Yk.updateDirty(), CD.bridge?.sendSection(F(GD), n), Xj.gridOn && CD.bridge?.sendShowGrid(!0));
+	}, k($O, { ...n.grid }, !0), ZD.save(), Zk.updateDirty(), TD.bridge?.sendSection(F(qD), n), Qj.gridOn && TD.bridge?.sendShowGrid(!0));
 }
-var Tk = null;
-function Ek(e) {
+var Dk = null;
+function Ok(e) {
 	return {
 		schemaVersion: 7,
 		meta: {
@@ -26831,17 +26851,17 @@ function Ek(e) {
 		}]
 	};
 }
-async function Dk(e, { keepHistory: t = !1 } = {}) {
-	k(GD, e, !0), Tk = (async () => {
-		let n = ZD(), r = null;
+async function kk(e, { keepHistory: t = !1 } = {}) {
+	k(qD, e, !0), Dk = (async () => {
+		let n = $D(), r = null;
 		try {
 			let e = await fetch(`/${n.file}`);
 			e.ok && (r = Dc(await e.json(), Q.siteStore.data));
 		} catch {}
-		r ? XD.delete(e) : r = Ek(n), YD = $C(`urd-draft-${e}`, () => r, Xj.draftSaveError), (YD.data.schemaVersion ?? 1) > 7 && (console.warn(`Urd: the draft for '${e}' has schemaVersion ${YD.data.schemaVersion} (the engine has 7) and is discarded`), YD.replace(structuredClone(r))), YD.replace(Dc(YD.data, Q.siteStore.data)), YD.save(), t || (Yk.lastHistoryKey = null), k(XO, null), k(ZO, null), Yk.updateDirty(), Q.readSeoDraft(), Xj.updateAttention(), Xj.status = "";
-	})(), await Tk;
+		r ? QD.delete(e) : r = Ok(n), ZD = $C(`urd-draft-${e}`, () => r, Qj.draftSaveError), (ZD.data.schemaVersion ?? 1) > 7 && (console.warn(`Urd: the draft for '${e}' has schemaVersion ${ZD.data.schemaVersion} (the engine has 7) and is discarded`), ZD.replace(structuredClone(r))), ZD.replace(Dc(ZD.data, Q.siteStore.data)), ZD.save(), t || (Zk.lastHistoryKey = null), k(QO, null), k($O, null), Zk.updateDirty(), Q.readSeoDraft(), Qj.updateAttention(), Qj.status = "";
+	})(), await Dk;
 }
-async function Ok(e) {
+async function Ak(e) {
 	let t = localStorage.getItem(`urd-draft-${e.id}`);
 	if (t) try {
 		return JSON.parse(t);
@@ -26850,316 +26870,316 @@ async function Ok(e) {
 		let t = await fetch(`/${e.file}`);
 		if (t.ok) return Dc(await t.json(), Q.siteStore.data);
 	} catch {}
-	return Ek(e);
+	return Ok(e);
 }
-async function kk(e, t) {
-	let n = await Ok(e);
-	t(n), Xj.writeDraftKey(`urd-draft-${e.id}`, JSON.stringify(n)), Yk.updateDirty();
+async function jk(e, t) {
+	let n = await Ak(e);
+	t(n), Qj.writeDraftKey(`urd-draft-${e.id}`, JSON.stringify(n)), Zk.updateDirty();
 }
-async function Ak(e) {
+async function Mk(e) {
 	let t = [...e.target.files ?? []];
 	if (e.target.value = "", !t.length) return;
-	Xj.setStatus(K("status.compressingImages"));
-	let { images: n, failed: r, big: i } = await aM.compressMany(t);
-	n.length && fO("gallery-add", (e) => {
+	Qj.setStatus(K("status.compressingImages"));
+	let { images: n, failed: r, big: i } = await sM.compressMany(t);
+	n.length && mO("gallery-add", (e) => {
 		e.props.images.push(...n);
-	}), aM.reportUpload(n.length, r, i);
+	}), sM.reportUpload(n.length, r, i);
 }
-function jk(e, t) {
-	fO("gallery-move", (n) => {
+function Nk(e, t) {
+	mO("gallery-move", (n) => {
 		let r = e + t;
 		r < 0 || r >= n.props.images.length || ([n.props.images[e], n.props.images[r]] = [n.props.images[r], n.props.images[e]]);
 	});
 }
-function Mk(e) {
-	fO("gallery-remove", (t) => {
+function Pk(e) {
+	mO("gallery-remove", (t) => {
 		t.props.images.splice(e, 1);
 	});
 }
-function Nk(e, t, n) {
-	fO(`edit:${F(QD).blockId}:img${e}-${t}`, (r) => {
+function Fk(e, t, n) {
+	mO(`edit:${F(eO).blockId}:img${e}-${t}`, (r) => {
 		r.props.images[e][t] = n;
 	});
 }
-function Pk() {
-	LO = null;
+function Ik() {
+	zO = null;
 }
-function Fk() {
+function Lk() {
 	Pn(() => {
-		if (F(nO)) return rO(), window.addEventListener("resize", rO), () => window.removeEventListener("resize", rO);
+		if (F(iO)) return aO(), window.addEventListener("resize", aO), () => window.removeEventListener("resize", aO);
 	}), Pn(() => {
-		F(iO)?.mode === "set" && F(QD)?.type !== "calendar" && k(iO, null);
+		F(oO)?.mode === "set" && F(eO)?.type !== "calendar" && k(oO, null);
 	}), Pn(() => {
-		let e = F(QD)?.blockId ?? null;
-		e !== aO && (aO = e, Uh.menuQuery = "", Uh.propsQuery = "");
+		let e = F(eO)?.blockId ?? null;
+		e !== sO && (sO = e, Uh.menuQuery = "", Uh.propsQuery = "");
 	}), Pn(() => {
-		F(nO) || (Uh.menuQuery = "");
+		F(iO) || (Uh.menuQuery = "");
 	}), Pn(() => {
-		F(XO), F($O), requestAnimationFrame(() => requestAnimationFrame(ok));
+		F(QO), F(tk), requestAnimationFrame(() => requestAnimationFrame(ck));
 	}), Pn(() => {
-		let e = CD.iframeEl;
+		let e = TD.iframeEl;
 		if (!e || typeof ResizeObserver > "u") return;
-		let t = new ResizeObserver(() => ok());
+		let t = new ResizeObserver(() => ck());
 		return t.observe(e), () => t.disconnect();
 	});
 }
 var $ = {
 	get sections() {
-		return YD?.data.sections ?? [];
+		return ZD?.data.sections ?? [];
 	},
 	get pageId() {
-		return F(GD);
+		return F(qD);
 	},
 	set pageId(e) {
-		k(GD, e, !0);
+		k(qD, e, !0);
 	},
-	handleApplyLayout: KD,
-	hasMobileOverrides: qD,
-	markDesktopChange: JD,
+	handleApplyLayout: JD,
+	hasMobileOverrides: YD,
+	markDesktopChange: XD,
 	get store() {
-		return YD;
+		return ZD;
 	},
 	set store(e) {
-		YD = e;
+		ZD = e;
 	},
-	pendingPublished: XD,
-	pageEntry: ZD,
+	pendingPublished: QD,
+	pageEntry: $D,
 	get selectedBlock() {
-		return F(QD);
+		return F(eO);
 	},
 	set selectedBlock(e) {
-		k(QD, e, !0);
+		k(eO, e, !0);
 	},
-	readBlock: $D,
-	syncSelectedBlock: eO,
-	onSelectBlock: tO,
+	readBlock: tO,
+	syncSelectedBlock: nO,
+	onSelectBlock: rO,
 	get blockMenu() {
-		return F(nO);
-	},
-	set blockMenu(e) {
-		k(nO, e, !0);
-	},
-	moveBlockMenu: uO,
-	menuBackToBlock: dO,
-	measureMenuRoom: rO,
-	get designPicker() {
 		return F(iO);
 	},
-	set designPicker(e) {
+	set blockMenu(e) {
 		k(iO, e, !0);
 	},
+	moveBlockMenu: fO,
+	menuBackToBlock: pO,
+	measureMenuRoom: aO,
+	get designPicker() {
+		return F(oO);
+	},
+	set designPicker(e) {
+		k(oO, e, !0);
+	},
 	get searchBlockId() {
-		return aO;
+		return sO;
 	},
 	set searchBlockId(e) {
-		aO = e;
+		sO = e;
 	},
-	onBlockMenu: sO,
-	mutateBlock: fO,
-	setBlockProp: pO,
-	setBlockProps: mO,
-	groupReset: hO,
-	groupChanged: gO,
-	onOff: _O,
-	RIBBON_REACH: vO,
-	ribbonReach: yO,
-	RIBBON_MOTIONS: bO,
-	buttonTargets: xO,
-	setButtonTarget: SO,
-	openImageEditor: CO,
-	fitTimers: wO,
-	fitSeq: TO,
+	onBlockMenu: lO,
+	mutateBlock: mO,
+	setBlockProp: hO,
+	setBlockProps: gO,
+	groupReset: _O,
+	groupChanged: vO,
+	onOff: yO,
+	RIBBON_REACH: bO,
+	ribbonReach: xO,
+	RIBBON_MOTIONS: SO,
+	buttonTargets: CO,
+	setButtonTarget: wO,
+	openImageEditor: TO,
+	fitTimers: EO,
+	fitSeq: DO,
 	get fitCount() {
-		return EO;
+		return OO;
 	},
 	set fitCount(e) {
-		EO = e;
+		OO = e;
 	},
-	fitBlockSoon: DO,
-	phoneSeq: OO,
+	fitBlockSoon: kO,
+	phoneSeq: AO,
 	get phoneFit() {
-		return kO;
+		return jO;
 	},
 	set phoneFit(e) {
-		kO = e;
+		jO = e;
 	},
 	get phonePlugins() {
-		return AO;
+		return MO;
 	},
 	set phonePlugins(e) {
-		AO = e;
+		MO = e;
 	},
-	phoneFitSoon: jO,
-	applyPhoneHeight: MO,
-	dropFits: NO,
-	setCalendarDesign: PO,
-	setBlockFit: FO,
-	setBlockFitMin: IO,
+	phoneFitSoon: NO,
+	applyPhoneHeight: PO,
+	dropFits: FO,
+	setCalendarDesign: IO,
+	setBlockFit: LO,
+	setBlockFitMin: RO,
 	get sizeGesture() {
-		return LO;
+		return zO;
 	},
 	set sizeGesture(e) {
-		LO = e;
+		zO = e;
 	},
-	setBlockSize: RO,
-	setBlockSizeBound: zO,
-	setBlockHeightMode: BO,
-	setBlockHeightAlign: VO,
-	canStretch: HO,
-	setBlockFrame: UO,
-	designWidth: WO,
-	shapePx: GO,
-	setShapeSizePx: KO,
-	setBoxStyle: qO,
-	setBlockDecor: JO,
-	setBlockHideMobile: YO,
+	setBlockSize: BO,
+	setBlockSizeBound: VO,
+	setBlockHeightMode: HO,
+	setBlockHeightAlign: UO,
+	canStretch: WO,
+	setBlockFrame: GO,
+	designWidth: KO,
+	shapePx: qO,
+	setShapeSizePx: JO,
+	setBoxStyle: YO,
+	setBlockDecor: XO,
+	setBlockHideMobile: ZO,
 	get activeSectionId() {
-		return F(XO);
-	},
-	set activeSectionId(e) {
-		k(XO, e, !0);
-	},
-	get sectionGrid() {
-		return F(ZO);
-	},
-	set sectionGrid(e) {
-		k(ZO, e, !0);
-	},
-	get sectionMinHeight() {
 		return F(QO);
 	},
-	set sectionMinHeight(e) {
+	set activeSectionId(e) {
 		k(QO, e, !0);
 	},
-	get sectionBg() {
+	get sectionGrid() {
 		return F($O);
 	},
-	set sectionBg(e) {
+	set sectionGrid(e) {
 		k($O, e, !0);
 	},
-	get sectionAnim() {
+	get sectionMinHeight() {
 		return F(ek);
 	},
-	set sectionAnim(e) {
+	set sectionMinHeight(e) {
 		k(ek, e, !0);
 	},
-	get sectionHover() {
+	get sectionBg() {
 		return F(tk);
 	},
-	set sectionHover(e) {
+	set sectionBg(e) {
 		k(tk, e, !0);
 	},
-	get sectionTheme() {
+	get sectionAnim() {
 		return F(nk);
 	},
-	set sectionTheme(e) {
+	set sectionAnim(e) {
 		k(nk, e, !0);
 	},
-	get sectionDivider() {
+	get sectionHover() {
 		return F(rk);
 	},
-	set sectionDivider(e) {
+	set sectionHover(e) {
 		k(rk, e, !0);
 	},
-	syncSectionMirrors: ik,
-	get secBox() {
+	get sectionTheme() {
+		return F(ik);
+	},
+	set sectionTheme(e) {
+		k(ik, e, !0);
+	},
+	get sectionDivider() {
 		return F(ak);
 	},
-	set secBox(e) {
+	set sectionDivider(e) {
 		k(ak, e, !0);
 	},
-	measureSecBox: ok,
-	onSelectSection: sk,
-	mutateSection: ck,
-	setBlockVideoFile: lk,
-	setBlockVideoPoster: uk,
+	syncSectionMirrors: ok,
+	get secBox() {
+		return F(sk);
+	},
+	set secBox(e) {
+		k(sk, e, !0);
+	},
+	measureSecBox: ck,
+	onSelectSection: lk,
+	mutateSection: uk,
+	setBlockVideoFile: dk,
+	setBlockVideoPoster: fk,
 	get sectionBgCtx() {
-		return F(dk);
+		return F(pk);
 	},
-	animObj: fk,
-	isEntrance: pk,
+	animObj: mk,
+	isEntrance: hk,
 	get ENTRANCE_OPTIONS() {
-		return F(mk);
-	},
-	get BLOCK_ENTRANCE_OPTIONS() {
-		return F(hk);
-	},
-	get HOVER_OPTIONS() {
 		return F(gk);
 	},
-	normalizeAnim: _k,
-	setBlockAnimation: vk,
-	setBlockHover: yk,
-	setBlockAnimProp: bk,
-	setSectionHeight: xk,
-	targetSection: Sk,
-	toggleSectionGrid: Ck,
-	setSectionGrid: wk,
+	get BLOCK_ENTRANCE_OPTIONS() {
+		return F(_k);
+	},
+	get HOVER_OPTIONS() {
+		return F(vk);
+	},
+	normalizeAnim: yk,
+	setBlockAnimation: bk,
+	setBlockHover: xk,
+	setBlockAnimProp: Sk,
+	setSectionHeight: Ck,
+	targetSection: wk,
+	toggleSectionGrid: Tk,
+	setSectionGrid: Ek,
 	get pageLoading() {
-		return Tk;
+		return Dk;
 	},
 	set pageLoading(e) {
-		Tk = e;
+		Dk = e;
 	},
-	blankPage: Ek,
-	selectPage: Dk,
-	readPageDraft: Ok,
-	patchPageDraft: kk,
-	addGalleryImages: Ak,
-	moveGalleryImage: jk,
-	removeGalleryImage: Mk,
-	setGalleryImageField: Nk,
-	endSizeGesture: Pk,
-	effects: Fk
-}, Ik = /* @__PURE__ */ O(!1);
-function Lk() {
-	let e = Q.siteDraft?.pages?.some((e) => !$.pendingPublished.has(e.id) && localStorage.getItem(`urd-draft-${e.id}`) !== null) ?? !1, t = _A.collectionsIndexStore?.hasDraft() || Object.values(_A.collectionStores).some((e) => e.hasDraft()), n = Yw.templatesIndexStore?.hasDraft() || Object.values(Yw.templateStores).some((e) => e.hasDraft());
-	k(Ik, e || $.store?.hasDraft() && !$.pendingPublished.has($.pageId) || Q.siteStore?.hasDraft() || WD.pluginsStore?.hasDraft() || t || n || !1, !0);
+	blankPage: Ok,
+	selectPage: kk,
+	readPageDraft: Ak,
+	patchPageDraft: jk,
+	addGalleryImages: Mk,
+	moveGalleryImage: Nk,
+	removeGalleryImage: Pk,
+	setGalleryImageField: Fk,
+	endSizeGesture: Ik,
+	effects: Lk
+}, Rk = /* @__PURE__ */ O(!1);
+function zk() {
+	let e = Q.siteDraft?.pages?.some((e) => !$.pendingPublished.has(e.id) && localStorage.getItem(`urd-draft-${e.id}`) !== null) ?? !1, t = yA.collectionsIndexStore?.hasDraft() || Object.values(yA.collectionStores).some((e) => e.hasDraft()), n = Yw.templatesIndexStore?.hasDraft() || Object.values(Yw.templateStores).some((e) => e.hasDraft());
+	k(Rk, e || $.store?.hasDraft() && !$.pendingPublished.has($.pageId) || Q.siteStore?.hasDraft() || KD.pluginsStore?.hasDraft() || t || n || !1, !0);
 }
-var Rk = [], zk = [], Bk = null;
-function Vk() {
+var Bk = [], Vk = [], Hk = null;
+function Uk() {
 	return JSON.stringify({
 		pageId: $.pageId,
 		page: $.store.data,
 		site: Q.siteStore.data,
-		collectionsIndex: _A.collectionsReady ? _A.collectionsIndexStore.data : null,
-		collections: _A.collectionsReady ? Object.fromEntries(Object.entries(_A.collectionStores).map(([e, t]) => [e, t.data])) : {},
+		collectionsIndex: yA.collectionsReady ? yA.collectionsIndexStore.data : null,
+		collections: yA.collectionsReady ? Object.fromEntries(Object.entries(yA.collectionStores).map(([e, t]) => [e, t.data])) : {},
 		templatesIndex: Yw.templatesReady ? Yw.templatesIndexStore.data : null,
 		templates: Yw.templatesReady ? Object.fromEntries(Object.entries(Yw.templateStores).map(([e, t]) => [e, t.data])) : {},
-		plugins: WD.pluginsStore?.data ?? null
+		plugins: KD.pluginsStore?.data ?? null
 	});
 }
-function Hk(e) {
-	(e !== Bk || !e.startsWith("edit:") && !e.startsWith("grid:")) && (Rk.push(Vk()), Rk.length > 50 && Rk.shift(), zk.length = 0, Bk = e);
+function Wk(e) {
+	(e !== Hk || !e.startsWith("edit:") && !e.startsWith("grid:")) && (Bk.push(Uk()), Bk.length > 50 && Bk.shift(), Vk.length = 0, Hk = e);
 }
-function Uk(e) {
+function Gk(e) {
 	let { pageId: t, page: n, site: r, collectionsIndex: i, collections: a, templatesIndex: o, templates: s, plugins: c } = JSON.parse(e);
 	Q.siteStore.replace(r), Q.linkSiteDraft(), Q.siteStore.save(), Q.grid = {
 		snap: !0,
 		...Q.siteDraft.grid
-	}, Q.pushSiteToPreview(), Wk(i, a ?? {}), Gk(o, s ?? {}), Kk(c), t && t !== $.pageId && Q.siteDraft.pages.some((e) => e.id === t) ? (Xj.writeDraftKey(`urd-draft-${t}`, JSON.stringify(n)), $.selectPage(t, { keepHistory: !0 }), Lk()) : ($.store.replace(n), $.store.save(), Lk(), Xj.updateAttention(), $.syncSelectedBlock(), $.syncSectionMirrors($.store.data.sections.find((e) => e.id === $.activeSectionId)), Q.siteDraft.pages.some((e) => e.id === $.pageId) ? CD.bridge?.sendPage($.pageId, $.store.data) : $.selectPage(Q.siteDraft.pages[0].id, { keepHistory: !0 }));
+	}, Q.pushSiteToPreview(), Kk(i, a ?? {}), qk(o, s ?? {}), Jk(c), t && t !== $.pageId && Q.siteDraft.pages.some((e) => e.id === t) ? (Qj.writeDraftKey(`urd-draft-${t}`, JSON.stringify(n)), $.selectPage(t, { keepHistory: !0 }), zk()) : ($.store.replace(n), $.store.save(), zk(), Qj.updateAttention(), $.syncSelectedBlock(), $.syncSectionMirrors($.store.data.sections.find((e) => e.id === $.activeSectionId)), Q.siteDraft.pages.some((e) => e.id === $.pageId) ? TD.bridge?.sendPage($.pageId, $.store.data) : $.selectPage(Q.siteDraft.pages[0].id, { keepHistory: !0 }));
 }
-function Wk(e, t) {
-	if (_A.collectionsIndexStore && e && JSON.stringify({
-		index: _A.collectionsIndexStore.data,
-		collections: Object.fromEntries(Object.entries(_A.collectionStores).map(([e, t]) => [e, t.data]))
+function Kk(e, t) {
+	if (yA.collectionsIndexStore && e && JSON.stringify({
+		index: yA.collectionsIndexStore.data,
+		collections: Object.fromEntries(Object.entries(yA.collectionStores).map(([e, t]) => [e, t.data]))
 	}) !== JSON.stringify({
 		index: e,
 		collections: t
 	})) {
-		_A.collectionsIndexStore.replace(e), _A.collectionsIndexStore.save();
-		for (let e of Object.keys(_A.collectionStores)) e in t || (localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete _A.collectionStores[e]);
+		yA.collectionsIndexStore.replace(e), yA.collectionsIndexStore.save();
+		for (let e of Object.keys(yA.collectionStores)) e in t || (localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete yA.collectionStores[e]);
 		for (let [e, n] of Object.entries(t)) {
-			if (!_A.collectionStores[e]) {
-				let t = _A.publishedCollections[e] ?? null;
-				_A.collectionStores[e] = $C(`urd-draft-collection-${e}`, () => t, Xj.draftSaveError, `urd-draft-samling-${e}`);
+			if (!yA.collectionStores[e]) {
+				let t = yA.publishedCollections[e] ?? null;
+				yA.collectionStores[e] = $C(`urd-draft-collection-${e}`, () => t, Qj.draftSaveError, `urd-draft-samling-${e}`);
 			}
-			_A.collectionStores[e].replace(n), _A.collectionStores[e].save();
+			yA.collectionStores[e].replace(n), yA.collectionStores[e].save();
 		}
-		_A.collectionIds = [...e.samlinger ?? []], _A.activeCollection && !_A.collectionIds.includes(_A.activeCollection) && (_A.activeCollection = null), _A.syncCollectionsView();
+		yA.collectionIds = [...e.samlinger ?? []], yA.activeCollection && !yA.collectionIds.includes(yA.activeCollection) && (yA.activeCollection = null), yA.syncCollectionsView();
 	}
 }
-function Gk(e, t) {
+function qk(e, t) {
 	if (Yw.templatesIndexStore && e && JSON.stringify({
 		index: Yw.templatesIndexStore.data,
 		templates: Object.fromEntries(Object.entries(Yw.templateStores).map(([e, t]) => [e, t.data]))
@@ -27169,45 +27189,45 @@ function Gk(e, t) {
 	})) {
 		Yw.templatesIndexStore.replace(e), Yw.templatesIndexStore.save();
 		for (let e of Object.keys(Yw.templateStores)) e in t || (localStorage.removeItem(`urd-draft-template-${e}`), localStorage.removeItem(`urd-draft-mal-${e}`), delete Yw.templateStores[e]);
-		for (let [e, n] of Object.entries(t)) Yw.templateStores[e] || (Yw.templateStores[e] = $C(`urd-draft-template-${e}`, () => Yw.publishedTemplates[e] ?? null, Xj.draftSaveError, `urd-draft-mal-${e}`)), Yw.templateStores[e].replace(n), Yw.templateStores[e].save();
-		Yw.templateIds = [...e.maler ?? []], Lk(), Yw.pushTemplatesToPreview();
+		for (let [e, n] of Object.entries(t)) Yw.templateStores[e] || (Yw.templateStores[e] = $C(`urd-draft-template-${e}`, () => Yw.publishedTemplates[e] ?? null, Qj.draftSaveError, `urd-draft-mal-${e}`)), Yw.templateStores[e].replace(n), Yw.templateStores[e].save();
+		Yw.templateIds = [...e.maler ?? []], zk(), Yw.pushTemplatesToPreview();
 	}
 }
-function Kk(e) {
-	WD.pluginsStore && e && JSON.stringify(WD.pluginsStore.data) !== JSON.stringify(e) && (WD.pluginsStore.replace(e), WD.pluginsStore.save(), WD.syncPluginsView(), CD.reloadPreview());
+function Jk(e) {
+	KD.pluginsStore && e && JSON.stringify(KD.pluginsStore.data) !== JSON.stringify(e) && (KD.pluginsStore.replace(e), KD.pluginsStore.save(), KD.syncPluginsView(), TD.reloadPreview());
 }
-function qk() {
-	Rk.length && ($.dropFits(), zk.push(Vk()), Uk(Rk.pop()), Bk = null, Xj.setStatus(K("status.undone")));
+function Yk() {
+	Bk.length && ($.dropFits(), Vk.push(Uk()), Gk(Bk.pop()), Hk = null, Qj.setStatus(K("status.undone")));
 }
-function Jk() {
-	zk.length && ($.dropFits(), Rk.push(Vk()), Uk(zk.pop()), Bk = null, Xj.setStatus(K("status.redone")));
+function Xk() {
+	Vk.length && ($.dropFits(), Bk.push(Uk()), Gk(Vk.pop()), Hk = null, Qj.setStatus(K("status.redone")));
 }
-var Yk = {
+var Zk = {
 	get dirty() {
-		return F(Ik);
+		return F(Rk);
 	},
 	set dirty(e) {
-		k(Ik, e, !0);
+		k(Rk, e, !0);
 	},
-	updateDirty: Lk,
-	history: Rk,
-	redoStack: zk,
+	updateDirty: zk,
+	history: Bk,
+	redoStack: Vk,
 	get lastHistoryKey() {
-		return Bk;
+		return Hk;
 	},
 	set lastHistoryKey(e) {
-		Bk = e;
+		Hk = e;
 	},
-	snapshot: Vk,
-	pushHistory: Hk,
-	restore: Uk,
-	restoreCollections: Wk,
-	restoreTemplates: Gk,
-	restorePlugins: Kk,
-	undo: qk,
-	redo: Jk
-}, Xk = null, Zk = {}, Qk = {}, $k = !1, eA = /* @__PURE__ */ O(mn([])), tA = /* @__PURE__ */ O(mn({})), nA = /* @__PURE__ */ O(null), rA = /* @__PURE__ */ O(""), iA = /* @__PURE__ */ O("news");
-async function aA() {
+	snapshot: Uk,
+	pushHistory: Wk,
+	restore: Gk,
+	restoreCollections: Kk,
+	restoreTemplates: qk,
+	restorePlugins: Jk,
+	undo: Yk,
+	redo: Xk
+}, Qk = null, $k = {}, eA = {}, tA = !1, nA = /* @__PURE__ */ O(mn([])), rA = /* @__PURE__ */ O(mn({})), iA = /* @__PURE__ */ O(null), aA = /* @__PURE__ */ O(""), oA = /* @__PURE__ */ O("news");
+async function sA() {
 	let e = {
 		version: 1,
 		samlinger: []
@@ -27215,41 +27235,41 @@ async function aA() {
 	try {
 		e = await (await fetch("/content/collections.json")).json();
 	} catch {}
-	Xk = $C("urd-draft-collections", () => e, Xj.draftSaveError, "urd-draft-samlinger"), k(eA, [...Xk.data.samlinger ?? []], !0);
-	for (let e of F(eA)) {
+	Qk = $C("urd-draft-collections", () => e, Qj.draftSaveError, "urd-draft-samlinger"), k(nA, [...Qk.data.samlinger ?? []], !0);
+	for (let e of F(nA)) {
 		let t = null;
 		try {
 			t = await (await fetch(`/content/samlinger/${e}.json`)).json();
 		} catch {}
-		Qk[e] = t, Zk[e] = $C(`urd-draft-collection-${e}`, () => t, Xj.draftSaveError, `urd-draft-samling-${e}`), !t && !Zk[e].data && (Zk[e].replace({
+		eA[e] = t, $k[e] = $C(`urd-draft-collection-${e}`, () => t, Qj.draftSaveError, `urd-draft-samling-${e}`), !t && !$k[e].data && ($k[e].replace({
 			schemaVersion: 1,
 			id: e,
 			name: e,
 			kind: "custom",
 			entries: []
-		}), Zk[e].save());
+		}), $k[e].save());
 	}
-	$k = !0, oA();
+	tA = !0, cA();
 }
-function oA(e = !0) {
+function cA(e = !0) {
 	let t = {};
-	for (let e of F(eA)) Zk[e] && (t[e] = JSON.parse(JSON.stringify(Zk[e].data)));
-	k(tA, t, !0), e && sA();
+	for (let e of F(nA)) $k[e] && (t[e] = JSON.parse(JSON.stringify($k[e].data)));
+	k(rA, t, !0), e && lA();
 }
-function sA() {
-	CD.bridge?.sendCollections(Ze(F(tA)) ?? {});
+function lA() {
+	TD.bridge?.sendCollections(Ze(F(rA)) ?? {});
 }
-function cA(e, t, n, r = !0) {
-	let i = Zk[e];
-	i && (Yk.pushHistory(t), n(i.data), i.save(), Yk.updateDirty(), oA(r));
-}
-function lA(e) {
-	Zk[e.collection] && gA(e.collection);
-}
-function uA(e) {
-	return (new DOMParser().parseFromString(String(e ?? ""), "text/html").body.textContent ?? "").trim();
+function uA(e, t, n, r = !0) {
+	let i = $k[e];
+	i && (Zk.pushHistory(t), n(i.data), i.save(), Zk.updateDirty(), cA(r));
 }
 function dA(e) {
+	$k[e.collection] && vA(e.collection);
+}
+function fA(e) {
+	return (new DOMParser().parseFromString(String(e ?? ""), "text/html").body.textContent ?? "").trim();
+}
+function pA(e) {
 	let { collection: t, entryId: n, field: r, value: i } = e;
 	[
 		"title",
@@ -27257,12 +27277,12 @@ function dA(e) {
 		"image",
 		"imageAlt",
 		"imageStyle"
-	].includes(r) && (r !== "title" || uA(i)) && cA(t, `edit:collection:${t}:${n}:${r}`, (e) => {
+	].includes(r) && (r !== "title" || fA(i)) && uA(t, `edit:collection:${t}:${n}:${r}`, (e) => {
 		let t = e.entries.find((e) => e.id === n);
 		t && (i === "" && r !== "title" ? delete t[r] : t[r] = i);
 	}, r === "image");
 }
-function fA(e, t, n) {
+function mA(e, t, n) {
 	let r = {
 		schemaVersion: 1,
 		id: e,
@@ -27270,26 +27290,26 @@ function fA(e, t, n) {
 		kind: n,
 		entries: []
 	};
-	Zk[e] = $C(`urd-draft-collection-${e}`, () => null, Xj.draftSaveError, `urd-draft-samling-${e}`), Zk[e].replace(r), Zk[e].save(), Xk.data.samlinger = [...F(eA), e], Xk.save(), k(eA, [...F(eA), e], !0), k(nA, e, !0), Yk.updateDirty(), oA();
+	$k[e] = $C(`urd-draft-collection-${e}`, () => null, Qj.draftSaveError, `urd-draft-samling-${e}`), $k[e].replace(r), $k[e].save(), Qk.data.samlinger = [...F(nA), e], Qk.save(), k(nA, [...F(nA), e], !0), k(iA, e, !0), Zk.updateDirty(), cA();
 }
-function pA() {
-	let e = F(rA).trim();
+function hA() {
+	let e = F(aA).trim();
 	if (!e) return;
 	let t = Fp(e);
-	!t || F(eA).includes(t) ? Xj.setStatus(K(t ? "status.collectionExists" : "status.invalidName"), "error") : (Yk.pushHistory("collections"), fA(t, e, F(iA)), k(rA, ""));
+	!t || F(nA).includes(t) ? Qj.setStatus(K(t ? "status.collectionExists" : "status.invalidName"), "error") : (Zk.pushHistory("collections"), mA(t, e, F(oA)), k(aA, ""));
 }
-function mA() {
+function gA() {
 	let e = K("seed.productCatalogName"), t = Fp(e) || "collection", n = t;
-	for (let e = 2; F(eA).includes(n); e += 1) n = `${t}-${e}`;
-	Yk.pushHistory("collections"), fA(n, e, "products"), $.mutateBlock(null, (e) => {
+	for (let e = 2; F(nA).includes(n); e += 1) n = `${t}-${e}`;
+	Zk.pushHistory("collections"), mA(n, e, "products"), $.mutateBlock(null, (e) => {
 		e.props.collection = n;
 	});
 }
-function hA(e) {
-	Yk.pushHistory("collections"), localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete Zk[e], Xk.data.samlinger = F(eA).filter((t) => t !== e), Xk.save(), k(eA, F(eA).filter((t) => t !== e), !0), F(nA) === e && k(nA, null), Yk.updateDirty(), oA();
+function _A(e) {
+	Zk.pushHistory("collections"), localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete $k[e], Qk.data.samlinger = F(nA).filter((t) => t !== e), Qk.save(), k(nA, F(nA).filter((t) => t !== e), !0), F(iA) === e && k(iA, null), Zk.updateDirty(), cA();
 }
-function gA(e) {
-	cA(e, `collection:${e}:add-entry`, (e) => {
+function vA(e) {
+	uA(e, `collection:${e}:add-entry`, (e) => {
 		e.kind === "products" ? e.entries.push({
 			id: es("entry"),
 			title: K("seed.newProduct"),
@@ -27302,84 +27322,84 @@ function gA(e) {
 		});
 	});
 }
-var _A = {
+var yA = {
 	get collectionsIndexStore() {
-		return Xk;
-	},
-	set collectionsIndexStore(e) {
-		Xk = e;
-	},
-	get collectionStores() {
-		return Zk;
-	},
-	set collectionStores(e) {
-		Zk = e;
-	},
-	get publishedCollections() {
 		return Qk;
 	},
-	set publishedCollections(e) {
+	set collectionsIndexStore(e) {
 		Qk = e;
 	},
-	get collectionsReady() {
+	get collectionStores() {
 		return $k;
 	},
-	set collectionsReady(e) {
+	set collectionStores(e) {
 		$k = e;
 	},
+	get publishedCollections() {
+		return eA;
+	},
+	set publishedCollections(e) {
+		eA = e;
+	},
+	get collectionsReady() {
+		return tA;
+	},
+	set collectionsReady(e) {
+		tA = e;
+	},
 	get collectionIds() {
-		return F(eA);
-	},
-	set collectionIds(e) {
-		k(eA, e, !0);
-	},
-	get collectionsView() {
-		return F(tA);
-	},
-	set collectionsView(e) {
-		k(tA, e, !0);
-	},
-	get activeCollection() {
 		return F(nA);
 	},
-	set activeCollection(e) {
+	set collectionIds(e) {
 		k(nA, e, !0);
 	},
-	get newCollectionName() {
+	get collectionsView() {
 		return F(rA);
 	},
-	set newCollectionName(e) {
+	set collectionsView(e) {
 		k(rA, e, !0);
 	},
-	get newCollectionKind() {
+	get activeCollection() {
 		return F(iA);
 	},
-	set newCollectionKind(e) {
+	set activeCollection(e) {
 		k(iA, e, !0);
 	},
-	initCollections: aA,
-	syncCollectionsView: oA,
-	pushCollectionsToPreview: sA,
-	mutateCollection: cA,
-	handleCollectionAdd: lA,
-	plainTitle: uA,
-	handleCollectionEdit: dA,
-	insertCollection: fA,
-	addCollection: pA,
-	createCatalogForBlock: mA,
-	removeCollection: hA,
-	addCollectionEntry: gA
+	get newCollectionName() {
+		return F(aA);
+	},
+	set newCollectionName(e) {
+		k(aA, e, !0);
+	},
+	get newCollectionKind() {
+		return F(oA);
+	},
+	set newCollectionKind(e) {
+		k(oA, e, !0);
+	},
+	initCollections: sA,
+	syncCollectionsView: cA,
+	pushCollectionsToPreview: lA,
+	mutateCollection: uA,
+	handleCollectionAdd: dA,
+	plainTitle: fA,
+	handleCollectionEdit: pA,
+	insertCollection: mA,
+	addCollection: hA,
+	createCatalogForBlock: gA,
+	removeCollection: _A,
+	addCollectionEntry: vA
 };
 //#endregion
 //#region src/lib/deploy-wait.js
-function vA(e, { max: t = 8 } = {}) {
+function bA(e, { max: t = 8 } = {}) {
 	let n = (e ?? []).filter((e) => e && typeof e.path == "string" && typeof e.content == "string" && e.encoding === "utf-8" && !e.delete && (e.path.startsWith("content/") || e.path === "plugins/plugins.json"));
 	return n.sort((e, t) => (e.path === "content/site.json" ? -1 : 0) - (t.path === "content/site.json" ? -1 : 0)), n.slice(0, t).map(({ path: e, content: t }) => ({
 		path: e,
 		content: t
 	}));
 }
-async function yA(e, { fetchFn: t = fetch, delayMs: n = 1e4, attempts: r = 18, sleep: i = (e) => new Promise((t) => setTimeout(t, e)) } = {}) {
+async function xA(e, { fetchFn: t = fetch, delayMs: n = 1e4, attempts: r = 18, sleep: i = (e) => new Promise((t) => setTimeout(t, e)) } = {}) {
 	let a = [...e];
 	if (a.length === 0) return !0;
 	for (let e = 0; e < r; e++) {
@@ -27398,26 +27418,26 @@ async function yA(e, { fetchFn: t = fetch, delayMs: n = 1e4, attempts: r = 18, s
 }
 //#endregion
 //#region src/state/updater.svelte.js
-var bA = null;
-async function xA() {
+var SA = null;
+async function CA() {
 	try {
 		let e = await fetch("/api/github/latest");
-		e.ok && (bA = (await e.json()).head ?? null);
+		e.ok && (SA = (await e.json()).head ?? null);
 	} catch {}
 }
-async function SA(e) {
-	if (!bA) return await xA(), {
-		ok: await Xj.askConfirm({
+async function wA(e) {
+	if (!SA) return await CA(), {
+		ok: await Qj.askConfirm({
 			title: K("confirm.conflictUnknown.title"),
 			lines: [K("confirm.conflictUnknown.body"), K("confirm.conflictUnknown.warning")],
 			okLabel: K("confirm.publishAnyway"),
 			cancelLabel: K("confirm.cancel")
 		}),
-		head: bA
+		head: SA
 	};
 	let t = null;
 	try {
-		let e = await fetch(`/api/github/latest?base=${bA}`);
+		let e = await fetch(`/api/github/latest?base=${SA}`);
 		e.ok && (t = await e.json().catch(() => null));
 	} catch {}
 	if (!t?.head) return {
@@ -27425,7 +27445,7 @@ async function SA(e) {
 		head: null
 	};
 	let n = t.head;
-	if (n === bA) return {
+	if (n === SA) return {
 		ok: !0,
 		head: n
 	};
@@ -27434,7 +27454,7 @@ async function SA(e) {
 		ok: !0,
 		head: n
 	} : {
-		ok: await Xj.askConfirm({
+		ok: await Qj.askConfirm({
 			title: K("confirm.conflict.title"),
 			lines: [
 				K("confirm.conflict.intro"),
@@ -27447,93 +27467,93 @@ async function SA(e) {
 		head: n
 	};
 }
-var CA = /* @__PURE__ */ O(null), wA = /* @__PURE__ */ O("");
-async function TA() {
-	k(wA, "");
+var TA = /* @__PURE__ */ O(null), EA = /* @__PURE__ */ O("");
+async function DA() {
+	k(EA, "");
 	try {
 		let e = await fetch("/api/github/history");
-		e.ok ? k(CA, (await e.json()).commits, !0) : e.status === 401 ? (k(CA, [], !0), k(wA, K("status.historyLoginRequired"), !0)) : (k(CA, [], !0), k(wA, ba(await e.json().catch(() => null)) ?? K("status.historyFetchFailed"), !0));
+		e.ok ? k(TA, (await e.json()).commits, !0) : e.status === 401 ? (k(TA, [], !0), k(EA, K("status.historyLoginRequired"), !0)) : (k(TA, [], !0), k(EA, ba(await e.json().catch(() => null)) ?? K("status.historyFetchFailed"), !0));
 	} catch {
-		k(CA, [], !0), k(wA, K("status.historyUnavailable"), !0);
+		k(TA, [], !0), k(EA, K("status.historyUnavailable"), !0);
 	}
 }
-var EA = !1, DA = 0;
-async function OA(e) {
-	let t = ++DA, n = Xj.statusSeq, r = await yA(vA(e));
-	t === DA && n === Xj.statusSeq && (r ? Xj.setStatus(K("status.publishLive"), "ok") : Xj.setStatus(K("status.publishDeployTimeout"), "error"));
+var OA = !1, kA = 0;
+async function AA(e) {
+	let t = ++kA, n = Qj.statusSeq, r = await xA(bA(e));
+	t === kA && n === Qj.statusSeq && (r ? Qj.setStatus(K("status.publishLive"), "ok") : Qj.setStatus(K("status.publishDeployTimeout"), "error"));
 }
-var kA = /* @__PURE__ */ O(null), AA = /* @__PURE__ */ O(null), jA = /* @__PURE__ */ O(!1), MA = /* @__PURE__ */ O(mn(/* @__PURE__ */ new Set()));
-async function NA() {
-	k(jA, !0), k(AA, null), k(kA, null);
+var jA = /* @__PURE__ */ O(null), MA = /* @__PURE__ */ O(null), NA = /* @__PURE__ */ O(!1), PA = /* @__PURE__ */ O(mn(/* @__PURE__ */ new Set()));
+async function FA() {
+	k(NA, !0), k(MA, null), k(jA, null);
 	try {
 		let e = await fetch("/api/github/update"), t = await e.json().catch(() => null);
-		e.ok ? (k(kA, t, !0), k(MA, /* @__PURE__ */ new Set(), !0)) : k(AA, ba(t) ?? K("update.checkFailed"), !0);
+		e.ok ? (k(jA, t, !0), k(PA, /* @__PURE__ */ new Set(), !0)) : k(MA, ba(t) ?? K("update.checkFailed"), !0);
 	} catch {
-		k(AA, K("status.publishLayerUnreachable"), !0);
+		k(MA, K("status.publishLayerUnreachable"), !0);
 	}
-	k(jA, !1);
+	k(NA, !1);
 }
-var PA = {
+var IA = {
 	get baseSha() {
-		return bA;
+		return SA;
 	},
 	set baseSha(e) {
-		bA = e;
+		SA = e;
 	},
-	refreshBaseSha: xA,
-	confirmNoConflict: SA,
+	refreshBaseSha: CA,
+	confirmNoConflict: wA,
 	get historyList() {
-		return F(CA);
+		return F(TA);
 	},
 	set historyList(e) {
-		k(CA, e, !0);
+		k(TA, e, !0);
 	},
 	get historyError() {
-		return F(wA);
+		return F(EA);
 	},
 	set historyError(e) {
-		k(wA, e, !0);
+		k(EA, e, !0);
 	},
-	loadHistory: TA,
+	loadHistory: DA,
 	get revertedSinceLoad() {
-		return EA;
+		return OA;
 	},
 	set revertedSinceLoad(e) {
-		EA = e;
+		OA = e;
 	},
 	get publishWave() {
-		return DA;
+		return kA;
 	},
 	set publishWave(e) {
-		DA = e;
+		kA = e;
 	},
-	awaitPublishDeploy: OA,
+	awaitPublishDeploy: AA,
 	get updateInfo() {
-		return F(kA);
-	},
-	set updateInfo(e) {
-		k(kA, e, !0);
-	},
-	get updateError() {
-		return F(AA);
-	},
-	set updateError(e) {
-		k(AA, e, !0);
-	},
-	get updateBusy() {
 		return F(jA);
 	},
-	set updateBusy(e) {
+	set updateInfo(e) {
 		k(jA, e, !0);
 	},
-	get updateSkip() {
+	get updateError() {
 		return F(MA);
 	},
-	set updateSkip(e) {
+	set updateError(e) {
 		k(MA, e, !0);
 	},
-	loadUpdateCheck: NA
-}, FA = /* @__PURE__ */ D(() => [
+	get updateBusy() {
+		return F(NA);
+	},
+	set updateBusy(e) {
+		k(NA, e, !0);
+	},
+	get updateSkip() {
+		return F(PA);
+	},
+	set updateSkip(e) {
+		k(PA, e, !0);
+	},
+	loadUpdateCheck: FA
+}, LA = /* @__PURE__ */ D(() => [
 	["purple", K("adminTheme.purple")],
 	["well", K("adminTheme.well")],
 	["gold", K("adminTheme.gold")],
@@ -27541,7 +27561,7 @@ var PA = {
 	["aurora", K("adminTheme.aurora")],
 	["dusk", K("adminTheme.dusk")],
 	["ember", K("adminTheme.ember")]
-]), IA = {
+]), RA = {
 	lilla: "purple",
 	bronn: "well",
 	gull: "gold",
@@ -27549,53 +27569,53 @@ var PA = {
 	nordlys: "aurora",
 	skumring: "dusk",
 	glo: "ember"
-}, LA = /* @__PURE__ */ O(mn((() => {
+}, zA = /* @__PURE__ */ O(mn((() => {
 	let e = localStorage.getItem("urd-admin-theme");
-	return IA[e] ?? e ?? "grey";
+	return RA[e] ?? e ?? "grey";
 })()));
-function RA() {
+function BA() {
 	let e = getComputedStyle(document.documentElement), t = e.getPropertyValue("--urd-color-accent").trim();
-	CD.bridge?.sendAdminTheme({
+	TD.bridge?.sendAdminTheme({
 		bg: e.getPropertyValue("--urd-color-bg").trim(),
 		surface: e.getPropertyValue("--urd-color-surface").trim(),
 		accent: t,
 		text: e.getPropertyValue("--urd-color-text").trim(),
-		"accent-text": zA(t)
+		"accent-text": VA(t)
 	});
 }
-function zA(e) {
+function VA(e) {
 	return Ls(e) == null || (Rs(e, "#ffffff") ?? 0) >= (Rs(e, "#0b0e14") ?? 0) ? "#ffffff" : "#0b0e14";
 }
-var BA = /* @__PURE__ */ O(""), VA = /* @__PURE__ */ O("info"), HA = 0;
-function UA(e, t = "info") {
-	k(BA, e, !0), k(VA, t, !0);
-	let n = ++HA;
+var HA = /* @__PURE__ */ O(""), UA = /* @__PURE__ */ O("info"), WA = 0;
+function GA(e, t = "info") {
+	k(HA, e, !0), k(UA, t, !0);
+	let n = ++WA;
 	t === "ok" && setTimeout(() => {
-		HA === n && (k(BA, ""), k(VA, "info"));
+		WA === n && (k(HA, ""), k(UA, "info"));
 	}, 8e3);
 }
-function WA() {
-	UA(K("status.storageFull"), "error");
+function KA() {
+	GA(K("status.storageFull"), "error");
 }
-function GA(e, t) {
+function qA(e, t) {
 	try {
 		localStorage.setItem(e, t);
 	} catch {
-		WA();
+		KA();
 	}
 }
-var KA = /* @__PURE__ */ O(null), qA = /* @__PURE__ */ O(0);
-function JA() {
-	k(qA, $.store?.data.sections.filter((e) => e.responsive?.mobile?.attention?.needed).length ?? 0, !0);
+var JA = /* @__PURE__ */ O(null), YA = /* @__PURE__ */ O(0);
+function XA() {
+	k(YA, $.store?.data.sections.filter((e) => e.responsive?.mobile?.attention?.needed).length ?? 0, !0);
 }
-function YA() {
+function ZA() {
 	let e = $.store?.data.sections.find((e) => e.responsive?.mobile?.attention?.needed);
-	CD.deviceId = "mobile", e && setTimeout(() => CD.bridge?.sendScrollSection(e.id), 0);
+	TD.deviceId = "mobile", e && setTimeout(() => TD.bridge?.sendScrollSection(e.id), 0);
 }
-function XA(e) {
+function QA(e) {
 	$.blockMenu && (e.target instanceof Element && e.target.closest(".block-menu") || ($.blockMenu = null));
 }
-function ZA(e) {
+function $A(e) {
 	if (e.key === "Escape" && $.blockMenu) {
 		$.blockMenu = null;
 		return;
@@ -27609,8 +27629,8 @@ function ZA(e) {
 			"checkbox",
 			"range",
 			"color"
-		].includes(t.type)) || !$.selectedBlock || CD.viewMode === "mobile") return;
-		e.preventDefault(), CD.bridge?.sendDuplicate();
+		].includes(t.type)) || !$.selectedBlock || TD.viewMode === "mobile") return;
+		e.preventDefault(), TD.bridge?.sendDuplicate();
 		return;
 	}
 	if (t !== "z" && t !== "y") return;
@@ -27620,18 +27640,18 @@ function ZA(e) {
 		"checkbox",
 		"range",
 		"color"
-	].includes(n.type)) || (e.preventDefault(), t === "y" || e.shiftKey ? Yk.redo() : Yk.undo());
+	].includes(n.type)) || (e.preventDefault(), t === "y" || e.shiftKey ? Zk.redo() : Zk.undo());
 }
-async function QA() {
-	Q.site = Ec(await (await fetch("/content/site.json")).json()), Q.siteStore = $C("urd-draft-site", () => Q.site, WA), (Q.siteStore.data.schemaVersion ?? 1) > 5 && (console.warn(`Urd: the site draft has schemaVersion ${Q.siteStore.data.schemaVersion} (the engine has 5) and is discarded`), Q.siteStore.replace(Ze(Q.site))), Q.siteStore.replace(Ec(Q.siteStore.data)), Q.siteStore.save(), Q.linkSiteDraft(), Q.grid = {
+async function ej() {
+	Q.site = Ec(await (await fetch("/content/site.json")).json()), Q.siteStore = $C("urd-draft-site", () => Q.site, KA), (Q.siteStore.data.schemaVersion ?? 1) > 5 && (console.warn(`Urd: the site draft has schemaVersion ${Q.siteStore.data.schemaVersion} (the engine has 5) and is discarded`), Q.siteStore.replace(Ze(Q.site))), Q.siteStore.replace(Ec(Q.siteStore.data)), Q.siteStore.save(), Q.linkSiteDraft(), Q.grid = {
 		snap: !0,
 		...Q.siteDraft.grid
-	}, await $.selectPage(new URLSearchParams(location.search).get("page") ?? Q.siteDraft.pages[0].id), await WD.initPlugins(), await _A.initCollections(), await Yw.initTemplates(), await kj(), F(KA) && PA.refreshBaseSha(), Dj(), Q.siteDraft.site.setup === !0 && !localStorage.getItem("urd-setup-done") && (k(aj, Q.siteDraft.site.title, !0), k(oj, Q.siteDraft.theme.tokens.color.accent, !0), k(sj, Q.siteDraft.theme.tokens.color.bg, !0), k(ij, !0));
+	}, await $.selectPage(new URLSearchParams(location.search).get("page") ?? Q.siteDraft.pages[0].id), await KD.initPlugins(), await yA.initCollections(), await Yw.initTemplates(), await jj(), F(JA) && IA.refreshBaseSha(), kj(), Q.siteDraft.site.setup === !0 && !localStorage.getItem("urd-setup-done") && (k(sj, Q.siteDraft.site.title, !0), k(cj, Q.siteDraft.theme.tokens.color.accent, !0), k(lj, Q.siteDraft.theme.tokens.color.bg, !0), k(oj, !0));
 }
-var $A = /* @__PURE__ */ O(null);
-function ej({ title: e, lines: t = [], okLabel: n = K("confirm.ok"), cancelLabel: r = K("confirm.cancel") }) {
+var tj = /* @__PURE__ */ O(null);
+function nj({ title: e, lines: t = [], okLabel: n = K("confirm.ok"), cancelLabel: r = K("confirm.cancel") }) {
 	return new Promise((i) => {
-		k($A, {
+		k(tj, {
 			title: e,
 			lines: t,
 			okLabel: n,
@@ -27640,9 +27660,9 @@ function ej({ title: e, lines: t = [], okLabel: n = K("confirm.ok"), cancelLabel
 		}, !0);
 	});
 }
-function tj({ title: e, lines: t = [], value: n = "", placeholder: r = "", okLabel: i = K("confirm.ok"), cancelLabel: a = K("confirm.cancel") }) {
+function rj({ title: e, lines: t = [], value: n = "", placeholder: r = "", okLabel: i = K("confirm.ok"), cancelLabel: a = K("confirm.cancel") }) {
 	return new Promise((o) => {
-		k($A, {
+		k(tj, {
 			title: e,
 			lines: t,
 			okLabel: i,
@@ -27654,27 +27674,27 @@ function tj({ title: e, lines: t = [], value: n = "", placeholder: r = "", okLab
 		}, !0);
 	});
 }
-function nj(e) {
-	F($A)?.resolve(F($A).prompt ? e ? F($A).value : null : e), k($A, null);
+function ij(e) {
+	F(tj)?.resolve(F(tj).prompt ? e ? F(tj).value : null : e), k(tj, null);
 }
-var rj = !1, ij = /* @__PURE__ */ O(!1), aj = /* @__PURE__ */ O(""), oj = /* @__PURE__ */ O("#7c5cff"), sj = /* @__PURE__ */ O("#0b0e14");
-function cj() {
-	localStorage.setItem("urd-setup-done", "1"), k(ij, !1);
+var aj = !1, oj = /* @__PURE__ */ O(!1), sj = /* @__PURE__ */ O(""), cj = /* @__PURE__ */ O("#7c5cff"), lj = /* @__PURE__ */ O("#0b0e14");
+function uj() {
+	localStorage.setItem("urd-setup-done", "1"), k(oj, !1);
 }
-function lj() {
-	let e = F(aj).trim();
+function dj() {
+	let e = F(sj).trim();
 	e && (Q.siteMutate("setup", () => {
 		Q.siteDraft.site.title = e, Q.siteDraft.nav.logo = {
 			type: "text",
 			value: e
-		}, Q.siteDraft.theme.tokens.color.accent = F(oj), Q.siteDraft.theme.tokens.color.bg = F(sj), delete Q.siteDraft.site.setup;
-	}), cj(), UA(K("status.setupDone"), "ok"));
+		}, Q.siteDraft.theme.tokens.color.accent = F(cj), Q.siteDraft.theme.tokens.color.bg = F(lj), delete Q.siteDraft.site.setup;
+	}), uj(), GA(K("status.setupDone"), "ok"));
 }
-var uj = "urd-admin-panels", dj = "urd-admin-panel-open", fj = /* @__PURE__ */ O(mn(localStorage.getItem(uj) === "reset" ? "reset" : "remember"));
-function pj(e) {
-	k(fj, e === "reset" ? "reset" : "remember", !0), F(fj) === "reset" ? localStorage.setItem(uj, "reset") : localStorage.removeItem(uj);
+var fj = "urd-admin-panels", pj = "urd-admin-panel-open", mj = /* @__PURE__ */ O(mn(localStorage.getItem(fj) === "reset" ? "reset" : "remember"));
+function hj(e) {
+	k(mj, e === "reset" ? "reset" : "remember", !0), F(mj) === "reset" ? localStorage.setItem(fj, "reset") : localStorage.removeItem(fj);
 }
-var mj = /* @__PURE__ */ O(mn(F(fj) === "reset" ? null : localStorage.getItem(dj))), hj = [
+var gj = /* @__PURE__ */ O(mn(F(mj) === "reset" ? null : localStorage.getItem(pj))), _j = [
 	[
 		"pages",
 		"blocks",
@@ -27690,86 +27710,86 @@ var mj = /* @__PURE__ */ O(mn(F(fj) === "reset" ? null : localStorage.getItem(dj
 		"plugins"
 	],
 	["history", "update"]
-], gj = [
+], vj = [
 	"rail.thisPage",
 	"rail.site",
 	"rail.system"
-], _j = /* @__PURE__ */ D(() => Object.fromEntries(hj.flat().map((e) => [e, K(`panel.${e}`)])));
-F(mj) && !hj.flat().includes(F(mj)) && k(mj, null);
-var vj = {
+], yj = /* @__PURE__ */ D(() => Object.fromEntries(_j.flat().map((e) => [e, K(`panel.${e}`)])));
+F(gj) && !_j.flat().includes(F(gj)) && k(gj, null);
+var bj = {
 	pages: ["hint.pages.drafts"],
 	blocks: ["hint.blocks.intro"],
 	grid: ["hint.grid.intro", "hint.grid.section"],
 	collections: ["hint.collections.intro"],
 	plugins: ["hint.plugins.intro"],
 	history: ["hint.history.intro"]
-}, yj = [
+}, xj = [
 	["se", "Davvisámegiella"],
 	["en-GB", "English (UK)"],
 	["nb", "Norsk bokmål"],
 	["nn", "Norsk nynorsk"],
 	["tr", "Türkçe"]
-], bj = (e) => [...e].sort((e, t) => e[1].localeCompare(t[1]));
-function xj(e, t) {
+], Sj = (e) => [...e].sort((e, t) => e[1].localeCompare(t[1]));
+function Cj(e, t) {
 	let n = [];
-	for (let r of e) for (let e of WD.pluginInfo[r]?.languages ?? []) e?.[t] === !0 && typeof e.code == "string" && typeof e.name == "string" && e.name && (yj.some(([t]) => t === e.code) || n.some(([t]) => t === e.code) || n.push([e.code, e.name]));
+	for (let r of e) for (let e of KD.pluginInfo[r]?.languages ?? []) e?.[t] === !0 && typeof e.code == "string" && typeof e.name == "string" && e.name && (xj.some(([t]) => t === e.code) || n.some(([t]) => t === e.code) || n.push([e.code, e.name]));
 	return n;
 }
-function Sj() {
-	let e = bj([...yj, ...xj(WD.publishedPluginIds, "admin")]);
-	return wj === "auto" || e.some(([e]) => e === wj) ? e : [[wj, wj], ...e];
+function wj() {
+	let e = Sj([...xj, ...Cj(KD.publishedPluginIds, "admin")]);
+	return Ej === "auto" || e.some(([e]) => e === Ej) ? e : [[Ej, Ej], ...e];
 }
-var Cj = () => xj(WD.pluginsView?.enabled ?? [], "site"), wj = localStorage.getItem("urd-admin-lang") ?? "auto";
-function Tj(e) {
-	e !== wj && (e === "auto" ? localStorage.removeItem("urd-admin-lang") : localStorage.setItem("urd-admin-lang", e), location.reload());
+var Tj = () => Cj(KD.pluginsView?.enabled ?? [], "site"), Ej = localStorage.getItem("urd-admin-lang") ?? "auto";
+function Dj(e) {
+	e !== Ej && (e === "auto" ? localStorage.removeItem("urd-admin-lang") : localStorage.setItem("urd-admin-lang", e), location.reload());
 }
-function Ej(e) {
-	k(mj, F(mj) === e ? null : e, !0), Dj();
+function Oj(e) {
+	k(gj, F(gj) === e ? null : e, !0), kj();
 }
-function Dj() {
-	F(mj) === "history" && PA.loadHistory(), F(mj) === "update" && !PA.updateBusy && PA.loadUpdateCheck();
+function kj() {
+	F(gj) === "history" && IA.loadHistory(), F(gj) === "update" && !IA.updateBusy && IA.loadUpdateCheck();
 }
-var Oj = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-async function kj() {
+var Aj = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+async function jj() {
 	try {
 		let e = await fetch("/api/github/me");
-		e.ok ? k(KA, await e.json(), !0) : e.status !== 503 && k(KA, null);
+		e.ok ? k(JA, await e.json(), !0) : e.status !== 503 && k(JA, null);
 	} catch {
-		k(KA, null);
+		k(JA, null);
 	}
 }
-var Aj = /* @__PURE__ */ O(localStorage.getItem("urd-guides") === "1"), jj = /* @__PURE__ */ O(!1), Mj = /* @__PURE__ */ O(mn(localStorage.getItem("urd-layout-picker") === "menu" ? "menu" : "strip"));
-function Nj(e) {
-	k(Mj, e === "menu" ? "menu" : "strip", !0), F(Mj) === "menu" ? localStorage.setItem("urd-layout-picker", "menu") : localStorage.removeItem("urd-layout-picker");
+var Mj = /* @__PURE__ */ O(localStorage.getItem("urd-guides") === "1"), Nj = /* @__PURE__ */ O(!1), Pj = /* @__PURE__ */ O(mn(localStorage.getItem("urd-layout-picker") === "menu" ? "menu" : "strip"));
+function Fj(e) {
+	k(Pj, e === "menu" ? "menu" : "strip", !0), F(Pj) === "menu" ? localStorage.setItem("urd-layout-picker", "menu") : localStorage.removeItem("urd-layout-picker");
 }
-var Pj = /* @__PURE__ */ O(null), Fj = {
+var Ij = /* @__PURE__ */ O(null), Lj = {
 	view: 1079,
 	device: 999,
 	zoom: 919
-}, Ij = /* @__PURE__ */ O(null), Lj = /* @__PURE__ */ O(null), Rj = /* @__PURE__ */ O(mn({
+}, Rj = /* @__PURE__ */ O(null), zj = /* @__PURE__ */ O(null), Bj = /* @__PURE__ */ O(mn({
 	view: !1,
 	device: !1,
 	zoom: !1
 }));
-function zj() {
-	k(Aj, !F(Aj)), localStorage.setItem("urd-guides", F(Aj) ? "1" : "0"), CD.bridge?.sendShowGuides(F(Aj));
-}
-var Bj = /* @__PURE__ */ O(localStorage.getItem("urd-grid-overlay") === "1");
 function Vj() {
-	k(Bj, !F(Bj)), localStorage.setItem("urd-grid-overlay", F(Bj) ? "1" : "0"), CD.bridge?.sendShowGrid(F(Bj));
+	k(Mj, !F(Mj)), localStorage.setItem("urd-guides", F(Mj) ? "1" : "0"), TD.bridge?.sendShowGuides(F(Mj));
 }
-var Hj = /* @__PURE__ */ O(null), Uj = /* @__PURE__ */ O(!1), Wj = /* @__PURE__ */ O(!1), Gj = (e) => e.length > 0 && [...e].every((e) => e.open);
-function Kj() {
-	let e = F(Hj)?.querySelectorAll("details.group") ?? [];
-	k(Uj, e.length > 0), k(Wj, Gj(e), !0);
+var Hj = /* @__PURE__ */ O(localStorage.getItem("urd-grid-overlay") === "1");
+function Uj() {
+	k(Hj, !F(Hj)), localStorage.setItem("urd-grid-overlay", F(Hj) ? "1" : "0"), TD.bridge?.sendShowGrid(F(Hj));
 }
-function qj() {
-	let e = !F(Wj);
-	F(Hj)?.querySelectorAll("details.group").forEach((t) => {
+var Wj = /* @__PURE__ */ O(null), Gj = /* @__PURE__ */ O(!1), Kj = /* @__PURE__ */ O(!1), qj = (e) => e.length > 0 && [...e].every((e) => e.open);
+function Jj() {
+	let e = F(Wj)?.querySelectorAll("details.group") ?? [];
+	k(Gj, e.length > 0), k(Kj, qj(e), !0);
+}
+function Yj() {
+	let e = !F(Kj);
+	F(Wj)?.querySelectorAll("details.group").forEach((t) => {
 		t.open = e;
-	}), Kj();
+	}), Jj();
 }
-function Jj(e) {
+function Xj(e) {
 	for (let t of e.querySelectorAll("details.group")) {
 		let e = t.querySelector(":scope > summary");
 		if (!e || e.querySelector(".fold-sub")) continue;
@@ -27778,7 +27798,7 @@ function Jj(e) {
 		let r = document.createElement("button");
 		r.type = "button", r.className = "fold-sub fold-toggle", r.innerHTML = q.foldToggle;
 		let i = () => {
-			let e = Gj(n());
+			let e = qj(n());
 			r.classList.toggle("collapse", e), r.title = K(e ? "ui.collapseSub" : "ui.expandSub"), r.setAttribute("aria-label", r.title);
 		};
 		r.addEventListener("click", (e) => {
@@ -27790,270 +27810,270 @@ function Jj(e) {
 		}), t.addEventListener("toggle", i, !0), i(), e.appendChild(r);
 	}
 }
-function Yj() {
+function Zj() {
 	Pn(() => {
-		document.documentElement.dataset.adminTheme = F(LA), localStorage.setItem("urd-admin-theme", F(LA)), RA();
+		document.documentElement.dataset.adminTheme = F(zA), localStorage.setItem("urd-admin-theme", F(zA)), BA();
 	}), Pn(() => {
-		if (!F($A)) return;
+		if (!F(tj)) return;
 		let e = (e) => {
-			e.key === "Escape" && (e.stopPropagation(), nj(!1));
+			e.key === "Escape" && (e.stopPropagation(), ij(!1));
 		};
 		return document.addEventListener("keydown", e, !0), () => document.removeEventListener("keydown", e, !0);
 	}), Pn(() => {
-		F(fj) === "reset" ? localStorage.removeItem(dj) : F(mj) ? localStorage.setItem(dj, F(mj)) : localStorage.removeItem(dj);
+		F(mj) === "reset" ? localStorage.removeItem(pj) : F(gj) ? localStorage.setItem(pj, F(gj)) : localStorage.removeItem(pj);
 	}), Pn(() => {
-		if (!F(jj)) return;
+		if (!F(Nj)) return;
 		let e = (e) => {
-			F(Pj)?.contains(e.target) || k(jj, !1);
+			F(Ij)?.contains(e.target) || k(Nj, !1);
 		}, t = (e) => {
-			e.key === "Escape" && k(jj, !1);
+			e.key === "Escape" && k(Nj, !1);
 		}, n = () => {
-			k(jj, !1);
+			k(Nj, !1);
 		};
 		return document.addEventListener("pointerdown", e, !0), document.addEventListener("keydown", t), window.addEventListener("blur", n), () => {
 			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t), window.removeEventListener("blur", n);
 		};
 	}), Pn(() => {
-		let e = Object.entries(Fj).map(([e, t]) => {
+		let e = Object.entries(Lj).map(([e, t]) => {
 			let n = window.matchMedia(`(max-width: ${t}px)`), r = () => {
-				F(Rj)[e] = n.matches;
+				F(Bj)[e] = n.matches;
 			};
 			return r(), n.addEventListener("change", r), () => n.removeEventListener("change", r);
 		});
 		return () => e.forEach((e) => e());
 	}), Pn(() => {
-		F(Ij) && !F(Rj)[F(Ij)] && k(Ij, null);
+		F(Rj) && !F(Bj)[F(Rj)] && k(Rj, null);
 	}), Pn(() => {
-		if (!F(Ij)) return;
+		if (!F(Rj)) return;
 		let e = (e) => {
-			F(Lj)?.contains(e.target) || k(Ij, null);
+			F(zj)?.contains(e.target) || k(Rj, null);
 		}, t = (e) => {
-			e.key === "Escape" && k(Ij, null);
+			e.key === "Escape" && k(Rj, null);
 		}, n = () => {
-			k(Ij, null);
+			k(Rj, null);
 		};
 		return document.addEventListener("pointerdown", e, !0), document.addEventListener("keydown", t), window.addEventListener("blur", n), () => {
 			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t), window.removeEventListener("blur", n);
 		};
 	}), Pn(() => {
-		F(mj), Dr().then(Kj);
+		F(gj), Dr().then(Jj);
 	}), Pn(() => {
-		let e = F(Hj);
+		let e = F(Wj);
 		if (!e) return;
 		let t = new MutationObserver(() => {
-			Jj(e), Kj();
+			Xj(e), Jj();
 		});
 		return t.observe(e, {
 			childList: !0,
 			subtree: !0
-		}), e.addEventListener("toggle", Kj, !0), Jj(e), () => {
-			t.disconnect(), e.removeEventListener("toggle", Kj, !0);
+		}), e.addEventListener("toggle", Jj, !0), Xj(e), () => {
+			t.disconnect(), e.removeEventListener("toggle", Jj, !0);
 		};
 	});
 }
-var Xj = {
+var Qj = {
 	get ADMIN_THEMES() {
-		return F(FA);
-	},
-	LEGACY_ADMIN_THEMES: IA,
-	get adminTheme() {
 		return F(LA);
 	},
-	set adminTheme(e) {
-		k(LA, e, !0);
+	LEGACY_ADMIN_THEMES: RA,
+	get adminTheme() {
+		return F(zA);
 	},
-	sendAdminTheme: RA,
-	readableOn: zA,
+	set adminTheme(e) {
+		k(zA, e, !0);
+	},
+	sendAdminTheme: BA,
+	readableOn: VA,
 	get status() {
-		return F(BA);
+		return F(HA);
 	},
 	set status(e) {
-		k(BA, e, !0);
+		k(HA, e, !0);
 	},
 	get statusKind() {
-		return F(VA);
+		return F(UA);
 	},
 	set statusKind(e) {
-		k(VA, e, !0);
+		k(UA, e, !0);
 	},
 	get statusSeq() {
-		return HA;
+		return WA;
 	},
 	set statusSeq(e) {
-		HA = e;
+		WA = e;
 	},
-	setStatus: UA,
-	draftSaveError: WA,
-	writeDraftKey: GA,
+	setStatus: GA,
+	draftSaveError: KA,
+	writeDraftKey: qA,
 	get auth() {
-		return F(KA);
+		return F(JA);
 	},
 	set auth(e) {
-		k(KA, e, !0);
+		k(JA, e, !0);
 	},
 	get attentionCount() {
-		return F(qA);
+		return F(YA);
 	},
 	set attentionCount(e) {
-		k(qA, e, !0);
+		k(YA, e, !0);
 	},
-	updateAttention: JA,
-	jumpToAttention: YA,
-	onPointerdownWindow: XA,
-	onKeydown: ZA,
-	init: QA,
+	updateAttention: XA,
+	jumpToAttention: ZA,
+	onPointerdownWindow: QA,
+	onKeydown: $A,
+	init: ej,
 	get confirmBox() {
-		return F($A);
+		return F(tj);
 	},
 	set confirmBox(e) {
-		k($A, e, !0);
+		k(tj, e, !0);
 	},
-	askConfirm: ej,
-	askPrompt: tj,
-	answerConfirm: nj,
+	askConfirm: nj,
+	askPrompt: rj,
+	answerConfirm: ij,
 	get confirmDownOnOverlay() {
-		return rj;
+		return aj;
 	},
 	set confirmDownOnOverlay(e) {
-		rj = e;
+		aj = e;
 	},
 	get showSetup() {
-		return F(ij);
-	},
-	set showSetup(e) {
-		k(ij, e, !0);
-	},
-	get setupName() {
-		return F(aj);
-	},
-	set setupName(e) {
-		k(aj, e, !0);
-	},
-	get setupAccent() {
 		return F(oj);
 	},
-	set setupAccent(e) {
+	set showSetup(e) {
 		k(oj, e, !0);
 	},
-	get setupBg() {
+	get setupName() {
 		return F(sj);
 	},
-	set setupBg(e) {
+	set setupName(e) {
 		k(sj, e, !0);
 	},
-	closeSetup: cj,
-	applySetup: lj,
-	PANELS_PREF_KEY: uj,
-	PANEL_OPEN_KEY: dj,
+	get setupAccent() {
+		return F(cj);
+	},
+	set setupAccent(e) {
+		k(cj, e, !0);
+	},
+	get setupBg() {
+		return F(lj);
+	},
+	set setupBg(e) {
+		k(lj, e, !0);
+	},
+	closeSetup: uj,
+	applySetup: dj,
+	PANELS_PREF_KEY: fj,
+	PANEL_OPEN_KEY: pj,
 	get panelsPref() {
-		return F(fj);
-	},
-	set panelsPref(e) {
-		k(fj, e, !0);
-	},
-	setPanelsPref: pj,
-	get activePanel() {
 		return F(mj);
 	},
-	set activePanel(e) {
+	set panelsPref(e) {
 		k(mj, e, !0);
 	},
-	PANEL_GROUPS: hj,
-	PANEL_GROUP_KEYS: gj,
+	setPanelsPref: hj,
+	get activePanel() {
+		return F(gj);
+	},
+	set activePanel(e) {
+		k(gj, e, !0);
+	},
+	PANEL_GROUPS: _j,
+	PANEL_GROUP_KEYS: vj,
 	get PANEL_LABELS() {
-		return F(_j);
+		return F(yj);
 	},
-	PANEL_INTROS: vj,
-	LANG_OPTIONS: yj,
-	sortLangs: bj,
-	packLangOptions: xj,
-	adminLangOptions: Sj,
-	sitePackLangs: Cj,
-	adminLangChoice: wj,
-	setAdminLang: Tj,
-	togglePanel: Ej,
-	loadPanelData: Dj,
-	reducedMotion: Oj,
-	checkAuth: kj,
+	PANEL_INTROS: bj,
+	LANG_OPTIONS: xj,
+	sortLangs: Sj,
+	packLangOptions: Cj,
+	adminLangOptions: wj,
+	sitePackLangs: Tj,
+	adminLangChoice: Ej,
+	setAdminLang: Dj,
+	togglePanel: Oj,
+	loadPanelData: kj,
+	reducedMotion: Aj,
+	checkAuth: jj,
 	get guidesOn() {
-		return F(Aj);
-	},
-	set guidesOn(e) {
-		k(Aj, e, !0);
-	},
-	get settingsOpen() {
-		return F(jj);
-	},
-	set settingsOpen(e) {
-		k(jj, e, !0);
-	},
-	get layoutPickerPref() {
 		return F(Mj);
 	},
-	set layoutPickerPref(e) {
+	set guidesOn(e) {
 		k(Mj, e, !0);
 	},
-	setLayoutPicker: Nj,
-	get settingsEl() {
+	get settingsOpen() {
+		return F(Nj);
+	},
+	set settingsOpen(e) {
+		k(Nj, e, !0);
+	},
+	get layoutPickerPref() {
 		return F(Pj);
 	},
-	set settingsEl(e) {
+	set layoutPickerPref(e) {
 		k(Pj, e, !0);
 	},
-	FOLD_MQ: Fj,
-	get toolMenu() {
+	setLayoutPicker: Fj,
+	get settingsEl() {
 		return F(Ij);
 	},
-	set toolMenu(e) {
+	set settingsEl(e) {
 		k(Ij, e, !0);
 	},
-	get toolMenuEl() {
-		return F(Lj);
-	},
-	set toolMenuEl(e) {
-		k(Lj, e, !0);
-	},
-	get folded() {
+	FOLD_MQ: Lj,
+	get toolMenu() {
 		return F(Rj);
 	},
-	set folded(e) {
+	set toolMenu(e) {
 		k(Rj, e, !0);
 	},
-	toggleGuides: zj,
-	get gridOn() {
+	get toolMenuEl() {
+		return F(zj);
+	},
+	set toolMenuEl(e) {
+		k(zj, e, !0);
+	},
+	get folded() {
 		return F(Bj);
 	},
-	set gridOn(e) {
+	set folded(e) {
 		k(Bj, e, !0);
 	},
-	toggleGrid: Vj,
-	get panelEl() {
+	toggleGuides: Vj,
+	get gridOn() {
 		return F(Hj);
 	},
-	set panelEl(e) {
+	set gridOn(e) {
 		k(Hj, e, !0);
 	},
-	get panelHasGroups() {
-		return F(Uj);
-	},
-	set panelHasGroups(e) {
-		k(Uj, e, !0);
-	},
-	get panelAllOpen() {
+	toggleGrid: Uj,
+	get panelEl() {
 		return F(Wj);
 	},
-	set panelAllOpen(e) {
+	set panelEl(e) {
 		k(Wj, e, !0);
 	},
-	allOpen: Gj,
-	syncPanelFolds: Kj,
-	togglePanelGroups: qj,
-	decorateSubFolds: Jj,
-	effects: Yj
+	get panelHasGroups() {
+		return F(Gj);
+	},
+	set panelHasGroups(e) {
+		k(Gj, e, !0);
+	},
+	get panelAllOpen() {
+		return F(Kj);
+	},
+	set panelAllOpen(e) {
+		k(Kj, e, !0);
+	},
+	allOpen: qj,
+	syncPanelFolds: Jj,
+	togglePanelGroups: Yj,
+	decorateSubFolds: Xj,
+	effects: Zj
 };
 //#endregion
 //#region src/state/media.svelte.js
-async function Zj(e, t) {
+async function $j(e, t) {
 	try {
 		let n = new Image();
 		await new Promise((t, r) => {
@@ -28077,10 +28097,10 @@ async function Zj(e, t) {
 		return null;
 	}
 }
-async function Qj(e) {
+async function eM(e) {
 	let t = await e.text(), n = jp(t), r = Np(t);
 	if (!r) return n;
-	let i = await Zj(n.dataUrl, r);
+	let i = await $j(n.dataUrl, r);
 	if (!i) return n;
 	let a = Mp(t, i);
 	if (a === t) return n;
@@ -28090,24 +28110,24 @@ async function Qj(e) {
 		return n;
 	}
 }
-async function $j(e) {
-	if (e.type === "image/svg+xml" || /\.svg$/i.test(e.name || "")) return Qj(e);
+async function tM(e) {
+	if (e.type === "image/svg+xml" || /\.svg$/i.test(e.name || "")) return eM(e);
 	let t = await Op(e);
-	return t.animated && t.bytes > 1e6 && Xj.setStatus(K("status.animatedLarge", { mb: (t.bytes / 1e6).toFixed(1) }), "error"), t;
+	return t.animated && t.bytes > 1e6 && Qj.setStatus(K("status.animatedLarge", { mb: (t.bytes / 1e6).toFixed(1) }), "error"), t;
 }
-function eM(e) {
+function nM(e) {
 	return e?.code === "animatedTooLarge" ? K("status.animatedTooLarge", {
 		mb: (e.bytes / 1e6).toFixed(1),
 		max: Math.round(vp / 1e6)
 	}) : K("status.imageReadError");
 }
-function tM(e, t, n) {
+function rM(e, t, n) {
 	if (!["video/mp4", "video/webm"].includes(e.type)) {
-		Xj.setStatus(K(t), "error");
+		Qj.setStatus(K(t), "error");
 		return;
 	}
 	if (e.size > 15e6) {
-		Xj.setStatus(K("status.videoTooLarge", {
+		Qj.setStatus(K("status.videoTooLarge", {
 			mb: (e.size / 1e6).toFixed(1),
 			max: Math.round(_p / 1e6)
 		}), "error");
@@ -28115,14 +28135,14 @@ function tM(e, t, n) {
 	}
 	let r = new FileReader();
 	r.onload = () => {
-		n(String(r.result ?? "")), e.size > 4e6 && Xj.setStatus(K("status.videoLarge", { mb: (e.size / 1e6).toFixed(1) }), "error");
-	}, r.onerror = () => Xj.setStatus(K("status.imageReadError"), "error"), r.readAsDataURL(e);
+		n(String(r.result ?? "")), e.size > 4e6 && Qj.setStatus(K("status.videoLarge", { mb: (e.size / 1e6).toFixed(1) }), "error");
+	}, r.onerror = () => Qj.setStatus(K("status.imageReadError"), "error"), r.readAsDataURL(e);
 }
-var nM = () => 1 + Math.floor(Math.random() * 1e6);
-async function rM(e) {
+var iM = () => 1 + Math.floor(Math.random() * 1e6);
+async function aM(e) {
 	let t = [], n = 0, r = 0;
 	for (let i of e) try {
-		let e = await $j(i);
+		let e = await tM(i);
 		e.bytes > 4e5 && (r += 1), t.push({
 			src: e.dataUrl,
 			alt: Fp(i.name).replaceAll("-", " "),
@@ -28138,49 +28158,49 @@ async function rM(e) {
 		big: r
 	};
 }
-function iM(e, t, n) {
-	t ? Xj.setStatus(K("status.imagesReadFailed", { n: t }), "error") : n ? Xj.setStatus(K("status.imagesLarge", { n }), "error") : Xj.setStatus(e ? "" : K("status.noImagesAdded"));
+function oM(e, t, n) {
+	t ? Qj.setStatus(K("status.imagesReadFailed", { n: t }), "error") : n ? Qj.setStatus(K("status.imagesLarge", { n }), "error") : Qj.setStatus(e ? "" : K("status.noImagesAdded"));
 }
-var aM = {
-	svgContentBBox: Zj,
-	svgAutoTrim: Qj,
-	compressOrTrim: $j,
-	imageErrorText: eM,
-	readVideoFile: tM,
-	newSeed: nM,
-	compressMany: rM,
-	reportUpload: iM
+var sM = {
+	svgContentBBox: $j,
+	svgAutoTrim: eM,
+	compressOrTrim: tM,
+	imageErrorText: nM,
+	readVideoFile: rM,
+	newSeed: iM,
+	compressMany: aM,
+	reportUpload: oM
 };
 //#endregion
 //#region ../template/assets/engine/0.7.4/feeds.js
-function oM(e) {
+function cM(e) {
 	return String(e ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&apos;");
 }
-function sM(e, t) {
+function lM(e, t) {
 	let n = String(t ?? "").replace(/\/+$/, "");
-	return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${(e ?? []).filter((e) => !e.noindex).map((e) => `  <url><loc>${oM(n + (e.path === "/" ? "/" : e.path))}</loc></url>`).join("\n")}\n</urlset>\n`;
+	return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${(e ?? []).filter((e) => !e.noindex).map((e) => `  <url><loc>${cM(n + (e.path === "/" ? "/" : e.path))}</loc></url>`).join("\n")}\n</urlset>\n`;
 }
-function cM(e) {
+function uM(e) {
 	return `User-agent: *\nDisallow: /admin/\n\nSitemap: ${String(e ?? "").replace(/\/+$/, "")}/sitemap.xml\n`;
 }
-var lM = [
+var dM = [
 	"news",
 	"notices",
 	"publications"
 ];
-function uM(e) {
+function fM(e) {
 	let t = String(e.origin ?? "").replace(/\/+$/, ""), n = (e.items ?? []).map((n) => {
-		let r = n.href ? new URL(n.href, t + "/").href : t + "/", i = n.date ? new Date(n.date) : null, a = i && !Number.isNaN(i.getTime()) ? `\n      <pubDate>${i.toUTCString()}</pubDate>` : "", o = n.text ? `\n      <description>${oM(n.text)}</description>` : "";
-		return `    <item>\n      <title>${oM(n.title)}</title>\n      <link>${oM(r)}</link>\n      <guid isPermaLink="false">${oM(`${e.path}#${n.id ?? n.title}`)}</guid>${o}${a}\n    </item>`;
+		let r = n.href ? new URL(n.href, t + "/").href : t + "/", i = n.date ? new Date(n.date) : null, a = i && !Number.isNaN(i.getTime()) ? `\n      <pubDate>${i.toUTCString()}</pubDate>` : "", o = n.text ? `\n      <description>${cM(n.text)}</description>` : "";
+		return `    <item>\n      <title>${cM(n.title)}</title>\n      <link>${cM(r)}</link>\n      <guid isPermaLink="false">${cM(`${e.path}#${n.id ?? n.title}`)}</guid>${o}${a}\n    </item>`;
 	}).join("\n");
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>${oM(e.title)}</title>\n    <link>${oM(t + "/")}</link>\n    <description>${oM(e.description ?? e.title)}</description>\n${n}${n ? "\n" : ""}  </channel>\n</rss>\n`;
+    <title>${cM(e.title)}</title>\n    <link>${cM(t + "/")}</link>\n    <description>${cM(e.description ?? e.title)}</description>\n${n}${n ? "\n" : ""}  </channel>\n</rss>\n`;
 }
 //#endregion
 //#region src/state/publish.svelte.js
-function dM(e, t, n, r) {
+function pM(e, t, n, r) {
 	let i = e?.[t];
 	if (!i?.startsWith("data:image/") && !i?.startsWith("data:audio/") && !i?.startsWith("data:video/")) return;
 	let a = i.split(",", 2)[1], o = `media/${Fp(n || "image")}-${Ip(a)}.${Pp(i)}`;
@@ -28190,60 +28210,60 @@ function dM(e, t, n, r) {
 		encoding: "base64"
 	}), e[t] = `/${o}`;
 }
-function fM(e, t) {
-	dM(e, "image", e.title, t);
-	for (let n of e.colors ?? []) dM(n, "image", `${e.title}-${n.name}`, t);
-}
-function pM(e, t) {
-	for (let n of e?.layers ?? []) {
-		if (n.type === "image" && dM(n.props, "src", "background", t), n.type === "slideshow") for (let e of n.props.images ?? []) dM(e, "src", "background", t);
-		n.type === "video" && (dM(n.props, "src", "video", t), dM(n.props, "poster", "plakat", t));
-	}
-}
 function mM(e, t) {
-	if (e.type === "image" && dM(e.props, "src", e.props.alt, t), e.type === "icon" && dM(e.props, "image", "ikon", t), e.type === "gallery") for (let n of e.props.images ?? []) dM(n, "src", n.alt || "gallery", t);
-	e.type === "audio" && dM(e.props, "src", e.props.title || "lyd", t), e.type === "video" && (dM(e.props, "src", e.props.title || "video", t), dM(e.props, "poster", "poster", t));
+	pM(e, "image", e.title, t);
+	for (let n of e.colors ?? []) pM(n, "image", `${e.title}-${n.name}`, t);
 }
 function hM(e, t) {
-	pM(e.background, t);
-	for (let n of e.blocks) mM(n, t);
+	for (let n of e?.layers ?? []) {
+		if (n.type === "image" && pM(n.props, "src", "background", t), n.type === "slideshow") for (let e of n.props.images ?? []) pM(e, "src", "background", t);
+		n.type === "video" && (pM(n.props, "src", "video", t), pM(n.props, "poster", "plakat", t));
+	}
 }
-function gM(e) {
+function gM(e, t) {
+	if (e.type === "image" && pM(e.props, "src", e.props.alt, t), e.type === "icon" && pM(e.props, "image", "ikon", t), e.type === "gallery") for (let n of e.props.images ?? []) pM(n, "src", n.alt || "gallery", t);
+	e.type === "audio" && pM(e.props, "src", e.props.title || "lyd", t), e.type === "video" && (pM(e.props, "src", e.props.title || "video", t), pM(e.props, "poster", "poster", t));
+}
+function _M(e, t) {
+	hM(e.background, t);
+	for (let n of e.blocks) gM(n, t);
+}
+function vM(e) {
 	let t = [];
-	e.meta?.og && dM(e.meta.og, "image", "share", t);
-	for (let n of e.sections) hM(n, t);
+	e.meta?.og && pM(e.meta.og, "image", "share", t);
+	for (let n of e.sections) _M(n, t);
 	return t;
 }
-function _M(e) {
+function yM(e) {
 	let t = [], n = e.nav?.logo;
-	n?.type === "image" && dM(n, "value", "logo", t), n?.type === "both" && dM(n, "image", "logo", t), e.nav?.style && dM(e.nav.style, "image", "menu", t), pM(e.nav?.style?.background, t), pM(e.footer?.background, t), e.footer?.brand && dM(e.footer.brand, "logo", "footer-logo", t);
-	for (let n of Array.isArray(e.site?.links) ? e.site.links : []) dM(n, "image", "link-icon", t);
+	n?.type === "image" && pM(n, "value", "logo", t), n?.type === "both" && pM(n, "image", "logo", t), e.nav?.style && pM(e.nav.style, "image", "menu", t), hM(e.nav?.style?.background, t), hM(e.footer?.background, t), e.footer?.brand && pM(e.footer.brand, "logo", "footer-logo", t);
+	for (let n of Array.isArray(e.site?.links) ? e.site.links : []) pM(n, "image", "link-icon", t);
 	if (e.nav?.launcher) {
-		dM(e.nav.launcher, "image", "snarvei", t);
-		for (let n of e.nav.launcher.links ?? []) dM(n, "image", "snarvei", t);
+		pM(e.nav.launcher, "image", "snarvei", t);
+		for (let n of e.nav.launcher.links ?? []) pM(n, "image", "snarvei", t);
 	}
-	return dM(e.site, "icon", "ikon", t), t;
+	return pM(e.site, "icon", "ikon", t), t;
 }
-var vM = /* @__PURE__ */ O(!1), yM = /* @__PURE__ */ O(null);
-function bM() {
-	k(vM, !F(vM));
-}
-function xM() {
-	k(vM, !1);
-	try {
-		SM(), Xj.setStatus(K("ui.discarded"), "info");
-	} catch (e) {
-		console.error("Urd: discard failed", e), Xj.setStatus(String(e?.message ?? e), "error");
-	}
-}
+var bM = /* @__PURE__ */ O(!1), xM = /* @__PURE__ */ O(null);
 function SM() {
-	Yk.pushHistory("discard");
+	k(bM, !F(bM));
+}
+function CM() {
+	k(bM, !1);
+	try {
+		wM(), Qj.setStatus(K("ui.discarded"), "info");
+	} catch (e) {
+		console.error("Urd: discard failed", e), Qj.setStatus(String(e?.message ?? e), "error");
+	}
+}
+function wM() {
+	Zk.pushHistory("discard");
 	for (let e of Q.siteDraft.pages) e.id !== $.pageId && !$.pendingPublished.has(e.id) && localStorage.removeItem(`urd-draft-${e.id}`);
 	let e = $.store.reset();
-	if (Q.siteStore.reset(), WD.pluginsStore && (WD.pluginsStore.reset(), WD.syncPluginsView()), _A.collectionsIndexStore) {
-		_A.collectionsIndexStore.reset(), _A.collectionIds = [..._A.collectionsIndexStore.data.samlinger ?? []];
-		for (let e of Object.keys(_A.collectionStores)) _A.collectionIds.includes(e) ? _A.collectionStores[e].reset() : delete _A.collectionStores[e];
-		_A.syncCollectionsView();
+	if (Q.siteStore.reset(), KD.pluginsStore && (KD.pluginsStore.reset(), KD.syncPluginsView()), yA.collectionsIndexStore) {
+		yA.collectionsIndexStore.reset(), yA.collectionIds = [...yA.collectionsIndexStore.data.samlinger ?? []];
+		for (let e of Object.keys(yA.collectionStores)) yA.collectionIds.includes(e) ? yA.collectionStores[e].reset() : delete yA.collectionStores[e];
+		yA.syncCollectionsView();
 	}
 	if (Yw.templatesIndexStore) {
 		Yw.templatesIndexStore.reset(), Yw.templateIds = [...Yw.templatesIndexStore.data.maler ?? []];
@@ -28253,18 +28273,18 @@ function SM() {
 	Q.linkSiteDraft(), Q.grid = {
 		snap: !0,
 		...Q.siteDraft.grid
-	}, Yk.updateDirty(), Xj.status = "", Q.pushSiteToPreview(), Q.siteDraft.pages.some((e) => e.id === $.pageId) ? CD.bridge?.sendPage($.pageId, e) : $.selectPage(Q.siteDraft.pages[0].id);
+	}, Zk.updateDirty(), Qj.status = "", Q.pushSiteToPreview(), Q.siteDraft.pages.some((e) => e.id === $.pageId) ? TD.bridge?.sendPage($.pageId, e) : $.selectPage(Q.siteDraft.pages[0].id);
 }
-async function CM() {
-	if (PA.revertedSinceLoad) {
-		Xj.setStatus(K("status.revertReloadBeforePublish"), "error");
+async function TM() {
+	if (IA.revertedSinceLoad) {
+		Qj.setStatus(K("status.revertReloadBeforePublish"), "error");
 		return;
 	}
-	if (PA.updateBusy) {
-		Xj.setStatus(K("update.publishBlocked"), "error");
+	if (IA.updateBusy) {
+		Qj.setStatus(K("update.publishBlocked"), "error");
 		return;
 	}
-	Xj.setStatus(K("status.publishing"));
+	Qj.setStatus(K("status.publishing"));
 	let e = [], t = [], n = [], r = [];
 	for (let i of Q.siteDraft.pages) {
 		let a = `urd-draft-${i.id}`, o = $.pendingPublished.has(i.id) || !Q.site.pages.some((e) => e.id === i.id), s = null;
@@ -28277,7 +28297,7 @@ async function CM() {
 		}
 		if (!s && o && (s = $.blankPage(i)), !s) continue;
 		let c = JSON.parse(JSON.stringify(s));
-		e.push(...gM(c)), e.push({
+		e.push(...vM(c)), e.push({
 			path: i.file,
 			content: JSON.stringify(c, null, 2) + "\n",
 			encoding: "utf-8"
@@ -28285,7 +28305,7 @@ async function CM() {
 	}
 	if (Q.siteStore.hasDraft()) {
 		let r = JSON.parse(JSON.stringify(Q.siteDraft));
-		e.push(..._M(r)), e.push({
+		e.push(...yM(r)), e.push({
 			path: "content/site.json",
 			content: JSON.stringify(r, null, 2) + "\n",
 			encoding: "utf-8"
@@ -28299,25 +28319,25 @@ async function CM() {
 		let { icon: a, ...o } = Q.site.site, { icon: s, ...c } = Q.siteDraft.site;
 		i(o, c) || t.push(K("publish.part.siteInfo"));
 	}
-	let i = Object.entries(_A.collectionStores).filter(([, e]) => e.hasDraft());
-	if (i.length || _A.collectionsIndexStore?.hasDraft()) {
+	let i = Object.entries(yA.collectionStores).filter(([, e]) => e.hasDraft());
+	if (i.length || yA.collectionsIndexStore?.hasDraft()) {
 		for (let [t, r] of i) {
 			let i = JSON.parse(JSON.stringify(r.data));
-			for (let t of i.entries) fM(t, e);
+			for (let t of i.entries) mM(t, e);
 			e.push({
 				path: `content/samlinger/${t}.json`,
 				content: JSON.stringify(i, null, 2) + "\n",
 				encoding: "utf-8"
-			}), lM.includes(i.kind) && e.push({
+			}), dM.includes(i.kind) && e.push({
 				path: `content/samlinger/${t}.xml`,
-				content: uM({
+				content: fM({
 					title: i.name ?? t,
 					origin: location.origin,
 					path: `/content/samlinger/${t}.xml`,
 					items: i.entries.map((e) => ({
 						id: e.id,
-						title: _A.plainTitle(e.title),
-						text: _A.plainTitle(e.text),
+						title: yA.plainTitle(e.title),
+						text: yA.plainTitle(e.text),
 						date: e.date,
 						href: e.href
 					}))
@@ -28325,10 +28345,10 @@ async function CM() {
 				encoding: "utf-8"
 			}), n.push(`urd-draft-samling-${t}`);
 		}
-		if (_A.collectionsIndexStore?.hasDraft()) {
+		if (yA.collectionsIndexStore?.hasDraft()) {
 			e.push({
 				path: "content/collections.json",
-				content: JSON.stringify(_A.collectionsIndexStore.data, null, 2) + "\n",
+				content: JSON.stringify(yA.collectionsIndexStore.data, null, 2) + "\n",
 				encoding: "utf-8"
 			}), n.push("urd-draft-collections", "urd-draft-samlinger");
 			let t = { samlinger: [] };
@@ -28338,7 +28358,7 @@ async function CM() {
 			let r = new Set(e.map((e) => e.path));
 			for (let n of t.samlinger ?? []) {
 				let t = `content/samlinger/${n}.json`;
-				!_A.collectionIds.includes(n) && !r.has(t) && e.push({
+				!yA.collectionIds.includes(n) && !r.has(t) && e.push({
 					path: t,
 					delete: !0
 				});
@@ -28350,9 +28370,9 @@ async function CM() {
 	if (a.length || Yw.templatesIndexStore?.hasDraft()) {
 		for (let [t, r] of a) {
 			let i = JSON.parse(JSON.stringify(r.data));
-			i.section && hM(i.section, e);
-			for (let t of i.blocks ?? []) mM(t, e);
-			for (let t of i.page?.sections ?? []) hM(t, e);
+			i.section && _M(i.section, e);
+			for (let t of i.blocks ?? []) gM(t, e);
+			for (let t of i.page?.sections ?? []) _M(t, e);
 			e.push({
 				path: `content/maler/${t}.json`,
 				content: JSON.stringify(i, null, 2) + "\n",
@@ -28380,9 +28400,9 @@ async function CM() {
 		}
 		t.push(K("publish.part.templates"));
 	}
-	WD.pluginsStore?.hasDraft() && (e.push({
+	KD.pluginsStore?.hasDraft() && (e.push({
 		path: "plugins/plugins.json",
-		content: JSON.stringify(WD.pluginsStore.data, null, 2) + "\n",
+		content: JSON.stringify(KD.pluginsStore.data, null, 2) + "\n",
 		encoding: "utf-8"
 	}), n.push("urd-draft-plugins"), t.push(K("publish.part.plugins")));
 	try {
@@ -28395,11 +28415,11 @@ async function CM() {
 	} catch {}
 	e.push({
 		path: "sitemap.xml",
-		content: sM(Q.siteDraft.pages, location.origin),
+		content: lM(Q.siteDraft.pages, location.origin),
 		encoding: "utf-8"
 	}), e.push({
 		path: "robots.txt",
-		content: cM(location.origin),
+		content: uM(location.origin),
 		encoding: "utf-8"
 	});
 	let o = new Set(e.map((e) => e.path)), s = (t) => {
@@ -28412,9 +28432,9 @@ async function CM() {
 		let t = Q.siteDraft.pages.find((t) => t.id === e.id);
 		t ? t.path !== e.path && e.path !== "/" && s(`${e.path.slice(1)}/index.html`) : (s(e.file), e.path !== "/" && s(`${e.path.slice(1)}/index.html`));
 	}
-	let c = await PA.confirmNoConflict(e);
+	let c = await IA.confirmNoConflict(e);
 	if (!c.ok) {
-		Xj.setStatus(K("status.publishAborted"), "error");
+		Qj.setStatus(K("status.publishAborted"), "error");
 		return;
 	}
 	let l = {
@@ -28431,36 +28451,36 @@ async function CM() {
 	} catch {}
 	if (u?.ok) {
 		let { sha: t } = await u.json().catch(() => ({}));
-		t ? PA.baseSha = t : PA.refreshBaseSha(), gM($.store.data), _M(Q.siteDraft);
+		t ? IA.baseSha = t : IA.refreshBaseSha(), vM($.store.data), yM(Q.siteDraft);
 		for (let e of n) localStorage.removeItem(e);
 		for (let e of r) $.pendingPublished.add(e);
-		if (Q.site = JSON.parse(JSON.stringify(Q.siteDraft)), Q.siteStore = $C("urd-draft-site", () => Q.site, Xj.draftSaveError), Q.linkSiteDraft(), WD.pluginsStore) {
-			let e = JSON.parse(JSON.stringify(WD.pluginsStore.data));
-			WD.pluginsStore = $C("urd-draft-plugins", () => e, Xj.draftSaveError), WD.syncPluginsView();
+		if (Q.site = JSON.parse(JSON.stringify(Q.siteDraft)), Q.siteStore = $C("urd-draft-site", () => Q.site, Qj.draftSaveError), Q.linkSiteDraft(), KD.pluginsStore) {
+			let e = JSON.parse(JSON.stringify(KD.pluginsStore.data));
+			KD.pluginsStore = $C("urd-draft-plugins", () => e, Qj.draftSaveError), KD.syncPluginsView();
 		}
-		if (_A.collectionsIndexStore) {
-			for (let e of Object.values(_A.collectionStores)) for (let t of e.data.entries) fM(t, []);
-			let e = JSON.parse(JSON.stringify(_A.collectionsIndexStore.data));
-			_A.collectionsIndexStore = $C("urd-draft-collections", () => e, Xj.draftSaveError, "urd-draft-samlinger"), _A.publishedCollections = {};
-			for (let e of _A.collectionIds) {
-				if (!_A.collectionStores[e]) continue;
-				let t = JSON.parse(JSON.stringify(_A.collectionStores[e].data));
-				_A.publishedCollections[e] = t, _A.collectionStores[e] = $C(`urd-draft-collection-${e}`, () => t, Xj.draftSaveError, `urd-draft-samling-${e}`);
+		if (yA.collectionsIndexStore) {
+			for (let e of Object.values(yA.collectionStores)) for (let t of e.data.entries) mM(t, []);
+			let e = JSON.parse(JSON.stringify(yA.collectionsIndexStore.data));
+			yA.collectionsIndexStore = $C("urd-draft-collections", () => e, Qj.draftSaveError, "urd-draft-samlinger"), yA.publishedCollections = {};
+			for (let e of yA.collectionIds) {
+				if (!yA.collectionStores[e]) continue;
+				let t = JSON.parse(JSON.stringify(yA.collectionStores[e].data));
+				yA.publishedCollections[e] = t, yA.collectionStores[e] = $C(`urd-draft-collection-${e}`, () => t, Qj.draftSaveError, `urd-draft-samling-${e}`);
 			}
-			_A.syncCollectionsView();
+			yA.syncCollectionsView();
 		}
 		if (Yw.templatesIndexStore) {
 			for (let e of Object.values(Yw.templateStores)) {
-				e.data?.section && hM(e.data.section, []);
-				for (let t of e.data?.blocks ?? []) mM(t, []);
-				for (let t of e.data?.page?.sections ?? []) hM(t, []);
+				e.data?.section && _M(e.data.section, []);
+				for (let t of e.data?.blocks ?? []) gM(t, []);
+				for (let t of e.data?.page?.sections ?? []) _M(t, []);
 			}
 			let e = JSON.parse(JSON.stringify(Yw.templatesIndexStore.data));
-			Yw.templatesIndexStore = $C("urd-draft-templates", () => e, Xj.draftSaveError, "urd-draft-maler"), Yw.publishedTemplates = {};
+			Yw.templatesIndexStore = $C("urd-draft-templates", () => e, Qj.draftSaveError, "urd-draft-maler"), Yw.publishedTemplates = {};
 			for (let e of Yw.templateIds) {
 				if (!Yw.templateStores[e]) continue;
 				let t = JSON.parse(JSON.stringify(Yw.templateStores[e].data));
-				Yw.publishedTemplates[e] = t, Yw.templateStores[e] = $C(`urd-draft-template-${e}`, () => t, Xj.draftSaveError, `urd-draft-mal-${e}`);
+				Yw.publishedTemplates[e] = t, Yw.templateStores[e] = $C(`urd-draft-template-${e}`, () => t, Qj.draftSaveError, `urd-draft-mal-${e}`);
 			}
 			Yw.pushTemplatesToPreview();
 		}
@@ -28469,73 +28489,73 @@ async function CM() {
 			...Q.siteDraft.grid
 		};
 		let i = JSON.parse(JSON.stringify($.store.data));
-		$.store = $C(`urd-draft-${$.pageId}`, () => i, Xj.draftSaveError), $.pendingPublished.has($.pageId) && Xj.writeDraftKey(`urd-draft-${$.pageId}`, JSON.stringify(i)), Yk.updateDirty(), Xj.setStatus(K("status.published"), "info"), PA.awaitPublishDeploy(e);
+		$.store = $C(`urd-draft-${$.pageId}`, () => i, Qj.draftSaveError), $.pendingPublished.has($.pageId) && Qj.writeDraftKey(`urd-draft-${$.pageId}`, JSON.stringify(i)), Zk.updateDirty(), Qj.setStatus(K("status.published"), "info"), IA.awaitPublishDeploy(e);
 	} else if (u?.status === 401) {
 		let e = await u.json().catch(() => null);
-		Xj.setStatus(e?.code === "loginExpired" ? K("status.loginExpired") : K("status.loginRequired", { reason: ba(e) ?? K("status.unknownReason") }), "error"), await Xj.checkAuth();
-	} else u?.status === 403 ? Xj.setStatus(ba(await u.json().catch(() => null)) ?? K("status.noPublishAccess"), "error") : u?.status === 409 ? Xj.setStatus(K("status.publishRace"), "error") : u ? Xj.setStatus(ba(await u.json().catch(() => null)) ?? K("status.publishFailed"), "error") : Xj.setStatus(K("status.publishUnavailable"), "error");
+		Qj.setStatus(e?.code === "loginExpired" ? K("status.loginExpired") : K("status.loginRequired", { reason: ba(e) ?? K("status.unknownReason") }), "error"), await Qj.checkAuth();
+	} else u?.status === 403 ? Qj.setStatus(ba(await u.json().catch(() => null)) ?? K("status.noPublishAccess"), "error") : u?.status === 409 ? Qj.setStatus(K("status.publishRace"), "error") : u ? Qj.setStatus(ba(await u.json().catch(() => null)) ?? K("status.publishFailed"), "error") : Qj.setStatus(K("status.publishUnavailable"), "error");
 }
-function wM() {
+function EM() {
 	Pn(() => {
-		if (!F(vM)) return;
+		if (!F(bM)) return;
 		let e = (e) => {
-			F(yM)?.contains(e.target) ? e.target instanceof Element && e.target.closest(".discard-confirm") && (e.preventDefault(), e.stopPropagation(), xM()) : k(vM, !1);
+			F(xM)?.contains(e.target) ? e.target instanceof Element && e.target.closest(".discard-confirm") && (e.preventDefault(), e.stopPropagation(), CM()) : k(bM, !1);
 		}, t = (e) => {
-			e.key === "Escape" && k(vM, !1);
+			e.key === "Escape" && k(bM, !1);
 		}, n = !1, r = (e) => {
-			n = !!F(yM)?.contains(e.target);
+			n = !!F(xM)?.contains(e.target);
 		}, i = () => {
 			n = !1;
 		}, a = () => {
-			n || k(vM, !1);
+			n || k(bM, !1);
 		};
 		return window.addEventListener("pointerdown", r, !0), window.addEventListener("pointerup", i, !0), window.addEventListener("click", e, !0), window.addEventListener("keydown", t, !0), window.addEventListener("blur", a), () => {
 			window.removeEventListener("pointerdown", r, !0), window.removeEventListener("pointerup", i, !0), window.removeEventListener("click", e, !0), window.removeEventListener("keydown", t, !0), window.removeEventListener("blur", a);
 		};
 	});
 }
-var TM = {
-	materializeField: dM,
-	materializeEntryImages: fM,
-	materializeBackground: pM,
-	materializeBlockImages: mM,
-	materializeSection: hM,
-	materializeImages: gM,
-	materializeSiteImages: _M,
+var DM = {
+	materializeField: pM,
+	materializeEntryImages: mM,
+	materializeBackground: hM,
+	materializeBlockImages: gM,
+	materializeSection: _M,
+	materializeImages: vM,
+	materializeSiteImages: yM,
 	get discardArmed() {
-		return F(vM);
+		return F(bM);
 	},
 	set discardArmed(e) {
-		k(vM, e, !0);
+		k(bM, e, !0);
 	},
 	get discardWrapEl() {
-		return F(yM);
+		return F(xM);
 	},
 	set discardWrapEl(e) {
-		k(yM, e, !0);
+		k(xM, e, !0);
 	},
-	requestDiscard: bM,
-	confirmDiscard: xM,
-	discard: SM,
-	publish: CM,
-	effects: wM
-}, EM = /* @__PURE__ */ L("<button class=\"chrome-restore\"><!> </button>"), DM = /* @__PURE__ */ L("<button type=\"button\"></button>"), OM = /* @__PURE__ */ L("<aside><div class=\"panel-head\"><h2> </h2> <!></div> <!></aside>"), kM = /* @__PURE__ */ L("<div class=\"workspace\"><!> <!> <!></div>"), AM = /* @__PURE__ */ L("<p class=\"loading\"> </p>"), jM = /* @__PURE__ */ L("<div><span> </span> <button class=\"toast-x\">×</button></div>"), MM = /* @__PURE__ */ L("<div class=\"editor\"><!> <!> <!> <!> <!> <!> <!> <!></div> <!>", 1);
-function NM(e, t) {
+	requestDiscard: SM,
+	confirmDiscard: CM,
+	discard: wM,
+	publish: TM,
+	effects: EM
+}, OM = /* @__PURE__ */ L("<button class=\"chrome-restore\"><!> </button>"), kM = /* @__PURE__ */ L("<button type=\"button\"></button>"), AM = /* @__PURE__ */ L("<aside><div class=\"panel-head\"><h2> </h2> <!></div> <!></aside>"), jM = /* @__PURE__ */ L("<div class=\"workspace\"><!> <!> <!></div>"), MM = /* @__PURE__ */ L("<p class=\"loading\"> </p>"), NM = /* @__PURE__ */ L("<div><span> </span> <button class=\"toast-x\">×</button></div>"), PM = /* @__PURE__ */ L("<div class=\"editor\"><!> <!> <!> <!> <!> <!> <!> <!></div> <!>", 1);
+function FM(e, t) {
 	at(t, !0);
 	let n = [
-		aM,
-		Yk,
-		CD,
-		Xj,
+		sM,
+		Zk,
+		TD,
+		Qj,
 		Q,
 		$,
-		_A,
+		yA,
 		Yw,
-		WD,
-		PA,
+		KD,
+		IA,
 		SE,
-		zE,
-		TM
+		VE,
+		DM
 	], r = {};
 	for (let e of n) Object.defineProperties(r, Object.getOwnPropertyDescriptors(e));
 	Object.assign(r, {
@@ -28543,10 +28563,10 @@ function NM(e, t) {
 		blockEntranceOptions: () => $.BLOCK_ENTRANCE_OPTIONS,
 		hoverOptions: () => $.HOVER_OPTIONS,
 		openPanel: (e, t = {}) => {
-			t.calendars && (Q.siteCalendarsOpen = !0), Xj.activePanel = e;
+			t.calendars && (Q.siteCalendarsOpen = !0), Qj.activePanel = e;
 		},
 		openCollection: (e) => {
-			_A.activeCollection = e, Xj.activePanel = "collections";
+			yA.activeCollection = e, Qj.activePanel = "collections";
 		},
 		openDesignPicker: () => {
 			$.designPicker = { mode: "set" };
@@ -28556,14 +28576,14 @@ function NM(e, t) {
 	ia(() => {
 		r.init();
 	});
-	var i = MM();
+	var i = PM();
 	Br("keydown", hn, function(...e) {
 		r.onKeydown?.apply(this, e);
 	}), Br("pointerdown", hn, function(...e) {
 		r.onPointerdownWindow?.apply(this, e);
 	});
 	var a = j(i), o = A(a), s = (e) => {
-		var t = EM(), n = A(t);
+		var t = OM(), n = A(t);
 		V(n, () => q.pencil);
 		var i = N(n);
 		E(t), P((e, n) => {
@@ -28578,13 +28598,13 @@ function NM(e, t) {
 	var c = N(o, 2);
 	AC(c, {});
 	var l = N(c, 2), u = (e) => {
-		var t = kM(), n = A(t);
+		var t = jM(), n = A(t);
 		WC(n, {});
 		var i = N(n, 2), a = (e) => {
-			var t = OM();
+			var t = AM();
 			let n;
 			var i = A(t), a = A(i), o = M(a, !0), s = N(a, 2), c = (e) => {
-				var t = DM();
+				var t = kM();
 				let n;
 				V(t, () => q.foldToggle, !0), E(t), P((e, i) => {
 					n = H(t, 1, "fold-all fold-toggle", null, n, { collapse: r.panelAllOpen }), G(t, "title", e), G(t, "aria-label", i);
@@ -28630,7 +28650,7 @@ function NM(e, t) {
 			r.activePanel && e(a);
 		}), KC(N(i, 2), {}), E(t), R(e, t);
 	}, d = (e) => {
-		var t = AM(), n = M(t, !0);
+		var t = MM(), n = M(t, !0);
 		P((e) => z(n, e), [() => K("ui.loading")]), R(e, t);
 	};
 	B(l, (e) => {
@@ -28681,7 +28701,7 @@ function NM(e, t) {
 	var _ = N(g, 2);
 	QC(_, {});
 	var v = N(_, 2), y = (e) => {
-		var t = jM();
+		var t = NM();
 		let n;
 		var i = A(t), a = M(i, !0), o = N(i, 2);
 		E(t), P((e) => {
@@ -28709,6 +28729,6 @@ function NM(e, t) {
 //#endregion
 //#region src/main.js
 Vr(["click"]), document.documentElement.lang = await wa();
-var PM = ni(NM, { target: document.getElementById("urd-admin") });
+var IM = ni(FM, { target: document.getElementById("urd-admin") });
 //#endregion
-export { PM as default };
+export { IM as default };

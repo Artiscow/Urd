@@ -1780,7 +1780,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Unwrap or remove the wrapper | WS, FR, BR | Alt+Shift+C, ⌘⌫, context-menu Unwrap | n/a: flat blocks in sections | - |
 | Duplicate | WF, WS, WE, WH, SQ, WP, EL, BR, BD, DV, CA, DU, TI, WT, HO, ST, WN | Ctrl/⌘+D (WP ⇧⌘D) or right-click | Has: Ctrl+D | - |
 | Copy, cut and paste elements | WF, WS, WE, WH, SQ, WP, EL, BR, BD, DV, CA, DU, TI, WT, HO, RM | Clipboard shortcuts and context menus | Has | - |
-| Copy and paste styles only | WP, EL, DV, OX, BR, RM | Paste Style ⌘⇧V; copy/paste design ⌥⌘C/V; BR also per breakpoint; RM pastes animation settings | Missing | 0.7.10, animation included |
+| Copy and paste styles only | WP, EL, DV, OX, BR, RM | Paste Style ⌘⇧V; copy/paste design ⌥⌘C/V; BR also per breakpoint; RM pastes animation settings | Has (0.7.20.8): Ctrl+Alt+C and V, the look without the content, the animation included; the same type takes it whole, another the shared fields | - |
 | Cross-tool or cross-site paste | FS, WT, BR, TI | Figma↔Sites; paste Webflow/HTML/Tailwind/MD/SVG; HTML/CSS to Bricks; Figma into Zero Block | Missing | 0.7.10 paste pipeline (HTML, markdown); Figma is not taken |
 | Align | WE, FS, TI, FR | Align icon or toolbar; align to the container or to each other | Has | - |
 | Distribute evenly | WE | Horizontal or vertical axis | Has | - |
@@ -1811,7 +1811,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Hide UI, distraction-free, spotlight | WE, TI, WT, WP, WF, WS, EL | Shift+F, `⌘\`, Distraction Free, Spotlight, focus mode | Has: Clean view | - |
 | Movable panels, toolbar or workspaces | BR, CA, SQ, DV, WP | Toolbar on any side; move the UI; draggable panels; workspaces | Planned | 0.7.20.6 |
 | Dark editor UI | DV, WF, FR | Builder light/dark setting | Has: themed admin (ADR-0009) | - |
-| Right-click context menu | SQ, SH, WH, HO, BR, OX, DV | Contextual actions | Partial: the element menu | 0.7.20.8: a right-click menu on a block |
+| Right-click context menu | SQ, SH, WH, HO, BR, OX, DV | Contextual actions | Has (0.7.20.8): the block's and the section's menus at the pointer, from the keyboard too | - |
 
 #### 2. Insertion
 
@@ -2009,7 +2009,7 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | Lottie | DV | Lottie module | Missing | v0.8 Animation files |
 | Reduced motion | FR, WT | Setting or media condition | Has | - |
 | Component state interactions | FR, FS | Variant change on a trigger | n/a | - |
-| Copy animation settings | RM | ⇧⌘C/V | Missing | 0.7.10: paste styles |
+| Copy animation settings | RM | ⇧⌘C/V | Has (0.7.20.8): part of the copied style | - |
 | Preview or run animations in the editor | CA, OX | Alt+P; Run Interactions | Partial: motion demo | - |
 | Interaction reuse | WF, FR | Reusable interactions; effects on components | n/a | - |
 | Video plays in view | FR, WT | Video animation | Has | - |

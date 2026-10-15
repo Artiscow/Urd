@@ -197,6 +197,24 @@ function handleReviewDone(msg) {
 }
 
 /** Block flags from the preview: decor (the entrance wave) and/or hideMobile. */
+/** A pasted style's block-level fields (block-style.js): animation, hover, size, height and fit, written as one undo step; null clears a field. */
+const STYLE_FIELDS = ['animation', 'hover', 'size', 'sizeMin', 'sizeMax', 'height', 'fit', 'fitMin'];
+function handleBlockStyle(msg) {
+  const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
+  const block = section?.blocks.find((b) => b.id === msg.blockId);
+  if (!block || !msg.fields || typeof msg.fields !== 'object') return;
+  historyState.pushHistory('block-style');
+  for (const key of STYLE_FIELDS) {
+    if (!(key in msg.fields)) continue;
+    if (msg.fields[key] === null || msg.fields[key] === undefined) delete block[key];
+    else block[key] = structuredClone(msg.fields[key]);
+  }
+  pageState.store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageState.pageId, section);
+  if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
+}
+
 function handleBlockFlag(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
@@ -341,6 +359,7 @@ export const bridgeState = {
   handleMobileOrder,
   handleReviewDone,
   handleBlockFlag,
+  handleBlockStyle,
   handleAddSection,
   handleMoveSection,
   handleDeleteSection,

@@ -13233,12 +13233,9 @@ body.urd-mobile .urd-section-resize-top {
   display: none !important;
 }
 
-/* Mobile review: the section needs a pass over the mobile layout
-   (an editorial flag, preview only) */
-.urd-preview .urd-attention {
-  outline: 2px solid #e2b84a;
-  outline-offset: -2px;
-}
+/* Mobile review (urd-attention on the section): the section needs a pass
+   over the mobile layout. The flag is told by the top bar's badge and the
+   review card in the mobile view; the section itself is never outlined. */
 
 /* Decor toggle on the block toolbar */
 .urd-preview .urd-edit-toolbar .urd-edit-decor.on {
@@ -13415,6 +13412,87 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-editable:hover .urd-edit-toolbar,
 .urd-preview .urd-edit-toolbar:hover {
   display: flex;
+}
+
+/* The right-click menu on a block (openContextMenu in preview-edit.js): a
+   narrow list at the pointer in the admin's colours, counter-scaled like the
+   toolbar; the first item is the one Enter would take, the last the deletion */
+.urd-preview .urd-ctx {
+  position: fixed;
+  z-index: 100010;
+  min-width: 214px;
+  padding: 6px;
+  box-sizing: border-box;
+  background: var(--urd-admin-surface, #1b2030);
+  color: var(--urd-admin-text, #e9ebf2);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 10px;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 55%);
+  font: 500 13px/1.3 system-ui, sans-serif;
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top left;
+}
+
+.urd-preview .urd-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.urd-preview .urd-ctx-item kbd {
+  margin-left: auto;
+  padding-left: 16px;
+  font: inherit;
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.urd-preview .urd-ctx-item:hover,
+.urd-preview .urd-ctx-item:focus-visible {
+  background: var(--urd-admin-accent, #5f6a75);
+  color: var(--urd-admin-accent-text, #fff);
+  outline: none;
+}
+
+.urd-preview .urd-ctx-item:hover kbd,
+.urd-preview .urd-ctx-item:focus-visible kbd {
+  opacity: 0.9;
+}
+
+.urd-preview .urd-ctx-first {
+  font-weight: 700;
+}
+
+.urd-preview .urd-ctx-danger {
+  color: #ff8a80;
+}
+
+.urd-preview .urd-ctx-item[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.urd-preview .urd-ctx-armed {
+  color: #ff8a80;
+  font-weight: 700;
+}
+
+.urd-preview .urd-ctx-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: rgb(255 255 255 / 12%);
 }
 
 .urd-preview .urd-edit-toolbar button {
@@ -14313,10 +14391,6 @@ body.urd-mobile .urd-section-resize-top {
 /* Editorial markers sit as classes on the section itself and cannot
    be display:none-d: the effects are zeroed instead, so Clean view is
    identical to the published page. */
-.urd-preview.urd-chrome-off .urd-attention {
-  outline: none;
-}
-
 /* The height handle at the bottom edge of the section: the hit zone is 10px, but the
    visible line sits exactly on the section edge */
 /* Above the block lift on hover and selection (99998/99999): a block that hangs

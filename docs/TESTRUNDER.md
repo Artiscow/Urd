@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.20.8): the right-click menu
+
+- [ ] A right click on a block opens the menu at the pointer with Settings first and Delete last; every item does what it says (Settings opens the element menu, Duplicate, To the front and To the back, Hide and Show on mobile, Save as template, Delete); the arrows, Home, End, Escape and Tab behave; a click outside closes it; Shift+F10 and the context-menu key open it for the selected block
+- [ ] Copy style on one block and Paste style on another of the same type gives the look with the words kept; on a block of another type only the animation, hover, size, height and fit come across; Ctrl+Alt+C and Ctrl+Alt+V do the same without the menu; Ctrl+Z undoes a paste
+- [ ] A right click on a section's empty surface opens the section's menu: New block here opens the chooser at the point, Paste pastes the copied blocks, Section settings shows the section in Properties, New section below opens the preset choices, the moves move, Save as template saves, Delete asks for a second press; Shift+F10 with no block selected opens it for the active section
+- [ ] A right click in text you are typing in keeps the browser's own menu; the Clean view and the phone view show the browser's menu everywhere; the section toolbar's buttons keep theirs
+- [ ] No section ever gets an amber outline; the review flag shows only as the badge in the top bar and the card in the phone view
+- [ ] «1 section needs mobile review» in the top bar lands on the flagged section with its card in view in the phone view, also on a long page and at every zoom; «Reviewed» clears the badge
+
 ### Test batch (0.7.20.7): marks on own values
 
 - [ ] In every group of every block type: a setting at its default shows no dot; under switches and numbers a dimmed «Default: …» line; a changed setting gets the amber dot and the reset at the right, the group its dot; the row's reset puts that one setting back and leaves the others; the group's reset still puts all back

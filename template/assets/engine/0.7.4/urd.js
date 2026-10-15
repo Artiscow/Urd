@@ -366,9 +366,26 @@ function enablePreview(state, opts) {
         ?.classList.toggle('urd-attention', msg.needed !== false);
     } else if (msg?.type === 'urd-scroll-section' && msg.sectionId) {
       // The attention badge in the top bar: scroll to the section that needs
-      // review, so the badge points at a place and not just a mode.
-      root.querySelector(`[data-section-id="${msg.sectionId}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // review, so the badge points at a place and not just a mode. The
+      // badge also switches the view to the phone, whose layout settles over
+      // the next frames (blocks measure their heights), so the page is
+      // watched until its height has stood still, and the section is put at
+      // the top again if the settling moved it.
+      const target = () => root.querySelector(`[data-section-id="${msg.sectionId}"]`);
+      target()?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      let frames = 0;
+      let lastHeight = -1;
+      let still = 0;
+      const settle = () => {
+        const el = target();
+        if (!el || frames++ > 120) return;
+        const height = document.documentElement.scrollHeight;
+        if (height === lastHeight) still++;
+        else { still = 0; lastHeight = height; }
+        if (still < 8) { requestAnimationFrame(settle); return; }
+        if (Math.abs(el.getBoundingClientRect().top) > 4) el.scrollIntoView({ behavior: 'auto', block: 'start' });
+      };
+      requestAnimationFrame(settle);
     } else if (msg?.type === 'urd-collections' && msg.collections) {
       // Collection drafts from the editor: used instead of the server files.
       // Only sections with collection blocks are rerendered: a full

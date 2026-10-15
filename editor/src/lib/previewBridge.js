@@ -18,6 +18,7 @@
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder } (arrow moves in the mobile reading order)
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
+ *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
  *                  { type: 'urd-delete', sectionId, blockId | blockIds } (blockIds from a multi-selection: the whole selection in one undo step)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
@@ -96,6 +97,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-mobile-order') handlers.onMobileOrder?.(msg);
     if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
+    if (msg?.type === 'urd-block-style') handlers.onBlockStyle?.(msg);
     if (msg?.type === 'urd-collection-edit') handlers.onCollectionEdit?.(msg);
     if (msg?.type === 'urd-collection-add') handlers.onCollectionAdd?.(msg);
     if (msg?.type === 'urd-nav-width') handlers.onNavWidth?.(msg);

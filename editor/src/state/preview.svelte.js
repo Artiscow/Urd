@@ -188,6 +188,7 @@ function onIframeLoad() {
     onMobileOrder: bridgeState.handleMobileOrder,
     onReviewDone: bridgeState.handleReviewDone,
     onBlockFlag: bridgeState.handleBlockFlag,
+    onBlockStyle: bridgeState.handleBlockStyle,
     onCollectionEdit: collectionsState.handleCollectionEdit,
     onCollectionAdd: collectionsState.handleCollectionAdd,
     onSaveTemplate: templatesState.handleSaveTemplate,

@@ -16,6 +16,7 @@
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (arrow move in the mobile reading order)
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
+ *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
 import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
@@ -38,6 +39,7 @@ import { topDrag } from './section-size.js';
 import { snapTolerance, edgeSnap, gapSnap, lockAxis } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
+import { styleOf, pasteStyle } from './block-style.js';
 import { nearestDock } from './sticky-model.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
@@ -53,6 +55,257 @@ import { ta, adminLang } from './i18n.js';
 function eventTarget(event) {
   return event.target instanceof Element ? event.target : null;
 }
+
+/** The text a block lets the owner type in on the canvas, whichever editing mode it asked for. */
+const EDITABLE_TEXT = '[contenteditable="true"], [contenteditable="plaintext-only"]';
+
+/** z-order: puts the block at the top or the bottom among the section's blocks (the toolbar's arrows and the right-click menu). */
+function bumpBlockZ(host, section, block, el, dir) {
+  const others = section.blocks.filter((b) => b.id !== block.id);
+  const zs = others.map((b) => b.frames.desktop.z ?? 1);
+  let z;
+  if (dir > 0) {
+    z = zs.length ? Math.max(...zs) + 1 : 1;
+  } else if (!zs.length || Math.min(...zs) > 1) {
+    z = 1;
+  } else {
+    // Someone already sits at the bottom: push the others one notch up
+    // instead, so this one can go last (z never goes below 1).
+    z = 1;
+    for (const other of others) {
+      const frame = { ...other.frames.desktop, z: (other.frames.desktop.z ?? 1) + 1 };
+      other.frames.desktop = frame;
+      host.querySelector(`[data-block-id="${other.id}"]`)?.style.setProperty('z-index', String(frame.z));
+      // groupKey collects the whole z reordering (all blocks) into ONE undo step in the editor.
+      post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true, groupKey: `z-${block.id}` });
+    }
+  }
+  const frame = { ...block.frames.desktop, z };
+  block.frames.desktop = frame;
+  el.style.zIndex = String(z);
+  post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame, coalesce: true, groupKey: `z-${block.id}` });
+}
+
+/** The block menu in the editor, opened at the block (the toolbar's gear and the right-click menu's «Settings»). */
+function openBlockSettings(el, section, block) {
+  selectBlock(el);
+  const r = el.getBoundingClientRect();
+  post({ type: 'urd-block-menu', sectionId: section.id, blockId: block.id, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
+}
+
+/* The style clipboard (block-style.js): one copied look for the session,
+   pasted onto a block of the same type whole, onto another type as the
+   shared fields. */
+let styleClipboard = null;
+
+function copyBlockStyle(block) {
+  styleClipboard = styleOf(block);
+}
+
+function pasteBlockStyle(section, block) {
+  if (!styleClipboard) return;
+  const next = pasteStyle(block, styleClipboard);
+  if (next.props) {
+    block.props = next.props;
+    post({ type: 'urd-edit', sectionId: section.id, blockId: block.id, props: block.props, rerender: true });
+  }
+  post({ type: 'urd-block-style', sectionId: section.id, blockId: block.id, fields: next.shared });
+}
+
+/* The right-click menu (0.7.20.8, proposal N on the Design canvas): a narrow
+   menu at the pointer, or at the block or section when opened from the
+   keyboard (the context-menu key or Shift+F10). On a block it has «Settings»
+   first and the block's actions after it, on a section's surface the
+   section's actions, each with its key where it has one. One menu at a
+   time; Escape closes it and gives the focus back to where it was opened.
+   The APG menu pattern: role="menu", the arrow keys walk the items, Home
+   and End jump. */
+let contextMenu = null;
+
+function closeContextMenu(returnFocus = true) {
+  if (!contextMenu) return;
+  const { el, menu, cleanup } = contextMenu;
+  contextMenu = null;
+  cleanup();
+  menu.remove();
+  if (returnFocus && el.isConnected) {
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+    el.focus({ preventScroll: true });
+  }
+}
+
+/**
+ * Shows a menu at (x, y) for `el`, filled by `build(item, sep)`. An item
+ * with `arm` asks for a second press, the way the toolbar's deletions do.
+ */
+function showContextMenu(el, x, y, label, build) {
+  closeContextMenu(false);
+  const menu = document.createElement('div');
+  menu.className = 'urd-ctx';
+  menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', label);
+  const item = (text, key, run, opts = {}) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `urd-ctx-item${opts.danger ? ' urd-ctx-danger' : ''}`;
+    b.setAttribute('role', 'menuitem');
+    b.tabIndex = -1;
+    const span = document.createElement('span');
+    span.textContent = text;
+    b.appendChild(span);
+    if (key) {
+      const kbd = document.createElement('kbd');
+      kbd.textContent = key;
+      b.appendChild(kbd);
+    }
+    if (opts.disabled) b.setAttribute('aria-disabled', 'true');
+    let armed = false;
+    b.addEventListener('click', () => {
+      if (opts.disabled) return;
+      if (opts.arm && !armed) {
+        armed = true;
+        b.classList.add('urd-ctx-armed');
+        span.textContent = opts.arm;
+        return;
+      }
+      closeContextMenu(false);
+      run();
+    });
+    menu.appendChild(b);
+    return b;
+  };
+  const sep = () => {
+    const d = document.createElement('div');
+    d.className = 'urd-ctx-sep';
+    d.setAttribute('role', 'separator');
+    menu.appendChild(d);
+  };
+  build(item, sep);
+
+  // Keyboard inside the menu: the arrows walk the items and wrap, Home and End jump, Escape closes.
+  const items = () => [...menu.querySelectorAll('[role="menuitem"]')];
+  const focusAt = (i) => { const list = items(); list[(i + list.length) % list.length]?.focus(); };
+  menu.addEventListener('keydown', (event) => {
+    const list = items();
+    const i = list.indexOf(document.activeElement);
+    if (event.key === 'ArrowDown') { event.preventDefault(); focusAt(i + 1); }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); focusAt(i - 1); }
+    else if (event.key === 'Home') { event.preventDefault(); focusAt(0); }
+    else if (event.key === 'End') { event.preventDefault(); focusAt(-1); }
+    else if (event.key === 'Escape' || event.key === 'Tab') { event.preventDefault(); closeContextMenu(); }
+    event.stopPropagation();
+  });
+  // A press outside, a scroll of the page, a window the owner leaves or
+  // resizes: all close the menu. The listeners are set after the frame the
+  // menu opens in, since opening it can redraw the section under the pointer.
+  const outside = (event) => { if (!menu.contains(event.target)) closeContextMenu(false); };
+  const onScroll = () => closeContextMenu(false);
+  let wired = false;
+  const frame = requestAnimationFrame(() => {
+    wired = true;
+    document.addEventListener('pointerdown', outside, true);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('blur', onScroll);
+    window.addEventListener('resize', onScroll);
+  });
+  const cleanup = () => {
+    cancelAnimationFrame(frame);
+    if (!wired) return;
+    document.removeEventListener('pointerdown', outside, true);
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('blur', onScroll);
+    window.removeEventListener('resize', onScroll);
+  };
+  // Measured once in the page, then kept inside the window.
+  menu.style.left = '0px';
+  menu.style.top = '0px';
+  document.body.appendChild(menu);
+  const w = menu.offsetWidth;
+  const h = menu.offsetHeight;
+  menu.style.left = `${Math.max(4, Math.min(x, window.innerWidth - w - 4))}px`;
+  menu.style.top = `${Math.max(4, Math.min(y, window.innerHeight - h - 4))}px`;
+  contextMenu = { el, menu, cleanup };
+  focusAt(0);
+}
+
+/** The block's menu: «Settings» first, then the block's actions. */
+function openContextMenu(el, x, y) {
+  const ctx = el._urdCtx;
+  if (!ctx || isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+  const { host, section, block } = ctx;
+  selectBlock(el);
+  showContextMenu(el, x, y, ta('canvas.ctx.label'), (item, sep) => {
+    item(ta('canvas.ctx.settings'), 'Enter', () => openBlockSettings(el, section, block)).classList.add('urd-ctx-first');
+    sep();
+    item(ta('canvas.ctx.copyStyle'), 'Ctrl+Alt+C', () => copyBlockStyle(block));
+    item(ta('canvas.ctx.pasteStyle'), 'Ctrl+Alt+V', () => pasteBlockStyle(section, block), { disabled: !styleClipboard });
+    item(ta('canvas.ctx.duplicate'), 'Ctrl+D', () => duplicateBlock(section, block));
+    sep();
+    item(ta('canvas.ctx.toFront'), 'Ctrl+Shift+↑', () => bumpBlockZ(host, section, block, el, 1));
+    item(ta('canvas.ctx.toBack'), 'Ctrl+Shift+↓', () => bumpBlockZ(host, section, block, el, -1));
+    item(ta(block.hideMobile ? 'canvas.ctx.showMobile' : 'canvas.ctx.hideMobile'), '', () => {
+      block.hideMobile = !block.hideMobile;
+      post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, hideMobile: block.hideMobile });
+    });
+    item(ta('canvas.ctx.saveTemplate'), '', () => post({ type: 'urd-save-template', kind: 'blocks', blocks: [JSON.parse(JSON.stringify(block))] }));
+    sep();
+    item(ta('canvas.ctx.delete'), 'Delete', () => {
+      post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
+      selectBlock(null);
+    }, { danger: true });
+  });
+}
+
+/** The section's menu, on its empty surface: a new block at the point, the clipboard, the section's settings and its own actions. */
+function openSectionContextMenu(host, x, y) {
+  if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+  const section = host._urdSection;
+  if (!section) return;
+  selectBlock(null);
+  markActiveVisual(host);
+  // The «+ New section» bar below this section opens the preset choices.
+  const adderBelow = () => {
+    let n = host.nextElementSibling;
+    while (n && !n.classList.contains('urd-add-section')) n = n.nextElementSibling;
+    return n?.querySelector('button') ?? null;
+  };
+  showContextMenu(host, x, y, ta('canvas.ctx.sectionLabel'), (item, sep) => {
+    item(ta('canvas.ctx.newBlockHere'), '/', () => openBlockMenuAt(host, x, y)).classList.add('urd-ctx-first');
+    item(ta('canvas.ctx.paste'), 'Ctrl+V', () => pasteClipboard(), { disabled: !clipboard?.blocks?.length });
+    sep();
+    item(ta('canvas.ctx.sectionSettings'), '', () => { markActive(host); host.scrollIntoView({ block: 'nearest' }); });
+    item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: !adderBelow() });
+    item(ta('canvas.ctx.sectionUp'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
+    item(ta('canvas.ctx.sectionDown'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+    item(ta('canvas.ctx.saveSection'), '', () => post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) }));
+    sep();
+    item(ta('canvas.ctx.deleteSection'), '', () => post({ type: 'urd-delete-section', sectionId: section.id }), { danger: true, arm: ta('canvas.ctx.pressAgain') });
+  });
+}
+
+/* A right click opens the menu at the pointer: on a block the block's, on a
+   section's empty surface the section's; the browser's own stays off the
+   editing surface, except in text that held the caret before the press
+   (spelling, paste): the press itself moves the focus into the text, so
+   what had the focus is read on the way down. */
+let activeBeforePress = null;
+document.addEventListener('pointerdown', () => { activeBeforePress = document.activeElement; }, true);
+document.addEventListener('contextmenu', (event) => {
+  const target = eventTarget(event);
+  if (!target || isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+  const el = target.closest('.urd-block.urd-editable');
+  if (el) {
+    const text = target.closest(EDITABLE_TEXT);
+    if (text && activeBeforePress && text.contains(activeBeforePress)) return;
+    event.preventDefault();
+    openContextMenu(el, event.clientX, event.clientY);
+    return;
+  }
+  const host = target.closest('.urd-section');
+  if (!host || target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card, .urd-ctx, input, textarea, [contenteditable]')) return;
+  event.preventDefault();
+  openSectionContextMenu(host, event.clientX, event.clientY);
+});
 
 /**
  * Draws a desktop frame on its block with the push shift the block is
@@ -447,6 +700,8 @@ export function closeMenus() {
  */
 export function enhanceSection(host, section, grid) {
   host._urdGrid = grid;
+  // The section's data on its element, for the right-click menu on its surface.
+  host._urdSection = section;
   for (const el of host.querySelectorAll('.urd-block')) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
@@ -2704,7 +2959,7 @@ window.addEventListener('keydown', (event) => {
   const ctrl = event.ctrlKey || event.metaKey;
 
   // Ctrl+V needs no selection: paste where the active section is.
-  if (ctrl && event.key.toLowerCase() === 'v') {
+  if (ctrl && !event.altKey && event.key.toLowerCase() === 'v') {
     if (isMobile() || !clipboard) return;
     event.preventDefault();
     pasteClipboard();
@@ -2740,7 +2995,17 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  if (!selectedBlockId) return;
+  if (!selectedBlockId) {
+    // The section's menu from the keyboard, on the active section.
+    if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+      const active = document.querySelector('.urd-section-active');
+      if (!active || isMobile()) return;
+      event.preventDefault();
+      const r = active.getBoundingClientRect();
+      openSectionContextMenu(active, r.left + 16, Math.max(16, r.top + 16));
+    }
+    return;
+  }
 
   if (event.key === 'Escape') {
     selectBlock(null);
@@ -2750,6 +3015,37 @@ window.addEventListener('keydown', (event) => {
   const el = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`);
   const ctx = el?._urdCtx;
   if (!ctx) return;
+
+  // The right-click menu from the keyboard: the context-menu key, or Shift+F10.
+  if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+    if (isMobile()) return;
+    event.preventDefault();
+    const r = el.getBoundingClientRect();
+    openContextMenu(el, r.left + 8, r.top + 8);
+    return;
+  }
+
+  // The style clipboard: Ctrl+Alt+C copies the block's look, Ctrl+Alt+V pastes it.
+  if (ctrl && event.altKey && event.key.toLowerCase() === 'c') {
+    if (isMobile()) return;
+    event.preventDefault();
+    copyBlockStyle(ctx.block);
+    return;
+  }
+  if (ctrl && event.altKey && event.key.toLowerCase() === 'v') {
+    if (isMobile()) return;
+    event.preventDefault();
+    pasteBlockStyle(ctx.section, ctx.block);
+    return;
+  }
+
+  // z-order from the keyboard: Ctrl+Shift+Up to the front, Ctrl+Shift+Down to the back.
+  if (ctrl && event.shiftKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+    if (isMobile()) return;
+    event.preventDefault();
+    bumpBlockZ(ctx.host, ctx.section, ctx.block, el, event.key === 'ArrowUp' ? 1 : -1);
+    return;
+  }
 
   if (ctrl && event.key.toLowerCase() === 'c') {
     if (isMobile()) return;
@@ -2870,7 +3166,10 @@ document.addEventListener('pointerdown', (event) => {
   // the block); only the bare section surface switches to the section's
   // properties.
   const host = target?.closest('.urd-section');
-  if (blockEl) markActiveVisual(host);
+  // A right press marks the section visually only: the activation would
+  // redraw it before the browser's contextmenu event, which then lands on
+  // the detached node and never reaches the menu's listener.
+  if (blockEl || event.button === 2) markActiveVisual(host);
   else markActive(host);
 });
 
@@ -3456,32 +3755,7 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.appendChild(resetBtn);
   }
 
-  // z-order: put the block at the top/bottom among the section's blocks.
-  const bumpZ = (dir) => {
-    const others = section.blocks.filter((b) => b.id !== block.id);
-    const zs = others.map((b) => b.frames.desktop.z ?? 1);
-    let z;
-    if (dir > 0) {
-      z = zs.length ? Math.max(...zs) + 1 : 1;
-    } else if (!zs.length || Math.min(...zs) > 1) {
-      z = 1;
-    } else {
-      // Someone already sits at the bottom: push the others one notch up
-      // instead, so this one can go last (z never goes below 1).
-      z = 1;
-      for (const other of others) {
-        const frame = { ...other.frames.desktop, z: (other.frames.desktop.z ?? 1) + 1 };
-        other.frames.desktop = frame;
-        host.querySelector(`[data-block-id="${other.id}"]`)?.style.setProperty('z-index', String(frame.z));
-        // groupKey collects the whole z reordering (all blocks) into ONE undo step in the editor.
-        post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true, groupKey: `z-${block.id}` });
-      }
-    }
-    const frame = { ...block.frames.desktop, z };
-    block.frames.desktop = frame;
-    el.style.zIndex = String(z);
-    post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame, coalesce: true, groupKey: `z-${block.id}` });
-  };
+  const bumpZ = (dir) => bumpBlockZ(host, section, block, el, dir);
   // Structure (z-order, decor, deletion) is edited in the desktop view;
   // the mobile view is pure layout adjustment.
   if (!mobile) {
@@ -3549,16 +3823,7 @@ function enhanceBlock(el, block, section, grid, host) {
     // activation) BEFORE click fires - and then the button is swapped out
     // mid-click (the same guard as the handles).
     menuBtn.addEventListener('pointerdown', (event) => event.stopPropagation());
-    menuBtn.addEventListener('click', () => {
-      selectBlock(el);
-      const r = el.getBoundingClientRect();
-      post({
-        type: 'urd-block-menu',
-        sectionId: section.id,
-        blockId: block.id,
-        rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
-      });
-    });
+    menuBtn.addEventListener('click', () => openBlockSettings(el, section, block));
     toolbar.appendChild(menuBtn);
 
     const deleteBtn = document.createElement('button');
@@ -3798,10 +4063,7 @@ function enhanceBlock(el, block, section, grid, host) {
    * grid units and rounded continuously, so the block snaps visibly while
    * dragging. On release the new frame is reported to the editor.
    */
-  /** The text a block lets the owner type in on the canvas, whichever editing mode it asked for. */
-const EDITABLE_TEXT = '[contenteditable="true"], [contenteditable="plaintext-only"]';
-
-function wireDrag(handle, kind, opts = {}) {
+  function wireDrag(handle, kind, opts = {}) {
     handle.addEventListener('pointerdown', (event) => {
       if (opts.surface) {
         const target = eventTarget(event);
