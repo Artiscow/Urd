@@ -700,6 +700,8 @@ export default {
     'tip.settings.menuWidth': 'The width the element menu opens in. The button at the top of the menu switches for the session',
     'menu.toWide': 'Wide view',
     'menu.toNarrow': 'Narrow view',
+    'menu.backToBlock': 'Back beside the block',
+    'tip.menu.dragHead': 'Drag the head to move the menu; it stays where you put it for this session',
     'menu.back': 'Back to the menu',
     'menu.reset': 'Reset this group',
     'menu.pin': 'Pin to the quick row',

@@ -700,6 +700,8 @@ export default {
     'tip.settings.menuWidth': 'Öğe menüsünün açıldığı genişlik. Menünün üstündeki düğme oturum için değiştirir',
     'menu.toWide': 'Geniş görünüm',
     'menu.toNarrow': 'Dar görünüm',
+    'menu.backToBlock': 'Bloğun yanına geri',
+    'tip.menu.dragHead': 'Menüyü taşımak için başlığı sürükleyin; bu oturumda bıraktığınız yerde kalır',
     'menu.back': 'Menüye dön',
     'menu.reset': 'Bu grubu sıfırla',
     'menu.pin': 'Hızlı satıra sabitle',

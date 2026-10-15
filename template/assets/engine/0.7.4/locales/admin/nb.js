@@ -703,6 +703,8 @@ export default {
     'tip.settings.menuWidth': 'Bredden elementmenyen åpner i. Knappen øverst i menyen bytter for økten',
     'menu.toWide': 'Bred visning',
     'menu.toNarrow': 'Smal visning',
+    'menu.backToBlock': 'Tilbake ved blokken',
+    'tip.menu.dragHead': 'Dra i hodet for å flytte menyen; den blir stående der du satte den i denne økten',
     'menu.back': 'Tilbake til menyen',
     'menu.reset': 'Tilbakestill denne gruppen',
     'menu.pin': 'Fest i hurtigraden',

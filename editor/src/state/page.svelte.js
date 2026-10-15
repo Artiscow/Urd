@@ -3,6 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W } from '../menu/state.svelte.js';
+import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, SIZE_TEXT, STRETCHES } from '$engine/push-model.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
@@ -155,26 +156,55 @@ let designPicker = $state(null);
  *  block, or the floating menu closing, empties it (menu/state.svelte.js). */
 let searchBlockId = null;
 
+/** The block the floating menu was opened at, in the iframe's own coordinates, so «back beside the block» can place the menu again. */
+let menuAnchor = null;
+
 function onBlockMenu(msg) {
   onSelectBlock(msg);
   if (!selectedBlock) return;
+  menuAnchor = msg.rect;
+  blockMenu = menuPlaceFor(msg.rect);
+}
+
+/** The menu's box as the stylesheet sizes it (app.css .block-menu): the width for the chosen form, the height its ceiling. */
+function menuSize() {
   measureMenuRoom();
-  const MENU_W = Math.min(menu.wide && menu.room >= MENU_WIDE_W ? MENU_WIDE_W : 400, window.innerWidth - 16);
+  return {
+    w: Math.min(menu.wide && menu.room >= MENU_WIDE_W ? MENU_WIDE_W : 400, window.innerWidth - 16),
+    h: Math.min(window.innerHeight * 0.72, 620),
+  };
+}
+
+/**
+ * Where the floating menu stands for a block: where the owner dragged it this
+ * session, else beside the block (lib/menu-place.js). ir is the SCALED iframe
+ * rect and rect the block in the iframe's OWN coordinates, so inner points
+ * are multiplied by the scale before being added to the iframe's window
+ * position (visual = ir + scale * inner).
+ */
+function menuPlaceFor(rect) {
+  const size = menuSize();
+  const view = { w: window.innerWidth, h: window.innerHeight };
+  if (menu.place) return clampPlace(menu.place, size, view, menu.min);
   const ir = previewState.iframeEl?.getBoundingClientRect();
-  if (!ir) return;
-  // Beside the block: to the right if there is room, otherwise to the
-  // left, clamped inside the window (the menu itself scrolls when height
-  // is short). ir is the SCALED iframe rect; msg.rect is the block in the
-  // iframe's OWN (unscaled) coordinates, so inner points must be
-  // multiplied by scale before being added to the iframe's window
-  // position (visual = ir + scale * inner).
-  let left = ir.left + previewState.scale * msg.rect.right + 12;
-  if (left + MENU_W > window.innerWidth - 8) {
-    left = Math.max(8, ir.left + previewState.scale * msg.rect.left - MENU_W - 12);
-  }
-  const maxTop = window.innerHeight - Math.min(window.innerHeight * 0.7, 560) - 8;
-  const top = Math.min(Math.max(8, ir.top + previewState.scale * msg.rect.top), Math.max(8, maxTop));
-  blockMenu = { left, top };
+  if (!ir) return { left: menu.min, top: 8 };
+  const s = previewState.scale;
+  const block = { left: ir.left + s * rect.left, top: ir.top + s * rect.top, right: ir.left + s * rect.right, bottom: ir.top + s * rect.bottom };
+  const { left, top } = placeBesideBlock(block, size, view, { min: menu.min });
+  return { left, top };
+}
+
+/** The menu dragged by its head: the place is kept for the session and the menu stands there for every block. The menu's own measured box, when given, is what is kept inside the window. */
+function moveBlockMenu(place, size = menuSize()) {
+  const next = clampPlace(place, size, { w: window.innerWidth, h: window.innerHeight }, menu.min);
+  menu.place = next;
+  blockMenu = next;
+}
+
+/** «Back beside the block»: the remembered place is dropped, and the menu stands beside the block it was opened at. */
+function menuBackToBlock() {
+  menu.place = null;
+  if (menuAnchor) blockMenu = menuPlaceFor(menuAnchor);
 }
 
 /** Shared flow for block changes from the Properties panel. */
@@ -878,6 +908,8 @@ export const pageState = {
   onSelectBlock,
   get blockMenu() { return blockMenu; },
   set blockMenu(v) { blockMenu = v; },
+  moveBlockMenu,
+  menuBackToBlock,
   measureMenuRoom,
   get designPicker() { return designPicker; },
   set designPicker(v) { designPicker = v; },

@@ -24,6 +24,8 @@ export const menu = $state({
   propsQuery: '',
   /** The Content/Style/Placement tab of the narrow menu, remembered across selections. */
   tab: 'content',
+  /** Where the owner dragged the floating menu, kept for the session; null = beside the block (lib/menu-place.js). */
+  place: null,
 });
 
 /** Whether the floating menu stands wide: chosen wide, and with the room for it. */

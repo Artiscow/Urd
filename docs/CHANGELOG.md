@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.20.6 - The floating menu beside its block and never over it, dragged by its head, kept for the session, and put back beside the block - 15 October 2026
+
+- The floating element menu opened to the right of the block, else to the left clamped into the window, which could lay it over the block. It now takes the first of right, left and below that covers none of the block once clamped, else the one that covers the least (`placeBesideBlock` in the new editor/src/lib/menu-place.js, with tests; proposal J on the Design canvas «Urd elementmeny»).
+- The menu's head is a handle (proposal K): a grip and the grab cursor, a drag moves the whole menu clamped by its own box, and the place is kept for the session (`menu.place`), so the next block's menu opens where the owner left it. A button in the head, shown only once the menu was moved, puts it back beside the block it was opened at. Keys in nb, en-GB and tr.
+
 ### 0.7.20.5.3 - Every block in groups: the last fourteen families, the sole groups open, the caret and the cursor in every block's text; and the site's links with the links block - 15 October 2026
 
 - Table, quote, stats, FAQ and timeline; form, collection, product, cart and checkout; share, countdown, audio and map now follow the group map on the Design canvas «Urd elementmeny»: each group shows its value while closed and carries the dot and «Reset this group» when it differs, the settings that stand in the quick row carry pins, the map's two fields are one group in the field contract (plugin blocks keep their loose fields), and the divider line that ended every Style area is gone. The quick-row defaults from the map stand for every type. 0.7.20.5 is complete.

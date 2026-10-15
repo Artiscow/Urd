@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.20.6): the floating menu's place
+
+- [ ] The gear opens the floating menu beside the block: to the right, to the left when the right has no room, below when neither side is free, and never over the block; narrow and wide, at every zoom and in the device views
+- [ ] The head drags the menu (grip, grab cursor), the menu stops at the window's edges and never over the admin's panels, a press on the search field, the width button or the close cross in the head is not a drag
+- [ ] The place is kept: the next block's menu opens where the last one was left, until «Back beside the block» (shown only after a move) puts it beside the block, and the button then goes away; a reload starts beside the block again
+
 ### Test batch (0.7.20.5.3): the last families in groups, and the site's links
 
 - [ ] Table, quote, statistic, FAQ, timeline, form, collection, product, cart, checkout, share (now Links), countdown, audio and map: every setting stands in a group on the Design canvas's map, the closed value reads right, the dot and «Reset this group» appear and work, the pins put the mapped settings in the quick row, and no divider line ends a Style area
