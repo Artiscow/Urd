@@ -10,7 +10,7 @@
   import Dropdown from '../lib/Dropdown.svelte';
   import ColorPicker from '../lib/ColorPicker.svelte';
   import Pin from './Pin.svelte';
-  import { calDesign, calView } from '$engine/calendar-designs.js';
+  import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
   import { GALLERY_VIEWS, GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize } from '$engine/push-model.js';
@@ -62,6 +62,8 @@
     const items = [];
     if (b.type === 'calendar') {
       items.push({ id: 'design', label: ta('calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), run: ed.openDesignPicker });
+      items.push({ id: 'phoneView', label: ta('calendar.phoneView'), kind: 'open', value: ta(calPhoneDesignDef(calPhoneView(b.props), b.props).labelKey), run: ed.openPhonePicker });
+      items.push({ id: 'card', label: ta('calendar.card'), kind: 'open', value: ta(calCardDesignDef(calCardDesign(b.props)).labelKey), run: ed.openCardPicker });
       if (['list', 'cards', 'agenda'].includes(calView(b.props))) {
         items.push({ id: 'limit', label: ta('lbl.maxCount'), kind: 'number', min: 1, max: 50, value: b.props.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(1, Math.min(50, Number(v) || 6))) });
       }

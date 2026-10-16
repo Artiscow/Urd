@@ -1977,8 +1977,6 @@ export default {
     'calendar.picker.count': '{n} designer',
     'calendar.picker.preview': 'Förhandsvisning av {name} med exempeldata, i sidans eget tema',
     'tip.calendar.picker.open': 'Alla kalenderdesigner med bild, grupperade efter familj, med sök och filter på vy',
-    'calendar.phoneDesign': 'Telefondesign',
-    'tip.calendar.phoneDesign': 'På telefon ritas evenemangen som en enkel lista i designens färger, eftersom designen inte kan läsas där. Utan bock visas designen som den är',
     'calendar.viewWeek': 'Vecka',
     'calendar.viewDay': 'Dag',
     'calendar.viewYear': 'År',

@@ -8,7 +8,7 @@ import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, SIZE_TEXT, STRETCHES } from '$engine/push-model.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
-import { calDesign, calView } from '$engine/calendar-designs.js';
+import { calDesign, calView, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
 import { PAGE_SCHEMA_VERSION, liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
@@ -371,6 +371,18 @@ function setCalendarDesign(id) {
   const plainView = def.id === 'plain' && !['list', 'cards', 'month', 'agenda', 'next'].includes(calView(selectedBlock.props)) ? { view: 'list' } : {};
   // setBlockProps fits the frame to the new design.
   setBlockProps('design', { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}), ...plainView, ...counts });
+}
+
+/** The phone design the selected calendar draws on a phone (calPhoneView): stored only when it is not the design's own default, and the legacy switch is cleared. */
+function setCalendarPhoneView(id) {
+  const fallback = calPhoneView({ ...selectedBlock.props, phoneView: undefined, phoneDesign: undefined });
+  setBlockProps('phoneView', { phoneView: id === fallback ? undefined : id, phoneDesign: undefined });
+}
+
+/** The card design the selected calendar's card wears (calCardDesign): stored only when it is not the design's own default. */
+function setCalendarCard(id) {
+  const fallback = calCardDesign({ ...selectedBlock.props, card: undefined });
+  setBlockProp('card', id === fallback ? undefined : id);
 }
 
 function setBlockFit(mode) {
@@ -955,6 +967,8 @@ export const pageState = {
   applyPhoneHeight,
   dropFits,
   setCalendarDesign,
+  setCalendarPhoneView,
+  setCalendarCard,
   setBlockFit,
   setBlockFitMin,
   get sizeGesture() { return sizeGesture; },

@@ -3,10 +3,14 @@
  * template/admin/designs/<id>.webp (outside admin/assets, which the editor build empties): the block's own box, its width scaled to
  * 1120 px and its height as drawn, cut at 16:9 from the top for a design taller than that, so the picker shows each design in
  * its own proportions on the tile's dark surface rather than at the top of a white page.
+ * The phone designs follow (the neutral list, every design that reads on a phone, and the phone designs designs lend, calPhoneCandidates), each
+ * drawn at a phone's width as another block's phone view (a design of a span view over a block of that view), under phone-<id>.webp, cut at
+ * 4:5 from the top; then the card designs (the neutral card, every design's card, and the card designs designs lend, calCardCandidates), each
+ * the card open over a plain list, under card-<id>.webp.
  *
  * Run from the repo root with the local server up (python3 dev-server.py 8123) and a Chromium-family browser on the machine:
  *
- *     node scripts/design-pictures.mjs [--base http://localhost:8123] [--browser brave-browser] [--only table,heatmap]
+ *     node scripts/design-pictures.mjs [--base http://localhost:8123] [--browser brave-browser] [--only table,heatmap,phone-depStrip,card-depHead]
  *
  * The browser is started headless with the DevTools protocol on a free port and closed again; nothing but this script's
  * output changes. Run it again whenever a design changes its look, and commit the pictures with the change
@@ -79,13 +83,20 @@ try {
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: 1000, deviceScaleFactor: 1, mobile: false });
   await cdp.send('Page.navigate', { url: `${BASE}/?preview=1` });
   await wait(4000);
-  const ids = await cdp.evaluate(`(async () => {
+  const { ids, phones, cards } = await cdp.evaluate(`(async () => {
     const { engine } = await (await fetch('/urd.json')).json();
-    const { CAL_DESIGNS } = await import('/assets/engine/' + engine + '/calendar-designs.js');
+    const { CAL_DESIGNS, CAL_PHONE_DESIGNS, calCardCandidates } = await import('/assets/engine/' + engine + '/calendar-designs.js');
     const site = await (await fetch('/content/site.json')).json();
     window.postMessage({ type: 'urd-site', site }, location.origin);
     await new Promise((r) => setTimeout(r, 800));
-    return CAL_DESIGNS.map((d) => [d.id, d.view]);
+    // A lent phone design is drawn in the design that lends it, the neutral list in a design that cannot be read on a phone; a design that reads on a phone is drawn as the phone view of a block of its own view in another design.
+    const switching = CAL_DESIGNS.find((d) => d.phone === 'switch').id;
+    const phones = [
+      ...CAL_PHONE_DESIGNS.map((d) => [d.id, d.home ?? switching, null]),
+      ...CAL_DESIGNS.filter((d) => d.phone !== 'switch').map((d) => [d.id, d.id === 'plain' ? switching : 'plain', d.view]),
+    ];
+    // Every card is drawn opened from a plain list: a card design brings its own set, and the neutral one shows the calendar's.
+    return { ids: CAL_DESIGNS.map((d) => [d.id, d.view]), phones, cards: calCardCandidates().map((d) => [d.id, 'plain']) };
   })()`);
   mkdirSync(OUT, { recursive: true });
   const chosen = ONLY.length ? ids.filter(([id]) => ONLY.includes(id)) : ids;
@@ -121,8 +132,81 @@ try {
     writeFileSync(join(OUT, `${id}.webp`), Buffer.from(data, 'base64'));
     console.log(`${id}: ${box.w}x${box.h} block, picture written`);
   }
+  // The phone designs, at a phone's width.
+  const PHONE_W = 390;
+  await cdp.send('Emulation.setDeviceMetricsOverride', { width: PHONE_W, height: 1000, deviceScaleFactor: 1, mobile: true });
+  const chosenPhones = ONLY.length ? phones.filter(([id]) => ONLY.includes(`phone-${id}`)) : phones;
+  for (const [id, home, phoneViewOf] of chosenPhones) {
+    const box = await cdp.evaluate(`(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const page = await (await fetch('/content/pages/hjem.json')).json();
+      const { engine } = await (await fetch('/urd.json')).json();
+      const { calDesign } = await import('/assets/engine/' + engine + '/calendar-designs.js');
+      const def = calDesign(${JSON.stringify(home)});
+      const view = ${JSON.stringify(phoneViewOf)} ?? def.view ?? 'list';
+      const props = { sources: [], limit: 4, view, ...(def.id === 'plain' ? {} : { design: def.id }), ...(view === 'next' ? { nextCount: 3, laterCount: 3 } : {}), phoneView: ${JSON.stringify(id)} };
+      page.sections = [{ id: 'pic-sec', version: 1, size: { minHeight: '1400px' }, grid: null, background: { version: 1, layers: [] }, blocks: [
+        { id: 'pic-cal', type: 'calendar', version: 1, decor: false, hideMobile: false, animation: null, props, frames: { desktop: { x: 2.5, y: 24, w: 95, h: 600 }, mobile: null } },
+      ] }];
+      if (!document.getElementById('pic-style')) {
+        const style = document.createElement('style');
+        style.id = 'pic-style';
+        style.textContent = '.urd-nav, #urd-announce, .urd-nav-announce, .urd-totop { display: none !important; }';
+        document.head.appendChild(style);
+      }
+      window.postMessage({ type: 'urd-preview-full', page }, location.origin);
+      await sleep(2500);
+      window.postMessage({ type: 'urd-chrome', visible: false }, location.origin);
+      await sleep(400);
+      const el = document.querySelector('.urd-block[data-block-id="pic-cal"]');
+      el.scrollIntoView({ block: 'start' });
+      await sleep(300);
+      const r = el.getBoundingClientRect();
+      return { x: Math.round(r.left), y: Math.round(r.top + window.scrollY), w: Math.round(r.width), h: Math.round(r.height) };
+    })()`);
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, captureBeyondViewport: true, clip: { x: box.x, y: box.y, width: box.w, height: Math.min(box.h, Math.round(box.w * 5 / 4)), scale: 2 } });
+    const data = shot.result?.data;
+    if (!data) throw new Error(`phone-${id}: no picture (${JSON.stringify(shot)})`);
+    writeFileSync(join(OUT, `phone-${id}.webp`), Buffer.from(data, 'base64'));
+    console.log(`phone-${id}: ${box.w}x${box.h} block in ${home}, picture written`);
+  }
+  // The card designs: the first event's card, open over the design it belongs with.
+  await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: 1000, deviceScaleFactor: 1, mobile: false });
+  const chosenCards = ONLY.length ? cards.filter(([id]) => ONLY.includes(`card-${id}`)) : cards;
+  for (const [id, home] of chosenCards) {
+    const box = await cdp.evaluate(`(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const page = await (await fetch('/content/pages/hjem.json')).json();
+      const { engine } = await (await fetch('/urd.json')).json();
+      const { calDesign } = await import('/assets/engine/' + engine + '/calendar-designs.js');
+      const def = calDesign(${JSON.stringify(home)});
+      const props = { sources: [], limit: 4, showSignup: true, view: def.view ?? 'list', ...(def.id === 'plain' ? {} : { design: def.id }), ...(def.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}), card: ${JSON.stringify(id)} };
+      page.sections = [{ id: 'pic-sec', version: 1, size: { minHeight: '1400px' }, grid: null, background: { version: 1, layers: [] }, blocks: [
+        { id: 'pic-cal', type: 'calendar', version: 1, decor: false, hideMobile: false, animation: null, props, frames: { desktop: { x: 2.5, y: 24, w: 95, h: 600 }, mobile: null } },
+      ] }];
+      window.postMessage({ type: 'urd-preview-full', page }, location.origin);
+      await sleep(2500);
+      window.postMessage({ type: 'urd-chrome', visible: false }, location.origin);
+      await sleep(400);
+      const el = document.querySelector('.urd-block[data-block-id="pic-cal"]');
+      el.scrollIntoView({ block: 'start' });
+      await sleep(300);
+      el.querySelector('.urd-cal-event')?.click();
+      await sleep(700);
+      const dialog = document.querySelector('dialog.urd-cal-dialog[open]');
+      const r = dialog.getBoundingClientRect();
+      return { x: Math.round(r.left) - 12, y: Math.round(r.top + window.scrollY) - 12, w: Math.round(r.width) + 24, h: Math.round(r.height) + 24 };
+    })()`);
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, captureBeyondViewport: true, clip: { x: box.x, y: box.y, width: box.w, height: Math.min(box.h, Math.round(box.w * 5 / 4)), scale: 2 } });
+    const data = shot.result?.data;
+    if (!data) throw new Error(`card-${id}: no picture (${JSON.stringify(shot)})`);
+    writeFileSync(join(OUT, `card-${id}.webp`), Buffer.from(data, 'base64'));
+    console.log(`card-${id}: ${box.w}x${box.h} card over ${home}, picture written`);
+    await cdp.evaluate(`document.querySelector('dialog.urd-cal-dialog[open]')?.close(); true`);
+  }
 } finally {
   cdp?.close();
   browser.kill();
-  rmSync(profile, { recursive: true, force: true });
+  // The browser may still be writing its profile as it closes; a folder it holds on to is left to the system's temp cleaning.
+  try { rmSync(profile, { recursive: true, force: true }); } catch { /* left behind */ }
 }

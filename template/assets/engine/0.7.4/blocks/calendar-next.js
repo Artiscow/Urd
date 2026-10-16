@@ -557,3 +557,38 @@ export function nextBento(host, occs, props, ics, ui) {
   grid.appendChild(linkTile);
   host.appendChild(grid);
 }
+
+/* ---------- The cards of their own (`ownCard` in the design list), each run on the event's card by the block (ui.dressCard) ---------- */
+
+/** The card's facts as tiles: each term and its value wrapped together (a `div` inside the `dl`, as HTML allows). */
+function tileFacts(dialog, ui, className) {
+  const facts = dialog.querySelector('.urd-cal-dialog-facts');
+  if (!facts) return;
+  for (const term of [...facts.querySelectorAll(':scope > dt')]) {
+    const value = term.nextElementSibling;
+    const tile = ui.el('div', className);
+    term.before(tile);
+    tile.append(term, value);
+  }
+}
+
+export const cards = {
+  /** N1 Billboard: the card as a lit billboard on its legs, a pulse before the date and the facts as tiles; the frame, the lamps and the legs are base.css's. */
+  billboard(dialog, occ, ui) {
+    const date = dialog.querySelector('.urd-cal-dialog-date');
+    if (date) {
+      const pulse = ui.el('i', 'urd-cal-bb-carddot');
+      pulse.setAttribute('aria-hidden', 'true');
+      date.prepend(pulse);
+    }
+    tileFacts(dialog, ui, 'urd-cal-bb-cardtile');
+  },
+  /** N3 Noticeboard: the card as a pinned note, with the day on a second note pinned over its top corner. */
+  noticeboard(dialog, occ, ui) {
+    const d = dayOf(occ);
+    const day = ui.el('span', 'urd-cal-nb-cardday');
+    day.setAttribute('aria-hidden', 'true');
+    day.append(ui.el('strong', null, String(d.getDate())), ui.el('span', null, monthShort(d)));
+    dialog.prepend(day);
+  },
+};

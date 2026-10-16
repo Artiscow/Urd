@@ -17,7 +17,7 @@
   import MarkPicker from '../../lib/MarkPicker.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Pin from '../Pin.svelte';
-  import { calDesign, calView, calOptionDefs, calOptions, calOptionShown, calStripe, calHasExcerpt, calDescription, calSwitcherViews, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, CAL_FIELDS, CAL_SIZE, calHasTextOverrides, calResetTexts } from '$engine/calendar-designs.js';
+  import { calDesign, calView, calOptionDefs, calOptions, calOptionShown, calStripe, calHasExcerpt, calDescription, calSwitcherViews, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, CAL_FIELDS, CAL_SIZE, calHasTextOverrides, calResetTexts, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
   import { iconSvg } from '$engine/icons.js';
   import { FONT_STACKS } from '$engine/fonts.js';
   import { ta, adminLang as currentAdminLang } from '$engine/i18n.js';
@@ -257,14 +257,6 @@
       options={[['s', ta('calendar.toolsSize.s')], ['m', ta('calendar.toolsSize.m')], ['l', ta('calendar.toolsSize.l')]]}
       onchange={(v) => setBlockProp('toolsSize', v === 'm' ? undefined : v)} />
   {/if}
-  <!-- The phone design, on a design that cannot be read on a phone: on by default, switchable off -->
-  {#if calDesign(selectedBlock.props.design).phone === 'switch'}
-    <label class="gridmenu-snap" title={ta('tip.calendar.phoneDesign')}>
-      <input type="checkbox" checked={selectedBlock.props.phoneDesign !== false}
-        onchange={(e) => setBlockProp('phoneDesign', e.target.checked ? undefined : false)} />
-      {ta('calendar.phoneDesign')}
-    </label>
-  {/if}
   <!-- Where the description stands, on the designs with room for it in their rows -->
   {#if calHasExcerpt(selectedBlock.props)}
     <Choice label={ta('calendar.opt.description')} title={ta('tip.calendar.opt.description')} value={calDescription(selectedBlock.props)}
@@ -433,6 +425,20 @@
       <span class="menu-group-title">{ta('calendar.design')}</span><span class="menu-group-value">{ta(calDef.labelKey)}</span>
     </button>
     <Pin id="design" />
+  </div>
+  <!-- The phone design: what the calendar draws on a phone, the design's own default until the owner picks another -->
+  <div class="pin-line">
+    <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.phoneView')} onclick={ed.openPhonePicker}>
+      <span class="menu-group-title">{ta('calendar.phoneView')}</span><span class="menu-group-value">{ta(calPhoneDesignDef(calPhoneView(selectedBlock.props), selectedBlock.props).labelKey)}</span>
+    </button>
+    <Pin id="phoneView" />
+  </div>
+  <!-- The card design: how the card that opens at a press looks, the design's own default until the owner picks another -->
+  <div class="pin-line">
+    <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.card')} onclick={ed.openCardPicker}>
+      <span class="menu-group-title">{ta('calendar.card')}</span><span class="menu-group-value">{ta(calCardDesignDef(calCardDesign(selectedBlock.props)).labelKey)}</span>
+    </button>
+    <Pin id="card" />
   </div>
   {@const cm = calMenu()}
   {#snippet calOpts()}

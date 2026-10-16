@@ -1170,7 +1170,9 @@ textarea.urd-form-input {
    cards; the chips, the next panel and the month grid are its own. */
 /* The calendar block.
    Its colours are slots the owner can override in the Style tab (calendar-designs.js writes --urd-cal-s-<slot> on the host); every slot falls back to the theme, so a block without overrides follows the theme. --urd-cal-color is the event's own calendar colour, set per box by the block. */
-.urd-cal {
+/* A design drawn as another calendar's phone view (`.urd-cal-pd`) works its variables out again in its own box, from its own set and colours. */
+.urd-cal,
+.urd-cal-pd {
   --urd-cal-accent: var(--urd-cal-s-accent, var(--urd-color-accent));
   --urd-cal-accent-text: var(--urd-color-accent-text);
   --urd-cal-surface: var(--urd-cal-s-surface, var(--urd-color-surface));
@@ -1188,7 +1190,8 @@ textarea.urd-form-input {
  * The theme set follows the site; the others take the design's colour slots with the values the Design canvas drew.
  */
 .urd-cal,
-.urd-cal-dialog {
+.urd-cal-dialog,
+.urd-cal-pd {
   --urd-cal-set-bg: var(--urd-cal-s-surface, var(--urd-color-surface));
   --urd-cal-set-surface: var(--urd-color-bg);
   --urd-cal-set-ink: var(--urd-color-text);
@@ -1397,6 +1400,26 @@ textarea.urd-form-input {
   --urd-cal-set-title-weight: 400;
   --urd-cal-set-label-case: uppercase;
   --urd-cal-set-label-spacing: 0.14em;
+}
+
+.urd-cal-set-departures {
+  --urd-cal-set-bg: var(--urd-cal-s-board, #111315);
+  --urd-cal-set-surface: var(--urd-cal-s-flap, #23272c);
+  --urd-cal-set-ink: var(--urd-cal-s-text, #f4f1e6);
+  --urd-cal-set-muted: color-mix(in srgb, var(--urd-cal-s-text, #f4f1e6) 65%, transparent);
+  --urd-cal-set-line: var(--urd-cal-s-flap, #23272c);
+  --urd-cal-set-accent: var(--urd-cal-s-amber, #ffb000);
+  --urd-cal-set-accent-text: var(--urd-cal-s-board, #111315);
+  --urd-cal-set-label: var(--urd-cal-s-amber, #ffb000);
+  --urd-cal-set-radius: 10px;
+  --urd-cal-set-chip-radius: 4px;
+  --urd-cal-set-frame: 3px solid var(--urd-cal-s-flap, #23272c);
+  --urd-cal-set-shadow: 0 18px 40px rgb(0 0 0 / 45%);
+  --urd-cal-set-font: 'Share Tech Mono', ui-monospace, 'Courier New', monospace;
+  --urd-cal-set-title-font: Oswald, 'Roboto Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  --urd-cal-set-title-weight: 700;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.1em;
 }
 
 .urd-cal .urd-collection-card {
@@ -1680,11 +1703,10 @@ textarea.urd-form-input {
   inset: auto;
   box-sizing: border-box;
   width: min(28rem, calc(100vw - 1rem));
-  max-height: calc(100dvh - 1rem);
   padding: 1.2rem 1.3rem 1.1rem;
   margin: 0;
   font-size: 0.92rem;
-  overflow-y: auto;
+  overflow: visible;
   font-family: var(--urd-cal-set-font);
   line-height: 1.5;
   color: var(--dlg-text);
@@ -1779,6 +1801,19 @@ textarea.urd-form-input {
 
 .urd-cal-dlg-index .urd-cal-dialog-facts dt {
   opacity: 1;
+}
+
+/* R3 Departure board's card: the title in capitals on the condensed face, the button in amber. */
+.urd-cal-dlg-departures .urd-cal-dialog-title {
+  font-stretch: condensed;
+  text-transform: uppercase;
+}
+
+.urd-cal-dlg-departures a.urd-cal-dialog-primary {
+  font-family: var(--urd-cal-set-title-font);
+  font-stretch: condensed;
+  text-transform: uppercase;
+  border-radius: 8px;
 }
 
 .urd-cal-shade {
@@ -6055,6 +6090,875 @@ textarea.urd-form-input {
   border: 3px solid var(--urd-cal-index-rule);
   opacity: 0.85;
   rotate: -12deg;
+}
+
+/* R3 Departure board: split-flap rows on a dark board. A run of cells is one text on a tiled background: the monospace face advances one tile per letter (1ch plus the spacing), so the words stay text, and the tile pattern is centred under each letter. The variables serve the board, its phone designs and its cards alike. */
+.urd-cal-dep,
+.urd-cal-dlg-departures,
+.urd-cal-dlg-depHead,
+.urd-cal-dlg-depTitle,
+.urd-cal-dlg-depScreen {
+  --urd-cal-dep-board: var(--urd-cal-s-board, #111315);
+  --urd-cal-dep-flap: var(--urd-cal-s-flap, #23272c);
+  --urd-cal-dep-text: var(--urd-cal-s-text, #f4f1e6);
+  --urd-cal-dep-amber: var(--urd-cal-s-amber, #ffb000);
+  --urd-cal-dep-alert: var(--urd-cal-s-cancelled, #ff5a4f);
+  --urd-cal-dep-cell: 15px;
+  --urd-cal-dep-gap: 2px;
+  --urd-cal-dep-step: 17px;
+}
+
+.urd-cal-dep {
+  padding: 18px 20px 20px;
+  overflow-x: auto;
+  font-family: var(--urd-cal-set-font);
+  font-size: 15px;
+  color: var(--urd-cal-dep-text);
+  background: var(--urd-cal-dep-board);
+  border: 3px solid var(--urd-cal-dep-flap);
+  border-radius: 10px;
+}
+
+.urd-cal-dep-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1em;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.urd-cal-dep-title {
+  font-family: var(--urd-cal-set-title-font);
+  font-stretch: condensed;
+  font-size: 1.6em;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--urd-cal-dep-amber);
+  text-transform: uppercase;
+}
+
+.urd-cal-dep-updated {
+  font-size: 0.87em;
+  opacity: 0.7;
+}
+
+.urd-cal-dep-cols,
+.urd-cal-dep-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.urd-cal-dep-cols {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.urd-cal-dep-cols .urd-cal-dep-cells {
+  line-height: 1.4;
+  background: none;
+}
+
+.urd-cal-dep-rows {
+  display: grid;
+  gap: 8px;
+}
+
+.urd-cal-dep-row {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.urd-cal-dep-cells {
+  flex: none;
+  box-sizing: border-box;
+  width: calc(var(--n) * var(--urd-cal-dep-step) - var(--urd-cal-dep-gap));
+  overflow: hidden;
+  line-height: 24px;
+  letter-spacing: calc(var(--urd-cal-dep-step) - 1ch);
+  text-transform: uppercase;
+  white-space: pre;
+  background:
+    linear-gradient(transparent 48%, var(--urd-cal-dep-board) 48% 52%, transparent 52%),
+    repeating-linear-gradient(90deg, var(--urd-cal-dep-flap) 0 var(--urd-cal-dep-cell), transparent var(--urd-cal-dep-cell) var(--urd-cal-dep-step));
+  background-position: 0 0, calc((1ch - var(--urd-cal-dep-cell)) / 2) 0;
+  padding-left: calc((var(--urd-cal-dep-cell) - 1ch) / 2);
+}
+
+.urd-cal-dep .urd-cal-open {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  text-transform: inherit;
+  background: none;
+  border: 0;
+  opacity: 1;
+}
+
+.urd-cal-dep-amber {
+  color: var(--urd-cal-dep-amber);
+}
+
+.urd-cal-dep-alert {
+  color: var(--urd-cal-dep-alert);
+}
+
+/* A cancelled row says so in its status: a title on flaps is dimmed, not struck through them. */
+.urd-cal-dep-cells .urd-cal-cancelled.urd-cal-f-title {
+  text-decoration: none;
+  opacity: 0.6;
+}
+
+/* The small flaps of the compact board and the cards' status. */
+.urd-cal-dep-small {
+  --urd-cal-dep-cell: 13px;
+  --urd-cal-dep-step: 15px;
+  font-size: 13px;
+  line-height: 21px;
+}
+
+/* Without rewriting the rows hold the calendar's own text whole: no tiles, no fixed cells, wrapping as it must. */
+.urd-cal-dep-plain .urd-cal-dep-row {
+  align-items: baseline;
+  white-space: normal;
+}
+
+.urd-cal-dep-plain .urd-cal-dep-row .urd-cal-dep-cells {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: calc(var(--n) * 1.9ch);
+  padding-left: 0;
+  overflow: visible;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+  background: none;
+}
+
+/* Where the browser has subgrid the plain rows share one set of columns with the heads; without it each row lays itself out, which still reads. */
+@supports (grid-template-columns: subgrid) {
+  .urd-cal-dep-plain .urd-cal-dep-rows {
+    grid-template-columns: max-content max-content minmax(8em, 2fr) minmax(6em, 1fr) max-content;
+    column-gap: 14px;
+  }
+
+  .urd-cal-dep-plain .urd-cal-dep-cols,
+  .urd-cal-dep-plain .urd-cal-dep-row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+
+  .urd-cal-dep-plain .urd-cal-dep-text {
+    grid-column: 1 / -1;
+  }
+
+  .urd-cal-dep-plain .urd-cal-dep-row .urd-cal-dep-cells,
+  .urd-cal-dep-plain .urd-cal-dep-cols .urd-cal-dep-cells {
+    width: auto;
+    min-width: 0;
+  }
+}
+
+.urd-cal-dep-text {
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: normal;
+  opacity: 0.85;
+}
+
+.urd-cal-dep-text a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.urd-cal-dep-more {
+  white-space: nowrap;
+}
+
+.urd-cal-dep-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em 18px;
+  align-items: baseline;
+  margin-top: 16px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.urd-cal-dep-foot .urd-cal-subscribe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 0;
+}
+
+.urd-cal-dep-foot .urd-cal-sub-btn {
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--urd-cal-dep-amber);
+  text-decoration: none;
+  background: none;
+  border: 0;
+}
+
+.urd-cal-dep-foot .urd-cal-sub-btn::before {
+  content: '\25B8 ';
+}
+
+.urd-cal-dep-hint {
+  opacity: 0.6;
+}
+
+/* The board on a phone: two phone designs of its own. The compact board stacks each event as two flap rows; the strip keeps one flap row over the title. */
+.urd-cal-dep-event {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  cursor: pointer;
+  border-top: 1px solid var(--urd-cal-dep-flap);
+}
+
+.urd-cal-dep-compact .urd-cal-dep-row,
+.urd-cal-dep-strip .urd-cal-dep-row,
+.urd-cal-dep-compact .urd-cal-dep-cols,
+.urd-cal-dep-strip .urd-cal-dep-cols {
+  gap: 10px;
+}
+
+.urd-cal-dep-compact,
+.urd-cal-dep-strip {
+  padding: 16px 16px 16px;
+}
+
+.urd-cal-dep-compact .urd-cal-dep-title,
+.urd-cal-dep-strip .urd-cal-dep-title {
+  font-size: 1.35em;
+}
+
+.urd-cal-dep-place {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.urd-cal-dep-strip .urd-cal-dep-event {
+  gap: 2px;
+  padding: 12px 0;
+}
+
+.urd-cal-dep-strip .urd-cal-dep-row {
+  margin-bottom: 6px;
+}
+
+.urd-cal-dep-name {
+  display: block;
+  font-family: var(--urd-cal-set-title-font);
+  font-stretch: condensed;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.urd-cal-dep-strip .urd-cal-dep-place {
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.75;
+}
+
+/* A design drawn as another block's phone view (calPhoneCandidates, `.urd-cal-pd`): its box stands in the block in the design's own set. */
+.urd-cal-pd {
+  color: var(--urd-cal-set-ink);
+}
+
+/* The board's three card designs (CAL_CARD_DESIGNS): the board row on top, the title on the flaps, and the screen; each brings the board's set to the card wherever it is chosen. */
+.urd-cal-dlg-depHead .urd-cal-dialog-title,
+.urd-cal-dlg-depScreen .urd-cal-dialog-title {
+  font-stretch: condensed;
+  text-transform: uppercase;
+}
+.urd-cal-dep-cardrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 2.6rem 0.8rem 0;
+}
+
+.urd-cal-dlg-depHead .urd-cal-dialog-facts dt {
+  padding-top: 2px;
+  font-size: 0.8em;
+  letter-spacing: 0.14em;
+  color: var(--urd-cal-set-accent);
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+.urd-cal-dlg-depTitle .urd-cal-dialog-date {
+  font-size: 0.8em;
+  letter-spacing: 0.16em;
+}
+
+.urd-cal-dep-cardtitle {
+  display: grid;
+  gap: 4px;
+  margin-right: 0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.urd-cal-dlg-depTitle .urd-cal-dialog-facts {
+  padding-top: 0.8rem;
+  border-top: 2px solid var(--urd-cal-set-accent);
+}
+
+.urd-cal-dlg-depTitle a.urd-cal-dialog-primary {
+  color: var(--urd-cal-set-accent);
+  background: transparent;
+  border: 2px solid var(--urd-cal-set-accent);
+}
+
+.urd-cal-dlg-depScreen {
+  padding-top: 0;
+  background-image: repeating-linear-gradient(transparent 0 3px, rgb(255 255 255 / 3%) 3px 4px);
+}
+
+.urd-cal-dep-cardband {
+  display: flex;
+  align-items: center;
+  min-height: 2.6rem;
+  margin: 0 -1.3rem 1rem;
+  padding: 0.5rem 3.4rem 0.5rem 1.3rem;
+  background: var(--urd-cal-set-surface);
+}
+
+.urd-cal-dlg-depScreen .urd-cal-dialog-date {
+  padding: 0;
+  font-size: 0.8em;
+  letter-spacing: 0.18em;
+}
+
+.urd-cal-dlg-depScreen .urd-cal-dialog-close {
+  top: 0.45rem;
+  border-color: transparent;
+}
+
+.urd-cal-dep-cardtop {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 0 0 0.9rem;
+}
+
+.urd-cal-dep-cardtop .urd-cal-dialog-title {
+  margin: 0;
+}
+
+.urd-cal-dlg-depScreen .urd-cal-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.urd-cal-dlg-depScreen a.urd-cal-dialog-primary {
+  margin: 0;
+  border-radius: 4px;
+}
+
+.urd-cal-dlg-depScreen .urd-cal-dialog-add summary {
+  display: block;
+  padding: 0.7rem 0.6rem;
+  font-family: var(--urd-cal-set-title-font);
+  font-stretch: condensed;
+  text-align: center;
+  text-transform: uppercase;
+  background: var(--urd-cal-set-surface);
+  border-radius: 4px;
+}
+
+/*
+ * The cards of their own (`ownCard` in the design list), from the design rounds on the Design canvas («Egne kort: kortet har samme form som tingen designet etterligner»).
+ * Each is drawn on the card under the design's card class and its set, and a design's module adds a part the card has no element for (its `cards`). The rules stand after the sets' card rules and carry the card's own class too, so they win over them.
+ */
+
+/* 03 Tickets: an admission ticket, the stub across the top with the day large, and a tear-off line with a half-moon notch at each end above the buttons. */
+.urd-cal-dialog.urd-cal-dlg-tickets {
+  --urd-cal-tk-stub: var(--urd-cal-s-stub, var(--urd-cal-set-accent));
+  --urd-cal-tk-stubtext: var(--urd-cal-s-stubText, var(--urd-cal-set-accent-text));
+  padding-top: 0;
+  border-radius: 12px;
+}
+
+.urd-cal-tk-cardstub {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 0 -1.3rem 1rem;
+  padding: 0.9rem 3.4rem 0.9rem 1.3rem;
+  color: var(--urd-cal-tk-stubtext);
+  background: var(--urd-cal-tk-stub);
+  border-radius: 11px 11px 0 0;
+}
+
+.urd-cal-tk-cardday {
+  display: grid;
+  line-height: 0.9;
+  text-align: center;
+}
+
+.urd-cal-tk-cardday strong {
+  font-size: 2.8em;
+  font-weight: 800;
+}
+
+.urd-cal-tk-cardday span {
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.urd-cal-dlg-tickets .urd-cal-tk-cardstub .urd-cal-dialog-date {
+  padding: 0;
+  font-weight: 700;
+  color: inherit;
+}
+
+.urd-cal-dlg-tickets .urd-cal-dialog-close {
+  top: 1.1rem;
+  color: var(--urd-cal-tk-stubtext);
+  border-color: transparent;
+}
+
+.urd-cal-dlg-tickets .urd-cal-dialog-facts dt {
+  align-self: center;
+  font-size: 0.75em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.urd-cal-dlg-tickets .urd-cal-dialog-actions {
+  position: relative;
+  margin: 0 -1.3rem;
+  padding: 1.1rem 1.3rem 0;
+  border-top: 2px dashed var(--urd-cal-set-line);
+}
+
+.urd-cal-dlg-tickets .urd-cal-dialog-actions::before,
+.urd-cal-dlg-tickets .urd-cal-dialog-actions::after {
+  position: absolute;
+  top: -14px;
+  width: 26px;
+  height: 26px;
+  content: '';
+  background: rgb(10 10 14 / 55%);
+  border-radius: 50%;
+}
+
+.urd-cal-dlg-tickets .urd-cal-dialog-actions::before {
+  left: -13px;
+}
+
+.urd-cal-dlg-tickets .urd-cal-dialog-actions::after {
+  right: -13px;
+}
+
+.urd-cal-dlg-tickets a.urd-cal-dialog-primary {
+  color: var(--urd-cal-tk-stubtext);
+  background: var(--urd-cal-tk-stub);
+  border-radius: 8px;
+}
+
+/* 02 Poster wall: the card as a poster in the second poster colour, taped at its two top corners and a little askew, the day large in the third. */
+.urd-cal-dialog.urd-cal-dlg-posters {
+  --urd-cal-set-bg: var(--urd-cal-s-posterB, var(--urd-color-text));
+  --urd-cal-set-ink: var(--urd-cal-s-posterBText, var(--urd-color-bg));
+  --urd-cal-pw-hi: var(--urd-cal-s-posterC, color-mix(in srgb, var(--urd-cal-s-accent, var(--urd-color-accent)) 22%, var(--urd-color-surface)));
+  --urd-cal-pw-hitext: var(--urd-cal-s-posterCText, var(--urd-color-text));
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 50%);
+  rotate: -0.8deg;
+}
+
+.urd-cal-dialog.urd-cal-dlg-posters::before,
+.urd-cal-dialog.urd-cal-dlg-posters::after {
+  position: absolute;
+  top: -10px;
+  width: 78px;
+  height: 24px;
+  content: '';
+  background: rgb(255 255 255 / 55%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 15%);
+}
+
+.urd-cal-dialog.urd-cal-dlg-posters::before {
+  left: -18px;
+  rotate: -32deg;
+}
+
+.urd-cal-dialog.urd-cal-dlg-posters::after {
+  right: -18px;
+  rotate: 32deg;
+}
+
+.urd-cal-pw-cardday {
+  display: block;
+  margin-top: 0.3rem;
+  font-family: var(--urd-font-heading);
+  font-size: 6.5em;
+  font-weight: 800;
+  line-height: 0.85;
+  color: var(--urd-cal-pw-hi);
+}
+
+.urd-cal-dlg-posters .urd-cal-dialog-date {
+  margin-bottom: 0.6rem;
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: inherit;
+  text-transform: uppercase;
+}
+
+.urd-cal-dlg-posters .urd-cal-dialog-title {
+  font-size: 1.9em;
+  font-weight: 800;
+  line-height: 1.02;
+}
+
+.urd-cal-dlg-posters .urd-cal-dialog-facts {
+  padding: 0.6rem 0;
+  border-top: 2px solid var(--urd-cal-pw-hi);
+  border-bottom: 2px solid var(--urd-cal-pw-hi);
+}
+
+.urd-cal-dlg-posters .urd-cal-dialog-facts dt {
+  font-weight: 700;
+  opacity: 1;
+}
+
+.urd-cal-dlg-posters a.urd-cal-dialog-primary {
+  color: var(--urd-cal-pw-hitext);
+  background: var(--urd-cal-pw-hi);
+  border-radius: 6px;
+}
+
+/* 07 Programme booklet: a page out of the booklet, the binding shaded along its left edge with two staples, «Program» over a rule at its top. */
+.urd-cal-dialog.urd-cal-dlg-booklet {
+  padding-left: 2.4rem;
+  background-image: linear-gradient(90deg, rgb(0 0 0 / 12%), transparent 22px);
+  border: 0;
+  border-radius: 2px 6px 6px 2px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+
+.urd-cal-dialog.urd-cal-dlg-booklet::before,
+.urd-cal-dialog.urd-cal-dlg-booklet::after {
+  position: absolute;
+  left: 10px;
+  width: 3px;
+  height: 26px;
+  content: '';
+  background: linear-gradient(90deg, #8a8f94, #d9dde0, #8a8f94);
+  border-radius: 2px;
+}
+
+.urd-cal-dialog.urd-cal-dlg-booklet::before {
+  top: 70px;
+}
+
+.urd-cal-dialog.urd-cal-dlg-booklet::after {
+  bottom: 70px;
+}
+
+.urd-cal-bk-cardhead {
+  margin-bottom: 0.9rem;
+  padding: 0 3rem 0.5rem 0;
+  font-family: var(--urd-font-heading);
+  font-size: 1.35em;
+  font-weight: 800;
+  border-bottom: 2px solid var(--urd-cal-s-rule, var(--urd-color-text));
+}
+
+.urd-cal-dlg-booklet .urd-cal-dialog-title {
+  font-size: 1.8em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.urd-cal-dlg-booklet .urd-cal-dialog-facts dt {
+  font-weight: 700;
+}
+
+.urd-cal-dlg-booklet a.urd-cal-dialog-primary {
+  color: var(--urd-cal-set-bg);
+  background: var(--urd-cal-set-ink);
+  border-radius: 6px;
+}
+
+/* N1 Billboard: the card as a lit billboard in a dark frame, two lamps over its top edge throwing light down on it and two legs under it; a pulse before the date, the facts as tiles. */
+.urd-cal-dialog.urd-cal-dlg-billboard {
+  background-image:
+    radial-gradient(ellipse 130px 120px at 22% 0, rgb(255 250 220 / 22%), transparent 70%),
+    radial-gradient(ellipse 130px 120px at 78% 0, rgb(255 250 220 / 22%), transparent 70%);
+  border: 8px solid #2c3532;
+  border-radius: 10px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 50%);
+}
+
+.urd-cal-dialog.urd-cal-dlg-billboard::before {
+  position: absolute;
+  top: -24px;
+  right: 70px;
+  left: 70px;
+  height: 10px;
+  content: '';
+  background: linear-gradient(90deg, #3a4642 0 44px, transparent 44px calc(100% - 44px), #3a4642 calc(100% - 44px));
+  border-radius: 3px;
+}
+
+.urd-cal-dialog.urd-cal-dlg-billboard::after {
+  position: absolute;
+  right: 90px;
+  bottom: -42px;
+  left: 90px;
+  height: 34px;
+  content: '';
+  background: linear-gradient(90deg, #232b28, #3a4642 7px, #232b28 14px, transparent 14px calc(100% - 14px), #232b28 calc(100% - 14px), #3a4642 calc(100% - 7px), #232b28);
+}
+
+.urd-cal-bb-carddot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  vertical-align: 0.1em;
+  background: var(--urd-cal-s-pulse, var(--urd-cal-set-label));
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--urd-cal-s-pulse, var(--urd-cal-set-label)) 30%, transparent);
+}
+
+.urd-cal-dlg-billboard .urd-cal-dialog-date {
+  font-size: 0.8em;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.urd-cal-dlg-billboard .urd-cal-dialog-title {
+  font-size: 2em;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.urd-cal-dlg-billboard .urd-cal-dialog-facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.urd-cal-bb-cardtile {
+  padding: 10px 12px;
+  color: var(--urd-cal-s-tileText, inherit);
+  background: var(--urd-cal-s-tile, var(--urd-cal-set-surface));
+  border-radius: 10px;
+}
+
+.urd-cal-bb-cardtile:last-child:nth-child(odd) {
+  grid-column: span 2;
+}
+
+.urd-cal-dlg-billboard .urd-cal-bb-cardtile dt {
+  display: block;
+  font-size: 0.75em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--urd-cal-set-label);
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+.urd-cal-dlg-billboard .urd-cal-dialog-text {
+  color: var(--urd-cal-set-muted);
+}
+
+.urd-cal-dlg-billboard a.urd-cal-dialog-primary {
+  color: var(--urd-cal-s-buttonText, var(--urd-cal-set-accent-text));
+  background: var(--urd-cal-s-button, var(--urd-cal-set-accent));
+  border-radius: 10px;
+}
+
+/* N3 Noticeboard: the card as a note pinned to the board, a little askew, with the day on a second note pinned over its top corner. */
+.urd-cal-dialog.urd-cal-dlg-noticeboard {
+  padding-top: 1.5rem;
+  transform: none;
+  rotate: 1deg;
+}
+
+.urd-cal-nb-cardday {
+  position: absolute;
+  top: -26px;
+  left: -14px;
+  z-index: 1;
+  display: grid;
+  padding: 12px 14px 10px;
+  line-height: 0.9;
+  color: var(--urd-cal-s-noteAltText, #17201d);
+  text-align: center;
+  background: var(--urd-cal-s-noteAlt, #d9ecff);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 30%);
+  rotate: -7deg;
+}
+
+.urd-cal-nb-cardday::before {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  content: '';
+  background: var(--urd-cal-s-pinAlt, #2f6fd6);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 35%);
+}
+
+.urd-cal-nb-cardday strong {
+  font-size: 2.3em;
+  font-weight: 800;
+}
+
+.urd-cal-nb-cardday span {
+  font-size: 0.8em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.urd-cal-dlg-noticeboard .urd-cal-dialog-date {
+  padding-left: 4.4rem;
+  color: color-mix(in srgb, var(--urd-cal-set-label) 66%, #000);
+}
+
+.urd-cal-dlg-noticeboard .urd-cal-dialog-facts dt {
+  font-weight: 700;
+  color: color-mix(in srgb, var(--urd-cal-set-label) 66%, #000);
+  opacity: 1;
+}
+
+.urd-cal-dlg-noticeboard a.urd-cal-dialog-primary {
+  color: var(--urd-cal-s-buttonText, var(--urd-cal-set-accent-text));
+  background: var(--urd-cal-s-button, var(--urd-cal-set-accent));
+  border-radius: 6px;
+}
+
+/* M2 Glass: the card as a frosted glass plate with the three colour blobs glowing through it, the date on a glass pill and the facts on an inner pane; the calendar behind it is blurred rather than darkened, so the glass has colour to break. */
+.urd-cal-dialog.urd-cal-dlg-glass {
+  --urd-cal-gl-line: var(--urd-cal-s-glassLine, rgb(255 255 255 / 80%));
+  background:
+    linear-gradient(rgb(255 255 255 / 55%), rgb(255 255 255 / 55%)),
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--urd-cal-s-blobA, #ff8a65) 70%, transparent), transparent 45%),
+    radial-gradient(circle at 92% 100%, color-mix(in srgb, var(--urd-cal-s-blobB, #7fd1c4) 70%, transparent), transparent 50%),
+    radial-gradient(circle at 78% 40%, color-mix(in srgb, var(--urd-cal-s-blobC, #ffd36b) 50%, transparent), transparent 32%);
+  border: 1px solid var(--urd-cal-gl-line);
+  border-radius: 26px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 95%), 0 30px 60px rgb(23 22 26 / 28%);
+  backdrop-filter: blur(24px) saturate(1.4);
+}
+
+.urd-cal-card-glass .urd-cal-shade {
+  background: rgb(255 255 255 / 12%);
+  backdrop-filter: blur(6px);
+}
+
+.urd-cal-dlg-glass .urd-cal-dialog-date {
+  display: inline-block;
+  margin-right: 3rem;
+  padding: 6px 12px;
+  font-size: 0.82em;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: inherit;
+  text-transform: none;
+  background: rgb(255 255 255 / 60%);
+  border: 1px solid var(--urd-cal-gl-line);
+  border-radius: 999px;
+}
+
+.urd-cal-dlg-glass .urd-cal-dialog-title {
+  margin-top: 0.9rem;
+  font-size: 1.6em;
+  font-weight: 600;
+}
+
+.urd-cal-dlg-glass .urd-cal-dialog-close {
+  border-color: var(--urd-cal-gl-line);
+}
+
+.urd-cal-dlg-glass .urd-cal-dialog-facts {
+  padding: 12px 14px;
+  background: rgb(255 255 255 / 50%);
+  border: 1px solid var(--urd-cal-gl-line);
+  border-radius: 16px;
+}
+
+.urd-cal-dlg-glass .urd-cal-dialog-facts dt {
+  align-self: center;
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+/* M5 Dark glass: the card as smoked glass lit along its edges by the two colour blobs, a dot before the date and the title glowing. */
+.urd-cal-dialog.urd-cal-dlg-darkGlass {
+  --urd-cal-dgc-a: var(--urd-cal-s-blobA, var(--urd-color-accent));
+  --urd-cal-dgc-b: var(--urd-cal-s-blobB, #3fb8a4);
+  background:
+    radial-gradient(circle at 0 0, color-mix(in srgb, var(--urd-cal-dgc-a) 22%, transparent), transparent 45%) padding-box,
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--urd-cal-dgc-b) 20%, transparent), transparent 45%) padding-box,
+    linear-gradient(160deg, rgb(28 28 34 / 94%), rgb(16 16 20 / 97%)) padding-box,
+    linear-gradient(135deg, var(--urd-cal-dgc-a), rgb(255 255 255 / 15%) 35%, rgb(255 255 255 / 8%) 65%, var(--urd-cal-dgc-b)) border-box;
+  border: 1.5px solid transparent;
+  border-radius: 22px;
+  box-shadow: 0 30px 70px rgb(0 0 0 / 60%), -6px -6px 30px -10px var(--urd-cal-dgc-a), 6px 6px 30px -10px var(--urd-cal-dgc-b);
+}
+
+.urd-cal-dlg-darkGlass .urd-cal-dialog-date::before {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  vertical-align: 0.05em;
+  content: '';
+  background: var(--urd-cal-set-label);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--urd-cal-set-label) 25%, transparent);
+}
+
+.urd-cal-dlg-darkGlass .urd-cal-dialog-title {
+  font-size: 1.7em;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 0 1px rgb(255 255 255 / 80%), 0 0 14px var(--urd-cal-dgc-a);
 }
 
 /* ---- The «Coming up» designs (blocks/calendar-next.js) ---- */

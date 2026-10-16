@@ -2,6 +2,19 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.23.3): Departure board, the phone and card designs per calendar, and seven own cards
+
+- [ ] «Avgangstavle» in the picker's Retro family: an amber heading with «Oppdatert», the heads Dato, Tid, Arrangement, Sted and Status over split-flap rows; the date 04.10, the start time, the title and place cut to the flaps, the status «Påmeld» in amber, «Åpent», or «Avlyst» in the cancelled colour; the first row carries the excerpt; «Abonner på tavla» and «Trykk på en rad for detaljer» under it
+- [ ] «Skriv om kalenderdata» off shows the calendar's own date, time, title and place whole, without flaps, in columns under the heads; «Ordvalg: Nøytrale» gives «Akkurat nå», «Meld deg på» and «Åpent for alle»; the words are rewritten by clicking them
+- [ ] Style has «Design på telefon» and «Kortet» under Design, each opening the picker on its list with the calendar's choice marked «I bruk»; the floating menu's quick row offers both
+- [ ] The phone list: «Enkel liste» under Nøytral, every design that reads on a phone (the calendar's own under its own name), the board's «to flapprader» and «flappstripe»; never Avgangstavle, Tabell or Varmekart; no entry scrolls sideways in the preview or on a phone; a month or week design shows only on a calendar of that view
+- [ ] A phone design from another design keeps its own colours on a phone, whatever colours the calendar has; on a desktop the calendar shows its own design
+- [ ] The card list: «Enkelt kort» under Nøytral, the shared cards under «Delt av flere design» (Tema with its designs named, ApeironLF krem and marine, Bento; a search on a design's name finds its set's card), the own cards, Nummerert program and Agenda, mørk, and the board's three cards; a card from another design opens in that design's look
+- [ ] The seven own cards open as drawn on the canvas: Billetter (stub with the day, tear-off line with notches), Plakatvegg (taped poster, the day large), Programhefte (staples and «Program»), Reklametavle (framed board with lamps and legs, facts as tiles), Oppslagstavle (pinned note, the day on a second note), Glass (frosted plate, the calendar behind blurred) and Mørkt glass (edge-lit smoked glass)
+- [ ] Every card is as tall as its content without a scrollbar inside it, and follows the block's size: a calendar at 130 % opens its card at 130 %
+- [ ] Under every preview: «Om designet» with a sentence about the marked entry, and «Dette kan du endre» with Farger, Tekst and Alternativ, a row left out when it has nothing; the sentences read right in nb, en-GB and tr
+- [ ] The picker opened from the floating menu: its cross, a press on a tile and Escape close the picker and leave the menu open
+
 ### Test batch (0.7.19.23.2): Index cards
 
 - [ ] «Kartotekkort» in the picker's Retro family with its picture; chosen, the block draws typewritten cards on lined paper, each a little askew, numbered «Kort nr. 01», «02» … with the category in the head, and the writing sits on the lines

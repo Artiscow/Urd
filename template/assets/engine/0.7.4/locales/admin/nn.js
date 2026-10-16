@@ -1534,8 +1534,6 @@ export default {
     'calendar.picker.count': '{n} design',
     'calendar.picker.preview': 'Førehandsvising av {name} med dømedata, i sida sitt eige tema',
     'tip.calendar.picker.open': 'Alle kalenderdesigna med bilete, grupperte etter familie, med søk og filter på vising',
-    'calendar.phoneDesign': 'Telefondesign',
-    'tip.calendar.phoneDesign': 'På telefon vert arrangementa teikna som ei enkel liste i fargane til designet, sidan designet ikkje kan lesast der. Utan avkryssing vert designet vist som det er',
     'calendar.viewWeek': 'Veke',
     'calendar.viewDay': 'Dag',
     'calendar.viewYear': 'År',

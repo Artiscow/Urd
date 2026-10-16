@@ -131,3 +131,219 @@ export function index(host, occs, props, ics, ui) {
   });
   host.appendChild(box);
 }
+
+/** The departure board's columns: the head text of each and its width in flap cells. */
+const DEP_COLS = [['colDate', 5], ['colTime', 5], ['colEvent', 19], ['colPlace', 9], ['colStatus', 6]];
+
+/** Text cut to a column's cells, as a board with fixed flaps cuts it; the whole text when the design draws without rewriting. */
+const cut = (text, n, rewrite) => (rewrite && text.length > n ? text.slice(0, n).trimEnd() : text);
+
+/** A run of n flap cells holding one text (the tiles are the style sheet's); `className` adds the small size or a tone. */
+function cells(ui, n, content, className) {
+  const run = ui.el('span', className ? `urd-cal-dep-cells ${className}` : 'urd-cal-dep-cells', content);
+  run.style.setProperty('--n', String(n));
+  return run;
+}
+
+/** The date as the board writes it: 04.10 with rewriting, else the language's day and month. */
+const depDate = (d, ui) => (ui.rewrite ? `${two(d.getDate())}.${two(d.getMonth() + 1)}` : ui.dayMonth(d));
+
+/** The time as the board writes it: the all-day word, the start alone with rewriting, else the event's time. */
+const depTime = (occ, ui) => (occ.allDay ? ui.tx('allDay') : ui.rewrite ? document.createTextNode(ui.startClock(occ)) : ui.time(occ));
+
+/**
+ * An event's status on the board: the sign-up word with a sign-up to show (amber), else «open to everyone» where the design says it, else nothing; a cancelled event says so in the alert colour.
+ * @returns {{node: Node|null, tone: string}}
+ */
+function statusOf(occ, props, ui) {
+  if (occ.cancelled) return { node: ui.tx('cancelled'), tone: 'urd-cal-dep-alert' };
+  if (occ.signup && props.showSignup === true) return { node: ui.tx('signup'), tone: 'urd-cal-dep-amber' };
+  return { node: ui.openToAll(occ), tone: '' };
+}
+
+/** The board's head: the heading and the time it was updated. */
+function depHead(ui) {
+  const now = ui.today();
+  const stamp = `${depDate(now, ui)} ${ui.startClock({ start: now.getTime() })}`;
+  const head = ui.el('div', 'urd-cal-dep-head');
+  head.append(ui.tx('now', 'urd-cal-dep-title'), ui.tx('updated', 'urd-cal-dep-updated', { time: stamp }));
+  return head;
+}
+
+/** The board's foot: the subscribe links, where there is a source, and the hint. */
+function depFoot(ui) {
+  const foot = ui.el('div', 'urd-cal-dep-foot');
+  const subscribe = ui.subscribe();
+  if (subscribe) foot.appendChild(subscribe);
+  foot.appendChild(ui.tx('rowHint', 'urd-cal-dep-hint'));
+  return foot;
+}
+
+/** The first event's excerpt with its link, for the boards that carry one; null without. */
+function depExcerpt(occ, ui) {
+  const excerpt = ui.excerpt(occ.description, 220);
+  if (!excerpt || ui.descriptionIn === 'card') return null;
+  const text = ui.field('p', 'description', excerpt, 'urd-cal-dep-text');
+  const href = ui.href(occ);
+  if (href) {
+    const more = ui.link('urd-cal-dep-more', 'moreInfo', href, '');
+    more.target = '_blank';
+    more.rel = 'noopener';
+    text.append(document.createTextNode(' '), more);
+  }
+  return text;
+}
+
+/**
+ * R3 Departure board: a dark board of split-flap rows under an amber heading and the time it was updated, the columns headed Date, Time, Event, Place and Status, each row the event's start as 04.10 and 18:00, its title and place cut to the flaps and set in capitals by the style sheet, and its status (the sign-up, open to everyone, or cancelled in the alert colour); the first row carries the excerpt. With rewriting off the rows hold the calendar's own text whole, wrapping as it must.
+ * The heading, the status words and the subscribe link are the design's own (the theme words now, signup, openToAll and subscribe).
+ */
+export function departures(host, occs, props, ics, ui) {
+  const rewrite = ui.rewrite;
+  const board = ui.el('div', rewrite ? 'urd-cal-dep' : 'urd-cal-dep urd-cal-dep-plain');
+  const cols = ui.el('div', 'urd-cal-dep-cols');
+  for (const [key, n] of DEP_COLS) cols.appendChild(cells(ui, n, ui.tx(key), 'urd-cal-dep-col'));
+  // The column heads stand in the rows' grid, so without rewriting they share its columns.
+  const rows = ui.el('div', 'urd-cal-dep-rows');
+  rows.appendChild(cols);
+  occs.forEach((occ, i) => {
+    const d = dayOf(occ);
+    const title = ui.field('span', 'title', cut(occ.title, DEP_COLS[2][1], rewrite));
+    const row = ui.tint(ui.el('div', 'urd-cal-dep-row'), occ, title);
+    const status = statusOf(occ, props, ui);
+    row.append(
+      cells(ui, DEP_COLS[0][1], ui.field('span', 'date', depDate(d, ui), null, d)),
+      cells(ui, DEP_COLS[1][1], ui.field('span', 'time', depTime(occ, ui), null, occ)),
+      cells(ui, DEP_COLS[2][1], title),
+      cells(ui, DEP_COLS[3][1], occ.location ? ui.field('span', 'place', cut(occ.location, DEP_COLS[3][1], rewrite)) : null),
+      cells(ui, DEP_COLS[4][1], status.node, status.tone),
+    );
+    rows.appendChild(row);
+    // The first row carries its excerpt, with the link on.
+    const text = i === 0 ? depExcerpt(occ, ui) : null;
+    if (text) rows.appendChild(text);
+  });
+  board.append(depHead(ui), rows, depFoot(ui));
+  host.appendChild(board);
+}
+
+/* ---------- The departure board on a phone: two phone designs of its own (CAL_PHONE_DESIGNS), neither scrolling sideways ---------- */
+
+/** The compact board: each event as two rows of small flaps, the date, time and status on the first, the title on the second, the place as text under. */
+export function depRows(host, occs, props, ics, ui) {
+  const board = ui.el('div', `urd-cal-dep urd-cal-dep-compact${ui.rewrite ? '' : ' urd-cal-dep-plain'}`);
+  const cols = ui.el('div', 'urd-cal-dep-cols');
+  for (const [key, n] of [['colDate', 5], ['colTime', 5], ['colStatus', 6]]) cols.appendChild(cells(ui, n, ui.tx(key), 'urd-cal-dep-col urd-cal-dep-small'));
+  const rows = ui.el('div', 'urd-cal-dep-rows');
+  rows.appendChild(cols);
+  occs.forEach((occ, i) => {
+    const d = dayOf(occ);
+    const title = ui.field('span', 'title', cut(occ.title, 20, ui.rewrite));
+    const event = ui.tint(ui.el('article', 'urd-cal-dep-event'), occ, title);
+    const status = statusOf(occ, props, ui);
+    const row = ui.el('div', 'urd-cal-dep-row');
+    row.append(cells(ui, 5, ui.field('span', 'date', depDate(d, ui), null, d), 'urd-cal-dep-small'), cells(ui, 5, ui.field('span', 'time', depTime(occ, ui), null, occ), 'urd-cal-dep-small'), cells(ui, 6, status.node, `urd-cal-dep-small ${status.tone}`));
+    event.append(row, cells(ui, 20, title, 'urd-cal-dep-small'));
+    if (occ.location) event.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-dep-place'));
+    const text = i === 0 ? depExcerpt(occ, ui) : null;
+    if (text) event.appendChild(text);
+    rows.appendChild(event);
+  });
+  board.append(depHead(ui), rows, depFoot(ui));
+  host.appendChild(board);
+}
+
+/** The strip: one flap strip per event with the date, time and status, the title on the condensed face and the place as text under it. */
+export function depStrip(host, occs, props, ics, ui) {
+  const board = ui.el('div', `urd-cal-dep urd-cal-dep-strip${ui.rewrite ? '' : ' urd-cal-dep-plain'}`);
+  const cols = ui.el('div', 'urd-cal-dep-cols');
+  for (const [key, n] of [['colDate', 5], ['colTime', 5], ['colStatus', 6]]) cols.appendChild(cells(ui, n, ui.tx(key), 'urd-cal-dep-col'));
+  const rows = ui.el('div', 'urd-cal-dep-rows');
+  rows.appendChild(cols);
+  occs.forEach((occ, i) => {
+    const d = dayOf(occ);
+    const title = ui.field('strong', 'title', occ.title, 'urd-cal-dep-name');
+    const event = ui.tint(ui.el('article', 'urd-cal-dep-event'), occ, title);
+    const status = statusOf(occ, props, ui);
+    const row = ui.el('div', 'urd-cal-dep-row');
+    row.append(cells(ui, 5, ui.field('span', 'date', depDate(d, ui), null, d)), cells(ui, 5, ui.field('span', 'time', depTime(occ, ui), null, occ)), cells(ui, 6, status.node, status.tone));
+    event.append(row, title);
+    if (occ.location) event.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-dep-place'));
+    const text = i === 0 ? depExcerpt(occ, ui) : null;
+    if (text) event.appendChild(text);
+    rows.appendChild(event);
+  });
+  board.append(depHead(ui), rows, depFoot(ui));
+  host.appendChild(board);
+}
+
+/* ---------- The departure board's card dresses (`cards` in the design list) ---------- */
+
+/** Words laid in lines of at most n letters, a word longer than a line cut across lines. */
+function wrapWords(text, n) {
+  const lines = [];
+  let line = '';
+  for (const word of String(text).split(/\s+/).filter(Boolean)) {
+    let rest = word;
+    while (rest.length > n) {
+      if (line) lines.push(line);
+      lines.push(rest.slice(0, n));
+      rest = rest.slice(n);
+      line = '';
+    }
+    if (!line) line = rest;
+    else if (line.length + 1 + rest.length <= n) line += ` ${rest}`;
+    else {
+      lines.push(line);
+      line = rest;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/** The card's parts, each a decorator the block runs on the event's card after it is built (ui.dressCard), in the common words. */
+export const cards = {
+  /** The board row on top: the date, time and status as flaps over the date line, the facts labelled as the board's columns by the style sheet. */
+  depHead(dialog, occ, ui, props) {
+    const d = dayOf(occ);
+    const status = statusOf(occ, props, ui);
+    const row = ui.el('div', `urd-cal-dep-cardrow${ui.rewrite ? '' : ' urd-cal-dep-plain'}`);
+    row.append(cells(ui, 5, ui.field('span', 'date', depDate(d, ui), null, d)), cells(ui, 5, ui.field('span', 'time', depTime(occ, ui), null, occ)), cells(ui, 6, status.node, status.tone));
+    dialog.insertBefore(row, dialog.querySelector('.urd-cal-dialog-date'));
+  },
+  /** The title on the flaps, a line of seventeen at a time, and the status among the facts. */
+  depTitle(dialog, occ, ui, props) {
+    const title = dialog.querySelector('.urd-cal-dialog-title');
+    if (title) {
+      const lines = wrapWords(occ.title, 17);
+      title.replaceChildren(...lines.map((line, i) => cells(ui, 17, document.createTextNode(i < lines.length - 1 ? `${line} ` : line))));
+      title.classList.add('urd-cal-dep-cardtitle');
+    }
+    const facts = dialog.querySelector('.urd-cal-dialog-facts');
+    const status = statusOf(occ, props, ui);
+    if (facts && status.node) {
+      const dt = ui.el('dt');
+      dt.appendChild(ui.tx('colStatus'));
+      const dd = ui.el('dd');
+      dd.appendChild(cells(ui, 6, status.node, `urd-cal-dep-small ${status.tone}`));
+      facts.append(dt, dd);
+    }
+  },
+  /** The screen: the date in a band across the top, the status flaps beside the title, the actions as tiles by the style sheet. */
+  depScreen(dialog, occ, ui, props) {
+    const date = dialog.querySelector('.urd-cal-dialog-date');
+    if (date) {
+      const band = ui.el('div', 'urd-cal-dep-cardband');
+      dialog.insertBefore(band, dialog.firstChild);
+      band.appendChild(date);
+    }
+    const title = dialog.querySelector('.urd-cal-dialog-title');
+    const status = statusOf(occ, props, ui);
+    if (title && status.node) {
+      const top = ui.el('div', 'urd-cal-dep-cardtop');
+      title.replaceWith(top);
+      top.append(title, cells(ui, 6, status.node, `urd-cal-dep-small ${status.tone}`));
+    }
+  },
+};

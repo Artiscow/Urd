@@ -125,14 +125,16 @@ function jumpToAttention() {
 
 // A click anywhere in the admin outside the block menu closes it (clicks
 // in the preview are handled via onSelectBlock; iframe clicks never reach here).
+// A dialog over the menu (the design picker, the icon editor) is work the
+// menu opened: a press in it, and its own Escape, leave the menu open.
 function onPointerdownWindow(e) {
   if (!pageState.blockMenu) return;
-  if (e.target instanceof Element && e.target.closest('.block-menu')) return;
+  if (e.target instanceof Element && e.target.closest('.block-menu, dialog')) return;
   pageState.blockMenu = null;
 }
 
 function onKeydown(e) {
-  if (e.key === 'Escape' && pageState.blockMenu) {
+  if (e.key === 'Escape' && pageState.blockMenu && !(e.target instanceof Element && e.target.closest('dialog'))) {
     pageState.blockMenu = null;
     return;
   }

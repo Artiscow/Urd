@@ -201,3 +201,16 @@ export function glass(host, occs, props, ics, ui) {
   }
   host.appendChild(list);
 }
+
+/* ---------- The cards of their own (`ownCard` in the design list), each run on the event's card by the block (ui.dressCard) ---------- */
+
+export const cards = {
+  /** 07 Programme booklet: a page out of the booklet, «Program» over a rule at its top; the binding and the staples are base.css's. */
+  booklet(dialog, occ, ui) {
+    const head = ui.el('div', 'urd-cal-bk-cardhead');
+    head.appendChild(ui.tx('program'));
+    const close = dialog.querySelector('.urd-cal-dialog-close');
+    if (close) close.after(head);
+    else dialog.prepend(head);
+  },
+};

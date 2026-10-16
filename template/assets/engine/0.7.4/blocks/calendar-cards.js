@@ -312,3 +312,34 @@ export function bento(host, occs, props, ics, ui) {
   }
   host.appendChild(grid);
 }
+
+/* ---------- The cards of their own (`ownCard` in the design list), each run on the event's card by the block (ui.dressCard) ---------- */
+
+/** The day of an event as a large number over its short month, for a card's own head; hidden from a screen reader, since the date line says the same in words. */
+function cardDay(occ, ui, className, month = true) {
+  const d = new Date(occ.start);
+  const day = ui.el('span', className);
+  day.setAttribute('aria-hidden', 'true');
+  day.appendChild(ui.el('strong', null, String(d.getDate())));
+  if (month) day.appendChild(ui.el('span', null, dates().monthsShort[d.getMonth()]));
+  return day;
+}
+
+export const cards = {
+  /** 03 Tickets: an admission ticket, the stub across the top with the day large beside the date line; the tear-off line above the buttons is base.css's. */
+  tickets(dialog, occ, ui) {
+    const stub = ui.el('div', 'urd-cal-tk-cardstub');
+    stub.appendChild(cardDay(occ, ui, 'urd-cal-tk-cardday'));
+    const date = dialog.querySelector('.urd-cal-dialog-date');
+    if (date) {
+      date.replaceWith(stub);
+      stub.appendChild(date);
+    } else {
+      dialog.prepend(stub);
+    }
+  },
+  /** 02 Poster wall: the card as a poster taped to the wall, the day large in the third poster colour over the date line. */
+  posters(dialog, occ, ui) {
+    dialog.querySelector('.urd-cal-dialog-date')?.before(cardDay(occ, ui, 'urd-cal-pw-cardday', false));
+  },
+};

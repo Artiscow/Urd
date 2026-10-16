@@ -210,15 +210,16 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
 
   const params = (key) => cd.CAL_TEXT_PARAMS[key] ?? [];
   const formOf = (key, values) => (cd.CAL_PLURAL_TEXTS.includes(key) ? pluralForm(cd.CAL_TEXTS[key], Number(values?.n ?? 0)).form : null);
-  // The texts the design has words of its own for, while the owner keeps its word choice (calThemeTexts).
+  // The texts the design has words of its own for, while the owner keeps its word choice (calThemeTexts); a design drawn as the phone view brings its own (withDesign).
   // The event's card is the block's, not the design's: the texts drawn inside plainWords take the common words, and keep them when painted again.
-  const themed = new Set(cd.calThemeTexts(props));
+  let wordsDesign = cd.calDesign(props.design).id;
+  let themed = new Set(cd.calThemeTexts(props));
   let plainScope = false;
   /** The dictionary's words for a text in the site language, with its placeholders left in: the design's own words where it has them (themeString), else the common ones. */
   const defaultWords = (key, form, plain = false) => {
     const base = cd.CAL_TEXTS[key];
     if (!base) return '';
-    if (!plain && themed.has(key)) return themeString(cd.calThemeKey(cd.calDesign(props.design).id, key), base, form);
+    if (!plain && themed.has(key)) return themeString(cd.calThemeKey(wordsDesign, key), base, form);
     return t(form ? `${base}.${form}` : base);
   };
   /** A value in a text: a whole of its own, which the owner's words keep and a tick updates in place. */
@@ -484,6 +485,8 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     if (occ.allDay) return cf.isMultiDay(occ) ? tx('until', null, { date: endDate(occ) }) : tx('allDay');
     return document.createTextNode(clockRange(occ));
   };
+  /** The clock time an event starts at, alone («18:00», or «6 pm» on a 12-hour clock), for a design that writes the start by itself. */
+  const startClock = (occ) => cf.timeRange(occ, clock12, lang).from;
   /** The time with the language's word before a clock time («kl. 18:00»). */
   const timeText = (occ) => (occ.cancelled || occ.allDay ? time(occ) : tx('timeAt', null, { time: clockRange(occ) }));
   /** The time with its word as plain text, for a tooltip or a screen reader. */
@@ -579,6 +582,29 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
       plainScope = false;
     }
   };
+  /** The texts drawn while fn runs take another design's own words and options: a design drawn as the block's phone view. */
+  const withDesign = (id, fn) => {
+    const was = { wordsDesign, themed, opt: ui.opt };
+    wordsDesign = id;
+    themed = new Set(cd.calThemeTexts({ ...props, design: id }));
+    ui.opt = cd.calOptions({ ...props, design: id });
+    try {
+      return fn();
+    } finally {
+      ({ wordsDesign, themed } = was);
+      ui.opt = was.opt;
+    }
+  };
+  /** The texts drawn while fn runs take the design's own words again: the design's own parts of the card (its dress). */
+  const themedWords = (fn) => {
+    const was = plainScope;
+    plainScope = false;
+    try {
+      return fn();
+    } finally {
+      plainScope = was;
+    }
+  };
   /** The event in full, in a native dialog over the page (ADR-0011), in the common words. */
   const openEvent = (occ, from) => plainWords(() => showEventDialog(occ, from, ics, ui, props));
   /** The mark on an event that repeats, with words the owner can rewrite; null on a single event. */
@@ -609,7 +635,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const subscribe = () => (props.showSubscribe !== false && sources.some((source) => source.subscribable) ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
-  const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, countdown, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, metaString, hasTime, excerpt, sources,
+  const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, countdown, image: imageUrl, themedWords, withDesign, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, startClock, metaString, hasTime, excerpt, sources,
     dayMonth, dateLine, weekdayDay, monthYear, monthRange, percent,
     /** The week as the site's language lays it out: the empty cells before the first of a month, the weekday names in order, and the first day of a week. */
     lead: (first) => cf.leadDays(first, weekStart),
@@ -711,15 +737,15 @@ function descriptionNode(description, ui) {
 }
 
 /**
- * The card wears its calendar's set: the set class, the design's card class (`urd-cal-dlg-<design>`, where a design overrides its set's variables for the card), and the owner's colour slots copied from the block, so base.css draws it in the design's own colours although it lies in the page.
+ * The card wears the card design the block names (calCardDress, written on the block as `data-card-set`, `data-card-classes` and `data-card-colours`): the set it is drawn in, the card classes (`urd-cal-dlg-<design>`, where a design overrides its set's variables for the card, and a lent card design's own), and the owner's colour slots copied from the block when the card is the calendar's own design's or the neutral one, so base.css draws it in the right colours although it lies in the page.
  */
 function dressDialog(dialog, from) {
   const host = from?.closest?.('.urd-cal');
   if (!host) return;
-  for (const name of host.classList) {
-    if (name.startsWith('urd-cal-set-')) dialog.classList.add(name);
-    else if (name.startsWith('urd-cal-d-')) dialog.classList.add(name.replace('urd-cal-d-', 'urd-cal-dlg-'));
-  }
+  const set = host.dataset.cardSet ?? [...host.classList].find((name) => name.startsWith('urd-cal-set-'))?.slice('urd-cal-set-'.length);
+  if (set) dialog.classList.add(`urd-cal-set-${set}`);
+  for (const name of (host.dataset.cardClasses ?? '').split(' ').filter(Boolean)) dialog.classList.add(name);
+  if (host.dataset.cardColours === 'off') return;
   for (const name of host.style) if (name.startsWith('--urd-cal-s-') || name === '--urd-cal-accent-text') dialog.style.setProperty(name, host.style.getPropertyValue(name));
 }
 
@@ -865,6 +891,8 @@ function showEventDialog(occ, from, ics, ui, props) {
     dialog.addEventListener('close', () => URL.revokeObjectURL(file.href));
   }
   dialog.appendChild(actions);
+  // The card design the block wears, when a module lends it (calCardDesign): its decorator adds its own parts to the card.
+  ui.dressCard?.(dialog, occ);
   openCard(dialog, from);
 }
 
@@ -927,13 +955,12 @@ function openCard(dialog, from) {
 }
 
 /**
- * Lays the card inside the calendar it belongs to, not over the page: no wider and no taller than the calendar allows (its own content scrolls when there is more), centred on the part of the calendar that is in view, never over the navigation bar when it opens.
+ * Lays the card over the calendar it belongs to, not over the page: no wider than the calendar allows, as tall as its content (a card never scrolls inside itself: it reaches below the calendar when it must, and the page scrolls), centred on the part of the calendar that is in view, never over the navigation bar when it opens.
  * It is placed on the page, so it scrolls away with its calendar, and placed again when the window changes or its own content unfolds.
- * A calendar too low to hold a card lets it reach below itself.
+ * The card is drawn at the calendar's own zoom (the block's size, render.js applyZoom), so it follows the size the owner gave the block; the offsets are written in the card's zoomed space.
  * The calendar is shaded behind it; the rest of the page is left as it is.
  */
 const CARD_MAX_W = 460;
-const CARD_MIN_H = 300;
 
 function placeOverCalendar(dialog, from) {
   const host = from?.closest?.('.urd-cal');
@@ -942,22 +969,24 @@ function placeOverCalendar(dialog, from) {
   host.appendChild(shade);
   const place = () => {
     const box = host.getBoundingClientRect();
+    const zoom = parseFloat(host.style.zoom) || 1;
+    dialog.style.zoom = zoom === 1 ? '' : String(zoom);
     // The navigation bar's height, when it stays at the top of the window.
     const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-nav-h')) || 0;
     const roof = nav + 8;
     const floor = window.innerHeight - 8;
-    const width = Math.max(240, Math.min(CARD_MAX_W, box.width - 24, window.innerWidth - 16));
-    dialog.style.width = `${width}px`;
-    // As tall as the calendar holds, but never so low that the card cannot be read, and never taller than the window under the bar.
-    dialog.style.maxHeight = `${Math.max(Math.min(CARD_MIN_H, floor - roof), Math.min(box.height - 24, floor - roof))}px`;
+    const width = Math.max(240 * zoom, Math.min(CARD_MAX_W * zoom, box.width - 24, window.innerWidth - 16));
+    dialog.style.width = `${width / zoom}px`;
     const top = Math.max(roof, box.top);
     const bottom = Math.min(floor, box.bottom);
-    const height = dialog.offsetHeight;
+    const height = dialog.offsetHeight * zoom;
     const centre = top + Math.max(0, bottom - top) / 2;
-    // The place is on the page, not in the window: the card scrolls away with its calendar.
+    // The place is on the page, not in the window: the card scrolls away with its calendar. A card taller than the window starts under the bar and reaches below it.
     const page = (dialog.offsetParent ?? document.documentElement).getBoundingClientRect();
-    dialog.style.left = `${Math.max(8, Math.min(window.innerWidth - width - 8, box.left + (box.width - width) / 2)) - page.left}px`;
-    dialog.style.top = `${Math.max(roof, Math.min(floor - height, Math.max(box.top + 12, centre - height / 2))) - page.top}px`;
+    const left = Math.max(8, Math.min(window.innerWidth - width - 8, box.left + (box.width - width) / 2)) - page.left;
+    const y = Math.max(roof, Math.min(floor - height, Math.max(box.top + 12, centre - height / 2))) - page.top;
+    dialog.style.left = `${left / zoom}px`;
+    dialog.style.top = `${y / zoom}px`;
   };
   const watch = new AbortController();
   window.addEventListener('resize', place, { signal: watch.signal });
@@ -1632,7 +1661,11 @@ function renderCalendar(el, props, ctx) {
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
     // The view switcher draws the week with the week strip, so its module comes along.
     const weekMod = cd.calSwitcher(props) ? await DESIGN_MODULES.time() : null;
-    if (host.isConnected) drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, ctx);
+    // The phone design the block draws on a phone (calPhoneView) and the card design its card wears (calCardDesign), when they are a module's own.
+    const lent = async (def) => (!def.module ? null : def.module === design.module ? mod : await DESIGN_MODULES[def.module]?.());
+    const phoneMod = await lent(cd.calPhoneDesignDef(cd.calPhoneView(props), props));
+    const cardMod = await lent(cd.calCardDesignDef(cd.calCardDesign(props)));
+    if (host.isConnected) drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx);
   }).catch((error) => {
     // A module that did not load, or a design that threw: the loading state gives way to the empty state.
     console.warn('Urd: the calendar could not be drawn', error);
@@ -1642,7 +1675,7 @@ function renderCalendar(el, props, ctx) {
   });
 }
 
-function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, ctx) {
+function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx) {
   // The site's own time zone, when set: every visitor sees the times on that zone's clock.
   const siteZone = ctx.site?.site?.timeZone;
   const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
@@ -1672,7 +1705,18 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   const stripe = cd.calStripe(design, props.stripe);
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
+  // The phone design (calPhoneView) and the card design (calCardDesign) the block wears, each as a class of its own; the card's dress is written for the card (dressDialog).
+  const phoneView = cd.calPhoneView(props);
+  const phoneDef = cd.calPhoneDesignDef(phoneView, props);
+  host.classList.add(`urd-cal-pv-${phoneView}`);
+  const card = cd.calCardDesign(props);
+  const cardDress = cd.calCardDress(props);
+  host.classList.add(`urd-cal-card-${card}`);
+  host.dataset.cardSet = cardDress.set;
+  host.dataset.cardClasses = cardDress.classes.join(' ');
+  host.dataset.cardColours = cardDress.ownColours ? 'on' : 'off';
   const ui = makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone);
+  if (cardMod?.cards?.[card]) ui.dressCard = (dialog, occ) => ui.themedWords(() => cardMod.cards[card](dialog, occ, ui, props));
   // A calendar narrower than NARROW_PX draws its narrow layouts: the designs
   // with seven columns lay their days under each other, and the months show
   // dots that open the day. Where container queries exist the calendar asks
@@ -1782,8 +1826,8 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
         draw(occurrences, note);
       },
     };
-    // On a phone a design that cannot be read there is marked for the shared phone design, unless the owner switched it off.
-    const phoneDesign = ui.phone && cd.calPhoneDesign(props);
+    // On a phone the block is marked for its phone design, when that is not the design itself.
+    const phoneDesign = ui.phone && phoneView !== design.id;
     host.classList.toggle('urd-cal-phone-design', phoneDesign);
     if (mode === 'week' || mode === 'month') {
       // The design behind the button (calSwitcherViews) is drawn in a box of its own that carries its class and its options, so its style sheet rules and settings apply inside the block's own set.
@@ -1803,14 +1847,30 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
     } else if (!limited.length) {
       host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
     } else {
-      // On a phone a design that cannot be read there draws the shared phone design instead, unless the owner switched it off.
-      const render = phoneDesign ? renderPhoneAgenda : (mod?.[design.id] ?? VIEWS[view] ?? renderList);
-      render(host, limited, props, ics, ui);
-      if (folds) host.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
+      if (phoneDesign && phoneDef.look) {
+        // On a phone another design, or a phone design a design lends, is drawn in a box of its own that carries that design's set, its class (for a design drawn as itself) and its options, with its words.
+        // The owner's colours on this calendar belong to its own design: the box clears them, so the other design is drawn in its own.
+        const look = cd.calDesign(phoneDef.look);
+        const box = el2('div', `urd-cal-pd urd-cal-set-${look.set}${phoneDef.desktop ? ` urd-cal-d-${look.id}` : ''}`);
+        if (look.id !== design.id) for (const name of host.style) if (name.startsWith('--urd-cal-s-') || name === '--urd-cal-accent-text') box.style.setProperty(name, 'initial');
+        for (const [key, value] of Object.entries(cd.calOptions({ ...props, design: look.id }))) box.classList.add(`urd-cal-o-${key}-${typeof value === 'boolean' ? (value ? 'on' : 'off') : value}`);
+        host.appendChild(box);
+        const render = phoneDef.desktop ? (phoneMod?.[look.id] ?? VIEWS[look.view ?? view] ?? renderList) : phoneMod?.[phoneDef.id] ?? renderPhoneAgenda;
+        ui.withDesign(look.id, () => {
+          render(box, limited, props, ics, ui);
+          if (folds) box.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
+        });
+      } else {
+        // The design itself, or on a phone the neutral list the block draws in its own set.
+        const render = phoneDesign ? renderPhoneAgenda : (mod?.[design.id] ?? VIEWS[view] ?? renderList);
+        render(host, limited, props, ics, ui);
+        if (folds) host.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
+      }
     }
     if (past.length) host.appendChild(earlierNode(past, ui));
-    // A design that places the subscribe buttons itself (ownSubscribe) gets no row under it.
-    if (!design.ownSubscribe || !limited.length || !own) {
+    // A design that places the subscribe buttons itself (ownSubscribe) gets no row under it; on a phone the phone design decides.
+    const ownSubscribe = phoneDesign ? phoneDef.ownSubscribe === true : design.ownSubscribe;
+    if (!ownSubscribe || !limited.length || !own) {
       const row = ui.subscribe();
       if (row) host.appendChild(row);
     }

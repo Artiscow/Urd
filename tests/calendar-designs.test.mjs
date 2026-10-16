@@ -13,7 +13,7 @@ const {
   CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
   CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign, CAL_FAMILIES, calDesignFamilies,
-  CAL_SHARED_OPTIONS, calThemeKey, calThemeTexts, calRewrites,
+  CAL_SHARED_OPTIONS, calThemeKey, calThemeTexts, calRewrites, CAL_PHONE_DESIGNS, calPhoneDesignDef, calPhoneFamilies, calPhoneView, calPhoneCandidates, CAL_CARD_DESIGNS, calCardDesignDef, calCardFamilies, calCardDesign, calCardCandidates, calCardDress,
 } = await engineImport('calendar-designs.js');
 import { readFileSync, existsSync, statSync } from 'node:fs';
 
@@ -398,15 +398,192 @@ test('calDescription and calHasExcerpt: the rows or the card, only where the row
   assert.ok(!Object.keys(CAL_OPTIONS).some((id) => CAL_OPTIONS[id].some((def) => def.key === 'description')), 'the description is a block setting, not a design option');
 });
 
-test('calPhoneDesign: on a phone only a design that cannot be read there switches, until the owner switches it off', () => {
-  const switching = CAL_DESIGNS.filter((d) => d.phone === 'switch').map((d) => d.id);
-  assert.ok(switching.includes('table') && switching.includes('heatmap'));
+test('calPhoneView and calPhoneDesign: the design itself on a phone when it reads there, its own default else, and any candidate the owner picks', () => {
+  assert.equal(calPhoneView({ design: 'table' }), 'agenda');
+  assert.equal(calPhoneView({ design: 'heatmap' }), 'agenda');
+  assert.equal(calPhoneView({ design: 'plain' }), 'plain', 'a design that reads on a phone is its own phone design, under its own name');
+  assert.equal(calPhoneView({ design: 'posters' }), 'posters');
+  assert.equal(calPhoneView(undefined), 'plain');
+  assert.equal(calPhoneView({ design: 'departures' }), 'depStrip', 'a design with a phone design of its own defaults to it');
+  assert.equal(calPhoneView({ design: 'plain', phoneView: 'depRows' }), 'depRows', 'any calendar can take any phone design');
+  assert.equal(calPhoneView({ design: 'plain', phoneView: 'pad' }), 'pad');
+  assert.equal(calPhoneView({ design: 'departures', phoneView: 'pad' }), 'pad');
+  assert.equal(calPhoneView({ design: 'plain', view: 'list', phoneView: 'sidepanel' }), 'plain', 'a design of a span view joins only a block of that view');
+  assert.equal(calPhoneView({ design: 'plain', view: 'month', phoneView: 'sidepanel' }), 'sidepanel');
+  assert.equal(calPhoneView({ design: 'plain', phoneView: 'table' }), 'plain', 'a design that cannot be read on a phone is never a phone design');
+  assert.equal(calPhoneView({ design: 'departures', phoneView: 'departures' }), 'depStrip', 'not even for itself');
+  // The legacy values read as the design itself, which a design that cannot be read on a phone never is.
+  assert.equal(calPhoneView({ design: 'pad', phoneView: 'self' }), 'pad');
+  assert.equal(calPhoneView({ design: 'pad', phoneDesign: false }), 'pad');
+  assert.equal(calPhoneView({ design: 'table', phoneView: 'self' }), 'agenda');
+  assert.equal(calPhoneView({ design: 'table', phoneDesign: false }), 'agenda');
+  assert.equal(calPhoneView({ design: 'departures', phoneView: 'depScroll' }), 'depStrip', 'a retired phone design falls back to the default');
   assert.equal(calPhoneDesign({ design: 'table' }), true);
-  assert.equal(calPhoneDesign({ design: 'table', phoneDesign: false }), false);
-  assert.equal(calPhoneDesign({ design: 'heatmap', phoneDesign: true }), true);
   assert.equal(calPhoneDesign({ design: 'plain' }), false);
-  assert.equal(calPhoneDesign({ design: 'posters' }), false);
-  assert.equal(calPhoneDesign(undefined), false);
+  assert.equal(calPhoneDesign({ design: 'plain', phoneView: 'agenda' }), true);
+  assert.equal(calPhoneDesign({ design: 'pad', phoneView: 'pad' }), false);
+});
+
+test('the phone designs: the neutral list first, every design that reads on a phone, the lent ones last; ids, labels, descriptions and families in the dictionaries', async () => {
+  const ids = CAL_PHONE_DESIGNS.map((d) => d.id);
+  assert.deepEqual(ids, ['agenda', 'depRows', 'depStrip']);
+  assert.ok(!ids.includes('self') && !ids.includes('depScroll'), 'neither «the design as it is» nor a phone design that scrolls sideways');
+  for (const id of ids) assert.ok(!CAL_DESIGNS.some((d) => d.id === id), `${id} is no design's id`);
+  for (const design of CAL_DESIGNS) if (design.phoneDefault) assert.ok(ids.includes(design.phoneDefault), `${design.id}: phoneDefault ${design.phoneDefault}`);
+  for (const d of CAL_PHONE_DESIGNS) {
+    assert.equal(d.labelKey, `calendar.phone.${d.id}`);
+    assert.ok(d.family === 'neutral' || CAL_FAMILIES.includes(d.family), `${d.id}: family ${d.family}`);
+    if (d.home) assert.equal(calDesign(d.home).id, d.home, `${d.id}: home ${d.home}`);
+    if (d.module) {
+      assert.ok(CAL_MODULES.includes(d.module), `${d.id}: module ${d.module}`);
+      const mod = await engineImport(`blocks/calendar-${d.module}.js`);
+      assert.equal(typeof mod[d.id], 'function', `${d.id} in calendar-${d.module}.js`);
+    }
+  }
+  const candidates = calPhoneCandidates({ design: 'departures' });
+  const candIds = candidates.map((d) => d.id);
+  assert.equal(candIds[0], 'agenda');
+  assert.ok(candIds.includes('pad') && candIds.includes('index') && candIds.includes('posters') && candIds.includes('plain') && candIds.includes('carousel'));
+  assert.ok(!candIds.includes('table') && !candIds.includes('heatmap') && !candIds.includes('departures') && !candIds.includes('sidepanel'));
+  assert.deepEqual(candIds.slice(-2), ['depRows', 'depStrip']);
+  assert.equal(new Set(candIds).size, candIds.length);
+  assert.ok(calPhoneCandidates({ design: 'pad' }).some((d) => d.id === 'pad'), 'the calendar\'s own design stands in its list');
+  assert.ok(calPhoneCandidates({ design: 'plain', view: 'month' }).some((d) => d.id === 'sidepanel'), 'a month block can take a month design on a phone');
+  const pad = candidates.find((d) => d.id === 'pad');
+  assert.ok(pad.desktop && pad.set === 'pad' && pad.module === 'retro' && pad.view === 'next' && pad.look === 'pad');
+  assert.equal(candidates.find((d) => d.id === 'depStrip').look, 'departures');
+  assert.equal(calPhoneDesignDef('pad', { design: 'departures' }).id, 'pad');
+  assert.equal(calPhoneDesignDef('nonsense', { design: 'departures' }).id, 'depStrip', 'an unknown id is the one the block draws');
+  const families = calPhoneFamilies({ design: 'departures' });
+  assert.equal(families[0].family, 'neutral');
+  assert.deepEqual(families.flatMap((f) => f.designs.map((d) => d.id)).sort(), [...candIds].sort());
+  for (const lang of ['nb', 'en-GB', 'tr']) {
+    const { strings } = (await engineImport(`locales/admin/${lang}.js`)).default;
+    for (const d of CAL_PHONE_DESIGNS) {
+      assert.ok(d.labelKey in strings, `${lang}: ${d.labelKey}`);
+      assert.ok(`${d.labelKey}.about` in strings, `${lang}: ${d.labelKey}.about`);
+    }
+    for (const f of families) assert.ok(f.labelKey in strings, `${lang}: ${f.labelKey}`);
+    for (const key of ['calendar.phoneView', 'tip.calendar.phoneView', 'calendar.picker.phoneTitle', 'calendar.card', 'tip.calendar.card']) assert.ok(key in strings, `${lang}: ${key}`);
+    for (const key of ['calendar.phoneDesign', 'calendar.phone.self', 'calendar.family.shared', 'calendar.cardDesign.plain']) assert.ok(!(key in strings), `${lang}: the retired key ${key} is gone`);
+  }
+});
+
+test('every design has a description and a sentence for what its colours paint, every design setting a phrase, and the picker\'s sentences are in the three core admin dictionaries', async () => {
+  const keys = ['calendar.picker.aboutHead', 'calendar.picker.yoursHead', 'calendar.picker.cardOf', 'calendar.picker.h.colours', 'calendar.picker.h.text', 'calendar.picker.h.options', 'calendar.picker.c.settings', 'calendar.picker.c.words', 'calendar.picker.c.theme', 'calendar.picker.c.rewrite', 'calendar.picker.c.phoneNeutral', 'calendar.picker.c.other', 'calendar.picker.c.phoneWords', 'calendar.picker.c.phoneOptions', 'calendar.picker.c.cardNeutral', 'calendar.picker.c.cardOwn', 'calendar.picker.c.cardText', 'calendar.picker.c.cardOptions'];
+  for (const lang of ['nb', 'en-GB', 'tr']) {
+    const { strings } = (await engineImport(`locales/admin/${lang}.js`)).default;
+    for (const design of CAL_DESIGNS) {
+      assert.ok(`${design.labelKey}.about` in strings, `${lang}: ${design.labelKey}.about`);
+      assert.ok(`${design.labelKey}.colors` in strings, `${lang}: ${design.labelKey}.colors`);
+    }
+    for (const defs of Object.values(CAL_OPTIONS)) for (const def of defs) assert.ok(`${def.labelKey}.phrase` in strings, `${lang}: ${def.labelKey}.phrase`);
+    for (const key of keys) assert.ok(key in strings, `${lang}: ${key}`);
+    for (const key of ['calendar.picker.colorsOf', 'calendar.picker.alsoAll', 'calendar.picker.c.all', 'calendar.picker.c.colours']) assert.ok(!(key in strings), `${lang}: the retired key ${key} is gone`);
+    // What a design's colours paint stands as a sentence of its own after the heading.
+    for (const design of CAL_DESIGNS) assert.match(strings[`${design.labelKey}.colors`], /^\p{Lu}.*\.$/u, `${lang}: ${design.labelKey}.colors is a sentence`);
+  }
+});
+
+test('every phone design has a picture for the picker, the designs that read on a phone included', () => {
+  const ids = [...CAL_PHONE_DESIGNS.map((d) => d.id), ...CAL_DESIGNS.filter((d) => d.phone !== 'switch').map((d) => d.id)];
+  for (const id of ids) {
+    const file = new URL(`../template/admin/designs/phone-${id}.webp`, import.meta.url);
+    assert.ok(existsSync(file), `phone-${id}: ${file.pathname}`);
+    assert.ok(statSync(file).size > 1000 && statSync(file).size < 200000, `phone-${id}: picture size`);
+  }
+});
+
+test('the card designs: the neutral card first, one card per colour set its designs share, every design\'s own card, the lent ones last; a decorator per lent one, labels and descriptions in the dictionaries', async () => {
+  const ids = CAL_CARD_DESIGNS.map((d) => d.id);
+  assert.deepEqual(ids, ['neutral', 'depHead', 'depTitle', 'depScreen']);
+  for (const id of ids) assert.ok(!CAL_DESIGNS.some((d) => d.id === id), `${id} is no design's id`);
+  for (const design of CAL_DESIGNS) if (design.cardDefault) assert.ok(ids.includes(design.cardDefault), `${design.id}: cardDefault ${design.cardDefault}`);
+  const candidates = calCardCandidates();
+  const candIds = candidates.map((d) => d.id);
+  assert.equal(candIds[0], 'neutral');
+  assert.equal(new Set(candIds).size, candIds.length);
+  assert.deepEqual(candIds.slice(-3), ['depHead', 'depTitle', 'depScreen']);
+  // Every design has its card in the list once: its own, or the card of the set it shares with others.
+  const shared = candidates.filter((d) => d.setCard);
+  assert.ok(shared.length >= 1);
+  for (const design of CAL_DESIGNS) {
+    const own = candIds.includes(design.id);
+    const inSet = shared.filter((card) => card.designs.includes(design.id));
+    assert.equal(Number(own) + inSet.length, 1, `${design.id}: in the list once`);
+    if (design.ownCard) assert.ok(own, `${design.id} has its own card`);
+  }
+  for (const card of shared) {
+    assert.ok(card.designs.length > 1, `${card.id} is shared`);
+    assert.equal(card.id, `set-${card.set}`);
+    assert.equal(card.family, 'sets');
+    for (const id of card.designs) assert.equal(calDesign(id).set, card.set);
+  }
+  for (const d of candidates.slice(-3)) {
+    assert.equal(d.look, 'departures');
+    assert.equal(d.set, 'departures');
+    const mod = await engineImport(`blocks/calendar-${d.module}.js`);
+    assert.equal(typeof mod.cards?.[d.id], 'function', `${d.id}: a decorator in calendar-${d.module}.js`);
+  }
+  assert.equal(calCardDesignDef('nonsense').id, 'neutral');
+  const families = calCardFamilies();
+  assert.deepEqual(families.slice(0, 2).map((f) => f.family), ['neutral', 'sets']);
+  assert.deepEqual(families.flatMap((f) => f.designs.map((d) => d.id)).sort(), [...candIds].sort());
+  for (const lang of ['nb', 'en-GB', 'tr']) {
+    const { strings } = (await engineImport(`locales/admin/${lang}.js`)).default;
+    for (const d of CAL_CARD_DESIGNS) {
+      assert.ok(d.labelKey in strings, `${lang}: ${d.labelKey}`);
+      assert.ok(`${d.labelKey}.about` in strings, `${lang}: ${d.labelKey}.about`);
+    }
+    for (const set of CAL_SETS) assert.ok(`calendar.cardSet.${set}` in strings, `${lang}: calendar.cardSet.${set}`);
+    for (const f of families) assert.ok(f.labelKey in strings, `${lang}: ${f.labelKey}`);
+    for (const key of ['calendar.picker.cardTitle', 'calendar.picker.setName', 'calendar.picker.setNameMore', 'calendar.picker.setAbout', 'calendar.picker.c.setOther']) assert.ok(key in strings, `${lang}: ${key}`);
+  }
+});
+
+test('every design with a card of its own has the card\'s rules in base.css, and its module\'s decorator where it has one', async () => {
+  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const own = CAL_DESIGNS.filter((d) => d.ownCard);
+  assert.ok(own.length >= 10);
+  for (const design of own) assert.ok(css.includes(`.urd-cal-dlg-${design.id}`), `${design.id}: .urd-cal-dlg-${design.id} in base.css`);
+  for (const design of own) {
+    const mod = await engineImport(`blocks/calendar-${design.module}.js`);
+    if (mod.cards?.[design.id]) assert.equal(typeof mod.cards[design.id], 'function');
+  }
+  for (const id of ['tickets', 'posters', 'booklet', 'billboard', 'noticeboard']) {
+    const design = calDesign(id);
+    const mod = await engineImport(`blocks/calendar-${design.module}.js`);
+    assert.equal(typeof mod.cards?.[id], 'function', `${id}: the part its card adds`);
+  }
+});
+
+test('every card design has a picture for the picker', () => {
+  for (const d of calCardCandidates()) {
+    const file = new URL(`../template/admin/designs/card-${d.id}.webp`, import.meta.url);
+    assert.ok(existsSync(file), `card-${d.id}: ${file.pathname}`);
+    assert.ok(statSync(file).size > 1000 && statSync(file).size < 200000, `card-${d.id}: picture size`);
+  }
+});
+
+test('calCardDesign and calCardDress: the design\'s own card, or its set\'s while it has none, until the owner picks another; the set and dress of the design it belongs to; the owner\'s colours only on the calendar\'s own', () => {
+  assert.equal(calCardDesign({ design: 'plain' }), 'set-theme');
+  assert.equal(calCardDesign({ design: 'pad' }), 'pad');
+  assert.equal(calCardDesign({ design: 'tickets' }), 'tickets');
+  assert.equal(calCardDesign({ design: 'numbered' }), 'numbered', 'a design alone in its set without a card of its own');
+  assert.equal(calCardDesign({ design: 'departures' }), 'depHead');
+  assert.equal(calCardDesign({ design: 'plain', card: 'depHead' }), 'depHead', 'any calendar takes any card design');
+  assert.equal(calCardDesign({ design: 'plain', card: 'pad' }), 'pad');
+  assert.equal(calCardDesign({ design: 'pad', card: 'plain' }), 'set-theme', 'a stored design id that shares its set\'s card reads as that card');
+  assert.equal(calCardDesign({ design: 'departures', card: 'neutral' }), 'neutral');
+  assert.equal(calCardDesign({ design: 'departures', card: 'nonsense' }), 'depHead');
+  assert.equal(calCardDesign(undefined), 'set-theme');
+  assert.deepEqual(calCardDress({ design: 'pad' }), { set: 'pad', classes: ['urd-cal-dlg-pad'], ownColours: true });
+  assert.deepEqual(calCardDress({ design: 'pad', card: 'neutral' }), { set: 'pad', classes: [], ownColours: true });
+  assert.deepEqual(calCardDress({ design: 'plain' }), { set: 'theme', classes: [], ownColours: true });
+  assert.deepEqual(calCardDress({ design: 'pad', card: 'set-theme' }), { set: 'theme', classes: [], ownColours: false });
+  assert.deepEqual(calCardDress({ design: 'plain', card: 'index' }), { set: 'index', classes: ['urd-cal-dlg-index'], ownColours: false });
+  assert.deepEqual(calCardDress({ design: 'plain', card: 'depScreen' }), { set: 'departures', classes: ['urd-cal-dlg-departures', 'urd-cal-dlg-depScreen'], ownColours: false });
+  assert.deepEqual(calCardDress({ design: 'departures' }), { set: 'departures', classes: ['urd-cal-dlg-departures', 'urd-cal-dlg-depHead'], ownColours: true });
 });
 
 test('calDesignFamilies: every design once, in the families\' order, the plain design first', () => {
