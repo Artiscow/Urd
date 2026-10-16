@@ -472,6 +472,7 @@ What comes, in order (brought up to date 14 October 2026):
 - [ ] ctrl+s for å få opp en meny som spør om å enten lagre som utkast eller publiserer
 - [ ] Fix Plugin Readme + Plugin agent.md for easy use when creating new plugins
 - [ ] Måte å forkaste det som er i Template slik at man kan starte med en helt blank side
+- [ ] PNG XL support
 
 ## URGENT
 
