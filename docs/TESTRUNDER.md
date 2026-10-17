@@ -2,6 +2,11 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.54p): release 0.7.6
+
+- [ ] After the tag v0.7.6 and the GitHub release: the release Action runs green by itself (the editor's dependencies installed before the tests), and the template repo gets «Urd v0.7.6» with the tag v0.7.6 and the engine under `assets/engine/0.7.6/` alone
+- [ ] A site on v0.7.5 is offered v0.7.6 and updates in one start
+
 ### Test batch (0.7.0.54): the update in batches
 
 - [ ] urd-web (v0.7.4) with update.js, update-plan.js and github.js copied into its functions/: each start of the update shows «Copied N of 107 files from the template. Start the update again to continue.», N growing by 18; the last start commits, the site deploys v0.7.5, and its pages, content and plugins are as before

@@ -80,11 +80,9 @@ export function currentUser(token) {
 }
 
 /**
- * GraphQL call to GitHub: used by the updater to fetch MANY file contents in
- * ONE subrequest (Blob.text via aliases), which REST would have needed one call
- * per file for. Same retry rule as gh(). With `partial`, the data is returned
- * beside errors for single fields (an object the repository does not hold
- * comes back as null), and only a reply without data throws.
+ * GraphQL call to GitHub: used by the updater to fetch MANY file contents in ONE subrequest (Blob.text via aliases), which REST would have needed one call per file for.
+ * Same retry rule as gh().
+ * With `partial`, the data is returned beside errors for single fields (an object the repository does not hold comes back as null), and only a reply without data throws.
  */
 export async function ghGraphql(token, query, attempt = 1, { partial = false } = {}) {
   const res = await fetch('https://api.github.com/graphql', {

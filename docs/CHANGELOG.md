@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+## [0.7.6] - 2026-10-17
+
+### 0.7.0.54p - Release 0.7.6: the update that copies the template's binary files in batches - 17 October 2026
+
+- RELEASE: the engine bumped 0.7.5 to 0.7.6 after the ritual (urd.json, git mv of the engine folder, the nine assets/urd/ shells, the seven HTML shells with byte-identical slug copies, editor/package.json and the lockfile, the bundle rebuilt). It carries the update in batches (0.7.0.54), so a site on 0.7.6 updates past a release with many binary files on Cloudflare's free plan.
+- Review finding: a template file whose encoding GraphQL cannot tell (`isBinary` null) was taken for text, had no text to fetch and stopped every run of the update for good. Such a file is copied as a blob (`travelsAsBlob` in update-plan.js, with a test).
+- Review finding: the new comments in update.js, update-plan.js, github.js and UpdatePanel.svelte broke lines mid-sentence. They are wrapped at sentence ends.
+
 ### 0.7.0.54 - The update that copies the template's binary files in batches, and the release run that installs the editor's dependencies - 17 October 2026
 
 - Test finding the same day: the release run for v0.7.5 stopped at its tests, since the render tests compile the editor's Svelte files and release.yml, unlike tests.yml, ran them without the editor's dependencies. The release workflow installs them first (`npm ci` in editor/), and v0.7.5 was synced by a manual run from main.

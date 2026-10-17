@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  planUpdate, highestVersionTag, isAtomPath, chunkEntries, blobBatch, BLOB_BATCH, BLOB_ROOM,
+  planUpdate, highestVersionTag, isAtomPath, chunkEntries, blobBatch, BLOB_BATCH, BLOB_ROOM, travelsAsBlob,
 } from '../template/functions/_lib/update-plan.js';
 
 const change = (plan, path) => plan.changes.find((c) => c.path === path);
@@ -128,4 +128,14 @@ test('blobBatch: a batch of the files the site does not hold, and all of them wi
   // Two subrequests a file beside the call's own (about 7 copying, 13 committing) stay under the free plan's 50.
   assert.ok(2 * BLOB_BATCH + 7 <= 50);
   assert.ok(2 * BLOB_ROOM + 13 <= 50);
+});
+
+test('travelsAsBlob: only a blob GraphQL calls text and gives whole travels inline', () => {
+  assert.equal(travelsAsBlob({ isBinary: false, isTruncated: false }), false);
+  assert.equal(travelsAsBlob({ isBinary: true, isTruncated: false }), true);
+  assert.equal(travelsAsBlob({ isBinary: false, isTruncated: true }), true);
+  // An encoding GraphQL cannot tell, and a file the reply leaves out, are copied as they are.
+  assert.equal(travelsAsBlob({ isBinary: null, isTruncated: false }), true);
+  assert.equal(travelsAsBlob(null), true);
+  assert.equal(travelsAsBlob(undefined), true);
 });

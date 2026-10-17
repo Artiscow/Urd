@@ -41,8 +41,8 @@
     ed.updateBusy = true;
     setStatus(ta('update.running', { target: updateInfo.target }));
     try {
-      // The update copies the template's binary files in batches, one call each, and commits in the call that finds them all in
-      // place (ADR-0014 decision 6); a call that copies nothing new stops the loop, and its words ask for a new start.
+      // The update copies the template's binary files in batches, one call each, and commits in the call that finds few enough of them left (ADR-0014 decision 6).
+      // A call that copies nothing new stops the loop, and its words ask for a new start.
       let res;
       let data;
       let copied = -1;
