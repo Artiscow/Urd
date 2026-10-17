@@ -278,8 +278,6 @@ export function depStrip(host, occs, props, ics, ui) {
   host.appendChild(board);
 }
 
-/* ---------- The departure board's card dresses (`cards` in the design list) ---------- */
-
 /** Words laid in lines of at most n letters, a word longer than a line cut across lines. */
 function wrapWords(text, n) {
   const lines = [];
@@ -650,6 +648,8 @@ const DECO_FAN = Array.from({ length: 11 }, (_, i) => {
   const a = ((i - 5) * 14 * Math.PI) / 180;
   return `M60 34 L${(60 + 30 * Math.sin(a)).toFixed(1)} ${(34 - 30 * Math.cos(a)).toFixed(1)}`;
 }).join(' ');
+
+/* ---------- The card dresses (`cards` in the design list) ---------- */
 
 /** The card's parts, each a decorator the block runs on the event's card after it is built (ui.dressCard), in the common words. */
 export const cards = {

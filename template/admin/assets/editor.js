@@ -13210,7 +13210,6 @@ var X = (e, t = "colors") => ({
 			X("edge")
 		],
 		texts: [
-			"later",
 			"addEvent",
 			"moreInfo",
 			...Gm

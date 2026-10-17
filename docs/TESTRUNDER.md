@@ -4,22 +4,22 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 ### Test batch (0.7.19.23.5): Receipt, Seventies poster and Art deco
 
-- [ ] «Kvittering» in the picker's Retro family: a till receipt with a torn bottom edge, «* PROGRAM *», «HØSTEN 2026» and «KLUBBHUSET, NEDRE GATE 2», a row per event of date, title, a dot leader and the time with the place and status under it, the totals, «INNGANG GRATIS», the barcode with «Abonner: skann eller trykk her» (with «Abonner» on) and «Takk for at du kommer!»
-- [ ] Kvittering: the titles start on one line and the times end on one line whatever their widths; a long title is cut with an ellipsis; «Skriv om kalenderdata» off shows the calendar's own date, title and time
-- [ ] Kvittering's card: «Kvittering nr 001» over the title, dot-leader lines Dato, Tid, Sted and Kategori, «Meld deg på» in ink and a torn bottom edge, without a scrollbar inside it
-- [ ] «Syttitallsplakat»: the sunrise, «Hva skjer?» and «Oktober og november», the events as pills with a round date badge in turn orange, mustard and brown, «Bli med» on an event with a sign-up and «Følg kalenderen, far out» with «Abonner» on; the pills' titles start on one line
+- [ ] «Receipt» in the picker's Retro family: a till receipt with a torn bottom edge, «* PROGRAMME *», «AUTUMN 2026» and «THE CLUBHOUSE, 2 LOWER STREET», a row per event of date, title, a dot leader and the time with the place and status under it, the totals, «ADMISSION FREE», the barcode with «Subscribe: scan or tap here» (with «Subscribe» on) and «Thank you for coming!»
+- [ ] Kvittering: the titles start on one line and the times end on one line whatever their widths; a long title is cut with an ellipsis; «Rewrite calendar data» off shows the calendar's own date, title and time
+- [ ] Kvittering's card: «Receipt no. 001» over the title, dot-leader lines Dato, Tid, Sted and Kategori, «Sign up» in ink and a torn bottom edge, without a scrollbar inside it
+- [ ] «Seventies poster»: the sunrise, «What's on?» and «October and November», the events as pills with a round date badge in turn orange, mustard and brown, «Join in» on an event with a sign-up and «Follow the calendar, far out» with «Subscribe» on; the pills' titles start on one line
 - [ ] Syttitallsplakat's card: a band of stripes with the event's calendar on it and a row of matches under it
-- [ ] «Art deco»: the gold double frame on black, the sunburst, «PROGRAM» and «◆ SESONGEN 2026 ◆», rows of the day in gold, the title with its time and place, and the countdown at the right; the foot with the sign-up and the subscribe links
+- [ ] «Art deco»: the gold double frame on black, the sunburst, «PROGRAMME» and «◆ THE 2026 SEASON ◆», rows of the day in gold, the title with its time and place, and the countdown at the right; the foot with the sign-up and the subscribe links
 - [ ] Art deco's card: a fan in each corner, rays over the date and a rule with a diamond under the title
-- [ ] In all three the period line («Høsten 2026», «Oktober og november», «Sesongen 2026») is rewritten by clicking it; emptied it is gone on the published page and a faint hint in the editor; a rewritten period stays when the calendar changes between the three designs
-- [ ] «Ordvalg: Nøytrale» gives the common words in all three, with «Sesongen 2026» as the period
+- [ ] In all three the period line («Autumn 2026», «October and November», «The 2026 season») is rewritten by clicking it; emptied it is gone on the published page and a faint hint in the editor; a rewritten period stays when the calendar changes between the three designs
+- [ ] «Word choice: Neutral» gives the common words in all three, with «The 2026 season» as the period
 - [ ] At 100 % the three have type the size of the other designs'; at 50 % they are half as tall with the same lines; on a phone none of them scrolls sideways, and each shows as itself
 - [ ] The pictures in the picker (the design, the phone and the card) show each of the three in its own look
 
 ### Test batch (0.7.0.52): gallery, timeline and stat under «Size», and the timeline item's title
 
-- [ ] A Galleri with «Rutenett» and «Kolonner» 3, just wide enough for three columns: «Størrelse» at 80 % and 50 % keeps three columns, only smaller; dragged narrow at 100 % it still takes two columns. The same for the mosaic and the polaroids
-- [ ] A Tidslinje with «Vekslende sider», just wide enough to alternate: at 80 % and 50 % the cards still alternate; dragged narrow at 100 % they still line up along the left line
+- [ ] A Galleri with «Grid» and «Columns» 3, just wide enough for three columns: «Size» at 80 % and 50 % keeps three columns, only smaller; dragged narrow at 100 % it still takes two columns. The same for the mosaic and the polaroids
+- [ ] A Tidslinje with «Alternating sides», just wide enough to alternate: at 80 % and 50 % the cards still alternate; dragged narrow at 100 % they still line up along the left line
 - [ ] A Statistikk card just wide enough for its large figure: at 80 % the figure shrinks as much as its label; dragged very narrow at 100 % the figure still gets smaller
 - [ ] A Statistikk card or band with its own height fills its block; a plain one placed in the middle or stretched stands in the middle
 - [ ] A gallery's lightbox, carousel, slideshow and band work as before
@@ -27,46 +27,46 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 ### Test batch (0.7.19.23.4): Cinema marquee, «Size» that scales everything alike, and three calendar fixes
 
-- [ ] «Kinomarkise» in the picker's Retro family: a red frame with lit bulbs above and below a letter board; «★ Nå på plakaten ★» with the day word («I morgen») over the next event's title, a line with its date, time and place, the excerpt with «Les mer», and «Kommer snart» with rows of date, name and time
-- [ ] The names under «Kommer snart» start on one line under each other, whatever the widths of the dates
+- [ ] «Cinema marquee» in the picker's Retro family: a red frame with lit bulbs above and below a letter board; «★ Now showing ★» with the day word («Tomorrow») over the next event's title, a line with its date, time and place, the excerpt with «Read more», and «Coming soon» with rows of date, name and time
+- [ ] The names under «Coming soon» start on one line under each other, whatever the widths of the dates
 - [ ] At 100 % the marquee sits at the size of the other designs: its rows the size of the departure board's flaps, the board about as tall as the departure board in the same frame
-- [ ] «Ordvalg: Nøytrale» gives the common words in place of «Nå på plakaten», «Kommer snart» and «Billetter»; the words are rewritten by clicking them
-- [ ] On a phone, or in a frame too narrow for the board, the marquee shows «Kinomarkise, rader»: the board as a list in its red frame with the subscribe link at the foot; it is offered under «Design på telefon»
-- [ ] The marquee's card: a ticket with bulbs along its top edge and a stub with the day and short month, with «Meld deg på» in the common words
+- [ ] «Word choice: Neutral» gives the common words in place of «Now showing», «Coming soon» and «Tickets»; the words are rewritten by clicking them
+- [ ] On a phone, or in a frame too narrow for the board, the marquee shows «Cinema marquee, rows»: the board as a list in its red frame with the subscribe link at the foot; it is offered under «Design on a phone»
+- [ ] The marquee's card: a ticket with bulbs along its top edge and a stub with the day and short month, with «Sign up» in the common words
 - [ ] Departure board: every letter stands in the middle of its flap, also at 50 % and 150 %
 - [ ] A row's card opens centred over the part of the calendar in view, at its own width, past the calendar's edges when it must be, never scrolling inside itself; also at 50 % and 150 %, and with the calendar partly scrolled out of view
 - [ ] A stylised calendar (Avgangstavle, Avrivningsblokk) keeps its desktop design at 80, 60 and 50 %; it shows its phone design only where its frame is narrow at 100 %
-- [ ] «Størrelse» on a calendar, a text and an FAQ: the slider goes from 40 to 200 %, and everything scales alike; at 50 % the block is half as wide and half as tall with the same lines, nothing wraps anew
-- [ ] «Minste tekst» and «Største tekst» stand empty while a size is set and show the text's size now (7 at 50 % on a calendar); 12 typed in moves a calendar at 50 % to 90 % with its frame and the blocks below; emptied again, the slider reaches 40 %
+- [ ] «Size» on a calendar, a text and an FAQ: the slider goes from 40 to 200 %, and everything scales alike; at 50 % the block is half as wide and half as tall with the same lines, nothing wraps anew
+- [ ] «Smallest text» and «Largest text» stand empty while a size is set and show the text's size now (7 at 50 % on a calendar); 12 typed in moves a calendar at 50 % to 90 % with its frame and the blocks below; emptied again, the slider reaches 40 %
 - [ ] A calendar at 100 % has smaller text than before (14 px), in the same frame; a calendar that showed its phone design in a narrow frame may now show its desktop design
 - [ ] Under 100 %, Bento, Delt kort, Måned med sidepanel, Årshjul and the ApeironLF designs keep their wide layout, and a product list and a table keep their columns
 - [ ] Pages saved before with a size on a calendar (the front page's at 95 %) open with the calendar at its size and its frame where it was
 
 ### Test batch (0.7.19.23.3): Departure board, the phone and card designs per calendar, and seven own cards
 
-- [ ] «Avgangstavle» in the picker's Retro family: an amber heading with «Oppdatert», the heads Dato, Tid, Arrangement, Sted and Status over split-flap rows; the date 04.10, the start time, the title and place cut to the flaps, the status «Påmeld» in amber, «Åpent», or «Avlyst» in the cancelled colour; the first row carries the excerpt; «Abonner på tavla» and «Trykk på en rad for detaljer» under it
-- [ ] «Skriv om kalenderdata» off shows the calendar's own date, time, title and place whole, without flaps, in columns under the heads; «Ordvalg: Nøytrale» gives «Akkurat nå», «Meld deg på» and «Åpent for alle»; the words are rewritten by clicking them
-- [ ] Style has «Design på telefon» and «Kortet» under Design, each opening the picker on its list with the calendar's choice marked «I bruk»; the floating menu's quick row offers both
-- [ ] The phone list: «Enkel liste» under Nøytral, every design that reads on a phone (the calendar's own under its own name), the board's «to flapprader» and «flappstripe»; never Avgangstavle, Tabell or Varmekart; no entry scrolls sideways in the preview or on a phone; a month or week design shows only on a calendar of that view
+- [ ] «Departure board» in the picker's Retro family: an amber heading with «Updated», the heads Date, Time, Event, Place and Status over split-flap rows; the date 04.10, the start time, the title and place cut to the flaps, the status «Enrol» in amber, «Open», or «Cancelled» in the cancelled colour; the first row carries the excerpt; «Subscribe to the board» and «Press a row for details» under it
+- [ ] «Rewrite calendar data» off shows the calendar's own date, time, title and place whole, without flaps, in columns under the heads; «Word choice: Neutral» gives «Coming up», «Sign up» and «Open to everyone»; the words are rewritten by clicking them
+- [ ] Style has «Design on a phone» and «The card» under Design, each opening the picker on its list with the calendar's choice marked «In use»; the floating menu's quick row offers both
+- [ ] The phone list: «Plain list» under Nøytral, every design that reads on a phone (the calendar's own under its own name), the board's «two flap rows» and «flap strip»; never Avgangstavle, Tabell or Varmekart; no entry scrolls sideways in the preview or on a phone; a month or week design shows only on a calendar of that view
 - [ ] A phone design from another design keeps its own colours on a phone, whatever colours the calendar has; on a desktop the calendar shows its own design
-- [ ] The card list: «Enkelt kort» under Nøytral, the shared cards under «Delt av flere design» (Tema with its designs named, ApeironLF krem and marine, Bento; a search on a design's name finds its set's card), the own cards, Nummerert program and Agenda, mørk, and the board's three cards; a card from another design opens in that design's look
-- [ ] The seven own cards open as drawn on the canvas: Billetter (stub with the day, tear-off line with notches), Plakatvegg (taped poster, the day large), Programhefte (staples and «Program»), Reklametavle (framed board with lamps and legs, facts as tiles), Oppslagstavle (pinned note, the day on a second note), Glass (frosted plate, the calendar behind blurred) and Mørkt glass (edge-lit smoked glass)
+- [ ] The card list: «Plain card» under Nøytral, the shared cards under «Shared by several designs» (Tema with its designs named, ApeironLF krem and marine, Bento; a search on a design's name finds its set's card), the own cards, Nummerert program and Agenda, mørk, and the board's three cards; a card from another design opens in that design's look
+- [ ] The seven own cards open as drawn on the canvas: Billetter (stub with the day, tear-off line with notches), Plakatvegg (taped poster, the day large), Programhefte (staples and «Programme»), Reklametavle (framed board with lamps and legs, facts as tiles), Oppslagstavle (pinned note, the day on a second note), Glass (frosted plate, the calendar behind blurred) and Mørkt glass (edge-lit smoked glass)
 - [ ] Every card is as tall as its content without a scrollbar inside it, and follows the block's size: a calendar at 130 % opens its card at 130 %
-- [ ] Under every preview: «Om designet» with a sentence about the marked entry, and «Dette kan du endre» with Farger, Tekst and Alternativ, a row left out when it has nothing; the sentences read right in nb, en-GB and tr
+- [ ] Under every preview: «About the design» with a sentence about the marked entry, and «What you can change» with Colours, Text and Options, a row left out when it has nothing; the sentences read right in nb, en-GB and tr
 - [ ] The picker opened from the floating menu: its cross, a press on a tile and Escape close the picker and leave the menu open
 
 ### Test batch (0.7.19.23.2): Index cards
 
-- [ ] «Kartotekkort» in the picker's Retro family with its picture; chosen, the block draws typewritten cards on lined paper, each a little askew, numbered «Kort nr. 01», «02» … with the category in the head, and the writing sits on the lines
-- [ ] Each card reads «Dato:», «Tid:» (left out of a cancelled event) and «Sted:» lines, «Påmelding: ja, se lenke» as the sign-up link (with sign-up buttons on) or «Påmelding: ikke nødvendig» (unless «Open to everyone» is off), «Gjentas: ja» on a repeating event, the excerpt with «Les mer», and a rotated «Avlyst» stamp across a cancelled card with its title struck
-- [ ] «Ordvalg: Nøytrale» gives «Nr. 01», «Dato», «Tid», «Sted», «Meld deg på», «Åpent for alle» and «Gjentas»; the «Kolonner» option sets two, three or four columns; on a phone the cards flow into one column
-- [ ] A press on a card opens the event card with the punched hole at the top, the date as the head over the red rule, the facts on the lines, and the common words on its button and labels («Meld deg på», «Når», «Hvor»), never the design's line words
+- [ ] «Index cards» in the picker's Retro family with its picture; chosen, the block draws typewritten cards on lined paper, each a little askew, numbered «Card no. 01», «02» … with the category in the head, and the writing sits on the lines
+- [ ] Each card reads «Date:», «Time:» (left out of a cancelled event) and «Place:» lines, «Sign-up: yes, see link» as the sign-up link (with sign-up buttons on) or «Sign-up: not needed» (unless «Open to everyone» is off), «Repeats: yes» on a repeating event, the excerpt with «Read more», and a rotated «Cancelled» stamp across a cancelled card with its title struck
+- [ ] «Word choice: Neutral» gives «No. 01», «Date», «Time», «Place», «Sign up», «Open to everyone» and «Repeats»; the «Columns» option sets two, three or four columns; on a phone the cards flow into one column
+- [ ] A press on a card opens the event card with the punched hole at the top, the date as the head over the red rule, the facts on the lines, and the common words on its button and labels («Sign up», «When», «Where»), never the design's line words
 
 ### Test batch (0.7.19.23.1): the stylised designs' foundation and Tear-off pad
 
-- [ ] The design picker has a «Retro» family with «Avrivningsblokk» and its picture; chosen, the block draws the pad: the month bar, the huge day and weekday, the next event with its countdown, time and place, excerpt and «Les mer», the sign-up (with sign-up buttons on) and «Legg i kalender», and the later events as dashed rows, a cancelled one struck
-- [ ] «Legg i kalender» opens the event's card dressed as a pad page (the perforation along the top, the date as the red bar with the close cross on it), with the add-to-calendar choices inside
-- [ ] With the next event two or more days away the countdown reads «I dag om {n} dager» (English: «Today in {n} days»); in Style → Designets innstillinger, «Ordvalg: Nøytrale» gives «Om {n} dager»; clicking the words in the preview still rewrites them, and the «?» text on the choice reads right
+- [ ] The design picker has a «Retro» family with «Tear-off pad» and its picture; chosen, the block draws the pad: the month bar, the huge day and weekday, the next event with its countdown, time and place, excerpt and «Read more», the sign-up (with sign-up buttons on) and «Add to calendar», and the later events as dashed rows, a cancelled one struck
+- [ ] «Add to calendar» opens the event's card dressed as a pad page (the perforation along the top, the date as the red bar with the close cross on it), with the add-to-calendar choices inside
+- [ ] With the next event two or more days away the countdown reads «Today in {n} days» (English: «Today in {n} days»); in Style → Designets innstillinger, «Word choice: Neutral» gives «In {n} days»; clicking the words in the preview still rewrites them, and the «?» text on the choice reads right
 - [ ] A site in nynorsk or Northern Sami shows the common word in that language, never bokmål's theme word; a bokmål site shows the theme word
 - [ ] No rewriting switch on the pad (it never rewrites); the Style area's colour slots are paper, head, ink, rule and edge, and the empty state, the switcher's week and month and the finding tools take the pad's colours
 - [ ] On a phone the pad fits its width, and a later row with a long title keeps the title whole with the time under it

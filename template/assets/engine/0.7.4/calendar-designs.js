@@ -340,9 +340,6 @@ export function calCardDress(props) {
   return { set: look.set, classes: def.desktop ? [`urd-cal-dlg-${look.id}`] : [`urd-cal-dlg-${look.id}`, `urd-cal-dlg-${id}`], ownColours: look.id === design.id };
 }
 
-
-
-
 /** A colour slot: the label key is `calendar.slot.<key>`, the section groups the pickers in the panel. */
 const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key}`, section });
 
@@ -797,7 +794,7 @@ export const CAL_DESIGNS = [
     stripe: false,
     theme: ['inDays'],
     slots: [slot('paper'), slot('head'), slot('ink'), slot('rule'), slot('edge')],
-    texts: ['later', 'addEvent', 'moreInfo', ...COMMON_TEXTS],
+    texts: ['addEvent', 'moreInfo', ...COMMON_TEXTS],
   },
   {
     id: 'index',
