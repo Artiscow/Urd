@@ -27,6 +27,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.23.5 - Receipt, Seventies poster and Art deco, with the shared period line - 17 October 2026
+
+- Receipt (`receipt`, set `receipt`, the slots paper and ink; blocks/calendar-retro.js): a till receipt with a torn edge, «* Program *» over the period and the venue, a row per event of date, title, dot leader and time with the place and status under it, the totals «Antall arrangement» and «Neste om», «Inngang: gratis», the subscribe link as a barcode and «Takk for at du kommer!». Its rewriting writes the date as 04.10 and the title in capitals, and its own card is a numbered receipt with dot-leader lines for date, time, place and category.
+- Seventies poster (`seventies`, set `seventies`, the slots cream, orange, brown and mustard): a sunrise of arcs over «Hva skjer?» and the period, the events as cream pills with a round date badge on a mustard panel, «Bli med» on those with a sign-up and «Følg kalenderen, far out» as the subscribe link. Its own card carries a band of stripes with the event's calendar and a row of matches.
+- Art deco (`deco`, set `deco`, the slots bg, gold and cream): a gold double frame on black under a sunburst, «Program» over the season, rows of the day in gold, the title with its time and place, and the countdown. Its own card has a fan in each corner and a rule with a diamond under the title.
+- The three draw at the calendar's 14 px base with their rows in shared columns (subgrid), read on a phone as they are, and their default lines («Høsten 2026», «Klubbhuset, Nedre gate 2», «Inngang: gratis», «Takk for at du kommer!» and the others) are content lines the owner rewrites or empties (`CAL_CONTENT_TEXTS`).
+- Found while merging: the receipt and the poster had each added a content text `period` with defaults of its own, and Art deco a `season`. They are one shared `period` (the common words «Sesongen 2026») with the receipt's and the poster's defaults as theme words, so an owner's own words survive a change between them; the slot label `calendar.slot.cream`, added twice, is kept once.
+- Found while building: the One line design's grid (`.urd-cal-line { display: grid }`) lands on every design's content lines, which carry the same class. The three new designs reset it on their own lines; the shared fix is in BACKLOG.
+
 ### 0.7.0.52 - Gallery, timeline and stat that keep their layout under «Size», and the timeline item's title on a line of its own - 17 October 2026
 
 - Gallery, timeline and stat took their narrow layout at the visible width under «Size» or «Shrink the content», since their narrow rules styled the content root, which cannot be its own container (BACKLOG, 17 October 2026). The gallery's grid, mosaic and polaroid views lay their tiles out in `.urd-gallery-tiles`, and the timeline and the stat stand in a box of their own (`.urd-timeline-box`, `.urd-stats-box`), so the root is the `urd-block` container and the layout stays the same at any size.

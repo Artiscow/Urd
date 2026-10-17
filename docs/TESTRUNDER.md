@@ -2,6 +2,20 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.23.5): Receipt, Seventies poster and Art deco
+
+- [ ] «Kvittering» in the picker's Retro family: a till receipt with a torn bottom edge, «* PROGRAM *», «HØSTEN 2026» and «KLUBBHUSET, NEDRE GATE 2», a row per event of date, title, a dot leader and the time with the place and status under it, the totals, «INNGANG GRATIS», the barcode with «Abonner: skann eller trykk her» (with «Abonner» on) and «Takk for at du kommer!»
+- [ ] Kvittering: the titles start on one line and the times end on one line whatever their widths; a long title is cut with an ellipsis; «Skriv om kalenderdata» off shows the calendar's own date, title and time
+- [ ] Kvittering's card: «Kvittering nr 001» over the title, dot-leader lines Dato, Tid, Sted and Kategori, «Meld deg på» in ink and a torn bottom edge, without a scrollbar inside it
+- [ ] «Syttitallsplakat»: the sunrise, «Hva skjer?» and «Oktober og november», the events as pills with a round date badge in turn orange, mustard and brown, «Bli med» on an event with a sign-up and «Følg kalenderen, far out» with «Abonner» on; the pills' titles start on one line
+- [ ] Syttitallsplakat's card: a band of stripes with the event's calendar on it and a row of matches under it
+- [ ] «Art deco»: the gold double frame on black, the sunburst, «PROGRAM» and «◆ SESONGEN 2026 ◆», rows of the day in gold, the title with its time and place, and the countdown at the right; the foot with the sign-up and the subscribe links
+- [ ] Art deco's card: a fan in each corner, rays over the date and a rule with a diamond under the title
+- [ ] In all three the period line («Høsten 2026», «Oktober og november», «Sesongen 2026») is rewritten by clicking it; emptied it is gone on the published page and a faint hint in the editor; a rewritten period stays when the calendar changes between the three designs
+- [ ] «Ordvalg: Nøytrale» gives the common words in all three, with «Sesongen 2026» as the period
+- [ ] At 100 % the three have type the size of the other designs'; at 50 % they are half as tall with the same lines; on a phone none of them scrolls sideways, and each shows as itself
+- [ ] The pictures in the picker (the design, the phone and the card) show each of the three in its own look
+
 ### Test batch (0.7.0.52): gallery, timeline and stat under «Size», and the timeline item's title
 
 - [ ] A Galleri with «Rutenett» and «Kolonner» 3, just wide enough for three columns: «Størrelse» at 80 % and 50 % keeps three columns, only smaller; dragged narrow at 100 % it still takes two columns. The same for the mosaic and the polaroids

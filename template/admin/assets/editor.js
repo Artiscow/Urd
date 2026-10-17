@@ -2697,6 +2697,25 @@ var oa = {
 		"calendar.theme.marquee.now": "Nå på plakaten",
 		"calendar.theme.marquee.later": "Kommer snart",
 		"calendar.theme.marquee.signup": "Billetter",
+		"calendar.countLabel": "Arrangementer",
+		"calendar.colCategory": "Kategori",
+		"calendar.theme.receipt.period": "Høsten 2026",
+		"calendar.venue": "Klubbhuset, Nedre gate 2",
+		"calendar.admission": "Inngang",
+		"calendar.admissionPrice": "Gratis",
+		"calendar.thanks": "Takk for at du kommer!",
+		"calendar.theme.receipt.program": "* Program *",
+		"calendar.theme.receipt.countLabel": "Antall arrangement",
+		"calendar.theme.receipt.nextShort": "Neste om",
+		"calendar.theme.receipt.signup": "Påmelding",
+		"calendar.theme.receipt.subscribe": "Abonner: skann eller trykk her",
+		"calendar.theme.receipt.cardNo": "Kvittering nr {n}",
+		"calendar.theme.seventies.period": "Oktober og november",
+		"calendar.theme.seventies.now": "Hva skjer?",
+		"calendar.theme.seventies.signup": "Bli med",
+		"calendar.theme.seventies.subscribe": "Følg kalenderen, far out",
+		"calendar.theme.deco.now": "Program",
+		"calendar.theme.deco.signup": "Reserver plass",
 		"calendar.more": "+{n}",
 		"calendar.next": "Neste arrangement",
 		"calendar.now": "Akkurat nå",
@@ -2768,6 +2787,7 @@ var oa = {
 		"calendar.where": "Hvor",
 		"calendar.forWhom": "For hvem",
 		"calendar.openAll": "Åpent for alle",
+		"calendar.period": "Sesongen 2026",
 		"calendar.allDates": "Alle datoer",
 		"calendar.emptyKicker": "Datoer",
 		"calendar.emptyTitle": "Datoer kommer",
@@ -12209,7 +12229,12 @@ var zm = [
 	"emptyTitle",
 	"series",
 	"forWhom",
-	"openAll"
+	"openAll",
+	"period",
+	"venue",
+	"admission",
+	"admissionPrice",
+	"thanks"
 ], Hm = {
 	noticeTitle: "calendar.noticeTitleHint",
 	noticeText: "calendar.noticeTextHint"
@@ -13297,6 +13322,104 @@ var X = (e, t = "colors") => ({
 		texts: [
 			"now",
 			"later",
+			"moreInfo",
+			...Gm
+		]
+	},
+	{
+		id: "receipt",
+		ownCard: !0,
+		labelKey: "calendar.design.receipt",
+		set: "receipt",
+		family: "retro",
+		phone: "fits",
+		excerpt: !0,
+		view: "list",
+		module: "retro",
+		stripe: !1,
+		ownSubscribe: !0,
+		rewrites: !0,
+		theme: [
+			"program",
+			"period",
+			"countLabel",
+			"nextShort",
+			"signup",
+			"subscribe",
+			"cardNo"
+		],
+		slots: [X("paper"), X("ink")],
+		texts: [
+			"program",
+			"period",
+			"venue",
+			"countLabel",
+			"nextShort",
+			"unitDays",
+			"admission",
+			"admissionPrice",
+			"thanks",
+			"cardNo",
+			"colDate",
+			"colTime",
+			"colPlace",
+			"colCategory",
+			"moreInfo",
+			...Gm
+		]
+	},
+	{
+		id: "seventies",
+		ownCard: !0,
+		labelKey: "calendar.design.seventies",
+		set: "seventies",
+		family: "retro",
+		phone: "fits",
+		excerpt: !0,
+		view: "list",
+		module: "retro",
+		stripe: !1,
+		ownSubscribe: !0,
+		theme: [
+			"now",
+			"period",
+			"signup",
+			"subscribe"
+		],
+		slots: [
+			X("cream"),
+			X("orange"),
+			X("brown"),
+			X("mustard")
+		],
+		texts: [
+			"now",
+			"period",
+			"moreInfo",
+			...Gm
+		]
+	},
+	{
+		id: "deco",
+		labelKey: "calendar.design.deco",
+		ownCard: !0,
+		set: "deco",
+		family: "retro",
+		phone: "fits",
+		excerpt: !0,
+		view: "list",
+		module: "retro",
+		stripe: !1,
+		ownSubscribe: !0,
+		theme: ["now", "signup"],
+		slots: [
+			X("bg"),
+			X("gold"),
+			X("cream")
+		],
+		texts: [
+			"now",
+			"period",
 			"moreInfo",
 			...Gm
 		]
@@ -23336,6 +23459,58 @@ var gC = {
 		110
 	].map((t, n) => Array.from({ length: n === 2 ? 7 : 4 }, (n, r) => Z(t + r * 5.5, e, 4.5, 8, "#23272c", 1, 1)).join("")).join("") + Z(130, e + 2, 14, 4, t === 3 ? "#ff5a4f" : t === 1 ? "#ffb000" : "#f4f1e6", .9, 1)),
 	marquee: () => Z(8, 4, 144, 72, "#7a1420", 1, 6) + Array.from({ length: 12 }, (e, t) => dC(16 + t * 11.6, 9, 1.8, "#ffd76a") + dC(16 + t * 11.6, 71, 1.8, "#ffd76a")).join("") + Z(14, 14, 132, 52, "#f6f1e4", 1, 0) + Z(20, 18, 40, 3, "#7a1420", .9, 0) + Z(20, 25, 76, 8, "#17120f", 1, 0) + Z(20, 37, 60, 3, "#17120f", .7, 0) + pC(3, 46, 6, (e) => Z(20, e, 120, 2.5, "#17120f", .55, 0)),
+	receipt: () => Z(46, 2, 68, 70, "#fbfaf6", 1, 0) + `<polygon points="${Array.from({ length: 17 }, (e, t) => `${46 + t * 4},72 ${48 + t * 4},75.5`).join(" ")} 114,72" fill="#fbfaf6"/>` + Z(64, 6, 32, 4, "#1b1b1b", 1, 0) + Z(68, 12, 24, 2.5, "#1b1b1b", .6, 0) + [18, 46].map((e) => pC(16, 51, 4, (t) => Z(t, e, 2.4, .8, "#1b1b1b", 1, 0))).join("") + pC(4, 22, 6, (e, t) => Z(51, e, 8, 3, "#1b1b1b", 1, 0) + Z(62, e, [
+		28,
+		18,
+		24,
+		14
+	][t], 3, "#1b1b1b", .85, 0) + pC(Math.floor((32 - [
+		28,
+		18,
+		24,
+		14
+	][t]) / 3), 64 + [
+		28,
+		18,
+		24,
+		14
+	][t] + 2, 3, (t) => Z(t, e + 2, 1, 1, "#1b1b1b", .6, 0)) + Z(100, e, 10, 3, "#1b1b1b", 1, 0)) + pC(2, 50, 5, (e) => Z(51, e, 30, 2.5, "#1b1b1b", .7, 0) + Z(102, e, 8, 2.5, "#1b1b1b", .7, 0)) + Array.from({ length: 22 }, (e, t) => Z(52 + t * 2.6, 61, [
+		1,
+		1.8,
+		.8
+	][t % 3], 7, "#1b1b1b", 1, 0)).join(""),
+	seventies: () => Z(34, 2, 92, 76, "#f6e7c8", 1, 8) + [
+		[20, "#e0aa2a"],
+		[17, "#f6e7c8"],
+		[14, "#5a3320"],
+		[11, "#e2711d"],
+		[8, "#e0aa2a"],
+		[5, "#f6e7c8"]
+	].map(([e, t]) => dC(80, 24, e, t)).join("") + Z(34, 24, 92, 4, "#f6e7c8", 1, 0) + Z(60, 26, 40, 5, "#e2711d", 1, 2) + Z(66, 33, 28, 2, "#5a3320", .6, 1) + Z(40, 38, 80, 36, "#e0aa2a", 1, 7) + pC(3, 41, 11, (e, t) => Z(43, e, 74, 9, "#f6e7c8", 1, 4.5) + dC(48, e + 4.5, 3.4, [
+		"#e2711d",
+		"#e0aa2a",
+		"#5a3320"
+	][t]) + Z(54, e + 2.2, 30, 2.6, "#5a3320", .9, 1) + Z(54, e + 5.8, 20, 1.6, "#5a3320", .5, 1) + (t === 1 ? "" : Z(103, e + 2.5, 11, 4, "#5a3320", 1, 2))),
+	deco: () => Z(14, 2, 132, 76, "#0e0e10", 1, 0) + [
+		[
+			16,
+			4,
+			128,
+			72
+		],
+		[
+			18.5,
+			6.5,
+			123,
+			67
+		],
+		[
+			82,
+			70,
+			16,
+			4
+		]
+	].map(([e, t, n, r]) => `<rect x="${e}" y="${t}" width="${n}" height="${r}" fill="none" stroke="#d4af6a" stroke-width="0.6"/>`).join("") + Array.from({ length: 15 }, (e, t) => (t - 7) * 12 * Math.PI / 180).map((e) => fC(80, 20, 80 + 11 * Math.sin(e), 20 - 11 * Math.cos(e), "#d4af6a", .9)).join("") + Z(62, 23, 36, 4, "#d4af6a", 1, 0) + Z(69, 29.5, 22, 1.5, "#f3ead3", .7, 0) + pC(3, 34, 11, (e) => fC(22, e, 138, e, "#d4af6a", .5) + Z(26, e + 2.5, 8, 5, "#d4af6a", 1, 0) + fC(38, e + 1.5, 38, e + 9.5, "#d4af6a", .5) + Z(42, e + 3, 52, 3, "#f3ead3", .9, 0) + Z(42, e + 7.5, 32, 1.5, "#f3ead3", .5, 0) + Z(120, e + 4.5, 15, 1.8, "#d4af6a", .9, 0)) + fC(22, 67, 138, 67, "#d4af6a", .5) + Z(62, 70, 16, 4, "#d4af6a", 1, 0),
 	mobileAgenda: () => Z(50, 4, 60, 72, "#121216", 1, 8) + Z(56, 10, 22, 4, aC, .9) + Array.from({ length: 7 }, (e, t) => Z(56 + t * 7.1, 18, 5.6, 9, t === 2 ? nC : iC, 1, 2)).join("") + pC(3, 32, 14, (e) => Z(56, e, 48, 11, "#1c1c22", 1, 3) + fC(67, e + 2, 67, e + 9, nC, 1.4) + Z(58, e + 4, 6, 3, rC, .8) + Z(70, e + 3, 26, 3, aC, .85))
 };
 Object.keys(gC);

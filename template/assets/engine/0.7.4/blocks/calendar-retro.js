@@ -4,6 +4,7 @@
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
 import { dates } from '../i18n.js';
+import { daysBetween, isMultiDay } from '../calendar-format.js';
 
 const dayOf = (occ) => new Date(occ.start);
 const two = (n) => String(n).padStart(2, '0');
@@ -390,6 +391,266 @@ export function marqueeRows(host, occs, props, ics, ui) {
   host.appendChild(box);
 }
 
+/* ---------- R5 Receipt ---------- */
+
+/** The time on a receipt's row: the board's (the all-day word, the start alone) with rewriting, else the event's own; a cancellation is the status line's to say. */
+const rcTime = (occ, ui) => (ui.rewrite ? depTime(occ, ui) : ui.time(occ.cancelled ? { ...occ, cancelled: false } : occ));
+
+/** The days an event covers as the receipt's card writes them with rewriting: 17.10, 17.-18.10 within a month and 30.10-02.11 across one. */
+function rcDays(occ) {
+  const d = dayOf(occ);
+  const day = `${two(d.getDate())}.${two(d.getMonth() + 1)}`;
+  if (!isMultiDay(occ)) return day;
+  const end = new Date(occ.end);
+  const last = `${two(end.getDate())}.${two(end.getMonth() + 1)}`;
+  return end.getMonth() === d.getMonth() ? `${two(d.getDate())}.-${last}` : `${day}-${last}`;
+}
+
+/** The line under a row: the place and the status words (the sign-up, a repeat, a cancellation), between dots; null with none of them. */
+function rcSub(occ, ui) {
+  const parts = [];
+  if (occ.location) parts.push(ui.field('span', 'place', occ.location, 'urd-cal-rc-place'));
+  if (occ.cancelled) parts.push(ui.tx('cancelled'));
+  for (const part of [ui.signup(occ), ui.recurring(occ)]) if (part) parts.push(part);
+  if (!parts.length) return null;
+  const sub = ui.el('div', 'urd-cal-rc-sub');
+  parts.forEach((part, i) => {
+    if (i) sub.appendChild(document.createTextNode(' · '));
+    sub.appendChild(part);
+  });
+  return sub;
+}
+
+/** The first event's excerpt with its link, under its row; null without. */
+function rcExcerpt(occ, ui) {
+  const excerpt = ui.excerpt(occ.description, 120);
+  if (!excerpt || ui.descriptionIn === 'card') return null;
+  const text = ui.field('p', 'description', excerpt, 'urd-cal-rc-text');
+  const href = ui.href(occ);
+  if (href) {
+    const more = ui.link('urd-cal-rc-more', 'moreInfo', href, '');
+    more.target = '_blank';
+    more.rel = 'noopener';
+    text.append(document.createTextNode(' '), more);
+  }
+  return text;
+}
+
+/** The receipt's rows: per event the date, the title and the time in the columns the rows share with the dot leader between them (base.css), the place and status under them, and the first event's excerpt under that. */
+function rcRows(occs, ui) {
+  const rows = ui.el('div', 'urd-cal-rc-rows');
+  occs.forEach((occ, i) => {
+    const d = dayOf(occ);
+    const event = ui.tint(ui.el('div', 'urd-cal-rc-event'), occ);
+    event.append(
+      ui.field('span', 'date', depDate(d, ui), 'urd-cal-rc-date', d),
+      ui.field('span', 'title', occ.title, 'urd-cal-rc-title'),
+      ui.field('span', 'time', rcTime(occ, ui), 'urd-cal-rc-time', occ),
+    );
+    const sub = rcSub(occ, ui);
+    if (sub) event.appendChild(sub);
+    const text = i === 0 && !ui.rest ? rcExcerpt(occ, ui) : null;
+    if (text) event.appendChild(text);
+    rows.appendChild(event);
+  });
+  return rows;
+}
+
+/** A totals line: its words at the left and its value at the right, as a till prints them. */
+function rcTotal(ui, words, value) {
+  const line = ui.el('div', 'urd-cal-rc-total');
+  line.append(words, ui.el('span', 'urd-cal-rc-value', value));
+  return line;
+}
+
+/** The days to the next event: the number and the word for days in the receipt's own words («Next in ... 3 days»), the countdown in the neutral ones («Next ... In 3 days»). */
+function rcNextIn(occ, ui) {
+  if (ui.opt.wordChoice === 'neutral') return ui.countdown(occ);
+  const n = Math.max(0, daysBetween(ui.today().getTime(), occ.start));
+  const value = ui.el('span');
+  value.append(document.createTextNode(`${n} `), ui.tx('unitDays', null, { n }));
+  return value;
+}
+
+/**
+ * R5 Receipt: a till receipt on paper with a torn bottom edge, in a monospace face: the heading over the period and the venue, the events as rows of date, title, dot leader and time with the place and status under each and the first one's excerpt, the totals (the number of events, the days to the next one and the admission in large type), and the barcode that is the subscribe link over the thanks. In the fold the receipt goes on with the rows alone.
+ * The heading, the totals' words, the sign-up and the subscribe link are the design's own (the theme words program, countLabel, nextShort, signup and subscribe); the period, the venue, the admission and the thanks are content lines the owner can remove. With rewriting on the date is 04.10, the time the start alone, and the title and excerpt are set in capitals and the title cut to its row by the style sheet; off, the rows hold the calendar's own text.
+ */
+export function receipt(host, occs, props, ics, ui) {
+  const paper = ui.el('div', ui.rewrite ? 'urd-cal-rc' : 'urd-cal-rc urd-cal-rc-plain');
+  if (ui.rest) {
+    paper.classList.add('urd-cal-rc-rest');
+    paper.appendChild(rcRows(occs, ui));
+    host.appendChild(paper);
+    return;
+  }
+  const head = ui.el('div', 'urd-cal-rc-head');
+  head.appendChild(ui.tx('program', 'urd-cal-rc-program'));
+  for (const key of ['period', 'venue']) {
+    const line = ui.line(ui.el('span', 'urd-cal-rc-headline'), key);
+    if (line) head.appendChild(line);
+  }
+  const totals = ui.el('div', 'urd-cal-rc-totals');
+  totals.appendChild(rcTotal(ui, ui.tx('countLabel'), document.createTextNode(String(ui.total))));
+  const next = ui.all.find((occ) => !occ.cancelled);
+  if (next) totals.appendChild(rcTotal(ui, ui.tx('nextShort'), rcNextIn(next, ui)));
+  // The admission is two content lines, its words and its price, and goes when both are emptied.
+  const entry = ui.el('div', 'urd-cal-rc-total urd-cal-rc-entry');
+  const words = ui.line(ui.el('span'), 'admission', { carry: true });
+  const price = ui.line(ui.el('span', 'urd-cal-rc-value'), 'admissionPrice', { carry: true });
+  for (const part of [words, price]) if (part) entry.appendChild(part);
+  if (ui.group(entry)) totals.appendChild(entry);
+  // The foot holds the barcode and the thanks; without a barcode it goes with the thanks line.
+  const foot = ui.el('div', 'urd-cal-rc-foot');
+  const subscribe = ui.subscribe();
+  if (subscribe) {
+    subscribe.classList.add('urd-cal-rc-code');
+    foot.appendChild(subscribe);
+  }
+  const thanks = ui.line(ui.el('span', 'urd-cal-rc-thanks'), 'thanks', { carry: !subscribe });
+  if (thanks) foot.appendChild(thanks);
+  paper.append(head, rcRows(occs, ui), totals);
+  if (subscribe || ui.group(foot)) paper.appendChild(foot);
+  host.appendChild(paper);
+}
+
+/**
+ * R6 Seventies poster: a rounded cream poster with a sunrise of arcs at its top, the heading in a rounded face over a spaced line, and a mustard panel holding one cream pill per event (the day over the short month in a round badge, orange, mustard and brown in turn, the title with the time and place under it, the first event's excerpt, and the sign-up at the pill's end), with the subscribe link under the panel.
+ * The heading, the sign-up and the subscribe link are the design's own (the theme words now, signup and subscribe), and the line under the heading is content the owner can rewrite or remove (`period`).
+ * The rest of a folded list is drawn as a panel on a poster of its own, the badges' turn carried on.
+ */
+export function seventies(host, occs, props, ics, ui) {
+  const poster = ui.el('div', ui.rest ? 'urd-cal-sv urd-cal-sv-rest' : 'urd-cal-sv');
+  if (!ui.rest) {
+    poster.appendChild(ui.tx('now', 'urd-cal-sv-head'));
+    const period = ui.line(ui.el('p', 'urd-cal-sv-period'), 'period');
+    if (period) poster.appendChild(period);
+  }
+  const panel = ui.el('div', 'urd-cal-sv-panel');
+  occs.forEach((occ, i) => {
+    const d = dayOf(occ);
+    const row = ui.tint(ui.el('article', `urd-cal-sv-row urd-cal-sv-tone-${(ui.offset + i) % 3}`), occ);
+    const badge = ui.el('span', 'urd-cal-sv-badge');
+    badge.append(ui.field('strong', 'number', String(d.getDate()), 'urd-cal-sv-day', d), ui.field('span', 'date', dates().monthsShort[d.getMonth()], 'urd-cal-sv-mon', d));
+    // The text and the sign-up share a line while there is room, and the sign-up goes under the text when there is not.
+    const main = ui.el('div', 'urd-cal-sv-main');
+    const body = ui.el('div', 'urd-cal-sv-body');
+    body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-sv-title'));
+    const when = ui.el('span', 'urd-cal-sv-when');
+    when.appendChild(ui.field('span', 'time', ui.time(occ), null, occ));
+    if (occ.location) when.append(document.createTextNode(' · '), ui.field('span', 'place', occ.location));
+    body.appendChild(when);
+    const excerpt = i === 0 && !ui.rest ? ui.excerpt(occ.description, 160) : '';
+    if (excerpt && ui.descriptionIn !== 'card') {
+      const text = ui.field('p', 'description', excerpt, 'urd-cal-sv-text');
+      const href = ui.href(occ);
+      if (href) {
+        const more = ui.link('urd-cal-sv-more', 'moreInfo', href, '');
+        more.target = '_blank';
+        more.rel = 'noopener';
+        text.append(document.createTextNode(' '), more);
+      }
+      body.appendChild(text);
+    }
+    main.appendChild(body);
+    const signup = ui.signup(occ);
+    if (signup) {
+      signup.classList.add('urd-cal-sv-signup');
+      main.appendChild(signup);
+    }
+    row.append(badge, main);
+    panel.appendChild(row);
+  });
+  poster.appendChild(panel);
+  const subscribe = ui.rest ? null : ui.subscribe();
+  if (subscribe) {
+    subscribe.classList.add('urd-cal-sv-foot');
+    poster.appendChild(subscribe);
+  }
+  host.appendChild(poster);
+}
+
+/** An Art deco row: the day in gold over its month, the title with its time and place under it, and the countdown at the right; the first row of the list carries the excerpt. */
+function decoRow(occ, ui, first) {
+  const d = dayOf(occ);
+  const title = ui.field('strong', 'title', occ.title, 'urd-cal-deco-title');
+  const row = ui.tint(ui.el('div', 'urd-cal-deco-row'), occ, title);
+  const date = ui.el('div', 'urd-cal-deco-date');
+  date.append(ui.field('strong', 'number', String(d.getDate()), 'urd-cal-deco-day', d), ui.field('span', 'date', dates().monthsShort[d.getMonth()], 'urd-cal-deco-month', d));
+  const body = ui.el('div', 'urd-cal-deco-body');
+  const meta = ui.el('span', 'urd-cal-deco-meta');
+  meta.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
+  if (occ.location) meta.appendChild(ui.field('span', 'place', occ.location));
+  body.append(title, meta);
+  const excerpt = first ? ui.excerpt(occ.description, 160) : '';
+  if (excerpt && ui.descriptionIn !== 'card') {
+    const text = ui.field('p', 'description', excerpt, 'urd-cal-deco-text');
+    const href = ui.href(occ);
+    if (href) {
+      const more = ui.link('urd-cal-deco-more', 'moreInfo', href, '');
+      more.target = '_blank';
+      more.rel = 'noopener';
+      text.append(document.createTextNode(' '), more);
+    }
+    body.appendChild(text);
+  }
+  row.append(date, body, ui.el('span', 'urd-cal-deco-in', occ.cancelled ? null : ui.countdown(occ)));
+  return row;
+}
+
+/**
+ * R7 Art deco: a programme in a gold double frame on black, a sunburst over the heading and the season line under it, the events as rows of the day in gold, the title with its time and place, and the countdown, the first with its excerpt; the first event's sign-up and the subscribe links stand at the foot.
+ * The heading and the sign-up are the design's own words (the theme words now and signup), the season line is the shared period text (`period`, content the owner can rewrite or remove), and the capitals are the style sheet's.
+ * The events a list folds away are drawn as rows alone, without the heading and the foot.
+ */
+export function deco(host, occs, props, ics, ui) {
+  const box = ui.el('div', ui.rest ? 'urd-cal-deco urd-cal-deco-rest' : 'urd-cal-deco');
+  const frame = ui.el('div', 'urd-cal-deco-frame');
+  if (!ui.rest) {
+    frame.appendChild(ui.tx('now', 'urd-cal-deco-heading'));
+    const season = ui.line(ui.el('p', 'urd-cal-deco-season'), 'period');
+    if (season) frame.appendChild(season);
+  }
+  const rows = ui.el('div', 'urd-cal-deco-rows');
+  occs.forEach((occ, i) => rows.appendChild(decoRow(occ, ui, i === 0 && !ui.rest)));
+  frame.appendChild(rows);
+  if (!ui.rest) {
+    const foot = ui.el('div', 'urd-cal-deco-foot');
+    const signup = ui.signup(occs[0]);
+    if (signup) {
+      signup.classList.add('urd-cal-deco-signup');
+      foot.appendChild(signup);
+    }
+    const subscribe = ui.subscribe();
+    if (subscribe) foot.append(...subscribe.children);
+    if (foot.childElementCount) frame.appendChild(foot);
+  }
+  box.appendChild(frame);
+  host.appendChild(box);
+}
+
+/** An Art deco ornament on the card: a line drawing in the gold, hidden from a screen reader. */
+function decoSvg(className, viewBox, d) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', viewBox);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('class', className);
+  const path = document.createElementNS(NS, 'path');
+  path.setAttribute('d', d);
+  svg.appendChild(path);
+  return svg;
+}
+
+/** The card's corner piece: a quarter fan with three rays from the corner. */
+const DECO_CORNER = 'M2 2 L36 2 A34 34 0 0 1 2 36 Z M2 2 L30 14 M2 2 L22 22 M2 2 L14 30';
+
+/** The fan over the card's date: eleven rays from the middle of its foot, fourteen degrees apart. */
+const DECO_FAN = Array.from({ length: 11 }, (_, i) => {
+  const a = ((i - 5) * 14 * Math.PI) / 180;
+  return `M60 34 L${(60 + 30 * Math.sin(a)).toFixed(1)} ${(34 - 30 * Math.cos(a)).toFixed(1)}`;
+}).join(' ');
+
 /** The card's parts, each a decorator the block runs on the event's card after it is built (ui.dressCard), in the common words. */
 export const cards = {
   /** R4 Cinema marquee's own card: a cinema ticket, the date, title and facts on its face and the stub down its right side with the day standing; the bulbs over it and the tear line under it are base.css's. */
@@ -405,6 +666,60 @@ export const cards = {
     parts[0].before(ticket);
     face.append(...parts);
     ticket.append(face, stub);
+  },
+  /**
+   * R5 Receipt's own card: the receipt's number over the title (the event's place in the calendar's list, the theme word cardNo), the facts as dot-leader lines with the date first and the category last, named as the receipt's columns, and the thanks at its foot; the torn edge and the capitals are base.css's, the capitals of the calendar's data only with rewriting.
+   */
+  receipt(dialog, occ, ui) {
+    if (!ui.rewrite) dialog.classList.add('urd-cal-rc-own');
+    const title = dialog.querySelector('.urd-cal-dialog-title');
+    const place = ui.all.indexOf(occ);
+    if (title && place >= 0) title.before(ui.el('span', 'urd-cal-rc-cardno', ui.tx('cardNo', null, { n: String(place + 1).padStart(3, '0') })));
+    const facts = dialog.querySelector('.urd-cal-dialog-facts');
+    if (facts) {
+      const d = dayOf(occ);
+      const term = (key) => ui.el('dt', null, ui.tx(key));
+      // The time is always the first fact, and the place the one whose value leads to the map.
+      facts.querySelector('dt')?.replaceChildren(ui.tx('colTime'));
+      facts.querySelector('dd > .urd-cal-f-place, dd > .urd-cal-place-link')?.parentElement.previousElementSibling?.replaceChildren(ui.tx('colPlace'));
+      facts.prepend(term('colDate'), ui.el('dd', null, ui.field('span', 'date', ui.rewrite ? rcDays(occ) : ui.dateLine(d, true), null, d)));
+      dialog.querySelector('.urd-cal-dialog-date')?.remove();
+      const meta = dialog.querySelector('.urd-cal-dialog-meta');
+      const chip = meta?.querySelector('.urd-cal-chip');
+      if (chip) {
+        facts.append(term('colCategory'), ui.el('dd', null, chip));
+        if (!meta.childElementCount) meta.remove();
+      }
+      // Each fact on a line of its own, the dots between its name and its value drawn by the style sheet.
+      for (const dt of [...facts.querySelectorAll(':scope > dt')]) {
+        const line = ui.el('div', 'urd-cal-rc-fact');
+        const dd = dt.nextElementSibling;
+        dt.before(line);
+        line.append(dt, dd);
+      }
+    }
+    const thanks = ui.line(ui.el('p', 'urd-cal-rc-cardthanks'), 'thanks');
+    if (thanks) dialog.appendChild(thanks);
+  },
+  /** R6 Seventies poster's own card: a band of stripes across its top with the event's calendar as its label, the row of matches under the band and the halftone strip at the foot drawn by the style sheet. */
+  seventies(dialog, occ, ui) {
+    const band = ui.el('div', 'urd-cal-sv-cardband');
+    const chip = dialog.querySelector('.urd-cal-dialog-meta .urd-cal-chip');
+    if (chip) {
+      const meta = chip.parentElement;
+      band.appendChild(chip);
+      if (!meta.childElementCount) meta.remove();
+    }
+    dialog.insertBefore(band, dialog.querySelector('.urd-cal-dialog-date'));
+  },
+  /** R7 Art deco's own card: a fan piece in each corner of the gold double frame, a fan of thin rays over the date, and a rule with a diamond under the title; the frame is base.css's. */
+  deco(dialog, occ, ui) {
+    dialog.append(...['tl', 'tr', 'bl', 'br'].map((corner) => decoSvg(`urd-cal-deco-corner urd-cal-deco-corner-${corner}`, '0 0 38 38', DECO_CORNER)));
+    dialog.querySelector('.urd-cal-dialog-date')?.before(decoSvg('urd-cal-deco-cardfan', '0 0 120 34', DECO_FAN));
+    const rule = ui.el('span', 'urd-cal-deco-cardrule');
+    rule.setAttribute('aria-hidden', 'true');
+    rule.appendChild(ui.el('i'));
+    dialog.querySelector('.urd-cal-dialog-title')?.after(rule);
   },
   /** The board row on top: the date, time and status as flaps over the date line, the facts labelled as the board's columns by the style sheet. */
   depHead(dialog, occ, ui, props) {

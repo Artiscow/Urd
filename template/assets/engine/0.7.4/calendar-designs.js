@@ -102,16 +102,23 @@ export const CAL_TEXTS = {
   updated: 'calendar.updated',
   colStatus: 'calendar.colStatus',
   rowHint: 'calendar.rowHint',
+  countLabel: 'calendar.countLabel',
+  colCategory: 'calendar.colCategory',
+  period: 'calendar.period',
+  venue: 'calendar.venue',
+  admission: 'calendar.admission',
+  admissionPrice: 'calendar.admissionPrice',
+  thanks: 'calendar.thanks',
 };
 
 /** The texts with plural forms: the dictionary holds one key per form, and the owner's words are stored per form. */
 export const CAL_PLURAL_TEXTS = ['count', 'todayCount', 'nextN', 'inDays', 'unitDays', 'unitHours', 'unitMin'];
 
 /**
- * The texts that are content a design ships with rather than words for a thing every calendar has (an announcement, the empty state's pill, the regular event's labels).
+ * The texts that are content a design ships with rather than words for a thing every calendar has (an announcement, the empty state's pill, the regular event's labels, the period line of the receipt, the seventies poster and Art deco, and the receipt's venue, admission and thanks).
  * The owner can remove such a line by emptying it in the preview: it is stored as `false`, never drawn for a visitor, and stands as a faint hint in the editor.
  */
-export const CAL_CONTENT_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'emptyKicker', 'emptyTitle', 'series', 'forWhom', 'openAll'];
+export const CAL_CONTENT_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'emptyKicker', 'emptyTitle', 'series', 'forWhom', 'openAll', 'period', 'venue', 'admission', 'admissionPrice', 'thanks'];
 
 /** The admin dictionary's hint for a text without words of its own, shown in the editor only. */
 export const CAL_HINT_TEXTS = { noticeTitle: 'calendar.noticeTitleHint', noticeText: 'calendar.noticeTextHint' };
@@ -845,6 +852,55 @@ export const CAL_DESIGNS = [
     texts: ['now', 'later', 'moreInfo', ...COMMON_TEXTS],
   },
   {
+    id: 'receipt',
+    ownCard: true,
+    labelKey: 'calendar.design.receipt',
+    set: 'receipt',
+    family: 'retro',
+    phone: 'fits',
+    excerpt: true,
+    view: 'list',
+    module: 'retro',
+    stripe: false,
+    ownSubscribe: true,
+    rewrites: true,
+    theme: ['program', 'period', 'countLabel', 'nextShort', 'signup', 'subscribe', 'cardNo'],
+    slots: [slot('paper'), slot('ink')],
+    texts: ['program', 'period', 'venue', 'countLabel', 'nextShort', 'unitDays', 'admission', 'admissionPrice', 'thanks', 'cardNo', 'colDate', 'colTime', 'colPlace', 'colCategory', 'moreInfo', ...COMMON_TEXTS],
+  },
+  {
+    id: 'seventies',
+    ownCard: true,
+    labelKey: 'calendar.design.seventies',
+    set: 'seventies',
+    family: 'retro',
+    phone: 'fits',
+    excerpt: true,
+    view: 'list',
+    module: 'retro',
+    stripe: false,
+    ownSubscribe: true,
+    theme: ['now', 'period', 'signup', 'subscribe'],
+    slots: [slot('cream'), slot('orange'), slot('brown'), slot('mustard')],
+    texts: ['now', 'period', 'moreInfo', ...COMMON_TEXTS],
+  },
+  {
+    id: 'deco',
+    labelKey: 'calendar.design.deco',
+    ownCard: true,
+    set: 'deco',
+    family: 'retro',
+    phone: 'fits',
+    excerpt: true,
+    view: 'list',
+    module: 'retro',
+    stripe: false,
+    ownSubscribe: true,
+    theme: ['now', 'signup'],
+    slots: [slot('bg'), slot('gold'), slot('cream')],
+    texts: ['now', 'period', 'moreInfo', ...COMMON_TEXTS],
+  },
+  {
     id: 'mobileAgenda',
     labelKey: 'calendar.design.mobileAgenda',
     set: 'agendaDark',
@@ -899,7 +955,7 @@ export const CAL_SHARED_OPTIONS = {
  * The colour sets: every design belongs to one, and the event card, the switcher's week and month, the finding tools and the phone view are drawn per set in base.css (`urd-cal-set-<id>` on the block, ADR-0011).
  * A design overrides its set by redefining a set variable under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
  */
-export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad', 'index', 'departures', 'marquee'];
+export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad', 'index', 'departures', 'marquee', 'receipt', 'seventies', 'deco'];
 
 /** The designs a switcher button can stand behind: the week strip and the week designs, the plain month and the month designs. */
 export const CAL_SWITCH_WEEKS = ['weekStrip', 'weekPlan', 'layers'];
