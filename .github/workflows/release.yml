@@ -62,6 +62,8 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
 
       - name: Version consistency (engine == tag == CHANGELOG)
         env:
@@ -73,6 +75,12 @@ jobs:
           else
             node scripts/check-release.mjs "$TAG"
           fi
+
+      # Before the tests: the render tests compile the editor's Svelte files
+      # through the compiler in editor/node_modules.
+      - name: Install editor dependencies
+        working-directory: editor
+        run: npm ci
 
       - name: Engine and guard tests
         # A cheap smoke guard on exactly the content being synced; full CI
