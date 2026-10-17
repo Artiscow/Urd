@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.54 - The update that copies the template's binary files in batches, and the release run that installs the editor's dependencies - 17 October 2026
+
+- Test finding the same day: the release run for v0.7.5 stopped at its tests, since the render tests compile the editor's Svelte files and release.yml, unlike tests.yml, ran them without the editor's dependencies. The release workflow installs them first (`npm ci` in editor/), and v0.7.5 was synced by a manual run from main.
+- Test finding the same day: updating a site from v0.7.4 to v0.7.5 failed with Cloudflare's «Too many subrequests», since every binary file cost two requests and the release brings the design picker's 106 pictures, far over the free plan's 50 per call. Such files (binary, or text too long for the inline fetch) are now copied as blobs in batches of 18, each call answering 429 `updateContinue` with its progress, until a call with at most 10 left copies those and makes the one commit (`blobBatch` in update-plan.js; update.js); ADR-0014 decision 6 is amended, its earlier text in amended/.
+- The Updates panel repeats the call while it copies more and shows «Copying files from the template: {copied} of {total}» (`update.copying`, and `api.updateContinue` in the five admin dictionaries).
+- A site runs its own updater, so a site on v0.7.4 gets the fix by copying update.js, update-plan.js and github.js into its functions/ once; its admin shows the continue answer as a message, and the update is started again until it commits.
+
 ## [0.7.5] - 2026-10-17
 
 ### 0.7.0.53p - Release 0.7.5: the calendar's designs, the element menu, the sizing model and the App.svelte split - 17 October 2026

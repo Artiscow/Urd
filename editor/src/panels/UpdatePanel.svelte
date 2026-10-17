@@ -41,12 +41,22 @@
     ed.updateBusy = true;
     setStatus(ta('update.running', { target: updateInfo.target }));
     try {
-      const res = await fetch('/api/github/update', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ to: updateInfo.target, expect: updateInfo.head, skip: skipped }),
-      });
-      const data = await res.json().catch(() => null);
+      // The update copies the template's binary files in batches, one call each, and commits in the call that finds them all in
+      // place (ADR-0014 decision 6); a call that copies nothing new stops the loop, and its words ask for a new start.
+      let res;
+      let data;
+      let copied = -1;
+      for (;;) {
+        res = await fetch('/api/github/update', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ to: updateInfo.target, expect: updateInfo.head, skip: skipped }),
+        });
+        data = await res.json().catch(() => null);
+        if (data?.code !== 'updateContinue' || !(data.copied > copied)) break;
+        copied = data.copied;
+        setStatus(ta('update.copying', { copied: data.copied, total: data.total }));
+      }
       if (res.ok) {
         setStatus(ta('update.committed', { target: updateInfo.target }), 'ok');
         await awaitUpdateDeploy(updateInfo.target.replace(/^v/, ''));

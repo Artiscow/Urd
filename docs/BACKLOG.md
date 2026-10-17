@@ -452,6 +452,7 @@ What comes, in order (brought up to date 14 October 2026):
 
 - [ ] Røde streker under tekst, selv i ren visning: må bygge inn kompatibilitet for språkpakker og korrektur eller legge til en instilling om å disable en nettlesers egen korrektur.
 - [ ] `.urd-cal-line` is both the One line design's grid (`display: grid` in base.css) and the class `ui.line` gives every design's content lines, so the grid has stood on the announcement and the other content lines of every design since 0.7.19.18 (found 17 October 2026). Receipt, Seventies poster and Art deco reset it on their own lines; the One line design's box wants a class of its own, checked on every design that draws content lines.
+- [ ] Error messages on updating to a new release doesn't fit inside the text box.
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene

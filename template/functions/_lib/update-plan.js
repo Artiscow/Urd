@@ -111,3 +111,28 @@ export function chunkEntries(entries, size = 300) {
   for (let i = 0; i < entries.length; i += size) chunks.push(entries.slice(i, i + size));
   return chunks;
 }
+
+/** The template files one update call copies at most as blobs of their own: two subrequests each, which with the call's other
+ *  requests keeps it under the cap of 50 on the free plan (ADR-0014 decision 6). */
+export const BLOB_BATCH = 18;
+
+/** The files a call copies and still commits in: two subrequests each beside the committing call's own (about 13). */
+export const BLOB_ROOM = 10;
+
+/**
+ * The next files to copy as blobs of their own (binary, or text too long to travel inline in the tree): the ones the site's
+ * repository does not hold yet, in plan order. With at most `room` of them left, the call copies them all and commits
+ * (`commit`); otherwise it copies `size` of them and is repeated. `copied` is how many the repository holds once the batch
+ * is copied, out of `total`.
+ * @param {string[]} paths The paths written as blobs of their own
+ * @param {Set<string>} present The paths whose blob the site's repository already holds
+ * @param {number} [size]
+ * @param {number} [room]
+ * @returns {{batch: string[], copied: number, total: number, commit: boolean}}
+ */
+export function blobBatch(paths, present, size = BLOB_BATCH, room = BLOB_ROOM) {
+  const missing = paths.filter((path) => !present.has(path));
+  const commit = missing.length <= room;
+  const batch = commit ? missing : missing.slice(0, size);
+  return { batch, copied: paths.length - missing.length + batch.length, total: paths.length, commit };
+}

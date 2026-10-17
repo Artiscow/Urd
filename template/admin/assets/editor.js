@@ -23103,7 +23103,8 @@ function QS(e, t) {
 		})) {
 			n.updateBusy = !0, c(K("update.running", { target: F(a).target }));
 			try {
-				let t = await fetch("/api/github/update", {
+				let t, n, r = -1;
+				for (; t = await fetch("/api/github/update", {
 					method: "POST",
 					headers: { "content-type": "application/json" },
 					body: JSON.stringify({
@@ -23111,7 +23112,10 @@ function QS(e, t) {
 						expect: F(a).head,
 						skip: e
 					})
-				}), n = await t.json().catch(() => null);
+				}), n = await t.json().catch(() => null), n?.code === "updateContinue" && n.copied > r;) r = n.copied, c(K("update.copying", {
+					copied: n.copied,
+					total: n.total
+				}));
 				t.ok ? (c(K("update.committed", { target: F(a).target }), "ok"), await d(F(a).target.replace(/^v/, ""))) : t.status === 409 ? (c(ba(n) ?? K("update.checkFailed"), "error"), await s()) : c(ba(n) ?? K("update.failed"), "error");
 			} catch {
 				c(K("status.publishLayerUnreachable"), "error");

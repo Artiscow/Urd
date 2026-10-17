@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  planUpdate, highestVersionTag, isAtomPath, chunkEntries,
+  planUpdate, highestVersionTag, isAtomPath, chunkEntries, blobBatch, BLOB_BATCH, BLOB_ROOM,
 } from '../template/functions/_lib/update-plan.js';
 
 const change = (plan, path) => plan.changes.find((c) => c.path === path);
@@ -102,4 +102,30 @@ test('chunkEntries: splits into groups and preserves the order', () => {
   assert.deepEqual(chunkEntries(entries, 3), [[0, 1, 2], [3, 4, 5], [6]]);
   assert.deepEqual(chunkEntries([], 3), []);
   assert.equal(chunkEntries(entries).length, 1);
+});
+
+test('blobBatch: a batch of the files the site does not hold, and all of them with the commit once few enough are left', () => {
+  const paths = Array.from({ length: 40 }, (_, i) => `admin/designs/d${i}.webp`);
+  const none = blobBatch(paths, new Set());
+  assert.deepEqual(none.batch, paths.slice(0, BLOB_BATCH));
+  assert.equal(none.commit, false);
+  assert.equal(none.copied, BLOB_BATCH);
+  assert.equal(none.total, 40);
+  // What the site already holds is skipped, wherever it stands in the plan.
+  const some = blobBatch(paths, new Set([paths[0], paths[5], paths[39]]));
+  assert.equal(some.batch.includes(paths[0]), false);
+  assert.equal(some.batch[0], paths[1]);
+  assert.equal(some.copied, 3 + BLOB_BATCH);
+  // With few enough left, the call copies them and commits.
+  const last = blobBatch(paths, new Set(paths.slice(BLOB_ROOM)));
+  assert.deepEqual(last.batch, paths.slice(0, BLOB_ROOM));
+  assert.equal(last.commit, true);
+  assert.equal(last.copied, 40);
+  assert.equal(blobBatch(paths, new Set(paths.slice(BLOB_ROOM - 1))).commit, true);
+  assert.equal(blobBatch(paths, new Set(paths.slice(BLOB_ROOM + 1))).commit, false);
+  assert.deepEqual(blobBatch(paths, new Set(paths)), { batch: [], copied: 40, total: 40, commit: true });
+  assert.deepEqual(blobBatch([], new Set()), { batch: [], copied: 0, total: 0, commit: true });
+  // Two subrequests a file beside the call's own (about 7 copying, 13 committing) stay under the free plan's 50.
+  assert.ok(2 * BLOB_BATCH + 7 <= 50);
+  assert.ok(2 * BLOB_ROOM + 13 <= 50);
 });
