@@ -18820,7 +18820,7 @@ function zy(e, t) {
 Vr(["change", "click"]);
 //#endregion
 //#region src/menu/families/Timeline.svelte
-var By = /* @__PURE__ */ L("<span class=\"nav-line\"><input class=\"tl-year\"/> <input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span> <input/>", 1), Vy = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), Hy = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), Uy = /* @__PURE__ */ L("<label> <!></label>"), Wy = /* @__PURE__ */ L("<!> <!> <!>", 1);
+var By = /* @__PURE__ */ L("<span class=\"nav-line\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span> <input/> <input/>", 1), Vy = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), Hy = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), Uy = /* @__PURE__ */ L("<label> <!></label>"), Wy = /* @__PURE__ */ L("<!> <!> <!>", 1);
 function Gy(e, t) {
 	at(t, !0);
 	let n = rt("urd-editor"), r = /* @__PURE__ */ D(() => n.selectedBlock), { mutateBlock: i, setBlockProp: a, setBlockProps: o, themeSwatches: s } = n, { groupOf: c } = b_(() => F(r).props, o), l = () => [["left", K("opt.timeline.left")], ["alternating", K("opt.timeline.alternating")]];
@@ -18858,25 +18858,25 @@ function Gy(e, t) {
 			di(n, 17, () => F(r).props.items ?? [], si, (e, t, n) => {
 				var i = By(), a = j(i), o = A(a);
 				U(o);
-				var s = N(o, 2);
-				U(s);
-				var c = N(s, 2), l = A(c);
-				l.disabled = n === 0, V(l, () => q.up, !0), E(l);
+				var s = N(o, 2), c = A(s);
+				c.disabled = n === 0, V(c, () => q.up, !0), E(c);
+				var l = N(c, 2);
+				V(l, () => q.down, !0), E(l);
 				var d = N(l, 2);
-				V(d, () => q.down, !0), E(d);
-				var m = N(d, 2);
-				V(m, () => q.cross, !0), E(m), E(c), E(a);
-				var h = N(a, 2);
-				U(h), P((e, i, a, c, l, u) => {
-					W(o, F(t).year), G(o, "placeholder", e), G(o, "title", i), W(s, F(t).title), G(s, "title", a), d.disabled = n === (F(r).props.items?.length ?? 0) - 1, G(m, "title", c), W(h, F(t).text), G(h, "placeholder", l), G(h, "title", u);
+				V(d, () => q.cross, !0), E(d), E(s), E(a);
+				var m = N(a, 2);
+				U(m);
+				var h = N(m, 2);
+				U(h), P((e, i, a, s, c, u) => {
+					W(o, F(t).year), G(o, "placeholder", e), G(o, "title", i), l.disabled = n === (F(r).props.items?.length ?? 0) - 1, G(d, "title", a), W(m, F(t).title), G(m, "title", s), W(h, F(t).text), G(h, "placeholder", c), G(h, "title", u);
 				}, [
 					() => K("ph.tlYear"),
 					() => K("tip.timeline.year"),
-					() => K("tip.timeline.title"),
 					() => K("tip.timeline.remove"),
+					() => K("tip.timeline.title"),
 					() => K("ph.tlText"),
 					() => K("tip.timeline.text")
-				]), I("change", o, (e) => u(n, { year: e.target.value })), I("change", s, (e) => u(n, { title: e.target.value })), I("click", l, () => p(n, -1)), I("click", d, () => p(n, 1)), I("click", m, () => f(n)), I("change", h, (e) => u(n, { text: e.target.value })), R(e, i);
+				]), I("change", o, (e) => u(n, { year: e.target.value })), I("click", c, () => p(n, -1)), I("click", l, () => p(n, 1)), I("click", d, () => f(n)), I("change", m, (e) => u(n, { title: e.target.value })), I("change", h, (e) => u(n, { text: e.target.value })), R(e, i);
 			});
 			var i = N(n, 2), a = M(i, !0);
 			P((e) => z(a, e), [() => K("ui.addTlItem")]), I("click", i, d), R(e, t);

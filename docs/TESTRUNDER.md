@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.52): gallery, timeline and stat under «Size», and the timeline item's title
+
+- [ ] A Galleri with «Rutenett» and «Kolonner» 3, just wide enough for three columns: «Størrelse» at 80 % and 50 % keeps three columns, only smaller; dragged narrow at 100 % it still takes two columns. The same for the mosaic and the polaroids
+- [ ] A Tidslinje with «Vekslende sider», just wide enough to alternate: at 80 % and 50 % the cards still alternate; dragged narrow at 100 % they still line up along the left line
+- [ ] A Statistikk card just wide enough for its large figure: at 80 % the figure shrinks as much as its label; dragged very narrow at 100 % the figure still gets smaller
+- [ ] A Statistikk card or band with its own height fills its block; a plain one placed in the middle or stretched stands in the middle
+- [ ] A gallery's lightbox, carousel, slideshow and band work as before
+- [ ] A Tidslinje's events in the element menu: the year with the up, down and remove buttons on one line, the title in full width under it and the text under that; an edit in each field lands in the timeline
+
 ### Test batch (0.7.19.23.4): Cinema marquee, «Size» that scales everything alike, and three calendar fixes
 
 - [ ] «Kinomarkise» in the picker's Retro family: a red frame with lit bulbs above and below a letter board; «★ Nå på plakaten ★» with the day word («I morgen») over the next event's title, a line with its date, time and place, the excerpt with «Les mer», and «Kommer snart» with rows of date, name and time

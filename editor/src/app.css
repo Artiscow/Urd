@@ -1802,11 +1802,6 @@
     opacity: 0.8;
   }
 
-  /* The timeline panel's year field: narrow, the title takes the rest of the row. */
-  .nav-line input.tl-year:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
-    flex: 0 0 3.6rem;
-  }
-
   .page-path {
     opacity: 0.6;
     padding: 0 0.4rem;

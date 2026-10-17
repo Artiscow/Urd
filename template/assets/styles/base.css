@@ -233,11 +233,12 @@ html {
 
 /* A block drawn at a zoom (its size or its shrink, render.js applyZoom) is
    laid out in its content's own pixels. The content root of the calendar, the
-   product and the table is the urd-block container itself, so the rules for
-   their columns and cards, which all style elements inside the root, ask the
-   width the content is laid out in, and the layout stays the same at any size.
-   Container units inside them read the same width. */
-.urd-block[data-urd-width="own"] > :is(.urd-cal, .urd-product, .urd-table) {
+   product, the table, the gallery's grid views, the timeline and the stat is
+   the urd-block container itself, so the rules for their columns and cards,
+   which all style elements inside the root, ask the width the content is laid
+   out in, and the layout stays the same at any size. Container units inside
+   them read the same width. */
+.urd-block[data-urd-width="own"] > :is(.urd-cal, .urd-product, .urd-table, .urd-gallery-grid, .urd-gallery-wall, .urd-gallery-cards, .urd-timeline-box, .urd-stats-box) {
   container: urd-block / inline-size;
 }
 
@@ -272,7 +273,8 @@ html {
    digits in the middle, a quote's text stands in the middle of its card, and
    the plain list and card calendar views spread their rows and cards over the
    height left under the finding tools and over the subscribe row. */
-.urd-block[data-urd-align="stretch"] > .urd-stats {
+.urd-block[data-urd-align="stretch"] > .urd-stats-box > .urd-stats {
+  flex: 1 0 auto;
   justify-content: center;
 }
 
@@ -766,12 +768,22 @@ html {
   opacity: 0.7;
 }
 
+/* The figure stands in a box of its own, the width its narrow rules ask (see urd-block). */
+.urd-stats-box {
+  display: flex;
+  flex-direction: column;
+}
+
 /* The figure's two dressed variants (stats.variant): a card on the surface colour, and a band of the accent colour with the accent's own text colour.
    Both fill the block's box, which follows the content (ADR-0025), so three in a row line up as one strip when their figures and labels take the same height. */
+.urd-stats-box:has(> .urd-stats-cards, > .urd-stats-band) {
+  min-height: 100%;
+}
+
 .urd-stats-cards,
 .urd-stats-band {
   box-sizing: border-box;
-  min-height: 100%;
+  flex: 1 0 auto;
   justify-content: center;
   padding: 1.1rem 1rem;
 }
@@ -11209,11 +11221,17 @@ a.urd-gallery-tile {
   height: 100%;
 }
 
-.urd-gallery-grid {
+/* The grid views (grid, mosaic, polaroid) lay their tiles out in .urd-gallery-tiles inside the gallery, which is the width their narrow rules ask (see urd-block). */
+.urd-gallery-grid,
+.urd-gallery-wall,
+.urd-gallery-cards {
+  height: auto;
+}
+
+.urd-gallery-tiles {
   display: grid;
   grid-template-columns: repeat(var(--urd-gallery-cols, 3), 1fr);
   gap: var(--urd-gallery-gap, 12px);
-  height: auto;
 }
 
 .urd-gallery-grid .urd-gallery-tile {
@@ -11223,12 +11241,8 @@ a.urd-gallery-tile {
 
 /* Mosaic (the gallery block's view; the background layer's mosaic has its own rules under .urd-gallery-mosaic): the grid's wall with rows of one height and tiles in varied spans.
    Every tile's place is set by the block (mosaicWall in gallery-model.js), so the wall is a full rectangle. */
-.urd-gallery-wall {
-  display: grid;
-  grid-template-columns: repeat(var(--urd-gallery-cols, 3), 1fr);
+.urd-gallery-wall > .urd-gallery-tiles {
   grid-auto-rows: var(--urd-gallery-row, 140px);
-  gap: var(--urd-gallery-gap, 12px);
-  height: auto;
 }
 
 .urd-gallery-wall .urd-gallery-tile {
@@ -11241,12 +11255,9 @@ a.urd-gallery-tile {
 /* Polaroid: each picture set in a card with a wider foot, leaning by its own throw of the seed (--urd-card-tilt from the block).
    The card is white with dark ink until the owner picks a colour (--urd-polaroid-color); then the words take the section's text colour.
    The grid's own padding gives the leaning corners room inside the block. */
-.urd-gallery-cards {
-  display: grid;
-  grid-template-columns: repeat(var(--urd-gallery-cols, 3), 1fr);
+.urd-gallery-cards > .urd-gallery-tiles {
   gap: calc(var(--urd-gallery-gap, 12px) + 10px);
   align-items: start;
-  height: auto;
   padding: 10px;
 }
 
@@ -11255,7 +11266,7 @@ a.urd-gallery-tile {
    (--urd-gallery-cols-narrow, at most two), and the mosaic its narrow wall.
    Without container queries the block writes the window's count instead. */
 @container urd-block (max-width: 540px) {
-  :is(.urd-gallery-grid, .urd-gallery-wall, .urd-gallery-cards) {
+  .urd-gallery-tiles {
     grid-template-columns: repeat(var(--urd-gallery-cols-narrow, var(--urd-gallery-cols, 3)), 1fr);
   }
 

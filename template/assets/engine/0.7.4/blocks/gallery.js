@@ -133,11 +133,25 @@ function columnCounts(host, props, ctx) {
   return { wide, narrow };
 }
 
+/**
+ * The element a grid view lays its tiles out in, inside the gallery: the
+ * gallery itself is the width the narrow rules ask (base.css), so the
+ * columns follow the width the content is laid out in under a size.
+ * @param {HTMLElement} host The gallery
+ * @returns {HTMLElement}
+ */
+function tilesIn(host) {
+  const tiles = el2('div', 'urd-gallery-tiles');
+  host.appendChild(tiles);
+  return tiles;
+}
+
 function renderGrid(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-grid');
   columnCounts(host, props, ctx);
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
-  props.images.forEach((_, i) => host.appendChild(makeTile(props, i, ctx, blockEl)));
+  const tiles = tilesIn(host);
+  props.images.forEach((_, i) => tiles.appendChild(makeTile(props, i, ctx, blockEl)));
 }
 
 function navButton(dir, label, onclick) {
@@ -365,6 +379,7 @@ function renderMosaic(host, props, ctx, blockEl) {
   // Two walls from the same seed, one per column count: base.css places each
   // tile by the one that fits the block's width.
   const walls = { '': mosaicWall(props.images.length, props.seed, wide), '-narrow': mosaicWall(props.images.length, props.seed, narrow) };
+  const tiles = tilesIn(host);
   props.images.forEach((_, i) => {
     const tile = makeTile(props, i, ctx, blockEl);
     for (const [suffix, wall] of Object.entries(walls)) {
@@ -372,7 +387,7 @@ function renderMosaic(host, props, ctx, blockEl) {
       tile.style.setProperty(`--urd-tile-col${suffix}`, `${place.col + 1} / span ${place.cols}`);
       tile.style.setProperty(`--urd-tile-row${suffix}`, `${place.row + 1} / span ${place.rows}`);
     }
-    host.appendChild(tile);
+    tiles.appendChild(tile);
   });
 }
 
@@ -394,6 +409,7 @@ function renderPolaroid(host, props, ctx, blockEl) {
     if (ink) host.style.setProperty('--urd-polaroid-ink', ink);
   }
   const tilts = polaroidTilts(props.images.length, props.seed, props.tilt);
+  const tiles = tilesIn(host);
   props.images.forEach((img, i) => {
     const card = el2('figure', 'urd-gallery-card');
     card.style.setProperty('--urd-card-tilt', `${tilts[i]}deg`);
@@ -401,7 +417,7 @@ function renderPolaroid(host, props, ctx, blockEl) {
     const words = props.captions === true && typeof img.alt === 'string' ? img.alt.trim() : '';
     if (words) card.appendChild(el2('figcaption', 'urd-gallery-caption', words));
     else card.classList.add('urd-gallery-card-plain');
-    host.appendChild(card);
+    tiles.appendChild(card);
   });
 }
 

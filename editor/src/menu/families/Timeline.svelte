@@ -48,11 +48,10 @@
 {#if area === 'content'}
   {#snippet tlEvents()}
   {#each selectedBlock.props.items ?? [] as item, i (i)}
+    <!-- The year with the item's tools on its line, and the title and the text each on a line of their own, so the title keeps its width in a narrow menu -->
     <span class="nav-line">
-      <input class="tl-year" value={item.year} placeholder={ta('ph.tlYear')} title={ta('tip.timeline.year')}
+      <input value={item.year} placeholder={ta('ph.tlYear')} title={ta('tip.timeline.year')}
         onchange={(e) => setTlItem(i, { year: e.target.value })} />
-      <input value={item.title} title={ta('tip.timeline.title')}
-        onchange={(e) => setTlItem(i, { title: e.target.value })} />
       <span class="row-tools">
         <button class="ghost row-tool" onclick={() => moveTlItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
         <button class="ghost row-tool" onclick={() => moveTlItem(i, 1)}
@@ -60,6 +59,8 @@
         <button class="ghost row-tool" title={ta('tip.timeline.remove')} onclick={() => removeTlItem(i)}>{@html ICONS.cross}</button>
       </span>
     </span>
+    <input value={item.title} title={ta('tip.timeline.title')}
+      onchange={(e) => setTlItem(i, { title: e.target.value })} />
     <input value={item.text} placeholder={ta('ph.tlText')} title={ta('tip.timeline.text')}
       onchange={(e) => setTlItem(i, { text: e.target.value })} />
   {/each}

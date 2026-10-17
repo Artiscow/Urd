@@ -84,7 +84,12 @@ export const statsBlock = {
   render(el, props, ctx) {
     const host = document.createElement('div');
     host.className = `urd-stats urd-stats-${statVariant(props.variant)}`;
-    el.appendChild(host);
+    // The figure stands in a box of its own, the width the narrow rules ask
+    // (base.css), so the figure follows the width the content is laid out in.
+    const box = document.createElement('div');
+    box.className = 'urd-stats-box';
+    box.appendChild(host);
+    el.appendChild(box);
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 

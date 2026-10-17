@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.52 - Gallery, timeline and stat that keep their layout under «Size», and the timeline item's title on a line of its own - 17 October 2026
+
+- Gallery, timeline and stat took their narrow layout at the visible width under «Size» or «Shrink the content», since their narrow rules styled the content root, which cannot be its own container (BACKLOG, 17 October 2026). The gallery's grid, mosaic and polaroid views lay their tiles out in `.urd-gallery-tiles`, and the timeline and the stat stand in a box of their own (`.urd-timeline-box`, `.urd-stats-box`), so the root is the `urd-block` container and the layout stays the same at any size.
+- The stat's card and band fill its new box, which fills the block when one of them is shown (`:has()` in base.css), and the stretch rule reaches the figure through the box.
+- Test finding the same day: a timeline item's title in the element menu was a field of 20 to 30 px, since the year, the title and three buttons shared one line in a narrow column. The year stands with the buttons, and the title has a line of its own.
+
 ### 0.7.19.23.4 - Cinema marquee, «Size» that scales everything alike with the calendar at a 14 px base, and the board's letters, the centred card and the stylised calendar under 85 % - 17 October 2026
 
 - Cinema marquee (`marquee`, set `marquee`, the slots frame, bulb, board and ink; blocks/calendar-retro.js): a red frame with bulbs above and below a letter board, «Nå på plakaten» over the next event's title, date, time and place, its excerpt, and «Kommer snart» rows of date, name and time; its own words are «Nå på plakaten», «Kommer snart» and «Billetter». Its phone design is the board as a list in its frame (`marqueeRows`), and its own card a ticket with bulbs along the top and a stub with the day.

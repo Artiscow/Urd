@@ -455,7 +455,7 @@ What comes, in order (brought up to date 14 October 2026):
 - [x] Kalender avgangstavle: tekst er ikke helt over rutene sine
 - [x] pop-up kort for kalendere er ikke sentrert over kalenderne (de må fremdeles ikke være helt inne i kalenderframe. Det skal ikke være noe scroll i pop-up kort)
 - [x] Kalender: Om man endrer størrelse til under 85% blir den stiliserte kalenderen borte 
-- [ ] Gallery, timeline and stats under «Size» or «Shrink the content» (found 17 October 2026): their narrow-layout rules style the content root itself, which cannot be its own container, so below 100 % they switch to the narrow layout at the visible width rather than the width the content is laid out in. The calendar, the product and the table have their root as the container (base.css); these three need an inner element to carry the columns, so the root can be the container too.
+- [x] Gallery, timeline and stats under «Size» or «Shrink the content» (found 17 October 2026): their narrow-layout rules style the content root itself, which cannot be its own container, so below 100 % they switch to the narrow layout at the visible width rather than the width the content is laid out in. The calendar, the product and the table have their root as the container (base.css); these three need an inner element to carry the columns, so the root can be the container too.
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene
