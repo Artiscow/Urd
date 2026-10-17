@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+## [0.7.5] - 2026-10-17
+
+### 0.7.0.53p - Release 0.7.5: the calendar's designs, the element menu, the sizing model and the App.svelte split - 17 October 2026
+
+- RELEASE: the engine bumped 0.7.4 to 0.7.5 after the ritual (urd.json, git mv of the engine folder, the nine assets/urd/ shells, the seven HTML shells with byte-identical slug copies, editor/package.json and the lockfile, the bundle rebuilt). It carries the element review stages (0.7.13.6 to 0.7.13.12), the calendar's designs (0.7.19: the colour sets, the design picker, the phone and card designs per calendar and the first seven retro designs), the element menu (0.7.20), the sizing model (0.7.21, ADR-0025), the split of App.svelte (0.7.26) and the running rounds 0.7.0.16 to 0.7.0.52.
+- The template's `_headers` changes with this release (`media-src 'self' data:`, 0.7.0.45), so a site updated from v0.7.4 gets it as a «change by hand» note in the Updates panel.
+- Review finding: the entry counted eight retro designs where seven are built, and its list left out the element review stages; the release test asked for published media to play after the `media-src` line, which plays without it, where the line is for an unpublished file in the draft. The count, the list and the test item are corrected.
+
 ### 0.7.19.23.3-5p - Push preparation: the retro designs and the size model reviewed, the earlier two retro commits reviewed late, and the quoted words in English - 17 October 2026
 
 - The span is 0.7.19.23.3 to 0.7.19.23.5 with 0.7.0.52 inside. The commits from 0.7.0.49 to 0.7.19.23.2 went out on 15 October without a preparation; 0.7.19.23.1 and 0.7.19.23.2 got their independent review in this round, the element-menu and running commits among them did not.

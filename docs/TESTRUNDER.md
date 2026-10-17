@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.53p): release 0.7.5
+
+- [ ] After the tag v0.7.5 and the GitHub release: the release Action runs green, and the template repo gets one commit «Urd v0.7.5» with the tag v0.7.5 and the engine under `assets/engine/0.7.5/` alone
+- [ ] A site on v0.7.4 opens Updates and is offered v0.7.5; the update leaves its content, its pages and its own plugins as they were, and the published site loads the new engine (no 404 in the network panel)
+- [ ] The Updates panel shows the template's new `_headers` as a «change by hand» note with the `media-src 'self' data:` line (this replaces the expectation in an earlier batch that the `_headers` is unchanged at the next release); after the line is added, an unpublished video or audio file in the draft plays in the deployed site's admin preview
+- [ ] An engine file on the published site is served with `immutable`, and the admin and the pages work after a hard reload
+
 ### Test batch (0.7.19.23.5): Receipt, Seventies poster and Art deco
 
 - [ ] «Receipt» in the picker's Retro family: a till receipt with a torn bottom edge, «* PROGRAMME *», «AUTUMN 2026» and «THE CLUBHOUSE, 2 LOWER STREET», a row per event of date, title, a dot leader and the time with the place and status under it, the totals, «ADMISSION FREE», the barcode with «Subscribe: scan or tap here» (with «Subscribe» on) and «Thank you for coming!»
