@@ -204,6 +204,7 @@ export const CAL_PHONE_DESIGNS = [
   { id: 'agenda', labelKey: 'calendar.phone.agenda', family: 'neutral' },
   { id: 'depRows', labelKey: 'calendar.phone.depRows', family: 'retro', module: 'retro', home: 'departures', ownSubscribe: true },
   { id: 'depStrip', labelKey: 'calendar.phone.depStrip', family: 'retro', module: 'retro', home: 'departures', ownSubscribe: true },
+  { id: 'marqueeRows', labelKey: 'calendar.phone.marqueeRows', family: 'retro', module: 'retro', home: 'marquee', ownSubscribe: true },
 ];
 
 /** The views a design can stand on and still be drawn on a phone by a block of another view: the ones that list what is coming; a design of a span view (week, month, day, year) needs the block's own window and joins only a block of the same view. */
@@ -828,6 +829,22 @@ export const CAL_DESIGNS = [
     texts: ['now', 'updated', 'colDate', 'colTime', 'colEvent', 'colPlace', 'colStatus', 'rowHint', 'openToAll', 'moreInfo', ...COMMON_TEXTS],
   },
   {
+    id: 'marquee',
+    ownCard: true,
+    labelKey: 'calendar.design.marquee',
+    set: 'marquee',
+    family: 'retro',
+    phone: 'switch',
+    excerpt: true,
+    view: 'next',
+    module: 'retro',
+    stripe: false,
+    phoneDefault: 'marqueeRows',
+    theme: ['now', 'later', 'signup'],
+    slots: [slot('frame'), slot('bulb'), slot('board'), slot('ink')],
+    texts: ['now', 'later', 'moreInfo', ...COMMON_TEXTS],
+  },
+  {
     id: 'mobileAgenda',
     labelKey: 'calendar.design.mobileAgenda',
     set: 'agendaDark',
@@ -882,7 +899,7 @@ export const CAL_SHARED_OPTIONS = {
  * The colour sets: every design belongs to one, and the event card, the switcher's week and month, the finding tools and the phone view are drawn per set in base.css (`urd-cal-set-<id>` on the block, ADR-0011).
  * A design overrides its set by redefining a set variable under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
  */
-export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad', 'index', 'departures'];
+export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad', 'index', 'departures', 'marquee'];
 
 /** The designs a switcher button can stand behind: the week strip and the week designs, the plain month and the month designs. */
 export const CAL_SWITCH_WEEKS = ['weekStrip', 'weekPlan', 'layers'];

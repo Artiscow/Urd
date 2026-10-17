@@ -51,7 +51,7 @@ export function lift(data, def) {
 }
 
 import { liftFooterSocial } from './links-model.js';
-import { fitMoves, blockSize } from './push-model.js';
+import { fitMoves, SIZE, SIZE_BY_FRAME } from './push-model.js';
 
 /** Current version of the page file format (content/pages/*.json). */
 export const PAGE_SCHEMA_VERSION = 7;
@@ -214,6 +214,21 @@ export function liftContractTokens(target) {
 const MAP_LINK_PX = 26;
 
 /**
+ * A block's stored size as the steps up to page v7 read it: inside SIZE,
+ * else 1, and always 1 for the frame-sized types. The steps keep their
+ * own reading, apart from blockSize, so they lift data the same way
+ * whatever the bounds a block's text gives its size today.
+ * @param {{type?: string, size?: number}} block
+ * @returns {number}
+ */
+function storedSize(block) {
+  if (!block || SIZE_BY_FRAME.has(block.type)) return 1;
+  const size = Number(block.size);
+  if (!Number.isFinite(size) || size <= 0) return 1;
+  return Math.round(Math.min(SIZE.max, Math.max(SIZE.min, size)) * 100) / 100;
+}
+
+/**
  * The calendar's own size (`props.scale`, 0.7.20.1 to 0.7.21.4) becomes the
  * block-level `size` every block type takes (ADR-0025 decision 6), inside
  * its bounds; a size of 1 leaves no field.
@@ -224,7 +239,7 @@ const MAP_LINK_PX = 26;
 export function liftCalendarScale(section) {
   for (const block of section?.blocks ?? []) {
     if (block.type !== 'calendar' || !block.props || !('scale' in block.props)) continue;
-    const size = blockSize({ type: 'calendar', size: block.props.scale });
+    const size = storedSize({ type: 'calendar', size: block.props.scale });
     delete block.props.scale;
     if (size !== 1) block.size = size;
   }
@@ -283,7 +298,7 @@ export function liftGalleryBands(section, old = false) {
       const band = Math.min(400, Math.max(80, Number(block.props.bandHeight) || 160));
       const rows = Number(block.props.rows) === 2 ? 2 : 1;
       const gap = Number(block.props.gap) || 0;
-      const shown = Math.round((rows * band + (rows - 1) * gap) * blockSize(block));
+      const shown = Math.round((rows * band + (rows - 1) * gap) * storedSize(block));
       const moves = fitMoves(section.blocks, block.id, shown);
       frame.h = shown;
       for (const other of section.blocks) {

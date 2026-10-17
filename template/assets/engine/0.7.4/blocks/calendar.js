@@ -955,12 +955,24 @@ function openCard(dialog, from) {
 }
 
 /**
- * Lays the card over the calendar it belongs to, not over the page: no wider than the calendar allows, as tall as its content (a card never scrolls inside itself: it reaches below the calendar when it must, and the page scrolls), centred on the part of the calendar that is in view, never over the navigation bar when it opens.
+ * Lays the card over the calendar it belongs to, centred on the part of the calendar that is in view: at its own width and as tall as its content, so it may reach past the calendar's edges (a card never scrolls inside itself), never wider than the window and never over the navigation bar; a card taller than the window starts under the bar and the page scrolls.
  * It is placed on the page, so it scrolls away with its calendar, and placed again when the window changes or its own content unfolds.
- * The card is drawn at the calendar's own zoom (the block's size, render.js applyZoom), so it follows the size the owner gave the block; the offsets are written in the card's zoomed space.
+ * The card is drawn at the calendar's own zoom (the block's drawn scale, render.js applyZoom), so it follows the size the owner gave the block. Its place is measured where it lands and set right from there (placeAt), so it lands where it should however the browser applies the zoom to its offsets.
  * The calendar is shaded behind it; the rest of the page is left as it is.
  */
 const CARD_MAX_W = 460;
+
+/** Moves a positioned element so its box lands at (left, top) in the window: written, measured, and set right by what it missed, a few times at most. */
+function placeAt(node, left, top, scale) {
+  for (let i = 0; i < 3; i++) {
+    const rect = node.getBoundingClientRect();
+    const dx = left - rect.left;
+    const dy = top - rect.top;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    node.style.left = `${(parseFloat(node.style.left) || 0) + dx / scale}px`;
+    node.style.top = `${(parseFloat(node.style.top) || 0) + dy / scale}px`;
+  }
+}
 
 function placeOverCalendar(dialog, from) {
   const host = from?.closest?.('.urd-cal');
@@ -975,18 +987,19 @@ function placeOverCalendar(dialog, from) {
     const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-nav-h')) || 0;
     const roof = nav + 8;
     const floor = window.innerHeight - 8;
-    const width = Math.max(240 * zoom, Math.min(CARD_MAX_W * zoom, box.width - 24, window.innerWidth - 16));
-    dialog.style.width = `${width / zoom}px`;
-    const top = Math.max(roof, box.top);
-    const bottom = Math.min(floor, box.bottom);
-    const height = dialog.offsetHeight * zoom;
-    const centre = top + Math.max(0, bottom - top) / 2;
-    // The place is on the page, not in the window: the card scrolls away with its calendar. A card taller than the window starts under the bar and reaches below it.
-    const page = (dialog.offsetParent ?? document.documentElement).getBoundingClientRect();
-    const left = Math.max(8, Math.min(window.innerWidth - width - 8, box.left + (box.width - width) / 2)) - page.left;
-    const y = Math.max(roof, Math.min(floor - height, Math.max(box.top + 12, centre - height / 2))) - page.top;
-    dialog.style.left = `${left / zoom}px`;
-    dialog.style.top = `${y / zoom}px`;
+    // The card's own width at the calendar's size, never wider than the window.
+    const cssWidth = Math.min(CARD_MAX_W, (window.innerWidth - 16) / zoom);
+    dialog.style.width = `${cssWidth}px`;
+    const rect = dialog.getBoundingClientRect();
+    // How far the card moves on the screen for one CSS pixel of its place.
+    const scale = rect.width / cssWidth || zoom;
+    // The centre of the part of the calendar in view, or of the whole calendar when none of it is.
+    const shownTop = Math.max(roof, box.top);
+    const shownBottom = Math.min(floor, box.bottom);
+    const centreY = shownBottom > shownTop ? (shownTop + shownBottom) / 2 : box.top + box.height / 2;
+    const left = Math.max(8, Math.min(window.innerWidth - rect.width - 8, box.left + (box.width - rect.width) / 2));
+    const top = rect.height > floor - roof ? roof : Math.max(roof, Math.min(floor - rect.height, centreY - rect.height / 2));
+    placeAt(dialog, left, top, scale);
   };
   const watch = new AbortController();
   window.addEventListener('resize', place, { signal: watch.signal });
@@ -1723,8 +1736,9 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   // its own width (ADR-0025), so a calendar in a narrow column of a wide page
   // is narrow too and a drag passes through both layouts; else the window
   // decides, as the page's phone view.
+  // The width counts as the content has it: the block's drawn scale zooms the content (render.js applyZoom) and the frame follows the size, so a calendar drawn smaller has the room it had and keeps its layout.
   const ruler = el.querySelector(':scope > .urd-block-ruler');
-  const isNarrow = () => (WIDTH_QUERIES && ruler ? ruler.clientWidth < NARROW_PX : ctx.viewport === 'mobile');
+  const isNarrow = () => (WIDTH_QUERIES && ruler ? ruler.clientWidth / (parseFloat(host.style.zoom) || 1) < NARROW_PX : ctx.viewport === 'mobile');
   const setNarrow = (narrow) => {
     ui.phone = narrow;
     host.classList.toggle('urd-cal-phone', narrow);

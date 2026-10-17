@@ -7,7 +7,7 @@
   import MenuGroup from './MenuGroup.svelte';
   import Pin from './Pin.svelte';
   import { ta } from '$engine/i18n.js';
-  import { FIT_BY_WIDTH, FOLLOWS_CONTENT, SIZE, SIZE_BY_FRAME, SIZE_TEXT, blockSize, sizeBounds } from '$engine/push-model.js';
+  import { FIT_BY_WIDTH, FOLLOWS_CONTENT, SIZE, SIZE_BY_FRAME, SIZE_TEXT, baseTextPx, blockSize, sizeBounds, sizeRange } from '$engine/push-model.js';
   import { DOCK_OPTIONS } from './options.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
@@ -44,21 +44,21 @@
 </script>
 
 {#snippet menuSize()}
-  <!-- The block's size (ADR-0025 decision 6): the whole block, text included, drawn smaller or larger; no drag changes it -->
+  <!-- The block's size (ADR-0025 decision 6): the whole block, text included, drawn smaller or larger; no drag changes it, and the slider ends where the base text meets a bound the owner set -->
   <div class="ctl-row" title={ta('tip.scale')}>
     <span class="mini-label">{ta('lbl.scale')}</span>
-    <input type="range" min={SIZE.min * 100} max={SIZE.max * 100} step="5" value={Math.round(blockSize(selectedBlock) * 100)}
+    <input type="range" min={Math.round(sizeRange(selectedBlock).min * 100)} max={Math.round(sizeRange(selectedBlock).max * 100)} step={Math.round(SIZE.step * 100)} value={Math.round(blockSize(selectedBlock) * 100)}
       aria-label={ta('lbl.scale')} oninput={(e) => setBlockSize(e.target.valueAsNumber / 100)} onchange={ed.endSizeGesture} />
     <span class="gridmenu-value">{Math.round(blockSize(selectedBlock) * 100)} %</span>
     <Pin id="size" />
   </div>
   {#if blockSize(selectedBlock) !== 1}
-    <!-- The bounds the base text never passes, shown only while a size is set, side by side so the menu keeps its height -->
+    <!-- The bounds the owner may give the base text, where the slider then ends, shown only while a size is set, side by side so the menu keeps its height; empty, each shows the base text's size now -->
     <div class="frame-grid">
-      <label title={ta('tip.scaleMin')}>{ta('lbl.scaleMin')}<input type="number" min={SIZE_TEXT.min} max={SIZE_TEXT.max} value={sizeBounds(selectedBlock).min}
-        onchange={(e) => setBlockSizeBound('sizeMin', e.target.value)} /></label>
-      <label title={ta('tip.scaleMax')}>{ta('lbl.scaleMax')}<input type="number" min={SIZE_TEXT.min} max={SIZE_TEXT.max} value={sizeBounds(selectedBlock).max}
-        onchange={(e) => setBlockSizeBound('sizeMax', e.target.value)} /></label>
+      <label title={ta('tip.scaleMin')}>{ta('lbl.scaleMin')}<input type="number" min={SIZE_TEXT.min} max={SIZE_TEXT.max} value={sizeBounds(selectedBlock).min ?? ''}
+        placeholder={String(Math.round(baseTextPx(selectedBlock) * blockSize(selectedBlock)))} onchange={(e) => setBlockSizeBound('sizeMin', e.target.value)} /></label>
+      <label title={ta('tip.scaleMax')}>{ta('lbl.scaleMax')}<input type="number" min={SIZE_TEXT.min} max={SIZE_TEXT.max} value={sizeBounds(selectedBlock).max ?? ''}
+        placeholder={String(Math.round(baseTextPx(selectedBlock) * blockSize(selectedBlock)))} onchange={(e) => setBlockSizeBound('sizeMax', e.target.value)} /></label>
     </div>
   {/if}
 {/snippet}

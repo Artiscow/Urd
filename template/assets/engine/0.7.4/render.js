@@ -14,7 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, blockSize, sizeBounds, mobileLoadingHeight } from './push-model.js';
+import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -262,8 +262,9 @@ export function updateFrames(host, frames) {
 }
 
 /**
- * The content's zoom on the desktop: the block's size (ADR-0025 decision 6,
- * block.size) times its fit below the design width (ADR-0024, block.fit).
+ * The content's zoom on the desktop: the block's drawn scale (ADR-0025
+ * decision 6, block.size times its type's scale, drawnScale) times its fit
+ * below the design width (ADR-0024, block.fit).
  * «Shrink» follows the canvas in proportion: the zoom is the canvas width
  * over the design width, down to the block's floor (block.fitMin, a share
  * of the design size), so the content keeps its lines and nothing is
@@ -274,7 +275,7 @@ export function updateFrames(host, frames) {
  * fits at full size is left alone, and content that does not fit at the
  * floor keeps the floor, wraps, and is pushed like any other. A block
  * without the field (wrap), or of a type that shrinks by its frame instead,
- * is drawn at its size alone, so a switch back needs no re-render. The
+ * is drawn at its drawn scale alone, so a switch back needs no re-render. The
  * bisection measures with the box at the design height and the content's
  * min-height off, since the content otherwise fills the box.
  * @param {HTMLElement} el The block element
@@ -284,22 +285,22 @@ export function updateFrames(host, frames) {
 function fitContent(el, designH, block) {
   const child = contentChild(el);
   if (!child) return;
-  const size = blockSize(block);
+  const size = drawnScale(block);
   // The width-floor types (image, video, shape, icon) shrink by their frame
   // (fitFloorPx), never by a zoom of the content.
   if ((block.fit !== 'shrink' && block.fit !== 'both') || FIT_BY_WIDTH.has(block.type)) {
-    applyZoom(child, block, size);
+    applyZoom(child, size);
     return;
   }
   const floor = clampFitMin(block.fitMin);
   if (block.fit === 'shrink') {
-    applyZoom(child, block, Math.max(floor, canvasRatio(el)) * size);
+    applyZoom(child, Math.max(floor, canvasRatio(el)) * size);
     return;
   }
   const minHeight = child.style.minHeight;
   child.style.minHeight = '0';
   const fitsAt = (z) => {
-    applyZoom(child, block, z * size);
+    applyZoom(child, z * size);
     return child.scrollHeight * z * size <= designH + 1;
   };
   if (!fitsAt(1) && fitsAt(floor)) {
@@ -335,34 +336,16 @@ function contentChild(el) {
 }
 
 /**
- * Draws the content at a zoom and keeps the base text of a sized block
- * inside its bounds (block.sizeMin, block.sizeMax): the content's own base
- * size (a text block's size, else the inherited one as 1em) is kept in
- * --urd-font, and the font size becomes a clamp around it in the content's
- * own px, so the text a visitor sees stops at the bounds while the rest
- * keeps scaling. Text sized from the base in em follows it; text in px or
- * rem scales with the zoom alone. The bounds hold against the size alone:
- * the shrink below the design width scales the text with everything else,
- * so the content keeps its lines whatever the shrink and the fit's measure
- * is monotone. A block at size 1 gets its own base back.
+ * Draws the content at a zoom: everything in it, text included, scales
+ * alike, so the content keeps its lines at any size. A bound the owner
+ * gives the base text stops the size there (sizeRange); the shrink below
+ * the design width multiplies it.
  * @param {HTMLElement} child The content element
- * @param {object} block The block data
- * @param {number} zoom The size times the shrink
+ * @param {number} zoom The drawn scale times the shrink
  */
-function applyZoom(child, block, zoom) {
+function applyZoom(child, zoom) {
   const z = Math.round(zoom * 1000) / 1000;
   child.style.zoom = z === 1 ? '' : String(z);
-  const own = child.style.fontSize;
-  if (own && !own.startsWith('clamp(')) child.style.setProperty('--urd-font', own);
-  const size = blockSize(block);
-  if (size === 1) {
-    if (own.startsWith('clamp(')) child.style.fontSize = child.style.getPropertyValue('--urd-font');
-    child.style.removeProperty('--urd-font');
-    return;
-  }
-  const { min, max } = sizeBounds(block);
-  const px = (n) => `${Math.round((n / size) * 100) / 100}px`;
-  child.style.fontSize = `clamp(${px(min)}, var(--urd-font, 1em), ${px(max)})`;
 }
 
 /** The editing chrome inside a block never counts as content, and neither
@@ -880,10 +863,10 @@ export function renderSection(section, site, host, opts = {}) {
       if (align !== 'top') el.dataset.urdAlign = align;
       // A block that fetches its content stands at the height the editor
       // measured at the phone width while it loads (0.7.21.7, base.css).
-      // The reserve stands inside the content, which the block's size zooms,
-      // so it is written in the content's own px.
+      // The reserve stands inside the content, which the block's drawn
+      // scale zooms, so it is written in the content's own px.
       const loadingH = mobileLoadingHeight(block);
-      if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / blockSize(block))}px`);
+      if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / drawnScale(block))}px`);
       // Screen docking applies on mobile too: sticky.js docks the block
       // against its own measured size. Scroll pinning is desktop-only
       // (the row grid is document flow), so that mode is not marked here.
@@ -895,10 +878,10 @@ export function renderSection(section, site, host, opts = {}) {
         el.dataset.stickyGroup = block.sticky.group ?? '';
       }
       renderBlock(Urd, el, block, ctx);
-      // The block's size applies on the phone too (ADR-0025 decision 6);
-      // the shrink does not, since the row grid wraps.
-      const sized = blockSize(block) !== 1 ? contentChild(el) : null;
-      if (sized) applyZoom(sized, block, blockSize(block));
+      // The block's drawn scale applies on the phone too (ADR-0025
+      // decision 6); the shrink does not, since the row grid wraps.
+      const sized = drawnScale(block) !== 1 ? contentChild(el) : null;
+      if (sized) applyZoom(sized, drawnScale(block));
       flow.appendChild(el);
     }
     canvas.appendChild(flow);

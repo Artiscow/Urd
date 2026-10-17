@@ -302,8 +302,110 @@ function wrapWords(text, n) {
   return lines;
 }
 
+/**
+ * R4 Cinema marquee: a cinema's letter board in a red frame between two rows of bulbs, «Now showing» over the next event in large letters with its countdown, the date, time and place on one line beside the sign-up, the excerpt, and «Coming soon» over the events after it as rows of date, title and time.
+ * The heading words and the sign-up are the design's own (the theme words now, later and signup); the capitals are the style sheet's.
+ */
+export function marquee(host, occs, props, ics, ui) {
+  const [hero] = occs;
+  const title = ui.field('strong', 'title', hero.title, 'urd-cal-mq-title');
+  const sign = ui.el('div', 'urd-cal-mq');
+  const board = ui.tint(ui.el('div', 'urd-cal-mq-board'), hero, title);
+  const head = ui.el('div', 'urd-cal-mq-head');
+  head.append(ui.tx('now', 'urd-cal-mq-now'), ui.el('span', 'urd-cal-mq-in', ui.countdown(hero)));
+  board.append(head, title);
+  const line = ui.el('div', 'urd-cal-mq-line');
+  const meta = ui.meta(hero);
+  if (meta) {
+    meta.classList.add('urd-cal-mq-when');
+    line.appendChild(meta);
+  }
+  const signup = ui.signup(hero);
+  if (signup) {
+    signup.classList.add('urd-cal-mq-signup');
+    line.appendChild(signup);
+  }
+  if (line.childElementCount) board.appendChild(line);
+  const excerpt = ui.excerpt(hero.description, 220);
+  if (excerpt && ui.descriptionIn !== 'card') {
+    const text = ui.field('p', 'description', excerpt, 'urd-cal-mq-text');
+    const href = ui.href(hero);
+    if (href) {
+      const more = ui.link('urd-cal-mq-more', 'moreInfo', href, '');
+      more.target = '_blank';
+      more.rel = 'noopener';
+      text.append(document.createTextNode(' '), more);
+    }
+    board.appendChild(text);
+  }
+  const later = laterOf(occs, props, ics);
+  if (later.length) {
+    board.appendChild(ui.tx('later', 'urd-cal-mq-soon'));
+    const rows = ui.el('div', 'urd-cal-mq-rows');
+    for (const occ of later) {
+      const d = dayOf(occ);
+      const name = ui.field('span', 'title', occ.title, 'urd-cal-mq-row-title');
+      const row = ui.tint(ui.el('div', 'urd-cal-mq-row'), occ, name);
+      row.append(ui.field('span', 'date', `${dates().weekdaysShort[(d.getDay() + 6) % 7]} ${ui.dayMonth(d)}`, 'urd-cal-mq-row-date', d), name, ui.field('span', 'time', ui.time(occ), 'urd-cal-mq-row-time', occ));
+      rows.appendChild(row);
+    }
+    board.appendChild(rows);
+  }
+  sign.appendChild(board);
+  host.appendChild(sign);
+}
+
+/** The marquee on a phone: the letter board in its red frame as a list, «Now showing» with the countdown over a row per event (its date and time, title and place, the first with its excerpt and sign-up), and the subscribe link at the foot. */
+export function marqueeRows(host, occs, props, ics, ui) {
+  const box = ui.el('div', 'urd-cal-mqp');
+  const head = ui.el('div', 'urd-cal-mqp-head');
+  head.append(ui.tx('now', 'urd-cal-mqp-now'), ui.el('span', 'urd-cal-mqp-in', ui.countdown(occs[0])));
+  box.appendChild(head);
+  occs.forEach((occ, i) => {
+    const title = ui.field('strong', 'title', occ.title, 'urd-cal-mqp-title');
+    const row = ui.tint(ui.el('article', 'urd-cal-mqp-row'), occ, title);
+    const when = ui.meta(occ, { place: false });
+    if (when) {
+      when.classList.add('urd-cal-mqp-when');
+      row.appendChild(when);
+    }
+    row.appendChild(title);
+    if (occ.location) row.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-mqp-place'));
+    if (i === 0) {
+      const excerpt = ui.excerpt(occ.description, 160);
+      if (excerpt && ui.descriptionIn !== 'card') row.appendChild(ui.field('p', 'description', excerpt, 'urd-cal-mqp-text'));
+      const signup = ui.signup(occ);
+      if (signup) {
+        signup.classList.add('urd-cal-mqp-signup');
+        row.appendChild(signup);
+      }
+    }
+    box.appendChild(row);
+  });
+  const subscribe = ui.subscribe();
+  if (subscribe) {
+    subscribe.classList.add('urd-cal-mqp-foot');
+    box.appendChild(subscribe);
+  }
+  host.appendChild(box);
+}
+
 /** The card's parts, each a decorator the block runs on the event's card after it is built (ui.dressCard), in the common words. */
 export const cards = {
+  /** R4 Cinema marquee's own card: a cinema ticket, the date, title and facts on its face and the stub down its right side with the day standing; the bulbs over it and the tear line under it are base.css's. */
+  marquee(dialog, occ, ui) {
+    const d = dayOf(occ);
+    const ticket = ui.el('div', 'urd-cal-mq-cardticket');
+    const face = ui.el('div', 'urd-cal-mq-cardface');
+    const stub = ui.el('span', 'urd-cal-mq-cardstub');
+    stub.setAttribute('aria-hidden', 'true');
+    stub.append(ui.el('strong', null, String(d.getDate())), ui.el('span', null, dates().monthsShort[d.getMonth()]));
+    const parts = ['.urd-cal-dialog-date', '.urd-cal-dialog-title', '.urd-cal-dialog-facts'].map((selector) => dialog.querySelector(selector)).filter(Boolean);
+    if (!parts.length) return;
+    parts[0].before(ticket);
+    face.append(...parts);
+    ticket.append(face, stub);
+  },
   /** The board row on top: the date, time and status as flaps over the date line, the facts labelled as the board's columns by the style sheet. */
   depHead(dialog, occ, ui, props) {
     const d = dayOf(occ);

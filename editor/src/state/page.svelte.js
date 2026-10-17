@@ -6,7 +6,7 @@ import { tick } from 'svelte';
 import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea } from '../menu/state.svelte.js';
 import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
-import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, SIZE_TEXT, STRETCHES } from '$engine/push-model.js';
+import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES } from '$engine/push-model.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
@@ -402,62 +402,78 @@ function setBlockFitMin(value) {
 }
 
 /* The block's size (ADR-0025 decision 6): the whole block, text included,
-   drawn smaller or larger, with the bounds its base text never passes.
-   The default is stored as nothing, and a block back at full size drops
-   its bounds with it. The frame follows the size, so the content keeps
-   its lines: the width by the ratio, capped at the canvas edge, and the
-   height the same way where the block owns it, with the blocks below
-   moved as for a fit; a block whose height follows its content is fitted
-   by the preview after the edit (fitBlockSoon). */
+   drawn smaller or larger, and held where its base text meets a bound the
+   owner set (sizeRange). The default is stored as nothing, and a block
+   back at full size drops its bounds with it. The frame follows the size,
+   so the content keeps its lines: the width by the ratio, capped at the
+   canvas edge, and the height the same way where the block owns it, with
+   the blocks below moved as for a fit; a block whose height follows its
+   content is fitted by the preview after the edit (fitBlockSoon). */
 /* One slider gesture is computed from where it began (sizeGesture: the
    block's size, its frame and the other blocks' places then), so a slide
    up and back returns the frame and the blocks below to where they were,
    also when the width met the canvas edge on the way. */
 let sizeGesture = null;
 
+function sizeStart(b, section) {
+  return {
+    blockId: b.id,
+    size: blockSize(b),
+    frame: { ...b.frames.desktop },
+    ys: new Map(section.blocks.filter((x) => x.frames?.desktop).map((x) => [x.id, x.frames.desktop.y])),
+  };
+}
+
+/* Stores a size and scales the frame to it from where a gesture began. */
+function applySize(b, section, g, value) {
+  if (value === 1) {
+    delete b.size;
+    delete b.sizeMin;
+    delete b.sizeMax;
+  } else {
+    b.size = value;
+  }
+  // Back to where the gesture began, then scaled from there.
+  for (const x of section.blocks) {
+    if (x.id !== b.id && x.frames?.desktop && g.ys.has(x.id)) x.frames.desktop = { ...x.frames.desktop, y: g.ys.get(x.id) };
+  }
+  b.frames.desktop = { ...g.frame };
+  const ratio = blockSize(b) / g.size;
+  if (ratio === 1) return;
+  const frame = { ...g.frame, w: Math.min(Math.round(g.frame.w * ratio * 100) / 100, Math.round((100 - g.frame.x) * 100) / 100) };
+  if (!followsContent(b)) {
+    frame.h = Math.max(1, Math.round(g.frame.h * ratio));
+    for (const [id, y] of fitMoves(section.blocks, b.id, frame.h)) {
+      const other = section.blocks.find((x) => x.id === id);
+      if (other?.frames?.desktop) other.frames.desktop = { ...other.frames.desktop, y };
+    }
+  }
+  b.frames.desktop = frame;
+}
+
 function setBlockSize(value) {
   mutateBlock(`edit:${selectedBlock.blockId}:size`, (b, section) => {
-    if (sizeGesture?.blockId !== b.id) {
-      sizeGesture = {
-        blockId: b.id,
-        size: blockSize(b),
-        frame: { ...b.frames.desktop },
-        ys: new Map(section.blocks.filter((x) => x.frames?.desktop).map((x) => [x.id, x.frames.desktop.y])),
-      };
-    }
-    if (value === 1) {
-      delete b.size;
-      delete b.sizeMin;
-      delete b.sizeMax;
-    } else {
-      b.size = value;
-    }
-    const g = sizeGesture;
-    // Back to where the gesture began, then scaled from there.
-    for (const x of section.blocks) {
-      if (x.id !== b.id && x.frames?.desktop && g.ys.has(x.id)) x.frames.desktop = { ...x.frames.desktop, y: g.ys.get(x.id) };
-    }
-    b.frames.desktop = { ...g.frame };
-    const ratio = blockSize(b) / g.size;
-    if (ratio === 1) return;
-    const frame = { ...g.frame, w: Math.min(Math.round(g.frame.w * ratio * 100) / 100, Math.round((100 - g.frame.x) * 100) / 100) };
-    if (!followsContent(b)) {
-      frame.h = Math.max(1, Math.round(g.frame.h * ratio));
-      for (const [id, y] of fitMoves(section.blocks, b.id, frame.h)) {
-        const other = section.blocks.find((x) => x.id === id);
-        if (other?.frames?.desktop) other.frames.desktop = { ...other.frames.desktop, y };
-      }
-    }
-    b.frames.desktop = frame;
+    if (sizeGesture?.blockId !== b.id) sizeGesture = sizeStart(b, section);
+    const { min, max } = sizeRange(b);
+    applySize(b, section, sizeGesture, Math.round(Math.min(max, Math.max(min, value)) * 100) / 100);
   });
 }
 
+/* A bound on the base text is the owner's own, and an empty field removes
+   it. A bound that moves the end of the range past the size takes the size
+   with it, and the frame follows as for the slider. The size is first
+   stored as it is drawn, so a stored size outside the range never comes
+   back when a bound widens it. */
 function setBlockSizeBound(name, value) {
-  const fallback = name === 'sizeMin' ? SIZE_TEXT.minDefault : SIZE_TEXT.maxDefault;
-  mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => {
+  sizeGesture = null;
+  mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b, section) => {
+    const g = sizeStart(b, section);
+    if (g.size !== 1) b.size = g.size;
     const n = Math.round(Number(value));
-    if (Number.isFinite(n) && n > 0 && n !== fallback) b[name] = Math.min(SIZE_TEXT.max, Math.max(SIZE_TEXT.min, n));
+    if (Number.isFinite(n) && n > 0) b[name] = Math.min(SIZE_TEXT.max, Math.max(SIZE_TEXT.min, n));
     else delete b[name];
+    const size = blockSize(b);
+    if (size !== g.size) applySize(b, section, g, size);
   });
 }
 

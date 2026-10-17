@@ -74,6 +74,8 @@ const THUMBS = {
   index: () => [[12, 6], [84, 6], [12, 42], [84, 42]].map(([x, y], i) => r(x, y, 64, 32, '#fdfbf3', 1, 1) + l(x + 4, y + 9, x + 60, y + 9, '#c9483b', 1.2) + rows(3, y + 14, 6, (yy) => r(x + 4, yy, 44, 2, '#2a2622', 0.7)) + (i === 3 ? r(x + 40, y + 20, 18, 7, '#c9483b', 0.8, 0) : '')).join(''),
   // R3 Departure board: an amber heading over rows of flap cells on the dark board, the last row's status in the alert colour.
   departures: () => r(10, 4, 140, 72, '#111315', 1, 4) + r(16, 10, 44, 5, '#ffb000', 1, 1) + rows(4, 22, 12, (y, i) => [16, 42, 68, 110].map((x, j) => Array.from({ length: j === 2 ? 7 : 4 }, (_, k) => r(x + k * 5.5, y, 4.5, 8, '#23272c', 1, 1)).join('')).join('') + r(130, y + 2, 14, 4, i === 3 ? '#ff5a4f' : i === 1 ? '#ffb000' : '#f4f1e6', 0.9, 1)),
+  // R4 Cinema marquee: the red frame with its two rows of bulbs, the board with a large title and rows under it.
+  marquee: () => r(8, 4, 144, 72, '#7a1420', 1, 6) + Array.from({ length: 12 }, (_, i) => c(16 + i * 11.6, 9, 1.8, '#ffd76a') + c(16 + i * 11.6, 71, 1.8, '#ffd76a')).join('') + r(14, 14, 132, 52, '#f6f1e4', 1, 0) + r(20, 18, 40, 3, '#7a1420', 0.9, 0) + r(20, 25, 76, 8, '#17120f', 1, 0) + r(20, 37, 60, 3, '#17120f', 0.7, 0) + rows(3, 46, 6, (y) => r(20, y, 120, 2.5, '#17120f', 0.55, 0)),
   mobileAgenda: () => r(50, 4, 60, 72, '#121216', 1, 8) + r(56, 10, 22, 4, PAPER, 0.9) + Array.from({ length: 7 }, (_, i) => r(56 + i * 7.1, 18, 5.6, 9, i === 2 ? ACC : DIM, 1, 2)).join('') + rows(3, 32, 14, (y) => r(56, y, 48, 11, '#1c1c22', 1, 3) + l(67, y + 2, 67, y + 9, ACC, 1.4) + r(58, y + 4, 6, 3, MUT, 0.8) + r(70, y + 3, 26, 3, PAPER, 0.85)),
 };
 

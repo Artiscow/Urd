@@ -121,15 +121,26 @@ export const FIT_BY_WIDTH = new Set(['image', 'video', 'shape', 'icon']);
  */
 export const SIZE_BY_FRAME = new Set(['image', 'video', 'shape', 'icon', 'map']);
 
-/** The bounds of a block's size: the whole block, text included, drawn smaller or larger than it is. */
-export const SIZE = { min: 0.4, max: 2 };
+/** The bounds of a block's size: the whole block, text included, drawn smaller or larger than it is, in steps of `step`. */
+export const SIZE = { min: 0.4, max: 2, step: 0.05 };
 
-/** The bounds of the text inside a sized block, in px, and their defaults: the base text never passes them, whatever the size. */
-export const SIZE_TEXT = { min: 6, max: 200, minDefault: 12, maxDefault: 96 };
+/**
+ * The bounds the owner may give the base text of a sized block, in px, and
+ * the page's own base text, 16 px (base.css sets no root size).
+ */
+export const SIZE_TEXT = { min: 6, max: 200, base: 16 };
+
+/**
+ * The scale a type's content is drawn at when its size is 1 (ADR-0025
+ * decision 6): the calendar's designs at a dense 14 px base for the page's
+ * 16 px, the base of dense widgets. Every other type is drawn as it is.
+ */
+export const TYPE_SCALE = new Map([['calendar', 0.875]]);
 
 /**
  * A block's size as a factor (ADR-0025 decision 6): the owner's `size`
- * inside the bounds, else 1. The frame-sized types are always 1.
+ * inside the sizes the block may take (sizeRange), else 1. The frame-sized
+ * types are always 1.
  * @param {{type?: string, size?: number}} block
  * @returns {number}
  */
@@ -137,24 +148,66 @@ export function blockSize(block) {
   if (!block || SIZE_BY_FRAME.has(block.type)) return 1;
   const size = Number(block.size);
   if (!Number.isFinite(size) || size <= 0) return 1;
-  return Math.round(Math.min(SIZE.max, Math.max(SIZE.min, size)) * 100) / 100;
+  const { min, max } = sizeRange(block);
+  return Math.round(Math.min(max, Math.max(min, size)) * 100) / 100;
 }
 
 /**
- * The smallest and largest size in px the base text of a sized block may
- * take (block.sizeMin, block.sizeMax), inside SIZE_TEXT and never crossed:
- * a largest size under the smallest is raised to it.
- * @param {{sizeMin?: number, sizeMax?: number}} block
+ * The scale a block's content is drawn at: its size times its type's scale
+ * (TYPE_SCALE). The frame follows the size alone.
+ * @param {{type?: string, size?: number}} block
+ * @returns {number}
+ */
+export function drawnScale(block) {
+  return Math.round(blockSize(block) * (TYPE_SCALE.get(block?.type) ?? 1) * 10000) / 10000;
+}
+
+/**
+ * The base text of a block in px at size 1: a text block's own size, else
+ * the page's (SIZE_TEXT.base) at its type's scale.
+ * @param {{type?: string, props?: {size?: number}}} block
+ * @returns {number}
+ */
+export function baseTextPx(block) {
+  const own = Number(block?.props?.size);
+  if (block?.type === 'text' && Number.isFinite(own) && own > 0) return own;
+  return SIZE_TEXT.base * (TYPE_SCALE.get(block?.type) ?? 1);
+}
+
+/**
+ * The sizes a block may take (ADR-0025 decision 6): inside SIZE, and where
+ * the owner bounds its base text (sizeBounds), only as far as the base text
+ * stays inside, in whole steps. The size scales everything alike, so these
+ * are where the slider stops. Size 1 is always inside, so a block whose text
+ * is already past a bound keeps its size as drawn.
+ * @param {{type?: string, props?: {size?: number}, sizeMin?: number, sizeMax?: number}} block
  * @returns {{min: number, max: number}}
  */
+export function sizeRange(block) {
+  const base = baseTextPx(block);
+  const { min, max } = sizeBounds(block);
+  const step = Math.round(SIZE.step * 100);
+  const lo = Math.ceil(Math.max(SIZE.min * 100, min === null ? 0 : (min / base) * 100) / step - 1e-9) * step;
+  const hi = Math.floor(Math.min(SIZE.max * 100, max === null ? Infinity : (max / base) * 100) / step + 1e-9) * step;
+  return { min: Math.min(100, lo) / 100, max: Math.max(100, hi) / 100 };
+}
+
+/**
+ * The smallest and largest size in px the owner lets the base text of a
+ * sized block take (block.sizeMin, block.sizeMax), inside SIZE_TEXT and
+ * never crossed: a largest size under the smallest is raised to it. A bound
+ * not set is null, and the text follows the size.
+ * @param {{sizeMin?: number, sizeMax?: number}} block
+ * @returns {{min: number|null, max: number|null}}
+ */
 export function sizeBounds(block) {
-  const px = (value, fallback) => {
+  const px = (value) => {
     const n = Number(value);
-    return Number.isFinite(n) && n > 0 ? Math.min(SIZE_TEXT.max, Math.max(SIZE_TEXT.min, Math.round(n))) : fallback;
+    return Number.isFinite(n) && n > 0 ? Math.min(SIZE_TEXT.max, Math.max(SIZE_TEXT.min, Math.round(n))) : null;
   };
-  const min = px(block?.sizeMin, SIZE_TEXT.minDefault);
-  const max = Math.max(min, px(block?.sizeMax, SIZE_TEXT.maxDefault));
-  return { min, max };
+  const min = px(block?.sizeMin);
+  const max = px(block?.sizeMax);
+  return { min, max: min !== null && max !== null ? Math.max(min, max) : max };
 }
 
 /**

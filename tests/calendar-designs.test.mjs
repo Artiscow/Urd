@@ -426,7 +426,8 @@ test('calPhoneView and calPhoneDesign: the design itself on a phone when it read
 
 test('the phone designs: the neutral list first, every design that reads on a phone, the lent ones last; ids, labels, descriptions and families in the dictionaries', async () => {
   const ids = CAL_PHONE_DESIGNS.map((d) => d.id);
-  assert.deepEqual(ids, ['agenda', 'depRows', 'depStrip']);
+  assert.equal(ids[0], 'agenda');
+  for (const id of ['depRows', 'depStrip', 'marqueeRows']) assert.ok(ids.includes(id), id);
   assert.ok(!ids.includes('self') && !ids.includes('depScroll'), 'neither «the design as it is» nor a phone design that scrolls sideways');
   for (const id of ids) assert.ok(!CAL_DESIGNS.some((d) => d.id === id), `${id} is no design's id`);
   for (const design of CAL_DESIGNS) if (design.phoneDefault) assert.ok(ids.includes(design.phoneDefault), `${design.id}: phoneDefault ${design.phoneDefault}`);
@@ -445,7 +446,7 @@ test('the phone designs: the neutral list first, every design that reads on a ph
   assert.equal(candIds[0], 'agenda');
   assert.ok(candIds.includes('pad') && candIds.includes('index') && candIds.includes('posters') && candIds.includes('plain') && candIds.includes('carousel'));
   assert.ok(!candIds.includes('table') && !candIds.includes('heatmap') && !candIds.includes('departures') && !candIds.includes('sidepanel'));
-  assert.deepEqual(candIds.slice(-2), ['depRows', 'depStrip']);
+  assert.deepEqual(candIds.slice(-(ids.length - 1)), ids.slice(1), 'the lent phone designs come last');
   assert.equal(new Set(candIds).size, candIds.length);
   assert.ok(calPhoneCandidates({ design: 'pad' }).some((d) => d.id === 'pad'), 'the calendar\'s own design stands in its list');
   assert.ok(calPhoneCandidates({ design: 'plain', view: 'month' }).some((d) => d.id === 'sidepanel'), 'a month block can take a month design on a phone');

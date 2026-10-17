@@ -13,7 +13,7 @@
   import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
   import { GALLERY_VIEWS, GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
   import { ta } from '$engine/i18n.js';
-  import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize } from '$engine/push-model.js';
+  import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize, sizeRange } from '$engine/push-model.js';
   import { ribbonMotions, colorTokens, onOff } from './options.js';
   import { menu, quickChoice, setQuickChoice, chooseArea, MENU_AREAS } from './state.svelte.js';
   import { quickIds, choiceChanged, NO_CHOICE } from '../lib/quick-row.js';
@@ -151,8 +151,10 @@
       items.push({ id: 'zoom', label: ta('lbl.mapZoom'), kind: 'number', min: 1, max: 19, value: p.zoom ?? 15, set: (v) => setBlockProp('zoom', Math.max(1, Math.min(19, Number(v) || 15))) });
     }
     if (!SIZE_BY_FRAME.has(b.type)) {
-      items.push({ id: 'size', label: ta('lbl.scale'), kind: 'number', min: SIZE.min * 100, max: SIZE.max * 100, step: 5, value: Math.round(blockSize(b) * 100),
-        set: (v) => { endSizeGesture(); setBlockSize(Math.min(SIZE.max, Math.max(SIZE.min, (Number(v) || 100) / 100))); endSizeGesture(); } });
+      // The size ends where the block's base text meets a bound the owner set (sizeRange); setBlockSize holds it there.
+      const range = sizeRange(b);
+      items.push({ id: 'size', label: ta('lbl.scale'), kind: 'number', min: Math.round(range.min * 100), max: Math.round(range.max * 100), step: Math.round(SIZE.step * 100), value: Math.round(blockSize(b) * 100),
+        set: (v) => { endSizeGesture(); setBlockSize((Number(v) || 100) / 100); endSizeGesture(); } });
     }
     return items;
   }

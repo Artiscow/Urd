@@ -2,6 +2,23 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.23.4): Cinema marquee, «Size» that scales everything alike, and three calendar fixes
+
+- [ ] «Kinomarkise» in the picker's Retro family: a red frame with lit bulbs above and below a letter board; «★ Nå på plakaten ★» with the day word («I morgen») over the next event's title, a line with its date, time and place, the excerpt with «Les mer», and «Kommer snart» with rows of date, name and time
+- [ ] The names under «Kommer snart» start on one line under each other, whatever the widths of the dates
+- [ ] At 100 % the marquee sits at the size of the other designs: its rows the size of the departure board's flaps, the board about as tall as the departure board in the same frame
+- [ ] «Ordvalg: Nøytrale» gives the common words in place of «Nå på plakaten», «Kommer snart» and «Billetter»; the words are rewritten by clicking them
+- [ ] On a phone, or in a frame too narrow for the board, the marquee shows «Kinomarkise, rader»: the board as a list in its red frame with the subscribe link at the foot; it is offered under «Design på telefon»
+- [ ] The marquee's card: a ticket with bulbs along its top edge and a stub with the day and short month, with «Meld deg på» in the common words
+- [ ] Departure board: every letter stands in the middle of its flap, also at 50 % and 150 %
+- [ ] A row's card opens centred over the part of the calendar in view, at its own width, past the calendar's edges when it must be, never scrolling inside itself; also at 50 % and 150 %, and with the calendar partly scrolled out of view
+- [ ] A stylised calendar (Avgangstavle, Avrivningsblokk) keeps its desktop design at 80, 60 and 50 %; it shows its phone design only where its frame is narrow at 100 %
+- [ ] «Størrelse» on a calendar, a text and an FAQ: the slider goes from 40 to 200 %, and everything scales alike; at 50 % the block is half as wide and half as tall with the same lines, nothing wraps anew
+- [ ] «Minste tekst» and «Største tekst» stand empty while a size is set and show the text's size now (7 at 50 % on a calendar); 12 typed in moves a calendar at 50 % to 90 % with its frame and the blocks below; emptied again, the slider reaches 40 %
+- [ ] A calendar at 100 % has smaller text than before (14 px), in the same frame; a calendar that showed its phone design in a narrow frame may now show its desktop design
+- [ ] Under 100 %, Bento, Delt kort, Måned med sidepanel, Årshjul and the ApeironLF designs keep their wide layout, and a product list and a table keep their columns
+- [ ] Pages saved before with a size on a calendar (the front page's at 95 %) open with the calendar at its size and its frame where it was
+
 ### Test batch (0.7.19.23.3): Departure board, the phone and card designs per calendar, and seven own cards
 
 - [ ] «Avgangstavle» in the picker's Retro family: an amber heading with «Oppdatert», the heads Dato, Tid, Arrangement, Sted and Status over split-flap rows; the date 04.10, the start time, the title and place cut to the flaps, the status «Påmeld» in amber, «Åpent», or «Avlyst» in the cancelled colour; the first row carries the excerpt; «Abonner på tavla» and «Trykk på en rad for detaljer» under it

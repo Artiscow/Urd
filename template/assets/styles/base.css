@@ -231,6 +231,16 @@ html {
   container: urd-block / inline-size;
 }
 
+/* A block drawn at a zoom (its size or its shrink, render.js applyZoom) is
+   laid out in its content's own pixels. The content root of the calendar, the
+   product and the table is the urd-block container itself, so the rules for
+   their columns and cards, which all style elements inside the root, ask the
+   width the content is laid out in, and the layout stays the same at any size.
+   Container units inside them read the same width. */
+.urd-block[data-urd-width="own"] > :is(.urd-cal, .urd-product, .urd-table) {
+  container: urd-block / inline-size;
+}
+
 /* A block with its own height places its content in the box (ADR-0025
    decision 3; heightAlign in push-model.js): at the top by default, in the
    middle, at the bottom, or stretched over the whole box. The box is a grid
@@ -1418,6 +1428,26 @@ textarea.urd-form-input {
   --urd-cal-set-font: 'Share Tech Mono', ui-monospace, 'Courier New', monospace;
   --urd-cal-set-title-font: Oswald, 'Roboto Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
   --urd-cal-set-title-weight: 700;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.1em;
+}
+
+.urd-cal-set-marquee {
+  --urd-cal-set-bg: var(--urd-cal-s-board, #f6f1e4);
+  --urd-cal-set-surface: color-mix(in srgb, var(--urd-cal-s-board, #f6f1e4) 88%, var(--urd-cal-s-frame, #7a1420));
+  --urd-cal-set-ink: var(--urd-cal-s-ink, #17120f);
+  --urd-cal-set-muted: color-mix(in srgb, var(--urd-cal-s-ink, #17120f) 65%, transparent);
+  --urd-cal-set-line: color-mix(in srgb, var(--urd-cal-s-ink, #17120f) 25%, transparent);
+  --urd-cal-set-accent: var(--urd-cal-s-frame, #7a1420);
+  --urd-cal-set-accent-text: var(--urd-cal-s-board, #f6f1e4);
+  --urd-cal-set-label: var(--urd-cal-s-frame, #7a1420);
+  --urd-cal-set-radius: 4px;
+  --urd-cal-set-chip-radius: 0;
+  --urd-cal-set-frame: 8px solid var(--urd-cal-s-frame, #7a1420);
+  --urd-cal-set-shadow: 0 18px 40px rgb(0 0 0 / 45%);
+  --urd-cal-set-font: Georgia, 'Times New Roman', serif;
+  --urd-cal-set-title-font: 'Bebas Neue', Oswald, 'League Gothic', 'Arial Narrow', Impact, sans-serif;
+  --urd-cal-set-title-weight: 400;
   --urd-cal-set-label-case: uppercase;
   --urd-cal-set-label-spacing: 0.1em;
 }
@@ -6092,7 +6122,7 @@ textarea.urd-form-input {
   rotate: -12deg;
 }
 
-/* R3 Departure board: split-flap rows on a dark board. A run of cells is one text on a tiled background: the monospace face advances one tile per letter (1ch plus the spacing), so the words stay text, and the tile pattern is centred under each letter. The variables serve the board, its phone designs and its cards alike. */
+/* R3 Departure board: split-flap rows on a dark board. A run of cells is one text on a tiled background from the run's left edge: the monospace face advances one tile per letter (1ch plus the spacing), and the padding sets each letter in the middle of its tile, so the words stay text. The variables serve the board, its phone designs and its cards alike. */
 .urd-cal-dep,
 .urd-cal-dlg-departures,
 .urd-cal-dlg-depHead,
@@ -6185,7 +6215,6 @@ textarea.urd-form-input {
   background:
     linear-gradient(transparent 48%, var(--urd-cal-dep-board) 48% 52%, transparent 52%),
     repeating-linear-gradient(90deg, var(--urd-cal-dep-flap) 0 var(--urd-cal-dep-cell), transparent var(--urd-cal-dep-cell) var(--urd-cal-dep-step));
-  background-position: 0 0, calc((1ch - var(--urd-cal-dep-cell)) / 2) 0;
   padding-left: calc((var(--urd-cal-dep-cell) - 1ch) / 2);
 }
 
@@ -6959,6 +6988,387 @@ textarea.urd-form-input {
   font-weight: 600;
   color: #fff;
   text-shadow: 0 0 1px rgb(255 255 255 / 80%), 0 0 14px var(--urd-cal-dgc-a);
+}
+
+/* R4 Cinema marquee: a letter board in a red frame between two rows of glowing bulbs, the letters on rails, the display face condensed and in capitals by the style sheet. */
+.urd-cal-mq,
+.urd-cal-mqp,
+.urd-cal-dlg-marquee {
+  --urd-cal-mq-frame: var(--urd-cal-s-frame, #7a1420);
+  --urd-cal-mq-bulb: var(--urd-cal-s-bulb, #ffd76a);
+  --urd-cal-mq-board: var(--urd-cal-s-board, #f6f1e4);
+  --urd-cal-mq-ink: var(--urd-cal-s-ink, #17120f);
+  --urd-cal-mq-display: var(--urd-cal-set-title-font);
+  --urd-cal-mq-bulbs: radial-gradient(circle, var(--urd-cal-mq-bulb) 0 3px, color-mix(in srgb, var(--urd-cal-mq-bulb) 45%, transparent) 4px, transparent 6px);
+}
+
+.urd-cal-mq {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  font-family: var(--urd-cal-mq-display);
+  font-stretch: condensed;
+  color: var(--urd-cal-mq-ink);
+  background: var(--urd-cal-mq-frame);
+  border-radius: 14px;
+}
+
+.urd-cal-mq::before,
+.urd-cal-mq::after {
+  display: block;
+  height: 12px;
+  content: '';
+  background-image: var(--urd-cal-mq-bulbs);
+  background-repeat: space no-repeat;
+  background-size: 18px 12px;
+}
+
+.urd-cal-mq-board {
+  padding: 14px 18px 16px;
+  background-color: var(--urd-cal-mq-board);
+  background-image: repeating-linear-gradient(transparent 0 43px, rgb(0 0 0 / 12%) 43px 45px);
+  cursor: pointer;
+}
+
+.urd-cal-mq-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em 1em;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.urd-cal-mq-now,
+.urd-cal-mq-soon {
+  display: block;
+  font-size: 0.9em;
+  letter-spacing: 0.2em;
+  color: var(--urd-cal-mq-frame);
+  text-transform: uppercase;
+}
+
+.urd-cal-mq-now::before {
+  content: '\2605\00a0';
+}
+
+.urd-cal-mq-now::after {
+  content: '\00a0\2605';
+}
+
+.urd-cal-mq-in {
+  font-size: 0.85em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.urd-cal-mq-title {
+  display: block;
+  font-size: 2em;
+  font-size: clamp(1.5em, 4cqi, 2.4em);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.urd-cal-mq-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1em;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 1em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.urd-cal-mq .urd-cal-mq-when,
+.urd-cal-mqp .urd-cal-mqp-when {
+  font-size: 1em;
+  opacity: 1;
+}
+
+.urd-cal-mq .urd-cal-mq-signup {
+  margin: 0;
+  padding: 4px 16px 2px;
+  font-size: 1em;
+  font-weight: 400;
+  color: var(--urd-cal-mq-board);
+  text-decoration: none;
+  background: var(--urd-cal-mq-frame);
+}
+
+.urd-cal-mq-text {
+  margin: 6px 0 0;
+  font-family: var(--urd-cal-set-font);
+  font-stretch: normal;
+  font-size: 1em;
+  line-height: 1.4;
+}
+
+.urd-cal-mq-text a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.urd-cal-mq-more {
+  white-space: nowrap;
+}
+
+.urd-cal-mq-soon {
+  margin-top: 14px;
+}
+
+.urd-cal-mq-rows {
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* A row holds the date, the name and the time in three columns, the names under each other. */
+.urd-cal-mq-row {
+  display: grid;
+  grid-template-columns: minmax(7.5em, max-content) minmax(0, 1fr) max-content;
+  column-gap: 16px;
+  align-items: baseline;
+  padding: 5px 0;
+  border-bottom: 2px solid var(--urd-cal-mq-ink);
+}
+
+.urd-cal-mq-row-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.urd-cal-mq-row-time {
+  text-align: right;
+}
+
+/* Where the browser has subgrid the rows share one set of columns, so the names start at one line whatever the dates' widths; without it the date column has a width of its own, which lines them up for the usual dates. */
+@supports (grid-template-columns: subgrid) {
+  .urd-cal-mq-rows {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    column-gap: 16px;
+  }
+
+  .urd-cal-mq-row {
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+}
+
+.urd-cal-mq-row.urd-cal-cancelled {
+  opacity: 0.45;
+}
+
+/* The marquee on a phone: the letter board in its frame as a list of rows. */
+.urd-cal-mqp {
+  padding: 18px 18px 16px;
+  font-family: var(--urd-cal-set-font);
+  line-height: 1.35;
+  color: var(--urd-cal-mq-ink);
+  background: var(--urd-cal-mq-board);
+  border: 8px solid var(--urd-cal-mq-frame);
+  border-radius: 4px;
+}
+
+.urd-cal-mqp-head {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.urd-cal-mqp-now {
+  min-width: 0;
+  font-family: var(--urd-cal-mq-display);
+  font-stretch: condensed;
+  font-size: 1.3em;
+  line-height: 1.1;
+  color: var(--urd-cal-mq-frame);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.urd-cal-mqp-in {
+  flex: none;
+  font-size: 0.82em;
+  opacity: 0.8;
+}
+
+.urd-cal-mqp-row {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0;
+  cursor: pointer;
+  border-top: 1px solid var(--urd-cal-mq-frame);
+}
+
+.urd-cal-mqp .urd-cal-mqp-when {
+  font-size: 0.82em;
+  opacity: 1;
+  letter-spacing: 0.1em;
+  color: var(--urd-cal-mq-frame);
+  text-transform: uppercase;
+}
+
+.urd-cal-mqp-title {
+  font-family: var(--urd-cal-mq-display);
+  font-stretch: condensed;
+  font-size: 1.15em;
+  font-weight: 400;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.urd-cal-mqp-place {
+  opacity: 0.8;
+}
+
+.urd-cal-mqp-text {
+  margin: 6px 0 0;
+  font-size: 0.95em;
+  line-height: 1.4;
+}
+
+.urd-cal-mqp .urd-cal-mqp-signup {
+  justify-self: start;
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-family: var(--urd-cal-mq-display);
+  font-stretch: condensed;
+  font-size: 0.95em;
+  font-weight: 400;
+  color: var(--urd-cal-mq-board);
+  text-decoration: none;
+  text-transform: uppercase;
+  background: var(--urd-cal-mq-frame);
+  border-radius: 4px;
+}
+
+.urd-cal-mqp-foot {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--urd-cal-mq-frame);
+}
+
+.urd-cal-mqp-foot .urd-cal-sub-btn {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+}
+
+/* The marquee's set card: the board's paper in the red frame, the title in the display face. */
+.urd-cal-set-marquee.urd-cal-dialog .urd-cal-dialog-title {
+  font-stretch: condensed;
+  text-transform: uppercase;
+}
+
+.urd-cal-set-marquee.urd-cal-dialog a.urd-cal-dialog-primary {
+  font-family: var(--urd-cal-set-title-font);
+  font-stretch: condensed;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+/* R4 Cinema marquee's own card: a cinema ticket, a row of bulbs in its red top, the date, title and facts on its face with a dashed stub down the right side holding the day, and a tear line above the description and the buttons. */
+.urd-cal-dialog.urd-cal-dlg-marquee {
+  padding-top: 0.9rem;
+  border-width: 34px 8px 8px;
+  border-radius: 6px;
+}
+
+.urd-cal-dialog.urd-cal-dlg-marquee::before {
+  position: absolute;
+  top: -26px;
+  right: 3.2rem;
+  left: 4px;
+  height: 16px;
+  content: '';
+  background-image: var(--urd-cal-mq-bulbs);
+  background-repeat: space no-repeat;
+  background-size: 18px 16px;
+}
+
+.urd-cal-dlg-marquee .urd-cal-dialog-close {
+  top: -38px;
+  right: -6px;
+  color: var(--urd-cal-mq-board);
+  border-color: transparent;
+}
+
+.urd-cal-mq-cardticket {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem;
+  margin: 0 -1.3rem 0.9rem;
+  padding: 0 0 0.9rem 1.3rem;
+  border-bottom: 2px dashed var(--urd-cal-mq-frame);
+}
+
+.urd-cal-mq-cardface {
+  padding-right: 1rem;
+  border-right: 2px dashed var(--urd-cal-mq-frame);
+}
+
+.urd-cal-mq-cardstub {
+  display: grid;
+  place-content: center;
+  line-height: 0.9;
+  color: var(--urd-cal-mq-frame);
+  text-align: center;
+  font-family: var(--urd-cal-mq-display);
+  font-stretch: condensed;
+  text-transform: uppercase;
+}
+
+.urd-cal-mq-cardstub strong {
+  font-size: 2.2em;
+  font-weight: 400;
+}
+
+.urd-cal-mq-cardstub span {
+  font-size: 1.1em;
+  letter-spacing: 0.14em;
+}
+
+.urd-cal-dlg-marquee .urd-cal-dialog-date {
+  padding-right: 0;
+  font-family: var(--urd-cal-mq-display);
+  font-stretch: condensed;
+  font-size: 0.95em;
+  letter-spacing: 0.14em;
+}
+
+.urd-cal-dlg-marquee .urd-cal-dialog-title {
+  margin-right: 0;
+  font-size: 1.6em;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+}
+
+.urd-cal-dlg-marquee .urd-cal-dialog-facts {
+  margin-bottom: 0;
+}
+
+.urd-cal-dlg-marquee .urd-cal-dialog-facts dt {
+  font-family: var(--urd-cal-mq-display);
+  font-stretch: condensed;
+  letter-spacing: 0.14em;
+  color: var(--urd-cal-mq-frame);
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+.urd-cal-dlg-marquee a.urd-cal-dialog-primary {
+  font-size: 1.05em;
+  letter-spacing: 0.08em;
+  border-radius: 0;
 }
 
 /* ---- The «Coming up» designs (blocks/calendar-next.js) ---- */

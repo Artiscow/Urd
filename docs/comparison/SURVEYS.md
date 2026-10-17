@@ -11,6 +11,7 @@ These are the surveys the ADRs and milestones cite: the layout, navigation and s
 | [Scaling below the design width](#scaling-below-the-design-width-23-september-2026) | 23 September 2026 | ADR-0018, ADR-0024 (0.7.17) |
 | [Content that grows must push](#content-that-grows-must-push-23-september-2026) | 23 September 2026 | ADR-0024 (0.7.17.3) |
 | [What a drag means](#what-a-drag-means-how-the-builders-size-an-element-3-october-2026) | 3 October 2026 | ADR-0025 (0.7.21) |
+| [Default sizes](#default-sizes-what-100--is-17-october-2026) | 17 October 2026 | ADR-0025 decision 6 (0.7.19.23.4) |
 
 ## The preview canvas (27 July 2026)
 
@@ -205,6 +206,36 @@ None of the players handles `prefers-reduced-motion` itself; the block pauses th
 
 **What Urd takes:** three tracks. (1) Design in, on Urd's own elements (0.7.25): faces by `border-image`, scoped CSS styles, tokens, and the pointer as custom properties. (2) Lottie, Rive and glTF as files in `media/` with vendored MIT players as shipped plugins, on the page, no frame and no CDN (v0.8 Animation files). (3) Exported code in a sandboxed frame with a CSP of its own, the portal, with no promise beyond isolation. Spline's runtime is never vendored. Framer, Figma Sites and Penpot prototypes cannot come at all.
 
+## Default sizes: what 100 % is (17 October 2026)
+
+From the test of «Size» on the calendars: 100 % read as far too large, and the smallest size the slider then allowed, 75 %, as still large. The survey asks what the field draws at its default size.
+
+**What 100 % means.** Every builder that documents a scale treats 100 % as the size as designed, never as a px value: Wix Studio's «Scale proportionally» (the default for new elements, with a smallest and a largest text size), Shopify Dawn's body and heading scales (100 to 130 % and 100 to 150 %, 100 % the floor) and The Events Calendar's font-size scale from its 16 px base ([Wix Studio: scaling text proportionally](https://support.wix.com/en/article/setting-text-to-scale-proportionally), [Dawn's settings schema](https://raw.githubusercontent.com/Shopify/dawn/main/config/settings_schema.json), [The Events Calendar: fonts](https://docs.nexcess.com/software/the-events-calendar/customize-fonts/)).
+
+**Text sizes on a page today:**
+
+| Text | px | Who |
+|---|---|---|
+| Body | 16 | The browser default; Material Body Large, Tailwind `text-base`, USWDS; 73 % of 518 design systems |
+| Dense body | 14 | Fluent 2 Body 1, Atlassian Body M, Carbon productive, Webflow's default, the Google Calendar embed |
+| Meta (time, place, captions) | 12 to 14 | Material Body Small 12, Tailwind `text-sm` and `text-xs`, Fluent Caption 12 |
+| The floor | 11 | Material Label Small, Apple Caption 2, Polaris `bodyXs`; nothing in the field goes lower |
+
+**Calendar widgets at their default size:**
+
+| Widget | Title | Meta | Rows | Source |
+|---|---|---|---|---|
+| Google Calendar embed | about 14 (agenda, read from its stylesheet), 12 (month chips) | 11 to 14 | 32 px agenda rows | [embedding a calendar](https://support.google.com/calendar/answer/41207) |
+| The Events Calendar | 24 (list, 16 under 768 px) | 14 (12 narrow) | 48 and 40 px margins per event | [typography variables](https://raw.githubusercontent.com/the-events-calendar/tribe-common-styles/master/variables/_typography.pcss) |
+| EventON | 24 | 12 | at least 63 px, 20 px padding | [EventON styles](https://plugins.svn.wordpress.org/eventon-lite/trunk/assets/css/eventon_styles.css) |
+| Modern Events Calendar | 29 | 11 to 12 | 25 px between cards | [MEC styles](https://plugins.svn.wordpress.org/modern-events-calendar-lite/trunk/assets/css/frontend.css) |
+
+None of them is compact by default: a dense layout is a choice (Google Calendar's Compact density, Timely's Compact Agenda) or the narrow fallback.
+
+**Urd at 100 % (measured in base.css):** the base text is the page's 16 px, the titles 22 to 26 px in most designs (Glass 25.6, Tear-off pad 22.4, Departure board 24), the meta text 0.78 to 0.85 of the base (12.5 to 13.6 px), with display type beyond that (the cinema marquee's title 42 to 83 px, the tear-off pad's day number 150 px). At 50 % the base is 8 px and the meta text 6 to 7 px, under every floor in the field.
+
+**What Urd takes (17 October 2026):** 100 % stays the size as designed, and «Size» scales everything alike over its whole range with no default floor; the text bounds are the owner's choice. The calendar, a dense widget, draws its designs at a 14 px base for the page's 16 px (`TYPE_SCALE`), the base of the dense systems above, which keeps its meta text at the floor (ADR-0025 decision 6). Compact designed sizes per design are milestone 0.7.19.32.
+
 ## Sources
 
 Each list is the survey's own sources, as cited in its text, and belongs to the survey dated in its heading. The kind is marked after each link: (primary) vendor, official or standards documentation, (secondary) a third-party blog, tutorial or user forum, (code) read in source.
@@ -397,3 +428,26 @@ Each list is the survey's own sources, as cited in its text, and belongs to the 
 - [DOMPurify source](https://github.com/cure53/DOMPurify/tree/main/src) (code)
 - [MDN: the Sanitizer API's default configuration](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API/Default_sanitizer_configuration) (primary)
 - [csswg-drafts #6733: pointer position in CSS](https://github.com/w3c/csswg-drafts/issues/6733) (primary)
+
+### Survey 17 October 2026 (default sizes)
+
+- [MDN: font-size](https://developer.mozilla.org/en-US/docs/Web/CSS/font-size) (primary)
+- [Nicolas Hoizey: users do change font size](https://nicolas-hoizey.com/2018/06/users-do-change-font-size.html) (secondary)
+- [Lazyweb: the base font size of 518 design systems](https://www.lazyweb.com/research/what-base-font-size-do-products-use.md) (secondary)
+- [Flutter: Material 3 TextTheme](https://api.flutter.dev/flutter/material/TextTheme-class.html) (primary)
+- [Apple Human Interface Guidelines: typography](https://developer.apple.com/tutorials/data/design/human-interface-guidelines/typography.json) (primary)
+- [Fluent 2: typography](https://fluent2.microsoft.design/typography) (primary)
+- [Carbon: type sets](https://carbondesignsystem.com/elements/typography/type-sets/) (primary)
+- [Atlassian: typography](https://atlassian.design/foundations/typography) (primary)
+- [Polaris size tokens](https://raw.githubusercontent.com/Shopify/polaris/main/polaris-tokens/src/size.ts) (code)
+- [USWDS: font size tokens](https://designsystem.digital.gov/design-tokens/typesetting/font-size/) (primary)
+- [Tailwind: font size](https://tailwindcss.com/docs/font-size) (primary)
+- [Wix Studio: scaling text proportionally](https://support.wix.com/en/article/setting-text-to-scale-proportionally) (primary)
+- [Shopify Dawn: settings schema](https://raw.githubusercontent.com/Shopify/dawn/main/config/settings_schema.json) (code)
+- [Google Calendar: embed a calendar](https://support.google.com/calendar/answer/41207) (primary)
+- [Google Workspace Updates: Calendar density options](https://workspaceupdates.googleblog.com/2026/07/updated-options-to-better-view-google-Calendar-on-large-monitors.html) (primary)
+- [The Events Calendar: typography variables](https://raw.githubusercontent.com/the-events-calendar/tribe-common-styles/master/variables/_typography.pcss) (code)
+- [The Events Calendar: customising fonts](https://docs.nexcess.com/software/the-events-calendar/customize-fonts/) (secondary)
+- [EventON Lite styles](https://plugins.svn.wordpress.org/eventon-lite/trunk/assets/css/eventon_styles.css) (code)
+- [Modern Events Calendar Lite styles](https://plugins.svn.wordpress.org/modern-events-calendar-lite/trunk/assets/css/frontend.css) (code)
+- [Timely: embedding the calendar](https://help.time.ly/how-to-embed-your-calendar/) (primary)
