@@ -369,8 +369,12 @@ function setCalendarDesign(id) {
     : {};
   // The plain design shows the five plain views: a week, day or year left by a design goes back to the list.
   const plainView = def.id === 'plain' && !['list', 'cards', 'month', 'agenda', 'next'].includes(calView(selectedBlock.props)) ? { view: 'list' } : {};
+  const next = { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}), ...plainView };
+  // A calendar that keeps the count it started with takes the new design's own (Index cards start with four).
+  const limitOf = (props) => calDesign(props.design).limit ?? (calView(props) === 'agenda' ? 8 : 6);
+  const limit = (selectedBlock.props.limit ?? 6) === limitOf(selectedBlock.props) ? { limit: limitOf({ ...selectedBlock.props, ...next }) } : {};
   // setBlockProps fits the frame to the new design.
-  setBlockProps('design', { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}), ...plainView, ...counts });
+  setBlockProps('design', { ...next, ...counts, ...limit });
 }
 
 /** The phone design the selected calendar draws on a phone (calPhoneView): stored only when it is not the design's own default, and the legacy switch is cleared. */

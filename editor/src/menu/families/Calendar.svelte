@@ -142,13 +142,13 @@
     const p = selectedBlock.props;
     const def = calDesign(p.design);
     const reset = (name, patch) => () => setBlockProps(name, patch);
-    // The counts a new calendar starts with: eight in the agenda, and three and three in a «Coming up» design.
+    // The counts a new calendar starts with: the design's own where it has one (Index cards: four), else eight in the agenda and six elsewhere, and three and three in a «Coming up» design.
     const view = calView(p);
-    const limit0 = view === 'agenda' ? 8 : 6;
+    const limit0 = def.limit ?? (view === 'agenda' ? 8 : 6);
     const count0 = view === 'next' ? 3 : undefined;
     const viewChanged = p.switcher === true || p.switcherViews != null || p.toolsSize != null || p.description != null || p.showMore === false || (p.limit ?? 6) !== limit0 || p.nextCount !== count0 || p.laterCount !== count0 || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
-    const on = [!def.ownFilter && p.showCategories === true, p.showSubscribe !== false, p.showSignup === true, p.showSearch === true, p.showEarlier === true].filter(Boolean).length;
-    const buttonsChanged = on > 0 || p.showOpen === false || p.showAdd === false || Boolean(p.programHref);
+    const on = [!def.ownFilter && p.showCategories === true, p.showSubscribe !== false, p.showSignup === true, p.showSearch === true, p.showEarlier === true, p.showRecurring === true].filter(Boolean).length;
+    const buttonsChanged = on > 0 || p.showAdd === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
     const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length;
     const colorCount = def.slots.filter((slot) => p.colors?.[slot.key]).length;
@@ -158,7 +158,7 @@
       view: ta(CAL_VIEW_KEYS[calView(p)]),
       viewReset: viewChanged ? reset('cal-view', { switcher: undefined, switcherViews: undefined, toolsSize: undefined, description: undefined, showMore: undefined, limit: limit0, nextCount: count0, laterCount: count0, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
-      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showSearch: undefined, showEarlier: undefined, showOpen: undefined, showAdd: undefined, programHref: undefined }) : null,
+      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showSearch: undefined, showEarlier: undefined, showRecurring: undefined, showOpen: undefined, showAdd: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
       emptyReset: emptyChanged ? reset('cal-empty', { emptyText: undefined, emptyIcon: undefined }) : null,
       notice: p.notice?.show === true ? ta('common.on') : ta('common.off'),
@@ -351,13 +351,11 @@
       onchange={(e) => setBlockProp('showAdd', e.target.checked ? undefined : false)} />
     {ta('calendar.showAdd')}
   </label>
-  {#if calDesign(selectedBlock.props.design).open}
-    <label class="gridmenu-snap" title={ta('tip.calendar.showOpen')}>
-      <input type="checkbox" checked={selectedBlock.props.showOpen !== false}
-        onchange={(e) => setBlockProp('showOpen', e.target.checked ? undefined : false)} />
-      {ta('calendar.showOpen')}
-    </label>
-  {/if}
+  <label class="gridmenu-snap" title={ta('tip.calendar.showRecurring')}>
+    <input type="checkbox" checked={selectedBlock.props.showRecurring === true}
+      onchange={(e) => setBlockProp('showRecurring', e.target.checked ? true : undefined)} />
+    {ta('calendar.showRecurring')}
+  </label>
   {#if calDesign(selectedBlock.props.design).program}
     <label title={ta('tip.calendar.programHref')}>{ta('calendar.programHref')}
       <input value={selectedBlock.props.programHref ?? ''} placeholder="/program" spellcheck="false"

@@ -281,9 +281,13 @@ test('calOptions: every option of the design with its default, the valid stored 
   assert.deepEqual(calOptions({ design: 'table', options: { zebra: 'no', colPlace: false } }), { colTime: true, colPlace: false, zebra: true });
   assert.deepEqual(calOptions({ design: 'yearWheel', options: { firstMonth: '8' } }), { firstMonth: '8' });
   assert.deepEqual(calOptionDefs('no-such-design'), []);
-  assert.deepEqual(calOptions({ design: 'band' }), { roll: true, pause: 'button' });
-  assert.deepEqual(calOptions({ design: 'band', options: { pause: 'touch' } }), { roll: true, pause: 'touch' });
-  assert.deepEqual(calOptions({ design: 'band', options: { pause: 'hover' } }), { roll: true, pause: 'button' });
+  assert.deepEqual(calOptions({ design: 'band' }), { reach: 'content', roll: true, pause: 'button' });
+  assert.deepEqual(calOptions({ design: 'band', options: { pause: 'touch' } }), { reach: 'content', roll: true, pause: 'touch' });
+  assert.deepEqual(calOptions({ design: 'band', options: { pause: 'hover' } }), { reach: 'content', roll: true, pause: 'button' });
+  // The band's reach takes the ribbon block's three widths, and nothing else.
+  assert.deepEqual(calOptions({ design: 'band', options: { reach: 'page' } }).reach, 'page');
+  assert.deepEqual(calOptions({ design: 'band', options: { reach: 'canvas' } }).reach, 'canvas');
+  assert.deepEqual(calOptions({ design: 'band', options: { reach: 'window' } }).reach, 'content');
 });
 
 test('CAL_OPTIONS: every key names a design, and every default is a value the option can hold', () => {
@@ -606,7 +610,7 @@ test('every design has a picture for the design picker', () => {
 });
 
 test('calOptionShown: an option with a `when` shows only while the design\'s other options match it (the band\'s pause while it rolls)', () => {
-  const [roll, pause] = calOptionDefs('band');
+  const [, roll, pause] = calOptionDefs('band');
   assert.equal(calOptionShown(roll, calOptions({ design: 'band' })), true);
   assert.equal(calOptionShown(pause, calOptions({ design: 'band' })), true);
   assert.equal(calOptionShown(pause, calOptions({ design: 'band', options: { roll: false } })), false);

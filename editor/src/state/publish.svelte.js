@@ -332,9 +332,11 @@ async function publish() {
     publishedTitles.push(ta('publish.part.templates'));
   }
 
-  // Plugin changes (enabled/disabled/added) are published as plugins.json.
+  // Plugin changes (enabled/disabled/added) are published as plugins.json, and a removed plugin's folder is deleted in the same commit.
   if (pluginsState.pluginsStore?.hasDraft()) {
-    files.push({ path: 'plugins/plugins.json', content: JSON.stringify(pluginsState.pluginsStore.data, null, 2) + '\n', encoding: 'utf-8' });
+    const { remove = [], ...index } = $state.snapshot(pluginsState.pluginsStore.data);
+    files.push({ path: 'plugins/plugins.json', content: JSON.stringify(index, null, 2) + '\n', encoding: 'utf-8' });
+    for (const id of remove) files.push({ path: `plugins/${id}`, delete: true });
     draftKeys.push('urd-draft-plugins');
     publishedTitles.push(ta('publish.part.plugins'));
   }

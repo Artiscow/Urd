@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import {
-  isAllowedPath, isAllowedLogin,
+  isAllowedPath, isDeletablePath, isAllowedLogin,
   OWNED_PATTERNS, USER_PATTERNS, matchesPattern, isOwnedPath, isUserPath, isPageIndexCopy,
 } from '../template/functions/_lib/guard.js';
 
@@ -78,6 +78,33 @@ test('code and config paths are forbidden', () => {
     'plugins/kalender/index.js',
   ]) {
     assert.equal(isAllowedPath(path), false, path);
+  }
+});
+
+test('a plugin\'s whole folder may be deleted, never written in, and nothing else is opened for deletion', () => {
+  for (const path of ['plugins/lang-sv', 'plugins/kalender', 'plugins/my-plugin-2']) {
+    assert.equal(isDeletablePath(path), true, path);
+    assert.equal(isAllowedPath(path), false, path);
+  }
+  // A path publishing may write it may also delete.
+  for (const path of ['content/pages/hjem.json', 'media/bilde.webp', 'plugins/plugins.json']) {
+    assert.equal(isDeletablePath(path), true, path);
+  }
+  for (const path of [
+    'plugins',
+    'plugins/',
+    'plugins/lang-sv/',
+    'plugins/lang-sv/plugin.json',
+    'plugins/lang-sv/locales/admin/sv.js',
+    'plugins/Lang-SV',
+    'plugins/-x',
+    'plugins/../functions',
+    '/plugins/lang-sv',
+    'functions/api',
+    'assets/engine/0.7.6',
+    'admin',
+  ]) {
+    assert.equal(isDeletablePath(path), false, path);
   }
 });
 

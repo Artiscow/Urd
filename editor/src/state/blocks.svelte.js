@@ -221,6 +221,7 @@ function addCalendarDesign(id) {
     ...(design.view ? { view: design.view } : {}),
     ...(design.id === 'plain' ? {} : { design: design.id }),
     ...(design.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}),
+    ...(design.limit ? { limit: design.limit } : {}),
   };
   requestPlacement(block);
 }

@@ -2,6 +2,22 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.55): the bug list
+
+- [ ] One line: emptying one of its words leaves the rest of the list in place; in Plain, Tickets and the ApeironLF designs the announcement and the empty state look as before
+- [ ] An update or publish error with a long address or a reply from GitHub wraps inside the toast, and its × stays at the top
+- [ ] Plugins: × on «Swedish language pack» takes it out of the list, it does not come back under «Found» after a reload, and after publishing the folder plugins/lang-sv is gone from the repo; taken back into the list before publishing, the folder stays
+- [ ] Calendar band: a press anywhere along the rolling band opens the event's pop-up, also on the right half
+- [ ] Calendar band, «Width»: «Own width» keeps the block's box, «Content width» spans the page's content, «The whole page width» runs from edge to edge; it follows a resized window and a «Size» under 100 %
+- [ ] «Show subscribe button» off: no subscription anywhere, also under «Add to calendar» in the pop-up
+- [ ] The calendar's row for the event's card reads «Pop-up», and the picker «Choose the pop-up design»; «Departure board, screen» is described in English in en-GB and in Norwegian in nb
+- [ ] «Show open to everyone» is no longer in Buttons and filter; a calendar that had it off still shows no «Open to everyone»
+- [ ] A new Index cards calendar shows four events; a calendar at six switched to Index cards shows four, one at five keeps five
+- [ ] Site → Calendars: a calendar without a name keeps its row's width, its address cut with «…»
+- [ ] Index cards with a long calendar name: the name runs on under the red rule and the title stands a line lower, clear of it; with a short name the card is as before
+- [ ] A Google calendar with formatted descriptions (bold, line breaks, links): the excerpt shows the words without tags
+- [ ] «Repeats» shows on no event by default; «Mark repeating events» shows it in List on navy, Grid on cream, Index cards, Receipt and the pop-up
+
 ### Test batch (0.7.0.54p): release 0.7.6
 
 - [ ] After the tag v0.7.6 and the GitHub release: the release Action runs green by itself (the editor's dependencies installed before the tests), and the template repo gets «Urd v0.7.6» with the tag v0.7.6 and the engine under `assets/engine/0.7.6/` alone

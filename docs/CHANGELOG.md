@@ -27,6 +27,23 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.55 - The bug list taken: the One line class, the update toast, plugins that can be removed, the calendar band's presses and width, the pop-up's name, and the calendar settings - 18 October 2026
+
+- `.urd-cal-line` was both the One line design's grid and the mark on every design's content lines, so the grid stood on the content lines of every design, and emptying a word in One line could mark its whole list as gone. The One line list has a class of its own (`urd-cal-oneline`); the 41 designs drawn before and after kept their heights.
+- A long error ran past the editor's toast, since an address or GitHub's reply has no space to break at. The text wraps anywhere, and the toast scrolls past 40 % of the window.
+- A removed plugin came back under «Found», since publishing could not delete its folder. Publishing may now delete a plugin's whole folder and never write in it (`isDeletablePath` in guard.js, a folder deletion removing every file under it), the × marks the folder in the draft, and the next publish deletes it with plugins.json; ADR-0003 is amended, its earlier text in amended/.
+- Calendar band: only the left part opened the pop-up, since the rolling band's second run was a clone without its presses. The second run is built like the first, and is kept from assistive technology and the tab order.
+- Calendar band: «Width» (`options.reach`) takes the ribbon block's three widths, the block's own, the content width and the whole page (`bandReach`), written in the calendar's own pixels under its zoom.
+- «Show subscribe button» off left the subscription to the whole calendar in the pop-up under «Add to calendar». It follows the setting there too.
+- The event's card is called «Pop-up» in the editor (tr «Açılır pencere»), in its row, the picker and the tips; the description of «Departure board, screen» had its English and Norwegian swapped and is corrected.
+- «Show open to everyone» is gone from the panel; a calendar that turned it off keeps it off.
+- Index cards start with four events (`limit` in the design list), also when chosen while the calendar keeps the count it started with.
+- A site calendar without a name widened its row to the right with its address. The head cuts it with «…», and the list's one column never widens.
+- Index cards: a calendar name over two lines ran into the title, since the head had a fixed height. The head grows a ruled line at a time, with the red rule where it stood.
+- An excerpt showed a description's HTML as text (`<b>`, `<br>`, `&nbsp;`). Rich text is read as plain lines first (`plainLines` in sanitize.js), also in Regular event.
+- «Repeats» showed on every repeating event. It shows only with the new «Mark repeating events» (`showRecurring`) under Buttons and filter, in the calendar and in its pop-up.
+- BACKLOG: 0.7.19.33, one «Subscribe» button with a menu in every design's own look, drawn and built in the design rounds.
+
 ## [0.7.6] - 2026-10-17
 
 ### 0.7.0.54p - Release 0.7.6: the update that copies the template's binary files in batches - 17 October 2026

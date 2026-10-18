@@ -37,8 +37,11 @@ let publishedPluginIds = $state([]);
 /** 'pending' | 'ok' | 'unavailable': the type-a-name field is only a fallback when discovery does not work. */
 let pluginDiscovery = $state('pending');
 
-/** All plugin ids the panel knows: enabled + disabled (the directories remain in the repo). */
+/** All plugin ids the panel knows: enabled + disabled. */
 const knownPlugins = () => [...new Set([...(pluginsView?.enabled ?? []), ...(pluginsView?.disabled ?? [])])];
+
+/** The plugins removed in the draft, whose folders the next publish deletes: never offered as found. */
+const removing = () => pluginsView?.remove ?? [];
 
 function syncPluginsView() {
   pluginsView = JSON.parse(JSON.stringify(pluginsStore.data));
@@ -98,7 +101,7 @@ async function discoverPlugins() {
     }
     const { plugins } = await res.json();
     localStorage.setItem('urd-plugins-found', JSON.stringify(plugins ?? []));
-    pluginsFound = (plugins ?? []).filter((id) => !knownPlugins().includes(id));
+    pluginsFound = (plugins ?? []).filter((id) => !knownPlugins().includes(id) && !removing().includes(id));
     for (const id of pluginsFound) loadPluginInfo(id);
     pluginDiscovery = 'ok';
   } catch {
@@ -111,7 +114,7 @@ function useCachedDiscovery() {
   try {
     const cached = JSON.parse(localStorage.getItem('urd-plugins-found') ?? '[]');
     if (Array.isArray(cached) && cached.length) {
-      pluginsFound = cached.filter((id) => !knownPlugins().includes(id));
+      pluginsFound = cached.filter((id) => !knownPlugins().includes(id) && !removing().includes(id));
       for (const id of pluginsFound) loadPluginInfo(id);
       pluginDiscovery = 'ok';
       return;
@@ -142,18 +145,24 @@ function setPluginEnabled(id, on) {
   d.disabled = (d.disabled ?? []).filter((x) => x !== id);
   if (on) d.enabled.push(id);
   else d.disabled.push(id);
+  // A plugin taken back into the lists keeps its folder.
+  if (d.remove) {
+    d.remove = d.remove.filter((x) => x !== id);
+    if (!d.remove.length) delete d.remove;
+  }
   pluginsStore.save();
   historyState.updateDirty();
   syncPluginsView();
   previewState.reloadPreview();
 }
 
-/** Removes the plugin from both lists; the directory itself in plugins/ remains in the repo. */
+/** Removes the plugin from both lists and marks its folder in plugins/ for the next publish to delete (`remove` in the draft, never written into plugins.json). */
 function removePlugin(id) {
   historyState.pushHistory('plugins');
   const d = pluginsStore.data;
   d.enabled = (d.enabled ?? []).filter((x) => x !== id);
   d.disabled = (d.disabled ?? []).filter((x) => x !== id);
+  d.remove = [...new Set([...(d.remove ?? []), id])];
   pluginsStore.save();
   historyState.updateDirty();
   syncPluginsView();
