@@ -87,14 +87,15 @@ tests/      node --test-tester (foreløpig migreringskontrakten)
 
 ## Versjonering
 
-Urd følger [semantisk versjonering](https://semver.org/lang/no/): `MAJOR.MINOR.PATCH`, alltid tre tall (`0.1.0`, aldri `0.1`).
+Urds versjoner bygger på [semantisk versjonering](https://semver.org/lang/no/): `MAJOR.MINOR.PATCH`, alltid minst tre tall (`0.1.0`, aldri `0.1`), og en utgivelse kan bære flere etter dem, typisk tre til seks i alt. Noe med en bokstav eller et suffiks (`0.7.6b`, `0.7.6-rc.1`) er ingen versjon, og oppdatereren tilbyr aldri en slik tagg.
 
 - **PATCH** (`0.2.0 → 0.2.1`): kun feilrettinger, ingen ny funksjonalitet.
+- **Flere tall** (`0.7.6 → 0.7.6.1 → 0.7.6.1.1`): en utgivelse mellom to patch-nummer. Versjoner sammenlignes tall for tall, og et manglende tall teller som 0, så `0.7.6 < 0.7.6.1 < 0.7.6.1.1 < 0.7.6.2 < 0.7.7`. Ingen tall har ledende null, og det siste etter det tredje er aldri 0 (`0.7.6.0` ville rangert likt med `0.7.6`).
 - **MINOR** (`0.2.1 → 0.3.0`): ny funksjonalitet. Veikartfasene er minorversjoner, og utgivelsene i en fase bærer fasens minor med løpende patch-nummer (0.7.1, 0.7.2 ...), uavhengig av milepælsnumrene i backloggen; fase-slippet ved gaten er det siste av dem (besluttet 15. september 2026).
 - **MAJOR** (`1.4.2 → 2.0.0`): endringer som kan kreve handling av de som oppgraderer. Merk: selv MAJOR knuser aldri en bygget side (løfte 2, migreringskontrakten gjelder alltid).
 - Før `1.0.0` er vi i utviklingsfase: `0.x`-minorer kan inneholde brytende endringer.
 
-Sannhetskilden er `engine`-feltet i `template/urd.json`. Git-taggen (`v0.2.0`) og CHANGELOG-overskriften skal alltid stemme med den. `editor/package.json` og plugin-manifester versjoneres etter samme regler (plugins deklarerer motorkompatibilitet via `requiresEngine`).
+Sannhetskilden er `engine`-feltet i `template/urd.json`. Git-taggen (`v0.2.0`) og CHANGELOG-overskriften skal alltid stemme med den. `editor/package.json` bærer motorens versjon. En plugins egen `version` beholder tre tall (manifestskjemaet), og `requiresEngine` kan nevne en versjon med flere, som motorer fra 0.7.7 leser; en eldre motor hopper over en slik plugin.
 
 ## Utgivelser (automatisert fra 0.6.9)
 
@@ -115,4 +116,4 @@ Forutsetninger (engangsoppsett, gjøres FØR første utgivelse; før dette finne
 
 Plugins deles med topicen `urd-plugin`.
 
-**Prerelease-synk (rc):** for å ende-til-ende-teste oppdatereren før et slipp kan Action-en kjøres manuelt (`workflow_dispatch`) mot en rc-tagg med prerelease-flagget satt; da hoppes CHANGELOG-/package.json-sjekkene over. Bruk et eget treparts versjonsnummer for rc-en (semver-parseren i `satisfiesEngine` er streng treparts, så suffikser som `-rc.1` kan ikke stå i engine-feltet).
+**Prerelease-synk (rc):** for å ende-til-ende-teste oppdatereren før et slipp kan Action-en kjøres manuelt (`workflow_dispatch`) mot en rc-tagg med prerelease-flagget satt; da hoppes CHANGELOG-/package.json-sjekkene over. Bruk et eget versjonsnummer for rc-en (engine-feltet tar bare tall, så suffikser som `-rc.1` kan ikke stå der).

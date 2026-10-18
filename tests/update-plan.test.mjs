@@ -5,18 +5,45 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  planUpdate, highestVersionTag, isAtomPath, chunkEntries, blobBatch, BLOB_BATCH, BLOB_ROOM, travelsAsBlob,
+  planUpdate, highestVersionTag, VERSION_TAG_RE, isAtomPath, chunkEntries, blobBatch, BLOB_BATCH, BLOB_ROOM, travelsAsBlob,
 } from '../template/functions/_lib/update-plan.js';
+import { engineImport } from './_engine.mjs';
+
+const { parseEngineVersion } = await engineImport('plugins.js');
 
 const change = (plan, path) => plan.changes.find((c) => c.path === path);
 
-test('highestVersionTag: the highest three-part wins, other names are ignored', () => {
+test('highestVersionTag: the highest version wins, other names are ignored', () => {
   assert.equal(highestVersionTag(['v0.6.8', 'v0.6.9', 'v0.6.10']), 'v0.6.10');
   assert.equal(highestVersionTag(['v0.9.1', 'v1.0.0', 'v0.10.2']), 'v1.0.0');
   assert.equal(highestVersionTag(['v0.6.9-rc.1', 'utkast', 'v0.6']), null);
   assert.equal(highestVersionTag(['v0.6.9-rc.1', 'v0.6.8']), 'v0.6.8');
   assert.equal(highestVersionTag([]), null);
   assert.equal(highestVersionTag(undefined), null);
+});
+
+test('highestVersionTag: numbers after the third rank after their three and before the next patch', () => {
+  assert.equal(highestVersionTag(['v0.7.6', 'v0.7.6.2', 'v0.7.6.1']), 'v0.7.6.2');
+  assert.equal(highestVersionTag(['v0.7.6.2', 'v0.7.7', 'v0.7.6.10']), 'v0.7.7');
+  assert.equal(highestVersionTag(['v0.7.6.9', 'v0.7.6.10']), 'v0.7.6.10');
+  assert.equal(highestVersionTag(['v0.7.6.2', 'v0.7.6.2.1', 'v0.7.6.1.5.3']), 'v0.7.6.2.1');
+  assert.equal(highestVersionTag(['v0.7.6.1', 'v0.7.6.0.4']), 'v0.7.6.1');
+  assert.equal(highestVersionTag(['v0.7.6', 'v0.7.6.0.4']), 'v0.7.6.0.4');
+  assert.equal(highestVersionTag(['v0.7.6.2-rc.1', 'v0.7.6.2.1-rc.1']), null);
+  for (const good of ['v0.7.6', 'v0.7.6.2', 'v0.7.6.2.1', 'v0.7.6.0.2', 'v1.0.0.1.2.3']) {
+    assert.ok(VERSION_TAG_RE.test(good), good);
+  }
+  for (const bad of ['v0.7.6b', '0.7.6.2', 'v0.7', 'v0.7.7.0', 'v0.7.7.1.0', 'v0.7.7.01', 'v0.07.7', 'v0.7.6.2.']) {
+    assert.ok(!VERSION_TAG_RE.test(bad), bad);
+  }
+  assert.equal(highestVersionTag(['v0.7.7.0', 'v0.7.7']), 'v0.7.7');
+});
+
+test('VERSION_TAG_RE and the engine\'s parseEngineVersion accept the same versions', () => {
+  const probes = ['0.7.7', '0.7.7.1', '0.7.7.0.1', '1.0.0.1.2.3', '10.20.30.40', '0.7', '0.7.7.0', '0.7.7.1.0', '0.7.7.01', '0.07.7', '00.7.7', '0.7.6b', '0.7.6-rc.1', '0.7.6.', '.0.7.6', '0..7.6', ''];
+  for (const v of probes) {
+    assert.equal(VERSION_TAG_RE.test(`v${v}`), parseEngineVersion(v) !== null, v);
+  }
 });
 
 test('isAtomPath: the engine group is locked, functions and loose root files are optional', () => {

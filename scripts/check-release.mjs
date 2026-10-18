@@ -11,13 +11,14 @@
  */
 import { readFileSync, statSync } from 'node:fs';
 import process from 'node:process';
+import { VERSION_TAG_RE } from '../template/functions/_lib/update-plan.js';
 
 const [tag, flag] = process.argv.slice(2);
 const prerelease = flag === '--prerelease';
 const errors = [];
 
-if (!tag || !/^v\d+\.\d+\.\d+$/.test(tag)) {
-  console.error(`FAIL  the tag must have the form vX.Y.Z (got: ${tag ?? '(missing)'})`);
+if (!tag || !VERSION_TAG_RE.test(tag)) {
+  console.error(`FAIL  the tag must be v and three numbers or more, none with a leading zero and the last after the third not 0 (got: ${tag ?? '(missing)'})`);
   process.exit(1);
 }
 

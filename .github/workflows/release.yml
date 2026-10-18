@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to sync (vX.Y.Z, must exist in the repo)'
+        description: 'Tag to sync (v and three numbers or more, e.g. v0.7.7.1; must exist in the repo)'
         required: true
         type: string
       prerelease:

@@ -115,7 +115,7 @@ Hvert design har egne farger, og noen har egne innstillinger, i blokkens meny.
 | Hele dagen, eller flere dager | «hele dagen», eller «til 6. okt» |
 | Sted | stedet, som lenke til et kart |
 | Beskrivelse | beskrivelsen, med adressene som lenker |
-| Et arrangement som gjentas | hver forekomst, merket som gjentakende |
+| Et arrangement som gjentas | hver forekomst, merket som gjentakende med «Merk gjentatte arrangementer» på |
 | Et avlyst arrangement | strøket tittel og «Avlyst», med mindre du skjuler dem |
 | Et bilde lagt ved som adresse, eller en lenke til et bilde i beskrivelsen | arrangementets bilde |
 | Kategorier | arrangementets kategori |
@@ -195,7 +195,7 @@ Verktøyene virker sammen: et søk innenfor én kalender. De tegnes i designets 
 
 **Vis visningsvelger** lar den besøkende bytte mellom det som kommer, uken og måneden. Under bryteren velger **Ukedesign** og **Månedsdesign** hvilket design som tegnes når en besøkende trykker på knappen: ukestripen eller ett av ukedesignene, den vanlige måneden eller ett av månedsdesignene. Uten et valg passer måneden til kalenderens utseende (ApeironLF-måneden på ApeironLF-designene).
 
-**Vis beskrivelsen** vises på designene som har plass til den i radene sine (Programhefte, Delt kort, Fast arrangement og de vanlige kortene): **I radene** skriver beskrivelsens første linje under arrangementet, **Bare i kortet** overlater den til kortet som åpnes ved et trykk, og som alltid har hele beskrivelsen.
+**Vis beskrivelsen** vises på designene som har plass til den i radene sine (Programhefte, Delt kort, Fast arrangement og de vanlige kortene): **I radene** skriver beskrivelsens første linje under arrangementet, **Bare i pop-upen** overlater den til pop-upen som åpnes ved et trykk, og som alltid har hele beskrivelsen.
 
 ## Tider
 
@@ -207,11 +207,13 @@ Verktøyene virker sammen: et søk innenfor én kalender. De tegnes i designets 
 
 Et trykk på et arrangement åpner kortet over kalenderen: dato og tid, sted, bilde, hele beskrivelsen, og knappene Bli med og Meld deg på. Siden kan rulles som vanlig, og Escape, lukkeknappen eller et trykk utenfor kortet lukker det.
 
-**Legg i kalender** i kortet gir den besøkende arrangementet i sin egen kalender: til Google Kalender, eller som fil for Apple Kalender, Outlook og de andre. Den tilbyr også hele kalenderen som abonnement. Fjern avkryssingen «Vis «Legg i kalender»» under Innhold for å utelate det fra kortene.
+**Legg i kalender** i kortet gir den besøkende arrangementet i sin egen kalender: til Google Kalender, eller som fil for Apple Kalender, Outlook og de andre. Med «Vis abonner-knapp» på tilbyr den også hele kalenderen som abonnement. Fjern avkryssingen «Vis «Legg i kalender»» under Innhold for å utelate det fra kortene.
 
 I editoren velger første trykk på en kalender den, og et trykk på et av arrangementene åpner kortet. Ordene i det («Når», «Hvor», «Legg i kalender») endres da ved å klikke på dem, som i selve kalenderen.
 
 **Vis abonner-knapp** setter en **Abonner**-knapp under kalenderen, så besøkende kan følge hele kalenderen i sin egen app.
+
+**Merk gjentatte arrangementer** skriver «Gjentas» på et arrangement som gjentas, i kalenderen og i pop-upen.
 
 ## Søkemotorer
 

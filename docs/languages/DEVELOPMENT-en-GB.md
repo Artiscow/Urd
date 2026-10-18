@@ -89,14 +89,15 @@ tests/      node --test tests (for now the migration contract)
 
 ## Versioning
 
-Urd follows [semantic versioning](https://semver.org/): `MAJOR.MINOR.PATCH`, always three numbers (`0.1.0`, never `0.1`).
+Urd's versions build on [semantic versioning](https://semver.org/): `MAJOR.MINOR.PATCH`, always at least three numbers (`0.1.0`, never `0.1`), and a release may carry more after them, typically three to six in all. Anything with a letter or a suffix (`0.7.6b`, `0.7.6-rc.1`) is not a version, and the updater never offers such a tag.
 
 - **PATCH** (`0.2.0 → 0.2.1`): bug fixes only, no new functionality.
+- **More numbers** (`0.7.6 → 0.7.6.1 → 0.7.6.1.1`): a release between two patch numbers. Versions are compared number by number, a missing number counting as 0, so `0.7.6 < 0.7.6.1 < 0.7.6.1.1 < 0.7.6.2 < 0.7.7`. No number has a leading zero, and the last one after the third is never 0 (`0.7.6.0` would rank equal to `0.7.6`).
 - **MINOR** (`0.2.1 → 0.3.0`): new functionality. The roadmap phases are minor versions, and the releases in a phase carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is the last of them (decided 15 September 2026).
 - **MAJOR** (`1.4.2 → 2.0.0`): changes that may require action from those who upgrade. Note: even MAJOR never breaks a built site (promise 2, the migration contract always applies).
 - Before `1.0.0` we are in the development phase: `0.x` minors may contain breaking changes.
 
-The source of truth is the `engine` field in `template/urd.json`. The git tag (`v0.2.0`) and the CHANGELOG heading shall always agree with it. `editor/package.json` and plugin manifests are versioned by the same rules (plugins declare engine compatibility via `requiresEngine`).
+The source of truth is the `engine` field in `template/urd.json`. The git tag (`v0.2.0`) and the CHANGELOG heading shall always agree with it. `editor/package.json` carries the engine's version. A plugin's own `version` keeps three numbers (the manifest schema), and its `requiresEngine` may name a version with more, which engines from 0.7.7 read; an older engine skips such a plugin.
 
 ## Releases (automated from 0.6.9)
 
@@ -117,4 +118,4 @@ Prerequisites (a one-time setup, done BEFORE the first release; until then neith
 
 Plugins are shared with the topic `urd-plugin`.
 
-**Prerelease sync (rc):** to test the updater end to end before a release, the Action can be run by hand (`workflow_dispatch`) against an rc tag with the prerelease flag set; the CHANGELOG and package.json checks are then skipped. Use a three-part version number of its own for the rc (the semver parser in `satisfiesEngine` is strictly three-part, so suffixes like `-rc.1` cannot stand in the engine field).
+**Prerelease sync (rc):** to test the updater end to end before a release, the Action can be run by hand (`workflow_dispatch`) against an rc tag with the prerelease flag set; the CHANGELOG and package.json checks are then skipped. Use a version number of its own for the rc (the engine field takes numbers only, so suffixes like `-rc.1` cannot stand there).

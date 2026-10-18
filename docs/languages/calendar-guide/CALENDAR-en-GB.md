@@ -115,7 +115,7 @@ Each design has its own colours, and some have settings of their own, in the blo
 | All day, or several days | «all day», or «until 6 Oct» |
 | Place | the place, as a link to a map |
 | Description | the description, with its addresses as links |
-| A repeating event | every occurrence, marked as repeating |
+| A repeating event | every occurrence, marked as repeating with «Mark repeating events» on |
 | A cancelled event | a struck title and «Cancelled», unless you hide them |
 | A picture attached by address, or a link to a picture in the description | the event's picture |
 | Categories | the event's category |
@@ -195,7 +195,7 @@ The tools work together: a search inside one calendar. They are drawn in the des
 
 **Show view switcher** lets the visitor change between what is coming, the week and the month. Under the switch, **Week design** and **Month design** choose which design is drawn when a visitor presses the button: the week strip or one of the week designs, the plain month or one of the month designs. Without a choice, the month matches the calendar's look (the ApeironLF month on the ApeironLF designs).
 
-**Show the description** appears on the designs with room for it in their rows (Programme booklet, Split card, Regular event, and the plain cards): **In the rows** writes the first line of the description under the event, **Only in the card** leaves it to the card that opens at a press, which always holds the whole description.
+**Show the description** appears on the designs with room for it in their rows (Programme booklet, Split card, Regular event, and the plain cards): **In the rows** writes the first line of the description under the event, **Only in the pop-up** leaves it to the pop-up that opens at a press, which always holds the whole description.
 
 ## Times
 
@@ -207,11 +207,13 @@ The tools work together: a search inside one calendar. They are drawn in the des
 
 A press on an event opens its card over the calendar: the date and time, the place, the picture, the whole description, and the Join and Sign up buttons. The page can be scrolled as usual, and Escape, the close button or a press outside the card closes it.
 
-**Add to calendar** in the card gives the visitor the event in their own calendar: to Google Calendar, or as a file for Apple Calendar, Outlook and the others. It also offers the whole calendar as a subscription. Untick «Show Add to calendar» under Content to leave it out of the cards.
+**Add to calendar** in the card gives the visitor the event in their own calendar: to Google Calendar, or as a file for Apple Calendar, Outlook and the others. With «Show subscribe button» on it also offers the whole calendar as a subscription. Untick «Show Add to calendar» under Content to leave it out of the cards.
 
 In the editor, the first press on a calendar selects it, and a press on one of its events opens the card. Its words («When», «Where», «Add to calendar») are then changed by clicking them, as in the calendar itself.
 
 **Show subscribe button** puts a **Subscribe** button under the calendar, so visitors can follow the whole calendar in their own app.
+
+**Mark repeating events** writes «Repeats» on an event that repeats, in the calendar and in its pop-up.
 
 ## Search engines
 

@@ -329,7 +329,7 @@ function fitReach(wrap, reach) {
   const sectionEl = el?.closest('.urd-section');
   const canvasEl = el?.closest('.urd-canvas');
   if (!sectionEl || !canvasEl) return null;
-  const zoom = wrap.currentCSSZoom || 1;
+  const zoom = wrap.currentCSSZoom ?? (parseFloat(wrap.closest('.urd-cal')?.style.zoom) || 1);
   const box = bandReach(reach, { sectionW: sectionEl.offsetWidth, canvasW: canvasEl.clientWidth, canvasLeft: canvasEl.offsetLeft, blockLeft: el.offsetLeft });
   wrap.style.width = `${box.width / zoom}px`;
   wrap.style.marginLeft = `${box.offset / zoom}px`;

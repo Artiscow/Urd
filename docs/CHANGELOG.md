@@ -3,7 +3,8 @@
 Alle vesentlige endringer i Urd dokumenteres i denne filen.
 
 Formatet følger [Keep a Changelog](https://keepachangelog.com/no/1.1.0/),
-og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
+og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/), med
+flere tall etter de tre for en utgivelse mellom to patch-nummer (se UTVIKLING.md).
 
 ## [Ulansert]
 
@@ -27,6 +28,30 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+## [0.7.7] - 2026-10-18
+
+### 0.7.0.55-56p - Release 0.7.7: the bug list, and versions with more than three numbers - 18 October 2026
+
+- RELEASE: the engine bumped 0.7.6 to 0.7.7 after the ritual (urd.json, git mv of the engine folder, the nine assets/urd/ shells, the seven HTML shells with byte-identical slug copies, editor/package.json and the lockfile, the bundle rebuilt). It carries the updater that reads more than three numbers (0.7.0.56), so a site on 0.7.7 with its functions/ updated is offered a later release such as 0.7.7.1.
+- Review finding: the reset under Buttons and filter cleared a stored `showOpen: false`, which the panel has no switch to set again. The reset leaves it (Calendar.svelte).
+- Review finding: the published plugins index was kept as the draft's baseline with its `remove` list, so the next publish would send the deletions again. The list is left out of the baseline (publish.svelte.js).
+- Review finding: the update's conflict check compared single paths, so a file changed upstream under a plugin folder the publish deletes gave no warning. A folder deletion covers every path under it (updater.svelte.js).
+- Review finding: a plugin id the guard refuses stopped the whole publish. Such an id is left out of the deletions (publish.svelte.js).
+- Review finding: a browser without `currentCSSZoom` laid out the calendar band's width without the calendar's zoom. The zoom is then read from the calendar's own style (calendar-next.js).
+- Review finding: the calendar guide (en-GB and nb) marked every repeating event, named «Only in the card», and offered the pop-up's subscription without «Show subscribe button». It describes «Mark repeating events», «Only in the pop-up» and the setting.
+- Review finding: no test covered a folder deletion in `commitFiles`. tests/commit-files.test.mjs checks that deleting `plugins/a` removes its files and leaves `plugins/ab/` and `plugins/a.json`.
+- Review finding: a last number 0 or one with a leading zero (v0.7.7.0, v0.7.7.01) passed and tied with another version, so a site could be told it was up to date beside a newer release. Such versions are refused in update-plan.js, plugins.js and check-release.mjs, with tests.
+- Review finding: an engine before 0.7.7 skips a plugin whose `requiresEngine` names a version with more than three numbers. DEVELOPMENT and the plugin README say such a bound is read from 0.7.7.
+- Review finding: update.js's header and release.yml's tag input named only vX.Y.Z. They name the longer form too.
+- Review finding: the version pattern stands twice, in update-plan.js for the functions and in plugins.js for the engine, with nothing keeping them equal. A test runs one list of versions through both.
+- Review finding: the review fixes had no items in TESTRUNDER, and the header of tests/commit-files.test.mjs broke mid-sentence. Three items are added to the release batch, and the header is one sentence on one line.
+- AGENTS.md carried dates, earlier events and a list of amended ADRs beside its rules. They are removed, so the file holds only the rules in force.
+
+### 0.7.0.56 - Versions with more than three numbers - 18 October 2026
+
+- A release could not be called 0.7.6.2, since the updater, check-release.mjs and the plugins' engine check read only three numbers, and a site would never be offered such a tag. All three read three numbers or more, compared number by number, so 0.7.6 < 0.7.6.1 < 0.7.6.1.1 < 0.7.7 (`VERSION_TAG_RE` and `highestVersionTag` in update-plan.js, which check-release.mjs imports, and `parseEngineVersion` in plugins.js); a plugin's own version keeps three.
+- The version rule in DEVELOPMENT (en-GB and nb), AGENTS.md and the CHANGELOG introduction name the longer versions; a letter or a suffix (`0.7.6b`, `-rc.1`) is still no version.
+
 ### 0.7.0.55 - The bug list taken: the One line class, the update toast, plugins that can be removed, the calendar band's presses and width, the pop-up's name, and the calendar settings - 18 October 2026
 
 - `.urd-cal-line` was both the One line design's grid and the mark on every design's content lines, so the grid stood on the content lines of every design, and emptying a word in One line could mark its whole list as gone. The One line list has a class of its own (`urd-cal-oneline`); the 41 designs drawn before and after kept their heights.
@@ -35,7 +60,7 @@ entydig: alle commit-innslag over forrige p-innslag.
 - Calendar band: only the left part opened the pop-up, since the rolling band's second run was a clone without its presses. The second run is built like the first, and is kept from assistive technology and the tab order.
 - Calendar band: «Width» (`options.reach`) takes the ribbon block's three widths, the block's own, the content width and the whole page (`bandReach`), written in the calendar's own pixels under its zoom.
 - «Show subscribe button» off left the subscription to the whole calendar in the pop-up under «Add to calendar». It follows the setting there too.
-- The event's card is called «Pop-up» in the editor (tr «Açılır pencere»), in its row, the picker and the tips; the description of «Departure board, screen» had its English and Norwegian swapped and is corrected.
+- The event's card is called «Pop-up» in the editor (tr «Açılır pencere»), in its row, the picker and the tips.
 - «Show open to everyone» is gone from the panel; a calendar that turned it off keeps it off.
 - Index cards start with four events (`limit` in the design list), also when chosen while the calendar keeps the count it started with.
 - A site calendar without a name widened its row to the right with its address. The head cuts it with «…», and the list's one column never widens.

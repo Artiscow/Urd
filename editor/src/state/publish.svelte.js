@@ -336,7 +336,8 @@ async function publish() {
   if (pluginsState.pluginsStore?.hasDraft()) {
     const { remove = [], ...index } = $state.snapshot(pluginsState.pluginsStore.data);
     files.push({ path: 'plugins/plugins.json', content: JSON.stringify(index, null, 2) + '\n', encoding: 'utf-8' });
-    for (const id of remove) files.push({ path: `plugins/${id}`, delete: true });
+    // A folder name the guard would refuse is left out, so it never stops the rest of the publish.
+    for (const id of remove) if (/^[a-z0-9][a-z0-9-]*$/.test(id)) files.push({ path: `plugins/${id}`, delete: true });
     draftKeys.push('urd-draft-plugins');
     publishedTitles.push(ta('publish.part.plugins'));
   }
@@ -422,7 +423,8 @@ async function publish() {
     siteState.siteStore = createDraftStore('urd-draft-site', () => siteState.site, shellState.draftSaveError);
     siteState.linkSiteDraft();
     if (pluginsState.pluginsStore) {
-      const publishedPlugins = JSON.parse(JSON.stringify(pluginsState.pluginsStore.data));
+      // The published index: the removals are done, and are not carried into the next draft.
+      const { remove: _done, ...publishedPlugins } = JSON.parse(JSON.stringify(pluginsState.pluginsStore.data));
       pluginsState.pluginsStore = createDraftStore('urd-draft-plugins', () => publishedPlugins, shellState.draftSaveError);
       pluginsState.syncPluginsView();
     }

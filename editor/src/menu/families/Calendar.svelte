@@ -158,7 +158,7 @@
       view: ta(CAL_VIEW_KEYS[calView(p)]),
       viewReset: viewChanged ? reset('cal-view', { switcher: undefined, switcherViews: undefined, toolsSize: undefined, description: undefined, showMore: undefined, limit: limit0, nextCount: count0, laterCount: count0, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
-      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showSearch: undefined, showEarlier: undefined, showRecurring: undefined, showOpen: undefined, showAdd: undefined, programHref: undefined }) : null,
+      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showSearch: undefined, showEarlier: undefined, showRecurring: undefined, showAdd: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
       emptyReset: emptyChanged ? reset('cal-empty', { emptyText: undefined, emptyIcon: undefined }) : null,
       notice: p.notice?.show === true ? ta('common.on') : ta('common.off'),

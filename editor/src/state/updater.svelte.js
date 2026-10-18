@@ -56,11 +56,13 @@ async function confirmNoConflict(files) {
   if (head === baseSha) return { ok: true, head };
 
   const mine = new Set(files.map((f) => f.path));
+  // A deleted folder (a removed plugin's) overlaps every file someone else changed under it.
+  const folders = files.filter((f) => f.delete).map((f) => `${f.path}/`);
   // Truncated diff (very large changes): we do NOT know whether there is
   // overlap, so the editor must make the call.
   const overlap = data.truncated
     ? [ta('confirm.conflict.truncated')]
-    : (data.changedFiles ?? []).filter((p) => mine.has(p));
+    : (data.changedFiles ?? []).filter((p) => mine.has(p) || folders.some((folder) => p.startsWith(folder)));
   if (overlap.length === 0) return { ok: true, head };
 
   const ok = await shellState.askConfirm({

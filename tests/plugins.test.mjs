@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { parseSemver, satisfiesEngine, validateManifest, createStagedUrd, checkProvides } = await engineImport('plugins.js');
+const { parseSemver, parseEngineVersion, satisfiesEngine, validateManifest, createStagedUrd, checkProvides } = await engineImport('plugins.js');
 const { createRegistry } = await engineImport('registry.js');
 
 test('parseSemver: valid and invalid forms', () => {
@@ -31,6 +31,34 @@ test('satisfiesEngine: ranges, caret, tilde and exact', () => {
   assert.ok(!satisfiesEngine('0.6.1', '0.6.0'));
   assert.ok(satisfiesEngine('0.6.0', '>0.5.9'));
   assert.ok(satisfiesEngine('0.6.0', '<=0.6.0'));
+});
+
+test('parseEngineVersion: three numbers or more, the last after the third not 0', () => {
+  assert.deepEqual(parseEngineVersion('0.7.6'), [0, 7, 6]);
+  assert.deepEqual(parseEngineVersion('0.7.6.2'), [0, 7, 6, 2]);
+  assert.deepEqual(parseEngineVersion('0.7.6.0.2.1'), [0, 7, 6, 0, 2, 1]);
+  for (const bad of ['0.7', '0.7.6.0', '0.7.6.2.0', '0.7.6.01', '0.07.6', 'v0.7.6', '0.7.6b', '0.7.6-rc.1', '0.7.6.', '']) {
+    assert.equal(parseEngineVersion(bad), null, bad);
+  }
+  assert.equal(parseSemver('0.7.6.2'), null, 'a plugin\'s own version keeps three numbers');
+});
+
+test('satisfiesEngine: an engine version with more than three numbers', () => {
+  assert.ok(satisfiesEngine('0.7.6.2', '>=0.6.8 <1.0.0'));
+  assert.ok(satisfiesEngine('0.7.6.2', '>0.7.6'));
+  assert.ok(satisfiesEngine('0.7.6.2', '<0.7.7'));
+  assert.ok(!satisfiesEngine('0.7.6.2', '<=0.7.6'));
+  assert.ok(satisfiesEngine('0.7.6.2', '^0.7.6'));
+  assert.ok(satisfiesEngine('0.7.6.2', '~0.7.6'));
+  assert.ok(!satisfiesEngine('0.7.6.2', '0.7.6'), 'exact means exact');
+  assert.ok(satisfiesEngine('0.7.6.2', '>=0.7.6.2'));
+  assert.ok(!satisfiesEngine('0.7.6.1', '>=0.7.6.2'));
+  assert.ok(!satisfiesEngine('0.7.6', '>=0.7.6.1'));
+  assert.ok(satisfiesEngine('0.7.7', '>=0.7.6.2'));
+  assert.equal(satisfiesEngine('0.7.7', '>=0.7.7.0'), false, 'a bound ending on 0 after the third is unintelligible');
+  assert.ok(satisfiesEngine('0.7.6.2.1', '>0.7.6.2 <0.7.6.3'));
+  assert.ok(!satisfiesEngine('0.7.6.2.1', '0.7.6.2'));
+  assert.ok(satisfiesEngine('0.7.6.2.1', '~0.7.6.2'));
 });
 
 test('satisfiesEngine: unintelligible requirements reject (never load blindly)', () => {

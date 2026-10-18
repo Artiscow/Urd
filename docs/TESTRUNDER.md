@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.55-56p): release 0.7.7
+
+- [ ] After the tag v0.7.7 and the GitHub release: the release Action runs green by itself, and the template repo gets «Urd v0.7.7» with the tag
+- [ ] urd-web on v0.7.6 is offered v0.7.7 and updates
+- [ ] The next release with more than three numbers (e.g. v0.7.7.1): its release Action runs green, and a site on v0.7.7 is offered it in Updates
+- [ ] The Swedish language pack still loads after the update (Swedish in the site's language list)
+- [ ] A calendar with «Open to everyone» off: the reset under Buttons and filter leaves it off
+- [ ] Remove a plugin and publish, then change another plugin and publish again: the second publish goes through without deleting anything again
+- [ ] Remove a plugin in the editor, then change a file in its folder on GitHub before publishing: Publish asks about the conflict and names that file
+
 ### Test batch (0.7.0.55): the bug list
 
 - [ ] One line: emptying one of its words leaves the rest of the list in place; in Plain, Tickets and the ApeironLF designs the announcement and the empty state look as before
