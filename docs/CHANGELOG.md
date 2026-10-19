@@ -28,6 +28,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.57-59p - The comparison round, the shop decided for v1.1, and the backlog reviewed against the v0.7 gate - 20 October 2026
+
+- A docs-only push: the independent review was replaced by the mechanical checks AGENTS.md names (em dash, checkbox syntax, link targets and anchors, version numbers, nothing removed from TESTRUNDER), and they found nothing to fix.
+
 ### 0.7.0.59 - The backlog reviewed against the v0.7 gate, six items moved to v0.8, and the buyer's confirmation - 20 October 2026
 
 - Milestones 0.7.17, 0.7.18, 0.7.21 and 0.7.26, five stages of 0.7.3 and one 0.7.10 item were delivered but not ticked. They are ticked with their commits, and 0.7.17.4's open checks, a test item kept in BACKLOG, became a TESTRUNDER batch.
