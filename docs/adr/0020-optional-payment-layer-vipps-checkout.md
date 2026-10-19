@@ -1,7 +1,7 @@
 # ADR-0020: Optional payment layer via Vipps Checkout (hosted redirect)
 
 Date: 25 August 2026
-Status: Accepted
+Status: Accepted; decision 6 amended 19 October 2026 (a members' code of ADR-0027 may make the member price chargeable), earlier text in [amended/](amended/0020-optional-payment-layer-vipps-checkout-until-2026-10-19.md)
 
 ## Context
 
@@ -16,7 +16,7 @@ The payment layer is built on **Vipps Checkout via a dedicated Pages Function wi
 3. The function creates a Checkout session at Vipps (checkout/v3) and responds with the session's URL; the client redirects there. The payment happens at Vipps, never on the site.
 4. On return the checkout block shows a receipt and empties the cart. The callback endpoint acknowledges and stores nothing - the orders live in the Vipps portal (the order lines are sent along in the session), the site is static and has no order database.
 5. Configuration is Cloudflare secrets, never repo data. Without them the function reports that Vipps is not configured, the button shows a calm unavailable text, and the form checkout works unchanged.
-6. The member price is a displayed second price on a trust basis (login is outside the core, BACKLOG); the payment layer always charges the regular price.
+6. The member price is a displayed second price on a trust basis (login is outside the core, BACKLOG); the payment layer charges the regular price, unless the buyer enters a members' discount code of [ADR-0027](0027-a-shop-without-a-database.md), which makes the member price chargeable.
 
 ## Rationale
 

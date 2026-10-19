@@ -28,6 +28,19 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.57 - The function catalogue deepened, a shop without a database decided for v1.1, and the backlog and roadmap completed - 19 October 2026
+
+- The catalogue covered some builders only in part. Those whose source lists now carry 19 October 2026 were read function by function from their help centres, plan tables and release notes and matched to the rows: 53 site rows, 8 editor rows and 3 elements were added, and builder codes where rows lacked them (FEATURES.md, ELEMENTS.md).
+- Urd's status on every row the pass touched, and on the rows changed by deliveries since 11 October, was recounted from engine 0.7.7; the axis lock, the menu dragged by its head and «Add to calendar» per event (delivered 0.7.19.11) had stood as missing. Part 1's texts and counts follow (39 section presets, 41 calendar designs).
+- Recommendations C115 to C139 and E41 to E42 were added and sorted into the backlog; C54, C91 and E31 moved to Closed as delivered.
+- Three rows said a Cloudflare Access recipe «is documented», which it is not. They point to the recipe in the v0.9 documentation round, which now also covers a members' page and its content file.
+- ADR-0027 «A shop without a database» decides the shop of a new phase v1.1 after v1.0 (variants, published stock with reserve-then-capture, shipping tables, codes as an HMAC, MVA as a seller switch, notices without storage), from the survey «What a shop needs» in SURVEYS.md. ADR-0020 decision 6 is amended so a members' code can make the member price chargeable (earlier text in amended/), and AGENTS.md lists the new ADR.
+- BACKLOG has the v1.1 item with SHOP-1 to SHOP-9 and the weighed paid registration; the shop extensions after v1.0 are narrowed, and the URGENT item names what the shop needs from the payment layer and a setup-guide section.
+- The editor reads and writes `content/collections.json`, while ADR-0021, SCHEMA.md and the Vipps function use `content/samlinger.json`, so a product collection made in the editor is unknown to the payment layer and an older site's Collections panel is empty after the update; the template also ships a stray test collection «f». Both are in Bugs.
+- The checkout's «Send bestilling» does not state the obligation to pay that angrerettloven § 16 asks for, and no summary with the shipping cost stands above the button; 0.7.24.6 takes it.
+- About fifteen backlog items gained the round's findings, each with a Done when line; the canvas functions item dropped what 0.7.20.8 and 0.7.26.3 delivered, ER-F dropped «add to calendar», and two Suggestions items moved into the items that take them.
+- ROADMAP-en-GB.md and VEIKART.md were dated 11 October and listed 0.7.20 as open and the releases as 0.7.1 to 0.7.4. They now read 19 October, 0.7.20 delivered, 0.7.21 and 0.7.26 with every stage delivered, and 0.7.1 to 0.7.7, with the § 16 fix in v0.7 and the new phase v1.1 with its gate.
+
 ## [0.7.7] - 2026-10-18
 
 ### 0.7.0.55-56p - Release 0.7.7: the bug list, and versions with more than three numbers - 18 October 2026

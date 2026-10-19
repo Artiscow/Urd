@@ -68,14 +68,14 @@ Fasen ble styrt som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokst
 - **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Ekte betalings-kasse er flyttet inn i fasen som valgfritt lag oppå skjema-kassen (9. august 2026; Vipps Checkout, [ADR-0020](adr/0020-optional-payment-layer-vipps-checkout.md)); kjernen forblir gateway-fri. Vipps MobilePay Checkout avvikles 30. april 2027 (Kustom har overtatt den), så det valgfrie laget flyttes til ePayment-API-et eller til Kustom Checkout før det.
 - **SEO-grunnpakke** (fra funksjonskartet 23. juli 2026, se [FEATURES.md](comparison/FEATURES.md)): per-side meta/og-felter, sitemap, robots, 404, canonical. Pluss RSS for samlinger, flere skjema-felttyper, video-bakgrunnslag og CSV/tabell.
 - **Arkitektur-avklaringene**: fast innholdsbredde ([ADR-0018](adr/0018-bound-content-width.md)), den synkede mobilmodellen ([ADR-0019](adr/0019-synced-mobile-model.md)), klientside-navigasjon (målt, og lukket uten ruter), innholdsdytting på desktop-lerretet ([ADR-0024](adr/0024-content-push-on-the-desktop-canvas.md)) og størrelsesmodellen for hver blokk ([ADR-0025](adr/0025-the-sizing-model.md)).
-- **Intuitivitets-gjennomgangen**: er alt intuitivt, er noe rotete, er noe lett å misforstå? (Funksjonssammenligningen mot andre byggere ble gjort 23. juli 2026 og fornyet 11. oktober 2026, [FEATURES.md](comparison/FEATURES.md).)
-- **Personvernstandarder og videresendinger** (fra sammenligningen 11. oktober 2026): innbygginger lastes først ved et klikk, en personvernside lages fra nettstedsinnstillingene, samtykke spørres om bare når besøksmåling eller innbygginger trenger det, og 301-videresendinger lages ved publisering ([ADR-0015](adr/0015-redirects-ownership.md)).
+- **Intuitivitets-gjennomgangen**: er alt intuitivt, er noe rotete, er noe lett å misforstå? (Funksjonssammenligningen mot andre byggere ble gjort 23. juli 2026, fornyet 11. oktober 2026 og utdypet funksjon for funksjon 19. oktober 2026, [FEATURES.md](comparison/FEATURES.md).)
+- **Personvernstandarder og videresendinger** (fra sammenligningen 11. oktober 2026): innbygginger lastes først ved et klikk, en personvernside lages fra nettstedsinnstillingene, samtykke spørres om bare når besøksmåling eller innbygginger trenger det, 301-videresendinger lages ved publisering ([ADR-0015](adr/0015-redirects-ownership.md)), og bestillingsknappen og oppsummeringen over den følger forbrukerretten (angrerettloven § 16; funnet 19. oktober 2026).
 - **Egne utseender fra designverktøy** (besluttet 14. oktober 2026): et utseende laget i Figma, Penpot, Illustrator eller SVGator blir ansiktet, den avgrensede stilen eller tokenene til et Urd-element, med pekeren som CSS-egenskaper for design som følger den; kode kommer aldri inn denne veien.
 
-Fasen styres som milepælene 0.7.0-0.7.26 i [BACKLOG.md](BACKLOG.md), delt opp 9. august 2026 (arkitekturavklaringene først, deretter blokker, butikk og synlighet, finpuss mot slutten) og utvidet underveis. Utgivelsene bærer fasens minor med løpende patch-nummer (0.7.1 til 0.7.4 så langt). Per 11. oktober 2026:
+Fasen styres som milepælene 0.7.0-0.7.26 i [BACKLOG.md](BACKLOG.md), delt opp 9. august 2026 (arkitekturavklaringene først, deretter blokker, butikk og synlighet, finpuss mot slutten) og utvidet underveis. Utgivelsene bærer fasens minor med løpende patch-nummer (0.7.1 til 0.7.7 så langt). Per 19. oktober 2026:
 
-- **Levert:** 0.7.1 oppryddingsrunden, 0.7.2 fast innholdsbredde, 0.7.4 blokker og skjemafelter, 0.7.5 butikken, 0.7.6 SEO og synlighet, 0.7.7 video-bakgrunn og mediegrenser, 0.7.8 klientside-navigasjon, 0.7.12 forankringsrunden, 0.7.14 engelsk-renskingen, 0.7.15 menylinjens størrelse.
-- **Åpne:** 0.7.3 mobil-revurderingen, 0.7.9 design-strekket fra 0.6.6, 0.7.10 intuitivitets-gjennomgangen og editor-finpuss, 0.7.11 tilgjengelighetsrunden, 0.7.13 elementgjennomgangen, 0.7.16 arkivering og personsamlinger, 0.7.17 breddeskaleringen (oppfølgingen fra testrunden), 0.7.18 kart, skjema, kalender og besøksmåling inn i kjernen (alle trinn levert), 0.7.19 kalenderdesignene, 0.7.20 elementmenyen, 0.7.21 størrelsesmodellen for hvert element, 0.7.22 utskrift, 0.7.23 videresendinger, 0.7.24 personvernstandarder, 0.7.25 egne utseender fra designverktøy, 0.7.26 oppdeling av App.svelte i funksjonelle deler.
+- **Levert:** 0.7.1 oppryddingsrunden, 0.7.2 fast innholdsbredde, 0.7.4 blokker og skjemafelter, 0.7.5 butikken, 0.7.6 SEO og synlighet, 0.7.7 video-bakgrunn og mediegrenser, 0.7.8 klientside-navigasjon, 0.7.12 forankringsrunden, 0.7.14 engelsk-renskingen, 0.7.15 menylinjens størrelse, 0.7.20 elementmenyen.
+- **Åpne:** 0.7.3 mobil-revurderingen, 0.7.9 design-strekket fra 0.6.6, 0.7.10 intuitivitets-gjennomgangen og editor-finpuss, 0.7.11 tilgjengelighetsrunden, 0.7.13 elementgjennomgangen, 0.7.16 arkivering og personsamlinger, 0.7.17 breddeskaleringen (oppfølgingen fra testrunden), 0.7.18 kart, skjema, kalender og besøksmåling inn i kjernen (alle trinn levert), 0.7.19 kalenderdesignene, 0.7.21 størrelsesmodellen for hvert element (alle trinn levert), 0.7.22 utskrift, 0.7.23 videresendinger, 0.7.24 personvernstandarder, 0.7.25 egne utseender fra designverktøy, 0.7.26 oppdeling av App.svelte i funksjonelle deler (alle trinn levert).
 
 **Port:** en testbestilling går gjennom handlekurv, bestillingsskjema og e-post på en deployet side; publisert side har meta/og-felter, sitemap, robots og 404; intuitivitets-gjennomgangen er gjennomført og funnene sortert inn i backloggen; og hver milepæl over er levert og har bestått testrunden sin, eller er flyttet til en senere fase med flyttingen ført i backloggen.
 
@@ -113,6 +113,18 @@ En forening kan klone, sette opp, bygge og vedlikeholde en side uten utvikler.
 
 **Port:** migreringskontrakten er testet med minst én reell v1→v2-blokkendring i testsuiten; en pilotside (kandidat: gjenskape ApeironLF med Urd) er bygget og driftes. Piloten forutsetter v0.7-butikken (ApeironLF har merch med handlekurv) og kalenderblokken (arrangementer fra Google Calendar/iCal-feed).
 
+## v1.1 - Butikken
+
+En butikk uten database oppå betalingslaget ([ADR-0027](adr/0027-a-shop-without-a-database.md), besluttet 19. oktober 2026 fra kartleggingen «What a shop needs» i [SURVEYS.md](comparison/SURVEYS.md)). Katalogen i git forblir den eneste sannheten, og nettstedet har ikke noe ordrelager; fasen starter når betalingslaget har forlatt Vipps Checkout (BACKLOG URGENT).
+
+- Varianter med egen pris, SKU og bilde, og publisert lager per variant med «utsolgt»; betalingen reserveres ved bestilling og trekkes når varene sendes, så en oversolgt ordre kanselleres uten at noe trekkes.
+- Statiske frakttabeller med henting og leveringstid, og rabattkoder publisert bare som HMAC.
+- MVA som en selgerbryter, av som standard, og førprisen lest fra katalogens git-historikk.
+- Et varsel til eieren fra leverandørens webhook, kjøperens kvittering i betalingsappen med en utskriftsvennlig bekreftelse, og butikkvilkår med angreskjemaet generert fra butikkinnstillingene.
+- En butikkmal for foreningsmerch; til vurdering: et datert tjenesteprodukt som betalt påmelding.
+
+**Port:** en testbestilling med to varianter, en fraktregel og en rabattkode betales på en deployet side; beløpet som trekkes er lik funksjonens total; en variant publisert med 0 kan ikke bestilles; og ingen ordredata havner i repoet eller i funksjonens logger.
+
 ## Etter 1.0 (horisont)
 
 Uprioritert, avhenger av community og behov: import fra eksisterende sider,
@@ -121,8 +133,8 @@ er flerspråklige fra 0.6.8), flere UI-språk (fransk, tysk, spansk, finsk, dans
 eksport av et bygget nettsted, samtidighetsvisning i admin, galleri-nettsted for maler og
 plugins (urd.dev), GitLab/Gitea-adapter (publisering og oppdateringer for et repo utenfor GitHub), ekstern medialagring (R2),
 PR-per-utkast-/deploy-preview-arbeidsflyt (fra [CODE.md](comparison/CODE.md#part-5-publishing-and-deploy)), synkede globale blokker (én blokk brukt på flere sider og redigert ett sted),
-butikk-utvidelser utover ApeironLFs behov (pris og varelager per variant med mer) og
-butikk/merch-mal. Detaljer i [BACKLOG.md](BACKLOG.md).
+butikk-utvidelser utover v1.1 (pakker, antallsgrenser, varsel om ny beholdning, forhåndsbestilling,
+mersalg). Detaljer i [BACKLOG.md](BACKLOG.md).
 
 ---
 
@@ -157,4 +169,4 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 | Oppdaterer vs. håndredigerte Urd-eide filer | Avgjort i [ADR-0014](adr/0014-updater-model.md): hver Urd-eide fil klassifiseres etter sjekksummen mot utgivelsestaggen, en håndredigert fil vises som konflikt før noe skrives, og `_headers` skrives aldri |
 | Ikke-GitHub-hoster (GitLab/Gitea) | `functions/_lib`-grensen holdes adapter-vennlig; utenfor scope til etter v1 (andre statiske hoster for selve nettstedet er planlagt i v0.9) |
 | Antall breakpoints | To (desktop + mobil) i v1; nettbrett vurderes senere |
-| Tredjepartstjenester endrer seg under nettstedet | Vipps Checkout avvikles 30. april 2027. Kjernen forblir gateway-fri; det valgfrie laget flyttes før datoen (BACKLOG URGENT) |
+| Tredjepartstjenester endrer seg under nettstedet | Vipps Checkout avvikles 30. april 2027. Kjernen forblir gateway-fri; det valgfrie laget flyttes før datoen (BACKLOG URGENT), og butikken i v1.1 navngir hva den trenger fra laget, ikke leverandøren ([ADR-0027](adr/0027-a-shop-without-a-database.md)) |

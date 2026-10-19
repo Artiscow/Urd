@@ -70,14 +70,14 @@ The phase was steered as milestones 0.6.1-0.6.9 in [BACKLOG.md](../BACKLOG.md), 
 - **Shop without a payment gateway as a core feature** (the ApeironLF model, chosen 18 July 2026): product card block with variants, shopping cart (localStorage + drawer), order form to email/optional endpoint, payment via Vipps number instructions. Dependency-free, git-owned catalogue; built on the v0.6 data block pattern. A real payment checkout was moved into the phase as an optional layer on top of the form checkout (9 August 2026; Vipps Checkout, [ADR-0020](../adr/0020-optional-payment-layer-vipps-checkout.md)); the core stays gateway-free. Vipps MobilePay Checkout is discontinued on 30 April 2027 (Kustom took it over), so the optional layer moves to the ePayment API or to Kustom Checkout before then.
 - **SEO base package** (from the feature map of 23 July 2026, see [FEATURES.md](../comparison/FEATURES.md)): per-page meta/og fields, sitemap, robots, 404, canonical. Plus RSS for collections, more form field types, video background layer and CSV/table.
 - **The architecture clarifications**: the fixed content width ([ADR-0018](../adr/0018-bound-content-width.md)), the synced mobile model ([ADR-0019](../adr/0019-synced-mobile-model.md)), client-side navigation (measured, and closed without a router), the content push on the desktop canvas ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)) and the sizing model for every block ([ADR-0025](../adr/0025-the-sizing-model.md)).
-- **The intuitiveness review**: is everything intuitive, is anything cluttered, is anything easy to misunderstand? (The feature comparison against other builders was done on 23 July 2026 and refreshed on 11 October 2026, [FEATURES.md](../comparison/FEATURES.md).)
-- **Privacy defaults and redirects** (from the comparison of 11 October 2026): embeds load only on a click, a privacy page is generated from the site settings, consent is asked for only when analytics or embeds need it, and 301 redirects are generated at publishing ([ADR-0015](../adr/0015-redirects-ownership.md)).
+- **The intuitiveness review**: is everything intuitive, is anything cluttered, is anything easy to misunderstand? (The feature comparison against other builders was done on 23 July 2026, refreshed on 11 October 2026 and deepened function by function on 19 October 2026, [FEATURES.md](../comparison/FEATURES.md).)
+- **Privacy defaults and redirects** (from the comparison of 11 October 2026): embeds load only on a click, a privacy page is generated from the site settings, consent is asked for only when analytics or embeds need it, 301 redirects are generated at publishing ([ADR-0015](../adr/0015-redirects-ownership.md)), and the order button and the summary above it follow the consumer law (angrerettloven § 16; found 19 October 2026).
 - **Own looks from design tools** (decided 14 October 2026): a look made in Figma, Penpot, Illustrator or SVGator becomes the face, the scoped style or the tokens of an Urd element, with the pointer as CSS properties for designs that follow it; code never comes in this way.
 
-The phase is steered as milestones 0.7.0-0.7.26 in [BACKLOG.md](../BACKLOG.md), split up on 9 August 2026 (the architecture clarifications first, then blocks, shop and visibility, polish towards the end) and grown along the way. Releases carry the phase's minor with a running patch number (0.7.1 to 0.7.4 so far). As of 11 October 2026:
+The phase is steered as milestones 0.7.0-0.7.26 in [BACKLOG.md](../BACKLOG.md), split up on 9 August 2026 (the architecture clarifications first, then blocks, shop and visibility, polish towards the end) and grown along the way. Releases carry the phase's minor with a running patch number (0.7.1 to 0.7.7 so far). As of 19 October 2026:
 
-- **Delivered:** 0.7.1 the clean-up round, 0.7.2 the fixed content width, 0.7.4 blocks and form fields, 0.7.5 the shop, 0.7.6 SEO and visibility, 0.7.7 the video background and media limits, 0.7.8 client-side navigation, 0.7.12 the anchoring round, 0.7.14 the English clean-up, 0.7.15 navigation bar sizing.
-- **Open:** 0.7.3 the mobile reconsideration, 0.7.9 the design stretch from 0.6.6, 0.7.10 the intuitiveness review and editor polish, 0.7.11 the accessibility round, 0.7.13 the element review, 0.7.16 archiving and person collections, 0.7.17 the width scaling (its test-round follow-up), 0.7.18 map, form, calendar and analytics into the core (every stage delivered), 0.7.19 the calendar designs, 0.7.20 the element menu, 0.7.21 the sizing model for every element, 0.7.22 print, 0.7.23 redirects, 0.7.24 privacy defaults, 0.7.25 own looks from design tools, 0.7.26 App.svelte split into functional parts.
+- **Delivered:** 0.7.1 the clean-up round, 0.7.2 the fixed content width, 0.7.4 blocks and form fields, 0.7.5 the shop, 0.7.6 SEO and visibility, 0.7.7 the video background and media limits, 0.7.8 client-side navigation, 0.7.12 the anchoring round, 0.7.14 the English clean-up, 0.7.15 navigation bar sizing, 0.7.20 the element menu.
+- **Open:** 0.7.3 the mobile reconsideration, 0.7.9 the design stretch from 0.6.6, 0.7.10 the intuitiveness review and editor polish, 0.7.11 the accessibility round, 0.7.13 the element review, 0.7.16 archiving and person collections, 0.7.17 the width scaling (its test-round follow-up), 0.7.18 map, form, calendar and analytics into the core (every stage delivered), 0.7.19 the calendar designs, 0.7.21 the sizing model for every element (every stage delivered), 0.7.22 print, 0.7.23 redirects, 0.7.24 privacy defaults, 0.7.25 own looks from design tools, 0.7.26 App.svelte split into functional parts (every stage delivered).
 
 **Gate:** a test order goes through cart, order form and email on a deployed site; the published site has meta/og fields, sitemap, robots and 404; the intuitiveness review has been carried out and the findings sorted into the backlog; and every milestone above is delivered and has passed its test round, or has been moved to a later phase with the move recorded in the backlog.
 
@@ -115,6 +115,18 @@ An association can clone, set up, build and maintain a site without a developer.
 
 **Gate:** the migration contract has been tested with at least one real v1→v2 block change in the test suite; a pilot site (candidate: recreating ApeironLF with Urd) has been built and is being operated. The pilot presupposes the v0.7 shop (ApeironLF has merch with a cart) and the calendar block (events from a Google Calendar/iCal feed).
 
+## v1.1 - The shop
+
+A shop without a database on top of the payment layer ([ADR-0027](../adr/0027-a-shop-without-a-database.md), decided 19 October 2026 from the survey «What a shop needs» in [SURVEYS.md](../comparison/SURVEYS.md)). The catalogue in git stays the only truth and the site keeps no order store; the phase starts once the payment layer has left Vipps Checkout (BACKLOG URGENT).
+
+- Variants with their own price, SKU and image, and published stock per variant with «sold out»; the payment is reserved at the order and captured when the goods ship, so an oversold order is cancelled with nothing charged.
+- Static shipping tables with pickup and a delivery time, and discount codes published only as an HMAC.
+- MVA as a seller switch, off by default, and the before price read from the catalogue's git history.
+- A notice to the owner from the provider's webhook, the buyer's receipt in the payment app with a printable confirmation, and shop terms with the withdrawal form generated from the shop settings.
+- A shop template for association merch; to be weighed, a dated service product as paid registration.
+
+**Gate:** a test order with two variants, a shipping rule and a discount code is paid on a deployed site; the amount charged equals the function's total; a variant published at 0 cannot be ordered; and no order data lands in the repo or in the function's logs.
+
 ## After 1.0 (horizon)
 
 Unprioritised, depends on community and needs: import from existing sites,
@@ -123,8 +135,8 @@ are multilingual from 0.6.8), more UI languages (French, German, Spanish, Finnis
 export of a built site, concurrency view in admin, gallery website for templates and
 plugins (urd.dev), GitLab/Gitea adapter (publishing and updates for a repo outside GitHub), external media storage (R2),
 PR-per-draft/deploy-preview workflow (from [CODE.md](../comparison/CODE.md#part-5-publishing-and-deploy)), synced global blocks (one block used on several pages and edited once),
-shop extensions beyond the ApeironLF needs (prices and stock per variant and more) and a
-shop/merch template. Details in [BACKLOG.md](../BACKLOG.md).
+shop extensions beyond v1.1 (bundles, quantities, back-in-stock alerts, pre-orders,
+upsells). Details in [BACKLOG.md](../BACKLOG.md).
 
 ---
 
@@ -159,4 +171,4 @@ Nothing from the original brainstorm shall be lost:
 | The updater vs. hand-edited Urd-owned files | Decided in [ADR-0014](../adr/0014-updater-model.md): every Urd-owned file is classified by its checksum against the release tag, a hand-edited file is shown as a conflict before anything is written, and `_headers` is never written |
 | Non-GitHub hosts (GitLab/Gitea) | The `functions/_lib` boundary is kept adapter-friendly; out of scope until after v1 (other static hosts for the site itself are planned in v0.9) |
 | Number of breakpoints | Two (desktop + mobile) in v1; tablet considered later |
-| Third-party services change under the site | Vipps Checkout is discontinued on 30 April 2027. The core stays gateway-free; the optional layer moves before the date (BACKLOG URGENT) |
+| Third-party services change under the site | Vipps Checkout is discontinued on 30 April 2027. The core stays gateway-free; the optional layer moves before the date (BACKLOG URGENT), and the shop of v1.1 names what it needs from the layer, not the provider ([ADR-0027](../adr/0027-a-shop-without-a-database.md)) |

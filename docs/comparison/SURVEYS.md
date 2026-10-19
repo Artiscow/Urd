@@ -1,6 +1,6 @@
 # Surveys: the dated studies behind Urd's decisions
 
-These are the surveys the ADRs and milestones cite: the layout, navigation and sizing decisions in [ADR-0018](../adr/0018-bound-content-width.md), [ADR-0019](../adr/0019-synced-mobile-model.md), [ADR-0023](../adr/0023-navigation-bar-sizing.md), [ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md) and [ADR-0025](../adr/0025-the-sizing-model.md), and the element review of milestone 0.7.13 in [BACKLOG.md](../BACKLOG.md). Each survey is kept as written on its date, with its own sources: what the builders did then, the rules drawn from it, and the «What Urd takes» line that records what was decided then. A survey is not rewritten when a builder changes or a decision moves on; the ADR it names holds the decision in force. The current picture of the field is in [FEATURES.md](FEATURES.md), [ELEMENTS.md](ELEMENTS.md), [DESIGN.md](DESIGN.md) and [CODE.md](CODE.md).
+These are the surveys the ADRs and milestones cite: the layout, navigation and sizing decisions in [ADR-0018](../adr/0018-bound-content-width.md), [ADR-0019](../adr/0019-synced-mobile-model.md), [ADR-0023](../adr/0023-navigation-bar-sizing.md), [ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md) and [ADR-0025](../adr/0025-the-sizing-model.md), the shop of [ADR-0027](../adr/0027-a-shop-without-a-database.md), and the element review of milestone 0.7.13 in [BACKLOG.md](../BACKLOG.md). Each survey is kept as written on its date, with its own sources: what the builders did then, the rules drawn from it, and the «What Urd takes» line that records what was decided then. A survey is not rewritten when a builder changes or a decision moves on; the ADR it names holds the decision in force. The current picture of the field is in [FEATURES.md](FEATURES.md), [ELEMENTS.md](ELEMENTS.md), [DESIGN.md](DESIGN.md) and [CODE.md](CODE.md).
 
 | Survey | Date | Decided in |
 |---|---|---|
@@ -12,6 +12,7 @@ These are the surveys the ADRs and milestones cite: the layout, navigation and s
 | [Content that grows must push](#content-that-grows-must-push-23-september-2026) | 23 September 2026 | ADR-0024 (0.7.17.3) |
 | [What a drag means](#what-a-drag-means-how-the-builders-size-an-element-3-october-2026) | 3 October 2026 | ADR-0025 (0.7.21) |
 | [Default sizes](#default-sizes-what-100--is-17-october-2026) | 17 October 2026 | ADR-0025 decision 6 (0.7.19.23.4) |
+| [What a shop needs](#what-a-shop-needs-how-the-builders-sell-19-october-2026) | 19 October 2026 | ADR-0027 (v1.1) |
 
 ## The preview canvas (27 July 2026)
 
@@ -236,6 +237,36 @@ None of them is compact by default: a dense layout is a choice (Google Calendar'
 
 **What Urd takes (17 October 2026):** 100 % stays the size as designed, and «Size» scales everything alike over its whole range with no default floor; the text bounds are the owner's choice. The calendar, a dense widget, draws its designs at a 14 px base for the page's 16 px (`TYPE_SCALE`), the base of the dense systems above, which keeps its meta text at the floor (ADR-0025 decision 6). Compact designed sizes per design are milestone 0.7.19.32.
 
+## What a shop needs: how the builders sell (19 October 2026)
+
+A pass on what the builders' entry plans that sell include, read from their own pricing, feature and help pages, held against the payment API that replaces Vipps Checkout, the Norwegian rules for an association that sells to consumers, and the host's free plan. The question was which shop functions Urd can take without a database, and which it must leave to a platform.
+
+**The builders' entry plans that sell:**
+- **Shopify Basic (NOK 389 a month):** variants, stock, flat, amount and weight rates with pickup, codes and automatic discounts, tax per market (Norway through Basic Tax), gift cards, customer accounts, abandoned carts, notices to the owner and the buyer, and refunds; low-stock alerts, downloads, subscriptions and reviews through Shopify's own apps ([pricing](https://www.shopify.com/pricing), [variants](https://help.shopify.com/en/manual/products/variants), [discounts](https://help.shopify.com/en/manual/discounts), [taxes](https://help.shopify.com/en/manual/taxes)).
+- **Squarespace Basic (NOK 249 a month, a 2 % fee):** variants, stock, flat and weight shipping by zone with pickup, digital products, gift cards, customer accounts, abandoned carts, notices, refunds and reviews; codes, automatic discounts, low-stock alerts and carrier rates from Core; VAT as a manual rate with «Include in price» ([pricing](https://www.squarespace.com/pricing), [variants](https://support.squarespace.com/hc/en-us/articles/206540687-Adding-product-variants), [inventory](https://support.squarespace.com/hc/en-us/articles/205811228-Managing-inventory), [VAT](https://support.squarespace.com/hc/en-us/articles/215074868-Collecting-VAT-or-GST)).
+- **Wix Core and Business:** variants, stock, flat, weight, price and quantity shipping with pickup, codes, automatic discounts, tax included in the price (automatic tax on Business), digital products, gift cards, abandoned carts, notices, refunds, reviews and subscriptions; the plan split of the last four could not be read ([plans](https://www.wix.com/plans), [store features](https://support.wix.com/en/article/wix-stores-an-overview-of-store-features)).
+- **Webflow Ecommerce Standard (a 2 % fee):** variants, stock, zone tables by price, quantity or weight, codes with a minimum, automatic tax for the US, Canada, the EU and Australia but a manual rate for Norway, and downloads; user accounts and subscriptions were retired on 29 January 2026 ([pricing](https://webflow.com/pricing), [taxes](https://help.webflow.com/hc/en-us/articles/33961409897747-Configure-taxes-on-Ecommerce-orders), [sunset](https://help.webflow.com/hc/en-us/articles/36046006227731-User-Accounts-sunset)).
+- **The small-shop platforms:** Big Cartel gates stock and codes behind Platinum and keeps tax manual outside the US ([pricing](https://www.bigcartel.com/pricing)); Ecwid has no free plan any more and gates stock, codes and digital goods behind Venture ([pricing](https://www.ecwid.com/pricing)); Square Online's free plan has variants, shipping tables, pickup and codes, while its pages disagree on stock ([plans](https://squareup.com/us/en/online-store/plans)).
+- **The other builders:** WooCommerce on WordPress.com, Hostinger, GoDaddy, Strikingly and Tilda have variants, stock, flat shipping and codes on the entry shop plan, while Jimdo and Webnode put variants and codes on a higher plan; weight tables, gift cards, accounts and reviews are gates or add-ons throughout ([WooCommerce](https://woocommerce.com/document/variable-product/), [Hostinger](https://www.hostinger.com/ecommerce), [GoDaddy](https://www.godaddy.com/help/add-product-options-in-my-online-store-20054), [Jimdo](https://www.jimdo.com/pricing/onlineshop/), [Webnode](https://www.webnode.com/e-commerce-pricing/), [Strikingly](https://www.strikingly.com/s/pricing), [Tilda](https://help.tilda.cc/online-store/catalog)). Carrd sells only through Stripe, PayPal or Gumroad widgets, and Ghost sells memberships, not products ([Carrd](https://carrd.com/docs/forms/setting-up-payments), [Ghost](https://ghost.org/help/selling-courses/)).
+- **The club platforms:** WildApricot's store has variants without a price of their own, stock and named flat shipping ([online store](https://gethelp.wildapricot.com/en/articles/1570-online-store)); StyreWeb's member shop takes Vipps and codes ([nettbutikk](https://www.styreweb.com/nettbutikk-i-styreweb/)); Rubic has no web shop, only a kiosk on site ([moduler](https://rubic.no/moduler)).
+
+**The payment layer:**
+- **Vipps MobilePay ePayment:** a web redirect; the amount is reserved and may be captured only when the goods are ready to ship, within 180 days in Norway; partial capture, cancel and refund; profile sharing gives the name, email, phone and address; Express lets the buyer choose among fixed shipping options in the app, where only the shipping cost may change; receipts with order lines through the Order Management API; webhooks signed with HMAC ([how it works](https://developer.vippsmobilepay.com/docs/APIs/epayment-api/how-it-works/online/), [reserve and capture](https://developer.vippsmobilepay.com/docs/knowledge-base/reserve-and-capture/), [Express](https://developer.vippsmobilepay.com/docs/APIs/epayment-api/api-guide/features/express/), [order management](https://developer.vippsmobilepay.com/docs/APIs/order-management-api/), [webhooks](https://developer.vippsmobilepay.com/docs/APIs/webhooks-api/api-guide/)). The list price for online payment is 2.99 % + 1 NOK ([priser](https://vippsmobilepay.com/no/priser)).
+- **Kustom Checkout:** an embedded frame by default (its hosts in the CSP), a hosted payment page as the redirect alternative, authorisations of about 28 days, no public prices, and onboarding by invitation ([how it works](https://docs.kustom.co/checkout/how-it-works/), [hosted page](https://docs.kustom.co/checkout/surfaces/hosted-payment-page/), [FAQ](https://www.kustom.co/kustom-vipps-faq)).
+
+**The rules and the host:**
+- **Norwegian rules:** prices to consumers include MVA and every charge, and the shipping is shown before the order ([prisopplysningsforskriften](https://lovdata.no/dokument/SF/forskrift/2012-11-14-1066)); the paying button must say that the order binds the buyer to pay, and a confirmation on a durable medium is owed by delivery at the latest ([angrerettloven § 16](https://lovdata.no/lov/2014-06-20-27/§16), [§ 18](https://lovdata.no/lov/2014-06-20-27/§18)); the seller's information includes the organisation number ([ehandelsloven § 8](https://lovdata.no/lov/2003-05-23-35/§8)); a seller not registered for MVA may not write «inkl. mva» ([merverdiavgiftsloven § 15-11](https://lovdata.no/lov/2009-06-19-58/§15-11)), and charitable and public-benefit organisations register at 140 000 NOK ([Skatteetaten](https://www.skatteetaten.no/bedrift-og-organisasjon/rapportering-og-bransjer/bransjer-med-egne-regler/frivillige-og-ideelle-organisasjoner/mva-for-veldedige-og-allmennyttige-organisasjoner/)); a reduced price shows the lowest price of the previous 30 days ([§ 9a](https://lovdata.no/forskrift/2012-11-14-1066/§9a)); an online withdrawal function comes with an amendment whose start date was not found ([LOV-2026-06-19-34](https://lovdata.no/dokument/LTI/lov/2026-06-19-34)).
+- **The host:** a Pages Function cannot hold the email binding; sending needs a Worker and the domain's DNS at Cloudflare; mail to the owner's verified address is free, while mail to a buyer needs a paid plan; the free plan allows 500 builds a month ([email service](https://developers.cloudflare.com/email-service/), [bindings](https://developers.cloudflare.com/pages/functions/bindings/), [limits](https://developers.cloudflare.com/pages/platform/limits/)).
+
+**Five rules from the survey:**
+1. The entry plan that sells always has variants with their own price, stock that stops a sale, flat or weight shipping with pickup, discount codes, a notice to the owner, a confirmation to the buyer and refunds; gift cards, abandoned-cart emails, reviews, subscriptions and customer accounts are plan gates or add-ons.
+2. Every one of them keeps the orders in a database; the one that does not (Carrd) hands the whole sale to Stripe, PayPal or Gumroad.
+3. Only Shopify names automatic tax for Norway; the rest leave Norway to a manual rate, so a fixed MVA setting is the field's practice, not a shortcut.
+4. The payment API can carry the shop's state: the reservation holds the goods, the capture is the shipment, a cancel answers an oversold item, and Express takes the shipping table.
+5. The law fixes the checkout's last screen (the button, with the total and the shipping right above it) and the information the shop must give, so those belong in settings and generated pages, not in each product.
+
+**What Urd takes (v1.1):** [ADR-0027](../adr/0027-a-shop-without-a-database.md), a shop without a database: variants with their own price, SKU, availability and image; published availability per variant with reserve-then-capture; static shipping tables with pickup; codes published as an HMAC; MVA as a seller switch, off by default; the law's information in the site and shop settings, with the terms page generated from them; notices from the provider's webhook without storage; and the before price from the catalogue's history. Accounts, subscriptions, gift cards, markets, point of sale, abandoned carts, reviews, B2B, downloads and refunds through Urd are not taken. The order button of today's checkout is fixed earlier, in 0.7.24.6.
+
 ## Sources
 
 Each list is the survey's own sources, as cited in its text, and belongs to the survey dated in its heading. The kind is marked after each link: (primary) vendor, official or standards documentation, (secondary) a third-party blog, tutorial or user forum, (code) read in source.
@@ -451,3 +482,54 @@ Each list is the survey's own sources, as cited in its text, and belongs to the 
 - [EventON Lite styles](https://plugins.svn.wordpress.org/eventon-lite/trunk/assets/css/eventon_styles.css) (code)
 - [Modern Events Calendar Lite styles](https://plugins.svn.wordpress.org/modern-events-calendar-lite/trunk/assets/css/frontend.css) (code)
 - [Timely: embedding the calendar](https://help.time.ly/how-to-embed-your-calendar/) (primary)
+
+### Survey 19 October 2026 (what a shop needs)
+
+- [Shopify: pricing](https://www.shopify.com/pricing) (primary)
+- [Shopify: variants](https://help.shopify.com/en/manual/products/variants) (primary)
+- [Shopify: discounts](https://help.shopify.com/en/manual/discounts) (primary)
+- [Shopify: taxes](https://help.shopify.com/en/manual/taxes) (primary)
+- [Squarespace: pricing](https://www.squarespace.com/pricing) (primary)
+- [Squarespace: variants](https://support.squarespace.com/hc/en-us/articles/206540687-Adding-product-variants) (primary)
+- [Squarespace: inventory](https://support.squarespace.com/hc/en-us/articles/205811228-Managing-inventory) (primary)
+- [Squarespace: VAT](https://support.squarespace.com/hc/en-us/articles/215074868-Collecting-VAT-or-GST) (primary)
+- [Wix: plans](https://www.wix.com/plans) (primary)
+- [Wix: store features](https://support.wix.com/en/article/wix-stores-an-overview-of-store-features) (primary)
+- [Webflow: pricing](https://webflow.com/pricing) (primary)
+- [Webflow: taxes](https://help.webflow.com/hc/en-us/articles/33961409897747-Configure-taxes-on-Ecommerce-orders) (primary)
+- [Webflow: sunset](https://help.webflow.com/hc/en-us/articles/36046006227731-User-Accounts-sunset) (primary)
+- [Big Cartel: pricing](https://www.bigcartel.com/pricing) (primary)
+- [Ecwid: pricing](https://www.ecwid.com/pricing) (primary)
+- [Square Online: plans](https://squareup.com/us/en/online-store/plans) (primary)
+- [WooCommerce](https://woocommerce.com/document/variable-product/) (primary)
+- [Hostinger](https://www.hostinger.com/ecommerce) (primary)
+- [GoDaddy](https://www.godaddy.com/help/add-product-options-in-my-online-store-20054) (primary)
+- [Jimdo](https://www.jimdo.com/pricing/onlineshop/) (primary)
+- [Webnode](https://www.webnode.com/e-commerce-pricing/) (primary)
+- [Strikingly](https://www.strikingly.com/s/pricing) (primary)
+- [Tilda](https://help.tilda.cc/online-store/catalog) (primary)
+- [Carrd](https://carrd.com/docs/forms/setting-up-payments) (primary)
+- [Ghost](https://ghost.org/help/selling-courses/) (primary)
+- [WildApricot: online store](https://gethelp.wildapricot.com/en/articles/1570-online-store) (primary)
+- [StyreWeb: nettbutikk](https://www.styreweb.com/nettbutikk-i-styreweb/) (primary)
+- [Rubic: moduler](https://rubic.no/moduler) (primary)
+- [Vipps MobilePay: how it works](https://developer.vippsmobilepay.com/docs/APIs/epayment-api/how-it-works/online/) (primary)
+- [Vipps MobilePay: reserve and capture](https://developer.vippsmobilepay.com/docs/knowledge-base/reserve-and-capture/) (primary)
+- [Vipps MobilePay: Express](https://developer.vippsmobilepay.com/docs/APIs/epayment-api/api-guide/features/express/) (primary)
+- [Vipps MobilePay: order management](https://developer.vippsmobilepay.com/docs/APIs/order-management-api/) (primary)
+- [Vipps MobilePay: webhooks](https://developer.vippsmobilepay.com/docs/APIs/webhooks-api/api-guide/) (primary)
+- [Vipps MobilePay: priser](https://vippsmobilepay.com/no/priser) (primary)
+- [Kustom: how it works](https://docs.kustom.co/checkout/how-it-works/) (primary)
+- [Kustom: hosted page](https://docs.kustom.co/checkout/surfaces/hosted-payment-page/) (primary)
+- [Kustom: FAQ](https://www.kustom.co/kustom-vipps-faq) (primary)
+- [Lovdata: prisopplysningsforskriften](https://lovdata.no/dokument/SF/forskrift/2012-11-14-1066) (primary)
+- [Lovdata: angrerettloven § 16](https://lovdata.no/lov/2014-06-20-27/§16) (primary)
+- [Lovdata: § 18](https://lovdata.no/lov/2014-06-20-27/§18) (primary)
+- [Lovdata: ehandelsloven § 8](https://lovdata.no/lov/2003-05-23-35/§8) (primary)
+- [Lovdata: merverdiavgiftsloven § 15-11](https://lovdata.no/lov/2009-06-19-58/§15-11) (primary)
+- [Skatteetaten](https://www.skatteetaten.no/bedrift-og-organisasjon/rapportering-og-bransjer/bransjer-med-egne-regler/frivillige-og-ideelle-organisasjoner/mva-for-veldedige-og-allmennyttige-organisasjoner/) (primary)
+- [Lovdata: § 9a](https://lovdata.no/forskrift/2012-11-14-1066/§9a) (primary)
+- [Lovdata: LOV-2026-06-19-34](https://lovdata.no/dokument/LTI/lov/2026-06-19-34) (primary)
+- [Cloudflare: email service](https://developers.cloudflare.com/email-service/) (primary)
+- [Cloudflare: bindings](https://developers.cloudflare.com/pages/functions/bindings/) (primary)
+- [Cloudflare: limits](https://developers.cloudflare.com/pages/platform/limits/) (primary)
