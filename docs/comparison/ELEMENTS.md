@@ -813,7 +813,7 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |---|---|---|---|---|---|---|
 |80|Navigation menu (Menu, Nav Menu, WordPress Menu, WP Menu, Navigation, Navbar, Menus, Navigation Menu)|EL BR BD DV BB WP KB GB WX WF WS DO SH CV TL FS SQ|mobile toggle, overlay|`<nav>` with a list; submenus as APG disclosure navigation (a button with `aria-expanded`), never `role="menu"`; the mobile menu as the same disclosure panel ([ADR-0010](../adr/0010-disclosure-navigation.md)) or a full-screen `<dialog>` sheet|Has|-|
 |81|Mega menu (Menu (mega), Menu Builder, Nav (Nestable))|EL BD BR SH|nested content|disclosure navigation opening a panel, placed with the Popover API and anchor positioning (the core ships in all three engines since Firefox 147)|Partial: submenus in columns and a flyout style; no pictures or blocks in the panel|Not taken for pictures or blocks in the panel until a real site needs one|
-|82|Menu link / submenu (Navigation Link, Submenu, Home Link, Page List)|WP KB|-|`aria-current="page"` on the link to the current page|Has: one level|-|
+|82|Menu link / submenu (Navigation Link, Submenu, Home Link, Page List)|WP KB|-|`aria-current="page"` on the link to the current page|Partial: one level, with no `aria-current` on the current page|0.7.11: the current page marked|
 |83|Dropdown (Dropdown, Dropdown Menus)|BR DV WF S1|hover/click|opens on click; hover only behind a `pointerType === 'mouse'` guard; Escape closes and returns focus|Has|-|
 |84|Anchor / scroll point (Menu Anchor, Scroll Points, Anchor)|EL CA WX|offset|an `id` on the target with `scroll-margin-top` for a fixed header; smooth scroll only under `prefers-reduced-motion: no-preference`|Has: section ids|-|
 |85|In-page navigation (In-page navigation)|WX|scroll-spy|`<nav aria-label>` with an `<ol>` of anchor links; scroll-spy from a small IntersectionObserver setting `aria-current`|Planned|0.7.13.16 page index|
@@ -983,10 +983,10 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |210|Product title (Product Title)|EL BR DV SH|-|the product page's `<h1>`|Partial: card and quick view|v0.8 product permalinks|
 |211|Product images (Product Images, Product Gallery, product-media-gallery)|EL BR DV BD SH|zoom, thumbnails|the gallery and lightbox (#50)|Partial: card and quick view|v0.8 product permalinks|
 |212|Product price (Product Price, price)|EL BR DV BD SH|sale price|the price as text with the currency; a reduced price shows both prices in text, not only a strike-through|Partial: price and member price; no reduced price beside the old one|v1.1 the shop (sale price with the before price (førpris))|
-|213|Add to cart (Add To Cart, Custom Add To Cart, Add to Cart Button, «Add to bag», add-to-cart, buy-buttons)|EL BR DV WX WF OT HO SH|quantity, variations|a `<button>`, with the new cart count announced through `role="status"`|Has|-|
+|213|Add to cart (Add To Cart, Custom Add To Cart, Add to Cart Button, «Add to bag», add-to-cart, buy-buttons)|EL BR DV WX WF OT HO SH|quantity, variations|a `<button>`, with the new cart count announced through `role="status"`|Partial: the add is shown on the button for a moment and not announced|0.7.11: announcements in the basket|
 |214|Express checkout (accelerated-checkout, Quick Checkout Actions, PayPal Checkout Button)|SH WF|Apple/Google Pay|the provider's hosted flow|Partial: Vipps|URGENT: Vipps migration|
-|215|Variant picker / swatches (variant-picker, swatches)|SH|buttons/dropdown|radios in a `<fieldset>` styled as chips, the colour also named in text|Has: size and colour chips|-|
-|216|Quantity selector (quantity)|SH|-|`<input type="number">` with labelled minus and plus buttons|Has: in the cart drawer|-|
+|215|Variant picker / swatches (variant-picker, swatches)|SH|buttons/dropdown|radios in a `<fieldset>` styled as chips, the colour also named in text|Partial: size and colour chips as `aria-pressed` buttons, not radios|0.7.11: variant choices as form controls|
+|216|Quantity selector (quantity)|SH|-|`<input type="number">` with labelled minus and plus buttons|Partial: in the cart drawer, a count between the buttons, not a number field|0.7.11: the quantity as a form control|
 |217|Product rating (Product Rating)|EL BR DV BD|-|-|Missing|Not taken: server|
 |218|Stock / inventory (Product Stock, product-inventory)|EL BR DV SH|low-stock note, pickup availability|-|Partial: the badge can say «sold out» by hand|v1.1 the shop (published stock per variant)|
 |219|Product meta / SKU (Product Meta, sku)|EL BR DV BD SH|categories, tags|-|Missing|v1.1 the shop (an SKU per variant)|
@@ -998,7 +998,7 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |225|Product categories / collections (Product Categories, collection-list, collection-card, Featured Categories)|EL SH WE|-|link cards|Has: shop categories preset|-|
 |226|Shop archive title/description (Archive Title, Archive Description, Products Archive Description)|EL BR|-|-|n/a (WooCommerce internals)|-|
 |227|Sort / order (Products Orderby)|BR|-|a labelled native `<select>`|Missing|0.7.16.3|
-|228|Mini cart / cart icon (Menu Cart, Mini Cart, Cart Icon, Cart, cart-drawer)|EL BR BD WX WF SH SQ|drawer|a `<button>` whose name includes the count; the drawer on `<dialog>`|Has: cart in the nav, drawer|-|
+|228|Mini cart / cart icon (Menu Cart, Mini Cart, Cart Icon, Cart, cart-drawer)|EL BR BD WX WF SH SQ|drawer|a `<button>` whose name includes the count; the drawer on `<dialog>`|Partial: cart in the nav and a drawer on `<dialog>`; the button's name leaves out the count and the drawer has no name|0.7.11: names in the basket|
 |229|Cart contents (Cart, Cart Items, Cart v2, Cart Page, Cart Contents, Cart Products, main-cart)|EL BR BD DV SH|-|a table or list, with changes announced|Has|-|
 |230|Cart totals (Cart Totals, Cart Collaterals)|BD DV BR|-|`<output>` or plain text|Has|-|
 |231|Coupon / discount field (Cart Coupon, Checkout Coupon, Discounts)|BR WF SH|-|a text field; the checkout asks the shop function whether the code holds, and the payment function checks it again|Missing|v1.1 the shop|

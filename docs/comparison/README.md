@@ -10,7 +10,7 @@ The maps replace `docs/sammenligning/` (FUNKSJONSKART, ELEMENTKART and LAERDOMME
 |---|---|---|
 | [FEATURES.md](FEATURES.md) | What the field offers and what Urd has, in 17 categories (from text editing to privacy, handover, AI and associations), and the full function catalogue: 647 rows of site and business functions at 26 builders and club platforms, and 346 rows of editor and design functions at 24 builders | C1-C139 |
 | [ELEMENTS.md](ELEMENTS.md) | How features are offered in the editor (delivery patterns), the keyboard-shortcut sets of 19 builders against Urd's own, and the full element catalogue: 313 elements from 39 builders and the main component libraries, plus 14 found elsewhere or added since, each with its native build and Urd's status | E1-E42 |
-| [DESIGN.md](DESIGN.md) | What modern sites look like in 2025-2026 (layout, typography, colour, surfaces, motion, backgrounds, imagery), how each pattern is built natively, what usability research says, and the patterns of association, club and event sites | D1-D62 |
+| [DESIGN.md](DESIGN.md) | What modern sites look like in 2025-2026 (layout, typography, colour, surfaces, motion, backgrounds, imagery), how each pattern is built natively, what usability research says, and the patterns of association, club and event sites | D1-D64 |
 | [CODE.md](CODE.md) | How the builders are built: the editors read from their source code, the published output measured, the web platform as of October 2026 with Baseline dates, publishing and deploy, and what Urd takes and does not take | T1-T116 |
 | [SURVEYS.md](SURVEYS.md) | The dated surveys the ADRs and milestones cite, kept as decided | - |
 
@@ -27,7 +27,7 @@ The maps replace `docs/sammenligning/` (FUNKSJONSKART, ELEMENTKART and LAERDOMME
 8. Every site and business function at 26 builders and club platforms, enumerated from plan comparison tables and feature pages.
 9. Every editor and design function at 24 builders, with their keyboard-shortcut pages.
 
-**On 19 October 2026, a tenth pass** deepened the function catalogue: the builders whose source lists in FEATURES.md and ELEMENTS.md carry that date were read function by function from their whole help-centre trees, plan tables and release notes, the functions were matched to the catalogue rows, and every row the pass touched, together with every row a delivery since 11 October changed, was recounted from engine 0.7.7. Those source lists name what was read.
+**On 19 October 2026, a tenth pass** deepened the function catalogue: the builders whose source lists in FEATURES.md and ELEMENTS.md carry that date were read function by function from their whole help-centre trees, plan tables and release notes, the functions were matched to the catalogue rows, and every row the pass touched, together with every row a delivery since 11 October changed, was recounted from engine 0.7.7. The demo pages of the same builders were measured again in a browser that day (CODE.md Part 3, dated per bullet). Those source lists name what was read.
 
 **Earlier work kept:** the feature comparison of 22-23 July 2026 and the element and lessons maps of 27 July 2026 (their facts are kept where still true and re-dated where research superseded them), and the surveys of 27 July to 3 October 2026 in [SURVEYS.md](SURVEYS.md).
 
@@ -40,7 +40,7 @@ Every claim about a builder, a library, a law or the platform carries a link and
 | (primary) | The vendor's own pages, documentation, changelog or plan table; the law, the regulator or the standards body |
 | (secondary) | A blog, a review, a news site or another third party |
 | (code) | Read in the source code of the project named |
-| (measured) | Measured on a live site on 11 October 2026 |
+| (measured) | Measured on a live site on 11 October 2026, or on the date given beside it |
 | (earlier survey, verified July 2026, no URL) | A fact the July 2026 map cross-checked against vendor documentation with three independent checkers, whose URL was not recorded |
 | (earlier survey, no URL) or «earlier maps» | A fact kept from the maps of July to September 2026 whose source was not checked again; treat it as unverified until it is |
 | unverified | A claim a research pass could not confirm, kept only where it matters, and never used to decide anything |

@@ -28,6 +28,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.58 - Markup and settings findings sorted into the backlog, and measured facts added to the maps - 20 October 2026
+
+- The shop, gallery, form and navigation markup fell short of the accessible patterns: the basket buttons carry a fixed `aria-label` that hides the count, the drawer has no name, an add is not announced, variant choices are `aria-pressed` buttons, the quantity is no number field, slides have no slide semantics and always run, form errors are not tied to their fields, and no link marks the current page. 0.7.11 takes them in five steps, and ELEMENTS #82, #213, #215, #216 and #228, which said Has, now say Partial with that place.
+- BACKLOG gained conditions in the plugin field contract (0.7.10); text styles and component tokens (0.7.9, DESIGN.md D63 and D64) and a speed, a card hover and a page-transition switch in C125's step; one layout choice per collection view and what follows an add to the basket (ER-D); the filter markup (0.7.16.3); the search markup should site search be built; the sale price for screen readers and «from» (SHOP-6); and visitor texts per shop stage.
+- CODE.md Part 3 gained a measurement in a browser of 19 October 2026 for two builders (skip links, `srcset` and `fetchpriority` counts, heading order, landmarks, disclosure markup, third-party requests), and Table B, which had Horizon's speculation rules as absent, records them as inserted after load.
+- DESIGN.md D24 and D34 gained sources, the README's «(measured)» mark carries its date, and the tenth pass names the measurement.
+
 ### 0.7.0.57 - The function catalogue deepened, a shop without a database decided for v1.1, and the backlog and roadmap completed - 19 October 2026
 
 - The catalogue covered some builders only in part. Those whose source lists now carry 19 October 2026 were read function by function from their help centres, plan tables and release notes and matched to the rows: 53 site rows, 8 editor rows and 3 elements were added, and builder codes where rows lacked them (FEATURES.md, ELEMENTS.md).

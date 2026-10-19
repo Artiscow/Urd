@@ -389,7 +389,7 @@ Y = present, P = partial, N = absent, all measured on the URLs in Table A unless
 | Webstudio | Y + hydration | Y | inferred (`format=auto`) | Y | N | N | N | N | N | Y | Y br | **Y** | N | N | N | N |
 | Figma Sites | P (Make: N) | Y | N | N | N | N | N | N | N | Y | N (gzip) | N | N | N | N | N |
 | Hostinger | Y (islands) | Y | **Y** | P | N | N | N | N | N | Y | **Y zstd** | N | N | N | N | N |
-| Shopify Horizon | Y | Y | N (WebP) | Y | Y | N | N in HTML | **Y (`rel=expect`)** | P | Y | Y br | **Y** | **Y (agents)** | N | N | Y |
+| Shopify Horizon | Y | Y | N (WebP) | Y | Y | N | N in HTML; Y after load (measured 19 Oct 2026) | **Y (`rel=expect`)** | P | Y | Y br | **Y** | **Y (agents)** | N | N | Y |
 | WordPress (news/TT5) | Y | Y | N (WebP) | Y | Y | **Y** | **Y** | N | N | short | Y br | N | Y | N | **Y (`?output_format=md`)** | Y |
 | Elementor | Y | P (no `sizes`) | `f=auto` | Y | preload | N | Y (WP core) | N | N | Y | Y br | N | Y | N | N | N |
 | Bricks | Y | Y | N | Y | **16 preloads** | N | Y (WP core) | N | N | Y | N (gzip) | N | N | N | N | **Y, twice** |
@@ -463,6 +463,7 @@ speculation-rules: "/speculation-rules.json"
 - The heaviest JS measured: about 3.8 MB raw / 980 KB gz, including an 858 KB moment.js vendor bundle and YUI-era code.
 - Good images: `srcset` from 100w to 2500w, **`sizes="auto, 100vw"`** on lazy images, the hero `loading="eager" fetchpriority="high"`, WebP by negotiation.
 - HTML gzip only, HSTS 180 days, a sitemap with `image:image` entries; robots.txt names 29 AI user agents in the same group as `*`, so they are not blocked. A «Skip to Content» link and correct landmarks, but adri's heading order runs 2-4-3-4 with the h1 tenth.
+- Measured again in a browser on 19 October 2026 on six pages of the two demos (the homes at desktop and phone width, scheduling, projects, take action, news): a skip link on every page; `srcset` on 1 to 10 elements and `fetchpriority` on 0 to 3 per page; the bailard home starts its headings at h4, the news list has three h1, the scheduling page two and the projects page none; six requests to a third-party consent manager (`consent.trustarc.com`) on every page, and `www.google.com` and `www.gstatic.com` on the pages with a form block; blocks marked by class (`sqs-block-accordion`, `-form`, `-newsletter`), no custom elements.
 
 #### Carrd
 
@@ -488,6 +489,7 @@ speculation-rules: "/speculation-rules.json"
 - `srcset` on 48 of 48 images, all with `width`/`height`, the first slide at `fetchpriority=high`; font preloads at `fetchpriority="low"`.
 - Cross-document View Transitions held by `<link rel="expect" … blocking="render">`; 103 Early Hints; an llms.txt served as Markdown with agent instructions (recorded as content only), `rel="ucp"` and `/agents.md`.
 - Dawn, the previous generation: custom elements too, but 42 `<link rel=stylesheet>`, one per component with duplicates.
+- Measured again in a browser on 19 October 2026 (the homes at desktop and phone width, a product and a collection on each): a skip link on every page, and a second one to the product information or the results on product and collection pages; Horizon marks 71 to 173 elements with `fetchpriority` and lazy-loads 25 to 102, Dawn 0 to 2; Horizon's speculation rules are inserted after load, not served in the HTML; Horizon's pages have no `contentinfo` landmark, its collection jumps from h1 to h4 and its product page opens with an h3 before the h1; Dawn's menu is a `<details>` disclosure with `aria-expanded` and `aria-controls`, and its filters are disclosures with checkboxes in a fieldset; telemetry requests to `otlp-http-production.shopifysvc.com` and `monorail-edge.shopifysvc.com` on every page.
 
 ```
 <link rel="expect" href="#MainContent" blocking="render" id="view-transition-render-blocker">
