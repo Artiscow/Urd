@@ -674,8 +674,8 @@ The pattern of Samfundet, UCL, Cambridge Union, Øya and the Framer templates, f
 | 4 | Open now, and the practical facts | Samfundet | Opening hours in ER-C; a key-facts box in ER-F |
 | 5 | Join: tiers with benefits, and the steps to join | Cambridge Union, the Framer templates | Membership and steps presets; the sign-up hand-off is in ER-F |
 | 6 | News and notices, pinned first, tagged | Abakus, Øya | News-collection and noticeboard presets |
-| 7 | People: the board with roles and contacts, and earlier boards | UCL, Abakus | Team preset; the people kind is 0.7.16.4 |
-| 8 | A directory of groups and committees | UCL | A directory preset in ER-F; collection filters in 0.7.16.3 |
+| 7 | People: the board with roles and contacts, and earlier boards | UCL, Abakus | Team preset; the people kind is v0.8 AR-4 |
+| 8 | A directory of groups and committees | UCL | A directory preset in ER-F; collection filters in v0.8 AR-3 |
 | 9 | Sponsors and partners, by tier | Samfundet, Cambridge Union | Sponsors preset; tiers in ER-F |
 | 10 | A newsletter band | Øya | A newsletter sign-up with a split consent in 0.7.24 |
 | 11 | Documents («vedtekter», minutes, annual reports) | Samfundet, echo | The file list and documents kind in ER-B |

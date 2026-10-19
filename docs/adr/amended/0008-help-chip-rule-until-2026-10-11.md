@@ -9,7 +9,7 @@ Blocks and sections keep gaining functions that are not visible on the surface: 
 ## Decision
 
 1. **All blocks, sections and elements with SPECIAL functions must have a help chip** in the preview: a «?» that opens a persistent help card where ALL the functions are explained, one line per function. The card stays until you click outside or press Escape, so it can be read in peace. «Special» means: something beyond the move/scale/delete standard all blocks have (dedicated editing surfaces, conventions in the content, panels, automation).
-2. **One shared helper owns the form**: `attachHint(host, { title, lines })` in [hint.js](../../template/assets/urd/hint.js) (stable plugin API path, ADR-0013), styled in base.css (the chip is shown when hovering the block, never in Clean view, never for visitors). Nobody makes their own variants.
+2. **One shared helper owns the form**: `attachHint(host, { title, lines })` in [hint.js](../../../template/assets/urd/hint.js) (stable plugin API path, ADR-0013), styled in base.css (the chip is shown when hovering the block, never in Clean view, never for visitors). Nobody makes their own variants.
 3. **The rule applies to the core AND plugins alike.** Plugin authors import the same helper (`import { attachHint } from '/assets/urd/hint.js'`) and call it only when `ctx.preview` is true. The requirement is stated in plugins/README.md.
 4. First compliance: the collection block and the calendar block. New blocks with special functions must deliver the chip in the same push as the function.
 

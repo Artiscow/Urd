@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.59): the width scaling in the three engines (the follow-up of 0.7.17.4)
+
+- [ ] The lightbox at 1280 and 1024 px window width opens, fits the window and closes in Chromium, Firefox and Safari.
+- [ ] A parallax background at 1280 and 1024 px moves without a gap at the section edges in Chromium, Firefox and Safari.
+- [ ] The text toolbar at 1280 and 1024 px stands above or below the text it edits, never off the canvas, in Chromium, Firefox and Safari.
+
 ### Test batch (0.7.0.55-56p): release 0.7.7
 
 - [ ] After the tag v0.7.7 and the GitHub release: the release Action runs green by itself, and the template repo gets «Urd v0.7.7» with the tag

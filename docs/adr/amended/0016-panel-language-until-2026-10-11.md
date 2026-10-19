@@ -6,7 +6,7 @@ Date: 8 August 2026. Status: accepted (v0.6, the panel-language rollout 0.6.6.6)
 
 Admin's six panels (Pages, Theme, Nav, Footer, Collections, Plugins) plus Properties grew organically, and each panel invented its own recipes for rows, labels, chips and previews. During the rebuild of the Theme panel (0.6.6.5.4) a coherent panel language was piloted: compact control rows, collapsible groups, segment buttons, small uppercase labels, pill chips and live previews. The Updates panel (0.6.10) reused the idiom, but had to copy the CSS recipes because they were not shared classes: three nearly identical row recipes (`.autorow`, `.palhead`, `.update-opt-head`), three nearly identical uppercase labels and two nearly identical chips arose over two rounds. Without a pinned contract the panels drift apart again.
 
-At the same time the field study ([ELEMENTKART.md](../sammenligning/ELEMENTKART.md) parts 1.2 and 9) shows that nearly all modern builders split the inspector into Content vs Style: Gutenberg (Settings/Styles), Elementor (Content/Style/Advanced), Bricks (Content/Style), Carrd (Main/Appearance), GrapesJS (Traits/Style Manager). Urd's Properties panel has no such split today: content fields, appearance, placement and animation stand in one long list.
+At the same time the field study ([ELEMENTKART.md](../../comparison/README.md#former-numbers) parts 1.2 and 9) shows that nearly all modern builders split the inspector into Content vs Style: Gutenberg (Settings/Styles), Elementor (Content/Style/Advanced), Bricks (Content/Style), Carrd (Main/Appearance), GrapesJS (Traits/Style Manager). Urd's Properties panel has no such split today: content fields, appearance, placement and animation stand in one long list.
 
 ## Decision
 

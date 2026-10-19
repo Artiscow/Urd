@@ -4,7 +4,7 @@ Date: 27 July 2026. Status: accepted (v0.6, «Modernise to native/CSS»).
 
 ## Context
 
-Urd's engine is dependency-free vanilla JS served raw. Several components were originally built «the old way»: custom JS for state, position and animation (rAF and scroll listeners, manual `aria-expanded`, `max-height`/`scrollHeight` hacking, absolute positioning with z-index wars, custom focus traps and outside-click listeners). These dragged along a whole class of nasty, often unsolvable bugs: jank, teleported elements, stuck hover, overlays trapped in a stacking context, lost focus. The field study in [ELEMENTKART.md](../sammenligning/ELEMENTKART.md) (parts 3, 5b and the table in 6) showed that modern builders avoid precisely these by building on browser primitives, and that the platform in early 2026 has baseline primitives for most of it.
+Urd's engine is dependency-free vanilla JS served raw. Several components were originally built «the old way»: custom JS for state, position and animation (rAF and scroll listeners, manual `aria-expanded`, `max-height`/`scrollHeight` hacking, absolute positioning with z-index wars, custom focus traps and outside-click listeners). These dragged along a whole class of nasty, often unsolvable bugs: jank, teleported elements, stuck hover, overlays trapped in a stacking context, lost focus. The field study in [ELEMENTKART.md](../../comparison/README.md#former-numbers) (parts 3, 5b and the table in 6) showed that modern builders avoid precisely these by building on browser primitives, and that the platform in early 2026 has baseline primitives for most of it.
 
 ## Decision
 

@@ -1,6 +1,6 @@
 # ADR-0014: The updater model v1 - blob-SHA checksum against the baseline tag
 
-Date: 5 August 2026. Status: accepted (v0.6, milestone 0.6.9). How the endpoint and the commit are built is described in [ARCHITECTURE.md](../ARCHITECTURE.md#the-update-mechanism-adr-0014).
+Date: 5 August 2026. Status: accepted (v0.6, milestone 0.6.9). How the endpoint and the commit are built is described in [ARCHITECTURE.md](../../ARCHITECTURE.md#the-update-mechanism-adr-0014).
 
 ## Context
 

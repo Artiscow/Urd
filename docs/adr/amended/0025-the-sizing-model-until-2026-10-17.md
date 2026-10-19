@@ -1,6 +1,6 @@
 # ADR-0025: The sizing model: the dragged width, and a height that follows the content or is the block's own
 
-Date: 3 October 2026. Status: accepted (v0.7, milestone 0.7.21); decisions 4, 5 and 8 amended 4 and 11 October 2026, earlier text in [amended/](amended/0025-the-sizing-model-until-2026-10-11.md). How the decisions are built is described in [ARCHITECTURE.md](../ARCHITECTURE.md#desktop-sizing-the-push-pass-the-fit-and-the-gestures); the fields are in [SCHEMA.md](../SCHEMA.md).
+Date: 3 October 2026. Status: accepted (v0.7, milestone 0.7.21); decisions 4, 5 and 8 amended 4 and 11 October 2026, earlier text in [amended/](0025-the-sizing-model-until-2026-10-11.md). How the decisions are built is described in [ARCHITECTURE.md](../../ARCHITECTURE.md#desktop-sizing-the-push-pass-the-fit-and-the-gestures); the fields are in [SCHEMA.md](../../SCHEMA.md).
 
 ## Context
 
@@ -8,7 +8,7 @@ A desktop block is an absolutely placed frame: `x` and `w` in percent of the con
 
 The test of the calendar designs on 3 October 2026 showed the gap: a change of design left the outline at the old height, so one design was clipped by its frame and the next stood in a frame with air under it.
 
-The survey of the same day ([SURVEYS.md](../comparison/SURVEYS.md#what-a-drag-means-how-the-builders-size-an-element-3-october-2026), «What a drag means») measured every block type in the preview in a frame that was too short, too tall and narrow, and found three behaviours that nobody had chosen:
+The survey of the same day ([SURVEYS.md](../../comparison/SURVEYS.md#what-a-drag-means-how-the-builders-size-an-element-3-october-2026), «What a drag means») measured every block type in the preview in a frame that was too short, too tall and narrow, and found three behaviours that nobody had chosen:
 
 - **The box decides and the content fills it:** image, video, icon, shape, button, gallery and ribbon.
 - **The content decides and stands at the top of whatever box it is given:** calendar, collection, product, cart, checkout, countdown, FAQ, form, quote, share, stats, table and timeline. A frame taller than the content shows as an outline with air in it.

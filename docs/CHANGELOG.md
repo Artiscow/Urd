@@ -28,6 +28,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.59 - The backlog reviewed against the v0.7 gate, six items moved to v0.8, and the buyer's confirmation - 20 October 2026
+
+- Milestones 0.7.17, 0.7.18, 0.7.21 and 0.7.26, five stages of 0.7.3 and one 0.7.10 item were delivered but not ticked. They are ticked with their commits, and 0.7.17.4's open checks, a test item kept in BACKLOG, became a TESTRUNDER batch.
+- Six stale texts and the clear duplicates were fixed (0.7.12 still called movable though delivered, pointers to delivered or retitled items, the LTT line, two Suggestions), and the huskeliste was rewritten as seven points towards the gate.
+- Six items left v0.7 for v0.8 under v0.8 names and codes: Archiving and person collections (AR), Own looks from design tools (OL), More calendar designs (CD), Accessibility audit in the editor (AU), The phone side of the canvas (PH) and The shortcut's fetched icon. Every reference in the maps and both roadmaps names the new code, and the mapping from the old numbers stands at the top of BACKLOG.
+- The checkout's endpoint path ends on a page the buyer cannot keep, while angrerettloven § 18 asks for a confirmation on a durable medium. 0.7.24.7 makes it a printable confirmation, and the maps' order-confirmation rows point to it.
+- 0.7.3.5 was described as arrow keys, while 0.7.3 built up and down buttons in the phone toolbar. The item and four map entries say so, and keys for the phone order go to 0.7.3.6.
+- Eleven relative links in the amended ADR copies broke when the copies moved into `amended/` or their targets were renamed. AGENTS.md and the amended README allow such a repair, and the links resolve again.
+
 ### 0.7.0.58 - Markup and settings findings sorted into the backlog, and measured facts added to the maps - 20 October 2026
 
 - The shop, gallery, form and navigation markup fell short of the accessible patterns: the basket buttons carry a fixed `aria-label` that hides the count, the drawer has no name, an add is not announced, variant choices are `aria-pressed` buttons, the quantity is no number field, slides have no slide semantics and always run, form errors are not tied to their fields, and no link marks the current page. 0.7.11 takes them in five steps, and ELEMENTS #82, #213, #215, #216 and #228, which said Has, now say Partial with that place.
