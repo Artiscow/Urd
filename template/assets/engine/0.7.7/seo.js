@@ -6,6 +6,8 @@
  * The tags are built pure (node-tested); only applyHeadMeta touches the DOM.
  */
 
+import { siteContact, organizationContact } from './contact-model.js';
+
 /** Absolute address from a page-relative path (media images, pages). */
 function absolute(origin, path) {
   try {
@@ -55,9 +57,8 @@ export function pageMetaTags(site, page, origin, path, entry = {}) {
 }
 
 /**
- * JSON-LD for the site: Organization with name, address, description and
- * logo (the fields from the Site panel). Rich search results for the target
- * audience (associations, small businesses) with no dependency.
+ * JSON-LD for the site: Organization with the name, the description and the logo, and the legal name, the organisation number, the address, the phone and the email of the contact details (the fields from the Site panel, contact-model.js).
+ * Rich search results for the target audience (associations, small businesses) with no dependency.
  * @param {object} site the site.json content (migrated)
  * @param {string} origin
  * @returns {object}
@@ -73,7 +74,7 @@ export function siteJsonLd(site, origin) {
   if (site?.site?.description) data.description = site.site.description;
   const logo = site?.site?.icon ? absolute(base, site.site.icon) : null;
   if (logo) data.logo = logo;
-  return data;
+  return { ...data, ...organizationContact(siteContact(site)) };
 }
 
 /**

@@ -143,4 +143,23 @@ for (const sample of syntheticTemplates) {
 }
 if (templateOk) console.log('OK    synthetic templates (3 against the template schema)');
 
+// A synthetic site with every contact detail filled (site.contact, additive from 0.7.24.5) and the footer's switch off.
+// The template ships none, since a new site must never show a sample organisation number, so the contract is validated here.
+const contactSite = load('template/content/site.json');
+contactSite.site.contact = {
+  country: 'NO', legalName: 'Test Association', representative: 'A Person', ids: { org: '974760673' }, registers: { org: 'Foretaksregisteret' }, vat: { registered: true },
+  address: { street: 'Street 1', postalCode: '7034', city: 'Trondheim' }, phone: '+47 73 59 00 00', email: 'post@example.org',
+};
+contactSite.footer = { ...(contactSite.footer ?? { version: 1 }), contact: false, legal: false };
+const validateSite = ajv.getSchema(siteSchema.$id);
+if (validateSite(contactSite)) {
+  console.log('OK    synthetic site with the contact details');
+} else {
+  failed = true;
+  console.error('ERROR synthetic site with the contact details');
+  for (const err of validateSite.errors ?? []) {
+    console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
+  }
+}
+
 process.exit(failed ? 1 : 0);

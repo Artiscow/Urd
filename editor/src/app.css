@@ -1015,6 +1015,8 @@
      buttons must line up wherever they stand */
   .panel-body input:not([type]):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
   .panel-body input[type='text']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .panel-body input[type='tel']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .panel-body input[type='email']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
   .panel-body input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
     font: inherit;
     font-size: 0.85rem;
@@ -2333,6 +2335,22 @@
   .panel-body .field-filled:focus {
     outline: none;
     border-bottom-color: var(--urd-color-accent);
+  }
+
+  /* A text field that grows downwards with its text (the site's description); lib/autogrow.js sizes it where field-sizing is missing. */
+  .panel-body textarea.field-grow {
+    field-sizing: content;
+    min-height: 2.2rem;
+    padding: 0.45rem 0.5em;
+    resize: none;
+    overflow: hidden;
+  }
+
+  /* Two stacked fields on one row, the first narrow (the postcode beside the town). */
+  .panel-body .field-pair {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.5rem;
   }
 
   /* A dropdown under a stacked label fills the row. */

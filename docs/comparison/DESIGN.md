@@ -679,7 +679,7 @@ The pattern of Samfundet, UCL, Cambridge Union, Øya and the Framer templates, f
 | 9 | Sponsors and partners, by tier | Samfundet, Cambridge Union | Sponsors preset; tiers in ER-F |
 | 10 | A newsletter band | Øya | A newsletter sign-up with a split consent in 0.7.24 |
 | 11 | Documents («vedtekter», minutes, annual reports) | Samfundet, echo | The file list and documents kind in ER-B |
-| 12 | A footer with the legal name, org.nr., address, contact, social links and an accessibility statement link | Online, UCL | Footer in 10 layouts; the org.nr. field is in 0.7.24 |
+| 12 | A footer with the legal name, org.nr., address, contact, social links and an accessibility statement link | Online, UCL | Footer in 10 layouts; the legal name, the organisation numbers, the address and the contact details from the site settings in every layout (0.7.24.5.1) |
 
 **What the design asks for** is little:
 - one type pairing;

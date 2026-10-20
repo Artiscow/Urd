@@ -4,6 +4,7 @@
  * lines only) and the rich one (brand, columns, social links, call to action,
  * baseline with links, background layers). Pure logic lives in footer-model.js
  * and footer-cta.js.
+ * Both shapes show the site's contact details and the legal line (contact-model.js) once they are filled.
  */
 
 import { resolveColor } from './theme.js';
@@ -20,6 +21,8 @@ import {
   footerLinkRow,
   footerCta,
   footerDesign,
+  footerContact,
+  footerLegal,
   hasRichFooter,
 } from './footer-model.js';
 import {
@@ -228,6 +231,37 @@ function buildBrandIdentity(brand) {
   return el;
 }
 
+/** The legal line as text: «Apeiron Linjeforening · Org.nr. 123 456 789 MVA · Foretaksregisteret», the representative with the visitor language's title. */
+function legalText(parts) {
+  return parts.map((p) => {
+    if (p.kind === 'representative') return `${t('contact.representative')}: ${p.text}`;
+    return p.labelKey ? `${t(p.labelKey)} ${p.text}` : p.text;
+  }).join(' · ');
+}
+
+/**
+ * The contact details as an <address>: the address, then the phone and the email, each a link when it is usable.
+ * In a column the address keeps its lines; inline (the plain and the big call-to-action builds) it is one item, «Street 1, 7030 Town».
+ */
+function buildContactAddress(parts, className, inline) {
+  const address = document.createElement('address');
+  address.className = className;
+  const lines = inline && parts.address.length ? [parts.address.join(', ')] : parts.address;
+  for (const line of lines) {
+    const span = document.createElement('span');
+    span.textContent = line;
+    address.appendChild(span);
+  }
+  for (const item of [parts.phone, parts.email]) {
+    if (!item) continue;
+    const node = document.createElement(item.href ? 'a' : 'span');
+    node.textContent = item.label;
+    if (item.href) node.href = item.href;
+    address.appendChild(node);
+  }
+  return address;
+}
+
 /**
  * @param {object} site site.json, already parsed
  * @param {HTMLElement} host The element the footer is built into
@@ -247,11 +281,13 @@ export function renderFooter(site, host, pageId) {
 
   const rich = hasRichFooter(site);
   const baseline = footerBaseline(site);
+  const contact = footerContact(site);
+  const legal = footerLegal(site);
 
   // On, but with no content: a visible yet COMPLETELY empty footer. No text,
   // no placeholder, no page title; it fills up once something is entered in
   // the Footer panel. (show off gives no footer at all, handled above.)
-  if (!rich && !baseline.length) {
+  if (!rich && !baseline.length && !contact && !legal) {
     host.style.display = '';
     const inner = document.createElement('div');
     inner.className = 'urd-footer urd-footer-empty';
@@ -260,7 +296,7 @@ export function renderFooter(site, host, pageId) {
     return;
   }
 
-  // Simple shape: text lines only, no columns or social row.
+  // Simple shape: text lines only, no columns or social row; the contact details and the legal line follow the text.
   if (!rich) {
     host.style.display = '';
     const inner = document.createElement('div');
@@ -269,6 +305,13 @@ export function renderFooter(site, host, pageId) {
       if (!line.trim()) continue;
       const p = document.createElement('p');
       p.textContent = line;
+      inner.appendChild(p);
+    }
+    if (contact) inner.appendChild(buildContactAddress(contact, 'urd-footer-contact-inline', true));
+    if (legal) {
+      const p = document.createElement('p');
+      p.className = 'urd-footer-legal';
+      p.textContent = legalText(legal);
       inner.appendChild(p);
     }
     mountFooterBg(footer, inner);
@@ -315,7 +358,8 @@ export function renderFooter(site, host, pageId) {
       sr.classList.add('urd-footer-social-center');
       wrap.appendChild(sr);
     }
-  } else if (brand || columns.length || social.length || cta) {
+    if (contact) wrap.appendChild(buildContactAddress(contact, 'urd-footer-contact-inline', true));
+  } else if (brand || columns.length || social.length || cta || contact) {
     const top = document.createElement('div');
     top.className = 'urd-footer-top';
     // Alignment of a wide (two-slot) column's heading: left or centered.
@@ -364,6 +408,16 @@ export function renderFooter(site, host, pageId) {
       c.appendChild(ul);
       top.appendChild(c);
     }
+    // The contact column follows the link columns and takes one slot.
+    if (contact) {
+      const c = document.createElement('div');
+      c.className = 'urd-footer-col urd-footer-contact';
+      const h = document.createElement('h4');
+      h.textContent = t('footer.contact');
+      c.append(h, buildContactAddress(contact, 'urd-footer-address', false));
+      top.appendChild(c);
+      n += 1;
+    }
     if (n) top.style.setProperty('--n', String(n));
     wrap.appendChild(top);
   }
@@ -371,8 +425,8 @@ export function renderFooter(site, host, pageId) {
   // The doormat link row (Centered / Big CTA): one centered row.
   if (linkRow.length) wrap.appendChild(buildLinks(linkRow, 'urd-footer-linkrow'));
 
-  // The baseline: copyright/text on the left, optional links on the right.
-  if (baseline.length || baselineLinks.length) {
+  // The baseline: copyright/text and the legal line on the left, optional links on the right.
+  if (baseline.length || baselineLinks.length || legal) {
     const base = document.createElement('div');
     base.className = 'urd-footer-baseline';
     const left = document.createElement('div');
@@ -380,6 +434,12 @@ export function renderFooter(site, host, pageId) {
     for (const line of baseline) {
       const span = document.createElement('span');
       span.textContent = line;
+      left.appendChild(span);
+    }
+    if (legal) {
+      const span = document.createElement('span');
+      span.className = 'urd-footer-legal';
+      span.textContent = legalText(legal);
       left.appendChild(span);
     }
     base.appendChild(left);

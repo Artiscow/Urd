@@ -15532,6 +15532,32 @@ body.urd-marqueeing {
   gap: 0.4rem 1.2rem;
 }
 
+/* The site's contact details (site.site.contact) as an <address>, without the italic browsers give it: lines in the contact column, one wrapping row in the plain and the large CTA builds. */
+#urd-footer address {
+  font-style: normal;
+}
+.urd-footer-address {
+  display: grid;
+  gap: 0.55rem;
+}
+.urd-footer-contact-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.2rem;
+}
+.urd-footer-center .urd-footer-contact-inline {
+  justify-content: center;
+}
+.urd-footer-right .urd-footer-contact-inline {
+  justify-content: flex-end;
+}
+.urd-footer-contact-inline a {
+  color: inherit;
+}
+.urd-footer-wrap > .urd-footer-contact-inline {
+  margin-top: 1.2rem;
+}
+
 /* The doormat link row (Centered / Large CTA): one centered row of links. */
 .urd-footer-linkrow {
   display: flex;

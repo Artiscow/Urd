@@ -58,6 +58,39 @@
           }
         },
         "description": { "type": "string" },
+        "contact": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Additive from 0.7.24.5: the association's legal and contact details, typed once in the Site panel and read by the footer and the Organization JSON-LD (contact-model.js). Which numbers exist, their form and check, and how the VAT number is written follow the country's profile (contact-profiles.js); every field is optional and left out when empty.",
+          "properties": {
+            "country": { "type": "string", "pattern": "^[A-Z]{2}$", "description": "The country whose profile applies (ISO 3166-1 alpha-2; XX for a country outside the list, which gives a free label and number). Omitted, the site language suggests one." },
+            "legalName": { "type": "string", "description": "The registered name, when it differs from the site's title; shown first in the footer's legal line" },
+            "representative": { "type": "string", "description": "The person who represents the association (the Vorstand, the 대표자, the directeur de la publication), where the country's law asks for a name" },
+            "label": { "type": "string", "description": "The number's own label, for a country outside the list" },
+            "ids": { "type": "object", "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "boolean" }] }, "description": "The numbers by the profile's keys, normalised by the editor (a status such as 501(c)(3) is true)" },
+            "extras": { "type": "object", "additionalProperties": { "type": "string" }, "description": "What a number is written with, by its key: the register court, the RCS city or the tax office" },
+            "registers": { "type": "object", "additionalProperties": { "type": "string" }, "description": "The register named beside a number, by its key, from the profile's choices" },
+            "vat": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "registered": { "type": "boolean", "description": "Registered for VAT: the VAT number is derived or shown, and the shop's MVA lines of v1.1 read it (ADR-0027)" },
+                "number": { "type": "string", "description": "The VAT number, for a country where it is a separate number" }
+              }
+            },
+            "address": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "street": { "type": "string" },
+                "postalCode": { "type": "string" },
+                "city": { "type": "string" }
+              }
+            },
+            "phone": { "type": "string" },
+            "email": { "type": "string" }
+          }
+        },
         "icon": { "type": "string", "description": "Site icon (favicon): path in media/ (data URL in draft). Additive field from v0.5." },
         "setup": { "type": "boolean", "description": "Additive from v0.6: true in the template's default content triggers the setup wizard in admin; the wizard removes the field on completion. Replaces the old string matching on the template's default name." }
       }
@@ -551,6 +584,8 @@
           }
         },
         "links": { "type": "boolean", "default": true, "description": "The site's links (site.links) as a row in the footer (additive from 0.7.0.52); false leaves the row out" },
+        "contact": { "type": "boolean", "default": true, "description": "The site's address, phone and email (site.contact) in the footer (additive from 0.7.24.5); false leaves them out" },
+        "legal": { "type": "boolean", "default": true, "description": "The legal line (the legal name, the organisation numbers, the VAT number and the representative of site.contact) in the footer (additive from 0.7.24.5); false leaves it out" },
         "social": {
           "type": "array",
           "description": "Social links (v0.6 to 0.7.0.51; lifted into site.links by the site migration 4 -> 5, never written by the editor since): icon id from the icon library + URL (http/https/mailto/tel).",

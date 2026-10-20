@@ -28,6 +28,17 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.24.5.1 - The legal and contact details for 57 countries in the site settings, drawn by every footer and written into the JSON-LD, and the Site panel tidied - 20 October 2026
+
+- The site had nowhere to keep the association's legal name, organisation number, address, phone and email, so no footer or search data could show them. `site.contact` holds them, typed once in the Site panel under Contact details (SCHEMA.md).
+- Which numbers an organisation shows, their form and check digit, and how its VAT number is written differ by country. One profile per country for 57 countries (`contact-profiles.js`, the survey of 20 October 2026 in SURVEYS.md) and one check per algorithm (`contact-checks.js`, each tested on real published numbers) drive the panel's fields; a failed verified check refuses the number, a check the register does not keep only warns, and «Other country» takes a free number.
+- Every footer build shows the legal line in the bottom line and the address, phone and email as a Contact column or one row, each with a switch in the Footer panel, on by default; the «Contact» footer template drops its sample columns.
+- The Organization JSON-LD gets the legal name, an ISO 6523 code where the list has one, the other numbers, the VAT number and the address; a number that fails its check is left out.
+- Opening hours moved from 0.7.24.5 to ER-C in v0.8, where the weekly hours, the closed periods and «open now» are designed together.
+- The Site panel's fields stood beside labels of different widths, so they never lined up and long labels wrapped. Every field has its label above it, and the description grows downwards with its text (`lib/autogrow.js`, native `field-sizing` where the browser has it).
+- Phone and email fields in the panels were grey boxes, since the panel style reached only text and number fields; it now covers them, the checkout block's email field included.
+- SCHEMA.md said the footer's brand title falls back to the site's title, which the code deliberately never does; the sentence is corrected.
+
 ### 0.7.24.6 - The order button the consumer law asks for: «Bekreft kjøp», with the order and the total right above it - 20 October 2026
 
 - «Send bestilling» did not say that ordering means paying, so under angrerettloven § 16 the buyer was not bound by the order. The button reads «Bekreft kjøp» («Confirm purchase», tr «Satın almayı onayla»), a wording the Commission's reading of Directive 2011/83/EU article 8(2) accepts, and the Swedish pack's «Skicka beställning» reads «Bekräfta köp»; «Betal med Vipps» stays.

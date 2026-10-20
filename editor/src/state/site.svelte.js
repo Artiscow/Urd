@@ -402,6 +402,9 @@ let focusSiteLink = $state(null);
 /** Whether the Site panel's Links group stands open; the buttons that lead there open it. */
 let siteLinksOpen = $state(false);
 
+/** Whether the Site panel's contact details group is open; the Footer panel opens it with «Edit contact details». */
+let siteContactOpen = $state(false);
+
 function addSiteLink() {
   const link = { id: makeId('link'), icon: 'globe', label: '', url: '' };
   siteMutate('site', () => {
@@ -728,6 +731,8 @@ export const siteState = {
   set focusSiteLink(v) { focusSiteLink = v; },
   get siteLinksOpen() { return siteLinksOpen; },
   set siteLinksOpen(v) { siteLinksOpen = v; },
+  get siteContactOpen() { return siteContactOpen; },
+  set siteContactOpen(v) { siteContactOpen = v; },
   siteCalendars,
   siteCalendarById,
   addSiteCalendar,

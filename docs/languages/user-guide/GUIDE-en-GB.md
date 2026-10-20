@@ -315,9 +315,22 @@ reading order. You usually do not have to do anything.
   allows it, so it works out of the box. (On another
   host «frame-src https://www.openstreetmap.org» must be in _headers;
   the block says so if the map is blocked.)
+- The **Site** panel's **Contact details**: the association's country, legal
+  name, organisation numbers, address, phone and email, typed once. The
+  country decides which numbers there are (57 countries are known; «Other
+  country» gives a free number with its own name), how each is written and
+  checked, and how the VAT number is formed. The footer shows the legal line
+  at the bottom («Apeiron Linjeforening · Org.nr. 974 760 673 MVA») and the
+  address, phone and email as a contact column, and search engines read the
+  same details. A number that fails its check is marked and not saved; where
+  a register issues numbers that fail the usual check, it is saved with a
+  note. An empty field leaves no trace.
 - The **Footer** panel: the footer text shown at the bottom of all pages.
   Switch it on, write the lines (one per line) and choose the alignment - it
-  is edited in one place and applies to the whole site.
+  is edited in one place and applies to the whole site. Under **Contact
+  details** two switches leave the legal line, or the address, phone and
+  email, out of the footer; both are on to begin with, since most countries
+  want them easy to find.
 - The **Theme** panel: the colours and fonts the whole site builds on. If you change
   the accent colour, buttons, links and highlights follow along everywhere.
 

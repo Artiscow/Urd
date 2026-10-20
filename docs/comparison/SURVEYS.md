@@ -13,6 +13,7 @@ These are the surveys the ADRs and milestones cite: the layout, navigation and s
 | [What a drag means](#what-a-drag-means-how-the-builders-size-an-element-3-october-2026) | 3 October 2026 | ADR-0025 (0.7.21) |
 | [Default sizes](#default-sizes-what-100--is-17-october-2026) | 17 October 2026 | ADR-0025 decision 6 (0.7.19.23.4) |
 | [What a shop needs](#what-a-shop-needs-how-the-builders-sell-19-october-2026) | 19 October 2026 | ADR-0027 (v1.1) |
+| [How an organisation names itself](#how-an-organisation-names-itself-numbers-registers-and-the-law-in-57-countries-20-october-2026) | 20 October 2026 | Milestone 0.7.24 (0.7.24.5) |
 
 ## The preview canvas (27 July 2026)
 
@@ -266,6 +267,44 @@ A pass on what the builders' entry plans that sell include, read from their own 
 5. The law fixes the checkout's last screen (the button, with the total and the shipping right above it) and the information the shop must give, so those belong in settings and generated pages, not in each product.
 
 **What Urd takes (v1.1):** [ADR-0027](../adr/0027-a-shop-without-a-database.md), a shop without a database: variants with their own price, SKU, availability and image; published availability per variant with reserve-then-capture; static shipping tables with pickup; codes published as an HMAC; MVA as a seller switch, off by default; the law's information in the site and shop settings, with the terms page generated from them; notices from the provider's webhook without storage; and the before price from the catalogue's history. Accounts, subscriptions, gift cards, markets, point of sale, abandoned carts, reviews, B2B, downloads and refunds through Urd are not taken. The order button of today's checkout is fixed earlier, in 0.7.24.6.
+
+## How an organisation names itself: numbers, registers and the law in 57 countries (20 October 2026)
+
+A pass on how an association, a club or a small business identifies itself on its website in the Nordic countries, the rest of Europe including the transcontinental states, the United States, Canada, Mexico, Taiwan, Japan, South Korea and Australia. Read from the registers, the tax authorities, the laws and the ISO 6523 code list, with every check digit run on real published numbers: the registers' and tax authorities' own, listed companies' and charities', several against a whole open register (379 999 Estonian codes, 455 268 Latvian numbers, 1 416 996 Slovak tax numbers). The question was what one site setting must hold so that any of these associations can show what its law asks for.
+
+**What the numbers are:**
+- **One number or several:** Norway, Denmark, Finland, the Baltic states and most of Central Europe show one national number. The United Kingdom shows a company number, a charity number for England and Wales, Scotland or Northern Ireland and a VAT number; Germany a register entry with its court (Vereinsregister, Handelsregister and three more) and a VAT number; France a SIREN, an RNA number for associations and an RCS entry with its city; South Korea a business or non-profit number, a corporate number and a mail-order report number; Canada a business number and a charity registration number.
+- **What travels with a number:** the register court in Germany, Austria, Belgium, Czechia and Croatia, the RCS city in France, the tax office in Greece and Türkiye, the register's name in Norway and the United Kingdom.
+- **Statuses rather than numbers:** the United States' 501(c)(3) sentence, Australia's «Registered charity», Mexico's «Donataria autorizada» and France's «reconnue d'utilité publique».
+
+**What the checks are:**
+- **A published algorithm:** Norway, Finland, Croatia, Serbia, Luxembourg, Japan, Australia and Romania's trade register state theirs in law or regulation.
+- **An algorithm no register publishes, but every real number keeps:** most of the rest, among them the UK and Irish VAT numbers, the Swiss UID (its standard is repealed), Mexico's RFC and Canada's business number.
+- **A check the registers no longer keep:** Iceland issues numbers that fail theirs since 18 February 2026; older Slovenian, Slovak, Ukrainian and Austrian numbers fail theirs; Montenegro's 2026 rulebook names a rule its existing numbers do not follow. A check there may warn, never refuse.
+- **No check at all:** UK company and charity numbers, Irish company and charity numbers, the French RNA, the Austrian ZVR, the Dutch KVK number, the Greek ΓΕΜΗ number and the US EIN (only its prefix).
+- **A rule that changed:** Taiwan's unified business number moved from mod 10 to mod 5 in 2023; 399 of 400 companies registered in October 2026 fail the old rule.
+
+**What the VAT number is:**
+- **The number itself:** Türkiye, Russia, Serbia, Mexico, Taiwan, South Korea and others use the national number for VAT.
+- **The number with a mark or a wrapping:** Norway's «974 760 673 MVA», Switzerland's «CHE-… MWST», Sweden's «SE…01», Belgium's «BE…», Hungary's «HU» with the first eight digits.
+- **A separate number:** Germany, Austria, the United Kingdom, Ireland, the Netherlands, Luxembourg, Estonia, Lithuania, Malta, Cyprus, Japan's «T» number and Canada's «RT» account.
+- **None:** the United States; Australia shows «GST registered» beside the ABN.
+
+**What the law asks a website to show:**
+- **The EU and EEA:** article 5 of Directive 2000/31/EC as each country wrote it, with name, address, email, the register and number and the VAT number. Several countries reach further: Norway's enhetsregisterloven § 7-2 (in force 1 January 2026) asks every registered unit, associations included, for its name and number on its website; Austria's MedienG § 25 asks every Verein for a small disclosure; Belgium's company code covers the VZW; Italy wants the partita IVA on the home page; Greece wants the ΓΕΜΗ number on company sites.
+- **Elsewhere:** Türkiye's 2022 e-commerce regulation asks for a contact section reachable from the home page; South Korea's e-commerce act asks for the trade name, the representative's name, the address, the business number and the mail-order report number; Japan's 特定商取引法 asks the same when selling; the United States, Canada and Australia have no general website rule, and charities show their numbers by custom or for donations.
+- **The representative:** Germany (the Vorstand), South Korea (대표자), France (the directeur de la publication) and Türkiye ask for a person's name.
+
+**What the data may say:** schema.org's `iso6523Code` writes a number as its ISO 6523 code and the number (`0192:974760673`), and can express most identifiers that way, but only 24 of the countries have a national scheme in the ISO 6523 list (Norway 0192, Sweden 0007, Denmark 0184, Belgium 0208, Japan 0188, Australia 0151 and others); the 99xx codes Peppol uses for VAT numbers are electronic-address codes, not ISO 6523, and never belong in `iso6523Code`.
+
+**Five rules from the survey:**
+1. A site setting holds a list of numbers, not one: the country decides which exist.
+2. A number may carry a court, a city, a tax office or a register's name, and the country writes its line its own way.
+3. A check refuses only where it is verified and the register keeps it; where the register publishes no rule, or issues numbers that fail it, the check warns.
+4. The VAT number comes from the country's rule: the number itself, the number marked or wrapped, a number of its own, a status, or nothing.
+5. The JSON-LD writes an ISO 6523 code only where the list has one; the other numbers go into `identifier` and the VAT number into `vatID`.
+
+**What Urd takes (0.7.24.5):** one profile per country in `contact-profiles.js`, with the numbers, their forms, their checks (`contact-checks.js`, each verified on real numbers in its test), what travels with them and how the VAT number is formed; a generic profile for any other country, with a free label and number; a representative's name; and two footer switches, the legal line and the contact details, both on by default. Opening hours stay with ER-C ([FEATURES.md](FEATURES.md#open) C112, C116).
 
 ## Sources
 
@@ -533,3 +572,88 @@ Each list is the survey's own sources, as cited in its text, and belongs to the 
 - [Cloudflare: email service](https://developers.cloudflare.com/email-service/) (primary)
 - [Cloudflare: bindings](https://developers.cloudflare.com/pages/functions/bindings/) (primary)
 - [Cloudflare: limits](https://developers.cloudflare.com/pages/platform/limits/) (primary)
+
+### Survey 20 October 2026 (how an organisation names itself)
+
+- [Peppol BIS Billing 3.0: the ISO 6523 ICD list](https://docs.peppol.eu/poacc/billing/3.0/codelist/ICD/) (primary)
+- [Peppol: the electronic address schemes](https://docs.peppol.eu/poacc/billing/3.0/codelist/eas/) (primary)
+- [Peppol: participant identifier schemes v9.7](https://docs.peppol.eu/edelivery/codelists/) (primary)
+- [schema.org: Organization](https://schema.org/Organization) (primary)
+- [EU: VIES VAT number validation](https://ec.europa.eu/taxation_customs/vies/) (primary)
+- [GLEIF: the LEI records API](https://api.gleif.org/api/v1/lei-records) (secondary)
+- [Lovdata: ehandelsloven](https://lovdata.no/dokument/NL/lov/2003-05-23-35) (primary)
+- [Lovdata: enhetsregisterloven 2025](https://lovdata.no/dokument/NL/lov/2025-06-20-105) (primary)
+- [Brønnøysundregistrene: organisasjonsnummeret](https://www.brreg.no/om-oss/registrene-vare/om-enhetsregisteret/organisasjonsnummeret/) (primary)
+- [Riksdagen: lag 2002:562](https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/lag-2002562-om-elektronisk-handel-och-andra_sfs-2002-562/) (primary)
+- [Retsinformation: e-handelsloven](https://www.retsinformation.dk/eli/lta/2002/227) (primary)
+- [Finlex: laki 917/2014](https://opendata.finlex.fi/finlex/avoindata/v1/akn/fi/act/statute/2014/917/fin@) (primary)
+- [Finlex: laki 244/2001](https://opendata.finlex.fi/finlex/avoindata/v1/akn/fi/act/statute/2001/244/fin@) (primary)
+- [Neytendastofa: rafræn viðskipti](https://www.neytendastofa.is/neytendarettur/rafraen-vidskipti/) (primary)
+- [Riigi Teataja: ISTS](https://www.riigiteataja.ee/akt/ISTS) (primary)
+- [TTJA: e-kaubandus](https://ttja.ee/ariklient/ettevotlus/tarbijakaitsenouded-tegevusalale/e-kaubandus) (primary)
+- [Likumi.lv: Informācijas sabiedrības pakalpojumu likums](https://likumi.lv/ta/id/96619-informacijas-sabiedribas-pakalpojumu-likums) (primary)
+- [legislation.gov.uk: SI 2015/17 part 6](https://www.legislation.gov.uk/uksi/2015/17/part/6) (primary)
+- [legislation.gov.uk: SI 2009/1804 reg. 14](https://www.legislation.gov.uk/uksi/2009/1804/regulation/14) (primary)
+- [Irish Statute Book: Companies Act 2014 s.151](https://www.irishstatutebook.ie/eli/2014/act/38/section/151/enacted/en/html) (primary)
+- [Service-Public: mentions obligatoires](https://entreprendre.service-public.gouv.fr/vosdroits/F37351) (primary)
+- [recherche-entreprises.api.gouv.fr](https://recherche-entreprises.api.gouv.fr/) (primary)
+- [LégiMonaco: loi n° 1.383](https://legimonaco.mc/tnc/loi/2011/08-02-1.383/) (primary)
+- [BOPA: llei 20/2014](https://documents.bopa.ad/bopa-documents/026065/html/lo26065006.html) (primary)
+- [Justel: WVV/CSA](https://www.ejustice.just.fgov.be/eli/wet/2019/03/23/2019A40586/justel) (primary)
+- [KBO Public Search](https://kbopub.economie.fgov.be/kbopub/zoeknummerform.html) (primary)
+- [wetten.overheid.nl: Handelsregisterwet 2007](https://wetten.overheid.nl/BWBR0021777/2025-07-16) (primary)
+- [Legilux: loi du 14 août 2000](https://legilux.public.lu/eli/etat/leg/loi/2000/08/14/n8/consolide/20260510) (primary)
+- [gesetze-im-internet.de: § 5 DDG](https://www.gesetze-im-internet.de/ddg/__5.html) (primary)
+- [RIS: § 5 ECG](https://ogd.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40025801/NOR40025801.html) (primary)
+- [Fedlex: UWG](https://www.fedlex.admin.ch/eli/cc/1988/223_223_223/de) (primary)
+- [uid.admin.ch: the UID register](https://www.uid.admin.ch/) (primary)
+- [gesetze.li: ECG](https://www.gesetze.li/konso/2003.133) (primary)
+- [BOE: Ley 34/2002](https://www.boe.es/buscar/act.php?id=BOE-A-2002-13758) (primary)
+- [WIPO Lex: Decreto-Lei n.º 7/2004](https://wipolex-res.wipo.int/edocs/lexdocs/laws/pt/pt/pt064pt.pdf) (primary)
+- [Normattiva: D.Lgs. 70/2003 art. 7](https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2003-04-09;70~art7) (primary)
+- [legislation.mt: Cap. 426](https://legislation.mt/eli/cap/426/eng/pdf) (primary)
+- [taxheaven: Π.Δ. 131/2003 art. 4](https://www.taxheaven.gr/law/%CE%A0.%CE%94.131/2003/arthro/4) (secondary)
+- [Diavgeia: organisations open data](https://diavgeia.gov.gr/opendata/organizations.json) (primary)
+- [Cyprus Consumer Protection Service: e-commerce](https://katanalotis.org.cy/nomothesia/ilektroniko-eborio/) (primary)
+- [Mevzuat: kanun 6563](https://www.mevzuat.gov.tr/MevzuatMetin/1.5.6563.pdf) (primary)
+- [Mevzuat: the 2022 e-commerce regulation](https://www.mevzuat.gov.tr/MevzuatMetin/yonetmelik/7.5.39927.pdf) (primary)
+- [zakon.hr: Zakon o elektroničkoj trgovini](https://www.zakon.hr/z/199/zakon-o-elektronickoj-trgovini) (secondary)
+- [FURS: the register of legal-entity taxpayers](https://www.fu.gov.si/fileadmin/prenosi/DURS_zavezanci_PO.zip) (primary)
+- [Sejm: ustawa o świadczeniu usług drogą elektroniczną](https://api.sejm.gov.pl/eli/acts/DU/2024/1513/text.pdf) (primary)
+- [e-Sbírka: zákon 89/2012](https://e-sbirka.gov.cz/sb/2012/89) (primary)
+- [Slov-Lex: zákon 22/2004](https://static.slov-lex.sk/static/SK/ZZ/2004/22/20250628.html) (primary)
+- [Financial Administration of Slovakia: the DIČ list](https://report.financnasprava.sk/ds_dsrdp.zip) (primary)
+- [Nemzeti Jogszabálytár: 2001. évi CVIII. törvény](https://njt.jog.gov.hu/jogszabaly/2001-108-00-00) (primary)
+- [legislatie.just.ro: Legea 365/2002](https://legislatie.just.ro/Public/DetaliiDocumentAfis/77218) (primary)
+- [ANAF: the VAT payer API](https://webservicesp.anaf.ro/api/PlatitorTvaRest/v9/tva) (primary)
+- [lex.bg: Закон за електронната търговия](https://lex.bg/laws/ldoc/2135530547) (secondary)
+- [Paragraf: Zakon o elektronskoj trgovini (RS)](https://www.paragraf.rs/propisi/zakon_o_elektronskoj_trgovini.html) (secondary)
+- [Paragraf: Zakon o zaštiti potrošača (BiH)](https://www.paragraf.ba/propisi/bih/zakon-o-zastiti-potrosaca-u-bosni-i-hercegovini.html) (secondary)
+- [Službeni list CG: Zakon o elektronskoj trgovini](https://www.sluzbenilist.me/propisi/301040/download) (primary)
+- [UJP: the register of legal entities](https://www.ujp.gov.mk/mk/prebaruvanje_pravni_lica/prikazi?edb=4030000404218) (primary)
+- [Tatime: ligji 9920/2008](https://tatime.gov.al/wp-content/uploads/2026/10/Ligj-Nr-9920-Dt-2008.05.19-perditesuar-1.pdf) (primary)
+- [Gazeta Zyrtare: ligji 04/L-094](https://gzk.rks-gov.net/ActDetail.aspx?ActID=2811) (primary)
+- [dataset.gov.md: the company register](https://dataset.gov.md/dataset/a1f38191-f35c-4180-8d80-297851a08f60) (primary)
+- [Rada: Закон «Про електронну комерцію»](https://zakon.rada.gov.ua/laws/show/675-19) (primary)
+- [FAOLEX: закон 90-З](https://faolex.fao.org/docs/pdf/blr112499.pdf) (secondary)
+- [nalog.gov.ru: open data](https://www.nalog.gov.ru/opendata/) (primary)
+- [ConsultantPlus: 149-ФЗ](https://www.consultant.ru/document/cons_doc_LAW_61798/) (secondary)
+- [Matsne: the law on electronic commerce](https://matsne.gov.ge/en/document/view/5825902?publication=0) (primary)
+- [ARLIS: the law on consumer rights protection](https://www.arlis.am/hy/acts/226867/latest) (primary)
+- [WIPO Lex: the Azerbaijani law on electronic commerce](https://www.wipo.int/wipolex/en/legislation/details/9209) (primary)
+- [IRS: Publication 557](https://www.irs.gov/pub/irs-pdf/p557.pdf) (primary)
+- [Florida Statutes: s. 496.411](https://www.flsenate.gov/Laws/Statutes/2025/496.411) (primary)
+- [CRA: official donation receipts](https://www.canada.ca/en/revenue-agency/services/charities-giving/charities/operating-a-registered-charity/issuing-receipts/what-information-must-on-official-donation-receipt-a-registered-charity.html) (primary)
+- [Justice Laws: Canada Business Corporations Act](https://laws-lois.justice.gc.ca/eng/acts/c-44/page-2.html) (primary)
+- [Profeco: LFPC](https://www.profeco.gob.mx/juridico/pdf/l_lfpc_ultimo_camDip.pdf) (primary)
+- [SAT: the article 69-B list](http://omawww.sat.gob.mx/cifras_sat/Documents/Listado_Completo_69-B.csv) (primary)
+- [Wikisource: 消費者保護法](https://zh.wikisource.org/wiki/消費者保護法_(民國104年)) (secondary)
+- [GCIS: the company register API](https://data.gcis.nat.gov.tw/) (primary)
+- [e-Gov: 特定商取引に関する法律](https://laws.e-gov.go.jp/law/351AC0000000057) (primary)
+- [NTA: the corporate number site](https://www.houjin-bangou.nta.go.jp/) (primary)
+- [NTA: the invoice registration diff files](https://www.invoice-kohyo.nta.go.jp/download/sabun) (primary)
+- [law.go.kr: 전자상거래법](https://www.law.go.kr/법령/전자상거래등에서의소비자보호에관한법률) (primary)
+- [DART](https://dart.fss.or.kr/) (primary)
+- [ABR: ABN lookup](https://abr.business.gov.au/) (primary)
+- [ASIC: the Australian company number](https://www.asic.gov.au/for-business-and-companies/companies/register-a-company/australian-company-number-acn/) (primary)
+- [python-stdnum](https://github.com/arthurdejong/python-stdnum) (code)

@@ -314,9 +314,22 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   det virker ut av boksen. (På en annen
   host må «frame-src https://www.openstreetmap.org» ligge i _headers;
   blokken sier fra hvis kartet er blokkert.)
+- **Kontaktopplysninger** i **Nettsted**-panelet: foreningens land, juridiske
+  navn, organisasjonsnumre, adresse, telefon og e-post, skrevet én gang.
+  Landet bestemmer hvilke numre som finnes (57 land er kjent; «Annet land» gir
+  ett fritt nummer med eget navn), hvordan hvert skrives og kontrolleres, og
+  hvordan mva-nummeret dannes. Bunnteksten viser den juridiske linjen nederst
+  («Apeiron Linjeforening · Org.nr. 974 760 673 MVA») og adressen, telefonen
+  og e-posten som en kontaktkolonne, og søkemotorene leser de samme
+  opplysningene. Et nummer som ikke består kontrollen, blir markert og ikke
+  lagret; der et register deler ut numre som ikke består den vanlige
+  kontrollen, lagres det med en merknad. Et tomt felt setter ingen spor.
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.
   Skru den på, skriv linjene (én per linje) og velg justering - den
-  redigeres ett sted og gjelder hele nettstedet.
+  redigeres ett sted og gjelder hele nettstedet. Under
+  **Kontaktopplysninger** lar to brytere den juridiske linjen, eller
+  adressen, telefonen og e-posten, stå utenfor bunnteksten; begge er på fra
+  start, siden de fleste land vil ha dem lette å finne.
 - **Tema**-panelet: fargene og fontene hele siden bygger på. Endrer du
   aksentfargen, følger knapper, lenker og markeringer med overalt.
 

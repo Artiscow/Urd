@@ -6,6 +6,7 @@
 
 import { resolveItem, isSafeUrl } from './nav-model.js';
 import { siteLinks } from './links-model.js';
+import { siteContact, legalParts, contactParts } from './contact-model.js';
 
 // The safe-URL guard lives in nav-model (shared with resolveItem); re-exported
 // here for footer.js and the tests that import it from here.
@@ -127,6 +128,27 @@ export function footerCta(site) {
  */
 export function footerSocial(site) {
   return site.footer?.links === false ? [] : siteLinks(site);
+}
+
+/**
+ * The site's address, phone and email (site.site.contact, contact-model.js), unless the footer leaves them out (`footer.contact: false`, additive from 0.7.24.5).
+ * @param {object} site
+ * @returns {ReturnType<typeof contactParts>}
+ */
+export function footerContact(site) {
+  return site.footer?.contact === false ? null : contactParts(siteContact(site));
+}
+
+/**
+ * The legal line's parts (the legal name, the organisation numbers, the VAT number and the representative), unless the footer leaves them out (`footer.legal: false`).
+ * On by default once filled, since most countries ask for them to be easy to find.
+ * @param {object} site
+ * @returns {ReturnType<typeof legalParts> | null} null when there is nothing to show
+ */
+export function footerLegal(site) {
+  if (site.footer?.legal === false) return null;
+  const parts = legalParts(siteContact(site));
+  return parts.length ? parts : null;
 }
 
 /**

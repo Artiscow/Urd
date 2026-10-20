@@ -65,7 +65,7 @@ test('the schema and the template picker know the same designs', () => {
     assert.ok(editor.includes(`design: '${design}'`), `${design} in a template`);
   }
   // A template without a design clears the one a former template set.
-  assert.match(editor, /for \(const k of \[[^\]]*'design'\]\)/);
+  assert.match(editor, /for \(const k of \[[^\]]*'design'[^\]]*\]\)/);
 });
 
 test('footerThumb: the two designs draw their own cards', () => {

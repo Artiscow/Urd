@@ -2,6 +2,24 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.24.5.1): the legal and contact details for any country, and the Site panel tidied
+
+- [ ] Site panel, Contact details: Country offers 57 countries by their names in the admin language and «Other country» last; a new site starts on the country of its language (Norway for bokmål)
+- [ ] Norway: 974 760 673 is saved and shown as «974 760 673»; 974 760 674 gives the red note and is not saved; Register and «Registered for VAT» follow
+- [ ] Iceland: 540269-6039 (wrong check digit) is saved with the grey note; Germany: Number type offers the five registers, only the chosen one has a field, switching kind clears the number, and «12345 B» typed as a Vereinsregister number becomes «VR 12345 B»; the Register court field and USt-IdNr. appear once their number or tick is there
+- [ ] A number in the wrong form (Norway: 12345) gives «The number is not in the form the country writes it», not the check note
+- [ ] Picking the same country again keeps the numbers; changing the country clears them; a picked country stays when its last field is emptied; «Other country» shows «The number's name», «Number» and «VAT number»
+- [ ] Ctrl+Z takes back a typed contact field in one step
+- [ ] Footer: in Minimal, Columns, Chapters, Split, Big CTA, Contact and the plain text footer the bottom line shows «Apeiron Linjeforening · Org.nr. 974 760 673 MVA · Foretaksregisteret», and the address, phone and email show as a Contact column (one centred row in Big CTA and the plain footer); phone and email are links
+- [ ] While the Register court or the register is still empty the line reads cleanly: «Vereinsregister: VR 12345 B», «Company No. 07510759»
+- [ ] Footer panel, Contact details: «Show the legal line» and «Show the address, phone and email» each hide only their part, show only when there is something to hide, and «Edit the contact details» opens the Site panel with the group open; applying a footer template turns both back on
+- [ ] Germany in the footer: «Vereinsregister: Amtsgericht Berlin-Charlottenburg, VR 12345 B» and «USt-IdNr. DE259582878»; Switzerland with HR and VAT: «UID CHE-135.626.465 HR/MWST»; a representative shows last as «Ansvarlig: …» (en-GB «Representative», tr «Temsilci»); «Other country» with a VAT number shows «Mva-nr. …» (en-GB «VAT no.»)
+- [ ] Published: `content/site.json` holds the contact group, the live footer matches the preview, and DevTools shows the `application/ld+json` with `legalName`, `iso6523Code` 0192:974760673, `vatID` and the address
+- [ ] At phone width the Contact column moves below like the link columns, and the plain footer's contact row wraps
+- [ ] Site panel: every field has its label above it at full width and nothing wraps; Description grows downwards with its text and Enter adds no line break, also in Firefox, and keeps the right height after Ctrl+Z
+- [ ] A refused number is announced by a screen reader as invalid with its note
+- [ ] The checkout block's email field in Properties looks like the other fields, not a grey box
+
 ### Test batch (0.7.24.6): the order button and the summary above it
 
 - [ ] Checkout with products in the basket: right above the buttons, after the contact fields, stands the order in one line («2 × …, 1 × …») with the total; the summary at the top is still there

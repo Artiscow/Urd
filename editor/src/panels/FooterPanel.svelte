@@ -6,6 +6,7 @@
   import { glowLayer } from '$engine/backgrounds/glow.js';
   import { grainLayer } from '$engine/backgrounds/grain.js';
   import { footerThumb } from '$engine/footer-thumb.js';
+  import { siteContact, contactParts, legalParts } from '$engine/contact-model.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
   const ed = getContext('urd-editor');
@@ -75,7 +76,7 @@
     { id: 'sitemap', label: ta('footerTemplate.sitemap'), thumb: { tag: true, fat: true, cols: 4, social: 4, baselineLinks: 3 } },
     { id: 'newsletter', label: ta('footerTemplate.newsletter'), thumb: { tag: true, cta: true, cols: 2, social: 2, baselineLinks: 1 } },
     { id: 'bigcta', label: ta('footerTemplate.bigcta'), thumb: { center: true, bigcta: true, baselineLinks: 2 } },
-    { id: 'contact', label: ta('footerTemplate.contact'), thumb: { tag: true, cols: 3, social: 2, baselineLinks: 1 } },
+    { id: 'contact', label: ta('footerTemplate.contact'), thumb: { tag: true, cols: 2, social: 2, baselineLinks: 1 } },
     { id: 'mega', label: ta('footerTemplate.mega'), thumb: { tag: true, mega: true, cols: 2, social: 4, baselineLinks: 2 } },
     { id: 'chapters', label: ta('footerTemplate.chapters'), thumb: { chapters: true, cols: 3, baselineLinks: 2 } },
     { id: 'split', label: ta('footerTemplate.split'), thumb: { split: true, cols: 2, baselineLinks: 1 } },
@@ -136,10 +137,9 @@
         baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'contact') {
+      // The contact column after the pages is the site's own contact details (the Site panel), never sample text.
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline4') },
         columns: [
-          { title: ta('seed.footer.colVisit'), links: [ext(ta('seed.footer.address'), '#'), ext(ta('seed.email'), `mailto:${ta('seed.email')}`), ext(ta('seed.phone'), `tel:${ta('seed.phone').replace(/\s+/g, '')}`)] },
-          { title: ta('seed.footer.colHours'), links: [ext(ta('seed.footer.hours1'), '#'), ext(ta('seed.footer.hours2'), '#')] },
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
         ],
         copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
@@ -184,7 +184,7 @@
       const t = footerTemplateConfig(name);
       f.show = true;
       delete f.text; // "Simple text" is the legacy form; the templates use the rich footer.
-      for (const k of ['align', 'brand', 'columns', 'social', 'copyright', 'baseline', 'linkRow', 'cta', 'columnsAlign', 'background', 'design']) {
+      for (const k of ['align', 'brand', 'columns', 'social', 'copyright', 'baseline', 'linkRow', 'cta', 'columnsAlign', 'background', 'design', 'contact', 'legal']) {
         if (t[k] !== undefined) f[k] = t[k]; else delete f[k];
       }
     });
@@ -455,6 +455,28 @@
         {ta('ui.footerLinks')}
       </label>
       <button class="ghost action" onclick={() => { ed.siteLinksOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteLinks')}</button>
+    </div>
+  </details>
+
+  <details class="group">
+    <summary title={ta('tip.footer.contact')}>{ta('group.siteContact')}</summary>
+    <div class="group-items">
+      <!-- The legal line and the address, phone and email come from the Site panel; a switch shows only when there is something to leave out -->
+      {#if legalParts(siteContact(siteDraft)).length}
+        <label class="gridmenu-snap" title={ta('tip.footer.legal')}>
+          <input type="checkbox" checked={siteDraft.footer?.legal !== false}
+            onchange={(e) => footerMutate('footer', (f) => { if (e.target.checked) delete f.legal; else f.legal = false; })} />
+          {ta('ui.footerLegal')}
+        </label>
+      {/if}
+      {#if contactParts(siteContact(siteDraft))}
+        <label class="gridmenu-snap" title={ta('tip.footer.contact')}>
+          <input type="checkbox" checked={siteDraft.footer?.contact !== false}
+            onchange={(e) => footerMutate('footer', (f) => { if (e.target.checked) delete f.contact; else f.contact = false; })} />
+          {ta('ui.footerContact')}
+        </label>
+      {/if}
+      <button class="ghost action" onclick={() => { ed.siteContactOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteContact')}</button>
     </div>
   </details>
 
