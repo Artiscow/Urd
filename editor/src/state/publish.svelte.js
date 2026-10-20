@@ -8,6 +8,9 @@ import { liftPageFile } from '$engine/migrate.js';
 import { buildThemeCss } from '$engine/theme.js';
 import { FEED_KINDS, buildRssXml, buildSitemapXml, buildRobotsTxt } from '$engine/feeds.js';
 import { createDraftStore } from '../lib/draftStore.js';
+import {
+  INDEX_PATH, LEGACY_INDEX_PATH, INDEX_DRAFT_KEY, LEGACY_DELETED_KEY, fetchIndex, indexPending, planIndexPublish,
+} from '../lib/collection-index.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -259,7 +262,7 @@ async function publish() {
 
   // Collections: changed files, the index file and deletions (diff against the published index).
   const changedCollections = Object.entries(collectionsState.collectionStores).filter(([, st]) => st.hasDraft());
-  if (changedCollections.length || collectionsState.collectionsIndexStore?.hasDraft()) {
+  if (changedCollections.length || indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds)) {
     for (const [id, st] of changedCollections) {
       const out = JSON.parse(JSON.stringify(st.data));
       for (const entry of out.entries) materializeEntryImages(entry, files);
@@ -281,23 +284,25 @@ async function publish() {
           encoding: 'utf-8',
         });
       }
-      draftKeys.push(`urd-draft-samling-${id}`);
+      draftKeys.push(`urd-draft-collection-${id}`, `urd-draft-samling-${id}`);
     }
-    if (collectionsState.collectionsIndexStore?.hasDraft()) {
-      files.push({ path: 'content/collections.json', content: JSON.stringify(collectionsState.collectionsIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
-      draftKeys.push('urd-draft-collections', 'urd-draft-samlinger');
-      // Collections removed from the index are deleted from the repo (if
-      // also created in the same publish, the create list above wins).
-      let publishedIndex = { samlinger: [] };
-      try {
-        publishedIndex = await (await fetch('/content/collections.json')).json();
-      } catch { /* no published index yet */ }
-      const created = new Set(files.map((f) => f.path));
-      for (const id of publishedIndex.samlinger ?? []) {
-        const path = `content/samlinger/${id}.json`;
-        if (!collectionsState.collectionIds.includes(id) && !created.has(path)) files.push({ path, delete: true });
-      }
+    const plan = planIndexPublish({
+      ids: collectionsState.collectionIds,
+      hasDraft: collectionsState.collectionsIndexStore?.hasDraft() ?? false,
+      published: (await fetchIndex(INDEX_PATH))?.samlinger ?? null,
+      legacy: collectionsState.legacyIndexIds,
+    });
+    if (plan.writeIndex) {
+      files.push({ path: INDEX_PATH, content: JSON.stringify(collectionsState.collectionsIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
+      draftKeys.push(INDEX_DRAFT_KEY);
     }
+    // Collections removed from the index are deleted from the repo; one also created in the same publish keeps the create.
+    const created = new Set(files.map((f) => f.path));
+    for (const id of plan.deleteIds) {
+      const path = `content/samlinger/${id}.json`;
+      if (!created.has(path)) files.push({ path, delete: true });
+    }
+    if (plan.deleteLegacy) files.push({ path: LEGACY_INDEX_PATH, delete: true });
     publishedTitles.push(ta('publish.part.collections'));
   }
 
@@ -312,7 +317,7 @@ async function publish() {
       for (const block of out.blocks ?? []) materializeBlockImages(block, files);
       for (const section of out.page?.sections ?? []) materializeSection(section, files);
       files.push({ path: `content/maler/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
-      draftKeys.push(`urd-draft-mal-${id}`);
+      draftKeys.push(`urd-draft-template-${id}`, `urd-draft-mal-${id}`);
     }
     if (templatesState.templatesIndexStore?.hasDraft()) {
       files.push({ path: 'content/maler.json', content: JSON.stringify(templatesState.templatesIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
@@ -434,7 +439,11 @@ async function publish() {
         for (const entry of st.data.entries) materializeEntryImages(entry, []);
       }
       const publishedIndex = JSON.parse(JSON.stringify(collectionsState.collectionsIndexStore.data));
-      collectionsState.collectionsIndexStore = createDraftStore('urd-draft-collections', () => publishedIndex, shellState.draftSaveError, 'urd-draft-samlinger');
+      collectionsState.collectionsIndexStore = createDraftStore(INDEX_DRAFT_KEY, () => publishedIndex, shellState.draftSaveError);
+      if (files.some((f) => f.path === LEGACY_INDEX_PATH)) {
+        collectionsState.legacyIndexIds = null;
+        try { localStorage.setItem(LEGACY_DELETED_KEY, '1'); } catch { /* without the marker, a reload before the deploy merges the legacy index again */ }
+      }
       collectionsState.publishedCollections = {};
       for (const id of collectionsState.collectionIds) {
         if (!collectionsState.collectionStores[id]) continue;

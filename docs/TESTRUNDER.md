@@ -2,6 +2,20 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.60): the collection index and the template's collections
+
+- [ ] A new site from the template: Collections shows «Nyheter» and «Produkter» and no «F», and the repo has no `content/collections.json` and no `content/samlinger/f.json`
+- [ ] A site whose collections are listed only in `content/samlinger.json`: after the update, Collections shows them all
+- [ ] A site with a `content/collections.json` (made from the template since 28 September 2026, or with a collection created in the editor since 0.7.14.5): after the update, Collections shows the collections of both files and the editor shows «Unpublished»; after Publish, `content/samlinger.json` lists them all and `content/collections.json` is gone from the repo
+- [ ] On such a site before the first Publish: remove «F» in Collections and reload; «F» stays removed. Then Publish: `content/samlinger/f.json` and `content/collections.json` are gone from the repo, and «F» does not come back after a reload
+- [ ] On such a site: Publish, reload at once and publish a change to a page before the deploy finishes; that commit leaves `content/samlinger.json` alone
+- [ ] On the same site before Publish: Discard drafts keeps every collection of both files in Collections
+- [ ] A collection created in the editor but not published before the update: after the update, Collections shows it beside the published ones, and Publish deletes no collection file in the repo
+- [ ] After that publish and the deploy: a collection removed in Collections and published is gone from the repo and does not come back after a reload
+- [ ] A product collection created in the editor and published: a product in it is paid for through the Vipps layer on a deployed site
+- [ ] After a Publish that changes a collection or a template, «Unpublished» goes off, and the next Publish of a page alone does not rewrite that collection or template
+- [ ] A page titled «Samlinger» or «Collections» with an unpublished change keeps the change after a reload
+
 ### Test batch (0.7.0.59): the width scaling in the three engines (the follow-up of 0.7.17.4)
 
 - [ ] The lightbox at 1280 and 1024 px window width opens, fits the window and closes in Chromium, Firefox and Safari.

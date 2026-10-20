@@ -3,6 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { createDraftStore } from '../lib/draftStore.js';
+import { indexPending } from '../lib/collection-index.js';
 import { ta } from '$engine/i18n.js';
 import { collectionsState } from './collections.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -19,7 +20,7 @@ function updateDirty() {
   // published pages that are just waiting for deploy.
   const anyPageDraft = siteState.siteDraft?.pages?.some((p) =>
     !pageState.pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
-  const anyCollectionDraft = collectionsState.collectionsIndexStore?.hasDraft()
+  const anyCollectionDraft = indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds)
     || Object.values(collectionsState.collectionStores).some((st) => st.hasDraft());
   const anyTemplateDraft = templatesState.templatesIndexStore?.hasDraft()
     || Object.values(templatesState.templateStores).some((st) => st.hasDraft());

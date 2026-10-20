@@ -3,6 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { createDraftStore } from '../lib/draftStore.js';
+import { INDEX_DRAFT_KEY, readIndexes, indexBaseline, earlierDrafts, openingIds } from '../lib/collection-index.js';
 import { slugify } from '$engine/imageTools.js';
 import { ta } from '$engine/i18n.js';
 import { makeId } from '$engine/sections/presets.js';
@@ -15,6 +16,9 @@ import { shellState } from './shell.svelte.js';
 // one file per collection, each with its own draftStore. Editing goes
 // through the Ctrl+Z history (like pages/site).
 let collectionsIndexStore = null;
+
+/** The ids only the site's legacy index lists, or null when it has none (readIndexes in lib/collection-index.js). */
+let legacyIndexIds = null;
 
 let collectionStores = {};
 
@@ -35,12 +39,21 @@ let newCollectionName = $state('');
 let newCollectionKind = $state('news');
 
 async function initCollections() {
-  let index = { version: 1, samlinger: [] };
-  try {
-    index = await (await fetch('/content/collections.json')).json();
-  } catch { /* no index is perfectly fine */ }
-  collectionsIndexStore = createDraftStore('urd-draft-collections', () => index, shellState.draftSaveError, 'urd-draft-samlinger');
-  collectionIds = [...(collectionsIndexStore.data.samlinger ?? [])];
+  // No index is perfectly fine.
+  const { index, legacy } = await readIndexes();
+  legacyIndexIds = legacy;
+  const earlier = earlierDrafts(localStorage);
+  const baseline = indexBaseline(index, legacy);
+  collectionsIndexStore = createDraftStore(INDEX_DRAFT_KEY, () => baseline, shellState.draftSaveError);
+  collectionsIndexStore.data.samlinger = openingIds({
+    published: index.samlinger,
+    legacy,
+    draft: collectionsIndexStore.hasDraft() ? collectionsIndexStore.data.samlinger : null,
+    earlier: earlier.ids,
+  });
+  // The earlier drafts are dropped only once the merge is persisted.
+  if (collectionsIndexStore.save()) for (const key of earlier.keys) localStorage.removeItem(key);
+  collectionIds = [...collectionsIndexStore.data.samlinger];
   for (const id of collectionIds) {
     let published = null;
     try {
@@ -202,6 +215,8 @@ function addCollectionEntry(id) {
 export const collectionsState = {
   get collectionsIndexStore() { return collectionsIndexStore; },
   set collectionsIndexStore(v) { collectionsIndexStore = v; },
+  get legacyIndexIds() { return legacyIndexIds; },
+  set legacyIndexIds(v) { legacyIndexIds = v; },
   get collectionStores() { return collectionStores; },
   set collectionStores(v) { collectionStores = v; },
   get publishedCollections() { return publishedCollections; },

@@ -28,6 +28,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.60 - The editor back on the collection index the rest of Urd reads, the template's stray collection removed, and published drafts cleared - 20 October 2026
+
+- Since 0.7.14.5, whose rename also caught the index path, the editor read and wrote `content/collections.json`, while the Vipps function reads `content/samlinger.json`; an older site's Collections panel was empty after the update, and a product collection made in the editor could not be paid for. The editor reads and writes `samlinger.json` again (`editor/src/lib/collection-index.js`), adds the ids only a site's `collections.json` lists when it opens, and the next publish of the collections writes them into the index and deletes that file, also when one of them was removed.
+- An index draft saved before the fix could lack the ids only `samlinger.json` lists, and publishing it would delete their files. The index draft has a new key no page slug can give, an earlier draft is merged with the published index (a page's draft under the same key is left alone), and a collection listed in either file counts as published when publishing decides what to delete.
+- The template shipped a test collection «f» from an admin commit on 28 September 2026, and its `content/collections.json` listed only «f». That file, `f.json`, `f.xml` and the three images only «f» used are removed, and a test holds the template's index equal to its collection files.
+- Since 0.7.14.6, publishing cleared the drafts of collections and templates under their earlier key names only, so «Unpublished» stayed on after publishing them and every later publish rewrote them. Publishing clears both names.
+- SCHEMA.md says what a `content/collections.json` beside the index is.
+- BACKLOG: a removed collection's feed stays online, and a failed request for the collection index empties Collections, both under Bugs.
+
 ### 0.7.0.57-59p - The comparison round, the shop decided for v1.1, and the backlog reviewed against the v0.7 gate - 20 October 2026
 
 - A docs-only push: the independent review was replaced by the mechanical checks AGENTS.md names (em dash, checkbox syntax, link targets and anchors, version numbers, nothing removed from TESTRUNDER), and they found nothing to fix.
