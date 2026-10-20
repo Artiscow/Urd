@@ -9,7 +9,7 @@ For you who own or edit a site built with Urd. No code, no git knowledge needed:
 > Urd is under development. The guide covers what exists today and is
 > extended along the way; a full clean-up is planned towards v0.9.
 
-**Contents:** [Getting started](#getting-started) · [The editor](#the-editor) · [Editing content](#editing-content) · [The Properties panel](#the-properties-panel) · [Sections](#sections) · [Grid (guide lines)](#grid-guide-lines) · [Mobile](#mobile) · [Pages, menu and theme](#pages-menu-and-theme) · [Drafts and publishing](#drafts-and-publishing) · [History and undoing a publish](#history-and-undoing-a-publish) · [The first time](#the-first-time)
+**Contents:** [Getting started](#getting-started) · [The editor](#the-editor) · [Editing content](#editing-content) · [The Properties panel](#the-properties-panel) · [Sections](#sections) · [Grid (guide lines)](#grid-guide-lines) · [Mobile](#mobile) · [Pages, menu and theme](#pages-menu-and-theme) · [The shop](#the-shop) · [Drafts and publishing](#drafts-and-publishing) · [History and undoing a publish](#history-and-undoing-a-publish) · [The first time](#the-first-time)
 
 ## Getting started
 
@@ -320,6 +320,26 @@ reading order. You usually do not have to do anything.
   is edited in one place and applies to the whole site.
 - The **Theme** panel: the colours and fonts the whole site builds on. If you change
   the accent colour, buttons, links and highlights follow along everywhere.
+
+## The shop
+
+A shop is three blocks: **Product cards** show a product collection, the
+**Basket** holds what the visitor has picked, and the **Checkout** takes the
+order, as an email to you or to an order endpoint you have set up, or as a
+payment with Vipps when the payment layer is on.
+
+- The order button reads «Confirm purchase», and the order lines with the
+  total stand right above the buttons. The consumer law (angrerettloven § 16)
+  asks for both. The button's words weigh most: a button that only says
+  «Send» or «Order» does not say that ordering means paying, and then the
+  buyer is not bound by the order. That is why the text cannot be changed.
+- The total above the buttons has no shipping line yet; the shop gets one in
+  v1.1. If you charge for shipping, put it in the product prices, since the
+  law asks for the delivery cost before the order is placed.
+- With the email draft, the buyer places the order by sending the email from
+  their own mail program.
+- «Pay with Vipps» names the payment itself, a wording the EU Commission's
+  guidance on the rule accepts.
 
 ## Drafts and publishing
 

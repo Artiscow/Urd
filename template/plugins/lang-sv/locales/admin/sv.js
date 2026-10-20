@@ -1543,6 +1543,7 @@ export default {
     'hintCheckout.l1': 'Beställningen skickas som e-postutkast (mailto) eller till en endpoint: ingen betalningsgateway',
     'hintCheckout.l2': 'Ett dolt honeypot-fält stoppar enkla bottar; vid endpoint-svar töms vagnen',
     'hintCheckout.l3': 'Vipps-numret visas som betalningsinstruktion när det är satt',
+    'hintCheckout.l4': 'Knapptexten och beställningen ovanför den följer angrerettloven § 16 och kan inte ändras',
     'preset.shop.label': 'Butik',
     'preset.shop.hint': 'Riktiga produktkort från en produktsamling, med kundvagn',
     'seed.shop.title': '<h2>Butik</h2>',

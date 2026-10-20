@@ -114,6 +114,11 @@ export function orderLines(items, currency = 'kr') {
   });
 }
 
+/** The order in one line, for the summary right above the order buttons: "2 × Chocolate cake (Large), 1 × Coffee". */
+export function orderSummary(items) {
+  return items.map((line) => `${line.qty} × ${line.variant ? `${line.title} (${line.variant})` : line.title}`).join(', ');
+}
+
 /**
  * The email body for an order: the order lines, the total line and the
  * contact fields. fields is {label: value} with the labels in the visitor's

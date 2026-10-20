@@ -2127,6 +2127,7 @@ export default {
     'hintCheckout.l1': 'The order is sent as an email draft (mailto) or to an endpoint: no payment gateway',
     'hintCheckout.l2': 'A hidden honeypot field stops simple bots; an endpoint response empties the basket',
     'hintCheckout.l3': 'The Vipps number is shown as a payment instruction when set',
+    'hintCheckout.l4': 'The button text and the order above it follow angrerettloven § 16 and cannot be changed',
     'preset.shop.label': 'Shop',
     'preset.shop.hint': 'Real product cards from a product collection, with a basket',
     'seed.shop.title': '<h2>Shop</h2>',

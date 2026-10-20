@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.24.6): the order button and the summary above it
+
+- [ ] Checkout with products in the basket: right above the buttons, after the contact fields, stands the order in one line («2 × …, 1 × …») with the total; the summary at the top is still there
+- [ ] The basket emptied in another tab: the line above the buttons goes away, and comes back when a product is added
+- [ ] The order button reads «Bekreft kjøp» in bokmål, nynorsk and Sami, «Confirm purchase» in English and «Satın almayı onayla» in Turkish; «Betal med Vipps» is unchanged
+- [ ] With a Vipps number set: the payment line stands above the summary, never between the summary and the buttons
+- [ ] At phone width: the summary and the buttons stay together, and the two buttons wrap below each other without overlapping
+- [ ] The checkout's help chip has the line about why the button text is fixed, in nb, en-GB and tr, and in Swedish with the Swedish pack
+- [ ] A site in Swedish (the Swedish pack): the order button reads «Bekräfta köp»
+- [ ] With a screen reader (VoiceOver or NVDA), tabbing from the comment field to «Bekreft kjøp» and to «Betal med Vipps» reads the order and the total with each button
+
 ### Test batch (0.7.0.60): the collection index and the template's collections
 
 - [ ] A new site from the template: Collections shows «Nyheter» and «Produkter» and no «F», and the repo has no `content/collections.json` and no `content/samlinger/f.json`

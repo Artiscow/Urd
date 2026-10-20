@@ -28,6 +28,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.24.6 - The order button the consumer law asks for: «Bekreft kjøp», with the order and the total right above it - 20 October 2026
+
+- «Send bestilling» did not say that ordering means paying, so under angrerettloven § 16 the buyer was not bound by the order. The button reads «Bekreft kjøp» («Confirm purchase», tr «Satın almayı onayla»), a wording the Commission's reading of Directive 2011/83/EU article 8(2) accepts, and the Swedish pack's «Skicka beställning» reads «Bekräfta köp»; «Betal med Vipps» stays.
+- The order lines and the total stood only at the top of the checkout, above the contact fields. The order is repeated in one line with the total right above the buttons (`orderSummary` in shop.js), hidden with an empty basket, and the buttons are described by it, so a screen reader that tabs to them hears the order and the total.
+- The checkout's help chip says why the button text is fixed, and the user guide in English and bokmål has a shop section that says the same, with shipping in the product prices until v1.1 and the email draft sent by the buyer.
+- ADR-0020 named the order button by its old text «Send order». Decision 1 names it by its role, its earlier text in amended/.
+- BACKLOG: 0.7.24.7 says what the endpoint path and the payment layer's return show today and comes after 0.7.24.5, the terms link beside the buttons moves to 0.7.24.2, and the huskeliste takes 0.7.24.5 and 0.7.24.7 first. The maps: C135 is delivered.
+
 ### 0.7.0.60 - The editor back on the collection index the rest of Urd reads, the template's stray collection removed, and published drafts cleared - 20 October 2026
 
 - Since 0.7.14.5, whose rename also caught the index path, the editor read and wrote `content/collections.json`, while the Vipps function reads `content/samlinger.json`; an older site's Collections panel was empty after the update, and a product collection made in the editor could not be paid for. The editor reads and writes `samlinger.json` again (`editor/src/lib/collection-index.js`), adds the ids only a site's `collections.json` lists when it opens, and the next publish of the collections writes them into the index and deletes that file, also when one of them was removed.

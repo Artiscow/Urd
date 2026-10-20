@@ -1,14 +1,14 @@
 /**
- * Core block: checkout (the shop). An order form without a payment gateway:
- * the order summary is read from the basket (shop.js), the contact fields
- * (name, email, phone, comment) are validated, and the order is sent as an
- * email draft (mailto, zero setup) or as JSON to an optional endpoint. The
- * honeypot field stops simple bots (filled in = discarded silently). Payment
- * is an instruction: the Vipps number is shown below the form. An external
- * endpoint requires connect-src in _headers (ADR-0006).
+ * Core block: checkout (the shop).
+ * The order summary is read from the basket (shop.js), the contact fields (name, email, phone, comment) are validated, and the order is sent as an email draft (mailto, zero setup), as JSON to an optional endpoint, or to the optional payment layer (ADR-0020).
+ * The order lines and the total are repeated right above the order buttons, and the buttons' texts say that ordering is a purchase or a payment: angrerettloven § 16 asks for both, and without the wording the buyer is not bound.
+ * The buttons are described by the summary, so a screen reader that tabs to them hears the order and the total.
+ * The honeypot field stops simple bots (filled in = discarded silently).
+ * With a Vipps number set, payment is an instruction shown in the form above the order summary.
+ * An external endpoint requires connect-src in _headers (ADR-0006).
  */
 import {
-  readCart, writeCart, cartTotal, formatPrice, orderLines,
+  readCart, writeCart, cartTotal, formatPrice, orderLines, orderSummary,
   buildOrderBody, buildOrderMailto, buildOrderPayload, isEmail, onCartChange,
 } from '../shop.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
@@ -37,6 +37,20 @@ function renderSummary(box, currency) {
   box.appendChild(sum);
 }
 
+/** The summary right above the order buttons: the order in one line and the total; hidden with an empty basket. */
+function renderRecap(box, currency) {
+  box.textContent = '';
+  const items = readCart();
+  box.hidden = !items.length;
+  if (!items.length) return;
+  const sum = el2('div', 'urd-checkout-total');
+  sum.append(el2('span', null, t('shop.total')), el2('strong', null, formatPrice(cartTotal(items), currency)));
+  box.append(el2('p', 'urd-checkout-recap-lines', orderSummary(items)), sum);
+}
+
+/** Numbers the summaries above the buttons, so two checkouts on a page keep their descriptions apart. */
+let recapCount = 0;
+
 export const checkoutBlock = {
   version: 1,
   autoGrow: true,
@@ -58,7 +72,14 @@ export const checkoutBlock = {
     const summary = el2('div', 'urd-checkout-summary');
     renderSummary(summary, currency);
     host.appendChild(summary);
-    onCartChange(el, () => renderSummary(summary, currency));
+    const recap = el2('div', 'urd-checkout-recap');
+    recapCount += 1;
+    recap.id = `urd-checkout-recap-${recapCount}`;
+    renderRecap(recap, currency);
+    onCartChange(el, () => {
+      renderSummary(summary, currency);
+      renderRecap(recap, currency);
+    });
 
     const form = el2('form', 'urd-checkout-form');
     form.noValidate = true;
@@ -93,9 +114,11 @@ export const checkoutBlock = {
       form.appendChild(el2('p', 'urd-checkout-vipps', t('shop.vippsHint', { number: props.vipps })));
     }
 
+    form.appendChild(recap);
     const buttons = el2('div', 'urd-checkout-buttons');
     const submit = el2('button', 'urd-checkout-send', t('shop.sendOrder'));
     submit.type = 'submit';
+    submit.setAttribute('aria-describedby', recap.id);
     buttons.appendChild(submit);
     form.appendChild(buttons);
 
@@ -115,6 +138,7 @@ export const checkoutBlock = {
     if (props.vippsCheckout) {
       const pay = el2('button', 'urd-checkout-vippspay', t('shop.payWithVipps'));
       pay.type = 'button';
+      pay.setAttribute('aria-describedby', recap.id);
       pay.addEventListener('click', async () => {
         // Same send guard as the form: never in preview, whatever the viewport.
         if (ctx.preview) return;
@@ -226,7 +250,7 @@ export const checkoutBlock = {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
           title: ta('hintCheckout.title'),
-          lines: [ta('hintCheckout.l1'), ta('hintCheckout.l2'), ta('hintCheckout.l3')],
+          lines: [ta('hintCheckout.l1'), ta('hintCheckout.l2'), ta('hintCheckout.l3'), ta('hintCheckout.l4')],
         });
       });
     }

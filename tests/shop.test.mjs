@@ -8,7 +8,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
-  isEmail, orderLines, buildOrderBody, buildOrderMailto, buildOrderPayload, altCardImage,
+  isEmail, orderLines, orderSummary, buildOrderBody, buildOrderMailto, buildOrderPayload, altCardImage,
 } = await engineImport('shop.js');
 
 // Deliberate Norwegian product fixtures throughout: shop items are user data.
@@ -88,6 +88,11 @@ test('orderLines: quantity, variant in parentheses and line total', () => {
   const lines = orderLines(ORDER);
   assert.equal(lines[0], '2 × Sjokoladekake (Stor) - 700 kr');
   assert.equal(lines[1], '1 × Kanelboller - 120 kr');
+});
+
+test('orderSummary: the order in one line, quantity and variant, for the summary above the order buttons', () => {
+  assert.equal(orderSummary(ORDER), '2 × Sjokoladekake (Stor), 1 × Kanelboller');
+  assert.equal(orderSummary([]), '');
 });
 
 test('buildOrderBody: lines, total and only filled-in contact fields', () => {

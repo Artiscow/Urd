@@ -1002,7 +1002,7 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |229|Cart contents (Cart, Cart Items, Cart v2, Cart Page, Cart Contents, Cart Products, main-cart)|EL BR BD DV SH|-|a table or list, with changes announced|Has|-|
 |230|Cart totals (Cart Totals, Cart Collaterals)|BD DV BR|-|`<output>` or plain text|Has|-|
 |231|Coupon / discount field (Cart Coupon, Checkout Coupon, Discounts)|BR WF SH|-|a text field; the checkout asks the shop function whether the code holds, and the payment function checks it again|Missing|v1.1 the shop|
-|232|Checkout (Checkout, Checkout Page, Checkout Billing/Shipping/Payment/Information/Details, Checkout Form, Checkout v2)|EL BR BD DV WF|multi-step|checkout as a form; the gateway outside the core|Has: form checkout, Vipps|0.7.24: the order button text (angrerettloven § 16)|
+|232|Checkout (Checkout, Checkout Page, Checkout Billing/Shipping/Payment/Information/Details, Checkout Form, Checkout v2)|EL BR BD DV WF|multi-step|checkout as a form; the gateway outside the core|Has: form checkout, Vipps; the order button and the order with the total right above it (0.7.24.6)|-|
 |233|Order confirmation (Purchase Summary, Checkout Thankyou, Order Confirmation)|EL BR WF|-|-|Partial: a thank-you line after the Vipps payment (`?ordered=1`); no order details|0.7.24.7: a printable confirmation with the order lines and the withdrawal form; v1.1 the shop for the rest|
 |234|My account (My Account, Account Page (+ orders, downloads, addresses, payment methods), User Account)|EL BR BD WF|-|needs a server|Missing|Not taken: server|
 |235|Order tracking (Order Tracking Page)|BD|-|needs a server|Missing|Not taken: server|

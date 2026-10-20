@@ -2130,6 +2130,7 @@ export default {
     'hintCheckout.l1': 'Bestillingen sendes som e-postutkast (mailto) eller til et endepunkt: ingen betalingsgateway',
     'hintCheckout.l2': 'Et skjult honeypot-felt stopper enkle bots; ved endepunkt-svar tømmes kurven',
     'hintCheckout.l3': 'Vipps-nummeret vises som betalingsinstruks når det er satt',
+    'hintCheckout.l4': 'Knappeteksten og bestillingen over den følger angrerettloven § 16 og kan ikke endres',
     'preset.shop.label': 'Butikk',
     'preset.shop.hint': 'Ekte produktkort fra en produktsamling, med handlekurv',
     'seed.shop.title': '<h2>Butikk</h2>',

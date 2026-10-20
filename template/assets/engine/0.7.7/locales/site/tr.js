@@ -56,7 +56,7 @@ export default {
     'shop.email': 'E-posta',
     'shop.phone': 'Telefon',
     'shop.comment': 'Yorum',
-    'shop.sendOrder': 'Siparişi gönder',
+    'shop.sendOrder': 'Satın almayı onayla',
     'shop.orderSubject': '{site} siparişi',
     'shop.orderSent': 'Teşekkürler! Siparişiniz gönderildi.',
     'shop.orderDraft': 'Bir e-posta taslağı açıldı - siparişi tamamlamak için gönderin.',

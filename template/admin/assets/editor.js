@@ -2641,7 +2641,7 @@ var oa = {
 		"shop.email": "E-post",
 		"shop.phone": "Telefon",
 		"shop.comment": "Kommentar",
-		"shop.sendOrder": "Send bestilling",
+		"shop.sendOrder": "Bekreft kjøp",
 		"shop.orderSubject": "Bestilling fra {site}",
 		"shop.orderSent": "Takk! Bestillingen er sendt.",
 		"shop.orderDraft": "E-postutkastet er åpnet - send det for å fullføre bestillingen.",

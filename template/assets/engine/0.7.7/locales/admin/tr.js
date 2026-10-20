@@ -2127,6 +2127,7 @@ export default {
     'hintCheckout.l1': 'Sipariş e-posta taslağı (mailto) veya bir uç noktaya gönderilir: ödeme ağ geçidi yok',
     'hintCheckout.l2': 'Gizli bir honeypot alanı basit botları durdurur; uç nokta yanıtı sepeti boşaltır',
     'hintCheckout.l3': 'Ayarlandığında Vipps numarası ödeme talimatı olarak gösterilir',
+    'hintCheckout.l4': 'Düğme metni ve üstündeki sipariş angrerettloven § 16 kuralına uyar ve değiştirilemez',
     'preset.shop.label': 'Mağaza',
     'preset.shop.hint': 'Bir ürün koleksiyonundan sepetli gerçek ürün kartları',
     'seed.shop.title': '<h2>Mağaza</h2>',

@@ -8,7 +8,7 @@ git-kunnskap nødvendig: alt skjer i nettleseren på din egen side.
 > Urd er under utvikling. Veiledningen dekker det som finnes i dag og
 > utvides etter hvert; en full opprydding er planlagt mot v0.9.
 
-**Innhold:** [Kom i gang](#kom-i-gang) · [Editoren](#editoren) · [Redigere innhold](#redigere-innhold) · [Egenskaper-panelet](#egenskaper-panelet) · [Seksjoner](#seksjoner) · [Grid (hjelpelinjer)](#grid-hjelpelinjer) · [Mobil](#mobil) · [Sider, meny og tema](#sider-meny-og-tema) · [Utkast og publisering](#utkast-og-publisering) · [Historikk og angring av publisering](#historikk-og-angring-av-publisering) · [Første gang](#første-gang)
+**Innhold:** [Kom i gang](#kom-i-gang) · [Editoren](#editoren) · [Redigere innhold](#redigere-innhold) · [Egenskaper-panelet](#egenskaper-panelet) · [Seksjoner](#seksjoner) · [Grid (hjelpelinjer)](#grid-hjelpelinjer) · [Mobil](#mobil) · [Sider, meny og tema](#sider-meny-og-tema) · [Butikken](#butikken) · [Utkast og publisering](#utkast-og-publisering) · [Historikk og angring av publisering](#historikk-og-angring-av-publisering) · [Første gang](#første-gang)
 
 ## Kom i gang
 
@@ -319,6 +319,26 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   redigeres ett sted og gjelder hele nettstedet.
 - **Tema**-panelet: fargene og fontene hele siden bygger på. Endrer du
   aksentfargen, følger knapper, lenker og markeringer med overalt.
+
+## Butikken
+
+En butikk er tre blokker: **Produktkort** viser en produktsamling,
+**Handlekurv** holder det den besøkende har valgt, og **Kasse** tar imot
+bestillingen, som en e-post til deg eller til et bestillingsendepunkt du har
+satt opp, eller som en betaling med Vipps når betalingslaget er slått på.
+
+- Bestillingsknappen sier «Bekreft kjøp», og ordrelinjene med summen står
+  rett over knappene. Forbrukerretten (angrerettloven § 16) krever begge.
+  Knappens ord veier tyngst: en knapp som bare sier «Send» eller «Bestill»,
+  sier ikke at bestillingen betyr å betale, og da er ikke kjøperen bundet av
+  bestillingen. Derfor kan teksten ikke endres.
+- Summen over knappene har ingen fraktlinje ennå; butikken får en i v1.1. Tar
+  du betalt for frakt, legg den inn i produktprisene, siden loven krever
+  leveringskostnaden før bestillingen gjøres.
+- Med e-postutkastet gjør kjøperen bestillingen ved å sende e-posten fra sitt
+  eget e-postprogram.
+- «Betal med Vipps» nevner selve betalingen, en ordlyd EU-kommisjonens
+  veiledning om regelen godtar.
 
 ## Utkast og publisering
 

@@ -55,7 +55,7 @@ export default {
     'shop.email': 'E-post',
     'shop.phone': 'Telefon',
     'shop.comment': 'Kommentar',
-    'shop.sendOrder': 'Skicka beställning',
+    'shop.sendOrder': 'Bekräfta köp',
     'shop.orderSubject': 'Beställning från {site}',
     'shop.orderSent': 'Tack! Beställningen är skickad.',
     'shop.orderDraft': 'E-postutkastet är öppnat - skicka det för att slutföra beställningen.',

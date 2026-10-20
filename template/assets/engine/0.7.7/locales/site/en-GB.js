@@ -57,7 +57,7 @@ export default {
     'shop.email': 'Email',
     'shop.phone': 'Phone',
     'shop.comment': 'Comment',
-    'shop.sendOrder': 'Send order',
+    'shop.sendOrder': 'Confirm purchase',
     'shop.orderSubject': 'Order from {site}',
     'shop.orderSent': 'Thank you! Your order has been sent.',
     'shop.orderDraft': 'An email draft has been opened - send it to complete your order.',
