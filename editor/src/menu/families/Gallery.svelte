@@ -9,7 +9,8 @@
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
-  import { GALLERY_VIEWS, GRID_VIEWS, MOSAIC_ROW, POLAROID_TILT, galleryView as blockGalleryView } from '$engine/gallery-model.js';
+  import { GRID_VIEWS, MOSAIC_ROW, POLAROID_TILT, galleryView as blockGalleryView } from '$engine/gallery-model.js';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ribbonReaches, ribbonReach } from '../options.js';
   import { ICONS } from '../../lib/icons.js';
@@ -53,13 +54,7 @@
   {@const gview = blockGalleryView(selectedBlock.props.view)}
   {#snippet galleryView()}
     <Setting key="view">
-      <div class="pin-line">
-        <label>{ta('lbl.view')}
-          <Dropdown value={gview}
-            options={GALLERY_VIEWS.map((v) => [v, ta(`opt.galleryView.${v}`)])}
-            onchange={(v) => setBlockProp('view', v)} /></label>
-        <Pin id="galleryView" />
-      </div>
+      <DesignRow pin="galleryView" />
     </Setting>
     {#if gview === 'ribbon'}
       <Setting key="width">

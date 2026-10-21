@@ -88,7 +88,31 @@
               }
             },
             "phone": { "type": "string" },
-            "email": { "type": "string" }
+            "email": { "type": "string" },
+            "geo": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["lat", "lon"],
+              "description": "The address's point on the map (additive from 0.7.24.5), found from the address in the Site panel and cleared when the address changes; the contact block's map design shows it, and its directions open it",
+              "properties": {
+                "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+                "lon": { "type": "number", "minimum": -180, "maximum": 180 }
+              }
+            },
+            "points": {
+              "type": "array",
+              "description": "Contact points by role (additive from 0.7.24.5): the contact block's By role design lists them, and the Organization JSON-LD writes each with a phone or an email as a ContactPoint",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "role": { "type": "string", "description": "The role, as the site names it (the board, the treasurer, the press)" },
+                  "email": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "note": { "type": "string", "description": "A short note under the point (when it answers, what it handles)" }
+                }
+              }
+            }
           }
         },
         "icon": { "type": "string", "description": "Site icon (favicon): path in media/ (data URL in draft). Additive field from v0.5." },

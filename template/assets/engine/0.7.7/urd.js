@@ -31,6 +31,7 @@ import { statsBlock } from './blocks/stats.js';
 import { ribbonBlock } from './blocks/ribbon.js';
 import { tableBlock } from './blocks/table.js';
 import { shareBlock } from './blocks/share.js';
+import { contactBlock } from './blocks/contact.js';
 import { countdownBlock } from './blocks/countdown.js';
 import { audioBlock } from './blocks/audio.js';
 import { productBlock } from './blocks/product.js';
@@ -49,7 +50,7 @@ import { slideshowLayer } from './backgrounds/slideshow.js';
 import { videoLayer } from './backgrounds/video.js';
 import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
-import { loadPlugins, loadPluginList, applyPluginSiteLocales } from './plugins.js';
+import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns } from './plugins.js';
 import { setCollectionsDraft } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
 import { applyHeadMeta, mountAnalytics } from './seo.js';
@@ -89,6 +90,7 @@ function registerCore() {
   Urd.blocks.define('stats', statsBlock);
   Urd.blocks.define('table', tableBlock);
   Urd.blocks.define('share', shareBlock);
+  Urd.blocks.define('contact', contactBlock);
   Urd.blocks.define('countdown', countdownBlock);
   Urd.blocks.define('audio', audioBlock);
   Urd.blocks.define('product', productBlock);
@@ -461,6 +463,8 @@ function enablePreview(state, opts) {
                     : {}),
                 }))
               : [],
+            // The design contract (additive): a def with `designs` gets the design picker in its menu, its labels resolved here too.
+            designs: pluginBlockDesigns(def, ta),
           });
         }
         window.parent?.postMessage({ type: 'urd-plugin-blocks', blocks }, location.origin);

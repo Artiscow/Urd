@@ -2,6 +2,33 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.24.5.2): the Contact details block in eleven designs, the checkout's seller line, and the design picker for every block
+
+- [ ] Blocks panel: «Contact details» adds the block; with no contact details typed the editor says where to type them and the published page shows nothing
+- [ ] Content: Name, Address, Phone, Email and Legal line show and hide their parts; «Edit the contact details» opens the Site panel at Contact details
+- [ ] The «Contact» section template gives a heading and the block, with no sample address
+- [ ] Each of the eleven designs draws the details at desktop width, in the phone view, and in a narrow frame on desktop with its narrow layout: Lines, Icon rows, Card, Three tiles, Fact list, Action buttons, With a map, Contact strip, Poster, By role, With a QR code
+- [ ] Phone and email are links that call and write in every design; Directions (Action buttons, With a map) opens the Site panel's map service with the address
+- [ ] Contact strip: «Coloured band» shows only for that design; off, the strip stands on the page itself
+- [ ] «Add to contacts button» (every design but the strip): the file downloads as `<name>.vcf`, and a phone's contacts app imports the name, the address, the phone and the email
+- [ ] With a QR code: a phone camera reads the code as a contact with the same details, on a light and on a dark theme
+- [ ] «Call bar on phones»: on a published page at phone width Call, Email and Map stay at the bottom of the screen while scrolling, the page's last line scrolls clear of the bar, two blocks with the option give one bar, and on desktop there is none
+- [ ] With a map: no OpenStreetMap request before «Show map» is pressed (DevTools Network), then the map shows the address's point; without a point the published page shows the details alone and the editor says where the point is found
+- [ ] Site panel on the published site, signed in: «Find on the map» under the address stores the point and shows «On the map: lat, lon» with a remove button; changing the address removes the point; locally the lookup reports that it could not be reached
+- [ ] Site panel, Contact points: «Add a contact point» gives Role, Email, Phone and Note, the remove button is as tall as the field; By role shows a card per point and the site's own phone and email as «General»; a point with only a role is not shown
+- [ ] Published: the JSON-LD lists each contact point with a phone or a valid email as a `ContactPoint`
+- [ ] Screen reader: the block is read as an address, the QR code as «QR code with the contact details», and the call bar as a navigation named «Contact»
+- [ ] Norway: Register offers Frivillighetsregisteret beside Enhetsregisteret and Foretaksregisteret, and the footer's legal line shows it
+- [ ] Checkout: under the order buttons stands «Seller:» with the name, the organisation number, the address, the phone and the email; «Show the seller» in its menu hides it; at phone width it wraps cleanly
+- [ ] Footer Contact column: the street and the postcode with the town stay together
+- [ ] Every block with more than one look has a Design row under Style and a Design tile in the quick row: Contact details, Gallery, Statistic, Collection, Countdown, Ribbon, FAQ, Timeline, Quote, Links, Basket, Button and Shape
+- [ ] The picker shows a picture of each design, its search finds a design by name, «In use» marks the current one, the preview shows the block's own content at its real width and is readable, «Use this design» applies and closes, and Escape closes without a change
+- [ ] A gallery without pictures and a contact block without details are previewed with sample content; a collection block previews a draft collection
+- [ ] A setting pinned to the quick row before (Gallery's View, Button's Style, the Variant of Quote, Statistic, FAQ, Timeline and Links, Collection's and Basket's View) is still pinned and opens the picker
+- [ ] Calendar: the design picker, the phone design picker and the card picker open with their pictures, the view filter, «What you can change» and the open card in the card preview; «Choose design …» in the Blocks panel still adds a calendar
+- [ ] A plugin block that declares `designs` shows the Design row and the picker, and the picker's preview draws the plugin block
+- [ ] The contact designs stand in four families (Lists, Boxes, Actions, Bold), and every design's description reads right in nb, en-GB and tr
+
 ### Test batch (0.7.24.5.1): the legal and contact details for any country, and the Site panel tidied
 
 - [ ] Site panel, Contact details: Country offers 57 countries by their names in the admin language and «Other country» last; a new site starts on the country of its language (Norway for bokmål)

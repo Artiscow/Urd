@@ -145,8 +145,8 @@ test('fitFloorPx: the width-floor types get their share of the design width time
   assert.equal(fitFloorPx({ ...image, frames: {} }, {}), 0);
 });
 
-test('the fourteen block types ADR-0025 names follow their content, and no other', () => {
-  assert.deepEqual([...FOLLOWS_CONTENT].sort(), ['audio', 'calendar', 'cart', 'checkout', 'collection', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
+test('the block types ADR-0025 names follow their content, and no other', () => {
+  assert.deepEqual([...FOLLOWS_CONTENT].sort(), ['audio', 'calendar', 'cart', 'checkout', 'collection', 'contact', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
   assert.equal(followsContent({ type: 'faq' }), true);
   for (const type of ['text', 'image', 'video', 'icon', 'shape', 'button', 'gallery', 'ribbon', 'map']) {
     assert.equal(followsContent({ type }), false, type);

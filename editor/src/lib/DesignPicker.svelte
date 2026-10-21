@@ -1,29 +1,19 @@
 <script>
   /**
-   * The design picker (0.7.19.22): every calendar design with its picture, grouped by family, over the editor.
-   * The pictures are the engine's own drawings of each design with the sample events (template/admin/designs/<id>.webp, made by scripts/design-pictures.mjs), each the design's own box, shown whole and centred on the tile's dark surface; a design without one shows its schematic thumbnail.
-   * The marked design is drawn live in a preview iframe of its own, in the site's theme and language, so the owner sees it before it is applied.
-   * `mode` 'set' changes the selected calendar's design, 'add' adds a calendar in the chosen one, 'phone' chooses the phone design the selected calendar draws on a phone (calPhoneCandidates: the neutral list, every design that reads on a phone, and the phone designs designs lend; pictures under phone-<id>.webp and the preview at a phone's width in the calendar's own design, `design`), and 'card' the card design its card wears (calCardCandidates: the neutral card, every design's card, and the card designs designs lend; pictures under card-<id>.webp, the preview with the card open); `onpick(id)` applies, `onclose` leaves.
-   * Under the preview the marked entry is described, and what the owner can change on it is said in plain sentences under three headings: Colours (what its colours paint, `<design labelKey>.colors`, or for another design's phone view or card that it keeps its own), Text (its words) and Options (its settings, `calendar.opt.<key>.phrase`, and its rewriting); a heading with nothing under it is left out.
+   * The design picker (0.7.19.22): every design of a choice with its picture, grouped by family, over the editor.
+   * What it shows comes from a source (design-sources.js): the calendar's designs, its phone and card designs, or another block's designs (block-designs.js).
+   * The pictures are the engine's own drawings of each design (template/admin/designs/, made by scripts/design-pictures.mjs), each the design's own box, shown whole and centred on the tile's dark surface; a design without one shows its schematic thumbnail where the source has one.
+   * The marked design is drawn live in a preview iframe of its own, in the site's theme and language, so the owner sees it before it is applied; under the preview it is described, with what the owner can change on it where the source says.
+   * The preview frame is told the site, the enabled plugins and the draft collections, as the editor's own preview is, so a plugin block and a collection block draw there too.
+   * `onpick(id)` applies, `onclose` leaves.
    */
-  import { ta, adminLang } from '$engine/i18n.js';
-  import { CAL_VIEWS, calDesign, calDesignFamilies, calOptionDefs, calPhoneDesignDef, calPhoneFamilies, calCardDesignDef, calCardFamilies } from '$engine/calendar-designs.js';
-  import { calendarThumb } from '$engine/calendar-thumb.js';
+  import { ta } from '$engine/i18n.js';
 
-  let { current = null, mode = 'set', design = 'plain', props = {}, site = null, page = null, onpick, onclose } = $props();
-  const phone = mode === 'phone';
-  const card = mode === 'card';
-  /** The lists other than the design's own: pictures and preview follow the calendar's own design. */
-  const lent = phone || card;
-  const PIC_PREFIX = phone ? 'phone-' : card ? 'card-' : '';
-
-  const VIEW_KEYS = { list: 'calendar.viewList', cards: 'calendar.viewCards', month: 'calendar.viewMonth', agenda: 'calendar.viewAgenda', next: 'calendar.viewNext', week: 'calendar.viewWeek', day: 'calendar.viewDay', year: 'calendar.viewYear' };
-  /** The preview page's width in CSS px (a phone's for the phone designs); the iframe is scaled to the pane, and its height follows the drawn calendar. */
-  const PREVIEW_W = phone ? 390 : 1040;
+  let { source, site = null, page = null, plugins = [], collections = null, onpick, onclose } = $props();
 
   let query = $state('');
   let view = $state('');
-  let chosen = $state(current ?? (phone ? 'agenda' : card ? 'neutral' : 'plain'));
+  let chosen = $state(source.initial);
   let broken = $state(new Set());
   let iframeEl = $state(null);
   let paneW = $state(0);
@@ -32,60 +22,11 @@
   let searchEl = $state(null);
   let dialogEl = $state(null);
 
-  /** The plain design follows the block's view, so it stands in every view's filter; the lent lists have no view filter. */
-  const inView = (d) => lent || !view || d.view === null || d.view === view;
-  /** A card several designs share is named for its colour set and the first designs that share it; the search finds it by any of their names. */
-  function nameOf(d) {
-    if (!d.setCard) return ta(d.labelKey);
-    const names = d.designs.map((id) => ta(calDesign(id).labelKey));
-    const set = ta(d.labelKey);
-    return names.length > 3 ? ta('calendar.picker.setNameMore', { set, designs: names.slice(0, 3).join(', '), n: names.length - 3 }) : ta('calendar.picker.setName', { set, designs: joined(names) });
-  }
-  const searchText = (d) => (d.setCard ? [nameOf(d), ...d.designs.map((id) => ta(calDesign(id).labelKey))].join(' ') : ta(d.labelKey));
-  const matches = (d) => inView(d) && (!query.trim() || searchText(d).toLowerCase().includes(query.trim().toLowerCase()));
-  const families = $derived((phone ? calPhoneFamilies(props) : card ? calCardFamilies() : calDesignFamilies()).map((f) => ({ ...f, designs: f.designs.filter(matches) })).filter((f) => f.designs.length));
+  const matches = (d) => (!source.filters || !view || source.filters.match(d, view)) && (!query.trim() || source.searchText(d).toLowerCase().includes(query.trim().toLowerCase()));
+  const families = $derived(source.families().map((f) => ({ ...f, designs: f.designs.filter(matches) })).filter((f) => f.designs.length));
   const count = $derived(families.reduce((n, f) => n + f.designs.length, 0));
-  const chosenDef = $derived(phone ? calPhoneDesignDef(chosen, props) : card ? calCardDesignDef(chosen) : calDesign(chosen));
-  const scale = $derived(paneW ? Math.min(1, paneW / PREVIEW_W) : 0.4);
-
-  /** What the marked entry is: a design's own description, a lent or neutral entry's own, or for a design's card the card as that design draws it. */
-  function aboutText(def) {
-    if (def.setCard) return ta('calendar.picker.setAbout', { designs: joined(def.designs.map((id) => ta(calDesign(id).labelKey))) });
-    if (card && def.desktop) return ta('calendar.picker.cardOf', { name: ta(def.labelKey) });
-    return ta(`${def.labelKey}.about`);
-  }
-  /** Phrases joined as the admin language joins a list («a, b og c»), with commas where the language has no rules for it. */
-  function joined(parts) {
-    try {
-      return new Intl.ListFormat(adminLang(), { type: 'conjunction' }).format(parts);
-    } catch {
-      return parts.join(', ');
-    }
-  }
-  /**
-   * What the owner can change on the marked entry, as [heading, sentences] rows under Colours, Text and Options; a row with no sentence is left out.
-   * A design: what its colours paint, its words, its settings and its rewriting. A phone view or card: the calendar's colours for a neutral one, what the colours paint for the calendar's own design, or that another design keeps its own; then what follows the calendar.
-   */
-  function yours(def) {
-    const look = def.look ? calDesign(def.look) : null;
-    let colours;
-    let text;
-    let options;
-    if (phone || card) {
-      if (def.setCard) colours = [calDesign(design).set === def.set ? ta('calendar.picker.c.cardOwn') : ta('calendar.picker.c.setOther')];
-      else if (!look) colours = [ta(phone ? 'calendar.picker.c.phoneNeutral' : 'calendar.picker.c.cardNeutral')];
-      else if (look.id === design) colours = [card ? ta('calendar.picker.c.cardOwn') : ta(`${look.labelKey}.colors`)];
-      else colours = [ta('calendar.picker.c.other', { name: ta(look.labelKey) })];
-      text = [ta(phone ? 'calendar.picker.c.phoneWords' : 'calendar.picker.c.cardText')];
-      options = [ta(phone ? 'calendar.picker.c.phoneOptions' : 'calendar.picker.c.cardOptions')];
-    } else {
-      colours = [ta(`${def.labelKey}.colors`)];
-      text = [ta('calendar.picker.c.words'), ...(def.theme?.length ? [ta('calendar.picker.c.theme')] : [])];
-      const settings = calOptionDefs(def.id).filter((o) => !o.tipKey).map((o) => ta(`${o.labelKey}.phrase`));
-      options = [...(settings.length ? [ta('calendar.picker.c.settings', { settings: joined(settings) })] : []), ...(def.rewrites ? [ta('calendar.picker.c.rewrite')] : [])];
-    }
-    return [['calendar.picker.h.colours', colours], ['calendar.picker.h.text', text], ['calendar.picker.h.options', options]].filter(([, lines]) => lines.length).map(([key, lines]) => [ta(key), lines]);
-  }
+  const chosenDef = $derived(source.def(chosen));
+  const scale = $derived(paneW ? Math.min(1, paneW / source.previewWidth) : 0.4);
 
   // A native modal dialog (ADR-0011): the top layer places it over the whole editor whatever the panel it was opened from is transformed by, and Escape is its own cancel.
   $effect(() => {
@@ -93,27 +34,14 @@
     searchEl?.focus();
   });
 
-  /** One calendar in the chosen design on an otherwise empty page, drawn by the preview with its sample events; for a phone or card design, the calendar's own design with that phone or card design, at a phone's width for the phone. */
-  function previewPage(id) {
-    const def = calDesign(lent ? design : id);
-    const block = {
-      id: 'design-picker-cal', type: 'calendar', version: 1, decor: false, hideMobile: false, animation: null,
-      props: { sources: [], limit: 4, view: def.view ?? 'list', ...(def.id === 'plain' ? {} : { design: def.id }), ...(def.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}), ...(phone ? { phoneView: id } : {}), ...(card ? { card: id } : {}) },
-      frames: { desktop: { x: 3, y: 24, w: 94, h: 600 }, mobile: null },
-    };
-    const section = { id: 'design-picker-sec', version: 1, size: { minHeight: '200px' }, grid: null, background: { version: 1, layers: [] }, blocks: [block] };
-    return { ...(page ?? {}), sections: [section] };
-  }
-
   const post = (msg) => iframeEl?.contentWindow?.postMessage(msg, location.origin);
 
-  /** The preview's height follows the drawn calendar: the block's bottom (or the open card's, when it reaches lower), read whenever the preview page's body changes size (the sample events arrive after the first draw and the block grows with them). */
+  /** The preview's height follows the drawn block: its bottom (or what the source draws below it, an open card), read whenever the block changes size (sample data arrives after the first draw and the block grows with it). */
   function measure() {
     const doc = iframeEl?.contentDocument;
-    const block = doc?.querySelector('.urd-block[data-block-id="design-picker-cal"]');
+    const block = doc?.querySelector(`.urd-block[data-block-id="${source.blockId}"]`);
     if (!block) return;
-    const open = doc.querySelector('dialog.urd-cal-dialog[open]');
-    const bottom = Math.max(block.getBoundingClientRect().bottom, open?.getBoundingClientRect().bottom ?? 0) + (doc.defaultView?.scrollY ?? 0);
+    const bottom = Math.max(block.getBoundingClientRect().bottom, source.extraBottom?.(doc) ?? 0) + (doc.defaultView?.scrollY ?? 0);
     const next = Math.max(160, Math.ceil(bottom + 24));
     if (next !== previewH) previewH = next;
   }
@@ -128,14 +56,16 @@
     if (!win?.ResizeObserver) return;
     let tries = 0;
     const find = () => {
-      const block = win.document.querySelector('.urd-block[data-block-id="design-picker-cal"]');
+      const block = win.document.querySelector(`.urd-block[data-block-id="${source.blockId}"]`);
       if (block && block !== watched) {
         watched = block;
         watcher = new win.ResizeObserver(measure);
         watcher.observe(block);
         measure();
-        // For a card design the preview shows the card itself: the first event is opened once the events are drawn, and the card is watched too.
-        if (card) openPreviewCard(win, block, 0);
+        source.afterDraw?.(win, block, (el) => {
+          watcher?.observe(el);
+          measure();
+        });
       } else if (tries++ < 300) {
         win.requestAnimationFrame(find);
       }
@@ -143,23 +73,8 @@
     find();
   }
 
-  /** Opens the first event's card in the preview, once an event stands, and watches the card's size as well. */
-  function openPreviewCard(win, block, tries) {
-    const event = block.querySelector('.urd-cal-event');
-    if (!event) {
-      if (tries < 300) win.requestAnimationFrame(() => openPreviewCard(win, block, tries + 1));
-      return;
-    }
-    event.click();
-    const dialog = win.document.querySelector('dialog.urd-cal-dialog[open]');
-    if (dialog && watcher) {
-      watcher.observe(dialog);
-      measure();
-    }
-  }
-
   function sendPreview() {
-    post({ type: 'urd-preview-full', pageId: 'design-picker', page: previewPage(chosen) });
+    post({ type: 'urd-preview-full', pageId: 'design-picker', page: source.previewPage(chosen, page, site) });
     watchPreview();
   }
 
@@ -168,7 +83,7 @@
     if (event.origin !== location.origin || event.source !== iframeEl?.contentWindow) return;
     if (event.data?.type !== 'urd-ready') return;
     // The preview shows the design alone: the site's header, announcement strip, footer and scroll-top button stay out of it.
-    // The frame is as tall as the drawn calendar (measure) and as wide as the view it shows, so the page in it never scrolls.
+    // The frame is as tall as the drawn block (measure) and as wide as the view it shows, so the page in it never scrolls.
     const doc = iframeEl?.contentDocument;
     if (doc && !doc.getElementById('design-picker-style')) {
       const style = doc.createElement('style');
@@ -176,9 +91,10 @@
       style.textContent = '.urd-nav, #urd-announce, .urd-nav-announce, #urd-footer, .urd-totop { display: none !important; } html { overflow: hidden !important; }';
       doc.head.appendChild(style);
     }
-    if (site) post({ type: 'urd-site', site });
-    // A phone design is shown on the page's phone layout, at a phone's width; the others on the desktop layout.
-    post({ type: 'urd-viewport', mode: phone ? 'mobile' : 'desktop' });
+    if (site) post({ type: 'urd-site', site: source.previewSite(site) });
+    if (plugins.length) post({ type: 'urd-plugins', enabled: plugins });
+    if (collections) post({ type: 'urd-collections', collections });
+    post({ type: 'urd-viewport', mode: source.viewport });
     post({ type: 'urd-chrome', visible: false });
     // The effect below sends the page once the preview is ready, and again at every choice.
     previewReady = true;
@@ -203,21 +119,21 @@
 
 <svelte:window onmessage={onMessage} />
 
-<dialog class="dp-overlay" bind:this={dialogEl} aria-label={ta('calendar.picker.title')} onclose={onClosed}>
-  <div class="dp-card">
+<dialog class="dp-overlay" bind:this={dialogEl} aria-label={source.label} onclose={onClosed}>
+  <div class="dp-card" class:nofilters={!source.filters}>
     <div class="dp-head">
-      <h2>{ta(phone ? 'calendar.picker.phoneTitle' : card ? 'calendar.picker.cardTitle' : 'calendar.picker.title')}</h2>
-      <input class="dp-search" type="search" bind:this={searchEl} bind:value={query} placeholder={ta('calendar.picker.search')} aria-label={ta('calendar.picker.search')} />
-      <span class="dp-count">{ta('calendar.picker.count', { n: count })}</span>
+      <h2>{source.title}</h2>
+      <input class="dp-search" type="search" bind:this={searchEl} bind:value={query} placeholder={source.searchLabel} aria-label={source.searchLabel} />
+      <span class="dp-count">{source.countText(count)}</span>
       <button type="button" class="dp-close" aria-label={ta('ui.close')} title={ta('ui.close')} onclick={() => onclose?.()}>
         <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
-    {#if !lent}
+    {#if source.filters}
     <div class="dp-views" role="group">
-      <button type="button" class:on={view === ''} aria-pressed={view === ''} onclick={() => (view = '')}>{ta('calendar.picker.all')}</button>
-      {#each CAL_VIEWS as v (v)}
-        <button type="button" class:on={view === v} aria-pressed={view === v} onclick={() => (view = v)}>{ta(VIEW_KEYS[v])}</button>
+      <button type="button" class:on={view === ''} aria-pressed={view === ''} onclick={() => (view = '')}>{source.filters.allLabel}</button>
+      {#each source.filters.items as [v, label] (v)}
+        <button type="button" class:on={view === v} aria-pressed={view === v} onclick={() => (view = v)}>{label}</button>
       {/each}
     </div>
     {/if}
@@ -225,21 +141,21 @@
       <div class="dp-list">
         {#each families as family (family.family)}
           <section class="dp-family">
-            <h3>{ta(family.labelKey)}</h3>
+            <h3>{family.label ?? ta(family.labelKey)}</h3>
             <div class="dp-grid">
               {#each family.designs as d (d.id)}
-                <button type="button" class="dp-tile" class:on={d.id === chosen} class:current={current !== null && d.id === current} aria-pressed={d.id === chosen}
-                  title={nameOf(d)} onclick={() => (chosen = d.id)} ondblclick={() => onpick?.(d.id)}>
+                <button type="button" class="dp-tile" class:on={d.id === chosen} class:current={source.current !== null && d.id === source.current} aria-pressed={d.id === chosen}
+                  title={source.name(d)} onclick={() => (chosen = d.id)} ondblclick={() => onpick?.(d.id)}>
                   <span class="dp-pic">
-                    {#if broken.has(d.id)}
-                      {@html calendarThumb(d.id)}
+                    {#if broken.has(d.id) || !source.picture(d.id)}
+                      {@html source.thumb(d.id)}
                     {:else}
-                      <img src={`/admin/designs/${PIC_PREFIX}${d.id}.webp`} alt="" loading="lazy" decoding="async" onerror={() => pictureFailed(d.id)} />
+                      <img src={source.picture(d.id)} alt="" loading="lazy" decoding="async" onerror={() => pictureFailed(d.id)} />
                     {/if}
                   </span>
-                  <span class="dp-name">{nameOf(d)}</span>
-                  {#if current !== null && d.id === current}
-                    <span class="dp-mark">{ta('calendar.picker.current')}</span>
+                  <span class="dp-name">{source.name(d)}</span>
+                  {#if source.current !== null && d.id === source.current}
+                    <span class="dp-mark">{source.currentText}</span>
                   {/if}
                 </button>
               {/each}
@@ -247,38 +163,40 @@
           </section>
         {/each}
         {#if !families.length}
-          <p class="dp-none">{ta('calendar.picker.none')}</p>
+          <p class="dp-none">{source.noneText}</p>
         {/if}
       </div>
       <aside class="dp-side">
         <div class="dp-side-head">
-          <strong>{nameOf(chosenDef)}</strong>
-          {#if !lent && chosenDef.view}
-            <span class="dp-side-view">{ta(VIEW_KEYS[chosenDef.view])}</span>
+          <strong>{source.name(chosenDef)}</strong>
+          {#if source.sideTag(chosenDef)}
+            <span class="dp-side-view">{source.sideTag(chosenDef)}</span>
           {/if}
         </div>
         <div class="dp-preview" bind:clientWidth={paneW}>
-          <div class="dp-stage" style="width:{PREVIEW_W * scale}px; height:{previewH * scale}px">
-            <iframe bind:this={iframeEl} title={ta('calendar.picker.preview', { name: nameOf(chosenDef) })} src="/?preview=1"
-              style="width:{PREVIEW_W}px; height:{previewH}px; transform:scale({scale}); transform-origin:top left"></iframe>
+          <div class="dp-stage" style="width:{source.previewWidth * scale}px; height:{previewH * scale}px">
+            <iframe bind:this={iframeEl} title={source.previewTitle(source.name(chosenDef))} src="/?preview=1"
+              style="width:{source.previewWidth}px; height:{previewH}px; transform:scale({scale}); transform-origin:top left"></iframe>
           </div>
         </div>
         <div class="dp-info">
           <section>
-            <h3>{ta('calendar.picker.aboutHead')}</h3>
-            <p>{aboutText(chosenDef)}</p>
+            <h3>{source.aboutHead}</h3>
+            <p>{source.about(chosenDef)}</p>
           </section>
-          <section>
-            <h3>{ta('calendar.picker.yoursHead')}</h3>
-            <dl>
-              {#each yours(chosenDef) as [label, lines] (label)}
-                <dt>{label}</dt>
-                <dd>{#each lines as line, i (i)}<span>{line}</span>{/each}</dd>
-              {/each}
-            </dl>
-          </section>
+          {#if source.yours(chosenDef).length}
+            <section>
+              <h3>{source.yoursHead}</h3>
+              <dl>
+                {#each source.yours(chosenDef) as [label, lines] (label)}
+                  <dt>{label}</dt>
+                  <dd>{#each lines as line, i (i)}<span>{line}</span>{/each}</dd>
+                {/each}
+              </dl>
+            </section>
+          {/if}
         </div>
-        <button type="button" class="dp-use" onclick={() => onpick?.(chosen)}>{mode === 'add' ? ta('calendar.picker.add') : ta('calendar.picker.use')}</button>
+        <button type="button" class="dp-use" onclick={() => onpick?.(chosen)}>{source.useLabel}</button>
       </aside>
     </div>
   </div>
@@ -324,6 +242,11 @@
     border: 1px solid rgb(255 255 255 / 15%);
     border-radius: 12px;
     box-shadow: 0 16px 48px rgb(0 0 0 / 55%);
+  }
+
+  /* Without the filter row the body takes the second row, which holds the rest of the card's height. */
+  .dp-card.nofilters {
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .dp-head {

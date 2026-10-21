@@ -41,7 +41,7 @@ class StubElement {
 }
 
 /** Renders the block over a basket and returns its form. */
-function renderCheckout(cart, props) {
+function renderCheckout(cart, props, site) {
   const store = new Map([['urd-cart', JSON.stringify(cart)]]);
   const globals = {
     document: { createElement: (tag) => new StubElement(tag), addEventListener() {} },
@@ -52,7 +52,7 @@ function renderCheckout(cart, props) {
   for (const [name, value] of Object.entries(globals)) Object.defineProperty(globalThis, name, { value, configurable: true, writable: true });
   try {
     const el = new StubElement('div');
-    checkoutBlock.render(el, { ...checkoutBlock.defaults(), ...props }, { preview: false });
+    checkoutBlock.render(el, { ...checkoutBlock.defaults(), ...props }, { preview: false, site });
     return el.children[0].children.find((c) => c.className === 'urd-checkout-form');
   } finally {
     for (const name of Object.keys(globals)) delete globalThis[name];
@@ -103,4 +103,21 @@ test('the order button texts in nb, en-GB, tr and the Swedish pack state the obl
   assert.match(sites.tr['shop.payWithVipps'], / öde$/);
   assert.match(sites.sv['shop.payWithVipps'], /^Betala /);
   for (const lang of ['nn', 'se']) assert.ok(!('shop.sendOrder' in sites[lang]), `${lang} shows the bokmål text until its translation round`);
+});
+
+test('the seller stands under the order buttons from the Site panel, and the block can leave it out', () => {
+  const site = { site: { title: 'Apeiron', lang: 'nb', contact: {
+    country: 'NO', legalName: 'Apeiron Linjeforening', ids: { org: '974760673' }, vat: { registered: true }, representative: 'Kari Nordmann',
+    address: { street: 'Høgskoleringen 5', postalCode: '7034', city: 'Trondheim' }, phone: '+47 73 59 00 00', email: 'post@apeiron.no' } } };
+  const form = renderCheckout(CART, { recipient: 'post@example.org' }, site);
+  const at = form.children.findIndex((c) => c.className === 'urd-checkout-buttons');
+  const seller = form.children.find((c) => c.className === 'urd-checkout-seller');
+  assert.ok(seller && form.children.indexOf(seller) > at, 'under the buttons');
+  assert.equal(seller.tagName, 'ADDRESS');
+  assert.equal(seller.children[0].textContent, 'Selger:');
+  assert.equal(seller.children[1].textContent, 'Apeiron Linjeforening · Org.nr. 974 760 673 MVA · Høgskoleringen 5, 7034 Trondheim');
+  assert.deepEqual(seller.children.slice(2).map((a) => a.href), ['tel:+4773590000', 'mailto:post@apeiron.no']);
+  assert.ok(!seller.textContent.includes('Kari Nordmann'), 'the representative stays in the footer');
+  assert.ok(!renderCheckout(CART, { recipient: 'post@example.org', seller: false }, site).children.some((c) => c.className === 'urd-checkout-seller'), 'switched off');
+  assert.ok(!renderCheckout(CART, { recipient: 'post@example.org' }, { site: { title: 'Apeiron', lang: 'nb' } }).children.some((c) => c.className === 'urd-checkout-seller'), 'no details, no line');
 });

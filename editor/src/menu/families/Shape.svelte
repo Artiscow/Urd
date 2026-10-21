@@ -7,6 +7,7 @@
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { colorTokens, shapeKinds } from '../options.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -19,10 +20,7 @@
 
 {#if area === 'content'}
   {#snippet shapeShape()}
-    <label>{ta('blocks.shape')}
-      <Dropdown value={selectedBlock.props.kind}
-        options={shapeKinds()}
-        onchange={(v) => setBlockProp('kind', v)} /></label>
+    <DesignRow pin="design" />
     {#if selectedBlock.props.kind === 'line'}
       <label title={ta('tip.shape.label')}>{ta('lbl.shapeLabel')}
         <input value={selectedBlock.props.label ?? ''}

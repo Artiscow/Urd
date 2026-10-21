@@ -57,7 +57,7 @@ export function pageMetaTags(site, page, origin, path, entry = {}) {
 }
 
 /**
- * JSON-LD for the site: Organization with the name, the description and the logo, and the legal name, the organisation number, the address, the phone and the email of the contact details (the fields from the Site panel, contact-model.js).
+ * JSON-LD for the site: Organization with the name, the description and the logo, and the legal name, the organisation number, the address, the phone, the email and the contact points by role of the contact details (the fields from the Site panel, contact-model.js).
  * Rich search results for the target audience (associations, small businesses) with no dependency.
  * @param {object} site the site.json content (migrated)
  * @param {string} origin

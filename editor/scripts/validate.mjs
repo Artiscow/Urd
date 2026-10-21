@@ -149,6 +149,7 @@ const contactSite = load('template/content/site.json');
 contactSite.site.contact = {
   country: 'NO', legalName: 'Test Association', representative: 'A Person', ids: { org: '974760673' }, registers: { org: 'Foretaksregisteret' }, vat: { registered: true },
   address: { street: 'Street 1', postalCode: '7034', city: 'Trondheim' }, phone: '+47 73 59 00 00', email: 'post@example.org',
+  geo: { lat: 63.4155, lon: 10.4042 }, points: [{ role: 'Board', email: 'board@example.org', phone: '+47 400 00 001', note: 'Replies within two working days' }],
 };
 contactSite.footer = { ...(contactSite.footer ?? { version: 1 }), contact: false, legal: false };
 const validateSite = ajv.getSchema(siteSchema.$id);

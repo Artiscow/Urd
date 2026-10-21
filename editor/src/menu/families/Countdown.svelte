@@ -3,10 +3,10 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
@@ -30,9 +30,7 @@
 {:else if area === 'style'}
   {#snippet countdownLook()}
     <Setting key="variant">
-      <label>{ta('lbl.variant')}
-        <Dropdown value={selectedBlock.props.variant ?? 'boxes'} options={variantOptions()}
-          onchange={(v) => setBlockProp('variant', v)} /></label>
+      <DesignRow pin="design" />
     </Setting>
     <Setting key="showSeconds" shown={ta('common.on')}>
       <div class="pin-line">

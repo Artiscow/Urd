@@ -68,6 +68,7 @@
     { label: ta('blocks.ribbon'), act: 'block', kind: 'ribbon' },
       { label: ta('blocks.table'), act: 'block', kind: 'table' },
       { label: ta('blocks.share'), act: 'block', kind: 'share' },
+      { label: ta('blocks.contact'), act: 'block', kind: 'contact' },
       { label: ta('blocks.countdown'), act: 'block', kind: 'countdown' },
       { label: ta('blocks.audio'), act: 'block', kind: 'audio' },
       { label: ta('blocks.product'), act: 'block', kind: 'product' },
@@ -218,6 +219,8 @@
     onclick={() => addBlock('table')}>{ta('blocks.table')}</button>
   <button class="ghost" title={ta('tip.blocks.share')}
     onclick={() => addBlock('share')}>{ta('blocks.share')}</button>
+  <button class="ghost" title={ta('tip.blocks.contact')}
+    onclick={() => addBlock('contact')}>{ta('blocks.contact')}</button>
   <button class="ghost" title={ta('tip.blocks.countdown')}
     onclick={() => addBlock('countdown')}>{ta('blocks.countdown')}</button>
   <button class="ghost" title={ta('tip.blocks.audio')}

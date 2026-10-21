@@ -238,6 +238,13 @@ function blockShapes(type, x, y, w, h, props) {
     parts.push(rect(x + w * 0.66, y, 0.6, h, token('text', FALLBACK_TEXT), ' opacity="0.2"'));
     return parts.join('');
   }
+  if (type === 'contact') {
+    // A bold name line, then three shorter lines.
+    const lineH = Math.max(1.2, Math.min(2.2, h / 6));
+    const parts = [rect(x, y, w * 0.55, lineH, token('text', FALLBACK_TEXT), ' opacity="0.8" rx="0.6"')];
+    for (let i = 1; i < 4; i += 1) parts.push(rect(x, y + i * (h / 4), w * (0.7 - i * 0.1), lineH * 0.8, token('text', FALLBACK_TEXT), ' opacity="0.4" rx="0.6"'));
+    return parts.join('');
+  }
   if (type === 'share') {
     // Row of small icon discs.
     const r = Math.max(1.2, Math.min(h / 2, w / 9));

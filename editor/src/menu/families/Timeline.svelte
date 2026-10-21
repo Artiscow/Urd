@@ -7,7 +7,7 @@
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
-  import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -70,12 +70,7 @@
 {:else if area === 'style'}
   {#snippet tlLook()}
     <Setting key="variant">
-      <div class="pin-line">
-        <label>{ta('lbl.variant')}
-          <Dropdown value={selectedBlock.props.variant ?? 'left'} options={variantOptions()}
-            onchange={(v) => setBlockProp('variant', v)} /></label>
-        <Pin id="variant" />
-      </div>
+      <DesignRow pin="variant" />
     </Setting>
     <Setting key="marker">
       <label>{ta('lbl.timelineMarker')}

@@ -5,7 +5,7 @@
   import { WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP, WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS, clampWidth, clampGutter, contentBand, presetOf } from '../lib/content-width.js';
   import Dropdown from '../lib/Dropdown.svelte';
   import { autogrow } from '../lib/autogrow.js';
-  import { ta, adminLang } from '$engine/i18n.js';
+  import { ta, taApiError, adminLang } from '$engine/i18n.js';
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
   import { meetingHostList } from '$engine/meeting-links.js';
@@ -251,6 +251,78 @@
     });
   }
 
+  /** One line of the address; a point found on the map for the old address no longer marks the place, so it goes with the change. */
+  function setContactAddress(key, value) {
+    contactMutate(`edit:site-contact-address-${key}`, (contact) => {
+      const next = { ...(contact.address ?? {}) };
+      if (value) next[key] = value;
+      else delete next[key];
+      contact.address = next;
+      delete contact.geo;
+    });
+    geoStatus = null;
+  }
+
+  /** The address as the map lookup gets it: the street, then the postcode and the town. */
+  const contactAddressText = $derived([siteDraft.site.contact?.address?.street, [siteDraft.site.contact?.address?.postalCode, siteDraft.site.contact?.address?.city].filter(Boolean).join(' ')].filter(Boolean).join(', '));
+  let geoStatus = $state(null);
+  let geoBusy = $state(false);
+
+  /** Finds the address on the map through /api/geocode (the published site's function, which needs a signed-in session) and stores the point the contact block's map design shows. */
+  async function findContactOnMap() {
+    const query = contactAddressText;
+    if (!query) return;
+    geoBusy = true;
+    geoStatus = { text: ta('props.place.searching'), err: false };
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+      const data = await res.json().catch(() => null);
+      // An address changed while the lookup ran is not the one the point belongs to.
+      if (query !== contactAddressText) {
+        geoStatus = null;
+        return;
+      }
+      if (res.ok && Number.isFinite(data?.lat) && Number.isFinite(data?.lon)) {
+        const round = (n) => Math.round(n * 1e6) / 1e6;
+        contactMutate('edit:site-contact-geo', (contact) => { contact.geo = { lat: round(data.lat), lon: round(data.lon) }; });
+        geoStatus = null;
+      } else {
+        geoStatus = { text: taApiError(data) ?? ta('props.place.notFound'), err: true };
+      }
+    } catch {
+      geoStatus = { text: ta('props.place.failed'), err: true };
+    } finally {
+      geoBusy = false;
+    }
+  }
+
+  function clearContactGeo() {
+    contactMutate('edit:site-contact-geo', (contact) => { delete contact.geo; });
+  }
+
+  /** The contact points by role, as stored. */
+  const contactPoints = $derived(Array.isArray(siteDraft.site.contact?.points) ? siteDraft.site.contact.points : []);
+
+  /** Writes the contact points through fn; an empty list removes the field. */
+  function pointsMutate(key, fn) {
+    contactMutate(key, (contact) => {
+      const points = (Array.isArray(contact.points) ? contact.points : []).map((p) => ({ ...p }));
+      fn(points);
+      if (points.length) contact.points = points;
+      else delete contact.points;
+    });
+  }
+
+  /** One field of a contact point: an empty value removes the field. */
+  function setPointField(i, key, value) {
+    const clean = value.trim();
+    pointsMutate(`edit:site-contact-point-${i}-${key}`, (points) => {
+      if (!points[i]) return;
+      if (clean) points[i][key] = clean;
+      else delete points[i][key];
+    });
+  }
+
   /** A number: normalised and checked by its profile; refused when it fails a verified check, saved with a warning when the register publishes no rule. */
   function setContactId(def, value) {
     const clean = normaliseId(def, value);
@@ -488,21 +560,62 @@
           oninput={(e) => setContact('representative', e.target.value)} /></label>
       <label class="field-stack">{ta('lbl.street')}
         <input value={siteDraft.site.contact?.address?.street ?? ''} autocomplete="off"
-          oninput={(e) => setContactMap('address', 'street', e.target.value.trim())} /></label>
+          oninput={(e) => setContactAddress('street', e.target.value.trim())} /></label>
       <div class="field-pair">
         <label class="field-stack">{ta('lbl.postalCode')}
           <input value={siteDraft.site.contact?.address?.postalCode ?? ''} autocomplete="off"
-            oninput={(e) => setContactMap('address', 'postalCode', e.target.value.trim())} /></label>
+            oninput={(e) => setContactAddress('postalCode', e.target.value.trim())} /></label>
         <label class="field-stack">{ta('lbl.city')}
           <input value={siteDraft.site.contact?.address?.city ?? ''} autocomplete="off"
-            oninput={(e) => setContactMap('address', 'city', e.target.value.trim())} /></label>
+            oninput={(e) => setContactAddress('city', e.target.value.trim())} /></label>
       </div>
+      {#if contactAddressText}
+        <!-- The address's point on the map, which the contact block's map design shows -->
+        {#if siteDraft.site.contact?.geo}
+          <div class="pin-line">
+            <span class="mini-label">{ta('site.onMap', { lat: siteDraft.site.contact.geo.lat, lon: siteDraft.site.contact.geo.lon })}</span>
+            <button class="ghost row-tool" title={ta('tip.clearGeo')} onclick={clearContactGeo}>{@html ICONS.cross}</button>
+          </div>
+        {:else}
+          <button class="ghost action" title={ta('tip.site.findOnMap')} disabled={geoBusy} onclick={findContactOnMap}>{ta('ui.findOnMap')}</button>
+        {/if}
+        {#if geoStatus}
+          <p class="panel-hint" class:place-error={geoStatus.err} role="status">{geoStatus.text}</p>
+        {/if}
+      {/if}
       <label class="field-stack">{ta('lbl.phone')}
         <input type="tel" value={siteDraft.site.contact?.phone ?? ''} autocomplete="off"
           oninput={(e) => setContact('phone', e.target.value)} /></label>
       <label class="field-stack">{ta('lbl.email')}
         <input type="email" value={siteDraft.site.contact?.email ?? ''} autocomplete="off" spellcheck="false"
           oninput={(e) => setContact('email', e.target.value)} /></label>
+      <!-- The contact points by role (site.contact.points): the contact block's By role design and the JSON-LD's ContactPoint entries -->
+      <p class="panel-strong" title={ta('tip.site.contactPoints')}>{ta('lbl.contactPoints')}</p>
+      {#each contactPoints as point, i (i)}
+        <div class="contact-point">
+          <div class="contact-point-role">
+            <label for={`contact-point-${i}`}>{ta('lbl.contactRole')}</label>
+            <span class="nav-line">
+              <input id={`contact-point-${i}`} value={point.role ?? ''} placeholder={ta('ph.contactRole')} autocomplete="off"
+                oninput={(e) => setPointField(i, 'role', e.target.value)} />
+              <span class="row-tools">
+                <button class="ghost row-tool" title={ta('tip.removeContactPoint')}
+                  onclick={() => pointsMutate('site', (points) => points.splice(i, 1))}>{@html ICONS.cross}</button>
+              </span>
+            </span>
+          </div>
+          <label class="field-stack">{ta('lbl.email')}
+            <input type="email" value={point.email ?? ''} autocomplete="off" spellcheck="false"
+              oninput={(e) => setPointField(i, 'email', e.target.value)} /></label>
+          <label class="field-stack">{ta('lbl.phone')}
+            <input type="tel" value={point.phone ?? ''} autocomplete="off"
+              oninput={(e) => setPointField(i, 'phone', e.target.value)} /></label>
+          <label class="field-stack">{ta('lbl.contactNote')}
+            <input value={point.note ?? ''} placeholder={ta('ph.contactNote')} autocomplete="off"
+              oninput={(e) => setPointField(i, 'note', e.target.value)} /></label>
+        </div>
+      {/each}
+      <button class="ghost action" onclick={() => pointsMutate('site', (points) => points.push({}))}>{ta('ui.addContactPoint')}</button>
     </div>
   </details>
   <hr class="gridmenu-divider" />

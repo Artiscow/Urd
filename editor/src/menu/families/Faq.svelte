@@ -3,11 +3,10 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Choice from '../../lib/Choice.svelte';
   import BoxStyle from '../BoxStyle.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
-  import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -17,9 +16,6 @@
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
   const variant = $derived(selectedBlock.props.variant === 'list' ? 'list' : 'cards');
-
-  /** The variants, as the block's own FAQ_VARIANTS lists them: tests/styled-blocks.test.mjs holds the lists equal. */
-  const FAQ_VARIANT_IDS = ['cards', 'list'];
 
   function setFaqItem(i, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:faq${i}`, (b) => {
@@ -73,12 +69,7 @@
 {:else if area === 'style'}
   {#snippet faqVariant()}
     <Setting key="variant">
-      <div class="pin-line">
-        <Choice label={ta('lbl.variant')} value={variant}
-          options={FAQ_VARIANT_IDS.map((v) => [v, ta(`opt.faqVariant.${v}`)])}
-          onchange={(v) => setBlockProp('variant', v)} />
-        <Pin id="variant" />
-      </div>
+      <DesignRow pin="variant" />
     </Setting>
   {/snippet}
   {#snippet faqCard()}

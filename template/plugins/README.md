@@ -174,6 +174,29 @@ mønsteret til og med v0.7.3, riktig for innstillinger som er mer enn en
 flat felt-liste, som kildelister). Kontrakten er beskrevet i
 [docs/SCHEMA.md](../../docs/SCHEMA.md#plugins).
 
+**Design (design-kontrakten)**: har blokken din flere utseender, deklarer
+dem som `designs` på blokk-defen. Menyen får da den samme Design-raden,
+hurtigflisen og designvelgeren som kjernens blokker, med et bilde og en
+levende forhåndsvisning av eierens egen blokk i hvert design:
+
+```js
+Urd.blocks.define('venue', {
+  // …
+  designs: {
+    prop: 'variant',
+    items: [
+      { id: 'card', labelKey: 'venue.design.card', aboutKey: 'venue.design.card.about', picture: '/plugins/venue/designs/card.webp' },
+      { id: 'band', labelKey: 'venue.design.band', aboutKey: 'venue.design.band.about', picture: '/plugins/venue/designs/band.webp' },
+    ],
+  },
+});
+```
+
+`prop` er propen blokken holder designet i, og `id` verdien som skrives
+dit. Etikettene og beskrivelsene løses av motoren som feltenes. Bildet er
+valgfritt og må være en bildefil på nettstedet selv (en sti fra roten);
+uten bilde viser flisen navnet. Færre enn to design er ikke noe valg.
+
 **Temastyrt UI-regelen (ADR-0009)**: aldri native `<select>` i
 redigerings-UI - popupen følger OS-temaet og blir uleselig. Bruk
 `createDropdown` fra `/assets/urd/dropdown.js`, eller segmentknapper

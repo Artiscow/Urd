@@ -23,8 +23,9 @@ const el2 = (tag, className, textContent) => {
  * frame-src) and replaces the broken iframe with something calm: the
  * missing line in the editor, a link that opens the map for visitors.
  * Urd's own _headers allows OSM, so this normally never fires.
+ * The contact block's map design watches its frame with it too.
  */
-function watchCspBlock(host, frame, ctx, largerUrl) {
+export function watchCspBlock(host, frame, ctx, largerUrl) {
   // The blocked host is compared EXACTLY (a parsed URL), never as a
   // substring: a substring check would also match openstreetmap.org.example.com.
   const blockedHost = new URL(OSM_HOST).hostname;

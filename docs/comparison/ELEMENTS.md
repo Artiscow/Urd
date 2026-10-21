@@ -915,7 +915,7 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |157|Marketing button (Marketing Button)|SP|headline + sub|-|Missing|Not taken: low value|
 |158|Promo / banner (Promos, Main Banner)|WX WE SH|-|-|Has: sections, announcement bar|-|
 |159|Notification / announcement bar (Notification Bar, Floating Bars, header-announcements)|BD EL SH SQ|sticky, dismiss|a region above the nav with a real close `<button>`; a rolling bar needs a pause (WCAG 2.2.2)|Has|-|
-|160|Floating contact button (Floating Buttons, Chat button, Click To Call, Click To Email)|EL WX DU SQ|WhatsApp, multi-link, phone-only bottom bar (SQ)|`tel:` and `mailto:` links in a fixed element that never covers content|Has: a block docked to the screen|-|
+|160|Floating contact button (Floating Buttons, Chat button, Click To Call, Click To Email)|EL WX DU SQ|WhatsApp, multi-link, phone-only bottom bar (SQ)|`tel:` and `mailto:` links in a fixed element that never covers content|Has: a block docked to the screen, and the contact block's call bar on phones (0.7.24.5.2)|-|
 |161|Countdown (Countdown, Countdown Timer, Timer)|EL BR DV BB KB SP OT ST BD NP DO CA MB|evergreen, expiry action|the target in `<time datetime>`; no `aria-live` on the ticking digits|Has|-|
 |162|Count-up timer (Countup Timer)|NP|-|as #161, counting from a past date|Missing|ER-H|
 |163|Newsletter / email opt-in (Email Optin, Subscribe Form, Newsletter, Subscription Form, Email signup, Signup card, Sign Up Forms)|DV BB SQ HO DO SH GH SP WH SK ZS WF|ESP integration|a `<form>` posting to the provider's endpoint, with an explicit, unticked consent («markedsføringsloven» § 15) and, as good practice, double opt-in|Partial: footer newsletter CTA, form|0.7.24: preset with a split consent|
@@ -1082,7 +1082,7 @@ Webflow disabled User Accounts on all sites on 29 January 2026 (Webflow help, re
 |283|Leaflet / OSM map (Map (Leaflet), map)|BR EL4|no API key|-|Has: OpenStreetMap's own iframe, with no API key and no library|-|
 |284|Map connector (Map Connector)|BR|query-driven markers|needs a map library|Missing|Watch: needs a map library|
 |285|Multi-location (Multi-Location)|DU|-|a list of `<address>`es, each with map links|Missing|ER-G: places with map links|
-|286|Contact section (Contact, Contacts, contact section)|EL GD TL|-|`<address>` with `tel:` and `mailto:` links|Has: presets|-|
+|286|Contact section (Contact, Contacts, contact section)|EL GD TL|-|`<address>` with `tel:` and `mailto:` links|Has: the Contact details block in eleven designs, read from the site settings, and the Contact preset built on it (0.7.24.5.2)|-|
 |287|Chat (Chat, Live Chat)|WX SK|-|a third-party script|Missing|Not taken: third party|
 
 ### O. Embeds and integrations
@@ -1152,7 +1152,7 @@ These nine come from the association pass and the component libraries rather tha
 |320|Document archive («vedtekter», «protokoller», «årsberetning»)|Samfundet's `Saksdokument` categories ([model_choices.py](https://github.com/Samfundet/Samfundet4/blob/master/backend/samfundet/models/model_choices.py), code), echo's meeting minutes with a required PDF ([meeting-minute.tsx](https://raw.githubusercontent.com/echo-webkom/echo-web-mono/main/apps/cms/schemas/meeting-minute.tsx), code), Nabla's meeting records ([nablaweb](https://github.com/Nabla-NTNU/nablaweb), code)|a file list (#75) over a documents collection, by category and year. Pitfall: personal data in published protocols|Partial: the publications kind with the archive view (year headings, a link per entry)|ER-B: file list plus a documents collection kind|
 |321|Job and recruitment listings with a deadline|Abakus `joblistings` ([lego apps](https://github.com/webkom/lego/tree/master/lego/apps), code), Online `JobListing` ([schema.prisma](https://raw.githubusercontent.com/dotkom/monoweb/main/packages/db/prisma/schema.prisma), code), echo `job-ad` ([schemas](https://github.com/echo-webkom/echo-web-mono/tree/main/apps/cms/schemas), code); Relume career sections and Untitled UI Careers ([Untitled UI](https://www.untitledui.com/react/components), primary); Samfundet has «Opptak» in its main navigation|a collection with the deadline in `<time>`, hidden after expiry at publish or by a date check in the browser|Missing|ER-F|
 |322|Directory of interest groups or committees|Abakus `interest-groups` ([lego-webapp pages](https://github.com/webkom/lego-webapp/tree/master/lego-webapp/pages), code), Online `grupper` and `interessegrupper` ([monoweb routes](https://github.com/dotkom/monoweb/tree/main/apps/web/src/app/(web)), code), echo `student-group` (schemas above, code), UCL's groups directory filtered by category with «Start a group» ([studentsunionucl.org](https://studentsunionucl.org/), observed)|a collection with filters and A-Z letter anchors|Partial: custom collection|ER-F: preset|
-|323|QR code|Flowbite QR Code ([Flowbite](https://flowbite.com/docs/getting-started/introduction/), primary) and Untitled UI QR Codes; in no builder's list|an SVG generated at publish; staying library-free needs an encoder of Urd's own|Missing|ER-G: an encoder of Urd's own (C119 in FEATURES.md)|
+|323|QR code|Flowbite QR Code ([Flowbite](https://flowbite.com/docs/getting-started/introduction/), primary) and Untitled UI QR Codes; in no builder's list|an SVG generated at publish; staying library-free needs an encoder of Urd's own|Partial: the contact block's QR design (0.7.24.5.2), from an encoder of Urd's own (`qr.js`)|ER-G: a code per page from `qr.js` (C119 in FEATURES.md)|
 |324|Copy to clipboard|Flowbite Clipboard; in no builder's list|`navigator.clipboard.writeText()` ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText)) with a `role="status"` confirmation|Missing: «Copy link» went with the share buttons (0.7.20.5.3)|ER-G: copy button, for example for a Vipps or account number|
 
 ### Missing elements ranked for associations
@@ -1188,7 +1188,7 @@ The element research ranked what Urd lacks by value to clubs and associations. C
 |25|Link preview / bookmark card|low-medium|Ghost Bookmark, Squarespace Content Link|OpenGraph read at publish|Missing|ER-G|
 |26|Charts|low-medium|Squarespace Chart, Divi Chart|SVG drawn at publish, plus the table|Missing|ER-C|
 |27|Copy to clipboard|low-medium|Flowbite|the Clipboard API|Missing: the share block's «copy» went with the share buttons (0.7.20.5.3)|ER-G|
-|28|QR code|low-medium|Flowbite, Untitled UI|SVG generated at publish|Missing|ER-G: an encoder of Urd's own (C119 in FEATURES.md)|
+|28|QR code|low-medium|Flowbite, Untitled UI|SVG generated at publish|Partial: the contact block's QR design (0.7.24.5.2)|ER-G: a code per page from `qr.js` (C119 in FEATURES.md)|
 |29|Before/after|low|Divi, Aceternity UI Compare|a range input plus `clip-path`|Missing|ER-B|
 |30|Image hotspots|low|Elementor Hotspot|buttons plus popovers|Missing|ER-B|
 |31|Rotating headline|low|Elementor, Bricks, daisyUI Text Rotate|keyframes plus the full text hidden for screen readers|Missing|ER-H|

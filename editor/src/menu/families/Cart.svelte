@@ -6,7 +6,7 @@
   import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
-  import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
@@ -34,12 +34,7 @@
 {:else if area === 'style'}
   {#snippet cartView()}
     <Setting key="variant">
-      <div class="pin-line">
-        <label>{ta('lbl.view')}
-          <Dropdown value={selectedBlock.props.variant ?? 'button'} options={viewOptions()}
-            onchange={(v) => setBlockProp('variant', v)} /></label>
-        <Pin id="cartView" />
-      </div>
+      <DesignRow pin="cartView" />
     </Setting>
   {/snippet}
   <MenuGroup id="cart-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'button'))?.[1] ?? ''} group={groupOf('cart-view', { variant: 'button' })}>{@render cartView()}</MenuGroup>

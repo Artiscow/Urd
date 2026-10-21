@@ -9,6 +9,7 @@
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ribbonMotions, ribbonReaches, ribbonReach, ribbonSepOptions, ribbonMainOptions, ribbonStripeOptions, RIBBON_SEP_ICONS, ribbonInk } from '../options.js';
   import { ICONS } from '../../lib/icons.js';
@@ -213,9 +214,7 @@
           onchange={(v) => setBlockProp('width', v)} />
       </Setting>
       <Setting key="variant">
-        <Choice label={ta('lbl.ribbonVariant')} value={selectedBlock.props.variant ?? 'band'}
-          options={[['band', ta('opt.ribbonVariant.band')], ['plain', ta('opt.ribbonVariant.plain')]]}
-          onchange={(v) => setBlockProp('variant', v)} />
+        <DesignRow pin="design" />
       </Setting>
       <Setting key="tilt" shown="0">
         <div class="ctl-row" title={ta('tip.ribbon.tilt')}>

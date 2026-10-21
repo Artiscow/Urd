@@ -174,6 +174,36 @@ export function checkProvides(provides, defined) {
   return diffs;
 }
 
+/** A picture a plugin names for a design: a picture file on the site itself (a path from its root, never a protocol-relative address). */
+const DESIGN_PICTURE = /^\/(?!\/)[A-Za-z0-9._~/-]+\.(?:webp|png|jpe?g|avif|svg)$/;
+
+/**
+ * A plugin block's designs, for the editor's design picker (the design contract, additive): `designs: { prop, items: [{ id, label | labelKey, about | aboutKey, picture? }] }` on the block's def, `prop` naming the prop the block keeps its design in.
+ * The labels and descriptions are resolved with `translate` (the preview's ta, where the plugin's dictionary lives); an item keeps its id when it is a short word, unseen before, and its picture only when it is a picture file on the site itself.
+ * Fewer than two designs is no choice, and gives null.
+ * @param {object} def the block's definition
+ * @param {(key: string) => string} translate
+ * @returns {{prop: string, items: Array<{id: string, label: string, about: string, picture: string}>}|null}
+ */
+export function pluginBlockDesigns(def, translate) {
+  const designs = def?.designs;
+  if (!designs || typeof designs.prop !== 'string' || !/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(designs.prop) || !Array.isArray(designs.items)) return null;
+  const seen = new Set();
+  const items = [];
+  for (const item of designs.items) {
+    if (typeof item?.id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9-]{0,39}$/.test(item.id) || seen.has(item.id)) continue;
+    seen.add(item.id);
+    const picture = typeof item.picture === 'string' && DESIGN_PICTURE.test(item.picture) && !item.picture.includes('..') ? item.picture : '';
+    items.push({
+      id: item.id,
+      label: item.labelKey ? translate(item.labelKey) : String(item.label ?? item.id),
+      about: item.aboutKey ? translate(item.aboutKey) : String(item.about ?? ''),
+      picture,
+    });
+  }
+  return items.length >= 2 ? { prop: designs.prop, items } : null;
+}
+
 /** Plugins already loaded in this page: an import cannot be undone, so each id is loaded at most once. */
 const loadedPlugins = new Set();
 

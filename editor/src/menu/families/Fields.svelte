@@ -11,11 +11,13 @@
 <script>
   /* The field contract (0.7.26.2): the settings of a core block listed in
      CORE_FIELDS and of a plugin block with `fields`, and the button that opens
-     a plugin block's own config panel in the preview. */
+     a plugin block's own config panel in the preview; and the design contract,
+     the design row of a plugin block with `designs`. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta, taApiError } from '$engine/i18n.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
@@ -128,4 +130,7 @@
     <button class="ghost" title={ta('hint.pluginBlock')}
       onclick={() => ed.bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
   {/if}
+{:else if area === 'style' && pluginBlocks.find((b) => b.type === selectedBlock.type)?.designs}
+  <!-- The design contract: a plugin block with designs opens the design picker as the core blocks do -->
+  <DesignRow pin="design" />
 {/if}

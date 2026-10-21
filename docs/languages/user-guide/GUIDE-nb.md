@@ -41,7 +41,7 @@ helt uten editor-rammer. Klikk «Rediger»-knappen for å komme tilbake.
   hjelpelinjene (se Grid under).
 - **Endre størrelse**: dra i håndtaket i blokkens hjørne. En blokk der
   innholdet bestemmer høyden (Kalender, Samling, Produktkort, Handlekurv,
-  Kasse, Nedteller, FAQ, Skjema, Sitat, Delingsknapper, Statistikk, Tabell,
+  Kasse, Kontaktopplysninger, Nedteller, FAQ, Skjema, Sitat, Delingsknapper, Statistikk, Tabell,
   Tidslinje og Lyd) er alltid like høy som det den viser: håndtaket endrer
   bare bredden, et drag opp eller ned stopper ved kanten av innholdet med
   et merke som sier det, og omrisset følger selv med når du endrer
@@ -135,6 +135,15 @@ innstillingene i en rad over dem. Søkefeltet øverst finner en innstilling på 
 fra navnet eller hjelpeteksten: menyen viser da bare det som passer, med gruppene
 det står i åpne, og Esc eller et tomt felt gir deg menyen tilbake slik den var.
 Egenskaper har det samme søket over sin meny.
+
+**Design**: hver blokk med mer enn ett utseende (Kontaktopplysninger, Galleri,
+Statistikk, Samling, Nedteller, Bånd, FAQ, Tidslinje, Sitat, Lenker,
+Handlekurv, Knapp og Form, i tillegg til kalenderen) har en **Design**-rad i
+menyen. Den åpner et vindu med et bilde av hvert design, et søkefelt og en
+levende forhåndsvisning av din egen blokk i det markerte designet, med en
+linje om hva det er; «Bruk dette designet» tar det i bruk. En blokk som ennå
+ikke har noe eget å vise (et galleri uten bilder, kontaktopplysninger som ikke
+er skrevet inn) forhåndsvises med eksempelinnhold.
 
 **Farger**: fargevelgerne viser temafargene dine som prikker - velger du
 en av dem, KOBLES feltet til temaet og følger med når du endrer paletten
@@ -324,6 +333,21 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   opplysningene. Et nummer som ikke består kontrollen, blir markert og ikke
   lagret; der et register deler ut numre som ikke består den vanlige
   kontrollen, lagres det med en merknad. Et tomt felt setter ingen spor.
+  Blokken **Kontaktopplysninger** (og seksjonsmalen «Kontakt») viser de samme
+  opplysningene på en side, så et endret telefonnummer endres overalt; i
+  menyen dens velger du hvilke deler som vises, og under Stil én av elleve
+  utforminger: Linjer, Ikonrader, Kort, Tre fliser, Faktaliste,
+  Handlingsknapper, Med kart, Kontaktstripe, Plakat, Etter rolle og Med
+  QR-kode. Hver har sin egen oppstilling på mobil. «Med kart» viser adressen
+  på OpenStreetMap, lastet først når besøkeren trykker «Vis kart»; klikk
+  «Finn på kartet» under adressen i Nettsted-panelet først (oppslaget går
+  gjennom det publiserte nettstedet). «Etter rolle» lister
+  **Kontaktpunktene** du legger til i Nettsted-panelet (styret, kassereren,
+  pressen, hver med e-post, telefon og en merknad). «Med QR-kode» tegner en
+  kode som lagrer kontakten på en annen telefon. To valg virker med
+  utformingene: en «Legg til i kontakter»-knapp som laster ned opplysningene
+  som et kontaktkort, og en ringelinje på mobil som holder Ring, E-post og
+  Kart nederst på skjermen mens besøkeren blar (én linje per side).
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.
   Skru den på, skriv linjene (én per linje) og velg justering - den
   redigeres ett sted og gjelder hele nettstedet. Under
@@ -350,6 +374,10 @@ satt opp, eller som en betaling med Vipps når betalingslaget er slått på.
   leveringskostnaden før bestillingen gjøres.
 - Med e-postutkastet gjør kjøperen bestillingen ved å sende e-posten fra sitt
   eget e-postprogram.
+- Under knappene navngir Kasse selgeren: juridisk navn, organisasjonsnummer,
+  adresse, telefon og e-post fra Kontaktopplysninger i Nettsted-panelet,
+  siden kjøperen skal vite hvem hen kjøper av før bestillingen. «Vis
+  selgeren» i blokkens meny skrur det av.
 - «Betal med Vipps» nevner selve betalingen, en ordlyd EU-kommisjonens
   veiledning om regelen godtar.
 

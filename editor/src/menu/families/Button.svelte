@@ -7,6 +7,7 @@
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
@@ -36,13 +37,7 @@
 {:else if area === 'style'}
   {#snippet btnLook()}
     <Setting key="style">
-      <div class="pin-line">
-        <label>{ta('lbl.style')}
-          <Dropdown value={selectedBlock.props.style}
-            options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
-            onchange={(v) => setBlockProp('style', v)} /></label>
-        <Pin id="btnStyle" />
-      </div>
+      <DesignRow pin="btnStyle" />
     </Setting>
   {/snippet}
   <MenuGroup id="btn-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary')} group={groupOf('btn-look', { style: 'primary' })}>{@render btnLook()}</MenuGroup>

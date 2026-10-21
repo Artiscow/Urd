@@ -3,12 +3,11 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import LinkList from '../../lib/LinkList.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
-  import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeId } from '$engine/sections/presets.js';
   import { ICON_LIBRARY, iconSvg } from '$engine/icons.js';
@@ -76,12 +75,7 @@
 {:else if area === 'style'}
   {#snippet shareLook()}
     <Setting key="variant">
-      <div class="pin-line">
-        <label>{ta('lbl.variant')}
-          <Dropdown value={selectedBlock.props.variant ?? 'icons'} options={variantOptions()}
-            onchange={(v) => setBlockProp('variant', v)} /></label>
-        <Pin id="variant" />
-      </div>
+      <DesignRow pin="variant" />
     </Setting>
     <Setting key="size" shown="38">
       <label>{ta('lbl.size')}

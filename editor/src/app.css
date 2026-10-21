@@ -2353,6 +2353,21 @@
     gap: 0.5rem;
   }
 
+  /* A contact point in the Site panel: its role with the remove button beside the field, then its email, phone and note, set apart by a rule. */
+  .panel-body .contact-point {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  }
+
+  .panel-body .contact-point-role {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
   /* A dropdown under a stacked label fills the row. */
   .panel-body label.field-stack > .dd {
     flex: 1 1 auto;

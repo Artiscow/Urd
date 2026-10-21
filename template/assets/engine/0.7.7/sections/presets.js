@@ -65,6 +65,16 @@ const button = (fr, label, props = {}) => ({
   frames: fr,
 });
 
+const contact = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'contact',
+  version: 1,
+  // The block reads the Site panel's contact details, so the preset carries no sample address.
+  props: { parts: ['name', 'address', 'phone', 'email'], design: 'lines', ...props },
+  animation: null,
+  frames: fr,
+});
+
 const icon = (fr, glyph, size = 40) => ({
   id: makeId('blk'),
   type: 'icon',
@@ -462,14 +472,11 @@ export function registerSectionPresets(Urd) {
     labelKey: 'preset.contact.label',
     group: 'Basics',
     groupKey: 'presetGroup.basic',
-    hint: 'Contact details in a card with an email button',
+    hint: 'The contact details from the Site panel under a heading',
     hintKey: 'preset.contact.hint',
     create: () => section('contact', '320px', bg(colorLayer('surface'), glowLayer(0.2, 0.8, 0.2)), [
       text(frame(10, 32, 40, 36), ta('seed.contact.title')),
-      text(frame(10, 84, 36, 130),
-        ta('seed.contact.info'),
-        { box: true }),
-      button(frame(60, 100, 22, 40), ta('seed.contact.button'), { href: `mailto:${ta('seed.email')}` }),
+      contact(frame(10, 84, 40, 150)),
     ]),
   });
 

@@ -249,3 +249,36 @@ test('loader: overlapping lists commit in call order, and dictionaries apply in 
   assert.deepEqual(Urd.blocks.ids(), ['ld-q1-block', 'ld-q2-block'], 'the second list waits for the first');
   assert.ok(log.includes('/plugins/ld-q2/plugin.json'));
 });
+
+const { pluginBlockDesigns } = await engineImport('plugins.js');
+
+test('pluginBlockDesigns: a plugin block\'s designs with their words resolved, its picture only from the site itself', () => {
+  const translate = (key) => `«${key}»`;
+  const def = {
+    designs: {
+      prop: 'variant',
+      items: [
+        { id: 'cards', labelKey: 'my.cards', aboutKey: 'my.cards.about', picture: '/plugins/my-block/designs/cards.webp' },
+        { id: 'list', label: 'List', about: 'Rows', picture: 'https://evil.example/x.webp' },
+        { id: 'list', label: 'Twice' },
+        { id: 'bad id', label: 'Space' },
+        { id: 'proto', label: 'Protocol-relative', picture: '//evil.example/x.webp' },
+        { id: 'up', label: 'Climbs', picture: '/plugins/../admin/x.webp' },
+        null,
+      ],
+    },
+  };
+  assert.deepEqual(pluginBlockDesigns(def, translate), {
+    prop: 'variant',
+    items: [
+      { id: 'cards', label: '«my.cards»', about: '«my.cards.about»', picture: '/plugins/my-block/designs/cards.webp' },
+      { id: 'list', label: 'List', about: 'Rows', picture: '' },
+      { id: 'proto', label: 'Protocol-relative', about: '', picture: '' },
+      { id: 'up', label: 'Climbs', about: '', picture: '' },
+    ],
+  });
+  assert.equal(pluginBlockDesigns({ designs: { prop: 'variant', items: [{ id: 'one' }] } }, translate), null, 'one design is no choice');
+  assert.equal(pluginBlockDesigns({ designs: { prop: 'x y', items: [{ id: 'a' }, { id: 'b' }] } }, translate), null, 'a prop must be a plain name');
+  assert.equal(pluginBlockDesigns({}, translate), null);
+  assert.equal(pluginBlockDesigns(undefined, translate), null);
+});

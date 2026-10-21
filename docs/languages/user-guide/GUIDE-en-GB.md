@@ -42,7 +42,7 @@ completely without editor frames. Click the **Edit** button to come back.
   the guide lines (see Grid below).
 - **Resizing**: drag the handle in the corner of the block. A block whose
   content decides its height (Calendar, Collection, Product cards, Basket,
-  Checkout, Countdown, FAQ, Form, Quote, Share buttons, Statistic, Table,
+  Checkout, Contact details, Countdown, FAQ, Form, Quote, Share buttons, Statistic, Table,
   Timeline and Audio) is always as tall as what it shows: its handle changes the width
   only, a pull up or down stops at the edge of the content with a mark that
   says so, and its outline follows by itself when you change its settings.
@@ -137,6 +137,15 @@ above them. The search field at the top finds a setting by a word from its name 
 its help text: the menu then shows only what matches, with the groups that hold it
 open, and Esc or an empty field brings the menu back as it was. Properties has the
 same search over its menu.
+
+**Designs**: every block with more than one look (Contact details, Gallery,
+Statistic, Collection, Countdown, Ribbon, FAQ, Timeline, Quote, Links, Basket,
+Button and Shape, as well as the calendar) has a **Design** row in its menu.
+It opens a window with a picture of each design, a search field and a live
+preview of your own block in the marked design, with a line about what it is;
+«Use this design» applies it. A block with nothing of its own to show yet (a
+gallery without pictures, contact details not yet typed) is previewed with
+sample content.
 
 **Colours**: the colour pickers show your theme colours as dots - if you choose
 one of them, the field is LINKED to the theme and follows along when you change the palette
@@ -324,7 +333,21 @@ reading order. You usually do not have to do anything.
   address, phone and email as a contact column, and search engines read the
   same details. A number that fails its check is marked and not saved; where
   a register issues numbers that fail the usual check, it is saved with a
-  note. An empty field leaves no trace.
+  note. An empty field leaves no trace. The **Contact details** block (and
+  the «Contact» section template) shows the same details on a page, so a
+  changed phone number changes everywhere; in its menu you choose which parts
+  show and, under Style, one of eleven designs: Lines, Icon rows, Card, Three
+  tiles, Fact list, Action buttons, With a map, Contact strip, Poster, By role
+  and With a QR code. Each has its own layout on a phone. «With a map» shows
+  the address on OpenStreetMap, loaded only when the visitor taps «Show map»;
+  click «Find on the map» under the address in the Site panel first (the
+  lookup goes through the published site). «By role» lists the **Contact
+  points** you add in the Site panel (the board, the treasurer, the press,
+  each with an email, a phone and a note). «With a QR code» draws a code that
+  saves the contact on another phone. Two options work with the designs: an
+  «Add to contacts» button that downloads the details as a contact card, and
+  a call bar on phones that keeps Call, Email and Map at the bottom of the
+  screen while the visitor scrolls (one bar per page).
 - The **Footer** panel: the footer text shown at the bottom of all pages.
   Switch it on, write the lines (one per line) and choose the alignment - it
   is edited in one place and applies to the whole site. Under **Contact
@@ -351,6 +374,10 @@ payment with Vipps when the payment layer is on.
   law asks for the delivery cost before the order is placed.
 - With the email draft, the buyer places the order by sending the email from
   their own mail program.
+- Under the buttons the Checkout names the seller: the legal name,
+  organisation number, address, phone and email from the Site panel's
+  Contact details, since the buyer must know who they buy from before the
+  order. «Show the seller» in the block's menu switches it off.
 - «Pay with Vipps» names the payment itself, a wording the EU Commission's
   guidance on the rule accepts.
 

@@ -17,7 +17,7 @@ export const GENERIC = {
 
 export const PROFILES = {
   NO: {
-    ids: [{ key: 'org', label: 'Org.nr.', regex: D(9), check: 'no-org', display: '### ### ###', registers: ['Enhetsregisteret', 'Foretaksregisteret'], icd: '0192' }],
+    ids: [{ key: 'org', label: 'Org.nr.', regex: D(9), check: 'no-org', display: '### ### ###', registers: ['Enhetsregisteret', 'Foretaksregisteret', 'Frivillighetsregisteret'], icd: '0192' }],
     vat: { kind: 'mark', of: 'org', mark: 'MVA' },
   },
   SE: {

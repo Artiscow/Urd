@@ -17,8 +17,8 @@ const { footerThumb } = await engineImport('footer-thumb.js');
 
 // The footer's template picker stands in the Footer panel (0.7.26.3).
 const editor = readFileSync(new URL('../editor/src/panels/FooterPanel.svelte', import.meta.url), 'utf8');
-// The variant lists stand in the block families of the element menu (0.7.26.2).
-const families = ['Stats', 'Faq'].map((f) => readFileSync(new URL(`../editor/src/menu/families/${f}.svelte`, import.meta.url), 'utf8')).join('\n');
+// The editor's design picker reads the variants from the blocks' design catalogue.
+const { BLOCK_DESIGNS, blockDesignOf } = await engineImport('block-designs.js');
 
 test('statVariant: bare, a card or a band, and bare for anything unknown', () => {
   assert.deepEqual(STAT_VARIANTS, ['plain', 'cards', 'band']);
@@ -42,10 +42,11 @@ test('the variants are additive: the blocks keep their versions and their defaul
   assert.equal(shapeBlock.defaults().label, undefined);
 });
 
-test('the editor offers the same variants as the blocks', () => {
-  const list = (name) => JSON.parse(new RegExp(`const ${name} = (\\[[^\\]]*\\]);`).exec(families)[1].replaceAll("'", '"'));
-  assert.deepEqual(list('STAT_VARIANT_IDS'), STAT_VARIANTS);
-  assert.deepEqual(list('FAQ_VARIANT_IDS'), FAQ_VARIANTS);
+test('the editor offers the same variants as the blocks, and reads a stored one as the blocks do', () => {
+  assert.deepEqual(BLOCK_DESIGNS.stats.ids, STAT_VARIANTS);
+  assert.deepEqual(BLOCK_DESIGNS.faq.ids, FAQ_VARIANTS);
+  for (const value of [...STAT_VARIANTS, undefined, 'neon']) assert.equal(blockDesignOf('stats', { variant: value }), statVariant(value));
+  for (const value of [...FAQ_VARIANTS, undefined, 'grid']) assert.equal(blockDesignOf('faq', { variant: value }), faqVariant(value));
 });
 
 test('footerDesign: the two designs, and the standard footer for anything else', () => {

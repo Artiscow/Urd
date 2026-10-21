@@ -1,6 +1,6 @@
 /**
- * The association's legal and contact details (site.site.contact, additive from 0.7.24.5): the country, the legal name, the organisation numbers the country's profile knows (contact-profiles.js), the VAT status, the representative, the address, the phone and the email.
- * They are typed once in the Site panel and read by the footer and the Organization JSON-LD.
+ * The association's legal and contact details (site.site.contact, additive from 0.7.24.5): the country, the legal name, the organisation numbers the country's profile knows (contact-profiles.js), the VAT status, the representative, the address with its point on the map, the phone, the email and the contact points by role.
+ * They are typed once in the Site panel and read by the footer, the contact block and the Organization JSON-LD.
  * Pure functions with no DOM and no language: the render layer adds the words through t() (ADR-0012), and tests/contact.test.mjs covers them.
  */
 
@@ -8,6 +8,32 @@ import { profileOf, countryForLanguage } from './contact-profiles.js';
 import { runCheck } from './contact-checks.js';
 
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
+
+/** The parts a contact block can show, in the order they stand (blocks/contact.js). */
+export const CONTACT_PARTS = ['name', 'address', 'phone', 'email', 'legal'];
+
+/**
+ * The contact block's designs, the plain lines first: each id is a class `urd-contact-<id>` in base.css and a label `opt.contact.<id>` in the admin dictionaries.
+ * `points` marks the design that lists the contact points by role, `geo` the one that shows the site's point on a map, and `band` the one that may stand on a coloured band.
+ */
+export const CONTACT_DESIGNS = [
+  { id: 'lines' },
+  { id: 'icons' },
+  { id: 'card' },
+  { id: 'tiles' },
+  { id: 'facts' },
+  { id: 'buttons' },
+  { id: 'map', geo: true },
+  { id: 'strip', band: true },
+  { id: 'poster' },
+  { id: 'roles', points: true },
+  { id: 'qr' },
+];
+
+/** A design's entry; an unknown id is the plain lines. */
+export function contactDesign(id) {
+  return CONTACT_DESIGNS.find((d) => d.id === id) ?? CONTACT_DESIGNS[0];
+}
 
 /** The stored form of a value for an id: free text trimmed with single spaces (in a register entry the letters set apart from the number, and the prefix added when the number is typed alone), or the characters of a number uppercased with the separators removed and the prefix in place. */
 export function normaliseId(def, value) {
@@ -74,6 +100,11 @@ export function siteContact(site) {
   }
   const address = contact.address && typeof contact.address === 'object' ? contact.address : {};
   const vat = contact.vat && typeof contact.vat === 'object' ? contact.vat : {};
+  const geo = contact.geo && typeof contact.geo === 'object' ? contact.geo : {};
+  const points = (Array.isArray(contact.points) ? contact.points : [])
+    .filter((p) => p && typeof p === 'object')
+    .map((p) => ({ role: str(p.role), email: str(p.email), phone: str(p.phone), note: str(p.note) }))
+    .filter((p) => p.role && (p.email || p.phone || p.note));
   return {
     country,
     profile,
@@ -89,7 +120,14 @@ export function siteContact(site) {
     city: str(address.city),
     phone: str(contact.phone),
     email: str(contact.email),
+    geo: validGeo(geo) ? { lat: geo.lat, lon: geo.lon } : null,
+    points,
   };
+}
+
+/** A point on the map: a latitude and a longitude within their ranges. */
+function validGeo(geo) {
+  return Number.isFinite(geo?.lat) && Number.isFinite(geo?.lon) && Math.abs(geo.lat) <= 90 && Math.abs(geo.lon) <= 180;
 }
 
 /** The VAT number as the data carries it (with its country prefix), or null when the association is not registered or the number is unknown. */
@@ -176,7 +214,41 @@ export function contactParts(contact) {
 }
 
 /**
+ * The contact points by role, for the block's roles design: each with its role, its phone and email as contactParts makes them, and its note.
+ * @returns {Array<{role: string, phone: {label: string, href: string|null}|null, email: {label: string, href: string|null}|null, note: string}>}
+ */
+export function pointParts(contact) {
+  return contact.points.map((p) => ({
+    role: p.role,
+    phone: p.phone ? { label: p.phone, href: telHref(p.phone) } : null,
+    email: p.email ? { label: p.email, href: emailLike(p.email) ? `mailto:${p.email}` : null } : null,
+    note: p.note,
+  }));
+}
+
+/**
+ * The seller as the checkout names it under its order buttons (angrerettloven § 8 d: the name, the address and the contact details before the order): the name, the organisation numbers and the VAT number, the address on one line, the phone and the email.
+ * The name is the legal name, else the site's title; the representative stays in the footer.
+ * @param {object} site
+ * @returns {{name: string, legal: Array<object>, address: string, phone: object|null, email: object|null}|null} null when the site has no details beyond its title
+ */
+export function sellerParts(site) {
+  const contact = siteContact(site);
+  const legal = legalParts(contact).filter((p) => p.kind !== 'name' && p.kind !== 'representative');
+  const parts = contactParts(contact);
+  if (!contact.legalName && !legal.length && !parts) return null;
+  return {
+    name: contact.legalName || str(site?.site?.title),
+    legal,
+    address: parts?.address.join(', ') ?? '',
+    phone: parts?.phone ?? null,
+    email: parts?.email ?? null,
+  };
+}
+
+/**
  * The legal and contact details as schema.org Organization properties, with every empty field left out.
+ * The contact points by role become ContactPoint entries.
  * The first number with an ISO 6523 code goes into iso6523Code, the VAT number into vatID, the other numbers into identifier, a status with a schema.org type into nonprofitStatus; a number that fails a refusing check is left out.
  * @returns {object}
  */
@@ -208,5 +280,13 @@ export function organizationContact(contact) {
   if (Object.keys(address).length > (address.addressCountry ? 1 : 0)) out.address = { '@type': 'PostalAddress', ...address };
   if (contact.phone) out.telephone = contact.phone;
   if (contact.email) out.email = contact.email;
+  // A contact point with a way to reach it; a point with a note alone has nothing for a machine to use.
+  const points = contact.points.filter((p) => p.phone || (p.email && emailLike(p.email))).map((p) => {
+    const point = { '@type': 'ContactPoint', contactType: p.role };
+    if (p.phone) point.telephone = p.phone;
+    if (p.email && emailLike(p.email)) point.email = p.email;
+    return point;
+  });
+  if (points.length) out.contactPoint = points;
   return out;
 }

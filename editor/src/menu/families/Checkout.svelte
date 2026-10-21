@@ -44,6 +44,17 @@
       </div>
     </Setting>
   {/snippet}
+  {#snippet checkoutSeller()}
+    <Setting key="seller" shown={ta('common.on')}>
+      <label class="gridmenu-snap" title={ta('tip.checkout.seller')}>
+        <input type="checkbox" checked={selectedBlock.props.seller !== false}
+          onchange={(e) => setBlockProp('seller', e.target.checked)} />
+        {ta('lbl.checkoutSeller')}
+      </label>
+    </Setting>
+    <button class="ghost action" onclick={() => { ed.siteContactOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteContact')}</button>
+  {/snippet}
   <MenuGroup id="checkout-order" title={ta('group.order')} value={selectedBlock.props.recipient || selectedBlock.props.endpoint || ta('common.none')} group={groupOf('checkout-order', { currency: 'kr' })}>{@render checkoutOrder()}</MenuGroup>
   <MenuGroup id="checkout-vipps" title={ta('group.vipps')} value={selectedBlock.props.vippsCheckout ? ta('lbl.vippsCheckout') : (selectedBlock.props.vipps || ta('common.none'))} group={groupOf('checkout-vipps', { vippsCheckout: false })}>{@render checkoutVipps()}</MenuGroup>
+  <MenuGroup id="checkout-seller" title={ta('lbl.checkoutSeller')} value={selectedBlock.props.seller === false ? ta('common.off') : ta('common.on')} group={groupOf('checkout-seller', { seller: true })}>{@render checkoutSeller()}</MenuGroup>
 {/if}

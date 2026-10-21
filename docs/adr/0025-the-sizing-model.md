@@ -1,6 +1,6 @@
 # ADR-0025: The sizing model: the dragged width, and a height that follows the content or is the block's own
 
-Date: 3 October 2026. Status: accepted (v0.7, milestone 0.7.21); decisions 4, 5 and 8 amended 4 and 11 October 2026, earlier text in [amended/](amended/0025-the-sizing-model-until-2026-10-11.md); decision 6 amended 17 October 2026 (the size scales everything alike, the text bounds are the owner's choice, and a type may have a scale of its own), earlier text in [amended/](amended/0025-the-sizing-model-until-2026-10-17.md). How the decisions are built is described in [ARCHITECTURE.md](../ARCHITECTURE.md#desktop-sizing-the-push-pass-the-fit-and-the-gestures); the fields are in [SCHEMA.md](../SCHEMA.md).
+Date: 3 October 2026. Status: accepted (v0.7, milestone 0.7.21); decisions 4, 5 and 8 amended 4 and 11 October 2026, earlier text in [amended/](amended/0025-the-sizing-model-until-2026-10-11.md); decision 6 amended 17 October 2026 (the size scales everything alike, the text bounds are the owner's choice, and a type may have a scale of its own), earlier text in [amended/](amended/0025-the-sizing-model-until-2026-10-17.md); decision 2 amended 21 October 2026 (the contact block follows its content), earlier text in [amended/](amended/0025-the-sizing-model-until-2026-10-21.md). How the decisions are built is described in [ARCHITECTURE.md](../ARCHITECTURE.md#desktop-sizing-the-push-pass-the-fit-and-the-gestures); the fields are in [SCHEMA.md](../SCHEMA.md).
 
 ## Context
 
@@ -24,7 +24,7 @@ The builders agree on the model, under different names. Squarespace Fluid Engine
 
 2. **The height has two behaviours, and each block type has one as its default.**
    - **Own height:** the frame decides and the content fills it. Default for image, video, icon, shape, button, gallery, ribbon and map. The map's own height setting goes, and the frame takes over, with a migration that keeps the height a stored map shows (ADR-0005).
-   - **Follows the content:** the outline is the content. Default for calendar, collection, product, cart, checkout, countdown, FAQ, form, quote, share, stats, table, timeline and audio (`FOLLOWS_CONTENT` in push-model.js).
+   - **Follows the content:** the outline is the content. Default for calendar, collection, product, cart, checkout, contact, countdown, FAQ, form, quote, share, stats, table, timeline and audio (`FOLLOWS_CONTENT` in push-model.js).
    - **Text** keeps what it has: never shorter than its words, and as tall as it is dragged, since a text block can be a card with a background.
 
 3. **The owner can choose per block, as one additive field.** On a block whose type follows its content by default, `height: { mode: "own", align? }` gives it its own height: the block takes the dragged height, the editor fits it no more, and the content stands in the box at the top, in the middle, at the bottom or stretched. Stretch is offered only where the type can use the height: the figure, the countdown and the quote, and the calendar in its plain list and card views, where the rows and cards spread. A block is one or the other, never both on the same axis.
@@ -42,7 +42,7 @@ The builders agree on the model, under different names. Squarespace Fluid Engine
 ## Consequences
 
 - The lower drag handle on a block that follows its content changes the width only, until the block is given its own height. The handle says why.
-- Thirteen block types show no outline with air in it; whether each of them can stretch is decided block by block, and for the calendar design by design.
+- The block types that follow their content show no outline with air in it; whether each of them can stretch is decided block by block, and for the calendar design by design.
 - The preview shows the design the owner drew and the published page what the visitor needs: a block whose content outgrows a section with a height of its own lies over the section below in the editor, where the owner decides between a taller section, a smaller block and the overlap, while visitors see the section grown.
 - The editor's section heights are the published page's: the editor's own parts may overlap the block below while editing, since they never push.
 - A per-axis choice for the width (a block as wide as its content) stays outside: no block needs it today.

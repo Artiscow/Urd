@@ -231,8 +231,8 @@ function buildBrandIdentity(brand) {
   return el;
 }
 
-/** The legal line as text: «Apeiron Linjeforening · Org.nr. 123 456 789 MVA · Foretaksregisteret», the representative with the visitor language's title. */
-function legalText(parts) {
+/** The legal line as text: «Apeiron Linjeforening · Org.nr. 974 760 673 MVA · Foretaksregisteret», the representative with the visitor language's title; the contact block writes the same. */
+export function legalText(parts) {
   return parts.map((p) => {
     if (p.kind === 'representative') return `${t('contact.representative')}: ${p.text}`;
     return p.labelKey ? `${t(p.labelKey)} ${p.text}` : p.text;
@@ -241,15 +241,15 @@ function legalText(parts) {
 
 /**
  * The contact details as an <address>: the address, then the phone and the email, each a link when it is usable.
- * In a column the address keeps its lines; inline (the plain and the big call-to-action builds) it is one item, «Street 1, 7030 Town».
+ * In a column the address keeps its lines together in one item; inline (the plain and the big call-to-action builds) it is one line, «Street 1, 7030 Town».
  */
 function buildContactAddress(parts, className, inline) {
   const address = document.createElement('address');
   address.className = className;
-  const lines = inline && parts.address.length ? [parts.address.join(', ')] : parts.address;
-  for (const line of lines) {
+  if (parts.address.length) {
     const span = document.createElement('span');
-    span.textContent = line;
+    span.className = 'urd-footer-address-lines';
+    span.textContent = parts.address.join(inline ? ', ' : '\n');
     address.appendChild(span);
   }
   for (const item of [parts.phone, parts.email]) {

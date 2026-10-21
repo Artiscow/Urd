@@ -28,7 +28,7 @@ export const PUSH_SECTION_PAD = 24;
  * other type keeps the height of its frame, and text is at least as tall as
  * its words.
  */
-export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout', 'collection', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
+export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout', 'collection', 'contact', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
 
 /**
  * Whether a block's height follows its content (ADR-0025): one of the types

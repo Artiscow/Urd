@@ -3,21 +3,18 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Choice from '../../lib/Choice.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
-  import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
+  import { blockDesignOf } from '$engine/block-designs.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
-  const variant = $derived(STAT_VARIANT_IDS.includes(selectedBlock.props.variant) ? selectedBlock.props.variant : 'plain');
-
-  /** The variants, as the block's own STAT_VARIANTS lists them: tests/styled-blocks.test.mjs holds the lists equal. */
-  const STAT_VARIANT_IDS = ['plain', 'cards', 'band'];
+  const variant = $derived(blockDesignOf('stats', selectedBlock.props));
 </script>
 
 {#if area === 'content'}
@@ -39,12 +36,7 @@
 {:else if area === 'style'}
   {#snippet statLook()}
     <Setting key="variant">
-      <div class="pin-line">
-        <Choice label={ta('lbl.variant')} value={variant}
-          options={STAT_VARIANT_IDS.map((v) => [v, ta(`opt.statVariant.${v}`)])}
-          onchange={(v) => setBlockProp('variant', v)} />
-        <Pin id="variant" />
-      </div>
+      <DesignRow pin="variant" />
     </Setting>
     <Setting key="countUp" shown={ta('common.on')}>
       <label class="gridmenu-snap" title={ta('tip.stat.countUp')}>

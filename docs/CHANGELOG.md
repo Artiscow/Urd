@@ -28,6 +28,24 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.24.5.2 - The Contact details block in eleven designs, the checkout's seller line, and a design picker for every block with more than one look - 21 October 2026
+
+- A page could show the association's contact details only through the footer. The Contact details block (type `contact`) draws them from the Site panel as an `<address>`, and the «Contact» section template is built on it.
+- The block comes in eleven designs with a phone layout each, chosen 20 October 2026 from a design round (`blocks/contact.js`).
+- Two options work with the designs: «Add to contacts» downloads the details as a contact card (`vcard.js`), and «Call bar on phones» docks Call, Email and Map at the bottom of a phone's screen.
+- «With a map» shows the address's point, `site.contact.geo` from «Find on the map» in the Site panel, behind a cover that loads OpenStreetMap only on a tap.
+- «By role» reads the Site panel's new Contact points (`site.contact.points`), which the JSON-LD writes as `ContactPoint` entries.
+- «With a QR code» draws the details as a contact card through a QR encoder of Urd's own (`qr.js`), checked against an independent decoder; ER-G's page codes reuse it.
+- The checkout named nobody as the seller before the order (angrerettloven § 8 d). It names the seller under its order buttons, with a «Show the seller» switch.
+- Norway's register choice lacked Frivillighetsregisteret; it stands beside Enhetsregisteret and Foretaksregisteret.
+- The footer's contact column could split the street from the postcode and town; the address lines stay together.
+- Thirteen block menus chose a look through a dropdown or segment buttons, with no picture and no preview. Each has a Design row and a quick tile that open the calendar's design picker, with a picture and a description of each of the 44 designs and a live preview of the block's own content (`block-designs.js`).
+- The design picker served the calendar alone. It draws from a source (`editor/src/lib/design-sources.js`), the calendar's among them.
+- The picker's preview frame was never told the enabled plugins or the draft collections, so a plugin block showed a placeholder there and a collection its published entries only; it is told both, as the editor's preview is.
+- A plugin block with more than one look declares `designs` and gets the same row, tile and picker (the design contract in SCHEMA.md).
+- AGENTS.md gains the rule «Every choice of a look is a design picker»; ADR-0025 decision 2 names the contact block among those that follow their content, its earlier text in amended/.
+- BACKLOG: 0.7.24.5 is delivered, ER-G's page codes reuse `qr.js`, and the v0.8 milestone «The plugin guide and an AGENTS.md for plugins» takes the plugin README rewrite, an AGENTS.md for plugin authors and the editor gaps for plugin fields, replacing the suggestion and the documentation round's point. The maps: C116 delivered in part, ELEMENTS #160, #286 and #323 updated.
+
 ### 0.7.24.5.1 - The legal and contact details for 57 countries in the site settings, drawn by every footer and written into the JSON-LD, and the Site panel tidied - 20 October 2026
 
 - The site had nowhere to keep the association's legal name, organisation number, address, phone and email, so no footer or search data could show them. `site.contact` holds them, typed once in the Site panel under Contact details (SCHEMA.md).

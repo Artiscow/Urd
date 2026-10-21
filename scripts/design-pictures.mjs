@@ -6,7 +6,8 @@
  * The phone designs follow (the neutral list, every design that reads on a phone, and the phone designs designs lend, calPhoneCandidates), each
  * drawn at a phone's width as another block's phone view (a design of a span view over a block of that view), under phone-<id>.webp, cut at
  * 4:5 from the top; then the card designs (the neutral card, every design's card, and the card designs designs lend, calCardCandidates), each
- * the card open over a plain list, under card-<id>.webp.
+ * the card open over a plain list, under card-<id>.webp; then every other block's designs (block-designs.js), each drawn from its sample over the
+ * block's defaults in the site's language, under block-<type>-<id>.webp.
  *
  * Run from the repo root with the local server up (python3 dev-server.py 8123) and a Chromium-family browser on the machine:
  *
@@ -203,6 +204,61 @@ try {
     writeFileSync(join(OUT, `card-${id}.webp`), Buffer.from(data, 'base64'));
     console.log(`card-${id}: ${box.w}x${box.h} card over ${home}, picture written`);
     await cdp.evaluate(`document.querySelector('dialog.urd-cal-dialog[open]')?.close(); true`);
+  }
+  // The other blocks' designs (block-designs.js): each drawn from its sample over the block's defaults, in the site's language, under block-<type>-<id>.webp.
+  const blockDesigns = await cdp.evaluate(`(async () => {
+    const { engine } = await (await fetch('/urd.json')).json();
+    const { BLOCK_DESIGNS } = await import('/assets/engine/' + engine + '/block-designs.js');
+    return Object.entries(BLOCK_DESIGNS).flatMap(([type, entry]) => entry.ids.map((id) => [type, id]));
+  })()`);
+  const chosenBlocks = ONLY.length ? blockDesigns.filter(([type, id]) => ONLY.includes(`block-${type}-${id}`)) : blockDesigns;
+  for (const [type, id] of chosenBlocks) {
+    const box = await cdp.evaluate(`(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const { engine } = await (await fetch('/urd.json')).json();
+      const { BLOCK_DESIGNS, blockDesignSample } = await import('/assets/engine/' + engine + '/block-designs.js');
+      const { ta, initAdminLocale } = await import('/assets/engine/' + engine + '/i18n.js');
+      const site = await (await fetch('/content/site.json')).json();
+      // The seed words in the blocks' defaults follow the site's language, as the rest of the picture does.
+      await initAdminLocale(site.site?.lang ?? 'nb');
+      const type = ${JSON.stringify(type)};
+      const entry = BLOCK_DESIGNS[type];
+      const sample = blockDesignSample(type, ta);
+      if (sample.contact) site.site.contact = sample.contact;
+      window.postMessage({ type: 'urd-site', site }, location.origin);
+      await sleep(500);
+      const def = window.Urd.blocks.get(type);
+      const page = await (await fetch('/content/pages/hjem.json')).json();
+      const w = entry.frame.w;
+      const props = { ...def.defaults(), ...sample.props, [entry.prop]: ${JSON.stringify(id)} };
+      page.sections = [{ id: 'pic-sec', version: 1, size: { minHeight: '900px' }, grid: null, background: { version: 1, layers: [] }, blocks: [
+        { id: 'pic-block', type, version: def.version ?? 1, decor: false, hideMobile: false, animation: null, props, frames: { desktop: { x: (100 - w) / 2, y: 40, w, h: entry.frame.h, z: 1, rot: 0 }, mobile: null } },
+      ] }];
+      if (!document.getElementById('pic-style')) {
+        const style = document.createElement('style');
+        style.id = 'pic-style';
+        style.textContent = '.urd-nav, #urd-announce, .urd-nav-announce, .urd-totop { display: none !important; }';
+        document.head.appendChild(style);
+      }
+      window.postMessage({ type: 'urd-preview-full', page }, location.origin);
+      await sleep(2500);
+      window.postMessage({ type: 'urd-chrome', visible: false }, location.origin);
+      await sleep(400);
+      const el = document.querySelector('.urd-block[data-block-id="pic-block"]');
+      el.scrollIntoView({ block: 'center' });
+      await sleep(300);
+      const r = el.getBoundingClientRect();
+      return { x: Math.round(r.left), y: Math.round(r.top + window.scrollY), w: Math.round(r.width), h: Math.round(r.height) };
+    })()`);
+    // The block's own box with a margin of the page around it, at least 360 px wide so a small block stands in some room, at most 16:9 from its top.
+    const pad = 28;
+    const width = Math.max(360, box.w + pad * 2);
+    const clip = { x: box.x + box.w / 2 - width / 2, y: box.y - pad, width, height: Math.min(box.h + pad * 2, Math.round(width * 9 / 16)) };
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, captureBeyondViewport: true, clip: { ...clip, scale: Math.min(2, PIC_W / width) } });
+    const data = shot.result?.data;
+    if (!data) throw new Error(`block-${type}-${id}: no picture (${JSON.stringify(shot)})`);
+    writeFileSync(join(OUT, `block-${type}-${id}.webp`), Buffer.from(data, 'base64'));
+    console.log(`block-${type}-${id}: ${box.w}x${box.h} block, picture written`);
   }
 } finally {
   cdp?.close();

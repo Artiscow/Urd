@@ -902,6 +902,8 @@ export function effects() {
 
   $effect(() => {
     if (designPicker?.mode === 'set' && selectedBlock?.type !== 'calendar') designPicker = null;
+    // A block's design picker belongs to the block it was opened for.
+    if (designPicker?.kind === 'block' && selectedBlock?.blockId !== designPicker.blockId) designPicker = null;
   });
 
   $effect(() => {

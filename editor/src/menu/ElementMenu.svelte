@@ -11,7 +11,9 @@
   import ColorPicker from '../lib/ColorPicker.svelte';
   import Pin from './Pin.svelte';
   import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
-  import { GALLERY_VIEWS, GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
+  import { GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
+  import { BLOCK_DESIGNS } from '$engine/block-designs.js';
+  import { blockDesigns } from '../lib/design-sources.js';
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize, sizeRange } from '$engine/push-model.js';
   import { ribbonMotions, colorTokens, onOff } from './options.js';
@@ -36,6 +38,7 @@
   import Stats from './families/Stats.svelte';
   import Table from './families/Table.svelte';
   import Share from './families/Share.svelte';
+  import Contact from './families/Contact.svelte';
   import Countdown from './families/Countdown.svelte';
   import Audio from './families/Audio.svelte';
   import Collection from './families/Collection.svelte';
@@ -47,7 +50,7 @@
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockFit, setBlockSize, endSizeGesture, setBlockHideMobile, designWidth, buttonTargets, setButtonTarget, themeSwatches } = ed;
   /** The family of each block type; a type without one of its own shows the field contract. */
-  const FAMILIES = { text: Text, button: Button, image: Image, video: Video, icon: Icon, shape: Shape, gallery: Gallery, ribbon: Ribbon, calendar: Calendar, form: Form, faq: Faq, timeline: Timeline, quote: Quote, stats: Stats, table: Table, share: Share, countdown: Countdown, audio: Audio, collection: Collection, product: Product, cart: Cart, checkout: Checkout };
+  const FAMILIES = { text: Text, button: Button, image: Image, video: Video, icon: Icon, shape: Shape, gallery: Gallery, ribbon: Ribbon, calendar: Calendar, form: Form, faq: Faq, timeline: Timeline, quote: Quote, stats: Stats, table: Table, share: Share, contact: Contact, countdown: Countdown, audio: Audio, collection: Collection, product: Product, cart: Cart, checkout: Checkout };
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
   let { wide, query = '' } = $props();
 
@@ -76,14 +79,18 @@
       set: (v) => setBlockFit(v) });
     items.push({ id: 'phone', label: ta('quick.phone'), kind: 'choice', value: b.hideMobile ? 'off' : 'on', options: [['on', ta('quick.phone.show')], ['off', ta('quick.phone.hide')]], set: (v) => setBlockHideMobile(v === 'off') });
     const p = b.props;
+    /** A block's design, as the calendar's: the quick tile opens the design picker (block-designs.js). */
+    const designs = blockDesigns(b.type, ed.pluginBlocks);
+    const designItem = (id) => ({ id, label: ta('lbl.design'), kind: 'open', value: designs ? designs.name(designs.read(p)) : '', run: ed.openBlockDesignPicker });
+    // A plugin block with designs (the design contract) gets the same tile.
+    if (designs && !BLOCK_DESIGNS[b.type]) items.push(designItem('design'));
     if (b.type === 'text') {
       items.push({ id: 'align', label: ta('lbl.align'), kind: 'choice', value: p.align ?? 'left',
         options: [['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]], set: (v) => setBlockProp('align', v) });
       items.push({ id: 'textBox', label: ta('group.textBox'), kind: 'choice', value: p.box ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('box', v === 'on') });
     } else if (b.type === 'button') {
       items.push({ id: 'goesTo', label: ta('lbl.goesTo'), kind: 'select', value: p.page ?? '__href', options: buttonTargets(), set: setButtonTarget });
-      items.push({ id: 'btnStyle', label: ta('lbl.style'), kind: 'select', value: p.style ?? 'primary',
-        options: [['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]], set: (v) => setBlockProp('style', v) });
+      items.push(designItem('btnStyle'));
     } else if (b.type === 'image') {
       items.push({ id: 'imgFit', label: ta('lbl.imageFit'), kind: 'select', value: p.fit ?? 'cover',
         options: [['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]], set: (v) => setBlockProp('fit', v) });
@@ -97,53 +104,50 @@
       items.push({ id: 'iconColor', label: ta('lbl.color'), kind: 'color', value: p.color ?? 'accent', set: (v) => setBlockProp('color', v) });
     } else if (b.type === 'gallery') {
       const gview = blockGalleryView(p.view);
-      items.push({ id: 'galleryView', label: ta('lbl.view'), kind: 'select', value: gview,
-        options: GALLERY_VIEWS.map((v) => [v, ta(`opt.galleryView.${v}`)]), set: (v) => setBlockProp('view', v) });
+      items.push(designItem('galleryView'));
       if (GRID_VIEWS.includes(gview)) {
         items.push({ id: 'columns', label: ta('lbl.columns'), kind: 'number', min: 1, max: 6, value: p.columns ?? 3, set: (v) => setBlockProp('columns', Math.max(1, Math.min(6, Number(v) || 3))) });
       }
     } else if (b.type === 'ribbon') {
+      items.push(designItem('design'));
       const motion = p.motion ?? 'roll';
       items.push({ id: 'ribbonMotion', label: ta('lbl.ribbonMotion'), kind: 'select', value: motion, options: ribbonMotions(), set: (v) => setBlockProp('motion', v) });
       if (motion === 'roll' || motion === 'sway') {
         items.push({ id: 'speed', label: ta('lbl.ribbonSpeed'), kind: 'number', min: 10, max: 300, step: 5, value: p.speed ?? 60, set: (v) => setBlockProp('speed', Math.max(10, Math.min(300, Number(v) || 60))) });
       }
     } else if (b.type === 'shape') {
+      items.push(designItem('design'));
       items.push({ id: 'shapeColor', label: ta('lbl.color'), kind: 'select', value: p.color ?? 'accent', options: colorTokens(), set: (v) => setBlockProp('color', v) });
       items.push({ id: 'thickness', label: ta('lbl.thickness'), kind: 'number', min: 1, max: 40, value: p.thickness ?? 2, set: (v) => setBlockProp('thickness', Math.max(1, Math.min(40, Number(v) || 2))) });
     } else if (b.type === 'table') {
       items.push({ id: 'tableLines', label: ta('lbl.tableLines'), kind: 'select', value: p.lines ?? 'rows',
         options: [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]], set: (v) => setBlockProp('lines', v) });
     } else if (b.type === 'quote') {
-      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: p.variant ?? 'large',
-        options: [['large', ta('opt.quote.large')], ['short', ta('opt.quote.short')]], set: (v) => setBlockProp('variant', v) });
+      items.push(designItem('variant'));
     } else if (b.type === 'stats') {
-      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: ['plain', 'cards', 'band'].includes(p.variant) ? p.variant : 'plain',
-        options: ['plain', 'cards', 'band'].map((v) => [v, ta(`opt.statVariant.${v}`)]), set: (v) => setBlockProp('variant', v) });
+      items.push(designItem('variant'));
     } else if (b.type === 'faq') {
-      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: p.variant === 'list' ? 'list' : 'cards',
-        options: ['cards', 'list'].map((v) => [v, ta(`opt.faqVariant.${v}`)]), set: (v) => setBlockProp('variant', v) });
+      items.push(designItem('variant'));
     } else if (b.type === 'timeline') {
-      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: p.variant ?? 'left',
-        options: [['left', ta('opt.timeline.left')], ['alternating', ta('opt.timeline.alternating')]], set: (v) => setBlockProp('variant', v) });
+      items.push(designItem('variant'));
     } else if (b.type === 'form') {
       items.push({ id: 'sendMode', label: ta('form.mode'), kind: 'select', value: p.mode === 'endpoint' ? 'endpoint' : 'mailto',
         options: [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]], set: (v) => setBlockProp('mode', v) });
     } else if (b.type === 'collection') {
-      items.push({ id: 'collectionView', label: ta('lbl.view'), kind: 'select', value: p.view ?? 'cards',
-        options: [['cards', ta('opt.collectionView.cards')], ['list', ta('opt.collectionView.list')], ['archive', ta('opt.collectionView.archive')]], set: (v) => setBlockProp('view', v) });
+      items.push(designItem('collectionView'));
       items.push({ id: 'limit', label: ta('lbl.maxCount'), kind: 'number', min: 0, max: 100, value: p.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(0, Math.min(100, Number(v) || 0))) });
     } else if (b.type === 'product') {
       items.push({ id: 'columns', label: ta('lbl.columns'), kind: 'number', min: 0, max: 6, value: p.columns ?? 0, set: (v) => setBlockProp('columns', Math.max(0, Math.min(6, Number(v) || 0))) });
     } else if (b.type === 'cart') {
-      items.push({ id: 'cartView', label: ta('lbl.view'), kind: 'select', value: p.variant ?? 'button',
-        options: [['button', ta('opt.cart.button')], ['icon', ta('opt.cart.icon')]], set: (v) => setBlockProp('variant', v) });
+      items.push(designItem('cartView'));
     } else if (b.type === 'checkout') {
       items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), kind: 'choice', value: p.vippsCheckout === true ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('vippsCheckout', v === 'on') });
     } else if (b.type === 'share') {
-      items.push({ id: 'variant', label: ta('lbl.variant'), kind: 'select', value: p.variant ?? 'icons',
-        options: [['icons', ta('opt.share.icons')], ['labels', ta('opt.share.labels')]], set: (v) => setBlockProp('variant', v) });
+      items.push(designItem('variant'));
+    } else if (b.type === 'contact') {
+      items.push(designItem('design'));
     } else if (b.type === 'countdown') {
+      items.push(designItem('design'));
       items.push({ id: 'seconds', label: ta('lbl.countdownSeconds'), kind: 'choice', value: p.showSeconds !== false ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('showSeconds', v === 'on') });
     } else if (b.type === 'audio') {
       items.push({ id: 'loop', label: ta('lbl.audioLoop'), kind: 'choice', value: p.loop ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('loop', v === 'on') });

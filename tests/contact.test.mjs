@@ -6,7 +6,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { normaliseId, validateId, formatId, siteContact, vatNumber, legalParts, telHref, contactParts, organizationContact } = await engineImport('contact-model.js');
+const CONTACT_MODEL = await engineImport('contact-model.js');
+const { normaliseId, validateId, formatId, siteContact, vatNumber, legalParts, telHref, contactParts, organizationContact } = CONTACT_MODEL;
 const { PROFILES, GENERIC, COUNTRY_CODES, profileOf, countryForLanguage } = await engineImport('contact-profiles.js');
 const { CHECKS } = await engineImport('contact-checks.js');
 const { footerContact, footerLegal } = await engineImport('footer-model.js');
@@ -182,6 +183,25 @@ test('organizationContact and siteJsonLd: the ISO 6523 code, the other numbers, 
   assert.deepEqual(Object.keys(siteJsonLd(siteWith(undefined), 'https://apeiron.no')).sort(), ['@context', '@type', 'name', 'url']);
 });
 
+test('sellerParts: the name, the numbers and the address on one line, without the representative', () => {
+  const { sellerParts } = CONTACT_MODEL;
+  assert.deepEqual(sellerParts(siteWith({ ...NO, representative: 'Kari Nordmann' })), {
+    name: 'Apeiron Linjeforening',
+    legal: [{ kind: 'id', text: 'Org.nr. 974 760 673 MVA · Foretaksregisteret' }],
+    address: 'Høgskoleringen 5, 7034 Trondheim',
+    phone: { label: '+47 73 59 00 00', href: 'tel:+4773590000' },
+    email: { label: 'post@apeiron.no', href: 'mailto:post@apeiron.no' },
+  });
+  assert.equal(sellerParts(siteWith({ email: 'post@apeiron.no' })).name, 'Apeiron', 'the site title stands in for a missing legal name');
+  assert.equal(sellerParts(siteWith(undefined)), null);
+  assert.equal(sellerParts(undefined), null);
+});
+
+test('Norway names Frivillighetsregisteret beside the number', () => {
+  assert.deepEqual(PROFILES.NO.ids[0].registers, ['Enhetsregisteret', 'Foretaksregisteret', 'Frivillighetsregisteret']);
+  assert.deepEqual(legalParts(siteContact(siteWith({ country: 'NO', ids: { org: '974760673' }, registers: { org: 'Frivillighetsregisteret' } }))).map((p) => p.text), ['Org.nr. 974 760 673 · Frivillighetsregisteret']);
+});
+
 test('footerContact and footerLegal: the two switches, each hiding its own part', () => {
   assert.equal(footerContact(siteWith(NO, { contact: false })), null);
   assert.equal(footerLegal(siteWith(NO, { contact: false })).length, 2);
@@ -282,4 +302,123 @@ test('an empty field leaves no trace, and each switch leaves the other part', ()
   assert.ok(!noLegal.some((n) => n.className === 'urd-footer-legal'));
   const off = renderWith(siteWith(NO, { legal: false, contact: false })).all();
   assert.ok(!off.some((n) => n.tagName === 'ADDRESS' || n.className === 'urd-footer-legal'), 'both off: nothing of it in the footer');
+});
+
+const { contactBlock, contactBlockModel } = await engineImport('blocks/contact.js');
+const { CONTACT_PARTS, CONTACT_DESIGNS, contactDesign, pointParts } = await engineImport('contact-model.js');
+
+test('contactBlockModel: the chosen parts, the name once, nothing when the site has nothing', () => {
+  assert.deepEqual(CONTACT_PARTS, ['name', 'address', 'phone', 'email', 'legal']);
+  const all = contactBlockModel(siteWith(NO), { parts: CONTACT_PARTS });
+  assert.equal(all.name, 'Apeiron Linjeforening');
+  assert.deepEqual(all.address, ['Høgskoleringen 5', '7034 Trondheim']);
+  assert.equal(all.phone.href, 'tel:+4773590000');
+  assert.deepEqual(all.legal.map((p) => p.text), ['Org.nr. 974 760 673 MVA · Foretaksregisteret'], 'the legal name stands once, as the name');
+  const legalOnly = contactBlockModel(siteWith(NO), { parts: ['legal'] });
+  assert.equal(legalOnly.legal[0].text, 'Apeiron Linjeforening', 'without the name part the legal line starts from the name');
+  const defaults = contactBlockModel(siteWith(NO), contactBlock.defaults());
+  assert.deepEqual(defaults.legal, [], 'the legal line is off by default');
+  assert.equal(contactBlockModel(siteWith({ phone: '+47 1' }), contactBlock.defaults()).name, 'Apeiron', 'the site title stands in for a missing legal name');
+  assert.equal(contactBlockModel(siteWith({ phone: '+47 1' }), { parts: ['address'] }), null, 'nothing the block shows is filled');
+  assert.equal(contactBlockModel(siteWith(undefined), { parts: ['phone', 'email'] }), null);
+});
+
+/** Draws the contact block with the stub; `rest` gets the elements the block puts beside its <address> (the phone bar). */
+function drawBlock(contact, props, { preview = false, viewport = 'mobile' } = {}) {
+  Object.defineProperty(globalThis, 'document', { value: { createElement: (tag) => new StubElement(tag) }, configurable: true, writable: true });
+  const frame = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = () => 0;
+  try {
+    const el = new StubElement('div');
+    contactBlock.render(el, { ...contactBlock.defaults(), ...props }, { site: siteWith(contact), preview, viewport });
+    return { host: el.children[0], rest: el.children.slice(1) };
+  } finally {
+    delete globalThis.document;
+    globalThis.requestAnimationFrame = frame;
+  }
+}
+
+const hrefs = (root) => root.all().filter((n) => n.tagName === 'A' && n.href).map((a) => a.href);
+
+test('the contact block draws an <address> with links, and nothing on a published page without details', () => {
+  const { host } = drawBlock(NO, {});
+  assert.equal(host.tagName, 'ADDRESS');
+  assert.ok(host.className.includes('urd-contact-lines'));
+  assert.deepEqual(hrefs(host), ['tel:+4773590000', 'mailto:post@apeiron.no']);
+  assert.equal(host.children[0].children[0].textContent, 'Apeiron Linjeforening');
+  assert.equal(drawBlock(undefined, {}).host.children.length, 0, 'a published page shows nothing');
+  assert.equal(drawBlock(undefined, {}, { preview: true }).host.children[0].className, 'urd-contact-empty', 'the editor says where to type them');
+});
+
+test('every design draws the details with their links, and an unknown design draws the lines', () => {
+  assert.deepEqual(CONTACT_DESIGNS.map((d) => d.id), ['lines', 'icons', 'card', 'tiles', 'facts', 'buttons', 'map', 'strip', 'poster', 'roles', 'qr']);
+  for (const { id } of CONTACT_DESIGNS) {
+    const { host } = drawBlock(NO, { design: id, parts: CONTACT_PARTS });
+    assert.ok(host.className.split(' ').includes(`urd-contact-${id}`), id);
+    assert.match(host.textContent, /Høgskoleringen 5/, id);
+    assert.match(host.textContent, /Org\.nr\. 974 760 673 MVA/, `${id}: the legal line`);
+    const links = hrefs(host);
+    assert.ok(links.includes('tel:+4773590000') && links.includes('mailto:post@apeiron.no'), `${id}: ${links}`);
+  }
+  assert.ok(drawBlock(NO, { design: 'nope' }).host.className.includes('urd-contact-lines'));
+  assert.equal(contactDesign('nope').id, 'lines');
+});
+
+test('the strip lies on a band unless switched off, and the save button stands in every design but the strip', () => {
+  assert.ok(drawBlock(NO, { design: 'strip' }).host.classList.contains('urd-contact-band'));
+  assert.ok(!drawBlock(NO, { design: 'strip', band: false }).host.classList.contains('urd-contact-band'));
+  const saves = (props) => drawBlock(NO, props).host.all().filter((n) => n.className === 'urd-contact-save').length;
+  assert.equal(saves({}), 0, 'off by default');
+  for (const { id } of CONTACT_DESIGNS) assert.equal(saves({ design: id, vcard: true }), id === 'strip' ? 0 : 1, id);
+});
+
+test('the phone bar stands beside the <address> on a phone only, with the actions the site has', () => {
+  assert.equal(drawBlock(NO, { dock: true }, { viewport: 'desktop' }).rest.length, 0);
+  const [bar] = drawBlock(NO, { dock: true }).rest;
+  assert.equal(bar.tagName, 'NAV');
+  assert.equal(bar.attributes.popover, 'manual');
+  assert.equal(bar.children.length, 3, 'call, email and map');
+  assert.deepEqual(drawBlock({ phone: '+47 400 00 000' }, { dock: true }).rest[0].children.map((a) => a.href), ['tel:+4740000000']);
+  assert.equal(drawBlock({ legalName: 'Apeiron' }, { dock: true, parts: ['name'] }).rest.length, 0, 'nothing to act on, no bar');
+});
+
+test('the roles design lists the contact points and the site\'s own phone and email as the general one', () => {
+  const points = [{ role: 'Styret', email: 'styret@apeiron.no', phone: '+47 400 00 001' }, { role: 'Presse', email: 'presse@apeiron.no', note: 'Svar innen to virkedager' }];
+  const { host } = drawBlock({ ...NO, points }, { design: 'roles' });
+  const roles = host.all().filter((n) => n.tagName === 'DT').map((n) => n.textContent);
+  assert.deepEqual(roles, ['Styret', 'Presse', 'Generelt']);
+  assert.match(host.textContent, /Svar innen to virkedager/);
+  assert.ok(hrefs(host).includes('mailto:presse@apeiron.no'));
+  assert.deepEqual(contactBlockModel(siteWith({ points }), { design: 'roles' }).points.map((p) => p.role), ['Styret', 'Presse'], 'points alone are enough to draw');
+  assert.equal(contactBlockModel(siteWith({ points }), { design: 'lines' }), null, 'only the roles design reads them');
+});
+
+test('the map design shows the cover only with a point, and says where to find one in the editor', () => {
+  const box = (contact, preview) => drawBlock(contact, { design: 'map' }, { preview }).host.all().filter((n) => n.className === 'urd-contact-mapbox');
+  assert.equal(box(NO, false).length, 0, 'no point: the details alone');
+  assert.equal(box(NO, true).length, 1, 'the editor shows where the point is missing');
+  const withPoint = box({ ...NO, geo: { lat: 63.4155, lon: 10.4042 } }, false);
+  assert.equal(withPoint.length, 1);
+  assert.ok(withPoint[0].all().some((n) => n.className === 'urd-contact-mapbtn'), 'the map loads on a tap');
+  assert.ok(!withPoint[0].all().some((n) => n.tagName === 'IFRAME'), 'no frame before the tap');
+});
+
+test('siteContact keeps a valid point and the contact points with a role and something beside it', () => {
+  const contact = siteContact(siteWith({ geo: { lat: 63.4, lon: 10.4 }, points: [{ role: ' Styret ', email: 'styret@apeiron.no' }, { role: 'Tom' }, { email: 'x@y.no' }, null, 'x'] }));
+  assert.deepEqual(contact.geo, { lat: 63.4, lon: 10.4 });
+  assert.deepEqual(contact.points, [{ role: 'Styret', email: 'styret@apeiron.no', phone: '', note: '' }]);
+  assert.equal(siteContact(siteWith({ geo: { lat: 95, lon: 10 } })).geo, null);
+  assert.equal(siteContact(siteWith({ geo: { lat: '63', lon: 10 } })).geo, null);
+  assert.deepEqual(pointParts(siteContact(siteWith({ points: [{ role: 'Kasserer', phone: '+47 400 00 002', email: 'not an email' }] }))), [
+    { role: 'Kasserer', phone: { label: '+47 400 00 002', href: 'tel:+4740000002' }, email: { label: 'not an email', href: null }, note: '' },
+  ]);
+});
+
+test('the JSON-LD writes each contact point with a way to reach it as a ContactPoint', () => {
+  const ld = organizationContact(siteContact(siteWith({ points: [{ role: 'Styret', email: 'styret@apeiron.no' }, { role: 'Presse', phone: '+47 400 00 001' }, { role: 'Kasserer', note: 'Faktura' }, { role: 'Feil', email: 'nope' }] })));
+  assert.deepEqual(ld.contactPoint, [
+    { '@type': 'ContactPoint', contactType: 'Styret', email: 'styret@apeiron.no' },
+    { '@type': 'ContactPoint', contactType: 'Presse', telephone: '+47 400 00 001' },
+  ]);
+  assert.equal(organizationContact(siteContact(siteWith(NO))).contactPoint, undefined);
 });

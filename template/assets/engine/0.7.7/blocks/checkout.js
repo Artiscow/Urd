@@ -3,6 +3,7 @@
  * The order summary is read from the basket (shop.js), the contact fields (name, email, phone, comment) are validated, and the order is sent as an email draft (mailto, zero setup), as JSON to an optional endpoint, or to the optional payment layer (ADR-0020).
  * The order lines and the total are repeated right above the order buttons, and the buttons' texts say that ordering is a purchase or a payment: angrerettloven § 16 asks for both, and without the wording the buyer is not bound.
  * The buttons are described by the summary, so a screen reader that tabs to them hears the order and the total.
+ * Under the buttons the seller is named from the Site panel's contact details (angrerettloven § 8 d), unless the block leaves it out (`seller: false`).
  * The honeypot field stops simple bots (filled in = discarded silently).
  * With a Vipps number set, payment is an instruction shown in the form above the order summary.
  * An external endpoint requires connect-src in _headers (ADR-0006).
@@ -13,6 +14,8 @@ import {
 } from '../shop.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
+import { sellerParts } from '../contact-model.js';
+import { legalText } from '../footer.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -51,12 +54,27 @@ function renderRecap(box, currency) {
 /** Numbers the summaries above the buttons, so two checkouts on a page keep their descriptions apart. */
 let recapCount = 0;
 
+/** The seller under the order buttons, as an <address>: «Seller: Apeiron Linjeforening · Org.nr. … · Street 1, 7034 Town», the phone and the email as links. */
+function buildSeller(seller) {
+  const box = el2('address', 'urd-checkout-seller');
+  box.appendChild(el2('span', 'urd-checkout-seller-label', `${t('shop.seller')}:`));
+  const text = [seller.name, seller.legal.length ? legalText(seller.legal) : '', seller.address].filter(Boolean).join(' · ');
+  if (text) box.appendChild(el2('span', null, text));
+  for (const item of [seller.phone, seller.email]) {
+    if (!item) continue;
+    const node = el2(item.href ? 'a' : 'span', null, item.label);
+    if (item.href) node.href = item.href;
+    box.appendChild(node);
+  }
+  return box;
+}
+
 export const checkoutBlock = {
   version: 1,
   autoGrow: true,
   label: 'Checkout',
   labelKey: 'blocks.checkout',
-  defaults: () => ({ recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }),
+  defaults: () => ({ recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false, seller: true }),
   migrations: {},
   /**
    * @param {HTMLElement} el
@@ -126,6 +144,8 @@ export const checkoutBlock = {
     status.setAttribute('aria-live', 'polite');
     status.hidden = true;
     form.appendChild(status);
+    const seller = props.seller === false ? null : sellerParts(ctx.site);
+    if (seller) form.appendChild(buildSeller(seller));
     const setStatus = (text, isError) => {
       status.textContent = text;
       status.hidden = false;

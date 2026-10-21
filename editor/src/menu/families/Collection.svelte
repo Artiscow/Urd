@@ -7,6 +7,7 @@
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
+  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
@@ -45,12 +46,7 @@
 {:else if area === 'style'}
   {#snippet collectionView()}
     <Setting key="view">
-      <div class="pin-line">
-        <label>{ta('lbl.view')}
-          <Dropdown value={selectedBlock.props.view ?? 'cards'} options={viewOptions()}
-            onchange={(v) => setBlockProp('view', v)} /></label>
-        <Pin id="collectionView" />
-      </div>
+      <DesignRow pin="collectionView" />
     </Setting>
   {/snippet}
   <MenuGroup id="collection-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.view ?? 'cards'))?.[1] ?? ''} group={groupOf('collection-view', { view: 'cards' })}>{@render collectionView()}</MenuGroup>

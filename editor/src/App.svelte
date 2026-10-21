@@ -25,6 +25,7 @@
   import IconEditor from './lib/IconEditor.svelte';
   import DesignPicker from './lib/DesignPicker.svelte';
   import { calDesign, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
+  import { calendarDesignSource, blockDesignSource, blockDesigns } from './lib/design-sources.js';
   import ColorPicker from './lib/ColorPicker.svelte';
   import FloatingMenu from './menu/FloatingMenu.svelte';
   import TopBar from './shell/TopBar.svelte';
@@ -70,6 +71,10 @@
     },
     openCardPicker: () => {
       pageState.designPicker = { mode: 'card' };
+    },
+    /** The design picker for the selected block's designs (block-designs.js), kept to that block. */
+    openBlockDesignPicker: () => {
+      pageState.designPicker = { kind: 'block', blockId: ed.selectedBlock?.blockId ?? null };
     },
   });
   setContext('urd-editor', ed);
@@ -143,9 +148,21 @@
   {#if ed.iconEditorImage}
     <IconEditor image={ed.iconEditorImage} onapply={ed.applyIcon} oncancel={() => (ed.iconEditorImage = null)} />
   {/if}
-  {#if ed.designPicker}
-    <DesignPicker mode={ed.designPicker.mode} current={ed.designPicker.mode === 'set' ? calDesign(ed.selectedBlock?.props.design).id : ed.designPicker.mode === 'phone' ? calPhoneView(ed.selectedBlock?.props) : ed.designPicker.mode === 'card' ? calCardDesign(ed.selectedBlock?.props) : null}
-      design={calDesign(ed.selectedBlock?.props.design).id} props={ed.selectedBlock ? $state.snapshot(ed.selectedBlock.props) : {}}
+  {#if ed.designPicker?.kind === 'block'}
+    <!-- A block's designs, a core block's or a plugin block's: the picked one is written to the prop the block keeps its design in; a block that is gone takes the picker with it -->
+    {@const stored = ed.selectedBlock && ed.store?.data.sections.find((sec) => sec.id === ed.selectedBlock.sectionId)?.blocks.find((blk) => blk.id === ed.selectedBlock.blockId)}
+    {@const designs = ed.selectedBlock ? blockDesigns(ed.selectedBlock.type, ed.pluginBlocks) : null}
+    {#if stored && designs}
+      <DesignPicker source={blockDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs })}
+        site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
+        plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
+        onpick={(id) => { ed.setBlockProp(designs.prop, id); ed.designPicker = null; }}
+        onclose={() => (ed.designPicker = null)} />
+    {/if}
+  {:else if ed.designPicker && ed.designPicker.kind !== 'block'}
+    <DesignPicker source={calendarDesignSource({ mode: ed.designPicker.mode,
+      current: ed.designPicker.mode === 'set' ? calDesign(ed.selectedBlock?.props.design).id : ed.designPicker.mode === 'phone' ? calPhoneView(ed.selectedBlock?.props) : ed.designPicker.mode === 'card' ? calCardDesign(ed.selectedBlock?.props) : null,
+      design: calDesign(ed.selectedBlock?.props.design).id, props: ed.selectedBlock ? $state.snapshot(ed.selectedBlock.props) : {} })}
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
       onpick={(id) => { if (ed.designPicker.mode === 'add') ed.addCalendarDesign(id); else if (ed.designPicker.mode === 'phone') ed.setCalendarPhoneView(id); else if (ed.designPicker.mode === 'card') ed.setCalendarCard(id); else ed.setCalendarDesign(id); ed.designPicker = null; }}
       onclose={() => (ed.designPicker = null)} />
