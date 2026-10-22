@@ -1070,21 +1070,21 @@ The two catalogues keep the codes their enumerations used. Figma Sites is FI in 
 - **no:** it can be produced at build time or in the browser.
 - **-:** a plan cap or quota, where the question does not apply.
 
-**The «Urd» column** (status on 11 October 2026, or on 19 October 2026 for the rows checked again that day):
-- **Has:** in Urd today.
-- **Partial:** part of it is there; the cell names that part.
+**The «Urd» column** (status on 11 October 2026, or on 19 October 2026 for the rows checked again that day; every Has, Partial and Planned row was checked again on 22 October 2026, option by option against the code and the settings in [SETTINGS.md](SETTINGS.md)):
+- **Has:** every option the row lists, and its builders document, is in Urd today.
+- **Partial:** part of it is there; the cell names that part and what is missing, and the Where names the place for the missing part.
 - **Planned:** a backlog item already describes it.
 - **Missing:** not in Urd.
 - **n/a:** does not apply to Urd's model; the cell gives the reason.
 
 **The «Where» column:**
 - A place in [BACKLOG.md](../BACKLOG.md) or the [roadmap](../languages/ROADMAP-en-GB.md):
-  - 0.7 milestones: 0.7.3 mobile rethink, 0.7.9 design stretch, 0.7.10 intuitiveness review and editor polish, 0.7.11 accessibility round, 0.7.20 element menu, 0.7.21 sizing model, 0.7.23 Redirects, 0.7.24 Privacy defaults, and sub-items such as 0.7.3.5.
+  - 0.7 milestones: 0.7.3 mobile rethink, 0.7.9 design stretch, 0.7.10 intuitiveness review and editor polish, 0.7.11 accessibility round, 0.7.13 the element review, 0.7.20 element menu, 0.7.21 sizing model, 0.7.23 Redirects, 0.7.24 Privacy defaults, 0.7.27 named anchors and one link editor, and sub-items such as 0.7.3.5 and 0.7.13.21.
   - URGENT: Vipps migration (Vipps Checkout ends 30 April 2027; see [Commerce](#6-commerce)).
   - v1.1 the shop: the phase after v1.0 that [ADR-0027](../adr/0027-a-shop-without-a-database.md) decides (variants, published stock, shipping tables, codes, MVA, notices, terms).
   - v0.8 items: baking, entry pages, product pages, responsive pictures, media library, image editor, speed, publish-time files, MCP, events as a collection kind, typed custom fields and site search (both to be weighed), the template model, Animation files, archiving and person collections (AR-1 to AR-5: AR-2 the entry model, AR-3 collection filters, AR-4 the people kind, AR-5 section and page hide), own looks from design tools (OL-1 to OL-5: OL-1 the pointer as custom properties, OL-2 the inline SVG sanitiser, OL-3 faces, OL-4 scoped styles, OL-5 the tokens importer), more calendar designs (CD-1 to CD-6), the accessibility audit in the editor (AU-1 the audit panel, AU-2 the vision simulation), the phone side of the canvas (PH-1 desktop and phone side by side, PH-2 the phone text size), and the Element round in stages ER-A Disclosure and overlays, ER-B Media and files, ER-C Data display, ER-D Collections and carousels, ER-E Forms, ER-F Associations and conversion, ER-G Navigation and utility, ER-H Motion and time.
-  - v0.9 items: board handover, content-only editing mode and scheduled publishing (both to be weighed), hardening, touch friendliness, the documentation round.
-  - After v1.0: synced global blocks, PR per draft, the concurrency view, multilingual content, import, shop extensions beyond v1.1.
+  - v0.9 items: board handover, content-only editing mode and scheduled publishing (both to be weighed), hardening with the restore of an earlier publish, touch friendliness, the documentation round, the MCP server's write tools, forms through the site's own function.
+  - After v1.0: synced global blocks, PR per draft, the concurrency view, multilingual content, import, the gallery site, own functions beside Urd's, shop extensions beyond v1.1.
 - **Watch:** looked at again when the gate or reason in the cell changes.
 - **Not taken:** with the reason.
 - **Docs:** handled by the user guide or the setup guide.
@@ -1103,41 +1103,41 @@ The ADRs behind the «Where» column: [ADR-0009](../adr/0009-themed-ui-rule.md) 
 | Collection page types | SQ | Blog, Course, Calendar, Portfolio, Store, Videos, Album, Gallery | no (yes for store and courses) | Partial: collections render on pages | v0.8 entry pages |
 | CMS template or dynamic item pages | WX, WF, FR, DU, FI, ZO, SH (metaobject pages) | One template rendered per collection item | no | Partial: collections render on pages | v0.8 entry pages |
 | Conditional CMS detail layouts | FR | Show or hide sections by field values | no | Partial: collections render on pages | v0.8 entry pages |
-| Related-collection lists on detail pages | FR | A second collection shown on an item page | no | Partial: collections render on pages | v0.8 entry pages |
+| Related-collection lists on detail pages | FR | A second collection shown on an item page | no | Partial: collections render on pages | v0.8 entry pages; v0.8 typed custom fields |
 | Reuse a page design with another collection | FR | Duplicate a CMS page and rebind its source | no | Partial: collections render on pages | v0.8 entry pages |
-| Landing page builder | WX | Standalone campaign pages | no | Has | - |
+| Landing page builder | WX | Standalone campaign pages | no | Partial: a Landing page template, a page left out of the menu and search, the footer hidden per page; no hiding the menu on one page | 0.7.10 |
 | Page and section templates | DU (2-5 custom templates), WX, SH (metaobjects) | Reusable page or section blueprints | no | Has: page, section and group templates | - |
 | Page duplication | WX, DU, SQ | Copy a page | no | Missing | 0.7.10 |
 | Hidden or not-linked pages | SQ, SU | Public but not in the navigation | no | Has | - |
 | Enable or disable pages | SQ, SH | Take a page offline | no | Missing | v0.8 AR-5: section hide, extended to whole pages |
-| Set homepage | SQ | Choose the root page | no | Has | - |
-| Draft pages and single-page publish | ZO, WP | Unpublished pages; publish one page at a time | no | Partial: drafts across pages; publishing sends the whole draft | Watch |
+| Set homepage | SQ | Choose the root page | no | Missing: the page at / is always the front page and cannot be swapped for another | 0.7.10 |
+| Draft pages and single-page publish | ZO, WP | Unpublished pages; publish one page at a time | no | Partial: edits are drafts in this browser until one publish of the whole site; no unpublished page and no single-page publish | v0.8 AR-5; Watch: single-page publish |
 | Password-protected site or pages | FR, SQ, CA, FI, CV, SU, TI, ST, WF (Growth workspace), SH (private mode) | Shared password gate | yes | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
 | IP-restricted access | TI, SQ (SSO, Enterprise) | Allowlist by IP address, or sign-in through an identity provider (Okta, Entra ID, Google) | edge | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
 | Members-only pages | WX, SQ, DU, ST, TI, GH, WP | Login or plan-gated pages | yes | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
-| Custom 404 page | WX, SQ, DU, ZO, TI, SH | Branded not-found page | no | Partial: Urd's own static page, which the site owner cannot edit | ER-G: editable 404 text |
+| Custom 404 page | WX, SQ, DU, ZO, TI, SH | Branded not-found page | no | Partial: Urd's own static page, which the site owner cannot edit | ER-G: an editable 404 page |
 | URL redirects (301 and 302) | WX, SQ, FR, WF, WN, ZO, TI, CA, WP, SU, SH | Old-path to new-path rules | edge | Missing | 0.7.23 Redirects |
 | Bulk redirect import | WX, SQ (a text list), SH (CSV) | Upload many 301s at once | edge | Missing | 0.7.23 Redirects |
 | Custom URL slugs | WX, SQ, WN, TI, FI | Editable paths | no | Has | - |
 | Site search | WX, FR, WF, WP, WN, SU, NO, ZO, SH (Search & Discovery), SQ | Search box over pages and CMS | yes (or a prebuilt client index) | Partial: calendar search | v0.8 AR-3 collection filters; v0.8 site search, to be weighed |
 | Search tuning | SH (Search & Discovery), SQ | Typo tolerance, search syntax, synonyms and boosted results | no | Missing | v0.8 site search, to be weighed (C61) |
 | Automatic XML sitemap | WX, SQ, FR, WF, WN, ZO, TI, DR, SH | sitemap.xml generated | no | Has | v0.8 publish-time files: `lastmod` and image entries |
-| Navigation menus (multiple) | WX, ZO, SP, NO, SQ, SH | Menu builder with drop-down folders and link items, plan-capped on ZO | no | Has: one menu, one submenu level | - |
-| Deeper submenu levels | SH (three levels) | Items nested two levels below the top item, drawn as drop-downs or a mega menu | no | Partial: one submenu level, with card, flat, pills, lines and flyout styles and columns | - |
+| Navigation menus (multiple) | WX, ZO, SP, NO, SQ, SH | Menu builder with drop-down folders and link items, plan-capped on ZO | no | Partial: one main menu with one submenu level, plus the footer's columns and link row; no further named menus | ER-G |
+| Deeper submenu levels | SH (three levels) | Items nested two levels below the top item, drawn as drop-downs or a mega menu | no | Partial: one submenu level, with card, flat, pills, lines and flyout styles and columns | 0.7.13.21 Menu item options |
 | Breadcrumbs and search in the nav bar | NO | Navigation bar options | no | Missing | ER-G: breadcrumbs; search as for site search |
 | Anchor links | WX, SQ | Jump to a section | no | Has: a named spot on any section or block, landing under the menu from any page (0.7.27.1-3) | - |
 | Lightbox pop-ups and overlays | WX, FR | Modal content | no | Partial: gallery lightbox, product quick view | ER-A |
-| Mobile information bar | SQ (Core+) | Sticky contact or address bar on mobile | no | Partial: announcement bar, docked block | - |
-| Business contact details and hours | SQ | Phone, email, address and opening hours kept once, used by the mobile information bar and the LocalBusiness data | no | Partial: the legal name, the organisation numbers of the site's country, the address, phone and email kept once in the site settings, drawn by every footer and written into the Organization JSON-LD (0.7.24.5.1); no hours | 0.7.24.5: the Contact details block; ER-C: opening hours |
-| Announcement bar | SQ (Core+) | Site-wide banner | no | Has | - |
+| Mobile information bar | SQ (Core+) | Sticky contact or address bar on mobile | no | Partial: the Contact details block's call bar (Call, Email, Map) docked on phones, and the announcement bar; no opening hours and no site-wide bar | ER-C |
+| Business contact details and hours | SQ | Phone, email, address and opening hours kept once, used by the mobile information bar and the LocalBusiness data | no | Partial: name, organisation numbers, address, phone and email kept once in the site settings, used by the footers, the Contact details block and the JSON-LD; no hours | ER-C: opening hours |
+| Announcement bar | SQ (Core+) | Site-wide banner | no | Partial: one plain-text message linked through the link editor, a close cross, own colours, sticky with the menu; no formatting, own font or rotating messages | 0.7.13.18 |
 | Multi-site under one domain | FR | Rewrite rules combining projects | edge | n/a | v0.9: «any static host» covers sub-paths |
 | Sub-path or subdirectory hosting | SU (Custom), GH (+$50) | Serve the site at /blog or /docs | edge | n/a | v0.9: «any static host» covers sub-paths |
 | Reverse-proxy self-hosting | FR | Cloudflare or NGINX in front | edge | n/a | v0.9: «any static host» covers sub-paths |
-| Static file hosting | FR (Pro: 50 files), CA (Plus), SQ (20 MB per file), SH | Upload PDFs and other files | no | Partial: files placed in `media/` through git; no upload in admin | ER-B: file list |
-| Well-known files | FR, WF (Premium), SQ (ads.txt) | `/.well-known/*` verification files and root text files such as ads.txt | no | Partial: the repo can hold them, with no UI | - |
-| Favicon and site icon | DU, WN, TI, ZO, NO, CA, FI, SH, SQ | Browser icon | no | Has | - |
+| Static file hosting | FR (Pro: 50 files), CA (Plus), SQ (20 MB per file), SH | Upload PDFs and other files | no | Partial: a PDF of at most 15 MB uploaded through the link editor, other files placed in media/ through git; no other file types in admin | ER-B: file list; v0.8 media library |
+| Well-known files | FR, WF (Premium), SQ (ads.txt) | `/.well-known/*` verification files and root text files such as ads.txt | no | Partial: the repo can hold them, added by hand; publishing writes none and the admin has no field for them | v0.8 publish-time files |
+| Favicon and site icon | DU, WN, TI, ZO, NO, CA, FI, SH, SQ | Browser icon | no | Partial: one site icon (upload, square crop, filters), also the fallback share image and the JSON-LD logo; no dark-mode version | 0.7.13.19 |
 | Site QR codes | CA, SQ | QR code linking to the site | no | Partial: the contact block's QR design (0.7.24.5.2), from an encoder of Urd's own (`qr.js`) | ER-G: a code per page from `qr.js` (C119) |
-| File download area | SP | Files for viewing or downloading | no | Missing | ER-B: file list |
+| File download area | SP | Files for viewing or downloading | no | Partial: a link to a file in `media/` (an uploaded PDF too) that opens or downloads; no area or list of files | ER-B: file list |
 | Smart categories (auto-filled pages) | SP | Pages filled from club data | yes | n/a: generated from a member register Urd does not hold | - |
 | Board and contact overview page | SW | Generated from the member register | yes | n/a: generated from a member register Urd does not hold | - |
 | Activity or events calendar on the site | SW, WX | Calendar fed from events data | yes | Has: calendar block | - |
@@ -1149,16 +1149,16 @@ The SEO services marked «Not taken» need a third party or a server. The MCP se
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Meta title and description | WX, SQ, FR, WF, WN, TI, DR, CA, FI, SH | Per-page metadata | no | Has | - |
-| Patterned or default meta templates | WX, FR, SQ (title formats) | Metadata from CMS fields | no | Missing | v0.8 entry and product pages |
-| Open Graph and social share images | WX, TI, CA, FI, FR, SQ, SH | og:image and og:title | no | Has | - |
-| Canonical tags | WX, FR, CA | rel=canonical, custom per site | no | Has | - |
-| robots.txt (automatic or editable) | WX, FR, TI, DR, SQ (fixed, with a site-wide crawler block), SH (editable template) | Crawler rules | no | Has: generated, not editable | v0.8 publish-time files: Content-Signal line and AI-crawler choice |
+| Meta title and description | WX, SQ, FR, WF, WN, TI, DR, CA, FI, SH | Per-page metadata | no | Partial: a description per page and a title of the page name and the site name; no separate search title | 0.7.10 |
+| Patterned or default meta templates | WX, FR, SQ (title formats) | Metadata from CMS fields | no | Missing | v0.8 entry and product pages; 0.7.10 |
+| Open Graph and social share images | WX, TI, CA, FI, FR, SQ, SH | og:image and og:title | no | Partial: og and twitter tags per page with fallbacks, written in the browser; no tags for link-preview crawlers that run no JavaScript | v0.8 baking |
+| Canonical tags | WX, FR, CA | rel=canonical, custom per site | no | Partial: an automatic canonical per page; no custom canonical | Watch: needed only for a page first published elsewhere |
+| robots.txt (automatic or editable) | WX, FR, TI, DR, SQ (fixed, with a site-wide crawler block), SH (editable template) | Crawler rules | no | Partial: generated at publishing, with /admin/ excluded and the sitemap named; not editable | v0.8 publish-time files |
 | Per-page noindex | FR, TI, SQ, SH | Exclude a page from search | no | Has | - |
 | Block known AI crawlers | SQ | A toggle adds exclusions to robots.txt | no | Missing | v0.8 publish-time files: AI-crawler choice |
-| Structured data (automatic) | SQ (BlogPosting, Event, LocalBusiness, Organization, Product, WebSite), WX, DR | JSON-LD output | no | Partial: Organization and Event | v0.8 baking: BlogPosting, Product, WebSite, BreadcrumbList |
+| Structured data (automatic) | SQ (BlogPosting, Event, LocalBusiness, Organization, Product, WebSite), WX, DR | JSON-LD output | no | Partial: Organization and Event | v0.8 baking (WebSite, FAQPage); v0.8 entry and product pages (BlogPosting, Product); ER-G (BreadcrumbList); ER-C (opening hours) |
 | Custom JSON-LD and schema generator | FR, ZO, WX (dynamic pages) | Hand-written or generated schema | no | Missing | Watch |
-| SEO checklist or wizard | WX, SQ, TI | Guided setup | no | Partial: a marker on pages without a description | v0.8 AU-1 audit panel, which also covers SEO checks |
+| SEO checklist or wizard | WX, SQ, TI | Guided setup | no | Partial: a marker on pages without a description | v0.8 AU-1 audit panel |
 | SEO assistant | WX, TI, HO (AI), SQ (AI Site Scanner, announced) | In-dashboard suggestions | no (yes if AI) | Missing | Not taken: third party or server |
 | Keyword research | WX (Semrush), DR, SQ (search keyword analysis) | Keyword data | yes | Missing | Not taken: third party or server |
 | Google Search Console connection and verification | WX, SQ, FR, WN, TI, JI, ZO, SH | Ownership verification; SQ also verifies Bing Webmaster Tools | no | Missing | v0.8 publish-time files: a verification field |
@@ -1169,13 +1169,13 @@ The SEO services marked «Not taken» need a third party or a server. The MCP se
 | Lumar and Semrush integrations | WX | Third-party SEO tools | yes | Missing | Not taken: third party or server |
 | SEO APIs | WX | Programmatic SEO settings | yes | Missing | Not taken: third party or server |
 | Server-side rendering | WX | HTML rendered for crawlers | no (static equivalent) | Missing | v0.8 baking |
-| Traffic-aware pre-rendering | FR | Builds large sites by traffic priority | edge | Missing | v0.8 baking |
+| Traffic-aware pre-rendering | FR | Builds large sites by traffic priority | edge | n/a: publishing writes every page, so there is no build order to prioritise | - |
 | Image optimisation (resize, WebP, lazy load) | WX, FR, TI, DU, SQ | Automatic image processing | no | Partial: WebP at upload | v0.8 responsive pictures |
 | Font and video optimisation | FR | Delivery optimisations | no | Has: system fonts, media limits | - |
 | Third-party script optimisation | FR | Defers scripts for Core Web Vitals | no | Has: no third parties by default | - |
 | Optimisation warnings and linting | FR | Project-level warnings | no | Missing | v0.8 «show the engine's lightness» |
 | AMP pages | WX (blog), TI | Accelerated mobile pages | no | Missing | Not taken: obsolete |
-| Heading tag control | TI, DR, SQ | H1-H3 configuration | no | Has | - |
+| Heading tag control | TI, DR, SQ | H1-H3 configuration | no | Partial: paragraph and H1-H3 as real heading elements in the text block; no H4-H6, and the level is also the look | 0.7.9: text styles |
 | Image alt text | WN, TI, WP, WF, SQ | Alt attributes | no | Has | - |
 | Site name shown in Google | FR | WebSite name markup | no | Partial: og:site_name and the Organization name | v0.8 baking: WebSite JSON-LD |
 | Hreflang (automatic) | FR, WF, SH | Language alternates | no | n/a until there is multilingual content | After v1.0: multilingual content |
@@ -1190,7 +1190,7 @@ The SEO services marked «Not taken» need a third party or a server. The MCP se
 | Directory listings and NAP consistency | DR | Syncs name, address and phone to directories | yes | Missing | Not taken: third party or server |
 | Review requests by email | DR | Asks customers for Google reviews | yes | Missing | Not taken: third party or server |
 | Shopping feeds | SQ (Core+), WX, SH, WN | Google Merchant and price-comparison feeds | yes | Missing | Watch: a static product feed is possible |
-| Mirror, HTTPS and www redirects | TI, SQ, SH | Host canonicalisation: one primary domain, the others redirected to it | edge | Has: host-level on Cloudflare | Docs (v0.9 documentation round) |
+| Mirror, HTTPS and www redirects | TI, SQ, SH | Host canonicalisation: one primary domain, the others redirected to it | edge | Partial: HTTPS from the host; the www and mirror-domain redirects are Cloudflare rules the owner sets | Docs (v0.9 documentation round) |
 | Product SEO | WN, WX | Product meta fields | no | Missing | v0.8 product pages |
 
 Note: **Content-Signal in robots.txt** was searched for and no builder documents it; only Cloudflare's own policy turned up. Urd: Missing. Where: v0.8 publish-time files (a Content-Signal line the site owner chooses).
@@ -1201,12 +1201,12 @@ Urd has no user-defined fields: each collection kind shares a fixed set of field
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Collections | WX, WF, FR, FI, ZO, DU, NO, SU, SH (metaobjects) | Structured content types | no (if built statically) | Has | - |
+| Collections | WX, WF, FR, FI, ZO, DU, NO, SU, SH (metaobjects) | Structured content types | no (if built statically) | Partial: collections of five fixed kinds with entries and CSV import and export; no rename, kind change, entry duplication or drag reorder | 0.7.10 |
 | Collection and item limits | FR, WF, ZO | Plan caps | - | n/a: no plans or caps | - |
 | Field: plain text | WX, WF, FR, FI | Short text | no | Has | - |
 | Field: rich text or formatted text | WX, WF, FR, FI | HTML content | no | Has | - |
 | Field: rich content (structured document) | WX | Ricos rich-content object | no | Has: rich text | - |
-| Field: number | WX, WF, FR | Numeric value | no | Has | - |
+| Field: number | WX, WF, FR | Numeric value | no | Partial: price and member price on product entries; no number field on the other kinds | v0.8 typed custom fields |
 | Field: boolean, switch or toggle | WX, WF, FR | True or false | no | Missing | v0.8 typed custom fields, to be weighed |
 | Field: date | WX, FR, FI | Date value | no | Has | - |
 | Field: date and time | WX, WF | Timestamp | no | Partial: date only | v0.8 typed custom fields, to be weighed |
@@ -1218,38 +1218,38 @@ Urd has no user-defined fields: each collection kind shares a fixed set of field
 | Field: video or video link | WX, WF | Video URL | no | Missing | v0.8 typed custom fields, to be weighed |
 | Field: audio | WX | Audio file | no | Missing | v0.8 typed custom fields, to be weighed |
 | Field: document or file | WX, WF, FR | File asset | no | Missing | v0.8 typed custom fields, to be weighed |
-| Field: URL or link | WX, WF, FR, FI | Link | no | Has | - |
+| Field: URL or link | WX, WF, FR, FI | Link | no | Has: a link per entry from the one link editor, to a page, a spot on it, an address or a file (0.7.27.5) | - |
 | Field: email | WX, WF | Email address | no | Missing | v0.8 typed custom fields, to be weighed |
 | Field: phone | WF | Phone number | no | Missing | v0.8 typed custom fields, to be weighed |
 | Field: address (with geo) | WX | Structured address with latitude and longitude | no | Missing | v0.8 typed custom fields, to be weighed |
-| Field: tags | WX | String array | no | Missing | v0.8 typed custom fields, to be weighed |
+| Field: tags | WX | String array | no | Missing | v0.8 AR-2; v0.8 AR-3 collection filters |
 | Field: option or enum | WF, FR | Fixed choices | no | Missing | v0.8 typed custom fields, to be weighed |
 | Field: single reference | WX, WF, FR | Link to another item | no | Missing | v0.8 typed custom fields, to be weighed |
 | Field: multi-reference | WX, WF, FR | Links to many items | no | Missing | v0.8 typed custom fields, to be weighed |
-| Field: array and object | WX | Raw JSON values | no | Missing | v0.8 typed custom fields, to be weighed |
+| Field: array and object | WX | Raw JSON values | no | Missing | Not taken: raw JSON values are for developers, who edit the entry files in git |
 | Field: title and slug | FI | Required identity fields | no | Partial: items have titles; item slugs arrive with entry pages | v0.8 entry pages |
 | Dynamic filters | FR | Visitor-side filtering | no | Planned | v0.8 AR-3 collection filters |
-| Limit and sort visible items | FR | List controls | no | Has | - |
+| Limit and sort visible items | FR | List controls | no | Partial: a limit and newest or oldest first by date; no sort by title or price, no manual order for dated entries, no offset | v0.8 AR-3 collection filters |
 | Markdown import and export | FR | Bulk content in Markdown | no | Partial: CSV import and export | Watch |
 | On-page editing of the live site | FR, WF | Edit from the published site | yes | Has: the admin edits the real page | - |
-| Collection backups and restore | WX | Weekly automatic, manual, restore | yes | Has: git keeps the history | - |
-| Restore deleted collection | WX | Undo a delete | yes | Has: git keeps the history | - |
+| Collection backups and restore | WX | Weekly automatic, manual, restore | yes | Partial: git keeps every publish; the admin undoes only the last publish and restores nothing older | v0.9 hardening |
+| Restore deleted collection | WX | Undo a delete | yes | Partial: undo brings a deleted collection back until the next publish; after that only git restores it | v0.9 hardening |
 | External database connection | WX, DU (connected data) | Bring your own data source | yes | Missing | Not taken |
 | CMS and data APIs | WX, WF, FR (plugin API), GH (Content and Admin APIs) | CRUD over content | yes | Missing | v0.8/v0.9 MCP (ADR-0017) |
 | Webhooks | GH (Publisher+), WX, FR (forms), TI | Event push to external URLs | yes | n/a: GitHub sends its own | - |
 | Scheduled publishing of content | WP, WX, TI, WN, SH | Publish at a set time | yes (scheduled job) | Missing | v0.9 scheduled publishing, to be weighed: date windows in the browser, or a GitHub Action |
-| Revisions or time machine | WP | Post history | yes | Has: git keeps the history | - |
-| RSS or Atom from a database | SU, GH, WP | Feed generation | no | Has: RSS for dated collections | - |
+| Revisions or time machine | WP | Post history | yes | Partial: git keeps the history; the History panel lists the last 15 publishes and undoes only the last one | v0.9 hardening |
+| RSS or Atom from a database | SU, GH, WP | Feed generation | no | Partial: RSS 2.0 for news, notices and publications collections, with plain-text descriptions; no feed link in the head, no feed for other kinds | v0.8 publish-time files |
 | Localised CMS content | WF, FR | Per-locale field values | no | Missing | After v1.0: multilingual content |
 | Collection content search | ZO | Search within collections | yes | Planned | v0.8 AR-3 collection filters |
 | Content import from an existing site | DU, WN (AI migration), WP (importers), SQ, SH (Store Migration app) | Migration tools | yes | Missing | After v1.0: import |
 | CMS agent | FR | AI organises and updates content | yes | Missing | v0.8/v0.9 MCP (ADR-0017) |
 | Notion as CMS | NO, SU | Notion pages and databases rendered as a site | yes | Missing | Not taken |
 | Metafields | SH | Custom fields on products, orders, customers | no | Missing | Not taken |
-| FAQ app | WX | Question-and-answer collection | no | Has: FAQ block | - |
+| FAQ app | WX | Question-and-answer collection | no | Partial: the FAQ block, questions typed in the block as cards or a list; not a collection, no categories, no FAQPage markup | 0.7.9: accordion view for collections; v0.8 AR-2 and AR-3; v0.8 baking |
 | Portfolio collections and projects | WX, SQ | Project items, with a page per project | no | Partial: a custom collection shown as cards; projects have no pages of their own | v0.8 entry pages |
 | Semantic search API | WX, SH (storefront semantic search) | Vector search tool | yes | Missing | Not taken |
-| Rich-text video embeds | FR | Video inside formatted text | no | Partial: a video block, not inside the text | - |
+| Rich-text video embeds | FR | Video inside formatted text | no | Partial: a video block, not inside the text | Not taken: a video block placed beside the text does it |
 
 #### 4. Blog
 
@@ -1258,11 +1258,11 @@ Urd's blog is the news collection. The functions that need a server are not take
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
 | Blog | WX, SQ, WP, GH, WN, TI (Feeds), SO, ST, DU, SH | Posts with list and detail pages | no | Partial: the news collection; posts have no pages of their own | v0.8 entry pages |
-| Categories and tags | WX, WN, TI, WP, SQ, SH | Taxonomies | no | Missing | v0.8 AR-3 collection filters |
+| Categories and tags | WX, WN, TI, WP, SQ, SH | Taxonomies | no | Missing | v0.8 AR-2 and AR-3; v0.8 entry pages |
 | Post thumbnails | WN, SQ, SH | Featured images | no | Has | - |
-| Post excerpts and metadata in lists | SQ, SH | An excerpt per post, and the date, author, tags and categories on list cards with a read-more link; author and tag filters on SQ | no | Partial: an entry's date, text and link show on the cards; no separate excerpt, author or tags | v0.8 AR-2: the excerpt, to be weighed (C117); authors with the v0.8 entry pages (C4b); tags with v0.8 AR-3 collection filters |
+| Post excerpts and metadata in lists | SQ, SH | An excerpt per post, and the date, author, tags and categories on list cards with a read-more link; author and tag filters on SQ | no | Partial: an entry's date, text and link show on the cards; no separate excerpt, author or tags | v0.8 AR-2: the excerpt and tags; v0.8 entry pages: authors and a read-more link; v0.8 AR-3: author and tag filters |
 | Featured posts | SQ | A post marked as featured, and lists that show only the featured ones | no | Missing | v0.8 AR-2: a featured flag beside `kicker` and `urgent`, to be weighed |
-| Multiple authors and blog roles | WX (Editor, Writer, Guest Writer), WP, SQ, SH | Author permissions, and bylines with a bio | yes | Missing | v0.8 entry pages: an author field |
+| Multiple authors and blog roles | WX (Editor, Writer, Guest Writer), WP, SQ, SH | Author permissions, and bylines with a bio | yes | Missing | v0.8 entry pages: an author field; Not taken: roles (access follows the GitHub repo) |
 | Comments and moderation | WX, WP, GH, SQ (moderator role), TI (Disqus), SH | Visitor comments | yes | Missing | Not taken: server |
 | Likes | WX | Post reactions | yes | Missing | Not taken: server |
 | Scheduled posts | WX, WN, TI, WP, SQ, SH | Future publish date | yes | Missing | v0.9 scheduled publishing, to be weighed |
@@ -1276,7 +1276,7 @@ Urd's blog is the news collection. The functions that need a server are not take
 | Custom sending domain | GH (Publisher+), SQ | DKIM and SPF on the site's own domain | yes | Missing | Not taken: server |
 | Dedicated sending IP | GH (Custom) | Deliverability | yes | Missing | Not taken: server |
 | Blog AMP | WX, TI, SQ (retired 2025) | AMP versions of posts | no | Missing | Not taken: obsolete |
-| Blog RSS | GH, WP, SU, SQ, SH (Atom) | Feed | no | Has | - |
+| Blog RSS | GH, WP, SU, SQ, SH (Atom) | Feed | no | Partial: an RSS 2.0 feed per dated collection (news, notices, publications), its text as plain text; no feed link in the head and no formatted post body | v0.8 publish-time files |
 | Podcast feed | SQ | Audio posts become episodes in an iTunes-compatible RSS feed | no | Missing | v0.8 typed custom fields, to be weighed: an audio field written as the feed's enclosure |
 | Per-feed sitemap | TI | Sitemap per blog | no | n/a until posts have pages of their own | v0.8 entry pages |
 | Recent-posts layouts | WN | Post list widgets | no | Has | - |
@@ -1286,7 +1286,7 @@ Urd's blog is the news collection. The functions that need a server are not take
 | Cross-site recommendations | GH | Recommend other publications | yes | Missing | Not taken: server |
 | Share posts to social media | SP, WP (auto-share), SQ | Post to networks | yes | Missing | Not taken: server |
 | Publishing to news apps | SQ (Apple News) | Posts cross-published to a news channel after approval | yes | Missing | Not taken: server |
-| Blog time-zone setting | TI | Publication time zone | no | Has | - |
+| Blog time-zone setting | TI | Publication time zone | no | Partial: a site time zone that drives the calendar only; entries carry a date without a time | v0.9 scheduled publishing |
 | Product cards and downloadable files in posts | GH | Editor cards | no | Partial: product blocks on the page; no file cards | ER-B |
 
 #### 5. Forms
@@ -1295,17 +1295,17 @@ Urd's form block sends by mailto or to an endpoint the site owner chooses (a for
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Form builder | WX, SQ, FR, WP, WF, TI, CA, WN, JI, ST, SO, ZO, DU, HO, SH (Shopify Forms) | Form blocks | yes (submission endpoint) | Has: mailto or an endpoint | - |
+| Form builder | WX, SQ, FR, WP, WF, TI, CA, WN, JI, ST, SO, ZO, DU, HO, SH (Shopify Forms) | Form blocks | yes (submission endpoint) | Partial: a form block with eight field types, sent by mailto or to an endpoint; no placeholders, help text, default values, field widths or form designs | ER-E; 0.7.9: component tokens |
 | Field: short text | WX, SQ, FR, WP, SH | Single line | - | Has | - |
 | Field: long text or text area | WX, SQ, FR, WP, SH | Multi-line | - | Has | - |
 | Field: name (first and last) | WX, SQ, WP | Name inputs | - | Missing | Not taken: low value |
 | Field: email | WX, SQ, FR, WP, SH | Validated email | - | Has | - |
-| Field: phone | WX, SQ, FR, WP, SH | Phone, with a country restriction on WX | - | Has | - |
+| Field: phone | WX, SQ, FR, WP, SH | Phone, with a country restriction on WX | - | Partial: a phone field (type tel) with required; no country code and no country restriction | ER-E |
 | Field: number | WX, SQ, FR, WP, SH | Numeric | - | Missing | ER-E |
 | Field: URL or website | WX, SQ, FR, WP | Link | - | Missing | ER-E |
 | Field: date | WX, SQ, FR, WP, SH | Date | - | Has | - |
 | Field: date picker | WX | Calendar picker | - | Has: the date field opens the browser's date picker | - |
-| Field: date and time | WX | Timestamp | - | Missing | ER-E, with the time field |
+| Field: date and time | WX | Timestamp | - | Missing | ER-E |
 | Field: time | WX, SQ, FR, WP | Time | - | Missing | ER-E |
 | Field: birthdate | WX | Mapped to a contact | - | Missing | Not taken: low value |
 | Field: single-line address | WX | Address text | - | Missing | Not taken: low value |
@@ -1338,17 +1338,17 @@ Urd's form block sends by mailto or to an endpoint the site owner chooses (a for
 | Field: appointment | WX | Book a slot in the form | yes | Missing | Not taken: server |
 | Field: service picker (single or multi) | WX | Choose services | yes | Missing | Not taken: server |
 | Field: calendar booking in the form | TI | Interactive calendar | yes | Missing | Not taken: server |
-| Field: terms consent | WP | Accept terms | - | Missing | 0.7.24 Privacy defaults |
+| Field: terms consent | WP | Accept terms | - | Partial: a required checkbox with a plain-text label; no link to the terms or privacy page in the label | 0.7.24.4 |
 | Price calculator form | TI | Computed totals | no | Missing | Not taken |
 | Quizzes, polls and voting | TI | Branching quizzes and votes | yes | Missing | Not taken |
 | Conditional logic | WX (rules), SQ (follow-up questions), WP, TI | Show or hide fields | no | Missing | ER-E |
 | Multi-step forms | WX, WP, TI | Paged forms | no | Missing | ER-E |
-| Validation and required fields | WX, FR | Format checks | no | Has | - |
+| Validation and required fields | WX, FR | Format checks | no | Partial: required, email, date and option checks with messages in the visitor's language; no length, pattern or number bounds | ER-E |
 | Plan caps on fields, steps, rules, forms and submissions | WX, ZO, WF, CA, DU (unlimited) | Quotas | yes | n/a: no plans or caps | - |
-| Email notifications | FR, WP, SQ | Notify the site owner | yes | Partial: mailto sends straight to the recipient | - |
+| Email notifications | FR, WP, SQ | Notify the site owner | yes | Partial: mailto opens a draft the visitor sends from their own mail client, and an endpoint provider may notify; no notice sent by the site, no auto-reply | v0.9: forms through the site's own function; Not taken: an auto-reply (it would mail any address typed into the form) |
 | Submissions inbox | WP (Responses), WX (Inbox), ST, SQ (Contacts) | View entries | yes | Missing | Not taken: an endpoint provider has one |
-| Submissions to Google Sheets | SQ, FR | Append rows | yes | Partial: endpoint mode can post to any webhook | Docs: recipes (v0.9 documentation round) |
-| Submissions to a webhook | FR, TI | POST the data out | yes | Partial: endpoint mode can post to any webhook | Docs: recipes (v0.9 documentation round) |
+| Submissions to Google Sheets | SQ, FR | Append rows | yes | Partial: endpoint mode posts JSON to a URL the owner sets, such as a Google Apps Script that appends rows; its host is added to connect-src in _headers by hand | Docs: recipes (v0.9 documentation round) |
+| Submissions to a webhook | FR, TI | POST the data out | yes | Has: endpoint mode posts the answers as JSON to a URL the owner sets; its host is added to connect-src in _headers by hand | Docs: recipes (v0.9 documentation round) |
 | Submissions to Zapier or Mailchimp | SQ (Zapier on Core+), TI, CA | Automation | yes | Partial: endpoint mode can post to any webhook | Docs: recipes (v0.9 documentation round) |
 | Submissions to 20+ services | TI, CA | Trello, Slack, Notion, Telegram, Salesforce, Monday, Zoho CRM and others | yes | Partial: endpoint mode can post to any webhook | Docs: recipes (v0.9 documentation round) |
 | Auto-create a CRM contact | WX, SQ, TI | Contact mapping | yes | Missing | Not taken: server |
@@ -1363,11 +1363,11 @@ Urd's form block sends by mailto or to an endpoint the site owner chooses (a for
 | GDPR-friendly forms | WN | Consent handling | yes | Missing | 0.7.24 Privacy defaults |
 | AI form generation | WP | Describe a form and AI builds it | yes | Missing | Not taken |
 | File storage to Dropbox or Google Drive | TI | Upload destination | yes | Missing | Not taken: server |
-| Third-party form embeds | FR (HubSpot, Marketo, Typeform, Formspark) | Embedded forms | no | Missing | 0.7.24: allowlisted click-to-load frames |
+| Third-party form embeds | FR (HubSpot, Marketo, Typeform, Formspark) | Embedded forms | no | Missing | 0.7.24.1 |
 | Advanced forms tier | CA (Pro Plus) | Extended form options | yes | Missing | Not taken |
-| Course or registration forms on the site | SP | Embedded club sign-up | yes | Missing | ER-F: hand-off to Spond, StyreWeb, Rubic, Checkin or Hoopla |
+| Course or registration forms on the site | SP | Embedded club sign-up | yes | Missing | ER-F |
 | Digital membership sign-up | SW, SP | A join form writes to the register | yes | Missing | ER-F: hand-off to Spond, StyreWeb, Rubic, Checkin or Hoopla |
-| Payment within registration | SP, WA | Pay while registering | yes | Missing | ER-F: hand-off to Spond, StyreWeb, Rubic, Checkin or Hoopla |
+| Payment within registration | SP, WA | Pay while registering | yes | Missing | ER-F; v1.1 the shop: a dated service product |
 
 #### 6. Commerce
 
@@ -1378,9 +1378,9 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Online store and cart | WX (Core+), SQ, WF, SH, WP, HO, GD, JI, SO, WN, ST, TI, WA, SW | Catalogue, cart, checkout | yes | Has | URGENT: Vipps migration |
 | Product-count limits | WF (500 / 5,000 / 15,000), ST (1 / 300 / 500), JI (about 100), WX (50,000) | Plan caps | - | n/a: no plans or caps | - |
 | Unlimited products | SQ, SH, GD, WP | No cap | - | Has: no cap | - |
-| Product variants | WX, WN, SH, SQ | Option choices such as size and colour | yes | Has: size and colour choices, and a colour with its own image | - |
+| Product variants | WX, WN, SH, SQ | Option choices such as size and colour | yes | Partial: two fixed option kinds, size and colour, a colour with its own image; no options the owner names | v1.1 SHOP-2 |
 | Price, stock, weight and image per variant | SQ, SH | Each variant combination with its own price, sale price, stock, weight and image; up to 250 (SQ) or 2,048 (SH) variants | no | Partial: a colour can carry its own image; one price per product; no stock or weight | v1.1 the shop (variants with price, SKU, availability and image) |
-| SKU and barcodes | SQ, SH | An SKU per variant, GTIN or MPN, and barcodes for scanning | no | Missing | v1.1 the shop (an SKU per variant) |
+| SKU and barcodes | SQ, SH | An SKU per variant, GTIN or MPN, and barcodes for scanning | no | Missing | v1.1 SHOP-2; Not taken: barcodes for scanning (no point of sale) |
 | Item modifiers | SO, SQ | Add-on choices; a form of questions when a product is added to the cart | yes | Missing | After v1.0: shop extensions |
 | Product add-ons | WP | Paid extras | yes | Missing | After v1.0: shop extensions |
 | Kits and bundles | WP, SH | Assembled products | yes | Missing | After v1.0: shop extensions |
@@ -1393,23 +1393,23 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Multi-location inventory | SH (10 / 200 locations) | Per-location stock | yes | Missing | Not taken: gateway-free core |
 | Low-stock alerts and demand forecasting | SH | Inventory intelligence | yes | Missing | Not taken: gateway-free core |
 | Transfers and purchase orders | SH | Stock operations | yes | Missing | Not taken: gateway-free core |
-| Back-in-stock notifications | WX (10 per month on Core, unlimited on Business+), WP, SQ (Core+) | Email when restocked | yes | Missing | After v1.0: shop extensions |
+| Back-in-stock notifications | WX (10 per month on Core, unlimited on Business+), WP, SQ (Core+) | Email when restocked | yes | Missing | Not taken: a restock notice needs the buyers' addresses stored, which ADR-0027 rules out |
 | Product status labels | SQ | Limited availability, out of stock | no | Has: badge | - |
 | Product availability display | WN, SQ, SH | Stock state; sold out blocks the purchase; a low-stock label; sold-out products hidden | yes | Partial: the badge can show it | v1.1 the shop (sold out from the published stock) |
 | Pre-orders and backorders | SH | Selling when out of stock or before release, with full, partial or no payment up front | yes | Missing | After v1.0: shop extensions (reserve at order, capture on shipping) |
-| Product import and export (CSV) | WX, WN, SQ, SH | Bulk catalogue | yes | Has | - |
+| Product import and export (CSV) | WX, WN, SQ, SH | Bulk catalogue | yes | Partial: CSV export and import in Urd's own columns; import replaces every entry with no merge by id or preview, and drops alt texts and colour images | 0.7.10: collections CSV round trip; v1.1 SHOP-2 (variant columns) |
 | Import from other shop platforms | SQ, SH | Products moved in from Etsy, Shopify, Big Cartel, WooCommerce, Square and others by CSV or account connection | yes | Partial: CSV import of a product collection in Urd's own columns | After v1.0: import |
 | Product status and visibility | SQ, SH | Draft, hidden or unlisted, scheduled and archived products | no | Missing | v0.8 AR: entry states |
 | Product reviews | WX (Business+), SQ, SH (apps) | Ratings | yes | Missing | Not taken: server |
 | Recommendations and upsells | SH, WP, SQ | Cross-sell | yes | Missing | v0.8 product pages (recommendations); After v1.0: shop extensions (upsells) |
 | Brands | WP, SH | Shop by brand or vendor | no | Missing | After v1.0: shop extensions |
-| Price per unit | TI, SH | Unit pricing | no | Missing | After v1.0: shop extensions |
+| Price per unit | TI, SH | Unit pricing | no | Missing | v1.1 SHOP-6 |
 | Sale price beside the regular price | SQ, SH | A sale or compare-at price per product or variant, the old price struck through and a Sale badge | no | Partial: a «Sale» badge and a member price; no reduced price beside the old one | v1.1 the shop (with the before price (førpris), prisopplysningsforskriften § 9a) |
-| Product video and 3D | SH | Rich media | no | Partial: a video block beside the product; the product gallery holds images only | - |
-| Product notices and disclosures | SH | Safety, legal and regulatory notices per product, shown on the product and in the cart | no | Partial: the product text can carry a notice | v1.1 the shop (a note that the withdrawal right does not apply, angrerettloven § 22) |
+| Product video and 3D | SH | Rich media | no | Partial: one image per product and a colour image, with a video block beside the product block; no gallery, video or 3D on the product | v0.8 product pages; v0.8 AF-4 (3D) |
+| Product notices and disclosures | SH | Safety, legal and regulatory notices per product, shown on the product and in the cart | no | Partial: the product text can carry a notice | v1.1 SHOP-8 |
 | Product QR codes and barcode labels | SH | Retail labels | no | Missing | Watch |
 | Product search and filtering | WN, SH, SQ | Catalogue search, filters and search boosts | yes | Planned | v0.8 AR-3 collection filters |
-| Product categories, tags and collections | SQ, SH | Categories as store navigation (three levels on SQ), tags, product types and a standard taxonomy, manual or rule-based collections | no | Partial: several product collections and the shop categories preset; no tags or rule-based collections | v0.8 AR-3 collection filters |
+| Product categories, tags and collections | SQ, SH | Categories as store navigation (three levels on SQ), tags, product types and a standard taxonomy, manual or rule-based collections | no | Partial: several product collections and the shop categories preset; no tags or rule-based collections | v0.8 AR-2 and AR-3 |
 | AI product descriptions | WX | LLM copy | yes | Missing | Not taken: the site owner's own agent through MCP (ADR-0017) |
 | Price recommendations and price tests | SH | AI markdown and markup tips from sales data, and A/B price tests | yes | Missing | Not taken: needs sales data on a server |
 | Discounts, coupons, promo codes | WX, SQ (Core+), SH, WN, ST, TI, WF, RU | Code-based discounts: percentage or fixed, on products, categories or the order, within a validity window | yes | Missing | v1.1 the shop (codes without use limits) |
@@ -1418,13 +1418,13 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Gift cards | WX, SQ, SH, SO | Stored value, sold or issued by hand; store credit | yes | Missing | Not taken: gateway-free core |
 | Express checkout and digital wallets | WX, SQ, SH | Saved details | yes | Partial: express Vipps; no other wallets | URGENT: Vipps migration |
 | Mini cart | SQ, SH | Slide-out cart, cart page or pop-up | no | Has: cart drawer | - |
-| Buy now: straight to checkout | SQ, SH | A purchase button that skips the cart, for single-product shops | no | Missing | ER-D: one featured product (a buy-now button) |
+| Buy now: straight to checkout | SQ, SH | A purchase button that skips the cart, for single-product shops | no | Missing | ER-D |
 | Cart and checkout links | SH | Links that open the cart or checkout with chosen products, quantities, a discount code and prefilled details | edge | Missing | After v1.0: shop extensions |
 | Checkout on the site's own domain | SQ | Branded checkout | yes | Partial: the order form is on the site; the Vipps payment is on Vipps's hosted page ([ADR-0020](../adr/0020-optional-payment-layer-vipps-checkout.md)) | URGENT: Vipps migration |
-| Customisable checkout | WX, WF, WN, SH (full on Plus), SQ | Checkout fields, order-level questions, address autocomplete and branding | yes | Partial: the checkout block is an order form | - |
+| Customisable checkout | WX, WF, WN, SH (full on Plus), SQ | Checkout fields, order-level questions, address autocomplete and branding | yes | Partial: a fixed order form (name, email, phone, comment) in the site's theme; no address fields, order questions or autocomplete hints | v1.1 SHOP-4; 0.7.11 |
 | Order review and the order button | SH | A review step before the purchase where the law asks for it, and the wording of the button that places the order | yes | Has: the order in one line and the total right above the buttons, which read «Confirm purchase» and «Pay with Vipps» (0.7.24.6) | - |
 | Release-based selling, reserved cart and timer | SQ (timer on Advanced), SH (Plus) | Drops and limited launches | yes | Missing | Not taken: gateway-free core |
-| Checkout bot protection | SH (Plus) | CAPTCHA checkpoints that stop bots completing checkouts, also during timed launches | yes | Partial: a honeypot field in the checkout form | - |
+| Checkout bot protection | SH (Plus) | CAPTCHA checkpoints that stop bots completing checkouts, also during timed launches | yes | Partial: a honeypot field in the checkout form; no challenge on the order | v0.9: forms through the site's own function |
 | Abandoned cart recovery | WX (Core+), SQ, SH | Reminder emails | yes | Missing | Not taken: gateway-free core |
 | Customer accounts | SQ, WX, SO, SH | Order history, reorder, balances, saved cards, social or single sign-on | yes | Missing | Not taken: gateway-free core |
 | Age verification | SO | Age gate and checkout check | yes | Missing | Not taken: gateway-free core |
@@ -1439,7 +1439,7 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Apple Pay and Google Pay | WF, SQ, SH | Wallets | yes | Missing | Not taken: gateway-free core |
 | ACH bank payments | SQ | Bank debit (ACH in the US, SEPA in euros) | yes | Missing | Not taken: gateway-free core |
 | Vipps | RU | Norwegian mobile payment | yes | Has: the optional Vipps Checkout layer | URGENT: Vipps migration |
-| Manual payment methods | SH | Bank transfer, cash on delivery or a custom method with instructions shown after checkout; the order is marked paid by hand | yes | Partial: a Vipps number shown as the payment instruction; no other method to choose | - |
+| Manual payment methods | SH | Bank transfer, cash on delivery or a custom method with instructions shown after checkout; the order is marked paid by hand | yes | Partial: one Vipps number shown above the order summary as the payment instruction; no choice of methods and no instruction after the order | v1.1 SHOP-8; 0.7.24.7 |
 | Stablecoin (USDC) | SH | Crypto payment | yes | Missing | Not taken: gateway-free core |
 | Transaction fees by plan | SQ, WP, ST, WF, GD (0%), JI (none), SH | Platform fee | - | Has: no platform fee | - |
 | Fraud analysis | SH | Order risk scoring | yes | Missing | Not taken: gateway-free core |
@@ -1447,25 +1447,25 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Payout schedule | WX, SH | Settlement timing | yes | Missing | Not taken: gateway-free core |
 | Tips | SH, SQ (Acuity) | Gratuity | yes | Missing | Not taken: gateway-free core |
 | Split and partial payments | SH | Multiple tenders, deposits and payment terms | yes | Missing | Not taken: gateway-free core |
-| Pay links and QR payments | SQ, GD, JI, SQ (Acuity) | Request payment by link | yes | Partial: a Vipps number as an instruction | - |
+| Pay links and QR payments | SQ, GD, JI, SQ (Acuity) | Request payment by link | yes | Partial: a Vipps number as an instruction | ER-F: donation; Not taken: a payment request per link (needs a server) |
 | Invoices | WX, SQ, WN, WA, GD (US), SW, RU | Billing documents | yes | Missing | Not taken: gateway-free core |
 | eFaktura (e-invoice) | RU | Norwegian electronic invoice | yes | Missing | Not taken: gateway-free core |
 | Automatic receipts | WA, SH | Payment receipts and order confirmations to the buyer by email or SMS | yes | Missing | v1.1 the shop (the order lines as a receipt in the Vipps app; buyer email is not taken) |
 | Order confirmation page | SQ, SH | The page after checkout with the order details and next steps | no | Partial: a thank-you line after the Vipps payment (`?ordered=1`); no order details | 0.7.24.7: a printable confirmation with the order lines and the withdrawal form; v1.1 the shop for the rest |
-| Order notifications to the owner | SH | New order, return request and dispute emails to the owner or staff, and a daily or weekly summary | yes | Partial: a mailto order arrives as an email; the Vipps layer sends no notice | v1.1 the shop (a webhook notice to the owner) |
+| Order notifications to the owner | SH | New order, return request and dispute emails to the owner or staff, and a daily or weekly summary | yes | Partial: a mailto order arrives as an email; the Vipps layer sends no notice | v1.1 SHOP-7 |
 | Automatic payment reminders | RU | Dunning | yes | Missing | Not taken: gateway-free core |
 | Price quotes | WX, SQ | Quotes, proposals and contracts for clients | yes | Missing | Not taken: gateway-free core |
 | Automated sales tax | WX (Business+), SQ (Core+), WF, GD, SH | Tax calculation | yes | Missing | Not taken: gateway-free core |
 | TaxJar integration | SQ, SH | Tax service (TaxJar, Avalara, Vertex) | yes | Missing | Not taken in the core: plugins or link-out |
 | Custom tax rates | WX, SQ, SH | Manual rates by country or region, with overrides and exemptions | yes | Missing | v1.1 the shop (the MVA rate per product for a registered seller) |
-| Prices including VAT and VAT on receipts | SQ, SH | Tax included in the shown price or added at checkout, tax per item and the VAT number on the receipt or a VAT invoice, tax on shipping | no | Partial: prices are total prices, with no VAT shown | v1.1 the shop (MVA display, a seller switch that is off by default) |
-| Shipping rules (flat, weight) | SQ, WX, SH | Rate tables: flat, by weight or by order amount, per zone or per product profile | yes | Missing | v1.1 the shop (flat, weight bands, free over an amount, pickup) |
+| Prices including VAT and VAT on receipts | SQ, SH | Tax included in the shown price or added at checkout, tax per item and the VAT number on the receipt or a VAT invoice, tax on shipping | no | Partial: prices are total prices, and the seller line shows a registered seller's VAT number; no «inkl. mva» and no VAT per line | v1.1 SHOP-6 |
+| Shipping rules (flat, weight) | SQ, WX, SH | Rate tables: flat, by weight or by order amount, per zone or per product profile | yes | Missing | v1.1 SHOP-4; Not taken: zones (the shop sells in Norway) |
 | Real-time carrier rates | SQ (Core+), SO (Premium), SH | Live quotes | yes | Missing | Not taken: gateway-free core |
-| Delivery times and dates | SH | Transit time on a shipping option, delivery date estimates at checkout and in the confirmation, delivery badges | no | Missing | v1.1 the shop (a delivery time per shipping option; angrerettloven § 8 g) |
+| Delivery times and dates | SH | Transit time on a shipping option, delivery date estimates at checkout and in the confirmation, delivery badges | no | Missing | v1.1 SHOP-4 |
 | Shipping labels | SQ (Core+), WF (via software), SH | Print labels, with insurance, claims and carrier pickups | yes | Missing | Not taken: gateway-free core |
 | Discounted shipping rates | WX | Negotiated rates | yes | Missing | Not taken: gateway-free core |
 | Shipment tracking | WN, SQ, SH | Tracking numbers and an order status page | yes | Missing | Not taken: gateway-free core |
-| Packing slips and order printouts | SQ, SH | Packing slips, pick lists and invoices printed from the order, with editable templates | yes | Missing | v1.1 the shop (a printable order confirmation with the withdrawal form for the parcel) |
+| Packing slips and order printouts | SQ, SH | Packing slips, pick lists and invoices printed from the order, with editable templates | yes | Missing | v1.1 SHOP-7; Not taken: pick lists (no order store) |
 | Local delivery, pickup, curbside | WX, SO, SH, SQ | Fulfilment options | yes | Partial: the comment field in the checkout form can ask for it | v1.1 the shop (pickup as a shipping option) |
 | Ship from store, buy online and pick up in store | SH | Omnichannel | yes | Partial: the comment field in the checkout form can ask for pickup | v1.1 the shop (pickup as a shipping option) |
 | Pickup points and parcel lockers | SH | The buyer picks a carrier pickup point or parcel locker at checkout | yes | Missing | v1.1 the shop (a flat «to a pickup point» option; picking the point needs the carrier's API and is not taken) |
@@ -1479,7 +1479,7 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Shop terms, returns and withdrawal page | SH | Refund, shipping and terms pages generated from the store settings and linked at checkout | no | Missing | v1.1 the shop (terms and the withdrawal form, angrerettloven § 8) |
 | Online withdrawal and cancellation requests | SH | The buyer asks to cancel or return from an order page, within the return rules; the owner approves | yes | Missing | v1.1 the shop (a withdrawal form to the owner; the «angre avtalen» function of angrerettloven § 20 a when in force) |
 | Customisable transactional emails | WN, WF (unbranded on Plus), SH | Order emails | yes | Missing | Not taken: gateway-free core |
-| Order webhooks | SH | Order events pushed as JSON to a URL the owner chooses | yes | Partial: the checkout's endpoint mode posts each order as JSON to a URL the owner sets | - |
+| Order webhooks | SH | Order events pushed as JSON to a URL the owner chooses | yes | Partial: the endpoint-mode checkout posts each order as JSON to the owner's URL before any payment; the Vipps path posts nothing; no payment or return events | v1.1 SHOP-7 |
 | Store staff accounts | WF (3 / 10 / 15), SH (5 / 15 / unlimited) | Staff seats | yes | Missing | Not taken: gateway-free core |
 | Sales and custom reports | WX (Elite), SH (200+), SO (Premium), TI (ABC/XYZ) | Commerce analytics, product insights, inventory and finance reports | yes | Missing | Not taken: gateway-free core |
 | Order and accounting export | SQ, SH | Orders, line items, taxes and payouts exported as CSV or a workbook, to Google Sheets, or in a tax authority's format | yes | Missing | Not taken: no order store; the payment provider's reports serve the accounts |
@@ -1501,7 +1501,7 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Business finance (balance, capital, bill pay) | SH, WX (Capital API), SQ | Banking-like services | yes | Missing | Not taken: gateway-free core |
 | Auto-release unpaid reservations | TI | Free up held stock | yes | Missing | Not taken: gateway-free core |
 | Sell or rent video content | WX | Video on demand | yes | Missing | Not taken: gateway-free core |
-| Donations | SQ, WP, WX, GH (tips), SW (Innsamling) | Donate buttons and campaigns | yes | Partial: a Vipps number as an instruction | ER-F: amounts and a Vipps number |
+| Donations | SQ, WP, WX, GH (tips), SW (Innsamling) | Donate buttons and campaigns | yes | Partial: a Vipps number as an instruction | ER-F: amounts, a Vipps number and a campaign goal |
 | Recurring donations and donor self-service | WX, SQ | The donor manages their own plan | yes | Missing | Not taken: link out to Spond, Rubic or StyreWeb |
 | Crowdfunding | WX (app category) | Campaigns | yes | Missing | Not taken: link out to Spond, Rubic or StyreWeb |
 | Membership and training fees | RU | Club fee collection | yes | Missing | Not taken: link out to Spond, Rubic or StyreWeb |
@@ -1550,7 +1550,7 @@ Urd's calendar block covers the event listing. Booking, ticketing and registrati
 | Volunteer coordination | RU | Shifts and volunteers | yes | Missing | Not taken: link out (Checkin, Hoopla, Spond) |
 | Activity registration («påmelding») | RU, SP, SW | Club activity sign-up | yes | Partial: a sign-up link per event | ER-F: registration mode (link-out to Checkin, Hoopla, Spond) |
 | Restaurant online ordering | WX (commission-free), SO | Orders for pickup or delivery | yes | Missing | Not taken |
-| Digital menus | WX, SQ (Menu block) | Menu display | no | Partial: table | ER-C: price list |
+| Digital menus | WX, SQ (Menu block) | Menu display | no | Partial: the table block (plain-text cells); no menu sections, item descriptions or allergen labels | ER-C: price list |
 | Table reservations | WX, SQ (OpenTable block) | Book a table | yes | Missing | Not taken |
 | Future orders | WX | Order ahead | yes | Missing | Not taken |
 | Catering | WX | Catering orders | yes | Missing | Not taken |
@@ -1620,8 +1620,8 @@ Campaign tools need a server or a third party and are not taken. What Urd offers
 | Segmentation | SQ, SH, GH, RU | Audience groups | yes | Missing | Not taken: server or third party |
 | CRM and contacts | WX, SQ, TI, DR, WA, SH | Contact database | yes | Missing | Not taken: server or third party |
 | Sales pipeline (kanban) | TI | Funnel stages | yes | Missing | Not taken: server or third party |
-| Lead capture | SQ, SH | Newsletter blocks and forms, with double opt-in on SQ | yes | Partial: forms, footer newsletter | 0.7.24: newsletter sign-up preset |
-| Promotional pop-ups | SQ (Core+), WX | Pop-up offers | no (yes for capture) | Missing | ER-A: a popup opened by a click; no timed or exit-intent pop-ups |
+| Lead capture | SQ, SH | Newsletter blocks and forms, with double opt-in on SQ | yes | Partial: forms and the footer newsletter, by mailto or to an endpoint; no sign-up preset, consent field, redirect after sending or double opt-in | 0.7.24.4 (preset, consent); ER-E (redirect); Not taken: double opt-in and a lead list (provider or server) |
+| Promotional pop-ups | SQ (Core+), WX | Pop-up offers | no (yes for capture) | Missing | ER-A (opened by a click), ER-H (a date window); Not taken: timed, scroll and exit-intent opening (an overlay the visitor did not ask for) |
 | Social posting and scheduling | WX, WP, GD | Post to networks | yes | Missing | Not taken: server or third party |
 | Ads (Google, Meta) | WX, SQ (Core+), GD (Premium+), HO, WP (credits), SH (Audiences, Shop Campaigns) | Campaign management | yes | Missing | Not taken: server or third party |
 | Monetisation ads | WP (WordAds), WN (AdSense), GH (ad networks) | Display ads | no | Missing | Not taken: server or third party |
@@ -1635,7 +1635,7 @@ Campaign tools need a server or a third party and are not taken. What Urd offers
 | AI social captions | WX, DR | An LLM writes posts | yes | Missing | Not taken: server or third party |
 | Logo maker | WX, HO, ST, SQ | Brand assets | yes | Missing | Not taken: server or third party |
 | Social graphics from the site's own media | SQ (Marketing Kit, iOS, which replaced Video Studio) | Social-media images and videos made from the site's pictures and products | yes | Missing | Not taken: server or third party |
-| Link-in-bio page | SQ (Bio Sites, from the Unfold app; Pro retired February 2025) | A one-page profile of links for a social-media bio, on an address of its own | no | Has: the link launcher and the links block | - |
+| Link-in-bio page | SQ (Bio Sites, from the Unfold app; Pro retired February 2025) | A one-page profile of links for a social-media bio, on an address of its own | no | Partial: the links block, the launcher and buttons on any page; the footer can be hidden per page but the menu cannot, and there is no link-page starter | 0.7.10 (a per-page menu switch); ER-G (a link-page starter) |
 | Instagram or social feed | WX, ST, SQ | Embedded feed | yes | Missing | Not taken: server or third party |
 | Marketing agent | WX (Kleo), WX Bookings, SH (Campaign Autopilot) | AI marketer | yes | Missing | Not taken: server or third party |
 | Paid newsletters | SQ, GH | Subscription newsletters | yes | Missing | Not taken: server or third party |
@@ -1666,7 +1666,7 @@ Urd's analytics is optional Cloudflare Web Analytics: cookieless, switched on wi
 | Funnels | FR (Convert), SQ (Core+) | Step conversion | yes | Missing | Not taken |
 | A/B tests | FR (up to 5 variants), WF (Optimize) | Variant testing | yes (edge assignment) | Missing | Not taken |
 | Personalisation | WF (Optimize), DU (rules), TI | Content per segment | edge or yes | Missing | Not taken |
-| Dynamic triggers | FR | Overlays and variants by condition | no | Missing (a Suggestions item) | 0.7.13.18: a date window on the announcement bar; ER-H: date windows on blocks |
+| Dynamic triggers | FR | Overlays and variants by condition | no | Missing | 0.7.13.18 (the bar); ER-H (date windows, a query parameter); Not taken: conditions on the visitor (stored state and consent) |
 | Core Web Vitals monitoring | FR, SH | Real-user performance | yes | Partial: the Cloudflare dashboard shows it | Docs (v0.9 documentation round) |
 | UTM builder | TI, SQ, SH | Campaign links | no | Missing | Not taken |
 | Engagement (time and scroll) | TI | Engagement rates | yes | Missing | Not taken |
@@ -1691,21 +1691,21 @@ Urd has one content language per site, with visitor and admin texts in five lang
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
 | Multilingual sites | WX, FR, WF, DU, WN, SU (Pro), GH, SH, TI, SQ (Weglot) | Locale versions | no | Missing | After v1.0: multilingual content |
-| Machine or AI translation | WX (130+ languages, word credits), FR (Auto Translate), WF, SQ (Weglot), SH | Auto-translate content | yes (at edit time) | Missing | After v1.0: multilingual content |
+| Machine or AI translation | WX (130+ languages, word credits), FR (Auto Translate), WF, SQ (Weglot), SH | Auto-translate content | yes (at edit time) | Missing | After v1.0: multilingual content, translated by the owner's agent (v0.9 MCP write) |
 | Translation manager | WX, SH (Translate & Adapt) | Review translations | yes | Missing | After v1.0: multilingual content |
-| Translation tone («AI Style») | FR | Voice for translations | yes | Missing | After v1.0: multilingual content |
+| Translation tone («AI Style») | FR | Voice for translations | yes | Missing | Not taken: the tone is the owner's own agent instruction (ADR-0017) |
 | Localised slugs | FR, WF, SH | Translated paths | no | Missing | After v1.0: multilingual content |
 | Automatic locale redirect | FR, WF (Advanced), TI, SH | Browser language or geo | edge | Missing | After v1.0: multilingual content |
 | Right-to-left support | FR, SH (Horizon) | Arabic and Hebrew layouts | no | Missing | After v1.0, together with multilingual content |
-| Language attribute | FR | `lang` per page | no | Has | - |
-| Site language and region | SQ (13 languages, Norwegian among them) | One language for the built-in visitor texts and the date, time and currency formats; country, time zone and units | no | Has: the site language sets the visitor texts, `<html lang>` and the Intl formats; a time zone per site | - |
+| Language attribute | FR | `lang` per page | no | Partial: `<html lang>` follows the site language once the page has rendered; no language per page or per passage | v0.8 baking (lang in the HTML); 0.7.11 (a passage in another language); After v1.0: multilingual content |
+| Site language and region | SQ (13 languages, Norwegian among them) | One language for the built-in visitor texts and the date, time and currency formats; country, time zone and units | no | Partial: the site language sets the visitor texts, `<html lang>` and the dates, with a country and a time zone per site; no site currency, number format or units | v1.1 SHOP-6 (a site currency); Not taken: units (low value) |
 | Exclude items per locale | FR | Hide content in some locales | no | Missing | After v1.0: multilingual content |
 | Asset localisation | WF (Advanced), SH | Swap images and alt text per locale | no | Missing | After v1.0: multilingual content |
 | Multi-currency | WX, WN, SH | Local prices | yes | n/a | - |
 | Local domains | SH | Domain per market | edge | n/a | - |
 | Duties and taxes | SH | Cross-border | yes | n/a | - |
 | Translate store and chat | WX | App strings | no | Has: visitor texts in five languages plus language packs | - |
-| Edit the built-in visitor texts | SH | Reword fixed strings such as cart labels, the sold-out text and form messages | no | Partial: the form's labels and success text, the countdown's done text and the calendar's words are edited in place; the other visitor texts come from the built-in dictionaries | - |
+| Edit the built-in visitor texts | SH | Reword fixed strings such as cart labels, the sold-out text and form messages | no | Partial: the form's labels, button and success text, the countdown's done text and the calendar's words are edited in place; no shop texts or form messages | ER-G |
 | Language-aware personalisation | DU, SH (per market) | Rules per language | no | n/a | - |
 
 Note: the enumeration lists **hreflang** a second time in this area; it appears once, under [SEO and AI search](#2-seo-and-ai-search).
@@ -1716,18 +1716,18 @@ The consent and privacy-page items belong to 0.7.24 Privacy defaults, where a co
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Cookie banner | WX (Usercentrics), SQ, FR, WN, SH | Consent UI | no | Missing | 0.7.24, only when analytics or embeds need it |
-| Script blocking until consent | WX, FR (via GTM), SQ, SH | Prior consent | no | Missing | 0.7.24, only when analytics or embeds need it |
-| Google Consent Mode v2 | WX, FR, SQ | Consent signals to Google tags | no | Missing | 0.7.24, only when analytics or embeds need it |
+| Cookie banner | WX (Usercentrics), SQ, FR, WN, SH | Consent UI | no | Missing | 0.7.24.3, only when analytics or embeds need it |
+| Script blocking until consent | WX, FR (via GTM), SQ, SH | Prior consent | no | Missing | 0.7.24.1 and 0.7.24.3 |
+| Google Consent Mode v2 | WX, FR, SQ | Consent signals to Google tags | no | Missing | Not taken in the core: a plugin's Google tags follow the consent of 0.7.24.3 |
 | Personal data export and erase | WP (core), SH | GDPR requests | yes | n/a: no personal data is stored | - |
 | Opt-out of data sale or sharing | SH | A page where visitors opt out of data sale, sharing and targeted ads; honours Global Privacy Control | edge | n/a: Urd sells and shares no visitor data | - |
 | GDPR or privacy module | SW («Personvern»), WX (guide), SQ (guide) | Compliance tools | yes | Missing | 0.7.24: a privacy page generated from site settings, and a terms page template |
 | Legal text generators and templates | JI, WN, SQ (Legal Assistant, beta), SH (automated privacy policy) | Privacy and terms | no | Missing | 0.7.24: a privacy page generated from site settings, and a terms page template |
-| Accessibility wizard and tools | WX, DU (AudioEye, UserWay), FR (a11y attributes) | Audits and fixes | no | Missing (editor) | 0.7.11 |
-| Accessible output by default | SQ | Focus outline, a skip link on Tab, semantic headings, a pause on animated backgrounds, and guidance for an accessibility statement | no | Partial: reduced motion, disclosure navigation, native dialogs and pause buttons on moving bands; no skip link | 0.7.11: a skip link (C78); 0.7.24.2: an accessibility page, to be weighed |
+| Accessibility wizard and tools | WX, DU (AudioEye, UserWay), FR (a11y attributes) | Audits and fixes | no | Missing (editor) | 0.7.11 (contrast in the picker, a decorative toggle); v0.8 AU-1 and AU-2 (the audit panel, a vision preview) |
+| Accessible output by default | SQ | Focus outline, a skip link on Tab, semantic headings, a pause on animated backgrounds, and guidance for an accessibility statement | no | Partial: focus outlines, reduced motion, disclosure navigation, native dialogs and pauses on moving bands; no skip link, current-page mark or nav landmark names | 0.7.11 (a skip link, the current page marked, a site-wide pause, landmark names); 0.7.24.2 (an accessibility page) |
 | SSL | all | HTTPS | edge | Has | - |
-| HSTS with preload, TLS 1.2 | FR, SQ | Transport security | edge | Missing: HSTS | 0.7.0: HSTS in `_headers` (max-age only) |
-| Custom SSL certificate | GH (Business add-on), WF (Enterprise) | Own certificate | edge | Has: Cloudflare | Docs |
+| HSTS with preload, TLS 1.2 | FR, SQ | Transport security | edge | Missing: HSTS | 0.7.0: HSTS in `_headers` (max-age only); Docs (v0.9 documentation round): preload and TLS 1.2 |
+| Custom SSL certificate | GH (Business add-on), WF (Enterprise) | Own certificate | edge | Has: Cloudflare issues the certificate; an own one depends on the Cloudflare plan | Docs (v0.9 documentation round) |
 | DDoS protection | FR, WP, TI | Attack mitigation | edge | Has: Cloudflare | Docs |
 | Web application firewall | WP (Business+) | WAF | edge | Has: Cloudflare | Docs |
 | Firewall rules (country and path) | FR (Advanced Hosting, Enterprise) | Block or redirect | edge | Has: Cloudflare | Docs |
@@ -1737,10 +1737,10 @@ The consent and privacy-page items belong to 0.7.24 Privacy defaults, where a co
 | DNSSEC | FR, SQ | DNS integrity | edge | Has: Cloudflare | Docs |
 | Owner 2FA | WX (app, SMS, authenticator, email), SQ (passkeys, authenticator, SMS), GH (2FA, device verification), SH (required for all on Plus) | Account security | yes | Partial: through GitHub | v0.9 board handover: 2FA required in the organisation |
 | SSO | FR, GH, DU, SU, WF (Enterprise or Custom), SQ (Enterprise), SH (Plus) | SAML or OIDC | yes | n/a | - |
-| Roles and permissions | WX, WF, FR, SQ, WP, DU, SH, TI, WN | Role-based access | yes | Partial: GitHub repo permissions | v0.9 content-only editing mode, to be weighed |
-| Custom roles and user groups | WX, SH (user groups on Plus) | Granular roles | yes | Partial: GitHub repo permissions | v0.9 content-only editing mode, to be weighed |
+| Roles and permissions | WX, WF, FR, SQ, WP, DU, SH, TI, WN | Role-based access | yes | Partial: GitHub repo permissions | v0.9 content-only editing mode; v0.9 board handover (docs) |
+| Custom roles and user groups | WX, SH (user groups on Plus) | Granular roles | yes | Partial: GitHub repo permissions | Not taken: a role table (it needs stored state; GitHub teams group the people) |
 | Audit log and site activity log | WF (Enterprise), WP (Business+), SQ (account activity), SH | Who changed what | yes | Has: git history | - |
-| Backups and restore | WX, WP (real-time), GH, WN, FR (revert), SQ (30-day trash) | Recovery | yes | Has: git | - |
+| Backups and restore | WX, WP (real-time), GH, WN, FR (revert), SQ (30-day trash) | Recovery | yes | Partial: git keeps every version; admin undoes only the last publish, and an older version or a deleted page comes back through git | v0.9 restore an earlier publish |
 | Disaster recovery and failover | WX (Studio), WP | High availability | yes | Has: git plus Pages | - |
 | Data export (site or code) | CA, TI, WF, DU, GD, SQ (WordPress XML) | Take the data out | no | Has: the repo is the data | - |
 | Uptime commitments and SLA | WX (99.98%), FR (99.99%), SH (99.9%), GH (99.9% SLA on Custom) | Availability | - | n/a | - |
@@ -1754,7 +1754,7 @@ The consent and privacy-page items belong to 0.7.24 Privacy defaults, where a co
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Custom domain connection | all paid | DNS to the site | edge | Has | - |
+| Custom domain connection | all paid | DNS to the site | edge | Has | Docs (v0.9 documentation round) |
 | Built-in subdomain | SQ, SH | A free address on the platform's own domain (squarespace.com, myshopify.com) | edge | Has: the `pages.dev` address Cloudflare Pages gives every project | - |
 | Free domain for one year | WX, SQ, WP, GH, DU, HO, ST, WN, DR | Bundled domain | - | n/a: the domain is bought separately | Docs: Norid on the org.nr. (v0.9 board handover) |
 | Domain registration and purchase | WX, SQ (no .no), CV, DR, JI, WN, SH (no .no) | Registrar | yes | n/a | Docs: Norid on the org.nr. (v0.9 board handover) |
@@ -1765,8 +1765,8 @@ The consent and privacy-page items belong to 0.7.24 Privacy defaults, where a co
 | Global CDN | FR (20 / 300+ locations), WX, WP, GH, SH (300 points of presence), TI | Edge caching | edge | Has | - |
 | Bandwidth and storage quotas | FR, WF, ST, ZO, WX, WP, SQ (unlimited) | Plan limits | - | Has: media limits; Cloudflare free tier | Docs |
 | Staging environment | FR (Pro), WP (Business+), WF, DU (safe testing) | Pre-production | yes | Partial: the admin preview | After v1.0: PR per draft with preview URLs |
-| Branching | FR, WF (Enterprise or Team), WX (API) | Parallel edits | yes | Partial: the admin preview | After v1.0: PR per draft with preview URLs |
-| Version history and revert | FR, WX, WP | Roll back | yes | Has: publish history and «undo the last publish» | - |
+| Branching | FR, WF (Enterprise or Team), WX (API) | Parallel edits | yes | Missing: a draft lives in one browser and is published straight to the main branch | After v1.0: PR per draft with preview URLs |
+| Version history and revert | FR, WX, WP | Roll back | yes | Partial: the publish history lists the 15 latest publishes and undoes the last one; no restore of an older publish or of one page | v0.9 restore an earlier publish |
 | Manual publishing control | SU (Pro), ZO | Publish when ready | no | Has: the publish button | - |
 | Site duplication | WX, SQ | Copy a whole site | yes | Has: «Use this template» | - |
 | Site or project transfer | CA, FR, WX | Hand over ownership | yes | Partial: GitHub repo transfer | v0.9 board handover |
@@ -1776,8 +1776,8 @@ The consent and privacy-page items belong to 0.7.24 Privacy defaults, where a co
 | Video hosting quotas | SQ (30 min / 5 h / unlimited), WP (VideoPress 250 GB) | Video storage | yes | Has: media limits; Cloudflare free tier | Docs |
 | Code injection and custom code | SQ (Core+), FR, CA, TI, ZO, SU, WN | Header and footer scripts | no | Missing | Not taken for head and footer scripts; a code bundle goes in the portal, v0.8 Animation files |
 | SFTP, SSH, WP-CLI, Git deploys | WP (Business+), SQ (7.0 developer mode) | Developer access | yes | Has: Git deploys | - |
-| Automatic platform updates | WP, GH, SQ (7.0 to 7.1 update tool) | Managed updates | yes | Partial: the updater, started by the site owner in admin; `_headers` changes by hand ([ADR-0014](../adr/0014-updater-model.md)) | - |
-| App backend or full-stack hosting | WX (Velo, HTTP functions, secrets), DU (Vibe), GD (Airo), WF (secondary) | Server code | yes | Has: Pages Functions | - |
+| Automatic platform updates | WP, GH, SQ (7.0 to 7.1 update tool) | Managed updates | yes | Partial: the updater, started by the site owner in admin; no update notice, automatic update or rollback; `_headers` changes by hand ([ADR-0014](../adr/0014-updater-model.md)) | 0.7.10 (the update notice); v0.9 hardening (undo an update); Not taken: automatic updates (the owner decides each update, ADR-0014) |
+| App backend or full-stack hosting | WX (Velo, HTTP functions, secrets), DU (Vibe), GD (Airo), WF (secondary) | Server code | yes | Partial: Urd's own Pages Functions; `functions/**` is Urd-owned, with no path for the owner's or a plugin's own server code | After v1.0: own functions beside Urd's |
 | Headless and APIs | SH, WX | Decoupled front end | yes | n/a | - |
 | Branding removal | all paid | White-label | no | Has: no branding | - |
 
@@ -1791,15 +1791,15 @@ The consent and privacy-page items belong to 0.7.24 Privacy defaults, where a co
 | Guest access for agencies | WF, SH (collaborators) | External designers | yes | Has: GitHub collaborators listed in `ALLOWED_LOGINS` | - |
 | Comments on the site or canvas | WX (Studio), DU (up to 100 clients), TI, WF (Reviewer), FR (viewers) | Review comments | yes | Missing | Watch: block notes ([WordPress 6.9](https://www.wpbeginner.com/news/whats-new-in-wordpress-6-9/), secondary) could be stored in the draft |
 | Approvals | WF (approve page branches), SH (POS manager approvals) | Sign-off | yes | Missing | After v1.0: PR per draft |
-| Publishing permissions | WF (Growth) | Who may publish | yes | Partial: `ALLOWED_LOGINS`, checked by every publishing endpoint ([ADR-0003](../adr/0003-publishing-via-github-oauth-and-pages-functions.md)) | v0.9 board handover (docs) |
+| Publishing permissions | WF (Growth) | Who may publish | yes | Partial: `ALLOWED_LOGINS`, checked by every publishing endpoint ([ADR-0003](../adr/0003-publishing-via-github-oauth-and-pages-functions.md)) | v0.9 board handover (docs); After v1.0: PR per draft (edit without publishing) |
 | Client billing | DU | The agency bills the client | yes | n/a | - |
 | Client accounts and permissions | DU | Client logins | yes | n/a | - |
 | White-label platform | DU (custom domain, email, CSS), GH | Agency branding | yes | n/a | - |
-| Client kits, content mode, handoff | WX (Studio), SQ (Website Editor role) | Safe client editing | yes | Missing | v0.9 content-only editing mode, to be weighed |
+| Client kits, content mode, handoff | WX (Studio), SQ (Website Editor role) | Safe client editing | yes | Missing | v0.9 content-only editing mode; v0.9 board handover |
 | Client content collection | DU | Gather client assets | yes | n/a | - |
 | Workspaces, organisations, folders | FR (Enterprise), WX (Studio), SH | Hierarchy | yes | n/a | - |
-| Real-time co-editing | FR, WX (Studio) | Concurrent editing | yes | Missing | After v1.0: concurrency view |
-| Shared libraries and assets | WF (Core), DU | Reuse across sites | yes | Partial: templates as plugins | After v1.0: synced global blocks |
+| Real-time co-editing | FR, WX (Studio) | Concurrent editing | yes | Missing | After v1.0: concurrency view (presence); Not taken: live co-editing (needs real-time infrastructure) |
+| Shared libraries and assets | WF (Core), DU | Reuse across sites | yes | Partial: templates as plugins | 0.7.9 theme export; v0.8 template model |
 | Location-scoped access | WX | Per-business-location permissions | yes | n/a | - |
 | Ownership transfer | FR, CA, WX, SH | Change owner | yes | Partial: GitHub repo transfer | v0.9 board handover |
 | Enterprise true-up billing | FR | Usage reconciliation | yes | n/a | - |
@@ -1810,7 +1810,7 @@ Services that need their own account or script are not taken in the core; a plug
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| App market, extensions or plugin directory | WX, SQ, WF, FR, SH, WP | Third-party apps, extensions or plugins per platform (categories in the note below) | - | Has: the plugin API for blocks and language packs, GitHub topic `urd-plugin` | After v1.0: gallery site |
+| App market, extensions or plugin directory | WX, SQ, WF, FR, SH, WP | Third-party apps, extensions or plugins per platform (categories in the note below) | - | Partial: the plugin API for blocks and language packs and the topic `urd-plugin`; a plugin comes into `plugins/` through git, with no directory or installer | After v1.0: gallery site |
 | Theme or template marketplace | SH (Theme Store, free and paid) | Whole-site designs to try, buy and install | - | Partial: one template and eight page starter packs; templates shared as plugins | v0.8 template model; After v1.0: gallery site |
 | Zapier, Make, n8n | SQ (Core+), GH (Publisher+), DU, CA, SH (Flow) | Automation platforms | yes | Partial: the form endpoint | Docs: recipes (v0.9 documentation round) |
 | Slack | GH, TI | Notifications | yes | Missing | Not taken in the core: plugins or link-out |
@@ -1827,7 +1827,7 @@ Services that need their own account or script are not taken in the core; a plug
 | Disqus and comment services | TI | Comments | no | Missing | Not taken in the core: plugins or link-out |
 | Sports federation integration (NIF/FIKS) | RU | Federation data | yes | Missing | Not taken in the core: plugins or link-out |
 | WordPress plugin bridge | TI, WA | Embed in WordPress | no | Missing | Not taken in the core: plugins or link-out |
-| Public APIs (site and admin) | WX, SQ, SH, GH, WF, DU, TI, WA | Developer access | yes | Missing | v0.8/v0.9 MCP |
+| Public APIs (site and admin) | WX, SQ, SH, GH, WF, DU, TI, WA | Developer access | yes | Partial: the content is public JSON in the documented schema (SCHEMA.md), and writes and events go through GitHub's API and webhooks; no API of Urd's own | Docs (v0.9 documentation round); Not taken: an API of Urd's own (GitHub's serves it) |
 | Expert or partner directory | SQ (Marketplace), SH (Partner Directory) | Designers and developers listed for hire by the platform | - | n/a: no hiring directory; what others share is found through the `urd-template` and `urd-plugin` topics | - |
 
 Note: the enumeration lists the six app markets in rows of their own, with only their category names. The categories, as each vendor names them:
@@ -1854,7 +1854,7 @@ Urd's AI route is the site owner's own agent through a local MCP server ([ADR-00
 | AI deep research and keyword research | DR | Research tasks | yes | Missing | Not taken: ADR-0017 |
 | AI text in fields, blocks and pages | TI, NO, SQ (FAQ Composer, announced) | Copy generation | yes | Missing | Not taken: ADR-0017 |
 | AI test shoppers | SH (SimGym, beta) | AI shoppers browse the live and a draft theme and report on add-to-cart rates | yes | Missing | Not taken: ADR-0017 |
-| MCP server (official) | WX, WF, DU, WN, SH (Checkout MCP, Storefront MCP) | Remote AI agent access to sites | yes | Planned (a local server) | v0.8 MCP read, v0.9 MCP write (ADR-0017) |
+| MCP server (official) | WX, WF, DU, WN, SH (Checkout MCP, Storefront MCP) | Remote AI agent access to sites | yes | Planned (a local server) | v0.8 MCP read, v0.9 MCP write (ADR-0017); Not taken: a remote server (ADR-0017 keeps it local) |
 | External agents and IDE access | FR (Claude Code, Codex, Cursor) | Agents edit projects | yes | Planned | v0.8 MCP read, v0.9 MCP write (ADR-0017) |
 | MCP via a third party only | SQ (viaSocket) | Unofficial connector | yes | Planned | v0.8 MCP read, v0.9 MCP write (ADR-0017) |
 | Agentic commerce protocol | SH (UCP, Agentic Storefronts) | Agents shop and check out | yes | Missing | Not taken |
@@ -1869,12 +1869,12 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Multi-select | WE, WH, RM, WP, WT, SQ, BR, FS | Shift/⌘-click, or select all; Bricks bulk-edits multiple elements | Has | - |
-| Box or marquee selection by keyboard | FS | Option/Ctrl+Space box-selection tool | Missing | 0.7.10 |
+| Multi-select | WE, WH, RM, WP, WT, SQ, BR, FS | Shift/⌘-click, or select all; Bricks bulk-edits multiple elements | Partial: Shift+click and a marquee select a set that aligns, distributes, pins, saves, moves, copies and deletes together; no setting edited for the whole set | 0.7.10 canvas functions |
+| Box or marquee selection by keyboard | FS | Option/Ctrl+Space box-selection tool | Missing | Not taken: the marquee starts on empty section surface without a key |
 | Select all | WH, SQ, WP, TI, WT | Ctrl/⌘+A; in WP a repeat press selects the parent | Missing | 0.7.10 |
 | Select parent or child | WF, WS, WH, BR, BD, WE, RM, FS, DV | Arrows, Enter/Shift+Enter, Ctrl+click, Shift+Esc, breadcrumbs | n/a: flat blocks in sections | - |
 | Select the next or previous sibling | WF, WH, WE, SQ, FR, BR, WT, SH | Tab/Shift+Tab, arrow keys, Cycle Selection | Missing | 0.7.10 (Tab also in 0.7.11) |
-| Deselect or abort | WF, WS, WH, WP, BD, BR, WT | Esc (double Esc in WP) | Has | - |
+| Deselect or abort | WF, WS, WH, WP, BD, BR, WT | Esc (double Esc in WP) | Partial: Esc deselects and closes the menus; it does not abort a drag, and does not leave a text edit for the block | 0.7.10: undo quality and canvas functions |
 | Lock element | WS, TI, WP, SH | Lock icon in Layers, L key, Lock in List View | Missing | 0.7.9 layers panel |
 | Hide element in the editor | WS, FR, BR, DV, WP, SH, TI | Eye icon or `⌘;`; BR also hides on the live site | Partial: hide on mobile | 0.7.9 layers panel; v0.8 AR-5 section hide |
 | Group or ungroup | WH, WP, SQ, DV, TI, RM | Ctrl+G; Stacks (SQ); Module Groups (DV); nested groups (TI) | Partial: sticky group, block groups as templates | Watch |
@@ -1884,34 +1884,34 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Copy, cut and paste elements | WF, WS, WE, WH, SQ, WP, EL, BR, BD, DV, CA, DU, TI, WT, HO, RM, SH | Clipboard shortcuts and context menus | Partial: copy and paste of a block or a set within a page; no cut, and no paste on another page | 0.7.10 canvas functions |
 | Copy and paste styles only | WP, EL, DV, OX, BR, RM | Paste Style ⌘⇧V; copy/paste design ⌥⌘C/V; BR also per breakpoint; RM pastes animation settings | Has (0.7.20.8): Ctrl+Alt+C and V, the look without the content, the animation included; the same type takes it whole, another the shared fields | - |
 | Cross-tool or cross-site paste | FS, WT, BR, TI | Figma↔Sites; paste Webflow/HTML/Tailwind/MD/SVG; HTML/CSS to Bricks; Figma into Zero Block | Missing | 0.7.10 paste pipeline (HTML, markdown); Figma is not taken |
-| Align | WE, FS, TI, FR, SQ | Align icon or toolbar; align to the container or to each other | Has | - |
+| Align | WE, FS, TI, FR, SQ | Align icon or toolbar; align to the container or to each other | Partial: a set of two or more aligns to its own bounds (left, centre, right, top, middle, bottom); one block cannot align to its section | 0.7.10 canvas functions |
 | Distribute evenly | WE | Horizontal or vertical axis | Has | - |
 | Match size | WE | Matches the selected elements' width or height | Missing | 0.7.10 canvas functions (C32) |
-| Z-order (front, back, forward, backward) | WE, WS, WH, HO, DU, SQ, FR, TI | Ctrl(+Shift)+↑/↓, Shift+↑/↓, Ctrl+[, z-index | Has | - |
+| Z-order (front, back, forward, backward) | WE, WS, WH, HO, DU, SQ, FR, TI | Ctrl(+Shift)+↑/↓, Shift+↑/↓, Ctrl+[, z-index | Partial: to the front and to the back (toolbar, right-click, Ctrl+Shift+Up and Down) and a layer number; no one step forward or back | 0.7.10 canvas functions |
 | Nudge with the arrows (1 / 10 px) | WS, WE, WH, SQ, TI | Arrows; Shift ×10 | Has: the grid step, and 1 px with Shift | 0.7.10: weigh the convention |
 | Keyboard resize | SQ, RM, WH, FS | ⌘+arrows; ⌘⇧ symmetric; Alt+arrows | Missing | 0.7.10 canvas functions (C32) |
-| Resize modifiers | WS, FR, FS, SQ | Shift proportional, Alt from the centre, ignore constraints, lock aspect ratio | Partial: Shift keeps the aspect ratio on image, video, shape and icon (0.7.21.6); Ctrl or Cmd frees a drag or resize from the grid and guides (0.7.26.3); no resize from the centre | - |
+| Resize modifiers | WS, FR, FS, SQ | Shift proportional, Alt from the centre, ignore constraints, lock aspect ratio | Partial: Shift keeps the ratio of images, video, shapes and icons (0.7.21.6) and Ctrl or Cmd frees the grid (0.7.26.3); one corner handle; no centre resize or ratio lock | 0.7.10 editor polish (resizing from every edge); 0.7.10 canvas functions |
 | Disable auto-docking while dragging | WS | Ctrl+drag or resize | n/a | - |
-| Rotate in increments | WE, WH, FS | Shift = 15°; Alt+arrows 1°/15° | Has: 15° steps, and 1° with Shift | - |
+| Rotate in increments | WE, WH, FS | Shift = 15°; Alt+arrows 1°/15° | Partial: the handle turns in 15° steps, and 1° with Shift, beside a number field; no rotation by keyboard | 0.7.10 canvas functions |
 | Axis-constrained drag | WS, WE, WH | Shift+drag | Has: Shift holds a move to one axis (0.7.26.3) | - |
 | Duplicate-and-drag | WF, WS, WE, WH, TI | Option/Alt+drag | Missing | 0.7.10 canvas functions (C32) |
 | Snapping | HO, DU, FR, SQ | Snap to grid; Flex snapping; stacks snap | Has: snap grid, smart guides and equal gaps (0.7.26.3) | - |
 | Distance indicators | WS, WH | Hold Alt while hovering | Partial: equal gaps are drawn as bands with the gap size while dragging (0.7.26.3); no distances on Alt+hover | 0.7.10 canvas functions (C32) |
 | Rulers | WE | Shift+R | Missing | Watch |
-| Guides | WE, TI, RM, WF | Draggable guides; ⌘H/⌘⇧H; guide overlay | Has | - |
-| Grid overlay | SQ, TI, WE, FS, EL, BR, RM | G key; layout grids; Grid Outline aid | Has | - |
+| Guides | WE, TI, RM, WF | Draggable guides; ⌘H/⌘⇧H; guide overlay | Partial: a Guides switch shows fixed lines at 25, 50 and 75 % and the middle, and smart guides appear in a drag; no guides dragged out and kept | Not taken: smart guides and equal gaps do the aligning (0.7.26.3) |
+| Grid overlay | SQ, TI, WE, FS, EL, BR, RM | G key; layout grids; Grid Outline aid | Partial: a Grid switch and a square-cell grid for the site or a section; no key for the overlay and no column grid with gutters | 0.7.10 canvas functions (a key); Not taken: a column grid (blocks snap to a square grid) |
 | X-ray, outline or wireframe view | WF, DV | X-ray Shift+⌘X; Wireframe view; X-Ray mode | Missing | Watch |
-| Zoom in, out and to 100% | WS, WH, DV, RM, FS, WP | Ctrl/⌘ ± and Ctrl+0 | Has: zoom in the preview | - |
-| Zoom to fit or to the selection | FR, WH, BD | ⌘1 / ⌘2; Shift+1; scale-to-fit | Partial: fit and stepped zoom; no zoom to the selection | - |
+| Zoom in, out and to 100% | WS, WH, DV, RM, FS, WP | Ctrl/⌘ ± and Ctrl+0 | Partial: zoom in and out in 10 % steps from 10 to 400 %, and Fit, in the top bar; no zoom keys and no one-click 100 % | 0.7.10 canvas functions |
+| Zoom to fit or to the selection | FR, WH, BD | ⌘1 / ⌘2; Shift+1; scale-to-fit | Partial: fit and stepped zoom; no zoom to the selection | 0.7.10 canvas functions |
 | Zoom-out page overview | WP, SH (beta) | Ctrl+Shift+0 condensed section view | Missing | 0.7.10: reorder sections from above |
 | Pan the canvas by keyboard | FS | Arrows with nothing selected | n/a | - |
 | Switch breakpoint or device view | WF, WE, WH, CA, EL, BR, BD, WT, TI, FR, DV, SQ, SH | Number keys, Ctrl+J, Ctrl+B, ⌘⌥R | Has: 4 preview devices | - |
-| Side-by-side breakpoints canvas | WF, FS | Breakpoint canvas; breakpoints as frames with cross-breakpoint edits | Missing | 0.7.3, to be weighed: two iframes on the same bridge |
+| Side-by-side breakpoints canvas | WF, FS | Breakpoint canvas; breakpoints as frames with cross-breakpoint edits | Missing | v0.8 PH-1 |
 | Preview mode | WF, WS, WE, WH, BR, TI, DU, WT, FS, SQ, WP, CA, SH, FR | Dedicated preview shortcut or toggle | Has: Clean view | - |
 | Inline preview on the canvas | FS | Shift+Space beside the design | n/a | - |
-| Preview resizing and device sizes | FS, WH, SH, FR, WP | Drag width, snap to breakpoint, slider, preview width | Partial: 4 devices | 0.7.10: the «real phone sizes» item |
+| Preview resizing and device sizes | FS, WH, SH, FR, WP | Drag width, snap to breakpoint, slider, preview width | Partial: Screen (the window or an editing size), Laptop 1280, Tablet 810 and Phone 390; no width dragged on the canvas and no list of real phone sizes | 0.7.10: the «real phone sizes» item |
 | Hide UI, distraction-free, spotlight | WE, TI, WT, WP, WF, WS, EL | Shift+F, `⌘\`, Distraction Free, Spotlight, focus mode | Has: Clean view | - |
-| Movable panels, toolbar or workspaces | BR, CA, SQ, DV, WP | Toolbar on any side; move the UI; draggable panels; workspaces | Partial: the floating element menu is dragged by its head, keeps its place for the session and can be put back beside the block (0.7.20.6); panels, rail and toolbar are fixed; no workspaces | - |
+| Movable panels, toolbar or workspaces | BR, CA, SQ, DV, WP | Toolbar on any side; move the UI; draggable panels; workspaces | Partial: the floating element menu is dragged by its head, keeps its place for the session and can be put back beside the block (0.7.20.6); panels, rail and toolbar are fixed; no workspaces | Not taken: the rail, the panels and the toolbar stay in one place, so the editor reads the same everywhere |
 | Dark editor UI | DV, WF, FR | Builder light/dark setting | Has: themed admin (ADR-0009) | - |
 | Right-click context menu | SQ, SH, WH, HO, BR, OX, DV | Contextual actions | Has (0.7.20.8): the block's and the section's menus at the pointer, from the keyboard too | - |
 
@@ -1924,21 +1924,21 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Command palette | WF, FR, WP, BR, DV, DU, WT, EL, SQ | ⌘K / ⌘E; Finder; panel search | Planned | 0.7.10 |
 | Insert from the command palette | FR, BR, DV, WP | Quick insert of components; DV chains commands (>, *, ^) | Planned | 0.7.10 |
 | Slash command | WP | «/» changes the block type | Has: «/» opens the block menu on the canvas | - |
-| Insert before or after by shortcut | WP, BR, DV, WH, WE, OX | Ctrl+Alt+T/Y; R+1-4; Alt+Shift+S; type an HTML tag | Partial | 0.7.10 |
+| Insert before or after by shortcut | WP, BR, DV, WH, WE, OX | Ctrl+Alt+T/Y; R+1-4; Alt+Shift+S; type an HTML tag | Partial: «/» and the «+ New block» chip insert a block in the active section at the pointer; no key inserts before or after the selected block | 0.7.10 |
 | Section and layout libraries | WF, WS, WH, SQ, DU, HO, WN, ST, CA, TI, FS, WP, EL, BR, BD, OX, FR, RM, SH | Pre-designed sections, patterns, templates, presets | Has: 39 section presets | - |
 | Layout switcher | SQ | Suggested rearrangements of a section's blocks; one click applies one, undo reverts it | Has: «Change layout» offers six layouts on a section with at least two movable blocks | - |
 | Wireframes | BR | Wireframe library (2.1/2.2) | Missing | Watch: grey presets |
 | Design sets or kits | BR, BD, OX, SQ | Install pages, templates and components as sets | Partial: page starter packs | v0.8 template model |
-| Saved reusable assets | WS, RM, DV, FS, SQ | Save sections or pages; Preset Manager; libraries | Has: «Save as template» (My templates) | - |
-| Paste HTML/CSS as native elements | BR, WT, BD | Converter to elements, classes and variables | Missing | 0.7.10 paste |
+| Saved reusable assets | WS, RM, DV, FS, SQ | Save sections or pages; Preset Manager; libraries | Partial: sections, block groups and pages saved as My templates and deleted from their card; no rename, update in place or categories | v0.8 template model |
+| Paste HTML/CSS as native elements | BR, WT, BD | Converter to elements, classes and variables | Missing | 0.7.10 paste (HTML); v0.8 OL-4 (CSS as a scoped style) |
 | Figma import | WS, TI, FS | Figma plugin; copy-paste | Missing | Not taken as an import; Figma arrives as SVG, CSS and tokens (v0.8 OL own looks) or Lottie (v0.8 Animation files) |
 | Markdown input | WT, CA, EL | Paste markdown; markdown formatting; markdown rendering (alpha) | Missing | 0.7.10 paste |
 | AI section generation | WH, DU, WN, HO | A prompt creates a section | Missing | Not taken: MCP is the way (ADR-0017) |
 | AI element, block or widget generator | WH, DU, SH, WF, FS, FR, TI | Generated custom element (code-backed) | Missing | Not taken: MCP is the way (ADR-0017) |
 | Embeds | FS, CA, WF, WN | Embed element or iframe | Partial: video, map | 0.7.24: allowlisted click-to-load frames |
-| Icon insertion from a library | RM, BR, WP, WN, FR | Noun Project; Icon Manager; Icon block; vector sets | Has: icon block and icon library | - |
-| Keep the add panel open | WE | Ctrl+click in Add Elements | Partial | - |
-| Hover-to-preview in the picker | SH | Block picker preview | Partial: thumbnails | - |
+| Icon insertion from a library | RM, BR, WP, WN, FR | Noun Project; Icon Manager; Icon block; vector sets | Partial: the icon block with 56 drawn icons, glyphs in nine categories and an own image; no search in the picker | 0.7.10 |
+| Keep the add panel open | WE | Ctrl+click in Add Elements | Has: the Blocks panel stays open after an insertion | - |
+| Hover-to-preview in the picker | SH | Block picker preview | Partial: pictures of the section presets and block designs, with a live preview in the design picker; block types are listed by name | Not taken: the design picker shows each look |
 | Add page or section shortcut | WH, WE, BR, DV | Alt+Shift+P/S; Alt+N/B; Pages panel | Partial | 0.7.10 |
 
 #### 3. Structure
@@ -1956,7 +1956,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Document outline or heading structure | WP | Outline tab (words, reading time, headings) | Missing | v0.8 AU-1 audit panel |
 | Page blocks map | TI | ⌘L | Missing | Watch |
 | Section isolation | CA, WP | Section View; Spotlight | Missing | Watch |
-| Pages panel management | WF, WH, WE, BR, WT, FS, DV, WN, WP, SQ | Add, organise, copy, duplicate, hide pages | Has; page duplication is missing | 0.7.10 (page duplication) |
+| Pages panel management | WF, WH, WE, BR, WT, FS, DV, WN, WP, SQ | Add, organise, copy, duplicate, hide pages | Partial: create (blank or a starter pack), rename, change the address, delete, open and save as a template; no duplicate, reorder or hidden page | 0.7.10 (duplicate a page); v0.8 AR-5 (a hidden page); Not taken: reordering (the menu sets the order) |
 | Element Manager (disable elements) | BR | Removes unused elements from the UI | Partial: the shop blocks are gated by «shop is on» | 0.7.10: the gating item, widened into an element manager |
 | Orphaned-element scanner | BR | Finds disconnected elements | n/a | - |
 | Keyboard region navigation | WP, FS, BR, SH | Ctrl+backtick; Alt+F10; F6; ⌥T | Missing | 0.7.11 |
@@ -1971,16 +1971,16 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 | Flexbox layout controls | EL, DV, BR, WS, DU, FR, FS, WT | Direction, align, wrap, gap; stacks or auto layout | n/a: free placement | - |
 | CSS Grid editor | BR, DV, EL, WS, DU, WT, OX, FR | Visual tracks, fr, spans, placement, masonry or bento | n/a: free placement | - |
 | Spacing with linked sides or presets | WP, WF, WT, OX, BR | Link toggle; Shift/⌘-drag; preset slider; Apply All / Opposite | n/a: free placement | - |
-| Sizing with min/max, fit or fill | FR, WS, WP, DV, FS | Fill/Fit/Fixed; min width; clamp; text min/max | Partial: three fit choices below the design width (wrap, shrink in proportion, shrink and wrap), a height that follows the content or is the block's own, and «Size» per block with smallest and largest text bounds (0.7.21); no min or max width | - |
+| Sizing with min/max, fit or fill | FR, WS, WP, DV, FS | Fill/Fit/Fixed; min width; clamp; text min/max | Partial: three fit choices below the design width (wrap, shrink in proportion, shrink and wrap), a height that follows the content or is the block's own, and «Size» per block with smallest and largest text bounds (0.7.21); no min or max width | Not taken: the dragged width is the block's size (ADR-0025), and the text bounds keep it readable |
 | Position (relative, absolute, fixed, sticky) | FS, FR, DU, WS, RM, OX, EL | Position menu; pinned; sticky | Has: sticky, docked to the screen | - |
 | Docking or constraints | WS, FS | Dock margins (px\*); constraints to the parent | n/a: frames are bound to the content width (ADR-0018) | - |
-| Typography controls | WP, DV, FR, SQ, BR | Family, size, weight, spacing, case, decoration, orientation | Has: font, size, line height, letter spacing | - |
+| Typography controls | WP, DV, FR, SQ, BR | Family, size, weight, spacing, case, decoration, orientation | Partial: font, size, line height, letter spacing, bold, italic, underline and strikethrough; no weight beyond bold, letter case or vertical text | 0.7.9 (letter case, a font weight); Not taken: vertical text (low value) |
 | Text shadow | WP | 7.1 block support | Missing | 0.7.9 |
-| Backgrounds (colour, gradient, image) | WP, DU, TI, WN, ST, DV, FR, SQ | Gradient plus image; overlays; text fill | Has | - |
-| Borders and radius | WP, TI, FS, FR | Linked or unlinked sides and corners; squircle | Has | - |
-| Shadows | WP, TI, EL | Presets; variables in box-shadow | Has | - |
+| Backgrounds (colour, gradient, image) | WP, DU, TI, WN, ST, DV, FR, SQ | Gradient plus image; overlays; text fill | Partial: sections, the menu and the footer take layers (colour, gradient, image, overlays); blocks have only the text box's colour; no gradient text | 0.7.9 box styles and block designs; Not taken: gradient text (low value) |
+| Borders and radius | WP, TI, FS, FR | Linked or unlinked sides and corners; squircle | Partial: a border colour and width on the text box and FAQ cards, None, Small or Large corners on images, two theme radii; no border per side or radius per corner | 0.7.9 box styles and block designs; 0.7.9 component tokens; Not taken: per side and per corner (low value) |
+| Shadows | WP, TI, EL | Presets; variables in box-shadow | Partial: Soft and Strong shadows with a colour on the text box and FAQ cards; no shadow on other blocks, no offset or blur | 0.7.9 box styles and block designs |
 | Effects, filters, blend modes, masks | FR, FS, DV, WP, EL, SQ | Blur, backdrop filter, duotone, blend modes, masks | Partial: image filters, glass, image shapes | 0.7.9: duotone and blend modes on images |
-| Transforms 2D and 3D | FR, SQ, BR, WT | Rotate, scale, skew, opacity, perspective, scale3d | Partial: rotation, and «Size» scales a whole block from 0.4 to 2 (0.7.21.5); no skew, perspective or 3D | - |
+| Transforms 2D and 3D | FR, SQ, BR, WT | Rotate, scale, skew, opacity, perspective, scale3d | Partial: rotation, and «Size» scales a whole block from 0.4 to 2 (0.7.21.5); no opacity, skew, flip, perspective or 3D | 0.7.9 (opacity); Not taken: skew, flip and 3D (low value) |
 | Transitions | WT, FR | CSS transitions; motion matching | n/a: free placement | - |
 | Custom cursor | FR, FS | An image or element as the cursor | Missing | Not taken: low value |
 | Overflow or clip | FR, FS | Overflow: Clip; clip content | n/a: free placement | - |
@@ -1998,20 +1998,20 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 | Class manager or unused-style cleanup | WF, EL, BR, OX | Organise, rename, prioritise; remove unused | Missing | Not taken: class-based cascade not adopted |
 | Inheritance indicators | BR, OX, TI, WT | Coloured indicators; inherited placeholders; computed values | Has (0.7.20.7): the amber dot and a reset on every setting a block made its own, the inherited value with its source under the control | - |
 | Reset style | WT, WP, DV, BR | Alt+click; Clear; reset across breakpoints | Has | - |
-| Style presets | DV, BD, OX, WP, CA, SQ | Element and option-group presets; button presets; Element Styles | Partial: box styles | 0.7.9 design gallery |
-| Apply an instance's style globally | WP, DV | Apply Globally; convert to variable | Missing | 0.7.9: «use this block's style as the site default» |
-| Per-breakpoint overrides | WF, FR, WS, EL, BR, DV, TI, FS, WP, SQ, DU, WT, OX | Edit at a breakpoint and override inherited values | Partial: placement, order and visibility of each block on the phone (ADR-0019), and the menu's own phone overrides; no style override per block | v0.8 PH-2: a phone text size per block, to be weighed |
+| Style presets | DV, BD, OX, WP, CA, SQ | Element and option-group presets; button presets; Element Styles | Partial: box styles | 0.7.9 box styles and block designs |
+| Apply an instance's style globally | WP, DV | Apply Globally; convert to variable | Missing | 0.7.9: «use this block's style as the site default», and a value made a theme token |
+| Per-breakpoint overrides | WF, FR, WS, EL, BR, DV, TI, FS, WP, SQ, DU, WT, OX | Edit at a breakpoint and override inherited values | Partial: placement, order and visibility of each block on the phone (ADR-0019), and the menu's own phone overrides; no style override per block | v0.8 PH-2 (a phone text size); Not taken: other styles per breakpoint (ADR-0019) |
 | Per-device visibility | WP, SQ, CA, WH, ST | Hide per device or browser width | Partial: hide on the phone; no hide on the desktop only | 0.7.3: mobile-only elements |
 | Hover preview of tokens or fonts | BR, WP | Hover to preview a colour, class, variable or font | Missing | 0.7.9 |
 | Inspector property search | BR, BD | ⌘⇧F; F | Has: property search in the element menu | - |
-| Pin control groups | BR | Keep groups at the top | Partial: a pin puts a single setting into the quick row at the top of the element menu, kept per block type, with a reset (0.7.20.3); whole groups are not pinned | - |
+| Pin control groups | BR | Keep groups at the top | Partial: a pin puts a single setting into the quick row at the top of the element menu, kept per block type, with a reset (0.7.20.3); whole groups are not pinned | Not taken: a pinned setting in the quick row covers it |
 | Collapse inspector sections | WF | Option+S | Has: collapsed folds | - |
-| Conditional settings | SH | A setting shows only when its condition holds (`visible_if` in the theme's schema) | Has: a setting with no effect for the chosen variant is hidden in the element menu | - |
+| Conditional settings | SH | A setting shows only when its condition holds (`visible_if` in the theme's schema) | Partial: the core menus and panels hide a setting with no effect for the chosen variant; a plugin's fields cannot declare a condition | 0.7.10: conditions in the plugin field contract |
 | Value nudging in inputs | WT | ⇧/⌥ arrows ±10 / ±0.1 | Missing | Not taken: low value |
 | Advanced units | DV, WP, WS, OX | rem, vw, clamp, px\* scale unit; default unit preference | Partial: theme space | 0.7.9 fluid type |
 | Relative HSL colours | DV | Shades derived from a base colour | Partial: hex and pipette | 0.7.9 OKLCH theme |
 | Colour picker formats | WP, BR, FR, SQ | HEX/RGB/HSL; P3 | Partial: hex, RGB and an HSV field with alpha, and the pipette; no HSL entry or P3 | 0.7.9 OKLCH theme |
-| Semantic HTML tags | DV, EL, FR, RM, WS | Set nav, main, header, h1/h2 tags | Has in text (h1-h6); the section tag is fixed | - |
+| Semantic HTML tags | DV, EL, FR, RM, WS | Set nav, main, header, h1/h2 tags | Partial: a text block is a paragraph or H1-H3; no H4-H6, and the section tag is fixed | 0.7.9 text styles (H4-H6); Not taken: a landmark tag per section (low value) |
 | Custom HTML wrappers | DV | HTML Before / After | n/a: free placement | - |
 | Text selection colour | FR | Highlight colour | Missing | 0.7.9 |
 | Link styles with hover and current | FR, RM, WP, DU | Default link states; current page | Missing | 0.7.9 |
@@ -2020,9 +2020,9 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Colour palette or swatches | WP, SQ, HO, WN, WH, TI, DU, ST, JI, EL, BR, DV, FS, WS, SH | Site-wide palette | Has | - |
-| Variables or CSS variables | WF, EL, BR, BD, OX, DV, WT, FS | Typed tokens (colour, size, font and others) | Has: theme tokens | - |
-| Variable modes (light, dark, brand) | WF, BR, FR, FS, WT, SQ, SH | Modes; dark variants; colour-scheme media condition; section themes | Has: light and dark, and seven section themes; brand or seasonal modes are missing | 0.7.9 «save your own theme» |
+| Colour palette or swatches | WP, SQ, HO, WN, WH, TI, DU, ST, JI, EL, BR, DV, FS, WS, SH | Site-wide palette | Partial: five theme colours in light and dark as swatches in every picker, six theme suggestions and seven section themes; no own named colours | 0.7.9 (own named colours) |
+| Variables or CSS variables | WF, EL, BR, BD, OX, DV, WT, FS | Typed tokens (colour, size, font and others) | Partial: a fixed set of theme tokens (five colours, two font stacks, two radii); no size or spacing token in use, and no variables of the owner's own | 0.7.9: the type and spacing scales, component tokens and own named colours |
+| Variable modes (light, dark, brand) | WF, BR, FR, FS, WT, SQ, SH | Modes; dark variants; colour-scheme media condition; section themes | Partial: light and dark (the dark derived or own colours) and seven section themes; no brand or seasonal modes | 0.7.9 «save your own theme» |
 | Light/dark toggle element | BR | Toggle-Mode element | Has: the light/dark toggle in the nav | - |
 | Colour generators | BR, DV, SQ | Shades, harmonies, scales | Partial: theme suggestions | 0.7.9: palette from an image |
 | Typography styles | FR, FS, WP, RM, SQ, TI, EL, BR, WS | Text styles, presets, classes | Partial: two font stacks and S/M/L/XL | 0.7.9: the font items and a type scale |
@@ -2030,10 +2030,10 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 | Google Fonts or local hosting | FS, BR, DV, WP, SQ, SH | Font library; Font Manager | Missing: system font stacks only | 0.7.9: the font items |
 | Font upload | SQ, FR, ST, TI, RM, WP | Upload custom font files | Missing: system font stacks only | 0.7.9: the font items |
 | Variable fonts or OpenType | FR, DV, SQ | Axes; ligatures | Missing: system font stacks only | 0.7.9: the font items |
-| Spacing scales or presets | WP, BR, DV, WT, SH | Preset sliders; scales | Partial: section spacing token | 0.7.9: spacing scale |
-| Shadow presets | WP | Natural / Crisp / Sharp / Soft | Has | - |
+| Spacing scales or presets | WP, BR, DV, WT, SH | Preset sliders; scales | Missing: a section spacing token is written to the theme, with no setting and nothing that reads it | 0.7.9: spacing scale |
+| Shadow presets | WP | Natural / Crisp / Sharp / Soft | Partial: Soft and Strong presets with a colour on the text box and FAQ cards; no site-wide shadow presets | 0.7.9 design presets (a shadow scale) |
 | Style guide or style book | WP, BR | Style Book; Style Manager | Missing | 0.7.9: style-book page |
-| Default HTML-tag styles | EL, WF, BR, WP, SQ | Default Styles; global tag styles; Theme Styles; per-block styles | Partial: theme | - |
+| Default HTML-tag styles | EL, WF, BR, WP, SQ | Default Styles; global tag styles; Theme Styles; per-block styles | Partial: the theme's colours, two font stacks and two radii apply everywhere; no style per tag (H1-H6, paragraph, link) | 0.7.9: text styles and link styles |
 | Theme presets or style variations | WP, SQ, SH, BR, TI | Variations; site styles; Horizon presets | Has: six theme presets | - |
 | Import or export of a design system | EL, BR, OX, DV, WP, SH | Classes and variables export; ZIP; framework importer; theme export | Missing | 0.7.9 theme export; v0.8 template model |
 | Shared libraries across sites | WF, WS, FS, BR, SQ (Enterprise) | Libraries; design libraries; import from another site | Missing | 0.7.9 theme export; v0.8 template model |
@@ -2048,7 +2048,7 @@ Urd's templates are independent copies, and plugin blocks are its code component
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
 | Components or symbols | WF, FR, EL, BR, OX, FS, DU, WP, SQ (Enterprise) | Reusable synced elements (patterns in WP) | Partial: templates as independent copies | After v1.0: synced global blocks |
-| Global sections or widgets | RM, WP, DV, WT, SH (section groups) | Global widgets; template parts; Canvases; Slot pages | Has: nav and footer at site level | - |
+| Global sections or widgets | RM, WP, DV, WT, SH (section groups) | Global widgets; template parts; Canvases; Slot pages | Partial: the menu and the footer are site-wide; no section or block shared across pages | After v1.0: synced global blocks |
 | Variants | WF, FR, FS, BR | Variant prop; style variants | Partial: templates as independent copies | After v1.0: synced global blocks |
 | Props or properties | WF, FR, BR, EL, OX | Exposed fields with groups and defaults | Partial: templates as independent copies | After v1.0: synced global blocks |
 | Style props | WF | Limited colour and size choices (Conf 2026, per the noqode.fr recap, secondary) | Partial: templates as independent copies | After v1.0: synced global blocks |
@@ -2058,9 +2058,9 @@ Urd's templates are independent copies, and plugin blocks are its code component
 | Detach or unlink | FR, EL, WP | Break the link to the main component | Partial: templates as independent copies | After v1.0: synced global blocks |
 | Inline component editing | OX, BR | Edit in the page; off-page preview | Partial: templates as independent copies | After v1.0: synced global blocks |
 | Component manager or usage | BR | Usage locations; variant reorder | Partial: templates as independent copies | After v1.0: synced global blocks |
-| Components in CMS rich text | WF | Per-item prop configuration | Partial: templates as independent copies | After v1.0: synced global blocks |
-| Restrict components by role | WF | Hide from the Marketer role | Partial: templates as independent copies | After v1.0: synced global blocks |
-| Component sharing or marketplace | FR, WT, FS, WS | Share; marketplace; libraries; Blocks apps | Partial: templates as independent copies | After v1.0: synced global blocks |
+| Components in CMS rich text | WF | Per-item prop configuration | Missing | Not taken: an entry's text holds no blocks |
+| Restrict components by role | WF | Hide from the Marketer role | Missing | Not taken: roles (`ALLOWED_LOGINS` is one level) |
+| Component sharing or marketplace | FR, WT, FS, WS | Share; marketplace; libraries; Blocks apps | Partial: templates as independent copies | v0.8 template model; After v1.0: gallery site |
 | Code components | WF, FR, FS, DU, SH, OX | React, Liquid or custom elements on the canvas | Has: plugin blocks | - |
 | Components as CMS-editor blocks | BR | Bricks components in Gutenberg | n/a | - |
 | Component-level effects | FR | Reusable effects inside components | n/a | - |
@@ -2076,12 +2076,12 @@ Urd has two layouts by decision ([ADR-0019](../adr/0019-synced-mobile-model.md))
 | Cascade direction | WF, WS, WH, FR, FS, WT | Desktop-down; WF larger cascade up; WT min- or max-width choice | Missing | Not taken: two breakpoints by decision (ADR-0019) |
 | Non-width media conditions | WT | Colour scheme, motion, orientation, pointer | Missing | Not taken: two breakpoints by decision (ADR-0019) |
 | Auto layout or stacks | FR, FS, TI, WS, SQ, DU | Content-driven layout | Missing | Not taken: two breakpoints by decision (ADR-0019) |
-| Scale-proportionally behaviours | WS, TI | Scale, Fixed; auto-scaling | Partial: «Shrink the content» zooms a block in proportion below the design width, and «Size» zooms a block at any width (0.7.21.5) | Not taken: a page-wide proportional zoom (ADR-0024 decision 5) |
+| Scale-proportionally behaviours | WS, TI | Scale, Fixed; auto-scaling | Partial: «Shrink the content» zooms a block in proportion below the design width, and «Size» at any width (0.7.21.5); the shrink does not work on the phone | 0.7.3 (shrink on the phone); Not taken: a page-wide zoom (ADR-0024 decision 5) |
 | Mobile-only elements | WH, ST, SQ | Add in the mobile view; mobile overrides | Missing | 0.7.3 |
 | Single-column mobile conversion | RM, CA | Single column; cropped or expanded views | Has: the synced row grid | - |
 | Responsive AI fix | WS, WH, FR, FS | One-click responsive; Fix layout; agent | Missing | Not taken |
-| Min/max sizes | FR, WS, WP | Constraints per element | Partial: the shrink floor, and smallest and largest text bounds under «Size» (0.7.21.5); no min or max width or height | - |
-| Mobile reorder | SQ, HO, WH | Alt+arrows; manual sort | Has: up and down buttons in the phone toolbar (0.7.3); no keys | 0.7.3.6: keys for the phone order |
+| Min/max sizes | FR, WS, WP | Constraints per element | Partial: the shrink floor, and smallest and largest text bounds under «Size» (0.7.21.5); no min or max width or height | Not taken: the dragged width is the block's size (ADR-0025), and the text bounds keep it readable |
+| Mobile reorder | SQ, HO, WH | Alt+arrows; manual sort | Partial: up and down buttons and a drag in the row grid on the phone (0.7.3); no keys | 0.7.3.6: keys for the phone order |
 | Per-breakpoint variable values | OX | Variable value per breakpoint | n/a | - |
 | Responsive offcanvas | BR | Direction per breakpoint | n/a | - |
 | Masonry or bento | FR | Layout presets | Partial: masonry as the gallery's mosaic view; no bento | 0.7.9 bento preset |
@@ -2093,35 +2093,35 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Entrance or appear | WS, FR, EL, OX, DV, SQ, CA, TI, RM, WH, HO, ST, FS, BD, CV, WF | On load or in view | Has: fade-in, slide-up, zoom-in | - |
-| Scroll-linked (scrub, transform) | WS, FR, FS, EL, TI, WT, OX, WF, RM, SQ | Progress tied to scroll | Missing | ER-H: the scroll-scrubbed entrance as a choice of its own |
-| Parallax | FR, FS, BR, DU, WN, ST, TI, OX, RM | Speed or background parallax | Has | - |
-| Hover effects | WS, FR, FS, TI, RM, SQ, CV, BD, OX, EL, WF, SH | Hover trigger | Has: hover lift | - |
-| Click or press | WS, FR, FS, TI, RM, SQ, EL, BD, OX, WF | Click trigger | Partial: lightbox | ER-A: popup |
-| Loop | WS, FR, TI, RM, SQ | Continuous animation | Has: ribbon, animated gradient | - |
+| Entrance or appear | WS, FR, EL, OX, DV, SQ, CA, TI, RM, WH, HO, ST, FS, BD, CV, WF | On load or in view | Partial: fade in, slide up and zoom in with duration and delay, on sections and blocks; no direction, easing, replay or other effects | ER-H |
+| Scroll-linked (scrub, transform) | WS, FR, FS, EL, TI, WT, OX, WF, RM, SQ | Progress tied to scroll | Missing | ER-H |
+| Parallax | FR, FS, BR, DU, WN, ST, TI, OX, RM | Speed or background parallax | Partial: parallax with a strength on image and video background layers, off on the phone; none on blocks or other layers | ER-H |
+| Hover effects | WS, FR, FS, TI, RM, SQ, CV, BD, OX, EL, WF, SH | Hover trigger | Partial: one hover effect, a lift on pointer, on sections and blocks; no scale, glow, tilt or colour change | 0.7.9; v0.8 OL-1; v0.8 Reactions on elements |
+| Click or press | WS, FR, FS, TI, RM, SQ, EL, BD, OX, WF | Click trigger | Partial: a click opens the lightbox on images and gallery pictures, and a link scrolls to a spot (0.7.27); no popup, toggle or press effect | ER-A; v0.8 Reactions on elements |
+| Loop | WS, FR, TI, RM, SQ | Continuous animation | Partial: the ribbon, the animated gradient and the image and gallery layer motions loop; no loop animation on an ordinary block | v0.8 Reactions on elements |
 | Mouse or cursor effects | EL, FS, FR, WS, SQ | Mouse track, 3D tilt, mouse parallax, WebGL | Planned: a style or a background layer that follows the pointer | v0.8 OL-1: the pointer as custom properties; WebGL not taken |
 | Draggable | FR, FS | Visitor drag | Missing | Not taken: library, GPU or complexity |
 | Keyboard-triggered | BD, OX | Key up/down or keypress | Missing | Not taken: library, GPU or complexity |
-| Interaction actions | BD, OX, FS, WF | Show or hide, classes, attributes, variables, scroll to | Missing | ER-A, as far as popups and tabs go |
+| Interaction actions | BD, OX, FS, WF | Show or hide, classes, attributes, variables, scroll to | Missing | ER-A; v0.8 Reactions on elements; Not taken: classes, attributes and variables (complexity) |
 | Timeline or keyframes | WF, TI, OX | Horizontal timeline; step-by-step; sequences (Figma Motion belongs to Figma Design) | Missing | Not taken: library, GPU or complexity |
-| Text split animation | WF, FR, WT, FS | SplitText; by character, word or line; typewriter, scramble | Missing | ER-H: animated headline |
+| Text split animation | WF, FR, WT, FS | SplitText; by character, word or line; typewriter, scramble | Missing | ER-H |
 | Stagger | WF, WT, OX | Cascaded children | Has: stagger for card groups | - |
 | Marquee or ticker | FR, FS | Infinite scroll strip | Has: ribbon | - |
-| Lightbox | FS, WP, SQ | Overlay or gallery lightbox | Has | - |
-| Sticky | FR, FS, EL, OX, SQ | Pin within the scroll | Has | - |
+| Lightbox | FS, WP, SQ | Overlay or gallery lightbox | Partial: a native dialog lightbox on images and the gallery with arrows, Esc and captions; no swipe, zoom, counter, thumbnails or video | ER-B; v0.9 touch friendliness |
+| Sticky | FR, FS, EL, OX, SQ | Pin within the scroll | Partial: pinning within the scroll or to the screen at nine docks, with offset, release and groups, on the desktop; no pinning on the phone | 0.7.3 |
 | Shrinking header | DU | The header changes on scroll | Has: scroll shrink in the nav | - |
 | Lottie | DV | Lottie module | Missing | v0.8 Animation files |
-| Reduced motion | FR, WT | Setting or media condition | Has | - |
+| Reduced motion | FR, WT | Setting or media condition | Partial: entrances, backgrounds, the ribbon and the slideshow honour the media query; animated images ignore it, and no site-wide setting or pause | 0.7.11; 0.7.9: the motion intensity setting |
 | Component state interactions | FR, FS | Variant change on a trigger | n/a | - |
 | Copy animation settings | RM | ⇧⌘C/V | Has (0.7.20.8): part of the copied style | - |
-| Preview or run animations in the editor | CA, OX | Alt+P; Run Interactions | Partial: motion demo | - |
+| Preview or run animations in the editor | CA, OX | Alt+P; Run Interactions | Partial: an animation replays when its setting changes, and the ribbon plays on a button; no «play all» and no shortcut | 0.7.10 |
 | Interaction reuse | WF, FR | Reusable interactions; effects on components | n/a | - |
-| Video plays in view | FR, WT | Video animation | Has | - |
+| Video plays in view | FR, WT | Video animation | Partial: a background video plays in view and pauses off screen; the video block autoplays at load and never pauses off screen | ER-B |
 | Shaders or WebGL | FR, WS, SQ | Shader effects; WebGL backgrounds | Missing | Not taken: library, GPU or complexity |
-| Animation presets | RM, WS, SQ, OX | Ready-made animations | Has | - |
+| Animation presets | RM, WS, SQ, OX | Ready-made animations | Partial: three entrances, a stagger and a lift, beside the ribbon, gradient and image motions; no larger gallery of ready-made animations | ER-H |
 | Site-wide animation setting | SQ, SH | One entrance style and speed for every block (SQ); reveal on scroll and a card hover effect as theme settings (SH) | Missing: entrance and hover are set per block and per section | 0.7.9: the motion intensity setting |
 | Scroll points | CA | Scroll anchors | Has: named spots on sections and blocks (0.7.27.2) | - |
-| Per-breakpoint interactions | EL, BR | Breakpoint controls; viewport visibility % | Partial: decor, hide on mobile | - |
+| Per-breakpoint interactions | EL, BR | Breakpoint controls; viewport visibility % | Partial: hide on mobile, and background parallax and motion stop on the phone by themselves; no desktop-only hide and no animation choice per device | 0.7.3: mobile-only elements |
 | Triggers and event variables | FR | Trigger events into variables | Missing | Not taken: library, GPU or complexity |
 | Spin effect | FS | Rotation loop | Missing | Not taken: library, GPU or complexity |
 | Conditional interactions | FS | Boolean expressions; set variable | Missing | Not taken: library, GPU or complexity |
@@ -2140,9 +2140,9 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | AI image generation or editing | WS, WH, FS, HO, WP, SH, DV, WN, SQ | Prompt-based images and edits | Missing | Not taken: third party or AI (MCP) |
 | Background removal | FS, SH, SQ | Isolate the subject or change the background | Missing | Not taken: third party or AI (MCP) |
 | Upscale | FS | Resolution enhancement | Missing | Not taken: third party or AI (MCP) |
-| Video settings | EL, BR, FR, FS, RM, DU, CA, TI | Autoplay, loop, start/end, object-fit | Has: loop, muted, poster | - |
+| Video settings | EL, BR, FR, FS, RM, DU, CA, TI | Autoplay, loop, start/end, object-fit | Partial: autoplay, loop, muted and a poster for a video file; no start or end time, fit or controls switch, and embeds take no options | ER-B |
 | Background video | EL, DU, WN, SQ | Video behind content | Has | - |
-| SVG styling or animation | BR, FR, WT | SVG per breakpoint; SVG animations; paste SVG | Partial | - |
+| SVG styling or animation | BR, FR, WT | SVG per breakpoint; SVG animations; paste SVG | Partial: an uploaded SVG stays a vector with a trimmed viewBox, shown as an image; no styling, recolouring or animation of its parts | v0.8 OL-2 |
 | Vector drawing or booleans | FR, FS | Pen, paths, booleans | Missing | Not taken: third party or AI (MCP) |
 | Icon libraries or managers | RM, BR, WP, WN, DV | Noun Project; Icon Manager; Icon block | Has: icon library and icon editor | - |
 | Asset or media manager | WF, WH, BR, WT, SQ | Assets panel; Media Manager; bulk and metadata (BR) | Missing | v0.8 media library |
@@ -2151,11 +2151,11 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | Image metadata import | SQ | EXIF and IPTC titles, captions and tags read at upload | Missing: the upload re-encodes a still picture as WebP, which drops its metadata, GPS position included | Not taken: low value |
 | Export layers | FR | Elements to an image or SVG | Missing | Not taken: third party or AI (MCP) |
 | File or PDF element | BR | PDF preview | Missing | ER-B |
-| Gallery or slider settings | TI, DU, BR, WP, SQ | Autoplay, zoom, load more, lightbox | Has: six gallery views with a lightbox | - |
+| Gallery or slider settings | TI, DU, BR, WP, SQ | Autoplay, zoom, load more, lightbox | Partial: six views with columns, gap, a slideshow interval and a lightbox; no load more, zoom, captions beyond Polaroid or filter chips | ER-D; ER-B |
 | Decorative image toggle | WP | Marks an image as decorative | Missing | 0.7.11 |
 | External-URL images | EL | Image from a URL | Missing | Not taken: images live in the repo, and the CSP allows images from the site itself only |
-| Cloud upload | DU | Dropbox and others | Partial: the image gallery layer reads shared folders at Google Drive, Google Photos or Nextcloud | - |
-| Colour overlays on media | DU | Overlay on an image or video | Partial | - |
+| Cloud upload | DU | Dropbox and others | Partial: the image gallery layer reads shared folders at Google Drive, Google Photos or Nextcloud | Not taken: a picker for a cloud service needs its API and a sign-in |
+| Colour overlays on media | DU | Overlay on an image or video | Partial: a colour layer stacked over a background image or video works as an overlay; the image and video blocks have none | 0.7.9 |
 
 Note: the enumeration's last AI row («AI image tasks in the editor») points back to AI image generation above and is not repeated under [AI in the editor](#14-ai-in-the-editor).
 
@@ -2165,21 +2165,21 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 |---|---|---|---|---|
 | Inline on-canvas text editing | EL, SH, WP, DV | Click to type; contextual toolbar | Has: click-and-write with a floating text toolbar | - |
 | Bold, italic, underline | WS, WE, WH, SQ, WP | ⌘B / I / U | Has | - |
-| Heading or paragraph shortcuts | SQ, WP | ⌘⌥0-6; Shift+Alt+1-6 | Missing | 0.7.10 |
+| Heading or paragraph shortcuts | SQ, WP | ⌘⌥0-6; Shift+Alt+1-6 | Missing | 0.7.10; 0.7.9: text styles |
 | Text alignment shortcuts | SQ | ⇧⌘L / E / R | Missing | 0.7.10 |
-| Lists and indent | SQ | Tab / ⌘] | Has: lists | - |
+| Lists and indent | SQ | Tab / ⌘] | Partial: bulleted and numbered lists with indent and outdent buttons; no Tab or Ctrl+] to indent | 0.7.10 |
 | Paste as plain text | SQ | ⌘⇧V | Missing | 0.7.10 |
 | Inline code | WP, SQ | Ctrl+Alt+X | Missing | Not taken: audience |
-| Insert or remove a link | WP, SQ | ⌘K; ⌘⇧K | Partial: links from the text toolbar; no Ctrl+K | 0.7.27.6: rich text links with Ctrl+K |
-| Internal-link autocomplete | WP, SQ | `[[` | Partial: page picker | - |
+| Insert or remove a link | WP, SQ | ⌘K; ⌘⇧K | Has: the toolbar's link button and Ctrl+K open the link editor, and Ctrl+Shift+K removes the link (0.7.27.6) | - |
+| Internal-link autocomplete | WP, SQ | `[[` | Partial: the text's link editor searches the pages and their spots (0.7.27.6); no `[[` while typing | 0.7.10 |
 | Link types (page, anchor, email, phone) | FR, CA, WP, FS, SQ | Email and phone links; URL types; page jumps | Has: a page or a spot on it, a web address, email, phone and a file, in one link editor (0.7.27.4-9) | - |
 | Dynamic text or variables | CA, WT, BR, OX, DV, WP | {{var}}; expression editor; bindings | n/a | - |
 | Rich-text modal | BD, DU, SH | ⌘E modal; rich text | n/a | - |
-| Text balance or truncation | FR | Line-break balancing; ellipsis | Missing | 0.7.9: `text-wrap` |
-| Drop cap, columns, stroke | DV | Body-text styling | Missing | 0.7.9: drop cap behind a gate (`initial-letter` is not Baseline) |
+| Text balance or truncation | FR | Line-break balancing; ellipsis | Missing | 0.7.9: `text-wrap` and a line clamp |
+| Drop cap, columns, stroke | DV | Body-text styling | Missing | 0.7.9: drop cap behind a gate (`initial-letter` is not Baseline), columns and stroke |
 | Letter case or text transform | WP, SQ | Case controls | Missing | 0.7.9 |
 | Special characters | SQ | Character insertion | Has: GlyphPicker | - |
-| Markdown formatting | CA | Markdown syntax | Missing | 0.7.10 paste |
+| Markdown formatting | CA | Markdown syntax | Missing | 0.7.10: pasted and typed Markdown |
 | AI write, rewrite, tone | WS, WH, SQ, FS, DU, HO, TI, WN, DV, WP, SH | Generate, simplify, shorten, change tone | Missing | Not taken: MCP |
 | Find and replace in code | BR, SH | Search and replace in the code control | Missing | Watch: find and replace across the site |
 
@@ -2187,24 +2187,24 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Undo and redo | all with published shortcuts | ⌘Z / ⌘⇧Z | Has | - |
-| History panel | EL, BR, FR, BD | Actions or revisions list | Has | - |
+| Undo and redo | all with published shortcuts | ⌘Z / ⌘⇧Z | Partial: undo and redo keys over the whole draft, 50 steps; no buttons, nothing kept over a reload, and the selection is not restored | 0.7.10 |
+| History panel | EL, BR, FR, BD | Actions or revisions list | Partial: the History panel lists the 15 latest publishes; no list of editing steps to jump back to | 0.7.10 |
 | Autosave | FR, WE | Auto-save; toggle (WE) | Has: drafts kept in the browser | - |
 | Snapshots or backups | WF, DU, WN, SH | Save snapshot; site backup | Has: git | - |
-| Version history or restore | FR, FS, WP, EL, BD, SH (beta) | Version history; rollback; revisions | Has: publish history and «undo the last publish» | - |
+| Version history or restore | FR, FS, WP, EL, BD, SH (beta) | Version history; rollback; revisions | Partial: the 15 latest publishes listed and the last one undone in admin; no restore of an older publish and no compare | v0.9 hardening; Watch, with the visual revision diff |
 | Visual revision diff | WP | Green and red changes | Missing | Watch |
 | Shareable revision links | WP | Link to a revision | Missing | Watch, with the visual revision diff |
 | Canvas comments or notes | WF, FR, WS, FS, EL, WP, DU | Pinned feedback | Missing | Watch |
 | @mentions | WP | Notes with mentions and email | Missing | Watch |
-| Real-time co-editing or presence | WF, FR, WS, WH | Multiplayer cursors | Missing | After v1.0: concurrency view |
+| Real-time co-editing or presence | WF, FR, WS, WH | Multiplayer cursors | Missing | After v1.0: concurrency view (presence); Not taken: cursors and co-editing (a realtime server) |
 | Agent presence | WF | Agent cursor on the canvas | n/a | - |
-| Editor roles or permissions | WF, FR, WS, WT, BR, WN, SH | Role-scoped UI; share-link levels | Partial: GitHub | v0.9 board handover |
+| Editor roles or permissions | WF, FR, WS, WT, BR, WN, SH | Role-scoped UI; share-link levels | Partial: access is a list of GitHub logins (`ALLOWED_LOGINS`), and every editor can do everything; no roles | v0.9 board handover; v0.9 content-only editing mode |
 | Content-only edit mode | WF, WT, FR | Edit mode; Content mode; on-page editing | Missing | v0.9 content-only editing mode, to be weighed |
 | Page-level permissions | WS | Restrict pages | Missing | Not taken |
 | Branching or staging | WF, FR, SH | Branch, stage, merge; staging URLs | Missing | After v1.0: PR per draft |
 | Review or approval | WF, FR, SQ (Enterprise) | Request review; sign-off | Missing | After v1.0: PR per draft |
 | CMS draft publishing flow | WS, WE | Drafts with side-by-side compare | Partial: drafts across pages; no side-by-side compare | Watch, with the visual revision diff |
-| Publish or quick publish | WS, CA, FR, FS, WN, SH | Shortcut publish; unpublish | Has: publish | - |
+| Publish or quick publish | WS, CA, FR, FS, WN, SH | Shortcut publish; unpublish | Partial: the Publish button for every draft; no publish key and no unpublish short of deleting the page | 0.7.10; v0.8 AR-5 |
 | Selective save | WP | Choose the entities to save | Missing | Watch |
 | Save draft | DV, WP | ⌘⇧S draft | Has: drafts across pages | - |
 | Preview or share links | FR, WT, WP, SQ (Enterprise), SH | Branch preview; share links | Missing | After v1.0: PR per draft |
@@ -2214,7 +2214,7 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 | Instant page switching | BR | No builder reload | Has | - |
 | Theme or site export | WP, WT, BR, SH | Zip; self-host or CLI; transfer ZIP | Has: the repo | - |
 | Reset or restart the site | SQ | Reset the site styles to the template's defaults; clear the content and keep the styles | Missing | v0.9: a blank start for new sites |
-| Edit from mobile devices | WN, JI, SH, SQ | Phone editing; app | Partial | v0.9 touch friendliness |
+| Edit from mobile devices | WN, JI, SH, SQ | Phone editing; app | Partial: the phone view is a preview width; the canvas uses pointer drags and hover toolbars and is not made for touch | v0.9 touch friendliness |
 | Page settings shortcut | EL, DV, WT | ⌘⇧Y; O; ⌥-click | Partial: page settings in the Pages panel, with no shortcut | 0.7.10: command palette |
 | Site settings shortcut | EL, FS | ⌘K; website settings | Has: site settings behind the gear | - |
 | Editor preferences | EL, WP, OX | Preferences panel | Has: admin language and admin theme, kept per browser | - |
@@ -2236,13 +2236,13 @@ The legal floor for associations is «forskrift om universell utforming av IKT-l
 | Missing-alt detection | WF, WS, DU | Audit, wizard, SEO overview | Missing | v0.8 AU-1 audit panel |
 | Duplicate-ID check or prevention | WF, EL | Audit check; duplication fix | n/a: ids are generated | - |
 | Non-descriptive link check | WF, FR | Audit; guidance | Missing | v0.8 AU-1 audit panel |
-| SEO audit or checklist | DU, HO, FS | SEO Audit; AI SEO; settings | Partial: a marker on pages without a description | v0.8 AU-1 audit panel |
+| SEO audit or checklist | DU, HO, FS | SEO Audit; AI SEO; settings | Partial: a warning on page rows without a description; no checks for the title, the share image, the lengths or a single H1 | v0.8 AU-1 audit panel |
 | Broken-link check | DU | SEO Overview | Missing | v0.8 AU-1 audit panel (internal links) |
-| Performance monitoring | FR, SH | Core Web Vitals | Missing | v0.8 «show the engine's lightness» |
-| ARIA labels | FR, DV, BR | ARIA attributes | Has: ARIA on the output | - |
+| Performance monitoring | FR, SH | Core Web Vitals | Partial: real-visitor Core Web Vitals in the Cloudflare dashboard once analytics is on (optional); nothing in the editor | Docs; v0.8 «show the engine's lightness» for page weight in the editor |
+| ARIA labels | FR, DV, BR | ARIA attributes | Partial: the engine writes ARIA on its own controls; no accessible-name field for the owner, no landmark names and no `aria-current` | 0.7.11; ER-G |
 | Tab-order customisation | FR | Keyboard order | n/a: the reading order follows `y` | 0.7.11 checks it |
 | Keyboard-operable editor | WP, SQ, FS, BR, WF | Region navigation; Tab through panels; box select | Missing | 0.7.11 |
-| Form accessibility | EL | Autocomplete; message semantics | Partial | 0.7.11 |
+| Form accessibility | EL | Autocomplete; message semantics | Partial: labels, fieldsets and required marks; no autocomplete tokens, no `aria-invalid` and no status role on the form message | 0.7.11 |
 | AI SEO or visibility audit | DU, SH | Copilot audits; an AI check of the store's setup before launch (SH) | Missing | Not taken |
 
 Note: the enumeration lists **reduced-motion support** (FR, WT) here as well, pointing back to Reduced motion under [Interactions and motion](#8-interactions-and-motion). Urd: Has.
@@ -2262,11 +2262,11 @@ Head, page and element code, and JavaScript triggers, are not taken in the core:
 | Plugin or extension SDK | WF, FR, WP, WS, OX, DU, SH (app blocks and app embeds) | Designer API; Plugin API; Abilities and commands | Has: the define API | - |
 | Built-in IDE or dev mode | WS, DU, WP, SH | Wix IDE and GitHub; Dev Mode; code editor | n/a: the repo is the code | - |
 | Two-way Git sync | SH | A theme connected to a GitHub branch: a push updates the theme, and a save in the admin commits back | Has: the site is the repo; every publish is a commit, and a push to the repo goes live (ADR-0003, ADR-0004) | - |
-| Command line and theme tooling | SH | A CLI with a local preview, live reload, push and pull; a theme linter in CI and code editors; an editor extension, documentation comments, a formatter and a render profiler | Partial: every site has a local server (`dev-server.py`); the content's JSON schemas and their validation live in Urd's own repo, not in a site | - |
+| Command line and theme tooling | SH | A CLI with a local preview, live reload, push and pull; a theme linter in CI and code editors; an editor extension, documentation comments, a formatter and a render profiler | Partial: every site has a local server (`dev-server.py`); the content's JSON schemas and their validation live in Urd's own repo, not in a site | v0.8 PG-1 plugin guide; Not taken: a command line |
 | Pro code editor (Emmet, lint) | BD, OX, BR, SH | CodeMirror 6 | n/a: the repo is the code | - |
 | JS event triggers | CA, OX | Run JS on events | Missing | Not taken in the core: plugin route |
-| Dynamic data or loops | WF, FR, BR, OX, DV, EL, WP, WT, FS, DU, SH | CMS, queries, bindings | Has: collections | - |
-| Conditional visibility | OX | Role or field conditions | Missing | ER-H: date windows |
+| Dynamic data or loops | WF, FR, BR, OX, DV, EL, WP, WT, FS, DU, SH | CMS, queries, bindings | Partial: collections with a limit, date order and cards, list and archive views; no filter, sort, typed fields, relations or entry pages | v0.8 AR-3; v0.8 entry pages; v0.8 typed custom fields, to be weighed |
+| Conditional visibility | OX | Role or field conditions | Missing | ER-H (dates); v0.8 entry pages (field values); Not taken: roles (no logins) |
 | Custom element builder | OX | Element Studio | Has: the same define API | - |
 | CSS framework import | BR | Extract classes and variables | n/a: the repo is the code | - |
 | Bidirectional CSS and controls | BR | CSS Sync | n/a: the repo is the code | - |
@@ -2283,18 +2283,18 @@ Urd's AI route is the site owner's own agent, with their own model, through the 
 | Generate a full site | FR, WH, DU, HO, SQ, WN, JI, DV, SH, ST | Prompt or brief to a site or theme | Missing | Not taken: ADR-0017 |
 | Generate a page | HO, DV, WH | Prompt to a page | Missing | Not taken: ADR-0017 |
 | Layout variations | FR | Alternative compositions | Missing | Not taken: ADR-0017 |
-| Translate | FS, WF | Rewrite-translate; agentic Localize | Planned: through the site owner's agent | v0.8/v0.9 MCP |
+| Translate | FS, WF | Rewrite-translate; agentic Localize | Planned: through the site owner's agent | v0.9 MCP write; After v1.0: multilingual content |
 | Translation exclusions or memory | WF | Exclusion rules | Missing | After v1.0: multilingual content |
-| SEO metadata or titles | HO, WP, JI, DU | AI SEO; titles and excerpts | Planned: through the site owner's agent | v0.8/v0.9 MCP |
+| SEO metadata or titles | HO, WP, JI, DU | AI SEO; titles and excerpts | Planned: through the site owner's agent | v0.9 MCP write |
 | Conversational agent | WF, FR, WH, DU, EL, DV, SH, TI, SQ (beta) | Assistant, Agent, Aria, Copilot, Angie, Sidekick | Planned: the site owner's own agent | v0.8/v0.9 MCP |
 | Plan mode | DU | Plan before execution | n/a | Not taken: ADR-0017 |
 | AI code generation | WF, FR, FS, WS, DU, SH | Code components, layers or blocks | Missing | Not taken: ADR-0017 |
-| AI CMS content | FR, EL | CMS agent; Loops and dynamic tags | Planned: through the site owner's agent | v0.8/v0.9 MCP |
+| AI CMS content | FR, EL | CMS agent; Loops and dynamic tags | Planned: through the site owner's agent | v0.9 MCP write |
 | Reusable AI skills or instructions | FR, WF, SH | Skills; Agent Instructions | Planned | v0.8 MCP: agent instructions returned by a read tool, built from the theme tokens |
 | Manual edits without AI credits | TI, DU | Editing panel; credit-free edits | n/a: no AI credits | - |
 | Disable AI for the organisation | FR | Enterprise toggle | n/a: no built-in AI | - |
 | Model selection | FR | Choose the agent's model | n/a: the site owner's agent brings its own model | Not taken: ADR-0017 |
-| Agent auto-branching | FR | Agents work in branches | Planned: the MCP server will write files the site owner reviews; it does no git operations (ADR-0017) | v0.9 MCP write |
+| Agent auto-branching | FR | Agents work in branches | n/a: the MCP server writes files the owner reviews, and does no git operations (ADR-0017) | Not taken: ADR-0017 |
 | AI logo | HO | Logo maker | Missing | Not taken: ADR-0017 |
 | AI forms | JI | AI-drafted smart forms | Missing | Not taken: ADR-0017 |
 | AI design-system build | EL, BR | Angie classes and variables; AI client | Missing | Not taken: ADR-0017 |

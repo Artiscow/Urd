@@ -678,12 +678,12 @@ Every builder code below resolves to that builder's own list in [Sources for the
 
 EL and EL4 are one builder, so the 40 codes cover 39 builders. «all» in the Builders column is the enumeration's own word, used for four elements (heading, image, video, button). WN is listed for completeness but appears in no row of the enumeration.
 
-**The Urd column** says where Urd stands, counted from the engine (`template/assets/engine/0.7.4`) on 11 October 2026, and from `template/assets/engine/0.7.7` on 19 October 2026 for the rows checked again that day:
+**The Urd column** says where Urd stands, counted from the engine (`template/assets/engine/0.7.4`) on 11 October 2026, from `template/assets/engine/0.7.7` on 19 October 2026 for the rows checked again that day, and for every Has, Partial and Planned row again on 22 October 2026, option by option against the code and the settings in [SETTINGS.md](SETTINGS.md):
 
 | Word | Meaning |
 |---|---|
-| Has | Urd has it, with the detail after the colon |
-| Partial | Urd covers part of it |
+| Has | Urd has every option the row's builders offer, with the detail after the colon |
+| Partial | Urd covers part of it; the cell names what it has and what it lacks |
 | Planned | an existing backlog item builds it |
 | Missing | Urd does not have it |
 | n/a | the element belongs to another builder model: nested flow layout, WordPress or WooCommerce internals, accounts |
@@ -711,25 +711,25 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|1|Section (Strip (WX), Row Layout (KB), Section (GB/ST/CA))|BR BD DV KB SP OT WF WX DO CA SH BB WE SQ|full width, background, shape dividers, height|`<section>` with a heading, CSS grid or flex inside. Pitfall: wrapper bloat|Has: backgrounds, dividers, size|-|
+|1|Section (Strip (WX), Row Layout (KB), Section (GB/ST/CA))|BR BD DV KB SP OT WF WX DO CA SH BB WE SQ|full width, background, shape dividers, height|`<section>` with a heading, CSS grid or flex inside. Pitfall: wrapper bloat|Partial: 8 background layer types, 5 divider shapes, minimum height, own grid, 8 section themes, a named anchor; no content-width control, no hiding a section|0.7.10; v0.8 AR-5|
 |2|Container / Div block (Container, Div, Div Block, Flexbox, Block, Box, Element, Group)|EL EL4 BR BD OX GB SP WF WS BB OT WX ZS NP DO WP SH|flex/grid, tag, link wrapper|`<div>` or the fitting semantic tag, flex or grid with `gap`. Pitfall: wrapper bloat|n/a: free placement replaces nesting (ADR-0001, 0024)|-|
 |3|Columns / Row (Columns, Column, Row, Inner Section, Advanced Columns)|WP BD DV KB ST EL JI WE CA DO|count, gap, stacking|CSS grid with `gap`; stacking by container query|n/a: free placement plus the mobile row grid|-|
 |4|Grid (CSS grid) (Grid, Grid element, Layout tools grid)|EL4 BD WF NP WX GB|templates, cell span|`grid-template-areas` or spans plus container queries. Pitfall: `grid-auto-flow: dense` changes the visual order but not the DOM order, which breaks WCAG 1.3.2 and 2.4.3|n/a: the section's snap grid|-|
 |5|Stack / auto-layout (Quick Stack, VFlex/HFlex, Stack, Stacks)|WF WX SQ|direction, wrap|flex with `gap` and `flex-wrap`|n/a: the push pass (ADR-0024)|-|
 |6|Spacer (Spacer/Divider, vertical spacing)|EL WP ST KB SQ WE ZS JI SH|height per breakpoint|margin or `gap`, not an empty element|n/a: free placement|-|
-|7|Divider / separator (Separator, Line, Horizontal Line)|EL WP BB DV BR ST SP SQ DU ZS WE DO JI GH NO SH WS|style, width, icon|`<hr>`; a purely decorative line is hidden from assistive technology|Has: line shape, line with a label|-|
-|8|Reusable template / global block (Template, Global Block, Pattern, Template Part, Component, Canvas Portal, WordPress Patterns)|EL BR BD WP OX DV BB WF|synced or detached|a reference plus overrides, expanded into each page at publish|Partial: templates are copies|After v1.0: synced global blocks `{ref, overrides}`|
+|7|Divider / separator (Separator, Line, Horizontal Line)|EL WP BB DV BR ST SP SQ DU ZS WE DO JI GH NO SH WS|style, width, icon|`<hr>`; a purely decorative line is hidden from assistive technology|Partial: a line shape with thickness, length and a text label, 4 theme colours; no dashed or dotted style, no icon in the line, no own colour|0.7.9|
+|8|Reusable template / global block (Template, Global Block, Pattern, Template Part, Component, Canvas Portal, WordPress Patterns)|EL BR BD WP OX DV BB WF|synced or detached|a reference plus overrides, expanded into each page at publish|Partial: section, block-group and page templates inserted as detached copies; no rename or update of a saved template, no export, no synced instances|v0.8 template model; After v1.0: synced global blocks `{ref, overrides}`|
 |9|Slot (Slot, Head Slot)|BR WF WS|component placeholder|-|n/a|Together with #8|
 |10|Hero (Hero, Flex Hero, Intros, Cover, Image banner, Main Banner)|SH ST DV EL FS WF UM MB TL WE|image/video background, CTA|the first `<section>` with the page's `<h1>`; the hero image eager with `fetchpriority=high`. Pitfall: a lazy hero image (Urd today, measured; 0.7.0, T44)|Has: 4 hero presets|-|
-|11|Header builder (Header Builder, Site Header, Header & Navigation, header)|BD GB KB SH FS SQ|sticky, transparent|`<header>` with `<nav>`, `position: sticky`; «stuck» styling with `scroll-state()` is Chrome-only, so behind a gate|Has: nav panel with 6 variants|-|
-|12|Footer (Footer, footer-utilities)|SH WF MB FS TL SQ|columns, legal links|`<footer>` landmark with `<nav>` link groups|Has: 10 designs|-|
+|11|Header builder (Header Builder, Site Header, Header & Navigation, header)|BD GB KB SH FS SQ|sticky, transparent|`<header>` with `<nav>`, `position: sticky`; «stuck» styling with `scroll-state()` is Chrome-only, so behind a gate|Partial: 6 variants, sticky with shrink or hide, clear at the top, mobile overrides, tools; no button item, search, language switcher, burger choice or per-page hiding|0.7.13.21 Menu item options; v0.8 site search, to be weighed; After v1.0, with multilingual content|
+|12|Footer (Footer, footer-utilities)|SH WF MB FS TL SQ|columns, legal links|`<footer>` landmark with `<nav>` link groups|Partial: link columns, link row, legal line, site links, call to action or newsletter, background, hiding per page, ten starting templates; no text, images or blocks|After v1.0: synced global blocks|
 |13|Sidebar / widget area (Sidebar, Widgets, Widget, WordPress (widgets))|EL BR DV BB BD OX|WordPress sidebar|-|n/a (WordPress)|-|
-|14|Repeater (Repeater, Grid Repeater, Repeater Field)|WX NP KB BD OX SQ|static or dynamic items|a list (`<ul>` of `<li>` or `<article>`) rendered from data, baked into the HTML at publish|Has: collections, «+ card» items|-|
-|15|Link wrapper (Wrapper Link, Container Link, Link Block)|BD OX WF|whole-box link|one `<a>` around the content, or one link stretched over the box. Pitfall: links or buttons nested inside a link|Partial: only image, button and text take links|ER-G: any block as a link|
-|16|Card (Card, product/collection card)|HO ST SH|image + text + CTA|`<article>` with a heading and one primary link|Has: card presets, text box, collection cards|-|
-|17|Pre-designed section / wireframe (Sections, Wireframes, Design Kits, kit widgets (Contact, CTA, Zigzag))|WX EL FS SQ SH|AI/kit presets|-|Has: 39 presets, «Change layout»|-|
+|14|Repeater (Repeater, Grid Repeater, Repeater Field)|WX NP KB BD OX SQ|static or dynamic items|a list (`<ul>` of `<li>` or `<article>`) rendered from data, baked into the HTML at publish|Partial: preset item factories, collection and product blocks (3 views, max count, date order); no own item template, filter, other sort, pagination or carousel|v0.8 AR-3 collection filters; ER-D; v0.8 entry pages (a card template)|
+|15|Link wrapper (Wrapper Link, Container Link, Link Block)|BD OX WF|whole-box link|one `<a>` around the content, or one link stretched over the box. Pitfall: links or buttons nested inside a link|Partial: button, image, gallery pictures, calendar notice, collection entries, Links block and text take links; no link on a text box, icon, shape or block group|ER-G: any block as a link|
+|16|Card (Card, product/collection card)|HO ST SH|image + text + CTA|`<article>` with a heading and one primary link|Partial: card presets of blocks (a text box surface with lift, image, text), collection and product cards; no whole-card link, image-holding surface or data-card style|ER-G: any block as a link; 0.7.9|
+|17|Pre-designed section / wireframe (Sections, Wireframes, Design Kits, kit widgets (Contact, CTA, Zigzag))|WX EL FS SQ SH|AI/kit presets|-|Partial: 39 presets in categories with search, «Change layout» (6 layouts), saved section templates, 8 page starter packs; no AI-generated sections|v0.9 MCP write|
 |18|Page break / more (Page Break, More)|WP|pagination inside posts|-|n/a|-|
-|19|Horizontal scroller (Horizontal Scroller)|ST|snap scroll|`overflow-x: auto` with `scroll-snap-type`; `::scroll-button()` and `::scroll-marker` are Chrome-only, so arrows and dots need a JS fallback|Partial: gallery carousel|ER-D: carousel view for collections|
+|19|Horizontal scroller (Horizontal Scroller)|ST|snap scroll|`overflow-x: auto` with `scroll-snap-type`; `::scroll-button()` and `::scroll-marker` are Chrome-only, so arrows and dots need a JS fallback|Partial: the gallery carousel view (scroll snap, arrows, images only, fixed 4:3 tiles); no scroller of cards or other blocks, no dots, no tile width or gap|ER-D: carousel view for collections; Not taken: a scroller of any blocks (no nesting, ADR-0001)|
 |20|Split content (Split Content)|KB|media + text halves|two grid columns that stack by container query|Has: presets, free placement|-|
 |21|Media & text (Media & Text, Image Text, Text with Photo)|WP ZS JI|image side, ratio|as #20, with `aspect-ratio` on the media|Has: presets|-|
 
@@ -739,30 +739,30 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|22|Heading (Heading, Title, Advanced Heading, Titles)|all|H1-H6, link, icon (BD)|`<h1>`-`<h6>` in order, without skipped levels; `text-wrap: balance`|Has|-|
-|23|Text / paragraph (Text Editor, Paragraph, Text, Text Basic, Advanced Text)|EL EL4 WP BR BD OX SQ HO GB WF WS ZS DO NO SH|typography, columns|`<p>`; `text-wrap: pretty`|Has|-|
-|24|Rich text (Rich Text, Rich Text Editor, Rich Text Element)|BR BD OX WF BB DO|WYSIWYG, TinyMCE|semantic markup from a document model, sanitised on save|Has|-|
+|22|Heading (Heading, Title, Advanced Heading, Titles)|all|H1-H6, link, icon (BD)|`<h1>`-`<h6>` in order, without skipped levels; `text-wrap: balance`|Partial: H1-H3 and paragraph in the text toolbar, inline links, balanced wrapping; no H4-H6|0.7.9|
+|23|Text / paragraph (Text Editor, Paragraph, Text, Text Basic, Advanced Text)|EL EL4 WP BR BD OX SQ HO GB WF WS ZS DO NO SH|typography, columns|`<p>`; `text-wrap: pretty`|Partial: font, size, weight, spacing, colour and highlight per selection, alignment, text box; no multi-column text|0.7.9|
+|24|Rich text (Rich Text, Rich Text Editor, Rich Text Element)|BR BD OX WF BB DO|WYSIWYG, TinyMCE|semantic markup from a document model, sanitised on save|Partial: H1-H3, inline formatting, lists, quote, links, colours, font and size per selection; no H4-H6, images in the text, font weights, columns or paste cleanup|0.7.9; 0.7.10; v0.8 entry pages|
 |25|Subtitle / dual heading (Subtitle, Dual Heading)|ST BD|two-tone heading|one heading with a `<span>` for the second tone, not two headings|Has: inline formatting|-|
 |26|Animated headline (Animated Headline, Animated Heading, Animated Typing, Text Animation, Text effects, shimmering text)|EL BD BR WS WX HO SQ|typing, rotate, highlight, hand-drawn highlight in the text toolbar (SQ)|stacked spans animated with `@keyframes`; the full sentence once as visually hidden text, the animated copies `aria-hidden`. Pitfalls: `aria-live` churn; WCAG 2.2.2 applies when it runs longer than 5 s|Missing|ER-H, with a pause (WCAG 2.2.2)|
 |27|Text path (Text Path)|EL|curved SVG text|SVG `<textPath>`|Missing|Not taken: low value|
-|28|Marquee / running text (Text Marquee, Running text, Scrolling block, marquee, Ticker)|WX WH HO SQ SH FR|speed, direction, pause on hover|the duplicated track `aria-hidden` and `inert`; a pause control; static under reduced motion (WCAG 2.2.2)|Has: ribbon block (pauses on hover and on keyboard focus, and on a phone tap only through emulated `:hover`; a pause button, or a tap on a phone, that stays (0.7.0.51); stands still under reduced motion)|-|
+|28|Marquee / running text (Text Marquee, Running text, Scrolling block, marquee, Ticker)|WX WH HO SQ SH FR|speed, direction, pause on hover|the duplicated track `aria-hidden` and `inert`; a pause control; static under reduced motion (WCAG 2.2.2)|Partial: ribbon block (separators, roll, sway or step, direction, speed, pause on hover, focus or a button, still under reduced motion); no link on the band|ER-G: any block as a link|
 |29|Text mask (Text mask)|WX|image/video inside text|`background-clip: text` over the image; the text stays real text|Missing|ER-B: `background-clip: text`|
 |30|Collapsible text / show more (Collapsible text, Show More, Expand/Show More)|WX WH KB ST|line clamp|`<details>`, or a line clamp plus a button with `aria-expanded`. Pitfall: collapsed text that find-in-page cannot reach; `hidden="until-found"` keeps it findable|Missing|ER-A: `<details>` read-more|
-|31|Blockquote (Quote, Blockquote)|WP EL BD SP ST SQ WF WS NO|citation, style|`<figure>` with `<blockquote>` and a `<figcaption>` for the source|Has: quote|-|
+|31|Blockquote (Quote, Blockquote)|WP EL BD SP ST SQ WF WS NO|citation, style|`<figure>` with `<blockquote>` and a `<figcaption>` for the source|Partial: quote block with name and role, two designs, a card switch, portrait and accent colour; no alignment, card background or border, or share link|0.7.9; Not taken: a share link (share links were removed, #143)|
 |32|Pullquote (Pullquote)|WP|emphasised quote|as #31, set larger|Has: quote, large|-|
 |33|List (List, List Item, Basic List, bulleted/numbered/to-do)|WP BR BB DO WF NO DU|ordered/unordered|`<ul>` or `<ol>`|Has: text lists|-|
-|34|Icon list / checklist (Icon List, Checkmark List)|EL BR DV KB ST SP OT BD|icon per item, links|`<ul>` with the icon as `::marker` or a decorative SVG; the meaning stays in the text|Partial: plain bullets|ER-D: icon bullets|
+|34|Icon list / checklist (Icon List, Checkmark List)|EL BR DV KB ST SP OT BD|icon per item, links|`<ul>` with the icon as `::marker` or a decorative SVG; the meaning stays in the text|Partial: text lists with plain bullets or numbers and links inside items; no icon bullets, icon colour or size, inline layout, columns or dividers|ER-D: icon bullets|
 |35|Code display (Code, Preformatted, Code Highlight, Code Text)|WP EL WS NO|syntax highlighting|`<pre><code>`|Missing|Not taken: audience|
 |36|Markdown (Markdown, Markdown Embed)|SQ GH WS CA|footnotes (GH)|converted to HTML when saved or pasted|Missing|0.7.10: markdown in the paste pipeline instead|
 |37|Poetry / verse (Poetry)|WP|whitespace kept|`white-space: pre-line`|Has: line breaks in text|-|
 |38|Math (Math, Math equation)|WP NO|LaTeX|MathML|Missing|Not taken: audience|
 |39|Footnotes (Footnotes)|WP GH|auto-numbered|`<sup>` links to an `<ol>` with links back|Missing|Not taken: low value|
-|40|Table (Table, Table Element, Tables)|WP KB ZS DO NP CA WX JI|header row, striped|`<table>` with `<caption>` and `scope`, inside an `overflow-x: auto` wrapper; sortable headers need `aria-sort` and buttons|Has|-|
-|41|Alert / callout / notice (Alert, Inline Notice, Notification, Callout)|EL BR SP ST GH NO BB|type, dismissible|`<aside>` or `role="note"`; `role="alert"` only for content injected live. Pitfall: meaning carried by colour alone (WCAG 1.4.1)|Partial: text box style|ER-F: callout variant (info, warning)|
-|42|Text link (Text Link, Link, Links, Content link)|BR BD OX WF WS DO RM SQ OT|inline anchor|`<a href>` with link text that makes sense on its own|Has|-|
+|40|Table (Table, Table Element, Tables)|WP KB ZS DO NP CA WX JI|header row, striped|`<table>` with `<caption>` and `scope`, inside an `overflow-x: auto` wrapper; sortable headers need `aria-sort` and buttons|Partial: header row, row lines, stripes, scroll wrapper; no caption, column alignment or widths, header column, footer row, links in cells or insert in the middle|ER-C|
+|41|Alert / callout / notice (Alert, Inline Notice, Notification, Callout)|EL BR SP ST GH NO BB|type, dismissible|`<aside>` or `role="note"`; `role="alert"` only for content injected live. Pitfall: meaning carried by colour alone (WCAG 1.4.1)|Partial: a text box (colour, border, shadow) with an icon block beside it makes a note; no callout types with their colours and icon, no dismiss|ER-F: callout variant (info, warning)|
+|42|Text link (Text Link, Link, Links, Content link)|BR BD OX WF WS DO RM SQ OT|inline anchor|`<a href>` with link text that makes sense on its own|Has: the link editor from the toolbar and Ctrl+K (a page and a spot on it, a web address with nofollow and sponsored, email, phone, a file; new tab)|-|
 |43|Inline text / span (Inline Text, inline-text)|WS SH|inline styling|`<span>` or `<mark>`|Has|-|
-|44|Jumbo / display text (jumbo-text)|SH|viewport-scaled text|`clamp()` with a rem term, so zoom still works (WCAG 1.4.4); `text-fit` is Chrome-only and has no CSS fallback|Has: size, «fit: shrink»|`text-fit` stays on the watch list|
-|45|Read more (Read More, More)|EL WP|link to full post|`<a>` whose text names the entry, not a bare «Read more»|Partial|v0.8 entry pages|
+|44|Jumbo / display text (jumbo-text)|SH|viewport-scaled text|`clamp()` with a rem term, so zoom still works (WCAG 1.4.4); `text-fit` is Chrome-only and has no CSS fallback|Partial: block size 40-200 % and «Shrink the content» on narrower screens; no headline that fills its box width|Watch: `text-fit` in a second engine|
+|45|Read more (Read More, More)|EL WP|link to full post|`<a>` whose text names the entry, not a bare «Read more»|Partial: a collection entry's title links to a page, a spot or an address; no read-more link and no entry pages|v0.8 entry pages|
 |46|Classic editor block (Classic)|WP|legacy TinyMCE|-|n/a|-|
 |47|Header card (Header)|GH|full-width text banner|a section with a heading|Has: text box, section|-|
 
@@ -772,35 +772,35 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|48|Image (Image, Photo, Picture, Advanced Image)|all|link, lightbox, caption, hover|`<img>` with `alt`, `width` and `height`, `srcset` and `sizes`; the first image eager with `fetchpriority=high`. Pitfall: every image lazy and none with `width`/`height` (Urd today, measured; the eager first image in 0.7.0, the sizes in v0.8 responsive pictures)|Has: focus, filters, shapes, lightbox|-|
-|49|Image box / info card (Image Box, Image Heading Text)|EL ST BD ZS|image + heading + text|`<article>` or `<figure>` with a heading|Has: presets|-|
-|50|Gallery (Basic Gallery, Gallery, Image Gallery, Photo Gallery, Advanced Gallery, Pro Gallery, Imagely Gallery)|EL WP BR DV BB KB SP SQ WX HO JI DO NP GH TL CA DU WE RM SH|grid/masonry, lightbox, collage (SH)|a list of images, the lightbox on `<dialog>`; masonry with `display: grid-lanes` ships in Safari 26.4 only, so an ordinary grid is the fallback|Has: 6 views and a lightbox|-|
-|51|Portfolio (Portfolio, Filterable Portfolio, Projects gallery)|EL DV WX|filter by category|a row of checkbox or radio chips inside `<search>`; `:has()` can filter a small set in CSS alone|Partial|ER-D: category chips on the gallery (shared with v0.8 AR-3 collection filters)|
-|52|Image carousel (Image Carousel, Image Slider, Slider Gallery, Carousel, Media Carousel)|EL OT DO DU WX NP BR ST FR|autoplay, arrows, dots|a scroll-snap track; `::scroll-button()` and `::scroll-marker` are Chrome-only, so the controls need a JS fallback; APG Carousel (a rotation control, `aria-roledescription="carousel"`, slide labels). Pitfall: auto-forwarding hurts comprehension (NN/g); Baymard asks for 5-7 s, pause on hover, a permanent stop after interaction and no autorotation on mobile|Has|-|
-|53|Slider / slideshow (Slides, Slider, Slideshow, Content Slider, Advanced Slider, Basic Slider, Media Sliders, layered-slideshow)|EL DV BR BD BB KB SP OT DO WX FR SH RM CA WE SK MB NP SQ|any content per slide, Swiper|as #52, with any content in a slide|Partial: images only|ER-D: carousel view for collections|
-|54|Nested carousel (Carousel (nested), Group Carousel, Slider (Nestable))|EL EL4 DV BR|any elements per slide|as #52|Missing|ER-D (same as #53)|
-|55|Video (Video, HTML5 Video, YouTube, Vimeo, Self-hosted Video)|all|autoplay, poster, controls|`<video>` with `<track kind="captions">`; YouTube and Vimeo behind a click-to-load facade. Pitfalls in Urd today: the embed iframe is created at once (lazily) with no click to load (`blocks/video.js:143`; 0.7.24 Privacy defaults), and the file video has no captions track|Has: embed and file|-|
+|48|Image (Image, Photo, Picture, Advanced Image)|all|link, lightbox, caption, hover|`<img>` with `alt`, `width` and `height`, `srcset` and `sizes`; the first image eager with `fetchpriority=high`. Pitfall: every image lazy and none with `width`/`height` (Urd today, measured; the eager first image in 0.7.0, the sizes in v0.8 responsive pictures)|Partial: link with new tab and rel, lightbox, focus and zoom, 3 filters, rounding, alt text; no caption, no hover effect of its own, no decorative toggle|ER-B; 0.7.11|
+|49|Image box / info card (Image Box, Image Heading Text)|EL ST BD ZS|image + heading + text|`<article>` or `<figure>` with a heading|Partial: presets compose image, heading and text with free image placement; no whole-box link and no surface around image and text|ER-G: any block as a link; 0.7.9|
+|50|Gallery (Basic Gallery, Gallery, Image Gallery, Photo Gallery, Advanced Gallery, Pro Gallery, Imagely Gallery)|EL WP BR DV BB KB SP SQ WX HO JI DO NP GH TL CA DU WE RM SH|grid/masonry, lightbox, collage (SH)|a list of images, the lightbox on `<dialog>`; masonry with `display: grid-lanes` ships in Safari 26.4 only, so an ordinary grid is the fallback|Partial: 6 views, a lightbox with arrows, Esc and the alt as caption, per-image link and alt; captions in the polaroid view only; no lightbox swipe, zoom or counter|ER-B|
+|51|Portfolio (Portfolio, Filterable Portfolio, Projects gallery)|EL DV WX|filter by category|a row of checkbox or radio chips inside `<search>`; `:has()` can filter a small set in CSS alone|Partial: a gallery and collection cards, with filters only in the calendar; no category filter on the gallery or collections|ER-D: category chips on the gallery (shared with v0.8 AR-3 collection filters)|
+|52|Image carousel (Image Carousel, Image Slider, Slider Gallery, Carousel, Media Carousel)|EL OT DO DU WX NP BR ST FR|autoplay, arrows, dots|a scroll-snap track; `::scroll-button()` and `::scroll-marker` are Chrome-only, so the controls need a JS fallback; APG Carousel (a rotation control, `aria-roledescription="carousel"`, slide labels). Pitfall: auto-forwarding hurts comprehension (NN/g); Baymard asks for 5-7 s, pause on hover, a permanent stop after interaction and no autorotation on mobile|Partial: slideshow with autoplay, arrows, dots and pause, scroll-snap carousel with arrows; no autoplay switch, no carousel dots, no carousel semantics|0.7.11; ER-D|
+|53|Slider / slideshow (Slides, Slider, Slideshow, Content Slider, Advanced Slider, Basic Slider, Media Sliders, layered-slideshow)|EL DV BR BD BB KB SP OT DO WX FR SH RM CA WE SK MB NP SQ|any content per slide, Swiper|as #52, with any content in a slide|Partial: the gallery slideshow (images, cross-fade, arrows, dots, pause, interval); no text or buttons on a slide, slide transition or slides per view|ER-D: carousel view for collections|
+|54|Nested carousel (Carousel (nested), Group Carousel, Slider (Nestable))|EL EL4 DV BR|any elements per slide|as #52|Missing|Not taken: any blocks per slide needs nesting (ADR-0001); collection carousels in ER-D|
+|55|Video (Video, HTML5 Video, YouTube, Vimeo, Self-hosted Video)|all|autoplay, poster, controls|`<video>` with `<track kind="captions">`; YouTube and Vimeo behind a click-to-load facade. Pitfalls in Urd today: the embed iframe is created at once (lazily) with no click to load (`blocks/video.js:143`; 0.7.24 Privacy defaults), and the file video has no captions track|Partial: YouTube and Vimeo embeds, a file video with poster, loop, mute and autoplay; no options for embeds, no captions track, no click to load|0.7.11; 0.7.24.1|
 |56|Video playlist (Video Playlist)|EL|chapters, tabs|-|Missing|Not taken: low value|
 |57|Video popup / lightbox (Video Popup, Lightbox)|KB ST WF NP|modal player|`<dialog>` with the player loaded when it opens; focus returns to the trigger on close|Missing|ER-B|
 |58|Video slider (Video Slider, Facebook Videos)|DV BD|thumbnails|-|Missing|Not taken: low value|
-|59|Background video (Background Video, Vimeo Background Video, Video Backgrounds, Video Box)|EL4 WF WS SK WX MB SQ|muted loop|`<video muted loop playsinline>` with a poster; a pause control when it runs longer than 5 s (WCAG 2.2.2); the poster alone under reduced motion|Has: video layer|-|
+|59|Background video (Background Video, Vimeo Background Video, Video Backgrounds, Video Box)|EL4 WF WS SK WX MB SQ|muted loop|`<video muted loop playsinline>` with a poster; a pause control when it runs longer than 5 s (WCAG 2.2.2); the poster alone under reduced motion|Partial: a muted looping video layer, still on its poster under reduced motion, with focus and parallax; no pause control for visitors|0.7.11|
 |60|Video mask / transparent video (Video Mask, Transparent Video)|WX|shape mask|-|Missing|Not taken: low value|
-|61|Audio (Audio, Music)|EL WP DV BB BR SQ GH ZS CA NP NO RM WX|player, playlist|`<audio controls>` with a transcript|Has|-|
+|61|Audio (Audio, Music)|EL WP DV BB BR SQ GH ZS CA NP NO RM WX|player, playlist|`<audio controls>` with a transcript|Partial: a native player for an uploaded file with title and loop; no transcript and no external audio (Spotify, SoundCloud)|0.7.11; 0.7.24.1|
 |62|Audio playlist (Playlist, Playlist track)|WP|track list|-|Missing|Watch: a publications collection covers podcasts|
 |63|Lottie (Lottie, Lottie Animation, Animation, DotLottie)|EL DV KB OT BD SP WF WX RM FR|loop, scroll-sync, hover|a vendored MIT player on the page (lottie-web light, or dotlottie-web for state machines); SVG with CSS animation for the simple cases|Missing|Taken: v0.8 Animation files (the `lottie` and `dotlottie` plugins)|
 |64|Rive animation (Rive)|WX|state machines|a vendored MIT player on the page (@rive-app/canvas), the WASM same-site|Missing|Taken: v0.8 Animation files (the `rive` plugin)|
 |65|3D / Spline (Spline, 3D models)|WF RM|interactive 3D|glTF/GLB through model-viewer (Apache 2.0), decoders same-site; Spline's runtime never vendored|Missing|Taken: v0.8 Animation files (the `model` plugin; a Spline scene as GLB, or the owner's export in the portal)|
-|66|SVG (SVG, SVG Icon)|EL4 BR DV OX|inline SVG|inline SVG, sanitised; `aria-hidden` when decorative, `role="img"` with a title when it carries meaning|Partial: icons and shapes|-|
-|67|Icon (Icon, Icons)|EL BR BD DV BB KB ST SP OT WP ZS DU SH RM WH|library, link|drawn SVG, `aria-hidden` beside text; an icon-only link or button needs an accessible name|Has: a drawn icon library; no link on the icon block (the links block draws icon links)|-|
-|68|Icon box / blurb (Icon Box, Blurb, Info Box, Icon Label, Icon with Text, Icon Heading Text, Callout)|EL BR BD DV KB SP ST DO ZS BB|icon position|`<article>` with a heading; the icon decorative|Has: presets|-|
-|69|Image hover card / overlay (Image Hover Card, Image Overlay, Hover box)|BD KB WX NP|reveal on hover|a caption over the image shown on `:hover` and `:focus-within`, and always shown on touch. Pitfall: content reachable only by hover|Partial: hover lift|ER-B: caption overlay that also opens on focus|
+|66|SVG (SVG, SVG Icon)|EL4 BR DV OX|inline SVG|inline SVG, sanitised; `aria-hidden` when decorative, `role="img"` with a title when it carries meaning|Partial: an uploaded SVG shows as a vector through the image block (scripted SVG refused), drawn icons and shapes; no inline SVG that follows theme colours|v0.8 OL-2|
+|67|Icon (Icon, Icons)|EL BR BD DV BB KB ST SP OT WP ZS DU SH RM WH|library, link|drawn SVG, `aria-hidden` beside text; an icon-only link or button needs an accessible name|Partial: a drawn library of 56 icons plus glyphs and an own image, size and colour; no link on the icon block, no icon search|ER-G: any block as a link; 0.7.10|
+|68|Icon box / blurb (Icon Box, Blurb, Info Box, Icon Label, Icon with Text, Icon Heading Text, Callout)|EL BR BD DV KB SP ST DO ZS BB|icon position|`<article>` with a heading; the icon decorative|Partial: feature-card presets (an icon and a text box with lift) with free icon placement; no icon badge background and no whole-box link|ER-G: any block as a link; 0.7.9|
+|69|Image hover card / overlay (Image Hover Card, Image Overlay, Hover box)|BD KB WX NP|reveal on hover|a caption over the image shown on `:hover` and `:focus-within`, and always shown on touch. Pitfall: content reachable only by hover|Partial: hover lift on any block; no caption or overlay shown on hover and focus, no overlay colour, no image zoom on hover|ER-B: caption overlay that also opens on focus|
 |70|Image zoom (Image with Zoom)|BD|magnifier|-|Missing|Not taken: the lightbox covers it|
 |71|Image accordion (Image Accordion)|BD|expanding panels|-|Missing|Not taken: low value|
-|72|Masker (Masker)|BD|shape mask|`clip-path` (`shape()` is Baseline since February 2026) or `mask-image`|Has: image shapes|-|
+|72|Masker (Masker)|BD|shape mask|`clip-path` (`shape()` is Baseline since February 2026) or `mask-image`|Partial: image rounding none, small, large, and round or ratio shapes on collection images; no mask shapes on the image block|0.7.9|
 |73|Scrolling image (Scrolling Image)|BD|long screenshot scroll|-|Missing|Not taken: low value|
 |74|Cover (Cover)|WP TL SQ|overlay, focal point|`object-fit: cover` with `object-position` at the focal point; a veil keeps the text contrast (WCAG 1.4.3)|Has: hero, image layer|-|
-|75|File / download (File, File Download)|WP GH JI|button, embed PDF|`<a href download>` with the type and size visible («PDF, 240 kB») and the date in `<time>`; any preview behind a click|Missing|ER-B: file list showing type, size and date|
-|76|GIF (GIF)|GH|search|`<img>` with `alt`; a pause control when it runs longer than 5 s (WCAG 2.2.2)|Has: animated images (no GIF search)|-|
+|75|File / download (File, File Download)|WP GH JI|button, embed PDF|`<a href download>` with the type and size visible («PDF, 240 kB») and the date in `<time>`; any preview behind a click|Partial: a button or a text link to a file in `media/` (an uploaded PDF too) that downloads; no file block with type, size and date, and no embedded PDF|ER-B: file list showing type, size and date|
+|76|GIF (GIF)|GH|search|`<img>` with `alt`; a pause control when it runs longer than 5 s (WCAG 2.2.2)|Partial: animated images (GIF, WebP, APNG) kept as uploaded; no GIF search|Not taken: GIF search needs an API key, which a static site cannot keep|
 |77|Flickr (Flickr)|SQ JI|photostream|-|Missing|Not taken: third party|
 |78|Shots (Shots)|RM|-|-|n/a|-|
 |79|Media with content (media-with-content)|SH|media + text section|as #20|Has: presets|-|
@@ -811,25 +811,25 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|80|Navigation menu (Menu, Nav Menu, WordPress Menu, WP Menu, Navigation, Navbar, Menus, Navigation Menu)|EL BR BD DV BB WP KB GB WX WF WS DO SH CV TL FS SQ|mobile toggle, overlay|`<nav>` with a list; submenus as APG disclosure navigation (a button with `aria-expanded`), never `role="menu"`; the mobile menu as the same disclosure panel ([ADR-0010](../adr/0010-disclosure-navigation.md)) or a full-screen `<dialog>` sheet|Has|-|
-|81|Mega menu (Menu (mega), Menu Builder, Nav (Nestable))|EL BD BR SH|nested content|disclosure navigation opening a panel, placed with the Popover API and anchor positioning (the core ships in all three engines since Firefox 147)|Partial: submenus in columns and a flyout style; no pictures or blocks in the panel|Not taken for pictures or blocks in the panel until a real site needs one|
-|82|Menu link / submenu (Navigation Link, Submenu, Home Link, Page List)|WP KB|-|`aria-current="page"` on the link to the current page|Partial: one level, with no `aria-current` on the current page|0.7.11: the current page marked|
-|83|Dropdown (Dropdown, Dropdown Menus)|BR DV WF S1|hover/click|opens on click; hover only behind a `pointerType === 'mouse'` guard; Escape closes and returns focus|Has|-|
-|84|Anchor / scroll point (Menu Anchor, Scroll Points, Anchor)|EL CA WX|offset|an `id` on the target with `scroll-margin-top` for a fixed header; smooth scroll only under `prefers-reduced-motion: no-preference`|Has: a name on any section or block beside its stable id, the offset from the menu's height (`scroll-padding-top`), smooth only without reduced motion (0.7.27.1-3)|-|
+|80|Navigation menu (Menu, Nav Menu, WordPress Menu, WP Menu, Navigation, Navbar, Menus, Navigation Menu)|EL BR BD DV BB WP KB GB WX WF WS DO SH CV TL FS SQ|mobile toggle, overlay|`<nav>` with a list; submenus as APG disclosure navigation (a button with `aria-expanded`), never `role="menu"`; the mobile menu as the same disclosure panel ([ADR-0010](../adr/0010-disclosure-navigation.md)) or a full-screen `<dialog>` sheet|Partial: 6 variants, a burger panel or full-screen sheet, one submenu level, every link kind; no current-page mark, second level, button item or description|0.7.11; 0.7.13.21 Menu item options|
+|81|Mega menu (Menu (mega), Menu Builder, Nav (Nestable))|EL BD BR SH|nested content|disclosure navigation opening a panel, placed with the Popover API and anchor positioning (the core ships in all three engines since Firefox 147)|Partial: submenus in 1-4 columns and a full-width flyout; one level only, so no column headings with links under them, and no pictures or blocks in the panel|0.7.13.21 Menu item options; Not taken: pictures or blocks in the panel until a real site needs one|
+|82|Menu link / submenu (Navigation Link, Submenu, Home Link, Page List)|WP KB|-|`aria-current="page"` on the link to the current page|Partial: every link kind with new tab and rel, one submenu level, new pages added automatically; no current-page mark, second level or description|0.7.11: the current page marked; 0.7.13.21 Menu item options|
+|83|Dropdown (Dropdown, Dropdown Menus)|BR DV WF S1|hover/click|opens on click; hover only behind a `pointerType === 'mouse'` guard; Escape closes and returns focus|Partial: the menu's submenus open on hover or click and close with Escape; no dropdown element placed on the page|ER-A|
+|84|Anchor / scroll point (Menu Anchor, Scroll Points, Anchor)|EL CA WX|offset|an `id` on the target with `scroll-margin-top` for a fixed header; smooth scroll only under `prefers-reduced-motion: no-preference`|Has: a name on any section or block beside its stable id, a spot picker, the offset from the menu's height, smooth only without reduced motion (0.7.27)|-|
 |85|In-page navigation (In-page navigation)|WX|scroll-spy|`<nav aria-label>` with an `<ol>` of anchor links; scroll-spy from a small IntersectionObserver setting `aria-current`|Planned|0.7.13.16 page index|
 |86|Breadcrumbs (Breadcrumbs)|EL BR DV WP BD WX NO|separator, schema|APG Breadcrumb: `<nav aria-label="Breadcrumb">` with an `<ol>` and `aria-current="page"` on the last item|Missing|ER-G, with the v0.8 entry pages|
 |87|Table of contents (Table of Contents, Post Table of Contents)|EL BR DV KB SP ST WP BD NO|heading levels, sticky|`<nav aria-label="On this page">` with an `<ol>` of anchor links; scroll-spy from an IntersectionObserver. Pitfall: duplicate or unstable ids|Planned|0.7.13.16|
-|88|Pagination (Pagination, Page Numbers, Next/Previous Page, Pagination Bar, Products Pagination)|WP BR DV GB WF WX ST|numbers, prev/next|`<nav aria-label="Pagination">` with `aria-current="page"` and `rel=prev`/`rel=next` links|Partial: limit, archive view|ER-D, with the entry pages|
+|88|Pagination (Pagination, Page Numbers, Next/Previous Page, Pagination Bar, Products Pagination)|WP BR DV GB WF WX ST|numbers, prev/next|`<nav aria-label="Pagination">` with `aria-current="page"` and `rel=prev`/`rel=next` links|Partial: a max count on the collection blocks, the calendar's «Show all» fold and the archive view by year; no page numbers, previous and next, or load more|ER-D, with the entry pages|
 |89|Load more (Load More)|ST|AJAX|a `<button>` that reveals the next batch, with the new count announced through `role="status"`|Missing|ER-D|
 |90|Post navigation (Post Navigation, Adjacent Posts, Post Navigation Link)|EL BR BD WP BB|prev/next post|`<nav>` with `rel=prev`/`rel=next` links naming the entries|Missing|v0.8 entry pages|
-|91|Search form (Search Form, Search, WP Search, Global Search, Search bar)|EL WP BR BD DV BB KB SP WF WX HO DO SQ FR SH|icon, full-screen|the `<search>` landmark (widely available) around a form; on a static site, a JSON index written at publish and filtered in the browser|Partial: calendar search|v0.8 AR-3 (collections); v0.8 site search, to be weighed|
+|91|Search form (Search Form, Search, WP Search, Global Search, Search bar)|EL WP BR BD DV BB KB SP WF WX HO DO SQ FR SH|icon, full-screen|the `<search>` landmark (widely available) around a form; on a static site, a JSON index written at publish and filtered in the browser|Partial: a search field in the calendar block, folded behind an icon on phones; no site search and no search over collections or products|v0.8 AR-3 (collections); v0.8 site search, to be weighed|
 |92|Live search (Search (live results), Live Search, predictive-search)|EL OT SH SQ|AJAX results|as #91, with the result count in `role="status"`|Missing|Same as #91|
 |93|Language / locale switcher (Locales list, Locale Selector, Language element, language selector)|WF FR NP WX UM SH|flags, dropdown|`<nav>` of links with `lang` and `hreflang`, each language named in itself («English», «Norsk»); `<link rel=alternate hreflang>` in the head. Pitfall: flags stand for countries, not languages|Missing|After v1.0, with multilingual content|
-|94|Site logo (Site Logo, Logo)|EL WP BR WX SH|retina, link|`<a href="/">` around an `<img>` whose `alt` is the name; `light-dark()` for images (Baseline September 2026) swaps a logo per colour scheme|Has|-|
-|95|Site title / tagline (Site Title, Site Tagline)|EL WP|-|text in the header, not an `<h1>` on every page|Has|-|
-|96|Page / archive / query title (Page Title, Archive Title, Query Title)|EL WP BD|dynamic|the page's `<h1>`|Has: static|-|
+|94|Site logo (Site Logo, Logo)|EL WP BR WX SH|retina, link|`<a href="/">` around an `<img>` whose `alt` is the name; `light-dark()` for images (Baseline September 2026) swaps a logo per colour scheme|Partial: text, image or both with height and mobile height, linked home with the site name as alt; no logo per colour mode|0.7.13.19|
+|95|Site title / tagline (Site Title, Site Tagline)|EL WP|-|text in the header, not an `<h1>` on every page|Partial: the text logo falls back to the site name and links home, the footer has its own tagline; no tagline in the menu bar|0.7.13.19|
+|96|Page / archive / query title (Page Title, Archive Title, Query Title)|EL WP BD|dynamic|the page's `<h1>`|Partial: a typed h1 per page, the page title driving the tab title; no entry or archive title bound to its data|v0.8 entry pages|
 |97|Back to top (Back to Top, Move to Top Button)|BR BD NP DO|appear on scroll|`<a href="#top">`, smooth only under `prefers-reduced-motion: no-preference`; revealed by a scroll-driven animation (Chrome and Safari; Firefox Nightly only, so shown statically there)|Partial: a fixed «↑» button on every page after 400 px of scrolling (`urd.js:138`), with no settings|0.7.13.14 (the element with settings)|
-|98|Off-canvas panel (Off-Canvas, Offcanvas, Sheet, Overlay Panels)|EL BR WS GB|side, trigger|`<dialog>` or `[popover]` sliding in with `@starting-style` and `transition-behavior: allow-discrete`; `inert` on the page behind|Partial: mobile menu, cart drawer|ER-A: drawer variant of the popup block|
+|98|Off-canvas panel (Off-Canvas, Offcanvas, Sheet, Overlay Panels)|EL BR WS GB|side, trigger|`<dialog>` or `[popover]` sliding in with `@starting-style` and `transition-behavior: allow-discrete`; `inert` on the page behind|Partial: the mobile menu sheet (from any side) and the basket drawer; no drawer of the owner's own content opened from a button or link|ER-A: drawer variant of the popup block|
 |99|Sitemap (Sitemap)|EL|post types|a nested `<ul>` built from the page registry at publish|Missing|ER-G: built from the page registry|
 |100|Navigation overlay close (Navigation Overlay Close)|WP|accessible close button|a real `<button>` with an accessible name; `<dialog>` also closes on Escape|Has: in the dialogs|-|
 |101|Collection links (collection-links)|SH|-|`<nav>` or `<ul>` of links|Has: link launcher, footer columns|-|
@@ -840,14 +840,14 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|102|Accordion (Accordion, Nested Accordion, Accordion (Nestable), Advanced Accordion, Accordions)|EL EL4 WP BR BD DV BB KB SP OT ST GB SQ ZS NP DO WS SH DU MB|single/multi open, icons|`<details name>` for an exclusive group; animated with `::details-content` (Baseline September 2025) plus `interpolate-size` (Chrome only, behind a gate); APG Accordion. NN/g: accordions suit pages where readers need only a few sections|Has: FAQ block|-|
+|102|Accordion (Accordion, Nested Accordion, Accordion (Nestable), Advanced Accordion, Accordions)|EL EL4 WP BR BD DV BB KB SP OT ST GB SQ ZS NP DO WS SH DU MB|single/multi open, icons|`<details name>` for an exclusive group; animated with `::details-content` (Baseline September 2025) plus `interpolate-size` (Chrome only, behind a gate); APG Accordion. NN/g: accordions suit pages where readers need only a few sections|Partial: FAQ block with exclusive or multi open, cards or list, rich-text answers; no icon choice and no item open by default|ER-A|
 |103|FAQ (schema) (FAQ, FAQ Element)|SP BD NP MB EL4 SH|FAQPage schema|as #102, with FAQPage JSON-LD in the baked HTML|Partial: no FAQPage JSON-LD|v0.8 baking (JSON-LD)|
-|104|Toggle / details (Toggle, Details, Toggle list, Collapsible)|EL DV BR GH NO WP WS|-|one `<details>`; APG Disclosure|Has: FAQ with one item|-|
+|104|Toggle / details (Toggle, Details, Toggle list, Collapsible)|EL DV BR GH NO WP WS|-|one `<details>`; APG Disclosure|Partial: the FAQ block with one item (native `<details>`, rich-text answer, find-in-page opens it); no open by default, icon choice or summary heading level|ER-A|
 |105|Tabs (Tabs, Nested Tabs, Tabs (Nestable), Advanced Tabs, Tab)|EL EL4 WP BR BD DV BB KB SP OT ST GB WX ZS NP DO WS DU|horizontal/vertical|no native tab element: APG Tabs (`role=tablist/tab/tabpanel`, roving tabindex, arrow keys, automatic or manual activation); inactive panels `hidden="until-found"` so find-in-page and `#fragment` links reach them (plain `hidden` where unsupported); `<details name>` as the no-JS fallback. Pitfall: radio or `:target` CSS hacks break semantics and history|Missing|ER-A: APG tabs whose panels use `hidden="until-found"`|
 |106|Content toggle (Content Toggle)|BD|switch between two contents|two tabs as in #105, or a `<button aria-pressed>`|Missing|ER-A, together with tabs|
-|107|Modal / popup (Popup, Modal, Modal Popup, Dialog, Popups, Pop-up, Promotion Popups)|EL BD BB KB SP OT WX TL NP DO DU WS S1 SQ SH|triggers, exit intent|`<dialog>` with `showModal()`, opened declaratively by invoker commands (`<button commandfor command="show-modal">`, Baseline December 2025); light dismiss with `closedby="any"` (Chrome and Firefox, Safari Technology Preview only, so a JS path); APG Dialog (Modal). Pitfalls: timed or exit-intent popups; focus must return to the trigger; scroll locked with `body:has(dialog:modal)`|Partial: lightbox, quick view|ER-A: popup block opened by a click (invoker commands), never on exit-intent|
+|107|Modal / popup (Popup, Modal, Modal Popup, Dialog, Popups, Pop-up, Promotion Popups)|EL BD BB KB SP OT WX TL NP DO DU WS S1 SQ SH|triggers, exit intent|`<dialog>` with `showModal()`, opened declaratively by invoker commands (`<button commandfor command="show-modal">`, Baseline December 2025); light dismiss with `closedby="any"` (Chrome and Firefox, Safari Technology Preview only, so a JS path); APG Dialog (Modal). Pitfalls: timed or exit-intent popups; focus must return to the trigger; scroll locked with `body:has(dialog:modal)`|Partial: the lightbox, product quick view and calendar event card on `<dialog>`; no popup of the owner's own content opened from a button or link|ER-A: popup block opened by a click (invoker commands), never on exit-intent|
 |108|Tooltip (Tooltip)|DV BD TL WS|hover/click|`popover="hint"` (Chrome and Firefox, Safari Technology Preview only, so behind a gate) placed by anchor positioning; `interestfor` is Chrome-only; APG Tooltip. Pitfalls: interactive content inside a tooltip; a tooltip that does not work on touch|Missing|ER-A: `popover="hint"` behind a gate|
-|109|Popover (Popover)|WS|anchored panel|the Popover API (Baseline January 2025) with anchor positioning and explicit anchor names|Has: the engine's own menus|-|
+|109|Popover (Popover)|WS|anchored panel|the Popover API (Baseline January 2025) with anchor positioning and explicit anchor names|Partial: the engine's own menus use the Popover API; no popover panel the owner can place|ER-A|
 |110|Hotspot (Hotspot, product-hotspots)|EL RM SH|pins on image|absolutely placed `<button>`s opening `[popover]` panels, anchor positioning as an enhancement. Pitfall: tiny targets; WCAG 2.5.8 sets 24 by 24 px|Missing|ER-B|
 |111|Flip box (Flip Box)|EL OT|3D flip|Pitfall: content shown only on hover is unreachable on touch and by keyboard|Missing|Not taken: content shown only on hover fails touch and keyboard|
 |112|Before/after comparison (Before/After Image, Image Comparison, comparison-slider)|DV BD SH|horizontal/vertical|two stacked images and a labelled `<input type=range>` driving `clip-path: inset(0 calc(100% - var(--p)) 0 0)`|Missing|ER-B: range input plus `clip-path`|
@@ -858,27 +858,27 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|115|Counter (Counter, Number Counter, Count Up, Simple Counter)|EL BR DV BB KB ST SP BD NP MB|prefix/suffix, duration|the final number in the markup, the count-up as decoration so screen readers hear the final value; no count under reduced motion|Has: stats with count-up|-|
+|115|Counter (Counter, Number Counter, Count Up, Simple Counter)|EL BR DV BB KB ST SP BD NP MB|prefix/suffix, duration|the final number in the markup, the count-up as decoration so screen readers hear the final value; no count under reduced motion|Partial: stats with count-up, prefix and suffix; no count-up duration, no start number|ER-C|
 |116|Circle counter (Circle Counter, Progress Circle, Counter Circle)|DV OT BD ST DO|percentage|`<meter>` drawn as a ring with `conic-gradient`; the number printed as text|Missing|ER-C: `<meter>` plus `conic-gradient`|
 |117|Progress bar (Progress Bar, Bar Counters, Progress Blocks, Basic Bar)|EL BR KB OT ST BD DO DV WX MB|striped, animated|`<meter>` for a measured value (APG Meter), `<progress>` for task progress; the number always printed as text|Missing|ER-C|
 |118|Reading progress (Progress Tracker, Post Reading Progress Bar)|EL BR|top bar|a fixed bar scaled by `animation-timeline: scroll(root)` (Chrome and Safari; Firefox Nightly only), left out where unsupported|Missing|ER-C: scroll timeline, behind a gate|
 |119|Reading time (Time to Read, Post Reading Time)|WP BR|-|computed at publish|Missing|v0.8 entry pages|
 |120|Pie chart (Pie Chart)|BR|-|as #121|Missing|ER-C: charts|
 |121|Chart (Chart, Canva Code charts)|DV SQ CV|bar/line/pie|inline SVG drawn at publish, or CSS-grid bars, always with the data table kept|Missing|ER-C: SVG drawn from a table, with the table kept|
-|122|Stats grid / number box (Stats Grid, Number Box, Features Metrics)|BD ST WF|-|a `<dl>` or a list, the numbers as text|Has: stats variants|-|
-|123|Timeline (Timeline, Content Timeline, Post Timeline, Timelines)|DV SP ST OT MB|vertical, alternating|`<ol>` with `<time>`; the line is decoration|Has|-|
-|124|Pricing table (Price Table, Pricing Tables, Pricing Table, Pricing Box, Price, Pricing Plans)|EL BR DV BD ST WF TL MB|featured badge, toggles|a grid of `<article>`s (heading, price, a `<ul>` of benefits, a CTA); the highlighted tier carries a text label («Most popular»); a feature comparison goes in a real `<table>`|Has: membership preset (no monthly/yearly switch)|Not taken: the switch is low value|
-|125|Price list / menu (Price List, Restaurant Menu, Menu (SQ), price list)|EL SP DU SQ S1 GD|dotted leaders|a `<dl>` or a table, with dotted leaders from a flex filler|Partial: table|ER-C|
-|126|Comparison table (Pricing Comparison, Review Comparison Table)|WF OT|-|`<table>` with `scope`; ticks and crosses also as text|Has: table|-|
+|122|Stats grid / number box (Stats Grid, Number Box, Features Metrics)|BD ST WF|-|a `<dl>` or a list, the numbers as text|Partial: stats in Plain, Cards and Band designs, three side by side in the statistics preset; no icon above the figure, no figure colour or size|ER-C|
+|123|Timeline (Timeline, Content Timeline, Post Timeline, Timelines)|DV SP ST OT MB|vertical, alternating|`<ol>` with `<time>`; the line is decoration|Partial: vertical and alternating designs, a dot or ring marker and a colour; no icon, picture or link per event, no horizontal layout|ER-C|
+|124|Pricing table (Price Table, Pricing Tables, Pricing Table, Pricing Box, Price, Pricing Plans)|EL BR DV BD ST WF TL MB|featured badge, toggles|a grid of `<article>`s (heading, price, a `<ul>` of benefits, a CTA); the highlighted tier carries a text label («Most popular»); a feature comparison goes in a real `<table>`|Partial: membership preset of text tiers with a button; no featured-tier badge, no benefit list with ticks, no monthly/yearly switch|ER-F; Not taken: the monthly/yearly switch is low value|
+|125|Price list / menu (Price List, Restaurant Menu, Menu (SQ), price list)|EL SP DU SQ S1 GD|dotted leaders|a `<dl>` or a table, with dotted leaders from a flex filler|Partial: the table block (text cells, header row, lines); no dotted leaders, no description line or picture per item, no right-aligned price|ER-C|
+|126|Comparison table (Pricing Comparison, Review Comparison Table)|WF OT|-|`<table>` with `scope`; ticks and crosses also as text|Partial: table block with a header row, stripes and lines; plain-text cells, no header column, no highlighted column|ER-C|
 |127|Business hours (Business Hours)|BD OT DU|open now|a `<table>` or `<dl>` with `<time>`, plus schema.org OpeningHoursSpecification; «open now» needs a few lines of JS in Europe/Oslo time and must handle exceptions (holidays, exam periods)|Missing|ER-C: «open now», closed periods, OpeningHoursSpecification|
 |128|Rating display (Star Rating, Rating, Ratings Display)|EL BR BD BB SP WX|stars, schema|the value as text («4 of 5»), the stars decorative|Missing|Not taken: low value|
 |129|Feature list / grid (Feature, Feature Grid, Features List/Table, Features)|ST WF TL MB SH|-|a `<ul>` of `<article>`s with headings|Has: feature card presets|-|
 |130|Steps / how it works (How It Works)|TL|-|`<ol>` with CSS counters; `aria-current="step"` when used in a flow|Has: steps preset|-|
-|131|Calendar display (Calendar, Calendars, Calendar Element)|WP SQ WX NO NP|month view|a month grid as a `<table>` with `<time>`; the first weekday from `Intl.Locale` week info (Baseline July 2026); recurrence with `Temporal` where present (Chrome and Firefox), Urd's own RRULE code otherwise|Has: calendar block with 8 views|-|
-|132|Database view (Table, Board, Calendar, Gallery, List)|NO|filters/sorts|-|Partial: collection views|-|
+|131|Calendar display (Calendar, Calendars, Calendar Element)|WP SQ WX NO NP|month view|a month grid as a `<table>` with `<time>`; the first weekday from `Intl.Locale` week info (Baseline July 2026); recurrence with `Temporal` where present (Chrome and Firefox), Urd's own RRULE code otherwise|Partial: calendar block with 8 views over iCal feeds, with category filter, search and add to calendar; no events written in Urd, no page per event|v0.8 events as a collection kind|
+|132|Database view (Table, Board, Calendar, Gallery, List)|NO|filters/sorts|-|Partial: collection cards, list and archive views in date order, and the calendar block's views; no filters, no sort keys, no table or board view|v0.8 AR-3; Not taken: table and board views are low value|
 |133|Timetable / schedule (Timetable, Schedule Events)|TL NP|-|`<table>` with row and column headers and `<time>`|Has: calendar week and agenda views|-|
 |134|Airtable table (Airtable Table)|DO|live data|-|Missing|Not taken: third party|
-|135|Index / tile and link (Index, Tile and Link)|TL|-|`<nav>` or `<ul>` of link cards|Has: link launcher, cards|-|
+|135|Index / tile and link (Index, Tile and Link)|TL|-|`<nav>` or `<ul>` of link cards|Partial: collection cards whose title links, and the launcher's picture cards in the menu; no whole-card link and no page link card on a page|ER-G|
 |136|Query results summary (Query Results Summary, Query Total, Products Total Results)|BR WP|«x of y results»|text in `role="status"` that follows the filter|Missing|v0.8 AR-3 filters|
 
 ### G. Social and proof
@@ -887,12 +887,12 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|137|Testimonial (Testimonial, Testimonials, Simple/Fancy Testimonial, Reviews (TL))|EL DV BR BB KB SP ST BD TL MB SH|avatar, rating|`<figure>` with `<blockquote>` and `<figcaption>`|Has: quote, short variant|-|
+|137|Testimonial (Testimonial, Testimonials, Simple/Fancy Testimonial, Reviews (TL))|EL DV BR BB KB SP ST BD TL MB SH|avatar, rating|`<figure>` with `<blockquote>` and `<figcaption>`|Partial: quote block, large or as a card with portrait, name and role; no star rating|Not taken: a star rating is low value, as #128|
 |138|Testimonial carousel (Testimonial Carousel, Testimonial Slider)|EL DO WF|-|as #52|Missing|ER-D: carousel view|
 |139|Reviews (third-party) (Reviews, Yelp Reviews, Review, Product Review, review)|EL DU SP OT SH S1|schema|-|Missing|Not taken: third party|
-|140|Team member (Person, Team Members, Team)|DV BR SP ST TL WF|social links|a `<ul>` of `<article>`s: `<img alt="">` (the name is already text), `<h3>`, role and a `mailto:` link; a «vacant» state|Has: team preset|v0.8 AR-4 people kind|
+|140|Team member (Person, Team Members, Team)|DV BR SP ST TL WF|social links|a `<ul>` of `<article>`s: `<img alt="">` (the name is already text), `<h3>`, role and a `mailto:` link; a «vacant» state|Partial: team preset with portrait, name, role and email per person; no social links, no vacant state|v0.8 AR-4 people kind|
 |141|Logo list / partners (Logo List, Partners, Logos)|BD TL WF SH|carousel/grid|a `<ul>` of linked logos with the sponsor's name as `alt`, `flex-wrap`, equal optical size from `max-block-size` and `aspect-ratio`; a scrolling row duplicates the list with `aria-hidden` and `inert`, has a pause control and stands still under reduced motion|Has: sponsors preset, gallery ribbon|ER-F: sponsor tiers|
-|142|Social icons / follow (Social Icons, Social Media Follow, Social Bar, Social links)|EL WP DV BD HO WX DO NP SH SQ WH|brand colours|drawn SVG icons inside links with accessible names|Has (0.7.20.5.3): the site's links, registered once in the Site panel with a library icon or an own image, drawn by the footer, the menu's tools and the links block|-|
+|142|Social icons / follow (Social Icons, Social Media Follow, Social Bar, Social links)|EL WP DV BD HO WX DO NP SH SQ WH|brand colours|drawn SVG icons inside links with accessible names|Partial (0.7.20.5.3): the site's links, registered once and drawn by the footer, the menu and the links block; no brand colours, no shape around the icon|0.7.9|
 |143|Share buttons (Share Buttons, Social Sharing, Social Share (Buttons), Social Buttons, Sharing Icons, Share)|EL BR BD SP ST OT DU WX JI WH SQ|networks, counts, save button on images (SQ)|plain share links with no SDK; «copy link» through the Clipboard API|Missing: had them v0.7 to 0.7.20.5.2; removed 15 October 2026, since the share links led nowhere a visitor wants, and the block became the row of the site's links (#142)|-|
 |144|Instagram feed (Instagram Feed, Instagram)|DV BR SP HO SQ RM SK|grid/carousel|needs an API token a static site cannot hold; a manual gallery plus a profile link instead|Missing|Not taken: needs an API token, which a static site cannot keep|
 |145|Facebook embeds (Facebook Button/Comments/Embed/Page, Facebook Page Plugin/Post/Like/Share, Facebook)|EL BR BD WF DU|-|needs Facebook's SDK, which tracks|Missing|Not taken: SDK and tracking|
@@ -900,7 +900,7 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |147|YouTube subscribe (YouTube Subscribe button)|WX|-|an ordinary link|Missing|Not taken: an ordinary link button does it|
 |148|Social feed (aggregated) (Social Feed, Social Widgets)|SK DU|-|-|Missing|Not taken|
 |149|Third-party comments (Disqus Comments, Facebook Comments)|DU EL BD|-|-|Missing|Not taken|
-|150|Link in bio (Link in Bio (Minimalist + 6 Pro), Bio Sites)|EL SQ|-|a `<ul>` of large links|Has: link launcher|-|
+|150|Link in bio (Link in Bio (Minimalist + 6 Pro), Bio Sites)|EL SQ|-|a `<ul>` of large links|Partial: the link launcher in the menu, and the links block with icons or icon and name; no block of large stacked link buttons|0.7.9|
 |151|Follow on Shop (follow-on-shop)|SH|-|-|n/a|-|
 |152|Bandsintown (Bandsintown)|SQ|tour dates|-|n/a: the calendar covers it|-|
 
@@ -908,19 +908,19 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|153|Button (Button, Advanced Button, Regular Button)|all|icon, size, hover|`<a>` for navigation, `<button>` for actions; a target of at least 24 by 24 px (WCAG 2.5.8); `text-box` trim for optical centring (Baseline August 2026)|Has|-|
+|153|Button (Button, Advanced Button, Regular Button)|all|icon, size, hover|`<a>` for navigation, `<button>` for actions; a target of at least 24 by 24 px (WCAG 2.5.8); `text-box` trim for optical centring (Baseline August 2026)|Partial: Filled and Outline designs, the shared hover and the one link editor (page, spot, web, email, phone, file, new tab); no icon, no own colour|ER-G; 0.7.9|
 |154|Button group (Buttons, Button Group)|WP BB OT SP|-|flex with `gap` and wrapping|Has: free placement|-|
 |155|Icon button (Icon Button)|ST|-|`<button>` with an accessible name|Partial: the links block draws icon-only links with an accessible name; the icon block has no link and the button block has no icon|ER-G: an icon in the button block|
-|156|Call to action (Call to Action, CTA)|EL DV BB SP ST GH|box, ribbon|a section with a heading and one primary action|Has: CTA preset|-|
+|156|Call to action (Call to Action, CTA)|EL DV BB SP ST GH|box, ribbon|a section with a heading and one primary action|Partial: CTA banner and hero presets (heading, text and a button on a colour or picture background); no whole-box link|ER-G|
 |157|Marketing button (Marketing Button)|SP|headline + sub|-|Missing|Not taken: low value|
 |158|Promo / banner (Promos, Main Banner)|WX WE SH|-|-|Has: sections, announcement bar|-|
-|159|Notification / announcement bar (Notification Bar, Floating Bars, header-announcements)|BD EL SH SQ|sticky, dismiss|a region above the nav with a real close `<button>`; a rolling bar needs a pause (WCAG 2.2.2)|Has|-|
-|160|Floating contact button (Floating Buttons, Chat button, Click To Call, Click To Email)|EL WX DU SQ|WhatsApp, multi-link, phone-only bottom bar (SQ)|`tel:` and `mailto:` links in a fixed element that never covers content|Has: a block docked to the screen, and the contact block's call bar on phones (0.7.24.5.2)|-|
-|161|Countdown (Countdown, Countdown Timer, Timer)|EL BR DV BB KB SP OT ST BD NP DO CA MB|evergreen, expiry action|the target in `<time datetime>`; no `aria-live` on the ticking digits|Has|-|
+|159|Notification / announcement bar (Notification Bar, Floating Bars, header-announcements)|BD EL SH SQ|sticky, dismiss|a region above the nav with a real close `<button>`; a rolling bar needs a pause (WCAG 2.2.2)|Partial: one plain-text message with a link, sticky, a close remembered per text, own colours; no formatted text, text size, icon, date window or rotation|0.7.13.18|
+|160|Floating contact button (Floating Buttons, Chat button, Click To Call, Click To Email)|EL WX DU SQ|WhatsApp, multi-link, phone-only bottom bar (SQ)|`tel:` and `mailto:` links in a fixed element that never covers content|Partial: a block docked to the screen and the contact block's call bar on phones (0.7.24.5.2); no WhatsApp or SMS action, no multi-link button|ER-G|
+|161|Countdown (Countdown, Countdown Timer, Timer)|EL BR DV BB KB SP OT ST BD NP DO CA MB|evergreen, expiry action|the target in `<time datetime>`; no `aria-live` on the ticking digits|Partial: target date, a text when it ends, two designs and a seconds switch; no time zone for the target, no hiding at zero, no evergreen timer|ER-H; Not taken: an evergreen timer (false urgency) and a redirect at zero (it sends the visitor away unasked)|
 |162|Count-up timer (Countup Timer)|NP|-|as #161, counting from a past date|Missing|ER-H|
-|163|Newsletter / email opt-in (Email Optin, Subscribe Form, Newsletter, Subscription Form, Email signup, Signup card, Sign Up Forms)|DV BB SQ HO DO SH GH SP WH SK ZS WF|ESP integration|a `<form>` posting to the provider's endpoint, with an explicit, unticked consent («markedsføringsloven» § 15) and, as good practice, double opt-in|Partial: footer newsletter CTA, form|0.7.24: preset with a split consent|
+|163|Newsletter / email opt-in (Email Optin, Subscribe Form, Newsletter, Subscription Form, Email signup, Signup card, Sign Up Forms)|DV BB SQ HO DO SH GH SP WH SK ZS WF|ESP integration|a `<form>` posting to the provider's endpoint, with an explicit, unticked consent («markedsføringsloven» § 15) and, as good practice, double opt-in|Partial: footer newsletter CTA, form|0.7.24.4: preset with a split consent|
 |164|Coupons (Coupons)|DU S1 SK|-|needs validation on a server|Missing|Not taken: needs server validation|
-|165|Payment button (PayPal Button, Stripe Button, Payment Button, Pay button, PayPal, Stripe Checkout)|EL DV DO WX DU OT|one-off/recurring|a link to the provider's hosted payment page|Partial: checkout, Vipps|URGENT: Vipps migration|
+|165|Payment button (PayPal Button, Stripe Button, Payment Button, Pay button, PayPal, Stripe Checkout)|EL DV DO WX DU OT|one-off/recurring|a link to the provider's hosted payment page|Partial: the checkout block's Vipps button, and a button linking to a hosted payment page; no pay button for a set amount, no recurring payment|URGENT: Vipps migration; ER-D; Not taken: recurring payments need stored agreements|
 |166|Donation (Donation, Donations, Donation form)|SQ WX WE|-|amount chips (radio inputs styled as chips), a link out to the payment page and a `<meter>` for the goal|Partial: Vipps line in the membership preset|ER-F: donation with set amounts|
 |167|Cookie consent banner (Cookie Banner, Cookie Consent, cookie solution)|FR S1 UM SQ|Google Consent Mode (FR)|not needed without non-essential storage; a click-to-load facade on each embed is the better pattern («ekomloven» § 3-15)|Missing|0.7.24, only when analytics or embeds need consent|
 |168|Public preview / paywall marker (Public preview)|GH|free/paid cut-off|needs a server|Missing|Not taken: server|
@@ -933,21 +933,21 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|171|Form (builder) (Form, Atomic Form, Form Builder, Contact Form, Advanced Form, Forms, Form Block, Custom Form, Online form, Canva Forms, Webhook Form, contact-form)|EL EL4 BR BD DV BB KB SP OT WF FR WX SQ HO DO NP TL RM CA ZS WE JI S1 CV WS DU SH|actions, webhooks, email, redirect after sending (SQ)|constraint validation, `autocomplete` tokens, `<fieldset>` and `<legend>` for groups, `:user-invalid` for styling (widely available); the result announced. Pitfall in Urd today: the status line (`blocks/form.js:126`) has no `role="status"`, so the success message is not announced|Has|-|
+|171|Form (builder) (Form, Atomic Form, Form Builder, Contact Form, Advanced Form, Forms, Form Block, Custom Form, Online form, Canva Forms, Webhook Form, contact-form)|EL EL4 BR BD DV BB KB SP OT WF FR WX SQ HO DO NP TL RM CA ZS WE JI S1 CV WS DU SH|actions, webhooks, email, redirect after sending (SQ)|constraint validation, `autocomplete` tokens, `<fieldset>` and `<legend>` for groups, `:user-invalid` for styling (widely available); the result announced. Pitfall in Urd today: the status line (`blocks/form.js:126`) has no `role="status"`, so the success message is not announced|Partial: eight field types, required, mailto or endpoint and a honeypot; no placeholder, help text, default value or redirect, and the result is not announced|0.7.11; ER-E|
 |172|Multi-step form (Multi-Step Contact Form)|NP|progress|one `<form>` with a `<fieldset>` per step and the step as text («Step 2 of 3»)|Missing|ER-E|
-|173|Text input (Text Input, Input, Text)|WF WX WS FR RM SQ|placeholder, required|`<input>` with a visible `<label>`; a placeholder is not a label|Has|-|
-|174|Email input (Email)|FR RM SQ|validation|`type="email"` with `autocomplete="email"`|Has|-|
+|173|Text input (Text Input, Input, Text)|WF WX WS FR RM SQ|placeholder, required|`<input>` with a visible `<label>`; a placeholder is not a label|Partial: a text field with its label and required; no placeholder, help text, default value or length limit|ER-E|
+|174|Email input (Email)|FR RM SQ|validation|`type="email"` with `autocomplete="email"`|Partial: an email field with a format check and required; no autocomplete token|0.7.11|
 |175|Number input (Number)|FR RM SQ|min/max|`type="number"` with `min`, `max` and `step`|Missing|ER-E|
-|176|Phone input (Phone)|FR SQ|-|`type="tel"` with `autocomplete="tel"`|Has|-|
+|176|Phone input (Phone)|FR SQ|-|`type="tel"` with `autocomplete="tel"`|Partial: a phone field (`type="tel"`) with required; no autocomplete token|0.7.11|
 |177|URL input (URL)|FR SQ|-|`type="url"`|Missing|ER-E|
-|178|Date picker (Date, Date Picker, Filter Datepicker)|FR WX BR SQ|range|`type="date"`|Has|-|
+|178|Date picker (Date, Date Picker, Filter Datepicker)|FR WX BR SQ|range|`type="date"`|Partial: a date field with required and a real-date check; no date range, no earliest or latest date|ER-E|
 |179|Time picker (Time, Time Picker)|FR WX SQ|-|`type="time"`|Missing|ER-E|
-|180|Textarea (Textarea, Text Area, Text Box)|WF FR WS WX SQ|rows|`<textarea>` with `field-sizing: content` (Baseline June 2026) instead of JS autosize|Has|-|
+|180|Textarea (Textarea, Text Area, Text Box)|WF FR WS WX SQ|rows|`<textarea>` with `field-sizing: content` (Baseline June 2026) instead of JS autosize|Partial: a multi-line field fixed at four rows; no rows setting, no maximum length|ER-E|
 |181|Rich-text input (Rich Text (input))|WX|formatting|-|Missing|Not taken|
-|182|Checkbox (Checkbox, Filter Checkbox)|WF FR WS WX RM BR|-|`<input type="checkbox">` with its label|Has|-|
-|183|Multi-checkbox (Multi-Checkboxes)|WX SQ|-|checkboxes in a `<fieldset>` with a `<legend>`|Partial|ER-E|
-|184|Radio buttons (Radio, Radio Group, Radio Button(s), Filter Radio)|WF FR WS WX BR SQ|-|radios in a `<fieldset>` with a `<legend>`|Has|-|
-|185|Select / dropdown (Select, Dropdown, Filter Select)|WF FR WS WX RM BR SQ|multi-select|a native `<select>`, styled with `appearance: base-select` where supported (Chrome and Safari 27; Firefox behind prefs) and plain native otherwise; the editor's own UI keeps the themed dropdown ([ADR-0009](../adr/0009-themed-ui-rule.md))|Has|-|
+|182|Checkbox (Checkbox, Filter Checkbox)|WF FR WS WX RM BR|-|`<input type="checkbox">` with its label|Partial: a checkbox field with its label and required; no checked default, no link in the label|0.7.24.4; ER-E|
+|183|Multi-checkbox (Multi-Checkboxes)|WX SQ|-|checkboxes in a `<fieldset>` with a `<legend>`|Partial: separate single checkboxes; no group under one legend with an options list|ER-E|
+|184|Radio buttons (Radio, Radio Group, Radio Button(s), Filter Radio)|WF FR WS WX BR SQ|-|radios in a `<fieldset>` with a `<legend>`|Partial: radios in a fieldset with a legend, an options list and required; no default choice, no inline layout|ER-E|
+|185|Select / dropdown (Select, Dropdown, Filter Select)|WF FR WS WX RM BR SQ|multi-select|a native `<select>`, styled with `appearance: base-select` where supported (Chrome and Safari 27; Firefox behind prefs) and plain native otherwise; the editor's own UI keeps the themed dropdown ([ADR-0009](../adr/0009-themed-ui-rule.md))|Partial: a native select with a placeholder option; no multi-select|ER-E (a checkbox group for several choices); Not taken: multi-select in the dropdown|
 |186|Selection tags (Selection Tags)|WX|chips|checkboxes styled as chips|Missing|Not taken: low value|
 |187|Slider input (Slider)|WX|step|`<input type="range">` with the value shown|Missing|ER-E|
 |188|Range slider (Range Slider, Filter Range)|WX BR|min/max|two range inputs; there is no native two-thumb range|Missing|ER-E|
@@ -956,10 +956,10 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |191|Rating input (Ratings Input, Contact Form Rating)|WX NP SQ|-|radios in a `<fieldset>`|Missing|Not taken: low value|
 |192|Address input (Address Input)|WX SQ|autocomplete|address `autocomplete` tokens; a place lookup needs a third-party service|Missing|Not taken: third-party service|
 |193|Signature input (Signature Input)|WX|-|-|Missing|Not taken|
-|194|reCAPTCHA (reCAPTCHA, Google ReCAPTCHA)|WF WX NP SP SQ|v2/v3|a honeypot first; Turnstile verified on the server|Partial: honeypot|v0.9: Turnstile, once forms go through the site's own function|
-|195|Label (Label)|WF WS|-|`<label for>`|Has|-|
-|196|Submit button (Form Button, contact-form-submit-button, Filter Submit)|WF SH BR|-|`<button type="submit">`|Has|-|
-|197|Terms checkbox (Accept Terms Checkbox)|NP|-|an unticked, required checkbox with a link to the policy|Missing|0.7.24|
+|194|reCAPTCHA (reCAPTCHA, Google ReCAPTCHA)|WF WX NP SP SQ|v2/v3|a honeypot first; Turnstile verified on the server|Partial: a honeypot on the form, the checkout and the footer newsletter; no captcha service (Turnstile, hCaptcha or reCAPTCHA)|v0.9: Turnstile, once forms go through the site's own function|
+|195|Label (Label)|WF WS|-|`<label for>`|Partial: a visible label wrapping each field, with a * for required; no visually hidden label|ER-E|
+|196|Submit button (Form Button, contact-form-submit-button, Filter Submit)|WF SH BR|-|`<button type="submit">`|Partial: a submit button with its own text, disabled while sending; no style, size, width or alignment|0.7.9|
+|197|Terms checkbox (Accept Terms Checkbox)|NP|-|an unticked, required checkbox with a link to the policy|Partial: a required checkbox with a plain-text label; no link to the policy in the label|0.7.24.4|
 |198|Calculated field (Calculation Formulas)|NP|-|`<output>`|Missing|Not taken|
 |199|Conditional logic (Show Or Hide Field Condition, Conditional Form Emails)|NP OX SQ|-|hidden fields also `disabled`, so they are neither validated nor sent|Missing|ER-E|
 |325|Hidden field (Hidden)|SQ|filled from the page address (campaign tracking)|`<input type="hidden">` filled from `URLSearchParams`; the visitor can see and change it, so it is never trusted, and what it tracks belongs in the privacy page|Missing|ER-E|
@@ -976,9 +976,9 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|206|Product grid (Products, Archive Products, Product List, Grid Product Gallery, Featured Items, featured-collection, product-list)|EL BR BD DV WX WE SH SQ|filters, columns|a `<ul>` of product `<article>`s|Has|-|
-|207|Product carousel (Slider Product Gallery, Product Carousel, Carousel Product)|WX KB NP|-|as #52|Planned|0.7.13 (the LTT gaps)|
-|208|Single product widget (Product Widget, Product, featured-product)|WX SQ BD SH GH|-|-|Partial|ER-D: the product block limited to one entry|
+|206|Product grid (Products, Archive Products, Product List, Grid Product Gallery, Featured Items, featured-collection, product-list)|EL BR BD DV WX WE SH SQ|filters, columns|a `<ul>` of product `<article>`s|Partial: product cards in columns with a quick view, a badge and a hover picture; no filters or sort, no choice of the card's parts|v0.8 AR-3; ER-D|
+|207|Product carousel (Slider Product Gallery, Product Carousel, Carousel Product)|WX KB NP|-|as #52|Planned|ER-D: carousel view|
+|208|Single product widget (Product Widget, Product, featured-product)|WX SQ BD SH GH|-|-|Partial|ER-D: one featured product|
 |209|Product template builder (Product Builder)|BD SQ SH|-|-|Partial: card and quick view|v0.8 product permalinks|
 |210|Product title (Product Title)|EL BR DV SH|-|the product page's `<h1>`|Partial: card and quick view|v0.8 product permalinks|
 |211|Product images (Product Images, Product Gallery, product-media-gallery)|EL BR DV BD SH|zoom, thumbnails|the gallery and lightbox (#50)|Partial: card and quick view|v0.8 product permalinks|
@@ -990,31 +990,31 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |217|Product rating (Product Rating)|EL BR DV BD|-|-|Missing|Not taken: server|
 |218|Stock / inventory (Product Stock, product-inventory)|EL BR DV SH|low-stock note, pickup availability|-|Partial: the badge can say «sold out» by hand|v1.1 the shop (published stock per variant)|
 |219|Product meta / SKU (Product Meta, sku)|EL BR DV BD SH|categories, tags|-|Missing|v1.1 the shop (an SKU per variant)|
-|220|Product description (Short Description, Product Description, Product Content)|EL BR DV SH|-|rich text (#24)|Has|-|
+|220|Product description (Short Description, Product Description, Product Content)|EL BR DV SH|-|rich text (#24)|Partial: the product text as rich text on the card and in full in the quick view; no short description apart from the full one, no pictures inside it|v0.8 AR-2; v0.8 product permalinks|
 |221|Product tabs / additional info (Product Data Tabs, Additional Information, Product Tabs, Product Information)|EL BR DV SH|disclosures|APG Tabs or `<details>` (#105, #104)|Partial: card and quick view|v0.8 product permalinks|
 |222|Product reviews (Product Reviews)|BR DV S1|-|-|Missing|Not taken: server|
-|223|Related products / recommendations (Product Related, Related Products, Best Sellers, product-recommendations)|EL BR DV BD WX SH|-|-|Partial: card and quick view|v0.8 product permalinks|
+|223|Related products / recommendations (Product Related, Related Products, Best Sellers, product-recommendations)|EL BR DV BD WX SH|-|-|Partial: card and quick view|After v1.0 shop extensions|
 |224|Upsells / cross-sells (Upsells, Product Up/Cross-sells, Product Upsell, Cross Sells, Upsell Products)|EL BR DV BD SH|-|-|Missing|After v1.0 shop extensions|
-|225|Product categories / collections (Product Categories, collection-list, collection-card, Featured Categories)|EL SH WE|-|link cards|Has: shop categories preset|-|
+|225|Product categories / collections (Product Categories, collection-list, collection-card, Featured Categories)|EL SH WE|-|link cards|Partial: the shop categories preset of picture-and-text tiles made by hand; no category field on products, no filtered list behind a tile|v0.8 AR-3|
 |226|Shop archive title/description (Archive Title, Archive Description, Products Archive Description)|EL BR|-|-|n/a (WooCommerce internals)|-|
 |227|Sort / order (Products Orderby)|BR|-|a labelled native `<select>`|Missing|v0.8 AR-3 collection filters|
-|228|Mini cart / cart icon (Menu Cart, Mini Cart, Cart Icon, Cart, cart-drawer)|EL BR BD WX WF SH SQ|drawer|a `<button>` whose name includes the count; the drawer on `<dialog>`|Partial: cart in the nav and a drawer on `<dialog>`; the button's name leaves out the count and the drawer has no name|0.7.11: names in the basket|
-|229|Cart contents (Cart, Cart Items, Cart v2, Cart Page, Cart Contents, Cart Products, main-cart)|EL BR BD DV SH|-|a table or list, with changes announced|Has|-|
-|230|Cart totals (Cart Totals, Cart Collaterals)|BD DV BR|-|`<output>` or plain text|Has|-|
-|231|Coupon / discount field (Cart Coupon, Checkout Coupon, Discounts)|BR WF SH|-|a text field; the checkout asks the shop function whether the code holds, and the payment function checks it again|Missing|v1.1 the shop|
-|232|Checkout (Checkout, Checkout Page, Checkout Billing/Shipping/Payment/Information/Details, Checkout Form, Checkout v2)|EL BR BD DV WF|multi-step|checkout as a form; the gateway outside the core|Has: form checkout, Vipps; the order button and the order with the total right above it (0.7.24.6)|-|
+|228|Mini cart / cart icon (Menu Cart, Mini Cart, Cart Icon, Cart, cart-drawer)|EL BR BD WX WF SH SQ|drawer|a `<button>` whose name includes the count; the drawer on `<dialog>`|Partial: cart in the nav and a drawer on `<dialog>`; the button's name leaves out the count and the drawer has no name|0.7.11: names in the basket; ER-D|
+|229|Cart contents (Cart, Cart Items, Cart v2, Cart Page, Cart Contents, Cart Products, main-cart)|EL BR BD DV SH|-|a table or list, with changes announced|Partial: the basket drawer with lines, quantity buttons, remove and line totals; changes are not announced|0.7.11: announcements in the basket|
+|230|Cart totals (Cart Totals, Cart Collaterals)|BD DV BR|-|`<output>` or plain text|Partial: one total; no subtotal, shipping, VAT or discount line|v1.1 SHOP-4, SHOP-5, SHOP-6|
+|231|Coupon / discount field (Cart Coupon, Checkout Coupon, Discounts)|BR WF SH|-|a text field; the checkout asks the shop function whether the code holds, and the payment function checks it again|Missing|v1.1 SHOP-5|
+|232|Checkout (Checkout, Checkout Page, Checkout Billing/Shipping/Payment/Information/Details, Checkout Form, Checkout v2)|EL BR BD DV WF|multi-step|checkout as a form; the gateway outside the core|Partial: contact fields, the order and its total above the order button (0.7.24.6), mailto, endpoint or Vipps; no delivery address, delivery choice or terms link|v1.1 SHOP-4; 0.7.24.2|
 |233|Order confirmation (Purchase Summary, Checkout Thankyou, Order Confirmation)|EL BR WF|-|-|Partial: a thank-you line after the Vipps payment (`?ordered=1`); no order details|0.7.24.7: a printable confirmation with the order lines and the withdrawal form; v1.1 the shop for the rest|
 |234|My account (My Account, Account Page (+ orders, downloads, addresses, payment methods), User Account)|EL BR BD WF|-|needs a server|Missing|Not taken: server|
 |235|Order tracking (Order Tracking Page)|BD|-|needs a server|Missing|Not taken: server|
 |236|Store notices (WooCommerce Notices, Notice)|EL BR DV|-|-|n/a|-|
 |237|Currency converter (Currency Converter)|WX|-|-|Missing|Not taken|
-|238|Payment icons (payment-icons)|SH|-|decorative SVG, with the methods also named in text|Partial: shop trust preset|-|
+|238|Payment icons (payment-icons)|SH|-|decorative SVG, with the methods also named in text|Missing: the shop trust preset holds trust points (ordering, returns, help), not payment marks; the icon library has no Vipps or card mark|v1.1 SHOP-9|
 |239|Wishlist (Store Wishlist)|S1|-|`localStorage`|Missing|Watch: localStorage would work, but low value|
 |240|Quick order list (quick-order-list)|SH|B2B|-|n/a|-|
 |241|Digital downloads (Downloads, Digital Goods)|WF SK|-|needs a server|Missing|Not taken: server|
 |242|Store hook / fragment (Template Hook, Dynamic Fragment, WooCommerce Pages)|BR EL|-|-|n/a|-|
 |243|External commerce module (BigCommerce, North Commerce, WooCommerce)|BB SH|-|-|n/a|-|
-|326|Product quick view (Quick view, Quick add, quick buy)|SQ SH|options and add to cart in the dialog|`<dialog>` with `showModal()`, a link to the full product page, focus back on the card when it closes|Has: a quick view in a native `<dialog>` with gallery, variants and buy button|-|
+|326|Product quick view (Quick view, Quick add, quick buy)|SQ SH|options and add to cart in the dialog|`<dialog>` with `showModal()`, a link to the full product page, focus back on the card when it closes|Partial: a quick view in a native `<dialog>` with gallery, variants and buy button; no link to a product page|v0.8 product permalinks|
 |327|Recently viewed products (Recently viewed)|SH|-|a list kept in `localStorage`, shown as a row of product cards|Missing|Watch: localStorage would work, but low value|
 
 ### K. Booking, events and services
@@ -1022,9 +1022,9 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
 |244|Booking / scheduling (Scheduling (Acuity), Bookings calendar, Online Scheduling, Appointment Booking, Schedule Booking, Online appointments)|SQ WX DU NP S1 GD|-|needs a server; a link out to the booking service|Missing|Not taken: server. Link out instead (events already carry a sign-up link)|
-|245|Service list (Service List, Services)|WX TL|categories|a `<ul>` of cards|Has: cards, custom collection, button|-|
+|245|Service list (Service List, Services)|WX TL|categories|a `<ul>` of cards|Partial: cards or a list from a custom collection (title, text, image, a link on the title); no price, duration or category, no book button per entry|v0.8 typed custom fields (to be weighed); v0.8 AR-3; ER-D|
 |246|Book button (Book button)|WX|-|a link to the booking service|Has: cards, custom collection, button|-|
-|247|Event list / calendar (Event List (list/grid/calendar), Single Event, Events)|WX S1 WE NP|RSVP/tickets|a list with `<time>` and Event JSON-LD; a static `.ics` per event (RFC 5545) plus a Google Calendar template link; ticket status as text, never colour alone|Has: calendar block with 41 designs (40 plus the plain one), a phone design and a pop-up design per calendar, 8 views, and «Add to calendar» per event. RSVP and tickets Partial: a sign-up link per event|ER-F: registration mode, ticket status|
+|247|Event list / calendar (Event List (list/grid/calendar), Single Event, Events)|WX S1 WE NP|RSVP/tickets|a list with `<time>` and Event JSON-LD; a static `.ics` per event (RFC 5545) plus a Google Calendar template link; ticket status as text, never colour alone|Partial: the calendar block with 41 designs and 8 views, fed from an iCal feed; no events kept in Urd, no event pages, and only a sign-up link for tickets|ER-F: registration mode, ticket status; v0.8 events as a collection kind|
 |248|Restaurant ordering (Online Orders)|WX|pickup/delivery|needs a server|Missing|Not taken: server. Link out instead|
 |249|Table reservations (Reservations (Tock), OpenTable, OpenTable Reservations, Table Reservations, Restaurant Reservations)|SQ DU WX S1|-|needs a server|Missing|Not taken: server. Link out instead|
 |250|Real-estate listings (real-estate listings)|GD|-|-|n/a|-|
@@ -1036,11 +1036,11 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|252|Posts grid / list (Posts, Archive Posts, Blog, Latest Posts, Post List, Post Grid, featured-blog-posts)|EL BR DV BB KB SP ST WP BD OT WX SH|card skins|a `<ul>` of `<article>`s with `<time>`, baked into the HTML at publish|Has: collection views|-|
+|252|Posts grid / list (Posts, Archive Posts, Blog, Latest Posts, Post List, Post Grid, featured-blog-posts)|EL BR DV BB KB SP ST WP BD OT WX SH|card skins|a `<ul>` of `<article>`s with `<time>`, baked into the HTML at publish|Partial: cards, list and archive views with a limit and newest first; no column count, show or hide per part, read-more link, pagination or filter|ER-D; v0.8 AR-3|
 |253|Posts carousel (Post Carousel, Post Slider, Posts Carousel/Slider, Post Grid/Carousel, Blog Posts Carousel)|DV BB SP KB NP|-|as #52|Missing|ER-D: carousel view|
-|254|Query loop / loop builder (Query Loop, Post Template, Loop Grid, Loop Carousel, Collection Loop, Query, Looper, Loop Item, Loop, Post Loop Builder, Advanced Query Loop, Loop Builder, Collection List, Collection, CMS lists)|WP EL EL4 BR BB BD OX GB KB SP WF WS FS|any post type, custom template|one card designed as the template and bound to a query, as a block of its own|Partial: fixed card designs|0.7.9: more collection view designs|
+|254|Query loop / loop builder (Query Loop, Post Template, Loop Grid, Loop Carousel, Collection Loop, Query, Looper, Loop Item, Loop, Post Loop Builder, Advanced Query Loop, Loop Builder, Collection List, Collection, CMS lists)|WP EL EL4 BR BB BD OX GB KB SP WF WS FS|any post type, custom template|one card designed as the template and bound to a query, as a block of its own|Partial: a collection, a limit, newest or oldest first and one of three fixed designs; no offset, filter, other sort, own card template or pagination|0.7.9; v0.8 AR-3; ER-D; v0.8 entry pages (a card template)|
 |255|Term loop (Term Loop Builder, Terms Query, Term Template)|BD OX WP|-|-|n/a|-|
-|256|No results (No Results)|WP GB|-|a calm empty state in text|Has|-|
+|256|No results (No Results)|WP GB|-|a calm empty state in text|Partial: the calendar has an editable empty text and a «No matches» line; an empty collection shows visitors nothing|v0.8 AR-3 collection filters|
 |257|Post title (Post Title, Title)|EL BR DV BD WP BB|-|the entry page's `<h1>`|Partial: cards|v0.8 entry pages|
 |258|Post content (Post Content, Content, page-content)|EL BR DV BD WP SH|-|`<article>`|Partial: cards|v0.8 entry pages|
 |259|Post excerpt (Post Excerpt, Excerpt)|EL BR BD WP|length|-|Partial: cards|v0.8 entry pages|
@@ -1049,14 +1049,14 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 |262|Author box (Author Box, Author, Author Name, Author Biography)|EL BR BD WP|-|-|Partial: cards|v0.8 entry pages|
 |263|Comments (Post Comments, Comments, Comments List, Comment Form + WP comment sub-blocks, Comment System)|EL BR DV BD WP BB S1 SH|threading|needs a server|Missing|Not taken: server|
 |264|Related posts (Related Posts)|BR|-|-|Partial: cards|v0.8 entry pages|
-|265|Archives (Archives, Archive Menu, Archive)|WP WX SQ|-|entries grouped under year headings|Has: archive view|-|
-|266|Category / term list (Terms List, Taxonomy List, Taxonomy, Category Menu, Term Name/Description/Count)|WP SP BR WX|-|a list of filter links or chips|Missing|v0.8 AR-3 collection filters|
-|267|Tag cloud (Tag Cloud)|WP SQ WX|-|a plain list; size alone carries no meaning|Missing|v0.8 AR-3 collection filters|
-|268|RSS (RSS, RSS Feed, RSS Button)|WP SQ DU WX S1|-|RSS written at publish; an outside feed read through a proxy|Has: RSS for dated collections. Reading an outside feed Missing|Watch: an outside feed could go through the same proxy as /api/ics|
+|265|Archives (Archives, Archive Menu, Archive)|WP WX SQ|-|entries grouped under year headings|Partial: the archive view groups entries under year headings; no month grouping and no list of periods with counts|v0.8 AR-3 collection filters|
+|266|Category / term list (Terms List, Taxonomy List, Taxonomy, Category Menu, Term Name/Description/Count)|WP SP BR WX|-|a list of filter links or chips|Missing|v0.8 AR-2; v0.8 AR-3 collection filters|
+|267|Tag cloud (Tag Cloud)|WP SQ WX|-|a plain list; size alone carries no meaning|Missing|v0.8 AR-2; v0.8 AR-3 collection filters|
+|268|RSS (RSS, RSS Feed, RSS Button)|WP SQ DU WX S1|-|RSS written at publish; an outside feed read through a proxy|Partial: an RSS feed per news, notices or publications collection, written at publish; no discovery link or RSS button. Reading an outside feed Missing|v0.8 entry pages; ER-G; Watch: an outside feed could go through the same proxy as /api/ics|
 |269|Latest comments (Latest Comments)|WP|-|needs comments, so a server|Missing|Not taken: server|
-|270|Collection summary (Summary)|SQ|carousel/list/grid|-|Partial: cards, list and archive views with a limit; no carousel, wall or category filter|ER-D: carousel view; v0.8 AR-3 filters|
+|270|Collection summary (Summary)|SQ|carousel/list/grid|-|Partial: cards, list and archive views with a limit; no carousel, wall, column count, show or hide per part, or category filter|ER-D; v0.8 AR-3 filters|
 |271|Dynamic HTML / list (Dynamic HTML, Dynamic List)|KB|-|-|n/a|-|
-|272|Repeater field (ACF/Meta Box) (Repeater Field, ACF Blocks)|BD OX BB|-|-|Has: collection fields, FAQ items|-|
+|272|Repeater field (ACF/Meta Box) (Repeater Field, ACF Blocks)|BD OX BB|-|-|Partial: FAQ and timeline items, and collection entries with a fixed set of fields; no owner-defined fields or repeating groups|v0.8 typed custom fields (to be weighed)|
 |273|Template content area (Template Content Area)|BD OX|-|-|n/a|-|
 |274|Bookmark / link preview (Bookmark, Web bookmark)|GH NO SQ|internal page card (SQ)|OpenGraph data fetched at publish, rendered as a card `<a>`|Missing|ER-G: OpenGraph data fetched at publish|
 |275|Forum widget (Recent Posts (Forum))|WX|-|needs a server|Missing|Not taken: server|
@@ -1070,7 +1070,7 @@ Webflow disabled User Accounts on all sites on 29 January 2026 (Webflow help, re
 |---|---|---|---|---|---|---|
 |277|Login bar / account menu (Login Bar, Login/out, Log Out/Log In button, Customer account component)|WX WP WF SH|avatar menu|needs a server|Missing|Not taken: server|
 |278|Members area / profile (Members area, User Account, Account Page)|WX WF BR|-|needs a server|Missing|Not taken: server|
-|279|Pricing plans (membership) (Plan List, Membership, User Account Subscription List, Pricing Plan)|WX SK WE WF SQ|-|the tiers of #124, with the sign-up handed to the association's register|Partial: membership preset|ER-F: sign-up handed off to Spond, StyreWeb or Rubic|
+|279|Pricing plans (membership) (Plan List, Membership, User Account Subscription List, Pricing Plan)|WX SK WE WF SQ|-|the tiers of #124, with the sign-up handed to the association's register|Partial: the membership preset (tiers with benefits in text boxes, a join button) and sign-up as a link out; no highlighted tier and no period switch|ER-F; Not taken: the period switch (low value)|
 |280|Members-only content / password (Members-Only Content, Public preview, Password Protection)|SK GH S1|-|access control at the host|Missing|Not taken: Cloudflare Access instead, a recipe in the v0.9 documentation round|
 |281|Avatar (Avatar)|WP|-|-|n/a: no user accounts|-|
 
@@ -1078,11 +1078,11 @@ Webflow disabled User Accounts on all sites on 29 January 2026 (Webflow help, re
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|282|Map (Google Maps, Map, Maps, Google Map, MapWidget)|EL EL4 BR DV KB SP OT ST BD WX SQ HO ZS NP RM JI WE WF DU MB FS|marker, style|`<address>` with an «Open in OpenStreetMap / Google Maps» link, and the map as a static image or a click-to-load iframe. Urd embeds OpenStreetMap's own iframe at once; 0.7.24 asks that no third-party frame loads before a click|Has: OpenStreetMap|-|
+|282|Map (Google Maps, Map, Maps, Google Map, MapWidget)|EL EL4 BR DV KB SP OT ST BD WX SQ HO ZS NP RM JI WE WF DU MB FS|marker, style|`<address>` with an «Open in OpenStreetMap / Google Maps» link, and the map as a static image or a click-to-load iframe. Urd embeds OpenStreetMap's own iframe at once; 0.7.24 asks that no third-party frame loads before a click|Partial: OpenStreetMap's embed with one marker, address search and zoom; no map style, several pins, marker text or directions link|ER-G; Watch: needs a map library (several pins, marker text)|
 |283|Leaflet / OSM map (Map (Leaflet), map)|BR EL4|no API key|-|Has: OpenStreetMap's own iframe, with no API key and no library|-|
 |284|Map connector (Map Connector)|BR|query-driven markers|needs a map library|Missing|Watch: needs a map library|
 |285|Multi-location (Multi-Location)|DU|-|a list of `<address>`es, each with map links|Missing|ER-G: places with map links|
-|286|Contact section (Contact, Contacts, contact section)|EL GD TL|-|`<address>` with `tel:` and `mailto:` links|Has: the Contact details block in eleven designs, read from the site settings, and the Contact preset built on it (0.7.24.5.2)|-|
+|286|Contact section (Contact, Contacts, contact section)|EL GD TL|-|`<address>` with `tel:` and `mailto:` links|Partial: the Contact details block in eleven designs (map, QR, vCard, call bar) and the Contact preset; no opening hours and no several places|ER-C (opening hours); ER-G (several places)|
 |287|Chat (Chat, Live Chat)|WX SK|-|a third-party script|Missing|Not taken: third party|
 
 ### O. Embeds and integrations
@@ -1093,11 +1093,11 @@ Webflow disabled User Accounts on all sites on 29 January 2026 (Webflow help, re
 |289|PHP / JS / CSS code (PHP Code, JavaScript Code, CSS Code, Custom CSS)|OX EL|server-side (OX)|-|n/a|-|
 |290|Shortcode (Shortcode, Container Shortcode, Shortcode Wrapper)|EL BR BD OX WP|-|-|n/a|-|
 |291|oEmbed / URL embed (Embed, oEmbed, Embeds)|WP OX GH SQ NO CV FR FS|providers|a click-to-load facade per allowlisted host, the host named in the CSP|Partial: YouTube, Vimeo|0.7.24: one click-to-load frame for allowlisted hosts|
-|292|Iframe (IFRAMEs, Iframe, embed a site)|CA DO WX|-|`<iframe loading="lazy" title>`; blocked by the CSP's `frame-src` unless the host is allowed|Missing|Taken: v0.8 Animation files, the portal (a sandboxed frame with its own CSP)|
+|292|Iframe (IFRAMEs, Iframe, embed a site)|CA DO WX|-|`<iframe loading="lazy" title>`; blocked by the CSP's `frame-src` unless the host is allowed|Missing|0.7.24.1: the click-to-load frame for an allowlisted host|
 |293|Third-party widget (Widgets, Widget, WordPress)|CA BD OX EL|-|-|n/a: WordPress widget slots; a third-party embed is #288 or #291|-|
 |294|SoundCloud (SoundCloud)|EL SQ GD|-|as #291|Missing (the embed family is Partial: YouTube and Vimeo only)|0.7.24: one click-to-load frame for allowlisted hosts|
 |295|PDF viewer (PDF viewer)|GD|-|an `<iframe>` or `<object>` behind a click, always with a download link|Missing|ER-B, together with the file list|
-|296|JSON-LD / head (JSON-LD, Head Slot)|WS|SEO|JSON-LD in the baked HTML|Has: automatic|-|
+|296|JSON-LD / head (JSON-LD, Head Slot)|WS|SEO|JSON-LD in the baked HTML|Partial: Organization on every page and Event from the calendar, written automatically; no Article, Product or FAQPage and no custom head slot|v0.8 entry pages; v0.8 product pages; v0.8 baking; Not taken in the core: the head slot (plugin route)|
 |297|XML node (XML Node)|WS|feeds/sitemaps|-|n/a: Urd writes sitemap.xml and RSS itself at publish|-|
 |298|AI code element (Code layers, Canva Code element, AI Element Generator, AI widget builder)|FS CV WH DU|prompt-built|-|Missing|Not taken: MCP is the way ([ADR-0017](../adr/0017-ai-via-local-mcp-server.md))|
 |299|AI writing block (AI Block (Spectra/ZipAI), AI Block (Otter))|SP OT|-|-|Missing|Not taken: MCP is the way (ADR-0017)|
@@ -1108,23 +1108,23 @@ Webflow disabled User Accounts on all sites on 29 January 2026 (Webflow help, re
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|300|Shape (Shape, Shapes, Graphics)|SQ HO GB WX WH TL RM FR|fill, stroke|inline SVG or CSS, hidden from assistive technology|Has|-|
-|301|Vector art / illustration (Vector art, Vector Illustration, Vector)|WX KB TL|-|inline SVG|Partial: icons|-|
-|302|Section shape divider (Section Shape Dividers, shapes)|BD EL SQ|wave, tilt|`clip-path` with `shape()` (Baseline February 2026) or inline SVG|Has|-|
-|303|Fancy divider (Fancy Divider)|BD|-|as #7|Has|-|
-|304|Animation group (Animation Group, Stagger Animation, Video Animation)|WS|scroll-driven|`animation-timeline: view()` behind `@supports` (Chrome and Safari), IntersectionObserver for a one-off reveal; stagger from `sibling-index()` (Baseline August 2026); everything off under reduced motion|Has|-|
+|300|Shape (Shape, Shapes, Graphics)|SQ HO GB WX WH TL RM FR|fill, stroke|inline SVG or CSS, hidden from assistive technology|Partial: five shapes in four theme colours with thickness, fill and rotation; no own colour, opacity, corner radius or more shapes|0.7.9|
+|301|Vector art / illustration (Vector art, Vector Illustration, Vector)|WX KB TL|-|inline SVG|Partial: an SVG shown as an image, and the icon library; no inline SVG|v0.8 OL-2 inline SVG|
+|302|Section shape divider (Section Shape Dividers, shapes)|BD EL SQ|wave, tilt|`clip-path` with `shape()` (Baseline February 2026) or inline SVG|Partial: five shapes on the top and bottom edges with height, colour, mirror and invert; no more shapes, no overlap of the content, no line style|0.7.9|
+|303|Fancy divider (Fancy Divider)|BD|-|as #7|Partial: a line with a word between two strokes; no icon or ornament in the middle and no dashed or double line|0.7.9|
+|304|Animation group (Animation Group, Stagger Animation, Video Animation)|WS|scroll-driven|`animation-timeline: view()` behind `@supports` (Chrome and Safari), IntersectionObserver for a one-off reveal; stagger from `sibling-index()` (Baseline August 2026); everything off under reduced motion|Partial: a section's blocks staggered in four orders with an effect and a step; no scroll-driven animation|ER-H; v0.8 Animation files|
 |305|Parallax (Parallax, Parallax Scrolling)|MB|-|scroll-driven CSS behind `@supports` with a `requestAnimationFrame` fallback; off under reduced motion|Has|-|
-|306|Stickers (stickers)|WH|-|decorative images or SVG|Partial: icons and shapes|-|
+|306|Stickers (stickers)|WH|-|decorative images or SVG|Has: images, icons and shapes|-|
 |307|Text effects (Text effects)|WX|-|as #26|Missing|ER-H, with #26|
 
 ### Q. Utility
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|308|Dark-mode toggle (Toggle - Mode)|BR|light/dark|`color-scheme` with `light-dark()`, a `<button aria-pressed>`, and the choice applied before first paint so nothing flashes|Has|-|
+|308|Dark-mode toggle (Toggle - Mode)|BR|light/dark|`color-scheme` with `light-dark()`, a `<button aria-pressed>`, and the choice applied before first paint so nothing flashes|Partial: a light and dark button in the menu's tools that follows the system and is remembered; not placeable as a block or in the footer|ER-G|
 |309|Coming soon / under construction (Coming Soon mode, Under Construction page)|SP S1|-|-|Missing|Watch: low value|
 |310|Footer copyright / policy links (footer-copyright, footer-policy-list)|SH|-|text and links in the `<footer>`|Has|-|
-|311|Time / date output (Time)|WS|-|`<time datetime>` formatted with `Intl.DateTimeFormat`|Partial: dates in collections, the calendar and the countdown; no free-standing date element|-|
+|311|Time / date output (Time)|WS|-|`<time datetime>` formatted with `Intl.DateTimeFormat`|Partial: dates in collections, the calendar and the countdown; no free-standing date element|Not taken: a date belongs to the content that holds it|
 |312|Template button (Template button)|NO|-|-|n/a|-|
 |313|Sub-page (Page)|NO|-|-|n/a: pages are made in the pages panel|-|
 
@@ -1161,8 +1161,8 @@ The element research ranked what Urd lacks by value to clubs and associations. C
 
 | Rank | Element | Value | Who has it | Native build | Urd today | Where |
 |---|---|---|---|---|---|---|
-|1|People / board cards|very high|Divi Person, Bricks Team Members, Spectra Team, Tailwind Plus and Relume team sections|a `<ul>` of `<article>`s: image, `<h3>`, role, `mailto:`|Has: the team preset (the research listed it as planned). Boards kept per period are planned|v0.8 AR-4 people kind|
-|2|Membership tiers / pricing cards|very high|Elementor Price Table, Divi Pricing Tables, Bricks Pricing Tables, Tailwind Plus Pricing|a grid of `<article>`s plus a real comparison `<table>`|Has: the membership preset (the research listed it as missing). No monthly/yearly switch|ER-F: sign-up handed off to Spond, StyreWeb or Rubic|
+|1|People / board cards|very high|Divi Person, Bricks Team Members, Spectra Team, Tailwind Plus and Relume team sections|a `<ul>` of `<article>`s: image, `<h3>`, role, `mailto:`|Partial: the team preset (the research listed it as planned); no social links or vacant state, and boards kept per period are planned|v0.8 AR-4 people kind|
+|2|Membership tiers / pricing cards|very high|Elementor Price Table, Divi Pricing Tables, Bricks Pricing Tables, Tailwind Plus Pricing|a grid of `<article>`s plus a real comparison `<table>`|Partial: the membership preset (the research listed it as missing); no highlighted tier, benefit list or monthly/yearly switch|ER-F: sign-up handed off to Spond, StyreWeb or Rubic|
 |3|«Add to calendar» and ticket/RSVP status on events|high|UCL and Samfundet; Squarespace Reservations|a static `.ics` per event (RFC 5545) plus a text badge|Partial: the calendar block (41 designs, 8 views, subscribe links, «Add to calendar» per event, a sign-up link per event) and the events preset; no ticket status|ER-F|
 |4|Sponsor / partner logo cloud with an optional pausable marquee|high|Tailwind Plus Logo Clouds, Relume logo sections, Once UI LogoCloud|a `<ul>` grid; a duplicated `aria-hidden` track; a still fallback under reduced motion|Has: the sponsors preset and the gallery ribbon (the research listed it as missing). The gallery ribbon has a pause button that stays (0.7.0.51); tiers are missing|ER-F: sponsor tiers|
 |5|Opening hours with «open now»|high for venues and offices|Duda Business Hours, Otter Business Hours|`<table>` and `<time>`, a few lines of JS, schema.org OpeningHoursSpecification|Missing|ER-C|

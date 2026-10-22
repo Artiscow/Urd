@@ -14,6 +14,7 @@ These are the surveys the ADRs and milestones cite: the layout, navigation and s
 | [Default sizes](#default-sizes-what-100--is-17-october-2026) | 17 October 2026 | ADR-0025 decision 6 (0.7.19.23.4) |
 | [What a shop needs](#what-a-shop-needs-how-the-builders-sell-19-october-2026) | 19 October 2026 | ADR-0027 (v1.1) |
 | [How an organisation names itself](#how-an-organisation-names-itself-numbers-registers-and-the-law-in-57-countries-20-october-2026) | 20 October 2026 | Milestone 0.7.24 (0.7.24.5) |
+| [What a link can point to](#what-a-link-can-point-to-and-what-every-element-carries-21-october-2026) | 21 October 2026 | Milestone 0.7.27 |
 
 ## The preview canvas (27 July 2026)
 
@@ -305,6 +306,36 @@ A pass on how an association, a club or a small business identifies itself on it
 5. The JSON-LD writes an ISO 6523 code only where the list has one; the other numbers go into `identifier` and the VAT number into `vatID`.
 
 **What Urd takes (0.7.24.5):** one profile per country in `contact-profiles.js`, with the numbers, their forms, their checks (`contact-checks.js`, each verified on real numbers in its test), what travels with them and how the VAT number is formed; a generic profile for any other country, with a free label and number; a representative's name; and two footer switches, the legal line and the contact details, both on by default. Opening hours stay with ER-C ([FEATURES.md](FEATURES.md#open) C112, C116).
+
+## What a link can point to, and what every element carries (21 October 2026)
+
+From the question whether a link can point at a spot on a page. In Urd a link reached a section only by its random id, copied by hand from Properties; blocks had no id, nothing jumped to the spot after the page was drawn, and about fifteen link fields kept three data shapes. Two passes read the source code of the open-source builders: what a link and an anchor can be in Gutenberg, Elementor, Kadence Blocks, Spectra, Stackable and GenerateBlocks, and in Webstudio, GrapesJS, Puck, Plasmic, Builder.io, Silex and Onlook; and the settings every element offers in eleven of them, now in [SETTINGS.md](SETTINGS.md).
+
+**Anchors:**
+- **On the element, not a widget:** Gutenberg turns its «HTML anchor» on for 98 of 116 core blocks and writes it as the block's id; Stackable has one on all 46 blocks and Spectra on most; Elementor has a «CSS ID» on every element and an ID on its v4 elements, and its Menu Anchor widget is the older pattern. Webstudio and GrapesJS give every instance an id, Builder.io only as a custom attribute, Puck none.
+- **Checked little:** most only turn spaces and «#» into «-», and Gutenberg never checks that an anchor is unique. GrapesJS rolls a taken id back without a word and numbers clones (`id-2`), Elementor's v4 elements clear the id on a duplicate, and Webstudio finds duplicates only in a later audit.
+- **From the headings:** Gutenberg and Stackable store a slug of the heading text in the content and stop following the text once the owner edits it; Kadence and Spectra make the ids in the browser at runtime, and Spectra's are random for a repeated heading, so a link to them breaks on reload.
+
+**Links:**
+- **Kinds:** Webstudio's link control has five modes, URL, Page with a section on it, Email with a subject, Phone and Attachment; Silex has URL, Email and Page; Gutenberg sorts what is typed into a link, mailto, tel or a fragment; Plasmic, GrapesJS and Builder.io take one field, and Puck has no link field.
+- **A spot on a page:** only Webstudio lists the ids on the chosen page, and only it stores a jump as a reference (`{pageId, instanceId}`) whose hash is resolved at render, so a renamed anchor never breaks a link. Everywhere else the owner types `#name`, and nothing checks that it exists.
+- **Options:** a new tab everywhere, with `noopener` added by Gutenberg, Kadence and GenerateBlocks and left out by Elementor's classic link control and Builder.io (Webstudio warns about it in an audit); nofollow in the WordPress projects, sponsored in Kadence and GenerateBlocks, download in Kadence, and no `ugc` anywhere. Silex rewrites links when a page is renamed and flags links to a deleted one.
+
+**The jump:**
+- **The offset under a sticky header** is a number the owner types: Kadence's and Spectra's tables of contents scroll by script with an offset (40 and 30 px by default), Stackable writes the number into `scroll-padding-top` per breakpoint, and Elementor's v4 elements take a `scroll-margin-top` each; only Kadence's navigation can take the live height of the header row.
+- **Smooth scrolling:** only Elementor keeps `scroll-behavior: smooth` behind `prefers-reduced-motion: no-preference`.
+- **Hidden targets:** Gutenberg's accordion opens the panel that holds `:target`, and Stackable and Spectra open an item whose id is in the address.
+
+**What every element carries:** the WordPress libraries give their blocks an anchor, a class, visibility per device, custom CSS, lock, rename and reuse through the block supports, and Stackable spacing, border, shadow and background through its shared block components; Elementor gives every element an id, a class, hiding per device, spacing, border, shadow, background, position and z-index through its Advanced tab; Webstudio, GrapesJS and Builder.io reach the styles through a style panel over any CSS property; and Elementor, Spectra and Stackable add an entrance animation to every element ([SETTINGS.md](SETTINGS.md#what-every-element-can-carry)).
+
+**Five rules from the survey:**
+1. A name belongs on any section or block, slugged, unique on the page and cleared on a duplicate, while the stored target is the element's stable id, so a rename never breaks a link.
+2. One link editor serves every link field: a page and a spot on it chosen from the anchors that exist, a web address, email, phone and a file.
+3. The offset under a sticky header is CSS, `scroll-padding-top` taken from the menu's own height, not arithmetic in a click handler, so a link from another page, the history and a page without script land right too.
+4. Smooth scrolling only without reduced motion.
+5. A link whose page or spot is gone says so in its field.
+
+**What Urd takes (0.7.27):** a name on any section or block beside a stable id on every block, the id kept as the stored target; one link editor with a page and a spot on it, a web address with nofollow and sponsored, email, phone and a file from `media/`, a new tab and a download; the offset under the menu through `scroll-padding-top` from its height; smooth scrolling only without reduced motion; and a warning in a field whose page or spot is gone. The cross-cutting settings Urd still lacks go to their places: a lock and a layer name in the 0.7.9 layers panel, box styles on more blocks in 0.7.9, elements shown only on the phone in 0.7.3, a hidden section or block in v0.8 AR-5, a scoped style per look in v0.8 OL-4, and any block or group of blocks as a link in v0.8 ER-G; a CSS class is not taken, since the class-based cascade is not adopted.
 
 ## Sources
 
@@ -657,3 +688,36 @@ Each list is the survey's own sources, as cited in its text, and belongs to the 
 - [ABR: ABN lookup](https://abr.business.gov.au/) (primary)
 - [ASIC: the Australian company number](https://www.asic.gov.au/for-business-and-companies/companies/register-a-company/australian-company-number-acn/) (primary)
 - [python-stdnum](https://github.com/arthurdejong/python-stdnum) (code)
+
+### Survey 21 October 2026 (links, anchors and settings)
+
+- [Gutenberg: the anchor support](https://github.com/WordPress/gutenberg/blob/168e4f4/packages/block-editor/src/hooks/anchor.tsx) (code)
+- [Gutenberg: heading anchors from the text](https://github.com/WordPress/gutenberg/blob/168e4f4/packages/block-library/src/heading/autogenerate-anchors.js) (code)
+- [Gutenberg: LinkControl](https://github.com/WordPress/gutenberg/tree/168e4f4/packages/block-editor/src/components/link-control) (code)
+- [Gutenberg: the accordion's script](https://github.com/WordPress/gutenberg/blob/168e4f4/packages/block-library/src/accordion/view.js) (code)
+- [Gutenberg: the block library](https://github.com/WordPress/gutenberg/tree/168e4f4/packages/block-library/src) (code)
+- [Elementor: the Advanced tab every widget shares](https://github.com/elementor/elementor/blob/b4ca769/includes/widgets/common-base.php) (code)
+- [Elementor: the Menu Anchor widget](https://github.com/elementor/elementor/blob/b4ca769/includes/widgets/menu-anchor.php) (code)
+- [Elementor: smooth scrolling under reduced motion](https://github.com/elementor/elementor/blob/b4ca769/assets/dev/scss/frontend/_smooth-scroll.scss) (code)
+- [Elementor: the scroll margin under a sticky element](https://github.com/elementor/elementor/blob/b4ca769/assets/dev/js/frontend/utils/anchor-scroll-margin.js) (code)
+- [Elementor: the URL control](https://github.com/elementor/elementor/blob/b4ca769/includes/controls/url.php) (code)
+- [Kadence Blocks: the table of contents](https://github.com/stellarwp/kadence-blocks/blob/a30a69b/src/assets/js/kb-table-of-contents.js) (code)
+- [Kadence Blocks: the navigation's offset and scroll spy](https://github.com/stellarwp/kadence-blocks/blob/a30a69b/src/assets/js/kb-navigation-block.js) (code)
+- [Kadence Blocks: the button's link settings](https://github.com/stellarwp/kadence-blocks/blob/a30a69b/src/blocks/singlebtn/block.json) (code)
+- [Spectra: the table of contents](https://github.com/brainstormforce/wp-spectra/blob/ea0852c/assets/js/table-of-contents.js) (code)
+- [Spectra: the link control](https://github.com/brainstormforce/wp-spectra/blob/ea0852c/src/components/link-control/index.js) (code)
+- [Stackable: the table of contents' anchors](https://github.com/gambitph/Stackable/blob/d207f37/src/block/table-of-contents/autogenerate-anchors.js) (code)
+- [Stackable: the offset as CSS](https://github.com/gambitph/Stackable/blob/d207f37/src/block/table-of-contents/style.js) (code)
+- [GenerateBlocks 2.5.0, the wordpress.org build](https://wordpress.org/plugins/generateblocks/) (code)
+- [Webstudio: the URL control](https://github.com/webstudio-is/webstudio/blob/dabaeed/apps/builder/app/builder/features/settings-panel/controls/url.tsx) (code)
+- [Webstudio: links resolved at render](https://github.com/webstudio-is/webstudio/blob/dabaeed/packages/react-sdk/src/props.ts) (code)
+- [Webstudio: the project audit](https://github.com/webstudio-is/webstudio/blob/dabaeed/packages/project-build/src/runtime/audit.ts) (code)
+- [GrapesJS: the component model](https://github.com/GrapesJS/grapesjs/blob/f47fbde/packages/core/src/dom_components/model/Component.ts) (code)
+- [GrapesJS: the link component](https://github.com/GrapesJS/grapesjs/blob/f47fbde/packages/core/src/dom_components/model/ComponentLink.ts) (code)
+- [Puck: the field types](https://github.com/puckeditor/puck/blob/1839d14/packages/core/types/Fields.ts) (code)
+- [Plasmic: the href editor](https://github.com/plasmicapp/plasmic/blob/3254a11/platform/wab/src/wab/client/components/sidebar-tabs/ComponentProps/HrefEditor.tsx) (code)
+- [Builder.io: the block renderer](https://github.com/BuilderIO/builder/blob/c4497e9/packages/sdks/src/components/block/block.lite.tsx) (code)
+- [Builder.io: the React router](https://github.com/BuilderIO/builder/blob/c4497e9/packages/react/src/blocks/Router.tsx) (code)
+- [Silex: internal links](https://github.com/silexlabs/Silex/blob/1fe592f/editor/grapesjs/internal-links.ts) (code)
+- [Onlook: the editor's element ids](https://github.com/onlook-dev/onlook/blob/423e2e9/packages/constants/src/editor.ts) (code)
+- The settings catalogues of the eleven projects, with the commits read: [SETTINGS.md](SETTINGS.md#sources) (code)

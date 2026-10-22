@@ -104,7 +104,7 @@ We use Urd as an outside user, without shortcuts:
 - Hosting beyond Cloudflare Pages: the site served from any static host (GitHub Pages, Netlify, an own server), with a way for the sign-in and the publishing from `/admin` to work there, and an answer to how such a site gets Urd updates (added 6 October 2026; details in BACKLOG).
 - Then release an Urd update that contains a **real block change (v1→v2 with migration)**, and run the update button on the Urd-Design site.
 
-Also in the phase (details in [BACKLOG.md](../BACKLOG.md)): the documentation round (setup guide friction, troubleshooting, the readme structure) and the user guide finished, and the release and updater hardening, both gathered here on 9 August 2026 because they cover the guides and the code the dress rehearsal tries out; the MCP server's write tools (ADR-0017); the translation round for nn and se; touch-friendliness for admin and the published page; one editing size per site, shared between editors; the code comments reviewed before outside developers read them; starting a new site from a blank page or a full page template; board handover (a «new board term» checklist: the repo in an association GitHub organisation, two owners with 2FA, the Cloudflare account and the domain on the association); test fixtures per block type and a seeded fuzz test of the push pass; optimistic commits that retry when only other files changed; and, to be weighed, a content-only editing mode and scheduled publishing.
+Also in the phase (details in [BACKLOG.md](../BACKLOG.md)): the documentation round (setup guide friction, troubleshooting, the readme structure) and the user guide finished, and the release and updater hardening, both gathered here on 9 August 2026 because they cover the guides and the code the dress rehearsal tries out; the MCP server's write tools (ADR-0017); restoring an earlier publish, or one page, from the History panel; the translation round for nn and se; touch-friendliness for admin and the published page; one editing size per site, shared between editors; the code comments reviewed before outside developers read them; starting a new site from a blank page or a full page template; board handover (a «new board term» checklist: the repo in an association GitHub organisation, two owners with 2FA, the Cloudflare account and the domain on the association); test fixtures per block type and a seeded fuzz test of the push pass; optimistic commits that retry when only other files changed; and, to be weighed, a content-only editing mode and scheduled publishing.
 
 Until v0.6, `template/` was both workshop and demo (urdweb); from v0.6 the template is its own repo, and Urd-Design is the first site that lives as a real user's.
 
@@ -136,7 +136,7 @@ are multilingual from 0.6.8), more UI languages (French, German, Spanish, Finnis
 export of a built site, concurrency view in admin, gallery website for templates and
 plugins (urd.dev), GitLab/Gitea adapter (publishing and updates for a repo outside GitHub), external media storage (R2),
 PR-per-draft/deploy-preview workflow (from [CODE.md](../comparison/CODE.md#part-5-publishing-and-deploy)), synced global blocks (one block used on several pages and edited once),
-shop extensions beyond v1.1 (bundles, quantities, back-in-stock alerts, pre-orders,
+the owner's own server functions beside Urd's, shop extensions beyond v1.1 (bundles, quantities, pre-orders,
 upsells). Details in [BACKLOG.md](../BACKLOG.md).
 
 ---

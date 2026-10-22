@@ -28,6 +28,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.62 - Every Has row of the comparison checked option by option, the settings read from source, and the backlog given what the rows lack - 22 October 2026
+
+- 155 catalogue rows in FEATURES.md and ELEMENTS.md said Has while Urd held only part of what their builders offer (the text toolbar's headings stop at H3, no card is one link, the menu marks no current page). 768 rows, every Has, Partial and Planned row and every Missing row that names a backlog place, were checked option by option against the code and the settings read from source: those rows are Partial with the missing part named, 69 Partial cells name what they lacked or changed status, and 283 Where cells name the backlog place for it or the reason it is not taken.
+- «Has» means every option the row lists, in both maps and in the comparison README, whose refresh steps now check each Has row a round touches; AGENTS.md carries the rule.
+- New `docs/comparison/SETTINGS.md`: the settings every element offers in eleven open-source builders and block libraries, read from their source, against Urd's.
+- SURVEYS.md: «What a link can point to, and what every element carries (21 October 2026)».
+- BACKLOG: 73 items take the options the rows lack, each with a done-when; new items 0.7.10 collections CSV round trip, 0.7.13.21 Menu item options, v0.9 restore an earlier publish and after v1.0 own functions beside Urd's; overloaded items split; back-in-stock alerts not taken and related products moved to the product permalinks; 26 bugs found by the audit under Bugs.
+- The roadmaps: v0.9 restores an earlier publish, and after 1.0 holds the owner's own server functions and no longer back-in-stock alerts.
+
 ### 0.7.27.7-9 - A warning on a link that no longer lands, the links to a spot listed, a link field for plugins, and links to files - 22 October 2026
 
 - A link whose page or spot had been deleted gave no sign in the editor and went nowhere on the site. Its field shows a warning in place of where it went, and so does an address within the site that no page has (`linkProblem` in link-edit.js).
