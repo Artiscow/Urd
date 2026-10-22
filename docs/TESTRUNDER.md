@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.65): the payment layer (a deployed site with the Vipps test secrets)
+
+- [ ] Checkout block with «Vipps Checkout button» on: the prices in the summary show kr whatever the currency word was; the block's menu shows the currency field fixed to kr with its tooltip; a block that held «€» before shows kr too, and turning the button off frees the field with its old word
+- [ ] A test payment completed at Vipps: the return lands on the checkout page, the basket is empty and «Thank you! Your order has been sent.» shows; a reload keeps the basket empty and shows no second message
+- [ ] A test payment cancelled at Vipps: the return leaves the basket as it was and shows no message
+- [ ] The checkout page opened with `?ordered=1`, or with the return address of someone else's payment, leaves the basket as it was and shows no message; the parameter is gone from the address
+- [ ] A basket edited in the browser's storage with a variant the product does not have («XL · Lilla» on a product with S, M and Rød, Blå): the Vipps button shows the could-not-send message and no session is made; a real variant pays as before, and the receipt in the Vipps portal shows it
+- [ ] Local development without functions: a return with `?ordered=<reference>` leaves the basket as it was, with no error shown to the visitor
+
 ### Test batch (0.7.0.64): the calendar feed parser
 
 - [ ] An Outlook feed whose events carry `TZID=W. Europe Standard Time` shows each event at its right local time, for a visitor in Oslo and for one in London (the site's zone setting off), in summer and in winter

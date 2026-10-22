@@ -23,9 +23,10 @@
     <label title={ta('tip.checkout.endpoint')}>{ta('lbl.endpointUrl')}
       <input type="url" value={selectedBlock.props.endpoint ?? ''}
         onchange={(e) => setBlockProp('endpoint', e.target.value.trim())} /></label>
+    <!-- With the payment layer on the prices are charged and shown in NOK, so the word is kr and cannot be changed -->
     <Setting key="currency">
-      <label title={ta('tip.product.currency')}>{ta('lbl.currency')}
-        <input value={selectedBlock.props.currency ?? 'kr'}
+      <label title={ta(selectedBlock.props.vippsCheckout ? 'tip.checkout.currencyVipps' : 'tip.product.currency')}>{ta('lbl.currency')}
+        <input value={selectedBlock.props.vippsCheckout ? 'kr' : (selectedBlock.props.currency ?? 'kr')} disabled={selectedBlock.props.vippsCheckout === true}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     </Setting>
   {/snippet}
@@ -37,7 +38,7 @@
       <div class="pin-line">
         <label class="gridmenu-snap" title={ta('tip.checkout.vippsCheckout')}>
           <input type="checkbox" checked={selectedBlock.props.vippsCheckout === true}
-            onchange={(e) => setBlockProp('vippsCheckout', e.target.checked)} />
+            onchange={(e) => (e.target.checked ? setBlockProps('vippsCheckout', { vippsCheckout: true, currency: 'kr' }) : setBlockProp('vippsCheckout', false))} />
           {ta('lbl.vippsCheckout')}
         </label>
         <Pin id="vippsButton" />

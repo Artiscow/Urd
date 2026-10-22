@@ -1,7 +1,7 @@
 # ADR-0020: Optional payment layer via Vipps Checkout (hosted redirect)
 
 Date: 25 August 2026
-Status: Accepted; decision 6 amended 19 October 2026 (a members' code of ADR-0027 may make the member price chargeable), earlier text in [amended/](amended/0020-optional-payment-layer-vipps-checkout-until-2026-10-19.md); decision 1 amended 20 October 2026 (the order button named by its role, since its text follows angrerettloven § 16), earlier text in [amended/](amended/0020-optional-payment-layer-vipps-checkout-until-2026-10-20.md)
+Status: Accepted; decision 6 amended 19 October 2026 (a members' code of ADR-0027 may make the member price chargeable), earlier text in [amended/](amended/0020-optional-payment-layer-vipps-checkout-until-2026-10-19.md); decision 1 amended 20 October 2026 (the order button named by its role, since its text follows angrerettloven § 16), earlier text in [amended/](amended/0020-optional-payment-layer-vipps-checkout-until-2026-10-20.md); decision 4 amended 22 October 2026 (the return empties the cart only for a session the site's own endpoint confirms paid), earlier text in [amended/](amended/0020-optional-payment-layer-vipps-checkout-until-2026-10-22.md)
 
 ## Context
 
@@ -14,7 +14,7 @@ The payment layer is built on **Vipps Checkout via a dedicated Pages Function wi
 1. The checkout block gets the additive prop `vippsCheckout` (bool, default false). When set, it shows a «Pay with Vipps» button next to the form's order button.
 2. The button POSTs the cart lines (id/quantity/variant) and the contact fields to the site's own function `/api/vipps/checkout`. The function ALWAYS recomputes the total from the git-owned catalogue (`content/samlinger/`, kind `products`) - the client's amount is never used. An unknown product id or a manipulated payload is rejected.
 3. The function creates a Checkout session at Vipps (checkout/v3) and responds with the session's URL; the client redirects there. The payment happens at Vipps, never on the site.
-4. On return the checkout block shows a receipt and empties the cart. The callback endpoint acknowledges and stores nothing - the orders live in the Vipps portal (the order lines are sent along in the session), the site is static and has no order database.
+4. On return the checkout block asks the site's session endpoint whether the session was paid, and for a paid session shows a receipt and empties the cart. The callback endpoint acknowledges and stores nothing - the orders live in the Vipps portal (the order lines are sent along in the session), the site is static and has no order database.
 5. Configuration is Cloudflare secrets, never repo data. Without them the function reports that Vipps is not configured, the button shows a calm unavailable text, and the form checkout works unchanged.
 6. The member price is a displayed second price on a trust basis (login is outside the core, BACKLOG); the payment layer charges the regular price, unless the buyer enters a members' discount code of [ADR-0027](0027-a-shop-without-a-database.md), which makes the member price chargeable.
 
@@ -27,7 +27,7 @@ The payment layer is built on **Vipps Checkout via a dedicated Pages Function wi
 
 ## Consequences
 
-- The pure logic (payload validation, conversion to øre, session body) is one module under `functions/_lib/` and is tested in node; the two endpoints are thin shells.
+- The pure logic (payload validation, conversion to øre, session body) is one module under `functions/_lib/` and is tested in node; the three endpoints (the session's creation, its state, the callback) are thin shells.
 - The form checkout and the payment button live side by side; no part of the core gains a dependency on Vipps.
 - A test payment (the Done-when criterion) requires the site owner's test agreement (the MT environment) on a deployed site; locally the button degrades gracefully.
 - If the provider is switched later, the surface is small: one block prop, two functions and one pure module.

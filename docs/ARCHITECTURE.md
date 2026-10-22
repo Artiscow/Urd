@@ -178,7 +178,7 @@ Configuration is six environment variables at the host: `GITHUB_REPO`, `GITHUB_C
 
 ### The payment layer (ADR-0020)
 
-The checkout function creates the Vipps session with `returnUrl` set to the checkout page with `?ordered=1`; on that query the checkout block shows a receipt and empties the cart. The callback endpoint `/api/vipps/callback` acknowledges 200 and stores nothing: the orders live in the Vipps portal (the order lines are sent along in the session), and the site has no order database. `functions/_lib/vipps.js` owns the pure logic (payload validation, conversion to øre, the session body) and is tested in node; `functions/api/vipps/checkout.js` and `functions/api/vipps/callback.js` are thin shells around it. The secrets it needs are listed in [DEVELOPMENT-en-GB.md](languages/DEVELOPMENT-en-GB.md#common-tasks).
+The checkout function creates the Vipps session with `returnUrl` set to the checkout page with `?ordered=<reference>`; on that return the checkout block asks `/api/vipps/session`, which reads the session's state from Vipps, and shows a receipt and empties the cart for a paid session only. The callback endpoint `/api/vipps/callback` acknowledges 200 and stores nothing: the orders live in the Vipps portal (the order lines are sent along in the session), and the site has no order database. `functions/_lib/vipps.js` owns the pure logic (payload validation, conversion to øre, the session body) and is tested in node; `functions/api/vipps/checkout.js` and `functions/api/vipps/callback.js` are thin shells around it. The secrets it needs are listed in [DEVELOPMENT-en-GB.md](languages/DEVELOPMENT-en-GB.md#common-tasks).
 
 ## Repo layout: monorepo with `template/`
 

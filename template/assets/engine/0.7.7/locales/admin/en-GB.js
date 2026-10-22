@@ -2307,6 +2307,7 @@ export default {
     'lbl.checkoutSeller': 'Show the seller',
     'tip.checkout.seller': 'The association\'s name, organisation number, address, phone and email from the Site panel, under the buttons: the buyer must know who they buy from before the order (angrerettloven § 8 d)',
     'tip.checkout.vippsCheckout': 'Optional payment layer (ADR-0020): needs a Vipps agreement and secrets in the Cloudflare environment; without them the button shows an unavailable text',
+    'tip.checkout.currencyVipps': 'Vipps charges in Norwegian kroner, so the prices show kr while the button is on',
     'blocks.map': 'Map',
     'tip.blocks.map': 'A map with your address: OpenStreetMap\'s own embed, no tracking',
     'lbl.mapLocation': 'Location',

@@ -2307,6 +2307,7 @@ export default {
     'lbl.checkoutSeller': 'Satıcıyı göster',
     'tip.checkout.seller': 'Site panelindeki derneğin adı, kuruluş numarası, adresi, telefonu ve e-postası, düğmelerin altında: alıcı siparişten önce kimden aldığını bilmelidir (angrerettloven § 8 d)',
     'tip.checkout.vippsCheckout': 'İsteğe bağlı ödeme katmanı (ADR-0020): Vipps anlaşması ve Cloudflare ortamında gizli anahtarlar gerektirir; onlar olmadan düğme kullanılamıyor metni gösterir',
+    'tip.checkout.currencyVipps': 'Vipps Norveç kronu ile ücretlendirir; düğme açıkken fiyatlar kr gösterir',
     'blocks.map': 'Harita',
     'tip.blocks.map': 'Adresinizle harita: OpenStreetMap\'in kendi gömmesi, izleme yok',
     'lbl.mapLocation': 'Konum',

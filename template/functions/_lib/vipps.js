@@ -47,7 +47,9 @@ export function validOrderPayload(payload) {
     if (!Number.isFinite(qty) || qty < 1 || qty > 99) return null;
     const clean = { id, qty };
     if (line.variant != null) {
-      const variant = String(line.variant).slice(0, 80);
+      // The variant is a size and a colour of the product; a text past any such label is no basket line.
+      const variant = String(line.variant);
+      if (variant.length > 200) return null;
       if (variant) clean.variant = variant;
     }
     order.push(clean);
@@ -103,6 +105,41 @@ export function makeReference() {
   return `urd-${hex}`;
 }
 
+/** Whether a value is a reference makeReference made (anchored, the CodeQL lesson). */
+export function isReference(value) {
+  return typeof value === 'string' && /^urd-[0-9a-f]{24}$/.test(value);
+}
+
+/**
+ * Whether every order line's variant text is a label the basket makes for the product («M · Red», a size or a colour alone, as blocks/product.js joins them), compared whole, so a name that holds the separator itself still fits.
+ * A line without a variant is fine; a product without sizes or colours takes no variant.
+ * @param {Array<{id: string, qty: number, variant?: string}>} order Cleaned order (validOrderPayload)
+ * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
+ * @returns {boolean}
+ */
+export function validVariants(order, catalogs) {
+  const choices = new Map();
+  for (const catalog of catalogs) {
+    if (catalog?.kind !== 'products') continue;
+    for (const entry of catalog.entries ?? []) {
+      if (!entry?.id || choices.has(entry.id)) continue;
+      choices.set(entry.id, {
+        sizes: (Array.isArray(entry.sizes) ? entry.sizes : []).map(String),
+        colors: (Array.isArray(entry.colors) ? entry.colors : []).map((c) => String(c?.name ?? '')).filter(Boolean),
+      });
+    }
+  }
+  for (const line of order) {
+    if (!line.variant) continue;
+    const own = choices.get(line.id);
+    if (!own) return false;
+    const labels = new Set([...own.sizes, ...own.colors]);
+    for (const size of own.sizes) for (const color of own.colors) labels.add(`${size} · ${color}`);
+    if (!labels.has(line.variant)) return false;
+  }
+  return true;
+}
+
 /**
  * The body for POST {apiBase}/checkout/v3/session. The order lines and the
  * contact fields ride along as the description, so the order can be read in
@@ -116,7 +153,8 @@ export function buildSession({ amountOre, reference, order, contact, origin, ret
   return {
     merchantInfo: {
       callbackUrl: `${origin}/api/vipps/callback`,
-      returnUrl: `${origin}${returnPath ?? '/'}?ordered=1`,
+      // The reference travels with the return, so the page can ask the session endpoint whether this session was paid.
+      returnUrl: `${origin}${returnPath ?? '/'}?ordered=${reference}`,
       callbackAuthorizationToken: callbackToken,
     },
     transaction: {

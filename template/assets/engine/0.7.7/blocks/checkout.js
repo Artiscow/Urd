@@ -85,7 +85,8 @@ export const checkoutBlock = {
     const host = el2('div', 'urd-checkout');
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
-    const currency = props.currency || 'kr';
+    // The payment layer charges in NOK, so with it on the prices show kr whatever word the block holds.
+    const currency = props.vippsCheckout ? 'kr' : (props.currency || 'kr');
 
     const summary = el2('div', 'urd-checkout-summary');
     renderSummary(summary, currency);
@@ -185,6 +186,8 @@ export const checkoutBlock = {
           });
           const data = await res.json().catch(() => null);
           if (res.ok && data?.url) {
+            // The session's reference is kept for the return, which asks whether this session was paid.
+            try { sessionStorage.setItem('urd-vipps-reference', String(data.reference ?? '')); } catch { /* no storage: the basket then stays after the payment */ }
             location.href = data.url;
             return;
           }
@@ -197,16 +200,29 @@ export const checkoutBlock = {
       buttons.appendChild(pay);
     }
 
-    // Return from payment (?ordered=1): receipt plus empty the basket. The
-    // parameter is cleaned away so a refresh does not empty a new basket.
-    // Only with the payment layer on: otherwise a shared link could empty
-    // the basket.
-    if (props.vippsCheckout && !ctx.preview && new URLSearchParams(location.search).has('ordered')) {
-      writeCart([]);
-      setStatus(t('shop.orderSent'), false);
+    // Return from payment (?ordered=<reference>): the basket is emptied and the buyer thanked only when the reference is the one this browser started and the site's session endpoint says the session was paid, so neither a shared address nor a cancelled payment empties a basket.
+    // The parameter is cleaned away so a refresh does not ask again.
+    const ordered = new URLSearchParams(location.search).get('ordered');
+    if (props.vippsCheckout && !ctx.preview && ordered !== null) {
       const url = new URL(location.href);
       url.searchParams.delete('ordered');
       history.replaceState(null, '', url);
+      let started = '';
+      try { started = sessionStorage.getItem('urd-vipps-reference') ?? ''; } catch { /* no storage */ }
+      if (started && ordered === started && /^urd-[0-9a-f]{24}$/.test(ordered)) {
+        // Vipps may send the buyer back before the session is settled, so the page asks a few times while it is still being paid.
+        const ask = async (left) => {
+          const data = await fetch(`/api/vipps/session?reference=${encodeURIComponent(ordered)}`).then((res) => (res.ok ? res.json() : null));
+          if (data?.paid) {
+            writeCart([]);
+            setStatus(t('shop.orderSent'), false);
+            try { sessionStorage.removeItem('urd-vipps-reference'); } catch { /* no storage */ }
+            return;
+          }
+          if (left > 0 && ['SessionCreated', 'PaymentInitiated'].includes(data?.state)) setTimeout(() => ask(left - 1).catch(() => {}), 2000);
+        };
+        ask(5).catch(() => {});
+      }
     }
 
     form.addEventListener('submit', async (event) => {

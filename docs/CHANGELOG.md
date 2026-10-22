@@ -28,6 +28,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.65 - The bug list taken, third round: the payment layer - 22 October 2026
+
+- The Vipps function charged in NOK while the checkout showed whatever currency word the block held. With the payment button on, the prices show kr, the block's currency field is fixed to kr with its reason in the tooltip, and turning the button on sets it (`blocks/checkout.js`, `Checkout.svelte`). BACKLOG: the product and cart blocks' own words under SHOP-6.
+- The variant text from the basket went onto the order lines unchecked. The function checks each line's variant against the product's sizes and colours in the catalogue and refuses the order otherwise (`validVariants` in `functions/_lib/vipps.js`).
+- Any visit to the checkout page with `?ordered` in the address emptied the basket and thanked the buyer. The return address carries the session's reference, the page keeps the reference it started, and on the return it asks the new `/api/vipps/session`, which reads the session's state from Vipps; the basket is emptied only for a paid session, asking a few times while Vipps still settles it (SCHEMA.md, ARCHITECTURE.md; ADR-0020 decision 4 amended, the earlier text under amended/).
+- BACKLOG: three bug entries delivered.
+
 ### 0.7.0.64 - The bug list taken, second round: the calendar feed parser - 22 October 2026
 
 - A feed with a Windows time-zone name as `TZID` (the names Outlook writes, such as «W. Europe Standard Time») was read as the visitor's local time. Such a name is read through a table of the Windows names and their IANA zones, and a zone given only in a `VTIMEZONE` block is read from the block's offsets, with the change of clock from its yearly rules (`ics.js`).

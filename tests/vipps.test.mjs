@@ -7,7 +7,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { vippsConfig, validOrderPayload, orderAmountOre, makeReference, buildSession } from '../template/functions/_lib/vipps.js';
+import { vippsConfig, validOrderPayload, orderAmountOre, makeReference, buildSession, isReference, validVariants } from '../template/functions/_lib/vipps.js';
 
 const ENV = {
   VIPPS_CLIENT_ID: 'id',
@@ -79,10 +79,39 @@ test('buildSession: return URL on own origin, amount in ore, description with li
     returnPath: '/kasse',
     callbackToken: 'urd-token',
   });
-  assert.equal(body.merchantInfo.returnUrl, 'https://forening.pages.dev/kasse?ordered=1');
+  assert.equal(body.merchantInfo.returnUrl, 'https://forening.pages.dev/kasse?ordered=urd-abc123def456');
   assert.equal(body.merchantInfo.callbackUrl, 'https://forening.pages.dev/api/vipps/callback');
   assert.equal(body.transaction.amount.value, 70000);
   assert.equal(body.transaction.amount.currency, 'NOK');
   assert.ok(body.transaction.paymentDescription.includes('2 x kake (Stor)'));
   assert.ok(body.transaction.paymentDescription.length <= 100);
+});
+
+test('isReference: the shape makeReference makes, nothing else', () => {
+  assert.equal(isReference(makeReference()), true);
+  for (const bad of ['urd-abc', 'urd-' + 'g'.repeat(24), 'x'.repeat(28), '', null, 'urd-' + 'a'.repeat(24) + '/..']) assert.equal(isReference(bad), false, String(bad));
+});
+
+test('buildSession: the return address carries the session reference', () => {
+  const body = buildSession({ amountOre: 100, reference: 'urd-' + 'a'.repeat(24), order: [{ id: 'x', qty: 1 }], contact: {}, origin: 'https://site.no', returnPath: '/kasse', callbackToken: 't' });
+  assert.equal(body.merchantInfo.returnUrl, 'https://site.no/kasse?ordered=urd-' + 'a'.repeat(24));
+});
+
+test('validVariants: a variant must be a size and a colour the product has, in the basket\'s form', () => {
+  const catalogs = [{ kind: 'products', entries: [
+    { id: 'genser', price: 300, sizes: ['S', 'M'], colors: [{ name: 'Rød' }, { name: 'Blå' }] },
+    { id: 'kopp', price: 100 },
+  ] }];
+  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'M · Rød' }], catalogs), true);
+  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'M' }, { id: 'genser', qty: 1, variant: 'Blå' }], catalogs), true);
+  assert.equal(validVariants([{ id: 'kopp', qty: 2 }], catalogs), true, 'no variant');
+  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'XL · Rød' }], catalogs), false, 'a size the product lacks');
+  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'Rød · M' }], catalogs), false, 'the colour before the size');
+  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'Gratis for meg' }], catalogs), false, 'free text');
+  assert.equal(validVariants([{ id: 'kopp', qty: 1, variant: 'M' }], catalogs), false, 'a product without choices takes no variant');
+  assert.equal(validVariants([{ id: 'ukjent', qty: 1, variant: 'M' }], catalogs), false);
+  const dotted = [{ kind: 'products', entries: [{ id: 'skjerf', price: 200, colors: [{ name: 'Rød · Blå' }] }] }];
+  assert.equal(validVariants([{ id: 'skjerf', qty: 1, variant: 'Rød · Blå' }], dotted), true, 'a colour name that holds the separator');
+  assert.equal(validOrderPayload({ order: [{ id: 'genser', qty: 1, variant: 'x'.repeat(201) }] }), null, 'a variant past any label is no order');
+  assert.equal(validOrderPayload({ order: [{ id: 'genser', qty: 1, variant: 'x'.repeat(120) }] }).order[0].variant.length, 120, 'a long label is kept whole for the check');
 });

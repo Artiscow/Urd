@@ -6,7 +6,7 @@
  * configuration the answer is 503, and the checkout block shows a calm
  * unavailable message (the form checkout works unchanged).
  */
-import { vippsConfig, validOrderPayload, orderAmountOre, makeReference, buildSession } from '../../_lib/vipps.js';
+import { vippsConfig, validOrderPayload, orderAmountOre, validVariants, makeReference, buildSession } from '../../_lib/vipps.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -46,10 +46,15 @@ export async function onRequestPost({ request, env }) {
   if (amountOre == null || amountOre <= 0) {
     return json({ error: 'Unknown product in the order', code: 'orderInvalid' }, 400);
   }
+  // The variant text goes on the receipt, so it must be a choice the product has.
+  if (!validVariants(clean.order, catalogs.filter(Boolean))) {
+    return json({ error: 'Unknown variant in the order', code: 'orderInvalid' }, 400);
+  }
 
+  const reference = makeReference();
   const body = buildSession({
     amountOre,
-    reference: makeReference(),
+    reference,
     order: clean.order,
     contact: clean.contact,
     origin,
@@ -91,5 +96,6 @@ export async function onRequestPost({ request, env }) {
   if (!session?.checkoutFrontendUrl || !session?.token) {
     return json({ error: 'Unexpected response from Vipps', code: 'vippsUnexpected' }, 502);
   }
-  return json({ url: `${session.checkoutFrontendUrl}?token=${encodeURIComponent(session.token)}` });
+  // The reference goes to the client too, which keeps it for the return (blocks/checkout.js).
+  return json({ url: `${session.checkoutFrontendUrl}?token=${encodeURIComponent(session.token)}`, reference });
 }

@@ -24640,8 +24640,8 @@ function KC(e, t) {
 				children: (e, t) => {
 					var n = zC(), a = A(n), o = N(a);
 					U(o), E(n), P((e, t) => {
-						K(n, "title", e), z(a, `${t ?? ""} `), W(o, F(r).props.currency ?? "kr");
-					}, [() => q("tip.product.currency"), () => q("lbl.currency")]), I("change", o, (e) => i("currency", e.target.value)), R(e, n);
+						K(n, "title", e), z(a, `${t ?? ""} `), W(o, F(r).props.vippsCheckout ? "kr" : F(r).props.currency ?? "kr"), o.disabled = F(r).props.vippsCheckout === !0;
+					}, [() => q(F(r).props.vippsCheckout ? "tip.checkout.currencyVipps" : "tip.product.currency"), () => q("lbl.currency")]), I("change", o, (e) => i("currency", e.target.value)), R(e, n);
 				},
 				$$slots: { default: !0 }
 			}), P((e, t, i, u) => {
@@ -24652,32 +24652,35 @@ function KC(e, t) {
 				() => q("tip.checkout.endpoint"),
 				() => q("lbl.endpointUrl")
 			]), I("change", o, (e) => i("recipient", e.target.value.trim())), I("change", l, (e) => i("endpoint", e.target.value.trim())), R(e, t);
-		}, a = (e) => {
-			var t = HC(), n = j(t), a = A(n), o = N(a);
-			U(o), E(n);
-			var s = N(n, 2);
+		}, s = (e) => {
+			var t = HC(), n = j(t), o = A(n), s = N(o);
+			U(s), E(n);
+			var c = N(n, 2);
 			{
 				let e = /* @__PURE__ */ D(() => q("common.off"));
-				db(s, {
+				db(c, {
 					key: "vippsCheckout",
 					get shown() {
 						return F(e);
 					},
 					children: (e, t) => {
-						var n = VC(), a = A(n), o = A(a);
-						U(o);
-						var s = N(o);
-						E(a), kv(N(a, 2), { id: "vippsButton" }), E(n), P((e, t) => {
-							K(a, "title", e), G(o, F(r).props.vippsCheckout === !0), z(s, ` ${t ?? ""}`);
-						}, [() => q("tip.checkout.vippsCheckout"), () => q("lbl.vippsCheckout")]), I("change", o, (e) => i("vippsCheckout", e.target.checked)), R(e, n);
+						var n = VC(), o = A(n), s = A(o);
+						U(s);
+						var c = N(s);
+						E(o), kv(N(o, 2), { id: "vippsButton" }), E(n), P((e, t) => {
+							K(o, "title", e), G(s, F(r).props.vippsCheckout === !0), z(c, ` ${t ?? ""}`);
+						}, [() => q("tip.checkout.vippsCheckout"), () => q("lbl.vippsCheckout")]), I("change", s, (e) => e.target.checked ? a("vippsCheckout", {
+							vippsCheckout: !0,
+							currency: "kr"
+						}) : i("vippsCheckout", !1)), R(e, n);
 					},
 					$$slots: { default: !0 }
 				});
 			}
 			P((e, t) => {
-				K(n, "title", e), z(a, `${t ?? ""} `), W(o, F(r).props.vipps ?? "");
-			}, [() => q("tip.checkout.vipps"), () => q("lbl.vippsNumber")]), I("change", o, (e) => i("vipps", e.target.value.trim())), R(e, t);
-		}, s = (e) => {
+				K(n, "title", e), z(o, `${t ?? ""} `), W(s, F(r).props.vipps ?? "");
+			}, [() => q("tip.checkout.vipps"), () => q("lbl.vippsNumber")]), I("change", s, (e) => i("vipps", e.target.value.trim())), R(e, t);
+		}, c = (e) => {
 			var t = WC(), a = j(t);
 			{
 				let e = /* @__PURE__ */ D(() => q("common.on"));
@@ -24702,10 +24705,10 @@ function KC(e, t) {
 				n.siteContactOpen = !0, n.openPanel("site");
 			}), R(e, t);
 		};
-		var c = GC(), l = j(c);
+		var l = GC(), u = j(l);
 		{
 			let e = /* @__PURE__ */ D(() => q("group.order")), n = /* @__PURE__ */ D(() => F(r).props.recipient || F(r).props.endpoint || q("common.none")), i = /* @__PURE__ */ D(() => o("checkout-order", { currency: "kr" }));
-			Iy(l, {
+			Iy(u, {
 				id: "checkout-order",
 				get title() {
 					return F(e);
@@ -24722,31 +24725,11 @@ function KC(e, t) {
 				$$slots: { default: !0 }
 			});
 		}
-		var u = N(l, 2);
-		{
-			let e = /* @__PURE__ */ D(() => q("group.vipps")), t = /* @__PURE__ */ D(() => F(r).props.vippsCheckout ? q("lbl.vippsCheckout") : F(r).props.vipps || q("common.none")), n = /* @__PURE__ */ D(() => o("checkout-vipps", { vippsCheckout: !1 }));
-			Iy(u, {
-				id: "checkout-vipps",
-				get title() {
-					return F(e);
-				},
-				get value() {
-					return F(t);
-				},
-				get group() {
-					return F(n);
-				},
-				children: (e, t) => {
-					a(e);
-				},
-				$$slots: { default: !0 }
-			});
-		}
 		var d = N(u, 2);
 		{
-			let e = /* @__PURE__ */ D(() => q("lbl.checkoutSeller")), t = /* @__PURE__ */ D(() => F(r).props.seller === !1 ? q("common.off") : q("common.on")), n = /* @__PURE__ */ D(() => o("checkout-seller", { seller: !0 }));
+			let e = /* @__PURE__ */ D(() => q("group.vipps")), t = /* @__PURE__ */ D(() => F(r).props.vippsCheckout ? q("lbl.vippsCheckout") : F(r).props.vipps || q("common.none")), n = /* @__PURE__ */ D(() => o("checkout-vipps", { vippsCheckout: !1 }));
 			Iy(d, {
-				id: "checkout-seller",
+				id: "checkout-vipps",
 				get title() {
 					return F(e);
 				},
@@ -24762,7 +24745,27 @@ function KC(e, t) {
 				$$slots: { default: !0 }
 			});
 		}
-		R(e, c);
+		var f = N(d, 2);
+		{
+			let e = /* @__PURE__ */ D(() => q("lbl.checkoutSeller")), t = /* @__PURE__ */ D(() => F(r).props.seller === !1 ? q("common.off") : q("common.on")), n = /* @__PURE__ */ D(() => o("checkout-seller", { seller: !0 }));
+			Iy(f, {
+				id: "checkout-seller",
+				get title() {
+					return F(e);
+				},
+				get value() {
+					return F(t);
+				},
+				get group() {
+					return F(n);
+				},
+				children: (e, t) => {
+					c(e);
+				},
+				$$slots: { default: !0 }
+			});
+		}
+		R(e, l);
 	};
 	B(c, (e) => {
 		t.area === "content" && e(l);

@@ -2310,6 +2310,7 @@ export default {
     'lbl.checkoutSeller': 'Vis selgeren',
     'tip.checkout.seller': 'Foreningens navn, organisasjonsnummer, adresse, telefon og e-post fra Nettsted-panelet, under knappene: kjøperen skal vite hvem hen kjøper av før bestillingen (angrerettloven § 8 d)',
     'tip.checkout.vippsCheckout': 'Valgfritt betalingslag (ADR-0020): krever Vipps-avtale og hemmeligheter i Cloudflare-miljøet; uten dem viser knappen en utilgjengelig-tekst',
+    'tip.checkout.currencyVipps': 'Vipps belaster i norske kroner, så prisene viser kr så lenge knappen er på',
     'blocks.map': 'Kart',
     'tip.blocks.map': 'Kart med adressen deres: OpenStreetMaps egen innbygging, ingen sporing',
     'lbl.mapLocation': 'Sted',
