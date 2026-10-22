@@ -1,11 +1,11 @@
 /**
- * Named spots on a page (anchor-model.js): the reasons a name is refused, the ids a page already uses, free names, suggestions from a spot's own words, the clean-up when content is copied in, and the uniqueness check validate.mjs runs.
+ * Named spots on a page (anchor-model.js): the reasons a name is refused, the ids a page already uses, free names, suggestions from a spot's own words, the clean-up when content is copied in, the uniqueness check validate.mjs runs, and the links that point at a spot.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { anchorError, takenAnchors, uniqueAnchor, suggestAnchor, blockWords, sectionWords, claimAnchors, duplicateAnchors, pageSpots, ANCHOR_MAX } = await engineImport('anchor-model.js');
+const { anchorError, takenAnchors, uniqueAnchor, suggestAnchor, blockWords, sectionWords, claimAnchors, duplicateAnchors, pageSpots, spotLinks, ANCHOR_MAX } = await engineImport('anchor-model.js');
 
 // Deliberately Norwegian content: site content stays Norwegian (ADR-0021).
 const PAGE = {
@@ -124,4 +124,46 @@ test('pageSpots: every section by number with its name and words, and the named 
     { id: 'sec-b', kind: 'section', n: 2, name: '', words: '' },
   ]);
   assert.deepEqual(pageSpots(null), []);
+});
+
+test('spotLinks: the blocks, menu items and footer links that point at a spot, by its id, its name or an address of its page', () => {
+  const page = {
+    sections: [
+      {
+        id: 'sec-aaaa1111', anchor: 'priser', blocks: [
+          { id: 'blk-1', type: 'button', props: { label: 'Se prisene', target: 'sec-aaaa1111' } },
+          { id: 'blk-2', type: 'text', props: { html: '<p>Les <a href="#sec-aaaa1111" data-urd-target="sec-aaaa1111">her</a></p>' } },
+          { id: 'blk-3', type: 'links', props: { links: [{ label: 'Priser', url: '#priser' }, { label: 'Igjen', url: '/kaker/#priser' }] } },
+          { id: 'blk-4', type: 'button', props: { label: 'Til om oss', page: 'om-oss', target: 'sec-aaaa1111' } },
+          { id: 'blk-5', type: 'countdown', props: { title: 'Snart', target: '2026-11-01T18:00' } },
+          { id: 'blk-6', type: 'text', props: { html: '<p><a href="/om-oss#priser">Andre</a> og <a href="#sec-bbbb2222">neste</a></p>' } },
+        ],
+      },
+      { id: 'sec-bbbb2222', blocks: [] },
+    ],
+  };
+  const site = {
+    nav: {
+      items: [
+        { label: 'Kaker', page: 'kaker', children: [{ label: 'Priser', page: 'kaker', target: 'sec-aaaa1111' }, { label: 'Annet', page: 'om-oss', target: 'sec-aaaa1111' }] },
+      ],
+      announcement: { text: 'Nye <b>priser</b>', page: 'kaker', target: 'priser' },
+    },
+    footer: { columns: [{ title: 'Snarveier', links: [{ label: 'Prisliste', href: '/kaker#sec-aaaa1111' }, { label: 'Topp', href: '#sec-aaaa1111' }] }] },
+  };
+  const uses = spotLinks({ id: 'sec-aaaa1111', name: 'priser' }, { page, pageId: 'kaker', path: '/kaker', site });
+  assert.deepEqual(uses, [
+    { area: 'page', sectionId: 'sec-aaaa1111', blockId: 'blk-1', type: 'button', words: 'Se prisene' },
+    { area: 'page', sectionId: 'sec-aaaa1111', blockId: 'blk-2', type: 'text', words: 'Les her' },
+    { area: 'page', sectionId: 'sec-aaaa1111', blockId: 'blk-3', type: 'links', words: '' },
+    { area: 'menu', words: 'Priser' },
+    { area: 'menu', words: 'Nye priser' },
+    { area: 'footer', words: 'Prisliste' },
+  ], 'a link to another page, a date under target, a bare fragment in the footer and a link to another spot are left out');
+  assert.deepEqual(spotLinks({ id: 'sec-bbbb2222', name: '' }, { page, pageId: 'kaker', path: '/kaker', site }).map((u) => u.blockId), ['blk-6']);
+  assert.deepEqual(spotLinks({ id: 'sec-aaaa1111', name: '' }, { page, pageId: 'kaker', path: '/kaker', site: null }).map((u) => u.blockId), ['blk-1', 'blk-2'], 'without its name a spot is found by its id alone');
+  assert.deepEqual(spotLinks({ id: 'sec-x' }, {}), []);
+  const front = { sections: [{ id: 'sec-topp1234', anchor: 'velkommen', blocks: [] }] };
+  const frontSite = { footer: { baseline: [{ label: 'Til toppen', href: '/#velkommen' }, { label: 'Annen side', href: '/kaker#velkommen' }] } };
+  assert.deepEqual(spotLinks({ id: 'sec-topp1234', name: 'velkommen' }, { page: front, pageId: 'hjem', path: '/', site: frontSite }), [{ area: 'footer', words: 'Til toppen' }], 'the front page\'s address is /');
 });

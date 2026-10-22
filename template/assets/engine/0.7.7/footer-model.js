@@ -112,7 +112,7 @@ export function footerCta(site) {
     // language's default text (footer.js + t()); the model is language-free (ADR-0012).
     label: rawLabel,
     big: cta.big === true,
-    target: kind === 'button' ? resolveItem({ label: rawLabel, page: cta.page, target: cta.target, href: cta.href, newTab: cta.newTab, rel: cta.rel }, pages) : null,
+    target: kind === 'button' ? resolveItem({ label: rawLabel, page: cta.page, target: cta.target, href: cta.href, newTab: cta.newTab, rel: cta.rel, download: cta.download }, pages) : null,
     endpoint: str(cta.endpoint).trim(),
     recipient: str(cta.recipient).trim(),
     success: str(cta.success).trim(),

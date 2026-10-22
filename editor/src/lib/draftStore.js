@@ -42,6 +42,9 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
     }
   }
 
+  /** True while the draft holds changes that could not be stored (a full quota): they live in memory until they are published or stored. */
+  let held = false;
+
   return {
     get data() {
       return data;
@@ -55,12 +58,15 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
       const now = JSON.stringify(data);
       if (now === baseline) {
         localStorage.removeItem(key);
+        held = false;
         return true;
       }
       try {
         localStorage.setItem(key, now);
+        held = false;
         return true;
       } catch (err) {
+        held = true;
         onSaveError?.(err);
         return false;
       }
@@ -68,6 +74,7 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
     /** Discard the draft and go back to the published state. */
     reset() {
       localStorage.removeItem(key);
+      held = false;
       data = JSON.parse(baseline);
       return data;
     },
@@ -87,8 +94,9 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
       fn(base);
       baseline = JSON.stringify(base);
     },
+    /** Whether there is a draft to publish: stored, or held in memory when it could not be stored. */
     hasDraft() {
-      return localStorage.getItem(key) !== null;
+      return held || localStorage.getItem(key) !== null;
     },
   };
 }

@@ -268,6 +268,8 @@ function onLinkEdit(msg) {
     value: offered,
     removable: Boolean(msg.value),
     here: pageState.pageId,
+    // Words in a text keep their link as an address, which a PDF held until publishing cannot be.
+    upload: false,
     apply: (link) => {
       historyState.lastHistoryKey = null;
       bridge?.sendLinkApply(link);

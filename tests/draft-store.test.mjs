@@ -1,5 +1,5 @@
 /**
- * Tests of the draft store (editor/src/lib/draftStore.js): the baseline invariant ("has draft" is true if and only if the key exists) and the quota guard (a full localStorage must never pass silently).
+ * Tests of the draft store (editor/src/lib/draftStore.js): the baseline invariant ("has draft" is true when the key exists, or while changes that could not be stored are held in memory) and the quota guard (a full localStorage must never pass silently, nor leave the changes out of the next publish).
  * Runs in node with a Map-based localStorage mock.
  */
 import { test, beforeEach } from 'node:test';
@@ -45,7 +45,7 @@ test('save persists on diff and deletes the key when equal to published', () => 
   assert.equal(store.hasDraft(), false);
 });
 
-test('a quota error reports onSaveError, returns false and keeps the data in memory', () => {
+test('a quota error reports onSaveError, returns false and keeps the data in memory as a draft to publish', () => {
   let reported = null;
   const store = createDraftStore('urd-draft-test', () => ({ title: 'A' }), (err) => { reported = err; });
   store.data.title = 'B';
@@ -54,7 +54,8 @@ test('a quota error reports onSaveError, returns false and keeps the data in mem
   assert.equal(store.save(), false);
   assert.equal(reported?.name, 'QuotaExceededError');
   assert.equal(store.data.title, 'B');
-  assert.equal(store.hasDraft(), false);
+  assert.equal(mock.getItem('urd-draft-test'), null);
+  assert.equal(store.hasDraft(), true, 'the changes held in memory are published like a stored draft');
 
   // The next attempt with room to spare succeeds without further ado.
   mock.failNextSet = false;
@@ -105,4 +106,20 @@ test('no legacy key present leaves the store untouched', () => {
   const store = createDraftStore('urd-draft-collection-z', () => ({ a: 0 }), undefined, 'urd-draft-samling-z');
   assert.deepEqual(store.data, { a: 0 });
   assert.equal(store.hasDraft(), false);
+});
+
+test('changes held in memory stop counting once they are stored, undone or discarded', () => {
+  const store = createDraftStore('urd-draft-test', () => ({ title: 'A' }));
+  store.data.title = 'B';
+  mock.failNextSet = true;
+  store.save();
+  assert.equal(store.hasDraft(), true);
+  store.data.title = 'A';
+  assert.equal(store.save(), true);
+  assert.equal(store.hasDraft(), false, 'back to the published state');
+  store.data.title = 'C';
+  mock.failNextSet = true;
+  store.save();
+  store.reset();
+  assert.equal(store.hasDraft(), false, 'discarded');
 });

@@ -9,6 +9,7 @@ import { buildThemeCss } from '$engine/theme.js';
 import { resolveLink } from '$engine/nav-model.js';
 import { FEED_KINDS, buildRssXml, buildSitemapXml, buildRobotsTxt } from '$engine/feeds.js';
 import { createDraftStore } from '../lib/draftStore.js';
+import { publishHeldFiles } from '../lib/file-links.js';
 import {
   INDEX_PATH, LEGACY_INDEX_PATH, INDEX_DRAFT_KEY, LEGACY_DELETED_KEY, fetchIndex, indexPending, planIndexPublish,
 } from '../lib/collection-index.js';
@@ -39,10 +40,11 @@ function materializeField(obj, field, name, files) {
   obj[field] = `/${path}`;
 }
 
-/** One collection entry's images: the main image + the product colors' images (kind products). */
+/** One collection entry's images: the main image + the product colors' images (kind products); and a PDF its link goes to. */
 function materializeEntryImages(entry, files) {
   materializeField(entry, 'image', entry.title, files);
   for (const color of entry.colors ?? []) materializeField(color, 'image', `${entry.title}-${color.name}`, files);
+  publishHeldFiles(entry, files);
 }
 
 /** The background layers' images (image and slideshow) - shared by section, nav and footer. */
@@ -59,8 +61,9 @@ function materializeBackground(background, files) {
   }
 }
 
-/** One block's images - shared by page publishing and block-group templates. */
+/** One block's images, and the PDFs its links go to - shared by page publishing and block-group templates. */
 function materializeBlockImages(block, files) {
+  publishHeldFiles(block.props, files);
   if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
   // The icon block's own uploaded icon is published as a media file the same way.
   if (block.type === 'icon') materializeField(block.props, 'image', 'ikon', files);
@@ -110,6 +113,8 @@ function materializeSiteImages(site) {
     for (const link of site.nav.launcher.links ?? []) materializeField(link, 'image', 'snarvei', files);
   }
   materializeField(site.site, 'icon', 'ikon', files);
+  // The PDFs the menu's, the footer's and the site's links go to.
+  publishHeldFiles(site, files);
   return files;
 }
 
@@ -398,7 +403,8 @@ async function publish() {
 
   const body = {
     message: ta('publish.commitMessage', { titles: publishedTitles.join(', ') || ta('publish.theSite') }),
-    files,
+    // A file named by its content (a PDF a page and the footer both link to) may be gathered from several drafts: it is sent once, the last copy as git would keep it.
+    files: [...new Map(files.map((file) => [file.path, file])).values()],
     // The HEAD the conflict check saw: the server rejects with 409 if
     // someone manages to publish inside the commit window itself.
     ...(conflict.head ? { expect: conflict.head } : {}),

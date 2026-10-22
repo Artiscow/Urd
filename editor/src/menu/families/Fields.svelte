@@ -18,6 +18,7 @@
   import MenuGroup from '../MenuGroup.svelte';
   import Pin from '../Pin.svelte';
   import DesignRow from '../DesignRow.svelte';
+  import LinkField from '../../lib/LinkField.svelte';
   import { ta, taApiError } from '$engine/i18n.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
@@ -110,6 +111,10 @@
             onchange={(e) => setBlockProp(f.key, e.target.checked)} />
           {f.label}
         </label>
+      {:else if f.type === 'link'}
+        <!-- The link shape under the field's own key, set through the link editor; null when it is removed -->
+        <LinkField label={f.label} value={selectedBlock.props[f.key] ?? null}
+          onchange={(next) => setBlockProp(f.key, next)} />
       {:else if f.type === 'select'}
         <label>{f.label}
           <Dropdown value={selectedBlock.props[f.key]}

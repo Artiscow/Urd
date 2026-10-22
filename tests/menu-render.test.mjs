@@ -55,7 +55,7 @@ const BLOCKS = {
   cart: [{ href: '/checkout', variant: 'icon' }],
   checkout: [{ recipient: 'a@b', vippsCheckout: true }],
   map: [{ location: 'Oslo', zoom: 12 }],
-  'plugin-thing': [{ where: 'Here', n: 3, on: true, sel: 'a', t: 'x' }],
+  'plugin-thing': [{ where: 'Here', n: 3, on: true, sel: 'a', t: 'x', more: { page: 'hjem', target: 'kontakt' } }, { where: '', more: null }],
   'plugin-bare': [{}],
 };
 
@@ -75,7 +75,7 @@ function handleFor(selectedBlock, viewMode = 'desktop') {
     sections: [{ id: 's1', blocks: [] }, { id: 's2', blocks: [] }],
     collectionIds: ['news', 'shop'],
     collectionsView: { news: { name: 'News', kind: 'posts' }, shop: { name: 'Shop', kind: 'products' } },
-    pluginBlocks: [{ type: 'plugin-thing', fields: [{ key: 'where', type: 'place', label: 'Where' }, { key: 'n', type: 'number', label: 'N', min: 1, max: 5 }, { key: 'on', type: 'toggle', label: 'On' }, { key: 'sel', type: 'select', label: 'S', options: [{ value: 'a', label: 'A' }] }, { key: 't', type: 'text', label: 'T' }] }, { type: 'plugin-bare' }],
+    pluginBlocks: [{ type: 'plugin-thing', fields: [{ key: 'where', type: 'place', label: 'Where' }, { key: 'n', type: 'number', label: 'N', min: 1, max: 5 }, { key: 'on', type: 'toggle', label: 'On' }, { key: 'sel', type: 'select', label: 'S', options: [{ value: 'a', label: 'A' }] }, { key: 't', type: 'text', label: 'T' }, { key: 'more', type: 'link', label: 'More' }] }, { type: 'plugin-bare' }],
     bridge: null,
     blockLabel: (t) => t,
     blockEntranceOptions: () => [['', 'None'], ['fade-in', 'Fade']],
@@ -124,6 +124,14 @@ for (const [type, propsList] of Object.entries(BLOCKS)) {
     }
   });
 }
+
+test('a plugin block\'s link field draws the link field the core blocks have, with where it goes', () => {
+  const context = new Map([['urd-editor', handleFor(block('plugin-thing', { more: { page: 'hjem', target: 'kontakt' } }, {}))]]);
+  const { body } = render(ElementMenu, { props: { wide: true, query: '' }, context });
+  assert.match(body, /class="link-field[^"]*"/);
+  assert.match(body, /More/);
+  assert.match(body, /Hjem › #kontakt/);
+});
 
 test('the quick row shows a block type\'s own tiles first, then the shared ones', () => {
   const context = new Map([['urd-editor', handleFor(block('ribbon', { items: ['a'], motion: 'roll', speed: 80 }, {}))]]);

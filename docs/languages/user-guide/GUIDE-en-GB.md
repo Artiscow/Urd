@@ -239,15 +239,18 @@ over the section edge; nothing is clipped.
 ### Linking to a spot on a page
 
 A link can land on a section or a block instead of the top of the page. Give
-the spot a name: for a section in its **Properties** under **Link name**, for
-a block in its menu under **Placement**, in the **Link target** group. Type
-the name in your own words: «Priser» is written as `priser`, and the button
-below the field offers a name made from the spot's first heading. A name
+the spot a name under **Link name**: for a section in its **Properties**, for
+a block in its menu under **Placement**, in both cases in the **Link target**
+group. Type the name in your own words: «Priser» is written as `priser`, and
+the suggestion below the field offers a name made from the spot's first
+heading. A name
 another spot on the page already has is refused with a note. To link to the
 spot, choose its page and then the spot in any link field (see Links below).
 The copy button beside the name copies the link within the site, for example
 `/kaker#priser`, for sharing. A spot without a name can still be linked to:
-the link editor lists every section by its number and first words.
+the link editor lists every section by its number and first words. Under the
+name stand the links that point at the spot from the same page, the menu and
+the footer; press one to go to it.
 
 The link lands with the spot right below the menu, from the same page and
 from any other. On the same page it scrolls there smoothly, unless the visitor
@@ -260,7 +263,8 @@ template whose name the page already has gets a number after it (`priser-2`).
 Every link in the editor is set in the same window: a button's **Goes to**, an
 image's or a gallery picture's link, the basket's checkout page, the calendar
 announcement's link, the menu's items, the footer's links and call to action,
-the site's links, a collection entry's link, and words in a text. Click the
+the site's links, a collection entry's link, a plugin block's link, and words
+in a text. Click the
 link field (in a text, select the words and press the link button or Ctrl+K;
 Ctrl+Shift+K takes the link away). Under **Goes to** choose:
 
@@ -270,12 +274,19 @@ Ctrl+Shift+K takes the link away). Under **Goes to** choose:
 - **Web address**: a full address; `www.example.org` gets `https://` in front.
 - **Email**: the address, and a subject if you want one.
 - **Phone**: the number.
+- **File**: a file the site already has, found by searching, or a PDF from your
+  computer with **Upload a PDF** (at most 15 MB), which is published to the
+  media folder with the next publish. **Download instead of opening** makes
+  the visitor's browser save it. Words in a text take a file that is already
+  published.
 
-**Open in a new tab** works for pages and web addresses, and a web address can
+**Open in a new tab** works for pages, web addresses and files, and a web address can
 also be marked **Ask search engines not to follow it** or **Paid or sponsored
 link**. Selected words that are an email address or a phone number are offered
 as one. A link to a page keeps working when the page's address changes or its
-spot is renamed.
+spot is renamed. A link whose page or spot has been deleted shows a warning in
+its field, and so does an address within the site that no page has; click the
+field to choose where it goes.
 
 ## Grid (guide lines)
 

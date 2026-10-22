@@ -1,8 +1,9 @@
 <script>
   /* The link editor (0.7.27.4): one dialog for every link the editor stores, opened through state/link.svelte.js.
-     The kind of link is a choice of four, Page, Web address, Email and Phone, or pages alone for a host that takes nothing else.
+     The kind of link is a choice of five, Page, Web address, Email, Phone and File, or pages alone for a host that takes nothing else.
+     File lists the files in media/ the site's content uses (siteFiles), and takes a PDF from the computer, held in the draft until it is published (file-links.js); a host whose link cannot hold one (words in a text) is offered the listed files only.
      A page is found by searching the register, and a spot on it can then be chosen: the top, each section by its number and first words, and each named block (pageSpots in anchor-model.js); another page's spots are read from its draft or its published file.
-     A link to a page or the web can open in a new tab, and a link to the web can carry the rel words; a host that keeps one address gets neither, and a host that takes pages only gets no new tab.
+     A link to a page, the web or a file can open in a new tab, a link to the web can carry the rel words, and a link to a file can be saved rather than opened; a host that keeps one address gets none of these, and a host that takes pages only gets no new tab.
      A spot on the host's own page (`here`) is written without the page (writeLink), so a copy of the host follows the spot's copy.
      It is a native modal dialog (ADR-0011): Escape, the cross, Cancel and a press on the backdrop close it, and focus goes back to the field that opened it. */
   import { getContext } from 'svelte';
@@ -12,7 +13,9 @@
   import { LINK_RELS } from '$engine/nav-model.js';
   import Choice from './Choice.svelte';
   import { ICONS } from './icons.js';
+  import { PDF_MAX_BYTES, PDF_WARN_BYTES } from '$engine/imageTools.js';
   import { LINK_KINDS, readLink, writeLink, linkReady, webHref, hasLink } from './link-edit.js';
+  import { siteFiles, heldPdf, heldName, fileLabel } from './file-links.js';
   const ed = getContext('urd-editor');
   /** request: the value to start from, `shape`, `pagesOnly`, `here` and `apply` (state/link.svelte.js); onclose: leaves. */
   let { request, onclose } = $props();
@@ -25,6 +28,8 @@
   // svelte-ignore state_referenced_locally
   const offerNewTab = shape === 'link' && !request.pagesOnly;
   // svelte-ignore state_referenced_locally
+  const offerUpload = request.upload !== false;
+  // svelte-ignore state_referenced_locally
   const removable = request.removable !== false && hasLink(request.value);
   const pages = $derived(ed.siteDraft?.pages ?? []);
   // svelte-ignore state_referenced_locally
@@ -34,13 +39,19 @@
   let query = $state('');
   /** The chosen page's spots, null while they are read. */
   let spots = $state(null);
+  let fileQuery = $state('');
+  /** The files the site's content uses, null while the pages are read. */
+  let files = $state(null);
+  /** What the dialog says about the PDF just taken: a refusal, or a warning that it is large. */
+  let fileNote = $state(null);
   let dialogEl = $state(null);
   let downOnBackdrop = false;
 
-  const KIND_KEYS = { page: 'link.kind.page', web: 'link.kind.web', email: 'link.kind.email', phone: 'link.kind.phone' };
+  const KIND_KEYS = { page: 'link.kind.page', web: 'link.kind.web', email: 'link.kind.email', phone: 'link.kind.phone', file: 'link.kind.file' };
   const REL_KEYS = { nofollow: ['link.nofollow', 'tip.link.nofollow'], sponsored: ['link.sponsored', 'tip.link.sponsored'] };
   const shownPages = $derived(pages.filter((p) => matchWords(`${p.title} ${p.path}`, query)));
   const leavesForWeb = $derived(link.kind === 'web' && /^https?:\/\//i.test(webHref(link.url)));
+  const shownFiles = $derived((files ?? []).filter((path) => matchWords(fileLabel(path), fileQuery)));
 
   $effect(() => {
     if (!dialogEl || dialogEl.open) return;
@@ -76,6 +87,47 @@
       live = false;
     };
   });
+
+  // The site's files, read once the File kind is chosen: from the site, the page being edited, and every other page's draft or published file.
+  $effect(() => {
+    if (link.kind !== 'file' || files !== null) return;
+    let live = true;
+    const others = pages.filter((p) => p.id !== ed.pageId).map((entry) => ed.readPageDraft(entry).catch(() => null));
+    Promise.all(others).then((read) => {
+      if (live) files = siteFiles($state.snapshot(ed.siteDraft), $state.snapshot(ed.store?.data), read);
+    });
+    return () => {
+      live = false;
+    };
+  });
+
+  /** A PDF from the computer: read into the draft with its name, refused when it is too large or not a PDF, with the reason said in the dialog (a toast lies under the modal). */
+  function takePdf(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    fileNote = null;
+    if (!file) return;
+    const mb = (bytes) => (bytes / 1_000_000).toFixed(1);
+    if (file.size > PDF_MAX_BYTES) {
+      fileNote = { error: true, text: ta('status.pdfTooLarge', { name: file.name, mb: mb(file.size), max: mb(PDF_MAX_BYTES) }) };
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const held = heldPdf(String(reader.result ?? ''), file.name);
+      // The publishing guard takes a file in media/ named .pdf only when it starts as a PDF does (%PDF-).
+      if (!held.split(',', 2)[1]?.startsWith('JVBERi0')) {
+        fileNote = { error: true, text: ta('status.notPdf', { name: file.name }) };
+        return;
+      }
+      link.file = held;
+      if (file.size > PDF_WARN_BYTES) fileNote = { error: false, text: ta('status.pdfLarge', { name: file.name, mb: mb(file.size) }) };
+    };
+    reader.onerror = () => {
+      fileNote = { error: true, text: ta('status.fileReadError', { name: file.name }) };
+    };
+    reader.readAsDataURL(file);
+  }
 
   /** The words a spot is listed by: a section's number and first words, a block's words or its name. */
   const spotText = (spot) => (spot.kind === 'section'
@@ -157,8 +209,42 @@
       {:else if link.kind === 'phone'}
         <label class="field-stack">{ta('link.phone')}
           <input type="tel" bind:value={link.phone} spellcheck="false" autocomplete="off" /></label>
+      {:else if link.kind === 'file'}
+        <input class="ld-search" type="search" bind:value={fileQuery} placeholder={ta('link.searchFiles')} aria-label={ta('link.searchFiles')} />
+        <div class="ld-list" role="group" aria-label={ta('link.kind.file')}>
+          <!-- A PDF taken from the computer stands first until it is published -->
+          {#if heldName(link.file)}
+            <button type="button" class="ld-row on" aria-pressed="true">
+              <span class="ld-text">{fileLabel(link.file)}</span><span class="ld-aside">{ta('link.fileHeld')}</span>
+            </button>
+          {/if}
+          {#each shownFiles as path (path)}
+            <button type="button" class="ld-row" class:on={link.file === path} aria-pressed={link.file === path} onclick={() => (link.file = path)}>
+              <span class="ld-text">{fileLabel(path)}</span>
+            </button>
+          {:else}
+            {#if !heldName(link.file)}
+              <p class="ld-none">{files === null ? ta('link.filesLoading') : ta('link.noFiles')}</p>
+            {/if}
+          {/each}
+        </div>
+        {#if offerUpload}
+          <label class="ghost filepick" title={ta('tip.link.upload')}>
+            {ta('link.upload')}
+            <input type="file" accept="application/pdf,.pdf" onchange={takePdf} />
+          </label>
+          {#if fileNote}
+            <p class="ld-note" class:place-error={fileNote.error} role={fileNote.error ? 'alert' : 'status'}>{fileNote.text}</p>
+          {/if}
+        {/if}
+        {#if shape === 'link'}
+          <label class="gridmenu-snap" title={ta('tip.link.download')}>
+            <input type="checkbox" bind:checked={link.download} />
+            {ta('link.download')}
+          </label>
+        {/if}
       {/if}
-      {#if offerNewTab && (link.kind === 'page' || link.kind === 'web')}
+      {#if offerNewTab && ['page', 'web', 'file'].includes(link.kind)}
         <label class="gridmenu-snap" title={ta('tip.link.newTab')}>
           <input type="checkbox" bind:checked={link.newTab} />
           {ta('link.newTab')}
@@ -319,6 +405,15 @@
     font-size: 0.8rem;
     font-weight: 600;
     opacity: 0.8;
+  }
+
+  .ld-note {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  .ld-note.place-error {
+    color: #e05252;
   }
 
   .ld-none {

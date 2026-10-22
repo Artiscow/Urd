@@ -9,7 +9,9 @@ import { engineImport } from './_engine.mjs';
 const {
   svgViewBox, tightSvgViewBox, mediaExtension, slugify, slugText, isAnimatedImage, animatedImageKind,
   AnimatedTooLargeError, ANIMATED_WARN_BYTES, ANIMATED_MAX_BYTES, VIDEO_WARN_BYTES, compressToWebp,
+  PDF_WARN_BYTES, PDF_MAX_BYTES,
 } = await engineImport('imageTools.js');
+const { MEDIA_PDF_MAX_BYTES } = await import('../template/functions/_lib/guard.js');
 
 test('svgViewBox: reads viewBox, falls back to width/height, otherwise null', () => {
   assert.deepEqual(svgViewBox('<svg viewBox="0 0 100 40"></svg>'), [0, 0, 100, 40]);
@@ -103,6 +105,13 @@ test('isAnimatedImage: junk, truncated files and other types are stills, never a
   assert.equal(isAnimatedImage(null), false);
   // A sub-block length that points past the end ends the walk.
   assert.equal(isAnimatedImage(gif([0x21, 0xf9, 200])), false);
+});
+
+test('a PDF publishes as a pdf, under one limit in the editor and the publishing guard', () => {
+  assert.equal(mediaExtension('data:application/pdf;name=meny;base64,JVBERi0'), 'pdf');
+  assert.equal(mediaExtension('data:application/pdf;base64,JVBERi0'), 'pdf');
+  assert.ok(PDF_WARN_BYTES < PDF_MAX_BYTES);
+  assert.equal(PDF_MAX_BYTES, MEDIA_PDF_MAX_BYTES);
 });
 
 test('the kept animations publish under their own extension, and the caps are in order', () => {

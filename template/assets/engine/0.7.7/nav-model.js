@@ -55,13 +55,13 @@ export const LINK_RELS = ['nofollow', 'sponsored'];
 const LINK_TARGET_RE = /^[a-z0-9][a-z0-9-]{0,80}$/;
 
 /**
- * Resolves one link, in the shape every host stores beside its own fields (additive from 0.7.27.3): `page` (a page id in the register), `target` (the id of a section or block on that page, or on this page when there is no `page`), `href` (an address: http(s), mailto, tel, or a path or a fragment of the site, through the safe-URL gate), `newTab` (open in a new tab) and `rel` (a list of 'nofollow' and 'sponsored', which count only for a link that leaves the site).
+ * Resolves one link, in the shape every host stores beside its own fields (additive from 0.7.27.3): `page` (a page id in the register), `target` (the id of a section or block on that page, or on this page when there is no `page`), `href` (an address: http(s), mailto, tel, or a path or a fragment of the site, through the safe-URL gate), `newTab` (open in a new tab), `rel` (a list of 'nofollow' and 'sponsored', which count only for a link that leaves the site) and `download` (save the file rather than open it, additive from 0.7.27.9, which counts only for a path on the site).
  * `page` wins over `href`, so the link follows a change of the page's address, and `target` holds the spot's id, so it follows a rename of the spot; the address shows the spot's name once the visitor has landed (urd.js).
  * An unknown page or an address that fails the gate gives '#' and the missing flag (the hosts log the warning - this module has no side effects).
- * `newTab` and `rel` appear only when set.
- * @param {{page?: string, target?: string, href?: string, newTab?: boolean, rel?: string[]}} link
+ * `newTab`, `rel` and `download` appear only when set.
+ * @param {{page?: string, target?: string, href?: string, newTab?: boolean, rel?: string[], download?: boolean}} link
  * @param {Array<{id: string, path: string}>} [pages] The page register (site.pages)
- * @returns {{href: string, external: boolean, missing: boolean, newTab?: true, rel?: string[]}}
+ * @returns {{href: string, external: boolean, missing: boolean, newTab?: true, rel?: string[], download?: true}}
  */
 export function resolveLink(link, pages = []) {
   const extra = link?.newTab === true ? { newTab: true } : {};
@@ -78,16 +78,20 @@ export function resolveLink(link, pages = []) {
     const rel = /^https?:\/\//i.test(href) && Array.isArray(link.rel) ? LINK_RELS.filter((word) => link.rel.includes(word)) : [];
     return { href, external: true, missing: false, ...extra, ...(rel.length ? { rel } : {}) };
   }
-  if (isSafeHref(href)) return { href, external: false, missing: false, ...extra };
+  if (isSafeHref(href)) {
+    // A browser saves only a file from the site's own origin, so the wish counts for a path and nothing else.
+    const save = link.download === true && href.startsWith('/') ? { download: true } : {};
+    return { href, external: false, missing: false, ...extra, ...save };
+  }
   return { href: '#', external: false, missing: true };
 }
 
 /**
- * The attributes a resolved link puts on its element: its address, a new tab, and the rel words.
+ * The attributes a resolved link puts on its element: its address, a new tab, the rel words, and `download` for a file to save.
  * A link that leaves the site (http(s), mailto, tel) gets the host's own words (the menu's noopener, the footer's noopener noreferrer), a new tab gets noopener, and the owner's words come last.
- * @param {{href: string, external?: boolean, newTab?: boolean, rel?: string[]}} link A resolveLink result
+ * @param {{href: string, external?: boolean, newTab?: boolean, rel?: string[], download?: boolean}} link A resolveLink result
  * @param {string[]} [external] The host's rel words for a link that leaves the site
- * @returns {{href: string, target?: string, rel?: string}}
+ * @returns {{href: string, target?: string, rel?: string, download?: string}}
  */
 export function linkAttrs(link, external = ['noopener']) {
   const rel = new Set([...(link.external ? external : []), ...(link.newTab ? ['noopener'] : []), ...(link.rel ?? [])]);
@@ -95,6 +99,7 @@ export function linkAttrs(link, external = ['noopener']) {
     href: link.href,
     ...(link.newTab ? { target: '_blank' } : {}),
     ...(rel.size ? { rel: [...rel].join(' ') } : {}),
+    ...(link.download ? { download: '' } : {}),
   };
 }
 

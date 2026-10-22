@@ -873,6 +873,22 @@ test('isAnchorName: lower-case letters, digits and inner hyphens, at most 40, ne
   }
 });
 
+test('download: a file on the site is saved rather than opened, anywhere else the wish is left out', () => {
+  assert.deepEqual(resolveLink({ href: '/media/meny-1a2b3c4d.pdf', download: true }), { href: '/media/meny-1a2b3c4d.pdf', external: false, missing: false, download: true });
+  assert.deepEqual(linkAttrs(resolveLink({ href: '/media/meny-1a2b3c4d.pdf', download: true, newTab: true })), { href: '/media/meny-1a2b3c4d.pdf', target: '_blank', rel: 'noopener', download: '' });
+  assert.equal(resolveLink({ href: 'https://x.no/meny.pdf', download: true }).download, undefined, 'another origin');
+  assert.equal(resolveLink({ page: 'om-oss', download: true }, PAGES).download, undefined, 'a page');
+  assert.equal(resolveLink({ href: '#kontakt', download: true }).download, undefined, 'a spot');
+  assert.equal(resolveLink({ href: 'data:application/pdf;base64,JVBERi0', download: true }).href, '#', 'a PDF not yet published is no live link');
+});
+
+test('the plugin shell /assets/urd/links.js offers the resolver a link field is drawn with', async () => {
+  const shell = await import(new URL('../template/assets/urd/links.js', import.meta.url));
+  assert.deepEqual(Object.keys(shell).sort(), ['linkAttrs', 'resolveLink']);
+  assert.equal(shell.resolveLink, resolveLink, 'the same function the engine draws with');
+  assert.deepEqual(shell.linkAttrs(shell.resolveLink({ page: 'om-oss', target: 'kontakt' }, PAGES)), { href: '/om-oss#kontakt' });
+});
+
 test('resolveLink: one link shape for every host (0.7.27.3)', () => {
   const pages = [{ id: 'hjem', path: '/' }, { id: 'kaker', path: '/kaker' }];
   const at = (link) => resolveLink(link, pages);

@@ -1,6 +1,6 @@
 /**
  * Named spots on a page: the sections and blocks an owner names so a link can point at them (`/kaker#priser`).
- * The naming rule's reasons, the ids a page already uses, suggestions from the spot's own words, and the clean-up when content is copied in.
+ * The naming rule's reasons, the ids a page already uses, suggestions from the spot's own words, the clean-up when content is copied in, and the links that point at a spot.
  * Pure: the editor, the schema check and the tests import it, and visitors never load it.
  * The rule itself is isAnchorName in nav-model.js, which the renderer reads.
  */
@@ -211,4 +211,114 @@ export function claimAnchors(items, page) {
     }
   }
   return items;
+}
+
+/** The keys whose value is one address (a link kept as an address, or one typed before the link shape). */
+const ADDRESS_KEYS = new Set(['href', 'url']);
+
+/** The props whose words name the item a link stands in (a menu item, a footer link). */
+const HOLDER_WORDS = ['label', 'text', 'title'];
+
+const A_TAG_RE = /<a\b[^>]*>/gi;
+const TARGET_ATTR_RE = /\sdata-urd-target="([^"]*)"/i;
+const PAGE_ATTR_RE = /\sdata-urd-page="([^"]*)"/i;
+const HREF_ATTR_RE = /\shref="([^"]*)"/i;
+
+/**
+ * An address within the site as the page path it names and the spot after #; the path is '' for a bare fragment, which stands for the page the link is on.
+ * Null for an address without a spot or outside the site.
+ * @param {string} href
+ * @returns {{path: string, target: string}|null}
+ */
+function addressRef(href) {
+  const text = String(href).trim();
+  const at = text.indexOf('#');
+  if (at < 0) return null;
+  const path = text.slice(0, at).replace(/\?.*$/, '');
+  if (path && (!path.startsWith('/') || path.startsWith('//'))) return null;
+  return { path: path.length > 1 ? path.replace(/\/$/, '') : path, target: text.slice(at + 1) };
+}
+
+/** The links in rich text: by the spot they carry (`data-urd-target`, with `data-urd-page` for another page), else by their address. */
+function textRefs(html) {
+  const refs = [];
+  for (const [tag] of html.matchAll(A_TAG_RE)) {
+    const target = tag.match(TARGET_ATTR_RE)?.[1];
+    if (target) {
+      refs.push({ page: tag.match(PAGE_ATTR_RE)?.[1] ?? '', target });
+      continue;
+    }
+    const ref = addressRef(tag.match(HREF_ATTR_RE)?.[1] ?? '');
+    if (ref) refs.push(ref);
+  }
+  return refs;
+}
+
+/**
+ * Calls `visit(ref, holder)` for every link to a spot in a value: a link object's `target`, an address under `href` or `url`, and the links in rich text.
+ * A ref names its page (`page`, '' for none) or the path of its address (`path`); `holder` is the nearest object with words of its own.
+ * @param {unknown} value
+ * @param {(ref: {page?: string, path?: string, target: string}, holder: object|null) => void} visit
+ * @param {object|null} [holder]
+ */
+function walkRefs(value, visit, holder = null) {
+  if (Array.isArray(value)) {
+    for (const item of value) walkRefs(item, visit, holder);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  const own = HOLDER_WORDS.some((key) => typeof value[key] === 'string' && value[key].trim()) ? value : holder;
+  if (typeof value.target === 'string' && value.target) visit({ page: typeof value.page === 'string' ? value.page : '', target: value.target }, own);
+  for (const [key, item] of Object.entries(value)) {
+    if (typeof item !== 'string') walkRefs(item, visit, own);
+    else if (ADDRESS_KEYS.has(key)) {
+      const ref = addressRef(item);
+      if (ref) visit(ref, own);
+    } else if (item.includes('<a')) {
+      for (const ref of textRefs(item)) visit(ref, own);
+    }
+  }
+}
+
+/** The words of the item a link stands in. */
+function holderWords(holder) {
+  const key = HOLDER_WORDS.find((k) => typeof holder?.[k] === 'string' && holder[k].trim());
+  return key ? plainWords(holder[key]) : '';
+}
+
+/**
+ * The links that point at a spot from its own page, the menu and the footer: by the spot's id, or by its name for a link typed as an address.
+ * A link on the page that names no page points at a spot there; a link in the menu or the footer counts when it names the page, by its id or its address.
+ * Each block with such a link is listed once, with its type and words; each menu or footer item once, with its words.
+ * @param {{id: string, name?: string}} spot
+ * @param {{page?: {sections?: Array<object>}, pageId?: string, path?: string, site?: {nav?: object, footer?: object}|null}} context The page, its id and path, and the site with its menu and footer
+ * @returns {Array<{area: 'page'|'menu'|'footer', words: string, sectionId?: string, blockId?: string, type?: string}>}
+ */
+export function spotLinks(spot, { page = null, pageId = '', path = '/', site = null } = {}) {
+  const named = (target) => target === spot.id || (Boolean(spot.name) && target === spot.name);
+  const lands = (ref, onPage) => {
+    if (!named(ref.target)) return false;
+    if (ref.page) return ref.page === pageId;
+    if (ref.path === undefined || ref.path === '') return onPage;
+    return ref.path === path;
+  };
+  const uses = [];
+  for (const section of page?.sections ?? []) {
+    for (const block of section?.blocks ?? []) {
+      let found = false;
+      walkRefs(block?.props, (ref) => {
+        if (lands(ref, true)) found = true;
+      });
+      if (found) uses.push({ area: 'page', sectionId: section.id, blockId: block.id, type: block.type, words: blockWords(block) });
+    }
+  }
+  for (const [area, value] of [['menu', site?.nav], ['footer', site?.footer]]) {
+    const seen = new Set();
+    walkRefs(value, (ref, holder) => {
+      if (!lands(ref, false) || seen.has(holder)) return;
+      seen.add(holder);
+      uses.push({ area, words: holderWords(holder) });
+    });
+  }
+  return uses;
 }

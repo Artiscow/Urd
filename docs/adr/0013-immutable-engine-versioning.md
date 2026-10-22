@@ -21,3 +21,7 @@ The engine is served as raw ES modules, and without cache control every visitor 
 - New engine modules that are to be plugin API require a new shell in `assets/urd/` and a line in the plugin README; everything else in the engine is internals and can be moved freely within the version directory.
 - A change of the template's `_headers` text reaches every site that never edited the file: the updater shows a «change by hand» note when a site's `_headers` differs from the template's at the target version.
 - The window of decision 5 is longer than seconds for a page held from before an update (a document prefetched by the speculation rules, a back/forward-cache restore, an open tab's lazy import), which can load files from the deleted directory. A recovery in the page (a boot guard that refetches the files the page names and reloads once) is open in BACKLOG under the updater hardening, since it would ship with the releases.
+
+## Addendum, 22 October 2026: the link resolver as a shell
+
+`links.js` joined the shells of decision 3 in 0.7.27.8: it re-exports `resolveLink` and `linkAttrs` from nav-model.js, so a plugin draws its `link` field as the core blocks draw their links. It is the new shell the consequence on new plugin API calls for, and no decision changes.

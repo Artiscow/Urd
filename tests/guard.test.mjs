@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import {
-  isAllowedPath, isDeletablePath, isAllowedLogin,
+  isAllowedPath, isAllowedContent, MEDIA_PDF_MAX_BYTES, isDeletablePath, isAllowedLogin,
   OWNED_PATTERNS, USER_PATTERNS, matchesPattern, isOwnedPath, isUserPath, isPageIndexCopy,
 } from '../template/functions/_lib/guard.js';
 
@@ -29,12 +29,26 @@ test('content paths are allowed', () => {
     'media/musikk.m4a',
     'media/video-9f8e7d6c.mp4',
     'media/loop.webm',
+    'media/meny-1a2b3c4d.pdf',
     'plugins/plugins.json',
     'sitemap.xml',
     'robots.txt',
   ]) {
     assert.equal(isAllowedPath(path), true, path);
   }
+});
+
+test('a PDF in media/ is written only when it starts as a PDF and stays within the limit', () => {
+  const pdf = 'JVBERi0xLjcKJcfsj6IK';
+  assert.equal(isAllowedContent('media/meny-1a2b3c4d.pdf', pdf, 'base64'), true);
+  assert.equal(isAllowedContent('media/MENY.PDF', pdf, 'base64'), true);
+  assert.equal(isAllowedContent('media/meny.pdf', btoa('<html><script>alert(1)</script>'), 'base64'), false, 'HTML named .pdf');
+  assert.equal(isAllowedContent('media/meny.pdf', '%PDF-1.7', 'utf-8'), false, 'a PDF is sent as base64');
+  assert.equal(isAllowedContent('media/meny.pdf', null, 'base64'), false);
+  const limit = Math.floor((MEDIA_PDF_MAX_BYTES * 4) / 3);
+  assert.equal(isAllowedContent('media/stor.pdf', pdf + 'A'.repeat(limit - pdf.length), 'base64'), true, 'at the limit');
+  assert.equal(isAllowedContent('media/stor.pdf', pdf + 'A'.repeat(limit + 8 - pdf.length), 'base64'), false, 'over it');
+  for (const other of ['media/bilde.webp', 'content/site.json', 'media/meny.pdf.json']) assert.equal(isAllowedContent(other, 'x', 'utf-8'), true, other);
 });
 
 test('executable extensions under the content prefixes are forbidden', () => {

@@ -33,7 +33,7 @@ The source marks, the ID scheme and the status words are explained in [README.md
   - paragraph and headings H1 to H3
   - bold, italic, underline, strikethrough, subscript and superscript
   - theme colours and a custom colour with a pipette, plus highlight
-  - links: external, internal and mailto
+  - links through the one link editor (a page or a spot on it, a web address, email, phone or a file), with Ctrl+K
   - alignment (left, centre, right, justify), bulleted and numbered lists, indent and outdent, quote
   - clear formatting, and special characters
   - a typography row: font (seven system stacks, code: `fonts.js`), size per selection from 8 to 120 px on a Word-style ladder, line height and letter spacing (code: `text-typo.js`)
@@ -43,13 +43,12 @@ The source marks, the ID scheme and the status words are explained in [README.md
 - Dynamic text (CMS merge fields) belongs to the collection views; see [8. CMS, collections and blogs](#8-cms-collections-and-blogs).
 
 **Gaps.**
-- **C27** Text shortcuts (headings, alignment, Ctrl+K for a link, paste as plain text) and `tel:` links.
+- **C27** Text shortcuts (headings, alignment, paste as plain text); the link with Ctrl+K and `tel:` links came with C124.
 - **C28** A paste pipeline: Word, Docs and Slack cleaned, a pasted URL becoming a link, pasted Markdown becoming formatting.
 - **C29** Styling extras: text shadow, selection colour, letter case, link styles for hover and the current page, a drop cap, and `text-wrap: balance` and `pretty`.
 - **C30** Find and replace across the site.
-- **C124** One link editor for every link.
 - Framer's responsive text styles have no item of their own: Urd's answer is the theme fonts plus a size per field, and the type scale in the design presets (C35).
-- Line height and letter spacing are closed (C1).
+- Line height and letter spacing are closed (C1), and so is the one link editor (C124).
 
 ### 2. The element library
 
@@ -940,7 +939,7 @@ The C-IDs below are the ones named in Part 1. C1 to C26, C4b and C7b keep their 
 | C121 | Analytics beyond the host's dashboard: a real-time view, traffic alerts, a per-visit log with IP addresses, feed subscriber estimates | Squarespace and Shopify ([Part 2](#10-analytics-and-optimisation)) | Needs server state, and the per-visit log stores personal data | Not taken: needs server state |
 | C122 | A phone text size or «Size» per block, so a heading set for the desktop can be smaller on the phone without the fit choices | Squarespace Mobile Overrides ([squarespace.com/blog](https://www.squarespace.com/blog/product-updates-may-2026), primary); per-breakpoint overrides at Webflow, Framer, Wix Studio, Elementor and Bricks ([Part 2](#7-responsive)) | An additive field in the phone override that `frames.mobile` already is (ADR-0019); the mobile model stays two layouts | Taken: v0.8 PH-2 the phone text size, weighed against ADR-0019 |
 | C123 | Sections duplicated, cut, copied and pasted; blocks cut with Ctrl+X; blocks pasted on another page | Squarespace ([support.squarespace.com](https://support.squarespace.com/hc/en-us/articles/206543627-Duplicating-pages-and-content), primary); Shopify ([help.shopify.com](https://help.shopify.com/en/manual/online-store/themes/theme-structure/sections-and-blocks), primary); cut and paste at Webflow, Wix Studio, WordPress, Elementor and Bricks ([Part 2](#1-canvas-and-selection)) | Editor work only: the re-id of template insertion gives a copy fresh ids, and the clipboard has to outlive a page switch; page duplication is C40 | Taken: 0.7.10 Intuitiveness review and editor polish |
-| C124 | One link editor for every link: a page and section picker with search, email, phone, a file from `media/` and «open in a new tab», used by the text toolbar, buttons, images, the nav and the announcement bar | Squarespace ([support.squarespace.com](https://support.squarespace.com/hc/en-us/articles/206543827-Creating-text-links), primary); link types at Framer, Carrd and Figma Sites ([Part 2](#10-text-editing)) | The button has a page picker and text links are typed URLs today; `isSafeHref` stays the gate | Delivered in part: the link editor for the text toolbar, buttons, images, the nav, the footer and the announcement bar in 0.7.27.4-6, with a page and spot picker, email, phone and «open in a new tab»; the file from `media/` with 0.7.27.9 |
+| C124 | One link editor for every link: a page and section picker with search, email, phone, a file from `media/` and «open in a new tab», used by the text toolbar, buttons, images, the nav and the announcement bar | Squarespace ([support.squarespace.com](https://support.squarespace.com/hc/en-us/articles/206543827-Creating-text-links), primary); link types at Framer, Carrd and Figma Sites ([Part 2](#10-text-editing)) | The button has a page picker and text links are typed URLs today; `isSafeHref` stays the gate | Delivered 0.7.27.4-9: one link editor for every link field (the block menus, the site panels, words in a text and a plugin's link field), with a page and spot picker, email, phone, a file from `media/` and «open in a new tab» |
 | C125 | A site-wide motion default: one entrance style and speed that every block and section uses unless it sets its own, with «none» as a choice | Squarespace ([support.squarespace.com](https://support.squarespace.com/hc/en-us/articles/360040839591-Site-wide-animations), primary); Shopify reveal on scroll as a theme setting ([help.shopify.com](https://help.shopify.com/en/manual/online-store/themes/customizing-themes/theme-editor/theme-settings), primary) | A theme field read when a block has no animation of its own; the first half of the motion intensity setting ([DESIGN.md](DESIGN.md#open) D24); reduced motion still wins | Taken: 0.7.9 design stretch |
 | C126 | Start over: reset the theme to the template's values, or clear the content and keep the theme, from the admin | Squarespace ([support.squarespace.com](https://support.squarespace.com/hc/en-us/articles/205815378-Redesign-or-restart-your-site), primary) | A publish of known files; git keeps the old state | Taken: v0.9 blank start |
 | C127 | A content check outside the editor: the site's content files against Urd's schemas, and a plugin's manifest and engine range, run before a push | Shopify Theme Check ([shopify.dev](https://shopify.dev/docs/storefronts/themes/tools/theme-check), primary) | One dependency-free node script in the template, with an ownership class in `urd.json` | Watch: the first outside plugin author, or a site edited mostly through git |
@@ -1126,7 +1125,7 @@ The ADRs behind the «Where» column: [ADR-0009](../adr/0009-themed-ui-rule.md) 
 | Navigation menus (multiple) | WX, ZO, SP, NO, SQ, SH | Menu builder with drop-down folders and link items, plan-capped on ZO | no | Has: one menu, one submenu level | - |
 | Deeper submenu levels | SH (three levels) | Items nested two levels below the top item, drawn as drop-downs or a mega menu | no | Partial: one submenu level, with card, flat, pills, lines and flyout styles and columns | - |
 | Breadcrumbs and search in the nav bar | NO | Navigation bar options | no | Missing | ER-G: breadcrumbs; search as for site search |
-| Anchor links | WX, SQ | Jump to a section | no | Has | - |
+| Anchor links | WX, SQ | Jump to a section | no | Has: a named spot on any section or block, landing under the menu from any page (0.7.27.1-3) | - |
 | Lightbox pop-ups and overlays | WX, FR | Modal content | no | Partial: gallery lightbox, product quick view | ER-A |
 | Mobile information bar | SQ (Core+) | Sticky contact or address bar on mobile | no | Partial: announcement bar, docked block | - |
 | Business contact details and hours | SQ | Phone, email, address and opening hours kept once, used by the mobile information bar and the LocalBusiness data | no | Partial: the legal name, the organisation numbers of the site's country, the address, phone and email kept once in the site settings, drawn by every footer and written into the Organization JSON-LD (0.7.24.5.1); no hours | 0.7.24.5: the Contact details block; ER-C: opening hours |
@@ -1990,7 +1989,7 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 | Custom CSS per element or block | WP, BD, CA, WS, BR, WF, DU, WT, SH | Block CSS; Advanced > Custom CSS; custom CSS properties | Missing | v0.8 OL-4: a scoped style per look, pasted whole; the content files still hold no CSS |
 | Site-wide custom CSS | WP, WS, BR, SQ, WF, SH | Additional CSS; global.css; theme stylesheet | Missing | Not taken: no CSS in the content |
 | Custom attributes | WF, CA, DV, OX, WT | Name/value pairs in settings | Missing | Not taken: no CSS in the content |
-| Custom IDs or anchors | CA, WP, DV, SQ | Fixed IDs; HTML anchor | Has: section ids | - |
+| Custom IDs or anchors | CA, WP, DV, SQ | Fixed IDs; HTML anchor | Has: a stable id on every section and block, and a name beside it (0.7.27.2) | - |
 | Custom classes | CA, WT, WS, OX | Add class names to elements | Missing | Not taken: class-based cascade not adopted |
 | Interactive states | WF, EL, WP, WT, OX, BR, FR, FS | Hover, focus, active, pressed, visited; custom states | Partial: nav hover styles, hover lift | 0.7.9: button states in the design gallery |
 | Pseudo-elements | WT, WF, BR, OX | ::before, ::after, ::marker and others | n/a: free placement | - |
@@ -2121,7 +2120,7 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | Shaders or WebGL | FR, WS, SQ | Shader effects; WebGL backgrounds | Missing | Not taken: library, GPU or complexity |
 | Animation presets | RM, WS, SQ, OX | Ready-made animations | Has | - |
 | Site-wide animation setting | SQ, SH | One entrance style and speed for every block (SQ); reveal on scroll and a card hover effect as theme settings (SH) | Missing: entrance and hover are set per block and per section | 0.7.9: the motion intensity setting |
-| Scroll points | CA | Scroll anchors | Has: section anchors | - |
+| Scroll points | CA | Scroll anchors | Has: named spots on sections and blocks (0.7.27.2) | - |
 | Per-breakpoint interactions | EL, BR | Breakpoint controls; viewport visibility % | Partial: decor, hide on mobile | - |
 | Triggers and event variables | FR | Trigger events into variables | Missing | Not taken: library, GPU or complexity |
 | Spin effect | FS | Rotation loop | Missing | Not taken: library, GPU or complexity |
@@ -2173,7 +2172,7 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 | Inline code | WP, SQ | Ctrl+Alt+X | Missing | Not taken: audience |
 | Insert or remove a link | WP, SQ | ⌘K; ⌘⇧K | Partial: links from the text toolbar; no Ctrl+K | 0.7.27.6: rich text links with Ctrl+K |
 | Internal-link autocomplete | WP, SQ | `[[` | Partial: page picker | - |
-| Link types (page, anchor, email, phone) | FR, CA, WP, FS, SQ | Email and phone links; URL types; page jumps | Partial: external, internal and mailto; no tel: | 0.7.27.4: the link editor |
+| Link types (page, anchor, email, phone) | FR, CA, WP, FS, SQ | Email and phone links; URL types; page jumps | Has: a page or a spot on it, a web address, email, phone and a file, in one link editor (0.7.27.4-9) | - |
 | Dynamic text or variables | CA, WT, BR, OX, DV, WP | {{var}}; expression editor; bindings | n/a | - |
 | Rich-text modal | BD, DU, SH | ⌘E modal; rich text | n/a | - |
 | Text balance or truncation | FR | Line-break balancing; ellipsis | Missing | 0.7.9: `text-wrap` |

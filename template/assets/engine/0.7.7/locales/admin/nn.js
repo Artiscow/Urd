@@ -293,6 +293,7 @@ export default {
     'api.badFiles': 'files må vere ei liste med 1 til 200 filer',
     'api.badFileEntry': 'Kvar fil treng path og content (eller delete: true)',
     'api.pathNotAllowed': 'Stien «{path}» kan ikkje publiserast herfrå',
+    'api.fileNotAllowed': 'Fila «{path}» er ikkje ein PDF, eller er større enn 15 MB',
     'api.publishRace': 'Nokon publiserte akkurat no - prøv å publisere på nytt',
     'api.commitFailed': 'Kunne ikkje committe til GitHub: {detail}',
     'api.badRevertTarget': 'expect (publiseringa som skal angrast) manglar eller er ugyldig',

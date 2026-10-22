@@ -219,6 +219,7 @@ export default {
     'api.badFiles': 'files ferte leat listu mas leat 1 gitta 200 fiilla',
     'api.badFileEntry': 'Juohke fiila dárbbaša path ja content (dahje delete: true)',
     'api.pathNotAllowed': 'Bálggis «{path}» ii sáhte almmuhuvvot dáppe',
+    'api.fileNotAllowed': 'Fiila «{path}» ii leat PDF, dahje lea stuorát go 15 MB',
     'api.publishRace': 'Muhtin almmuhii aiddo dál - geahččal almmuhit ođđasit',
     'api.commitFailed': 'Ii sáhttán committet GitHubii: {detail}',
     'api.badRevertTarget': 'expect (almmuheapmi mii galgá gáđahuvvot) váilu dahje lea gustohis',

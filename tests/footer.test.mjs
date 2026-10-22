@@ -69,6 +69,13 @@ test('footer-model: non-string fields (hand-edited data) never topple the render
   assert.doesNotThrow(() => footerColumns({ footer: { columns: [{ title: 7, links: [{ label: 3 }] }] } }));
 });
 
+test('footerCta: the button keeps every part of its link, the wish to save a file included', () => {
+  const cta = footerCta({ pages: PAGES, footer: { cta: { kind: 'button', label: 'Meny', href: '/media/meny-1a2b3c4d.pdf', download: true, newTab: true } } });
+  assert.equal(cta.target.href, '/media/meny-1a2b3c4d.pdf');
+  assert.equal(cta.target.download, true);
+  assert.equal(cta.target.newTab, true);
+});
+
 test('footerColumns: resolves links, skips empty ones', () => {
   const cols = footerColumns({
     pages: PAGES,

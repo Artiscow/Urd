@@ -65,7 +65,7 @@
   {/snippet}
   <MenuGroup id="img-image" title={ta('blocks.image')} value={selectedBlock.props.alt || ta('menu.noAlt')}>{@render imgImage()}</MenuGroup>
   <MenuGroup id="img-link" title={ta('group.linkClick')} value={imageLinked ? linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) : (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none'))}
-    group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, lightbox: false })}>{@render imgLink()}</MenuGroup>
+    group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet imgCrop()}
     <Setting key="fit">

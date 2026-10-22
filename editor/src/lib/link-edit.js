@@ -6,12 +6,13 @@
  */
 import { isSafeHref, isSafeUrl, LINK_RELS } from '$engine/nav-model.js';
 import { telHref } from '$engine/contact-model.js';
+import { isFileHref, fileLabel } from './file-links.js';
 
 /** The kinds of link the editor offers, in the order it shows them. */
-export const LINK_KINDS = ['page', 'web', 'email', 'phone'];
+export const LINK_KINDS = ['page', 'web', 'email', 'phone', 'file'];
 
 /** The fields of the link shape, which a host's link is written over. */
-const LINK_FIELDS = ['page', 'target', 'href', 'newTab', 'rel'];
+const LINK_FIELDS = ['page', 'target', 'href', 'newTab', 'rel', 'download'];
 
 /**
  * Writes a link over a host object in place: the link shape's fields go, and the ones the link has are set.
@@ -74,21 +75,24 @@ export function emailHref(email, subject = '') {
  * A stored link as the editor works on it.
  * `value` is a link object, or for a host of the `address` shape the address itself.
  * A path or a fragment of the site that names a page of the register reads as that page and the spot after its #, so an old `/kaker#sec-…` opens with Kaker and the section chosen; the spot may be a name, which the editor matches to its spot.
+ * A path in media/ or a PDF held in the draft reads as a file (file-links.js).
  * @param {object|string|null} value
  * @param {{pages?: Array<{id: string, path: string}>, here?: string|null}} [context] The page register, and the page the link stands on
- * @returns {{kind: string, page: string, target: string, url: string, email: string, subject: string, phone: string, newTab: boolean, rel: string[]}}
+ * @returns {{kind: string, page: string, target: string, url: string, email: string, subject: string, phone: string, file: string, newTab: boolean, rel: string[], download: boolean}}
  */
 export function readLink(value, { pages = [], here = null } = {}) {
   const link = typeof value === 'string' ? { href: value } : (value ?? {});
   const base = {
-    kind: 'page', page: '', target: '', url: '', email: '', subject: '', phone: '',
+    kind: 'page', page: '', target: '', url: '', email: '', subject: '', phone: '', file: '',
     newTab: link.newTab === true,
     rel: Array.isArray(link.rel) ? LINK_RELS.filter((word) => link.rel.includes(word)) : [],
+    download: link.download === true,
   };
   const target = typeof link.target === 'string' ? link.target : '';
   if (link.page) return { ...base, page: link.page, target };
   const href = typeof link.href === 'string' ? link.href.trim() : '';
   if (!href || href === '#') return target ? { ...base, page: here ?? '', target } : base;
+  if (isFileHref(href)) return { ...base, kind: 'file', file: href };
   if (/^mailto:/i.test(href)) {
     const [address, query = ''] = href.slice(7).split('?');
     let email = address;
@@ -115,6 +119,7 @@ export function linkReady(state) {
   if (state.kind === 'web') return Boolean(webHref(state.url));
   if (state.kind === 'email') return emailLike(state.email);
   if (state.kind === 'phone') return Boolean(telHref(state.phone));
+  if (state.kind === 'file') return isFileHref(state.file);
   return false;
 }
 
@@ -122,14 +127,14 @@ export function linkReady(state) {
  * The editor's link written back in the host's shape, or null when it is not complete.
  * A link to a page stores the page and the spot's id; a spot on the host's own page (`here`) is stored without the page.
  * For a host that keeps one address it is the page's path with the spot's id after #, or the # alone for a spot on its own page.
- * A new tab goes with a link to a page or the web, and the rel words with a link to the web only.
+ * A new tab goes with a link to a page, the web or a file, the rel words with a link to the web only, and the wish to save with a link to a file only.
  * @param {ReturnType<typeof readLink>} state
  * @param {{shape?: 'link'|'address', pages?: Array<{id: string, path: string}>, here?: string|null}} [options]
  * @returns {object|string|null}
  */
 export function writeLink(state, { shape = 'link', pages = [], here = null } = {}) {
   if (!linkReady(state)) return null;
-  const newTab = state.newTab && (state.kind === 'page' || state.kind === 'web') ? { newTab: true } : {};
+  const newTab = state.newTab && ['page', 'web', 'file'].includes(state.kind) ? { newTab: true } : {};
   if (state.kind === 'page') {
     const ownSpot = Boolean(here) && state.page === here && Boolean(state.target);
     if (shape === 'address') {
@@ -140,6 +145,10 @@ export function writeLink(state, { shape = 'link', pages = [], here = null } = {
     if (ownSpot) return { target: state.target, ...newTab };
     return { page: state.page, ...(state.target ? { target: state.target } : {}), ...newTab };
   }
+  if (state.kind === 'file') {
+    if (shape === 'address') return state.file;
+    return { href: state.file, ...newTab, ...(state.download ? { download: true } : {}) };
+  }
   const href = state.kind === 'web' ? webHref(state.url)
     : state.kind === 'email' ? emailHref(state.email, state.subject)
       : telHref(state.phone);
@@ -149,7 +158,30 @@ export function writeLink(state, { shape = 'link', pages = [], here = null } = {
 }
 
 /**
- * The words a link field shows for a link: the page's title with the spot after ›, the web address without its scheme, the email address or the phone number; '' for no link.
+ * Why a link no longer lands, or null when it does or this cannot be told: 'page' (its page is gone from the register), 'spot' (its spot is gone from its page) or 'address' (an address within the site that names no page).
+ * A spot is checked only when the ids in use on its page are known (`taken`, from takenAnchors); a file, a reserved folder and an address outside the site are never flagged.
+ * @param {ReturnType<typeof readLink>} state
+ * @param {{pages?: Array<{id: string, path: string}>, taken?: Set<string>|null, reserved?: string[]}} [context] The register, the ids in use on the link's page, and the reserved first path parts
+ * @returns {'page'|'spot'|'address'|null}
+ */
+export function linkProblem(state, { pages = [], taken = null, reserved = [] } = {}) {
+  if (state.kind === 'page') {
+    if (!state.page) return null;
+    if (!pages.some((p) => p.id === state.page)) return 'page';
+    return state.target && taken && !taken.has(state.target) ? 'spot' : null;
+  }
+  if (state.kind !== 'web' || !/^\/(?!\/)/.test(state.url)) return null;
+  // An address with a query (/kaker?ref=x) still names its page.
+  const path = state.url.replace(/[?#].*$/, '');
+  const bare = path.length > 1 ? path.replace(/\/$/, '') : path;
+  if (pages.some((p) => p.path === bare)) return null;
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length && (reserved.includes(parts[0]) || parts.at(-1).includes('.'))) return null;
+  return 'address';
+}
+
+/**
+ * The words a link field shows for a link: the page's title with the spot after ›, the web address without its scheme, the email address, the phone number or the file's name; '' for no link.
  * @param {ReturnType<typeof readLink>} state
  * @param {{pages?: Array<{id: string, title: string}>, spotLabel?: string}} [context] The register, and the words for the spot when they are known
  * @returns {string}
@@ -165,6 +197,7 @@ export function linkSummary(state, { pages = [], spotLabel = '' } = {}) {
   if (state.kind === 'web') return state.url.replace(/^https?:\/\//i, '');
   if (state.kind === 'email') return state.email;
   if (state.kind === 'phone') return state.phone;
+  if (state.kind === 'file') return fileLabel(state.file);
   return '';
 }
 

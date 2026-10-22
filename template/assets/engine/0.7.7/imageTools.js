@@ -18,6 +18,10 @@ export const WARN_BYTES = 400_000;
    until it is published, and the editor warns). */
 export const VIDEO_WARN_BYTES = 4_000_000;
 export const VIDEO_MAX_BYTES = 15_000_000;
+/* A PDF a link goes to is published unchanged like a video, under the same two limits.
+   The publishing guard holds the same maximum (MEDIA_PDF_MAX_BYTES in functions/_lib/guard.js). */
+export const PDF_WARN_BYTES = VIDEO_WARN_BYTES;
+export const PDF_MAX_BYTES = VIDEO_MAX_BYTES;
 /* An animated image (GIF, animated WebP, APNG) is kept as the file it is: a
    canvas holds one frame, so compressing it would freeze it. It is warned
    about above ANIMATED_WARN_BYTES and rejected above ANIMATED_MAX_BYTES,
@@ -291,10 +295,11 @@ export function svgViewBox(svgText) {
 }
 
 /** Media file extension from a data URL: SVG keeps the vector, a GIF and a
- *  PNG keep their own (the animations that were kept as they are), the rest
- *  is webp. */
+ *  PNG keep their own (the animations that were kept as they are), a PDF is
+ *  a pdf, the rest is webp. */
 export function mediaExtension(dataUrl) {
   const url = dataUrl || '';
+  if (/^data:application\/pdf[;,]/i.test(url)) return 'pdf';
   if (/^data:image\/svg\+xml[;,]/.test(url)) return 'svg';
   if (/^data:image\/gif[;,]/.test(url)) return 'gif';
   if (/^data:image\/(?:png|apng)[;,]/.test(url)) return 'png';

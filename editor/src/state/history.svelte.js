@@ -2,6 +2,7 @@
  * Undo and redo: one stack over the page, the site, the collections, the templates and the plugins, and the dirty flag.
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
+import { untrack } from 'svelte';
 import { createDraftStore } from '../lib/draftStore.js';
 import { indexPending } from '../lib/collection-index.js';
 import { ta } from '$engine/i18n.js';
@@ -14,8 +15,12 @@ import { siteState } from './site.svelte.js';
 import { templatesState } from './templates.svelte.js';
 
 let dirty = $state(false);
+/** Counts the changes saved this session, so a view that reads the page's own data (which is not reactive) follows every change. */
+let edits = $state(0);
 
 function updateDirty() {
+  // Read without tracking, so an effect that saves never follows its own count.
+  edits = untrack(() => edits) + 1;
   // Drafts on ALL pages count, not just the current one - but not newly
   // published pages that are just waiting for deploy.
   const anyPageDraft = siteState.siteDraft?.pages?.some((p) =>
@@ -209,6 +214,7 @@ function redo() {
 export const historyState = {
   get dirty() { return dirty; },
   set dirty(v) { dirty = v; },
+  get edits() { return edits; },
   updateDirty,
   history,
   redoStack,

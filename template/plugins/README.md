@@ -164,9 +164,31 @@ Urd.blocks.define('venue', {
 ```
 
 Typene er `text`, `number` (`min`/`max`/`step`), `toggle`, `select`
-(`options: [{ value, labelKey }]`) og `place` (stedssøk: teksten skrives
+(`options: [{ value, labelKey }]`), `place` (stedssøk: teksten skrives
 til `key`, koordinater til props `lat`/`lon`; kjernens kartblokk bruker
-samme felt). Etikettnøklene løses av motoren før de sendes til admin, så
+samme felt) og `link` (det samme lenkefeltet og lenkevinduet som kjernens
+blokker: en side eller et sted på den, en nettadresse, e-post eller
+telefon; lenken skrives til `key`, `null` når den fjernes). En `link`
+tegnes med resolveren fra `/assets/urd/links.js`, så lenken følger en ny
+adresse på siden og et nytt navn på stedet, og en utrygg adresse aldri blir
+en levende lenke:
+
+```js
+import { resolveLink, linkAttrs } from '/assets/urd/links.js';
+
+Urd.blocks.define('venue', {
+  // …
+  fields: [{ key: 'more', type: 'link', labelKey: 'venue.edit.more' }],
+  render(el, props, ctx) {
+    const a = document.createElement('a');
+    a.textContent = props.title;
+    Object.assign(a, linkAttrs(resolveLink(props.more ?? {}, ctx.site.pages ?? [])));
+    el.appendChild(a);
+  },
+});
+```
+
+Etikettnøklene løses av motoren før de sendes til admin, så
 bruk `labelKey` fra pluginens egen ordbok. Uten `fields` viser Egenskaper
 en «Innstillinger …»-knapp som åpner pluginens eget config-panel i
 forhåndsvisningen (referansepluginene kalender og skjema viste det
@@ -229,7 +251,7 @@ deres ligger i git-historikken (taggen v0.7.3, `template/plugins/`). Fra
   en host blokkerer kartet (Urds egen `_headers` tillater den).
 
 Én forskjell gjelder for en plugin: kjernens blokker importerer
-`../i18n.js`, `../hint.js` og `../dropdown.js` direkte, mens en plugin
+`../i18n.js`, `../hint.js`, `../dropdown.js` og `../nav-model.js` direkte, mens en plugin
 ALLTID importerer fra `/assets/urd/` (motorkatalogen byttes ved hver
 utgivelse, ADR-0013). Besøksmåling (Cloudflare Web Analytics) var også en
 referanseplugin; den er nå nettstedsinnstillingen «Besøksmåling» bak

@@ -248,6 +248,7 @@
             "href": { "type": "string", "description": "A full address or a site path; unsafe values are dropped" },
             "target": { "$ref": "#/$defs/linkTarget" },
             "newTab": { "$ref": "#/$defs/linkNewTab" },
+            "download": { "$ref": "#/$defs/linkDownload" },
             "rel": { "$ref": "#/$defs/linkRel" },
             "dismiss": { "type": "boolean", "default": true, "description": "A cross lets the visitor close the strip; it stays closed while the text is unchanged (localStorage)" },
             "sticky": { "type": "boolean", "default": true, "description": "The strip follows the menu; false lets it scroll away while the menu sticks alone (fixed hosts keep it)" },
@@ -294,6 +295,7 @@
                   "href": { "type": "string", "description": "A full address or a site path; an unsafe or empty value leaves the tile dimmed" },
                   "target": { "$ref": "#/$defs/linkTarget" },
                   "newTab": { "$ref": "#/$defs/linkNewTab" },
+                  "download": { "$ref": "#/$defs/linkDownload" },
                   "rel": { "$ref": "#/$defs/linkRel" },
                   "icon": { "type": "string", "description": "An id from the icon library (icons.js); an unknown id leaves the tile with its label" },
                   "image": { "type": "string", "description": "Own image or logo as a path in media/ (data URL in the draft); wins over icon" }
@@ -539,6 +541,7 @@
               "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section (#section-id, /path#section-id; additive from v0.6)" },
               "target": { "$ref": "#/$defs/linkTarget" },
               "newTab": { "$ref": "#/$defs/linkNewTab" },
+              "download": { "$ref": "#/$defs/linkDownload" },
               "rel": { "$ref": "#/$defs/linkRel" },
               "children": {
                 "type": "array",
@@ -553,6 +556,7 @@
                     "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section (#section-id, /path#section-id; additive from v0.6)" },
                     "target": { "$ref": "#/$defs/linkTarget" },
                     "newTab": { "$ref": "#/$defs/linkNewTab" },
+                    "download": { "$ref": "#/$defs/linkDownload" },
                     "rel": { "$ref": "#/$defs/linkRel" }
                   },
                   "anyOf": [
@@ -619,6 +623,7 @@
                     "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section (#section-id, /path#section-id; additive from v0.6)" },
                     "target": { "$ref": "#/$defs/linkTarget" },
                     "newTab": { "$ref": "#/$defs/linkNewTab" },
+                    "download": { "$ref": "#/$defs/linkDownload" },
                     "rel": { "$ref": "#/$defs/linkRel" }
                   },
                   "not": { "required": ["page", "href"] }
@@ -664,6 +669,7 @@
             "href": { "type": "string", "description": "Button target when page is not set: external link/mailto or site-internal path/anchor to a section (#section-id; additive from v0.6)" },
             "target": { "$ref": "#/$defs/linkTarget" },
             "newTab": { "$ref": "#/$defs/linkNewTab" },
+            "download": { "$ref": "#/$defs/linkDownload" },
             "rel": { "$ref": "#/$defs/linkRel" },
             "endpoint": { "type": "string", "description": "Newsletter endpoint (Formspree/Mailchimp/Buttondown/own Cloudflare function); sent with fetch (POST JSON). An external host requires connect-src in _headers (ADR-0006)." },
             "recipient": { "type": "string", "description": "Mailto fallback when endpoint is missing" },
@@ -677,6 +683,7 @@
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
     "linkTarget": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,80}$", "description": "The id of a section or block the link lands on (additive from 0.7.27.3): on the page in page, or on the page the link stands on without one. The id, not the name, so a rename never breaks the link; the address shows the name once the visitor lands" },
     "linkNewTab": { "type": "boolean", "default": false, "description": "Open the link in a new tab (additive from 0.7.27.3); gets rel noopener" },
+    "linkDownload": { "type": "boolean", "default": false, "description": "Save the file the link goes to rather than open it (additive from 0.7.27.9); counts only for a path on the site, such as a file in media/" },
     "linkRel": { "type": "array", "uniqueItems": true, "items": { "enum": ["nofollow", "sponsored"] }, "description": "Rel words for a link that leaves the site (additive from 0.7.27.3); ignored on a link within the site" },
     "footerLink": {
       "type": "object",
@@ -688,6 +695,7 @@
         "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section (#section-id, /path#section-id; additive from v0.6)" },
         "target": { "$ref": "#/$defs/linkTarget" },
         "newTab": { "$ref": "#/$defs/linkNewTab" },
+        "download": { "$ref": "#/$defs/linkDownload" },
         "rel": { "$ref": "#/$defs/linkRel" }
       },
       "not": { "required": ["page", "href"] }

@@ -2,6 +2,25 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.27.7-9): links that no longer land, the links to a spot, the plugin link field, and links to files
+
+- [ ] Footer panel: link a footer link to Kaker › the video section, then delete that section on Kaker: the field shows «Kaker › the spot is gone» in amber with a warning sign; a menu item to a deleted page shows «The page is gone»; a site link typed as `/gammel-side` shows «No page at /gammel-side»; a link to a file in `/media/` or to `/admin` shows no warning
+- [ ] Kaker, the video section's Properties, Link target: under «Link name» stands «Links here» with the footer's «Kakevideoen» and any button that links to the section; pressing a button's entry selects the button, a menu or footer entry opens the Nav or Footer panel; a link added or removed shows in the list at once
+- [ ] Footer panel, Columns and Link row: each link has its name and its up, down and remove buttons on one line, as tall as the name field, with the link field across the line under them; Site panel, Links: the icon and the name, then the link field with the tools; the words in every link field start at the left
+- [ ] A plugin block with `fields: [{ key: 'more', type: 'link', label: 'More' }]` (the example in template/plugins/README.md): its menu shows «More» with the same link field; Om oss and a spot chosen there give a published link to `/om-oss#…`, also after Om oss changes address
+- [ ] A button's «Goes to», File: the list shows the files in `media/` the site uses that are not pictures; «Upload a PDF» takes a PDF and lists it first with «Not published yet»; after «Use this link» the field shows its name
+- [ ] An HTML file renamed to .pdf, or a PDF over 15 MB, is refused with a message; a PDF over 4 MB is taken with a warning
+- [ ] Publish a button linked to an uploaded PDF with «Download instead of opening»: the repo gets `media/<name>-<hash>.pdf`, the field shows that name, and the published button saves the file; two buttons linked to the same PDF before publishing give one file
+- [ ] Without «Download instead of opening» the published PDF opens in the browser, and with «Open in a new tab» it opens in a new tab
+- [ ] Text: select words, Ctrl+K, File: the published files are listed and there is no «Upload a PDF»; a file chosen with «Download instead of opening» makes the published words save it
+- [ ] The example footer's «Last ned logoen» saves the logo instead of opening it
+- [ ] Hovering a link to a PDF on the published site does not fetch the PDF ahead (the browser's network panel)
+- [ ] A published PDF opened from a link shows in the browser's own viewer in Firefox and Safari as in Chrome (the site's `Content-Security-Policy` applies to it too)
+- [ ] The footer's call to action linked to a PDF with «Download instead of opening» saves the file on the published site
+- [ ] A link typed as `/kaker?ref=nyhetsbrev` shows no warning, and goes to Kaker on the published site
+- [ ] With the section's «Links here» in view, a link to the section added to words in a text on the page shows in the list at once
+- [ ] A PDF of about 5 MB on a page with no other unpublished change: the storage message shows, «Unpublished» stays on, and Publish writes the page and the PDF
+
 ### Test batch (0.7.0.61): the section's Properties in groups
 
 - [ ] Select a section's surface and open Properties: six closed groups, Height and grid, Section theme, Link target, Background, Edge shapes and Motion, each with its value beside it (such as «Glow · Grain · Image», «None» or «#priser»); a group left open is open again after a reload

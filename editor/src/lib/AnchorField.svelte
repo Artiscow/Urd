@@ -2,10 +2,11 @@
   /* The name a section or block carries for links (anchor-model.js): typed, or taken from a suggestion drawn from its own words, and checked against the page as it is typed.
      The typed words are written as a name (Priser becomes priser), and a name another spot holds or words with no letters or digits are refused with a note.
      An emptied field removes the name; the spot's own id still takes links.
-     «Copy link» copies the address within the site that lands on the spot (/kaker#priser), by its name, or else by its id. */
+     «Copy link» copies the address within the site that lands on the spot (/kaker#priser), by its name, or else by its id.
+     Under the field stand the links that point at the spot from this page, the menu and the footer (spotLinks); pressing one selects its block or opens its panel. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
-  import { ANCHOR_MAX, anchorError, suggestAnchor } from '$engine/anchor-model.js';
+  import { ANCHOR_MAX, anchorError, suggestAnchor, spotLinks } from '$engine/anchor-model.js';
   import { slugText } from '$engine/imageTools.js';
   import { ICONS } from './icons.js';
   const ed = getContext('urd-editor');
@@ -35,6 +36,24 @@
   function useSuggestion() {
     typed = null;
     onchange(suggestion);
+  }
+
+  // The page's own data is not reactive: the count of saved changes makes the list follow every change on the page.
+  const uses = $derived.by(() => {
+    void ed.edits;
+    return spotLinks({ id: own, name: value }, { page: ed.store?.data, pageId: ed.pageId, path, site: ed.siteDraft });
+  });
+
+  /** A link's place in words: the block with its type and words, or the menu or footer item after its panel's name. */
+  function useText(use) {
+    if (use.area === 'page') return use.words ? ta('link.useBlock', { type: ed.blockLabel(use.type), words: use.words }) : ed.blockLabel(use.type);
+    const area = ta(use.area === 'menu' ? 'panel.nav' : 'panel.footer');
+    return use.words ? `${area} › ${use.words}` : area;
+  }
+
+  function goToUse(use) {
+    if (use.area === 'page') ed.bridge?.sendSelect(use.blockId);
+    else ed.openPanel(use.area === 'menu' ? 'nav' : 'footer');
   }
 
   function copyLink() {
@@ -68,6 +87,14 @@
 {#if error}
   <p id="anchor-note-{uid}" class="panel-hint place-error" aria-live="polite">{ta(ERROR_KEYS[error])}</p>
 {/if}
+{#if uses.length}
+  <div class="anchor-uses">
+    <span class="mini-label">{ta('link.usedBy')}</span>
+    {#each uses as use, i (i)}
+      <button type="button" class="linkish anchor-use" title={ta('tip.link.use')} onclick={() => goToUse(use)}>{useText(use)}</button>
+    {/each}
+  </div>
+{/if}
 
 <style>
   .anchor-row {
@@ -84,6 +111,21 @@
   .anchor-suggest {
     justify-self: start;
     text-align: left;
+  }
+
+  .anchor-uses {
+    display: grid;
+    justify-items: start;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .anchor-use {
+    max-width: 100%;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .anchor-error {

@@ -28,6 +28,21 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.27.7-9 - A warning on a link that no longer lands, the links to a spot listed, a link field for plugins, and links to files - 22 October 2026
+
+- A link whose page or spot had been deleted gave no sign in the editor and went nowhere on the site. Its field shows a warning in place of where it went, and so does an address within the site that no page has (`linkProblem` in link-edit.js).
+- Nothing showed which links pointed at a spot before it was renamed or deleted. «Link name» lists the links that point at it from the page, the menu and the footer, and each leads to its block or panel (`spotLinks` in anchor-model.js).
+- Since 0.7.13.5, which took the row rule away with the old Nav panel, the Footer panel's column links and link row had no layout, with the order buttons as a thin strip under the name. The rows have their grid back, the link field across the line under the name.
+- A link field's words stood in the middle of the field; they start at the left.
+- A plugin block had no link field. `type: 'link'` in the field contract gives it the same link field, and a plugin draws the link with `resolveLink` and `linkAttrs` from the new `/assets/urd/links.js`.
+- A link could go to a file only by its typed path. The link editor's File kind lists the files in `media/` the site uses and takes a PDF from the computer, which publishing writes to `media/<name>-<hash>.pdf` (`file-links.js`); «Download instead of opening» makes the browser save it (`download` in the link shape, SCHEMA.md).
+- The publishing guard takes `pdf` in `media/`, and only a file that starts as a PDF and stays within 15 MB (`isAllowedContent`, the error code `fileNotAllowed`).
+- The speculation rules prefetched every address on hover, a file in `media/` included; `/media/*` is left out.
+- A change too large for the browser's storage (a big video or PDF on a page with no earlier draft) was left out of the next publish, though the quota message said it would be kept until then. The draft store counts such changes as a draft (`draftStore.js`).
+- A file gathered from several drafts was sent once per draft in the same publish; each path is sent once.
+- ADR-0013: an addendum on `links.js` as a new shell, and AGENTS.md names it among the paths plugins import.
+- BACKLOG: stages 7 to 9 and the milestone 0.7.27 delivered, and in both roadmaps; the maps: C124 delivered, and «Anchor links», «Custom IDs or anchors», «Scroll points», «Link types» and ELEMENTS #84 recounted.
+
 ### 0.7.0.61 - The section's Properties in groups, and background layers that fold - 22 October 2026
 
 - The section's Properties were one long list: the height and grid, the theme cards, the link name, every background layer open, the edge shapes and the motion, split by rules. They are six groups as a block's menu has them (Height and grid, Section theme, Link target, Background, Edge shapes, Motion), each showing its value while closed (`PropertiesPanel.svelte`).

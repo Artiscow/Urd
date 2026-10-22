@@ -2123,17 +2123,19 @@ function initTextToolbar() {
       ...(editedLink.dataset.urdTarget ? { target: editedLink.dataset.urdTarget } : {}),
       ...(editedLink.dataset.urdPage || editedLink.dataset.urdTarget ? {} : { href: editedLink.getAttribute('href') ?? '' }),
       ...(editedLink.target === '_blank' ? { newTab: true } : {}),
+      ...(editedLink.hasAttribute('download') ? { download: true } : {}),
       rel: LINK_RELS.filter((word) => editedLink.relList.contains(word)),
     } : null;
     post({ type: 'urd-link-edit', value, text: editedLink ? '' : (sel?.toString() ?? '').trim() });
   }
 
-  /** Puts a link (the link shape) on an anchor: its address now, a new tab, the rel words, and the page and the spot it stands for. */
+  /** Puts a link (the link shape) on an anchor: its address now, a new tab, the rel words, a file to save, and the page and the spot it stands for. */
   const setTextLink = (a, link, pages) => {
     const attrs = linkAttrs(resolveLink(link, pages));
     a.setAttribute('href', attrs.href);
     if (attrs.target) a.setAttribute('target', attrs.target); else a.removeAttribute('target');
     if (attrs.rel) a.setAttribute('rel', attrs.rel); else a.removeAttribute('rel');
+    if (attrs.download !== undefined) a.setAttribute('download', ''); else a.removeAttribute('download');
     if (link.page) a.dataset.urdPage = link.page; else delete a.dataset.urdPage;
     if (link.target) a.dataset.urdTarget = link.target; else delete a.dataset.urdTarget;
   };

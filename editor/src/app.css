@@ -1783,7 +1783,28 @@
     text-align: center;
   }
 
-  /* Submenu rows: indented under the parent item, with a marked edge */
+  /* A row of a list of links (the footer's columns, its link row, LinkList): the name with its tools on one line, the link field across the line under them. */
+  .nav-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.3rem 0.35rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  .nav-row > .nav-target,
+  .nav-row > .nav-line {
+    grid-column: 1 / -1;
+  }
+
+  /* The links under a footer column's name, set in from it. */
+  .nav-sub-row {
+    margin-left: 0.8rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid rgb(255 255 255 / 12%);
+  }
+
   .nav-line {
     display: flex;
     align-items: center;

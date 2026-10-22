@@ -368,6 +368,7 @@ export default {
     'api.badFiles': 'files måste vara en lista med 1 till 200 filer',
     'api.badFileEntry': 'Varje fil behöver path och content (eller delete: true)',
     'api.pathNotAllowed': 'Sökvägen «{path}» kan inte publiceras härifrån',
+    'api.fileNotAllowed': 'Filen «{path}» är inte en PDF, eller är större än 15 MB',
     'api.publishRace': 'Någon publicerade just nu - försök publicera igen',
     'api.commitFailed': 'Kunde inte committa till GitHub: {detail}',
     'api.badRevertTarget': 'expect (publiceringen som ska ångras) saknas eller är ogiltig',

@@ -283,6 +283,11 @@
             "label": "Bli med",
             "page": "kaker",
             "target": "blk-b35fc0b9"
+          },
+          {
+            "label": "Last ned logoen",
+            "href": "/media/footer-logo-84804c80.svg",
+            "download": true
           }
         ]
       },

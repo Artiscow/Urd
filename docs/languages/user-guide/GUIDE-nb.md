@@ -237,15 +237,17 @@ utover seksjonskanten; ingenting klippes.
 ### Lenke til et sted på en side
 
 En lenke kan lande på en seksjon eller en blokk i stedet for øverst på siden.
-Gi stedet et navn: for en seksjon i **Egenskaper** under **Lenkenavn**, for en
-blokk i menyen under **Plassering**, i gruppen **Lenkemål**. Skriv navnet med
-dine egne ord: «Priser» blir skrevet som `priser`, og knappen under feltet
-foreslår et navn laget av stedets første overskrift. Et navn et annet sted på
+Gi stedet et navn under **Lenkenavn**: for en seksjon i **Egenskaper**, for en
+blokk i menyen under **Plassering**, begge steder i gruppen **Lenkemål**. Skriv
+navnet med dine egne ord: «Priser» blir skrevet som `priser`, og forslaget
+under feltet gir et navn laget av stedets første overskrift. Et navn et annet sted på
 siden allerede har, blir avvist med en merknad. For å lenke til stedet velger
 du siden og så stedet i et hvilket som helst lenkefelt (se Lenker nedenfor).
 Kopier-knappen ved siden av navnet kopierer lenken innenfor nettstedet, for
 eksempel `/kaker#priser`, til deling. Et sted uten navn kan fortsatt lenkes
-til: lenkeredigereren viser hver seksjon med nummer og første ord.
+til: lenkeredigereren viser hver seksjon med nummer og første ord. Under navnet
+står lenkene som peker til stedet fra samme side, menyen og footeren; trykk på
+en for å gå til den.
 
 Lenken lander med stedet rett under menyen, fra samme side og fra alle andre.
 På samme side ruller den dit mykt, med mindre den besøkende har bedt om mindre
@@ -258,7 +260,8 @@ siden allerede har, får et tall bak (`priser-2`).
 Hver lenke i redigereren settes i det samme vinduet: en knapps **Går til**,
 lenken på et bilde eller et galleribilde, handlekurvens kasseside,
 kalenderkunngjøringens lenke, menypunktene, footerens lenker og oppfordring,
-nettstedets lenker, lenken på en oppføring i en samling, og ord i en tekst.
+nettstedets lenker, lenken på en oppføring i en samling, lenken i en
+plugin-blokk, og ord i en tekst.
 Klikk lenkefeltet (i en tekst merker du ordene og trykker lenkeknappen eller
 Ctrl+K; Ctrl+Shift+K tar bort lenken). Under **Går til** velger du:
 
@@ -268,12 +271,19 @@ Ctrl+K; Ctrl+Shift+K tar bort lenken). Under **Går til** velger du:
 - **Nettadresse**: en hel adresse; `www.eksempel.no` får `https://` foran.
 - **E-post**: adressen, og et emne om du vil.
 - **Telefon**: nummeret.
+- **Fil**: en fil nettstedet allerede har, funnet med søk, eller en PDF fra
+  maskinen din med **Last opp en PDF** (høyst 15 MB), som publiseres til
+  media-mappen ved neste publisering. **Last ned i stedet for å åpne** gjør at
+  nettleseren til den besøkende lagrer den. Ord i en tekst tar en fil som
+  allerede er publisert.
 
-**Åpne i ny fane** gjelder sider og nettadresser, og en nettadresse kan også
+**Åpne i ny fane** gjelder sider, nettadresser og filer, og en nettadresse kan også
 merkes **Be søkemotorer ikke følge den** eller **Betalt eller sponset lenke**.
 Merkede ord som er en e-postadresse eller et telefonnummer, blir foreslått som
 det. En lenke til en side virker videre når sidens adresse endres eller stedet
-får nytt navn.
+får nytt navn. En lenke der siden eller stedet er slettet, viser en advarsel i
+feltet sitt, og det samme gjør en adresse på nettstedet som ingen side har;
+klikk feltet for å velge hvor den går.
 
 ## Grid (hjelpelinjer)
 

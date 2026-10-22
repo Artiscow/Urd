@@ -27,6 +27,7 @@
           "target": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,80}$", "description": "The id of a section or block on that page (or on the page the block stands on) the title lands on (additive from 0.7.27.3)" },
           "href": { "type": "string", "description": "Optional link (internal path or external URL); makes the title clickable. Through the shared safe-URL gate" },
           "newTab": { "type": "boolean", "default": false, "description": "Open the title's link in a new tab (additive from 0.7.27.3)" },
+          "download": { "type": "boolean", "default": false, "description": "Save the file the title links to rather than open it (additive from 0.7.27.9); counts only for a path on the site" },
           "rel": { "type": "array", "uniqueItems": true, "items": { "enum": ["nofollow", "sponsored"] }, "description": "Rel words for a link that leaves the site (additive from 0.7.27.3)" },
           "imageAlt": { "type": "string", "description": "Alt text for the entry image (additive from v0.6)" },
           "price": { "type": "number", "minimum": 0, "description": "Product price (kind products, additive from v0.7); the currency word is set on the product block" },
