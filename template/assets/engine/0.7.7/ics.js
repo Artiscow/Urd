@@ -71,6 +71,115 @@ function zoneFormatter(timeZone) {
 }
 
 /**
+ * The Windows time-zone names Outlook writes as TZID, each with the IANA zone CLDR names for it (windowsZones, territory 001).
+ * Intl knows the IANA names only, so a Windows name is read through this table; a name not here is read from the feed's VTIMEZONE block.
+ */
+const WINDOWS_ZONES = {
+  'Dateline Standard Time': 'Etc/GMT+12', 'UTC-11': 'Etc/GMT+11', 'Aleutian Standard Time': 'America/Adak', 'Hawaiian Standard Time': 'Pacific/Honolulu',
+  'Marquesas Standard Time': 'Pacific/Marquesas', 'Alaskan Standard Time': 'America/Anchorage', 'UTC-09': 'Etc/GMT+9', 'Pacific Standard Time (Mexico)': 'America/Tijuana',
+  'UTC-08': 'Etc/GMT+8', 'Pacific Standard Time': 'America/Los_Angeles', 'US Mountain Standard Time': 'America/Phoenix', 'Mountain Standard Time (Mexico)': 'America/Mazatlan',
+  'Mountain Standard Time': 'America/Denver', 'Yukon Standard Time': 'America/Whitehorse', 'Central America Standard Time': 'America/Guatemala', 'Central Standard Time': 'America/Chicago',
+  'Easter Island Standard Time': 'Pacific/Easter', 'Central Standard Time (Mexico)': 'America/Mexico_City', 'Canada Central Standard Time': 'America/Regina', 'SA Pacific Standard Time': 'America/Bogota',
+  'Eastern Standard Time (Mexico)': 'America/Cancun', 'Eastern Standard Time': 'America/New_York', 'Haiti Standard Time': 'America/Port-au-Prince', 'Cuba Standard Time': 'America/Havana',
+  'US Eastern Standard Time': 'America/Indianapolis', 'Turks And Caicos Standard Time': 'America/Grand_Turk', 'Paraguay Standard Time': 'America/Asuncion', 'Atlantic Standard Time': 'America/Halifax',
+  'Venezuela Standard Time': 'America/Caracas', 'Central Brazilian Standard Time': 'America/Cuiaba', 'SA Western Standard Time': 'America/La_Paz', 'Pacific SA Standard Time': 'America/Santiago',
+  'Newfoundland Standard Time': 'America/St_Johns', 'Tocantins Standard Time': 'America/Araguaina', 'E. South America Standard Time': 'America/Sao_Paulo', 'SA Eastern Standard Time': 'America/Cayenne',
+  'Argentina Standard Time': 'America/Buenos_Aires', 'Greenland Standard Time': 'America/Godthab', 'Montevideo Standard Time': 'America/Montevideo', 'Magallanes Standard Time': 'America/Punta_Arenas',
+  'Saint Pierre Standard Time': 'America/Miquelon', 'Bahia Standard Time': 'America/Bahia', 'UTC-02': 'Etc/GMT+2', 'Azores Standard Time': 'Atlantic/Azores',
+  'Cape Verde Standard Time': 'Atlantic/Cape_Verde', 'UTC': 'Etc/UTC', 'GMT Standard Time': 'Europe/London', 'Greenwich Standard Time': 'Atlantic/Reykjavik',
+  'Sao Tome Standard Time': 'Africa/Sao_Tome', 'Morocco Standard Time': 'Africa/Casablanca', 'W. Europe Standard Time': 'Europe/Berlin', 'Central Europe Standard Time': 'Europe/Budapest',
+  'Romance Standard Time': 'Europe/Paris', 'Central European Standard Time': 'Europe/Warsaw', 'W. Central Africa Standard Time': 'Africa/Lagos', 'GTB Standard Time': 'Europe/Bucharest',
+  'Middle East Standard Time': 'Asia/Beirut', 'Egypt Standard Time': 'Africa/Cairo', 'E. Europe Standard Time': 'Europe/Chisinau', 'West Bank Standard Time': 'Asia/Hebron',
+  'South Africa Standard Time': 'Africa/Johannesburg', 'FLE Standard Time': 'Europe/Kiev', 'Israel Standard Time': 'Asia/Jerusalem', 'South Sudan Standard Time': 'Africa/Juba',
+  'Kaliningrad Standard Time': 'Europe/Kaliningrad', 'Sudan Standard Time': 'Africa/Khartoum', 'Libya Standard Time': 'Africa/Tripoli', 'Namibia Standard Time': 'Africa/Windhoek',
+  'Jordan Standard Time': 'Asia/Amman', 'Arabic Standard Time': 'Asia/Baghdad', 'Syria Standard Time': 'Asia/Damascus', 'Turkey Standard Time': 'Europe/Istanbul',
+  'Arab Standard Time': 'Asia/Riyadh', 'Belarus Standard Time': 'Europe/Minsk', 'Russian Standard Time': 'Europe/Moscow', 'E. Africa Standard Time': 'Africa/Nairobi',
+  'Volgograd Standard Time': 'Europe/Volgograd', 'Iran Standard Time': 'Asia/Tehran', 'Arabian Standard Time': 'Asia/Dubai', 'Astrakhan Standard Time': 'Europe/Astrakhan',
+  'Azerbaijan Standard Time': 'Asia/Baku', 'Russia Time Zone 3': 'Europe/Samara', 'Mauritius Standard Time': 'Indian/Mauritius', 'Saratov Standard Time': 'Europe/Saratov',
+  'Georgian Standard Time': 'Asia/Tbilisi', 'Caucasus Standard Time': 'Asia/Yerevan', 'Afghanistan Standard Time': 'Asia/Kabul', 'West Asia Standard Time': 'Asia/Tashkent',
+  'Qyzylorda Standard Time': 'Asia/Qyzylorda', 'Ekaterinburg Standard Time': 'Asia/Yekaterinburg', 'Pakistan Standard Time': 'Asia/Karachi', 'India Standard Time': 'Asia/Calcutta',
+  'Sri Lanka Standard Time': 'Asia/Colombo', 'Nepal Standard Time': 'Asia/Katmandu', 'Central Asia Standard Time': 'Asia/Bishkek', 'Bangladesh Standard Time': 'Asia/Dhaka',
+  'Omsk Standard Time': 'Asia/Omsk', 'Myanmar Standard Time': 'Asia/Rangoon', 'SE Asia Standard Time': 'Asia/Bangkok', 'Altai Standard Time': 'Asia/Barnaul',
+  'W. Mongolia Standard Time': 'Asia/Hovd', 'North Asia Standard Time': 'Asia/Krasnoyarsk', 'N. Central Asia Standard Time': 'Asia/Novosibirsk', 'Tomsk Standard Time': 'Asia/Tomsk',
+  'China Standard Time': 'Asia/Shanghai', 'North Asia East Standard Time': 'Asia/Irkutsk', 'Singapore Standard Time': 'Asia/Singapore', 'W. Australia Standard Time': 'Australia/Perth',
+  'Taipei Standard Time': 'Asia/Taipei', 'Ulaanbaatar Standard Time': 'Asia/Ulaanbaatar', 'Aus Central W. Standard Time': 'Australia/Eucla', 'Transbaikal Standard Time': 'Asia/Chita',
+  'Tokyo Standard Time': 'Asia/Tokyo', 'North Korea Standard Time': 'Asia/Pyongyang', 'Korea Standard Time': 'Asia/Seoul', 'Yakutsk Standard Time': 'Asia/Yakutsk',
+  'Cen. Australia Standard Time': 'Australia/Adelaide', 'AUS Central Standard Time': 'Australia/Darwin', 'E. Australia Standard Time': 'Australia/Brisbane', 'AUS Eastern Standard Time': 'Australia/Sydney',
+  'West Pacific Standard Time': 'Pacific/Port_Moresby', 'Tasmania Standard Time': 'Australia/Hobart', 'Vladivostok Standard Time': 'Asia/Vladivostok', 'Lord Howe Standard Time': 'Australia/Lord_Howe',
+  'Bougainville Standard Time': 'Pacific/Bougainville', 'Russia Time Zone 10': 'Asia/Srednekolymsk', 'Magadan Standard Time': 'Asia/Magadan', 'Norfolk Standard Time': 'Pacific/Norfolk',
+  'Sakhalin Standard Time': 'Asia/Sakhalin', 'Central Pacific Standard Time': 'Pacific/Guadalcanal', 'Russia Time Zone 11': 'Asia/Kamchatka', 'New Zealand Standard Time': 'Pacific/Auckland',
+  'UTC+12': 'Etc/GMT-12', 'Fiji Standard Time': 'Pacific/Fiji', 'Chatham Islands Standard Time': 'Pacific/Chatham', 'UTC+13': 'Etc/GMT-13',
+  'Tonga Standard Time': 'Pacific/Tongatapu', 'Samoa Standard Time': 'Pacific/Apia', 'Line Islands Standard Time': 'Pacific/Kiritimati',
+};
+
+/** The zone a TZID names for Intl: the name itself when Intl knows it, else the IANA zone its Windows name stands for, else null. */
+function intlZone(tzid) {
+  if (!tzid) return null;
+  if (zoneFormatter(tzid)) return tzid;
+  const mapped = WINDOWS_ZONES[tzid];
+  return mapped && zoneFormatter(mapped) ? mapped : null;
+}
+
+/** `±HHMM` (the seconds optional) → minutes east of UTC, or null. */
+function offsetMinutes(value) {
+  const m = /^([+-])(\d{2})(\d{2})(?:\d{2})?$/.exec(String(value).trim());
+  return m ? (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) : null;
+}
+
+/**
+ * The wall time a VTIMEZONE component's change of clock happens at in a year: its DTSTART's month, day and time, moved by its yearly rule (BYMONTH with a signed BYDAY such as -1SU, or BYMONTHDAY) when it has one.
+ * As a UTC stamp of the wall time, for comparing with another wall time; null when the component has not begun by that year.
+ */
+function changeAt(component, year) {
+  const start = component.start;
+  if (year < start.y) return null;
+  const rule = component.rule;
+  // A component without a rule changes the clock once, at its start.
+  if (!rule) return year === start.y ? Date.UTC(start.y, start.mo - 1, start.d, start.h, start.mi, start.s) : null;
+  let mo = start.mo;
+  let d = start.d;
+  if (rule.bymonth?.length) [mo] = rule.bymonth;
+  const by = rule.byday?.[0];
+  if (by) {
+    if (by.ord < 0) {
+      let day = daysInMonth(year, mo);
+      while (weekday({ y: year, mo, d: day }) !== by.day) day -= 1;
+      d = day + (by.ord + 1) * 7;
+    } else {
+      let day = 1;
+      while (weekday({ y: year, mo, d: day }) !== by.day) day += 1;
+      d = day + (Math.max(1, by.ord) - 1) * 7;
+    }
+  } else if (rule.bymonthday?.length) {
+    const [n] = rule.bymonthday;
+    d = n < 0 ? daysInMonth(year, mo) + n + 1 : n;
+  }
+  const at = Date.UTC(year, mo - 1, d, start.h, start.mi, start.s);
+  // A rule that has ended (UNTIL) changes nothing after its last year; the day's slack covers the stamp's own zone.
+  if (rule.until != null && at > rule.until + DAY_MS) return null;
+  return at;
+}
+
+/**
+ * Wall time under a feed's own VTIMEZONE → UTC ms: the component (standard or daylight) whose latest change of clock stands before the wall time gives the offset.
+ * The changes are compared as wall times, which is how the feed states them.
+ */
+function componentsToUtc(y, mo, d, h, mi, s, components) {
+  const wallAsUtc = Date.UTC(y, mo - 1, d, h, mi, s);
+  let best = null;
+  for (const component of components) {
+    // A ruled component is tried in this year and the one before; one without a rule stands from its own start.
+    const years = component.rule ? [y, y - 1] : [component.start.y];
+    for (const year of years) {
+      const at = changeAt(component, year);
+      if (at != null && at <= wallAsUtc && (!best || at > best.at)) best = { at, offset: component.offset };
+    }
+  }
+  const offset = best ? best.offset : components[0]?.offset ?? 0;
+  return wallAsUtc - offset * 60 * 1000;
+}
+
+/**
  * Wall time in an IANA zone → UTC ms.
  * The offset is estimated with Intl and adjusted once more, which catches DST transitions.
  * An unknown zone falls back to local time.
@@ -108,13 +217,41 @@ function parseDateParts(value, params = {}) {
   };
 }
 
+/**
+ * Gives a date's parts the zone they are read in: the TZID as Intl knows it (a Windows name through its IANA zone), else the feed's own VTIMEZONE components under `zone`.
+ * A TZID nothing resolves is read as local time.
+ */
+function resolveZone(parts, timezones) {
+  if (!parts?.tzid || parts.tzid === 'UTC') return parts;
+  const zone = intlZone(parts.tzid);
+  if (zone) return zone === parts.tzid ? parts : { ...parts, tzid: zone };
+  const components = timezones[parts.tzid];
+  return components?.length ? { ...parts, tzid: null, zone: components } : parts;
+}
+
 /** Wall-time parts → UTC ms. All-day is read as local midnight (rendered as a date). */
 export function partsToMs(parts) {
   if (!parts) return NaN;
-  const { y, mo, d, h, mi, s, tzid, allDay } = parts;
-  if (allDay || !tzid) return new Date(y, mo - 1, d, h, mi, s).getTime();
+  const { y, mo, d, h, mi, s, tzid, allDay, zone } = parts;
+  if (allDay) return new Date(y, mo - 1, d, h, mi, s).getTime();
+  if (zone) return componentsToUtc(y, mo, d, h, mi, s, zone);
+  if (!tzid) return new Date(y, mo - 1, d, h, mi, s).getTime();
   if (tzid === 'UTC') return Date.UTC(y, mo - 1, d, h, mi, s);
   return zonedToUtc(y, mo, d, h, mi, s, tzid);
+}
+
+/**
+ * `DURATION` → the length of an event: `{ days }` for whole days and weeks, else `{ ms }`; null when the value is not a duration.
+ * The form is RFC 5545's: P2D, P1W, PT2H30M, P1DT2H.
+ */
+export function parseDuration(value) {
+  const m = /^([+-])?P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(String(value).trim());
+  if (!m || /^[+-]?P$/.test(m[0])) return null;
+  const sign = m[1] === '-' ? -1 : 1;
+  const days = Number(m[2] ?? 0) * 7 + Number(m[3] ?? 0);
+  const ms = (Number(m[4] ?? 0) * 3600 + Number(m[5] ?? 0) * 60 + Number(m[6] ?? 0)) * 1000;
+  if (!ms) return { days: sign * days };
+  return { ms: sign * (days * DAY_MS + ms) };
 }
 
 /** Calendar arithmetic on wall-time parts (DST-safe: the clock time survives). */
@@ -147,6 +284,10 @@ export function parseIcs(text) {
   let calendarName = null;
   let calendarZone = null;
   let current = null;
+  // The feed's own zones (VTIMEZONE): per TZID, its standard and daylight components with the offset each one sets and when it begins.
+  const timezones = {};
+  let timezone = null;
+  let component = null;
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
@@ -160,8 +301,36 @@ export function parseIcs(text) {
       current = null;
       continue;
     }
+    if (line === 'BEGIN:VTIMEZONE') {
+      timezone = { id: null, components: [] };
+      continue;
+    }
+    if (line === 'END:VTIMEZONE') {
+      if (timezone?.id) timezones[timezone.id] = timezone.components.filter((c) => c.start && c.offset != null);
+      timezone = null;
+      continue;
+    }
+    if (timezone && (line === 'BEGIN:STANDARD' || line === 'BEGIN:DAYLIGHT')) {
+      component = { start: null, offset: null, rule: null };
+      continue;
+    }
+    if (timezone && (line === 'END:STANDARD' || line === 'END:DAYLIGHT')) {
+      if (component) timezone.components.push(component);
+      component = null;
+      continue;
+    }
     const prop = parseLine(line);
     if (!prop) continue;
+    if (timezone) {
+      if (component) {
+        if (prop.name === 'DTSTART') component.start = parseDateParts(prop.value);
+        if (prop.name === 'TZOFFSETTO') component.offset = offsetMinutes(prop.value);
+        if (prop.name === 'RRULE') component.rule = parseRrule(prop.value);
+      } else if (prop.name === 'TZID') {
+        timezone.id = prop.value.trim();
+      }
+      continue;
+    }
     if (!current) {
       if (prop.name === 'X-WR-CALNAME') calendarName = unescapeText(prop.value).trim();
       if (prop.name === 'X-WR-TIMEZONE') calendarZone = prop.value.trim();
@@ -188,7 +357,10 @@ export function parseIcs(text) {
       case 'STATUS': current.status = prop.value.trim().toUpperCase(); break;
       case 'DTSTART': current.start = parseDateParts(prop.value, prop.params); break;
       case 'DTEND': current.end = parseDateParts(prop.value, prop.params); break;
-      case 'RRULE': current.rrule = parseRrule(prop.value); break;
+      // The length when the feed gives one instead of an end.
+      case 'DURATION': current.duration = parseDuration(prop.value); break;
+      // The rule as parsed for the expansion, and as written for the file «Add to calendar» gives.
+      case 'RRULE': current.rrule = parseRrule(prop.value); current.rruleText = prop.value.trim(); break;
       // Extra dates beside the rule; of a period («start/end») the start is the date.
       case 'RDATE':
         for (const part of prop.value.split(',')) {
@@ -221,6 +393,12 @@ export function parseIcs(text) {
         break;
       default: break;
     }
+  }
+  // Every date is read in its zone once the whole feed is known, since a VTIMEZONE block may stand after the events that use it.
+  for (const event of events) {
+    for (const key of ['start', 'end', 'recurrenceId']) if (event[key]) event[key] = resolveZone(event[key], timezones);
+    event.exdates = event.exdates.map((parts) => resolveZone(parts, timezones));
+    event.rdates = event.rdates.map((parts) => resolveZone(parts, timezones));
   }
   return { name: calendarName, timezone: calendarZone, events };
 }
@@ -419,13 +597,17 @@ function setPositions(days, positions) {
  * The length of an event: whole days for an all-day event (its last day counted from its first; DTEND is the day after the last), else in ms (an hour when the feed gives no end).
  */
 function lengthOf(event) {
+  const duration = event.end ? null : event.duration;
   if (event.start.allDay) {
+    // An all-day length is counted in days to the last day: a DTEND is exclusive, and a DURATION of two days spans two days.
     const days = event.end
       ? Math.round((Date.UTC(event.end.y, event.end.mo - 1, event.end.d) - Date.UTC(event.start.y, event.start.mo - 1, event.start.d)) / DAY_MS) - 1
-      : 0;
+      : duration ? Math.round(duration.days ?? duration.ms / DAY_MS) - 1 : 0;
     return { days: Math.max(0, days) };
   }
-  return { ms: event.end ? Math.max(0, partsToMs(event.end) - partsToMs(event.start)) : 3600 * 1000 };
+  if (event.end) return { ms: Math.max(0, partsToMs(event.end) - partsToMs(event.start)) };
+  if (duration) return { ms: Math.max(0, duration.ms ?? duration.days * DAY_MS) };
+  return { ms: 3600 * 1000 };
 }
 
 /** The end of an occurrence that starts at a time: the start of its last day for an all-day event, counted in calendar days so a change of clock cannot move it. */
@@ -446,9 +628,11 @@ function endAfter(startMs, length) {
  * @param {{ from?: Date|number, to?: Date|number, max?: number }} window
  * @returns {Array<{ uid, summary, description, location, categories: string[], url, image, meeting, geo, descriptionHtml, start: number, end: number, allDay: boolean, recurring: boolean, cancelled: boolean, hasEnd: boolean }>}
  */
-export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) {
+export function expandEvents(events, { from = Date.now(), to, max = 300, near = null } = {}) {
   const fromMs = Number(from);
   const toMs = to != null ? Number(to) : fromMs + 400 * DAY_MS;
+  // Over the cap, the occurrences from `near` on come first, and the ones before it fill what is left, latest first.
+  const nearMs = near != null ? Number(near) : fromMs;
 
   // Overrides: uid + the base occurrence's start → the replacement event.
   const overrides = new Map();
@@ -478,7 +662,10 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       allDay: !!event.start.allDay,
       recurring,
       cancelled: event.status === 'CANCELLED',
-      hasEnd: Boolean(event.end),
+      hasEnd: Boolean(event.end || event.duration),
+      // The rule as the feed wrote it, and the series it belongs to, so a file made from an occurrence can carry the whole series.
+      rrule: event.rruleText ?? null,
+      series: event.rruleText && !event.override ? { start: event.start, end: event.end ?? null, length: lengthOf(event), rrule: event.rruleText, exdates: event.exdates ?? [] } : null,
     });
   };
 
@@ -494,8 +681,9 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       if (override) {
         const oStart = partsToMs(override.start);
         if (!Number.isFinite(oStart)) return;
-        const oEnd = endAfter(oStart, override.end ? lengthOf(override) : length);
-        if (oEnd >= fromMs && oStart <= toMs) push({ ...event, ...override }, oStart, oEnd, recurring);
+        const oEnd = endAfter(oStart, override.end || override.duration ? lengthOf(override) : length);
+        // An override is one instance: it carries no rule of its own.
+        if (oEnd >= fromMs && oStart <= toMs) push({ ...event, ...override, rruleText: null, override: true }, oStart, oEnd, recurring);
         return;
       }
       const end = endAfter(ms, length);
@@ -518,6 +706,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
     }
 
     let produced = 0;
+    let coming = 0;
     // A rule without COUNT may begin just before the window; the longest event a rule repeats is allowed for.
     const longest = length.days != null ? (length.days + 2) * DAY_MS : length.ms + DAY_MS;
     for (const parts of ruleStarts(event.start, event.rrule, fromMs - longest)) {
@@ -529,13 +718,17 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       seen.add(occurrenceMs);
       if (exdateMs.has(occurrenceMs)) continue;
       pushAt(occurrenceMs, true);
-      if (out.length >= max * 2) break;
+      // Enough of a rule: twice the cap in all, or, with a `near`, the cap of occurrences from `near` on.
+      if (near == null ? out.length >= max * 2 : occurrenceMs >= nearMs && ++coming >= max) break;
     }
     pushExtra();
   }
 
   out.sort((a, b) => a.start - b.start);
-  return out.slice(0, max);
+  if (out.length <= max) return out;
+  const coming = out.filter((occ) => occ.end >= nearMs).slice(0, max);
+  const past = out.filter((occ) => occ.end < nearMs);
+  return [...past.slice(Math.max(0, past.length - (max - coming.length))), ...coming];
 }
 
 /* ---------- Conventions (the ApeironLF patterns) ---------- */
@@ -684,6 +877,29 @@ const nextDay = (ms) => {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime();
 };
 
+/**
+ * Wall-time parts as an iCal date property: a date for an all-day event, a UTC stamp for a UTC time, a wall time with its TZID for an IANA zone, a floating wall time otherwise.
+ * A time under a feed's own VTIMEZONE has no name a calendar app knows, so it is written as the moment in UTC.
+ */
+function partsProperty(name, parts) {
+  const wall = `${parts.y}${pad(parts.mo)}${pad(parts.d)}T${pad(parts.h)}${pad(parts.mi)}${pad(parts.s)}`;
+  if (parts.allDay) return `${name};VALUE=DATE:${parts.y}${pad(parts.mo)}${pad(parts.d)}`;
+  if (parts.zone) return `${name}:${utcStamp(partsToMs(parts))}`;
+  if (parts.tzid === 'UTC') return `${name}:${wall}Z`;
+  if (parts.tzid) return `${name};TZID=${parts.tzid}:${wall}`;
+  return `${name}:${wall}`;
+}
+
+/** A length as an iCal DURATION: whole days for an all-day event, else hours, minutes and seconds. */
+function durationProperty(length) {
+  if (length.days != null) return `DURATION:P${length.days + 1}D`;
+  const total = Math.max(0, Math.round(length.ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `DURATION:PT${h ? `${h}H` : ''}${m ? `${m}M` : ''}${s || (!h && !m) ? `${s}S` : ''}`;
+}
+
 /** The start and the end of one occurrence as iCal stamps: dates for an all-day event (the end exclusive), UTC times otherwise. */
 function stamps(occ) {
   const start = occ.start;
@@ -694,16 +910,20 @@ function stamps(occ) {
 
 /**
  * One occurrence as an iCal file, for «Add to calendar»: a calendar with the one event, its title, place, description and address.
- * @param {{start: number, end?: number, allDay?: boolean, title?: string, summary?: string, location?: string, description?: string, url?: string, uid?: string}} occ
+ * An occurrence of a repeating event carries its series (`series`: the feed's own start, end or length, rule and excluded dates, in the feed's zone), and the file is that series, so a calendar app imports the whole of it with its count, its end and its clock.
+ * @param {{start: number, end?: number, allDay?: boolean, title?: string, summary?: string, location?: string, description?: string, url?: string, uid?: string, series?: object|null}} occ
  */
 export function eventIcs(occ) {
   const at = stamps(occ);
+  const series = occ.series ?? null;
+  const when = series
+    ? [partsProperty('DTSTART', series.start), series.end ? partsProperty('DTEND', series.end) : durationProperty(series.length), `RRULE:${series.rrule}`, ...series.exdates.map((parts) => partsProperty('EXDATE', parts))]
+    : [at.date ? `DTSTART;VALUE=DATE:${at.start}` : `DTSTART:${at.start}`, at.date ? `DTEND;VALUE=DATE:${at.end}` : `DTEND:${at.end}`];
   const lines = [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Urd//Calendar//EN', 'BEGIN:VEVENT',
     `UID:${escapeText(occ.uid || `${at.start}-${occ.title ?? occ.summary ?? ''}`)}@urd`,
     `DTSTAMP:${utcStamp(occ.start)}`,
-    at.date ? `DTSTART;VALUE=DATE:${at.start}` : `DTSTART:${at.start}`,
-    at.date ? `DTEND;VALUE=DATE:${at.end}` : `DTEND:${at.end}`,
+    ...when,
     `SUMMARY:${escapeText(occ.title ?? occ.summary)}`,
   ];
   if (occ.location) lines.push(`LOCATION:${escapeText(occ.location)}`);

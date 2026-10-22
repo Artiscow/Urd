@@ -28,6 +28,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.64 - The bug list taken, second round: the calendar feed parser - 22 October 2026
+
+- A feed with a Windows time-zone name as `TZID` (the names Outlook writes, such as «W. Europe Standard Time») was read as the visitor's local time. Such a name is read through a table of the Windows names and their IANA zones, and a zone given only in a `VTIMEZONE` block is read from the block's offsets, with the change of clock from its yearly rules (`ics.js`).
+- An event with `DURATION` instead of `DTEND` got the one-hour default. The duration gives the end: hours and minutes for a timed event, whole days or weeks for an all-day one (`parseDuration`).
+- «Add to calendar» on a repeating event gave a file with one date. An occurrence carries its series as the feed had it (the start, the end or length, the rule and the excluded dates, in the feed's zone), and the file is that series, so a calendar app imports the whole of it with its count, its end and its clock; a moved instance stays one date (`eventIcs`).
+- The month, week and day views paged back into empty periods, since events were loaded from the start of the current period only. Those views load the year before too, with the forward window kept, and over the occurrence cap the coming ones are kept first so the history never pushes the coming months out (`blocks/calendar.js`, `expandEvents` with `near`).
+- BACKLOG: four bug entries delivered.
+
 ### 0.7.0.63 - The bug list taken, first round: the lightbox by keyboard, the form's words and ids, the product card's name, the shapes, the contact block's card and code, and the small ones - 22 October 2026
 
 - The picture that opens the lightbox was a span with a click listener only. For visitors it is a button for the keyboard too, named by its alt text and «Show the picture full screen», opened with Enter or Space, with a focus ring (`blocks/image.js`).

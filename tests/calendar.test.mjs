@@ -9,7 +9,7 @@ import { engineImport } from './_engine.mjs';
 const {
   parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl, eventJsonLd, placeName, matchesSearch, meetingLinkOf,
   splitCategory, findSignupLink, signupLinkOf, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart, seasonRange, seasonTop,
-  nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry, calendarEntry, resolveSources,
+  nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry, calendarEntry, resolveSources, parseDuration,
 } = await engineImport('ics.js');
 
 // The ICS fixtures carry deliberate Norwegian event content (titles, locations, signup lines): calendar feeds are user data.
@@ -505,7 +505,8 @@ test('all-day events across a change of clock keep their days, in the export too
     // A weekly all-day event on the day the clock goes back.
     const weekly = one(['UID:d2', 'DTSTART;VALUE=DATE:20261018', 'DTEND;VALUE=DATE:20261019', 'RRULE:FREQ=WEEKLY;COUNT=3', 'SUMMARY:Market'], { from: new Date(2026, 9, 1).getTime() });
     const october25 = weekly.find((occ) => dayOfMs(occ.start) === '2026-10-25');
-    assert.ok(eventIcs(october25).includes('DTSTART;VALUE=DATE:20261025') && eventIcs(october25).includes('DTEND;VALUE=DATE:20261026'));
+    // The file is the whole series as the feed had it, from its first day; the Google link is the one day.
+    assert.ok(eventIcs(october25).includes('DTSTART;VALUE=DATE:20261018') && eventIcs(october25).includes('DTEND;VALUE=DATE:20261019') && eventIcs(october25).includes('RRULE:FREQ=WEEKLY;COUNT=3'));
     assert.match(googleEventUrl(october25), /dates=20261025%2F20261026/);
   });
 });
@@ -647,4 +648,120 @@ test('eventJsonLd: the organizer with its own page, else the site with its root'
   const own = eventJsonLd(occ, { pageUrl: 'https://site.test/kalender', organizer: 'Styret', organizerUrl: 'https://site.test/styret' });
   assert.deepEqual(own.organizer, { '@type': 'Organization', name: 'Styret', url: 'https://site.test/styret' });
   assert.equal(eventJsonLd(occ, { pageUrl: 'https://site.test/kalender' }).organizer, undefined);
+});
+
+test('a Windows time-zone name as TZID is read through its IANA zone, in summer and in winter', () => {
+  const { events } = parseIcs(wrap([
+    'BEGIN:VEVENT', 'UID:s', 'SUMMARY:Sommer', 'DTSTART;TZID=W. Europe Standard Time:20260601T140000', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:v', 'SUMMARY:Vinter', 'DTSTART;TZID=W. Europe Standard Time:20260115T140000', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:l', 'SUMMARY:London', 'DTSTART;TZID=GMT Standard Time:20260601T140000', 'END:VEVENT',
+  ].join('\r\n')));
+  assert.equal(partsToMs(events[0].start), Date.UTC(2026, 5, 1, 12), 'Berlin in June is UTC+2');
+  assert.equal(partsToMs(events[1].start), Date.UTC(2026, 0, 15, 13), 'Berlin in January is UTC+1');
+  assert.equal(partsToMs(events[2].start), Date.UTC(2026, 5, 1, 13), 'London in June is UTC+1');
+});
+
+test('a zone given only in a VTIMEZONE block is read by its offsets, with the change of clock from its rules', () => {
+  const feed = wrap([
+    'BEGIN:VEVENT', 'UID:s', 'SUMMARY:Sommer', 'DTSTART;TZID=Egen sone:20260601T140000', 'DTEND;TZID=Egen sone:20260601T160000', 'END:VEVENT',
+    'BEGIN:VTIMEZONE', 'TZID:Egen sone',
+    'BEGIN:STANDARD', 'DTSTART:16011025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'END:STANDARD',
+    'BEGIN:DAYLIGHT', 'DTSTART:16010329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'END:DAYLIGHT',
+    'END:VTIMEZONE',
+    'BEGIN:VEVENT', 'UID:v', 'SUMMARY:Vinter', 'DTSTART;TZID=Egen sone:20260115T140000', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:f', 'SUMMARY:Fast', 'DTSTART;TZID=Fast sone:20260115T140000', 'END:VEVENT',
+    'BEGIN:VTIMEZONE', 'TZID:Fast sone', 'BEGIN:STANDARD', 'DTSTART:19700101T000000', 'TZOFFSETFROM:+0530', 'TZOFFSETTO:+0530', 'END:STANDARD', 'END:VTIMEZONE',
+  ].join('\r\n'));
+  const { events } = parseIcs(feed);
+  assert.equal(partsToMs(events[0].start), Date.UTC(2026, 5, 1, 12), 'daylight time in June');
+  assert.equal(partsToMs(events[0].end) - partsToMs(events[0].start), 2 * 3600 * 1000);
+  assert.equal(partsToMs(events[1].start), Date.UTC(2026, 0, 15, 13), 'standard time in January, with the block after the event');
+  assert.equal(partsToMs(events[2].start), Date.UTC(2026, 0, 15, 8, 30), 'a fixed offset');
+});
+
+test('DURATION gives an event its end: a timed length, and whole days for an all-day event', () => {
+  assert.deepEqual(parseDuration('PT2H30M'), { ms: 9000 * 1000 });
+  assert.deepEqual(parseDuration('P2D'), { days: 2 });
+  assert.deepEqual(parseDuration('P1W'), { days: 7 });
+  assert.deepEqual(parseDuration('P1DT2H'), { ms: 26 * 3600 * 1000 });
+  assert.equal(parseDuration('2H'), null);
+  const { events } = parseIcs(wrap([
+    'BEGIN:VEVENT', 'UID:t', 'SUMMARY:Timet', 'DTSTART:20260601T120000Z', 'DURATION:PT2H30M', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:d', 'SUMMARY:Dager', 'DTSTART;VALUE=DATE:20260610', 'DURATION:P2D', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:b', 'SUMMARY:Begge', 'DTSTART:20260601T120000Z', 'DTEND:20260601T130000Z', 'DURATION:PT5H', 'END:VEVENT',
+  ].join('\r\n')));
+  const occ = expandEvents(events, { from: Date.UTC(2026, 4, 1), to: Date.UTC(2026, 6, 1) });
+  const timed = occ.find((o) => o.summary === 'Timet');
+  assert.equal(timed.end - timed.start, 9000 * 1000);
+  assert.equal(timed.hasEnd, true);
+  const days = occ.find((o) => o.summary === 'Dager');
+  assert.equal(days.end, new Date(2026, 5, 11).getTime(), 'two days: the end is the start of the second day');
+  const both = occ.find((o) => o.summary === 'Begge');
+  assert.equal(both.end - both.start, 3600 * 1000, 'DTEND wins over DURATION');
+});
+
+test('an occurrence of a repeating event carries its series, and «Add to calendar» gives the whole series from any occurrence', () => {
+  const { events } = parseIcs(wrap(['BEGIN:VEVENT', 'UID:w', 'SUMMARY:Trening', 'DTSTART;TZID=Europe/Oslo:20260602T170000', 'DTEND;TZID=Europe/Oslo:20260602T183000', 'RRULE:FREQ=WEEKLY;BYDAY=TU;COUNT=4', 'EXDATE;TZID=Europe/Oslo:20260616T170000', 'END:VEVENT'].join('\r\n')));
+  const occ = expandEvents(events, { from: Date.UTC(2026, 5, 1), to: Date.UTC(2026, 6, 1) });
+  assert.equal(occ[0].rrule, 'FREQ=WEEKLY;BYDAY=TU;COUNT=4');
+  assert.equal(occ.length, 3, 'four by count, one excluded');
+  // From the third occurrence the file still starts the series at its first date, in the feed's own zone and clock, with the count and the excluded date.
+  const file = eventIcs({ ...occ[2], title: occ[2].summary });
+  assert.match(file, /\r\nDTSTART;TZID=Europe\/Oslo:20260602T170000\r\nDTEND;TZID=Europe\/Oslo:20260602T183000\r\nRRULE:FREQ=WEEKLY;BYDAY=TU;COUNT=4\r\nEXDATE;TZID=Europe\/Oslo:20260616T170000\r\n/);
+  // A series with a DURATION writes the length; a UTC series writes UTC stamps.
+  const timed = expandEvents(parseIcs(event(['UID:u', 'SUMMARY:Møte', 'DTSTART:20260602T170000Z', 'DURATION:PT1H30M', 'RRULE:FREQ=WEEKLY;COUNT=2'])).events, { from: Date.UTC(2026, 5, 1), to: Date.UTC(2026, 6, 1) });
+  assert.match(eventIcs({ ...timed[1], title: 'Møte' }), /DTSTART:20260602T170000Z\r\nDURATION:PT1H30M\r\nRRULE:FREQ=WEEKLY;COUNT=2\r\n/);
+  // A moved instance (RECURRENCE-ID) is one date, with no rule.
+  const moved = expandEvents(parseIcs(wrap([
+    'BEGIN:VEVENT', 'UID:m', 'SUMMARY:Kor', 'DTSTART:20260602T170000Z', 'DTEND:20260602T180000Z', 'RRULE:FREQ=WEEKLY;BYDAY=TU;COUNT=3', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:m', 'RECURRENCE-ID:20260609T170000Z', 'SUMMARY:Kor (flyttet)', 'DTSTART:20260610T170000Z', 'DTEND:20260610T180000Z', 'END:VEVENT',
+  ].join('\r\n'))).events, { from: Date.UTC(2026, 5, 1), to: Date.UTC(2026, 6, 1) });
+  const instance = moved.find((o) => o.summary === 'Kor (flyttet)');
+  assert.equal(instance.series, null);
+  assert.doesNotMatch(eventIcs({ ...instance, title: instance.summary }), /RRULE/);
+  assert.match(eventIcs({ ...instance, title: instance.summary }), /DTSTART:20260610T170000Z/);
+  const single = expandEvents(parseIcs(event(['UID:o', 'SUMMARY:En gang', 'DTSTART:20260602T170000Z'])).events, { from: Date.UTC(2026, 5, 1), to: Date.UTC(2026, 6, 1) });
+  assert.equal(single[0].rrule, null);
+  assert.doesNotMatch(eventIcs({ ...single[0], title: 'En gang' }), /RRULE/);
+});
+
+test('VTIMEZONE rules: a second Sunday, a day of the month, a rule that has ended, a component without a rule, and a time before any change', () => {
+  const zone = (rules) => parseIcs(wrap([
+    'BEGIN:VTIMEZONE', 'TZID:Sone', ...rules, 'END:VTIMEZONE',
+    'BEGIN:VEVENT', 'UID:a', 'SUMMARY:Mars', 'DTSTART;TZID=Sone:20260315T120000', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:b', 'SUMMARY:Januar', 'DTSTART;TZID=Sone:20260115T120000', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:c', 'SUMMARY:Oktober', 'DTSTART;TZID=Sone:20261028T120000', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:d', 'SUMMARY:Gammel', 'DTSTART;TZID=Sone:19600115T120000', 'END:VEVENT',
+  ].join('\r\n'))).events.map((e) => partsToMs(e.start));
+  // The New York rules since 2007: daylight from the second Sunday of March, standard from the first Sunday of November; the older standard rule ended in 2006.
+  const ny = zone([
+    'BEGIN:DAYLIGHT', 'DTSTART:20070311T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU', 'TZOFFSETFROM:-0500', 'TZOFFSETTO:-0400', 'END:DAYLIGHT',
+    'BEGIN:STANDARD', 'DTSTART:20071104T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU', 'TZOFFSETFROM:-0400', 'TZOFFSETTO:-0500', 'END:STANDARD',
+    'BEGIN:STANDARD', 'DTSTART:19671029T020000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU;UNTIL=20061029T060000Z', 'TZOFFSETFROM:-0400', 'TZOFFSETTO:-0500', 'END:STANDARD',
+  ]);
+  assert.equal(ny[0], Date.UTC(2026, 2, 15, 16), '15 March 2026 is after the second Sunday (the 8th): daylight, UTC-4');
+  assert.equal(ny[1], Date.UTC(2026, 0, 15, 17), 'January: standard, UTC-5');
+  assert.equal(ny[2], Date.UTC(2026, 9, 28, 16), '28 October: still daylight, since the old October rule ended in 2006');
+  // A day of the month, and a component without a rule that stands from its start.
+  const fixed = zone([
+    'BEGIN:STANDARD', 'DTSTART:19700101T000000', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0100', 'END:STANDARD',
+    'BEGIN:DAYLIGHT', 'DTSTART:20000401T020000', 'RRULE:FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=1', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'END:DAYLIGHT',
+    'BEGIN:STANDARD', 'DTSTART:20001001T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYMONTHDAY=-1', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'END:STANDARD',
+  ]);
+  assert.equal(fixed[1], Date.UTC(2026, 0, 15, 11), 'January 2026 follows the standard component without a rule, not the daylight one');
+  assert.equal(fixed[0], Date.UTC(2026, 2, 15, 11), 'March is before the first of April: standard');
+  assert.equal(fixed[2], Date.UTC(2026, 9, 28, 10), 'the 28th is before the last of October: still daylight');
+  assert.equal(fixed[3], Date.UTC(1960, 0, 15, 11), 'before any change the first component\'s offset applies');
+});
+
+test('expandEvents over the cap keeps the coming occurrences first, and the latest of the past', () => {
+  const { events } = parseIcs(event(['UID:d', 'SUMMARY:Daglig', 'DTSTART:20260101T100000Z', 'DTEND:20260101T110000Z', 'RRULE:FREQ=DAILY']));
+  const near = Date.UTC(2026, 9, 22);
+  const kept = expandEvents(events, { from: Date.UTC(2025, 9, 22), to: Date.UTC(2027, 10, 1), max: 100, near });
+  assert.equal(kept.length, 100);
+  assert.ok(kept.every((o) => o.end >= near), 'the hundred coming days, none of the past');
+  const some = expandEvents(events, { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 10, 1), max: 20, near });
+  assert.equal(some.filter((o) => o.end >= near).length, 10, 'the ten coming days');
+  assert.equal(some.filter((o) => o.end < near).length, 10, 'and the ten latest past days');
+  assert.equal(expandEvents(events, { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 10, 1), max: 20 }).length, 20, 'without near the first twenty, as before');
 });

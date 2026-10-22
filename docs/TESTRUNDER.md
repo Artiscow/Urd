@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.64): the calendar feed parser
+
+- [ ] An Outlook feed whose events carry `TZID=W. Europe Standard Time` shows each event at its right local time, for a visitor in Oslo and for one in London (the site's zone setting off), in summer and in winter
+- [ ] A feed whose zone stands only in a `VTIMEZONE` block (its own name, not an IANA one) shows its events by the block's offsets, with the right time on both sides of the change of clock
+- [ ] An event with `DTSTART` and `DURATION:PT2H30M` shows an end two and a half hours after its start, and an all-day event with `DURATION:P2D` spans two days
+- [ ] «Add to calendar» on a weekly event gives a file that a calendar app (Google Calendar, Apple Calendar, Thunderbird) imports as the weekly series from that date; a single event still gives one date
+- [ ] A calendar in a month, week or day design, with a feed that has events in earlier months: the back arrows show those events, in the preview and on the published page, a year back; the forward months are as before
+
 ### Test batch (0.7.0.63): the bug list, first round
 
 - [ ] Published page: an image with «Full screen on click» is reached with Tab with a visible focus ring, a screen reader names it by its alt text and «Show the picture full screen» as a button, and Enter and Space open the lightbox; a picture with a link keeps the link and no lightbox; in the editor the picture is not in the Tab order

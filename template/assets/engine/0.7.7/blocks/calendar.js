@@ -71,7 +71,8 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
   }));
   // The window follows the view: a year design wants the whole year, a month, week or day design its own span.
   const wide = ['year', 'month', 'week', 'day'].includes(view) || from < ics.windowStart('list');
-  const expanded = ics.expandEvents(events, { from, to, max: wide ? 600 : Math.max(limit * 4, 120) })
+  // Over the cap the coming occurrences are kept first, so a year of history never pushes the coming months out.
+  const expanded = ics.expandEvents(events, { from, to, max: wide ? 900 : Math.max(limit * 4, 120), near: Date.now() })
     .map((occ) => {
       // A named calendar is the category; otherwise the feed's own first category, and last «Category: Title» in the event itself.
       const source = occ.source ?? null;
@@ -1926,8 +1927,11 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   // A year design with another month at the top reads a season: twelve months from that month, through the season's end.
   const season = view === 'year' ? ics.seasonRange(ics.seasonTop(ui.opt.firstMonth, ui.today()), ui.today().getTime()) : null;
   const viewFrom = switcher ? Math.min(weekFrom, ics.windowStart('month')) : view === 'week' ? weekFrom : season ? season.from : ics.windowStart(view);
-  const from = props.showEarlier === true ? Math.min(viewFrom, Date.now() - EARLIER_DAYS * 24 * 3600 * 1000) : viewFrom;
-  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone, ui.meetingHosts, season && !switcher ? season.to : undefined).then(({ occurrences, errors, feedZone: fz }) => {
+  // A month, week or day view pages back through its periods, so it loads the year before its own period too, with the forward window kept as it is.
+  const pagesBack = ['month', 'week', 'day'].includes(view) || switcher;
+  const from = Math.min(pagesBack ? viewFrom - 365 * 24 * 3600 * 1000 : viewFrom, props.showEarlier === true ? Date.now() - EARLIER_DAYS * 24 * 3600 * 1000 : viewFrom);
+  const to = season && !switcher ? season.to : pagesBack ? Date.now() + 400 * 24 * 3600 * 1000 : undefined;
+  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone, ui.meetingHosts, to).then(({ occurrences, errors, feedZone: fz }) => {
     if (!host.isConnected) return;
     feedZone = fz;
     if (!occurrences.length && errors.length) {
