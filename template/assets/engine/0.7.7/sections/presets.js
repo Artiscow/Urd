@@ -755,7 +755,7 @@ export function registerSectionPresets(Urd) {
     hintKey: 'preset.steps.hint',
     create: () => {
       const step = (x, col, title) => {
-        const num = text(frame(x, 88, 25, 72), `<h3>${col + 1}</h3>`, { align: 'center', size: 44 });
+        const num = text(frame(x, 88, 25, 72), `<p><strong>${col + 1}</strong></p>`, { align: 'center', size: 44 });
         const box = text(frame(x, 168, 25, 160),
           ta('seed.steps.card', { title }),
           { align: 'center', box: true });
@@ -774,7 +774,7 @@ export function registerSectionPresets(Urd) {
     itemLabelKey: 'item.step',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 272, 25, 240);
-      const num = text(frame(x, y, 25, 72), `<h3>${n + 1}</h3>`, { align: 'center', size: 44 });
+      const num = text(frame(x, y, 25, 72), `<p><strong>${n + 1}</strong></p>`, { align: 'center', size: 44 });
       const box = text(frame(x, y + 80, 25, 160),
         ta('seed.steps.card', { title: ta('seed.steps.newTitle') }),
         { align: 'center', box: true });

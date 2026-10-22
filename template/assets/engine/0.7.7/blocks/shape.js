@@ -6,6 +6,11 @@
  */
 import { resolveColor } from '../theme.js';
 
+/** The fill of a filled shape: the shape's colour when `fill` is `true`, or the colour string an older block stores as its fill. */
+function fillColor(props, color) {
+  return props.fill === true || !props.fill ? color : resolveColor(props.fill);
+}
+
 export const shapeBlock = {
   version: 1,
   label: 'Shape',
@@ -14,7 +19,7 @@ export const shapeBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{kind: 'line'|'arrow'|'circle'|'rect'|'triangle', color: string, thickness: number, fill: string|null,
+   * @param {{kind: 'line'|'arrow'|'circle'|'rect'|'triangle', color: string, thickness: number, fill: boolean|string|null,
    *          label?: string}} props
    * @param {object} ctx
    */
@@ -55,14 +60,14 @@ export const shapeBlock = {
     if (props.kind === 'triangle') {
       // A triangle is drawn as a filled surface (clip-path cannot take a stroke).
       const tri = document.createElement('div');
-      tri.style.cssText = `position:absolute;inset:0;background:${resolveColor(props.fill ?? props.color)};clip-path:polygon(50% 0, 100% 100%, 0 100%);`;
+      tri.style.cssText = `position:absolute;inset:0;background:${fillColor(props, color)};clip-path:polygon(50% 0, 100% 100%, 0 100%);`;
       el.appendChild(tri);
       return;
     }
 
     // circle / rect: a circle becomes an ellipse in non-square frames.
     if (props.fill) {
-      el.style.background = resolveColor(props.fill);
+      el.style.background = fillColor(props, color);
     } else {
       el.style.border = `${props.thickness}px solid ${color}`;
     }

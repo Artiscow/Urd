@@ -110,9 +110,12 @@
     <label>{ta('lbl.buttonText')}
       <input value={selectedBlock.props.submitLabel ?? ''} placeholder={ta('form.sendDefault')}
         onchange={(e) => setBlockProp('submitLabel', e.target.value.trim() || ta('form.sendDefault'))} /></label>
-    <label>{ta('form.receipt')}
-      <input value={selectedBlock.props.successText ?? ''} placeholder={ta('form.thanksDefault')}
-        onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
+    <!-- The receipt text shows after an endpoint send only; mailto mode says that the mail program has the message -->
+    {#if mode === 'endpoint'}
+      <label>{ta('form.receipt')}
+        <input value={selectedBlock.props.successText ?? ''} placeholder={ta('form.thanksDefault')}
+          onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
+    {/if}
   {/snippet}
   <MenuGroup id="form-sending" title={ta('group.sending')} value={mode === 'endpoint' ? (selectedBlock.props.endpoint || ta('form.modeEndpoint')) : (selectedBlock.props.recipient || ta('form.modeMailto'))} group={groupOf('form-sending', { mode: 'mailto' })}>{@render formSending()}</MenuGroup>
   <MenuGroup id="form-fields" title={ta('form.fields')} value={String(selectedBlock.props.fields?.length ?? 0)}>{@render formFields()}</MenuGroup>

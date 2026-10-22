@@ -28,6 +28,23 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.63 - The bug list taken, first round: the lightbox by keyboard, the form's words and ids, the product card's name, the shapes, the contact block's card and code, and the small ones - 22 October 2026
+
+- The picture that opens the lightbox was a span with a click listener only. For visitors it is a button for the keyboard too, named by its alt text and «Show the picture full screen», opened with Enter or Space, with a focus ring (`blocks/image.js`).
+- In mailto mode the form said «Thanks! The message has been sent.» when only a mail draft had opened. It always says the visitor's mail program has opened the message (`form.mailtoOpened`); the receipt text applies to endpoint mode, and its field shows in that mode only (`Form.svelte`, SCHEMA.md).
+- A new form's fields carried the ids `navn`, `epost` and `melding`, and the endpoint payload named the page under `side` (ADR-0021). The seed ids are `name`, `email` and `message`, and the payload carries `page` with `side` beside it until v1.0 (SCHEMA.md); existing forms keep their ids.
+- The product card's picture and title were named «View the product», which hid the product's name from a screen reader, and the title was a `<strong>`. The control is named «View {name}», and the title is an `<h3>` with no margin whose words stand in a button inside it, so the heading keeps its role (base.css, the eight shells restamped).
+- A video block with an empty or unrecognised address showed the editor's hint to visitors; the hint is drawn in the editor only (`blocks/video.js`).
+- The image editor's crop choice was labelled «On narrower screens»; it reads «Fit».
+- The map's help card named the height setting the block lost in its migration; the line names the zoom only, in all five admin languages.
+- The steps preset wrote each number as an `<h3>`, one heading per number in the outline; the numbers are bold paragraphs (`sections/presets.js`).
+- A links block added from the Blocks panel was seeded with the share buttons' props at version 1, and its tooltip described share buttons. It is seeded at version 2 with the links shape (`blocks.svelte.js`), and the tooltip describes the links block.
+- Ticking «Filled» on a shape stored a copy of the colour, so a later colour change left the fill. `fill` is `true` and follows the colour; a colour stored before is kept as the fill (`blocks/shape.js`, SCHEMA.md). «Filled» is offered for the circle and the rectangle only, and «Thickness» only where the renderer draws it (`Shape.svelte`).
+- The contact block's vCard and QR code were built from the whole site contact, whatever parts the block showed, and the «With a map» design drew the map point with Address off. The model carries the parts shown, the card and the code take them (`contactVcard`'s `parts`), and the point goes with the address (`blocks/contact.js`, `vcard.js`).
+- «Stretch» was never offered for a calendar: the check asked for a design without a module whose view is list or cards, which no design is. It reads the block's effective view (`calView`, `page.svelte.js`).
+- An entry's picture had no alt field in the Collections panel; an «Alt text» field stands under the picture and writes the `imageAlt` the image editor sets.
+- BACKLOG: fifteen bug entries delivered.
+
 ### 0.7.0.60-62p - Push preparation: the collection index, the contact details, named anchors and one link editor, the Properties groups, and the audit of the comparison - 22 October 2026
 
 - The review of the whole span found no rule broken. Two findings were fixed: the `checkout` block's `seller` field (0.7.24.5) stood in SCHEMA.md and the schema but in no example data; the template's checkout page carries it (the contact block is covered by its section preset in the validation's preset page). And a legacy `content/collections.json` whose ids all stand in `samlinger.json` was never deleted, since the collections branch of publishing ran only on a change; it runs for the legacy file too, and names the collections in the commit message only when something of theirs changed (`publish.svelte.js`).

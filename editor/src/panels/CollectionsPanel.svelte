@@ -199,6 +199,12 @@
                 onclick={() => setEntryField(ed.activeCollection, entry.id, 'image', '')}>{@html ICONS.cross}</button>
             {/if}
           </span>
+          {#if entry.image}
+            <!-- The picture's alt text, the same the image editor on the canvas shows -->
+            <label class="field-stack">{ta('lbl.altText')}
+              <input value={entry.imageAlt ?? ''} placeholder={ta('ph.altText')}
+                onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'imageAlt', e.target.value.trim())} /></label>
+          {/if}
           {#if collectionView.kind === 'products'}
             <!-- The product fields (the shop): price, member price, badge, sizes and colors. -->
             <label>{ta('lbl.price')}

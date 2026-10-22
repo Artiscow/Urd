@@ -169,9 +169,10 @@ function renderForm(host, props, ctx) {
       return;
     }
 
-    const done = () => {
+    // Endpoint mode shows the owner's receipt text, or that the message was sent; mailto mode always says that the visitor sends the opened draft, since nothing has been sent yet.
+    const done = (text) => {
       status.classList.add('ok');
-      status.textContent = props.successText || t('form.thanks');
+      status.textContent = text;
       form.reset();
     };
 
@@ -181,10 +182,11 @@ function renderForm(host, props, ctx) {
         const res = await fetch(props.endpoint, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(buildPayload(fields, values, { side: location.pathname })),
+          // The page's address under `page`, with `side` beside it for endpoints written against the earlier key (SCHEMA.md).
+          body: JSON.stringify(buildPayload(fields, values, { page: location.pathname, side: location.pathname })),
         });
         if (!res.ok) throw new Error(String(res.status));
-        done();
+        done(props.successText || t('form.thanks'));
       } catch {
         status.classList.add('error');
         status.textContent = t('form.sendFailed');
@@ -199,7 +201,7 @@ function renderForm(host, props, ctx) {
         return;
       }
       window.location.href = url;
-      done();
+      done(t('form.mailtoOpened'));
     }
   });
 
@@ -230,9 +232,9 @@ function renderFormBlock(el, props, ctx) {
  * insertion time, translated ONCE with the admin language.
  */
 export const defaultFormFields = () => [
-  { id: 'navn', label: ta('form.fieldName'), type: 'text', required: true },
-  { id: 'epost', label: ta('form.fieldEmail'), type: 'email', required: true },
-  { id: 'melding', label: ta('form.fieldMessage'), type: 'textarea', required: true },
+  { id: 'name', label: ta('form.fieldName'), type: 'text', required: true },
+  { id: 'email', label: ta('form.fieldEmail'), type: 'email', required: true },
+  { id: 'message', label: ta('form.fieldMessage'), type: 'textarea', required: true },
 ];
 
 export const formBlock = {

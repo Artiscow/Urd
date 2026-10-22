@@ -220,7 +220,7 @@ export function openImageEditor(anchor, adapter) {
   }
 
   if (has('fit')) {
-    panel.appendChild(row(ta('lbl.fit'), segmented(
+    panel.appendChild(row(ta('lbl.imageFit'), segmented(
       [['cover', ta('imged.fitCover')], ['contain', ta('imged.fitContain')]],
       adapter.get('fit') ?? 'cover',
       (value) => adapter.set('fit', value),

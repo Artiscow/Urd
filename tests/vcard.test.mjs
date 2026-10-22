@@ -56,3 +56,13 @@ test('the file name is the name\'s letters and digits joined by hyphens', () => 
   assert.equal(vcardFileName('  Kafé & Bar!! '), 'Kafé-Bar.vcf');
   assert.equal(vcardFileName('***'), 'contact.vcf');
 });
+
+test('parts: the card carries only the parts a contact block shows, and none of them gives no card', () => {
+  const card = contactVcard(site(NO), { url: 'https://apeiron.no/', parts: ['name', 'address', 'email'] });
+  assert.ok(card.includes('ADR;TYPE=WORK:;;Høgskoleringen 5;Trondheim;;7034;Norge'));
+  assert.ok(card.includes('EMAIL;TYPE=INTERNET,WORK:post@apeiron.no'));
+  assert.ok(!card.includes('TEL'), 'the phone is switched off in the block');
+  assert.ok(!contactVcard(site(NO), { parts: ['email'] }).includes('ADR'));
+  assert.equal(contactVcard(site(NO), { parts: ['name', 'legal'] }), null, 'no address, phone or email shown');
+  assert.ok(contactVcard(site(NO), {}).includes('TEL'), 'without parts the card carries everything');
+});

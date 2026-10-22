@@ -228,7 +228,7 @@ function renderCard(entry, props, editable, preview) {
     card.appendChild(el2('span', `urd-product-badge${img ? ' urd-product-badge-over' : ''}`, entry.badge));
   }
 
-  const title = richNode('strong', 'urd-product-title', entry, 'title', props.collection, editable);
+  const title = richNode('h3', 'urd-product-title', entry, 'title', props.collection, editable);
   if (title) card.appendChild(title);
   const text = richNode('div', 'urd-product-text', entry, 'text', props.collection, editable);
   if (text) card.appendChild(text);
@@ -254,11 +254,22 @@ function renderCard(entry, props, editable, preview) {
   // In the editor clicks belong to editing (click-and-type), so nothing is wired
   // there - nor in the mobile view (the preview flag, never editable).
   if (!preview) {
-    for (const target of [wrap, title].filter(Boolean)) {
+    // The title keeps its heading role: its words go into a button inside it, which is the opener there.
+    let titleButton = null;
+    if (title) {
+      titleButton = el2('button', 'urd-product-titlebtn');
+      titleButton.type = 'button';
+      titleButton.append(...title.childNodes);
+      title.append(titleButton);
+    }
+    for (const target of [wrap, titleButton].filter(Boolean)) {
       target.classList.add('urd-product-opener');
-      target.setAttribute('role', 'button');
-      target.setAttribute('aria-label', t('shop.quickView'));
-      target.tabIndex = 0;
+      if (target.tagName !== 'BUTTON') {
+        target.setAttribute('role', 'button');
+        target.tabIndex = 0;
+      }
+      // The control is named by the product, so a screen reader hears which product opens.
+      target.setAttribute('aria-label', t('shop.quickViewNamed', { name: plainText(entry.title) || t('shop.quickView') }));
       const open = () => openQuickView(card, entry, props);
       target.addEventListener('click', open);
       target.addEventListener('keydown', (event) => {

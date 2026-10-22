@@ -65,10 +65,10 @@ test('buildMailto: without a recipient gives null', () => {
   assert.equal(buildMailto('', 'x', FIELDS, {}), null);
 });
 
-test('buildPayload: field values + extra context, honeypot excluded', () => {
+test('buildPayload: field values + extra context (the page under `page`, with `side` beside it), honeypot excluded', () => {
   const payload = buildPayload(FIELDS, { navn: 'Ola', epost: 'ola@x.no', melding: 'hei', _hp: 'bot' },
-    { side: '/kontakt' });
-  assert.deepEqual(payload, { side: '/kontakt', navn: 'Ola', epost: 'ola@x.no', melding: 'hei' });
+    { page: '/kontakt', side: '/kontakt' });
+  assert.deepEqual(payload, { page: '/kontakt', side: '/kontakt', navn: 'Ola', epost: 'ola@x.no', melding: 'hei' });
 });
 
 test('endpointOrigin: extracts the origin, null when invalid', () => {

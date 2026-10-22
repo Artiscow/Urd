@@ -47,15 +47,18 @@ function countryName(code, lang) {
  * The vCard for the site, or null when it holds nothing beyond a name.
  * A file folds its long lines and types its address, phone and email as the work ones; `compact`, for a QR code, keeps the lines whole and leaves the types out, which every reader takes and which makes the code smaller.
  * @param {object} site
- * @param {{url?: string, compact?: boolean}} [opts] `url` is the site's own address
+ * @param {{url?: string, compact?: boolean, parts?: string[]|null}} [opts] `url` is the site's own address; `parts` the parts the card carries (address, phone, email), all when omitted
  * @returns {string|null}
  */
-export function contactVcard(site, { url = '', compact = false } = {}) {
+export function contactVcard(site, { url = '', compact = false, parts = null } = {}) {
   const contact = siteContact(site);
+  // `parts` names what the card carries (address, phone, email), as a contact block shows it; without it the card carries everything the site has.
+  const shown = (part) => !Array.isArray(parts) || parts.includes(part);
   const name = contact.legalName || String(site?.site?.title ?? '').trim();
-  const tel = telHref(contact.phone)?.slice(4) ?? '';
-  const hasAddress = contact.street || contact.postalCode || contact.city;
-  if (!tel && !contact.email && !hasAddress) return null;
+  const tel = shown('phone') ? (telHref(contact.phone)?.slice(4) ?? '') : '';
+  const email = shown('email') ? contact.email : '';
+  const hasAddress = shown('address') && (contact.street || contact.postalCode || contact.city);
+  if (!tel && !email && !hasAddress) return null;
   const lines = ['BEGIN:VCARD', 'VERSION:3.0', 'N:;;;;'];
   if (name) lines.push(`FN:${esc(name)}`, `ORG:${esc(name)}`);
   if (hasAddress) {
@@ -63,7 +66,7 @@ export function contactVcard(site, { url = '', compact = false } = {}) {
     lines.push(`ADR${compact ? '' : ';TYPE=WORK'}:;;${esc(contact.street)};${esc(contact.city)};;${esc(contact.postalCode)};${esc(country)}`);
   }
   if (tel) lines.push(`TEL${compact ? '' : ';TYPE=WORK,VOICE'}:${tel}`);
-  if (contact.email) lines.push(`EMAIL${compact ? '' : ';TYPE=INTERNET,WORK'}:${esc(contact.email)}`);
+  if (email) lines.push(`EMAIL${compact ? '' : ';TYPE=INTERNET,WORK'}:${esc(email)}`);
   if (/^https?:\/\//.test(url)) lines.push(`URL:${url}`);
   lines.push('END:VCARD');
   return `${lines.map((line) => (compact ? line : fold(line))).join('\r\n')}\r\n`;

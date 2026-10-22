@@ -133,7 +133,8 @@ export const videoBlock = {
     }
     const src = embedUrl(props.url);
     if (!src) {
-      // Without a valid URL: a quiet placeholder, never a crash.
+      // Without a valid URL: a hint in the editor, nothing at all for visitors.
+      if (!ctx.preview) return;
       const hint = document.createElement('div');
       hint.className = 'urd-video-empty';
       hint.textContent = props.url ? t('video.unknownUrl') : t('video.emptyHint');

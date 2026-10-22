@@ -39,21 +39,26 @@
         <Pin id="shapeColor" />
       </div>
     </Setting>
-    <Setting key="thickness" shown="2">
-      <div class="pin-line">
-        <label>{ta('lbl.thickness')}
-          <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
-            onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
-        <Pin id="thickness" />
-      </div>
-    </Setting>
-    <Setting key="fill">
-      <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
-        <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
-          onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
-        {ta('lbl.filled')}
-      </label>
-    </Setting>
+    <!-- Thickness draws the line, the arrow and the stroke of an unfilled circle or rectangle; Filled fills a circle or a rectangle (a triangle is always filled) -->
+    {#if ['line', 'arrow'].includes(selectedBlock.props.kind) || (['circle', 'rect'].includes(selectedBlock.props.kind) && !selectedBlock.props.fill)}
+      <Setting key="thickness" shown="2">
+        <div class="pin-line">
+          <label>{ta('lbl.thickness')}
+            <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
+              onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
+          <Pin id="thickness" />
+        </div>
+      </Setting>
+    {/if}
+    {#if ['circle', 'rect'].includes(selectedBlock.props.kind)}
+      <Setting key="fill">
+        <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
+          <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
+            onchange={(e) => setBlockProp('fill', e.target.checked ? true : null)} />
+          {ta('lbl.filled')}
+        </label>
+      </Setting>
+    {/if}
   {/snippet}
   {#snippet shapeSize()}
     {#if (selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow') && designWidth()}

@@ -1167,7 +1167,7 @@ export default {
     'hintMap.title': 'Kartblokka',
     'hintMap.l1': 'Vel blokka og skriv ei adresse (t.d. «Storgata 1, Oslo»), koordinatar («59.913, 10.739») eller lim inn ei OSM-lenkje i Eigenskapar',
     'hintMap.l2': 'Adressesøket slår opp staden via OpenStreetMap når du klikkar «Søk» (verkar på den publiserte sida; koordinatar og lenkjer verkar også lokalt)',
-    'hintMap.l3': 'Still zoom (1 er verda, 19 er gatenivå) og høgda på kartet',
+    'hintMap.l3': 'Still zoom (1 er verda, 19 er gatenivå)',
     'hintMap.l4': 'Kartet er OpenStreetMaps eiga innbygging: inga sporing, ingen informasjonskapslar',
     'hintMap.l5': 'Urds standard _headers tillèt kartet. På andre hostar må «frame-src https://www.openstreetmap.org» liggje i _headers (blokka seier frå om det er blokkert)',
     'preset.find-us.label': 'Finn oss',

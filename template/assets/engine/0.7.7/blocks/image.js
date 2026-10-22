@@ -10,7 +10,7 @@
  */
 
 import { resolveLink, linkAttrs } from '../nav-model.js';
-import { ta } from '../i18n.js';
+import { ta, t } from '../i18n.js';
 
 /** Applies the non-destructive image style to the frame and the image.
  *  @param {HTMLElement} frame The frame element (.urd-image-frame) with the <img> inside */
@@ -98,12 +98,24 @@ export const imageBlock = {
 
     // Full screen on click: always for visitors when the field is on; in preview
     // only in clean view (otherwise editing owns the click). A link wins.
+    // For visitors the frame is a button for the keyboard too, named by the picture's alt text: reached with Tab, opened with Enter or Space.
     if (props.lightbox && !linked) {
       frame.classList.add('urd-lightbox-able');
-      frame.addEventListener('click', async () => {
+      if (!ctx.preview) {
+        frame.setAttribute('role', 'button');
+        frame.setAttribute('aria-label', props.alt ? `${props.alt}: ${t('lightbox.open')}` : t('lightbox.open'));
+        frame.tabIndex = 0;
+      }
+      const open = async () => {
         if (ctx.preview && !document.body.classList.contains('urd-chrome-off')) return;
         const { openLightbox } = await import('../lightbox.js');
         openLightbox([{ src: props.src, alt: props.alt, style: props }], 0);
+      };
+      frame.addEventListener('click', open);
+      frame.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        open();
       });
     }
   },

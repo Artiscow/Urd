@@ -10756,6 +10756,7 @@ textarea.urd-form-input {
 }
 
 .urd-product-title {
+  margin: 0;
   font-family: var(--urd-font-heading);
   font-size: 1.05em;
 }
@@ -10833,6 +10834,17 @@ textarea.urd-form-input {
    dialog:not([open]) { display: none } would be overridden. */
 .urd-product-opener {
   cursor: pointer;
+}
+
+/* The opener inside the title: a button that looks like the heading's words. */
+.urd-product-titlebtn {
+  all: unset;
+  cursor: pointer;
+}
+
+.urd-product-opener:focus-visible {
+  outline: 2px solid var(--urd-color-accent);
+  outline-offset: 2px;
 }
 
 .urd-product-dialog {
@@ -12410,6 +12422,11 @@ a.urd-collection-title:hover {
    with chrome on, editing owns the click, so the cursor is neutral there. */
 .urd-lightbox-able {
   cursor: zoom-in;
+}
+
+.urd-lightbox-able:focus-visible {
+  outline: 2px solid var(--urd-color-accent);
+  outline-offset: 2px;
 }
 
 .urd-preview:not(.urd-chrome-off) .urd-lightbox-able {

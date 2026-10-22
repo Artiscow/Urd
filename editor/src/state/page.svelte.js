@@ -491,13 +491,12 @@ function setBlockHeightAlign(align) {
 }
 
 /** Whether stretch is offered: the block types that fill their box, and the
- *  calendar in the plain list and card views, which spread their rows and cards. */
+ *  calendar in the list and card views (the design's own view, or the block's under the plain design), which spread their rows and cards. */
 function canStretch() {
   const b = selectedBlock;
   if (STRETCHES.has(b.type)) return true;
   if (b.type !== 'calendar') return false;
-  const def = calDesign(b.props.design);
-  return !def.module && ['list', 'cards'].includes(def.view);
+  return ['list', 'cards'].includes(calView(b.props));
 }
 
 function setBlockFrame(field, value) {

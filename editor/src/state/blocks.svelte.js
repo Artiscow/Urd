@@ -118,9 +118,11 @@ const BLOCK_DEFAULTS = $derived({
     props: { parts: ['name', 'address', 'phone', 'email'], design: 'lines' },
     w: 30, h: 130,
   },
+  // The links block (type id `share`, blocks/share.js version 2): the site's links, with no own list.
   share: {
     type: 'share',
-    props: { services: ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'], variant: 'icons', size: 38, color: '' },
+    version: 2,
+    props: { useSite: true, hidden: [], links: [], variant: 'icons', size: 38, color: '' },
     w: 34, h: 48,
   },
   countdown: {
@@ -150,7 +152,7 @@ function buildBlock(kind) {
   return {
     id: makeId('blk'),
     type: d.type,
-    version: 1,
+    version: d.version ?? 1,
     // Shapes are decor by default: outside the entrance wave (decor) and
     // hidden on mobile (hideMobile); both can be turned off per block.
     decor: Boolean(d.decor),

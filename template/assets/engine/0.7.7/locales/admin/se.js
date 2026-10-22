@@ -1069,7 +1069,7 @@ export default {
     'canvas.mapCspBlocked': 'Kárta lea caggojuvvon neahttabáikki CSP:s.',
     'canvas.mapCspFix': 'Bija dán verddi frame-src:ii _headers fiillas, de kárta čájehuvvo:',
     'hintMap.title': 'Kártablohkka',
-    'hintMap.l3': 'Heivet zooma (1 lea máilbmi, 19 lea gáhtadássi) ja kártta allodaga',
+    'hintMap.l3': 'Heivet zooma (1 lea máilbmi, 19 lea gáhtadássi)',
     'hintMap.l4': 'Kárta lea OpenStreetMap iežas innbygging: ii sporren, eai diehtočoahkut',
     'hintMap.l5': 'Urd standárda _headers diktá kártta. Eará hosttain ferte «frame-src https://www.openstreetmap.org» leat _headers fiillas (blohkka muitala jus lea caggojuvvon)',
     'preset.find-us.label': 'Gávnna min',

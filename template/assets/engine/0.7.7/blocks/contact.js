@@ -21,7 +21,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * Pure; the render draws it.
  * @param {object} site
  * @param {{parts?: string[], design?: string}} props
- * @returns {{name: string, address: string[], phone: object|null, email: object|null, legal: Array<object>, points: Array<object>, geo: {lat: number, lon: number}|null}|null} null when nothing would show
+ * @returns {{name: string, address: string[], phone: object|null, email: object|null, legal: Array<object>, points: Array<object>, geo: {lat: number, lon: number}|null, shown: string[]}|null} null when nothing would show
  */
 export function contactBlockModel(site, props) {
   const shown = new Set(Array.isArray(props?.parts) ? props.parts : CONTACT_PARTS.slice(0, 4));
@@ -37,7 +37,9 @@ export function contactBlockModel(site, props) {
     email: shown.has('email') ? parts.email : null,
     legal,
     points: contactDesign(props?.design).points ? pointParts(contact) : [],
-    geo: contact.geo,
+    // The map point goes with the address; the parts the block shows travel with the model for the card and the code.
+    geo: shown.has('address') ? contact.geo : null,
+    shown: [...shown],
   };
   if (!out.name && !out.address.length && !out.phone && !out.email && !out.legal.length && !out.points.length) return null;
   if (!out.name && shown.has('name')) out.name = String(site?.site?.title ?? '').trim();
@@ -297,7 +299,7 @@ function drawQr(box, model, extras, site) {
   drawLines(details, model, extras);
   box.append(details);
   Promise.all([import('../qr.js'), import('../vcard.js')]).then(([qr, card]) => {
-    const text = card.contactVcard(site, { url: `${location.origin}/`, compact: true });
+    const text = card.contactVcard(site, { url: `${location.origin}/`, compact: true, parts: model.shown });
     const matrix = text ? qr.qrMatrix(text) : null;
     if (!matrix) {
       figure.remove();
@@ -334,8 +336,8 @@ const DRAW = {
   qr: drawQr,
 };
 
-/** The button that saves the details as a contact card: vcard.js is fetched with the block, so a click downloads at once. */
-function saveButton(site, name) {
+/** The button that saves the details as a contact card, with the parts the block shows: vcard.js is fetched with the block, so a click downloads at once. */
+function saveButton(site, name, model) {
   const button = node('button', 'urd-contact-save');
   button.type = 'button';
   button.append(icon('user'), node('span', null, t('contact.addContact')));
@@ -346,7 +348,7 @@ function saveButton(site, name) {
   button.addEventListener('click', async () => {
     const mod = card ?? await ready;
     if (!mod) return;
-    const text = mod.contactVcard(site, { url: `${location.origin}/` });
+    const text = mod.contactVcard(site, { url: `${location.origin}/`, parts: model.shown });
     if (!text) return;
     const href = URL.createObjectURL(new Blob([text], { type: 'text/vcard' }));
     const a = node('a');
@@ -415,7 +417,7 @@ export const contactBlock = {
       const box = node('div', 'urd-contact-in');
       host.append(box);
       const name = model.name || String(ctx.site?.site?.title ?? '');
-      const extras = props.vcard && design !== 'strip' ? [saveButton(ctx.site, name)] : [];
+      const extras = props.vcard && design !== 'strip' ? [saveButton(ctx.site, name, model)] : [];
       DRAW[design](box, model, extras, ctx.site, ctx);
       if (props.dock && ctx.viewport === 'mobile') {
         const bar = dockBar(model, ctx.site);

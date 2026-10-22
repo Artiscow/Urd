@@ -2,6 +2,22 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.63): the bug list, first round
+
+- [ ] Published page: an image with «Full screen on click» is reached with Tab with a visible focus ring, a screen reader names it by its alt text and «Show the picture full screen» as a button, and Enter and Space open the lightbox; a picture with a link keeps the link and no lightbox; in the editor the picture is not in the Tab order
+- [ ] Form in mailto mode: after sending, the message says the mail program has opened the message (nb, en-GB, tr), whatever receipt text the form had; in endpoint mode the owner's receipt text shows, or «sent»; the receipt text field in the block's menu shows only in endpoint mode
+- [ ] A new form from the Blocks panel has the field ids `name`, `email` and `message` (the endpoint payload shows them); an endpoint receives both `page` and `side` with the page's address; a form made before keeps its old ids
+- [ ] Shop page: each product card's title is a heading in the outline (an h3 with no extra space above it) whose words are a button that looks like the heading; a screen reader names the picture and that button «Se Sjokoladekake» (the product's name); the quick view opens by click, Enter and Space, with a focus ring on both
+- [ ] A video block with an empty or an unrecognised address shows its hint in the editor and nothing on the published page; a file video without a film shows nothing either
+- [ ] Image editor: the cover or contain choice is labelled «Fit» (nb «Tilpasning», tr likewise)
+- [ ] Map block's help chip: the third line names the zoom only, in nb, nn, en-GB, se and tr
+- [ ] A new Step by step section: the numbers are plain text, and the page outline lists one heading per step title; adding a step gives a plain number too
+- [ ] Blocks panel: «Links» inserts a block that shows the site's links at once (no dead share services stored, version 2 in the draft), and its tooltip describes a row of links
+- [ ] Shape block: for a circle or rectangle, tick «Filled» and change the colour: the fill follows; untick: the stroke returns with the thickness; the line and the arrow offer no «Filled», a filled circle no «Thickness»; a shape filled before the update keeps its colour
+- [ ] Contact block with the phone switched off: the saved contact card (.vcf) and the scanned QR code carry no phone number; with Address off, the «With a map» design draws no map point, in the editor and on the published page
+- [ ] A calendar in a list or card design, under any design: Placement offers «Stretch», and the content stretches to the block's height on the published page
+- [ ] Collections panel: an entry with a picture shows an «Alt text» field under it; a text typed there shows in the image editor on the canvas for that picture, and the other way round
+
 ### Test batch (0.7.0.60-62p): the stray collection index
 
 - [ ] A site with a `content/collections.json` whose collections all stand in `content/samlinger.json`: a publish of a page alone deletes `content/collections.json` from the repo, and the commit message names the page, not the collections
