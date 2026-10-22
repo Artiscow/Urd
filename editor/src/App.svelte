@@ -46,8 +46,10 @@
   import { blocksState } from './state/blocks.svelte.js';
   import { bridgeState } from './state/bridge.svelte.js';
   import { publishState } from './state/publish.svelte.js';
+  import { linkState } from './state/link.svelte.js';
+  import LinkDialog from './lib/LinkDialog.svelte';
 
-  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState];
+  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
   /* The handle's own closures: what the element menu and the panels open or read across the modules. */
@@ -166,6 +168,13 @@
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
       onpick={(id) => { if (ed.designPicker.mode === 'add') ed.addCalendarDesign(id); else if (ed.designPicker.mode === 'phone') ed.setCalendarPhoneView(id); else if (ed.designPicker.mode === 'card') ed.setCalendarCard(id); else ed.setCalendarDesign(id); ed.designPicker = null; }}
       onclose={() => (ed.designPicker = null)} />
+  {/if}
+
+  {#if ed.linkRequest}
+    <!-- One link editor for every link: the request says how the host keeps the link and what applies it, and a new request draws a new dialog -->
+    {#key ed.linkRequest}
+      <LinkDialog request={ed.linkRequest} onclose={ed.closeLink} />
+    {/key}
   {/if}
 
   <ConfirmDialog />

@@ -164,3 +164,36 @@ test('cloneBlocksForInsert renames old block types in the group', () => {
   const out = cloneBlocksForInsert([{ ...block('blk-a'), type: 'produkt' }], makeId);
   assert.equal(out.blocks[0].type, 'product');
 });
+
+test('a template\'s links to its own spots follow the new ids it gets on insert, and other links stay as they are', () => {
+  const frames = { desktop: { x: 0, y: 0, w: 10, h: 10, z: 1, rot: 0 }, mobile: null };
+  const original = { id: 'sec-old', version: 1, blocks: [
+    { id: 'blk-btn', type: 'button', version: 1, props: { label: 'Til toppen', target: 'sec-old' }, frames },
+    { id: 'blk-img', type: 'image', version: 1, props: { src: '/media/a.webp', target: 'blk-btn' }, frames },
+    { id: 'blk-gal', type: 'gallery', version: 1, props: { images: [{ src: '/media/b.webp', target: 'blk-img' }, { src: '/media/c.webp', page: 'kaker', target: 'blk-img' }] }, frames },
+    { id: 'blk-ext', type: 'button', version: 1, props: { label: 'Ute', target: 'sec-other' }, frames },
+  ] };
+  const out = cloneSectionForInsert(original, makeId);
+  const byOld = (oldIndex) => out.blocks[oldIndex];
+  assert.equal(byOld(0).props.target, out.id, 'the section itself');
+  assert.equal(byOld(1).props.target, byOld(0).id, 'a block in the template');
+  assert.equal(byOld(2).props.images[0].target, byOld(1).id, 'a picture inside a gallery');
+  assert.equal(byOld(2).props.images[1].target, 'blk-img', 'a link to a spot on another page stays');
+  assert.equal(byOld(3).props.target, 'sec-other', 'a spot outside the template stays');
+  const group = cloneBlocksForInsert(original.blocks, makeId).blocks;
+  assert.equal(group[1].props.target, group[0].id);
+  assert.equal(group[0].props.target, 'sec-old', 'a block group carries no section to follow');
+});
+
+test('a template\'s text links to its own spots follow the new ids, and a text link to another page stays', () => {
+  const frames = { desktop: { x: 0, y: 0, w: 10, h: 10, z: 1, rot: 0 }, mobile: null };
+  const html = '<p><a href="#blk-a" data-urd-target="blk-a">her</a> og <a href="/kaker#blk-a" data-urd-page="kaker" data-urd-target="blk-a">der</a></p>';
+  const original = { id: 'sec-t', version: 1, blocks: [
+    { id: 'blk-a', type: 'text', version: 1, props: { html: '<p>Mål</p>' }, frames },
+    { id: 'blk-b', type: 'text', version: 1, props: { html }, frames },
+  ] };
+  const out = cloneSectionForInsert(original, makeId);
+  const fresh = out.blocks[0].id;
+  assert.ok(out.blocks[1].props.html.includes(`href="#${fresh}" data-urd-target="${fresh}"`));
+  assert.ok(out.blocks[1].props.html.includes('data-urd-page="kaker" data-urd-target="blk-a"'), 'a link to a spot on another page stays');
+});

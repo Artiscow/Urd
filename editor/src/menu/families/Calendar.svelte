@@ -23,6 +23,8 @@
   import { ta, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import { swatchCss } from '../../lib/swatch.js';
+  import LinkField from '../../lib/LinkField.svelte';
+  import { linkOf, setLinkOn } from '../../lib/link-edit.js';
   import { menu } from '../state.svelte.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
@@ -398,9 +400,11 @@
           <textarea rows="3" value={calNoticeWords('noticeText')}
             onchange={(e) => setCalNoticeWords('noticeText', e.target.value)}></textarea></label>
       {/if}
-      <label title={ta('tip.calendar.noticeHref')}>{ta('calendar.noticeHref')}
-        <input value={selectedBlock.props.notice?.href ?? ''} placeholder="https://" spellcheck="false"
-          onchange={(e) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), href: e.target.value.trim() || undefined })} /></label>
+      <LinkField label={ta('calendar.noticeHref')} title={ta('tip.calendar.noticeHref')} value={linkOf(selectedBlock.props.notice)}
+        onchange={(link) => ed.mutateBlock(`link:${selectedBlock.blockId}:notice`, (b) => {
+          b.props.notice = { ...(b.props.notice ?? {}) };
+          setLinkOn(b.props.notice, link);
+        })} />
     {/if}
   {/if}
   {/snippet}

@@ -36,18 +36,58 @@ function liftBlockMobile(block) {
 }
 
 /**
+ * A rich text's links to a spot on its own page (data-urd-target without data-urd-page) pointed at the spots' new ids, the address included.
+ * @param {string} html
+ * @param {Map<string, string>} ids The old ids to the new
+ * @returns {string}
+ */
+function followSpotsInText(html, ids) {
+  return html.replace(/<a\b[^>]*>/g, (tag) => {
+    if (tag.includes('data-urd-page=')) return tag;
+    const old = tag.match(/data-urd-target="([^"]*)"/)?.[1];
+    if (!old || !ids.has(old)) return tag;
+    return tag.replace(`data-urd-target="${old}"`, `data-urd-target="${ids.get(old)}"`).replace(`href="#${old}"`, `href="#${ids.get(old)}"`);
+  });
+}
+
+/**
+ * Points the links inside copied blocks at the copies: a link to a spot on its own page (a `target` with no `page`, the link shape in SCHEMA.md, or the same in a rich text) whose spot was copied along follows the spot's new id.
+ * Changed in place.
+ * @param {Array<object>} blocks
+ * @param {Map<string, string>} ids The old ids to the new
+ */
+function followCopiedSpots(blocks, ids) {
+  const visit = (value) => {
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (!value || typeof value !== 'object') return;
+    if (typeof value.target === 'string' && !value.page && ids.has(value.target)) value.target = ids.get(value.target);
+    for (const [key, inner] of Object.entries(value)) {
+      if (typeof inner === 'string' && inner.includes('data-urd-target=')) value[key] = followSpotsInText(inner, ids);
+      else visit(inner);
+    }
+  };
+  for (const block of blocks) visit(block.props);
+}
+
+/**
  * Prepares a section template for insertion: deep clone with a new section id
- * and new block ids. Geometry and props are left alone.
+ * and new block ids.
+ * Geometry and props are left alone, apart from a link to one of the template's own spots, which follows the spot's new id.
  * @param {object} section The section from the template file (not mutated)
  * @param {(prefix: string) => string} makeId The id factory (sections/presets.js)
  */
 export function cloneSectionForInsert(section, makeId) {
   const out = structuredClone(section);
-  out.id = makeId('sec');
+  const ids = new Map();
+  ids.set(out.id, (out.id = makeId('sec')));
   for (const block of out.blocks ?? []) {
-    block.id = makeId('blk');
+    ids.set(block.id, (block.id = makeId('blk')));
     liftBlockMobile(block);
   }
+  followCopiedSpots(out.blocks ?? [], ids);
   // Templates saved before v3 carry the old Norwegian contract tokens
   // (ADR-0021); renamed here since payloads bypass the page lift. A map saved
   // before page v5 carries its height as a setting, lifted into the frame, a
@@ -72,13 +112,15 @@ export function cloneSectionForInsert(section, makeId) {
 export function clonePageForInsert(page, makeId, { id, title }) {
   const out = structuredClone(page);
   out.meta = { ...out.meta, id, title };
+  const ids = new Map();
   for (const section of out.sections ?? []) {
-    section.id = makeId('sec');
-    for (const block of section.blocks ?? []) block.id = makeId('blk');
+    ids.set(section.id, (section.id = makeId('sec')));
+    for (const block of section.blocks ?? []) ids.set(block.id, (block.id = makeId('blk')));
     liftMapHeights(section);
     liftCalendarScale(section);
     liftGalleryBands(section);
   }
+  followCopiedSpots((out.sections ?? []).flatMap((section) => section.blocks ?? []), ids);
   return out;
 }
 
@@ -96,10 +138,12 @@ export function clonePageForInsert(page, makeId, { id, title }) {
  */
 export function cloneBlocksForInsert(blocks, makeId, { anchor = null } = {}) {
   const out = structuredClone(blocks);
+  const ids = new Map();
   for (const block of out) {
-    block.id = makeId('blk');
+    ids.set(block.id, (block.id = makeId('blk')));
     liftBlockMobile(block);
   }
+  followCopiedSpots(out, ids);
   liftContractTokens(out);
   liftMapHeights({ blocks: out });
   liftCalendarScale({ blocks: out });

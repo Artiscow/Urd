@@ -33,6 +33,7 @@
  *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
  *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
  *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
+ *                  { type: 'urd-link-edit', value, text }     (the text toolbar's link or Ctrl+K: the link at the caret in the link shape, or null, and the selected words)
  *                  { type: 'urd-add-block', sectionId, block } (block placed from the palette)
  *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
  *                  { type: 'urd-request-block', sectionId, kind, at? } ("+ Add block"; at = click point {x in %, y in px}, without = centered)
@@ -56,6 +57,7 @@
  *                  { type: 'urd-zoom', scale }                (the canvas zoom; the handles counter-scale so they keep their admin size)
  *                  { type: 'urd-scroll-section', sectionId }  (scroll the preview to the section; the review marker in the top bar)
  *                  { type: 'urd-scroll-anchor', hash }        (jump to the spot a link's fragment names, once its page stands)
+ *                  { type: 'urd-link-apply', link }           (the link editor's answer for the text being edited: the link shape, or null to take the link away)
  *                  { type: 'urd-close-menus' }                (a click in the admin panels closes open menus in the preview)
  *                  { type: 'urd-place-block', block }         (the palette: the engine finds a placement mid-viewport and reports back)
  *                  { type: 'urd-attention', sectionId, needed } (desktop drift in an overridden section: mark it live)
@@ -93,6 +95,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-plugin-blocks') handlers.onPluginBlocks?.(msg);
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);
+    if (msg?.type === 'urd-link-edit') handlers.onLinkEdit?.(msg);
     if (msg?.type === 'urd-add-block') handlers.onAddBlock?.(msg);
     if (msg?.type === 'urd-add-blocks') handlers.onAddBlocks?.(msg);
     if (msg?.type === 'urd-request-block') handlers.onRequestBlock?.(msg);
@@ -196,6 +199,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Jump the preview to the spot a link's fragment names, as the published page does on arrival. */
     sendScrollAnchor(hash) {
       post({ type: 'urd-scroll-anchor', hash });
+    },
+    /** The link editor's answer for the text being edited (a plain object, never a $state proxy). */
+    sendLinkApply(link) {
+      post({ type: 'urd-link-apply', link });
     },
     /** Play an entrance animation as a demo (blockId null = the section). */
     sendDemoAnim(sectionId, blockId = null) {

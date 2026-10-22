@@ -56,3 +56,20 @@ test('csvToEntries: without a title column or rows gives null', () => {
   assert.equal(csvToEntries('id,title\n'), null);
   assert.equal(csvToEntries(''), null);
 });
+
+test('entriesToCsv: an entry that links a page or a spot on it is written as the address the page draws', () => {
+  const pages = [{ id: 'kaker', path: '/kaker' }];
+  const csv = entriesToCsv([{ id: 'a', title: 'A', page: 'kaker', target: 'sec-1' }, { id: 'b', title: 'B', page: 'borte' }], pages);
+  const [, first, second] = csv.trim().split('\n');
+  assert.ok(first.includes('/kaker#sec-1'));
+  assert.ok(!second.includes('borte'), 'a page that is gone gives no address');
+});
+
+test('csvToEntries: an address that names a page of the register is read back as that page and its spot', () => {
+  const pages = [{ id: 'kaker', path: '/kaker' }];
+  const csv = entriesToCsv([{ id: 'a', title: 'A', page: 'kaker', target: 'sec-1' }, { id: 'b', title: 'B', href: '/annet' }, { id: 'c', title: 'C', href: 'https://x.no' }], pages);
+  const { entries } = csvToEntries(csv, pages);
+  assert.deepEqual([entries[0].page, entries[0].target, entries[0].href], ['kaker', 'sec-1', undefined]);
+  assert.equal(entries[1].href, '/annet', 'a path that names no page stays an address');
+  assert.equal(entries[2].href, 'https://x.no');
+});

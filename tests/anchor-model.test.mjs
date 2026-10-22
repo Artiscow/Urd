@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { anchorError, takenAnchors, uniqueAnchor, suggestAnchor, blockWords, sectionWords, claimAnchors, duplicateAnchors, ANCHOR_MAX } = await engineImport('anchor-model.js');
+const { anchorError, takenAnchors, uniqueAnchor, suggestAnchor, blockWords, sectionWords, claimAnchors, duplicateAnchors, pageSpots, ANCHOR_MAX } = await engineImport('anchor-model.js');
 
 // Deliberately Norwegian content: site content stays Norwegian (ADR-0021).
 const PAGE = {
@@ -106,4 +106,22 @@ test('duplicateAnchors: a name given twice, or equal to another spot\'s id', () 
   onInput.sections[1].anchor = 'navn-in';
   assert.deepEqual(duplicateAnchors(onInput), ['navn-in']);
   assert.deepEqual(duplicateAnchors({}), []);
+});
+
+test('pageSpots: every section by number with its name and words, and the named blocks under it from the top', () => {
+  const page = { sections: [
+    { id: 'sec-a', anchor: 'priser', blocks: [
+      { id: 'blk-2', anchor: 'nede', props: { html: '<p>Nede</p>' }, frames: { desktop: { y: 300 } } },
+      { id: 'blk-1', anchor: 'oppe', props: { html: '<h2>Oppe</h2>' }, frames: { desktop: { y: 10 } } },
+      { id: 'blk-3', props: { html: '<p>Uten navn</p>' }, frames: { desktop: { y: 20 } } },
+    ] },
+    { id: 'sec-b', blocks: [] },
+  ] };
+  assert.deepEqual(pageSpots(page), [
+    { id: 'sec-a', kind: 'section', n: 1, name: 'priser', words: 'Oppe' },
+    { id: 'blk-1', kind: 'block', n: 1, name: 'oppe', words: 'Oppe' },
+    { id: 'blk-2', kind: 'block', n: 1, name: 'nede', words: 'Nede' },
+    { id: 'sec-b', kind: 'section', n: 2, name: '', words: '' },
+  ]);
+  assert.deepEqual(pageSpots(null), []);
 });

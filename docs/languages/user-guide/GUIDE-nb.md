@@ -241,17 +241,39 @@ Gi stedet et navn: for en seksjon i **Egenskaper** under **Lenkenavn**, for en
 blokk i menyen under **Plassering**, i gruppen **Lenkemål**. Skriv navnet med
 dine egne ord: «Priser» blir skrevet som `priser`, og knappen under feltet
 foreslår et navn laget av stedets første overskrift. Et navn et annet sted på
-siden allerede har, blir avvist med en merknad. Kopier-knappen ved siden av
-feltet kopierer lenken innenfor nettstedet, for eksempel `/kaker#priser`, klar
-til å limes inn i et menypunkt, en footer-kolonne eller en knapp. Et sted uten
-navn kan fortsatt lenkes til med sin egen id, som kopier-knappen da bruker.
+siden allerede har, blir avvist med en merknad. For å lenke til stedet velger
+du siden og så stedet i et hvilket som helst lenkefelt (se Lenker nedenfor).
+Kopier-knappen ved siden av navnet kopierer lenken innenfor nettstedet, for
+eksempel `/kaker#priser`, til deling. Et sted uten navn kan fortsatt lenkes
+til: lenkeredigereren viser hver seksjon med nummer og første ord.
 
 Lenken lander med stedet rett under menyen, fra samme side og fra alle andre.
 På samme side ruller den dit mykt, med mindre den besøkende har bedt om mindre
-bevegelse. En blokk som
-er skjult på mobil, lander øverst i seksjonen sin der. En kopiert eller
-duplisert blokk kommer uten navnet sitt, og en mal med et navn siden allerede
-har, får et tall bak (`priser-2`).
+bevegelse. En blokk som er skjult på mobil, lander øverst i seksjonen sin der.
+En kopiert eller duplisert blokk kommer uten navnet sitt, og en mal med et navn
+siden allerede har, får et tall bak (`priser-2`).
+
+### Lenker
+
+Hver lenke i redigereren settes i det samme vinduet: en knapps **Går til**,
+lenken på et bilde eller et galleribilde, handlekurvens kasseside,
+kalenderkunngjøringens lenke, menypunktene, footerens lenker og oppfordring,
+nettstedets lenker, lenken på en oppføring i en samling, og ord i en tekst.
+Klikk lenkefeltet (i en tekst merker du ordene og trykker lenkeknappen eller
+Ctrl+K; Ctrl+Shift+K tar bort lenken). Under **Går til** velger du:
+
+- **Side**: søk i sidene og velg én, og deretter, om du vil, **Et sted på
+  siden**: toppen, en seksjon med nummer og første ord, eller en blokk som har
+  et lenkenavn.
+- **Nettadresse**: en hel adresse; `www.eksempel.no` får `https://` foran.
+- **E-post**: adressen, og et emne om du vil.
+- **Telefon**: nummeret.
+
+**Åpne i ny fane** gjelder sider og nettadresser, og en nettadresse kan også
+merkes **Be søkemotorer ikke følge den** eller **Betalt eller sponset lenke**.
+Merkede ord som er en e-postadresse eller et telefonnummer, blir foreslått som
+det. En lenke til en side virker videre når sidens adresse endres eller stedet
+får nytt navn.
 
 ## Grid (hjelpelinjer)
 

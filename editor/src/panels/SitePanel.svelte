@@ -478,7 +478,7 @@
   <details class="group" bind:open={() => ed.siteLinksOpen, (v) => (ed.siteLinksOpen = v)}>
     <summary title={ta('tip.site.links')}>{ta('group.siteLinks')}</summary>
     <div class="group-items">
-      <LinkList links={siteLinks()}
+      <LinkList scope="site" links={siteLinks()}
         onchange={(i, patch) => setSiteLink(i, patch)} onadd={() => addSiteLink()}
         onremove={(i) => removeSiteLink(i)} onmove={(i, dir) => moveSiteLink(i, dir)} />
     </div>

@@ -43,7 +43,7 @@ import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selecti
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
 import { styleOf, pasteStyle } from './block-style.js';
 import { nearestDock } from './sticky-model.js';
-import { isAnchorName } from './nav-model.js';
+import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
 import { ta, adminLang } from './i18n.js';
@@ -685,6 +685,18 @@ function fitBlockMenu(menu) {
 
 /** Closes open menus (preset gallery, block menu). Also called via urd-close-menus when the owner clicks in the admin panels, which the iframe's own click listeners never see. */
 let collapseOpenPresetMenu = null;
+/** The text toolbar's way to write the link editor's answer on the selection it kept (initTextToolbar). */
+let textLinkApply = null;
+
+/**
+ * The link editor's answer for the text being edited (urd-link-apply): the link in the link shape, or null to take the link away.
+ * @param {object|null} link
+ * @param {Array<{id: string, path: string}>} pages The page register, for the link's address now
+ */
+export function applyTextLink(link, pages) {
+  textLinkApply?.(link, pages);
+}
+
 export function closeMenus() {
   collapseOpenPresetMenu?.();
   collapseOpenPresetMenu = null;
@@ -1737,9 +1749,7 @@ function initTextToolbar() {
   const bar = document.createElement('div');
   bar.className = 'urd-text-toolbar';
   // Clicks in the toolbar must not move focus out of the text field.
-  // Exception: select and input MUST receive mousedown, otherwise the
-  // level picker will not open and the link field cannot be clicked; their
-  // focus switching is handled explicitly.
+  // Exception: select and input MUST receive mousedown, otherwise the level picker will not open and the size field cannot be clicked; their focus switching is handled explicitly.
   bar.addEventListener('mousedown', (event) => {
     if (event.target instanceof Element && event.target.closest('select, input')) return;
     event.preventDefault();
@@ -1747,7 +1757,7 @@ function initTextToolbar() {
 
   const exec = (name, value = null) => document.execCommand(name, false, value);
 
-  // The color picker and link field move focus/selection: the selection is saved beforehand and restored on use.
+  // The color picker and the link editor move focus/selection: the selection is saved beforehand and restored on use.
   let savedRange = null;
   const saveSelection = () => {
     const sel = document.getSelection();
@@ -1781,9 +1791,8 @@ function initTextToolbar() {
     return b;
   };
 
-  // Two FIXED rows (Office/Word style): row 1 = structure + size, row 2 =
-  // character formatting + paragraph. The expandable subrows (colors,
-  // spacing, glyphs, link) go below both.
+  // Two FIXED rows (Office/Word style): row 1 = structure + size, row 2 = character formatting + paragraph.
+  // The expandable subrows (colors, spacing, glyphs) go below both.
   const row1 = document.createElement('div');
   row1.className = 'urd-tt-row';
   const row2 = document.createElement('div');
@@ -1991,9 +2000,8 @@ function initTextToolbar() {
   });
   group.appendChild(fontDd.el);
 
-  // Size for the SELECTION: a number field with minus/plus (±1px). The
-  // field steals focus, so the selection is saved/restored (the linkRow
-  // pattern).
+  // Size for the SELECTION: a number field with minus/plus (±1px).
+  // The field steals focus, so the selection is saved/restored (as the link editor does).
   const MINUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 6h7"/></svg>';
   const PLUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2.5v7M2.5 6h7"/></svg>';
 
@@ -2080,7 +2088,7 @@ function initTextToolbar() {
   startGroup(row2);
   const LINK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>';
   const CLEAR_SVG = '<svg width="16" height="14" viewBox="0 0 26 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5h12"/><path d="M11 5L8 19"/><path d="M18 15l6 6"/><path d="M24 15l-6 6"/></svg>';
-  btn(LINK_SVG, ta('lbl.link'), () => toggleLinkRow());
+  btn(LINK_SVG, ta('tt.link'), () => editLink());
   btn(CLEAR_SVG, ta('tt.clearFormat'), () => {
     exec('removeFormat');
     exec('unlink');
@@ -2093,55 +2101,85 @@ function initTextToolbar() {
     }
   });
 
-  // Inline link field (modern flow, no prompt): opened by the link button on its own row in the toolbar.
-  const linkRow = document.createElement('div');
-  linkRow.className = 'urd-tt-linkrow';
-  const linkInput = document.createElement('input');
-  linkInput.placeholder = ta('tt.linkPh');
-  linkInput.spellcheck = false;
-  const linkApply = document.createElement('button');
-  linkApply.textContent = ta('common.apply');
-  const linkRemove = document.createElement('button');
-  linkRemove.textContent = ta('tt.removeLink');
-  linkRow.append(linkInput, linkApply, linkRemove);
-  bar.appendChild(linkRow);
-
-  const applyLink = () => {
-    const trimmed = linkInput.value.trim();
-    // Only ordinary link forms: active URL schemes must never become clickable for visitors.
-    if (/^(javascript|data|vbscript):/i.test(trimmed)) return;
-    restoreSelection();
-    if (trimmed) exec('createLink', trimmed);
-    else exec('unlink');
-    linkRow.classList.remove('visible');
-  };
-  linkApply.addEventListener('click', applyLink);
-  linkInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') applyLink();
-    if (event.key === 'Escape') linkRow.classList.remove('visible');
-  });
-  linkRemove.addEventListener('click', () => {
-    restoreSelection();
-    exec('unlink');
-    linkRow.classList.remove('visible');
-  });
-
-  function toggleLinkRow() {
-    if (linkRow.classList.contains('visible')) {
-      linkRow.classList.remove('visible');
-      return;
-    }
+  // A link: the editor's link editor opens over the admin (urd-link-edit), and its answer comes back as urd-link-apply (applyTextLink), which writes it on the selection kept here.
+  // A link to a page or a spot on it keeps the page and the spot beside its address (data-urd-page, data-urd-target), which the text's render reads again, so the link follows a change of the page's address.
+  /** The link being edited, or null for a new one on the selection. */
+  let editedLink = null;
+  function editLink() {
+    // Words that stand inside a link or a button already (the calendar's words) take no link of their own.
+    if (!activeText || activeText.closest('a, button')) return;
     colorRow.classList.remove('visible');
     glyphRow.classList.remove('visible');
     spacingRow.classList.remove('visible');
     saveSelection();
-    // Prefill with the existing link when the caret sits in one.
     const sel = document.getSelection();
-    const anchorEl = sel?.anchorNode instanceof HTMLElement ? sel.anchorNode : sel?.anchorNode?.parentElement;
-    linkInput.value = anchorEl?.closest('a')?.getAttribute('href') ?? '';
-    linkRow.classList.add('visible');
-    linkInput.focus();
+    const node = sel?.anchorNode instanceof Element ? sel.anchorNode : sel?.anchorNode?.parentElement;
+    const a = node?.closest('a');
+    // The link is edited when the caret stands in it or the words chosen lie inside it; words that run past it get a link of their own.
+    const within = sel && sel.rangeCount && (sel.isCollapsed || a?.contains(sel.getRangeAt(0).commonAncestorContainer));
+    editedLink = a && activeText.contains(a) && within ? a : null;
+    const value = editedLink ? {
+      ...(editedLink.dataset.urdPage ? { page: editedLink.dataset.urdPage } : {}),
+      ...(editedLink.dataset.urdTarget ? { target: editedLink.dataset.urdTarget } : {}),
+      ...(editedLink.dataset.urdPage || editedLink.dataset.urdTarget ? {} : { href: editedLink.getAttribute('href') ?? '' }),
+      ...(editedLink.target === '_blank' ? { newTab: true } : {}),
+      rel: LINK_RELS.filter((word) => editedLink.relList.contains(word)),
+    } : null;
+    post({ type: 'urd-link-edit', value, text: editedLink ? '' : (sel?.toString() ?? '').trim() });
   }
+
+  /** Puts a link (the link shape) on an anchor: its address now, a new tab, the rel words, and the page and the spot it stands for. */
+  const setTextLink = (a, link, pages) => {
+    const attrs = linkAttrs(resolveLink(link, pages));
+    a.setAttribute('href', attrs.href);
+    if (attrs.target) a.setAttribute('target', attrs.target); else a.removeAttribute('target');
+    if (attrs.rel) a.setAttribute('rel', attrs.rel); else a.removeAttribute('rel');
+    if (link.page) a.dataset.urdPage = link.page; else delete a.dataset.urdPage;
+    if (link.target) a.dataset.urdTarget = link.target; else delete a.dataset.urdTarget;
+  };
+
+  textLinkApply = (link, pages) => {
+    if (!activeText?.isConnected) return;
+    activeText.focus({ preventScroll: true });
+    restoreSelection();
+    if (!link) {
+      if (editedLink?.isConnected) editedLink.replaceWith(...editedLink.childNodes);
+      else exec('unlink');
+    } else if (editedLink?.isConnected) {
+      setTextLink(editedLink, link, pages);
+    } else {
+      const sel = document.getSelection();
+      const marker = '#urd-link-new';
+      if (sel && !sel.isCollapsed) {
+        exec('createLink', marker);
+      } else {
+        // No words chosen: the link is written with words of its own: the page's title for a page, the spot's name for a spot on this page, else the address without its scheme and query.
+        const words = document.createElement('span');
+        const page = link.page ? pages.find((p) => p.id === link.page) : null;
+        const spotName = !page && link.target ? document.querySelector(`.urd-anchor[data-spot="${CSS.escape(link.target)}"]`)?.id : null;
+        words.textContent = page?.title ?? spotName ?? resolveLink(link, pages).href.replace(/^(?:https?:\/\/|mailto:|tel:)/i, '').replace(/\?.*$/, '');
+        exec('insertHTML', `<a href="${marker}">${words.innerHTML}</a>`);
+      }
+      for (const a of activeText.querySelectorAll(`a[href="${marker}"]`)) setTextLink(a, link, pages);
+    }
+    editedLink = null;
+    // The change is posted as typing is.
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+    reposition();
+  };
+
+  // Ctrl+K (⌘K) opens the link editor on the selection, and Ctrl+Shift+K takes the link away.
+  document.addEventListener('keydown', (event) => {
+    if (!activeText || !(event.target instanceof Node) || !activeText.contains(event.target)) return;
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 'k') return;
+    event.preventDefault();
+    if (!event.shiftKey) {
+      editLink();
+      return;
+    }
+    exec('unlink');
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+  });
 
   // The theme color commands: execCommand can only write a FIXED color;
   // afterwards it is swapped for var(--urd-color-<token>) in the field, so
@@ -2193,7 +2231,7 @@ function initTextToolbar() {
   // remove highlight.
   const colorRow = document.createElement('div');
   colorRow.className = 'urd-tt-colorrow';
-  bar.insertBefore(colorRow, linkRow);
+  bar.appendChild(colorRow);
   const colorBtn = (html, title, run) => {
     const b = document.createElement('button');
     b.innerHTML = html;
@@ -2248,7 +2286,6 @@ function initTextToolbar() {
   });
 
   function toggleColorRow() {
-    linkRow.classList.remove('visible');
     glyphRow.classList.remove('visible');
     spacingRow.classList.remove('visible');
     colorRow.classList.toggle('visible');
@@ -2262,7 +2299,7 @@ function initTextToolbar() {
   // admin picker via the same localStorage key.
   const glyphRow = document.createElement('div');
   glyphRow.className = 'urd-tt-glyphrow';
-  bar.insertBefore(glyphRow, linkRow);
+  bar.appendChild(glyphRow);
   let glyphRowBuilt = false;
 
   const glyphHeading = (name) => {
@@ -2301,7 +2338,6 @@ function initTextToolbar() {
   };
 
   function toggleGlyphRow() {
-    linkRow.classList.remove('visible');
     colorRow.classList.remove('visible');
     spacingRow.classList.remove('visible');
     if (glyphRow.classList.contains('visible')) {
@@ -2329,7 +2365,7 @@ function initTextToolbar() {
   // Everything is additive inline; "Inherit" removes the override.
   const spacingRow = document.createElement('div');
   spacingRow.className = 'urd-tt-spacerow';
-  bar.insertBefore(spacingRow, linkRow);
+  bar.appendChild(spacingRow);
 
   const spacingLabel = (text) => {
     const s = document.createElement('span');
@@ -2374,7 +2410,6 @@ function initTextToolbar() {
   spacingRow.appendChild(lsInput);
 
   function toggleSpacingRow() {
-    linkRow.classList.remove('visible');
     colorRow.classList.remove('visible');
     glyphRow.classList.remove('visible');
     spacingRow.classList.toggle('visible');
@@ -2398,7 +2433,6 @@ function initTextToolbar() {
     }
     if (!activeText || !activeText.isConnected) {
       bar.classList.remove('visible');
-      linkRow.classList.remove('visible');
       colorRow.classList.remove('visible');
       glyphRow.classList.remove('visible');
       spacingRow.classList.remove('visible');
@@ -2502,7 +2536,6 @@ function initTextToolbar() {
     if (target && target !== activeText) {
       activeText = target;
       activeBlockId = target.closest('.urd-block')?.dataset.blockId ?? null;
-      linkRow.classList.remove('visible');
       colorRow.classList.remove('visible');
       glyphRow.classList.remove('visible');
       spacingRow.classList.remove('visible');
@@ -2510,8 +2543,7 @@ function initTextToolbar() {
     if (target) reposition();
   });
   document.addEventListener('focusout', () => {
-    // Wait a beat: focus may be on its way to the toolbar itself, the link
-    // field or the color picker's sliders and fields (a separate card).
+    // Wait a beat: focus may be on its way to the toolbar itself or the color picker's sliders and fields (a separate card).
     requestAnimationFrame(() => {
       const el = document.activeElement;
       if (el instanceof HTMLElement && (bar.contains(el) || el.closest('.urd-text[contenteditable="true"], .urd-cp'))) return;

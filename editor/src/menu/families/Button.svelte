@@ -3,16 +3,17 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
+  import LinkField from '../../lib/LinkField.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
+  import { linkOf, linkText } from '../../lib/link-edit.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { setBlockProp, setBlockProps, buttonTargets, setButtonTarget } = ed;
+  const { setBlockProp, setBlockProps, setBlockLink } = ed;
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 </script>
@@ -23,17 +24,11 @@
       <input value={selectedBlock.props.label}
         onchange={(e) => setBlockProp('label', e.target.value)} /></label>
     <div class="pin-line">
-      <label>{ta('lbl.goesTo')}
-        <Dropdown value={selectedBlock.props.page ?? '__href'} options={buttonTargets()} onchange={setButtonTarget} /></label>
+      <LinkField label={ta('lbl.goesTo')} value={linkOf(selectedBlock.props)} onchange={setBlockLink} />
       <Pin id="goesTo" />
     </div>
-    {#if !selectedBlock.props.page}
-      <input placeholder={ta('ph.url')}
-        value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
-        onchange={(e) => setBlockProp('href', e.target.value || null)} />
-    {/if}
   {/snippet}
-  <MenuGroup id="btn-link" defaultOpen title={ta('group.textLink')} value={buttonTargets().find(([id]) => id === (selectedBlock.props.page ?? '__href'))?.[1] ?? ''}>{@render btnLink()}</MenuGroup>
+  <MenuGroup id="btn-link" defaultOpen title={ta('group.textLink')} value={linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) || ta('link.none')}>{@render btnLink()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet btnLook()}
     <Setting key="style">

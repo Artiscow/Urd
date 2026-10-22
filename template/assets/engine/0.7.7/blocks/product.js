@@ -33,6 +33,9 @@ const el2 = (tag, className, textContent) => {
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
+/** The site's page register, for a link in a product's text to a page (set by every render; the register is the site's, the same for every block). */
+let pagesNow = [];
+
 /** Rich text node (title/text) with click-and-type in preview (urd-collection-edit). */
 function richNode(tag, className, entry, field, collection, editable) {
   const value = entry[field];
@@ -40,7 +43,7 @@ function richNode(tag, className, entry, field, collection, editable) {
   const node = el2(tag, className);
   if (value) {
     node.innerHTML = value;
-    stripActiveContent(node);
+    stripActiveContent(node, pagesNow);
   } else {
     node.classList.add('urd-collection-placeholder');
     node.dataset.placeholder = ta('canvas.textPlaceholder');
@@ -305,6 +308,7 @@ export const productBlock = {
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
+    pagesNow = ctx.site?.pages ?? [];
     const host = el2('div', 'urd-product');
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';

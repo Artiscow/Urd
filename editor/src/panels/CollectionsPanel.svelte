@@ -6,6 +6,8 @@
   import { makeId } from '$engine/sections/presets.js';
   import { entriesToCsv, csvToEntries } from '$engine/collections-csv.js';
   import { ICONS } from '../lib/icons.js';
+  import LinkField from '../lib/LinkField.svelte';
+  import { linkOf, setLinkOn } from '../lib/link-edit.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const collectionIds = $derived(ed.collectionIds);
@@ -27,6 +29,14 @@
       if (!entry) return;
       if (value === '' && field !== 'title') delete entry[field];
       else entry[field] = value;
+    });
+  }
+
+  /** An entry's link from the link editor (the title links to it). */
+  function setEntryLink(id, entryId, link) {
+    mutateCollection(id, `collection:${id}:${entryId}:link`, (data) => {
+      const entry = data.entries.find((e) => e.id === entryId);
+      if (entry) setLinkOn(entry, link);
     });
   }
 
@@ -98,7 +108,7 @@
   function exportCollectionCsv(id) {
     const data = collectionStores[id]?.data;
     if (!data) return;
-    const url = URL.createObjectURL(new Blob([entriesToCsv(data.entries)], { type: 'text/csv' }));
+    const url = URL.createObjectURL(new Blob([entriesToCsv(data.entries, ed.siteDraft?.pages ?? [])], { type: 'text/csv' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = `${id}.csv`;
@@ -113,7 +123,7 @@
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    const parsed = csvToEntries(await file.text());
+    const parsed = csvToEntries(await file.text(), ed.siteDraft?.pages ?? []);
     if (!parsed) {
       setStatus(ta('status.csvInvalid'), 'error');
       return;
@@ -175,9 +185,8 @@
             value={entry.text ?? ''}
             onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'text', e.target.value)}></textarea>
           {#if collectionView.kind !== 'products'}
-            <label>{ta('lbl.link')}
-              <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
-                onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'href', e.target.value)} /></label>
+            <LinkField scope="site" label={ta('lbl.link')} value={linkOf(entry)} placeholder={ta('ph.collections.href')}
+              onchange={(link) => setEntryLink(ed.activeCollection, entry.id, link)} />
           {/if}
           <span class="toolbar-row">
             <label class="ghost filepick">

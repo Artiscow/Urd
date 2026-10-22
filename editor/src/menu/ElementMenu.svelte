@@ -21,6 +21,7 @@
   import { quickIds, choiceChanged, NO_CHOICE } from '../lib/quick-row.js';
   import { matchWords } from '$engine/palette-search.js';
   import { menuSearch } from '../lib/menu-search.js';
+  import { linkOf, linkText } from '../lib/link-edit.js';
   import Placement from './Placement.svelte';
   import Text from './families/Text.svelte';
   import Button from './families/Button.svelte';
@@ -48,7 +49,7 @@
   import Fields from './families/Fields.svelte';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { setBlockProp, setBlockFit, setBlockSize, endSizeGesture, setBlockHideMobile, designWidth, buttonTargets, setButtonTarget, themeSwatches } = ed;
+  const { setBlockProp, setBlockFit, setBlockSize, endSizeGesture, setBlockHideMobile, designWidth, themeSwatches } = ed;
   /** The family of each block type; a type without one of its own shows the field contract. */
   const FAMILIES = { text: Text, button: Button, image: Image, video: Video, icon: Icon, shape: Shape, gallery: Gallery, ribbon: Ribbon, calendar: Calendar, form: Form, faq: Faq, timeline: Timeline, quote: Quote, stats: Stats, table: Table, share: Share, contact: Contact, countdown: Countdown, audio: Audio, collection: Collection, product: Product, cart: Cart, checkout: Checkout };
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
@@ -89,7 +90,8 @@
         options: [['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]], set: (v) => setBlockProp('align', v) });
       items.push({ id: 'textBox', label: ta('group.textBox'), kind: 'choice', value: p.box ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('box', v === 'on') });
     } else if (b.type === 'button') {
-      items.push({ id: 'goesTo', label: ta('lbl.goesTo'), kind: 'select', value: p.page ?? '__href', options: buttonTargets(), set: setButtonTarget });
+      items.push({ id: 'goesTo', label: ta('lbl.goesTo'), kind: 'open', value: linkText(linkOf(p), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) || ta('link.none'),
+        run: () => ed.openLink({ value: linkOf(p), here: ed.pageId, apply: (link) => ed.setBlockLink(link) }) });
       items.push(designItem('btnStyle'));
     } else if (b.type === 'image') {
       items.push({ id: 'imgFit', label: ta('lbl.imageFit'), kind: 'select', value: p.fit ?? 'cover',

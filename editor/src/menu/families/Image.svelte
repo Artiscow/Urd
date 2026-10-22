@@ -11,10 +11,14 @@
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
+  import LinkField from '../../lib/LinkField.svelte';
+  import { linkOf, linkText } from '../../lib/link-edit.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { mutateBlock, setBlockProp, setBlockProps, openImageEditor, compressOrTrim, imageErrorText, setStatus } = ed;
+  const { mutateBlock, setBlockProp, setBlockProps, setBlockLink, openImageEditor, compressOrTrim, imageErrorText, setStatus } = ed;
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  /** Whether the picture links somewhere (a page, a spot or an address). */
+  const imageLinked = $derived(Object.keys(linkOf(selectedBlock.props)).some((key) => key !== 'newTab' && key !== 'rel'));
   let { area } = $props();
 
   /** Replace the image in an image block (same webp flow as + Image). */
@@ -46,11 +50,10 @@
   {/snippet}
   {#snippet imgLink()}
     <Setting key="href">
-      <label>{ta('lbl.link')}
-        <input value={selectedBlock.props.href ?? ''} placeholder={ta('ph.optionalImageLink')}
-          onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
+      <LinkField label={ta('lbl.link')} value={linkOf(selectedBlock.props)} placeholder={ta('ph.optionalImageLink')} onchange={setBlockLink} />
     </Setting>
-    {#if !selectedBlock.props.href}
+    <!-- The lightbox only for a picture without a link: a link wins the click -->
+    {#if !imageLinked}
       <Setting key="lightbox" shown={ta('common.off')}>
         <label class="gridmenu-snap" title={ta('tip.lightbox')}>
           <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
@@ -61,7 +64,8 @@
     {/if}
   {/snippet}
   <MenuGroup id="img-image" title={ta('blocks.image')} value={selectedBlock.props.alt || ta('menu.noAlt')}>{@render imgImage()}</MenuGroup>
-  <MenuGroup id="img-link" title={ta('group.linkClick')} value={selectedBlock.props.href || (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none'))} group={groupOf('img-link', { href: null, lightbox: false })}>{@render imgLink()}</MenuGroup>
+  <MenuGroup id="img-link" title={ta('group.linkClick')} value={imageLinked ? linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) : (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none'))}
+    group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, lightbox: false })}>{@render imgLink()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet imgCrop()}
     <Setting key="fit">

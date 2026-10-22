@@ -13,7 +13,7 @@ import { coreAnimations } from '$engine/animations/core.js';
 import { PAGE_SCHEMA_VERSION, liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { anchorError, takenAnchors } from '$engine/anchor-model.js';
-import { clearLinkExtras } from '../lib/link-edit.js';
+import { setLinkOn } from '../lib/link-edit.js';
 import { createDraftStore } from '../lib/draftStore.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
@@ -271,21 +271,6 @@ const ribbonReach = (w) => (w === 'canvas' || w === 'page' ? w : 'content');
 
 const RIBBON_MOTIONS = () => [['roll', ta('opt.ribbonMotion.roll')], ['sway', ta('opt.ribbonMotion.sway')],
   ['step', ta('opt.ribbonMotion.step')], ['none', ta('opt.ribbonMotion.none')]];
-
-/** Where a button goes: a page of the site, or an address of its own. */
-function buttonTargets() {
-  return [...siteState.siteDraft.pages.map((pg) => [pg.id, pg.title]), ['__href', ta('opt.externalLink')]];
-}
-
-function setButtonTarget(v) {
-  const page = v === '__href' ? null : v;
-  mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-    // The spot, the new tab and the rel words belonged to the link the button had.
-    clearLinkExtras(b.props);
-    b.props.page = page;
-    if (page) b.props.href = null;
-  });
-}
 
 /** The image editor in the preview, opened from the block's menu (the floating menu steps aside for it). */
 function openImageEditor() {
@@ -923,6 +908,16 @@ function setGalleryImageField(i, field, value) {
   mutateBlock(`edit:${selectedBlock.blockId}:img${i}-${field}`, (b) => { b.props.images[i][field] = value; });
 }
 
+/** A gallery picture's link (the link editor): its link fields written over, as an undo step of its own. */
+function setGalleryImageLink(i, link) {
+  mutateBlock(`link:${selectedBlock.blockId}:img${i}`, (b) => setLinkOn(b.props.images[i], link));
+}
+
+/** The selected block's link (the link editor): the link fields of its props written over, as an undo step of its own. */
+function setBlockLink(link) {
+  mutateBlock(`link:${selectedBlock.blockId}`, (b) => setLinkOn(b.props, link));
+}
+
 /** The size slider's gesture ends: the next slide starts from where the block then stands. */
 function endSizeGesture() {
   sizeGesture = null;
@@ -1010,8 +1005,6 @@ export const pageState = {
   RIBBON_REACH,
   ribbonReach,
   RIBBON_MOTIONS,
-  buttonTargets,
-  setButtonTarget,
   openImageEditor,
   fitTimers,
   fitSeq,
@@ -1097,6 +1090,8 @@ export const pageState = {
   moveGalleryImage,
   removeGalleryImage,
   setGalleryImageField,
+  setGalleryImageLink,
+  setBlockLink,
   endSizeGesture,
   effects,
 };

@@ -139,6 +139,8 @@ function onKeydown(e) {
     return;
   }
   if (!(e.ctrlKey || e.metaKey)) return;
+  // A dialog over the editor (the link editor, the design picker) keeps its keys: the page behind it is not changed.
+  if (e.target instanceof Element && e.target.closest('dialog')) return;
   const key = e.key.toLowerCase();
   // Ctrl+D with focus in the admin panels: duplicate the selected block
   // in the preview (otherwise the shortcut opens the browser's bookmark

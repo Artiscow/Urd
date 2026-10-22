@@ -1285,14 +1285,6 @@
     max-width: 100%;
   }
 
-  .panel-body input.nav-item-href:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
-    flex: 1 1 4rem;
-    min-width: 3rem;
-    height: 1.5rem;
-    font-size: 0.72rem;
-    padding: 0 0.3rem;
-  }
-
   .nav-item-sub {
     flex: 0 0 auto;
     display: inline-flex;
@@ -1714,17 +1706,9 @@
     flex-shrink: 0;
   }
 
-  /* A target that can never become a link: the row is kept, but it is drawn
-     as unusable, since the shortcut is silently left out of the menu. */
+  /* A field whose value can never be used (a shared folder's address that cannot be read): drawn as unusable. */
   .bad-target {
     border-color: #e05252;
-  }
-
-  .bad-target-note {
-    display: block;
-    padding: 0.1rem 0.2rem 0;
-    font-size: 0.72rem;
-    color: #f5a09a;
   }
 
   /* The answer from a shared folder: how many pictures it holds, or why it

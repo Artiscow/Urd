@@ -165,6 +165,26 @@ export function sectionWords(section) {
 }
 
 /**
+ * The spots a link can land on in a page, in page order: each section, numbered from 1, and each named block, under its section from the top.
+ * Each spot carries its id (what a link stores), its name ('' when it has none) and its first words, which the link editor shows.
+ * @param {{sections?: Array<object>}} page
+ * @returns {Array<{id: string, kind: 'section'|'block', n: number, name: string, words: string}>} `n` is the section's number, for a block the number of its section
+ */
+export function pageSpots(page) {
+  const spots = [];
+  (page?.sections ?? []).forEach((section, index) => {
+    if (typeof section?.id !== 'string' || !section.id) return;
+    const n = index + 1;
+    spots.push({ id: section.id, kind: 'section', n, name: isAnchorName(section.anchor) ? section.anchor : '', words: sectionWords(section) });
+    const blocks = [...(section.blocks ?? [])].sort((a, b) => (a.frames?.desktop?.y ?? 0) - (b.frames?.desktop?.y ?? 0));
+    for (const block of blocks) {
+      if (typeof block?.id === 'string' && isAnchorName(block.anchor)) spots.push({ id: block.id, kind: 'block', n, name: block.anchor, words: blockWords(block) });
+    }
+  });
+  return spots;
+}
+
+/**
  * Gives sections and blocks copied onto a page names that are free there: a name the page already uses gets -2, -3 and so on, two copies with the same name get different ones, and a name that breaks the rule is dropped.
  * The items are changed in place and returned.
  * @param {Array<object>} items Sections with their blocks, or blocks

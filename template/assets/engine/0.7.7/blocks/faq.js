@@ -120,7 +120,7 @@ export const faqBlock = {
       answer.className = 'urd-text';
       answer.innerHTML = entry.a ?? '';
       answer.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button').forEach((n) => n.remove());
-      stripActiveContent(answer);
+      stripActiveContent(answer, ctx.site?.pages ?? []);
       region.appendChild(answer);
       item.append(head, region);
       host.appendChild(item);

@@ -281,8 +281,8 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     }
     if (own) {
       node.innerHTML = own;
-      // Visitor protection: executable code is always stripped on render.
-      stripActiveContent(node);
+      // Visitor protection: executable code is always stripped on render, and a link to a page gets the page's address now.
+      stripActiveContent(node, ctx.site?.pages ?? []);
     } else {
       node.textContent = defaultWords(key, form, plain);
     }

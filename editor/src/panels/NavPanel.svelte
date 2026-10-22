@@ -8,11 +8,12 @@
   import Choice from '../lib/Choice.svelte';
   import { ta } from '$engine/i18n.js';
   import { FONT_STACKS } from '$engine/fonts.js';
-  import { isSafeHref, toolOrder } from '$engine/nav-model.js';
+  import { resolveLink, toolOrder } from '$engine/nav-model.js';
   import { iconSvg, ICON_LIBRARY } from '$engine/icons.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
-  import { clearLinkExtras, pointLink } from '../lib/link-edit.js';
+  import LinkField from '../lib/LinkField.svelte';
+  import { linkOf, setLinkOn } from '../lib/link-edit.js';
   const ed = getContext('urd-editor');
   const grid = $derived(ed.grid);
   const siteDraft = $derived(ed.siteDraft);
@@ -422,14 +423,9 @@
     siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
   }
 
-  /** Target: a page from the registry, '__href' = external link, or '__none' = a pure opener for the submenu (offered only for items with a submenu).
-   *  The schema allows only one of page/href, so the rest are removed (pointLink, which also drops the spot, the new tab and the rel words). */
-  function setNavTarget(i, value) {
-    siteMutate('nav', () => pointLink(siteDraft.nav.items[i], value));
-  }
-
-  function setNavHref(i, value) {
-    siteMutate(`edit:nav-href-${i}`, () => { siteDraft.nav.items[i].href = value; });
+  /** A menu item's link, or a submenu item's (j), from the link editor; an item with a submenu and no link is the submenu's opener. */
+  function setNavLink(i, j, link) {
+    siteMutate('nav', () => setLinkOn(j === null ? siteDraft.nav.items[i] : siteDraft.nav.items[i].children[j], link));
   }
 
   function moveNavItem(i, dir) {
@@ -630,13 +626,6 @@
     siteMutate(`edit:nav-child-label-${i}-${j}`, () => { siteDraft.nav.items[i].children[j].label = value; });
   }
 
-  function setNavChildTarget(i, j, value) {
-    siteMutate('nav', () => pointLink(siteDraft.nav.items[i].children[j], value));
-  }
-
-  function setNavChildHref(i, j, value) {
-    siteMutate(`edit:nav-child-href-${i}-${j}`, () => { siteDraft.nav.items[i].children[j].href = value; });
-  }
 
   function moveNavChild(i, j, dir) {
     const k = j + dir;
@@ -1231,25 +1220,13 @@
           <input type="text" class="field-filled" value={siteDraft.nav.announcement?.text ?? ''}
             onchange={(e) => setNavAnnouncement('text', e.target.value.trim() || undefined)} />
         </label>
-        <!-- A page from the register, or a free link with its own field -->
-        <label title={ta('tip.nav.announceLink')}>{ta('lbl.link')}
-          <Dropdown value={siteDraft.nav.announcement?.page ?? (siteDraft.nav.announcement?.href !== undefined ? 'custom' : '')}
-            options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.id, p.title]), ['custom', ta('opt.announceLink.custom')]]}
-            onchange={(v) => siteMutate('edit:nav-announce-link', () => {
-              const next = { ...(siteDraft.nav.announcement ?? {}) };
-              delete next.page; delete next.href;
-              clearLinkExtras(next);
-              if (v === 'custom') next.href = '';
-              else if (v) next.page = v;
-              siteDraft.nav.announcement = next;
-            })} /></label>
-        {#if siteDraft.nav.announcement?.href !== undefined && !siteDraft.nav.announcement?.page}
-          <label class="field-stack" title={ta('tip.nav.announceHref')}>
-            <span class="mini-label">{ta('lbl.announceHref')}</span>
-            <input type="text" class="field-filled" placeholder="https://" value={siteDraft.nav.announcement?.href ?? ''}
-              onchange={(e) => setNavAnnouncement('href', e.target.value.trim())} />
-          </label>
-        {/if}
+        <!-- The strip's link, set in the link editor -->
+        <LinkField scope="site" label={ta('lbl.link')} title={ta('tip.nav.announceLink')} value={linkOf(siteDraft.nav.announcement)}
+          onchange={(link) => siteMutate('nav-announce-link', () => {
+            const next = { ...(siteDraft.nav.announcement ?? {}) };
+            setLinkOn(next, link);
+            siteDraft.nav.announcement = next;
+          })} />
         <!-- Only where the strip can scroll away: a sticky bar in the flow -->
         {#if siteDraft.nav.sticky !== false && !floatingVariant && !sideVariant && !siteDraft.nav.overlay}
           <label class="gridmenu-snap" title={ta('tip.nav.announceSticky')}>
@@ -1355,14 +1332,8 @@
             {ta('lbl.showInMenu')}
           </label>
           {#if siteDraft.nav.cart?.show}
-            <label class="field-stack" title={ta('tip.cart.checkout')}>
-              <span class="mini-label">{ta('lbl.checkoutPage')}</span>
-              <Dropdown filled value={siteDraft.nav.cart?.href ?? ''}
-                options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
-                onchange={(v) => siteMutate('nav', () => {
-                  if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
-                })} />
-            </label>
+            <LinkField scope="site" label={ta('lbl.checkoutPage')} title={ta('tip.cart.checkout')} pagesOnly value={linkOf(siteDraft.nav.cart)}
+              onchange={(link) => siteMutate('nav', () => setLinkOn(siteDraft.nav.cart, link))} />
           {/if}
         </div>
         {:else}
@@ -1440,7 +1411,7 @@
              Open, the row is a card with a live tile: the preview is drawn as
              the menu will draw it, and it is itself the mark picker. -->
         {#each siteDraft.nav.launcher?.links ?? [] as link, i (i)}
-          {@const broken = !isSafeHref(link.href ?? '')}
+          {@const broken = resolveLink(link, siteDraft.pages).missing}
           <div class="lrow" class:open={launcherOpen === i}>
             <div class="lrow-head" role="button" tabindex="0"
               onclick={() => (launcherOpen = launcherOpen === i ? null : i)}
@@ -1476,13 +1447,8 @@
                   <input class="field-filled" value={link.label} title={ta('tip.nav.launcherLabel')}
                     placeholder={ta('lbl.text')}
                     onchange={(e) => setLauncherLink(i, 'label', e.target.value)} />
-                  <input class="field-filled" class:bad-target={broken}
-                    value={link.href ?? ''} placeholder={ta('ph.hrefAnchor')}
-                    title={broken ? ta('tip.badTarget') : ta('tip.hrefAnchor')}
-                    onchange={(e) => setLauncherLink(i, 'href', e.target.value)} />
-                  {#if broken}
-                    <span class="bad-target-note">{ta('ui.badTarget')}</span>
-                  {/if}
+                  <LinkField scope="site" value={linkOf(link)} title={ta('tip.link.field')} removable={false}
+                    onchange={(next) => siteMutate(`nav-launcher-link-${i}`, () => setLinkOn(siteDraft.nav.launcher.links[i], next))} />
                   <span class="lrow-actions">
                     <MarkPicker icon={link.icon ?? ''} image={link.image ?? ''} images={launcherImages()}
                       klass="linkish" label={ta('mp.pickMark')}
@@ -1589,16 +1555,10 @@
       <div class="nav-item-main">
         <input class="nav-item-name" value={item.label} title={ta('tip.nav.itemLabel')}
           oninput={(e) => setNavLabel(i, e.target.value)} />
+        <!-- The item's link; an item with a submenu may have none and is then the submenu's opener -->
         <div class="nav-item-target">
-          <Dropdown compact value={item.page ?? (item.href != null ? '__href' : '__none')} title={ta('tip.linkTarget')}
-            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')],
-              ...(item.children ? [['__none', ta('opt.noLink')]] : [])]}
-            onchange={(v) => setNavTarget(i, v)} />
-          {#if !item.page && item.href != null}
-            <input class="nav-item-href" value={item.href} placeholder={ta('ph.hrefAnchor')}
-              title={ta('tip.hrefAnchor')}
-              onchange={(e) => setNavHref(i, e.target.value)} />
-          {/if}
+          <LinkField scope="site" value={linkOf(item)} title={ta('tip.linkTarget')} removable={Boolean(item.children?.length)}
+            placeholder={item.children?.length ? ta('opt.noLink') : ''} onchange={(link) => setNavLink(i, null, link)} />
         </div>
       </div>
       {#if item.children?.length}<span class="nav-item-sub" title={ta('tip.nav.hasSubmenu')}>{@html SUB_ICON}</span>{/if}
@@ -1626,14 +1586,7 @@
           <input class="nav-item-name" value={child.label} title={ta('tip.nav.childLabel')}
             oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
           <div class="nav-item-target">
-            <Dropdown compact value={child.page ?? '__href'} title={ta('tip.linkTarget')}
-              options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
-              onchange={(v) => setNavChildTarget(i, j, v)} />
-            {#if !child.page}
-              <input class="nav-item-href" value={child.href ?? ''} placeholder={ta('ph.hrefAnchor')}
-                title={ta('tip.hrefAnchor')}
-                onchange={(e) => setNavChildHref(i, j, e.target.value)} />
-            {/if}
+            <LinkField scope="site" value={linkOf(child)} title={ta('tip.linkTarget')} removable={false} onchange={(link) => setNavLink(i, j, link)} />
           </div>
         </div>
         <span class="nav-actions">

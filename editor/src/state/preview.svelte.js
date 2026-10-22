@@ -18,6 +18,8 @@ import { pluginsState } from './plugins.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
 import { templatesState } from './templates.svelte.js';
+import { linkState } from './link.svelte.js';
+import { emailLike } from '../lib/link-edit.js';
 
 let iframeEl = $state(null);
 
@@ -181,6 +183,7 @@ function onIframeLoad() {
     onMenuArea: pageState.onMenuArea,
     onReady,
     onNavigate,
+    onLinkEdit,
     onAddBlock: (msg) => blocksState.insertBlock(msg.sectionId, msg.block),
     onAddBlocks: (msg) => blocksState.insertBlocks(msg.sectionId, msg.blocks, msg.minBottom, msg.moves),
     onRequestBlock: blocksState.handleRequestBlock,
@@ -250,6 +253,26 @@ function onNavigate(msg) {
   } else if (hash) {
     bridge?.sendScrollAnchor(hash);
   }
+}
+
+/**
+ * The text toolbar's link or Ctrl+K in the preview: the link editor opens on the link at the caret, and its answer goes back to the text.
+ * Selected words that are an email address or a phone number (eight to fifteen digits, spaces allowed, a + first) are offered as one.
+ * The link is an undo step of its own: the text's change it comes back as starts a new step.
+ */
+function onLinkEdit(msg) {
+  const words = typeof msg.text === 'string' ? msg.text.trim() : '';
+  const digits = words.replace(/\s/g, '');
+  const offered = msg.value ?? (emailLike(words) ? `mailto:${words}` : /^\+?\d{8,15}$/.test(digits) ? `tel:${digits}` : null);
+  linkState.openLink({
+    value: offered,
+    removable: Boolean(msg.value),
+    here: pageState.pageId,
+    apply: (link) => {
+      historyState.lastHistoryKey = null;
+      bridge?.sendLinkApply(link);
+    },
+  });
 }
 
 /** Plugin changes require a fresh boot in the preview (an import cannot be undone); onReady sends the new list. */

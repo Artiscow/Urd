@@ -81,7 +81,7 @@ function textOrPlaceholder(entry) {
   const node = el2('div', 'urd-text urd-collection-text');
   if (entry.text) {
     node.innerHTML = entry.text;
-    stripActiveContent(node);
+    stripActiveContent(node, pagesNow);
   } else {
     node.classList.add('urd-collection-placeholder');
     node.dataset.placeholder = ta('canvas.textPlaceholder');
@@ -117,7 +117,7 @@ function titleNode(entry) {
   const tag = link && !link.missing && !editCtx ? 'a' : 'strong';
   const node = el2(tag, 'urd-collection-title');
   node.innerHTML = entry.title;
-  stripActiveContent(node);
+  stripActiveContent(node, pagesNow);
   if (tag === 'a') {
     Object.assign(node, linkAttrs(link));
     return node;

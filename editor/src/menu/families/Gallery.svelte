@@ -14,11 +14,13 @@
   import { ta } from '$engine/i18n.js';
   import { ribbonReaches, ribbonReach } from '../options.js';
   import { ICONS } from '../../lib/icons.js';
+  import LinkField from '../../lib/LinkField.svelte';
+  import { linkOf } from '../../lib/link-edit.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { setBlockProp, setBlockProps, setBlockFrame, addGalleryImages, moveGalleryImage, removeGalleryImage, setGalleryImageField, themeSwatches, newSeed } = ed;
+  const { setBlockProp, setBlockProps, setBlockFrame, addGalleryImages, moveGalleryImage, removeGalleryImage, setGalleryImageField, setGalleryImageLink, themeSwatches, newSeed } = ed;
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 </script>
@@ -43,9 +45,7 @@
         <label>{ta('lbl.description')}
           <input value={img.alt ?? ''} placeholder={ta('ph.altShort')}
             onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
-        <label>{ta('lbl.link')}
-          <input value={img.href ?? ''} placeholder={ta('ph.galleryHref')}
-            onchange={(e) => setGalleryImageField(i, 'href', e.target.value || null)} /></label>
+        <LinkField label={ta('lbl.link')} value={linkOf(img)} placeholder={ta('ph.galleryHref')} onchange={(link) => setGalleryImageLink(i, link)} />
       </div>
     {/each}
   {/snippet}

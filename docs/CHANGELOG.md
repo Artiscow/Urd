@@ -28,6 +28,19 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.27.4-6 - One link editor for every link: the block menus, the site panels and the words of a text - 22 October 2026
+
+- About fifteen link fields were a page dropdown beside a typed address, each with its own rules, and none offered a spot on a page. Every link opens the same link editor (`LinkDialog.svelte`, through `LinkField.svelte`): Page, Web address, Email or Phone; a page is searched and then a spot on it chosen (the top, each section by number and first words, each named block; `pageSpots`); «Open in a new tab» for pages and the web, and nofollow and sponsored for the web.
+- The button (with its quick tile), the image, the gallery pictures, the cart (pages only), the calendar announcement and the links block use it, and so do the menu's items and submenu items, the announcement bar, the launcher, the menu's cart, the footer's columns, bottom line, link row and call to action, the site's links and collection entries.
+- An old typed link such as `/kaker#sec-…` or `#priser` opens with its page and spot chosen (`readLink` in `link-edit.js`).
+- A text link was typed into an address row of the text toolbar. The toolbar's link and Ctrl+K open the link editor over the editor, Ctrl+Shift+K removes the link, and selected words that are an email address or a phone number are offered as one.
+- A text link to a page broke when the page's address changed. It carries the page and the spot (`data-urd-page`, `data-urd-target`), and the render gives it the page's address now.
+- Rich text kept a stored `data:` or `vbscript:` link, since only `javascript:` was stripped; all three are stripped at render.
+- A section or block template's links to its own spots pointed at the ids the template had; they follow the new ids on insert, in rich text too.
+- The collection CSV export wrote no address for an entry that links a page; it writes the page's address.
+- The old address inputs and their «#anchor» hints are gone, with 14 dictionary keys nothing reads any more.
+- BACKLOG: stages 4 to 6 delivered; the maps: C124 delivered in part (the file from `media/` with 0.7.27.9).
+
 ### 0.7.27.1-3 - Named spots on a page, a jump that lands under the menu, and one link shape for every link - 22 October 2026
 
 - A link to a spot on another page landed at the top, since the page is drawn after the browser looks for the fragment. urd.js jumps there after the first render and on prerender activation, never on a return through the history or a reload (`jumpOnArrival`).

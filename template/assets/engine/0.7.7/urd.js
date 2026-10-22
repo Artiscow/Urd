@@ -514,6 +514,9 @@ function enablePreview(state, opts) {
       // The attention badge in the top bar: scroll to the section that needs review, so the badge points at a place and not just a mode.
       // The badge also switches the view to the phone, whose layout settles over the next frames (blocks measure their heights), so the jump settles.
       jumpTo(msg.sectionId);
+    } else if (msg?.type === 'urd-link-apply') {
+      // The link editor's answer for the text being edited: written on the selection the text toolbar kept.
+      window.UrdPreviewEdit?.applyTextLink(msg.link ?? null, state.site.pages ?? []);
     } else if (msg?.type === 'urd-scroll-anchor' && typeof msg.hash === 'string') {
       // A link in the preview to a spot on a page: the editor sends it once the page the link names stands, and the preview jumps there as the published page does on arrival.
       jumpTo(hashTarget(msg.hash));

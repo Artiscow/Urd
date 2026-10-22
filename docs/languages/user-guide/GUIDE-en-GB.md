@@ -243,17 +243,39 @@ the spot a name: for a section in its **Properties** under **Link name**, for
 a block in its menu under **Placement**, in the **Link target** group. Type
 the name in your own words: «Priser» is written as `priser`, and the button
 below the field offers a name made from the spot's first heading. A name
-another spot on the page already has is refused with a note. The copy button
-beside the field copies the link within the site, for example `/kaker#priser`,
-ready to paste into a menu item, a footer column or a button. A spot without
-a name can still be linked to by its own id, which the copy button then uses.
+another spot on the page already has is refused with a note. To link to the
+spot, choose its page and then the spot in any link field (see Links below).
+The copy button beside the name copies the link within the site, for example
+`/kaker#priser`, for sharing. A spot without a name can still be linked to:
+the link editor lists every section by its number and first words.
 
 The link lands with the spot right below the menu, from the same page and
 from any other. On the same page it scrolls there smoothly, unless the visitor
-has asked for less motion. A
-block hidden on phones lands on the top of its section there. A copied or
-duplicated block arrives without its name, and a template whose name the
-page already has gets a number after it (`priser-2`).
+has asked for less motion. A block hidden on phones lands on the top of its
+section there. A copied or duplicated block arrives without its name, and a
+template whose name the page already has gets a number after it (`priser-2`).
+
+### Links
+
+Every link in the editor is set in the same window: a button's **Goes to**, an
+image's or a gallery picture's link, the basket's checkout page, the calendar
+announcement's link, the menu's items, the footer's links and call to action,
+the site's links, a collection entry's link, and words in a text. Click the
+link field (in a text, select the words and press the link button or Ctrl+K;
+Ctrl+Shift+K takes the link away). Under **Goes to** choose:
+
+- **Page**: search the pages and pick one, then, if you like, **A spot on the
+  page**: the top, a section by its number and first words, or a block that
+  has a link name.
+- **Web address**: a full address; `www.example.org` gets `https://` in front.
+- **Email**: the address, and a subject if you want one.
+- **Phone**: the number.
+
+**Open in a new tab** works for pages and web addresses, and a web address can
+also be marked **Ask search engines not to follow it** or **Paid or sponsored
+link**. Selected words that are an email address or a phone number are offered
+as one. A link to a page keeps working when the page's address changes or its
+spot is renamed.
 
 ## Grid (guide lines)
 

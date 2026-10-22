@@ -1,15 +1,26 @@
+import { resolveLink } from './nav-model.js';
+
 /**
  * Shared visitor-side protection for rich text (text blocks and collection entries): pasted or stored HTML can carry event attributes or active elements, and legitimate formatting never needs either.
- * The owner is trusted for MARKUP; executable code is always stripped at render.
+ * The owner is trusted for MARKUP; executable code is always stripped at render, an address that would run code included.
+ * With the page register a link to a page or a spot on it (data-urd-page, data-urd-target, written by the link editor) gets the address the page has now, so a change of the page's address never breaks it.
+ * @param {Element} root
+ * @param {Array<{id: string, path: string}>} [pages]
  */
-export function stripActiveContent(root) {
+export function stripActiveContent(root, pages = null) {
   for (const el of root.querySelectorAll('*')) {
     for (const attr of [...el.attributes]) {
       if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
     }
-    if (/^\s*javascript:/i.test(el.getAttribute?.('href') ?? '')) el.removeAttribute('href');
+    // Read as the URL parser reads it: tabs, newlines and control characters inside the scheme are dropped there, so they are dropped for the check too.
+    const href = (el.getAttribute?.('href') ?? '').replace(/[\u0000-\u0020\u007f]/g, '');
+    if (/^(?:javascript|data|vbscript):/i.test(href)) el.removeAttribute('href');
   }
   root.querySelectorAll('script, iframe, object, embed').forEach((n) => n.remove());
+  if (!pages) return;
+  for (const a of root.querySelectorAll('a[data-urd-page], a[data-urd-target]')) {
+    a.setAttribute('href', resolveLink({ page: a.dataset.urdPage, target: a.dataset.urdTarget }, pages).href);
+  }
 }
 
 const KEPT_TAGS = new Set(['P', 'BR', 'UL', 'OL', 'LI', 'B', 'STRONG', 'I', 'EM', 'U', 'BLOCKQUOTE', 'A']);

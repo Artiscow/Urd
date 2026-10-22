@@ -2,6 +2,23 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.27.4-6): one link editor for every link
+
+- [ ] A button's «Goes to», and its tile in the quick row, open the link window; «Goes to» offers Page, Web address, Email and Phone; searching «kak» shows Kaker, and choosing Kaker lists «A spot on the page»: the top, «Section 1 · …», «Section 2 · Video #video» and the named block; «Use this link» stores it, and the field shows «Kaker › #video»
+- [ ] The published button goes to Kaker at the video section, also after Kaker's address is changed in the Pages panel
+- [ ] Image: a Phone link (+47 900 00 000) makes the picture call; with a link the «Full screen on click (lightbox)» switch is hidden; a gallery picture gets an Email link with a subject
+- [ ] Cart block and the menu's cart: the window shows pages only; the drawer's «Go to checkout» goes there
+- [ ] Calendar announcement, Links block, Site panel's links: the same window; a Links block's or a site link's page link is kept as the page's address
+- [ ] Nav panel: a menu item, a submenu item, a launcher shortcut and the announcement bar each open the window; an item with a submenu can have no link («No link (only opens the submenu)») and opens its submenu, an item without one offers no «Remove the link»
+- [ ] Footer panel: the column links, the bottom line, the link row and the call to action open the window; «Kakevideoen» (typed `/kaker#sec-…`) shows «Kaker › #video» and opens with Kaker and the video section chosen
+- [ ] Collections panel: an entry's link opens the window; the published entry title goes there; «Export CSV» writes a page link as the page's address
+- [ ] «Open in a new tab» opens the published link in a new tab; «Ask search engines not to follow it» and «Paid or sponsored link» show only for a web address and put rel="nofollow" / rel="sponsored" on it
+- [ ] A web address typed as `www.example.org` is stored as `https://www.example.org`; `javascript:…` is refused (the «Use this link» button stays off)
+- [ ] Text: select words and press the toolbar's link button or Ctrl+K; the window opens over the editor; choosing «Om oss» makes the words a link that works on the published page and still after Om oss changes address; Ctrl+K on a link edits it; Ctrl+Shift+K takes it away
+- [ ] Text: selected `post@apeiron.no` opens on Email with the address filled in, and a selected phone number on Phone
+- [ ] Escape, the cross and a click beside the window close it without a change; Enter in a field uses the link
+- [ ] A section template with a button linking to its own heading, inserted twice, links each copy to its own heading
+
 ### Test batch (0.7.27.1-3): named spots on a page, the jump under the menu, and one link shape
 
 - [ ] Published, a new tab: `/kaker#video`, `/kaker#sec-4c908354`, `/kaker#meld-deg-inn` and `/kaker#blk-b35fc0b9` each land with the spot's top right under the menu once the page has loaded, and the address shows `#video` or `#meld-deg-inn`

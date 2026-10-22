@@ -11339,21 +11339,7 @@ textarea.urd-form-input {
   font: 12px/1 system-ui, sans-serif;
 }
 
-/* Inline link field (its own sub-row in the bar while the link button is active) */
-.urd-tt-linkrow {
-  display: none;
-  gap: 4px;
-  align-items: center;
-  padding-top: 4px;
-  margin-top: 2px;
-  border-top: 1px solid rgb(255 255 255 / 14%);
-}
-
-.urd-tt-linkrow.visible {
-  display: flex;
-}
-
-/* The color row (the dropdown behind the palette icon): its own sub-row, like the link field */
+/* The color row (the dropdown behind the palette icon): its own sub-row in the bar */
 .urd-tt-colorrow {
   display: none;
   gap: 2px;
@@ -11441,26 +11427,6 @@ textarea.urd-form-input {
   padding: 1px 3px 2px;
   border-bottom: 3px solid transparent;
   border-image: linear-gradient(to right, #e05252, #e2b84a, #4ac26b, #4a90e2, #a45ce2) 1;
-}
-
-.urd-tt-linkrow input {
-  flex: 1;
-  font: 12px/1.3 system-ui, sans-serif;
-  color: #e8eaf0;
-  background: rgb(255 255 255 / 6%);
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 5px;
-  padding: 4px 6px;
-  min-width: 0;
-}
-
-.urd-tt-linkrow button {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  font-size: 11px;
-  padding: 4px 8px;
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 5px;
 }
 
 .urd-text-toolbar.visible {

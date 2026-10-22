@@ -9,7 +9,8 @@
   import { siteContact, contactParts, legalParts } from '$engine/contact-model.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
-  import { pointLink } from '../lib/link-edit.js';
+  import LinkField from '../lib/LinkField.svelte';
+  import { linkOf, setLinkOn } from '../lib/link-edit.js';
   const ed = getContext('urd-editor');
   const pageId = $derived(ed.pageId);
   const siteDraft = $derived(ed.siteDraft);
@@ -217,12 +218,9 @@
     footerMutate(`edit:footer-${field}-label-${i}`, (f) => { f[field][i].label = value; });
   }
 
-  function setFooterListLinkTarget(field, i, value) {
-    footerMutate('footer', (f) => pointLink(f[field][i], value));
-  }
-
-  function setFooterListLinkHref(field, i, value) {
-    footerMutate(`edit:footer-${field}-href-${i}`, (f) => { f[field][i].href = value; });
+  /** A bottom-line or link-row link from the link editor. */
+  function setFooterListLink(field, i, link) {
+    footerMutate('footer', (f) => setLinkOn(f[field][i], link));
   }
 
   /** Column alignment: the heading of a wide (two-part) column. */
@@ -243,10 +241,11 @@
     });
   }
 
-  function setFooterCtaTarget(value) {
+  /** The call to action's link from the link editor. */
+  function setFooterCtaLink(link) {
     footerMutate('footer', (f) => {
       f.cta ??= {};
-      pointLink(f.cta, value);
+      setLinkOn(f.cta, link);
     });
   }
 
@@ -306,12 +305,9 @@
     footerMutate(`edit:footer-link-label-${ci}-${li}`, (f) => { f.columns[ci].links[li].label = value; });
   }
 
-  function setFooterLinkTarget(ci, li, value) {
-    footerMutate('footer', (f) => pointLink(f.columns[ci].links[li], value));
-  }
-
-  function setFooterLinkHref(ci, li, value) {
-    footerMutate(`edit:footer-link-href-${ci}-${li}`, (f) => { f.columns[ci].links[li].href = value; });
+  /** A column link from the link editor. */
+  function setFooterLink(ci, li, link) {
+    footerMutate('footer', (f) => setLinkOn(f.columns[ci].links[li], link));
   }
 
 </script>
@@ -417,15 +413,8 @@
                 onclick={() => removeFooterLink(ci, li)}>{@html ICONS.cross}</button>
             </span>
             <span class="nav-target">
-              <Dropdown value={link.page ?? '__href'} title={ta('tip.linkTarget')}
-                options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
-                onchange={(v) => setFooterLinkTarget(ci, li, v)} />
+              <LinkField scope="site" removable={false} value={linkOf(link)} title={ta('tip.linkTarget')} onchange={(next) => setFooterLink(ci, li, next)} />
             </span>
-            {#if !link.page}
-              <input class="nav-target" value={link.href ?? ''} placeholder={ta('ph.hrefAnchor')}
-                title={ta('tip.hrefAnchor')}
-                onchange={(e) => setFooterLinkHref(ci, li, e.target.value)} />
-            {/if}
           </div>
         {/each}
       {/each}
@@ -501,15 +490,7 @@
           <input value={cta.label ?? ''} placeholder={ta('ph.footer.ctaLabel')}
             oninput={(e) => setFooterCtaField('label', e.target.value)} /></label>
         {#if (cta.kind ?? 'button') === 'button'}
-          <label title={ta('tip.footer.ctaTarget')}>{ta('lbl.buttonTarget')}
-            <Dropdown value={cta.page ?? '__href'}
-              options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHrefMailto')]]}
-              onchange={(v) => setFooterCtaTarget(v)} /></label>
-          {#if !cta.page}
-            <input value={cta.href ?? ''} placeholder={ta('ph.hrefMailtoAnchor')}
-              title={ta('tip.hrefAnchor')}
-              onchange={(e) => setFooterCtaField('href', e.target.value)} />
-          {/if}
+          <LinkField scope="site" removable={false} label={ta('lbl.buttonTarget')} title={ta('tip.footer.ctaTarget')} value={linkOf(cta)} onchange={setFooterCtaLink} />
         {:else}
           <label title={ta('tip.footer.ctaEndpoint')}>{ta('lbl.newsletterEndpoint')}
             <input value={cta.endpoint ?? ''} placeholder={ta('ph.endpoint')}
@@ -574,15 +555,8 @@
           onclick={() => removeFooterListLink(field, li)}>{@html ICONS.cross}</button>
       </span>
       <span class="nav-target">
-        <Dropdown value={link.page ?? '__href'} title={ta('tip.linkTarget')}
-          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
-          onchange={(v) => setFooterListLinkTarget(field, li, v)} />
+        <LinkField scope="site" removable={false} value={linkOf(link)} title={ta('tip.linkTarget')} onchange={(next) => setFooterListLink(field, li, next)} />
       </span>
-      {#if !link.page}
-        <input class="nav-target" value={link.href ?? ''} placeholder={ta('ph.hrefAnchor')}
-          title={ta('tip.hrefAnchor')}
-          onchange={(e) => setFooterListLinkHref(field, li, e.target.value)} />
-      {/if}
     </div>
   {/each}
 {/snippet}

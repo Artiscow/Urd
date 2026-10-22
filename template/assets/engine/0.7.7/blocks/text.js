@@ -52,7 +52,7 @@ export const textBlock = {
     // render (and stored clean on the next edit).
     content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button').forEach((n) => n.remove());
     // Visitor protection (shared with collection entries): executable code is always stripped on render.
-    stripActiveContent(content);
+    stripActiveContent(content, ctx.site?.pages ?? []);
     el.appendChild(content);
 
     // Click-and-type: in preview mode (inside the editor's iframe) the text is
