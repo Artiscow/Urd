@@ -36,6 +36,12 @@
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
     "version": { "type": "integer", "minimum": 1 },
+    "anchorName": {
+      "type": "string",
+      "maxLength": 40,
+      "pattern": "^(?!(?:urd|sec|blk)-)[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$",
+      "description": "A name a link can point at (/kaker#priser, additive from 0.7.27.2): lower-case letters, digits and inner hyphens, at most 40 characters, never starting urd-, sec- or blk- (the engine's own ids). Unique on the page across sections, blocks and form inputs (checked by validate.mjs and the editor). A name that breaks the rule is ignored by the renderer."
+    },
     "dividerEdge": {
       "type": "object",
       "required": ["shape"],
@@ -55,6 +61,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "version": { "$ref": "#/$defs/version" },
+        "anchor": { "$ref": "#/$defs/anchorName", "description": "The section's name for links, drawn as a marker at its top; the section's id stays a target of its own, so a link made with #sec-… keeps working" },
         "preset": {
           "type": ["string", "null"],
           "description": "The preset the section was created from - provenance only, controls nothing"
@@ -159,6 +166,7 @@
         "version": { "$ref": "#/$defs/version" },
         "decor": { "type": "boolean", "default": false, "description": "Decor block: excluded from the entrance animation's content wave. From schemaVersion 2 (ADR-0019) the field controls ONLY animation; the mobile hiding lives in hideMobile." },
         "hideMobile": { "type": "boolean", "default": false, "description": "Hide the block on mobile (additive field from v0.7, ADR-0019). Supersedes decor as the mobile filter and applies throughout the mobile render path." },
+        "anchor": { "$ref": "#/$defs/anchorName", "description": "The block's name for links, drawn as a marker at the block's top that moves with it; the block's id is a target too. On a phone a block hidden there (hideMobile) lands on its section's top. A pasted or duplicated block arrives without it" },
         "mobileOrder": { "type": "number", "description": "Overrides the sort key in the mobile reading order (interpreted on the same scale as desktop y). Additive field from v0.5: the section templates use it to keep cards together." },
         "sticky": {
           "description": "Pin on scroll (additive field from v0.6, desktop only): the block is pinned at the top of the viewport and released when its own section (until: null) or a later section (until: section id) has been passed. With mode 'screen' the block instead docks to a fixed point in the viewport for the whole page",

@@ -126,7 +126,7 @@ valg i stedet for dra-og-slipp:
   Bilde: bytt bilde, beskrivelse, beskjæring, avrunding og lenke.
   Form: type, farge fra temaet, tykkelse og fylt/kantlinje.
 - Klikker du i en seksjon (uten blokk valgt) viser panelet seksjonens
-  minstehøyde, eget grid, bakgrunn og animasjon.
+  minstehøyde, eget grid, seksjonstema, lenkenavn, bakgrunn, kantformer og animasjon.
 
 **Elementmenyen**: tannhjulet på blokkens verktøylinje åpner de samme innstillingene
 ved siden av blokken. De står i tre områder, Innhold, Stil og Plassering, som
@@ -227,11 +227,31 @@ Verktøylinjen oppe til høyre i en seksjon (vises når du peker på den):
 - ↑ / ↓ flytt seksjonen opp eller ned på siden
 - ⤓ tilpass høyden til innholdet
 - × slett seksjonen
+- En seksjon med navn viser navnet (`#priser`) først i verktøylinjen
 
 Du kan også dra i seksjonens nederkant for å justere høyden fritt, eller
 dra rett i «+ Ny seksjon»-knappen på grensen mellom to seksjoner (klikk
 åpner fortsatt menyen; dra flytter grensen). Blokker kan bevisst henge
 utover seksjonskanten; ingenting klippes.
+
+### Lenke til et sted på en side
+
+En lenke kan lande på en seksjon eller en blokk i stedet for øverst på siden.
+Gi stedet et navn: for en seksjon i **Egenskaper** under **Lenkenavn**, for en
+blokk i menyen under **Plassering**, i gruppen **Lenkemål**. Skriv navnet med
+dine egne ord: «Priser» blir skrevet som `priser`, og knappen under feltet
+foreslår et navn laget av stedets første overskrift. Et navn et annet sted på
+siden allerede har, blir avvist med en merknad. Kopier-knappen ved siden av
+feltet kopierer lenken innenfor nettstedet, for eksempel `/kaker#priser`, klar
+til å limes inn i et menypunkt, en footer-kolonne eller en knapp. Et sted uten
+navn kan fortsatt lenkes til med sin egen id, som kopier-knappen da bruker.
+
+Lenken lander med stedet rett under menyen, fra samme side og fra alle andre.
+På samme side ruller den dit mykt, med mindre den besøkende har bedt om mindre
+bevegelse. En blokk som
+er skjult på mobil, lander øverst i seksjonen sin der. En kopiert eller
+duplisert blokk kommer uten navnet sitt, og en mal med et navn siden allerede
+har, får et tall bak (`priser-2`).
 
 ## Grid (hjelpelinjer)
 

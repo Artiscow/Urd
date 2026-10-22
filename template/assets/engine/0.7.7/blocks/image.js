@@ -9,7 +9,7 @@
  * both render AND the floating image editor, so the two can never drift apart.
  */
 
-import { isSafeHref } from '../nav-model.js';
+import { resolveLink, linkAttrs } from '../nav-model.js';
 import { ta } from '../i18n.js';
 
 /** Applies the non-destructive image style to the frame and the image.
@@ -84,11 +84,12 @@ export const imageBlock = {
     frame.appendChild(img);
     applyImageStyle(frame, props);
 
-    // Shared guard (nav/footer plus internal paths/anchors): an unsafe href is treated as if the link were not there.
-    const safeHref = props.href && isSafeHref(props.href) ? props.href : null;
-    if (safeHref && !ctx.preview) {
+    // One link (resolveLink): a page, a spot on it, or an address through the shared safe-URL gate; one that goes nowhere is treated as if it were not there.
+    const resolved = props.page || props.href || props.target ? resolveLink(props, ctx.site?.pages ?? []) : null;
+    const linked = resolved && !resolved.missing ? resolved : null;
+    if (linked && !ctx.preview) {
       const a = document.createElement('a');
-      a.href = safeHref;
+      Object.assign(a, linkAttrs(linked));
       a.appendChild(frame);
       el.appendChild(a);
     } else {
@@ -97,7 +98,7 @@ export const imageBlock = {
 
     // Full screen on click: always for visitors when the field is on; in preview
     // only in clean view (otherwise editing owns the click). A link wins.
-    if (props.lightbox && !safeHref) {
+    if (props.lightbox && !linked) {
       frame.classList.add('urd-lightbox-able');
       frame.addEventListener('click', async () => {
         if (ctx.preview && !document.body.classList.contains('urd-chrome-off')) return;

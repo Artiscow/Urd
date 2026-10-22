@@ -10,12 +10,15 @@
  */
 import { getCollection, sortEntries, groupByYear, dateBadge } from '../collections.js';
 import { stripActiveContent } from '../sanitize.js';
-import { isSafeHref } from '../nav-model.js';
+import { resolveLink, linkAttrs } from '../nav-model.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
 
 /** Editing context while a collection renders in preview: {collection}, or null (visitors). */
 let editCtx = null;
+
+/** The page register of the render running now, for an entry that links a page. */
+let pagesNow = [];
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
@@ -109,13 +112,14 @@ const el2 = (tag, className, textContent) => {
 /** Title: rich text (a safe HTML subset) with the full text editor in preview (the urd-text class
  *  gives the floating bar). With a link it renders as an anchor for visitors; in the editor the text is edited. */
 function titleNode(entry) {
-  // Shared guard (nav/footer plus internal paths and anchors): an unsafe href gives a title without a link.
-  const tag = entry.href && isSafeHref(entry.href) && !editCtx ? 'a' : 'strong';
+  // One link (resolveLink): a page, a spot on it, or an address through the shared safe-URL gate; one that goes nowhere gives a title without a link.
+  const link = entry.page || entry.href || entry.target ? resolveLink(entry, pagesNow) : null;
+  const tag = link && !link.missing && !editCtx ? 'a' : 'strong';
   const node = el2(tag, 'urd-collection-title');
   node.innerHTML = entry.title;
   stripActiveContent(node);
   if (tag === 'a') {
-    node.href = entry.href;
+    Object.assign(node, linkAttrs(link));
     return node;
   }
   node.classList.add('urd-text');
@@ -279,12 +283,13 @@ export const collectionBlock = {
       }
       const view = VIEWS[props.view] ?? renderCards;
       editCtx = ctx.preview && ctx.viewport !== 'mobile' ? { collection: props.collection } : null;
-      // finally: if the view throws, the module global would otherwise stay set
-      // and leak this collection's editing context into the next block rendered.
+      pagesNow = ctx.site?.pages ?? [];
+      // finally: the module globals are reset even when the view throws, so this collection's context never reaches the next block rendered.
       try {
         view(host, entries);
       } finally {
         editCtx = null;
+        pagesNow = [];
       }
 
       // The help chip (ADR-0008): the block has special functions and explains itself.

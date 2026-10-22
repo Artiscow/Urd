@@ -6,6 +6,7 @@ import { slugify, contentHash, mediaExtension } from '$engine/imageTools.js';
 import { ta, taApiError } from '$engine/i18n.js';
 import { liftPageFile } from '$engine/migrate.js';
 import { buildThemeCss } from '$engine/theme.js';
+import { resolveLink } from '$engine/nav-model.js';
 import { FEED_KINDS, buildRssXml, buildSitemapXml, buildRobotsTxt } from '$engine/feeds.js';
 import { createDraftStore } from '../lib/draftStore.js';
 import {
@@ -277,9 +278,12 @@ async function publish() {
             title: out.name ?? id,
             origin: location.origin,
             path: `/content/samlinger/${id}.xml`,
-            items: out.entries.map((e) => ({
-              id: e.id, title: collectionsState.plainTitle(e.title), text: collectionsState.plainTitle(e.text), date: e.date, href: e.href,
-            })),
+            // An entry's link as the page draws it (resolveLink): a page, a spot on it or an address; one that goes nowhere gives the feed's own link.
+            items: out.entries.map((e) => {
+              // A spot without a page belongs to the page the block stands on, which a feed does not know: such an entry links the feed's own address.
+              const link = e.page || e.href ? resolveLink(e, siteState.siteDraft.pages ?? []) : null;
+              return { id: e.id, title: collectionsState.plainTitle(e.title), text: collectionsState.plainTitle(e.text), date: e.date, href: link && !link.missing ? link.href : undefined };
+            }),
           }),
           encoding: 'utf-8',
         });

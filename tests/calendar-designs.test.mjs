@@ -10,7 +10,7 @@ import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
-  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
+  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, calNoticeHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
   CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign, CAL_FAMILIES, calDesignFamilies,
   CAL_SHARED_OPTIONS, calThemeKey, calThemeTexts, calRewrites, CAL_PHONE_DESIGNS, calPhoneDesignDef, calPhoneFamilies, calPhoneView, calPhoneCandidates, CAL_CARD_DESIGNS, calCardDesignDef, calCardFamilies, calCardDesign, calCardCandidates, calCardDress,
@@ -616,3 +616,19 @@ test('calOptionShown: an option with a `when` shows only while the design\'s oth
   assert.equal(calOptionShown(pause, calOptions({ design: 'band', options: { roll: false } })), false);
   assert.equal(calOptionShown({ key: 'x' }, {}), true);
 });
+
+test('calProgramHref and calNoticeHref: the shared safe-URL gate, and the notice as one link (0.7.27.3)', () => {
+  const program = (href) => calProgramHref({ design: 'posters', programHref: href });
+  assert.equal(program('/program'), '/program');
+  assert.equal(program('tel:+4790000000'), 'tel:+4790000000');
+  assert.equal(program('/\\evil.no'), null, 'a backslash path the browser would read as another host');
+  assert.equal(program('/side med mellomrom'), null);
+  const pages = [{ id: 'kaker', path: '/kaker' }];
+  assert.equal(calNoticeHref({ notice: { show: true, href: 'https://x.no' } }, pages), 'https://x.no');
+  assert.equal(calNoticeHref({ notice: { show: true, page: 'kaker', target: 'priser' } }, pages), '/kaker#priser');
+  assert.equal(calNoticeHref({ notice: { show: true, href: '/\\evil.no' } }, pages), '');
+  assert.equal(calNoticeHref({ notice: { show: true, page: 'borte' } }, pages), '');
+  assert.equal(calNoticeHref({ notice: { show: true } }, pages), '');
+  assert.equal(calNoticeHref({}, pages), '');
+});
+

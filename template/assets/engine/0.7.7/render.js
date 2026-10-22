@@ -20,6 +20,7 @@ import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
 import { refreshSticky } from './sticky.js';
 import { t } from './i18n.js';
+import { isAnchorName } from './nav-model.js';
 
 /**
  * Draws the background layers (color/gradient/glow/grain/image/slideshow)
@@ -350,7 +351,7 @@ function applyZoom(child, zoom) {
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
-const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-cal-note, .urd-block-ruler, dialog';
+const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-cal-note, .urd-block-ruler, dialog';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -776,6 +777,47 @@ export function renderPage(page, site, root, opts = {}) {
 }
 
 /**
+ * The spots of a section a link can land on, beyond the section's own id: the section's name, each drawn block's name, and on a phone the ids and names of the blocks hidden there, which land on the section's top instead.
+ * Each spot names the section or block it stands for (`of`).
+ * Names that do not follow the naming rule are left out.
+ * @param {object} section
+ * @param {'desktop'|'mobile'} viewport
+ * @returns {{section: Array<{id: string, of: string}>, blocks: Map<string, Array<{id: string, of: string}>>}} The spots drawn at the section's top, and the names per drawn block
+ */
+export function anchorTargets(section, viewport) {
+  const top = isAnchorName(section.anchor) ? [{ id: section.anchor, of: section.id }] : [];
+  const blocks = new Map();
+  for (const block of section.blocks ?? []) {
+    if (typeof block.id !== 'string' || !block.id) continue;
+    const names = isAnchorName(block.anchor) ? [{ id: block.anchor, of: block.id }] : [];
+    if (viewport === 'mobile' && block.hideMobile) top.push({ id: block.id, of: block.id }, ...names);
+    else blocks.set(block.id, names);
+  }
+  return { section: top, blocks };
+}
+
+/**
+ * Draws a spot a link can land on as a zero-size marker at the top of `host`; a name records the section or block it names (data-spot), so urd.js can show the name in the address.
+ * An id already on the page is left where it is, so the first spot to claim a name keeps it.
+ * @param {HTMLElement} host
+ * @param {{id: string, of: string}} spot
+ */
+function placeSpot(host, { id, of }) {
+  if (document.getElementById(id)) return;
+  const marker = document.createElement('span');
+  marker.className = 'urd-anchor';
+  marker.id = id;
+  if (of !== id) marker.dataset.spot = of;
+  host.appendChild(marker);
+}
+
+/** A drawn block carries its stable id, and its name as a marker at its top that moves with it. */
+function placeBlockSpots(el, block, names = []) {
+  if (!document.getElementById(block.id)) el.id = block.id;
+  for (const spot of names) placeSpot(el, spot);
+}
+
+/**
  * Renders (or rerenders) a single section - the basis for incremental preview.
  *
  * @param {object} section Section data
@@ -791,9 +833,10 @@ export function renderSection(section, site, host, opts = {}) {
 
   host.className = 'urd-section';
   host.dataset.sectionId = section.id;
-  // The DOM id makes the section an anchor target (#<section-id> from footer
-  // columns, menu items and block links); smooth anchor scroll comes from base.css.
+  // The DOM id makes the section a spot a link lands on by its id (#<section-id>); a name, when it has one, is a marker drawn further down.
+  // The jump itself is shaped by base.css and followed by urd.js.
   if (typeof section.id === 'string' && section.id) host.id = section.id;
+  const spots = anchorTargets(section, viewport);
   // Ready-made section theme (role set, additive field): overrides the section's
   // color tokens on host, the blocks inherit them. Resets on Standard/absence.
   applySectionTheme(host, section.theme);
@@ -843,6 +886,8 @@ export function renderSection(section, site, host, opts = {}) {
     // row tracks, and the minmax rows let the content grow without JS.
     const flow = document.createElement('div');
     flow.className = 'urd-flow';
+    // On the page before its blocks are drawn, so a spot's id is checked against the section's own blocks too.
+    canvas.appendChild(flow);
     for (const block of stackOrder(section.blocks)) {
       const el = document.createElement('div');
       const pinned = Number.isFinite(block.frames.mobile?.row);
@@ -883,8 +928,8 @@ export function renderSection(section, site, host, opts = {}) {
       const sized = drawnScale(block) !== 1 ? contentChild(el) : null;
       if (sized) applyZoom(sized, drawnScale(block));
       flow.appendChild(el);
+      if (typeof block.id === 'string' && block.id) placeBlockSpots(el, block, spots.blocks.get(block.id));
     }
-    canvas.appendChild(flow);
     host.style.minHeight = 'auto';
   } else {
     // Desktop: absolute positioning from desktop frames.
@@ -929,6 +974,7 @@ export function renderSection(section, site, host, opts = {}) {
       maxBottomPx = Math.max(maxBottomPx, frame.y + frame.h);
       renderBlock(Urd, el, block, ctx);
       canvas.appendChild(el);
+      if (typeof block.id === 'string' && block.id) placeBlockSpots(el, block, spots.blocks.get(block.id));
     }
 
     // The section height belongs to the user: blocks may deliberately hang
@@ -939,6 +985,9 @@ export function renderSection(section, site, host, opts = {}) {
     host.dataset.urdMinHeight = host.style.minHeight;
     wirePush(host, section, ctx.preview);
   }
+
+  // The section's name, and on a phone the blocks hidden there, land on the section's top.
+  for (const spot of spots.section) placeSpot(host, spot);
 
   // Optional section animation (additive field). The entrance animation
   // (animation) and the pointer effect (hover, additive field) are

@@ -128,7 +128,7 @@ choices instead of drag and drop:
   Image: change image, description, cropping, rounding and link.
   Shape: type, colour from the theme, thickness and filled/outline.
 - If you click in a section (with no block selected) the panel shows the section's
-  minimum height, own grid, background and animation.
+  minimum height, own grid, section theme, link name, background, edge shapes and animation.
 
 **The element menu**: the gear on a block's toolbar opens the same settings beside
 the block. They stand in three areas, Content, Style and Placement, as columns in
@@ -229,11 +229,31 @@ The toolbar in the top right of a section (shown when you point at it):
 - ↑ / ↓ move the section up or down the page
 - ⤓ fit the height to the content
 - × delete the section
+- A named section shows its name (`#priser`) at the start of the toolbar
 
 You can also drag the bottom edge of the section to adjust the height freely, or
 drag directly on the **+ New section** button on the border between two sections (a click
 still opens the menu; dragging moves the border). Blocks can deliberately hang
 over the section edge; nothing is clipped.
+
+### Linking to a spot on a page
+
+A link can land on a section or a block instead of the top of the page. Give
+the spot a name: for a section in its **Properties** under **Link name**, for
+a block in its menu under **Placement**, in the **Link target** group. Type
+the name in your own words: «Priser» is written as `priser`, and the button
+below the field offers a name made from the spot's first heading. A name
+another spot on the page already has is refused with a note. The copy button
+beside the field copies the link within the site, for example `/kaker#priser`,
+ready to paste into a menu item, a footer column or a button. A spot without
+a name can still be linked to by its own id, which the copy button then uses.
+
+The link lands with the spot right below the menu, from the same page and
+from any other. On the same page it scrolls there smoothly, unless the visitor
+has asked for less motion. A
+block hidden on phones lands on the top of its section there. A copied or
+duplicated block arrives without its name, and a template whose name the
+page already has gets a number after it (`priser-2`).
 
 ## Grid (guide lines)
 

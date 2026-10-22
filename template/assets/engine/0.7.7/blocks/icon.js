@@ -33,7 +33,8 @@ export const iconBlock = {
       }
       img.addEventListener('error', () => {
         img.remove();
-        el.replaceChildren();
+        // The block's own content goes; a name marker the renderer placed beside it stays (render.js placeSpot).
+        for (const child of [...el.children]) if (!child.classList.contains('urd-anchor')) child.remove();
         iconBlock.render(el, { ...props, image: null });
       }, { once: true });
       el.appendChild(img);

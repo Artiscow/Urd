@@ -7,8 +7,8 @@
 /** The props that are a block's content (its words, pictures, addresses and sources), kept out of a copied style, per type. */
 export const CONTENT_KEYS = {
   text: ['html', 'text'],
-  button: ['label', 'href', 'page'],
-  image: ['src', 'alt', 'href', 'lightbox', 'caption'],
+  button: ['label', 'href', 'page', 'target', 'newTab', 'rel'],
+  image: ['src', 'alt', 'href', 'page', 'target', 'newTab', 'rel', 'lightbox', 'caption'],
   video: ['url', 'src', 'poster', 'file', 'title'],
   icon: ['glyph', 'icon', 'image', 'href', 'page', 'label'],
   gallery: ['images'],
@@ -21,7 +21,7 @@ export const CONTENT_KEYS = {
   form: ['mode', 'recipient', 'subject', 'endpoint', 'fields', 'submitLabel', 'successText'],
   collection: ['collection'],
   product: ['collection'],
-  cart: ['href'],
+  cart: ['href', 'page'],
   checkout: ['recipient', 'endpoint', 'vipps'],
   share: ['links', 'hidden'],
   countdown: ['target', 'doneText'],

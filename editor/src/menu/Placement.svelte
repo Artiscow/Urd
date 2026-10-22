@@ -1,7 +1,6 @@
 <script>
-  /* Placement (0.7.26.2): how the block sits on the page and behaves there.
-     The height, the narrow-screen fit, the phone switch and the pinning stand
-     open; motion and the frame are groups that show their value while closed. */
+  /* Placement (0.7.26.2): how the block sits on the page and behaves there, and its name for links.
+     The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target, motion and the frame are groups that show their value while closed. */
   import { getContext } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import MenuGroup from './MenuGroup.svelte';
@@ -9,11 +8,13 @@
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, FOLLOWS_CONTENT, SIZE, SIZE_BY_FRAME, SIZE_TEXT, baseTextPx, blockSize, sizeBounds, sizeRange } from '$engine/push-model.js';
   import { DOCK_OPTIONS } from './options.js';
+  import AnchorField from '../lib/AnchorField.svelte';
+  import { blockWords } from '$engine/anchor-model.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const viewMode = $derived(ed.viewMode);
   const sections = $derived(ed.sections);
-  const { mutateBlock, setBlockFrame, setBlockFit, setBlockFitMin, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions, designWidth, handleMobileReset } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockFitMin, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions, designWidth, handleMobileReset } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** What a closed group shows: how the block fits a narrower screen, and its motion. */
@@ -186,7 +187,7 @@
       </label>
 {/snippet}
 
-<!-- The height, the narrow-screen fit, the phone switch and the pinning stand open; motion and the frame are groups -->
+<!-- The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target, motion and the frame are groups -->
 {#if FOLLOWS_CONTENT.has(selectedBlock.type)}
   <!-- The height (ADR-0025 decision 3): the box is the content's, or the block's own with the content placed in it -->
   <label title={ta('tip.height')}>{ta('lbl.height')}
@@ -215,5 +216,16 @@
   <Pin id="phone" />
 </div>
 {@render menuSticky()}
+{#snippet menuTarget()}
+  <!-- The block's name for links, typed or suggested from its own words -->
+  {#key selectedBlock.blockId}
+    <AnchorField value={selectedBlock.anchor} own={selectedBlock.blockId} taken={() => ed.anchorsTaken(selectedBlock.blockId)}
+      words={blockWords(selectedBlock)} path={ed.pageEntry()?.path ?? '/'} onchange={(name) => setBlockAnchor(name)} />
+  {/key}
+  {#if selectedBlock.anchor && selectedBlock.hideMobile}
+    <p class="panel-hint">{ta('menu.anchorHiddenMobile')}</p>
+  {/if}
+{/snippet}
+<MenuGroup id="link-target" title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</MenuGroup>
 <MenuGroup id="motion" title={ta('group.motion')} value={menuMotionValue()}>{@render menuMotion()}</MenuGroup>
 <MenuGroup id="frame" title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</MenuGroup>

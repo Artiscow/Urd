@@ -9,8 +9,9 @@
   import { ta } from '$engine/i18n.js';
   import { DIVIDER_SHAPES, DIVIDER_HEIGHT } from '$engine/divider-model.js';
   import { SECTION_THEME_LABELS, sectionThemeVars } from '$engine/theme.js';
-  import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
+  import AnchorField from '../lib/AnchorField.svelte';
+  import { sectionWords } from '$engine/anchor-model.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const activeSectionId = $derived(ed.activeSectionId);
@@ -147,12 +148,12 @@
         </button>
       {/each}
     </div>
-    <label title={ta('tip.props.anchor')}>{ta('lbl.anchor')}
-      <span class="row-tools">
-        <span class="gridmenu-value">#{activeSectionId}</span>
-        <button class="ghost row-tool" title={ta('tip.props.copyAnchor')}
-          onclick={() => navigator.clipboard?.writeText(`#${activeSectionId}`)}>{@html ICONS.copy}</button>
-      </span></label>
+    <!-- The section's name for links, typed or suggested from its first heading -->
+    {#key activeSectionId}
+      <AnchorField value={ed.sectionAnchor} own={activeSectionId} taken={() => ed.anchorsTaken(activeSectionId)}
+        words={sectionWords(ed.sections.find((s) => s.id === activeSectionId))} path={ed.pageEntry()?.path ?? '/'}
+        onchange={(name) => ed.setSectionAnchor(name)} />
+    {/key}
 
     <hr class="gridmenu-divider" />
     <p class="panel-strong">{ta('lbl.background')}</p>

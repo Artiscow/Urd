@@ -8,6 +8,7 @@
  */
 import { readCart, writeCart, cartSetQty, cartRemove, cartCount, cartTotal, formatPrice, onCartChange } from '../shop.js';
 import { iconSvg } from '../icons.js';
+import { isSafeHref, resolveLink } from '../nav-model.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
@@ -70,9 +71,10 @@ function renderDrawer(body, props, currency) {
   foot.appendChild(el2('strong', null, formatPrice(cartTotal(items), currency)));
   body.appendChild(foot);
 
-  if (props.href) {
+  // The checkout link only through the shared safe-URL gate.
+  if (isSafeHref(props.href)) {
     const checkout = el2('a', 'urd-cart-checkout', t('shop.checkout'));
-    checkout.href = props.href;
+    checkout.href = props.href.trim();
     body.appendChild(checkout);
   }
 }
@@ -141,7 +143,9 @@ export const cartBlock = {
     btn.appendChild(badge);
     el.appendChild(btn);
 
-    const drawer = createCartDrawer({ href: props.href ?? '', currency });
+    // The checkout page: a page in the register (props.page) or a path (props.href).
+    const checkoutLink = resolveLink(props, ctx.site?.pages ?? []);
+    const drawer = createCartDrawer({ href: checkoutLink.missing ? '' : checkoutLink.href, currency });
     el.appendChild(drawer.dialog);
 
     const updateBadge = () => {

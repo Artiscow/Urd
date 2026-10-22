@@ -12,6 +12,7 @@
   import { iconSvg, ICON_LIBRARY } from '$engine/icons.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
+  import { clearLinkExtras, pointLink } from '../lib/link-edit.js';
   const ed = getContext('urd-editor');
   const grid = $derived(ed.grid);
   const siteDraft = $derived(ed.siteDraft);
@@ -421,24 +422,10 @@
     siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
   }
 
-  /** Target: a page from the registry, '__href' = external link, or
-   *  '__none' = a pure opener for the submenu (offered only for items with
-   *  a submenu). The schema allows only one of page/href, so the rest are
-   *  removed. */
+  /** Target: a page from the registry, '__href' = external link, or '__none' = a pure opener for the submenu (offered only for items with a submenu).
+   *  The schema allows only one of page/href, so the rest are removed (pointLink, which also drops the spot, the new tab and the rel words). */
   function setNavTarget(i, value) {
-    siteMutate('nav', () => {
-      const item = siteDraft.nav.items[i];
-      if (value === '__href') {
-        delete item.page;
-        item.href = item.href ?? 'https://';
-      } else if (value === '__none') {
-        delete item.page;
-        delete item.href;
-      } else {
-        item.page = value;
-        delete item.href;
-      }
-    });
+    siteMutate('nav', () => pointLink(siteDraft.nav.items[i], value));
   }
 
   function setNavHref(i, value) {
@@ -644,16 +631,7 @@
   }
 
   function setNavChildTarget(i, j, value) {
-    siteMutate('nav', () => {
-      const child = siteDraft.nav.items[i].children[j];
-      if (value === '__href') {
-        delete child.page;
-        child.href = child.href ?? 'https://';
-      } else {
-        child.page = value;
-        delete child.href;
-      }
-    });
+    siteMutate('nav', () => pointLink(siteDraft.nav.items[i].children[j], value));
   }
 
   function setNavChildHref(i, j, value) {
@@ -1260,6 +1238,7 @@
             onchange={(v) => siteMutate('edit:nav-announce-link', () => {
               const next = { ...(siteDraft.nav.announcement ?? {}) };
               delete next.page; delete next.href;
+              clearLinkExtras(next);
               if (v === 'custom') next.href = '';
               else if (v) next.page = v;
               siteDraft.nav.announcement = next;

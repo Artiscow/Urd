@@ -13,8 +13,8 @@ import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrames } from './render.js';
-import { renderNav, refreshNavScroll, clearAnnounceDismissal } from './nav.js';
-import { isSafeImage } from './nav-model.js';
+import { renderNav, refreshNavScroll, clearAnnounceDismissal, holdNavForJump } from './nav.js';
+import { isSafeImage, hashTarget, samePageHash, jumpOnArrival } from './nav-model.js';
 import { renderFooter } from './footer.js';
 import { textBlock } from './blocks/text.js';
 import { imageBlock } from './blocks/image.js';
@@ -153,6 +153,146 @@ function mountToTop() {
   toggle();
 }
 
+/** The jump being followed now: a newer jump, or the visitor's own scrolling, ends it. */
+let jumpControl = null;
+
+/**
+ * Follows a jump to the element with this id.
+ * A menu that hides on scroll is held in view while the page moves.
+ * A change of size (the menu shrinking on the way, data blocks still measuring above the spot) puts the spot back below the menu once the page has stood still for a moment; scrolling only postpones a correction that is waiting.
+ * After the first correction, any scroll the follow did not make is the visitor's own and ends it, as do a wheel, a key or a touch, or `ms` passing.
+ * The element is looked up again on every correction, since a render replaces it.
+ * @param {string} id
+ * @param {number} ms
+ */
+function followJump(id, ms) {
+  jumpControl?.abort();
+  const control = new AbortController();
+  jumpControl = control;
+  const { signal } = control;
+  let landed = false;
+  let waiting = false;
+  let own = false;
+  let timer = 0;
+  const align = () => {
+    landed = true;
+    waiting = false;
+    const el = document.getElementById(id);
+    if (!el) return;
+    const top = spotTop(el);
+    if (Math.abs(top - window.scrollY) <= 2) return;
+    const y = window.scrollY;
+    window.scrollTo({ top, behavior: 'instant' });
+    own = window.scrollY !== y;
+  };
+  const later = () => {
+    clearTimeout(timer);
+    timer = setTimeout(align, 150);
+  };
+  holdNavForJump();
+  window.addEventListener('scroll', () => {
+    if (landed && !own) {
+      control.abort();
+      return;
+    }
+    own = false;
+    holdNavForJump(400);
+    if (waiting) later();
+  }, { passive: true, signal });
+  // The observer reports every element once as it starts, which checks the landing.
+  const observer = new ResizeObserver(() => {
+    waiting = true;
+    later();
+  });
+  observer.observe(document.documentElement);
+  const menu = document.querySelector('#urd-nav > nav');
+  if (menu) observer.observe(menu, { box: 'border-box' });
+  signal.addEventListener('abort', () => {
+    observer.disconnect();
+    clearTimeout(timer);
+  });
+  for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+    window.addEventListener(type, () => control.abort(), { capture: true, passive: true, once: true, signal });
+  }
+  setTimeout(() => control.abort(), ms);
+}
+
+/**
+ * Brings the element with this id to the top of the window at once, below a menu that stays on screen (the scroll-padding in base.css), and follows the jump while the page that has just been drawn settles.
+ * @param {string|null} id
+ * @returns {boolean} Whether the element was there
+ */
+function jumpTo(id) {
+  const el = id ? document.getElementById(id) : null;
+  if (!el) return false;
+  followJump(id, 4000);
+  window.scrollTo({ top: spotTop(el), behavior: 'instant' });
+  return true;
+}
+
+/**
+ * The scroll position that brings an element's top right below a menu that stays on screen (the page's scroll-padding-top).
+ * The top is the one the page lays out, without the transforms an entrance animation still holds the element in before it is revealed (offsetTop up the offsetParent chain), so the spot lands where it ends up.
+ * @param {HTMLElement} el
+ * @returns {number}
+ */
+function spotTop(el) {
+  let top = 0;
+  for (let node = el; node; node = node.offsetParent) top += node.offsetTop;
+  const clear = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  return Math.max(0, top - clear);
+}
+
+/**
+ * The name of the spot a section's or block's id stands for, when it has one (the marker render.js draws with data-spot), else null.
+ * @param {string} id
+ * @returns {string|null}
+ */
+function spotName(id) {
+  return document.querySelector(`.urd-anchor[data-spot="${CSS.escape(id)}"]`)?.id ?? null;
+}
+
+/**
+ * A link to a spot on this page: the browser's own jump does the work, shaped by the scroll-padding and the smooth scrolling in base.css, and the engine follows it.
+ * A link holds a spot's id, so the jump goes to its name when it has one, and the address shows the name; a link that names the page with a different trailing slash would load the page again.
+ * In both cases the fragment is handed to the address, which jumps in place.
+ * A plain left click only: a link the page has already handled, one opened in a new tab and a download are left alone.
+ */
+function wireJumps() {
+  document.addEventListener('click', (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+    if (!link || (link.target && link.target !== '_self') || link.hasAttribute('download')) return;
+    const spot = samePageHash(link.getAttribute('href'), location);
+    const linked = spot ? hashTarget(spot.hash) : null;
+    if (!linked || !document.getElementById(linked)) return;
+    const id = spotName(linked) ?? linked;
+    followJump(id, 2500);
+    if (spot.inPlace && id === linked) return;
+    event.preventDefault();
+    if (location.hash !== `#${id}`) location.hash = id;
+    else window.scrollTo({ top: spotTop(document.getElementById(id)), behavior: 'auto' });
+  });
+}
+
+/**
+ * The arrival jump: the page is drawn after the browser has looked for the address's fragment, so the engine jumps there once the page stands (jumpOnArrival says when).
+ * A prerendered page jumps when it is shown.
+ */
+function arriveAtSpot() {
+  const jump = () => {
+    const navigationType = performance.getEntriesByType?.('navigation')?.[0]?.type;
+    if (!jumpOnArrival({ hash: location.hash, navigationType, scrollY: window.scrollY })) return;
+    // A link holds the spot's id: the address shows the spot's name, in the same history entry.
+    const linked = hashTarget(location.hash);
+    const name = linked ? spotName(linked) : null;
+    if (name) history.replaceState(history.state, '', `#${name}`);
+    jumpTo(name ?? linked);
+  };
+  if (document.prerendering) document.addEventListener('prerenderingchange', jump, { once: true });
+  else jump();
+}
+
 /**
  * Cross-document View Transitions (ADR-0011): the arriving page is captured
  * at its first rendering opportunity, before the engine has fetched its
@@ -255,7 +395,11 @@ function enablePreview(state, opts) {
   const keepScroll = (fn) => {
     const y = window.scrollY;
     fn();
-    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
+    // A jump being followed owns the scroll position, and the restore is never animated.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (jumpControl && !jumpControl.signal.aborted) return;
+      window.scrollTo({ top: y, behavior: 'instant' });
+    }));
   };
   /** The ribbon motion demo's timer: a new press restarts the six seconds. */
   let motionDemoTimer = 0;
@@ -367,27 +511,12 @@ function enablePreview(state, opts) {
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
         ?.classList.toggle('urd-attention', msg.needed !== false);
     } else if (msg?.type === 'urd-scroll-section' && msg.sectionId) {
-      // The attention badge in the top bar: scroll to the section that needs
-      // review, so the badge points at a place and not just a mode. The
-      // badge also switches the view to the phone, whose layout settles over
-      // the next frames (blocks measure their heights), so the page is
-      // watched until its height has stood still, and the section is put at
-      // the top again if the settling moved it.
-      const target = () => root.querySelector(`[data-section-id="${msg.sectionId}"]`);
-      target()?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      let frames = 0;
-      let lastHeight = -1;
-      let still = 0;
-      const settle = () => {
-        const el = target();
-        if (!el || frames++ > 120) return;
-        const height = document.documentElement.scrollHeight;
-        if (height === lastHeight) still++;
-        else { still = 0; lastHeight = height; }
-        if (still < 8) { requestAnimationFrame(settle); return; }
-        if (Math.abs(el.getBoundingClientRect().top) > 4) el.scrollIntoView({ behavior: 'auto', block: 'start' });
-      };
-      requestAnimationFrame(settle);
+      // The attention badge in the top bar: scroll to the section that needs review, so the badge points at a place and not just a mode.
+      // The badge also switches the view to the phone, whose layout settles over the next frames (blocks measure their heights), so the jump settles.
+      jumpTo(msg.sectionId);
+    } else if (msg?.type === 'urd-scroll-anchor' && typeof msg.hash === 'string') {
+      // A link in the preview to a spot on a page: the editor sends it once the page the link names stands, and the preview jumps there as the published page does on arrival.
+      jumpTo(hashTarget(msg.hash));
     } else if (msg?.type === 'urd-collections' && msg.collections) {
       // Collection drafts from the editor: used instead of the server files.
       // Only sections with collection blocks are rerendered: a full
@@ -653,6 +782,8 @@ export async function boot(opts) {
   endArrivalHold();
   // Sticky blocks ("pin on scroll"): one scroll listener for the whole page.
   initSticky();
+  wireJumps();
+  if (!preview) arriveAtSpot();
 
   if (!preview) {
     mq.addEventListener('change', (event) => {

@@ -8,7 +8,7 @@
  */
 
 import { resolveColor } from './theme.js';
-import { isSafeImage } from './nav-model.js';
+import { isSafeImage, linkAttrs } from './nav-model.js';
 import { linkIconHtml, leavesSite } from './links-model.js';
 import { t } from './i18n.js';
 import { renderBackgroundLayers } from './render.js';
@@ -31,6 +31,9 @@ import {
   buildNewsletterPayload,
   buildNewsletterMailto,
 } from './footer-cta.js';
+
+/** The rel words on a footer link that leaves the site. */
+const FOOTER_REL = ['noopener', 'noreferrer'];
 
 /**
  * Full layered background (additive since v0.6, shared with sections and nav):
@@ -76,8 +79,7 @@ function buildLinks(links, className) {
   for (const link of links) {
     const a = document.createElement('a');
     a.textContent = link.label;
-    a.href = link.href;
-    if (link.external) a.rel = 'noopener noreferrer';
+    Object.assign(a, linkAttrs(link, FOOTER_REL));
     el.appendChild(a);
   }
   return el;
@@ -194,9 +196,8 @@ function buildCta(cta) {
   } else {
     const a = document.createElement('a');
     a.className = 'urd-footer-cta-btn';
-    a.href = cta.target?.href ?? '#';
+    Object.assign(a, linkAttrs(cta.target ?? { href: '#' }, FOOTER_REL));
     a.textContent = cta.label || t('footer.readMore');
-    if (cta.target?.external) a.rel = 'noopener noreferrer';
     block.appendChild(a);
   }
   return block;
@@ -400,8 +401,7 @@ export function renderFooter(site, host, pageId) {
         const li = document.createElement('li');
         const a = document.createElement('a');
         a.textContent = link.label;
-        a.href = link.href;
-        if (link.external) a.rel = 'noopener noreferrer';
+        Object.assign(a, linkAttrs(link, FOOTER_REL));
         li.appendChild(a);
         ul.appendChild(li);
       }

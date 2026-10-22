@@ -9,6 +9,7 @@
   import { siteContact, contactParts, legalParts } from '$engine/contact-model.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
+  import { pointLink } from '../lib/link-edit.js';
   const ed = getContext('urd-editor');
   const pageId = $derived(ed.pageId);
   const siteDraft = $derived(ed.siteDraft);
@@ -217,11 +218,7 @@
   }
 
   function setFooterListLinkTarget(field, i, value) {
-    footerMutate('footer', (f) => {
-      const link = f[field][i];
-      if (value === '__href') { delete link.page; link.href = link.href ?? 'https://'; }
-      else { link.page = value; delete link.href; }
-    });
+    footerMutate('footer', (f) => pointLink(f[field][i], value));
   }
 
   function setFooterListLinkHref(field, i, value) {
@@ -249,8 +246,7 @@
   function setFooterCtaTarget(value) {
     footerMutate('footer', (f) => {
       f.cta ??= {};
-      if (value === '__href') { delete f.cta.page; f.cta.href = f.cta.href ?? 'https://'; }
-      else { f.cta.page = value; delete f.cta.href; }
+      pointLink(f.cta, value);
     });
   }
 
@@ -311,11 +307,7 @@
   }
 
   function setFooterLinkTarget(ci, li, value) {
-    footerMutate('footer', (f) => {
-      const link = f.columns[ci].links[li];
-      if (value === '__href') { delete link.page; link.href = link.href ?? 'https://'; }
-      else { link.page = value; delete link.href; }
-    });
+    footerMutate('footer', (f) => pointLink(f.columns[ci].links[li], value));
   }
 
   function setFooterLinkHref(ci, li, value) {

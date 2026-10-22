@@ -1,8 +1,8 @@
 /**
- * Core block: button. Links to a page in the page registry (page) or an
- * external URL (href). page is looked up in ctx.site.pages at render time.
+ * Core block: button.
+ * One link (resolveLink in nav-model.js): a page in the page registry (page), a spot on it (target), or an address (href), with a new tab and rel words; page is looked up in ctx.site.pages at render time.
  */
-import { isSafeHref } from '../nav-model.js';
+import { resolveLink, linkAttrs } from '../nav-model.js';
 
 // Seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
@@ -15,22 +15,17 @@ export const buttonBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{label: string, page: string|null, href: string|null, style: string}} props
+   * @param {{label: string, page: string|null, target?: string, href: string|null, newTab?: boolean, rel?: string[], style: string}} props
    * @param {{site: object}} ctx
    */
   render(el, props, ctx) {
     const a = document.createElement('a');
     a.className = `urd-button urd-button-${props.style}`;
     a.textContent = props.label;
-    if (props.page) {
-      const target = ctx.site.pages.find((p) => p.id === props.page);
-      a.href = target ? target.path : '#';
-      if (!target) console.warn(`Urd: button points to unknown page '${props.page}'`);
-    } else {
-      // Shared guard (nav/footer plus internal paths/anchors): an unsafe href (javascript:/data:) must never become a live link for visitors.
-      a.href = isSafeHref(props.href) ? props.href : '#';
-      if (props.href && !isSafeHref(props.href)) console.warn(`Urd: the button has an unsafe link '${props.href}'`);
-    }
+    // An unknown page or an unsafe address (javascript:/data:) never becomes a live link for visitors.
+    const link = resolveLink(props, ctx.site.pages ?? []);
+    if (link.missing && (props.page || props.href)) console.warn(`Urd: the button's link goes nowhere ('${props.page || props.href}')`);
+    Object.assign(a, linkAttrs(link));
     el.appendChild(a);
   },
 };

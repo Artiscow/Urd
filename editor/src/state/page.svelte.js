@@ -12,6 +12,8 @@ import { calDesign, calView, calPhoneView, calCardDesign } from '$engine/calenda
 import { coreAnimations } from '$engine/animations/core.js';
 import { PAGE_SCHEMA_VERSION, liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
+import { anchorError, takenAnchors } from '$engine/anchor-model.js';
+import { clearLinkExtras } from '../lib/link-edit.js';
 import { createDraftStore } from '../lib/draftStore.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
@@ -106,6 +108,7 @@ function syncSelectedBlock() {
     type: block.type,
     decor: Boolean(block.decor),
     hideMobile: Boolean(block.hideMobile),
+    anchor: typeof block.anchor === 'string' ? block.anchor : '',
     fit: block.fit === 'shrink' || block.fit === 'both' ? block.fit : undefined,
     fitMin: typeof block.fitMin === 'number' ? block.fitMin : undefined,
     size: typeof block.size === 'number' ? block.size : undefined,
@@ -277,6 +280,8 @@ function buttonTargets() {
 function setButtonTarget(v) {
   const page = v === '__href' ? null : v;
   mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+    // The spot, the new tab and the rel words belonged to the link the button had.
+    clearLinkExtras(b.props);
     b.props.page = page;
     if (page) b.props.href = null;
   });
@@ -568,6 +573,35 @@ function setBlockDecor(on) {
   mutateBlock('decor', (b) => { b.decor = on; });
 }
 
+/** The block's name for links (anchor-model.js), refused unless it follows the rule and is free on the page.
+ * A link target is not a change to the desktop layout, so it bypasses mutateBlock and never raises the phone review, as the phone switch does.
+ * An empty name removes it; the block's id still takes links. */
+function setBlockAnchor(name) {
+  const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+  if (!block || (name && anchorError(name, takenAnchors(store.data, block.id)))) return;
+  historyState.pushHistory(`anchor:${block.id}`);
+  if (name) block.anchor = name;
+  else delete block.anchor;
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  syncSelectedBlock();
+}
+
+/** The section's name for links, refused unless it follows the rule and is free on the page; an empty name removes it, and the section's id still takes links. */
+function setSectionAnchor(name) {
+  if (name && anchorError(name, takenAnchors(store.data, activeSectionId))) return;
+  mutateSection(`anchor:${activeSectionId}`, (s) => {
+    if (name) s.anchor = name;
+    else delete s.anchor;
+  });
+}
+
+/** The ids the page's spots already use, except the one being named (`own`, a section or block id). */
+function anchorsTaken(own) {
+  return takenAnchors(store?.data, own);
+}
+
 /** Hide on mobile is a MOBILE intent, not a desktop change: it bypasses
  *  mutateBlock so the review flag is never triggered by it (same rule as
  *  the phone toggle in the canvas, ADR-0019). */
@@ -605,6 +639,9 @@ let sectionTheme = $state('');
 /** The section's shape dividers, { top?, bottom? } (a copy for the panel, like the mirrors above). */
 let sectionDivider = $state({});
 
+/** Mirror of the active section's name for links ('' = none) */
+let sectionAnchor = $state('');
+
 function syncSectionMirrors(section) {
   sectionGrid = section?.grid ? { ...section.grid } : null;
   sectionMinHeight = section?.size?.minHeight ?? '';
@@ -613,6 +650,7 @@ function syncSectionMirrors(section) {
   sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
   sectionTheme = section?.theme ?? '';
   sectionDivider = section?.divider ? JSON.parse(JSON.stringify(section.divider)) : {};
+  sectionAnchor = section?.anchor ?? '';
 }
 
 /* Measurements for the "Cover"/"Show all" buttons on image background
@@ -1007,6 +1045,10 @@ export const pageState = {
   setBoxStyle,
   setBlockDecor,
   setBlockHideMobile,
+  setBlockAnchor,
+  setSectionAnchor,
+  anchorsTaken,
+  get sectionAnchor() { return sectionAnchor; },
   get activeSectionId() { return activeSectionId; },
   set activeSectionId(v) { activeSectionId = v; },
   get sectionGrid() { return sectionGrid; },

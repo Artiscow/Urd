@@ -60,18 +60,26 @@ for (const id of load('template/content/maler.json').maler ?? []) {
   cases.push([`template/content/maler/${id}.json`, templateSchema]);
 }
 
+// A name a link points at is unique on its page, which the schema cannot say: across the sections, the blocks and the form inputs (anchor-model.js).
+const { duplicateAnchors } = await import(new URL(`template/assets/engine/${JSON.parse(readFileSync(`${root}template/urd.json`, 'utf-8')).engine}/anchor-model.js`, `file://${root}`));
+const pagesIn = (data) => [data, data?.page, data?.section ? { sections: [data.section] } : null, data?.blocks ? { sections: [{ blocks: data.blocks }] } : null].filter(Boolean);
+
 let failed = false;
 for (const [path, schema] of cases) {
   const validate = typeof schema === 'string' ? ajv.getSchema(schema) : ajv.compile(schema);
-  if (validate(load(path))) {
+  const data = load(path);
+  const taken = pagesIn(data).flatMap((page) => duplicateAnchors(page));
+  const valid = validate(data);
+  if (valid && !taken.length) {
     console.log(`OK    ${path}`);
-  } else {
-    failed = true;
-    console.error(`ERROR ${path}`);
-    for (const err of validate.errors ?? []) {
-      console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
-    }
+    continue;
   }
+  failed = true;
+  console.error(`ERROR ${path}`);
+  for (const err of valid ? [] : validate.errors ?? []) {
+    console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
+  }
+  if (taken.length) console.error(`      a name used by more than one spot: ${taken.join(', ')}`);
 }
 
 // The section presets are validated too: every create() plus two item rounds must yield schema-valid sections.

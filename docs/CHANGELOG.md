@@ -28,6 +28,24 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.27.1-3 - Named spots on a page, a jump that lands under the menu, and one link shape for every link - 22 October 2026
+
+- A link to a spot on another page landed at the top, since the page is drawn after the browser looks for the fragment. urd.js jumps there after the first render and on prerender activation, never on a return through the history or a reload (`jumpOnArrival`).
+- A spot reached by a link lay under the sticky menu. The page gets `scroll-padding-top` from the menu's own height, following the scroll shrink, none for a menu that scrolls away and only the page strip for the side column (`scrollClear`).
+- In hide mode the menu slid away during a jump and left a gap above the spot; it stays in view while a jump runs (`holdNavForJump`).
+- A spot could land too low while data blocks grew above it or the menu shrank. The jump is corrected once the page stands still, and never against the visitor's own scrolling (`followJump`).
+- A link to `/kaker#…` on `/kaker/` loaded the page again; it jumps in place.
+- The phone dropdown, an open submenu and the launcher stayed open over the spot an in-page link went to; they close on the link.
+- The editor's preview dropped a link's fragment, so a footer link to another page's spot opened that page at its top. The fragment travels with the page switch and the preview jumps there (`urd-scroll-anchor`).
+- Blocks had no id, and a section could be linked only by its random id. Sections and blocks take a name (`anchor`), typed or suggested from the spot's first heading in Properties and in the new Link target group under Placement, refused when another spot on the page has it, and drawn as a marker that moves with its block; every block carries its own id too (`anchor-model.js`, `anchorTargets` in render.js).
+- A pasted or duplicated block arrives without its name, a template's taken name arrives as `name-2` (`claimAnchors`), and validate.mjs refuses a name two spots share.
+- A block hidden on phones has no spot there; its name and id land on its section's top, with a note in its menu.
+- About fifteen link fields kept three data shapes. Every link reads one shape, `{ page, target, href, newTab, rel }` (`resolveLink` and `linkAttrs`, Links and anchors in SCHEMA.md), holding the spot's id, so a link survives a rename of its page or its spot; the address shows the spot's name once the visitor lands.
+- The cart's checkout link was never checked, and the calendar's notice and programme links had looser checks of their own that let `/\evil.no` through; all go through the shared safe-URL gate.
+- An RSS item took an entry's link unchecked; it gets the link as the page draws it.
+- A new page's address dropped accented letters («Café» gave `/caf`); they are written without the accent (`slugText`).
+- BACKLOG: the milestone 0.7.27 Named anchors and one link editor, with the link editor of 0.7.10 (C124) moved into it; stages 1 to 3 delivered.
+
 ### 0.7.24.5.2 - The Contact details block in eleven designs, the checkout's seller line, and a design picker for every block with more than one look - 21 October 2026
 
 - A page could show the association's contact details only through the footer. The Contact details block (type `contact`) draws them from the Site panel as an `<address>`, and the «Contact» section template is built on it.

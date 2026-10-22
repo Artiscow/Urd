@@ -43,6 +43,7 @@ import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selecti
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
 import { styleOf, pasteStyle } from './block-style.js';
 import { nearestDock } from './sticky-model.js';
+import { isAnchorName } from './nav-model.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
 import { ta, adminLang } from './i18n.js';
@@ -2566,6 +2567,15 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(btn);
   };
 
+  // The section's name for links, so the owner sees which spot a link lands on.
+  if (isAnchorName(section.anchor)) {
+    const tag = document.createElement('span');
+    tag.className = 'urd-anchor-tag';
+    tag.textContent = `#${section.anchor}`;
+    tag.title = ta('tip.anchorTag');
+    bar.appendChild(tag);
+  }
+
   if (isMobile()) {
     const attention = section.responsive?.mobile?.attention;
     if (attention?.needed) {
@@ -2957,7 +2967,7 @@ document.addEventListener('click', (event) => {
   if ((cleanCalendar || linksRow) && url.origin !== location.origin && a.target === '_blank') return;
   event.preventDefault();
   if (url.origin === location.origin) {
-    post({ type: 'urd-navigate', path: url.pathname });
+    post({ type: 'urd-navigate', path: url.pathname, hash: url.hash });
   } else {
     window.open(url, '_blank', 'noopener');
   }
@@ -3559,6 +3569,8 @@ function pasteClipboard(source = clipboard) {
   const blocks = source.blocks.map((b) => {
     const copy = JSON.parse(JSON.stringify(b));
     copy.id = makeId('blk');
+    // A name belongs to one spot on the page, so the copy arrives without it.
+    delete copy.anchor;
     copy.frames.desktop = { ...copy.frames.desktop, x: r2(copy.frames.desktop.x + dx), y: copy.frames.desktop.y + dy };
     return copy;
   });
@@ -3630,6 +3642,8 @@ export function duplicateSelected() {
 function duplicateBlock(section, block) {
   const copy = JSON.parse(JSON.stringify(block));
   copy.id = makeId('blk');
+  // A name belongs to one spot on the page, so the duplicate arrives without it.
+  delete copy.anchor;
   const f = copy.frames.desktop;
   copy.frames.desktop = {
     ...f,

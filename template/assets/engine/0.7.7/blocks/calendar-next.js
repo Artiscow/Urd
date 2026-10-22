@@ -83,9 +83,8 @@ function noticeNode(props, ui, className) {
     if (part) note.appendChild(part);
     return part;
   });
-  const raw = typeof props.notice.href === 'string' ? props.notice.href.trim() : '';
-  const href = /^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(raw) ? raw : '';
-  if (href) note.appendChild(ui.link('urd-cal-nx-notice-link', 'moreInfo', href, ''));
+  const href = ui.noticeHref;
+  if (href) note.appendChild(ui.noticeOn(ui.link('urd-cal-nx-notice-link', 'moreInfo', href, '')));
   return ui.notice(note, { title, text, href });
 }
 

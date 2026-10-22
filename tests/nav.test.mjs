@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage } = await engineImport('nav-model.js');
+const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -674,7 +674,7 @@ test('announcementModel: null unless shown with text, defaults otherwise', () =>
   assert.equal(announcementModel({ show: true, text: '   ' }), null);
   assert.equal(announcementModel({ text: 'Open late' }), null);
   assert.deepEqual(announcementModel({ show: true, text: ' Open late ' }),
-    { text: 'Open late', href: null, sticky: true, dismiss: true, followNav: false, place: 'nav', bg: '', color: '' });
+    { text: 'Open late', href: null, link: null, sticky: true, dismiss: true, followNav: false, place: 'nav', bg: '', color: '' });
 });
 
 test('announcementModel: followNav is off unless set true, so the strip stays while the menu hides', () => {
@@ -803,3 +803,123 @@ test('clampLauncherMax: the mobile count stays inside its bounds, six by default
   assert.equal(launcherModel(LAUNCHER).mobileMax, 6);
   assert.equal(launcherModel({ ...LAUNCHER, mobileMax: 3 }).mobileMax, 3);
 });
+
+test('navScrollState: a jump holds a hiding menu in view and measures the travel from where it ends', () => {
+  // Hidden mid-page, a jump starts: the menu comes back and the anchor follows the jump down.
+  assert.deepEqual(navScrollState('hide', 900, 1000, true, { hold: true }), { compact: false, hidden: false, scrolled: true, anchor: 1000 });
+  assert.deepEqual(navScrollState('hide', 1000, 2400, false, { hold: true }), { compact: false, hidden: false, scrolled: true, anchor: 2400 });
+  // Once the hold ends, a short scroll down from the landing keeps it, a long one hides it.
+  assert.equal(navScrollState('hide', 2400, 2450, false).hidden, false);
+  assert.equal(navScrollState('hide', 2400, 2500, false).hidden, true);
+  // The hold changes nothing for the shrink: it follows the scroll as before.
+  assert.deepEqual(navScrollState('shrink', 0, 500, false, { hold: true }), navScrollState('shrink', 0, 500, false));
+});
+
+test('scrollClear: a sticky bar leaves its own height, a menu that scrolls away nothing, the side column only a strip across the page', () => {
+  assert.equal(scrollClear({ sticky: true, side: false, height: 72.4 }), 72);
+  assert.equal(scrollClear({ sticky: false, side: false, height: 72 }), 0);
+  assert.equal(scrollClear({ sticky: true, side: true, height: 0, pageStrip: 40 }), 40);
+  assert.equal(scrollClear({ sticky: true, side: true, height: 0 }), 0);
+  assert.equal(scrollClear({ sticky: true, side: false, height: Number.NaN }), 0);
+  assert.equal(scrollClear({ sticky: true, side: false, height: -4 }), 0);
+});
+
+test('hashTarget: the id a fragment names, decoded as the browser reads it', () => {
+  assert.equal(hashTarget('#priser'), 'priser');
+  assert.equal(hashTarget('#sec-4c908354'), 'sec-4c908354');
+  assert.equal(hashTarget('priser'), 'priser');
+  assert.equal(hashTarget('#bl%C3%A5b%C3%A6r'), 'blåbær');
+  assert.equal(hashTarget('#%E0%A4%A'), '%E0%A4%A', 'a malformed escape is read as written');
+  assert.equal(hashTarget('#'), null);
+  assert.equal(hashTarget(''), null);
+  assert.equal(hashTarget(undefined), null);
+});
+
+test('samePageHash: only a fragment on the page the visitor is on, with or without its trailing slash', () => {
+  const here = { href: 'https://urd.example/kaker' };
+  const inPlace = (hash) => ({ hash, inPlace: true });
+  assert.deepEqual(samePageHash('#priser', here), inPlace('#priser'));
+  assert.deepEqual(samePageHash('/kaker#priser', here), inPlace('#priser'));
+  assert.deepEqual(samePageHash('https://urd.example/kaker#priser', here), inPlace('#priser'));
+  // The site serves a page at /kaker/ too: the same page, which the browser would load again.
+  assert.deepEqual(samePageHash('/kaker/#priser', here), { hash: '#priser', inPlace: false });
+  assert.deepEqual(samePageHash('/kaker#priser', { href: 'https://urd.example/kaker/' }), { hash: '#priser', inPlace: false });
+  assert.deepEqual(samePageHash('#priser', { href: 'https://urd.example/kaker/' }), inPlace('#priser'));
+  assert.deepEqual(samePageHash('/#om', { href: 'https://urd.example/' }), inPlace('#om'));
+  assert.equal(samePageHash('/om-oss#kontakt', here), null, 'another page loads');
+  assert.equal(samePageHash('/#kontakt', here), null, 'the front page is another page');
+  assert.equal(samePageHash('/kaker?x=1#priser', here), null, 'another query loads');
+  assert.equal(samePageHash('https://andre.example/kaker#priser', here), null, 'another site');
+  assert.equal(samePageHash('/kaker', here), null, 'no fragment');
+  assert.equal(samePageHash('#', here), null, 'an empty fragment');
+  assert.deepEqual(samePageHash('#priser', { href: 'https://urd.example/kaker?page=kaker' }), inPlace('#priser'), 'the query of the page itself is kept');
+  assert.equal(samePageHash('http://[bad', here), null);
+});
+
+test('jumpOnArrival: a visit with a fragment jumps, a return through the history or a reload does not', () => {
+  assert.equal(jumpOnArrival({ hash: '#priser', navigationType: 'navigate', scrollY: 0 }), true);
+  assert.equal(jumpOnArrival({ hash: '#priser', navigationType: 'reload', scrollY: 0 }), false, 'a reload keeps the place the browser restores');
+  assert.equal(jumpOnArrival({ hash: '#priser', navigationType: undefined, scrollY: 0 }), true);
+  assert.equal(jumpOnArrival({ hash: '#priser', navigationType: 'back_forward', scrollY: 0 }), false);
+  assert.equal(jumpOnArrival({ hash: '#priser', navigationType: 'reload', scrollY: 640 }), false, 'a place already restored stays');
+  assert.equal(jumpOnArrival({ hash: '', navigationType: 'navigate', scrollY: 0 }), false);
+  assert.equal(jumpOnArrival({ hash: '#', navigationType: 'navigate', scrollY: 0 }), false);
+});
+
+test('isAnchorName: lower-case letters, digits and inner hyphens, at most 40, never an engine prefix', () => {
+  for (const ok of ['priser', 'a', '2026', 'meld-deg-inn', 'a'.repeat(40), 'section-1', 'blkx']) assert.equal(isAnchorName(ok), true, ok);
+  for (const bad of ['', 'Priser', '-a', 'a-', 'a b', 'å', 'a'.repeat(41), 'sec-1', 'blk-a', 'urd-nav', 'a_b', null, undefined, 12]) {
+    assert.equal(isAnchorName(bad), false, String(bad));
+  }
+});
+
+test('resolveLink: one link shape for every host (0.7.27.3)', () => {
+  const pages = [{ id: 'hjem', path: '/' }, { id: 'kaker', path: '/kaker' }];
+  const at = (link) => resolveLink(link, pages);
+  assert.deepEqual(at({ page: 'kaker' }), { href: '/kaker', external: false, missing: false });
+  assert.deepEqual(at({ page: 'kaker', target: 'sec-4c908354' }), { href: '/kaker#sec-4c908354', external: false, missing: false });
+  assert.deepEqual(at({ page: 'hjem', target: 'priser' }), { href: '/#priser', external: false, missing: false });
+  assert.deepEqual(at({ target: 'blk-1' }), { href: '#blk-1', external: false, missing: false }, 'a spot on this page');
+  assert.deepEqual(at({ page: 'kaker', href: 'https://x.no' }), { href: '/kaker', external: false, missing: false }, 'page wins over href');
+  assert.deepEqual(at({ page: 'borte' }), { href: '#', external: false, missing: true });
+  assert.deepEqual(resolveLink({ page: 'ute' }, [{ id: 'ute', path: '//evil.no' }]), { href: '#', external: false, missing: true }, 'a page path that would leave the site');
+  assert.deepEqual(at({ page: 'kaker', target: 'Not valid!' }), { href: '/kaker', external: false, missing: false }, 'a malformed target is left out');
+  assert.deepEqual(at({ href: ' https://x.no ' }), { href: 'https://x.no', external: true, missing: false });
+  assert.deepEqual(at({ href: 'tel:+4790000000' }), { href: 'tel:+4790000000', external: true, missing: false });
+  assert.deepEqual(at({ href: '/kaker#sec-1' }), { href: '/kaker#sec-1', external: false, missing: false }, 'an old link stays as it is');
+  for (const bad of ['javascript:alert(1)', '/\\evil.no', '//evil.no', '', 'kaker']) {
+    assert.deepEqual(at({ href: bad }), { href: '#', external: false, missing: true }, bad);
+  }
+  assert.deepEqual(at(null), { href: '#', external: false, missing: true });
+  assert.deepEqual(at({ href: 'https://x.no', newTab: true, rel: ['sponsored', 'ugc', 'nofollow'] }),
+    { href: 'https://x.no', external: true, missing: false, newTab: true, rel: ['nofollow', 'sponsored'] });
+  assert.deepEqual(at({ href: 'mailto:a@b.no', rel: ['nofollow'] }), { href: 'mailto:a@b.no', external: true, missing: false }, 'rel only on a link that leaves for the web');
+  assert.deepEqual(at({ page: 'kaker', newTab: true, rel: ['nofollow'] }), { href: '/kaker', external: false, missing: false, newTab: true });
+  assert.deepEqual(LINK_RELS, ['nofollow', 'sponsored']);
+});
+
+test('linkAttrs: the host\'s words for a link that leaves the site, noopener for a new tab, the owner\'s words last', () => {
+  assert.deepEqual(linkAttrs({ href: '/kaker', external: false }), { href: '/kaker' });
+  assert.deepEqual(linkAttrs({ href: 'https://x.no', external: true }), { href: 'https://x.no', rel: 'noopener' });
+  assert.deepEqual(linkAttrs({ href: 'https://x.no', external: true }, ['noopener', 'noreferrer']), { href: 'https://x.no', rel: 'noopener noreferrer' });
+  assert.deepEqual(linkAttrs({ href: '/kaker', external: false, newTab: true }), { href: '/kaker', target: '_blank', rel: 'noopener' });
+  assert.deepEqual(linkAttrs({ href: 'https://x.no', external: true, newTab: true, rel: ['sponsored'] }, ['noopener', 'noreferrer']),
+    { href: 'https://x.no', target: '_blank', rel: 'noopener noreferrer sponsored' });
+});
+
+test('resolveItem, the launcher and the announcement carry the link shape', () => {
+  const pages = [{ id: 'kaker', path: '/kaker' }];
+  assert.deepEqual(resolveItem({ label: 'Priser', page: 'kaker', target: 'priser', newTab: true }, pages),
+    { label: 'Priser', href: '/kaker#priser', external: false, missing: false, newTab: true });
+  const launcher = launcherModel({ show: true, links: [{ label: 'Kaker', page: 'kaker', target: 'sec-1' }, { label: 'Ut', href: 'https://x.no', newTab: true }] }, pages);
+  assert.equal(launcher.links[0].href, '/kaker#sec-1');
+  assert.equal(launcher.links[1].newTab, true);
+  const strip = announcementModel({ show: true, text: 'Nytt', page: 'kaker', target: 'priser' }, pages);
+  assert.equal(strip.href, '/kaker#priser');
+  assert.equal(strip.link.href, '/kaker#priser');
+  assert.equal(announcementModel({ show: true, text: 'Nytt', page: 'borte' }, pages).link, null);
+  const items = navItems({ pages, nav: { items: [{ label: 'Her', target: 'priser' }] } });
+  assert.equal(items[0].href, '#priser');
+  assert.equal(items[0].kind, 'link');
+});
+

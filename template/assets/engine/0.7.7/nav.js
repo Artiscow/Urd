@@ -14,7 +14,7 @@
  * and the scroll lock come from the browser).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, toolOrder, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, toolOrder, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -37,6 +37,18 @@ let navScrollRefresh = null;
 
 /** Recomputes the scroll classes (compact, hidden, scrolled) for the current render. */
 export function refreshNavScroll() {
+  navScrollRefresh?.();
+}
+
+/** Until when a jump to a spot on the page holds a hiding menu in view (performance.now()). */
+let jumpHoldUntil = 0;
+
+/**
+ * Holds a menu that hides on scroll in view while a jump to a spot on the page runs, so the spot lands under the bar rather than under the gap it leaves; the menu then hides again only after a scroll down from where the jump ended.
+ * @param {number} [ms] How long the jump may take
+ */
+export function holdNavForJump(ms = 1200) {
+  jumpHoldUntil = Math.max(jumpHoldUntil, performance.now() + ms);
   navScrollRefresh?.();
 }
 
@@ -123,13 +135,10 @@ export function renderNav(site, host) {
   if (announce && !dismissed) {
     announceEl = document.createElement('div');
     announceEl.className = 'urd-nav-announce';
-    const inner = document.createElement(announce.href ? 'a' : 'span');
+    const inner = document.createElement(announce.link ? 'a' : 'span');
     inner.className = 'urd-nav-announce-text';
     inner.textContent = announce.text;
-    if (announce.href) {
-      inner.href = announce.href;
-      if (/^https?:/i.test(announce.href)) inner.rel = 'noopener';
-    }
+    if (announce.link) Object.assign(inner, linkAttrs(announce.link));
     if (announce.bg) announceEl.style.setProperty('--urd-announce-bg', announce.bg);
     if (announce.color) announceEl.style.setProperty('--urd-announce-text', announce.color);
     announceEl.appendChild(inner);
@@ -264,7 +273,7 @@ export function renderNav(site, host) {
       const state = menuOpen
         ? { compact: false, hidden: false, scrolled: true, anchor: y }
         : navScrollState(wantsScroll ? scrollMode : undefined, anchor, y, hidden,
-          { shrinkAt: effSite.nav.style?.shrinkAt });
+          { shrinkAt: effSite.nav.style?.shrinkAt, hold: performance.now() < jumpHoldUntil });
       // The turning point the travel is measured from; navScrollState owns
       // where it goes, the render only carries it between frames.
       anchor = state.anchor;
@@ -422,7 +431,7 @@ export function renderNav(site, host) {
   // The button is the desktop opener; on mobile the same shortcuts are a
   // section at the foot of the menu list, which travels into the full-screen
   // sheet with the list.
-  const launcher = launcherModel(site.nav?.launcher);
+  const launcher = launcherModel(site.nav?.launcher, site.pages ?? []);
   const launcherWrap = launcher ? buildLauncher(launcher, signal) : null;
   if (launcherWrap) toolEls.launcher = launcherWrap.el;
   // A shortcut whose target is not a usable link still gets its tile, but the
@@ -443,7 +452,9 @@ export function renderNav(site, host) {
     cartBadge.className = 'urd-nav-cart-badge';
     cartBadge.hidden = true;
     cartBtn.appendChild(cartBadge);
-    const drawer = createCartDrawer({ href: cartCfg.href ?? '', currency: cartCfg.currency || 'kr' });
+    // The checkout page: a page in the register (cart.page) or a path (cart.href).
+    const checkoutLink = resolveLink(cartCfg, site.pages ?? []);
+    const drawer = createCartDrawer({ href: checkoutLink.missing ? '' : checkoutLink.href, currency: cartCfg.currency || 'kr' });
     nav.appendChild(drawer.dialog);
     const paintCart = () => {
       const count = cartCount(readCart());
@@ -598,8 +609,7 @@ export function renderNav(site, host) {
     const makeLink = (target) => {
       const a = document.createElement('a');
       a.textContent = target.label;
-      a.href = target.href;
-      if (target.external) a.rel = 'noopener';
+      Object.assign(a, linkAttrs(target));
       return a;
     };
 
@@ -742,6 +752,15 @@ export function renderNav(site, host) {
     list.appendChild(row);
   }
 
+  // A link in the dropdown panel or an open submenu closes them, so a link to a spot on this page, which never leaves the page, shows the spot rather than the menu.
+  // A link whose own handler cancelled it (the item that opens its submenu on a phone) leaves them open.
+  // The sheet closes on its own.
+  list.addEventListener('click', (event) => {
+    if (event.defaultPrevented || !event.target.closest('a[href]')) return;
+    if (!expandedSubs()) closeAll();
+    if (!sheet && nav.classList.contains('urd-nav-open')) setMobileOpen(false);
+  }, { signal });
+
   nav.appendChild(list);
   nav.appendChild(tools);
   host.appendChild(nav);
@@ -785,6 +804,21 @@ export function renderNav(site, host) {
     document.documentElement.style.setProperty('--urd-announce-h', `${isSide ? pageH : announceH}px`);
     document.documentElement.style.setProperty('--urd-nav-own-h', `${isSide ? 0 : Math.max(0, nav.offsetTop + nav.offsetHeight - announceH)}px`);
     document.documentElement.style.setProperty('--urd-announce-page-h', `${pageH}px`);
+    setScrollClear();
+  }
+
+  // The room a jump to a spot leaves above it, which base.css gives the page as scroll-padding-top.
+  // Unlike --urd-nav-h it follows the scroll shrink, so a spot reached mid-page lands right under the compact menu.
+  function setScrollClear() {
+    if (sheet?.dialog.open) return;
+    // Written only when it changes: the observer reports every frame of the shrink.
+    const announceH = announceEl?.offsetHeight ?? 0;
+    const pageStrip = announceEl?.classList.contains('urd-announce-page') ? announceH : 0;
+    const height = nav.offsetTop + nav.offsetHeight - (announceScrolls ? announceH : 0);
+    const clear = `${scrollClear({ sticky: effSite.nav.sticky !== false, side: isSide, height, pageStrip })}px`;
+    if (document.documentElement.style.getPropertyValue('--urd-scroll-clear') !== clear) {
+      document.documentElement.style.setProperty('--urd-scroll-clear', clear);
+    }
   }
 
   // Content-aware folding: menu items never wrap (nowrap in base.css), so
@@ -824,7 +858,13 @@ export function renderNav(site, host) {
   });
   navRo.observe(nav);
   if (announceEl) navRo.observe(announceEl);
-  signal.addEventListener('abort', () => navRo.disconnect());
+  // The shrink changes the menu's padding, which its content box never shows.
+  const clearRo = new ResizeObserver(setScrollClear);
+  clearRo.observe(nav, { box: 'border-box' });
+  signal.addEventListener('abort', () => {
+    navRo.disconnect();
+    clearRo.disconnect();
+  });
 
   // The column's hover closing: all accordions close together when the
   // pointer leaves the whole menu; re-entering within the delay cancels
@@ -1030,11 +1070,10 @@ function launcherTiles(links, view) {
     const li = document.createElement('li');
     const a = document.createElement('a');
     a.className = 'urd-nav-launcher-link';
-    a.href = link.href;
+    Object.assign(a, linkAttrs(link));
     // A target that is not a usable link points at '#': the tile is there,
     // drawn as the unfinished row it is.
     if (link.missing) a.classList.add('urd-nav-launcher-missing');
-    if (link.external) a.rel = 'noopener';
     const drawn = link.image ? '' : iconSvg(link.icon);
     if (link.image || drawn) {
       const mark = document.createElement('span');
@@ -1140,7 +1179,9 @@ function buildLauncher(model, signal) {
     }, { signal });
     // Escape belongs to the browser here, so the grid reports itself closed
     // to the nav's own Escape handling.
-    return { el: wrap, btn, isOpen: () => false, close: () => { if (grid.matches(':popover-open')) grid.hidePopover(); } };
+    const hide = () => { if (grid.matches(':popover-open')) grid.hidePopover(); };
+    closeOnLink(grid, hide, signal);
+    return { el: wrap, btn, isOpen: () => false, close: hide };
   }
 
   const close = () => {
@@ -1164,5 +1205,13 @@ function buildLauncher(model, signal) {
     if (pressing) return;
     if (!wrap.contains(event.relatedTarget)) close();
   }, { signal });
+  closeOnLink(grid, close, signal);
   return { el: wrap, btn, isOpen: () => wrap.classList.contains('open'), close };
+}
+
+/** A shortcut followed from the launcher's grid closes it, so a shortcut to a spot on this page shows the spot. */
+function closeOnLink(grid, close, signal) {
+  grid.addEventListener('click', (event) => {
+    if (!event.defaultPrevented && event.target.closest('a[href]')) close();
+  }, { signal });
 }

@@ -62,7 +62,7 @@ const BLOCKS = {
 /** The block-level settings that open the most of Placement. */
 const PLACEMENTS = [
   {},
-  { fit: 'shrink', fitMin: 0.5, size: 1.2, sizeMin: 10, sticky: { offset: 16, until: null, mode: 'scroll' }, height: { mode: 'own', align: 'stretch' }, animation: { type: 'fade-in', props: { duration: 300, delay: 0 } }, hover: { type: 'lift' }, decor: true, hideMobile: true },
+  { fit: 'shrink', fitMin: 0.5, size: 1.2, sizeMin: 10, sticky: { offset: 16, until: null, mode: 'scroll' }, height: { mode: 'own', align: 'stretch' }, animation: { type: 'fade-in', props: { duration: 300, delay: 0 } }, hover: { type: 'lift' }, decor: true, hideMobile: true, anchor: 'priser' },
   { fit: 'both', sticky: { offset: 0, mode: 'screen', dock: 'middle-center' } },
 ];
 
@@ -90,6 +90,7 @@ function handleFor(selectedBlock, viewMode = 'desktop') {
     setStatus: noop,
     mutateBlock: noop, setBlockProp: noop, setBlockProps: noop, setBlockFrame: noop, setBlockFit: noop, setBlockFitMin: noop,
     setBlockSize: noop, endSizeGesture: noop, setBlockSizeBound: noop, setBlockHeightMode: noop, setBlockHeightAlign: noop,
+    setBlockAnchor: noop, setSectionAnchor: noop, anchorsTaken: () => new Set(), pageEntry: () => ({ id: 'hjem', path: '/' }),
     canStretch: () => true, setBlockHideMobile: noop, setBlockDecor: noop, setBlockAnimation: noop, setBlockHover: noop, setBlockAnimProp: noop,
     designWidth: () => 1440, shapePx: (p) => Math.round(p * 14.4), setShapeSizePx: noop, setBoxStyle: noop,
     buttonTargets: () => [['hjem', 'Hjem'], ['__href', 'Link']], setButtonTarget: noop, openImageEditor: noop,

@@ -63,11 +63,11 @@ export function apNow(host, occs, props, ics, ui) {
   head.append(ui.el('i', 'urd-cal-apn-dot'), ui.tx('now'));
   card.appendChild(head);
   const notice = props.notice?.show === true;
-  const href = typeof props.notice?.href === 'string' && /^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(props.notice.href.trim()) ? props.notice.href.trim() : '';
+  const href = ui.noticeHref;
   if (notice && props.notice.as === 'band') {
     const band = ui.el(href ? 'a' : 'div', 'urd-cal-apn-alert');
     if (href) {
-      band.href = href;
+      ui.noticeOn(band);
       ui.editLink(band);
     }
     const mark = ui.el('span', 'urd-cal-apn-alert-icon');
@@ -115,8 +115,7 @@ export function apNow(host, occs, props, ics, ui) {
     });
     box.appendChild(body);
     if (href) {
-      const arrow = ui.el('a', 'urd-cal-apn-arrow', '→');
-      arrow.href = href;
+      const arrow = ui.noticeOn(ui.el('a', 'urd-cal-apn-arrow', '→'));
       arrow.setAttribute('aria-label', t('calendar.moreInfo'));
       box.appendChild(arrow);
     }
@@ -259,9 +258,8 @@ export function apSeries(host, occs, props, ics, ui) {
       if (part) aside.appendChild(part);
       return part;
     });
-    const raw = typeof props.notice.href === 'string' ? props.notice.href.trim() : '';
-    const href = /^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(raw) ? raw : '';
-    if (href) aside.appendChild(ui.link('urd-cal-aps-aside-link', 'moreInfo', href, ''));
+    const href = ui.noticeHref;
+    if (href) aside.appendChild(ui.noticeOn(ui.link('urd-cal-aps-aside-link', 'moreInfo', href, '')));
     if (ui.notice(aside, { title, text, href })) card.appendChild(aside);
   }
   host.appendChild(card);

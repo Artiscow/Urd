@@ -21,6 +21,7 @@ import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
 import { stripActiveContent, safeHtmlFragment, plainLines } from '../sanitize.js';
 import { WIDTH_QUERIES } from '../render.js';
+import { linkAttrs } from '../nav-model.js';
 
 /** An element with its class and its content: a text, or a node such as a text the owner rewrites. */
 const el2 = (tag, className, content) => {
@@ -528,6 +529,9 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     return a;
   };
   /** A link whose words are a text the owner rewrites. */
+  /** The announcement's link (calNoticeLink), and what puts it on an anchor: its address, a new tab and the rel words. */
+  const noticeLink = cd.calNoticeLink(props, ctx.site?.pages ?? []);
+  const noticeOn = (a) => (noticeLink ? Object.assign(a, linkAttrs(noticeLink)) : a);
   const link = (className, key, href, title) => {
     const a = el2('a', className);
     a.href = href;
@@ -635,7 +639,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const subscribe = () => (props.showSubscribe !== false && sources.some((source) => source.subscribable) ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
-  const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, countdown, image: imageUrl, themedWords, withDesign, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, startClock, metaString, hasTime, excerpt, sources,
+  const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, noticeHref: noticeLink?.href ?? '', noticeOn, countdown, image: imageUrl, themedWords, withDesign, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, startClock, metaString, hasTime, excerpt, sources,
     dayMonth, dateLine, weekdayDay, monthYear, monthRange, percent,
     /** The week as the site's language lays it out: the empty cells before the first of a month, the weekday names in order, and the first day of a week. */
     lead: (first) => cf.leadDays(first, weekStart),
@@ -914,7 +918,7 @@ function showNoticeDialog(from, ui, href) {
   }
   if (href) {
     const actions = el2('div', 'urd-cal-dialog-actions');
-    actions.appendChild(ui.link('urd-cal-dialog-primary', 'moreInfo', href, ''));
+    actions.appendChild(ui.noticeOn(ui.link('urd-cal-dialog-primary', 'moreInfo', href, '')));
     dialog.appendChild(actions);
   }
   openCard(dialog, from);

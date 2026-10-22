@@ -32,7 +32,7 @@
  *                  { type: 'urd-block-menu', sectionId, blockId, rect } (open the block menu at the block)
  *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
  *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
- *                  { type: 'urd-navigate', path }             (internal link clicked in the preview)
+ *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
  *                  { type: 'urd-add-block', sectionId, block } (block placed from the palette)
  *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
  *                  { type: 'urd-request-block', sectionId, kind, at? } ("+ Add block"; at = click point {x in %, y in px}, without = centered)
@@ -55,6 +55,7 @@
  *                  { type: 'urd-insert-template', id }        (the Blocks panel's My templates: insert a block-group template into the active section)
  *                  { type: 'urd-zoom', scale }                (the canvas zoom; the handles counter-scale so they keep their admin size)
  *                  { type: 'urd-scroll-section', sectionId }  (scroll the preview to the section; the review marker in the top bar)
+ *                  { type: 'urd-scroll-anchor', hash }        (jump to the spot a link's fragment names, once its page stands)
  *                  { type: 'urd-close-menus' }                (a click in the admin panels closes open menus in the preview)
  *                  { type: 'urd-place-block', block }         (the palette: the engine finds a placement mid-viewport and reports back)
  *                  { type: 'urd-attention', sectionId, needed } (desktop drift in an overridden section: mark it live)
@@ -191,6 +192,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Scroll the preview to a section (the review marker in the top bar). */
     sendScrollSection(sectionId) {
       post({ type: 'urd-scroll-section', sectionId });
+    },
+    /** Jump the preview to the spot a link's fragment names, as the published page does on arrival. */
+    sendScrollAnchor(hash) {
+      post({ type: 'urd-scroll-anchor', hash });
     },
     /** Play an entrance animation as a demo (blockId null = the section). */
     sendDemoAnim(sectionId, blockId = null) {

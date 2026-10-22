@@ -2,6 +2,23 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.27.1-3): named spots on a page, the jump under the menu, and one link shape
+
+- [ ] Published, a new tab: `/kaker#video`, `/kaker#sec-4c908354`, `/kaker#meld-deg-inn` and `/kaker#blk-b35fc0b9` each land with the spot's top right under the menu once the page has loaded, and the address shows `#video` or `#meld-deg-inn`
+- [ ] Menu «Hide, show on scroll up»: the menu stays in view during a jump with the spot under it, and hides again on a scroll down afterwards; «Shrink the menu»: the spot lands right under the shrunk menu
+- [ ] A menu that does not stick: the spot lands at the window's top; the side column: at the top, or under a strip fixed across the page
+- [ ] With reduced motion in the system settings an in-page link jumps without animation; without it the page scrolls smoothly
+- [ ] Phone: the dropdown menu, the full-screen menu and the launcher close when a link on them goes to a spot on the page
+- [ ] The back button after a jump returns to where you were; a reload keeps the place you were at; scrolling while a calendar or collection above the spot loads is never undone
+- [ ] Editor: a menu or footer link in the preview to another page's spot switches to that page and scrolls to the spot; the attention badge in the top bar still scrolls to its section
+- [ ] Section Properties: «Link name» offers a name from the section's first heading; «Priser» typed is stored as `priser`; a name another spot on the page has gives «Another spot on this page has this name» and is not stored; an emptied field removes the name; the section's toolbar shows `#priser`
+- [ ] The copy button beside «Link name» copies the whole link (`https://…/kaker#priser`, or the id when there is no name) and the toast shows it
+- [ ] A block's menu, Placement, «Link target»: the same field; a named block hidden on phones shows «Hidden on phones: there a link lands on the top of the section», and at phone width a link to it lands on its section
+- [ ] Ctrl+C/Ctrl+V and Ctrl+D give a block without the name; a named section saved as a template and inserted on the same page arrives as `priser-2`
+- [ ] The example footer: «Bli med» goes to Kaker at «Meld deg inn», also after Kaker's address is changed in the Pages panel; «Kakevideoen» lands on the video section; «Urd på GitHub» opens in a new tab
+- [ ] The cart drawer's «Go to checkout» goes to the checkout page, from the menu's cart and from the Cart block; the calendar's announcement link and programme link still go where they point
+- [ ] A new page named «Café» gets the address `/cafe`
+
 ### Test batch (0.7.24.5.2): the Contact details block in eleven designs, the checkout's seller line, and the design picker for every block
 
 - [ ] Blocks panel: «Contact details» adds the block; with no contact details typed the editor says where to type them and the published page shows nothing

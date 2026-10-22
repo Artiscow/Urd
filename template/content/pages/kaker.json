@@ -89,6 +89,7 @@
           "id": "blk-b35fc0b9",
           "type": "text",
           "version": 1,
+          "anchor": "meld-deg-inn",
           "props": {
             "html": "<h3>Meld deg inn</h3><p>Forklar dette steget kort.</p>",
             "align": "center",
@@ -538,6 +539,7 @@
     {
       "id": "sec-4c908354",
       "version": 1,
+      "anchor": "video",
       "preset": "blank",
       "size": {
         "minHeight": "640px"

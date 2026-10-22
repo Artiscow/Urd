@@ -16832,6 +16832,22 @@ html.urd-arriving::view-transition-new(root) {
   }
 }
 
+/* A jump to a spot on the page (a link's fragment, the arrival jump in urd.js, and focus moving down the page) stops below a menu that stays on screen.
+   nav.js writes the room from the menu's own height (scrollClear in nav-model.js). */
+html {
+  scroll-padding-top: var(--urd-scroll-clear, 0px);
+}
+
+/* A named spot (render.js placeSpot): a zero-size marker at the top of its section or block, which a link's fragment lands on and which moves with the block. */
+.urd-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
 /* The "Back to top" arrow (mountToTop in urd.js) */
 .urd-totop {
   position: fixed;
@@ -17992,6 +18008,17 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-section-toolbar button:hover {
   background: var(--urd-admin-accent, #5f6a75);
   color: var(--urd-admin-accent-text, #fff);
+}
+
+/* The section's name for links (preview-edit.js addSectionToolbar) */
+.urd-preview .urd-section-toolbar .urd-anchor-tag {
+  align-self: center;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--urd-color-surface) 85%, transparent);
+  color: var(--urd-color-text);
+  font-size: 12px;
+  line-height: 1;
+  padding: 5px 8px;
 }
 
 /* Clean view: the editor can hide every editing handle, so the page

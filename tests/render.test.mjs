@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { frameToCss, stackOrder, mobilePlacementToCss, autoGrows, reorderMobileKey, EDITOR_ONLY } = await engineImport('render.js');
+const { frameToCss, stackOrder, mobilePlacementToCss, autoGrows, reorderMobileKey, anchorTargets, EDITOR_ONLY } = await engineImport('render.js');
 const { galleryBlock } = await engineImport('blocks/gallery.js');
 const { MOBILE_ROW, MOBILE_GAP } = await engineImport('migrate.js');
 
@@ -177,3 +177,23 @@ test('autoGrows: text always, else the definition\'s flag or its answer for the 
   const css = mobilePlacementToCss(null, { x: 0, y: 0, w: 50, h: 240 }, { autoGrow: autoGrows({ type: 'gallery', props: { view: 'ribbon' } }, galleryBlock) });
   assert.equal(css.height, '240px');
 });
+
+test('anchorTargets: a section name at its top, each block with its name, and on a phone the hidden blocks at the section top, each naming its owner', () => {
+  const section = { id: 'sec-1', anchor: 'priser', blocks: [
+    { id: 'blk-a', anchor: 'kaker' },
+    { id: 'blk-b' },
+    { id: 'blk-c', anchor: 'skjult', hideMobile: true },
+    { id: 'blk-d', anchor: 'Not A Name' },
+  ] };
+  const desktop = anchorTargets(section, 'desktop');
+  assert.deepEqual(desktop.section, [{ id: 'priser', of: 'sec-1' }]);
+  assert.deepEqual([...desktop.blocks], [
+    ['blk-a', [{ id: 'kaker', of: 'blk-a' }]], ['blk-b', []], ['blk-c', [{ id: 'skjult', of: 'blk-c' }]], ['blk-d', []],
+  ]);
+  const phone = anchorTargets(section, 'mobile');
+  assert.deepEqual(phone.section, [{ id: 'priser', of: 'sec-1' }, { id: 'blk-c', of: 'blk-c' }, { id: 'skjult', of: 'blk-c' }], 'a block hidden on phones lands on its section');
+  assert.equal(phone.blocks.has('blk-c'), false);
+  assert.deepEqual(anchorTargets({ id: 'sec-2', anchor: 'sec-2x', blocks: [] }, 'desktop').section, [], 'a reserved prefix is not a name');
+  assert.deepEqual(anchorTargets({ id: 'sec-3' }, 'desktop'), { section: [], blocks: new Map() });
+});
+

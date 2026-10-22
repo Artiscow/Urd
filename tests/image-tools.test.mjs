@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const {
-  svgViewBox, tightSvgViewBox, mediaExtension, slugify, isAnimatedImage, animatedImageKind,
+  svgViewBox, tightSvgViewBox, mediaExtension, slugify, slugText, isAnimatedImage, animatedImageKind,
   AnimatedTooLargeError, ANIMATED_WARN_BYTES, ANIMATED_MAX_BYTES, VIDEO_WARN_BYTES, compressToWebp,
 } = await engineImport('imageTools.js');
 
@@ -42,6 +42,18 @@ test('mediaExtension/slugify: unchanged by the auto-trim work', () => {
   assert.equal(mediaExtension('data:image/svg+xml;base64,abc'), 'svg');
   assert.equal(mediaExtension('data:image/webp;base64,abc'), 'webp');
   assert.equal(slugify('Min Logo.svg'), 'min-logo');
+});
+
+test('slugText: Norwegian letters spelt out, accents dropped, hyphens only between words', () => {
+  assert.equal(slugText('Ærlig ål på Øya'), 'aerlig-al-pa-oya');
+  assert.equal(slugText('Café Crème'), 'cafe-creme');
+  assert.equal(slugText('Straße, Iğdır'), 'strasse-igdir');
+  assert.equal(slugText('Đuolbmi ŋ ŧ Łódź ð þ Œuvre'), 'duolbmi-n-t-lodz-d-th-oeuvre', 'letters an accent cannot be split from');
+  assert.equal(slugText('  -- Hei!! -- '), 'hei');
+  assert.equal(slugText(null), '');
+  // slugify keeps its file-name rules on top of it.
+  assert.equal(slugify('Ærlig ål.PNG'), 'aerlig-al');
+  assert.equal(slugify('...'), 'image');
 });
 
 /* ---------- Animated images: recognised from their own bytes ---------- */

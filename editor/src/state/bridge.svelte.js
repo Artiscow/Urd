@@ -4,6 +4,7 @@
  */
 import { DOCK_OPTIONS } from '../menu/options.js';
 import { makeId } from '$engine/sections/presets.js';
+import { claimAnchors } from '$engine/anchor-model.js';
 import { ta } from '$engine/i18n.js';
 import { fitMoves } from '$engine/push-model.js';
 import { historyState } from './history.svelte.js';
@@ -241,6 +242,8 @@ function handleAddSection(msg) {
   // id-less section would make the page file invalid on publish. Assign
   // one here if it is missing.
   if (!msg.section.id) msg.section.id = makeId('sec');
+  // Names the page already uses arrive as name-2 (a section template).
+  claimAnchors([msg.section], pageState.store.data);
   pageState.store.data.sections.splice(msg.index, 0, msg.section);
   pageState.store.save();
   historyState.updateDirty();

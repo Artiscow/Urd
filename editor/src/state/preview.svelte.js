@@ -207,6 +207,9 @@ function onIframeLoad() {
   });
 }
 
+/** The fragment of a link in the preview that named a spot on another page, jumped to once that page has loaded (onReady). */
+let pendingAnchor = '';
+
 /** The engine in the iframe is listening now: send the draft and the current editor state. */
 async function onReady() {
   await pageState.pageLoading;
@@ -230,13 +233,23 @@ async function onReady() {
   if (shellState.gridOn) bridge?.sendShowGrid(true);
   if (shellState.guidesOn) bridge?.sendShowGuides(true);
   shellState.sendAdminTheme();
+  // A link from another page to a spot on this one: the jump follows the draft, so it lands in the page as edited.
+  if (pendingAnchor) bridge?.sendScrollAnchor(pendingAnchor);
+  pendingAnchor = '';
 }
 
-/** Internal link clicked in the preview: switch page properly. */
+/** Internal link clicked in the preview: switch page properly, and jump to the spot the link's fragment names. */
 function onNavigate(msg) {
   const path = msg.path.replace(/\/$/, '') || '/';
   const entry = siteState.siteDraft.pages.find((p) => p.path === path);
-  if (entry && entry.id !== pageState.pageId) pageState.selectPage(entry.id);
+  if (!entry) return;
+  const hash = typeof msg.hash === 'string' && msg.hash.length > 1 ? msg.hash : '';
+  if (entry.id !== pageState.pageId) {
+    pendingAnchor = hash;
+    pageState.selectPage(entry.id);
+  } else if (hash) {
+    bridge?.sendScrollAnchor(hash);
+  }
 }
 
 /** Plugin changes require a fresh boot in the preview (an import cannot be undone); onReady sends the new list. */

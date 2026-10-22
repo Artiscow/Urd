@@ -310,15 +310,28 @@ export function mediaExtension(dataUrl) {
   return 'webp';
 }
 
+/** Letters an accent cannot be split from, spelt with the plain letters they stand for (Norwegian, Sámi, German, Turkish, Icelandic and Polish among them). */
+const SPELT_OUT = { æ: 'ae', ø: 'o', ß: 'ss', ı: 'i', đ: 'd', ŋ: 'n', ŧ: 't', ł: 'l', ð: 'd', þ: 'th', œ: 'oe' };
+
+/**
+ * Words → lower-case letters and digits joined by single hyphens.
+ * The letters in SPELT_OUT are spelt out (æ as ae), accents are dropped (é as e), and everything else becomes a hyphen, never at either end.
+ * @param {unknown} text
+ * @returns {string}
+ */
+export function slugText(text) {
+  return String(text ?? '')
+    .toLowerCase()
+    .replace(/[æøßıđŋŧłðþœ]/g, (letter) => SPELT_OUT[letter])
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 /** File name → safe slug for media/ paths. */
 export function slugify(name, fallback = 'image') {
-  return name
-    .replace(/\.[^.]+$/, '')
-    .toLowerCase()
-    .replaceAll('æ', 'ae').replaceAll('ø', 'o').replaceAll('å', 'a')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40) || fallback;
+  return slugText(name.replace(/\.[^.]+$/, '')).slice(0, 40) || fallback;
 }
 
 /** Short, deterministic hash of the content (same image → same file name). */

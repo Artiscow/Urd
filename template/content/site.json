@@ -278,6 +278,11 @@
           {
             "label": "Kakevideoen",
             "href": "/kaker#sec-4c908354"
+          },
+          {
+            "label": "Bli med",
+            "page": "kaker",
+            "target": "blk-b35fc0b9"
           }
         ]
       },
@@ -287,6 +292,11 @@
           {
             "label": "Vi har ingen steder du kan følge oss",
             "href": "#"
+          },
+          {
+            "label": "Urd på GitHub",
+            "href": "https://github.com/Artiscow/Urd",
+            "newTab": true
           }
         ]
       }

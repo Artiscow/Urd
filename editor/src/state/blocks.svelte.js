@@ -7,6 +7,7 @@ import { defaultFormFields } from '$engine/blocks/form.js';
 import { makeId } from '$engine/sections/presets.js';
 import { calDesign } from '$engine/calendar-designs.js';
 import { frameAtPoint } from '$engine/place.js';
+import { claimAnchors } from '$engine/anchor-model.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
@@ -178,6 +179,8 @@ function insertBlock(sectionId, block) {
   // they never hide behind what is already in the section.
   const topZ = Math.max(0, ...section.blocks.map((b) => b.frames?.desktop?.z ?? 1)) + 1;
   if (block.frames?.desktop) block.frames.desktop = { ...block.frames.desktop, z: topZ };
+  // A name the page already uses arrives as name-2 (a template's block).
+  claimAnchors([block], pageState.store.data);
   section.blocks.push(block);
   pageState.markDesktopChange(section, 'block-added');
   pageState.store.save();
@@ -202,6 +205,8 @@ function insertBlocks(sectionId, blocks, minBottom, moves) {
       block.frames.desktop = { ...block.frames.desktop, y: block.frames.desktop.y + move.dy };
     }
   }
+  // Names the page already uses arrive as name-2 (a block group template).
+  claimAnchors(blocks, pageState.store.data);
   section.blocks.push(...blocks);
   const current = String(section.size?.minHeight ?? '');
   if (minBottom && current.endsWith('px') && Number.parseFloat(current) < minBottom) {

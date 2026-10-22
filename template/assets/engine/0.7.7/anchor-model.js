@@ -1,0 +1,194 @@
+/**
+ * Named spots on a page: the sections and blocks an owner names so a link can point at them (`/kaker#priser`).
+ * The naming rule's reasons, the ids a page already uses, suggestions from the spot's own words, and the clean-up when content is copied in.
+ * Pure: the editor, the schema check and the tests import it, and visitors never load it.
+ * The rule itself is isAnchorName in nav-model.js, which the renderer reads.
+ */
+
+import { isAnchorName } from './nav-model.js';
+import { slugText } from './imageTools.js';
+
+/** The longest name. */
+export const ANCHOR_MAX = 40;
+
+/** The prefixes of the engine's own ids, which a name can never start with. */
+const RESERVED_RE = /^(?:urd|sec|blk)-/;
+
+/**
+ * Why a name cannot be used, or null when it can: 'form' (only lower-case letters, digits and inner hyphens, at most 40), 'reserved' (one of the engine's own prefixes) or 'taken' (another spot on the page has it).
+ * @param {unknown} name
+ * @param {Set<string>} [taken] The ids in use on the page (takenAnchors)
+ * @returns {'form'|'reserved'|'taken'|null}
+ */
+export function anchorError(name, taken = new Set()) {
+  if (typeof name === 'string' && RESERVED_RE.test(name)) return 'reserved';
+  if (!isAnchorName(name)) return 'form';
+  return taken.has(name) ? 'taken' : null;
+}
+
+/** A form's fields, each of which gives its input an id on the page (blocks/form.js). */
+function formFields(block) {
+  return block?.type === 'form' && Array.isArray(block.props?.fields) ? block.props.fields : [];
+}
+
+/**
+ * The ids a page already uses for its spots: its sections' and blocks' ids and names, and the ids of its form fields' inputs.
+ * The spot being named (`own`, a section or block id) is left out, so its own name stays free for it.
+ * @param {{sections?: Array<object>}} page
+ * @param {string|null} [own]
+ * @returns {Set<string>}
+ */
+export function takenAnchors(page, own = null) {
+  const taken = new Set();
+  const add = (id) => {
+    if (typeof id === 'string' && id) taken.add(id);
+  };
+  for (const section of page?.sections ?? []) {
+    if (section.id !== own) {
+      add(section.id);
+      add(section.anchor);
+    }
+    for (const block of section.blocks ?? []) {
+      if (block.id !== own) {
+        add(block.id);
+        add(block.anchor);
+      }
+      for (const field of formFields(block)) add(`${field.id}-in`);
+    }
+  }
+  return taken;
+}
+
+/**
+ * The names on a page that another spot already holds: a name given twice, or a name equal to a section's or block's id or a form input's id.
+ * Empty when every name is the only spot of its kind.
+ * @param {{sections?: Array<object>}} page
+ * @returns {string[]}
+ */
+export function duplicateAnchors(page) {
+  const seen = new Map();
+  const count = (id) => {
+    if (typeof id === 'string' && id) seen.set(id, (seen.get(id) ?? 0) + 1);
+  };
+  const names = [];
+  for (const section of page?.sections ?? []) {
+    count(section.id);
+    count(section.anchor);
+    if (typeof section.anchor === 'string') names.push(section.anchor);
+    for (const block of section.blocks ?? []) {
+      count(block.id);
+      count(block.anchor);
+      if (typeof block.anchor === 'string') names.push(block.anchor);
+      for (const field of formFields(block)) count(`${field.id}-in`);
+    }
+  }
+  return [...new Set(names.filter((name) => seen.get(name) > 1))];
+}
+
+/**
+ * A free name built on `name`: the name itself, or with -2, -3 and so on while it is taken, shortened so it stays within the limit.
+ * A name that is one of the reserved words alone (`urd`, `sec`, `blk`) takes its number without the hyphen (`urd2`), since `urd-2` would start with a reserved prefix.
+ * @param {string} name A valid name
+ * @param {Set<string>} taken
+ * @returns {string}
+ */
+export function uniqueAnchor(name, taken) {
+  if (!taken.has(name)) return name;
+  for (let n = 2; ; n++) {
+    const tail = `-${n}`;
+    const base = name.slice(0, ANCHOR_MAX - tail.length).replace(/-+$/, '');
+    const candidate = RESERVED_RE.test(`${base}${tail}`) ? `${base}${n}` : `${base}${tail}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+}
+
+/**
+ * A name made from words, free on the page: their slug, cut at the last whole word that fits, without a reserved prefix.
+ * Empty when the words give no letters or digits.
+ * @param {string} words
+ * @param {Set<string>} [taken]
+ * @returns {string}
+ */
+export function suggestAnchor(words, taken = new Set()) {
+  let slug = slugText(words).replace(RESERVED_RE, '');
+  if (slug.length > ANCHOR_MAX) {
+    const cut = slug.slice(0, ANCHOR_MAX + 1).lastIndexOf('-');
+    slug = slug.slice(0, cut > 0 ? cut : ANCHOR_MAX).replace(/-+$/, '');
+  }
+  return isAnchorName(slug) ? uniqueAnchor(slug, taken) : '';
+}
+
+const HEADING_RE = /<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/i;
+
+/** Rich text as plain words: tags and entities become spaces. */
+function plainWords(html) {
+  return String(html).replace(/<[^>]*>/g, ' ').replace(/&[a-z0-9#]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/** The props a block's own words stand in, in the order they name it best. */
+const WORD_PROPS = ['title', 'heading', 'label', 'name', 'text', 'quote'];
+
+/**
+ * The words that name a block: a text block's first heading, else its first words; another block's title, label or text.
+ * @param {object} block
+ * @returns {string}
+ */
+export function blockWords(block) {
+  const props = block?.props ?? {};
+  if (typeof props.html === 'string') {
+    const heading = props.html.match(HEADING_RE);
+    return plainWords(heading ? heading[1] : props.html).split(' ').slice(0, 6).join(' ');
+  }
+  for (const key of WORD_PROPS) {
+    if (typeof props[key] === 'string' && props[key].trim()) return plainWords(props[key]);
+  }
+  return '';
+}
+
+/**
+ * The words that name a section: the first heading from the top of the section, else the first block with words.
+ * @param {object} section
+ * @returns {string}
+ */
+export function sectionWords(section) {
+  const blocks = [...(section?.blocks ?? [])]
+    .sort((a, b) => (a.frames?.desktop?.y ?? 0) - (b.frames?.desktop?.y ?? 0));
+  for (const block of blocks) {
+    const heading = typeof block.props?.html === 'string' ? block.props.html.match(HEADING_RE) : null;
+    if (heading && plainWords(heading[1])) return plainWords(heading[1]);
+  }
+  for (const block of blocks) {
+    const words = blockWords(block);
+    if (words) return words;
+  }
+  return '';
+}
+
+/**
+ * Gives sections and blocks copied onto a page names that are free there: a name the page already uses gets -2, -3 and so on, two copies with the same name get different ones, and a name that breaks the rule is dropped.
+ * The items are changed in place and returned.
+ * @param {Array<object>} items Sections with their blocks, or blocks
+ * @param {{sections?: Array<object>}} page The page they are added to, as it is without them
+ * @returns {Array<object>}
+ */
+export function claimAnchors(items, page) {
+  const taken = takenAnchors(page);
+  const claim = (item) => {
+    if (item.anchor === undefined) return;
+    if (!isAnchorName(item.anchor)) {
+      delete item.anchor;
+      return;
+    }
+    item.anchor = uniqueAnchor(item.anchor, taken);
+    taken.add(item.anchor);
+  };
+  for (const item of items) {
+    if (typeof item.id === 'string') taken.add(item.id);
+    claim(item);
+    for (const block of item.blocks ?? []) {
+      if (typeof block.id === 'string') taken.add(block.id);
+      claim(block);
+    }
+  }
+  return items;
+}

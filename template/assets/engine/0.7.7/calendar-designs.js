@@ -7,6 +7,8 @@
  * A design is five things, added together: an entry in CAL_DESIGNS below (its view, the colour slots by section with the plain colours first, the static texts, the stripe and the flags); a renderer exported under the design's id from its blocks/calendar-<module>.js; its rules in base.css, under its own class names, that read every slot as `--urd-cal-s-<slot>` with the design's own default; a drawing in calendar-thumb.js; a picture under template/admin/designs/<id>.webp made by scripts/design-pictures.mjs for the design picker; and the label, slot and section keys in the nb, en-GB and tr admin dictionaries. tests/calendar-designs.test.mjs holds the entries, the renderers, the drawings and the keys against each other; the style sheet is checked by eye.
  */
 
+import { isSafeHref, resolveLink } from './nav-model.js';
+
 /** The data views a design can stand on; `null` on a design means the block's own `view`. */
 export const CAL_VIEWS = ['list', 'cards', 'month', 'agenda', 'next', 'week', 'day', 'year'];
 
@@ -1058,16 +1060,37 @@ export function calFolds(props) {
   return props?.showMore !== false && calView(props) === 'list' && calDesign(props?.design).module !== 'more';
 }
 
-const SAFE_HREF = /^(?:https?:\/\/|\/(?!\/)|#|mailto:)/i;
-
 /**
- * The address of the whole programme, for a design that links to it (`program`): a page of the site, an anchor or a full address.
+ * The address of the whole programme, for a design that links to it (`program`): a page of the site, an anchor or a full address, through the shared safe-URL gate.
  * Null when the block has none, the design draws no such link, or the value is not an address.
  */
 export function calProgramHref(props) {
   if (!calDesign(props?.design).program) return null;
   const href = typeof props?.programHref === 'string' ? props.programHref.trim() : '';
-  return SAFE_HREF.test(href) ? href : null;
+  return isSafeHref(href) ? href : null;
+}
+
+/**
+ * The link the announcement goes to (`props.notice`, one link: a page, a spot on it, or an address through the shared safe-URL gate, with a new tab and rel words), resolved by resolveLink, or null when it has none or it goes nowhere.
+ * @param {object} props The block's props
+ * @param {Array<{id: string, path: string}>} [pages] The page register
+ * @returns {ReturnType<typeof resolveLink>|null}
+ */
+export function calNoticeLink(props, pages = []) {
+  const notice = props?.notice;
+  if (!notice || !(notice.page || notice.href || notice.target)) return null;
+  const link = resolveLink(notice, pages);
+  return link.missing ? null : link;
+}
+
+/**
+ * The address the announcement links to, or '' when it has none or it goes nowhere (calNoticeLink).
+ * @param {object} props The block's props
+ * @param {Array<{id: string, path: string}>} [pages] The page register
+ * @returns {string}
+ */
+export function calNoticeHref(props, pages = []) {
+  return calNoticeLink(props, pages)?.href ?? '';
 }
 
 /** The picker's groups: the designs by the view they stand on, the plain one first and alone. */

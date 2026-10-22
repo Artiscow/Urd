@@ -25,7 +25,7 @@ import {
 import { resolveColor, inkOn } from '../theme.js';
 import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll, ribbonWidth, ribbonPause } from '../ribbon-model.js';
 import { syncTrackCopies, fitBandReach, bandPauseControl, PAUSE_ICON, PLAY_ICON } from './ribbon.js';
-import { isSafeHref } from '../nav-model.js';
+import { resolveLink, linkAttrs } from '../nav-model.js';
 // ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
 
@@ -79,11 +79,12 @@ async function openTileEditor(tile, props, index, ctx, blockEl) {
  *  is chosen by what the click should do: link (a), clickable (button) or pure decoration (span). */
 function makeTile(props, index, ctx, blockEl) {
   const img = props.images[index];
-  // Shared guard (nav/footer plus internal paths and anchors): an unsafe href gives a tile without a link (the lightbox takes over).
-  const asLink = Boolean(img.href) && isSafeHref(img.href) && !ctx.preview;
+  // One link per picture (resolveLink): one that goes nowhere gives a tile without a link (the lightbox takes over).
+  const link = img.page || img.href || img.target ? resolveLink(img, ctx.site?.pages ?? []) : null;
+  const asLink = Boolean(link) && !link.missing && !ctx.preview;
   const clickable = ctx.preview || props.lightbox;
   const tile = el2(asLink ? 'a' : clickable ? 'button' : 'span', 'urd-gallery-tile');
-  if (asLink) tile.href = img.href;
+  if (asLink) Object.assign(tile, linkAttrs(link));
   if (tile.tagName === 'BUTTON') tile.type = 'button';
 
   const image = document.createElement('img');

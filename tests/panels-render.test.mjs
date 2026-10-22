@@ -154,6 +154,7 @@ function handleFor(panel, siteDraft, extra = {}) {
     askConfirm: async () => true, loadHistory: noop, refreshBaseSha: async () => null, loadUpdateCheck: noop,
     mutateBlock: noop, setBlockProp: noop, setBlockProps: noop, setBlockFrame: noop, setBlockFit: noop, setBlockFitMin: noop,
     setBlockSize: noop, endSizeGesture: noop, setBlockSizeBound: noop, setBlockHeightMode: noop, setBlockHeightAlign: noop,
+    setBlockAnchor: noop, setSectionAnchor: noop, anchorsTaken: () => new Set(), pageEntry: () => ({ id: 'hjem', path: '/' }),
     setBlockHideMobile: noop, setBlockDecor: noop, setBlockAnimation: noop, setBlockHover: noop, setBlockAnimProp: noop,
     setShapeSizePx: noop, setBoxStyle: noop, setButtonTarget: noop, openImageEditor: noop,
     setBlockVideoFile: noop, setBlockVideoPoster: noop, addGalleryImages: noop, moveGalleryImage: noop, removeGalleryImage: noop, setGalleryImageField: noop,
@@ -222,6 +223,16 @@ test('the Properties panel renders a section with every setting on, and a select
   assert.match(body, /bg-layer/, 'the background layers are drawn');
   body = draw(panels.Properties, 'properties', structuredClone(site), { selectedBlock: textBlock });
   assert.match(body, /menu-quick/, 'the element menu is drawn for the selected block');
+});
+
+test('the section Properties draws its link name, with a suggestion from its first heading while it has none', () => {
+  const sections = [{ id: 'sec-1', blocks: [{ id: 'blk-1', type: 'text', props: { html: '<h2>Våre priser</h2>' }, frames: { desktop: { y: 0 } } }] }];
+  let body = draw(panels.Properties, 'properties', structuredClone(site), { sections, sectionAnchor: '' });
+  assert.match(body, /placeholder="vare-priser"/, 'the suggestion stands in the empty field');
+  assert.match(body, /title="tip.anchorSuggest"/, 'and a button gives it');
+  body = draw(panels.Properties, 'properties', structuredClone(site), { sections, sectionAnchor: 'priser' });
+  assert.match(body, /value="priser"/);
+  assert.doesNotMatch(body, /tip.anchorSuggest/, 'a named section offers no suggestion');
 });
 
 test('the background editor renders a layer of every type, with the sizes, the stops and the folder', () => {

@@ -47,27 +47,66 @@ export function isSafeHref(url) {
   return isSafeUrl(url) || (typeof url === 'string' && SAFE_INTERNAL_RE.test(url.trim()));
 }
 
+/** The words an owner may add to a link's rel; they count only for a link that leaves the site. */
+export const LINK_RELS = ['nofollow', 'sponsored'];
+
+// A link's `target`: the id of a section or block (or a name), the page schema's id shape.
+// Anchored regex on purpose - CodeQL recognizes it as a barrier.
+const LINK_TARGET_RE = /^[a-z0-9][a-z0-9-]{0,80}$/;
+
 /**
- * Resolves a menu item against the page register: `page` is looked up to a
- * path, `href` is an external link OR a site-internal path/anchor (additive
- * since v0.6: `#section-id` and `/path#section-id` via isSafeHref, so
- * footer columns and menu items can point at sections - sections render
- * with a DOM id). An unknown page or unsafe href yields '#' with a missing
- * flag (nav.js logs the warning - this module has no side effects).
- * @param {{label: string, page?: string, href?: string}} item
+ * Resolves one link, in the shape every host stores beside its own fields (additive from 0.7.27.3): `page` (a page id in the register), `target` (the id of a section or block on that page, or on this page when there is no `page`), `href` (an address: http(s), mailto, tel, or a path or a fragment of the site, through the safe-URL gate), `newTab` (open in a new tab) and `rel` (a list of 'nofollow' and 'sponsored', which count only for a link that leaves the site).
+ * `page` wins over `href`, so the link follows a change of the page's address, and `target` holds the spot's id, so it follows a rename of the spot; the address shows the spot's name once the visitor has landed (urd.js).
+ * An unknown page or an address that fails the gate gives '#' and the missing flag (the hosts log the warning - this module has no side effects).
+ * `newTab` and `rel` appear only when set.
+ * @param {{page?: string, target?: string, href?: string, newTab?: boolean, rel?: string[]}} link
+ * @param {Array<{id: string, path: string}>} [pages] The page register (site.pages)
+ * @returns {{href: string, external: boolean, missing: boolean, newTab?: true, rel?: string[]}}
+ */
+export function resolveLink(link, pages = []) {
+  const extra = link?.newTab === true ? { newTab: true } : {};
+  const fragment = typeof link?.target === 'string' && LINK_TARGET_RE.test(link.target) ? `#${link.target}` : '';
+  if (link?.page) {
+    // The page's own path passes the same gate: a register edited by hand never makes a link leave the site.
+    const page = pages.find((p) => p.id === link.page);
+    if (!page || !isSafeHref(page.path)) return { href: '#', external: false, missing: true };
+    return { href: `${page.path}${fragment}`, external: false, missing: false, ...extra };
+  }
+  const href = typeof link?.href === 'string' ? link.href.trim() : '';
+  if (!href && fragment) return { href: fragment, external: false, missing: false, ...extra };
+  if (isSafeUrl(href)) {
+    const rel = /^https?:\/\//i.test(href) && Array.isArray(link.rel) ? LINK_RELS.filter((word) => link.rel.includes(word)) : [];
+    return { href, external: true, missing: false, ...extra, ...(rel.length ? { rel } : {}) };
+  }
+  if (isSafeHref(href)) return { href, external: false, missing: false, ...extra };
+  return { href: '#', external: false, missing: true };
+}
+
+/**
+ * The attributes a resolved link puts on its element: its address, a new tab, and the rel words.
+ * A link that leaves the site (http(s), mailto, tel) gets the host's own words (the menu's noopener, the footer's noopener noreferrer), a new tab gets noopener, and the owner's words come last.
+ * @param {{href: string, external?: boolean, newTab?: boolean, rel?: string[]}} link A resolveLink result
+ * @param {string[]} [external] The host's rel words for a link that leaves the site
+ * @returns {{href: string, target?: string, rel?: string}}
+ */
+export function linkAttrs(link, external = ['noopener']) {
+  const rel = new Set([...(link.external ? external : []), ...(link.newTab ? ['noopener'] : []), ...(link.rel ?? [])]);
+  return {
+    href: link.href,
+    ...(link.newTab ? { target: '_blank' } : {}),
+    ...(rel.size ? { rel: [...rel].join(' ') } : {}),
+  };
+}
+
+/**
+ * Resolves a menu item against the page register through resolveLink: the item's label with the link's address, its flags, and a new tab and rel words when set.
+ * An unknown page or unsafe href yields '#' with the missing flag.
+ * @param {{label: string, page?: string, target?: string, href?: string, newTab?: boolean, rel?: string[]}} item
  * @param {Array<{id: string, path: string}>} pages The page register (site.pages)
- * @returns {{label: string, href: string, external: boolean, missing: boolean}}
+ * @returns {{label: string, href: string, external: boolean, missing: boolean, newTab?: true, rel?: string[]}}
  */
 export function resolveItem(item, pages) {
-  if (item.page) {
-    const target = pages.find((p) => p.id === item.page);
-    return { label: item.label, href: target ? target.path : '#', external: false, missing: !target };
-  }
-  const href = (item.href ?? '').trim();
-  if (isSafeUrl(href)) return { label: item.label, href, external: true, missing: false };
-  // Internal targets never open in a new tab and get no rel - they are not external.
-  if (isSafeHref(href)) return { label: item.label, href, external: false, missing: false };
-  return { label: item.label, href: '#', external: false, missing: true };
+  return { label: item.label, ...resolveLink(item, pages) };
 }
 
 /**
@@ -84,7 +123,7 @@ export function navItems(site) {
     const children = Array.isArray(item.children)
       ? item.children.map((child) => resolveItem(child, pages))
       : [];
-    const hasTarget = !!(item.page || item.href);
+    const hasTarget = !!(item.page || item.href || item.target);
     const kind = children.length === 0 ? 'link' : hasTarget ? 'split' : 'toggle';
     // A toggle item has no link of its own - resolveItem would flag it as
     // missing, so openers are modeled without an href.
@@ -146,26 +185,21 @@ export function clampLauncherMax(value) {
  * empty when the heading is off, and the custom heading otherwise; the
  * translated default word is nav.js's business, not this module's.
  * @param {object} [launcher] site.nav.launcher
+ * @param {Array<{id: string, path: string}>} [pages] The page register, for a row that links a page
  * @returns {{links: Array<object>, view: string, mobileView: string, mobileMax: number, title: string, titleShow: boolean, icon: string, image: string} | null}
  */
-export function launcherModel(launcher) {
+export function launcherModel(launcher, pages = []) {
   if (launcher?.show !== true) return null;
   const rows = Array.isArray(launcher.links) ? launcher.links : [];
   // Every row the owner has added is drawn: the launcher stands as soon as it
   // is switched on, and a row whose target is not a usable link gets '#' with
   // the missing flag, exactly as a menu item pointing at an unknown page does.
-  const links = rows.map((row) => {
-    const href = typeof row?.href === 'string' ? row.href.trim() : '';
-    const safe = isSafeHref(href);
-    return {
-      label: typeof row?.label === 'string' ? row.label.trim() : '',
-      href: safe ? href : '#',
-      missing: !safe,
-      external: safe && isSafeUrl(href),
-      icon: typeof row?.icon === 'string' ? row.icon : '',
-      image: isSafeImage(row?.image) ? row.image : '',
-    };
-  });
+  const links = rows.map((row) => ({
+    label: typeof row?.label === 'string' ? row.label.trim() : '',
+    ...resolveLink(row, pages),
+    icon: typeof row?.icon === 'string' ? row.icon : '',
+    image: isSafeImage(row?.image) ? row.image : '',
+  }));
   const view = LAUNCHER_VIEWS.includes(launcher.view) ? launcher.view : 'grid';
   return {
     links,
@@ -195,13 +229,15 @@ export function launcherModel(launcher) {
  * the furthest point in the current direction. `scrolled` says whether the
  * page has left the top zone, whatever the mode: the transparent-at-top
  * surface (nav.style.atTop) reads it.
+ * `hold` keeps a hiding menu in view while a jump to a spot on the page runs, so the spot lands under it, and the travel is measured from where the jump ends.
  * @param {string|undefined} mode nav.scroll ('shrink' | 'hide' | undefined)
  * @param {number} anchor The scrollY the travel is measured from
  * @param {number} y Current scrollY
  * @param {boolean} prevHidden Whether the menu was hidden
+ * @param {{shrinkAt?: number, hold?: boolean}} [options]
  * @returns {{compact: boolean, hidden: boolean, scrolled: boolean, anchor: number}}
  */
-export function navScrollState(mode, anchor, y, prevHidden, { shrinkAt } = {}) {
+export function navScrollState(mode, anchor, y, prevHidden, { shrinkAt, hold = false } = {}) {
   const TOP_ZONE = 80;
   // Asymmetric on purpose. Hiding asks for a deliberate scroll down, so the
   // menu does not leave at the first notch; showing it again answers a short
@@ -214,7 +250,7 @@ export function navScrollState(mode, anchor, y, prevHidden, { shrinkAt } = {}) {
   const shrinkZone = clampNum(shrinkAt, NAV_SIZE_BOUNDS.shrinkAt) ?? TOP_ZONE;
   if (mode === 'shrink') return { compact: y > shrinkZone, hidden: false, scrolled, anchor: y };
   if (mode !== 'hide') return { compact: false, hidden: false, scrolled, anchor: y };
-  if (!scrolled) return { compact: false, hidden: false, scrolled, anchor: y };
+  if (!scrolled || hold) return { compact: false, hidden: false, scrolled, anchor: y };
   if (prevHidden) {
     if (y >= anchor) return { compact: false, hidden: true, scrolled, anchor: y };
     if (anchor - y >= SHOW_TRAVEL) return { compact: false, hidden: false, scrolled, anchor: y };
@@ -223,6 +259,78 @@ export function navScrollState(mode, anchor, y, prevHidden, { shrinkAt } = {}) {
   if (y <= anchor) return { compact: false, hidden: false, scrolled, anchor: y };
   if (y - anchor >= HIDE_TRAVEL) return { compact: false, hidden: true, scrolled, anchor: y };
   return { compact: false, hidden: false, scrolled, anchor };
+}
+
+/**
+ * The room a jump to a spot on the page leaves above the spot, so it lands under a menu that stays on screen: a sticky top bar's own height, nothing for a menu that scrolls away with the page, and for the side column only a strip fixed across the page above it. nav.js writes it to `--urd-scroll-clear`, which base.css gives the page as its `scroll-padding-top`.
+ * @param {{sticky: boolean, side: boolean, height: number, pageStrip?: number}} menu
+ * @returns {number} Whole pixels, never negative
+ */
+export function scrollClear({ sticky, side, height, pageStrip = 0 }) {
+  const px = side ? pageStrip : sticky ? height : 0;
+  return Number.isFinite(px) && px > 0 ? Math.round(px) : 0;
+}
+
+// A name an owner gives a section or a block, so a link can point at it (`/kaker#priser`): lower-case letters, digits and inner hyphens, at most 40 characters, never one of the prefixes the engine's own ids use.
+// Anchored regex on purpose - CodeQL recognizes it as a barrier.
+const ANCHOR_NAME_RE = /^(?!(?:urd|sec|blk)-)[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
+
+/** @param {unknown} name @returns {boolean} */
+export function isAnchorName(name) {
+  return typeof name === 'string' && ANCHOR_NAME_RE.test(name);
+}
+
+/**
+ * The element id a URL fragment names: `#priser` gives `priser`, and a percent-encoded fragment is decoded the way the browser reads it.
+ * An empty fragment names nothing.
+ * @param {unknown} hash location.hash or a link's fragment
+ * @returns {string|null}
+ */
+export function hashTarget(hash) {
+  if (typeof hash !== 'string') return null;
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  if (!raw) return null;
+  try {
+    return decodeURIComponent(raw) || null;
+  } catch {
+    // A malformed escape is read as it is written.
+    return raw;
+  }
+}
+
+/**
+ * A link to a spot on the page the visitor is on: the same origin and query, and the same path with or without a trailing slash, since the site serves a page at both.
+ * `inPlace` says whether the browser follows it without loading the page again, which it does only when the path is written exactly as the address bar has it.
+ * Anything else gives null.
+ * @param {string} href The link's address, absolute or relative to `here`
+ * @param {{href: string}} here The current location
+ * @returns {{hash: string, inPlace: boolean}|null} The fragment with its '#'
+ */
+export function samePageHash(href, here) {
+  let url;
+  let base;
+  try {
+    base = new URL(here.href);
+    url = new URL(href, base);
+  } catch {
+    return null;
+  }
+  const page = (path) => (path.length > 1 ? path.replace(/\/$/, '') : path);
+  if (url.origin !== base.origin || url.search !== base.search || page(url.pathname) !== page(base.pathname)) return null;
+  if (url.hash.length < 2) return null;
+  return { hash: url.hash, inPlace: url.pathname === base.pathname };
+}
+
+/**
+ * Whether the engine jumps to the address's fragment once the page has rendered.
+ * The page is drawn after the browser has looked for the spot, so a visit with a fragment jumps there.
+ * A return through the history and a reload keep the place the browser restores, and so does a page that has already left the top.
+ * @param {{hash: string, navigationType?: string, scrollY: number}} arrival
+ * @returns {boolean}
+ */
+export function jumpOnArrival({ hash, navigationType, scrollY }) {
+  if (!hashTarget(hash) || navigationType === 'back_forward' || navigationType === 'reload') return false;
+  return !(scrollY > 1);
 }
 
 /** The nav fields the mobile breakpoint may override (nav.style.mobile). */
@@ -402,16 +510,12 @@ export function navClasses(site) {
 export function announcementModel(announcement, pages = []) {
   const text = typeof announcement?.text === 'string' ? announcement.text.trim() : '';
   if (announcement?.show !== true || !text) return null;
-  let href = null;
-  if (announcement.page) {
-    const target = resolveItem({ label: text, page: announcement.page }, pages);
-    href = target.missing ? null : target.href;
-  } else if (isSafeHref(announcement.href)) {
-    href = announcement.href.trim();
-  }
+  // The strip is a link only when its target resolves: an unknown page or a failing address leaves it as plain text.
+  const link = resolveLink(announcement, pages);
   return {
     text,
-    href,
+    href: link.missing ? null : link.href,
+    link: link.missing ? null : link,
     sticky: announcement.sticky !== false,
     dismiss: announcement.dismiss !== false,
     // Whether the strip slides out with the menu under «hide on scroll».
