@@ -85,7 +85,7 @@
   {/if}
 {/snippet}
 {#snippet menuMotion()}
-  <label title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
+  <label class="field-stack" title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
     <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
       options={blockEntranceOptions()}
       onchange={(v) => setBlockAnimation(v || null)} /></label>
@@ -99,7 +99,7 @@
         value={selectedBlock.animation.props.delay}
         onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
   {/if}
-  <label title={ta('tip.props.blockHover')}>{ta('lbl.onHover')}
+  <label class="field-stack" title={ta('tip.props.blockHover')}>{ta('lbl.onHover')}
     <Dropdown value={selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : '')}
       options={hoverOptions()}
       onchange={(v) => setBlockHover(v || null)} /></label>

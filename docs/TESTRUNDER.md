@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.61): the section's Properties in groups
+
+- [ ] Select a section's surface and open Properties: six closed groups, Height and grid, Section theme, Link target, Background, Edge shapes and Motion, each with its value beside it (such as «Glow · Grain · Image», «None» or «#priser»); a group left open is open again after a reload
+- [ ] Each group's settings work as before: the minimum height and the own grid, the theme cards, «Link name» with its suggestion and the copy button, the edge shapes with their own settings shown only once an edge has a shape, the entrance with its duration, delay and the stagger settings, and the effect on pointer
+- [ ] A changed setting shows in its closed group at once: a top edge «Wave» gives «Wave» beside Edge shapes, an entrance gives its name beside Motion, and an own grid adds «Grid 24 px» beside Height and grid
+- [ ] Background in Properties, Nav and Footer: each layer shows only its row with the type, the arrows and the cross; its arrow opens and closes its settings; «+ Add layer» adds a layer that arrives open; a layer moved up or down stays open or closed, and removing a layer leaves the others as they were
+- [ ] «Link name» on a section without a name offers «Name it «…»» as a small underlined link under the field; pressing it stores the name
+- [ ] A block's menu, Placement, Motion: «Animation in» and «On pointer» stand above their dropdowns
+
 ### Test batch (0.7.27.4-6): one link editor for every link
 
 - [ ] A button's «Goes to», and its tile in the quick row, open the link window; «Goes to» offers Page, Web address, Email and Phone; searching «kak» shows Kaker, and choosing Kaker lists «A spot on the page»: the top, «Section 1 · …», «Section 2 · Video #video» and the named block; «Use this link» stores it, and the field shows «Kaker › #video»

@@ -2070,6 +2070,18 @@
     border-left: 2px solid rgb(255 255 255 / 12%);
   }
 
+  /* A layer's fold: the caret points right while the layer's settings are folded away, down while they show. */
+  .bg-fold svg {
+    rotate: -90deg;
+    transition: rotate 0.15s ease;
+  }
+
+  .bg-fold.open svg { rotate: 0deg; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-fold svg { transition: none; }
+  }
+
   /* Compact toolbar rows (word-processor style) in the panels */
   .toolbar-row {
     display: flex;

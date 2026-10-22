@@ -63,7 +63,7 @@
   <button type="button" class="ghost row-tool" title={ta('tip.copyLink')} aria-label={ta('tip.copyLink')} onclick={copyLink}>{@html ICONS.copy}</button>
 </div>
 {#if suggestion}
-  <button type="button" class="ghost action" title={ta('tip.anchorSuggest')} onclick={useSuggestion}>{ta('ui.useName', { name: suggestion })}</button>
+  <button type="button" class="linkish anchor-suggest" title={ta('tip.anchorSuggest')} onclick={useSuggestion}>{ta('ui.useName', { name: suggestion })}</button>
 {/if}
 {#if error}
   <p id="anchor-note-{uid}" class="panel-hint place-error" aria-live="polite">{ta(ERROR_KEYS[error])}</p>
@@ -79,6 +79,11 @@
   .anchor-row label {
     flex: 1;
     min-width: 0;
+  }
+
+  .anchor-suggest {
+    justify-self: start;
+    text-align: left;
   }
 
   .anchor-error {

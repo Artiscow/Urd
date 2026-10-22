@@ -28,6 +28,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.61 - The section's Properties in groups, and background layers that fold - 22 October 2026
+
+- The section's Properties were one long list: the height and grid, the theme cards, the link name, every background layer open, the edge shapes and the motion, split by rules. They are six groups as a block's menu has them (Height and grid, Section theme, Link target, Background, Edge shapes, Motion), each showing its value while closed (`PropertiesPanel.svelte`).
+- Every background layer showed all its settings at once, in Properties and in the Nav and Footer panels. A layer folds to its row of type, order and removal, opened by its arrow, and a new layer arrives open (`BackgroundEditor.svelte`).
+- The name suggestion under «Link name» was a button across the panel; it is a small text link.
+- «Animation in» and «On pointer» broke over two lines beside their dropdowns inside a group; the label stands above its dropdown, in a block's Motion group too.
+
 ### 0.7.27.4-6 - One link editor for every link: the block menus, the site panels and the words of a text - 22 October 2026
 
 - About fifteen link fields were a page dropdown beside a typed address, each with its own rules, and none offered a spot on a page. Every link opens the same link editor (`LinkDialog.svelte`, through `LinkField.svelte`): Page, Web address, Email or Phone; a page is searched and then a spot on it chosen (the top, each section by number and first words, each named block; `pageSpots`); «Open in a new tab» for pages and the web, and nofollow and sponsored for the web.
