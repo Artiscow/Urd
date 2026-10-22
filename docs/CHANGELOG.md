@@ -28,6 +28,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.66 - The bug list taken, fourth round: publishing and the collections - 22 October 2026
+
+- A collection taken out of the index lost its file but kept its feed online, and a collection changed to a kind without a feed kept the old one. Publishing deletes `content/samlinger/<id>.xml` with the collection, and when the published kind had a feed and the new one has none (`publish.svelte.js`).
+- When the request for the collection index failed as the editor opened, the editor started from an empty index, and the next publish could delete every published collection's file. The index reader tells a failed request from a missing index (`readIndexes`), the editor then reports that the collections could not be read, the Collections panel shows that in place of the list and the create form, publishing writes and deletes nothing of the collections until a reload, and the product block's «Create product catalog» is held back too (`collections.svelte.js`, `publish.svelte.js`, `Product.svelte`).
+- BACKLOG: two bug entries delivered.
+
 ### 0.7.0.65 - The bug list taken, third round: the payment layer - 22 October 2026
 
 - The Vipps function charged in NOK while the checkout showed whatever currency word the block held. With the payment button on, the prices show kr, the block's currency field is fixed to kr with its reason in the tooltip, and turning the button on sets it (`blocks/checkout.js`, `Checkout.svelte`). BACKLOG: the product and cart blocks' own words under SHOP-6.

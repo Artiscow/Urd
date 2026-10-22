@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.66): publishing and the collections
+
+- [ ] Remove a news collection in the Collections panel and publish: `content/samlinger/<id>.json` and `content/samlinger/<id>.xml` are both gone from the repo in that commit, and the feed address answers 404 after the deploy
+- [ ] Change a published news collection to a kind without a feed (custom) and publish: its `.xml` is gone from the repo in that commit; a collection that never had a feed publishes without a deletion in the commit
+- [ ] With the request for `content/samlinger.json` blocked in the browser's network panel, reload the editor: a toast says the collections could not be read, the Collections panel shows the same message with no list and no create form; a product block's menu offers no «Create product catalog»; publish a page: the commit holds no collection file, no index and no deletion; after the block is lifted and a reload, the collections are back
+
 ### Test batch (0.7.0.65): the payment layer (a deployed site with the Vipps test secrets)
 
 - [ ] Checkout block with «Vipps Checkout button» on: the prices in the summary show kr whatever the currency word was; the block's menu shows the currency field fixed to kr with its tooltip; a block that held «€» before shows kr too, and turning the button off frees the field with its old word

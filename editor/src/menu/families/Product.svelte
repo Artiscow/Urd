@@ -31,7 +31,7 @@
         <button class="ghost action" title={ta('tip.product.editCatalog')}
           onclick={() => ed.openCollection(selectedBlock.props.collection)}>{ta('ui.editCatalog')}</button>
       </span>
-    {:else if !collectionIds.some((id) => collectionsView[id]?.kind === 'products')}
+    {:else if !ed.collectionsUnavailable && !collectionIds.some((id) => collectionsView[id]?.kind === 'products')}
       <button class="ghost action" title={ta('tip.product.createCatalog')}
         onclick={createCatalogForBlock}>{ta('ui.createCatalog')}</button>
     {/if}

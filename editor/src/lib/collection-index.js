@@ -61,10 +61,13 @@ export function mergeIds(...lists) {
  * Reads the index and the legacy index the editor opens with.
  * @param {typeof fetch} [fetchFn]
  * @param {Pick<Storage, 'getItem' | 'removeItem'>} [storage]
- * @returns {Promise<{index: {version: number, samlinger: string[]}, legacy: string[] | null}>} legacy: the ids only the legacy index lists (possibly none), or null when the site has no legacy index or this browser has published its deletion
+ * @returns {Promise<{index: {version: number, samlinger: string[]}, legacy: string[] | null, unreadable?: true}>} legacy: the ids only the legacy index lists (possibly none), or null when the site has no legacy index or this browser has published its deletion; unreadable when the request for the index failed
  */
 export async function readIndexes(fetchFn = fetch, storage = localStorage) {
-  const index = (await fetchIndex(INDEX_PATH, fetchFn)) ?? { version: 1, samlinger: [] };
+  const read = await fetchIndex(INDEX_PATH, fetchFn);
+  // A request that failed (undefined) is not a missing index (null): the editor then keeps the collections out of editing and publishing.
+  if (read === undefined) return { index: { version: 1, samlinger: [] }, legacy: null, unreadable: true };
+  const index = read ?? { version: 1, samlinger: [] };
   const legacyFile = await fetchIndex(LEGACY_INDEX_PATH, fetchFn);
   if (legacyFile === null) storage.removeItem(LEGACY_DELETED_KEY);
   if (!legacyFile || storage.getItem(LEGACY_DELETED_KEY) !== null) return { index, legacy: null };

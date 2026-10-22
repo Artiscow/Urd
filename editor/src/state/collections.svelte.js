@@ -30,6 +30,9 @@ let collectionsReady = false;
 
 let collectionIds = $state([]);
 
+/** True when the request for the collection index failed as the editor opened: the collections are then out of editing and publishing until a reload. */
+let collectionsUnavailable = $state(false);
+
 let collectionsView = $state({});
 
 let activeCollection = $state(null);
@@ -39,8 +42,14 @@ let newCollectionName = $state('');
 let newCollectionKind = $state('news');
 
 async function initCollections() {
-  // No index is perfectly fine.
-  const { index, legacy } = await readIndexes();
+  // No index is perfectly fine; an index that could not be read is not.
+  const { index, legacy, unreadable } = await readIndexes();
+  if (unreadable) {
+    collectionsUnavailable = true;
+    collectionIds = [];
+    shellState.setStatus(ta('status.collectionsUnreadable'), 'error');
+    return;
+  }
   legacyIndexIds = legacy;
   const earlier = earlierDrafts(localStorage);
   const baseline = indexBaseline(index, legacy);
@@ -140,6 +149,8 @@ function handleCollectionEdit(msg) {
 
 /** Creates and activates a collection (the caller owns the history step). */
 function insertCollection(id, name, kind) {
+  // Without the index (it could not be read) no collection is made: the editor does not know what is published.
+  if (!collectionsIndexStore) return;
   const fresh = { schemaVersion: 1, id, name, kind, entries: [] };
   // The baseline is "does not exist" (null) until the first publish: a
   // fresh collection must have hasDraft() true, otherwise the index is
@@ -170,6 +181,7 @@ function addCollection() {
 
 /** "+ Create product catalog" in the product block's Properties: collection + binding in ONE undo step. */
 function createCatalogForBlock() {
+  if (collectionsUnavailable) return;
   const name = ta('seed.productCatalogName');
   const base = slugify(name) || 'collection';
   let id = base;
@@ -224,6 +236,7 @@ export const collectionsState = {
   get collectionsReady() { return collectionsReady; },
   set collectionsReady(v) { collectionsReady = v; },
   get collectionIds() { return collectionIds; },
+  get collectionsUnavailable() { return collectionsUnavailable; },
   set collectionIds(v) { collectionIds = v; },
   get collectionsView() { return collectionsView; },
   set collectionsView(v) { collectionsView = v; },

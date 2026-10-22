@@ -92,8 +92,10 @@ test('readIndexes: the ids only the legacy index lists, none without one, and no
   assert.equal((await readIndexes(deployed, marked)).legacy, null);
   assert.ok(!marked.map.has(LEGACY_DELETED_KEY), 'the marker goes once the file is gone');
   const offline = storage({ [LEGACY_DELETED_KEY]: '1' });
-  await readIndexes(async () => { throw new TypeError('offline'); }, offline);
+  const failed = await readIndexes(async () => { throw new TypeError('offline'); }, offline);
   assert.ok(offline.map.has(LEGACY_DELETED_KEY), 'a failed request keeps the marker');
+  assert.deepEqual(failed, { index: { version: 1, samlinger: [] }, legacy: null, unreadable: true }, 'a failed request is told from a missing index');
+  assert.equal((await readIndexes(serve({}), storage())).unreadable, undefined, 'a missing index is simply none');
   assert.deepEqual(await readIndexes(serve({}), storage()), { index: { version: 1, samlinger: [] }, legacy: null });
   const subset = serve({
     '/content/samlinger.json': '{"version":1,"samlinger":["nyheter"]}',

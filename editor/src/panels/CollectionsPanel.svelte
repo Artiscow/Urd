@@ -139,6 +139,9 @@
 </script>
 
 <div class="panel-body">
+  {#if ed.collectionsUnavailable}
+    <p class="panel-hint place-error">{ta('collections.unreadable')}</p>
+  {/if}
   {#if collectionIds.length}
     <label>{ta('blocks.collection')}
       <Dropdown value={ed.activeCollection ?? ''}
@@ -244,12 +247,14 @@
     {/if}
     <hr class="gridmenu-divider" />
   {/if}
-  <label>{ta('lbl.newCollectionName')}
-    <input bind:value={() => ed.newCollectionName, (v) => (ed.newCollectionName = v)} placeholder={ta('ph.collections.name')}
-      onkeydown={(e) => e.key === 'Enter' && addCollection()} /></label>
-  <label>{ta('common.type')}
-    <Dropdown value={ed.newCollectionKind}
-      options={COLLECTION_KINDS}
-      onchange={(v) => (ed.newCollectionKind = v)} /></label>
-  <button class="ghost action" onclick={addCollection} disabled={!ed.newCollectionName.trim()}>{ta('ui.createCollection')}</button>
+  {#if !ed.collectionsUnavailable}
+    <label>{ta('lbl.newCollectionName')}
+      <input bind:value={() => ed.newCollectionName, (v) => (ed.newCollectionName = v)} placeholder={ta('ph.collections.name')}
+        onkeydown={(e) => e.key === 'Enter' && addCollection()} /></label>
+    <label>{ta('common.type')}
+      <Dropdown value={ed.newCollectionKind}
+        options={COLLECTION_KINDS}
+        onchange={(v) => (ed.newCollectionKind = v)} /></label>
+    <button class="ghost action" onclick={addCollection} disabled={!ed.newCollectionName.trim()}>{ta('ui.createCollection')}</button>
+  {/if}
 </div>

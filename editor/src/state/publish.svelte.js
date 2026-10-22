@@ -267,8 +267,9 @@ async function publish() {
   }
 
   // Collections: changed files, the index file and deletions (diff against the published index); a legacy index file with nothing of its own is deleted with any publish.
-  const changedCollections = Object.entries(collectionsState.collectionStores).filter(([, st]) => st.hasDraft());
-  if (changedCollections.length || indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds) || collectionsState.legacyIndexIds !== null) {
+  // While the index could not be read, nothing of the collections is written or deleted, since the editor does not know what is published.
+  const changedCollections = collectionsState.collectionsUnavailable ? [] : Object.entries(collectionsState.collectionStores).filter(([, st]) => st.hasDraft());
+  if (!collectionsState.collectionsUnavailable && (changedCollections.length || indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds) || collectionsState.legacyIndexIds !== null)) {
     for (const [id, st] of changedCollections) {
       const out = JSON.parse(JSON.stringify(st.data));
       for (const entry of out.entries) materializeEntryImages(entry, files);
@@ -292,6 +293,9 @@ async function publish() {
           }),
           encoding: 'utf-8',
         });
+      } else if (FEED_KINDS.includes(collectionsState.publishedCollections[id]?.kind)) {
+        // A collection changed to a kind without a feed loses the feed it had.
+        files.push({ path: `content/samlinger/${id}.xml`, delete: true });
       }
       draftKeys.push(`urd-draft-collection-${id}`, `urd-draft-samling-${id}`);
     }
@@ -305,11 +309,12 @@ async function publish() {
       files.push({ path: INDEX_PATH, content: JSON.stringify(collectionsState.collectionsIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
       draftKeys.push(INDEX_DRAFT_KEY);
     }
-    // Collections removed from the index are deleted from the repo; one also created in the same publish keeps the create.
+    // Collections removed from the index are deleted from the repo with their feeds; one also created in the same publish keeps the create.
     const created = new Set(files.map((f) => f.path));
     for (const id of plan.deleteIds) {
-      const path = `content/samlinger/${id}.json`;
-      if (!created.has(path)) files.push({ path, delete: true });
+      for (const path of [`content/samlinger/${id}.json`, `content/samlinger/${id}.xml`]) {
+        if (!created.has(path)) files.push({ path, delete: true });
+      }
     }
     if (plan.deleteLegacy) files.push({ path: LEGACY_INDEX_PATH, delete: true });
     if (changedCollections.length || plan.writeIndex || plan.deleteIds.length) publishedTitles.push(ta('publish.part.collections'));
