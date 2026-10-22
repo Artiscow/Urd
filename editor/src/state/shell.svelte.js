@@ -418,6 +418,16 @@ let settingsOpen = $state(false);
    (shared origin), so the switch works without a reload. */
 let layoutPickerPref = $state(localStorage.getItem('urd-layout-picker') === 'menu' ? 'menu' : 'strip');
 
+/** The browser's own spell check on the texts while editing: on unless the owner turns it off (a site in a language the browser has no dictionary for underlines every word). */
+let spellcheckPref = $state(localStorage.getItem('urd-spellcheck') === 'off' ? 'off' : 'on');
+
+function setSpellcheck(v) {
+  spellcheckPref = v === 'off' ? 'off' : 'on';
+  if (spellcheckPref === 'off') localStorage.setItem('urd-spellcheck', 'off');
+  else localStorage.removeItem('urd-spellcheck');
+  previewState.bridge?.sendSpellcheck(spellcheckPref === 'on');
+}
+
 function setLayoutPicker(v) {
   layoutPickerPref = v === 'menu' ? 'menu' : 'strip';
   if (layoutPickerPref === 'menu') localStorage.setItem('urd-layout-picker', 'menu');
@@ -688,6 +698,8 @@ export const shellState = {
   get guidesOn() { return guidesOn; },
   set guidesOn(v) { guidesOn = v; },
   get settingsOpen() { return settingsOpen; },
+  get spellcheckPref() { return spellcheckPref; },
+  setSpellcheck,
   set settingsOpen(v) { settingsOpen = v; },
   get layoutPickerPref() { return layoutPickerPref; },
   set layoutPickerPref(v) { layoutPickerPref = v; },

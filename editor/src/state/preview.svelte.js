@@ -234,6 +234,7 @@ async function onReady() {
   if (pageState.store.hasDraft() || unpublished) bridge?.sendPage(pageState.pageId, pageState.store.data);
   if (!chromeVisible) bridge?.sendChrome(false);
   if (shellState.gridOn) bridge?.sendShowGrid(true);
+  if (shellState.spellcheckPref === 'off') bridge?.sendSpellcheck(false);
   if (shellState.guidesOn) bridge?.sendShowGuides(true);
   shellState.sendAdminTheme();
   // A link from another page to a spot on this one: the jump follows the draft, so it lands in the page as edited.

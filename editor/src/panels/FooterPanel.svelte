@@ -3,6 +3,7 @@
   import { getContext } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import { ta } from '$engine/i18n.js';
+  import { footerDesign } from '$engine/footer-model.js';
   import { glowLayer } from '$engine/backgrounds/glow.js';
   import { grainLayer } from '$engine/backgrounds/grain.js';
   import { footerThumb } from '$engine/footer-thumb.js';
@@ -334,6 +335,14 @@
       </div>
     </details>
   {/if}
+
+  <!-- The footer's look, chosen in the shared design picker; the content stays as it is -->
+  <details class="group">
+    <summary>{ta('lbl.design')}<span class="menu-group-value">{ta(`footerDesign.${footerDesign(siteDraft) || 'standard'}`)}</span></summary>
+    <div class="group-items">
+      <button class="ghost action" title={ta('tip.footer.design')} onclick={() => (ed.designPicker = { kind: 'footer' })}>{ta('ui.chooseDesign')}</button>
+    </div>
+  </details>
 
   <details class="group">
     <summary>{ta('group.startpoint')}</summary>

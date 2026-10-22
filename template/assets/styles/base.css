@@ -12,7 +12,6 @@
   --urd-font-body: system-ui, sans-serif;
   --urd-radius-sm: 6px;
   --urd-radius-md: 12px;
-  --urd-space-section: clamp(3rem, 8vw, 6rem);
 }
 
 /* The default theme follows OS lightness where light-dark() is supported (Baseline 2024),

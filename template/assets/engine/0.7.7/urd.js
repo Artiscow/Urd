@@ -355,6 +355,9 @@ function resolvePage(site) {
   return site.pages.find((p) => p.path === path) ?? site.pages[0];
 }
 
+/** The spell check the editor asked for on the texts; the clean view turns it off while it lasts. */
+let spellcheckOn = true;
+
 /**
  * Attaches postMessage listening and height reporting in preview mode.
  * state = { page, site, viewport } is shared with boot, so breakpoint
@@ -427,9 +430,14 @@ function enablePreview(state, opts) {
       if (samePage) keepScroll(paint); else paint();
       // Page switch in the editor: the footer can have per-page visibility (hideOn).
       if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
+    } else if (msg?.type === 'urd-spellcheck') {
+      // The browser's spell check on the editable texts, which the body's attribute governs for every text under it.
+      spellcheckOn = msg.on !== false;
+      document.body.spellcheck = spellcheckOn && !document.body.classList.contains('urd-chrome-off');
     } else if (msg?.type === 'urd-chrome') {
-      // Clean view: hide/show the editing handles (CSS only, see base.css).
+      // Clean view: hide/show the editing handles (CSS only, see base.css), and no spell marks, since nothing is being written.
       document.body.classList.toggle('urd-chrome-off', !msg.visible);
+      document.body.spellcheck = spellcheckOn && msg.visible;
       // The calendar's rewritable words are plain text in the Clean view, so the links and buttons around them work.
       for (const node of document.querySelectorAll('.urd-cal-tx.urd-text')) node.contentEditable = msg.visible ? 'true' : 'false';
       // The pinning and the menu's scroll state follow the switch at once,

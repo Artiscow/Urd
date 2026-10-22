@@ -49,6 +49,7 @@
  *   editor → page: { type: 'urd-chrome', visible }            (show/hide the editing handles)
  *                  { type: 'urd-show-grid', visible }         (show the grid in every section)
  *                  { type: 'urd-show-guides', visible }       (guides: center/content width in every section)
+ *                  { type: 'urd-spellcheck', on }             (the browser's spell check on the texts)
  *                  { type: 'urd-announce-reset' }             (the Announcement panel: forget the dismissal, so the strip returns)
  *                  { type: 'urd-select', blockId }            (select a block the editor just built, e.g. + New block)
  *                  { type: 'urd-admin-theme', colors }        (the admin color theme {bg, surface, accent, text}: the editor menus in the preview follow admin, not the site)
@@ -170,6 +171,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendShowGuides(visible) {
       post({ type: 'urd-show-guides', visible });
+    },
+    /** The browser's spell check on the texts while editing, on or off; the clean view turns it off on its own. */
+    sendSpellcheck(on) {
+      post({ type: 'urd-spellcheck', on });
     },
     /** The admin color theme: the editor menus in the preview follow admin, not the site. */
     sendAdminTheme(colors) {

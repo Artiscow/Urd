@@ -37,9 +37,12 @@
   const post = (msg) => iframeEl?.contentWindow?.postMessage(msg, location.origin);
 
   /** The preview's height follows the drawn block: its bottom (or what the source draws below it, an open card), read whenever the block changes size (sample data arrives after the first draw and the block grows with it). */
+  /** The element the preview is measured by and watched for: the drawn block, or what the source points at (the footer). */
+  const drawn = (doc) => (doc ? (source.findEl ? source.findEl(doc) : doc.querySelector(`.urd-block[data-block-id="${source.blockId}"]`)) : null);
+
   function measure() {
     const doc = iframeEl?.contentDocument;
-    const block = doc?.querySelector(`.urd-block[data-block-id="${source.blockId}"]`);
+    const block = drawn(doc);
     if (!block) return;
     const bottom = Math.max(block.getBoundingClientRect().bottom, source.extraBottom?.(doc) ?? 0) + (doc.defaultView?.scrollY ?? 0);
     const next = Math.max(160, Math.ceil(bottom + 24));
@@ -56,7 +59,7 @@
     if (!win?.ResizeObserver) return;
     let tries = 0;
     const find = () => {
-      const block = win.document.querySelector(`.urd-block[data-block-id="${source.blockId}"]`);
+      const block = drawn(win.document);
       if (block && block !== watched) {
         watched = block;
         watcher = new win.ResizeObserver(measure);
@@ -74,6 +77,8 @@
   }
 
   function sendPreview() {
+    // A source whose design is the site's (the footer) sends the site anew with the choice.
+    if (source.siteVaries && site) post({ type: 'urd-site', site: source.previewSite(site, chosen) });
     post({ type: 'urd-preview-full', pageId: 'design-picker', page: source.previewPage(chosen, page, site) });
     watchPreview();
   }
@@ -82,16 +87,16 @@
   function onMessage(event) {
     if (event.origin !== location.origin || event.source !== iframeEl?.contentWindow) return;
     if (event.data?.type !== 'urd-ready') return;
-    // The preview shows the design alone: the site's header, announcement strip, footer and scroll-top button stay out of it.
+    // The preview shows the design alone: the site's header, announcement strip, footer and scroll-top button stay out of it, unless the footer is what the source shows.
     // The frame is as tall as the drawn block (measure) and as wide as the view it shows, so the page in it never scrolls.
     const doc = iframeEl?.contentDocument;
     if (doc && !doc.getElementById('design-picker-style')) {
       const style = doc.createElement('style');
       style.id = 'design-picker-style';
-      style.textContent = '.urd-nav, #urd-announce, .urd-nav-announce, #urd-footer, .urd-totop { display: none !important; } html { overflow: hidden !important; }';
+      style.textContent = `.urd-nav, #urd-announce, .urd-nav-announce, .urd-totop${source.showsFooter ? '' : ', #urd-footer'} { display: none !important; } html { overflow: hidden !important; }`;
       doc.head.appendChild(style);
     }
-    if (site) post({ type: 'urd-site', site: source.previewSite(site) });
+    if (site) post({ type: 'urd-site', site: source.previewSite(site, chosen) });
     if (plugins.length) post({ type: 'urd-plugins', enabled: plugins });
     if (collections) post({ type: 'urd-collections', collections });
     post({ type: 'urd-viewport', mode: source.viewport });

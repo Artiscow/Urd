@@ -1037,6 +1037,12 @@
                 options={[['', ta('lbl.navSameAsDesktop')], ['on', ta('common.on')], ['off', ta('common.off')]]}
                 onchange={(v) => setNavMobileFlag('overlay', v)} />
             </label>
+            <label class="field-stack" title={ta('tip.nav.inset')}>
+              <span class="mini-label">{ta('lbl.navInset')}</span>
+              <Dropdown filled value={navMobileFlag('inset')}
+                options={[['', ta('lbl.navSameAsDesktop')], ['on', ta('common.on')], ['off', ta('common.off')]]}
+                onchange={(v) => setNavMobileFlag('inset', v)} />
+            </label>
             {/if}
           </div>
           <div class="ctl-pair">
@@ -1334,6 +1340,9 @@
           {#if siteDraft.nav.cart?.show}
             <LinkField scope="site" label={ta('lbl.checkoutPage')} title={ta('tip.cart.checkout')} pagesOnly value={linkOf(siteDraft.nav.cart)}
               onchange={(link) => siteMutate('nav', () => setLinkOn(siteDraft.nav.cart, link))} />
+            <label title={ta('tip.product.currency')}>{ta('lbl.currency')}
+              <input value={siteDraft.nav.cart.currency ?? 'kr'}
+                onchange={(e) => siteMutate('nav', () => { siteDraft.nav.cart.currency = e.target.value.trim() || 'kr'; })} /></label>
           {/if}
         </div>
         {:else}

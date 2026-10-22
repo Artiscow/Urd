@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.67): the footer designs, the calendar picker, the spell check and the nav fields
+
+- [ ] A calendar block with a working feed: the design picker's previews show the block's own events in every design; a block without a feed shows the sample events
+- [ ] Footer panel, Design: the row shows the current design; «Choose design» opens the picker with Standard, Chapters and Split, each with a picture and a description (nb, en-GB, tr); the preview shows the site's own footer in the marked design, with the menu kept out; «Use this design» changes the footer's look and keeps every column, link and text; Standard clears the design again
+- [ ] A site whose footer has no brand or columns: the picker's preview shows a sample brand and two columns of the site's pages, and choosing a design does not write the sample into the footer
+- [ ] The published page's stylesheet and `content/theme.css` hold no `--urd-space-section`, after a publish from the editor too; the theme looks as before
+- [ ] Nav panel, the phone's settings: «Align to content width» set to Off draws the bar's contents out to the window edge at phone width while the desktop keeps its own setting
+- [ ] Nav panel, the cart: a currency word typed there shows after the prices in the menu's cart drawer on the published page
+- [ ] Admin settings (the gear): «Spell check in the texts» Off removes the browser's underlines while writing in a text block; On brings them back; the clean view shows none either way; the setting survives a reload
+- [ ] The published page: a text block carries no spell-check attribute and no underlines (nothing is editable there)
+
 ### Test batch (0.7.0.66): publishing and the collections
 
 - [ ] Remove a news collection in the Collections panel and publish: `content/samlinger/<id>.json` and `content/samlinger/<id>.xml` are both gone from the repo in that commit, and the feed address answers 404 after the deploy

@@ -74,9 +74,6 @@
       "radius": {
         "sm": "6px",
         "md": "12px"
-      },
-      "space": {
-        "section": "clamp(3rem, 8vw, 6rem)"
       }
     },
     "alt": {

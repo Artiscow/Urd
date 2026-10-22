@@ -5,6 +5,7 @@
 import { ta, adminLang } from '$engine/i18n.js';
 import { CAL_VIEWS, calDesign, calDesignFamilies, calOptionDefs, calPhoneDesignDef, calPhoneFamilies, calCardDesignDef, calCardFamilies } from '$engine/calendar-designs.js';
 import { calendarThumb } from '$engine/calendar-thumb.js';
+import { FOOTER_DESIGNS, footerDesign, hasRichFooter } from '$engine/footer-model.js';
 import { BLOCK_DESIGNS, blockDesignOf, blockDesignFamilies, designLabelKey, designAboutKey, designPicture, blockDesignSample, blockDesignEmpty, designPreviewFrame } from '$engine/block-designs.js';
 
 /** Phrases joined as the admin language joins a list («a, b og c»), with commas where the language has no rules for it. */
@@ -99,12 +100,12 @@ export function calendarDesignSource({ mode = 'set', current = null, design = 'p
     previewWidth: phone ? 390 : 1040,
     viewport: phone ? 'mobile' : 'desktop',
     blockId: 'design-picker-cal',
-    /** One calendar in the chosen design on an otherwise empty page, drawn by the preview with its sample events; for a phone or card design, the calendar's own design with that phone or card design, at a phone's width for the phone. */
+    /** One calendar in the chosen design on an otherwise empty page, drawn by the preview with the block's own feeds, or the sample events while it has none; for a phone or card design, the calendar's own design with that phone or card design, at a phone's width for the phone. */
     previewPage(id, page) {
       const def = calDesign(lent ? design : id);
       return onePage(page, {
         id: 'design-picker-cal', type: 'calendar', version: 1, decor: false, hideMobile: false, animation: null,
-        props: { sources: [], limit: 4, view: def.view ?? 'list', ...(def.id === 'plain' ? {} : { design: def.id }), ...(def.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}), ...(phone ? { phoneView: id } : {}), ...(card ? { card: id } : {}) },
+        props: { sources: mode !== 'add' && Array.isArray(props.sources) ? props.sources : [], limit: 4, view: def.view ?? 'list', ...(def.id === 'plain' ? {} : { design: def.id }), ...(def.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}), ...(phone ? { phoneView: id } : {}), ...(card ? { card: id } : {}) },
         frames: { desktop: { x: 3, y: 24, w: 94, h: 600 }, mobile: null },
       });
     },
@@ -215,6 +216,69 @@ export function blockDesignSource({ block, site = null, designs }) {
       if (!designs.sample.contact || !designs.empty(block.props, siteNow)) return siteNow;
       return { ...siteNow, site: { ...(siteNow?.site ?? {}), contact: designs.sample.contact } };
     },
+    extraBottom: () => 0,
+    afterDraw: null,
+  };
+}
+
+/** The footer's designs as the picker lists them: the standard footer and the ones footer-model.js names. */
+export const FOOTER_DESIGN_IDS = ['standard', ...FOOTER_DESIGNS];
+
+/**
+ * The footer's designs (footer-model.js): the site's own footer drawn in each design on an empty page, with a sample of brand and columns while the footer has no content of its own.
+ * The picker keeps the footer in its preview for this source, measures it, and sends the site anew at every choice, since the design is the site's, not a block's.
+ * @param {{site: object|null}} opts the site as a snapshot
+ */
+export function footerDesignSource({ site = null }) {
+  const current = footerDesign(site ?? {}) || 'standard';
+  const name = (d) => ta(`footerDesign.${d.id}`);
+  return {
+    title: ta('picker.title', { block: ta('panel.footer') }),
+    label: ta('picker.title', { block: ta('panel.footer') }),
+    searchLabel: ta('picker.search'),
+    countText: (n) => ta('picker.count', { n }),
+    noneText: ta('picker.none'),
+    currentText: ta('picker.current'),
+    aboutHead: ta('picker.aboutHead'),
+    yoursHead: '',
+    useLabel: ta('picker.use'),
+    previewTitle: (n) => ta('picker.preview', { name: n }),
+    current,
+    initial: current,
+    filters: null,
+    families: () => [{ family: 'footer', label: ta('panel.footer'), designs: FOOTER_DESIGN_IDS.map((id) => ({ id })) }],
+    name,
+    searchText: name,
+    def: (id) => ({ id }),
+    sideTag: () => '',
+    picture: (id) => `/admin/designs/footer-${id}.webp`,
+    thumb: () => '',
+    about: (d) => ta(`design.footer.${d.id}`),
+    yours: () => [],
+    previewWidth: 1040,
+    viewport: 'desktop',
+    blockId: 'design-picker-footer',
+    /** The footer stands under the page, so the page is drawn empty; the footer is the site's, sent with the choice. */
+    previewPage: (page) => ({ ...page, sections: [] }),
+    /** The site with the footer shown in the chosen design; a footer with nothing of its own borrows a brand and two columns of the site's pages. */
+    previewSite(siteNow, id) {
+      const footer = { ...(siteNow?.footer ?? { version: 1 }), show: true };
+      if (!hasRichFooter({ ...siteNow, footer })) {
+        const pages = siteNow?.pages ?? [];
+        const links = (from, n) => pages.slice(from, from + n).map((p) => ({ label: p.title || p.id, page: p.id }));
+        Object.assign(footer, {
+          brand: { title: ta('seed.orgName') },
+          columns: [{ title: ta('seed.footer.colExplore'), links: links(0, 4) }, { title: ta('seed.footer.colPages'), links: links(4, 3) }],
+          copyright: `© ${ta('seed.orgName')}`,
+        });
+      }
+      delete footer.hideOn;
+      if (id && id !== 'standard') footer.design = id; else delete footer.design;
+      return { ...siteNow, footer };
+    },
+    siteVaries: true,
+    showsFooter: true,
+    findEl: (doc) => doc.getElementById('urd-footer'),
     extraBottom: () => 0,
     afterDraw: null,
   };

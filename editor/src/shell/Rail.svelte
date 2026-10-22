@@ -46,6 +46,10 @@
           <Dropdown value={menu.widthPref}
             options={[['wide', ta('settings.menuWide')], ['narrow', ta('settings.menuNarrow')]]}
             onchange={setMenuWidthPref} /></label>
+        <label title={ta('tip.settings.spellcheck')}>{ta('settings.spellcheck')}
+          <Dropdown value={ed.spellcheckPref}
+            options={[['on', ta('common.on')], ['off', ta('common.off')]]}
+            onchange={ed.setSpellcheck} /></label>
         <label title={ta('tip.settings.panels')}>{ta('settings.panels')}
           <Dropdown value={ed.panelsPref}
             options={[['remember', ta('settings.panelsRemember')], ['reset', ta('settings.panelsReset')]]}

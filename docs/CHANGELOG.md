@@ -28,6 +28,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.67 - The bug list taken, fifth round: the footer designs in the design picker, the calendar picker's own events, the spell check, and the nav fields - 22 October 2026
+
+- The calendar's design picker previewed every design with the sample events, whatever feed the block had. The preview draws the block's own feeds, with the sample only while it has none (`design-sources.js`).
+- The footer's two designs were reached only through starting templates that replaced the footer's content. The Footer panel has a Design group with the current design and «Choose design», which opens the shared design picker with Standard, Chapters and Split, each with a picture (`scripts/design-pictures.mjs` draws `footer-<id>.webp`), a live preview of the site's own footer (a sample while it has no content) and a description in nb, en-GB and tr; choosing one changes `footer.design` alone. The picker took two hooks for it: a source that keeps the footer in the preview and points at it for the measure, and one that sends the site anew with each choice (`footerDesignSource`, `DesignPicker.svelte`).
+- The stylesheet, the theme file and the example site carried the token `space.section`, which no rule read. It is removed from all three (base.css with the eight shells restamped, `content/theme.css`, `site.json`, the SCHEMA.md example); an older site's file keeps it as a dead token, which SCHEMA.md says.
+- The engine read nav fields no control writes. SCHEMA.md describes `nav.style` as the Nav panel writes it and names the picture and veil fields read for older sites only; the phone's own inset (`mobile.inset`, read on the phone) gets «Align to content width» among the phone's settings, and the menu's cart drawer takes its currency word from a field in the Nav panel's cart settings (`nav.cart.currency`).
+- The browser's spell check underlined the texts in the preview, in the clean view too, and every word of a language it has no dictionary for. A «Spell check in the texts» setting in the admin settings governs it (remembered in the browser, `urd-spellcheck` to the preview), and the clean view shows no spell marks (`urd.js`).
+- BACKLOG: five bug entries delivered; the bug list is taken.
+
 ### 0.7.0.66 - The bug list taken, fourth round: publishing and the collections - 22 October 2026
 
 - A collection taken out of the index lost its file but kept its feed online, and a collection changed to a kind without a feed kept the old one. Publishing deletes `content/samlinger/<id>.xml` with the collection, and when the published kind had a feed and the new one has none (`publish.svelte.js`).
