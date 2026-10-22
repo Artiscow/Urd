@@ -33339,7 +33339,7 @@ async function sI() {
 		i(o, c) || t.push(q("publish.part.siteInfo"));
 	}
 	let i = Object.entries(tP.collectionStores).filter(([, e]) => e.hasDraft());
-	if (i.length || fD(tP.collectionsIndexStore?.hasDraft() ?? !1, tP.legacyIndexIds)) {
+	if (i.length || fD(tP.collectionsIndexStore?.hasDraft() ?? !1, tP.legacyIndexIds) || tP.legacyIndexIds !== null) {
 		for (let [t, r] of i) {
 			let i = JSON.parse(JSON.stringify(r.data));
 			for (let t of i.entries) XF(t, e);
@@ -33389,7 +33389,7 @@ async function sI() {
 		r.deleteLegacy && e.push({
 			path: nD,
 			delete: !0
-		}), t.push(q("publish.part.collections"));
+		}), (i.length || r.writeIndex || r.deleteIds.length) && t.push(q("publish.part.collections"));
 	}
 	let a = Object.entries(fO.templateStores).filter(([, e]) => e.hasDraft());
 	if (a.length || fO.templatesIndexStore?.hasDraft()) {

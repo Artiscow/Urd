@@ -266,9 +266,9 @@ async function publish() {
     if (!eq(restA, restB)) publishedTitles.push(ta('publish.part.siteInfo'));
   }
 
-  // Collections: changed files, the index file and deletions (diff against the published index).
+  // Collections: changed files, the index file and deletions (diff against the published index); a legacy index file with nothing of its own is deleted with any publish.
   const changedCollections = Object.entries(collectionsState.collectionStores).filter(([, st]) => st.hasDraft());
-  if (changedCollections.length || indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds)) {
+  if (changedCollections.length || indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds) || collectionsState.legacyIndexIds !== null) {
     for (const [id, st] of changedCollections) {
       const out = JSON.parse(JSON.stringify(st.data));
       for (const entry of out.entries) materializeEntryImages(entry, files);
@@ -312,7 +312,7 @@ async function publish() {
       if (!created.has(path)) files.push({ path, delete: true });
     }
     if (plan.deleteLegacy) files.push({ path: LEGACY_INDEX_PATH, delete: true });
-    publishedTitles.push(ta('publish.part.collections'));
+    if (changedCollections.length || plan.writeIndex || plan.deleteIds.length) publishedTitles.push(ta('publish.part.collections'));
   }
 
   // Template changes are published as content/maler/ files + index, the

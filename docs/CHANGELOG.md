@@ -28,6 +28,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.60-62p - Push preparation: the collection index, the contact details, named anchors and one link editor, the Properties groups, and the audit of the comparison - 22 October 2026
+
+- The review of the whole span found no rule broken. Two findings were fixed: the `checkout` block's `seller` field (0.7.24.5) stood in SCHEMA.md and the schema but in no example data; the template's checkout page carries it (the contact block is covered by its section preset in the validation's preset page). And a legacy `content/collections.json` whose ids all stand in `samlinger.json` was never deleted, since the collections branch of publishing ran only on a change; it runs for the legacy file too, and names the collections in the commit message only when something of theirs changed (`publish.svelte.js`).
+- Noted, no change: the jump on a published page (`wireJumps` and `followJump` in urd.js) is covered by the 0.7.27.1-3 test batch and its pure helpers' tests, not by a DOM test; the publish pipeline's one-file-per-path rule has no test beyond the guard in the delete step.
+
 ### 0.7.0.62 - Every Has row of the comparison checked option by option, the settings read from source, and the backlog given what the rows lack - 22 October 2026
 
 - 155 catalogue rows in FEATURES.md and ELEMENTS.md said Has while Urd held only part of what their builders offer (the text toolbar's headings stop at H3, no card is one link, the menu marks no current page). 768 rows, every Has, Partial and Planned row and every Missing row that names a backlog place, were checked option by option against the code and the settings read from source: those rows are Partial with the missing part named, 69 Partial cells name what they lacked or changed status, and 283 Where cells name the backlog place for it or the reason it is not taken.

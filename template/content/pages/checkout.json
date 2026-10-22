@@ -56,7 +56,8 @@
             "recipient": "",
             "endpoint": "",
             "vipps": "",
-            "currency": "kr"
+            "currency": "kr",
+            "seller": true
           },
           "animation": null,
           "frames": {

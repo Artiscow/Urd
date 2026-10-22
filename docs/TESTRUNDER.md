@@ -2,6 +2,10 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.60-62p): the stray collection index
+
+- [ ] A site with a `content/collections.json` whose collections all stand in `content/samlinger.json`: a publish of a page alone deletes `content/collections.json` from the repo, and the commit message names the page, not the collections
+
 ### Test batch (0.7.27.7-9): links that no longer land, the links to a spot, the plugin link field, and links to files
 
 - [ ] Footer panel: link a footer link to Kaker › the video section, then delete that section on Kaker: the field shows «Kaker › the spot is gone» in amber with a warning sign; a menu item to a deleted page shows «The page is gone»; a site link typed as `/gammel-side` shows «No page at /gammel-side»; a link to a file in `/media/` or to `/admin` shows no warning
