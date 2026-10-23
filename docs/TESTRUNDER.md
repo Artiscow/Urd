@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.10.3): the section gallery and the canvas menus at the admin's size
+
+- [ ] Scroll so a section boundary sits near the bottom of the view and click «+ New section»: the gallery opens upward and stays inside the canvas; near the top it opens downward; in a short window it is shortened and scrolls inside
+- [ ] Zoom the canvas out to about 50 % and back to 100 %: the section toolbar's «Change layout» strip and its gallery form, the text toolbar's level and font lists and the custom text colour picker keep the same size on screen as the admin panels, and the strip stands below the section toolbar, not over it
+- [ ] On a site with a light theme, open «+ New section»: the categories, the search text and the card names read light on the dark gallery
+- [ ] Open «+ New section», click a category and press Escape: the gallery closes
+- [ ] Repeat the zoom check in Firefox and Safari
+
 ### Test batch (0.7.10.2): the canvas gestures of the review
 
 - [ ] Select an image block: eight handles show (the corners and the middles of the edges), each with the cursor of its direction; pull the top edge up: the block grows upward and keeps its bottom edge; pull the left edge out: it grows leftward and keeps its right edge; a corner pulls both; the handles keep their size at every zoom

@@ -11747,6 +11747,9 @@ body.urd-chrome-off .urd-text-toolbar {
   position: fixed;
   z-index: 100003;
   width: 236px;
+  /* Chrome, kept at the admin's size at any preview zoom.
+     Zoom scales the box itself, so the anchoring and the flip measure the size it is drawn at. */
+  zoom: var(--urd-chrome-scale, 1);
   display: grid;
   /* Bind the column to the box width: without this the implicit grid column
      becomes max-content wide (the RGB fields) and the content spills out of the box. */
@@ -17529,8 +17532,7 @@ body.urd-mobile .urd-section-resize-top {
   display: block;
 }
 
-/* The handles on the other edges and corners: each sits on its edge, counter-scaled
-   from the point that stays put, with the cursor of its direction. */
+/* The handles on the other edges and corners: each sits on its edge, counter-scaled from the point that stays put, with the cursor of its direction. */
 .urd-preview .urd-edit-resize[data-edge="e"],
 .urd-preview .urd-edit-resize[data-edge="w"] {
   top: 50%;
@@ -17696,12 +17698,9 @@ body.urd-mobile .urd-section-resize-top {
   cursor: text;
 }
 
-/* While editing, the block under the pointer or the selected block is raised visually
-   to the top, so that the handles can always be reached even if other blocks lie above
-   it (z order). The raised one is the smallest block under the pointer (preview-edit.js
-   sets the class), so a small block over a larger one can be reached. The true layer
-   order is shown when the block is deselected - and ALWAYS in Clean view (chrome-off),
-   which must be exactly what visitors see. */
+/* While editing, the block under the pointer or the selected block is raised visually to the top, so that the handles can always be reached even if other blocks lie above it (z order).
+   The raised one is the smallest block under the pointer (preview-edit.js sets the class), so a small block over a larger one can be reached.
+   The true layer order is shown when the block is deselected - and ALWAYS in Clean view (chrome-off), which must be exactly what visitors see. */
 .urd-preview:not(.urd-chrome-off) .urd-editable.urd-hover-top {
   z-index: 99998 !important;
 }
@@ -17877,10 +17876,14 @@ body.urd-mobile .urd-section-resize-top {
   transform: translateX(-50%) scale(var(--urd-chrome-scale, 1));
   transform-origin: top center;
   display: flex;
-  width: min(560px, calc(100vw - 16px));
-  max-height: min(70vh, 460px);
+  /* The caps are divided by the scale, so the drawn gallery fits the frame.
+     placePresetMenu (preview-edit.js) chooses the side and holds the height to the room there. */
+  width: min(560px, calc((100vw - 16px) / var(--urd-chrome-scale, 1)));
+  max-height: min(calc(70vh / var(--urd-chrome-scale, 1)), 460px);
   overflow: hidden;
   background: var(--urd-color-bg);
+  /* The text takes the admin theme's colour set on the bar, not the page's inherited colour. */
+  color: var(--urd-color-text);
   border: 1px solid color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent);
   border-radius: 10px;
   box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
@@ -17891,6 +17894,7 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-preset-menu.urd-preset-up {
   top: auto;
   bottom: 8px;
+  transform-origin: bottom center;
 }
 
 /* The category colors (F2): five fixed steps derived from
@@ -18036,6 +18040,21 @@ body.urd-mobile .urd-section-resize-top {
   cursor: pointer;
 }
 
+/* Both forms of the picker are counter-scaled like the section toolbar they open from, and kept clear of it.
+   The toolbar's height (--urd-picker-clear, measured when the picker opens) grows with the scale past its box in the flow, which the drop clears.
+   The sticky offset parks the picker under the parked toolbar.
+   The negative bottom margin gives the drop back, so the section takes the same height at any scale. */
+.urd-preview .urd-layout-strip,
+.urd-preview .urd-layout-menu {
+  --urd-picker-scale: var(--urd-chrome-scale, 1);
+  --urd-picker-drop: calc(var(--urd-picker-clear, 33px) * (var(--urd-picker-scale) - 1) + 6px * var(--urd-picker-scale));
+  top: calc(var(--urd-nav-h-base, var(--urd-nav-h, 56px)) + (var(--urd-picker-clear, 33px) + 14px) * var(--urd-picker-scale));
+  margin-top: var(--urd-picker-drop);
+  margin-bottom: calc(-1 * var(--urd-picker-drop));
+  transform: scale(var(--urd-picker-scale));
+  box-sizing: border-box;
+}
+
 /* The change-layout strip (variant B): a horizontal row of thumbnails that
    sticks to the screen while you are in the section (like the toolbar, right
    below it), so the choice stays visible in tall sections too. The same
@@ -18043,11 +18062,12 @@ body.urd-mobile .urd-section-resize-top {
    the floating menu. */
 .urd-preview .urd-layout-strip {
   position: sticky;
-  top: 96px;
   z-index: 100001;
   display: flex;
   gap: 6px;
-  margin: 0 8px;
+  width: calc((100% - 16px) / var(--urd-picker-scale));
+  margin-left: 8px;
+  transform-origin: top left;
   padding: 6px;
   overflow-x: auto;
   background: color-mix(in srgb, var(--urd-color-bg) 88%, transparent);
@@ -18060,10 +18080,14 @@ body.urd-mobile .urd-section-resize-top {
    cards in a 2-column panel anchored at the toolbar, also sticky. */
 .urd-preview .urd-layout-menu {
   position: sticky;
-  top: 96px;
   z-index: 100001;
-  width: min(320px, calc(100% - 16px));
-  margin: 0 8px 0 auto;
+  width: min(320px, calc((100% - 16px) / var(--urd-picker-scale)));
+  /* Held to the view below its parked place, scrolling inside when longer. */
+  max-height: max(120px, calc((100vh - var(--urd-nav-h-base, var(--urd-nav-h, 56px)) - 8px) / var(--urd-picker-scale) - var(--urd-picker-clear, 33px) - 14px));
+  overflow-y: auto;
+  margin-right: 8px;
+  margin-left: auto;
+  transform-origin: top right;
   padding: 6px;
   background: var(--urd-color-bg);
   border: 1px solid color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent);

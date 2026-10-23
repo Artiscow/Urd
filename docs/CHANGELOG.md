@@ -28,6 +28,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.10.3 - The intuitiveness review, third stage: the section gallery's direction and the canvas menus at the admin's size - 23 October 2026
+
+- The **+ New section** gallery opened downward from every bar but the page's last, so from a bar low in the view it ran past the frame's edge. It now opens toward the side with room in the view and is held to that room (`placePresetMenu` in preview-edit.js).
+- At a zoomed canvas the layout picker, the text toolbar's level and font dropdowns and the colour picker shrank with the page (the dropdown's words to 7 px at 59 %). The layout picker now counter-scales clear of the section toolbar, and the dropdown and the colour picker take CSS `zoom` from the chrome scale (dropdown.js, color-picker.js, base.css); the eight shells restamped.
+- The gallery's labels inherited the page's text colour, so on a light site they read black on the admin's near-black. The gallery now takes the admin theme's text colour.
+- Escape closed the gallery only from its search field, so after a click on a category it stayed open. It now closes the gallery from anywhere inside it.
+
 ### 0.7.10.2 - The intuitiveness review, second stage: resize from every edge, the smallest block under the pointer, and the toolbar's hit boxes - 23 October 2026
 
 - A block could be resized from its bottom-right corner only. Every edge and corner now carries a handle on the desktop canvas, with the opposite edge held still, so a pull on the top or the left moves the block's origin with its size (`wireDrag` in preview-edit.js; the handles' places and cursors in base.css); a block that follows its content gets the left and right edges only. The eight shells restamped.

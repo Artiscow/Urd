@@ -603,6 +603,9 @@ function toggleLayoutPicker(host, section, grid) {
     picker.className = 'urd-layout-strip';
     picker.append(...cards);
   }
+  // The section toolbar's own height, which the picker's offsets clear at any scale (base.css).
+  const toolbar = host.querySelector(':scope > .urd-section-toolbar');
+  if (toolbar?.offsetHeight) picker.style.setProperty('--urd-picker-clear', `${toolbar.offsetHeight}px`);
   host.appendChild(picker);
   setTimeout(() => {
     document.addEventListener('pointerdown', outside, true);
@@ -618,10 +621,8 @@ document.addEventListener('pointermove', (event) => {
 }, { passive: true });
 
 /**
- * The block raised under the pointer is the smallest one there, not the
- * topmost, so a small block lying over a larger one can be reached. The
- * class stands where :hover would in base.css; a block that is not under
- * the pointer loses it, and the Clean view raises nothing.
+ * The block raised under the pointer is the smallest one there, not the topmost, so a small block lying over a larger one can be reached.
+ * The class stands where :hover would in base.css; a block that is not under the pointer loses it, and the Clean view raises nothing.
  */
 let raisedEl = null;
 let raiseFrame = 0;
@@ -1459,6 +1460,23 @@ export function enhancePage(root, page, site) {
   root.appendChild(makeSectionAdder(hosts.length, above(hosts.length)));
 }
 
+/**
+ * Opens the "+ New section" gallery toward the side of its bar that has room in the view, and holds it to that room, so it stays inside the frame as a category switch grows it.
+ * The side is chosen on the tallest the gallery can be (its CSS cap): downward when that fits below, upward when it does not and there is more room above, never upward from a bar with no section above it.
+ * The gallery stands 8 px off its bar and keeps 8 px from the frame's edge; the cap is read in the gallery's own units and drawn at the chrome scale.
+ */
+function placePresetMenu(bar, menu) {
+  const scale = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale')) || 1;
+  const cap = Number.parseFloat(getComputedStyle(menu).maxHeight) || 460;
+  const barY = bar.getBoundingClientRect().top;
+  const below = window.innerHeight - barY - 16;
+  const above = barY - 16;
+  const up = cap * scale > below && above > below && Boolean(bar.previousElementSibling);
+  menu.classList.toggle('urd-preset-up', up);
+  const room = up ? above : below;
+  menu.style.maxHeight = `${Math.max(160, Math.floor(Math.min(cap, room / scale)))}px`;
+}
+
 /** The "+ New section" bar; a click shows the preset choices from the
  *  registry, dragging moves the section boundary (when a section exists
  *  above). */
@@ -1497,9 +1515,6 @@ function makeSectionAdder(index, above = null) {
     // presets without a group land under "Other".
     const menu = document.createElement('div');
     menu.className = 'urd-preset-menu';
-    // The bottom boundary sits at the end of the page, where the iframe has no room below: open the gallery upward instead.
-    // On an empty page (only one boundary) there is nothing above, so it still opens downward.
-    if (!bar.nextElementSibling && bar.previousElementSibling) menu.classList.add('urd-preset-up');
 
     // The sources are collected ONCE at opening: core groups keyed by the
     // group STRING (display via groupKey - the plugin contract), plugin
@@ -1740,8 +1755,15 @@ function makeSectionAdder(index, above = null) {
       event.stopPropagation();
     });
     applyCategory();
+    // Escape closes the gallery from anywhere inside it, a category button as well as the search.
+    menu.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      cleanupOutside();
+      collapse();
+    });
     bar.appendChild(menu);
-    search.focus();
+    placePresetMenu(bar, menu);
+    search.focus({ preventScroll: true });
 
     // A click outside the menu closes it, the same expectation as elsewhere
     // in the editor. The listener is cleaned up on close and on preset
@@ -3953,9 +3975,8 @@ function enhanceBlock(el, block, section, grid, host) {
   resizeHandle.title = followsContent(block) ? ta('canvas.dragResizeWidth')
     : FIT_BY_WIDTH.has(block.type) ? ta('canvas.dragResizeRatio') : ta('canvas.dragResize');
   el.appendChild(resizeHandle);
-  // The other edges and corners take the same drag with the opposite edge
-  // held still, on the desktop frame; a block that follows its content gets
-  // the left and right edges only, since its height is the content's.
+  // The other edges and corners take the same drag with the opposite edge held still, on the desktop frame.
+  // A block that follows its content gets the left and right edges only, since its height is the content's.
   const edgeHandles = [];
   if (!mobile) {
     const edges = followsContent(block) ? ['e', 'w'] : ['n', 's', 'e', 'w', 'ne', 'sw', 'nw'];
@@ -4313,9 +4334,7 @@ function enhanceBlock(el, block, section, grid, host) {
 
       const start = { x: event.clientX, y: event.clientY };
       let orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
-      // Which edges the resize moves: the corner handle both, an edge handle
-      // one, with the opposite edge held still, so a pull on the left or top
-      // moves the block's origin as well as its size.
+      // Which edges the resize moves: the corner handle both, an edge handle one, with the opposite edge held still, so a pull on the left or top moves the block's origin as well as its size.
       const edge = kind === 'resize' ? (opts.edge ?? { x: 1, y: 1 }) : { x: 0, y: 0 };
       // A block that follows its content keeps its height under the resize
       // handle (ADR-0025): the box follows the content at the width being
@@ -4550,9 +4569,7 @@ function enhanceBlock(el, block, section, grid, host) {
             collectTargets();
           }
         }
-        // The width grows with a pull outward on the edge dragged, up to the
-        // section's far edge on the right and the block's own right edge on
-        // the left, so the origin never crosses zero.
+        // The width grows with a pull outward on the edge dragged, up to the section's far edge on the right and the block's own right edge on the left, so the origin never crosses zero.
         const wMax = edge.x < 0 ? r2(orig.x + orig.w) : r2(100 - orig.x);
         const w = edge.x === 0 || (hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX) ? orig.w : clamp(snapPct(orig.w + edge.x * dx), r2(colStep), wMax);
         const hFrom = (hv) => Math.max(4, hv);

@@ -316,6 +316,9 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   };
   close.addEventListener('click', dismiss);
 
+  // The card's zoom (the chrome scale in base.css) keeps it at the admin's size; an engine that cannot report the zoom draws it unscaled.
+  if (!('currentCSSZoom' in panel)) panel.style.zoom = '1';
+
   // Placement: PREFERABLY above the anchor (the text toolbar sits above the text,
   // so the picker must not cover what is being edited), otherwise below.
   if (nativeAnchoring()) {
@@ -334,12 +337,14 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   }
 
   // The measuring branch: clamped inside the viewport.
+  // The card's zoom multiplies its own coordinates, so they are written in its units.
+  const zoom = panel.currentCSSZoom || 1;
   const rect = anchor.getBoundingClientRect();
-  const W = 236;
-  const left = Math.max(8, Math.min(rect.left, window.innerWidth - W - 8));
-  const above = rect.top - panel.offsetHeight - 8;
-  panel.style.left = `${left}px`;
-  panel.style.top = `${above >= 8 ? above : Math.min(rect.bottom + 8, window.innerHeight - panel.offsetHeight - 8)}px`;
+  const box = panel.getBoundingClientRect();
+  const left = Math.max(8, Math.min(rect.left, window.innerWidth - box.width - 8));
+  const above = rect.top - box.height - 8;
+  panel.style.left = `${left / zoom}px`;
+  panel.style.top = `${(above >= 8 ? above : Math.min(rect.bottom + 8, window.innerHeight - box.height - 8)) / zoom}px`;
 
   const onDown = (event) => {
     if (!panel.contains(event.target)) dismiss();

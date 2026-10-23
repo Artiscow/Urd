@@ -35,8 +35,11 @@ const DD_CSS = `
 }
 .urd-dd-btn:hover { background: rgb(255 255 255 / 12%); }
 .urd-dd-caret { display: inline-flex; font-size: 9px; opacity: 0.65; }
+/* The menu is chrome: zoom keeps it at the admin's size at any preview zoom (--urd-chrome-scale).
+   Since zoom scales its box, the anchoring and the flip below measure the size it is drawn at. */
 .urd-dd-menu {
   position: fixed; z-index: 100004; min-width: 120px; max-height: 300px; overflow-y: auto;
+  zoom: var(--urd-chrome-scale, 1);
   display: grid; gap: 2px; padding: 5px;
   background: #151a23; color: #e8eaf0;
   border: 1px solid rgb(255 255 255 / 18%); border-radius: 8px;
@@ -131,6 +134,8 @@ export function createDropdown({ value = null, options = [], onchange, title = '
     btn.setAttribute('popovertarget', name.slice(2));
     const menu = document.createElement('div');
     menu.className = 'urd-dd-menu';
+    // An engine that cannot report the zoom draws the menu unscaled.
+    if (!('currentCSSZoom' in menu)) menu.style.zoom = '1';
     menu.id = name.slice(2);
     menu.popover = 'auto';
     menu.style.setProperty('position-anchor', name);
@@ -159,10 +164,17 @@ export function createDropdown({ value = null, options = [], onchange, title = '
     document.body.appendChild(menu);
     openMenu = menu;
 
+    // The menu's zoom multiplies its own coordinates, so they are written in its units.
+    // An engine that cannot report the zoom draws the menu unscaled.
+    if (!('currentCSSZoom' in menu)) menu.style.zoom = '1';
+    const zoom = menu.currentCSSZoom || 1;
     const rect = btn.getBoundingClientRect();
-    const below = rect.bottom + 6 + menu.offsetHeight <= window.innerHeight - 8;
-    menu.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - menu.offsetWidth - 8))}px`;
-    menu.style.top = `${below ? rect.bottom + 6 : Math.max(8, rect.top - menu.offsetHeight - 6)}px`;
+    const box = menu.getBoundingClientRect();
+    const below = rect.bottom + 6 + box.height <= window.innerHeight - 8;
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - box.width - 8));
+    const top = below ? rect.bottom + 6 : Math.max(8, rect.top - box.height - 6);
+    menu.style.left = `${left / zoom}px`;
+    menu.style.top = `${top / zoom}px`;
 
     const onDown = (event) => {
       if (!menu.contains(event.target) && event.target !== btn) closeDropdowns();
