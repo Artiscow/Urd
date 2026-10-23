@@ -363,8 +363,8 @@
       <span class="toolbar-row">
         <img class="site-icon-preview" src={img.src} alt="" />
         <span class="row-tools">
-          <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
-          <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, 1)}
+          <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveBgGalleryImage(bg, i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
+          <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveBgGalleryImage(bg, i, j, 1)}
             disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
           <button class="ghost row-tool" title={ta('tip.removeImage')}
             onclick={() => removeBgGalleryImage(bg, i, j)}>{@html ICONS.cross}</button>

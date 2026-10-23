@@ -196,7 +196,7 @@
           <span>{ta('mp.upload')}</span>
         </button>
         {#each ownImages as src (src)}
-          <button type="button" class="mp-cell mp-img" class:active={src === image}
+          <button type="button" class="mp-cell mp-img" class:active={src === image} title={src.split('/').pop()}
             onclick={() => pickImage(src)}><img src={src} alt="" /></button>
         {/each}
       </div>

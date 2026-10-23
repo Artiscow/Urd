@@ -7,10 +7,11 @@
   import { safeCssValue } from '$engine/theme.js';
   import { ICONS } from '../lib/icons.js';
   const ed = getContext('urd-editor');
-  const missingSeo = $derived(ed.missingSeo);
   const pageId = $derived(ed.pageId);
   const seoDraft = $derived(ed.seoDraft);
   const siteDraft = $derived(ed.siteDraft);
+  // The open page lacks a description, unless it is hidden from search: a hollow dot on its Search and sharing group points at the field.
+  const missingDescription = $derived(!siteDraft.pages.find((p) => p.id === pageId)?.noindex && !seoDraft.description);
   const templateIds = $derived(ed.templateIds);
   const { addPage, deletePage, handleDeleteTemplate, renamePage, savePageAsTemplate, selectPage, setPageNoindex, setPageSeo, setPageSlug, templateStores, uploadOgImage } = ed;
 
@@ -44,9 +45,6 @@
         <input class="page-slug" value={p.path.slice(1)} title={ta('tip.pages.slug')}
           onchange={(e) => setPageSlug(p, e.target.value)} />
       {/if}
-      {#if missingSeo[p.id]}
-        <span class="seo-warn" title={ta('tip.pages.missingDescription')}>{@html ICONS.warn}</span>
-      {/if}
       <span class="row-tools">
         <button class="ghost row-tool" title={ta('tip.pages.open')}
           disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
@@ -69,7 +67,7 @@
     </div>
   {/each}
   <details class="group">
-    <summary>{ta('ui.seoGroup', { page: siteDraft.pages.find((p) => p.id === pageId)?.title ?? '' })}</summary>
+    <summary>{ta('ui.seoGroup', { page: siteDraft.pages.find((p) => p.id === pageId)?.title ?? '' })}{#if missingDescription}<i class="seo-open-dot" title={ta('tip.pages.missingDescription')}></i>{/if}</summary>
     <div class="group-items">
       <label title={ta('tip.seo.description')}>{ta('lbl.seoDescription')}
         <textarea rows="2" value={seoDraft.description}

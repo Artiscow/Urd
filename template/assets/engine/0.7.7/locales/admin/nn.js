@@ -770,7 +770,7 @@ export default {
     'tip.removeImage': 'Fjern biletet',
     'tip.removeLink': 'Fjern lenkja',
     'tip.resetAdjust': 'Set lysstyrke, kontrast og metting tilbake til nøytralt',
-    'tip.collection.limit': '0 viser alle.',
+    'tip.collection.limit': 'Tomt eller 0 viser alle.',
     'tip.collection.source': 'Innslaga blir redigerte i Samlingar-panelet.',
     'tip.shape.fill': 'Fylte former brukar fargen som flate i staden for kantlinje',
     'tip.site.description': 'Kort beskriving av nettstaden - brukt av søkjemotorar og ved deling',

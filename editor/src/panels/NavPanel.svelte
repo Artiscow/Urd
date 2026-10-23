@@ -513,6 +513,14 @@
     return node;
   }
 
+  /** An emptied name takes the linked page's title, the link's address, or the seed word, so no item is published without a name (the schema's minLength 1). */
+  function fillNavLabel(i, j = null, k = null) {
+    const node = navNode(i, j, k);
+    if (node?.label?.trim()) return;
+    const page = node.page ? siteDraft.pages.find((p) => p.id === node.page) : null;
+    siteMutate(`edit:nav-label-fill-${i}-${j}-${k}`, () => { node.label = page?.title || node.href || ta('seed.link'); });
+  }
+
   /** A menu item's link, or a submenu item's (j, and k one level down), from the link editor; an item with a submenu and no link is the submenu's opener. */
   function setNavLink(i, j, link, k = null) {
     siteMutate('nav', () => setLinkOn(navNode(i, j, k), link));
@@ -1770,7 +1778,8 @@
         <div class="nav-body">
           <span class="nav-body-label">{ta('lbl.name')}</span>
           <input class="field-filled" value={node.label} title={level === 0 ? ta('tip.nav.itemLabel') : ta('tip.nav.childLabel')}
-            oninput={(e) => (level === 0 ? setNavLabel(i, e.target.value) : setNavChildLabel(i, j, e.target.value, level === 2 ? k : null))} />
+            oninput={(e) => (level === 0 ? setNavLabel(i, e.target.value) : setNavChildLabel(i, j, e.target.value, level === 2 ? k : null))}
+            onblur={() => fillNavLabel(i, level === 0 ? null : j, level === 2 ? k : null)} />
           <span class="nav-body-label">{ta('lbl.link')}</span>
           <!-- An item with items under it may have no link and is then their opener -->
           <LinkField scope="site" value={linkOf(node)} title={ta('tip.linkTarget')} removable={Boolean(node.children?.length)}

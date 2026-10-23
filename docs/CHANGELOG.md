@@ -28,6 +28,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.10.4 - The intuitiveness review, fourth stage: the panels' small findings - 23 October 2026
+
+- 22 icon-only buttons in nine files (the up, down and remove tools in the Footer, Site and Collections panels, the background editor and four block families, and the mark picker's images) had no text, title or aria-label. Each now has a title, the mark picker's images their file name, and `tests/button-names.test.mjs` reads every Svelte file through Svelte's parser and fails on a button without a name.
+- Every page without a description carried a warning triangle in the Pages panel, so a fresh site read as an error on each row. The rows carry no mark now; the open page's Search and sharing group shows a hollow dot with a tooltip while its description is empty, and the panel no longer reads every page's draft to find them.
+- The product cards' Columns and Max count, and the collection list's Max count, showed 0 where the block means «automatic» and «all». An empty field now shows «Auto» or «All», in the menu, the default line, the Grid group and the quick tiles, and an empty field or a word stores 0.
+- The Site panel opened on seven loose fields. Shop currency moved into a new Shop group and the own meeting addresses to the foot of Calendars.
+- A nav item's name could be emptied and published as `label: ""`, against the schema. Leaving an empty name now fills it with the linked page's title, the link's address or «Link».
+- The phone view's section reset took two clicks, and the first one's armed state did not show, since the hover colour covered it. The reset now takes one click and is undone with Ctrl+Z, as the deletions are; the arming and its «Sure?» key are gone.
+- The colour picker, the image editor, the admin's colour picker and the status toast drew their close and remove buttons with a «×» character. They draw the cross icon now.
+
 ### 0.7.10.3 - The intuitiveness review, third stage: the section gallery's direction and the canvas menus at the admin's size - 23 October 2026
 
 - The **+ New section** gallery opened downward from every bar but the page's last, so from a bar low in the view it ran past the frame's edge. It now opens toward the side with room in the view and is held to that room (`placePresetMenu` in preview-edit.js).

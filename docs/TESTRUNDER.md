@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.10.4): the panels' small findings
+
+- [ ] Hover each up, down and remove button in the Footer panel's columns and links, the Site panel's calendars, the Collections panel's entries and colours, the FAQ, form, gallery and timeline lists and a gallery background's images: each shows a tooltip; the mark picker's own images show their file name
+- [ ] The Pages panel: no row carries a warning triangle; open a page without a description: its «Search and sharing» group shows a small hollow dot whose tooltip says the description is missing; write one: the dot goes
+- [ ] A product cards block: Columns and Max count stand empty with «Auto» and «All», as does the Columns quick tile and the Grid group's value; type 3: the grid takes three columns; empty the field: back to «Auto»; type 0 or 9: the field shows «Auto» or 6
+- [ ] A collection list: Max count shows 6; empty it in the menu or on the quick tile: it reads «All» and the list shows every entry
+- [ ] The Site panel: the name, the description, the language, the time zone and the map service stand at the top; Shop currency is in the Shop group, the own meeting addresses at the foot of Calendars
+- [ ] The Nav panel: empty a menu item's name and click elsewhere: the name becomes the linked page's title; the same for a submenu item
+- [ ] The phone view, a section with a block moved on the phone: one click on the section's reset puts the block back in sync with desktop; Ctrl+Z brings the move back
+- [ ] The colour picker on the canvas, the image editor, the admin's colour picker and the status message: the close and remove buttons show a drawn cross
+
 ### Test batch (0.7.10.3): the section gallery and the canvas menus at the admin's size
 
 - [ ] Scroll so a section boundary sits near the bottom of the view and click «+ New section»: the gallery opens upward and stays inside the canvas; near the top it opens downward; in a short window it is shortened and scrolls inside

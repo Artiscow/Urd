@@ -35,10 +35,10 @@
       <button class="ghost action" title={ta('tip.product.createCatalog')}
         onclick={createCatalogForBlock}>{ta('ui.createCatalog')}</button>
     {/if}
-    <Setting key="limit" shown="0">
+    <Setting key="limit" shown={ta('common.all')}>
       <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
-        <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 0}
-          onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
+        <input type="number" min="0" max="100" value={selectedBlock.props.limit || ''} placeholder={ta('common.all')}
+          onchange={(e) => { const n = Math.max(0, Math.min(100, Math.round(Number(e.target.value)) || 0)); setBlockProp('limit', n); e.target.value = n || ''; }} /></label>
     </Setting>
   {/snippet}
   {#snippet productPrice()}
@@ -52,14 +52,14 @@
   <MenuGroup id="product-price" title={ta('lbl.price')} value={selectedBlock.props.currency ?? 'kr'} group={groupOf('product-price', { currency: 'kr' })}>{@render productPrice()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet productGrid()}
-    <Setting key="columns" shown="0">
+    <Setting key="columns" shown={ta('common.auto')}>
       <div class="pin-line">
         <label title={ta('tip.product.columns')}>{ta('lbl.columns')}
-          <input type="number" min="0" max="6" value={selectedBlock.props.columns ?? 0}
-            onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
+          <input type="number" min="0" max="6" value={selectedBlock.props.columns || ''} placeholder={ta('common.auto')}
+            onchange={(e) => { const n = Math.max(0, Math.min(6, Math.round(Number(e.target.value)) || 0)); setBlockProp('columns', n); e.target.value = n || ''; }} /></label>
         <Pin id="columns" />
       </div>
     </Setting>
   {/snippet}
-  <MenuGroup id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('menu.standard')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</MenuGroup>
+  <MenuGroup id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('common.auto')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</MenuGroup>
 {/if}

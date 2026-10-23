@@ -137,7 +137,7 @@ Lenken finnes på to måter:
 - **Feltet kalenderappen skriver den i.** Google Kalender og Outlook legger møtelenken i et eget felt når du legger et møte til et arrangement.
 - **En lenke i arrangementets adresse, sted eller beskrivelse** til en tjeneste kalenderen kjenner: Zoom, Microsoft Teams, Google Meet, Whereby, Webex, Proton Meet, kMeet (Infomaniak), Element Call og Jitsi på `meet.jit.si`.
 
-**En egen server** (Jitsi, Nextcloud Talk, BigBlueButton og lignende) har en adresse bare du kjenner. Legg den inn i panelet **Nettsted** under **Egne møteadresser**, for eksempel `meet.example.org`, med komma mellom flere. En lenke til den adressen i et arrangement gir da også Bli med-knappen.
+**En egen server** (Jitsi, Nextcloud Talk, BigBlueButton og lignende) har en adresse bare du kjenner. Legg den inn i panelet **Nettsted**, nederst i gruppen **Kalendere** under **Egne møteadresser**, for eksempel `meet.example.org`, med komma mellom flere. En lenke til den adressen i et arrangement gir da også Bli med-knappen.
 
 Knappen viser hvor den leder når pekeren hviler på den («meet.proton.me»), så en besøkende kan se adressen før de trykker. En lenke regnes som møtelenke bare når adressen er nøyaktig en kjent adresse, aldri fordi navnet står et sted i en lengre adresse.
 

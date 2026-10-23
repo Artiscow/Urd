@@ -11792,12 +11792,14 @@ body.urd-chrome-off .urd-text-toolbar {
 }
 
 .urd-cp-close {
+  display: inline-flex;
+  align-items: center;
   background: transparent;
   border: 0;
   color: inherit;
   font-size: 15px;
   line-height: 1;
-  padding: 2px 7px;
+  padding: 4px 6px;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -11987,6 +11989,11 @@ body.urd-chrome-off .urd-text-toolbar {
   cursor: pointer;
 }
 
+.urd-cp-del svg {
+  width: 7px;
+  height: 7px;
+}
+
 .urd-cp-saved:hover .urd-cp-del {
   display: flex;
 }
@@ -12029,12 +12036,14 @@ body.urd-chrome-off .urd-cp {
 }
 
 .urd-imged-close {
+  display: inline-flex;
+  align-items: center;
   background: transparent;
   border: 0;
   color: inherit;
   font-size: 15px;
   line-height: 1;
-  padding: 2px 7px;
+  padding: 4px 6px;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -17300,12 +17309,6 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-mobile-pin svg {
   width: calc(11px * var(--urd-chrome-scale, 1));
   height: calc(11px * var(--urd-chrome-scale, 1));
-}
-
-/* Armed reset ("Sure?") in the section toolbar */
-.urd-preview .urd-section-toolbar button.urd-armed {
-  background: #d94f3d;
-  color: #fff;
 }
 
 /* The hidden-on-mobile list: a floating panel below the section toolbar, with

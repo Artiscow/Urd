@@ -18,6 +18,7 @@
    */
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { ta } from '$engine/i18n.js';
+  import { ICONS } from './icons.js';
 
   let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false } = $props();
 
@@ -286,7 +287,7 @@
     aria-label={label} onclick={native ? undefined : () => (open ? close() : openPicker())}></button>
   {#if allowClear && value}
     <button type="button" class="cp-clear" title={ta('cp.clearTitle')}
-      aria-label={ta('cp.clear')} onclick={() => onchange?.('')}>×</button>
+      aria-label={ta('cp.clear')} onclick={() => onchange?.('')}>{@html ICONS.cross}</button>
   {/if}
   <!-- The picker often sits inside a <label>: without preventDefault the browser
        forwards clicks on non-interactive surfaces (the color field, empty space)
@@ -356,7 +357,7 @@
               <button type="button" class="cp-token" style="background: {hex}"
                 title={hex} onclick={() => pick(hex)}></button>
               <button type="button" class="cp-del" title={ta('cp.removeSaved')}
-                onclick={() => removeSaved(hex)}>×</button>
+                onclick={() => removeSaved(hex)}>{@html ICONS.cross}</button>
             </span>
           {/each}
         </span>
@@ -662,6 +663,11 @@
     font-size: 10px;
     line-height: 1;
     cursor: pointer;
+  }
+
+  .cp-del :global(svg) {
+    width: 7px;
+    height: 7px;
   }
 
   .cp-saved:hover .cp-del {

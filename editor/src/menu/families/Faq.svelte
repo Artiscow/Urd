@@ -49,8 +49,8 @@
         <input value={item.q} title={ta('tip.faq.question')}
           onchange={(e) => setFaqItem(i, { q: e.target.value })} />
         <span class="row-tools">
-          <button class="ghost row-tool" onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-          <button class="ghost row-tool" onclick={() => moveFaqItem(i, 1)}
+          <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+          <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFaqItem(i, 1)}
             disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
           <button class="ghost row-tool" title={ta('tip.faq.remove')} onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
         </span>

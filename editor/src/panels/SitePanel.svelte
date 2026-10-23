@@ -394,18 +394,10 @@
   {#if ed.siteZoneBad}
     <p class="panel-hint place-error">{ta('settings.timeZoneBad')}</p>
   {/if}
-  <!-- The shop's currency: the ISO code the payment layer charges in, and the word the checkout shows with a provider on -->
-  <label class="field-stack" title={ta('tip.settings.currency')}>{ta('settings.currency')}
-    <input value={siteDraft.site.commerce?.currency ?? ''} placeholder="NOK" maxlength="3" spellcheck="false" class:place-error={ed.siteCurrencyBad}
-      onchange={(e) => setSiteCurrency(e.target.value)} /></label>
   <!-- The map service a place links to: each choice says who makes it, where they are from and what it does with a search -->
   <label class="field-stack" title={ta('tip.settings.mapService')}>{ta('settings.mapService')}
     <Dropdown value={mapService(siteDraft)} options={MAP_SERVICES.map((id) => [id, ta(`mapService.${id}`), ta(`mapService.${id}.note`)])}
       onchange={(v) => setSiteMapService(v)} /></label>
-  <!-- The site's own video meeting servers: a link to one of them in a calendar event is a meeting link -->
-  <label class="field-stack" title={ta('tip.settings.meetingHosts')}>{ta('settings.meetingHosts')}
-    <input value={(siteDraft.site.meetingHosts ?? []).join(', ')} placeholder="meet.example.org" spellcheck="false"
-      onchange={(e) => setSiteMeetingHosts(e.target.value)} /></label>
   <!-- The site's calendars (site.calendars): registered once with their settings, picked by the calendar blocks as references.
        A list of closed rows (the colour, the name, the address) with one row open at a time; the new calendar opens with the caret in its name -->
   <details class="group" bind:open={() => ed.siteCalendarsOpen, (v) => (ed.siteCalendarsOpen = v)}>
@@ -474,8 +466,8 @@
                     </label>
                     <div class="site-cal-foot">
                       <span class="row-tools">
-                        <button class="ghost row-tool" onclick={() => moveSiteCalendar(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
-                        <button class="ghost row-tool" onclick={() => moveSiteCalendar(ci, 1)} disabled={ci === siteCalendars().length - 1}>{@html ICONS.down}</button>
+                        <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveSiteCalendar(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
+                        <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveSiteCalendar(ci, 1)} disabled={ci === siteCalendars().length - 1}>{@html ICONS.down}</button>
                       </span>
                       <button type="button" class="site-cal-remove" title={ta('tip.site.removeCalendar')} onclick={() => removeSiteCalendar(ci)}>{ta('siteCal.remove')}</button>
                     </div>
@@ -486,6 +478,10 @@
           {/each}
         </div>
       {/if}
+      <!-- The site's own video meeting servers: a link to one of them in a calendar event is a meeting link -->
+      <label class="field-stack" title={ta('tip.settings.meetingHosts')}>{ta('settings.meetingHosts')}
+        <input value={(siteDraft.site.meetingHosts ?? []).join(', ')} placeholder="meet.example.org" spellcheck="false"
+          onchange={(e) => setSiteMeetingHosts(e.target.value)} /></label>
     </div>
   </details>
 
@@ -631,6 +627,16 @@
         </div>
       {/each}
       <button class="ghost action" onclick={() => pointsMutate('site', (points) => points.push({}))}>{ta('ui.addContactPoint')}</button>
+    </div>
+  </details>
+  <!-- The shop's settings for the whole site -->
+  <details class="group">
+    <summary title={ta('tip.site.shop')}>{ta('group.siteShop')}</summary>
+    <div class="group-items">
+      <!-- The shop's currency: the ISO code the payment layer charges in, and the word the checkout shows with a provider on -->
+      <label class="field-stack" title={ta('tip.settings.currency')}>{ta('settings.currency')}
+        <input value={siteDraft.site.commerce?.currency ?? ''} placeholder="NOK" maxlength="3" spellcheck="false" class:place-error={ed.siteCurrencyBad}
+          onchange={(e) => setSiteCurrency(e.target.value)} /></label>
     </div>
   </details>
   <hr class="gridmenu-divider" />

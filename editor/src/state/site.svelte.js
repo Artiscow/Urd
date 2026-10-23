@@ -245,8 +245,6 @@ function setPageSeo(field, rawValue) {
   pageState.store.save();
   historyState.updateDirty();
   readSeoDraft();
-  const entry = siteDraft.pages.find((p) => p.id === pageState.pageId);
-  missingSeo[pageState.pageId] = entry?.noindex ? false : !pageState.store.data.meta.description;
 }
 
 /** Hide from search engines: the flag lives in the PAGE REGISTRY
@@ -259,26 +257,6 @@ function setPageNoindex(checked) {
     if (checked) entry.noindex = true;
     else delete entry.noindex;
   });
-  // Hidden pages are outside search and are never marked as lacking.
-  missingSeo[pageState.pageId] = checked ? false : !pageState.store?.data?.meta?.description;
-}
-
-/** Pages missing a meta description (the warning marker in the Pages
- *  panel): computed when the panel opens; the open page updates on edit. */
-let missingSeo = $state({});
-
-async function refreshMissingSeo() {
-  const out = {};
-  for (const entry of siteDraft.pages) {
-    if (entry.noindex) continue;
-    if (entry.id === pageState.pageId) {
-      out[entry.id] = !pageState.store?.data?.meta?.description;
-      continue;
-    }
-    const page = await pageState.readPageDraft(entry);
-    out[entry.id] = !page?.meta?.description;
-  }
-  missingSeo = out;
 }
 
 /** The sharing image: compressed like other images and materialized to
@@ -630,10 +608,6 @@ export function effects() {
   });
 
   $effect(() => {
-    if (shellState.activePanel === 'pages' && pageState.pageId) refreshMissingSeo();
-  });
-
-  $effect(() => {
     const id = focusSiteCalendar;
     if (!id) return;
     focusSiteCalendar = null;
@@ -702,9 +676,6 @@ export const siteState = {
   readSeoDraft,
   setPageSeo,
   setPageNoindex,
-  get missingSeo() { return missingSeo; },
-  set missingSeo(v) { missingSeo = v; },
-  refreshMissingSeo,
   uploadOgImage,
   setPageSlug,
   deletePage,

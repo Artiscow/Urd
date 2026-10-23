@@ -17,6 +17,9 @@ import { ta } from './i18n.js';
 let panel = null;
 let teardown = null;
 
+/** The close button carries a drawn cross, never a character. */
+const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
 export function closeImageEditor() {
   teardown?.();
   panel?.remove();
@@ -83,7 +86,8 @@ export function openImageEditor(anchor, adapter) {
 
   const head = el2('div', 'urd-imged-head');
   head.appendChild(el2('strong', null, ta('blocks.image')));
-  const close = el2('button', 'urd-imged-close', '×');
+  const close = el2('button', 'urd-imged-close');
+  close.innerHTML = CROSS_SVG;
   close.type = 'button';
   close.title = ta('ui.close');
   close.addEventListener('click', closeImageEditor);

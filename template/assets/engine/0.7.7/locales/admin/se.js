@@ -685,7 +685,7 @@ export default {
     'tip.removeImage': 'Váldde gova eret',
     'tip.removeLink': 'Váldde liŋkka eret',
     'tip.resetAdjust': 'Bija čuovgadaga, kontrastta ja ivdnedievvasa fas neutrálan',
-    'tip.collection.limit': '0 čájeha buot.',
+    'tip.collection.limit': 'Guorus dahje 0 čájeha buot.',
     'tip.collection.source': 'Oasit doaimmahuvvojit Čoakkáldagat-panelas.',
     'tip.shape.fill': 'Devdojuvvon hámit geavahit ivnni beallin iige ravdalinnján',
     'tip.site.description': 'Oanehis válddahus neahttabáikkis - geavahuvvo ohcanmohtoriin ja juohkimis',

@@ -88,8 +88,8 @@
         options={FORM_FIELD_TYPES.map((t) => [t, ta(`form.type${t[0].toUpperCase()}${t.slice(1)}`)])}
         onchange={(v) => setFormField(i, { type: v })} />
       <span class="row-tools">
-        <button class="ghost row-tool" onclick={() => moveFormField(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-        <button class="ghost row-tool" onclick={() => moveFormField(i, 1)}
+        <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFormField(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+        <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFormField(i, 1)}
           disabled={i === (selectedBlock.props.fields?.length ?? 0) - 1}>{@html ICONS.down}</button>
         <button class="ghost row-tool" title={ta('form.removeField')} onclick={() => removeFormField(i)}>{@html ICONS.cross}</button>
       </span>

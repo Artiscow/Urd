@@ -53,8 +53,8 @@
       <input value={item.year} placeholder={ta('ph.tlYear')} title={ta('tip.timeline.year')}
         onchange={(e) => setTlItem(i, { year: e.target.value })} />
       <span class="row-tools">
-        <button class="ghost row-tool" onclick={() => moveTlItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-        <button class="ghost row-tool" onclick={() => moveTlItem(i, 1)}
+        <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveTlItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+        <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveTlItem(i, 1)}
           disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
         <button class="ghost row-tool" title={ta('tip.timeline.remove')} onclick={() => removeTlItem(i)}>{@html ICONS.cross}</button>
       </span>

@@ -53,7 +53,6 @@ function handleFor(panel, siteDraft, extra = {}) {
     iframeEl: null,
     sections: [{ id: 'sec-1', blocks: [] }],
     // Pages
-    missingSeo: {},
     seoDraft: { description: '', ogTitle: '', ogDescription: '', ogImage: '' },
     templateIds: [],
     templateStores: {},

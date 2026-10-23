@@ -129,7 +129,7 @@ git push
 
 The Checkout block can take the payment through a provider ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md), [ADR-0028](../../adr/0028-payment-providers-in-the-optional-layer.md)). It is an optional layer: without it the order form sends the order by email or to an endpoint, as before. Each provider needs its own agreement and keys, and each is switched on per Checkout block under **Payment** in the block's menu. The buyer always pays on the provider's own page, so the site never sees a card.
 
-First set the shop's currency in the Site panel (**Shop currency**, an ISO code such as NOK, DKK or EUR); the catalogue's prices are in that currency, and every provider charges in it.
+First set the shop's currency in the Site panel's **Shop** group (**Shop currency**, an ISO code such as NOK, DKK or EUR); the catalogue's prices are in that currency, and every provider charges in it.
 
 ### Vipps MobilePay
 

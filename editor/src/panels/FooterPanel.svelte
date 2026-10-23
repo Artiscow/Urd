@@ -403,8 +403,8 @@
           <span class="row-tools">
             <button class="ghost row-tool" title={ta('tip.footer.addLink')}
               onclick={() => addFooterLink(ci)}>{@html ICONS.plus}</button>
-            <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
-            <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, 1)}
+            <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFooterColumn(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
+            <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFooterColumn(ci, 1)}
               disabled={ci === siteDraft.footer.columns.length - 1}>{@html ICONS.down}</button>
             <button class="ghost row-tool" title={ta('tip.footer.removeColumn')}
               onclick={() => removeFooterColumn(ci)}>{@html ICONS.cross}</button>
@@ -415,8 +415,8 @@
             <input value={link.label} title={ta('tip.linkLabel')}
               oninput={(e) => setFooterLinkLabel(ci, li, e.target.value)} />
             <span class="row-tools">
-              <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
-              <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, 1)}
+              <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFooterLink(ci, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
+              <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFooterLink(ci, li, 1)}
                 disabled={li === col.links.length - 1}>{@html ICONS.down}</button>
               <button class="ghost row-tool" title={ta('tip.removeLink')}
                 onclick={() => removeFooterLink(ci, li)}>{@html ICONS.cross}</button>
@@ -557,8 +557,8 @@
       <input value={link.label} title={ta('tip.linkLabel')}
         oninput={(e) => setFooterListLinkLabel(field, li, e.target.value)} />
       <span class="row-tools">
-        <button class="ghost row-tool" onclick={() => moveFooterListLink(field, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
-        <button class="ghost row-tool" onclick={() => moveFooterListLink(field, li, 1)}
+        <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFooterListLink(field, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
+        <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFooterListLink(field, li, 1)}
           disabled={li === links.length - 1}>{@html ICONS.down}</button>
         <button class="ghost row-tool" title={ta('tip.removeLink')}
           onclick={() => removeFooterListLink(field, li)}>{@html ICONS.cross}</button>

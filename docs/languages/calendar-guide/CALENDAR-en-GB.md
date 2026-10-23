@@ -137,7 +137,7 @@ The link is found in two ways:
 - **The field your calendar app writes it in.** Google Calendar and Outlook put the meeting link in a field of their own when you add a meeting to an event.
 - **A link in the event's address, place or description** to a service the calendar knows: Zoom, Microsoft Teams, Google Meet, Whereby, Webex, Proton Meet, kMeet (Infomaniak), Element Call and Jitsi on `meet.jit.si`.
 
-**A server of your own** (Jitsi, Nextcloud Talk, BigBlueButton and the like) has an address only you know. Add it in the **Site** panel under **Own meeting addresses**, for example `meet.example.org`, with commas between several. A link to that address in an event then gives the Join button too.
+**A server of your own** (Jitsi, Nextcloud Talk, BigBlueButton and the like) has an address only you know. Add it in the **Site** panel, at the foot of the **Calendars** group under **Own meeting addresses**, for example `meet.example.org`, with commas between several. A link to that address in an event then gives the Join button too.
 
 The button shows where it leads when the pointer rests on it («meet.proton.me»), so a visitor can see the address before pressing. A link counts as a meeting link only when its address is exactly a known one, never because the name appears somewhere in a longer address.
 

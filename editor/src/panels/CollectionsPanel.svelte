@@ -172,8 +172,8 @@
             <input value={entry.title} title={ta('lbl.title')}
               onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'title', e.target.value || ta('ui.untitled'))} />
             <span class="row-tools">
-              <button class="ghost row-tool" onclick={() => moveEntry(ed.activeCollection, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-              <button class="ghost row-tool" onclick={() => moveEntry(ed.activeCollection, i, 1)}
+              <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveEntry(ed.activeCollection, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+              <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveEntry(ed.activeCollection, i, 1)}
                 disabled={i === collectionView.entries.length - 1}>{@html ICONS.down}</button>
               <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')}
                 onclick={() => removeEntry(ed.activeCollection, entry.id)}>{@html ICONS.cross}</button>
@@ -233,7 +233,7 @@
                 {#if color.image}
                   <img class="site-icon-preview" src={color.image} alt="" />
                 {/if}
-                <button class="ghost row-tool" onclick={() => removeEntryColor(ed.activeCollection, entry.id, ci)}>{@html ICONS.cross}</button>
+                <button class="ghost row-tool" title={ta('tip.entry.removeColor')} onclick={() => removeEntryColor(ed.activeCollection, entry.id, ci)}>{@html ICONS.cross}</button>
               </span>
             {/each}
             <button class="ghost action" title={ta('tip.entry.colors')}

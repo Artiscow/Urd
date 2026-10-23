@@ -243,8 +243,10 @@
   .toast-x {
     flex: none;
     align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
     border: 0;
-    padding: 0 0.2em;
+    padding: 0.15em 0.2em;
     font-size: 1rem;
     line-height: 1;
     opacity: 0.6;
@@ -1082,11 +1084,16 @@
     gap: 0.35rem;
   }
 
-  /* The warning marker for pages without a meta description (Search and sharing) */
-  .seo-warn {
-    display: inline-flex;
-    flex: none;
-    color: #e2b84a;
+  /* The hollow dot on the Search and sharing group while the open page has no description: a field left open, not an error */
+  .seo-open-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-left: 0.45rem;
+    vertical-align: middle;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    opacity: 0.6;
   }
 
   .collection-entry {

@@ -138,9 +138,9 @@
         options: [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]], set: (v) => setBlockProp('mode', v) });
     } else if (b.type === 'collection') {
       items.push(designItem('collectionView'));
-      items.push({ id: 'limit', label: ta('lbl.maxCount'), kind: 'number', min: 0, max: 100, value: p.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(0, Math.min(100, Number(v) || 0))) });
+      items.push({ id: 'limit', label: ta('lbl.maxCount'), kind: 'number', min: 0, max: 100, value: p.limit ?? 6, zero: ta('common.all'), set: (v) => { const n = Math.max(0, Math.min(100, Math.round(Number(v)) || 0)); setBlockProp('limit', n); return n; } });
     } else if (b.type === 'product') {
-      items.push({ id: 'columns', label: ta('lbl.columns'), kind: 'number', min: 0, max: 6, value: p.columns ?? 0, set: (v) => setBlockProp('columns', Math.max(0, Math.min(6, Number(v) || 0))) });
+      items.push({ id: 'columns', label: ta('lbl.columns'), kind: 'number', min: 0, max: 6, value: p.columns ?? 0, zero: ta('common.auto'), set: (v) => { const n = Math.max(0, Math.min(6, Math.round(Number(v)) || 0)); setBlockProp('columns', n); return n; } });
     } else if (b.type === 'cart') {
       items.push(designItem('cartView'));
     } else if (b.type === 'checkout') {
@@ -213,7 +213,8 @@
         {#if item.kind === 'open'}
           <button type="button" class="menu-quick-open" onclick={item.run}>{item.value}</button>
         {:else if item.kind === 'number'}
-          <input type="number" min={item.min} max={item.max} step={item.step ?? 1} value={item.value} aria-label={item.label} onchange={(e) => item.set(e.target.value)} />
+          <!-- A tile whose zero means «all» or «automatic» (item.zero) shows that word in an empty field; a set that returns the stored value writes it back, so a clamped or zero entry shows what the block holds. -->
+          <input type="number" min={item.min} max={item.max} step={item.step ?? 1} value={item.zero && !item.value ? '' : item.value} placeholder={item.zero} aria-label={item.label} onchange={(e) => { const stored = item.set(e.target.value); if (stored !== undefined) e.target.value = item.zero && !stored ? '' : stored; }} />
         {:else if item.kind === 'select'}
           <Dropdown value={item.value} options={item.options} title={item.label} compact onchange={(v) => item.set(v)} />
         {:else if item.kind === 'color'}

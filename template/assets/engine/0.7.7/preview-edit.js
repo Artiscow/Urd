@@ -2678,7 +2678,7 @@ function addSectionToolbar(host, section, grid) {
       const reset = document.createElement('button');
       reset.innerHTML = RESET_SVG;
       reset.title = ta('canvas.mobileReset');
-      armConfirm(reset, () => post({ type: 'urd-mobile-reset', sectionId: section.id }));
+      reset.addEventListener('click', () => post({ type: 'urd-mobile-reset', sectionId: section.id }));
       bar.appendChild(reset);
     }
     // Hidden blocks are otherwise invisible in the mobile view: the chip
@@ -2756,42 +2756,6 @@ function addSectionToolbar(host, section, grid) {
   }
 
   if (bar.childElementCount) host.appendChild(bar);
-}
-
-/**
- * Two-click confirmation on a destructive button: the first click arms it
- * (red, "Sure?"), the second click executes. A click outside or Escape
- * disarms. The listeners are cleaned up on every exit.
- */
-function armConfirm(btn, onConfirm) {
-  const label = btn.innerHTML;
-  let armed = false;
-  let cleanup = null;
-  const disarm = () => {
-    armed = false;
-    btn.classList.remove('urd-armed');
-    btn.innerHTML = label;
-    cleanup?.();
-    cleanup = null;
-  };
-  btn.addEventListener('click', () => {
-    if (armed) {
-      disarm();
-      onConfirm();
-      return;
-    }
-    armed = true;
-    btn.classList.add('urd-armed');
-    btn.textContent = ta('canvas.confirmReset');
-    const onDown = (ev) => { if (!btn.contains(ev.target)) disarm(); };
-    const onKey = (ev) => { if (ev.key === 'Escape') disarm(); };
-    document.addEventListener('pointerdown', onDown, true);
-    document.addEventListener('keydown', onKey, true);
-    cleanup = () => {
-      document.removeEventListener('pointerdown', onDown, true);
-      document.removeEventListener('keydown', onKey, true);
-    };
-  });
 }
 
 /** Relative time for the attention card, in the admin language ("2 hours ago"). */

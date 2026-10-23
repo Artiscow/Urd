@@ -29,8 +29,8 @@
     <Setting key="limit" shown="6">
       <div class="pin-line">
         <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
-          <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
-            onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
+          <input type="number" min="0" max="100" value={(selectedBlock.props.limit ?? 6) || ''} placeholder={ta('common.all')}
+            onchange={(e) => { const n = Math.max(0, Math.min(100, Math.round(Number(e.target.value)) || 0)); setBlockProp('limit', n); e.target.value = n || ''; }} /></label>
         <Pin id="limit" />
       </div>
     </Setting>

@@ -127,7 +127,7 @@ git push
 
 Kasse-blokken kan ta betalingen gjennom en leverandør ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md), [ADR-0028](../../adr/0028-payment-providers-in-the-optional-layer.md)). Det er et valgfritt lag: uten det sender bestillingsskjemaet bestillingen på e-post eller til et endepunkt, som før. Hver leverandør trenger sin egen avtale og sine egne nøkler, og hver slås på per Kasse-blokk under **Betaling** i blokkens meny. Kjøperen betaler alltid på leverandørens egen side, så nettstedet ser aldri et kort.
 
-Sett først butikkens valuta i Nettsted-panelet (**Butikkvaluta**, en ISO-kode som NOK, DKK eller EUR); katalogprisene står i den valutaen, og hver leverandør belaster i den.
+Sett først butikkens valuta i Nettsted-panelets gruppe **Butikk** (**Butikkvaluta**, en ISO-kode som NOK, DKK eller EUR); katalogprisene står i den valutaen, og hver leverandør belaster i den.
 
 ### Vipps MobilePay
 

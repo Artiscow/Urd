@@ -191,7 +191,7 @@
   {#if ed.status}
     <div class="toast" class:ok={ed.statusKind === 'ok'} class:error={ed.statusKind === 'error'}>
       <span>{ed.status}</span>
-      <button class="toast-x" onclick={() => ed.setStatus('')} title={ta('ui.close')}>×</button>
+      <button class="toast-x" onclick={() => ed.setStatus('')} title={ta('ui.close')}>{@html ICONS.cross}</button>
     </div>
   {/if}
 </div>

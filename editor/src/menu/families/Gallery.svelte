@@ -36,8 +36,8 @@
         <span class="toolbar-row" title={ta('hint.gallery')}>
           <img class="site-icon-preview" src={img.src} alt="" />
           <span class="row-tools">
-            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, 1)}
+            <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+            <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveGalleryImage(i, 1)}
               disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>
             <button class="ghost row-tool" title={ta('tip.removeImage')} onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
           </span>
