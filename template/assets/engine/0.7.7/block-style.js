@@ -22,7 +22,7 @@ export const CONTENT_KEYS = {
   collection: ['collection'],
   product: ['collection'],
   cart: ['href', 'page'],
-  checkout: ['recipient', 'endpoint', 'vipps'],
+  checkout: ['recipient', 'endpoint', 'payments'],
   share: ['links', 'hidden'],
   countdown: ['target', 'doneText'],
   audio: ['src', 'title'],

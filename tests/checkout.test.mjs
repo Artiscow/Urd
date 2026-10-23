@@ -65,7 +65,7 @@ const CART = [
 ];
 
 test('the order lines and the total stand right above the order buttons', () => {
-  for (const props of [{ recipient: 'post@example.org' }, { recipient: 'post@example.org', vipps: '12345', vippsCheckout: true }]) {
+  for (const props of [{ recipient: 'post@example.org' }, { recipient: 'post@example.org', payments: { vipps: true, manual: [{ id: 'v', label: 'Vipps', text: '12345' }] } }]) {
     const form = renderCheckout(CART, props);
     const at = form.children.findIndex((c) => c.className === 'urd-checkout-buttons');
     const recap = form.children[at - 1];
@@ -82,7 +82,7 @@ test('the summary above the buttons is hidden with an empty basket', () => {
 });
 
 test('each order button names the purchase or the payment, and is described by the summary above it', () => {
-  const form = renderCheckout(CART, { recipient: 'post@example.org', vippsCheckout: true });
+  const form = renderCheckout(CART, { recipient: 'post@example.org', payments: { vipps: true } });
   const recap = form.children.find((c) => c.className === 'urd-checkout-recap');
   const buttons = form.children.find((c) => c.className === 'urd-checkout-buttons').children;
   assert.deepEqual(buttons.map((b) => b.textContent), [sites.nb['shop.sendOrder'], sites.nb['shop.payWithVipps']]);
@@ -120,4 +120,38 @@ test('the seller stands under the order buttons from the Site panel, and the blo
   assert.ok(!seller.textContent.includes('Kari Nordmann'), 'the representative stays in the footer');
   assert.ok(!renderCheckout(CART, { recipient: 'post@example.org', seller: false }, site).children.some((c) => c.className === 'urd-checkout-seller'), 'switched off');
   assert.ok(!renderCheckout(CART, { recipient: 'post@example.org' }, { site: { title: 'Apeiron', lang: 'nb' } }).children.some((c) => c.className === 'urd-checkout-seller'), 'no details, no line');
+});
+
+test('the payment buttons follow the settings: Vipps, a card at Vipps, and nothing for a provider that is off', () => {
+  const buttonsOf = (props) => renderCheckout(CART, props).children.find((c) => c.className === 'urd-checkout-buttons').children.map((b) => b.textContent);
+  assert.deepEqual(buttonsOf({ recipient: 'post@example.org' }), [sites.nb['shop.sendOrder']]);
+  assert.deepEqual(buttonsOf({ payments: { vipps: true, card: 'vipps' } }), [sites.nb['shop.sendOrder'], sites.nb['shop.payWithVipps'], sites.nb['shop.payWithCard']]);
+  assert.deepEqual(buttonsOf({ payments: { card: 'vipps' } }), [sites.nb['shop.sendOrder'], sites.nb['shop.payWithCard']]);
+});
+
+test('the payment instructions stand in the form above the order summary, as label and text', () => {
+  const form = renderCheckout(CART, { payments: { manual: [{ id: 'a', label: 'Vipps', text: '12345' }, { id: 'b', label: '', text: 'Pay at pickup' }] } });
+  const lines = form.children.filter((c) => c.className === 'urd-checkout-vipps').map((c) => c.textContent);
+  assert.deepEqual(lines, ['Vipps: 12345', 'Pay at pickup']);
+  const at = form.children.findIndex((c) => c.className === 'urd-checkout-vipps');
+  assert.ok(at < form.children.findIndex((c) => c.className === 'urd-checkout-recap'));
+});
+
+test('with a provider on the prices show the site currency\'s word; without one the block\'s own word', () => {
+  const totalOf = (props, site) => renderCheckout(CART, props, site).children.find((c) => c.className === 'urd-checkout-recap').textContent;
+  assert.match(totalOf({ currency: 'EUR' }), /820 EUR/);
+  assert.match(totalOf({ currency: 'EUR', payments: { vipps: true } }, { commerce: { currency: 'DKK' } }), /820 kr/);
+  assert.match(totalOf({ payments: { card: 'vipps' } }, { commerce: { currency: 'EUR' } }), /820 €/);
+  assert.match(totalOf({ payments: { vipps: true } }), /820 kr/, 'no site currency means NOK');
+});
+
+test('the migration 1 -> 2 turns the Vipps flag into the provider and the Vipps number into the first instruction', () => {
+  assert.equal(checkoutBlock.version, 2);
+  assert.deepEqual(checkoutBlock.defaults(), { recipient: '', endpoint: '', currency: 'kr', seller: true, payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } });
+  const lift = checkoutBlock.migrations[1];
+  assert.deepEqual(lift({ recipient: 'a@b.no', endpoint: '', vipps: ' 12345 ', currency: 'kr', vippsCheckout: true, seller: false }), {
+    recipient: 'a@b.no', endpoint: '', currency: 'kr', seller: false,
+    payments: { vipps: true, card: 'none', paypal: false, capture: 'ship', manual: [{ id: 'vipps', label: 'Vipps', text: '12345' }] },
+  });
+  assert.deepEqual(lift({ recipient: '', endpoint: '', vipps: '', currency: 'kr' }).payments, { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] });
 });

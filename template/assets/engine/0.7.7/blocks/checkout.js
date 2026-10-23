@@ -1,16 +1,17 @@
 /**
  * Core block: checkout (the shop).
- * The order summary is read from the basket (shop.js), the contact fields (name, email, phone, comment) are validated, and the order is sent as an email draft (mailto, zero setup), as JSON to an optional endpoint, or to the optional payment layer (ADR-0020).
+ * The order summary is read from the basket (shop.js), the contact fields (name, email, phone, comment) are validated, and the order is sent as an email draft (mailto, zero setup), as JSON to an optional endpoint, or to the optional payment layer (ADR-0020, ADR-0028: Vipps, a card at Vipps or Stripe, PayPal).
  * The order lines and the total are repeated right above the order buttons, and the buttons' texts say that ordering is a purchase or a payment: angrerettloven § 16 asks for both, and without the wording the buyer is not bound.
  * The buttons are described by the summary, so a screen reader that tabs to them hears the order and the total.
  * Under the buttons the seller is named from the Site panel's contact details (angrerettloven § 8 d), unless the block leaves it out (`seller: false`).
  * The honeypot field stops simple bots (filled in = discarded silently).
- * With a Vipps number set, payment is an instruction shown in the form above the order summary.
+ * Payment instructions (a Vipps number, a bank account, pay at pickup) are shown in the form above the order summary.
  * An external endpoint requires connect-src in _headers (ADR-0006).
  */
 import {
   readCart, writeCart, cartTotal, formatPrice, orderLines, orderSummary,
   buildOrderBody, buildOrderMailto, buildOrderPayload, isEmail, onCartChange,
+  paymentsOf, anyProvider, currencyWord, PAY_PROVIDERS,
 } from '../shop.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
@@ -70,23 +71,38 @@ function buildSeller(seller) {
 }
 
 export const checkoutBlock = {
-  version: 1,
+  version: 2,
   autoGrow: true,
   label: 'Checkout',
   labelKey: 'blocks.checkout',
-  defaults: () => ({ recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false, seller: true }),
-  migrations: {},
+  defaults: () => ({ recipient: '', endpoint: '', currency: 'kr', seller: true, payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } }),
+  migrations: {
+    // 1 -> 2: the Vipps button flag and the Vipps number became the payments
+    // settings (ADR-0028): the flag is the Vipps provider, the number the
+    // first payment instruction.
+    1: ({ vippsCheckout, vipps, ...rest }) => ({
+      ...rest,
+      payments: {
+        vipps: vippsCheckout === true,
+        card: 'none',
+        paypal: false,
+        capture: 'ship',
+        manual: typeof vipps === 'string' && vipps.trim() ? [{ id: 'vipps', label: 'Vipps', text: vipps.trim() }] : [],
+      },
+    }),
+  },
   /**
    * @param {HTMLElement} el
-   * @param {{recipient?: string, endpoint?: string, vipps?: string, currency?: string}} props
+   * @param {{recipient?: string, endpoint?: string, currency?: string, seller?: boolean, payments?: object}} props
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = el2('div', 'urd-checkout');
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
-    // The payment layer charges in NOK, so with it on the prices show kr whatever word the block holds.
-    const currency = props.vippsCheckout ? 'kr' : (props.currency || 'kr');
+    // The payment layer charges in the site's currency, so with a provider on the prices show that currency's word whatever word the block holds.
+    const pays = paymentsOf(props);
+    const currency = anyProvider(pays) ? currencyWord(ctx.site?.commerce?.currency) : (props.currency || 'kr');
 
     const summary = el2('div', 'urd-checkout-summary');
     renderSummary(summary, currency);
@@ -129,8 +145,10 @@ export const checkoutBlock = {
     hpWrap.appendChild(hp);
     form.appendChild(hpWrap);
 
-    if (props.vipps) {
-      form.appendChild(el2('p', 'urd-checkout-vipps', t('shop.vippsHint', { number: props.vipps })));
+    // The payment instructions: a label and a text each, shown above the order summary (chosen by the buyer from 0.7.28.4).
+    for (const method of pays.manual) {
+      if (!method.label && !method.text) continue;
+      form.appendChild(el2('p', 'urd-checkout-vipps', [method.label, method.text].filter(Boolean).join(': ')));
     }
 
     form.appendChild(recap);
@@ -153,12 +171,13 @@ export const checkoutBlock = {
       status.classList.toggle('urd-checkout-error', Boolean(isError));
     };
 
-    // The optional payment layer (ADR-0020): the button sends the basket to
-    // the site's own function, which recomputes the total from the catalogue
-    // and answers with the address at Vipps; the payment happens there, and
-    // the contact fields may stay empty, since the app shares them.
-    if (props.vippsCheckout) {
-      const pay = el2('button', 'urd-checkout-vippspay', t('shop.payWithVipps'));
+    // The optional payment layer (ADR-0020, ADR-0028): a button per provider
+    // sends the basket to the site's own function, which recomputes the total
+    // from the catalogue and answers with the address at the provider; the
+    // payment happens there, and the contact fields may stay empty, since
+    // the provider's page asks for them.
+    const payButton = (labelKey, provider, method) => {
+      const pay = el2('button', 'urd-checkout-vippspay urd-checkout-pay', t(labelKey));
       pay.type = 'button';
       pay.setAttribute('aria-describedby', recap.id);
       pay.addEventListener('click', async () => {
@@ -171,7 +190,7 @@ export const checkoutBlock = {
         }
         pay.disabled = true;
         try {
-          const res = await fetch('/api/vipps/checkout', {
+          const res = await fetch(`/api/pay/${provider}/checkout`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -183,12 +202,13 @@ export const checkoutBlock = {
                 comment: commentInput.value.trim(),
               },
               returnPath: location.pathname,
+              method,
             }),
           });
           const data = await res.json().catch(() => null);
           if (res.ok && data?.url) {
-            // The payment's reference is kept for the return, which asks whether this payment went through.
-            try { sessionStorage.setItem('urd-vipps-reference', String(data.reference ?? '')); } catch { /* no storage: the basket then stays after the payment */ }
+            // The payment's reference and provider are kept for the return, which asks whether this payment went through.
+            try { sessionStorage.setItem('urd-pay-reference', `${provider}:${String(data.reference ?? '')}`); } catch { /* no storage: the basket then stays after the payment */ }
             location.href = data.url;
             return;
           }
@@ -199,33 +219,40 @@ export const checkoutBlock = {
         pay.disabled = false;
       });
       buttons.appendChild(pay);
-    }
+    };
+    if (pays.vipps) payButton('shop.payWithVipps', 'vipps', 'wallet');
+    if (pays.card === 'vipps') payButton('shop.payWithCard', 'vipps', 'card');
+    else if (pays.card === 'stripe') payButton('shop.payWithCard', 'stripe', 'card');
+    if (pays.paypal) payButton('shop.payWithPaypal', 'paypal', 'paypal');
 
-    // Return from payment (?ordered=<reference>): the basket is emptied and the buyer thanked only when the reference is the one this browser started and the site's session endpoint says the payment is reserved, so neither a shared address nor a cancelled payment empties a basket.
-    // The parameter is cleaned away once the payment is settled, so a refresh does not ask again; while the answer is still open it stays, so a refresh asks once more.
-    const ordered = new URLSearchParams(location.search).get('ordered');
-    if (props.vippsCheckout && !ctx.preview && ordered !== null) {
+    // Return from payment (?ordered=<reference>&via=<provider>): the basket is emptied and the buyer thanked only when the reference is the one this browser started and the provider's session endpoint says the payment went through, so neither a shared address nor a cancelled payment empties a basket.
+    // The parameters are cleaned away once the payment is settled, so a refresh does not ask again; while the answer is still open they stay, so a refresh asks once more.
+    const params = new URLSearchParams(location.search);
+    const ordered = params.get('ordered');
+    const via = params.get('via') ?? 'vipps';
+    if (anyProvider(pays) && !ctx.preview && ordered !== null) {
       const settle = () => {
         const url = new URL(location.href);
         url.searchParams.delete('ordered');
+        url.searchParams.delete('via');
         history.replaceState(null, '', url);
       };
       let started = '';
-      try { started = sessionStorage.getItem('urd-vipps-reference') ?? ''; } catch { /* no storage */ }
-      if (started && ordered === started && /^urd-[0-9a-f]{24}$/.test(ordered)) {
-        // Vipps may send the buyer back before the payment is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
+      try { started = sessionStorage.getItem('urd-pay-reference') ?? ''; } catch { /* no storage */ }
+      if (PAY_PROVIDERS.includes(via) && started === `${via}:${ordered}` && /^urd-[0-9a-f]{24}$/.test(ordered)) {
+        // The provider may send the buyer back before the payment is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
         const ask = async (left) => {
-          const data = await fetch(`/api/vipps/session?reference=${encodeURIComponent(ordered)}`).then((res) => (res.ok ? res.json() : null)).catch(() => null);
+          const data = await fetch(`/api/pay/${via}/session?reference=${encodeURIComponent(ordered)}`).then((res) => (res.ok ? res.json() : null)).catch(() => null);
           if (data?.paid) {
             writeCart([]);
-            // The buyer who shared the profile in the app is thanked by name; the receipt with the order lines sits in the app.
+            // The buyer the provider named is thanked by name; the receipt with the order lines sits with the provider.
             const name = String(data.buyer?.name ?? '').trim();
             setStatus(name ? t('shop.paidThanks', { name }) : t('shop.orderSent'), false);
-            try { sessionStorage.removeItem('urd-vipps-reference'); } catch { /* no storage */ }
+            try { sessionStorage.removeItem('urd-pay-reference'); } catch { /* no storage */ }
             settle();
             return;
           }
-          const open = !data || data.state === 'CREATED';
+          const open = !data || data.open === true;
           if (!open) settle();
           else if (left > 0) setTimeout(() => ask(left - 1), 2000);
         };

@@ -28,6 +28,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.28.1 - Payment methods in the optional layer, first stage: the order core, the currency, the payments setting and the card at Vipps - 23 October 2026
+
+- The payment layer had one provider wired straight into its module. The order logic every provider shares (the payload, the total in the minor unit, the variants, the line items, the reference, the site's currency, the shop files) is `functions/_lib/order.js`; `vipps.js` keeps the Vipps part, and the three Vipps endpoints stand under `/api/pay/vipps/`, the path every provider follows ([ADR-0028](adr/0028-payment-providers-in-the-optional-layer.md); ADR-0020's decisions 1, 2 and 5 amended, the earlier text in `amended/`).
+- The layer charged in NOK only. `site.commerce.currency` (ISO 4217, NOK when omitted; schema, SCHEMA.md and the example site) is the currency the layer charges in, edited in the Site panel as Shop currency; with a provider on, the checkout shows the currency's word (`currencyWord` in shop.js).
+- The checkout block's Vipps flag and Vipps number became one `payments` setting (block version 2, with the migration 1 -> 2): `vipps`, `card` (none or Vipps's own card page, sending `paymentMethod.type: CARD` without a profile scope), `paypal`, `capture` and `manual`, the ways to pay without a provider as a label and a text each, shown above the order summary. The buttons are one per method, the return carries the provider (`?ordered=<reference>&via=<provider>`), and the page asks that provider's session endpoint.
+- The element menu's Vipps group is the Payment group: the Vipps button, the Card choice and the instructions list with add and remove; the quick tile still toggles Vipps. The admin keys for the group, the card choice, the instructions and the shop currency in nb, en-GB and tr; the Vipps-number keys retired; `shop.payWithCard` and `shop.payWithPaypal` in the site dictionaries.
+- Tests: `order.test.mjs` for the shared module, `vipps.test.mjs` for the card body and the moved endpoints, the checkout block's buttons, instructions, currency word and migration; the collection-index test reads the shared module.
+
 ### 0.7.0.68 - The payment layer moved to the Vipps MobilePay ePayment API - 23 October 2026
 
 - The optional payment layer ran on Vipps Checkout, which Kustom discontinues on 30 April 2027. It now creates the payment on the ePayment API (`POST /epayment/v1/payments`, a wallet payment by web redirect, the reference as the idempotency key) with an access token the function keeps in the isolate until shortly before it expires; `checkout/v3/session` is gone, and a test holds it out of the functions.

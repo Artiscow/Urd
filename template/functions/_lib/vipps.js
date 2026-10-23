@@ -1,14 +1,12 @@
 /**
- * Pure logic for the optional payment layer on the Vipps MobilePay ePayment
- * API (ADR-0020): reading the configuration, validating the payload,
- * converting to øre against the git-owned catalogue, the payment body for
- * epayment/v1, the reading of a payment's state, the access-token cache and
- * the webhook signature check. No fetch here; the endpoints under
- * api/vipps/ handle the network. Tested in tests/vipps.test.mjs.
- *
- * The amount is ALWAYS recomputed from the catalogue: the basket lives with
- * the visitor, so anything the client sends may have been tampered with.
+ * The Vipps MobilePay part of the optional payment layer (ADR-0020,
+ * ADR-0028): reading the configuration, the payment body for epayment/v1
+ * (the app or a card), the receipt lines, the reading of a payment's state,
+ * the access-token cache and the webhook signature check. The order logic
+ * every provider shares is in order.js; no fetch here, the endpoints under
+ * api/pay/vipps/ handle the network. Tested in tests/vipps.test.mjs.
  */
+import { orderLineItems, orderDescription, returnUrl } from './order.js';
 
 /** Reads the configuration from env; null when the payment layer is not set up. */
 export function vippsConfig(env) {
@@ -28,186 +26,61 @@ export function vippsConfig(env) {
   };
 }
 
-/** Entry ids follow the same regime as the collections (anchored, the CodeQL lesson). */
-const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
-
-/**
- * Validates and cleans the order payload from the client. Only the shape is
- * accepted: order lines with a known id form and clamped quantities, contact
- * fields as short strings. Prices from the client are deliberately ignored.
- * @returns {{order: Array<{id: string, qty: number, variant?: string}>, contact: {name: string, email: string, phone: string, comment: string}}|null}
- */
-export function validOrderPayload(payload) {
-  if (!payload || typeof payload !== 'object') return null;
-  const rawOrder = Array.isArray(payload.order) ? payload.order : [];
-  if (!rawOrder.length || rawOrder.length > 50) return null;
-  const order = [];
-  for (const line of rawOrder) {
-    if (!line || typeof line !== 'object') return null;
-    const id = String(line.id ?? '');
-    if (!ID_RE.test(id) || id.length > 80) return null;
-    const qty = Math.trunc(Number(line.qty));
-    if (!Number.isFinite(qty) || qty < 1 || qty > 99) return null;
-    const clean = { id, qty };
-    if (line.variant != null) {
-      // The variant is a size and a colour of the product; a text past any such label is no basket line.
-      const variant = String(line.variant);
-      if (variant.length > 200) return null;
-      if (variant) clean.variant = variant;
-    }
-    order.push(clean);
-  }
-  const field = (value) => String(value ?? '').slice(0, 200).trim();
-  // Return path: an internal path on our own site (anchored; never a full URL from the client).
-  const rawPath = String(payload.returnPath ?? '/');
-  const returnPath = /^\/[a-z0-9\-/]*$/.test(rawPath) && rawPath.length <= 200 ? rawPath : '/';
-  return {
-    order,
-    returnPath,
-    contact: {
-      name: field(payload.contact?.name),
-      email: field(payload.contact?.email),
-      phone: field(payload.contact?.phone),
-      comment: field(payload.contact?.comment),
-    },
-  };
-}
-
-/** The products by id across the catalogues of kind products; the first catalogue that names an id wins. */
-function productMap(catalogs) {
-  const products = new Map();
-  for (const catalog of catalogs) {
-    if (catalog?.kind !== 'products') continue;
-    for (const entry of catalog.entries ?? []) {
-      if (entry?.id && !products.has(entry.id)) products.set(entry.id, entry);
-    }
-  }
-  return products;
-}
-
-/** A product's price in øre, or null when it has none. */
-function priceOre(entry) {
-  const price = Number(entry?.price);
-  return Number.isFinite(price) && price >= 0 ? Math.round(price * 100) : null;
-}
-
-/**
- * Computes the order total in øre against the catalogues (kind products). An
- * unknown id or a product without a price gives null (the order is rejected);
- * the member price is a trust-based display and is never charged (ADR-0020).
- * @param {Array<{id: string, qty: number}>} order Cleaned order (validOrderPayload)
- * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
- * @returns {number|null}
- */
-export function orderAmountOre(order, catalogs) {
-  const products = productMap(catalogs);
-  let sum = 0;
-  for (const line of order) {
-    const price = priceOre(products.get(line.id));
-    if (price == null) return null;
-    sum += price * line.qty;
-  }
-  return sum;
-}
-
-/** Payment reference in the ePayment form [a-zA-Z0-9-]{8,64}, unique per sales unit. */
-export function makeReference() {
-  const bytes = crypto.getRandomValues(new Uint8Array(12));
-  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
-  return `urd-${hex}`;
-}
-
-/** Whether a value is a reference makeReference made (anchored, the CodeQL lesson). */
-export function isReference(value) {
-  return typeof value === 'string' && /^urd-[0-9a-f]{24}$/.test(value);
-}
-
-/**
- * Whether every order line's variant text is a label the basket makes for the product («M · Red», a size or a colour alone, as blocks/product.js joins them), compared whole, so a name that holds the separator itself still fits.
- * A line without a variant is fine; a product without sizes or colours takes no variant.
- * @param {Array<{id: string, qty: number, variant?: string}>} order Cleaned order (validOrderPayload)
- * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
- * @returns {boolean}
- */
-export function validVariants(order, catalogs) {
-  const products = productMap(catalogs);
-  for (const line of order) {
-    if (!line.variant) continue;
-    const entry = products.get(line.id);
-    if (!entry) return false;
-    const sizes = (Array.isArray(entry.sizes) ? entry.sizes : []).map(String);
-    const colors = (Array.isArray(entry.colors) ? entry.colors : []).map((c) => String(c?.name ?? '')).filter(Boolean);
-    const labels = new Set([...sizes, ...colors]);
-    for (const size of sizes) for (const color of colors) labels.add(`${size} · ${color}`);
-    if (!labels.has(line.variant)) return false;
-  }
-  return true;
-}
-
 /** The profile the payment asks the buyer to share in the app: what the order form asks for, so the fields can be left empty. */
 export const PROFILE_SCOPE = 'name email phoneNumber';
 
+/** The two ways to pay at Vipps: the app (Vipps or MobilePay), or a card on Vipps's own card page. */
+export const VIPPS_METHODS = ['wallet', 'card'];
+
 /**
- * The order lines for the receipt in the buyer's app, in øre, with the tax
- * fields at zero: the receipt is sent only for a seller who is not registered
- * for VAT (buildPayment leaves it out otherwise), and the VAT lines come with
- * the shop of v1.1 (ADR-0027). The name is the product's title with the
- * variant, the id the catalogue id.
+ * The order lines for the receipt in the buyer's app, in the minor unit,
+ * with the tax fields at zero: the receipt is sent only for a seller who is
+ * not registered for VAT (the endpoint leaves it out otherwise), and the VAT
+ * lines come with the shop of v1.1 (ADR-0027).
  * @param {Array<{id: string, qty: number, variant?: string}>} order Cleaned order
  * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
  * @returns {Array<object>|null} null when a line has no priced product
  */
 export function receiptLines(order, catalogs) {
-  const products = productMap(catalogs);
-  const lines = [];
-  for (const line of order) {
-    const entry = products.get(line.id);
-    const unit = priceOre(entry);
-    if (unit == null) return null;
-    const total = unit * line.qty;
-    const title = String(entry.title ?? line.id).trim() || line.id;
-    lines.push({
-      name: (line.variant ? `${title} (${line.variant})` : title).slice(0, 2048),
-      id: line.id,
-      totalAmount: total,
-      totalAmountExcludingTax: total,
-      totalTaxAmount: 0,
-      taxRate: 0,
-      unitInfo: { unitPrice: unit, quantity: String(line.qty), quantityUnit: 'PCS' },
-    });
-  }
-  return lines;
+  const items = orderLineItems(order, catalogs);
+  if (!items) return null;
+  return items.map((item) => ({
+    name: item.name.slice(0, 2048),
+    id: item.id,
+    totalAmount: item.total,
+    totalAmountExcludingTax: item.total,
+    totalTaxAmount: 0,
+    taxRate: 0,
+    unitInfo: { unitPrice: item.unit, quantity: String(item.qty), quantityUnit: 'PCS' },
+  }));
 }
 
 /**
- * The body for POST {apiBase}/epayment/v1/payments: a wallet payment through
- * the web redirect, reserved now and captured by the seller when the goods
- * ship. The order lines and the typed contact fields ride along as the
- * description, so the order can be read in the Vipps portal; the receipt
- * carries the lines into the buyer's app when the seller sends one; the
- * profile scope asks the app for the contact details. The site stores
+ * The body for POST {apiBase}/epayment/v1/payments: a payment through the
+ * web redirect in the app (WALLET) or on Vipps's card page (CARD), reserved
+ * now and captured by the seller when the goods ship. The order lines and
+ * the typed contact fields ride along as the description, so the order can
+ * be read in the Vipps portal; the receipt carries the lines into the
+ * buyer's app when the seller sends one; the profile scope asks the app for
+ * the contact details, which the card page cannot give. The site stores
  * nothing itself (ADR-0020).
  * @param {object} args
+ * @param {'wallet'|'card'} [args.method]
  * @param {Array<object>|null} [args.receipt] The lines from receiptLines, or null for no receipt
  */
-export function buildPayment({ amountOre, reference, order, contact, origin, returnPath, receipt = null }) {
-  const lines = order
-    .map((line) => `${line.qty} x ${line.id}${line.variant ? ` (${line.variant})` : ''}`)
-    .join(', ');
-  const who = [contact.name, contact.email, contact.phone].filter(Boolean).join(' / ');
-  // The description holds at most 100 characters; an order line alone is past its minimum of 3.
-  const paymentDescription = `${lines}${who ? ` - ${who}` : ''}`.slice(0, 100);
+export function buildPayment({ amountMinor, currency = 'NOK', reference, order, contact, origin, returnPath, method = 'wallet', receipt = null }) {
   const body = {
-    amount: { currency: 'NOK', value: amountOre },
-    paymentMethod: { type: 'WALLET' },
+    amount: { currency, value: amountMinor },
+    paymentMethod: { type: method === 'card' ? 'CARD' : 'WALLET' },
     reference,
     userFlow: 'WEB_REDIRECT',
     // The reference travels with the return, so the page can ask the session endpoint whether this payment went through.
-    returnUrl: `${origin}${returnPath ?? '/'}?ordered=${reference}`,
-    paymentDescription,
-    profile: { scope: PROFILE_SCOPE },
+    returnUrl: returnUrl(origin, returnPath, reference, 'vipps'),
+    // The description holds at most 100 characters; an order line alone is past its minimum of 3.
+    paymentDescription: orderDescription(order, contact, 100),
   };
-  if (receipt?.length) body.receipt = { orderLines: receipt, bottomLine: { currency: 'NOK' } };
+  if (method !== 'card') body.profile = { scope: PROFILE_SCOPE };
+  if (receipt?.length) body.receipt = { orderLines: receipt, bottomLine: { currency } };
   return body;
 }
 
@@ -219,7 +92,7 @@ export const OPEN_STATES = ['CREATED'];
  * whether the money is reserved, the state word, and the buyer's shared
  * contact details for the receipt on the page. The state arrives as a word,
  * or as a list whose first entry is the current one.
- * @returns {{paid: boolean, state: string, buyer: {name: string, email: string, phone: string}}|null} null for an answer without a state
+ * @returns {{paid: boolean, open: boolean, state: string, buyer: {name: string, email: string, phone: string}}|null} null for an answer without a state
  */
 export function paymentSummary(payment) {
   const raw = Array.isArray(payment?.state) ? payment.state[0] : payment?.state;
@@ -230,6 +103,7 @@ export function paymentSummary(payment) {
   const name = [field(details.firstName), field(details.lastName)].filter(Boolean).join(' ');
   return {
     paid: state === 'AUTHORIZED',
+    open: OPEN_STATES.includes(state),
     state,
     buyer: { name, email: field(details.email), phone: field(details.mobileNumber) },
   };
@@ -292,7 +166,7 @@ export function signatureOf(authorization) {
 }
 
 /** Constant-time comparison of two short strings. */
-function sameText(a, b) {
+export function sameText(a, b) {
   if (a.length !== b.length) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);

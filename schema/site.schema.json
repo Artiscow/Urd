@@ -58,6 +58,14 @@
           }
         },
         "description": { "type": "string" },
+        "commerce": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Additive from 0.7.28.1 (ADR-0028): the shop's settings shared by every checkout. `currency` is the ISO 4217 code the payment layer charges in and the catalogue's prices are in; omitted means NOK",
+          "properties": {
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          }
+        },
         "contact": {
           "type": "object",
           "additionalProperties": false,

@@ -1,19 +1,14 @@
 /**
- * Optional payment layer (ADR-0020): whether a payment on the Vipps MobilePay
- * ePayment API is reserved. The checkout page asks here on its return from
- * Vipps, with the reference the return address carries, and empties the
- * basket only for a reserved payment; the buyer's shared contact details
- * come along for the receipt on the page. The site stores no order; the
- * answer is read from Vipps each time.
+ * Optional payment layer (ADR-0020, ADR-0028): whether a payment on the
+ * Vipps MobilePay ePayment API is reserved. The checkout page asks here on
+ * its return from Vipps, with the reference the return address carries,
+ * and empties the basket only for a reserved payment; the buyer's shared
+ * contact details come along for the receipt on the page. The site stores
+ * no order; the answer is read from Vipps each time.
  */
-import { vippsConfig, isReference, paymentSummary } from '../../_lib/vipps.js';
-import { callVipps } from '../../_lib/vipps-api.js';
-
-const json = (body, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
-  });
+import { isReference, json } from '../../../_lib/order.js';
+import { vippsConfig, paymentSummary } from '../../../_lib/vipps.js';
+import { callVipps } from '../../../_lib/vipps-api.js';
 
 export async function onRequestGet({ request, env }) {
   const config = vippsConfig(env);

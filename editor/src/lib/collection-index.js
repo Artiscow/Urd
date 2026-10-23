@@ -1,6 +1,6 @@
 /**
  * The collection index (ADR-0007): `content/samlinger.json` lists the collection ids, since static hosts cannot list folders.
- * The Vipps function reads the same file, and ADR-0021 keeps its name.
+ * The payment layer's order module reads the same file, and ADR-0021 keeps its name.
  * A site may also have `content/collections.json`, an index an earlier editor wrote under a translated name.
  * The editor opens with the ids only that file lists added to the published index, and the next publish of the collections writes them into the index and deletes the file.
  * Pure functions, node-tested; the caller supplies fetch and localStorage.

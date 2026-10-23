@@ -47,7 +47,7 @@ test('the index paths and the keys', () => {
   }
 });
 
-test('the editor names the index files only through the module, and the Vipps function reads the same index', () => {
+test('the editor names the index files only through the module, and the payment layer reads the same index', () => {
   const dirs = ['editor/src/state/', 'editor/src/lib/', 'editor/src/panels/'];
   for (const dir of dirs) {
     for (const name of readdirSync(new URL(dir, ROOT))) {
@@ -56,8 +56,8 @@ test('the editor names the index files only through the module, and the Vipps fu
       assert.ok(!src.includes('samlinger.json') && !src.includes('collections.json'), `${dir}${name} names an index file`);
     }
   }
-  const checkout = readFileSync(new URL('template/functions/api/vipps/checkout.js', ROOT), 'utf8');
-  assert.ok(checkout.includes(`/${INDEX_PATH}`));
+  const order = readFileSync(new URL('template/functions/_lib/order.js', ROOT), 'utf8');
+  assert.ok(order.includes(`/${INDEX_PATH}`));
 });
 
 test('fetchIndex: the index, or null when missing, not JSON or not an index', async () => {

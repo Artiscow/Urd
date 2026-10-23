@@ -11,6 +11,7 @@
   import ColorPicker from '../lib/ColorPicker.svelte';
   import Pin from './Pin.svelte';
   import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
+  import { paymentsOf } from '$engine/shop.js';
   import { GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
   import { BLOCK_DESIGNS } from '$engine/block-designs.js';
   import { blockDesigns } from '../lib/design-sources.js';
@@ -143,7 +144,7 @@
     } else if (b.type === 'cart') {
       items.push(designItem('cartView'));
     } else if (b.type === 'checkout') {
-      items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), kind: 'choice', value: p.vippsCheckout === true ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('vippsCheckout', v === 'on') });
+      items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), kind: 'choice', value: paymentsOf(p).vipps ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('payments', { ...paymentsOf(p), vipps: v === 'on' }) });
     } else if (b.type === 'share') {
       items.push(designItem('variant'));
     } else if (b.type === 'contact') {

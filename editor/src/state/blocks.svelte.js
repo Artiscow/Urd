@@ -143,7 +143,8 @@ const BLOCK_DEFAULTS = $derived({
   audio: { type: 'audio', props: { src: '', title: '', loop: false }, w: 34, h: 80 },
   product: { type: 'product', props: { collection: null, limit: 0, columns: 0, currency: 'kr' }, w: 88.89, h: 300 },
   cart: { type: 'cart', props: { variant: 'button', href: '', currency: 'kr' }, w: 16, h: 48 },
-  checkout: { type: 'checkout', props: { recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }, w: 44, h: 430 },
+  // The checkout block (blocks/checkout.js version 2): the payment settings as one object (ADR-0028).
+  checkout: { type: 'checkout', version: 2, props: { recipient: '', endpoint: '', currency: 'kr', seller: true, payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } }, w: 44, h: 430 },
 });
 
 function buildBlock(kind) {

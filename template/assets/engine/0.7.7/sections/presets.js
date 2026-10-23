@@ -153,8 +153,8 @@ const cart = (fr, props = {}) => ({
 const checkout = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'checkout',
-  version: 1,
-  props: { recipient: '', endpoint: '', vipps: '', currency: 'kr', ...props },
+  version: 2,
+  props: { recipient: '', endpoint: '', currency: 'kr', seller: true, payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] }, ...props },
   animation: null,
   frames: fr,
 });

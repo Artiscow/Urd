@@ -351,6 +351,17 @@
     setContactVat({ number: clean });
   }
 
+  /** The shop's currency (site.commerce.currency, ISO 4217): the code the payment layer charges in; empty means NOK. */
+  function setSiteCurrency(value) {
+    const code = value.trim().toUpperCase();
+    ed.siteCurrencyBad = code !== '' && !/^[A-Z]{3}$/.test(code);
+    if (ed.siteCurrencyBad) return;
+    siteMutate('site', () => {
+      if (code) siteDraft.site.commerce = { ...(siteDraft.site.commerce ?? {}), currency: code };
+      else delete siteDraft.site.commerce;
+    });
+  }
+
   function setSiteTimeZone(value) {
     const zone = value.trim();
     ed.siteZoneBad = zone !== '' && !zoneValid(zone);
@@ -383,6 +394,10 @@
   {#if ed.siteZoneBad}
     <p class="panel-hint place-error">{ta('settings.timeZoneBad')}</p>
   {/if}
+  <!-- The shop's currency: the ISO code the payment layer charges in, and the word the checkout shows with a provider on -->
+  <label class="field-stack" title={ta('tip.settings.currency')}>{ta('settings.currency')}
+    <input value={siteDraft.site.commerce?.currency ?? ''} placeholder="NOK" maxlength="3" spellcheck="false" class:place-error={ed.siteCurrencyBad}
+      onchange={(e) => setSiteCurrency(e.target.value)} /></label>
   <!-- The map service a place links to: each choice says who makes it, where they are from and what it does with a search -->
   <label class="field-stack" title={ta('tip.settings.mapService')}>{ta('settings.mapService')}
     <Dropdown value={mapService(siteDraft)} options={MAP_SERVICES.map((id) => [id, ta(`mapService.${id}`), ta(`mapService.${id}.note`)])}

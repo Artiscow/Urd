@@ -62,7 +62,6 @@ export default {
     'shop.fillRequired': 'Fyll i namn och en giltig e-postadress.',
     'shop.sendFailed': 'Kunde inte skicka just nu. Försök igen senare.',
     'shop.missingTarget': 'Kassan saknar mottagare eller endpoint.',
-    'shop.vippsHint': 'Betalning: Vipps till {number}.',
     'shop.quickView': 'Visa produkten',
     'shop.payWithVipps': 'Betala med Vipps',
     'shop.vippsUnavailable': 'Betalning är inte uppsatt för den här sidan ännu.',

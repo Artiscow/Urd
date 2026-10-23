@@ -92,6 +92,43 @@ export function formatPrice(value, currency = 'kr') {
   return currency ? `${text} ${currency}` : text;
 }
 
+/** The payment providers the checkout block may offer, in the order their buttons stand; the `via` of a return address. */
+export const PAY_PROVIDERS = ['vipps', 'stripe', 'paypal'];
+
+/** The card providers the block chooses between: none, Vipps's own card page, or Stripe's hosted page. */
+export const CARD_PROVIDERS = ['none', 'vipps', 'stripe'];
+
+/**
+ * The checkout block's payment settings in their full shape (block version 2, ADR-0028), with every field present and every unknown value folded to its default; an instruction row without a label and a text is kept, since the editor shows it while it is typed.
+ * @param {object} props The block's props
+ * @returns {{vipps: boolean, card: 'none'|'vipps'|'stripe', paypal: boolean, capture: 'ship'|'now', manual: Array<{id: string, label: string, text: string}>}}
+ */
+export function paymentsOf(props) {
+  const raw = props?.payments && typeof props.payments === 'object' ? props.payments : {};
+  const manual = (Array.isArray(raw.manual) ? raw.manual : [])
+    .filter((m) => m && typeof m === 'object')
+    .map((m) => ({ id: String(m.id ?? ''), label: String(m.label ?? '').trim(), text: String(m.text ?? '').trim() }));
+  return {
+    vipps: raw.vipps === true,
+    card: CARD_PROVIDERS.includes(raw.card) ? raw.card : 'none',
+    paypal: raw.paypal === true,
+    capture: raw.capture === 'now' ? 'now' : 'ship',
+    manual,
+  };
+}
+
+/** Whether a payment provider is switched on, so the prices show the site currency's word. */
+export function anyProvider(payments) {
+  return payments.vipps || payments.card !== 'none' || payments.paypal;
+}
+
+/** The word shown after a price for the site's currency (site.commerce.currency); the code itself for a currency without a common sign. */
+export function currencyWord(code) {
+  const upper = String(code ?? '').toUpperCase();
+  const words = { NOK: 'kr', DKK: 'kr', SEK: 'kr', ISK: 'kr', EUR: '€', GBP: '£', USD: '$', CAD: '$', AUD: '$', NZD: '$', CHF: 'CHF', PLN: 'zł', CZK: 'Kč', HUF: 'Ft', TRY: '₺', JPY: '¥' };
+  return words[upper] ?? (upper || 'kr');
+}
+
 /** The card's secondary image (hover swap): the first colour image that differs from the main one. */
 export function altCardImage(entry) {
   const main = entry?.image || '';

@@ -135,7 +135,7 @@ The Checkout block can take the payment with Vipps ([ADR-0020](../../adr/0020-op
 4. Redeploy (as at the end of step 3). In the editor, open the Checkout block's menu, tick the «Pay with Vipps» button, and publish.
 5. The test payment: put a product in the basket, open the checkout page and press «Pay with Vipps». On a phone the test app opens; on a desktop Vipps asks for the test user's number and sends the request to the app. The app first asks the buyer to share the name, email and phone with the shop, then to approve the payment. Back on the checkout page the basket is empty and the page thanks the buyer by name; the payment is in the portal with the order lines in its description, and the receipt is in the app. When it works, swap in the production keys and remove `VIPPS_API_BASE`.
 6. The money is reserved, not moved. When the goods ship, capture the payment in the portal; Vipps allows 180 days, and the rules forbid a capture before the goods are ready. Cancelling in the portal releases the reservation; a payment never captured is released by Vipps when the window ends.
-7. Optional, for the order notices the shop of v1.1 sends: register a webhook, so Vipps tells the site about payment events. The site stores nothing yet, but the endpoint `/api/vipps/webhook` is in place and refuses every delivery that is not signed with the registration's secret. Register it with the API, and put the `secret` the answer returns in Cloudflare as **Secret** `VIPPS_WEBHOOK_SECRET`:
+7. Optional, for the order notices the shop of v1.1 sends: register a webhook, so Vipps tells the site about payment events. The site stores nothing yet, but the endpoint `/api/pay/vipps/webhook` is in place and refuses every delivery that is not signed with the registration's secret. Register it with the API, and put the `secret` the answer returns in Cloudflare as **Secret** `VIPPS_WEBHOOK_SECRET`:
 
 ```bash
 # The access token (valid 24 hours in production, 1 hour in the test environment)
@@ -148,7 +148,7 @@ curl -X POST https://api.vipps.no/webhooks/v1/webhooks \
   -H "Authorization: Bearer <access_token>" \
   -H "Ocp-Apim-Subscription-Key: <subscription key>" -H "Merchant-Serial-Number: <MSN>" \
   -H "Content-Type: application/json" \
-  -d '{"url":"https://<site>/api/vipps/webhook","events":["epayments.payment.authorized.v1"]}'
+  -d '{"url":"https://<site>/api/pay/vipps/webhook","events":["epayments.payment.authorized.v1"]}'
 ```
 
 ## The security model (in brief)

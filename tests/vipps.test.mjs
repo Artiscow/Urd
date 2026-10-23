@@ -1,18 +1,18 @@
 /**
- * Contract tests for the payment layer's pure logic (functions/_lib/vipps.js,
- * ADR-0020): configuration reading, payload validation (never the client's
- * prices), øre conversion against the catalogue, the payment body for the
- * ePayment API, the receipt lines, the reading of a payment's state, the
- * token cache and the webhook signature. The endpoints and the actual
- * payment are tested manually against the test environment (the test rounds).
+ * Contract tests for the Vipps MobilePay part of the payment layer
+ * (functions/_lib/vipps.js, ADR-0020): configuration reading, the payment
+ * body for the ePayment API in the app and on the card page, the receipt
+ * lines, the reading of a payment's state, the token cache and the webhook
+ * signature. The order logic every provider shares is tested in
+ * tests/order.test.mjs; the endpoints and the actual payment are tested
+ * manually against the test environment (the test rounds).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac, createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import {
-  vippsConfig, validOrderPayload, orderAmountOre, makeReference, isReference, validVariants,
-  receiptLines, buildPayment, PROFILE_SCOPE, paymentSummary, OPEN_STATES,
+  vippsConfig, receiptLines, buildPayment, PROFILE_SCOPE, VIPPS_METHODS, paymentSummary, OPEN_STATES,
   tokenFromAnswer, tokenFresh, webhookSignature, signatureOf, verifyWebhook,
 } from '../template/functions/_lib/vipps.js';
 
@@ -26,7 +26,6 @@ const ENV = {
 // Deliberate Norwegian fixture ids and names: this is user catalog data.
 const CATALOGS = [
   { kind: 'products', entries: [{ id: 'kake', title: 'Sjokoladekake', price: 350 }, { id: 'boller', title: 'Kanelboller', price: 49.5 }, { id: 'gratis' }] },
-  { kind: 'news', entries: [{ id: 'kake', price: 1 }] },
 ];
 
 test('vippsConfig: null without all the secrets, default api base otherwise, the webhook secret optional', () => {
@@ -39,51 +38,7 @@ test('vippsConfig: null without all the secrets, default api base otherwise, the
   assert.equal(vippsConfig({ ...ENV, VIPPS_WEBHOOK_SECRET: 'whs' }).webhookSecret, 'whs');
 });
 
-test('validOrderPayload: cleans lines and contact, clamps quantity, rejects nonsense', () => {
-  const clean = validOrderPayload({
-    order: [{ id: 'kake', qty: 2, variant: 'Stor', price: 1 }],
-    contact: { name: ' Kari ', email: 'kari@forening.no' },
-    returnPath: '/kasse',
-  });
-  assert.deepEqual(clean.order, [{ id: 'kake', qty: 2, variant: 'Stor' }]);
-  assert.equal(clean.contact.name, 'Kari');
-  assert.equal(clean.returnPath, '/kasse');
-  assert.equal(validOrderPayload(null), null);
-  assert.equal(validOrderPayload({ order: [] }), null);
-  assert.equal(validOrderPayload({ order: [{ id: '../etc', qty: 1 }] }), null);
-  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 0 }] }), null);
-  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 100 }] }), null);
-});
-
-test('validOrderPayload: return path must be internal; anything else gives the root', () => {
-  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }], returnPath: 'https://ond.no/' }).returnPath, '/');
-  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }], returnPath: '//ond.no' }).returnPath, '/');
-  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }] }).returnPath, '/');
-});
-
-test('orderAmountOre: computes from the catalog, never the client; unknown/priceless id rejects', () => {
-  assert.equal(orderAmountOre([{ id: 'kake', qty: 2 }], CATALOGS), 70000);
-  assert.equal(orderAmountOre([{ id: 'boller', qty: 1 }], CATALOGS), 4950);
-  assert.equal(orderAmountOre([{ id: 'ukjent', qty: 1 }], CATALOGS), null);
-  assert.equal(orderAmountOre([{ id: 'gratis', qty: 1 }], CATALOGS), null);
-});
-
-test('orderAmountOre: only products collections count', () => {
-  assert.equal(orderAmountOre([{ id: 'kake', qty: 1 }], [{ kind: 'news', entries: [{ id: 'kake', price: 1 }] }]), null);
-});
-
-test('makeReference: the ePayment shape [a-zA-Z0-9-]{8,64}', () => {
-  const ref = makeReference();
-  assert.match(ref, /^[a-zA-Z0-9-]{8,64}$/);
-  assert.notEqual(makeReference(), ref);
-});
-
-test('isReference: the shape makeReference makes, nothing else', () => {
-  assert.equal(isReference(makeReference()), true);
-  for (const bad of ['urd-abc', 'urd-' + 'g'.repeat(24), 'x'.repeat(28), '', null, 'urd-' + 'a'.repeat(24) + '/..']) assert.equal(isReference(bad), false, String(bad));
-});
-
-test('receiptLines: the lines in øre with the title and the variant, the tax at zero; a priceless product gives none', () => {
+test('receiptLines: the lines in the minor unit with the title and the variant, the tax at zero; a priceless product gives none', () => {
   const lines = receiptLines([{ id: 'kake', qty: 2, variant: 'Stor' }, { id: 'boller', qty: 1 }], CATALOGS);
   assert.equal(lines.length, 2);
   assert.deepEqual(lines[0], {
@@ -96,16 +51,16 @@ test('receiptLines: the lines in øre with the title and the variant, the tax at
   assert.equal(receiptLines([{ id: 'ukjent', qty: 1 }], CATALOGS), null);
 });
 
-test('buildPayment: a wallet payment by web redirect, the return on own origin with the reference, the amount in øre, the profile asked for', () => {
+test('buildPayment: a wallet payment by web redirect, the return on own origin with the reference and the provider, the amount in the currency, the profile asked for', () => {
   const body = buildPayment({
-    amountOre: 70000,
+    amountMinor: 70000,
     reference: 'urd-abc123def456',
     order: [{ id: 'kake', qty: 2, variant: 'Stor' }],
     contact: { name: 'Kari', email: 'kari@forening.no', phone: '', comment: '' },
     origin: 'https://forening.pages.dev',
     returnPath: '/kasse',
   });
-  assert.equal(body.returnUrl, 'https://forening.pages.dev/kasse?ordered=urd-abc123def456');
+  assert.equal(body.returnUrl, 'https://forening.pages.dev/kasse?ordered=urd-abc123def456&via=vipps');
   assert.deepEqual(body.amount, { currency: 'NOK', value: 70000 });
   assert.deepEqual(body.paymentMethod, { type: 'WALLET' });
   assert.equal(body.userFlow, 'WEB_REDIRECT');
@@ -119,25 +74,35 @@ test('buildPayment: a wallet payment by web redirect, the return on own origin w
   assert.equal('merchantInfo' in body, false, 'nothing of the Checkout session shape');
 });
 
-test('buildPayment: the description is cut at 100 characters, and the receipt carries the lines with NOK on the bottom line', () => {
+test('buildPayment: the card page takes CARD without a profile scope, the currency follows the site, the receipt carries the lines with the currency on the bottom line', () => {
+  const card = buildPayment({ amountMinor: 100, currency: 'DKK', reference: 'urd-' + 'a'.repeat(24), order: [{ id: 'kake', qty: 1 }], contact: {}, origin: 'https://site.no', returnPath: '/', method: 'card', receipt: receiptLines([{ id: 'kake', qty: 1 }], CATALOGS) });
+  assert.deepEqual(card.paymentMethod, { type: 'CARD' });
+  assert.equal(card.profile, undefined);
+  assert.equal(card.amount.currency, 'DKK');
+  assert.equal(card.receipt.orderLines.length, 1);
+  assert.deepEqual(card.receipt.bottomLine, { currency: 'DKK' });
+  assert.deepEqual(VIPPS_METHODS, ['wallet', 'card']);
   const order = Array.from({ length: 12 }, (_, i) => ({ id: `produkt-${i}`, qty: 1 }));
-  const body = buildPayment({ amountOre: 100, reference: 'urd-' + 'a'.repeat(24), order, contact: {}, origin: 'https://site.no', returnPath: '/', receipt: receiptLines([{ id: 'kake', qty: 1 }], CATALOGS) });
-  assert.equal(body.paymentDescription.length, 100);
-  assert.equal(body.receipt.orderLines.length, 1);
-  assert.deepEqual(body.receipt.bottomLine, { currency: 'NOK' });
-  assert.equal(buildPayment({ amountOre: 100, reference: 'urd-x', order, contact: {}, origin: 'https://site.no', returnPath: '/', receipt: [] }).receipt, undefined);
+  const long = buildPayment({ amountMinor: 100, reference: 'urd-x', order, contact: {}, origin: 'https://site.no', returnPath: '/', receipt: [] });
+  assert.equal(long.paymentDescription.length, 100);
+  assert.equal(long.receipt, undefined);
 });
 
-test('paymentSummary: reserved only in AUTHORIZED, the state as a word or the first of a list, the buyer from the shared profile', () => {
+test('paymentSummary: reserved only in AUTHORIZED, open only in CREATED, the state as a word or the first of a list, the buyer from the shared profile', () => {
   const paid = paymentSummary({ state: 'AUTHORIZED', userDetails: { firstName: ' Kari ', lastName: 'Nordmann', email: 'kari@forening.no', mobileNumber: '4712345678' } });
   assert.equal(paid.paid, true);
+  assert.equal(paid.open, false);
   assert.equal(paid.state, 'AUTHORIZED');
   assert.deepEqual(paid.buyer, { name: 'Kari Nordmann', email: 'kari@forening.no', phone: '4712345678' });
   const open = paymentSummary({ state: ['CREATED'] });
   assert.equal(open.paid, false);
+  assert.equal(open.open, true);
   assert.equal(open.state, 'CREATED');
   assert.deepEqual(open.buyer, { name: '', email: '', phone: '' });
-  for (const state of ['ABORTED', 'EXPIRED', 'TERMINATED']) assert.equal(paymentSummary({ state }).paid, false, state);
+  for (const state of ['ABORTED', 'EXPIRED', 'TERMINATED']) {
+    assert.equal(paymentSummary({ state }).paid, false, state);
+    assert.equal(paymentSummary({ state }).open, false, state);
+  }
   assert.equal(paymentSummary({}), null);
   assert.equal(paymentSummary(null), null);
   assert.deepEqual(OPEN_STATES, ['CREATED']);
@@ -162,7 +127,7 @@ function expectedSignature({ pathAndQuery, date, host, body }, secret) {
 }
 
 const DELIVERY = {
-  pathAndQuery: '/api/vipps/webhook',
+  pathAndQuery: '/api/pay/vipps/webhook',
   date: 'Thu, 30 Mar 2023 08:38:32 GMT',
   host: 'forening.pages.dev',
   body: JSON.stringify({ msn: '123456', reference: 'urd-' + 'a'.repeat(24), name: 'AUTHORIZED', success: true }),
@@ -200,7 +165,7 @@ test('verifyWebhook: a delivery signed with the secret passes; a changed body, a
   assert.equal(await verifyWebhook(delivery(), ''), false, 'no secret configured');
 });
 
-test('the Checkout API is gone from the functions: no call to checkout/v3', () => {
+test('the Checkout API is gone from the functions, and the Vipps endpoints stand under the shared payment path', () => {
   const dir = new URL('../template/functions/', import.meta.url);
   const files = [];
   const walk = (base) => {
@@ -212,25 +177,6 @@ test('the Checkout API is gone from the functions: no call to checkout/v3', () =
   };
   walk(dir);
   for (const file of files) assert.ok(!readFileSync(file, 'utf8').includes('checkout/v3'), `${file.pathname} still calls the Checkout API`);
-  assert.ok(files.some((f) => f.pathname.endsWith('/api/vipps/webhook.js')), 'the webhook endpoint exists');
-  assert.ok(!files.some((f) => f.pathname.endsWith('/api/vipps/callback.js')), 'the Checkout callback is gone');
-});
-
-test('validVariants: a variant must be a size and a colour the product has, in the basket\'s form', () => {
-  const catalogs = [{ kind: 'products', entries: [
-    { id: 'genser', price: 300, sizes: ['S', 'M'], colors: [{ name: 'Rød' }, { name: 'Blå' }] },
-    { id: 'kopp', price: 100 },
-  ] }];
-  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'M · Rød' }], catalogs), true);
-  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'M' }, { id: 'genser', qty: 1, variant: 'Blå' }], catalogs), true);
-  assert.equal(validVariants([{ id: 'kopp', qty: 2 }], catalogs), true, 'no variant');
-  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'XL · Rød' }], catalogs), false, 'a size the product lacks');
-  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'Rød · M' }], catalogs), false, 'the colour before the size');
-  assert.equal(validVariants([{ id: 'genser', qty: 1, variant: 'Gratis for meg' }], catalogs), false, 'free text');
-  assert.equal(validVariants([{ id: 'kopp', qty: 1, variant: 'M' }], catalogs), false, 'a product without choices takes no variant');
-  assert.equal(validVariants([{ id: 'ukjent', qty: 1, variant: 'M' }], catalogs), false);
-  const dotted = [{ kind: 'products', entries: [{ id: 'skjerf', price: 200, colors: [{ name: 'Rød · Blå' }] }] }];
-  assert.equal(validVariants([{ id: 'skjerf', qty: 1, variant: 'Rød · Blå' }], dotted), true, 'a colour name that holds the separator');
-  assert.equal(validOrderPayload({ order: [{ id: 'genser', qty: 1, variant: 'x'.repeat(201) }] }), null, 'a variant past any label is no order');
-  assert.equal(validOrderPayload({ order: [{ id: 'genser', qty: 1, variant: 'x'.repeat(120) }] }).order[0].variant.length, 120, 'a long label is kept whole for the check');
+  for (const name of ['checkout', 'session', 'webhook']) assert.ok(files.some((f) => f.pathname.endsWith(`/api/pay/vipps/${name}.js`)), `the ${name} endpoint exists`);
+  assert.ok(!files.some((f) => /\/api\/vipps\//.test(f.pathname)), 'the earlier path is gone');
 });

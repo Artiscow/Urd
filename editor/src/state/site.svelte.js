@@ -458,6 +458,8 @@ function addSiteCalendar(seed = {}) {
 
 /** The site's time zone (site.timeZone): stored only when Intl knows the name; an empty field removes it. */
 let siteZoneBad = $state(false);
+/** Whether the shop currency typed last is not a three-letter code (the Site panel marks the field). */
+let siteCurrencyBad = $state(false);
 
 // The admin tab shows the site icon when it exists, otherwise the Urd
 // mark (same SVG as in admin/index.html; it cannot be read from the
@@ -738,6 +740,8 @@ export const siteState = {
   addSiteCalendar,
   get siteZoneBad() { return siteZoneBad; },
   set siteZoneBad(v) { siteZoneBad = v; },
+  get siteCurrencyBad() { return siteCurrencyBad; },
+  set siteCurrencyBad(v) { siteCurrencyBad = v; },
   URD_MARK_ICON,
   SAFE_ICON_RE,
   clearLauncherImage,

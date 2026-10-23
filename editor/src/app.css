@@ -725,6 +725,14 @@
     gap: 0.4rem;
   }
 
+  /* A payment instruction's row in the checkout menu: the name, the text and its remove button */
+  .pay-instruction {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr auto;
+    gap: 0.3rem;
+    align-items: center;
+  }
+
   .pin-line > :first-child {
     flex: 1;
     min-width: 0;

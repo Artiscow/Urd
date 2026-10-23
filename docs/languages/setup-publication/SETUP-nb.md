@@ -133,7 +133,7 @@ Kasse-blokken kan ta betalingen med Vipps ([ADR-0020](../../adr/0020-optional-pa
 4. Deploy på nytt (som på slutten av steg 3). Åpne Kasse-blokkens meny i redigeringen, huk av «Betal med Vipps»-knapp, og publiser.
 5. Testbetalingen: legg et produkt i handlekurven, åpne kassesiden og trykk «Betal med Vipps». På en telefon åpner testappen seg; på en datamaskin spør Vipps etter testbrukerens nummer og sender forespørselen til appen. Appen ber først kjøperen dele navn, e-post og telefon med butikken, så om å godkjenne betalingen. Tilbake på kassesiden er handlekurven tom og siden takker kjøperen med navn; betalingen ligger i portalen med ordrelinjene i beskrivelsen, og kvitteringen ligger i appen. Når det virker, bytter du til produksjonsnøklene og fjerner `VIPPS_API_BASE`.
 6. Pengene er reservert, ikke flyttet. Når varen sendes, henter du betalingen i portalen; Vipps gir 180 dager, og reglene forbyr å hente før varen er klar. Avbryt i portalen frigir reservasjonen; en betaling som aldri hentes, frigir Vipps når fristen går ut.
-7. Valgfritt, til bestillingsvarslene butikken i v1.1 sender: registrer en webhook, så Vipps forteller nettstedet om betalingshendelser. Nettstedet lagrer ingenting ennå, men endepunktet `/api/vipps/webhook` er på plass og avviser hver levering som ikke er signert med registreringens hemmelighet. Registrer den med API-et, og legg `secret` fra svaret inn i Cloudflare som **Secret** `VIPPS_WEBHOOK_SECRET`:
+7. Valgfritt, til bestillingsvarslene butikken i v1.1 sender: registrer en webhook, så Vipps forteller nettstedet om betalingshendelser. Nettstedet lagrer ingenting ennå, men endepunktet `/api/pay/vipps/webhook` er på plass og avviser hver levering som ikke er signert med registreringens hemmelighet. Registrer den med API-et, og legg `secret` fra svaret inn i Cloudflare som **Secret** `VIPPS_WEBHOOK_SECRET`:
 
 ```bash
 # Tilgangstokenet (gyldig 24 timer i produksjon, 1 time i testmiljøet)
@@ -146,7 +146,7 @@ curl -X POST https://api.vipps.no/webhooks/v1/webhooks \
   -H "Authorization: Bearer <access_token>" \
   -H "Ocp-Apim-Subscription-Key: <abonnementsnøkkel>" -H "Merchant-Serial-Number: <MSN>" \
   -H "Content-Type: application/json" \
-  -d '{"url":"https://<nettsted>/api/vipps/webhook","events":["epayments.payment.authorized.v1"]}'
+  -d '{"url":"https://<nettsted>/api/pay/vipps/webhook","events":["epayments.payment.authorized.v1"]}'
 ```
 
 ## Sikkerhetsmodellen (kort)
