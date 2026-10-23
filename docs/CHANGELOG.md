@@ -28,6 +28,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.69 - The verification round in one command, with the quick selection at a commit - 23 October 2026
+
+- The verification was three commands run by hand, and the full suite ran at every commit although the rule let a commit run only what its diff covers. `scripts/verify.mjs` runs build, every test and schema validation in one command, and `--quick` picks the test files from the changed and untracked paths (by file name, or by the folder of a new file), builds only when the editor's source or a bundled engine module changed, validates only when the schemas or the content changed, and falls back to the full round when a shared file changed; `--list` shows the selection. The rule in AGENTS.md is written as the instruction: the quick selection at a commit, the full round at push and in CI.
+
 ### 0.7.28.1 - Payment methods in the optional layer, first stage: the order core, the currency, the payments setting and the card at Vipps - 23 October 2026
 
 - The payment layer had one provider wired straight into its module. The order logic every provider shares (the payload, the total in the minor unit, the variants, the line items, the reference, the site's currency, the shop files) is `functions/_lib/order.js`; `vipps.js` keeps the Vipps part, and the three Vipps endpoints stand under `/api/pay/vipps/`, the path every provider follows ([ADR-0028](adr/0028-payment-providers-in-the-optional-layer.md); ADR-0020's decisions 1, 2 and 5 amended, the earlier text in `amended/`).

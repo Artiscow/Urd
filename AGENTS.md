@@ -18,7 +18,7 @@ Urd is a dependency-free static site builder where the cloned repo IS the websit
 
 ## Verification: always before anything is «done»
 
-Run all three, and report the result honestly:
+Run all three (`node scripts/verify.mjs` does it in one command), and report the result honestly:
 
 1. Build the editor: `cd editor && npm run build`
 2. Tests: `node --test tests/*.mjs` (must be green)
@@ -30,7 +30,7 @@ If CI's build-conformity check fails with a diff inside framework code (the Svel
 
 **The scope of verification follows the diff**:
 
-- **Intermediate commits along the way** need no full round: run only the tests that cover what you touch (e.g. `node --test tests/guard.test.mjs`), or none. The whole ritual belongs to push preparation, not to every commit. Every commit is still numbered (see Versioning under Workflow).
+- **At a commit, run only the tests that cover the diff** (`node scripts/verify.mjs --quick`, which picks the test files from the changed paths, builds only when the editor's source or a bundled engine module changed, and validates only when the schemas or the content changed); the full round with build, every test and schema validation (`node scripts/verify.mjs`) runs at push preparation and in CI. A full run at a commit is a deviation, and is not reported as evidence. Every commit is still numbered (see Versioning under Workflow).
 - **A push with docs-only changes (.md):** an editor rebuild is unnecessary (markdown cannot affect the bundle), and the independent review step can be replaced by mechanical checks: em dash, checkbox syntax, link targets, version-number consistency, and that nothing was removed from TESTRUNDER. The full test suite costs seconds and may well be run, but CI runs the same checks after the push anyway. Exception: if the diff touches `docs/SCHEMA.md`, it is never docs-only - the three-places rule requires SCHEMA.md to change in the same commit as `schema/` and the example data, so a bare SCHEMA.md diff is a half-done schema change and gets the full round.
 - **A push with code, schema or content changes:** the full round as described above: build + all tests + schema validation + independent review.
 
