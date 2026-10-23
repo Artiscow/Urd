@@ -25215,7 +25215,7 @@ function vw(e, t) {
 Vr(["change"]);
 //#endregion
 //#region src/menu/families/Checkout.svelte
-var yw = /* @__PURE__ */ L("<label> <input/></label>"), bw = /* @__PURE__ */ L("<label> <input type=\"email\"/></label> <label> <input type=\"url\"/></label> <!>", 1), xw = /* @__PURE__ */ L("<div class=\"pay-instruction\"><input/> <input/> <button class=\"ghost\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\" aria-hidden=\"true\"><path d=\"M3 3l6 6M9 3l-6 6\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"></path></svg></button></div>"), Sw = /* @__PURE__ */ L("<div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div> <!> <!> <span class=\"mini-label\"> </span> <!> <button class=\"ghost action\"> </button>", 1), Cw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), ww = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), Tw = /* @__PURE__ */ L("<!> <!> <!>", 1);
+var yw = /* @__PURE__ */ L("<label> <input/></label>"), bw = /* @__PURE__ */ L("<label> <input type=\"email\"/></label> <label> <input type=\"url\"/></label> <!>", 1), xw = /* @__PURE__ */ L("<div class=\"pay-instruction\"><input/> <input/> <button class=\"ghost\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\" aria-hidden=\"true\"><path d=\"M3 3l6 6M9 3l-6 6\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"></path></svg></button></div>"), Sw = /* @__PURE__ */ L("<div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <span class=\"mini-label\"> </span> <!> <button class=\"ghost action\"> </button>", 1), Cw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), ww = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), Tw = /* @__PURE__ */ L("<!> <!> <!>", 1);
 function Ew(e, t) {
 	at(t, !0);
 	let n = rt("urd-editor"), r = /* @__PURE__ */ D(() => n.selectedBlock), { setBlockProp: i, setBlockProps: a } = n, { groupOf: o } = Zb(() => F(r).props, a), s = /* @__PURE__ */ D(() => Yv(F(r).props)), c = /* @__PURE__ */ D(() => Xv(F(s))), l = /* @__PURE__ */ D(() => Zv(n.siteDraft?.site?.commerce?.currency)), u = (e) => i("payments", {
@@ -25231,7 +25231,7 @@ function Ew(e, t) {
 	}] }), p = (e) => u({ manual: F(s).manual.filter((t, n) => n !== e) }), m = /* @__PURE__ */ D(() => {
 		let e = [];
 		return F(s).vipps && e.push("Vipps"), F(s).card !== "none" && e.push(q("lbl.payCard")), F(s).paypal && e.push("PayPal"), e.length ? e.join(", ") : F(s).manual.length ? String(F(s).manual.length) : q("common.none");
-	}), h = /* @__PURE__ */ D(() => Jv.map((e) => [e, q(`opt.payCard.${e}`)])), g = /* @__PURE__ */ D(() => F(s).card === "stripe" || F(s).paypal);
+	}), h = /* @__PURE__ */ D(() => Jv.map((e) => [e, q(`opt.payCard.${e}`)])), g = /* @__PURE__ */ D(() => F(s).card === "stripe");
 	var _ = Qr(), v = j(_), y = (e) => {
 		let t = (e) => {
 			var t = bw(), n = j(t), a = A(n), o = N(a);
@@ -25286,7 +25286,11 @@ function Ew(e, t) {
 								onchange: (e) => u({ card: e })
 							});
 						}
-						var l = N(c, 2), m = (e) => {
+						var l = N(c, 2), m = A(l);
+						U(m);
+						var _ = N(m);
+						E(l);
+						var v = N(l, 2), y = (e) => {
 							{
 								let t = /* @__PURE__ */ D(() => q("lbl.payCapture")), n = /* @__PURE__ */ D(() => q("tip.checkout.payCapture")), r = /* @__PURE__ */ D(() => [["ship", q("opt.payCapture.ship")], ["now", q("opt.payCapture.now")]]);
 								cu(e, {
@@ -25306,11 +25310,11 @@ function Ew(e, t) {
 								});
 							}
 						};
-						B(l, (e) => {
-							F(g) && e(m);
+						B(v, (e) => {
+							F(g) && e(y);
 						});
-						var _ = N(l, 2), v = M(_, !0), y = N(_, 2);
-						hi(y, 19, () => F(s).manual, (e) => e.id, (e, t, n) => {
+						var b = N(v, 2), x = M(b, !0), S = N(b, 2);
+						hi(S, 19, () => F(s).manual, (e) => e.id, (e, t, n) => {
 							var r = xw(), i = A(r);
 							U(i);
 							var a = N(i, 2);
@@ -25327,16 +25331,18 @@ function Ew(e, t) {
 								() => q("ui.remove")
 							]), I("change", i, (e) => d(F(n), { label: e.target.value.trim() })), I("change", a, (e) => d(F(n), { text: e.target.value.trim() })), I("click", o, () => p(F(n))), R(e, r);
 						});
-						var b = N(y, 2), x = M(b, !0);
-						P((e, t, n, r, c) => {
-							K(i, "title", e), G(a, F(s).vipps), z(o, ` ${t ?? ""}`), K(_, "title", n), z(v, r), z(x, c);
+						var C = N(S, 2), w = M(C, !0);
+						P((e, t, n, r, c, u, d) => {
+							K(i, "title", e), G(a, F(s).vipps), z(o, ` ${t ?? ""}`), K(l, "title", n), G(m, F(s).paypal), z(_, ` ${r ?? ""}`), K(b, "title", c), z(x, u), z(w, d);
 						}, [
 							() => q("tip.checkout.vippsCheckout"),
 							() => q("lbl.vippsCheckout"),
+							() => q("tip.checkout.payPaypal"),
+							() => q("lbl.payPaypal"),
 							() => q("tip.checkout.instructions"),
 							() => q("lbl.payInstructions"),
 							() => q("ui.addInstruction")
-						]), I("change", a, (e) => u({ vipps: e.target.checked })), I("click", b, f), R(e, n);
+						]), I("change", a, (e) => u({ vipps: e.target.checked })), I("change", m, (e) => u({ paypal: e.target.checked })), I("click", C, f), R(e, n);
 					},
 					$$slots: { default: !0 }
 				});

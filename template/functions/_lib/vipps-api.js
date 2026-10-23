@@ -4,8 +4,7 @@
  * call shape against the Vipps MobilePay API with the headers every call
  * carries and a timeout. The pure logic is in vipps.js.
  */
-import { tokenFromAnswer, tokenFresh } from './vipps.js';
-import { fetchWithin } from './net.js';
+import { fetchWithin, tokenFromAnswer, tokenFresh } from './net.js';
 
 /** The cached token per client id; an isolate serves one site, so the map holds one entry. */
 const tokens = new Map();

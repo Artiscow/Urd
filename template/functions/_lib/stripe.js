@@ -11,7 +11,7 @@
  * and the rest), so the site needs no script, frame or connect-src of its own.
  */
 import { orderLineItems, orderDescription, returnUrl } from './order.js';
-import { sameText } from './vipps.js';
+import { sameText } from './net.js';
 
 /** Reads the configuration from env; null when Stripe is not set up. */
 export function stripeConfig(env) {

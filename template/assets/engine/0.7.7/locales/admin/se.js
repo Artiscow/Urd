@@ -247,6 +247,7 @@ export default {
     'api.payUnreachable': 'Ii ožžon oktavuođa {provider}:in',
     'api.payUpstreamStatus': '{provider} vástidii {status}',
     'api.payUnexpected': 'Vuordekeahtes vástádus {provider}:is',
+    'api.payCurrency': '{provider} ii váldde vuostá {currency}, dahje ii supmi dan valuhtas (gávpevaluhtta Neahttabáiki-panelas)',
     'api.webhookRejected': 'Dieđáhus Vippsis ii lean vuolláičállojuvvon registrerema suollemasvuođain',
     'api.geocodeUnexpected': 'Vuordekeahtes vástádus čujuhusohcamis',
     'api.placeNotFound': 'Ii gávdnan báikki. Geahččal dárkilet čujuhusa.',

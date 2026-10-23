@@ -26,3 +26,6 @@ export async function onRequestGet({ request, env }) {
   if (summary.reference !== reference) return json({ error: 'Invalid reference', code: 'orderInvalid' }, 400);
   return json({ paid: summary.paid, open: summary.open, state: summary.state, buyer: summary.buyer });
 }
+
+/** The checkout page asks every provider with a POST (PayPal's ask may capture); the answer is the same read. */
+export const onRequestPost = onRequestGet;

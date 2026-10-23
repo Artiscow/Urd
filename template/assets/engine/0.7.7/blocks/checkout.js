@@ -236,6 +236,9 @@ export const checkoutBlock = {
         const url = new URL(location.href);
         url.searchParams.delete('ordered');
         url.searchParams.delete('via');
+        // PayPal adds its own order token and payer id to the return.
+        url.searchParams.delete('token');
+        url.searchParams.delete('PayerID');
         history.replaceState(null, '', url);
       };
       let started = '';
@@ -245,7 +248,8 @@ export const checkoutBlock = {
         // The provider may send the buyer back before the payment is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
         const ask = async (left) => {
           const query = `reference=${encodeURIComponent(ordered)}${pid ? `&pid=${encodeURIComponent(pid)}` : ''}`;
-          const data = await fetch(`/api/pay/${via}/session?${query}`).then((res) => (res.ok ? res.json() : null)).catch(() => null);
+          // A POST, since PayPal's endpoint captures the approved order on this ask.
+          const data = await fetch(`/api/pay/${via}/session?${query}`, { method: 'POST' }).then((res) => (res.ok ? res.json() : null)).catch(() => null);
           if (data?.paid) {
             writeCart([]);
             // The buyer the provider named is thanked by name; the receipt with the order lines sits with the provider.

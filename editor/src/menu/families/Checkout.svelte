@@ -36,8 +36,8 @@
     return pays.manual.length ? String(pays.manual.length) : ta('common.none');
   });
   const cardOptions = $derived(CARD_PROVIDERS.map((id) => [id, ta(`opt.payCard.${id}`)]));
-  /** The capture choice matters only for the providers that can take the money at once (Vipps always holds it). */
-  const captureShown = $derived(pays.card === 'stripe' || pays.paypal);
+  /** The capture choice matters only for Stripe: Vipps always holds the money, PayPal always takes it at the order (ADR-0028). */
+  const captureShown = $derived(pays.card === 'stripe');
 </script>
 
 {#if area === 'content'}
@@ -67,6 +67,11 @@
       </div>
       <Choice label={ta('lbl.payCard')} value={pays.card} title={ta('tip.checkout.payCard')}
         options={cardOptions} onchange={(v) => setPay({ card: v })} />
+      <label class="gridmenu-snap" title={ta('tip.checkout.payPaypal')}>
+        <input type="checkbox" checked={pays.paypal}
+          onchange={(e) => setPay({ paypal: e.target.checked })} />
+        {ta('lbl.payPaypal')}
+      </label>
       {#if captureShown}
         <Choice label={ta('lbl.payCapture')} value={pays.capture} title={ta('tip.checkout.payCapture')}
           options={[['ship', ta('opt.payCapture.ship')], ['now', ta('opt.payCapture.now')]]} onchange={(v) => setPay({ capture: v })} />

@@ -22,3 +22,6 @@ export async function onRequestGet({ request, env }) {
   if (!summary) return json({ error: 'Unexpected response from Vipps', code: 'vippsUnexpected' }, 502);
   return json(summary);
 }
+
+/** The checkout page asks every provider with a POST (PayPal's ask may capture); the answer is the same read. */
+export const onRequestPost = onRequestGet;

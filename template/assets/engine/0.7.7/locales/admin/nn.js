@@ -321,6 +321,7 @@ export default {
     'api.payUnreachable': 'Fekk ikkje kontakt med {provider}',
     'api.payUpstreamStatus': '{provider} svarte {status}',
     'api.payUnexpected': 'Uventa svar frå {provider}',
+    'api.payCurrency': '{provider} tek ikkje imot {currency}, eller ikkje beløpet i den valutaen (butikkvalutaen i Nettstad-panelet)',
     'api.webhookRejected': 'Varselet frå Vipps var ikkje signert med løyndomen til registreringa',
     'api.geocodeUnexpected': 'Uventa svar frå adressesøket',
     'api.placeNotFound': 'Fann ikkje staden. Prøv ei meir nøyaktig adresse.',

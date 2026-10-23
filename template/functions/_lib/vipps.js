@@ -2,11 +2,12 @@
  * The Vipps MobilePay part of the optional payment layer (ADR-0020,
  * ADR-0028): reading the configuration, the payment body for epayment/v1
  * (the app or a card), the receipt lines, the reading of a payment's state,
- * the access-token cache and the webhook signature check. The order logic
+ * and the webhook signature check. The order logic
  * every provider shares is in order.js; no fetch here, the endpoints under
  * api/pay/vipps/ handle the network. Tested in tests/vipps.test.mjs.
  */
 import { orderLineItems, orderDescription, returnUrl } from './order.js';
+import { sameText } from './net.js';
 
 /** Reads the configuration from env; null when the payment layer is not set up. */
 export function vippsConfig(env) {
@@ -109,31 +110,6 @@ export function paymentSummary(payment) {
   };
 }
 
-/** How long before its expiry a cached access token is dropped, in seconds. */
-const TOKEN_MARGIN = 60;
-
-/**
- * The access token to keep from an answer of POST {apiBase}/accesstoken/get, with the
- * time it may be used until. The token is valid 24 hours in production and
- * 1 hour in the test environment; the answer says which.
- * @param {{access_token?: string, expires_on?: string|number, expires_in?: string|number}} answer
- * @param {number} now Unix seconds
- * @returns {{token: string, until: number}|null}
- */
-export function tokenFromAnswer(answer, now) {
-  const token = typeof answer?.access_token === 'string' ? answer.access_token : '';
-  if (!token) return null;
-  const on = Number(answer.expires_on);
-  const within = Number(answer.expires_in);
-  const until = Number.isFinite(on) && on > now ? on : Number.isFinite(within) && within > 0 ? now + within : now + 300;
-  return { token, until: until - TOKEN_MARGIN };
-}
-
-/** Whether a cached token may still be sent. */
-export function tokenFresh(cached, now) {
-  return Boolean(cached?.token) && cached.until > now;
-}
-
 const encoder = new TextEncoder();
 
 /** Base64 of a byte buffer. */
@@ -163,14 +139,6 @@ export async function webhookSignature({ method = 'POST', pathAndQuery, date, ho
 export function signatureOf(authorization) {
   const match = /^HMAC-SHA256 SignedHeaders=x-ms-date;host;x-ms-content-sha256&Signature=([A-Za-z0-9+/=]+)$/.exec(String(authorization ?? ''));
   return match ? match[1] : '';
-}
-
-/** Constant-time comparison of two short strings. */
-export function sameText(a, b) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
 }
 
 /**

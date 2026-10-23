@@ -13,8 +13,9 @@ import { createHmac, createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import {
   vippsConfig, receiptLines, buildPayment, PROFILE_SCOPE, VIPPS_METHODS, paymentSummary, OPEN_STATES,
-  tokenFromAnswer, tokenFresh, webhookSignature, signatureOf, verifyWebhook,
+  webhookSignature, signatureOf, verifyWebhook,
 } from '../template/functions/_lib/vipps.js';
+import { tokenFromAnswer, tokenFresh } from '../template/functions/_lib/net.js';
 
 const ENV = {
   VIPPS_CLIENT_ID: 'id',

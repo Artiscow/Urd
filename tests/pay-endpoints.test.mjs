@@ -5,7 +5,7 @@
  * every call the endpoint makes is recorded. This holds the request each
  * provider receives (path, headers, body), the answer the checkout page gets,
  * the check of the return, the webhook's signature gate, and the 503 without
- * secrets. The real payments are tested in the providers' test environments.
+ * secrets, for Vipps MobilePay, Stripe and PayPal. The real payments are tested in the providers' test environments.
  */
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,6 +21,11 @@ const stripe = {
   checkout: await import(new URL('stripe/checkout.js', FN).href),
   session: await import(new URL('stripe/session.js', FN).href),
   webhook: await import(new URL('stripe/webhook.js', FN).href),
+};
+const paypal = {
+  checkout: await import(new URL('paypal/checkout.js', FN).href),
+  session: await import(new URL('paypal/session.js', FN).href),
+  webhook: await import(new URL('paypal/webhook.js', FN).href),
 };
 
 const ORIGIN = 'https://forening.pages.dev';
@@ -188,4 +193,109 @@ test('stripe webhook: a recent delivery signed with the secret 200, a tampered o
   assert.equal((await deliver(`t=${t},v1=${'0'.repeat(64)}`)).status, 401);
   assert.equal((await deliver(`t=${t - 3600},v1=${sig(t - 3600)}`)).status, 401, 'a replay an hour later');
   assert.equal((await deliver(`t=${t},v1=${sig(t)}`, { STRIPE_SECRET_KEY: 'sk_test_abc123' })).status, 503);
+});
+
+const PAYPAL_ENV = { PAYPAL_CLIENT_ID: 'cid', PAYPAL_CLIENT_SECRET: 'csec', PAYPAL_API_BASE: 'https://api-m.sandbox.paypal.com', PAYPAL_WEBHOOK_ID: 'WH-1' };
+const ORDER_ID = '5O190127TN364715T';
+
+/** A stubbed PayPal: the token, the order's creation, its read in a given state, its capture, and the signature check. */
+function paypalApi(state) {
+  return (call, json) => {
+    const path = new URL(call.url).pathname;
+    if (path === '/v1/oauth2/token') return json({ access_token: 'PTOK', token_type: 'Bearer', expires_in: 32400 });
+    if (path === '/v2/checkout/orders' && call.method === 'POST') {
+      state.created = JSON.parse(call.body);
+      return json({ id: ORDER_ID, status: 'PAYER_ACTION_REQUIRED', links: [{ rel: 'payer-action', href: `https://www.sandbox.paypal.com/checkoutnow?token=${ORDER_ID}` }] }, 200);
+    }
+    const unit = { reference_id: state.reference ?? state.created?.purchase_units[0].reference_id };
+    if (path === `/v2/checkout/orders/${ORDER_ID}` && call.method === 'GET') return json({ id: ORDER_ID, status: state.status, purchase_units: [unit] });
+    if (path === `/v2/checkout/orders/${ORDER_ID}/capture` && call.method === 'POST') {
+      state.captures = (state.captures ?? 0) + 1;
+      state.captureRequestId = call.headers['PayPal-Request-Id'];
+      return json({ id: ORDER_ID, status: 'COMPLETED', payer: { name: { given_name: 'Kari', surname: 'Nordmann' }, email_address: 'k@n.no' }, purchase_units: [{ ...unit, payments: { captures: [{ status: 'COMPLETED' }] } }] }, 201);
+    }
+    if (path === '/v1/notifications/verify-webhook-signature') {
+      state.verifyBody = call.body;
+      return json({ verification_status: state.signed ? 'SUCCESS' : 'FAILURE' });
+    }
+    return new Response('nope', { status: 404 });
+  };
+}
+
+test('paypal checkout: the order with the token from the OAuth call, the items in the site currency, and the approval address with the order id to the page', async () => {
+  const state = {};
+  const calls = stubNetwork({ title: 'Forening', commerce: { currency: 'EUR' } }, paypalApi(state));
+  const res = await paypal.checkout.onRequestPost({ request: order(), env: PAYPAL_ENV });
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.match(data.reference, REF_RE);
+  assert.equal(data.pid, ORDER_ID);
+  assert.equal(data.url, `https://www.sandbox.paypal.com/checkoutnow?token=${ORDER_ID}`);
+  const token = calls.find((c) => c.url.endsWith('/v1/oauth2/token'));
+  assert.equal(token.headers.Authorization, `Basic ${btoa('cid:csec')}`);
+  assert.equal(token.body, 'grant_type=client_credentials');
+  const create = calls.find((c) => c.url.endsWith('/v2/checkout/orders'));
+  assert.equal(create.headers.Authorization, 'Bearer PTOK');
+  assert.equal(create.headers['PayPal-Request-Id'], data.reference);
+  assert.equal(state.created.intent, 'CAPTURE');
+  assert.deepEqual(state.created.purchase_units[0].amount, { currency_code: 'EUR', value: '700.00', breakdown: { item_total: { currency_code: 'EUR', value: '700.00' } } });
+  assert.equal(state.created.payment_source.paypal.experience_context.brand_name, 'Forening');
+});
+
+test('paypal checkout: a currency PayPal lacks is refused before PayPal is asked; without the keys 503', async () => {
+  let calls = stubNetwork({ commerce: { currency: 'ISK' } }, paypalApi({}));
+  const res = await paypal.checkout.onRequestPost({ request: order(), env: PAYPAL_ENV });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).code, 'payCurrency');
+  assert.ok(!calls.some((c) => c.url.includes('paypal.com')));
+  calls = stubNetwork({}, paypalApi({}));
+  assert.equal((await paypal.checkout.onRequestPost({ request: order(), env: {} })).status, 503);
+  assert.equal(calls.length, 0);
+});
+
+test('paypal session: an approved order for this reference is captured once, with the reference as request id, and paid by name', async () => {
+  const ref = 'urd-' + 'e'.repeat(24);
+  const state = { status: 'APPROVED', reference: ref };
+  stubNetwork({}, paypalApi(state));
+  const ask = (reference, pid) => paypal.session.onRequestPost({ request: new Request(`${ORIGIN}/api/pay/paypal/session?reference=${reference}&pid=${pid}`, { method: 'POST' }), env: PAYPAL_ENV });
+  assert.deepEqual(await (await ask(ref, ORDER_ID)).json(), { paid: true, open: false, state: 'COMPLETED:COMPLETED', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '' } });
+  assert.equal(state.captures, 1);
+  assert.equal(state.captureRequestId, `${ref}-capture`);
+  assert.equal((await ask('urd-' + 'f'.repeat(24), ORDER_ID)).status, 400, 'the order belongs to another reference');
+  assert.equal(state.captures, 1, 'and nothing was captured for it');
+  assert.equal((await ask(ref, 'bad id')).status, 400);
+  state.status = 'PAYER_ACTION_REQUIRED';
+  const open = await (await ask(ref, ORDER_ID)).json();
+  assert.equal(open.open, true);
+  assert.equal(open.paid, false);
+  assert.equal(state.captures, 1, 'an order not yet approved is not captured');
+});
+
+test('paypal webhook: PayPal\'s check decides, with the event sent back as it came; a missing header 401 before PayPal is asked; no webhook id 503', async () => {
+  const state = { signed: true };
+  const calls = stubNetwork({}, paypalApi(state));
+  const raw = '{"id":"WH-1A","event_type":"PAYMENT.CAPTURE.COMPLETED"}';
+  const headers = {
+    'paypal-auth-algo': 'SHA256withRSA',
+    'paypal-cert-url': 'https://api.sandbox.paypal.com/v1/notifications/certs/CERT-1',
+    'paypal-transmission-id': 'tid',
+    'paypal-transmission-sig': 'sig',
+    'paypal-transmission-time': '2026-10-23T12:00:00Z',
+  };
+  const deliver = (h, env = PAYPAL_ENV) => paypal.webhook.onRequestPost({ env, request: new Request(`${ORIGIN}/api/pay/paypal/webhook`, { method: 'POST', body: raw, headers: h }) });
+  assert.equal((await deliver(headers)).status, 200);
+  assert.ok(state.verifyBody.endsWith(`"webhook_event":${raw}}`));
+  assert.equal(JSON.parse(state.verifyBody).webhook_id, 'WH-1');
+  state.signed = false;
+  assert.equal((await deliver(headers)).status, 401);
+  const before = calls.length;
+  const { 'paypal-transmission-sig': _sig, ...unsigned } = headers;
+  assert.equal((await deliver(unsigned)).status, 401);
+  assert.equal(calls.length, before);
+  assert.equal((await deliver(headers, { ...PAYPAL_ENV, PAYPAL_WEBHOOK_ID: '' })).status, 503);
+});
+
+test('every session endpoint answers the POST the checkout page sends', () => {
+  for (const provider of [vipps, stripe, paypal]) assert.equal(typeof provider.session.onRequestPost, 'function');
+  assert.equal(paypal.session.onRequestGet, undefined, 'PayPal\'s may capture, so it takes no GET');
 });

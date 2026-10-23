@@ -1,0 +1,34 @@
+# ADR-0028: Payment providers in the optional layer
+
+Date: 23 October 2026
+Status: Accepted. Builds on [ADR-0020](../0020-optional-payment-layer-vipps-checkout.md) (the model of the layer: a site function, a hosted redirect, secrets in Cloudflare, nothing stored) and amends its decisions 1, 2 and 5 (the block's payment settings, the function path per provider, the secrets per provider); the shop of v1.1 ([ADR-0027](../0027-a-shop-without-a-database.md)) builds on every provider alike.
+
+## Context
+
+The optional payment layer had one provider, Vipps MobilePay, chosen for a Norwegian audience. Urd's site owners are in 57 countries (the contact profiles of 0.7.24.5), MobilePay owners in Denmark and Finland pay in DKK and EUR, and the comparison of 11 October 2026 closed every other gateway as «Not taken: gateway-free core» ([FEATURES.md](../../comparison/FEATURES.md) C68). The core stays gateway-free; what was missing was a way for the optional layer to take more than one provider without a database, a frame or a change to the CSP.
+
+The primary pages of the Vipps MobilePay ePayment API, Stripe Checkout and PayPal's Orders API were read on 23 October 2026 for the create call, the state read, the hold and capture, the webhook signature, the test environment and the methods each gives.
+
+## Decision
+
+1. **The layer takes several providers, chosen per checkout block.** The block's `payments` setting (block version 2; the migration 1 -> 2 lifts the earlier Vipps flag and Vipps number) holds `vipps` (a «Pay with Vipps» button), `card` (`none`, `vipps` or `stripe`: a «Pay with card» button on Vipps's own card page or on Stripe's hosted page), `paypal` (a «Pay with PayPal» button), `capture` (`ship` or `now`) and `manual` (ways to pay without a provider, each a label and a text shown above the order summary).
+2. **Every provider follows the model of ADR-0020:** one pure module with tests, one network helper, and three endpoints under `/api/pay/<provider>/` (the payment's creation, its state, the webhook), with the order logic they share in one neutral module (`functions/_lib/order.js`: the payload, the total from the catalogue, the variants, the reference, the currency). The buyer is sent to the provider's hosted page and returns to the checkout page with `?ordered=<reference>&via=<provider>`; the page empties the basket only when that provider's session endpoint confirms the payment. The site stores nothing; the orders live in the provider's portal.
+3. **The currency is the site's.** `site.commerce.currency` (ISO 4217, NOK when omitted) is the currency the layer charges in and the catalogue's prices are in; with a provider on, the checkout shows its word. This is what lets a Danish or Finnish sales unit pay through the same Vipps MobilePay layer, and Stripe and PayPal charge in it.
+4. **Hold and capture.** Vipps MobilePay always reserves, and the seller captures in the portal when the goods ship (180 days in Norway, 14 in Denmark and Finland). Stripe and PayPal follow the block's `capture`: `ship` reserves (Stripe's cards hold 7 days and Klarna 28, PayPal's authorisation is honoured 3 days and valid 29) and the seller captures in the provider's dashboard; `now` captures at the order, which is right for what is delivered at once (a membership, a ticket). The site's own function captures nothing before the shop of v1.1.
+5. **The methods each provider gives, read 23 October 2026.** Vipps MobilePay: the Vipps and MobilePay apps, and freestanding card payments in Norway (3D Secure on Vipps's page; not in the test environment); no Apple Pay or Google Pay. Stripe Checkout: card, Apple Pay, Google Pay, Link, Klarna, MobilePay, iDEAL and the other methods the owner switches on in the Stripe dashboard, on checkout.stripe.com. PayPal: the PayPal balance and a card without an account. Manual: a Vipps number, a bank account, pay at pickup, an invoice.
+6. **Not taken.** Apple Pay and Google Pay as buttons of their own (a gateway's page gives them; Stripe does), Kustom Checkout (a frame by default, a hosted page by invitation), Swish (a bank certificate per merchant and a server that holds it), Klarna direct (Stripe offers it with no extra agreement), and any provider that needs a script, a frame or a connect-src on the site.
+7. **Secrets per provider**, never repo data: the four Vipps keys with the optional API base and webhook secret (ADR-0020); Stripe's secret key and webhook signing secret; PayPal's client id, client secret and webhook id with the optional sandbox base. A provider without its secrets answers 503, its button shows a calm unavailable text, and the form checkout works unchanged.
+
+## Rationale
+
+- **The hosted redirect keeps the CSP untouched** for every provider, as ADR-0006 and ADR-0020 require; providers that need a frame are not taken.
+- **One neutral order module** keeps the price check in one place: whichever provider, the total is recomputed from the catalogue in git and the client's figures are never used.
+- **A per-block choice, not a site-wide one:** a club may take Vipps on its merch page and manual instructions on its membership page.
+- **Capture at shipping stays the default** since the regulation Vipps names forbids capture before the goods are ready; `now` exists because a membership is delivered at once, and a 7-day card hold would otherwise lapse.
+
+## Consequences
+
+- The pure modules are tested in node; the endpoints are thin shells; a mocked run of the three endpoints per provider is part of each stage's verification, and the real test payments (Vipps MT, Stripe test mode, PayPal sandbox) are the test rounds'.
+- The setup guide gets one section per provider: the keys, the test environment and a test payment.
+- The comparison's commerce rows are recounted: the gateways row of C68 stays «Not taken» for the core and names the optional layer's providers; express checkout and the wallets, local methods and manual methods change status with what the layer gives.
+- Adding a provider later is one pure module, one network helper, three endpoints, a button key and a setup section.

@@ -28,6 +28,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.28.3 - Payment methods in the optional layer, third stage: PayPal - 23 October 2026
+
+- «Pay with PayPal» in the checkout block sends the buyer to PayPal's own approval page with an order on the Orders v2 API (`functions/_lib/paypal.js`, `paypal-api.js` and the three endpoints under `/api/pay/paypal/`): the lines as items in the site's currency, in PayPal's decimal form (whole units for HUF, JPY and TWD), the reference as the unit's reference, custom id and invoice id, no shipping address asked, and the return with the reference and the provider.
+- PayPal's pages showed an authorisation honoured for 3 days and a later capture documented through the merchant's own server code only, so PayPal captures at the order: the session endpoint captures the order the buyer approved when the buyer returns, with the reference as PayPal's request id, and **Take the money** stays a Stripe setting. ADR-0028 decisions 1, 4 and 7 are amended, the earlier text in `amended/`.
+- The session endpoints take a POST, since PayPal's may capture; the checkout page asks every provider with a POST, and cleans PayPal's own `token` and `PayerID` from the address after the return. PayPal's endpoint refuses an order made for another reference before it captures anything.
+- The PayPal webhook asks PayPal's verify-webhook-signature with the five delivery headers, the webhook's id and the event sent back exactly as it arrived, and refuses a delivery PayPal does not confirm.
+- A shop currency PayPal cannot take, or a fraction where it takes whole units, answers `payCurrency`, with `api.payCurrency` in the five admin dictionaries; the PayPal switch and its tooltip, and the capture tooltip naming each provider's rule, in nb, en-GB and tr. The token rule and the constant-time comparison moved to `net.js`, shared by the providers.
+- The setup guide gets a PayPal part in English and Norwegian (the app's keys in the sandbox, the buyer sandbox account, the test payment, the webhook, the verified Business account and the review before live) and a troubleshooting row; DEVELOPMENT-en-GB, UTVIKLING, ARCHITECTURE and SCHEMA.md follow.
+- Tests: `paypal.test.mjs` for the module; `pay-endpoints.test.mjs` runs the PayPal endpoints against a stubbed PayPal (the token, the order, the capture once, another reference refused, the webhook check) and holds every session endpoint to the POST.
+
 ### 0.7.28.2 - Payment methods in the optional layer, second stage: Stripe Checkout - 23 October 2026
 
 - The layer had no card provider beyond Vipps's Norwegian card page. «Card payment: Stripe» in the checkout block sends the buyer to a Stripe Checkout Session (`functions/_lib/stripe.js`, `stripe-api.js` and the three endpoints under `/api/pay/stripe/`), where the methods the owner switches on in the Stripe dashboard (card, Apple Pay, Google Pay, Klarna, MobilePay and the rest) take the catalogue's total in the site's currency; nothing on the site loads from Stripe.

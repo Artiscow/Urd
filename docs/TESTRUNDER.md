@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.28.3): PayPal
+
+- [ ] With the sandbox app's keys and `PAYPAL_API_BASE=https://api-m.sandbox.paypal.com` on a deployed site (setup guide, section 5, PayPal): «Pay with PayPal» opens PayPal's page with the order's lines and the total in the shop currency and the site's name
+- [ ] Logged in with the personal sandbox account: back on the checkout page the basket is empty and the page thanks the buyer by name; the business sandbox account at sandbox.paypal.com shows the payment completed; the address no longer carries `token` or `PayerID`
+- [ ] «Cancel» on PayPal's page returns to the checkout with the basket kept and no thank-you
+- [ ] Refresh the checkout page right after a paid return: no second capture appears in the sandbox account
+- [ ] Shop currency ISK: «Pay with PayPal» answers with the unavailable text and nothing is created at PayPal
+- [ ] Element menu, Payment: the «Pay with PayPal» switch sits under Card payment; **Take the money** shows only with Stripe chosen, and its tooltip says that PayPal takes the money at the order
+- [ ] The webhook with `PAYMENT.CAPTURE.COMPLETED` and `PAYPAL_WEBHOOK_ID`: the deliveries stand as delivered in the app's webhook events; a POST without PayPal's headers gets 401
+
 ### Test batch (0.7.28.2): Stripe Checkout
 
 - [ ] With a sandbox restricted key (Checkout Sessions Write, Payment Intents Read) in `STRIPE_SECRET_KEY` on a deployed site and Card payment set to Stripe (setup guide, section 5, Stripe): the key's request log shows no refused call, and «Pay with card» opens Stripe's page with the order's lines and the total in the shop currency, in the site's language
