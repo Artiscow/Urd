@@ -17529,6 +17529,51 @@ body.urd-mobile .urd-section-resize-top {
   display: block;
 }
 
+/* The handles on the other edges and corners: each sits on its edge, counter-scaled
+   from the point that stays put, with the cursor of its direction. */
+.urd-preview .urd-edit-resize[data-edge="e"],
+.urd-preview .urd-edit-resize[data-edge="w"] {
+  top: 50%;
+  bottom: auto;
+  margin-top: -6px;
+  cursor: ew-resize;
+}
+
+.urd-preview .urd-edit-resize[data-edge="n"],
+.urd-preview .urd-edit-resize[data-edge="s"] {
+  left: 50%;
+  right: auto;
+  margin-left: -6px;
+  cursor: ns-resize;
+}
+
+.urd-preview .urd-edit-resize[data-edge="w"],
+.urd-preview .urd-edit-resize[data-edge="nw"],
+.urd-preview .urd-edit-resize[data-edge="sw"] {
+  right: auto;
+  left: -6px;
+}
+
+.urd-preview .urd-edit-resize[data-edge="n"],
+.urd-preview .urd-edit-resize[data-edge="ne"],
+.urd-preview .urd-edit-resize[data-edge="nw"] {
+  bottom: auto;
+  top: -6px;
+}
+
+.urd-preview .urd-edit-resize[data-edge="ne"],
+.urd-preview .urd-edit-resize[data-edge="sw"] {
+  cursor: nesw-resize;
+}
+
+.urd-preview .urd-edit-resize[data-edge="e"] { transform-origin: center right; }
+.urd-preview .urd-edit-resize[data-edge="w"] { transform-origin: center left; }
+.urd-preview .urd-edit-resize[data-edge="n"] { transform-origin: top center; }
+.urd-preview .urd-edit-resize[data-edge="s"] { transform-origin: bottom center; }
+.urd-preview .urd-edit-resize[data-edge="ne"] { transform-origin: top right; }
+.urd-preview .urd-edit-resize[data-edge="nw"] { transform-origin: top left; }
+.urd-preview .urd-edit-resize[data-edge="sw"] { transform-origin: bottom left; }
+
 /* A block whose height follows its content (ADR-0025): its handle changes the
    width only on the desktop, and a pull up or down stops at the content's edge,
    where a bar says why for as long as the pointer is held. The bar takes the
@@ -17651,11 +17696,13 @@ body.urd-mobile .urd-section-resize-top {
   cursor: text;
 }
 
-/* While editing, the hovered or selected block is raised visually to the top, so that
-   the handles can always be reached even if other blocks lie above it (z order).
-   The true layer order is shown when the block is deselected - and ALWAYS in Clean
-   view (chrome-off), which must be exactly what visitors see. */
-.urd-preview:not(.urd-chrome-off) .urd-editable:hover {
+/* While editing, the block under the pointer or the selected block is raised visually
+   to the top, so that the handles can always be reached even if other blocks lie above
+   it (z order). The raised one is the smallest block under the pointer (preview-edit.js
+   sets the class), so a small block over a larger one can be reached. The true layer
+   order is shown when the block is deselected - and ALWAYS in Clean view (chrome-off),
+   which must be exactly what visitors see. */
+.urd-preview:not(.urd-chrome-off) .urd-editable.urd-hover-top {
   z-index: 99998 !important;
 }
 

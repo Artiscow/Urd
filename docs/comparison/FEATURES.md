@@ -1887,7 +1887,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Z-order (front, back, forward, backward) | WE, WS, WH, HO, DU, SQ, FR, TI | Ctrl(+Shift)+↑/↓, Shift+↑/↓, Ctrl+[, z-index | Partial: to the front and to the back (toolbar, right-click, Ctrl+Shift+Up and Down) and a layer number; no one step forward or back | 0.7.10 canvas functions |
 | Nudge with the arrows (1 / 10 px) | WS, WE, WH, SQ, TI | Arrows; Shift ×10 | Has: the grid step, and 1 px with Shift | 0.7.10: weigh the convention |
 | Keyboard resize | SQ, RM, WH, FS | ⌘+arrows; ⌘⇧ symmetric; Alt+arrows | Missing | 0.7.10 canvas functions (C32) |
-| Resize modifiers | WS, FR, FS, SQ | Shift proportional, Alt from the centre, ignore constraints, lock aspect ratio | Partial: Shift keeps the ratio of images, video, shapes and icons (0.7.21.6) and Ctrl or Cmd frees the grid (0.7.26.3); one corner handle; no centre resize or ratio lock | 0.7.10 editor polish (resizing from every edge); 0.7.10 canvas functions |
+| Resize modifiers | WS, FR, FS, SQ | Shift proportional, Alt from the centre, ignore constraints, lock aspect ratio | Partial: Shift keeps the ratio of images, video, shapes and icons (0.7.21.6), Ctrl or Cmd frees the grid (0.7.26.3) and every edge and corner has a handle (0.7.10.2); no centre resize or ratio lock | 0.7.10 canvas functions |
 | Disable auto-docking while dragging | WS | Ctrl+drag or resize | n/a | - |
 | Rotate in increments | WE, WH, FS | Shift = 15°; Alt+arrows 1°/15° | Partial: the handle turns in 15° steps, and 1° with Shift, beside a number field; no rotation by keyboard | 0.7.10 canvas functions |
 | Axis-constrained drag | WS, WE, WH | Shift+drag | Has: Shift holds a move to one axis (0.7.26.3) | - |

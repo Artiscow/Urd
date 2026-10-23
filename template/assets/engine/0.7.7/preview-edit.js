@@ -614,7 +614,39 @@ function toggleLayoutPicker(host, section, grid) {
 let lastPointer = null;
 document.addEventListener('pointermove', (event) => {
   lastPointer = { x: event.clientX, y: event.clientY };
+  raiseSmallestUnder(event.clientX, event.clientY);
 }, { passive: true });
+
+/**
+ * The block raised under the pointer is the smallest one there, not the
+ * topmost, so a small block lying over a larger one can be reached. The
+ * class stands where :hover would in base.css; a block that is not under
+ * the pointer loses it, and the Clean view raises nothing.
+ */
+let raisedEl = null;
+let raiseFrame = 0;
+function raiseSmallestUnder(x, y) {
+  if (raiseFrame) return;
+  raiseFrame = requestAnimationFrame(() => {
+    raiseFrame = 0;
+    let best = null;
+    if (!document.body.classList.contains('urd-chrome-off')) {
+      let bestArea = Infinity;
+      for (const n of document.elementsFromPoint(x, y)) {
+        if (!(n instanceof HTMLElement) || !n.classList.contains('urd-editable')) continue;
+        const area = n.offsetWidth * n.offsetHeight;
+        if (area < bestArea) {
+          bestArea = area;
+          best = n;
+        }
+      }
+    }
+    if (best === raisedEl) return;
+    raisedEl?.classList.remove('urd-hover-top');
+    raisedEl = best;
+    best?.classList.add('urd-hover-top');
+  });
+}
 
 /**
  * Open a section's + New block menu, shared by double-click and slash: with
@@ -3914,12 +3946,28 @@ function enhanceBlock(el, block, section, grid, host) {
 
   const resizeHandle = document.createElement('div');
   resizeHandle.className = 'urd-edit-resize';
+  resizeHandle.dataset.edge = 'se';
   // The handle of a block that follows its content changes its width only
   // (ADR-0025), and says so; on a block whose size is its frame it says that
   // Shift keeps the ratio.
   resizeHandle.title = followsContent(block) ? ta('canvas.dragResizeWidth')
     : FIT_BY_WIDTH.has(block.type) ? ta('canvas.dragResizeRatio') : ta('canvas.dragResize');
   el.appendChild(resizeHandle);
+  // The other edges and corners take the same drag with the opposite edge
+  // held still, on the desktop frame; a block that follows its content gets
+  // the left and right edges only, since its height is the content's.
+  const edgeHandles = [];
+  if (!mobile) {
+    const edges = followsContent(block) ? ['e', 'w'] : ['n', 's', 'e', 'w', 'ne', 'sw', 'nw'];
+    for (const edge of edges) {
+      const h = document.createElement('div');
+      h.className = 'urd-edit-resize';
+      h.dataset.edge = edge;
+      h.title = resizeHandle.title;
+      el.appendChild(h);
+      edgeHandles.push(h);
+    }
+  }
 
   // Pinning is otherwise invisible until you scroll: a pin in the corner
   // shows that the block has "Pin on scroll" enabled. On mobile only
@@ -3935,6 +3983,7 @@ function enhanceBlock(el, block, section, grid, host) {
 
   wireDrag(moveHandle, 'move');
   wireDrag(resizeHandle, 'resize');
+  for (const h of edgeHandles) wireDrag(h, 'resize', { edge: { x: h.dataset.edge.includes('w') ? -1 : h.dataset.edge.includes('e') ? 1 : 0, y: h.dataset.edge.includes('n') ? -1 : h.dataset.edge.includes('s') ? 1 : 0 } });
   // The whole block surface can also be dragged directly (⠿ remains). A
   // threshold keeps clicks as clicks; editable text and handles are
   // exempt.
@@ -4264,6 +4313,10 @@ function enhanceBlock(el, block, section, grid, host) {
 
       const start = { x: event.clientX, y: event.clientY };
       let orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
+      // Which edges the resize moves: the corner handle both, an edge handle
+      // one, with the opposite edge held still, so a pull on the left or top
+      // moves the block's origin as well as its size.
+      const edge = kind === 'resize' ? (opts.edge ?? { x: 1, y: 1 }) : { x: 0, y: 0 };
       // A block that follows its content keeps its height under the resize
       // handle (ADR-0025): the box follows the content at the width being
       // dragged, and a pull up or down is stopped at the content's edge,
@@ -4497,7 +4550,15 @@ function enhanceBlock(el, block, section, grid, host) {
             collectTargets();
           }
         }
-        const w = hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX ? orig.w : clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x));
+        // The width grows with a pull outward on the edge dragged, up to the
+        // section's far edge on the right and the block's own right edge on
+        // the left, so the origin never crosses zero.
+        const wMax = edge.x < 0 ? r2(orig.x + orig.w) : r2(100 - orig.x);
+        const w = edge.x === 0 || (hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX) ? orig.w : clamp(snapPct(orig.w + edge.x * dx), r2(colStep), wMax);
+        const hFrom = (hv) => Math.max(4, hv);
+        const h = edge.y === 0 || hug ? orig.h : keepRatio ? hFrom(Math.round(w * ratio)) : hFrom(snapPx(orig.h + edge.y * dy));
+        // The top edge pulled: the origin follows the new height, held at the floor.
+        const yTop = edge.y < 0 ? Math.max(yMin, orig.y + orig.h - h) : orig.y;
         current = kind === 'move'
           ? {
               ...orig,
@@ -4509,10 +4570,12 @@ function enhanceBlock(el, block, section, grid, host) {
             }
           : {
               ...orig,
+              x: edge.x < 0 ? r2(orig.x + orig.w - w) : orig.x,
+              y: yTop,
               // A pull straight up or down on a block that follows its content
               // leaves its width as it is, unsnapped, so the release changes nothing.
               w,
-              h: hug ? orig.h : keepRatio ? Math.max(4, Math.round(w * ratio)) : Math.max(4, snapPx(orig.h + dy)),
+              h: edge.y < 0 ? orig.y + orig.h - yTop : h,
             };
         // Free = the smart guides are off too.
         if (!free) applyGuides();

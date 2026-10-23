@@ -28,6 +28,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.10.2 - The intuitiveness review, second stage: resize from every edge, the smallest block under the pointer, and the toolbar's hit boxes - 23 October 2026
+
+- A block could be resized from its bottom-right corner only. Every edge and corner now carries a handle on the desktop canvas, with the opposite edge held still, so a pull on the top or the left moves the block's origin with its size (`wireDrag` in preview-edit.js; the handles' places and cursors in base.css); a block that follows its content gets the left and right edges only. The eight shells restamped.
+- A small block lying over a larger one could not be selected, because the larger, hovered first, was raised above it. The block raised under the pointer is now the smallest one there (`raiseSmallestUnder` in preview-edit.js), in place of the :hover rule.
+- The toolbar's click boxes, said to register only on the upper half of the icons, register at the top, the middle and the bottom of every button in a headless check; the item is closed as found done.
+
 ### 0.7.10.1 - The intuitiveness review: the walk, its findings sorted, and two polish items - 23 October 2026
 
 - The whole editor was walked in a headless browser against the panel rules: the setup wizard, the top bar and the rail, the twelve panels with every group opened, the element menu of the twelve block kinds on the example pages, the canvas toolbar and the phone view, with a screenshot of each; and the editor's source was counted for labels without a tooltip (115 of 314), prose lines in panels and icon buttons without a name (26 in the Footer panel). Eleven findings stand as sub-items under 0.7.10 with a done-when each; the letterbox outside the canvas was found done.

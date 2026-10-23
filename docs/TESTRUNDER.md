@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.10.2): the canvas gestures of the review
+
+- [ ] Select an image block: eight handles show (the corners and the middles of the edges), each with the cursor of its direction; pull the top edge up: the block grows upward and keeps its bottom edge; pull the left edge out: it grows leftward and keeps its right edge; a corner pulls both; the handles keep their size at every zoom
+- [ ] Select an FAQ or a form block: only the left, right and bottom-right handles show, and a pull on the left edge changes the width alone
+- [ ] In the first section, pull a block's top edge above the section's top: it stops there
+- [ ] Lay a small button over a large text block that stands above it in the layer order: hovering the button raises it, a click selects the button and not the text, and Clean view shows the true order
+- [ ] The phone view: the corner handle alone, as before
+
 ### Test batch (0.7.10.1): the two polish items of the review
 
 - [ ] Drag a block's ⠿ handle down past the bottom of the view and hold: the page scrolls under it, the block stays under the pointer, and the drop lands where the pointer is; the same upward past the top; at the page's end the scroll stops
