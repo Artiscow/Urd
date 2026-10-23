@@ -337,6 +337,24 @@ From the question whether a link can point at a spot on a page. In Urd a link re
 
 **What Urd takes (0.7.27):** a name on any section or block beside a stable id on every block, the id kept as the stored target; one link editor with a page and a spot on it, a web address with nofollow and sponsored, email, phone and a file from `media/`, a new tab and a download; the offset under the menu through `scroll-padding-top` from its height; smooth scrolling only without reduced motion; and a warning in a field whose page or spot is gone. The cross-cutting settings Urd still lacks go to their places: a lock and a layer name in the 0.7.9 layers panel, box styles on more blocks in 0.7.9, elements shown only on the phone in 0.7.3, a hidden section or block in v0.8 AR-5, a scoped style per look in v0.8 OL-4, and any block or group of blocks as a link in v0.8 ER-G; a CSS class is not taken, since the class-based cascade is not adopted.
 
+## What a payment provider gives the optional layer (23 October 2026)
+
+A pass on the payment providers that fit Urd's optional layer (a function on the site, the provider's own page, the secrets at the host, no change to the CSP), read from each provider's own developer and help pages and held against the shop rules of 19 October and the countries of 20 October. The question was which providers to add beside Vipps MobilePay, and what each asks of the site owner.
+
+**The providers read:**
+- **Vipps MobilePay ePayment:** the Vipps and MobilePay apps in Norway, Denmark and Finland on the same servers, and a card page in Norway that the test environment lacks; a reservation of 180 days in Norway and 14 in Denmark and Finland, captured in the portal; no Apple Pay or Google Pay ([servers](https://developer.vippsmobilepay.com/docs/knowledge-base/servers/), [reserve and capture](https://developer.vippsmobilepay.com/docs/knowledge-base/reserve-and-capture/), [portal](https://developer.vippsmobilepay.com/docs/knowledge-base/portal/)).
+- **Stripe Checkout:** card, and Apple Pay and Google Pay that work on the hosted page «with no additional configuration», with Klarna, Link and the local methods switched on in the dashboard; a hold of 7 days on cards and 28 on Klarna, captured in the dashboard; sandboxes with test cards, and restricted keys recommended over the full secret key ([Apple Pay](https://docs.stripe.com/apple-pay?platform=web), [holds](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method), [keys](https://docs.stripe.com/keys)).
+- **PayPal:** the PayPal account, and a card without one where PayPal offers it, in 25 currencies with HUF, JPY and TWD in whole units; an authorisation valid 29 days but honoured for 3, captured later through the merchant's own server code; a sandbox with buyer accounts, and live credentials for a verified Business account ([authorisation](https://developer.paypal.com/docs/checkout/standard/customize/authorization/), [currencies](https://developer.paypal.com/api/rest/reference/currency-codes/), [production](https://developer.paypal.com/api/rest/production)).
+- **Not fitting:** Kustom Checkout (a frame by default, its hosted page by invitation), Swish (a certificate per merchant, held by a server), and Apple Pay or Google Pay as buttons of their own (a gateway's page gives them).
+
+**Four rules from the survey:**
+1. A hosted page per provider keeps the CSP as it is, and the card, the wallets and the local methods come with the provider's page, so the site adds providers, never methods.
+2. The provider's hold decides whether the money may wait: where the hold outlasts the shipping and the seller can capture in the provider's portal, it waits; where it does not (PayPal's 3 days), it is taken at the order.
+3. The return confirms only what is confirmed at once; a payment that settles over days needs the provider's later event.
+4. The currency is the site's, since every provider charges in the catalogue's currency, and some take only some currencies or whole units.
+
+**What Urd takes (23 October 2026):** milestone 0.7.28 and [ADR-0028](../adr/0028-payment-providers-in-the-optional-layer.md): Vipps MobilePay with its card page, Stripe Checkout and PayPal per checkout block, the site's currency, when Stripe takes the money, and the payment instructions as a choice.
+
 ## Sources
 
 Each list is the survey's own sources, as cited in its text, and belongs to the survey dated in its heading. The kind is marked after each link: (primary) vendor, official or standards documentation, (secondary) a third-party blog, tutorial or user forum, (code) read in source.
@@ -721,3 +739,20 @@ Each list is the survey's own sources, as cited in its text, and belongs to the 
 - [Silex: internal links](https://github.com/silexlabs/Silex/blob/1fe592f/editor/grapesjs/internal-links.ts) (code)
 - [Onlook: the editor's element ids](https://github.com/onlook-dev/onlook/blob/423e2e9/packages/constants/src/editor.ts) (code)
 - The settings catalogues of the eleven projects, with the commits read: [SETTINGS.md](SETTINGS.md#sources) (code)
+
+### Survey 23 October 2026 (payment providers)
+
+- [Vipps MobilePay: servers](https://developer.vippsmobilepay.com/docs/knowledge-base/servers/) (primary)
+- [Vipps MobilePay: reserve and capture](https://developer.vippsmobilepay.com/docs/knowledge-base/reserve-and-capture/) (primary)
+- [Vipps MobilePay: the business portal](https://developer.vippsmobilepay.com/docs/knowledge-base/portal/) (primary)
+- [Vipps MobilePay: freestanding card payments](https://developer.vippsmobilepay.com/docs/APIs/epayment-api/api-guide/features/freestanding-card-payments) (primary)
+- [Stripe: Apple Pay on the web](https://docs.stripe.com/apple-pay?platform=web) (primary)
+- [Stripe: place a hold on a payment method](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method) (primary)
+- [Stripe: API keys](https://docs.stripe.com/keys) (primary)
+- [Stripe: webhooks](https://docs.stripe.com/webhooks) (primary)
+- [Stripe: pricing in Norway](https://stripe.com/en-no/pricing) (primary)
+- [PayPal: authorize a payment and capture funds later](https://developer.paypal.com/docs/checkout/standard/customize/authorization/) (primary)
+- [PayPal: currency codes](https://developer.paypal.com/api/rest/reference/currency-codes/) (primary)
+- [PayPal: move your app to production](https://developer.paypal.com/api/rest/production) (primary)
+- [PayPal: merchant fees in Norway](https://www.paypal.com/no/webapps/mpp/merchant-fees) (primary)
+- [Kustom: supported methods](https://docs.kustom.co/checkout/surfaces/supported-methods) (primary)

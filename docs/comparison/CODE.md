@@ -42,6 +42,8 @@ Urd has by design hit the architecture the field is moving towards. Worth saying
 | [0023](../adr/0023-navigation-bar-sizing.md) | Navigation bar sizing |
 | [0024](../adr/0024-content-push-on-the-desktop-canvas.md) | Content push on the desktop canvas |
 | [0025](../adr/0025-the-sizing-model.md) | The sizing model: the dragged width, and a height that follows the content or is the block's own |
+| [0027](../adr/0027-a-shop-without-a-database.md) | A shop without a database: variants, published stock, shipping tables, codes and MVA on the payment layer |
+| [0028](../adr/0028-payment-providers-in-the-optional-layer.md) | Payment providers in the optional layer: Vipps MobilePay, Stripe and PayPal per checkout block |
 
 **Measured advantages.** Of the 30 pages from 15 builders measured on 11 October 2026 ([Part 3](#part-3-the-generated-site-measured)), Urd's demo was ahead of every other builder on four counts:
 

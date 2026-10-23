@@ -442,7 +442,7 @@ Urd: the collection block (ELEMENTS.md #14, #88, #252 and #254).
 
 In the code read, commerce lives outside these projects: the WooCommerce and SureCart blocks were not read. Spectra's SureCart product and checkout blocks carry only the shared WordPress supports, and Stackable's pricing box and price are containers of ordinary blocks, so no product or cart setting reaches two projects.
 
-Urd has product cards over a products collection (columns, a maximum count, a quick view, a badge, a picture on hover, size and colour choices; ELEMENTS.md #206), the basket as a button or an icon with a drawer (#228 to #230), and the checkout block (#232). The shop of v1.1 ([ADR-0027](../adr/0027-a-shop-without-a-database.md)) adds variants with their own price, published stock, shipping tables, discount codes and MVA (v1.1 SHOP-2 to SHOP-6).
+Urd has product cards over a products collection (columns, a maximum count, a quick view, a badge, a picture on hover, size and colour choices; ELEMENTS.md #206), the basket as a button or an icon with a drawer (#228 to #230), and the checkout block (#232) with its payment settings: Vipps, a card at Vipps or Stripe, PayPal, when Stripe takes the money, and payment instructions with a name and a text (0.7.28). The shop of v1.1 ([ADR-0027](../adr/0027-a-shop-without-a-database.md)) adds variants with their own price, published stock, shipping tables, discount codes and MVA (v1.1 SHOP-2 to SHOP-6).
 
 ## Sources
 

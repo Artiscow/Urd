@@ -28,6 +28,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.28.5 - Payment methods in the optional layer, fifth stage: the comparison recounted - 23 October 2026
+
+- The commerce rows still described a Vipps-only layer. Recounted against the delivered code: Express checkout and digital wallets, Local payment methods, Test orders and test mode, Stripe and PayPal, and Apple Pay and Google Pay are Has; Payment plans, Gateway breadth, ACH bank payments and the integrations row Stripe, PayPal, Square, Klarna are Partial with the missing part placed; Manual payment methods names the choice and the instruction after the order, with marking an order paid Not taken (no order store); the capture, receipt, confirmation, notification, webhook and event-payment rows name the providers; ELEMENTS #165, #214, #232 and #233 and the checkout's settings in SETTINGS.md follow.
+- C65 and C136 were marked Delivered in place in 0.7.0.68 but stayed in the open table and in Part 1's gaps. They now stand in the Closed table; C68 is delivered in part (Stripe and PayPal beside Vipps), with the rest Not taken.
+- SURVEYS.md gets «What a payment provider gives the optional layer (23 October 2026)» with its sources and four rules; CODE.md's ADR table lacked ADR-0027 and gets it with ADR-0028, and the ADR list in AGENTS.md names ADR-0028.
+- The roadmap's v0.7 shop bullet still said the layer would move to the ePayment API or to Kustom; both languages now name the move and the three providers.
+- SHOP-7 takes the later event of a payment that settles over days as the owner's notice, the place the ACH row names.
+
 ### 0.7.28.4 - Payment methods in the optional layer, fourth stage: the payment instructions as a choice - 23 October 2026
 
 - Two or more payment instructions stood as plain lines, so the buyer could not say which way they would pay and the order did not name one. They are now a radio group above the order summary, drawn like the form block's (the legend «Payment», each way to pay with its instruction under its name, none chosen in advance); «Confirm purchase» without a choice says «Choose how you will pay» and sends nothing. One instruction stays a line.
