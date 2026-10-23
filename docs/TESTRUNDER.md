@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.0.68): the payment layer on the ePayment API
+
+- [ ] On a deployed site with the test sales unit's keys and `VIPPS_API_BASE=https://apitest.vipps.no` (setup guide section 5): «Pay with Vipps» on the checkout page opens the Vipps MT app (a phone) or the number dialog (a desktop); the app asks the test user to share name, email and phone, then to approve; back on the checkout page the basket is empty and the status thanks the buyer by name
+- [ ] The same payment in the Vipps portal: reserved, not captured, with the order lines and the typed contact fields in the description; the receipt with the order lines in the test app; the capture in the portal goes through
+- [ ] A payment aborted in the app: the return keeps the basket and shows no thank-you; the `?ordered=` parameter is gone after the answer
+- [ ] The contact fields left empty: the Vipps payment still goes through, and the form's own «Confirm purchase» still asks for the name and the email
+- [ ] A seller with «Registered for VAT» ticked in the Site panel's contact details: the payment goes through without the receipt in the app (the lines stay in the description)
+- [ ] Without the four secrets: the button shows «Payment is not set up for this site yet» and the form checkout works; with the webhook registered and `VIPPS_WEBHOOK_SECRET` set, the registration's deliveries get 200 (seen in the portal's webhook log), and a POST to `/api/vipps/webhook` without the headers gets 401
+- [ ] The element menu's Vipps group: the label reads «Pay with Vipps» button, the tooltip names the setup guide and the capture in the portal; the currency field reads kr and is disabled while the button is on
+
 ### Test batch (0.7.13.21): the menu item options, the tucked menu and the link editor
 
 - [ ] Nav panel, Menu items: a closed row shows the name, the link's words and marks for a button look, a description and a submenu; a click on the row or its chevron opens the card, which slides open and shut without a flash; one card open at a time; the arrows on the head move the row; the head drags a top-level or submenu row (the dragged row stays dimmed in place, the clone shows where it lands); a second-level row has no grip and orders by its arrows

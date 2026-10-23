@@ -94,6 +94,7 @@ export default {
     'shop.payWithVipps': 'Pay with Vipps',
     'shop.seller': 'Seller',
     'shop.vippsUnavailable': 'Payment is not set up for this site yet.',
+    'shop.paidThanks': 'Thank you, {name}! The payment is confirmed, and the receipt is in the Vipps app.',
     'countdown.days': 'days',
     'countdown.hours': 'hours',
     'countdown.minutes': 'minutes',

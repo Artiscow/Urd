@@ -243,6 +243,7 @@ export default {
     'api.vippsUnreachable': 'Ii ožžon oktavuođa Vippsiin',
     'api.vippsUpstreamStatus': 'Vipps vástidii {status}',
     'api.vippsUnexpected': 'Vuordekeahtes vástádus Vippsis',
+    'api.webhookRejected': 'Dieđáhus Vippsis ii lean vuolláičállojuvvon registrerema suollemasvuođain',
     'api.geocodeUnexpected': 'Vuordekeahtes vástádus čujuhusohcamis',
     'api.placeNotFound': 'Ii gávdnan báikki. Geahččal dárkilet čujuhusa.',
     'api.updateBadTarget': 'Gustohis ulbmilveršuvdna {target}',

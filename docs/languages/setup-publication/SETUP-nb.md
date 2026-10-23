@@ -123,6 +123,32 @@ git push
 2. Brukernavnet ditt vises i topplinjen (⚠ foran betyr at du mangler `ALLOWED_LOGINS`-oppføring).
 3. Endre en tekst, trykk **Publiser**. Etter et øyeblikk ligger commiten i repoet, og Cloudflare deployer den (~1 minutt).
 
+## 5. Betalingslaget (valgfritt)
+
+Kasse-blokken kan ta betalingen med Vipps ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md)). Det er et valgfritt lag: uten det sender bestillingsskjemaet bestillingen på e-post eller til et endepunkt, som før. Laget trenger en Vipps MobilePay-avtale for betaling på nett (ePayment-API-et) og salgsstedets fire nøkler.
+
+1. I Vipps MobilePay-portalen for bedrifter, under **Utvikler**, åpner du salgsstedet og kopierer `client_id`, `client_secret`, `Ocp-Apim-Subscription-Key` og salgsstedsnummeret (MSN). Testsalgsstedet som følger med produktet har egne nøkler under samme overskrift.
+2. Legg dem inn i Cloudflare som i steg 3, alle fire som **Secret**: `VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET`, `VIPPS_SUBSCRIPTION_KEY` og `VIPPS_MSN`.
+3. Til testbetalingen bruker du testsalgsstedets nøkler og legger til én til, Type: Text, `VIPPS_API_BASE` med verdien `https://apitest.vipps.no`. Installer testappen Vipps MT (TestFlight på iOS, Google Play på Android etter å ha blitt med i Vipps' testgruppe; utviklersidene lenker til begge), og lag en testbruker under **Utvikler** i portalen. Appen logger inn med testbrukerens telefonnummer og fødselsnummer, og bekreftelseskoden er 0000 eller 000000. Din egen Vipps-konto kan ikke betale i testmiljøet.
+4. Deploy på nytt (som på slutten av steg 3). Åpne Kasse-blokkens meny i redigeringen, huk av «Betal med Vipps»-knapp, og publiser.
+5. Testbetalingen: legg et produkt i handlekurven, åpne kassesiden og trykk «Betal med Vipps». På en telefon åpner testappen seg; på en datamaskin spør Vipps etter testbrukerens nummer og sender forespørselen til appen. Appen ber først kjøperen dele navn, e-post og telefon med butikken, så om å godkjenne betalingen. Tilbake på kassesiden er handlekurven tom og siden takker kjøperen med navn; betalingen ligger i portalen med ordrelinjene i beskrivelsen, og kvitteringen ligger i appen. Når det virker, bytter du til produksjonsnøklene og fjerner `VIPPS_API_BASE`.
+6. Pengene er reservert, ikke flyttet. Når varen sendes, henter du betalingen i portalen; Vipps gir 180 dager, og reglene forbyr å hente før varen er klar. Avbryt i portalen frigir reservasjonen; en betaling som aldri hentes, frigir Vipps når fristen går ut.
+7. Valgfritt, til bestillingsvarslene butikken i v1.1 sender: registrer en webhook, så Vipps forteller nettstedet om betalingshendelser. Nettstedet lagrer ingenting ennå, men endepunktet `/api/vipps/webhook` er på plass og avviser hver levering som ikke er signert med registreringens hemmelighet. Registrer den med API-et, og legg `secret` fra svaret inn i Cloudflare som **Secret** `VIPPS_WEBHOOK_SECRET`:
+
+```bash
+# Tilgangstokenet (gyldig 24 timer i produksjon, 1 time i testmiljøet)
+curl -X POST https://api.vipps.no/accesstoken/get \
+  -H "client_id: <client_id>" -H "client_secret: <client_secret>" \
+  -H "Ocp-Apim-Subscription-Key: <abonnementsnøkkel>" -H "Merchant-Serial-Number: <MSN>"
+
+# Registreringen; secret fra svaret går inn i VIPPS_WEBHOOK_SECRET
+curl -X POST https://api.vipps.no/webhooks/v1/webhooks \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Ocp-Apim-Subscription-Key: <abonnementsnøkkel>" -H "Merchant-Serial-Number: <MSN>" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://<nettsted>/api/vipps/webhook","events":["epayments.payment.authorized.v1"]}'
+```
+
 ## Sikkerhetsmodellen (kort)
 
 - OAuth-tokenet byttes server-side og lagres i en httpOnly-cookie; det når aldri nettleser-JS.
@@ -153,4 +179,6 @@ Da kjører både siden, admin og functions på `http://localhost:8788`. Full OAu
 | «har ikke publiseringstilgang» (403) | Brukernavnet står ikke i `ALLOWED_LOGINS` (sjekk staving; feltet er case-ufølsomt) |
 | «Kunne ikke committe til GitHub» (502) | Tokenet mangler scope (privat repo trenger `repo`), eller grenen har flyttet seg |
 | Publisering lykkes, men siden endres ikke | `GITHUB_ROOT_DIR` mangler/feil: commiten havner utenfor nettsidens rotmappe (sjekk hvilke stier commiten endret på GitHub) |
+| «Betaling er ikke satt opp for denne siden ennå» på kassesiden | En av de fire Vipps-hemmelighetene mangler i Cloudflare, eller deployen er eldre enn hemmelighetene (steg 5) |
+| Vipps-betalingen feiler før appen åpner seg | `VIPPS_API_BASE` peker på testmiljøet med produksjonsnøkler, eller omvendt; nøklene og basen hører til samme miljø |
 | Commiten er riktig, men ingen deploy dukker opp | Git-webhooken glapp hos hosten (skjer av og til). Sett opp `DEPLOY_HOOK_URL` (variabel 9), så trigger publiseringen deployen selv |

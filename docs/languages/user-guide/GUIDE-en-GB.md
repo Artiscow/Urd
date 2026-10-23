@@ -441,6 +441,11 @@ payment with Vipps when the payment layer is on.
   order. «Show the seller» in the block's menu switches it off.
 - «Pay with Vipps» names the payment itself, a wording the EU Commission's
   guidance on the rule accepts.
+- With Vipps the buyer can leave the contact fields empty: the app asks them
+  to share the name, email and phone with you, and the receipt with the order
+  lines lands in the app. The money is reserved, not moved; you capture it in
+  the Vipps portal when the goods ship. The setup guide has the keys and a
+  test payment.
 
 ## Drafts and publishing
 

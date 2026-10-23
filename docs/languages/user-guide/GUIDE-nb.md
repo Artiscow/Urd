@@ -440,6 +440,10 @@ satt opp, eller som en betaling med Vipps når betalingslaget er slått på.
   selgeren» i blokkens meny skrur det av.
 - «Betal med Vipps» nevner selve betalingen, en ordlyd EU-kommisjonens
   veiledning om regelen godtar.
+- Med Vipps kan kjøperen la kontaktfeltene stå tomme: appen ber om å dele
+  navn, e-post og telefon med deg, og kvitteringen med ordrelinjene havner i
+  appen. Pengene er reservert, ikke flyttet; du henter dem i Vipps-portalen
+  når varen sendes. Oppsettsguiden har nøklene og en testbetaling.
 
 ## Utkast og publisering
 

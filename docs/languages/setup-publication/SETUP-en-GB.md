@@ -125,6 +125,32 @@ git push
 2. Your username appears in the top bar (a ⚠ in front means you are missing an `ALLOWED_LOGINS` entry).
 3. Change a text and press **Publish**. After a moment the commit is in the repo, and Cloudflare deploys it (~1 minute).
 
+## 5. The payment layer (optional)
+
+The Checkout block can take the payment with Vipps ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md)). It is an optional layer: without it the order form sends the order by email or to an endpoint, as before. The layer needs a Vipps MobilePay agreement for payment on the web (the ePayment API) and the four keys of the sales unit.
+
+1. In the Vipps MobilePay business portal, under **Developer**, open the sales unit and copy its `client_id`, `client_secret`, `Ocp-Apim-Subscription-Key` and the Merchant Serial Number (MSN). The test sales unit that comes with the product has keys of its own, under the same heading.
+2. Add them in Cloudflare as in step 3, all four as **Secret**: `VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET`, `VIPPS_SUBSCRIPTION_KEY` and `VIPPS_MSN`.
+3. For the test payment, use the test sales unit's keys and add one more, Type: Text, `VIPPS_API_BASE` with the value `https://apitest.vipps.no`. Install the Vipps MT test app (TestFlight on iOS, Google Play on Android after joining Vipps's test group; the developer pages link both), and make a test user under **Developer** in the portal. The app signs in with the test user's phone number and identity number, and the confirmation code is 0000 or 000000. Your own Vipps account cannot pay in the test environment.
+4. Redeploy (as at the end of step 3). In the editor, open the Checkout block's menu, tick the «Pay with Vipps» button, and publish.
+5. The test payment: put a product in the basket, open the checkout page and press «Pay with Vipps». On a phone the test app opens; on a desktop Vipps asks for the test user's number and sends the request to the app. The app first asks the buyer to share the name, email and phone with the shop, then to approve the payment. Back on the checkout page the basket is empty and the page thanks the buyer by name; the payment is in the portal with the order lines in its description, and the receipt is in the app. When it works, swap in the production keys and remove `VIPPS_API_BASE`.
+6. The money is reserved, not moved. When the goods ship, capture the payment in the portal; Vipps allows 180 days, and the rules forbid a capture before the goods are ready. Cancelling in the portal releases the reservation; a payment never captured is released by Vipps when the window ends.
+7. Optional, for the order notices the shop of v1.1 sends: register a webhook, so Vipps tells the site about payment events. The site stores nothing yet, but the endpoint `/api/vipps/webhook` is in place and refuses every delivery that is not signed with the registration's secret. Register it with the API, and put the `secret` the answer returns in Cloudflare as **Secret** `VIPPS_WEBHOOK_SECRET`:
+
+```bash
+# The access token (valid 24 hours in production, 1 hour in the test environment)
+curl -X POST https://api.vipps.no/accesstoken/get \
+  -H "client_id: <client_id>" -H "client_secret: <client_secret>" \
+  -H "Ocp-Apim-Subscription-Key: <subscription key>" -H "Merchant-Serial-Number: <MSN>"
+
+# The registration; the answer's secret goes into VIPPS_WEBHOOK_SECRET
+curl -X POST https://api.vipps.no/webhooks/v1/webhooks \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Ocp-Apim-Subscription-Key: <subscription key>" -H "Merchant-Serial-Number: <MSN>" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://<site>/api/vipps/webhook","events":["epayments.payment.authorized.v1"]}'
+```
+
 ## The security model (in brief)
 
 - The OAuth token is exchanged server-side and stored in an httpOnly cookie; it never reaches browser JS.
@@ -155,4 +181,6 @@ Then the site, admin and functions all run on `http://localhost:8788`. Full OAut
 | «har ikke publiseringstilgang» (403) | The username is not in `ALLOWED_LOGINS` (check the spelling; the field is case-insensitive) |
 | «Kunne ikke committe til GitHub» (502) | The token lacks scope (a private repo needs `repo`), or the branch has moved |
 | Publishing succeeds, but the site does not change | `GITHUB_ROOT_DIR` is missing/wrong: the commit lands outside the website root folder (check which paths the commit changed on GitHub) |
+| «Payment is not set up for this site yet» on the checkout page | One of the four Vipps secrets is missing in Cloudflare, or the deploy is older than the secrets (step 5) |
+| The Vipps payment fails before the app opens | `VIPPS_API_BASE` points at the test environment with production keys, or the other way round; the keys and the base belong to the same environment |
 | The commit is correct, but no deploy appears | The git webhook was missed by the host (happens now and then). Set up `DEPLOY_HOOK_URL` (variable 9), and publishing triggers the deploy itself |

@@ -1,9 +1,10 @@
 /**
- * Pure logic for the optional Vipps Checkout payment layer (ADR-0020): reading
- * the configuration, validating the payload, converting to øre against the
- * git-owned catalogue, and the session body for checkout/v3. No fetch here;
- * the endpoint (api/vipps/checkout.js) handles the network. Tested in
- * tests/vipps.test.mjs.
+ * Pure logic for the optional payment layer on the Vipps MobilePay ePayment
+ * API (ADR-0020): reading the configuration, validating the payload,
+ * converting to øre against the git-owned catalogue, the payment body for
+ * epayment/v1, the reading of a payment's state, the access-token cache and
+ * the webhook signature check. No fetch here; the endpoints under
+ * api/vipps/ handle the network. Tested in tests/vipps.test.mjs.
  *
  * The amount is ALWAYS recomputed from the catalogue: the basket lives with
  * the visitor, so anything the client sends may have been tampered with.
@@ -22,6 +23,8 @@ export function vippsConfig(env) {
     subscriptionKey,
     msn,
     apiBase: env.VIPPS_API_BASE || 'https://api.vipps.no',
+    // The secret the webhook registration answered with; without it the webhook endpoint takes nothing.
+    webhookSecret: env.VIPPS_WEBHOOK_SECRET || '',
   };
 }
 
@@ -70,6 +73,24 @@ export function validOrderPayload(payload) {
   };
 }
 
+/** The products by id across the catalogues of kind products; the first catalogue that names an id wins. */
+function productMap(catalogs) {
+  const products = new Map();
+  for (const catalog of catalogs) {
+    if (catalog?.kind !== 'products') continue;
+    for (const entry of catalog.entries ?? []) {
+      if (entry?.id && !products.has(entry.id)) products.set(entry.id, entry);
+    }
+  }
+  return products;
+}
+
+/** A product's price in øre, or null when it has none. */
+function priceOre(entry) {
+  const price = Number(entry?.price);
+  return Number.isFinite(price) && price >= 0 ? Math.round(price * 100) : null;
+}
+
 /**
  * Computes the order total in øre against the catalogues (kind products). An
  * unknown id or a product without a price gives null (the order is rejected);
@@ -79,26 +100,17 @@ export function validOrderPayload(payload) {
  * @returns {number|null}
  */
 export function orderAmountOre(order, catalogs) {
-  const prices = new Map();
-  for (const catalog of catalogs) {
-    if (catalog?.kind !== 'products') continue;
-    for (const entry of catalog.entries ?? []) {
-      const price = Number(entry?.price);
-      if (entry?.id && Number.isFinite(price) && price >= 0 && !prices.has(entry.id)) {
-        prices.set(entry.id, price);
-      }
-    }
-  }
+  const products = productMap(catalogs);
   let sum = 0;
   for (const line of order) {
-    const price = prices.get(line.id);
+    const price = priceOre(products.get(line.id));
     if (price == null) return null;
-    sum += Math.round(price * 100) * line.qty;
+    sum += price * line.qty;
   }
   return sum;
 }
 
-/** Session reference in the Vipps form [a-zA-Z0-9-]{8,50}. */
+/** Payment reference in the ePayment form [a-zA-Z0-9-]{8,64}, unique per sales unit. */
 export function makeReference() {
   const bytes = crypto.getRandomValues(new Uint8Array(12));
   const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -118,49 +130,189 @@ export function isReference(value) {
  * @returns {boolean}
  */
 export function validVariants(order, catalogs) {
-  const choices = new Map();
-  for (const catalog of catalogs) {
-    if (catalog?.kind !== 'products') continue;
-    for (const entry of catalog.entries ?? []) {
-      if (!entry?.id || choices.has(entry.id)) continue;
-      choices.set(entry.id, {
-        sizes: (Array.isArray(entry.sizes) ? entry.sizes : []).map(String),
-        colors: (Array.isArray(entry.colors) ? entry.colors : []).map((c) => String(c?.name ?? '')).filter(Boolean),
-      });
-    }
-  }
+  const products = productMap(catalogs);
   for (const line of order) {
     if (!line.variant) continue;
-    const own = choices.get(line.id);
-    if (!own) return false;
-    const labels = new Set([...own.sizes, ...own.colors]);
-    for (const size of own.sizes) for (const color of own.colors) labels.add(`${size} · ${color}`);
+    const entry = products.get(line.id);
+    if (!entry) return false;
+    const sizes = (Array.isArray(entry.sizes) ? entry.sizes : []).map(String);
+    const colors = (Array.isArray(entry.colors) ? entry.colors : []).map((c) => String(c?.name ?? '')).filter(Boolean);
+    const labels = new Set([...sizes, ...colors]);
+    for (const size of sizes) for (const color of colors) labels.add(`${size} · ${color}`);
     if (!labels.has(line.variant)) return false;
   }
   return true;
 }
 
+/** The profile the payment asks the buyer to share in the app: what the order form asks for, so the fields can be left empty. */
+export const PROFILE_SCOPE = 'name email phoneNumber';
+
 /**
- * The body for POST {apiBase}/checkout/v3/session. The order lines and the
- * contact fields ride along as the description, so the order can be read in
- * the Vipps portal; the site stores nothing itself (ADR-0020).
+ * The order lines for the receipt in the buyer's app, in øre, with the tax
+ * fields at zero: the receipt is sent only for a seller who is not registered
+ * for VAT (buildPayment leaves it out otherwise), and the VAT lines come with
+ * the shop of v1.1 (ADR-0027). The name is the product's title with the
+ * variant, the id the catalogue id.
+ * @param {Array<{id: string, qty: number, variant?: string}>} order Cleaned order
+ * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
+ * @returns {Array<object>|null} null when a line has no priced product
  */
-export function buildSession({ amountOre, reference, order, contact, origin, returnPath, callbackToken }) {
+export function receiptLines(order, catalogs) {
+  const products = productMap(catalogs);
+  const lines = [];
+  for (const line of order) {
+    const entry = products.get(line.id);
+    const unit = priceOre(entry);
+    if (unit == null) return null;
+    const total = unit * line.qty;
+    const title = String(entry.title ?? line.id).trim() || line.id;
+    lines.push({
+      name: (line.variant ? `${title} (${line.variant})` : title).slice(0, 2048),
+      id: line.id,
+      totalAmount: total,
+      totalAmountExcludingTax: total,
+      totalTaxAmount: 0,
+      taxRate: 0,
+      unitInfo: { unitPrice: unit, quantity: String(line.qty), quantityUnit: 'PCS' },
+    });
+  }
+  return lines;
+}
+
+/**
+ * The body for POST {apiBase}/epayment/v1/payments: a wallet payment through
+ * the web redirect, reserved now and captured by the seller when the goods
+ * ship. The order lines and the typed contact fields ride along as the
+ * description, so the order can be read in the Vipps portal; the receipt
+ * carries the lines into the buyer's app when the seller sends one; the
+ * profile scope asks the app for the contact details. The site stores
+ * nothing itself (ADR-0020).
+ * @param {object} args
+ * @param {Array<object>|null} [args.receipt] The lines from receiptLines, or null for no receipt
+ */
+export function buildPayment({ amountOre, reference, order, contact, origin, returnPath, receipt = null }) {
   const lines = order
     .map((line) => `${line.qty} x ${line.id}${line.variant ? ` (${line.variant})` : ''}`)
     .join(', ');
   const who = [contact.name, contact.email, contact.phone].filter(Boolean).join(' / ');
-  return {
-    merchantInfo: {
-      callbackUrl: `${origin}/api/vipps/callback`,
-      // The reference travels with the return, so the page can ask the session endpoint whether this session was paid.
-      returnUrl: `${origin}${returnPath ?? '/'}?ordered=${reference}`,
-      callbackAuthorizationToken: callbackToken,
-    },
-    transaction: {
-      amount: { value: amountOre, currency: 'NOK' },
-      reference,
-      paymentDescription: `${lines}${who ? ` - ${who}` : ''}`.slice(0, 100),
-    },
+  // The description holds at most 100 characters; an order line alone is past its minimum of 3.
+  const paymentDescription = `${lines}${who ? ` - ${who}` : ''}`.slice(0, 100);
+  const body = {
+    amount: { currency: 'NOK', value: amountOre },
+    paymentMethod: { type: 'WALLET' },
+    reference,
+    userFlow: 'WEB_REDIRECT',
+    // The reference travels with the return, so the page can ask the session endpoint whether this payment went through.
+    returnUrl: `${origin}${returnPath ?? '/'}?ordered=${reference}`,
+    paymentDescription,
+    profile: { scope: PROFILE_SCOPE },
   };
+  if (receipt?.length) body.receipt = { orderLines: receipt, bottomLine: { currency: 'NOK' } };
+  return body;
+}
+
+/** The payment states of epayment/v1 in which the buyer may still be paying. */
+export const OPEN_STATES = ['CREATED'];
+
+/**
+ * Reads what the checkout page needs from GET {apiBase}/epayment/v1/payments/{reference}:
+ * whether the money is reserved, the state word, and the buyer's shared
+ * contact details for the receipt on the page. The state arrives as a word,
+ * or as a list whose first entry is the current one.
+ * @returns {{paid: boolean, state: string, buyer: {name: string, email: string, phone: string}}|null} null for an answer without a state
+ */
+export function paymentSummary(payment) {
+  const raw = Array.isArray(payment?.state) ? payment.state[0] : payment?.state;
+  const state = typeof raw === 'string' ? raw : '';
+  if (!state) return null;
+  const details = payment.userDetails && typeof payment.userDetails === 'object' ? payment.userDetails : {};
+  const field = (value) => String(value ?? '').slice(0, 200).trim();
+  const name = [field(details.firstName), field(details.lastName)].filter(Boolean).join(' ');
+  return {
+    paid: state === 'AUTHORIZED',
+    state,
+    buyer: { name, email: field(details.email), phone: field(details.mobileNumber) },
+  };
+}
+
+/** How long before its expiry a cached access token is dropped, in seconds. */
+const TOKEN_MARGIN = 60;
+
+/**
+ * The access token to keep from an answer of POST {apiBase}/accesstoken/get, with the
+ * time it may be used until. The token is valid 24 hours in production and
+ * 1 hour in the test environment; the answer says which.
+ * @param {{access_token?: string, expires_on?: string|number, expires_in?: string|number}} answer
+ * @param {number} now Unix seconds
+ * @returns {{token: string, until: number}|null}
+ */
+export function tokenFromAnswer(answer, now) {
+  const token = typeof answer?.access_token === 'string' ? answer.access_token : '';
+  if (!token) return null;
+  const on = Number(answer.expires_on);
+  const within = Number(answer.expires_in);
+  const until = Number.isFinite(on) && on > now ? on : Number.isFinite(within) && within > 0 ? now + within : now + 300;
+  return { token, until: until - TOKEN_MARGIN };
+}
+
+/** Whether a cached token may still be sent. */
+export function tokenFresh(cached, now) {
+  return Boolean(cached?.token) && cached.until > now;
+}
+
+const encoder = new TextEncoder();
+
+/** Base64 of a byte buffer. */
+function base64(bytes) {
+  let binary = '';
+  for (const byte of new Uint8Array(bytes)) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+/**
+ * The signature a webhook delivery must carry (the Webhooks API's request
+ * authentication): base64 of HMAC-SHA256 over «POST\n<path and query>\n<date>;<host>;<body hash>»,
+ * keyed with the registration's secret, where the body hash is base64 of SHA-256 over the body.
+ * @param {{method?: string, pathAndQuery: string, date: string, host: string, body: string}} delivery
+ * @param {string} secret
+ * @returns {Promise<{contentHash: string, signature: string}>}
+ */
+export async function webhookSignature({ method = 'POST', pathAndQuery, date, host, body }, secret) {
+  const contentHash = base64(await crypto.subtle.digest('SHA-256', encoder.encode(body)));
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const toSign = `${method}\n${pathAndQuery}\n${date};${host};${contentHash}`;
+  const signature = base64(await crypto.subtle.sign('HMAC', key, encoder.encode(toSign)));
+  return { contentHash, signature };
+}
+
+/** The signature in an Authorization header of the webhook form, or '' for any other header. */
+export function signatureOf(authorization) {
+  const match = /^HMAC-SHA256 SignedHeaders=x-ms-date;host;x-ms-content-sha256&Signature=([A-Za-z0-9+/=]+)$/.exec(String(authorization ?? ''));
+  return match ? match[1] : '';
+}
+
+/** Constant-time comparison of two short strings. */
+function sameText(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/**
+ * Whether a webhook delivery is signed by the registration's secret: the body
+ * hash in x-ms-content-sha256 must be the body's, and the signature in the
+ * Authorization header must be the one webhookSignature computes.
+ * @param {{method: string, pathAndQuery: string, host: string, headers: {get(name: string): string|null}, body: string}} delivery
+ * @param {string} secret
+ * @returns {Promise<boolean>}
+ */
+export async function verifyWebhook({ method, pathAndQuery, host, headers, body }, secret) {
+  if (!secret) return false;
+  const date = headers.get('x-ms-date') ?? '';
+  const claimedHash = headers.get('x-ms-content-sha256') ?? '';
+  const claimed = signatureOf(headers.get('authorization'));
+  if (!date || !claimedHash || !claimed) return false;
+  const { contentHash, signature } = await webhookSignature({ method, pathAndQuery, date, host, body }, secret);
+  return sameText(contentHash, claimedHash) && sameText(signature, claimed);
 }

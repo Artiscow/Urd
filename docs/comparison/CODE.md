@@ -36,7 +36,7 @@ Urd has by design hit the architecture the field is moving towards. Worth saying
 | [0017](../adr/0017-ai-via-local-mcp-server.md) | Optional AI integration via a local MCP server |
 | [0018](../adr/0018-bound-content-width.md) | Bound content width |
 | [0019](../adr/0019-synced-mobile-model.md) | Synced mobile model per block (the row grid) |
-| [0020](../adr/0020-optional-payment-layer-vipps-checkout.md) | Optional payment layer via Vipps Checkout (hosted redirect) |
+| [0020](../adr/0020-optional-payment-layer-vipps-checkout.md) | Optional payment layer via the Vipps MobilePay ePayment API (hosted redirect) |
 | [0021](../adr/0021-english-code-text-and-contract-identifiers.md) | English code text and contract identifiers |
 | [0022](../adr/0022-english-canonical-norwegian-secondary.md) | English as the canonical language, Norwegian as secondary |
 | [0023](../adr/0023-navigation-bar-sizing.md) | Navigation bar sizing |

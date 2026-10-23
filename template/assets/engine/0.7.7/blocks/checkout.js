@@ -155,7 +155,8 @@ export const checkoutBlock = {
 
     // The optional payment layer (ADR-0020): the button sends the basket to
     // the site's own function, which recomputes the total from the catalogue
-    // and answers with the Vipps session URL; payment happens at Vipps.
+    // and answers with the address at Vipps; the payment happens there, and
+    // the contact fields may stay empty, since the app shares them.
     if (props.vippsCheckout) {
       const pay = el2('button', 'urd-checkout-vippspay', t('shop.payWithVipps'));
       pay.type = 'button';
@@ -186,7 +187,7 @@ export const checkoutBlock = {
           });
           const data = await res.json().catch(() => null);
           if (res.ok && data?.url) {
-            // The session's reference is kept for the return, which asks whether this session was paid.
+            // The payment's reference is kept for the return, which asks whether this payment went through.
             try { sessionStorage.setItem('urd-vipps-reference', String(data.reference ?? '')); } catch { /* no storage: the basket then stays after the payment */ }
             location.href = data.url;
             return;
@@ -200,8 +201,8 @@ export const checkoutBlock = {
       buttons.appendChild(pay);
     }
 
-    // Return from payment (?ordered=<reference>): the basket is emptied and the buyer thanked only when the reference is the one this browser started and the site's session endpoint says the session was paid, so neither a shared address nor a cancelled payment empties a basket.
-    // The parameter is cleaned away once the session is settled, so a refresh does not ask again; while the answer is still open it stays, so a refresh asks once more.
+    // Return from payment (?ordered=<reference>): the basket is emptied and the buyer thanked only when the reference is the one this browser started and the site's session endpoint says the payment is reserved, so neither a shared address nor a cancelled payment empties a basket.
+    // The parameter is cleaned away once the payment is settled, so a refresh does not ask again; while the answer is still open it stays, so a refresh asks once more.
     const ordered = new URLSearchParams(location.search).get('ordered');
     if (props.vippsCheckout && !ctx.preview && ordered !== null) {
       const settle = () => {
@@ -212,17 +213,19 @@ export const checkoutBlock = {
       let started = '';
       try { started = sessionStorage.getItem('urd-vipps-reference') ?? ''; } catch { /* no storage */ }
       if (started && ordered === started && /^urd-[0-9a-f]{24}$/.test(ordered)) {
-        // Vipps may send the buyer back before the session is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
+        // Vipps may send the buyer back before the payment is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
         const ask = async (left) => {
           const data = await fetch(`/api/vipps/session?reference=${encodeURIComponent(ordered)}`).then((res) => (res.ok ? res.json() : null)).catch(() => null);
           if (data?.paid) {
             writeCart([]);
-            setStatus(t('shop.orderSent'), false);
+            // The buyer who shared the profile in the app is thanked by name; the receipt with the order lines sits in the app.
+            const name = String(data.buyer?.name ?? '').trim();
+            setStatus(name ? t('shop.paidThanks', { name }) : t('shop.orderSent'), false);
             try { sessionStorage.removeItem('urd-vipps-reference'); } catch { /* no storage */ }
             settle();
             return;
           }
-          const open = !data || ['SessionCreated', 'PaymentInitiated'].includes(data.state);
+          const open = !data || data.state === 'CREATED';
           if (!open) settle();
           else if (left > 0) setTimeout(() => ask(left - 1), 2000);
         };

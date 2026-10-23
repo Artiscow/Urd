@@ -97,6 +97,7 @@ export default {
     'shop.payWithVipps': 'Betal med Vipps',
     'shop.seller': 'Selger',
     'shop.vippsUnavailable': 'Betaling er ikke satt opp for denne siden ennå.',
+    'shop.paidThanks': 'Takk, {name}! Betalingen er bekreftet, og kvitteringen ligger i Vipps-appen.',
     'countdown.days': 'dager',
     'countdown.hours': 'timer',
     'countdown.minutes': 'minutter',

@@ -317,6 +317,7 @@ export default {
     'api.vippsUnreachable': 'Fekk ikkje kontakt med Vipps',
     'api.vippsUpstreamStatus': 'Vipps svarte {status}',
     'api.vippsUnexpected': 'Uventa svar frå Vipps',
+    'api.webhookRejected': 'Varselet frå Vipps var ikkje signert med løyndomen til registreringa',
     'api.geocodeUnexpected': 'Uventa svar frå adressesøket',
     'api.placeNotFound': 'Fann ikkje staden. Prøv ei meir nøyaktig adresse.',
     'api.updateBadTarget': 'Ugyldig målversjon {target}',

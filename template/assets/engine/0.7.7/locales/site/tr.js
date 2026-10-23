@@ -93,6 +93,7 @@ export default {
     'shop.payWithVipps': 'Vipps ile öde',
     'shop.seller': 'Satıcı',
     'shop.vippsUnavailable': 'Bu site için ödeme henüz kurulmadı.',
+    'shop.paidThanks': 'Teşekkürler, {name}! Ödeme onaylandı ve makbuz Vipps uygulamasında.',
     'countdown.days': 'gün',
     'countdown.hours': 'saat',
     'countdown.minutes': 'dakika',

@@ -14,7 +14,7 @@ Four limits frame the answer:
 - The host's free plan: 500 builds a month, and a Pages Function cannot send email itself.
 - Norwegian law: prices include every charge and shipping is shown before the order (prisopplysningsforskriften § 3), the paying button must read as an order with an obligation to pay and a confirmation on a durable medium is owed (angrerettloven §§ 16 and 18), the provider's information including the organisation number (ehandelsloven § 8), a seller not registered for MVA may not write «inkl. mva» (merverdiavgiftsloven § 15-11), and a reduced price shows the lowest price of the previous 30 days (prisopplysningsforskriften § 9a).
 
-The payment provider itself is moving: Vipps Checkout ends on 30 April 2027 (the URGENT item in BACKLOG). This ADR names what the shop needs from the payment layer, not which provider gives it.
+The payment layer moved from Vipps Checkout, which ends on 30 April 2027, to the Vipps MobilePay ePayment API on 23 October 2026 ([ADR-0020](0020-optional-payment-layer-vipps-checkout.md)). This ADR names what the shop needs from the payment layer, not which provider gives it.
 
 ## Decision
 
