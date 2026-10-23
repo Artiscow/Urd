@@ -27,6 +27,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] The checkout page opened with `?ordered=1`, or with the return address of someone else's payment, leaves the basket as it was and shows no message; the parameter is gone from the address
 - [ ] A basket edited in the browser's storage with a variant the product does not have («XL · Lilla» on a product with S, M and Rød, Blå): the Vipps button shows the could-not-send message and no session is made; a real variant pays as before, and the receipt in the Vipps portal shows it
 - [ ] Local development without functions: a return with `?ordered=<reference>` leaves the basket as it was, with no error shown to the visitor
+- [ ] A paid return where the site's function fails to answer at first (the network panel blocking `/api/vipps/session` for the first request): the address keeps `?ordered=…`, the page asks again within a few seconds, and the basket empties once the function answers; a reload while the answer is open asks once more
 
 ### Test batch (0.7.0.64): the calendar feed parser
 

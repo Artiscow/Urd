@@ -201,27 +201,34 @@ export const checkoutBlock = {
     }
 
     // Return from payment (?ordered=<reference>): the basket is emptied and the buyer thanked only when the reference is the one this browser started and the site's session endpoint says the session was paid, so neither a shared address nor a cancelled payment empties a basket.
-    // The parameter is cleaned away so a refresh does not ask again.
+    // The parameter is cleaned away once the session is settled, so a refresh does not ask again; while the answer is still open it stays, so a refresh asks once more.
     const ordered = new URLSearchParams(location.search).get('ordered');
     if (props.vippsCheckout && !ctx.preview && ordered !== null) {
-      const url = new URL(location.href);
-      url.searchParams.delete('ordered');
-      history.replaceState(null, '', url);
+      const settle = () => {
+        const url = new URL(location.href);
+        url.searchParams.delete('ordered');
+        history.replaceState(null, '', url);
+      };
       let started = '';
       try { started = sessionStorage.getItem('urd-vipps-reference') ?? ''; } catch { /* no storage */ }
       if (started && ordered === started && /^urd-[0-9a-f]{24}$/.test(ordered)) {
-        // Vipps may send the buyer back before the session is settled, so the page asks a few times while it is still being paid.
+        // Vipps may send the buyer back before the session is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
         const ask = async (left) => {
-          const data = await fetch(`/api/vipps/session?reference=${encodeURIComponent(ordered)}`).then((res) => (res.ok ? res.json() : null));
+          const data = await fetch(`/api/vipps/session?reference=${encodeURIComponent(ordered)}`).then((res) => (res.ok ? res.json() : null)).catch(() => null);
           if (data?.paid) {
             writeCart([]);
             setStatus(t('shop.orderSent'), false);
             try { sessionStorage.removeItem('urd-vipps-reference'); } catch { /* no storage */ }
+            settle();
             return;
           }
-          if (left > 0 && ['SessionCreated', 'PaymentInitiated'].includes(data?.state)) setTimeout(() => ask(left - 1).catch(() => {}), 2000);
+          const open = !data || ['SessionCreated', 'PaymentInitiated'].includes(data.state);
+          if (!open) settle();
+          else if (left > 0) setTimeout(() => ask(left - 1), 2000);
         };
-        ask(5).catch(() => {});
+        ask(5);
+      } else {
+        settle();
       }
     }
 

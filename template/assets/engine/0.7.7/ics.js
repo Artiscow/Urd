@@ -718,8 +718,8 @@ export function expandEvents(events, { from = Date.now(), to, max = 300, near = 
       seen.add(occurrenceMs);
       if (exdateMs.has(occurrenceMs)) continue;
       pushAt(occurrenceMs, true);
-      // Enough of a rule: twice the cap in all, or, with a `near`, the cap of occurrences from `near` on.
-      if (near == null ? out.length >= max * 2 : occurrenceMs >= nearMs && ++coming >= max) break;
+      // Enough of a rule: twice the cap in all, or, with a `near`, the cap of occurrences that reach `near`, counted as the keep counts them.
+      if (near == null ? out.length >= max * 2 : endAfter(occurrenceMs, length) >= nearMs && ++coming >= max) break;
     }
     pushExtra();
   }

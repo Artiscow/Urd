@@ -28,6 +28,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.63-67p - Push preparation: the bug list taken in five rounds - 23 October 2026
+
+- The review of the whole span found no rule broken. Two findings were fixed: on the return from Vipps the page stripped `?ordered` before its first ask and gave up when that ask failed (a cold function, a transient error), so a paid buyer could keep a full basket with no way back; the parameter now stays until the session is settled, a failed ask is asked again a few times, and a refresh asks once more (`blocks/checkout.js`). And `expandEvents` counted a rule's coming occurrences by their start while keeping them by their end, so an event straddling `near` was counted twice over at the cap; the count follows the keep (`ics.js`).
+- Noted, no change: the session endpoint, like the checkout's, spends the merchant's Vipps requests for any well-formed reference, which the 96 random bits make guessable by no one but a hammering client could burn; a series under a feed's own VTIMEZONE is written in UTC with the feed's weekday rule, which can shift a weekday near midnight in the importing app; the return flow has no test beyond the test batch, since it needs the browser, the function and the storage together.
+- The first review of the span stopped on a session limit after the tests had run, and was run again from the start.
+
 ### 0.7.0.67 - The bug list taken, fifth round: the footer designs in the design picker, the calendar picker's own events, the spell check, and the nav fields - 22 October 2026
 
 - The calendar's design picker previewed every design with the sample events, whatever feed the block had. The preview draws the block's own feeds, with the sample only while it has none (`design-sources.js`).
