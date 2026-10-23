@@ -21,6 +21,8 @@ class StubElement {
     this.isConnected = true;
     this.ownText = '';
     this.attributes = {};
+    this.value = '';
+    this.listeners = {};
     this.classList = { toggle() {} };
   }
 
@@ -37,30 +39,35 @@ class StubElement {
 
   setAttribute(name, value) { this.attributes[name] = String(value); }
 
-  addEventListener() {}
+  addEventListener(type, fn) { this.listeners[type] = fn; }
 }
 
 /** What this tab remembers between renders: the last order's record. */
 const session = new Map();
 
-/** Renders the block over a basket and returns its form. */
-function renderCheckout(cart, props, site, preview = false) {
+/** The page globals the block reads, over a basket; the returned function takes them away again. */
+function holdGlobals(cart) {
   const store = new Map([['urd-cart', JSON.stringify(cart)]]);
   const globals = {
     document: { createElement: (tag) => new StubElement(tag), addEventListener() {} },
     window: { addEventListener() {} },
-    location: { search: '', href: 'https://example.org/checkout' },
+    location: { search: '', href: 'https://example.org/checkout', pathname: '/checkout' },
     localStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) },
     sessionStorage: { getItem: (k) => session.get(k) ?? null, setItem: (k, v) => session.set(k, v), removeItem: (k) => session.delete(k) },
   };
   for (const [name, value] of Object.entries(globals)) Object.defineProperty(globalThis, name, { value, configurable: true, writable: true });
+  return () => { for (const name of Object.keys(globals)) delete globalThis[name]; };
+}
+/** Renders the block over a basket and returns its form. */
+function renderCheckout(cart, props, site, preview = false) {
+  const release = holdGlobals(cart);
   try {
     const el = new StubElement('div');
     checkoutBlock.render(el, { ...checkoutBlock.defaults(), ...props }, { preview, site });
     renderCheckout.host = el.children[0];
     return el.children[0].children.find((c) => c.className === 'urd-checkout-form');
   } finally {
-    for (const name of Object.keys(globals)) delete globalThis[name];
+    release();
   }
 }
 
@@ -249,4 +256,27 @@ test('the mailto draft carries the seller\'s details, so the buyer\'s sent mail 
   const form = renderCheckout(CART, { recipient: 'post@example.org' }, SELLER_SITE);
   assert.ok(form, 'the form renders with the seller named under the buttons');
   assert.ok(form.children.some((c) => c.className === 'urd-checkout-seller'));
+});
+
+test('a pay button on a site without functions, or without the keys, says payment is not set up; another failure says try again', async () => {
+  const realFetch = globalThis.fetch;
+  const answer = async (status) => {
+    const release = holdGlobals(CART);
+    try {
+      const el = new StubElement('div');
+      checkoutBlock.render(el, { ...checkoutBlock.defaults(), payments: { vipps: true } }, { preview: false, site: {} });
+      const form = el.children[0].children.find((c) => c.className === 'urd-checkout-form');
+      const pay = form.children.find((c) => c.className === 'urd-checkout-buttons').children.find((b) => b.textContent === sites.nb['shop.payWithVipps']);
+      globalThis.fetch = async () => ({ ok: false, status, json: async () => null });
+      await pay.listeners.click();
+      return form.children.find((c) => c.className === 'urd-checkout-status').textContent;
+    } finally {
+      globalThis.fetch = realFetch;
+      release();
+    }
+  };
+  assert.equal(await answer(404), sites.nb['shop.vippsUnavailable'], 'no function at all');
+  assert.equal(await answer(503), sites.nb['shop.vippsUnavailable'], 'the keys are missing');
+  assert.equal(await answer(400), sites.nb['shop.payRefused']);
+  assert.equal(await answer(500), sites.nb['shop.sendFailed']);
 });

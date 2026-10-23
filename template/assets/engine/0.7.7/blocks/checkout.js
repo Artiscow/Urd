@@ -314,13 +314,32 @@ export const checkoutBlock = {
     // from the catalogue and answers with the address at the provider; the
     // payment happens there, and the contact fields may stay empty, since
     // the provider's page asks for them.
+    const providerName = { vipps: 'Vipps', stripe: 'Stripe', paypal: 'PayPal' };
+    // Whether the provider's function is there and set up: true or false from its answer, null where the site has no functions (a local server, a host without them).
+    const probeProvider = async (provider) => {
+      try {
+        const res = await fetch(`/api/pay/${provider}/checkout`, { cache: 'no-store' });
+        if (!res.ok) return null;
+        const data = await res.json().catch(() => null);
+        return typeof data?.configured === 'boolean' ? data.configured : null;
+      } catch {
+        return null;
+      }
+    };
     const payButton = (labelKey, provider, method) => {
       const pay = el2('button', 'urd-checkout-vippspay urd-checkout-pay', t(labelKey));
       pay.type = 'button';
       pay.setAttribute('aria-describedby', recap.id);
       pay.addEventListener('click', async () => {
-        // Same send guard as the form: never in preview, whatever the viewport.
-        if (ctx.preview) return;
+        // Same send guard as the form: never in preview, whatever the viewport. There the click tells the owner whether the provider is set up.
+        if (ctx.preview) {
+          pay.disabled = true;
+          const ready = await probeProvider(provider);
+          pay.disabled = false;
+          const name = providerName[provider];
+          setStatus(ready === null ? ta('canvas.payPreviewNoFunctions', { provider: name }) : ready ? ta('canvas.payPreviewReady', { provider: name }) : ta('canvas.payPreviewNotSetUp', { provider: name }), ready === false);
+          return;
+        }
         const items = readCart();
         if (!items.length) {
           setStatus(t('shop.cartEmpty'), true);
@@ -350,8 +369,8 @@ export const checkoutBlock = {
             location.href = data.url;
             return;
           }
-          // 503: the provider is not set up; 400: this provider cannot take the order (the currency, a product); else a failure that may pass.
-          setStatus(t(res.status === 503 ? 'shop.vippsUnavailable' : res.status === 400 ? 'shop.payRefused' : 'shop.sendFailed'), true);
+          // 503: the provider is not set up; 404: the site has no functions, so the payment is not set up either; 400: this provider cannot take the order (the currency, a product); else a failure that may pass.
+          setStatus(t(res.status === 503 || res.status === 404 ? 'shop.vippsUnavailable' : res.status === 400 ? 'shop.payRefused' : 'shop.sendFailed'), true);
         } catch {
           setStatus(t('shop.sendFailed'), true);
         }
@@ -412,8 +431,11 @@ export const checkoutBlock = {
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       // Nothing is ever sent from the editor, not even in the mobile view
-      // (ctx.preview, never editable: that one is false in the mobile viewport).
-      if (ctx.preview) return;
+      // (ctx.preview, never editable: that one is false in the mobile viewport); the click says so.
+      if (ctx.preview) {
+        setStatus(ta('canvas.orderPreview'), false);
+        return;
+      }
       // Honeypot filled in: discard silently, show success so the bot gives up.
       if (hp.value.trim()) {
         setStatus(t('shop.orderSent'), false);

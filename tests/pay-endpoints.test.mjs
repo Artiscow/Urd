@@ -317,3 +317,14 @@ test('every session endpoint answers the POST the checkout page sends', () => {
   for (const provider of [vipps, stripe, paypal]) assert.equal(typeof provider.session.onRequestPost, 'function');
   assert.equal(paypal.session.onRequestGet, undefined, 'PayPal\'s may capture, so it takes no GET');
 });
+
+test('checkout GET: each provider answers whether it is set up, without a secret and without caching', async () => {
+  for (const [mod, env] of [[vipps, VIPPS_ENV], [stripe, STRIPE_ENV], [paypal, PAYPAL_ENV]]) {
+    const on = await mod.checkout.onRequestGet({ env });
+    assert.equal(on.headers.get('cache-control'), 'no-store');
+    const body = await on.text();
+    assert.deepEqual(JSON.parse(body), { configured: true });
+    for (const value of Object.values(env)) assert.ok(!body.includes(value), 'no secret in the answer');
+    assert.deepEqual(await (await mod.checkout.onRequestGet({ env: {} })).json(), { configured: false });
+  }
+});

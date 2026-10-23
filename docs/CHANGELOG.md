@@ -28,6 +28,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.28.6 - The pay buttons say when nothing is set up - 24 October 2026
+
+- In the editor a click on **Pay with Vipps**, the card button or **Pay with PayPal** did nothing, and on a site without functions the published button answered «Could not send right now». Each checkout endpoint now answers a GET with whether its provider is set up (no secret leaves, never cached), and in the editor a click on a pay button says whether the provider is set up, that its keys are missing, or that the site's functions do not answer from there; on the published page a missing function reads as «Payment is not set up for this site yet», as a missing key does.
+- **Confirm purchase** in the editor did nothing either. It now says the order is sent from the published page only.
+- Tests: the GET answers in `pay-endpoints.test.mjs`; the published button's answers to 404, 503, 400 and 500 in `checkout.test.mjs`.
+
 ### 0.7.0.70 - Two CodeQL alerts in the payment endpoint test - 24 October 2026
 
 - CodeQL flagged two URL checks in `tests/pay-endpoints.test.mjs` as incomplete substring sanitisation (alerts 22 and 23): the stubbed network told the site's own files from the provider's API by the URL's start, and a test checked that PayPal was not called by a substring. Both now parse the URL and compare the host exactly.

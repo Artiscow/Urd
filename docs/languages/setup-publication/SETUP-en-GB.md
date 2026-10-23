@@ -131,6 +131,8 @@ The Checkout block can take the payment through a provider ([ADR-0020](../../adr
 
 First set the shop's currency in the Site panel's **Shop** group (**Shop currency**, an ISO code such as NOK, DKK or EUR); the catalogue's prices are in that currency, and every provider charges in it.
 
+In the editor a click on a pay button tells you whether the provider's keys are in place; nothing is sent from there. Until the keys are in place the published button tells the buyer that payment is not set up yet.
+
 ### Vipps MobilePay
 
 The layer needs a Vipps MobilePay agreement for payment on the web (the ePayment API) and the four keys of the sales unit. A Danish or Finnish MobilePay sales unit follows the same steps against the same servers, with the shop currency DKK or EUR; its reservations are shorter (step 6).

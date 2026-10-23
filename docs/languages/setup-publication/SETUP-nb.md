@@ -129,6 +129,8 @@ Kasse-blokken kan ta betalingen gjennom en leverandør ([ADR-0020](../../adr/002
 
 Sett først butikkens valuta i Nettsted-panelets gruppe **Butikk** (**Butikkvaluta**, en ISO-kode som NOK, DKK eller EUR); katalogprisene står i den valutaen, og hver leverandør belaster i den.
 
+I editoren forteller et klikk på en betalingsknapp om leverandørens nøkler er på plass; ingenting sendes derfra. Til nøklene er på plass sier den publiserte knappen til kjøperen at betaling ikke er satt opp ennå.
+
 ### Vipps MobilePay
 
 Laget trenger en Vipps MobilePay-avtale for betaling på nett (ePayment-API-et) og salgsstedets fire nøkler. Et dansk eller finsk MobilePay-salgssted følger de samme stegene mot de samme serverne, med butikkvalutaen DKK eller EUR; reservasjonene er kortere der (steg 6). Navnene på menyene og knappene under er fra portalens engelske visning.

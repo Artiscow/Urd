@@ -44,3 +44,8 @@ export async function onRequestPost({ request, env }) {
   // The reference goes to the client too, which keeps it for the return (blocks/checkout.js).
   return json({ url: answer.data.redirectUrl, reference });
 }
+
+/** Whether the provider is set up: the editor's checkout block asks before a sale, so the owner sees a missing key while building. No secret leaves; the answer is never cached. */
+export function onRequestGet({ env }) {
+  return new Response(JSON.stringify({ configured: Boolean(vippsConfig(env)) }), { status: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+}

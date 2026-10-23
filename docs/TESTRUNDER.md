@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.28.6): the pay buttons without a setup
+
+- [ ] In the editor, on a checkout block with Vipps on and no keys set: click «Betal med Vipps»: a line under the buttons says Vipps is not set up and names the setup guide; on a local server it says the site's functions do not answer from here; with the keys in place it says Vipps is set up
+- [ ] In the editor, click «Bekreft kjøp»: the line says the order is sent from the published page only, and nothing is sent
+- [ ] On a published site without the keys, with items in the basket: «Betal med Vipps» answers «Betaling er ikke satt opp for denne siden ennå»; on a host without functions the same
+
 ### Test batch (0.7.10.6): the text block's Content area, the pickers' search and the example site
 
 - [ ] A text block's menu, Content: «Edit the text» opens the words on the page with the text toolbar and the menu steps aside; choose a font for the whole text: every word takes it, and «Inherit from theme» takes it back; type a size: every word takes it, and an empty field takes the theme's size back; the toolbar's own font and size still apply to a selection alone

@@ -43,3 +43,8 @@ export async function onRequestPost({ request, env }) {
   // The reference and the session's id go to the client, which keeps them for the return (blocks/checkout.js).
   return json({ url, reference, pid: id });
 }
+
+/** Whether the provider is set up: the editor's checkout block asks before a sale, so the owner sees a missing key while building. No secret leaves; the answer is never cached. */
+export function onRequestGet({ env }) {
+  return new Response(JSON.stringify({ configured: Boolean(stripeConfig(env)) }), { status: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+}
