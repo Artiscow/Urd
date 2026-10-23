@@ -1448,7 +1448,7 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Invoices | WX, SQ, WN, WA, GD (US), SW, RU | Billing documents | yes | Missing | Not taken: gateway-free core |
 | eFaktura (e-invoice) | RU | Norwegian electronic invoice | yes | Missing | Not taken: gateway-free core |
 | Automatic receipts | WA, SH | Payment receipts and order confirmations to the buyer by email or SMS | yes | Partial: the receipt with the order lines in the Vipps app (0.7.0.68); no receipt from the site | v1.1 the shop (buyer email is not taken) |
-| Order confirmation page | SQ, SH | The page after checkout with the order details and next steps | no | Partial: a thank-you by name after a provider's payment, and the chosen payment instruction after a form order; no order details | 0.7.24.7: a printable confirmation with the order lines and the withdrawal form; v1.1 the shop for the rest |
+| Order confirmation page | SQ, SH | The page after checkout with the order details and next steps | no | Has: a printable confirmation after every order path, with the lines, the total, the buyer, the payment, the seller's organisation number and contact details, and the standard withdrawal form (0.7.24.7); kept on the page until the next order | - |
 | Order notifications to the owner | SH | New order, return request and dispute emails to the owner or staff, and a daily or weekly summary | yes | Partial: a mailto order arrives as an email; the payment layer's webhooks are checked but send no notice | v1.1 SHOP-7 |
 | Automatic payment reminders | RU | Dunning | yes | Missing | Not taken: gateway-free core |
 | Price quotes | WX, SQ | Quotes, proposals and contracts for clients | yes | Missing | Not taken: gateway-free core |

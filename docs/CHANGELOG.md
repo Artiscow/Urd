@@ -28,6 +28,17 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.24.7 - The buyer's printable order confirmation - 23 October 2026
+
+- An order by endpoint ended on a status line with the basket emptied, and a provider's return on a thank-you alone, so the buyer had no confirmation on a durable medium (angrerettloven § 18). After every order path the checkout now shows a confirmation with the date, the provider's reference, the order lines and the total, the buyer, how it is paid (the chosen instruction or «Paid with Vipps», «Paid by card», «Paid with PayPal»), the seller with the organisation number and contact details, the right of withdrawal and the standard withdrawal form with the seller filled in (`buildConfirmation` in blocks/checkout.js; the record in `orderRecord`, kept in sessionStorage so a refresh keeps it until the next order).
+- A **Print** button prints the confirmation alone (base.css, `html.urd-print-order`); the eight shells restamped.
+- The withdrawal form's words are the directive's annex I B in English and the EEA translation in Norwegian (read 23 October 2026), with the Turkish wording Urd's own; 20 site keys in nb, en-GB and tr.
+- The mailto draft carries the seller's details too, so the buyer's sent mail holds the same. The link to the shop's terms waits for the terms page of 0.7.24.2.
+- The user guide's shop paragraph says the confirmation is the seller's duty; the comparison's order confirmation row and ELEMENTS #233 are Has.
+- The guide's shop section cited Norway's angrerettloven as if it bound every site owner. It now names the EU consumer rights directive, which applies in the whole EEA, with the Norwegian sections as Norway's version of it, and tells owners outside the EEA to check their own distance-selling rules; the withdrawal note on the page names the law in Norwegian only.
+- The five user guides were hard-wrapped at 78 characters, which read as broken lines in an editor. Every paragraph and list item is one line now, with the words unchanged.
+- Tests: the confirmation's parts and the withdrawal form in `checkout.test.mjs`; the record and its keeping in `shop.test.mjs`.
+
 ### 0.7.13.21-0.7.28.5p - Push preparation: the menu item options, the payment layer on three providers, and the quick verification - 23 October 2026
 
 The independent review read the whole span (the menu options and the link editor, the move to the ePayment API, the five stages of 0.7.28 and the verification script) against AGENTS.md and ADR-0020, 0027 and 0028, and found seven things, all taken:

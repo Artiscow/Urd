@@ -40,19 +40,24 @@ class StubElement {
   addEventListener() {}
 }
 
+/** What this tab remembers between renders: the last order's record. */
+const session = new Map();
+
 /** Renders the block over a basket and returns its form. */
-function renderCheckout(cart, props, site) {
+function renderCheckout(cart, props, site, preview = false) {
   const store = new Map([['urd-cart', JSON.stringify(cart)]]);
   const globals = {
     document: { createElement: (tag) => new StubElement(tag), addEventListener() {} },
     window: { addEventListener() {} },
     location: { search: '', href: 'https://example.org/checkout' },
     localStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) },
+    sessionStorage: { getItem: (k) => session.get(k) ?? null, setItem: (k, v) => session.set(k, v), removeItem: (k) => session.delete(k) },
   };
   for (const [name, value] of Object.entries(globals)) Object.defineProperty(globalThis, name, { value, configurable: true, writable: true });
   try {
     const el = new StubElement('div');
-    checkoutBlock.render(el, { ...checkoutBlock.defaults(), ...props }, { preview: false, site });
+    checkoutBlock.render(el, { ...checkoutBlock.defaults(), ...props }, { preview, site });
+    renderCheckout.host = el.children[0];
     return el.children[0].children.find((c) => c.className === 'urd-checkout-form');
   } finally {
     for (const name of Object.keys(globals)) delete globalThis[name];
@@ -177,4 +182,71 @@ test('the migration 1 -> 2 turns the Vipps flag into the provider and the Vipps 
     payments: { vipps: true, card: 'none', paypal: false, capture: 'ship', manual: [{ id: 'vipps', label: 'Vipps', text: '12345' }] },
   });
   assert.deepEqual(lift({ recipient: '', endpoint: '', vipps: '', currency: 'kr' }).payments, { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] });
+});
+
+const SELLER_SITE = { site: { title: 'Apeiron', contact: { country: 'NO', legalName: 'Apeiron Linjeforening', ids: { org: '974760673' }, address: { street: 'Gata 1', postalCode: '7034', city: 'Trondheim' }, phone: '12345678', email: 'post@apeiron.no' } } };
+const RECORD = {
+  at: '2026-10-23T10:00:00.000Z', currency: 'kr',
+  lines: [{ title: 'Sjokoladekake', variant: 'Stor', qty: 2, price: 350 }, { title: 'Kanelboller', variant: '', qty: 1, price: 120 }],
+  total: 820, contact: { name: 'Kari Nordmann', email: 'kari@forening.no', phone: '' }, payment: 'Vipps: Vipps til 12345', provider: '', reference: '',
+};
+
+test('a kept order draws the printable confirmation first: the heading and Print, the date, the lines and the total, the buyer, the payment, the seller, and the withdrawal form with the seller filled in', () => {
+  session.set('urd-last-order', JSON.stringify(RECORD));
+  try {
+    renderCheckout([], { payments: { manual: [{ id: 'a', label: 'Vipps', text: 'Vipps til 12345' }] } }, SELLER_SITE);
+    const box = renderCheckout.host.children[0];
+    assert.equal(box.className, 'urd-checkout-confirmation');
+    assert.equal(box.tagName, 'SECTION');
+    const head = box.children[0];
+    assert.equal(head.children[0].textContent, sites.nb['shop.confirmation']);
+    assert.equal(head.children[1].textContent, sites.nb['shop.print']);
+    assert.equal(head.children[1].type, 'button');
+    assert.match(box.children[1].textContent, /Bestilt .*2026/);
+    const lines = box.children.find((c) => c.className === 'urd-checkout-lines').children.map((l) => l.textContent);
+    assert.deepEqual(lines, ['2 × Sjokoladekake (Stor) - 700 kr', '1 × Kanelboller - 120 kr']);
+    assert.match(box.children.find((c) => c.className === 'urd-checkout-total').textContent, /820 kr/);
+    const facts = box.children.find((c) => c.className === 'urd-checkout-facts').children.map((c) => c.textContent);
+    assert.deepEqual(facts.slice(0, 4), [sites.nb['shop.buyer'], 'Kari Nordmann · kari@forening.no', sites.nb['shop.payMethod'], 'Vipps: Vipps til 12345']);
+    assert.equal(facts[4], sites.nb['shop.seller']);
+    assert.match(facts[5], /Apeiron Linjeforening · Org\.nr\. 974 760 673 · Gata 1, 7034 Trondheim/);
+    const withdrawal = box.children.find((c) => c.className === 'urd-checkout-withdrawal');
+    assert.equal(withdrawal.children[0].textContent, sites.nb['shop.withdrawalHeading']);
+    assert.match(withdrawal.children[1].textContent, /14 dager/);
+    const form = withdrawal.children[2];
+    assert.equal(form.children[0].textContent, sites.nb['shop.wfTitle']);
+    const rows = form.children.filter((c) => c.className === 'urd-checkout-wform-row');
+    assert.equal(rows.length, 7);
+    assert.equal(rows[0].children[0].textContent, sites.nb['shop.wfTo']);
+    assert.match(rows[0].children[1].textContent, /^Apeiron Linjeforening, Org\.nr\. 974 760 673, Gata 1, 7034 Trondheim/, 'the seller filled in, as the form asks of the trader');
+    assert.equal(rows[1].children[0].textContent, sites.nb['shop.wfDeclaration']);
+    assert.match(rows[2].children[1].textContent, /2026 \/ ______$/, 'ordered on filled, received on left open');
+    assert.equal(rows[3].children[1].textContent, 'Kari Nordmann');
+    assert.equal(form.children[form.children.length - 1].textContent, sites.nb['shop.wfDelete']);
+  } finally {
+    session.clear();
+  }
+});
+
+test('the confirmation names a provider\'s payment and reference; without a kept order there is none; the preview never shows one', () => {
+  session.set('urd-last-order', JSON.stringify({ ...RECORD, payment: '', provider: 'stripe', reference: 'urd-' + 'a'.repeat(24) }));
+  try {
+    renderCheckout([], {}, SELLER_SITE);
+    const box = renderCheckout.host.children[0];
+    assert.match(box.children[1].textContent, new RegExp(`${sites.nb['shop.reference']}: urd-a{24}`));
+    const facts = box.children.find((c) => c.className === 'urd-checkout-facts').children.map((c) => c.textContent);
+    assert.equal(facts[3], sites.nb['shop.paidVia.stripe']);
+    renderCheckout([], {}, SELLER_SITE, true);
+    assert.notEqual(renderCheckout.host.children[0].className, 'urd-checkout-confirmation', 'nothing in the preview');
+  } finally {
+    session.clear();
+  }
+  renderCheckout(CART, {}, SELLER_SITE);
+  assert.notEqual(renderCheckout.host.children[0].className, 'urd-checkout-confirmation');
+});
+
+test('the mailto draft carries the seller\'s details, so the buyer\'s sent mail is the confirmation', () => {
+  const form = renderCheckout(CART, { recipient: 'post@example.org' }, SELLER_SITE);
+  assert.ok(form, 'the form renders with the seller named under the buttons');
+  assert.ok(form.children.some((c) => c.className === 'urd-checkout-seller'));
 });

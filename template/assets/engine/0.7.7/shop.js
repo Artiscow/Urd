@@ -129,6 +129,54 @@ export function currencyWord(code) {
   return words[upper] ?? (upper || 'kr');
 }
 
+/** The key the last order's record is kept under in sessionStorage, so the confirmation survives a refresh of the checkout page in this tab. */
+export const ORDER_KEY = 'urd-last-order';
+
+/**
+ * The record of an order the buyer placed, the data the printable
+ * confirmation is drawn from (angrerettloven § 18: a confirmation on a
+ * durable medium): the lines with their prices, the total, the currency, the
+ * buyer's contact details, how it is paid, the provider's reference, and
+ * when. Every field is plain data, so the record can be kept and read back.
+ * @param {Array} items The basket lines (readCart)
+ * @param {{name?: string, email?: string, phone?: string, comment?: string}} contact
+ * @param {{currency?: string, payment?: string, provider?: string, reference?: string, at?: string}} [extra] payment is the instruction's text, provider the layer's provider that took the money
+ */
+export function orderRecord(items, contact, extra = {}) {
+  const field = (value) => String(value ?? '').trim().slice(0, 200);
+  return {
+    at: extra.at ?? new Date().toISOString(),
+    currency: extra.currency ?? 'kr',
+    lines: items.map((line) => ({
+      title: field(line.title),
+      variant: field(line.variant),
+      qty: clampQty(line.qty),
+      price: Number(line.price) || 0,
+    })),
+    total: cartTotal(items),
+    contact: { name: field(contact?.name), email: field(contact?.email), phone: field(contact?.phone) },
+    payment: field(extra.payment),
+    provider: PAY_PROVIDERS.includes(extra.provider) ? extra.provider : '',
+    reference: /^urd-[0-9a-f]{24}$/.test(String(extra.reference ?? '')) ? extra.reference : '',
+  };
+}
+
+/** Keeps the record for the confirmation; no storage means the confirmation lasts the page view. */
+export function saveOrder(record) {
+  try { sessionStorage.setItem(ORDER_KEY, JSON.stringify(record)); } catch { /* no storage */ }
+}
+
+/** The kept record, or null when there is none or it is not a record. */
+export function readOrder() {
+  try {
+    const raw = sessionStorage.getItem(ORDER_KEY);
+    const record = raw ? JSON.parse(raw) : null;
+    return record && typeof record === 'object' && Array.isArray(record.lines) ? record : null;
+  } catch {
+    return null;
+  }
+}
+
 /** The card's secondary image (hover swap): the first colour image that differs from the main one. */
 export function altCardImage(entry) {
   const main = entry?.image || '';

@@ -4,6 +4,7 @@
  * The order lines and the total are repeated right above the order buttons, and the buttons' texts say that ordering is a purchase or a payment: angrerettloven § 16 asks for both, and without the wording the buyer is not bound.
  * The buttons are described by the summary, so a screen reader that tabs to them hears the order and the total.
  * Under the buttons the seller is named from the Site panel's contact details (angrerettloven § 8 d), unless the block leaves it out (`seller: false`).
+ * After an order, by any path, the page shows a printable confirmation with the order lines, the total, the buyer, how it is paid, the seller with the organisation number, and the standard withdrawal form (angrerettloven § 18 and § 20); it is kept in this tab's sessionStorage, so a refresh keeps it.
  * The honeypot field stops simple bots (filled in = discarded silently).
  * Payment instructions (a Vipps number, a bank account, pay at pickup) are shown in the form above the order summary: one as a line, two or more as a choice the buyer makes before ordering, and the chosen one is named in the order and repeated after it is sent.
  * An external endpoint requires connect-src in _headers (ADR-0006).
@@ -12,9 +13,10 @@ import {
   readCart, writeCart, cartTotal, formatPrice, orderLines, orderSummary,
   buildOrderBody, buildOrderMailto, buildOrderPayload, isEmail, onCartChange,
   paymentsOf, anyProvider, currencyWord, PAY_PROVIDERS, methodText, shownMethods,
+  orderRecord, saveOrder, readOrder,
 } from '../shop.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
-import { ta, adminLocaleReady, t } from '../i18n.js';
+import { ta, adminLocaleReady, t, siteLang } from '../i18n.js';
 import { sellerParts } from '../contact-model.js';
 import { legalText } from '../footer.js';
 
@@ -54,6 +56,105 @@ function renderRecap(box, currency) {
 
 /** Numbers the summaries above the buttons, so two checkouts on a page keep their descriptions apart. */
 let recapCount = 0;
+
+/** A date as the site's language writes it, from the record's ISO stamp. */
+function dateText(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  try {
+    return new Intl.DateTimeFormat(siteLang(), { dateStyle: 'long' }).format(date);
+  } catch {
+    return date.toISOString().slice(0, 10);
+  }
+}
+
+/** The texts of the seller for the confirmation and the withdrawal form: the name, the legal line, the address, the phone and the email. */
+function sellerLines(seller) {
+  if (!seller) return [];
+  return [
+    seller.name,
+    seller.legal.length ? legalText(seller.legal) : '',
+    seller.address,
+    seller.phone?.label ?? '',
+    seller.email?.label ?? '',
+  ].filter(Boolean);
+}
+
+/**
+ * The printable confirmation of an order: a heading with the date and the
+ * reference, the lines and the total, the buyer, how it is paid, the seller
+ * (angrerettloven § 8 d, ehandelsloven § 8), the right of withdrawal and the
+ * standard withdrawal form with the seller filled in (directive 2011/83/EU
+ * annex I B, forskrift 2014-06-20-777 § 1), and a Print button. Printing
+ * shows this section alone (base.css).
+ */
+function buildConfirmation(record, seller, currency) {
+  const box = el2('section', 'urd-checkout-confirmation');
+  box.setAttribute('aria-label', t('shop.confirmation'));
+  const head = el2('div', 'urd-checkout-confirmation-head');
+  head.appendChild(el2('h2', null, t('shop.confirmation')));
+  const print = el2('button', 'urd-checkout-print', t('shop.print'));
+  print.type = 'button';
+  print.addEventListener('click', () => {
+    document.documentElement.classList.add('urd-print-order');
+    const done = () => document.documentElement.classList.remove('urd-print-order');
+    window.addEventListener('afterprint', done, { once: true });
+    window.print();
+  });
+  head.appendChild(print);
+  box.appendChild(head);
+  const meta = el2('p', 'urd-checkout-confirmation-meta');
+  const when = dateText(record.at);
+  meta.append(el2('span', null, when ? t('shop.orderedOn', { date: when }) : ''));
+  if (record.reference) meta.append(el2('span', null, `${t('shop.reference')}: ${record.reference}`));
+  box.appendChild(meta);
+  const list = el2('ul', 'urd-checkout-lines');
+  for (const line of record.lines) {
+    const name = line.variant ? `${line.title} (${line.variant})` : line.title;
+    list.appendChild(el2('li', null, `${line.qty} × ${name} - ${formatPrice(line.price * line.qty, currency)}`));
+  }
+  box.appendChild(list);
+  const sum = el2('div', 'urd-checkout-total');
+  sum.append(el2('span', null, t('shop.total')), el2('strong', null, formatPrice(record.total, currency)));
+  box.appendChild(sum);
+  const facts = el2('dl', 'urd-checkout-facts');
+  const fact = (label, text) => {
+    if (!text) return;
+    facts.append(el2('dt', null, label), el2('dd', null, text));
+  };
+  fact(t('shop.buyer'), [record.contact.name, record.contact.email, record.contact.phone].filter(Boolean).join(' · '));
+  if (record.provider) fact(t('shop.payMethod'), t(`shop.paidVia.${record.provider}`));
+  else if (record.payment) fact(t('shop.payMethod'), record.payment);
+  const sellerText = sellerLines(seller);
+  if (sellerText.length) fact(t('shop.seller'), sellerText.join(' · '));
+  box.appendChild(facts);
+  // The right of withdrawal and the model form, the seller's details filled in as the form asks.
+  const withdrawal = el2('div', 'urd-checkout-withdrawal');
+  withdrawal.appendChild(el2('h3', null, t('shop.withdrawalHeading')));
+  withdrawal.appendChild(el2('p', null, t('shop.withdrawalNote')));
+  const form = el2('div', 'urd-checkout-wform');
+  form.appendChild(el2('h4', null, t('shop.wfTitle')));
+  form.appendChild(el2('p', 'urd-checkout-wform-note', t('shop.wfInstruction')));
+  const rows = [
+    [t('shop.wfTo'), sellerText.length ? sellerText.join(', ') : '______'],
+    [t('shop.wfDeclaration'), ''],
+    [t('shop.wfOrdered'), when ? `${when} / ______` : '______ / ______'],
+    [t('shop.wfName'), record.contact.name || '______'],
+    [t('shop.wfAddress'), '______'],
+    [t('shop.wfSignature'), '______'],
+    [t('shop.wfDate'), '______'],
+  ];
+  for (const [label, value] of rows) {
+    const row = el2('p', 'urd-checkout-wform-row');
+    row.appendChild(el2('span', null, label));
+    if (value) row.appendChild(el2('span', 'urd-checkout-wform-value', value));
+    form.appendChild(row);
+  }
+  form.appendChild(el2('p', 'urd-checkout-wform-note', t('shop.wfDelete')));
+  withdrawal.appendChild(form);
+  box.appendChild(withdrawal);
+  return box;
+}
 
 /** The seller under the order buttons, as an <address>: «Seller: Apeiron Linjeforening · Org.nr. … · Street 1, 7034 Town», the phone and the email as links. */
 function buildSeller(seller) {
@@ -104,6 +205,22 @@ export const checkoutBlock = {
     const pays = paymentsOf(props);
     const currency = anyProvider(pays) ? currencyWord(ctx.site?.commerce?.currency) : (props.currency || 'kr');
 
+    // The last order's confirmation stands first, kept across a refresh of this tab; a new order replaces it.
+    const seller = props.seller === false ? null : sellerParts(ctx.site);
+    let confirmation = null;
+    const showConfirmation = (record) => {
+      if (ctx.preview) return;
+      saveOrder(record);
+      const next = buildConfirmation(record, seller, record.currency || currency);
+      if (confirmation) confirmation.replaceWith(next);
+      else host.prepend(next);
+      confirmation = next;
+    };
+    const kept = ctx.preview ? null : readOrder();
+    if (kept) {
+      confirmation = buildConfirmation(kept, seller, kept.currency || currency);
+      host.appendChild(confirmation);
+    }
     const summary = el2('div', 'urd-checkout-summary');
     renderSummary(summary, currency);
     host.appendChild(summary);
@@ -183,7 +300,6 @@ export const checkoutBlock = {
     status.setAttribute('aria-live', 'polite');
     status.hidden = true;
     form.appendChild(status);
-    const seller = props.seller === false ? null : sellerParts(ctx.site);
     if (seller) form.appendChild(buildSeller(seller));
     const setStatus = (text, isError) => {
       status.textContent = text;
@@ -271,6 +387,8 @@ export const checkoutBlock = {
           // A POST, since PayPal's endpoint captures the approved order on this ask.
           const data = await fetch(`/api/pay/${via}/session?${query}`, { method: 'POST' }).then((res) => (res.ok ? res.json() : null)).catch(() => null);
           if (data?.paid) {
+            // The confirmation is drawn from the basket before it empties, with the buyer the provider named.
+            showConfirmation(orderRecord(readCart(), data.buyer ?? {}, { currency, provider: via, reference: ordered }));
             writeCart([]);
             // The buyer the provider named is thanked by name; the receipt with the order lines sits with the provider.
             const name = String(data.buyer?.name ?? '').trim();
@@ -326,7 +444,8 @@ export const checkoutBlock = {
             body: JSON.stringify(buildOrderPayload(items, contact, method)),
           });
           if (!res.ok) throw new Error(String(res.status));
-          // The endpoint has confirmed: the basket is delivered, so it is emptied.
+          // The endpoint has confirmed: the basket is delivered, so it is emptied, and the confirmation drawn.
+          showConfirmation(orderRecord(items, contact, { currency, payment: method ? methodText(method) : '' }));
           writeCart([]);
           form.reset();
           setStatus(withPayment(t('shop.orderSent')), false);
@@ -336,15 +455,18 @@ export const checkoutBlock = {
         return;
       }
       if (props.recipient) {
+        // The draft carries the seller's details too, so the buyer's sent mail holds the confirmation (angrerettloven § 18).
         const body = buildOrderBody(items, {
           [t('shop.name')]: name,
           [t('shop.email')]: email,
           [t('shop.phone')]: contact.phone,
           [t('shop.comment')]: contact.comment,
           [t('shop.payMethod')]: method ? methodText(method) : '',
+          [t('shop.seller')]: sellerLines(seller).join(' · '),
         }, currency, t('shop.total'));
         location.href = buildOrderMailto(props.recipient, t('shop.orderSubject', { site: document.title }), body);
-        // mailto opens a draft: the basket survives until the email is actually sent.
+        // mailto opens a draft: the basket survives until the email is actually sent; the confirmation shows meanwhile.
+        showConfirmation(orderRecord(items, contact, { currency, payment: method ? methodText(method) : '' }));
         setStatus(withPayment(t('shop.orderDraft')), false);
         return;
       }

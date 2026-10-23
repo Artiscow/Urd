@@ -11263,6 +11263,132 @@ textarea.urd-form-input {
 }
 
 /* The seller under the order buttons (angrerettloven § 8 d): one small wrapping row. */
+/* The printable order confirmation: a card above the form with the lines, the buyer, the seller and the withdrawal form; printed alone. */
+.urd-checkout-confirmation {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
+  border-radius: var(--urd-radius-sm, 6px);
+  background: var(--urd-color-surface);
+  font-size: 0.9em;
+}
+
+.urd-checkout-confirmation-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.urd-checkout-confirmation h2,
+.urd-checkout-confirmation h3,
+.urd-checkout-confirmation h4 {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.urd-checkout-confirmation h3,
+.urd-checkout-confirmation h4 {
+  font-size: 1em;
+}
+
+.urd-checkout-print {
+  padding: 6px 12px;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 30%, transparent);
+  border-radius: var(--urd-radius-sm, 6px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.urd-checkout-confirmation-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2em 1em;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.urd-checkout-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.urd-checkout-facts dt {
+  font-weight: 700;
+}
+
+.urd-checkout-facts dd {
+  margin: 0;
+}
+
+.urd-checkout-withdrawal {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent);
+}
+
+.urd-checkout-withdrawal p {
+  margin: 0;
+}
+
+.urd-checkout-wform {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 35%, transparent);
+  border-radius: var(--urd-radius-sm, 6px);
+}
+
+.urd-checkout-wform-note {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.urd-checkout-wform-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2em 0.5em;
+}
+
+.urd-checkout-wform-value {
+  opacity: 0.85;
+}
+
+/* Printing an order: the confirmation alone, at the top of the page, in black on white. */
+@media print {
+  html.urd-print-order body {
+    visibility: hidden;
+  }
+
+  html.urd-print-order .urd-checkout-confirmation,
+  html.urd-print-order .urd-checkout-confirmation * {
+    visibility: visible;
+  }
+
+  html.urd-print-order .urd-checkout-confirmation {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: 0;
+    padding: 0;
+    color: #000;
+    background: #fff;
+    font-size: 11pt;
+  }
+
+  html.urd-print-order .urd-checkout-print {
+    display: none;
+  }
+}
+
 .urd-checkout-seller {
   display: flex;
   flex-wrap: wrap;

@@ -9,7 +9,7 @@ import { engineImport } from './_engine.mjs';
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
   isEmail, orderLines, orderSummary, buildOrderBody, buildOrderMailto, buildOrderPayload, altCardImage,
-  methodText, shownMethods, paymentsOf,
+  methodText, shownMethods, paymentsOf, orderRecord, saveOrder, readOrder, ORDER_KEY,
 } = await engineImport('shop.js');
 
 // Deliberate Norwegian product fixtures throughout: shop items are user data.
@@ -140,4 +140,41 @@ test('buildOrderBody: the chosen way to pay stands among the contact lines, and 
   const body = buildOrderBody(ORDER, { Navn: 'Kari', Betaling: methodText({ label: 'Vipps', text: 'Vipps til 12345' }) }, 'kr', 'Sum');
   assert.match(body, /\nBetaling: Vipps: Vipps til 12345$/);
   assert.ok(!buildOrderBody(ORDER, { Navn: 'Kari', Betaling: '' }).includes('Betaling'));
+});
+
+test('orderRecord: the lines, the total, the buyer, how it is paid and when, as plain data; a provider or reference outside the pattern is dropped', () => {
+  const record = orderRecord(ORDER, { name: ' Kari ', email: 'kari@forening.no', phone: '', comment: 'ignored' }, { currency: 'kr', payment: 'Vipps: 12345', at: '2026-10-23T10:00:00.000Z' });
+  assert.equal(record.at, '2026-10-23T10:00:00.000Z');
+  assert.equal(record.currency, 'kr');
+  assert.equal(record.lines.length, ORDER.length);
+  assert.deepEqual(Object.keys(record.lines[0]), ['title', 'variant', 'qty', 'price']);
+  assert.equal(record.total, ORDER.reduce((sum, l) => sum + l.price * l.qty, 0));
+  assert.deepEqual(record.contact, { name: 'Kari', email: 'kari@forening.no', phone: '' });
+  assert.equal(record.payment, 'Vipps: 12345');
+  assert.equal(record.provider, '');
+  assert.equal(record.reference, '');
+  const paid = orderRecord(ORDER, {}, { provider: 'stripe', reference: 'urd-' + 'b'.repeat(24) });
+  assert.equal(paid.provider, 'stripe');
+  assert.equal(paid.reference, 'urd-' + 'b'.repeat(24));
+  assert.match(paid.at, /^\d{4}-\d{2}-\d{2}T/);
+  const odd = orderRecord(ORDER, {}, { provider: 'evil', reference: '../x' });
+  assert.equal(odd.provider, '');
+  assert.equal(odd.reference, '');
+});
+
+test('saveOrder and readOrder: the record kept in sessionStorage and read back; nothing, or a value that is no record, reads as null', () => {
+  const session = new Map();
+  globalThis.sessionStorage = { getItem: (k) => session.get(k) ?? null, setItem: (k, v) => session.set(k, v), removeItem: (k) => session.delete(k) };
+  try {
+    assert.equal(readOrder(), null);
+    const record = orderRecord(ORDER, { name: 'Kari' }, { at: '2026-10-23T10:00:00.000Z' });
+    saveOrder(record);
+    assert.deepEqual(readOrder(), record);
+    session.set(ORDER_KEY, '{"total":1}');
+    assert.equal(readOrder(), null, 'no lines, no record');
+    session.set(ORDER_KEY, 'not json');
+    assert.equal(readOrder(), null);
+  } finally {
+    delete globalThis.sessionStorage;
+  }
 });
