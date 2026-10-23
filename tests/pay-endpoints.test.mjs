@@ -29,6 +29,10 @@ const paypal = {
 };
 
 const ORIGIN = 'https://forening.pages.dev';
+/** The host a call goes to, compared exactly; a URL that cannot be parsed has none. */
+const hostOf = (url) => { try { return new URL(url).host; } catch { return ''; } };
+/** Whether a call went to PayPal: its host is paypal.com or a subdomain of it. */
+const toPayPal = (call) => { const h = hostOf(call.url); return h === 'paypal.com' || h.endsWith('.paypal.com'); };
 const REF_RE = /^urd-[0-9a-f]{24}$/;
 // Deliberate Norwegian fixture ids and names: this is user catalog data.
 const SHOP = {
@@ -53,7 +57,7 @@ function stubNetwork(site, provider) {
     const call = { url: String(url), method: init.method ?? 'GET', headers: init.headers ?? {}, body: init.body };
     calls.push(call);
     const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-    if (call.url.startsWith(ORIGIN)) {
+    if (hostOf(call.url) === hostOf(ORIGIN)) {
       const path = new URL(call.url).pathname;
       if (path === '/content/site.json') return json({ site: { pages: PAGES, ...site } });
       if (path === '/content/pages/kasse.json') return json(pageFile());
@@ -261,7 +265,7 @@ test('paypal checkout: a currency PayPal lacks is refused before PayPal is asked
   const res = await paypal.checkout.onRequestPost({ request: order(), env: PAYPAL_ENV });
   assert.equal(res.status, 400);
   assert.equal((await res.json()).code, 'payCurrency');
-  assert.ok(!calls.some((c) => c.url.includes('paypal.com')));
+  assert.ok(!calls.some(toPayPal));
   calls = stubNetwork({}, paypalApi({}));
   assert.equal((await paypal.checkout.onRequestPost({ request: order(), env: {} })).status, 503);
   assert.equal(calls.length, 0);

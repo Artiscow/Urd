@@ -28,6 +28,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.70 - Two CodeQL alerts in the payment endpoint test - 24 October 2026
+
+- CodeQL flagged two URL checks in `tests/pay-endpoints.test.mjs` as incomplete substring sanitisation (alerts 22 and 23): the stubbed network told the site's own files from the provider's API by the URL's start, and a test checked that PayPal was not called by a substring. Both now parse the URL and compare the host exactly.
+
 ### 0.7.24.7-0.7.10.6p - Push preparation: the printable confirmation and the first five stages of the intuitiveness review - 24 October 2026
 
 The independent review read the whole span (the printable order confirmation, the walk and its five stages: the gestures, the canvas menus, the panels' small findings, search in every language and the text block's Content area) against AGENTS.md and ADR-0011, 0012, 0016, 0019, 0024 and 0025, and found four things, all taken:
