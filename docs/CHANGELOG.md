@@ -28,6 +28,19 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.24.7-0.7.10.6p - Push preparation: the printable confirmation and the first five stages of the intuitiveness review - 24 October 2026
+
+The independent review read the whole span (the printable order confirmation, the walk and its five stages: the gestures, the canvas menus, the panels' small findings, search in every language and the text block's Content area) against AGENTS.md and ADR-0011, 0012, 0016, 0019, 0024 and 0025, and found four things, all taken:
+
+- The printed confirmation hid the page with `visibility` and placed itself absolutely, which keeps the page's layout, so it printed where the checkout block stands on the page, at the block's width, with a blank sheet after it. Found by reading the print rule against the canvas's absolute layout. The rule now leaves out everything beside the confirmation's own ancestors and takes those out of the canvas layout (base.css); a headless print of the checkout page shows the confirmation at the top of the sheet, at the sheet's width, with nothing else shown. The eight shells restamped.
+- The top edge of a text block kept shrinking past its words: the frame's height fell towards nothing and its origin walked down while the drawn box stayed at the words, so the stored frame ended small and low and pushed the blocks below. Found by reading the resize maths against ADR-0025. The top edge now stops at the words' height, the measurement the push pass uses (`contentHeight` in render.js, exported); a headless pull of the top edge 200 px below the words left the frame unchanged.
+- The four edge handles carried the corner's tooltip «Shift keeps the ratio», and Shift does nothing on one axis. The edge handles say «Drag to resize»; the corners keep their tooltip.
+- After an order through the endpoint or the email draft, the confirmation was put at the block's top while the buyer stood at the form's foot, out of view. It is scrolled into view when the order goes.
+
+A deviation from the ritual: the commit of 0.7.10.4 carries the title of 0.7.10.3 a second time; its entry below names the stage.
+
+Clean on review: no props shape changed, so no migration; the new engine module outside the visitor closure and under the owned paths; the dictionaries complete in nb, en-GB and tr with the removed keys gone everywhere; the zoomed menus gated on the zoom the engine reports; the resize, raise, gallery, search and text-style code; the documents' style. The mechanical checks over the span found no em dash, no attribution, no broken link and nothing removed from TESTRUNDER.
+
 ### 0.7.10.6 - The intuitiveness review, fifth stage: the text block's Content area, the pickers' search and the example site - 24 October 2026
 
 - The Text family's Content area was one explanatory line. It now holds **Edit the text**, which opens the words on the page with the text toolbar, and a font and a size for the whole text, which the toolbar applies to every word at once (`urd-edit-text` and `urd-text-style` in previewBridge.js; the toolbar's `urd-text-style` listener in preview-edit.js).

@@ -21,7 +21,7 @@
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
+import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
@@ -3996,7 +3996,8 @@ function enhanceBlock(el, block, section, grid, host) {
       const h = document.createElement('div');
       h.className = 'urd-edit-resize';
       h.dataset.edge = edge;
-      h.title = resizeHandle.title;
+      // An edge handle moves one axis, so it says nothing of the ratio Shift keeps on a corner.
+      h.title = followsContent(block) || edge.length === 2 ? resizeHandle.title : ta('canvas.dragResize');
       el.appendChild(h);
       edgeHandles.push(h);
     }
@@ -4584,7 +4585,9 @@ function enhanceBlock(el, block, section, grid, host) {
         // The width grows with a pull outward on the edge dragged, up to the section's far edge on the right and the block's own right edge on the left, so the origin never crosses zero.
         const wMax = edge.x < 0 ? r2(orig.x + orig.w) : r2(100 - orig.x);
         const w = edge.x === 0 || (hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX) ? orig.w : clamp(snapPct(orig.w + edge.x * dx), r2(colStep), wMax);
-        const hFrom = (hv) => Math.max(4, hv);
+        // The top edge of a block drawn at least as tall as its words stops at the words, as the drawn box does, so the block never walks down.
+        const hMin = edge.y < 0 && autoGrows(block, window.Urd.blocks.get(block.type)) ? Math.max(4, Math.round(contentHeight(el))) : 4;
+        const hFrom = (hv) => Math.max(hMin, hv);
         const h = edge.y === 0 || hug ? orig.h : keepRatio ? hFrom(Math.round(w * ratio)) : hFrom(snapPx(orig.h + edge.y * dy));
         // The top edge pulled: the origin follows the new height, held at the floor.
         const yTop = edge.y < 0 ? Math.max(yMin, orig.y + orig.h - h) : orig.y;

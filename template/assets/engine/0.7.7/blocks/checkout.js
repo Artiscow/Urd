@@ -215,6 +215,8 @@ export const checkoutBlock = {
       if (confirmation) confirmation.replaceWith(next);
       else host.prepend(next);
       confirmation = next;
+      // The buyer stands at the form's foot when the order goes: the confirmation is brought into view.
+      next.scrollIntoView({ block: 'start' });
     };
     const kept = ctx.preview ? null : readOrder();
     if (kept) {

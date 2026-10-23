@@ -11366,22 +11366,32 @@ body.urd-mobile .urd-cal-note {
   opacity: 0.85;
 }
 
-/* Printing an order: the confirmation alone, at the top of the page, in black on white. */
+/* Printing an order: the confirmation alone, at the top of the sheet, in black on white.
+   Everything beside the confirmation's own ancestors is left out, and those ancestors are taken out of the canvas's
+   absolute layout, so the confirmation stands at the top of the first sheet at the sheet's width. */
 @media print {
-  html.urd-print-order body {
-    visibility: hidden;
+  html.urd-print-order body > :not(:has(.urd-checkout-confirmation)),
+  html.urd-print-order #urd-root > :not(:has(.urd-checkout-confirmation)),
+  html.urd-print-order .urd-section:has(.urd-checkout-confirmation) > :not(:has(.urd-checkout-confirmation)),
+  html.urd-print-order .urd-canvas:has(.urd-checkout-confirmation) > :not(:has(.urd-checkout-confirmation)),
+  html.urd-print-order .urd-checkout > :not(.urd-checkout-confirmation) {
+    display: none;
   }
 
-  html.urd-print-order .urd-checkout-confirmation,
-  html.urd-print-order .urd-checkout-confirmation * {
-    visibility: visible;
+  html.urd-print-order :is(.urd-section, .urd-canvas, .urd-block, .urd-checkout):has(.urd-checkout-confirmation) {
+    position: static;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    transform: none;
+    background: #fff;
   }
 
   html.urd-print-order .urd-checkout-confirmation {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: static;
+    width: auto;
     border: 0;
     padding: 0;
     color: #000;

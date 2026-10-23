@@ -361,7 +361,7 @@ const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edi
  * @param {HTMLElement} el The block element
  * @returns {number}
  */
-function contentHeight(el) {
+export function contentHeight(el) {
   return childrenHeight(el);
 }
 
