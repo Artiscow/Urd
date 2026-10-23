@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.10.1): the two polish items of the review
+
+- [ ] Drag a block's ⠿ handle down past the bottom of the view and hold: the page scrolls under it, the block stays under the pointer, and the drop lands where the pointer is; the same upward past the top; at the page's end the scroll stops
+- [ ] Double-click a section and type «quo»: the first hit is marked; Enter inserts it; typing on with the arrows walks from the mark
+- [ ] In the element menu's settings search, type a word and press Enter: the focus lands on the first setting left standing
+
 ### Test batch (0.7.24.7): the printable order confirmation
 
 - [ ] An order through the endpoint, and one through the email draft: the checkout shows «Ordrebekreftelse» above the form with the date, the lines and the total, the buyer, the chosen payment instruction, the seller's name, organisation number, address, phone and email, the right-of-withdrawal note and the standard withdrawal form with the seller's details and the order date filled in

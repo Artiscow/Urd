@@ -28,6 +28,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.10.1 - The intuitiveness review: the walk, its findings sorted, and two polish items - 23 October 2026
+
+- The whole editor was walked in a headless browser against the panel rules: the setup wizard, the top bar and the rail, the twelve panels with every group opened, the element menu of the twelve block kinds on the example pages, the canvas toolbar and the phone view, with a screenshot of each; and the editor's source was counted for labels without a tooltip (115 of 314), prose lines in panels and icon buttons without a name (26 in the Footer panel). Eleven findings stand as sub-items under 0.7.10 with a done-when each; the letterbox outside the canvas was found done.
+- Dragging a block to the top or bottom edge of the view did nothing, so a block could not be carried past what was on screen. The pointer resting in a 48 px edge band now scrolls the page once per frame, with the scrolled distance counted as pointer travel so the block stays under the pointer (`wireDrag` in preview-edit.js).
+- Typing in the new-block menu left no hit marked, so Enter took a row the eye had not seen. The first hit is marked from the first letter, and Enter in the element menu's settings search moves the focus to the first setting the words left standing.
+
 ### 0.7.24.7 - The buyer's printable order confirmation - 23 October 2026
 
 - An order by endpoint ended on a status line with the basket emptied, and a provider's return on a thank-you alone, so the buyer had no confirmation on a durable medium (angrerettloven § 18). After every order path the checkout now shows a confirmation with the date, the provider's reference, the order lines and the total, the buyer, how it is paid (the chosen instruction or «Paid with Vipps», «Paid by card», «Paid with PayPal»), the seller with the organisation number and contact details, the right of withdrawal and the standard withdrawal form with the seller filled in (`buildConfirmation` in blocks/checkout.js; the record in `orderRecord`, kept in sessionStorage so a refresh keeps it until the next order).

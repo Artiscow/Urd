@@ -1127,6 +1127,8 @@ function addBlockAdder(host, section, grid) {
       b.addEventListener('click', item.run);
       hits.appendChild(b);
     }
+    // The first hit is marked from the first letter, so the row Enter takes is the row the eye sees.
+    setPick(hits.querySelector('button'));
   };
   searchInput.addEventListener('input', renderHits);
   searchInput.addEventListener('keydown', (event) => {
@@ -4325,6 +4327,34 @@ function enhanceBlock(el, block, section, grid, host) {
       }
       let current = orig;
 
+      // A block carried to the top or bottom edge of the view scrolls the
+      // page under it, so a block can be moved past what is on screen. The
+      // scrolled distance counts as pointer travel, so the block stays under
+      // the pointer while the page moves; the pass runs once per frame while
+      // the pointer rests in the edge band, and stops at the page's ends.
+      const EDGE_PX = 48;
+      let scrolled = 0;
+      let lastEv = null;
+      let edgeFrame = 0;
+      const stopEdgeScroll = () => {
+        if (edgeFrame) cancelAnimationFrame(edgeFrame);
+        edgeFrame = 0;
+      };
+      const edgeScroll = () => {
+        edgeFrame = 0;
+        if (!lastEv) return;
+        const y = lastEv.clientY;
+        const h = window.innerHeight;
+        const step = y < EDGE_PX ? -Math.ceil((EDGE_PX - y) / 3) : y > h - EDGE_PX ? Math.ceil((y - (h - EDGE_PX)) / 3) : 0;
+        if (!step) return;
+        const before = window.scrollY;
+        window.scrollBy({ top: step, behavior: 'instant' });
+        const moved = window.scrollY - before;
+        if (!moved) return;
+        scrolled += moved;
+        onMove(lastEv);
+      };
+
       // Smart guides (snap-model.js): the neighbours' edges and centres, the
       // content surface's quarters and midline, and the gaps the neighbours
       // keep between them, as snap lines, within a distance that follows the
@@ -4448,7 +4478,11 @@ function enhanceBlock(el, block, section, grid, host) {
         const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
         const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
         let dxPx = ev.clientX - start.x;
-        let dyPx = ev.clientY - start.y;
+        let dyPx = ev.clientY - start.y + (kind === 'move' ? scrolled : 0);
+        if (kind === 'move') {
+          lastEv = ev;
+          if (!edgeFrame) edgeFrame = requestAnimationFrame(edgeScroll);
+        }
         if (kind === 'move' && ev.shiftKey) ({ dx: dxPx, dy: dyPx } = lockAxis(dxPx, dyPx));
         const dx = dxPx * pctPerPx;
         const dy = dyPx;
@@ -4524,6 +4558,7 @@ function enhanceBlock(el, block, section, grid, host) {
       // is swapped out mid-drag): clean up and release the pinning,
       // otherwise it would stay suspended for the rest of the session.
       const onCancel = () => {
+        stopEdgeScroll();
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         handle.removeEventListener('pointercancel', onCancel);
@@ -4536,6 +4571,7 @@ function enhanceBlock(el, block, section, grid, host) {
       };
 
       const onUp = () => {
+        stopEdgeScroll();
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         handle.removeEventListener('pointercancel', onCancel);

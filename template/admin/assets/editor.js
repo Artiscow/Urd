@@ -26141,7 +26141,12 @@ var Xw = /* @__PURE__ */ L("<span><input type=\"search\" class=\"menu-search\"/>
 function Zw(e, t) {
 	at(t, !0);
 	function n(e) {
-		e.key === "Escape" && t.get() ? (e.stopPropagation(), t.set("")) : !t.get() && [
+		if (e.key === "Escape" && t.get()) e.stopPropagation(), t.set("");
+		else if (e.key === "Enter" && t.get()) {
+			e.preventDefault();
+			let t = e.currentTarget.closest(".block-menu") ?? e.currentTarget.closest(".panel-body"), n = e.currentTarget;
+			[...t?.querySelectorAll("input, button, textarea, [tabindex=\"0\"]") ?? []].find((e) => e !== n && e.offsetParent !== null && !e.disabled && n.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING)?.focus();
+		} else !t.get() && [
 			"1",
 			"2",
 			"3"
