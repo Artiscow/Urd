@@ -127,6 +127,7 @@ test('the payment buttons follow the settings: Vipps, a card at Vipps, and nothi
   assert.deepEqual(buttonsOf({ recipient: 'post@example.org' }), [sites.nb['shop.sendOrder']]);
   assert.deepEqual(buttonsOf({ payments: { vipps: true, card: 'vipps' } }), [sites.nb['shop.sendOrder'], sites.nb['shop.payWithVipps'], sites.nb['shop.payWithCard']]);
   assert.deepEqual(buttonsOf({ payments: { card: 'vipps' } }), [sites.nb['shop.sendOrder'], sites.nb['shop.payWithCard']]);
+  assert.deepEqual(buttonsOf({ payments: { card: 'stripe', vipps: true } }), [sites.nb['shop.sendOrder'], sites.nb['shop.payWithVipps'], sites.nb['shop.payWithCard']], 'one card button whichever provider');
 });
 
 test('the payment instructions stand in the form above the order summary, as label and text', () => {

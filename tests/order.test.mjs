@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  validOrderPayload, orderAmountMinor, validVariants, orderLineItems, orderDescription,
+  validOrderPayload, orderAmountMinor, validVariants, orderLineItems, orderDescription, currencyExponent,
   makeReference, isReference, orderCurrency, vatRegistered, returnUrl, PROVIDERS,
 } from '../template/functions/_lib/order.js';
 
@@ -103,4 +103,12 @@ test('returnUrl: the checkout page with the reference and the provider that answ
   assert.equal(returnUrl('https://site.no', '/kasse', 'urd-abc', 'vipps'), 'https://site.no/kasse?ordered=urd-abc&via=vipps');
   assert.equal(returnUrl('https://site.no', undefined, 'urd-abc', 'stripe'), 'https://site.no/?ordered=urd-abc&via=stripe');
   assert.deepEqual(PROVIDERS, ['vipps', 'stripe', 'paypal']);
+});
+
+test('currencyExponent and the minor unit: two decimals for most currencies, whole units for the zero-decimal ones', () => {
+  for (const code of ['NOK', 'DKK', 'EUR', 'SEK', 'GBP', 'USD', 'ISK']) assert.equal(currencyExponent(code), 2, code);
+  for (const code of ['JPY', 'KRW', 'jpy']) assert.equal(currencyExponent(code), 0, code);
+  assert.equal(orderAmountMinor([{ id: 'kake', qty: 2 }], CATALOGS, 'JPY'), 700);
+  assert.equal(orderAmountMinor([{ id: 'kake', qty: 2 }], CATALOGS, 'EUR'), 70000);
+  assert.equal(orderLineItems([{ id: 'boller', qty: 1 }], CATALOGS, 'KRW')[0].unit, 50, 'rounded to the whole unit');
 });

@@ -1,13 +1,11 @@
 /**
- * The network side of the payment layer (ADR-0020): the access token for the
+ * The Vipps MobilePay network side of the payment layer (ADR-0020): the access token for the
  * sales unit, kept in the isolate until shortly before it expires, and one
  * call shape against the Vipps MobilePay API with the headers every call
  * carries and a timeout. The pure logic is in vipps.js.
  */
 import { tokenFromAnswer, tokenFresh } from './vipps.js';
-
-/** The Vipps API answers within this, or the call is given up. */
-const TIMEOUT_MS = 10000;
+import { fetchWithin } from './net.js';
 
 /** The cached token per client id; an isolate serves one site, so the map holds one entry. */
 const tokens = new Map();
@@ -19,19 +17,6 @@ function baseHeaders(config) {
     'Merchant-Serial-Number': config.msn,
     'Vipps-System-Name': 'urd',
   };
-}
-
-/** fetch with a timeout; a network failure or a timeout gives null. */
-async function fetchWithin(url, init) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 /**

@@ -35,7 +35,9 @@
     if (on.length) return on.join(', ');
     return pays.manual.length ? String(pays.manual.length) : ta('common.none');
   });
-  const cardOptions = $derived(CARD_PROVIDERS.filter((id) => id !== 'stripe').map((id) => [id, ta(`opt.payCard.${id}`)]));
+  const cardOptions = $derived(CARD_PROVIDERS.map((id) => [id, ta(`opt.payCard.${id}`)]));
+  /** The capture choice matters only for the providers that can take the money at once (Vipps always holds it). */
+  const captureShown = $derived(pays.card === 'stripe' || pays.paypal);
 </script>
 
 {#if area === 'content'}
@@ -65,6 +67,10 @@
       </div>
       <Choice label={ta('lbl.payCard')} value={pays.card} title={ta('tip.checkout.payCard')}
         options={cardOptions} onchange={(v) => setPay({ card: v })} />
+      {#if captureShown}
+        <Choice label={ta('lbl.payCapture')} value={pays.capture} title={ta('tip.checkout.payCapture')}
+          options={[['ship', ta('opt.payCapture.ship')], ['now', ta('opt.payCapture.now')]]} onchange={(v) => setPay({ capture: v })} />
+      {/if}
       <!-- The ways to pay without a provider: a label and a text each, shown above the order summary -->
       <span class="mini-label" title={ta('tip.checkout.instructions')}>{ta('lbl.payInstructions')}</span>
       {#each pays.manual as method, i (method.id)}

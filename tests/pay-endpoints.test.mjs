@@ -1,0 +1,191 @@
+/**
+ * The payment layer's endpoints (functions/api/pay/<provider>/, ADR-0020 and
+ * ADR-0028) run against a stubbed network: the site's own files (the
+ * catalogue, the site file) and the provider's API answer from fixtures, and
+ * every call the endpoint makes is recorded. This holds the request each
+ * provider receives (path, headers, body), the answer the checkout page gets,
+ * the check of the return, the webhook's signature gate, and the 503 without
+ * secrets. The real payments are tested in the providers' test environments.
+ */
+import { test, afterEach } from 'node:test';
+import assert from 'node:assert/strict';
+import { createHmac, createHash } from 'node:crypto';
+
+const FN = new URL('../template/functions/api/pay/', import.meta.url);
+const vipps = {
+  checkout: await import(new URL('vipps/checkout.js', FN).href),
+  session: await import(new URL('vipps/session.js', FN).href),
+  webhook: await import(new URL('vipps/webhook.js', FN).href),
+};
+const stripe = {
+  checkout: await import(new URL('stripe/checkout.js', FN).href),
+  session: await import(new URL('stripe/session.js', FN).href),
+  webhook: await import(new URL('stripe/webhook.js', FN).href),
+};
+
+const ORIGIN = 'https://forening.pages.dev';
+const REF_RE = /^urd-[0-9a-f]{24}$/;
+// Deliberate Norwegian fixture ids and names: this is user catalog data.
+const SHOP = {
+  '/content/samlinger.json': { samlinger: ['produkter'] },
+  '/content/samlinger/produkter.json': { kind: 'products', entries: [{ id: 'kake', title: 'Kake', price: 350, sizes: ['Stor'] }] },
+};
+
+const realFetch = globalThis.fetch;
+afterEach(() => { globalThis.fetch = realFetch; });
+
+/**
+ * Stubs fetch: the site's own files from SHOP plus the site file, and the
+ * provider's API from a handler; returns the recorded calls.
+ */
+function stubNetwork(site, provider) {
+  const calls = [];
+  globalThis.fetch = async (url, init = {}) => {
+    const call = { url: String(url), method: init.method ?? 'GET', headers: init.headers ?? {}, body: init.body };
+    calls.push(call);
+    const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+    if (call.url.startsWith(ORIGIN)) {
+      const path = new URL(call.url).pathname;
+      if (path === '/content/site.json') return json({ site });
+      return SHOP[path] ? json(SHOP[path]) : new Response('not found', { status: 404 });
+    }
+    return provider(call, json);
+  };
+  return calls;
+}
+
+const order = (extra = {}) => new Request(`${ORIGIN}/api/pay/x/checkout`, {
+  method: 'POST',
+  body: JSON.stringify({ order: [{ id: 'kake', qty: 2, variant: 'Stor' }], contact: { name: 'Kari', email: 'kari@forening.no' }, returnPath: '/kasse', ...extra }),
+});
+
+const VIPPS_ENV = { VIPPS_CLIENT_ID: 'id', VIPPS_CLIENT_SECRET: 'sec', VIPPS_SUBSCRIPTION_KEY: 'sub', VIPPS_MSN: '123456', VIPPS_API_BASE: 'https://apitest.vipps.no', VIPPS_WEBHOOK_SECRET: 'whs' };
+
+function vippsApi(call, json) {
+  if (call.url.endsWith('/accesstoken/get')) return json({ token_type: 'Bearer', expires_in: '3599', access_token: 'TOK' });
+  if (call.url.endsWith('/epayment/v1/payments') && call.method === 'POST') return json({ reference: JSON.parse(call.body).reference, redirectUrl: 'https://landing.vipps.no?token=abc' }, 201);
+  if (/\/epayment\/v1\/payments\/urd-/.test(call.url)) return json({ state: 'AUTHORIZED', userDetails: { firstName: 'Kari', lastName: 'Nordmann', email: 'k@n.no', mobileNumber: '4712345678' } });
+  return new Response('nope', { status: 404 });
+}
+
+test('vipps checkout: the payment in the site currency with the profile, the receipt and the reference as idempotency key', async () => {
+  const calls = stubNetwork({ commerce: { currency: 'DKK' } }, vippsApi);
+  const res = await vipps.checkout.onRequestPost({ request: order(), env: VIPPS_ENV });
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.match(data.reference, REF_RE);
+  assert.equal(data.url, 'https://landing.vipps.no?token=abc');
+  const create = calls.find((c) => c.url.endsWith('/epayment/v1/payments'));
+  assert.equal(create.headers.Authorization, 'Bearer TOK');
+  assert.equal(create.headers['Idempotency-Key'], data.reference);
+  const body = JSON.parse(create.body);
+  assert.deepEqual(body.amount, { currency: 'DKK', value: 70000 });
+  assert.equal(body.returnUrl, `${ORIGIN}/kasse?ordered=${data.reference}&via=vipps`);
+  assert.equal(body.profile.scope, 'name email phoneNumber');
+  assert.equal(body.receipt.orderLines.length, 1);
+});
+
+test('vipps checkout: a seller in the VAT register sends no receipt; the card method sends CARD', async () => {
+  const calls = stubNetwork({ contact: { vat: { registered: true } } }, vippsApi);
+  await vipps.checkout.onRequestPost({ request: order({ method: 'card' }), env: VIPPS_ENV });
+  const body = JSON.parse(calls.find((c) => c.url.endsWith('/epayment/v1/payments')).body);
+  assert.equal(body.receipt, undefined);
+  assert.deepEqual(body.paymentMethod, { type: 'CARD' });
+  assert.equal(body.profile, undefined);
+});
+
+test('vipps session: a reserved payment is paid with the buyer\'s name; a malformed reference is refused before Vipps is asked', async () => {
+  const calls = stubNetwork({}, vippsApi);
+  const ref = 'urd-' + 'a'.repeat(24);
+  const res = await vipps.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/vipps/session?reference=${ref}`), env: VIPPS_ENV });
+  assert.deepEqual(await res.json(), { paid: true, open: false, state: 'AUTHORIZED', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '4712345678' } });
+  const before = calls.length;
+  const bad = await vipps.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/vipps/session?reference=../x`), env: VIPPS_ENV });
+  assert.equal(bad.status, 400);
+  assert.equal(calls.length, before);
+});
+
+test('vipps webhook: a signed delivery 200, a tampered one 401, no secret 503', async () => {
+  stubNetwork({}, vippsApi);
+  const body = JSON.stringify({ reference: 'urd-' + 'a'.repeat(24), name: 'AUTHORIZED' });
+  const date = new Date().toUTCString();
+  const hash = createHash('sha256').update(body).digest('base64');
+  const sig = createHmac('sha256', 'whs').update(`POST\n/api/pay/vipps/webhook\n${date};forening.pages.dev;${hash}`).digest('base64');
+  const deliver = (signature, env = VIPPS_ENV) => vipps.webhook.onRequestPost({ env, request: new Request(`${ORIGIN}/api/pay/vipps/webhook`, { method: 'POST', body, headers: { 'x-ms-date': date, 'x-ms-content-sha256': hash, authorization: `HMAC-SHA256 SignedHeaders=x-ms-date;host;x-ms-content-sha256&Signature=${signature}` } }) });
+  assert.equal((await deliver(sig)).status, 200);
+  assert.equal((await deliver(sig.slice(1) + 'A')).status, 401);
+  assert.equal((await deliver(sig, { ...VIPPS_ENV, VIPPS_WEBHOOK_SECRET: '' })).status, 503);
+});
+
+const STRIPE_ENV = { STRIPE_SECRET_KEY: 'sk_test_abc123', STRIPE_WEBHOOK_SECRET: 'whsec_test' };
+const SESSION_ID = 'cs_test_a1b2c3d4e5f6g7h8i9';
+
+function stripeApi(sessions) {
+  return (call, json) => {
+    if (call.url.endsWith('/v1/checkout/sessions') && call.method === 'POST') {
+      const form = new URLSearchParams(call.body);
+      sessions.set(SESSION_ID, form.get('client_reference_id'));
+      return json({ id: SESSION_ID, url: `https://checkout.stripe.com/c/pay/${SESSION_ID}` });
+    }
+    const m = /\/v1\/checkout\/sessions\/(cs_[A-Za-z0-9_]+)\?expand\[\]=payment_intent$/.exec(call.url);
+    if (m) return json({ id: m[1], status: 'complete', payment_status: 'unpaid', client_reference_id: sessions.get(m[1]) ?? 'urd-other', payment_intent: { status: 'requires_capture' }, customer_details: { name: 'Kari Nordmann', email: 'k@n.no', phone: null } });
+    return new Response('nope', { status: 404 });
+  };
+}
+
+test('stripe checkout: a form-encoded session with the bearer key, the lines in the site currency, a hold by default, and the session id to the page', async () => {
+  const sessions = new Map();
+  const calls = stubNetwork({ lang: 'nb', commerce: { currency: 'EUR' } }, stripeApi(sessions));
+  const res = await stripe.checkout.onRequestPost({ request: order(), env: STRIPE_ENV });
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.match(data.reference, REF_RE);
+  assert.equal(data.pid, SESSION_ID);
+  assert.equal(data.url, `https://checkout.stripe.com/c/pay/${SESSION_ID}`);
+  const create = calls.find((c) => c.url === 'https://api.stripe.com/v1/checkout/sessions');
+  assert.equal(create.headers.Authorization, 'Bearer sk_test_abc123');
+  assert.equal(create.headers['content-type'], 'application/x-www-form-urlencoded');
+  assert.equal(create.headers['Idempotency-Key'], data.reference);
+  const form = new URLSearchParams(create.body);
+  assert.equal(form.get('line_items[0][price_data][currency]'), 'eur');
+  assert.equal(form.get('line_items[0][price_data][unit_amount]'), '35000');
+  assert.equal(form.get('line_items[0][quantity]'), '2');
+  assert.equal(form.get('payment_intent_data[capture_method]'), 'manual');
+  assert.equal(form.get('locale'), 'nb');
+  assert.equal(form.get('success_url'), `${ORIGIN}/kasse?ordered=${data.reference}&via=stripe`);
+});
+
+test('stripe checkout: capture now leaves the hold out; without the key 503 before anything is read', async () => {
+  const sessions = new Map();
+  let calls = stubNetwork({}, stripeApi(sessions));
+  await stripe.checkout.onRequestPost({ request: order({ capture: 'now' }), env: STRIPE_ENV });
+  assert.equal(new URLSearchParams(calls.find((c) => c.url.endsWith('/v1/checkout/sessions')).body).get('payment_intent_data[capture_method]'), null);
+  calls = stubNetwork({}, stripeApi(sessions));
+  const res = await stripe.checkout.onRequestPost({ request: order(), env: {} });
+  assert.equal(res.status, 503);
+  assert.equal((await res.json()).code, 'payNotConfigured');
+  assert.equal(calls.length, 0);
+});
+
+test('stripe session: a held payment for this reference is paid with the name Stripe collected; another reference\'s session confirms nothing', async () => {
+  const sessions = new Map();
+  stubNetwork({}, stripeApi(sessions));
+  const ref = 'urd-' + 'c'.repeat(24);
+  sessions.set(SESSION_ID, ref);
+  const ask = (reference, pid) => stripe.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/stripe/session?reference=${reference}&pid=${pid}`), env: STRIPE_ENV });
+  assert.deepEqual(await (await ask(ref, SESSION_ID)).json(), { paid: true, open: false, state: 'complete:requires_capture', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '' } });
+  assert.equal((await ask('urd-' + 'd'.repeat(24), SESSION_ID)).status, 400, 'the session belongs to another reference');
+  assert.equal((await ask(ref, 'pi_123')).status, 400, 'not a session id');
+});
+
+test('stripe webhook: a recent delivery signed with the secret 200, a tampered or old one 401, no secret 503', async () => {
+  stubNetwork({}, stripeApi(new Map()));
+  const body = JSON.stringify({ id: 'evt_1', type: 'checkout.session.completed' });
+  const t = Math.floor(Date.now() / 1000);
+  const sig = (time) => createHmac('sha256', 'whsec_test').update(`${time}.${body}`).digest('hex');
+  const deliver = (header, env = STRIPE_ENV) => stripe.webhook.onRequestPost({ env, request: new Request(`${ORIGIN}/api/pay/stripe/webhook`, { method: 'POST', body, headers: { 'stripe-signature': header } }) });
+  assert.equal((await deliver(`t=${t},v1=${sig(t)}`)).status, 200);
+  assert.equal((await deliver(`t=${t},v1=${'0'.repeat(64)}`)).status, 401);
+  assert.equal((await deliver(`t=${t - 3600},v1=${sig(t - 3600)}`)).status, 401, 'a replay an hour later');
+  assert.equal((await deliver(`t=${t},v1=${sig(t)}`, { STRIPE_SECRET_KEY: 'sk_test_abc123' })).status, 503);
+});

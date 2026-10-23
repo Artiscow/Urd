@@ -203,12 +203,13 @@ export const checkoutBlock = {
               },
               returnPath: location.pathname,
               method,
+              capture: pays.capture,
             }),
           });
           const data = await res.json().catch(() => null);
           if (res.ok && data?.url) {
-            // The payment's reference and provider are kept for the return, which asks whether this payment went through.
-            try { sessionStorage.setItem('urd-pay-reference', `${provider}:${String(data.reference ?? '')}`); } catch { /* no storage: the basket then stays after the payment */ }
+            // The provider, the payment's reference and the provider's own id are kept for the return, which asks whether this payment went through; the id never comes from the address, so a shared link confirms nothing.
+            try { sessionStorage.setItem('urd-pay-reference', [provider, String(data.reference ?? ''), String(data.pid ?? '')].join(':')); } catch { /* no storage: the basket then stays after the payment */ }
             location.href = data.url;
             return;
           }
@@ -239,10 +240,12 @@ export const checkoutBlock = {
       };
       let started = '';
       try { started = sessionStorage.getItem('urd-pay-reference') ?? ''; } catch { /* no storage */ }
-      if (PAY_PROVIDERS.includes(via) && started === `${via}:${ordered}` && /^urd-[0-9a-f]{24}$/.test(ordered)) {
+      const [startedVia = '', startedRef = '', pid = ''] = started.split(':');
+      if (PAY_PROVIDERS.includes(via) && startedVia === via && startedRef === ordered && /^urd-[0-9a-f]{24}$/.test(ordered)) {
         // The provider may send the buyer back before the payment is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
         const ask = async (left) => {
-          const data = await fetch(`/api/pay/${via}/session?reference=${encodeURIComponent(ordered)}`).then((res) => (res.ok ? res.json() : null)).catch(() => null);
+          const query = `reference=${encodeURIComponent(ordered)}${pid ? `&pid=${encodeURIComponent(pid)}` : ''}`;
+          const data = await fetch(`/api/pay/${via}/session?${query}`).then((res) => (res.ok ? res.json() : null)).catch(() => null);
           if (data?.paid) {
             writeCart([]);
             // The buyer the provider named is thanked by name; the receipt with the order lines sits with the provider.

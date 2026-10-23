@@ -67,10 +67,18 @@ export function productMap(catalogs) {
   return products;
 }
 
-/** A product's price in the currency's minor unit (øre, cents), or null when it has none. */
-export function priceMinor(entry) {
+/** The currencies the providers count in whole units (ISO 4217 exponent 0 at Stripe); every other currency has two decimals. */
+const ZERO_DECIMAL = new Set(['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF']);
+
+/** How many decimals a currency's minor unit has: 0 for the zero-decimal currencies, else 2. */
+export function currencyExponent(code) {
+  return ZERO_DECIMAL.has(String(code ?? '').toUpperCase()) ? 0 : 2;
+}
+
+/** A product's price in the currency's minor unit (øre, cents; yen for JPY), or null when it has none. */
+export function priceMinor(entry, currency = 'NOK') {
   const price = Number(entry?.price);
-  return Number.isFinite(price) && price >= 0 ? Math.round(price * 100) : null;
+  return Number.isFinite(price) && price >= 0 ? Math.round(price * 10 ** currencyExponent(currency)) : null;
 }
 
 /**
@@ -80,13 +88,14 @@ export function priceMinor(entry) {
  * never charged (ADR-0020).
  * @param {Array<{id: string, qty: number}>} order Cleaned order (validOrderPayload)
  * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
+ * @param {string} [currency] The ISO code, for its minor unit
  * @returns {number|null}
  */
-export function orderAmountMinor(order, catalogs) {
+export function orderAmountMinor(order, catalogs, currency = 'NOK') {
   const products = productMap(catalogs);
   let sum = 0;
   for (const line of order) {
-    const price = priceMinor(products.get(line.id));
+    const price = priceMinor(products.get(line.id), currency);
     if (price == null) return null;
     sum += price * line.qty;
   }
@@ -120,12 +129,12 @@ export function validVariants(order, catalogs) {
  * the minor unit, for a provider's receipt or line items.
  * @returns {Array<{id: string, name: string, qty: number, unit: number, total: number}>|null} null when a line has no priced product
  */
-export function orderLineItems(order, catalogs) {
+export function orderLineItems(order, catalogs, currency = 'NOK') {
   const products = productMap(catalogs);
   const lines = [];
   for (const line of order) {
     const entry = products.get(line.id);
-    const unit = priceMinor(entry);
+    const unit = priceMinor(entry, currency);
     if (unit == null) return null;
     const title = String(entry.title ?? line.id).trim() || line.id;
     lines.push({ id: line.id, name: line.variant ? `${title} (${line.variant})` : title, qty: line.qty, unit, total: unit * line.qty });
@@ -208,7 +217,7 @@ export const json = (body, status = 200) =>
 /**
  * The checks every checkout endpoint runs before it talks to a provider:
  * the payload, the shop files, the total and the variants.
- * @returns {Promise<{clean: object, site: object|null, catalogs: Array<object>, amountMinor: number, currency: string}|{error: Response}>}
+ * @returns {Promise<{clean: object, payload: object, origin: string, site: object|null, catalogs: Array<object>, amountMinor: number, currency: string}|{error: Response}>}
  */
 export async function prepareOrder(request) {
   let payload = null;
@@ -222,7 +231,8 @@ export async function prepareOrder(request) {
   const origin = new URL(request.url).origin;
   const shop = await readShop(origin);
   if (!shop) return { error: json({ error: 'Could not read the catalogue', code: 'catalogUnreachable' }, 502) };
-  const amountMinor = orderAmountMinor(clean.order, shop.catalogs);
+  const currency = orderCurrency(shop.site);
+  const amountMinor = orderAmountMinor(clean.order, shop.catalogs, currency);
   if (amountMinor == null || amountMinor <= 0) {
     return { error: json({ error: 'Unknown product in the order', code: 'orderInvalid' }, 400) };
   }
@@ -230,5 +240,5 @@ export async function prepareOrder(request) {
   if (!validVariants(clean.order, shop.catalogs)) {
     return { error: json({ error: 'Unknown variant in the order', code: 'orderInvalid' }, 400) };
   }
-  return { clean, payload, origin, site: shop.site, catalogs: shop.catalogs, amountMinor, currency: orderCurrency(shop.site) };
+  return { clean, payload, origin, site: shop.site, catalogs: shop.catalogs, amountMinor, currency };
 }

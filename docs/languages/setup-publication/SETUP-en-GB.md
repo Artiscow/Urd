@@ -127,18 +127,25 @@ git push
 
 ## 5. The payment layer (optional)
 
-The Checkout block can take the payment with Vipps ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md)). It is an optional layer: without it the order form sends the order by email or to an endpoint, as before. The layer needs a Vipps MobilePay agreement for payment on the web (the ePayment API) and the four keys of the sales unit.
+The Checkout block can take the payment through a provider ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md), [ADR-0028](../../adr/0028-payment-providers-in-the-optional-layer.md)). It is an optional layer: without it the order form sends the order by email or to an endpoint, as before. Each provider needs its own agreement and keys, and each is switched on per Checkout block under **Payment** in the block's menu. The buyer always pays on the provider's own page, so the site never sees a card.
 
-1. In the Vipps MobilePay business portal, under **Developer**, open the sales unit and copy its `client_id`, `client_secret`, `Ocp-Apim-Subscription-Key` and the Merchant Serial Number (MSN). The test sales unit that comes with the product has keys of its own, under the same heading.
+First set the shop's currency in the Site panel (**Shop currency**, an ISO code such as NOK, DKK or EUR); the catalogue's prices are in that currency, and every provider charges in it.
+
+### Vipps MobilePay
+
+The layer needs a Vipps MobilePay agreement for payment on the web (the ePayment API) and the four keys of the sales unit. A Danish or Finnish MobilePay sales unit follows the same steps against the same servers, with the shop currency DKK or EUR; its reservations are shorter (step 6).
+
+1. In the Vipps MobilePay business portal, click **For developers** in the side menu and choose **Production**. Find the sales unit and click **Show keys**, then copy `client_id`, `client_secret` and the primary `Ocp-Apim-Subscription-Key`, and the Merchant Serial Number (MSN) shown with the sales unit.
 2. Add them in Cloudflare as in step 3, all four as **Secret**: `VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET`, `VIPPS_SUBSCRIPTION_KEY` and `VIPPS_MSN`.
-3. For the test payment, use the test sales unit's keys and add one more, Type: Text, `VIPPS_API_BASE` with the value `https://apitest.vipps.no`. Install the Vipps MT test app (TestFlight on iOS, Google Play on Android after joining Vipps's test group; the developer pages link both), and make a test user under **Developer** in the portal. The app signs in with the test user's phone number and identity number, and the confirmation code is 0000 or 000000. Your own Vipps account cannot pay in the test environment.
-4. Redeploy (as at the end of step 3). In the editor, open the Checkout block's menu, tick the «Pay with Vipps» button, and publish.
+3. For the test payment, choose **Test** under **For developers** instead: a test sales unit comes with the product, and **Add test sales unit** makes another. Use its keys (**Show keys**) in the four secrets, and add one more, Type: Text, `VIPPS_API_BASE` with the value `https://apitest.vipps.no`. Make a test user on the **Test users** tab with **Add a new test user**; the portal gives it a phone number and an identity number. Install the Vipps MT test app (TestFlight on iOS, Google Play on Android after joining Vipps's test group; the developer pages link both), sign in with the test user's phone number and identity number, and confirm with the code 0000 or 000000. Your own Vipps account cannot pay in the test environment.
+4. Redeploy (as at the end of step 3). In the editor, open the Checkout block's menu, tick **Payment** → «Pay with Vipps» button, and publish.
 5. The test payment: put a product in the basket, open the checkout page and press «Pay with Vipps». On a phone the test app opens; on a desktop Vipps asks for the test user's number and sends the request to the app. The app first asks the buyer to share the name, email and phone with the shop, then to approve the payment. Back on the checkout page the basket is empty and the page thanks the buyer by name; the payment is in the portal with the order lines in its description, and the receipt is in the app. When it works, swap in the production keys and remove `VIPPS_API_BASE`.
-6. The money is reserved, not moved. When the goods ship, capture the payment in the portal; Vipps allows 180 days, and the rules forbid a capture before the goods are ready. Cancelling in the portal releases the reservation; a payment never captured is released by Vipps when the window ends.
+6. The money is reserved, not moved. When the goods ship, find the reserved order among the portal's transactions and click **Capture** (enter an amount to capture only a part). A Norwegian sales unit has 180 days to capture; a Danish or Finnish one has 14, unless Vipps has approved late capture. The rules forbid a capture before the goods are ready. To call an order off, select it and click **Cancel transaction**, which releases the reservation at once; the portal offers this for Norwegian sales units only. A reservation never captured is released when the window ends.
 7. Optional, for the order notices the shop of v1.1 sends: register a webhook, so Vipps tells the site about payment events. The site stores nothing yet, but the endpoint `/api/pay/vipps/webhook` is in place and refuses every delivery that is not signed with the registration's secret. Register it with the API, and put the `secret` the answer returns in Cloudflare as **Secret** `VIPPS_WEBHOOK_SECRET`:
 
 ```bash
-# The access token (valid 24 hours in production, 1 hour in the test environment)
+# The access token (valid 24 hours in production, 1 hour in the test environment).
+# In the test environment use https://apitest.vipps.no and the test keys; each environment's registration has its own secret.
 curl -X POST https://api.vipps.no/accesstoken/get \
   -H "client_id: <client_id>" -H "client_secret: <client_secret>" \
   -H "Ocp-Apim-Subscription-Key: <subscription key>" -H "Merchant-Serial-Number: <MSN>"
@@ -150,6 +157,17 @@ curl -X POST https://api.vipps.no/webhooks/v1/webhooks \
   -H "Content-Type: application/json" \
   -d '{"url":"https://<site>/api/pay/vipps/webhook","events":["epayments.payment.authorized.v1"]}'
 ```
+
+### Stripe (card, Apple Pay, Google Pay, Klarna and more)
+
+Stripe's hosted page takes card, Apple Pay, Google Pay, Klarna, MobilePay and the other methods you switch on in the Stripe dashboard, in most currencies.
+
+1. Create a Stripe account, and test in a sandbox first (**Sandboxes** in the Dashboard's account picker). On the **API keys** page (`dashboard.stripe.com/apikeys`) Stripe recommends a restricted key over the full secret key: click **Create restricted key**, give **Checkout Sessions** Write and **Payment Intents** Read, and leave the rest at None. Add the key (`rk_test_…`; a secret key `sk_test_…` also works) in Cloudflare as **Secret** `STRIPE_SECRET_KEY`, and redeploy. If a test payment fails, the key's **View request logs** names the permission it lacked.
+2. Under **Settings** → **Payment methods**, switch on the methods you want. Apple Pay and Google Pay show on Stripe's page without anything more, on the devices that support them. Leave off the methods that settle over days (SEPA Direct Debit, bank transfers): the checkout page confirms only what is confirmed at once, so the buyer would not be thanked.
+3. In the editor, open the Checkout block's menu, **Payment** → **Card payment**: Stripe. **Take the money** says when: *When I ship* holds the amount and you capture it in the Stripe dashboard when the goods ship (cards are held 7 days, Klarna 28); *At the order* takes it at once, for what is delivered at once, such as a membership or a ticket. Publish.
+4. The test payment: put a product in the basket and press «Pay with card». On Stripe's page pay with the card number `4242 4242 4242 4242`, any future date and any three digits. Back on the checkout page the basket is empty and the page thanks the buyer by the name Stripe collected. In the sandbox's payments the payment stands as **Uncaptured** (When I ship; open it and click **Capture** when the goods ship) or **Succeeded** (At the order); `4000 0000 0000 9995` shows a declined card, and the basket stays.
+5. Optional, for the order notices the shop of v1.1 sends: on the **Webhooks** page in Workbench (`dashboard.stripe.com/webhooks`) click **Create an event destination**, choose **Your account** and the **Snapshot** payload, select the event `checkout.session.completed`, choose **Webhook endpoint**, and give the address `https://<site>/api/pay/stripe/webhook`. Click **Reveal secret** and copy the signing secret (`whsec_…`) into Cloudflare as **Secret** `STRIPE_WEBHOOK_SECRET`. The endpoint stores nothing yet, and refuses every delivery that is not signed with the secret or is older than five minutes. With the destination in place, Stripe waits up to ten seconds for the site's answer before it sends the buyer back; the endpoint answers at once.
+6. When it works, switch the **API keys** page from sandbox to live mode and complete Stripe's go-live checklist, which activates the account. Make a live restricted key the same way (`rk_live_…`; Stripe shows it only once), create the webhook destination again in live mode, since it has its own signing secret, and put both in Cloudflare instead of the sandbox values.
 
 ## The security model (in brief)
 
@@ -182,5 +200,6 @@ Then the site, admin and functions all run on `http://localhost:8788`. Full OAut
 | «Kunne ikke committe til GitHub» (502) | The token lacks scope (a private repo needs `repo`), or the branch has moved |
 | Publishing succeeds, but the site does not change | `GITHUB_ROOT_DIR` is missing/wrong: the commit lands outside the website root folder (check which paths the commit changed on GitHub) |
 | «Payment is not set up for this site yet» on the checkout page | One of the four Vipps secrets is missing in Cloudflare, or the deploy is older than the secrets (step 5) |
+| «Pay with card» at Stripe answers that payment is not set up | `STRIPE_SECRET_KEY` is missing, is the publishable key (`pk_…`) instead of the secret one, or the deploy is older than the key |
 | The Vipps payment fails before the app opens | `VIPPS_API_BASE` points at the test environment with production keys, or the other way round; the keys and the base belong to the same environment |
 | The commit is correct, but no deploy appears | The git webhook was missed by the host (happens now and then). Set up `DEPLOY_HOOK_URL` (variable 9), and publishing triggers the deploy itself |

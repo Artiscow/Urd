@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.28.2): Stripe Checkout
+
+- [ ] With a sandbox restricted key (Checkout Sessions Write, Payment Intents Read) in `STRIPE_SECRET_KEY` on a deployed site and Card payment set to Stripe (setup guide, section 5, Stripe): the key's request log shows no refused call, and «Pay with card» opens Stripe's page with the order's lines and the total in the shop currency, in the site's language
+- [ ] The test card 4242 4242 4242 4242: back on the checkout page the basket is empty and the page thanks the buyer by the name typed on Stripe's page; the dashboard shows the payment **Uncaptured** with «When I ship» and **Succeeded** with «At the order»; Capture in the dashboard goes through
+- [ ] The card 4000 0000 0000 9995 declines on Stripe's page; «Back» from Stripe's page returns to the checkout with the basket kept and no thank-you
+- [ ] Apple Pay or Google Pay switched on in the dashboard shows on Stripe's page on a device that has it
+- [ ] Element menu, Payment: Card payment offers Off, Card page at Vipps and Stripe; **Take the money** shows only with Stripe chosen
+- [ ] The webhook destination with `checkout.session.completed` and `STRIPE_WEBHOOK_SECRET`: the deliveries stand as delivered (200) in the dashboard; a POST without the signature gets 401
+
 ### Test batch (0.7.28.1): the payments setting, the shop currency and the card at Vipps
 
 - [ ] A site made before the round: the checkout block renders its Vipps button and the Vipps number line as before (the migration to `payments`), and the element menu's Payment group shows Vipps on and the number as the first instruction

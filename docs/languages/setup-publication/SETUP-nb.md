@@ -125,18 +125,25 @@ git push
 
 ## 5. Betalingslaget (valgfritt)
 
-Kasse-blokken kan ta betalingen med Vipps ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md)). Det er et valgfritt lag: uten det sender bestillingsskjemaet bestillingen på e-post eller til et endepunkt, som før. Laget trenger en Vipps MobilePay-avtale for betaling på nett (ePayment-API-et) og salgsstedets fire nøkler.
+Kasse-blokken kan ta betalingen gjennom en leverandør ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md), [ADR-0028](../../adr/0028-payment-providers-in-the-optional-layer.md)). Det er et valgfritt lag: uten det sender bestillingsskjemaet bestillingen på e-post eller til et endepunkt, som før. Hver leverandør trenger sin egen avtale og sine egne nøkler, og hver slås på per Kasse-blokk under **Betaling** i blokkens meny. Kjøperen betaler alltid på leverandørens egen side, så nettstedet ser aldri et kort.
 
-1. I Vipps MobilePay-portalen for bedrifter, under **Utvikler**, åpner du salgsstedet og kopierer `client_id`, `client_secret`, `Ocp-Apim-Subscription-Key` og salgsstedsnummeret (MSN). Testsalgsstedet som følger med produktet har egne nøkler under samme overskrift.
+Sett først butikkens valuta i Nettsted-panelet (**Butikkvaluta**, en ISO-kode som NOK, DKK eller EUR); katalogprisene står i den valutaen, og hver leverandør belaster i den.
+
+### Vipps MobilePay
+
+Laget trenger en Vipps MobilePay-avtale for betaling på nett (ePayment-API-et) og salgsstedets fire nøkler. Et dansk eller finsk MobilePay-salgssted følger de samme stegene mot de samme serverne, med butikkvalutaen DKK eller EUR; reservasjonene er kortere der (steg 6). Navnene på menyene og knappene under er fra portalens engelske visning.
+
+1. I Vipps MobilePay-portalen for bedrifter klikker du **For developers** i sidemenyen og velger **Production**. Finn salgsstedet og klikk **Show keys**, og kopier `client_id`, `client_secret` og den primære `Ocp-Apim-Subscription-Key`, og salgsstedsnummeret (MSN) som står ved salgsstedet.
 2. Legg dem inn i Cloudflare som i steg 3, alle fire som **Secret**: `VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET`, `VIPPS_SUBSCRIPTION_KEY` og `VIPPS_MSN`.
-3. Til testbetalingen bruker du testsalgsstedets nøkler og legger til én til, Type: Text, `VIPPS_API_BASE` med verdien `https://apitest.vipps.no`. Installer testappen Vipps MT (TestFlight på iOS, Google Play på Android etter å ha blitt med i Vipps' testgruppe; utviklersidene lenker til begge), og lag en testbruker under **Utvikler** i portalen. Appen logger inn med testbrukerens telefonnummer og fødselsnummer, og bekreftelseskoden er 0000 eller 000000. Din egen Vipps-konto kan ikke betale i testmiljøet.
-4. Deploy på nytt (som på slutten av steg 3). Åpne Kasse-blokkens meny i redigeringen, huk av «Betal med Vipps»-knapp, og publiser.
+3. Til testbetalingen velger du **Test** under **For developers** i stedet: et testsalgssted følger med produktet, og **Add test sales unit** lager et til. Bruk nøklene dets (**Show keys**) i de fire hemmelighetene, og legg til én til, Type: Text, `VIPPS_API_BASE` med verdien `https://apitest.vipps.no`. Lag en testbruker på fanen **Test users** med **Add a new test user**; portalen gir den et telefonnummer og et fødselsnummer. Installer testappen Vipps MT (TestFlight på iOS, Google Play på Android etter å ha blitt med i Vipps' testgruppe; utviklersidene lenker til begge), logg inn med testbrukerens telefonnummer og fødselsnummer, og bekreft med koden 0000 eller 000000. Din egen Vipps-konto kan ikke betale i testmiljøet.
+4. Deploy på nytt (som på slutten av steg 3). Åpne Kasse-blokkens meny i redigeringen, huk av **Betaling** → «Betal med Vipps»-knapp, og publiser.
 5. Testbetalingen: legg et produkt i handlekurven, åpne kassesiden og trykk «Betal med Vipps». På en telefon åpner testappen seg; på en datamaskin spør Vipps etter testbrukerens nummer og sender forespørselen til appen. Appen ber først kjøperen dele navn, e-post og telefon med butikken, så om å godkjenne betalingen. Tilbake på kassesiden er handlekurven tom og siden takker kjøperen med navn; betalingen ligger i portalen med ordrelinjene i beskrivelsen, og kvitteringen ligger i appen. Når det virker, bytter du til produksjonsnøklene og fjerner `VIPPS_API_BASE`.
-6. Pengene er reservert, ikke flyttet. Når varen sendes, henter du betalingen i portalen; Vipps gir 180 dager, og reglene forbyr å hente før varen er klar. Avbryt i portalen frigir reservasjonen; en betaling som aldri hentes, frigir Vipps når fristen går ut.
+6. Pengene er reservert, ikke flyttet. Når varen sendes, finner du den reserverte ordren blant transaksjonene i portalen og klikker **Capture** (skriv et beløp for å hente bare en del). Et norsk salgssted har 180 dager på å hente; et dansk eller finsk har 14, med mindre Vipps har godkjent sen henting. Reglene forbyr å hente før varen er klar. For å avlyse en ordre velger du den og klikker **Cancel transaction**, som frigir reservasjonen med en gang; portalen tilbyr dette bare for norske salgssteder. En reservasjon som aldri hentes, frigis når fristen går ut.
 7. Valgfritt, til bestillingsvarslene butikken i v1.1 sender: registrer en webhook, så Vipps forteller nettstedet om betalingshendelser. Nettstedet lagrer ingenting ennå, men endepunktet `/api/pay/vipps/webhook` er på plass og avviser hver levering som ikke er signert med registreringens hemmelighet. Registrer den med API-et, og legg `secret` fra svaret inn i Cloudflare som **Secret** `VIPPS_WEBHOOK_SECRET`:
 
 ```bash
-# Tilgangstokenet (gyldig 24 timer i produksjon, 1 time i testmiljøet)
+# Tilgangstokenet (gyldig 24 timer i produksjon, 1 time i testmiljøet).
+# I testmiljøet bruker du https://apitest.vipps.no og testnøklene; registreringen i hvert miljø har sin egen hemmelighet.
 curl -X POST https://api.vipps.no/accesstoken/get \
   -H "client_id: <client_id>" -H "client_secret: <client_secret>" \
   -H "Ocp-Apim-Subscription-Key: <abonnementsnøkkel>" -H "Merchant-Serial-Number: <MSN>"
@@ -148,6 +155,17 @@ curl -X POST https://api.vipps.no/webhooks/v1/webhooks \
   -H "Content-Type: application/json" \
   -d '{"url":"https://<nettsted>/api/pay/vipps/webhook","events":["epayments.payment.authorized.v1"]}'
 ```
+
+### Stripe (kort, Apple Pay, Google Pay, Klarna og mer)
+
+Stripes egen side tar kort, Apple Pay, Google Pay, Klarna, MobilePay og de andre metodene du slår på i Stripe-dashbordet, i de fleste valutaer.
+
+1. Lag en Stripe-konto, og test i en sandkasse først (**Sandboxes** i kontovelgeren i dashbordet). På siden **API keys** (`dashboard.stripe.com/apikeys`) anbefaler Stripe en begrenset nøkkel framfor den fulle hemmelige nøkkelen: klikk **Create restricted key**, gi **Checkout Sessions** Write og **Payment Intents** Read, og la resten stå på None. Legg nøkkelen (`rk_test_…`; en hemmelig nøkkel `sk_test_…` virker også) inn i Cloudflare som **Secret** `STRIPE_SECRET_KEY`, og deploy på nytt. Feiler en testbetaling, viser nøkkelens **View request logs** hvilken tillatelse som manglet.
+2. Under **Settings** → **Payment methods** slår du på metodene du vil ha. Apple Pay og Google Pay vises på Stripes side uten noe mer, på enhetene som støtter dem. La metodene som gjøres opp over dager (SEPA Direct Debit, bankoverføringer) være av: kassesiden bekrefter bare det som bekreftes med en gang, så kjøperen ville ikke blitt takket.
+3. Åpne Kasse-blokkens meny i redigeringen, **Betaling** → **Kortbetaling**: Stripe. **Ta pengene** sier når: *Når jeg sender* holder av beløpet, og du henter det i Stripe-dashbordet når varen sendes (kort holdes av i 7 dager, Klarna 28); *Ved bestillingen* trekker det med en gang, for det som leveres med en gang, som et medlemskap eller en billett. Publiser.
+4. Testbetalingen: legg et produkt i handlekurven og trykk «Betal med kort». Betal på Stripes side med kortnummeret `4242 4242 4242 4242`, en hvilken som helst framtidig dato og tre vilkårlige sifre. Tilbake på kassesiden er handlekurven tom og siden takker kjøperen med navnet Stripe samlet inn. Blant sandkassens betalinger står betalingen som **Uncaptured** (Når jeg sender; åpne den og klikk **Capture** når varen sendes) eller **Succeeded** (Ved bestillingen); `4000 0000 0000 9995` viser et avvist kort, og handlekurven blir stående.
+5. Valgfritt, til bestillingsvarslene butikken i v1.1 sender: på siden **Webhooks** i Workbench (`dashboard.stripe.com/webhooks`) klikker du **Create an event destination**, velger **Your account** og nyttelasten **Snapshot**, velger hendelsen `checkout.session.completed`, velger **Webhook endpoint** og gir adressen `https://<nettsted>/api/pay/stripe/webhook`. Klikk **Reveal secret** og kopier signeringshemmeligheten (`whsec_…`) inn i Cloudflare som **Secret** `STRIPE_WEBHOOK_SECRET`. Endepunktet lagrer ingenting ennå, og avviser hver levering som ikke er signert med hemmeligheten eller er eldre enn fem minutter. Med webhooken på plass venter Stripe opptil ti sekunder på nettstedets svar før kjøperen sendes tilbake; endepunktet svarer med en gang.
+6. Når det virker, bytter du siden **API keys** fra sandkasse til live-modus og fullfører Stripes go-live-sjekkliste, som aktiverer kontoen. Lag en levende begrenset nøkkel på samme måte (`rk_live_…`; Stripe viser den bare én gang), lag webhooken på nytt i live-modus, siden den har sin egen signeringshemmelighet, og legg begge inn i Cloudflare i stedet for sandkassens verdier.
 
 ## Sikkerhetsmodellen (kort)
 
@@ -180,5 +198,6 @@ Da kjører både siden, admin og functions på `http://localhost:8788`. Full OAu
 | «Kunne ikke committe til GitHub» (502) | Tokenet mangler scope (privat repo trenger `repo`), eller grenen har flyttet seg |
 | Publisering lykkes, men siden endres ikke | `GITHUB_ROOT_DIR` mangler/feil: commiten havner utenfor nettsidens rotmappe (sjekk hvilke stier commiten endret på GitHub) |
 | «Betaling er ikke satt opp for denne siden ennå» på kassesiden | En av de fire Vipps-hemmelighetene mangler i Cloudflare, eller deployen er eldre enn hemmelighetene (steg 5) |
+| «Betal med kort» hos Stripe svarer at betaling ikke er satt opp | `STRIPE_SECRET_KEY` mangler, er den publiserbare nøkkelen (`pk_…`) i stedet for den hemmelige, eller deployen er eldre enn nøkkelen |
 | Vipps-betalingen feiler før appen åpner seg | `VIPPS_API_BASE` peker på testmiljøet med produksjonsnøkler, eller omvendt; nøklene og basen hører til samme miljø |
 | Commiten er riktig, men ingen deploy dukker opp | Git-webhooken glapp hos hosten (skjer av og til). Sett opp `DEPLOY_HOOK_URL` (variabel 9), så trigger publiseringen deployen selv |
