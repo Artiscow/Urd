@@ -26,7 +26,7 @@ import { followsContent, fitMovesAll, FIT_BY_WIDTH } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
-import { searchItems } from './palette-search.js';
+import { loadSearchLanguages, searchLanguagesReady, searchItemsAny } from './search-langs.js';
 import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { openImageEditor, closeImageEditor } from './image-editor.js';
@@ -1133,6 +1133,8 @@ function addBlockAdder(host, section, grid) {
   };
   const ARROW_STEPS = { ArrowDown: [0, 1], ArrowUp: [0, -1], ArrowRight: [1, 0], ArrowLeft: [-1, 0] };
 
+  // Set while the other languages load, so the hits are drawn again once when they are in.
+  let langsWaiting = false;
   const renderHits = () => {
     clearPick();
     const query = searchInput.value;
@@ -1144,9 +1146,17 @@ function addBlockAdder(host, section, grid) {
     menu.classList.add('urd-searching');
     hits.replaceChildren();
     const all = searchables.concat(menu._urdTemplateSearchables ?? []);
+    // The other languages load on the first query, and the hits are drawn again when they are in (search-langs.js).
+    if (!searchLanguagesReady() && !langsWaiting) {
+      langsWaiting = true;
+      loadSearchLanguages().then(() => {
+        langsWaiting = false;
+        if (searchInput.isConnected && searchInput.value.trim()) renderHits();
+      });
+    }
     // A fold's own name searches with its rows: "Former" finds the shapes,
     // which otherwise sit behind a fold that is no row in the hit list.
-    const found = searchItems(all, query, (item) => (item.group ? `${item.label} ${item.group}` : item.label));
+    const found = searchItemsAny(all, query, (item) => (item.group ? `${item.label} ${item.group}` : item.label));
     if (!found.length) {
       const empty = document.createElement('div');
       empty.className = 'urd-search-empty';
@@ -1681,13 +1691,23 @@ function makeSectionAdder(index, above = null) {
     }
     const templateDef = (tpl) => ({ label: tpl.name, create: () => cloneSectionForInsert(tpl.section, makeId) });
 
+    // Set while the other languages load, so the grid is drawn again once when they are in.
+    let langsWaiting = false;
     const renderContent = () => {
       content.replaceChildren();
       const query = search.value.trim();
       if (query) {
         const all = [...searchables,
           ...templates.filter((m) => m.kind === 'section' && m.section).map((m) => ({ label: m.name, def: templateDef(m), category: TEMPLATE_CAT }))];
-        const found = searchItems(all, query, (item) => item.label);
+        // The other languages load on the first query, and the grid is drawn again when they are in (search-langs.js).
+        if (!searchLanguagesReady() && !langsWaiting) {
+          langsWaiting = true;
+          loadSearchLanguages().then(() => {
+            langsWaiting = false;
+            if (search.isConnected && search.value.trim()) renderContent();
+          });
+        }
+        const found = searchItemsAny(all, query, (item) => item.label);
         if (!found.length) {
           const empty = document.createElement('div');
           empty.className = 'urd-template-empty';

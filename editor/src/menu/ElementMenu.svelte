@@ -21,6 +21,8 @@
   import { menu, quickChoice, setQuickChoice, chooseArea, MENU_AREAS } from './state.svelte.js';
   import { quickIds, choiceChanged, NO_CHOICE } from '../lib/quick-row.js';
   import { matchWords } from '$engine/palette-search.js';
+  import { matchAny } from '$engine/search-langs.js';
+  import { searchLangs } from '../lib/search-langs.svelte.js';
   import { menuSearch } from '../lib/menu-search.js';
   import { linkOf, linkText } from '../lib/link-edit.js';
   import Placement from './Placement.svelte';
@@ -55,6 +57,8 @@
   const FAMILIES = { text: Text, button: Button, image: Image, video: Video, icon: Icon, shape: Shape, gallery: Gallery, ribbon: Ribbon, calendar: Calendar, form: Form, faq: Faq, timeline: Timeline, quote: Quote, stats: Stats, table: Table, share: Share, contact: Contact, countdown: Countdown, audio: Audio, collection: Collection, product: Product, cart: Cart, checkout: Checkout };
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
   let { wide, query = '' } = $props();
+  // A typed query loads the other languages once; the search runs again when they are in.
+  $effect(() => searchLangs.need(query));
 
   function menuQuickItems() {
     const choice = quickChoice(selectedBlock.type);
@@ -236,7 +240,7 @@
 {#if query.trim()}
   <!-- The search: a copy of the three areas of its own, narrowed to what matches (menu-search.js),
        as columns when wide and under each other when narrow, each area saying when nothing in it matches -->
-  <div class="emenu-cols emenu-search" class:stacked={!wide} {@attach menuSearch(query, matchWords)}>
+  <div class="emenu-cols emenu-search" class:stacked={!wide} {@attach menuSearch(query, searchLangs.ready ? matchAny : matchWords)}>
     <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabContent')}</p>{@render menuContent()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
     <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
     <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabPlacement')}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>

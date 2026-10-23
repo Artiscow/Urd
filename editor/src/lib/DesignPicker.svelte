@@ -8,6 +8,8 @@
    * `onpick(id)` applies, `onclose` leaves.
    */
   import { ta } from '$engine/i18n.js';
+  import { matchAny } from '$engine/search-langs.js';
+  import { searchLangs } from './search-langs.svelte.js';
 
   let { source, site = null, page = null, plugins = [], collections = null, onpick, onclose } = $props();
 
@@ -22,8 +24,13 @@
   let searchEl = $state(null);
   let dialogEl = $state(null);
 
-  const matches = (d) => (!source.filters || !view || source.filters.match(d, view)) && (!query.trim() || source.searchText(d).toLowerCase().includes(query.trim().toLowerCase()));
-  const families = $derived(source.families().map((f) => ({ ...f, designs: f.designs.filter(matches) })).filter((f) => f.designs.length));
+  // A design is found by its words in any language (search-langs.js); a typed query loads the other languages once, and the list runs again when they are in.
+  const matches = (d) => (!source.filters || !view || source.filters.match(d, view)) && (!query.trim() || matchAny(source.searchText(d), query));
+  $effect(() => searchLangs.need(query));
+  const families = $derived.by(() => {
+    void searchLangs.ready;
+    return source.families().map((f) => ({ ...f, designs: f.designs.filter(matches) })).filter((f) => f.designs.length);
+  });
   const count = $derived(families.reduce((n, f) => n + f.designs.length, 0));
   const chosenDef = $derived(source.def(chosen));
   const scale = $derived(paneW ? Math.min(1, paneW / source.previewWidth) : 0.4);

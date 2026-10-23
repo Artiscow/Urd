@@ -28,6 +28,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.10.5 - Search in every language - 23 October 2026
+
+- A search found only the words of the admin language, so «kalender» found nothing in an English admin. The element menu's settings search, the Blocks panel, the canvas block menu, the section gallery, the design picker and the icon picker now also match a word typed in any built-in admin language, through the labels it stands for in the admin language (`search-langs.js`, loaded with the five dictionaries on the first query).
+- Hits through another language rank after the hits as typed. A word needs three letters before the other languages are searched, and the label it stands for matches only at the start of a word.
+- Tests: the matching and the ranking in `search-langs.test.mjs`, with the real dictionaries for the calendar block.
+
 ### 0.7.10.4 - The intuitiveness review, fourth stage: the panels' small findings - 23 October 2026
 
 - 22 icon-only buttons in nine files (the up, down and remove tools in the Footer, Site and Collections panels, the background editor and four block families, and the mark picker's images) had no text, title or aria-label. Each now has a title, the mark picker's images their file name, and `tests/button-names.test.mjs` reads every Svelte file through Svelte's parser and fails on a button without a name.

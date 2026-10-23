@@ -21,6 +21,8 @@
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '$engine/icons.js';
   import { ta } from '$engine/i18n.js';
+  import { matchAny } from '$engine/search-langs.js';
+  import { searchLangs } from './search-langs.svelte.js';
 
   // `iconsOnly` is the picker for a mark that can only be a drawn icon: the Images tab is left out.
   let { icon = '', image = '', images = [], label = ta('mp.pickMark'), noneLabel = ta('common.none'), klass = '', iconsOnly = false, onpick, onfile, children } = $props();
@@ -40,13 +42,12 @@
   /** Every icon with its translated name, for the search. */
   const allIcons = ICON_CATEGORIES.flatMap(([cat, ids]) => ids.map((id) => ({ id, cat })));
 
+  // An icon is found by its id and its name in any language (search-langs.js); a typed query loads the other languages once, and the list runs again when they are in.
   const hits = $derived.by(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return allIcons;
-    return allIcons.filter(({ id }) => {
-      const name = ta(ICON_LIBRARY[id].labelKey) || ICON_LIBRARY[id].label;
-      return id.includes(q) || name.toLowerCase().includes(q);
-    });
+    if (!query.trim()) return allIcons;
+    searchLangs.need(query);
+    void searchLangs.ready;
+    return allIcons.filter(({ id }) => matchAny(`${id} ${ta(ICON_LIBRARY[id].labelKey) || ICON_LIBRARY[id].label}`, query));
   });
 
   /** The images already in use, without repeats: one mark can serve several shortcuts. */

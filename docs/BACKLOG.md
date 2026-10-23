@@ -117,6 +117,9 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [ ] Editor-finpuss (moved from Suggestions 22 September 2026): move the nav settings into the Pages panel
   - [ ] Editor-finpuss (from the audit of 22 October 2026): a search field in the icon and glyph picker
     Done when: a word typed in the icon picker narrows the icons and glyphs to those whose names match, in every admin language.
+  - [x] Search in every language (23 October 2026): a word typed in any of the admin's built-in languages finds what the menus show in the current one («kalender» finds «Calendar» in an English admin), in the element menu's settings search, the Blocks panel, the canvas block menu, the section gallery, the design picker and the icon picker. The link dialog's search is left as it is, since it searches the owner's own page titles and words.
+    Done when: in an English admin, «kalender» finds the calendar block in the Blocks panel and in the canvas block menu, «kontakt» the contact sections in the section gallery, «farge» the colour settings in the element menu and «hjerte» the heart icon; in a bokmål admin, «calendar» finds «Kalender»; and a word in the admin's own language finds what it found before, first in the list.
+    DELIVERED 0.7.10.5 (23 October 2026): `search-langs.js` over the five built-in dictionaries, loaded on the first query.
   - [ ] Editor-finpuss (from the audit of 22 October 2026): a content-width control per section in Properties (full width, the site's width or a px width), writing the existing `size.maxWidth`
     Done when: a section set to full width, the site's width or 900 px in Properties shows that width in the preview and on the published page, and a section never set keeps its width after the update.
   - [x] Editor-finpuss: drag and drop of nav sub-items in the admin panel, delivered in 0.7.13.5 (25 September 2026)

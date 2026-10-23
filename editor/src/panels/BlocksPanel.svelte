@@ -3,7 +3,8 @@
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { makeId } from '$engine/sections/presets.js';
-  import { searchItems as searchBlockItems } from '$engine/palette-search.js';
+  import { searchItemsAny } from '$engine/search-langs.js';
+  import { searchLangs } from '../lib/search-langs.svelte.js';
   import { slugify, WARN_BYTES } from '$engine/imageTools.js';
   import { calDesignGroups } from '$engine/calendar-designs.js';
   const ed = getContext('urd-editor');
@@ -42,6 +43,12 @@
      from the VISIBLE labels the panel already shows: core blocks, shapes,
      block-group templates and plugin blocks (variants flattened). */
   let blockSearch = $state('');
+  // The hits in every language: a typed query loads the other languages once, and the list runs again when they are in.
+  const blockHits = $derived.by(() => {
+    searchLangs.need(blockSearch);
+    void searchLangs.ready;
+    return searchItemsAny(panelBlockItems(), blockSearch, (item) => item.label);
+  });
 
   function panelBlockItems() {
     const items = [
@@ -164,7 +171,7 @@
   {#if blockSearch.trim()}
     <!-- An active search shows a flat, ranked hit list instead
          of the groups. -->
-    {#each searchBlockItems(panelBlockItems(), blockSearch, (item) => item.label) as item (item.label)}
+    {#each blockHits as item (item.label)}
       {#if item.act === 'image'}
         <label class="ghost filepick" title={ta('tip.webpAuto')}>
           {item.label}
