@@ -13,7 +13,7 @@ import { createHmac, createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import {
   vippsConfig, receiptLines, buildPayment, PROFILE_SCOPE, VIPPS_METHODS, paymentSummary, OPEN_STATES,
-  webhookSignature, signatureOf, verifyWebhook,
+  webhookSignature, signatureOf, verifyWebhook, DATE_TOLERANCE,
 } from '../template/functions/_lib/vipps.js';
 import { tokenFromAnswer, tokenFresh } from '../template/functions/_lib/net.js';
 
@@ -156,8 +156,11 @@ test('verifyWebhook: a delivery signed with the secret passes; a changed body, a
     authorization: `HMAC-SHA256 SignedHeaders=x-ms-date;host;x-ms-content-sha256&Signature=${signature}`,
     ...over,
   }));
-  const delivery = (over = {}) => ({ method: 'POST', pathAndQuery: DELIVERY.pathAndQuery, host: DELIVERY.host, headers: headers(), body: DELIVERY.body, ...over });
+  const now = Math.floor(Date.parse(DELIVERY.date) / 1000) + 60;
+  const delivery = (over = {}) => ({ method: 'POST', pathAndQuery: DELIVERY.pathAndQuery, host: DELIVERY.host, headers: headers(), body: DELIVERY.body, now, ...over });
   assert.equal(await verifyWebhook(delivery(), 'whs'), true);
+  assert.equal(await verifyWebhook(delivery({ now: now + DATE_TOLERANCE + 60 }), 'whs'), false, 'a replay past the window');
+  assert.equal(await verifyWebhook(delivery({ now: now - DATE_TOLERANCE }), 'whs'), true, 'inside the window');
   assert.equal(await verifyWebhook(delivery({ body: DELIVERY.body.replace('true', 'false') }), 'whs'), false, 'a changed body');
   assert.equal(await verifyWebhook(delivery(), 'other'), false, 'a wrong secret');
   assert.equal(await verifyWebhook(delivery({ host: 'evil.example' }), 'whs'), false, 'another host');

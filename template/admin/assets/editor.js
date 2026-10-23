@@ -2737,6 +2737,7 @@ var da = {
 		"shop.payMethod": "Betaling",
 		"shop.choosePayment": "Velg hvordan du vil betale.",
 		"shop.payBy": "Betaling: {method}.",
+		"shop.payRefused": "Denne betalingsmåten kan ikke ta imot bestillingen. Velg en annen.",
 		"shop.paidThanks": "Takk, {name}! Betalingen er bekreftet, og kvitteringen ligger i Vipps-appen.",
 		"countdown.days": "dager",
 		"countdown.hours": "timer",
@@ -25218,7 +25219,7 @@ function vw(e, t) {
 Vr(["change"]);
 //#endregion
 //#region src/menu/families/Checkout.svelte
-var yw = /* @__PURE__ */ L("<label> <input/></label>"), bw = /* @__PURE__ */ L("<label> <input type=\"email\"/></label> <label> <input type=\"url\"/></label> <!>", 1), xw = /* @__PURE__ */ L("<div class=\"pay-instruction\"><input/> <input/> <button class=\"ghost\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\" aria-hidden=\"true\"><path d=\"M3 3l6 6M9 3l-6 6\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"></path></svg></button></div>"), Sw = /* @__PURE__ */ L("<div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <span class=\"mini-label\"> </span> <!> <button class=\"ghost action\"> </button>", 1), Cw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), ww = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), Tw = /* @__PURE__ */ L("<!> <!> <!>", 1);
+var yw = /* @__PURE__ */ L("<label> <input/></label>"), bw = /* @__PURE__ */ L("<label> <input type=\"email\"/></label> <label> <input type=\"url\"/></label> <!>", 1), xw = /* @__PURE__ */ L("<div class=\"pay-instruction\"><input/> <input/> <button class=\"ghost\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\" aria-hidden=\"true\"><path d=\"M3 3l6 6M9 3l-6 6\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"></path></svg></button></div>"), Sw = /* @__PURE__ */ L("<div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div> <!> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <span class=\"mini-label\"> </span> <!> <button class=\"ghost action\"> </button>", 1), Cw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), ww = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), Tw = /* @__PURE__ */ L("<!> <!> <!>", 1);
 function Ew(e, t) {
 	at(t, !0);
 	let n = rt("urd-editor"), r = /* @__PURE__ */ D(() => n.selectedBlock), { setBlockProp: i, setBlockProps: a } = n, { groupOf: o } = Zb(() => F(r).props, a), s = /* @__PURE__ */ D(() => Yv(F(r).props)), c = /* @__PURE__ */ D(() => Xv(F(s))), l = /* @__PURE__ */ D(() => Zv(n.siteDraft?.site?.commerce?.currency)), u = (e) => i("payments", {
@@ -25289,11 +25290,7 @@ function Ew(e, t) {
 								onchange: (e) => u({ card: e })
 							});
 						}
-						var l = N(c, 2), m = A(l);
-						U(m);
-						var _ = N(m);
-						E(l);
-						var v = N(l, 2), y = (e) => {
+						var l = N(c, 2), m = (e) => {
 							{
 								let t = /* @__PURE__ */ D(() => q("lbl.payCapture")), n = /* @__PURE__ */ D(() => q("tip.checkout.payCapture")), r = /* @__PURE__ */ D(() => [["ship", q("opt.payCapture.ship")], ["now", q("opt.payCapture.now")]]);
 								cu(e, {
@@ -25313,10 +25310,14 @@ function Ew(e, t) {
 								});
 							}
 						};
-						B(v, (e) => {
-							F(g) && e(y);
+						B(l, (e) => {
+							F(g) && e(m);
 						});
-						var b = N(v, 2), x = M(b, !0), S = N(b, 2);
+						var _ = N(l, 2), v = A(_);
+						U(v);
+						var y = N(v);
+						E(_);
+						var b = N(_, 2), x = M(b, !0), S = N(b, 2);
 						hi(S, 19, () => F(s).manual, (e) => e.id, (e, t, n) => {
 							var r = xw(), i = A(r);
 							U(i);
@@ -25335,8 +25336,8 @@ function Ew(e, t) {
 							]), I("change", i, (e) => d(F(n), { label: e.target.value.trim() })), I("change", a, (e) => d(F(n), { text: e.target.value.trim() })), I("click", o, () => p(F(n))), R(e, r);
 						});
 						var C = N(S, 2), w = M(C, !0);
-						P((e, t, n, r, c, u, d) => {
-							K(i, "title", e), G(a, F(s).vipps), z(o, ` ${t ?? ""}`), K(l, "title", n), G(m, F(s).paypal), z(_, ` ${r ?? ""}`), K(b, "title", c), z(x, u), z(w, d);
+						P((e, t, n, r, c, l, u) => {
+							K(i, "title", e), G(a, F(s).vipps), z(o, ` ${t ?? ""}`), K(_, "title", n), G(v, F(s).paypal), z(y, ` ${r ?? ""}`), K(b, "title", c), z(x, l), z(w, u);
 						}, [
 							() => q("tip.checkout.vippsCheckout"),
 							() => q("lbl.vippsCheckout"),
@@ -25345,7 +25346,7 @@ function Ew(e, t) {
 							() => q("tip.checkout.instructions"),
 							() => q("lbl.payInstructions"),
 							() => q("ui.addInstruction")
-						]), I("change", a, (e) => u({ vipps: e.target.checked })), I("change", m, (e) => u({ paypal: e.target.checked })), I("click", C, f), R(e, n);
+						]), I("change", a, (e) => u({ vipps: e.target.checked })), I("change", v, (e) => u({ paypal: e.target.checked })), I("click", C, f), R(e, n);
 					},
 					$$slots: { default: !0 }
 				});

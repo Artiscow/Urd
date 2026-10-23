@@ -7,7 +7,7 @@
  * secret key lives in the Cloudflare environment. Without it the answer is
  * 503, and the checkout block shows a calm unavailable message.
  */
-import { prepareOrder, makeReference, json } from '../../../_lib/order.js';
+import { prepareOrder, pageCheckout, makeReference, json } from '../../../_lib/order.js';
 import { stripeConfig, sessionForm } from '../../../_lib/stripe.js';
 import { callStripe } from '../../../_lib/stripe-api.js';
 
@@ -16,9 +16,10 @@ export async function onRequestPost({ request, env }) {
   if (!config) return json({ error: 'Stripe is not configured', code: 'payNotConfigured', provider: 'Stripe' }, 503);
   const prepared = await prepareOrder(request);
   if (prepared.error) return prepared.error;
-  const { clean, payload, origin, site, catalogs, currency } = prepared;
-  // The capture mode decides only when the seller takes the money, never the amount, so the block's word through the client is enough.
-  const capture = payload.capture === 'now' ? 'now' : 'ship';
+  const { clean, origin, site, catalogs, currency } = prepared;
+  // The capture mode is the block's setting, read from the page the buyer orders from; a page or block that cannot be read holds the money, the safe side.
+  const settings = await pageCheckout(origin, site, clean.returnPath, 'stripe');
+  const capture = settings?.capture === 'now' ? 'now' : 'ship';
   const reference = makeReference();
   const form = sessionForm({
     order: clean.order,

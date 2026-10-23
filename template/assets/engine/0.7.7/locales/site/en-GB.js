@@ -98,6 +98,7 @@ export default {
     'shop.payMethod': 'Payment',
     'shop.choosePayment': 'Choose how you will pay.',
     'shop.payBy': 'Payment: {method}.',
+    'shop.payRefused': 'This way to pay cannot take the order. Choose another.',
     'shop.paidThanks': 'Thank you, {name}! The payment is confirmed, and the receipt is in the Vipps app.',
     'countdown.days': 'days',
     'countdown.hours': 'hours',

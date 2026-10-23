@@ -62,6 +62,34 @@ const GENERIC = new Set(['src/', 'editor/', 'template/', 'assets/', 'engine/', `
 /** Paths whose change means a shared change: the quick round falls back to the full one. */
 const SHARED = [/^tests\/_/, /^package(-lock)?\.json$/, /^editor\/package(-lock)?\.json$/, /^editor\/vite\.config\.js$/, /^scripts\/verify\.mjs$/, /^\.github\//];
 
+/**
+ * The files under template/functions/ that import a given one, one static
+ * import edge at a time: a change to a helper selects the tests that name
+ * the endpoints built on it.
+ */
+function functionImporters() {
+  const dir = new URL('template/functions/', ROOT);
+  const files = [];
+  const walk = (base, rel) => {
+    for (const entry of readdirSync(base, { withFileTypes: true })) {
+      const path = rel + entry.name;
+      if (entry.isDirectory()) walk(new URL(entry.name + '/', base), path + '/');
+      else if (entry.name.endsWith('.js')) files.push(path);
+    }
+  };
+  walk(dir, 'template/functions/');
+  const importers = new Map();
+  for (const file of files) {
+    const text = readFileSync(new URL(file, ROOT), 'utf8');
+    for (const m of text.matchAll(/from\s+'(\.\.?\/[^']+)'/g)) {
+      const target = new URL(m[1], new URL(file, ROOT)).pathname.replace(ROOT.pathname, '');
+      if (!importers.has(target)) importers.set(target, new Set());
+      importers.get(target).add(file);
+    }
+  }
+  return importers;
+}
+
 /** The test files, and each one's text. */
 function testFiles() {
   const dir = new URL('tests/', ROOT);
@@ -79,9 +107,18 @@ function select(paths) {
   const tests = new Map();
   const all = testFiles();
   const bundled = bundledEngineModules();
+  const importers = functionImporters();
+  // A changed function module stands for every function file that imports it, through every edge.
+  const seen = new Set(paths);
+  const queue = [...paths];
+  while (queue.length) {
+    const path = queue.shift();
+    for (const importer of importers.get(path) ?? []) if (!seen.has(importer)) { seen.add(importer); queue.push(importer); }
+  }
+  const widened = [...seen];
   let build = false;
   let validate = false;
-  for (const path of paths) {
+  for (const path of widened) {
     if (path.startsWith('tests/') && path.endsWith('.test.mjs')) { tests.set(path, 'changed'); continue; }
     if (path.startsWith('editor/src/')) build = true;
     if (path.startsWith(ENGINE_DIR) && bundled.has(path.slice(ENGINE_DIR.length))) build = true;
@@ -92,13 +129,14 @@ function select(paths) {
     const folders = [parent, dirname(parent)].filter((d) => d && d !== '.').map((d) => `${basename(d)}/`).filter((f) => !GENERIC.has(f));
     const byFolder = !existsInHead(path) || path.startsWith('editor/src/');
     for (const t of all) {
-      if (t.text.includes(name)) tests.set(t.name, `names ${name}`);
+      if (t.text.includes(name)) tests.set(t.name, paths.includes(path) ? `names ${name}` : `names ${name}, which imports a changed module`);
       else if (byFolder) {
         const folder = folders.find((f) => t.text.includes(f));
         if (folder) tests.set(t.name, `walks ${folder} (${name})`);
       }
     }
   }
+  if (!tests.size && widened.some((p) => !/\.md$/.test(p))) return { full: true, reason: 'no test names the changed files, so every test runs', tests: new Map(), build, validate };
   return { full: false, tests, build, validate };
 }
 
@@ -131,7 +169,7 @@ const results = [];
 if (plan.build) results.push(['build', step('build the editor', 'npm', ['run', 'build'], new URL('editor/', ROOT))]);
 if (plan.full) results.push(['tests', step('every test', 'node', ['--test', ...readdirSync(new URL('tests/', ROOT)).filter((n) => n.endsWith('.mjs')).map((n) => `tests/${n}`)])]);
 else if (plan.tests.size) results.push(['tests', step(`${plan.tests.size} test file(s)`, 'node', ['--test', ...plan.tests.keys()])]);
-else console.log('\n== no test names the changed files');
+else console.log('\n== only documents changed: no test to run');
 if (plan.validate) results.push(['validate', step('schema validation', 'npm', ['run', 'validate'], new URL('editor/', ROOT))]);
 
 console.log('');

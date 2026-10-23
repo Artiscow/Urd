@@ -223,7 +223,6 @@ export const checkoutBlock = {
               },
               returnPath: location.pathname,
               method,
-              capture: pays.capture,
             }),
           });
           const data = await res.json().catch(() => null);
@@ -233,7 +232,8 @@ export const checkoutBlock = {
             location.href = data.url;
             return;
           }
-          setStatus(t(res.status === 503 ? 'shop.vippsUnavailable' : 'shop.sendFailed'), true);
+          // 503: the provider is not set up; 400: this provider cannot take the order (the currency, a product); else a failure that may pass.
+          setStatus(t(res.status === 503 ? 'shop.vippsUnavailable' : res.status === 400 ? 'shop.payRefused' : 'shop.sendFailed'), true);
         } catch {
           setStatus(t('shop.sendFailed'), true);
         }

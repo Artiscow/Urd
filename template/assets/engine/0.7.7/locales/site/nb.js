@@ -101,6 +101,7 @@ export default {
     'shop.payMethod': 'Betaling',
     'shop.choosePayment': 'Velg hvordan du vil betale.',
     'shop.payBy': 'Betaling: {method}.',
+    'shop.payRefused': 'Denne betalingsmåten kan ikke ta imot bestillingen. Velg en annen.',
     'shop.paidThanks': 'Takk, {name}! Betalingen er bekreftet, og kvitteringen ligger i Vipps-appen.',
     'countdown.days': 'dager',
     'countdown.hours': 'timer',

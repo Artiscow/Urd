@@ -207,6 +207,30 @@ export async function readShop(origin) {
   return { site: site?.site ?? null, catalogs: catalogs.filter(Boolean) };
 }
 
+/**
+ * The payment settings of the checkout block the buyer orders from, read from
+ * the site's own page file: the page whose registered path is the return
+ * path, and on it the first checkout block that offers the provider, else
+ * the first checkout block. Null when the page or the block cannot be found,
+ * so a caller falls back to the safe setting. The client's words never
+ * decide a setting the block owns (ADR-0028 decision 1).
+ * @param {string} origin
+ * @param {object|null} site The site file's `site`
+ * @param {string} returnPath The validated return path
+ * @param {'vipps'|'stripe'|'paypal'} [provider]
+ * @returns {Promise<object|null>} The block's `payments`, as stored
+ */
+export async function pageCheckout(origin, site, returnPath, provider) {
+  const wanted = returnPath.length > 1 ? returnPath.replace(/\/+$/, '') : '/';
+  const page = (site?.pages ?? []).find((p) => typeof p?.path === 'string' && (p.path.length > 1 ? p.path.replace(/\/+$/, '') : '/') === wanted);
+  if (!page?.id || !/^[a-z0-9][a-z0-9-]*$/.test(page.id)) return null;
+  const file = await ownJson(origin, `/content/pages/${page.id}.json`);
+  const blocks = [];
+  for (const section of file?.sections ?? []) for (const block of section?.blocks ?? []) if (block?.type === 'checkout' && block.props?.payments && typeof block.props.payments === 'object') blocks.push(block.props.payments);
+  const offers = (pays) => (provider === 'stripe' ? pays.card === 'stripe' : provider === 'vipps' ? pays.vipps === true || pays.card === 'vipps' : provider === 'paypal' ? pays.paypal === true : true);
+  return blocks.find(offers) ?? blocks[0] ?? null;
+}
+
 /** The JSON answer the endpoints give, never cached. */
 export const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {

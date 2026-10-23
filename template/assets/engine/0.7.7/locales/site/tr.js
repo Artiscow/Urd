@@ -97,6 +97,7 @@ export default {
     'shop.payMethod': 'Ödeme',
     'shop.choosePayment': 'Nasıl ödeyeceğinizi seçin.',
     'shop.payBy': 'Ödeme: {method}.',
+    'shop.payRefused': 'Bu ödeme yolu siparişi alamıyor. Başka birini seçin.',
     'shop.paidThanks': 'Teşekkürler, {name}! Ödeme onaylandı ve makbuz Vipps uygulamasında.',
     'countdown.days': 'gün',
     'countdown.hours': 'saat',

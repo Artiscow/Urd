@@ -35,6 +35,10 @@ const SHOP = {
   '/content/samlinger.json': { samlinger: ['produkter'] },
   '/content/samlinger/produkter.json': { kind: 'products', entries: [{ id: 'kake', title: 'Kake', price: 350, sizes: ['Stor'] }] },
 };
+/** The checkout block on the page the orders return to; the tests set its capture mode. */
+let PAGE_CAPTURE = 'ship';
+const PAGES = [{ id: 'kasse', path: '/kasse' }];
+const pageFile = () => ({ sections: [{ blocks: [{ type: 'checkout', props: { payments: { vipps: true, card: 'stripe', paypal: false, capture: PAGE_CAPTURE, manual: [] } } }] }] });
 
 const realFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = realFetch; });
@@ -51,7 +55,8 @@ function stubNetwork(site, provider) {
     const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
     if (call.url.startsWith(ORIGIN)) {
       const path = new URL(call.url).pathname;
-      if (path === '/content/site.json') return json({ site });
+      if (path === '/content/site.json') return json({ site: { pages: PAGES, ...site } });
+      if (path === '/content/pages/kasse.json') return json(pageFile());
       return SHOP[path] ? json(SHOP[path]) : new Response('not found', { status: 404 });
     }
     return provider(call, json);
@@ -160,11 +165,20 @@ test('stripe checkout: a form-encoded session with the bearer key, the lines in 
   assert.equal(form.get('success_url'), `${ORIGIN}/kasse?ordered=${data.reference}&via=stripe`);
 });
 
-test('stripe checkout: capture now leaves the hold out; without the key 503 before anything is read', async () => {
+test('stripe checkout: the capture mode is the block\'s on the page, never the client\'s word; an unreadable page holds; without the key 503 before anything is read', async () => {
   const sessions = new Map();
+  const captureSent = (calls) => new URLSearchParams(calls.find((c) => c.url.endsWith('/v1/checkout/sessions')).body).get('payment_intent_data[capture_method]');
+  PAGE_CAPTURE = 'now';
   let calls = stubNetwork({}, stripeApi(sessions));
+  await stripe.checkout.onRequestPost({ request: order({ capture: 'ship' }), env: STRIPE_ENV });
+  assert.equal(captureSent(calls), null, 'the block says now: taken at the order whatever the client posts');
+  PAGE_CAPTURE = 'ship';
+  calls = stubNetwork({}, stripeApi(sessions));
   await stripe.checkout.onRequestPost({ request: order({ capture: 'now' }), env: STRIPE_ENV });
-  assert.equal(new URLSearchParams(calls.find((c) => c.url.endsWith('/v1/checkout/sessions')).body).get('payment_intent_data[capture_method]'), null);
+  assert.equal(captureSent(calls), 'manual', 'the block says ship: held whatever the client posts');
+  calls = stubNetwork({ pages: [] }, stripeApi(sessions));
+  await stripe.checkout.onRequestPost({ request: order({ capture: 'now' }), env: STRIPE_ENV });
+  assert.equal(captureSent(calls), 'manual', 'no page found: held, the safe side');
   calls = stubNetwork({}, stripeApi(sessions));
   const res = await stripe.checkout.onRequestPost({ request: order(), env: {} });
   assert.equal(res.status, 503);

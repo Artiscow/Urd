@@ -141,20 +141,26 @@ export function signatureOf(authorization) {
   return match ? match[1] : '';
 }
 
+/** How far a delivery's date may stand from the clock, in seconds, so a captured delivery cannot be replayed later. */
+export const DATE_TOLERANCE = 300;
+
 /**
- * Whether a webhook delivery is signed by the registration's secret: the body
- * hash in x-ms-content-sha256 must be the body's, and the signature in the
- * Authorization header must be the one webhookSignature computes.
- * @param {{method: string, pathAndQuery: string, host: string, headers: {get(name: string): string|null}, body: string}} delivery
+ * Whether a webhook delivery is signed by the registration's secret and
+ * recent: the body hash in x-ms-content-sha256 must be the body's, the
+ * signature in the Authorization header must be the one webhookSignature
+ * computes, and the signed date must stand within the tolerance of now.
+ * @param {{method: string, pathAndQuery: string, host: string, headers: {get(name: string): string|null}, body: string, now?: number}} delivery now in Unix seconds
  * @param {string} secret
  * @returns {Promise<boolean>}
  */
-export async function verifyWebhook({ method, pathAndQuery, host, headers, body }, secret) {
+export async function verifyWebhook({ method, pathAndQuery, host, headers, body, now = Math.floor(Date.now() / 1000) }, secret) {
   if (!secret) return false;
   const date = headers.get('x-ms-date') ?? '';
   const claimedHash = headers.get('x-ms-content-sha256') ?? '';
   const claimed = signatureOf(headers.get('authorization'));
   if (!date || !claimedHash || !claimed) return false;
+  const sent = Date.parse(date) / 1000;
+  if (!Number.isFinite(sent) || Math.abs(now - sent) > DATE_TOLERANCE) return false;
   const { contentHash, signature } = await webhookSignature({ method, pathAndQuery, date, host, body }, secret);
   return sameText(contentHash, claimedHash) && sameText(signature, claimed);
 }

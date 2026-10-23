@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   validOrderPayload, orderAmountMinor, validVariants, orderLineItems, orderDescription, currencyExponent,
-  makeReference, isReference, orderCurrency, vatRegistered, returnUrl, PROVIDERS,
+  makeReference, isReference, orderCurrency, vatRegistered, returnUrl, PROVIDERS, pageCheckout,
 } from '../template/functions/_lib/order.js';
 
 // Deliberate Norwegian fixture ids and names: this is user catalog data.
@@ -111,4 +111,24 @@ test('currencyExponent and the minor unit: two decimals for most currencies, who
   assert.equal(orderAmountMinor([{ id: 'kake', qty: 2 }], CATALOGS, 'JPY'), 700);
   assert.equal(orderAmountMinor([{ id: 'kake', qty: 2 }], CATALOGS, 'EUR'), 70000);
   assert.equal(orderLineItems([{ id: 'boller', qty: 1 }], CATALOGS, 'KRW')[0].unit, 50, 'rounded to the whole unit');
+});
+
+test('pageCheckout: the checkout block on the page the return path names, the one offering the provider first; nothing for an unknown page, an odd id or a block without payments', async () => {
+  const realFetch = globalThis.fetch;
+  const site = { pages: [{ id: 'hjem', path: '/' }, { id: 'kasse', path: '/kasse' }, { id: 'rar', path: '/rar' }] };
+  const pages = {
+    '/content/pages/kasse.json': { sections: [{ blocks: [{ type: 'checkout', props: { payments: { card: 'none', paypal: true, capture: 'now' } } }, { type: 'checkout', props: { payments: { card: 'stripe', capture: 'ship' } } }] }] },
+    '/content/pages/hjem.json': { sections: [{ blocks: [{ type: 'checkout', props: { recipient: 'a@b.no' } }] }] },
+  };
+  globalThis.fetch = async (url) => { const path = new URL(url).pathname; return pages[path] ? new Response(JSON.stringify(pages[path])) : new Response('no', { status: 404 }); };
+  try {
+    assert.equal((await pageCheckout('https://s.no', site, '/kasse', 'stripe')).capture, 'ship', 'the block that offers Stripe');
+    assert.equal((await pageCheckout('https://s.no', site, '/kasse/', 'paypal')).capture, 'now', 'a trailing slash is the same page');
+    assert.equal((await pageCheckout('https://s.no', site, '/kasse', 'vipps')).capture, 'now', 'no block offers Vipps: the first');
+    assert.equal(await pageCheckout('https://s.no', site, '/', 'stripe'), null, 'a block still at version 1 has no payments');
+    assert.equal(await pageCheckout('https://s.no', site, '/ukjent', 'stripe'), null);
+    assert.equal(await pageCheckout('https://s.no', { pages: [{ id: '../x', path: '/x' }] }, '/x', 'stripe'), null, 'an id outside the pattern is never fetched');
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
