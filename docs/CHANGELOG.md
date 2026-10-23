@@ -28,6 +28,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.10.6 - The intuitiveness review, fifth stage: the text block's Content area, the pickers' search and the example site - 24 October 2026
+
+- The Text family's Content area was one explanatory line. It now holds **Edit the text**, which opens the words on the page with the text toolbar, and a font and a size for the whole text, which the toolbar applies to every word at once (`urd-edit-text` and `urd-text-style` in previewBridge.js; the toolbar's `urd-text-style` listener in preview-edit.js).
+- The glyph picker had no search, so a glyph or an icon was found by scrolling. A search field at its top narrows the icons by name and the glyphs by their category's name, in every language.
+- Placement showed the note on a named block hidden on phones as a paragraph, and the Plugins panel explained the discovery in prose. The note is a marked state with the words in its tooltip, and the panel shows an empty-state line with the explanation in its tooltip.
+- On the example site the Shop FP product cards had no collection and drew empty cards, and the front page's calendar referred to a source the site does not have. The cards show the products collection, and the stale source is gone.
+- On a phone the calendar's feed note in the preview overlapped the heading below, since it stands outside the flow. On the phone it now stands in the flow (base.css); the eight shells restamped.
+
 ### 0.7.10.5 - Search in every language - 23 October 2026
 
 - A search found only the words of the admin language, so «kalender» found nothing in an English admin. The element menu's settings search, the Blocks panel, the canvas block menu, the section gallery, the design picker and the icon picker now also match a word typed in any built-in admin language, through the labels it stands for in the admin language (`search-langs.js`, loaded with the five dictionaries on the first query).

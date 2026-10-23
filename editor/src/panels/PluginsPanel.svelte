@@ -106,7 +106,7 @@
   {/if}
   {#if pluginDiscovery === 'ok'}
     {#if !ed.pluginsFound.length}
-      <p class="panel-hint">{ta('hint.plugins.autoDiscover')}</p>
+      <p class="panel-hint" title={ta('hint.plugins.autoDiscover')}>{ta('plugins.noneFound')}</p>
     {/if}
   {:else}
     <!-- Fallback when repo discovery is unavailable (local server / not logged in) -->

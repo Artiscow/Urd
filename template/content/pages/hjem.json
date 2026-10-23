@@ -109,9 +109,6 @@
           "props": {
             "sources": [
               {
-                "calendar": "apeiron"
-              },
-              {
                 "calendar": "cal-5ed2f6ab"
               }
             ],

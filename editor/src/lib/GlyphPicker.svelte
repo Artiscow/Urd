@@ -11,6 +11,8 @@
   import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph, readRecentIcons, saveRecentIcon } from '$engine/glyphs.js';
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '$engine/icons.js';
   import { ta } from '$engine/i18n.js';
+  import { matchAny } from '$engine/search-langs.js';
+  import { searchLangs } from './search-langs.svelte.js';
 
   let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage, iconsOnly = false } = $props();
 
@@ -25,6 +27,18 @@
   let fileEl = $state(null);
   let open = $state(false);
   let pos = $state({ top: 0, left: 0 });
+  let query = $state('');
+
+  /** The hits of a typed search: the icons by their id and name, the glyphs by their category's name or the glyph itself, in any language (search-langs.js). */
+  const hits = $derived.by(() => {
+    const q = query.trim();
+    if (!q) return null;
+    searchLangs.need(q);
+    void searchLangs.ready;
+    const icons = onicon ? ICON_CATEGORIES.flatMap(([, ids]) => ids).filter((id) => matchAny(`${id} ${ta(ICON_LIBRARY[id].labelKey)}`, q)) : [];
+    const glyphs = iconsOnly ? [] : GLYPH_CATEGORIES.flatMap(([name, list]) => (matchAny(ta(name), q) ? list.split(' ') : list.split(' ').filter((g) => g === q)));
+    return { icons, glyphs };
+  });
 
   /** The popover's toggle event drives the open state in the anchored branch. */
   function readRecents() {
@@ -35,7 +49,7 @@
   function onToggle(e) {
     open = e.newState === 'open';
     namePane(rootEl, open);
-    if (open) readRecents();
+    if (open) { readRecents(); query = ''; }
   }
 
   function closePicker() {
@@ -45,6 +59,7 @@
 
   function openPicker() {
     readRecents();
+    query = '';
     const r = rootEl.getBoundingClientRect();
     const W = 292;
     const H = 380;
@@ -132,6 +147,22 @@
 </span>
 
 {#snippet pickerBody()}
+      <input class="gp-search" type="search" placeholder={ta('gp.search')} aria-label={ta('gp.search')} bind:value={query} />
+      {#if hits}
+        {#if !hits.icons.length && !hits.glyphs.length}
+          <p class="gp-hint">{ta('gp.noHits')}</p>
+        {/if}
+        <div class="gp-grid">
+          {#each hits.icons as id (id)}
+            <button type="button" class="gp-cell gp-cell-icon" title={ta(ICON_LIBRARY[id].labelKey)}
+              class:active={id === icon}
+              onclick={() => pickIcon(id)}><span class="gp-svg">{@html iconSvg(id)}</span></button>
+          {/each}
+          {#each hits.glyphs as glyph (glyph)}
+            <button type="button" class="gp-cell" class:active={glyph === value} onclick={() => pick(glyph)}>{glyph}</button>
+          {/each}
+        </div>
+      {:else}
       {#if recent.length || recentIcons.length}
         <div class="gp-group">{ta('common.recent')}</div>
         <div class="gp-grid">
@@ -175,6 +206,7 @@
         <button type="button" class="ghost gp-upload" onclick={() => fileEl.click()}>{ta('gp.upload')}</button>
         <input type="file" accept="image/*" hidden bind:this={fileEl} onchange={uploadOwn} />
         <p class="gp-hint">{ta('gp.uploadHint')}</p>
+      {/if}
       {/if}
 {/snippet}
 
@@ -234,6 +266,18 @@
         position-try-fallbacks: flip-block;
       }
     }
+  }
+
+  .gp-search {
+    width: 100%;
+    margin-bottom: 6px;
+    padding: 6px 9px;
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 7px;
+    background: rgb(255 255 255 / 6%);
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
   }
 
   .gp-group {

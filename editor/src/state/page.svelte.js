@@ -278,6 +278,17 @@ function openImageEditor() {
   blockMenu = null;
 }
 
+/** The text block's words, opened for editing in the preview with the text toolbar (the floating menu steps aside). */
+function editText() {
+  previewState.bridge?.sendEditText(selectedBlock.blockId);
+  blockMenu = null;
+}
+
+/** A font or a size for the whole text of the block, applied by the preview's text toolbar (`{fontFamily}` or `{fontSize}`, null takes the theme's). */
+function setTextStyle(style) {
+  previewState.bridge?.sendTextStyle(selectedBlock.blockId, style);
+}
+
 /** A block whose height follows its content (ADR-0025) has its frame fitted
  *  after every edit that can change the height (its settings, its text, its
  *  width): the preview is asked for the height the content needs and
@@ -1005,6 +1016,8 @@ export const pageState = {
   ribbonReach,
   RIBBON_MOTIONS,
   openImageEditor,
+  editText,
+  setTextStyle,
   fitTimers,
   fitSeq,
   get fitCount() { return fitCount; },

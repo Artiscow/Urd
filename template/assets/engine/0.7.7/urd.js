@@ -515,6 +515,15 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-open-image-editor' && msg.blockId) {
       // An image block's editor opened from its menu: press the block's own image button.
       root.querySelector(`[data-block-id="${CSS.escape(msg.blockId)}"] .urd-edit-image`)?.click();
+    } else if ((msg?.type === 'urd-edit-text' || msg?.type === 'urd-text-style') && msg.blockId) {
+      // A text block's words opened from its menu: the field takes focus, which brings the text toolbar.
+      // A style for the whole text is handed to the toolbar as an event on the field (preview-edit.js).
+      const field = root.querySelector(`[data-block-id="${CSS.escape(msg.blockId)}"] .urd-text[contenteditable="true"]`);
+      if (field) {
+        field.scrollIntoView({ block: 'center', behavior: 'instant' });
+        field.focus({ preventScroll: true });
+        if (msg.type === 'urd-text-style' && msg.style && typeof msg.style === 'object') field.dispatchEvent(new CustomEvent('urd-text-style', { detail: msg.style, bubbles: true }));
+      }
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
       // The editor detected desktop drift in an overridden section: mark it live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)

@@ -67,7 +67,7 @@
     </div>
   {/each}
   <details class="group">
-    <summary>{ta('ui.seoGroup', { page: siteDraft.pages.find((p) => p.id === pageId)?.title ?? '' })}{#if missingDescription}<i class="seo-open-dot" title={ta('tip.pages.missingDescription')}></i>{/if}</summary>
+    <summary>{ta('ui.seoGroup', { page: siteDraft.pages.find((p) => p.id === pageId)?.title ?? '' })}{#if missingDescription}<i class="note-dot" title={ta('tip.pages.missingDescription')}></i>{/if}</summary>
     <div class="group-items">
       <label title={ta('tip.seo.description')}>{ta('lbl.seoDescription')}
         <textarea rows="2" value={seoDraft.description}

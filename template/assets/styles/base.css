@@ -10651,6 +10651,11 @@ textarea.urd-form-input {
   pointer-events: none;
 }
 
+/* On the phone the row grid flows the blocks, so the note stands in the flow and takes its own room under the calendar. */
+body.urd-mobile .urd-cal-note {
+  position: static;
+}
+
 .urd-preview .urd-audio-empty {
   display: grid;
   place-items: center;

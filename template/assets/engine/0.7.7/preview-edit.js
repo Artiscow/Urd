@@ -2620,6 +2620,34 @@ function initTextToolbar() {
     }
     if (target) reposition();
   });
+  // A font or a size for the whole text, from the block's menu (urd-text-style): written on every leaf paragraph and list item of the field, and taken off the runs inside, so the whole text reads alike; null takes the theme's value back.
+  document.addEventListener('urd-text-style', (event) => {
+    const field = event.target instanceof HTMLElement ? event.target.closest('.urd-text[contenteditable="true"]') : null;
+    const style = event.detail;
+    if (!field || !style || typeof style !== 'object') return;
+    activeText = field;
+    activeBlockId = field.closest('.urd-block')?.dataset.blockId ?? null;
+    // Bare words and runs at the field's top level get a paragraph around them first; a list or a paragraph is left as it stands.
+    const loose = [...field.childNodes].filter((n) => (n.nodeType === 3 ? n.textContent.trim() !== '' : n.nodeType === 1 && !n.matches(BLOCK_SEL) && !n.querySelector(BLOCK_SEL)));
+    if (loose.length) {
+      const p = document.createElement('p');
+      field.insertBefore(p, loose[0]);
+      p.append(...loose);
+    }
+    const all = [...field.querySelectorAll(BLOCK_SEL)];
+    const paragraphs = all.filter((el) => !all.some((o) => o !== el && el.contains(o)));
+    for (const prop of ['fontFamily', 'fontSize']) {
+      if (!(prop in style)) continue;
+      const value = typeof style[prop] === 'string' ? style[prop] : '';
+      for (const el of paragraphs) {
+        el.style[prop] = value;
+        if (el.getAttribute('style') === '') el.removeAttribute('style');
+        stripDescendantProp(el, prop);
+      }
+    }
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    reposition();
+  });
   document.addEventListener('focusout', () => {
     // Wait a beat: focus may be on its way to the toolbar itself or the color picker's sliders and fields (a separate card).
     requestAnimationFrame(() => {

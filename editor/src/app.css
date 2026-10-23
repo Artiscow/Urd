@@ -1084,8 +1084,8 @@
     gap: 0.35rem;
   }
 
-  /* The hollow dot on the Search and sharing group while the open page has no description: a field left open, not an error */
-  .seo-open-dot {
+  /* The hollow dot that points at a field left open or a state worth a look, with the words in its tooltip: not an error */
+  .note-dot {
     display: inline-block;
     width: 7px;
     height: 7px;
@@ -1094,6 +1094,19 @@
     border: 1.5px solid currentColor;
     border-radius: 50%;
     opacity: 0.6;
+  }
+
+  /* A short state beside a field, named by its tooltip */
+  .field-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    opacity: 0.75;
+  }
+
+  .field-note .note-dot {
+    margin-left: 0;
   }
 
   .collection-entry {

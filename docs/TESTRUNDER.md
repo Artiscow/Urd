@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.10.6): the text block's Content area, the pickers' search and the example site
+
+- [ ] A text block's menu, Content: «Edit the text» opens the words on the page with the text toolbar and the menu steps aside; choose a font for the whole text: every word takes it, and «Inherit from theme» takes it back; type a size: every word takes it, and an empty field takes the theme's size back; the toolbar's own font and size still apply to a selection alone
+- [ ] An icon block's glyph picker: type «hjerte» in an English admin: the heart icon and the hearts; type «pil»: the arrows; clear the field: the categories are back
+- [ ] A named block with «Hide on mobile» on: Placement's Link target group shows a dotted «Hide on mobile» mark whose tooltip says a link lands on the section's top on phones; without the name or the switch, no mark
+- [ ] The Plugins panel on a repo with no new plugin folder: the line «No new plugins in plugins/» with the explanation in its tooltip
+- [ ] The example site: the Shop FP page shows the four products as cards; the front page on a phone in the editor: the calendar's feed note stands above the heading, not over it
+
 ### Test batch (0.7.10.5): search in every language
 
 - [ ] Admin in English: «kalender» in the Blocks panel and in the canvas block menu (double-click a section) finds Calendar; «kontakt» in the «+ New section» gallery finds the contact sections; «farge» in the ribbon's settings search finds its colour settings; «bare tekst» in the ribbon's design picker finds «Text only»; «hjerte» in an icon picker finds the heart

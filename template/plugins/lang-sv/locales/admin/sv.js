@@ -523,7 +523,6 @@ export default {
     'hint.plugins.intro': 'Tillägg utökar Urd med nya block, sektionsmallar, bakgrunder och animationer. Ett tillägg är en mapp i plugins/ i ditt repo; här styr du vilka som är aktiva. Ändringar gäller från nästa publicering.',
     'hint.props.empty': 'Klicka på ett block eller en sektion i förhandsvisningen.',
     'hint.props.minHeight': 'px-värde eller CSS (40vh). Block kan ändå hänga utanför kanten.',
-    'hint.textInline': 'Texten skrivs direkt på sidan; typsnitt och storlek sätts i textraden.',
     'hint.theme.autoDark': 'Härledda från de ljusa färgerna - klicka en ruta för att styra dem själv.',
     'hint.video': 'YouTube och Vimeo stöds, med integritetsvänlig inbäddning. Videon spelas på den publicerade sidan (och i Ren vy).',
     'ie.dragTip': 'Dra för att flytta utsnittet',

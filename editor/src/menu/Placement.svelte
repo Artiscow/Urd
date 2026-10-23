@@ -223,7 +223,7 @@
       words={blockWords(selectedBlock)} path={ed.pageEntry()?.path ?? '/'} onchange={(name) => setBlockAnchor(name)} />
   {/key}
   {#if selectedBlock.anchor && selectedBlock.hideMobile}
-    <p class="panel-hint">{ta('menu.anchorHiddenMobile')}</p>
+    <span class="field-note" title={ta('menu.anchorHiddenMobile')}><i class="note-dot"></i>{ta('lbl.hideMobile')}</span>
   {/if}
 {/snippet}
 <MenuGroup id="link-target" title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</MenuGroup>
