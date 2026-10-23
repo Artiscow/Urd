@@ -356,10 +356,10 @@ Urd: the menu, set in the Nav panel (ELEMENTS.md #80 to #83).
 |---|---|---|---|
 | An item's label and link | WP, KB | Has: a page and a spot on it, a web address, email or phone | - |
 | A new tab and rel per item | WP, KB | Has (0.7.27) | - |
-| A description or title per item | WP, KB | Missing | 0.7.13.21 Menu item options |
+| A description or title per item | WP, KB | Has: a one-line description, shown in the submenus and the mobile menus (0.7.13.21) | - |
 | Submenus that open on hover or on a click | WP, WS, KB | Has: hover, hover closed by a click, or click only | - |
-| More than one submenu level | WP, KB | Missing: one level | 0.7.13.21 Menu item options |
-| A phone menu behind a button | WP, PL | Has: a panel below the bar or a full-screen sheet | The button's icon and label: 0.7.13.21 Menu item options |
+| More than one submenu level | WP, KB | Has: two levels, the second beside the panel or as a headed group in columns and the flyout (0.7.13.21) | - |
+| A phone menu behind a button | WP, PL | Has: a panel below the bar or a full-screen sheet; the button's drawing and word chosen (0.7.13.21) | - |
 | The current page marked | WS, KB | Missing | 0.7.11 (the current page marked) |
 | The gap between items | KB, PL | Has: the item spacing | - |
 
@@ -369,7 +369,7 @@ Only Kadence offers a highlighted label on an item and a mega menu with media; o
 
 Urd: the menu and the footer, set once for the site (ELEMENTS.md #11 and #12). Only Kadence ships a header builder in the code read: rows with a layout, a background and a transparent version, a border, a minimum height, a maximum width, and the gap and vertical alignment of their items, with sections and columns placed in them. Gutenberg keeps a header or a footer as a template part with an area and a tag. No setting beyond the shared part itself reaches two projects.
 
-Urd has the menu in six variants, pinned with a shrink or hidden while scrolling down, clear at the top over the first section, with phone overrides, a background stack and tools (the basket, the site's links, the theme button, the launcher); and the footer from ten templates, with link columns, a link row, a bottom line, the legal line, the site's links, a call to action or a newsletter field and a background, hidden per page. Missing: a button-styled menu item and the menu hidden on chosen pages (0.7.13.21 Menu item options); search in the menu (v0.8 site search, to be weighed); a language switcher (After v1.0: multilingual content); and free content in the footer (After v1.0: synced global blocks, a synced section as the footer).
+Urd has the menu in six variants, pinned with a shrink or hidden while scrolling down, clear at the top over the first section, with phone overrides, a background stack and tools (the basket, the site's links, the theme button, the launcher); and the footer from ten templates, with link columns, a link row, a bottom line, the legal line, the site's links, a call to action or a newsletter field and a background, hidden per page. A button-styled menu item and the menu kept off chosen pages, hidden or reached by the pointer at the top edge, a ghost there or a pull tab, came with 0.7.13.21. Missing: search in the menu (v0.8 site search, to be weighed); a language switcher (After v1.0: multilingual content); and free content in the footer (After v1.0: synced global blocks, a synced section as the footer).
 
 ### Container or section
 

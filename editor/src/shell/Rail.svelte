@@ -50,6 +50,10 @@
           <Dropdown value={ed.spellcheckPref}
             options={[['on', ta('common.on')], ['off', ta('common.off')]]}
             onchange={ed.setSpellcheck} /></label>
+        <label title={ta('tip.settings.linkEditor')}>{ta('settings.linkEditor')}
+          <Dropdown value={ed.linkEditorPref}
+            options={[['dialog', ta('opt.linkEditor.dialog')], ['popover', ta('opt.linkEditor.popover')]]}
+            onchange={ed.setLinkEditor} /></label>
         <label title={ta('tip.settings.panels')}>{ta('settings.panels')}
           <Dropdown value={ed.panelsPref}
             options={[['remember', ta('settings.panelsRemember')], ['reset', ta('settings.panelsReset')]]}

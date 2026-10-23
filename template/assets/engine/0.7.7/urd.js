@@ -428,8 +428,9 @@ function enablePreview(state, opts) {
       if (!Array.isArray(state.page.sections)) state.page.sections = [];
       const paint = () => renderPage(state.page, state.site, root, vp());
       if (samePage) keepScroll(paint); else paint();
-      // Page switch in the editor: the footer can have per-page visibility (hideOn).
+      // Page switch in the editor: the footer and the menu can have per-page visibility (hideOn).
       if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
+      if (!samePage && opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
     } else if (msg?.type === 'urd-spellcheck') {
       // The browser's spell check on the editable texts, which the body's attribute governs for every text under it.
       spellcheckOn = msg.on !== false;
@@ -472,7 +473,7 @@ function enablePreview(state, opts) {
       // The Announcement panel: forget the dismissal, so the strip returns
       // in the preview and for this browser on the published page.
       clearAnnounceDismissal(state.site);
-      if (opts.nav) renderNav(state.site, opts.nav);
+      if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
     } else if (msg?.type === 'urd-demo-motion') {
       // The ribbons stand still while the editing chrome is on, so the words
       // can be read and typed. This lets them roll for a few seconds, the way
@@ -640,7 +641,7 @@ function enablePreview(state, opts) {
         applyTheme(state.site.theme);
         applySiteLayout(state.site);
         applyFavicon(state.site.site?.icon);
-        if (opts.nav) renderNav(state.site, opts.nav);
+        if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
         if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
         renderPage(state.page, state.site, root, vp());
       });
@@ -741,7 +742,8 @@ export async function boot(opts) {
   document.body.classList.toggle('urd-mobile', viewport === 'mobile');
   if (preview) document.body.classList.add('urd-preview');
 
-  if (opts.nav) renderNav(site, opts.nav);
+  // The page id is known from the register, so a page the menu stays off (nav.hideOn) starts without it.
+  if (opts.nav) renderNav(site, opts.nav, entry.id);
   // Shared footer: its own element right after the main content (index.html
   // is Urd-owned and cannot be changed by publishing, so the element is
   // created here).

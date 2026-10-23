@@ -428,6 +428,15 @@ function setSpellcheck(v) {
   previewState.bridge?.sendSpellcheck(spellcheckPref === 'on');
 }
 
+/** Where the link editor opens: a dialog over the page (the default), or a small panel beside the field that opened it. */
+let linkEditorPref = $state(localStorage.getItem('urd-link-editor') === 'popover' ? 'popover' : 'dialog');
+
+function setLinkEditor(v) {
+  linkEditorPref = v === 'popover' ? 'popover' : 'dialog';
+  if (linkEditorPref === 'popover') localStorage.setItem('urd-link-editor', 'popover');
+  else localStorage.removeItem('urd-link-editor');
+}
+
 function setLayoutPicker(v) {
   layoutPickerPref = v === 'menu' ? 'menu' : 'strip';
   if (layoutPickerPref === 'menu') localStorage.setItem('urd-layout-picker', 'menu');
@@ -700,6 +709,8 @@ export const shellState = {
   get settingsOpen() { return settingsOpen; },
   get spellcheckPref() { return spellcheckPref; },
   setSpellcheck,
+  get linkEditorPref() { return linkEditorPref; },
+  setLinkEditor,
   set settingsOpen(v) { settingsOpen = v; },
   get layoutPickerPref() { return layoutPickerPref; },
   set layoutPickerPref(v) { layoutPickerPref = v; },

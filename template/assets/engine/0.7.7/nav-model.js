@@ -115,18 +115,22 @@ export function resolveItem(item, pages) {
 }
 
 /**
- * Builds the flat menu model nav.js renders from. Each item gets a `kind`:
+ * Builds the menu model nav.js renders from. Each item gets a `kind`:
  * 'link' (plain link), 'split' (own target plus submenu: link plus arrow
  * button) or 'toggle' (submenu only: the whole item is the opener). The
- * submenu is one level - any grandchildren are ignored defensively.
+ * submenu has two levels (additive from 0.7.13.21): a child may carry
+ * children of its own, and anything deeper is ignored defensively. Every
+ * item carries its `description` (one line under the label, '' without
+ * one), and a top-level item its `look` ('button' for a call to action
+ * drawn as a button, '' for a plain item).
  * @param {{nav: {items?: Array<object>}, pages?: Array<object>}} site
- * @returns {Array<{label: string, href: string, external: boolean, missing: boolean, kind: string, children: Array<object>}>}
+ * @returns {Array<{label: string, href: string, external: boolean, missing: boolean, kind: string, children: Array<object>, description: string, look: string}>}
  */
 export function navItems(site) {
   const pages = site.pages ?? [];
-  return (site.nav.items ?? []).map((item) => {
-    const children = Array.isArray(item.children)
-      ? item.children.map((child) => resolveItem(child, pages))
+  const model = (item, depth) => {
+    const children = depth < 2 && Array.isArray(item.children)
+      ? item.children.map((child) => model(child, depth + 1))
       : [];
     const hasTarget = !!(item.page || item.href || item.target);
     const kind = children.length === 0 ? 'link' : hasTarget ? 'split' : 'toggle';
@@ -135,8 +139,78 @@ export function navItems(site) {
     const own = kind === 'toggle'
       ? { label: item.label, href: '', external: false, missing: false }
       : resolveItem(item, pages);
-    return { ...own, kind, children };
-  });
+    const description = typeof item.description === 'string' ? item.description.trim() : '';
+    const look = depth === 0 && item.look === 'button' ? 'button' : '';
+    return { ...own, kind, children, description, look };
+  };
+  return (site.nav.items ?? []).map((item) => model(item, 0));
+}
+
+/** The burger's drawings (nav.style.burger.icon); the first is the default, and `none` leaves the word to stand alone. */
+export const BURGER_ICONS = ['lines', 'handle', 'dots', 'grid', 'none'];
+
+/**
+ * The burger as it is drawn (nav.style.burger, additive from 0.7.13.21): the icon id, whether the word stands beside it, and the owner's own word ('' for the translated default, which is nav.js's business).
+ * An unknown icon gives the lines, and so does `none` without the word, so the button never stands empty.
+ * @param {{burger?: {icon?: string, showLabel?: boolean, label?: string}}} [style] nav.style
+ * @returns {{icon: string, showLabel: boolean, label: string}}
+ */
+export function burgerModel(style = {}) {
+  const b = style?.burger;
+  const showLabel = b?.showLabel === true;
+  let icon = BURGER_ICONS.includes(b?.icon) ? b.icon : 'lines';
+  if (icon === 'none' && !showLabel) icon = 'lines';
+  return { icon, showLabel, label: showLabel && typeof b?.label === 'string' ? b.label.trim() : '' };
+}
+
+/**
+ * Whether the menu stays off a page (nav.hideOn, additive from 0.7.13.21): the page ids the owner listed, read the way footer.js reads footer.hideOn.
+ * @param {{hideOn?: string[]}} [nav] site.nav
+ * @param {string} [pageId] The page being rendered
+ * @returns {boolean}
+ */
+export function navHidden(nav, pageId) {
+  return !!pageId && Array.isArray(nav?.hideOn) && nav.hideOn.includes(pageId);
+}
+
+/** How the menu stands on a page it is kept off (nav.hideMode); the first is the default. */
+export const HIDE_MODES = ['hidden', 'hover', 'ghost', 'tab'];
+
+/**
+ * The way the menu is reached on a page listed in nav.hideOn (additive from 0.7.13.21): `hidden` (nothing), `hover` (the pointer at the top edge slides it in), `ghost` (the pointer at the top edge shows it faint, and it turns solid when the pointer rests on it) or `tab` (a pull tab at the top edge at all times).
+ * Touch has no hover, so nav.js draws the tab for `hover` and `ghost` there too.
+ * @param {{hideMode?: string}} [nav] site.nav
+ * @returns {'hidden' | 'hover' | 'ghost' | 'tab'}
+ */
+export function hideMode(nav) {
+  return HIDE_MODES.includes(nav?.hideMode) ? nav.hideMode : 'hidden';
+}
+
+/**
+ * The pull tab as drawn (nav.tab, additive from 0.7.13.21): the owner's own mark (an uploaded image, else an icon id), word and colours, or the default tab (the burger lines in the menu's surface) when none is set.
+ * The word and the colours are '' when unset; `custom` says whether any field is set.
+ * @param {{tab?: {icon?: string, image?: string, label?: string, color?: string, textColor?: string}}} [nav] site.nav
+ * @returns {{custom: boolean, icon: string, image: string, label: string, bg: string, color: string}}
+ */
+export function tabModel(nav) {
+  const t = nav?.tab && typeof nav.tab === 'object' ? nav.tab : {};
+  const out = {
+    icon: typeof t.icon === 'string' ? t.icon : '',
+    image: isSafeImage(t.image) ? t.image : '',
+    label: typeof t.label === 'string' ? t.label.trim() : '',
+    bg: t.color ? resolveColor(t.color) : '',
+    color: t.textColor ? resolveColor(t.textColor) : '',
+  };
+  return { custom: Object.values(out).some(Boolean), ...out };
+}
+
+/**
+ * Whether the submenu is laid out in columns (nav.style.subColumns above 1) or as the flyout: there a second level stands as a headed group under its item rather than as a panel beside it.
+ * @param {{subStyle?: string, subColumns?: number}} [style] nav.style
+ * @returns {boolean}
+ */
+export function subGrouped(style = {}) {
+  return style?.subStyle === 'flyout' || Math.round(Number(style?.subColumns)) >= 2;
 }
 
 /** The launcher's three designs; grid is the default. */
@@ -476,6 +550,8 @@ export function navClasses(site) {
   // Submenu design (default is the card style).
   const sub = site.nav.style?.subStyle;
   if (['flat', 'pills', 'lines', 'flyout'].includes(sub)) classes += ` urd-nav-sub-${sub}`;
+  // A second submenu level stands as a headed group in a column layout or the flyout (additive from 0.7.13.21).
+  if (subGrouped(site.nav.style)) classes += ' urd-nav-sub-grouped';
   // Inset (additive since v0.7, ADR-0023, the default since schemaVersion 4):
   // the bar's contents line up with the content edge while the background
   // keeps the full width. Only the top bar can be inset; the pill has its

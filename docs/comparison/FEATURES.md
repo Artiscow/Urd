@@ -1123,7 +1123,7 @@ The ADRs behind the «Where» column: [ADR-0009](../adr/0009-themed-ui-rule.md) 
 | Search tuning | SH (Search & Discovery), SQ | Typo tolerance, search syntax, synonyms and boosted results | no | Missing | v0.8 site search, to be weighed (C61) |
 | Automatic XML sitemap | WX, SQ, FR, WF, WN, ZO, TI, DR, SH | sitemap.xml generated | no | Has | v0.8 publish-time files: `lastmod` and image entries |
 | Navigation menus (multiple) | WX, ZO, SP, NO, SQ, SH | Menu builder with drop-down folders and link items, plan-capped on ZO | no | Partial: one main menu with one submenu level, plus the footer's columns and link row; no further named menus | ER-G |
-| Deeper submenu levels | SH (three levels) | Items nested two levels below the top item, drawn as drop-downs or a mega menu | no | Partial: one submenu level, with card, flat, pills, lines and flyout styles and columns | 0.7.13.21 Menu item options |
+| Deeper submenu levels | SH (three levels) | Items nested two levels below the top item, drawn as drop-downs or a mega menu | no | Has: two submenu levels, the second beside the panel or as headed columns, with card, flat, pills, lines and flyout styles (0.7.13.21) | - |
 | Breadcrumbs and search in the nav bar | NO | Navigation bar options | no | Missing | ER-G: breadcrumbs; search as for site search |
 | Anchor links | WX, SQ | Jump to a section | no | Has: a named spot on any section or block, landing under the menu from any page (0.7.27.1-3) | - |
 | Lightbox pop-ups and overlays | WX, FR | Modal content | no | Partial: gallery lightbox, product quick view | ER-A |

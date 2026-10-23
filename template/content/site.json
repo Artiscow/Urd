@@ -164,7 +164,8 @@
       },
       {
         "label": "Kontakt",
-        "page": "kontakt"
+        "page": "kontakt",
+        "look": "button"
       },
       {
         "label": "Kaker",
@@ -176,11 +177,15 @@
         "children": [
           {
             "label": "Shop FP",
-            "page": "shop-fp"
-          },
-          {
-            "label": "Checkout",
-            "page": "checkout"
+            "page": "shop-fp",
+            "description": "Forsiden til butikken",
+            "children": [
+              {
+                "label": "Checkout",
+                "page": "checkout",
+                "description": "Betaling og levering"
+              }
+            ]
           },
           {
             "label": "Butikk",
@@ -189,6 +194,10 @@
         ]
       }
     ],
+    "hideOn": [
+      "checkout"
+    ],
+    "hideMode": "tab",
     "layout": "left",
     "sticky": true,
     "cart": {

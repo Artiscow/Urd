@@ -1,6 +1,7 @@
 <script>
   /* The Nav panel: the logo, the menu items with their drag order, the bar's variant, size, surface and behaviour, the launcher and the announcement strip. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
+  import { cubicOut } from 'svelte/easing';
   import ColorPicker from '../lib/ColorPicker.svelte';
   import MarkPicker from '../lib/MarkPicker.svelte';
   import { PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, SHRINK_AT, SHRINK_MS, COL_WIDTH, LOGO_SIZE, RADIUS, SIZE_IDS, clampRange, effectivePadY, effectiveTextSize, sizePresetOf } from '../lib/nav-size.js';
@@ -8,12 +9,12 @@
   import Choice from '../lib/Choice.svelte';
   import { ta } from '$engine/i18n.js';
   import { FONT_STACKS } from '$engine/fonts.js';
-  import { resolveLink, toolOrder } from '$engine/nav-model.js';
+  import { resolveLink, toolOrder, burgerModel, BURGER_ICONS } from '$engine/nav-model.js';
   import { iconSvg, ICON_LIBRARY } from '$engine/icons.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
   import LinkField from '../lib/LinkField.svelte';
-  import { linkOf, setLinkOn } from '../lib/link-edit.js';
+  import { linkOf, setLinkOn, linkText } from '../lib/link-edit.js';
   const ed = getContext('urd-editor');
   const grid = $derived(ed.grid);
   const siteDraft = $derived(ed.siteDraft);
@@ -49,6 +50,87 @@
     'lines': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><path d="M12 12h24M12 21h24M12 30h24" stroke-opacity="0.8"/>'),
     'flyout': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><rect x="1" y="6" width="46" height="24" fill="currentColor" fill-opacity="0.12" stroke="none"/><path d="M6 13h10M6 19h8M22 13h10M22 19h8M38 13h6M38 19h4" stroke-opacity="0.8"/>'),
   };
+
+  // The burger's drawings, as nav.js draws them; «none» is a bare frame.
+  const burgerSvg = (body) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${body}</svg>`;
+  const BURGER_TILE_ICONS = {
+    lines: burgerSvg('<path d="M4 6h16M4 12h16M4 18h16"/>'),
+    handle: burgerSvg('<path d="M4 9h16M4 15h16"/>'),
+    dots: burgerSvg('<g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></g>'),
+    grid: burgerSvg('<g fill="currentColor" stroke="none"><circle cx="6" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="18" cy="6" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/><circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></g>'),
+    none: burgerSvg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-opacity="0.35"/>'),
+  };
+  /** The burger as the engine will draw it; the bare «none» tile is offered only beside the word. */
+  const burgerLook = $derived(burgerModel(siteDraft?.nav?.style ?? {}));
+  const burgerOptions = $derived(BURGER_ICONS.filter((id) => id !== 'none' || burgerLook.showLabel).map((id) => [id, ta(`opt.burger.${id}`)]));
+
+  /** One field of nav.style.burger; the object leaves the file when nothing is set. */
+  function setNavBurger(key, value) {
+    siteMutate(`edit:nav-burger-${key}`, () => {
+      siteDraft.nav.style ??= {};
+      const burger = { ...(siteDraft.nav.style.burger ?? {}) };
+      if (value === undefined) delete burger[key];
+      else burger[key] = value;
+      if (Object.keys(burger).length) siteDraft.nav.style.burger = burger;
+      else delete siteDraft.nav.style.burger;
+    });
+  }
+
+  /** Per-page visibility: the menu shows on all pages except those in nav.hideOn. */
+  function toggleNavOnPage(pageId, show) {
+    siteMutate('nav', () => {
+      const hide = new Set(siteDraft.nav.hideOn ?? []);
+      if (show) hide.delete(pageId); else hide.add(pageId);
+      if (hide.size) siteDraft.nav.hideOn = [...hide]; else delete siteDraft.nav.hideOn;
+    });
+  }
+
+  /** Whether any page is without the menu, which is when the way to reach it matters. */
+  const navHidesSome = $derived((siteDraft?.nav?.hideOn ?? []).length > 0);
+
+  /** How the menu is reached on an unticked page (nav.hideMode); hidden leaves the file. */
+  function setNavHideMode(mode) {
+    siteMutate('nav', () => {
+      if (mode === 'hidden') delete siteDraft.nav.hideMode; else siteDraft.nav.hideMode = mode;
+    });
+  }
+
+  /** The pull tab's design: the owner's own once any field of nav.tab is set; the choice alone opens the fields. */
+  let tabOwnChoice = $state(null);
+  const tabOwn = $derived(tabOwnChoice ?? Boolean(siteDraft?.nav?.tab && Object.keys(siteDraft.nav.tab).length));
+  function setTabOwn(own) {
+    tabOwnChoice = own;
+    if (!own) siteMutate('nav', () => { delete siteDraft.nav.tab; });
+  }
+
+  /** One field of the pull tab (nav.tab); the object leaves the file when nothing is set. */
+  function setNavTab(key, value) {
+    siteMutate(`edit:nav-tab-${key}`, () => {
+      const tab = { ...(siteDraft.nav.tab ?? {}) };
+      if (value === undefined || value === '') delete tab[key]; else tab[key] = value;
+      if (Object.keys(tab).length) siteDraft.nav.tab = tab; else delete siteDraft.nav.tab;
+    });
+  }
+
+  /** The tab's mark from the picker: an image wins, an icon clears it. */
+  function setNavTabMark(mark) {
+    siteMutate('nav', () => {
+      const tab = { ...(siteDraft.nav.tab ?? {}) };
+      if (mark.image) tab.image = mark.image; else delete tab.image;
+      if (mark.icon) tab.icon = mark.icon; else delete tab.icon;
+      if (Object.keys(tab).length) siteDraft.nav.tab = tab; else delete siteDraft.nav.tab;
+    });
+  }
+
+  async function uploadNavTabImage(file) {
+    if (!file) return;
+    try {
+      const img = await compressOrTrim(file);
+      siteMutate('nav', () => { siteDraft.nav.tab = { ...(siteDraft.nav.tab ?? {}), image: img.dataUrl }; });
+    } catch {
+      setStatus(ta('status.imageReadErrorSvg'), 'error');
+    }
+  }
 
   // The launcher's three designs, drawn as the panel they give: tiles in
   // three columns, rows with a small mark, or image cards in two columns.
@@ -423,10 +505,43 @@
     siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
   }
 
-  /** A menu item's link, or a submenu item's (j), from the link editor; an item with a submenu and no link is the submenu's opener. */
-  function setNavLink(i, j, link) {
-    siteMutate('nav', () => setLinkOn(j === null ? siteDraft.nav.items[i] : siteDraft.nav.items[i].children[j], link));
+  /** The item at a place in the menu: the top level (i), a submenu item (i, j) or a second-level item (i, j, k). */
+  function navNode(i, j = null, k = null) {
+    let node = siteDraft.nav.items[i];
+    if (j !== null) node = node.children[j];
+    if (k !== null) node = node.children[k];
+    return node;
   }
+
+  /** A menu item's link, or a submenu item's (j, and k one level down), from the link editor; an item with a submenu and no link is the submenu's opener. */
+  function setNavLink(i, j, link, k = null) {
+    siteMutate('nav', () => setLinkOn(navNode(i, j, k), link));
+  }
+
+  /** The one-line description under an item at any level; an emptied field leaves the file. */
+  function setNavDescription(i, j, k, value) {
+    siteMutate(`edit:nav-desc-${i}-${j}-${k}`, () => {
+      const node = navNode(i, j, k);
+      if (value.trim()) node.description = value; else delete node.description;
+    });
+  }
+
+  /** A top-level item's look (item.look): a button, or plain, which leaves the file. */
+  function setNavLook(i, look) {
+    siteMutate('nav', () => {
+      if (look === 'button') siteDraft.nav.items[i].look = 'button'; else delete siteDraft.nav.items[i].look;
+    });
+  }
+
+  /** The card's closing: its fold shrinks its one grid row to nothing, the mirror of the opening animation in app.css. */
+  function foldOut(node, { duration }) {
+    return { duration, easing: cubicOut, css: (t) => `grid-template-rows: ${t}fr` };
+  }
+
+  /** The marks on a closed row: the button look and a description. */
+  const PILL_ICON = '<svg width="14" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="4"/></svg>';
+  const DESC_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h9"/></svg>';
+  const CHEV_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 
   function moveNavItem(i, dir) {
     const j = i + dir;
@@ -542,7 +657,7 @@
       the rows. Below everything the drop is the end of the top level. */
   function onNavListDragOver(e) {
     if (!navDrag) return;
-    const rows = [...e.currentTarget.querySelectorAll('.nav-item:not(.ghost)')];
+    const rows = [...e.currentTarget.querySelectorAll('.nav-item:not(.ghost):not(.grand)')];
     if (!rows.length) return;
     const hit = rows.find((r) => { const b = r.getBoundingClientRect(); return e.clientY >= b.top && e.clientY <= b.bottom; });
     let drop = null;
@@ -614,36 +729,39 @@
     });
   }
 
-  function addNavChild(i) {
+  /** A new submenu item under a top-level item, or under a submenu item (j) as the second level. */
+  function addNavChild(i, j = null) {
     siteMutate('nav', () => {
-      const item = siteDraft.nav.items[i];
+      const item = navNode(i, j);
       item.children ??= [];
       item.children.push({ label: ta('seed.link'), page: siteDraft.pages[0].id });
     });
   }
 
-  function setNavChildLabel(i, j, value) {
-    siteMutate(`edit:nav-child-label-${i}-${j}`, () => { siteDraft.nav.items[i].children[j].label = value; });
+  function setNavChildLabel(i, j, value, k = null) {
+    siteMutate(`edit:nav-child-label-${i}-${j}-${k}`, () => { navNode(i, j, k).label = value; });
   }
 
-
-  function moveNavChild(i, j, dir) {
-    const k = j + dir;
-    const children = siteDraft.nav.items[i].children;
-    if (k < 0 || k >= children.length) return;
-    siteMutate('nav', () => { [children[j], children[k]] = [children[k], children[j]]; });
+  /** Moves a submenu item (i, j), or a second-level item (i, j, k), one step within its list. */
+  function moveNavChild(i, j, dir, k = null) {
+    const children = k === null ? navNode(i).children : navNode(i, j).children;
+    const at = k === null ? j : k;
+    const to = at + dir;
+    if (to < 0 || to >= children.length) return;
+    siteMutate('nav', () => { [children[at], children[to]] = [children[to], children[at]]; });
   }
 
-  function removeNavChild(i, j) {
+  /** Removes a submenu item (i, j), or a second-level item (i, j, k). */
+  function removeNavChild(i, j, k = null) {
     siteMutate('nav', () => {
-      const item = siteDraft.nav.items[i];
-      item.children.splice(j, 1);
+      const item = k === null ? navNode(i) : navNode(i, j);
+      item.children.splice(k === null ? j : k, 1);
       if (item.children.length === 0) {
         // An empty submenu is removed from the file; a pure opener without
         // children has no target and gets the front page, so the item
         // stays valid.
         delete item.children;
-        if (!item.page && !item.href) item.page = siteDraft.pages[0].id;
+        if (!item.page && !item.href && !item.target) item.page = siteDraft.pages[0].id;
       }
     });
   }
@@ -719,6 +837,54 @@
         <Choice label={ta('lbl.order')} value={siteDraft.nav.logo?.order ?? 'image-first'}
           options={[['image-first', ta('opt.logo.imageFirst')], ['text-first', ta('opt.logo.textFirst')]]}
           onchange={(v) => setLogo({ order: v })} />
+      {/if}
+    </div>
+  </details>
+  <details class="group">
+    <summary title={ta('tip.nav.hideMode')}>{ta('group.showNavOnPages')}</summary>
+    <div class="group-items">
+      {#each siteDraft.pages ?? [] as pg (pg.id)}
+        <label class="gridmenu-snap" title={ta('tip.nav.hideOnPage')}>
+          <input type="checkbox"
+            checked={!(siteDraft.nav.hideOn ?? []).includes(pg.id)}
+            onchange={(e) => toggleNavOnPage(pg.id, e.target.checked)} />
+          {pg.title || pg.id}
+        </label>
+      {/each}
+      <!-- How the menu is reached on the unticked pages, and the pull tab's design once a reveal is chosen -->
+      {#if navHidesSome}
+        <Choice label={ta('lbl.navHideMode')} title={ta('tip.nav.hideMode')} value={siteDraft.nav.hideMode ?? 'hidden'}
+          options={['hidden', 'hover', 'ghost', 'tab'].map((m) => [m, ta(`opt.navHide.${m}`)])}
+          onchange={setNavHideMode} />
+        {#if (siteDraft.nav.hideMode ?? 'hidden') !== 'hidden'}
+          <Choice label={ta('lbl.navTab')} title={ta('tip.nav.tabDesign')} value={tabOwn ? 'own' : 'default'}
+            options={[['default', ta('opt.navTab.default')], ['own', ta('opt.navTab.own')]]}
+            onchange={(v) => setTabOwn(v === 'own')} />
+          {#if tabOwn}
+            <div class="lrow-fields">
+              <span class="lrow-actions">
+                <MarkPicker icon={siteDraft.nav.tab?.icon ?? ''} image={siteDraft.nav.tab?.image ?? ''} images={[...launcherImages(), siteDraft.nav.tab?.image].filter(Boolean)}
+                  klass="linkish" label={ta('tip.nav.tabMark')}
+                  onpick={setNavTabMark} onfile={uploadNavTabImage}>
+                  {ta('mp.changeMark')}
+                </MarkPicker>
+                {#if siteDraft.nav.tab?.image}
+                  <img class="tab-mark-preview" src={siteDraft.nav.tab.image} alt="" />
+                {:else if siteDraft.nav.tab?.icon}
+                  <span class="tab-mark-preview">{@html iconSvg(siteDraft.nav.tab.icon) || ''}</span>
+                {/if}
+              </span>
+              <input class="field-filled" value={siteDraft.nav.tab?.label ?? ''} placeholder={ta('ph.nav.burgerLabel')} title={ta('tip.nav.tabLabel')}
+                onchange={(e) => setNavTab('label', e.target.value.trim())} />
+              <label title={ta('tip.nav.tabColor')}>{ta('lbl.colour')}
+                <ColorPicker value={siteDraft.nav.tab?.color ?? 'surface'} tokens={themeSwatches()}
+                  label={ta('tip.nav.tabColor')} onchange={(hex) => setNavTab('color', hex)} /></label>
+              <label title={ta('tip.nav.tabTextColor')}>{ta('lbl.textColor')}
+                <ColorPicker value={siteDraft.nav.tab?.textColor ?? 'text'} tokens={themeSwatches()}
+                  label={ta('tip.nav.tabTextColor')} onchange={(hex) => setNavTab('textColor', hex)} /></label>
+            </div>
+          {/if}
+        {/if}
       {/if}
     </div>
   </details>
@@ -1088,6 +1254,26 @@
               </label>
             {/if}
           </div>
+          <!-- The burger's drawing and the word beside it; the bare tile only once the word is on -->
+          <div class="ctl-field" title={ta('tip.nav.burgerIcon')}>
+            <span class="mini-label">{ta('lbl.burgerIcon')}</span>
+            <div class="tile-grid" class:cols-5={burgerLook.showLabel} class:cols-4={!burgerLook.showLabel} role="group" aria-label={ta('lbl.burgerIcon')}>
+              {#each burgerOptions as [v, text] (v)}
+                <button type="button" class="tile" class:on={burgerLook.icon === v} aria-pressed={burgerLook.icon === v}
+                  onclick={() => setNavBurger('icon', v === 'lines' ? undefined : v)}>{@html BURGER_TILE_ICONS[v]}<span>{text}</span></button>
+              {/each}
+            </div>
+          </div>
+          <label class="gridmenu-snap" title={ta('tip.nav.burgerLabel')}>
+            <input type="checkbox" checked={burgerLook.showLabel}
+              onchange={(e) => setNavBurger('showLabel', e.target.checked ? true : undefined)} />
+            {ta('lbl.burgerLabel')}
+          </label>
+          {#if burgerLook.showLabel}
+            <input placeholder={ta('ph.nav.burgerLabel')} title={ta('tip.nav.burgerText')}
+              value={siteDraft.nav.style?.burger?.label ?? ''}
+              oninput={(e) => setNavBurger('label', e.target.value.trim() ? e.target.value : undefined)} />
+          {/if}
           {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
             <label class="gridmenu-snap" title={ta('tip.nav.sheetLogo')}>
               <input type="checkbox" checked={siteDraft.nav.style?.sheetLogo === true}
@@ -1540,11 +1726,77 @@
     {@const g = navGhostText()}
     <!-- The faint clone at the landing place -->
     <div class="nav-item ghost" class:child aria-hidden="true">
-      <span class="nav-grip">{@html GRIP_ICON}</span>
-      <div class="nav-item-main">
-        <span class="nav-item-name ghost-name">{g.label}</span>
-        <span class="ghost-target">{g.target}</span>
+      <div class="nav-head">
+        <span class="nav-grip">{@html GRIP_ICON}</span>
+        <span class="nav-head-name ghost-name">{g.label}</span>
+        <span class="nav-head-link ghost-target">{g.target}</span>
       </div>
+    </div>
+  {/snippet}
+  <!-- One row per item at every level: closed it is one line with the name,
+       the link, small marks for what is set and the arrows; open it is a
+       card with every field. One row is open at a time. The top two levels
+       are reordered by dragging the row's head (a faint clone shows where
+       the row lands, the middle of a top-level row takes it in as a child,
+       and the grip column of a child row leads back out); the second level
+       is ordered with the arrows alone. -->
+  {#snippet navCard(node, key, level, i, j, k, index, count)}
+    {@const open = navSel === key}
+    <div class="nav-item" class:child={level === 1} class:grand={level === 2} class:open class:dragging={navDrag === key}
+      data-key={level < 2 ? key : undefined}
+      class:drop-target={level === 0 && navDrop?.key === key && navDrop.pos === 'into'}>
+      <!-- The head is the handle: the fields sit in the body, so a drag never fights a text selection -->
+      <div class="nav-head" draggable={level < 2 ? 'true' : undefined} title={level < 2 ? ta('tip.nav.dragItem') : undefined}
+        onclick={(e) => { e.stopPropagation(); navSel = open ? '' : key; }}
+        ondragstart={(e) => { if (level === 2) { e.preventDefault(); return; } e.stopPropagation(); navDrag = key; e.dataTransfer?.setData(NAV_DRAG_TYPE, key); }}
+        ondragend={endNavDrag}>
+        {#if level < 2}<span class="nav-grip">{@html GRIP_ICON}</span>{/if}
+        <span class="nav-head-name">{node.label || ta('seed.link')}</span>
+        <span class="nav-head-link">{linkText(linkOf(node), { pages: siteDraft.pages }) || (node.children?.length ? ta('opt.noLink') : '')}</span>
+        {#if node.look === 'button'}<span class="nav-head-mark" title={ta('opt.navLook.button')}>{@html PILL_ICON}</span>{/if}
+        {#if node.description}<span class="nav-head-mark" title={node.description}>{@html DESC_ICON}</span>{/if}
+        {#if node.children?.length}<span class="nav-item-sub" title={ta('tip.nav.hasSubmenu')}>{@html SUB_ICON}</span>{/if}
+        <span class="nav-head-tools" onclick={(e) => e.stopPropagation()}>
+          <button class="ghost nav-act" title={ta('tip.moveUp')} disabled={index === 0}
+            onclick={() => (level === 0 ? moveNavItem(i, -1) : moveNavChild(i, j, -1, level === 2 ? k : null))}>{@html ICONS.up}</button>
+          <button class="ghost nav-act" title={ta('tip.moveDown')} disabled={index === count - 1}
+            onclick={() => (level === 0 ? moveNavItem(i, 1) : moveNavChild(i, j, 1, level === 2 ? k : null))}>{@html ICONS.down}</button>
+        </span>
+        <button class="ghost nav-act nav-chev" aria-expanded={open} title={ta('tip.nav.openItem')} aria-label={ta('tip.nav.openItem')}>{@html CHEV_ICON}</button>
+      </div>
+      {#if open}
+        <!-- The fold grows from nothing as the card opens (a CSS animation on the wrapper, drawn with the first frame) and shrinks back as it closes -->
+        <div class="nav-fold" out:foldOut={{ duration: ed.reducedMotion ? 0 : 160 }}>
+        <div class="nav-body">
+          <span class="nav-body-label">{ta('lbl.name')}</span>
+          <input class="field-filled" value={node.label} title={level === 0 ? ta('tip.nav.itemLabel') : ta('tip.nav.childLabel')}
+            oninput={(e) => (level === 0 ? setNavLabel(i, e.target.value) : setNavChildLabel(i, j, e.target.value, level === 2 ? k : null))} />
+          <span class="nav-body-label">{ta('lbl.link')}</span>
+          <!-- An item with items under it may have no link and is then their opener -->
+          <LinkField scope="site" value={linkOf(node)} title={ta('tip.linkTarget')} removable={Boolean(node.children?.length)}
+            placeholder={node.children?.length ? ta('opt.noLink') : ''}
+            onchange={(link) => setNavLink(i, level === 0 ? null : j, link, level === 2 ? k : null)} />
+          <span class="nav-body-label">{ta('ph.nav.itemDescription')}</span>
+          <input class="field-filled" value={node.description ?? ''} placeholder={ta('ph.nav.itemDescription')} title={ta('tip.nav.itemDescription')}
+            oninput={(e) => setNavDescription(i, level === 0 ? null : j, level === 2 ? k : null, e.target.value)} />
+          {#if level === 0}
+            <div class="nav-body-wide">
+              <Choice label={ta('lbl.navItemLook')} title={ta('tip.nav.itemButton')} value={node.look === 'button' ? 'button' : 'plain'}
+                options={[['plain', ta('opt.navLook.plain')], ['button', ta('opt.navLook.button')]]}
+                onchange={(v) => setNavLook(i, v)} />
+            </div>
+          {/if}
+          <div class="nav-body-actions">
+            {#if level < 2}
+              <button class="ghost action" onclick={() => addNavChild(i, level === 0 ? null : j)}>{level === 0 ? ta('ui.addMenuChild') : ta('ui.addMenuGrandchild')}</button>
+            {/if}
+            <span class="nav-body-spacer"></span>
+            <button class="ghost nav-act" title={level === 0 ? ta('tip.nav.removeItem') : ta('tip.nav.removeChild')}
+              onclick={() => { navSel = ''; if (level === 0) removeNavItem(i); else removeNavChild(i, j, level === 2 ? k : null); }}>{@html ICONS.cross}</button>
+          </div>
+        </div>
+        </div>
+      {/if}
     </div>
   {/snippet}
   <div class="nav-list" role="list"
@@ -1553,61 +1805,14 @@
   {#each siteDraft.nav.items as item, i (i)}
     {@const key = `${i}`}
     {#if navDrop?.key === key && navDrop.pos === 'before'}{@render navGhost(false)}{/if}
-    <div class="nav-item" class:selected={navSel === key} class:dragging={navDrag === key} data-key={key}
-      class:drop-target={navDrop?.key === key && navDrop.pos === 'into'}
-      onclick={() => { navSel = key; }}>
-      <!-- The grip alone is draggable: a draggable row would take the mouse
-           from the name field's text selection. -->
-      <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
-        ondragstart={(e) => { navDrag = key; e.dataTransfer?.setData(NAV_DRAG_TYPE, key); }}
-        ondragend={endNavDrag}>{@html GRIP_ICON}</span>
-      <div class="nav-item-main">
-        <input class="nav-item-name" value={item.label} title={ta('tip.nav.itemLabel')}
-          oninput={(e) => setNavLabel(i, e.target.value)} />
-        <!-- The item's link; an item with a submenu may have none and is then the submenu's opener -->
-        <div class="nav-item-target">
-          <LinkField scope="site" value={linkOf(item)} title={ta('tip.linkTarget')} removable={Boolean(item.children?.length)}
-            placeholder={item.children?.length ? ta('opt.noLink') : ''} onchange={(link) => setNavLink(i, null, link)} />
-        </div>
-      </div>
-      {#if item.children?.length}<span class="nav-item-sub" title={ta('tip.nav.hasSubmenu')}>{@html SUB_ICON}</span>{/if}
-      <span class="nav-actions">
-        <button class="ghost nav-act" title={ta('tip.nav.addChild')}
-          onclick={() => addNavChild(i)}>{@html ICONS.plus}</button>
-        <button class="ghost nav-act" title={ta('tip.moveUp')} onclick={() => moveNavItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-        <button class="ghost nav-act" title={ta('tip.nav.removeItem')}
-          onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
-        <button class="ghost nav-act" title={ta('tip.moveDown')} onclick={() => moveNavItem(i, 1)}
-          disabled={i === siteDraft.nav.items.length - 1}>{@html ICONS.down}</button>
-      </span>
-      <button class="ghost row-tool nav-more" title={ta('tip.nav.itemActions')} aria-label={ta('tip.nav.itemActions')}
-        onclick={() => { navSel = key; }}>{@html ICONS.kebab}</button>
-    </div>
+    {@render navCard(item, key, 0, i, null, null, i, siteDraft.nav.items.length)}
     {#each item.children ?? [] as child, j (j)}
       {@const ckey = `${i}.${j}`}
       {#if navDrop?.key === ckey && navDrop.pos === 'before'}{@render navGhost(true)}{/if}
-      <div class="nav-item child" class:selected={navSel === ckey} class:dragging={navDrag === ckey} data-key={ckey}
-        onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>
-        <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
-          ondragstart={(e) => { e.stopPropagation(); navDrag = ckey; e.dataTransfer?.setData(NAV_DRAG_TYPE, ckey); }}
-          ondragend={endNavDrag}>{@html GRIP_ICON}</span>
-        <div class="nav-item-main">
-          <input class="nav-item-name" value={child.label} title={ta('tip.nav.childLabel')}
-            oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
-          <div class="nav-item-target">
-            <LinkField scope="site" value={linkOf(child)} title={ta('tip.linkTarget')} removable={false} onchange={(link) => setNavLink(i, j, link)} />
-          </div>
-        </div>
-        <span class="nav-actions">
-          <button class="ghost nav-act" title={ta('tip.moveUp')} onclick={() => moveNavChild(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
-          <button class="ghost nav-act" title={ta('tip.nav.removeChild')}
-            onclick={() => removeNavChild(i, j)}>{@html ICONS.cross}</button>
-          <button class="ghost nav-act" title={ta('tip.moveDown')} onclick={() => moveNavChild(i, j, 1)}
-            disabled={j === item.children.length - 1}>{@html ICONS.down}</button>
-        </span>
-        <button class="ghost row-tool nav-more" title={ta('tip.nav.itemActions')} aria-label={ta('tip.nav.itemActions')}
-          onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>{@html ICONS.kebab}</button>
-      </div>
+      {@render navCard(child, ckey, 1, i, j, null, j, item.children.length)}
+      {#each child.children ?? [] as grand, k (k)}
+        {@render navCard(grand, `${i}.${j}.${k}`, 2, i, j, k, k, child.children.length)}
+      {/each}
       {#if navDrop?.key === ckey && navDrop.pos === 'after'}{@render navGhost(true)}{/if}
     {/each}
     {#if navDrop?.key === key && navDrop.pos === 'into'}{@render navGhost(true)}{/if}

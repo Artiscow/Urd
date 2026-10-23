@@ -326,6 +326,14 @@ reading order. You usually do not have to do anything.
   The logo can be text, an uploaded image or both (with
   size and order), and always works as a «Home» button.
   The menu items can sit to the right, centred or to the left.
+  An item can carry a one-line description (shown in the submenus and the
+  mobile menu) and be shown as a button; a submenu item can have items of
+  its own, a second level that opens beside the panel or stands as a headed
+  group when the submenu has columns or is the flyout. Under Mobile you
+  choose the burger's drawing and whether the word «Menu» stands beside
+  it, and under «Show nav on pages» you keep the menu off chosen pages,
+  where it can stay hidden, slide in when the pointer reaches the top edge,
+  show as a ghost there, or hang as a pull tab in the default look or your own.
   Under Appearance you control the menu's background colour and opacity (0 =
   a transparent menu over the hero), text colour and «Sticky menu»
   (whether the menu follows along when visitors scroll down).

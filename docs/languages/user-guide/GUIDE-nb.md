@@ -323,6 +323,14 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   Logoen kan være tekst, et opplastet bilde eller begge deler (med
   størrelse og rekkefølge), og fungerer alltid som «Hjem»-knapp.
   Menypunktene kan stå til høyre, midtstilt eller til venstre.
+  Et punkt kan ha en beskrivelse på én linje (vist i undermenyene og
+  mobilmenyen) og vises som knapp; et undermenypunkt kan ha egne punkter,
+  et andre nivå som åpnes ved siden av ruta eller står som en gruppe med
+  overskrift når undermenyen har kolonner eller er utfellingen. Under Mobil
+  velger du burgerens tegning og om ordet «Meny» skal stå ved siden av, og
+  under «Vis nav på sider» holder du menyen borte fra valgte sider, der den
+  kan være skjult, gli inn når pekeren når toppkanten, vises som et spøkelse
+  der, eller henge som en trekkfane i standardutseendet eller ditt eget.
   Under Utseende styrer du menyens bakgrunnsfarge og dekkevne (0 =
   gjennomsiktig meny over hero-en), tekstfarge og «Klistret meny»
   (om menyen følger med når besøkende blar nedover).

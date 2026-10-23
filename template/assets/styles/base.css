@@ -15062,6 +15062,205 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-hover-pill:not(.urd-na
   }
 }
 
+/* Menu item options (0.7.13.21). The description is a second line under the
+   label; the bar hides it on its own row, where a two-line item would grow
+   the bar, and the submenus, the column and the mobile menus show it. */
+.urd-nav-label,
+.urd-nav-desc {
+  display: block;
+}
+
+.urd-nav-desc {
+  font-size: 0.8em;
+  opacity: 0.7;
+  white-space: normal;
+  max-width: 18rem;
+  margin-top: 0.1rem;
+}
+
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav:not(.urd-nav-mobile) .urd-nav-list > li > a .urd-nav-desc,
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav:not(.urd-nav-mobile) .urd-nav-list > li > .urd-nav-toggle .urd-nav-desc {
+  display: none;
+}
+
+/* A call to action drawn as a button (item.look button): the accent surface
+   with its text colour, kept on hover, whatever the hover style. The
+   selectors carry the nav class so they outrank the row rules of the column
+   and the mobile menus above. */
+.urd-nav .urd-nav-list .urd-nav-btn > a {
+  background: var(--urd-color-accent);
+  color: var(--urd-color-accent-text, #fff);
+  padding: 0.45em 1.1em;
+  border-radius: 999px;
+  margin-inline: 0;
+  transition: filter 0.15s ease;
+}
+
+.urd-nav .urd-nav-list .urd-nav-btn > a:hover,
+.urd-nav .urd-nav-list .urd-nav-btn > a:focus-visible {
+  background: var(--urd-color-accent);
+  color: var(--urd-color-accent-text, #fff);
+  filter: brightness(1.1);
+}
+
+.urd-nav-hover-underline .urd-nav-list .urd-nav-btn > a::after {
+  content: none;
+}
+
+body.urd-mobile .urd-nav .urd-nav-list .urd-nav-btn > a,
+.urd-nav-mobile .urd-nav-list .urd-nav-btn > a,
+.urd-nav-side-host .urd-nav .urd-nav-list .urd-nav-btn > a {
+  text-align: center;
+  padding: 0.55em 1rem;
+  margin-top: 0.35rem;
+}
+
+/* The burger's word beside its drawing (nav.style.burger) */
+.urd-nav-burger {
+  gap: 0.35rem;
+  font: inherit;
+}
+
+.urd-nav-burger-label {
+  font-size: 0.9em;
+}
+
+/* The second submenu level: a child's own submenu opens beside the panel,
+   on the outer side, and stacks as an accordion in the column and the
+   mobile menus like the first level. */
+.urd-nav-sub .urd-nav-has-sub {
+  position: relative;
+  align-self: auto;
+}
+
+.urd-nav-sub .urd-nav-has-sub > a {
+  flex: 1;
+}
+
+.urd-nav-sub .urd-nav-sub {
+  top: 0;
+  left: 100%;
+  margin-left: 0.25rem;
+}
+
+.urd-nav-right .urd-nav-sub .urd-nav-sub {
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 0.25rem;
+}
+
+/* In a column layout or the flyout the second level stands as a headed
+   group: the child is the heading (its link, or its opener without the
+   chevron) and its submenu is a list in the flow under it. nav.js keeps
+   these open and takes the opener out of the tab order. */
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-nav-mobile) .urd-nav-sub .urd-nav-has-sub {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Room for a heading with a description in every column (the flyout has the full width anyway) */
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-nav-mobile) .urd-nav-list > li > .urd-nav-sub {
+  min-width: calc(var(--urd-nav-sub-cols, 1) * 12rem);
+}
+
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-nav-mobile) .urd-nav-sub .urd-nav-has-sub > .urd-nav-caret,
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-nav-mobile) .urd-nav-sub .urd-nav-has-sub > .urd-nav-toggle svg {
+  display: none;
+}
+
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-nav-mobile) .urd-nav-sub .urd-nav-has-sub > a,
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-nav-mobile) .urd-nav-sub .urd-nav-has-sub > .urd-nav-toggle {
+  font-weight: 600;
+  justify-content: flex-start;
+}
+
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-nav-mobile) .urd-nav-sub .urd-nav-has-sub > .urd-nav-toggle {
+  cursor: default;
+  opacity: 1;
+}
+
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-nav-mobile) .urd-nav-sub .urd-nav-sub {
+  display: block;
+  position: static;
+  min-width: 0;
+  margin: 0;
+  padding: 0.15rem 0 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* A menu tucked above the top edge (nav.hideMode on a page in nav.hideOn):
+   fixed and translated out of view; the pointer at the edge, the ghost or the
+   pull tab bring it in (nav.js). The page keeps no clearance for it. */
+.urd-nav-tuck {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5000;
+  transform: translateY(-100%);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.urd-preview .urd-nav-tuck {
+  z-index: 100001;
+}
+
+.urd-nav-tuck.urd-nav-peek {
+  transform: translateY(0);
+  opacity: 0.45;
+}
+
+.urd-nav-tuck.urd-nav-shown {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* The pull tab hangs below the host's bottom edge, so it stays in view while
+   the bar is tucked and sits under the bar once it is in. The default is
+   the burger lines in the submenu's surface; the owner's own colours come
+   as variables from nav.js. */
+.urd-nav-tab {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.9rem 0.35rem;
+  border: 0;
+  border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
+  background: var(--urd-nav-tab-bg, var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 92%, transparent)));
+  color: var(--urd-nav-tab-color, var(--urd-color-text));
+  backdrop-filter: var(--urd-nav-blur, blur(8px));
+  box-shadow: 0 6px 14px -4px rgb(0 0 0 / 18%);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85em;
+}
+
+.urd-nav-tab svg {
+  width: 18px;
+  height: 18px;
+}
+
+.urd-nav-tab img {
+  width: 1.4em;
+  height: 1.4em;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urd-nav-tuck {
+    transition: none;
+  }
+}
+
 /* Smart guides: snap lines while a block is dragged (preview only). A line
    between the block and a neighbour spans the two, a line of the content
    surface spans its section, so preview-edit sets the span inline. */

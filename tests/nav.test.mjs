@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage } = await engineImport('nav-model.js');
+const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, subGrouped, hideMode, HIDE_MODES, tabModel } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -86,7 +86,7 @@ test('navItems: own target + submenu gives kind split', () => {
   const [item] = navItems(site);
   assert.equal(item.kind, 'split');
   assert.equal(item.href, '/om-oss');
-  assert.deepEqual(item.children, [{ label: 'Hjem', href: '/', external: false, missing: false }]);
+  assert.deepEqual(item.children, [{ label: 'Hjem', href: '/', external: false, missing: false, kind: 'link', children: [], description: '', look: '' }]);
 });
 
 test('navItems: submenu only gives kind toggle without an own target', () => {
@@ -106,14 +106,97 @@ test('navItems: empty submenu counts as a plain link', () => {
   assert.equal(navItems(site)[0].kind, 'link');
 });
 
-test('navItems: grandchildren are ignored defensively (one level)', () => {
+test('navItems: a child carries a second level, and anything deeper is ignored (0.7.13.21)', () => {
   const site = {
     pages: PAGES,
-    nav: { items: [{ label: 'Mer', children: [{ label: 'Hjem', page: 'hjem', children: [{ label: 'Dypt', page: 'om-oss' }] }] }] },
+    nav: { items: [{ label: 'Mer', children: [{ label: 'Hjem', page: 'hjem', children: [{ label: 'Dypt', page: 'om-oss', children: [{ label: 'Dypere', page: 'hjem' }] }] }] }] },
   };
   const [item] = navItems(site);
   assert.equal(item.children.length, 1);
-  assert.equal(item.children[0].children, undefined);
+  const child = item.children[0];
+  assert.equal(child.kind, 'split');
+  assert.equal(child.children.length, 1);
+  assert.equal(child.children[0].href, '/om-oss');
+  assert.equal(child.children[0].kind, 'link');
+  assert.deepEqual(child.children[0].children, []);
+  // A child with its own items and no link is the second level's opener.
+  const opener = navItems({ pages: PAGES, nav: { items: [{ label: 'Mer', children: [{ label: 'Gruppe', children: [{ label: 'Hjem', page: 'hjem' }] }] }] } })[0].children[0];
+  assert.equal(opener.kind, 'toggle');
+  assert.equal(opener.href, '');
+  assert.equal(opener.missing, false);
+});
+
+test('navItems: the description and the button look travel with the item, the look at the top level only', () => {
+  const site = {
+    pages: PAGES,
+    nav: { items: [
+      { label: 'Bli med', page: 'hjem', look: 'button', description: '  Gratis  ' },
+      { label: 'Mer', look: 'odd', children: [{ label: 'Hjem', page: 'hjem', look: 'button', description: 7 }] },
+    ] },
+  };
+  const [cta, more] = navItems(site);
+  assert.equal(cta.look, 'button');
+  assert.equal(cta.description, 'Gratis');
+  assert.equal(more.look, '');
+  assert.equal(more.children[0].look, '');
+  assert.equal(more.children[0].description, '');
+});
+
+test('burgerModel: the lines by default, the bare drawing only beside the word, the word trimmed', () => {
+  assert.deepEqual(burgerModel(), { icon: 'lines', showLabel: false, label: '' });
+  assert.deepEqual(burgerModel({ burger: { icon: 'dots' } }), { icon: 'dots', showLabel: false, label: '' });
+  assert.deepEqual(burgerModel({ burger: { icon: 'odd', label: 'Meny' } }), { icon: 'lines', showLabel: false, label: '' });
+  assert.deepEqual(burgerModel({ burger: { icon: 'none' } }), { icon: 'lines', showLabel: false, label: '' });
+  assert.deepEqual(burgerModel({ burger: { icon: 'none', showLabel: true, label: ' Oversikt ' } }), { icon: 'none', showLabel: true, label: 'Oversikt' });
+  assert.deepEqual(burgerModel({ burger: { icon: 'grid', showLabel: true } }), { icon: 'grid', showLabel: true, label: '' });
+});
+
+test('burgerModel: the schema and the engine agree on the drawings', async () => {
+  const { readFileSync } = await import('node:fs');
+  const schema = JSON.parse(readFileSync(new URL('../schema/site.schema.json', import.meta.url), 'utf-8'));
+  assert.deepEqual(schema.properties.nav.properties.style.properties.burger.properties.icon.enum, BURGER_ICONS);
+});
+
+test('navHidden: only a listed page id keeps the menu off, and only when the page is known', () => {
+  assert.equal(navHidden({ hideOn: ['kampanje'] }, 'kampanje'), true);
+  assert.equal(navHidden({ hideOn: ['kampanje'] }, 'hjem'), false);
+  assert.equal(navHidden({ hideOn: ['kampanje'] }, undefined), false);
+  assert.equal(navHidden({ hideOn: 'kampanje' }, 'kampanje'), false);
+  assert.equal(navHidden({}, 'kampanje'), false);
+  assert.equal(navHidden(undefined, 'kampanje'), false);
+});
+
+test('hideMode: hidden by default, the three reveals allowlisted, and the schema agrees', async () => {
+  assert.equal(hideMode({}), 'hidden');
+  assert.equal(hideMode(undefined), 'hidden');
+  assert.equal(hideMode({ hideMode: 'tab' }), 'tab');
+  assert.equal(hideMode({ hideMode: 'ghost' }), 'ghost');
+  assert.equal(hideMode({ hideMode: 'odd' }), 'hidden');
+  const { readFileSync } = await import('node:fs');
+  const schema = JSON.parse(readFileSync(new URL('../schema/site.schema.json', import.meta.url), 'utf-8'));
+  assert.deepEqual(schema.properties.nav.properties.hideMode.enum, HIDE_MODES);
+});
+
+test('tabModel: the default tab without fields, the owner\'s mark, word and colours otherwise, unsafe images dropped', () => {
+  assert.deepEqual(tabModel({}), { custom: false, icon: '', image: '', label: '', bg: '', color: '' });
+  assert.equal(tabModel({ tab: { label: ' Meny ' } }).label, 'Meny');
+  assert.equal(tabModel({ tab: { label: 'Meny' } }).custom, true);
+  assert.equal(tabModel({ tab: { icon: 'home' } }).icon, 'home');
+  assert.equal(tabModel({ tab: { image: '/media/tab.webp' } }).image, '/media/tab.webp');
+  assert.equal(tabModel({ tab: { image: 'https://evil.example/x.png' } }).image, '');
+  assert.equal(tabModel({ tab: { image: 'https://evil.example/x.png' } }).custom, false);
+  assert.equal(tabModel({ tab: { color: '#112233' } }).bg, '#112233');
+  assert.match(tabModel({ tab: { textColor: 'accent' } }).color, /accent/);
+});
+
+test('subGrouped/navClasses: columns or the flyout draw a second level as a headed group', () => {
+  assert.equal(subGrouped({}), false);
+  assert.equal(subGrouped({ subColumns: 1 }), false);
+  assert.equal(subGrouped({ subColumns: 2 }), true);
+  assert.equal(subGrouped({ subStyle: 'flyout' }), true);
+  assert.equal(subGrouped({ subStyle: 'pills' }), false);
+  assert.match(navClasses({ nav: { style: { subColumns: 3 } } }), /urd-nav-sub-grouped/);
+  assert.doesNotMatch(navClasses({ nav: { style: { subStyle: 'card' } } }), /urd-nav-sub-grouped/);
 });
 
 test('navClasses: default layout is right', () => {
@@ -306,7 +389,7 @@ test('navClasses: size gives a class only outside the default (md)', () => {
 test('navClasses: text alignment and submenu design give allowlisted classes', () => {
   assert.equal(navClasses({ nav: { style: { sideAlign: 'center' } } }), 'urd-nav urd-nav-right urd-nav-salign-center urd-nav-inset');
   assert.equal(navClasses({ nav: { style: { sideAlign: 'left' } } }), 'urd-nav urd-nav-right urd-nav-inset');
-  assert.equal(navClasses({ nav: { style: { subStyle: 'flyout' } } }), 'urd-nav urd-nav-right urd-nav-sub-flyout urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { subStyle: 'flyout' } } }), 'urd-nav urd-nav-right urd-nav-sub-flyout urd-nav-sub-grouped urd-nav-inset');
   assert.equal(navClasses({ nav: { style: { subStyle: 'card' } } }), 'urd-nav urd-nav-right urd-nav-inset');
   assert.equal(navClasses({ nav: { style: { subStyle: 'x"y' } } }), 'urd-nav urd-nav-right urd-nav-inset');
 });

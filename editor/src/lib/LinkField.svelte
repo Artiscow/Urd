@@ -49,8 +49,9 @@
     : problem === 'spot' ? ta('link.missingSpot', { page: pages.find((p) => p.id === link.page)?.title ?? link.page })
       : problem === 'address' ? ta('link.missingAddress', { url: link.url }) : '');
 
-  function open() {
-    ed.openLink({ value: $state.snapshot(value), shape, pagesOnly, removable, here, apply: (next) => onchange(next) });
+  /** Opens the link editor; the field itself is the anchor the editor may stand beside (the admin setting). */
+  function open(event) {
+    ed.openLink({ value: $state.snapshot(value), shape, pagesOnly, removable, here, anchor: event.currentTarget, apply: (next) => onchange(next) });
   }
 </script>
 

@@ -7,14 +7,19 @@
  * menubar): real buttons with aria-expanded/aria-controls, natural Tab
  * order and no role="menu". An item with both its own target and a submenu
  * renders as a link plus its own arrow button, so the page stays reachable.
- * The mobile menu (the burger) is a non-modal disclosure of the same list,
- * styled by body.urd-mobile (the breakpoint is set in urd.js from site.json),
- * or with nav.style.mobileMenu 'sheet' a full-screen native <dialog> the
- * list moves into while it is open (ADR-0011: top layer, focus trap, Escape
- * and the scroll lock come from the browser).
+ * The submenu has two levels: a child's own submenu opens beside the panel,
+ * or stands as a headed group under the child when the submenu is laid out
+ * in columns or as the flyout. The mobile menu (the burger) is a non-modal
+ * disclosure of the same list, styled by body.urd-mobile (the breakpoint is
+ * set in urd.js from site.json), or with nav.style.mobileMenu 'sheet' a
+ * full-screen native <dialog> the list moves into while it is open
+ * (ADR-0011: top layer, focus trap, Escape and the scroll lock come from the
+ * browser). The menu stays off the pages listed in nav.hideOn: gone, or
+ * tucked above the top edge and reached by the pointer at the edge, a faint
+ * ghost there, or a pull tab (nav.hideMode).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, toolOrder, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -72,14 +77,21 @@ let lastRender = null;
 narrowMq.addEventListener('change', () => {
   const variant = lastRender?.site.nav.variant;
   if (variant === 'side-left' || variant === 'side-right') {
-    renderNav(lastRender.site, lastRender.host);
+    renderNav(lastRender.site, lastRender.host, lastRender.pageId);
   }
 });
 
 const svg = (path) =>
   `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 const CHEVRON = svg('<path d="M6 9l6 6 6-6"/>');
-const BURGER = svg('<path d="M4 6h16M4 12h16M4 18h16"/>');
+/** The burger's drawings, by the id burgerModel gives; `none` leaves the word to stand alone. */
+const BURGER_SVGS = {
+  lines: svg('<path d="M4 6h16M4 12h16M4 18h16"/>'),
+  handle: svg('<path d="M4 9h16M4 15h16"/>'),
+  dots: svg('<g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></g>'),
+  grid: svg('<g fill="currentColor" stroke="none"><circle cx="6" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="18" cy="6" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/><circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></g>'),
+  none: '',
+};
 const SUN = svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>');
 const MOON = svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
 const CROSS = svg('<path d="M6 6l12 12M18 6L6 18"/>');
@@ -88,32 +100,63 @@ const GRID = svg('<g fill="currentColor" stroke="none"><circle cx="6" cy="6" r="
 /** The launcher button's anchor name; one launcher per page, so one name. */
 const LAUNCHER_ANCHOR = '--urd-nav-launcher';
 
+/** Every class a render may put on the host; all are taken off before a render decides which apply. */
+const HOST_CLASSES = ['urd-nav-float', 'urd-nav-overlay', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right', 'urd-nav-clear',
+  'urd-nav-side-subs-open', 'urd-nav-side-sub-arrow', 'urd-nav-tools-align-start', 'urd-nav-tools-align-center', 'urd-nav-tools-align-end', 'urd-nav-tools-align-spread',
+  'urd-nav-tuck', 'urd-nav-tuck-hover', 'urd-nav-tuck-ghost', 'urd-nav-tuck-tab', 'urd-nav-peek', 'urd-nav-shown'];
+
+/** How close to the top edge the pointer must be, in px, for a tucked menu to answer. */
+const TUCK_EDGE = 24;
+/** How long the pointer rests on the ghost before it turns solid, and how long the menu stays after the pointer has left. */
+const GHOST_SETTLE = 350;
+const TUCK_LEAVE = 300;
+
+/** The measured clearances a render writes on the root element. */
+const ROOT_VARS = ['--urd-nav-h', '--urd-nav-h-base', '--urd-announce-h', '--urd-nav-own-h', '--urd-announce-page-h', '--urd-scroll-clear'];
+
 /**
  * @param {object} site site.json, already parsed
  * @param {HTMLElement} host Element the navigation is built into
+ * @param {string} [pageId] The page being rendered; the menu stays off the pages listed in nav.hideOn
  */
-export function renderNav(site, host) {
+export function renderNav(site, host, pageId) {
   navController?.abort();
   navController = new AbortController();
   const signal = navController.signal;
   navScrollRefresh = null;
-  lastRender = { site, host };
+  lastRender = { site, host, pageId };
+
+  host.replaceChildren();
+  // A strip placed outside the nav host by the previous render leaves with it.
+  document.getElementById('urd-announce')?.remove();
+  // A page the menu stays off (nav.hideOn): with hideMode hidden the host is hidden with its classes and clearances cleared, so the page starts at the top with nothing parked above it.
+  // The other modes tuck the menu above the top edge as a fixed bar (tuckNav below), where the page starts at the top the same way.
+  const tucked = navHidden(site.nav, pageId) ? hideMode(site.nav) : 'hidden';
+  if (navHidden(site.nav, pageId) && tucked === 'hidden') {
+    host.style.display = 'none';
+    host.classList.remove(...HOST_CLASSES, 'urd-nav-sticky', 'urd-nav-announce-scroll', 'urd-nav-announce-keep', 'urd-nav-scroll', 'urd-nav-compact', 'urd-nav-hidden', 'urd-nav-scrolled');
+    document.body.classList.remove('urd-side-left', 'urd-side-right');
+    document.body.style.removeProperty('--urd-nav-side-width');
+    for (const name of ROOT_VARS) document.documentElement.style.setProperty(name, '0px');
+    return;
+  }
+  host.style.removeProperty('display');
 
   // Narrow windows: the side variant renders as a regular top bar
   // (effective variant bar); the breakpoint listener above re-renders on
   // crossing. At the mobile breakpoint the overrides in nav.style.mobile
   // replace the desktop values they name (effectiveNav), so the appearance
   // is computed from one resolved nav.
-  const wantsSide = site.nav.variant === 'side-left' || site.nav.variant === 'side-right';
+  // A tucked menu is always a plain top bar, out of the flow and without the scroll behaviours and the clear top: the modes below the bar's variant have no meaning above the edge.
+  const isTucked = tucked !== 'hidden';
+  const wantsSide = !isTucked && (site.nav.variant === 'side-left' || site.nav.variant === 'side-right');
   // The site's own breakpoint; the listener and the burger class are wired
   // further down, where the nav element exists.
   const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
-  const baseNav = wantsSide && narrowMq.matches ? { ...site.nav, variant: 'bar' } : site.nav;
+  const baseNav = isTucked
+    ? { ...site.nav, variant: 'bar', overlay: false, sticky: true, scroll: undefined, style: { ...(site.nav.style ?? {}), atTop: undefined } }
+    : wantsSide && narrowMq.matches ? { ...site.nav, variant: 'bar' } : site.nav;
   const effSite = { ...site, nav: effectiveNav(baseNav, { mobile: mobileMq.matches }) };
-
-  host.replaceChildren();
-  // A strip placed outside the nav host by the previous render leaves with it.
-  document.getElementById('urd-announce')?.remove();
 
   // The announcement bar (nav.announcement, additive since v0.7): a strip
   // above the menu inside the host. It follows the menu by default; with
@@ -207,7 +250,7 @@ export function renderNav(site, host) {
   // window is narrower than the mobile breakpoint. For visitors,
   // body.urd-mobile is set at the same threshold; the double coverage in
   // the CSS is harmless.
-  mobileMq.addEventListener('change', () => renderNav(lastRender.site, lastRender.host), { signal });
+  mobileMq.addEventListener('change', () => renderNav(lastRender.site, lastRender.host, lastRender.pageId), { signal });
   if (mobileMq.matches) nav.classList.add('urd-nav-mobile');
   // Sticky menu (the default): sticky must sit on the HOST (the header
   // element), not on the nav - a sticky element can never leave its parent,
@@ -219,8 +262,8 @@ export function renderNav(site, host) {
   // are toggled on every render, so a variant switch in the editor never
   // leaves leftovers.
   const hc = hostClasses(effSite);
-  for (const cls of ['urd-nav-float', 'urd-nav-overlay', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right', 'urd-nav-clear',
-    'urd-nav-side-subs-open', 'urd-nav-side-sub-arrow', 'urd-nav-tools-align-start', 'urd-nav-tools-align-center', 'urd-nav-tools-align-end', 'urd-nav-tools-align-spread']) {
+  if (isTucked) hc.host.push('urd-nav-tuck', `urd-nav-tuck-${tucked}`);
+  for (const cls of HOST_CLASSES) {
     host.classList.toggle(cls, hc.host.includes(cls));
   }
   for (const cls of ['urd-side-left', 'urd-side-right']) {
@@ -522,14 +565,24 @@ export function renderNav(site, host) {
   // is a non-modal disclosure of the menu list - no focus trap or scroll
   // lock, the panel scrolls itself. With the sheet it opens a modal dialog
   // that the list moves into (and back out of on close), so the same list
-  // with its submenu accordions serves both.
+  // with its submenu accordions serves both. The drawing and the word
+  // beside it are the owner's choice (nav.style.burger); a visible word is
+  // the button's name.
+  const burgerLook = burgerModel(site.nav.style);
+  const burgerName = burgerLook.label || t('nav.menu');
   const burger = document.createElement('button');
   burger.className = 'urd-nav-burger';
   burger.type = 'button';
   burger.setAttribute('aria-expanded', 'false');
   burger.setAttribute('aria-controls', 'urd-nav-menu');
-  burger.setAttribute('aria-label', t('nav.menu'));
-  burger.innerHTML = BURGER;
+  burger.setAttribute('aria-label', burgerName);
+  burger.innerHTML = BURGER_SVGS[burgerLook.icon];
+  if (burgerLook.showLabel) {
+    const word = document.createElement('span');
+    word.className = 'urd-nav-burger-label';
+    word.textContent = burgerName;
+    burger.appendChild(word);
+  }
   // The burger ends the row, except when the cluster stands at the start,
   // where it takes the outer edge so it sits leftmost on mobile.
   if (effSite.nav.style?.tools?.side === 'start' && !isSide) tools.prepend(burger);
@@ -553,11 +606,7 @@ export function renderNav(site, host) {
   // the editor's viewport choice in the preview (body.urd-mobile).
   const isMobileState = () => mobileMq.matches || nav.classList.contains('urd-nav-mobile') || document.body.classList.contains('urd-mobile');
   const subMode = mobileSubMode(site.nav.style);
-  // The column can keep every submenu open from the start (nav.style.sideSubs);
-  // without the arrow (nav.style.sideSubArrow) nothing closes them.
-  const columnExpanded = hc.host.includes('urd-nav-side-subs-open');
-  const columnFixedOpen = columnExpanded && !hc.host.includes('urd-nav-side-sub-arrow');
-  const expandedSubs = () => (subMode === 'expanded' && isMobileState()) || (columnExpanded && !isMobileState());
+  const expandedSubs = () => (subMode === 'expanded' && isMobileState()) || (hc.host.includes('urd-nav-side-subs-open') && !isMobileState());
   const setMobileOpen = (open) => {
     if (sheet) {
       if (open && !sheet.dialog.open) sheet.show();
@@ -577,14 +626,43 @@ export function renderNav(site, host) {
     setMobileOpen(!isMobileOpen());
   }, { signal });
 
-  /** All li elements with a submenu, for closeAll. */
+  /** Every opener with its submenu, at both levels, in document order (a parent before its children). */
   const subs = [];
   const setOpen = (entry, open) => {
     entry.li.classList.toggle('open', open);
     entry.button.setAttribute('aria-expanded', String(open));
+    // A closing submenu takes its own open second level with it, so the panel never reopens with a stale inner level; a headed group stays as it is.
+    if (!open) {
+      for (const inner of subs) {
+        if (inner !== entry && entry.li.contains(inner.li) && inner.li.classList.contains('open') && !isFixed(inner)) setOpen(inner, false);
+      }
+    }
+  };
+  // The column can keep every submenu open from the start (nav.style.sideSubs);
+  // without the arrow (nav.style.sideSubArrow) nothing closes them.
+  const columnExpanded = hc.host.includes('urd-nav-side-subs-open');
+  const columnFixedOpen = columnExpanded && !hc.host.includes('urd-nav-side-sub-arrow');
+  // A child's own submenu stands as a headed group when the submenu is laid
+  // out in columns or as the flyout (navClasses sets the class the CSS reads).
+  const grouped = subGrouped(site.nav.style);
+  /** Whether an opener stands open with nothing to close it: the column with every submenu open and no arrow, or a headed group. Only outside the mobile menu, where every submenu is an accordion. */
+  const isFixed = (entry) => (columnFixedOpen || entry.grouped) && !isMobileState();
+  /** A fixed opener leaves the tab order and reads as a heading, not as an expanded button that cannot collapse; the state follows the mobile fold, so it is applied again when the bar folds or unfolds. */
+  const applyFixed = () => {
+    for (const entry of subs) {
+      const fixed = isFixed(entry);
+      entry.button.tabIndex = fixed ? -1 : 0;
+      if (fixed) entry.button.setAttribute('aria-disabled', 'true');
+      else entry.button.removeAttribute('aria-disabled');
+      if (fixed) setOpen(entry, true);
+    }
   };
   const closeAll = (except) => {
-    for (const entry of subs) if (entry !== except) setOpen(entry, false);
+    for (const entry of subs) {
+      // The openers above the one kept stay open: closing a parent would take the panel from under the pointer.
+      if (entry === except || (except && entry.li.contains(except.li)) || isFixed(entry)) continue;
+      setOpen(entry, false);
+    }
   };
 
   // Hover only opens on devices with a real pointer - touch must never get
@@ -599,31 +677,53 @@ export function renderNav(site, host) {
   const { hoverOpens, hoverCloses } = subOpenMode(site.nav.style);
   const mouseHover = hoverOpens && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-  const items = navItems(site);
-  items.forEach((item, index) => {
+  /** The item's words inside its link or opener: the label alone, or the label over its one-line description. */
+  const fillLabel = (el, item) => {
+    if (!item.description) {
+      el.textContent = item.label;
+      return;
+    }
+    const label = document.createElement('span');
+    label.className = 'urd-nav-label';
+    label.textContent = item.label;
+    const desc = document.createElement('span');
+    desc.className = 'urd-nav-desc';
+    desc.textContent = item.description;
+    el.append(label, desc);
+  };
+  const makeLink = (target) => {
+    const a = document.createElement('a');
+    Object.assign(a, linkAttrs(target));
+    fillLabel(a, target);
+    return a;
+  };
+
+  /**
+   * One menu item as a list row, its submenu built the same way one level
+   * down. `path` is the item's place in the menu and names the submenu.
+   * @param {object} item From navItems
+   * @param {number} depth 0 in the bar, 1 and 2 in the submenus
+   * @param {string} path
+   * @returns {HTMLLIElement}
+   */
+  const buildItem = (item, depth, path) => {
     if (item.missing && !item.external) {
       console.warn(`Urd: nav item points to unknown page (${item.label})`);
     }
     const li = document.createElement('li');
-
-    const makeLink = (target) => {
-      const a = document.createElement('a');
-      a.textContent = target.label;
-      Object.assign(a, linkAttrs(target));
-      return a;
-    };
+    // A call to action drawn as a button, in the bar and in the mobile menu alike.
+    if (item.look === 'button') li.className = 'urd-nav-btn';
 
     if (item.kind === 'link') {
       li.appendChild(makeLink(item));
-      list.appendChild(li);
-      return;
+      return li;
     }
 
     // Item with a submenu: 'split' = link plus its own arrow button (the
     // page stays reachable); 'toggle' = one button carries both the title
     // and the arrow.
-    li.className = 'urd-nav-has-sub';
-    const subId = `urd-nav-sub-${index}`;
+    li.classList.add('urd-nav-has-sub');
+    const subId = `urd-nav-sub-${path}`;
     const button = document.createElement('button');
     button.type = 'button';
     button.setAttribute('aria-expanded', 'false');
@@ -650,11 +750,14 @@ export function renderNav(site, host) {
     } else {
       button.className = 'urd-nav-toggle';
       const title = document.createElement('span');
-      title.textContent = item.label;
+      fillLabel(title, item);
       button.appendChild(title);
       button.insertAdjacentHTML('beforeend', CHEVRON);
     }
     li.appendChild(button);
+
+    const entry = { li, button, grouped: grouped && depth > 0 };
+    subs.push(entry);
 
     const sub = document.createElement('ul');
     sub.className = 'urd-nav-sub';
@@ -665,28 +768,11 @@ export function renderNav(site, host) {
       selfLi.appendChild(makeLink(item));
       sub.appendChild(selfLi);
     }
-    for (const child of item.children) {
-      if (child.missing && !child.external) {
-        console.warn(`Urd: nav item points to unknown page (${child.label})`);
-      }
-      const childLi = document.createElement('li');
-      childLi.appendChild(makeLink(child));
-      sub.appendChild(childLi);
-    }
+    item.children.forEach((child, j) => sub.appendChild(buildItem(child, depth + 1, `${path}-${j}`)));
     li.appendChild(sub);
 
-    const entry = { li, button };
-    subs.push(entry);
-
-    // In the column with every submenu open and no arrow the opener does
-    // nothing: it leaves the tab order and reads as a heading, not as an
-    // expanded button that cannot collapse.
-    if (columnFixedOpen && !isMobileState()) {
-      button.tabIndex = -1;
-      button.setAttribute('aria-disabled', 'true');
-    }
     button.addEventListener('click', () => {
-      if (columnFixedOpen && !isMobileState()) return;
+      if (isFixed(entry)) return;
       const open = !li.classList.contains('open');
       // The accordion closes the others, except in the expanded mobile mode
       // where every submenu stands on its own.
@@ -694,7 +780,7 @@ export function renderNav(site, host) {
       setOpen(entry, open);
     }, { signal });
 
-    if (mouseHover && !columnExpanded) {
+    if (mouseHover && !columnExpanded && !entry.grouped) {
       // Real mouse only: on hybrid devices (laptop with touchscreen) a tap
       // fires both pointerenter and click, and without the guard the
       // submenu would open on enter and close again on click. The mobile
@@ -720,12 +806,15 @@ export function renderNav(site, host) {
     // Tabbing out of the item closes the submenu - focus must never leave
     // an open menu behind.
     li.addEventListener('focusout', (event) => {
-      if (expandedSubs()) return;
+      if (expandedSubs() || isFixed(entry)) return;
       if (!li.contains(event.relatedTarget)) setOpen(entry, false);
     }, { signal });
 
-    list.appendChild(li);
-  });
+    return li;
+  };
+
+  navItems(site).forEach((item, index) => list.appendChild(buildItem(item, 0, String(index))));
+  applyFixed();
   if (columnExpanded && !isMobileState()) for (const entry of subs) setOpen(entry, true);
 
   // The launcher's shortcuts inside the mobile menu: a section at the foot
@@ -784,6 +873,12 @@ export function renderNav(site, host) {
     // host is short; the page behind keeps the clearance it had before the
     // menu opened, and the close puts it back.
     if (sheet?.dialog.open) return;
+    // Above the edge the menu takes no room: the page starts at the top and a jump lands there too.
+    if (isTucked) {
+      for (const name of ROOT_VARS) document.documentElement.style.setProperty(name, '0px');
+      host.style.setProperty('--urd-announce-h', `${announceEl?.offsetHeight ?? 0}px`);
+      return;
+    }
     const announceH = announceEl?.offsetHeight ?? 0;
     const scrolledAway = announceScrolls ? announceH : 0;
     // A strip fixed across the whole page: the column starts and the body
@@ -810,7 +905,7 @@ export function renderNav(site, host) {
   // The room a jump to a spot leaves above it, which base.css gives the page as scroll-padding-top.
   // Unlike --urd-nav-h it follows the scroll shrink, so a spot reached mid-page lands right under the compact menu.
   function setScrollClear() {
-    if (sheet?.dialog.open) return;
+    if (sheet?.dialog.open || isTucked) return;
     // Written only when it changes: the observer reports every frame of the shrink.
     const announceH = announceEl?.offsetHeight ?? 0;
     const pageStrip = announceEl?.classList.contains('urd-announce-page') ? announceH : 0;
@@ -834,6 +929,9 @@ export function renderNav(site, host) {
       if (nav.scrollWidth > nav.clientWidth + 1) {
         foldNeeds = nav.scrollWidth;
         nav.classList.add('urd-nav-mobile');
+        // The headed groups are accordions in the folded menu.
+        applyFixed();
+        if (!expandedSubs()) closeAll();
       }
     } else if (nav.clientWidth > foldNeeds + 8) {
       nav.classList.remove('urd-nav-mobile');
@@ -842,9 +940,10 @@ export function renderNav(site, host) {
         nav.classList.add('urd-nav-mobile');
       } else {
         // The bar is back: the submenus the expanded mobile mode opened
-        // close with the panel.
+        // close with the panel, and the headed groups stand open again.
         setMobileOpen(false);
         closeAll();
+        applyFixed();
       }
     }
   };
@@ -912,13 +1011,20 @@ export function renderNav(site, host) {
     host.appendChild(grip);
   }
 
+  // A tucked menu (nav.hideMode on a page in nav.hideOn) stands above the
+  // top edge and comes in by the pointer at the edge, a ghost there, or the
+  // pull tab; keyboard focus inside brings it in whatever the mode.
+  const tuck = isTucked ? tuckNav(host, nav, tucked, site, signal) : null;
+
   // Escape closes the nearest open layer and returns focus to the button
   // that opened it, so keyboard users land where they were. An open
   // accordion inside the sheet closes alone: the cancelled keydown keeps
   // the dialog's own Escape handling from closing the sheet as well.
   nav.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    const openSub = expandedSubs() ? null : subs.find((entry) => entry.li.classList.contains('open'));
+    // The innermost open submenu around the focus closes first; a fixed one has nothing to close.
+    const openSubs = expandedSubs() ? [] : subs.filter((entry) => entry.li.classList.contains('open') && !isFixed(entry));
+    const openSub = openSubs.filter((entry) => entry.li.contains(document.activeElement)).pop() ?? openSubs[0];
     if (launcherWrap?.isOpen()) {
       event.preventDefault();
       launcherWrap.close();
@@ -937,11 +1043,148 @@ export function renderNav(site, host) {
   // mobile panel. Submenus that stand open by choice (the expanded column)
   // keep standing.
   document.addEventListener('pointerdown', (event) => {
-    if (nav.contains(event.target)) return;
+    if (host.contains(event.target)) return;
     if (!expandedSubs()) closeAll();
     launcherWrap?.close();
     setMobileOpen(false);
+    tuck?.hide();
   }, { signal });
+}
+
+/**
+ * The menu above the top edge of a page it is kept off (nav.hideMode): the
+ * host is fixed and translated out of view (base.css), and the mode decides
+ * what brings it in. `hover`: the pointer within TUCK_EDGE of the top, and
+ * it leaves TUCK_LEAVE after the pointer has left the bar. `ghost`: the
+ * pointer at the edge shows the bar faint (urd-nav-peek), and it turns
+ * solid once the pointer has rested on it for GHOST_SETTLE or clicked it.
+ * `tab`: a pull tab hangs below the edge at all times and toggles the bar;
+ * the pointer resting on the tab brings it in too. Touch has no hover, so
+ * the tab is drawn for every mode there (ADR-0011: the menu stays
+ * reachable). Focus inside the bar brings it in in every mode, and focus
+ * leaving it lets it go.
+ * @param {HTMLElement} host
+ * @param {HTMLElement} nav
+ * @param {'hover' | 'ghost' | 'tab'} mode
+ * @param {object} site
+ * @param {AbortSignal} signal
+ * @returns {{isShown: () => boolean, hide: () => void, tab: HTMLButtonElement | null}}
+ */
+function tuckNav(host, nav, mode, site, signal) {
+  const canHover = window.matchMedia('(hover: hover)').matches;
+  let leaveTimer = null;
+  let settleTimer = null;
+  const isShown = () => host.classList.contains('urd-nav-shown');
+  const show = () => {
+    clearTimeout(leaveTimer);
+    clearTimeout(settleTimer);
+    host.classList.add('urd-nav-shown');
+    host.classList.remove('urd-nav-peek');
+    tab?.setAttribute('aria-expanded', 'true');
+  };
+  const hide = () => {
+    clearTimeout(leaveTimer);
+    clearTimeout(settleTimer);
+    host.classList.remove('urd-nav-shown', 'urd-nav-peek');
+    tab?.setAttribute('aria-expanded', 'false');
+  };
+  const leaveLater = () => {
+    clearTimeout(leaveTimer);
+    leaveTimer = setTimeout(hide, TUCK_LEAVE);
+  };
+
+  // The pull tab: the owner's own mark, word and colours, or the burger
+  // lines in the menu's surface. Drawn for the tab mode, and on a device
+  // without hover for the other modes as well.
+  let tab = null;
+  if (mode === 'tab' || !canHover) {
+    const look = tabModel(site.nav);
+    tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = `urd-nav-tab${look.custom ? ' urd-nav-tab-own' : ''}`;
+    tab.setAttribute('aria-expanded', 'false');
+    tab.setAttribute('aria-controls', host.id || 'urd-nav');
+    const name = look.label || t('nav.menu');
+    tab.setAttribute('aria-label', name);
+    if (look.image) {
+      const img = document.createElement('img');
+      img.src = look.image;
+      img.alt = '';
+      tab.appendChild(img);
+    } else {
+      tab.innerHTML = (look.icon && iconSvg(look.icon)) || BURGER_SVGS.lines;
+    }
+    if (look.label) {
+      const word = document.createElement('span');
+      word.className = 'urd-nav-tab-label';
+      word.textContent = look.label;
+      tab.appendChild(word);
+    }
+    if (look.bg) tab.style.setProperty('--urd-nav-tab-bg', look.bg);
+    if (look.color) tab.style.setProperty('--urd-nav-tab-color', look.color);
+    tab.addEventListener('click', () => {
+      if (isShown()) hide(); else show();
+    }, { signal });
+    if (canHover) {
+      tab.addEventListener('pointerenter', (event) => {
+        if (event.pointerType === 'mouse') show();
+      }, { signal });
+    }
+    host.appendChild(tab);
+  }
+
+  if (canHover) {
+    // The edge: a pointer there brings the bar in (hover) or shows the ghost.
+    let ticking = false;
+    document.addEventListener('pointermove', (event) => {
+      if (event.pointerType !== 'mouse' || ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        const atEdge = event.clientY <= TUCK_EDGE;
+        if (isShown()) {
+          // The bar stays while the pointer is on it; the host's own leave handles the rest.
+          return;
+        }
+        if (mode === 'hover' && atEdge) show();
+        else if (mode === 'ghost') host.classList.toggle('urd-nav-peek', atEdge || (host.classList.contains('urd-nav-peek') && event.clientY <= nav.offsetHeight));
+      });
+    }, { passive: true, signal });
+    host.addEventListener('pointerenter', (event) => {
+      if (event.pointerType !== 'mouse') return;
+      clearTimeout(leaveTimer);
+      if (mode === 'ghost' && !isShown()) {
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(show, GHOST_SETTLE);
+      }
+    }, { signal });
+    host.addEventListener('pointerleave', (event) => {
+      if (event.pointerType !== 'mouse') return;
+      clearTimeout(settleTimer);
+      if (isShown()) leaveLater();
+      else host.classList.remove('urd-nav-peek');
+    }, { signal });
+    if (mode === 'ghost') {
+      host.addEventListener('click', () => { if (!isShown()) show(); }, { signal });
+    }
+  }
+  // Keyboard: focus inside brings the bar in, focus leaving lets it go, and
+  // Escape puts it away from the tab as well as from the bar (the bar's own
+  // Escape handling, which closes an open submenu first, has cancelled the key then).
+  host.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || event.defaultPrevented || !isShown()) return;
+    event.preventDefault();
+    hide();
+    tab?.focus();
+  }, { signal });
+  // The tab is the opener: focus on it opens nothing, its click does.
+  host.addEventListener('focusin', (event) => {
+    if (!tab?.contains(event.target)) show();
+  }, { signal });
+  host.addEventListener('focusout', (event) => {
+    if (!host.contains(event.relatedTarget)) leaveLater();
+  }, { signal });
+  return { isShown, hide, tab };
 }
 
 /**

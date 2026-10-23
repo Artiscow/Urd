@@ -1148,23 +1148,159 @@
     padding-bottom: 14px;
   }
 
-  /* The menu items as compact rows: grip, name over target, marker, actions. */
+  /* The menu items as rows: closed, one line with the grip, the name, the
+     link and small marks for what is set; open, a card with every field. */
   .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: color-mix(in srgb, currentColor 3%, transparent);
+    /* The card's frame changes in step with the fold, one motion rather than a snap and a slide */
+    transition: background-color 0.16s ease-out, border-color 0.16s ease-out, box-shadow 0.16s ease-out;
+  }
+
+  .nav-item.open {
+    border-color: var(--urd-admin-accent, #6c5ce7);
+    background: color-mix(in srgb, var(--urd-color-accent) 10%, transparent);
+    box-shadow: 0 8px 22px rgb(0 0 0 / 25%);
+  }
+
+  .nav-head {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.3rem 0.4rem 0.3rem 0.3rem;
-    border-radius: 7px;
-    background: color-mix(in srgb, currentColor 3%, transparent);
+    padding: 0.3rem 0.3rem 0.3rem 0.3rem;
+    min-height: 2rem;
+    cursor: pointer;
   }
 
-  .nav-item.selected {
-    background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
+  .nav-head-name {
+    flex: 0 1 auto;
+    max-width: 48%;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-head-link {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.74rem;
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-head-mark {
+    flex: 0 0 auto;
+    display: inline-flex;
+    color: var(--urd-admin-accent, #6c5ce7);
+    opacity: 0.85;
+  }
+
+  .panel-body .nav-chev {
+    flex: 0 0 auto;
+    opacity: 0.7;
+  }
+
+  .nav-chev svg {
+    transition: transform 0.15s ease;
+  }
+
+  .nav-item.open .nav-chev svg {
+    transform: rotate(180deg);
+  }
+
+  /* The arrows on the row's head, shown on hover and while the row is open */
+  .nav-head-tools {
+    flex: 0 0 auto;
+    display: none;
+    gap: 2px;
+  }
+
+  .nav-item:hover .nav-head-tools,
+  .nav-item.open .nav-head-tools {
+    display: inline-flex;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-chev svg { transition: none; }
+  }
+
+  /* The fold opens by growing its one grid row from nothing, which keeps
+     the card clipped to its growing height from the first frame. A browser
+     without animated track sizes shows the card at its full height at once. */
+  .nav-fold {
+    display: grid;
+    grid-template-rows: 1fr;
+    animation: nav-fold-open 0.16s ease-out;
+  }
+
+  @keyframes nav-fold-open {
+    from { grid-template-rows: 0fr; }
+    to { grid-template-rows: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-fold { animation: none; }
+    .nav-item { transition: none; }
+  }
+
+  .nav-body {
+    display: grid;
+    grid-template-columns: 5.2rem minmax(0, 1fr);
+    gap: 6px 8px;
+    align-items: center;
+    padding: 2px 8px 9px 8px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .nav-body-label {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .nav-body-wide,
+  .nav-body-actions {
+    grid-column: 1 / -1;
+  }
+
+  .nav-body-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 2px;
+  }
+
+  .nav-body-spacer {
+    flex: 1;
+  }
+
+  /* The pull tab's own mark, shown beside the picker's trigger */
+  .tab-mark-preview {
+    width: 1.6rem;
+    height: 1.6rem;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 6px;
+    object-fit: cover;
+    background: rgb(255 255 255 / 7%);
   }
 
   .nav-item.child {
     margin-left: 1.3rem;
   }
+
+  /* The second submenu level: one step further in, ordered with the arrows */
+  .nav-item.grand {
+    margin-left: 2.6rem;
+  }
+
 
   .nav-grip {
     flex: 0 0 auto;
@@ -1209,7 +1345,7 @@
     opacity: 0.55;
     border: 1px dashed var(--urd-color-accent);
     background: color-mix(in srgb, var(--urd-color-accent) 10%, transparent);
-    min-height: 2.9rem;
+    min-height: 2rem;
   }
 
   .ghost-name {
@@ -1233,8 +1369,9 @@
     white-space: nowrap;
   }
 
+  /* The row being dragged stays in view, dimmed, until it lands */
   .nav-item.dragging {
-    opacity: 0.3;
+    opacity: 0.55;
   }
 
   /* The row that takes the dragged row in as a child */

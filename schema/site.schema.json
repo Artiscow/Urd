@@ -237,6 +237,20 @@
           "default": false,
           "description": "Place the full-width bar on top of the first section instead of in its own band above it, so a transparent menu reveals the hero behind it (additive from v0.6). Applies only to variant bar; the first section should have enough clearance at the top. Floating/side variants already sit outside the flow."
         },
+        "hideOn": { "type": "array", "items": { "type": "string" }, "description": "Page ids where the menu is kept off, the announcement strip with it (per-page exception, additive from 0.7.13.21); the default (absent) is visible on all pages. The footer's hideOn is its own list." },
+        "hideMode": { "enum": ["hidden", "hover", "ghost", "tab"], "default": "hidden", "description": "How the menu is reached on a page in hideOn (additive from 0.7.13.21): hidden = not at all; hover = the pointer at the top edge slides it in; ghost = the pointer at the top edge shows it faint, and it turns solid when the pointer rests on it; tab = a pull tab at the top edge at all times. A device without hover gets the tab in every mode but hidden." },
+        "tab": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The pull tab's own design (additive from 0.7.13.21); omitted = the burger lines in the menu's surface.",
+          "properties": {
+            "icon": { "type": "string", "description": "An id from the icon library; omitted = the burger lines" },
+            "image": { "type": "string", "description": "An own mark as a path in media/ (data URL in the draft); wins over icon" },
+            "label": { "type": "string", "description": "The word on the tab; it is also the tab's accessible name (empty = the translated «Menu»)" },
+            "color": { "type": "string", "description": "The tab's colour: theme token or raw colour" },
+            "textColor": { "type": "string", "description": "The colour of the mark and the word" }
+          }
+        },
         "announcement": {
           "type": "object",
           "additionalProperties": false,
@@ -443,6 +457,16 @@
             },
             "shadow": { "enum": ["soft", "strong"], "description": "A drop shadow under the top bar (additive from v0.7); omitted = none. Variant bar only (the floating menu has glow)." },
             "mobileMenu": { "enum": ["dropdown", "sheet"], "default": "dropdown", "description": "How the burger opens the menu on mobile (additive from v0.7): dropdown = the panel below the bar; sheet = a full-screen native dialog the list moves into (top layer, focus trap, Escape and the scroll lock native). All variants." },
+            "burger": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "The burger as drawn (additive from 0.7.13.21); omitted = the three lines alone.",
+              "properties": {
+                "icon": { "enum": ["lines", "handle", "dots", "grid", "none"], "default": "lines", "description": "The drawing: three lines, two lines, three dots, nine dots, or none (the word alone; without the word the lines are drawn)" },
+                "showLabel": { "type": "boolean", "default": false, "description": "The word beside the drawing; it is also the button's accessible name" },
+                "label": { "type": "string", "description": "The owner's own word; empty = the translated «Menu»" }
+              }
+            },
             "mobileSubs": { "enum": ["collapsed", "expanded"], "default": "collapsed", "description": "Submenus in the mobile menu (additive from v0.7): collapsed = a tap on the item opens the submenu instead of navigating, with the item's own page listed first in it; expanded = every submenu is open from the start and the item is a plain link. Both mobile menus." },
             "sheetMotion": { "enum": ["top", "bottom", "left", "right", "fade", "none"], "default": "top", "description": "The full-screen sheet's entrance (additive from v0.7): a slide from an edge, a fade, or none; cut under reduced motion. mobileMenu sheet only." },
             "sheetLogo": { "type": "boolean", "default": false, "description": "The logo moves into the top of the full-screen sheet while it is open (additive from v0.7). mobileMenu sheet only." },
@@ -543,9 +567,11 @@
               "newTab": { "$ref": "#/$defs/linkNewTab" },
               "download": { "$ref": "#/$defs/linkDownload" },
               "rel": { "$ref": "#/$defs/linkRel" },
+              "description": { "$ref": "#/$defs/navDescription" },
+              "look": { "enum": ["button"], "description": "The item drawn as a button, a call to action in the bar and in the mobile menu (additive from 0.7.13.21); omitted = a plain item" },
               "children": {
                 "type": "array",
-                "description": "Submenu, one level (additive from v0.6). An item with children but no page/href is a pure opener (the whole item opens the submenu); with a target of its own the link is shown plus an arrow button.",
+                "description": "Submenu (additive from v0.6; a second level additive from 0.7.13.21). An item with children but no page/href is a pure opener (the whole item opens the submenu); with a target of its own the link is shown plus an arrow button. A child with children of its own opens a second level beside the panel, or stands as a headed group when the submenu is laid out in columns or as the flyout.",
                 "items": {
                   "type": "object",
                   "required": ["label"],
@@ -557,12 +583,39 @@
                     "target": { "$ref": "#/$defs/linkTarget" },
                     "newTab": { "$ref": "#/$defs/linkNewTab" },
                     "download": { "$ref": "#/$defs/linkDownload" },
-                    "rel": { "$ref": "#/$defs/linkRel" }
+                    "rel": { "$ref": "#/$defs/linkRel" },
+                    "description": { "$ref": "#/$defs/navDescription" },
+                    "children": {
+                      "type": "array",
+                      "description": "The second submenu level (additive from 0.7.13.21): the child's own submenu. Each entry must have its own target; nothing nests below it.",
+                      "items": {
+                        "type": "object",
+                        "required": ["label"],
+                        "additionalProperties": false,
+                        "properties": {
+                          "label": { "type": "string", "minLength": 1 },
+                          "page": { "$ref": "#/$defs/id", "description": "Id from the page registry" },
+                          "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section" },
+                          "target": { "$ref": "#/$defs/linkTarget" },
+                          "newTab": { "$ref": "#/$defs/linkNewTab" },
+                          "download": { "$ref": "#/$defs/linkDownload" },
+                          "rel": { "$ref": "#/$defs/linkRel" },
+                          "description": { "$ref": "#/$defs/navDescription" }
+                        },
+                        "anyOf": [
+                          { "required": ["page"] },
+                          { "required": ["href"] },
+                          { "required": ["target"] }
+                        ],
+                        "not": { "required": ["page", "href"] }
+                      }
+                    }
                   },
                   "anyOf": [
                     { "required": ["page"] },
                     { "required": ["href"] },
-                    { "required": ["target"] }
+                    { "required": ["target"] },
+                    { "required": ["children"] }
                   ],
                   "not": { "required": ["page", "href"] }
                 }
@@ -685,6 +738,7 @@
     "linkNewTab": { "type": "boolean", "default": false, "description": "Open the link in a new tab (additive from 0.7.27.3); gets rel noopener" },
     "linkDownload": { "type": "boolean", "default": false, "description": "Save the file the link goes to rather than open it (additive from 0.7.27.9); counts only for a path on the site, such as a file in media/" },
     "linkRel": { "type": "array", "uniqueItems": true, "items": { "enum": ["nofollow", "sponsored"] }, "description": "Rel words for a link that leaves the site (additive from 0.7.27.3); ignored on a link within the site" },
+    "navDescription": { "type": "string", "maxLength": 160, "description": "One line under a menu item's label (additive from 0.7.13.21); shown in the submenus, the column and the mobile menus, never on the bar's own row" },
     "footerLink": {
       "type": "object",
       "required": ["label"],
