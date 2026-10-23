@@ -131,12 +131,33 @@ test('the payment buttons follow the settings: Vipps, a card at Vipps, and nothi
   assert.deepEqual(buttonsOf({ payments: { vipps: true, card: 'stripe', paypal: true } }), [sites.nb['shop.sendOrder'], sites.nb['shop.payWithVipps'], sites.nb['shop.payWithCard'], sites.nb['shop.payWithPaypal']], 'every provider, in the order of PAY_PROVIDERS');
 });
 
-test('the payment instructions stand in the form above the order summary, as label and text', () => {
-  const form = renderCheckout(CART, { payments: { manual: [{ id: 'a', label: 'Vipps', text: '12345' }, { id: 'b', label: '', text: 'Pay at pickup' }] } });
+test('one payment instruction stands as a line above the order summary; a row still being typed is left out', () => {
+  const form = renderCheckout(CART, { payments: { manual: [{ id: 'a', label: 'Vipps', text: '12345' }, { id: 'b', label: '', text: '' }] } });
   const lines = form.children.filter((c) => c.className === 'urd-checkout-vipps').map((c) => c.textContent);
-  assert.deepEqual(lines, ['Vipps: 12345', 'Pay at pickup']);
+  assert.deepEqual(lines, ['Vipps: 12345']);
+  assert.ok(!form.children.some((c) => c.className?.includes('urd-checkout-paychoice')));
   const at = form.children.findIndex((c) => c.className === 'urd-checkout-vipps');
   assert.ok(at < form.children.findIndex((c) => c.className === 'urd-checkout-recap'));
+});
+
+test('two or more payment instructions are a radio group above the order summary, none chosen, each with its instruction under its name', () => {
+  const form = renderCheckout(CART, { payments: { manual: [{ id: 'a', label: 'Vipps', text: 'Vipps til 12345' }, { id: 'b', label: '', text: 'Betal ved henting' }, { id: 'c', label: 'Bank', text: '1234.56.78901' }] } });
+  assert.ok(!form.children.some((c) => c.className === 'urd-checkout-vipps'), 'no plain lines beside the choice');
+  const group = form.children.find((c) => c.className === 'urd-form-fieldset urd-checkout-paychoice');
+  assert.equal(group.tagName, 'FIELDSET');
+  assert.equal(group.children[0].tagName, 'LEGEND');
+  assert.equal(group.children[0].textContent, sites.nb['shop.payMethod']);
+  const options = group.children.slice(1);
+  assert.equal(options.length, 3);
+  const radios = options.map((o) => o.children[0]);
+  assert.ok(radios.every((r) => r.type === 'radio' && r.name === radios[0].name && !r.checked), 'one group, nothing chosen in advance');
+  assert.deepEqual(radios.map((r) => r.value), ['0', '1', '2']);
+  assert.equal(options[0].children[1].textContent, 'VippsVipps til 12345', 'the name, then the instruction');
+  assert.equal(options[0].children[1].children[1].className, 'urd-checkout-paychoice-text');
+  assert.equal(options[1].children[1].textContent, 'Betal ved henting', 'an instruction without a name is its own name');
+  assert.ok(form.children.indexOf(group) < form.children.findIndex((c) => c.className === 'urd-checkout-recap'));
+  const other = renderCheckout(CART, { payments: { manual: [{ id: 'a', label: 'A', text: '1' }, { id: 'b', label: 'B', text: '2' }] } });
+  assert.notEqual(other.children.find((c) => c.className?.includes('urd-checkout-paychoice')).children[1].children[0].name, radios[0].name, 'two checkouts, two groups');
 });
 
 test('with a provider on the prices show the site currency\'s word; without one the block\'s own word', () => {

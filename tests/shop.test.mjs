@@ -9,6 +9,7 @@ import { engineImport } from './_engine.mjs';
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
   isEmail, orderLines, orderSummary, buildOrderBody, buildOrderMailto, buildOrderPayload, altCardImage,
+  methodText, shownMethods, paymentsOf,
 } = await engineImport('shop.js');
 
 // Deliberate Norwegian product fixtures throughout: shop items are user data.
@@ -117,4 +118,26 @@ test('buildOrderPayload: contact fields + order lines as data with a total', () 
   assert.equal(payload.order[0].variant, 'Stor');
   assert.equal(payload.order[1].variant, undefined);
   assert.ok(!('key' in payload.order[0]));
+});
+
+test('buildOrderPayload: the chosen way to pay as payment, only when there is one', () => {
+  assert.deepEqual(buildOrderPayload(ORDER, { name: 'Kari' }, { id: 'x', label: 'Vipps', text: 'Vipps til 12345' }).payment, { label: 'Vipps', text: 'Vipps til 12345' });
+  assert.equal('payment' in buildOrderPayload(ORDER, { name: 'Kari' }), false);
+  assert.equal('payment' in buildOrderPayload(ORDER, { name: 'Kari' }, null), false);
+});
+
+test('methodText and shownMethods: an instruction in one line, and only the rows that hold something', () => {
+  assert.equal(methodText({ label: 'Vipps', text: 'Vipps til 12345' }), 'Vipps: Vipps til 12345');
+  assert.equal(methodText({ label: '', text: 'Betal ved henting' }), 'Betal ved henting');
+  assert.equal(methodText({ label: ' Bank ', text: '' }), 'Bank');
+  assert.equal(methodText(null), '');
+  const pays = paymentsOf({ payments: { manual: [{ id: 'a', label: 'Vipps', text: '1' }, { id: 'b', label: '', text: ' ' }, { id: 'c', label: '', text: 'Kontant' }] } });
+  assert.deepEqual(shownMethods(pays).map((m) => m.id), ['a', 'c']);
+  assert.deepEqual(shownMethods(paymentsOf({})), []);
+});
+
+test('buildOrderBody: the chosen way to pay stands among the contact lines, and an empty one is left out', () => {
+  const body = buildOrderBody(ORDER, { Navn: 'Kari', Betaling: methodText({ label: 'Vipps', text: 'Vipps til 12345' }) }, 'kr', 'Sum');
+  assert.match(body, /\nBetaling: Vipps: Vipps til 12345$/);
+  assert.ok(!buildOrderBody(ORDER, { Navn: 'Kari', Betaling: '' }).includes('Betaling'));
 });

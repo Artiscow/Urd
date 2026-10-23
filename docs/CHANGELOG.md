@@ -28,6 +28,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.28.4 - Payment methods in the optional layer, fourth stage: the payment instructions as a choice - 23 October 2026
+
+- Two or more payment instructions stood as plain lines, so the buyer could not say which way they would pay and the order did not name one. They are now a radio group above the order summary, drawn like the form block's (the legend «Payment», each way to pay with its instruction under its name, none chosen in advance); «Confirm purchase» without a choice says «Choose how you will pay» and sends nothing. One instruction stays a line.
+- The chosen way to pay is named in the order: a «Payment» line in the mailto body, `payment: { label, text }` in the endpoint payload (additive, SCHEMA.md), and the status after sending repeats it («Payment: Bank: 1234.56.78901.»), so the instruction stands where the buyer looks after ordering. The helpers `methodText` and `shownMethods` in shop.js; `buildOrderPayload` takes the method.
+- base.css gives the choice the form's radio rows with the instruction under the name; the eight shells restamped. Site keys `shop.payMethod`, `shop.choosePayment` and `shop.payBy` in nb, en-GB and tr.
+- The user guide's shop paragraph in both languages names every provider, the shop currency, when each provider takes the money, and the payment instructions.
+- Tests: the line or the group in `checkout.test.mjs`, and the payload, the one-line text and the shown rows in `shop.test.mjs`.
+
 ### 0.7.28.3 - Payment methods in the optional layer, third stage: PayPal - 23 October 2026
 
 - «Pay with PayPal» in the checkout block sends the buyer to PayPal's own approval page with an order on the Orders v2 API (`functions/_lib/paypal.js`, `paypal-api.js` and the three endpoints under `/api/pay/paypal/`): the lines as items in the site's currency, in PayPal's decimal form (whole units for HUF, JPY and TWD), the reference as the unit's reference, custom id and invoice id, no shipping address asked, and the return with the reference and the provider.

@@ -422,7 +422,11 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
 En butikk er tre blokker: **Produktkort** viser en produktsamling,
 **Handlekurv** holder det den besøkende har valgt, og **Kasse** tar imot
 bestillingen, som en e-post til deg eller til et bestillingsendepunkt du har
-satt opp, eller som en betaling med Vipps når betalingslaget er slått på.
+satt opp, eller som en betaling gjennom en leverandør: Vipps (eller
+MobilePay), kort på Vipps' eller Stripes side, eller PayPal. Hver leverandør
+slås på under **Betaling** i Kasse-menyen når nøklene er på plass;
+oppsettsguiden tar deg gjennom hver av dem, og **Butikkvaluta** i
+Nettsted-panelet er valutaen de belaster i.
 
 - Bestillingsknappen sier «Bekreft kjøp», og ordrelinjene med summen står
   rett over knappene. Forbrukerretten (angrerettloven § 16) krever begge.
@@ -438,12 +442,19 @@ satt opp, eller som en betaling med Vipps når betalingslaget er slått på.
   adresse, telefon og e-post fra Kontaktopplysninger i Nettsted-panelet,
   siden kjøperen skal vite hvem hen kjøper av før bestillingen. «Vis
   selgeren» i blokkens meny skrur det av.
-- «Betal med Vipps» nevner selve betalingen, en ordlyd EU-kommisjonens
-  veiledning om regelen godtar.
-- Med Vipps kan kjøperen la kontaktfeltene stå tomme: appen ber om å dele
-  navn, e-post og telefon med deg, og kvitteringen med ordrelinjene havner i
-  appen. Pengene er reservert, ikke flyttet; du henter dem i Vipps-portalen
-  når varen sendes. Oppsettsguiden har nøklene og en testbetaling.
+- «Betal med Vipps», «Betal med kort» og «Betal med PayPal» nevner selve
+  betalingen, en ordlyd EU-kommisjonens veiledning om regelen godtar.
+- Med en leverandør kan kjøperen la kontaktfeltene stå tomme: leverandørens
+  side spør etter dem, og Kasse takker kjøperen med navn når hen kommer
+  tilbake. Pengene blir hos leverandøren til du tar dem: Vipps holder dem
+  til du henter dem i Vipps-portalen når varen sendes; Stripe holder dem
+  eller trekker dem med en gang, slik **Ta pengene** sier; PayPal trekker
+  dem med en gang.
+- **Betalingsinstrukser** er måter å betale på uten en leverandør, som et
+  Vipps-nummer, et kontonummer eller betaling ved henting: et navn og en
+  tekst hver. Én står som en linje over bestillingen; med to eller flere
+  velger kjøperen én før bekreftelsen, bestillingsmailen eller endepunktet
+  nevner den, og takken etter bestillingen gjentar den.
 
 ## Utkast og publisering
 

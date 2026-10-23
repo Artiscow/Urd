@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.28.4): the payment instructions as a choice
+
+- [ ] Checkout block, Payment, three instructions (Vipps with a number, Bank with an account, one with a text only): the published checkout shows «Betaling» with three radios above the summary, none chosen, each instruction under its name
+- [ ] «Bekreft kjøp» without a choice: «Velg hvordan du vil betale.» and nothing is sent; choose one and confirm: the email draft has a «Betaling» line with the chosen instruction, and the status after the draft opens repeats it
+- [ ] With an order endpoint: the JSON the endpoint receives has `payment` with the chosen name and text, the basket empties, and the thank-you repeats the instruction
+- [ ] One instruction only: it stands as a line above the summary as before, no radio, and the status after the order repeats it
+- [ ] Phone width: the radios and the instructions wrap within the block
+
 ### Test batch (0.7.28.3): PayPal
 
 - [ ] With the sandbox app's keys and `PAYPAL_API_BASE=https://api-m.sandbox.paypal.com` on a deployed site (setup guide, section 5, PayPal): «Pay with PayPal» opens PayPal's page with the order's lines and the total in the shop currency and the site's name

@@ -423,7 +423,11 @@ reading order. You usually do not have to do anything.
 A shop is three blocks: **Product cards** show a product collection, the
 **Basket** holds what the visitor has picked, and the **Checkout** takes the
 order, as an email to you or to an order endpoint you have set up, or as a
-payment with Vipps when the payment layer is on.
+payment through a provider: Vipps (or MobilePay), a card on Vipps's or
+Stripe's page, or PayPal. Each provider is switched on under **Payment** in
+the Checkout's menu once its keys are in place; the setup guide walks you
+through each, and the **Shop currency** in the Site panel is the currency
+they charge in.
 
 - The order button reads «Confirm purchase», and the order lines with the
   total stand right above the buttons. The consumer law (angrerettloven § 16)
@@ -439,13 +443,19 @@ payment with Vipps when the payment layer is on.
   organisation number, address, phone and email from the Site panel's
   Contact details, since the buyer must know who they buy from before the
   order. «Show the seller» in the block's menu switches it off.
-- «Pay with Vipps» names the payment itself, a wording the EU Commission's
-  guidance on the rule accepts.
-- With Vipps the buyer can leave the contact fields empty: the app asks them
-  to share the name, email and phone with you, and the receipt with the order
-  lines lands in the app. The money is reserved, not moved; you capture it in
-  the Vipps portal when the goods ship. The setup guide has the keys and a
-  test payment.
+- «Pay with Vipps», «Pay with card» and «Pay with PayPal» name the payment
+  itself, a wording the EU Commission's guidance on the rule accepts.
+- With a provider the buyer can leave the contact fields empty: the
+  provider's page asks for them, and the Checkout thanks the buyer by name
+  when they come back. The money stays with the provider until you take it:
+  Vipps holds it until you capture it in the Vipps portal when the goods
+  ship; Stripe holds it or takes it at once, as **Take the money** says;
+  PayPal takes it at once.
+- **Payment instructions** are ways to pay without a provider, such as a
+  Vipps number, a bank account or paying at pickup: a name and a text each.
+  One stands as a line above the order; with two or more the buyer picks
+  one before confirming, the order email or the endpoint names it, and the
+  thank-you after the order repeats it.
 
 ## Drafts and publishing
 

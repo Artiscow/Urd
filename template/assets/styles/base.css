@@ -11184,6 +11184,26 @@ textarea.urd-form-input {
   opacity: 0.85;
 }
 
+/* The buyer's choice among the payment instructions: the form block's radio rows, each way to pay with its instruction under its name. */
+.urd-checkout-paychoice {
+  display: grid;
+  gap: 6px;
+  font-size: 0.88em;
+}
+
+.urd-checkout-paychoice .urd-form-check {
+  align-items: flex-start;
+}
+
+.urd-checkout-paychoice .urd-form-check input {
+  margin-top: 0.15em;
+}
+
+.urd-checkout-paychoice-text {
+  display: block;
+  opacity: 0.85;
+}
+
 /* The summary right above the order buttons (angrerettloven § 16): the order in one line and the total. */
 .urd-checkout-recap {
   display: grid;

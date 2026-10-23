@@ -185,13 +185,29 @@ export function buildOrderMailto(recipient, subject, body) {
   return query ? `mailto:${to}?${query}` : `mailto:${to}`;
 }
 
-/** Payload for an optional endpoint: the contact fields plus the order lines as data. */
-export function buildOrderPayload(items, fields) {
+/**
+ * Payload for an optional endpoint: the contact fields plus the order lines
+ * as data, and the way to pay the buyer chose among the block's instructions
+ * (`payment`, additive from 0.7.28.4) when there is one.
+ * @param {{label: string, text: string}|null} [payment]
+ */
+export function buildOrderPayload(items, fields, payment = null) {
   return {
     ...fields,
     order: items.map(({ id, title, price, qty, variant }) => ({ id, title, price, qty, ...(variant ? { variant } : {}) })),
     total: cartTotal(items),
+    ...(payment ? { payment: { label: payment.label, text: payment.text } } : {}),
   };
+}
+
+/** A payment instruction in one line, its name and its text: «Vipps: Vipps to 123456», or the one of them it has. */
+export function methodText(method) {
+  return [method?.label, method?.text].map((part) => String(part ?? '').trim()).filter(Boolean).join(': ');
+}
+
+/** The payment instructions the buyer sees: the block's own, without the rows the editor holds while they are typed. */
+export function shownMethods(payments) {
+  return (payments?.manual ?? []).filter((method) => methodText(method));
 }
 
 /**
