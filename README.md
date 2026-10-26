@@ -77,7 +77,7 @@ English is the project's canonical language. Documents not yet translated are ma
 | [docs/languages/](docs/languages/) | The translations: the user guide and the setup guide in five languages, the calendar and photo guides in English and Norwegian, and the vision, roadmap and development documents in Norwegian beside the English |
 | [docs/comparison/](docs/comparison/README.md) | Urd against other website builders: features, elements, design and code, with the dated surveys behind the decisions |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Change log per commit and push (older entries in Norwegian) |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: fork, branch, tests, pull request (in Norwegian) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: fork, branch, tests, pull request |
 | [docs/adr/](docs/adr/) | Architecture decisions with reasoning |
 
 ## Licence

@@ -69,7 +69,7 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | [docs/languages/](../) | Alle oversatte dokumenter (guide og oppsett på fem språk; engelsk tekst er kanonisk ved avvik) |
 | [docs/comparison/](../../comparison/README.md) | Urd mot andre nettsidebyggere: funksjoner, elementer, design og kode, med undersøkelsene bak beslutningene (på engelsk) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per commit og push (nyere innslag på engelsk) |
-| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request |
+| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request (på engelsk) |
 | [docs/adr/](../../adr/) | Arkitekturbeslutninger med begrunnelse (på engelsk) |
 
 ## Lisens

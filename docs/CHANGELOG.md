@@ -1,32 +1,25 @@
-# Endringslogg
+# Changelog
 
-Alle vesentlige endringer i Urd dokumenteres i denne filen.
+Every notable change to Urd is documented in this file.
 
-Formatet følger [Keep a Changelog](https://keepachangelog.com/no/1.1.0/),
-og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/), med
-flere tall etter de tre for en utgivelse mellom to patch-nummer (se UTVIKLING.md).
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [semantic versioning](https://semver.org/), with more numbers after the three for a release between two patch numbers (see [DEVELOPMENT-en-GB.md](languages/DEVELOPMENT-en-GB.md)).
 
-## [Ulansert]
+## [Unreleased]
 
-Hvert innslag arver nummeret til backlog-punktet arbeidet hører under, pluss
-ett siffer for rekkefølge (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). Sifferet legges
-kun på når milepælen faktisk får mer enn én commit: lander hele milepælen i én
-commit, er nummeret milepælens eget (0.7.1, ikke 0.7.1.1), og åpnes milepælen
-senere igjen, fortsetter de nye commitene på 0.7.1.2, 0.7.1.3 … slik at det
-flate nummeret leses som 0.7.1.1. Arbeid som ikke
-hører under noen milepæl (arbeidsflyt, kodegjennomganger, vedlikehold) hører
-under fasens stående «Løpende»-punkt i backloggen og nummereres 0.6.0.1,
-0.6.0.2 … (neste fase: 0.7.0.x), og er alltid firedelt siden punktet aldri
-lukkes. Flate fasenumre (0.6.34, 0.6.35) deles ikke
-lenger ut - de leses feilaktig som milepæl-plassering - men de historiske
-består, siden commit-titler i git ikke kan skrives om. Utgivelser bærer fasens
-minor med løpende patch-nummer (0.7.1, 0.7.2 ...), uavhengig av milepælsnumrene
-i backloggen; fase-slippet ved gaten er bare det siste av dem (besluttet 15.
-september 2026). Push-innslag arver commit-spennet siden forrige
-push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
-0.6.7.5) gir 0.6.7.2-5p. Kortformen brukes kun når numrene deler prefiks; med
-blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
-entydig: alle commit-innslag over forrige p-innslag.
+Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
+
+### 0.7.0.71 - English for the leftover Norwegian documents - 26 October 2026
+
+- CONTRIBUTING, the plugin guide (`template/plugins/README.md`) and the brand README were in Norwegian, though developers outside the project read them. All three are in English, with three stale facts corrected on the way: the language pack's folder (`lang-sv`), the engine's version folder in the locale paths, and where `LANG_OPTIONS` lives; the guide's key counts, long out of date, are gone.
+- The opening text of CHANGELOG, BACKLOG and TESTRUNDER was Norwegian. Their titles, intros and the numbering convention are in English, and the backlog's first lines link the English roadmap; the older entries stay as written. The `[Ulansert]` heading is `[Unreleased]`, and `scripts/check-release.mjs` skips it under its new name.
+- The README tables in five languages called CONTRIBUTING Norwegian; they say English.
+
+The independent review before the commit compared each translation with its Norwegian original and found these:
+
+- The README's running text in nynorsk, Northern Sámi and Turkish still called CONTRIBUTING Norwegian beside the corrected tables, and DEVELOPMENT-en-GB.md said «(in Norwegian)». All four say English, the Sámi in the spelling the other rows use.
+- CONTRIBUTING said a built-in language needs the full key set in every set, carried over from the Norwegian text, while the parity test asks the full set only of the core languages. It says what the test asks.
+- The plugin guide's example manifest named the Swedish pack in Norwegian. It matches `lang-sv/plugin.json`, with the English name and the `names` map.
+- Not taken: the backlog's later phase headings, and the comparison README's quote of them, stay in Norwegian as the backlog's points do; the guide's links to CONTRIBUTING and SCHEMA.md, which do not resolve in urd-template, are noted on the plugin guide milestone for PG-1.
 
 ### 0.7.28.7 - A test of the payment from the editor, a test-mode line, and the element menu's layout - 26 October 2026
 

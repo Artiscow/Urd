@@ -44,11 +44,10 @@ try {
 }
 
 if (!prerelease) {
-  // The first release heading in the CHANGELOG (## [X.Y.Z] - date, Keep a
-  // Changelog) must be this version: the [Ulansert] section has to be renamed
-  // (or emptied into) the release before tagging.
+  // The first release heading in the CHANGELOG (## [X.Y.Z] - date, Keep a Changelog) must be this version.
+  // The [Unreleased] section has to be renamed (or emptied into) the release before tagging.
   const changelog = readFileSync('docs/CHANGELOG.md', 'utf-8');
-  const heading = changelog.match(/^## \[(?!Ulansert\])([^\]]+)\]/m)?.[1];
+  const heading = changelog.match(/^## \[(?!Unreleased\])([^\]]+)\]/m)?.[1];
   if (heading !== engine) {
     errors.push(`the CHANGELOG heading is [${heading ?? '(none)'}], expected [${engine}]`);
   }

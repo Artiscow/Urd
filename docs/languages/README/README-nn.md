@@ -49,7 +49,7 @@ Kalender (ein iCal-feed i fem visingar og 34 design, med arrangementskort, søk 
 
 ## Språk
 
-Editoren og motoren sine tekstar for besøkjande finst på nordsamisk, britisk engelsk, norsk (bokmål og nynorsk) og tyrkisk. Admin-språket følgjer eininga di som standard og blir hugsa per nettlesar; språket for besøkjande blir valt i Nettstad-panelet. Å leggje til eller forbetre ei omsetjing er ei rein filendring utan byggjesteg, sjå [CONTRIBUTING.md](../../../CONTRIBUTING.md) (på bokmål). Eit språk Urd ikkje har innebygd kan leggjast til som ein språkpakke: ein plugin som berre er omsetjingsfiler, slått på i Plugins-panelet.
+Editoren og motoren sine tekstar for besøkjande finst på nordsamisk, britisk engelsk, norsk (bokmål og nynorsk) og tyrkisk. Admin-språket følgjer eininga di som standard og blir hugsa per nettlesar; språket for besøkjande blir valt i Nettstad-panelet. Å leggje til eller forbetre ei omsetjing er ei rein filendring utan byggjesteg, sjå [CONTRIBUTING.md](../../../CONTRIBUTING.md) (på engelsk). Eit språk Urd ikkje har innebygd kan leggjast til som ein språkpakke: ein plugin som berre er omsetjingsfiler, slått på i Plugins-panelet.
 
 ## Dokumentasjon
 
@@ -70,7 +70,7 @@ Engelsk er hovudspråket i prosjektet. Dokument som berre finst på bokmål er m
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekklista for manuell testing: levert arbeid som ventar på testing (eldre innslag på bokmål) |
 | [docs/comparison/](../../comparison/README.md) | Urd mot andre nettsidebyggjarar: funksjonar, element, design og kode, med undersøkingane bak avgjerdene (på engelsk) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per commit og push (eldre innslag på bokmål) |
-| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidreg du: fork, grein, testar, pull request (på bokmål) |
+| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidreg du: fork, grein, testar, pull request (på engelsk) |
 | [docs/adr/](../../adr/) | Arkitekturavgjerder med grunngjeving (på engelsk) |
 
 ## Lisens

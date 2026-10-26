@@ -6,7 +6,7 @@ The canonical text (ADR-0022): on a discrepancy this English text applies. The N
 
 This document is for those of us who develop Urd itself. (Associations that *use* Urd never need any of this; they clone the template and edit via /admin.)
 
-The running task list is in [BACKLOG.md](../BACKLOG.md) (in Norwegian). The phases and goals are in [ROADMAP-en-GB.md](ROADMAP-en-GB.md). If you want to contribute changes from the outside (the fork/PR flow), see [CONTRIBUTING.md](../../CONTRIBUTING.md) (in Norwegian).
+The running task list is in [BACKLOG.md](../BACKLOG.md) (in Norwegian). The phases and goals are in [ROADMAP-en-GB.md](ROADMAP-en-GB.md). If you want to contribute changes from the outside (the fork/PR flow), see [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## What you need
 

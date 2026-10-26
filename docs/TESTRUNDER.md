@@ -1,6 +1,6 @@
-# Testrunder (sjekkliste for manuell testing)
+# Test rounds (the checklist for manual testing)
 
-Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
+What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here. A new delivery gets a «Test batch» section of its own at the top (newest first); items without a batch stand in the remainder list at the bottom. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (reviewed and gathered on 6 October 2026: the calendar batches were merged into one with one item per design).
 
 ### Test batch (0.7.28.7): the payment test, the test-mode line and the element menu's layout
 

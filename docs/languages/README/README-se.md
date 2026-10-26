@@ -51,7 +51,7 @@ Kaleandar (iCal-feed viđain čájehemiin ja 34 hábmemiin), oktavuohtaskovvi (m
 
 ## Gielat
 
-Doaimmaheaddji ja mohtora teavsttat maid guossit oidnet gávdnojit davvisámegillii, brittalaš eŋgelasgillii, dárogillii (bokmål ja nynorsk) ja durkagillii. Hálddašangiella čuovvu automáhtalaččat du reaiddu giela ja muitojuvvo juohke fierpmádatlohkki várás; guossiid giella válljejuvvo Neahttabáiki-panelas. Jorgalusa lasiheapmi dahje buorideapmi lea dušše fiilarievdadus almmá huksenlávkki haga, geahča [CONTRIBUTING.md](../../../CONTRIBUTING.md) (dárogillii). Giela mii ii leat sisahuksejuvvon Urdii sáhttá lasihit giellapáhkkan: lassemoduvla mas leat dušše jorgalanfiillat, ja mii biddjojuvvo johtui Plugins-panelas.
+Doaimmaheaddji ja mohtora teavsttat maid guossit oidnet gávdnojit davvisámegillii, brittalaš eŋgelasgillii, dárogillii (bokmål ja nynorsk) ja durkagillii. Hálddašangiella čuovvu automáhtalaččat du reaiddu giela ja muitojuvvo juohke fierpmádatlohkki várás; guossiid giella válljejuvvo Neahttabáiki-panelas. Jorgalusa lasiheapmi dahje buorideapmi lea dušše fiilarievdadus almmá huksenlávkki haga, geahča [CONTRIBUTING.md](../../../CONTRIBUTING.md) (eaŋgalasgillii). Giela mii ii leat sisahuksejuvvon Urdii sáhttá lasihit giellapáhkkan: lassemoduvla mas leat dušše jorgalanfiillat, ja mii biddjojuvvo johtui Plugins-panelas.
 
 ## Dokumentašuvdna
 
@@ -72,7 +72,7 @@ Prošeavtta váldogiella lea eaŋgalasgiella. Dokumeanttat mat leat dušše dár
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Dárkkistanlistu gieđain geahččaleapmái: buktojuvvon bargu mii vuordá geahččaleami (boarráset merkkašumit dárogillii) |
 | [docs/comparison/](../../comparison/README.md) | Doaibmabuohtastahttin eará neahttasiidohuksejeddjiiguin; elemeanttat ja doaimmat; arkitektuvra ja minsttarat (eaŋgalasgillii) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Rievdadanlogga juohke commitii ja pushii (boarráset merkkašumit dárogillii) |
-| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Ná don veahkehat: fork, ossodat, testtat, pull request (dárogillii) |
+| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Ná don veahkehat: fork, ossodat, testtat, pull request (eaŋgalasgillii) |
 | [docs/adr/](../../adr/) | Arkitektuvramearrádusat ákkastallamiiguin (eaŋgalasgillii) |
 
 ## Liseansa

@@ -51,7 +51,7 @@ Takvim (beş görünüm ve 34 tasarımda bir iCal akışı; etkinlik kartı, ara
 
 ## Diller
 
-Düzenleyici ve motorun ziyaretçilere gösterdiği metinler Kuzey Sami dili, İngiliz İngilizcesi, Norveççe (bokmål ve nynorsk) ve Türkçe olarak vardır. Yönetim dili öntanımlı olarak cihazınızın dilini izler ve tarayıcı başına hatırlanır; ziyaretçilerin gördüğü dil Site panelinden seçilir. Bir çeviriyi eklemek ya da iyileştirmek, derleme adımı olmayan düz bir dosya değişikliğidir; bkz. [CONTRIBUTING.md](../../../CONTRIBUTING.md) (Norveççe). Urd'un yerleşik olarak sunmadığı bir dil, dil paketi olarak eklenebilir: yalnızca çeviri dosyalarından oluşan ve Eklentiler panelinden açılan bir eklenti.
+Düzenleyici ve motorun ziyaretçilere gösterdiği metinler Kuzey Sami dili, İngiliz İngilizcesi, Norveççe (bokmål ve nynorsk) ve Türkçe olarak vardır. Yönetim dili öntanımlı olarak cihazınızın dilini izler ve tarayıcı başına hatırlanır; ziyaretçilerin gördüğü dil Site panelinden seçilir. Bir çeviriyi eklemek ya da iyileştirmek, derleme adımı olmayan düz bir dosya değişikliğidir; bkz. [CONTRIBUTING.md](../../../CONTRIBUTING.md) (İngilizce). Urd'un yerleşik olarak sunmadığı bir dil, dil paketi olarak eklenebilir: yalnızca çeviri dosyalarından oluşan ve Eklentiler panelinden açılan bir eklenti.
 
 ## Belgeler
 
@@ -72,7 +72,7 @@ Projenin ana dili İngilizcedir. Yalnızca Norveççe olan belgeler işaretlenmi
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Elle test kontrol listesi: test bekleyen teslim edilmiş işler (eski kayıtlar Norveççe) |
 | [docs/comparison/](../../comparison/README.md) | Diğer web sitesi kurucularıyla özellik karşılaştırması ve boşluk analizi; öğeler ve işlevler; mimari ve desenler (İngilizce) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Her commit ve push için değişiklik günlüğü (eski kayıtlar Norveççe) |
-| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Nasıl katkı verilir: fork, dal, testler, pull request (Norveççe) |
+| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Nasıl katkı verilir: fork, dal, testler, pull request (İngilizce) |
 | [docs/adr/](../../adr/) | Gerekçeleriyle mimari kararlar (İngilizce) |
 
 ## Lisans
