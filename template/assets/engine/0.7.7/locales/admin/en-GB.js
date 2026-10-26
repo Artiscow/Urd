@@ -1284,6 +1284,7 @@ export default {
     'tip.ribbon.main': 'What the main stripe holds. «Colour only» gives an empty band to put stripes above and below.',
     'tip.ribbon.below': 'A thin stripe below the main one, with the same choices as the one above.',
     'tip.ribbon.thickness': 'How thick the thin stripes are. The main stripe takes the rest of the block height.',
+    'tip.ribbon.motion': 'How the band moves: it rolls, sways back and forth, jumps one word at a time or stands still.',
     'tip.ribbon.dwell': 'How long each word stands still before the band jumps to the next.',
     'tip.ribbon.play': 'The band stands still while you edit, so the words can be read and typed. Press here to see the motion for six seconds.',
     'tip.ribbon.bold': 'The words are set semibold.',

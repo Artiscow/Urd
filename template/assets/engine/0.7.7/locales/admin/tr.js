@@ -1284,6 +1284,7 @@ export default {
     'tip.ribbon.main': 'Ana şeridin içeriği. «Yalnız renk» üstüne ve altına şerit koyabileceğin boş bir bant verir.',
     'tip.ribbon.below': 'Ana şeridin altında ince bir şerit, üsttekiyle aynı seçeneklerle.',
     'tip.ribbon.thickness': 'İnce şeritlerin kalınlığı. Ana şerit blok yüksekliğinin kalanını alır.',
+    'tip.ribbon.motion': 'Bandın nasıl hareket ettiği: akar, ileri geri salınır, birer kelime atlar ya da durur.',
     'tip.ribbon.dwell': 'Her kelimenin bir sonrakine atlamadan önce ne kadar duracağı.',
     'tip.ribbon.play': 'Düzenlerken şerit durur, böylece kelimeler okunup yazılabilir. Hareketi altı saniye görmek için buraya basın.',
     'tip.ribbon.bold': 'Kelimeler yarı kalın dizilir.',

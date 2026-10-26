@@ -5,6 +5,7 @@
  * search queries, the tab of the narrow menu, the groups left open, and the
  * quick row's choices per block type.
  */
+import { tick } from 'svelte';
 import { SvelteSet } from 'svelte/reactivity';
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
 
@@ -58,9 +59,14 @@ export const MENU_AREAS = ['content', 'style', 'placement'];
  */
 export function chooseArea(area, root = null) {
   if (!MENU_AREAS.includes(area)) return;
+  const focusInMenu = Boolean(root?.contains(document.activeElement)) && !document.activeElement.classList.contains('menu-search');
   menu.tab = area;
-  const col = root?.querySelectorAll('.emenu-col')[MENU_AREAS.indexOf(area)];
-  if (!col) return;
+  const col = root?.querySelectorAll('.emenu-cols > .emenu-col')[MENU_AREAS.indexOf(area)];
+  if (!col) {
+    // The narrow menu: the chosen tab's area replaces the one the focus stood in, so the focus moves to the chosen tab and the next key is still the menu's.
+    if (focusInMenu) tick().then(() => root.querySelector('.props-tabs button.on')?.focus());
+    return;
+  }
   col.scrollIntoView({ block: 'nearest' });
   if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button')?.focus();
 }

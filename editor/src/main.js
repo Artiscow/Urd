@@ -11,6 +11,7 @@
 import { mount } from 'svelte';
 import { initAdminLocale } from '$engine/i18n.js';
 import App from './App.svelte';
+import { installSegSlide } from './lib/seg-slide.js';
 // The admin's global stylesheet, after the components so its rules win a tie with theirs.
 import './app.css';
 
@@ -18,5 +19,8 @@ import './app.css';
 // language-pack language that is no longer installed falls back to the base
 // language (nb), and the attribute has to follow the text.
 document.documentElement.lang = await initAdminLocale();
+
+// A segment control's choice slides from the old button to the new one, in every panel and menu.
+installSegSlide();
 
 export default mount(App, { target: document.getElementById('urd-admin') });

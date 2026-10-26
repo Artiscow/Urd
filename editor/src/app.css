@@ -676,12 +676,11 @@
     border-radius: 50%;
   }
 
-  /* The quick row: a tile per setting, the label over its control.
-     A tile is never narrower than its segment or its label's longest word: a label wraps between words before a tile leaves the row, and the controls of a row line up at the bottom.
-     A tile takes at most half the row, so one alone on a row stays a tile. */
+  /* The quick row: a tile per setting, the label over its control, in columns of at least 168px, so a segment of three choices fits its tile: two tiles to a row in the narrow menu, three or four in the wide one.
+     The controls of a row line up at the bottom. */
   .menu-quick {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(168px, 100%), 1fr));
     gap: 0.5rem;
     padding-bottom: 0.6rem;
     border-bottom: 1px solid rgb(255 255 255 / 12%);
@@ -689,11 +688,10 @@
 
   .menu-quick-item {
     display: flex;
-    flex: 1 1 96px;
     flex-direction: column;
     justify-content: space-between;
     gap: 0.3rem;
-    max-width: calc(50% - 0.25rem);
+    min-width: 0;
     padding: 0.45rem 0.5rem;
     background: rgb(0 0 0 / 18%);
     border: 1px solid rgb(255 255 255 / 12%);
@@ -714,9 +712,18 @@
   }
 
   .menu-quick-reset {
-    flex-basis: 100%;
-    text-align: left;
+    grid-column: 1 / -1;
+    justify-self: start;
     font-size: 0.75rem;
+  }
+
+  /* The Properties panel is narrower than two such tiles: two columns there, and a segment of three choices takes the whole row */
+  .panel-body:not(.block-menu-body) .menu-quick {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panel-body:not(.block-menu-body) .menu-quick-item:has(.seg > button:nth-child(3)) {
+    grid-column: 1 / -1;
   }
 
   /* A setting that can stand in the quick row, with its pin at the end */
@@ -736,6 +743,45 @@
     position: absolute;
     top: 50%;
     right: calc(2.1rem + 0.3rem);
+    translate: 0 -50%;
+  }
+
+  /* Any other pinnable setting stands as its words over its control, with the pin at the end of the words' line, so the control keeps the row's full width and ends where the rows around it end */
+  .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .pin-line > .field-stack:has(+ .menu-pin),
+  .pin-line > .choice:has(+ .menu-pin) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    padding-right: 30px;
+  }
+
+  .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin) > :last-child,
+  .pin-line > .field-stack:has(+ .menu-pin) > :last-child,
+  .pin-line > .choice:has(+ .menu-pin) > :last-child {
+    flex: none;
+    box-sizing: border-box;
+    width: calc(100% + 30px);
+    max-width: none;
+  }
+
+  .pin-line > label:not(.gridmenu-snap) + .menu-pin,
+  .pin-line > .field-stack + .menu-pin,
+  .pin-line > .choice + .menu-pin {
+    position: absolute;
+    top: -4px;
+    right: 0;
+  }
+
+  /* A row that opens a picker keeps its pin inside its own border, at its end */
+  .pin-line > .menu-row:has(+ .menu-pin) {
+    padding-right: calc(0.4rem + 26px);
+  }
+
+  .pin-line > .menu-row + .menu-pin {
+    position: absolute;
+    top: 50%;
+    right: 0.35rem;
     translate: 0 -50%;
   }
 
@@ -788,7 +834,7 @@
 
   .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
     flex: 1;
-    padding: 4px 2px;
+    padding: 4px 6px;
     font-size: 0.75rem;
   }
 
@@ -927,14 +973,14 @@
     font-size: 0.78rem;
   }
 
-  /* In a column a label stands over its control: the row is too narrow for both */
-  .emenu-cols:not(.stacked) .emenu-col label:not(.gridmenu-snap):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  /* In the element menu a label stands over its control, in the wide columns and the narrow menu alike, so a control keeps the row's width */
+  .emenu-col label:not(.gridmenu-snap):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
   }
 
-  .panel-body .emenu-cols:not(.stacked) .emenu-col label:not(.gridmenu-snap) > * {
+  .panel-body .emenu-col label:not(.gridmenu-snap) > * {
     flex: none;
   }
 
@@ -2758,9 +2804,13 @@
   /* Colors: Auto/Custom, palette rows (Light+Dark), Standard chip */
   .autorow { margin: 8px 0 2px; }
   .autorow .autolbl { font-size: 0.85rem; opacity: 0.75; }
-  .seg { display: inline-flex; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
+  .seg { display: inline-flex; isolation: isolate; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
   .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
-  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ background: var(--urd-color-accent); color: var(--urd-color-bg); }
+  /* The chosen button's pill is a layer under every button's words (the segment isolates them), so a new choice can slide the pill across from the old one (lib/seg-slide.js) while the words stay put */
+  .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ position: relative; transition: color 0.18s ease, background 0.12s ease, transform 0.05s ease; }
+  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ color: var(--urd-color-bg); }
+  .seg button.on:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ background: transparent; }
+  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::before{ content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--urd-color-accent); transform-origin: 0 50%; }
   .palhead { margin: 13px 0 6px; }
   .palcells { display: flex; gap: 6px; }
   .palcells .palcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }

@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here. A new delivery gets a «Test batch» section of its own at the top (newest first); items without a batch stand in the remainder list at the bottom. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (reviewed and gathered on 6 October 2026: the calendar batches were merged into one with one item per design).
 
+### Test batch (0.7.10.9): aligned pinned settings, sliding segment choices and the reworked narrow menu
+
+- [ ] Wide menu: a text block's «Alignment», Placement's «On narrower screens», the product cards' Columns, a button's «Goes to», a video's «Video source», an icon's size and colour, a shape's colour and thickness, a table's lines, a form's sending mode, an image's fit and corners, a gallery's columns, the max count of a collection list and a calendar, and a map's zoom: the words stand with the pin at the end of their line, and the control under them ends level with the controls around it
+- [ ] The calendar's Style column: Design, Design on a phone and Pop-up each keep their pin inside the row's border, as wide as the groups below; a click on that pin pins or unpins without opening the picker, and a click on the rest of the row opens it
+- [ ] A ribbon's Rolling group: «Motion» stands over the dropdown with the pin on its line, and its tooltip says how the band moves
+- [ ] Click another choice in a quick tile, in the Content, Style and Placement tabs and in a choice inside a group (the checkout's Card payment): the pill slides from the old choice to the new one; with reduced motion on in the system, it moves at once
+- [ ] The narrow menu (the «><» button): the quick tiles stand two to a row with every label on one line and nothing cut off; the tab's area is a card with its groups spaced; labels stand over their controls, «Edit the text» spans the width, and «Size for the whole text» shows «Inherit from theme» in full
+- [ ] The Properties panel with a text block selected: the quick tiles stand in two columns, and a tile of three choices (Alignment, Narrow screen) takes the whole row
+- [ ] The narrow menu with the focus on a group's head: press 2, 3 and 1: the tab follows each key and the focus stays on the chosen tab
+
 ### Test batch (0.7.28.7): the payment test, the test-mode line and the element menu's layout
 
 - [ ] In the editor, a checkout block with a provider on (Vipps, a card provider or PayPal): the Payment group shows «Test the payment» under the providers; with an empty basket, click it: a new tab opens the checkout page with the pay buttons as set in the editor, an amber mark at the bottom left says the changes are shown in this browser only, and the basket holds the first published product; the editor's status line says what was done

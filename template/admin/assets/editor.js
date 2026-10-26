@@ -6894,22 +6894,22 @@ function Au(e) {
 var ju = /* @__PURE__ */ L("<button type=\"button\"> </button>"), Mu = /* @__PURE__ */ L("<div><span class=\"choice-label svelte-1ehof1c\"> </span> <div class=\"choice-seg svelte-1ehof1c\" role=\"group\"></div></div>");
 function Nu(e, t) {
 	at(t, !0);
-	let n = ca(t, "title", 3, void 0), r = /* @__PURE__ */ D(() => t.options.length > 3 || t.options.reduce((e, [, t]) => e + `${t}`.length, 0) > 14), i = (e) => `${e ?? ""}`;
-	var a = Mu();
-	let o;
-	var s = A(a), c = M(s, !0), l = N(s, 2);
-	hi(l, 21, () => t.options, ([e, t]) => i(e), (e, n) => {
+	let n = ca(t, "title", 3, void 0), r = ca(t, "stack", 3, !1), i = /* @__PURE__ */ D(() => r() || t.options.length > 3 || t.options.reduce((e, [, t]) => e + `${t}`.length, 0) > 14), a = (e) => `${e ?? ""}`;
+	var o = Mu();
+	let s;
+	var c = A(o), l = M(c, !0), u = N(c, 2);
+	hi(u, 21, () => t.options, ([e, t]) => a(e), (e, n) => {
 		var r = /* @__PURE__ */ D(() => g(F(n), 2));
-		let a = () => F(r)[0], o = () => F(r)[1];
+		let i = () => F(r)[0], o = () => F(r)[1];
 		var s = ju();
 		let c;
 		var l = M(s, !0);
 		P((e, t) => {
 			K(s, "aria-pressed", e), c = H(s, 1, "svelte-1ehof1c", null, c, { on: t }), z(l, o());
-		}, [() => i(a()) === i(t.value), () => i(a()) === i(t.value)]), I("click", s, () => t.onchange(a())), R(e, s);
-	}), E(l), E(a), P(() => {
-		o = H(a, 1, "choice svelte-1ehof1c", null, o, { stacked: F(r) }), K(a, "title", n()), z(c, t.label), K(l, "aria-label", t.label);
-	}), R(e, a), ot();
+		}, [() => a(i()) === a(t.value), () => a(i()) === a(t.value)]), I("click", s, () => t.onchange(i())), R(e, s);
+	}), E(u), E(o), P(() => {
+		s = H(o, 1, "choice svelte-1ehof1c", null, s, { stacked: F(i) }), K(o, "title", n()), z(l, t.label), K(u, "aria-label", t.label);
+	}), R(e, o), ot();
 }
 Vr(["click"]);
 //#endregion
@@ -18287,9 +18287,10 @@ var cy = [
 ];
 function ly(e, t = null) {
 	if (!cy.includes(e)) return;
+	let n = !!t?.contains(document.activeElement) && !document.activeElement.classList.contains("menu-search");
 	iy.tab = e;
-	let n = t?.querySelectorAll(".emenu-col")[cy.indexOf(e)];
-	n && (n.scrollIntoView({ block: "nearest" }), document.activeElement?.classList.contains("menu-search") || n.querySelector("summary, button")?.focus());
+	let r = t?.querySelectorAll(".emenu-cols > .emenu-col")[cy.indexOf(e)];
+	r ? (r.scrollIntoView({ block: "nearest" }), document.activeElement?.classList.contains("menu-search") || r.querySelector("summary, button")?.focus()) : n && Dr().then(() => t.querySelector(".props-tabs button.on")?.focus());
 }
 var uy = new Wv(), dy = /* @__PURE__ */ new Set(), fy = mn({ choices: ty(localStorage) });
 function py(e) {
@@ -20896,6 +20897,7 @@ function rS(e, t) {
 			{
 				let e = /* @__PURE__ */ D(() => q("lbl.videoSource")), t = /* @__PURE__ */ D(() => [["embed", q("opt.videoSource.embed")], ["file", q("opt.videoSource.file")]]);
 				Nu(a, {
+					stack: !0,
 					get label() {
 						return F(e);
 					},
@@ -21911,7 +21913,7 @@ Vr([
 ]);
 //#endregion
 //#region src/menu/families/Ribbon.svelte
-var zS = /* @__PURE__ */ L("<span class=\"nav-line\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span>"), BS = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), VS = /* @__PURE__ */ L("<button type=\"button\"></button>"), HS = /* @__PURE__ */ L("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-6\" role=\"group\"></div></div>"), US = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input class=\"field-filled\"/></label>"), WS = /* @__PURE__ */ L("<!> <!>", 1), GS = /* @__PURE__ */ L("<div class=\"pin-line\"><!> <!></div>"), KS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0.5\" max=\"10\" step=\"0.5\"/> <span class=\"gridmenu-value\"> </span></div>"), qS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"10\" max=\"300\" step=\"5\"/> <span class=\"gridmenu-value\"> </span> <!></div>"), JS = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), YS = /* @__PURE__ */ L("<button class=\"ghost action\"> </button> <!> <!> <!> <!> <!>", 1), XS = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label>"), ZS = /* @__PURE__ */ L("<label> <!></label>"), QS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"2\" max=\"40\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>"), $S = /* @__PURE__ */ L("<!> <!> <!> <!> <!> <!>", 1), eC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"-10\" max=\"10\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>"), tC = /* @__PURE__ */ L("<!> <!> <!>", 1), nC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"8\" max=\"120\" step=\"2\"/> <span class=\"gridmenu-value\"> </span></div>"), rC = /* @__PURE__ */ L("<!> <!> <!> <!> <!>", 1), iC = /* @__PURE__ */ L("<div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div>"), aC = /* @__PURE__ */ L("<div class=\"swatch-row\"><!> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div></div>");
+var zS = /* @__PURE__ */ L("<span class=\"nav-line\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span>"), BS = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), VS = /* @__PURE__ */ L("<button type=\"button\"></button>"), HS = /* @__PURE__ */ L("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-6\" role=\"group\"></div></div>"), US = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input class=\"field-filled\"/></label>"), WS = /* @__PURE__ */ L("<!> <!>", 1), GS = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), KS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0.5\" max=\"10\" step=\"0.5\"/> <span class=\"gridmenu-value\"> </span></div>"), qS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"10\" max=\"300\" step=\"5\"/> <span class=\"gridmenu-value\"> </span> <!></div>"), JS = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), YS = /* @__PURE__ */ L("<button class=\"ghost action\"> </button> <!> <!> <!> <!> <!>", 1), XS = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label>"), ZS = /* @__PURE__ */ L("<label> <!></label>"), QS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"2\" max=\"40\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>"), $S = /* @__PURE__ */ L("<!> <!> <!> <!> <!> <!>", 1), eC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"-10\" max=\"10\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>"), tC = /* @__PURE__ */ L("<!> <!> <!>", 1), nC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"8\" max=\"120\" step=\"2\"/> <span class=\"gridmenu-value\"> </span></div>"), rC = /* @__PURE__ */ L("<!> <!> <!> <!> <!>", 1), iC = /* @__PURE__ */ L("<div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div>"), aC = /* @__PURE__ */ L("<div class=\"swatch-row\"><!> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div></div>");
 function oC(e, t) {
 	at(t, !0);
 	let n = rt("urd-editor"), r = /* @__PURE__ */ D(() => n.selectedBlock), { mutateBlock: i, setBlockProp: a, setBlockProps: o, themeSwatches: s } = n, { groupChanged: c, groupOf: l } = Mx(() => F(r).props, o);
@@ -22041,10 +22043,10 @@ function oC(e, t) {
 			Cx(i, {
 				key: "motion",
 				children: (e, t) => {
-					var n = GS(), r = A(n);
+					var n = GS(), r = A(n), i = A(r), o = N(i);
 					{
 						let e = /* @__PURE__ */ D(Ob);
-						Va(r, {
+						Va(o, {
 							filled: !0,
 							get value() {
 								return F(f);
@@ -22055,7 +22057,9 @@ function oC(e, t) {
 							onchange: (e) => a("motion", e)
 						});
 					}
-					_y(N(r, 2), { id: "ribbonMotion" }), E(n), R(e, n);
+					E(r), _y(N(r, 2), { id: "ribbonMotion" }), E(n), P((e, t) => {
+						K(r, "title", e), z(i, `${t ?? ""} `);
+					}, [() => q("tip.ribbon.motion"), () => q("group.motion")]), R(e, n);
 				},
 				$$slots: { default: !0 }
 			});
@@ -26273,7 +26277,7 @@ Vr([
 ]);
 //#endregion
 //#region src/menu/ElementMenu.svelte
-var TT = /* @__PURE__ */ L("<button type=\"button\" class=\"menu-quick-open\"> </button>"), ET = /* @__PURE__ */ L("<input type=\"number\"/>"), DT = /* @__PURE__ */ L("<button type=\"button\"> </button>"), OT = /* @__PURE__ */ L("<span class=\"seg\" role=\"group\"></span>"), kT = /* @__PURE__ */ L("<div class=\"menu-quick-item\"><span class=\"menu-quick-head\"><span class=\"mini-label\"> </span><!></span> <!></div>"), AT = /* @__PURE__ */ L("<button type=\"button\" class=\"linkish menu-quick-reset\"> </button>"), jT = /* @__PURE__ */ L("<div class=\"menu-quick\"><!> <!></div>"), MT = /* @__PURE__ */ L("<div><section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section> <section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section> <section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section></div>"), NT = /* @__PURE__ */ L("<div class=\"emenu-cols\"><section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section> <section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section> <section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section></div>"), PT = /* @__PURE__ */ L("<div class=\"props-tabs\"><span class=\"seg\"><button type=\"button\"> </button> <button type=\"button\"> </button> <button type=\"button\"> </button></span></div> <!>", 1), FT = /* @__PURE__ */ L("<div class=\"emenu-root\"><!> <!></div>");
+var TT = /* @__PURE__ */ L("<button type=\"button\" class=\"menu-quick-open\"> </button>"), ET = /* @__PURE__ */ L("<input type=\"number\"/>"), DT = /* @__PURE__ */ L("<button type=\"button\"> </button>"), OT = /* @__PURE__ */ L("<span class=\"seg\" role=\"group\"></span>"), kT = /* @__PURE__ */ L("<div class=\"menu-quick-item\"><span class=\"menu-quick-head\"><span class=\"mini-label\"> </span><!></span> <!></div>"), AT = /* @__PURE__ */ L("<button type=\"button\" class=\"linkish menu-quick-reset\"> </button>"), jT = /* @__PURE__ */ L("<div class=\"menu-quick\"><!> <!></div>"), MT = /* @__PURE__ */ L("<div><section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section> <section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section> <section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section></div>"), NT = /* @__PURE__ */ L("<div class=\"emenu-cols\"><section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section> <section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section> <section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section></div>"), PT = /* @__PURE__ */ L("<div class=\"props-tabs\"><span class=\"seg\"><button type=\"button\"> </button> <button type=\"button\"> </button> <button type=\"button\"> </button></span></div> <section class=\"emenu-col emenu-area\"><!></section>", 1), FT = /* @__PURE__ */ L("<div class=\"emenu-root\"><!> <!></div>");
 function IT(e, t) {
 	at(t, !0);
 	let n = rt("urd-editor"), r = /* @__PURE__ */ D(() => n.selectedBlock), { setBlockProp: i, setBlockFit: a, setBlockSize: o, endSizeGesture: s, setBlockHideMobile: c, designWidth: l, themeSwatches: u } = n, d = {
@@ -26754,16 +26758,16 @@ function IT(e, t) {
 			let m;
 			var h = M(p, !0);
 			E(o), E(a);
-			var g = N(a, 2), _ = (t) => {
+			var g = N(a, 2), _ = A(g), v = (t) => {
 				e(t);
-			}, v = (e) => {
-				n(e);
 			}, y = (e) => {
+				n(e);
+			}, b = (e) => {
 				i(e);
 			};
-			B(g, (e) => {
-				iy.tab === "content" ? e(_) : iy.tab === "style" ? e(v, 1) : e(y, -1);
-			}), P((e, t, n) => {
+			B(_, (e) => {
+				iy.tab === "content" ? e(v) : iy.tab === "style" ? e(y, 1) : e(b, -1);
+			}), E(g), P((e, t, n) => {
 				c = H(s, 1, "", null, c, { on: iy.tab === "content" }), z(l, e), d = H(u, 1, "", null, d, { on: iy.tab === "style" }), z(f, t), m = H(p, 1, "", null, m, { on: iy.tab === "placement" }), z(h, n);
 			}, [
 				() => q("props.tabContent"),
@@ -35991,9 +35995,39 @@ function AR(e, t) {
 		r.blockMenu && r.selectedBlock && e(ee);
 	}), R(e, i), ot();
 }
+Vr(["click"]);
 //#endregion
-//#region src/main.js
-Vr(["click"]), document.documentElement.lang = await ka();
-var jR = ii(AR, { target: document.getElementById("urd-admin") });
+//#region src/lib/seg-slide.js
+var jR = (e) => Math.round(e * 10) / 10;
+function MR(e, t) {
+	let n = e.left - t.left, r = e.top - t.top, i = t.width > 0 ? e.width / t.width : 1;
+	return Math.abs(n) < .5 && Math.abs(r) < .5 && Math.abs(i - 1) < .01 ? null : `translate(${jR(n)}px, ${jR(r)}px) scaleX(${jR(i * 100) / 100})`;
+}
+function NR(e) {
+	let t = (e instanceof Element ? e.closest("button") : null)?.parentElement;
+	return t?.matches(".seg, .choice-seg") ? t : null;
+}
+function PR(e = document) {
+	if (typeof KeyframeEffect > "u" || !("pseudoElement" in KeyframeEffect.prototype)) return;
+	let t = window.matchMedia("(prefers-reduced-motion: reduce)");
+	e.addEventListener("click", (e) => {
+		if (t.matches) return;
+		let n = NR(e.target), r = n?.querySelector(":scope > button.on");
+		if (!r) return;
+		let i = r.getBoundingClientRect();
+		requestAnimationFrame(() => {
+			let e = n.querySelector(":scope > button.on");
+			if (!e || e === r || !e.isConnected) return;
+			let t = MR(i, e.getBoundingClientRect());
+			t && e.animate([{ transform: t }, { transform: "none" }], {
+				duration: 220,
+				easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+				pseudoElement: "::before"
+			});
+		});
+	}, !0);
+}
+document.documentElement.lang = await ka(), PR();
+var FR = ii(AR, { target: document.getElementById("urd-admin") });
 //#endregion
-export { jR as default };
+export { FR as default };

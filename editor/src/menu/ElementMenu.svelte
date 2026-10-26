@@ -264,12 +264,15 @@
         onclick={() => (menu.tab = 'placement')}>{ta('props.tabPlacement')}</button>
     </span>
   </div>
-  {#if menu.tab === 'content'}
-    {@render menuContent()}
-  {:else if menu.tab === 'style'}
-    {@render menuStyle()}
-  {:else}
-    {@render menuPlacement()}
-  {/if}
+  <!-- The tab's area, laid out as a column of the wide menu -->
+  <section class="emenu-col emenu-area">
+    {#if menu.tab === 'content'}
+      {@render menuContent()}
+    {:else if menu.tab === 'style'}
+      {@render menuStyle()}
+    {:else}
+      {@render menuPlacement()}
+    {/if}
+  </section>
 {/if}
 </div>

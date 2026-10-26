@@ -1287,6 +1287,7 @@ export default {
     'tip.ribbon.main': 'Hva hovedstripa holder. «Bare farge» gir et tomt bånd du kan sette striper over og under.',
     'tip.ribbon.below': 'En tynn stripe under hovedstripa, med de samme valgene som stripa over.',
     'tip.ribbon.thickness': 'Hvor tjukke de tynne stripene er. Hovedstripa tar resten av blokkens høyde.',
+    'tip.ribbon.motion': 'Hvordan båndet beveger seg: det ruller, vugger fram og tilbake, hopper ett ord om gangen eller står stille.',
     'tip.ribbon.dwell': 'Hvor lenge hvert ord står stille før båndet hopper til det neste.',
     'tip.ribbon.play': 'Båndet står stille mens du redigerer, så ordene kan leses og skrives. Trykk her for å se bevegelsen i seks sekunder.',
     'tip.ribbon.bold': 'Ordene settes halvfete.',

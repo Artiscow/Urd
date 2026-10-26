@@ -21,7 +21,7 @@
   {@const vsource = selectedBlock.props.source === 'file' ? 'file' : 'embed'}
   {#snippet videoSource()}
     <div class="pin-line">
-      <Choice label={ta('lbl.videoSource')} value={vsource}
+      <Choice stack label={ta('lbl.videoSource')} value={vsource}
         options={[['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]]}
         onchange={(v) => setBlockProp('source', v)} />
       <Pin id="videoSource" />

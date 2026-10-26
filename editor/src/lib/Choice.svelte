@@ -5,10 +5,11 @@
    * label on one row; four or more, or long option texts, get the label above
    * in capitals and the segment on its own line, wrapping when the panel is
    * narrow.
-   * @type {{ label: string, title?: string, value: string, options: Array<[string, string]>, onchange: (value: string) => void }}
+   * `stack` asks for the label above whatever the options, as a pinnable choice stands.
+   * @type {{ label: string, title?: string, value: string, options: Array<[string, string]>, onchange: (value: string) => void, stack?: boolean }}
    */
-  let { label, title = undefined, value, options, onchange } = $props();
-  const stacked = $derived(options.length > 3 || options.reduce((n, [, text]) => n + `${text}`.length, 0) > 14);
+  let { label, title = undefined, value, options, onchange, stack = false } = $props();
+  const stacked = $derived(stack || options.length > 3 || options.reduce((n, [, text]) => n + `${text}`.length, 0) > 14);
   const key = (v) => `${v ?? ''}`;
 </script>
 
@@ -47,6 +48,7 @@
   .choice-seg {
     display: inline-flex;
     flex: 0 0 auto;
+    isolation: isolate;
     border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
     border-radius: 999px;
     overflow: hidden;
@@ -59,6 +61,7 @@
   }
 
   .choice-seg button {
+    position: relative;
     border: 0;
     background: transparent;
     color: inherit;
@@ -66,15 +69,26 @@
     padding: 5px 11px;
     cursor: pointer;
     white-space: nowrap;
+    transition: color 0.18s ease, background 0.12s ease, transform 0.05s ease;
   }
 
   .choice.stacked .choice-seg button {
     flex: 1 1 auto;
   }
 
+  /* The chosen button's pill is a layer under every button's words, which a new choice slides across (lib/seg-slide.js) */
   .choice-seg button.on {
-    background: var(--urd-color-accent);
     color: var(--urd-color-bg);
+  }
+
+  .choice-seg button.on::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--urd-color-accent);
+    transform-origin: 0 50%;
   }
 
   .choice-seg button:focus-visible {

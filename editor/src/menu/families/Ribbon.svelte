@@ -97,7 +97,8 @@
   {#snippet ribbonMotion()}
       <Setting key="motion">
         <div class="pin-line">
-          <Dropdown filled value={motion} options={ribbonMotions()} onchange={(v) => setBlockProp('motion', v)} />
+          <label title={ta('tip.ribbon.motion')}>{ta('group.motion')}
+            <Dropdown filled value={motion} options={ribbonMotions()} onchange={(v) => setBlockProp('motion', v)} /></label>
           <Pin id="ribbonMotion" />
         </div>
       </Setting>
