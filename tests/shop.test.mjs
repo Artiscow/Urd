@@ -178,3 +178,14 @@ test('saveOrder and readOrder: the record kept in sessionStorage and read back; 
     delete globalThis.sessionStorage;
   }
 });
+
+test('a basket block without a checkout page of its own links to the menu basket\'s; its own page wins', async () => {
+  const { cartCheckoutHref } = await engineImport('blocks/cart.js');
+  const site = { pages: [{ id: 'kasse', path: '/kasse' }, { id: 'butikk', path: '/butikk' }], nav: { cart: { show: true, page: 'kasse' } } };
+  assert.equal(cartCheckoutHref({ href: '' }, site), '/kasse', 'the menu basket\'s page');
+  assert.equal(cartCheckoutHref({ page: 'butikk' }, site), '/butikk', 'the block\'s own page');
+  assert.equal(cartCheckoutHref({ href: '/egen' }, site), '/egen', 'the block\'s own path');
+  assert.equal(cartCheckoutHref({ page: 'gone' }, site), '/kasse', 'a page that is gone falls back');
+  assert.equal(cartCheckoutHref({}, { pages: site.pages, nav: { cart: { show: true, href: '/checkout' } } }), '/checkout', 'the menu basket\'s path');
+  assert.equal(cartCheckoutHref({}, { pages: site.pages, nav: {} }), '', 'neither: no checkout link');
+});

@@ -71,10 +71,10 @@
         <input value={selectedBlock.props.endpoint ?? ''} placeholder={ta('form.endpointPh')}
           onchange={(e) => setBlockProp('endpoint', e.target.value.trim())} /></label>
     {:else}
-      <label>{ta('form.recipient')}
+      <label title={ta('tip.form.recipient')}>{ta('form.recipient')}
         <input value={selectedBlock.props.recipient ?? ''} placeholder={ta('form.recipientPh')}
           onchange={(e) => setBlockProp('recipient', e.target.value.trim())} /></label>
-      <label>{ta('form.subject')}
+      <label title={ta('tip.form.subject')}>{ta('form.subject')}
         <input value={selectedBlock.props.subject ?? ''} placeholder={ta('form.subjectPh')}
           onchange={(e) => setBlockProp('subject', e.target.value.trim())} /></label>
     {/if}
@@ -94,7 +94,7 @@
         <button class="ghost row-tool" title={ta('form.removeField')} onclick={() => removeFormField(i)}>{@html ICONS.cross}</button>
       </span>
     </span>
-    <label class="gridmenu-snap">
+    <label title={ta('tip.form.required')} class="gridmenu-snap">
       <input type="checkbox" checked={field.required === true}
         onchange={(e) => setFormField(i, { required: e.target.checked })} />
       {ta('form.required')}
@@ -107,12 +107,12 @@
   <button class="ghost action" onclick={addFormField}>{ta('form.addField')}</button>
   {/snippet}
   {#snippet formReceipt()}
-    <label>{ta('lbl.buttonText')}
+    <label title={ta('tip.form.buttonText')}>{ta('lbl.buttonText')}
       <input value={selectedBlock.props.submitLabel ?? ''} placeholder={ta('form.sendDefault')}
         onchange={(e) => setBlockProp('submitLabel', e.target.value.trim() || ta('form.sendDefault'))} /></label>
     <!-- The receipt text shows after an endpoint send only; mailto mode says that the mail program has the message -->
     {#if mode === 'endpoint'}
-      <label>{ta('form.receipt')}
+      <label title={ta('tip.form.receipt')}>{ta('form.receipt')}
         <input value={selectedBlock.props.successText ?? ''} placeholder={ta('form.thanksDefault')}
           onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
     {/if}

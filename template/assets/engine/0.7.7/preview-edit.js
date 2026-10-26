@@ -3050,7 +3050,9 @@ document.addEventListener('click', (event) => {
   const chromeOff = document.body.classList.contains('urd-chrome-off');
   const cleanCalendar = chromeOff && a.closest('.urd-cal');
   const linksRow = a.classList.contains('urd-share-button') && (chromeOff || a.closest('.urd-block')?.classList.contains('urd-selected'));
-  if (a.closest('.urd-block') && !cleanCalendar && !linksRow) {
+  // A basket's drawer is opened on purpose, so its «Go to checkout» switches the editor to that page, as the menu basket's does.
+  const cartDrawer = Boolean(a.closest('.urd-cart-dialog'));
+  if (a.closest('.urd-block') && !cleanCalendar && !linksRow && !cartDrawer) {
     event.preventDefault();
     return;
   }

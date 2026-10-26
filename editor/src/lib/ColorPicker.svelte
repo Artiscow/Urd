@@ -348,7 +348,7 @@
         </span>
       {/if}
       <span class="cp-label cp-label-row">{ta('cp.saved')}
-        <button type="button" class="cp-add" title={ta('cp.saveTitle')} onclick={addSaved}>+</button>
+        <button type="button" class="cp-add" title={ta('cp.saveTitle')} onclick={addSaved}>{@html ICONS.plus}</button>
       </span>
       {#if saved.length}
         <span class="cp-tokens">

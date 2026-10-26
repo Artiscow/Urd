@@ -40,13 +40,13 @@
 
 {#if area === 'content'}
   {#snippet quoteWords()}
-    <label>{ta('lbl.quoteText')}
+    <label title={ta('tip.quote.text')}>{ta('lbl.quoteText')}
       <input value={selectedBlock.props.text ?? ''}
         onchange={(e) => setBlockProp('text', e.target.value)} /></label>
-    <label>{ta('lbl.quoteName')}
+    <label title={ta('tip.quote.name')}>{ta('lbl.quoteName')}
       <input value={selectedBlock.props.attribution ?? ''}
         onchange={(e) => setBlockProp('attribution', e.target.value)} /></label>
-    <label>{ta('lbl.quoteRole')}
+    <label title={ta('tip.quote.role')}>{ta('lbl.quoteRole')}
       <input value={selectedBlock.props.role ?? ''}
         onchange={(e) => setBlockProp('role', e.target.value)} /></label>
   {/snippet}
@@ -57,7 +57,7 @@
       <DesignRow pin="variant" />
     </Setting>
     {#if selectedBlock.props.variant === 'short'}
-      <label class="ghost filepick">
+      <label title={ta('tip.quote.portrait')} class="ghost filepick">
         {ta('ui.quotePortrait')}
         <input type="file" accept="image/*" onchange={setQuotePortrait} />
       </label>
@@ -77,7 +77,7 @@
   {/snippet}
   {#snippet quoteColour()}
     <Setting key="accent" source="theme">
-      <label>{ta('lbl.color')}
+      <label title={ta('tip.quote.color')}>{ta('lbl.color')}
         <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
           onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
     </Setting>

@@ -135,13 +135,13 @@
       <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
         <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
           onchange={(e) => setSectionHeight(e.target.value)} /></label>
-      <label class="gridmenu-snap">
+      <label title={ta('tip.sectionGrid')} class="gridmenu-snap">
         <input type="checkbox" checked={sectionGrid !== null}
           onchange={(e) => toggleSectionGrid(e.target.checked)} />
         {ta('lbl.sectionGrid')}
       </label>
       {#if sectionGrid}
-        <label>
+        <label title={ta('tip.gridSize')}>
           {ta('lbl.gridSize')}
           <span class="gridmenu-value">{sectionGrid.size} px</span>
         </label>
@@ -218,10 +218,10 @@
           options={ENTRANCE_OPTIONS}
           onchange={(v) => setSectionAnimation(v || null)} /></label>
       {#if isEntrance(sectionAnim)}
-        <label>{ta('lbl.durationMs')}
+        <label title={ta('tip.anim.duration')}>{ta('lbl.durationMs')}
           <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
             onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
-        <label>{ta('lbl.delayMs')}
+        <label title={ta('tip.anim.delay')}>{ta('lbl.delayMs')}
           <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay ?? 0}
             onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
         {#if sectionAnim.type === 'stagger'}

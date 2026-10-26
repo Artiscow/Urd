@@ -42,14 +42,14 @@
     {#if selectedBlock.props.src}
       <button class="ghost" onclick={() => setBlockProp('src', '')}>{ta('ui.removeAudio')}</button>
     {/if}
-    <label>{ta('lbl.audioTitle')}
+    <label title={ta('tip.audio.title')}>{ta('lbl.audioTitle')}
       <input value={selectedBlock.props.title ?? ''}
         onchange={(e) => setBlockProp('title', e.target.value)} /></label>
   {/snippet}
   {#snippet audioPlayback()}
     <Setting key="loop" shown={ta('common.off')}>
       <div class="pin-line">
-        <label class="gridmenu-snap">
+        <label title={ta('tip.audio.loop')} class="gridmenu-snap">
           <input type="checkbox" checked={Boolean(selectedBlock.props.loop)}
             onchange={(e) => setBlockProp('loop', e.target.checked)} />
           {ta('lbl.audioLoop')}

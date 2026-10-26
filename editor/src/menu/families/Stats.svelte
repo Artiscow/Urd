@@ -19,16 +19,16 @@
 
 {#if area === 'content'}
   {#snippet statNumber()}
-    <label>{ta('lbl.statValue')}
-      <input value={selectedBlock.props.value ?? ''} title={ta('tip.stat.value')}
+    <label title={ta('tip.stat.value')}>{ta('lbl.statValue')}
+      <input value={selectedBlock.props.value ?? ''}
         onchange={(e) => setBlockProp('value', e.target.value)} /></label>
-    <label>{ta('lbl.statPrefix')}
+    <label title={ta('tip.stat.prefix')}>{ta('lbl.statPrefix')}
       <input value={selectedBlock.props.prefix ?? ''}
         onchange={(e) => setBlockProp('prefix', e.target.value)} /></label>
-    <label>{ta('lbl.statSuffix')}
+    <label title={ta('tip.stat.suffix')}>{ta('lbl.statSuffix')}
       <input value={selectedBlock.props.suffix ?? ''}
         onchange={(e) => setBlockProp('suffix', e.target.value)} /></label>
-    <label>{ta('lbl.statLabel')}
+    <label title={ta('tip.stat.label')}>{ta('lbl.statLabel')}
       <input value={selectedBlock.props.label ?? ''}
         onchange={(e) => setBlockProp('label', e.target.value)} /></label>
   {/snippet}

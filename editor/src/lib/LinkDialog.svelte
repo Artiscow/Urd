@@ -277,12 +277,12 @@
     <label class="field-stack" title={ta('tip.link.web')}>{ta('link.url')}
       <input bind:value={link.url} placeholder="https://" spellcheck="false" autocomplete="off" /></label>
   {:else if link.kind === 'email'}
-    <label class="field-stack">{ta('link.email')}
+    <label title={ta('tip.link.email')} class="field-stack">{ta('link.email')}
       <input type="email" bind:value={link.email} spellcheck="false" autocomplete="off" /></label>
     <label class="field-stack" title={ta('tip.link.subject')}>{ta('link.subject')}
       <input bind:value={link.subject} /></label>
   {:else if link.kind === 'phone'}
-    <label class="field-stack">{ta('link.phone')}
+    <label title={ta('tip.link.phone')} class="field-stack">{ta('link.phone')}
       <input type="tel" bind:value={link.phone} spellcheck="false" autocomplete="off" /></label>
   {:else if link.kind === 'file'}
     <input class="ld-search" type="search" bind:value={fileQuery} placeholder={ta('link.searchFiles')} aria-label={ta('link.searchFiles')} />
@@ -335,7 +335,7 @@
   <dialog class="ld-pop" bind:this={dialogEl} aria-label={ta('link.title')} style="top: {pos.top}px; left: {pos.left}px; width: {POP_WIDTH}px" onclose={() => onclose()}>
     <form class="ld-card ld-card-pop" onsubmit={(e) => { e.preventDefault(); use(); }}>
       {#if !request.pagesOnly}
-        <Choice label={ta('lbl.goesTo')} value={link.kind} options={LINK_KINDS.map((kind) => [kind, ta(KIND_KEYS[kind])])} onchange={(v) => (link.kind = v)} />
+        <Choice label={ta('lbl.goesTo')} title={ta('tip.link.field')} value={link.kind} options={LINK_KINDS.map((kind) => [kind, ta(KIND_KEYS[kind])])} onchange={(v) => (link.kind = v)} />
       {/if}
       <div class="ld-body panel-body">
         {#if link.kind === 'page'}
@@ -383,7 +383,7 @@
         <div class="ld-rail" role="radiogroup" aria-label={ta('lbl.goesTo')}>
           <span class="ld-rail-head">{ta('lbl.goesTo')}</span>
           {#each LINK_KINDS as kind (kind)}
-            <label class="ld-kind" class:on={link.kind === kind}>
+            <label title={ta(`tip.link.kind.${kind}`)} class="ld-kind" class:on={link.kind === kind}>
               <input type="radio" name="ld-kind-{uid}" value={kind} checked={link.kind === kind} onchange={() => (link.kind = kind)} />
               {ta(KIND_KEYS[kind])}
             </label>

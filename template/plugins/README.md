@@ -189,7 +189,9 @@ Urd.blocks.define('venue', {
 ```
 
 Etikettnøklene løses av motoren før de sendes til admin, så
-bruk `labelKey` fra pluginens egen ordbok. Uten `fields` viser Egenskaper
+bruk `labelKey` fra pluginens egen ordbok. Et felt kan også ha en
+hjelpetekst, `hintKey` (eller `hint`), som vises som feltets «?»-tooltip;
+uten den viser tooltipen feltets etikett. Uten `fields` viser Egenskaper
 en «Innstillinger …»-knapp som åpner pluginens eget config-panel i
 forhåndsvisningen (referansepluginene kalender og skjema viste det
 mønsteret til og med v0.7.3, riktig for innstillinger som er mer enn en

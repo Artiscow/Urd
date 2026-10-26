@@ -20,6 +20,9 @@
    */
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '$engine/icons.js';
+  import { ICONS } from './icons.js';
+  import { cellWalker } from './cell-walk.js';
+  import { tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { matchAny } from '$engine/search-langs.js';
   import { searchLangs } from './search-langs.svelte.js';
@@ -37,6 +40,11 @@
   let open = $state(false);
   let tab = $state('icons');
   let query = $state('');
+  let searchEl = $state(null);
+  /** The search field takes the focus as the icons appear, so a word can be typed at once. */
+  const takeFocus = (el) => { el.focus({ preventScroll: true }); };
+  /** The arrows walk the cells from the search field and Enter takes the marked one (cell-walk.js). */
+  const walker = cellWalker(() => [...(searchEl?.closest('.mp-pop')?.querySelectorAll('.mp-grid .mp-cell') ?? [])]);
   let pos = $state({ top: 0, left: 0 });
 
   /** Every icon with its translated name, for the search. */
@@ -48,6 +56,12 @@
     searchLangs.need(query);
     void searchLangs.ready;
     return allIcons.filter(({ id }) => matchAny(`${id} ${ta(ICON_LIBRARY[id].labelKey) || ICON_LIBRARY[id].label}`, query));
+  });
+
+  // A typed search marks its first hit (past the «none» cell), so Enter takes the icon the eye sees; an emptied field marks none.
+  $effect(() => {
+    const typed = query.trim() !== '' && hits;
+    tick().then(() => (typed ? walker.markFirst(searchEl?.closest('.mp-pop')?.querySelector('.mp-grid .mp-cell:not(.mp-none)')) : walker.mark(null)));
   });
 
   /** The images already in use, without repeats: one mark can serve several shortcuts. */
@@ -149,7 +163,7 @@
     {#if children}{@render children()}
     {:else if image}<img class="mp-own" src={image} alt="" />
     {:else if icon && ICON_LIBRARY[icon]}<span class="mp-svg">{@html iconSvg(icon)}</span>
-    {:else}<span class="mp-empty" aria-hidden="true">+</span>{/if}
+    {:else}<span class="mp-empty" aria-hidden="true">{@html ICONS.plus}</span>{/if}
   </button>
   {#if native}
     <div class="mp-pop mp-anchored" id={popId} popover="auto" bind:this={popEl}
@@ -174,7 +188,7 @@
   </div>
   {/if}
   {#if tab === 'icons'}
-    <input class="mp-search" type="search" placeholder={ta('mp.search')} aria-label={ta('mp.search')} bind:value={query} />
+    <input class="mp-search" type="search" placeholder={ta('mp.search')} aria-label={ta('mp.search')} bind:value={query} bind:this={searchEl} onkeydown={(e) => walker.onKey(e)} {@attach takeFocus} />
     <div class="mp-scroll">
       <div class="mp-grid">
         <button type="button" class="mp-cell mp-none" class:active={!icon && !image} title={noneLabel}
@@ -364,6 +378,12 @@
   .mp-cell.active {
     border-color: var(--urd-admin-accent, #6c5ce7);
     background: color-mix(in srgb, var(--urd-admin-accent, #6c5ce7) 30%, transparent);
+  }
+
+  /* The cell the keyboard walk has marked (cell-walk.js) */
+  .mp-cell:global(.picked) {
+    outline: 2px solid var(--urd-admin-accent, #6c5ce7);
+    outline-offset: -2px;
   }
 
   .mp-cell .mp-svg {

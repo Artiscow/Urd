@@ -13,6 +13,8 @@
   import { ta } from '$engine/i18n.js';
   import { matchAny } from '$engine/search-langs.js';
   import { searchLangs } from './search-langs.svelte.js';
+  import { cellWalker } from './cell-walk.js';
+  import { tick } from 'svelte';
 
   let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage, iconsOnly = false } = $props();
 
@@ -28,6 +30,11 @@
   let open = $state(false);
   let pos = $state({ top: 0, left: 0 });
   let query = $state('');
+  let searchEl = $state(null);
+  /** The search field takes the focus as the picker opens, so a word can be typed at once. */
+  const takeFocus = (el) => { el.focus({ preventScroll: true }); };
+  /** The arrows walk the cells from the search field and Enter takes the marked one (cell-walk.js). */
+  const walker = cellWalker(() => [...(searchEl?.closest('.gp-pop')?.querySelectorAll('.gp-grid .gp-cell') ?? [])]);
 
   /** The hits of a typed search: the icons by their id and name, the glyphs by their category's name or the glyph itself, in any language (search-langs.js). */
   const hits = $derived.by(() => {
@@ -38,6 +45,12 @@
     const icons = onicon ? ICON_CATEGORIES.flatMap(([, ids]) => ids).filter((id) => matchAny(`${id} ${ta(ICON_LIBRARY[id].labelKey)}`, q)) : [];
     const glyphs = iconsOnly ? [] : GLYPH_CATEGORIES.flatMap(([name, list]) => (matchAny(ta(name), q) ? list.split(' ') : list.split(' ').filter((g) => g === q)));
     return { icons, glyphs };
+  });
+
+  // A typed search marks its first hit, so Enter takes the cell the eye sees; an emptied field marks none.
+  $effect(() => {
+    const shown = hits;
+    tick().then(() => (shown ? walker.markFirst() : walker.mark(null)));
   });
 
   /** The popover's toggle event drives the open state in the anchored branch. */
@@ -147,7 +160,7 @@
 </span>
 
 {#snippet pickerBody()}
-      <input class="gp-search" type="search" placeholder={ta('gp.search')} aria-label={ta('gp.search')} bind:value={query} />
+      <input class="gp-search" type="search" placeholder={ta('gp.search')} aria-label={ta('gp.search')} bind:value={query} bind:this={searchEl} onkeydown={(e) => walker.onKey(e)} {@attach takeFocus} />
       {#if hits}
         {#if !hits.icons.length && !hits.glyphs.length}
           <p class="gp-hint">{ta('gp.noHits')}</p>
@@ -316,6 +329,12 @@
   .gp-cell.active {
     border-color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
+  }
+
+  /* The cell the keyboard walk has marked (cell-walk.js) */
+  .gp-cell:global(.picked) {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: -2px;
   }
 
   /* Drawn SVG icons from the engine's library: fixed cell size, colored by the text */

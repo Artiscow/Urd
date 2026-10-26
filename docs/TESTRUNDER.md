@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.10.7): a tooltip on every label
+
+- [ ] Hover the labels in the Site panel's contact details, the Collections panel's entries, the element menu's Placement group, an image block's settings and a section background's gradient, glow and pictures: each shows a tooltip that says what the setting does, in the admin's language
+- [ ] Switch the admin language to bokmål and to Turkish: the same tooltips are translated
+- [ ] A text box's border set to its own colour: the thickness stepper shows a drawn minus and plus; the same in a background image's size stepper, the colour picker's save button and an empty mark picker
+- [ ] Open an icon block's glyph picker and type at once, without clicking the field: the words land in the search field and narrow the list; the same in a mark picker (the Nav panel's launcher icon) on its Icons tab
+- [ ] The shop page with something in the basket: the floating basket's drawer shows «Til kassen» to the same page as the menu's basket; give the basket block a checkout page of its own: its drawer goes there instead; its Checkout group names the page in use
+- [ ] In the editor, select the floating basket, click it again to open the drawer and click «Til kassen»: the editor switches to the checkout page
+- [ ] In the glyph picker type «hjerte»: the first hit is marked; the arrows move the mark through the cells, up and down by row, and Enter chooses the marked one and closes the picker; with an empty field, Down starts the walk at the chosen glyph; the same in the mark picker
+
 ### Test batch (0.7.28.6): the pay buttons without a setup
 
 - [ ] In the editor, on a checkout block with Vipps on and no keys set: click «Betal med Vipps»: a line under the buttons says Vipps is not set up and names the setup guide; on a local server it says the site's functions do not answer from here; with the keys in place it says Vipps is set up

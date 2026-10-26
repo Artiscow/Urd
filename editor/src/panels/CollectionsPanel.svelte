@@ -143,7 +143,7 @@
     <p class="panel-hint place-error">{ta('collections.unreadable')}</p>
   {/if}
   {#if collectionIds.length}
-    <label>{ta('blocks.collection')}
+    <label title={ta('tip.collections.pick')}>{ta('blocks.collection')}
       <Dropdown value={ed.activeCollection ?? ''}
         options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
         onchange={(v) => (ed.activeCollection = v || null)} /></label>
@@ -180,7 +180,7 @@
             </span>
           </span>
           {#if collectionView.kind !== 'products'}
-            <label>{ta('lbl.date')}
+            <label title={ta('tip.entry.date')}>{ta('lbl.date')}
               <input type="date" value={entry.date ?? ''}
                 onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'date', e.target.value)} /></label>
           {/if}
@@ -192,7 +192,7 @@
               onchange={(link) => setEntryLink(ed.activeCollection, entry.id, link)} />
           {/if}
           <span class="toolbar-row">
-            <label class="ghost filepick">
+            <label title={ta('tip.entry.image')} class="ghost filepick">
               {entry.image ? ta('ui.changeImage') : ta('ui.addImage')}
               <input type="file" accept="image/*" onchange={(e) => setEntryImage(ed.activeCollection, entry.id, e)} />
             </label>
@@ -204,13 +204,13 @@
           </span>
           {#if entry.image}
             <!-- The picture's alt text, the same the image editor on the canvas shows -->
-            <label class="field-stack">{ta('lbl.altText')}
+            <label title={ta('tip.image.alt')} class="field-stack">{ta('lbl.altText')}
               <input value={entry.imageAlt ?? ''} placeholder={ta('ph.altText')}
                 onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'imageAlt', e.target.value.trim())} /></label>
           {/if}
           {#if collectionView.kind === 'products'}
             <!-- The product fields (the shop): price, member price, badge, sizes and colors. -->
-            <label>{ta('lbl.price')}
+            <label title={ta('tip.entry.price')}>{ta('lbl.price')}
               <input type="number" min="0" step="0.01" value={entry.price ?? ''}
                 onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
             <label title={ta('tip.entry.memberPrice')}>{ta('lbl.memberPrice')}
@@ -226,7 +226,7 @@
               <span class="toolbar-row">
                 <input value={color.name} placeholder={ta('ph.colorName')}
                   onchange={(e) => setEntryColor(ed.activeCollection, entry.id, ci, 'name', e.target.value)} />
-                <label class="ghost filepick">
+                <label title={ta('tip.entry.colorImage')} class="ghost filepick">
                   {color.image ? ta('ui.changeImage') : ta('ui.addImage')}
                   <input type="file" accept="image/*" onchange={(e) => setEntryColorImage(ed.activeCollection, entry.id, ci, e)} />
                 </label>
@@ -248,10 +248,10 @@
     <hr class="gridmenu-divider" />
   {/if}
   {#if !ed.collectionsUnavailable}
-    <label>{ta('lbl.newCollectionName')}
+    <label title={ta('tip.collections.newName')}>{ta('lbl.newCollectionName')}
       <input bind:value={() => ed.newCollectionName, (v) => (ed.newCollectionName = v)} placeholder={ta('ph.collections.name')}
         onkeydown={(e) => e.key === 'Enter' && addCollection()} /></label>
-    <label>{ta('common.type')}
+    <label title={ta('tip.collections.kind')}>{ta('common.type')}
       <Dropdown value={ed.newCollectionKind}
         options={COLLECTION_KINDS}
         onchange={(v) => (ed.newCollectionKind = v)} /></label>

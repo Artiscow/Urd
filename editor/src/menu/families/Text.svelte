@@ -57,7 +57,7 @@
   {#snippet textAlign()}
     <Setting key="align">
       <div class="pin-line">
-        <label>{ta('lbl.align')}
+        <label title={ta('tip.text.align')}>{ta('lbl.align')}
           <Dropdown value={selectedBlock.props.align ?? 'left'}
             options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
             onchange={(v) => setBlockProp('align', v)} /></label>
@@ -68,7 +68,7 @@
   {#snippet textBox()}
     <Setting key="box" shown={ta('common.off')}>
       <div class="pin-line">
-        <label class="gridmenu-snap">
+        <label title={ta('tip.blocks.textBox')} class="gridmenu-snap">
           <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
             onchange={(e) => setBlockProp('box', e.target.checked)} />
           {ta('lbl.textBoxToggle')}

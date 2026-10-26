@@ -604,6 +604,7 @@ function enablePreview(state, opts) {
                   key: f.key,
                   type: f.type,
                   label: f.labelKey ? ta(f.labelKey) : (f.label ?? f.key),
+                  ...(f.hintKey || f.hint ? { hint: f.hintKey ? ta(f.hintKey) : f.hint } : {}),
                   placeholder: f.placeholderKey ? ta(f.placeholderKey) : (f.placeholder ?? ''),
                   ...(f.min !== undefined ? { min: f.min } : {}),
                   ...(f.max !== undefined ? { max: f.max } : {}),

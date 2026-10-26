@@ -73,13 +73,13 @@
       <DesignRow pin="variant" />
     </Setting>
     <Setting key="marker">
-      <label>{ta('lbl.timelineMarker')}
+      <label title={ta('tip.timeline.marker')}>{ta('lbl.timelineMarker')}
         <Dropdown value={selectedBlock.props.marker ?? 'filled'}
           options={[['filled', ta('opt.timeline.filled')], ['ring', ta('opt.timeline.ring')]]}
           onchange={(v) => setBlockProp('marker', v)} /></label>
     </Setting>
     <Setting key="accent" source="theme">
-      <label>{ta('lbl.color')}
+      <label title={ta('tip.timeline.color')}>{ta('lbl.color')}
         <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
           onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
     </Setting>

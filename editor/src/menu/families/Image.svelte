@@ -40,11 +40,11 @@
 
 {#if area === 'content'}
   {#snippet imgImage()}
-    <label class="ghost filepick">
+    <label title={ta('tip.image.change')} class="ghost filepick">
       {ta('ui.changeImage')}
       <input type="file" accept="image/*" onchange={replaceImage} />
     </label>
-    <label>{ta('lbl.description')}
+    <label title={ta('tip.image.alt')}>{ta('lbl.description')}
       <input value={selectedBlock.props.alt ?? ''} placeholder={ta('ph.altText')}
         onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
   {/snippet}
@@ -70,18 +70,18 @@
   {#snippet imgCrop()}
     <Setting key="fit">
       <div class="pin-line">
-        <label>{ta('lbl.imageFit')}
+        <label title={ta('tip.image.fit')}>{ta('lbl.imageFit')}
           <Dropdown value={selectedBlock.props.fit ?? 'cover'}
             options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
             onchange={(v) => setBlockProp('fit', v)} /></label>
         <Pin id="imgFit" />
       </div>
     </Setting>
-    <label>{ta('lbl.focusX')}
+    <label title={ta('tip.image.focusX')}>{ta('lbl.focusX')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
     <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.x ?? 0.5}
       oninput={(e) => setBlockProp('x', Number(e.target.value))} />
-    <label>{ta('lbl.focusY')}
+    <label title={ta('tip.image.focusY')}>{ta('lbl.focusY')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
     <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.y ?? 0.5}
       oninput={(e) => setBlockProp('y', Number(e.target.value))} />
@@ -92,15 +92,15 @@
     <button type="button" class="linkish" onclick={openImageEditor}>{ta('ui.openImageEditor')}</button>
   {/snippet}
   {#snippet imgFilters()}
-    <label>{ta('lbl.brightness')}
+    <label title={ta('tip.image.brightness')}>{ta('lbl.brightness')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
     <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
       oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
-    <label>{ta('lbl.contrast')}
+    <label title={ta('tip.image.contrast')}>{ta('lbl.contrast')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
     <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
       oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
-    <label>{ta('lbl.saturate')}
+    <label title={ta('tip.image.saturate')}>{ta('lbl.saturate')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
     <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.saturate ?? 1}
       oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
@@ -108,7 +108,7 @@
   {#snippet imgCorners()}
     <Setting key="radius">
       <div class="pin-line">
-        <label>{ta('lbl.radius')}
+        <label title={ta('tip.image.radius')}>{ta('lbl.radius')}
           <Dropdown value={selectedBlock.props.radius ?? ''}
             options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
             onchange={(v) => setBlockProp('radius', v || null)} /></label>

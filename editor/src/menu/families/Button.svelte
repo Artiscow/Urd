@@ -20,7 +20,7 @@
 
 {#if area === 'content'}
   {#snippet btnLink()}
-    <label>{ta('blocks.text')}
+    <label title={ta('tip.button.text')}>{ta('blocks.text')}
       <input value={selectedBlock.props.label}
         onchange={(e) => setBlockProp('label', e.target.value)} /></label>
     <div class="pin-line">

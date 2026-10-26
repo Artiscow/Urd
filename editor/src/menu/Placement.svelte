@@ -90,11 +90,11 @@
       options={blockEntranceOptions()}
       onchange={(v) => setBlockAnimation(v || null)} /></label>
   {#if isEntrance(selectedBlock.animation)}
-    <label>{ta('lbl.durationMs')}
+    <label title={ta('tip.anim.duration')}>{ta('lbl.durationMs')}
       <input type="number" min="100" max="4000" step="100"
         value={selectedBlock.animation.props.duration}
         onchange={(e) => setBlockAnimProp('duration', Number(e.target.value))} /></label>
-    <label>{ta('lbl.delayMs')}
+    <label title={ta('tip.anim.delay')}>{ta('lbl.delayMs')}
       <input type="number" min="0" max="4000" step="100"
         value={selectedBlock.animation.props.delay}
         onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
@@ -151,18 +151,18 @@
 {#snippet menuFrame()}
       {#if viewMode === 'desktop'}
         <div class="frame-grid">
-          <label>{ta('frame.x')}<input type="number" step="0.5" value={selectedBlock.frame.x}
+          <label title={ta('tip.frame.x')}>{ta('frame.x')}<input type="number" step="0.5" value={selectedBlock.frame.x}
             onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
-          <label>{ta('frame.y')}<input type="number" step="1" value={selectedBlock.frame.y}
+          <label title={ta('tip.frame.y')}>{ta('frame.y')}<input type="number" step="1" value={selectedBlock.frame.y}
             onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
-          <label>{ta('frame.w')}<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
+          <label title={ta('tip.frame.w')}>{ta('frame.w')}<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
             onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
-          <label>{ta('frame.h')}<input type="number" step="1" min="1" value={selectedBlock.frame.h}
+          <label title={ta('tip.frame.h')}>{ta('frame.h')}<input type="number" step="1" min="1" value={selectedBlock.frame.h}
             onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
           <label title={ta('tip.frameZ')}>
             {ta('frame.z')}<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
             onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
-          <label>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
+          <label title={ta('tip.frame.rot')}>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
             onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
         </div>
       {:else}

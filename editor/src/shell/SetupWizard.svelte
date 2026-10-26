@@ -12,12 +12,12 @@
     <div class="setup-card">
       <h2>{ta('setup.title')}</h2>
       <p class="panel-hint">{ta('setup.intro')}</p>
-      <label>{ta('setup.nameLabel')}
+      <label title={ta('tip.site.name')}>{ta('setup.nameLabel')}
         <input bind:value={ed.setupName} placeholder={ta('ph.setup.name')}
           onkeydown={(e) => e.key === 'Enter' && ed.applySetup()} /></label>
-      <label>{ta('setup.accentLabel')}
+      <label title={ta('tip.setup.accent')}>{ta('setup.accentLabel')}
         <ColorPicker value={ed.setupAccent} label={ta('setup.accentPick')} onchange={(hex) => (ed.setupAccent = hex)} /></label>
-      <label>{ta('setup.bgLabel')}
+      <label title={ta('tip.setup.bg')}>{ta('setup.bgLabel')}
         <ColorPicker value={ed.setupBg} label={ta('setup.bgLabel')} onchange={(hex) => (ed.setupBg = hex)} /></label>
       <p class="panel-hint">{ta('setup.outro')}</p>
       <p class="panel-hint">{ta('setup.keys')}</p>

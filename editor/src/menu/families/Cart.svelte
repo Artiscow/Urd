@@ -17,6 +17,10 @@
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
   const viewOptions = () => [['button', ta('opt.cart.button')], ['icon', ta('opt.cart.icon')]];
+  /** The checkout the drawer links to, in words: the block's own page, else the menu basket's, else none. */
+  const checkoutText = () => linkText(linkOf(selectedBlock.props), { pages: siteDraft.pages, here: ed.pageId })
+    || linkText(linkOf(siteDraft.nav?.cart ?? {}), { pages: siteDraft.pages, here: ed.pageId })
+    || ta('common.none');
 </script>
 
 {#if area === 'content'}
@@ -28,7 +32,7 @@
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     </Setting>
   {/snippet}
-  <MenuGroup id="cart-checkout" defaultOpen title={ta('group.checkout')} value={linkText(linkOf(selectedBlock.props), { pages: siteDraft.pages, here: ed.pageId }) || ta('common.none')} group={groupOf('cart-checkout', { currency: 'kr' })}>{@render cartCheckout()}</MenuGroup>
+  <MenuGroup id="cart-checkout" defaultOpen title={ta('group.checkout')} value={checkoutText()} group={groupOf('cart-checkout', { currency: 'kr' })}>{@render cartCheckout()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet cartView()}
     <Setting key="variant">

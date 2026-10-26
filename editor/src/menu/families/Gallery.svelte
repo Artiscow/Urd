@@ -42,7 +42,7 @@
             <button class="ghost row-tool" title={ta('tip.removeImage')} onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
           </span>
         </span>
-        <label>{ta('lbl.description')}
+        <label title={ta('tip.gallery.alt')}>{ta('lbl.description')}
           <input value={img.alt ?? ''} placeholder={ta('ph.altShort')}
             onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
         <LinkField label={ta('lbl.link')} value={linkOf(img)} placeholder={ta('ph.galleryHref')} onchange={(link) => setGalleryImageLink(i, link)} />
@@ -67,13 +67,13 @@
     {#if GRID_VIEWS.includes(gview)}
       <Setting key="columns" shown="3">
         <div class="pin-line">
-          <label>{ta('lbl.columns')}
+          <label title={ta('tip.gallery.columns')}>{ta('lbl.columns')}
             <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
               onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
           <Pin id="columns" />
         </div>
       </Setting>
-      <label>{ta('lbl.imageGap')}
+      <label title={ta('tip.gallery.gap')}>{ta('lbl.imageGap')}
         <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
       <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
         oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
@@ -123,7 +123,7 @@
     {/if}
     {#if gview === 'slides'}
       <Setting key="interval" shown="5">
-        <label>{ta('lbl.secondsPerImage')}
+        <label title={ta('tip.gallery.interval')}>{ta('lbl.secondsPerImage')}
           <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
             onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>
       </Setting>
@@ -156,7 +156,7 @@
         oninput={(e) => setBlockFrame('h', e.target.valueAsNumber)} />
       <span class="gridmenu-value">{selectedBlock.frame.h} px</span>
     </div>
-    <label>{ta('lbl.imageGap')}
+    <label title={ta('tip.gallery.gap')}>{ta('lbl.imageGap')}
       <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
     <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
       oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
@@ -183,7 +183,7 @@
   {/snippet}
   {#snippet galleryLook()}
     <Setting key="radius">
-      <label>{ta('lbl.radius')}
+      <label title={ta('tip.gallery.radius')}>{ta('lbl.radius')}
         <Dropdown value={selectedBlock.props.radius ?? ''}
           options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
           onchange={(v) => setBlockProp('radius', v || null)} /></label>

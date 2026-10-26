@@ -150,8 +150,9 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [ ] A test-mode marker on the checkout (from the audit of 22 October 2026 of the test-mode row): while a provider's keys point at its test environment (`VIPPS_API_BASE`, a Stripe sandbox key, `PAYPAL_API_BASE`), the published checkout shows a small line that the payments are test payments, so an owner never leaves the test keys in by mistake.
     Done when: with test keys the checkout page shows the line above the payment buttons, with production keys it shows nothing, and the setup guide's test steps name the line.
   - [ ] From the review of 23 October 2026, the walk through every panel and block menu in the browser against the panel rules:
-    - [ ] Tooltips: 115 of the 314 labels in the panels and the block families have no «?» tooltip (the rule: every setting is explained in one); most in the Site panel's contact details (18), the Image family (9), the Collections panel (8), Placement (7), BoxStyle and Gallery (6 each), the setup wizard (3). Each gets a `tip.*` key in nb, en-GB and tr.
+    - [x] Tooltips: 115 of the 314 labels in the panels and the block families have no «?» tooltip (the rule: every setting is explained in one); most in the Site panel's contact details (18), the Image family (9), the Collections panel (8), Placement (7), BoxStyle and Gallery (6 each), the setup wizard (3). Each gets a `tip.*` key in nb, en-GB and tr.
       Done when: every label in editor/src/panels, menu and shell carries a title, held by a test that reads the files.
+      DELIVERED 0.7.10.7 (25 October 2026): 169 labels across the whole editor, the background editor, the icon editor and the link dialog included, with 133 new keys; `tests/label-titles.test.mjs` reads every Svelte file.
     - [x] Prose in the panels: the Text family's Content area is one explanatory line (`hint.textInline`), Placement shows `menu.anchorHiddenMobile` as a paragraph, and the Plugins panel `hint.plugins.autoDiscover`. The Text family gets an «Edit text» action and the toolbar's font and size settings in its Content area instead of the line; the two others move into a tooltip or the help chip.
       Done when: no `panel-hint` in a panel or family explains a setting; the ones left are empty states, errors and status lines.
       DELIVERED 0.7.10.6 (24 October 2026): «Edit the text» with a font and a size for the whole text in the Text family's Content area; the anchor note as a marked state with a tooltip; the plugins line as an empty state with the explanation in its tooltip.
@@ -650,6 +651,7 @@ What comes, in order (brought up to date 20 October 2026):
 6. Then the build that stays in v0.7, each followed by its test round: 0.7.23 and 0.7.24.1 to 0.7.24.4, 0.7.9 the design stretch, 0.7.11 (the published page first, then the editor), 0.7.22, the open ends of 0.7.3 and 0.7.13 (0.7.13.14 to 0.7.13.19), and in 0.7.19 the last seven retro designs (0.7.19.23), 0.7.19.28, a plain 0.7.19.30 and 0.7.19.33.
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
+- [ ] No "empty cart" button in the cart
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene

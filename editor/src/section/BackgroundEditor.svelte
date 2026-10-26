@@ -370,11 +370,11 @@
             onclick={() => removeBgGalleryImage(bg, i, j)}>{@html ICONS.cross}</button>
         </span>
       </span>
-      <label>{ta('lbl.focusX')}
+      <label title={ta('tip.image.focusX')}>{ta('lbl.focusX')}
         <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
       <input type="range" min="0" max="1" step="0.01" value={img.x ?? 0.5}
         oninput={(e) => setBgGalleryImageProp(bg, i, j, 'x', Number(e.target.value))} />
-      <label>{ta('lbl.focusY')}
+      <label title={ta('tip.image.focusY')}>{ta('lbl.focusY')}
         <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
       <input type="range" min="0" max="1" step="0.01" value={img.y ?? 0.5}
         oninput={(e) => setBgGalleryImageProp(bg, i, j, 'y', Number(e.target.value))} />
@@ -420,7 +420,7 @@
       options={[['none', ta('common.none')], ['kenburns', ta('opt.bgMotion.kenburns')], ['drift', ta('opt.bgMotion.drift')]]}
       onchange={(v) => setBgProp(bg, i, 'motion', v)} /></label>
   {#if (layer.props.motion ?? 'none') !== 'none'}
-    <label>{ta('lbl.motionSpeed')}
+    <label title={ta('tip.bg.motionSpeed')}>{ta('lbl.motionSpeed')}
       <span class="gridmenu-value">{layer.props.motionSpeed ?? 20} s</span></label>
     <input type="range" min="6" max="60" step="1" value={layer.props.motionSpeed ?? 20}
       oninput={(e) => setBgProp(bg, i, 'motionSpeed', Number(e.target.value))} />
@@ -446,17 +446,17 @@
     </span>
     {#if isOpen(i)}
       {#if layer.type === 'color'}
-        <label>{ta('lbl.color')}
+        <label title={ta('tip.bg.layerColor')}>{ta('lbl.color')}
           <ColorPicker value={layer.props.value} tokens={themeSwatches()}
             label={ta('tip.bg.layerColor')} onchange={(hex) => setBgProp(bg, i, 'value', hex)} /></label>
-        <label>{ta('lbl.strength')}
+        <label title={ta('tip.bg.strength')}>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'gradient'}
         {@const g = gradientProps(layer)}
         {@const shareSum = g.stops.reduce((a, s) => a + Math.max(0, Number(s.share) || 0), 0)}
-        <label>{ta('blocks.shape')}
+        <label title={ta('tip.bg.gradKind')}>{ta('blocks.shape')}
           <Dropdown value={g.kind ?? 'linear'}
             options={[['linear', ta('opt.grad.linear')], ['radial', ta('opt.grad.radial')]]}
             onchange={(v) => setGradKind(bg, i, v)} /></label>
@@ -484,21 +484,21 @@
         <button class="ghost action" title={ta('tip.bg.addStop')}
           onclick={() => addGradStop(bg, i)}>{ta('ui.addStop')}</button>
         {#if (g.kind ?? 'linear') === 'radial'}
-          <label>{ta('lbl.centerX')}
+          <label title={ta('tip.bg.centerX')}>{ta('lbl.centerX')}
             <span class="gridmenu-value">{Math.round((g.x ?? 0.5) * 100)}%</span></label>
           <input type="range" min="0" max="1" step="0.01" value={g.x ?? 0.5}
             oninput={(e) => setGradProp(bg, i, 'x', Number(e.target.value))} />
-          <label>{ta('lbl.centerY')}
+          <label title={ta('tip.bg.centerY')}>{ta('lbl.centerY')}
             <span class="gridmenu-value">{Math.round((g.y ?? 0.5) * 100)}%</span></label>
           <input type="range" min="0" max="1" step="0.01" value={g.y ?? 0.5}
             oninput={(e) => setGradProp(bg, i, 'y', Number(e.target.value))} />
         {:else}
-          <label>{ta('lbl.angle')}
+          <label title={ta('tip.bg.angle')}>{ta('lbl.angle')}
             <span class="gridmenu-value">{g.angle}°</span></label>
           <input type="range" min="0" max="360" step="5" value={g.angle}
             oninput={(e) => setGradProp(bg, i, 'angle', Number(e.target.value))} />
         {/if}
-        <label>{ta('lbl.strength')}
+        <label title={ta('tip.bg.strength')}>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((g.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={g.opacity ?? 1}
           oninput={(e) => setGradProp(bg, i, 'opacity', Number(e.target.value))} />
@@ -507,47 +507,47 @@
             options={GRAD_ANIMATIONS[(g.kind ?? 'linear') === 'radial' ? 'radial' : 'linear']}
             onchange={(v) => setGradProp(bg, i, 'animation', v)} /></label>
       {:else if layer.type === 'glow'}
-        <label>{ta('lbl.color')}
+        <label title={ta('tip.bg.glowColor')}>{ta('lbl.color')}
           <ColorPicker value={layer.props.color} tokens={themeSwatches()}
             label={ta('tip.bg.glowColor')} onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
-        <label>{ta('lbl.posX')}
+        <label title={ta('tip.bg.glowX')}>{ta('lbl.posX')}
           <span class="gridmenu-value">{Math.round(layer.props.x * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.x}
           oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-        <label>{ta('lbl.posY')}
+        <label title={ta('tip.bg.glowY')}>{ta('lbl.posY')}
           <span class="gridmenu-value">{Math.round(layer.props.y * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.y}
           oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
-        <label>{ta('lbl.size')}
+        <label title={ta('tip.bg.glowSize')}>{ta('lbl.size')}
           <span class="gridmenu-value">{Math.round(layer.props.radius * 100)}%</span></label>
         <input type="range" min="0.1" max="1" step="0.01" value={layer.props.radius}
           oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
-        <label>{ta('lbl.strength')}
+        <label title={ta('tip.bg.strength')}>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'grain'}
-        <label>{ta('lbl.strength')}
+        <label title={ta('tip.bg.strength')}>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.opacity}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'pattern'}
-        <label>{ta('lbl.bgPattern')}
+        <label title={ta('tip.bg.pattern')}>{ta('lbl.bgPattern')}
           <Dropdown value={bgPattern(layer.props.pattern)}
             options={BG_PATTERNS.map((id) => [id, ta(`opt.bgPattern.${id}`)])}
             onchange={(v) => setBgProp(bg, i, 'pattern', v)} /></label>
-        <label>{ta('lbl.color')}
+        <label title={ta('tip.bg.patternColor')}>{ta('lbl.color')}
           <ColorPicker value={layer.props.color ?? 'text'} tokens={themeSwatches()}
             label={ta('lbl.color')} onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
-        <label>{ta('lbl.size')}
+        <label title={ta('tip.bg.patternSize')}>{ta('lbl.size')}
           <span class="gridmenu-value">{layer.props.size ?? PATTERN_SIZE.dflt} px</span></label>
         <input type="range" min={PATTERN_SIZE.min} max={PATTERN_SIZE.max} step="2" value={layer.props.size ?? PATTERN_SIZE.dflt}
           oninput={(e) => setBgProp(bg, i, 'size', Number(e.target.value))} />
-        <label>{ta('lbl.strength')}
+        <label title={ta('tip.bg.strength')}>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? PATTERN_OPACITY) * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.opacity ?? PATTERN_OPACITY}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-        <label>{ta('lbl.patternRotation')}
+        <label title={ta('tip.bg.patternRotation')}>{ta('lbl.patternRotation')}
           <span class="gridmenu-value">{layer.props.rotation ?? 0}&deg;</span></label>
         <input type="range" min="0" max="180" step="5" value={layer.props.rotation ?? 0}
           oninput={(e) => setBgProp(bg, i, 'rotation', Number(e.target.value))} />
@@ -568,11 +568,11 @@
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
         <label title={ta('tip.bg.size')}>{ta('lbl.size')}</label>
         <div class="sizestep">
-          <button type="button" title={ta('tip.smaller')} onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, -0.05)}>−</button>
+          <button type="button" title={ta('tip.smaller')} onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, -0.05)}>{@html ICONS.minus}</button>
           <input type="number" min="10" max="400" value={Math.round((layer.props.size ?? 1) * 100)}
             onchange={(e) => setBgSizePct(bg, i, e.target.value)} />
           <span class="sizeunit">%</span>
-          <button type="button" title={ta('tip.larger')} onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, 0.05)}>+</button>
+          <button type="button" title={ta('tip.larger')} onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, 0.05)}>{@html ICONS.plus}</button>
         </div>
         {#if !isTile}
           <div class="sizefill">
@@ -584,20 +584,20 @@
             style="--fx:{Math.max(0, Math.min(1, layer.props.x ?? 0.5)) * 100}%; --fy:{Math.max(0, Math.min(1, layer.props.y ?? 0.5)) * 100}%">
             <span class="focaldot"></span>
           </div>
-          <label class="sub">{ta('lbl.horizontal')}
+          <label title={ta('tip.bg.position')} class="sub">{ta('lbl.horizontal')}
             <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
           <input type="range" min="-0.5" max="1.5" step="0.01" value={layer.props.x ?? 0.5}
             oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-          <label class="sub">{ta('lbl.vertical')}
+          <label title={ta('tip.bg.position')} class="sub">{ta('lbl.vertical')}
             <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
           <input type="range" min="-0.5" max="1.5" step="0.01" value={layer.props.y ?? 0.5}
             oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
         {/if}
-        <label>{ta('lbl.blur')}
+        <label title={ta('tip.bg.blur')}>{ta('lbl.blur')}
           <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
         <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
           oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
-        <label>{ta('lbl.strength')}
+        <label title={ta('tip.bg.strength')}>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
@@ -608,7 +608,7 @@
           {ta('lbl.parallax')}
         </label>
         {#if (layer.props.parallax ?? 0) > 0}
-          <label>{ta('lbl.parallaxStrength')}
+          <label title={ta('tip.bg.parallaxStrength')}>{ta('lbl.parallaxStrength')}
             <span class="gridmenu-value">{Math.round((layer.props.parallax ?? 0) * 100)}%</span></label>
           <input type="range" min="0.1" max="1" step="0.01" value={layer.props.parallax ?? 0.3}
             oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
@@ -629,28 +629,28 @@
             options={GALLERY_STYLES.map((st) => [st, ta(`opt.galleryStyle.${st}`)])}
             onchange={(v) => setBgProp(bg, i, 'style', v)} /></label>
         {#if gstyle === 'fill'}
-          <label>{ta('lbl.imageFit')}
+          <label title={ta('tip.bg.slideFit')}>{ta('lbl.imageFit')}
             <Dropdown value={gp.fit ?? 'cover'}
               options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
               onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-          <label>{ta('lbl.secondsPerImage')}
+          <label title={ta('tip.gallery.interval')}>{ta('lbl.secondsPerImage')}
             <span class="gridmenu-value">{gp.interval ?? 12} s</span></label>
           <input type="range" min="0.5" max="90" step="0.5" value={gp.interval ?? 12}
             oninput={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} />
-          <label>{ta('lbl.transition')}
+          <label title={ta('tip.bg.fade')}>{ta('lbl.transition')}
             <span class="gridmenu-value">{(gp.fade ?? 1.5).toFixed(1)} s</span></label>
           <input type="range" min="0" max="5" step="0.1" value={gp.fade ?? 1.5}
             oninput={(e) => setBgProp(bg, i, 'fade', Number(e.target.value))} />
-          <label>{ta('lbl.blur')}
+          <label title={ta('tip.bg.blur')}>{ta('lbl.blur')}
             <span class="gridmenu-value">{gp.blur ?? 0} px</span></label>
           <input type="range" min="0" max="20" step="1" value={gp.blur ?? 0}
             oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
         {:else}
           {#if gstyle === 'band'}
-            <label>{ta('lbl.galleryRows')}
+            <label title={ta('tip.bg.rows')}>{ta('lbl.galleryRows')}
               <Dropdown value={String(gp.rows ?? 2)} options={[['1', '1'], ['2', '2']]}
                 onchange={(v) => setBgProp(bg, i, 'rows', Number(v))} /></label>
-            <label>{ta('lbl.photoDirection')}
+            <label title={ta('tip.bg.direction')}>{ta('lbl.photoDirection')}
               <Dropdown value={gp.direction ?? 'left'}
                 options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
                 onchange={(v) => setBgProp(bg, i, 'direction', v)} /></label>
@@ -674,7 +674,7 @@
               </button>
             {/if}
           {/if}
-          <label>{ta('lbl.size')}
+          <label title={ta('tip.bg.photoSize')}>{ta('lbl.size')}
             <span class="gridmenu-value">{frameSize(gp.size, gstyle)} px</span></label>
           <input type="range" min="60" max="400" step="2" value={frameSize(gp.size, gstyle)}
             oninput={(e) => setBgProp(bg, i, 'size', Number(e.target.value))} />
@@ -683,7 +683,7 @@
               <span class="gridmenu-value">{Math.round((gp.spread ?? 0.85) * 100)}%</span></label>
             <input type="range" min="0" max="1" step="0.01" value={gp.spread ?? 0.85}
               oninput={(e) => setBgProp(bg, i, 'spread', Number(e.target.value))} />
-            <label>{ta('lbl.photoTilt')}
+            <label title={ta('tip.bg.photoTilt')}>{ta('lbl.photoTilt')}
               <span class="gridmenu-value">{gp.tilt ?? 5}°</span></label>
             <input type="range" min="0" max="15" step="1" value={gp.tilt ?? 5}
               oninput={(e) => setBgProp(bg, i, 'tilt', Number(e.target.value))} />
@@ -697,12 +697,12 @@
               options={GALLERY_LOOKS.map((lk) => [lk, ta(`opt.galleryLook.${lk}`)])}
               onchange={(v) => setBgProp(bg, i, 'look', v)} /></label>
           {#if colouredLook(gp.look)}
-            <label>{ta('lbl.frameColor')}
+            <label title={ta('tip.bg.frameColor')}>{ta('lbl.frameColor')}
               <ColorPicker value={frameColor(gp.look, gp.frameColor)} tokens={themeSwatches()} allowClear
                 label={ta('tip.bg.frameColor')} onchange={(hex) => setBgProp(bg, i, 'frameColor', hex ?? '')} /></label>
           {/if}
           {#if roundable(gp.shape) && (gp.look ?? 'shadow') !== 'polaroid'}
-            <label>{ta('lbl.rounding')}
+            <label title={ta('tip.bg.photoRadius')}>{ta('lbl.rounding')}
               <span class="gridmenu-value">{gp.radius ?? 5} px</span></label>
             <input type="range" min="0" max="48" step="1" value={gp.radius ?? 5}
               oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
@@ -719,12 +719,12 @@
               onchange={(v) => setBgProp(bg, i, 'motion', v)} /></label>
         {/if}
         {#if gmotion === 'crossfade' && gstyle !== 'fill'}
-          <label>{ta('lbl.secondsPerImage')}
+          <label title={ta('tip.gallery.interval')}>{ta('lbl.secondsPerImage')}
             <span class="gridmenu-value">{gp.interval ?? 12} s</span></label>
           <input type="range" min="0.5" max="90" step="0.5" value={gp.interval ?? 12}
             oninput={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} />
         {:else if gmotion !== 'none' || gstyle === 'band'}
-          <label>{ta('lbl.motionSpeed')}
+          <label title={ta('tip.bg.motionSpeed')}>{ta('lbl.motionSpeed')}
             <span class="gridmenu-value">{gp.motionSpeed ?? 30} s</span></label>
           <input type="range" min="0.5" max="90" step="0.5" value={gp.motionSpeed ?? 30}
             oninput={(e) => setBgProp(bg, i, 'motionSpeed', Number(e.target.value))} />
@@ -746,7 +746,7 @@
             {ta('lbl.underAnnounce')}
           </label>
         {/if}
-        <label>{ta('lbl.strength')}
+        <label title={ta('tip.bg.strength')}>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((gp.opacity ?? 0.85) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={gp.opacity ?? 0.85}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
@@ -763,15 +763,15 @@
           <Dropdown value={layer.props.fit ?? 'cover'}
             options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-        <label class="sub">{ta('lbl.horizontal')}
+        <label title={ta('tip.bg.videoFocus')} class="sub">{ta('lbl.horizontal')}
           <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.x ?? 0.5}
           oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-        <label class="sub">{ta('lbl.vertical')}
+        <label title={ta('tip.bg.videoFocus')} class="sub">{ta('lbl.vertical')}
           <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.y ?? 0.5}
           oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
-        <label>{ta('lbl.strength')}
+        <label title={ta('tip.bg.strength')}>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
@@ -781,7 +781,7 @@
           {ta('lbl.parallax')}
         </label>
         {#if (layer.props.parallax ?? 0) > 0}
-          <label>{ta('lbl.parallaxStrength')}
+          <label title={ta('tip.bg.parallaxStrength')}>{ta('lbl.parallaxStrength')}
             <span class="gridmenu-value">{Math.round((layer.props.parallax ?? 0) * 100)}%</span></label>
           <input type="range" min="0.1" max="1" step="0.01" value={layer.props.parallax ?? 0.3}
             oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
@@ -790,7 +790,7 @@
     {/if}
   </div>
 {/each}
-<label>{ta('lbl.newLayer')}
+<label title={ta('tip.bg.newLayer')}>{ta('lbl.newLayer')}
   <Dropdown value={newBgType}
     options={BG_TYPES.map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])}
     onchange={(v) => (newBgType = v)} /></label>

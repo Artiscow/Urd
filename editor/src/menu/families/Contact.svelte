@@ -39,7 +39,7 @@
   {#snippet contactParts()}
     <!-- The parts this block shows; what they hold is typed in the Site panel -->
     {#each CONTACT_PARTS as part (part)}
-      <label class="gridmenu-snap">
+      <label title={ta('tip.contact.part')} class="gridmenu-snap">
         <input type="checkbox" checked={shown.has(part)}
           onchange={(e) => togglePart(part, e.target.checked)} />
         {ta(`contactPart.${part}`)}

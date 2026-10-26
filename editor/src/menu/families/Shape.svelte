@@ -32,7 +32,7 @@
   {#snippet shapeStroke()}
     <Setting key="color">
       <div class="pin-line">
-        <label>{ta('lbl.color')}
+        <label title={ta('tip.shape.color')}>{ta('lbl.color')}
           <Dropdown value={selectedBlock.props.color}
             options={colorTokens()}
             onchange={(v) => setBlockProp('color', v)} /></label>
@@ -43,7 +43,7 @@
     {#if ['line', 'arrow'].includes(selectedBlock.props.kind) || (['circle', 'rect'].includes(selectedBlock.props.kind) && !selectedBlock.props.fill)}
       <Setting key="thickness" shown="2">
         <div class="pin-line">
-          <label>{ta('lbl.thickness')}
+          <label title={ta('tip.shape.thickness')}>{ta('lbl.thickness')}
             <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
               onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
           <Pin id="thickness" />
@@ -69,7 +69,7 @@
           onchange={(e) => setShapeSizePx(Number(e.target.value), false)} /></label>
     {:else if selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
       <!-- Without a design width the length stays in percent of the content surface -->
-      <label>{ta('lbl.length')}
+      <label title={ta('tip.shape.length')}>{ta('lbl.length')}
         <input type="number" min="1" max={Math.max(1, Math.round(100 - selectedBlock.frame.x))} step="0.5" value={selectedBlock.frame.w}
           onchange={(e) => setBlockFrame('w', Math.max(1, Math.min(Number(e.target.value), 100 - selectedBlock.frame.x)))} /></label>
     {:else}

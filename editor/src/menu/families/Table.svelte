@@ -64,14 +64,14 @@
   {#snippet tableLines()}
     <Setting key="lines">
       <div class="pin-line">
-        <label>{ta('lbl.tableLines')}
+        <label title={ta('tip.table.lines')}>{ta('lbl.tableLines')}
           <Dropdown value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
             onchange={(v) => setBlockProp('lines', v)} /></label>
         <Pin id="tableLines" />
       </div>
     </Setting>
     <Setting key="striped" shown={ta('common.off')}>
-      <label class="gridmenu-snap">
+      <label title={ta('tip.table.striped')} class="gridmenu-snap">
         <input type="checkbox" checked={Boolean(selectedBlock.props.striped)}
           onchange={(e) => setBlockProp('striped', e.target.checked)} />
         {ta('lbl.tableStriped')}

@@ -35,7 +35,7 @@
       </div>
     </Setting>
     <Setting key="newestFirst" shown={ta('common.on')}>
-      <label class="gridmenu-snap">
+      <label title={ta('tip.collection.newestFirst')} class="gridmenu-snap">
         <input type="checkbox" checked={selectedBlock.props.newestFirst !== false}
           onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
         {ta('lbl.newestFirst')}

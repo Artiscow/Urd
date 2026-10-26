@@ -227,7 +227,7 @@
   {/snippet}
   {#snippet ribbonText()}
       <Setting key="size">
-        <label class="field-stack">
+        <label title={ta('tip.ribbon.size')} class="field-stack">
           <span class="mini-label">{ta('lbl.size')}</span>
           <Dropdown filled value={selectedBlock.props.size ?? 'md'}
             options={[['sm', ta('opt.size.sm')], ['md', ta('opt.size.md')], ['lg', ta('opt.size.lg')], ['xl', ta('opt.size.xl')]]}

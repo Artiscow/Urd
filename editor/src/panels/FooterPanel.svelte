@@ -384,7 +384,7 @@
           {/if}
         </span>
         {#if siteDraft.footer?.brand?.logo}
-          <label>{ta('lbl.logoHeight')}
+          <label title={ta('tip.footer.logoHeight')}>{ta('lbl.logoHeight')}
             <span class="gridmenu-value">{siteDraft.footer?.brand?.logoHeight ?? 40} px</span></label>
           <input type="range" min="16" max="160" step="2" value={siteDraft.footer?.brand?.logoHeight ?? 40}
             oninput={(e) => setFooterLogoHeight(e.target.value)} />

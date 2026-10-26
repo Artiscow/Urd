@@ -43,7 +43,7 @@
   {/snippet}
   {#snippet videoPlay()}
     <Setting key="loop" shown={ta('common.off')}>
-      <label class="gridmenu-snap">
+      <label title={ta('tip.video.loop')} class="gridmenu-snap">
         <input type="checkbox" checked={selectedBlock.props.loop === true}
           onchange={(e) => setBlockProp('loop', e.target.checked)} />
         {ta('lbl.videoLoop')}
@@ -51,7 +51,7 @@
     </Setting>
     <!-- Unmuting takes the self-start with it: only a muted film may start by itself -->
     <Setting key="muted" shown={ta('common.off')}>
-      <label class="gridmenu-snap">
+      <label title={ta('tip.video.muted')} class="gridmenu-snap">
         <input type="checkbox" checked={selectedBlock.props.muted === true}
           onchange={(e) => setBlockProps('muted', e.target.checked ? { muted: true } : { muted: false, autoplay: false })} />
         {ta('lbl.videoMuted')}
@@ -68,7 +68,7 @@
     {/if}
   {/snippet}
   {#snippet videoA11y()}
-    <label>{ta('lbl.videoTitle')}
+    <label title={ta('tip.video.title')}>{ta('lbl.videoTitle')}
       <input value={selectedBlock.props.title ?? ''}
         onchange={(e) => setBlockProp('title', e.target.value)} /></label>
   {/snippet}

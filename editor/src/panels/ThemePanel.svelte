@@ -200,10 +200,10 @@
   <details class="group">
     <summary>{ta('group.typography')}</summary>
     <div class="group-items">
-      <label>{ta('lbl.headings')}
+      <label title={ta('tip.theme.headingFont')}>{ta('lbl.headings')}
         <Dropdown value={siteDraft.theme.tokens.font.heading} options={fontOptions('heading')}
           onchange={(v) => setFontToken('heading', v)} /></label>
-      <label>{ta('lbl.bodyText')}
+      <label title={ta('tip.theme.bodyFont')}>{ta('lbl.bodyText')}
         <Dropdown value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
           onchange={(v) => setFontToken('body', v)} /></label>
       <div class="sample typo-sample">
@@ -220,10 +220,10 @@
         <span class="fp-btn">{ta('preview.button')}</span>
         <span class="fp-card">{ta('preview.card')}</span>
       </div>
-      <label class="ctl-row">{ta('lbl.smallCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
+      <label title={ta('tip.theme.radiusSm')} class="ctl-row">{ta('lbl.smallCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
       <input type="range" min="0" max="24" step="1" value={radiusNum(siteDraft.theme.tokens.radius.sm)}
         oninput={(e) => setRadiusPx('sm', Number(e.target.value))} />
-      <label class="ctl-row">{ta('lbl.largeCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
+      <label title={ta('tip.theme.radiusMd')} class="ctl-row">{ta('lbl.largeCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
       <input type="range" min="0" max="40" step="1" value={radiusNum(siteDraft.theme.tokens.radius.md)}
         oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
   </details>

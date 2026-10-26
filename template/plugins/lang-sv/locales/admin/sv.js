@@ -1496,7 +1496,7 @@ export default {
     'tip.product.source': 'Produkterna hämtas från en samling av typen «Produkter»',
     'tip.product.columns': 'Tomt eller 0 ger kolumnantal efter bredden',
     'tip.product.currency': 'Ordet som visas efter priset, t.ex. kr',
-    'tip.cart.checkout': 'Sidan lådans «Till kassan»-länk går till',
+    'tip.cart.checkout': 'Sidan lådans «Till kassan»-länk går till; tomt använder kassasidan för varukorgen i menyn',
     'tip.entry.memberPrice': 'Valfritt rabatterat pris; visas bredvid ordinarie pris',
     'tip.entry.badge': 'Kort etikett på kortet, t.ex. Nyhet eller Erbjudande',
     'tip.entry.sizes': 'Kommaseparerad lista; visas som valchips på kortet',

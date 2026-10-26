@@ -19,7 +19,7 @@
 
 {#if area === 'content'}
   {#snippet countdownTarget()}
-    <label>{ta('lbl.countdownTarget')}
+    <label title={ta('tip.countdown.target')}>{ta('lbl.countdownTarget')}
       <input type="datetime-local" value={selectedBlock.props.target ?? ''}
         onchange={(e) => setBlockProp('target', e.target.value)} /></label>
     <label title={ta('tip.countdown.done')}>{ta('lbl.countdownDone')}
@@ -34,7 +34,7 @@
     </Setting>
     <Setting key="showSeconds" shown={ta('common.on')}>
       <div class="pin-line">
-        <label class="gridmenu-snap">
+        <label title={ta('tip.countdown.seconds')} class="gridmenu-snap">
           <input type="checkbox" checked={selectedBlock.props.showSeconds !== false}
             onchange={(e) => setBlockProp('showSeconds', e.target.checked)} />
           {ta('lbl.countdownSeconds')}

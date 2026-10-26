@@ -128,6 +128,10 @@ function select(paths) {
     const parent = dirname(path);
     const folders = [parent, dirname(parent)].filter((d) => d && d !== '.').map((d) => `${basename(d)}/`).filter((f) => !GENERIC.has(f));
     const byFolder = !existsInHead(path) || path.startsWith('editor/src/');
+    // A test that walks the whole editor source from its root stands for every Svelte file in it (the button names, the label tooltips, the imports).
+    if (path.startsWith('editor/src/') && path.endsWith('.svelte')) {
+      for (const t of all) if (t.text.includes("'../editor/src/'")) tests.set(t.name, `walks the editor source (${name})`);
+    }
     for (const t of all) {
       if (t.text.includes(name)) tests.set(t.name, paths.includes(path) ? `names ${name}` : `names ${name}, which imports a changed module`);
       else if (byFolder) {

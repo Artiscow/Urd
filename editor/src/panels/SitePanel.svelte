@@ -422,10 +422,10 @@
                 <div class="site-cal-clip">
                   <div class="site-cal-fields">
                     <span class="mini-label site-cal-section">{ta('group.siteCalBasics')}</span>
-                    <label class="site-cal-field">{ta('lbl.name')}
-                      <input value={cal.name ?? ''} placeholder={ta('calendar.sourceName')} title={ta('tip.calendar.sourceName')} data-cal-name={cal.id}
+                    <label title={ta('tip.calendar.sourceName')} class="site-cal-field">{ta('lbl.name')}
+                      <input value={cal.name ?? ''} placeholder={ta('calendar.sourceName')} data-cal-name={cal.id}
                         onchange={(e) => setSiteCalendar(ci, 'name', e.target.value)} /></label>
-                    <label class="site-cal-field">{ta('calendar.sourceUrl')}
+                    <label title={ta('tip.siteCal.url')} class="site-cal-field">{ta('calendar.sourceUrl')}
                       <input value={cal.url} placeholder={ta('calendar.sourcesPh')} spellcheck="false"
                         onchange={(e) => setSiteCalendar(ci, 'url', e.target.value, true)} /></label>
                     <label class="site-cal-field" title={ta('tip.siteCal.description')}>{ta('siteCal.description')}
@@ -505,18 +505,18 @@
           oninput={(e) => setContact('legalName', e.target.value)} /></label>
       {#snippet idField(def)}
         {#if def.status}
-          <label class="gridmenu-snap">
+          <label title={ta('tip.site.idStatus')} class="gridmenu-snap">
             <input type="checkbox" checked={siteDraft.site.contact?.ids?.[def.key] === true}
               onchange={(e) => setContactMap('ids', def.key, e.target.checked)} />
             {def.label}
           </label>
         {:else}
           {#if def.ownLabel}
-            <label class="field-stack">{ta('lbl.ownLabel')}
+            <label title={ta('tip.site.ownLabel')} class="field-stack">{ta('lbl.ownLabel')}
               <input value={siteDraft.site.contact?.label ?? ''} oninput={(e) => setContact('label', e.target.value)} /></label>
           {/if}
           {@const state = idState[def.key] ?? 'ok'}
-          <label class="field-stack">{def.ownLabel ? ta('lbl.idNumber') : def.label}
+          <label title={ta('tip.site.idNumber')} class="field-stack">{def.ownLabel ? ta('lbl.idNumber') : def.label}
             <input value={formatId(def, siteDraft.site.contact?.ids?.[def.key] ?? '')} spellcheck="false" class:place-error={state === 'bad' || state === 'form'}
               aria-invalid={state === 'bad' || state === 'form'} aria-describedby={state === 'ok' ? undefined : `contact-note-${def.key}`}
               onchange={(e) => setContactId(def, e.target.value)} /></label>
@@ -526,7 +526,7 @@
           <!-- What the number is written with, and the register it stands in, only once the number is there -->
           {#if siteDraft.site.contact?.ids?.[def.key]}
             {#if def.extra}
-              <label class="field-stack">{ta(`lbl.extra.${def.extra}`)}
+              <label title={ta('tip.site.idExtra')} class="field-stack">{ta(`lbl.extra.${def.extra}`)}
                 <input value={siteDraft.site.contact?.extras?.[def.key] ?? ''}
                   oninput={(e) => setContactMap('extras', def.key, e.target.value.trim())} /></label>
             {/if}
@@ -542,7 +542,7 @@
         {#if row.choice}
           {@const def = chosen(row)}
           <!-- Alternatives an organisation holds one of: the kind is picked, and only its field shows -->
-          <label class="field-stack">{ta('lbl.idKind')}
+          <label title={ta('tip.site.idKind')} class="field-stack">{ta('lbl.idKind')}
             <Dropdown value={def.key} options={row.members.map((d) => [d.key, d.label])} onchange={(v) => pickChoice(row, v)} /></label>
           {@render idField(def)}
         {:else}
@@ -557,7 +557,7 @@
         </label>
         {#if contactProfile.vat.kind === 'separate' && siteDraft.site.contact?.vat?.registered}
           {@const vatState = idState.vat ?? 'ok'}
-          <label class="field-stack">{contactProfile.vat.label ?? ta('lbl.vatNumber')}
+          <label title={ta('tip.site.vatNumber')} class="field-stack">{contactProfile.vat.label ?? ta('lbl.vatNumber')}
             <input value={siteDraft.site.contact?.vat?.number ?? ''} spellcheck="false" class:place-error={vatState === 'bad' || vatState === 'form'}
               aria-invalid={vatState === 'bad' || vatState === 'form'} aria-describedby={vatState === 'ok' ? undefined : 'contact-note-vat'}
               onchange={(e) => setContactVatNumber(e.target.value)} /></label>
@@ -569,14 +569,14 @@
       <label class="field-stack" title={ta('tip.site.representative')}>{ta('lbl.representative')}
         <input value={siteDraft.site.contact?.representative ?? ''}
           oninput={(e) => setContact('representative', e.target.value)} /></label>
-      <label class="field-stack">{ta('lbl.street')}
+      <label title={ta('tip.site.street')} class="field-stack">{ta('lbl.street')}
         <input value={siteDraft.site.contact?.address?.street ?? ''} autocomplete="off"
           oninput={(e) => setContactAddress('street', e.target.value.trim())} /></label>
       <div class="field-pair">
-        <label class="field-stack">{ta('lbl.postalCode')}
+        <label title={ta('tip.site.postalCode')} class="field-stack">{ta('lbl.postalCode')}
           <input value={siteDraft.site.contact?.address?.postalCode ?? ''} autocomplete="off"
             oninput={(e) => setContactAddress('postalCode', e.target.value.trim())} /></label>
-        <label class="field-stack">{ta('lbl.city')}
+        <label title={ta('tip.site.city')} class="field-stack">{ta('lbl.city')}
           <input value={siteDraft.site.contact?.address?.city ?? ''} autocomplete="off"
             oninput={(e) => setContactAddress('city', e.target.value.trim())} /></label>
       </div>
@@ -594,10 +594,10 @@
           <p class="panel-hint" class:place-error={geoStatus.err} role="status">{geoStatus.text}</p>
         {/if}
       {/if}
-      <label class="field-stack">{ta('lbl.phone')}
+      <label title={ta('tip.site.phone')} class="field-stack">{ta('lbl.phone')}
         <input type="tel" value={siteDraft.site.contact?.phone ?? ''} autocomplete="off"
           oninput={(e) => setContact('phone', e.target.value)} /></label>
-      <label class="field-stack">{ta('lbl.email')}
+      <label title={ta('tip.site.email')} class="field-stack">{ta('lbl.email')}
         <input type="email" value={siteDraft.site.contact?.email ?? ''} autocomplete="off" spellcheck="false"
           oninput={(e) => setContact('email', e.target.value)} /></label>
       <!-- The contact points by role (site.contact.points): the contact block's By role design and the JSON-LD's ContactPoint entries -->
@@ -605,7 +605,7 @@
       {#each contactPoints as point, i (i)}
         <div class="contact-point">
           <div class="contact-point-role">
-            <label for={`contact-point-${i}`}>{ta('lbl.contactRole')}</label>
+            <label title={ta('tip.contact.role')} for={`contact-point-${i}`}>{ta('lbl.contactRole')}</label>
             <span class="nav-line">
               <input id={`contact-point-${i}`} value={point.role ?? ''} placeholder={ta('ph.contactRole')} autocomplete="off"
                 oninput={(e) => setPointField(i, 'role', e.target.value)} />
@@ -615,13 +615,13 @@
               </span>
             </span>
           </div>
-          <label class="field-stack">{ta('lbl.email')}
+          <label title={ta('tip.contact.email')} class="field-stack">{ta('lbl.email')}
             <input type="email" value={point.email ?? ''} autocomplete="off" spellcheck="false"
               oninput={(e) => setPointField(i, 'email', e.target.value)} /></label>
-          <label class="field-stack">{ta('lbl.phone')}
+          <label title={ta('tip.contact.phone')} class="field-stack">{ta('lbl.phone')}
             <input type="tel" value={point.phone ?? ''} autocomplete="off"
               oninput={(e) => setPointField(i, 'phone', e.target.value)} /></label>
-          <label class="field-stack">{ta('lbl.contactNote')}
+          <label title={ta('tip.contact.note')} class="field-stack">{ta('lbl.contactNote')}
             <input value={point.note ?? ''} placeholder={ta('ph.contactNote')} autocomplete="off"
               oninput={(e) => setPointField(i, 'note', e.target.value)} /></label>
         </div>
@@ -697,7 +697,7 @@
     </div>
   </details>
   <hr class="gridmenu-divider" />
-  <label>{ta('lbl.siteIcon')}
+  <label title={ta('tip.site.icon')}>{ta('lbl.siteIcon')}
     {#if siteDraft.site.icon}
       <img class="site-icon-preview" src={siteDraft.site.icon} alt={ta('lbl.siteIcon')} />
     {/if}

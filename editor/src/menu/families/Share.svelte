@@ -53,7 +53,7 @@
     {#if useSite}
       <!-- Each of the site's links can be left out of this block alone (hidden, by id) -->
       {#each siteLinks() as link (link.id)}
-        <label class="gridmenu-snap link-pick">
+        <label title={`${ta('tip.share.pick')}${link.url ? `\n${link.url}` : ''}`} class="gridmenu-snap link-pick">
           <input type="checkbox" checked={!(selectedBlock.props.hidden ?? []).includes(link.id)}
             onchange={(e) => toggleSiteLink(link.id, e.target.checked)} />
           <span class="footer-soc-preview" aria-hidden="true">{#if link.image}<img src={link.image} alt="">{:else}{@html iconSvg(link.icon) || ''}{/if}</span>
@@ -78,12 +78,12 @@
       <DesignRow pin="variant" />
     </Setting>
     <Setting key="size" shown="38">
-      <label>{ta('lbl.size')}
+      <label title={ta('tip.share.size')}>{ta('lbl.size')}
         <input type="number" min="24" max="64" value={selectedBlock.props.size ?? 38}
           onchange={(e) => setBlockProp('size', Number(e.target.value) || 38)} /></label>
     </Setting>
     <Setting key="color" source="theme">
-      <label>{ta('lbl.color')}
+      <label title={ta('tip.share.color')}>{ta('lbl.color')}
         <ColorPicker value={selectedBlock.props.color || 'accent'} tokens={themeSwatches()}
           onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} /></label>
     </Setting>

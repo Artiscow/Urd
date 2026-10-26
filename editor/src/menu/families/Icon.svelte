@@ -20,7 +20,7 @@
 
 {#if area === 'content'}
   {#snippet iconIcon()}
-    <label>{ta('blocks.icon')}
+    <label title={ta('tip.icon.pick')}>{ta('blocks.icon')}
       <span class="toolbar-row">
         <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
           icon={selectedBlock.props.icon ?? null}
@@ -56,7 +56,7 @@
   {#snippet iconLook()}
     <Setting key="size" shown="48">
       <div class="pin-line">
-        <label>{ta('lbl.sizePx')}
+        <label title={ta('tip.icon.size')}>{ta('lbl.sizePx')}
           <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
             onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
         <Pin id="iconSize" />

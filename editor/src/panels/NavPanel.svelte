@@ -1332,7 +1332,7 @@
                 onchange={(e) => setNavSheet('blur', e.target.checked)} />
               {ta('lbl.sheetBlur')}
             </label>
-            <label>{ta('lbl.textColor')}
+            <label title={ta('tip.nav.sheetTextColorPick')}>{ta('lbl.textColor')}
               <ColorPicker value={siteDraft.nav.style?.sheet?.textColor ?? siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
                 label={ta('tip.nav.sheetTextColorPick')} onchange={(hex) => setNavSheet('textColor', hex)} /></label>
           {/if}

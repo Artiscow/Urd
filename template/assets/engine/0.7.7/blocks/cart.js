@@ -84,6 +84,20 @@ function renderDrawer(body, props, currency) {
  * (nav.js) build the same drawer. The caller attaches the dialog to the DOM
  * and calls open()/refresh().
  */
+/**
+ * The checkout page a basket block's drawer links to: the block's own page or path, or else the menu basket's, so a basket dropped on a page leads to the same checkout without a setting of its own.
+ * @param {{page?: string, href?: string}} props The block's props
+ * @param {{pages?: Array<{id: string, path: string}>, nav?: {cart?: object}}} site
+ * @returns {string} The address, or '' when neither is set
+ */
+export function cartCheckoutHref(props, site) {
+  const pages = site?.pages ?? [];
+  const own = resolveLink(props ?? {}, pages);
+  if (!own.missing) return own.href;
+  const menu = resolveLink(site?.nav?.cart ?? {}, pages);
+  return menu.missing ? '' : menu.href;
+}
+
 export function createCartDrawer({ href = '', currency = 'kr' } = {}) {
   const dialog = document.createElement('dialog');
   dialog.className = 'urd-cart-dialog';
@@ -143,9 +157,8 @@ export const cartBlock = {
     btn.appendChild(badge);
     el.appendChild(btn);
 
-    // The checkout page: a page in the register (props.page) or a path (props.href).
-    const checkoutLink = resolveLink(props, ctx.site?.pages ?? []);
-    const drawer = createCartDrawer({ href: checkoutLink.missing ? '' : checkoutLink.href, currency });
+    // The checkout page: the block's own (props.page or props.href), else the menu basket's.
+    const drawer = createCartDrawer({ href: cartCheckoutHref(props, ctx.site), currency });
     el.appendChild(drawer.dialog);
 
     const updateBadge = () => {

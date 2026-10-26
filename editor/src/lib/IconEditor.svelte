@@ -103,14 +103,14 @@
       <p class="ie-hint">{ta('ie.hint')}</p>
     </div>
 
-    <label class="ie-row">{ta('lbl.zoom')} <span class="ie-val">{zoom.toFixed(2)}x</span></label>
+    <label title={ta('tip.icon.zoom')} class="ie-row">{ta('lbl.zoom')} <span class="ie-val">{zoom.toFixed(2)}x</span></label>
     <input type="range" min="1" max="3" step="0.02" bind:value={zoom} />
 
-    <label class="ie-row">{ta('lbl.brightness')} <span class="ie-val">{Math.round(brightness * 100)}%</span></label>
+    <label title={ta('tip.image.brightness')} class="ie-row">{ta('lbl.brightness')} <span class="ie-val">{Math.round(brightness * 100)}%</span></label>
     <input type="range" min="0.3" max="2" step="0.02" bind:value={brightness} />
-    <label class="ie-row">{ta('lbl.contrast')} <span class="ie-val">{Math.round(contrast * 100)}%</span></label>
+    <label title={ta('tip.image.contrast')} class="ie-row">{ta('lbl.contrast')} <span class="ie-val">{Math.round(contrast * 100)}%</span></label>
     <input type="range" min="0.3" max="2" step="0.02" bind:value={contrast} />
-    <label class="ie-row">{ta('lbl.saturate')} <span class="ie-val">{Math.round(saturate * 100)}%</span></label>
+    <label title={ta('tip.image.saturate')} class="ie-row">{ta('lbl.saturate')} <span class="ie-val">{Math.round(saturate * 100)}%</span></label>
     <input type="range" min="0" max="2" step="0.02" bind:value={saturate} />
 
     <span class="ie-tools">

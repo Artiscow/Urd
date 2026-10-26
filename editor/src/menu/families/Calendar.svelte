@@ -216,7 +216,7 @@
   <!-- The site's calendars: the ticked ones are shown by this block -->
   <span class="mini-label" title={ta('tip.calendar.siteSources')}>{ta('calendar.siteSources')}</span>
   {#each siteCalendars() as reg (reg.id)}
-    <label class="gridmenu-snap">
+    <label title={`${ta('tip.calendar.useSource')}${reg.url ? `\n${reg.url}` : ''}`} class="gridmenu-snap">
       <input type="checkbox" checked={calRefs().has(reg.id)} onchange={(e) => toggleCalendarRef(reg.id, e.target.checked)} />
       {reg.name || reg.url}
     </label>
@@ -229,7 +229,7 @@
   {#snippet calViewGroup()}
   <!-- A design with a view of its own (Style) fixes the view -->
   {#if !calDesign(selectedBlock.props.design).view}
-    <label>{ta('lbl.view')}
+    <label title={ta('tip.calendar.view')}>{ta('lbl.view')}
       <Dropdown value={selectedBlock.props.view ?? 'list'}
         options={[['list', ta('calendar.viewList')], ['cards', ta('calendar.viewCards')], ['month', ta('calendar.viewMonth')], ['agenda', ta('calendar.viewAgenda')], ['next', ta('calendar.viewNext')]]}
         onchange={(v) => setBlockProp('view', v)} /></label>
@@ -336,14 +336,14 @@
     </label>
   {/if}
   <div class="pin-line">
-    <label class="gridmenu-snap">
+    <label title={ta('tip.calendar.subscribe')} class="gridmenu-snap">
       <input type="checkbox" checked={selectedBlock.props.showSubscribe !== false}
         onchange={(e) => setBlockProp('showSubscribe', e.target.checked)} />
       {ta('calendar.showSubscribe')}
     </label>
     <Pin id="subscribe" />
   </div>
-  <label class="gridmenu-snap">
+  <label title={ta('tip.calendar.signup')} class="gridmenu-snap">
     <input type="checkbox" checked={selectedBlock.props.showSignup === true}
       onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
     {ta('calendar.showSignup')}
@@ -503,7 +503,7 @@
   {#snippet calFields()}
   <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour -->
   <Dropdown value={calField} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} />
-  <label>{ta('calendar.fieldFont')}
+  <label title={ta('tip.calendar.fieldFont')}>{ta('calendar.fieldFont')}
     <Dropdown value={calFieldStyleOf().font ?? ''}
       options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])]}
       onchange={(v) => setCalField({ font: v || undefined })} /></label>

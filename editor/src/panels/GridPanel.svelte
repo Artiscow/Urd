@@ -8,13 +8,13 @@
 </script>
 
 <div class="panel-body">
-  <label>
+  <label title={ta('tip.gridSize')}>
     {ta('lbl.gridSize')}
     <span class="gridmenu-value">{grid.size} px</span>
   </label>
   <input type="range" min="4" max="96" step="2" value={grid.size}
     oninput={(e) => setGrid('size', Number(e.target.value))} />
-  <label class="gridmenu-snap">
+  <label title={ta('tip.gridSnap')} class="gridmenu-snap">
     <input type="checkbox" checked={grid.snap !== false}
       onchange={(e) => setGrid('snap', e.target.checked)} />
     {ta('lbl.gridSnap')}

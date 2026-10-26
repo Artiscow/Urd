@@ -72,8 +72,8 @@
   /** The settings of the core blocks that use the field contract. */
   const CORE_FIELDS = {
     map: [
-      { key: 'location', type: 'place', label: ta('lbl.mapLocation'), placeholder: ta('ph.mapLocation') },
-      { key: 'zoom', type: 'number', label: ta('lbl.mapZoom'), min: 1, max: 19 },
+      { key: 'location', type: 'place', label: ta('lbl.mapLocation'), hint: ta('tip.map.location'), placeholder: ta('ph.mapLocation') },
+      { key: 'zoom', type: 'number', label: ta('lbl.mapZoom'), hint: ta('tip.map.zoom'), min: 1, max: 19 },
     ],
   };
 </script>
@@ -88,7 +88,7 @@
     {#each pluginFields as f (f.key)}
       {#if f.type === 'place'}
         {@const k = `${selectedBlock.blockId}:${f.key}`}
-        <label>{f.label}
+        <label title={f.hint || f.label}>{f.label}
           <input type="text" placeholder={f.placeholder}
             value={placeDrafts[k] ?? selectedBlock.props[f.key] ?? ''}
             oninput={(e) => { placeDrafts[k] = e.target.value; }}
@@ -99,29 +99,29 @@
         {/if}
       {:else if f.type === 'number'}
         <div class="pin-line">
-          <label>{f.label}
+          <label title={f.hint || f.label}>{f.label}
             <input type="number" min={f.min} max={f.max} step={f.step ?? 1}
               value={selectedBlock.props[f.key]}
               onchange={(e) => setBlockProp(f.key, clampField(f, Number(e.target.value)))} /></label>
           {#if selectedBlock.type === 'map' && f.key === 'zoom'}<Pin id="zoom" />{/if}
         </div>
       {:else if f.type === 'toggle'}
-        <label class="gridmenu-snap">
+        <label title={f.hint || f.label} class="gridmenu-snap">
           <input type="checkbox" checked={Boolean(selectedBlock.props[f.key])}
             onchange={(e) => setBlockProp(f.key, e.target.checked)} />
           {f.label}
         </label>
       {:else if f.type === 'link'}
         <!-- The link shape under the field's own key, set through the link editor; null when it is removed -->
-        <LinkField label={f.label} value={selectedBlock.props[f.key] ?? null}
+        <LinkField label={f.label} title={f.hint || f.label} value={selectedBlock.props[f.key] ?? null}
           onchange={(next) => setBlockProp(f.key, next)} />
       {:else if f.type === 'select'}
-        <label>{f.label}
+        <label title={f.hint || f.label}>{f.label}
           <Dropdown value={selectedBlock.props[f.key]}
             options={(f.options ?? []).map((o) => [o.value, o.label])}
             onchange={(v) => setBlockProp(f.key, v)} /></label>
       {:else}
-        <label>{f.label}
+        <label title={f.hint || f.label}>{f.label}
           <input type="text" placeholder={f.placeholder} value={selectedBlock.props[f.key] ?? ''}
             onchange={(e) => setBlockProp(f.key, e.target.value)} /></label>
       {/if}

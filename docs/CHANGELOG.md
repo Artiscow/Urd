@@ -28,6 +28,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.10.7 - The intuitiveness review, sixth stage: a tooltip on every label - 25 October 2026
+
+- 169 labels in the editor had no «?» tooltip, against the panel rule that every setting is explained in one: 118 in the panels, the element menu and the shell, and 51 in the background editor, the icon editor and the link dialog. Each now has one, reusing a key where the same setting is explained elsewhere, with 133 new keys in nb, en-GB and tr; `tests/label-titles.test.mjs` reads every Svelte file through Svelte's parser and fails on a label without a title.
+- A plugin block's settings had no way to carry a tooltip. The field contract takes an optional `hintKey` (or `hint`), shown as the field's tooltip, with its label as the fallback (SCHEMA.md, template/plugins/README.md); the core map block's two fields carry one.
+- The quick verification never selected the tests that read every Svelte file from the editor's root (the button names, the label tooltips, the imports), so an untitled label passed until the full round. A change to a Svelte file now selects them (scripts/verify.mjs).
+- The box style's border stepper, the background size stepper, the colour picker's save button and the mark picker's empty swatch drew «−» and «+» as characters. They draw the minus and plus icons now.
+- A basket block with no checkout page of its own drew its drawer without «Go to checkout», while the menu's basket had it. The block now falls back to the menu basket's checkout page (`cartCheckoutHref` in blocks/cart.js), and its menu and tooltip say which page it uses.
+- In the editor, «Go to checkout» in a basket block's drawer did nothing, since the preview holds back every link inside a block. The drawer's link now switches the editor to the checkout page, as the menu basket's does (preview-edit.js).
+- The glyph picker's and the mark picker's search fields had to be clicked before a word could be typed, and a hit could only be chosen with the mouse. The field takes the focus as the picker opens, typing marks the first hit, the arrows walk the cells and Enter chooses the marked one, as in the canvas block menu (`cell-walk.js`, with the geometry in `cell-walk.test.mjs`).
+
 ### 0.7.28.6 - The pay buttons say when nothing is set up - 24 October 2026
 
 - In the editor a click on **Pay with Vipps**, the card button or **Pay with PayPal** did nothing, and on a site without functions the published button answered «Could not send right now». Each checkout endpoint now answers a GET with whether its provider is set up (no secret leaves, never cached), and in the editor a click on a pay button says whether the provider is set up, that its keys are missing, or that the site's functions do not answer from there; on the published page a missing function reads as «Payment is not set up for this site yet», as a missing key does.
