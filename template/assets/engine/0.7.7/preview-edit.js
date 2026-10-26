@@ -19,7 +19,7 @@
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
  *                  urd-select-section carries `open: true` from the right-click menu's «Section settings»: the editor opens the Properties panel on the section
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
- *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
+ *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  */
 import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH } from './push-model.js';
@@ -4236,6 +4236,8 @@ function enhanceBlock(el, block, section, grid, host) {
         // block = native click (the drawer opens), unselected block =
         // surface drag and selection.
         if (target?.closest('.urd-cart-button, .urd-share-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
+        // A product card of the selected block follows the same two steps: its click opens the product's entry in the Collections panel (blocks/product.js).
+        if (!mobile && target?.closest('.urd-product-card') && selectedBlockId === block.id && multiIds.size <= 1) return;
         // In the Clean view a links row keeps its click too, as the calendar's links do.
         if (document.body.classList.contains('urd-chrome-off') && target?.closest('.urd-share-button')) return;
         // In the Clean view a calendar event keeps its click: it opens the event in full, as on the published page.

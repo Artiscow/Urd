@@ -28,6 +28,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.10.8 - The shop's way between the panels - 26 October 2026
+
+- The products, the checkout page and the shop currency lived in three panels with no way between them from the shop's blocks. The product cards and the checkout menus now have a **Shop** group with one-click links between them: the checkout or the shop page, the catalogue and the shop currency (`ShopLinks.svelte`, `openPageWith` in page.svelte.js).
+- A product card on the canvas could not lead to its product. On a product cards block selected alone, a click on a card outside its title and text opens the product's entry in the Collections panel, with the price, the badge or the sizes focused where those were clicked (`urd-open-entry`, SCHEMA.md); in the editing view the block is then moved by its grip, as the calendar is.
+- A product cards block with no catalogue said only to choose one in Properties. It says that no catalogue is chosen and offers «Choose the catalogue», which opens its menu at the Catalogue group (base.css; the eight shells restamped).
+
 ### 0.7.10.7 - The intuitiveness review, sixth stage: a tooltip on every label - 25 October 2026
 
 - 169 labels in the editor had no «?» tooltip, against the panel rule that every setting is explained in one: 118 in the panels, the element menu and the shell, and 51 in the background editor, the icon editor and the link dialog. Each now has one, reusing a key where the same setting is explained elsewhere, with 133 new keys in nb, en-GB and tr; `tests/label-titles.test.mjs` reads every Svelte file through Svelte's parser and fails on a label without a title.

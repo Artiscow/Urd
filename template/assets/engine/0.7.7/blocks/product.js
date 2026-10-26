@@ -8,9 +8,12 @@
  * For visitors, clicking the image or title opens a quick view: the product
  * details in a native <dialog> (ADR-0011) with an image gallery, full text,
  * variant choices and a buy button - the product page without a page change
- * (the Squarespace pattern). In the editor clicks belong to editing, and a
+ * (the Squarespace pattern). In the editor clicks belong to editing: a
  * "+ Product" card at the end of the grid adds a new product to the collection
- * (urd-collection-add).
+ * (urd-collection-add), a click on a card of the selected block opens its
+ * product in the Collections panel (urd-open-entry), and a block with no
+ * catalogue offers «Choose the catalogue» (urd-block-menu at its Catalogue
+ * group).
  *
  * The content is structured DATA: title and text are rich text through the same
  * sanitizing as the collection block, everything else renders with textContent.
@@ -293,6 +296,40 @@ function adderCard(collection) {
   return btn;
 }
 
+/**
+ * The editor's way from a card to its entry: once the block is selected alone, a click on a card part that is not written on the card itself (the price, the badge, the choices, the picture, the card around them) opens the product's entry in the Collections panel (urd-open-entry), with the price, the badge or the sizes focused, and else the title.
+ * The title and the text keep click-and-type, the buy button keeps filling the basket, and a Shift-click, a selected set and the Clean view open nothing.
+ */
+function wireEntryOpening(card, el, collection, entryId) {
+  let armed = false;
+  card.addEventListener('pointerdown', (event) => {
+    const host = el.closest('.urd-block');
+    armed = Boolean(host?.classList.contains('urd-selected')) && !host.classList.contains('urd-multi-selected')
+      && !document.body.classList.contains('urd-chrome-off') && !event.shiftKey;
+  });
+  card.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!armed || event.shiftKey || !target || target.closest('.urd-collection-editable, .urd-product-buy, .urd-product-adder')) return;
+    const field = target.closest('.urd-product-price') ? 'price'
+      : target.closest('.urd-product-badge') ? 'badge'
+        : target.closest('.urd-product-sizes') ? 'sizes'
+          : target.closest('.urd-product-colors') ? 'colors'
+            : 'title';
+    post({ type: 'urd-open-entry', collection, entryId, field });
+  });
+}
+
+/** The «Choose the catalogue» button of a block with none: the element menu opens at the block with its Catalogue group open. */
+function chooseCatalogButton(el, ctx) {
+  const btn = el2('button', 'urd-product-adder urd-product-choose', ta('canvas.productChoose'));
+  btn.type = 'button';
+  btn.addEventListener('click', () => {
+    const r = el.getBoundingClientRect();
+    post({ type: 'urd-block-menu', sectionId: ctx.section?.id, blockId: el.dataset.blockId, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom }, group: 'product-catalog' });
+  });
+  return btn;
+}
+
 function emptyState(el, ctx, message, action) {
   if (!ctx.preview) return;
   const box = el2('div', 'urd-collection-empty', message);
@@ -331,7 +368,7 @@ export const productBlock = {
       // other blocks, so the choice in Properties is never inert.
       if (block) renderCardAnimations(el, [el], block, ctx);
       adminLocaleReady.then(() => {
-        if (host.isConnected) emptyState(el, ctx, ta('canvas.productEmpty'));
+        if (host.isConnected) emptyState(el, ctx, ta('canvas.productEmpty'), editable ? chooseCatalogButton(el, ctx) : null);
       });
       return;
     }
@@ -366,6 +403,7 @@ export const productBlock = {
         grid.style.setProperty('--urd-product-cols-narrow', String(Math.min(columns, 2)));
       }
       const cards = entries.map((entry) => renderCard(entry, props, editable, Boolean(ctx.preview)));
+      if (editable) cards.forEach((card, i) => wireEntryOpening(card, el, props.collection, entries[i].id));
       grid.append(...cards);
       host.appendChild(grid);
 

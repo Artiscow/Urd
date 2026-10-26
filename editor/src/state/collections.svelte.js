@@ -36,6 +36,16 @@ let collectionsUnavailable = $state(false);
 let collectionsView = $state({});
 
 let activeCollection = $state(null);
+/** The entry and field a click on a product card in the preview asks for: the panel opens the entry and focuses the field, then clears it. */
+let focusEntry = $state(null);
+
+/** A click on a card in the preview (urd-open-entry): the Collections panel on that collection, with the entry open and its field focused. */
+function openEntry(msg) {
+  if (typeof msg?.collection !== 'string' || !collectionIds.includes(msg.collection) || typeof msg.entryId !== 'string') return;
+  activeCollection = msg.collection;
+  focusEntry = { id: msg.entryId, field: typeof msg.field === 'string' ? msg.field : 'title' };
+  shellState.activePanel = 'collections';
+}
 
 let newCollectionName = $state('');
 
@@ -242,6 +252,9 @@ export const collectionsState = {
   set collectionsView(v) { collectionsView = v; },
   get activeCollection() { return activeCollection; },
   set activeCollection(v) { activeCollection = v; },
+  get focusEntry() { return focusEntry; },
+  set focusEntry(v) { focusEntry = v; },
+  openEntry,
   get newCollectionName() { return newCollectionName; },
   set newCollectionName(v) { newCollectionName = v; },
   get newCollectionKind() { return newCollectionKind; },

@@ -59,6 +59,10 @@
     hoverOptions: () => pageState.HOVER_OPTIONS,
     openPanel: (panel, opts = {}) => {
       if (opts.calendars) siteState.siteCalendarsOpen = true;
+      if (opts.shop) {
+        siteState.siteShopOpen = true;
+        siteState.focusShopCurrency = true;
+      }
       shellState.activePanel = panel;
     },
     openCollection: (id) => {

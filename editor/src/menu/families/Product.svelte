@@ -9,6 +9,7 @@
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
+  import ShopLinks from '../ShopLinks.svelte';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const collectionIds = $derived(ed.collectionIds);
@@ -49,6 +50,7 @@
     </Setting>
   {/snippet}
   <MenuGroup id="product-catalog" title={ta('group.catalog')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('product-catalog', { limit: 0 })}>{@render productCatalog()}</MenuGroup>
+  <MenuGroup id="product-shop" title={ta('group.siteShop')} value={ed.siteDraft?.site?.commerce?.currency || 'NOK'}><ShopLinks from="product" /></MenuGroup>
   <MenuGroup id="product-price" title={ta('lbl.price')} value={selectedBlock.props.currency ?? 'kr'} group={groupOf('product-price', { currency: 'kr' })}>{@render productPrice()}</MenuGroup>
 {:else if area === 'style'}
   {#snippet productGrid()}

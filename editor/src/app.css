@@ -1096,6 +1096,13 @@
     opacity: 0.6;
   }
 
+  /* The Shop group's links to the shop's other parts, one under the other */
+  .shop-links {
+    display: grid;
+    justify-items: start;
+    gap: 0.35rem;
+  }
+
   /* A short state beside a field, named by its tooltip */
   .field-note {
     display: inline-flex;

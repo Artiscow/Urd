@@ -29,7 +29,7 @@
  *                  { type: 'urd-undo', redo }                 (Ctrl+Z inside the iframe)
  *                  { type: 'urd-select-section', sectionId }  (active section for the palette)
  *                  { type: 'urd-select-block', sectionId, blockId } (selected block, null = deselected)
- *                  { type: 'urd-block-menu', sectionId, blockId, rect } (open the block menu at the block)
+ *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? } (open the block menu at the block; `group` opens that group in its Content area)
  *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
  *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
  *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
@@ -40,6 +40,7 @@
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey? } (block dropped in another section; groupKey joins the frames its drag settled in the source)
  *                  { type: 'urd-collection-edit', collection, entryId, field, value } (click-to-type/image swap in the collection block)
  *                  { type: 'urd-collection-add', collection } (new entry from the "+ Product" adder in the product block)
+ *                  { type: 'urd-open-entry', collection, entryId, field } (a click on a product card of a selected block: its entry in the Collections panel, the field focused)
  *                  { type: 'urd-nav-width', width }           (side-by-side column width dragged in the preview)
  *                  { type: 'urd-save-template', kind, section | blocks } (Save as template: an unnamed snapshot; the editor names and stores it)
  *                  { type: 'urd-sticky-group', sectionId, blockIds, on } (Pin the group: one shared sticky group across the whole selection, or dissolve it)
@@ -110,6 +111,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-block-style') handlers.onBlockStyle?.(msg);
     if (msg?.type === 'urd-collection-edit') handlers.onCollectionEdit?.(msg);
     if (msg?.type === 'urd-collection-add') handlers.onCollectionAdd?.(msg);
+    if (msg?.type === 'urd-open-entry') handlers.onOpenEntry?.(msg);
     if (msg?.type === 'urd-nav-width') handlers.onNavWidth?.(msg);
     if (msg?.type === 'urd-save-template') handlers.onSaveTemplate?.(msg);
     if (msg?.type === 'urd-sticky-group') handlers.onStickyGroup?.(msg);

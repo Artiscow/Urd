@@ -379,6 +379,10 @@ let focusSiteLink = $state(null);
 
 /** Whether the Site panel's Links group stands open; the buttons that lead there open it. */
 let siteLinksOpen = $state(false);
+/** The Shop group of the Site panel, opened from the shop's blocks (the shop currency). */
+let siteShopOpen = $state(false);
+/** Set by the shop's «Shop currency» link: the Site panel brings the currency field into view and focuses it, then clears it. */
+let focusShopCurrency = $state(false);
 
 /** Whether the Site panel's contact details group is open; the Footer panel opens it with «Edit contact details». */
 let siteContactOpen = $state(false);
@@ -615,6 +619,16 @@ export function effects() {
   });
 
   $effect(() => {
+    if (!focusShopCurrency) return;
+    focusShopCurrency = false;
+    tick().then(() => {
+      const field = document.querySelector('[data-field="shop-currency"]');
+      field?.scrollIntoView({ block: 'nearest' });
+      field?.focus({ preventScroll: true });
+    });
+  });
+
+  $effect(() => {
     const id = focusSiteLink;
     if (!id) return;
     focusSiteLink = null;
@@ -691,6 +705,10 @@ export const siteState = {
   siteLangOptions,
   get siteCalendarsOpen() { return siteCalendarsOpen; },
   set siteCalendarsOpen(v) { siteCalendarsOpen = v; },
+  get siteShopOpen() { return siteShopOpen; },
+  set siteShopOpen(v) { siteShopOpen = v; },
+  get focusShopCurrency() { return focusShopCurrency; },
+  set focusShopCurrency(v) { focusShopCurrency = v; },
   get openSiteCalendar() { return openSiteCalendar; },
   set openSiteCalendar(v) { openSiteCalendar = v; },
   get focusSiteCalendar() { return focusSiteCalendar; },

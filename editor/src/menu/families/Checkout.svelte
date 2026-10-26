@@ -11,6 +11,7 @@
   import { ta } from '$engine/i18n.js';
   import { paymentsOf, anyProvider, currencyWord, CARD_PROVIDERS } from '$engine/shop.js';
   import { makeGroupHelpers } from '../groups.js';
+  import ShopLinks from '../ShopLinks.svelte';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps } = ed;
@@ -104,5 +105,6 @@
   {/snippet}
   <MenuGroup id="checkout-order" title={ta('group.order')} value={selectedBlock.props.recipient || selectedBlock.props.endpoint || ta('common.none')} group={groupOf('checkout-order', { currency: 'kr' })}>{@render checkoutOrder()}</MenuGroup>
   <MenuGroup id="checkout-payment" title={ta('group.payment')} value={paymentValue} group={groupOf('checkout-payment', { payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } })}>{@render checkoutPayment()}</MenuGroup>
+  <MenuGroup id="checkout-shop" title={ta('group.siteShop')} value={ed.siteDraft?.site?.commerce?.currency || 'NOK'}><ShopLinks from="checkout" /></MenuGroup>
   <MenuGroup id="checkout-seller" title={ta('lbl.checkoutSeller')} value={selectedBlock.props.seller === false ? ta('common.off') : ta('common.on')} group={groupOf('checkout-seller', { seller: true })}>{@render checkoutSeller()}</MenuGroup>
 {/if}

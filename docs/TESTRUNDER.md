@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.10.8): the shop's way between the panels
+
+- [ ] A product cards block's menu: the Shop group shows «Go to the checkout page» and «Shop currency»; the first switches the editor to the page with the checkout block and closes the menu, the second opens the Site panel with its Shop group open and the currency field focused; with the checkout on the same page, the first scrolls to it
+- [ ] The checkout block's menu: the Shop group shows «Edit the product catalogue», «Go to the shop page» and «Shop currency», each going where it says; on a site without product cards, «Go to the shop page» says no page has product cards yet
+- [ ] Select a product cards block and click a card's price: the Collections panel opens on that product with the price field focused; the badge, a size chip and the picture open the same entry; a click on the title still lets you type in it, and the buy button still fills the basket
+- [ ] An unselected product cards block: the first click selects it and opens nothing
+- [ ] A product cards block with no catalogue: the canvas says no catalogue is chosen, and «Choose the catalogue» opens its menu at the Catalogue group
+
 ### Test batch (0.7.10.7): a tooltip on every label
 
 - [ ] Hover the labels in the Site panel's contact details, the Collections panel's entries, the element menu's Placement group, an image block's settings and a section background's gradient, glow and pictures: each shows a tooltip that says what the setting does, in the admin's language

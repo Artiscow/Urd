@@ -194,6 +194,7 @@ function onIframeLoad() {
     onBlockFlag: bridgeState.handleBlockFlag,
     onBlockStyle: bridgeState.handleBlockStyle,
     onCollectionEdit: collectionsState.handleCollectionEdit,
+    onOpenEntry: collectionsState.openEntry,
     onCollectionAdd: collectionsState.handleCollectionAdd,
     onSaveTemplate: templatesState.handleSaveTemplate,
     onStickyGroup: bridgeState.handleStickyGroup,

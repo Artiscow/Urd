@@ -630,12 +630,12 @@
     </div>
   </details>
   <!-- The shop's settings for the whole site -->
-  <details class="group">
+  <details class="group" bind:open={() => ed.siteShopOpen, (v) => (ed.siteShopOpen = v)}>
     <summary title={ta('tip.site.shop')}>{ta('group.siteShop')}</summary>
     <div class="group-items">
       <!-- The shop's currency: the ISO code the payment layer charges in, and the word the checkout shows with a provider on -->
       <label class="field-stack" title={ta('tip.settings.currency')}>{ta('settings.currency')}
-        <input value={siteDraft.site.commerce?.currency ?? ''} placeholder="NOK" maxlength="3" spellcheck="false" class:place-error={ed.siteCurrencyBad}
+        <input value={siteDraft.site.commerce?.currency ?? ''} placeholder="NOK" maxlength="3" spellcheck="false" class:place-error={ed.siteCurrencyBad} data-field="shop-currency"
           onchange={(e) => setSiteCurrency(e.target.value)} /></label>
     </div>
   </details>

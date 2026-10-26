@@ -3,7 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { tick } from 'svelte';
-import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea } from '../menu/state.svelte.js';
+import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea, menuOpen } from '../menu/state.svelte.js';
 import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES } from '$engine/push-model.js';
@@ -175,6 +175,11 @@ let menuAnchor = null;
 function onBlockMenu(msg) {
   onSelectBlock(msg);
   if (!selectedBlock) return;
+  // A request for one group (the product cards' «Choose the catalogue») opens it in the Content area.
+  if (typeof msg.group === 'string' && /^[a-z-]+$/.test(msg.group)) {
+    menuOpen.add(msg.group);
+    chooseArea('content');
+  }
   menuAnchor = msg.rect;
   blockMenu = menuPlaceFor(msg.rect);
 }
@@ -883,6 +888,37 @@ async function readPageDraft(entry) {
   return blankPage(entry);
 }
 
+/** Set while openPageWith searches, so a second click waits for nothing and starts nothing. */
+let pageSearch = false;
+
+/**
+ * Opens the page that holds a block of the type (the shop's links: the checkout page from the product cards, the shop page from the checkout), the open page first, then the pages in the Pages panel's order.
+ * The element menu closes first, since its block stays behind; on the open page the preview scrolls to the block's section, and a status line says so when no page holds one.
+ * @param {string} type
+ */
+async function openPageWith(type) {
+  if (pageSearch) return;
+  pageSearch = true;
+  try {
+    await pageLoading;
+    const sectionWith = (page) => (page?.sections ?? []).find((s) => (s.blocks ?? []).some((b) => b.type === type)) ?? null;
+    const entries = siteState.siteDraft.pages ?? [];
+    const here = entries.find((p) => p.id === pageId);
+    for (const entry of [here, ...entries.filter((p) => p !== here)].filter(Boolean)) {
+      const section = sectionWith(entry.id === pageId ? store?.data : await readPageDraft(entry));
+      if (!section) continue;
+      blockMenu = null;
+      selectedBlock = null;
+      if (entry.id === pageId) previewState.bridge?.sendScrollSection(section.id);
+      else await selectPage(entry.id);
+      return;
+    }
+    shellState.setStatus(ta(type === 'checkout' ? 'status.noCheckoutPage' : 'status.noShopPage'));
+  } finally {
+    pageSearch = false;
+  }
+}
+
 /** Changes another page's draft (creates a draft from published as needed). */
 async function patchPageDraft(entry, fn) {
   const page = await readPageDraft(entry);
@@ -1097,6 +1133,7 @@ export const pageState = {
   blankPage,
   selectPage,
   readPageDraft,
+  openPageWith,
   patchPageDraft,
   addGalleryImages,
   moveGalleryImage,

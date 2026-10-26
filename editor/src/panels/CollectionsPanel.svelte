@@ -1,6 +1,6 @@
 <script>
   /* The Collections panel: the collections and their entries, with the images, sizes and colours of a product, and CSV in and out. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
-  import { getContext } from 'svelte';
+  import { getContext, tick } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeId } from '$engine/sections/presets.js';
@@ -14,6 +14,20 @@
   const collectionStores = $derived(ed.collectionStores);
   const collectionsView = $derived(ed.collectionsView);
   const { addCollection, addCollectionEntry, compressOrTrim, mutateCollection, plainTitle, removeCollection, setStatus } = ed;
+  let panelEl = $state(null);
+  // A click on a product card in the preview (urd-open-entry): the entry opens, scrolls into view and its field takes the focus.
+  $effect(() => {
+    const want = ed.focusEntry;
+    if (!want || !panelEl) return;
+    tick().then(() => {
+      const box = panelEl.querySelector(`[data-entry-id="${CSS.escape(want.id)}"]`);
+      ed.focusEntry = null;
+      if (!box) return;
+      box.open = true;
+      box.scrollIntoView({ block: 'nearest' });
+      (box.querySelector(`[data-field="${CSS.escape(want.field)}"]`) ?? box.querySelector('[data-field="title"]'))?.focus();
+    });
+  });
 
   const COLLECTION_KINDS = [
     ['news', ta('collectionKind.news')],
@@ -138,7 +152,7 @@
   }
 </script>
 
-<div class="panel-body">
+<div class="panel-body" bind:this={panelEl}>
   {#if ed.collectionsUnavailable}
     <p class="panel-hint place-error">{ta('collections.unreadable')}</p>
   {/if}
@@ -163,13 +177,13 @@
     </span>
     {#each collectionView.entries as entry, i (entry.id)}
       <!-- Collapsible entry: title + date in the summary, the fields inside (panel space) -->
-      <details class="group collection-entry">
+      <details class="group collection-entry" data-entry-id={entry.id}>
         <summary>{plainTitle(entry.title)}{collectionView.kind === 'products'
           ? (entry.price != null ? ` · ${entry.price}` : '')
           : (entry.date ? ` · ${entry.date}` : '')}</summary>
         <div class="group-items">
           <span class="toolbar-row">
-            <input value={entry.title} title={ta('lbl.title')}
+            <input value={entry.title} title={ta('lbl.title')} data-field="title"
               onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'title', e.target.value || ta('ui.untitled'))} />
             <span class="row-tools">
               <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveEntry(ed.activeCollection, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
@@ -184,7 +198,7 @@
               <input type="date" value={entry.date ?? ''}
                 onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'date', e.target.value)} /></label>
           {/if}
-          <textarea rows="3" placeholder={ta('ph.collections.text')}
+          <textarea rows="3" placeholder={ta('ph.collections.text')} data-field="text"
             value={entry.text ?? ''}
             onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'text', e.target.value)}></textarea>
           {#if collectionView.kind !== 'products'}
@@ -211,16 +225,16 @@
           {#if collectionView.kind === 'products'}
             <!-- The product fields (the shop): price, member price, badge, sizes and colors. -->
             <label title={ta('tip.entry.price')}>{ta('lbl.price')}
-              <input type="number" min="0" step="0.01" value={entry.price ?? ''}
+              <input type="number" min="0" step="0.01" value={entry.price ?? ''} data-field="price"
                 onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
             <label title={ta('tip.entry.memberPrice')}>{ta('lbl.memberPrice')}
               <input type="number" min="0" step="0.01" value={entry.memberPrice ?? ''}
                 onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'memberPrice', e.target.value === '' ? '' : Number(e.target.value))} /></label>
             <label title={ta('tip.entry.badge')}>{ta('lbl.productBadge')}
-              <input value={entry.badge ?? ''}
+              <input value={entry.badge ?? ''} data-field="badge"
                 onchange={(e) => setEntryField(ed.activeCollection, entry.id, 'badge', e.target.value)} /></label>
             <label title={ta('tip.entry.sizes')}>{ta('lbl.sizes')}
-              <input value={(entry.sizes ?? []).join(', ')} placeholder={ta('ph.sizes')}
+              <input value={(entry.sizes ?? []).join(', ')} placeholder={ta('ph.sizes')} data-field="sizes"
                 onchange={(e) => setEntrySizes(ed.activeCollection, entry.id, e.target.value)} /></label>
             {#each entry.colors ?? [] as color, ci (ci)}
               <span class="toolbar-row">
@@ -236,7 +250,7 @@
                 <button class="ghost row-tool" title={ta('tip.entry.removeColor')} onclick={() => removeEntryColor(ed.activeCollection, entry.id, ci)}>{@html ICONS.cross}</button>
               </span>
             {/each}
-            <button class="ghost action" title={ta('tip.entry.colors')}
+            <button class="ghost action" title={ta('tip.entry.colors')} data-field="colors"
               onclick={() => addEntryColor(ed.activeCollection, entry.id)}>{ta('ui.addColor')}</button>
           {/if}
         </div>

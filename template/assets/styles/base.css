@@ -10833,6 +10833,13 @@ body.urd-mobile .urd-cal-note {
   cursor: pointer;
 }
 
+/* «Choose the catalogue» on a product block with none: a button beside the message, not a card. */
+.urd-preview .urd-product-adder.urd-product-choose {
+  min-height: 0;
+  padding: 0.4em 0.9em;
+  opacity: 0.8;
+}
+
 /* Quick view (visitors only): the product details in a native <dialog>.
    display is set ONLY in the open state, otherwise the built-in
    dialog:not([open]) { display: none } would be overridden. */
