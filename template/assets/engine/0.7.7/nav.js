@@ -19,7 +19,7 @@
  * ghost there, or a pull tab (nav.hideMode).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -825,17 +825,18 @@ export function renderNav(site, host, pageId) {
   if (launcher) {
     const row = document.createElement('li');
     row.className = 'urd-nav-launcher-row';
+    for (const [name, value] of Object.entries(launcherVars(launcher))) row.style.setProperty(name, value);
     const title = launcherTitle(launcher);
     if (title) row.appendChild(title);
     const max = launcher.mobileMax;
-    row.appendChild(launcherTiles(launcher.links.slice(0, max), launcher.mobileView));
+    row.appendChild(launcherTiles(launcher.links.slice(0, max), launcher.mobileView, launcher.longNames));
     if (launcher.links.length > max) {
       const more = document.createElement('details');
       more.className = 'urd-nav-launcher-more';
       const summary = document.createElement('summary');
       summary.innerHTML = `<span class="urd-nav-launcher-more-open">${t('nav.launcherMore')}</span>`
         + `<span class="urd-nav-launcher-more-shut">${t('nav.launcherLess')}</span>`;
-      more.append(summary, launcherTiles(launcher.links.slice(max), launcher.mobileView));
+      more.append(summary, launcherTiles(launcher.links.slice(max), launcher.mobileView, launcher.longNames));
       row.appendChild(more);
     }
     list.appendChild(row);
@@ -1302,13 +1303,15 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
  * different designs from the same builder. A tile's mark is the uploaded
  * image when there is one, otherwise the drawn icon, and a tile with
  * neither stands with its label alone.
+ * A name too long for its tile is cut with an ellipsis, the whole name then in the tile's tooltip, or folded onto more lines (`longNames`).
  * @param {Array<{label: string, href: string, external: boolean, icon: string, image: string}>} links
  * @param {string} view One of LAUNCHER_VIEWS
+ * @param {'cut'|'wrap'} [longNames]
  * @returns {HTMLUListElement}
  */
-function launcherTiles(links, view) {
+function launcherTiles(links, view, longNames = 'cut') {
   const ul = document.createElement('ul');
-  ul.className = `urd-nav-launcher-grid urd-nav-launcher-view-${view}`;
+  ul.className = `urd-nav-launcher-grid urd-nav-launcher-view-${view} urd-nav-launcher-names-${longNames}`;
   for (const link of links) {
     const li = document.createElement('li');
     const a = document.createElement('a');
@@ -1337,6 +1340,7 @@ function launcherTiles(links, view) {
     const label = document.createElement('span');
     label.className = 'urd-nav-launcher-name';
     label.textContent = link.label;
+    if (longNames === 'cut' && link.label) a.title = link.label;
     a.appendChild(label);
     li.appendChild(a);
     ul.appendChild(li);
@@ -1399,9 +1403,10 @@ function buildLauncher(model, signal) {
   const grid = document.createElement('div');
   grid.className = 'urd-nav-launcher';
   grid.id = 'urd-nav-launcher';
+  for (const [name, value] of Object.entries(launcherVars(model))) grid.style.setProperty(name, value);
   const title = launcherTitle(model);
   if (title) grid.appendChild(title);
-  grid.appendChild(launcherTiles(model.links, model.view));
+  grid.appendChild(launcherTiles(model.links, model.view, model.longNames));
   btn.setAttribute('aria-controls', grid.id);
   btn.setAttribute('aria-expanded', 'false');
   wrap.append(btn, grid);

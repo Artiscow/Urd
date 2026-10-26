@@ -1,19 +1,20 @@
 <script>
   /**
-   * A choice among a few named values as a segment of buttons (ADR-0009:
-   * themed, never a native select). Two or three options sit beside the
-   * label on one row; four or more, or long option texts, get the label above
-   * in capitals and the segment on its own line, wrapping when the panel is
-   * narrow.
+   * A choice among a few named values as a segment of buttons (ADR-0009: themed, never a native select).
+   * Up to four short options sit beside the label on one row; five or more, or longer option texts, get the label above in capitals and the segment on its own line.
+   * An option of more than 18 characters puts every option on a row of its own, and so does `rows`.
    * `stack` asks for the label above whatever the options, as a pinnable choice stands.
-   * @type {{ label: string, title?: string, value: string, options: Array<[string, string]>, onchange: (value: string) => void, stack?: boolean }}
+   * @type {{ label: string, title?: string, value: string, options: Array<[string, string]>, onchange: (value: string) => void, stack?: boolean, rows?: boolean }}
    */
-  let { label, title = undefined, value, options, onchange, stack = false } = $props();
-  const stacked = $derived(stack || options.length > 3 || options.reduce((n, [, text]) => n + `${text}`.length, 0) > 14);
+  let { label, title = undefined, value, options, onchange, stack = false, rows = false } = $props();
+  const lengths = $derived(options.map(([, text]) => `${text}`.length));
+  const stacked = $derived(stack || rows || options.length > 4 || lengths.reduce((n, l) => n + l, 0) > 14);
+  /** Options too long to share a row stand under each other instead of wrapping two and one. */
+  const vertical = $derived(rows || (stacked && Math.max(0, ...lengths) > 18));
   const key = (v) => `${v ?? ''}`;
 </script>
 
-<div class="choice" class:stacked {title}>
+<div class="choice" class:stacked class:vertical {title}>
   <span class="choice-label">{label}</span>
   <div class="choice-seg" role="group" aria-label={label}>
     {#each options as [v, text] (key(v))}
@@ -76,6 +77,11 @@
     flex: 1 1 auto;
   }
 
+  .choice.vertical .choice-seg {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
   /* The chosen button's pill is a layer under every button's words, which a new choice slides across (lib/seg-slide.js) */
   .choice-seg button.on {
     color: var(--urd-color-bg);
@@ -88,7 +94,6 @@
     z-index: -1;
     border-radius: inherit;
     background: var(--urd-color-accent);
-    transform-origin: 0 50%;
   }
 
   .choice-seg button:focus-visible {

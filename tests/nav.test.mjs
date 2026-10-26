@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, subGrouped, hideMode, HIDE_MODES, tabModel } = await engineImport('nav-model.js');
+const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, launcherVars, LAUNCHER_SIZES, LAUNCHER_BOUNDS, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, subGrouped, hideMode, HIDE_MODES, tabModel } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -825,6 +825,26 @@ test('launcherModel: every row is drawn, an unusable target points at # and is f
   assert.equal(insta.external, true);
   assert.equal(insta.href, 'https://instagram.com');
   assert.equal(insta.image, '/media/insta-1a2b3c4d.webp');
+});
+
+test('launcherModel: a long name is cut unless the owner chose to fold it', () => {
+  assert.equal(launcherModel(LAUNCHER).longNames, 'cut');
+  assert.equal(launcherModel({ ...LAUNCHER, longNames: 'wrap' }).longNames, 'wrap');
+  assert.equal(launcherModel({ ...LAUNCHER, longNames: 'scroll' }).longNames, 'cut', 'an unknown value is the default');
+});
+
+test('launcherModel: one size for the panel, the marks and the names, and each part on its own within its bounds', () => {
+  const plain = launcherModel(LAUNCHER);
+  assert.equal(plain.size, 'md');
+  assert.deepEqual([plain.width, plain.iconSize, plain.textSize], [null, null, null]);
+  assert.deepEqual(launcherVars(plain), { '--urd-launcher-s': '1' }, 'without values of its own every part follows the size');
+  const own = launcherModel({ ...LAUNCHER, size: 'lg', width: 1000, iconSize: 40, textSize: 3 });
+  assert.equal(own.size, 'lg');
+  assert.equal(own.width, LAUNCHER_BOUNDS.width.max, 'a width past the bound is held at it');
+  assert.equal(own.textSize, LAUNCHER_BOUNDS.textSize.min);
+  assert.deepEqual(launcherVars(own), { '--urd-launcher-s': String(LAUNCHER_SIZES.lg), '--urd-launcher-w': '640px', '--urd-launcher-icon': '40px', '--urd-launcher-text': '10px' });
+  assert.equal(launcherModel({ ...LAUNCHER, size: 'huge', iconSize: '40' }).size, 'md', 'an unknown size is the default');
+  assert.equal(launcherModel({ ...LAUNCHER, iconSize: '40' }).iconSize, null, 'a value that is no number is left out');
 });
 
 test('launcherModel: the switch alone decides, and an empty list is a launcher too', () => {

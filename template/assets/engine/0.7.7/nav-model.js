@@ -251,6 +251,15 @@ export function clampLauncherMax(value) {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
+/** The launcher's sizes (nav.launcher.size): one choice that scales the panel, the marks and the names together. */
+export const LAUNCHER_SIZES = { sm: 0.85, md: 1, lg: 1.2, xl: 1.4 };
+
+/** The bounds of the launcher's own px values, each of which replaces its part of the size. */
+export const LAUNCHER_BOUNDS = { width: { min: 160, max: 640 }, iconSize: { min: 16, max: 96 }, textSize: { min: 10, max: 24 } };
+
+/** A px value within its bounds, or null when there is none. */
+const launcherPx = (value, { min, max }) => (typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, Math.round(value))) : null);
+
 /**
  * The link launcher (nav.launcher, additive since v0.7): the shortcuts behind
  * the launcher button in the tool cluster, and the same shortcuts as a
@@ -265,7 +274,7 @@ export function clampLauncherMax(value) {
  * translated default word is nav.js's business, not this module's.
  * @param {object} [launcher] site.nav.launcher
  * @param {Array<{id: string, path: string}>} [pages] The page register, for a row that links a page
- * @returns {{links: Array<object>, view: string, mobileView: string, mobileMax: number, title: string, titleShow: boolean, icon: string, image: string} | null}
+ * @returns {{links: Array<object>, view: string, mobileView: string, mobileMax: number, title: string, titleShow: boolean, longNames: 'cut'|'wrap', size: string, width: number|null, iconSize: number|null, textSize: number|null, icon: string, image: string} | null}
  */
 export function launcherModel(launcher, pages = []) {
   if (launcher?.show !== true) return null;
@@ -289,10 +298,30 @@ export function launcherModel(launcher, pages = []) {
     // menu is the page's own list and must not grow without end.
     mobileMax: clampLauncherMax(launcher.mobileMax),
     titleShow: launcher.showTitle !== false,
+    // A name too long for its tile is cut with an ellipsis, or folded onto more lines.
+    longNames: launcher.longNames === 'wrap' ? 'wrap' : 'cut',
+    // The size of the panel, the marks and the names together, and each of them on its own.
+    size: Object.hasOwn(LAUNCHER_SIZES, launcher.size) ? launcher.size : 'md',
+    width: launcherPx(launcher.width, LAUNCHER_BOUNDS.width),
+    iconSize: launcherPx(launcher.iconSize, LAUNCHER_BOUNDS.iconSize),
+    textSize: launcherPx(launcher.textSize, LAUNCHER_BOUNDS.textSize),
     title: typeof launcher.title === 'string' ? launcher.title.trim() : '',
     icon: typeof launcher.icon === 'string' ? launcher.icon : '',
     image: isSafeImage(launcher.image) ? launcher.image : '',
   };
+}
+
+/**
+ * The CSS custom properties that size the launcher's panel and tiles: the size's scale, and a px value for each part the owner set on its own (base.css reads them, the scale where a part has none).
+ * @param {{size: string, width: number|null, iconSize: number|null, textSize: number|null}} model From launcherModel
+ * @returns {Record<string, string>}
+ */
+export function launcherVars(model) {
+  const vars = { '--urd-launcher-s': String(LAUNCHER_SIZES[model.size] ?? 1) };
+  if (model.width) vars['--urd-launcher-w'] = `${model.width}px`;
+  if (model.iconSize) vars['--urd-launcher-icon'] = `${model.iconSize}px`;
+  if (model.textSize) vars['--urd-launcher-text'] = `${model.textSize}px`;
+  return vars;
 }
 
 /**

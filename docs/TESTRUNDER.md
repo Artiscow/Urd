@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here. A new delivery gets a «Test batch» section of its own at the top (newest first); items without a batch stand in the remainder list at the bottom. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (reviewed and gathered on 6 October 2026: the calendar batches were merged into one with one item per design).
 
+### Test batch (0.7.10.10): the Nav panel in eight groups, and the link launcher's long names and sizes
+
+- [ ] The Nav panel closed: Menu items, Logo, Layout and size, Colours and frame, Mobile, Scrolling and pages, Tools and Announcement, none with a fold inside; open each, change one setting in it, reload the editor: the changes stay, and «Discard drafts» takes them back
+- [ ] Menu items: with a submenu in the menu, the Submenu part under the list shows Design, «Opens» one option to a row, the pill colour (Pill items only) and Columns as 1, 2, 3, 4; with no submenu the part is gone
+- [ ] Layout and size: the six menu forms, then Size with Thickness, Text size, Side padding and Item spacing shown at once; the side column hides thickness, padding and spacing
+- [ ] Colours and frame: with «Transparent at the top of the page» on, «Shown once the page scrolls» stands under Background with its tooltip, and an uploaded background picture shows on the bar once the page is scrolled; with the side column the note and the Frame part are gone
+- [ ] Mobile: «The bar» with Thickness, Text size, Size, Border, Menu placement, Tool buttons and the two Same/On/Off choices, then «The menu» with the mobile menu, the burgers four to a row and the full-screen menu's switches and surface
+- [ ] Scrolling and pages: the «When scrolling» card, then the pages two to a row, a long page title cut with «…»; the side column shows the pages alone
+- [ ] Tools: the link launcher is a card with its arrows, «Show in the menu» first and its settings under it once it is on
+- [ ] Scroll the Nav panel with several groups open and click a few segment choices first: nothing is drawn twice
+- [ ] The link launcher with a long shortcut name: the panel keeps its width; «Long names» set to «Cut with …» ends the name with «…» and shows it whole on hover, «Onto more lines» folds it in its tile; the same in the list and image cards designs and in the mobile menu
+- [ ] The launcher's Size: Small, Standard, Large and Extra large scale the panel, the icons and the names together; Panel width, Icon size and Text size each change their part alone, an emptied field follows the size again, and a very small panel keeps its icons inside the tiles
+
 ### Test batch (0.7.10.9): aligned pinned settings, sliding segment choices and the reworked narrow menu
 
 - [ ] Wide menu: a text block's «Alignment», Placement's «On narrower screens», the product cards' Columns, a button's «Goes to», a video's «Video source», an icon's size and colour, a shape's colour and thickness, a table's lines, a form's sending mode, an image's fit and corners, a gallery's columns, the max count of a collection list and a calendar, and a map's zoom: the words stand with the pin at the end of their line, and the control under them ends level with the controls around it

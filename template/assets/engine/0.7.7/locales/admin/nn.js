@@ -189,7 +189,6 @@ export default {
     'tip.nav.announceShowAgain': 'Gløymer krysset i denne nettlesaren, så stripa kjem tilbake. Gjeld både førehandsvisinga og den publiserte sida.',
     'lbl.sheetToolLabels': 'Tekst på knappane',
     'tip.nav.sheetToolLabels': 'Temaknappen og handlekorga nedst i menyen viser teksten sin ved sida av ikonet; utan er dei berre ikon.',
-    'lbl.adjust': 'Tilpass',
     'group.navScrolling': 'Ved rulling',
     'lbl.cart': 'Handlekorg',
     'lbl.showInMenu': 'Vis i menyen',
