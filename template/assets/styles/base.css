@@ -11373,6 +11373,38 @@ body.urd-mobile .urd-cal-note {
   opacity: 0.85;
 }
 
+/* The draft view's mark (?draft=1): the owner's unpublished changes are on the page, in this browser only. */
+.urd-draft-view {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 900;
+  margin: 0;
+  padding: 0.35em 0.85em;
+  font: 600 0.8rem/1.3 system-ui, sans-serif;
+  color: #241a00;
+  background: #f2b84b;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 25%);
+  pointer-events: none;
+}
+
+@media print {
+  .urd-draft-view {
+    display: none;
+  }
+}
+
+/* The line a checkout shows while a provider runs on its test keys: a note in a dashed box, never mistaken for the order. */
+.urd-checkout-testmode {
+  margin: 0 0 0.8em;
+  padding: 0.45em 0.75em;
+  border: 1px dashed currentColor;
+  border-radius: var(--urd-radius-sm);
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
 /* Printing an order: the confirmation alone, at the top of the sheet, in black on white.
    Everything beside the confirmation's own ancestors is left out, and those ancestors are taken out of the canvas's
    absolute layout, so the confirmation stands at the top of the first sheet at the sheet's width. */

@@ -1,10 +1,12 @@
 /**
- * What the payment layer's provider helpers share: fetch with a timeout, so a
- * provider that does not answer never holds a function open past the
- * platform's limit; the rule for keeping an access token until shortly
- * before it expires; and the constant-time comparison a signature check
- * needs. Tested in tests/vipps.test.mjs and tests/paypal.test.mjs.
+ * What the payment layer's provider helpers share: fetch with a timeout, so a provider that does not answer never holds a function open past the platform's limit; the rule for keeping an access token until shortly before it expires; the constant-time comparison a signature check needs; and the host of an address, by which a provider's test environment is told.
+ * Tested in tests/vipps.test.mjs and tests/paypal.test.mjs.
  */
+
+/** The host of an address, or '' when it is no address: the test environment is told by its host, never by a substring. */
+export function hostOf(url) {
+  try { return new URL(String(url ?? '')).host; } catch { return ''; }
+}
 
 /** A provider answers within this, or the call is given up. */
 export const TIMEOUT_MS = 10000;

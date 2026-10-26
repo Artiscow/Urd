@@ -28,6 +28,28 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.28.7 - A test of the payment from the editor, a test-mode line, and the element menu's layout - 26 October 2026
+
+- A payment could only be tried on the published site, and a local site has none. «Test the payment» in the checkout block's Payment group opens the checkout page in a new tab as the draft view (`?draft=1`): the page drawn from this browser's drafts through the visitor's path, with an amber mark that the changes show in this browser only, no visit counted, an empty basket filled with a published product, and a payment that returns to the view (drafts.js, urd.js, `cancelUrl` in order.js; ARCHITECTURE.md, the ADR-0028 addendum, the setup guide's section 5).
+- Nothing told the owner that a published checkout ran on test keys. The payment functions' GET answers `test` beside `configured`, the published checkout shows a line naming the providers on test keys at the top of its form (base.css; the eight shells restamped), each provider's test steps in the setup guide name it, and the editor's pay-button click says when a provider is on its test keys.
+- The checkout block's menu was cramped and uneven: in the wide menu labels wrapped over three lines, the Payment group's title ran into its value, the Endpoint field showed as a grey bar and a setting's mark indented its row; in the narrow menu the «Narrow screen» tile cut its segment. Two-area menus take 280px columns, a group's title keeps its words with its mark after it, a setting's mark stands in the margin, the url field takes the shared style, quick tiles wrap at half the row at most, and «Reset this group» stands at the left (app.css, MenuGroup.svelte).
+- Toggles with a pin ended short of toggles without one. A toggle's pin stands left of the toggle, so the toggles of a group end at the right edge; the Payment group drops its duplicate reset, and «Pay with PayPal» can be pinned to the quick row as Vipps can.
+
+The independent review before the commit read the whole diff against AGENTS.md and ADR-0011, 0012, 0013, 0016, 0021, 0022 and 0028, and found these, all taken:
+
+- A payment started from the draft view came back to the published page without `draft=1`, so with no provider on the published block the return was never read, the basket stayed and a PayPal payment was never captured. Found by following the return address through order.js. The order says `draft`, and the functions put `draft=1` on the return and cancel addresses (`returnUrl`, `cancelUrl`).
+- The draft module's import stood outside its error handling, so a failed load left a `?draft=1` page blank. The import moved inside it.
+- A text replacement meant for the new test-mode rule also took the `6px` fallback from 14 other `--urd-radius-sm` uses in base.css. base.css was rebuilt from the committed file plus the two new rules, and the eight shells restamped.
+- «Test the payment» could fill the basket with a product that is only in a draft, or one without a price, both of which the functions refuse. It takes the first published product with a price.
+- The documents said only the price comes from what is published; Stripe's capture mode does too. ARCHITECTURE.md, the ADR-0028 addendum and both setup guides say so.
+- The test-mode item asked for the line in the setup guide's test steps, and it stood only in section 5's opening. Each provider's test step names it, in English and Norwegian.
+- The test batch quoted the Norwegian «Testmodus» in English text and named only Vipps and PayPal for the action. It quotes «Test mode» and names a card provider too.
+- Comments in drafts.js, its test and urd.js broke mid-sentence; they break at sentence ends.
+- Suggestions taken: `hostOf` stands once in net.js instead of in two files, the provider names are joined in the site's language through `Intl.ListFormat`, PayPal's older sandbox host counts as test, and a blocked tab is said in the status line. A cache of the providers' answers was left out, since it carried answers from one render to the next.
+- A second pass over the fixes found two style points, a Norwegian example in a code comment and a variable name reused inside its own scope; both changed.
+
+A deviation from the ritual: the element menu's layout and the test-mode line belong to items under 0.7.10, but they share the editor bundle and Checkout.svelte with 0.7.28.7, so they are committed under its number.
+
 ### 0.7.10.8 - The shop's way between the panels - 26 October 2026
 
 - The products, the checkout page and the shop currency lived in three panels with no way between them from the shop's blocks. The product cards and the checkout menus now have a **Shop** group with one-click links between them: the checkout or the shop page, the catalogue and the shop currency (`ShopLinks.svelte`, `openPageWith` in page.svelte.js).

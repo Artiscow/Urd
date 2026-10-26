@@ -7,7 +7,7 @@
  * api/pay/vipps/ handle the network. Tested in tests/vipps.test.mjs.
  */
 import { orderLineItems, orderDescription, returnUrl } from './order.js';
-import { sameText } from './net.js';
+import { sameText, hostOf } from './net.js';
 
 /** Reads the configuration from env; null when the payment layer is not set up. */
 export function vippsConfig(env) {
@@ -22,6 +22,8 @@ export function vippsConfig(env) {
     subscriptionKey,
     msn,
     apiBase: env.VIPPS_API_BASE || 'https://api.vipps.no',
+    // The test environment is its own host; the checkout page shows a line while it is in use.
+    test: hostOf(env.VIPPS_API_BASE) === 'apitest.vipps.no',
     // The secret the webhook registration answered with; without it the webhook endpoint takes nothing.
     webhookSecret: env.VIPPS_WEBHOOK_SECRET || '',
   };
@@ -69,14 +71,14 @@ export function receiptLines(order, catalogs) {
  * @param {'wallet'|'card'} [args.method]
  * @param {Array<object>|null} [args.receipt] The lines from receiptLines, or null for no receipt
  */
-export function buildPayment({ amountMinor, currency = 'NOK', reference, order, contact, origin, returnPath, method = 'wallet', receipt = null }) {
+export function buildPayment({ amountMinor, currency = 'NOK', reference, order, contact, origin, returnPath, draft = false, method = 'wallet', receipt = null }) {
   const body = {
     amount: { currency, value: amountMinor },
     paymentMethod: { type: method === 'card' ? 'CARD' : 'WALLET' },
     reference,
     userFlow: 'WEB_REDIRECT',
     // The reference travels with the return, so the page can ask the session endpoint whether this payment went through.
-    returnUrl: returnUrl(origin, returnPath, reference, 'vipps'),
+    returnUrl: returnUrl(origin, returnPath, reference, 'vipps', draft),
     // The description holds at most 100 characters; an order line alone is past its minimum of 3.
     paymentDescription: orderDescription(order, contact, 100),
   };

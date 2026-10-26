@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.28.7): the payment test, the test-mode line and the element menu's layout
+
+- [ ] In the editor, a checkout block with a provider on (Vipps, a card provider or PayPal): the Payment group shows «Test the payment» under the providers; with an empty basket, click it: a new tab opens the checkout page with the pay buttons as set in the editor, an amber mark at the bottom left says the changes are shown in this browser only, and the basket holds the first published product; the editor's status line says what was done
+- [ ] The same address (`/checkout/?draft=1`) in another browser, or after «Discard drafts»: the published page, without the mark
+- [ ] On the deployed site with test keys (Vipps with `VIPPS_API_BASE` at apitest, a Stripe `sk_test_` key, PayPal with `PAYPAL_API_BASE` at the sandbox): the published checkout shows the dashed «Test mode» line at the top of its form naming those providers; with live keys no line; in the editor a click on a pay button says the provider is set up on its test keys
+- [ ] From «Test the payment» on the deployed site with test keys, with the providers switched on only in the editor: each pay button reaches its provider's test page, the return comes back to the draft view (the amber mark is there), empties the basket and thanks the buyer, and «Cancel» on the provider's page comes back to the draft view with the basket kept
+- [ ] Block pop-ups for the editor and click «Test the payment»: the status line says the browser blocked the new tab
+- [ ] The checkout block's menu, wide: two columns; «Pay with Vipps» button on one line beside its toggle; the card choice on one row; the Payment group's title, its orange mark and its value apart; Endpoint (URL) like the other fields, lined up with Recipient email and Currency word; «Reset this group» at the left
+- [ ] The same menu, narrow: the quick tiles Vipps, Narrow screen and On a phone in one row with nothing cut off; a calendar block's menu: the fourth tile on a second row at half width
+- [ ] The Vipps and PayPal toggles end at the right edge with their pins left of them; pin PayPal: a PayPal tile joins the quick row; in Placement, «Hide on mobile» and «Pin while scrolling» line up
+
 ### Test batch (0.7.10.8): the shop's way between the panels
 
 - [ ] A product cards block's menu: the Shop group shows «Go to the checkout page» and «Shop currency»; the first switches the editor to the page with the checkout block and closes the menu, the second opens the Site panel with its Shop group open and the currency field focused; with the checkout on the same page, the first scrolls to it

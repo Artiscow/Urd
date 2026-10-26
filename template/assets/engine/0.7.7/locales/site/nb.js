@@ -98,6 +98,8 @@ export default {
     'shop.payWithPaypal': 'Betal med PayPal',
     'shop.seller': 'Selger',
     'shop.vippsUnavailable': 'Betaling er ikke satt opp for denne siden ennå.',
+    'shop.testMode': 'Testmodus: betalinger gjennom {providers} trekker ingen penger',
+    'draft.view': 'Upubliserte endringer, vist bare i denne nettleseren',
     'shop.payMethod': 'Betaling',
     'shop.choosePayment': 'Velg hvordan du vil betale.',
     'shop.payBy': 'Betaling: {method}.',

@@ -355,6 +355,25 @@ function resolvePage(site) {
   return site.pages.find((p) => p.path === path) ?? site.pages[0];
 }
 
+/** The draft view's drafts (drafts.js, loaded for it alone); a browser whose storage is closed has none. */
+async function loadDrafts() {
+  try {
+    const { readDrafts } = await import('./drafts.js');
+    return readDrafts(localStorage);
+  } catch {
+    return null;
+  }
+}
+
+/** The draft view's mark, so the owner never takes the page for the published one. */
+function markDraftView() {
+  const mark = document.createElement('p');
+  mark.className = 'urd-draft-view';
+  mark.setAttribute('role', 'note');
+  mark.textContent = t('draft.view');
+  document.body.appendChild(mark);
+}
+
 /** The spell check the editor asked for on the texts; the clean view turns it off while it lasts. */
 let spellcheckOn = true;
 
@@ -700,9 +719,12 @@ export async function boot(opts) {
   const siteRes = await fetch('/content/site.json');
   const siteText = await siteRes.text();
   served.site = { text: siteText, etag: siteRes.headers.get('etag') };
-  const rawSite = JSON.parse(siteText);
+  const params = new URLSearchParams(location.search);
+  const preview = params.get('preview') === '1';
+  // The draft view (?draft=1, drafts.js): the drafts this browser's editor keeps, drawn as a visitor's page.
+  const drafts = !preview && params.get('draft') === '1' ? await loadDrafts() : null;
+  const rawSite = drafts?.site ?? JSON.parse(siteText);
   const site = liftSiteFile(rawSite);
-  const preview = new URLSearchParams(location.search).get('preview') === '1';
   // The engine tolerates a truncated site.json: missing parts get empty defaults instead of a crash (the page never dies from bad data).
   site.site ??= { title: '', lang: 'no' };
   site.pages ??= [];
@@ -718,15 +740,17 @@ export async function boot(opts) {
   applyFavicon(site.site.icon);
   // An empty page register (hand-edited site.json) gives an empty page, not a crash.
   const entry = resolvePage(site) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
-  // A page file parked by the previous page's intent prefetch (prefetch.js)
-  // is used as it is and revalidated after the first render; visitors only,
-  // the preview receives its pages via postMessage.
-  const parked = preview ? null : readPrefetched(entry.file, sessionStore());
+  // A page file parked by the previous page's intent prefetch (prefetch.js) is used as it is and revalidated after the first render.
+  // Visitors only: the preview receives its pages via postMessage, and the draft view reads the page's draft.
+  const draftPage = drafts?.page(entry.id) ?? null;
+  const parked = preview || drafts ? null : readPrefetched(entry.file, sessionStore());
   // Otherwise the page file depends only on the register, so its fetch
   // starts here and runs alongside the plugin loading instead of after it:
   // with the engine cached, the serial round trips are what a page switch
   // costs.
-  const pagePromise = parked
+  const pagePromise = draftPage
+    ? Promise.resolve({ page: draftPage, text: null, etag: null })
+    : parked
     ? Promise.resolve(parked)
     : fetch(`/${entry.file}`).then(async (res) => {
         const text = await res.text();
@@ -777,12 +801,14 @@ export async function boot(opts) {
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   if (!Array.isArray(page.sections)) page.sections = [];
+  if (drafts) setCollectionsDraft(drafts.collections);
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
   // SEO metadata (description, canonical, og: fields, JSON-LD) is set only
   // for visitors: the preview address (?preview=1) is never a canonical page.
+  // The owner's own draft view is never counted.
   if (!preview) {
     applyHeadMeta(site, page, location.origin, location.pathname, entry);
-    mountAnalytics(site);
+    if (!drafts) mountAnalytics(site);
   }
   // The footer is rendered now that the page id is known (per-page hideOn visibility).
   renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
@@ -807,6 +833,7 @@ export async function boot(opts) {
   initSticky();
   wireJumps();
   if (!preview) arriveAtSpot();
+  if (drafts && (drafts.site || draftPage || Object.keys(drafts.collections).length)) markDraftView();
 
   if (!preview) {
     mq.addEventListener('change', (event) => {
@@ -860,13 +887,20 @@ export async function boot(opts) {
       return checking;
     };
     // A prerendered document checks at activation, everything else now.
-    if (parked && !document.prerendering) recheck({ site: false });
-    if (document.prerendering) {
-      document.addEventListener('prerenderingchange', () => recheck({ site: true }), { once: true });
+    // The draft view never trades its drafts for the server's files: it reads them anew on a return from the back-forward cache.
+    if (drafts) {
+      window.addEventListener('pageshow', (event) => {
+        if (event.persisted) location.reload();
+      });
+    } else {
+      if (parked && !document.prerendering) recheck({ site: false });
+      if (document.prerendering) {
+        document.addEventListener('prerenderingchange', () => recheck({ site: true }), { once: true });
+      }
+      window.addEventListener('pageshow', (event) => {
+        if (event.persisted) recheck({ site: true });
+      });
     }
-    window.addEventListener('pageshow', (event) => {
-      if (event.persisted) recheck({ site: true });
-    });
   }
 
   if (preview) enablePreview(state, opts);

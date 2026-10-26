@@ -318,13 +318,21 @@ test('every session endpoint answers the POST the checkout page sends', () => {
   assert.equal(paypal.session.onRequestGet, undefined, 'PayPal\'s may capture, so it takes no GET');
 });
 
-test('checkout GET: each provider answers whether it is set up, without a secret and without caching', async () => {
+test('checkout GET: each provider answers whether it is set up and on test keys, without a secret and without caching', async () => {
+  const live = [
+    [vipps, { ...VIPPS_ENV, VIPPS_API_BASE: '' }],
+    [vipps, { ...VIPPS_ENV, VIPPS_API_BASE: 'https://apitest.vipps.no.example.com' }],
+    [stripe, { ...STRIPE_ENV, STRIPE_SECRET_KEY: 'sk_live_abc123' }],
+    [paypal, { ...PAYPAL_ENV, PAYPAL_API_BASE: '' }],
+  ];
+  assert.equal((await (await paypal.checkout.onRequestGet({ env: { ...PAYPAL_ENV, PAYPAL_API_BASE: 'https://api.sandbox.paypal.com' } })).json()).test, true, 'the sandbox by its older name');
   for (const [mod, env] of [[vipps, VIPPS_ENV], [stripe, STRIPE_ENV], [paypal, PAYPAL_ENV]]) {
     const on = await mod.checkout.onRequestGet({ env });
     assert.equal(on.headers.get('cache-control'), 'no-store');
     const body = await on.text();
-    assert.deepEqual(JSON.parse(body), { configured: true });
+    assert.deepEqual(JSON.parse(body), { configured: true, test: true });
     for (const value of Object.values(env)) assert.ok(!body.includes(value), 'no secret in the answer');
-    assert.deepEqual(await (await mod.checkout.onRequestGet({ env: {} })).json(), { configured: false });
+    assert.deepEqual(await (await mod.checkout.onRequestGet({ env: {} })).json(), { configured: false, test: false });
   }
+  for (const [mod, env] of live) assert.deepEqual(await (await mod.checkout.onRequestGet({ env })).json(), { configured: true, test: false });
 });

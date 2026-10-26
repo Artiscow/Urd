@@ -94,6 +94,8 @@ export default {
     'shop.payWithPaypal': 'PayPal ile öde',
     'shop.seller': 'Satıcı',
     'shop.vippsUnavailable': 'Bu site için ödeme henüz kurulmadı.',
+    'shop.testMode': 'Test modu: {providers} üzerinden yapılan ödemelerde para çekilmez',
+    'draft.view': 'Yayımlanmamış değişiklikler, yalnızca bu tarayıcıda gösteriliyor',
     'shop.payMethod': 'Ödeme',
     'shop.choosePayment': 'Nasıl ödeyeceğinizi seçin.',
     'shop.payBy': 'Ödeme: {method}.',

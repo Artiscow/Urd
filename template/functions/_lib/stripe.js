@@ -10,7 +10,7 @@
  * on in the Stripe dashboard (card, Apple Pay, Google Pay, Klarna, MobilePay
  * and the rest), so the site needs no script, frame or connect-src of its own.
  */
-import { orderLineItems, orderDescription, returnUrl } from './order.js';
+import { orderLineItems, orderDescription, returnUrl, cancelUrl } from './order.js';
 import { sameText } from './net.js';
 
 /** Reads the configuration from env; null when Stripe is not set up. */
@@ -20,6 +20,8 @@ export function stripeConfig(env) {
   return {
     secretKey,
     apiBase: env.STRIPE_API_BASE || 'https://api.stripe.com',
+    // A sandbox key runs in Stripe's test mode; the checkout page shows a line while it is in use.
+    test: /^(sk|rk)_test_/.test(secretKey),
     // The signing secret of the webhook destination; without it the webhook endpoint takes nothing.
     webhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
   };
@@ -56,15 +58,15 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * @param {string} [args.lang] The site's language, for Stripe's page
  * @returns {Array<[string, string]>|null} null when a line has no priced product
  */
-export function sessionForm({ order, catalogs, currency = 'NOK', reference, contact, origin, returnPath, capture = 'ship', lang }) {
+export function sessionForm({ order, catalogs, currency = 'NOK', reference, contact, origin, returnPath, draft = false, capture = 'ship', lang }) {
   const items = orderLineItems(order, catalogs, currency);
   if (!items) return null;
   const fields = [
     ['mode', 'payment'],
     ['submit_type', 'pay'],
     ['client_reference_id', reference],
-    ['success_url', returnUrl(origin, returnPath, reference, 'stripe')],
-    ['cancel_url', `${origin}${returnPath ?? '/'}`],
+    ['success_url', returnUrl(origin, returnPath, reference, 'stripe', draft)],
+    ['cancel_url', cancelUrl(origin, returnPath, draft)],
     ['locale', stripeLocale(lang)],
     ['metadata[reference]', reference],
     ['payment_intent_data[description]', orderDescription(order, contact, 500)],

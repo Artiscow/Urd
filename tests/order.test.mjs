@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   validOrderPayload, orderAmountMinor, validVariants, orderLineItems, orderDescription, currencyExponent,
-  makeReference, isReference, orderCurrency, vatRegistered, returnUrl, PROVIDERS, pageCheckout,
+  makeReference, isReference, orderCurrency, vatRegistered, returnUrl, cancelUrl, PROVIDERS, pageCheckout,
 } from '../template/functions/_lib/order.js';
 
 // Deliberate Norwegian fixture ids and names: this is user catalog data.
@@ -27,6 +27,9 @@ test('validOrderPayload: cleans lines and contact, clamps quantity, rejects nons
   assert.deepEqual(clean.order, [{ id: 'kake', qty: 2, variant: 'Stor' }]);
   assert.equal(clean.contact.name, 'Kari');
   assert.equal(clean.returnPath, '/kasse');
+  assert.equal(clean.draft, false);
+  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }], draft: true }).draft, true, 'an order from the draft view');
+  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }], draft: 'yes' }).draft, false, 'only true counts');
   assert.equal(validOrderPayload(null), null);
   assert.equal(validOrderPayload({ order: [] }), null);
   assert.equal(validOrderPayload({ order: [{ id: '../etc', qty: 1 }] }), null);
@@ -103,6 +106,13 @@ test('returnUrl: the checkout page with the reference and the provider that answ
   assert.equal(returnUrl('https://site.no', '/kasse', 'urd-abc', 'vipps'), 'https://site.no/kasse?ordered=urd-abc&via=vipps');
   assert.equal(returnUrl('https://site.no', undefined, 'urd-abc', 'stripe'), 'https://site.no/?ordered=urd-abc&via=stripe');
   assert.deepEqual(PROVIDERS, ['vipps', 'stripe', 'paypal']);
+});
+
+test('an order from the draft view returns to the draft view, paid or cancelled', () => {
+  assert.equal(returnUrl('https://site.no', '/kasse', 'urd-abc', 'paypal', true), 'https://site.no/kasse?draft=1&ordered=urd-abc&via=paypal');
+  assert.equal(cancelUrl('https://site.no', '/kasse', true), 'https://site.no/kasse?draft=1');
+  assert.equal(cancelUrl('https://site.no', '/kasse'), 'https://site.no/kasse');
+  assert.equal(cancelUrl('https://site.no', undefined), 'https://site.no/');
 });
 
 test('currencyExponent and the minor unit: two decimals for most currencies, whole units for the zero-decimal ones', () => {

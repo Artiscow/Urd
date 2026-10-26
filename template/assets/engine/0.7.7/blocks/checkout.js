@@ -20,6 +20,31 @@ import { ta, adminLocaleReady, t, siteLang } from '../i18n.js';
 import { sellerParts } from '../contact-model.js';
 import { legalText } from '../footer.js';
 
+/**
+ * What a provider's function says of itself: `{configured, test}`, or null where the site has no functions (a local server, a host without them).
+ * @param {'vipps'|'stripe'|'paypal'} provider
+ * @returns {Promise<{configured: boolean, test: boolean}|null>}
+ */
+async function providerState(provider) {
+  try {
+    const res = await fetch(`/api/pay/${provider}/checkout`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    return typeof data?.configured === 'boolean' ? { configured: data.configured, test: data.test === true } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Names as a list in the site's language («Vipps and PayPal» in English), through Intl; a browser without ListFormat joins them with commas. */
+function listText(names) {
+  try {
+    return new Intl.ListFormat(siteLang(), { type: 'conjunction' }).format(names);
+  } catch {
+    return names.join(', ');
+  }
+}
+
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -315,17 +340,6 @@ export const checkoutBlock = {
     // payment happens there, and the contact fields may stay empty, since
     // the provider's page asks for them.
     const providerName = { vipps: 'Vipps', stripe: 'Stripe', paypal: 'PayPal' };
-    // Whether the provider's function is there and set up: true or false from its answer, null where the site has no functions (a local server, a host without them).
-    const probeProvider = async (provider) => {
-      try {
-        const res = await fetch(`/api/pay/${provider}/checkout`, { cache: 'no-store' });
-        if (!res.ok) return null;
-        const data = await res.json().catch(() => null);
-        return typeof data?.configured === 'boolean' ? data.configured : null;
-      } catch {
-        return null;
-      }
-    };
     const payButton = (labelKey, provider, method) => {
       const pay = el2('button', 'urd-checkout-vippspay urd-checkout-pay', t(labelKey));
       pay.type = 'button';
@@ -334,10 +348,11 @@ export const checkoutBlock = {
         // Same send guard as the form: never in preview, whatever the viewport. There the click tells the owner whether the provider is set up.
         if (ctx.preview) {
           pay.disabled = true;
-          const ready = await probeProvider(provider);
+          const state = await providerState(provider);
           pay.disabled = false;
           const name = providerName[provider];
-          setStatus(ready === null ? ta('canvas.payPreviewNoFunctions', { provider: name }) : ready ? ta('canvas.payPreviewReady', { provider: name }) : ta('canvas.payPreviewNotSetUp', { provider: name }), ready === false);
+          const key = !state ? 'canvas.payPreviewNoFunctions' : !state.configured ? 'canvas.payPreviewNotSetUp' : state.test ? 'canvas.payPreviewReadyTest' : 'canvas.payPreviewReady';
+          setStatus(ta(key, { provider: name }), state?.configured === false);
           return;
         }
         const items = readCart();
@@ -359,6 +374,8 @@ export const checkoutBlock = {
                 comment: commentInput.value.trim(),
               },
               returnPath: location.pathname,
+              // The draft view's order returns to the draft view (drafts.js), where the return is read with the settings it started from.
+              ...(new URLSearchParams(location.search).get('draft') === '1' ? { draft: true } : {}),
               method,
             }),
           });
@@ -382,6 +399,18 @@ export const checkoutBlock = {
     if (pays.card === 'vipps') payButton('shop.payWithCard', 'vipps', 'card');
     else if (pays.card === 'stripe') payButton('shop.payWithCard', 'stripe', 'card');
     if (pays.paypal) payButton('shop.payWithPaypal', 'paypal', 'paypal');
+
+    // On the published page a provider on its test keys shows a line at the top of the form, so test keys are never left in by mistake.
+    if (!ctx.preview) {
+      const providers = [...new Set([pays.vipps || pays.card === 'vipps' ? 'vipps' : null, pays.card === 'stripe' ? 'stripe' : null, pays.paypal ? 'paypal' : null].filter(Boolean))];
+      Promise.all(providers.map(async (p) => ((await providerState(p))?.test ? providerName[p] : null))).then((names) => {
+        const testing = names.filter(Boolean);
+        if (!testing.length || !form.isConnected) return;
+        const line = el2('p', 'urd-checkout-testmode', t('shop.testMode', { providers: listText(testing) }));
+        line.setAttribute('role', 'note');
+        form.prepend(line);
+      });
+    }
 
     // Return from payment (?ordered=<reference>&via=<provider>): the basket is emptied and the buyer thanked only when the reference is the one this browser started and the provider's session endpoint says the payment went through, so neither a shared address nor a cancelled payment empties a basket.
     // The parameters are cleaned away once the payment is settled, so a refresh does not ask again; while the answer is still open they stay, so a refresh asks once more.

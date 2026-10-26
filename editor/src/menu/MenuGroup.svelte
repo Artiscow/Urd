@@ -28,7 +28,7 @@
     if (e.currentTarget.closest('.emenu-search')) return;
     if (e.currentTarget.open) menuOpen.add(id); else menuOpen.delete(id);
   }}>
-  <summary>{#if groupReset}<i class="menu-group-dot" aria-hidden="true"></i>{/if}<span class="menu-group-title">{title}</span><span class="menu-group-value">{value}</span></summary>
+  <summary><span class="menu-group-title">{title}{#if groupReset}<i class="menu-group-dot" aria-hidden="true"></i>{/if}</span><span class="menu-group-value">{value}</span></summary>
   <div class="group-items">
     {@render children()}
     {#if groupReset}

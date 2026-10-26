@@ -12,7 +12,8 @@
  * documents capturing one later through the merchant's own server code,
  * which the static site does not run (ADR-0028 decision 4).
  */
-import { orderLineItems, orderDescription, returnUrl, currencyExponent } from './order.js';
+import { orderLineItems, orderDescription, returnUrl, cancelUrl, currencyExponent } from './order.js';
+import { hostOf } from './net.js';
 
 /** Reads the configuration from env; null when PayPal is not set up. */
 export function paypalConfig(env) {
@@ -23,6 +24,8 @@ export function paypalConfig(env) {
     clientId,
     clientSecret,
     apiBase: env.PAYPAL_API_BASE || 'https://api-m.paypal.com',
+    // The sandbox is its own host, by its current name or its older one; the checkout page shows a line while it is in use.
+    test: ['api-m.sandbox.paypal.com', 'api.sandbox.paypal.com'].includes(hostOf(env.PAYPAL_API_BASE)),
     // The id of the webhook in the PayPal app; without it the webhook endpoint takes nothing.
     webhookId: env.PAYPAL_WEBHOOK_ID || '',
   };
@@ -62,7 +65,7 @@ export function paypalValue(minor, currency) {
  * @param {string} [args.brand] The site's name on PayPal's page
  * @returns {object|null} null when a line has no priced product or PayPal cannot take an amount
  */
-export function buildOrder({ order, catalogs, currency = 'NOK', reference, contact, origin, returnPath, brand }) {
+export function buildOrder({ order, catalogs, currency = 'NOK', reference, contact, origin, returnPath, draft = false, brand }) {
   const items = orderLineItems(order, catalogs, currency);
   if (!items) return null;
   const code = currency.toUpperCase();
@@ -77,8 +80,8 @@ export function buildOrder({ order, catalogs, currency = 'NOK', reference, conta
   const value = paypalValue(total, code);
   if (value == null) return null;
   const experience = {
-    return_url: returnUrl(origin, returnPath, reference, 'paypal'),
-    cancel_url: `${origin}${returnPath ?? '/'}`,
+    return_url: returnUrl(origin, returnPath, reference, 'paypal', draft),
+    cancel_url: cancelUrl(origin, returnPath, draft),
     user_action: 'PAY_NOW',
     shipping_preference: 'NO_SHIPPING',
   };

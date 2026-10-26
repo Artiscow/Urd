@@ -619,11 +619,12 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* Wide: Content, Style and Placement side by side, each column scrolling with the menu */
+  /* Wide: Content, Style and Placement side by side, each column scrolling with the menu.
+     Two areas take 280px each, so a label stands on one line beside its toggle; three share the wide menu's width. */
   .emenu-cols {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 224px);
+    grid-auto-columns: minmax(0, 280px);
     grid-template-columns: none;
     gap: 0.6rem;
     align-items: start;
@@ -675,10 +676,12 @@
     border-radius: 50%;
   }
 
-  /* The quick row: a tile per setting, the label over its control */
+  /* The quick row: a tile per setting, the label over its control.
+     A tile is never narrower than its segment or its label's longest word: a label wraps between words before a tile leaves the row, and the controls of a row line up at the bottom.
+     A tile takes at most half the row, so one alone on a row stays a tile. */
   .menu-quick {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     padding-bottom: 0.6rem;
     border-bottom: 1px solid rgb(255 255 255 / 12%);
@@ -686,9 +689,11 @@
 
   .menu-quick-item {
     display: flex;
+    flex: 1 1 96px;
     flex-direction: column;
+    justify-content: space-between;
     gap: 0.3rem;
-    min-width: 0;
+    max-width: calc(50% - 0.25rem);
     padding: 0.45rem 0.5rem;
     background: rgb(0 0 0 / 18%);
     border: 1px solid rgb(255 255 255 / 12%);
@@ -708,23 +713,30 @@
     min-width: 0;
   }
 
-  .menu-quick-head .mini-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .menu-quick-reset {
-    grid-column: 1 / -1;
-    justify-self: start;
+    flex-basis: 100%;
+    text-align: left;
     font-size: 0.75rem;
   }
 
   /* A setting that can stand in the quick row, with its pin at the end */
   .pin-line {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.4rem;
+  }
+
+  /* A toggle's pin stands just left of the toggle, in room the row keeps for it, so the toggles of a group line up at the right edge whether they can be pinned or not */
+  .pin-line > .gridmenu-snap:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    gap: calc(0.6rem + 24px + 0.3rem);
+  }
+
+  .pin-line > .gridmenu-snap + .menu-pin {
+    position: absolute;
+    top: 50%;
+    right: calc(2.1rem + 0.3rem);
+    translate: 0 -50%;
   }
 
   /* A payment instruction's row in the checkout menu: the name, the text and its remove button */
@@ -829,16 +841,18 @@
     gap: 0.6rem;
   }
 
+  /* The title is never narrower than its longest word; the value gives way with an ellipsis */
   .menu-group-title {
     flex: 1;
-    min-width: 0;
   }
 
-  /* The mark on a group that differs from the defaults, and the reset under its controls */
+  /* The mark on a group that differs from the defaults, right after its title so the titles of a column line up, and the reset under its controls */
   .menu-group-dot {
-    flex: none;
+    display: inline-block;
     width: 7px;
     height: 7px;
+    margin-left: 0.45em;
+    vertical-align: middle;
     background: #f2b84b;
     border-radius: 50%;
   }
@@ -847,16 +861,19 @@
      control, and the reset on the right while the value is the block's own;
      the inherited value and its source as a dimmed line under the control */
   .setting {
+    position: relative;
     display: flex;
     align-items: flex-start;
     gap: 0.4rem;
   }
 
+  /* The dot stands in the group's left margin, so a setting's control lines up with the rows around it */
   .setting-dot {
-    flex: none;
+    position: absolute;
+    top: 0.9rem;
+    left: -0.6rem;
     width: 7px;
     height: 7px;
-    margin-top: 0.9rem;
     border-radius: 50%;
     background: transparent;
   }
@@ -906,7 +923,7 @@
   }
 
   .menu-group-reset {
-    align-self: flex-start;
+    justify-self: start;
     font-size: 0.78rem;
   }
 
@@ -1027,6 +1044,7 @@
   .panel-body input[type='text']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
   .panel-body input[type='tel']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
   .panel-body input[type='email']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .panel-body input[type='url']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
   .panel-body input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
     font: inherit;
     font-size: 0.85rem;

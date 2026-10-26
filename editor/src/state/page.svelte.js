@@ -14,6 +14,7 @@ import { PAGE_SCHEMA_VERSION, liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { anchorError, takenAnchors } from '$engine/anchor-model.js';
 import { setLinkOn } from '../lib/link-edit.js';
+import { readCart, writeCart, cartAdd, itemKey } from '$engine/shop.js';
 import { createDraftStore } from '../lib/draftStore.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
@@ -888,6 +889,39 @@ async function readPageDraft(entry) {
   return blankPage(entry);
 }
 
+/**
+ * «Test the payment» (0.7.28.7): the checkout page in a new tab as the draft view (`?draft=1`, drafts.js), where it stands as it does here and the pay buttons run against the site's functions.
+ * The editor and the page share the origin and so the basket; an empty basket gets the first published product with a price, since the payment is priced from the published catalogue.
+ * Unpublished changes are said in the status line, for the same reason.
+ */
+function testPayment() {
+  const entry = pageEntry();
+  if (!entry) return;
+  let filled = false;
+  if (!readCart().length) {
+    const published = collectionsState.publishedCollections;
+    const product = collectionsState.collectionIds
+      .filter((c) => published[c]?.kind === 'products')
+      .flatMap((c) => published[c].entries ?? [])
+      .find((item) => Number(item.price) > 0);
+    if (product) {
+      writeCart(cartAdd([], { key: itemKey(product.id), id: product.id, title: collectionsState.plainTitle(product.title), price: Number(product.price) || 0 }));
+      filled = true;
+    }
+  }
+  const address = new URL(entry.path, location.origin);
+  address.searchParams.set('draft', '1');
+  const tab = window.open(address.href, '_blank');
+  if (!tab) {
+    shellState.setStatus(ta('status.testPaymentBlocked'), 'error');
+    return;
+  }
+  tab.opener = null;
+  const drafts = [store, siteState.siteStore, ...Object.values(collectionsState.collectionStores)].some((s) => s?.hasDraft());
+  if (drafts) shellState.setStatus(ta('status.testPaymentDraft'));
+  else if (filled) shellState.setStatus(ta('status.testPaymentBasket'));
+}
+
 /** Set while openPageWith searches, so a second click waits for nothing and starts nothing. */
 let pageSearch = false;
 
@@ -1134,6 +1168,7 @@ export const pageState = {
   selectPage,
   readPageDraft,
   openPageWith,
+  testPayment,
   patchPageDraft,
   addGalleryImages,
   moveGalleryImage,

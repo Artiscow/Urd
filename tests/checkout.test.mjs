@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const { checkoutBlock } = await engineImport('blocks/checkout.js');
+const { siteLang } = await engineImport('i18n.js');
 const sites = Object.fromEntries(await Promise.all(['nb', 'en-GB', 'tr', 'nn', 'se'].map(async (lang) =>
   [lang, (await engineImport(`locales/site/${lang}.js`)).default.strings])));
 sites.sv = (await import(new URL('../template/plugins/lang-sv/locales/site/sv.js', import.meta.url).href)).default.strings;
@@ -36,6 +37,8 @@ class StubElement {
   appendChild(child) { this.children.push(child); return child; }
 
   append(...children) { for (const child of children) this.appendChild(child); }
+
+  prepend(child) { this.children.unshift(child); }
 
   setAttribute(name, value) { this.attributes[name] = String(value); }
 
@@ -279,4 +282,61 @@ test('a pay button on a site without functions, or without the keys, says paymen
   assert.equal(await answer(503), sites.nb['shop.vippsUnavailable'], 'the keys are missing');
   assert.equal(await answer(400), sites.nb['shop.payRefused']);
   assert.equal(await answer(500), sites.nb['shop.sendFailed']);
+});
+
+test('the published checkout names the providers on test keys in a line at the top of the form; live keys and the preview show none', async () => {
+  const realFetch = globalThis.fetch;
+  const asked = [];
+  const render = async (answers, preview = false) => {
+    const release = holdGlobals(CART);
+    globalThis.fetch = async (url) => {
+      asked.push(url);
+      const provider = String(url).split('/')[3];
+      return { ok: true, status: 200, json: async () => answers[provider] };
+    };
+    try {
+      const el = new StubElement('div');
+      checkoutBlock.render(el, { ...checkoutBlock.defaults(), payments: { vipps: true, card: 'stripe', paypal: true } }, { preview, site: {} });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return el.children[0].children.find((c) => c.className === 'urd-checkout-form');
+    } finally {
+      globalThis.fetch = realFetch;
+      release();
+    }
+  };
+  const form = await render({ vipps: { configured: true, test: true }, stripe: { configured: true, test: false }, paypal: { configured: true, test: true } });
+  assert.equal(form.children[0].className, 'urd-checkout-testmode');
+  assert.equal(form.children[0].textContent, sites.nb['shop.testMode'].replace('{providers}', new Intl.ListFormat(siteLang(), { type: 'conjunction' }).format(['Vipps', 'PayPal'])));
+  assert.equal(form.children[0].attributes.role, 'note');
+  const live = await render({ vipps: { configured: true, test: false }, stripe: { configured: true, test: false }, paypal: { configured: false, test: false } });
+  assert.ok(!live.children.some((c) => c.className === 'urd-checkout-testmode'));
+  asked.length = 0;
+  await render({ vipps: { configured: true, test: true } }, true);
+  assert.equal(asked.length, 0, 'the preview asks only on a click');
+});
+
+test('a pay button in the draft view tells the function so, and the published page does not', async () => {
+  const realFetch = globalThis.fetch;
+  const sent = async (search) => {
+    const release = holdGlobals(CART);
+    globalThis.location = { ...globalThis.location, search };
+    const bodies = [];
+    globalThis.fetch = async (url, init) => {
+      if (init?.method === 'POST') bodies.push(JSON.parse(init.body));
+      return { ok: false, status: 404, json: async () => null };
+    };
+    try {
+      const el = new StubElement('div');
+      checkoutBlock.render(el, { ...checkoutBlock.defaults(), payments: { vipps: true } }, { preview: false, site: {} });
+      const form = el.children[0].children.find((c) => c.className === 'urd-checkout-form');
+      const pay = form.children.find((c) => c.className === 'urd-checkout-buttons').children.find((b) => b.textContent === sites.nb['shop.payWithVipps']);
+      await pay.listeners.click();
+      return bodies[0];
+    } finally {
+      globalThis.fetch = realFetch;
+      release();
+    }
+  };
+  assert.equal((await sent('?draft=1')).draft, true);
+  assert.equal((await sent('')).draft, undefined);
 });

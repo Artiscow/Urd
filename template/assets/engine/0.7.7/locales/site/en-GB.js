@@ -95,6 +95,8 @@ export default {
     'shop.payWithPaypal': 'Pay with PayPal',
     'shop.seller': 'Seller',
     'shop.vippsUnavailable': 'Payment is not set up for this site yet.',
+    'shop.testMode': 'Test mode: payments through {providers} draw no money',
+    'draft.view': 'Unpublished changes, shown in this browser only',
     'shop.payMethod': 'Payment',
     'shop.choosePayment': 'Choose how you will pay.',
     'shop.payBy': 'Payment: {method}.',

@@ -52,6 +52,9 @@ test('sessionForm: payment mode, the lines as price data in the currency\'s mino
   assert.equal(form.client_reference_id, 'urd-' + 'a'.repeat(24));
   assert.equal(form.success_url, `https://forening.pages.dev/kasse?ordered=urd-${'a'.repeat(24)}&via=stripe`);
   assert.equal(form.cancel_url, 'https://forening.pages.dev/kasse');
+  const fromDraft = Object.fromEntries(sessionForm({ order: [{ id: 'boller', qty: 1 }], catalogs: CATALOGS, reference: 'urd-' + 'a'.repeat(24), contact: {}, origin: 'https://forening.pages.dev', returnPath: '/kasse', draft: true }));
+  assert.equal(fromDraft.success_url, `https://forening.pages.dev/kasse?draft=1&ordered=urd-${'a'.repeat(24)}&via=stripe`);
+  assert.equal(fromDraft.cancel_url, 'https://forening.pages.dev/kasse?draft=1');
   assert.equal(form.locale, 'nb');
   assert.equal(form.customer_email, 'kari@forening.no');
   assert.equal(form['payment_intent_data[capture_method]'], 'manual', 'held by default: the seller captures at shipping');

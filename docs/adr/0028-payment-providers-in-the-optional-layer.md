@@ -32,3 +32,7 @@ The primary pages of the Vipps MobilePay ePayment API, Stripe Checkout and PayPa
 - The setup guide gets one section per provider: the keys, the test environment and a test payment.
 - The comparison's commerce rows are recounted: the gateways row of C68 stays «Not taken» for the core and names the optional layer's providers; express checkout and the wallets, local methods and manual methods change status with what the layer gives.
 - Adding a provider later is one pure module, one network helper, three endpoints, a button key and a setup section.
+
+## Addendum, 26 October 2026: the payment test runs on the draft view
+
+«Test the payment» (0.7.28.7) opens the checkout page as the draft view, `?draft=1`: the public page drawn from the drafts the owner's browser keeps, through the visitor's path, so the pay buttons the preview holds back run for real against the site's functions, on a local site too. The decisions stand as they are: nothing is sent from the editor's preview, and the functions price every order from the published catalogue and read Stripe's capture mode from the published page, so a product, a price or a capture choice that is only in a draft is not what the payment uses. The view is described in ARCHITECTURE.md.

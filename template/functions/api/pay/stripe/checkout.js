@@ -29,6 +29,7 @@ export async function onRequestPost({ request, env }) {
     contact: clean.contact,
     origin,
     returnPath: clean.returnPath,
+    draft: clean.draft,
     capture,
     lang: site?.lang,
   });
@@ -44,7 +45,8 @@ export async function onRequestPost({ request, env }) {
   return json({ url, reference, pid: id });
 }
 
-/** Whether the provider is set up: the editor's checkout block asks before a sale, so the owner sees a missing key while building. No secret leaves; the answer is never cached. */
+/** Whether the provider is set up, and on its test keys: the editor's checkout block asks on a click, and the published checkout shows a line while test keys are in use. No secret leaves; the answer is never cached. */
 export function onRequestGet({ env }) {
-  return new Response(JSON.stringify({ configured: Boolean(stripeConfig(env)) }), { status: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+  const config = stripeConfig(env);
+  return new Response(JSON.stringify({ configured: Boolean(config), test: Boolean(config?.test) }), { status: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 }

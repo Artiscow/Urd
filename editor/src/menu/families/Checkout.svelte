@@ -57,41 +57,46 @@
     </Setting>
   {/snippet}
   {#snippet checkoutPayment()}
-    <Setting key="payments" shown={ta('common.off')}>
-      <div class="pin-line">
-        <label class="gridmenu-snap" title={ta('tip.checkout.vippsCheckout')}>
-          <input type="checkbox" checked={pays.vipps}
-            onchange={(e) => setPay({ vipps: e.target.checked })} />
-          {ta('lbl.vippsCheckout')}
-        </label>
-        <Pin id="vippsButton" />
-      </div>
-      <Choice label={ta('lbl.payCard')} value={pays.card} title={ta('tip.checkout.payCard')}
-        options={cardOptions} onchange={(v) => setPay({ card: v })} />
-      {#if captureShown}
-        <Choice label={ta('lbl.payCapture')} value={pays.capture} title={ta('tip.checkout.payCapture')}
-          options={[['ship', ta('opt.payCapture.ship')], ['now', ta('opt.payCapture.now')]]} onchange={(v) => setPay({ capture: v })} />
-      {/if}
+    <!-- The payments are one prop, so the group's own mark and reset stand for them -->
+    <div class="pin-line">
+      <label class="gridmenu-snap" title={ta('tip.checkout.vippsCheckout')}>
+        <input type="checkbox" checked={pays.vipps}
+          onchange={(e) => setPay({ vipps: e.target.checked })} />
+        {ta('lbl.vippsCheckout')}
+      </label>
+      <Pin id="vippsButton" />
+    </div>
+    <Choice label={ta('lbl.payCard')} value={pays.card} title={ta('tip.checkout.payCard')}
+      options={cardOptions} onchange={(v) => setPay({ card: v })} />
+    {#if captureShown}
+      <Choice label={ta('lbl.payCapture')} value={pays.capture} title={ta('tip.checkout.payCapture')}
+        options={[['ship', ta('opt.payCapture.ship')], ['now', ta('opt.payCapture.now')]]} onchange={(v) => setPay({ capture: v })} />
+    {/if}
+    <div class="pin-line">
       <label class="gridmenu-snap" title={ta('tip.checkout.payPaypal')}>
         <input type="checkbox" checked={pays.paypal}
           onchange={(e) => setPay({ paypal: e.target.checked })} />
         {ta('lbl.payPaypal')}
       </label>
-      <!-- The ways to pay without a provider: a label and a text each, shown above the order summary -->
-      <span class="mini-label" title={ta('tip.checkout.instructions')}>{ta('lbl.payInstructions')}</span>
-      {#each pays.manual as method, i (method.id)}
-        <div class="pay-instruction">
-          <input value={method.label} placeholder={ta('ph.instructionLabel')} aria-label={ta('lbl.name')}
-            onchange={(e) => setInstruction(i, { label: e.target.value.trim() })} />
-          <input value={method.text} placeholder={ta('ph.instructionText')} aria-label={ta('lbl.instructionText')}
-            onchange={(e) => setInstruction(i, { text: e.target.value.trim() })} />
-          <button class="ghost" title={ta('ui.remove')} aria-label={ta('ui.remove')} onclick={() => removeInstruction(i)}>
-            <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" /></svg>
-          </button>
-        </div>
-      {/each}
-      <button class="ghost action" onclick={addInstruction}>{ta('ui.addInstruction')}</button>
-    </Setting>
+      <Pin id="paypalButton" />
+    </div>
+    {#if providerOn}
+      <button type="button" class="ghost action" title={ta('tip.testPayment')} onclick={ed.testPayment}>{ta('ui.testPayment')}</button>
+    {/if}
+    <!-- The ways to pay without a provider: a label and a text each, shown above the order summary -->
+    <span class="mini-label" title={ta('tip.checkout.instructions')}>{ta('lbl.payInstructions')}</span>
+    {#each pays.manual as method, i (method.id)}
+      <div class="pay-instruction">
+        <input value={method.label} placeholder={ta('ph.instructionLabel')} aria-label={ta('lbl.name')}
+          onchange={(e) => setInstruction(i, { label: e.target.value.trim() })} />
+        <input value={method.text} placeholder={ta('ph.instructionText')} aria-label={ta('lbl.instructionText')}
+          onchange={(e) => setInstruction(i, { text: e.target.value.trim() })} />
+        <button class="ghost" title={ta('ui.remove')} aria-label={ta('ui.remove')} onclick={() => removeInstruction(i)}>
+          <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" /></svg>
+        </button>
+      </div>
+    {/each}
+    <button class="ghost action" onclick={addInstruction}>{ta('ui.addInstruction')}</button>
   {/snippet}
   {#snippet checkoutSeller()}
     <Setting key="seller" shown={ta('common.on')}>

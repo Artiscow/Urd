@@ -62,6 +62,8 @@ test('buildPayment: a wallet payment by web redirect, the return on own origin w
     returnPath: '/kasse',
   });
   assert.equal(body.returnUrl, 'https://forening.pages.dev/kasse?ordered=urd-abc123def456&via=vipps');
+  const fromDraft = buildPayment({ amountMinor: 100, reference: 'urd-abc123def456', order: [{ id: 'kake', qty: 1 }], contact: {}, origin: 'https://forening.pages.dev', returnPath: '/kasse', draft: true, receipt: [] });
+  assert.equal(fromDraft.returnUrl, 'https://forening.pages.dev/kasse?draft=1&ordered=urd-abc123def456&via=vipps');
   assert.deepEqual(body.amount, { currency: 'NOK', value: 70000 });
   assert.deepEqual(body.paymentMethod, { type: 'WALLET' });
   assert.equal(body.userFlow, 'WEB_REDIRECT');

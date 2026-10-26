@@ -17,7 +17,7 @@ const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
  * Validates and cleans the order payload from the client. Only the shape is
  * accepted: order lines with a known id form and clamped quantities, contact
  * fields as short strings. Prices from the client are deliberately ignored.
- * @returns {{order: Array<{id: string, qty: number, variant?: string}>, returnPath: string, contact: {name: string, email: string, phone: string, comment: string}}|null}
+ * @returns {{order: Array<{id: string, qty: number, variant?: string}>, returnPath: string, draft: boolean, contact: {name: string, email: string, phone: string, comment: string}}|null}
  */
 export function validOrderPayload(payload) {
   if (!payload || typeof payload !== 'object') return null;
@@ -46,6 +46,8 @@ export function validOrderPayload(payload) {
   return {
     order,
     returnPath,
+    // An order from the draft view (?draft=1) returns to it, so the return is read with the settings the payment started from.
+    draft: payload.draft === true,
     contact: {
       name: field(payload.contact?.name),
       email: field(payload.contact?.email),
@@ -177,9 +179,14 @@ export function vatRegistered(site) {
 /** The providers the layer knows, as the `via` of a return address and the folder of the endpoints. */
 export const PROVIDERS = ['vipps', 'stripe', 'paypal'];
 
-/** The return address of the checkout page with the payment's reference and the provider that answers for it. */
-export function returnUrl(origin, returnPath, reference, provider) {
-  return `${origin}${returnPath ?? '/'}?ordered=${reference}&via=${provider}`;
+/** The return address of the checkout page with the payment's reference and the provider that answers for it, in the draft view when the order came from it. */
+export function returnUrl(origin, returnPath, reference, provider, draft = false) {
+  return `${origin}${returnPath ?? '/'}?${draft ? 'draft=1&' : ''}ordered=${reference}&via=${provider}`;
+}
+
+/** The checkout page a cancelled payment goes back to, the draft view when the order came from it. */
+export function cancelUrl(origin, returnPath, draft = false) {
+  return `${origin}${returnPath ?? '/'}${draft ? '?draft=1' : ''}`;
 }
 
 /** A JSON file from our own deploy, or null. */

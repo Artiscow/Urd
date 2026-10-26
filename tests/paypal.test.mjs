@@ -59,6 +59,9 @@ test('buildOrder: a captured order with the lines as items in the site currency,
   const page = body.payment_source.paypal.experience_context;
   assert.equal(page.return_url, `https://forening.pages.dev/kasse?ordered=${REF}&via=paypal`);
   assert.equal(page.cancel_url, 'https://forening.pages.dev/kasse');
+  const fromDraft = buildOrder({ order: [{ id: 'boller', qty: 1 }], catalogs: CATALOGS, reference: REF, contact: {}, origin: 'https://forening.pages.dev', returnPath: '/kasse', draft: true }).payment_source.paypal.experience_context;
+  assert.equal(fromDraft.return_url, `https://forening.pages.dev/kasse?draft=1&ordered=${REF}&via=paypal`);
+  assert.equal(fromDraft.cancel_url, 'https://forening.pages.dev/kasse?draft=1');
   assert.equal(page.user_action, 'PAY_NOW');
   assert.equal(page.shipping_preference, 'NO_SHIPPING');
   assert.equal(page.brand_name, 'Apeiron Linjeforening');

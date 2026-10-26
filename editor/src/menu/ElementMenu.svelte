@@ -148,7 +148,9 @@
     } else if (b.type === 'cart') {
       items.push(designItem('cartView'));
     } else if (b.type === 'checkout') {
-      items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), kind: 'choice', value: paymentsOf(p).vipps ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('payments', { ...paymentsOf(p), vipps: v === 'on' }) });
+      // The providers' names alone on the tiles: the menu's rows name the buttons in full.
+      items.push({ id: 'vippsButton', label: 'Vipps', kind: 'choice', value: paymentsOf(p).vipps ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('payments', { ...paymentsOf(p), vipps: v === 'on' }) });
+      items.push({ id: 'paypalButton', label: 'PayPal', kind: 'choice', value: paymentsOf(p).paypal ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('payments', { ...paymentsOf(p), paypal: v === 'on' }) });
     } else if (b.type === 'share') {
       items.push(designItem('variant'));
     } else if (b.type === 'contact') {
