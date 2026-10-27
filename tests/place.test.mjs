@@ -7,7 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { frameAtPoint } = await engineImport('place.js');
+const { frameAtPoint, menuFit, shiftInto, flyoutFit } = await engineImport('place.js');
 
 const grid = { size: 8 };
 
@@ -69,4 +69,34 @@ test('toolbarAnchor: a rotated block anchors at the screen bounding box, carried
     const under = onScreen(w, h, deg, toolbarAnchor(w, h, deg, true));
     assert.ok(Math.abs(under.x + bw / 2) < 0.02 && Math.abs(under.y - bh / 2) < 0.02, `under at ${deg}°`);
   }
+});
+
+test('the block menu hangs down while it fits, and turns up or holds to the room when it does not', () => {
+  const at = { anchorTop: 100, anchorBottom: 130, gap: 6, viewport: 800 };
+  assert.deepEqual(menuFit({ ...at, height: 340 }), { up: false, room: null });
+  // Low on the screen: more room above, and the menu fits there whole.
+  assert.deepEqual(menuFit({ ...at, anchorTop: 600, anchorBottom: 630, height: 340 }), { up: true, room: null });
+  // A short screen: the larger side wins, and the menu is held to it.
+  assert.deepEqual(menuFit({ ...at, anchorTop: 150, anchorBottom: 180, viewport: 420, height: 340 }), { up: false, room: 226 });
+  assert.deepEqual(menuFit({ ...at, anchorTop: 250, anchorBottom: 280, viewport: 420, height: 340 }), { up: true, room: 236 });
+  // Never held below the least height.
+  assert.deepEqual(menuFit({ ...at, anchorTop: 60, anchorBottom: 90, viewport: 200, height: 340, min: 160 }), { up: false, room: 160 });
+});
+
+test('a box is moved sideways just enough to stay on the screen', () => {
+  assert.equal(shiftInto(100, 300, 1000), 0);
+  assert.equal(shiftInto(-40, 300, 1000), 48);
+  assert.equal(shiftInto(800, 300, 1000), -108);
+  // Wider than the screen: the left edge stays in view.
+  assert.equal(shiftInto(20, 1200, 1000), -12);
+});
+
+test('the slim menu\'s side panel opens right, turns left at the edge, and stays above the bottom', () => {
+  const base = { menuLeft: 100, menuRight: 340, rowTop: 200, width: 220, height: 190, viewportW: 1200, viewportH: 800, gap: 6 };
+  assert.deepEqual(flyoutFit(base), { left: false, top: 200, room: null });
+  assert.equal(flyoutFit({ ...base, menuLeft: 900, menuRight: 1140 }).left, true);
+  // No room on either side: the side with more room.
+  assert.equal(flyoutFit({ ...base, menuLeft: 100, menuRight: 340, viewportW: 500 }).left, false);
+  assert.equal(flyoutFit({ ...base, rowTop: 700 }).top, 602);
+  assert.deepEqual(flyoutFit({ ...base, height: 900 }), { left: false, top: 8, room: 784 });
 });

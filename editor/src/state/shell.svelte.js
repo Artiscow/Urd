@@ -443,6 +443,15 @@ function setLayoutPicker(v) {
   else localStorage.removeItem('urd-layout-picker');
 }
 
+/** The form of the canvas's «+ New block» menu: the groups on the side (the default), or the slim list with the blocks added last first. The preview reads the key on every open, as it does the layout picker's. */
+let addBlockMenuPref = $state(localStorage.getItem('urd-add-block-menu') === 'slim' ? 'slim' : 'side');
+
+function setAddBlockMenu(v) {
+  addBlockMenuPref = v === 'slim' ? 'slim' : 'side';
+  if (addBlockMenuPref === 'slim') localStorage.setItem('urd-add-block-menu', 'slim');
+  else localStorage.removeItem('urd-add-block-menu');
+}
+
 let settingsEl = $state(null);
 
 /* The top bar folds in fixed steps instead of wrapping to two rows.
@@ -715,6 +724,8 @@ export const shellState = {
   get layoutPickerPref() { return layoutPickerPref; },
   set layoutPickerPref(v) { layoutPickerPref = v; },
   setLayoutPicker,
+  get addBlockMenuPref() { return addBlockMenuPref; },
+  setAddBlockMenu,
   get settingsEl() { return settingsEl; },
   set settingsEl(v) { settingsEl = v; },
   FOLD_MQ,

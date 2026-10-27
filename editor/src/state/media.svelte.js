@@ -121,6 +121,28 @@ async function compressMany(fileList) {
   return { images, failed, big };
 }
 
+/**
+ * One picture for a new image block, as the Blocks panel and the canvas menu both add it: compressed (compressOrTrim), with its alt text made from the file name, and the status line telling of the work or of a picture that could not be read.
+ * @param {File} file
+ * @returns {Promise<{ src: string, alt: string, width: number, height: number, bytes: number }|null>} null when the picture could not be read
+ */
+async function imageForBlock(file) {
+  shellState.setStatus(ta('status.compressingImage'));
+  try {
+    const img = await compressOrTrim(file);
+    return { src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), width: img.width, height: img.height, bytes: img.bytes };
+  } catch (err) {
+    shellState.setStatus(imageErrorText(err), 'error');
+    return null;
+  }
+}
+
+/** The status line once an image block from a picture is placed: the size, when the picture is larger than WARN_BYTES, and otherwise clear. */
+function reportImage(bytes) {
+  if (bytes > WARN_BYTES) shellState.setStatus(ta('status.imageLarge', { kb: Math.round(bytes / 1024) }), 'error');
+  else shellState.setStatus('');
+}
+
 function reportUpload(ok, failed, big) {
   if (failed) shellState.setStatus(ta('status.imagesReadFailed', { n: failed }), 'error');
   else if (big) shellState.setStatus(ta('status.imagesLarge', { n: big }), 'error');
@@ -136,5 +158,7 @@ export const mediaState = {
   readVideoFile,
   newSeed,
   compressMany,
+  imageForBlock,
+  reportImage,
   reportUpload,
 };

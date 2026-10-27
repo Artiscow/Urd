@@ -12,7 +12,7 @@ export const QUICK_KEY = 'urd-quick-row';
 /** The settings every block type starts with in its row, in order: its own first, then the shared ones. */
 const SHARED = ['fit', 'phone'];
 const OWN = {
-  calendar: ['design', 'limit', 'subscribe'],
+  calendar: ['design', 'limit'],
   text: ['align', 'textBox'],
   button: ['goesTo', 'btnStyle'],
   image: ['imgFit', 'radius'],

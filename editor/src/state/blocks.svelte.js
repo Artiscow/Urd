@@ -9,6 +9,7 @@ import { calDesign } from '$engine/calendar-designs.js';
 import { frameAtPoint } from '$engine/place.js';
 import { claimAnchors } from '$engine/anchor-model.js';
 import { historyState } from './history.svelte.js';
+import { mediaState } from './media.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
@@ -224,8 +225,8 @@ function insertBlocks(sectionId, blocks, minBottom, moves) {
 /** The size a new calendar starts at, by the view its design shows; the frame is fitted to the design once it is placed. */
 const CAL_KIND_BY_VIEW = { list: 'calendar', cards: 'calendar-cards', month: 'calendar-month', next: 'calendar-next', agenda: 'calendar-agenda', week: 'calendar-month', day: 'calendar', year: 'calendar-month' };
 
-/** A new calendar in one of the designs (the palette's thumbnails and the palette search). */
-function addCalendarDesign(id) {
+/** A new calendar in one of the designs (the design picker opened from either list): placed in the view, or in the section and at the point the canvas menu was opened from (`place`). */
+function addCalendarDesign(id, place = null) {
   const design = calDesign(id);
   const block = buildBlock(CAL_KIND_BY_VIEW[design.view] ?? 'calendar');
   if (!block) return;
@@ -236,41 +237,64 @@ function addCalendarDesign(id) {
     ...(design.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}),
     ...(design.limit ? { limit: design.limit } : {}),
   };
-  requestPlacement(block);
+  if (place?.sectionId) placeInSection(block, place.sectionId, place.at);
+  else requestPlacement(block);
 }
 
-/** "+ Add block" in a section: build the block and put it there. With a
- *  click point (msg.at, from a double click on the section surface) the
- *  block lands centered on the point, clamped and snapped
- *  (frameAtPoint); without one it is centered horizontally. Image
- *  starts empty (picked in Properties - a file dialog cannot be opened
- *  from a postMessage). */
-function handleRequestBlock(msg) {
-  const block = buildBlock(msg.kind);
-  if (!block) return;
-  if (msg.at && typeof msg.at.x === 'number' && typeof msg.at.y === 'number') {
-    const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
+/**
+ * A block put in a section: with a click point (`at`, from a double click on the section surface) it lands centred on the point, clamped and snapped (frameAtPoint); without one it is centred horizontally.
+ * The new block is then selected, as from the Blocks panel (the preview learns its id through selectById).
+ */
+function placeInSection(block, sectionId, at) {
+  if (at && typeof at.x === 'number' && typeof at.y === 'number') {
+    const section = pageState.store.data.sections.find((s) => s.id === sectionId);
     const grid = section?.grid ?? siteState.siteDraft.grid;
-    const pos = frameAtPoint({
-      x: msg.at.x,
-      y: msg.at.y,
-      w: block.frames.desktop.w,
-      h: block.frames.desktop.h,
-      grid,
-    });
+    const pos = frameAtPoint({ x: at.x, y: at.y, w: block.frames.desktop.w, h: block.frames.desktop.h, grid });
     block.frames.desktop.x = pos.x;
     block.frames.desktop.y = pos.y;
   } else {
     block.frames.desktop.x = Math.round(((100 - block.frames.desktop.w) / 2) * 100) / 100;
     block.frames.desktop.y = 40;
   }
-  insertBlock(msg.sectionId, block);
-  // The new block is selected (the preview does not know the id until
-  // the rerender; selectById replies with urd-select-block, so the
-  // Properties panel follows). Same UX as the palette.
+  insertBlock(sectionId, block);
   previewState.bridge?.sendSelect(block.id);
-  if (msg.kind === 'image') shellState.setStatus(ta('status.imageBlockAdded'));
-  if (msg.kind === 'gallery') shellState.setStatus(ta('status.galleryBlockAdded'));
+}
+
+/**
+ * "+ Add block" in a section: build the block and put it there (placeInSection).
+ * An image or a gallery comes with the pictures picked in the preview (`files`), compressed here as the Blocks panel does; without them it starts empty.
+ * The block waits for the compression, and is left out, with a word in the status line, when its section is no longer on the page by then (the owner moved to another page, or took the section away).
+ */
+async function handleRequestBlock(msg) {
+  const block = buildBlock(msg.kind);
+  if (!block) return;
+  const files = Array.isArray(msg.files) ? msg.files.filter((f) => f instanceof Blob) : [];
+  const stillThere = () => pageState.store.data.sections.some((s) => s.id === msg.sectionId);
+  let report = null;
+  if (files.length && msg.kind === 'image') {
+    const img = await mediaState.imageForBlock(files[0]);
+    if (!img) return;
+    block.props = { ...block.props, src: img.src, alt: img.alt };
+    block.frames.desktop.h = Math.max(40, Math.round((img.height / img.width) * (block.frames.desktop.w / 100) * (previewState.iframeEl?.clientWidth ?? 1280)));
+    report = () => mediaState.reportImage(img.bytes);
+  } else if (files.length && msg.kind === 'gallery') {
+    shellState.setStatus(ta('status.compressingImages'));
+    const { images, failed, big } = await mediaState.compressMany(files);
+    if (!images.length) {
+      mediaState.reportUpload(0, failed, big);
+      return;
+    }
+    block.props = { ...block.props, images };
+    report = () => mediaState.reportUpload(images.length, failed, big);
+  }
+  if (!stillThere()) {
+    shellState.setStatus(ta('status.blockNotPlaced'), 'error');
+    return;
+  }
+  placeInSection(block, msg.sectionId, msg.at);
+  report?.();
+  if (!files.length && msg.kind === 'image') shellState.setStatus(ta('status.imageBlockAdded'));
+  if (!files.length && msg.kind === 'gallery') shellState.setStatus(ta('status.galleryBlockAdded'));
 }
 
 /** What the other parts read and write through, and the effects the shell runs once. */

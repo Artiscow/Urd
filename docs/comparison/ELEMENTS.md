@@ -45,8 +45,8 @@ Urd uses the first three. The fourth belongs to nested-flow builders: Urd's bloc
 - **AI as an insertion action:** Wix Harmony's «Generate with AI» for sections and its AI element generator [Harmony AI tools](https://support.wix.com/en/article/wix-harmony-editor-about-the-ai-tools) (primary, 27-28 Jan 2026); Duda's AI-generated sections [duda.co/product-updates](https://www.duda.co/product-updates) (primary); Shopify Sidekick generating blocks for any theme [shopify.com/news](https://www.shopify.com/news/winter-26-edition-merchant) (primary); Webflow's AI code components [webflow.com/blog](https://webflow.com/blog/ai-code-components) (primary).
 
 **Urd today.** Three manual paths, each with a search (`palette-search.js`):
-- the «Blocks» panel: a click places the block in the middle of the view, in the last clicked section, and the calendar, gallery and shape variants are nested;
-- the «+ New block» menu in a section, or at the pointer;
+- the «Blocks» panel: a click places the block in the middle of the view, in the last clicked section; the kinds stand in seven groups by purpose, each with its picture and no nesting (`block-palette.js`), and an image, a gallery with pictures and the calendar's designs open the file picker or the design picker;
+- the «+ New block» menu in a section, or at the pointer, with the same groups: the groups listed beside the chosen group's blocks, or, chosen in the Urd settings, a slim list under the blocks added last whose groups open beside it;
 - «/» on the canvas, which opens «+ New block» with the search focused; the arrows walk the menu, and Enter inserts the walked row or the first hit (`preview-edit.js`). Slash inside a text block is not built.
 
 A block is moved between sections by dragging it on the canvas; nothing is dragged in from a panel.

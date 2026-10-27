@@ -187,6 +187,7 @@ function onIframeLoad() {
     onAddBlock: (msg) => blocksState.insertBlock(msg.sectionId, msg.block),
     onAddBlocks: (msg) => blocksState.insertBlocks(msg.sectionId, msg.blocks, msg.minBottom, msg.moves),
     onRequestBlock: blocksState.handleRequestBlock,
+    onCalendarDesigns: (msg) => { pageState.designPicker = { mode: 'add', place: { sectionId: msg.sectionId, at: msg.at } }; },
     onMoveBlockSection: bridgeState.handleMoveBlockSection,
     onMobileReset: bridgeState.handleMobileReset,
     onMobileOrder: bridgeState.handleMobileOrder,

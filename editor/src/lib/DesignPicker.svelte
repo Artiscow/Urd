@@ -23,6 +23,8 @@
   let previewH = $state(600);
   let searchEl = $state(null);
   let dialogEl = $state(null);
+  // The dialog fills the window around its card, so a press outside the card lands on the dialog itself: it leaves the picker when it both starts and ends there, and a drag out of the card never does.
+  let downOnBackdrop = false;
 
   // A design is found by its words in any language (search-langs.js); a typed query loads the other languages once, and the list runs again when they are in.
   const matches = (d) => (!source.filters || !view || source.filters.match(d, view)) && (!query.trim() || matchAny(source.searchText(d), query));
@@ -131,7 +133,10 @@
 
 <svelte:window onmessage={onMessage} />
 
-<dialog class="dp-overlay" bind:this={dialogEl} aria-label={source.label} onclose={onClosed}>
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+<dialog class="dp-overlay" bind:this={dialogEl} aria-label={source.label} onclose={onClosed}
+  onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
+  onclick={(e) => downOnBackdrop && e.target === e.currentTarget && onclose?.()}>
   <div class="dp-card" class:nofilters={!source.filters}>
     <div class="dp-head">
       <h2>{source.title}</h2>

@@ -177,7 +177,7 @@
       current: ed.designPicker.mode === 'set' ? calDesign(ed.selectedBlock?.props.design).id : ed.designPicker.mode === 'phone' ? calPhoneView(ed.selectedBlock?.props) : ed.designPicker.mode === 'card' ? calCardDesign(ed.selectedBlock?.props) : null,
       design: calDesign(ed.selectedBlock?.props.design).id, props: ed.selectedBlock ? $state.snapshot(ed.selectedBlock.props) : {} })}
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
-      onpick={(id) => { if (ed.designPicker.mode === 'add') ed.addCalendarDesign(id); else if (ed.designPicker.mode === 'phone') ed.setCalendarPhoneView(id); else if (ed.designPicker.mode === 'card') ed.setCalendarCard(id); else ed.setCalendarDesign(id); ed.designPicker = null; }}
+      onpick={(id) => { if (ed.designPicker.mode === 'add') ed.addCalendarDesign(id, ed.designPicker.place); else if (ed.designPicker.mode === 'phone') ed.setCalendarPhoneView(id); else if (ed.designPicker.mode === 'card') ed.setCalendarCard(id); else ed.setCalendarDesign(id); ed.designPicker = null; }}
       onclose={() => (ed.designPicker = null)} />
   {/if}
 

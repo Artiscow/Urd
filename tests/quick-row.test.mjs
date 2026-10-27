@@ -12,7 +12,7 @@ import {
 const all = (...ids) => new Set(ids);
 
 test('quickDefaults: a type\'s own tiles first, then the shared ones', () => {
-  assert.deepEqual(quickDefaults('calendar'), ['design', 'limit', 'subscribe', 'fit', 'phone']);
+  assert.deepEqual(quickDefaults('calendar'), ['design', 'limit', 'fit', 'phone'], 'four tiles: one row in the wide menu');
   assert.deepEqual(quickDefaults('text'), ['align', 'textBox', 'fit', 'phone']);
   assert.deepEqual(quickDefaults('some-plugin-block'), ['fit', 'phone']);
 });
@@ -21,7 +21,9 @@ test('quickIds: the defaults, then the pins in pin order, only those the block h
   const choice = { pinned: ['size', 'design'], removed: ['fit'] };
   assert.deepEqual(quickIds('text', choice, all('fit', 'phone', 'size')), ['phone', 'size']);
   assert.deepEqual(quickIds('text', NO_CHOICE, all('align', 'textBox', 'fit', 'phone')), ['align', 'textBox', 'fit', 'phone']);
-  assert.deepEqual(quickIds('calendar', NO_CHOICE, all('design', 'subscribe', 'fit', 'phone')), ['design', 'subscribe', 'fit', 'phone']);
+  // The count is a default but is drawn only for the views that have one; the subscribe button stands in the row once pinned.
+  assert.deepEqual(quickIds('calendar', NO_CHOICE, all('design', 'subscribe', 'fit', 'phone')), ['design', 'fit', 'phone']);
+  assert.deepEqual(quickIds('calendar', { pinned: ['subscribe'], removed: [] }, all('design', 'limit', 'subscribe', 'fit', 'phone')), ['design', 'limit', 'fit', 'phone', 'subscribe']);
 });
 
 test('togglePin: a pin joins at the end and leaves again; a default leaves and returns to its own place', () => {

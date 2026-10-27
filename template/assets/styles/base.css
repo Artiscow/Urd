@@ -13450,39 +13450,242 @@ body:has(dialog:modal) {
   border-color: var(--urd-color-accent);
 }
 
+/* The + New block menu (preview-edit.js addBlockAdder).
+   Groups on the side, the default form, is a box of fixed size: the search on top, the groups' list at the left and the chosen group's blocks beside it, where only the list and the blocks scroll, so the box never grows with the palette.
+   Its fit to the screen (turning upwards, the height held to the room, the sideways move) is set by fitBlockMenu. */
 .urd-preview .urd-add-block-menu {
   display: none;
   position: absolute;
   right: 0;
   top: calc(100% + 6px);
-  grid-template-columns: repeat(2, minmax(6.5rem, 1fr));
-  gap: 4px;
-  padding: 6px;
-  /* A menu taller than the screen scrolls rather than running off it, as the
-     image editor's panel does. */
-  max-height: calc(100vh - 16px);
-  overflow-y: auto;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: 6px;
+  width: 460px;
+  height: 340px;
+  padding: 8px;
+  overflow: hidden;
+  text-align: left;
   background: var(--urd-color-surface);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
 }
 
-/* Opened in the lower half of the screen: the menu hangs upwards from the
-   pointer instead of down past the bottom edge (the class flip the block
-   toolbar uses, urd-toolbar-under). */
+.urd-preview .urd-add-block-menu.open {
+  display: flex;
+}
+
+/* Turned upwards from its chip or the pointer where the room below is too small (the class flip the block toolbar uses, urd-toolbar-under). */
 .urd-preview .urd-add-block-menu.urd-menu-up {
   top: auto;
   bottom: calc(100% + 6px);
 }
 
-/* Shapes: an expandable submenu spanning both columns */
+.urd-preview .urd-abm-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 10.5rem minmax(0, 1fr);
+  gap: 8px;
+}
+
+.urd-preview .urd-abm-rail,
+.urd-preview .urd-abm-pane {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.urd-preview .urd-abm-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 8px;
+  border-right: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+}
+
+.urd-preview .urd-abm-group {
+  display: none;
+}
+
+.urd-preview .urd-abm-group.open {
+  display: block;
+}
+
+.urd-preview .urd-abm-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  align-content: start;
+}
+
+/* A heading in the menu: the open group's name in the slim form's panel, and the recent blocks' (in the side form the list's marked row names the group) */
+.urd-preview .urd-add-block-group {
+  margin: 2px 2px 4px;
+  font: 700 9.5px/1.3 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--urd-color-text);
+  opacity: 0.55;
+}
+
+.urd-preview .urd-add-block-menu:not(.urd-abm-slim) .urd-abm-group > .urd-add-block-group,
+.urd-preview .urd-abm-recent {
+  display: none;
+}
+
+.urd-preview .urd-add-block-menu button {
+  font: 12px/1.2 system-ui, sans-serif;
+  color: var(--urd-color-text);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+  border-radius: 7px;
+  padding: 6px 8px;
+  text-align: left;
+  cursor: pointer;
+  /* Long labels without spaces (plugin views, for example) must never
+     burst the cell: break the word instead of overflowing the menu. */
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Each kind and group with its picture before its name (block-palette.js) */
+.urd-preview .urd-add-block-menu button:has(> svg) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.urd-preview .urd-add-block-menu button > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--urd-color-accent);
+}
+
+.urd-preview .urd-add-block-menu button:hover {
+  border-color: var(--urd-color-accent);
+  background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
+}
+
+/* The row the arrow keys have walked to, marked a shade stronger than hover
+   so the keyboard and the pointer can be told apart. */
+.urd-preview .urd-add-block-menu button.urd-pick-active {
+  border-color: var(--urd-color-accent);
+  background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent);
+}
+
+/* A group's row in the list: borderless, and filled with the accent while its blocks are shown */
+.urd-preview .urd-add-block-menu .urd-abm-tab {
+  flex: none;
+  border-color: transparent;
+}
+
+.urd-preview .urd-add-block-menu .urd-abm-tab[hidden] {
+  display: none;
+}
+
+.urd-preview .urd-add-block-menu .urd-abm-tab > span:not(.urd-abm-chevron) {
+  flex: 1;
+  min-width: 0;
+}
+
+.urd-preview .urd-add-block-menu .urd-abm-tab:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--urd-color-text) 8%, transparent);
+}
+
+.urd-preview .urd-add-block-menu .urd-abm-tab.on {
+  border-color: var(--urd-color-accent);
+  background: var(--urd-color-accent);
+  color: var(--urd-color-bg);
+  font-weight: 600;
+}
+
+.urd-preview .urd-add-block-menu .urd-abm-tab.on > svg {
+  color: inherit;
+}
+
+.urd-preview .urd-abm-chevron {
+  display: none;
+  opacity: 0.6;
+}
+
+/* The slim form (the Urd settings): the groups' list alone, 240 px wide and as tall as its rows, under the blocks added last.
+   A group's blocks open in a panel beside the menu (fitFlyout), so this form lets the panel out of its box and scrolls the list instead.
+   The panel's arrow points to the side it opens on. */
+.urd-preview .urd-add-block-menu.urd-abm-slim {
+  width: 240px;
+  height: auto;
+  overflow: visible;
+}
+
+.urd-preview .urd-abm-slim .urd-abm-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.urd-preview .urd-abm-slim .urd-abm-rail {
+  flex: 1;
+  padding-right: 0;
+  border-right: 0;
+}
+
+.urd-preview .urd-abm-slim .urd-abm-chevron {
+  display: inline-flex;
+}
+
+.urd-preview .urd-abm-slim.urd-abm-flip .urd-abm-chevron {
+  transform: scaleX(-1);
+}
+
+.urd-preview .urd-abm-slim .urd-abm-recent:not(:empty) {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+}
+
+.urd-preview .urd-abm-slim .urd-abm-pane {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: calc(100% + 6px);
+  box-sizing: border-box;
+  width: 220px;
+  padding: 8px;
+  background: var(--urd-color-surface);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
+}
+
+.urd-preview .urd-abm-slim .urd-abm-pane.open {
+  display: block;
+}
+
+.urd-preview .urd-abm-slim.urd-abm-flip .urd-abm-pane {
+  left: auto;
+  right: calc(100% + 6px);
+}
+
+.urd-preview .urd-abm-slim .urd-abm-items {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
+.urd-preview .urd-abm-slim .urd-abm-recent button,
+.urd-preview .urd-abm-slim .urd-abm-items button {
+  border-color: transparent;
+}
+
+/* A plugin's fold: an expandable submenu across the group's columns */
 .urd-preview .urd-add-block-shapes-toggle {
   grid-column: 1 / -1;
 }
 
-/* The fold's caret is drawn, never a character, and turns over while the
-   fold is open (the FAQ block's chevron pattern). */
+/* The fold's caret is drawn, never a character, and turns over while the fold is open (the FAQ block's chevron pattern). */
 .urd-preview .urd-fold-caret {
   display: inline-flex;
   vertical-align: -1px;
@@ -13502,19 +13705,6 @@ body:has(dialog:modal) {
   }
 }
 
-/* Plugin blocks: their own labelled section below the built-in ones */
-.urd-preview .urd-add-block-plugins {
-  grid-column: 1 / -1;
-  margin-top: 2px;
-  padding-top: 6px;
-  border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.55;
-}
-
 .urd-preview .urd-add-block-shapes {
   display: none;
   grid-column: 1 / -1;
@@ -13527,37 +13717,6 @@ body:has(dialog:modal) {
 
 .urd-preview .urd-add-block-shapes.open {
   display: grid;
-}
-
-.urd-preview .urd-add-block-menu.open {
-  display: grid;
-}
-
-.urd-preview .urd-add-block-menu button {
-  font: 12px/1.2 system-ui, sans-serif;
-  color: var(--urd-color-text);
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
-  border-radius: 6px;
-  padding: 6px 8px;
-  text-align: left;
-  cursor: pointer;
-  /* Long labels without spaces (plugin views, for example) must never
-     burst the cell: break the word instead of overflowing the menu. */
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.urd-preview .urd-add-block-menu button:hover {
-  border-color: var(--urd-color-accent);
-  background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
-}
-
-/* The row the arrow keys have walked to, marked a shade stronger than hover
-   so the keyboard and the pointer can be told apart. */
-.urd-preview .urd-add-block-menu button.urd-pick-active {
-  border-color: var(--urd-color-accent);
-  background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent);
 }
 
 /* Placeholder for unknown types: neutral, never destructive */
@@ -18246,17 +18405,16 @@ body.urd-mobile .urd-section-resize-top {
   text-overflow: ellipsis;
 }
 
-/* Block search in the + New block menu (variant B): a field at the top; during
-   an active search the menu's ordinary content is hidden and a flat, ranked
-   result list is shown instead (the urd-searching class). */
+/* Block search in the + New block menu: a field at the top.
+   During an active search the menu's ordinary content is hidden and a flat, ranked result list is shown instead (the urd-searching class), scrolling inside the menu. */
 .urd-preview .urd-block-search {
-  grid-column: 1 / -1;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 6px;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent);
   border-radius: 7px;
-  padding: 4px 8px;
+  padding: 5px 8px;
 }
 
 .urd-preview .urd-block-search svg {
@@ -18274,13 +18432,26 @@ body.urd-mobile .urd-section-resize-top {
   min-width: 0;
 }
 
-.urd-preview .urd-add-block-menu.urd-searching > :not(.urd-block-search):not(.urd-block-hits) {
+.urd-preview .urd-add-block-menu.urd-searching > :not(.urd-block-search):not(.urd-block-hits),
+.urd-preview .urd-block-hits {
   display: none;
 }
 
-/* The hits take part in the menu's own grid (two columns) */
-.urd-preview .urd-block-hits {
-  display: contents;
+.urd-preview .urd-add-block-menu.urd-searching .urd-block-hits {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  align-content: start;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* The slim form grows with its rows, so its hits are held to a height of their own */
+.urd-preview .urd-abm-slim.urd-searching .urd-block-hits {
+  grid-template-columns: minmax(0, 1fr);
+  max-height: 320px;
 }
 
 .urd-preview .urd-block-hits .urd-search-empty {

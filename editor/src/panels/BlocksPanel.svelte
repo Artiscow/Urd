@@ -5,8 +5,8 @@
   import { makeId } from '$engine/sections/presets.js';
   import { searchItemsAny } from '$engine/search-langs.js';
   import { searchLangs } from '../lib/search-langs.svelte.js';
-  import { slugify, WARN_BYTES } from '$engine/imageTools.js';
   import { calDesignGroups } from '$engine/calendar-designs.js';
+  import { PALETTE_GROUPS, PALETTE_KINDS } from '$engine/block-palette.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const bridge = $derived(ed.bridge);
@@ -15,7 +15,7 @@
   const templateIds = $derived(ed.templateIds);
   const templateStores = $derived(ed.templateStores);
   const viewMode = $derived(ed.viewMode);
-  const { addCalendarDesign, buildBlock, compressMany, compressOrTrim, imageErrorText, reportUpload, requestPlacement, setStatus } = ed;
+  const { addCalendarDesign, buildBlock, compressMany, imageForBlock, reportImage, reportUpload, requestPlacement, setStatus } = ed;
 
   function addBlock(kind) {
     requestPlacement(buildBlock(kind));
@@ -51,44 +51,26 @@
   });
 
   function panelBlockItems() {
-    const items = [
-      { label: ta('blocks.text'), act: 'block', kind: 'text' },
-      { label: ta('ui.textBox'), act: 'block', kind: 'text-box' },
-      { label: ta('blocks.button'), act: 'block', kind: 'button' },
-      { label: ta('blocks.image'), act: 'image' },
-      { label: ta('blocks.video'), act: 'block', kind: 'video' },
-      { label: ta('blocks.icon'), act: 'block', kind: 'icon' },
-      { label: ta('blocks.map'), act: 'block', kind: 'map' },
-      { label: ta('blocks.form'), act: 'block', kind: 'form' },
-      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewList')}`, act: 'block', kind: 'calendar' },
+    // The palette's kinds in its order, the image and the gallery from pictures as the panel adds them, then the calendar's views and designs, which the hit list reaches by name.
+    const items = [];
+    for (const group of PALETTE_GROUPS) {
+      for (const kind of group.kinds) {
+        const def = PALETTE_KINDS[kind];
+        const label = ta(def.labelKey);
+        if (def.files === 'one') items.push({ label, act: 'image' });
+        else if (def.files === 'many') items.push({ label, act: 'galleryImages' });
+        else if (def.action === 'designs') items.push({ label, act: 'designs' });
+        else items.push({ label, act: 'block', kind });
+      }
+    }
+    items.push(
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewCards')}`, act: 'block', kind: 'calendar-cards' },
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewMonth')}`, act: 'block', kind: 'calendar-month' },
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewNext')}`, act: 'block', kind: 'calendar-next' },
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewAgenda')}`, act: 'block', kind: 'calendar-agenda' },
       ...calDesignGroups().flatMap((group) => group.designs).filter((d) => d.id !== 'plain')
         .map((d) => ({ label: `${ta('blocks.calendar')}: ${ta(d.labelKey)}`, act: 'calendarDesign', design: d.id })),
-      { label: ta('blocks.collection'), act: 'block', kind: 'collection' },
-      { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
-      { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
-      { label: ta('blocks.quote'), act: 'block', kind: 'quote' },
-      { label: ta('blocks.stats'), act: 'block', kind: 'stats' },
-    { label: ta('blocks.ribbon'), act: 'block', kind: 'ribbon' },
-      { label: ta('blocks.table'), act: 'block', kind: 'table' },
-      { label: ta('blocks.share'), act: 'block', kind: 'share' },
-      { label: ta('blocks.contact'), act: 'block', kind: 'contact' },
-      { label: ta('blocks.countdown'), act: 'block', kind: 'countdown' },
-      { label: ta('blocks.audio'), act: 'block', kind: 'audio' },
-      { label: ta('blocks.product'), act: 'block', kind: 'product' },
-      { label: ta('blocks.cart'), act: 'block', kind: 'cart' },
-      { label: ta('blocks.checkout'), act: 'block', kind: 'checkout' },
-      { label: ta('ui.emptyGallery'), act: 'block', kind: 'gallery' },
-      { label: ta('ui.galleryWithImages'), act: 'galleryImages' },
-      { label: ta('shape.line'), act: 'block', kind: 'shape-line' },
-      { label: ta('shape.arrow'), act: 'block', kind: 'shape-arrow' },
-      { label: ta('shape.circle'), act: 'block', kind: 'shape-circle' },
-      { label: ta('shape.rect'), act: 'block', kind: 'shape-rect' },
-      { label: ta('shape.triangle'), act: 'block', kind: 'shape-triangle' },
-    ];
+    );
     for (const id of templateIds) {
       const tpl = templateStores[id]?.data?.mal;
       if (tpl?.kind === 'blocks') items.push({ label: tpl.name, act: 'template', id });
@@ -110,6 +92,7 @@
     else if (item.act === 'calendarDesign') addCalendarDesign(item.design);
     else if (item.act === 'plugin') addPluginBlock(item.entry, item.props ?? {});
     else if (item.act === 'template') bridge?.sendInsertTemplate(item.id);
+    else if (item.act === 'designs') ed.designPicker = { mode: 'add' };
   }
 
   /** + Image: compress to webp and put in the draft as a data URL.
@@ -119,14 +102,8 @@
     event.target.value = '';
     if (!file) return;
 
-    setStatus(ta('status.compressingImage'));
-    let img;
-    try {
-      img = await compressOrTrim(file);
-    } catch (err) {
-      setStatus(imageErrorText(err), 'error');
-      return;
-    }
+    const img = await imageForBlock(file);
+    if (!img) return;
 
     // Start width 30 % of the section; the height follows the image's
     // aspect ratio with an assumed section width (freely adjusted afterwards anyway).
@@ -135,15 +112,11 @@
       id: makeId('blk'),
       type: 'image',
       version: 1,
-      props: { src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), fit: 'cover', radius: 'md', href: null },
+      props: { src: img.src, alt: img.alt, fit: 'cover', radius: 'md', href: null },
       animation: null,
       frames: { desktop: { x: 4, y: 8, w: 30, h: Math.max(40, height), z: 1, rot: 0 }, mobile: null },
     });
-    if (img.bytes > WARN_BYTES) {
-      setStatus(ta('status.imageLarge', { kb: Math.round(img.bytes / 1024) }), 'error');
-    } else {
-      setStatus('');
-    }
+    reportImage(img.bytes);
   }
 
   /** "Gallery with images" in the palette: build the block pre-filled. */
@@ -189,90 +162,23 @@
       <p class="panel-hint">{ta('canvas.searchEmpty')}</p>
     {/each}
   {:else}
-  <details class="group">
-    <summary>{ta('blocks.text')}</summary>
-    <div class="group-items">
-      <button class="ghost" onclick={() => addBlock('text')}>{ta('blocks.text')}</button>
-      <button class="ghost" onclick={() => addBlock('text-box')}
-        title={ta('tip.blocks.textBox')}>{ta('ui.textBox')}</button>
+  <!-- The palette's groups in the order the canvas's «+ New block» shares (block-palette.js), a picture and a name per entry -->
+  {#each PALETTE_GROUPS as group (group.id)}
+    <p class="mini-label group-sub">{ta(group.labelKey)}</p>
+    <div class="tile-grid cols-3 palette-grid">
+      {#each group.kinds as kind (kind)}
+        {@const def = PALETTE_KINDS[kind]}
+        {#if def.files}
+          <label class="tile filepick" title={ta(def.tipKey)}>{@html def.picture}<span>{ta(def.labelKey)}</span>
+            <input type="file" accept="image/*" multiple={def.files === 'many'} onchange={def.files === 'many' ? addGalleryBlock : addImage} /></label>
+        {:else if def.action === 'designs'}
+          <button type="button" class="tile" title={ta(def.tipKey)} onclick={() => (ed.designPicker = { mode: 'add' })}>{@html def.picture}<span>{ta(def.labelKey)}</span></button>
+        {:else}
+          <button type="button" class="tile" title={def.tipKey ? ta(def.tipKey) : undefined} onclick={() => addBlock(kind)}>{@html def.picture}<span>{ta(def.labelKey)}</span></button>
+        {/if}
+      {/each}
     </div>
-  </details>
-  <button class="ghost" onclick={() => addBlock('button')}>{ta('blocks.button')}</button>
-  <label class="ghost filepick" title={ta('tip.webpAuto')}>
-    {ta('blocks.image')}
-    <input type="file" accept="image/*" onchange={addImage} />
-  </label>
-  <button class="ghost" title={ta('tip.blocks.video')}
-    onclick={() => addBlock('video')}>{ta('blocks.video')}</button>
-  <button class="ghost" title={ta('tip.blocks.icon')}
-    onclick={() => addBlock('icon')}>{ta('blocks.icon')}</button>
-  <button class="ghost" title={ta('tip.blocks.map')}
-    onclick={() => addBlock('map')}>{ta('blocks.map')}</button>
-  <button class="ghost" title={ta('tip.blocks.form')}
-    onclick={() => addBlock('form')}>{ta('blocks.form')}</button>
-  <button class="ghost" title={ta('tip.blocks.collection')}
-    onclick={() => addBlock('collection')}>{ta('blocks.collection')}</button>
-  <button class="ghost" title={ta('tip.blocks.faq')}
-    onclick={() => addBlock('faq')}>{ta('blocks.faq')}</button>
-  <button class="ghost" title={ta('tip.blocks.timeline')}
-    onclick={() => addBlock('timeline')}>{ta('blocks.timeline')}</button>
-  <button class="ghost" title={ta('tip.blocks.quote')}
-    onclick={() => addBlock('quote')}>{ta('blocks.quote')}</button>
-  <button class="ghost" title={ta('tip.blocks.stats')}
-    onclick={() => addBlock('stats')}>{ta('blocks.stats')}</button>
-  <button class="ghost" title={ta('tip.blocks.ribbon')}
-    onclick={() => addBlock('ribbon')}>{ta('blocks.ribbon')}</button>
-  <button class="ghost" title={ta('tip.blocks.table')}
-    onclick={() => addBlock('table')}>{ta('blocks.table')}</button>
-  <button class="ghost" title={ta('tip.blocks.share')}
-    onclick={() => addBlock('share')}>{ta('blocks.share')}</button>
-  <button class="ghost" title={ta('tip.blocks.contact')}
-    onclick={() => addBlock('contact')}>{ta('blocks.contact')}</button>
-  <button class="ghost" title={ta('tip.blocks.countdown')}
-    onclick={() => addBlock('countdown')}>{ta('blocks.countdown')}</button>
-  <button class="ghost" title={ta('tip.blocks.audio')}
-    onclick={() => addBlock('audio')}>{ta('blocks.audio')}</button>
-  <button class="ghost" title={ta('tip.blocks.product')}
-    onclick={() => addBlock('product')}>{ta('blocks.product')}</button>
-  <button class="ghost" title={ta('tip.blocks.cart')}
-    onclick={() => addBlock('cart')}>{ta('blocks.cart')}</button>
-  <button class="ghost" title={ta('tip.blocks.checkout')}
-    onclick={() => addBlock('checkout')}>{ta('blocks.checkout')}</button>
-  <details class="group">
-    <summary>{ta('blocks.gallery')}</summary>
-    <div class="group-items">
-      <button class="ghost" title={ta('tip.blocks.gallery')}
-        onclick={() => addBlock('gallery')}>{ta('ui.emptyGallery')}</button>
-      <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
-        {ta('ui.galleryWithImages')}
-        <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
-      </label>
-    </div>
-  </details>
-  <details class="group">
-    <summary>{ta('blocks.calendar')}</summary>
-    <div class="group-items">
-      <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar')}>{ta('calendar.viewList')}</button>
-      <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-cards')}>{ta('calendar.viewCards')}</button>
-      <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-month')}>{ta('calendar.viewMonth')}</button>
-      <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-next')}>{ta('calendar.viewNext')}</button>
-      <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-agenda')}>{ta('calendar.viewAgenda')}</button>
-    </div>
-    <!-- Every design with its picture, in the design picker: a choice adds a calendar in that design -->
-    <div class="group-items">
-      <button class="ghost" title={ta('tip.calendar.picker.open')} onclick={() => (ed.designPicker = { mode: 'add' })}>{ta('calendar.picker.open')}</button>
-    </div>
-  </details>
-  <details class="group">
-    <summary>{ta('group.shapes')}</summary>
-    <div class="group-items">
-      <button class="ghost" onclick={() => addBlock('shape-line')}>{ta('shape.line')}</button>
-      <button class="ghost" onclick={() => addBlock('shape-arrow')}>{ta('shape.arrow')}</button>
-      <button class="ghost" onclick={() => addBlock('shape-circle')}>{ta('shape.circle')}</button>
-      <button class="ghost" onclick={() => addBlock('shape-rect')}>{ta('shape.rect')}</button>
-      <button class="ghost" onclick={() => addBlock('shape-triangle')}>{ta('shape.triangle')}</button>
-    </div>
-  </details>
+  {/each}
   {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
     {@const blockGroupTemplates = templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
     <details class="group">

@@ -36,7 +36,8 @@
  *                  { type: 'urd-link-edit', value, text }     (the text toolbar's link or Ctrl+K: the link at the caret in the link shape, or null, and the selected words)
  *                  { type: 'urd-add-block', sectionId, block } (block placed from the palette)
  *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
- *                  { type: 'urd-request-block', sectionId, kind, at? } ("+ Add block"; at = click point {x in %, y in px}, without = centered)
+ *                  { type: 'urd-request-block', sectionId, kind, at?, files? } ("+ Add block"; at = click point {x in %, y in px}, without = centered; files = the pictures an image or a gallery is made from, picked in the preview)
+ *                  { type: 'urd-calendar-designs', sectionId, at? } ("All calendar designs …" in "+ Add block": the design picker, the calendar then placed as a requested block)
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey? } (block dropped in another section; groupKey joins the frames its drag settled in the source)
  *                  { type: 'urd-collection-edit', collection, entryId, field, value } (click-to-type/image swap in the collection block)
  *                  { type: 'urd-collection-add', collection } (new entry from the "+ Product" adder in the product block)
@@ -103,6 +104,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-add-block') handlers.onAddBlock?.(msg);
     if (msg?.type === 'urd-add-blocks') handlers.onAddBlocks?.(msg);
     if (msg?.type === 'urd-request-block') handlers.onRequestBlock?.(msg);
+    if (msg?.type === 'urd-calendar-designs') handlers.onCalendarDesigns?.(msg);
     if (msg?.type === 'urd-move-block-section') handlers.onMoveBlockSection?.(msg);
     if (msg?.type === 'urd-mobile-reset') handlers.onMobileReset?.(msg);
     if (msg?.type === 'urd-mobile-order') handlers.onMobileOrder?.(msg);

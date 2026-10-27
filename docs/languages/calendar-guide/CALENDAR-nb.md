@@ -93,9 +93,9 @@ Kalenderen har 34 design, gruppert etter hva de viser. Et design velges når blo
 
 Hvor du finner dem:
 
-- **Panelet Blokker,** under **Kalender**: de fem enkle visningene som knapper, og **Design** med et lite bilde av hvert design. Et trykk legger til en kalender i det designet.
-- **Blokksøket** i panelet Blokker: skriv navnet på et design («Ukestripe»).
-- **Menyen + Ny blokk** i en seksjon: Kalender folder seg ut i visningene og designene.
+- **Panelet Blokker,** under **Arrangementer og steder**: **Kalender** legger til en kalender, og **Alle kalenderdesign …** åpner designvelgeren med et lite bilde av hvert design. Et trykk på et design legger til en kalender i det.
+- **Blokksøket** i panelet Blokker: skriv navnet på en visning eller et design («Ukestripe»).
+- **Menyen + Ny blokk** i en seksjon: de samme to under **Arrangementer og steder**, og kalenderen havner i den seksjonen.
 - **Seksjonsmaler:** «Hva skjer» som liste, kort, måned, uke eller neste arrangement.
 
 En kalender er like høy som det den viser: omrisset tilpasses designet, og på nytt når du bytter design, innstillinger eller bredde. Dra i håndtaket i hjørnet av omrisset for å gjøre kalenderen smalere eller bredere; et drag opp eller ned stopper ved kanten av kalenderen. **Størrelse** i menyen gjør hele kalenderen, teksten medregnet, mindre eller større.

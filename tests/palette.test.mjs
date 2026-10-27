@@ -1,18 +1,15 @@
 /**
  * Guard against a core block that exists in the engine but cannot be reached.
- *
- * A block type is registered in ONE place (registerCore in urd.js) but has to
- * be listed by hand in four more before an owner can insert it: the canvas
- * menu's BLOCK_KINDS, and the editor's BLOCK_DEFAULTS (the seed), its palette
- * search (panelBlockItems) and BLOCK_LABELS (the Properties header). Nothing
- * fails when one of them is forgotten - the block simply never appears. This
- * test reads the four lists as text, the way modulepreload.test.mjs reads the
- * HTML shells, and holds them against the registry.
+ * A block type is registered in ONE place (registerCore in urd.js) but has to be listed in three more before an owner can insert it: the block palette (block-palette.js, which the canvas menu and the Blocks panel both read), and the editor's BLOCK_DEFAULTS (the seed) and BLOCK_LABELS (the Properties header).
+ * Nothing fails when one of them is forgotten: the block simply never appears.
+ * This test reads the palette as a module and the editor's lists as text, the way modulepreload.test.mjs reads the HTML shells, and holds them against the registry.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ENGINE_DIR } from './_engine.mjs';
+import { ENGINE_DIR, engineImport } from './_engine.mjs';
+
+const { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, palettePicture, recentKinds, rememberKind } = await engineImport('block-palette.js');
 
 // The seeds and the names stand in the blocks module (0.7.26.5).
 const APP = new URL('../editor/src/state/blocks.svelte.js', import.meta.url);
@@ -27,10 +24,9 @@ function coreBlocks() {
   return [...src.matchAll(/Urd\.blocks\.define\('([^']+)'/g)].map((m) => m[1]);
 }
 
-/** The kinds the canvas menu offers (the same list feeds its search). */
+/** The block types the palette adds, in the canvas menu and the Blocks panel alike: the entries that open a picker or build another kind (a gallery from pictures) are left out. */
 function menuKinds() {
-  const src = read(new URL('preview-edit.js', ENGINE_DIR));
-  return new Set([...slice(src, 'const BLOCK_KINDS', '];').matchAll(/\['([a-z-]+)',/g)].map((m) => m[1]));
+  return new Set(PALETTE_GROUPS.flatMap((group) => group.kinds).filter((kind) => !PALETTE_KINDS[kind].action && !PALETTE_KINDS[kind].block));
 }
 
 const app = read(APP);
@@ -40,9 +36,9 @@ function seeds() {
   return new Set([...slice(app, 'const BLOCK_DEFAULTS', 'function buildBlock').matchAll(/^ {2}'?([a-z-]+)'?: \{/gm)].map((m) => m[1]));
 }
 
-/** The palette search's block entries. */
+/** The panel search's entries: the palette's kinds, and the calendar's views the hit list reaches by name. */
 function paletteKinds() {
-  return new Set([...read(BLOCKS).matchAll(/act: 'block', kind: '([a-z-]+)'/g)].map((m) => m[1]));
+  return new Set([...menuKinds(), ...[...read(BLOCKS).matchAll(/act: 'block', kind: '([a-z-]+)'/g)].map((m) => m[1])]);
 }
 
 /** The labels the Properties header reads. */
@@ -65,7 +61,7 @@ const allowed = (type, list) => (EXCEPTIONS[type] ?? []).includes(list);
 test('every core block can be inserted from the canvas menu', () => {
   const kinds = menuKinds();
   const missing = coreBlocks().filter((type) => !kinds.has(type) && !allowed(type, 'menu'));
-  assert.deepEqual(missing, [], `missing in BLOCK_KINDS (preview-edit.js): ${missing.join(', ')}`);
+  assert.deepEqual(missing, [], `missing in PALETTE_GROUPS (block-palette.js): ${missing.join(', ')}`);
 });
 
 test('every core block has a seed in the editor', () => {
@@ -90,9 +86,49 @@ test('the lists name no block the engine does not define', () => {
   const core = new Set(coreBlocks());
   // The variants are their own entries and build a core block with other props.
   const VARIANTS = /^(shape-|calendar-|text-box$)/;
-  for (const [list, ids] of [['BLOCK_KINDS', menuKinds()], ['BLOCK_DEFAULTS', seeds()],
+  for (const [list, ids] of [['PALETTE_GROUPS', menuKinds()], ['BLOCK_DEFAULTS', seeds()],
     ['panelBlockItems', paletteKinds()], ['BLOCK_LABELS', labels()]]) {
     const strays = [...ids].filter((id) => !core.has(id) && !VARIANTS.test(id));
     assert.deepEqual(strays, [], `${list} names blocks the engine does not define: ${strays.join(', ')}`);
   }
+});
+
+test('the canvas menu and the Blocks panel both draw the palette, so their groups and order are one', () => {
+  const menu = read(new URL('preview-edit.js', ENGINE_DIR));
+  const panel = read(BLOCKS);
+  assert.match(menu, /import \{ PALETTE_GROUPS, PALETTE_KINDS(, \w+)* \} from '\.\/block-palette\.js';/);
+  assert.match(menu, /for \(const group of PALETTE_GROUPS\)/);
+  assert.match(panel, /from '\$engine\/block-palette\.js';/);
+  assert.match(panel, /\{#each PALETTE_GROUPS as group \(group\.id\)\}/);
+  const kinds = PALETTE_GROUPS.flatMap((group) => group.kinds);
+  assert.equal(new Set(kinds).size, kinds.length, 'a kind stands in one group only');
+});
+
+test('every kind in the palette has a drawn picture and a name in the core languages', async () => {
+  const dicts = await Promise.all(['nb', 'en-GB', 'tr'].map(async (lang) => (await engineImport(`locales/admin/${lang}.js`)).default.strings));
+  for (const group of PALETTE_GROUPS) {
+    for (const dict of dicts) assert.ok(dict[group.labelKey], `${group.id}: ${group.labelKey}`);
+    for (const kind of group.kinds) {
+      assert.match(palettePicture(kind), /^<svg [^>]*aria-hidden="true">.+<\/svg>$/, `${kind}: a drawn picture`);
+      for (const dict of dicts) {
+        assert.ok(dict[PALETTE_KINDS[kind].labelKey], `${kind}: ${PALETTE_KINDS[kind].labelKey}`);
+        if (PALETTE_KINDS[kind].tipKey) assert.ok(dict[PALETTE_KINDS[kind].tipKey], `${kind}: ${PALETTE_KINDS[kind].tipKey}`);
+      }
+    }
+  }
+  assert.equal(palettePicture('no-such-kind'), '');
+});
+
+test('every group in the canvas menu\'s list has a picture', () => {
+  for (const group of PALETTE_GROUPS) assert.ok(group.kinds.includes(group.icon), `${group.id}: its icon is one of its own kinds`);
+  for (const [id, picture] of Object.entries(EXTRA_GROUP_PICTURES)) assert.match(picture, /^<svg [^>]*aria-hidden="true">.+<\/svg>$/, id);
+});
+
+test('the recent blocks: newest first, each once, at most three, and only kinds the palette holds', () => {
+  assert.deepEqual(rememberKind([], 'image'), ['image']);
+  assert.deepEqual(rememberKind(['text', 'image', 'map'], 'image'), ['image', 'text', 'map']);
+  assert.deepEqual(rememberKind(['text', 'image', 'map'], 'form'), ['form', 'text', 'image']);
+  assert.deepEqual(recentKinds(['text', 'no-such-kind', 3, 'text', 'map']), ['text', 'map']);
+  assert.deepEqual(recentKinds('text'), []);
+  assert.deepEqual(recentKinds(null), []);
 });

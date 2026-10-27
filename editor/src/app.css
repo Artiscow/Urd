@@ -291,7 +291,7 @@
     overflow-y: auto;
   }
 
-  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)){
     border: 0;
     background: transparent;
     font-family: inherit;
@@ -306,7 +306,7 @@
     opacity: 0.75;
   }
 
-  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)){
     opacity: 1;
     background: rgb(255 255 255 / 6%);
   }
@@ -369,6 +369,8 @@
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent) !important;
   }
 
+  /* The Urd settings: a card above the gear in the panels' own type (the rail around it is monospace), its groups divided by a line, each setting a row with the name at the left and the control in a column of its own at the right.
+     Held to the window's height, where it scrolls. */
   .settings-pop {
     position: fixed;
     left: 10px;
@@ -376,26 +378,72 @@
     z-index: 100002;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 178px;
-    padding: 12px;
+    width: min(23rem, calc(100vw - 20px));
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    box-sizing: border-box;
+    padding: 12px 14px 4px;
     border-radius: 10px;
     border: 1px solid rgb(255 255 255 / 12%);
     background: var(--urd-color-surface, #151a23);
     box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+    font-family: var(--urd-font-body, system-ui, sans-serif);
+    font-size: 0.82rem;
   }
 
-  .settings-pop label:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .settings-pop > .panel-strong {
+    padding-bottom: 8px;
+  }
+
+  .settings-group {
+    display: grid;
+    gap: 8px;
+    padding: 10px 0;
+    border-top: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  .settings-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 12.5rem;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .settings-row > .seg {
     display: flex;
-    flex-direction: column;
+  }
+
+  .settings-row > .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex: 1;
+    padding: 5px 6px;
+  }
+
+  .settings-sub .tb-num {
+    width: 3.6rem;
+  }
+
+  .settings-stack {
+    display: grid;
     gap: 4px;
-    font-size: 0.8rem;
+  }
+
+  .settings-pop input[type='text'],
+  .settings-pop input[type='number'] {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    height: 2rem;
+    padding: 0 0.5em;
+    min-width: 0;
   }
 
   /* Active is colored text with a line at the left edge, not a filled
      pill: twelve filled pills stacked read heavy, and the line reads more
      clearly as "you are here" in a list. */
-  .rail button.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .rail button.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)){
     opacity: 1;
     background: transparent;
     color: var(--urd-color-accent, #7c5cff);
@@ -2543,6 +2591,10 @@
   .tile span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tile.on { opacity: 1; border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent); }
   .tile:focus-visible { outline: 2px solid var(--urd-color-accent); outline-offset: -2px; }
+  /* The Blocks panel's palette: tiles that add a block rather than choose, at full strength, the name on up to two lines */
+  .palette-grid .tile { opacity: 1; font-size: 11px; padding: 9px 4px 7px; }
+  .palette-grid .tile span { white-space: normal; overflow-wrap: anywhere; line-height: 1.2; text-align: center; }
+  .palette-grid .tile:hover { border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent); }
   /* The hover samples draw the menu word with the style itself. */
   .hover-sample { display: inline-block; font: 13px Georgia, serif; color: var(--urd-color-accent); height: 22px; line-height: 22px; }
   .hover-sample.hover-underline { text-decoration: underline; text-underline-offset: 3px; }

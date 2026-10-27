@@ -52,3 +52,52 @@ export function toolbarAnchor(w, h, rotDeg, under) {
   const r2 = (v) => Math.round(v * 100) / 100;
   return { left: r2(w / 2 + a * c + b * s), top: r2(h / 2 - a * s + b * c) };
 }
+
+/**
+ * How a menu that hangs from an anchor (the canvas's «+ New block») fits the screen: down from the anchor while it fits there, otherwise to the side of the anchor with more room, held to that room so it scrolls inside instead of running past the edge.
+ * Every value is in screen px.
+ * @param {{ anchorTop: number, anchorBottom: number, gap: number, height: number, viewport: number, margin?: number, min?: number }} p
+ *   gap is the space between the anchor and the menu, viewport the screen's height, min the least height the menu is held to
+ * @returns {{ up: boolean, room: number|null }} up: hang above the anchor; room: the height to hold the menu to, null when it fits whole
+ */
+export function menuFit(p) {
+  const margin = p.margin ?? 8;
+  const below = p.viewport - margin - (p.anchorBottom + p.gap);
+  const above = p.anchorTop - p.gap - margin;
+  if (p.height <= below) return { up: false, room: null };
+  const up = above > below;
+  const room = up ? above : below;
+  return { up, room: p.height <= room ? null : Math.max(p.min ?? 0, room) };
+}
+
+/**
+ * The sideways move that keeps a box inside the screen: positive to the right, negative to the left, 0 when it fits.
+ * A box wider than the screen keeps its left edge in view.
+ * @param {number} left The box's left edge on the screen
+ * @param {number} width The box's width
+ * @param {number} viewport The screen's width
+ * @param {number} [margin]
+ * @returns {number}
+ */
+export function shiftInto(left, width, viewport, margin = 8) {
+  if (left < margin) return margin - left;
+  const over = left + width - (viewport - margin);
+  return over > 0 ? Math.max(margin - left, -over) : 0;
+}
+
+/**
+ * Where a side panel beside a menu opens (the slim «+ New block» menu's group): on the menu's right while it fits there, on the left when it does not and the left has more room; its top level with the row that opened it, moved up so its bottom stays on the screen, but never above the screen's top.
+ * Every value is in screen px.
+ * @param {{ menuLeft: number, menuRight: number, rowTop: number, width: number, height: number, viewportW: number, viewportH: number, gap: number, margin?: number }} p
+ * @returns {{ left: boolean, top: number, room: number|null }} left: open on the menu's left; top: the panel's top; room: the height to hold the panel to, null when it fits whole
+ */
+export function flyoutFit(p) {
+  const margin = p.margin ?? 8;
+  const rightRoom = p.viewportW - margin - (p.menuRight + p.gap);
+  const leftRoom = p.menuLeft - p.gap - margin;
+  const left = p.width > rightRoom && leftRoom > rightRoom;
+  const tall = p.viewportH - 2 * margin;
+  const height = Math.min(p.height, tall);
+  const top = Math.max(margin, Math.min(p.rowTop, p.viewportH - margin - height));
+  return { left, top, room: p.height > tall ? tall : null };
+}

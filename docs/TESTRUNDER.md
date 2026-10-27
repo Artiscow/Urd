@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here. A new delivery gets a «Test batch» section of its own at the top (newest first); items without a batch stand in the remainder list at the bottom. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (reviewed and gathered on 6 October 2026: the calendar batches were merged into one with one item per design).
 
+### Test batch (0.7.10.11): one block palette, the «+ New block» menu in two forms, and the Urd settings regrouped
+
+- [ ] The Blocks panel: seven groups (Text, Pictures and media, Lists and facts, Events and places, Contact and sharing, Shop, Shapes and decor), each kind with its picture and no folds; a click adds the block in the view
+- [ ] The Blocks panel: Image opens the file chooser and adds an image block with the picture; «Gallery with images» takes several pictures and adds a gallery holding them; a picture over the size limit gives the warning in the status line
+- [ ] The Blocks panel: «All calendar designs …» opens the design picker, and a design adds a calendar in it; the block search finds «Calendar», its views and a design by name («Week strip»)
+- [ ] «+ New block» on a section: a box with the search on top, the groups at the left and Text's blocks beside them; another group shows its blocks; the groups and their order match the Blocks panel; plugin blocks and saved block groups stand as groups of their own when there are any
+- [ ] «+ New block» low in the window (double-click near the bottom of a section): the menu opens upward; in a short window it shrinks and scrolls inside, never past an edge; near the left edge it opens to the right of the pointer
+- [ ] From the canvas menu: Image and «Gallery with images» open the file chooser and the block lands in that section, at the point double-clicked; cancel the chooser: nothing is added; «All calendar designs …» opens the picker and the calendar lands in that section
+- [ ] With a block selected, open «+ New block», click a group, then press the arrow keys, Delete and a letter: the arrows walk the menu (down the groups, right into the blocks), the block stays where it is, the letter searches, Enter adds the marked row and Escape closes
+- [ ] Urd settings, «New block menu» set to «Slim, recent blocks first»: the next «+ New block» is a slim list with the three blocks added last at the top; pointing at a group opens its blocks in a panel beside it, a tap opens it on a touchscreen; near the window's right edge the panel opens to the left and the arrows turn; set it back: the box returns, with no reload
+- [ ] Urd settings: four groups (Look and language, Editing, Window, Visitor measurement), every value readable in full, spell check as On/Off, «Editing size» shows its width and height under the Screen choice, the analytics field like the panels' fields; in a short window the card scrolls
+- [ ] A calendar block's menu: the quick row holds Design, the count (in views with one), Narrow screen and On a phone in one row; pin «Subscribe»: it joins the row
+- [ ] The design picker (all calendar designs, a section's or a block's designs): a click outside the card closes it; a click inside the card, or a drag from inside the card out, keeps it open
+
 ### Test batch (0.7.10.10): the Nav panel in eight groups, and the link launcher's long names and sizes
 
 - [ ] The Nav panel closed: Menu items, Logo, Layout and size, Colours and frame, Mobile, Scrolling and pages, Tools and Announcement, none with a fold inside; open each, change one setting in it, reload the editor: the changes stay, and «Discard drafts» takes them back

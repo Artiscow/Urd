@@ -93,9 +93,9 @@ The calendar has 34 designs, grouped by what they show. A design is chosen when 
 
 Where to find them:
 
-- **The Blocks panel,** under **Calendar**: the five plain views as buttons, and **Designs** with a small picture of every design. A press adds a calendar in that design.
-- **The block search** in the Blocks panel: type a design's name («Week strip»).
-- **The + New block menu** in a section: Calendar unfolds into the views and the designs.
+- **The Blocks panel,** under **Events and places**: **Calendar** adds a calendar, and **All calendar designs …** opens the design picker with a small picture of every design. A press on a design adds a calendar in it.
+- **The block search** in the Blocks panel: type a view's or a design's name («Week strip»).
+- **The + New block menu** in a section: the same two under **Events and places**, and the calendar lands in that section.
 - **Section templates:** «What is on» as a list, cards, a month, a week or the next event.
 
 A calendar is as tall as what it shows: its outline is fitted to its design, and again when you change the design, its settings or its width. Drag the handle in the outline's corner to make the calendar narrower or wider; a pull up or down stops at the edge of the calendar. **Size** in the menu makes the whole calendar, text included, smaller or larger.

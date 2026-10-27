@@ -36,11 +36,12 @@ import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
 import { FONT_STACKS } from './fonts.js';
 import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
-import { frameAtPoint, toolbarAnchor } from './place.js';
+import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
 import { topDrag } from './section-size.js';
 import { snapTolerance, edgeSnap, gapSnap, lockAxis } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
+import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, recentKinds, rememberKind } from './block-palette.js';
 import { styleOf, pasteStyle } from './block-style.js';
 import { nearestDock } from './sticky-model.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
@@ -678,42 +679,66 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
   } else {
     menu._urdAt = null;
   }
-  menu._urdRefreshTemplates?.();
-  menu._urdSearchReset?.();
+  menu._urdPrepare?.();
   menu.classList.add('open');
   menu._urdSearchFocus?.();
-  if (clientX != null) {
-    // The menu normally hangs to the left of the pointer (right: 0). Near
-    // the left edge it would run off screen: there it opens to the right
-    // of the pointer instead.
-    menu.style.left = '';
-    menu.style.right = '';
-    const menuWidth = menu.getBoundingClientRect().width;
-    if (clientX - menuWidth < 8) {
-      menu.style.left = '0';
-      menu.style.right = 'auto';
-    }
-  }
   fitBlockMenu(menu);
 }
 
 /**
- * Keeps an open block menu inside the screen: it hangs down from the pointer
- * and flips upwards when it would pass the bottom edge and there is more room
- * above. Run again whenever a fold inside the menu changes its height.
+ * Keeps an open block menu inside the screen (menuFit and shiftInto in place.js): it hangs down from its chip or the pointer, turns upwards when the room below is too small and there is more above, and is held to the room it has, where its list scrolls inside.
+ * It hangs to the left of its anchor, and to the right where that would pass the screen's left edge.
+ * Run again whenever a fold inside the menu changes its height.
  * @param {HTMLElement} menu The .urd-add-block-menu element
  */
 function fitBlockMenu(menu) {
   menu.classList.remove('urd-menu-up');
   menu.style.maxHeight = '';
+  menu.style.left = '';
+  menu.style.right = '';
+  menu.style.translate = '';
+  const anchor = menu.parentElement.getBoundingClientRect();
+  let box = menu.getBoundingClientRect();
+  // The menu is drawn at the chrome's scale (urd-zoom): screen px are turned back into its own px.
+  const scale = menu.offsetHeight ? box.height / menu.offsetHeight : 1;
+  const fit = menuFit({ anchorTop: anchor.top, anchorBottom: anchor.bottom, gap: box.top - anchor.bottom, height: box.height, viewport: window.innerHeight, min: 160 * scale });
+  if (fit.up) menu.classList.add('urd-menu-up');
+  if (fit.room != null) menu.style.maxHeight = `${Math.floor(fit.room / scale)}px`;
+  if (box.left < 8) {
+    menu.style.left = '0';
+    menu.style.right = 'auto';
+    box = menu.getBoundingClientRect();
+  }
+  const shift = shiftInto(box.left, box.width, window.innerWidth);
+  if (shift) menu.style.translate = `${Math.round(shift / scale)}px 0`;
+  menu._urdFitFlyout?.();
+}
+
+/**
+ * Places the slim block menu's side panel beside the group row that opened it (flyoutFit in place.js): on the menu's right, or its left where the right has no room, level with the row and kept on the screen.
+ * The side form shows its blocks inside the menu, so there the panel's own placement is cleared.
+ * @param {HTMLElement} menu The .urd-add-block-menu element
+ * @param {HTMLElement} pane The side panel
+ * @param {HTMLElement|null} row The group row it belongs to
+ */
+function fitFlyout(menu, pane, row) {
+  pane.style.top = '';
+  pane.style.maxHeight = '';
+  menu.classList.remove('urd-abm-flip');
+  if (!row || !menu.classList.contains('urd-abm-slim') || !pane.classList.contains('open')) return;
   const box = menu.getBoundingClientRect();
-  if (box.bottom <= window.innerHeight - 8) return;
-  if (box.top <= window.innerHeight / 2) return;
-  menu.classList.add('urd-menu-up');
-  // A menu taller than the room above the pointer scrolls inside that room,
-  // so its top (the search field) stays on screen.
-  const over = 8 - menu.getBoundingClientRect().top;
-  if (over > 0) menu.style.maxHeight = `${Math.max(120, box.height - over)}px`;
+  const scale = menu.offsetWidth ? box.width / menu.offsetWidth : 1;
+  const own = pane.getBoundingClientRect();
+  const fit = flyoutFit({
+    menuLeft: box.left, menuRight: box.right,
+    // The panel's first row stands level with the group's row: the panel's padding is taken off.
+    rowTop: row.getBoundingClientRect().top - 8 * scale,
+    width: own.width, height: own.height,
+    viewportW: window.innerWidth, viewportH: window.innerHeight, gap: 6 * scale,
+  });
+  menu.classList.toggle('urd-abm-flip', fit.left);
+  pane.style.top = `${Math.round((fit.top - box.top) / scale)}px`;
+  if (fit.room != null) pane.style.maxHeight = `${Math.floor(fit.room / scale)}px`;
 }
 
 /** Closes open menus (preset gallery, block menu). Also called via urd-close-menus when the owner clicks in the admin panels, which the iframe's own click listeners never see. */
@@ -982,27 +1007,8 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
 }
 
 /**
- * "+ Add block" at the bottom of the section (shown on hover): a click
- * opens a menu of all block kinds, and the choice is reported to the
- * editor, which builds the block and puts it in this exact section.
+ * "+ New block" in the section (shown on hover): a click opens a menu of all block kinds, in the groups and the order the Blocks panel shares (block-palette.js), and the choice is reported to the editor, which builds the block and puts it in this exact section.
  */
-const BLOCK_KINDS = [
-  ['text', ta('blocks.text')], ['text-box', ta('ui.textBox')], ['button', ta('blocks.button')],
-  ['image', ta('blocks.image')], ['video', ta('blocks.video')], ['icon', ta('blocks.icon')], ['map', ta('blocks.map')], ['form', ta('blocks.form')], ['calendar', ta('blocks.calendar')],
-  ['collection', ta('blocks.collection')], ['gallery', ta('blocks.gallery')], ['faq', ta('blocks.faq')],
-  ['timeline', ta('blocks.timeline')], ['quote', ta('blocks.quote')], ['stats', ta('blocks.stats')], ['ribbon', ta('blocks.ribbon')],
-  ['table', ta('blocks.table')], ['share', ta('blocks.share')], ['contact', ta('blocks.contact')], ['countdown', ta('blocks.countdown')],
-  ['audio', ta('blocks.audio')], ['product', ta('blocks.product')], ['cart', ta('blocks.cart')],
-  ['checkout', ta('blocks.checkout')],
-];
-
-/** The shapes live in their own expandable submenu ("Shapes") in + New block. */
-const SHAPE_KINDS = [
-  ['shape-line', ta('shape.line')], ['shape-arrow', ta('shape.arrow')], ['shape-circle', ta('shape.circle')],
-  ['shape-rect', ta('shape.rect')], ['shape-triangle', ta('shape.triangle')],
-];
-
-/** The core block types (the editor's palette owns building these). */
 
 /**
  * Closes a "+ New block" menu and resets the double-click state: the chip
@@ -1018,6 +1024,34 @@ function resetBlockAdder(wrap) {
     menu.classList.remove('open', 'urd-menu-up');
     menu.style.left = '';
     menu.style.right = '';
+    menu.style.maxHeight = '';
+    menu.style.translate = '';
+  }
+}
+
+/** The «+ New block» menu's form from the Urd settings (urd-add-block-menu in the shared localStorage, read on every open like the layout picker's): the slim list, or the groups on the side. */
+function blockMenuSlim() {
+  try {
+    return localStorage.getItem('urd-add-block-menu') === 'slim';
+  } catch {
+    return false;
+  }
+}
+
+/** The kinds added last from the canvas menu, newest first (urd-recent-blocks, a convenience kept by this browser alone). */
+function readRecentKinds() {
+  try {
+    return recentKinds(JSON.parse(localStorage.getItem('urd-recent-blocks') ?? '[]'));
+  } catch {
+    return [];
+  }
+}
+
+function noteRecentKind(kind) {
+  try {
+    localStorage.setItem('urd-recent-blocks', JSON.stringify(rememberKind(readRecentKinds(), kind)));
+  } catch {
+    // Without storage the menu simply lists no recent blocks.
   }
 }
 
@@ -1085,10 +1119,8 @@ function addBlockAdder(host, section, grid) {
   hits.className = 'urd-block-hits';
   menu.append(searchWrap, hits);
 
-  // The arrow keys walk a marked row through the menu: the hits while a
-  // search is running, the menu's own rows before that (a closed fold hides
-  // its own). The step is geometric rather than DOM order, since the menu is
-  // a two-column grid with rows that span both columns.
+  // The arrow keys walk a marked row through the menu: the hits while a search is running, the menu's own rows before that (a closed group or fold hides its own).
+  // The step is geometric rather than DOM order, since the groups' list and the blocks stand side by side.
   let pickEl = null;
   const pickables = () => [...menu.querySelectorAll('button')].filter((b) => b.offsetParent !== null);
   const clearPick = () => {
@@ -1100,6 +1132,8 @@ function addBlockAdder(host, section, grid) {
     pickEl = el;
     el.classList.add('urd-pick-active');
     el.scrollIntoView({ block: 'nearest' });
+    // A group's row walked to shows its blocks, so the walk can step on into them.
+    if (el.classList.contains('urd-abm-tab')) showGroup(el.dataset.group);
   };
   const movePick = (dx, dy) => {
     const list = pickables();
@@ -1154,8 +1188,7 @@ function addBlockAdder(host, section, grid) {
         if (searchInput.isConnected && searchInput.value.trim()) renderHits();
       });
     }
-    // A fold's own name searches with its rows: "Former" finds the shapes,
-    // which otherwise sit behind a fold that is no row in the hit list.
+    // A group's name searches with its rows: «Shop» finds the shop's kinds, and a plugin fold's name its views.
     const found = searchItemsAny(all, query, (item) => (item.group ? `${item.label} ${item.group}` : item.label));
     if (!found.length) {
       const empty = document.createElement('div');
@@ -1166,7 +1199,10 @@ function addBlockAdder(host, section, grid) {
     }
     for (const item of found) {
       const b = document.createElement('button');
-      b.textContent = item.label;
+      if (item.kind) b.innerHTML = PALETTE_KINDS[item.kind]?.picture ?? '';
+      const name = document.createElement('span');
+      name.textContent = item.label;
+      b.appendChild(name);
       b.addEventListener('click', item.run);
       hits.appendChild(b);
     }
@@ -1174,16 +1210,18 @@ function addBlockAdder(host, section, grid) {
     setPick(hits.querySelector('button'));
   };
   searchInput.addEventListener('input', renderHits);
-  searchInput.addEventListener('keydown', (event) => {
-    // The arrows walk the menu, Enter takes the walked row and otherwise the
-    // first hit (the slash flow: "/", type, Enter), Escape closes. Stopped so
-    // the canvas shortcuts never see them. Left and right move the caret in
-    // the field until the walk has started with up or down.
+  // The keys are read on the whole menu, so they hold wherever in it the focus stands.
+  // The arrows walk the menu, Enter takes the walked row and otherwise the first hit (the slash flow: "/", type, Enter), and Escape closes.
+  // Every key is stopped at the menu, so the canvas shortcuts never see it.
+  // Left and right move the caret in the field until the walk has started with up or down.
+  menu.addEventListener('keydown', (event) => {
+    const inField = event.target === searchInput;
     const step = ARROW_STEPS[event.key];
-    if (step && (step[1] !== 0 || pickEl)) {
+    if (step && (step[1] !== 0 || pickEl || !inField)) {
       event.preventDefault();
       movePick(step[0], step[1]);
-    } else if (event.key === 'Enter') {
+    } else if (event.key === 'Enter' && (inField || pickEl)) {
+      event.preventDefault();
       (pickEl ?? hits.querySelector('button'))?.click();
     } else if (event.key === 'Escape') {
       resetBlockAdder(wrap);
@@ -1196,40 +1234,143 @@ function addBlockAdder(host, section, grid) {
   };
   menu._urdSearchFocus = () => searchInput.focus();
 
-  const kindButton = (parent, kind, label, group = null) => {
+  // The menu's body in both forms: the groups' list and the chosen group's blocks (block-palette.js), with the plugins' blocks and the saved block groups as two more groups.
+  // Groups on the side, the default, is a box of fixed size with the list at the left and the blocks beside it.
+  // The slim form (the Urd settings) is the list alone under the blocks added last, and a group's blocks open in a panel beside the menu.
+  const recent = document.createElement('div');
+  recent.className = 'urd-abm-recent';
+  const body = document.createElement('div');
+  body.className = 'urd-abm-body';
+  const rail = document.createElement('div');
+  rail.className = 'urd-abm-rail';
+  const pane = document.createElement('div');
+  pane.className = 'urd-abm-pane';
+  body.append(rail, pane);
+  menu.append(recent, body);
+
+  const groups = new Map();
+  let shownGroup = PALETTE_GROUPS[0].id;
+  let hoverTimer = 0;
+  const showGroup = (id) => {
+    const group = groups.get(id);
+    if (!group || group.tab.hidden) return;
+    shownGroup = id;
+    for (const [key, g] of groups) {
+      g.tab.classList.toggle('on', key === id);
+      g.panel.classList.toggle('open', key === id);
+    }
+    pane.classList.add('open');
+    pane.scrollTop = 0;
+    fitFlyout(menu, pane, group.tab);
+  };
+  menu._urdFitFlyout = () => fitFlyout(menu, pane, groups.get(shownGroup)?.tab ?? null);
+  const addGroup = (id, label, picture) => {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'urd-abm-tab';
+    tab.dataset.group = id;
+    tab.innerHTML = picture;
+    const name = document.createElement('span');
+    name.textContent = label;
+    const chevron = document.createElement('span');
+    chevron.className = 'urd-abm-chevron';
+    chevron.innerHTML = CHEVRON_SVG;
+    tab.append(name, chevron);
+    // A click marks the row for the arrow keys and gives the focus back to the search field, so the keys and the typing go on from there.
+    tab.addEventListener('click', () => {
+      setPick(tab);
+      searchInput.focus({ preventScroll: true });
+    });
+    // In the slim form a mouse resting on a group opens it; once a panel is open the change waits a moment, so a pointer crossing the other rows on its way into the panel leaves it be.
+    // Touch and the keyboard open a group with the click (the pointerType guard: a tap fires pointerenter too).
+    tab.addEventListener('pointerenter', (event) => {
+      if (event.pointerType !== 'mouse' || !menu.classList.contains('urd-abm-slim')) return;
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(() => showGroup(id), pane.classList.contains('open') ? 150 : 0);
+    });
+    tab.addEventListener('pointerleave', () => clearTimeout(hoverTimer));
+    rail.appendChild(tab);
+    const panel = document.createElement('div');
+    panel.className = 'urd-abm-group';
+    const heading = document.createElement('div');
+    heading.className = 'urd-add-block-group';
+    heading.textContent = label;
+    const items = document.createElement('div');
+    items.className = 'urd-abm-items';
+    panel.append(heading, items);
+    pane.appendChild(panel);
+    groups.set(id, { tab, panel });
+    return items;
+  };
+
+  // A kind's row: its picture, then its name. An entry from pictures opens the file picker on the click itself and sends the files with the request; the calendar's designs ask the editor for its design picker.
+  const kindButtons = new Map();
+  const kindButton = (parent, kind, label, group) => {
+    const def = PALETTE_KINDS[kind];
     const b = document.createElement('button');
-    b.textContent = label;
+    b.type = 'button';
+    b.innerHTML = def.picture;
+    const name = document.createElement('span');
+    name.textContent = label;
+    b.appendChild(name);
+    if (def.tipKey) b.title = ta(def.tipKey);
     b.addEventListener('click', () => {
-      post({ type: 'urd-request-block', sectionId: section.id, kind, at: menu._urdAt ?? undefined });
+      const at = menu._urdAt ?? undefined;
+      // A kind from pictures counts as added once pictures are chosen, so a cancelled file picker leaves the recent list as it was.
+      if (!def.files) noteRecentKind(kind);
+      if (def.files) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = def.files === 'many';
+        input.addEventListener('change', () => {
+          const files = [...(input.files ?? [])];
+          if (!files.length) return;
+          noteRecentKind(kind);
+          post({ type: 'urd-request-block', sectionId: section.id, kind: def.block ?? kind, at, files });
+        }, { once: true });
+        input.click();
+      } else if (def.action === 'designs') {
+        post({ type: 'urd-calendar-designs', sectionId: section.id, at });
+      } else {
+        post({ type: 'urd-request-block', sectionId: section.id, kind, at });
+      }
       resetBlockAdder(wrap);
     });
     parent.appendChild(b);
-    searchables.push({ label, group, run: () => b.click() });
+    kindButtons.set(kind, b);
+    searchables.push({ label, group, kind, run: () => b.click() });
   };
-  for (const [kind, label] of BLOCK_KINDS) kindButton(menu, kind, label);
-
-  // The shapes go in their own expandable submenu, keeping the main menu short.
-  const shapesToggle = foldToggle(ta('group.shapes'));
-  const shapes = document.createElement('div');
-  shapes.className = 'urd-add-block-shapes';
-  for (const [kind, label] of SHAPE_KINDS) kindButton(shapes, kind, label, ta('group.shapes'));
-  shapesToggle.addEventListener('click', () => {
-    const open = shapes.classList.toggle('open');
-    shapesToggle.classList.toggle('open', open);
-    // The fold changes the menu's height, so the fit is decided again.
-    fitBlockMenu(menu);
-  });
-  menu.append(shapesToggle, shapes);
-  // Plugin blocks: their own section below the built-ins. The preview has
-  // the registries (and thus defaults), so the block is built here and sent
-  // complete.
-  const pluginTypes = window.Urd.blocks.ids().filter((type) => window.Urd.blocks.get(type)?.fromPlugin);
-  if (pluginTypes.length) {
-    const divider = document.createElement('div');
-    divider.className = 'urd-add-block-plugins';
-    divider.textContent = ta('panel.plugins');
-    menu.appendChild(divider);
+  for (const group of PALETTE_GROUPS) {
+    const items = addGroup(group.id, ta(group.labelKey), PALETTE_KINDS[group.icon].picture);
+    for (const kind of group.kinds) kindButton(items, kind, ta(PALETTE_KINDS[kind].labelKey), ta(group.labelKey));
   }
+
+  // The slim form's first rows: the kinds added last from this menu, each running its own row in the groups.
+  const refreshRecent = () => {
+    recent.replaceChildren();
+    const kinds = readRecentKinds().filter((kind) => kindButtons.has(kind));
+    if (!kinds.length) return;
+    const heading = document.createElement('div');
+    heading.className = 'urd-add-block-group';
+    heading.textContent = ta('canvas.recent');
+    recent.appendChild(heading);
+    for (const kind of kinds) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = PALETTE_KINDS[kind].picture;
+      const name = document.createElement('span');
+      name.textContent = ta(PALETTE_KINDS[kind].labelKey);
+      b.appendChild(name);
+      b.addEventListener('click', () => kindButtons.get(kind)?.click());
+      recent.appendChild(b);
+    }
+  };
+
+  // Plugin blocks: their own group after the built-ins.
+  // The preview has the registries (and thus defaults), so the block is built here and sent complete.
+  const pluginTypes = window.Urd.blocks.ids().filter((type) => window.Urd.blocks.get(type)?.fromPlugin);
+  const pluginItems = pluginTypes.length ? addGroup('plugins', ta('panel.plugins'), EXTRA_GROUP_PICTURES.plugins) : null;
   for (const type of pluginTypes) {
     const def = window.Urd.blocks.get(type);
     const title = typeof def.fromPlugin === 'string' ? ta('tip.blocks.fromPlugin', { plugin: def.fromPlugin }) : ta('tip.blocks.fromPluginGeneric');
@@ -1276,33 +1417,27 @@ function addBlockAdder(host, section, grid) {
         toggle.classList.toggle('open', open);
         fitBlockMenu(menu);
       });
-      menu.append(toggle, sub);
+      pluginItems.append(toggle, sub);
       continue;
     }
     const b = document.createElement('button');
     b.textContent = defLabel;
     b.title = title;
     b.addEventListener('click', () => buildAndPost());
-    menu.appendChild(b);
+    pluginItems.appendChild(b);
     searchables.push({ label: defLabel, run: () => b.click() });
   }
-  // My templates (block groups, the snippets model): saved groups in the
-  // SAME menu as the blocks. The content is built on every open, so the
-  // list is always fresh (saving/deleting happens without the section
-  // re-rendering).
-  const templatesWrap = document.createElement('div');
-  menu.appendChild(templatesWrap);
+  // My templates (block groups, the snippets model): saved groups in the SAME menu as the blocks, as the last group.
+  // The content is built on every open, so the list is always fresh (saving/deleting happens without the section re-rendering), and the group is left out while there are none.
+  const templateItems = addGroup('templates', ta('canvas.tabMyTemplates'), EXTRA_GROUP_PICTURES.templates);
   menu._urdRefreshTemplates = () => {
-    templatesWrap.replaceChildren();
+    templateItems.replaceChildren();
     menu._urdTemplateSearchables = [];
     const groupTemplates = templates.filter((m) => m.kind === 'blocks' && Array.isArray(m.blocks));
-    if (!groupTemplates.length) return;
-    const divider = document.createElement('div');
-    divider.className = 'urd-add-block-plugins';
-    divider.textContent = ta('canvas.tabMyTemplates');
-    templatesWrap.appendChild(divider);
+    groups.get('templates').tab.hidden = !groupTemplates.length;
     for (const tpl of groupTemplates) {
       const b = document.createElement('button');
+      b.type = 'button';
       b.textContent = tpl.name;
       b.title = ta('canvas.insertGroup');
       b.addEventListener('click', () => {
@@ -1312,9 +1447,25 @@ function addBlockAdder(host, section, grid) {
         insertBlocksTemplate(tpl, section.id, menu._urdAt);
         resetBlockAdder(wrap);
       });
-      templatesWrap.appendChild(b);
+      templateItems.appendChild(b);
       menu._urdTemplateSearchables.push({ label: tpl.name, run: () => b.click() });
     }
+  };
+  // Every open reads the form from the Urd settings, so a change there needs no reload.
+  // The side form shows the group last chosen (the first while there is none), and the slim form opens with its panel closed.
+  menu._urdPrepare = () => {
+    clearTimeout(hoverTimer);
+    const slim = blockMenuSlim();
+    menu.classList.toggle('urd-abm-slim', slim);
+    menu._urdRefreshTemplates();
+    refreshRecent();
+    menu._urdSearchReset?.();
+    pane.classList.remove('open');
+    for (const g of groups.values()) {
+      g.tab.classList.remove('on');
+      g.panel.classList.remove('open');
+    }
+    if (!slim) showGroup(groups.get(shownGroup)?.tab.hidden === false ? shownGroup : PALETTE_GROUPS[0].id);
   };
   openBtn.addEventListener('click', () => {
     // From the button: reset any double-click placement of the menu.
@@ -1322,10 +1473,10 @@ function addBlockAdder(host, section, grid) {
     menu._urdAt = null;
     resetBlockAdder(wrap);
     if (!wasOpen) {
-      menu._urdRefreshTemplates?.();
-      menu._urdSearchReset?.();
+      menu._urdPrepare();
       menu.classList.add('open');
       menu._urdSearchFocus?.();
+      fitBlockMenu(menu);
     }
   });
   // enhanceSection runs after EVERY re-render on the same host element: the listeners are added only once and look up the current menu at event time, otherwise one listener piles up per re-render.
@@ -2895,6 +3046,8 @@ const GRIP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentC
 const ROTATE_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.5 13a8.5 8.5 0 1 1-2-5.5L21 10"/></svg>';
 const FIT_HEIGHT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6 10l6 6 6-6"/><path d="M4 21h16"/></svg>';
 const CARET_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg>';
+/** The slim block menu's arrow on a group's row, pointing to the side its panel opens on. */
+const CHEVRON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
 
 // Drawn icons for the mobile buttons (ADR-0009: never glyphs/emoji in
 // chrome): reset (counterclockwise arrow), arrow up/down (order) and a
