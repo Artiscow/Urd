@@ -1,4 +1,4 @@
-//#region node_modules/svelte/src/internal/shared/utils.js
+// node_modules/svelte/src/internal/shared/utils.js
 var e = Array.isArray, t = Array.prototype.indexOf, n = Array.prototype.includes, r = Array.from, i = Object.defineProperty, a = Object.getOwnPropertyDescriptor, o = Object.getOwnPropertyDescriptors, s = Object.prototype, c = Array.prototype, l = Object.getPrototypeOf, u = Object.isExtensible;
 function d(e) {
 	return typeof e == "function";
@@ -27,8 +27,7 @@ function g(e, t) {
 	for (let r of e) if (n.push(r), n.length === t) break;
 	return n;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/constants.js
+// node_modules/svelte/src/internal/client/constants.js
 var _ = 1 << 24, v = 1024, y = 2048, b = 4096, x = 8192, S = 16384, C = 32768, w = 1 << 25, ee = 65536, te = 1 << 19, ne = 1 << 20, re = 1 << 25, T = 1 << 21, ie = 1 << 22, ae = 1 << 23, oe = Symbol("$state"), se = Symbol("component"), ce = Symbol("legacy props"), le = Symbol(""), ue = Symbol("attributes"), de = Symbol("class"), fe = Symbol("style"), pe = Symbol("text"), me = Symbol("form reset"), he = new class extends Error {
 	name = "StaleReactionError";
 	message = "The reaction that called `getAbortSignal()` was re-run or destroyed";
@@ -42,8 +41,7 @@ function Ce(e) {
 function we() {
 	console.warn("https://svelte.dev/e/svelte_boundary_reset_noop");
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/hydration.js
+// node_modules/svelte/src/internal/client/dom/hydration.js
 var Te = !1;
 function Ee(e) {
 	Te = e;
@@ -85,8 +83,7 @@ function Me(e) {
 	if (!e || e.nodeType !== 8) throw Ce(), _e;
 	return e.data;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/equality.js
+// node_modules/svelte/src/internal/client/reactivity/equality.js
 function Ne(e) {
 	return e === this.v;
 }
@@ -99,8 +96,7 @@ function Fe(e) {
 function Ie(e) {
 	throw Error("https://svelte.dev/e/lifecycle_outside_component");
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/errors.js
+// node_modules/svelte/src/internal/client/errors.js
 function Le() {
 	throw Error("https://svelte.dev/e/async_derived_orphan");
 }
@@ -134,14 +130,12 @@ function Ke() {
 function qe() {
 	throw Error("https://svelte.dev/e/svelte_boundary_reset_onerror");
 }
-//#endregion
-//#region node_modules/svelte/src/internal/flags/index.js
+// node_modules/svelte/src/internal/flags/index.js
 var Je = !1;
 function Ye() {
 	Je = !0;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/shared/clone.js
+// node_modules/svelte/src/internal/shared/clone.js
 var Xe = [];
 function Ze(e, t = !1, n = !1) {
 	return Qe(e, /* @__PURE__ */ new Map(), "", Xe, null, n);
@@ -176,8 +170,7 @@ function Qe(t, n, r, i, a = null, o = !1) {
 		return t;
 	}
 }
-//#endregion
-//#region node_modules/svelte/src/internal/shared/context.js
+// node_modules/svelte/src/internal/shared/context.js
 function $e(e) {
 	let t = e.p;
 	for (; t !== null && t.c === null;) t = t.p;
@@ -186,8 +179,7 @@ function $e(e) {
 function et(e, t) {
 	return e === null && Ie(t), e.c ??= new Map($e(e) || void 0);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/context.js
+// node_modules/svelte/src/internal/client/context.js
 var tt = null;
 function nt(e) {
 	tt = e;
@@ -228,8 +220,7 @@ function st(e = {}) {
 function ct() {
 	return !Je || tt !== null && tt.l === null;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/task.js
+// node_modules/svelte/src/internal/client/dom/task.js
 var lt = [];
 function ut() {
 	var e = lt;
@@ -247,8 +238,7 @@ function dt(e) {
 function ft() {
 	for (; lt.length > 0;) ut();
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/status.js
+// node_modules/svelte/src/internal/client/reactivity/status.js
 var pt = ~(y | b | v);
 function mt(e, t) {
 	e.f = e.f & pt | t;
@@ -256,13 +246,11 @@ function mt(e, t) {
 function ht(e) {
 	e.f & 512 || e.deps === null ? mt(e, v) : mt(e, b);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/utils.js
+// node_modules/svelte/src/internal/client/reactivity/utils.js
 function gt(e, t, n) {
 	e.f & 2048 ? t.add(e) : e.f & 4096 && n.add(e), mt(e, v);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/misc.js
+// node_modules/svelte/src/internal/client/dom/elements/misc.js
 function _t(e, t) {
 	if (t) {
 		let t = document.body;
@@ -282,8 +270,7 @@ function bt() {
 		});
 	}, { capture: !0 }));
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/bindings/shared.js
+// node_modules/svelte/src/internal/client/dom/elements/bindings/shared.js
 function xt(e) {
 	var t = ir, n = sr;
 	or(null), cr(null);
@@ -300,8 +287,7 @@ function St(e, t, n, r = n) {
 		i(), r(!0);
 	} : () => r(!0), bt();
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/async.js
+// node_modules/svelte/src/internal/client/reactivity/async.js
 function Ct(e, t, n, r) {
 	let i = ct() ? Dt : At;
 	var a = e.filter((e) => !e.settled), o = t.map(i);
@@ -445,8 +431,7 @@ function Pt(e) {
 function Ft(e) {
 	if (e.effects !== null) for (let t of e.effects) t.teardown && t.fn !== null && Er(t);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/batch.js
+// node_modules/svelte/src/internal/client/reactivity/batch.js
 var It = null, Lt = null, Rt = null, zt = null, Bt = null, Vt = !1, Ht = !1, Ut = null, Wt = null, Gt = 0, Kt = 1, qt = class e {
 	id = Kt++;
 	#e = !1;
@@ -745,8 +730,7 @@ function en(e) {
 	mt(e, v);
 	for (var t = e.first; t !== null;) en(t), t = t.next;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/sources.js
+// node_modules/svelte/src/internal/client/reactivity/sources.js
 var tn = /* @__PURE__ */ new Set(), nn = /* @__PURE__ */ new Map(), rn = !1;
 function an(e, t) {
 	return {
@@ -841,7 +825,7 @@ function mn(t) {
 	};
 	return i && r.set("length", /* @__PURE__ */ O(t.length, u)), new Proxy(t, {
 		defineProperty(e, t, n) {
-			(!("value" in n) || n.configurable === !1 || n.enumerable === !1 || n.writable === !1) && We();
+			"value" in n && n.configurable !== !1 && n.enumerable !== !1 && n.writable !== !1 || We();
 			var i = r.get(t);
 			return i === void 0 ? f(() => {
 				var e = /* @__PURE__ */ O(n.value, u);
@@ -1023,8 +1007,7 @@ function On(e, t) {
 		throw e;
 	}
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/effects.js
+// node_modules/svelte/src/internal/client/reactivity/effects.js
 function kn(e) {
 	sr === null && (ir === null && Ve(e), Be()), nr && ze(e);
 }
@@ -1219,8 +1202,7 @@ function er(e, t) {
 		t.append(n), n = i;
 	}
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/legacy.js
+// node_modules/svelte/src/internal/client/legacy.js
 var tr = null, nr = !1;
 function rr(e) {
 	nr = e;
@@ -1415,8 +1397,7 @@ var Nr = ["touchstart", "touchmove"];
 function Pr(e) {
 	return Nr.includes(e);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/events.js
+// node_modules/svelte/src/internal/client/dom/elements/events.js
 var Fr = Symbol("events"), Ir = /* @__PURE__ */ new Set(), Lr = /* @__PURE__ */ new Set();
 function Rr(e) {
 	if (!Te) return;
@@ -1480,7 +1461,7 @@ function Wr(e) {
 			for (var p, m = []; o !== null && o !== t;) {
 				try {
 					var h = o[Fr]?.[r];
-					h != null && (!o.disabled || e.target === o) && h.call(o, e);
+					h == null || o.disabled && e.target !== o || h.call(o, e);
 				} catch (e) {
 					p ? m.push(e) : p = e;
 				}
@@ -1498,8 +1479,7 @@ function Wr(e) {
 		}
 	}
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/reconciler.js
+// node_modules/svelte/src/internal/client/dom/reconciler.js
 var Gr = globalThis?.window?.trustedTypes && /* @__PURE__ */ globalThis.window.trustedTypes.createPolicy("svelte-trusted-html", { createHTML: (e) => e });
 function Kr(e) {
 	return Gr?.createHTML(e) ?? e;
@@ -1508,8 +1488,7 @@ function qr(e) {
 	var t = Tn("template");
 	return t.innerHTML = Kr(e.replaceAll("<!>", "<!---->")), t.content;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/template.js
+// node_modules/svelte/src/internal/client/dom/template.js
 function Jr(e, t) {
 	var n = sr;
 	n.nodes === null && (n.nodes = {
@@ -1571,11 +1550,10 @@ function Qr() {
 function R(e, t) {
 	if (Te) {
 		var n = sr;
-		(!(n.f & 32768) || n.nodes.end === null) && (n.nodes.end = De), ke();
+		n.f & 32768 && n.nodes.end !== null || (n.nodes.end = De), ke();
 	} else e !== null && e.before(t);
 }
-//#endregion
-//#region node_modules/svelte/src/reactivity/create-subscriber.js
+// node_modules/svelte/src/reactivity/create-subscriber.js
 function $r(e) {
 	let t = 0, n = an(0), r;
 	return () => {
@@ -1586,8 +1564,7 @@ function $r(e) {
 		})));
 	};
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/blocks/boundary.js
+// node_modules/svelte/src/internal/client/dom/blocks/boundary.js
 var ei = ee | te;
 function ti(e, t, n, r) {
 	new ni(e, t, n, r);
@@ -1877,8 +1854,7 @@ var si = /* @__PURE__ */ new WeakMap(), ci = class {
 		} else Te && (this.anchor = De), this.#a(n);
 	}
 };
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/blocks/if.js
+// node_modules/svelte/src/internal/client/dom/blocks/if.js
 function B(e, t, n = !1) {
 	var r;
 	Te && (r = De, ke());
@@ -1901,8 +1877,7 @@ function B(e, t, n = !1) {
 		}), e || o(-1, null);
 	}, a);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/blocks/key.js
+// node_modules/svelte/src/internal/client/dom/blocks/key.js
 var li = Symbol("NaN");
 function ui(e, t, n) {
 	Te && ke();
@@ -1912,8 +1887,7 @@ function ui(e, t, n) {
 		e !== e && (e = li), i && typeof e == "object" && e && (e = {}), r.ensure(e, n);
 	});
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/blocks/each.js
+// node_modules/svelte/src/internal/client/dom/blocks/each.js
 function di(e, t) {
 	return t;
 }
@@ -2103,8 +2077,7 @@ function V(e, t, n = !1, r = !1, i = !1, a = !1) {
 		}
 	});
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/blocks/snippet.js
+// node_modules/svelte/src/internal/client/dom/blocks/snippet.js
 function xi(e, t, ...n) {
 	var r = new ci(e);
 	Vn(() => {
@@ -2112,8 +2085,7 @@ function xi(e, t, ...n) {
 		r.ensure(e, e && ((t) => e(t, ...n)));
 	}, ee);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/blocks/svelte-component.js
+// node_modules/svelte/src/internal/client/dom/blocks/svelte-component.js
 function Si(e, t, n) {
 	var r;
 	Te && (r = De, ke());
@@ -2126,15 +2098,13 @@ function Si(e, t, n) {
 		} else i.ensure(e, e && ((t) => n(t, e)));
 	}, ee);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/timing.js
+// node_modules/svelte/src/internal/client/timing.js
 var Ci = () => performance.now(), wi = {
 	tick: (e) => requestAnimationFrame(e),
 	now: () => Ci(),
 	tasks: /* @__PURE__ */ new Set()
 };
-//#endregion
-//#region node_modules/svelte/src/internal/client/loop.js
+// node_modules/svelte/src/internal/client/loop.js
 function Ti() {
 	let e = wi.now();
 	wi.tasks.forEach((t) => {
@@ -2155,8 +2125,7 @@ function Ei(e) {
 		}
 	};
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/transitions.js
+// node_modules/svelte/src/internal/client/dom/elements/transitions.js
 function Di(e, t) {
 	xt(() => {
 		e.dispatchEvent(new CustomEvent(t));
@@ -2290,8 +2259,7 @@ function Mi(e, t, n, r, i, a) {
 		t: () => g()
 	};
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/actions.js
+// node_modules/svelte/src/internal/client/dom/elements/actions.js
 function Ni(e, t, n) {
 	Rn(() => {
 		var r = Ar(() => t(e, n?.()) || {});
@@ -2305,8 +2273,7 @@ function Ni(e, t, n) {
 		if (r?.destroy) return () => r.destroy();
 	});
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/attachments.js
+// node_modules/svelte/src/internal/client/dom/elements/attachments.js
 function Pi(e, t) {
 	var n = void 0, r;
 	Hn(() => {
@@ -2315,8 +2282,7 @@ function Pi(e, t) {
 		})));
 	});
 }
-//#endregion
-//#region node_modules/svelte/src/internal/shared/attributes.js
+// node_modules/svelte/src/internal/shared/attributes.js
 var Fi = [..." 	\n\r\f\xA0\v﻿"];
 function Ii(e, t, n) {
 	var r = e == null ? "" : "" + e;
@@ -2371,21 +2337,19 @@ function zi(e, t) {
 	}
 	return e == null ? null : String(e);
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/class.js
+// node_modules/svelte/src/internal/client/dom/elements/class.js
 function H(e, t, n, r, i, a) {
 	var o = e[de];
 	if (Te || o !== n || o === void 0) {
 		var s = Ii(n, r, a);
-		(!Te || s !== e.getAttribute("class")) && (s == null ? e.removeAttribute("class") : t ? e.className = s : e.setAttribute("class", s)), e[de] = n;
+		Te && s === e.getAttribute("class") || (s == null ? e.removeAttribute("class") : t ? e.className = s : e.setAttribute("class", s)), e[de] = n;
 	} else if (a && i !== a) for (var c in a) {
 		var l = !!a[c];
 		(i == null || l !== !!i[c]) && e.classList.toggle(c, l);
 	}
 	return a;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/style.js
+// node_modules/svelte/src/internal/client/dom/elements/style.js
 function Bi(e, t = {}, n, r) {
 	for (var i in n) {
 		var a = n[i];
@@ -2396,12 +2360,11 @@ function Vi(e, t, n, r) {
 	var i = e[fe];
 	if (Te || i !== t) {
 		var a = zi(t, r);
-		(!Te || a !== e.getAttribute("style")) && (a == null ? e.removeAttribute("style") : e.style.cssText = a), e[fe] = t;
+		Te && a === e.getAttribute("style") || (a == null ? e.removeAttribute("style") : e.style.cssText = a), e[fe] = t;
 	} else r && (Array.isArray(r) ? (Bi(e, n?.[0], r[0]), Bi(e, n?.[1], r[1], "important")) : Bi(e, n, r));
 	return r;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/attributes.js
+// node_modules/svelte/src/internal/client/dom/elements/attributes.js
 var Hi = Symbol("is custom element"), Ui = Symbol("is html"), Wi = ge ? "link" : "LINK", Gi = ge ? "progress" : "PROGRESS";
 function U(e) {
 	if (Te) {
@@ -2449,8 +2412,7 @@ function Ji(e) {
 	}
 	return n;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/bindings/input.js
+// node_modules/svelte/src/internal/client/dom/elements/bindings/input.js
 function Yi(e, t, n = t) {
 	var r = /* @__PURE__ */ new WeakSet();
 	St(e, "input", async (i) => {
@@ -2513,8 +2475,7 @@ function ea(e, t, n) {
 	var r = $i.observe(e, () => n(e[t]));
 	Rn(() => (Ar(() => n(e[t])), r));
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/bindings/this.js
+// node_modules/svelte/src/internal/client/dom/elements/bindings/this.js
 function ta(e, t) {
 	return e === t || e?.[oe] === t;
 }
@@ -2538,8 +2499,7 @@ function na(e = st(), t, n, r) {
 		};
 	}), e;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/elements/bindings/universal.js
+// node_modules/svelte/src/internal/client/dom/elements/bindings/universal.js
 function ra(e, t, n, r, i) {
 	var a = () => {
 		r(n[e]);
@@ -2550,8 +2510,7 @@ function ra(e, t, n, r, i) {
 		n.removeEventListener(t, a);
 	});
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/dom/legacy/lifecycle.js
+// node_modules/svelte/src/internal/client/dom/legacy/lifecycle.js
 function ia(e = !1) {
 	let t = tt, n = t.l.u;
 	if (!n) return;
@@ -2579,8 +2538,7 @@ function aa(e, t) {
 	if (e.l.s) for (let t of e.l.s) F(t);
 	t();
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/store.js
+// node_modules/svelte/src/internal/client/reactivity/store.js
 var oa = !1;
 function sa(e) {
 	var t = oa;
@@ -2590,8 +2548,7 @@ function sa(e) {
 		oa = t;
 	}
 }
-//#endregion
-//#region node_modules/svelte/src/internal/client/reactivity/props.js
+// node_modules/svelte/src/internal/client/reactivity/props.js
 function ca(e, t, n, r) {
 	var i = !Je || !!(n & 2), o = !!(n & 8), s = !!(n & 16), c = r, l = !0, u = void 0, d = () => s && i ? (u ??= /* @__PURE__ */ Dt(r), F(u)) : (l && (l = !1, c = s ? Ar(r) : r), c);
 	let f;
@@ -2640,8 +2597,7 @@ function ua(e) {
 		m: []
 	};
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/locales/site/nb.js
+// ../template/assets/engine/0.7.7/locales/site/nb.js
 var da = {
 	lang: "nb",
 	strings: {
@@ -3033,7 +2989,7 @@ function _a(e) {
 			continue;
 		}
 		let e = String(n.code ?? "");
-		pa.test(e) ? ga(e) && t.push(`languages: '${e}' is built into Urd and cannot be overridden`) : t.push(`languages: '${e}' is not a valid language code`), (typeof n.name != "string" || !n.name.trim()) && t.push(`languages/${e}: name is missing (the language's own name)`);
+		pa.test(e) ? ga(e) && t.push(`languages: '${e}' is built into Urd and cannot be overridden`) : t.push(`languages: '${e}' is not a valid language code`), typeof n.name == "string" && n.name.trim() || t.push(`languages/${e}: name is missing (the language's own name)`);
 		for (let r of ["site", "admin"]) n[r] !== void 0 && typeof n[r] != "boolean" && t.push(`languages/${e}: ${r} must be a boolean`);
 		n.site !== !0 && n.admin !== !0 && t.push(`languages/${e}: must cover site, admin or both`);
 	}
@@ -3130,11 +3086,9 @@ async function ka(e = Da()) {
 	}
 	return Oa(xa.lang), xa.lang;
 }
-//#endregion
-//#region node_modules/svelte/src/internal/disclose-version.js
+// node_modules/svelte/src/internal/disclose-version.js
 typeof window < "u" && ((window.__svelte ??= {}).v ??= /* @__PURE__ */ new Set()).add("5");
-//#endregion
-//#region src/lib/icons.js
+// src/lib/icons.js
 var J = {
 	copy: "<svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"9\" y=\"9\" width=\"11\" height=\"11\" rx=\"2\"/><path d=\"M5 15V5a2 2 0 0 1 2-2h10\"/></svg>",
 	phone: "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><rect x=\"8\" y=\"3\" width=\"8\" height=\"18\" rx=\"2\"/><path d=\"M11 17.5h2\"/></svg>",
@@ -3166,8 +3120,7 @@ var J = {
 	device_tablet: "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"5\" y=\"2\" width=\"14\" height=\"20\" rx=\"2\"/><path d=\"M11 18.5h2\"/></svg>",
 	device_mobile: "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"7\" y=\"2\" width=\"10\" height=\"20\" rx=\"2\"/><path d=\"M11 18.5h2\"/></svg>"
 };
-//#endregion
-//#region ../template/assets/engine/0.7.7/anchored.js
+// ../template/assets/engine/0.7.7/anchored.js
 function Aa(e = globalThis) {
 	let t = e?.HTMLElement?.prototype, n = e?.CSS;
 	return !!(t && "popover" in t && typeof t.showPopover == "function" && typeof n?.supports == "function" && n.supports("anchor-name: --urd") && n.supports("position-try-fallbacks: flip-block"));
@@ -3180,8 +3133,7 @@ function Na(e, t) {
 	let n = e?.closest?.(".panel-body, .block-menu-body");
 	n && (t ? n.style.setProperty("anchor-name", "--urd-pane") : n.style.removeProperty("anchor-name"));
 }
-//#endregion
-//#region src/lib/Dropdown.svelte
+// src/lib/Dropdown.svelte
 var Pa = /* @__PURE__ */ L("<span aria-hidden=\"true\"><svg viewBox=\"0 0 16 16\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svelte-vtocc6\"><path d=\"M3.5 6l4.5 4.5L12.5 6\"></path></svg></span>"), Fa = /* @__PURE__ */ L("<span class=\"dd-note svelte-vtocc6\"> </span>"), Ia = /* @__PURE__ */ L("<button type=\"button\"> <!></button>"), La = /* @__PURE__ */ L("<button type=\"button\"><span class=\"dd-value svelte-vtocc6\"> </span> <!></button> <div class=\"dd-pop dd-anchored svelte-vtocc6\" popover=\"auto\"><!></div>", 1), Ra = /* @__PURE__ */ L("<div class=\"dd-pop svelte-vtocc6\"></div>"), za = /* @__PURE__ */ L("<button type=\"button\"><span class=\"dd-value svelte-vtocc6\"> </span> <!></button> <!>", 1), Ba = /* @__PURE__ */ L("<span class=\"dd svelte-vtocc6\"><!></span>");
 function Va(e, t) {
 	at(t, !0);
@@ -3298,8 +3250,7 @@ Vr(["click"]);
 function Ha(e) {
 	return Number(e) === 2 ? 2 : 1;
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/gallery-layout.js
+// ../template/assets/engine/0.7.7/gallery-layout.js
 var Ua = [
 	"floating",
 	"fill",
@@ -3561,8 +3512,7 @@ function Lo(e, t, n, r = !1) {
 	let i = vo(e, "mosaic", n, r);
 	return Array.from({ length: i }, (e, n) => Io(t, n));
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/preset-thumb.js
+// ../template/assets/engine/0.7.7/preset-thumb.js
 var Ro = /^#[0-9a-fA-F]{3,8}$/, zo = /^[a-z][a-z0-9-]*$/, Bo = "#171c26", Vo = "#232a38", Ho = "#98a1b3", Uo = "#7c5cff", Wo = (e, t) => `var(--urd-color-${e}, ${t})`;
 function Go(e, t) {
 	return typeof e == "string" ? Ro.test(e) ? e : zo.test(e) ? Wo(e, t) : t : t;
@@ -3773,8 +3723,7 @@ function is(e, { w: t = 96, h: n = 116, max: r = 6 } = {}) {
 	}
 	return `<svg viewBox="0 0 ${t} ${n}" width="${t}" height="${n}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${c.join("")}</svg>`;
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/blocks/form.js
+// ../template/assets/engine/0.7.7/blocks/form.js
 var as = () => [
 	{
 		id: "name",
@@ -3795,8 +3744,7 @@ var as = () => [
 		required: !0
 	}
 ];
-//#endregion
-//#region ../template/assets/engine/0.7.7/sections/presets.js
+// ../template/assets/engine/0.7.7/sections/presets.js
 function os(e) {
 	return typeof crypto < "u" && crypto.randomUUID ? `${e}-${crypto.randomUUID().slice(0, 8)}` : `${e}-${[...crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(4))].map((e) => e.toString(16).padStart(2, "0")).join("")}`;
 }
@@ -4932,8 +4880,7 @@ function Ps(e) {
 		])
 	});
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/theme.js
+// ../template/assets/engine/0.7.7/theme.js
 function Fs(e, t, n) {
 	return t === "light" || t === "dark" ? t : n ? "dark" : "light";
 }
@@ -5059,8 +5006,7 @@ function Gs(e, t) {
 	let n = Ws(e), r = Ws(t);
 	return n == null || r == null ? null : (Math.max(n, r) + .05) / (Math.min(n, r) + .05);
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/nav-model.js
+// ../template/assets/engine/0.7.7/nav-model.js
 var Ks = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/api\/photo\?[^\s"'<>\\]{1,2048}|\/(?!\/)[\w%./-]*)$/;
 function qs(e) {
 	return typeof e == "string" && Ks.test(e);
@@ -5172,8 +5118,7 @@ var oc = {
 function cc(e) {
 	return typeof e == "string" && sc.test(e);
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/icons.js
+// ../template/assets/engine/0.7.7/icons.js
 var lc = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", uc = "fill=\"currentColor\" stroke=\"none\"", dc = {
 	facebook: {
 		label: "Facebook",
@@ -5529,8 +5474,7 @@ function pc(e) {
 	let t = typeof e == "string" ? dc[e] : null;
 	return t ? `<svg viewBox="0 0 24 24" width="100%" height="100%" ${t.fill ? uc : lc} aria-hidden="true" focusable="false">${t.body}</svg>` : null;
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/links-model.js
+// ../template/assets/engine/0.7.7/links-model.js
 function mc(e) {
 	if (!e || typeof e != "object") return null;
 	let t = typeof e.url == "string" ? e.url.trim() : "";
@@ -5883,8 +5827,7 @@ function Yc(e, t) {
 	}
 	return n;
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/page-presets.js
+// ../template/assets/engine/0.7.7/page-presets.js
 var Xc = /* @__PURE__ */ new Map();
 Ps({ sections: { define: (e, t) => Xc.set(e, t) } });
 var Zc = [
@@ -5979,8 +5922,7 @@ function Qc(e, { pageId: t, title: n }) {
 		sections: r.sections.map((e) => Xc.get(e).create())
 	} : null;
 }
-//#endregion
-//#region src/panels/PagesPanel.svelte
+// src/panels/PagesPanel.svelte
 var $c = /* @__PURE__ */ L("<span class=\"page-path\">/</span>"), el = /* @__PURE__ */ L("<input class=\"page-slug\"/>"), tl = /* @__PURE__ */ L("<button class=\"ghost danger\"><!> </button>"), nl = /* @__PURE__ */ L("<div class=\"page-menu\"><button class=\"ghost\"><!> </button> <!></div>"), rl = /* @__PURE__ */ L("<div><input class=\"page-title\"/> <!> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <span class=\"page-menu-wrap\"><button class=\"ghost row-tool\"></button> <!></span></span></div>"), il = /* @__PURE__ */ L("<i class=\"note-dot\"></i>"), al = /* @__PURE__ */ L("<img class=\"site-icon-preview\"/>"), ol = /* @__PURE__ */ L("<button class=\"ghost row-tool\"></button>"), sl = /* @__PURE__ */ L("<div><button class=\"page-template-pick\"><span class=\"page-template-thumb\"></span> <span class=\"page-template-name\"> </span></button></div>"), cl = /* @__PURE__ */ L("<div><button class=\"page-template-pick\"><span class=\"page-template-thumb\"></span> <span class=\"page-template-name\"> </span></button> <button class=\"page-template-del\"></button></div>"), ll = /* @__PURE__ */ L("<span class=\"mini-label\"> </span> <div class=\"page-template-grid\"></div>", 1), ul = /* @__PURE__ */ L("<div class=\"panel-body\"><!> <details class=\"group\"><summary> <!></summary> <div class=\"group-items\"><label> <textarea rows=\"2\"></textarea></label> <label> <input/></label> <label> <textarea rows=\"2\"></textarea></label> <label> <!></label> <span class=\"toolbar-row\"><label class=\"ghost filepick tb-grow\"> <input type=\"file\" accept=\"image/*\"/></label> <!></span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label></div></details> <hr class=\"gridmenu-divider\"/> <input/> <button class=\"ghost action\"> </button> <span class=\"mini-label\"> </span> <div class=\"page-template-grid\"><div><button class=\"page-template-pick\"><span class=\"page-template-thumb\"></span> <span class=\"page-template-name\"> </span></button></div> <!></div> <!></div>");
 function dl(e, t) {
 	at(t, !0);
@@ -6150,14 +6092,12 @@ Vr([
 	"click",
 	"keydown"
 ]);
-//#endregion
-//#region node_modules/svelte/src/easing/index.js
+// node_modules/svelte/src/easing/index.js
 function fl(e) {
 	let t = e - 1;
 	return t * t * t + 1;
 }
-//#endregion
-//#region src/lib/ColorPicker.svelte
+// src/lib/ColorPicker.svelte
 var pl = /* @__PURE__ */ L("<button type=\"button\" class=\"cp-eye svelte-zxiloo\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 2l4 4-3 3-4-4 3-3z\"></path><path d=\"M15 5L4 16l-1 5 5-1L19 9\"></path></svg></button>"), ml = /* @__PURE__ */ L("<input type=\"number\" min=\"0\" max=\"255\" class=\"svelte-zxiloo\"/>"), hl = /* @__PURE__ */ L("<button type=\"button\"></button>"), gl = /* @__PURE__ */ L("<span class=\"cp-label svelte-zxiloo\"> <!></span> <span class=\"cp-tokens svelte-zxiloo\"></span>", 1), _l = /* @__PURE__ */ L("<span class=\"cp-saved svelte-zxiloo\"><button type=\"button\" class=\"cp-token svelte-zxiloo\"></button> <button type=\"button\" class=\"cp-del svelte-zxiloo\"></button></span>"), vl = /* @__PURE__ */ L("<span class=\"cp-tokens svelte-zxiloo\"></span>"), yl = /* @__PURE__ */ L("<button type=\"button\" class=\"cp-token svelte-zxiloo\"></button>"), bl = /* @__PURE__ */ L("<span class=\"cp-label svelte-zxiloo\"> </span> <span class=\"cp-tokens svelte-zxiloo\"></span>", 1), xl = /* @__PURE__ */ L("<div class=\"cp-sv svelte-zxiloo\"><span class=\"cp-cursor svelte-zxiloo\"></span></div> <input class=\"cp-hue svelte-zxiloo\" type=\"range\" min=\"0\" max=\"360\" step=\"1\"/> <input class=\"cp-alpha svelte-zxiloo\" type=\"range\" min=\"0\" max=\"100\" step=\"1\"/> <span class=\"cp-row svelte-zxiloo\"><span class=\"cp-preview svelte-zxiloo\"></span> <input class=\"cp-hex svelte-zxiloo\" spellcheck=\"false\"/> <!></span> <span class=\"cp-row cp-rgb svelte-zxiloo\"></span> <!> <span class=\"cp-label cp-label-row svelte-zxiloo\"> <button type=\"button\" class=\"cp-add svelte-zxiloo\"></button></span> <!> <!>", 1), Sl = /* @__PURE__ */ L("<button type=\"button\" class=\"cp-clear svelte-zxiloo\"></button>"), Cl = /* @__PURE__ */ L("<div class=\"cp-pop cp-anchored svelte-zxiloo\" popover=\"auto\"><!></div>"), wl = /* @__PURE__ */ L("<div class=\"cp-pop svelte-zxiloo\"><!></div>"), Tl = /* @__PURE__ */ L("<span class=\"cp svelte-zxiloo\"><button type=\"button\"></button> <!> <!></span>");
 function El(e, t) {
 	at(t, !0);
@@ -6476,8 +6416,7 @@ Vr([
 	"change",
 	"click"
 ]);
-//#endregion
-//#region src/lib/cell-walk.js
+// src/lib/cell-walk.js
 var Dl = {
 	ArrowDown: [0, 1],
 	ArrowUp: [0, -1],
@@ -6517,8 +6456,7 @@ function kl(e) {
 		}
 	};
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/palette-search.js
+// ../template/assets/engine/0.7.7/palette-search.js
 function Al(e) {
 	return String(e ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -6530,8 +6468,7 @@ function Ml(e, t) {
 	let n = Al(e);
 	return Al(t).split(/\s+/).filter(Boolean).every((e) => n.includes(e));
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/search-langs.js
+// ../template/assets/engine/0.7.7/search-langs.js
 var Nl = 48, Pl = 3, Fl = 5, Il = 3, Ll = 4;
 function Rl(e) {
 	let t = /* @__PURE__ */ new Map();
@@ -6621,8 +6558,7 @@ function Jl(e, t) {
 function Yl(e, t, n) {
 	return Ul.searchItemsAny(e, t, n);
 }
-//#endregion
-//#region src/lib/search-langs.svelte.js
+// src/lib/search-langs.svelte.js
 var Xl = /* @__PURE__ */ O(mn(ql())), Zl = {
 	get ready() {
 		return F(Xl);
@@ -6811,8 +6747,7 @@ Vr([
 	"keydown",
 	"change"
 ]);
-//#endregion
-//#region src/lib/nav-size.js
+// src/lib/nav-size.js
 var pu = {
 	min: 0,
 	max: 64,
@@ -6902,8 +6837,7 @@ function Au(e) {
 function ju(e) {
 	return e?.padY != null && e.padY !== "" || e?.textSize != null && e.textSize !== "" ? null : Tu.includes(e?.size) ? e.size : "md";
 }
-//#endregion
-//#region src/lib/Choice.svelte
+// src/lib/Choice.svelte
 var Mu = /* @__PURE__ */ L("<button type=\"button\"> </button>"), Nu = /* @__PURE__ */ L("<div><span class=\"choice-label svelte-1ehof1c\"> </span> <div class=\"choice-seg svelte-1ehof1c\" role=\"group\"></div></div>");
 function Pu(e, t) {
 	at(t, !0);
@@ -6928,8 +6862,7 @@ function Pu(e, t) {
 	}), R(e, l), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region ../template/assets/engine/0.7.7/fonts.js
+// ../template/assets/engine/0.7.7/fonts.js
 var Fu = [
 	["font.system", "system-ui, sans-serif"],
 	["font.arial", "Arial, Helvetica, sans-serif"],
@@ -7032,8 +6965,7 @@ function ed(e, { min: t = 2, fallback: n = 5 } = {}) {
 	let r = Number(e);
 	return !Number.isFinite(r) || r <= 0 ? n : Math.max(t, r);
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/backgrounds/image.js
+// ../template/assets/engine/0.7.7/backgrounds/image.js
 var td = .4, nd = [
 	"none",
 	"kenburns",
@@ -7173,8 +7105,7 @@ var Ed = {
 function Dd(e, t, n, r) {
 	vd() ? Td(e, t, n, r) : _d(e, t, n, r);
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/photo-source.js
+// ../template/assets/engine/0.7.7/photo-source.js
 var Od = [
 	"drive",
 	"gphotos",
@@ -7366,8 +7297,7 @@ function nf(e, t, n) {
 		e.isConnected && r.photos.length && (e.textContent = "", e.removeAttribute("style"), e.className = "urd-bg-layer", n(e, t));
 	}), n(e, t);
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/backgrounds/slideshow.js
+// ../template/assets/engine/0.7.7/backgrounds/slideshow.js
 var rf = {
 	source: "upload",
 	folder: "",
@@ -8924,8 +8854,7 @@ Vr([
 	"input",
 	"pointerdown"
 ]);
-//#endregion
-//#region ../template/assets/engine/0.7.7/imageTools.js
+// ../template/assets/engine/0.7.7/imageTools.js
 var $f = 1600, ep = .82, tp = .6, np = 15e6, rp = np, ip = 4e6, ap = 256e3;
 function op(e) {
 	if (!cp(e, 0, "GIF8")) return !1;
@@ -9289,8 +9218,7 @@ function Jp(e, { page: t = null, pageId: n = "", path: r = "/", site: i = null }
 	}
 	return s;
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/contact-profiles.js
+// ../template/assets/engine/0.7.7/contact-profiles.js
 var Yp = (e) => RegExp(`^[0-9]{${e}}$`), Xp = /^.{1,80}$/, Zp = {
 	ids: [{
 		key: "number",
@@ -10617,8 +10545,7 @@ function nm(e) {
 	let t = String(e ?? "");
 	return $p[t] ?? $p[t.split("-")[0]] ?? null;
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/contact-checks.js
+// ../template/assets/engine/0.7.7/contact-checks.js
 var rm = (e) => [...String(e)].map(Number);
 function im(e, t) {
 	let n = rm(e);
@@ -11299,8 +11226,7 @@ function fm(e, t) {
 		return !1;
 	}
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/contact-model.js
+// ../template/assets/engine/0.7.7/contact-model.js
 var pm = (e) => typeof e == "string" ? e.trim() : "", mm = [
 	"name",
 	"address",
@@ -11493,8 +11419,7 @@ function Dm(e) {
 		email: r
 	};
 }
-//#endregion
-//#region src/lib/file-links.js
+// src/lib/file-links.js
 var Om = /^data:application\/pdf;name=([a-z0-9-]{1,40});base64,/, km = /\/media\/[a-z0-9][a-z0-9._-]*\.([a-z0-9]+)/gi, Am = /* @__PURE__ */ new Set([
 	"webp",
 	"svg",
@@ -11548,8 +11473,7 @@ function Lm(e, t) {
 		}), e[n] = `/${o}`;
 	}
 }
-//#endregion
-//#region src/lib/link-edit.js
+// src/lib/link-edit.js
 var Rm = [
 	"page",
 	"web",
@@ -11716,8 +11640,7 @@ function Zm(e, { pages: t = [], here: n = null } = {}) {
 		here: n
 	}), { pages: t });
 }
-//#endregion
-//#region src/lib/LinkField.svelte
+// src/lib/LinkField.svelte
 var Qm = /* @__PURE__ */ L("<span class=\"link-field-icon svelte-q91sz3\" aria-hidden=\"true\"></span>"), $m = /* @__PURE__ */ Xr("<svg class=\"link-field-icon svelte-q91sz3\" width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7\"></path><path d=\"M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7\"></path></svg>"), eh = /* @__PURE__ */ L("<button type=\"button\"><!> <span class=\"link-field-text svelte-q91sz3\"> </span></button>"), th = /* @__PURE__ */ L("<div class=\"field-stack link-field-wrap\"><span class=\"mini-label\"> </span> <!></div>");
 function nh(e, t) {
 	at(t, !0);
@@ -11789,8 +11712,7 @@ function nh(e, t) {
 	}), R(e, S), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region src/panels/NavPanel.svelte
+// src/panels/NavPanel.svelte
 var rh = /* @__PURE__ */ L("<div aria-hidden=\"true\"><div class=\"nav-head\"><span class=\"nav-grip\"></span> <span class=\"nav-head-name ghost-name\"> </span> <span class=\"nav-head-link ghost-target\"> </span></div></div>"), ih = /* @__PURE__ */ L("<span class=\"nav-grip\"></span>"), ah = /* @__PURE__ */ L("<span class=\"nav-head-mark\"></span>"), oh = /* @__PURE__ */ L("<span class=\"nav-item-sub\"></span>"), sh = /* @__PURE__ */ L("<div class=\"nav-body-wide\"><!></div>"), ch = /* @__PURE__ */ L("<button class=\"ghost action\"> </button>"), lh = /* @__PURE__ */ L("<div class=\"nav-fold\"><div class=\"nav-body\"><span class=\"nav-body-label\"> </span> <input class=\"field-filled\"/> <span class=\"nav-body-label\"> </span> <!> <span class=\"nav-body-label\"> </span> <input class=\"field-filled\"/> <!> <div class=\"nav-body-actions\"><!> <span class=\"nav-body-spacer\"></span> <button class=\"ghost nav-act\"></button></div></div></div>"), uh = /* @__PURE__ */ L("<div><div class=\"nav-head\"><!> <span class=\"nav-head-name\"> </span> <span class=\"nav-head-link\"> </span> <!> <!> <!> <span class=\"nav-head-tools\"><button class=\"ghost nav-act\"></button> <button class=\"ghost nav-act\"></button></span> <button class=\"ghost nav-act nav-chev\"></button></div> <!></div>"), dh = /* @__PURE__ */ L("<!> <!> <!> <!>", 1), fh = /* @__PURE__ */ L("<!> <!> <!> <!> <!>", 1), ph = /* @__PURE__ */ L("<button type=\"button\"><!><span> </span></button>"), mh = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), hh = /* @__PURE__ */ L("<!> <!>", 1), gh = /* @__PURE__ */ L("<label> <!></label>"), _h = /* @__PURE__ */ L("<hr class=\"gridmenu-divider\"/> <p class=\"mini-label group-sub\"> </p>  <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div role=\"group\"></div></div> <!> <!> <!> <!>", 1), vh = /* @__PURE__ */ L("<input/> <span class=\"toolbar-row\"><!> <input type=\"number\" class=\"tb-num\" min=\"8\" max=\"96\" placeholder=\"px\"/> <button><b> </b></button> <button><i> </i></button></span>", 1), yh = /* @__PURE__ */ L("<img alt=\"\"/>"), bh = /* @__PURE__ */ L("<span class=\"logo-file\"> </span>"), xh = /* @__PURE__ */ L("<div class=\"logo-pick\"><span class=\"logo-thumb\"><!></span> <span class=\"logo-pick-col\"><label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\"/></label> <!></span></div> <div class=\"ctl-triple\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\" min=\"12\" max=\"128\"/></div> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\" min=\"0\" max=\"64\"/></div></div>", 1), Sh = /* @__PURE__ */ L("<span class=\"toolbar-row\"><span class=\"mini-label tb-grow\"> </span> <input type=\"number\" class=\"tb-num\" placeholder=\"1100\"/></span>"), Ch = /* @__PURE__ */ L("<!> <!> <span class=\"toolbar-row\"><span class=\"mini-label tb-grow\"> </span> <input type=\"number\" class=\"tb-num\"/></span>", 1), wh = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), Th = /* @__PURE__ */ L("<!> <span class=\"toolbar-row\"><span class=\"mini-label tb-grow\"> </span> <input type=\"number\" class=\"tb-num\"/></span>", 1), Eh = /* @__PURE__ */ L("<button> </button>"), Dh = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\"/> <input type=\"number\" class=\"tb-num\"/></div>"), Oh = /* @__PURE__ */ L("<div class=\"ctl-pair\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div></div>"), kh = /* @__PURE__ */ L("<button type=\"button\"><span> </span><span> </span></button>"), Ah = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0.1\" max=\"1\" step=\"0.01\"/> <span class=\"gridmenu-value\"> </span></div>"), jh = /* @__PURE__ */ L("<div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div>"), Mh = /* @__PURE__ */ L("<span class=\"field-note\"><i class=\"note-dot\"></i> </span>"), Nh = /* @__PURE__ */ L("<span class=\"toolbar-row ctl-end\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\" min=\"1\" max=\"8\"/> <span class=\"mini-label\"> </span> <!></span>"), Ph = /* @__PURE__ */ L("<hr class=\"gridmenu-divider\"/> <p class=\"mini-label group-sub\"> </p> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-5\" role=\"group\"></div></div> <!>", 1), Fh = /* @__PURE__ */ L("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div>"), Ih = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label>"), Lh = /* @__PURE__ */ L("<input/>"), Rh = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <!> <!> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <!> <input type=\"range\" min=\"0\" max=\"100\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label> <!></label>", 1), zh = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"30\" max=\"80\" step=\"5\"/> <span class=\"gridmenu-value\"> </span></div> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0\" max=\"400\" step=\"10\"/> <span class=\"gridmenu-value\"> </span></div> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0\" max=\"1200\" step=\"20\"/> <span class=\"gridmenu-value\"> </span></div> <!>", 1), Bh = /* @__PURE__ */ L("<div class=\"mini-card\"><span class=\"mini-label\"> </span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label></div> <hr class=\"gridmenu-divider\"/>", 1), Vh = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> <span class=\"page-switch-name\"> </span></label>"), Hh = /* @__PURE__ */ L("<img class=\"tab-mark-preview\" alt=\"\"/>"), Uh = /* @__PURE__ */ L("<span class=\"tab-mark-preview\"></span>"), Wh = /* @__PURE__ */ L("<div class=\"lrow-fields\"><span class=\"lrow-actions\"><!> <!></span> <input class=\"field-filled\"/> <label> <!></label> <label> <!></label></div>"), Gh = /* @__PURE__ */ L("<span class=\"tool-move\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span>"), Kh = /* @__PURE__ */ L("<div class=\"mini-card\"><span class=\"tool-head\"><span class=\"mini-label\"> </span><!></span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label></div>"), qh = /* @__PURE__ */ L("<div class=\"mini-card\"><span class=\"tool-head\"><span class=\"mini-label\"> </span><!></span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <button class=\"ghost action\"> </button></div>"), Jh = /* @__PURE__ */ L("<!> <label> <input/></label>", 1), Yh = /* @__PURE__ */ L("<div class=\"mini-card\"><span class=\"tool-head\"><span class=\"mini-label\"> </span><!></span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div>"), Xh = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input type=\"text\" class=\"field-filled\"/></label>"), Zh = /* @__PURE__ */ L("<span class=\"lrow-warn\"></span>"), Qh = /* @__PURE__ */ L("<span class=\"lrow-tile-mark\"><!></span> <span class=\"lrow-tile-name\"> </span>", 1), $h = /* @__PURE__ */ L("<div class=\"lrow-body\"><!> <div class=\"lrow-fields\"><input class=\"field-filled\"/> <!> <span class=\"lrow-actions\"><!> <button class=\"linkish danger\"> </button></span></div></div>"), eg = /* @__PURE__ */ L("<div><div class=\"lrow-head\" role=\"button\" tabindex=\"0\"><span class=\"lrow-mark\" aria-hidden=\"true\"><!></span> <span class=\"lrow-name\"> </span> <!> <span class=\"row-tools\" role=\"none\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span> <span class=\"lrow-chev\" aria-hidden=\"true\"></span></div> <!></div>"), tg = /* @__PURE__ */ L("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-3\" role=\"group\"></div></div> <!> <div class=\"ctl-triple\"></div> <!> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"1\" max=\"24\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <div class=\"mini-card\"><span class=\"mini-label\"> </span> <span class=\"lbtn-pick\"><!> <span class=\"lbtn-name\"><!></span></span></div> <!> <button class=\"ghost action\"> </button>", 1), ng = /* @__PURE__ */ L("<button class=\"ghost\"> </button>"), rg = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input type=\"text\" class=\"field-filled\"/></label> <!> <!> <!> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <label> <!></label> <label> <!></label>", 1), ig = /* @__PURE__ */ L("<div class=\"panel-body\"><details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"nav-list\" role=\"list\"></div> <button class=\"ghost action\"> </button> <span class=\"toolbar-row\"><input class=\"tb-grow\"/> <button class=\"ghost action\"> </button></span> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <!> <!> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-3\" role=\"group\"></div></div> <!> <!> <!> <!> <!> <hr class=\"gridmenu-divider\"/> <p class=\"mini-label group-sub\"> </p> <div class=\"seg cw-seg\"></div> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\"/> <input type=\"number\" class=\"tb-num\"/></div> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-5\" role=\"group\"></div></div> <!> <div class=\"swatch-row\"><!> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div></div> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <hr class=\"gridmenu-divider\"/> <p class=\"mini-label group-sub\"> </p> <!> <!> <!> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><p class=\"mini-label group-sub\"> </p> <div class=\"ctl-pair\"><!> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\"/></div></div> <div class=\"ctl-pair\"><label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label> <label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label></div> <!> <!> <!> <!> <hr class=\"gridmenu-divider\"/> <p class=\"mini-label group-sub\"> </p> <!> <!> <div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div role=\"group\"></div></div> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <!> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <p class=\"mini-label group-sub\"> </p> <div class=\"page-switches\"></div> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!>  <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div></details></div>");
 function ag(e, t) {
 	at(t, !0);
@@ -12294,7 +12216,7 @@ function ag(e, t) {
 	function kt(e, t, n = null) {
 		l("nav", () => {
 			let i = n === null ? it(e) : it(e, t);
-			i.children.splice(n === null ? t : n, 1), i.children.length === 0 && (delete i.children, !i.page && !i.href && !i.target && (i.page = F(r).pages[0].id));
+			i.children.splice(n === null ? t : n, 1), i.children.length === 0 && (delete i.children, i.page || i.href || i.target || (i.page = F(r).pages[0].id));
 		});
 	}
 	var At = ig(), jt = A(At), Mt = A(jt), Nt = M(Mt, !0), Pt = N(Mt, 2);
@@ -12568,7 +12490,7 @@ function ag(e, t) {
 				}
 			};
 			B(p, (e) => {
-				(!F(ve) || F(r).nav.style?.sideSubs !== "expanded") && e(m);
+				F(ve) && F(r).nav.style?.sideSubs === "expanded" || e(m);
 			});
 			var h = N(p, 2), v = (e) => {
 				var t = gh(), n = A(t), i = N(n);
@@ -14399,7 +14321,7 @@ function ag(e, t) {
 			}, [() => q("tip.nav.announceSticky"), () => q("lbl.announceSticky")]), I("change", n, (e) => ke("sticky", e.target.checked ? void 0 : !1)), R(e, t);
 		};
 		B(d, (e) => {
-			F(r).nav.sticky !== !1 && !F(ye) && !F(ve) && !F(r).nav.overlay && e(f);
+			F(r).nav.sticky === !1 || F(ye) || F(ve) || F(r).nav.overlay || e(f);
 		});
 		var p = N(d, 2), m = (e) => {
 			var t = mh(), n = A(t);
@@ -14635,8 +14557,7 @@ function pg(e, t, n) {
 function mg(e) {
 	return cg.find((t) => t.width === e)?.id ?? null;
 }
-//#endregion
-//#region src/lib/autogrow.js
+// src/lib/autogrow.js
 var hg = typeof CSS < "u" && typeof CSS.supports == "function" && CSS.supports("field-sizing", "content");
 function gg(e) {
 	if (hg) return {};
@@ -14654,8 +14575,7 @@ function gg(e) {
 		}
 	};
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/calendar-format.js
+// ../template/assets/engine/0.7.7/calendar-format.js
 function _g(e) {
 	if (typeof e != "string" || !e.trim()) return !1;
 	try {
@@ -14664,8 +14584,7 @@ function _g(e) {
 		return !1;
 	}
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/map-links.js
+// ../template/assets/engine/0.7.7/map-links.js
 var vg = {
 	osm: {
 		url: "https://www.openstreetmap.org/search?query=",
@@ -14704,8 +14623,7 @@ function bg(e) {
 	let t = e?.site?.mapService;
 	return Object.hasOwn(vg, t) ? t : "osm";
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/meeting-links.js
+// ../template/assets/engine/0.7.7/meeting-links.js
 var xg = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
 function Sg(e) {
 	let t = Array.isArray(e) ? e : String(e ?? "").split(/[\s,;]+/), n = [];
@@ -14720,8 +14638,7 @@ function Sg(e) {
 	}
 	return n;
 }
-//#endregion
-//#region src/lib/swatch.js
+// src/lib/swatch.js
 var Cg = (e) => e ? e.startsWith("#") ? e : `var(--urd-color-${e})` : "var(--urd-color-accent)", wg = "urd-recent-glyphs", Tg = "urd-recent-icons", Eg = [
 	["glyphCat.symbols", "★ ☆ ✦ ✧ ✩ ✪ ✫ ✭ ✮ ✯ ✵ ✳ ✴ ❖ ❋ ✿ ❀ ❁ ✾ ❃ ☘ ◆ ◇ ● ○ ◎ ■ □ ▣ ▲ △ ▼ ▽ ⬡ ⬢ ♦ ♠ ♣ ♥ ♡ ✓ ✔ ✕ ✖ ✗ ✘ ✚ ✜ ☀ ☾ ♪ ♫ ♬ ☮ ☯ ⚜ ⚓ ⚡ ☂ ✂ ✏ ✒ ✉ ☎ ⌛ ⏳ ♻ ⚠ ☑ ⚙ § © ® ™ ° ± × ÷ ∞ ≈ ≠ ≤ ≥ € £ ¥ • ‣ ⁂"],
 	["glyphCat.arrows", "→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ➜ ➤ ➔ ↩ ↪ ⤴ ⤵ ↺ ↻ ⟲ ⟳ « » ‹ ›"],
@@ -14762,8 +14679,7 @@ function Mg() {
 function Ng(e) {
 	return kg(Tg, Mg(), e);
 }
-//#endregion
-//#region src/lib/GlyphPicker.svelte
+// src/lib/GlyphPicker.svelte
 var Pg = /* @__PURE__ */ L("<p class=\"gp-hint svelte-15ln1c3\"> </p>"), Fg = /* @__PURE__ */ L("<button type=\"button\"><span class=\"gp-svg svelte-15ln1c3\"></span></button>"), Ig = /* @__PURE__ */ L("<button type=\"button\"> </button>"), Lg = /* @__PURE__ */ L("<!> <div class=\"gp-grid svelte-15ln1c3\"><!> <!></div>", 1), Rg = /* @__PURE__ */ L("<button type=\"button\" class=\"gp-cell svelte-15ln1c3\"> </button>"), zg = /* @__PURE__ */ L("<div class=\"gp-group svelte-15ln1c3\"> </div> <div class=\"gp-grid svelte-15ln1c3\"><!> <!></div>", 1), Bg = /* @__PURE__ */ L("<div class=\"gp-group svelte-15ln1c3\"> </div> <div class=\"gp-grid svelte-15ln1c3\"></div>", 1), Vg = /* @__PURE__ */ L("<div class=\"gp-group svelte-15ln1c3\"> </div> <button type=\"button\" class=\"ghost gp-upload svelte-15ln1c3\"> </button> <input type=\"file\" accept=\"image/*\" hidden=\"\"/> <p class=\"gp-hint svelte-15ln1c3\"> </p>", 1), Hg = /* @__PURE__ */ L("<!> <!> <!> <!>", 1), Ug = /* @__PURE__ */ L("<input class=\"gp-search svelte-15ln1c3\" type=\"search\"/> <!>", 1), Wg = /* @__PURE__ */ L("<img class=\"gp-own svelte-15ln1c3\"/>"), Gg = /* @__PURE__ */ L("<span class=\"gp-svg svelte-15ln1c3\"></span>"), Kg = /* @__PURE__ */ L("<div class=\"gp-pop gp-anchored svelte-15ln1c3\" popover=\"auto\"><!></div>"), qg = /* @__PURE__ */ L("<div class=\"gp-pop svelte-15ln1c3\"><!></div>"), Jg = /* @__PURE__ */ L("<span class=\"gp svelte-15ln1c3\"><button type=\"button\" class=\"gp-swatch svelte-15ln1c3\"><!></button> <!></span>");
 function Yg(e, t) {
 	at(t, !0);
@@ -14985,8 +14901,7 @@ Vr([
 	"click",
 	"change"
 ]);
-//#endregion
-//#region src/lib/LinkList.svelte
+// src/lib/LinkList.svelte
 var Xg = /* @__PURE__ */ L("<button class=\"ghost row-tool\"></button>"), Zg = /* @__PURE__ */ L("<div class=\"nav-row link-row\"><span class=\"nav-line\"><!> <input class=\"nav-target\"/> <!></span> <span class=\"nav-line\"><span class=\"link-cell svelte-3bgvoj\"><!></span> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span></div>"), Qg = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1);
 function $g(e, t) {
 	at(t, !0);
@@ -15069,8 +14984,7 @@ function $g(e, t) {
 	}), R(e, i), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/panels/SitePanel.svelte
+// src/panels/SitePanel.svelte
 var e_ = /* @__PURE__ */ L("<p class=\"panel-hint place-error\"> </p>"), t_ = /* @__PURE__ */ L("<span class=\"site-cal-color\"><!> <span> </span></span>"), n_ = /* @__PURE__ */ L("<div><button type=\"button\" class=\"site-cal-head\"><span class=\"site-cal-dot\" aria-hidden=\"true\"></span> <span class=\"site-cal-text\"><span class=\"site-cal-name\"> </span> <span class=\"site-cal-addr\"> </span></span> <span class=\"site-cal-chev\" aria-hidden=\"true\"></span></button> <div class=\"site-cal-body\"><div class=\"site-cal-clip\"><div class=\"site-cal-fields\"><span class=\"mini-label site-cal-section\"> </span> <label class=\"site-cal-field\"> <input/></label> <label class=\"site-cal-field\"> <input spellcheck=\"false\"/></label> <label class=\"site-cal-field\"> <input/></label> <span class=\"mini-label site-cal-section\"> </span> <div class=\"site-cal-colors\"><span class=\"site-cal-color\"><!> <span> </span></span> <!></div> <span class=\"mini-label site-cal-section\"> </span> <label class=\"site-cal-field\"> <input placeholder=\"https://\" spellcheck=\"false\"/></label> <label class=\"site-cal-field\"> <input/></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <div class=\"site-cal-foot\"><span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span> <button type=\"button\" class=\"site-cal-remove\"> </button></div></div></div></div></div>"), r_ = /* @__PURE__ */ L("<div class=\"site-cal-list\"></div>"), i_ = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), a_ = /* @__PURE__ */ L("<label class=\"field-stack\"> <input/></label>"), o_ = /* @__PURE__ */ L("<p> </p>"), s_ = /* @__PURE__ */ L("<label class=\"field-stack\"> <!></label>"), c_ = /* @__PURE__ */ L("<!> <!>", 1), l_ = /* @__PURE__ */ L("<!> <label class=\"field-stack\"> <input spellcheck=\"false\"/></label> <!> <!>", 1), u_ = /* @__PURE__ */ L("<label class=\"field-stack\"> <!></label> <!>", 1), d_ = /* @__PURE__ */ L("<p id=\"contact-note-vat\"> </p>"), f_ = /* @__PURE__ */ L("<label class=\"field-stack\"> <input spellcheck=\"false\"/></label> <!>", 1), p_ = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!>", 1), m_ = /* @__PURE__ */ L("<div class=\"pin-line\"><span class=\"mini-label\"> </span> <button class=\"ghost row-tool\"></button></div>"), h_ = /* @__PURE__ */ L("<button class=\"ghost action\"> </button>"), g_ = /* @__PURE__ */ L("<p role=\"status\"> </p>"), __ = /* @__PURE__ */ L("<div class=\"contact-point\"><div class=\"contact-point-role\"><label> </label> <span class=\"nav-line\"><input autocomplete=\"off\"/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button></span></span></div> <label class=\"field-stack\"> <input type=\"email\" autocomplete=\"off\" spellcheck=\"false\"/></label> <label class=\"field-stack\"> <input type=\"tel\" autocomplete=\"off\"/></label> <label class=\"field-stack\"> <input autocomplete=\"off\"/></label></div>"), v_ = /* @__PURE__ */ L("<div class=\"cw-row\"><span class=\"mini-label cw-screen\"> </span> <span><span class=\"cw-fill\"></span></span> <span class=\"gridmenu-value cw-margin\"> </span></div>"), y_ = /* @__PURE__ */ L("<div class=\"mini-label cw-binds\"> </div>"), b_ = /* @__PURE__ */ L("<button> </button>"), x_ = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label\"> </span> <input type=\"range\"/> <span class=\"gridmenu-value\"> </span></div>"), S_ = /* @__PURE__ */ L("<img class=\"site-icon-preview\"/>"), C_ = /* @__PURE__ */ L("<button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button>", 1), w_ = /* @__PURE__ */ L("<div class=\"panel-body\"><label class=\"field-stack\"> <input/></label> <label class=\"field-stack\"> <textarea class=\"field-grow\" rows=\"1\"></textarea></label> <label class=\"field-stack\"> <!></label> <label class=\"field-stack\"> <input placeholder=\"Europe/Oslo\" spellcheck=\"false\"/></label> <!> <label class=\"field-stack\"> <!></label> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><button type=\"button\" class=\"site-cal-add\"><!> </button> <!> <label class=\"field-stack\"> <input placeholder=\"meet.example.org\" spellcheck=\"false\"/></label></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"field-stack\"> <!></label> <label class=\"field-stack\"> <input/></label> <!> <!> <label class=\"field-stack\"> <input/></label> <label class=\"field-stack\"> <input autocomplete=\"off\"/></label> <div class=\"field-pair\"><label class=\"field-stack\"> <input autocomplete=\"off\"/></label> <label class=\"field-stack\"> <input autocomplete=\"off\"/></label></div> <!> <label class=\"field-stack\"> <input type=\"tel\" autocomplete=\"off\"/></label> <label class=\"field-stack\"> <input type=\"email\" autocomplete=\"off\" spellcheck=\"false\"/></label> <p class=\"panel-strong\"> </p> <!> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"field-stack\"> <input placeholder=\"NOK\" maxlength=\"3\" spellcheck=\"false\" data-field=\"shop-currency\"/></label></div></details> <hr class=\"gridmenu-divider\"/> <p class=\"panel-strong\"> </p> <div class=\"sample cw-sample\"><!> <div class=\"cw-legend\"><span class=\"mini-label\"> </span> <span class=\"mini-label\"> </span></div> <!></div> <div class=\"seg cw-seg\"></div> <!> <p class=\"mini-label\"> </p> <div class=\"seg cw-seg\"></div> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"ctl-row\"><span class=\"mini-label\"> </span> <input type=\"range\"/> <span class=\"gridmenu-value\"> </span></div></div></details> <hr class=\"gridmenu-divider\"/> <label> <!></label> <span class=\"toolbar-row\"><label class=\"ghost filepick tb-grow\"> <input type=\"file\" accept=\"image/*\"/></label> <!></span></div>");
 function T_(e, t) {
 	at(t, !0);
@@ -15958,8 +15872,7 @@ Vr([
 	"change",
 	"click"
 ]);
-//#endregion
-//#region src/panels/ThemePanel.svelte
+// src/panels/ThemePanel.svelte
 var E_ = /* @__PURE__ */ L("<div class=\"mini-label tpv-cap\"> </div>"), D_ = /* @__PURE__ */ L("<div class=\"theme-pvw\"><!> <div class=\"tpv-demo\"><div class=\"tpv-h\"> </div> <div class=\"tpv-card\"> </div> <div class=\"tpv-row\"><span class=\"tpv-btn\"> </span><span class=\"tpv-lnk\"> </span></div></div></div>"), O_ = /* @__PURE__ */ L("<button type=\"button\"><span class=\"tp-band\"><i></i><i></i><i></i><i></i></span> <small> </small></button>"), k_ = /* @__PURE__ */ L("<div class=\"ctl-row autorow\"><span class=\"autolbl\"> </span> <span class=\"seg\"><button type=\"button\"> </button> <button type=\"button\"> </button></span></div>"), A_ = /* @__PURE__ */ L("<span class=\"mini-label\"> </span>"), j_ = /* @__PURE__ */ L("<div class=\"palcol\"><!> <span class=\"palcap\"> </span> <b class=\"palhex\"> </b></div>"), M_ = /* @__PURE__ */ L("<div class=\"ctl-row palhead\"><span class=\"mini-label\"> </span> <button type=\"button\"> </button></div> <div></div>", 1), N_ = /* @__PURE__ */ L("<div class=\"panel-body\"><p class=\"panel-strong\"> </p> <div class=\"theme-presets\"></div> <p class=\"panel-strong\"> </p> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <div class=\"ctl-row palhead\"><!> <button type=\"button\"> </button></div> <div class=\"palcells\"></div> <!> <div class=\"ctl-row palauto-row\"><span class=\"mini-label ctl-name\"> </span> <button type=\"button\"> </button></div> <div class=\"theme-previews\"><!> <!></div> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label> <!></label> <label> <!></label> <div class=\"sample typo-sample\"><div class=\"ts-h\"> </div> <div class=\"ts-b\"> </div></div></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"sample form-prev\"><span class=\"fp-btn\"> </span> <span class=\"fp-card\"> </span></div> <label class=\"ctl-row\"> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"24\" step=\"1\"/> <label class=\"ctl-row\"> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"40\" step=\"1\"/></div></details></div>");
 function P_(e, t) {
 	at(t, !0);
@@ -16277,8 +16190,7 @@ Vr([
 	"change",
 	"input"
 ]);
-//#endregion
-//#region ../template/assets/engine/0.7.7/calendar-designs.js
+// ../template/assets/engine/0.7.7/calendar-designs.js
 var F_ = [
 	"list",
 	"cards",
@@ -17699,8 +17611,7 @@ function Mv(e) {
 	for (let n of Object.keys(R_)) Av(e?.[n]) || (t[n] = e[n]);
 	return Object.keys(t).length ? t : void 0;
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/block-palette.js
+// ../template/assets/engine/0.7.7/block-palette.js
 var Nv = (e) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${e}</svg>`, Pv = {
 	text: {
 		labelKey: "blocks.text",
@@ -17937,8 +17848,7 @@ var Nv = (e) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" str
 	}
 ];
 Nv("<path d=\"M9 3v5M15 3v5\"/><path d=\"M6 8h12v3a6 6 0 0 1-12 0z\"/><path d=\"M12 17v4\"/>"), Nv("<rect x=\"3\" y=\"3\" width=\"8\" height=\"8\" rx=\"1.5\"/><rect x=\"13\" y=\"3\" width=\"8\" height=\"8\" rx=\"1.5\"/><rect x=\"3\" y=\"13\" width=\"8\" height=\"8\" rx=\"1.5\"/><path d=\"M17 14v6M14 17h6\"/>");
-//#endregion
-//#region src/panels/BlocksPanel.svelte
+// src/panels/BlocksPanel.svelte
 var Iv = /* @__PURE__ */ L("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\"/></label>"), Lv = /* @__PURE__ */ L("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\" multiple=\"\"/></label>"), Rv = /* @__PURE__ */ L("<button class=\"ghost\"> </button>"), zv = /* @__PURE__ */ L("<p class=\"panel-hint\"> </p>"), Bv = /* @__PURE__ */ L("<label class=\"tile filepick\"><!><span> </span> <input type=\"file\" accept=\"image/*\"/></label>"), Vv = /* @__PURE__ */ L("<button type=\"button\" class=\"tile\"><!><span> </span></button>"), Hv = /* @__PURE__ */ L("<p class=\"mini-label group-sub\"> </p> <div class=\"tile-grid cols-3 palette-grid\"></div>", 1), Uv = /* @__PURE__ */ L("<details class=\"group\"><summary> </summary> <div class=\"group-items\"></div></details>"), Wv = /* @__PURE__ */ L("<!> <!> <!>", 1), Gv = /* @__PURE__ */ L("<div><input type=\"text\"/> <!></div>");
 function Kv(e, t) {
 	at(t, !0);
@@ -18192,8 +18102,7 @@ function Kv(e, t) {
 	]), Yi(ne, () => F(y), (e) => k(y, e)), R(e, ee), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/panels/GridPanel.svelte
+// src/panels/GridPanel.svelte
 var qv = /* @__PURE__ */ L("<div class=\"panel-body\"><label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\"/> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label></div>");
 function Jv(e, t) {
 	at(t, !0);
@@ -18215,8 +18124,7 @@ function Jv(e, t) {
 	]), I("input", l, (e) => i("size", Number(e.target.value))), I("change", d, (e) => i("snap", e.target.checked)), R(e, a), ot();
 }
 Vr(["input", "change"]);
-//#endregion
-//#region node_modules/svelte/src/reactivity/set.js
+// node_modules/svelte/src/reactivity/set.js
 var Yv = [
 	"forEach",
 	"isDisjointFrom",
@@ -18372,8 +18280,7 @@ function uy(e, t) {
 		e.setItem($v, JSON.stringify(n));
 	} catch {}
 }
-//#endregion
-//#region src/menu/state.svelte.js
+// src/menu/state.svelte.js
 var dy = "urd-admin-menu-width", fy = mn({
 	widthPref: localStorage.getItem(dy) === "narrow" ? "narrow" : "wide",
 	wide: localStorage.getItem(dy) !== "narrow",
@@ -18418,8 +18325,7 @@ function Sy(e, t) {
 function Cy(e, t) {
 	Sy(e, sy(e, xy(e), t));
 }
-//#endregion
-//#region src/menu/Pin.svelte
+// src/menu/Pin.svelte
 var wy = /* @__PURE__ */ L("<button type=\"button\"></button>");
 function Ty(e, t) {
 	at(t, !0);
@@ -18431,8 +18337,7 @@ function Ty(e, t) {
 	}, [() => F(i) ? q("menu.unpin") : q("menu.pin"), () => F(i) ? q("menu.unpin") : q("menu.pin")]), I("click", a, () => Cy(F(r), t.id)), R(e, a), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region ../template/assets/engine/0.7.7/shop.js
+// ../template/assets/engine/0.7.7/shop.js
 var Ey = "urd-cart";
 function Dy(e, t) {
 	return t ? `${e}|${t}` : String(e);
@@ -18524,8 +18429,7 @@ function Ly(e) {
 	} catch {}
 	document.dispatchEvent(new CustomEvent("urd-cart-change", { detail: { count: jy(e) } }));
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/block-designs.js
+// ../template/assets/engine/0.7.7/block-designs.js
 function Ry(e, t, n) {
 	let r = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${t} ${n}"><rect width="${t}" height="${n}" fill="hsl(${e} 45% 82%)"/><circle cx="${Math.round(t * .75)}" cy="${Math.round(n * .3)}" r="${Math.round(Math.min(t, n) * .12)}" fill="hsl(${(e + 40) % 360} 80% 75%)"/><path d="M0 ${Math.round(n * .75)} L${Math.round(t * .25)} ${Math.round(n * .45)} L${Math.round(t * .45)} ${Math.round(n * .65)} L${Math.round(t * .7)} ${Math.round(n * .4)} L${t} ${Math.round(n * .7)} L${t} ${n} L0 ${n}Z" fill="hsl(${e} 40% 48%)"/></svg>`;
 	return `data:image/svg+xml,${encodeURIComponent(r)}`;
@@ -18870,8 +18774,7 @@ function Xy(e, t) {
 		w: c
 	};
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/calendar-thumb.js
+// ../template/assets/engine/0.7.7/calendar-thumb.js
 var Zy = "#0e1512", Qy = "#2fd6b6", $y = "#5c6b64", eb = "#22302a", tb = "#e8efe9", nb = "#16221d", rb = "#1c2340", ib = "#f3ecd8", ab = "#d0a74a", ob = (e) => e < 1 ? ` opacity="${e}"` : "", Z = (e, t, n, r, i, a = 1, o = 2) => `<rect x="${e}" y="${t}" width="${n}" height="${r}" rx="${o}" fill="${i}"${ob(a)}/>`, sb = (e, t, n, r, i = 1) => `<circle cx="${e}" cy="${t}" r="${n}" fill="${r}"${ob(i)}/>`, cb = (e, t, n, r, i, a = 1, o = 1) => `<line x1="${e}" y1="${t}" x2="${n}" y2="${r}" stroke="${i}" stroke-width="${a}"${ob(o)}/>`, lb = (e, t, n, r) => Array.from({ length: e }, (e, i) => r(t + i * n, i)).join(""), ub = (e, t = Zy) => `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${t}"/>${e}</svg>`;
 function db(e, t, n, r, i, a = $y) {
 	let o = "", s = n / 7, c = r / 4;
@@ -19044,8 +18947,7 @@ function pb(e) {
 	let t = fb[e] ?? fb.plain, n = ["booklet"].includes(e);
 	return ub(t(), n ? "#1a2620" : Zy);
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/footer-model.js
+// ../template/assets/engine/0.7.7/footer-model.js
 var mb = (e) => typeof e == "string" ? e : "";
 function hb(e) {
 	let t = e.footer?.brand ?? {}, n = mb(t.title).trim(), r = mb(t.tagline).trim(), i = mb(t.logo).trim(), a = t.mode === "image" || t.mode === "both" ? t.mode : "text";
@@ -19113,8 +19015,7 @@ function Sb(e) {
 function Cb(e) {
 	return !!(hb(e) || gb(e).length || bb(e).length || _b(e).length || vb(e).length || yb(e) || mb(e.footer?.copyright).trim());
 }
-//#endregion
-//#region src/lib/design-sources.js
+// src/lib/design-sources.js
 function wb(e) {
 	try {
 		return new Intl.ListFormat(Ea(), { type: "conjunction" }).format(e);
@@ -19439,8 +19340,7 @@ function Mb({ site: e = null }) {
 		afterDraw: null
 	};
 }
-//#endregion
-//#region src/menu/options.js
+// src/menu/options.js
 var Nb = () => [["on", q("common.on")], ["off", q("common.off")]], Pb = () => [
 	["canvas", q("opt.ribbonWidth.content")],
 	["page", q("opt.ribbonWidth.page")],
@@ -19490,8 +19390,7 @@ var Nb = () => [["on", q("common.on")], ["off", q("common.off")]], Pb = () => [
 	["bottom-center", "opt.dock.bottomCenter"],
 	["bottom-right", "opt.dock.bottomRight"]
 ];
-//#endregion
-//#region src/lib/menu-search.js
+// src/lib/menu-search.js
 function Kb(e, t, n = "", r = /* @__PURE__ */ new Set()) {
 	let i = null;
 	for (let a of e ?? []) {
@@ -19572,8 +19471,7 @@ function Qb(e, t) {
 		}), () => i.disconnect();
 	};
 }
-//#endregion
-//#region src/menu/MenuGroup.svelte
+// src/menu/MenuGroup.svelte
 var $b = /* @__PURE__ */ L("<i class=\"menu-group-dot\" aria-hidden=\"true\"></i>"), ex = /* @__PURE__ */ L("<button type=\"button\" class=\"linkish menu-group-reset\"> </button>"), tx = /* @__PURE__ */ L("<details class=\"group menu-group\"><summary><span class=\"menu-group-title\"> <!></span><span class=\"menu-group-value\"> </span></summary> <div class=\"group-items\"><!> <!></div></details>");
 function nx(e, t) {
 	at(t, !0);
@@ -19609,8 +19507,7 @@ function nx(e, t) {
 	}), R(e, a), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region src/lib/AnchorField.svelte
+// src/lib/AnchorField.svelte
 var rx = /* @__PURE__ */ L("<button type=\"button\" class=\"linkish anchor-suggest svelte-7tz246\"> </button>"), ix = /* @__PURE__ */ L("<p class=\"panel-hint place-error\" aria-live=\"polite\"> </p>"), ax = /* @__PURE__ */ L("<button type=\"button\" class=\"linkish anchor-use svelte-7tz246\"> </button>"), ox = /* @__PURE__ */ L("<div class=\"anchor-uses svelte-7tz246\"><span class=\"mini-label\"> </span> <!></div>"), sx = /* @__PURE__ */ L("<div class=\"anchor-row svelte-7tz246\"><label class=\"field-stack svelte-7tz246\"> <input spellcheck=\"false\" autocomplete=\"off\"/></label> <button type=\"button\" class=\"ghost row-tool\"></button></div> <!> <!> <!>", 1);
 function cx(e, t) {
 	at(t, !0);
@@ -19702,8 +19599,7 @@ Vr([
 	"keydown",
 	"click"
 ]);
-//#endregion
-//#region src/menu/Placement.svelte
+// src/menu/Placement.svelte
 var lx = /* @__PURE__ */ L("<div class=\"frame-grid\"><label> <input type=\"number\"/></label> <label> <input type=\"number\"/></label></div>"), ux = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label\"> </span> <input type=\"range\"/> <span class=\"gridmenu-value\"> </span> <!></div> <!>", 1), dx = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label\"> </span> <input type=\"range\" min=\"1\" max=\"100\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>"), fx = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div> <!>", 1), px = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"100\" max=\"4000\" step=\"100\"/></label> <label> <input type=\"number\" min=\"0\" max=\"4000\" step=\"100\"/></label>", 1), mx = /* @__PURE__ */ L("<label class=\"field-stack\"> <!></label> <!> <label class=\"field-stack\"> <!></label>", 1), hx = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"0\" max=\"400\"/></label>"), gx = /* @__PURE__ */ L("<label> <!></label>"), _x = /* @__PURE__ */ L("<label> <!></label> <!> <!>", 1), vx = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!>", 1), yx = /* @__PURE__ */ L("<div class=\"frame-grid\"><label> <input type=\"number\" step=\"0.5\"/></label> <label> <input type=\"number\" step=\"1\"/></label> <label> <input type=\"number\" step=\"0.5\" min=\"1\"/></label> <label> <input type=\"number\" step=\"1\" min=\"1\"/></label> <label> <input type=\"number\" step=\"1\"/></label> <label> <input type=\"number\" step=\"1\"/></label></div>"), bx = /* @__PURE__ */ L("<button type=\"button\" class=\"setting-reset\"></button>"), xx = /* @__PURE__ */ L("<div><i class=\"setting-dot\" aria-hidden=\"true\"></i> <div class=\"setting-body\"><span class=\"mini-label\"> </span> <span class=\"setting-source\"> </span></div> <!></div>"), Sx = /* @__PURE__ */ L("<!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1), Cx = /* @__PURE__ */ L("<span class=\"field-note\"><i class=\"note-dot\"></i> </span>"), wx = /* @__PURE__ */ L("<!> <!>", 1), Tx = /* @__PURE__ */ L("<label> <!></label> <!>", 1), Ex = /* @__PURE__ */ L("<!> <!> <!> <div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div> <!> <!> <!> <!>", 1);
 function Dx(e, t) {
 	at(t, !0);
@@ -20169,8 +20065,7 @@ Vr([
 	"change",
 	"click"
 ]);
-//#endregion
-//#region src/menu/Setting.svelte
+// src/menu/Setting.svelte
 var Ox = /* @__PURE__ */ L("<span class=\"setting-source\"> </span>"), kx = /* @__PURE__ */ L("<button type=\"button\" class=\"setting-reset\"></button>"), Ax = /* @__PURE__ */ L("<div><i class=\"setting-dot\" aria-hidden=\"true\"></i> <div class=\"setting-body\"><!> <!></div> <!></div>");
 function jx(e, t) {
 	at(t, !0);
@@ -20197,8 +20092,7 @@ function jx(e, t) {
 	}), E(o), P(() => s = H(o, 1, "setting", null, s, { own: F(a) })), R(e, o), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region src/menu/BoxStyle.svelte
+// src/menu/BoxStyle.svelte
 var Mx = /* @__PURE__ */ L("<label> <!></label>"), Nx = /* @__PURE__ */ L("<label> <!></label> <label> <span class=\"num-stepper\"><button type=\"button\"></button> <input type=\"number\" min=\"1\" max=\"12\" step=\"1\"/> <button type=\"button\"></button></span></label>", 1), Px = /* @__PURE__ */ L("<label> <!></label> <label> <!></label> <!> <label> <!></label> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1);
 function Fx(e, t) {
 	at(t, !0);
@@ -20371,8 +20265,7 @@ function Rx(e) {
 	let n = Fu.find(([, e]) => Lx(e) === t);
 	return n ? n[1] : "";
 }
-//#endregion
-//#region src/menu/groups.js
+// src/menu/groups.js
 var zx = (e, t) => JSON.stringify(e) === JSON.stringify(t);
 function Bx(e, t) {
 	let n = (t) => Object.entries(t).filter(([t, n]) => e()[t] !== void 0 && !zx(e()[t], n));
@@ -20388,8 +20281,7 @@ function Bx(e, t) {
 		})
 	};
 }
-//#endregion
-//#region src/menu/families/Text.svelte
+// src/menu/families/Text.svelte
 var Vx = /* @__PURE__ */ L("<label> <!></label> <label> <input type=\"number\" step=\"1\"/></label>", 1), Hx = /* @__PURE__ */ L("<button type=\"button\" class=\"ghost action\"> </button> <!>", 1), Ux = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), Wx = /* @__PURE__ */ L("<div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div>"), Gx = /* @__PURE__ */ L("<!> <!>", 1);
 function Kx(e, t) {
 	at(t, !0);
@@ -20562,8 +20454,7 @@ function Kx(e, t) {
 	}), R(e, p), ot();
 }
 Vr(["click", "change"]);
-//#endregion
-//#region src/menu/DesignRow.svelte
+// src/menu/DesignRow.svelte
 var qx = /* @__PURE__ */ L("<div class=\"pin-line\"><button type=\"button\" class=\"menu-row\"><span class=\"menu-group-title\"> </span><span class=\"menu-group-value\"> </span></button> <!></div>");
 function Jx(e, t) {
 	at(t, !0);
@@ -20582,8 +20473,7 @@ function Jx(e, t) {
 	}), R(e, o), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region src/menu/families/Button.svelte
+// src/menu/families/Button.svelte
 var Yx = /* @__PURE__ */ L("<label> <input/></label> <div class=\"pin-line\"><!> <!></div>", 1);
 function Xx(e, t) {
 	at(t, !0);
@@ -20667,8 +20557,7 @@ function Xx(e, t) {
 	}), R(e, l), ot();
 }
 Vr(["change"]);
-//#endregion
-//#region src/menu/families/Image.svelte
+// src/menu/families/Image.svelte
 var Zx = /* @__PURE__ */ L("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\"/></label> <label> <input/></label>", 1), Qx = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), $x = /* @__PURE__ */ L("<!> <!>", 1), eS = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), tS = /* @__PURE__ */ L("<!> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\"/> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\"/> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"1\" max=\"3\" step=\"0.01\"/> <button type=\"button\" class=\"linkish\"> </button>", 1), nS = /* @__PURE__ */ L("<label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0.2\" max=\"2\" step=\"0.01\"/> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0.2\" max=\"2\" step=\"0.01\"/> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"2\" step=\"0.01\"/>", 1), rS = /* @__PURE__ */ L("<!> <!> <!>", 1);
 function iS(e, t) {
 	at(t, !0);
@@ -20998,8 +20887,7 @@ Vr([
 	"input",
 	"click"
 ]);
-//#endregion
-//#region src/menu/families/Video.svelte
+// src/menu/families/Video.svelte
 var aS = /* @__PURE__ */ L("<label> </label> <input/>", 1), oS = /* @__PURE__ */ L("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"video/mp4,video/webm\"/></label> <label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\"/></label>", 1), sS = /* @__PURE__ */ L("<div class=\"pin-line\"><!> <!></div> <!>", 1), cS = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), lS = /* @__PURE__ */ L("<!> <!> <!>", 1), uS = /* @__PURE__ */ L("<label> <input/></label>");
 function dS(e, t) {
 	at(t, !0);
@@ -21194,8 +21082,7 @@ function dS(e, t) {
 	}), R(e, u), ot();
 }
 Vr(["change"]);
-//#endregion
-//#region src/menu/families/Icon.svelte
+// src/menu/families/Icon.svelte
 var fS = /* @__PURE__ */ L("<input class=\"token-input\" maxlength=\"4\"/>"), pS = /* @__PURE__ */ L("<button class=\"ghost\"> </button>"), mS = /* @__PURE__ */ L("<span class=\"toolbar-row\"><img class=\"site-icon-preview\"/> <button class=\"ghost\"> </button></span>"), hS = /* @__PURE__ */ L("<label> <span class=\"toolbar-row\"><!> <!></span></label> <!>", 1), gS = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <input type=\"number\" min=\"8\" max=\"400\"/></label> <!></div>"), _S = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), vS = /* @__PURE__ */ L("<!> <!>", 1);
 function yS(e, t) {
 	at(t, !0);
@@ -21336,8 +21223,7 @@ function yS(e, t) {
 	}), R(e, u), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Shape.svelte
+// src/menu/families/Shape.svelte
 var bS = /* @__PURE__ */ L("<label> <input/></label>"), xS = /* @__PURE__ */ L("<!> <!>", 1), SS = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), CS = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <input type=\"number\" min=\"1\" max=\"40\"/></label> <!></div>"), wS = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), TS = /* @__PURE__ */ L("<!> <!> <!>", 1), ES = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"4\" step=\"1\"/></label>"), DS = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"1\" step=\"0.5\"/></label>");
 function OS(e, t) {
 	at(t, !0);
@@ -21521,8 +21407,7 @@ function OS(e, t) {
 	}), R(e, f), ot();
 }
 Vr(["change"]);
-//#endregion
-//#region src/menu/families/Gallery.svelte
+// src/menu/families/Gallery.svelte
 var kS = /* @__PURE__ */ L("<div class=\"bg-layer\"><span class=\"toolbar-row\"><img class=\"site-icon-preview\" alt=\"\"/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span> <label> <input/></label> <!></div>"), AS = /* @__PURE__ */ L("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\" multiple=\"\"/></label> <!>", 1), jS = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <input type=\"number\" min=\"1\" max=\"6\"/></label> <!></div>"), MS = /* @__PURE__ */ L("<!> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"32\" step=\"2\"/>", 1), NS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" step=\"10\"/> <span class=\"gridmenu-value\"> </span></div>"), PS = /* @__PURE__ */ L("<!> <button type=\"button\" class=\"ghost action\"><!> </button>", 1), FS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>"), IS = /* @__PURE__ */ L("<button type=\"button\" class=\"ghost action\"><!> </button>"), LS = /* @__PURE__ */ L("<label> <!></label>"), RS = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), zS = /* @__PURE__ */ L("<!> <!> <!> <!>", 1), BS = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"2\" max=\"60\"/></label>"), VS = /* @__PURE__ */ L("<!> <!> <!> <!> <!> <!>", 1), HS = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"10\" max=\"300\" step=\"5\"/> <span class=\"gridmenu-value\"> </span></div>"), US = /* @__PURE__ */ L("<!> <!> <!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"60\" max=\"800\" step=\"10\"/> <span class=\"gridmenu-value\"> </span></div> <label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"0\" max=\"32\" step=\"2\"/> <!> <!> <!>", 1), WS = /* @__PURE__ */ L("<!> <!>", 1), GS = /* @__PURE__ */ L("<!> <!> <!>", 1);
 function KS(e, t) {
 	at(t, !0);
@@ -22024,8 +21909,7 @@ Vr([
 	"click",
 	"input"
 ]);
-//#endregion
-//#region src/menu/families/Ribbon.svelte
+// src/menu/families/Ribbon.svelte
 var qS = /* @__PURE__ */ L("<span class=\"nav-line\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span>"), JS = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), YS = /* @__PURE__ */ L("<button type=\"button\"></button>"), XS = /* @__PURE__ */ L("<div class=\"ctl-field\"><span class=\"mini-label\"> </span> <div class=\"tile-grid cols-6\" role=\"group\"></div></div>"), ZS = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <input class=\"field-filled\"/></label>"), QS = /* @__PURE__ */ L("<!> <!>", 1), $S = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), eC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0.5\" max=\"10\" step=\"0.5\"/> <span class=\"gridmenu-value\"> </span></div>"), tC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"10\" max=\"300\" step=\"5\"/> <span class=\"gridmenu-value\"> </span> <!></div>"), nC = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), rC = /* @__PURE__ */ L("<button class=\"ghost action\"> </button> <!> <!> <!> <!> <!>", 1), iC = /* @__PURE__ */ L("<label class=\"field-stack\"><span class=\"mini-label\"> </span> <!></label>"), aC = /* @__PURE__ */ L("<label> <!></label>"), oC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"2\" max=\"40\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>"), sC = /* @__PURE__ */ L("<!> <!> <!> <!> <!> <!>", 1), cC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"-10\" max=\"10\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>"), lC = /* @__PURE__ */ L("<!> <!> <!>", 1), uC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"8\" max=\"120\" step=\"2\"/> <span class=\"gridmenu-value\"> </span></div>"), dC = /* @__PURE__ */ L("<!> <!> <!> <!> <!>", 1), fC = /* @__PURE__ */ L("<div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div>"), pC = /* @__PURE__ */ L("<div class=\"swatch-row\"><!> <div class=\"swatch-cell\"><!> <span class=\"mini-label\"> </span></div></div>");
 function mC(e, t) {
 	at(t, !0);
@@ -22816,8 +22700,7 @@ Vr([
 	"click",
 	"input"
 ]);
-//#endregion
-//#region src/menu/families/Calendar.svelte
+// src/menu/families/Calendar.svelte
 var hC = /* @__PURE__ */ O("title"), gC = /* @__PURE__ */ L("<div class=\"bg-layer\"><span class=\"toolbar-row\"><span class=\"cal-ref-swatch\" aria-hidden=\"true\"></span> <span> </span> <button class=\"ghost row-tool\"></button></span></div>"), _C = /* @__PURE__ */ L("<div class=\"bg-layer\"><span class=\"toolbar-row\"><input class=\"tb-grow\" spellcheck=\"false\"/> <button class=\"ghost row-tool\"></button></span> <span class=\"toolbar-row\"><input class=\"tb-grow\"/> <!></span> <button type=\"button\" class=\"ghost action\"> </button></div>"), vC = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), yC = /* @__PURE__ */ L("<span class=\"gridmenu-value\"> </span>"), bC = /* @__PURE__ */ L("<!> <button type=\"button\" class=\"ghost action\"><!> </button> <span class=\"mini-label\"> </span> <!> <!> <button type=\"button\" class=\"linkish\"> </button>", 1), xC = /* @__PURE__ */ L("<label> <!></label>"), SC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <!></div> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <!></div>", 1), CC = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <!>", 1), wC = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <input type=\"number\" min=\"1\" max=\"50\"/></label> <!></div> <!>", 1), TC = /* @__PURE__ */ L("<!> <div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <input type=\"range\" min=\"0\" max=\"10\" step=\"1\"/> <span class=\"gridmenu-value\"> </span></div>", 1), EC = /* @__PURE__ */ L("<!> <!> <!> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <!> <!>", 1), DC = /* @__PURE__ */ L("<label> <input placeholder=\"/program\" spellcheck=\"false\"/></label>"), OC = /* @__PURE__ */ L("<!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!>", 1), kC = /* @__PURE__ */ L("<label> <input/></label> <label> <!></label>", 1), AC = /* @__PURE__ */ L("<label class=\"field-stack\"> <textarea rows=\"3\"></textarea></label>"), jC = /* @__PURE__ */ L("<!> <label> <input/></label> <!> <!>", 1), MC = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!>", 1), NC = /* @__PURE__ */ L("<button type=\"button\" class=\"ghost action\"> </button>"), PC = /* @__PURE__ */ L("<!> <!> <!> <!> <!> <!>", 1), FC = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"0\" max=\"24\"/></label>"), IC = /* @__PURE__ */ L("<div class=\"ctl-row\"><span class=\"mini-label ctl-name\"> </span> <!></div>"), LC = /* @__PURE__ */ L("<span class=\"mini-label\"> </span>"), RC = /* @__PURE__ */ L("<div class=\"cal-slot\"><!> <span class=\"mini-label\"> </span></div>"), zC = /* @__PURE__ */ L("<!> <div class=\"cal-slots\"></div>", 1), BC = /* @__PURE__ */ L("<!> <label> <!></label> <label> <input type=\"number\"/></label> <!> <span class=\"toolbar-row\"><button type=\"button\"><i> </i></button> <button type=\"button\"><u> </u></button> <!></span>", 1), VC = /* @__PURE__ */ L("<div class=\"pin-line\"><button type=\"button\" class=\"menu-row cal-design-row\"><span class=\"menu-group-title\"> </span><span class=\"menu-group-value\"> </span></button> <!></div> <div class=\"pin-line\"><button type=\"button\" class=\"menu-row cal-design-row\"><span class=\"menu-group-title\"> </span><span class=\"menu-group-value\"> </span></button> <!></div> <div class=\"pin-line\"><button type=\"button\" class=\"menu-row cal-design-row\"><span class=\"menu-group-title\"> </span><span class=\"menu-group-value\"> </span></button> <!></div>   <!> <!> <!> <!>", 1);
 function HC(e, t) {
 	at(t, !0);
@@ -23981,8 +23864,7 @@ Vr([
 	"change",
 	"input"
 ]);
-//#endregion
-//#region src/menu/families/Form.svelte
+// src/menu/families/Form.svelte
 var UC = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), WC = /* @__PURE__ */ L("<label> <input/></label>"), GC = /* @__PURE__ */ L("<label> <input/></label> <label> <input/></label>", 1), KC = /* @__PURE__ */ L("<!> <!>", 1), qC = /* @__PURE__ */ L("<input/>"), JC = /* @__PURE__ */ L("<span class=\"nav-line\"><input/> <!> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!>", 1), YC = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), XC = /* @__PURE__ */ L("<label> <input/></label> <!>", 1), ZC = /* @__PURE__ */ L("<!> <!> <!>", 1);
 function QC(e, t) {
 	at(t, !0);
@@ -24214,8 +24096,7 @@ function QC(e, t) {
 	}), R(e, v), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Faq.svelte
+// src/menu/families/Faq.svelte
 var $C = /* @__PURE__ */ L("<span class=\"nav-line\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span>"), ew = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), tw = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button> <!>", 1), nw = /* @__PURE__ */ L("<!> <!>", 1);
 function rw(e, t) {
 	at(t, !0);
@@ -24374,8 +24255,7 @@ function rw(e, t) {
 	}), R(e, m), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Timeline.svelte
+// src/menu/families/Timeline.svelte
 var iw = /* @__PURE__ */ L("<span class=\"nav-line\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span> <input/> <input/>", 1), aw = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), ow = /* @__PURE__ */ L("<label> <!></label>"), sw = /* @__PURE__ */ L("<!> <!> <!>", 1);
 function cw(e, t) {
 	at(t, !0);
@@ -24542,8 +24422,7 @@ function cw(e, t) {
 	}), R(e, m), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Quote.svelte
+// src/menu/families/Quote.svelte
 var lw = /* @__PURE__ */ L("<label> <input/></label> <label> <input/></label> <label> <input/></label>", 1), uw = /* @__PURE__ */ L("<button class=\"ghost\"> </button>"), dw = /* @__PURE__ */ L("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\"/></label> <!>", 1), fw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), pw = /* @__PURE__ */ L("<!> <!>", 1), mw = /* @__PURE__ */ L("<label> <!></label>");
 function hw(e, t) {
 	at(t, !0);
@@ -24720,8 +24599,7 @@ function hw(e, t) {
 	}), R(e, g), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Stats.svelte
+// src/menu/families/Stats.svelte
 var gw = /* @__PURE__ */ L("<label> <input/></label> <label> <input/></label> <label> <input/></label> <label> <input/></label>", 1), _w = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), vw = /* @__PURE__ */ L("<!> <!>", 1);
 function yw(e, t) {
 	at(t, !0);
@@ -24825,8 +24703,7 @@ function yw(e, t) {
 	}), R(e, c), ot();
 }
 Vr(["change"]);
-//#endregion
-//#region src/menu/families/Table.svelte
+// src/menu/families/Table.svelte
 var bw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), xw = /* @__PURE__ */ L("<span class=\"toolbar-row\"><button class=\"ghost\"> </button> <button class=\"ghost\"> </button></span> <span class=\"toolbar-row\"><button class=\"ghost\"> </button> <button class=\"ghost\"> </button></span> <!>", 1), Sw = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <!></label> <!></div>"), Cw = /* @__PURE__ */ L("<!> <!>", 1);
 function ww(e, t) {
 	at(t, !0);
@@ -24977,8 +24854,7 @@ function ww(e, t) {
 	}), R(e, d), ot();
 }
 Vr(["click", "change"]);
-//#endregion
-//#region src/menu/families/Share.svelte
+// src/menu/families/Share.svelte
 var Tw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), Ew = /* @__PURE__ */ L("<img alt=\"\"/>"), Dw = /* @__PURE__ */ L("<label class=\"gridmenu-snap link-pick\"><input type=\"checkbox\"/> <span class=\"footer-soc-preview\" aria-hidden=\"true\"><!></span> </label>"), Ow = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), kw = /* @__PURE__ */ L("<!> <!> <span class=\"mini-label\"> </span> <!>", 1), Aw = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"24\" max=\"64\"/></label>"), jw = /* @__PURE__ */ L("<label> <!></label>"), Mw = /* @__PURE__ */ L("<!> <!> <!>", 1);
 function Nw(e, t) {
 	at(t, !0);
@@ -25170,8 +25046,7 @@ function Nw(e, t) {
 	}), R(e, m), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Contact.svelte
+// src/menu/families/Contact.svelte
 var Pw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), Fw = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), Iw = /* @__PURE__ */ L("<button class=\"ghost action\"> </button>"), Lw = /* @__PURE__ */ L("<!> <!> <!> <!> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>", 1);
 function Rw(e, t) {
 	at(t, !0);
@@ -25305,8 +25180,7 @@ function Rw(e, t) {
 	}), R(e, p), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Countdown.svelte
+// src/menu/families/Countdown.svelte
 var zw = /* @__PURE__ */ L("<label> <input type=\"datetime-local\"/></label> <label> <input/></label>", 1), Bw = /* @__PURE__ */ L("<div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div>"), Vw = /* @__PURE__ */ L("<!> <!>", 1);
 function Hw(e, t) {
 	at(t, !0);
@@ -25402,8 +25276,7 @@ function Hw(e, t) {
 	}), R(e, c), ot();
 }
 Vr(["change"]);
-//#endregion
-//#region src/menu/families/Audio.svelte
+// src/menu/families/Audio.svelte
 var Uw = /* @__PURE__ */ L("<button class=\"ghost\"> </button>"), Ww = /* @__PURE__ */ L("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"audio/*\"/></label> <!> <label> <input/></label>", 1), Gw = /* @__PURE__ */ L("<div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div>"), Kw = /* @__PURE__ */ L("<!> <!>", 1);
 function qw(e, t) {
 	at(t, !0);
@@ -25504,8 +25377,7 @@ function qw(e, t) {
 	}), R(e, l), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Collection.svelte
+// src/menu/families/Collection.svelte
 var Jw = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <input type=\"number\" min=\"0\" max=\"100\"/></label> <!></div>"), Yw = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), Xw = /* @__PURE__ */ L("<label> <!></label> <!> <!>", 1);
 function Zw(e, t) {
 	at(t, !0);
@@ -25631,8 +25503,7 @@ function Zw(e, t) {
 	}), R(e, u), ot();
 }
 Vr(["change"]);
-//#endregion
-//#region src/menu/ShopLinks.svelte
+// src/menu/ShopLinks.svelte
 var Qw = /* @__PURE__ */ L("<button type=\"button\" class=\"linkish\"> </button>"), $w = /* @__PURE__ */ L("<!> <button type=\"button\" class=\"linkish\"> </button>", 1), eT = /* @__PURE__ */ L("<span class=\"shop-links\"><!> <button type=\"button\" class=\"linkish\"> </button></span>");
 function tT(e, t) {
 	at(t, !0);
@@ -25666,8 +25537,7 @@ function tT(e, t) {
 	}, [() => q("tip.shop.currency"), () => q("settings.currency")]), I("click", c, () => n.openPanel("site", { shop: !0 })), R(e, i), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region src/menu/families/Product.svelte
+// src/menu/families/Product.svelte
 var nT = /* @__PURE__ */ L("<span class=\"toolbar-row\"><button class=\"ghost action\"> </button> <button class=\"ghost action\"> </button></span>"), rT = /* @__PURE__ */ L("<button class=\"ghost action\"> </button>"), iT = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"0\" max=\"100\"/></label>"), aT = /* @__PURE__ */ L("<label> <!></label> <!> <!>", 1), oT = /* @__PURE__ */ L("<label> <input/></label>"), sT = /* @__PURE__ */ L("<!> <!> <!>", 1), cT = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <input type=\"number\" min=\"0\" max=\"6\"/></label> <!></div>");
 function lT(e, t) {
 	at(t, !0);
@@ -25856,8 +25726,7 @@ function lT(e, t) {
 	}), R(e, d), ot();
 }
 Vr(["click", "change"]);
-//#endregion
-//#region src/menu/families/Cart.svelte
+// src/menu/families/Cart.svelte
 var uT = /* @__PURE__ */ L("<label> <input/></label>"), dT = /* @__PURE__ */ L("<!> <!>", 1);
 function fT(e, t) {
 	at(t, !0);
@@ -25956,8 +25825,7 @@ function fT(e, t) {
 	}), R(e, d), ot();
 }
 Vr(["change"]);
-//#endregion
-//#region src/menu/families/Checkout.svelte
+// src/menu/families/Checkout.svelte
 var pT = /* @__PURE__ */ L("<label> <input/></label>"), mT = /* @__PURE__ */ L("<label> <input type=\"email\"/></label> <label> <input type=\"url\"/></label> <!>", 1), hT = /* @__PURE__ */ L("<button type=\"button\" class=\"ghost action\"> </button>"), gT = /* @__PURE__ */ L("<div class=\"pay-instruction\"><input/> <input/> <button class=\"ghost\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\" aria-hidden=\"true\"><path d=\"M3 3l6 6M9 3l-6 6\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"></path></svg></button></div>"), _T = /* @__PURE__ */ L("<div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div> <!> <!> <div class=\"pin-line\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div> <!> <span class=\"mini-label\"> </span> <!> <button class=\"ghost action\"> </button>", 1), vT = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), yT = /* @__PURE__ */ L("<!> <button class=\"ghost action\"> </button>", 1), bT = /* @__PURE__ */ L("<!> <!> <!> <!>", 1);
 function xT(e, t) {
 	at(t, !0);
@@ -26204,8 +26072,7 @@ function xT(e, t) {
 	}), R(e, _), ot();
 }
 Vr(["change", "click"]);
-//#endregion
-//#region src/menu/families/Fields.svelte
+// src/menu/families/Fields.svelte
 var ST = mn({}), CT = mn({}), wT = /* @__PURE__ */ O(!1), TT = /* @__PURE__ */ L("<p> </p>"), ET = /* @__PURE__ */ L("<label> <input type=\"text\"/></label> <button class=\"ghost\"> </button> <!>", 1), DT = /* @__PURE__ */ L("<div class=\"pin-line\"><label> <input type=\"number\"/></label> <!></div>"), OT = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), kT = /* @__PURE__ */ L("<label> <!></label>"), AT = /* @__PURE__ */ L("<label> <input type=\"text\"/></label>"), jT = /* @__PURE__ */ L("<button class=\"ghost\"> </button>");
 function MT(e, t) {
 	at(t, !0);
@@ -26388,8 +26255,7 @@ Vr([
 	"click",
 	"change"
 ]);
-//#endregion
-//#region src/menu/ElementMenu.svelte
+// src/menu/ElementMenu.svelte
 var NT = /* @__PURE__ */ L("<button type=\"button\" class=\"menu-quick-open\"> </button>"), PT = /* @__PURE__ */ L("<input type=\"number\"/>"), FT = /* @__PURE__ */ L("<button type=\"button\"> </button>"), IT = /* @__PURE__ */ L("<span class=\"seg\" role=\"group\"></span>"), LT = /* @__PURE__ */ L("<div class=\"menu-quick-item\"><span class=\"menu-quick-head\"><span class=\"mini-label\"> </span><!></span> <!></div>"), RT = /* @__PURE__ */ L("<button type=\"button\" class=\"linkish menu-quick-reset\"> </button>"), zT = /* @__PURE__ */ L("<div class=\"menu-quick\"><!> <!></div>"), BT = /* @__PURE__ */ L("<div><section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section> <section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section> <section class=\"emenu-col\"><p class=\"panel-strong emenu-title\"> </p><!><p class=\"emenu-none\"> </p></section></div>"), VT = /* @__PURE__ */ L("<div class=\"emenu-cols\"><section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section> <section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section> <section class=\"emenu-col\"><p class=\"panel-strong\"> </p><!></section></div>"), HT = /* @__PURE__ */ L("<div class=\"props-tabs\"><span class=\"seg\"><button type=\"button\"> </button> <button type=\"button\"> </button> <button type=\"button\"> </button></span></div> <section class=\"emenu-col emenu-area\"><!></section>", 1), UT = /* @__PURE__ */ L("<div class=\"emenu-root\"><!> <!></div>");
 function WT(e, t) {
 	at(t, !0);
@@ -26899,8 +26765,7 @@ Vr([
 	"click",
 	"change"
 ]);
-//#endregion
-//#region src/menu/SearchField.svelte
+// src/menu/SearchField.svelte
 var GT = /* @__PURE__ */ L("<span><input type=\"search\" class=\"menu-search\"/> <span class=\"menu-search-key\" aria-hidden=\"true\">/</span></span>");
 function KT(e, t) {
 	at(t, !0);
@@ -26910,11 +26775,11 @@ function KT(e, t) {
 			e.preventDefault();
 			let t = e.currentTarget.closest(".block-menu") ?? e.currentTarget.closest(".panel-body"), n = e.currentTarget;
 			[...t?.querySelectorAll("input, button, textarea, [tabindex=\"0\"]") ?? []].find((e) => e !== n && e.offsetParent !== null && !e.disabled && n.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING)?.focus();
-		} else !t.get() && [
+		} else t.get() || ![
 			"1",
 			"2",
 			"3"
-		].includes(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && (e.preventDefault(), _y(gy[Number(e.key) - 1], e.currentTarget.closest(".block-menu") ?? e.currentTarget.closest(".panel-body")));
+		].includes(e.key) || e.ctrlKey || e.metaKey || e.altKey || (e.preventDefault(), _y(gy[Number(e.key) - 1], e.currentTarget.closest(".block-menu") ?? e.currentTarget.closest(".panel-body")));
 	}
 	var r = GT();
 	let i;
@@ -26929,8 +26794,7 @@ function KT(e, t) {
 	]), I("keydown", a, n), Yi(a, t.get, t.set), R(e, r), ot();
 }
 Vr(["keydown"]);
-//#endregion
-//#region ../template/assets/engine/0.7.7/divider-model.js
+// ../template/assets/engine/0.7.7/divider-model.js
 var qT = [
 	"wave",
 	"tilt",
@@ -27356,8 +27220,7 @@ Vr([
 	"input",
 	"click"
 ]);
-//#endregion
-//#region ../template/assets/engine/0.7.7/backgrounds/glow.js
+// ../template/assets/engine/0.7.7/backgrounds/glow.js
 var lE = {
 	version: 1,
 	label: "Glow",
@@ -27384,8 +27247,7 @@ var lE = {
 		e.style.backgroundImage = uE, e.style.backgroundRepeat = "repeat", e.style.opacity = String(t.opacity ?? .06);
 	}
 };
-//#endregion
-//#region ../template/assets/engine/0.7.7/footer-thumb.js
+// ../template/assets/engine/0.7.7/footer-thumb.js
 function fE(e = {}) {
 	let t = "#2fd6b6", n = "#5c6b64", r = e.mega ? "#16221d" : "#0e1512", i = e.cols ?? 0, a = e.social ?? 0, o = `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${r}"/>`;
 	if (e.mega && (o += `<circle cx="20" cy="6" r="34" fill="${t}" opacity="0.18"/>`), e.bigcta) return o += `<rect x="45" y="18" width="70" height="8" rx="3" fill="${n}" opacity="0.85"/>`, o += `<rect x="56" y="32" width="48" height="4" rx="2" fill="${n}" opacity="0.5"/>`, o += `<rect x="62" y="43" width="36" height="10" rx="3" fill="${t}"/>`, o += pE(n, e.baselineLinks), o + "</svg>";
@@ -27432,8 +27294,7 @@ function pE(e, t = 0) {
 	let n = `<line x1="8" y1="66" x2="152" y2="66" stroke="${e}" stroke-width="0.6" opacity="0.5"/>`;
 	return n += `<rect x="8" y="70" width="40" height="3" rx="1.5" fill="${e}" opacity="0.6"/>`, t && (n += `<g fill="${e}" opacity="0.6">` + Array.from({ length: t }, (e, t) => `<rect x="${120 - t * 16}" y="70" width="12" height="3" rx="1.5"/>`).join("") + "</g>"), n;
 }
-//#endregion
-//#region src/panels/FooterPanel.svelte
+// src/panels/FooterPanel.svelte
 var mE = /* @__PURE__ */ L("<div class=\"nav-row nav-sub-row\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span> <span class=\"nav-target\"><!></span></div>"), hE = /* @__PURE__ */ L("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), gE = /* @__PURE__ */ L("<details class=\"group\"><summary> </summary> <div class=\"group-items\"></div></details>"), _E = /* @__PURE__ */ L("<button class=\"footer-tp\"><span class=\"footer-tp-thumb\"></span> <span class=\"footer-tp-name\"> </span></button>"), vE = /* @__PURE__ */ L("<button class=\"ghost row-tool\"></button>"), yE = /* @__PURE__ */ L("<label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"16\" max=\"160\" step=\"2\"/>", 1), bE = /* @__PURE__ */ L("<span class=\"toolbar-row\"><label class=\"ghost filepick tb-grow\"> <input type=\"file\" accept=\"image/*\"/></label> <!></span> <!>", 1), xE = /* @__PURE__ */ L("<div class=\"nav-row\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></div> <!>", 1), SE = /* @__PURE__ */ L("<label> <input/></label> <label> <input/></label> <label> <input/></label>", 1), CE = /* @__PURE__ */ L("<label> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label> <input/></label> <label> <input/></label> <label> <input/></label> <!>", 1), wE = /* @__PURE__ */ L("<label> <!></label> <hr class=\"gridmenu-divider\"/>", 1), TE = /* @__PURE__ */ L("<div class=\"panel-body\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <details class=\"group\"><summary> <span class=\"menu-group-value\"> </span></summary> <div class=\"group-items\"><button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"footer-tpick\"></div></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label> <input/></label> <label> <input/></label> <label> <!></label> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <button class=\"ghost action\"> </button> <label> <!></label></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <!> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <p class=\"panel-strong\"> </p> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label> <input/></label> <p class=\"panel-strong\"> </p> <!> <button class=\"ghost action\"> </button></div></details></div>");
 function EE(e, t) {
 	at(t, !0);
@@ -27475,7 +27336,7 @@ function EE(e, t) {
 	}, r = rt("urd-editor"), i = /* @__PURE__ */ D(() => r.siteDraft), { compressOrTrim: a, footerBgCtx: o, footerMutate: s, setStatus: c } = r;
 	function l(e, t) {
 		s(`edit:footer-brand-${e}`, (n) => {
-			n.brand ??= {}, t.trim() ? n.brand[e] = t : delete n.brand[e], !n.brand.title && !n.brand.tagline && !n.brand.logo && delete n.brand;
+			n.brand ??= {}, t.trim() ? n.brand[e] = t : delete n.brand[e], n.brand.title || n.brand.tagline || n.brand.logo || delete n.brand;
 		});
 	}
 	function u(e) {
@@ -28368,8 +28229,7 @@ Vr([
 	"click",
 	"change"
 ]);
-//#endregion
-//#region ../template/assets/engine/0.7.7/collections-csv.js
+// ../template/assets/engine/0.7.7/collections-csv.js
 var DE = [
 	"id",
 	"title",
@@ -28460,8 +28320,7 @@ function NE(e, t = []) {
 		skipped: a
 	};
 }
-//#endregion
-//#region src/panels/CollectionsPanel.svelte
+// src/panels/CollectionsPanel.svelte
 var PE = /* @__PURE__ */ L("<p class=\"panel-hint place-error\"> </p>"), FE = /* @__PURE__ */ L("<label> <!></label>"), IE = /* @__PURE__ */ L("<label> <input type=\"date\"/></label>"), LE = /* @__PURE__ */ L("<img class=\"site-icon-preview\" alt=\"\"/> <button class=\"ghost row-tool\"></button>", 1), RE = /* @__PURE__ */ L("<label class=\"field-stack\"> <input/></label>"), zE = /* @__PURE__ */ L("<img class=\"site-icon-preview\" alt=\"\"/>"), BE = /* @__PURE__ */ L("<span class=\"toolbar-row\"><input/> <label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\"/></label> <!> <button class=\"ghost row-tool\"></button></span>"), VE = /* @__PURE__ */ L("<label> <input type=\"number\" min=\"0\" step=\"0.01\" data-field=\"price\"/></label> <label> <input type=\"number\" min=\"0\" step=\"0.01\"/></label> <label> <input data-field=\"badge\"/></label> <label> <input data-field=\"sizes\"/></label> <!> <button class=\"ghost action\" data-field=\"colors\"> </button>", 1), HE = /* @__PURE__ */ L("<details class=\"group collection-entry\"><summary> </summary> <div class=\"group-items\"><span class=\"toolbar-row\"><input data-field=\"title\"/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></span> <!> <textarea rows=\"3\" data-field=\"text\"></textarea> <!> <span class=\"toolbar-row\"><label class=\"ghost filepick\"> <input type=\"file\" accept=\"image/*\"/></label> <!></span> <!> <!></div></details>"), UE = /* @__PURE__ */ L("<p class=\"panel-hint\"> </p>"), WE = /* @__PURE__ */ L("<span class=\"toolbar-row\"><button class=\"ghost action\"> </button> <button class=\"ghost action\"> </button> <label class=\"ghost filepick\"> <input type=\"file\" accept=\".csv,text/csv\"/></label> <button class=\"ghost row-tool\"></button></span> <!> <!> <hr class=\"gridmenu-divider\"/>", 1), GE = /* @__PURE__ */ L("<label> <input/></label> <label> <!></label> <button class=\"ghost action\"> </button>", 1), KE = /* @__PURE__ */ L("<div class=\"panel-body\"><!> <!> <!> <!></div>");
 function qE(e, t) {
 	at(t, !0);
@@ -28773,8 +28632,7 @@ Vr([
 	"change",
 	"keydown"
 ]);
-//#endregion
-//#region src/panels/PluginsPanel.svelte
+// src/panels/PluginsPanel.svelte
 var JE = /* @__PURE__ */ L("<p class=\"panel-hint\"> </p>"), YE = /* @__PURE__ */ L("<span class=\"plugin-meta\"> </span>"), XE = /* @__PURE__ */ L("<p class=\"panel-hint plugin-warn\"> </p>"), ZE = /* @__PURE__ */ L("<div><span class=\"plugin-head\"><span class=\"plugin-name\"> </span> <!> <span class=\"row-tools\"><label class=\"gridmenu-snap plugin-toggle\"><input type=\"checkbox\"/> </label> <button class=\"ghost row-tool\"></button></span></span> <!> <!></div>"), QE = /* @__PURE__ */ L("<div class=\"plugin-row\"><span class=\"plugin-head\"><span class=\"plugin-name\"> </span> <!> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button></span></span></div>"), $E = /* @__PURE__ */ L("<hr class=\"gridmenu-divider\"/> <p class=\"panel-strong\"> </p> <!>", 1), eD = /* @__PURE__ */ L("<hr class=\"gridmenu-divider\"/> <input/> <button class=\"ghost action\"> </button> <!>", 1), tD = /* @__PURE__ */ L("<div class=\"panel-body\"><!> <!> <!> <!></div>");
 function nD(e, t) {
 	at(t, !0);
@@ -28913,8 +28771,7 @@ Vr([
 	"click",
 	"keydown"
 ]);
-//#endregion
-//#region src/panels/HistoryPanel.svelte
+// src/panels/HistoryPanel.svelte
 var rD = /* @__PURE__ */ L("<p class=\"panel-hint\"> </p>"), iD = /* @__PURE__ */ L("<div><span class=\"history-msg\"> </span> <span class=\"history-meta\"> </span></div>"), aD = /* @__PURE__ */ L("<button class=\"ghost\"> </button> <!>", 1), oD = /* @__PURE__ */ L("<!> <!>", 1), sD = /* @__PURE__ */ L("<div class=\"panel-body\"><!></div>");
 function cD(e, t) {
 	at(t, !0);
@@ -29009,8 +28866,7 @@ function cD(e, t) {
 	}), E(h), R(e, h), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region src/panels/UpdatePanel.svelte
+// src/panels/UpdatePanel.svelte
 var lD = /* @__PURE__ */ L("<p class=\"panel-hint\"> </p>"), uD = /* @__PURE__ */ L("<p class=\"panel-hint\"> </p> <button class=\"ghost\"> </button>", 1), dD = /* @__PURE__ */ L("<span class=\"update-arrow\"></span> <span class=\"badge\"> </span>", 1), fD = /* @__PURE__ */ L("<details class=\"group\"><summary> </summary> <div class=\"group-items\"><p class=\"update-notes\"> </p></div></details>"), pD = /* @__PURE__ */ L("<details class=\"group\"><summary><span class=\"update-warn\"></span> </summary> <div class=\"group-items\"><pre class=\"update-headers\"> </pre></div></details>"), mD = /* @__PURE__ */ L("<span class=\"chip\"> </span>"), hD = /* @__PURE__ */ L("<div class=\"update-row\"><span class=\"update-path\"> </span> <span class=\"update-flags\"><!> <span class=\"update-warn\"></span></span></div>"), gD = /* @__PURE__ */ L("<div class=\"update-row\"><span class=\"update-path\"> </span> <!></div>"), _D = /* @__PURE__ */ L("<span class=\"update-warn\"></span>"), vD = /* @__PURE__ */ L("<div class=\"update-row\"><span> </span> <span class=\"update-flags\"><!> <!> <input type=\"checkbox\"/></span></div>"), yD = /* @__PURE__ */ L("<div class=\"ctl-row update-opt-head\"><p class=\"panel-strong\"> </p> <span class=\"mini-label\"> </span></div> <!>", 1), bD = /* @__PURE__ */ L("<p class=\"update-summary\"> </p> <!> <!> <!> <details class=\"group\"><summary> </summary> <div class=\"group-items\"></div></details> <!> <button class=\"primary update-run\"> </button>", 1), xD = /* @__PURE__ */ L("<div class=\"update-versions\"><span class=\"update-from\"> </span> <!></div> <!>", 1), SD = /* @__PURE__ */ L("<div class=\"panel-body\"><!></div>");
 function CD(e, t) {
 	at(t, !0);
@@ -29195,8 +29051,7 @@ function CD(e, t) {
 	}), E(f), R(e, f), ot();
 }
 Vr(["click", "change"]);
-//#endregion
-//#region src/lib/IconEditor.svelte
+// src/lib/IconEditor.svelte
 var wD = /* @__PURE__ */ L("<div class=\"ie-overlay svelte-e7sog7\" role=\"dialog\" aria-modal=\"true\"><div class=\"ie-card svelte-e7sog7\"><h2 class=\"svelte-e7sog7\"> </h2> <div class=\"ie-stage svelte-e7sog7\"><canvas class=\"ie-canvas svelte-e7sog7\"></canvas> <p class=\"ie-hint svelte-e7sog7\"> </p></div> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"1\" max=\"3\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0.3\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0.3\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <span class=\"ie-tools svelte-e7sog7\"><button type=\"button\" class=\"ghost svelte-e7sog7\"> </button> <button type=\"button\" class=\"ghost svelte-e7sog7\"> </button></span> <span class=\"ie-actions svelte-e7sog7\"><button type=\"button\" class=\"ghost svelte-e7sog7\"> </button> <button type=\"button\" class=\"primary svelte-e7sog7\"> </button></span></div></div>");
 function TD(e, t) {
 	at(t, !0);
@@ -29282,8 +29137,7 @@ function TD(e, t) {
 	]), I("pointerdown", b, f), Yi(ee, () => F(a), (e) => k(a, e)), Yi(T, () => F(c), (e) => k(c, e)), Yi(se, () => F(l), (e) => k(l, e)), Yi(de, () => F(u), (e) => k(u, e)), I("click", pe, () => k(u, 0)), I("click", he, p), I("click", ve, () => t.oncancel?.()), I("click", be, m), R(e, h), ot();
 }
 Vr(["pointerdown", "click"]);
-//#endregion
-//#region src/lib/DesignPicker.svelte
+// src/lib/DesignPicker.svelte
 var ED = /* @__PURE__ */ L("<button type=\"button\"> </button>"), DD = /* @__PURE__ */ L("<div class=\"dp-views svelte-wurosr\" role=\"group\"><button type=\"button\"> </button> <!></div>"), OD = /* @__PURE__ */ L("<img alt=\"\" loading=\"lazy\" decoding=\"async\" class=\"svelte-wurosr\"/>"), kD = /* @__PURE__ */ L("<span class=\"dp-mark svelte-wurosr\"> </span>"), AD = /* @__PURE__ */ L("<button type=\"button\"><span class=\"dp-pic svelte-wurosr\"><!></span> <span class=\"dp-name svelte-wurosr\"> </span> <!></button>"), jD = /* @__PURE__ */ L("<section class=\"dp-family svelte-wurosr\"><h3 class=\"svelte-wurosr\"> </h3> <div class=\"dp-grid svelte-wurosr\"></div></section>"), MD = /* @__PURE__ */ L("<p class=\"dp-none svelte-wurosr\"> </p>"), ND = /* @__PURE__ */ L("<span class=\"dp-side-view svelte-wurosr\"> </span>"), PD = /* @__PURE__ */ L("<span> </span>"), FD = /* @__PURE__ */ L("<dt class=\"svelte-wurosr\"> </dt> <dd class=\"svelte-wurosr\"></dd>", 1), ID = /* @__PURE__ */ L("<section class=\"svelte-wurosr\"><h3 class=\"svelte-wurosr\"> </h3> <dl class=\"svelte-wurosr\"></dl></section>"), LD = /* @__PURE__ */ L("<dialog class=\"dp-overlay svelte-wurosr\"><div><div class=\"dp-head svelte-wurosr\"><h2 class=\"svelte-wurosr\"> </h2> <input class=\"dp-search svelte-wurosr\" type=\"search\"/> <span class=\"dp-count svelte-wurosr\"> </span> <button type=\"button\" class=\"dp-close svelte-wurosr\"><svg viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M3 3l10 10M13 3L3 13\"></path></svg></button></div> <!> <div class=\"dp-body svelte-wurosr\"><div class=\"dp-list svelte-wurosr\"><!> <!></div> <aside class=\"dp-side svelte-wurosr\"><div class=\"dp-side-head svelte-wurosr\"><strong> </strong> <!></div> <div class=\"dp-preview svelte-wurosr\"><div class=\"dp-stage svelte-wurosr\"><iframe src=\"/?preview=1\" class=\"svelte-wurosr\"></iframe></div></div> <div class=\"dp-info svelte-wurosr\"><section class=\"svelte-wurosr\"><h3 class=\"svelte-wurosr\"> </h3> <p class=\"svelte-wurosr\"> </p></section> <!></div> <button type=\"button\" class=\"dp-use svelte-wurosr\"> </button></aside></div></div></dialog>");
 function RD(e, t) {
 	at(t, !0);
@@ -29467,8 +29321,7 @@ Vr([
 	"click",
 	"dblclick"
 ]);
-//#endregion
-//#region src/menu/FloatingMenu.svelte
+// src/menu/FloatingMenu.svelte
 var zD = /* @__PURE__ */ L("<button class=\"ghost row-tool\"></button>"), BD = /* @__PURE__ */ L("<div><header class=\"block-menu-head\"><span class=\"block-menu-grip\" aria-hidden=\"true\"></span> <span class=\"block-menu-title\"> </span> <!> <!> <button class=\"ghost row-tool menu-width\"></button> <button class=\"ghost row-tool\"></button></header> <div class=\"panel-body block-menu-body\"><!></div></div>");
 function VD(e, t) {
 	at(t, !0);
@@ -29545,11 +29398,9 @@ function VD(e, t) {
 		t.onclose?.apply(this, e);
 	}), R(e, l), ot();
 }
-//#endregion
-//#region node_modules/svelte/src/internal/flags/legacy.js
+// node_modules/svelte/src/internal/flags/legacy.js
 Vr(["pointerdown", "click"]), Ye();
-//#endregion
-//#region node_modules/svelte/src/transition/index.js
+// node_modules/svelte/src/transition/index.js
 function HD(e) {
 	let t = e - 1;
 	return t * t * t + 1;
@@ -29569,8 +29420,7 @@ function WD(e, { delay: t = 0, duration: n = 400, easing: r = HD, x: i = 0, y: a
 			opacity: ${c - u * t}`
 	};
 }
-//#endregion
-//#region src/shell/TopBar.svelte
+// src/shell/TopBar.svelte
 var GD = /* @__PURE__ */ L("<button><!> </button>"), KD = /* @__PURE__ */ L("<div class=\"tool-pop\"></div>"), qD = /* @__PURE__ */ L("<span class=\"toolmenu\"><button><!><!></button> <!></span>"), JD = /* @__PURE__ */ L("<button></button>"), YD = /* @__PURE__ */ L("<span class=\"tool-cap\"> </span> <span class=\"viewswitch toolgrp\"></span>", 1), XD = /* @__PURE__ */ L("<div class=\"tool-pop\"><div class=\"tool-pop-row\"><button class=\"ghost\"></button> <span class=\"zoom-readout\"> </span> <button class=\"ghost\"></button></div> <button><!> </button></div>"), ZD = /* @__PURE__ */ L("<span class=\"toolmenu\"><button><span class=\"zoom-cap\"> </span><!></button> <!></span>"), QD = /* @__PURE__ */ L("<span class=\"tool-cap\"> </span> <span class=\"zoomswitch toolgrp\"><button class=\"ghost\"></button> <span class=\"zoom-readout\"> </span> <button class=\"ghost\"></button> <button></button></span>", 1), $D = /* @__PURE__ */ L("<div class=\"tool-pop\"><button><!> </button> <button><!> </button></div>"), eO = /* @__PURE__ */ L("<span class=\"tool-cap\"> </span> <span class=\"toolgrp\"><button></button> <button></button></span>", 1), tO = /* @__PURE__ */ L("<button class=\"ghost page-btn\"> </button> <span class=\"toolset\"><!> <!> <!></span>", 1), nO = /* @__PURE__ */ L("<button class=\"badge attention\"><!> <span class=\"btn-label\"> </span> <span class=\"badge-mini\"> </span></button>"), rO = /* @__PURE__ */ L("<button class=\"discard-confirm\"><!> </button>"), iO = /* @__PURE__ */ L("<span class=\"draft-cluster\"><span class=\"chip draft-chip\"><span class=\"chip-full\" aria-hidden=\"true\"> </span> <span class=\"chip-mini\" aria-hidden=\"true\">!</span></span>  <span class=\"discard-wrap\"><button><!><span class=\"discard-label\"> </span></button> <!></span></span>"), aO = /* @__PURE__ */ L("<!> <span class=\"btn-label\"> </span>", 1), oO = /* @__PURE__ */ L("<span class=\"who\"><!> </span>"), sO = /* @__PURE__ */ L("<a class=\"ghost\" href=\"/api/github/login\"> </a>"), cO = /* @__PURE__ */ L("<button class=\"ghost\"><!></button> <!> <a class=\"ghost\" target=\"_blank\" rel=\"noopener\"><!> <span class=\"btn-label\"> </span></a> <button class=\"primary\"> </button>", 1), lO = /* @__PURE__ */ L("<header><span class=\"topbar-group\"><!> <!></span> <span class=\"topbar-group topbar-draft\"><!></span> <span class=\"topbar-group topbar-right\"><!></span></header>");
 function uO(e, t) {
 	at(t, !1);
@@ -29869,8 +29719,7 @@ function _O(e, t) {
 		height: 0
 	};
 }
-//#endregion
-//#region src/shell/Rail.svelte
+// src/shell/Rail.svelte
 var vO = /* @__PURE__ */ L("<button> </button>"), yO = /* @__PURE__ */ L("<span class=\"rail-group\"> </span> <!>", 1), bO = /* @__PURE__ */ L("<div class=\"settings-row settings-sub\"><span></span> <div class=\"ctl-row\"><span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\" step=\"10\"/> <span class=\"mini-label\"> </span> <input type=\"number\" class=\"tb-num\" min=\"0\" step=\"10\" placeholder=\"0\"/></div></div>"), xO = /* @__PURE__ */ L("<section class=\"settings-group\"><p class=\"mini-label\"> </p> <label class=\"settings-stack\"><span> </span> <input type=\"text\" spellcheck=\"false\"/></label></section>"), SO = /* @__PURE__ */ L("<div class=\"settings-pop\"><p class=\"panel-strong\"> </p> <section class=\"settings-group\"><p class=\"mini-label\"> </p> <label class=\"settings-row\"><span> </span> <!></label> <label class=\"settings-row\"><span> </span> <!></label></section> <section class=\"settings-group\"><p class=\"mini-label\"> </p> <label class=\"settings-row\"><span> </span> <!></label> <label class=\"settings-row\"><span> </span> <!></label> <label class=\"settings-row\"><span> </span> <!></label> <label class=\"settings-row\"><span> </span> <!></label> <div class=\"settings-row\"><span> </span> <div class=\"seg\"><button type=\"button\"> </button> <button type=\"button\"> </button></div></div></section> <section class=\"settings-group\"><p class=\"mini-label\"> </p> <label class=\"settings-row\"><span> </span> <!></label> <div class=\"settings-row\"><span> </span> <div class=\"seg\"><button type=\"button\"> </button> <button type=\"button\"> </button></div></div> <!></section> <!></div>"), CO = /* @__PURE__ */ L("<nav><!> <span class=\"rail-settings\"><span class=\"rail-brand\" title=\"Urd\"><svg class=\"brand-mark\" viewBox=\"10.3 8.3 19.4 25.4\" aria-hidden=\"true\"><path d=\"M12 32V10l16 6.5V32\" fill=\"none\" stroke=\"var(--urd-brand)\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></svg> <span class=\"brand-word\">Urd</span></span> <button></button> <!></span></nav>");
 function wO(e, t) {
 	at(t, !1);
@@ -30090,8 +29939,7 @@ function wO(e, t) {
 	}, [() => q("settings.title")]), I("click", s, () => sn(n, F(n).settingsOpen = !F(n).settingsOpen)), R(e, r), ot();
 }
 Vr(["click", "change"]);
-//#endregion
-//#region src/shell/PreviewStage.svelte
+// src/shell/PreviewStage.svelte
 var TO = /* @__PURE__ */ L("<div><div class=\"stage\"><iframe></iframe></div></div>");
 function EO(e, t) {
 	at(t, !1);
@@ -30110,8 +29958,7 @@ function EO(e, t) {
 		F(n).onIframeLoad?.apply(this, e);
 	}), Rr(o), R(e, r), ot();
 }
-//#endregion
-//#region src/shell/ConfirmDialog.svelte
+// src/shell/ConfirmDialog.svelte
 var DO = /* @__PURE__ */ L("<p class=\"panel-hint confirm-line\"> </p>"), OO = /* @__PURE__ */ L("<input/>"), kO = /* @__PURE__ */ L("<div class=\"setup-overlay\"><div class=\"setup-card\"><h2> </h2> <!> <!> <span class=\"setup-actions\"><button class=\"ghost\"> </button> <button class=\"primary\"> </button></span></div></div>");
 function AO(e, t) {
 	at(t, !1);
@@ -30144,8 +29991,7 @@ Vr([
 	"click",
 	"keydown"
 ]);
-//#endregion
-//#region src/shell/SetupWizard.svelte
+// src/shell/SetupWizard.svelte
 var jO = /* @__PURE__ */ L("<div class=\"setup-overlay\"><div class=\"setup-card\"><h2> </h2> <p class=\"panel-hint\"> </p> <label> <input/></label> <label> <!></label> <label> <!></label> <p class=\"panel-hint\"> </p> <p class=\"panel-hint\"> </p> <span class=\"setup-actions\"><button class=\"ghost\"> </button> <button class=\"primary\"> </button></span></div></div>");
 function MO(e, t) {
 	at(t, !1);
@@ -30211,8 +30057,7 @@ function MO(e, t) {
 	}), R(e, r), ot();
 }
 Vr(["keydown", "click"]);
-//#endregion
-//#region src/lib/draftStore.js
+// src/lib/draftStore.js
 function NO(e, t, n, r) {
 	if (r) {
 		let t = localStorage.getItem(r);
@@ -30258,8 +30103,7 @@ function NO(e, t, n, r) {
 		}
 	};
 }
-//#endregion
-//#region src/lib/collection-index.js
+// src/lib/collection-index.js
 var PO = "content/samlinger.json", FO = "content/collections.json", IO = "urd-draft-collections:index", LO = "urd-draft-collections:legacy-deleted", RO = ["urd-draft-collections", "urd-draft-samlinger"];
 async function zO(e, t = fetch) {
 	let n;
@@ -30334,8 +30178,7 @@ function KO({ ids: e, hasDraft: t, published: n, legacy: r }) {
 		deleteIds: i ? BO(n, r).filter((t) => !e.includes(t)) : []
 	};
 }
-//#endregion
-//#region src/lib/menu-place.js
+// src/lib/menu-place.js
 function qO(e, t, n, r = 8, i = 8) {
 	let a = Math.max(r, n.w - t.w - i), o = Math.max(i, n.h - t.h - i);
 	return {
@@ -30425,8 +30268,7 @@ function ZO({ prepare: e, onHeight: t, title: n }) {
 		}
 	};
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/animations/core.js
+// ../template/assets/engine/0.7.7/animations/core.js
 var QO = () => ({
 	duration: 600,
 	delay: 0
@@ -30479,8 +30321,7 @@ var QO = () => ({
 		migrations: {}
 	}
 };
-//#endregion
-//#region ../template/assets/engine/0.7.7/plugins.js
+// ../template/assets/engine/0.7.7/plugins.js
 function tk(e) {
 	let t = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(e).trim());
 	return t ? [
@@ -30515,13 +30356,12 @@ var ak = /^[a-z0-9][a-z0-9-]*$/;
 function ok(e) {
 	let t = [];
 	if (!e || typeof e != "object") return ["the manifest is not an object"];
-	ak.test(e.id ?? "") || t.push("id is missing or invalid"), (typeof e.name != "string" || !e.name) && t.push("name is missing"), tk(e.version ?? "") || t.push("version is not semver"), (typeof e.requiresEngine != "string" || !e.requiresEngine) && t.push("requiresEngine is missing");
+	ak.test(e.id ?? "") || t.push("id is missing or invalid"), typeof e.name == "string" && e.name || t.push("name is missing"), tk(e.version ?? "") || t.push("version is not semver"), typeof e.requiresEngine == "string" && e.requiresEngine || t.push("requiresEngine is missing");
 	let n = Array.isArray(e.languages) && e.languages.length > 0;
-	return (e.entry !== void 0 || !n) && (typeof e.entry != "string" || !e.entry.endsWith(".js")) && t.push("entry is missing or is not a .js file"), (e.provides !== void 0 || !n) && (!e.provides || typeof e.provides != "object") && t.push("provides is missing"), e.languages !== void 0 && t.push(..._a(e.languages)), e.locales !== void 0 && typeof e.locales != "boolean" && t.push("locales must be a boolean"), e.names !== void 0 && (typeof e.names != "object" || e.names === null || Array.isArray(e.names) || Object.values(e.names).some((e) => typeof e != "string" || !e)) && t.push("names must be an object mapping language code to name"), t;
+	return e.entry === void 0 && n || typeof e.entry == "string" && e.entry.endsWith(".js") || t.push("entry is missing or is not a .js file"), e.provides === void 0 && n || e.provides && typeof e.provides == "object" || t.push("provides is missing"), e.languages !== void 0 && t.push(..._a(e.languages)), e.locales !== void 0 && typeof e.locales != "boolean" && t.push("locales must be a boolean"), e.names !== void 0 && (typeof e.names != "object" || e.names === null || Array.isArray(e.names) || Object.values(e.names).some((e) => typeof e != "string" || !e)) && t.push("names must be an object mapping language code to name"), t;
 }
 Promise.resolve();
-//#endregion
-//#region src/lib/preview-scale.js
+// src/lib/preview-scale.js
 function sk(e, t) {
 	return !(e > 0) || !(t > 0) ? 1 : e / t;
 }
@@ -30530,8 +30370,7 @@ function ck(e, t, n, r = 0, i = 0) {
 	let a = i > 0 ? sk(r, i) : Infinity;
 	return Math.max(.1, Math.min(1, sk(e, t), a));
 }
-//#endregion
-//#region src/lib/previewBridge.js
+// src/lib/previewBridge.js
 function lk(e, t = {}) {
 	let n = (n) => {
 		if (n.origin !== location.origin || n.source !== e.contentWindow) return;
@@ -30728,8 +30567,7 @@ function lk(e, t = {}) {
 		}
 	};
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/place.js
+// ../template/assets/engine/0.7.7/place.js
 function uk(e) {
 	let t = (e) => Math.round(e * 100) / 100, n = Math.max(0, t(100 - e.w)), r = Math.min(n, Math.max(0, t(e.x - e.w / 2))), i = Math.max(0, e.y - e.h / 2), a = e.snap === !1 || e.grid?.snap === !1, o = e.grid?.size || 8;
 	return i = a ? Math.round(i) : Math.round(i / o) * o, {
@@ -30737,8 +30575,7 @@ function uk(e) {
 		y: Math.max(0, i)
 	};
 }
-//#endregion
-//#region ../template/assets/engine/0.7.7/backgrounds/color.js
+// ../template/assets/engine/0.7.7/backgrounds/color.js
 var dk = {
 	version: 1,
 	label: "Colour",
@@ -30981,8 +30818,7 @@ function Pk(e, t, { id: n, title: r }) {
 	}
 	return Nk((i.sections ?? []).flatMap((e) => e.blocks ?? []), a), i;
 }
-//#endregion
-//#region src/state/templates.svelte.js
+// src/state/templates.svelte.js
 var Fk = null, Ik = {}, Lk = {}, Rk = !1, zk = /* @__PURE__ */ O(mn([]));
 async function Bk() {
 	let e = {
@@ -32367,8 +32203,7 @@ var xj = {
 	addCalendarDesign: vj,
 	handleRequestBlock: bj
 };
-//#endregion
-//#region src/state/bridge.svelte.js
+// src/state/bridge.svelte.js
 function Sj(e) {
 	let { section: t, block: n } = $.readBlock(e.sectionId, e.blockId);
 	t && n?.sticky && Gb.some(([t]) => t === e.dock) && (vF.pushHistory(`sticky-dock:${e.blockId}`), n.sticky = {
@@ -34167,8 +34002,7 @@ var WF = {
 	removeCollection: HF,
 	addCollectionEntry: UF
 };
-//#endregion
-//#region src/lib/deploy-wait.js
+// src/lib/deploy-wait.js
 function GF(e, { max: t = 8 } = {}) {
 	let n = (e ?? []).filter((e) => e && typeof e.path == "string" && typeof e.content == "string" && e.encoding === "utf-8" && !e.delete && (e.path.startsWith("content/") || e.path === "plugins/plugins.json"));
 	return n.sort((e, t) => (e.path === "content/site.json" ? -1 : 0) - (t.path === "content/site.json" ? -1 : 0)), n.slice(0, t).map(({ path: e, content: t }) => ({
@@ -34193,8 +34027,7 @@ async function KF(e, { fetchFn: t = fetch, delayMs: n = 1e4, attempts: r = 18, s
 	}
 	return !1;
 }
-//#endregion
-//#region src/state/updater.svelte.js
+// src/state/updater.svelte.js
 var qF = null;
 async function JF() {
 	try {
@@ -34871,8 +34704,7 @@ var kL = {
 	decorateSubFolds: DL,
 	effects: OL
 };
-//#endregion
-//#region src/state/media.svelte.js
+// src/state/media.svelte.js
 async function AL(e, t) {
 	try {
 		let n = new Image();
@@ -34991,8 +34823,7 @@ var BL = {
 	reportImage: RL,
 	reportUpload: zL
 };
-//#endregion
-//#region ../template/assets/engine/0.7.7/feeds.js
+// ../template/assets/engine/0.7.7/feeds.js
 function VL(e) {
 	return String(e ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&apos;");
 }
@@ -35018,8 +34849,7 @@ function GL(e) {
   <channel>
     <title>${VL(e.title)}</title>\n    <link>${VL(t + "/")}</link>\n    <description>${VL(e.description ?? e.title)}</description>\n${n}${n ? "\n" : ""}  </channel>\n</rss>\n`;
 }
-//#endregion
-//#region src/state/publish.svelte.js
+// src/state/publish.svelte.js
 function KL(e, t, n, r) {
 	let i = e?.[t];
 	if (!i?.startsWith("data:image/") && !i?.startsWith("data:audio/") && !i?.startsWith("data:video/")) return;
@@ -35902,8 +35732,7 @@ Vr([
 	"change",
 	"pointerdown"
 ]);
-//#endregion
-//#region src/App.svelte
+// src/App.svelte
 var IR = /* @__PURE__ */ L("<button class=\"chrome-restore\"><!> </button>"), LR = /* @__PURE__ */ L("<button type=\"button\"></button>"), RR = /* @__PURE__ */ L("<aside><div class=\"panel-head\"><h2> </h2> <!></div> <!></aside>"), zR = /* @__PURE__ */ L("<div class=\"workspace\"><!> <!> <!></div>"), BR = /* @__PURE__ */ L("<p class=\"loading\"> </p>"), VR = /* @__PURE__ */ L("<div><span> </span> <button class=\"toast-x\"></button></div>"), HR = /* @__PURE__ */ L("<div class=\"editor\"><!> <!> <!> <!> <!> <!> <!> <!> <!></div> <!>", 1);
 function UR(e, t) {
 	at(t, !0);
@@ -36185,8 +36014,7 @@ function UR(e, t) {
 	}), R(e, i), ot();
 }
 Vr(["click"]);
-//#endregion
-//#region src/lib/seg-slide.js
+// src/lib/seg-slide.js
 var WR = (e) => Math.round(e * 10) / 10;
 function GR(e, t) {
 	let n = e.left - t.left, r = e.top - t.top, i = t.left + t.width - (e.left + e.width), a = t.top + t.height - (e.top + e.height);
@@ -36233,5 +36061,4 @@ function qR(e = document) {
 }
 document.documentElement.lang = await ka(), qR();
 var JR = ii(UR, { target: document.getElementById("urd-admin") });
-//#endregion
 export { JR as default };
