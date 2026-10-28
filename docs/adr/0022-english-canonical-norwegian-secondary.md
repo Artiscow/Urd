@@ -11,7 +11,7 @@ Urd started as a Norwegian-language project: documentation, CHANGELOG, commit me
 
 English is the canonical language of Urd and Norwegian (bokmål) the secondary; together they are the project's two main languages. Everything developer-facing is English; everything a site owner or visitor may read is available in both.
 
-- Code text (ADR-0021), AGENTS.md, the ADRs and the documents under docs/ are written in English, and so are new entries in CHANGELOG, BACKLOG and TESTRUNDER and all commit messages from this date; older entries stay as written. Where a document exists in both languages, the English text applies on discrepancy.
+- Code text (ADR-0021), AGENTS.md, the ADRs and the documents under docs/ are written in English, and so are new entries in CHANGELOG, BACKLOG and TEST-ROUNDS and all commit messages from this date; older entries stay as written. Where a document exists in both languages, the English text applies on discrepancy.
 - A document not yet translated stays in Norwegian until its turn, and the English text applies on discrepancy. A translated document takes an English file name. Which documents are in which language is stated in the README document tables.
 - User-facing text is available in both English and Norwegian: the README, the user guide and the setup guide under docs/languages/, the UI texts and the seed content.
 - The UI texts exist in five languages (ADR-0012); the bokmål dictionary stays the base a missing key falls back to, with full parity enforced for en-GB and tr.

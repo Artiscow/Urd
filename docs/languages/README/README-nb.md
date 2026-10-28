@@ -65,7 +65,7 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | [Bilder fra en delt mappe](../setup-photos/PHOTOS-nb.md) | Bakgrunnsbilder fra en Google Drive-mappe, et Google Foto-album eller en Nextcloud-deling, og Cloudflare-variablene de trenger |
 | [Kalenderen](../calendar-guide/CALENDAR-nb.md) | For nettstedeiere: kalendertjenester, møtelenker, påmelding, kart og hva kalenderblokken leser fra et arrangement |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag (nyere innslag på engelsk) |
-| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekkliste for manuell testing: levert arbeid som venter på testing (nyere innslag på engelsk) |
+| [docs/TEST-ROUNDS.md](../../TEST-ROUNDS.md) | Sjekkliste for manuell testing: levert arbeid som venter på testing (på engelsk) |
 | [docs/languages/](../) | Alle oversatte dokumenter (guide og oppsett på fem språk; engelsk tekst er kanonisk ved avvik) |
 | [docs/comparison/](../../comparison/README.md) | Urd mot andre nettsidebyggere: funksjoner, elementer, design og kode, med undersøkelsene bak beslutningene (på engelsk) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per commit og push (nyere innslag på engelsk) |

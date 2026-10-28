@@ -69,7 +69,7 @@ Projenin ana dili İngilizcedir. Yalnızca Norveççe olan belgeler işaretlenmi
 | [Paylaşılan bir klasörden resimler](../setup-photos/PHOTOS-en-GB.md) | Bir Google Drive klasöründen, Google Fotoğraflar albümünden ya da Nextcloud paylaşımından arka plan resimleri ve gereken Cloudflare değişkenleri (İngilizce) |
 | [Takvim](../calendar-guide/CALENDAR-en-GB.md) | Site sahipleri için: takvim hizmetleri, toplantı bağlantıları, kayıt, haritalar ve Takvim bloğunun bir etkinlikten okudukları (İngilizce) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Güncel görev listesi: yapılacaklar, hatalar ve öneriler (eski kayıtlar Norveççe) |
-| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Elle test kontrol listesi: test bekleyen teslim edilmiş işler (eski kayıtlar Norveççe) |
+| [docs/TEST-ROUNDS.md](../../TEST-ROUNDS.md) | Elle test kontrol listesi: test bekleyen teslim edilmiş işler (İngilizce) |
 | [docs/comparison/](../../comparison/README.md) | Diğer web sitesi kurucularıyla özellik karşılaştırması ve boşluk analizi; öğeler ve işlevler; mimari ve desenler (İngilizce) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Her commit ve push için değişiklik günlüğü (eski kayıtlar Norveççe) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Nasıl katkı verilir: fork, dal, testler, pull request (İngilizce) |

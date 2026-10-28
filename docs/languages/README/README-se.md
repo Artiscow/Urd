@@ -69,7 +69,7 @@ Prošeavtta váldogiella lea eaŋgalasgiella. Dokumeanttat mat leat dušše dár
 | [Govat juogaduvvon máhpas](../setup-photos/PHOTOS-en-GB.md) | Duogášgovat Google Drive-máhpas, Google Photos-albumis dahje Nextcloud-juogadeamis, ja Cloudflare-variábelat maid dat dárbbašit (eaŋgalasgillii) |
 | [Kaleandar](../calendar-guide/CALENDAR-en-GB.md) | Siidooamasteddjiide: kaleandarbálvalusat, čoahkkinliŋkkat, dieđiheapmi, kárttat ja maid Kaleandar-blohkka lohká dáhpáhusas (eaŋgalasgillii) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Jotkkolaš bargolistu: barggut, meattáhusat ja evttohusat (boarráset merkkašumit dárogillii) |
-| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Dárkkistanlistu gieđain geahččaleapmái: buktojuvvon bargu mii vuordá geahččaleami (boarráset merkkašumit dárogillii) |
+| [docs/TEST-ROUNDS.md](../../TEST-ROUNDS.md) | Dárkkistanlistu gieđain geahččaleapmái: buktojuvvon bargu mii vuordá geahččaleami (eaŋgalasgillii) |
 | [docs/comparison/](../../comparison/README.md) | Doaibmabuohtastahttin eará neahttasiidohuksejeddjiiguin; elemeanttat ja doaimmat; arkitektuvra ja minsttarat (eaŋgalasgillii) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Rievdadanlogga juohke commitii ja pushii (boarráset merkkašumit dárogillii) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Ná don veahkehat: fork, ossodat, testtat, pull request (eaŋgalasgillii) |

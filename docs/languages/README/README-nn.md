@@ -67,7 +67,7 @@ Engelsk er hovudspråket i prosjektet. Dokument som berre finst på bokmål er m
 | [Bilete frå ei delt mappe](../setup-photos/PHOTOS-nb.md) | Bakgrunnsbilete frå ei Google Drive-mappe, eit Google Foto-album eller ei Nextcloud-deling, og Cloudflare-variablane dei treng (på bokmål) |
 | [Kalenderen](../calendar-guide/CALENDAR-nb.md) | For nettstadeigarar: kalendertenester, møtelenkjer, påmelding, kart og kva kalenderblokka les frå eit arrangement (på bokmål) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpande oppgåveliste: gjeremål, buggar og forslag (eldre innslag på bokmål) |
-| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekklista for manuell testing: levert arbeid som ventar på testing (eldre innslag på bokmål) |
+| [docs/TEST-ROUNDS.md](../../TEST-ROUNDS.md) | Sjekklista for manuell testing: levert arbeid som ventar på testing (på engelsk) |
 | [docs/comparison/](../../comparison/README.md) | Urd mot andre nettsidebyggjarar: funksjonar, element, design og kode, med undersøkingane bak avgjerdene (på engelsk) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per commit og push (eldre innslag på bokmål) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidreg du: fork, grein, testar, pull request (på engelsk) |

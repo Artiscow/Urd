@@ -73,7 +73,7 @@ English is the project's canonical language. Documents not yet translated are ma
 | [Pictures from a shared folder](docs/languages/setup-photos/PHOTOS-en-GB.md) | Background pictures from a Google Drive folder, a Google Photos album or a Nextcloud share, and the Cloudflare variables they need |
 | [The calendar](docs/languages/calendar-guide/CALENDAR-en-GB.md) | For site owners: calendar services, meeting links, sign-up, maps and what the Calendar block reads from an event |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Running task list: to-dos, bugs and suggestions (older entries in Norwegian) |
-| [docs/TESTRUNDER.md](docs/TESTRUNDER.md) | Checklist for manual testing: delivered work waiting to be tested (older entries in Norwegian) |
+| [docs/TEST-ROUNDS.md](docs/TEST-ROUNDS.md) | Checklist for manual testing: delivered work waiting to be tested |
 | [docs/languages/](docs/languages/) | The translations: the user guide and the setup guide in five languages, the calendar and photo guides in English and Norwegian, and the vision, roadmap and development documents in Norwegian beside the English |
 | [docs/comparison/](docs/comparison/README.md) | Urd against other website builders: features, elements, design and code, with the dated surveys behind the decisions |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Change log per commit and push (older entries in Norwegian) |
