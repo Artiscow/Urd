@@ -207,6 +207,29 @@
       "show": true,
       "href": "/checkout"
     },
+    "launcher": {
+      "show": false,
+      "view": "grid",
+      "size": "md",
+      "longNames": "cut",
+      "links": [
+        {
+          "label": "Bestill kaker til høstferien",
+          "page": "kaker",
+          "icon": "cart"
+        },
+        {
+          "label": "Kontakt oss",
+          "page": "kontakt",
+          "icon": "mail"
+        },
+        {
+          "label": "Butikk",
+          "page": "shop",
+          "icon": "gift"
+        }
+      ]
+    },
     "style": {
       "background": {
         "version": 1,

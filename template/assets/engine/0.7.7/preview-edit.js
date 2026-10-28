@@ -1316,8 +1316,8 @@ function addBlockAdder(host, section, grid) {
     if (def.tipKey) b.title = ta(def.tipKey);
     b.addEventListener('click', () => {
       const at = menu._urdAt ?? undefined;
-      // A kind from pictures counts as added once pictures are chosen, so a cancelled file picker leaves the recent list as it was.
-      if (!def.files) noteRecentKind(kind);
+      // The recent list holds the kinds added in one press: a kind from pictures counts once pictures are chosen, and an entry that opens a picker never counts.
+      if (!def.files && !def.action) noteRecentKind(kind);
       if (def.files) {
         const input = document.createElement('input');
         input.type = 'file';

@@ -124,6 +124,11 @@ test('every group in the canvas menu\'s list has a picture', () => {
   for (const [id, picture] of Object.entries(EXTRA_GROUP_PICTURES)) assert.match(picture, /^<svg [^>]*aria-hidden="true">.+<\/svg>$/, id);
 });
 
+test('the canvas menu counts a kind as recent only when it adds a block in one press', () => {
+  const menu = read(new URL('preview-edit.js', ENGINE_DIR));
+  assert.match(menu, /if \(!def\.files && !def\.action\) noteRecentKind\(kind\);/);
+});
+
 test('the recent blocks: newest first, each once, at most three, and only kinds the palette holds', () => {
   assert.deepEqual(rememberKind([], 'image'), ['image']);
   assert.deepEqual(rememberKind(['text', 'image', 'map'], 'image'), ['image', 'text', 'map']);
