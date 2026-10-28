@@ -36,6 +36,10 @@ Open the **Updates** panel in the admin: it checks against the template reposito
 - `plugins/` holds extensions: drop in a plugin folder and enable it in the Plugins panel. The one that ships is the Swedish language pack (`lang-sv`), the example for plugin authors; calendar, form and map are core blocks. See [plugins/README.md](plugins/README.md); more can be found via the GitHub topic `urd-plugin`.
 - `assets/engine/` and `admin/` are Urd itself and are maintained by the Updates panel; do not edit them by hand.
 
+## License
+
+Urd's own files, and the starting files Urd puts among yours, are under the MIT License, in [URD-LICENSE.md](URD-LICENSE.md), together with the notice for the third-party code the editor is built with. What you add or change yourself is yours, and the license does not cover it.
+
 ## Documentation
 
 [User guide](https://github.com/Artiscow/Urd/blob/main/docs/languages/user-guide/GUIDE-en-GB.md) and full documentation in the [main repository](https://github.com/Artiscow/Urd), with translations under [docs/languages/](https://github.com/Artiscow/Urd/tree/main/docs/languages).

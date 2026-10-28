@@ -36,6 +36,10 @@ Lokal titt uten host: kjør `python3 dev-server.py` fra denne mappen og åpne `h
 - `plugins/` er utvidelser: legg inn en plugin-mappe og aktiver den i Plugins-panelet. Den som følger med er den svenske språkpakken (`lang-sv`), eksempelet for den som vil lage egne; kalender, skjema og kart er kjerneblokker. Se [plugins/README.md](../plugins/README.md); flere finnes via GitHub-topicen `urd-plugin`.
 - `assets/engine/` og `admin/` er Urd selv og oppdateres av Oppdatering-panelet; rør dem ikke for hånd.
 
+## Lisens
+
+Urds egne filer, og startfilene Urd legger blant dine, er under MIT-lisensen, i [URD-LICENSE.md](../URD-LICENSE.md), sammen med merknaden for den tredjepartskoden editoren er bygget med. Det du legger til eller endrer selv, er ditt, og lisensen dekker det ikke.
+
 ## Dokumentasjon
 
 [Brukerveiledning](https://github.com/Artiscow/Urd/blob/main/docs/languages/user-guide/GUIDE-nb.md) og full dokumentasjon i [hovedrepoet](https://github.com/Artiscow/Urd), med oversettelser under [docs/languages/](https://github.com/Artiscow/Urd/tree/main/docs/languages).

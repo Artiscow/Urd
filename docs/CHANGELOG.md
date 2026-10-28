@@ -8,6 +8,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.73 - Urd's license in the template, an English .gitignore, and AGENTS.md read without CLAUDE.md - 28 October 2026
+
+- A site made from the template carried no license, and the editor's bundle held the Svelte runtime without its notice. `template/URD-LICENSE.md` holds Urd's MIT License, what it covers and Svelte's notice; it is an owned file in `urd.json` and the guard, so the Updates panel adds it to existing sites, and the template's README in English, Norwegian and Turkish links it under License.
+- The copyright line named «The Urd Team», no one who can hold a copyright. LICENSE and URD-LICENSE.md name the holder in person.
+- The comments in `.gitignore` were in Norwegian. They are in English, with the same rules.
+- CLAUDE.md held only an import of AGENTS.md, which coding agents read on their own. It is removed, and AGENTS.md's opening line says who reads it.
+- PG-2 planned a CLAUDE.md beside the plugins' AGENTS.md. It plans the AGENTS.md alone.
+
+The independent review before the commit read the diff with no description of the change, against AGENTS.md and the ADRs, and found these:
+
+- URD-LICENSE.md left everything under `userPaths` outside the license, also the files Urd ships there: the Swedish language pack the README gives as the example plugin, the example content and the drawn placeholder pictures. The license and the three READMEs cover those starting files, and what the owner adds or changes stays the owner's.
+- URD-LICENSE.md said the Updates panel keeps every owned file up to date, which it never does for `_headers` (ADR-0014). It says so of the engine, the editor and the functions.
+- PG-2's done-when line still named two files, from when the item planned a CLAUDE.md beside the plugins' AGENTS.md. It names one.
+- Not taken: GitHub may label urd-template's license «Other» rather than MIT, since the file holds a scope paragraph and a second license; the file is named so a site's repo is not labelled MIT.
+- The review ran the whole test suite, which a commit does not; the commit's evidence is the run of the tests that cover the diff.
+
 ### 0.7.10.13 - The Collections panel rebuilt, a product's required choices, product cards that line up, and «Empty the basket» - 28 October 2026
 
 - The Collections panel opened on a «Choose …» dropdown and never listed the collections. They stand as rows with their kind and count that open and close in place with the Nav panel items' grow and shrink, two at a time where wanted; the panel's «open all» button leaves this panel, which no longer has folds of that kind.

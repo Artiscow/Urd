@@ -1,20 +1,21 @@
-# Editor-utvikling (kun editor/-mappen bruker npm)
+# Editor development (only the editor/ folder uses npm)
 editor/node_modules/
 editor/.vite/
 editor/dist/
 
-# Merk: template/admin/assets/ skal IKKE ignoreres - den ferdigbygde
-# editoren committes slik at malen kan deployes uten byggesteg.
+# Note: template/admin/assets/ must NOT be ignored - the built editor is
+# committed so the template deploys without a build step.
 
-# Lokale hemmeligheter for wrangler pages dev (aldri i git)
+# Local secrets for wrangler pages dev (never in git)
 template/.dev.vars
 
-# Wrangler-cache (uansett hvor wrangler kjøres fra)
+# Wrangler's cache (wherever wrangler is run from)
 .wrangler/
 template/.wrangler/
 
+# Claude Code's local settings
 .claude/
 
-# Diverse
+# Miscellaneous
 .DS_Store
 *.log

@@ -115,6 +115,7 @@ export const OWNED_PATTERNS = [
   'speculation-rules.json',
   'dev-server.py',
   'README.md',
+  'URD-LICENSE.md',
   'readme/**',
   'admin/**',
   'assets/engine/**',

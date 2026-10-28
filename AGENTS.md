@@ -1,6 +1,6 @@
 # Urd: guidance for coding agents
 
-This file is loaded automatically in every session (Claude Code loads it via the `@` import in `CLAUDE.md`; tools that follow the AGENTS.md standard read it directly). It pins the durable rules and points to the authoritative documents. Read it before making changes.
+This file is loaded automatically in every session (coding agents that follow the AGENTS.md standard read it directly). It pins the durable rules and points to the authoritative documents. Read it before making changes.
 
 ## What Urd is
 

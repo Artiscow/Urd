@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here. A new delivery gets a «Test batch» section of its own at the top (newest first); items without a batch stand in the remainder list at the bottom. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (reviewed and gathered on 6 October 2026: the calendar batches were merged into one with one item per design).
 
+### Test batch (0.7.0.73): Urd's license in the template
+
+- [ ] After the next release: urd-template has `URD-LICENSE.md` at its root, and the License link in its README (English, and the Norwegian and Turkish under `readme/`) opens it
+- [ ] The Updates panel on a site made from an older template lists `URD-LICENSE.md` as new and adds it
+
 ### Test batch (0.7.10.13): the Collections panel, the product's choices, the product cards' rows and «Empty the basket»
 
 - [ ] The Collections panel: News and Products as rows with their kind and count; a click opens a collection with a grow and closes it with a shrink, and two can stand open together; no line at the left edge anywhere (the panel selector, the Pages panel, the rows)
