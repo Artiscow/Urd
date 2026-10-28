@@ -172,11 +172,8 @@
     return items;
   }
 
-  /* The keys of the menu's areas (0.7.20.9, proposal O on the Design canvas):
-     with the focus in the menu and not in a field, 1, 2 and 3 choose Content,
-     Style and Placement (the tab when narrow, the column when wide), and /
-     goes to the search field of the menu the focus is in. No key caps are
-     drawn; the keys are told in the welcome and the user guide. */
+  /* The keys of the menu's areas (0.7.20.9, proposal O on the Design canvas): with the focus in the menu and not in a field, 1, 2 and 3 choose Content, Style and Placement (the tab when narrow, the column when wide), and / goes to the search field of the menu the focus is in.
+     No key caps are drawn; the keys are listed in the shortcut sheet and the user guide. */
   function menuKeys(event) {
     const t = event.target;
     if (t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;

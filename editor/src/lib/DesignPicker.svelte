@@ -121,9 +121,25 @@
 
   $effect(() => () => watcher?.disconnect());
 
-  /** The dialog closing on its own (Escape, or a close the browser forces) leaves the picker too. */
+  // What had the focus when the picker opened: the page's frame, or a control in a panel or the element menu.
+  const opener = document.activeElement;
+
+  /** The focus back on what had it when the picker opened, so the keys go on working there. */
+  function giveBack() {
+    if (opener instanceof HTMLElement && opener.isConnected && opener !== document.body) opener.focus({ preventScroll: true });
+  }
+
+  /** The dialog closing (Escape, its ×, a press outside its card, or a close the browser forces) leaves the picker. */
   function onClosed() {
+    giveBack();
     onclose?.();
+  }
+
+  /** A design taken: the dialog closes first, since nothing outside a modal dialog can take the focus, then the choice is applied. */
+  function pick(id) {
+    dialogEl?.close();
+    giveBack();
+    onpick?.(id);
   }
 
   function pictureFailed(id) {
@@ -136,13 +152,13 @@
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 <dialog class="dp-overlay" bind:this={dialogEl} aria-label={source.label} onclose={onClosed}
   onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
-  onclick={(e) => downOnBackdrop && e.target === e.currentTarget && onclose?.()}>
+  onclick={(e) => downOnBackdrop && e.target === e.currentTarget && dialogEl.close()}>
   <div class="dp-card" class:nofilters={!source.filters}>
     <div class="dp-head">
       <h2>{source.title}</h2>
       <input class="dp-search" type="search" bind:this={searchEl} bind:value={query} placeholder={source.searchLabel} aria-label={source.searchLabel} />
       <span class="dp-count">{source.countText(count)}</span>
-      <button type="button" class="dp-close" aria-label={ta('ui.close')} title={ta('ui.close')} onclick={() => onclose?.()}>
+      <button type="button" class="dp-close" aria-label={ta('ui.close')} title={ta('ui.close')} onclick={() => dialogEl.close()}>
         <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
@@ -162,7 +178,7 @@
             <div class="dp-grid">
               {#each family.designs as d (d.id)}
                 <button type="button" class="dp-tile" class:on={d.id === chosen} class:current={source.current !== null && d.id === source.current} aria-pressed={d.id === chosen}
-                  title={source.name(d)} onclick={() => (chosen = d.id)} ondblclick={() => onpick?.(d.id)}>
+                  title={source.name(d)} onclick={() => (chosen = d.id)} ondblclick={() => pick(d.id)}>
                   <span class="dp-pic">
                     {#if broken.has(d.id) || !source.picture(d.id)}
                       {@html source.thumb(d.id)}
@@ -213,7 +229,7 @@
             </section>
           {/if}
         </div>
-        <button type="button" class="dp-use" onclick={() => onpick?.(chosen)}>{source.useLabel}</button>
+        <button type="button" class="dp-use" onclick={() => pick(chosen)}>{source.useLabel}</button>
       </aside>
     </div>
   </div>

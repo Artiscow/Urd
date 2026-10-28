@@ -32,7 +32,7 @@
     <button class="rail-gear" class:active={ed.settingsOpen} title={ta('settings.title')}
       onclick={() => (ed.settingsOpen = !ed.settingsOpen)}>{@html ICONS.gear}</button>
     {#if ed.settingsOpen}
-      <!-- Urd's own settings in four groups: how the admin looks, how the editing tools behave, the window, and the one site value.
+      <!-- Urd's own settings in four groups: how the admin looks, how the editing tools behave, the window, and the one site value, with the way to the shortcut sheet at the foot.
            Each setting is a row with its name at the left and its control at the right; an on/off choice and the Screen button's two choices are segment controls. -->
       <div class="settings-pop">
         <p class="panel-strong">{ta('settings.title')}</p>
@@ -111,6 +111,10 @@
                 onchange={(e) => ed.setAnalyticsToken(e.target.value)} /></label>
           </section>
         {/if}
+        <section class="settings-group">
+          <button type="button" class="ghost settings-keys" title={ta('tip.shortcuts.open')}
+            onclick={() => { ed.settingsOpen = false; ed.openShortcuts(); }}>{@html ICONS.keyboard}<span>{ta('shortcuts.title')}</span><kbd>?</kbd></button>
+        </section>
       </div>
     {/if}
   </span>

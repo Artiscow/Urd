@@ -43,6 +43,7 @@ The screen has three parts:
 - **Keyboard in the block menu**: 1, 2 and 3 choose Content, Style and Placement, / goes to the search, Esc closes the floating menu.
 - **Snap lines**: when you drag a block near the edge or centre of another block, a line appears between the two and the block snaps into place; when its distance to a neighbour equals the distance between two neighbours, the distances are shown as bands with the number in them. The lines also come from the section you hold the block over. Hold Shift to move straight across or straight down, and Ctrl (Cmd on a Mac) for completely free placement without the grid and the lines.
 - **Undo**: Ctrl+Z (and Ctrl+Shift+Z to redo) works on everything: moving, size, text, deletion, sections and grid.
+- **All the keys in one list**: press **?** on the page or in the panels, or choose **Keyboard shortcuts** in the Urd settings (the gear at the bottom of the panel selector), for every key the editor answers to, grouped by where it works.
 
 ### Adding blocks
 

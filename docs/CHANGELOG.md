@@ -8,6 +8,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.12 - A sheet of every keyboard shortcut, opened with «?» - 28 October 2026
+
+- The editor's keys could be learnt only from the setup wizard's one paragraph, the user guide or by accident (comparison E21). A shortcut sheet lists every key the editor answers to, in seven groups by where it works, with the keys drawn as key caps (`lib/shortcuts.js`, `lib/ShortcutSheet.svelte`); «?» opens it on the page and in the panels, and the Urd settings and the setup wizard have a way to it.
+- The wizard ended on a paragraph of menu keys for someone who had not seen a menu yet. It ends with the name and the colours beside a link to the sheet, and `setup.keys` is gone from every dictionary.
+- The comparison listed the sheet as missing, and Urd's key table lacked the link keys. E21 is Delivered, the FEATURES row is Has, the table holds Ctrl+K, Ctrl+Shift+K and «?», and the user guides name the sheet.
+
+The independent review before the commit checked each row of the sheet against its handler and read the diff against AGENTS.md and ADR-0008, 0009, 0011 and 0012. It found these, all taken but the last:
+
+- The sheet said the arrows walk «+ New section» and the right-click menu, which they do not, and its element menu tooltip said every key worked on the page. The right-click menu has a group of its own (up and down, Home and End, Enter, Esc and Tab), and the tooltips say what holds where.
+- Ctrl+B, Ctrl+I, Ctrl+U and Enter in the element menu's search were missing, and «Keep the ratio while resizing» did not say it holds for images, videos, shapes and icons only. They are listed, the last with a tooltip.
+- «?» did nothing right after a slider or a toggle in the panels, since every field counted as typing. A toggle, a slider and a colour let the key through, as they do for Ctrl+D and Ctrl+Z.
+- Esc in the sheet also answered a confirmation open behind it. The sheet stays shut while a confirmation or the icon editor is open.
+- The drawn arrows were silent to a screen reader, named on an element without a role. They are images with their names.
+- Closing the sheet with its × or a press outside left the focus on the editor's body, so the arrow keys needed a click on the page first. Measuring showed Escape did the same, since the browser does not give the focus back into the page's frame; the sheet and the design picker focus what had it when they opened.
+- Urd's key table gave Shift for a section's free height where the code uses Ctrl/⌘, three comments told what was no longer true or how it had been, a style meant for the wizard's buttons kept the confirmation's buttons from wrapping, and some names read awkwardly (Backspace, the front and back rows, two English rows). All are fixed, the front and back rows with the right-click menu's own words.
+- Not taken: «?» also opens the sheet in the Clean view, which does no harm.
+
+A second review read the diff with no description of the change, and found these, all taken but the last:
+
+- Ctrl+B, Ctrl+I and Ctrl+U were left to the browser's own editing commands, which no specification defines, and the text group's tooltip promised them in every text. They press the text toolbar's own bold, italic and underline buttons, and the tooltip names the texts that have the toolbar.
+- The sheet opened over the Urd settings, a tool menu or a page's menu, and Esc in the sheet closed those too; on the page it opened over a calendar event or the basket in the Clean view. The light menus close as the sheet opens, and a dialog on the page keeps the key.
+- A design taken with «Use» or a double-click left the focus on the editor's body, as closing did before. The picker closes its dialog and gives the focus back before it applies the choice.
+- A comment told what would otherwise happen, and a test step clicked away the block it then moved. Both are fixed.
+- Not taken: the ratio tooltip names the blocks by hand rather than from the list that decides them (`FIT_BY_WIDTH` in push-model.js), so it has to follow that list if a block joins it.
+
+Deviations from the ritual: the sheet's opening on «?» and from the Urd settings and the wizard, in place of E21's Shift+/ and help chip, was written into the backlog item after building rather than before; and the first review was given a description of the change, so a second one read the diff without it.
+
 ### 0.7.0.72 - Vite 8.3.5 with the editor bundle rebuilt - 27 October 2026
 
 - Dependabot's #30 (vite 8.3.4 → 8.3.5, with rolldown 1.2.15, postcss 8.5.31 and @oxc-project/types 0.155.0) failed the build-conformity check, since the new rolldown writes the bundle differently and a bot cannot rebuild it. The bump is taken in with the bundle rebuilt from it, so the pull request closes on its own; Svelte stays at 5.57.2.

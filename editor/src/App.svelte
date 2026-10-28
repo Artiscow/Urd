@@ -48,6 +48,7 @@
   import { publishState } from './state/publish.svelte.js';
   import { linkState } from './state/link.svelte.js';
   import LinkDialog from './lib/LinkDialog.svelte';
+  import ShortcutSheet from './lib/ShortcutSheet.svelte';
 
   const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState];
   const ed = {};
@@ -186,6 +187,10 @@
     {#key ed.linkRequest}
       <LinkDialog request={ed.linkRequest} onclose={ed.closeLink} />
     {/key}
+  {/if}
+
+  {#if ed.shortcutsOpen}
+    <ShortcutSheet onclose={() => (ed.shortcutsOpen = false)} />
   {/if}
 
   <ConfirmDialog />

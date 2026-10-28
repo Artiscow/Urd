@@ -287,8 +287,9 @@ ADR-0017 records that Sanity, Contentful, Storyblok, Strapi and Payload all ship
 - «+ New section» is the empty state, and «+ New block» sits in every section.
 - Everything with special behaviour has a «?» help chip ([ADR-0008](../adr/0008-help-chip-rule.md)), and settings are explained in «?» tooltips.
 - The setup wizard runs on a fresh clone, and mobile review flags sections that need a look.
+- «?» on the page or in the panels opens a sheet of every key the editor answers to, grouped by where it works; the Urd settings and the setup wizard open it too (E21).
 
-Missing: preset suggestions in an empty section or on an empty page (E20), a «which layout tool?» chip (E5), a cheat sheet (E21), and an element manager that hides unused block types (E4).
+Missing: preset suggestions in an empty section or on an empty page (E20), a «which layout tool?» chip (E5), and an element manager that hides unused block types (E4).
 
 ### Comments, notes and review
 
@@ -355,7 +356,7 @@ Urd covers most of the delivery patterns. The remaining gaps are the command pal
 | [Responsive delivery](#responsive-delivery) | Bound width, push pass, sizing model, synced mobile row grid, hide on mobile, mobile review, 4 devices, Clean view | Side by side (E14), phone-only elements (E15) |
 | [Section and template galleries](#section-and-template-galleries) | 39 presets with a category sidebar, «Change layout», 8 page templates, 10 footer layouts | Whole-site templates (E17) |
 | [AI and wizards as delivery](#ai-and-wizards-as-delivery) | Setup wizard; the MCP route decided | MCP server (E19) |
-| [Empty states and discoverability](#empty-states-and-discoverability) | «+ New section» empty state, help chips, tooltips | Richer empty states (E20), cheat sheet (E21) |
+| [Empty states and discoverability](#empty-states-and-discoverability) | «+ New section» empty state, help chips, tooltips | Richer empty states (E20) |
 | [Comments, notes and review](#comments-notes-and-review) | Drafts in the browser, the publish conflict warning, the History panel of publishes with «Undo the publish» | Comments (E22), visual diff (E23), content-only mode (E24), PR per draft (E25) |
 | [Editing the live page](#editing-the-live-page) | The real page in the editor (ADR-0001) | Nothing beyond E24 and E25 |
 | [Quality panels](#quality-panels) | Accessible output | Audit panel (E26), contrast and decorative (E27), alt-text list (E28) |
@@ -366,7 +367,7 @@ Urd's own set comes first, read from the code. Then come the sets of 19 builders
 
 ### Urd's own set
 
-Read from `template/assets/engine/0.7.4/preview-edit.js` and `editor/src/App.svelte` on 11 October 2026, and from `template/assets/engine/0.7.7/preview-edit.js` and `editor/src/menu/state.svelte.js` on 19 October 2026 (code). Ctrl means Ctrl or Cmd. The structural keys act on the desktop view only.
+Read from `template/assets/engine/0.7.4/preview-edit.js` and `editor/src/App.svelte` on 11 October 2026, and from `template/assets/engine/0.7.7/preview-edit.js` and `editor/src/menu/state.svelte.js` on 19 October 2026, and from `template/assets/engine/0.7.7/preview-edit.js`, `editor/src/state/shell.svelte.js` and `editor/src/menu/` on 28 October 2026 (code). Ctrl means Ctrl or Cmd. The structural keys act on the desktop view only.
 
 | Action | Keys | Notes |
 |---|---|---|
@@ -380,14 +381,16 @@ Read from `template/assets/engine/0.7.4/preview-edit.js` and `editor/src/App.sve
 | Multi-select | Shift+click; drag on empty section surface for a marquee | The marquee stays within the section it started in |
 | Free placement during a drag or resize | Hold Ctrl/⌘ | Snapping and smart guides are off while Ctrl/⌘ is held; Shift holds a move to one axis (0.7.10, 14 October 2026) |
 | Rotate | 15° steps by default; Shift gives 1° | |
-| Section height | Drag the section boundary; Shift gives a free height | |
+| Section height | Drag the section boundary; Ctrl/⌘ gives a free height | The top edge too |
 | Right-click menu | Right click on a block or a section's surface; the ContextMenu key or Shift+F10 | From the keyboard it opens on the selected block |
 | Copy and paste a style | Ctrl+Alt+C, Ctrl+Alt+V | The animation travels with the style |
 | To the front, to the back | Ctrl+Shift+Up, Ctrl+Shift+Down | Also in the right-click menu |
 | Element menu areas | 1, 2, 3 for Content, Style and Placement; / to the menu's search | Also on the canvas with a block selected; Escape empties the search, then closes |
 | Resize keeping the ratio | Shift while resizing | Image, video, shape and icon |
+| Link in a text | Ctrl+K; Ctrl+Shift+K removes it | Inside the text being edited (0.7.27.6) |
+| The shortcut sheet | ? | On the page and in the panels, outside a field; also from the Urd settings and the setup wizard (0.7.10.12) |
 
-Not in Urd: cut (Ctrl+X), select all, Tab to the next block, keys for the device views, a key for publishing, text shortcuts of Urd's own (heading levels, alignment, link), and a list of the shortcuts in the editor (E21).
+Not in Urd: cut (Ctrl+X), select all, Tab to the next block, keys for the device views, a key for publishing, and text shortcuts of Urd's own beyond the link (heading levels, alignment).
 
 ### The builders' sets
 
@@ -526,7 +529,7 @@ The conventions below recur across the 19 sets. A site owner who has used one bu
 | Delete or Backspace deletes | Nearly all | Same |
 | Esc deselects or closes | Webflow, Wix Studio, Wix Harmony, WordPress, Bricks, Breakdance, Webstudio | Same |
 | Ctrl/⌘+K opens a command palette or quick find | WordPress, Framer, Webflow, Bricks, Divi, Duda, Webstudio (Elementor uses Ctrl+E for its Finder and Ctrl+K for Site Settings) | None (E1) |
-| Ctrl/⌘+K makes a link inside text | WordPress, Squarespace; WordPress resolves the clash with the palette by context | None (E33) |
+| Ctrl/⌘+K makes a link inside text | WordPress, Squarespace; WordPress resolves the clash with the palette by context | Same, inside a text (0.7.27.6) |
 | Arrows nudge 1 px, Shift+arrows 10 px | Wix Studio, Wix Harmony, Wix Editor; Excalidraw in code uses 1 and 5 px [constants.ts](https://github.com/excalidraw/excalidraw/blob/master/packages/common/src/constants.ts) (code) | Grid step, and 1 px with Shift (E32) |
 | Ctrl/⌘+arrows resize | Squarespace, Readymag, Figma Sites (Wix Harmony uses Alt+arrows) | None (E30) |
 | Alt/Option+drag duplicates | Webflow, Wix Studio, Wix Harmony, Wix Editor | None (E30) |
@@ -535,7 +538,7 @@ The conventions below recur across the 19 sets. A site owner who has used one bu
 | Ctrl/⌘+G groups | Wix Harmony, WordPress | None (grouping is watched, FEATURES.md) |
 | Ctrl/⌘+A selects all | Squarespace, WordPress (again for the parent), Wix Harmony, Tilda, Webstudio (siblings) | None (E30) |
 | Tab / Shift+Tab to the next or previous element | Wix Harmony, Squarespace, Framer, Figma Sites | None (E30, E9) |
-| A shortcut list on Shift+/ or ? | Webflow Shift+/, Wix Harmony Shift+/ (help), Wix Editor ?, Divi ?, Breakdance ⌘⇧/, Elementor Ctrl+?, Figma Ctrl+Shift+?; Wix Studio and Shopify Ctrl+/, Webstudio ⌘/, WordPress Shift+Alt+H | None (E21) |
+| A shortcut list on Shift+/ or ? | Webflow Shift+/, Wix Harmony Shift+/ (help), Wix Editor ?, Divi ?, Breakdance ⌘⇧/, Elementor Ctrl+?, Figma Ctrl+Shift+?; Wix Studio and Shopify Ctrl+/, Webstudio ⌘/, WordPress Shift+Alt+H | «?» (E21) |
 | Ctrl/⌘ +, - and 0 zoom | Wix Studio, Wix Harmony, Divi, Readymag, Figma Sites | A zoom control in the preview, with Fit; no keys |
 | Number keys or Ctrl+J switch the device view | Webflow 1-4, Carrd Alt+1-3, Tilda ⌘1-5, Webstudio, Wix Ctrl+J | None |
 | Ctrl/⌘+S saves or publishes | Wix, WordPress, Elementor, Bricks, Breakdance, Divi, Tilda, Carrd, Duda, Shopify | None: drafts save themselves in the browser, and publishing is a button |
@@ -579,7 +582,6 @@ These are delivery recommendations: how Urd should offer what it has. They follo
 | E18 | **AI generator in the editor** for a site, page, section or block | Wix Harmony [AI tools](https://support.wix.com/en/article/wix-harmony-editor-about-the-ai-tools) (primary); Duda [Copilot](https://duda.co/product-updates/from-prompt-to-published-meet-copilot-in-editor-2-0) (primary); Divi 5.12 [release notes](https://www.elegantthemes.com/blog/divi-resources/divi-5-12-release-notes) (primary) | Low: it needs an external service and a key in the core | Not taken: no generator; AI goes through the local MCP server ([ADR-0017](../adr/0017-ai-via-local-mcp-server.md)) |
 | E19 | **The local MCP server as Urd's AI delivery:** typed abilities over the schema, writes that land as uncommitted files for the site owner to review, commit and publish (ADR-0017), and agent instructions built from the theme tokens and returned by a read tool | Framer 3.0 external agents on branches [Framer branches](https://www.framer.com/help/articles/how-to-use-branches-in-framer/) (primary); Webflow MCP v1.3 [changelog](https://developers.webflow.com/home/changelog/2026/5/21) (primary); WordPress MCP Adapter [developer.wordpress.org](https://developer.wordpress.org/news/2026/02/from-abilities-to-ai-agents-introducing-the-wordpress-mcp-adapter/) (primary); WordPress.com drafts by default [TechCrunch](https://www.techcrunch.com/2026/03/20/wordpress-com-now-lets-ai-agents-write-and-publish-posts-and-more/) (secondary) | High: the repo is the site, content is JSON with schemas, and `guard.js` is already the permission model (ADR-0017) | Taken: v0.8 MCP read, v0.9 MCP write |
 | E20 | **Richer empty states:** preset suggestions in an empty section and on an empty page | Wix Harmony template- or AI-first start [about Harmony](https://support.wix.com/en/article/about-the-new-wix-harmony-editor) (primary); empty-state components in [Untitled UI](https://www.untitledui.com/react/components) and [shadcn/ui](https://ui.shadcn.com/docs/components) (primary) | High, low effort: the presets and thumbnails exist | Taken: 0.7.10 Intuitiveness and editor polish |
-| E21 | **Shortcut cheat sheet** on Shift+/ and from the help chip, listing Urd's keys | Webflow Shift+/ [shortcuts](https://help.webflow.com/hc/en-us/articles/33961359609875) (primary, search extract); WordPress Shift+Alt+H [shortcuts](https://wordpress.org/documentation/article/keyboard-shortcuts-block-editor/) (primary); Wix Studio Ctrl+/ [shortcuts](https://support.wix.com/en/article/studio-editor-keyboard-shortcuts) (primary); 14 of the 24 builders in all | High, low effort: today the keys are found only by accident | Taken: 0.7.10 Intuitiveness and editor polish |
 | E22 | **Comments and notes on blocks,** with mentions | WordPress Notes [WPBeginner](https://www.wpbeginner.com/news/whats-new-in-wordpress-6-9/) (secondary), [Roadmap to 7.1](https://make.wordpress.org/core/2026/06/19/roadmap-to-7-1/) (primary); Webflow comment-only links [Conf 2025](https://community.webflow.com/updates/post/webflow-conf-2025-recap-everything-we-announced-7cOUvmz6EGiMlL4) (primary) | Medium for a board with several editors; it needs stored threads beyond the browser drafts | Watch: After v1.0 PR per draft (review comments on the pull request) |
 | E23 | **Visual revision diff:** what a publish changed, shown on the page | WordPress 7.0 [Gutenberg Times](https://gutenbergtimes.com/wordpress-7-0-source-of-truth/) (secondary); 7.1 shareable revision URLs [Roadmap to 7.1](https://make.wordpress.org/core/2026/06/19/roadmap-to-7-1/) (primary) | Medium: git holds every publish, and «Undo the publish» exists | Watch: After v1.0 PR per draft (a diff per draft) |
 | E24 | **Content-only editing mode:** text and pictures editable, layout locked | WordPress 7.0 content-only patterns [Gutenberg Times](https://gutenbergtimes.com/wordpress-7-0-source-of-truth/) (secondary); Webflow Marketer role [releases.sh](https://releases.sh/webflow/webflow-product-updates.md) (secondary); Framer content-editor seats [framer.com/blog](https://www.framer.com/blog/ai-credits-simpler-plans-and-lower-prices/) (primary); Framer On-Page Editing [updates](https://framer.com/updates/on-page-editing) (primary) | Medium-high: protects the design when the board changes every year | Taken: v0.9 content-only editing mode (to be weighed) |
@@ -601,6 +603,7 @@ These are delivery recommendations: how Urd should offer what it has. They follo
 
 | ID | What | Who does it (with source) | Fit for Urd | Status |
 |---|---|---|---|---|
+| E21 | **Shortcut cheat sheet** on Shift+/ and from the help chip, listing Urd's keys | Webflow Shift+/ [shortcuts](https://help.webflow.com/hc/en-us/articles/33961359609875) (primary, search extract); WordPress Shift+Alt+H [shortcuts](https://wordpress.org/documentation/article/keyboard-shortcuts-block-editor/) (primary); Wix Studio Ctrl+/ [shortcuts](https://support.wix.com/en/article/studio-editor-keyboard-shortcuts) (primary); 14 of the 24 builders in all | High, low effort: today the keys are found only by accident | Delivered 0.7.10.12: on «?» (Shift+/ on a US layout), and from the Urd settings and the setup wizard in place of a help chip |
 | E31 | **Snapping rework:** a snap threshold scaled by the preview zoom, Ctrl/⌘ to toggle snapping during a drag (in place of Shift), and equal-gap snapping between blocks | Excalidraw [snapping.ts](https://github.com/excalidraw/excalidraw/blob/master/packages/excalidraw/snapping.ts) (code); tldraw [SnapManager.ts](https://github.com/tldraw/tldraw/blob/main/packages/editor/src/lib/editor/managers/SnapManager/SnapManager.ts), [BoundsSnaps.ts](https://github.com/tldraw/tldraw/blob/main/packages/editor/src/lib/editor/managers/SnapManager/BoundsSnaps.ts) (code) | High: Urd's frames are free-canvas territory, like tldraw and Excalidraw | Delivered 0.7.26.3 |
 | E34 | Content/Style split of the inspector, with the panel language rolled out | Elementor [tabs](https://developers.elementor.com/docs/editor/elementor-tabs/) (primary); Bricks [interface tour](https://academy.bricksbuilder.io/getting-started/interface-tour/) (primary) | Very high ([ADR-0016](../adr/0016-panel-language.md)) | Delivered 0.6.6.6.2 |
 | E35 | Slash command and a searchable insert palette | Ghost [cards](https://ghost.org/help/cards/) (primary); WordPress [shortcuts](https://wordpress.org/documentation/article/keyboard-shortcuts-block-editor/) (primary) | High | Delivered 0.6.7.6 (search) and 0.6.7.7 (slash on the canvas) |

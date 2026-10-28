@@ -8,6 +8,7 @@ import { liftSiteFile, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
 import { createDraftStore } from '../lib/draftStore.js';
 import { tick } from 'svelte';
 import { ICONS } from '../lib/icons.js';
+import { opensShortcuts } from '../lib/shortcuts.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -136,6 +137,17 @@ function onPointerdownWindow(e) {
 function onKeydown(e) {
   if (e.key === 'Escape' && pageState.blockMenu && !(e.target instanceof Element && e.target.closest('dialog'))) {
     pageState.blockMenu = null;
+    return;
+  }
+  // «?» opens the shortcut sheet wherever in the panels it is not typed: a toggle, a slider or a colour keeps the focus after a choice and takes no text, so it lets the key through, and a dialog over the editor keeps it.
+  const focus = e.target;
+  const typed = focus instanceof HTMLElement
+    && (focus.isContentEditable || focus.tagName === 'TEXTAREA' || focus.tagName === 'SELECT'
+      || (focus.tagName === 'INPUT' && !['checkbox', 'radio', 'range', 'color'].includes(focus.type))
+      || Boolean(focus.closest('dialog, [role="dialog"]')));
+  if (opensShortcuts(e, typed)) {
+    e.preventDefault();
+    openShortcuts();
     return;
   }
   if (!(e.ctrlKey || e.metaKey)) return;
@@ -454,6 +466,21 @@ function setAddBlockMenu(v) {
 
 let settingsEl = $state(null);
 
+/** The shortcut sheet (lib/ShortcutSheet.svelte): opened by «?» in the panels and on the page, from the Urd settings and from the setup wizard. */
+let shortcutsOpen = $state(false);
+
+/**
+ * Opens the shortcut sheet over the editor.
+ * It stays shut while a confirmation or the icon editor is open, overlays that answer Escape themselves, and it closes the light menus first (the Urd settings, a tool menu, a page's menu), which close on any Escape or outside press.
+ */
+function openShortcuts() {
+  if (confirmBox || siteState.iconEditorImage) return;
+  settingsOpen = false;
+  toolMenu = null;
+  siteState.pageMenuFor = null;
+  shortcutsOpen = true;
+}
+
 /* The top bar folds in fixed steps instead of wrapping to two rows.
    Most steps are pure CSS at the bottom of the file, but the three that
    swap a tool cluster for a menu change STRUCTURE and must therefore
@@ -726,6 +753,9 @@ export const shellState = {
   setLayoutPicker,
   get addBlockMenuPref() { return addBlockMenuPref; },
   setAddBlockMenu,
+  get shortcutsOpen() { return shortcutsOpen; },
+  set shortcutsOpen(v) { shortcutsOpen = v; },
+  openShortcuts,
   get settingsEl() { return settingsEl; },
   set settingsEl(v) { settingsEl = v; },
   FOLD_MQ,

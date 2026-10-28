@@ -2262,9 +2262,12 @@ function initTextToolbar() {
 
   // ---------------- ROW 2: character formatting and paragraph ----------------
   startGroup(row2);
-  btn(`<b>${ta('format.boldLetter')}</b>`, ta('tt.bold'), () => exec('bold'), 'bold');
-  btn(`<i>${ta('format.italicLetter')}</i>`, ta('tt.italic'), () => exec('italic'), 'italic');
-  btn(`<u>${ta('format.underlineLetter')}</u>`, ta('tt.underline'), () => exec('underline'), 'underline');
+  // The three are kept for their keys (Ctrl+B, Ctrl+I and Ctrl+U below), which press them.
+  const formatButtons = {
+    b: btn(`<b>${ta('format.boldLetter')}</b>`, ta('tt.bold'), () => exec('bold'), 'bold'),
+    i: btn(`<i>${ta('format.italicLetter')}</i>`, ta('tt.italic'), () => exec('italic'), 'italic'),
+    u: btn(`<u>${ta('format.underlineLetter')}</u>`, ta('tt.underline'), () => exec('underline'), 'underline'),
+  };
   btn(`<s>${ta('format.strikeLetter')}</s>`, ta('tt.strike'), () => exec('strikeThrough'), 'strikeThrough');
   btn('<span class="urd-tt-supsub">A<sup>2</sup></span>', ta('tt.superscript'), () => exec('superscript'), 'superscript');
   btn('<span class="urd-tt-supsub">A<sub>2</sub></span>', ta('tt.subscript'), () => exec('subscript'), 'subscript');
@@ -2396,6 +2399,16 @@ function initTextToolbar() {
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
     reposition();
   };
+
+  // Ctrl+B, Ctrl+I and Ctrl+U (⌘ on a Mac) press the toolbar's own bold, italic and underline, so the keys and the buttons make the same text.
+  document.addEventListener('keydown', (event) => {
+    if (!activeText || !(event.target instanceof Node) || !activeText.contains(event.target)) return;
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
+    const button = formatButtons[event.key.toLowerCase()];
+    if (!button) return;
+    event.preventDefault();
+    button.click();
+  });
 
   // Ctrl+K (⌘K) opens the link editor on the selection, and Ctrl+Shift+K takes the link away.
   document.addEventListener('keydown', (event) => {
@@ -3255,6 +3268,13 @@ window.addEventListener('keydown', (event) => {
     if (isMobile()) return;
     event.preventDefault();
     deleteSelection();
+    return;
+  }
+
+  // «?» asks the editor for its shortcut sheet, which lists every key here and in the panels; a dialog on the page (a calendar event, the basket) keeps the key.
+  if (event.key === '?' && !ctrl && !event.altKey && !(target instanceof Element && target.closest('dialog, [role="dialog"]'))) {
+    event.preventDefault();
+    post({ type: 'urd-shortcuts' });
     return;
   }
 

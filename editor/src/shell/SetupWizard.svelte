@@ -3,6 +3,7 @@
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import ColorPicker from '../lib/ColorPicker.svelte';
+  import { ICONS } from '../lib/icons.js';
   const ed = getContext('urd-editor');
 </script>
 
@@ -20,8 +21,9 @@
       <label title={ta('tip.setup.bg')}>{ta('setup.bgLabel')}
         <ColorPicker value={ed.setupBg} label={ta('setup.bgLabel')} onchange={(hex) => (ed.setupBg = hex)} /></label>
       <p class="panel-hint">{ta('setup.outro')}</p>
-      <p class="panel-hint">{ta('setup.keys')}</p>
       <span class="setup-actions">
+        <!-- The editor's keys stand in the shortcut sheet, one press away -->
+        <button class="ghost setup-keys" title={ta('tip.shortcuts.open')} onclick={ed.openShortcuts}>{@html ICONS.keyboard}<span>{ta('shortcuts.title')}</span></button>
         <button class="ghost" onclick={ed.closeSetup}>{ta('setup.skip')}</button>
         <button class="primary" onclick={ed.applySetup} disabled={!ed.setupName.trim()}>{ta('setup.start')}</button>
       </span>

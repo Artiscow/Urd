@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here. A new delivery gets a «Test batch» section of its own at the top (newest first); items without a batch stand in the remainder list at the bottom. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (reviewed and gathered on 6 October 2026: the calendar batches were merged into one with one item per design).
 
+### Test batch (0.7.10.12): the shortcut sheet
+
+- [ ] Select a block on the page and press ?: the Keyboard shortcuts sheet opens over the editor with seven groups; Esc, the × and a press outside the card each close it, and the arrow keys then move the block again without a click
+- [ ] Press ? in the panels, also right after moving a slider or flipping a toggle: the sheet opens; in a text field, a search field or a text on the page, ? is typed as a character
+- [ ] Urd settings: «Keyboard shortcuts» at the foot opens the sheet and closes the settings
+- [ ] A fresh site's setup wizard: it ends with the name and the colours; «Keyboard shortcuts» at the left of Skip opens the sheet over the wizard, and closing the sheet leaves the wizard as it was
+- [ ] With a confirmation box open (for example when deleting a page), ? does nothing and Esc answers the box alone
+- [ ] The sheet in Norwegian and Turkish: every row and key name translated; a group heading's tooltip says where its keys work, and «Keep the ratio while resizing» names the blocks it holds for
+- [ ] Try a few rows: Ctrl+Shift+↑ puts a block in front, Ctrl+B makes a word bold in a text, Home and End in the right-click menu jump to its first and last item, Enter in the element menu's search goes to the first setting found
+- [ ] «All calendar designs …» from the canvas menu, closed with Esc or the ×, or with a design taken by «Use»: the arrow keys work on the page again without a click
+- [ ] In a text with the text toolbar: Ctrl+B, Ctrl+I and Ctrl+U set bold, italic and underline as the toolbar's buttons do, and light the buttons; in an FAQ question or a table cell they do nothing
+
 ### Test batch (0.7.10.11): one block palette, the «+ New block» menu in two forms, and the Urd settings regrouped
 
 - [ ] The Blocks panel: seven groups (Text, Pictures and media, Lists and facts, Events and places, Contact and sharing, Shop, Shapes and decor), each kind with its picture and no folds; a click adds the block in the view

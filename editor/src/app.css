@@ -428,6 +428,21 @@
     gap: 4px;
   }
 
+  /* The way to the shortcut sheet: its icon, its name and the key that opens it at the right */
+  .settings-keys {
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .settings-keys kbd {
+    margin-left: auto;
+    padding: 0 0.4rem;
+    font: 600 11px/1.5 system-ui, sans-serif;
+    border: 1px solid rgb(255 255 255 / 22%);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+  }
+
   .settings-pop input[type='text'],
   .settings-pop input[type='number'] {
     font: inherit;
@@ -2562,10 +2577,26 @@
     padding: 0 0.6em;
   }
 
+  /* The buttons keep their words on one line and move to a row of their own when the card is narrow */
   .setup-actions {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0.6rem;
+  }
+
+  /* The wizard's way to the shortcut sheet: a quiet link at the left of Skip and Get started */
+  .setup-actions .setup-keys {
+    margin-right: auto;
+    gap: 0.4rem;
+    padding-inline: 0.3rem;
+    font-size: 0.82rem;
+    border-color: transparent;
+    opacity: 0.8;
+  }
+
+  .setup-actions .setup-keys:hover {
+    opacity: 1;
   }
 
   /* Fields inside panel labels must never blow up the width */

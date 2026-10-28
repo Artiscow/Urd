@@ -41,6 +41,7 @@ Skjermen har tre deler:
 - **Tastatur i blokkmenyen**: 1, 2 og 3 velger Innhold, Stil og Plassering, / går til søket, Esc lukker den flytende menyen.
 - **Snappelinjer**: når du drar en blokk nær kanten eller midten av en annen blokk, vises en linje mellom de to og blokken snapper på plass; når avstanden til en nabo blir lik avstanden mellom to naboer, vises avstandene som bånd med tallet i. Linjene gjelder også seksjonen du drar blokken over. Hold Shift for å flytte rett bortover eller rett nedover, og Ctrl (Cmd på Mac) for helt fri plassering uten rutenett og linjer.
 - **Angre**: Ctrl+Z (og Ctrl+Shift+Z for å gjenta) virker på alt: flytting, størrelse, tekst, sletting, seksjoner og grid.
+- **Alle tastene i én liste**: trykk **?** på siden eller i panelene, eller velg **Hurtigtaster** i Urd-innstillingene (tannhjulet nederst i panelvelgeren), for alle tastene redigereren svarer på, gruppert etter hvor de virker.
 
 ### Legge til blokker
 
