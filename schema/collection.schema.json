@@ -51,6 +51,9 @@
               }
             }
           },
+          "requireSize": { "type": "boolean", "description": "Additive from 0.7.10.13 (kind products): «Add to basket» asks for a size first when the product has sizes; omitted = false" },
+          "requireColor": { "type": "boolean", "description": "Additive from 0.7.10.13 (kind products): «Add to basket» asks for a colour first when the product has colours; omitted = false" },
+          "disableUntilChosen": { "type": "boolean", "description": "Additive from 0.7.10.13 (kind products): with requireSize or requireColor, «Add to basket» stands greyed and unpressable until the required choices are made, in place of asking for them when pressed; omitted = false" },
           "imageStyle": {
             "type": "object",
             "description": "Non-destructive image style (additive from v0.6): focus point, filters, fit, shape, zoom, rounding",

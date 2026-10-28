@@ -8,7 +8,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
-  isEmail, orderLines, orderSummary, buildOrderBody, buildOrderMailto, buildOrderPayload, altCardImage,
+  isEmail, orderLines, orderSummary, buildOrderBody, buildOrderMailto, buildOrderPayload,
   methodText, shownMethods, paymentsOf, orderRecord, saveOrder, readOrder, ORDER_KEY,
 } = await engineImport('shop.js');
 
@@ -65,13 +65,6 @@ test('formatPrice: integers without decimals, otherwise a comma, the currency wo
   assert.equal(formatPrice('tull'), '');
 });
 
-test('altCardImage: the first color image differing from the main image, otherwise null', () => {
-  assert.equal(altCardImage({ image: '/a.webp', colors: [{ name: 'Rød' }, { name: 'Blå', image: '/b.webp' }] }), '/b.webp');
-  assert.equal(altCardImage({ image: '/a.webp', colors: [{ name: 'Rød', image: '/a.webp' }] }), null);
-  assert.equal(altCardImage({ colors: [{ name: 'Blå', image: '/b.webp' }] }), '/b.webp');
-  assert.equal(altCardImage({ image: '/a.webp' }), null);
-  assert.equal(altCardImage(null), null);
-});
 
 test('isEmail: common addresses accepted, obvious errors rejected', () => {
   assert.ok(isEmail('kari@forening.no'));

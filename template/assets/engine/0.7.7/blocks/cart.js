@@ -65,6 +65,7 @@ function renderDrawer(body, props, currency) {
     list.appendChild(row);
   }
   body.appendChild(list);
+  body.appendChild(emptyRow(body));
 
   const foot = el2('div', 'urd-cart-total');
   foot.appendChild(el2('span', null, t('shop.total')));
@@ -77,6 +78,44 @@ function renderDrawer(body, props, currency) {
     checkout.href = props.href.trim();
     body.appendChild(checkout);
   }
+}
+
+/**
+ * «Empty the basket» under the lines. It asks once in its own place, since the visitor cannot take it back:
+ * «Empty it» empties the whole basket (the drawer then shows its empty state, and the focus goes to the
+ * drawer's close button), and «Keep it» puts the button back with the focus on it.
+ * @param {HTMLElement} body The drawer's body, rebuilt on every basket change
+ */
+function emptyRow(body) {
+  const row = el2('div', 'urd-cart-emptyrow');
+  const ask = () => {
+    row.textContent = '';
+    row.appendChild(el2('span', 'urd-cart-emptyask', t('shop.emptyCartAsk')));
+    const yes = el2('button', 'urd-cart-emptybtn urd-cart-emptyyes', t('shop.emptyCartYes'));
+    yes.type = 'button';
+    yes.addEventListener('click', () => {
+      const closer = body.closest('dialog')?.querySelector('.urd-cart-close');
+      writeCart([]);
+      closer?.focus();
+    });
+    const no = el2('button', 'urd-cart-emptybtn', t('shop.emptyCartNo'));
+    no.type = 'button';
+    no.addEventListener('click', () => {
+      offer();
+      row.querySelector('button')?.focus();
+    });
+    row.append(yes, no);
+    no.focus();
+  };
+  const offer = () => {
+    row.textContent = '';
+    const btn = el2('button', 'urd-cart-emptybtn', t('shop.emptyCart'));
+    btn.type = 'button';
+    btn.addEventListener('click', ask);
+    row.appendChild(btn);
+  };
+  offer();
+  return row;
 }
 
 /**

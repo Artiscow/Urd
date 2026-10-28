@@ -2,6 +2,24 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here. A new delivery gets a «Test batch» section of its own at the top (newest first); items without a batch stand in the remainder list at the bottom. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (reviewed and gathered on 6 October 2026: the calendar batches were merged into one with one item per design).
 
+### Test batch (0.7.10.13): the Collections panel, the product's choices, the product cards' rows and «Empty the basket»
+
+- [ ] The Collections panel: News and Products as rows with their kind and count; a click opens a collection with a grow and closes it with a shrink, and two can stand open together; no line at the left edge anywhere (the panel selector, the Pages panel, the rows)
+- [ ] The entries as cards like the Nav panel's items: the grip, the title and the date or price, the arrows on hover, after Tab reaches the row's chevron, and always on a touch screen; an entry opens with a grow
+- [ ] Drag a product by its head: a dashed clone shows where it lands, any part of the dragged box over another row is enough, Escape cancels, one Ctrl+Z puts it back, and the new order shows on the Shop page
+- [ ] News: the dated entries stand newest first with no grip or arrows (the tooltip says why); a new entry gets today's date and lands first; an entry without a date can be moved among the undated ones
+- [ ] An open product: the picture at 112 px with «Change image» and «Remove image»; Price, Member price and Badge on one grid; the sizes as chips, several added at once divided by commas with Enter and each taken away with its ×; the colours across the card, each with its picture button
+- [ ] Colours: «+ Colour» at the top adds a colour first in the list, its name selected so typing replaces it; a name another colour has too is framed in amber with a warning sign and a tooltip
+- [ ] «A size must be chosen» under the Sizes heading and «A colour must be chosen» under Colours, each only while the product has them; «Grey out «Add to basket» until chosen» indented under the first requirement that is on
+- [ ] On the Shop page, a product that requires a size: «Add to basket» without one adds nothing, frames the sizes in red with «Choose a size» under them, and puts the focus on the first size; with «Grey out» on, the button stands greyed with the missing choice in its tooltip and does nothing until it is chosen; the quick view behaves the same
+- [ ] Two colours with the same name, the second with a picture: each chip shows its own picture and is pressed on its own
+- [ ] A product card under the mouse keeps its picture; a mouse resting on a colour chip with a picture shows that picture, and leaving gives the chosen one back; a tap on a phone chooses without a preview
+- [ ] The product cards: title, text, price, chips and «Add to basket» stand at one height across a row; a card without colours leaves that row empty instead of stretching; a card's red request line never stretches another card's chips; the «+ Product» card in the editor stretches nothing; the cards never run into the section below
+- [ ] The product cards block's menu: «+ New product» and «Edit the product catalogue» stacked, each on one line; «Edit the product catalogue» opens the Collections panel with the catalogue open, also after it was folded
+- [ ] The Nav panel's menu items, which share the entries' rows: a long name and its link still read well side by side, and the arrows show on hover, after Tab reaches the row, and always on a touch screen
+- [ ] A product with a picture and a badge: the badge stands just inside the picture's top left corner
+- [ ] The basket drawer (the menu's basket and the basket block): «Empty the basket» under the lines asks «Empty the whole basket?»; «Keep it» keeps everything with the focus back on the button, «Empty it» empties the basket, shows the empty state, sets the count to 0 and puts the focus on the close button
+
 ### Test batch (0.7.10.12): the shortcut sheet
 
 - [ ] Select a block on the page and press ?: the Keyboard shortcuts sheet opens over the editor with seven groups; Esc, the × and a press outside the card each close it, and the arrow keys then move the block again without a click

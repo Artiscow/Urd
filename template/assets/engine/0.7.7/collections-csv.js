@@ -7,7 +7,8 @@
  * The format is RFC 4180-like: comma separated, fields containing comma/quote/
  * newline are wrapped in quotes ("" is an escaped quote). The first row holds
  * the column names. The list fields sizes and colors are separated by «|»;
- * color images are not carried in the CSV (they are set in the panel).
+ * color images are not carried in the CSV (they are set in the panel), nor a product's
+ * requireSize, requireColor and disableUntilChosen.
  * An entry's link to a page or a spot on it is written as the address the page draws (resolveLink), and an address that names a page of the register is read back as that page and its spot; a new tab and the rel words are not carried.
  */
 

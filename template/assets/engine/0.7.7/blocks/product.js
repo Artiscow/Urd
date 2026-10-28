@@ -23,7 +23,7 @@ import { applyEntryImageStyle } from './collection.js';
 import { renderCardAnimations } from '../render.js';
 import { stripActiveContent, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
-import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, altCardImage } from '../shop.js';
+import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice } from '../shop.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
@@ -61,24 +61,98 @@ function richNode(tag, className, entry, field, collection, editable) {
   return node;
 }
 
-/** Choice chips (size/color): one row of buttons where a single choice can be active. */
-function choiceRow(className, labels, onPick) {
+/**
+ * A row of choice chips (the sizes, the colours). A chip is its own choice by its place in the row, so two choices
+ * that read the same stay two: the picture, the pressed chip and the preview follow the chip, never its words.
+ * @param {string} className
+ * @param {string[]} labels
+ * @param {(index: number|null) => void} onPick The chosen chip's place, or null when the choice is cleared
+ * @param {((index: number|null) => void)|null} [onPreview] The chip under the mouse, or null when the mouse leaves
+ */
+function choiceRow(className, labels, onPick, onPreview = null) {
   const row = el2('div', `urd-product-options ${className}`);
   let active = null;
-  for (const label of labels) {
+  labels.forEach((label, index) => {
     const btn = el2('button', 'urd-product-chip', label);
     btn.type = 'button';
     btn.setAttribute('aria-pressed', 'false');
     btn.addEventListener('click', () => {
-      // Clicking the active choice clears it (choosing is optional).
-      const next = active === label ? null : label;
+      // Clicking the active choice clears it.
+      const next = active === index ? null : index;
       active = next;
-      for (const other of row.children) other.setAttribute('aria-pressed', String(other === btn && next !== null));
+      for (const other of row.querySelectorAll('.urd-product-chip')) other.setAttribute('aria-pressed', String(other === btn && next !== null));
+      // A choice made answers a request for it (needChoice).
+      markNeed(row, null);
       onPick(next);
     });
+    // A mouse resting on a choice previews it (a colour's picture), and leaving gives the chosen one back.
+    // The pointerType guard keeps a tap on a touch screen from previewing and choosing in one press.
+    if (onPreview) {
+      btn.addEventListener('pointerenter', (event) => { if (event.pointerType === 'mouse') onPreview(index); });
+      btn.addEventListener('pointerleave', (event) => { if (event.pointerType === 'mouse') onPreview(null); });
+    }
     row.appendChild(btn);
-  }
+  });
   return row;
+}
+
+/** The first choice the product asks for that is still open, as the words that ask for it; null when none is. */
+function openChoice(entry, rows, choice) {
+  if (rows.sizes && entry.requireSize === true && choice.size == null) return t('shop.chooseSize');
+  if (rows.colors && entry.requireColor === true && choice.color == null) return t('shop.chooseColor');
+  return null;
+}
+
+/**
+ * The buy button of a product that greys it out until its choices are made (its disableUntilChosen): unavailable
+ * with the missing choice in its tooltip, and available again once none is open. aria-disabled rather than
+ * disabled, so the keyboard and a screen reader still reach the button and hear why it waits.
+ */
+function holdBuy(buy, entry, rows, choice) {
+  const open = entry.disableUntilChosen === true ? openChoice(entry, rows, choice) : null;
+  buy.classList.toggle('urd-product-buy-wait', Boolean(open));
+  if (open) {
+    buy.setAttribute('aria-disabled', 'true');
+    buy.title = open;
+  } else {
+    buy.removeAttribute('aria-disabled');
+    buy.removeAttribute('title');
+  }
+}
+
+/** A row's request for a choice: the words under its chips (read out once, role alert), or none. */
+function markNeed(row, text) {
+  row.classList.toggle('urd-product-missing', Boolean(text));
+  let note = row.querySelector('.urd-product-need');
+  if (!text) { note?.remove(); return; }
+  if (!note) {
+    note = el2('span', 'urd-product-need');
+    note.setAttribute('role', 'alert');
+    row.appendChild(note);
+  }
+  note.textContent = text;
+}
+
+/**
+ * Whether every choice the product asks for is made (its own requireSize and requireColor, for the
+ * options it has). An open one is asked for under its row, and the first takes the focus.
+ * @param {{ requireSize?: boolean, requireColor?: boolean }} entry
+ * @param {{ sizes: HTMLElement|null, colors: HTMLElement|null }} rows
+ * @param {{ size: unknown, color: unknown }} choice
+ */
+function choicesMade(entry, rows, choice) {
+  const asks = [
+    [rows.sizes, entry.requireSize === true && choice.size == null, 'shop.chooseSize'],
+    [rows.colors, entry.requireColor === true && choice.color == null, 'shop.chooseColor'],
+  ];
+  let first = null;
+  for (const [row, open, key] of asks) {
+    if (!row) continue;
+    markNeed(row, open ? t(key) : null);
+    if (open && !first) first = row;
+  }
+  first?.querySelector('.urd-product-chip')?.focus();
+  return !first;
 }
 
 /** Price row: shown only when a price is set (a new product must not show "0 kr"). */
@@ -93,14 +167,19 @@ function priceRow(entry, currency) {
   return row;
 }
 
-/** Buy button with an added-to-cart receipt; getChoice() reads the current variant choice. */
-function buyButton(entry, currency, colors, getChoice) {
+/**
+ * The buy button, with an «added» receipt on the press. getChoice gives the chosen size's words and the chosen colour ({name, image}) or null;
+ * ready says whether the choices the product asks for are made, and asks for the open ones when not.
+ * A button held by holdBuy does nothing.
+ */
+function buyButton(entry, getChoice, ready) {
   const buy = el2('button', 'urd-product-buy', t('shop.addToCart'));
   buy.type = 'button';
   buy.addEventListener('click', () => {
-    const { size, color } = getChoice();
-    const variant = variantLabel(size, color);
-    const chosen = colors.find((c) => c.name === color);
+    if (buy.getAttribute('aria-disabled') === 'true') return;
+    if (!ready()) return;
+    const { size, color: chosen } = getChoice();
+    const variant = variantLabel(size, chosen?.name ?? null);
     writeCart(cartAdd(readCart(), {
       key: itemKey(entry.id, variant),
       id: entry.id,
@@ -174,15 +253,29 @@ function openQuickView(card, entry, props) {
     const price = priceRow(entry, props.currency);
     if (price) info.appendChild(price);
     const sizes = Array.isArray(entry.sizes) ? entry.sizes.filter(Boolean) : [];
-    if (sizes.length) info.appendChild(choiceRow('urd-product-sizes', sizes, (v) => { size = v; }));
-    if (colors.length) {
-      info.appendChild(choiceRow('urd-product-colors', colors.map((c) => c.name), (name) => {
-        color = name;
-        const picked = colors.find((c) => c.name === name);
-        if (mainImg) mainImg.src = picked?.image || images[0];
-      }));
+    const rows = { sizes: null, colors: null };
+    // The buy button follows every choice (holdBuy); it is set once the button stands.
+    let sync = () => {};
+    if (sizes.length) {
+      rows.sizes = choiceRow('urd-product-sizes', sizes, (i) => { size = i; sync(); });
+      info.appendChild(rows.sizes);
     }
-    info.appendChild(buyButton(entry, props.currency, colors, () => ({ size, color })));
+    if (colors.length) {
+      // The picture shown: the colour previewed, else the colour chosen, else the entry's own.
+      const show = (i) => { if (mainImg) mainImg.src = (i == null ? null : colors[i]?.image) || images[0]; };
+      rows.colors = choiceRow('urd-product-colors', colors.map((c) => c.name), (i) => {
+        color = i;
+        show(i);
+        sync();
+      }, (i) => show(i ?? color));
+      info.appendChild(rows.colors);
+    }
+    const buy = buyButton(entry,
+      () => ({ size: size == null ? null : sizes[size], color: color == null ? null : colors[color] }),
+      () => choicesMade(entry, rows, { size, color }));
+    sync = () => holdBuy(buy, entry, rows, { size, color });
+    sync();
+    info.appendChild(buy);
     body.appendChild(info);
     dialog.appendChild(body);
 
@@ -213,18 +306,6 @@ function renderCard(entry, props, editable, preview) {
     wrap = el2('span', 'urd-collection-imgwrap urd-product-image');
     wrap.appendChild(img);
     applyEntryImageStyle(wrap, entry);
-    // Secondary image (the first color image): fades in on hover (CSS-first,
-    // ADR-0011); gives way when a color choice with its own image is active.
-    const alt = altCardImage(entry);
-    if (alt) {
-      const altImg = document.createElement('img');
-      altImg.src = alt;
-      altImg.alt = '';
-      altImg.loading = 'lazy';
-      altImg.draggable = false;
-      altImg.className = 'urd-product-image-alt';
-      wrap.appendChild(altImg);
-    }
     card.appendChild(wrap);
   }
   if (entry.badge) {
@@ -238,20 +319,34 @@ function renderCard(entry, props, editable, preview) {
   const price = priceRow(entry, props.currency);
   if (price) card.appendChild(price);
 
+  // The choices are kept by the chip's place (choiceRow), so a picture belongs to its own chip.
+  const rows = { sizes: null, colors: null };
+  // The buy button follows every choice (holdBuy); it is set once the button stands.
+  let sync = () => {};
   const sizes = Array.isArray(entry.sizes) ? entry.sizes.filter(Boolean) : [];
-  if (sizes.length) card.appendChild(choiceRow('urd-product-sizes', sizes, (v) => { chosenSize = v; }));
+  if (sizes.length) {
+    rows.sizes = choiceRow('urd-product-sizes', sizes, (i) => { chosenSize = i; sync(); });
+    card.appendChild(rows.sizes);
+  }
 
   const colors = Array.isArray(entry.colors) ? entry.colors.filter((c) => c?.name) : [];
   if (colors.length) {
-    card.appendChild(choiceRow('urd-product-colors', colors.map((c) => c.name), (name) => {
-      chosenColor = name;
-      const picked = colors.find((c) => c.name === name);
-      if (img) img.src = picked?.image || baseImage;
-      wrap?.classList.toggle('urd-product-color-selected', Boolean(picked?.image));
-    }));
+    // The card's picture: the colour previewed under the mouse, else the colour chosen, else the entry's own.
+    const show = (i) => { if (img) img.src = (i == null ? null : colors[i]?.image) || baseImage; };
+    rows.colors = choiceRow('urd-product-colors', colors.map((c) => c.name), (i) => {
+      chosenColor = i;
+      show(i);
+      sync();
+    }, (i) => show(i ?? chosenColor));
+    card.appendChild(rows.colors);
   }
 
-  card.appendChild(buyButton(entry, props.currency, colors, () => ({ size: chosenSize, color: chosenColor })));
+  const buy = buyButton(entry,
+    () => ({ size: chosenSize == null ? null : sizes[chosenSize], color: chosenColor == null ? null : colors[chosenColor] }),
+    () => choicesMade(entry, rows, { size: chosenSize, color: chosenColor }));
+  sync = () => holdBuy(buy, entry, rows, { size: chosenSize, color: chosenColor });
+  sync();
+  card.appendChild(buy);
 
   // Quick view for visitors: the image and the title open the detail view.
   // In the editor clicks belong to editing (click-and-type), so nothing is wired
@@ -404,6 +499,8 @@ export const productBlock = {
       }
       const cards = entries.map((entry) => renderCard(entry, props, editable, Boolean(ctx.preview)));
       if (editable) cards.forEach((card, i) => wireEntryOpening(card, el, props.collection, entries[i].id));
+      // The cards share their rows (base.css, subgrid); the picture's row exists only while a card has a picture.
+      grid.classList.toggle('urd-product-pictures', entries.some((entry) => entry.image));
       grid.append(...cards);
       host.appendChild(grid);
 

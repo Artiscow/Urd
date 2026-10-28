@@ -10676,6 +10676,62 @@ body.urd-mobile .urd-cal-note {
   width: 100%;
 }
 
+/* The cards share their rows across the list (subgrid): the picture, the words, the price, the
+   sizes, the colours and the buy button stand at one height in every card of a row, and a card
+   with no sizes or colours leaves that row empty rather than stretching what it has. The badge
+   shares the title's row, above the title's words, or stands over the picture. The picture's
+   row exists only while a card in the list has a picture (urd-product-pictures, product.js).
+   A browser without subgrid shows each card as its own column. */
+@supports (grid-template-rows: subgrid) {
+  .urd-product-cardlist > .urd-product-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: subgrid;
+    grid-row: span 6;
+    align-content: start;
+  }
+
+  /* One column: the badge and the title share a row, and neither may open a second column */
+  .urd-product-cardlist > .urd-product-card > * {
+    grid-column: 1;
+  }
+
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card {
+    grid-row: span 7;
+  }
+
+  /* Anything else in the list (the editor's «+ Product» card) spans the cards' rows, so its own height never stretches one of them */
+  .urd-product-cardlist > :not(.urd-product-card) {
+    grid-row: span 6;
+  }
+
+  .urd-product-cardlist.urd-product-pictures > :not(.urd-product-card) {
+    grid-row: span 7;
+  }
+
+  /* The children take their rows by what they are, so a missing part leaves its row to the others */
+  .urd-product-cardlist > .urd-product-card > .urd-product-badge { grid-row: 1; align-self: start; justify-self: start; }
+  .urd-product-cardlist > .urd-product-card > .urd-product-title { grid-row: 1; align-self: end; }
+  .urd-product-cardlist > .urd-product-card > .urd-product-badge + .urd-product-title { padding-top: 2em; }
+  .urd-product-cardlist > .urd-product-card > .urd-product-text { grid-row: 2; }
+  .urd-product-cardlist > .urd-product-card > .urd-product-price { grid-row: 3; }
+  .urd-product-cardlist > .urd-product-card > .urd-product-sizes { grid-row: 4; }
+  .urd-product-cardlist > .urd-product-card > .urd-product-colors { grid-row: 5; }
+  .urd-product-cardlist > .urd-product-card > .urd-product-buy { grid-row: 6; margin-top: 4px; align-self: end; }
+
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-image { grid-row: 1; }
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-badge { grid-row: 2; }
+  /* Positioned in the picture's grid area, so its offsets count from the picture's corner: 8 px, where the card's padding and the 22 px of .urd-product-badge-over meet */
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-badge-over { grid-row: 1; z-index: 1; top: 8px; left: 8px; }
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-title { grid-row: 2; }
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-badge-over + .urd-product-title { padding-top: 0; }
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-text { grid-row: 3; }
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-price { grid-row: 4; }
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-sizes { grid-row: 5; }
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-colors { grid-row: 6; }
+  .urd-product-cardlist.urd-product-pictures > .urd-product-card > .urd-product-buy { grid-row: 7; }
+}
+
 /* The owner's own column count (product.columns), which a narrow block (its
    own width, see urd-block) holds to two and then one. */
 .urd-product-cardlist.urd-product-cols {
@@ -10721,24 +10777,6 @@ body.urd-mobile .urd-cal-note {
   object-fit: cover;
 }
 
-/* The secondary image (the first color image) fades in on hover; an active
-   color choice with an image of its own wins over the hover swap. */
-.urd-product-image .urd-product-image-alt {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.25s;
-}
-
-.urd-product-card:hover .urd-product-image:not(.urd-product-color-selected) .urd-product-image-alt {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .urd-product-image .urd-product-image-alt {
-    display: none;
-  }
-}
 
 .urd-product-badge {
   align-self: flex-start;
@@ -10784,7 +10822,29 @@ body.urd-mobile .urd-cal-note {
 .urd-product-options {
   display: flex;
   flex-wrap: wrap;
+  /* The chips keep their own height where the shared row is taller (another card's request for a choice) */
+  align-items: center;
+  align-content: flex-start;
   gap: 6px;
+}
+
+/* A choice the product asks for (its requireSize, requireColor) and the buyer left open at «Add to basket»:
+   the chips' frames in the form error's colour, and the words under them (product.js markNeed). */
+.urd-product-options.urd-product-missing .urd-product-chip {
+  border-color: #e05252;
+}
+
+.urd-product-need {
+  flex-basis: 100%;
+  font-size: 0.8em;
+  color: #e05252;
+}
+
+/* A buy button waiting for its product's choices (disableUntilChosen, product.js holdBuy): greyed and inert until they are made */
+.urd-product-buy.urd-product-buy-wait {
+  opacity: 0.45;
+  filter: grayscale(1);
+  cursor: not-allowed;
 }
 
 .urd-product-chip {
@@ -11120,6 +11180,43 @@ body.urd-mobile .urd-cal-note {
   display: flex;
   justify-content: space-between;
   font-size: 1.05em;
+}
+
+/* «Empty the basket» under the lines: a quiet text button that asks once in its own place (cart.js emptyRow) */
+.urd-cart-emptyrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 10px;
+  font-size: 0.85em;
+}
+
+.urd-cart-emptybtn {
+  padding: 4px 6px;
+  border: none;
+  border-radius: var(--urd-radius-sm, 6px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.urd-cart-emptybtn:hover,
+.urd-cart-emptybtn:focus-visible {
+  opacity: 1;
+}
+
+.urd-cart-emptyask {
+  font-weight: 600;
+}
+
+.urd-cart-emptyyes {
+  color: #e05252;
+  opacity: 1;
 }
 
 .urd-cart-checkout {

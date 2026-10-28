@@ -979,7 +979,7 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|206|Product grid (Products, Archive Products, Product List, Grid Product Gallery, Featured Items, featured-collection, product-list)|EL BR BD DV WX WE SH SQ|filters, columns|a `<ul>` of product `<article>`s|Partial: product cards in columns with a quick view, a badge and a hover picture; no filters or sort, no choice of the card's parts|v0.8 AR-3; ER-D|
+|206|Product grid (Products, Archive Products, Product List, Grid Product Gallery, Featured Items, featured-collection, product-list)|EL BR BD DV WX WE SH SQ|filters, columns|a `<ul>` of product `<article>`s|Partial: product cards in columns with a quick view and a badge, their rows lined up across a row of cards (subgrid), a colour's picture shown while the mouse rests on its chip; no second picture of the product's own on hover, no filters or sort, no choice of the card's parts|v0.8 AR-3; ER-D|
 |207|Product carousel (Slider Product Gallery, Product Carousel, Carousel Product)|WX KB NP|-|as #52|Planned|ER-D: carousel view|
 |208|Single product widget (Product Widget, Product, featured-product)|WX SQ BD SH GH|-|-|Partial|ER-D: one featured product|
 |209|Product template builder (Product Builder)|BD SQ SH|-|-|Partial: card and quick view|v0.8 product permalinks|

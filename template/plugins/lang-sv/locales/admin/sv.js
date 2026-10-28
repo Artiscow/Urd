@@ -1484,7 +1484,6 @@ export default {
     'lbl.memberPrice': 'Medlemspris',
     'lbl.productBadge': 'Bricka',
     'lbl.sizes': 'Storlekar',
-    'ph.sizes': 'S, M, L',
     'ui.addColor': '+ Färg',
     'ph.colorName': 'Färgnamn',
     'lbl.currency': 'Valutaord',

@@ -1198,7 +1198,7 @@ Urd has no user-defined fields: each collection kind shares a fixed set of field
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Collections | WX, WF, FR, FI, ZO, DU, NO, SU, SH (metaobjects) | Structured content types | no (if built statically) | Partial: collections of five fixed kinds with entries and CSV import and export; no rename, kind change, entry duplication or drag reorder | 0.7.10 |
+| Collections | WX, WF, FR, FI, ZO, DU, NO, SU, SH (metaobjects) | Structured content types | no (if built statically) | Partial: collections of five fixed kinds with entries and CSV import and export; entries dragged into order where the page keeps the panel's order (products and undated entries; dated entries stand by their date, AR-3); no rename, kind change or entry duplication | 0.7.10 |
 | Collection and item limits | FR, WF, ZO | Plan caps | - | n/a: no plans or caps | - |
 | Field: plain text | WX, WF, FR, FI | Short text | no | Has | - |
 | Field: rich text or formatted text | WX, WF, FR, FI | HTML content | no | Has | - |
@@ -2130,7 +2130,7 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
 | Crop, rotate, flip | WP, DU, RM, SQ | Media editor modal; photo editor; crop and round | Partial: zoom toward a focal point, shapes and radius, brightness, contrast and saturation, all non-destructive; no free crop, rotate or flip | v0.8 image editor |
-| Focal point | SQ, SH | A point on the image that every responsive crop keeps in view | Has: on image blocks, gallery images, collection entries and the image layer | - |
+| Focal point | SQ, SH | A point on the image that every responsive crop keeps in view | Partial: on image blocks, gallery images, the collection block's entries and the image layer; a product's picture has no focus point (the Collections panel's image editor) | 0.7.10 |
 | Alt-text field | TI, WS, FR, WP, CA, DU, SQ | Per-image alt text | Has | - |
 | AI alt text | DU, WP | Generate per image or site-wide | Missing | Not taken: third party or AI (MCP) |
 | Alt Text Manager (bulk) | DU | All images in one view | Missing | v0.8 AU-1 audit panel: the images without alt text in one list, edited in place |

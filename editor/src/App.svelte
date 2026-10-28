@@ -68,6 +68,7 @@
     },
     openCollection: (id) => {
       collectionsState.activeCollection = id;
+      collectionsState.openRequest = { id };
       shellState.activePanel = 'collections';
     },
     openDesignPicker: () => {

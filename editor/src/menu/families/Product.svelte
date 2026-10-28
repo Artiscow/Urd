@@ -26,7 +26,8 @@
         options={[['', ta('common.choose')], ...collectionIds.filter((id) => collectionsView[id]?.kind === 'products').map((id) => [id, collectionsView[id]?.name ?? id])]}
         onchange={(v) => setBlockProp('collection', v || null)} /></label>
     {#if selectedBlock.props.collection && collectionsView[selectedBlock.props.collection]?.kind === 'products'}
-      <span class="toolbar-row">
+      <!-- The two actions stacked, each on one line across the column -->
+      <span class="menu-stack">
         <button class="ghost action" title={ta('tip.product.addProduct')}
           onclick={() => addCollectionEntry(selectedBlock.props.collection)}>{ta('ui.addProduct')}</button>
         <button class="ghost action" title={ta('tip.product.editCatalog')}

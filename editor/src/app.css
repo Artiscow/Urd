@@ -311,8 +311,6 @@
     background: rgb(255 255 255 / 6%);
   }
 
-  /* Active is marked by background + edge alone: the font weight does NOT
-     change, otherwise the text shifts slightly on every selection. */
   /* The settings gear at the bottom of the rail + the popover above it.
      position: fixed is not clipped by the rail's overflow. */
   /* Uppercase label above each group, so the three levels read as groups
@@ -455,14 +453,11 @@
     min-width: 0;
   }
 
-  /* Active is colored text with a line at the left edge, not a filled
-     pill: twelve filled pills stacked read heavy, and the line reads more
-     clearly as "you are here" in a list. */
+  /* The open panel: its name in the accent on a faint surface, never a line at the edge; the weight stays, so the names never shift on a selection */
   .rail button.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)){
     opacity: 1;
-    background: transparent;
+    background: rgb(255 255 255 / 8%);
     color: var(--urd-color-accent, #7c5cff);
-    box-shadow: inset 2px 0 0 var(--urd-color-accent, #7c5cff);
   }
 
 
@@ -1243,13 +1238,207 @@
     margin-left: 0;
   }
 
-  .collection-entry {
+  /* An entry's fields inside its card (the Collections panel's rows are the Nav panel's cards) */
+  .entry-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0.35rem;
+    padding: 2px 8px 9px 8px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Actions stacked in a menu column, each across the column on one line */
+  .menu-stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .menu-stack > button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The named fields of an entry: the names in a column of their own, as the Nav card's body sets them */
+  .entry-fields {
+    display: grid;
+    grid-template-columns: 5.8rem minmax(0, 1fr);
+    gap: 6px 8px;
+    align-items: center;
+  }
+
+  .panel-body .entry-fields input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 100%;
+    height: 2rem;
+  }
+
+  /* The date in the panel's own field look */
+  .panel-body .entry-date:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    font: inherit;
+    font-size: 0.85rem;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0 0.5em;
+    min-width: 0;
+  }
+
+  /* A colour: its name, its picture or the picker, and its removal on one row */
+  .entry-color {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .entry-color input {
+    flex: 1;
+  }
+
+  /* A product's «must be chosen» switch, under the part it belongs to */
+  .entry-require {
+    margin-top: 2px;
+  }
+
+  /* The grey-out switch belongs to the requirement above it, a step in */
+  .entry-require-sub {
+    padding-left: 0.9rem;
+  }
+
+  /* A colour name another colour has too: the field's frame and a mark in the amber the panels warn in */
+  .panel-body .entry-color.twice input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    border-color: #e2b84a;
+  }
+
+  .entry-color-warn {
+    display: inline-flex;
+    color: #e2b84a;
+  }
+
+  .entry-color-pick {
+    overflow: hidden;
+  }
+
+  .entry-color-thumb {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+
+  /* A part of the product that takes the card's width (the sizes, the colours): its name above it */
+  .entry-part {
+    margin-top: 4px;
+  }
+
+  /* The sizes as chips, each read whole, and the field that adds one */
+  .entry-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    min-height: 2rem;
+    padding: 3px;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+  }
+
+  .entry-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 2px 2px 8px;
+    font-size: 0.8rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent);
+  }
+
+  .panel-body .entry-chip-x:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: inline-grid;
+    place-items: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    opacity: 0.7;
+  }
+
+  .panel-body .entry-chip-x:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    opacity: 1;
+    background: rgb(255 255 255 / 12%);
+  }
+
+  .panel-body .entry-chip-add:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    flex: 1 1 6rem;
+    min-width: 6rem;
+    height: 1.6rem;
+    border: 0;
+    background: transparent;
+    padding: 0 4px;
+  }
+
+  /* The entry's picture large enough to tell what it shows, its change and removal beside it */
+  .entry-image {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+  }
+
+  .entry-image.empty {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .entry-image-thumb {
+    width: 7rem;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 6px;
     border: 1px solid rgb(255 255 255 / 12%);
-    border-radius: 8px;
-    padding: 0.5rem 0.6rem;
+  }
+
+  .entry-image-actions {
+    display: grid;
+    gap: 6px;
+  }
+
+  .entry-image-actions > * {
+    justify-content: center;
+  }
+
+  .panel-body .entry-add-color:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    justify-self: start;
+  }
+
+  /* The entries stand in the collection's fold without the fold's own indent, since the cards carry their frames */
+  .collection-body {
+    display: grid;
+    gap: 0.4rem;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0.4rem 1px 2px;
+  }
+
+  /* An open entry inside a collection keeps its frame without the floating shadow, which the opening collection would cut */
+  .collection-body .nav-item.open {
+    box-shadow: none;
+  }
+
+  /* The entries are a little taller than the menu items, so a name and its date or price read at ease */
+  .entries-list .nav-head {
+    min-height: 2.6rem;
+    padding: 0.4rem 0.4rem;
+  }
+
+  .entries-list {
+    padding-bottom: 4px;
   }
 
   .plugin-row {
@@ -1297,9 +1486,70 @@
     color: #e2b84a;
   }
 
-  .page-row.current {
-    border-left: 2px solid var(--urd-color-accent, #7c5cff);
-    padding-left: 0.4rem;
+  /* The page open on the canvas: its name in the accent and bold */
+  .page-row.current .page-title {
+    color: var(--urd-color-accent, #7c5cff);
+    font-weight: 600;
+  }
+
+  /* A collection's head: its name, its kind and its count and the chevron, one bordered row, the accent while it stands open */
+  .panel-body .collection-head:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 2.6rem;
+    padding: 0.35em 0.8em;
+    font: inherit;
+    font-size: 0.9rem;
+    color: inherit;
+    text-align: left;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.16s ease-out;
+  }
+
+  .panel-body .collection-fold.open > .collection-head:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .collection-head .collection-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .collection-head .collection-meta {
+    flex: none;
+    font-size: 0.75rem;
+    opacity: 0.65;
+  }
+
+  .collection-chev {
+    display: inline-flex;
+    opacity: 0.7;
+  }
+
+  .collection-chev svg {
+    transition: transform 0.15s ease;
+  }
+
+  .collection-fold.open .collection-chev svg {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .collection-chev svg,
+    .panel-body .collection-head { transition: none; }
+  }
+
+  .collection-fold + .collection-fold {
+    margin-top: 0.5rem;
   }
 
   /* The list of menu items, with a strip under the last row to drop on. */
@@ -1339,16 +1589,18 @@
   }
 
   .nav-head-name {
-    flex: 0 1 auto;
-    max-width: 48%;
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 0.85rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
+  /* The link or the date beside the name takes its own words' width, up to half the head */
   .nav-head-link {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
+    max-width: 50%;
     min-width: 0;
     font-size: 0.74rem;
     opacity: 0.6;
@@ -1384,9 +1636,22 @@
     gap: 2px;
   }
 
+  /* Also while the focus stands in the row, so the keyboard reaches them from the row's chevron, and always on a screen without hover */
   .nav-item:hover .nav-head-tools,
-  .nav-item.open .nav-head-tools {
+  .nav-item.open .nav-head-tools,
+  .nav-item:focus-within .nav-head-tools {
     display: inline-flex;
+  }
+
+  @media (hover: none) {
+    .nav-head-tools {
+      display: inline-flex;
+    }
+  }
+
+  /* A row that keeps its place (a dated entry) keeps the grip's room, so the names line up, without the grip */
+  .nav-grip.nav-grip-off {
+    visibility: hidden;
   }
 
   @media (prefers-reduced-motion: reduce) {

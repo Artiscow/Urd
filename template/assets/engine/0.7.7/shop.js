@@ -177,15 +177,6 @@ export function readOrder() {
   }
 }
 
-/** The card's secondary image (hover swap): the first colour image that differs from the main one. */
-export function altCardImage(entry) {
-  const main = entry?.image || '';
-  for (const color of entry?.colors ?? []) {
-    if (color?.image && color.image !== main) return color.image;
-  }
-  return null;
-}
-
 /** Practical email check (not RFC complete, but it catches the common mistakes). */
 export function isEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value ?? '').trim());
