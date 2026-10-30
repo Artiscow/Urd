@@ -6,7 +6,7 @@
      match, and what is kept open stays as it was left. A group that is the
      only one in its area starts open (defaultOpen): the heading is still a
      menu, but the settings are one step nearer. */
-  import { setContext } from 'svelte';
+  import { getContext, setContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { menuOpen, menuSeen } from './state.svelte.js';
   /* `group` (groupOf in groups.js) carries the defaults as well as the reset,
@@ -17,6 +17,12 @@
     menuOpen.add(id);
   }
   const groupReset = $derived(group ? group.reset : reset);
+  // The area's heading counts its groups and the changed ones among them (MenuArea).
+  const area = getContext('menu-area');
+  $effect(() => {
+    area?.register(id, () => Boolean(groupReset));
+    return () => area?.unregister(id);
+  });
   setContext('menu-group', {
     own: (key) => Boolean(group?.own(key)),
     resetKey: (key) => group?.resetKey(key),

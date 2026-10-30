@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.16): the command palette, the drop indicators, the layout help chip and the stacked Properties panel
+
+- [ ] Ctrl+K with the focus in the panels or on the canvas, and Ctrl+Shift+P: the palette opens with Actions, Pages, Panels, Insert a block and New section; the arrows walk it, Enter runs the marked command, Escape and a press outside close it; the field has the focus on opening
+- [ ] Type «kak»: «Go to Kaker» alone; Enter switches the page; open the palette again: «Recent» stands first with it; the same for a block inserted, a section added at the foot of the page, a panel opened, a device chosen and Clean view
+- [ ] «Publish» stands in the palette only while there is something to publish; «Show the grid» reads «Hide the grid» while it is on, the guide lines likewise
+- [ ] Ctrl+K while typing in a text block opens the link editor, not the palette; Ctrl+K in a text field of the panels does nothing; with the link editor or the design picker open, Ctrl+K leaves them as they are
+- [ ] The shortcut sheet («?») lists «Command palette» under General with both ways; the palette in bokmål and Turkish: the groups and every command translated
+- [ ] Drag a block by its ⠿ handle wholly out of its section over the next one: that section gets a dashed accent frame inside its edge; back into the own section the frame goes; the release clears it and the block lands there; a block still overlapping its own section gets no frame
+- [ ] The phone view: drag a block in the flow by its handle; a magenta line across the section shows the row it will land in and moves row by row; on release it is gone and the block sits where the line was; a resize draws no line
+- [ ] The element menu's Placement area (the narrow menu, the wide menu's column and the Properties panel): a «?» on the heading opens a card with six lines in the admin's colours; Escape and a press outside close it; the card in bokmål and Turkish
+- [ ] The Properties panel on a text block: no tab row; Content, Style and Placement under each other with a heading each in the accent; scroll the panel and the headings stick to the top; «2 groups» beside Style, «3 groups» beside Placement; change a Style setting: «1 changed» joins it; the same in the floating menu switched narrow with the «><» button; the wide menu keeps its three columns
+- [ ] The quick tiles in the panel: «Alignment» across the row with Left, Centred and Right at a field's height, «Text box» and «On a phone» side by side under it, «Narrow screen» across; the pins at the right edge; every tile's choice changes the page at once; another block type's tiles pack the same way
+- [ ] With the focus in the panel, press 1, 2 and 3: the panel scrolls to the area and the focus lands on its first group head, never on the «?» chip; Urd settings, Element menu: the narrow choice reads «Narrow (areas under each other)»
+
 ### Test batch (0.7.10.15): the gradient bar, the opacity per colour and the animations' pace
 
 - [ ] Properties on Kaker's first section, Background, the gradient layer: a bar under Shape with a handle per colour where its row's slider says; drag a handle and the strip, the page and the row follow, and the rows sort into position order on release; a press on the bar adds a colour there in the nearest colour; «+ Add colour» lands in the widest gap; Tab to a handle and the arrow keys move it one step, ten with Shift

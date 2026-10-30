@@ -12,6 +12,7 @@ import { opensShortcuts } from '../lib/shortcuts.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
+import { paletteState } from './palette.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { siteState } from './site.svelte.js';
@@ -154,6 +155,13 @@ function onKeydown(e) {
   // A dialog over the editor (the link editor, the design picker) keeps its keys: the page behind it is not changed.
   if (e.target instanceof Element && e.target.closest('dialog')) return;
   const key = e.key.toLowerCase();
+  // Ctrl+K outside a text opens the command palette, and Ctrl+Shift+P everywhere a browser keeps Ctrl+K for itself; in a text Ctrl+K stays the link key (the text toolbar's).
+  if ((key === 'k' && !e.altKey && !e.shiftKey) || (key === 'p' && e.shiftKey && !e.altKey)) {
+    if (typed && key === 'k') return;
+    e.preventDefault();
+    paletteState.openPalette();
+    return;
+  }
   // Ctrl+D with focus in the admin panels: duplicate the selected block
   // in the preview (otherwise the shortcut opens the browser's bookmark
   // dialog). Only real TEXT FIELDS keep the browser shortcut; numbers,

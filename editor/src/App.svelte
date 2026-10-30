@@ -49,6 +49,8 @@
   import { linkState } from './state/link.svelte.js';
   import LinkDialog from './lib/LinkDialog.svelte';
   import ShortcutSheet from './lib/ShortcutSheet.svelte';
+  import CommandPalette from './lib/CommandPalette.svelte';
+  import { paletteState } from './state/palette.svelte.js';
 
   const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState];
   const ed = {};
@@ -192,6 +194,11 @@
 
   {#if ed.shortcutsOpen}
     <ShortcutSheet onclose={() => (ed.shortcutsOpen = false)} />
+  {/if}
+
+  {#if paletteState.paletteOpen}
+    <!-- The command palette: built from the states as it opens, so the list reads the page, the panels and the draft as they stand -->
+    <CommandPalette commands={paletteState.buildCommands()} onclose={() => (paletteState.paletteOpen = false)} />
   {/if}
 
   <ConfirmDialog />

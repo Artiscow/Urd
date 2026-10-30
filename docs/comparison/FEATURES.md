@@ -2212,7 +2212,7 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 | Theme or site export | WP, WT, BR, SH | Zip; self-host or CLI; transfer ZIP | Has: the repo | - |
 | Reset or restart the site | SQ | Reset the site styles to the template's defaults; clear the content and keep the styles | Missing | v0.9: a blank start for new sites |
 | Edit from mobile devices | WN, JI, SH, SQ | Phone editing; app | Partial: the phone view is a preview width; the canvas uses pointer drags and hover toolbars and is not made for touch | v0.9 touch friendliness |
-| Page settings shortcut | EL, DV, WT | ⌘⇧Y; O; ⌥-click | Partial: page settings in the Pages panel, with no shortcut | 0.7.10: command palette |
+| Page settings shortcut | EL, DV, WT | ⌘⇧Y; O; ⌥-click | Partial: the command palette (Ctrl/⌘+K) opens the Pages panel and goes to a page; no key to a page's own settings | - |
 | Site settings shortcut | EL, FS | ⌘K; website settings | Has: site settings behind the gear | - |
 | Editor preferences | EL, WP, OX | Preferences panel | Has: admin language and admin theme, kept per browser | - |
 | Exit builder shortcut | EL, DV | Esc; ⌘E | Has: «See the site» | - |

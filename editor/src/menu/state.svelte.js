@@ -2,10 +2,9 @@
  * The element menu's own state (0.7.26.2), shared by every copy of the menu
  * (the Properties panel, the floating menu and the search's copy of the
  * areas): the width the floating menu opens in, the room it has, the two
- * search queries, the tab of the narrow menu, the groups left open, and the
- * quick row's choices per block type.
+ * search queries, the groups left open, and the quick row's choices per
+ * block type.
  */
-import { tick } from 'svelte';
 import { SvelteSet } from 'svelte/reactivity';
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
 
@@ -23,8 +22,6 @@ export const menu = $state({
   /** The search, one for each place the menu is drawn: the floating menu's head and the Properties panel. */
   menuQuery: '',
   propsQuery: '',
-  /** The Content/Style/Placement tab of the narrow menu, remembered across selections. */
-  tab: 'content',
   /** Where the owner dragged the floating menu, kept for the session; null = beside the block (lib/menu-place.js). */
   place: null,
 });
@@ -51,24 +48,19 @@ export function measureMenuRoom(left) {
 export const MENU_AREAS = ['content', 'style', 'placement'];
 
 /**
- * The keys of the areas (0.7.20.9): chooses the tab of the narrow menu, and
- * in the wide menu scrolls the column into view and, unless the focus is in
- * the search field, puts it on the column's first head or button, never a
- * field, so the next key is still the menu's. `root` is the menu the key was
- * pressed in (the floating menu, or the Properties panel's body).
+ * The keys of the areas (0.7.20.9): scrolls the area into view, a column
+ * when wide and a stacked area when narrow, and, unless the focus is in the
+ * search field, puts it on the area's first group head or button (never the
+ * help chip, never a field), so the next key is still the menu's. `root` is
+ * the menu the key was pressed in (the floating menu, or the Properties
+ * panel's body).
  */
 export function chooseArea(area, root = null) {
   if (!MENU_AREAS.includes(area)) return;
-  const focusInMenu = Boolean(root?.contains(document.activeElement)) && !document.activeElement.classList.contains('menu-search');
-  menu.tab = area;
   const col = root?.querySelectorAll('.emenu-cols > .emenu-col')[MENU_AREAS.indexOf(area)];
-  if (!col) {
-    // The narrow menu: the chosen tab's area replaces the one the focus stood in, so the focus moves to the chosen tab and the next key is still the menu's.
-    if (focusInMenu) tick().then(() => root.querySelector('.props-tabs button.on')?.focus());
-    return;
-  }
-  col.scrollIntoView({ block: 'nearest' });
-  if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button')?.focus();
+  if (!col) return;
+  col.scrollIntoView({ block: 'start' });
+  if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button:not(.help-chip)')?.focus();
 }
 
 /** The groups of the element menu that stand open, by id; a group stays as it was left when another block is selected. */

@@ -81,8 +81,78 @@ export function closeHint() {
 }
 
 /**
+ * Opens the help card under an anchor (or above it when the room below is
+ * short), with the title and one line per function; a card already open
+ * closes first. The admin panels open it from their own «?» buttons, the
+ * preview's chips through attachHint, so every help card has one form.
+ * @param {HTMLElement} anchor The element the card is placed by
+ * @param {{title: string, lines?: string[]}} help
+ * @returns {HTMLDivElement} the card
+ */
+export function openHintCard(anchor, { title, lines = [] }) {
+  injectCss();
+  closeHint();
+  const card = document.createElement('div');
+  card.className = 'urd-hint-card';
+  const head = document.createElement('strong');
+  head.textContent = title;
+  card.appendChild(head);
+  const list = document.createElement('ul');
+  for (const line of lines) {
+    const item = document.createElement('li');
+    item.textContent = line;
+    list.appendChild(item);
+  }
+  card.appendChild(list);
+  document.body.appendChild(card);
+  openCard = card;
+
+  const rect = anchor.getBoundingClientRect();
+  // The DRAWN size, which the counter-scale decides: offsetWidth and
+  // offsetHeight never see a transform.
+  const scale = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'),
+  ) || 1;
+  const w = 300 * scale;
+  const h = card.offsetHeight * scale;
+  card.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - w - 8))}px`;
+  // Preferably below the anchor; otherwise above, always inside the viewport.
+  let top = rect.bottom + 8;
+  if (top + h > window.innerHeight - 8) {
+    top = Math.max(8, rect.top - h - 8);
+  }
+  card.style.top = `${top}px`;
+
+  const onDown = (ev) => {
+    if (!card.contains(ev.target) && ev.target !== anchor) closeHint();
+  };
+  const onKey = (ev) => {
+    if (ev.key === 'Escape') closeHint();
+  };
+  setTimeout(() => {
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey, true);
+  }, 0);
+  teardown = () => {
+    document.removeEventListener('pointerdown', onDown, true);
+    document.removeEventListener('keydown', onKey, true);
+  };
+  return card;
+}
+
+/**
+ * A press on a chip: closes the open card, else opens the card by the chip.
+ * @param {HTMLElement} anchor
+ * @param {{title: string, lines?: string[]}} help
+ */
+export function toggleHintCard(anchor, help) {
+  if (openCard) closeHint();
+  else openHintCard(anchor, help);
+}
+
+/**
  * @param {HTMLElement} host The element the chip is added to (should have position: relative/absolute)
- * @param {{ title: string, lines: string[] }} spec Title plus one line per feature
+ * @param {{title: string, lines?: string[]}} help
  * @returns {HTMLButtonElement} the chip (for custom positioning when needed)
  */
 export function attachHint(host, { title, lines = [] }) {
@@ -95,55 +165,7 @@ export function attachHint(host, { title, lines = [] }) {
 
   chip.addEventListener('click', (event) => {
     event.stopPropagation();
-    if (openCard) {
-      closeHint();
-      return;
-    }
-    const card = document.createElement('div');
-    card.className = 'urd-hint-card';
-    const head = document.createElement('strong');
-    head.textContent = title;
-    card.appendChild(head);
-    const list = document.createElement('ul');
-    for (const line of lines) {
-      const item = document.createElement('li');
-      item.textContent = line;
-      list.appendChild(item);
-    }
-    card.appendChild(list);
-    document.body.appendChild(card);
-    openCard = card;
-
-    const rect = chip.getBoundingClientRect();
-    // The DRAWN size, which the counter-scale decides: offsetWidth and
-    // offsetHeight never see a transform.
-    const scale = Number.parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'),
-    ) || 1;
-    const w = 300 * scale;
-    const h = card.offsetHeight * scale;
-    card.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - w - 8))}px`;
-    // Preferably below the chip; otherwise above, always inside the viewport.
-    let top = rect.bottom + 8;
-    if (top + h > window.innerHeight - 8) {
-      top = Math.max(8, rect.top - h - 8);
-    }
-    card.style.top = `${top}px`;
-
-    const onDown = (ev) => {
-      if (!card.contains(ev.target) && ev.target !== chip) closeHint();
-    };
-    const onKey = (ev) => {
-      if (ev.key === 'Escape') closeHint();
-    };
-    setTimeout(() => {
-      document.addEventListener('pointerdown', onDown, true);
-      document.addEventListener('keydown', onKey, true);
-    }, 0);
-    teardown = () => {
-      document.removeEventListener('pointerdown', onDown, true);
-      document.removeEventListener('keydown', onKey, true);
-    };
+    toggleHintCard(chip, { title, lines });
   });
 
   host.appendChild(chip);

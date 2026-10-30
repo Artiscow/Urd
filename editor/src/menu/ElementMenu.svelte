@@ -2,7 +2,7 @@
   /* The element menu (ADR-0016 decision 3, 0.7.26.2): Content is what the
      block says and shows, Style is how it looks, Placement is where it sits
      and how it behaves there. Wide, the three stand as columns; narrow, they
-     are tabs. Above them the quick row: the settings used most, changed
+     stand under each other with a heading each. Above them the quick row: the settings used most, changed
      without opening anything. A block type's own come first, then the two
      every block has (how it fits a narrower screen, and whether it shows on
      a phone). */
@@ -26,6 +26,8 @@
   import { menuSearch } from '../lib/menu-search.js';
   import { linkOf, linkText } from '../lib/link-edit.js';
   import Placement from './Placement.svelte';
+  import MenuArea from './MenuArea.svelte';
+  import { toggleHintCard } from '$engine/hint.js';
   import Text from './families/Text.svelte';
   import Button from './families/Button.svelte';
   import Image from './families/Image.svelte';
@@ -195,7 +197,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="emenu-root" onkeydown={menuKeys}>
+<div class="emenu-root" class:narrow={!wide} onkeydown={menuKeys}>
 
 {#snippet menuContent()}
   <Family area="content" />
@@ -205,6 +207,12 @@
 {/snippet}
 {#snippet menuPlacement()}
   <Placement />
+{/snippet}
+<!-- «Which layout tool?» (comparison/ELEMENTS.md E5): the help chip rule (ADR-0008) on the heading of the area whose choices decide how a block is laid out -->
+{#snippet layoutChip()}
+  <button type="button" class="help-chip" title={ta('hint.how', { title: ta('hint.layout.title') })}
+    aria-label={ta('hint.how', { title: ta('hint.layout.title') })}
+    onclick={(e) => toggleHintCard(e.currentTarget, { title: ta('hint.layout.title'), lines: [1, 2, 3, 4, 5, 6].map((n) => ta(`hint.layout.${n}`)) })}>?</button>
 {/snippet}
 
 {#if !query.trim()}
@@ -242,34 +250,14 @@
   <div class="emenu-cols emenu-search" class:stacked={!wide} {@attach menuSearch(query, searchLangs.ready ? matchAny : matchWords)}>
     <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabContent')}</p>{@render menuContent()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
     <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
-    <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabPlacement')}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
-  </div>
-{:else if wide}
-  <div class="emenu-cols">
-    <section class="emenu-col"><p class="panel-strong">{ta('props.tabContent')}</p>{@render menuContent()}</section>
-    <section class="emenu-col"><p class="panel-strong">{ta('props.tabStyle')}</p>{@render menuStyle()}</section>
-    <section class="emenu-col"><p class="panel-strong">{ta('props.tabPlacement')}</p>{@render menuPlacement()}</section>
+    <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabPlacement')}{@render layoutChip()}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
   </div>
 {:else}
-  <div class="props-tabs">
-    <span class="seg">
-      <button type="button" class:on={menu.tab === 'content'}
-        onclick={() => (menu.tab = 'content')}>{ta('props.tabContent')}</button>
-      <button type="button" class:on={menu.tab === 'style'}
-        onclick={() => (menu.tab = 'style')}>{ta('props.tabStyle')}</button>
-      <button type="button" class:on={menu.tab === 'placement'}
-        onclick={() => (menu.tab = 'placement')}>{ta('props.tabPlacement')}</button>
-    </span>
+  <!-- Wide: the three areas as columns; narrow: under each other, each heading sticking to the top of its area and counting its groups -->
+  <div class="emenu-cols" class:stacked={!wide} class:emenu-stack={!wide}>
+    <MenuArea title={ta('props.tabContent')} counts={!wide}>{@render menuContent()}</MenuArea>
+    <MenuArea title={ta('props.tabStyle')} counts={!wide}>{@render menuStyle()}</MenuArea>
+    <MenuArea title={ta('props.tabPlacement')} counts={!wide} chip={layoutChip}>{@render menuPlacement()}</MenuArea>
   </div>
-  <!-- The tab's area, laid out as a column of the wide menu -->
-  <section class="emenu-col emenu-area">
-    {#if menu.tab === 'content'}
-      {@render menuContent()}
-    {:else if menu.tab === 'style'}
-      {@render menuStyle()}
-    {:else}
-      {@render menuPlacement()}
-    {/if}
-  </section>
 {/if}
 </div>

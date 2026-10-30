@@ -20,6 +20,16 @@
     --urd-brand-mono: #eaf1ed;    /* monochrome (off-white) */
   }
 
+  /* The help card (the engine's hint.js) takes the admin's colours through the
+     --urd-admin-* variables the preview gets by message; in the admin itself they
+     are the theme's own tokens. */
+  :root {
+    --urd-admin-bg: var(--urd-color-bg);
+    --urd-admin-surface: var(--urd-color-surface);
+    --urd-admin-accent: var(--urd-color-accent);
+    --urd-admin-text: var(--urd-color-text);
+  }
+
   :root[data-admin-theme='purple'] {
     --urd-color-bg: #0b0e17;
     --urd-color-surface: #151a2b;
@@ -775,13 +785,119 @@
     font-size: 0.75rem;
   }
 
-  /* The Properties panel is narrower than two such tiles: two columns there, and a segment of three choices takes the whole row */
-  .panel-body:not(.block-menu-body) .menu-quick {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* An area's heading (MenuArea): the title with the Placement area's «?» chip, and narrow the count of its groups */
+  .emenu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: 0;
   }
 
-  .panel-body:not(.block-menu-body) .menu-quick-item:has(.seg > button:nth-child(3)) {
+  .emenu-head .panel-strong {
+    margin: 0;
+  }
+
+  .emenu-head-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .emenu-head-meta {
+    font-size: 11px;
+    opacity: 0.55;
+    white-space: nowrap;
+  }
+
+  /* Narrow: the three areas under each other on the panel's own surface, each
+     heading sticking to the top while its area scrolls past, in the accent as
+     a small capital line */
+  .emenu-stack {
+    gap: 0.4rem;
+  }
+
+  .emenu-stack .emenu-area {
+    padding: 0 0 0.7rem;
+    background: none;
+    border-radius: 0;
+  }
+
+  .emenu-stack .emenu-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 0.55rem 0 0.4rem;
+    background: var(--urd-color-surface, #151a23);
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  /* The chip in a heading is drawn at the size of its capitals */
+  .emenu-head .help-chip {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+
+  .emenu-stack .emenu-head .panel-strong {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--urd-color-accent);
+  }
+
+  /* Narrow: the quick tiles as small cards with the whole words on segments the
+     height of a field; a tile of three choices takes the whole row, the others
+     stand two to a row and pack upward into the room a wide tile leaves, so no
+     half row stands empty. The row's own rule goes: the heading under it draws the line. */
+  .emenu-root.narrow .menu-quick {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: dense;
+    border-bottom: 0;
+    padding-bottom: 0.3rem;
+  }
+
+  .emenu-root.narrow .menu-quick-item:has(.seg > button:nth-child(3)) {
     grid-column: 1 / -1;
+  }
+
+  .emenu-root.narrow .menu-quick-item {
+    padding: 0.6rem 0.65rem;
+    gap: 0.4rem;
+  }
+
+  .emenu-root.narrow .menu-quick-head .mini-label {
+    font-size: 11px;
+  }
+
+  .emenu-root.narrow .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    padding: 7px 6px;
+    font-size: 13px;
+  }
+
+  .emenu-root.narrow .menu-quick-item input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .emenu-root.narrow .menu-quick-open {
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+
+  .help-chip {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--urd-color-accent) 80%, black);
+    color: #fff;
+    font: 700 12px/1 system-ui, sans-serif;
+    cursor: pointer;
+    opacity: 0.85;
+  }
+
+  .help-chip:hover,
+  .help-chip:focus-visible {
+    opacity: 1;
   }
 
   /* A setting that can stand in the quick row, with its pin at the end */
@@ -3140,12 +3256,6 @@
   /* The sliders in the control rows: the label on the left, the value at
      the far right, the track takes the rest. */
   .ctl-row input[type="range"]:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ flex: 1; min-width: 0; }
-
-  /* The Content/Style tabs at the top of the block properties (ADR-0016):
-     full width, otherwise the segment control's usual recipe. */
-  .props-tabs { display: flex; margin-bottom: 2px; }
-  .props-tabs .seg { flex: 1; }
-  .props-tabs .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ flex: 1; padding: 5px 0; font-size: 12px; }
 
   /* Theme suggestions: a row of palette thumbnails (all on one row) */
   .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }

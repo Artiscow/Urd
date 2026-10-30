@@ -367,7 +367,7 @@ Each plugin is a folder with a manifest + ES module. The template ships one plug
   "version": "1.0.0",
   "requiresEngine": ">=0.6.8 <1.0.0",
   "entry": "index.js",
-  "provides": { "blocks": ["events"], "sectionPresets": ["events-list"], "backgrounds": [], "animations": [], "templates": [] }
+  "provides": { "blocks": ["events"], "sectionPresets": ["events-list"], "backgrounds": [], "animations": [], "templates": [], "commands": [] }
 }
 ```
 
@@ -379,7 +379,7 @@ export function register(Urd) {
 }
 ```
 
-The provides key `templates` was called `maler` before ADR-0021; the old name is still read (dual-read in plugins.js), and old plugins that register via `Urd.maler` hit the same registry as `Urd.templates`. The engine aliases the old reference plugin ids (the blocks kalender/kart/skjema → calendar/map/form, the presets hva-skjer/finn-oss/kontaktskjema → whats-on/find-us/contact-form) to the core blocks and presets, so pages built with the old plugin ids render with the core blocks; a plugin folder that still defines one of the ids wins directly (registry alias semantics).
+`provides.commands` (optional, additive from 0.7.10.16) lists the ids a plugin defines through `Urd.commands` for the editor's command palette: `{ label, labelKey?, run(ctx) }`, run in the preview where the plugin's code lives. The provides key `templates` was called `maler` before ADR-0021; the old name is still read (dual-read in plugins.js), and old plugins that register via `Urd.maler` hit the same registry as `Urd.templates`. The engine aliases the old reference plugin ids (the blocks kalender/kart/skjema → calendar/map/form, the presets hva-skjer/finn-oss/kontaktskjema → whats-on/find-us/contact-form) to the core blocks and presets, so pages built with the old plugin ids render with the core blocks; a plugin folder that still defines one of the ids wins directly (registry alias semantics).
 
 ### The compatibility surface for plugin copies
 

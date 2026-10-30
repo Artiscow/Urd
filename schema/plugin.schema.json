@@ -85,6 +85,7 @@
         "backgrounds": { "$ref": "#/$defs/idList" },
         "animations": { "$ref": "#/$defs/idList" },
         "templates": { "$ref": "#/$defs/idList" },
+        "commands": { "$ref": "#/$defs/idList", "$comment": "Commands for the editor's command palette (Urd.commands), additive from 0.7.10.16." },
         "maler": { "$ref": "#/$defs/idList", "$comment": "The legacy name for templates (ADR-0021); still read, not written in new manifests." }
       }
     }

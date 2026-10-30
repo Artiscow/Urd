@@ -57,6 +57,15 @@ import { applyHeadMeta, mountAnalytics } from './seo.js';
 import { readPrefetched, revalidateFile, wirePrefetch, sessionStore } from './prefetch.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
+/** The commands plugins registered (Urd.commands), named for the editor's palette: the label from its key when it has one. */
+function postCommands() {
+  const commands = Urd.commands.ids().map((id) => {
+    const def = Urd.commands.get(id);
+    return { id, label: def?.labelKey ? ta(def.labelKey) : (def?.label ?? id) };
+  });
+  window.parent?.postMessage({ type: 'urd-commands', commands }, location.origin);
+}
+
 export const Urd = {
   blocks: createRegistry('blocks'),
   sections: createRegistry('sections'),
@@ -66,6 +75,10 @@ export const Urd = {
   // kind, section|blocks}); the section gallery merges kind section into
   // the plugin group.
   templates: createRegistry('templates'),
+  // Commands for the editor's command palette (Ctrl/⌘+K): a plugin defines
+  // `{ label, labelKey?, run }`, the preview reports the list to the editor,
+  // and a chosen command runs here, where the plugin's code lives.
+  commands: createRegistry('commands'),
 };
 
 // Legacy alias (ADR-0021): plugins written before the rename register
@@ -638,7 +651,12 @@ function enablePreview(state, opts) {
           });
         }
         window.parent?.postMessage({ type: 'urd-plugin-blocks', blocks }, location.origin);
+        postCommands();
       });
+    } else if (msg?.type === 'urd-run-command' && typeof msg.id === 'string') {
+      // A command chosen in the editor's palette: it runs here, where the plugin registered it.
+      const def = Urd.commands.get(msg.id);
+      if (typeof def?.run === 'function') def.run({ Urd, page: state.page, site: state.site });
     } else if (msg?.type === 'urd-zoom') {
       // The canvas is scaled with a transform on the iframe, so EVERYTHING
       // inside shrinks with the zoom, including the editing handles. They

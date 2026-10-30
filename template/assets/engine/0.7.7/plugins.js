@@ -100,6 +100,7 @@ const KINDS = [
   ['backgrounds', 'backgrounds'],
   ['animations', 'animations'],
   ['templates', 'templates'],
+  ['commands', 'commands'],
 ];
 
 /**

@@ -3278,6 +3278,15 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  // Ctrl/⌘+K outside a text asks the editor for its command palette, and Ctrl+Shift+P where a browser keeps Ctrl+K for itself; in a text Ctrl+K is the toolbar's link key, and a dialog on the page keeps the keys.
+  const paletteKey = (!event.shiftKey && event.key.toLowerCase() === 'k') || (event.shiftKey && event.key.toLowerCase() === 'p');
+  if (ctrl && !event.altKey && paletteKey
+    && !(target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.closest('dialog, [role="dialog"]')))) {
+    event.preventDefault();
+    post({ type: 'urd-palette' });
+    return;
+  }
+
   // Slash command: "/" opens the + New block menu with the search field
   // focused, in the active section (otherwise the section under the
   // pointer); if the pointer sits in the section, the block lands at the
@@ -4282,6 +4291,14 @@ function enhanceBlock(el, block, section, grid, host) {
     const ratio = kind === 'resize' && FIT_BY_WIDTH.has(block.type) && orig.w > 0 ? orig.h / orig.w : 0;
     let stop = null;
     let readout = null;
+    /** The line across the flow at the row the block will be pinned into, drawn while it is moved; the tracks are read once the block is out of the grid. */
+    let rowLine = null;
+    let rowTracks = [];
+    const rowLineTop = (row) => {
+      let top = padTop;
+      for (let i = 0; i < row - 1; i++) top += i < rowTracks.length ? rowTracks[i] : MOBILE_ROW;
+      return top;
+    };
 
     const begin = () => {
       started = true;
@@ -4293,6 +4310,13 @@ function enhanceBlock(el, block, section, grid, host) {
       if (kind === 'resize' && !hug) el.style.height = `${orig.h}px`;
       el.style.marginLeft = '0';
       el.style.zIndex = '100001';
+      if (kind === 'move') {
+        rowTracks = getComputedStyle(flowEl).gridTemplateRows.split(' ').map(parseFloat).filter(Number.isFinite);
+        rowLine = document.createElement('div');
+        rowLine.className = 'urd-row-line';
+        rowLine.style.top = `${rowLineTop(rowAtOffset(rowTracks, orig.top - padTop))}px`;
+        flowEl.appendChild(rowLine);
+      }
       if (kind === 'resize') {
         readout = sizeReadout(el);
         if (hug) {
@@ -4323,6 +4347,7 @@ function enhanceBlock(el, block, section, grid, host) {
         };
         el.style.left = `${current.left}px`;
         el.style.top = `${current.top}px`;
+        if (rowLine) rowLine.style.top = `${rowLineTop(rowAtOffset(rowTracks, current.top - padTop))}px`;
       } else {
         const w = clamp(orig.w + dx, 24, canvas.clientWidth - orig.left);
         current = {
@@ -4343,6 +4368,7 @@ function enhanceBlock(el, block, section, grid, host) {
       handle.removeEventListener('pointercancel', finish);
       stop?.remove();
       readout?.remove();
+      rowLine?.remove();
     };
 
     const onUp = () => {
@@ -4632,6 +4658,8 @@ function enhanceBlock(el, block, section, grid, host) {
         guideEls.length = 0;
       };
       let targetHost = host;
+      /** The section drawn as the drop target, while the block is held wholly outside its own over it. */
+      let markedTarget = null;
       let targets = { xs: [], ys: [], boxes: [] };
       const collectTargets = () => {
         const xs = [];
@@ -4806,6 +4834,22 @@ function enhanceBlock(el, block, section, grid, host) {
           updateMultiToolbar();
         }
         drawFrame(el, current);
+        // The section the block will move to is drawn as the drop target while
+        // the block, as now drawn, is held wholly outside its own section over
+        // another: the same test the release makes (ADR-0025 decision 8).
+        if (kind === 'move') {
+          const drawn = el.getBoundingClientRect();
+          const own = host.getBoundingClientRect();
+          const wholeOut = drawn.bottom <= own.top || drawn.top >= own.bottom;
+          const over = wholeOut ? document.elementsFromPoint(drawn.left + drawn.width / 2, drawn.top + drawn.height / 2)
+            .find((n) => n instanceof HTMLElement && n.classList.contains('urd-section')) ?? null : null;
+          const dropTarget = over && over !== host ? over : null;
+          if (dropTarget !== markedTarget) {
+            markedTarget?.classList.remove('urd-drop-target');
+            markedTarget = dropTarget;
+            markedTarget?.classList.add('urd-drop-target');
+          }
+        }
         let grown = settle?.grown;
         if (hug) {
           // Drawn with the editor's own parts, pushing as a visitor sees it.
@@ -4836,6 +4880,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointercancel', onCancel);
         for (const o of overlays) o.remove();
         clearGuides();
+        markedTarget?.classList.remove('urd-drop-target');
         stop?.remove();
         readout?.remove();
         settle?.undo();
@@ -4849,6 +4894,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointercancel', onCancel);
         for (const o of overlays) o.remove();
         clearGuides();
+        markedTarget?.classList.remove('urd-drop-target');
         stop?.remove();
         readout?.remove();
         // A fit can land while a block that follows its content is dragged

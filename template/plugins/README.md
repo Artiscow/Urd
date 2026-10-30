@@ -133,3 +133,18 @@ The contract is described in [docs/SCHEMA.md](../../docs/SCHEMA.md#plugins). The
 - **Map** (`blocks/map.js` and `osm.js`): the field contract (`fields`) for simple settings straight in Properties, an iframe to OpenStreetMap, and a CSP sentry that explains which `frame-src` line is missing if a host blocks the map (Urd's own `_headers` allows it).
 
 One difference applies to a plugin: the core's blocks import `../i18n.js`, `../hint.js`, `../dropdown.js` and `../nav-model.js` directly, while a plugin ALWAYS imports from `/assets/urd/` (the engine folder is swapped at every release, ADR-0013). Visitor measurement (Cloudflare Web Analytics) was a reference plugin as well; it is now the site setting «Visitor measurement» behind the gear in the admin.
+
+## A command in the editor's palette
+
+The editor's command palette (Ctrl/⌘+K) lists what a plugin registers through `Urd.commands`, under a «Plugins» heading, and runs it in the preview where the plugin's code lives:
+
+```js
+export function register(Urd) {
+  Urd.commands.define('venue-refresh', {
+    labelKey: 'venue.refresh', // or label: 'Refresh the venues'
+    run({ Urd, page, site }) { /* what the command does in the preview */ },
+  });
+}
+```
+
+The label goes through the plugin's own admin dictionary (`labelKey`), with `label` as the English fallback. The palette reports the list when the plugins load, so a command defined later in the session shows after the next reload.

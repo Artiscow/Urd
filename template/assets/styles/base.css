@@ -15851,6 +15851,27 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   height: calc(3px * var(--urd-chrome-scale, 1));
 }
 
+/* The section a dragged block will move to (preview-edit.js): a dashed frame
+   inside its edge in the admin accent while the block is held wholly outside
+   its own section over it, so the landing place is read before the release */
+.urd-preview .urd-section.urd-drop-target {
+  outline: calc(2px * var(--urd-chrome-scale, 1)) dashed var(--urd-admin-accent, #6c5ce7);
+  outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
+}
+
+/* The row a block dragged in the phone view will be pinned into: a line across
+   the flow at that row's top, in the guides' magenta, moving with the drag */
+.urd-preview .urd-row-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  height: calc(2px * var(--urd-chrome-scale, 1));
+  background: #ff2d87;
+  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 70%, transparent);
+  pointer-events: none;
+}
+
 /* Equal gaps: a band over each gap that becomes equal, with its size in px,
    in the same magenta as the lines */
 .urd-preview .urd-smart-gap {

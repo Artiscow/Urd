@@ -16,6 +16,7 @@ import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
 import { shellState } from './shell.svelte.js';
+import { paletteState } from './palette.svelte.js';
 import { siteState } from './site.svelte.js';
 import { templatesState } from './templates.svelte.js';
 import { linkState } from './link.svelte.js';
@@ -189,6 +190,8 @@ function onIframeLoad() {
     onRequestBlock: blocksState.handleRequestBlock,
     onCalendarDesigns: (msg) => { pageState.designPicker = { mode: 'add', place: { sectionId: msg.sectionId, at: msg.at } }; },
     onShortcuts: () => shellState.openShortcuts(),
+    onPalette: () => paletteState.openPalette(),
+    onCommands: (msg) => { paletteState.pluginCommands = msg.commands; },
     onMoveBlockSection: bridgeState.handleMoveBlockSection,
     onMobileReset: bridgeState.handleMobileReset,
     onMobileOrder: bridgeState.handleMobileOrder,

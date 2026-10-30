@@ -222,6 +222,8 @@ test('the Properties panel renders a section with every setting on, and a select
   assert.match(body, /bg-layer/, 'the background layers are drawn');
   body = draw(panels.Properties, 'properties', structuredClone(site), { selectedBlock: textBlock });
   assert.match(body, /menu-quick/, 'the element menu is drawn for the selected block');
+  assert.equal([...body.matchAll(/class="emenu-head"/g)].length, 3, 'the three areas stand under each other with a heading each');
+  assert.match(body, /class="help-chip"/, 'the Placement heading carries the layout help chip');
 });
 
 test('the section Properties draws its link name, with a suggestion from its first heading while it has none', () => {
