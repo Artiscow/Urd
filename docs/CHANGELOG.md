@@ -8,6 +8,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.15 - The gradient's colours at positions on a bar, an opacity per colour, and the animations' pace - 30 October 2026
+
+- A gradient's colours were set as a share of the space each, a weight the engine normalised, so the slider read one number and the label beside it another, and nothing showed where a colour sat; no builder in the comparison's field works that way (every one places a colour at a position). The gradient layer is version 2: each colour is a stop at a position, the migration puts every stored colour at the centre of the band its share gave it, so a built site looks the same (`backgrounds/gradient.js`, SCHEMA.md, the example pages).
+- The editor had a list of rows with a weight slider each. A bar under Shape shows the gradient with a handle per colour: a handle is dragged along it or moved with the arrow keys, a press on the bar adds a colour there, «+ Add colour» puts one in the widest gap, and the rows stand in position order with a position slider each (`lib/gradient-stops.js`).
+- A colour could not be see-through on its own. Each row has an opacity field, painted with `color-mix` towards transparent, so a gradient fades over a picture.
+- Every gradient animation ran at a fixed pace. «Time per cycle» under Motion sets the seconds per round, 3 to 90; without it each animation keeps its pace (`speed`, additive).
+- The «Hero» section template stored its gradient as two bare strings, which the engine read as the default colour twice, so the hero was a solid colour. It is a real gradient, and the migration reads bare strings as colours.
+- The template gallery's card for a section with a gradient fell back to grey, since the thumbnail read the first stop as a string. It reads the stop's colour.
+- The Swedish language pack carried the weight slider's keys. They are gone with the keys in the five dictionaries.
+- 0.7.9's component tokens item names where the field puts gradients beyond backgrounds (buttons, text boxes, shapes, headings), from the research read for this round.
+
+The independent review before the commit read the diff with no description of the change, against AGENTS.md and ADR-0005, and found these:
+
+- The editor read a layer's props as stored, while the page load lifts only the page schema, so a gradient stored at version 1 opened with every handle at 0 % and an edit wrote positions beside the shares the engine still read. The editor shows a layer lifted and lifts it in place, props and version, at its first edit.
+- SCHEMA.md's section example still showed the gradient layer at version 1 with shares. It shows version 2 with positions.
+- A colour added from the bar took the nearest colour without its opacity, so a press on the «Hero over a photo» veil put an opaque band in it. The new stop takes the opacity too.
+- An arrow-key move past a neighbour left the rows out of order, and sorting rounded every stop to a whole number, so an untouched stop moved with the undo step. The rows sort when the handle loses focus, and sorting keeps positions as stored.
+
+
 ### 0.7.10.14 - The menu's second submenu level beside its panel, its arrow inside the pill, and a short «Title» - 28 October 2026
 
 - A submenu's own submenu opened 4 px inside the first panel and 8 px below its row. It opens at the panel's outer edge with its first entry level with its row, in every submenu design and mirrored with the items on the right (`base.css`).

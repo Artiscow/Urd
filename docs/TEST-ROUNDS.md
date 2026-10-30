@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.15): the gradient bar, the opacity per colour and the animations' pace
+
+- [ ] Properties on Kaker's first section, Background, the gradient layer: a bar under Shape with a handle per colour where its row's slider says; drag a handle and the strip, the page and the row follow, and the rows sort into position order on release; a press on the bar adds a colour there in the nearest colour; «+ Add colour» lands in the widest gap; Tab to a handle and the arrow keys move it one step, ten with Shift
+- [ ] Two handles dragged to one spot give a hard edge on the page; a row's opacity at 40 lets the layer under show through that colour, 100 is opaque; × stands on the rows from three colours and is gone at two; Ctrl+Z takes a drag back in one step
+- [ ] The tooltips on the bar, a handle, the position slider, the opacity field and «+ Add colour», in English, bokmål and Turkish
+- [ ] Kaker's gradient and the front page's rolling eight-colour gradient look as before the update in the editor and published, the loop seamless; a gradient of two equal shares before shows 25 % and 75 %
+- [ ] «+ New section», Hero: a dark-to-purple gradient, and its card in the gallery drawn in the gradient's first colour; «Hero over a photo»: the veil fades from clear at the top as before
+- [ ] Motion on a gradient: «Time per cycle» appears under it with the animation's own pace (Pan 18 s, Pan one way 30 s, Rotate 40 s, Pulse 7 s, Orbit 26 s); 10 s runs the animation faster in the preview and published, the loop still seamless; None hides the slider; under reduced motion nothing moves
+
 ### Test batch (0.7.10.14): the menu's second submenu level and the arrow in the pill
 
 - [ ] Butikk › Shop FP › Checkout, on the published page and in the editor: the second panel opens at the first panel's edge with no gap and no overlap, «Checkout» level with «Shop FP», in Card (standard), Flat surface, Pill items and Underline list, and to the left with the menu items on the right

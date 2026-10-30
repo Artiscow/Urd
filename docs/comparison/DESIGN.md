@@ -554,7 +554,7 @@ OKLCH reaches the P3 gamut directly, and `@media (color-gamut: p3)` can raise th
 | Layer | What it does in Urd |
 |---|---|
 | Colour | A flat token or custom colour |
-| Gradient | Linear or radial, animated as pan, pan loop, rotate, pulse or orbit; the pans and the orbit move on `transform`, rotate turns the angle through a custom property, and pulse breathes the opacity |
+| Gradient | Linear or radial, the colours as stops at positions on a bar with an opacity each (0.7.10.15), animated as pan, pan loop, rotate, pulse or orbit with a time per cycle; the pans and the orbit move on `transform`, rotate turns the angle through a custom property, and pulse breathes the opacity |
 | Glow | Soft light fields |
 | Grain | Noise texture over the layers below |
 | Image | With parallax, Ken Burns, drift or blur |

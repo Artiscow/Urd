@@ -59,7 +59,7 @@ function bgFill(section) {
     if (layer.type === 'color') return safeColor(layer.props?.value, FALLBACK_BG);
     if (layer.type === 'gradient') {
       const stop = Array.isArray(layer.props?.stops) ? layer.props.stops[0] : null;
-      return safeColor(stop, FALLBACK_BG);
+      return safeColor(stop?.color ?? stop, FALLBACK_BG);
     }
   }
   return token('bg', FALLBACK_BG);

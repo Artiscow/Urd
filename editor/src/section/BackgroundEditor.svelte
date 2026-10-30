@@ -6,6 +6,9 @@
   import { ta, tp, taApiError } from '$engine/i18n.js';
   import { BG_PATTERNS, PATTERN_SIZE, PATTERN_OPACITY, bgPattern } from '$engine/backgrounds/pattern.js';
   import { slideshowLayer } from '$engine/backgrounds/slideshow.js';
+  import { gradientLayer, gradientRender, gradientSpeed, GRAD_SPEED_RANGE } from '$engine/backgrounds/gradient.js';
+  import { lift } from '$engine/migrate.js';
+  import { sortStops, pointerAt, widestGapAt, addStopAt } from '../lib/gradient-stops.js';
   import { GALLERY_STYLES, GALLERY_SHAPES, GALLERY_LOOKS, GALLERY_TONES, styleMotion, motionsFor, frameSize, roundable, colouredLook, frameColor } from '$engine/gallery-layout.js';
   import { loadFolderPhotos, parsePhotoSource } from '$engine/photo-source.js';
   import { ICONS } from '../lib/icons.js';
@@ -146,13 +149,22 @@
     setBgProp(bg, i, 'size', clampBgSize(Math.round(size * 100) / 100));
   }
 
+  /** A stored gradient layer as the current version reads it: a layer stored at an older version is shown lifted, and lifted in place at its first edit (mutateGradient), so the editor and the engine read one shape. */
   function gradientProps(layer) {
-    return layer.props;
+    // The lift clones its input, so it reads a snapshot, never the state proxy.
+    const lifted = lift($state.snapshot(layer), gradientLayer);
+    return lifted.ok ? lifted.props : layer.props;
   }
 
   function mutateGradient(bg, i, key, fn) {
     bg.mutate(key, (t) => {
-      fn(t.background.layers[i].props);
+      const layer = t.background.layers[i];
+      const lifted = lift($state.snapshot(layer), gradientLayer);
+      if (lifted.ok && lifted.version !== layer.version) {
+        layer.props = lifted.props;
+        layer.version = lifted.version;
+      }
+      fn(layer.props);
     });
   }
 
@@ -179,11 +191,55 @@
     });
   }
 
-  /** New color at the bottom of the list, with a share equal to the average. */
+  /** A stop's position while it is dragged or slid: one undo step per stop, the rows kept in place until the move ends. */
+  function setGradAt(bg, i, si, at) {
+    mutateGradient(bg, i, `edit:${bg.keyPrefix}-${bg.keyId}-${i}-stop${si}-at`, (p) => {
+      p.stops[si] = { ...p.stops[si], at };
+    });
+  }
+
+  /** The rows in position order once a move has ended (lib/gradient-stops.js). */
+  function sortGradStops(bg, i) {
+    mutateGradient(bg, i, `edit:${bg.keyPrefix}-${bg.keyId}-${i}-stops-sort`, (p) => {
+      p.stops = sortStops(p.stops);
+    });
+  }
+
+  /** The stop's own opacity as a percentage, 100 stored as no field. */
+  function setGradAlpha(bg, i, si, percent) {
+    const v = Math.min(100, Math.max(0, Math.round(Number(percent) || 0)));
+    mutateGradient(bg, i, `edit:${bg.keyPrefix}-${bg.keyId}-${i}-stop${si}-alpha`, (p) => {
+      const stop = { ...p.stops[si] };
+      if (v >= 100) delete stop.alpha;
+      else stop.alpha = v / 100;
+      p.stops[si] = stop;
+    });
+  }
+
+  /** The swatch a stop is painted with in the admin: the theme swatch for a token, else the colour itself. */
+  function stopSwatch(color) {
+    return themeSwatches().find(([name]) => name === color)?.[1] ?? color;
+  }
+
+  /** The gradient's colours drawn left to right on the bar, with the theme swatches for token colours. */
+  function gradPreviewCss(stops) {
+    const painted = stops.map((s) => ({ ...s, color: stopSwatch(s.color) }));
+    return gradientRender({ kind: 'linear', angle: 90, stops: painted }).background;
+  }
+
+  /** «+ Add colour»: a stop in the middle of the widest gap, with the nearest colour. */
   function addGradStop(bg, i) {
     mutateGradient(bg, i, bg.keyPrefix, (p) => {
-      const avg = Math.round(p.stops.reduce((a, s) => a + (Number(s.share) || 0), 0) / p.stops.length) || 50;
-      p.stops.push({ color: p.stops[p.stops.length - 1]?.color ?? '#ffffff', share: avg });
+      p.stops = addStopAt(p.stops, widestGapAt(p.stops));
+    });
+  }
+
+  /** A press on the bar itself adds a stop where the pointer is. */
+  function addGradStopAtPointer(bg, i, event) {
+    if (event.button !== 0 || event.target.closest('.grad-handle')) return;
+    const at = pointerAt(event.clientX, event.currentTarget.getBoundingClientRect());
+    mutateGradient(bg, i, bg.keyPrefix, (p) => {
+      p.stops = addStopAt(p.stops, at);
     });
   }
 
@@ -193,66 +249,34 @@
     });
   }
 
-  function reorderGradStop(bg, i, from, to) {
-    mutateGradient(bg, i, bg.keyPrefix, (p) => {
-      const [moved] = p.stops.splice(from, 1);
-      p.stops.splice(to, 0, moved);
-    });
-  }
+  /** The handle being dragged on a bar: {layer, index} or null. */
+  let handleDrag = $state(null);
 
-  /** Ongoing drag reordering of gradient colors: {layer, from, insert}
-   *  or null. insert is the insertion slot (0..count), drawn as a line
-   *  above the row (or below the last one). */
-  let stopDrag = $state(null);
-
-  /** Pointer-based drag (not HTML5 dnd: it gives neither a visual
-   *  indicator nor a reliable drop on the neighboring row). The dragged
-   *  row is dimmed, and the insertion line follows the pointer; the drop
-   *  performs ONE undo step. */
-  function startStopDrag(bg, event, layerI, si) {
+  /** A handle follows the pointer along its bar; the rows are sorted into position order when it is let go. */
+  function startHandleDrag(bg, event, layerI, si) {
     if (event.button !== 0) return;
     event.preventDefault();
-    const container = event.currentTarget.closest('.bg-layer');
-    const row = event.currentTarget.closest('.grad-stop');
-    stopDrag = { layer: layerI, from: si, insert: si };
-
-    // Ghost row: a copy of the whole row (with the color) follows the
-    // pointer, so you see WHAT you are dragging, not just where it lands.
-    // Inline style, since the copy lives on document.body outside the
-    // component tree.
-    const rect = row.getBoundingClientRect();
-    const grabY = event.clientY - rect.top;
-    const ghost = row.cloneNode(true);
-    ghost.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;`
-      + `width:${rect.width}px;display:flex;align-items:center;gap:0.4rem;`
-      + 'pointer-events:none;z-index:1000;opacity:0.92;padding:2px 4px;'
-      + 'background:var(--urd-color-surface);border:1px solid var(--urd-color-accent);border-radius:6px;';
-    document.body.appendChild(ghost);
-
-    const move = (ev) => {
-      ghost.style.top = `${ev.clientY - grabY}px`;
-      const rects = [...container.querySelectorAll('.grad-stop')].map((r) => r.getBoundingClientRect());
-      let insert = rects.length;
-      for (let k = 0; k < rects.length; k++) {
-        if (ev.clientY < rects[k].top + rects[k].height / 2) {
-          insert = k;
-          break;
-        }
-      }
-      stopDrag = { ...stopDrag, insert };
-    };
+    event.stopPropagation();
+    const bar = event.currentTarget.closest('.grad-preview');
+    handleDrag = { layer: layerI, index: si };
+    const move = (ev) => setGradAt(bg, layerI, si, pointerAt(ev.clientX, bar.getBoundingClientRect()));
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
-      ghost.remove();
-      const drag = stopDrag;
-      stopDrag = null;
-      if (!drag) return;
-      const to = drag.insert > drag.from ? drag.insert - 1 : drag.insert;
-      if (to !== drag.from) reorderGradStop(bg, drag.layer, drag.from, to);
+      handleDrag = null;
+      sortGradStops(bg, layerI);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+  }
+
+  /** The arrow keys move a focused handle one step, ten with Shift; the rows sort when the handle loses focus, so a move past a neighbour never pulls the handle out from under the keys. */
+  function handleKey(bg, event, layerI, si, at) {
+    const step = event.shiftKey ? 10 : 1;
+    const delta = event.key === 'ArrowRight' || event.key === 'ArrowUp' ? step : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -step : 0;
+    if (!delta) return;
+    event.preventDefault();
+    setGradAt(bg, layerI, si, Math.min(100, Math.max(0, at + delta)));
   }
 
   /** Change the layer type afterwards (the layer keeps its slot, props reset). */
@@ -455,26 +479,34 @@
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'gradient'}
         {@const g = gradientProps(layer)}
-        {@const shareSum = g.stops.reduce((a, s) => a + Math.max(0, Number(s.share) || 0), 0)}
         <label title={ta('tip.bg.gradKind')}>{ta('blocks.shape')}
           <Dropdown value={g.kind ?? 'linear'}
             options={[['linear', ta('opt.grad.linear')], ['radial', ta('opt.grad.radial')]]}
             onchange={(v) => setGradKind(bg, i, v)} /></label>
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="grad-preview" title={ta('tip.bg.gradPreview')} style="background: {gradPreviewCss(g.stops)}"
+          onpointerdown={(e) => addGradStopAtPointer(bg, i, e)}>
+          {#each g.stops as stop, si (si)}
+            <button type="button" class="grad-handle" class:dragging={handleDrag?.layer === i && handleDrag.index === si}
+              style="left: {stop.at ?? 0}%; background: {stopSwatch(stop.color)}"
+              title={ta('tip.bg.gradHandle')} aria-label={`${ta('tip.bg.stopColor')} ${si + 1}: ${stop.at ?? 0}%`}
+              onpointerdown={(e) => startHandleDrag(bg, e, i, si)}
+              onkeydown={(e) => handleKey(bg, e, i, si, Number(stop.at) || 0)}
+              onblur={() => sortGradStops(bg, i)}></button>
+          {/each}
+        </div>
         {#each g.stops as stop, si (si)}
-          <span class="nav-line grad-stop"
-            class:dragging={stopDrag?.layer === i && stopDrag.from === si}
-            class:drop-above={stopDrag?.layer === i && stopDrag.insert === si}
-            class:drop-below={stopDrag?.layer === i && stopDrag.insert === g.stops.length && si === g.stops.length - 1}>
-            <span class="grad-grip" title={ta('tip.bg.dragStop')}
-              onpointerdown={(e) => startStopDrag(bg, e, i, si)}>
-              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"/><circle cx="11" cy="3" r="1.4"/><circle cx="5" cy="8" r="1.4"/><circle cx="11" cy="8" r="1.4"/><circle cx="5" cy="13" r="1.4"/><circle cx="11" cy="13" r="1.4"/></svg>
-            </span>
+          <span class="nav-line grad-stop">
             <ColorPicker value={stop.color} tokens={themeSwatches()}
               label={ta('tip.bg.stopColor')} onchange={(hex) => setGradStop(bg, i, si, { color: hex })} />
-            <input type="range" class="tb-grow" min="0" max="100" step="1" value={stop.share ?? 50}
-              title={ta('tip.bg.stopShare')}
-              oninput={(e) => setGradStop(bg, i, si, { share: Number(e.target.value) })} />
-            <span class="gridmenu-value">{shareSum > 0 ? Math.round((Math.max(0, Number(stop.share) || 0) / shareSum) * 100) : Math.round(100 / g.stops.length)}%</span>
+            <input type="range" class="tb-grow" min="0" max="100" step="1" value={stop.at ?? 0}
+              title={ta('tip.bg.stopAt')}
+              oninput={(e) => setGradAt(bg, i, si, Number(e.target.value))}
+              onchange={() => sortGradStops(bg, i)} />
+            <span class="gridmenu-value">{Math.round(Number(stop.at) || 0)}%</span>
+            <input type="number" class="grad-alpha" min="0" max="100" step="5" value={Math.round((stop.alpha ?? 1) * 100)}
+              title={ta('tip.bg.stopAlpha')}
+              onchange={(e) => setGradAlpha(bg, i, si, e.target.value)} />
             {#if g.stops.length > 2}
               <button class="ghost row-tool" title={ta('tip.bg.removeStop')}
                 onclick={() => removeGradStop(bg, i, si)}>{@html ICONS.cross}</button>
@@ -506,6 +538,12 @@
           <Dropdown value={g.animation ?? 'none'}
             options={GRAD_ANIMATIONS[(g.kind ?? 'linear') === 'radial' ? 'radial' : 'linear']}
             onchange={(v) => setGradProp(bg, i, 'animation', v)} /></label>
+        {#if (g.animation ?? 'none') !== 'none'}
+          <label title={ta('tip.bg.motionSpeed')}>{ta('lbl.motionSpeed')}
+            <span class="gridmenu-value">{gradientSpeed(g, g.animation)} s</span></label>
+          <input type="range" min={GRAD_SPEED_RANGE.min} max={GRAD_SPEED_RANGE.max} step="1" value={gradientSpeed(g, g.animation)}
+            oninput={(e) => setGradProp(bg, i, 'speed', Number(e.target.value))} />
+        {/if}
       {:else if layer.type === 'glow'}
         <label title={ta('tip.bg.glowColor')}>{ta('lbl.color')}
           <ColorPicker value={layer.props.color} tokens={themeSwatches()}

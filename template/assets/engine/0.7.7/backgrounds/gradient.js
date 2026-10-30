@@ -1,12 +1,13 @@
 /**
- * Background layer: gradient. Linear or radial. The colors are a LIST in
- * order (first to last along the gradient), and each color has a share of
- * the space (share): how much of the gradient it covers. A color with a
- * share of 0 gives a hard color edge. Optional animation per shape.
+ * Background layer: gradient. Linear or radial. The colors are stops: each
+ * color sits at a position along the gradient (at, 0 to 100), with its own
+ * opacity (alpha, 0 to 1, omitted means opaque). Two colors at one position
+ * give a hard color edge. Optional animation per shape.
  *
- * The shares are weights: they are normalized at render time, so the sum
- * need not be 100. Each color is painted in the middle of its band; the CSS
- * stretches the first and last color out to the edges.
+ * Version 1 gave each color a share of the space instead, a weight that was
+ * normalized at render time and painted in the middle of its band; the 1 -> 2
+ * migration turns those band centers into positions, so a stored gradient
+ * looks the same.
  */
 import { resolveColor } from '../theme.js';
 
@@ -16,19 +17,91 @@ const ANIMATIONS = {
   radial: ['pulse', 'orbit'],
 };
 
-/** Normalizes the shares into color positions (the center of each band, 0-100). */
-function centers(stops) {
+/** The seconds one round of each animation takes when the layer sets no `speed` (the durations base.css falls back to). */
+export const GRAD_SPEED = { pan: 18, 'pan-loop': 30, rotate: 40, pulse: 7, orbit: 26 };
+
+/** The bounds of the `speed` field, seconds per round. */
+export const GRAD_SPEED_RANGE = { min: 3, max: 90 };
+
+/** The layer's time per round in seconds: its own `speed` inside the bounds, else the animation's default. */
+export function gradientSpeed(props, animation) {
+  const own = Number(props?.speed);
+  if (Number.isFinite(own) && own > 0) return Math.min(GRAD_SPEED_RANGE.max, Math.max(GRAD_SPEED_RANGE.min, own));
+  return GRAD_SPEED[animation] ?? 18;
+}
+
+const DEFAULT_STOPS = [{ color: '#0b0e14', at: 0 }, { color: '#1a1030', at: 100 }];
+
+const clampAt = (v) => Math.min(100, Math.max(0, Number(v)));
+const r2 = (v) => Math.round(v * 100) / 100;
+
+/**
+ * The stops as the CSS reads them: in position order, each with its color,
+ * position and opacity. A stop stored as a bare color string reads as that
+ * color, a stop without a usable position stands where the list order puts
+ * it (spread evenly), and the order among stops at one position is the list
+ * order, so a hard edge keeps its two colors the way round they were given.
+ * @param {Array<{color?: string, at?: number, alpha?: number}|string>|undefined} stops
+ * @returns {Array<{color: string, at: number, alpha: number}>}
+ */
+export function stopPositions(stops) {
+  const list = Array.isArray(stops) && stops.length ? stops : DEFAULT_STOPS;
+  const last = Math.max(1, list.length - 1);
+  return list
+    .map((s, i) => {
+      const stop = typeof s === 'string' ? { color: s } : (s ?? {});
+      const at = Number.isFinite(Number(stop.at)) && stop.at !== null && stop.at !== '' ? clampAt(stop.at) : (i / last) * 100;
+      const alpha = Number.isFinite(Number(stop.alpha)) && stop.alpha !== null && stop.alpha !== '' ? Math.min(1, Math.max(0, Number(stop.alpha))) : 1;
+      return { color: stop.color ?? '#0b0e14', at: r2(at), alpha, i };
+    })
+    .sort((a, b) => a.at - b.at || a.i - b.i)
+    .map(({ color, at, alpha }) => ({ color, at, alpha }));
+}
+
+/** A stop's color as painted: the theme token or hex, mixed towards transparent by its opacity. */
+function paint(stop) {
+  const color = resolveColor(stop.color);
+  if (stop.alpha >= 1) return color;
+  return `color-mix(in srgb, ${color} ${Math.round(stop.alpha * 100)}%, transparent)`;
+}
+
+/**
+ * The widest color band as a share of the gradient (0..1): each color owns
+ * the stretch from the midpoint to its neighbor on either side, the first
+ * from 0 and the last to 100. The loop's period length reads it.
+ */
+function widestBand(list) {
+  if (list.length < 2) return 1;
+  let widest = 0;
+  for (let i = 0; i < list.length; i++) {
+    const from = i === 0 ? 0 : (list[i - 1].at + list[i].at) / 2;
+    const to = i === list.length - 1 ? 100 : (list[i].at + list[i + 1].at) / 2;
+    widest = Math.max(widest, to - from);
+  }
+  return widest / 100;
+}
+
+/**
+ * The version 1 shares as positions: the center of each color's band, with
+ * the shares read as weights that need not sum to 100 and a missing or zero
+ * sum giving equal bands. A share of 0 lands the color on its neighbors'
+ * boundary, which is where the hard edge stood.
+ * @param {Array<{color?: string, share?: number}|string>|undefined} stops
+ * @returns {Array<{color: string, at: number}>}
+ */
+export function sharesToPositions(stops) {
   const list = Array.isArray(stops) && stops.length ? stops : [{ color: '#0b0e14' }, { color: '#1a1030' }];
-  const weights = list.map((s) => Math.max(0, Number(s?.share) || 0));
+  const items = list.map((s) => (typeof s === 'string' ? { color: s } : (s ?? {})));
+  const weights = items.map((s) => Math.max(0, Number(s.share) || 0));
   const sum = weights.reduce((a, b) => a + b, 0);
   const even = sum <= 0;
-  const total = even ? list.length : sum;
+  const total = even ? items.length : sum;
   let cum = 0;
-  return list.map((s, i) => {
+  return items.map((s, i) => {
     const w = even ? 1 : weights[i];
     const at = ((cum + w / 2) / total) * 100;
     cum += w;
-    return { color: s?.color ?? '#0b0e14', at: Math.round(at * 100) / 100 };
+    return { color: s.color ?? '#0b0e14', at: r2(at) };
   });
 }
 
@@ -38,18 +111,17 @@ function centers(stops) {
  *  only once unless it has been added twice). The positions are percentages
  *  of ONE period. */
 function cyclicCycle(list) {
-  const r2 = (v) => Math.round(v * 100) / 100;
   const shift = list[0]?.at ?? 0;
   return [
-    ...list.map((s) => ({ color: s.color, at: r2(s.at - shift) })),
-    { color: list[0]?.color ?? '#0b0e14', at: 100 },
+    ...list.map((s) => ({ color: s.color, alpha: s.alpha, at: r2(s.at - shift) })),
+    { color: list[0]?.color ?? '#0b0e14', alpha: list[0]?.alpha ?? 1, at: 100 },
   ];
 }
 
 /**
  * The loop geometry (pure, node-testable): follows the angle the owner has set.
  * The period is the gradient line across the surface plus JUST enough for the
- * hidden part of the cycle to hold the largest color: no color can then be
+ * hidden part of the cycle to hold the widest color: no color can then be
  * split across the edges of the visible area (the rule that no color shows
  * twice), while the colors keep roughly the same size as in the static
  * gradient (with 7 equal colors the period is only 1/6 longer than the line,
@@ -60,19 +132,19 @@ function cyclicCycle(list) {
  * @param {number} width Surface width in px
  * @param {number} height Surface height in px
  * @param {number} angleDeg The gradient angle
- * @param {number} [maxShare] The largest color's normalized share (0..1)
+ * @param {number} [maxShare] The widest color band as a share of the gradient (0..1)
  * @returns {{period: number, dx: number, dy: number}} px, rounded to 2 decimals
  */
 export function loopGeometry(width, height, angleDeg, maxShare = 0.5) {
   const rad = ((angleDeg % 360) * Math.PI) / 180;
   // || 0 normalizes -0 (floating-point noise at exact angles).
-  const r2 = (v) => Math.round(v * 100) / 100 || 0;
+  const round = (v) => Math.round(v * 100) / 100 || 0;
   const line = Math.abs(width * Math.sin(rad)) + Math.abs(height * Math.cos(rad));
   // Clamped so an extremely dominant color cannot give an absurdly long
   // period (and never a division by zero).
   const share = Math.min(Math.max(maxShare, 0), 0.9);
   const period = line / (1 - share);
-  return { period: r2(period), dx: r2(Math.sin(rad) * period), dy: r2(-Math.cos(rad) * period) };
+  return { period: round(period), dx: round(Math.sin(rad) * period), dy: round(-Math.cos(rad) * period) };
 }
 
 /**
@@ -81,7 +153,7 @@ export function loopGeometry(width, height, angleDeg, maxShare = 0.5) {
  */
 export function loopGradientCss(stops, angleDeg, periodPx) {
   const css = stops
-    .map((s) => `${resolveColor(s.color)} ${Math.round((s.at / 100) * periodPx * 100) / 100}px`)
+    .map((s) => `${paint({ color: s.color, alpha: s.alpha ?? 1 })} ${Math.round((s.at / 100) * periodPx * 100) / 100}px`)
     .join(', ');
   return `repeating-linear-gradient(${angleDeg}deg, ${css})`;
 }
@@ -91,8 +163,8 @@ export function loopGradientCss(stops, angleDeg, periodPx) {
  * background CSS, extra style properties (kebab-case, including CSS vars)
  * and the animation class.
  *
- * @param {{kind?: string, stops: Array<{color: string, share?: number}>, angle?: number, x?: number, y?: number, animation?: string, opacity?: number}} props
- * @returns {{background: string|null, className: string|null, styles: Record<string, string>, loop?: {angle: number, stops: Array<{color: string, at: number}>}, runner?: {className: string, background: string, left?: string, top?: string}}}
+ * @param {{kind?: string, stops: Array<{color: string, at?: number, alpha?: number}>, angle?: number, x?: number, y?: number, animation?: string, speed?: number, opacity?: number}} props
+ * @returns {{background: string|null, className: string|null, styles: Record<string, string>, loop?: {angle: number, stops: Array<{color: string, at: number, alpha: number}>, maxShare: number}, runner?: {className: string, background: string, left?: string, top?: string}}}
  *   loop is set only for pan-loop: the gradient is then painted on a runner
  *   in px once the surface can be measured (see render), and background is
  *   null. runner is set for pan/orbit: the gradient is painted on a 200 %
@@ -102,10 +174,12 @@ export function loopGradientCss(stops, angleDeg, periodPx) {
 export function gradientRender(props) {
   const kind = props.kind === 'radial' ? 'radial' : 'linear';
   const anim = (ANIMATIONS[kind] ?? []).includes(props.animation) ? props.animation : null;
-  const list = centers(props.stops);
-  const cssStops = list.map((s) => `${resolveColor(s.color)} ${s.at}%`).join(', ');
+  const list = stopPositions(props.stops);
+  const cssStops = list.map((s) => `${paint(s)} ${s.at}%`).join(', ');
 
   const styles = {};
+  // The time per round, read by every animation's CSS through the variable; the runners inherit it from the layer.
+  if (anim && props.speed != null) styles['--urd-grad-time'] = `${gradientSpeed(props, anim)}s`;
   let background;
   if (kind === 'radial') {
     const x = Math.round((props.x ?? 0.5) * 100);
@@ -127,16 +201,13 @@ export function gradientRender(props) {
     const angle = props.angle ?? 160;
     if (anim === 'pan-loop') {
       // The runner model (see render): the pure recipe is the cycle, the angle
-      // and the largest color share (which drives the period length); the px
+      // and the widest color band (which drives the period length); the px
       // measurements are set only once the surface can be measured.
-      const weights = (props.stops ?? []).map((s) => Math.max(0, Number(s?.share) || 0));
-      const sum = weights.reduce((a, b) => a + b, 0);
-      const maxShare = sum > 0 ? Math.max(...weights) / sum : 1 / list.length;
       return {
         background: null,
         className: null,
         styles,
-        loop: { angle, stops: cyclicCycle(list), maxShare },
+        loop: { angle, stops: cyclicCycle(list), maxShare: widestBand(list) },
       };
     }
     background = anim === 'rotate'
@@ -186,22 +257,26 @@ function registerSpin() {
 }
 
 export const gradientLayer = {
-  version: 1,
+  version: 2,
   label: 'Gradient',
   labelKey: 'bgLayer.gradient',
   defaults: () => ({
     kind: 'linear',
-    stops: [{ color: '#0b0e14', share: 50 }, { color: '#1a1030', share: 50 }],
+    stops: DEFAULT_STOPS.map((s) => ({ ...s })),
     angle: 160,
     x: 0.5,
     y: 0.5,
     animation: 'none',
     opacity: 1,
   }),
-  migrations: {},
+  migrations: {
+    // 1 -> 2: the shares become positions at the band centers, so the gradient
+    // keeps its look; the other props stand as stored.
+    1: (props) => ({ ...props, stops: sharesToPositions(props?.stops) }),
+  },
   /**
    * @param {HTMLElement} el
-   * @param {{kind: string, stops: Array<{color: string, share: number}>, angle: number, x: number, y: number, animation: string, opacity?: number}} props
+   * @param {{kind: string, stops: Array<{color: string, at: number, alpha?: number}>, angle: number, x: number, y: number, animation: string, opacity?: number}} props
    */
   render(el, props) {
     const r = gradientRender(props);

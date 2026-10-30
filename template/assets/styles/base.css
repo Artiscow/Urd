@@ -17090,8 +17090,11 @@ body:has(.urd-contact-dock) {
   height: 200%;
 }
 
+/* Every gradient animation reads its time per round from --urd-grad-time, set
+   inline on the layer from its speed field (gradientRender); the fallback is
+   the animation's own pace. */
 .urd-bg-pan-runner {
-  animation: urd-bg-pan 18s ease-in-out infinite alternate;
+  animation: urd-bg-pan var(--urd-grad-time, 18s) ease-in-out infinite alternate;
 }
 
 @keyframes urd-bg-pan {
@@ -17111,7 +17114,7 @@ body:has(.urd-contact-dock) {
 .urd-bg-loop-runner {
   position: absolute;
   inset: 0;
-  animation: urd-bg-loop 30s linear infinite;
+  animation: urd-bg-loop var(--urd-grad-time, 30s) linear infinite;
 }
 
 @keyframes urd-bg-loop {
@@ -17121,7 +17124,7 @@ body:has(.urd-contact-dock) {
 /* Rotation: the angle spins through the registered --urd-grad-spin
    (CSS.registerProperty in gradient.js); without support it stands still */
 .urd-bg-rotate {
-  animation: urd-bg-rotate 40s linear infinite;
+  animation: urd-bg-rotate var(--urd-grad-time, 40s) linear infinite;
 }
 
 @keyframes urd-bg-rotate {
@@ -17131,7 +17134,7 @@ body:has(.urd-contact-dock) {
 /* Pulsing (radial): the strength breathes around the layer's own opacity;
    the 0/100 % frames inherit the inline value, so the breath always starts there */
 .urd-bg-pulse {
-  animation: urd-bg-pulse 7s ease-in-out infinite;
+  animation: urd-bg-pulse var(--urd-grad-time, 7s) ease-in-out infinite;
 }
 
 @keyframes urd-bg-pulse {
@@ -17142,7 +17145,7 @@ body:has(.urd-contact-dock) {
    so the center of the gradient stays in place, and the orbit swings it ±2 % of
    its own size (= 4 % of the surface) */
 .urd-bg-orbit-runner {
-  animation: urd-bg-orbit 26s ease-in-out infinite;
+  animation: urd-bg-orbit var(--urd-grad-time, 26s) ease-in-out infinite;
 }
 
 @keyframes urd-bg-orbit {

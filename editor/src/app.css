@@ -2401,19 +2401,39 @@
     align-self: stretch;
   }
 
-  /* The gradient colors' drag handle: the order is dragged with the
-     pointer (startStopDrag); the row is dimmed and the insertion line follows */
-  .grad-grip {
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
+  /* The gradient bar: the gradient left to right with a handle per colour at
+     its position; a press on the bar adds a colour there, a handle is dragged
+     along it (startHandleDrag) or moved with the arrow keys */
+  .grad-preview {
+    position: relative;
+    height: 1.6rem;
+    margin: 0.2rem 0 0.6rem;
+    border-radius: var(--urd-radius-sm, 6px);
+    cursor: copy;
+  }
+
+  .grad-handle {
+    position: absolute;
+    top: 50%;
+    width: 0.9rem;
+    height: 0.9rem;
+    padding: 0;
+    translate: -50% -50%;
+    border: 2px solid var(--urd-color-bg);
+    border-radius: 999px;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--urd-color-text) 45%, transparent);
     cursor: grab;
-    opacity: 0.55;
     touch-action: none;
   }
 
-  .grad-grip:hover {
-    opacity: 1;
+  .grad-handle:focus-visible {
+    outline: 2px solid var(--urd-color-accent);
+    outline-offset: 1px;
+  }
+
+  .grad-handle.dragging {
+    cursor: grabbing;
+    scale: 1.2;
   }
 
   .grad-stop {
@@ -2421,16 +2441,9 @@
     gap: 0.4rem;
   }
 
-  .grad-stop.dragging {
-    opacity: 0.45;
-  }
-
-  .grad-stop.drop-above {
-    box-shadow: 0 -2px 0 0 var(--urd-color-accent);
-  }
-
-  .grad-stop.drop-below {
-    box-shadow: 0 2px 0 0 var(--urd-color-accent);
+  .grad-stop .grad-alpha {
+    flex: 0 0 3.6rem;
+    width: 3.6rem;
   }
 
   /* Compact color buttons in the gradient rows (same height as the row buttons) */

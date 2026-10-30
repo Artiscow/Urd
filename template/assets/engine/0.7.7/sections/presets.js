@@ -274,7 +274,7 @@ export function registerSectionPresets(Urd) {
     create: () => section('hero', '70vh', {
       version: 1,
       layers: [
-        { type: 'gradient', version: 1, props: { stops: ['#0b0e14', '#1a1030'], angle: 160, animate: false } },
+        { type: 'gradient', version: 2, props: { kind: 'linear', stops: [{ color: '#0b0e14', at: 0 }, { color: '#1a1030', at: 100 }], angle: 160, animation: 'none' } },
         glowLayer(0.7, 0.2, 0.35),
         { type: 'grain', version: 1, props: { opacity: 0.06 } },
       ],
@@ -324,11 +324,11 @@ export function registerSectionPresets(Urd) {
           // stand on whatever they pick.
           {
             type: 'gradient',
-            version: 1,
+            version: 2,
             props: {
               kind: 'linear',
               angle: 180,
-              stops: [{ color: '#00000000', share: 45 }, { color: '#000000b3', share: 55 }],
+              stops: [{ color: '#000000', at: 22.5, alpha: 0 }, { color: '#000000', at: 72.5, alpha: 0.7 }],
             },
           },
         ],
