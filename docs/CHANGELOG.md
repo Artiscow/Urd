@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.14 - The menu's second submenu level beside its panel, its arrow inside the pill, and a short «Title» - 28 October 2026
+
+- A submenu's own submenu opened 4 px inside the first panel and 8 px below its row. It opens at the panel's outer edge with its first entry level with its row, in every submenu design and mirrored with the items on the right (`base.css`).
+- A slow move from a row to its second level closed it, and in the editor the section's «+ New section» button and toolbar then stood over the panel. The row reaches across the panel's padding with an invisible bridge, only where the second level opens beside the panel.
+- In the Pill items design the arrow of a row with its own submenu stood outside its pill, and a row without a page of its own had no pill. The arrow sits inside the pill's end, and such a row is a pill with its arrow inside, in the phone menus too.
+- The Nav panel's field for a new page read «Title of the new page», cut off in its width. It reads «Title», in nb, nn and tr too.
+
+The independent review before the commit read the diff with no description of the change, against AGENTS.md and the ADRs, and found these:
+
+- The hover bridge also stood in the phone menus, the column and a headed group, where the second level is in the flow, so a strip beside the row reached over the page with pointer events. The bridge is drawn only where the second level opens beside the panel.
+- Two bullets above explained the cause beside the fix, and a comment said «as before». Both are cut.
+- Checked and closed without a change: in the column with Pill items, a row without a page keeps the pill rule's padding and radius, the same values the column gives a link pill.
+
 ### 0.7.0.74 - The test rounds gathered by area, and renamed TEST-ROUNDS.md - 28 October 2026
 
 - The test rounds held 757 open items in 83 batches by commit, many repeating one another, describing features since replaced, or checking what everyday use has confirmed. They stand as 356 items under 20 areas: the past releases (0.7.5 to 0.7.7 and the batched update from v0.7.4), the replaced pickers, Vipps's fixed «kr», the refactor checks of 0.7.26 and the old migration checks are gone, the rest is merged, and items that quoted Norwegian labels use the en-GB ones.

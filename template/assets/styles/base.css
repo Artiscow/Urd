@@ -14590,7 +14590,10 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-tools-none {
   z-index: 1;
   min-width: 12rem;
   margin: 0;
-  padding: 0.5rem;
+  /* The padding as two variables, so the second level can stand clear of the panel (below) */
+  --urd-nav-sub-pad-y: 0.5rem;
+  --urd-nav-sub-pad-x: 0.5rem;
+  padding: var(--urd-nav-sub-pad-y) var(--urd-nav-sub-pad-x);
   list-style: none;
   /* Its own surface variable: by default only the color veil, never the background
      image (nav.style.subImage turns the image on; nav.js sets the variable) */
@@ -14636,11 +14639,13 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-tools-none {
   background: none;
   backdrop-filter: none;
   box-shadow: none;
-  padding: 0.4rem 0;
+  --urd-nav-sub-pad-y: 0.4rem;
+  --urd-nav-sub-pad-x: 0px;
   gap: 0.35rem;
 }
 
-.urd-nav-sub-pills .urd-nav-sub a {
+.urd-nav-sub-pills .urd-nav-sub a,
+.urd-nav-sub-pills .urd-nav-sub .urd-nav-toggle {
   /* Its own pill color (nav.style.subPillColor) with the submenu surface as the
      default; the shadow falls downwards only (see the card above) */
   background: var(--urd-nav-sub-pill, var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 92%, transparent)));
@@ -14650,10 +14655,45 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-tools-none {
   box-shadow: 0 6px 14px -4px rgb(0 0 0 / 15%);
 }
 
+/* An opener without a page of its own is the pill itself, its arrow at the end */
+.urd-nav-sub-pills .urd-nav-sub .urd-nav-toggle {
+  width: 100%;
+  justify-content: space-between;
+  opacity: 1;
+}
+
+/* A row with its own submenu keeps its arrow inside the pill: the link and
+   the caret share one grid cell, the caret at the pill's end over the link's
+   wider right padding. A submenu that stands in the flow (the phone menus, the
+   column) is placed in the row under it by itself; one that opens beside the
+   panel keeps no grid line, so it is placed from the row. */
+.urd-nav-sub-pills .urd-nav-sub .urd-nav-has-sub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+}
+
+.urd-nav-sub-pills .urd-nav-sub .urd-nav-has-sub > a,
+.urd-nav-sub-pills .urd-nav-sub .urd-nav-has-sub > .urd-nav-caret {
+  grid-area: 1 / 1;
+}
+
+.urd-nav-sub-pills .urd-nav-sub .urd-nav-has-sub > a {
+  padding-right: 2.4rem;
+}
+
+.urd-nav-sub-pills .urd-nav-sub .urd-nav-has-sub > .urd-nav-caret {
+  justify-self: end;
+  margin-right: 0.6rem;
+  position: relative;
+  z-index: 1;
+}
+
 .urd-nav-sub-lines .urd-nav-sub {
   border-radius: 0;
   box-shadow: none;
-  padding: 0.25rem 0;
+  --urd-nav-sub-pad-y: 0.25rem;
+  --urd-nav-sub-pad-x: 0px;
 }
 
 .urd-nav-sub-lines .urd-nav-sub a {
@@ -15625,7 +15665,11 @@ body.urd-mobile .urd-nav .urd-nav-list .urd-nav-btn > a,
 
 /* The second submenu level: a child's own submenu opens beside the panel,
    on the outer side, and stacks as an accordion in the column and the
-   mobile menus like the first level. */
+   mobile menus like the first level. It is placed past the panel's padding,
+   so it starts at the panel's outer edge, neither over the panel nor apart
+   from it, with its first entry level with the row that opened it. The two
+   panels touch: a gap between them would put the pointer on the page on its
+   way across, which leaves the menu. */
 .urd-nav-sub .urd-nav-has-sub {
   position: relative;
   align-self: auto;
@@ -15636,16 +15680,40 @@ body.urd-mobile .urd-nav .urd-nav-list .urd-nav-btn > a,
 }
 
 .urd-nav-sub .urd-nav-sub {
-  top: 0;
-  left: 100%;
-  margin-left: 0.25rem;
+  top: calc(-1 * var(--urd-nav-sub-pad-y));
+  left: calc(100% + var(--urd-nav-sub-pad-x));
 }
 
 .urd-nav-right .urd-nav-sub .urd-nav-sub {
   left: auto;
+  right: calc(100% + var(--urd-nav-sub-pad-x));
+}
+
+/* The row reaches across the panel's padding to the second level with an
+   invisible bridge: the pointer on its way over stays inside the row, so a
+   slow move never counts as leaving it and never closes the second level. */
+.urd-nav-sub .urd-nav-has-sub::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: var(--urd-nav-sub-pad-x);
+}
+
+.urd-nav-right .urd-nav-sub .urd-nav-has-sub::after {
+  left: auto;
   right: 100%;
-  margin-left: 0;
-  margin-right: 0.25rem;
+}
+
+/* Where the second level stands in the flow (the phone menus, the column, a
+   headed group) there is nothing to bridge, and the strip would reach past the
+   menu's edge over the page. */
+body.urd-mobile .urd-nav-sub .urd-nav-has-sub::after,
+.urd-nav-mobile .urd-nav-sub .urd-nav-has-sub::after,
+.urd-nav-side-host .urd-nav-sub .urd-nav-has-sub::after,
+.urd-nav-sub-grouped .urd-nav-sub .urd-nav-has-sub::after {
+  content: none;
 }
 
 /* In a column layout or the flyout the second level stands as a headed

@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.14): the menu's second submenu level and the arrow in the pill
+
+- [ ] Butikk › Shop FP › Checkout, on the published page and in the editor: the second panel opens at the first panel's edge with no gap and no overlap, «Checkout» level with «Shop FP», in Card (standard), Flat surface, Pill items and Underline list, and to the left with the menu items on the right
+- [ ] Move the pointer slowly from «Shop FP» over to «Checkout», resting on the way: the second panel stays open, and in the editor no «+ New section» button or section toolbar appears over it
+- [ ] Pill items: the arrow of «Shop FP» stands inside its pill at the right end, a click on it opens and closes the second level, and a click on the words opens the page; a submenu item with no page of its own is a pill with its arrow inside; the same in the phone menus, with the submenu under the pill
+- [ ] Nav panel, Menu items: the field for a new page reads «Title» (bokmål «Tittel», Turkish «Başlık»)
+
 ## Releases and the deployed site
 
 - [ ] At the next release: the release Action runs green by itself, urd-template gets the release with its tag, `URD-LICENSE.md` stands at its root, and the License link in its README (English, and the Norwegian and Turkish under `readme/`) opens it

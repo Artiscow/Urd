@@ -437,7 +437,7 @@ export default {
     'lbl.onMobile': 'Mobilde',
     'lbl.rounding': 'Yuvarlama',
     'ui.newPageAsItem': 'Sayfa oluştur ve ekle',
-    'ph.nav.newPageTitle': 'Yeni sayfanın başlığı',
+    'ph.nav.newPageTitle': 'Başlık',
     'tip.nav.newPageAsItem': 'Bu başlıkla boş bir sayfa oluşturur ve menü ögesi olarak ekler; sayfa düzenleyicide açılır.',
     'seed.home': 'Ana sayfa',
     'tip.nav.dragItem': 'Ögeyi taşımak için sürükle',

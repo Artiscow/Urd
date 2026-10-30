@@ -437,7 +437,7 @@ export default {
     'lbl.onMobile': 'On mobile',
     'lbl.rounding': 'Rounding',
     'ui.newPageAsItem': 'Create page and add',
-    'ph.nav.newPageTitle': 'Title of the new page',
+    'ph.nav.newPageTitle': 'Title',
     'tip.nav.newPageAsItem': 'Creates a blank page with this title and adds it as a menu item; the page opens in the editor.',
     'seed.home': 'Home',
     'tip.nav.dragItem': 'Drag to move the item',

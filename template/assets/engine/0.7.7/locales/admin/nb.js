@@ -440,7 +440,7 @@ export default {
     'lbl.onMobile': 'På mobil',
     'lbl.rounding': 'Avrunding',
     'ui.newPageAsItem': 'Lag side og legg til',
-    'ph.nav.newPageTitle': 'Tittel på ny side',
+    'ph.nav.newPageTitle': 'Tittel',
     'tip.nav.newPageAsItem': 'Oppretter en tom side med denne tittelen og legger den til som menypunkt; siden åpnes i editoren.',
     'seed.home': 'Hjem',
     'tip.nav.dragItem': 'Dra for å flytte punktet',
