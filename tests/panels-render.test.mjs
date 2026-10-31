@@ -24,6 +24,7 @@ const { liftSiteFile } = await import('$engine/migrate.js');
 const NAMES = ['Pages', 'Nav', 'Site', 'Theme', 'Grid', 'Footer', 'Blocks', 'Properties', 'Collections', 'Plugins', 'History', 'Update'];
 const panels = Object.fromEntries(await Promise.all(NAMES.map(async (name) => [name, (await import(`../editor/src/panels/${name}Panel.svelte`)).default])));
 const { default: BackgroundEditor } = await import('../editor/src/section/BackgroundEditor.svelte');
+const { default: Dropdown } = await import('../editor/src/lib/Dropdown.svelte');
 const layerDefs = Object.fromEntries(await Promise.all([
   ['color', 'colorLayer'], ['gradient', 'gradientLayer'], ['glow', 'glowLayer'], ['image', 'imageLayer'],
   ['slideshow', 'slideshowLayer'], ['video', 'videoLayer'], ['pattern', 'patternLayer'], ['grain', 'grainLayer'],
@@ -208,6 +209,11 @@ test('the Theme panel renders a site with and without a dark theme', () => {
     if (alt) draft.theme.alt = alt; else delete draft.theme.alt;
     assert.match(draw(panels.Theme, 'theme', draft), /panel-body/);
   }
+  // The font fields show the chosen face's name drawn in that face.
+  const html = draw(panels.Theme, 'theme', structuredClone(site));
+  const heading = site.theme.tokens.font.heading;
+  const faced = [...html.matchAll(/class="dd-value[^"]*">(?:<!--[^>]*-->)*<span style="font-family: ([^;"]+);/g)].map((m) => m[1]);
+  assert.ok(faced.includes(heading), 'the heading field draws its name in the heading face');
 });
 
 test('the Properties panel renders a section with every setting on, and a selected block with the element menu', () => {
@@ -225,6 +231,19 @@ test('the Properties panel renders a section with every setting on, and a select
   assert.match(body, /menu-quick/, 'the element menu is drawn for the selected block');
   assert.equal([...body.matchAll(/class="emenu-head"/g)].length, 3, 'the three areas stand under each other with a heading each');
   assert.match(body, /class="help-chip"/, 'the Placement heading carries the layout help chip');
+});
+
+test('the dropdown draws a face\'s name in its typeface, and a decorative face\'s in the UI font with its sample beside it', () => {
+  const options = [['', 'Inherit'], ['Georgia, serif', 'Georgia', null, { font: 'Georgia, serif' }], ['cursive', 'Script', null, { font: 'cursive', sample: 'Ag' }]];
+  const plain = render(Dropdown, { props: { value: 'Georgia, serif', options } }).body;
+  assert.match(plain, /class="dd-value[^"]*">(?:<!--[^>]*-->)*<span style="font-family: Georgia, serif;">Georgia<\/span>/);
+  const decorative = render(Dropdown, { props: { value: 'cursive', options } }).body;
+  assert.match(decorative, /class="dd-value[^"]*">(?:<!--[^>]*-->)*Script<span class="dd-sample[^"]*" aria-hidden="true" style="font-family: cursive;">Ag<\/span>/);
+  const none = render(Dropdown, { props: { value: '', options } }).body;
+  assert.match(none, /class="dd-value[^"]*">(?:<!--[^>]*-->)*Inherit/);
+  // A fourth entry without a font name is no face: the label stands in the UI's font.
+  const odd = render(Dropdown, { props: { value: 'x', options: [['x', 'Plain', null, 'an-id']] } }).body;
+  assert.match(odd, /class="dd-value[^"]*">(?:<!--[^>]*-->)*Plain(?:<!--[^>]*-->)*<\/span>/);
 });
 
 test('the section Properties draws its link name, with a suggestion from its first heading while it has none', () => {

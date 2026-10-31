@@ -9,7 +9,7 @@
   import Pin from '../Pin.svelte';
   import BoxStyle from '../BoxStyle.svelte';
   import { ta } from '$engine/i18n.js';
-  import { FONT_STACKS } from '$engine/fonts.js';
+  import { fontChoices } from '$engine/fonts.js';
   import { SIZE_MIN, SIZE_MAX, clampSize, matchFontStack } from '$engine/text-typo.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
@@ -46,7 +46,7 @@
     <button type="button" class="ghost action" title={ta('tip.editText')} onclick={editText}>{ta('ui.editText')}</button>
     {#key selectedBlock.blockId}
       <label title={ta('tip.wholeFont')}>{ta('lbl.wholeFont')}
-        <Dropdown value={wholeStyle.font} options={[['', ta('tt.inheritFont')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])]}
+        <Dropdown value={wholeStyle.font} options={fontChoices(ta, [['', ta('tt.inheritFont')]])}
           onchange={(v) => setTextStyle({ fontFamily: v || null })} /></label>
       <label title={ta('tip.wholeSize')}>{ta('lbl.wholeSize')}
         <input type="number" min={SIZE_MIN} max={SIZE_MAX} step="1" value={wholeStyle.size} placeholder={ta('tt.inheritFont')}

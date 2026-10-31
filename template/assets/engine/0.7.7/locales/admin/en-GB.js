@@ -1979,6 +1979,7 @@ export default {
     'cp.tokenTitleShort': 'Theme colour: {name}',
     'font.arial': 'Arial',
     'font.courier': 'Courier (typewriter)',
+    'font.sample': 'Ag',
     'font.georgia': 'Georgia (serif)',
     'font.palatino': 'Palatino (serif)',
     'font.system': 'System',

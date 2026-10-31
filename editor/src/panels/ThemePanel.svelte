@@ -4,7 +4,7 @@
   import ColorPicker from '../lib/ColorPicker.svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import { ta } from '$engine/i18n.js';
-  import { FONT_STACKS } from '$engine/fonts.js';
+  import { FONT_STACKS, fontChoices } from '$engine/fonts.js';
   const ed = getContext('urd-editor');
   const activeThemePreset = $derived(ed.activeThemePreset);
   const siteDraft = $derived(ed.siteDraft);
@@ -94,13 +94,10 @@
     });
   }
 
-  /** The font dropdown's options: known stacks + any current custom one. */
+  /** The font dropdown's options: known stacks + any current custom one, each drawn in its own face. */
   function fontOptions(which) {
     const cur = siteDraft.theme.tokens.font[which];
-    return [
-      ...(FONT_STACKS.some(([, v]) => v === cur) ? [] : [[cur, ta('opt.customFont')]]),
-      ...FONT_STACKS.map(([name, value]) => [value, ta(name)]),
-    ];
+    return fontChoices(ta, FONT_STACKS.some(([, v]) => v === cur) ? [] : [[cur, ta('opt.customFont'), null, { font: cur }]]);
   }
 
   /** Corner radius from a slider (px). */

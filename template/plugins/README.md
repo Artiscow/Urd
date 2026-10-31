@@ -122,7 +122,7 @@ Urd.blocks.define('venue', {
 
 `prop` is the prop the block keeps its design in, and `id` is the value written there. The engine resolves the labels and the descriptions as it does the fields'. The picture is optional and must be an image file on the site itself (a path from the root); without a picture the tile shows the name. Fewer than two designs is no choice.
 
-**The themed UI rule (ADR-0009)**: never a native `<select>` in editing UI, since its popup follows the operating system's theme and becomes unreadable. Use `createDropdown` from `/assets/urd/dropdown.js`, or segment buttons for small sets of choices.
+**The themed UI rule (ADR-0009)**: never a native `<select>` in editing UI, since its popup follows the operating system's theme and becomes unreadable. Use `createDropdown` from `/assets/urd/dropdown.js`, or segment buttons for small sets of choices. Its options are `[value, label]`, and an option may carry a fourth entry, a face `{ font, sample? }`, which draws the label in that font (a list of typefaces), or keeps the UI font for the label and draws `sample` beside it in the face.
 
 ## The patterns, with the core's code to read
 

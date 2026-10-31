@@ -34,7 +34,7 @@ import { applyImageStyle } from './blocks/image.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
-import { FONT_STACKS } from './fonts.js';
+import { fontChoices } from './fonts.js';
 import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
 import { topDrag } from './section-size.js';
@@ -2299,7 +2299,7 @@ function initTextToolbar() {
   const fontDd = createDropdown({
     value: '',
     title: ta('tt.fontTitle'),
-    options: [['', ta('tt.inheritFont')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])],
+    options: fontChoices(ta, [['', ta('tt.inheritFont')]]),
     onchange: (v) => { applyInlineStyle('fontFamily', v || null); reposition(); },
   });
   group.appendChild(fontDd.el);

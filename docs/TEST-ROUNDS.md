@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.19): every font list in its own typefaces
+
+- [ ] Theme, Typography: open Headings and Body text; each of the seven names is drawn in its typeface, and the closed fields show the chosen one in its face; a custom font stack in the theme («Custom font») is drawn in that stack
+- [ ] A text block, Content, «Font for the whole text»; a calendar's Text fields, the field font; Nav, the logo's font: each list draws the names in their faces, «Inherit» in the admin's font, and the closed field the chosen face
+- [ ] Click into a text in the preview: the toolbar's font list draws the names in their faces, and after a choice the button shows the chosen name in its face; the text selection survives the choice
+- [ ] The same lists in Firefox and Safari, where the list is placed by measuring; a long name in its face ends with an ellipsis in a narrow field instead of breaking the row
+
 ### Test batch (0.7.10.13-18p): the shop tab in the canvas menu at boot
 
 - [ ] On a site with a products collection and no «List the shop's blocks» setting (the example site with `"shop"` removed from `commerce` in site.json, or a fresh site with a catalogue): reload the admin and press «+ New block» in the first section: the Shop tab stands there, as in the Blocks panel and Ctrl+K

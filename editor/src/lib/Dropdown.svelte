@@ -3,9 +3,9 @@
    * Theme-driven dropdown (ADR-0009): native select popups are drawn by the
    * browser/OS and become unreadable in dark panels, so ALL dropdowns in
    * admin use this one. options is [[value, label], …]; values are
-   * compared as strings, so '' and null can be used as "none". An option
-   * may carry a third entry, a note drawn as a smaller line under its label
-   * in the list.
+   * compared as strings, so '' and null can be used as "none".
+   * An option may carry a third entry, a note drawn as a smaller line under its label in the list.
+   * A fourth entry is a face `{ font, sample? }`: the label is drawn in that font, or with `sample` in the UI's font with the sample beside it in that font, in the list and in the closed field alike (fontChoices in the engine's fonts.js); a fourth entry without a font name is no face.
    *
    * Two branches (ADR-0011 addendum, anchored.js decides): with the Popover
    * API and anchor positioning the list opens in the top layer, placed
@@ -31,8 +31,7 @@
   let popEl = $state(null);
   let pos = $state({ top: 0, left: 0, width: 160 });
 
-  const currentLabel = () =>
-    options.find(([v]) => `${v ?? ''}` === `${value ?? ''}`)?.[1] ?? '';
+  const current = () => options.find(([v]) => `${v ?? ''}` === `${value ?? ''}`);
 
   function place() {
     const r = rootEl.getBoundingClientRect();
@@ -91,6 +90,11 @@
   });
 </script>
 
+<!-- An option's label, in its face when it has one (the fourth entry). -->
+{#snippet named(label, face)}
+  {#if typeof face?.font === 'string' && face.sample}{label}<span class="dd-sample" style:font-family={face.font} aria-hidden="true">{face.sample}</span>{:else if typeof face?.font === 'string'}<span style:font-family={face.font}>{label}</span>{:else}{label}{/if}
+{/snippet}
+
 <!-- The caret is drawn, never a character (chrome is icons only), and turns
      over while the menu is open. Sized in em so it follows the button's text. -->
 {#snippet caret()}
@@ -103,28 +107,28 @@
 <span class="dd" bind:this={rootEl}>
   {#if native}
     <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} popovertarget={popId} style="anchor-name: {anchor}">
-      <span class="dd-value">{currentLabel()}</span>
+      <span class="dd-value">{@render named(current()?.[1] ?? '', current()?.[3])}</span>
       {@render caret()}
     </button>
     <div class="dd-pop dd-anchored" id={popId} popover="auto" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={(e) => { open = e.newState === 'open'; }}>
       {#if open}
-        {#each options as [v, label, note] (`${v ?? ''}`)}
+        {#each options as [v, label, note, face] (`${v ?? ''}`)}
           <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
-            onclick={() => pick(v)}>{label}{#if note}<span class="dd-note">{note}</span>{/if}</button>
+            onclick={() => pick(v)}>{@render named(label, face)}{#if note}<span class="dd-note">{note}</span>{/if}</button>
         {/each}
       {/if}
     </div>
   {:else}
     <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} onclick={toggle}>
-      <span class="dd-value">{currentLabel()}</span>
+      <span class="dd-value">{@render named(current()?.[1] ?? '', current()?.[3])}</span>
       {@render caret()}
     </button>
     {#if open}
       <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px">
-        {#each options as [v, label, note] (`${v ?? ''}`)}
+        {#each options as [v, label, note, face] (`${v ?? ''}`)}
           <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
-            onclick={() => pick(v)}>{label}{#if note}<span class="dd-note">{note}</span>{/if}</button>
+            onclick={() => pick(v)}>{@render named(label, face)}{#if note}<span class="dd-note">{note}</span>{/if}</button>
         {/each}
       </div>
     {/if}
@@ -259,6 +263,8 @@
     white-space: nowrap;
   }
 
+  /* A decorative face's sample beside its name, in the face itself. */
+  .dd-sample { margin-left: 0.5em; opacity: 0.8; }
   /* An option's note: a smaller line under the label that wraps inside a list no wider than a panel. */
   .dd-note {
     display: block;

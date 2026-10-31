@@ -7,6 +7,9 @@
  *   const dd = createDropdown({ value, options: [['p', 'Paragraph'], …], onchange });
  *   parent.appendChild(dd.el);  dd.set('h2');
  *
+ * An option may carry a fourth entry, a face `{ font, sample? }`: the label is drawn in that font, or with `sample` in the UI's font with the sample beside it in that font, in the menu and on the button alike (fontChoices in fonts.js).
+ * The third entry is unused here, since the admin's Dropdown keeps a note there, and a fourth entry without a font name is no face.
+ *
  * The buttons do not steal focus (mousedown is prevented), so a text field's
  * selection survives the choice - which is why it fits in the text toolbar.
  *
@@ -52,6 +55,7 @@ const DD_CSS = `
 }
 .urd-dd-menu button:hover { background: rgb(255 255 255 / 10%); }
 .urd-dd-menu button.selected { background: color-mix(in srgb, #7c5cff 30%, transparent); }
+.urd-dd-sample { margin-left: 0.5em; opacity: 0.8; }
 body.urd-chrome-off .urd-dd, body.urd-chrome-off .urd-dd-menu { display: none !important; }
 @supports (anchor-name: --a) {
   .urd-dd-menu[popover] { inset: auto; margin: 6px 0 0; position-area: block-end span-inline-end; }
@@ -79,7 +83,7 @@ export function closeDropdowns() {
 }
 
 /**
- * @param {{ value?: string, options: Array<[string, string]>, onchange: (value: string) => void, title?: string }} spec
+ * @param {{ value?: string, options: Array<[string, string, unknown?, {font: string, sample?: string}?]>, onchange: (value: string) => void, title?: string }} spec
  * @returns {{ el: HTMLElement, set: (value: string) => void }}
  */
 export function createDropdown({ value = null, options = [], onchange, title = '' }) {
@@ -99,10 +103,29 @@ export function createDropdown({ value = null, options = [], onchange, title = '
   btn.append(labelEl, caret);
   root.appendChild(btn);
 
-  const labelFor = (v) => options.find(([ov]) => `${ov ?? ''}` === `${v ?? ''}`)?.[1] ?? '';
+  /** Writes an option's label into a node, in its face when it has one. */
+  const drawLabel = (node, label, face) => {
+    node.replaceChildren();
+    if (typeof face?.font !== 'string') {
+      node.textContent = label ?? '';
+    } else if (face.sample) {
+      const sample = document.createElement('span');
+      sample.className = 'urd-dd-sample';
+      sample.style.fontFamily = face.font;
+      sample.setAttribute('aria-hidden', 'true');
+      sample.textContent = face.sample;
+      node.append(label ?? '', sample);
+    } else {
+      const named = document.createElement('span');
+      named.style.fontFamily = face.font;
+      named.textContent = label ?? '';
+      node.append(named);
+    }
+  };
   const set = (v) => {
     current = v;
-    labelEl.textContent = labelFor(v);
+    const option = options.find(([ov]) => `${ov ?? ''}` === `${v ?? ''}`);
+    drawLabel(labelEl, option?.[1] ?? '', option?.[3]);
   };
   set(value ?? options[0]?.[0]);
 
@@ -111,10 +134,10 @@ export function createDropdown({ value = null, options = [], onchange, title = '
 
   const fillMenu = (menu) => {
     menu.replaceChildren();
-    for (const [v, label] of options) {
+    for (const [v, label, , face] of options) {
       const choice = document.createElement('button');
       choice.type = 'button';
-      choice.textContent = label;
+      drawLabel(choice, label, face);
       if (`${v ?? ''}` === `${current ?? ''}`) choice.classList.add('selected');
       choice.addEventListener('click', () => {
         closeDropdowns();

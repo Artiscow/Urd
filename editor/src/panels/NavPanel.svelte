@@ -8,7 +8,7 @@
   import Dropdown from '../lib/Dropdown.svelte';
   import Choice from '../lib/Choice.svelte';
   import { ta } from '$engine/i18n.js';
-  import { FONT_STACKS } from '$engine/fonts.js';
+  import { fontChoices } from '$engine/fonts.js';
   import { resolveLink, toolOrder, burgerModel, BURGER_ICONS, LAUNCHER_BOUNDS } from '$engine/nav-model.js';
   import { iconSvg, ICON_LIBRARY } from '$engine/icons.js';
   import { ICONS } from '../lib/icons.js';
@@ -959,7 +959,7 @@
         <span class="toolbar-row">
           <Dropdown title={ta('tip.nav.logoFont')}
             value={siteDraft.nav.logo?.font ?? ''}
-            options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])]}
+            options={fontChoices(ta, [['', ta('common.inherit')]])}
             onchange={(v) => setLogo({ font: v || undefined })} />
           <input type="number" class="tb-num" min="8" max="96" placeholder="px"
             title={ta('tip.nav.textSize')}

@@ -19,7 +19,7 @@
   import Pin from '../Pin.svelte';
   import { calDesign, calView, calOptionDefs, calOptions, calOptionShown, calStripe, calHasExcerpt, calDescription, calSwitcherViews, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, CAL_FIELDS, CAL_SIZE, calHasTextOverrides, calResetTexts, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
   import { iconSvg } from '$engine/icons.js';
-  import { FONT_STACKS } from '$engine/fonts.js';
+  import { fontChoices } from '$engine/fonts.js';
   import { ta, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import { swatchCss } from '../../lib/swatch.js';
@@ -505,7 +505,7 @@
   <Dropdown value={calField} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} />
   <label title={ta('tip.calendar.fieldFont')}>{ta('calendar.fieldFont')}
     <Dropdown value={calFieldStyleOf().font ?? ''}
-      options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])]}
+      options={fontChoices(ta, [['', ta('common.inherit')]])}
       onchange={(v) => setCalField({ font: v || undefined })} /></label>
   <label title={ta('tip.calendar.fieldSize')}>{ta('calendar.fieldSize')}
     <input type="number" min={CAL_SIZE.min} max={CAL_SIZE.max} value={calFieldStyleOf().size ?? ''} placeholder={ta('common.inherit')}

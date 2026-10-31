@@ -1979,6 +1979,7 @@ export default {
     'cp.tokenTitleShort': 'Tema rengi: {name}',
     'font.arial': 'Arial',
     'font.courier': 'Courier (daktilo)',
+    'font.sample': 'Ag',
     'font.georgia': 'Georgia (serif)',
     'font.palatino': 'Palatino (serif)',
     'font.system': 'Sistem',

@@ -1982,6 +1982,7 @@ export default {
     'cp.tokenTitleShort': 'Temafarge: {name}',
     'font.arial': 'Arial',
     'font.courier': 'Courier (skrivemaskin)',
+    'font.sample': 'Ag',
     'font.georgia': 'Georgia (serif)',
     'font.palatino': 'Palatino (serif)',
     'font.system': 'System',
