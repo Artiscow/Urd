@@ -378,7 +378,7 @@ Urd: the section (ELEMENTS.md #1 and #2).
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
 | The HTML tag | WP, EL, WS, KB, SP, GB | Partial: always a section | Watch: a page that needs an aside or an article landmark |
-| The content width, boxed or full | EL, BI, KB, SP, ST | Partial: the site's content width; a section's own is stored but has no control | 0.7.10 (a content-width control per section) |
+| The content width, boxed or full | EL, BI, KB, SP, ST | Has: the site's content width, and a section's own in Properties: the site's, full, or a width in px (0.7.10.20) | - |
 | A minimum height, or the screen's height | WP, EL, KB, SP | Has: any CSS length, and dragged edges | - |
 | A flex or grid layout with gaps | EL, PK, KB, SP, GB | n/a: free placement; «Change layout» offers six layouts | - |
 | Vertical alignment of the content | WP, EL, KB | n/a: free placement | - |

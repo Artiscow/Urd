@@ -160,10 +160,11 @@
   {/if}
   {#if ed.designPicker?.kind === 'block'}
     <!-- A block's designs, a core block's or a plugin block's: the picked one is written to the prop the block keeps its design in; a block that is gone takes the picker with it -->
-    {@const stored = ed.selectedBlock && ed.store?.data.sections.find((sec) => sec.id === ed.selectedBlock.sectionId)?.blocks.find((blk) => blk.id === ed.selectedBlock.blockId)}
+    {@const storedSection = ed.selectedBlock && ed.store?.data.sections.find((sec) => sec.id === ed.selectedBlock.sectionId)}
+    {@const stored = storedSection?.blocks.find((blk) => blk.id === ed.selectedBlock.blockId)}
     {@const designs = ed.selectedBlock ? blockDesigns(ed.selectedBlock.type, ed.pluginBlocks) : null}
     {#if stored && designs}
-      <DesignPicker source={blockDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs })}
+      <DesignPicker source={blockDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs, sectionWidth: storedSection.size?.maxWidth })}
         site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
         plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
         onpick={(id) => { ed.setBlockProp(designs.prop, id); ed.designPicker = null; }}

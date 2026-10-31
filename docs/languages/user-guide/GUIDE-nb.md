@@ -73,7 +73,7 @@ Klikk på en blokk og åpne **Egenskaper** for å finjustere den med tall og val
 
 - Alle blokker: nøyaktig posisjon og størrelse, lag (hva som ligger foran), rotasjon og mobil-synlighet (pynt).
 - Tekst: justering og tekstboks av/på. Knapp: tekst, hvor den går og stil. Bilde: bytt bilde, beskrivelse, beskjæring, avrunding og lenke. Form: type, farge fra temaet, tykkelse og fylt/kantlinje.
-- Klikker du i en seksjon (uten blokk valgt) viser panelet seksjonens minstehøyde, eget grid, seksjonstema, lenkenavn, bakgrunn, kantformer og animasjon.
+- Klikker du i en seksjon (uten blokk valgt) viser panelet seksjonens innholdsbredde, minstehøyde, eget grid, seksjonstema, lenkenavn, bakgrunn, kantformer og animasjon. Innholdsbredden er nettstedets, full bredde eller seksjonens egen i px: en smal spalte for en lang tekst, eller et bånd som går bredere enn resten av siden; bakgrunnen går alltid over hele bredden.
 
 **Elementmenyen**: tannhjulet på blokkens verktøylinje åpner de samme innstillingene ved siden av blokken. De står i tre områder, Innhold, Stil og Plassering, som kolonner i den brede menyen og som faner i den smale, med de mest brukte innstillingene i en rad over dem. Søkefeltet øverst finner en innstilling på et ord fra navnet eller hjelpeteksten: menyen viser da bare det som passer, med gruppene det står i åpne, og Esc eller et tomt felt gir deg menyen tilbake slik den var. Egenskaper har det samme søket over sin meny.
 

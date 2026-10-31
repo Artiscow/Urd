@@ -9,7 +9,28 @@ import {
   WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, GUTTER_MAX,
   WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS,
   clampWidth, clampGutter, contentBand, presetOf, bindingWidth,
+  SECTION_WIDTH_MIN, SECTION_WIDTH_MAX, clampSectionWidth, sectionWidthOf, sectionWidthValue,
 } from '../editor/src/lib/content-width.js';
+
+test('a section\'s width reads as the site\'s, the full width or its own, and the own width starts at the site\'s', () => {
+  assert.deepEqual(sectionWidthOf(undefined, 1440), { mode: 'site', px: 1440, shown: '' });
+  assert.deepEqual(sectionWidthOf('full', 1200), { mode: 'full', px: 1200, shown: '' });
+  assert.deepEqual(sectionWidthOf('900px', 1440), { mode: 'own', px: 900, shown: '900 px' });
+  // A length in another unit, or a px width outside the range, keeps its own words, and the slider stands at the site's width; a full-width site starts it at 1440.
+  assert.deepEqual(sectionWidthOf('60rem', 1200), { mode: 'own', px: 1200, shown: '60rem' });
+  assert.deepEqual(sectionWidthOf('2400px', 1440), { mode: 'own', px: 1440, shown: '2400px' });
+  assert.deepEqual(sectionWidthOf('200px', 1440), { mode: 'own', px: 1440, shown: '200px' });
+  assert.deepEqual(sectionWidthOf(undefined, 'full'), { mode: 'site', px: 1440, shown: '' });
+});
+
+test('a section\'s width is stored as nothing, full or px, inside its range and on its step', () => {
+  assert.equal(sectionWidthValue('site', 900), undefined);
+  assert.equal(sectionWidthValue('full', 900), 'full');
+  assert.equal(sectionWidthValue('own', 904), '900px');
+  assert.equal(sectionWidthValue('own', 100), `${SECTION_WIDTH_MIN}px`);
+  assert.equal(sectionWidthValue('own', 5000), `${SECTION_WIDTH_MAX}px`);
+  assert.equal(clampSectionWidth('abc', 1200), 1200);
+});
 
 test('the default 1440 is a preset and is named standard', () => {
   assert.equal(presetOf(1440), 'standard');

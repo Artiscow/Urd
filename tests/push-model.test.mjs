@@ -135,14 +135,16 @@ test('sizeRange: the whole of SIZE unless the owner bounds the base text, then i
 test('fitFloorPx: the width-floor types get their share of the design width times the floor, everything else 0', () => {
   const image = { type: 'image', fit: 'shrink', fitMin: 0.6, frames: { desktop: { x: 10, w: 40 } } };
   assert.deepEqual([...FIT_BY_WIDTH].sort(), ['icon', 'image', 'shape', 'video']);
-  assert.equal(fitFloorPx(image, { contentWidth: 1440 }), 346);
-  assert.equal(fitFloorPx(image, {}), 346);
-  assert.equal(fitFloorPx(image, { contentWidth: 1000 }), 240);
-  assert.equal(fitFloorPx({ ...image, fitMin: undefined }, {}), 346);
-  assert.equal(fitFloorPx({ ...image, fit: undefined }, {}), 0);
-  assert.equal(fitFloorPx({ ...image, type: 'text' }, {}), 0);
-  assert.equal(fitFloorPx(image, { contentWidth: 'full' }), 0);
-  assert.equal(fitFloorPx({ ...image, frames: {} }, {}), 0);
+  assert.equal(fitFloorPx(image, 1440), 346);
+  // A section with a width of its own: the floor is the block's share of that width.
+  assert.equal(fitFloorPx(image, 1000), 240);
+  assert.equal(fitFloorPx({ ...image, fitMin: undefined }, 1440), 346);
+  assert.equal(fitFloorPx({ ...image, fit: undefined }, 1440), 0);
+  assert.equal(fitFloorPx({ ...image, type: 'text' }, 1440), 0);
+  // A full-width site or section has no design width, and no floor.
+  assert.equal(fitFloorPx(image, 0), 0);
+  assert.equal(fitFloorPx(image, undefined), 0);
+  assert.equal(fitFloorPx({ ...image, frames: {} }, 1440), 0);
 });
 
 test('the block types ADR-0025 names follow their content, and no other', () => {

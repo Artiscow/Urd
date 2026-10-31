@@ -866,8 +866,7 @@ export function renderSection(section, site, host, opts = {}) {
   // not here, so the editor can MEASURE it instead of computing it.
   const canvas = document.createElement('div');
   canvas.className = 'urd-canvas';
-  // Per-section override: 'full' gives edge-to-edge content (heroes,
-  // dividers), a CSS length gives this section a width of its own.
+  // Per-section override: 'full' unbinds the content from the design width, inside the site's side margin (heroes, dividers), and a CSS length gives this section a width of its own.
   const secWidth = section.size?.maxWidth;
   if (secWidth) canvas.style.setProperty('--urd-canvas-w', secWidth === 'full' ? '100%' : secWidth);
   // The width the canvas has at the design width, for the proportional
@@ -948,7 +947,7 @@ export function renderSection(section, site, host, opts = {}) {
       // the field itself.
       if (block.decor) el.dataset.decor = '1';
       const frame = block.frames.desktop;
-      applyFrameCss(el, frame, fitFloorPx(block, site.layout));
+      applyFrameCss(el, frame, fitFloorPx(block, canvas._urdDesignW));
       // The push pass draws this block at its content's height (ADR-0025),
       // and the editing layer stops a drag of its height at the content. A
       // block with its own height places its content in the box (base.css),

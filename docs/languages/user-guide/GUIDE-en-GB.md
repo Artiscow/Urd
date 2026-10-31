@@ -75,7 +75,7 @@ Click a block and open **Properties** to fine-tune it with numbers and choices i
 
 - All blocks: exact position and size, layer (what sits in front), rotation and mobile visibility (decor).
 - Text: alignment and text box on/off. Button: text, where it goes and style. Image: change image, description, cropping, rounding and link. Shape: type, colour from the theme, thickness and filled/outline.
-- If you click in a section (with no block selected) the panel shows the section's minimum height, own grid, section theme, link name, background, edge shapes and animation.
+- If you click in a section (with no block selected) the panel shows the section's content width, minimum height, own grid, section theme, link name, background, edge shapes and animation. The content width is the site's, the full width, or the section's own in px: a narrow column for a long text, or a band that runs wider than the rest of the page; the background always spans the whole width.
 
 **The element menu**: the gear on a block's toolbar opens the same settings beside the block. They stand in three areas, Content, Style and Placement, as columns in the wide menu and as tabs in the narrow one, with the settings used most in a row above them. The search field at the top finds a setting by a word from its name or its help text: the menu then shows only what matches, with the groups that hold it open, and Esc or an empty field brings the menu back as it was. Properties has the same search over its menu.
 

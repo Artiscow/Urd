@@ -65,6 +65,51 @@ export function clampWidth(value) {
   return Math.min(WIDTH_MAX, Math.max(WIDTH_MIN, snapped));
 }
 
+/**
+ * A section's own content width (`size.maxWidth`, ADR-0018) reaches down to a text column, below the site's floor, and up to the site's ceiling.
+ */
+export const SECTION_WIDTH_MIN = 320;
+export const SECTION_WIDTH_MAX = WIDTH_MAX;
+export const SECTION_WIDTH_STEP = 10;
+
+/** Clamps and snaps a section's own width into its range; a value that is no number gives the fallback. */
+export function clampSectionWidth(value, fallback = 1440) {
+  const n = Number(value);
+  const raw = Number.isFinite(n) && n > 0 ? n : fallback;
+  const snapped = Math.round(raw / SECTION_WIDTH_STEP) * SECTION_WIDTH_STEP;
+  return Math.min(SECTION_WIDTH_MAX, Math.max(SECTION_WIDTH_MIN, snapped));
+}
+
+/**
+ * A section's content width as the Properties panel shows it: the site's (no field), the full width (`full`), or its own, with the words the panel shows for it.
+ * The slider stands at a px width in the range as stored; any other stored length (another unit, a width outside the range) keeps its own words, and the slider stands at the site's width until it is moved.
+ * The site's width is also where the slider starts from the two other choices, so a switch from the site's to «Own» changes nothing until the slider moves; on a full-width site it starts at 1440.
+ * @param {string|undefined} maxWidth The section's `size.maxWidth`
+ * @param {number|'full'} siteWidth The site's `layout.contentWidth`
+ * @returns {{ mode: 'site'|'full'|'own', px: number, shown: string }} `shown` is the own width as stored, '' for the two other choices
+ */
+export function sectionWidthOf(maxWidth, siteWidth) {
+  const start = clampSectionWidth(typeof siteWidth === 'number' ? siteWidth : 1440);
+  if (!maxWidth) return { mode: 'site', px: start, shown: '' };
+  if (maxWidth === 'full') return { mode: 'full', px: start, shown: '' };
+  const px = /^(\d+(?:\.\d+)?)px$/.exec(maxWidth);
+  const n = px ? Number(px[1]) : NaN;
+  if (n >= SECTION_WIDTH_MIN && n <= SECTION_WIDTH_MAX) return { mode: 'own', px: clampSectionWidth(n), shown: `${clampSectionWidth(n)} px` };
+  return { mode: 'own', px: start, shown: maxWidth };
+}
+
+/**
+ * The stored `size.maxWidth` for a choice: none for the site's, `full`, or the own width in px.
+ * @param {'site'|'full'|'own'} mode
+ * @param {number} px
+ * @returns {string|undefined}
+ */
+export function sectionWidthValue(mode, px) {
+  if (mode === 'full') return 'full';
+  if (mode === 'own') return `${clampSectionWidth(px)}px`;
+  return undefined;
+}
+
 /** Clamps and snaps the side margin (vw). */
 export function clampGutter(value) {
   const n = Number(value);

@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.20 - A content width of its own per section - 31 October 2026
+
+- A section's own content width (`size.maxWidth`) was drawn by the engine but had no control, so a narrow text column or a band wider than the page needed the JSON. Properties has «Content width» in the section's «Size and grid» group: the site's, full, or the section's own with a slider from 320 to 1920 px (`sectionWidthOf` and `sectionWidthValue` in `lib/content-width.js`).
+- SCHEMA.md, the page schema and a render comment called a full section edge-to-edge, while the content keeps the site's side margin as the site's own «Full» does. They say so, and the user guides in en, nb and tr name the setting.
+- The comparison's rows for the section and for the content width say what the control covers.
+
+The independent review before the commit read the diff against AGENTS.md and the ADRs, and found these:
+
+- A picture, video, shape or icon set to shrink took its floor from the site's content width, so in a section of 600 px a block at half its width was held at 432 px over a 300 px frame and covered its neighbour. The floor is the block's share of its section's design width (`fitFloorPx` in push-model.js, from render.js's `_urdDesignW`).
+- The block design picker drew the block at its width in the site's content width, not in its section's own. It takes the section's width (`designPreviewFrame` in block-designs.js).
+- The choice stood in the phone view, where the content fills the screen whatever is set. It is shown on the desktop only.
+- A stored width the slider cannot hold (another unit, or a px width outside 320 to 1920) read as a clamped number, a press on the «Own» already chosen overwrote it, and on a full-width site «Full width» repeated «The site's». The stored width keeps its own words, a press on the chosen option writes nothing, and «Full width» is left out on a full-width site.
+
 ### 0.7.10.19 - Every font list draws each name in its own typeface - 31 October 2026
 
 - The font lists named every typeface in the UI's own font, so the owner chose a look without seeing it. Each name in the text block's whole-text font, the Theme panel's heading and body fonts, the calendar's field font, the Nav panel's logo font and the text toolbar's list is drawn in its typeface, the chosen one in the closed field too, from one shared list (`fontChoices` in fonts.js).

@@ -211,17 +211,15 @@ export function sizeBounds(block) {
 }
 
 /**
- * The smallest width in px a block set to shrink may take, for the types in
- * FIT_BY_WIDTH: its share of the design width times the floor. 0 (no floor)
- * for every other block, for a block without the field, and for a site
- * without a design width ("full"), where nothing has a design size.
+ * The smallest width in px a block set to shrink may take, for the types in FIT_BY_WIDTH: its share of its section's design width times the floor.
+ * 0 (no floor) for every other block, for a block without the field, and where the section has no design width (a full-width site or section), where nothing has a design size.
  * @param {{type?: string, fit?: string, fitMin?: number, frames?: {desktop?: {w?: number}}}} block
- * @param {{contentWidth?: number|string}} [layout] site.layout
+ * @param {number} designWidth The width in px the section's canvas has at the design width (render.js `_urdDesignW`, the editor's designWidth)
  * @returns {number}
  */
-export function fitFloorPx(block, layout) {
+export function fitFloorPx(block, designWidth) {
   if (!block || block.fit !== 'shrink' || !FIT_BY_WIDTH.has(block.type)) return 0;
-  const width = layout?.contentWidth ?? 1440;
+  const width = designWidth;
   const w = Number(block.frames?.desktop?.w);
   if (typeof width !== 'number' || !(width > 0) || !Number.isFinite(w) || w <= 0) return 0;
   return Math.round((w / 100) * width * clampFitMin(block.fitMin));

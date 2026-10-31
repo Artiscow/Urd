@@ -97,4 +97,9 @@ test('the preview page keeps a block at its real width and fills the pane with i
   // A full-width site and a site without a layout count as 1440 px.
   assert.equal(designPreviewFrame({ layout: { contentWidth: 'full', gutter: 6 } }, 100).width, 1440);
   assert.equal(designPreviewFrame(null, 100).width, 1440);
+  // A block in a section with a width of its own keeps the pixels it has there: 50 % of 600 px.
+  const inOwn = designPreviewFrame({ layout: { contentWidth: 1440, gutter: 6 } }, 50, '600px');
+  assert.ok(Math.abs((inOwn.w / 100) * inOwn.width * 0.88 - 300) < 1, 'the block is drawn 300 px wide');
+  // A full section is the screen less the gutters, as a full-width site is.
+  assert.equal(designPreviewFrame({ layout: { contentWidth: 1100, gutter: 6 } }, 100, 'full').width, 1440);
 });

@@ -73,7 +73,7 @@ Bir bloğa tıkla ve sürükle-bırak yerine sayılar ve seçeneklerle ince ayar
 
 - Tüm bloklar: tam konum ve boyut, katman (önde ne duracağı), döndürme ve mobilde görünürlük (süsleme).
 - Metin: hizalama ve metin kutusu açık/kapalı. Düğme: metin, nereye gittiği ve stil. Görsel: görseli değiştir, açıklama, kırpma, yuvarlatma ve bağlantı. Şekil: tür, temadan renk, kalınlık ve dolu/kenarlık.
-- Bir bölüme tıklarsan (blok seçili değilken) panel bölümün en az yüksekliğini, özel ızgarasını, arka planını ve animasyonunu gösterir.
+- Bir bölüme tıklarsan (blok seçili değilken) panel bölümün içerik genişliğini, en az yüksekliğini, özel ızgarasını, arka planını ve animasyonunu gösterir. İçerik genişliği sitenin genişliği, tam genişlik ya da bölümün px cinsinden kendi genişliğidir: uzun bir metin için dar bir sütun ya da sayfanın geri kalanından daha geniş bir bant; arka plan her zaman tüm genişliği kaplar.
 
 **Renkler**: renk seçiciler tema renklerini nokta olarak gösterir - birini seçersen alan temaya BAĞLANIR ve Tema panelinde paleti değiştirdiğinde onu izler (bağlı alanlar halka ile gösterilir). Alanda serbestçe seçersen ya da bir hex veya RGB değeri yazarsan renk bağımsızdır ve renk tonlarının altındaki kaydırıcıyla saydam yapabilirsin. En son kullandığın serbest renkler **Son kullanılanlar** altındadır ve **Kayıtlı** yanındaki artı düğmesiyle kendi sabit paletini kurarsın (en fazla 12; bir noktadaki × onu kaldırır).
 

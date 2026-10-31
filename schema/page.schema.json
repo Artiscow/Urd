@@ -75,7 +75,7 @@
           "additionalProperties": false,
           "properties": {
             "minHeight": { "type": "string", "description": "CSS length, e.g. '85vh'" },
-            "maxWidth": { "type": "string", "description": "Overrides the site's content width for this section (adopted in v0.7, ADR-0018): CSS length, or 'full' for edge-to-edge content. Absence = inherit site.layout.contentWidth." }
+            "maxWidth": { "type": "string", "description": "Overrides the site's content width for this section (adopted in v0.7, ADR-0018): CSS length, or 'full' for content unbound by the design width, inside the site's side margin. Absence = inherit site.layout.contentWidth." }
           }
         },
         "grid": {

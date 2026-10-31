@@ -86,6 +86,8 @@ function handleFor(panel, siteDraft, extra = {}) {
     activeSectionId: 'sec-1',
     sectionGrid: null,
     sectionMinHeight: '',
+    sectionMaxWidth: '',
+    setSectionWidth: () => {},
     sectionAnim: null,
     sectionHover: null,
     sectionTheme: '',
@@ -218,7 +220,7 @@ test('the Theme panel renders a site with and without a dark theme', () => {
 
 test('the Properties panel renders a section with every setting on, and a selected block with the element menu', () => {
   const section = {
-    sectionGrid: { size: 24 }, sectionMinHeight: '600px', sectionTheme: 'accent',
+    sectionGrid: { size: 24 }, sectionMinHeight: '600px', sectionMaxWidth: '900px', sectionTheme: 'accent',
     sectionAnim: { type: 'stagger', version: 1, props: { duration: 400, delay: 0, effect: 'slide-up', step: 90, pattern: 'rows' } },
     sectionHover: { type: 'lift', version: 1, props: {} },
     sectionDivider: { top: { shape: 'wave', height: 80, color: 'bg', flip: true }, bottom: { shape: 'tilt' } },
@@ -227,6 +229,16 @@ test('the Properties panel renders a section with every setting on, and a select
   let body = draw(panels.Properties, 'properties', structuredClone(site), section);
   assert.match(body, /panel-body/);
   assert.match(body, /bg-layer/, 'the background layers are drawn');
+  assert.match(body, /900 px/, 'the section\'s own width stands in its group and beside its slider');
+  assert.match(body, /type="range" min="320" max="1920" step="10" value="900"/, 'the own width has its slider');
+  // On a full-width site «Full width» is the site's own, and is not offered; in the phone view the content width has no effect, and is not shown.
+  const fullSite = structuredClone(site);
+  fullSite.layout = { ...(fullSite.layout ?? {}), contentWidth: 'full' };
+  const onFull = draw(panels.Properties, 'properties', fullSite, { ...section, sectionMaxWidth: '' });
+  assert.match(onFull, />opt\.sectionWidth\.own</);
+  assert.doesNotMatch(onFull, />opt\.sectionWidth\.full</);
+  assert.match(draw(panels.Properties, 'properties', structuredClone(site), section), />opt\.sectionWidth\.full</);
+  assert.doesNotMatch(draw(panels.Properties, 'properties', structuredClone(site), { ...section, viewMode: 'mobile' }), />opt\.sectionWidth\.own</);
   body = draw(panels.Properties, 'properties', structuredClone(site), { selectedBlock: textBlock });
   assert.match(body, /menu-quick/, 'the element menu is drawn for the selected block');
   assert.equal([...body.matchAll(/class="emenu-head"/g)].length, 3, 'the three areas stand under each other with a heading each');

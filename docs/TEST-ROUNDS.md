@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.20): a section's own content width
+
+- [ ] Click a section's bare surface, Properties, «Size and grid»: «Content width» reads «The site's», and the group's line shows nothing for it; the tooltip on the choice in English, bokmål and Turkish
+- [ ] «Own»: a Width slider appears with the site's width, nothing on the page moves; drag it to 900: the section's blocks draw inside 900 px, the group's line reads «900 px», and one Ctrl+Z takes the drag back; «The site's» takes the field away again and the slider goes
+- [ ] «Full width» on a wide screen (wider than the site's width plus its margins): the section's blocks spread to the window's width inside the site's side margin, the sections around keep the site's width; the background spans the whole width in every choice
+- [ ] Publish a section at 900 px and one at full width: the published page draws the same widths, and the phone view is unchanged by either
+- [ ] A section from «+ New section» and a section never set: «The site's», and they look as before the update
+- [ ] The phone view, a section selected: «Size and grid» has no «Content width»; back on the desktop it stands again
+- [ ] A section at 600 px with an image across half of it set to «Shrink» at 60 %: narrow the window below the design width; the image stops at about 180 px and never covers the block beside it; the block's design picker draws it at its width in the section
+
 ### Test batch (0.7.10.19): every font list in its own typefaces
 
 - [ ] Theme, Typography: open Headings and Body text; each of the seven names is drawn in its typeface, and the closed fields show the chosen one in its face; a custom font stack in the theme («Custom font») is drawn in that stack

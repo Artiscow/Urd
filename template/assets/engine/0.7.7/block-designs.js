@@ -199,15 +199,19 @@ const PREVIEW_MIN = 640;
 
 /**
  * The preview page for a block: as wide as the block's own width on a 1440 px screen needs with the site's gutters around it, so the block keeps its real size and fills the pane, and never narrower than PREVIEW_MIN.
- * The canvas is the viewport less two gutters (a share of the viewport) up to the content width (render.js, applySiteLayout); the block is centred in it at its real width.
+ * The canvas is the viewport less two gutters (a share of the viewport) up to the content width (render.js, applySiteLayout), or up to the section's own width where it has one (`size.maxWidth`); the block is centred in the preview's canvas at its real width.
+ * @param {object|null} site
+ * @param {number} frameW The block's frame width in percent of its section's canvas
+ * @param {string} [sectionWidth] The section's `size.maxWidth`
  * @returns {{width: number, x: number, w: number}} the page's width in px and the block's frame in percent of the canvas
  */
-export function designPreviewFrame(site, frameW) {
+export function designPreviewFrame(site, frameW, sectionWidth) {
   const gutter = Number(site?.layout?.gutter ?? 6) || 0;
   const room = Math.max(0.5, 1 - (2 * gutter) / 100);
   const contentWidth = site?.layout?.contentWidth ?? 1440;
-  const canvasAt = (viewport) => (contentWidth === 'full' ? viewport * room : Math.min(contentWidth, viewport * room));
-  const real = (frameW / 100) * canvasAt(1440);
+  const canvasAt = (viewport, width = contentWidth) => (width === 'full' ? viewport * room : Math.min(width, viewport * room));
+  const own = sectionWidth === 'full' ? 'full' : /^\d+(\.\d+)?px$/.test(sectionWidth ?? '') ? parseFloat(sectionWidth) : contentWidth;
+  const real = (frameW / 100) * canvasAt(1440, own);
   const width = Math.max(PREVIEW_MIN, Math.ceil(real / room));
   const w = Math.min(100, (real / canvasAt(width)) * 100);
   return { width, x: (100 - w) / 2, w };

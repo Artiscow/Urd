@@ -649,9 +649,13 @@ let sectionDivider = $state({});
 /** Mirror of the active section's name for links ('' = none) */
 let sectionAnchor = $state('');
 
+/** Mirror of the active section's own content width (`size.maxWidth`, '' = the site's) */
+let sectionMaxWidth = $state('');
+
 function syncSectionMirrors(section) {
   sectionGrid = section?.grid ? { ...section.grid } : null;
   sectionMinHeight = section?.size?.minHeight ?? '';
+  sectionMaxWidth = section?.size?.maxWidth ?? '';
   sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
   sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
   sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
@@ -780,6 +784,15 @@ function setSectionHeight(raw) {
   store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageId, section);
+}
+
+/** The section's own content width (ADR-0018): `full`, a px length, or undefined for the site's; the blocks keep their frames in percent of the content surface, so they follow the new width. A slider's drag is one undo step. */
+function setSectionWidth(value) {
+  mutateSection(`edit:section-width:${activeSectionId}`, (s) => {
+    const size = { ...(s.size ?? {}) };
+    if (value) size.maxWidth = value; else delete size.maxWidth;
+    s.size = size;
+  });
 }
 
 function targetSection() {
@@ -1141,6 +1154,9 @@ export const pageState = {
   set sectionGrid(v) { sectionGrid = v; },
   get sectionMinHeight() { return sectionMinHeight; },
   set sectionMinHeight(v) { sectionMinHeight = v; },
+  get sectionMaxWidth() { return sectionMaxWidth; },
+  set sectionMaxWidth(v) { sectionMaxWidth = v; },
+  setSectionWidth,
   get sectionBg() { return sectionBg; },
   set sectionBg(v) { sectionBg = v; },
   get sectionAnim() { return sectionAnim; },

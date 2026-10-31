@@ -170,12 +170,12 @@ export function blockDesigns(type, pluginBlocks = []) {
 
 /**
  * Every other block's designs (blockDesigns): the selected block drawn in each design with its own content, at its real width and close up (designPreviewFrame); a block with nothing of its own to show (no pictures, no collection, no contact details) is drawn with the sample its picture has.
- * @param {{block: object, site: object|null, designs: object}} opts the selected block as the page stores it (its version, frames and props) and the site, as snapshots, and the block's designs
+ * @param {{block: object, site: object|null, designs: object, sectionWidth?: string}} opts the selected block as the page stores it (its version, frames and props) and the site, as snapshots, the block's designs, and its section's own width (`size.maxWidth`)
  */
-export function blockDesignSource({ block, site = null, designs }) {
+export function blockDesignSource({ block, site = null, designs, sectionWidth }) {
   const current = designs.read(block.props);
   const own = block.frames?.desktop ?? {};
-  const fit = designPreviewFrame(site, Math.min(100, own.w ?? designs.frame.w));
+  const fit = designPreviewFrame(site, Math.min(100, own.w ?? designs.frame.w), sectionWidth);
   const name = (d) => designs.name(d.id);
   return {
     title: ta('picker.title', { block: designs.blockName }),

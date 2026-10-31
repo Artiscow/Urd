@@ -13,6 +13,8 @@
   import AnchorField from '../lib/AnchorField.svelte';
   import MenuGroup from '../menu/MenuGroup.svelte';
   import { sectionWords } from '$engine/anchor-model.js';
+  import Choice from '../lib/Choice.svelte';
+  import { SECTION_WIDTH_MIN, SECTION_WIDTH_MAX, SECTION_WIDTH_STEP, sectionWidthOf, sectionWidthValue } from '../lib/content-width.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const activeSectionId = $derived(ed.activeSectionId);
@@ -25,6 +27,15 @@
   const sectionGrid = $derived(ed.sectionGrid);
   const sectionHover = $derived(ed.sectionHover);
   const sectionMinHeight = $derived(ed.sectionMinHeight);
+  /** The section's content width as a choice and a px width (lib/content-width.js). */
+  const sectionWidth = $derived(sectionWidthOf(ed.sectionMaxWidth, ed.layoutWidth));
+  const sectionWidthWord = $derived(sectionWidth.mode === 'full' ? ta('opt.sectionWidth.full') : sectionWidth.shown);
+  /** On a full-width site «Full width» is the site's own width, so it is offered only to a section that has it stored. */
+  const sectionWidthOptions = $derived([
+    ['site', ta('opt.sectionWidth.site')],
+    ...(ed.layoutWidth === 'full' && sectionWidth.mode !== 'full' ? [] : [['full', ta('opt.sectionWidth.full')]]),
+    ['own', ta('opt.sectionWidth.own')],
+  ]);
   const sectionTheme = $derived(ed.sectionTheme);
   const selectedBlock = $derived(ed.selectedBlock);
   const { BLOCK_LABELS, ENTRANCE_OPTIONS, HOVER_OPTIONS, animObj, isEntrance, mutateSection, normalizeAnim, readableOn, setSectionGrid, setSectionHeight, themeHex, themeSwatches, toggleSectionGrid } = ed;
@@ -131,7 +142,21 @@
   {:else if activeSectionId}
     <p class="panel-strong">{ta('lbl.section')}</p>
     <!-- The section's settings in groups, as a block's menu has them: each shows its value while closed -->
-    <MenuGroup id="sec-size" title={ta('group.sectionSize')} value={[sectionMinHeight || ta('common.auto'), sectionGrid ? `${ta('group.grid')} ${sectionGrid.size} px` : ''].filter(Boolean).join(' · ')}>
+    <MenuGroup id="sec-size" title={ta('group.sectionSize')} value={[sectionWidthWord, sectionMinHeight || ta('common.auto'), sectionGrid ? `${ta('group.grid')} ${sectionGrid.size} px` : ''].filter(Boolean).join(' · ')}>
+      <!-- The content width binds on the desktop only: on a phone the content fills the screen whatever is set -->
+      {#if ed.viewMode === 'desktop'}
+        <Choice label={ta('lbl.contentWidth')} title={ta('tip.props.sectionWidth')} value={sectionWidth.mode}
+          options={sectionWidthOptions}
+          onchange={(mode) => { if (mode !== sectionWidth.mode) ed.setSectionWidth(sectionWidthValue(mode, sectionWidth.px)); }} />
+        {#if sectionWidth.mode === 'own'}
+          <label title={ta('tip.props.sectionWidthPx')}>
+            {ta('lbl.widthFree')}
+            <span class="gridmenu-value">{sectionWidth.shown}</span>
+          </label>
+          <input type="range" min={SECTION_WIDTH_MIN} max={SECTION_WIDTH_MAX} step={SECTION_WIDTH_STEP} value={sectionWidth.px}
+            title={ta('tip.props.sectionWidthPx')} oninput={(e) => ed.setSectionWidth(sectionWidthValue('own', e.target.valueAsNumber))} />
+        {/if}
+      {/if}
       <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
         <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
           onchange={(e) => setSectionHeight(e.target.value)} /></label>
