@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, followsContent, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, typedFrames, followsContent, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -188,6 +188,40 @@ test('fitMoves: a taller frame moves the blocks below as far as the push pass sh
   assert.equal(moves.has('far'), false);
   assert.equal(moves.has('badge'), false);
   assert.equal(moves.has('faq'), false);
+});
+
+test('typedFrames: typing grows the text and moves the blocks below from where they stood before it', () => {
+  const before = [blk('text', 0, 100), blk('near', 120, 40), blk('beside', 30, 40, 60)];
+  const frames = typedFrames(before, 'text', 160);
+  assert.equal(frames.get('text').h, 160);
+  assert.equal(frames.get('near').y, 180);
+  assert.equal(frames.get('beside').y, 30);
+  assert.equal(before[0].frames.desktop.h, 100);
+});
+
+test('typedFrames: words deleted give the room back, never below the height before the typing', () => {
+  const before = [blk('text', 0, 100), blk('near', 120, 40)];
+  const grown = typedFrames(before, 'text', 200);
+  assert.equal(grown.get('near').y, 220);
+  const shrunk = typedFrames(before, 'text', 140);
+  assert.equal(shrunk.get('text').h, 140);
+  assert.equal(shrunk.get('near').y, 160);
+  const back = typedFrames(before, 'text', 40);
+  assert.deepEqual(back.get('text'), before[0].frames.desktop);
+  assert.deepEqual(back.get('near'), before[1].frames.desktop);
+  assert.notEqual(back.get('near'), before[1].frames.desktop);
+});
+
+test('typedFrames: a grown height is rounded up to the grid step, and words that fit keep the height before the typing', () => {
+  const before = [blk('text', 0, 108), blk('near', 120, 40)];
+  assert.equal(typedFrames(before, 'text', 106, 8).get('text').h, 108);
+  assert.equal(typedFrames(before, 'text', 109, 8).get('text').h, 112);
+  assert.equal(typedFrames(before, 'text', 109, 8).get('near').y, 124);
+});
+
+test('typedFrames: a block not in the section gives no frames', () => {
+  assert.equal(typedFrames([blk('a', 0, 100)], 'missing', 300).size, 0);
+  assert.equal(typedFrames([blk('a', 0, 100)], 'a', NaN).get('a').h, 100);
 });
 
 test('fitMoves: a shorter frame, or one that stays, moves nothing', () => {

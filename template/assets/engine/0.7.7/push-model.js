@@ -308,3 +308,27 @@ export function fitMovesAll(blocks, fits) {
   }
   return moves;
 }
+
+/**
+ * The frames typing gives a section (ADR-0024 decision 4): the text block takes the height its words need, rounded up to the grid step, never less than it had before the typing began, and the blocks below stand where the push rules move them from where they stood then.
+ * Measured from the frames before the typing, not from the last keystroke's, so words deleted give back the room they took and the blocks below return with them.
+ * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} before The section's blocks as they stood before the typing
+ * @param {string} id The text block
+ * @param {number} needed The height its words need now, in px
+ * @param {number} [step] The grid step a grown height is rounded up to
+ * @returns {Map<string, object>} The desktop frame of every block with one
+ */
+export function typedFrames(before, id, needed, step = 1) {
+  const frames = new Map();
+  const own = (before ?? []).find((b) => b?.id === id)?.frames?.desktop;
+  if (!own) return frames;
+  const h = needed > own.h ? Math.ceil(needed / step) * step : own.h;
+  const moves = fitMoves(before, id, h);
+  for (const block of before) {
+    const frame = block?.frames?.desktop;
+    if (!frame) continue;
+    if (block.id === id) frames.set(block.id, { ...frame, h });
+    else frames.set(block.id, moves.has(block.id) ? { ...frame, y: moves.get(block.id) } : { ...frame });
+  }
+  return frames;
+}

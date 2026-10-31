@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.18): pages held after a publish, the text block's room given back, and the caret through a redraw
+
+- [ ] Locally, any page in the admin: the preview draws the page and the console has no «Urd: boot failed»
+- [ ] Om oss, the text ending «…Krumpfurt.»: paste a long paragraph at its end; the block grows and the button below moves down with it; select the pasted words and delete them (or Ctrl+Z inside the text): the block returns to its height and the button to its place, and back exactly as before, Publish greys out
+- [ ] The same, with a click outside and back in between the paste and the delete: the room is given back; with a block in the section dragged in between: the height stays until the bottom edge is dragged up
+- [ ] A long text pasted, then the top bar's undo: the text, its height and the button go back in one step
+- [ ] A redraw while typing: type a word into the Om oss text, run in the admin window's console `const old = JSON.parse(localStorage.getItem('urd-draft-om-oss')).sections.find((s) => s.id === 'sec-82c3367e'); setTimeout(() => document.querySelector('iframe').contentWindow.postMessage({ type: 'urd-preview', section: old }, location.origin), 4000);` and type on in the text: when the old copy lands the field keeps every letter typed, the caret stays where it is and the next letters land there
+- [ ] On the deployed site: edit two pages, publish, and switch to the other page before the status says live: it shows the edit; a menu label changed and published shows in the preview after a page switch in the same minute
+
 ### Test batch (0.7.10.17): the shop's blocks behind a choice, and the date picker
 
 - [ ] Site panel, Shop: «List the shop's blocks» as Shown and Hidden, Shown marked on the example site; the tooltip, the label and both words in bokmål and Turkish

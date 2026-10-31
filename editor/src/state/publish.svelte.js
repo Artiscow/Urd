@@ -206,6 +206,8 @@ async function publish() {
   const publishedTitles = [];
   const draftKeys = [];
   const newPageIds = [];
+  // The committed files the editor reads in place of the server's until the deploy serves them.
+  const committed = [];
 
   // ALL pages with drafts are published, not just the current one.
   for (const entry of siteState.siteDraft.pages) {
@@ -239,7 +241,10 @@ async function publish() {
     // the draft is kept as the source until then, and cleaned up
     // automatically on the next visit.
     if (isNew) newPageIds.push(entry.id);
-    else draftKeys.push(key);
+    else {
+      draftKeys.push(key);
+      committed.push([entry.file, out]);
+    }
   }
 
   if (siteState.siteStore.hasDraft()) {
@@ -248,6 +253,7 @@ async function publish() {
     const siteOut = JSON.parse(JSON.stringify(siteState.siteDraft));
     files.push(...materializeSiteImages(siteOut));
     files.push({ path: 'content/site.json', content: JSON.stringify(siteOut, null, 2) + '\n', encoding: 'utf-8' });
+    committed.push(['content/site.json', siteOut]);
     // Materialize the theme as render-blocking light-dark() CSS
     // (FOUC-free first paint). One file covers all pages; the index.html
     // copies link to it.
@@ -494,10 +500,11 @@ async function publish() {
       shellState.writeDraftKey(`urd-draft-${pageState.pageId}`, JSON.stringify(pageSnap));
     }
     historyState.updateDirty();
+    const wave = pageState.held.hold(committed);
     // The wait keeps the message up (info never auto-clears) until the
     // site serves the commit or the wait gives up.
     shellState.setStatus(ta('status.published'), 'info');
-    updaterState.awaitPublishDeploy(files);
+    updaterState.awaitPublishDeploy(files, () => pageState.held.release(wave));
   } else if (res?.status === 401) {
     const data = await res.json().catch(() => null);
     shellState.setStatus(data?.code === 'loginExpired'

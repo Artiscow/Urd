@@ -119,14 +119,18 @@ let publishWave = 0;
  * them (lib/deploy-wait.js), so the status can say «live» rather than just
  * «committed». Nothing is reloaded and no draft changes: the drafts already
  * are the published state.
+ * `onLive` runs when the site serves the commit, also when a newer message or publish has taken the status line.
+ * @param {Array<object>} files The committed files
+ * @param {() => void} [onLive]
  */
-async function awaitPublishDeploy(files) {
+async function awaitPublishDeploy(files, onLive) {
   const wave = ++publishWave;
   // The status sequence at the publish: any message shown since (a
   // revert, a login prompt) makes the wait fall silent instead of
   // overwriting it.
   const seq = shellState.statusSeq;
   const live = await awaitServed(deployTargets(files));
+  if (live) onLive?.();
   if (wave !== publishWave || seq !== shellState.statusSeq) return;
   if (live) shellState.setStatus(ta('status.publishLive'), 'ok');
   else shellState.setStatus(ta('status.publishDeployTimeout'), 'error');

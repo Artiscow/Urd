@@ -45,6 +45,7 @@ import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, paletteGroupsFor, 
 import { styleOf, pasteStyle } from './block-style.js';
 import { nearestDock } from './sticky-model.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
+import { pathTo, nodeAt } from './caret-path.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
 import { ta, adminLang } from './i18n.js';
@@ -753,6 +754,70 @@ let textLinkApply = null;
  */
 export function applyTextLink(link, pages) {
   textLinkApply?.(link, pages);
+}
+
+/**
+ * Draws again while the owner types in a field of a block without taking the field from them: the field drawn anew gets the text it held, which can be newer than the draft the redraw was made from, and the caret or the selection where it stood, and its own input listener runs, so the editor gets the text and the frames the field stands at.
+ * The field is found by its block and its place among the block's fields, and only while the block keeps as many fields; a field drawn after its data arrives (a collection entry) is waited for over a few frames, until the owner presses elsewhere or the focus moves.
+ * A redraw while the preview does not have the focus (a change from the editor's panels) draws the data as it comes.
+ * @param {() => void} paint
+ */
+export function keepTyping(paint) {
+  const field = document.activeElement;
+  const block = field instanceof HTMLElement && field.isContentEditable && document.hasFocus()
+    ? field.closest('.urd-block[data-block-id]')
+    : null;
+  const fields = block ? [...block.querySelectorAll(EDITABLE_TEXT)] : [];
+  const index = fields.indexOf(field);
+  if (index < 0) {
+    paint();
+    return;
+  }
+  const blockId = block.dataset.blockId;
+  const html = field.innerHTML;
+  const selection = window.getSelection();
+  const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+  const caret = range && field.contains(range.startContainer) && field.contains(range.endContainer)
+    ? { start: pathTo(field, range.startContainer), startOffset: range.startOffset, end: pathTo(field, range.endContainer), endOffset: range.endOffset }
+    : null;
+  paint();
+  let frames = 0;
+  let pressed = false;
+  const press = () => { pressed = true; };
+  window.addEventListener('pointerdown', press, { capture: true, once: true });
+  const restore = () => {
+    const focus = document.activeElement;
+    if (pressed || !document.hasFocus() || (focus && focus !== document.body && focus !== field)) {
+      window.removeEventListener('pointerdown', press, { capture: true });
+      return;
+    }
+    const again = document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`);
+    const all = again ? again.querySelectorAll(EDITABLE_TEXT) : [];
+    const next = all.length === fields.length ? all[index] : null;
+    if (!next && again && all.length === 0 && ++frames < 12) {
+      requestAnimationFrame(restore);
+      return;
+    }
+    window.removeEventListener('pointerdown', press, { capture: true });
+    if (!next || next === field) return;
+    if (next.innerHTML !== html) next.innerHTML = html;
+    next.focus({ preventScroll: true });
+    const at = document.createRange();
+    const start = caret && nodeAt(next, caret.start);
+    const end = caret && nodeAt(next, caret.end);
+    try {
+      if (!start || !end) throw new RangeError('no caret');
+      at.setStart(start, caret.startOffset);
+      at.setEnd(end, caret.endOffset);
+    } catch {
+      at.selectNodeContents(next);
+      at.collapse(false);
+    }
+    selection.removeAllRanges();
+    selection.addRange(at);
+    next.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  restore();
 }
 
 export function closeMenus() {

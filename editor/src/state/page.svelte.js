@@ -16,6 +16,7 @@ import { anchorError, takenAnchors } from '$engine/anchor-model.js';
 import { setLinkOn } from '../lib/link-edit.js';
 import { readCart, writeCart, cartAdd, itemKey } from '$engine/shop.js';
 import { createDraftStore } from '../lib/draftStore.js';
+import { createHeld } from '../lib/held-publish.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { mediaState } from './media.svelte.js';
@@ -79,6 +80,11 @@ let store = null;
  * loaded from the server.
  */
 const pendingPublished = new Set();
+
+/**
+ * The page files and site.json a publish committed, held until the deploy serves them (lib/held-publish.js): a page opened before then takes the committed file as its published state, and the preview is sent it, since the server still answers with the file from before the publish.
+ */
+const held = createHeld();
 
 const pageEntry = () => siteState.siteDraft.pages.find((p) => p.id === pageId);
 
@@ -831,14 +837,16 @@ async function selectPage(id, { keepHistory = false } = {}) {
     // New pages do not exist on the server yet: 404, or an SPA fallback
     // answering 200 with HTML (json() throws). Then a blank page is the
     // baseline, and any draft in localStorage wins regardless.
-    let published = null;
-    try {
-      const res = await fetch(`/${entry.file}`);
-      // Older page files are lifted to the current format before editing,
-      // so drafts and publishing are always on the latest schemaVersion.
-      // Old drafts in localStorage are lifted too.
-      if (res.ok) published = liftPageFile(await res.json(), siteState.siteStore.data);
-    } catch { /* new, unpublished page */ }
+    let published = held.get(entry.file);
+    if (!published) {
+      try {
+        const res = await fetch(`/${entry.file}`);
+        // Older page files are lifted to the current format before editing,
+        // so drafts and publishing are always on the latest schemaVersion.
+        // Old drafts in localStorage are lifted too.
+        if (res.ok) published = liftPageFile(await res.json(), siteState.siteStore.data);
+      } catch { /* new, unpublished page */ }
+    }
     if (published) {
       // The page is out on the server: any wait-for-deploy marker is done
       // (store.save() below cleans the draft if it is identical).
@@ -882,6 +890,8 @@ async function readPageDraft(entry) {
   if (raw) {
     try { return JSON.parse(raw); } catch { /* corrupt: fetched again */ }
   }
+  const committed = held.get(entry.file);
+  if (committed) return committed;
   try {
     const res = await fetch(`/${entry.file}`);
     if (res.ok) return liftPageFile(await res.json(), siteState.siteStore.data);
@@ -1059,6 +1069,7 @@ export const pageState = {
   get store() { return store; },
   set store(v) { store = v; },
   pendingPublished,
+  held,
   pageEntry,
   get selectedBlock() { return selectedBlock; },
   set selectedBlock(v) { selectedBlock = v; },

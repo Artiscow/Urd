@@ -233,11 +233,12 @@ async function onReady() {
   bridge?.sendZoom(scale);
   collectionsState.pushCollectionsToPreview();
   templatesState.pushTemplatesToPreview();
-  if (siteState.siteStore.hasDraft()) siteState.pushSiteToPreview();
+  // A publish whose deploy is not out yet: the iframe has read the files from before it.
+  if (siteState.siteStore.hasDraft() || pageState.held.has('content/site.json')) siteState.pushSiteToPreview();
   // Unpublished pages do not exist on the server (the iframe falls back
   // to the front page): the editor's data is the source and must always be sent.
   const unpublished = !siteState.site.pages.some((p) => p.id === pageState.pageId);
-  if (pageState.store.hasDraft() || unpublished) bridge?.sendPage(pageState.pageId, pageState.store.data);
+  if (pageState.store.hasDraft() || unpublished || pageState.held.has(pageState.pageEntry()?.file)) bridge?.sendPage(pageState.pageId, pageState.store.data);
   if (!chromeVisible) bridge?.sendChrome(false);
   if (shellState.gridOn) bridge?.sendShowGrid(true);
   if (shellState.spellcheckPref === 'off') bridge?.sendSpellcheck(false);

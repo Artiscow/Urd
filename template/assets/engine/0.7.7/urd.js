@@ -441,6 +441,8 @@ function enablePreview(state, opts) {
       window.scrollTo({ top: y, behavior: 'instant' });
     }));
   };
+  /** A redraw that keeps the field the owner is typing in (keepTyping), once the editing module has loaded. */
+  const typing = (paint) => (window.UrdPreviewEdit?.keepTyping ?? ((fn) => fn()))(paint);
   /** The ribbon motion demo's timer: a new press restarts the six seconds. */
   let motionDemoTimer = 0;
   /** The measures waiting per block for the editor's fit of its frame (urd-fit-block). */
@@ -452,7 +454,7 @@ function enablePreview(state, opts) {
     const msg = event.data;
     if (msg?.type === 'urd-preview' && msg.section) {
       const host = root.querySelector(`[data-section-id="${msg.section.id}"]`);
-      if (host) renderSection(msg.section, state.site, host, vp());
+      if (host) typing(() => renderSection(msg.section, state.site, host, vp()));
       const i = state.page.sections.findIndex((s) => s.id === msg.section.id);
       if (i >= 0) state.page.sections[i] = msg.section;
     } else if (msg?.type === 'urd-preview-full' && msg.page) {
@@ -464,7 +466,7 @@ function enablePreview(state, opts) {
       state.page = msg.page;
       if (!Array.isArray(state.page.sections)) state.page.sections = [];
       const paint = () => renderPage(state.page, state.site, root, vp());
-      if (samePage) keepScroll(paint); else paint();
+      if (samePage) keepScroll(() => typing(paint)); else paint();
       // Page switch in the editor: the footer and the menu can have per-page visibility (hideOn).
       if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
       if (!samePage && opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
@@ -584,11 +586,13 @@ function enablePreview(state, opts) {
       setCollectionsDraft(msg.collections);
       refreshShopGate(state.site);
       const usesCollections = (b) => Boolean(Urd.blocks.get(b.type)?.usesCollections);
-      for (const section of state.page.sections ?? []) {
-        if (!Array.isArray(section.blocks) || !section.blocks.some(usesCollections)) continue;
-        const host = root.querySelector(`[data-section-id="${section.id}"]`);
-        if (host) renderSection(section, state.site, host, vp());
-      }
+      typing(() => {
+        for (const section of state.page.sections ?? []) {
+          if (!Array.isArray(section.blocks) || !section.blocks.some(usesCollections)) continue;
+          const host = root.querySelector(`[data-section-id="${section.id}"]`);
+          if (host) renderSection(section, state.site, host, vp());
+        }
+      });
     } else if (msg?.type === 'urd-templates') {
       // The template drafts from the editor: shown in the My templates tab in "+ New section".
       window.UrdPreviewEdit?.setTemplates?.(msg.templates);
@@ -691,14 +695,14 @@ function enablePreview(state, opts) {
       state.site.theme ??= { version: 1, tokens: {} };
       state.site.nav ??= { version: 1, items: [] };
       refreshShopGate(state.site);
-      const rerender = () => keepScroll(() => {
+      const rerender = () => keepScroll(() => typing(() => {
         applyTheme(state.site.theme);
         applySiteLayout(state.site);
         applyFavicon(state.site.site?.icon);
         if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
         if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
         renderPage(state.page, state.site, root, vp());
-      });
+      }));
       // Changed site.lang in the draft: reload the visitor locale BEFORE the
       // re-render, so the preview is WYSIWYG for the language too (boot read
       // the published site.json and may have a different language). The
@@ -847,7 +851,7 @@ export async function boot(opts) {
     // The editing layer is loaded dynamically ONLY in preview - visitors
     // never fetch this code. Must be in place before the first render.
     window.UrdPreviewEdit = await import('./preview-edit.js');
-    refreshShopGate(state.site);
+    refreshShopGate(site);
   }
 
   const state = { page, site, engine, viewport };

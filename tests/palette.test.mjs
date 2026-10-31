@@ -148,6 +148,13 @@ test('the shop group is offered while the shop is on: the site\'s own choice fir
   assert.deepEqual(paletteGroupsFor(false).map((g) => g.id), PALETTE_GROUPS.map((g) => g.id).filter((id) => id !== 'shop'));
 });
 
+test('the preview\'s boot seeds the shop gate from the site it read, before the page state exists', () => {
+  const boot = slice(read(new URL('urd.js', ENGINE_DIR)), 'export async function boot(', 'const state = ');
+  assert.match(boot, /refreshShopGate\(site\)/);
+  // The page state is declared after the editing module has loaded, so the boot reads nothing of it before then.
+  assert.doesNotMatch(boot, /\bstate\b/);
+});
+
 test('every section template of the shop carries the mark the lists read while the shop\'s blocks are hidden', async () => {
   const { registerSectionPresets } = await engineImport('sections/presets.js');
   const defs = new Map();

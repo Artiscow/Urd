@@ -9,7 +9,15 @@ import { boxStyleCss } from '../box-style.js';
 
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
-import { pushLayout } from '../push-model.js';
+import { typedFrames } from '../push-model.js';
+
+/** Per text block, the section's frames before the typing in it began, and the last few frames the typing wrote. */
+const typingFrom = new Map();
+
+/** The section's desktop frames as one comparable value. */
+const framesKey = (section) => JSON.stringify(section.blocks.map((b) => [b.id, b.frames?.desktop ?? null]));
+
+const sameFrame = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 export const textBlock = {
   version: 1,
@@ -65,38 +73,37 @@ export const textBlock = {
       content.addEventListener('input', () => {
         const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
-        // Grow with the content: when the text becomes taller than the frame,
-        // the frame (and the section when needed) is expanded so nothing is
-        // clipped or overlaps. Measured on the content element, so the handles
-        // never count, and converted from the content's zoom (a text set to
-        // shrink) to the block's. The growth belongs to the same undo step
-        // as the typing.
-        const zoom = (content.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1);
-        if (content.scrollHeight * zoom > el.clientHeight) {
-          const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
-          if (block) {
-            const step = ctx.grid?.size ?? 8;
-            const newH = Math.ceil((content.scrollHeight * zoom) / step) * step;
-            const grow = newH - block.frames.desktop.h;
-            block.frames.desktop = { ...block.frames.desktop, h: newH };
-            el.style.height = `${newH}px`;
+        // Grow with the content and give the room back: the frame takes the height the words need, never less than it had before the typing began, and the blocks below move by the push rules from where they stood then (ADR-0024 decision 4), posted in the typing's undo step.
+        // The start holds while the section's frames are ones the typing wrote, the last few included, so a redraw a keystroke behind keeps it; any other change starts afresh.
+        // The words are measured with the box at its own height, since the text fills a box taller than them, and converted from the content's zoom (a text set to shrink) to the block's.
+        const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
+        if (block?.frames?.desktop) {
+          const now = framesKey(ctx.section);
+          let start = typingFrom.get(block.id);
+          if (!start?.written.includes(now)) {
+            start = { before: ctx.section.blocks.map((b) => ({ id: b.id, frames: { desktop: b.frames?.desktop && { ...b.frames.desktop } } })), written: [now] };
+          }
+          const height = el.style.height;
+          el.style.height = 'auto';
+          const needed = content.scrollHeight * ((content.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1));
+          el.style.height = height;
+          const frames = typedFrames(start.before, block.id, needed, ctx.grid?.size ?? 8);
+          for (const other of ctx.section.blocks) {
+            const frame = frames.get(other.id);
+            if (!frame || sameFrame(frame, other.frames?.desktop)) continue;
+            other.frames.desktop = frame;
+            if (other === block) {
+              el.style.height = `${frame.h}px`;
+            } else {
+              const otherEl = el.parentElement?.querySelector(`:scope > .urd-block[data-block-id="${CSS.escape(other.id)}"]`);
+              if (otherEl) otherEl.style.top = `${frame.y}px`;
+            }
             // The section is left alone: if the text grows past the edge it
             // hangs over (sections never clip, and the height is the user's).
-            post({ type: 'urd-move', sectionId: ctx.section.id, blockId: block.id, frame: block.frames.desktop, coalesce: true, groupKey: block.id });
-            // Typing is an edit of the design: the blocks below move in the
-            // data by the push rules (ADR-0024), in the same undo step.
-            const items = ctx.section.blocks
-              .filter((b) => b.frames?.desktop)
-              .map((b) => ({ id: b.id, x: b.frames.desktop.x, y: b.frames.desktop.y, h: b.id === block.id ? block.frames.desktop.h - grow : b.frames.desktop.h, grow: b.id === block.id ? grow : 0 }));
-            for (const [id, shift] of pushLayout(items).shifts) {
-              const other = ctx.section.blocks.find((b) => b.id === id);
-              if (!other) continue;
-              other.frames.desktop = { ...other.frames.desktop, y: other.frames.desktop.y + shift };
-              const otherEl = el.parentElement?.querySelector(`:scope > .urd-block[data-block-id="${CSS.escape(id)}"]`);
-              if (otherEl) otherEl.style.top = `${other.frames.desktop.y}px`;
-              post({ type: 'urd-move', sectionId: ctx.section.id, blockId: id, frame: other.frames.desktop, coalesce: true, groupKey: block.id });
-            }
+            post({ type: 'urd-move', sectionId: ctx.section.id, blockId: other.id, frame, coalesce: true, groupKey: block.id });
           }
+          start.written = [...start.written.slice(-7), framesKey(ctx.section)];
+          typingFrom.set(block.id, start);
         }
 
         post({
