@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.13-18p): the shop tab in the canvas menu at boot
+
+- [ ] On a site with a products collection and no «List the shop's blocks» setting (the example site with `"shop"` removed from `commerce` in site.json, or a fresh site with a catalogue): reload the admin and press «+ New block» in the first section: the Shop tab stands there, as in the Blocks panel and Ctrl+K
+- [ ] Site panel, Shop, Hidden: «+ New block» in the same section without a reload has no Shop tab, a search for «product» in it finds nothing, and a product block added earlier is gone from the slim menu's Recent row; Shown brings all three back
+
 ### Test batch (0.7.10.18): pages held after a publish, the text block's room given back, and the caret through a redraw
 
 - [ ] Locally, any page in the admin: the preview draws the page and the console has no «Urd: boot failed»

@@ -20,7 +20,7 @@
 
 {#if area === 'content'}
   {#snippet countdownTarget()}
-    <!-- A span, not a label: a label around the picker would take a click on the calendar's own surface as a click on the field, and close it -->
+    <!-- A span beside the picker: the calendar's surface is not part of the field's label -->
     <div class="field-stack" title={ta('tip.countdown.target')}>
       <span class="nav-body-label">{ta('lbl.countdownTarget')}</span>
       <DatePicker value={selectedBlock.props.target ?? ''} time onchange={(v) => setBlockProp('target', v)} title={ta('tip.countdown.target')} />

@@ -41,7 +41,7 @@ import { topDrag } from './section-size.js';
 import { snapTolerance, edgeSnap, gapSnap, lockAxis } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
-import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, paletteGroupsFor, shopOn, recentKinds, rememberKind } from './block-palette.js';
+import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, shopOn, recentKinds, rememberKind } from './block-palette.js';
 import { styleOf, pasteStyle } from './block-style.js';
 import { nearestDock } from './sticky-model.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
@@ -1152,7 +1152,7 @@ function wireBlockMenuOutsideClose() {
   }, true);
 }
 
-/** Whether the shop's blocks stand in the «+ New block» menu (block-palette.js shopOn); urd.js hands in the site's settings and whether a product catalogue stands among the collection drafts. */
+/** Whether the shop's blocks stand in the «+ New block» menu and the shop's templates in «+ New section» (block-palette.js shopOn); urd.js hands in the site's settings and whether a product catalogue stands among the collection drafts, and each menu reads the value as it opens. */
 let shopBlocksOn = true;
 export function setShopOn(siteSettings, hasProducts) {
   shopBlocksOn = shopOn(siteSettings, hasProducts);
@@ -1250,7 +1250,7 @@ function addBlockAdder(host, section, grid) {
     }
     menu.classList.add('urd-searching');
     hits.replaceChildren();
-    const all = searchables.concat(menu._urdTemplateSearchables ?? []);
+    const all = searchables.filter((s) => !s.shop || shopBlocksOn).concat(menu._urdTemplateSearchables ?? []);
     // The other languages load on the first query, and the hits are drawn again when they are in (search-langs.js).
     if (!searchLanguagesReady() && !langsWaiting) {
       langsWaiting = true;
@@ -1320,7 +1320,7 @@ function addBlockAdder(host, section, grid) {
   menu.append(recent, body);
 
   const groups = new Map();
-  let shownGroup = paletteGroupsFor(shopBlocksOn)[0].id;
+  let shownGroup = PALETTE_GROUPS[0].id;
   let hoverTimer = 0;
   const showGroup = (id) => {
     const group = groups.get(id);
@@ -1376,7 +1376,7 @@ function addBlockAdder(host, section, grid) {
 
   // A kind's row: its picture, then its name. An entry from pictures opens the file picker on the click itself and sends the files with the request; the calendar's designs ask the editor for its design picker.
   const kindButtons = new Map();
-  const kindButton = (parent, kind, label, group) => {
+  const kindButton = (parent, kind, label, group, shop = false) => {
     const def = PALETTE_KINDS[kind];
     const b = document.createElement('button');
     b.type = 'button';
@@ -1410,17 +1410,19 @@ function addBlockAdder(host, section, grid) {
     });
     parent.appendChild(b);
     kindButtons.set(kind, b);
-    searchables.push({ label, group, kind, run: () => b.click() });
+    searchables.push({ label, group, kind, run: () => b.click(), ...(shop ? { shop } : {}) });
   };
-  for (const group of paletteGroupsFor(shopBlocksOn)) {
+  // Every group is built; the shop's stands in the menu while the gate is on, read as the menu opens (_urdPrepare).
+  for (const group of PALETTE_GROUPS) {
     const items = addGroup(group.id, ta(group.labelKey), PALETTE_KINDS[group.icon].picture);
-    for (const kind of group.kinds) kindButton(items, kind, ta(PALETTE_KINDS[kind].labelKey), ta(group.labelKey));
+    for (const kind of group.kinds) kindButton(items, kind, ta(PALETTE_KINDS[kind].labelKey), ta(group.labelKey), group.id === 'shop');
   }
 
   // The slim form's first rows: the kinds added last from this menu, each running its own row in the groups.
   const refreshRecent = () => {
     recent.replaceChildren();
-    const kinds = readRecentKinds().filter((kind) => kindButtons.has(kind));
+    // A shop kind added before the gate closed stays out of the row while it is closed.
+    const kinds = readRecentKinds().filter((kind) => kindButtons.has(kind) && (shopBlocksOn || !PALETTE_GROUPS.find((g) => g.id === 'shop')?.kinds.includes(kind)));
     if (!kinds.length) return;
     const heading = document.createElement('div');
     heading.className = 'urd-add-block-group';
@@ -1529,6 +1531,8 @@ function addBlockAdder(host, section, grid) {
     const slim = blockMenuSlim();
     menu.classList.toggle('urd-abm-slim', slim);
     menu._urdRefreshTemplates();
+    const shopGroup = groups.get('shop');
+    if (shopGroup) shopGroup.tab.hidden = shopGroup.panel.hidden = !shopBlocksOn;
     refreshRecent();
     menu._urdSearchReset?.();
     pane.classList.remove('open');

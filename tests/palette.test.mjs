@@ -96,9 +96,10 @@ test('the lists name no block the engine does not define', () => {
 test('the canvas menu and the Blocks panel both draw the palette, so their groups and order are one', () => {
   const menu = read(new URL('preview-edit.js', ENGINE_DIR));
   const panel = read(BLOCKS);
-  // Both read the groups through paletteGroupsFor, which leaves the shop's group out while the shop is off (shopOn).
+  // The panel reads the groups through paletteGroupsFor, which leaves the shop's group out while the shop is off (shopOn); the canvas menu builds every group and hides the shop's as it opens, so the gate's value at the opening counts.
   assert.match(menu, /import \{ PALETTE_GROUPS, PALETTE_KINDS(, \w+)* \} from '\.\/block-palette\.js';/);
-  assert.match(menu, /for \(const group of paletteGroupsFor\(shopBlocksOn\)\)/);
+  assert.match(menu, /for \(const group of PALETTE_GROUPS\) \{/);
+  assert.match(menu, /shopGroup\.tab\.hidden = shopGroup\.panel\.hidden = !shopBlocksOn/);
   assert.match(panel, /from '\$engine\/block-palette\.js';/);
   assert.match(panel, /\{#each paletteGroupsFor\(ed\.shopBlocksOn\(\)\) as group \(group\.id\)\}/);
   const kinds = PALETTE_GROUPS.flatMap((group) => group.kinds);
