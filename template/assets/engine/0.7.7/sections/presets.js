@@ -807,8 +807,10 @@ export function registerSectionPresets(Urd) {
     },
   });
 
+  // `shop: true` marks a template for a shop: the lists leave it out while the site's shop blocks are hidden (block-palette.js shopOn).
   Urd.sections.define('products', {
     label: 'Products',
+    shop: true,
     labelKey: 'preset.products.label',
     group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
@@ -849,6 +851,7 @@ export function registerSectionPresets(Urd) {
 
   Urd.sections.define('shop', {
     label: 'Shop',
+    shop: true,
     labelKey: 'preset.shop.label',
     group: 'Shop',
     groupKey: 'presetGroup.shop',
@@ -865,6 +868,7 @@ export function registerSectionPresets(Urd) {
 
   Urd.sections.define('shop-hero', {
     label: 'Shop hero',
+    shop: true,
     labelKey: 'preset.shop-hero.label',
     group: 'Shop',
     groupKey: 'presetGroup.shop',
@@ -888,6 +892,7 @@ export function registerSectionPresets(Urd) {
 
   Urd.sections.define('shop-categories', {
     label: 'Shop categories',
+    shop: true,
     labelKey: 'preset.shop-categories.label',
     group: 'Shop',
     groupKey: 'presetGroup.shop',
@@ -925,6 +930,7 @@ export function registerSectionPresets(Urd) {
 
   Urd.sections.define('shop-trust', {
     label: 'Shop trust',
+    shop: true,
     labelKey: 'preset.shop-trust.label',
     group: 'Shop',
     groupKey: 'presetGroup.shop',
@@ -961,6 +967,7 @@ export function registerSectionPresets(Urd) {
 
   Urd.sections.define('shop-showcase', {
     label: 'Shop feature',
+    shop: true,
     labelKey: 'preset.shop-showcase.label',
     group: 'Shop',
     groupKey: 'presetGroup.shop',
@@ -982,6 +989,7 @@ export function registerSectionPresets(Urd) {
 
   Urd.sections.define('checkout', {
     label: 'Checkout',
+    shop: true,
     labelKey: 'preset.checkout.label',
     group: 'Shop',
     groupKey: 'presetGroup.shop',

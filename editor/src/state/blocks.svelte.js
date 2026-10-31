@@ -14,6 +14,8 @@ import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
+import { collectionsState } from './collections.svelte.js';
+import { shopOn } from '$engine/block-palette.js';
 
 // FONT_STACKS lives in the engine's fonts.js (shared with the text editor
 // bar's typography row).
@@ -147,6 +149,12 @@ const BLOCK_DEFAULTS = $derived({
   // The checkout block (blocks/checkout.js version 2): the payment settings as one object (ADR-0028).
   checkout: { type: 'checkout', version: 2, props: { recipient: '', endpoint: '', currency: 'kr', seller: true, payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } }, w: 44, h: 430 },
 });
+
+/** Whether the shop's blocks stand in the block lists (block-palette.js shopOn): the site's own choice, else a product catalogue among the collections. */
+function shopBlocksOn() {
+  const hasProducts = collectionsState.collectionIds.some((id) => collectionsState.collectionStores[id]?.data?.kind === 'products');
+  return shopOn(siteState.siteDraft?.site, hasProducts);
+}
 
 function buildBlock(kind) {
   const d = BLOCK_DEFAULTS[kind];
@@ -300,6 +308,7 @@ async function handleRequestBlock(msg) {
 /** What the other parts read and write through, and the effects the shell runs once. */
 export const blocksState = {
   get BLOCK_LABELS() { return BLOCK_LABELS; },
+  shopBlocksOn,
   get BLOCK_DEFAULTS() { return BLOCK_DEFAULTS; },
   buildBlock,
   requestPlacement,

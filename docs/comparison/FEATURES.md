@@ -1954,7 +1954,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Page blocks map | TI | ⌘L | Missing | Watch |
 | Section isolation | CA, WP | Section View; Spotlight | Missing | Watch |
 | Pages panel management | WF, WH, WE, BR, WT, FS, DV, WN, WP, SQ | Add, organise, copy, duplicate, hide pages | Partial: create (blank or a starter pack), rename, change the address, delete, open and save as a template; no duplicate, reorder or hidden page | 0.7.10 (duplicate a page); v0.8 AR-5 (a hidden page); Not taken: reordering (the menu sets the order) |
-| Element Manager (disable elements) | BR | Removes unused elements from the UI | Partial: the shop blocks are gated by «shop is on» | 0.7.10: the gating item, widened into an element manager |
+| Element Manager (disable elements) | BR | Removes unused elements from the UI | Partial: the shop blocks are gated by «List the shop's blocks» (Shown or Hidden) in the Site panel, on by itself while a product catalogue exists, the shop's section templates with them (0.7.10.17); no switch for other block types | 0.7.10: widened into an element manager |
 | Orphaned-element scanner | BR | Finds disconnected elements | n/a | - |
 | Keyboard region navigation | WP, FS, BR, SH | Ctrl+backtick; Alt+F10; F6; ⌥T | Missing | 0.7.11 |
 

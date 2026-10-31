@@ -51,11 +51,16 @@ import { videoLayer } from './backgrounds/video.js';
 import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns } from './plugins.js';
-import { setCollectionsDraft } from './collections.js';
+import { setCollectionsDraft, draftHasKind } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
 import { applyHeadMeta, mountAnalytics } from './seo.js';
 import { readPrefetched, revalidateFile, wirePrefetch, sessionStore } from './prefetch.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
+
+/** The shop gate for the «+ New block» menu: the preview module reads it from the site's own choice and whether a product catalogue stands among the collection drafts (block-palette.js shopOn, kept out of the visitor closure). */
+function refreshShopGate(site) {
+  window.UrdPreviewEdit?.setShopOn?.(site?.site, draftHasKind('products'));
+}
 
 /** The commands plugins registered (Urd.commands), named for the editor's palette: the label from its key when it has one. */
 function postCommands() {
@@ -577,6 +582,7 @@ function enablePreview(state, opts) {
       // measure asynchronously), and the browser then clamps the scroll
       // position to the top.
       setCollectionsDraft(msg.collections);
+      refreshShopGate(state.site);
       const usesCollections = (b) => Boolean(Urd.blocks.get(b.type)?.usesCollections);
       for (const section of state.page.sections ?? []) {
         if (!Array.isArray(section.blocks) || !section.blocks.some(usesCollections)) continue;
@@ -684,6 +690,7 @@ function enablePreview(state, opts) {
       state.site.pages ??= [];
       state.site.theme ??= { version: 1, tokens: {} };
       state.site.nav ??= { version: 1, items: [] };
+      refreshShopGate(state.site);
       const rerender = () => keepScroll(() => {
         applyTheme(state.site.theme);
         applySiteLayout(state.site);
@@ -840,6 +847,7 @@ export async function boot(opts) {
     // The editing layer is loaded dynamically ONLY in preview - visitors
     // never fetch this code. Must be in place before the first render.
     window.UrdPreviewEdit = await import('./preview-edit.js');
+    refreshShopGate(state.site);
   }
 
   const state = { page, site, engine, viewport };

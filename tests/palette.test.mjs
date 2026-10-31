@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { ENGINE_DIR, engineImport } from './_engine.mjs';
 
-const { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, palettePicture, recentKinds, rememberKind } = await engineImport('block-palette.js');
+const { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, palettePicture, recentKinds, rememberKind, shopOn, paletteGroupsFor } = await engineImport('block-palette.js');
 
 // The seeds and the names stand in the blocks module (0.7.26.5).
 const APP = new URL('../editor/src/state/blocks.svelte.js', import.meta.url);
@@ -96,10 +96,11 @@ test('the lists name no block the engine does not define', () => {
 test('the canvas menu and the Blocks panel both draw the palette, so their groups and order are one', () => {
   const menu = read(new URL('preview-edit.js', ENGINE_DIR));
   const panel = read(BLOCKS);
+  // Both read the groups through paletteGroupsFor, which leaves the shop's group out while the shop is off (shopOn).
   assert.match(menu, /import \{ PALETTE_GROUPS, PALETTE_KINDS(, \w+)* \} from '\.\/block-palette\.js';/);
-  assert.match(menu, /for \(const group of PALETTE_GROUPS\)/);
+  assert.match(menu, /for \(const group of paletteGroupsFor\(shopBlocksOn\)\)/);
   assert.match(panel, /from '\$engine\/block-palette\.js';/);
-  assert.match(panel, /\{#each PALETTE_GROUPS as group \(group\.id\)\}/);
+  assert.match(panel, /\{#each paletteGroupsFor\(ed\.shopBlocksOn\(\)\) as group \(group\.id\)\}/);
   const kinds = PALETTE_GROUPS.flatMap((group) => group.kinds);
   assert.equal(new Set(kinds).size, kinds.length, 'a kind stands in one group only');
 });
@@ -136,4 +137,27 @@ test('the recent blocks: newest first, each once, at most three, and only kinds 
   assert.deepEqual(recentKinds(['text', 'no-such-kind', 3, 'text', 'map']), ['text', 'map']);
   assert.deepEqual(recentKinds('text'), []);
   assert.deepEqual(recentKinds(null), []);
+});
+
+test('the shop group is offered while the shop is on: the site\'s own choice first, else a product catalogue decides', () => {
+  assert.equal(shopOn({ commerce: { shop: false } }, true), false);
+  assert.equal(shopOn({ commerce: { shop: true } }, false), true);
+  assert.equal(shopOn({ commerce: { currency: 'NOK' } }, true), true);
+  assert.equal(shopOn(undefined, false), false);
+  assert.deepEqual(paletteGroupsFor(true), PALETTE_GROUPS);
+  assert.deepEqual(paletteGroupsFor(false).map((g) => g.id), PALETTE_GROUPS.map((g) => g.id).filter((id) => id !== 'shop'));
+});
+
+test('every section template of the shop carries the mark the lists read while the shop\'s blocks are hidden', async () => {
+  const { registerSectionPresets } = await engineImport('sections/presets.js');
+  const defs = new Map();
+  registerSectionPresets({ sections: { define: (id, def) => defs.set(id, def) } });
+  const marked = [...defs].filter(([, def]) => def.shop).map(([id]) => id).sort();
+  assert.deepEqual(marked, ['checkout', 'products', 'shop', 'shop-categories', 'shop-hero', 'shop-showcase', 'shop-trust']);
+  // A template that builds a shop block is marked; the mark never sits on one that builds none.
+  for (const [id, def] of defs) {
+    const types = new Set((def.create().blocks ?? []).map((b) => b.type));
+    const sells = ['product', 'cart', 'checkout'].some((type) => types.has(type));
+    if (sells) assert.ok(def.shop, `${id} builds a shop block and carries the mark`);
+  }
 });

@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.17): the shop's blocks behind a choice, and the date picker
+
+- [ ] Site panel, Shop: «List the shop's blocks» as Shown and Hidden, Shown marked on the example site; the tooltip, the label and both words in bokmål and Turkish
+- [ ] Hidden: the Shop group leaves the Blocks panel (a search for «product» finds no block), «+ New block» has no Shop tab, Ctrl+K offers no «Insert Product cards» and no «New section: Products», «Shop …» or «Checkout», and «+ New section» has no Shop category; Shown brings them all back without a reload
+- [ ] Hidden, the Shop page: the product cards block renders and opens its menu; the basket and the checkout pages work; the menu's basket tool is unchanged; a publish writes `"shop": false` under `commerce` in `content/site.json` and nothing else changes
+- [ ] «Discard drafts» and reload: Shown, from the product catalogue; on a site with no products collection and no setting: Hidden, and Shown there shows the group anyway; Ctrl+Z after a change flips it back
+- [ ] Collections, a news entry: the date reads like «19 Jul 2026» in the panel's field look; a click opens a month grid under it with the week in the admin language's order, today framed and the entry's day filled; another day picked moves the entry in the list and on the page; «Today» and «Clear» do what they say
+- [ ] The grid on the keyboard: the arrows move a day and a week, PageUp and PageDown a month, Home and End to the week's ends, Enter picks, Escape closes; a click in the preview closes it; an entry low in the panel opens its grid upward
+- [ ] A countdown block: «Counting down to» reads date and time together; the grid has Hour and Minute under it, a change in either moves the countdown on the page, and a day picked keeps the time
+- [ ] The picker in bokmål and Turkish: month and weekday names, «Today», «Clear», «Hour» and «Minute»; the same in Firefox and Safari, where the grid is placed by measuring
+
 ### Test batch (0.7.10.16): the command palette, the drop indicators, the layout help chip and the stacked Properties panel
 
 - [ ] Ctrl+K with the focus in the panels or on the canvas, and Ctrl+Shift+P: the palette opens with Actions, Pages, Panels, Insert a block and New section; the arrows walk it, Enter runs the marked command, Escape and a press outside close it; the field has the focus on opening

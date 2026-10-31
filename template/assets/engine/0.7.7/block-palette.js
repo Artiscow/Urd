@@ -55,6 +55,29 @@ export const PALETTE_GROUPS = [
   { id: 'decor', labelKey: 'blockGroup.decor', icon: 'shape-circle', kinds: ['ribbon', 'shape-line', 'shape-arrow', 'shape-circle', 'shape-rect', 'shape-triangle'] },
 ];
 
+/**
+ * Whether the shop's blocks (product cards, basket, checkout) are offered in the
+ * block lists: the site's own choice (site.commerce.shop) when it is set, else
+ * on while the site has a product catalogue, so a site without a shop keeps a
+ * shorter palette and a site that sells sees its blocks without a setting.
+ * @param {{commerce?: {shop?: boolean}}|undefined} siteSettings The `site` part of site.json
+ * @param {boolean} hasProducts Whether a collection of kind products exists
+ * @returns {boolean}
+ */
+export function shopOn(siteSettings, hasProducts) {
+  const own = siteSettings?.commerce?.shop;
+  return typeof own === 'boolean' ? own : Boolean(hasProducts);
+}
+
+/**
+ * The palette's groups as a block list shows them: every group, the shop's only while the shop is on.
+ * @param {boolean} shop
+ * @returns {typeof PALETTE_GROUPS}
+ */
+export function paletteGroupsFor(shop) {
+  return shop ? PALETTE_GROUPS : PALETTE_GROUPS.filter((g) => g.id !== 'shop');
+}
+
 /** The pictures of the two groups the canvas menu adds after the palette's own: the plugins' blocks and the owner's saved block groups. */
 export const EXTRA_GROUP_PICTURES = {
   plugins: draw('<path d="M9 3v5M15 3v5"/><path d="M6 8h12v3a6 6 0 0 1-12 0z"/><path d="M12 17v4"/>'),

@@ -63,7 +63,8 @@
           "additionalProperties": false,
           "description": "Additive from 0.7.28.1 (ADR-0028): the shop's settings shared by every checkout. `currency` is the ISO 4217 code the payment layer charges in and the catalogue's prices are in; omitted means NOK",
           "properties": {
-            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+            "shop": { "type": "boolean", "description": "Additive from 0.7.10.17: whether the shop's blocks stand in the block lists; omitted means on while a product catalogue exists" }
           }
         },
         "contact": {

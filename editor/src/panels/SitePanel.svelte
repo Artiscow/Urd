@@ -4,6 +4,7 @@
   import ColorPicker from '../lib/ColorPicker.svelte';
   import { WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP, WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS, clampWidth, clampGutter, contentBand, presetOf } from '../lib/content-width.js';
   import Dropdown from '../lib/Dropdown.svelte';
+  import Choice from '../lib/Choice.svelte';
   import { autogrow } from '../lib/autogrow.js';
   import { ta, taApiError, adminLang } from '$engine/i18n.js';
   import { zoneValid } from '$engine/calendar-format.js';
@@ -633,6 +634,10 @@
   <details class="group" bind:open={() => ed.siteShopOpen, (v) => (ed.siteShopOpen = v)}>
     <summary title={ta('tip.site.shop')}>{ta('group.siteShop')}</summary>
     <div class="group-items">
+      <!-- The shop's blocks in the block lists (block-palette.js shopOn): the site's own choice, else shown while a product catalogue exists. A choice of Shown or Hidden, never a switch, so it cannot read as the shop itself going off -->
+      <Choice label={ta('settings.shopOn')} title={ta('tip.settings.shopOn')} value={ed.shopBlocksOn() ? 'shown' : 'hidden'}
+        options={[['shown', ta('opt.shopBlocks.shown')], ['hidden', ta('opt.shopBlocks.hidden')]]}
+        onchange={(v) => siteMutate('site', () => { siteDraft.site.commerce = { ...(siteDraft.site.commerce ?? {}), shop: v === 'shown' }; })} />
       <!-- The shop's currency: the ISO code the payment layer charges in, and the word the checkout shows with a provider on -->
       <label class="field-stack" title={ta('tip.settings.currency')}>{ta('settings.currency')}
         <input value={siteDraft.site.commerce?.currency ?? ''} placeholder="NOK" maxlength="3" spellcheck="false" class:place-error={ed.siteCurrencyBad} data-field="shop-currency"

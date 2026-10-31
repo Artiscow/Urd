@@ -45,6 +45,7 @@ function handleFor(panel, siteDraft, extra = {}) {
     activePanel: panel,
     site: siteDraft,
     siteDraft,
+    shopBlocksOn: () => true,
     grid: { size: 16, snap: true },
     pageId: siteDraft.pages[0]?.id ?? 'hjem',
     bridge: null,

@@ -7,7 +7,7 @@
  * The list and its ranking are pure (lib/command-palette.js).
  */
 import { ta } from '$engine/i18n.js';
-import { PALETTE_GROUPS, PALETTE_KINDS } from '$engine/block-palette.js';
+import { PALETTE_KINDS, paletteGroupsFor } from '$engine/block-palette.js';
 import { registerSectionPresets } from '$engine/sections/presets.js';
 import { shellState } from './shell.svelte.js';
 import { previewState } from './preview.svelte.js';
@@ -82,8 +82,9 @@ function buildCommands() {
     add(`panel:${id}`, 'panels', ta('palette.openPanel', { panel: shellState.PANEL_LABELS[id] }), () => { shellState.activePanel = id; });
   }
 
-  // The blocks the Blocks panel adds in one press: a kind that asks for a file or opens a picker is left out.
-  for (const group of PALETTE_GROUPS) {
+  // The blocks the Blocks panel adds in one press: a kind that asks for a file or opens a picker is left out, and the shop's while the shop is off.
+  const shop = blocksState.shopBlocksOn();
+  for (const group of paletteGroupsFor(shop)) {
     for (const kind of group.kinds) {
       const def = PALETTE_KINDS[kind];
       if (!def || def.files || def.action) continue;
@@ -94,8 +95,9 @@ function buildCommands() {
     }
   }
 
-  // The section templates, added at the foot of the page.
+  // The section templates, added at the foot of the page; a shop template stands here while the shop's blocks do.
   for (const [id, def] of sectionPresets()) {
+    if (def.shop && !shop) continue;
     add(`section:${id}`, 'sections', ta('palette.insertSection', { name: def.labelKey ? ta(def.labelKey) : def.label }), () => {
       const sections = pageState.store?.data.sections ?? [];
       bridgeState.handleAddSection({ index: sections.length, section: def.create() });

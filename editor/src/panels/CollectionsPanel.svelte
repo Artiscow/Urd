@@ -1,5 +1,6 @@
 <script>
   /* The Collections panel: the collections and their entries, with the images, sizes and colours of a product, and CSV in and out. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  import DatePicker from '../lib/DatePicker.svelte';
   import { getContext, tick } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import Dropdown from '../lib/Dropdown.svelte';
@@ -361,8 +362,7 @@
           {#if collectionView.kind !== 'products'}
             <div class="entry-fields">
               <span class="nav-body-label">{ta('lbl.date')}</span>
-              <input type="date" class="entry-date" value={entry.date ?? ''} title={ta('tip.entry.date')}
-                onchange={(e) => setEntryField(id, entry.id, 'date', e.target.value)} />
+              <DatePicker value={entry.date ?? ''} title={ta('tip.entry.date')} onchange={(v) => setEntryField(id, entry.id, 'date', v)} />
             </div>
           {/if}
           <textarea rows="3" placeholder={ta('ph.collections.text')} data-field="text"

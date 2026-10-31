@@ -2,6 +2,7 @@
   /* The countdown block in the element menu (0.7.26.2): its Content and Style areas,
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
+  import DatePicker from '../../lib/DatePicker.svelte';
   import { getContext } from 'svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
@@ -19,9 +20,11 @@
 
 {#if area === 'content'}
   {#snippet countdownTarget()}
-    <label title={ta('tip.countdown.target')}>{ta('lbl.countdownTarget')}
-      <input type="datetime-local" value={selectedBlock.props.target ?? ''}
-        onchange={(e) => setBlockProp('target', e.target.value)} /></label>
+    <!-- A span, not a label: a label around the picker would take a click on the calendar's own surface as a click on the field, and close it -->
+    <div class="field-stack" title={ta('tip.countdown.target')}>
+      <span class="nav-body-label">{ta('lbl.countdownTarget')}</span>
+      <DatePicker value={selectedBlock.props.target ?? ''} time onchange={(v) => setBlockProp('target', v)} title={ta('tip.countdown.target')} />
+    </div>
     <label title={ta('tip.countdown.done')}>{ta('lbl.countdownDone')}
       <input value={selectedBlock.props.doneText ?? ''}
         onchange={(e) => setBlockProp('doneText', e.target.value)} /></label>

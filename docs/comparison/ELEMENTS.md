@@ -975,7 +975,7 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 ### J. Commerce
 
-**Offered:** dedicated element sets that appear when the shop is switched on. **Built:** a static catalogue plus checkout as a form (Urd's model), with the payment gateway outside the core.
+**Offered:** dedicated element sets that appear when the shop is switched on. **Built:** a static catalogue plus checkout as a form (Urd's model), with the payment gateway outside the core; the shop's blocks stand in the block lists while the shop is on, a choice in the Site panel («List the shop's blocks», Shown or Hidden) that stands on Shown by itself while a product catalogue exists (0.7.10.17).
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|

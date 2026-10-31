@@ -57,6 +57,16 @@ export function setCollectionsDraft(collections) {
   fetched.clear();
 }
 
+/**
+ * Whether the editor's collection drafts hold a collection of a kind, as the
+ * shop gate reads it (block-palette.js shopOn): false before the drafts arrive.
+ * @param {string} kind
+ * @returns {boolean}
+ */
+export function draftHasKind(kind) {
+  return Boolean(draftCollections) && Object.values(draftCollections).some((c) => c?.kind === kind);
+}
+
 /** Fetched collections are cached per page load (id → Promise<data|null>). */
 const fetched = new Map();
 

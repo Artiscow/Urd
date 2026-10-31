@@ -5,7 +5,8 @@
     "lang": "no",
     "description": "Urd sin testside",
     "commerce": {
-      "currency": "NOK"
+      "currency": "NOK",
+      "shop": true
     },
     "meetingHosts": [],
     "icon": "/media/ikon-9740643c.webp",

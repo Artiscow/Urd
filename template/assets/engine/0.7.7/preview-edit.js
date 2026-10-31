@@ -41,7 +41,7 @@ import { topDrag } from './section-size.js';
 import { snapTolerance, edgeSnap, gapSnap, lockAxis } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
-import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, recentKinds, rememberKind } from './block-palette.js';
+import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, paletteGroupsFor, shopOn, recentKinds, rememberKind } from './block-palette.js';
 import { styleOf, pasteStyle } from './block-style.js';
 import { nearestDock } from './sticky-model.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
@@ -1087,6 +1087,12 @@ function wireBlockMenuOutsideClose() {
   }, true);
 }
 
+/** Whether the shop's blocks stand in the «+ New block» menu (block-palette.js shopOn); urd.js hands in the site's settings and whether a product catalogue stands among the collection drafts. */
+let shopBlocksOn = true;
+export function setShopOn(siteSettings, hasProducts) {
+  shopBlocksOn = shopOn(siteSettings, hasProducts);
+}
+
 function addBlockAdder(host, section, grid) {
   wireBlockMenuOutsideClose();
   const wrap = document.createElement('div');
@@ -1249,7 +1255,7 @@ function addBlockAdder(host, section, grid) {
   menu.append(recent, body);
 
   const groups = new Map();
-  let shownGroup = PALETTE_GROUPS[0].id;
+  let shownGroup = paletteGroupsFor(shopBlocksOn)[0].id;
   let hoverTimer = 0;
   const showGroup = (id) => {
     const group = groups.get(id);
@@ -1341,7 +1347,7 @@ function addBlockAdder(host, section, grid) {
     kindButtons.set(kind, b);
     searchables.push({ label, group, kind, run: () => b.click() });
   };
-  for (const group of PALETTE_GROUPS) {
+  for (const group of paletteGroupsFor(shopBlocksOn)) {
     const items = addGroup(group.id, ta(group.labelKey), PALETTE_KINDS[group.icon].picture);
     for (const kind of group.kinds) kindButton(items, kind, ta(PALETTE_KINDS[kind].labelKey), ta(group.labelKey));
   }
@@ -1685,6 +1691,8 @@ function makeSectionAdder(index, above = null) {
     const pluginDefs = [];
     for (const id of window.Urd.sections.ids()) {
       const def = window.Urd.sections.get(id);
+      // A shop template stands in the gallery while the shop's blocks do.
+      if (def.shop && !shopBlocksOn) continue;
       if (def.fromPlugin) {
         pluginDefs.push(def);
         continue;

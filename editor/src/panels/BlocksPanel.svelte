@@ -6,7 +6,7 @@
   import { searchItemsAny } from '$engine/search-langs.js';
   import { searchLangs } from '../lib/search-langs.svelte.js';
   import { calDesignGroups } from '$engine/calendar-designs.js';
-  import { PALETTE_GROUPS, PALETTE_KINDS } from '$engine/block-palette.js';
+  import { PALETTE_KINDS, paletteGroupsFor } from '$engine/block-palette.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const bridge = $derived(ed.bridge);
@@ -53,7 +53,7 @@
   function panelBlockItems() {
     // The palette's kinds in its order, the image and the gallery from pictures as the panel adds them, then the calendar's views and designs, which the hit list reaches by name.
     const items = [];
-    for (const group of PALETTE_GROUPS) {
+    for (const group of paletteGroupsFor(ed.shopBlocksOn())) {
       for (const kind of group.kinds) {
         const def = PALETTE_KINDS[kind];
         const label = ta(def.labelKey);
@@ -162,8 +162,8 @@
       <p class="panel-hint">{ta('canvas.searchEmpty')}</p>
     {/each}
   {:else}
-  <!-- The palette's groups in the order the canvas's «+ New block» shares (block-palette.js), a picture and a name per entry -->
-  {#each PALETTE_GROUPS as group (group.id)}
+  <!-- The palette's groups in the order the canvas's «+ New block» shares (block-palette.js), a picture and a name per entry; the shop's group while the shop is on -->
+  {#each paletteGroupsFor(ed.shopBlocksOn()) as group (group.id)}
     <p class="mini-label group-sub">{ta(group.labelKey)}</p>
     <div class="tile-grid cols-3 palette-grid">
       {#each group.kinds as kind (kind)}
