@@ -335,6 +335,110 @@
 
   .rail-group:first-child { padding-top: 0.2rem; }
 
+  /* The icon rail (the default layout): the panels as icons with their names as tooltips, the groups parted by a line, the mark and the gear stacked at the foot. */
+  .rail-icons {
+    width: 3.5rem;
+    align-items: center;
+    padding: 0.6rem 0;
+    gap: 0.2rem;
+  }
+  .rail-icons .rail-icon:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) {
+    width: 2.5rem;
+    height: 2.25rem;
+    padding: 0;
+    justify-content: center;
+    border-radius: 8px;
+  }
+  .rail-icons .rail-icon.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) {
+    background: var(--urd-color-accent, #7c5cff);
+    color: var(--urd-color-surface, #151a23);
+  }
+  .rail-divider {
+    width: 1.5rem;
+    height: 1px;
+    margin: 0.4rem 0;
+    background: rgb(255 255 255 / 14%);
+  }
+  .rail-settings-stack {
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-inline: 0.5rem;
+    padding-top: 0.5rem;
+  }
+  .rail-settings-stack .rail-brand .brand-mark { height: 1.1rem; }
+
+  /* The panel's own tabs (the two tab layouts): the groups as a segment, the panels as underlined tabs. */
+  .panel-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: -0.3rem 0 0.8rem;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid rgb(255 255 255 / 10%);
+  }
+  .panel-nav-row { display: flex; align-items: center; gap: 0.4rem; }
+  .panel-nav-groups { display: flex; flex: 1; }
+  .panel-nav-groups button { flex: 1; }
+  .panel-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.1rem;
+  }
+  .panel-tab:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.86rem;
+    opacity: 0.75;
+    box-shadow: inset 0 -2px 0 transparent;
+  }
+  .panel-tab:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) { opacity: 1; }
+  .panel-tab.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) {
+    opacity: 1;
+    color: var(--urd-color-accent, #7c5cff);
+    box-shadow: inset 0 -2px 0 var(--urd-color-accent, #7c5cff);
+  }
+
+  /* The strip of every panel under the top bar («top-tabs»). */
+  .panel-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.1rem;
+    padding: 0 1rem;
+    background: var(--urd-color-surface, #151a23);
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+    font-size: 0.86rem;
+  }
+  .panel-strip.hidden { display: none; }
+  .strip-group {
+    font-size: 0.54rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    padding: 0 0.5rem 0 0.1rem;
+  }
+  .strip-divider {
+    width: 1px;
+    height: 1.1rem;
+    margin: 0 0.6rem;
+    background: rgb(255 255 255 / 14%);
+  }
+  .strip-end { margin-left: auto; display: inline-flex; }
+  .panel-strip .rail-gear { padding: 0.25rem 0.4rem; }
+
+  /* The top bar's Site menu («page-tabs»). */
+  .topnav { display: inline-flex; align-items: center; gap: 0.25rem; }
+  .topnav-btn.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    background: var(--urd-color-accent, #7c5cff);
+    color: var(--urd-color-surface, #151a23);
+    border-color: transparent;
+  }
+  .site-pop { min-width: 11rem; }
+  .site-pop .mini-label { padding: 0.35rem 0.5rem 0.1rem; }
+  .site-pop .mini-label:not(:first-child) { margin-top: 0.3rem; border-top: 1px solid rgb(255 255 255 / 10%); padding-top: 0.55rem; }
+
   /* The mark lives at the bottom by the gear: mark on the left, settings
      on the right, with a divider above. */
   .rail-settings {
@@ -399,6 +503,9 @@
     font-family: var(--urd-font-body, system-ui, sans-serif);
     font-size: 0.82rem;
   }
+  /* From the top bar's or the strip's gear the popover hangs under its gear, at its right edge. */
+  .settings-anchor { display: inline-flex; position: relative; }
+  .settings-pop.flip { position: absolute; top: calc(100% + 6px); bottom: auto; left: auto; right: 0; }
 
   .settings-pop > .panel-strong {
     padding-bottom: 8px;
@@ -493,6 +600,34 @@
     gap: 0.5rem;
     margin: 0 0 0.8rem;
   }
+  .panel-head-tools { display: inline-flex; align-items: center; gap: 0.3rem; }
+  .panel-tabs .panel-fold { margin-left: auto; align-self: center; }
+  /* The fold button: a box of its own size with the chevrons centred in it. */
+  .panel-fold:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.55rem;
+    padding: 0;
+    line-height: 0;
+  }
+  .panel-fold svg { display: block; }
+  /* The tab layouts' column folded to a handle at the workspace's edge. */
+  .panel-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    flex: none;
+    width: 1.6rem;
+    border: 0;
+    border-right: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 0;
+    background: var(--urd-color-surface, #151a23);
+    color: inherit;
+    opacity: 0.7;
+    padding: 0;
+    align-items: flex-start;
+    padding-top: 0.9rem;
+  }
+  .panel-handle:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { opacity: 1; }
+  .panel-handle.hidden { display: none; }
 
   .panel h2 {
     margin: 0;
@@ -3706,11 +3841,20 @@
     .who { display: none; }
   }
 
+  /* The page-tabs layout's Site menu takes room in the bar, so its three steps come FOLD_OFFSET (80 px) earlier: each of the queries below has a twin under `.editor[data-layout="page-tabs"]`, one step up. */
+  @media (max-width: 1159px) {
+    .editor[data-layout="page-tabs"] .topbar { gap: 0.5rem; }
+    .editor[data-layout="page-tabs"] .topbar-group { gap: 0.5rem; }
+  }
+
   /* Step 4: the View cluster becomes a menu (FOLD_MQ.view). Grid and
      guides are toggled rarely, so it yields first of the three. */
   @media (max-width: 1079px) {
     .topbar { gap: 0.5rem; }
     .topbar-group { gap: 0.5rem; }
+    .editor[data-layout="page-tabs"] .chip-full { display: none; }
+    .editor[data-layout="page-tabs"] .chip-mini { display: inline; }
+    .editor[data-layout="page-tabs"] .draft-chip { width: 1.7rem; height: 1.7rem; padding: 0; }
   }
 
   /* Step 5: the Device cluster becomes a menu (FOLD_MQ.device) and the status becomes "!". */
@@ -3724,6 +3868,8 @@
       height: 1.7rem;
       padding: 0;
     }
+    .editor[data-layout="page-tabs"] .topbar { gap: 0.4rem; padding-inline: 0.7rem; }
+    .editor[data-layout="page-tabs"] .topbar-group { gap: 0.4rem; }
   }
 
   /* Step 6: the Zoom cluster becomes a menu (FOLD_MQ.zoom). Zoom is

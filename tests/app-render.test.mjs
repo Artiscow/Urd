@@ -43,6 +43,50 @@ test('the shell renders before the site has loaded', async () => {
   assert.match(body, /class="topbar/, 'the top bar is drawn');
 });
 
+test('every panel layout draws its own way to the panels, and the gear stands once', async () => {
+  const { default: App } = await import('../editor/src/App.svelte');
+  const { siteState } = await import('../editor/src/state/site.svelte.js');
+  const { shellState } = await import('../editor/src/state/shell.svelte.js');
+  const { liftSiteFile } = await import('$engine/migrate.js');
+  const { readFileSync } = await import('node:fs');
+  const site = liftSiteFile(JSON.parse(readFileSync(new URL('../template/content/site.json', import.meta.url), 'utf8')));
+  siteState.site = site;
+  siteState.siteDraft = structuredClone(site);
+  const marks = {
+    rail: [/class="rail rail-icons/, /class="rail-icon/, /fold-all panel-fold/],
+    sidebar: [/class="rail"/, /class="rail-group/],
+    'panel-tabs': [/class="panel-nav/, /class="seg panel-nav-groups/, /class="panel-tab /],
+    'top-tabs': [/class="panel-strip/, /class="strip-group/],
+    'page-tabs': [/class="panel-nav/, /class="topnav/, /class="tool-pop site-pop/],
+  };
+  assert.deepEqual(Object.keys(marks).sort(), [...shellState.ADMIN_LAYOUTS].sort());
+  for (const layout of shellState.ADMIN_LAYOUTS) {
+    shellState.adminLayout = layout;
+    shellState.activePanel = 'properties';
+    shellState.toolMenu = layout === 'page-tabs' ? 'site' : null;
+    const { body } = render(App);
+    for (const re of marks[layout]) assert.match(body, re, `${layout}: ${re}`);
+    assert.equal([...body.matchAll(/class="rail-gear/g)].length, 1, `${layout}: one gear`);
+    assert.match(body, /class="panel-body/, `${layout}: the panel is drawn`);
+    if (layout !== 'rail' && layout !== 'sidebar') assert.doesNotMatch(body, /class="rail[" ]/, `${layout}: no rail`);
+  }
+  // The tab layouts keep the panel's column with its tabs while no panel is open, and fold it to a handle; the strip holds the gear; the rail closes the panel.
+  shellState.activePanel = null;
+  shellState.toolMenu = null;
+  shellState.adminLayout = 'panel-tabs';
+  assert.match(render(App).body, /class="panel-nav/);
+  shellState.panelFolded = true;
+  assert.match(render(App).body, /class="panel-handle/);
+  assert.doesNotMatch(render(App).body, /class="panel-nav/);
+  shellState.panelFolded = false;
+  shellState.adminLayout = 'top-tabs';
+  assert.match(render(App).body, /class="panel-strip[\s\S]*rail-gear/);
+  shellState.adminLayout = 'rail';
+  assert.doesNotMatch(render(App).body, /<aside class="panel/);
+  shellState.setAdminLayout('nonsense');
+  assert.equal(shellState.adminLayout, 'rail');
+});
+
 test('the shell renders the workspace with every panel open in turn, from the modules\' own state', async () => {
   const { default: App } = await import('../editor/src/App.svelte');
   const { siteState } = await import('../editor/src/state/site.svelte.js');

@@ -22,7 +22,7 @@ For you who own or edit a site built with Urd. No code, no git knowledge needed:
 The screen has three parts:
 
 - **The top bar**: choose page, switch between desktop and mobile view (the screen and phone icons), and publish.
-- **The panel selector on the left**, grouped by workflow: Pages, Blocks, Properties and Grid (building the page), Theme, Nav and Footer (the site), and History. Click to open a panel; click again to close.
+- **The panel rail on the left**: an icon for each panel, grouped by workflow and named in a tooltip: Pages, Blocks, Properties and Grid (building the page), Site, Theme, Nav, Footer, Collections and Plugins (the site), and History and Updates. Click to open a panel; click again, or the fold button in the panel's head, to close. Urd settings (the gear at the rail's foot) has «Panel navigation» with four other forms: a sidebar of words, tabs at the top of the panel, a strip of every panel under the top bar, or the page's panels as tabs with a Site menu in the top bar.
 - **Admin theme**: the dropdown next to the Urd logo switches the editor's own colour theme (seven variants). It never affects your website.
 - **The preview**: your real page. What you see is what visitors get.
 

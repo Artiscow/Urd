@@ -4,7 +4,12 @@
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import { fly } from 'svelte/transition';
+  import SettingsGear from './SettingsGear.svelte';
   const ed = getContext('urd-editor');
+  /** The Site menu stands in the top bar in the layout whose panel holds the page's tabs alone. */
+  const siteMenu = $derived(ed.adminLayout === 'page-tabs');
+  /** The gear stands in the top bar when neither a rail nor the strip holds it. */
+  const gearHere = $derived(ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs');
 </script>
 
 <header class="topbar" class:hidden={!ed.chromeVisible}>
@@ -12,9 +17,6 @@
     {#if ed.site}
       <!-- Current page: a click opens the Pages panel; the page you are
            on must stay visible -->
-      <button class="ghost page-btn" title={ta('tip.switchPage')}
-        onclick={() => ed.togglePanel('pages')}>{ed.pageEntry()?.title ?? ''}</button>
-
       <!-- The clusters fold one at a time (FOLD_MQ), not all at the same
            threshold: a single step swapping eleven controls for three
            menu buttons would be too big a jump. A folded cluster carries
@@ -23,8 +25,30 @@
 
            `display: contents` on the shell: it exists only so the
            outside-click test has ONE node to ask, and must not create
-           its own box in the bar. -->
+           its own box in the bar. The Site menu of the page-tabs layout
+           stands inside it for the same reason. -->
       <span class="toolset" bind:this={ed.toolMenuEl}>
+        {#if siteMenu}
+          <nav class="topnav" aria-label={ta('rail.panels')}>
+            <span class="toolmenu">
+              <button type="button" class="ghost topnav-btn" class:active={ed.toolMenu === 'site'} title={ta('tip.siteMenu')}
+                onclick={() => (ed.toolMenu = ed.toolMenu === 'site' ? null : 'site')}>{ta('rail.siteMenu')}{@html ICONS.caret}</button>
+              {#if ed.toolMenu === 'site'}
+                <div class="tool-pop site-pop">
+                  {#each ed.PANEL_GROUPS.slice(1) as group, gi (gi)}
+                    <span class="mini-label">{ta(ed.PANEL_GROUP_KEYS[gi + 1])}</span>
+                    {#each group as name (name)}
+                      <button type="button" class="ghost" class:active={ed.activePanel === name} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
+                    {/each}
+                  {/each}
+                </div>
+              {/if}
+            </span>
+          </nav>
+        {/if}
+        <button class="ghost page-btn" title={ta('tip.switchPage')}
+          onclick={() => ed.togglePanel('pages')}>{ed.pageEntry()?.title ?? ''}</button>
+
         {#if ed.folded.device}
           <span class="toolmenu">
             <button class="ghost" class:active={ed.toolMenu === 'device'}
@@ -166,6 +190,7 @@
 
   <span class="topbar-group topbar-right">
   {#if ed.site}
+    {#if gearHere}<SettingsGear flip />{/if}
     <button
       class="ghost"
       onclick={ed.toggleChrome}

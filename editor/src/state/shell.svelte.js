@@ -306,6 +306,29 @@ function setPanelsPref(v) {
 
 let activePanel = $state(panelsPref === 'reset' ? null : localStorage.getItem(PANEL_OPEN_KEY));
 
+/**
+ * How the panels are reached (the Urd settings, «Panel navigation»): an icon rail, the sidebar of words, tabs at the top of the panel in three groups, a strip of every panel under the top bar, or the page's panels as tabs with the site's in a menu.
+ * A personal workspace preference in localStorage, like the theme; the rail is the default and is not stored.
+ * The rail, the sidebar and the strip toggle a panel; the two tab forms keep the panel's column standing with the tabs, folded to a handle at the edge when the owner asks (`panelFolded`), and the rail lets the panel fold away.
+ */
+const ADMIN_LAYOUTS = ['rail', 'sidebar', 'panel-tabs', 'top-tabs', 'page-tabs'];
+
+const ADMIN_LAYOUT_KEY = 'urd-admin-layout';
+
+let adminLayout = $state(ADMIN_LAYOUTS.includes(localStorage.getItem(ADMIN_LAYOUT_KEY)) ? localStorage.getItem(ADMIN_LAYOUT_KEY) : 'rail');
+
+function setAdminLayout(v) {
+  adminLayout = ADMIN_LAYOUTS.includes(v) ? v : 'rail';
+  if (adminLayout === 'rail') localStorage.removeItem(ADMIN_LAYOUT_KEY);
+  else localStorage.setItem(ADMIN_LAYOUT_KEY, adminLayout);
+  if (toolMenu === 'site') toolMenu = null;
+}
+
+const ADMIN_LAYOUT_OPTIONS = $derived(ADMIN_LAYOUTS.map((id) => [id, ta(`opt.adminLayout.${id}`)]));
+
+/** Whether the tab layouts' column is folded to a handle at the edge; a panel opened from anywhere unfolds it (the activePanel setter). */
+let panelFolded = $state(false);
+
 /** The panels grouped by workflow: build the page, style the site,
  *  tools. Shown with dividers in the panel picker. The ids are stable
  *  English identifiers (never display text); PANEL_LABELS owns what the
@@ -398,6 +421,8 @@ function setAdminLang(v) {
 
 function togglePanel(name) {
   activePanel = activePanel === name ? null : name;
+  toolMenu = null;
+  panelFolded = false;
   loadPanelData();
 }
 
@@ -498,6 +523,9 @@ function openShortcuts() {
    measurement of the content, and the twinship is guarded in
    tests/topbar-fold.test.mjs. */
 const FOLD_MQ = { view: 1079, device: 999, zoom: 919 };
+
+/** The room the Site menu takes in the top bar, per layout: the clusters fold that much earlier there, so the bar still holds Publish at its right edge; the CSS ladder has the same steps under `.editor[data-layout]` (tests/topbar-fold.test.mjs). */
+const FOLD_OFFSET = { 'page-tabs': 80 };
 
 let toolMenu = $state(null);
 
@@ -634,8 +662,9 @@ export function effects() {
   });
 
   $effect(() => {
+    const extra = FOLD_OFFSET[adminLayout] ?? 0;
     const offs = Object.entries(FOLD_MQ).map(([key, px]) => {
-      const mq = window.matchMedia(`(max-width: ${px}px)`);
+      const mq = window.matchMedia(`(max-width: ${px + extra}px)`);
       const sync = () => { folded[key] = mq.matches; };
       sync();
       mq.addEventListener('change', sync);
@@ -644,9 +673,9 @@ export function effects() {
     return () => offs.forEach((off) => off());
   });
 
-  /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. */
+  /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu belongs to no cluster. */
   $effect(() => {
-    if (toolMenu && !folded[toolMenu]) toolMenu = null;
+    if (toolMenu && toolMenu !== 'site' && !folded[toolMenu]) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. */
@@ -732,7 +761,7 @@ export const shellState = {
   set panelsPref(v) { panelsPref = v; },
   setPanelsPref,
   get activePanel() { return activePanel; },
-  set activePanel(v) { activePanel = v; },
+  set activePanel(v) { activePanel = v; if (v) panelFolded = false; },
   PANEL_GROUPS,
   PANEL_GROUP_KEYS,
   get PANEL_LABELS() { return PANEL_LABELS; },
@@ -756,6 +785,13 @@ export const shellState = {
   get linkEditorPref() { return linkEditorPref; },
   setLinkEditor,
   set settingsOpen(v) { settingsOpen = v; },
+  ADMIN_LAYOUTS,
+  get ADMIN_LAYOUT_OPTIONS() { return ADMIN_LAYOUT_OPTIONS; },
+  get panelFolded() { return panelFolded; },
+  set panelFolded(v) { panelFolded = v; },
+  get adminLayout() { return adminLayout; },
+  set adminLayout(v) { adminLayout = v; },
+  setAdminLayout,
   get layoutPickerPref() { return layoutPickerPref; },
   set layoutPickerPref(v) { layoutPickerPref = v; },
   setLayoutPicker,

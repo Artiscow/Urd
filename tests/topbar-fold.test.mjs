@@ -93,6 +93,19 @@ test('every cluster threshold in JS has its twin in CSS', () => {
   }
 });
 
+test('a layout that folds earlier (FOLD_OFFSET) has every shifted step in CSS too, under its data-layout', () => {
+  const block = SRC.match(/const FOLD_OFFSET = \{([^}]*)\}/);
+  assert.ok(block, 'could not find FOLD_OFFSET in shell.svelte.js');
+  const css = new Set(cssSteps());
+  for (const m of block[1].matchAll(/'([a-z-]+)':\s*(\d+)/g)) {
+    const [, layout, extra] = m;
+    for (const [key, px] of Object.entries(jsSteps())) {
+      assert.ok(css.has(px + Number(extra)), `FOLD_MQ.${key} + FOLD_OFFSET.${layout} is ${px + Number(extra)}px, but no media query in the fold ladder uses the same number`);
+    }
+    assert.ok(FOLD.includes(`.editor[data-layout="${layout}"]`), `the fold ladder has no rules for data-layout="${layout}"`);
+  }
+});
+
 for (const short of ['.badge-mini', '.chip-mini']) {
   test(`${short} is hidden before it is enabled`, () => {
     const hidden = NO_COMMENTS.search(new RegExp(`\\${short}[^{]*\\{[^}]*display:\\s*none`));

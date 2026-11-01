@@ -20,7 +20,7 @@ For deg som eier eller redigerer en side bygget med Urd. Ingen kode, ingen git-k
 Skjermen har tre deler:
 
 - **Topplinjen**: velg side, bytt mellom desktop- og mobilvisning (skjerm- og telefonikonene), og publiser.
-- **Panelvelgeren til venstre**, gruppert etter arbeidsflyt: Sider, Blokker, Egenskaper og Grid (bygge siden), Tema, Nav og Footer (nettstedet), og Historikk. Klikk for å åpne et panel; klikk igjen for å lukke.
+- **Panelraden til venstre**: ett ikon per panel, gruppert etter arbeidsflyt og navngitt i et tips: Sider, Blokker, Egenskaper og Grid (bygge siden), Nettsted, Tema, Nav, Footer, Samlinger og Tillegg (nettstedet), og Historikk og Oppdatering. Klikk for å åpne et panel; klikk igjen, eller på foldeknappen øverst i panelet, for å lukke. Urd-innstillingene (tannhjulet nederst i raden) har «Panelnavigasjon» med fire andre former: en sidekolonne med ord, faner øverst i panelet, en rad med alle panelene under topplinja, eller sidens paneler som faner med en Nettsted-meny i topplinja.
 - **Admin-tema**: nedtrekket ved siden av Urd-logoen bytter editorens eget fargetema (sju varianter). Det påvirker aldri nettsiden din.
 - **Forhåndsvisningen**: den ekte siden din. Det du ser er det besøkende får.
 

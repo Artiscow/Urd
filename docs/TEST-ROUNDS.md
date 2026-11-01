@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.21): the icon rail and the panel layouts
+
+- [ ] Reload the admin with no layout chosen: an icon rail of twelve icons in three groups with thin lines between, the open panel's icon filled in the accent; hover shows each name; the panel head has a «fold» button that closes the panel, and the icon opens it again; the mark and the gear at the rail's foot, and the gear's popover opens as before
+- [ ] Urd settings, «Panel navigation»: «Sidebar of words» draws the column as before this round; «Tabs at the top of the panel»: a segment This page, The site, System over that group's tabs, the segment follows the open panel, the fold button beside the segment folds the column to a thin handle at the edge and the handle opens it again; Ctrl+K opening a panel unfolds it
+- [ ] «Strip under the top bar»: every panel in one row with group labels and dividers, the open one underlined, the gear at the strip's right end with its popover under it; «The page's tabs and a Site menu»: four tabs in the panel, a Site button at the left of the top bar whose menu lists the site's and the system's panels and opens one with a click, Escape and a click outside close it; the fold button at the end of the tab row
+- [ ] In every layout: Clean view hides the rail, the strip and the panel; the choice survives a reload; the gear stands once; the three layouts without a rail show it in the top bar or the strip; the words in bokmål and Turkish
+- [ ] «The page's tabs and a Site menu» at a laptop width (about 1300 px): the top bar's clusters fold into menus early enough that Publish stays inside the window
+
 ### Test batch (0.7.10.20): a section's own content width
 
 - [ ] Click a section's bare surface, Properties, «Size and grid»: «Content width» reads «The site's», and the group's line shows nothing for it; the tooltip on the choice in English, bokmål and Turkish

@@ -30,6 +30,8 @@
   import FloatingMenu from './menu/FloatingMenu.svelte';
   import TopBar from './shell/TopBar.svelte';
   import Rail from './shell/Rail.svelte';
+  import PanelNav from './shell/PanelNav.svelte';
+  import PanelStrip from './shell/PanelStrip.svelte';
   import PreviewStage from './shell/PreviewStage.svelte';
   import ConfirmDialog from './shell/ConfirmDialog.svelte';
   import SetupWizard from './shell/SetupWizard.svelte';
@@ -94,7 +96,7 @@
 
 <svelte:window onkeydown={ed.onKeydown} onpointerdown={ed.onPointerdownWindow} />
 
-<div class="editor">
+<div class="editor" data-layout={ed.adminLayout}>
   {#if !ed.chromeVisible}
     <!-- Clean view: all editor UI is hidden so the page gets the full surface -->
     <button class="chrome-restore" onclick={ed.toggleChrome} title={ta('tip.backToEdit')}>{@html ICONS.pencil} {ta('ui.edit')}</button>
@@ -103,22 +105,34 @@
   <TopBar />
 
   {#if ed.site}
+    {#if ed.adminLayout === 'top-tabs'}<PanelStrip />{/if}
     <div class="workspace">
       <!-- Clean view hides the rail and the panel rather than unmounting them:
            the folds keep their own open state in the DOM, which lives only
            as long as the subtree does. -->
       <Rail />
 
-      {#if ed.activePanel}
+      <!-- The tab layouts keep the panel's column standing with its tabs while no panel is open, or folded to a handle at the edge -->
+      {#if (ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded}
+        <button type="button" class="panel-handle" class:hidden={!ed.chromeVisible} title={ta('ui.openPanel')} aria-label={ta('ui.openPanel')} onclick={() => (ed.panelFolded = false)}>{@html ICONS.foldRight}</button>
+      {:else if ed.activePanel || ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}
         <aside class="panel" class:hidden={!ed.chromeVisible} bind:this={ed.panelEl}>
+          {#if ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}<PanelNav />{/if}
+          {#if ed.activePanel}
           <div class="panel-head">
             <h2 title={ed.PANEL_INTROS[ed.activePanel]?.map((k) => ta(k)).join('\n')}>{ed.PANEL_LABELS[ed.activePanel]}</h2>
-            {#if ed.panelHasGroups}
-              <button type="button" class="fold-all fold-toggle" class:collapse={ed.panelAllOpen}
-                title={ta(ed.panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
-                aria-label={ta(ed.panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
-                onclick={ed.togglePanelGroups}>{@html ICONS.foldToggle}</button>
-            {/if}
+            <span class="panel-head-tools">
+              {#if ed.panelHasGroups}
+                <button type="button" class="fold-all fold-toggle" class:collapse={ed.panelAllOpen}
+                  title={ta(ed.panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
+                  aria-label={ta(ed.panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
+                  onclick={ed.togglePanelGroups}>{@html ICONS.foldToggle}</button>
+              {/if}
+              <!-- The rail folds the panel away; the other layouts close it from the tab or the word that opened it -->
+              {#if ed.adminLayout === 'rail'}
+                <button type="button" class="fold-all panel-fold" title={ta('ui.foldPanel')} aria-label={ta('ui.foldPanel')} onclick={() => (ed.activePanel = null)}>{@html ICONS.foldLeft}</button>
+              {/if}
+            </span>
           </div>
 
           {#if ed.activePanel === 'pages'}
@@ -146,6 +160,7 @@
           {:else if ed.activePanel === 'update'}
             <UpdatePanel />
           {/if}
+        {/if}
         </aside>
       {/if}
 
