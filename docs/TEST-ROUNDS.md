@@ -2,6 +2,10 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.19-21p): the pressed state in the strip and the Site menu
+
+- [ ] «Strip under the top bar» and «The page's tabs and a Site menu»: a screen reader reads the open panel's tab in the strip, and the open panel's row in the Site menu, as pressed
+
 ### Test batch (0.7.10.21): the icon rail and the panel layouts
 
 - [ ] Reload the admin with no layout chosen: an icon rail of twelve icons in three groups with thin lines between, the open panel's icon filled in the accent; hover shows each name; the panel head has a «fold» button that closes the panel, and the icon opens it again; the mark and the gear at the rail's foot, and the gear's popover opens as before

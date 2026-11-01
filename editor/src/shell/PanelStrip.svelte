@@ -11,7 +11,7 @@
     {#if gi > 0}<span class="strip-divider" aria-hidden="true"></span>{/if}
     <span class="strip-group">{ta(ed.PANEL_GROUP_KEYS[gi])}</span>
     {#each group as name (name)}
-      <button type="button" class="panel-tab" class:active={ed.activePanel === name} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
+      <button type="button" class="panel-tab" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
     {/each}
   {/each}
   <span class="strip-end"><SettingsGear flip /></span>

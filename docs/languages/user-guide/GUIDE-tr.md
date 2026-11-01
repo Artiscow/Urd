@@ -23,7 +23,7 @@ Ekranın üç bölümü vardır:
 
 - **Üst çubuk**: sayfa seç, masaüstü ve mobil görünüm arasında geç (ekran ve telefon simgeleri) ve yayımla.
 - **Soldaki panel çubuğu**: her panel için bir simge, iş akışına göre gruplanmış ve bir ipucuyla adlandırılmış: Sayfalar, Bloklar, Özellikler ve Izgara (sayfayı kurma), Site, Tema, Gezinme, Alt bilgi, Koleksiyonlar ve Eklentiler (site) ile Geçmiş ve Güncellemeler. Bir paneli açmak için tıkla; kapatmak için yeniden tıkla ya da panelin başındaki katlama düğmesine bas. Urd ayarları (çubuğun altındaki dişli) «Panel gezinmesi» ile dört başka biçim sunar: sözcüklerden bir kenar çubuğu, panelin üstünde sekmeler, üst çubuğun altında tüm panellerin bir şeridi ya da sayfanın panelleri sekme olarak ve üst çubukta bir Site menüsü.
-- **Admin teması**: Urd logosunun yanındaki açılır menü düzenleyicinin kendi renk temasını değiştirir (yedi çeşit). Web siteni asla etkilemez.
+- **Admin teması**: Urd ayarlarındaki «Renk teması» düzenleyicinin kendi renk temasını değiştirir (yedi çeşit). Web siteni asla etkilemez.
 - **Önizleme**: gerçek sayfan. Gördüğün, ziyaretçilerin gördüğüdür.
 
 **Temiz görünüm** (sağ üstte) tüm araçları gizler; böylece sayfayı düzenleyici çerçeveleri olmadan görürsün. Geri dönmek için **Düzenle** düğmesine tıkla.

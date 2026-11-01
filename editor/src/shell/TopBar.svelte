@@ -38,7 +38,7 @@
                   {#each ed.PANEL_GROUPS.slice(1) as group, gi (gi)}
                     <span class="mini-label">{ta(ed.PANEL_GROUP_KEYS[gi + 1])}</span>
                     {#each group as name (name)}
-                      <button type="button" class="ghost" class:active={ed.activePanel === name} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
+                      <button type="button" class="ghost" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
                     {/each}
                   {/each}
                 </div>

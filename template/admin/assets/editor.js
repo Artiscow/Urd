@@ -31002,7 +31002,7 @@ function oA(e, t) {
 						let i;
 						var a = M(r, !0);
 						P(() => {
-							i = U(r, 1, "ghost", null, i, { active: n.activePanel === t }), z(a, n.PANEL_LABELS[t]);
+							i = U(r, 1, "ghost", null, i, { active: n.activePanel === t }), K(r, "aria-pressed", n.activePanel === t), z(a, n.PANEL_LABELS[t]);
 						}), I("click", r, () => n.togglePanel(t)), R(e, r);
 					}), P((e) => z(o, e), [() => q(n.PANEL_GROUP_KEYS[r + 1])]), R(e, i);
 				}), E(t), R(e, t);
@@ -31414,7 +31414,7 @@ function wA(e, t) {
 			let i;
 			var a = M(r, !0);
 			P(() => {
-				i = U(r, 1, "panel-tab", null, i, { active: n.activePanel === F(t) }), z(a, n.PANEL_LABELS[F(t)]);
+				i = U(r, 1, "panel-tab", null, i, { active: n.activePanel === F(t) }), K(r, "aria-pressed", n.activePanel === F(t)), z(a, n.PANEL_LABELS[F(t)]);
 			}), I("click", r, () => n.togglePanel(F(t))), R(e, r);
 		}), P((e) => z(c, e), [() => q(n.PANEL_GROUP_KEYS[r])]), R(e, i);
 	});
