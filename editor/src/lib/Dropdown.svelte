@@ -20,11 +20,13 @@
    */
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
 
-  let { value = null, options = [], onchange, title = null, disabled = false, filled = false, compact = false } = $props();
+  let { value = null, options = [], onchange, title = null, disabled = false, filled = false, compact = false, labelledby = null } = $props();
 
   const native = nativeAnchoring();
   const anchor = anchorName('urd-dd');
   const popId = anchor.slice(2);
+  /** With `labelledby` the button is named by that element and its own value, the setting's name before the choice. */
+  const btnId = `${popId}-btn`;
 
   let open = $state(false);
   let rootEl = $state(null);
@@ -106,7 +108,7 @@
 
 <span class="dd" bind:this={rootEl}>
   {#if native}
-    <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} popovertarget={popId} style="anchor-name: {anchor}">
+    <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} id={labelledby ? btnId : undefined} aria-labelledby={labelledby ? `${labelledby} ${btnId}` : undefined} popovertarget={popId} style="anchor-name: {anchor}">
       <span class="dd-value">{@render named(current()?.[1] ?? '', current()?.[3])}</span>
       {@render caret()}
     </button>
@@ -120,7 +122,7 @@
       {/if}
     </div>
   {:else}
-    <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} onclick={toggle}>
+    <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} id={labelledby ? btnId : undefined} aria-labelledby={labelledby ? `${labelledby} ${btnId}` : undefined} onclick={toggle}>
       <span class="dd-value">{@render named(current()?.[1] ?? '', current()?.[3])}</span>
       {@render caret()}
     </button>

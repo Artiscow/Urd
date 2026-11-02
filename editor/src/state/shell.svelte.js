@@ -10,6 +10,8 @@ import { tick } from 'svelte';
 import { ICONS } from '../lib/icons.js';
 import { opensShortcuts } from '../lib/shortcuts.js';
 import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
+import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as settingsPicturesOf } from '../lib/settings-model.js';
+import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT } from '../lib/panels-start.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -292,24 +294,36 @@ function applySetup() {
 }
 
 /** Active panel in the left panel picker (null = closed) */
-/* Whether the panels come back as they were left when the admin is loaded
-   again: a personal workspace preference in localStorage (like theme and
-   language), with only the non-default stored. Clean view keeps the folds
-   on its own (the rail and the panel are hidden, not unmounted); this is
-   about a fresh load of the admin. */
+/* What the admin shows when it is loaded again («Panels on a fresh load», lib/panels-start.js): the panel last open and its fold, no panel, always the same panel, or the folded column.
+   Personal workspace preferences in localStorage (like theme and language), with only the non-default stored.
+   Clean view keeps the folds on its own (the rail and the panel are hidden, not unmounted); this is about a fresh load of the admin. */
 const PANELS_PREF_KEY = 'urd-admin-panels';
 
 const PANEL_OPEN_KEY = 'urd-admin-panel-open';
 
-let panelsPref = $state(localStorage.getItem(PANELS_PREF_KEY) === 'reset' ? 'reset' : 'remember');
+const PANEL_FOLDED_KEY = 'urd-admin-panel-folded';
+
+const PANELS_START_KEY = 'urd-admin-panels-start';
+
+let panelsPref = $state(panelsPrefOf(localStorage.getItem(PANELS_PREF_KEY)));
 
 function setPanelsPref(v) {
-  panelsPref = v === 'reset' ? 'reset' : 'remember';
-  if (panelsPref === 'reset') localStorage.setItem(PANELS_PREF_KEY, 'reset');
-  else localStorage.removeItem(PANELS_PREF_KEY);
+  panelsPref = panelsPrefOf(v);
+  if (panelsPref === 'remember') localStorage.removeItem(PANELS_PREF_KEY);
+  else localStorage.setItem(PANELS_PREF_KEY, panelsPref);
 }
 
-let activePanel = $state(panelsPref === 'reset' ? null : localStorage.getItem(PANEL_OPEN_KEY));
+/** The panel «Always the same panel» opens; checked against the panels once they are known below. */
+let panelsStart = $state(localStorage.getItem(PANELS_START_KEY) ?? PANELS_START_DEFAULT);
+
+function setPanelsStart(v) {
+  panelsStart = v;
+  if (v === PANELS_START_DEFAULT) localStorage.removeItem(PANELS_START_KEY);
+  else localStorage.setItem(PANELS_START_KEY, v);
+}
+
+/** The open panel; set from the stored choice once the panels are known below. */
+let activePanel = $state(null);
 
 /**
  * How the panels are reached (the Urd settings, «Panel navigation»): an icon rail, the sidebar of words, tabs at the top of the panel in three groups, a strip of every panel under the top bar, or the page's panels as tabs with the site's in a menu.
@@ -352,10 +366,24 @@ const PANEL_GROUPS = [
 /** Uppercase label above each group in the rail, in the same order. */
 const PANEL_GROUP_KEYS = ['rail.thisPage', 'rail.site', 'rail.system'];
 
-const PANEL_LABELS = $derived(Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)])));
+/** The panels' names, and the settings panel's (panels/SettingsPanel.svelte), which stands in no group since the gear opens it. */
+const PANEL_LABELS = $derived({ ...Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)])), settings: ta('settings.title') });
 
-// A remembered id from an older version may name a panel that is gone.
-if (activePanel && !PANEL_GROUPS.flat().includes(activePanel)) activePanel = null;
+// The panel and the fold the admin starts with; a remembered id from an older version may name a panel that is gone.
+{
+  const panels = PANEL_GROUPS.flat();
+  const start = startPanels({ pref: panelsPref, layout: adminLayout, panels, stored: localStorage.getItem(PANEL_OPEN_KEY), storedFolded: localStorage.getItem(PANEL_FOLDED_KEY) === '1', start: panelsStart });
+  activePanel = start.panel;
+  panelFolded = start.folded;
+  if (!panels.includes(panelsStart)) panelsStart = PANELS_START_DEFAULT;
+}
+
+/** «Panels on a fresh load»: the folded column only in the layouts that keep the column. */
+const PANELS_PREF_LABELS = { remember: 'settings.panelsRemember', reset: 'settings.panelsReset', fixed: 'settings.panelsFixed', folded: 'settings.panelsFolded' };
+
+const PANELS_PREF_OPTIONS = $derived(panelsPrefsFor(adminLayout).map((id) => [id, ta(PANELS_PREF_LABELS[id])]));
+
+const PANELS_START_OPTIONS = $derived(PANEL_GROUPS.flat().map((id) => [id, PANEL_LABELS[id]]));
 
 /* The panel intros (the prose rule, ADR-0016): the explanation lives as
    a tooltip on the panel title, never as a paragraph in the panel.
@@ -463,9 +491,43 @@ async function checkAuth() {
  *  localStorage (not page data) and re-established in onReady. */
 let guidesOn = $state(localStorage.getItem('urd-guides') === '1');
 
-/* The Urd settings (admin theme + language) live in a popover at the
-   bottom of the rail, not in the top bar. Closed by outside click and Escape. */
+/** Whether Urd's own settings stand open over the admin (settings/SettingsDialog.svelte): the dialog or the sheet, by `settingsPlace`; the panel form is the panel id `settings` in activePanel instead. */
 let settingsOpen = $state(false);
+
+/**
+ * Where the Urd settings open («Settings window», lib/settings-model.js): the dialog with sections (the default), the panel in the panel column, or the sheet with the look at the left; and whether a look choice is shown as pictures or as words («Look choices»).
+ * Personal workspace preferences in localStorage, like the theme; the defaults are not stored.
+ * A change of place while the settings are open moves them: the dialog closes and the panel opens, or the other way round.
+ */
+const SETTINGS_PLACE_KEY = 'urd-settings-place';
+
+const SETTINGS_PICTURES_KEY = 'urd-settings-pictures';
+
+let settingsPlace = $state(settingsPlaceOf(localStorage.getItem(SETTINGS_PLACE_KEY)));
+
+let settingsPictures = $state(settingsPicturesOf(localStorage.getItem(SETTINGS_PICTURES_KEY)));
+
+function setSettingsPlace(v) {
+  const next = settingsPlaceOf(v);
+  if (next === settingsPlace) return;
+  const wasOpen = settingsOpen || activePanel === 'settings';
+  settingsPlace = next;
+  if (next === 'dialog') localStorage.removeItem(SETTINGS_PLACE_KEY);
+  else localStorage.setItem(SETTINGS_PLACE_KEY, next);
+  if (!wasOpen) return;
+  if (next === 'panel') { settingsOpen = false; activePanel = 'settings'; panelFolded = false; }
+  else { if (activePanel === 'settings') activePanel = null; settingsOpen = true; }
+}
+
+function setSettingsPictures(v) {
+  settingsPictures = settingsPicturesOf(v);
+  if (settingsPictures === 'words') localStorage.setItem(SETTINGS_PICTURES_KEY, 'words');
+  else localStorage.removeItem(SETTINGS_PICTURES_KEY);
+}
+
+const SETTINGS_PLACE_OPTIONS = $derived(SETTINGS_PLACES.map((id) => [id, ta(`opt.settingsPlace.${id}`)]));
+
+const SETTINGS_PICTURES_OPTIONS = $derived([['pictures', ta('opt.settingsPictures.pictures')], ['words', ta('opt.settingsPictures.words')]]);
 
 /* The switch-layout picker's form: a strip above the section (default)
    or a gallery menu; a personal workspace preference in localStorage
@@ -507,14 +569,12 @@ function setAddBlockMenu(v) {
   else localStorage.removeItem('urd-add-block-menu');
 }
 
-let settingsEl = $state(null);
-
 /** The shortcut sheet (lib/ShortcutSheet.svelte): opened by «?» in the panels and on the page, from the Urd settings and from the setup wizard. */
 let shortcutsOpen = $state(false);
 
 /**
  * Opens the shortcut sheet over the editor.
- * It stays shut while a confirmation or the icon editor is open, overlays that answer Escape themselves, and it closes the light menus first (the Urd settings, a tool menu, a page's menu), which close on any Escape or outside press.
+ * It stays shut while a confirmation or the icon editor is open, overlays that answer Escape themselves, and it closes the Urd settings dialog, a tool menu and a page's menu first, so the sheet is the one thing open over the editor.
  */
 function openShortcuts() {
   if (confirmBox || siteState.iconEditorImage) return;
@@ -648,28 +708,17 @@ export function effects() {
   });
 
   $effect(() => {
-    if (panelsPref === 'reset') { localStorage.removeItem(PANEL_OPEN_KEY); return; }
+    if (panelsPref !== 'remember') {
+      localStorage.removeItem(PANEL_OPEN_KEY);
+      localStorage.removeItem(PANEL_FOLDED_KEY);
+      return;
+    }
     if (activePanel) localStorage.setItem(PANEL_OPEN_KEY, activePanel);
     else localStorage.removeItem(PANEL_OPEN_KEY);
+    if (panelFolded) localStorage.setItem(PANEL_FOLDED_KEY, '1');
+    else localStorage.removeItem(PANEL_FOLDED_KEY);
   });
 
-  $effect(() => {
-    if (!settingsOpen) return;
-    const onDown = (e) => { if (!settingsEl?.contains(e.target)) settingsOpen = false; };
-    const onKey = (e) => { if (e.key === 'Escape') settingsOpen = false; };
-    // A click in the preview iframe never reaches the editor's document;
-    // the iframe takes focus and the admin window blurs - same closing
-    // pattern as ColorPicker.
-    const onBlur = () => { settingsOpen = false; };
-    document.addEventListener('pointerdown', onDown, true);
-    document.addEventListener('keydown', onKey);
-    window.addEventListener('blur', onBlur);
-    return () => {
-      document.removeEventListener('pointerdown', onDown, true);
-      document.removeEventListener('keydown', onKey);
-      window.removeEventListener('blur', onBlur);
-    };
-  });
 
   $effect(() => {
     const extra = FOLD_OFFSET[adminLayout] ?? 0;
@@ -770,6 +819,10 @@ export const shellState = {
   get panelsPref() { return panelsPref; },
   set panelsPref(v) { panelsPref = v; },
   setPanelsPref,
+  get panelsStart() { return panelsStart; },
+  setPanelsStart,
+  get PANELS_PREF_OPTIONS() { return PANELS_PREF_OPTIONS; },
+  get PANELS_START_OPTIONS() { return PANELS_START_OPTIONS; },
   get activePanel() { return activePanel; },
   set activePanel(v) { activePanel = v; if (v) panelFolded = false; },
   PANEL_GROUPS,
@@ -812,8 +865,12 @@ export const shellState = {
   get shortcutsOpen() { return shortcutsOpen; },
   set shortcutsOpen(v) { shortcutsOpen = v; },
   openShortcuts,
-  get settingsEl() { return settingsEl; },
-  set settingsEl(v) { settingsEl = v; },
+  get settingsPlace() { return settingsPlace; },
+  setSettingsPlace,
+  get settingsPictures() { return settingsPictures; },
+  setSettingsPictures,
+  get SETTINGS_PLACE_OPTIONS() { return SETTINGS_PLACE_OPTIONS; },
+  get SETTINGS_PICTURES_OPTIONS() { return SETTINGS_PICTURES_OPTIONS; },
   FOLD_MQ,
   get toolMenu() { return toolMenu; },
   set toolMenu(v) { toolMenu = v; },

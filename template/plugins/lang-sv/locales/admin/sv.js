@@ -1683,7 +1683,6 @@ export default {
     'preset.whats-on.label': 'Vad händer',
     'preset.whats-on.hint': 'Evenemangslista från en prenumererbar kalender (iCal/Google)',
     'seed.whatsOn.title': '<h2>Vad händer</h2>',
-    'settings.analytics': 'Besöksmätning',
     'lbl.analyticsToken': 'Cloudflare Web Analytics-token',
     'ph.analyticsToken': 'Tom = ingen mätning',
     'tip.analytics': 'Integritetsvänlig besöksmätning med Cloudflare Web Analytics: inga kakor, ingen fingerprinting, ingen samtyckesbanner. Skapa webbplatsen under Web Analytics i Cloudflare-panelen och klistra in token-värdet från mätsnutten. Publiceras med webbplatsen; mäts bara på den publicerade sidan, aldrig här i redigeraren.',

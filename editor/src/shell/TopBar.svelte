@@ -238,7 +238,7 @@
     {#if ed.updateNotice === 'pill'}
       <button type="button" class="ghost update-pill" title={ta('tip.updateOut', { version: ed.updateTarget })} onclick={() => ed.openPanel('update')}>{@html ICONS.panel_update}<span class="btn-label">{ta('ui.updateOut', { version: ed.updateTarget })}</span></button>
     {/if}
-    {#if gearHere}<SettingsGear flip />{/if}
+    {#if gearHere}<SettingsGear />{/if}
     <button
       class="ghost"
       onclick={ed.toggleChrome}

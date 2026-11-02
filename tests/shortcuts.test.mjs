@@ -58,7 +58,8 @@ test('the sheet is reached from the page, the panels, the Urd settings and the s
   assert.match(read('../editor/src/lib/previewBridge.js'), /msg\?\.type === 'urd-shortcuts'\) handlers\.onShortcuts/);
   assert.match(read('../editor/src/state/preview.svelte.js'), /onShortcuts: \(\) => shellState\.openShortcuts\(\)/);
   assert.match(read('../editor/src/state/shell.svelte.js'), /if \(opensShortcuts\(e, typed\)\) \{/);
-  assert.match(read('../editor/src/shell/SettingsGear.svelte'), /ed\.openShortcuts\(\);/);
+  assert.match(read('../editor/src/settings/SettingsDialog.svelte'), /ed\.openShortcuts\(\);/);
+  assert.match(read('../editor/src/panels/SettingsPanel.svelte'), /onclick=\{ed\.openShortcuts\}/);
   const wizard = read('../editor/src/shell/SetupWizard.svelte');
   assert.match(wizard, /onclick=\{ed\.openShortcuts\}/);
   assert.doesNotMatch(wizard, /setup\.keys/, 'the keys stand in the sheet, not in the wizard');

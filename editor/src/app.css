@@ -301,7 +301,7 @@
     overflow-y: auto;
   }
 
-  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)){
+  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
     border: 0;
     background: transparent;
     font-family: inherit;
@@ -316,7 +316,7 @@
     opacity: 0.75;
   }
 
-  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)){
+  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
     opacity: 1;
     background: rgb(255 255 255 / 6%);
   }
@@ -342,14 +342,14 @@
     padding: 0.6rem 0;
     gap: 0.2rem;
   }
-  .rail-icons .rail-icon:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) {
+  .rail-icons .rail-icon:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
     width: 2.5rem;
     height: 2.25rem;
     padding: 0;
     justify-content: center;
     border-radius: 8px;
   }
-  .rail-icons .rail-icon.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) {
+  .rail-icons .rail-icon.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
     background: var(--urd-color-accent, #7c5cff);
     color: var(--urd-color-surface, #151a23);
   }
@@ -416,7 +416,7 @@
     flex-wrap: wrap;
     gap: 0 0.1rem;
   }
-  .panel-tab:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) {
+  .panel-tab:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -425,8 +425,8 @@
     opacity: 0.75;
     box-shadow: inset 0 -2px 0 transparent;
   }
-  .panel-tab:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) { opacity: 1; }
-  .panel-tab.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)) {
+  .panel-tab:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { opacity: 1; }
+  .panel-tab.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
     opacity: 1;
     color: var(--urd-color-accent, #7c5cff);
     box-shadow: inset 0 -2px 0 var(--urd-color-accent, #7c5cff);
@@ -513,97 +513,8 @@
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent) !important;
   }
 
-  /* The Urd settings: a card above the gear in the panels' own type (the rail around it is monospace), its groups divided by a line, each setting a row with the name at the left and the control in a column of its own at the right.
-     Held to the window's height, where it scrolls. */
-  .settings-pop {
-    position: fixed;
-    left: 10px;
-    bottom: 52px;
-    z-index: 100002;
-    display: flex;
-    flex-direction: column;
-    width: min(23rem, calc(100vw - 20px));
-    max-height: calc(100vh - 64px);
-    overflow-y: auto;
-    scrollbar-width: thin;
-    box-sizing: border-box;
-    padding: 12px 14px 4px;
-    border-radius: 10px;
-    border: 1px solid rgb(255 255 255 / 12%);
-    background: var(--urd-color-surface, #151a23);
-    box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
-    font-family: var(--urd-font-body, system-ui, sans-serif);
-    font-size: 0.82rem;
-  }
-  /* From the top bar's or the strip's gear the popover hangs under its gear, at its right edge. */
-  .settings-anchor { display: inline-flex; position: relative; }
-  .settings-pop.flip { position: absolute; top: calc(100% + 6px); bottom: auto; left: auto; right: 0; }
-
-  .settings-pop > .panel-strong {
-    padding-bottom: 8px;
-  }
-
-  .settings-group {
-    display: grid;
-    gap: 8px;
-    padding: 10px 0;
-    border-top: 1px solid rgb(255 255 255 / 8%);
-  }
-
-  .settings-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 12.5rem;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .settings-row > .seg {
-    display: flex;
-  }
-
-  .settings-row > .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
-    flex: 1;
-    padding: 5px 6px;
-  }
-
-  .settings-sub .tb-num {
-    width: 3.6rem;
-  }
-
-  .settings-stack {
-    display: grid;
-    gap: 4px;
-  }
-
-  /* The way to the shortcut sheet: its icon, its name and the key that opens it at the right */
-  .settings-keys {
-    justify-content: flex-start;
-    gap: 0.5rem;
-  }
-
-  .settings-keys kbd {
-    margin-left: auto;
-    padding: 0 0.4rem;
-    font: 600 11px/1.5 system-ui, sans-serif;
-    border: 1px solid rgb(255 255 255 / 22%);
-    border-bottom-width: 2px;
-    border-radius: 5px;
-  }
-
-  .settings-pop input[type='text'],
-  .settings-pop input[type='number'] {
-    font: inherit;
-    color: inherit;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 6px;
-    height: 2rem;
-    padding: 0 0.5em;
-    min-width: 0;
-  }
-
   /* The open panel: its name in the accent on a faint surface, never a line at the edge; the weight stays, so the names never shift on a selection */
-  .rail button.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *, .settings-pop *)){
+  .rail button.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
     opacity: 1;
     background: rgb(255 255 255 / 8%);
     color: var(--urd-color-accent, #7c5cff);

@@ -127,14 +127,30 @@ test('the shell renders the workspace with every panel open in turn, from the mo
   const site = liftSiteFile(JSON.parse(readFileSync(new URL('../template/content/site.json', import.meta.url), 'utf8')));
   siteState.site = site;
   siteState.siteDraft = structuredClone(site);
-  for (const panel of ['pages', 'nav', 'site', 'theme', 'blocks', 'grid', 'properties', 'footer', 'collections', 'plugins', 'history', 'update']) {
+  for (const panel of ['pages', 'nav', 'site', 'theme', 'blocks', 'grid', 'properties', 'footer', 'collections', 'plugins', 'history', 'update', 'settings']) {
     shellState.activePanel = panel;
     const { body } = render(App);
     assert.match(body, /class="rail/, `${panel}: the rail is drawn`);
     assert.match(body, /class="panel-body/, `${panel}: the panel is drawn`);
     assert.match(body, /class="frame-wrap/, `${panel}: the preview stage is drawn`);
   }
+  shellState.activePanel = null;
   shellState.settingsOpen = true;
-  const { body } = render(App);
-  assert.match(body, /class="settings-pop/, 'the settings popover is drawn');
+  const dialog = render(App).body;
+  assert.match(dialog, /class="st-overlay/, 'the Urd settings open as a dialog');
+  assert.match(dialog, /\bst-dialog\b/, 'the dialog has its sections down the left');
+  assert.match(dialog, /class="st-tile/, 'a look choice is drawn as pictures');
+  shellState.setSettingsPictures('words');
+  assert.doesNotMatch(render(App).body, /class="st-tile/, 'with the pictures off a look choice is a dropdown');
+  shellState.setSettingsPictures('pictures');
+  shellState.setSettingsPlace('sheet');
+  assert.match(render(App).body, /\bst-sheet\b/, 'the sheet is drawn when chosen');
+  shellState.setSettingsPlace('panel');
+  assert.equal(shellState.settingsOpen, false, 'the open settings move into the panel');
+  assert.equal(shellState.activePanel, 'settings');
+  assert.match(render(App).body, /class="panel-body st-panel/, 'the settings panel is drawn');
+  shellState.setSettingsPlace('dialog');
+  assert.equal(shellState.activePanel, null);
+  assert.equal(shellState.settingsOpen, true, 'and back into the dialog');
+  shellState.settingsOpen = false;
 });

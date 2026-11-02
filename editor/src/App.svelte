@@ -51,6 +51,8 @@
   import { linkState } from './state/link.svelte.js';
   import LinkDialog from './lib/LinkDialog.svelte';
   import ShortcutSheet from './lib/ShortcutSheet.svelte';
+  import SettingsDialog from './settings/SettingsDialog.svelte';
+  import SettingsPanel from './panels/SettingsPanel.svelte';
   import CommandPalette from './lib/CommandPalette.svelte';
   import { paletteState } from './state/palette.svelte.js';
 
@@ -159,6 +161,8 @@
             <HistoryPanel />
           {:else if ed.activePanel === 'update'}
             <UpdatePanel />
+          {:else if ed.activePanel === 'settings'}
+            <SettingsPanel />
           {/if}
         {/if}
         </aside>
@@ -206,6 +210,11 @@
     {#key ed.linkRequest}
       <LinkDialog request={ed.linkRequest} onclose={ed.closeLink} />
     {/key}
+  {/if}
+
+  {#if ed.settingsOpen}
+    <!-- Urd's own settings over the admin, as a dialog or a sheet by «Settings window»; the panel form stands in the panel column -->
+    <SettingsDialog onclose={() => (ed.settingsOpen = false)} />
   {/if}
 
   {#if ed.shortcutsOpen}

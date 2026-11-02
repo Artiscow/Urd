@@ -2214,7 +2214,7 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 | Edit from mobile devices | WN, JI, SH, SQ | Phone editing; app | Partial: the phone view is a preview width; the canvas uses pointer drags and hover toolbars and is not made for touch | v0.9 touch friendliness |
 | Page settings shortcut | EL, DV, WT | ⌘⇧Y; O; ⌥-click | Partial: the command palette (Ctrl/⌘+K) opens the Pages panel and goes to a page; no key to a page's own settings | - |
 | Site settings shortcut | EL, FS | ⌘K; website settings | Has: site settings behind the gear | - |
-| Editor preferences | EL, WP, OX | Preferences panel | Has: admin language and admin theme, kept per browser | - |
+| Editor preferences | EL, WP, OX | Preferences panel | Has: a dialog with sections, a panel or a sheet (Settings window), every look choice as pictures or words, the panel a fresh load opens, the browser's own settings and the site's shared ones apart, kept per browser (0.7.10.24) | - |
 | Exit builder shortcut | EL, DV | Esc; ⌘E | Has: «See the site» | - |
 | Multiple AI conversations | DU | Switch threads | n/a | - |
 | Persistent admin bar | WP | 7.1 | n/a | - |

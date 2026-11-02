@@ -14,5 +14,5 @@
       <button type="button" class="panel-tab" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}</button>
     {/each}
   {/each}
-  <span class="strip-end"><SettingsGear flip /></span>
+  <span class="strip-end"><SettingsGear /></span>
 </nav>
