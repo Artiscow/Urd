@@ -27,6 +27,8 @@ The screen has three parts:
 - **Admin theme**: «Colour theme» in Urd settings switches the editor's own colour theme (seven variants). It never affects your website.
 - **The preview**: your real page. What you see is what visitors get.
 
+**Device** (top bar): Screen is your own window or an editing size from Urd settings; Laptop is a fixed width; **Phone** shows a real phone size with its height, and its caret lists the sizes (small, wide and large phones, a tablet, the width alone, or your own size), remembered in this browser. Drag the bar at the canvas's right edge to see the page at any width: the number follows the pointer and snaps to the devices and the site's phone breakpoint; press a device to leave it.
+
 **Clean view** (top right) hides all the tools so you see the page completely without editor frames. Click the **Edit** button to come back.
 
 ## Editing content

@@ -3656,6 +3656,132 @@
     flex: 0 0 auto;
     position: relative;
   }
+  /* The width handle: a bar along the canvas's right edge, inside it so no fit clips it; the readout and the phone breakpoint's mark stand while a drag runs. */
+  .stage-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    cursor: ew-resize;
+    z-index: 3;
+  }
+  .stage-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 3px;
+    width: 4px;
+    height: 48px;
+    margin-top: -24px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 35%);
+  }
+  .stage-handle:hover::before,
+  .stage-handle:focus-visible::before,
+  .stage.dragging .stage-handle::before { background: var(--urd-color-accent, #7c5cff); }
+  .stage.dragging iframe { pointer-events: none; }
+  .stage-readout {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--urd-color-text, #e8eaf0);
+    color: var(--urd-color-bg, #0b0d12);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    z-index: 3;
+  }
+  .stage-bp {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-left: 1px dashed color-mix(in srgb, var(--urd-color-accent, #7c5cff) 70%, transparent);
+    z-index: 3;
+    pointer-events: none;
+  }
+  .stage-bp span {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--urd-color-accent, #7c5cff);
+    white-space: nowrap;
+  }
+  /* The Phone device's size menu and the dragged width's chip in the Device cluster. */
+  /* The Phone's split button: the icon and the caret read as one control, the caret narrower. */
+  .phone-split { display: inline-flex; }
+  .phone-split .phone-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .phone-split .phone-caret:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    padding-inline: 0.3em;
+    margin-left: -1px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .phone-split .phone-caret.open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 13%); }
+  /* The sizes: plain rows with the size in grey, the current one tinted. */
+  .phone-pop { min-width: 15.5rem; padding: 0.4rem; }
+  .phone-pop .mini-label { padding: 0.3rem 0.6rem 0.2rem; }
+  .tool-pop .phone-size:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 0.88rem;
+  }
+  .tool-pop .phone-size:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
+  .tool-pop .phone-size.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
+    color: inherit;
+  }
+  .tool-pop .phone-size.active .phone-size-px { color: var(--urd-color-accent, #7c5cff); opacity: 1; }
+  .phone-size-px { margin-left: auto; padding-left: 1rem; opacity: 0.6; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+  .phone-own {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
+    padding: 0.35rem 0.6rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    font-size: 0.85rem;
+    border-radius: 0 0 6px 6px;
+  }
+  .phone-own.active { background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent); }
+  .phone-own > span:first-child { white-space: nowrap; }
+  .phone-own-fields { display: inline-flex; align-items: center; gap: 0.3rem; }
+  .phone-own-fields .tb-num {
+    width: 3.6rem;
+    height: 1.8rem;
+    font: inherit;
+    font-size: 0.85rem;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+  }
+  .free-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--urd-color-accent, #7c5cff);
+    border-radius: 9px;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
 
   iframe {
     border: 0;

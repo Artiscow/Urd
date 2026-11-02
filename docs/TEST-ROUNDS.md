@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.23): the Phone's sizes and the dragged width
+
+- [ ] The Device cluster shows Screen, Laptop and Phone; Phone draws 393 × 852 with the letterbox below the fold, scaled to the panel's height; the caret beside the phone icon opens «Phone sizes» from any device, with the names at the left and the sizes along the right edge, the current row tinted in the admin's accent
+- [ ] Each size redraws the canvas at its width and height; «Tablet» draws 810 × 1080 as a desktop with the tablet icon on the Phone button; «Phone, no height» fills the panel at 390 as before; «Own size» 375 × 700 takes effect on Enter or blur; the choice survives a reload; at a window narrower than 1000 px the Device cluster is a menu with the sizes listed under the devices
+- [ ] Drag the bar at the canvas's right edge from the Laptop: the width follows with its number beside the pointer, the dashed «Phone 640» mark stands at the breakpoint, the width snaps at 640, 810, 1280 and the phone widths, the cluster reads «Own width · N px» with no device lit, and on release the readout goes; Shift+Right on the focused bar adds 50 px; pressing Tablet in the fold-out or any device leaves the own width
+- [ ] A section's blocks at an own width of 700 px wrap and push as they do at the Tablet's width; below 640 the phone layout takes over; the arrow keys and the drag never scroll the page behind
+- [ ] The tooltips in bokmål and Turkish: the Phone's size, the tablet, the sizes' names, «Own width», the handle
+
 ### Test batch (0.7.10.22): shared shortcuts and the update notice
 
 - [ ] Ctrl+K on the example site: «Shared shortcuts» stands first with «Open Collections» and «Go to Kaker»; hover a row and press its pin: the command joins the group and the draft marks the site changed; press the pin again: it leaves, and the draft clears when nothing else changed; the arrow keys and the pointer mark one full row, never two highlights; Tab from the field reaches a pin and Enter on it pins without closing; «Publish», «View as …» and «Go to section …» carry no pin

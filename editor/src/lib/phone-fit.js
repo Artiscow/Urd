@@ -12,9 +12,10 @@
  * with the main preview's own fit (`urd-fit-block`, answered with
  * `urd-grow`), which waits for a feed and skips a block still loading.
  */
+import { PHONE_FILL_WIDTH } from './preview-width.js';
 
-/** The phone width the editor's mobile view uses (FIXED_DEVICES in App.svelte). */
-export const PHONE_W = 390;
+/** The phone width the hidden fit measures at: the Phone device's width alone. */
+export const PHONE_W = PHONE_FILL_WIDTH;
 
 /** Edits close together are measured once. */
 const SETTLE_MS = 400;

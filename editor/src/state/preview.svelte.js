@@ -6,6 +6,7 @@ import { ownWindowWidthOf, screenSetting, screenViewport } from '../lib/own-scre
 import { contentBand } from '../lib/content-width.js';
 import { ta } from '$engine/i18n.js';
 import { previewScale } from '../lib/preview-scale.js';
+import { PHONE_SIZES, phoneSetting, phoneViewport, snapWidth } from '../lib/preview-width.js';
 import { resolveThemeMode } from '$engine/theme.js';
 import { createPreviewBridge } from '../lib/previewBridge.js';
 import { tick } from 'svelte';
@@ -35,7 +36,8 @@ let chromeVisible = $state(true);
  *  optional height; only a set height pins both axes.
  *  The fixed devices pin the width and fill the panel.
  *  `viewport` is what the ENGINE gets to know (it only knows
- *  desktop/mobile), so tablet and laptop are desktop view to the engine. */
+ *  desktop/mobile), so the laptop is desktop view to the engine, and the
+ *  Phone's size is mobile below the site's phone breakpoint and desktop above it (a tablet). */
 let ownWidth = $state(ownWindowWidthOf(typeof window !== 'undefined' ? window : null) ?? 1920);
 
 /** The Screen preference, per browser like the admin theme and language. */
@@ -57,21 +59,55 @@ function setScreenPref(patch) {
 
 let screenTarget = $derived(screenViewport(screenPref, ownWidth));
 
+/** The Phone device's size (lib/preview-width.js): a preset with its height, the width alone, or an own size; per browser like the Screen's editing size. */
+const PHONE_PREF_KEY = 'urd-admin-phone';
+
+function readPhonePref() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(PHONE_PREF_KEY) ?? 'null'); } catch { raw = null; }
+  return phoneSetting(raw);
+}
+
+let phonePref = $state(readPhonePref());
+
+function setPhonePref(patch) {
+  phonePref = phoneSetting({ ...$state.snapshot(phonePref), ...patch });
+  try { localStorage.setItem(PHONE_PREF_KEY, JSON.stringify(phonePref)); } catch { /* blocked storage: the choice lasts the session */ }
+  freeWidth = null;
+}
+
+let phoneTarget = $derived(phoneViewport(phonePref));
+
 const FIXED_DEVICES = [
   { id: 'laptop', width: 1280, height: null, viewport: 'desktop' },
-  { id: 'tablet', width: 810, height: null, viewport: 'desktop' },
-  { id: 'mobile', width: 390, height: null, viewport: 'mobile' },
 ];
 
 let devices = $derived([
   { id: 'desktop', width: screenTarget.width, height: screenTarget.height || null, viewport: 'desktop' },
   ...FIXED_DEVICES,
+  { id: 'mobile', width: phoneTarget.width, height: phoneTarget.height || null, viewport: phoneTarget.width <= (siteState.siteDraft?.breakpoints?.mobile ?? 640) ? 'mobile' : 'desktop' },
 ]);
 
-/** The device tooltip: Screen names its mode, the fixed devices their size. */
+/** The icon the Phone button shows: a tablet while a tablet size is chosen. */
+const phoneIcon = $derived(phoneTarget.width > (siteState.siteDraft?.breakpoints?.mobile ?? 640) ? 'device_tablet' : 'device_mobile');
+
+/** A width dragged at the canvas's edge, in canvas px; null while a device stands. Not remembered: the sizes to come back to are the devices'. */
+let freeWidth = $state(null);
+
+/** The widths a dragged edge snaps to: the devices', the phone presets' and the site's phone breakpoint. */
+const dragStops = $derived([...devices.map((d) => d.width), ...PHONE_SIZES.map((p) => p.width), siteState.siteDraft?.breakpoints?.mobile ?? 640]);
+
+/** Sets the dragged width, snapped to the stops within the tolerance given in canvas px. */
+function setFreeWidth(width, tolerance = 0) {
+  freeWidth = snapWidth(width, dragStops, tolerance);
+}
+
+/** The device tooltip: Screen names its mode, the Phone its size, the fixed devices their width, a dragged width its number. */
 function deviceTip(d) {
-  const c = contentBand(siteState.layoutWidth, siteState.layoutGutter, d.width).width;
-  const key = d.id !== 'desktop' ? `tip.view.${d.id}`
+  const c = Math.round(contentBand(siteState.layoutWidth, siteState.layoutGutter, d.width).width);
+  const key = d.id === 'free' ? 'tip.view.free'
+    : d.id === 'mobile' ? (d.viewport === 'desktop' ? 'tip.view.tabletH' : d.height ? 'tip.view.mobileH' : 'tip.view.mobile')
+    : d.id !== 'desktop' ? `tip.view.${d.id}`
     : screenPref.mode === 'own' ? 'tip.view.desktop'
     : d.height ? 'tip.view.desktopSizeH' : 'tip.view.desktopSize';
   return ta(key, { w: d.width, h: d.height ?? 0, c });
@@ -79,7 +115,9 @@ function deviceTip(d) {
 
 let deviceId = $state('desktop');
 
-let device = $derived(devices.find((d) => d.id === deviceId) ?? devices[0]);
+let device = $derived(freeWidth
+  ? { id: 'free', width: freeWidth, height: null, viewport: 'desktop' }
+  : devices.find((d) => d.id === deviceId) ?? devices[0]);
 
 /** The engine's viewport. Everything that asks "are we on mobile" reads this.
  *  A Screen narrower than the site's mobile breakpoint is mobile to the
@@ -396,7 +434,13 @@ export const previewState = {
   set devices(v) { devices = v; },
   deviceTip,
   get deviceId() { return deviceId; },
-  set deviceId(v) { deviceId = v; },
+  set deviceId(v) { deviceId = v; freeWidth = null; },
+  get phonePref() { return phonePref; },
+  get phoneIcon() { return phoneIcon; },
+  setPhonePref,
+  PHONE_SIZES,
+  get freeWidth() { return freeWidth; },
+  setFreeWidth,
   get device() { return device; },
   set device(v) { device = v; },
   get viewMode() { return viewMode; },

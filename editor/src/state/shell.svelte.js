@@ -122,6 +122,8 @@ function updateAttention() {
  *  effect has flushed (postMessage is FIFO, so the order is guaranteed). */
 function jumpToAttention() {
   const target = pageState.store?.data.sections.find((s) => s.responsive?.mobile?.attention?.needed);
+  // The review is of the phone layout: a Phone standing at a tablet size or an own width above the breakpoint takes the phone preset first.
+  if (previewState.devices.find((d) => d.id === 'mobile')?.viewport !== 'mobile') previewState.setPhonePref({ size: 'phone' });
   previewState.deviceId = 'mobile';
   if (target) setTimeout(() => previewState.bridge?.sendScrollSection(target.id), 0);
 }
@@ -683,7 +685,7 @@ export function effects() {
 
   /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu belongs to no cluster. */
   $effect(() => {
-    if (toolMenu && toolMenu !== 'site' && !folded[toolMenu]) toolMenu = null;
+    if (toolMenu && toolMenu !== 'site' && toolMenu !== 'phone' && !folded[toolMenu]) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. */

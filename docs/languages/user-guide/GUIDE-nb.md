@@ -25,6 +25,8 @@ Skjermen har tre deler:
 - **Admin-tema**: «Fargetema» i Urd-innstillingene bytter editorens eget fargetema (sju varianter). Det påvirker aldri nettsiden din.
 - **Forhåndsvisningen**: den ekte siden din. Det du ser er det besøkende får.
 
+**Enhet** (topplinja): Skjerm er ditt eget vindu eller en redigeringsstørrelse fra Urd-innstillingene; Bærbar er en fast bredde; **Telefon** viser en ekte telefonstørrelse med høyde, og pila ved den lister størrelsene (liten, bred og stor telefon, nettbrett, bredden alene, eller din egen størrelse), husket i denne nettleseren. Dra i stolpen ved lerretets høyre kant for å se siden i hvilken som helst bredde: tallet følger pekeren og fester seg til enhetene og nettstedets telefonbrytepunkt; trykk en enhet for å gå tilbake.
+
 **Ren visning** (oppe til høyre) skjuler alle verktøyene så du ser siden helt uten editor-rammer. Klikk «Rediger»-knappen for å komme tilbake.
 
 ## Redigere innhold

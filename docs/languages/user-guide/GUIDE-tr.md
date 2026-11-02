@@ -27,6 +27,8 @@ Ekranın üç bölümü vardır:
 - **Admin teması**: Urd ayarlarındaki «Renk teması» düzenleyicinin kendi renk temasını değiştirir (yedi çeşit). Web siteni asla etkilemez.
 - **Önizleme**: gerçek sayfan. Gördüğün, ziyaretçilerin gördüğüdür.
 
+**Cihaz** (üst çubuk): Ekran kendi pencerendir ya da Urd ayarlarından bir düzenleme boyutu; Dizüstü sabit bir genişliktir; **Telefon** yüksekliğiyle birlikte gerçek bir telefon boyutu gösterir ve yanındaki ok boyutları listeler (küçük, geniş ve büyük telefon, tablet, yalnız genişlik ya da kendi boyutun), bu tarayıcıda hatırlanır. Sayfayı herhangi bir genişlikte görmek için tuvalin sağ kenarındaki çubuğu sürükle: sayı işaretçiyi izler, cihazlara ve sitenin telefon kesme noktasına oturur; çıkmak için bir cihaza bas.
+
 **Temiz görünüm** (sağ üstte) tüm araçları gizler; böylece sayfayı düzenleyici çerçeveleri olmadan görürsün. Geri dönmek için **Düzenle** düğmesine tıkla.
 
 ## İçeriği düzenleme

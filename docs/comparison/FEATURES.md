@@ -1902,11 +1902,11 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Zoom to fit or to the selection | FR, WH, BD | ⌘1 / ⌘2; Shift+1; scale-to-fit | Partial: fit and stepped zoom; no zoom to the selection | 0.7.10 canvas functions |
 | Zoom-out page overview | WP, SH (beta) | Ctrl+Shift+0 condensed section view | Missing | 0.7.10: reorder sections from above |
 | Pan the canvas by keyboard | FS | Arrows with nothing selected | n/a | - |
-| Switch breakpoint or device view | WF, WE, WH, CA, EL, BR, BD, WT, TI, FR, DV, SQ, SH | Number keys, Ctrl+J, Ctrl+B, ⌘⌥R | Has: 4 preview devices | - |
+| Switch breakpoint or device view | WF, WE, WH, CA, EL, BR, BD, WT, TI, FR, DV, SQ, SH | Number keys, Ctrl+J, Ctrl+B, ⌘⌥R | Has: 3 preview devices, the Phone at seven sizes | - |
 | Side-by-side breakpoints canvas | WF, FS | Breakpoint canvas; breakpoints as frames with cross-breakpoint edits | Missing | v0.8 PH-1 |
 | Preview mode | WF, WS, WE, WH, BR, TI, DU, WT, FS, SQ, WP, CA, SH, FR | Dedicated preview shortcut or toggle | Has: Clean view | - |
 | Inline preview on the canvas | FS | Shift+Space beside the design | n/a | - |
-| Preview resizing and device sizes | FS, WH, SH, FR, WP | Drag width, snap to breakpoint, slider, preview width | Partial: Screen (the window or an editing size), Laptop 1280, Tablet 810 and Phone 390; no width dragged on the canvas and no list of real phone sizes | 0.7.10: the «real phone sizes» item |
+| Preview resizing and device sizes | FS, WH, SH, FR, WP | Drag width, snap to breakpoint, slider, preview width | Has: Screen (the window or an editing size), Laptop 1280, and the Phone at four real phone sizes and a tablet with their heights, the width alone or an own size; any width dragged at the canvas's edge, snapping to the devices and the phone breakpoint (0.7.10.23) | - |
 | Hide UI, distraction-free, spotlight | WE, TI, WT, WP, WF, WS, EL | Shift+F, `⌘\`, Distraction Free, Spotlight, focus mode | Has: Clean view | - |
 | Movable panels, toolbar or workspaces | BR, CA, SQ, DV, WP | Toolbar on any side; move the UI; draggable panels; workspaces | Partial: the floating element menu is dragged by its head, keeps its place for the session and can be put back beside the block (0.7.20.6); panels, rail and toolbar are fixed; no workspaces | Not taken: the rail, the panels and the toolbar stay in one place, so the editor reads the same everywhere |
 | Dark editor UI | DV, WF, FR | Builder light/dark setting | Has: themed admin (ADR-0009) | - |
