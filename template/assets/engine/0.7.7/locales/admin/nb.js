@@ -2872,7 +2872,7 @@ export default {
     'csv.problem.date': '{column} «{value}» er ikke en dato (2026-11-02, 02.11.2026 eller 02/11/2026)',
     'csv.problem.number': '{column} «{value}» er ikke et tydelig tall',
     'csv.problem.yesNo': '{column} «{value}» er verken ja eller tom',
-    'csv.problem.image': '{column} «{value}» er ikke et bilde i media/',
+    'csv.problem.image': '{column} «{value}» er ikke et bilde: en sti i media/ eller et utkasts data-adresse',
     'csv.problem.style': '{column} er ikke en stil bilderedigereren setter',
     'csv.problem.rel': '{column} «{value}» er verken nofollow eller sponsored',
     'csv.problem.quantity': '{column} «{value}» er ikke et helt tall fra 1 til 99',

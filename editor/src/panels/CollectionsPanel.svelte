@@ -115,10 +115,10 @@
   /** What a press may land on without clearing the selection: a control, a row, the selection's bar and the collection's menu with its submenu. */
   const KEEPS_SELECTION = 'button, a, input, select, textarea, label, summary, [role="button"], [contenteditable], .cl-row, .sb, .cm-card, .dd';
 
-  // While entries are selected, a press on a place in the panel that is not a control clears the selection.
+  // While entries are selected and their list is in the panel, a press on a place in the panel that is not a control clears the selection.
   $effect(() => {
     const el = ed.panelEl;
-    if (!el || !ticks.length) return;
+    if (!el || !ticks.length || entry || ed.collectionsLayout === 'table' || ed.csvImport) return;
     const onClick = (e) => {
       if (e.target instanceof Element && !e.target.closest(KEEPS_SELECTION)) setTicks([]);
     };

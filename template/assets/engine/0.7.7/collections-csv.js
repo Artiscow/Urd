@@ -22,7 +22,7 @@ const PRODUCT_COLUMNS = ['id', 'title', 'text', 'image', 'imageAlt', 'imageStyle
 const DATED_COLUMNS = ['id', 'title', 'date', 'text', 'href', 'newTab', 'rel', 'download', 'image', 'imageAlt', 'imageStyle'];
 
 /** Every column the import knows. */
-export const ALL_COLUMNS = [...new Set([...DATED_COLUMNS, ...PRODUCT_COLUMNS])];
+const ALL_COLUMNS = [...new Set([...DATED_COLUMNS, ...PRODUCT_COLUMNS])];
 
 /** The columns a kind of collection writes and reads. */
 export function columnsFor(kind) {
@@ -109,7 +109,8 @@ export function csvCell(entry, column, pages = [], decimal = '.') {
     case 'href': {
       if (!e.page) return e.href ?? '';
       const link = resolveLink(e, pages);
-      return link.missing ? '' : link.href;
+      // A page the register no longer has is written by its id, so the link comes back as it was.
+      return link.missing ? `page:${e.page}${e.target ? `#${e.target}` : ''}` : link.href;
     }
     default:
       if (YES_NO.includes(column)) return yes(e[column] === true);
@@ -133,12 +134,21 @@ export function entriesToCsv(entries, pages = [], { kind, sep = ',', bom = false
   return (bom ? '﻿' : '') + rows.join('\n') + '\n';
 }
 
-/** Raw CSV text → rows of cells (handles quotes and newlines inside fields, and a byte-order mark). */
+/** Raw CSV text → rows of cells (handles quotes and newlines inside fields, and a byte-order mark); empty rows (double newlines, a trailing line) are left out. */
 export function parseCsv(text, sep = ',') {
+  return parseCsvRows(text, sep).map((r) => r.cells);
+}
+
+/**
+ * Raw CSV text → the rows with their cells and the row number a spreadsheet gives them, the first row being 1 and an empty row counting though it is left out, so a row named in the preview is the row the owner finds in the file.
+ * @returns {Array<{row: number, cells: string[]}>}
+ */
+export function parseCsvRows(text, sep = ',') {
   const rows = [];
   let row = [];
   let cell = '';
   let quoted = false;
+  let line = 1;
   const src = String(text ?? '').replace(/^﻿/, '');
   for (let i = 0; i < src.length; i += 1) {
     const ch = src[i];
@@ -154,7 +164,8 @@ export function parseCsv(text, sep = ',') {
     } else if (ch === '\n' || ch === '\r') {
       if (ch === '\r' && src[i + 1] === '\n') i += 1;
       row.push(cell);
-      rows.push(row);
+      rows.push({ row: line, cells: row });
+      line += 1;
       row = [];
       cell = '';
     } else {
@@ -163,10 +174,9 @@ export function parseCsv(text, sep = ',') {
   }
   if (cell !== '' || row.length) {
     row.push(cell);
-    rows.push(row);
+    rows.push({ row: line, cells: row });
   }
-  // Completely empty rows (double newlines, a trailing line) are discarded.
-  return rows.filter((r) => r.some((c) => c.trim() !== ''));
+  return rows.filter((r) => r.cells.some((c) => c.trim() !== ''));
 }
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -313,6 +323,13 @@ function readRow(cells, columns, pages, decimal) {
     set.page = null;
     set.target = null;
     set.href = raw || null;
+    // A page by its id (as the export writes a page the register no longer has) is that page and its spot.
+    const byId = raw.match(/^page:([a-z0-9][a-z0-9-]*)(?:#([a-z0-9][a-z0-9-]{0,80}))?$/);
+    if (byId) {
+      set.href = null;
+      set.page = byId[1];
+      if (byId[2]) set.target = byId[2];
+    }
     // An address that names a page of the register (as the export writes a page link) is that page and its spot.
     if (raw.startsWith('/')) {
       const [path, hash = ''] = raw.split('#');
@@ -347,7 +364,7 @@ function readRow(cells, columns, pages, decimal) {
 
 /**
  * Reads a CSV file for a collection: its separator, its columns (those of another kind and unknown ones set aside), and each row's fields, checked.
- * A row is numbered as a spreadsheet numbers it, the header being row 1.
+ * A row is numbered as a spreadsheet numbers it, the header being row 1 and an empty row counting.
  * @param {string} text
  * @param {string} kind The collection's kind
  * @param {Array<{id: string, path: string}>} [pages] The page register, for an address that names a page
@@ -355,24 +372,24 @@ function readRow(cells, columns, pages, decimal) {
  */
 export function readCsv(text, kind, pages = []) {
   const sep = detectSeparator(text);
-  const table = parseCsv(text, sep);
+  const table = parseCsvRows(text, sep);
   if (table.length < 2) return null;
-  const header = table[0].map((name) => name.trim());
+  const header = table[0].cells.map((name) => name.trim());
   if (!header.includes('title')) return null;
   const own = columnsFor(kind);
   const columns = own.filter((c) => header.includes(c));
   const ignored = header.filter((name) => name && !own.includes(name));
-  const rows = table.slice(1).map((cells, i) => {
+  const rows = table.slice(1).map(({ row, cells }) => {
     const byName = {};
     header.forEach((name, j) => { if (own.includes(name)) byName[name] = cells[j] ?? ''; });
     const { set, problem } = readRow(byName, columns, pages, sep === ';' ? ',' : '.');
-    return { row: i + 2, id: String(byName.id ?? '').trim(), cells: byName, set, problem };
+    return { row, id: String(byName.id ?? '').trim(), cells: byName, set, problem };
   });
   return { sep, columns, ignored, rows };
 }
 
 /** The fields the import compares and the preview names, one per column group. */
-export const PLAN_FIELDS = ['title', 'date', 'text', 'link', 'image', 'imageAlt', 'imageStyle', 'price', 'memberPrice', 'badge', 'sizes', 'colors',
+const PLAN_FIELDS = ['title', 'date', 'text', 'link', 'image', 'imageAlt', 'imageStyle', 'price', 'memberPrice', 'badge', 'sizes', 'colors',
   'requireSize', 'requireColor', 'disableUntilChosen', 'quantity'];
 
 const LINK_FIELDS = ['page', 'target', 'href', 'newTab', 'rel', 'download'];

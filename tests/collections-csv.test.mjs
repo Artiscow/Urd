@@ -76,7 +76,7 @@ test('csvCell: what the export writes for yes, a style, a quantity without limit
   assert.equal(csvCell(PRODUCTS[0], 'imageStyle'), '{"x":0.3,"y":0.6,"zoom":1.2,"shape":"square"}');
   assert.equal(csvCell(PRODUCTS[2], 'quantity'), 'yes');
   assert.equal(csvCell(PRODUCTS[2], 'quantityMax'), '');
-  assert.equal(csvCell({ page: 'borte' }, 'href', PAGES), '', 'a page that is gone gives no address');
+  assert.equal(csvCell({ page: 'borte' }, 'href', PAGES), 'page:borte', 'a page that is gone is written by its id');
   assert.equal(csvCell(PRODUCTS[1], 'price', [], ','), '49,5');
 });
 
@@ -230,4 +230,13 @@ test('importPlan: an address that names a page of the register is read back as t
   assert.deepEqual([entries[0].page, entries[0].target, entries[0].href], ['kaker', 'priser', undefined]);
   assert.equal(entries[1].href, '/annet', 'a path that names no page stays an address');
   assert.equal(entries[2].href, 'https://x.no');
+});
+
+test('a row keeps the number the spreadsheet gives it past an empty line, and a page the register no longer has survives the round trip', () => {
+  const rows = readCsv('id,title\na,A\n\n,\nb,\n', 'news').rows;
+  assert.deepEqual(rows.map((r) => [r.row, r.id]), [[2, 'a'], [5, 'b']]);
+  const gone = [{ id: 'a', title: 'A', page: 'borte', target: 'priser' }];
+  assert.equal(csvCell(gone[0], 'href', PAGES), 'page:borte#priser');
+  const result = plan(gone, entriesToCsv(gone, PAGES, { kind: 'news' }), 'news', {}, PAGES);
+  assert.equal(result.counts.same, 1);
 });

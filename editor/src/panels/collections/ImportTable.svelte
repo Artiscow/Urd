@@ -21,7 +21,8 @@
   const columns = $derived(session ? session.read.columns : []);
   /** The dialog or the panel's step the table was opened from, which it goes back to; none where the table is the chosen preview. */
   const fromSummary = $derived(session?.from ?? null);
-  const cell = (entry, column) => csvCell(entry, column, ed.siteDraft?.pages ?? []);
+  /** A cell as the file writes it, with the decimal mark the file's separator goes with. */
+  const cell = (entry, column) => csvCell(entry, column, ed.siteDraft?.pages ?? [], session.read.sep === ';' ? ',' : '.');
   const words = (column, text) => (column === 'title' || column === 'text' ? ed.plainTitle(text) : text);
 
   const statusText = (item) => {

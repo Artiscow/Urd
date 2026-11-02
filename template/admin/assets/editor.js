@@ -29741,7 +29741,7 @@ function JO(e, t, n = [], r = ".") {
 		case "href": {
 			if (!i.page) return i.href ?? "";
 			let e = nc(i, n);
-			return e.missing ? "" : e.href;
+			return e.missing ? `page:${i.page}${i.target ? `#${i.target}` : ""}` : e.href;
 		}
 		default: return LO.includes(t) ? KO(i[t] === !0) : i[t] ?? "";
 	}
@@ -29752,12 +29752,18 @@ function YO(e, t = [], { kind: n, sep: r = ",", bom: i = !1 } = {}) {
 	return (i ? "﻿" : "") + s.join("\n") + "\n";
 }
 function XO(e, t = ",") {
-	let n = [], r = [], i = "", a = !1, o = String(e ?? "").replace(/^﻿/, "");
-	for (let e = 0; e < o.length; e += 1) {
-		let s = o[e];
-		a ? s === "\"" && o[e + 1] === "\"" ? (i += "\"", e += 1) : s === "\"" ? a = !1 : i += s : s === "\"" ? a = !0 : s === t ? (r.push(i), i = "") : s === "\n" || s === "\r" ? (s === "\r" && o[e + 1] === "\n" && (e += 1), r.push(i), n.push(r), r = [], i = "") : i += s;
+	let n = [], r = [], i = "", a = !1, o = 1, s = String(e ?? "").replace(/^﻿/, "");
+	for (let e = 0; e < s.length; e += 1) {
+		let c = s[e];
+		a ? c === "\"" && s[e + 1] === "\"" ? (i += "\"", e += 1) : c === "\"" ? a = !1 : i += c : c === "\"" ? a = !0 : c === t ? (r.push(i), i = "") : c === "\n" || c === "\r" ? (c === "\r" && s[e + 1] === "\n" && (e += 1), r.push(i), n.push({
+			row: o,
+			cells: r
+		}), o += 1, r = [], i = "") : i += c;
 	}
-	return (i !== "" || r.length) && (r.push(i), n.push(r)), n.filter((e) => e.some((e) => e.trim() !== ""));
+	return (i !== "" || r.length) && (r.push(i), n.push({
+		row: o,
+		cells: r
+	})), n.filter((e) => e.cells.some((e) => e.trim() !== ""));
 }
 var ZO = (e) => String(e).padStart(2, "0");
 function QO(e) {
@@ -29883,7 +29889,9 @@ function ik(e, t, n, r) {
 	}
 	if (a("href")) {
 		let e = o("href");
-		if (i.page = null, i.target = null, i.href = e || null, e.startsWith("/")) {
+		i.page = null, i.target = null, i.href = e || null;
+		let t = e.match(/^page:([a-z0-9][a-z0-9-]*)(?:#([a-z0-9][a-z0-9-]{0,80}))?$/);
+		if (t && (i.href = null, i.page = t[1], t[2] && (i.target = t[2])), e.startsWith("/")) {
 			let [t, r = ""] = e.split("#"), a = n.find((e) => e.path === (t.length > 1 ? t.replace(/\/$/, "") : t));
 			a && (!r || /^[a-z0-9][a-z0-9-]{0,80}$/.test(r)) && (i.href = null, i.page = a.id, r && (i.target = r));
 		}
@@ -29917,21 +29925,21 @@ function ik(e, t, n, r) {
 function ak(e, t, n = []) {
 	let r = WO(e), i = XO(e, r);
 	if (i.length < 2) return null;
-	let a = i[0].map((e) => e.trim());
+	let a = i[0].cells.map((e) => e.trim());
 	if (!a.includes("title")) return null;
 	let o = IO(t), s = o.filter((e) => a.includes(e));
 	return {
 		sep: r,
 		columns: s,
 		ignored: a.filter((e) => e && !o.includes(e)),
-		rows: i.slice(1).map((e, t) => {
+		rows: i.slice(1).map(({ row: e, cells: t }) => {
 			let i = {};
-			a.forEach((t, n) => {
-				o.includes(t) && (i[t] = e[n] ?? "");
+			a.forEach((e, n) => {
+				o.includes(e) && (i[e] = t[n] ?? "");
 			});
 			let { set: c, problem: l } = ik(i, s, n, r === ";" ? "," : ".");
 			return {
-				row: t + 2,
+				row: e,
 				id: String(i.id ?? "").trim(),
 				cells: i,
 				set: c,
@@ -31149,6 +31157,8 @@ function SA(e, t) {
 			q(t, "id", s), q(t, "aria-label", e), zi(t, `position-anchor: ${o ?? ""}`);
 		}, [() => J("ui.presets")]), zr("toggle", t, (e) => {
 			e.newState === "open" ? b() : A(c, !1);
+		}), L("keydown", t, (e) => {
+			e.key === "Escape" && (e.stopPropagation(), v(), I(l)?.focus());
 		}), z(e, t);
 	}, ae = (e) => {
 		var t = bA(), r = j(t);
@@ -31165,7 +31175,7 @@ function SA(e, t) {
 		q(T, "title", t.tip), B(ee, t.label);
 	}), z(e, C), at();
 }
-Br(["click"]);
+Br(["click", "keydown"]);
 // src/panels/collections/EntryFields.svelte
 var CA = /* @__PURE__ */ R("<label class=\"gridmenu-snap entry-require entry-require-sub\"><input type=\"checkbox\"/> </label>"), wA = /* @__PURE__ */ R("<div class=\"entry-fields\"><span class=\"nav-body-label\"> </span> <!></div>"), TA = /* @__PURE__ */ R("<button type=\"button\" class=\"entry-image-edit svelte-1ezf3cs\"><img class=\"entry-image-thumb\" alt=\"\"/></button> <span class=\"entry-image-actions\"><button type=\"button\" class=\"ghost\"> </button></span>", 1), EA = /* @__PURE__ */ R("<span class=\"entry-image-actions\"><button type=\"button\" class=\"ghost\"> </button></span>"), DA = /* @__PURE__ */ R("<label class=\"field-stack\"> <input/></label>"), OA = /* @__PURE__ */ R("<label class=\"gridmenu-snap entry-require\"><input type=\"checkbox\"/> </label> <!>", 1), kA = /* @__PURE__ */ R("<span class=\"entry-chip\"> <button type=\"button\" class=\"entry-chip-x\"></button></span>"), AA = /* @__PURE__ */ R("<span class=\"entry-color-warn\" role=\"img\"></span>"), jA = /* @__PURE__ */ R("<img class=\"entry-color-thumb\" alt=\"\"/>"), MA = /* @__PURE__ */ R("<span><input/> <!> <label class=\"ghost row-tool filepick entry-color-pick\"><!> <input type=\"file\" accept=\"image/*\"/></label> <button class=\"ghost row-tool\"></button></span>"), NA = /* @__PURE__ */ R("<div class=\"entry-fields entry-qty svelte-1ezf3cs\"><span class=\"nav-body-label\"> </span> <input type=\"number\" min=\"1\" max=\"99\" step=\"1\"/> <span class=\"nav-body-label\"> </span> <input type=\"number\" min=\"1\" max=\"99\" step=\"1\"/></div>"), PA = /* @__PURE__ */ R("<div class=\"entry-fields\"><span class=\"nav-body-label\"> </span> <input type=\"number\" min=\"0\" step=\"0.01\" data-field=\"price\"/> <span class=\"nav-body-label\"> </span> <input type=\"number\" min=\"0\" step=\"0.01\"/> <span class=\"nav-body-label\"> </span> <input data-field=\"badge\"/></div> <!> <!> <div class=\"entry-chips\"><!> <input class=\"entry-chip-add\" data-field=\"sizes\"/></div> <span class=\"nav-body-label entry-part\"> </span> <!> <button class=\"ghost action entry-add-color\" data-field=\"colors\"> </button> <!> <span class=\"nav-body-label entry-part\"> </span> <label class=\"gridmenu-snap entry-require\"><input type=\"checkbox\" data-field=\"quantity\"/> </label> <!>", 1), FA = /* @__PURE__ */ R("<div class=\"entry-body coll-entry\"><label class=\"field-stack\"> <input data-field=\"title\"/></label> <!> <textarea rows=\"4\" data-field=\"text\"></textarea> <!> <div><!></div> <!> <!></div>");
 function IA(e, t) {
@@ -31862,7 +31872,7 @@ function _j(e, t) {
 	}
 	Nn(() => {
 		let e = i.panelEl;
-		if (!e || !I(m).length) return;
+		if (!e || !I(m).length || I(d) || i.collectionsLayout === "table" || i.csvImport) return;
 		let t = (e) => {
 			e.target instanceof Element && !e.target.closest("button, a, input, select, textarea, label, summary, [role=\"button\"], [contenteditable], .cl-row, .sb, .cm-card, .dd") && g([]);
 		};
@@ -41250,7 +41260,7 @@ Br(["pointerdown", "click"]);
 var oq = /* @__PURE__ */ R("<span aria-hidden=\"true\"></span>"), sq = /* @__PURE__ */ R("<button type=\"button\"><!> <b> </b></button>"), cq = /* @__PURE__ */ R("<button type=\"button\" class=\"it-btn svelte-fancty\"> </button>"), lq = /* @__PURE__ */ R("<th scope=\"col\"> </th>"), uq = /* @__PURE__ */ R("<s class=\"svelte-fancty\"> </s>"), dq = /* @__PURE__ */ R("<td><!> <span> </span></td>"), fq = /* @__PURE__ */ R("<tr><td class=\"it-rownum svelte-fancty\"> </td><td class=\"it-status svelte-fancty\"><span> </span></td><!></tr>"), pq = /* @__PURE__ */ R("<section class=\"it svelte-fancty\" tabindex=\"-1\"><div class=\"it-bar svelte-fancty\"><span class=\"it-words svelte-fancty\"><h2 class=\"svelte-fancty\"> </h2> <span class=\"it-sub svelte-fancty\"> </span></span> <span class=\"it-chips svelte-fancty\" role=\"group\"></span> <span class=\"it-grow svelte-fancty\"></span> <!> <!></div> <div class=\"it-scroll svelte-fancty\"><table class=\"it-table svelte-fancty\"><thead><tr><th scope=\"col\" class=\"svelte-fancty\"> </th><th scope=\"col\" class=\"svelte-fancty\"> </th><!></tr></thead><tbody></tbody></table></div></section>");
 function mq(e, t) {
 	it(t, !0);
-	let n = nt("urd-editor"), r = /* @__PURE__ */ k("all"), i = /* @__PURE__ */ k(null), a = /* @__PURE__ */ O(() => n.csvImport), o = /* @__PURE__ */ O(() => n.csvPlan), s = /* @__PURE__ */ O(() => I(a) ? n.collectionsView[I(a).id]?.name ?? I(a).id : ""), c = /* @__PURE__ */ O(() => BA(I(o))), l = /* @__PURE__ */ O(() => I(c).some((e) => e.status === I(r)) ? I(r) : "all"), u = /* @__PURE__ */ O(() => I(o) ? I(o).items.filter((e) => I(l) === "all" || e.status === I(l)) : []), d = /* @__PURE__ */ O(() => I(a) ? I(a).read.columns : []), f = /* @__PURE__ */ O(() => I(a)?.from ?? null), p = (e, t) => JO(e, t, n.siteDraft?.pages ?? []), m = (e, t) => e === "title" || e === "text" ? n.plainTitle(t) : t, h = (e) => e.status === "refused" ? J(`csv.problem.${e.problem.key}`, {
+	let n = nt("urd-editor"), r = /* @__PURE__ */ k("all"), i = /* @__PURE__ */ k(null), a = /* @__PURE__ */ O(() => n.csvImport), o = /* @__PURE__ */ O(() => n.csvPlan), s = /* @__PURE__ */ O(() => I(a) ? n.collectionsView[I(a).id]?.name ?? I(a).id : ""), c = /* @__PURE__ */ O(() => BA(I(o))), l = /* @__PURE__ */ O(() => I(c).some((e) => e.status === I(r)) ? I(r) : "all"), u = /* @__PURE__ */ O(() => I(o) ? I(o).items.filter((e) => I(l) === "all" || e.status === I(l)) : []), d = /* @__PURE__ */ O(() => I(a) ? I(a).read.columns : []), f = /* @__PURE__ */ O(() => I(a)?.from ?? null), p = (e, t) => JO(e, t, n.siteDraft?.pages ?? [], I(a).read.sep === ";" ? "," : "."), m = (e, t) => e === "title" || e === "text" ? n.plainTitle(t) : t, h = (e) => e.status === "refused" ? J(`csv.problem.${e.problem.key}`, {
 		column: e.problem.column ?? "",
 		value: e.problem.value ?? ""
 	}) : e.status === "missing" ? J(I(a).missing === "remove" ? "csv.missing.removed" : "csv.missing.kept") : J(`csv.status.${e.status}`);

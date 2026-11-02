@@ -1,5 +1,5 @@
 /**
- * A Svelte action for a menu card that stands open in a panel (the collection's menu, the selection's «More», the size presets): a press outside the card and its own opener, or Escape inside it, closes it.
+ * A Svelte action for a menu card that stands open in a panel (the collection's menu, the size presets' measured card): a press outside the card and its own opener, or Escape inside it, closes it.
  * Escape stops at the card, so it never reaches the panel or the page behind it.
  * Usage: `<div use:dismiss={{ close, opener }}>`, where opener is the button that opened the card.
  */

@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-import { STATUSES, groupsOf, chipsOf, shownValue, changeOf, summaryOf, cellOf } from '../editor/src/lib/csv-preview.js';
+import { groupsOf, chipsOf, changeOf, summaryOf, cellOf } from '../editor/src/lib/csv-preview.js';
 
 const { readCsv, importPlan, csvCell } = await engineImport('collections-csv.js');
 const plain = (html) => String(html).replace(/<[^>]+>/g, '');
@@ -21,19 +21,17 @@ test('groupsOf and chipsOf: what needs the owner first, each status once with it
   assert.deepEqual(groupsOf(plan).map((g) => g.status), ['refused', 'new', 'changed', 'same', 'missing']);
   assert.deepEqual(groupsOf(plan, 'changed').map((g) => g.items.length), [1]);
   assert.deepEqual(chipsOf(plan), [{ status: 'all', n: 5 }, { status: 'refused', n: 1 }, { status: 'new', n: 1 }, { status: 'changed', n: 1 }, { status: 'same', n: 1 }, { status: 'missing', n: 1 }]);
-  assert.equal(STATUSES.length, 6);
   assert.deepEqual(groupsOf(null), []);
 });
 
-test('changeOf and shownValue: a value field shows old to new, the rest is named alone', () => {
+test('changeOf: a value field shows old to new in words, the rest is named alone', () => {
   const item = plan.items.find((i) => i.status === 'changed');
   assert.deepEqual(item.changes, ['price', 'sizes']);
   assert.deepEqual(changeOf('price', item.before, item.entry, plain), { field: 'price', from: '120', to: '130' });
   assert.deepEqual(changeOf('sizes', item.before, item.entry, plain), { field: 'sizes', from: 'Liten', to: 'Liten, Stor' });
   assert.deepEqual(changeOf('imageStyle', item.before, item.entry, plain), { field: 'imageStyle' });
-  assert.equal(shownValue('quantity', { quantity: { max: 5 } }, plain), '1-5');
-  assert.equal(shownValue('title', { title: '<b>Kake</b>' }, plain), 'Kake');
-  assert.equal(shownValue('badge', {}, plain), '');
+  assert.deepEqual(changeOf('quantity', {}, { quantity: { max: 5 } }, plain), { field: 'quantity', from: '', to: '1-5' });
+  assert.deepEqual(changeOf('title', { title: '<b>Kake</b>' }, { title: 'Bolle' }, plain), { field: 'title', from: 'Kake', to: 'Bolle' });
 });
 
 test('summaryOf: a product\'s price and sizes, another entry\'s date', () => {

@@ -2869,7 +2869,7 @@ export default {
     'csv.problem.date': '{column} «{value}» is not a date (2026-11-02, 02.11.2026 or 02/11/2026)',
     'csv.problem.number': '{column} «{value}» is not a clear number',
     'csv.problem.yesNo': '{column} «{value}» is neither yes nor empty',
-    'csv.problem.image': '{column} «{value}» is not a picture in media/',
+    'csv.problem.image': '{column} «{value}» is not a picture: a path in media/ or a draft\'s data address',
     'csv.problem.style': '{column} is not a style the image editor sets',
     'csv.problem.rel': '{column} «{value}» is neither nofollow nor sponsored',
     'csv.problem.quantity': '{column} «{value}» is not a whole number from 1 to 99',

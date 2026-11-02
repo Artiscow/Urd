@@ -4,7 +4,7 @@
  */
 
 /** The groups in the order the preview lists them: what needs the owner first, what changes nothing last. */
-export const STATUSES = ['refused', 'new', 'changed', 'skipped', 'same', 'missing'];
+const STATUSES = ['refused', 'new', 'changed', 'skipped', 'same', 'missing'];
 
 /** The fields whose values a changed row shows, old to new; any other changed field is named alone. */
 const VALUE_FIELDS = ['title', 'date', 'price', 'memberPrice', 'badge', 'sizes', 'colors', 'quantity'];
@@ -31,7 +31,7 @@ export function chipsOf(plan) {
  * @param {object} entry
  * @param {(html: string) => string} plain The editor's plainTitle
  */
-export function shownValue(field, entry, plain) {
+function shownValue(field, entry, plain) {
   const v = entry?.[field];
   if (v === undefined || v === null || v === '') return '';
   if (field === 'title') return plain(v);

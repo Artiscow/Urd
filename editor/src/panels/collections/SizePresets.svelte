@@ -122,8 +122,11 @@
 </span>
 {#if native}
   <!-- The popover's light dismiss closes it on Escape and a press outside -->
+  <!-- Escape closes it with the focus back on the button, as the measured card's dismiss does; a press outside is the popover's own light dismiss -->
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div class="sp-card sp-anchored" id={popId} popover="auto" role="group" aria-label={ta('ui.presets')} bind:this={card}
-    style="position-anchor: {anchor}" ontoggle={(e) => { if (e.newState === 'open') opened(); else open = false; }}>
+    style="position-anchor: {anchor}" ontoggle={(e) => { if (e.newState === 'open') opened(); else open = false; }}
+    onkeydown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); opener?.focus(); } }}>
     {#if open}{@render sets()}{/if}
   </div>
 {:else if open}

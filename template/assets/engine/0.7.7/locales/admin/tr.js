@@ -2869,7 +2869,7 @@ export default {
     'csv.problem.date': '{column} «{value}» bir tarih değil (2026-11-02, 02.11.2026 ya da 02/11/2026)',
     'csv.problem.number': '{column} «{value}» açık bir sayı değil',
     'csv.problem.yesNo': '{column} «{value}» ne evet ne de boş',
-    'csv.problem.image': '{column} «{value}» media/ içindeki bir görsel değil',
+    'csv.problem.image': '{column} «{value}» bir görsel değil: media/ içinde bir yol ya da bir taslağın veri adresi',
     'csv.problem.style': '{column} görsel düzenleyicinin ayarladığı bir stil değil',
     'csv.problem.rel': '{column} «{value}» ne nofollow ne de sponsored',
     'csv.problem.quantity': '{column} «{value}» 1 ile 99 arasında bir tam sayı değil',
