@@ -2652,6 +2652,24 @@
     font-size: 0.8rem;
   }
 
+  /* The Collections panel's square tools: the way back, the collection's menu, and an entry's steps, copy and removal, one size with the icon in the middle; the removal in red, as the selection bar's */
+  .ghost.coll-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .panel-body .ghost.coll-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    min-height: 0;
+    padding: 0;
+    justify-content: center;
+    align-items: center;
+  }
+  .ghost.coll-btn svg { display: block; }
+  .ghost.coll-btn.coll-danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    color: #f08a8a;
+    border-color: rgb(224 82 82 / 50%);
+  }
+  .ghost.coll-btn.coll-danger:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(224 82 82 / 14%); }
+
   /* Row buttons (arrows/cross): fixed square width and centered glyph,
      follows the field's height - not the block buttons' min height or the
      panel list's left alignment */

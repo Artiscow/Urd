@@ -3,7 +3,8 @@
      An entry that moves is dragged by its row, with a faint clone where it lands (row-drag.js), or stepped with its arrows; a dated entry stands by its date, as on the page.
      While a search narrows the rows, nothing moves, since the neighbours an entry would pass are hidden.
      With `onticks`, each row's tick box stands in the drag grip's place before its picture: under the pointer or the focus, and on every row once one is ticked.
-     Shift and a press on a tick take the run from the last one ticked, Space ticks the focused row, Ctrl+A ticks every row shown and Escape clears the ticks. */
+     Shift and a press on a tick take the run from the last one ticked, Space ticks the focused row, Ctrl+A ticks every row shown and Escape clears the ticks.
+     While any row is ticked, a press on a row ticks or unticks it as its tick does, and Enter opens it, so the ticks can always be taken away one by one. */
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
@@ -143,8 +144,8 @@
         {/if}
       </span>
       <div class="nav-head cl-head" role="button" tabindex="0"
-        title={canMove ? ta('tip.collections.dragEntry') : searching ? ta('tip.collections.openEntry') : ta('tip.collections.datedOrder')} aria-current={selected === entry.id ? 'true' : undefined}
-        onclick={() => onselect?.(entry.id)}
+        title={ticking && onticks ? ta('tip.collections.tickRow') : canMove ? ta('tip.collections.dragEntry') : searching ? ta('tip.collections.openEntry') : ta('tip.collections.datedOrder')} aria-current={selected === entry.id ? 'true' : undefined}
+        onclick={(e) => (ticking && onticks ? tickRow(entry.id, e) : onselect?.(entry.id))}
         onkeydown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (e.key === 'Enter' || (e.key === ' ' && !onticks)) { e.preventDefault(); onselect?.(entry.id); }

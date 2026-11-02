@@ -5,13 +5,15 @@
 import { createDraftStore } from '../lib/draftStore.js';
 import { INDEX_DRAFT_KEY, readIndexes, indexBaseline, earlierDrafts, openingIds } from '../lib/collection-index.js';
 import { slugify } from '$engine/imageTools.js';
-import { ta } from '$engine/i18n.js';
+import { ta, adminLang } from '$engine/i18n.js';
 import { makeId } from '$engine/sections/presets.js';
+import { readCsv, importPlan, decodeCsv } from '$engine/collections-csv.js';
 import { historyState } from './history.svelte.js';
 import { withCopies, carryEntries, withField, entriesFit } from '../lib/collection-bulk.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
+import { siteState } from './site.svelte.js';
 
 // Collections are shared site data (like nav/footer): an index file +
 // one file per collection, each with its own draftStore. Editing goes
@@ -58,6 +60,17 @@ let panelEntry = $state(null);
 
 /** The entries ticked in the open collection (panels/collections/SelectionBar.svelte); cleared when another collection opens. */
 let panelTicks = $state([]);
+
+/**
+ * A CSV import waiting for the owner's word (panels/collections/ImportDialog.svelte, ImportStep.svelte, ImportTable.svelte): the file read and checked (readCsv),
+ * what rows that match an entry do, what becomes of the entries the file does not name, and the view it shows in. Nothing is stored until it is applied.
+ */
+let csvImport = $state.raw(null);
+
+/** What the waiting import will do, drawn from the collection as it stands (importPlan); a new entry without an id of its own shows none until the import is applied and gives it one. */
+const csvPlan = $derived(csvImport && collectionsView[csvImport.id]
+  ? importPlan($state.snapshot(collectionsView[csvImport.id].entries), csvImport.read.rows, { matched: csvImport.matched, missing: csvImport.missing }, () => '')
+  : null);
 
 let newCollectionName = $state('');
 
@@ -149,6 +162,9 @@ function mutateCollections(ids, key, fn) {
   syncCollectionsView();
 }
 
+/** A count in words, the one-entry form where the dictionary has it. */
+const counted = (key, n, params = {}) => ta(n === 1 ? `${key}.one` : key, { ...params, n: String(n) });
+
 /** The status after a change of several entries, with «Undo» beside it. The button undoes that step alone: once a later change stands on top of it, the button says so instead. */
 function doneWithUndo(message) {
   const step = historyState.history.at(-1);
@@ -190,7 +206,7 @@ function removeEntries(id, entryIds) {
   mutateCollection(id, `collection:${id}:remove-entries`, (data) => { data.entries = data.entries.filter((e) => !gone.has(e.id)); });
   panelTicks = panelTicks.filter((t) => !gone.has(t));
   if (panelEntry && gone.has(panelEntry)) panelEntry = null;
-  doneWithUndo(ta('status.entriesDeleted', { n: String(entryIds.length) }));
+  doneWithUndo(counted('status.entriesDeleted', entryIds.length));
 }
 
 /** One field set on the entries, or cleared with an empty value, in one undo step; false when the value does not fit the field. */
@@ -198,7 +214,7 @@ function setFieldOn(id, entryIds, field, value) {
   const data = collectionStores[id]?.data;
   if (!data || !withField(data.entries, entryIds, field, value)) return false;
   mutateCollection(id, `collection:${id}:set-field`, (d) => { d.entries = withField(d.entries, entryIds, field, value); });
-  doneWithUndo(ta(value === '' ? 'status.fieldCleared' : 'status.fieldSet', { n: String(entryIds.length) }));
+  doneWithUndo(counted(value === '' ? 'status.fieldCleared' : 'status.fieldSet', entryIds.length));
   return true;
 }
 
@@ -219,7 +235,7 @@ function carryToCollection(from, to, entryIds, copy) {
     panelTicks = panelTicks.filter((t) => !gone.has(t));
     if (panelEntry && gone.has(panelEntry)) panelEntry = null;
   }
-  doneWithUndo(ta(copy ? 'status.entriesCopied' : 'status.entriesMoved', { n: String(entryIds.length), name: target.name ?? to }));
+  doneWithUndo(counted(copy ? 'status.entriesCopied' : 'status.entriesMoved', entryIds.length, { name: target.name ?? to }));
   return true;
 }
 
@@ -248,7 +264,7 @@ function carryToNewCollection(from, name, entryIds, copy) {
   }
   historyState.updateDirty();
   syncCollectionsView();
-  doneWithUndo(ta(copy ? 'status.entriesCopied' : 'status.entriesMoved', { n: String(entryIds.length), name: clean }));
+  doneWithUndo(counted(copy ? 'status.entriesCopied' : 'status.entriesMoved', entryIds.length, { name: clean }));
   return true;
 }
 
@@ -332,6 +348,7 @@ function createCatalogForBlock() {
 }
 
 function removeCollection(id) {
+  if (csvImport?.id === id) csvImport = null;
   historyState.pushHistory('collections');
   localStorage.removeItem(`urd-draft-collection-${id}`);
       localStorage.removeItem(`urd-draft-samling-${id}`);
@@ -366,6 +383,51 @@ function addCollectionEntry(id) {
   return entryId;
 }
 
+/** A CSV file chosen for a collection, read and checked; it waits in the view Urd settings choose until it is applied or cancelled. */
+async function startCsvImport(id, file) {
+  const view = collectionsView[id];
+  if (!file || !view) return;
+  const read = readCsv(decodeCsv(await file.arrayBuffer()), view.kind, siteState.siteDraft?.pages ?? []);
+  if (!read) {
+    shellState.setStatus(ta('status.csvInvalid'), 'error');
+    return;
+  }
+  // The panel's step needs the Collections panel in view; started where it is not, the import waits in the dialog.
+  const pref = shellState.csvPreviewPref;
+  const panelShown = shellState.activePanel === 'collections' && !shellState.panelFolded;
+  csvImport = { id, fileName: file.name, read, matched: 'update', missing: 'keep', view: pref === 'panel' && !panelShown ? 'dialog' : pref };
+}
+
+/** One of the waiting import's choices, or its view. */
+function setCsvImport(patch) {
+  if (csvImport) csvImport = { ...csvImport, ...patch };
+}
+
+function cancelCsvImport() {
+  csvImport = null;
+}
+
+/** The waiting import stored as one undo step, offered as Undo in the status line; the status names what it did. */
+function applyCsvImport() {
+  const session = csvImport;
+  if (!session || !collectionStores[session.id]) return;
+  const plan = importPlan($state.snapshot(collectionStores[session.id].data.entries), session.read.rows,
+    { matched: session.matched, missing: session.missing }, makeId);
+  csvImport = null;
+  const removed = session.missing === 'remove' ? plan.counts.missing : 0;
+  const parts = [
+    plan.counts.new && counted('csv.part.new', plan.counts.new),
+    plan.counts.changed && counted('csv.part.updated', plan.counts.changed),
+    removed && counted('csv.part.removed', removed),
+  ].filter(Boolean);
+  if (!parts.length) {
+    shellState.setStatus(ta('status.csvNothing'));
+    return;
+  }
+  mutateCollection(session.id, `collection:${session.id}:import`, (data) => { data.entries = plan.entries; });
+  doneWithUndo(ta('status.csvImportDone', { list: new Intl.ListFormat(adminLang(), { type: 'conjunction' }).format(parts) }));
+}
+
 /** What the other parts read and write through, and the effects the shell runs once. */
 export const collectionsState = {
   get collectionsIndexStore() { return collectionsIndexStore; },
@@ -396,6 +458,12 @@ export const collectionsState = {
   set panelEntry(v) { panelEntry = v; },
   get panelTicks() { return panelTicks; },
   set panelTicks(v) { panelTicks = v; },
+  get csvImport() { return csvImport; },
+  get csvPlan() { return csvPlan; },
+  startCsvImport,
+  setCsvImport,
+  cancelCsvImport,
+  applyCsvImport,
   mutateCollections,
   renameCollection,
   setCollectionKind,

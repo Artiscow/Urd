@@ -2,15 +2,14 @@
  * What the Collections panel's layouts write through: an entry's fields, link, picture, sizes and colours, its move and removal, and a collection's CSV out and in.
  * Built once per layout from the editor handle (`collectionActions(ed)`), so the drill-in, the two columns and the table change an entry the same way, each change one undo step through `mutateCollection`.
  */
-import { ta } from '$engine/i18n.js';
-import { makeId } from '$engine/sections/presets.js';
-import { entriesToCsv, csvToEntries } from '$engine/collections-csv.js';
+import { ta, adminLang } from '$engine/i18n.js';
+import { entriesToCsv, separatorFor } from '$engine/collections-csv.js';
 import { stepAmong } from '../../lib/row-drag.js';
 import { setLinkOn } from '../../lib/link-edit.js';
 import { movable } from '../../lib/collection-layout.js';
 
 export function collectionActions(ed) {
-  const { mutateCollection, compressOrTrim, setStatus } = ed;
+  const { mutateCollection, compressOrTrim } = ed;
 
   /** One entry of a collection, changed in place. */
   const onEntry = (id, entryId, key, fn) => mutateCollection(id, key, (data) => {
@@ -106,12 +105,13 @@ export function collectionActions(ed) {
     });
   }
 
-  /** CSV export: the entries, or only the ones named, are downloaded as <id>.csv. */
+  /** CSV export: the entries, or only the ones named, are downloaded as <id>.csv with the kind's columns, the admin language's separator and a byte-order mark (engine/collections-csv.js). */
   function exportCollectionCsv(id, onlyIds = null) {
     const data = ed.collectionStores[id]?.data;
     if (!data) return;
     const entries = onlyIds ? data.entries.filter((e) => onlyIds.includes(e.id)) : data.entries;
-    const url = URL.createObjectURL(new Blob([entriesToCsv(entries, ed.siteDraft?.pages ?? [])], { type: 'text/csv' }));
+    const csv = entriesToCsv(entries, ed.siteDraft?.pages ?? [], { kind: data.kind, sep: separatorFor(adminLang()), bom: true });
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = `${id}.csv`;
@@ -119,23 +119,11 @@ export function collectionActions(ed) {
     URL.revokeObjectURL(url);
   }
 
-  /** CSV import: the file's rows replace the collection's entries in one undo step; a missing or repeated id gets a new one, and the parsing lives in engine/collections-csv.js. */
-  async function importCollectionCsv(id, event) {
+  /** CSV import: the chosen file is read and checked, and waits for the owner's word in the import preview (state/collections.svelte.js). */
+  function importCollectionCsv(id, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
-    if (!file) return;
-    const parsed = csvToEntries(await file.text(), ed.siteDraft?.pages ?? []);
-    if (!parsed) {
-      setStatus(ta('status.csvInvalid'), 'error');
-      return;
-    }
-    const used = new Set();
-    for (const entry of parsed.entries) {
-      if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || used.has(entry.id)) entry.id = makeId('entry');
-      used.add(entry.id);
-    }
-    mutateCollection(id, `collection:${id}:import`, (data) => { data.entries = parsed.entries; });
-    setStatus(ta('status.csvImported', { count: String(parsed.entries.length) }), 'ok');
+    if (file) ed.startCsvImport(id, file);
   }
 
   return {

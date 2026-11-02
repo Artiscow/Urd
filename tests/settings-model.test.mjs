@@ -22,6 +22,8 @@ function ctx() {
     panelsStart: 'pages',
     COLLECTIONS_LAYOUT_OPTIONS: [['drill', 'Step in'], ['columns', 'Two columns'], ['table', 'Table']],
     collectionsLayout: 'drill',
+    CSV_PREVIEW_OPTIONS: [['dialog', 'Dialog'], ['panel', 'In the panel'], ['table', 'Table']],
+    csvPreviewPref: 'dialog',
     adminLangOptions: () => [['nb', 'Norsk bokmål']],
     adminTheme: 'grey', adminLayout: 'rail', settingsPlace: 'dialog', settingsPictures: 'pictures', adminLangChoice: 'auto',
     addBlockMenuPref: 'side', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',

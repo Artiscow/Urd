@@ -1515,8 +1515,6 @@ export default {
     'ui.exportCsv': 'Exportera CSV',
     'ui.importCsv': 'Importera CSV',
     'tip.collections.exportCsv': 'Laddar ner posterna som CSV (kalkylarksvänligt)',
-    'tip.collections.importCsv': 'Ersätter posterna med raderna från en CSV-fil; första raden är kolumnnamnen',
-    'status.csvImported': '{count} poster importerade',
     'status.csvInvalid': 'Kunde inte läsa CSV-filen (första raden måste ha kolumnen title)',
     'canvas.addProduct': '+ Produkt',
     'seed.newProduct': 'Ny produkt',

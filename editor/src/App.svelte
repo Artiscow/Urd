@@ -54,6 +54,8 @@
   import SettingsDialog from './settings/SettingsDialog.svelte';
   import SettingsPanel from './panels/SettingsPanel.svelte';
   import CollectionsTable from './panels/collections/CollectionsTable.svelte';
+  import ImportDialog from './panels/collections/ImportDialog.svelte';
+  import ImportTable from './panels/collections/ImportTable.svelte';
   import CommandPalette from './lib/CommandPalette.svelte';
   import { paletteState } from './state/palette.svelte.js';
 
@@ -171,10 +173,12 @@
         </aside>
       {/if}
 
-      <!-- The stage, with the collections table standing over it while a collection is open in that layout; the preview stays mounted underneath -->
+      <!-- The stage, with the collections table standing over it while a collection is open in that layout, and a CSV import's table over both while it waits; the preview stays mounted underneath -->
       <div class="stage-area">
         <PreviewStage />
-        {#if ed.activePanel === 'collections' && ed.collectionsLayout === 'table' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection) && ed.chromeVisible
+        {#if ed.csvImport?.view === 'table' && ed.chromeVisible}
+          <ImportTable />
+        {:else if ed.activePanel === 'collections' && ed.collectionsLayout === 'table' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection) && ed.chromeVisible
           && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)}
           <CollectionsTable />
         {/if}
@@ -220,6 +224,11 @@
     {#key ed.linkRequest}
       <LinkDialog request={ed.linkRequest} onclose={ed.closeLink} />
     {/key}
+  {/if}
+
+  {#if ed.csvImport?.view === 'dialog'}
+    <!-- A CSV import waiting for the owner's word, in the default preview -->
+    <ImportDialog />
   {/if}
 
   {#if ed.settingsOpen}

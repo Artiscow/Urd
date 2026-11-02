@@ -3,7 +3,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { entriesFit, kindsFor, tickRun, withTicks, hiddenTicks, liveTicks, withCopies, carryEntries, settableFields, withField } from '../editor/src/lib/collection-bulk.js';
+import { entriesFit, kindsFor, kindChoices, fieldSummary, valuesInUse, tickRun, withTicks, hiddenTicks, liveTicks, withCopies, carryEntries, settableFields, withField } from '../editor/src/lib/collection-bulk.js';
 
 let n = 0;
 const makeId = () => `entry-${++n}`;
@@ -16,6 +16,14 @@ test('a product\'s fields fit only a product collection, a date or a link only t
   assert.deepEqual(entriesFit([{ id: 'a', title: 'x', text: 'y' }], 'products'), { fits: true, reason: null }, 'a bare entry fits anywhere');
   const kinds = kindsFor({ entries: [{ id: 'a', date: '2026-01-01' }] });
   assert.deepEqual(kinds.filter((k) => k.fits).map((k) => k.kind), ['news', 'notices', 'publications', 'custom']);
+});
+
+test('the menu offers a collection the kinds its entries fit, a products collection none', () => {
+  assert.deepEqual(kindChoices({ kind: 'news', entries: [{ id: 'a', date: '2026-01-01' }] }), ['news', 'notices', 'publications', 'custom']);
+  assert.deepEqual(kindChoices({ kind: 'news', entries: [] }), ['news', 'notices', 'publications', 'products', 'custom'], 'an empty collection fits every kind');
+  assert.deepEqual(kindChoices({ kind: 'products', entries: [] }), [], 'a products collection keeps its kind');
+  assert.deepEqual(kindChoices({ kind: 'products', entries: [{ id: 'a', price: 10 }] }), []);
+  assert.deepEqual(kindChoices(null), []);
 });
 
 test('a run is every entry shown between the anchor and the one pressed, and the ticks keep each once', () => {
@@ -62,4 +70,16 @@ test('«Set a field» offers the kind\'s own fields, sets them, clears them, and
   assert.equal(withField(entries, ['a'], 'price', '-1'), null);
   assert.equal(withField(entries, ['a'], 'date', '1. juli'), null);
   assert.equal(withField(entries, ['a'], 'title', 'x'), null, 'a field the menu does not offer is refused');
+});
+
+test('fieldSummary: what the selected entries hold in a field, and valuesInUse: the values the collection uses, the most used first', () => {
+  const a = { id: 'a', badge: 'Sale', price: 120 };
+  const b = { id: 'b', badge: 'Sale', price: 350 };
+  const c = { id: 'c', price: 120 };
+  assert.deepEqual(fieldSummary([a, b], 'badge'), { state: 'same', values: ['Sale'], set: 2, unset: 0 });
+  assert.deepEqual(fieldSummary([a, c], 'badge'), { state: 'some', values: ['Sale'], set: 1, unset: 1 });
+  assert.deepEqual(fieldSummary([a, b], 'price'), { state: 'mixed', values: [120, 350], set: 2, unset: 0 });
+  assert.deepEqual(fieldSummary([c], 'memberPrice'), { state: 'none', values: [], set: 0, unset: 1 });
+  assert.deepEqual(valuesInUse([a, b, c, { id: 'd', badge: 'New' }, { id: 'e', badge: '' }], 'badge'), ['Sale', 'New']);
+  assert.deepEqual(valuesInUse([{ badge: 'B' }, { badge: 'A' }, { badge: 'C' }], 'badge', 2), ['A', 'B']);
 });

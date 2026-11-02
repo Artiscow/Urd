@@ -11,6 +11,14 @@ export function collectionLayoutOf(raw) {
   return COLLECTION_LAYOUTS.includes(raw) ? raw : 'drill';
 }
 
+/** Where a CSV import shows what it will do before it is stored, the first the default: a dialog, a step in the panel, or a table over the page cell by cell. */
+export const CSV_PREVIEWS = ['dialog', 'panel', 'table'];
+
+/** The stored import preview, the default for anything else. */
+export function csvPreviewOf(raw) {
+  return CSV_PREVIEWS.includes(raw) ? raw : 'dialog';
+}
+
 /** Whether the page keeps an entry where the panel puts it: a product always, another kind's entry while it has no date, since the collection block sorts dated entries by their date (collections.js). */
 export function movable(kind, entry) {
   return kind === 'products' || !entry?.date;

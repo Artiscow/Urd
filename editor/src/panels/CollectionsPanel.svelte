@@ -4,7 +4,8 @@
      two columns, the panel widened while a collection is open with the entries at the left and the chosen entry at the right;
      or the table, the collections here and the open one as a table over the page (collections/CollectionsTable.svelte).
      The place (`panelCollection`, `panelEntry`) and the ticked entries (`panelTicks`) live in the collections state, so they are kept while the panel is closed and opened again.
-     The ticked entries' bar stands under the search (collections/SelectionBar.svelte), and the collection's own ⋮ menu in its head (collections/CollectionMenu.svelte). */
+     The selected entries' bar stands under the search (collections/SelectionBar.svelte), and the collection's one ⋮ menu in its head, with what else acts on the selection (collections/CollectionMenu.svelte).
+     A CSV import waiting with «In the panel» as its preview stands in the panel's place until it is applied or cancelled (collections/ImportStep.svelte). */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
@@ -17,16 +18,18 @@
   import SelectionBar from './collections/SelectionBar.svelte';
   import EntryList from './collections/EntryList.svelte';
   import EntryFields from './collections/EntryFields.svelte';
+  import ImportStep from './collections/ImportStep.svelte';
   import { collectionActions } from './collections/actions.js';
 
   const ed = getContext('urd-editor');
   const act = collectionActions(ed);
   let query = $state('');
 
-  const BACK_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>';
+  /** The chevrons stand a unit toward their open side, so they read as centred in their square: a «<» drawn on its exact centre looks left-heavy. */
+  const BACK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 6l-6 6 6 6"/></svg>';
   /** The steps to the entry before and after, as chevrons: the up and down arrows move an entry. */
-  const PREV_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>';
-  const NEXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+  const PREV_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 6l-6 6 6 6"/></svg>';
+  const NEXT_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6l6 6-6 6"/></svg>';
 
   /** The open collection and the chosen entry, each only while it still exists (a deletion or an undo may take it away). */
   const view = $derived(ed.panelCollection && ed.collectionIds.includes(ed.panelCollection) ? ed.collectionsView[ed.panelCollection] : null);
@@ -37,7 +40,6 @@
   const ticks = $derived(view ? liveTicks(ed.panelTicks, view.entries) : []);
   const shownIds = $derived(view ? ids.filter((eid) => entryMatches(view.entries.find((en) => en.id === eid), query, ed.plainTitle)) : []);
   const setTicks = (next) => { ed.panelTicks = next; };
-  const tickAll = () => setTicks(view ? view.entries.map((en) => en.id) : []);
 
   /** The focus follows a step, once the new level is drawn: to the way back after a step in, to the row stepped out of after a step back. */
   function focusAfter(selector) {
@@ -110,6 +112,20 @@
     });
   }
 
+  /** What a press may land on without clearing the selection: a control, a row, the selection's bar and the collection's menu with its submenu. */
+  const KEEPS_SELECTION = 'button, a, input, select, textarea, label, summary, [role="button"], [contenteditable], .cl-row, .sb, .cm-card, .dd';
+
+  // While entries are selected, a press on a place in the panel that is not a control clears the selection.
+  $effect(() => {
+    const el = ed.panelEl;
+    if (!el || !ticks.length) return;
+    const onClick = (e) => {
+      if (e.target instanceof Element && !e.target.closest(KEEPS_SELECTION)) setTicks([]);
+    };
+    el.addEventListener('click', onClick);
+    return () => el.removeEventListener('click', onClick);
+  });
+
   // A collection asked open from outside the panel («Edit the product catalogue», a new collection) opens.
   $effect(() => {
     const want = ed.openRequest;
@@ -148,26 +164,28 @@
     {#if place}<span class="coll-place">{ta('collections.position', { n: place.index + 1, count: place.count })}</span>{/if}
     <span class="coll-grow"></span>
     {#if place}
-      <button class="ghost nav-act" title={ta('tip.collections.prevEntry')} aria-label={ta('tip.collections.prevEntry')} disabled={!place.prev}
+      <button class="ghost coll-btn" title={ta('tip.collections.prevEntry')} aria-label={ta('tip.collections.prevEntry')} disabled={!place.prev}
         onclick={() => { ed.panelEntry = place.prev; }}>{@html PREV_ICON}</button>
-      <button class="ghost nav-act" title={ta('tip.collections.nextEntry')} aria-label={ta('tip.collections.nextEntry')} disabled={!place.next}
+      <button class="ghost coll-btn" title={ta('tip.collections.nextEntry')} aria-label={ta('tip.collections.nextEntry')} disabled={!place.next}
         onclick={() => { ed.panelEntry = place.next; }}>{@html NEXT_ICON}</button>
     {/if}
-    <button class="ghost row-tool" title={ta('tip.collections.duplicateEntry')} aria-label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry}>{@html ICONS.copy}</button>
-    <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')} aria-label={ta('tip.collections.deleteEntry')} onclick={deleteEntry}>{@html ICONS.cross}</button>
+    <button class="ghost coll-btn" title={ta('tip.collections.duplicateEntry')} aria-label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry}>{@html ICONS.copy}</button>
+    <button class="ghost coll-btn coll-danger" title={ta('tip.collections.deleteEntry')} aria-label={ta('tip.collections.deleteEntry')} onclick={deleteEntry}>{@html ICONS.cross}</button>
   </span>
 {/snippet}
 
 <div class="panel-body coll-panel">
-  {#if ed.collectionsLayout === 'table' || !view}
+  {#if ed.csvImport?.view === 'panel'}
+    <ImportStep />
+  {:else if ed.collectionsLayout === 'table' || !view}
     <!-- The collections: the first level of the drill-in and of the two columns, and the table's own list -->
     <CollectionList selected={ed.collectionsLayout === 'table' ? ed.panelCollection : null} onselect={openCollection} />
   {:else if ed.collectionsLayout === 'columns'}
     <!-- Two columns: the collection chosen at the top, its entries at the left and the chosen entry at the right -->
     <span class="coll-crumb">
-      <button class="ghost nav-act" title={ta('tip.collections.back')} aria-label={ta('tip.collections.back')} onclick={closeCollection}>{@html BACK_ICON}</button>
+      <button class="ghost coll-btn" title={ta('tip.collections.back')} aria-label={ta('tip.collections.back')} onclick={closeCollection}>{@html BACK_ICON}</button>
       <span class="coll-switch"><Dropdown value={ed.panelCollection} options={collectionOptions} title={ta('tip.collections.chooseCollection')} onchange={openCollection} /></span>
-      <CollectionMenu id={ed.panelCollection} onselectall={tickAll} />
+      <CollectionMenu id={ed.panelCollection} {ticks} {shownIds} onticks={setTicks} />
     </span>
     <div class="coll-cols">
       <div class="coll-list">
@@ -184,16 +202,16 @@
   {:else if !entry}
     <!-- Stepping in, the second level: a collection's entries -->
     <span class="coll-crumb">
-      <button class="ghost nav-act" title={ta('tip.collections.back')} aria-label={ta('tip.collections.back')} onclick={closeCollection}>{@html BACK_ICON}</button>
+      <button class="ghost coll-btn" title={ta('tip.collections.back')} aria-label={ta('tip.collections.back')} onclick={closeCollection}>{@html BACK_ICON}</button>
       <span class="coll-crumb-words"><span class="coll-crumb-up">{ta('panel.collections')}</span><span class="coll-crumb-name">{view.name ?? ed.panelCollection}</span></span>
-      <CollectionMenu id={ed.panelCollection} onselectall={tickAll} />
+      <CollectionMenu id={ed.panelCollection} {ticks} {shownIds} onticks={setTicks} />
     </span>
     {@render search()}
     <EntryList id={ed.panelCollection} {view} {query} onselect={chooseEntry} {ticks} onticks={setTicks} />
   {:else}
     <!-- Stepping in, the third level: one entry with all its fields -->
     <span class="coll-crumb">
-      <button class="ghost nav-act" title={ta('tip.collections.backToEntries', { name: view.name ?? ed.panelCollection })}
+      <button class="ghost coll-btn" title={ta('tip.collections.backToEntries', { name: view.name ?? ed.panelCollection })}
         aria-label={ta('tip.collections.backToEntries', { name: view.name ?? ed.panelCollection })} onclick={backToEntries}>{@html BACK_ICON}</button>
       <span class="coll-crumb-words"><span class="coll-crumb-up">{view.name ?? ed.panelCollection}</span><span class="coll-crumb-name">{ed.plainTitle(entry.title)}</span></span>
     </span>
@@ -250,7 +268,7 @@
   .coll-entry-head {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.35rem;
   }
 
   .coll-place {

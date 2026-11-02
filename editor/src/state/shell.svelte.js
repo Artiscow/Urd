@@ -12,7 +12,7 @@ import { opensShortcuts } from '../lib/shortcuts.js';
 import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
 import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as settingsPicturesOf } from '../lib/settings-model.js';
 import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT } from '../lib/panels-start.js';
-import { COLLECTION_LAYOUTS, collectionLayoutOf } from '../lib/collection-layout.js';
+import { COLLECTION_LAYOUTS, collectionLayoutOf, CSV_PREVIEWS, csvPreviewOf } from '../lib/collection-layout.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -543,6 +543,19 @@ function setCollectionsLayout(v) {
 
 const COLLECTIONS_LAYOUT_OPTIONS = $derived(COLLECTION_LAYOUTS.map((id) => [id, ta(`opt.collectionsLayout.${id}`)]));
 
+/** Where a collection's CSV import shows what it will do («Import preview», lib/collection-layout.js): a dialog (the default, not stored), a step in the panel, or a table over the page; kept per browser. */
+const CSV_PREVIEW_KEY = 'urd-csv-preview';
+
+let csvPreviewPref = $state(csvPreviewOf(localStorage.getItem(CSV_PREVIEW_KEY)));
+
+function setCsvPreview(v) {
+  csvPreviewPref = csvPreviewOf(v);
+  if (csvPreviewPref === 'dialog') localStorage.removeItem(CSV_PREVIEW_KEY);
+  else localStorage.setItem(CSV_PREVIEW_KEY, csvPreviewPref);
+}
+
+const CSV_PREVIEW_OPTIONS = $derived(CSV_PREVIEWS.map((id) => [id, ta(`opt.csvPreview.${id}`)]));
+
 const SETTINGS_PLACE_OPTIONS = $derived(SETTINGS_PLACES.map((id) => [id, ta(`opt.settingsPlace.${id}`)]));
 
 const SETTINGS_PICTURES_OPTIONS = $derived([['pictures', ta('opt.settingsPictures.pictures')], ['words', ta('opt.settingsPictures.words')]]);
@@ -887,6 +900,9 @@ export const shellState = {
   get collectionsLayout() { return collectionsLayout; },
   setCollectionsLayout,
   get COLLECTIONS_LAYOUT_OPTIONS() { return COLLECTIONS_LAYOUT_OPTIONS; },
+  get csvPreviewPref() { return csvPreviewPref; },
+  setCsvPreview,
+  get CSV_PREVIEW_OPTIONS() { return CSV_PREVIEW_OPTIONS; },
   get settingsPlace() { return settingsPlace; },
   setSettingsPlace,
   get settingsPictures() { return settingsPictures; },

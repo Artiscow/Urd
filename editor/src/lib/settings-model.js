@@ -58,6 +58,8 @@ export const SETTINGS_GROUPS = [
         get: (c) => c.menu.widthPref, set: (c, v) => c.setMenuWidthPref(v) },
       { id: 'collectionsLayout', labelKey: 'settings.collectionsLayout', tipKey: 'tip.settings.collectionsLayout', kind: 'choice', look: 'collectionsLayout',
         options: (c) => c.ed.COLLECTIONS_LAYOUT_OPTIONS, get: (c) => c.ed.collectionsLayout, set: (c, v) => c.ed.setCollectionsLayout(v) },
+      { id: 'csvPreview', labelKey: 'settings.csvPreview', tipKey: 'tip.settings.csvPreview', kind: 'choice', look: 'csvPreview',
+        options: (c) => c.ed.CSV_PREVIEW_OPTIONS, get: (c) => c.ed.csvPreviewPref, set: (c, v) => c.ed.setCsvPreview(v) },
       { id: 'linkEditor', labelKey: 'settings.linkEditor', tipKey: 'tip.settings.linkEditor', kind: 'choice', look: 'linkEditor',
         options: (c) => [['dialog', c.ta('opt.linkEditor.dialog')], ['popover', c.ta('opt.linkEditor.popover')]],
         get: (c) => c.ed.linkEditorPref, set: (c, v) => c.ed.setLinkEditor(v) },

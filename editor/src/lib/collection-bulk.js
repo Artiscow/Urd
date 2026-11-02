@@ -30,6 +30,16 @@ export function kindsFor(collection) {
   return KINDS.map((kind) => ({ kind, ...entriesFit(collection?.entries, kind) }));
 }
 
+/**
+ * The kinds the collection's menu offers, its own among them, or none where there is nothing to choose: a products collection keeps its kind, since its fields (price, sizes, colours, quantity) are its own, and another collection is offered only the kinds its entries fit.
+ * @returns {string[]} Empty, or two kinds and more
+ */
+export function kindChoices(collection) {
+  if (!collection || collection.kind === 'products') return [];
+  const fits = kindsFor(collection).filter((k) => k.fits).map((k) => k.kind);
+  return fits.some((kind) => kind !== collection.kind) ? fits : [];
+}
+
 /** The ids from the anchor to the id pressed, both included, in the order shown; a missing anchor gives the id alone. */
 export function tickRun(shownIds, anchor, id) {
   const a = shownIds.indexOf(anchor);
@@ -120,6 +130,30 @@ export function settableFields(kind) {
     ];
   }
   return [{ field: 'date', labelKey: 'lbl.date', input: 'date' }];
+}
+
+/**
+ * What the entries hold in a field, for its line in «Set a field»: none of them anything, all one value, one value on some and nothing on the rest, or several values.
+ * @param {Array<object>} entries
+ * @param {string} field
+ * @returns {{state: 'none'|'same'|'some'|'mixed', values: Array, set: number, unset: number}}
+ */
+export function fieldSummary(entries, field) {
+  const list = entries ?? [];
+  const holding = list.filter((e) => has(e, field));
+  const values = [...new Set(holding.map((e) => e[field]))];
+  const unset = list.length - holding.length;
+  const state = !holding.length ? 'none' : values.length > 1 ? 'mixed' : unset ? 'some' : 'same';
+  return { state, values, set: holding.length, unset };
+}
+
+/** The values a field holds across a collection's entries, the most used first and then in the order of the alphabet, to offer as a press each. */
+export function valuesInUse(entries, field, max = 6) {
+  const counts = new Map();
+  for (const e of entries ?? []) {
+    if (has(e, field)) counts.set(e[field], (counts.get(e[field]) ?? 0) + 1);
+  }
+  return [...counts].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]))).slice(0, max).map(([v]) => v);
 }
 
 /**

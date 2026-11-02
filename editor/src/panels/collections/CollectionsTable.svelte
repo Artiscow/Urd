@@ -113,7 +113,7 @@
       <input type="text" class="ct-search" bind:value={query} placeholder={ta('ph.collections.find')} aria-label={ta('ph.collections.find')} title={ta('ph.collections.find')} />
       <span class="ct-grow"></span>
       <button class="ghost action ct-new" title={ta('ui.addEntry')} onclick={newEntry}>{ta('ui.addEntry')}</button>
-      <CollectionMenu {id} onselectall={() => setTicks(view.entries.map((en) => en.id))} />
+      <CollectionMenu {id} {ticks} shownIds={rowIds} onticks={setTicks} />
       <button class="ghost row-tool ct-close" title={ta('tip.collections.closeTable')} aria-label={ta('tip.collections.closeTable')} onclick={close}>{@html ICONS.cross}</button>
     </div>
     {#if ticks.length}
@@ -161,8 +161,8 @@
               <button class="ghost nav-act" title={ta('tip.moveUp')} aria-label={ta('tip.moveUp')} disabled={at <= 0} onclick={() => act.moveEntry(id, entry.id, -1)}>{@html ICONS.up}</button>
               <button class="ghost nav-act" title={ta('tip.moveDown')} aria-label={ta('tip.moveDown')} disabled={at === movables.length - 1} onclick={() => act.moveEntry(id, entry.id, 1)}>{@html ICONS.down}</button>
             {/if}
-            <button class="ghost row-tool" title={ta('tip.collections.duplicateEntry')} aria-label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry}>{@html ICONS.copy}</button>
-            <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')} aria-label={ta('tip.collections.deleteEntry')} onclick={deleteEntry}>{@html ICONS.cross}</button>
+            <button class="ghost coll-btn" title={ta('tip.collections.duplicateEntry')} aria-label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry}>{@html ICONS.copy}</button>
+            <button class="ghost coll-btn coll-danger" title={ta('tip.collections.deleteEntry')} aria-label={ta('tip.collections.deleteEntry')} onclick={deleteEntry}>{@html ICONS.cross}</button>
           </span>
           <div class="panel-body ct-fields">
             {#key entry.id}<EntryFields {id} {entry} kind={view.kind} />{/key}

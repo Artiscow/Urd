@@ -80,6 +80,12 @@ const COLLECTIONS_LAYOUTS = {
   table: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 54, H - 8, 0.2) + line(11, 10, 30, 2) + acc(11, 15, 30, 3) + line(11, 20, 30, 2) + line(11, 25, 30, 2) + line(11, 30, 30, 2) + dim(44, 7, 19, H - 8, 0.12) + line(46, 11, 14, 2) + line(46, 16, 12, 2) + line(46, 21, 14, 4, 4),
 };
 
+const CSV_PREVIEWS = {
+  dialog: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 18, H - 8, 0.08) + stage(27) + dim(15, 10, 36, 25, 0.24) + acc(18, 13, 4, 2) + line(23, 13, 10, 2) + acc(18, 18, 2, 2) + line(22, 18, 22, 2) + line(18, 22, 26, 2) + line(18, 26, 20, 2) + acc(40, 30, 9, 3),
+  panel: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 22, H - 8, 0.22) + line(11, 10, 12, 2) + acc(11, 15, 2, 2) + line(15, 15, 13, 2) + line(11, 20, 17, 2) + line(11, 25, 15, 2) + acc(20, 33, 9, 3) + stage(31),
+  table: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 54, H - 8, 0.2) + line(11, 10, 20, 2) + acc(52, 10, 9, 3) + line(11, 15, 50, 1, 1) + line(11, 19, 12, 2) + acc(26, 18, 10, 4) + line(39, 19, 12, 2) + line(11, 24, 12, 2) + line(26, 24, 10, 2) + acc(39, 23, 12, 4) + line(11, 29, 12, 2) + line(26, 29, 10, 2) + line(39, 29, 12, 2),
+};
+
 const LOOKS = {
   layout: LAYOUTS,
   place: PLACES,
@@ -89,6 +95,7 @@ const LOOKS = {
   menuWidth: MENU_WIDTHS,
   linkEditor: LINK_EDITORS,
   collectionsLayout: COLLECTIONS_LAYOUTS,
+  csvPreview: CSV_PREVIEWS,
 };
 
 /** A theme's swatch: its background with its surface, a line in its accent and a line in its text colour. */
