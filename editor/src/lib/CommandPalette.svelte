@@ -4,16 +4,18 @@
    * Opened by Ctrl/⌘+K in the panels and on the page; in a text Ctrl+K stays the link key. A native modal dialog (ADR-0011), closed by a press outside its card as the shortcut sheet is.
    */
   import { ta } from '$engine/i18n.js';
+  import { ICONS } from '../lib/icons.js';
   import { searchItems } from '$engine/palette-search.js';
-  import { arrangeCommands, flatItems, readRecent, rememberCommand, RECENT_KEY } from './command-palette.js';
+  import { arrangeCommands, canPin, flatItems, readRecent, rememberCommand, RECENT_KEY } from './command-palette.js';
 
-  let { commands = [], onclose } = $props();
+  /** `pinned` is the site's shared shortcuts (site.shortcuts), command ids pinned first for everyone who edits the site; `onpin` toggles one, and without it the rows carry no pin. */
+  let { commands = [], pinned = [], onpin = null, onclose } = $props();
   let dialogEl = $state(null);
   let query = $state('');
   let marked = $state(0);
   let downOnBackdrop = false;
   const recent = readRecent(localStorage);
-  const groups = $derived(arrangeCommands(commands, query, recent, searchItems));
+  const groups = $derived(arrangeCommands(commands, query, recent, searchItems, pinned));
   const items = $derived(flatItems(groups));
   const opener = document.activeElement;
 
@@ -50,6 +52,8 @@
       marked = (marked + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length;
       dialogEl?.querySelector(`[data-index="${marked}"]`)?.scrollIntoView({ block: 'nearest' });
     } else if (e.key === 'Enter') {
+      // A pin with the focus takes its own Enter (its click), and the marked command runs from anywhere else.
+      if (e.target instanceof HTMLElement && e.target.closest('.kp-pin')) return;
       e.preventDefault();
       if (items[marked]) run(items[marked]);
     }
@@ -65,10 +69,11 @@
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <!-- svelte-ignore a11y_autofocus -->
       <input type="text" class="kp-input" placeholder={ta('palette.search')} aria-label={ta('palette.title')} bind:value={query} autofocus
-        role="combobox" aria-expanded="true" aria-controls="kp-list" aria-activedescendant={items[marked] ? `kp-${marked}` : undefined} />
+        aria-controls="kp-list" aria-describedby={items[marked] ? `kp-${marked}` : undefined} />
       <kbd class="kp-esc">Esc</kbd>
     </div>
-    <div class="kp-list" id="kp-list" role="listbox">
+    <!-- The commands are plain buttons, the pins beside them: Tab reaches each, the arrows mark a command for Enter from the field -->
+    <div class="kp-list" id="kp-list">
       {#if !groups.length}
         <p class="kp-none">{ta('palette.none')}</p>
       {/if}
@@ -77,11 +82,19 @@
           <p class="kp-group-title">{ta(`palette.group.${group.group}`)}</p>
           {#each group.items as item (item.id)}
             {@const index = items.indexOf(item)}
-            <button type="button" class="kp-item" class:marked={index === marked} id={`kp-${index}`} data-index={index} role="option" aria-selected={index === marked}
-              onpointerenter={() => (marked = index)} onclick={() => run(item)}>
-              <span class="kp-item-label">{item.label}</span>
-              {#if item.hint}<span class="kp-item-hint">{item.hint}</span>{/if}
-            </button>
+            {@const isPinned = pinned.includes(item.id)}
+            <div class="kp-row" class:marked={index === marked} onpointerenter={() => (marked = index)}>
+              <button type="button" class="kp-item" id={`kp-${index}`} data-index={index} aria-current={index === marked ? 'true' : undefined}
+                onclick={() => run(item)}>
+                <span class="kp-item-label">{item.label}</span>
+                {#if item.hint}<span class="kp-item-hint">{item.hint}</span>{/if}
+              </button>
+              <!-- The pin writes the command into the site's shared shortcuts, published with the site, so it stands first for everyone who edits it -->
+              {#if onpin && (isPinned || canPin(item.id))}
+                <button type="button" class="kp-pin" class:on={isPinned} aria-pressed={isPinned} title={ta(isPinned ? 'tip.palette.unpin' : 'tip.palette.pin')} aria-label={ta(isPinned ? 'tip.palette.unpin' : 'tip.palette.pin')}
+                  onclick={() => onpin(item.id)}>{@html ICONS.pin}</button>
+              {/if}
+            </div>
           {/each}
         </div>
       {/each}
@@ -181,12 +194,41 @@
     opacity: 0.55;
   }
 
+  .kp-row {
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+  }
+  .kp-row.marked { background: rgb(255 255 255 / 8%); }
+  /* The row carries the one highlight, for the pointer and the arrow keys alike; the item keeps none of the shell's button hover. */
+  .kp-item:hover { background: transparent; }
+  .kp-pin {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    margin-right: 0.2rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    opacity: 0.3;
+    cursor: pointer;
+  }
+  .kp-pin :global(svg) { flex: none; width: 14px; height: 14px; }
+  .kp-row:hover .kp-pin,
+  .kp-row.marked .kp-pin,
+  .kp-pin:focus-visible { opacity: 0.75; }
+  .kp-pin.on { opacity: 1; color: var(--urd-color-accent, #7c5cff); }
   .kp-item {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 0.8rem;
     width: 100%;
+    min-width: 0;
     padding: 0.5rem 0.6rem;
     font: inherit;
     font-size: 0.92rem;
@@ -198,9 +240,6 @@
     cursor: pointer;
   }
 
-  .kp-item.marked {
-    background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent);
-  }
 
   .kp-item-label {
     min-width: 0;

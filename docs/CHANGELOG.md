@@ -8,6 +8,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.22 - Shared shortcuts in the command palette, and a new Urd told in the admin - 2 November 2026
+
+- The commands a club uses most had to be typed into the palette each time. Every palette row has a pin that writes the command into the site's shared shortcuts (`site.shortcuts`), published with the site, and those stand first in the palette as «Shared shortcuts» for everyone who edits it; a command the palette no longer offers is skipped.
+- A new Urd was seen only with the Updates panel open. The check runs at the start for a publisher, and the panel's icon, word or tab carries a dot in every layout (`updateNotice` in `state/shell.svelte.js`, `lib/update-notice.js`); the panel-tabs layout puts it on the System segment while that group's tabs are out of sight.
+- Urd settings has «Update notice», stored in the site as `admin.updateNotice` and shared by everyone who edits it: the dot, or a pill «Urd vX» in the top bar in the admin theme's accent that opens the Updates panel, and gives way to the dot when the bar has folded its first cluster.
+- The palette's rows had two highlights, the row's and the shell's button hover; the row carries the one.
+- `shortcuts` and `admin` are in the site schema, SCHEMA.md and the example site; the user guides describe the palette, the pin and the dot in en, nb and tr.
+
+The independent review before the commit read the diff against AGENTS.md and the ADRs, and found these:
+
+- Enter on a pin reached with Tab ran the marked command and closed the palette instead of pinning. A pin with the focus takes its own Enter.
+- A plugin's command id with a space, or a forty-first pin, could be written into `site.shortcuts` against the schema. The pin is offered only for an id that fits the stored form (`canPin` in `lib/command-palette.js`), and a pin past the cap changes nothing.
+- A section of the open page, a device and Publish could be pinned, though they stand in the palette only while they apply, so the pin would come and go. They carry no pin.
+- The check for a newer Urd at the start held the flag that refuses a publish while an update runs, so a Publish pressed in the first second got the message about a deploy. The check has a flag of its own.
+- The palette's rows and pins stood inside a listbox as children that are no options. The list is plain buttons, the marked one carrying `aria-current`.
+
 ### 0.7.10.19-21p - Push preparation: the font lists in their typefaces, a section's own content width, and the panels reached from an icon rail - 1 November 2026
 
 The independent review read the whole span (the font lists drawn in their own typefaces, the content width per section in Properties, and the panel navigation in five layouts with the icon rail as the default) against AGENTS.md and the ADRs, looking across the commits for what the reviews at each commit could not see, and found these:

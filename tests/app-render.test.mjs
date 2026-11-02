@@ -87,6 +87,37 @@ test('every panel layout draws its own way to the panels, and the gear stands on
   assert.equal(shellState.adminLayout, 'rail');
 });
 
+test('a new Urd is told as a dot on Updates in every layout, or as a pill in the top bar where the site asks for it', async () => {
+  const { default: App } = await import('../editor/src/App.svelte');
+  const { siteState } = await import('../editor/src/state/site.svelte.js');
+  const { shellState } = await import('../editor/src/state/shell.svelte.js');
+  const { updaterState } = await import('../editor/src/state/updater.svelte.js');
+  updaterState.updateInfo = { upToDate: false, target: 'v0.7.8', current: 'v0.7.7', changes: [] };
+  shellState.activePanel = 'pages';
+  for (const layout of shellState.ADMIN_LAYOUTS) {
+    shellState.adminLayout = layout;
+    shellState.toolMenu = layout === 'page-tabs' ? 'site' : null;
+    const { body } = render(App);
+    assert.match(body, /class="update-dot/, `${layout}: the dot is drawn`);
+    assert.doesNotMatch(body, /update-pill/, `${layout}: no pill by default`);
+  }
+  siteState.siteDraft.admin = { updateNotice: 'pill' };
+  shellState.adminLayout = 'rail';
+  let body = render(App).body;
+  assert.match(body, /update-pill[\s\S]*Urd v0\.7\.8|update-pill/, 'the pill stands in the top bar');
+  assert.doesNotMatch(body, /class="update-dot/, 'no dot beside the pill');
+  // A narrow bar has folded its first cluster: the dot again.
+  shellState.folded = { view: true, device: false, zoom: false };
+  body = render(App).body;
+  assert.match(body, /class="update-dot/);
+  assert.doesNotMatch(body, /update-pill/);
+  shellState.folded = { view: false, device: false, zoom: false };
+  delete siteState.siteDraft.admin;
+  updaterState.updateInfo = { upToDate: true, target: 'v0.7.7', current: 'v0.7.7', changes: [] };
+  assert.doesNotMatch(render(App).body, /class="update-dot|update-pill/, 'nothing while up to date');
+  updaterState.updateInfo = null;
+});
+
 test('the shell renders the workspace with every panel open in turn, from the modules\' own state', async () => {
   const { default: App } = await import('../editor/src/App.svelte');
   const { siteState } = await import('../editor/src/state/site.svelte.js');

@@ -143,6 +143,20 @@
         "token": { "type": "string", "maxLength": 200, "description": "The token from the Cloudflare Web Analytics snippet; the engine injects the beacon on the published page only when it is set." }
       }
     },
+    "shortcuts": {
+      "type": "array",
+      "description": "The site's shared shortcuts (additive from v0.7.10): command ids of the admin's command palette, pinned first in it for everyone who edits the site, in this order. An id the palette no longer offers is skipped. The editor pins only ids that fit the pattern, at most 40.",
+      "maxItems": 40,
+      "items": { "type": "string", "maxLength": 120, "pattern": "^[a-z][a-z0-9-]*(:[A-Za-z0-9_.:-]+)?$" }
+    },
+    "admin": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Settings of the admin shared by everyone who edits the site (additive from v0.7.10), as against the personal ones kept per browser.",
+      "properties": {
+        "updateNotice": { "type": "string", "enum": ["dot", "pill"], "description": "How a new Urd is told: a dot on the Updates panel's icon, word or tab (the default), or a pill naming the version in the top bar, which falls back to the dot in a narrow window." }
+      }
+    },
     "layout": {
       "type": "object",
       "description": "Page layout (additive from v0.7, ADR-0018): the content is bound by a design width with full-width section backgrounds. Filled in by the site migration 1 -> 2.",

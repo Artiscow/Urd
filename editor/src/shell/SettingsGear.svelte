@@ -24,6 +24,11 @@
           <Dropdown value={ed.adminTheme} options={ed.ADMIN_THEMES} onchange={(v) => (ed.adminTheme = v)} /></label>
         <label class="settings-row" title={ta('tip.settings.layout')}><span>{ta('settings.layout')}</span>
           <Dropdown value={ed.adminLayout} options={ed.ADMIN_LAYOUT_OPTIONS} onchange={ed.setAdminLayout} /></label>
+        <!-- A site value like the analytics token: shared by everyone who edits the site, published with it -->
+        {#if ed.siteDraft}
+          <label class="settings-row" title={ta('tip.settings.updateNotice')}><span>{ta('settings.updateNotice')}</span>
+            <Dropdown value={ed.siteDraft.admin?.updateNotice ?? 'dot'} options={ed.UPDATE_NOTICE_OPTIONS} onchange={ed.setUpdateNotice} /></label>
+        {/if}
         <label class="settings-row" title={ta('topbar.language.title')}><span>{ta('settings.language')}</span>
           <Dropdown value={ed.adminLangChoice} options={[['auto', ta('lang.auto')], ...ed.adminLangOptions()]} onchange={ed.setAdminLang} /></label>
       </section>
@@ -84,8 +89,7 @@
           </div>
         {/if}
       </section>
-      <!-- Visitor measurement: the one SITE value in this pop (site.analytics,
-           published with the site), placed where the owner looks for Urd's own settings. -->
+      <!-- Visitor measurement: a SITE value (site.analytics, published with the site), placed where the owner looks for Urd's own settings. -->
       {#if ed.siteDraft}
         <section class="settings-group">
           <p class="mini-label" title={ta('tip.analytics')}>{ta('settings.analytics')}</p>

@@ -214,7 +214,7 @@
 
   {#if paletteState.paletteOpen}
     <!-- The command palette: built from the states as it opens, so the list reads the page, the panels and the draft as they stand -->
-    <CommandPalette commands={paletteState.buildCommands()} onclose={() => (paletteState.paletteOpen = false)} />
+    <CommandPalette commands={paletteState.buildCommands()} pinned={ed.siteDraft?.shortcuts ?? []} onpin={ed.siteDraft ? ed.toggleShortcut : null} onclose={() => (paletteState.paletteOpen = false)} />
   {/if}
 
   <ConfirmDialog />

@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.22): shared shortcuts and the update notice
+
+- [ ] Ctrl+K on the example site: «Shared shortcuts» stands first with «Open Collections» and «Go to Kaker»; hover a row and press its pin: the command joins the group and the draft marks the site changed; press the pin again: it leaves, and the draft clears when nothing else changed; the arrow keys and the pointer mark one full row, never two highlights; Tab from the field reaches a pin and Enter on it pins without closing; «Publish», «View as …» and «Go to section …» carry no pin
+- [ ] Pin a page, publish, delete the page and publish: the palette shows no dead row; a pin pressed in one browser stands first in another after the publish and a reload
+- [ ] On the deployed site with a newer Urd released (or locally with the console override from the round, then «Try again» in Updates): a dot on Updates in the rail, the sidebar, the tabs (and on the System segment while another group is shown), the strip and the Site menu's button and row, with «Urd vX is out» as the tooltip; up to date: nothing
+- [ ] Urd settings, «Update notice», Pill: «Urd vX» in the admin theme's accent beside Clean view, no dot; a click opens the Updates panel; narrow the window below about 1080 px: the dot again and no pill; the choice is in `content/site.json` under `admin` after a publish and holds in another browser
+- [ ] The words in bokmål and Turkish: the palette group, the pin tooltips, the setting, its two options and the pill's tooltip
+
 ### Test batch (0.7.10.19-21p): the pressed state in the strip and the Site menu
 
 - [ ] «Strip under the top bar» and «The page's tabs and a Site menu»: a screen reader reads the open panel's tab in the strip, and the open panel's row in the Site menu, as pressed

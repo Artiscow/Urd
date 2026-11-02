@@ -353,6 +353,37 @@
     background: var(--urd-color-accent, #7c5cff);
     color: var(--urd-color-surface, #151a23);
   }
+  /* The update notice: a dot at an icon's corner, or after a word, in the accent. */
+  .rail-icon { position: relative; }
+  .update-dot {
+    position: absolute;
+    top: 5px;
+    right: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--urd-color-accent, #7c5cff);
+    box-shadow: 0 0 0 2px var(--urd-color-surface, #151a23);
+  }
+  .rail-icon.active .update-dot { background: var(--urd-color-surface, #151a23); box-shadow: 0 0 0 2px var(--urd-color-accent, #7c5cff); }
+  .update-dot-inline {
+    position: static;
+    display: inline-block;
+    margin-left: 0.45rem;
+    vertical-align: middle;
+    box-shadow: none;
+  }
+  .topnav-btn { position: relative; }
+  .topnav-btn .update-dot { top: -3px; right: -3px; }
+  .topbar .update-pill:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    border-color: var(--urd-color-accent, #7c5cff);
+    border-radius: 999px;
+    color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 14%, transparent);
+  }
+  .topbar .update-pill:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 26%, transparent);
+  }
   .rail-divider {
     width: 1.5rem;
     height: 1px;
@@ -378,7 +409,8 @@
   }
   .panel-nav-row { display: flex; align-items: center; gap: 0.4rem; }
   .panel-nav-groups { display: flex; flex: 1; }
-  .panel-nav-groups button { flex: 1; }
+  .panel-nav-groups button { flex: 1; position: relative; }
+  .panel-nav-groups .update-dot { top: -3px; right: -3px; }
   .panel-tabs {
     display: flex;
     flex-wrap: wrap;

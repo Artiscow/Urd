@@ -11,7 +11,7 @@
     {#if gi > 0}<span class="strip-divider" aria-hidden="true"></span>{/if}
     <span class="strip-group">{ta(ed.PANEL_GROUP_KEYS[gi])}</span>
     {#each group as name (name)}
-      <button type="button" class="panel-tab" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
+      <button type="button" class="panel-tab" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}</button>
     {/each}
   {/each}
   <span class="strip-end"><SettingsGear flip /></span>

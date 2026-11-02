@@ -32,13 +32,13 @@
           <nav class="topnav" aria-label={ta('rail.panels')}>
             <span class="toolmenu">
               <button type="button" class="ghost topnav-btn" class:active={ed.toolMenu === 'site'} title={ta('tip.siteMenu')}
-                onclick={() => (ed.toolMenu = ed.toolMenu === 'site' ? null : 'site')}>{ta('rail.siteMenu')}{@html ICONS.caret}</button>
+                onclick={() => (ed.toolMenu = ed.toolMenu === 'site' ? null : 'site')}>{ta('rail.siteMenu')}{@html ICONS.caret}{#if ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{/if}</button>
               {#if ed.toolMenu === 'site'}
                 <div class="tool-pop site-pop">
                   {#each ed.PANEL_GROUPS.slice(1) as group, gi (gi)}
                     <span class="mini-label">{ta(ed.PANEL_GROUP_KEYS[gi + 1])}</span>
                     {#each group as name (name)}
-                      <button type="button" class="ghost" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
+                      <button type="button" class="ghost" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}</button>
                     {/each}
                   {/each}
                 </div>
@@ -190,6 +190,10 @@
 
   <span class="topbar-group topbar-right">
   {#if ed.site}
+    <!-- A new Urd as a pill naming the version, where the site asks for it and the bar is wide; it opens the Updates panel -->
+    {#if ed.updateNotice === 'pill'}
+      <button type="button" class="ghost update-pill" title={ta('tip.updateOut', { version: ed.updateTarget })} onclick={() => ed.openPanel('update')}>{@html ICONS.panel_update}<span class="btn-label">{ta('ui.updateOut', { version: ed.updateTarget })}</span></button>
+    {/if}
     {#if gearHere}<SettingsGear flip />{/if}
     <button
       class="ghost"

@@ -9,6 +9,7 @@ import { createDraftStore } from '../lib/draftStore.js';
 import { tick } from 'svelte';
 import { ICONS } from '../lib/icons.js';
 import { opensShortcuts } from '../lib/shortcuts.js';
+import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -216,6 +217,8 @@ async function init() {
   // produce 401 noise in the console. After login (OAuth redirect) the
   // page reloads, so the baseline is fetched here then.
   if (auth) updaterState.refreshBaseSha();
+  // The update check runs at the start for a publisher, so a new Urd is told in the admin's navigation without the Updates panel open.
+  if (auth?.allowed) updaterState.loadUpdateCheck();
   // A panel remembered from the last visit opens with its data.
   loadPanelData();
   // The setup wizard: first visit on a fresh clone and not dismissed
@@ -325,6 +328,11 @@ function setAdminLayout(v) {
 }
 
 const ADMIN_LAYOUT_OPTIONS = $derived(ADMIN_LAYOUTS.map((id) => [id, ta(`opt.adminLayout.${id}`)]));
+
+/** The update notice drawn now (lib/update-notice.js): `dot` on the Updates panel's icon, word or tab, `pill` in the top bar, null while no update is out. */
+const updateNotice = $derived(updateNoticeForm(updaterState.updateAvailable, siteState.siteDraft?.admin?.updateNotice, folded.view));
+
+const UPDATE_NOTICE_OPTIONS = $derived(UPDATE_NOTICES.map((id) => [id, ta(`opt.updateNotice.${id}`)]));
 
 /** Whether the tab layouts' column is folded to a handle at the edge; a panel opened from anywhere unfolds it (the activePanel setter). */
 let panelFolded = $state(false);
@@ -787,6 +795,8 @@ export const shellState = {
   set settingsOpen(v) { settingsOpen = v; },
   ADMIN_LAYOUTS,
   get ADMIN_LAYOUT_OPTIONS() { return ADMIN_LAYOUT_OPTIONS; },
+  get updateNotice() { return updateNotice; },
+  get UPDATE_NOTICE_OPTIONS() { return UPDATE_NOTICE_OPTIONS; },
   get panelFolded() { return panelFolded; },
   set panelFolded(v) { panelFolded = v; },
   get adminLayout() { return adminLayout; },

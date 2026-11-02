@@ -98,7 +98,7 @@
 </script>
 
 <div class="panel-body">
-  {#if ed.updateBusy && !updateInfo}
+  {#if ed.updateChecking && !updateInfo}
     <p class="panel-hint">{ta('update.checking')}</p>
   {:else if updateError}
     <p class="panel-hint">{updateError}</p>

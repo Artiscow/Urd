@@ -22,7 +22,8 @@ For you who own or edit a site built with Urd. No code, no git knowledge needed:
 The screen has three parts:
 
 - **The top bar**: choose page, switch between desktop and mobile view (the screen and phone icons), and publish.
-- **The panel rail on the left**: an icon for each panel, grouped by workflow and named in a tooltip: Pages, Blocks, Properties and Grid (building the page), Site, Theme, Nav, Footer, Collections and Plugins (the site), and History and Updates. Click to open a panel; click again, or the fold button in the panel's head, to close. Urd settings (the gear at the rail's foot) has «Panel navigation» with four other forms: a sidebar of words, tabs at the top of the panel, a strip of every panel under the top bar, or the page's panels as tabs with a Site menu in the top bar.
+- **The panel rail on the left**: an icon for each panel, grouped by workflow and named in a tooltip: Pages, Blocks, Properties and Grid (building the page), Site, Theme, Nav, Footer, Collections and Plugins (the site), and History and Updates. Click to open a panel; click again, or the fold button in the panel's head, to close. Urd settings (the gear at the rail's foot) has «Panel navigation» with four other forms: a sidebar of words, tabs at the top of the panel, a strip of every panel under the top bar, or the page's panels as tabs with a Site menu in the top bar. A dot on Updates says a new Urd is out; «Update notice» in Urd settings can make it a pill in the top bar instead, shared by everyone who edits the site.
+- **Ctrl+K opens the command palette**: type a command, a page, a panel or a block and press Enter. The pin on a row makes the command a shared shortcut, shown first in the palette for everyone who edits the site and published with it.
 - **Admin theme**: «Colour theme» in Urd settings switches the editor's own colour theme (seven variants). It never affects your website.
 - **The preview**: your real page. What you see is what visitors get.
 

@@ -19,7 +19,8 @@
     <div class="panel-nav-row">
       <div class="seg panel-nav-groups">
         {#each ed.PANEL_GROUP_KEYS as key, gi (key)}
-          <button type="button" class:on={shownGroup === gi} onclick={() => { pickedGroup = gi; if (ed.activePanel && groupOf(ed.activePanel) !== gi) ed.activePanel = null; }}>{ta(key)}</button>
+          <!-- The update dot stands on the System group's button while its tabs are out of sight -->
+          <button type="button" class:on={shownGroup === gi} onclick={() => { pickedGroup = gi; if (ed.activePanel && groupOf(ed.activePanel) !== gi) ed.activePanel = null; }}>{ta(key)}{#if gi === 2 && shownGroup !== 2 && ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{/if}</button>
         {/each}
       </div>
       {@render fold()}
@@ -27,8 +28,8 @@
   {/if}
   <div class="panel-tabs">
     {#each tabs as name (name)}
-      <button type="button" class="panel-tab" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name}
-        onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
+      <button type="button" class="panel-tab" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined}
+        onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}</button>
     {/each}
     {#if ed.adminLayout !== 'panel-tabs'}{@render fold()}{/if}
   </div>

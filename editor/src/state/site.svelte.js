@@ -3,6 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { colorLayer } from '$engine/backgrounds/color.js';
+import { togglePinned } from '../lib/command-palette.js';
 import { gradientLayer } from '$engine/backgrounds/gradient.js';
 import { glowLayer } from '$engine/backgrounds/glow.js';
 import { imageLayer } from '$engine/backgrounds/image.js';
@@ -123,6 +124,23 @@ function siteMutate(key, fn) {
   siteStore.save();
   historyState.updateDirty();
   pushSiteToPreview();
+}
+
+/** Pins a command into the site's shared shortcuts, or takes it out (site.shortcuts, the command palette's first group for everyone who edits the site); a pin the list cannot take (lib/command-palette.js togglePinned) changes nothing. */
+function toggleShortcut(id) {
+  const list = siteDraft.shortcuts ?? [];
+  const next = togglePinned(list, id);
+  if (next === list) return;
+  siteMutate('site-shortcuts', () => {
+    if (next.length) siteDraft.shortcuts = next; else delete siteDraft.shortcuts;
+  });
+}
+
+/** How a new Urd is told in the admin (site.admin.updateNotice): a dot on Updates, or a pill in the top bar; shared by everyone who edits the site. */
+function setUpdateNotice(v) {
+  siteMutate('site', () => {
+    siteDraft.admin = { ...(siteDraft.admin ?? {}), updateNotice: v === 'pill' ? 'pill' : 'dot' };
+  });
 }
 
 let newPageTitle = $state('');
@@ -674,6 +692,8 @@ export const siteState = {
   themeSwatches,
   setGrid,
   siteMutate,
+  toggleShortcut,
+  setUpdateNotice,
   get newPageTitle() { return newPageTitle; },
   set newPageTitle(v) { newPageTitle = v; },
   get newPageTemplate() { return newPageTemplate; },

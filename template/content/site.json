@@ -53,6 +53,13 @@
   "analytics": {
     "token": ""
   },
+  "shortcuts": [
+    "panel:collections",
+    "page:kaker"
+  ],
+  "admin": {
+    "updateNotice": "dot"
+  },
   "layout": {
     "contentWidth": 1440,
     "gutter": 6

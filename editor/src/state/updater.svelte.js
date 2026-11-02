@@ -141,14 +141,22 @@ let updateInfo = $state(null);
 
 let updateError = $state(null);
 
+/** A newer Urd is out, as the last check reported; its version is `updateTarget`. */
+const updateAvailable = $derived(Boolean(updateInfo && !updateInfo.upToDate));
+
+const updateTarget = $derived(updateInfo?.target ?? '');
+
 let updateBusy = $state(false);
+
+/** The check for a newer Urd is on its way; the panel says so while it has nothing to show. */
+let updateChecking = $state(false);
 
 /** Optional files the owner wants to keep their own version of (only
  *  outside the engine atom group; the server validates the same). */
 let updateSkip = $state(new Set());
 
 async function loadUpdateCheck() {
-  updateBusy = true;
+  updateChecking = true;
   updateError = null;
   updateInfo = null;
   try {
@@ -163,7 +171,7 @@ async function loadUpdateCheck() {
   } catch {
     updateError = ta('status.publishLayerUnreachable');
   }
-  updateBusy = false;
+  updateChecking = false;
 }
 
 /** What the other parts read and write through, and the effects the shell runs once. */
@@ -182,10 +190,13 @@ export const updaterState = {
   get publishWave() { return publishWave; },
   set publishWave(v) { publishWave = v; },
   awaitPublishDeploy,
+  get updateAvailable() { return updateAvailable; },
+  get updateTarget() { return updateTarget; },
   get updateInfo() { return updateInfo; },
   set updateInfo(v) { updateInfo = v; },
   get updateError() { return updateError; },
   set updateError(v) { updateError = v; },
+  get updateChecking() { return updateChecking; },
   get updateBusy() { return updateBusy; },
   set updateBusy(v) { updateBusy = v; },
   get updateSkip() { return updateSkip; },

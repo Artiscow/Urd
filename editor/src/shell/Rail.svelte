@@ -12,8 +12,8 @@
     {#each ed.PANEL_GROUPS as group, gi (gi)}
       {#if gi > 0}<span class="rail-divider" aria-hidden="true"></span>{/if}
       {#each group as name (name)}
-        <button class="rail-icon" class:active={ed.activePanel === name} title={ed.PANEL_LABELS[name]} aria-label={ed.PANEL_LABELS[name]}
-          onclick={() => ed.togglePanel(name)}>{@html ICONS[`panel_${name}`]}</button>
+        <button class="rail-icon" class:active={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : ed.PANEL_LABELS[name]} aria-label={ed.PANEL_LABELS[name]}
+          onclick={() => ed.togglePanel(name)}>{@html ICONS[`panel_${name}`]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{/if}</button>
       {/each}
     {/each}
     <span class="rail-settings rail-settings-stack">
@@ -30,7 +30,7 @@
            and system read as three levels. -->
       <span class="rail-group">{ta(ed.PANEL_GROUP_KEYS[gi])}</span>
       {#each group as name (name)}
-        <button class:active={ed.activePanel === name} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}</button>
+        <button class:active={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}</button>
       {/each}
     {/each}
     <span class="rail-settings">
