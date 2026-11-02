@@ -2680,6 +2680,7 @@ var ua = {
 		"shop.quantity": "Antall",
 		"shop.qtyMost": "Høyst {max}",
 		"shop.qtyLeast": "Minst {min}",
+		"shop.qtyChanged": "Et antall i handlekurven ble satt innenfor produktets grenser. Sjekk handlekurven og betal på nytt.",
 		"shop.qtyRange": "{min} til {max}",
 		"shop.qtyExactly": "Akkurat {min}",
 		"shop.decrease": "Færre",
@@ -32246,13 +32247,21 @@ function fM(e, t) {
 		var y = P(v, 4);
 		G(y), D(_);
 		var b = N(P(_, 2), !0);
-		D(f), F((e, t, n, r, s) => {
-			o = W(i, 1, "ghost device-size", null, o, { active: a.deviceId === "mobile" && !a.freeWidth && a.phonePref.size === "fill" }), B(c, e), B(l, 390), p = W(f, 1, "device-own", null, p, { active: a.deviceId === "mobile" && !a.freeWidth && a.phonePref.size === "own" }), B(g, t), q(v, "min", 280), q(v, "max", _j), K(v, a.phonePref.width), q(v, "aria-label", n), q(y, "min", 400), q(y, "max", vj), K(y, a.phonePref.height), q(y, "aria-label", r), B(b, s);
+		D(f), F((e, t, n, r, s, u, d) => {
+			o = W(i, 1, "ghost device-size", null, o, { active: a.deviceId === "mobile" && !a.freeWidth && a.phonePref.size === "fill" }), B(c, e), B(l, 390), p = W(f, 1, "device-own", null, p, { active: a.deviceId === "mobile" && !a.freeWidth && a.phonePref.size === "own" }), B(g, t), q(v, "min", 280), q(v, "max", _j), K(v, a.phonePref.width), q(v, "aria-label", n), q(v, "title", r), q(y, "min", 400), q(y, "max", vj), K(y, a.phonePref.height), q(y, "aria-label", s), q(y, "title", u), B(b, d);
 		}, [
 			() => J("lbl.phoneSize.fill"),
 			() => J("lbl.ownSize"),
 			() => J("lbl.screen.w"),
+			() => J("tip.phone.width", {
+				min: 280,
+				max: _j
+			}),
 			() => J("lbl.screen.h"),
+			() => J("tip.phone.height", {
+				min: 400,
+				max: vj
+			}),
 			() => m(a.phonePref.width, a.phonePref.height)
 		]), L("click", i, () => d({ size: "fill" })), L("change", v, (e) => {
 			a.setPhonePref({
@@ -34216,13 +34225,13 @@ async function bP() {
 	try {
 		e = await (await fetch("/content/maler.json")).json();
 	} catch {}
-	hP = qM("urd-draft-templates", () => e, WU.draftSaveError, "urd-draft-maler"), A(yP, [...hP.data.maler ?? []], !0);
+	hP = qM("urd-draft-templates", () => e, KU.draftSaveError, "urd-draft-maler"), A(yP, [...hP.data.maler ?? []], !0);
 	for (let e of I(yP)) {
 		let t = null;
 		try {
 			t = await (await fetch(`/content/maler/${e}.json`)).json();
 		} catch {}
-		_P[e] = t, gP[e] = qM(`urd-draft-template-${e}`, () => t, WU.draftSaveError, `urd-draft-mal-${e}`), (gP[e].data?.schemaVersion ?? 1) > 1 && gP[e].reset();
+		_P[e] = t, gP[e] = qM(`urd-draft-template-${e}`, () => t, KU.draftSaveError, `urd-draft-mal-${e}`), (gP[e].data?.schemaVersion ?? 1) > 1 && gP[e].reset();
 	}
 	vP = !0, xP();
 }
@@ -34238,7 +34247,7 @@ function xP() {
 		blocks: r,
 		page: i
 	}));
-	gR.bridge?.sendTemplates(e);
+	vR.bridge?.sendTemplates(e);
 }
 function SP(e) {
 	let t = uP.includes(e.kind) ? e.kind : "section";
@@ -34246,21 +34255,21 @@ function SP(e) {
 }
 async function CP(e, t) {
 	if (!t || !hP) return;
-	let n = (await WU.askPrompt({
+	let n = (await KU.askPrompt({
 		title: J("canvas.templateNamePrompt"),
 		placeholder: J("ph.templateName")
 	}))?.trim();
 	if (!n) return;
 	let r = dP(n);
 	if (!r) {
-		WU.setStatus(J("status.invalidName"), "error");
+		KU.setStatus(J("status.invalidName"), "error");
 		return;
 	}
 	if (I(yP).includes(r)) {
-		WU.setStatus(J("status.templateExists"), "error");
+		KU.setStatus(J("status.templateExists"), "error");
 		return;
 	}
-	sV.pushHistory("templates");
+	lV.pushHistory("templates");
 	let i = {
 		schemaVersion: 1,
 		mal: {
@@ -34269,11 +34278,11 @@ async function CP(e, t) {
 		},
 		[e]: t
 	};
-	gP[r] = qM(`urd-draft-template-${r}`, () => null, WU.draftSaveError, `urd-draft-mal-${r}`), gP[r].replace(i), gP[r].save(), hP.data.maler = [...I(yP), r], hP.save(), A(yP, [...I(yP), r], !0), WU.setStatus(J("status.templateSaved", { name: n }), "ok"), sV.updateDirty(), xP();
+	gP[r] = qM(`urd-draft-template-${r}`, () => null, KU.draftSaveError, `urd-draft-mal-${r}`), gP[r].replace(i), gP[r].save(), hP.data.maler = [...I(yP), r], hP.save(), A(yP, [...I(yP), r], !0), KU.setStatus(J("status.templateSaved", { name: n }), "ok"), lV.updateDirty(), xP();
 }
 async function wP(e) {
 	let t = gP[e.id]?.data?.mal;
-	t && await WU.askConfirm({ title: J("confirm.deleteTemplate", { name: t.name }) }) && (sV.pushHistory("templates"), qF.newPageTemplate === e.id && (qF.newPageTemplate = null), localStorage.removeItem(`urd-draft-template-${e.id}`), localStorage.removeItem(`urd-draft-mal-${e.id}`), delete gP[e.id], hP.data.maler = I(yP).filter((t) => t !== e.id), hP.save(), A(yP, I(yP).filter((t) => t !== e.id), !0), sV.updateDirty(), xP());
+	t && await KU.askConfirm({ title: J("confirm.deleteTemplate", { name: t.name }) }) && (lV.pushHistory("templates"), qF.newPageTemplate === e.id && (qF.newPageTemplate = null), localStorage.removeItem(`urd-draft-template-${e.id}`), localStorage.removeItem(`urd-draft-mal-${e.id}`), delete gP[e.id], hP.data.maler = I(yP).filter((t) => t !== e.id), hP.save(), A(yP, I(yP).filter((t) => t !== e.id), !0), lV.updateDirty(), xP());
 }
 var TP = {
 	get templatesIndexStore() {
@@ -34328,7 +34337,7 @@ function NP() {
 	A(MP, jP.data, !0), jP.replace(I(MP));
 }
 function PP() {
-	gR.bridge?.sendSite(Xe(I(MP)));
+	vR.bridge?.sendSite(Xe(I(MP)));
 }
 function FP(e, t) {
 	VP(e, () => {
@@ -34343,18 +34352,18 @@ var IP = {
 	mutate: NF,
 	keyPrefix: "footerbg",
 	keyId: "footer"
-}, RP = /* @__PURE__ */ O(() => I(MP)?.theme ? Rs(I(MP).theme, gR.previewMode).color ?? {} : {}), zP = () => Object.entries(I(RP));
+}, RP = /* @__PURE__ */ O(() => I(MP)?.theme ? Rs(I(MP).theme, vR.previewMode).color ?? {} : {}), zP = () => Object.entries(I(RP));
 function BP(e, t) {
-	sV.pushHistory("grid:site"), A(kP, {
+	lV.pushHistory("grid:site"), A(kP, {
 		...I(kP),
 		[e]: t
 	}, !0), jP.data.grid = {
 		...jP.data.grid,
 		[e]: t
-	}, jP.save(), sV.updateDirty(), PP(), WU.gridOn && gR.bridge?.sendShowGrid(!0);
+	}, jP.save(), lV.updateDirty(), PP(), KU.gridOn && vR.bridge?.sendShowGrid(!0);
 }
 function VP(e, t) {
-	sV.pushHistory(e), t(), jP.save(), sV.updateDirty(), PP();
+	lV.pushHistory(e), t(), jP.save(), lV.updateDirty(), PP();
 }
 function HP(e) {
 	let t = I(MP).shortcuts ?? [], n = QN(t, e);
@@ -34385,7 +34394,7 @@ function JP(e, t = null) {
 }
 function YP() {
 	let e = I(WP).trim(), t = rm(e), n = JP(t);
-	if (n) return WU.setStatus(n, "error"), !1;
+	if (n) return KU.setStatus(n, "error"), !1;
 	let r = I(GP) && !I(GP).startsWith("preset:") ? TP.templateStores[I(GP)]?.data?.page : null, i = I(GP)?.startsWith("preset:") ? tl(I(GP).slice(7), {
 		pageId: t,
 		title: e
@@ -34409,7 +34418,7 @@ function YP() {
 			label: e,
 			page: t
 		});
-	}), WU.writeDraftKey(`urd-draft-${t}`, JSON.stringify(i)), sV.updateDirty(), A(WP, ""), A(GP, null), $.selectPage(t);
+	}), KU.writeDraftKey(`urd-draft-${t}`, JSON.stringify(i)), lV.updateDirty(), A(WP, ""), A(GP, null), $.selectPage(t);
 }
 async function XP(e) {
 	A(KP, null);
@@ -34423,7 +34432,7 @@ function ZP(e, t) {
 	VP("pages", () => {
 		e.title = n;
 		for (let t of I(MP).nav.items) t.page === e.id && t.label === r && (t.label = n);
-	}), e.id === $.pageId ? ($.store.data.meta.title = n, $.store.save(), sV.updateDirty(), gR.bridge?.sendPage($.pageId, $.store.data)) : $.patchPageDraft(e, (e) => {
+	}), e.id === $.pageId ? ($.store.data.meta.title = n, $.store.save(), lV.updateDirty(), vR.bridge?.sendPage($.pageId, $.store.data)) : $.patchPageDraft(e, (e) => {
 		e.meta.title = n;
 	});
 }
@@ -34453,7 +34462,7 @@ function eF(e, t) {
 		}[e], r = { ...$.store.data.meta.og ?? {} };
 		n ? r[t] = n : delete r[t], Object.keys(r).length ? $.store.data.meta.og = r : delete $.store.data.meta.og;
 	}
-	$.store.save(), sV.updateDirty(), $P();
+	$.store.save(), lV.updateDirty(), $P();
 }
 function tF(e) {
 	let t = I(MP).pages.find((e) => e.id === $.pageId);
@@ -34464,16 +34473,16 @@ function tF(e) {
 async function nF(e) {
 	let t = e.target.files?.[0];
 	if (e.target.value = "", t) try {
-		eF("ogImage", (await tW.compressOrTrim(t)).dataUrl);
+		eF("ogImage", (await rW.compressOrTrim(t)).dataUrl);
 	} catch (e) {
-		WU.setStatus(tW.imageErrorText(e), "error");
+		KU.setStatus(rW.imageErrorText(e), "error");
 	}
 }
 function rF(e, t) {
 	let n = rm(t);
 	if (e.path === "/" || `/${n}` === e.path) return;
 	let r = JP(n, e.id);
-	r ? WU.setStatus(r, "error") : VP("pages", () => {
+	r ? KU.setStatus(r, "error") : VP("pages", () => {
 		e.path = `/${n}`;
 	});
 }
@@ -34482,7 +34491,7 @@ function iF(e) {
 		I(MP).pages = I(MP).pages.filter((t) => t.id !== e.id), I(MP).nav.items = I(MP).nav.items.filter((t) => t.page !== e.id || t.children);
 		for (let t of I(MP).nav.items) t.page === e.id && delete t.page, t.children && (t.children = t.children.filter((t) => t.page !== e.id), t.children.length === 0 && delete t.children);
 		I(MP).nav.items = I(MP).nav.items.filter((e) => e.page || e.href || e.children);
-	}), e.id === $.pageId && $.selectPage(I(MP).pages[0].id), WU.setStatus(J("status.pageRemoved")));
+	}), e.id === $.pageId && $.selectPage(I(MP).pages[0].id), KU.setStatus(J("status.pageRemoved")));
 }
 var aF = /* @__PURE__ */ k(null);
 function oF(e) {
@@ -34502,7 +34511,7 @@ function uF() {
 	return e === "no" ? "nb" : e;
 }
 function dF() {
-	let e = uF(), t = WU.sortLangs([...WU.LANG_OPTIONS, ...WU.sitePackLangs()]);
+	let e = uF(), t = KU.sortLangs([...KU.LANG_OPTIONS, ...KU.sitePackLangs()]);
 	return [...t.some(([t]) => t === e) ? [] : [[e, e]], ...t];
 }
 var fF = /* @__PURE__ */ k(!1), pF = /* @__PURE__ */ k(null), mF = /* @__PURE__ */ k(null), hF = () => I(MP)?.site?.calendars ?? [], gF = (e) => hF().find((t) => t.id === e) ?? null, _F = () => I(MP)?.site?.links ?? [], vF = /* @__PURE__ */ k(null), yF = /* @__PURE__ */ k(!1), bF = /* @__PURE__ */ k(!1), xF = /* @__PURE__ */ k(!1), SF = /* @__PURE__ */ k(!1);
@@ -35477,7 +35486,7 @@ var qF = {
 	}
 }));
 function XF() {
-	let e = KV.collectionIds.some((e) => KV.collectionStores[e]?.data?.kind === "products");
+	let e = JV.collectionIds.some((e) => JV.collectionStores[e]?.data?.kind === "products");
 	return by(qF.siteDraft?.site, e);
 }
 function ZF(e) {
@@ -35504,22 +35513,22 @@ function ZF(e) {
 	} : null;
 }
 function QF(e) {
-	gR.bridge ? gR.bridge.sendPlaceBlock(e) : $F($.targetSection()?.id, e);
+	vR.bridge ? vR.bridge.sendPlaceBlock(e) : $F($.targetSection()?.id, e);
 }
 function $F(e, t) {
 	let n = $.store.data.sections.find((t) => t.id === e) ?? $.store.data.sections[0];
 	if (!n) return;
-	sV.pushHistory("add-block");
+	lV.pushHistory("add-block");
 	let r = Math.max(0, ...n.blocks.map((e) => e.frames?.desktop?.z ?? 1)) + 1;
 	t.frames?.desktop && (t.frames.desktop = {
 		...t.frames.desktop,
 		z: r
-	}), _m([t], $.store.data), n.blocks.push(t), $.markDesktopChange(n, "block-added"), $.store.save(), sV.updateDirty(), gR.bridge?.sendSection($.pageId, n), $.fitBlockSoon(n.id, t);
+	}), _m([t], $.store.data), n.blocks.push(t), $.markDesktopChange(n, "block-added"), $.store.save(), lV.updateDirty(), vR.bridge?.sendSection($.pageId, n), $.fitBlockSoon(n.id, t);
 }
 function eI(e, t, n, r) {
 	let i = $.store.data.sections.find((t) => t.id === e);
 	if (!i || !t?.length) return;
-	sV.pushHistory("add-blocks");
+	lV.pushHistory("add-blocks");
 	for (let e of r ?? []) {
 		let t = i.blocks.find((t) => t.id === e.blockId);
 		t && typeof e.dy == "number" && (t.frames.desktop = {
@@ -35532,7 +35541,7 @@ function eI(e, t, n, r) {
 	n && a.endsWith("px") && Number.parseFloat(a) < n && (i.size = {
 		...i.size,
 		minHeight: `${n}px`
-	}), $.markDesktopChange(i, "block-added"), $.store.save(), sV.updateDirty(), gR.bridge?.sendSection($.pageId, i);
+	}), $.markDesktopChange(i, "block-added"), $.store.save(), lV.updateDirty(), vR.bridge?.sendSection($.pageId, i);
 }
 var tI = {
 	list: "calendar",
@@ -35568,33 +35577,33 @@ function rI(e, t, n) {
 		});
 		e.frames.desktop.x = i.x, e.frames.desktop.y = i.y;
 	} else e.frames.desktop.x = Math.round((100 - e.frames.desktop.w) / 2 * 100) / 100, e.frames.desktop.y = 40;
-	$F(t, e), gR.bridge?.sendSelect(e.id);
+	$F(t, e), vR.bridge?.sendSelect(e.id);
 }
 async function iI(e) {
 	let t = ZF(e.kind);
 	if (!t) return;
 	let n = Array.isArray(e.files) ? e.files.filter((e) => e instanceof Blob) : [], r = () => $.store.data.sections.some((t) => t.id === e.sectionId), i = null;
 	if (n.length && e.kind === "image") {
-		let e = await tW.imageForBlock(n[0]);
+		let e = await rW.imageForBlock(n[0]);
 		if (!e) return;
 		t.props = {
 			...t.props,
 			src: e.src,
 			alt: e.alt
-		}, t.frames.desktop.h = Math.max(40, Math.round(e.height / e.width * (t.frames.desktop.w / 100) * (gR.iframeEl?.clientWidth ?? 1280))), i = () => tW.reportImage(e.bytes);
+		}, t.frames.desktop.h = Math.max(40, Math.round(e.height / e.width * (t.frames.desktop.w / 100) * (vR.iframeEl?.clientWidth ?? 1280))), i = () => rW.reportImage(e.bytes);
 	} else if (n.length && e.kind === "gallery") {
-		WU.setStatus(J("status.compressingImages"));
-		let { images: e, failed: r, big: a } = await tW.compressMany(n);
+		KU.setStatus(J("status.compressingImages"));
+		let { images: e, failed: r, big: a } = await rW.compressMany(n);
 		if (!e.length) {
-			tW.reportUpload(0, r, a);
+			rW.reportUpload(0, r, a);
 			return;
 		}
 		t.props = {
 			...t.props,
 			images: e
-		}, i = () => tW.reportUpload(e.length, r, a);
+		}, i = () => rW.reportUpload(e.length, r, a);
 	}
-	r() ? (rI(t, e.sectionId, e.at), i?.(), !n.length && e.kind === "image" && WU.setStatus(J("status.imageBlockAdded")), !n.length && e.kind === "gallery" && WU.setStatus(J("status.galleryBlockAdded"))) : WU.setStatus(J("status.blockNotPlaced"), "error");
+	r() ? (rI(t, e.sectionId, e.at), i?.(), !n.length && e.kind === "image" && KU.setStatus(J("status.imageBlockAdded")), !n.length && e.kind === "gallery" && KU.setStatus(J("status.galleryBlockAdded"))) : KU.setStatus(J("status.blockNotPlaced"), "error");
 }
 var aI = {
 	get BLOCK_LABELS() {
@@ -35615,15 +35624,15 @@ var aI = {
 // src/state/bridge.svelte.js
 function oI(e) {
 	let { section: t, block: n } = $.readBlock(e.sectionId, e.blockId);
-	t && n?.sticky && Fx.some(([t]) => t === e.dock) && (sV.pushHistory(`sticky-dock:${e.blockId}`), n.sticky = {
+	t && n?.sticky && Fx.some(([t]) => t === e.dock) && (lV.pushHistory(`sticky-dock:${e.blockId}`), n.sticky = {
 		...n.sticky,
 		dock: e.dock
-	}, $.store.save(), sV.updateDirty(), gR.bridge?.sendSection($.pageId, t), $.syncSelectedBlock());
+	}, $.store.save(), lV.updateDirty(), vR.bridge?.sendSection($.pageId, t), $.syncSelectedBlock());
 }
 function sI(e) {
 	let t = e.blockIds ?? [], { section: n } = $.readBlock(e.sectionId, t[0]);
 	if (!n || !t.length) return;
-	sV.pushHistory(`sticky-group:${e.sectionId}`);
+	lV.pushHistory(`sticky-group:${e.sectionId}`);
 	let r = e.on ? cs("stk") : null;
 	for (let e of n.blocks) t.includes(e.id) && (e.sticky = r ? {
 		offset: 16,
@@ -35631,25 +35640,25 @@ function sI(e) {
 		...e.sticky,
 		group: r
 	} : null);
-	$.markDesktopChange(n, "block-edited"), $.store.save(), sV.updateDirty(), gR.bridge?.sendSection($.pageId, n), $.syncSelectedBlock(), WU.setStatus(J(e.on ? "status.stickyGrouped" : "status.stickyUngrouped"));
+	$.markDesktopChange(n, "block-edited"), $.store.save(), lV.updateDirty(), vR.bridge?.sendSection($.pageId, n), $.syncSelectedBlock(), KU.setStatus(J(e.on ? "status.stickyGrouped" : "status.stickyUngrouped"));
 }
 function cI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n && (sV.pushHistory(`edit:${e.blockId}`), n.props = e.props, $.store.save(), sV.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock(), e.rerender && gR.bridge?.sendSection($.pageId, t), WU.status = "", $.fitBlockSoon(t.id, n));
+	n && (lV.pushHistory(`edit:${e.blockId}`), n.props = e.props, $.store.save(), lV.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock(), e.rerender && vR.bridge?.sendSection($.pageId, t), KU.status = "", $.fitBlockSoon(t.id, n));
 }
 function lI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
 	if (!n) return;
-	sV.pushHistory(e.coalesce ? `edit:${e.groupKey ?? e.blockId}` : "move-block");
+	lV.pushHistory(e.coalesce ? `edit:${e.groupKey ?? e.blockId}` : "move-block");
 	let r = e.frameKey === "mobile" ? "mobile" : "desktop", i = n.frames.desktop?.w;
-	n.frames[r] = e.frame, r === "desktop" && $.markDesktopChange(t, "desktop-changed-after-mobile"), $.store.save(), sV.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock(), r === "desktop" && e.frame?.w !== i ? $.fitBlockSoon(t.id, n) : r === "mobile" && $.phoneFitSoon(t.id, n);
+	n.frames[r] = e.frame, r === "desktop" && $.markDesktopChange(t, "desktop-changed-after-mobile"), $.store.save(), lV.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock(), r === "desktop" && e.frame?.w !== i ? $.fitBlockSoon(t.id, n) : r === "mobile" && $.phoneFitSoon(t.id, n);
 }
 function uI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n?.frames?.desktop && n.frames.desktop.h !== e.h && (e.fit ? gR.viewMode === "desktop" && e.seq === $.fitSeq.get(e.blockId) && dI(t, n, e.h) : ($.store.amendBaseline((t) => {
+	n?.frames?.desktop && n.frames.desktop.h !== e.h && (e.fit ? vR.viewMode === "desktop" && e.seq === $.fitSeq.get(e.blockId) && dI(t, n, e.h) : ($.store.amendBaseline((t) => {
 		let n = t.sections.find((t) => t.id === e.sectionId)?.blocks.find((t) => t.id === e.blockId);
 		n?.frames?.desktop && (n.frames.desktop.h = e.h);
-	}), $.store.hasDraft() && sV.pushHistory(`edit:${e.blockId}`), n.frames.desktop.h = e.h, $.store.save(), sV.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock()));
+	}), $.store.hasDraft() && lV.pushHistory(`edit:${e.blockId}`), n.frames.desktop.h = e.h, $.store.save(), lV.updateDirty(), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock()));
 }
 function dI(e, t, n) {
 	let r = Nc(e.blocks, t.id, n), i = {};
@@ -35664,25 +35673,25 @@ function dI(e, t, n) {
 			y: n
 		}, i[t] = r.frames.desktop);
 	}
-	$.markDesktopChange(e, "block-edited"), $.store.save(), sV.updateDirty(), $.selectedBlock?.blockId === t.id && $.syncSelectedBlock(), gR.bridge?.sendFrames(e.id, Xe(i));
+	$.markDesktopChange(e, "block-edited"), $.store.save(), lV.updateDirty(), $.selectedBlock?.blockId === t.id && $.syncSelectedBlock(), vR.bridge?.sendFrames(e.id, Xe(i));
 }
 function fI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId);
 	if (t) {
-		if (sV.pushHistory("mobile-reset"), e.blockId) {
+		if (lV.pushHistory("mobile-reset"), e.blockId) {
 			let n = t.blocks.find((t) => t.id === e.blockId);
 			n && (n.frames.mobile = null);
 		} else for (let e of t.blocks) e.frames.mobile = null;
-		!$.hasMobileOverrides(t) && t.responsive?.mobile && (t.responsive.mobile.attention = null), $.store.save(), sV.updateDirty(), WU.updateAttention(), gR.bridge?.sendSection($.pageId, t);
+		!$.hasMobileOverrides(t) && t.responsive?.mobile && (t.responsive.mobile.attention = null), $.store.save(), lV.updateDirty(), KU.updateAttention(), vR.bridge?.sendSection($.pageId, t);
 	}
 }
 function pI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n && typeof e.mobileOrder == "number" && (sV.pushHistory("mobile-order"), n.mobileOrder = e.mobileOrder, $.store.save(), sV.updateDirty(), gR.bridge?.sendSection($.pageId, t));
+	n && typeof e.mobileOrder == "number" && (lV.pushHistory("mobile-order"), n.mobileOrder = e.mobileOrder, $.store.save(), lV.updateDirty(), vR.bridge?.sendSection($.pageId, t));
 }
 function mI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId);
-	t?.responsive?.mobile && (sV.pushHistory("review-done"), t.responsive.mobile.attention = null, $.store.save(), sV.updateDirty(), WU.updateAttention());
+	t?.responsive?.mobile && (lV.pushHistory("review-done"), t.responsive.mobile.attention = null, $.store.save(), lV.updateDirty(), KU.updateAttention());
 }
 var hI = [
 	"animation",
@@ -35697,29 +35706,29 @@ var hI = [
 function gI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
 	if (n && e.fields && typeof e.fields == "object") {
-		sV.pushHistory("block-style");
+		lV.pushHistory("block-style");
 		for (let t of hI) t in e.fields && (e.fields[t] === null || e.fields[t] === void 0 ? delete n[t] : n[t] = structuredClone(e.fields[t]));
-		$.store.save(), sV.updateDirty(), gR.bridge?.sendSection($.pageId, t), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock();
+		$.store.save(), lV.updateDirty(), vR.bridge?.sendSection($.pageId, t), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock();
 	}
 }
 function _I(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n && (sV.pushHistory("block-flag"), typeof e.decor == "boolean" && (n.decor = e.decor), typeof e.hideMobile == "boolean" && (n.hideMobile = e.hideMobile), $.store.save(), sV.updateDirty(), typeof e.hideMobile == "boolean" && gR.viewMode === "mobile" && gR.bridge?.sendSection($.pageId, t), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock());
+	n && (lV.pushHistory("block-flag"), typeof e.decor == "boolean" && (n.decor = e.decor), typeof e.hideMobile == "boolean" && (n.hideMobile = e.hideMobile), $.store.save(), lV.updateDirty(), typeof e.hideMobile == "boolean" && vR.viewMode === "mobile" && vR.bridge?.sendSection($.pageId, t), $.selectedBlock?.blockId === e.blockId && $.syncSelectedBlock());
 }
 function vI(e) {
-	sV.pushHistory("add-section"), e.section.id || (e.section.id = cs("sec")), _m([e.section], $.store.data), $.store.data.sections.splice(e.index, 0, e.section), $.store.save(), sV.updateDirty(), gR.bridge?.sendPage($.pageId, $.store.data), $.activeSectionId = e.section.id, $.syncSectionMirrors(e.section), WU.activePanel = "properties";
+	lV.pushHistory("add-section"), e.section.id || (e.section.id = cs("sec")), _m([e.section], $.store.data), $.store.data.sections.splice(e.index, 0, e.section), $.store.save(), lV.updateDirty(), vR.bridge?.sendPage($.pageId, $.store.data), $.activeSectionId = e.section.id, $.syncSectionMirrors(e.section), KU.activePanel = "properties";
 }
 function yI(e) {
 	let t = $.store.data.sections, n = t.findIndex((t) => t.id === e.sectionId), r = n + e.dir;
-	n < 0 || r < 0 || r >= t.length || (sV.pushHistory("move-section"), [t[n], t[r]] = [t[r], t[n]], $.store.save(), sV.updateDirty(), gR.bridge?.sendPage($.pageId, $.store.data));
+	n < 0 || r < 0 || r >= t.length || (lV.pushHistory("move-section"), [t[n], t[r]] = [t[r], t[n]], $.store.save(), lV.updateDirty(), vR.bridge?.sendPage($.pageId, $.store.data));
 }
 function bI(e) {
-	sV.pushHistory("delete-section"), e.sectionId === $.activeSectionId && ($.activeSectionId = null, $.sectionGrid = null), $.selectedBlock?.sectionId === e.sectionId && ($.selectedBlock = null), $.store.data.sections = $.store.data.sections.filter((t) => t.id !== e.sectionId), $.store.save(), sV.updateDirty(), gR.bridge?.sendPage($.pageId, $.store.data);
+	lV.pushHistory("delete-section"), e.sectionId === $.activeSectionId && ($.activeSectionId = null, $.sectionGrid = null), $.selectedBlock?.sectionId === e.sectionId && ($.selectedBlock = null), $.store.data.sections = $.store.data.sections.filter((t) => t.id !== e.sectionId), $.store.save(), lV.updateDirty(), vR.bridge?.sendPage($.pageId, $.store.data);
 }
 function xI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId);
 	if (t) {
-		sV.pushHistory("section-size"), t.size = {
+		lV.pushHistory("section-size"), t.size = {
 			...t.size,
 			minHeight: e.minHeight
 		};
@@ -35730,12 +35739,12 @@ function xI(e) {
 				y: e.frames.desktop.y + n.dy
 			});
 		}
-		e.moves?.length && ($.markDesktopChange(t, "section-height"), $.selectedBlock?.sectionId === e.sectionId && $.syncSelectedBlock()), e.sectionId === $.activeSectionId && ($.sectionMinHeight = e.minHeight), $.store.save(), sV.updateDirty();
+		e.moves?.length && ($.markDesktopChange(t, "section-height"), $.selectedBlock?.sectionId === e.sectionId && $.syncSelectedBlock()), e.sectionId === $.activeSectionId && ($.sectionMinHeight = e.minHeight), $.store.save(), lV.updateDirty();
 	}
 }
 function SI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.fromSectionId), n = $.store.data.sections.find((t) => t.id === e.toSectionId), r = t?.blocks.find((t) => t.id === e.blockId);
-	t && n && r && (sV.pushHistory(e.groupKey ? `edit:${e.groupKey}` : "move-block"), t.blocks = t.blocks.filter((t) => t.id !== e.blockId), r.frames.desktop = e.frame, r.frames.mobile = null, n.blocks.push(r), $.markDesktopChange(t, "block-moved"), $.markDesktopChange(n, "block-moved"), $.store.save(), sV.updateDirty(), WU.updateAttention(), gR.bridge?.sendSection($.pageId, t), gR.bridge?.sendSection($.pageId, n), $.selectedBlock?.blockId === e.blockId && ($.selectedBlock = {
+	t && n && r && (lV.pushHistory(e.groupKey ? `edit:${e.groupKey}` : "move-block"), t.blocks = t.blocks.filter((t) => t.id !== e.blockId), r.frames.desktop = e.frame, r.frames.mobile = null, n.blocks.push(r), $.markDesktopChange(t, "block-moved"), $.markDesktopChange(n, "block-moved"), $.store.save(), lV.updateDirty(), KU.updateAttention(), vR.bridge?.sendSection($.pageId, t), vR.bridge?.sendSection($.pageId, n), $.selectedBlock?.blockId === e.blockId && ($.selectedBlock = {
 		...$.selectedBlock,
 		sectionId: e.toSectionId
 	}, $.syncSelectedBlock()));
@@ -35744,7 +35753,7 @@ function CI(e) {
 	let t = $.store.data.sections.find((t) => t.id === e.sectionId);
 	if (!t) return;
 	let n = e.blockIds ?? [e.blockId];
-	sV.pushHistory("delete-block"), t.blocks = t.blocks.filter((e) => !n.includes(e.id)), n.includes($.selectedBlock?.blockId) && ($.selectedBlock = null), $.markDesktopChange(t, "block-deleted"), $.store.save(), sV.updateDirty(), gR.bridge?.sendSection($.pageId, t);
+	lV.pushHistory("delete-block"), t.blocks = t.blocks.filter((e) => !n.includes(e.id)), n.includes($.selectedBlock?.blockId) && ($.selectedBlock = null), $.markDesktopChange(t, "block-deleted"), $.store.save(), lV.updateDirty(), vR.bridge?.sendSection($.pageId, t);
 }
 var wI = {
 	handleStickyDock: oI,
@@ -35826,7 +35835,7 @@ async function NI() {
 }
 async function PI(e) {
 	if (!MI) return await NI(), {
-		ok: await WU.askConfirm({
+		ok: await KU.askConfirm({
 			title: J("confirm.conflictUnknown.title"),
 			lines: [J("confirm.conflictUnknown.body"), J("confirm.conflictUnknown.warning")],
 			okLabel: J("confirm.publishAnyway"),
@@ -35853,7 +35862,7 @@ async function PI(e) {
 		ok: !0,
 		head: n
 	} : {
-		ok: await WU.askConfirm({
+		ok: await KU.askConfirm({
 			title: J("confirm.conflict.title"),
 			lines: [
 				J("confirm.conflict.intro"),
@@ -35878,11 +35887,16 @@ async function LI() {
 }
 var RI = !1, zI = 0;
 async function BI(e, t) {
-	let n = ++zI, r = WU.statusSeq, i = await jI(AI(e));
-	i && t?.(), n === zI && r === WU.statusSeq && (i ? WU.setStatus(J("status.publishLive"), "ok") : WU.setStatus(J("status.publishDeployTimeout"), "error"));
+	let n = ++zI, r = KU.statusSeq, i = await jI(AI(e));
+	i && t?.(), n === zI && r === KU.statusSeq && (i ? KU.setStatus(J("status.publishLive"), "ok") : KU.setStatus(J("status.publishDeployTimeout"), "error"));
 }
-var VI = /* @__PURE__ */ k(null), HI = /* @__PURE__ */ k(null), UI = /* @__PURE__ */ O(() => !(!I(VI) || I(VI).upToDate)), WI = /* @__PURE__ */ O(() => I(VI)?.target ?? ""), GI = /* @__PURE__ */ k(!1), KI = /* @__PURE__ */ k(!1), qI = /* @__PURE__ */ k(pn(/* @__PURE__ */ new Set()));
-async function JI() {
+var VI = /* @__PURE__ */ k(null), HI = /* @__PURE__ */ k(null), UI = /* @__PURE__ */ O(() => !(!I(VI) || I(VI).upToDate)), WI = /* @__PURE__ */ O(() => I(VI)?.target ?? ""), GI = /* @__PURE__ */ k(!1), KI = /* @__PURE__ */ k(!1), qI = /* @__PURE__ */ k(pn(/* @__PURE__ */ new Set())), JI = null;
+function YI() {
+	return JI ??= XI().finally(() => {
+		JI = null;
+	}), JI;
+}
+async function XI() {
 	A(KI, !0), A(HI, null), A(VI, null);
 	try {
 		let e = await fetch("/api/github/update"), t = await e.json().catch(() => null);
@@ -35892,7 +35906,7 @@ async function JI() {
 	}
 	A(KI, !1);
 }
-var YI = {
+var ZI = {
 	get baseSha() {
 		return MI;
 	},
@@ -35960,10 +35974,10 @@ var YI = {
 	set updateSkip(e) {
 		A(qI, e, !0);
 	},
-	loadUpdateCheck: JI
+	loadUpdateCheck: YI
 };
 // src/state/publish.svelte.js
-function XI(e, t, n, r) {
+function QI(e, t, n, r) {
 	let i = e?.[t];
 	if (!i?.startsWith("data:image/") && !i?.startsWith("data:audio/") && !i?.startsWith("data:video/")) return;
 	let a = i.split(",", 2)[1], o = `media/${rm(n || "image")}-${im(a)}.${em(i)}`;
@@ -35973,61 +35987,61 @@ function XI(e, t, n, r) {
 		encoding: "base64"
 	}), e[t] = `/${o}`;
 }
-function ZI(e, t) {
-	XI(e, "image", e.title, t);
-	for (let n of e.colors ?? []) XI(n, "image", `${e.title}-${n.name}`, t);
+function $I(e, t) {
+	QI(e, "image", e.title, t);
+	for (let n of e.colors ?? []) QI(n, "image", `${e.title}-${n.name}`, t);
 	_h(e, t);
 }
-function QI(e, t) {
+function eL(e, t) {
 	for (let n of e?.layers ?? []) {
-		if (n.type === "image" && XI(n.props, "src", "background", t), n.type === "slideshow") for (let e of n.props.images ?? []) XI(e, "src", "background", t);
-		n.type === "video" && (XI(n.props, "src", "video", t), XI(n.props, "poster", "plakat", t));
+		if (n.type === "image" && QI(n.props, "src", "background", t), n.type === "slideshow") for (let e of n.props.images ?? []) QI(e, "src", "background", t);
+		n.type === "video" && (QI(n.props, "src", "video", t), QI(n.props, "poster", "plakat", t));
 	}
 }
-function $I(e, t) {
-	if (_h(e.props, t), e.type === "image" && XI(e.props, "src", e.props.alt, t), e.type === "icon" && XI(e.props, "image", "ikon", t), e.type === "gallery") for (let n of e.props.images ?? []) XI(n, "src", n.alt || "gallery", t);
-	e.type === "audio" && XI(e.props, "src", e.props.title || "lyd", t), e.type === "video" && (XI(e.props, "src", e.props.title || "video", t), XI(e.props, "poster", "poster", t));
+function tL(e, t) {
+	if (_h(e.props, t), e.type === "image" && QI(e.props, "src", e.props.alt, t), e.type === "icon" && QI(e.props, "image", "ikon", t), e.type === "gallery") for (let n of e.props.images ?? []) QI(n, "src", n.alt || "gallery", t);
+	e.type === "audio" && QI(e.props, "src", e.props.title || "lyd", t), e.type === "video" && (QI(e.props, "src", e.props.title || "video", t), QI(e.props, "poster", "poster", t));
 }
-function eL(e, t) {
-	QI(e.background, t);
-	for (let n of e.blocks) $I(n, t);
+function nL(e, t) {
+	eL(e.background, t);
+	for (let n of e.blocks) tL(n, t);
 }
-function tL(e) {
+function rL(e) {
 	let t = [];
-	e.meta?.og && XI(e.meta.og, "image", "share", t);
-	for (let n of e.sections) eL(n, t);
+	e.meta?.og && QI(e.meta.og, "image", "share", t);
+	for (let n of e.sections) nL(n, t);
 	return t;
 }
-function nL(e) {
+function iL(e) {
 	let t = [], n = e.nav?.logo;
-	n?.type === "image" && XI(n, "value", "logo", t), n?.type === "both" && XI(n, "image", "logo", t), e.nav?.style && XI(e.nav.style, "image", "menu", t), QI(e.nav?.style?.background, t), QI(e.footer?.background, t), e.footer?.brand && XI(e.footer.brand, "logo", "footer-logo", t);
-	for (let n of Array.isArray(e.site?.links) ? e.site.links : []) XI(n, "image", "link-icon", t);
+	n?.type === "image" && QI(n, "value", "logo", t), n?.type === "both" && QI(n, "image", "logo", t), e.nav?.style && QI(e.nav.style, "image", "menu", t), eL(e.nav?.style?.background, t), eL(e.footer?.background, t), e.footer?.brand && QI(e.footer.brand, "logo", "footer-logo", t);
+	for (let n of Array.isArray(e.site?.links) ? e.site.links : []) QI(n, "image", "link-icon", t);
 	if (e.nav?.launcher) {
-		XI(e.nav.launcher, "image", "snarvei", t);
-		for (let n of e.nav.launcher.links ?? []) XI(n, "image", "snarvei", t);
+		QI(e.nav.launcher, "image", "snarvei", t);
+		for (let n of e.nav.launcher.links ?? []) QI(n, "image", "snarvei", t);
 	}
-	return XI(e.site, "icon", "ikon", t), _h(e, t), t;
+	return QI(e.site, "icon", "ikon", t), _h(e, t), t;
 }
-var rL = /* @__PURE__ */ k(!1), iL = /* @__PURE__ */ k(null);
-function aL() {
-	A(rL, !I(rL));
-}
-function oL() {
-	A(rL, !1);
-	try {
-		sL(), WU.setStatus(J("ui.discarded"), "info");
-	} catch (e) {
-		console.error("Urd: discard failed", e), WU.setStatus(String(e?.message ?? e), "error");
-	}
-}
+var aL = /* @__PURE__ */ k(!1), oL = /* @__PURE__ */ k(null);
 function sL() {
-	sV.pushHistory("discard");
+	A(aL, !I(aL));
+}
+function cL() {
+	A(aL, !1);
+	try {
+		lL(), KU.setStatus(J("ui.discarded"), "info");
+	} catch (e) {
+		console.error("Urd: discard failed", e), KU.setStatus(String(e?.message ?? e), "error");
+	}
+}
+function lL() {
+	lV.pushHistory("discard");
 	for (let e of qF.siteDraft.pages) e.id !== $.pageId && !$.pendingPublished.has(e.id) && localStorage.removeItem(`urd-draft-${e.id}`);
 	let e = $.store.reset();
-	if (qF.siteStore.reset(), RR.pluginsStore && (RR.pluginsStore.reset(), RR.syncPluginsView()), KV.collectionsIndexStore) {
-		KV.collectionsIndexStore.reset(), KV.collectionIds = [...KV.collectionsIndexStore.data.samlinger ?? []];
-		for (let e of Object.keys(KV.collectionStores)) KV.collectionIds.includes(e) ? KV.collectionStores[e].reset() : delete KV.collectionStores[e];
-		KV.syncCollectionsView();
+	if (qF.siteStore.reset(), BR.pluginsStore && (BR.pluginsStore.reset(), BR.syncPluginsView()), JV.collectionsIndexStore) {
+		JV.collectionsIndexStore.reset(), JV.collectionIds = [...JV.collectionsIndexStore.data.samlinger ?? []];
+		for (let e of Object.keys(JV.collectionStores)) JV.collectionIds.includes(e) ? JV.collectionStores[e].reset() : delete JV.collectionStores[e];
+		JV.syncCollectionsView();
 	}
 	if (TP.templatesIndexStore) {
 		TP.templatesIndexStore.reset(), TP.templateIds = [...TP.templatesIndexStore.data.maler ?? []];
@@ -36037,18 +36051,18 @@ function sL() {
 	qF.linkSiteDraft(), qF.grid = {
 		snap: !0,
 		...qF.siteDraft.grid
-	}, sV.updateDirty(), WU.status = "", qF.pushSiteToPreview(), qF.siteDraft.pages.some((e) => e.id === $.pageId) ? gR.bridge?.sendPage($.pageId, e) : $.selectPage(qF.siteDraft.pages[0].id);
+	}, lV.updateDirty(), KU.status = "", qF.pushSiteToPreview(), qF.siteDraft.pages.some((e) => e.id === $.pageId) ? vR.bridge?.sendPage($.pageId, e) : $.selectPage(qF.siteDraft.pages[0].id);
 }
-async function cL() {
-	if (YI.revertedSinceLoad) {
-		WU.setStatus(J("status.revertReloadBeforePublish"), "error");
+async function uL() {
+	if (ZI.revertedSinceLoad) {
+		KU.setStatus(J("status.revertReloadBeforePublish"), "error");
 		return;
 	}
-	if (YI.updateBusy) {
-		WU.setStatus(J("update.publishBlocked"), "error");
+	if (ZI.updateBusy) {
+		KU.setStatus(J("update.publishBlocked"), "error");
 		return;
 	}
-	WU.setStatus(J("status.publishing"));
+	KU.setStatus(J("status.publishing"));
 	let e = [], t = [], n = [], r = [], i = [];
 	for (let a of qF.siteDraft.pages) {
 		let o = `urd-draft-${a.id}`, s = $.pendingPublished.has(a.id) || !qF.site.pages.some((e) => e.id === a.id), c = null;
@@ -36061,7 +36075,7 @@ async function cL() {
 		}
 		if (!c && s && (c = $.blankPage(a)), !c) continue;
 		let l = JSON.parse(JSON.stringify(c));
-		e.push(...tL(l)), e.push({
+		e.push(...rL(l)), e.push({
 			path: a.file,
 			content: JSON.stringify(l, null, 2) + "\n",
 			encoding: "utf-8"
@@ -36069,7 +36083,7 @@ async function cL() {
 	}
 	if (qF.siteStore.hasDraft()) {
 		let r = JSON.parse(JSON.stringify(qF.siteDraft));
-		e.push(...nL(r)), e.push({
+		e.push(...iL(r)), e.push({
 			path: "content/site.json",
 			content: JSON.stringify(r, null, 2) + "\n",
 			encoding: "utf-8"
@@ -36083,11 +36097,11 @@ async function cL() {
 		let { icon: o, ...s } = qF.site.site, { icon: c, ...l } = qF.siteDraft.site;
 		a(s, l) || t.push(J("publish.part.siteInfo"));
 	}
-	let a = KV.collectionsUnavailable ? [] : Object.entries(KV.collectionStores).filter(([, e]) => e.hasDraft());
-	if (!KV.collectionsUnavailable && (a.length || EN(KV.collectionsIndexStore?.hasDraft() ?? !1, KV.legacyIndexIds) || KV.legacyIndexIds !== null)) {
+	let a = JV.collectionsUnavailable ? [] : Object.entries(JV.collectionStores).filter(([, e]) => e.hasDraft());
+	if (!JV.collectionsUnavailable && (a.length || EN(JV.collectionsIndexStore?.hasDraft() ?? !1, JV.legacyIndexIds) || JV.legacyIndexIds !== null)) {
 		for (let [t, r] of a) {
 			let i = JSON.parse(JSON.stringify(r.data));
-			for (let t of i.entries) ZI(t, e);
+			for (let t of i.entries) $I(t, e);
 			e.push({
 				path: `content/samlinger/${t}.json`,
 				content: JSON.stringify(i, null, 2) + "\n",
@@ -36102,28 +36116,28 @@ async function cL() {
 						let t = e.page || e.href ? nc(e, qF.siteDraft.pages ?? []) : null;
 						return {
 							id: e.id,
-							title: KV.plainTitle(e.title),
-							text: KV.plainTitle(e.text),
+							title: JV.plainTitle(e.title),
+							text: JV.plainTitle(e.text),
 							date: e.date,
 							href: t && !t.missing ? t.href : void 0
 						};
 					})
 				}),
 				encoding: "utf-8"
-			}) : OI.includes(KV.publishedCollections[t]?.kind) && e.push({
+			}) : OI.includes(JV.publishedCollections[t]?.kind) && e.push({
 				path: `content/samlinger/${t}.xml`,
 				delete: !0
 			}), n.push(`urd-draft-collection-${t}`, `urd-draft-samling-${t}`);
 		}
 		let r = DN({
-			ids: KV.collectionIds,
-			hasDraft: KV.collectionsIndexStore?.hasDraft() ?? !1,
+			ids: JV.collectionIds,
+			hasDraft: JV.collectionsIndexStore?.hasDraft() ?? !1,
 			published: (await bN("content/samlinger.json"))?.samlinger ?? null,
-			legacy: KV.legacyIndexIds
+			legacy: JV.legacyIndexIds
 		});
 		r.writeIndex && (e.push({
 			path: hN,
-			content: JSON.stringify(KV.collectionsIndexStore.data, null, 2) + "\n",
+			content: JSON.stringify(JV.collectionsIndexStore.data, null, 2) + "\n",
 			encoding: "utf-8"
 		}), n.push(_N));
 		let i = new Set(e.map((e) => e.path));
@@ -36140,9 +36154,9 @@ async function cL() {
 	if (o.length || TP.templatesIndexStore?.hasDraft()) {
 		for (let [t, r] of o) {
 			let i = JSON.parse(JSON.stringify(r.data));
-			i.section && eL(i.section, e);
-			for (let t of i.blocks ?? []) $I(t, e);
-			for (let t of i.page?.sections ?? []) eL(t, e);
+			i.section && nL(i.section, e);
+			for (let t of i.blocks ?? []) tL(t, e);
+			for (let t of i.page?.sections ?? []) nL(t, e);
 			e.push({
 				path: `content/maler/${t}.json`,
 				content: JSON.stringify(i, null, 2) + "\n",
@@ -36170,8 +36184,8 @@ async function cL() {
 		}
 		t.push(J("publish.part.templates"));
 	}
-	if (RR.pluginsStore?.hasDraft()) {
-		let { remove: r = [], ...i } = Xe(RR.pluginsStore.data);
+	if (BR.pluginsStore?.hasDraft()) {
+		let { remove: r = [], ...i } = Xe(BR.pluginsStore.data);
 		e.push({
 			path: "plugins/plugins.json",
 			content: JSON.stringify(i, null, 2) + "\n",
@@ -36210,9 +36224,9 @@ async function cL() {
 		let t = qF.siteDraft.pages.find((t) => t.id === e.id);
 		t ? t.path !== e.path && e.path !== "/" && c(`${e.path.slice(1)}/index.html`) : (c(e.file), e.path !== "/" && c(`${e.path.slice(1)}/index.html`));
 	}
-	let l = await YI.confirmNoConflict(e);
+	let l = await ZI.confirmNoConflict(e);
 	if (!l.ok) {
-		WU.setStatus(J("status.publishAborted"), "error");
+		KU.setStatus(J("status.publishAborted"), "error");
 		return;
 	}
 	let u = {
@@ -36229,42 +36243,42 @@ async function cL() {
 	} catch {}
 	if (d?.ok) {
 		let { sha: t } = await d.json().catch(() => ({}));
-		t ? YI.baseSha = t : YI.refreshBaseSha(), tL($.store.data), nL(qF.siteDraft);
+		t ? ZI.baseSha = t : ZI.refreshBaseSha(), rL($.store.data), iL(qF.siteDraft);
 		for (let e of n) localStorage.removeItem(e);
 		for (let e of r) $.pendingPublished.add(e);
-		if (qF.site = JSON.parse(JSON.stringify(qF.siteDraft)), qF.siteStore = qM("urd-draft-site", () => qF.site, WU.draftSaveError), qF.linkSiteDraft(), RR.pluginsStore) {
-			let { remove: e, ...t } = JSON.parse(JSON.stringify(RR.pluginsStore.data));
-			RR.pluginsStore = qM("urd-draft-plugins", () => t, WU.draftSaveError), RR.syncPluginsView();
+		if (qF.site = JSON.parse(JSON.stringify(qF.siteDraft)), qF.siteStore = qM("urd-draft-site", () => qF.site, KU.draftSaveError), qF.linkSiteDraft(), BR.pluginsStore) {
+			let { remove: e, ...t } = JSON.parse(JSON.stringify(BR.pluginsStore.data));
+			BR.pluginsStore = qM("urd-draft-plugins", () => t, KU.draftSaveError), BR.syncPluginsView();
 		}
-		if (KV.collectionsIndexStore) {
-			for (let e of Object.values(KV.collectionStores)) for (let t of e.data.entries) ZI(t, []);
-			let t = JSON.parse(JSON.stringify(KV.collectionsIndexStore.data));
-			if (KV.collectionsIndexStore = qM(_N, () => t, WU.draftSaveError), e.some((e) => e.path === "content/collections.json")) {
-				KV.legacyIndexIds = null;
+		if (JV.collectionsIndexStore) {
+			for (let e of Object.values(JV.collectionStores)) for (let t of e.data.entries) $I(t, []);
+			let t = JSON.parse(JSON.stringify(JV.collectionsIndexStore.data));
+			if (JV.collectionsIndexStore = qM(_N, () => t, KU.draftSaveError), e.some((e) => e.path === "content/collections.json")) {
+				JV.legacyIndexIds = null;
 				try {
 					localStorage.setItem(vN, "1");
 				} catch {}
 			}
-			KV.publishedCollections = {};
-			for (let e of KV.collectionIds) {
-				if (!KV.collectionStores[e]) continue;
-				let t = JSON.parse(JSON.stringify(KV.collectionStores[e].data));
-				KV.publishedCollections[e] = t, KV.collectionStores[e] = qM(`urd-draft-collection-${e}`, () => t, WU.draftSaveError, `urd-draft-samling-${e}`);
+			JV.publishedCollections = {};
+			for (let e of JV.collectionIds) {
+				if (!JV.collectionStores[e]) continue;
+				let t = JSON.parse(JSON.stringify(JV.collectionStores[e].data));
+				JV.publishedCollections[e] = t, JV.collectionStores[e] = qM(`urd-draft-collection-${e}`, () => t, KU.draftSaveError, `urd-draft-samling-${e}`);
 			}
-			KV.syncCollectionsView();
+			JV.syncCollectionsView();
 		}
 		if (TP.templatesIndexStore) {
 			for (let e of Object.values(TP.templateStores)) {
-				e.data?.section && eL(e.data.section, []);
-				for (let t of e.data?.blocks ?? []) $I(t, []);
-				for (let t of e.data?.page?.sections ?? []) eL(t, []);
+				e.data?.section && nL(e.data.section, []);
+				for (let t of e.data?.blocks ?? []) tL(t, []);
+				for (let t of e.data?.page?.sections ?? []) nL(t, []);
 			}
 			let e = JSON.parse(JSON.stringify(TP.templatesIndexStore.data));
-			TP.templatesIndexStore = qM("urd-draft-templates", () => e, WU.draftSaveError, "urd-draft-maler"), TP.publishedTemplates = {};
+			TP.templatesIndexStore = qM("urd-draft-templates", () => e, KU.draftSaveError, "urd-draft-maler"), TP.publishedTemplates = {};
 			for (let e of TP.templateIds) {
 				if (!TP.templateStores[e]) continue;
 				let t = JSON.parse(JSON.stringify(TP.templateStores[e].data));
-				TP.publishedTemplates[e] = t, TP.templateStores[e] = qM(`urd-draft-template-${e}`, () => t, WU.draftSaveError, `urd-draft-mal-${e}`);
+				TP.publishedTemplates[e] = t, TP.templateStores[e] = qM(`urd-draft-template-${e}`, () => t, KU.draftSaveError, `urd-draft-mal-${e}`);
 			}
 			TP.pushTemplatesToPreview();
 		}
@@ -36273,67 +36287,67 @@ async function cL() {
 			...qF.siteDraft.grid
 		};
 		let a = JSON.parse(JSON.stringify($.store.data));
-		$.store = qM(`urd-draft-${$.pageId}`, () => a, WU.draftSaveError), $.pendingPublished.has($.pageId) && WU.writeDraftKey(`urd-draft-${$.pageId}`, JSON.stringify(a)), sV.updateDirty();
+		$.store = qM(`urd-draft-${$.pageId}`, () => a, KU.draftSaveError), $.pendingPublished.has($.pageId) && KU.writeDraftKey(`urd-draft-${$.pageId}`, JSON.stringify(a)), lV.updateDirty();
 		let o = $.held.hold(i);
-		WU.setStatus(J("status.published"), "info"), YI.awaitPublishDeploy(e, () => $.held.release(o));
+		KU.setStatus(J("status.published"), "info"), ZI.awaitPublishDeploy(e, () => $.held.release(o));
 	} else if (d?.status === 401) {
 		let e = await d.json().catch(() => null);
-		WU.setStatus(e?.code === "loginExpired" ? J("status.loginExpired") : J("status.loginRequired", { reason: wa(e) ?? J("status.unknownReason") }), "error"), await WU.checkAuth();
-	} else d?.status === 403 ? WU.setStatus(wa(await d.json().catch(() => null)) ?? J("status.noPublishAccess"), "error") : d?.status === 409 ? WU.setStatus(J("status.publishRace"), "error") : d ? WU.setStatus(wa(await d.json().catch(() => null)) ?? J("status.publishFailed"), "error") : WU.setStatus(J("status.publishUnavailable"), "error");
+		KU.setStatus(e?.code === "loginExpired" ? J("status.loginExpired") : J("status.loginRequired", { reason: wa(e) ?? J("status.unknownReason") }), "error"), await KU.checkAuth();
+	} else d?.status === 403 ? KU.setStatus(wa(await d.json().catch(() => null)) ?? J("status.noPublishAccess"), "error") : d?.status === 409 ? KU.setStatus(J("status.publishRace"), "error") : d ? KU.setStatus(wa(await d.json().catch(() => null)) ?? J("status.publishFailed"), "error") : KU.setStatus(J("status.publishUnavailable"), "error");
 }
-function lL() {
+function dL() {
 	Nn(() => {
-		if (!I(rL)) return;
+		if (!I(aL)) return;
 		let e = (e) => {
-			I(iL)?.contains(e.target) ? e.target instanceof Element && e.target.closest(".discard-confirm") && (e.preventDefault(), e.stopPropagation(), oL()) : A(rL, !1);
+			I(oL)?.contains(e.target) ? e.target instanceof Element && e.target.closest(".discard-confirm") && (e.preventDefault(), e.stopPropagation(), cL()) : A(aL, !1);
 		}, t = (e) => {
-			e.key === "Escape" && A(rL, !1);
+			e.key === "Escape" && A(aL, !1);
 		}, n = !1, r = (e) => {
-			n = !!I(iL)?.contains(e.target);
+			n = !!I(oL)?.contains(e.target);
 		}, i = () => {
 			n = !1;
 		}, a = () => {
-			n || A(rL, !1);
+			n || A(aL, !1);
 		};
 		return window.addEventListener("pointerdown", r, !0), window.addEventListener("pointerup", i, !0), window.addEventListener("click", e, !0), window.addEventListener("keydown", t, !0), window.addEventListener("blur", a), () => {
 			window.removeEventListener("pointerdown", r, !0), window.removeEventListener("pointerup", i, !0), window.removeEventListener("click", e, !0), window.removeEventListener("keydown", t, !0), window.removeEventListener("blur", a);
 		};
 	});
 }
-var uL = {
-	materializeField: XI,
-	materializeEntryImages: ZI,
-	materializeBackground: QI,
-	materializeBlockImages: $I,
-	materializeSection: eL,
-	materializeImages: tL,
-	materializeSiteImages: nL,
+var fL = {
+	materializeField: QI,
+	materializeEntryImages: $I,
+	materializeBackground: eL,
+	materializeBlockImages: tL,
+	materializeSection: nL,
+	materializeImages: rL,
+	materializeSiteImages: iL,
 	get discardArmed() {
-		return I(rL);
+		return I(aL);
 	},
 	set discardArmed(e) {
-		A(rL, e, !0);
+		A(aL, e, !0);
 	},
 	get discardWrapEl() {
-		return I(iL);
+		return I(oL);
 	},
 	set discardWrapEl(e) {
-		A(iL, e, !0);
+		A(oL, e, !0);
 	},
-	requestDiscard: aL,
-	confirmDiscard: oL,
-	discard: sL,
-	publish: cL,
-	effects: lL
-}, dL = /* @__PURE__ */ k(!1), fL = /* @__PURE__ */ k(pn([]));
-function pL() {
-	WU.confirmBox || qF.iconEditorImage || (WU.settingsOpen = !1, WU.toolMenu = null, qF.pageMenuFor = null, WU.shortcutsOpen = !1, A(dL, !0));
-}
-var mL = null;
+	requestDiscard: sL,
+	confirmDiscard: cL,
+	discard: lL,
+	publish: uL,
+	effects: dL
+}, pL = /* @__PURE__ */ k(!1), mL = /* @__PURE__ */ k(pn([]));
 function hL() {
-	return mL || (mL = /* @__PURE__ */ new Map(), Is({ sections: { define: (e, t) => mL.set(e, t) } })), mL;
+	KU.confirmBox || qF.iconEditorImage || (KU.settingsOpen = !1, KU.toolMenu = null, qF.pageMenuFor = null, KU.shortcutsOpen = !1, A(pL, !0));
 }
-function gL() {
+var gL = null;
+function _L() {
+	return gL || (gL = /* @__PURE__ */ new Map(), Is({ sections: { define: (e, t) => gL.set(e, t) } })), gL;
+}
+function vL() {
 	let e = [], t = (t, n, r, i, a) => e.push({
 		id: t,
 		group: n,
@@ -36341,17 +36355,17 @@ function gL() {
 		run: i,
 		...a ? { hint: a } : {}
 	});
-	sV.dirty && t("publish", "actions", J("ui.publish"), () => uL.publish()), t("undo", "actions", J("shortcuts.undo"), () => sV.undo()), t("redo", "actions", J("shortcuts.redo"), () => sV.redo()), t("clean", "actions", J("ui.cleanView"), () => gR.toggleChrome()), t("grid", "actions", J(WU.gridOn ? "palette.gridOff" : "palette.gridOn"), () => WU.toggleGrid()), t("guides", "actions", J(WU.guidesOn ? "palette.guidesOff" : "palette.guidesOn"), () => WU.toggleGuides());
-	for (let e of gR.devices) e.id !== gR.deviceId && t(`device:${e.id}`, "actions", J("palette.device", { device: J(`lbl.device.${e.id}`) }), () => {
-		gR.deviceId = e.id;
+	lV.dirty && t("publish", "actions", J("ui.publish"), () => fL.publish()), t("undo", "actions", J("shortcuts.undo"), () => lV.undo()), t("redo", "actions", J("shortcuts.redo"), () => lV.redo()), t("clean", "actions", J("ui.cleanView"), () => vR.toggleChrome()), t("grid", "actions", J(KU.gridOn ? "palette.gridOff" : "palette.gridOn"), () => KU.toggleGrid()), t("guides", "actions", J(KU.guidesOn ? "palette.guidesOff" : "palette.guidesOn"), () => KU.toggleGuides());
+	for (let e of vR.devices) e.id !== vR.deviceId && t(`device:${e.id}`, "actions", J("palette.device", { device: J(`lbl.device.${e.id}`) }), () => {
+		vR.deviceId = e.id;
 	});
-	t("shortcuts", "actions", J("shortcuts.title"), () => WU.openShortcuts()), t("viewSite", "actions", J("ui.viewSite"), () => window.open($.pageEntry()?.path ?? "/", "_blank", "noopener"));
+	t("shortcuts", "actions", J("shortcuts.title"), () => KU.openShortcuts()), t("view-site", "actions", J("ui.viewSite"), () => window.open($.pageEntry()?.path ?? "/", "_blank", "noopener"));
 	for (let e of qF.siteDraft?.pages ?? []) e.id !== $.pageId && t(`page:${e.id}`, "pages", J("palette.goPage", { title: e.title }), () => $.selectPage(e.id), e.path);
 	($.store?.data.sections ?? []).forEach((e, n) => {
-		t(`section-go:${e.id}`, "pages", J("palette.goSection", { n: n + 1 }), () => gR.bridge?.sendScrollSection(e.id), e.anchor ? `#${e.anchor}` : "");
+		t(`section-go:${e.id}`, "pages", J("palette.goSection", { n: n + 1 }), () => vR.bridge?.sendScrollSection(e.id), e.anchor ? `#${e.anchor}` : "");
 	});
-	for (let e of WU.PANEL_GROUPS.flat()) t(`panel:${e}`, "panels", J("palette.openPanel", { panel: WU.PANEL_LABELS[e] }), () => {
-		WU.activePanel = e;
+	for (let e of KU.PANEL_GROUPS.flat()) t(`panel:${e}`, "panels", J("palette.openPanel", { panel: KU.PANEL_LABELS[e] }), () => {
+		KU.activePanel = e;
 	});
 	let n = aI.shopBlocksOn();
 	for (let e of xy(n)) for (let n of e.kinds) {
@@ -36361,133 +36375,133 @@ function gL() {
 			e && aI.requestPlacement(e);
 		}, J(e.labelKey));
 	}
-	for (let [e, r] of hL()) (!r.shop || n) && t(`section:${e}`, "sections", J("palette.insertSection", { name: r.labelKey ? J(r.labelKey) : r.label }), () => {
+	for (let [e, r] of _L()) (!r.shop || n) && t(`section:${e}`, "sections", J("palette.insertSection", { name: r.labelKey ? J(r.labelKey) : r.label }), () => {
 		let e = $.store?.data.sections ?? [];
 		wI.handleAddSection({
 			index: e.length,
 			section: r.create()
 		});
 	}, r.groupKey ? J(r.groupKey) : r.group);
-	for (let e of I(fL)) t(`plugin:${e.id}`, "plugins", e.label, () => gR.bridge?.sendRunCommand(e.id));
+	for (let e of I(mL)) t(`plugin:${e.id}`, "plugins", e.label, () => vR.bridge?.sendRunCommand(e.id));
 	return e;
 }
-var _L = {
+var yL = {
 	get paletteOpen() {
-		return I(dL);
+		return I(pL);
 	},
 	set paletteOpen(e) {
-		A(dL, e, !0);
+		A(pL, e, !0);
 	},
-	openPalette: pL,
+	openPalette: hL,
 	get pluginCommands() {
-		return I(fL);
+		return I(mL);
 	},
 	set pluginCommands(e) {
-		A(fL, Array.isArray(e) ? e.filter((e) => e && typeof e.id == "string" && typeof e.label == "string") : [], !0);
+		A(mL, Array.isArray(e) ? e.filter((e) => e && typeof e.id == "string" && typeof e.label == "string") : [], !0);
 	},
-	buildCommands: gL
-}, vL = /* @__PURE__ */ k(null);
-function yL(e) {
-	A(vL, e);
+	buildCommands: vL
+}, bL = /* @__PURE__ */ k(null);
+function xL(e) {
+	A(bL, e);
 }
-function bL() {
-	A(vL, null);
+function SL() {
+	A(bL, null);
 }
-var xL = {
+var CL = {
 	get linkRequest() {
-		return I(vL);
+		return I(bL);
 	},
-	openLink: yL,
-	closeLink: bL
-}, SL = /* @__PURE__ */ k(null), CL = /* @__PURE__ */ k(!0), wL = /* @__PURE__ */ k(pn(kj(typeof window < "u" ? window : null) ?? 1920)), TL = "urd-admin-screen";
-function EL() {
+	openLink: xL,
+	closeLink: SL
+}, wL = /* @__PURE__ */ k(null), TL = /* @__PURE__ */ k(!0), EL = /* @__PURE__ */ k(pn(kj(typeof window < "u" ? window : null) ?? 1920)), DL = "urd-admin-screen";
+function OL() {
 	let e = null;
 	try {
-		e = JSON.parse(localStorage.getItem(TL) ?? "null");
+		e = JSON.parse(localStorage.getItem(DL) ?? "null");
 	} catch {
 		e = null;
 	}
-	return Aj(e, I(wL));
+	return Aj(e, I(EL));
 }
-var DL = /* @__PURE__ */ k(pn(EL()));
-function OL(e) {
-	A(DL, Aj({
-		...Xe(I(DL)),
+var kL = /* @__PURE__ */ k(pn(OL()));
+function AL(e) {
+	A(kL, Aj({
+		...Xe(I(kL)),
 		...e
-	}, I(wL)), !0);
+	}, I(EL)), !0);
 	try {
-		localStorage.setItem(TL, JSON.stringify(I(DL)));
+		localStorage.setItem(DL, JSON.stringify(I(kL)));
 	} catch {}
-	A(RL, null);
+	A(BL, null);
 }
-var kL = /* @__PURE__ */ O(() => jj(I(DL), I(wL))), AL = "urd-admin-phone";
-function jL() {
+var jL = /* @__PURE__ */ O(() => jj(I(kL), I(EL))), ML = "urd-admin-phone";
+function NL() {
 	let e = null;
 	try {
-		e = JSON.parse(localStorage.getItem(AL) ?? "null");
+		e = JSON.parse(localStorage.getItem(ML) ?? "null");
 	} catch {
 		e = null;
 	}
 	return xj(e);
 }
-var ML = /* @__PURE__ */ k(pn(jL()));
-function NL(e) {
-	A(ML, xj({
-		...Xe(I(ML)),
+var PL = /* @__PURE__ */ k(pn(NL()));
+function FL(e) {
+	A(PL, xj({
+		...Xe(I(PL)),
 		...e
 	}), !0);
 	try {
-		localStorage.setItem(AL, JSON.stringify(I(ML)));
+		localStorage.setItem(ML, JSON.stringify(I(PL)));
 	} catch {}
-	A(RL, null);
+	A(BL, null);
 }
-var PL = /* @__PURE__ */ O(() => Sj(I(ML))), FL = /* @__PURE__ */ O(() => [{
+var IL = /* @__PURE__ */ O(() => Sj(I(PL))), LL = /* @__PURE__ */ O(() => [{
 	id: "desktop",
-	width: I(kL).width,
-	height: I(kL).height || null,
+	width: I(jL).width,
+	height: I(jL).height || null,
 	viewport: "desktop"
 }, {
 	id: "mobile",
-	width: I(PL).width,
-	height: I(PL).height || null,
-	viewport: I(PL).width <= (qF.siteDraft?.breakpoints?.mobile ?? 640) ? "mobile" : "desktop"
-}]), IL = /* @__PURE__ */ O(() => Mj(I(DL))), LL = /* @__PURE__ */ O(() => I(PL).width > (qF.siteDraft?.breakpoints?.mobile ?? 640) ? "device_tablet" : "device_mobile"), RL = /* @__PURE__ */ k(null), zL = /* @__PURE__ */ O(() => [
-	...I(FL).map((e) => e.width),
+	width: I(IL).width,
+	height: I(IL).height || null,
+	viewport: I(IL).width <= (qF.siteDraft?.breakpoints?.mobile ?? 640) ? "mobile" : "desktop"
+}]), RL = /* @__PURE__ */ O(() => Mj(I(kL))), zL = /* @__PURE__ */ O(() => I(IL).width > (qF.siteDraft?.breakpoints?.mobile ?? 640) ? "device_tablet" : "device_mobile"), BL = /* @__PURE__ */ k(null), VL = /* @__PURE__ */ O(() => [
+	...I(LL).map((e) => e.width),
 	...Dj.map((e) => e.width),
 	...gj.map((e) => e.width),
 	qF.siteDraft?.breakpoints?.mobile ?? 640
 ]);
-function BL(e, t = 0) {
-	A(RL, Cj(e, I(zL), t), !0);
+function HL(e, t = 0) {
+	A(BL, Cj(e, I(VL), t), !0);
 }
-function VL(e) {
+function UL(e) {
 	let t = Math.round(Zg(qF.layoutWidth, qF.layoutGutter, e.width).width);
-	return J(e.id === "free" ? "tip.view.free" : e.id === "mobile" ? e.viewport === "desktop" ? "tip.view.tabletH" : e.height ? "tip.view.mobileH" : "tip.view.mobile" : I(DL).size === "window" ? "tip.view.desktop" : e.height ? "tip.view.desktopSizeH" : "tip.view.desktopSize", {
+	return J(e.id === "free" ? "tip.view.free" : e.id === "mobile" ? e.viewport === "desktop" ? "tip.view.tabletH" : e.height ? "tip.view.mobileH" : "tip.view.mobile" : I(kL).size === "window" ? "tip.view.desktop" : e.height ? "tip.view.desktopSizeH" : "tip.view.desktopSize", {
 		w: e.width,
 		h: e.height ?? 0,
 		c: t
 	});
 }
-var HL = /* @__PURE__ */ k("desktop"), UL = /* @__PURE__ */ O(() => I(RL) ? {
+var WL = /* @__PURE__ */ k("desktop"), GL = /* @__PURE__ */ O(() => I(BL) ? {
 	id: "free",
-	width: I(RL),
+	width: I(BL),
 	height: null,
 	viewport: "desktop"
-} : I(FL).find((e) => e.id === I(HL)) ?? I(FL)[0]), WL = /* @__PURE__ */ O(() => I(UL).viewport === "mobile" || I(UL).width <= (qF.siteDraft?.breakpoints?.mobile ?? 640) ? "mobile" : "desktop"), GL = /* @__PURE__ */ k(null), KL = /* @__PURE__ */ k(0), qL = /* @__PURE__ */ k(0), JL = /* @__PURE__ */ k("fit"), YL = /* @__PURE__ */ k(1), XL = /* @__PURE__ */ O(() => I(UL).width), ZL = /* @__PURE__ */ O(() => I(UL).height ?? 0), QL = /* @__PURE__ */ O(() => I(JL) === "manual" ? I(YL) : GN(I(KL), I(XL), "fit", I(qL), I(ZL)));
-function $L(e) {
-	A(YL, Math.min(400, Math.max(10, (Math.round(Math.round(I(QL) * 100) / 10) + e) * 10)) / 100), A(JL, "manual");
+} : I(LL).find((e) => e.id === I(WL)) ?? I(LL)[0]), KL = /* @__PURE__ */ O(() => I(GL).viewport === "mobile" || I(GL).width <= (qF.siteDraft?.breakpoints?.mobile ?? 640) ? "mobile" : "desktop"), qL = /* @__PURE__ */ k(null), JL = /* @__PURE__ */ k(0), YL = /* @__PURE__ */ k(0), XL = /* @__PURE__ */ k("fit"), ZL = /* @__PURE__ */ k(1), QL = /* @__PURE__ */ O(() => I(GL).width), $L = /* @__PURE__ */ O(() => I(GL).height ?? 0), eR = /* @__PURE__ */ O(() => I(XL) === "manual" ? I(ZL) : GN(I(JL), I(QL), "fit", I(YL), I($L)));
+function tR(e) {
+	A(ZL, Math.min(400, Math.max(10, (Math.round(Math.round(I(eR) * 100) / 10) + e) * 10)) / 100), A(XL, "manual");
 }
-var eR = /* @__PURE__ */ O(() => I(ZL) > 0 ? I(ZL) : I(QL) > 0 ? I(qL) / I(QL) : I(qL)), tR = /* @__PURE__ */ O(() => I(XL) * I(QL)), nR = /* @__PURE__ */ O(() => I(ZL) > 0 ? I(ZL) * I(QL) : I(qL)), rR = /* @__PURE__ */ O(() => I(tR) > I(KL) + 1 || I(nR) > I(qL) + 1), iR = /* @__PURE__ */ k(null), aR = () => {
+var nR = /* @__PURE__ */ O(() => I($L) > 0 ? I($L) : I(eR) > 0 ? I(YL) / I(eR) : I(YL)), rR = /* @__PURE__ */ O(() => I(QL) * I(eR)), iR = /* @__PURE__ */ O(() => I($L) > 0 ? I($L) * I(eR) : I(YL)), aR = /* @__PURE__ */ O(() => I(rR) > I(JL) + 1 || I(iR) > I(YL) + 1), oR = /* @__PURE__ */ k(null), sR = () => {
 	let e = null;
 	try {
 		e = localStorage.getItem("urd-theme-mode");
 	} catch {}
 	return Ls(qF.siteDraft?.theme?.scheme, e, window.matchMedia("(prefers-color-scheme: dark)").matches);
-}, oR = /* @__PURE__ */ k("light");
-function sR() {
-	I(iR)?.destroy(), I(SL)?.contentDocument?.addEventListener("pointerdown", () => {
+}, cR = /* @__PURE__ */ k("light");
+function lR() {
+	I(oR)?.destroy(), I(wL)?.contentDocument?.addEventListener("pointerdown", () => {
 		$.blockMenu &&= null;
-	}, !0), A(iR, KN(I(SL), {
+	}, !0), A(oR, KN(I(wL), {
 		onEdit: wI.handleEdit,
 		onMove: wI.handleMove,
 		onGrow: wI.handleGrow,
@@ -36496,14 +36510,14 @@ function sR() {
 		onMoveSection: wI.handleMoveSection,
 		onDeleteSection: wI.handleDeleteSection,
 		onSectionSize: wI.handleSectionSize,
-		onUndo: (e) => e.redo ? sV.redo() : sV.undo(),
+		onUndo: (e) => e.redo ? lV.redo() : lV.undo(),
 		onSelectSection: $.onSelectSection,
 		onSelectBlock: $.onSelectBlock,
 		onBlockMenu: $.onBlockMenu,
 		onMenuArea: $.onMenuArea,
-		onReady: lR,
-		onNavigate: uR,
-		onLinkEdit: dR,
+		onReady: dR,
+		onNavigate: fR,
+		onLinkEdit: pR,
 		onAddBlock: (e) => aI.insertBlock(e.sectionId, e.block),
 		onAddBlocks: (e) => aI.insertBlocks(e.sectionId, e.blocks, e.minBottom, e.moves),
 		onRequestBlock: aI.handleRequestBlock,
@@ -36516,10 +36530,10 @@ function sR() {
 				}
 			};
 		},
-		onShortcuts: () => WU.openShortcuts(),
-		onPalette: () => _L.openPalette(),
+		onShortcuts: () => KU.openShortcuts(),
+		onPalette: () => yL.openPalette(),
 		onCommands: (e) => {
-			_L.pluginCommands = e.commands;
+			yL.pluginCommands = e.commands;
 		},
 		onMoveBlockSection: wI.handleMoveBlockSection,
 		onMobileReset: wI.handleMobileReset,
@@ -36527,288 +36541,288 @@ function sR() {
 		onReviewDone: wI.handleReviewDone,
 		onBlockFlag: wI.handleBlockFlag,
 		onBlockStyle: wI.handleBlockStyle,
-		onCollectionEdit: KV.handleCollectionEdit,
-		onOpenEntry: KV.openEntry,
-		onCollectionAdd: KV.handleCollectionAdd,
+		onCollectionEdit: JV.handleCollectionEdit,
+		onOpenEntry: JV.openEntry,
+		onCollectionAdd: JV.handleCollectionAdd,
 		onSaveTemplate: TP.handleSaveTemplate,
 		onStickyGroup: wI.handleStickyGroup,
 		onStickyDock: wI.handleStickyDock,
 		onDeleteTemplate: TP.handleDeleteTemplate,
 		onApplyLayout: $.handleApplyLayout,
 		onPluginBlocks: (e) => {
-			RR.pluginBlocks = e.blocks ?? [];
+			BR.pluginBlocks = e.blocks ?? [];
 		},
 		onNavWidth: (e) => qF.siteMutate("edit:nav-width", () => {
 			qF.siteDraft.nav.style ??= {}, qF.siteDraft.nav.style.width = e.width;
 		})
 	}));
 }
-var cR = "";
-async function lR() {
-	await $.pageLoading, await RR.pluginsReady, I(iR)?.sendPlugins(Xe(RR.pluginsView)?.enabled ?? []), I(iR)?.sendViewport(I(WL)), I(iR)?.sendZoom(I(QL)), KV.pushCollectionsToPreview(), TP.pushTemplatesToPreview(), (qF.siteStore.hasDraft() || $.held.has("content/site.json")) && qF.pushSiteToPreview();
+var uR = "";
+async function dR() {
+	await $.pageLoading, await BR.pluginsReady, I(oR)?.sendPlugins(Xe(BR.pluginsView)?.enabled ?? []), I(oR)?.sendViewport(I(KL)), I(oR)?.sendZoom(I(eR)), JV.pushCollectionsToPreview(), TP.pushTemplatesToPreview(), (qF.siteStore.hasDraft() || $.held.has("content/site.json")) && qF.pushSiteToPreview();
 	let e = !qF.site.pages.some((e) => e.id === $.pageId);
-	($.store.hasDraft() || e || $.held.has($.pageEntry()?.file)) && I(iR)?.sendPage($.pageId, $.store.data), I(CL) || I(iR)?.sendChrome(!1), WU.gridOn && I(iR)?.sendShowGrid(!0), WU.spellcheckPref === "off" && I(iR)?.sendSpellcheck(!1), WU.guidesOn && I(iR)?.sendShowGuides(!0), WU.sendAdminTheme(), cR && I(iR)?.sendScrollAnchor(cR), cR = "";
+	($.store.hasDraft() || e || $.held.has($.pageEntry()?.file)) && I(oR)?.sendPage($.pageId, $.store.data), I(TL) || I(oR)?.sendChrome(!1), KU.gridOn && I(oR)?.sendShowGrid(!0), KU.spellcheckPref === "off" && I(oR)?.sendSpellcheck(!1), KU.guidesOn && I(oR)?.sendShowGuides(!0), KU.sendAdminTheme(), uR && I(oR)?.sendScrollAnchor(uR), uR = "";
 }
-function uR(e) {
+function fR(e) {
 	let t = e.path.replace(/\/$/, "") || "/", n = qF.siteDraft.pages.find((e) => e.path === t);
 	if (!n) return;
 	let r = typeof e.hash == "string" && e.hash.length > 1 ? e.hash : "";
-	n.id === $.pageId ? r && I(iR)?.sendScrollAnchor(r) : (cR = r, $.selectPage(n.id));
+	n.id === $.pageId ? r && I(oR)?.sendScrollAnchor(r) : (uR = r, $.selectPage(n.id));
 }
-function dR(e) {
+function pR(e) {
 	let t = typeof e.text == "string" ? e.text.trim() : "", n = t.replace(/\s/g, ""), r = e.value ?? (wh(t) ? `mailto:${t}` : /^\+?\d{8,15}$/.test(n) ? `tel:${n}` : null);
-	xL.openLink({
+	CL.openLink({
 		value: r,
 		removable: !!e.value,
 		here: $.pageId,
 		upload: !1,
 		apply: (e) => {
-			sV.lastHistoryKey = null, I(iR)?.sendLinkApply(e);
+			lV.lastHistoryKey = null, I(oR)?.sendLinkApply(e);
 		}
 	});
 }
-function fR() {
-	I(SL) && (I(SL).src = I(SL).src);
+function mR() {
+	I(wL) && (I(wL).src = I(wL).src);
 }
-var pR = 0;
-async function mR() {
-	I(CL) && (pR = WU.panelEl?.scrollTop ?? 0), A(CL, !I(CL)), I(iR)?.sendChrome(I(CL)), I(CL) || ($.blockMenu = null), I(CL) && (await Er(), requestAnimationFrame(() => {
-		WU.panelEl && (WU.panelEl.scrollTop = pR);
+var hR = 0;
+async function gR() {
+	I(TL) && (hR = KU.panelEl?.scrollTop ?? 0), A(TL, !I(TL)), I(oR)?.sendChrome(I(TL)), I(TL) || ($.blockMenu = null), I(TL) && (await Er(), requestAnimationFrame(() => {
+		KU.panelEl && (KU.panelEl.scrollTop = hR);
 	}));
 }
-function hR() {
+function _R() {
 	Nn(() => {
-		let e = () => I(iR)?.sendCloseMenus();
+		let e = () => I(oR)?.sendCloseMenus();
 		return document.addEventListener("pointerdown", e, !0), () => document.removeEventListener("pointerdown", e, !0);
 	}), Nn(() => {
-		let e = I(WL);
-		I(iR)?.sendViewport(e);
+		let e = I(KL);
+		I(oR)?.sendViewport(e);
 	}), Nn(() => {
-		let e = I(QL);
-		I(iR)?.sendZoom(e);
+		let e = I(eR);
+		I(oR)?.sendZoom(e);
 	}), Nn(() => {
 		let e = () => {
-			A(wL, kj(window) ?? I(wL), !0);
+			A(EL, kj(window) ?? I(EL), !0);
 		};
 		return window.addEventListener("resize", e), () => window.removeEventListener("resize", e);
 	}), Nn(() => {
-		let e = I(GL);
+		let e = I(qL);
 		if (!e || typeof ResizeObserver > "u") return;
 		let t = () => {
-			A(KL, e.clientWidth, !0), A(qL, e.clientHeight, !0);
+			A(JL, e.clientWidth, !0), A(YL, e.clientHeight, !0);
 		};
 		t();
 		let n = new ResizeObserver(t);
 		return n.observe(e), () => n.disconnect();
 	}), Nn(() => {
-		A(oR, aR(), !0);
+		A(cR, sR(), !0);
 		let e = window.matchMedia("(prefers-color-scheme: dark)"), t = (e) => {
-			e instanceof StorageEvent && e.key && e.key !== "urd-theme-mode" || A(oR, aR(), !0);
+			e instanceof StorageEvent && e.key && e.key !== "urd-theme-mode" || A(cR, sR(), !0);
 		};
 		return e.addEventListener("change", t), window.addEventListener("storage", t), () => {
 			e.removeEventListener("change", t), window.removeEventListener("storage", t);
 		};
 	});
 }
-var gR = {
+var vR = {
 	get iframeEl() {
-		return I(SL);
-	},
-	set iframeEl(e) {
-		A(SL, e, !0);
-	},
-	get chromeVisible() {
-		return I(CL);
-	},
-	set chromeVisible(e) {
-		A(CL, e, !0);
-	},
-	get ownWidth() {
 		return I(wL);
 	},
-	set ownWidth(e) {
+	set iframeEl(e) {
 		A(wL, e, !0);
 	},
-	SCREEN_PREF_KEY: TL,
-	readScreenPref: EL,
+	get chromeVisible() {
+		return I(TL);
+	},
+	set chromeVisible(e) {
+		A(TL, e, !0);
+	},
+	get ownWidth() {
+		return I(EL);
+	},
+	set ownWidth(e) {
+		A(EL, e, !0);
+	},
+	SCREEN_PREF_KEY: DL,
+	readScreenPref: OL,
 	get screenPref() {
-		return I(DL);
+		return I(kL);
 	},
 	get screenIcon() {
-		return I(IL);
+		return I(RL);
 	},
 	SCREEN_SIZES: Dj,
 	set screenPref(e) {
-		A(DL, e, !0);
+		A(kL, e, !0);
 	},
-	setScreenPref: OL,
+	setScreenPref: AL,
 	get screenTarget() {
-		return I(kL);
+		return I(jL);
 	},
 	set screenTarget(e) {
-		A(kL, e);
+		A(jL, e);
 	},
 	get devices() {
-		return I(FL);
-	},
-	set devices(e) {
-		A(FL, e);
-	},
-	deviceTip: VL,
-	get deviceId() {
-		return I(HL);
-	},
-	set deviceId(e) {
-		A(HL, e, !0), A(RL, null);
-	},
-	get phonePref() {
-		return I(ML);
-	},
-	get phoneIcon() {
 		return I(LL);
 	},
-	setPhonePref: NL,
-	PHONE_SIZES: gj,
-	get freeWidth() {
-		return I(RL);
+	set devices(e) {
+		A(LL, e);
 	},
-	setFreeWidth: BL,
-	get device() {
-		return I(UL);
-	},
-	set device(e) {
-		A(UL, e);
-	},
-	get viewMode() {
+	deviceTip: UL,
+	get deviceId() {
 		return I(WL);
 	},
-	set viewMode(e) {
-		A(WL, e);
+	set deviceId(e) {
+		A(WL, e, !0), A(BL, null);
 	},
-	get frameWrapEl() {
+	get phonePref() {
+		return I(PL);
+	},
+	get phoneIcon() {
+		return I(zL);
+	},
+	setPhonePref: FL,
+	PHONE_SIZES: gj,
+	get freeWidth() {
+		return I(BL);
+	},
+	setFreeWidth: HL,
+	get device() {
 		return I(GL);
 	},
-	set frameWrapEl(e) {
-		A(GL, e, !0);
+	set device(e) {
+		A(GL, e);
 	},
-	get frameW() {
+	get viewMode() {
 		return I(KL);
 	},
-	set frameW(e) {
-		A(KL, e, !0);
+	set viewMode(e) {
+		A(KL, e);
 	},
-	get frameH() {
+	get frameWrapEl() {
 		return I(qL);
 	},
-	set frameH(e) {
+	set frameWrapEl(e) {
 		A(qL, e, !0);
 	},
-	get zoomMode() {
+	get frameW() {
 		return I(JL);
 	},
-	set zoomMode(e) {
+	set frameW(e) {
 		A(JL, e, !0);
 	},
-	get manualZoom() {
+	get frameH() {
 		return I(YL);
 	},
-	set manualZoom(e) {
+	set frameH(e) {
 		A(YL, e, !0);
 	},
-	get targetW() {
+	get zoomMode() {
 		return I(XL);
 	},
-	set targetW(e) {
-		A(XL, e);
+	set zoomMode(e) {
+		A(XL, e, !0);
 	},
-	get targetH() {
+	get manualZoom() {
 		return I(ZL);
 	},
-	set targetH(e) {
-		A(ZL, e);
+	set manualZoom(e) {
+		A(ZL, e, !0);
 	},
-	get scale() {
+	get targetW() {
 		return I(QL);
 	},
-	set scale(e) {
+	set targetW(e) {
 		A(QL, e);
 	},
-	stepZoom: $L,
-	get iframeH() {
+	get targetH() {
+		return I($L);
+	},
+	set targetH(e) {
+		A($L, e);
+	},
+	get scale() {
 		return I(eR);
 	},
-	set iframeH(e) {
+	set scale(e) {
 		A(eR, e);
 	},
-	get stageW() {
-		return I(tR);
-	},
-	set stageW(e) {
-		A(tR, e);
-	},
-	get stageH() {
+	stepZoom: tR,
+	get iframeH() {
 		return I(nR);
 	},
-	set stageH(e) {
+	set iframeH(e) {
 		A(nR, e);
 	},
-	get canPan() {
+	get stageW() {
 		return I(rR);
 	},
-	set canPan(e) {
+	set stageW(e) {
 		A(rR, e);
 	},
-	get bridge() {
+	get stageH() {
 		return I(iR);
 	},
-	set bridge(e) {
+	set stageH(e) {
 		A(iR, e);
 	},
-	readPreviewMode: aR,
-	get previewMode() {
+	get canPan() {
+		return I(aR);
+	},
+	set canPan(e) {
+		A(aR, e);
+	},
+	get bridge() {
 		return I(oR);
 	},
-	set previewMode(e) {
-		A(oR, e, !0);
+	set bridge(e) {
+		A(oR, e);
 	},
-	onIframeLoad: sR,
-	onReady: lR,
-	onNavigate: uR,
-	reloadPreview: fR,
+	readPreviewMode: sR,
+	get previewMode() {
+		return I(cR);
+	},
+	set previewMode(e) {
+		A(cR, e, !0);
+	},
+	onIframeLoad: lR,
+	onReady: dR,
+	onNavigate: fR,
+	reloadPreview: mR,
 	get panelScroll() {
-		return pR;
+		return hR;
 	},
 	set panelScroll(e) {
-		pR = e;
+		hR = e;
 	},
-	toggleChrome: mR,
-	effects: hR
-}, _R = null, vR, yR = new Promise((e) => {
-	vR = e;
-}), bR = /* @__PURE__ */ k(null), xR = /* @__PURE__ */ k(pn({})), SR = /* @__PURE__ */ k("0.0.0"), CR = /* @__PURE__ */ k(pn([])), wR = /* @__PURE__ */ k(pn([])), TR = /* @__PURE__ */ k("pending"), ER = () => [.../* @__PURE__ */ new Set([...I(bR)?.enabled ?? [], ...I(bR)?.disabled ?? []])], DR = () => I(bR)?.remove ?? [];
-function OR() {
-	A(bR, JSON.parse(JSON.stringify(_R.data)), !0);
+	toggleChrome: gR,
+	effects: _R
+}, yR = null, bR, xR = new Promise((e) => {
+	bR = e;
+}), SR = /* @__PURE__ */ k(null), CR = /* @__PURE__ */ k(pn({})), wR = /* @__PURE__ */ k("0.0.0"), TR = /* @__PURE__ */ k(pn([])), ER = /* @__PURE__ */ k(pn([])), DR = /* @__PURE__ */ k("pending"), OR = () => [.../* @__PURE__ */ new Set([...I(SR)?.enabled ?? [], ...I(SR)?.disabled ?? []])], kR = () => I(SR)?.remove ?? [];
+function AR() {
+	A(SR, JSON.parse(JSON.stringify(yR.data)), !0);
 }
-var kR = /* @__PURE__ */ k(null);
-async function AR() {
+var jR = /* @__PURE__ */ k(null);
+async function MR() {
 	try {
 		let e = (await fetch("/urd.json", { cache: "no-store" })).headers.get("content-security-policy");
 		if (!e) {
-			A(kR, { unknown: !0 }, !0);
+			A(jR, { unknown: !0 }, !0);
 			return;
 		}
 		let t = (t) => new Set((e.split(";").map((e) => e.trim()).find((e) => e.startsWith(`${t} `)) ?? "").split(/\s+/).slice(1));
-		A(kR, {
+		A(jR, {
 			frameSrc: t("frame-src"),
 			connectSrc: t("connect-src"),
 			scriptSrc: t("script-src")
 		}, !0);
 	} catch {
-		A(kR, { unknown: !0 }, !0);
+		A(jR, { unknown: !0 }, !0);
 	}
 }
-async function jR() {
-	AR();
+async function NR() {
+	MR();
 	let e = {
 		version: 1,
 		enabled: []
@@ -36816,142 +36830,142 @@ async function jR() {
 	try {
 		e = await (await fetch("/plugins/plugins.json")).json();
 	} catch {}
-	A(wR, e.enabled ?? [], !0), _R = qM("urd-draft-plugins", () => e, WU.draftSaveError), OR();
+	A(ER, e.enabled ?? [], !0), yR = qM("urd-draft-plugins", () => e, KU.draftSaveError), AR();
 	try {
-		A(SR, (await (await fetch("/urd.json")).json()).engine ?? "0.0.0", !0);
+		A(wR, (await (await fetch("/urd.json")).json()).engine ?? "0.0.0", !0);
 	} catch {}
-	for (let e of ER()) PR(e);
-	MR(), vR(), gR.bridge?.sendPlugins(Xe(I(bR))?.enabled ?? []);
+	for (let e of OR()) IR(e);
+	PR(), bR(), vR.bridge?.sendPlugins(Xe(I(SR))?.enabled ?? []);
 }
-async function MR() {
+async function PR() {
 	try {
 		let e = await fetch("/api/github/plugins");
 		if (!e.ok) {
-			NR();
+			FR();
 			return;
 		}
 		let { plugins: t } = await e.json();
-		localStorage.setItem("urd-plugins-found", JSON.stringify(t ?? [])), A(CR, (t ?? []).filter((e) => !ER().includes(e) && !DR().includes(e)), !0);
-		for (let e of I(CR)) PR(e);
-		A(TR, "ok");
+		localStorage.setItem("urd-plugins-found", JSON.stringify(t ?? [])), A(TR, (t ?? []).filter((e) => !OR().includes(e) && !kR().includes(e)), !0);
+		for (let e of I(TR)) IR(e);
+		A(DR, "ok");
 	} catch {
-		NR();
+		FR();
 	}
 }
-function NR() {
+function FR() {
 	try {
 		let e = JSON.parse(localStorage.getItem("urd-plugins-found") ?? "[]");
 		if (Array.isArray(e) && e.length) {
-			A(CR, e.filter((e) => !ER().includes(e) && !DR().includes(e)), !0);
-			for (let e of I(CR)) PR(e);
-			A(TR, "ok");
+			A(TR, e.filter((e) => !OR().includes(e) && !kR().includes(e)), !0);
+			for (let e of I(TR)) IR(e);
+			A(DR, "ok");
 			return;
 		}
 	} catch {}
-	A(TR, "unavailable");
+	A(DR, "unavailable");
 }
-async function PR(e) {
+async function IR(e) {
 	try {
 		let t = await (await fetch(`/plugins/${e}/plugin.json`)).json(), n = UN(t);
-		I(xR)[e] = {
+		I(CR)[e] = {
 			...t,
 			errors: n,
-			satisfied: n.length === 0 && VN(I(SR), t.requiresEngine)
+			satisfied: n.length === 0 && VN(I(wR), t.requiresEngine)
 		};
 	} catch {
-		I(xR)[e] = {
+		I(CR)[e] = {
 			name: e,
 			errors: [J("plugin.manifestNotFound", { id: e })],
 			satisfied: !1
 		};
 	}
 }
-function FR(e, t) {
-	sV.pushHistory("plugins");
-	let n = _R.data;
-	n.enabled = (n.enabled ?? []).filter((t) => t !== e), n.disabled = (n.disabled ?? []).filter((t) => t !== e), t ? n.enabled.push(e) : n.disabled.push(e), n.remove && (n.remove = n.remove.filter((t) => t !== e), n.remove.length || delete n.remove), _R.save(), sV.updateDirty(), OR(), gR.reloadPreview();
+function LR(e, t) {
+	lV.pushHistory("plugins");
+	let n = yR.data;
+	n.enabled = (n.enabled ?? []).filter((t) => t !== e), n.disabled = (n.disabled ?? []).filter((t) => t !== e), t ? n.enabled.push(e) : n.disabled.push(e), n.remove && (n.remove = n.remove.filter((t) => t !== e), n.remove.length || delete n.remove), yR.save(), lV.updateDirty(), AR(), vR.reloadPreview();
 }
-function IR(e) {
-	sV.pushHistory("plugins");
-	let t = _R.data;
-	t.enabled = (t.enabled ?? []).filter((t) => t !== e), t.disabled = (t.disabled ?? []).filter((t) => t !== e), t.remove = [.../* @__PURE__ */ new Set([...t.remove ?? [], e])], _R.save(), sV.updateDirty(), OR(), gR.reloadPreview();
+function RR(e) {
+	lV.pushHistory("plugins");
+	let t = yR.data;
+	t.enabled = (t.enabled ?? []).filter((t) => t !== e), t.disabled = (t.disabled ?? []).filter((t) => t !== e), t.remove = [.../* @__PURE__ */ new Set([...t.remove ?? [], e])], yR.save(), lV.updateDirty(), AR(), vR.reloadPreview();
 }
-var LR = /* @__PURE__ */ k(pn([])), RR = {
+var zR = /* @__PURE__ */ k(pn([])), BR = {
 	get pluginsStore() {
-		return _R;
+		return yR;
 	},
 	set pluginsStore(e) {
-		_R = e;
+		yR = e;
 	},
 	get resolvePluginsReady() {
-		return vR;
+		return bR;
 	},
 	set resolvePluginsReady(e) {
-		vR = e;
+		bR = e;
 	},
-	pluginsReady: yR,
+	pluginsReady: xR,
 	get pluginsView() {
-		return I(bR);
-	},
-	set pluginsView(e) {
-		A(bR, e, !0);
-	},
-	get pluginInfo() {
-		return I(xR);
-	},
-	set pluginInfo(e) {
-		A(xR, e, !0);
-	},
-	get pluginEngine() {
 		return I(SR);
 	},
-	set pluginEngine(e) {
+	set pluginsView(e) {
 		A(SR, e, !0);
 	},
-	get pluginsFound() {
+	get pluginInfo() {
 		return I(CR);
 	},
-	set pluginsFound(e) {
+	set pluginInfo(e) {
 		A(CR, e, !0);
 	},
-	get publishedPluginIds() {
+	get pluginEngine() {
 		return I(wR);
 	},
-	set publishedPluginIds(e) {
+	set pluginEngine(e) {
 		A(wR, e, !0);
 	},
-	get pluginDiscovery() {
+	get pluginsFound() {
 		return I(TR);
 	},
-	set pluginDiscovery(e) {
+	set pluginsFound(e) {
 		A(TR, e, !0);
 	},
-	knownPlugins: ER,
-	syncPluginsView: OR,
+	get publishedPluginIds() {
+		return I(ER);
+	},
+	set publishedPluginIds(e) {
+		A(ER, e, !0);
+	},
+	get pluginDiscovery() {
+		return I(DR);
+	},
+	set pluginDiscovery(e) {
+		A(DR, e, !0);
+	},
+	knownPlugins: OR,
+	syncPluginsView: AR,
 	get liveCsp() {
-		return I(kR);
+		return I(jR);
 	},
 	set liveCsp(e) {
-		A(kR, e, !0);
+		A(jR, e, !0);
 	},
-	loadLiveCsp: AR,
-	initPlugins: jR,
-	discoverPlugins: MR,
-	useCachedDiscovery: NR,
-	loadPluginInfo: PR,
-	setPluginEnabled: FR,
-	removePlugin: IR,
+	loadLiveCsp: MR,
+	initPlugins: NR,
+	discoverPlugins: PR,
+	useCachedDiscovery: FR,
+	loadPluginInfo: IR,
+	setPluginEnabled: LR,
+	removePlugin: RR,
 	get pluginBlocks() {
-		return I(LR);
+		return I(zR);
 	},
 	set pluginBlocks(e) {
-		A(LR, e, !0);
+		A(zR, e, !0);
 	}
-}, zR = /* @__PURE__ */ k(null);
-function BR(e) {
-	let t = UR.data.sections.find((t) => t.id === e.sectionId);
+}, VR = /* @__PURE__ */ k(null);
+function HR(e) {
+	let t = GR.data.sections.find((t) => t.id === e.sectionId);
 	if (t) {
-		sV.pushHistory("layout");
+		lV.pushHistory("layout");
 		for (let n of e.frames ?? []) {
 			let e = t.blocks.find((e) => e.id === n.blockId);
 			e && (e.frames.desktop = {
@@ -36962,14 +36976,14 @@ function BR(e) {
 		t.size = {
 			...t.size,
 			minHeight: e.minHeight
-		}, HR(t, "layout-changed"), e.sectionId === I($z) && A(tB, e.minHeight, !0), I(qR)?.sectionId === e.sectionId && YR(), UR.save(), sV.updateDirty(), gR.bridge?.sendSection(I(zR), t);
+		}, WR(t, "layout-changed"), e.sectionId === I(tB) && A(rB, e.minHeight, !0), I(YR)?.sectionId === e.sectionId && ZR(), GR.save(), lV.updateDirty(), vR.bridge?.sendSection(I(VR), t);
 	}
 }
-function VR(e) {
+function UR(e) {
 	return e?.blocks?.some((e) => e.frames?.mobile) ?? !1;
 }
-function HR(e, t) {
-	e && VR(e) && (e.responsive?.mobile?.attention?.needed || (e.responsive = {
+function WR(e, t) {
+	e && UR(e) && (e.responsive?.mobile?.attention?.needed || (e.responsive = {
 		...e.responsive ?? {},
 		mobile: {
 			...e.responsive?.mobile ?? { mode: "auto" },
@@ -36979,22 +36993,22 @@ function HR(e, t) {
 				since: (/* @__PURE__ */ new Date()).toISOString()
 			}
 		}
-	}, WU.updateAttention(), gR.bridge?.sendAttention(e.id, !0)));
+	}, KU.updateAttention(), vR.bridge?.sendAttention(e.id, !0)));
 }
-var UR = null, WR = /* @__PURE__ */ new Set(), GR = LN(), KR = () => qF.siteDraft.pages.find((e) => e.id === I(zR)), qR = /* @__PURE__ */ k(null);
-function JR(e, t) {
-	let n = UR?.data.sections.find((t) => t.id === e);
+var GR = null, KR = /* @__PURE__ */ new Set(), qR = LN(), JR = () => qF.siteDraft.pages.find((e) => e.id === I(VR)), YR = /* @__PURE__ */ k(null);
+function XR(e, t) {
+	let n = GR?.data.sections.find((t) => t.id === e);
 	return {
 		section: n,
 		block: n?.blocks.find((e) => e.id === t)
 	};
 }
-function YR() {
-	if (!I(qR)) return;
-	let { block: e } = JR(I(qR).sectionId, I(qR).blockId);
-	e ? A(qR, {
-		sectionId: I(qR).sectionId,
-		blockId: I(qR).blockId,
+function ZR() {
+	if (!I(YR)) return;
+	let { block: e } = XR(I(YR).sectionId, I(YR).blockId);
+	e ? A(YR, {
+		sectionId: I(YR).sectionId,
+		blockId: I(YR).blockId,
 		type: e.type,
 		decor: !!e.decor,
 		hideMobile: !!e.hideMobile,
@@ -37011,44 +37025,44 @@ function YR() {
 		animation: e.animation ? JSON.parse(JSON.stringify(e.animation)) : null,
 		hover: e.hover ? JSON.parse(JSON.stringify(e.hover)) : null,
 		sticky: e.sticky ? JSON.parse(JSON.stringify(e.sticky)) : null
-	}, !0) : A(qR, null);
+	}, !0) : A(YR, null);
 }
-function XR(e) {
-	A(ZR, null), e.blockId ? (A(qR, {
+function QR(e) {
+	A($R, null), e.blockId ? (A(YR, {
 		sectionId: e.sectionId,
 		blockId: e.blockId
-	}, !0), e.sectionId && A($z, e.sectionId, !0), YR()) : A(qR, null);
+	}, !0), e.sectionId && A(tB, e.sectionId, !0), ZR()) : A(YR, null);
 }
-var ZR = /* @__PURE__ */ k(null);
-function QR() {
-	nb(gR.frameWrapEl?.getBoundingClientRect().left ?? 0);
+var $R = /* @__PURE__ */ k(null);
+function ez() {
+	nb(vR.frameWrapEl?.getBoundingClientRect().left ?? 0);
 }
-var $R = /* @__PURE__ */ k(null), ez = null;
-function tz(e) {
-	I(qR) && (I(ZR) || (WU.activePanel = "properties"), Er().then(() => ib(e.area, document.querySelector(".block-menu") ?? document.querySelector(".panel-body"))));
-}
-var nz = null;
+var tz = /* @__PURE__ */ k(null), nz = null;
 function rz(e) {
-	XR(e), I(qR) && (typeof e.group == "string" && /^[a-z-]+$/.test(e.group) && (ab.add(e.group), ib("content")), nz = e.rect, A(ZR, az(e.rect), !0));
+	I(YR) && (I($R) || (KU.activePanel = "properties"), Er().then(() => ib(e.area, document.querySelector(".block-menu") ?? document.querySelector(".panel-body"))));
 }
-function iz() {
-	return QR(), {
+var iz = null;
+function az(e) {
+	QR(e), I(YR) && (typeof e.group == "string" && /^[a-z-]+$/.test(e.group) && (ab.add(e.group), ib("content")), iz = e.rect, A($R, sz(e.rect), !0));
+}
+function oz() {
+	return ez(), {
 		w: Math.min($y.wide && $y.room >= 740 ? 740 : 400, window.innerWidth - 16),
 		h: Math.min(window.innerHeight * .72, 620)
 	};
 }
-function az(e) {
-	let t = iz(), n = {
+function sz(e) {
+	let t = oz(), n = {
 		w: window.innerWidth,
 		h: window.innerHeight
 	};
 	if ($y.place) return ON($y.place, t, n, $y.min);
-	let r = gR.iframeEl?.getBoundingClientRect();
+	let r = vR.iframeEl?.getBoundingClientRect();
 	if (!r) return {
 		left: $y.min,
 		top: 8
 	};
-	let i = gR.scale, { left: a, top: o } = AN({
+	let i = vR.scale, { left: a, top: o } = AN({
 		left: r.left + i * e.left,
 		top: r.top + i * e.top,
 		right: r.left + i * e.right,
@@ -37059,148 +37073,148 @@ function az(e) {
 		top: o
 	};
 }
-function oz(e, t = iz()) {
+function cz(e, t = oz()) {
 	let n = ON(e, t, {
 		w: window.innerWidth,
 		h: window.innerHeight
 	}, $y.min);
-	$y.place = n, A(ZR, n, !0);
+	$y.place = n, A($R, n, !0);
 }
-function sz() {
-	$y.place = null, nz && A(ZR, az(nz), !0);
+function lz() {
+	$y.place = null, iz && A($R, sz(iz), !0);
 }
-function cz(e, t) {
-	let { section: n, block: r } = JR(I(qR)?.sectionId, I(qR)?.blockId);
-	r && (e && sV.pushHistory(e), t(r, n), HR(n, "block-edited"), UR.save(), sV.updateDirty(), gR.bridge?.sendSection(I(zR), n), YR(), Cz(n.id, r));
+function uz(e, t) {
+	let { section: n, block: r } = XR(I(YR)?.sectionId, I(YR)?.blockId);
+	r && (e && lV.pushHistory(e), t(r, n), WR(n, "block-edited"), GR.save(), lV.updateDirty(), vR.bridge?.sendSection(I(VR), n), ZR(), Tz(n.id, r));
 }
-function lz(e, t) {
-	cz(`edit:${I(qR).blockId}:${e}`, (n) => {
+function dz(e, t) {
+	uz(`edit:${I(YR).blockId}:${e}`, (n) => {
 		n.props[e] = t;
 	});
 }
-function uz(e, t) {
-	cz(`edit:${I(qR).blockId}:${e}`, (e) => {
+function fz(e, t) {
+	uz(`edit:${I(YR).blockId}:${e}`, (e) => {
 		Object.assign(e.props, t);
 	});
 }
-function dz(e, t) {
-	let n = I(qR).props;
-	return Object.entries(t).some(([e, t]) => n[e] !== void 0 && JSON.stringify(n[e]) !== JSON.stringify(t)) ? () => uz(e, { ...t }) : null;
+function pz(e, t) {
+	let n = I(YR).props;
+	return Object.entries(t).some(([e, t]) => n[e] !== void 0 && JSON.stringify(n[e]) !== JSON.stringify(t)) ? () => fz(e, { ...t }) : null;
 }
-function fz(e) {
-	let t = I(qR).props;
+function mz(e) {
+	let t = I(YR).props;
 	return Object.entries(e).filter(([e, n]) => t[e] !== void 0 && JSON.stringify(t[e]) !== JSON.stringify(n)).length;
 }
-var pz = () => [["on", J("common.on")], ["off", J("common.off")]], mz = () => [
+var hz = () => [["on", J("common.on")], ["off", J("common.off")]], gz = () => [
 	["canvas", J("opt.ribbonWidth.content")],
 	["page", J("opt.ribbonWidth.page")],
 	["content", J("opt.ribbonWidth.own")]
-], hz = (e) => e === "canvas" || e === "page" ? e : "content", gz = () => [
+], _z = (e) => e === "canvas" || e === "page" ? e : "content", vz = () => [
 	["roll", J("opt.ribbonMotion.roll")],
 	["sway", J("opt.ribbonMotion.sway")],
 	["step", J("opt.ribbonMotion.step")],
 	["none", J("opt.ribbonMotion.none")]
 ];
-function _z() {
-	gR.bridge?.sendOpenImageEditor(I(qR).blockId), A(ZR, null);
+function yz() {
+	vR.bridge?.sendOpenImageEditor(I(YR).blockId), A($R, null);
 }
-function vz() {
-	gR.bridge?.sendEditText(I(qR).blockId), A(ZR, null);
+function bz() {
+	vR.bridge?.sendEditText(I(YR).blockId), A($R, null);
 }
-function yz(e) {
-	gR.bridge?.sendTextStyle(I(qR).blockId, e);
+function xz(e) {
+	vR.bridge?.sendTextStyle(I(YR).blockId, e);
 }
-var bz = /* @__PURE__ */ new Map(), xz = /* @__PURE__ */ new Map(), Sz = 0;
-function Cz(e, t) {
-	if (Dz(e, t), gR.viewMode !== "desktop" || !bc(t)) return;
-	clearTimeout(bz.get(t.id));
-	let n = ++Sz;
-	xz.set(t.id, n), bz.set(t.id, setTimeout(() => gR.bridge?.sendFitBlock(e, t.id, n), 60));
+var Sz = /* @__PURE__ */ new Map(), Cz = /* @__PURE__ */ new Map(), wz = 0;
+function Tz(e, t) {
+	if (kz(e, t), vR.viewMode !== "desktop" || !bc(t)) return;
+	clearTimeout(Sz.get(t.id));
+	let n = ++wz;
+	Cz.set(t.id, n), Sz.set(t.id, setTimeout(() => vR.bridge?.sendFitBlock(e, t.id, n), 60));
 }
-var wz = /* @__PURE__ */ new Map(), Tz = null, Ez = "";
-function Dz(e, t) {
+var Ez = /* @__PURE__ */ new Map(), Dz = null, Oz = "";
+function kz(e, t) {
 	if (!xc.has(t.type) || !bc(t)) return;
-	Tz ??= NN({
+	Dz ??= NN({
 		title: () => J("canvas.phoneMeasure"),
 		prepare: (e, t) => {
-			let n = Xe(RR.pluginsView)?.enabled ?? [], r = JSON.stringify(n);
-			(t || r !== Ez) && e({
+			let n = Xe(BR.pluginsView)?.enabled ?? [], r = JSON.stringify(n);
+			(t || r !== Oz) && e({
 				type: "urd-plugins",
 				enabled: n
-			}), Ez = r, e({
+			}), Oz = r, e({
 				type: "urd-site",
 				site: Xe(qF.siteDraft)
 			}), e({
 				type: "urd-collections",
-				collections: Xe(KV.collectionsView) ?? {}
+				collections: Xe(JV.collectionsView) ?? {}
 			});
 		},
-		onHeight: Oz
+		onHeight: Az
 	});
-	let n = ++Sz;
-	wz.set(t.id, n), Tz.request(I(zR), Xe(UR.data), e, t.id, n);
+	let n = ++wz;
+	Ez.set(t.id, n), Dz.request(I(VR), Xe(GR.data), e, t.id, n);
 }
-function Oz(e, t, n, r) {
-	if (e !== I(zR) || r !== wz.get(t)) return;
-	let i = UR.data.sections.flatMap((e) => e.blocks).find((e) => e.id === t), a = Math.round(n);
-	i && a > 0 && i.mobileHeight !== a && (i.mobileHeight = a, UR.save(), sV.updateDirty());
+function Az(e, t, n, r) {
+	if (e !== I(VR) || r !== Ez.get(t)) return;
+	let i = GR.data.sections.flatMap((e) => e.blocks).find((e) => e.id === t), a = Math.round(n);
+	i && a > 0 && i.mobileHeight !== a && (i.mobileHeight = a, GR.save(), lV.updateDirty());
 }
-function kz() {
-	for (let e of bz.values()) clearTimeout(e);
-	bz.clear(), xz.clear(), wz.clear(), Tz?.cancel();
+function jz() {
+	for (let e of Sz.values()) clearTimeout(e);
+	Sz.clear(), Cz.clear(), Ez.clear(), Dz?.cancel();
 }
-function Az(e) {
+function Mz(e) {
 	let t = iy(e), n = t.view === "next" ? {
-		nextCount: I(qR).props.nextCount ?? 3,
-		laterCount: I(qR).props.laterCount ?? 3
+		nextCount: I(YR).props.nextCount ?? 3,
+		laterCount: I(YR).props.laterCount ?? 3
 	} : {}, r = t.id === "plain" && ![
 		"list",
 		"cards",
 		"month",
 		"agenda",
 		"next"
-	].includes(ay(I(qR).props)) ? { view: "list" } : {}, i = {
+	].includes(ay(I(YR).props)) ? { view: "list" } : {}, i = {
 		design: t.id === "plain" ? void 0 : t.id,
 		...t.view ? { view: t.view } : {},
 		...r
-	}, a = (e) => iy(e.design).limit ?? (ay(e) === "agenda" ? 8 : 6), o = (I(qR).props.limit ?? 6) === a(I(qR).props) ? { limit: a({
-		...I(qR).props,
+	}, a = (e) => iy(e.design).limit ?? (ay(e) === "agenda" ? 8 : 6), o = (I(YR).props.limit ?? 6) === a(I(YR).props) ? { limit: a({
+		...I(YR).props,
 		...i
 	}) } : {};
-	uz("design", {
+	fz("design", {
 		...i,
 		...n,
 		...o
 	});
 }
-function jz(e) {
-	uz("phoneView", {
+function Nz(e) {
+	fz("phoneView", {
 		phoneView: e === Fv({
-			...I(qR).props,
+			...I(YR).props,
 			phoneView: void 0,
 			phoneDesign: void 0
 		}) ? void 0 : e,
 		phoneDesign: void 0
 	});
 }
-function Mz(e) {
-	lz("card", e === Hv({
-		...I(qR).props,
+function Pz(e) {
+	dz("card", e === Hv({
+		...I(YR).props,
 		card: void 0
 	}) ? void 0 : e);
 }
-function Nz(e) {
-	cz(`edit:${I(qR).blockId}:fit`, (t) => {
+function Fz(e) {
+	uz(`edit:${I(YR).blockId}:fit`, (t) => {
 		e === "shrink" || e === "both" ? (t.fit = e, t.fitMin ??= .6) : (delete t.fit, delete t.fitMin);
 	});
 }
-function Pz(e) {
-	cz(`edit:${I(qR).blockId}:fitMin`, (t) => {
+function Iz(e) {
+	uz(`edit:${I(YR).blockId}:fitMin`, (t) => {
 		t.fitMin = e;
 	});
 }
-var Fz = null;
-function Iz(e, t) {
+var Lz = null;
+function Rz(e, t) {
 	return {
 		blockId: e.id,
 		size: Oc(e),
@@ -37208,7 +37222,7 @@ function Iz(e, t) {
 		ys: new Map(t.blocks.filter((e) => e.frames?.desktop).map((e) => [e.id, e.frames.desktop.y]))
 	};
 }
-function Lz(e, t, n, r) {
+function zz(e, t, n, r) {
 	r === 1 ? (delete e.size, delete e.sizeMin, delete e.sizeMax) : e.size = r;
 	for (let r of t.blocks) r.id !== e.id && r.frames?.desktop && n.ys.has(r.id) && (r.frames.desktop = {
 		...r.frames.desktop,
@@ -37233,57 +37247,57 @@ function Lz(e, t, n, r) {
 	}
 	e.frames.desktop = a;
 }
-function Rz(e) {
-	cz(`edit:${I(qR).blockId}:size`, (t, n) => {
-		Fz?.blockId !== t.id && (Fz = Iz(t, n));
+function Bz(e) {
+	uz(`edit:${I(YR).blockId}:size`, (t, n) => {
+		Lz?.blockId !== t.id && (Lz = Rz(t, n));
 		let { min: r, max: i } = Ac(t);
-		Lz(t, n, Fz, Math.round(Math.min(i, Math.max(r, e)) * 100) / 100);
+		zz(t, n, Lz, Math.round(Math.min(i, Math.max(r, e)) * 100) / 100);
 	});
 }
-function zz(e, t) {
-	Fz = null, cz(`edit:${I(qR).blockId}:${e}`, (n, r) => {
-		let i = Iz(n, r);
+function Vz(e, t) {
+	Lz = null, uz(`edit:${I(YR).blockId}:${e}`, (n, r) => {
+		let i = Rz(n, r);
 		i.size !== 1 && (n.size = i.size);
 		let a = Math.round(Number(t));
 		Number.isFinite(a) && a > 0 ? n[e] = Math.min(Ec.max, Math.max(Ec.min, a)) : delete n[e];
 		let o = Oc(n);
-		o !== i.size && Lz(n, r, i, o);
+		o !== i.size && zz(n, r, i, o);
 	});
 }
-function Bz(e) {
-	cz(`edit:${I(qR).blockId}:height`, (t) => {
+function Hz(e) {
+	uz(`edit:${I(YR).blockId}:height`, (t) => {
 		e === "own" ? t.height = { mode: "own" } : delete t.height;
 	});
 }
-function Vz(e) {
-	cz(`edit:${I(qR).blockId}:heightAlign`, (t) => {
+function Uz(e) {
+	uz(`edit:${I(YR).blockId}:heightAlign`, (t) => {
 		t.height = { mode: "own" }, e !== "top" && (t.height.align = e);
 	});
 }
-function Hz() {
-	let e = I(qR);
+function Wz() {
+	let e = I(YR);
 	return Sc.has(e.type) ? !0 : e.type === "calendar" && ["list", "cards"].includes(ay(e.props));
 }
-function Uz(e, t) {
-	Number.isFinite(t) && cz(`edit:frame-${I(qR).blockId}:${e}`, (n) => {
+function Gz(e, t) {
+	Number.isFinite(t) && uz(`edit:frame-${I(YR).blockId}:${e}`, (n) => {
 		n.frames.desktop = {
 			...n.frames.desktop,
 			[e]: t
 		};
 	});
 }
-function Wz() {
-	let e = UR.data.sections.find((e) => e.id === I(qR)?.sectionId)?.size?.maxWidth, t = typeof qF.layoutWidth == "number" ? qF.layoutWidth : 0;
+function Kz() {
+	let e = GR.data.sections.find((e) => e.id === I(YR)?.sectionId)?.size?.maxWidth, t = typeof qF.layoutWidth == "number" ? qF.layoutWidth : 0;
 	return e === "full" ? 0 : e ? /^\d+(\.\d+)?px$/.test(e) ? Math.min(parseFloat(e), t || Infinity) : 0 : t;
 }
-function Gz(e) {
-	return Math.round(e / 100 * Wz());
+function qz(e) {
+	return Math.round(e / 100 * Kz());
 }
-function Kz(e, t) {
-	let n = Wz();
+function Jz(e, t) {
+	let n = Kz();
 	if (!Number.isFinite(e) || e < 4 || !(n > 0)) return;
-	let { x: r, w: i, h: a } = I(qR).frame, o = Math.max(.5, Math.min(Math.round(e / n * 200) / 2, Math.round((100 - r) * 2) / 2)), s = t ? Math.max(1, Math.round(o / i * a)) : a;
-	Number.isFinite(o) && Number.isFinite(s) && cz(`edit:frame-${I(qR).blockId}:size`, (e) => {
+	let { x: r, w: i, h: a } = I(YR).frame, o = Math.max(.5, Math.min(Math.round(e / n * 200) / 2, Math.round((100 - r) * 2) / 2)), s = t ? Math.max(1, Math.round(o / i * a)) : a;
+	Number.isFinite(o) && Number.isFinite(s) && uz(`edit:frame-${I(YR).blockId}:size`, (e) => {
 		e.frames.desktop = {
 			...e.frames.desktop,
 			w: o,
@@ -37291,8 +37305,8 @@ function Kz(e, t) {
 		};
 	});
 }
-function qz(e) {
-	cz(`edit:${I(qR).blockId}:boxStyle`, (t) => {
+function Yz(e) {
+	uz(`edit:${I(YR).blockId}:boxStyle`, (t) => {
 		let n = {
 			...t.props.boxStyle ?? {},
 			...e
@@ -37301,126 +37315,126 @@ function qz(e) {
 		Object.keys(n).length ? t.props.boxStyle = n : delete t.props.boxStyle;
 	});
 }
-function Jz(e) {
-	cz("decor", (t) => {
+function Xz(e) {
+	uz("decor", (t) => {
 		t.decor = e;
 	});
 }
-function Yz(e) {
-	let { section: t, block: n } = JR(I(qR)?.sectionId, I(qR)?.blockId);
-	!n || e && om(e, cm(UR.data, n.id)) || (sV.pushHistory(`anchor:${n.id}`), e ? n.anchor = e : delete n.anchor, UR.save(), sV.updateDirty(), gR.bridge?.sendSection(I(zR), t), YR());
+function Zz(e) {
+	let { section: t, block: n } = XR(I(YR)?.sectionId, I(YR)?.blockId);
+	!n || e && om(e, cm(GR.data, n.id)) || (lV.pushHistory(`anchor:${n.id}`), e ? n.anchor = e : delete n.anchor, GR.save(), lV.updateDirty(), vR.bridge?.sendSection(I(VR), t), ZR());
 }
-function Xz(e) {
-	e && om(e, cm(UR.data, I($z))) || pB(`anchor:${I($z)}`, (t) => {
+function Qz(e) {
+	e && om(e, cm(GR.data, I(tB))) || hB(`anchor:${I(tB)}`, (t) => {
 		e ? t.anchor = e : delete t.anchor;
 	});
 }
-function Zz(e) {
-	return cm(UR?.data, e);
+function $z(e) {
+	return cm(GR?.data, e);
 }
-function Qz(e) {
-	let { section: t, block: n } = JR(I(qR)?.sectionId, I(qR)?.blockId);
-	n && (sV.pushHistory("hide-mobile"), n.hideMobile = e, UR.save(), sV.updateDirty(), gR.bridge?.sendSection(I(zR), t), YR());
+function eB(e) {
+	let { section: t, block: n } = XR(I(YR)?.sectionId, I(YR)?.blockId);
+	n && (lV.pushHistory("hide-mobile"), n.hideMobile = e, GR.save(), lV.updateDirty(), vR.bridge?.sendSection(I(VR), t), ZR());
 }
-var $z = /* @__PURE__ */ k(null), eB = /* @__PURE__ */ k(null), tB = /* @__PURE__ */ k(""), nB = /* @__PURE__ */ k(pn([])), rB = /* @__PURE__ */ k(null), iB = /* @__PURE__ */ k(null), aB = /* @__PURE__ */ k(""), oB = /* @__PURE__ */ k(pn({})), sB = /* @__PURE__ */ k(""), cB = /* @__PURE__ */ k("");
-function lB(e) {
-	A(eB, e?.grid ? { ...e.grid } : null, !0), A(tB, e?.size?.minHeight ?? "", !0), A(cB, e?.size?.maxWidth ?? "", !0), A(nB, JSON.parse(JSON.stringify(e?.background?.layers ?? [])), !0), A(rB, e?.animation ? JSON.parse(JSON.stringify(e.animation)) : null, !0), A(iB, e?.hover ? JSON.parse(JSON.stringify(e.hover)) : null, !0), A(aB, e?.theme ?? "", !0), A(oB, e?.divider ? JSON.parse(JSON.stringify(e.divider)) : {}, !0), A(sB, e?.anchor ?? "", !0);
+var tB = /* @__PURE__ */ k(null), nB = /* @__PURE__ */ k(null), rB = /* @__PURE__ */ k(""), iB = /* @__PURE__ */ k(pn([])), aB = /* @__PURE__ */ k(null), oB = /* @__PURE__ */ k(null), sB = /* @__PURE__ */ k(""), cB = /* @__PURE__ */ k(pn({})), lB = /* @__PURE__ */ k(""), uB = /* @__PURE__ */ k("");
+function dB(e) {
+	A(nB, e?.grid ? { ...e.grid } : null, !0), A(rB, e?.size?.minHeight ?? "", !0), A(uB, e?.size?.maxWidth ?? "", !0), A(iB, JSON.parse(JSON.stringify(e?.background?.layers ?? [])), !0), A(aB, e?.animation ? JSON.parse(JSON.stringify(e.animation)) : null, !0), A(oB, e?.hover ? JSON.parse(JSON.stringify(e.hover)) : null, !0), A(sB, e?.theme ?? "", !0), A(cB, e?.divider ? JSON.parse(JSON.stringify(e.divider)) : {}, !0), A(lB, e?.anchor ?? "", !0);
 }
-var uB = /* @__PURE__ */ k(null);
-function dB() {
+var fB = /* @__PURE__ */ k(null);
+function pB() {
 	try {
-		let e = ((gR.iframeEl?.contentDocument)?.querySelector(`.urd-section[data-section-id="${I($z)}"]`))?.getBoundingClientRect();
-		A(uB, e && e.width ? {
+		let e = ((vR.iframeEl?.contentDocument)?.querySelector(`.urd-section[data-section-id="${I(tB)}"]`))?.getBoundingClientRect();
+		A(fB, e && e.width ? {
 			w: e.width,
 			h: e.height
 		} : null, !0);
 	} catch {
-		A(uB, null);
+		A(fB, null);
 	}
-}
-function fB(e) {
-	A($z, e.sectionId, !0), lB(UR?.data.sections.find((t) => t.id === e.sectionId)), e.open && (WU.activePanel = "properties");
-}
-function pB(e, t) {
-	let n = UR.data.sections.find((e) => e.id === I($z));
-	n && (sV.pushHistory(e), t(n), UR.save(), sV.updateDirty(), gR.bridge?.sendSection(I(zR), n), lB(n));
 }
 function mB(e) {
-	let t = e.target.files?.[0];
-	e.target.value = "", t && tW.readVideoFile(t, "status.videoFileFormat", (e) => lz("src", e));
+	A(tB, e.sectionId, !0), dB(GR?.data.sections.find((t) => t.id === e.sectionId)), e.open && (KU.activePanel = "properties");
 }
-async function hB(e) {
+function hB(e, t) {
+	let n = GR.data.sections.find((e) => e.id === I(tB));
+	n && (lV.pushHistory(e), t(n), GR.save(), lV.updateDirty(), vR.bridge?.sendSection(I(VR), n), dB(n));
+}
+function gB(e) {
+	let t = e.target.files?.[0];
+	e.target.value = "", t && rW.readVideoFile(t, "status.videoFileFormat", (e) => dz("src", e));
+}
+async function _B(e) {
 	let t = e.target.files?.[0];
 	if (e.target.value = "", t) try {
-		lz("poster", (await tW.compressOrTrim(t)).dataUrl);
+		dz("poster", (await rW.compressOrTrim(t)).dataUrl);
 	} catch (e) {
-		WU.setStatus(tW.imageErrorText(e), "error");
+		KU.setStatus(rW.imageErrorText(e), "error");
 	}
 }
-var gB = /* @__PURE__ */ O(() => ({
-	mutate: pB,
+var vB = /* @__PURE__ */ O(() => ({
+	mutate: hB,
 	keyPrefix: "bg",
-	keyId: I($z)
+	keyId: I(tB)
 }));
-function _B(e) {
+function yB(e) {
 	return {
 		type: e,
 		version: IN[e].version,
 		props: IN[e].defaults()
 	};
 }
-var vB = (e) => !!(e && IN[e.type]?.entrance), yB = /* @__PURE__ */ O(() => [["", J("common.none")], ...Object.entries(IN).filter(([, e]) => e.entrance).map(([e, t]) => [e, t.labelKey ? J(t.labelKey) : t.label])]), bB = /* @__PURE__ */ O(() => I(yB).filter(([e]) => !IN[e]?.group)), xB = /* @__PURE__ */ O(() => [["", J("common.none")], ...Object.entries(IN).filter(([, e]) => !e.entrance).map(([e, t]) => [e, t.labelKey ? J(t.labelKey) : t.label])]);
-function SB(e) {
-	e.animation && !vB(e.animation) && (e.hover ??= e.animation, e.animation = null);
-}
-function CB(e) {
-	cz(`edit:anim-${I(qR).blockId}`, (t) => {
-		SB(t), t.animation = e ? _B(e) : null;
-	}), I(qR) && gR.bridge?.sendDemoAnim(I(qR).sectionId, I(qR).blockId);
-}
+var bB = (e) => !!(e && IN[e.type]?.entrance), xB = /* @__PURE__ */ O(() => [["", J("common.none")], ...Object.entries(IN).filter(([, e]) => e.entrance).map(([e, t]) => [e, t.labelKey ? J(t.labelKey) : t.label])]), SB = /* @__PURE__ */ O(() => I(xB).filter(([e]) => !IN[e]?.group)), CB = /* @__PURE__ */ O(() => [["", J("common.none")], ...Object.entries(IN).filter(([, e]) => !e.entrance).map(([e, t]) => [e, t.labelKey ? J(t.labelKey) : t.label])]);
 function wB(e) {
-	cz(`edit:hover-${I(qR).blockId}`, (t) => {
-		SB(t), t.hover = e ? _B(e) : null;
-	});
+	e.animation && !bB(e.animation) && (e.hover ??= e.animation, e.animation = null);
 }
-function TB(e, t) {
-	Number.isFinite(t) && (cz(`edit:anim-${I(qR).blockId}:${e}`, (n) => {
-		n.animation && (n.animation.props[e] = t);
-	}), I(qR) && gR.bridge?.sendDemoAnim(I(qR).sectionId, I(qR).blockId));
+function TB(e) {
+	uz(`edit:anim-${I(YR).blockId}`, (t) => {
+		wB(t), t.animation = e ? yB(e) : null;
+	}), I(YR) && vR.bridge?.sendDemoAnim(I(YR).sectionId, I(YR).blockId);
 }
 function EB(e) {
-	let t = UR.data.sections.find((e) => e.id === I($z));
+	uz(`edit:hover-${I(YR).blockId}`, (t) => {
+		wB(t), t.hover = e ? yB(e) : null;
+	});
+}
+function DB(e, t) {
+	Number.isFinite(t) && (uz(`edit:anim-${I(YR).blockId}:${e}`, (n) => {
+		n.animation && (n.animation.props[e] = t);
+	}), I(YR) && vR.bridge?.sendDemoAnim(I(YR).sectionId, I(YR).blockId));
+}
+function OB(e) {
+	let t = GR.data.sections.find((e) => e.id === I(tB));
 	if (!t) return;
 	let n = e.trim();
 	if (!n) return;
 	let r = /^\d+$/.test(n) ? `${n}px` : n;
-	sV.pushHistory("section-size"), t.size = {
+	lV.pushHistory("section-size"), t.size = {
 		...t.size,
 		minHeight: r
-	}, A(tB, r, !0), UR.save(), sV.updateDirty(), gR.bridge?.sendSection(I(zR), t);
+	}, A(rB, r, !0), GR.save(), lV.updateDirty(), vR.bridge?.sendSection(I(VR), t);
 }
-function DB(e) {
-	pB(`edit:section-width:${I($z)}`, (t) => {
+function kB(e) {
+	hB(`edit:section-width:${I(tB)}`, (t) => {
 		let n = { ...t.size ?? {} };
 		e ? n.maxWidth = e : delete n.maxWidth, t.size = n;
 	});
 }
-function OB() {
-	return UR.data.sections.find((e) => e.id === I($z)) ?? UR.data.sections[0];
+function AB() {
+	return GR.data.sections.find((e) => e.id === I(tB)) ?? GR.data.sections[0];
 }
-function kB(e) {
-	let t = UR.data.sections.find((e) => e.id === I($z));
-	t && (sV.pushHistory("grid:section"), t.grid = e ? { ...qF.siteStore.data.grid } : null, A(eB, t.grid ? { ...t.grid } : null, !0), UR.save(), sV.updateDirty(), gR.bridge?.sendSection(I(zR), t), WU.gridOn && gR.bridge?.sendShowGrid(!0));
+function jB(e) {
+	let t = GR.data.sections.find((e) => e.id === I(tB));
+	t && (lV.pushHistory("grid:section"), t.grid = e ? { ...qF.siteStore.data.grid } : null, A(nB, t.grid ? { ...t.grid } : null, !0), GR.save(), lV.updateDirty(), vR.bridge?.sendSection(I(VR), t), KU.gridOn && vR.bridge?.sendShowGrid(!0));
 }
-function AB(e, t) {
-	let n = UR.data.sections.find((e) => e.id === I($z));
-	n?.grid && (sV.pushHistory("grid:section"), n.grid = {
+function MB(e, t) {
+	let n = GR.data.sections.find((e) => e.id === I(tB));
+	n?.grid && (lV.pushHistory("grid:section"), n.grid = {
 		...n.grid,
 		[e]: t
-	}, A(eB, { ...n.grid }, !0), UR.save(), sV.updateDirty(), gR.bridge?.sendSection(I(zR), n), WU.gridOn && gR.bridge?.sendShowGrid(!0));
+	}, A(nB, { ...n.grid }, !0), GR.save(), lV.updateDirty(), vR.bridge?.sendSection(I(VR), n), KU.gridOn && vR.bridge?.sendShowGrid(!0));
 }
-var jB = null;
-function MB(e) {
+var NB = null;
+function PB(e) {
 	return {
 		schemaVersion: 7,
 		meta: {
@@ -37445,39 +37459,39 @@ function MB(e) {
 		}]
 	};
 }
-async function NB(e, { keepHistory: t = !1 } = {}) {
-	A(zR, e, !0), jB = (async () => {
-		let n = KR(), r = GR.get(n.file);
+async function FB(e, { keepHistory: t = !1 } = {}) {
+	A(VR, e, !0), NB = (async () => {
+		let n = JR(), r = qR.get(n.file);
 		if (!r) try {
 			let e = await fetch(`/${n.file}`);
 			e.ok && (r = Qc(await e.json(), qF.siteStore.data));
 		} catch {}
-		r ? WR.delete(e) : r = MB(n), UR = qM(`urd-draft-${e}`, () => r, WU.draftSaveError), (UR.data.schemaVersion ?? 1) > 7 && (console.warn(`Urd: the draft for '${e}' has schemaVersion ${UR.data.schemaVersion} (the engine has 7) and is discarded`), UR.replace(structuredClone(r))), UR.replace(Qc(UR.data, qF.siteStore.data)), UR.save(), t || (sV.lastHistoryKey = null), A($z, null), A(eB, null), sV.updateDirty(), qF.readSeoDraft(), WU.updateAttention(), WU.status = "";
-	})(), await jB;
+		r ? KR.delete(e) : r = PB(n), GR = qM(`urd-draft-${e}`, () => r, KU.draftSaveError), (GR.data.schemaVersion ?? 1) > 7 && (console.warn(`Urd: the draft for '${e}' has schemaVersion ${GR.data.schemaVersion} (the engine has 7) and is discarded`), GR.replace(structuredClone(r))), GR.replace(Qc(GR.data, qF.siteStore.data)), GR.save(), t || (lV.lastHistoryKey = null), A(tB, null), A(nB, null), lV.updateDirty(), qF.readSeoDraft(), KU.updateAttention(), KU.status = "";
+	})(), await NB;
 }
-async function PB(e) {
+async function IB(e) {
 	let t = localStorage.getItem(`urd-draft-${e.id}`);
 	if (t) try {
 		return JSON.parse(t);
 	} catch {}
-	let n = GR.get(e.file);
+	let n = qR.get(e.file);
 	if (n) return n;
 	try {
 		let t = await fetch(`/${e.file}`);
 		if (t.ok) return Qc(await t.json(), qF.siteStore.data);
 	} catch {}
-	return MB(e);
+	return PB(e);
 }
-function FB() {
-	let e = KR();
+function LB() {
+	let e = JR();
 	if (!e) return;
 	let t = !1;
 	if (!Eb().length) {
-		let e = KV.publishedCollections, n = KV.collectionIds.filter((t) => e[t]?.kind === "products").flatMap((t) => e[t].entries ?? []).find((e) => Number(e.price) > 0);
+		let e = JV.publishedCollections, n = JV.collectionIds.filter((t) => e[t]?.kind === "products").flatMap((t) => e[t].entries ?? []).find((e) => Number(e.price) > 0);
 		n && (Db(bb([], {
 			key: mb(n.id),
 			id: n.id,
-			title: KV.plainTitle(n.title),
+			title: JV.plainTitle(n.title),
 			price: Number(n.price) || 0
 		})), t = !0);
 	}
@@ -37485,367 +37499,367 @@ function FB() {
 	n.searchParams.set("draft", "1");
 	let r = window.open(n.href, "_blank");
 	r ? (r.opener = null, [
-		UR,
+		GR,
 		qF.siteStore,
-		...Object.values(KV.collectionStores)
-	].some((e) => e?.hasDraft()) ? WU.setStatus(J("status.testPaymentDraft")) : t && WU.setStatus(J("status.testPaymentBasket"))) : WU.setStatus(J("status.testPaymentBlocked"), "error");
+		...Object.values(JV.collectionStores)
+	].some((e) => e?.hasDraft()) ? KU.setStatus(J("status.testPaymentDraft")) : t && KU.setStatus(J("status.testPaymentBasket"))) : KU.setStatus(J("status.testPaymentBlocked"), "error");
 }
-var IB = !1;
-async function LB(e) {
-	if (!IB) {
-		IB = !0;
+var RB = !1;
+async function zB(e) {
+	if (!RB) {
+		RB = !0;
 		try {
-			await jB;
-			let t = (t) => (t?.sections ?? []).find((t) => (t.blocks ?? []).some((t) => t.type === e)) ?? null, n = qF.siteDraft.pages ?? [], r = n.find((e) => e.id === I(zR));
+			await NB;
+			let t = (t) => (t?.sections ?? []).find((t) => (t.blocks ?? []).some((t) => t.type === e)) ?? null, n = qF.siteDraft.pages ?? [], r = n.find((e) => e.id === I(VR));
 			for (let e of [r, ...n.filter((e) => e !== r)].filter(Boolean)) {
-				let n = t(e.id === I(zR) ? UR?.data : await PB(e));
+				let n = t(e.id === I(VR) ? GR?.data : await IB(e));
 				if (n) {
-					A(ZR, null), A(qR, null), e.id === I(zR) ? gR.bridge?.sendScrollSection(n.id) : await NB(e.id);
+					A($R, null), A(YR, null), e.id === I(VR) ? vR.bridge?.sendScrollSection(n.id) : await FB(e.id);
 					return;
 				}
 			}
-			WU.setStatus(J(e === "checkout" ? "status.noCheckoutPage" : "status.noShopPage"));
+			KU.setStatus(J(e === "checkout" ? "status.noCheckoutPage" : "status.noShopPage"));
 		} finally {
-			IB = !1;
+			RB = !1;
 		}
 	}
 }
-async function RB(e, t) {
-	let n = await PB(e);
-	t(n), WU.writeDraftKey(`urd-draft-${e.id}`, JSON.stringify(n)), sV.updateDirty();
+async function BB(e, t) {
+	let n = await IB(e);
+	t(n), KU.writeDraftKey(`urd-draft-${e.id}`, JSON.stringify(n)), lV.updateDirty();
 }
-async function zB(e) {
+async function VB(e) {
 	let t = [...e.target.files ?? []];
 	if (e.target.value = "", !t.length) return;
-	WU.setStatus(J("status.compressingImages"));
-	let { images: n, failed: r, big: i } = await tW.compressMany(t);
-	n.length && cz("gallery-add", (e) => {
+	KU.setStatus(J("status.compressingImages"));
+	let { images: n, failed: r, big: i } = await rW.compressMany(t);
+	n.length && uz("gallery-add", (e) => {
 		e.props.images.push(...n);
-	}), tW.reportUpload(n.length, r, i);
+	}), rW.reportUpload(n.length, r, i);
 }
-function BB(e, t) {
-	cz("gallery-move", (n) => {
+function HB(e, t) {
+	uz("gallery-move", (n) => {
 		let r = e + t;
 		r < 0 || r >= n.props.images.length || ([n.props.images[e], n.props.images[r]] = [n.props.images[r], n.props.images[e]]);
 	});
 }
-function VB(e) {
-	cz("gallery-remove", (t) => {
+function UB(e) {
+	uz("gallery-remove", (t) => {
 		t.props.images.splice(e, 1);
 	});
 }
-function HB(e, t, n) {
-	cz(`edit:${I(qR).blockId}:img${e}-${t}`, (r) => {
+function WB(e, t, n) {
+	uz(`edit:${I(YR).blockId}:img${e}-${t}`, (r) => {
 		r.props.images[e][t] = n;
 	});
 }
-function UB(e, t) {
-	cz(`link:${I(qR).blockId}:img${e}`, (n) => bh(n.props.images[e], t));
+function GB(e, t) {
+	uz(`link:${I(YR).blockId}:img${e}`, (n) => bh(n.props.images[e], t));
 }
-function WB(e) {
-	cz(`link:${I(qR).blockId}`, (t) => bh(t.props, e));
+function KB(e) {
+	uz(`link:${I(YR).blockId}`, (t) => bh(t.props, e));
 }
-function GB() {
-	Fz = null;
+function qB() {
+	Lz = null;
 }
-function KB() {
+function JB() {
 	Nn(() => {
-		if (I(ZR)) return QR(), window.addEventListener("resize", QR), () => window.removeEventListener("resize", QR);
+		if (I($R)) return ez(), window.addEventListener("resize", ez), () => window.removeEventListener("resize", ez);
 	}), Nn(() => {
-		I($R)?.mode === "set" && I(qR)?.type !== "calendar" && A($R, null), I($R)?.kind === "block" && I(qR)?.blockId !== I($R).blockId && A($R, null);
+		I(tz)?.mode === "set" && I(YR)?.type !== "calendar" && A(tz, null), I(tz)?.kind === "block" && I(YR)?.blockId !== I(tz).blockId && A(tz, null);
 	}), Nn(() => {
-		let e = I(qR)?.blockId ?? null;
-		e !== ez && (ez = e, $y.menuQuery = "", $y.propsQuery = "");
+		let e = I(YR)?.blockId ?? null;
+		e !== nz && (nz = e, $y.menuQuery = "", $y.propsQuery = "");
 	}), Nn(() => {
-		I(ZR) || ($y.menuQuery = "");
+		I($R) || ($y.menuQuery = "");
 	}), Nn(() => {
-		I($z), I(nB), requestAnimationFrame(() => requestAnimationFrame(dB));
+		I(tB), I(iB), requestAnimationFrame(() => requestAnimationFrame(pB));
 	}), Nn(() => {
-		let e = gR.iframeEl;
+		let e = vR.iframeEl;
 		if (!e || typeof ResizeObserver > "u") return;
-		let t = new ResizeObserver(() => dB());
+		let t = new ResizeObserver(() => pB());
 		return t.observe(e), () => t.disconnect();
 	});
 }
 var $ = {
 	get sections() {
-		return UR?.data.sections ?? [];
+		return GR?.data.sections ?? [];
 	},
 	get pageId() {
-		return I(zR);
+		return I(VR);
 	},
 	set pageId(e) {
-		A(zR, e, !0);
+		A(VR, e, !0);
 	},
-	handleApplyLayout: BR,
-	hasMobileOverrides: VR,
-	markDesktopChange: HR,
+	handleApplyLayout: HR,
+	hasMobileOverrides: UR,
+	markDesktopChange: WR,
 	get store() {
-		return UR;
+		return GR;
 	},
 	set store(e) {
-		UR = e;
+		GR = e;
 	},
-	pendingPublished: WR,
-	held: GR,
-	pageEntry: KR,
+	pendingPublished: KR,
+	held: qR,
+	pageEntry: JR,
 	get selectedBlock() {
-		return I(qR);
+		return I(YR);
 	},
 	set selectedBlock(e) {
-		A(qR, e, !0);
+		A(YR, e, !0);
 	},
-	readBlock: JR,
-	syncSelectedBlock: YR,
-	onSelectBlock: XR,
+	readBlock: XR,
+	syncSelectedBlock: ZR,
+	onSelectBlock: QR,
 	get blockMenu() {
-		return I(ZR);
-	},
-	set blockMenu(e) {
-		A(ZR, e, !0);
-	},
-	moveBlockMenu: oz,
-	menuBackToBlock: sz,
-	onMenuArea: tz,
-	measureMenuRoom: QR,
-	get designPicker() {
 		return I($R);
 	},
-	set designPicker(e) {
+	set blockMenu(e) {
 		A($R, e, !0);
 	},
+	moveBlockMenu: cz,
+	menuBackToBlock: lz,
+	onMenuArea: rz,
+	measureMenuRoom: ez,
+	get designPicker() {
+		return I(tz);
+	},
+	set designPicker(e) {
+		A(tz, e, !0);
+	},
 	get searchBlockId() {
-		return ez;
+		return nz;
 	},
 	set searchBlockId(e) {
-		ez = e;
+		nz = e;
 	},
-	onBlockMenu: rz,
-	mutateBlock: cz,
-	setBlockProp: lz,
-	setBlockProps: uz,
-	groupReset: dz,
-	groupChanged: fz,
-	onOff: pz,
-	RIBBON_REACH: mz,
-	ribbonReach: hz,
-	RIBBON_MOTIONS: gz,
-	openImageEditor: _z,
-	editText: vz,
-	setTextStyle: yz,
-	fitTimers: bz,
-	fitSeq: xz,
+	onBlockMenu: az,
+	mutateBlock: uz,
+	setBlockProp: dz,
+	setBlockProps: fz,
+	groupReset: pz,
+	groupChanged: mz,
+	onOff: hz,
+	RIBBON_REACH: gz,
+	ribbonReach: _z,
+	RIBBON_MOTIONS: vz,
+	openImageEditor: yz,
+	editText: bz,
+	setTextStyle: xz,
+	fitTimers: Sz,
+	fitSeq: Cz,
 	get fitCount() {
-		return Sz;
+		return wz;
 	},
 	set fitCount(e) {
-		Sz = e;
+		wz = e;
 	},
-	fitBlockSoon: Cz,
-	phoneSeq: wz,
+	fitBlockSoon: Tz,
+	phoneSeq: Ez,
 	get phoneFit() {
-		return Tz;
+		return Dz;
 	},
 	set phoneFit(e) {
-		Tz = e;
+		Dz = e;
 	},
 	get phonePlugins() {
-		return Ez;
+		return Oz;
 	},
 	set phonePlugins(e) {
-		Ez = e;
+		Oz = e;
 	},
-	phoneFitSoon: Dz,
-	applyPhoneHeight: Oz,
-	dropFits: kz,
-	setCalendarDesign: Az,
-	setCalendarPhoneView: jz,
-	setCalendarCard: Mz,
-	setBlockFit: Nz,
-	setBlockFitMin: Pz,
+	phoneFitSoon: kz,
+	applyPhoneHeight: Az,
+	dropFits: jz,
+	setCalendarDesign: Mz,
+	setCalendarPhoneView: Nz,
+	setCalendarCard: Pz,
+	setBlockFit: Fz,
+	setBlockFitMin: Iz,
 	get sizeGesture() {
-		return Fz;
+		return Lz;
 	},
 	set sizeGesture(e) {
-		Fz = e;
+		Lz = e;
 	},
-	setBlockSize: Rz,
-	setBlockSizeBound: zz,
-	setBlockHeightMode: Bz,
-	setBlockHeightAlign: Vz,
-	canStretch: Hz,
-	setBlockFrame: Uz,
-	designWidth: Wz,
-	shapePx: Gz,
-	setShapeSizePx: Kz,
-	setBoxStyle: qz,
-	setBlockDecor: Jz,
-	setBlockHideMobile: Qz,
-	setBlockAnchor: Yz,
-	setSectionAnchor: Xz,
-	anchorsTaken: Zz,
+	setBlockSize: Bz,
+	setBlockSizeBound: Vz,
+	setBlockHeightMode: Hz,
+	setBlockHeightAlign: Uz,
+	canStretch: Wz,
+	setBlockFrame: Gz,
+	designWidth: Kz,
+	shapePx: qz,
+	setShapeSizePx: Jz,
+	setBoxStyle: Yz,
+	setBlockDecor: Xz,
+	setBlockHideMobile: eB,
+	setBlockAnchor: Zz,
+	setSectionAnchor: Qz,
+	anchorsTaken: $z,
 	get sectionAnchor() {
-		return I(sB);
+		return I(lB);
 	},
 	get activeSectionId() {
-		return I($z);
-	},
-	set activeSectionId(e) {
-		A($z, e, !0);
-	},
-	get sectionGrid() {
-		return I(eB);
-	},
-	set sectionGrid(e) {
-		A(eB, e, !0);
-	},
-	get sectionMinHeight() {
 		return I(tB);
 	},
-	set sectionMinHeight(e) {
+	set activeSectionId(e) {
 		A(tB, e, !0);
 	},
-	get sectionMaxWidth() {
-		return I(cB);
-	},
-	set sectionMaxWidth(e) {
-		A(cB, e, !0);
-	},
-	setSectionWidth: DB,
-	get sectionBg() {
+	get sectionGrid() {
 		return I(nB);
 	},
-	set sectionBg(e) {
+	set sectionGrid(e) {
 		A(nB, e, !0);
 	},
-	get sectionAnim() {
+	get sectionMinHeight() {
 		return I(rB);
 	},
-	set sectionAnim(e) {
+	set sectionMinHeight(e) {
 		A(rB, e, !0);
 	},
-	get sectionHover() {
-		return I(iB);
-	},
-	set sectionHover(e) {
-		A(iB, e, !0);
-	},
-	get sectionTheme() {
-		return I(aB);
-	},
-	set sectionTheme(e) {
-		A(aB, e, !0);
-	},
-	get sectionDivider() {
-		return I(oB);
-	},
-	set sectionDivider(e) {
-		A(oB, e, !0);
-	},
-	syncSectionMirrors: lB,
-	get secBox() {
+	get sectionMaxWidth() {
 		return I(uB);
 	},
-	set secBox(e) {
+	set sectionMaxWidth(e) {
 		A(uB, e, !0);
 	},
-	measureSecBox: dB,
-	onSelectSection: fB,
-	mutateSection: pB,
-	setBlockVideoFile: mB,
-	setBlockVideoPoster: hB,
+	setSectionWidth: kB,
+	get sectionBg() {
+		return I(iB);
+	},
+	set sectionBg(e) {
+		A(iB, e, !0);
+	},
+	get sectionAnim() {
+		return I(aB);
+	},
+	set sectionAnim(e) {
+		A(aB, e, !0);
+	},
+	get sectionHover() {
+		return I(oB);
+	},
+	set sectionHover(e) {
+		A(oB, e, !0);
+	},
+	get sectionTheme() {
+		return I(sB);
+	},
+	set sectionTheme(e) {
+		A(sB, e, !0);
+	},
+	get sectionDivider() {
+		return I(cB);
+	},
+	set sectionDivider(e) {
+		A(cB, e, !0);
+	},
+	syncSectionMirrors: dB,
+	get secBox() {
+		return I(fB);
+	},
+	set secBox(e) {
+		A(fB, e, !0);
+	},
+	measureSecBox: pB,
+	onSelectSection: mB,
+	mutateSection: hB,
+	setBlockVideoFile: gB,
+	setBlockVideoPoster: _B,
 	get sectionBgCtx() {
-		return I(gB);
+		return I(vB);
 	},
-	animObj: _B,
-	isEntrance: vB,
+	animObj: yB,
+	isEntrance: bB,
 	get ENTRANCE_OPTIONS() {
-		return I(yB);
-	},
-	get BLOCK_ENTRANCE_OPTIONS() {
-		return I(bB);
-	},
-	get HOVER_OPTIONS() {
 		return I(xB);
 	},
-	normalizeAnim: SB,
-	setBlockAnimation: CB,
-	setBlockHover: wB,
-	setBlockAnimProp: TB,
-	setSectionHeight: EB,
-	targetSection: OB,
-	toggleSectionGrid: kB,
-	setSectionGrid: AB,
+	get BLOCK_ENTRANCE_OPTIONS() {
+		return I(SB);
+	},
+	get HOVER_OPTIONS() {
+		return I(CB);
+	},
+	normalizeAnim: wB,
+	setBlockAnimation: TB,
+	setBlockHover: EB,
+	setBlockAnimProp: DB,
+	setSectionHeight: OB,
+	targetSection: AB,
+	toggleSectionGrid: jB,
+	setSectionGrid: MB,
 	get pageLoading() {
-		return jB;
+		return NB;
 	},
 	set pageLoading(e) {
-		jB = e;
+		NB = e;
 	},
-	blankPage: MB,
-	selectPage: NB,
-	readPageDraft: PB,
-	openPageWith: LB,
-	testPayment: FB,
-	patchPageDraft: RB,
-	addGalleryImages: zB,
-	moveGalleryImage: BB,
-	removeGalleryImage: VB,
-	setGalleryImageField: HB,
-	setGalleryImageLink: UB,
-	setBlockLink: WB,
-	endSizeGesture: GB,
-	effects: KB
-}, qB = /* @__PURE__ */ k(!1), JB = /* @__PURE__ */ k(0);
-function YB() {
-	A(JB, kr(() => I(JB)) + 1);
-	let e = qF.siteDraft?.pages?.some((e) => !$.pendingPublished.has(e.id) && localStorage.getItem(`urd-draft-${e.id}`) !== null) ?? !1, t = EN(KV.collectionsIndexStore?.hasDraft() ?? !1, KV.legacyIndexIds) || Object.values(KV.collectionStores).some((e) => e.hasDraft()), n = TP.templatesIndexStore?.hasDraft() || Object.values(TP.templateStores).some((e) => e.hasDraft());
-	A(qB, e || $.store?.hasDraft() && !$.pendingPublished.has($.pageId) || qF.siteStore?.hasDraft() || RR.pluginsStore?.hasDraft() || t || n || !1, !0);
+	blankPage: PB,
+	selectPage: FB,
+	readPageDraft: IB,
+	openPageWith: zB,
+	testPayment: LB,
+	patchPageDraft: BB,
+	addGalleryImages: VB,
+	moveGalleryImage: HB,
+	removeGalleryImage: UB,
+	setGalleryImageField: WB,
+	setGalleryImageLink: GB,
+	setBlockLink: KB,
+	endSizeGesture: qB,
+	effects: JB
+}, YB = /* @__PURE__ */ k(!1), XB = /* @__PURE__ */ k(0);
+function ZB() {
+	A(XB, kr(() => I(XB)) + 1);
+	let e = qF.siteDraft?.pages?.some((e) => !$.pendingPublished.has(e.id) && localStorage.getItem(`urd-draft-${e.id}`) !== null) ?? !1, t = EN(JV.collectionsIndexStore?.hasDraft() ?? !1, JV.legacyIndexIds) || Object.values(JV.collectionStores).some((e) => e.hasDraft()), n = TP.templatesIndexStore?.hasDraft() || Object.values(TP.templateStores).some((e) => e.hasDraft());
+	A(YB, e || $.store?.hasDraft() && !$.pendingPublished.has($.pageId) || qF.siteStore?.hasDraft() || BR.pluginsStore?.hasDraft() || t || n || !1, !0);
 }
-var XB = [], ZB = [], QB = null;
-function $B() {
+var QB = [], $B = [], eV = null;
+function tV() {
 	return JSON.stringify({
 		pageId: $.pageId,
 		page: $.store.data,
 		site: qF.siteStore.data,
-		collectionsIndex: KV.collectionsReady ? KV.collectionsIndexStore.data : null,
-		collections: KV.collectionsReady ? Object.fromEntries(Object.entries(KV.collectionStores).map(([e, t]) => [e, t.data])) : {},
+		collectionsIndex: JV.collectionsReady ? JV.collectionsIndexStore.data : null,
+		collections: JV.collectionsReady ? Object.fromEntries(Object.entries(JV.collectionStores).map(([e, t]) => [e, t.data])) : {},
 		templatesIndex: TP.templatesReady ? TP.templatesIndexStore.data : null,
 		templates: TP.templatesReady ? Object.fromEntries(Object.entries(TP.templateStores).map(([e, t]) => [e, t.data])) : {},
-		plugins: RR.pluginsStore?.data ?? null
+		plugins: BR.pluginsStore?.data ?? null
 	});
 }
-function eV(e) {
-	(e !== QB || !e.startsWith("edit:") && !e.startsWith("grid:")) && (XB.push($B()), XB.length > 50 && XB.shift(), ZB.length = 0, QB = e);
+function nV(e) {
+	(e !== eV || !e.startsWith("edit:") && !e.startsWith("grid:")) && (QB.push(tV()), QB.length > 50 && QB.shift(), $B.length = 0, eV = e);
 }
-function tV(e) {
+function rV(e) {
 	let { pageId: t, page: n, site: r, collectionsIndex: i, collections: a, templatesIndex: o, templates: s, plugins: c } = JSON.parse(e);
 	qF.siteStore.replace(r), qF.linkSiteDraft(), qF.siteStore.save(), qF.grid = {
 		snap: !0,
 		...qF.siteDraft.grid
-	}, qF.pushSiteToPreview(), nV(i, a ?? {}), rV(o, s ?? {}), iV(c), t && t !== $.pageId && qF.siteDraft.pages.some((e) => e.id === t) ? (WU.writeDraftKey(`urd-draft-${t}`, JSON.stringify(n)), $.selectPage(t, { keepHistory: !0 }), YB()) : ($.store.replace(n), $.store.save(), YB(), WU.updateAttention(), $.syncSelectedBlock(), $.syncSectionMirrors($.store.data.sections.find((e) => e.id === $.activeSectionId)), qF.siteDraft.pages.some((e) => e.id === $.pageId) ? gR.bridge?.sendPage($.pageId, $.store.data) : $.selectPage(qF.siteDraft.pages[0].id, { keepHistory: !0 }));
+	}, qF.pushSiteToPreview(), iV(i, a ?? {}), aV(o, s ?? {}), oV(c), t && t !== $.pageId && qF.siteDraft.pages.some((e) => e.id === t) ? (KU.writeDraftKey(`urd-draft-${t}`, JSON.stringify(n)), $.selectPage(t, { keepHistory: !0 }), ZB()) : ($.store.replace(n), $.store.save(), ZB(), KU.updateAttention(), $.syncSelectedBlock(), $.syncSectionMirrors($.store.data.sections.find((e) => e.id === $.activeSectionId)), qF.siteDraft.pages.some((e) => e.id === $.pageId) ? vR.bridge?.sendPage($.pageId, $.store.data) : $.selectPage(qF.siteDraft.pages[0].id, { keepHistory: !0 }));
 }
-function nV(e, t) {
-	if (KV.collectionsIndexStore && e && JSON.stringify({
-		index: KV.collectionsIndexStore.data,
-		collections: Object.fromEntries(Object.entries(KV.collectionStores).map(([e, t]) => [e, t.data]))
+function iV(e, t) {
+	if (JV.collectionsIndexStore && e && JSON.stringify({
+		index: JV.collectionsIndexStore.data,
+		collections: Object.fromEntries(Object.entries(JV.collectionStores).map(([e, t]) => [e, t.data]))
 	}) !== JSON.stringify({
 		index: e,
 		collections: t
 	})) {
-		KV.collectionsIndexStore.replace(e), KV.collectionsIndexStore.save();
-		for (let e of Object.keys(KV.collectionStores)) e in t || (localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete KV.collectionStores[e]);
+		JV.collectionsIndexStore.replace(e), JV.collectionsIndexStore.save();
+		for (let e of Object.keys(JV.collectionStores)) e in t || (localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete JV.collectionStores[e]);
 		for (let [e, n] of Object.entries(t)) {
-			if (!KV.collectionStores[e]) {
-				let t = KV.publishedCollections[e] ?? null;
-				KV.collectionStores[e] = qM(`urd-draft-collection-${e}`, () => t, WU.draftSaveError, `urd-draft-samling-${e}`);
+			if (!JV.collectionStores[e]) {
+				let t = JV.publishedCollections[e] ?? null;
+				JV.collectionStores[e] = qM(`urd-draft-collection-${e}`, () => t, KU.draftSaveError, `urd-draft-samling-${e}`);
 			}
-			KV.collectionStores[e].replace(n), KV.collectionStores[e].save();
+			JV.collectionStores[e].replace(n), JV.collectionStores[e].save();
 		}
-		KV.collectionIds = [...e.samlinger ?? []], KV.activeCollection && !KV.collectionIds.includes(KV.activeCollection) && (KV.activeCollection = null), KV.syncCollectionsView();
+		JV.collectionIds = [...e.samlinger ?? []], JV.activeCollection && !JV.collectionIds.includes(JV.activeCollection) && (JV.activeCollection = null), JV.syncCollectionsView();
 	}
 }
-function rV(e, t) {
+function aV(e, t) {
 	if (TP.templatesIndexStore && e && JSON.stringify({
 		index: TP.templatesIndexStore.data,
 		templates: Object.fromEntries(Object.entries(TP.templateStores).map(([e, t]) => [e, t.data]))
@@ -37855,182 +37869,182 @@ function rV(e, t) {
 	})) {
 		TP.templatesIndexStore.replace(e), TP.templatesIndexStore.save();
 		for (let e of Object.keys(TP.templateStores)) e in t || (localStorage.removeItem(`urd-draft-template-${e}`), localStorage.removeItem(`urd-draft-mal-${e}`), delete TP.templateStores[e]);
-		for (let [e, n] of Object.entries(t)) TP.templateStores[e] || (TP.templateStores[e] = qM(`urd-draft-template-${e}`, () => TP.publishedTemplates[e] ?? null, WU.draftSaveError, `urd-draft-mal-${e}`)), TP.templateStores[e].replace(n), TP.templateStores[e].save();
-		TP.templateIds = [...e.maler ?? []], YB(), TP.pushTemplatesToPreview();
+		for (let [e, n] of Object.entries(t)) TP.templateStores[e] || (TP.templateStores[e] = qM(`urd-draft-template-${e}`, () => TP.publishedTemplates[e] ?? null, KU.draftSaveError, `urd-draft-mal-${e}`)), TP.templateStores[e].replace(n), TP.templateStores[e].save();
+		TP.templateIds = [...e.maler ?? []], ZB(), TP.pushTemplatesToPreview();
 	}
 }
-function iV(e) {
-	RR.pluginsStore && e && JSON.stringify(RR.pluginsStore.data) !== JSON.stringify(e) && (RR.pluginsStore.replace(e), RR.pluginsStore.save(), RR.syncPluginsView(), gR.reloadPreview());
+function oV(e) {
+	BR.pluginsStore && e && JSON.stringify(BR.pluginsStore.data) !== JSON.stringify(e) && (BR.pluginsStore.replace(e), BR.pluginsStore.save(), BR.syncPluginsView(), vR.reloadPreview());
 }
-function aV() {
-	XB.length && ($.dropFits(), ZB.push($B()), tV(XB.pop()), QB = null, WU.setStatus(J("status.undone")));
+function sV() {
+	QB.length && ($.dropFits(), $B.push(tV()), rV(QB.pop()), eV = null, KU.setStatus(J("status.undone")));
 }
-function oV() {
-	ZB.length && ($.dropFits(), XB.push($B()), tV(ZB.pop()), QB = null, WU.setStatus(J("status.redone")));
+function cV() {
+	$B.length && ($.dropFits(), QB.push(tV()), rV($B.pop()), eV = null, KU.setStatus(J("status.redone")));
 }
-var sV = {
+var lV = {
 	get dirty() {
-		return I(qB);
+		return I(YB);
 	},
 	set dirty(e) {
-		A(qB, e, !0);
+		A(YB, e, !0);
 	},
 	get edits() {
-		return I(JB);
+		return I(XB);
 	},
-	updateDirty: YB,
-	history: XB,
-	redoStack: ZB,
+	updateDirty: ZB,
+	history: QB,
+	redoStack: $B,
 	get lastHistoryKey() {
-		return QB;
+		return eV;
 	},
 	set lastHistoryKey(e) {
-		QB = e;
+		eV = e;
 	},
-	snapshot: $B,
-	pushHistory: eV,
-	restore: tV,
-	restoreCollections: nV,
-	restoreTemplates: rV,
-	restorePlugins: iV,
-	undo: aV,
-	redo: oV
-}, cV = null, lV = null, uV = {}, dV = {}, fV = !1, pV = /* @__PURE__ */ k(pn([])), mV = /* @__PURE__ */ k(!1), hV = /* @__PURE__ */ k(pn({})), gV = /* @__PURE__ */ k(null), _V = /* @__PURE__ */ k(null), vV = /* @__PURE__ */ k(null);
-function yV(e) {
-	typeof e?.collection == "string" && I(pV).includes(e.collection) && typeof e.entryId == "string" && (A(gV, e.collection, !0), A(_V, {
+	snapshot: tV,
+	pushHistory: nV,
+	restore: rV,
+	restoreCollections: iV,
+	restoreTemplates: aV,
+	restorePlugins: oV,
+	undo: sV,
+	redo: cV
+}, uV = null, dV = null, fV = {}, pV = {}, mV = !1, hV = /* @__PURE__ */ k(pn([])), gV = /* @__PURE__ */ k(!1), _V = /* @__PURE__ */ k(pn({})), vV = /* @__PURE__ */ k(null), yV = /* @__PURE__ */ k(null), bV = /* @__PURE__ */ k(null);
+function xV(e) {
+	typeof e?.collection == "string" && I(hV).includes(e.collection) && typeof e.entryId == "string" && (A(vV, e.collection, !0), A(yV, {
 		id: e.entryId,
 		field: typeof e.field == "string" ? e.field : "title"
-	}, !0), WU.activePanel = "collections");
+	}, !0), KU.activePanel = "collections");
 }
-var bV = /* @__PURE__ */ k(null), xV = /* @__PURE__ */ k(null), SV = /* @__PURE__ */ k(pn([])), CV = /* @__PURE__ */ k(""), wV = /* @__PURE__ */ k("news");
-async function TV() {
+var SV = /* @__PURE__ */ k(null), CV = /* @__PURE__ */ k(null), wV = /* @__PURE__ */ k(pn([])), TV = /* @__PURE__ */ k(""), EV = /* @__PURE__ */ k("news");
+async function DV() {
 	let { index: e, legacy: t, unreadable: n } = await SN();
 	if (n) {
-		A(mV, !0), A(pV, [], !0), WU.setStatus(J("status.collectionsUnreadable"), "error");
+		A(gV, !0), A(hV, [], !0), KU.setStatus(J("status.collectionsUnreadable"), "error");
 		return;
 	}
-	lV = t;
+	dV = t;
 	let r = wN(localStorage), i = CN(e, t);
-	if (cV = qM(_N, () => i, WU.draftSaveError), cV.data.samlinger = TN({
+	if (uV = qM(_N, () => i, KU.draftSaveError), uV.data.samlinger = TN({
 		published: e.samlinger,
 		legacy: t,
-		draft: cV.hasDraft() ? cV.data.samlinger : null,
+		draft: uV.hasDraft() ? uV.data.samlinger : null,
 		earlier: r.ids
-	}), cV.save()) for (let e of r.keys) localStorage.removeItem(e);
-	A(pV, [...cV.data.samlinger], !0);
-	for (let e of I(pV)) {
+	}), uV.save()) for (let e of r.keys) localStorage.removeItem(e);
+	A(hV, [...uV.data.samlinger], !0);
+	for (let e of I(hV)) {
 		let t = null;
 		try {
 			t = await (await fetch(`/content/samlinger/${e}.json`)).json();
 		} catch {}
-		dV[e] = t, uV[e] = qM(`urd-draft-collection-${e}`, () => t, WU.draftSaveError, `urd-draft-samling-${e}`), !t && !uV[e].data && (uV[e].replace({
+		pV[e] = t, fV[e] = qM(`urd-draft-collection-${e}`, () => t, KU.draftSaveError, `urd-draft-samling-${e}`), !t && !fV[e].data && (fV[e].replace({
 			schemaVersion: 1,
 			id: e,
 			name: e,
 			kind: "custom",
 			entries: []
-		}), uV[e].save());
+		}), fV[e].save());
 	}
-	fV = !0, EV();
+	mV = !0, OV();
 }
-function EV(e = !0) {
+function OV(e = !0) {
 	let t = {};
-	for (let e of I(pV)) uV[e] && (t[e] = JSON.parse(JSON.stringify(uV[e].data)));
-	A(hV, t, !0), e && DV();
+	for (let e of I(hV)) fV[e] && (t[e] = JSON.parse(JSON.stringify(fV[e].data)));
+	A(_V, t, !0), e && kV();
 }
-function DV() {
-	gR.bridge?.sendCollections(Xe(I(hV)) ?? {});
+function kV() {
+	vR.bridge?.sendCollections(Xe(I(_V)) ?? {});
 }
-function OV(e, t, n, r = !0) {
-	let i = uV[e];
-	i && (sV.pushHistory(t), n(i.data), i.save(), sV.updateDirty(), EV(r));
+function AV(e, t, n, r = !0) {
+	let i = fV[e];
+	i && (lV.pushHistory(t), n(i.data), i.save(), lV.updateDirty(), OV(r));
 }
-function kV(e, t, n) {
-	let r = e.map((e) => uV[e]);
+function jV(e, t, n) {
+	let r = e.map((e) => fV[e]);
 	if (!r.some((e) => !e)) {
-		sV.pushHistory(t), n(Object.fromEntries(e.map((e, t) => [e, r[t].data])));
+		lV.pushHistory(t), n(Object.fromEntries(e.map((e, t) => [e, r[t].data])));
 		for (let e of r) e.save();
-		sV.updateDirty(), EV();
+		lV.updateDirty(), OV();
 	}
 }
-function AV(e) {
-	let t = sV.history.at(-1);
-	WU.setStatus(e, "ok", {
+function MV(e) {
+	let t = lV.history.at(-1);
+	KU.setStatus(e, "ok", {
 		label: J("ui.undo"),
 		run: () => {
-			sV.history.at(-1) === t ? sV.undo() : WU.setStatus(J("status.undoLater"));
+			lV.history.at(-1) === t ? lV.undo() : KU.setStatus(J("status.undoLater"));
 		}
 	});
 }
-function jV(e, t) {
+function NV(e, t) {
 	let n = String(t ?? "").trim();
-	n && OV(e, `collection:${e}:name`, (e) => {
+	n && AV(e, `collection:${e}:name`, (e) => {
 		e.name = n;
 	});
 }
-function MV(e, t) {
-	let n = uV[e]?.data;
-	n && n.kind !== t && uO(n.entries, t).fits && OV(e, `collection:${e}:kind`, (e) => {
+function PV(e, t) {
+	let n = fV[e]?.data;
+	n && n.kind !== t && uO(n.entries, t).fits && AV(e, `collection:${e}:kind`, (e) => {
 		e.kind = t;
 	});
 }
-function NV(e, t) {
+function FV(e, t) {
 	let n = [];
-	return OV(e, `collection:${e}:duplicate`, (e) => {
+	return AV(e, `collection:${e}:duplicate`, (e) => {
 		let r = _O(e.entries, t, cs);
 		e.entries = r.entries, n = r.copyIds;
-	}), t.length > 1 && AV(J("status.entriesDuplicated", { n: String(n.length) })), n;
+	}), t.length > 1 && MV(J("status.entriesDuplicated", { n: String(n.length) })), n;
 }
-function PV(e, t) {
+function IV(e, t) {
 	let n = new Set(t);
-	OV(e, `collection:${e}:remove-entries`, (e) => {
+	AV(e, `collection:${e}:remove-entries`, (e) => {
 		e.entries = e.entries.filter((e) => !n.has(e.id));
-	}), A(SV, I(SV).filter((e) => !n.has(e)), !0), I(xV) && n.has(I(xV)) && A(xV, null), AV(J("status.entriesDeleted", { n: String(t.length) }));
+	}), A(wV, I(wV).filter((e) => !n.has(e)), !0), I(CV) && n.has(I(CV)) && A(CV, null), MV(J("status.entriesDeleted", { n: String(t.length) }));
 }
-function FV(e, t, n, r) {
-	let i = uV[e]?.data;
-	return !i || !bO(i.entries, t, n, r) ? !1 : (OV(e, `collection:${e}:set-field`, (e) => {
+function LV(e, t, n, r) {
+	let i = fV[e]?.data;
+	return !i || !bO(i.entries, t, n, r) ? !1 : (AV(e, `collection:${e}:set-field`, (e) => {
 		e.entries = bO(e.entries, t, n, r);
-	}), AV(J(r === "" ? "status.fieldCleared" : "status.fieldSet", { n: String(t.length) })), !0);
+	}), MV(J(r === "" ? "status.fieldCleared" : "status.fieldSet", { n: String(t.length) })), !0);
 }
-function IV(e, t, n, r) {
-	let i = uV[t]?.data, a = uV[e]?.data;
+function RV(e, t, n, r) {
+	let i = fV[t]?.data, a = fV[e]?.data;
 	if (!i || !a || e === t || !uO(a.entries.filter((e) => n.includes(e.id)), i.kind).fits) return !1;
-	if (kV([e, t], `collections:${r ? "copy" : "move"}`, (i) => {
+	if (jV([e, t], `collections:${r ? "copy" : "move"}`, (i) => {
 		let a = vO(i[e].entries, i[t].entries, n, r, cs);
 		i[e].entries = a.from, i[t].entries = a.to;
 	}), !r) {
 		let e = new Set(n);
-		A(SV, I(SV).filter((t) => !e.has(t)), !0), I(xV) && e.has(I(xV)) && A(xV, null);
+		A(wV, I(wV).filter((t) => !e.has(t)), !0), I(CV) && e.has(I(CV)) && A(CV, null);
 	}
-	return AV(J(r ? "status.entriesCopied" : "status.entriesMoved", {
+	return MV(J(r ? "status.entriesCopied" : "status.entriesMoved", {
 		n: String(n.length),
 		name: i.name ?? t
 	})), !0;
 }
-function LV(e, t, n, r) {
-	let i = uV[e]?.data, a = String(t ?? "").trim(), o = rm(a);
+function zV(e, t, n, r) {
+	let i = fV[e]?.data, a = String(t ?? "").trim(), o = rm(a);
 	if (!i || !a) return !1;
-	if (!o || I(pV).includes(o)) return WU.setStatus(J(o ? "status.collectionExists" : "status.invalidName"), "error"), !1;
-	if (!cV) return !1;
-	sV.pushHistory("collections"), VV(o, a, i.kind, !1);
+	if (!o || I(hV).includes(o)) return KU.setStatus(J(o ? "status.collectionExists" : "status.invalidName"), "error"), !1;
+	if (!uV) return !1;
+	lV.pushHistory("collections"), UV(o, a, i.kind, !1);
 	let s = vO(i.entries, [], n, r, cs);
-	if (i.entries = s.from, uV[o].data.entries = s.to, uV[e].save(), uV[o].save(), !r) {
+	if (i.entries = s.from, fV[o].data.entries = s.to, fV[e].save(), fV[o].save(), !r) {
 		let e = new Set(n);
-		A(SV, I(SV).filter((t) => !e.has(t)), !0), I(xV) && e.has(I(xV)) && A(xV, null);
+		A(wV, I(wV).filter((t) => !e.has(t)), !0), I(CV) && e.has(I(CV)) && A(CV, null);
 	}
-	return sV.updateDirty(), EV(), AV(J(r ? "status.entriesCopied" : "status.entriesMoved", {
+	return lV.updateDirty(), OV(), MV(J(r ? "status.entriesCopied" : "status.entriesMoved", {
 		n: String(n.length),
 		name: a
 	})), !0;
 }
-function RV(e) {
-	uV[e.collection] && GV(e.collection);
+function BV(e) {
+	fV[e.collection] && qV(e.collection);
 }
-function zV(e) {
+function VV(e) {
 	return (new DOMParser().parseFromString(String(e ?? ""), "text/html").body.textContent ?? "").trim();
 }
-function BV(e) {
+function HV(e) {
 	let { collection: t, entryId: n, field: r, value: i } = e;
 	[
 		"title",
@@ -38038,13 +38052,13 @@ function BV(e) {
 		"image",
 		"imageAlt",
 		"imageStyle"
-	].includes(r) && (r !== "title" || zV(i)) && OV(t, `edit:collection:${t}:${n}:${r}`, (e) => {
+	].includes(r) && (r !== "title" || VV(i)) && AV(t, `edit:collection:${t}:${n}:${r}`, (e) => {
 		let t = e.entries.find((e) => e.id === n);
 		t && (i === "" && r !== "title" ? delete t[r] : t[r] = i);
 	}, r === "image");
 }
-function VV(e, t, n, r = !0) {
-	if (!cV) return;
+function UV(e, t, n, r = !0) {
+	if (!uV) return;
 	let i = {
 		schemaVersion: 1,
 		id: e,
@@ -38052,28 +38066,28 @@ function VV(e, t, n, r = !0) {
 		kind: n,
 		entries: []
 	};
-	uV[e] = qM(`urd-draft-collection-${e}`, () => null, WU.draftSaveError, `urd-draft-samling-${e}`), uV[e].replace(i), uV[e].save(), cV.data.samlinger = [...I(pV), e], cV.save(), A(pV, [...I(pV), e], !0), r && (A(gV, e, !0), A(vV, { id: e }, !0)), sV.updateDirty(), EV();
+	fV[e] = qM(`urd-draft-collection-${e}`, () => null, KU.draftSaveError, `urd-draft-samling-${e}`), fV[e].replace(i), fV[e].save(), uV.data.samlinger = [...I(hV), e], uV.save(), A(hV, [...I(hV), e], !0), r && (A(vV, e, !0), A(bV, { id: e }, !0)), lV.updateDirty(), OV();
 }
-function HV() {
-	let e = I(CV).trim();
+function WV() {
+	let e = I(TV).trim();
 	if (!e) return;
 	let t = rm(e);
-	!t || I(pV).includes(t) ? WU.setStatus(J(t ? "status.collectionExists" : "status.invalidName"), "error") : (sV.pushHistory("collections"), VV(t, e, I(wV)), A(CV, ""));
+	!t || I(hV).includes(t) ? KU.setStatus(J(t ? "status.collectionExists" : "status.invalidName"), "error") : (lV.pushHistory("collections"), UV(t, e, I(EV)), A(TV, ""));
 }
-function UV() {
-	if (I(mV)) return;
+function GV() {
+	if (I(gV)) return;
 	let e = J("seed.productCatalogName"), t = rm(e) || "collection", n = t;
-	for (let e = 2; I(pV).includes(n); e += 1) n = `${t}-${e}`;
-	sV.pushHistory("collections"), VV(n, e, "products"), $.mutateBlock(null, (e) => {
+	for (let e = 2; I(hV).includes(n); e += 1) n = `${t}-${e}`;
+	lV.pushHistory("collections"), UV(n, e, "products"), $.mutateBlock(null, (e) => {
 		e.props.collection = n;
 	});
 }
-function WV(e) {
-	sV.pushHistory("collections"), localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete uV[e], cV.data.samlinger = I(pV).filter((t) => t !== e), cV.save(), A(pV, I(pV).filter((t) => t !== e), !0), I(gV) === e && A(gV, null), I(bV) === e && (A(bV, null), A(xV, null), A(SV, [], !0)), sV.updateDirty(), EV();
+function KV(e) {
+	lV.pushHistory("collections"), localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete fV[e], uV.data.samlinger = I(hV).filter((t) => t !== e), uV.save(), A(hV, I(hV).filter((t) => t !== e), !0), I(vV) === e && A(vV, null), I(SV) === e && (A(SV, null), A(CV, null), A(wV, [], !0)), lV.updateDirty(), OV();
 }
-function GV(e) {
+function qV(e) {
 	let t = cs("entry");
-	return OV(e, `collection:${e}:add-entry`, (e) => {
+	return AV(e, `collection:${e}:add-entry`, (e) => {
 		e.kind === "products" ? e.entries.push({
 			id: t,
 			title: J("seed.newProduct"),
@@ -38086,122 +38100,122 @@ function GV(e) {
 		});
 	}), t;
 }
-var KV = {
+var JV = {
 	get collectionsIndexStore() {
-		return cV;
-	},
-	set collectionsIndexStore(e) {
-		cV = e;
-	},
-	get legacyIndexIds() {
-		return lV;
-	},
-	set legacyIndexIds(e) {
-		lV = e;
-	},
-	get collectionStores() {
 		return uV;
 	},
-	set collectionStores(e) {
+	set collectionsIndexStore(e) {
 		uV = e;
 	},
-	get publishedCollections() {
+	get legacyIndexIds() {
 		return dV;
 	},
-	set publishedCollections(e) {
+	set legacyIndexIds(e) {
 		dV = e;
 	},
-	get collectionsReady() {
+	get collectionStores() {
 		return fV;
 	},
-	set collectionsReady(e) {
+	set collectionStores(e) {
 		fV = e;
 	},
+	get publishedCollections() {
+		return pV;
+	},
+	set publishedCollections(e) {
+		pV = e;
+	},
+	get collectionsReady() {
+		return mV;
+	},
+	set collectionsReady(e) {
+		mV = e;
+	},
 	get collectionIds() {
-		return I(pV);
-	},
-	get collectionsUnavailable() {
-		return I(mV);
-	},
-	set collectionIds(e) {
-		A(pV, e, !0);
-	},
-	get collectionsView() {
 		return I(hV);
 	},
-	set collectionsView(e) {
-		A(hV, e, !0);
-	},
-	get activeCollection() {
+	get collectionsUnavailable() {
 		return I(gV);
 	},
-	set activeCollection(e) {
-		A(gV, e, !0);
+	set collectionIds(e) {
+		A(hV, e, !0);
 	},
-	get openRequest() {
-		return I(vV);
-	},
-	set openRequest(e) {
-		A(vV, e, !0);
-	},
-	get focusEntry() {
+	get collectionsView() {
 		return I(_V);
 	},
-	set focusEntry(e) {
+	set collectionsView(e) {
 		A(_V, e, !0);
 	},
-	openEntry: yV,
-	get panelCollection() {
+	get activeCollection() {
+		return I(vV);
+	},
+	set activeCollection(e) {
+		A(vV, e, !0);
+	},
+	get openRequest() {
 		return I(bV);
 	},
-	set panelCollection(e) {
-		e !== I(bV) && A(SV, [], !0), A(bV, e, !0);
+	set openRequest(e) {
+		A(bV, e, !0);
 	},
-	get panelEntry() {
-		return I(xV);
+	get focusEntry() {
+		return I(yV);
 	},
-	set panelEntry(e) {
-		A(xV, e, !0);
+	set focusEntry(e) {
+		A(yV, e, !0);
 	},
-	get panelTicks() {
+	openEntry: xV,
+	get panelCollection() {
 		return I(SV);
 	},
-	set panelTicks(e) {
-		A(SV, e, !0);
+	set panelCollection(e) {
+		e !== I(SV) && A(wV, [], !0), A(SV, e, !0);
 	},
-	mutateCollections: kV,
-	renameCollection: jV,
-	setCollectionKind: MV,
-	duplicateEntries: NV,
-	removeEntries: PV,
-	setFieldOn: FV,
-	carryToCollection: IV,
-	carryToNewCollection: LV,
-	get newCollectionName() {
+	get panelEntry() {
 		return I(CV);
 	},
-	set newCollectionName(e) {
+	set panelEntry(e) {
 		A(CV, e, !0);
 	},
-	get newCollectionKind() {
+	get panelTicks() {
 		return I(wV);
 	},
-	set newCollectionKind(e) {
+	set panelTicks(e) {
 		A(wV, e, !0);
 	},
-	initCollections: TV,
-	syncCollectionsView: EV,
-	pushCollectionsToPreview: DV,
-	mutateCollection: OV,
-	handleCollectionAdd: RV,
-	plainTitle: zV,
-	handleCollectionEdit: BV,
-	insertCollection: VV,
-	addCollection: HV,
-	createCatalogForBlock: UV,
-	removeCollection: WV,
-	addCollectionEntry: GV
-}, qV = /* @__PURE__ */ O(() => [
+	mutateCollections: jV,
+	renameCollection: NV,
+	setCollectionKind: PV,
+	duplicateEntries: FV,
+	removeEntries: IV,
+	setFieldOn: LV,
+	carryToCollection: RV,
+	carryToNewCollection: zV,
+	get newCollectionName() {
+		return I(TV);
+	},
+	set newCollectionName(e) {
+		A(TV, e, !0);
+	},
+	get newCollectionKind() {
+		return I(EV);
+	},
+	set newCollectionKind(e) {
+		A(EV, e, !0);
+	},
+	initCollections: DV,
+	syncCollectionsView: OV,
+	pushCollectionsToPreview: kV,
+	mutateCollection: AV,
+	handleCollectionAdd: BV,
+	plainTitle: VV,
+	handleCollectionEdit: HV,
+	insertCollection: UV,
+	addCollection: WV,
+	createCatalogForBlock: GV,
+	removeCollection: KV,
+	addCollectionEntry: qV
+}, YV = /* @__PURE__ */ O(() => [
 	["purple", J("adminTheme.purple")],
 	["well", J("adminTheme.well")],
 	["gold", J("adminTheme.gold")],
@@ -38209,7 +38223,7 @@ var KV = {
 	["aurora", J("adminTheme.aurora")],
 	["dusk", J("adminTheme.dusk")],
 	["ember", J("adminTheme.ember")]
-]), JV = {
+]), XV = {
 	lilla: "purple",
 	bronn: "well",
 	gull: "gold",
@@ -38217,56 +38231,56 @@ var KV = {
 	nordlys: "aurora",
 	skumring: "dusk",
 	glo: "ember"
-}, YV = /* @__PURE__ */ k(pn((() => {
+}, ZV = /* @__PURE__ */ k(pn((() => {
 	let e = localStorage.getItem("urd-admin-theme");
-	return JV[e] ?? e ?? "grey";
+	return XV[e] ?? e ?? "grey";
 })()));
-function XV() {
+function QV() {
 	let e = getComputedStyle(document.documentElement), t = e.getPropertyValue("--urd-color-accent").trim();
-	gR.bridge?.sendAdminTheme({
+	vR.bridge?.sendAdminTheme({
 		bg: e.getPropertyValue("--urd-color-bg").trim(),
 		surface: e.getPropertyValue("--urd-color-surface").trim(),
 		accent: t,
 		text: e.getPropertyValue("--urd-color-text").trim(),
-		"accent-text": ZV(t)
+		"accent-text": $V(t)
 	});
 }
-function ZV(e) {
+function $V(e) {
 	return Ks(e) == null || (qs(e, "#ffffff") ?? 0) >= (qs(e, "#0b0e14") ?? 0) ? "#ffffff" : "#0b0e14";
 }
-var QV = /* @__PURE__ */ k(""), $V = /* @__PURE__ */ k("info"), eH = 0, tH = /* @__PURE__ */ k(null);
-function nH(e, t = "info", n = null) {
-	A(QV, e, !0), A($V, t, !0), A(tH, e && n && typeof n.run == "function" ? {
+var eH = /* @__PURE__ */ k(""), tH = /* @__PURE__ */ k("info"), nH = 0, rH = /* @__PURE__ */ k(null);
+function iH(e, t = "info", n = null) {
+	A(eH, e, !0), A(tH, t, !0), A(rH, e && n && typeof n.run == "function" ? {
 		label: String(n.label ?? ""),
 		run: n.run
 	} : null, !0);
-	let r = ++eH;
+	let r = ++nH;
 	t === "ok" && setTimeout(() => {
-		eH === r && (A(QV, ""), A($V, "info"));
+		nH === r && (A(eH, ""), A(tH, "info"));
 	}, 8e3);
 }
-function rH() {
-	nH(J("status.storageFull"), "error");
+function aH() {
+	iH(J("status.storageFull"), "error");
 }
-function iH(e, t) {
+function oH(e, t) {
 	try {
 		localStorage.setItem(e, t);
 	} catch {
-		rH();
+		aH();
 	}
 }
-var aH = /* @__PURE__ */ k(null), oH = /* @__PURE__ */ k(0);
-function sH() {
-	A(oH, $.store?.data.sections.filter((e) => e.responsive?.mobile?.attention?.needed).length ?? 0, !0);
+var sH = /* @__PURE__ */ k(null), cH = /* @__PURE__ */ k(0);
+function lH() {
+	A(cH, $.store?.data.sections.filter((e) => e.responsive?.mobile?.attention?.needed).length ?? 0, !0);
 }
-function cH() {
+function uH() {
 	let e = $.store?.data.sections.find((e) => e.responsive?.mobile?.attention?.needed);
-	gR.devices.find((e) => e.id === "mobile")?.viewport !== "mobile" && gR.setPhonePref({ size: "phone" }), gR.deviceId = "mobile", e && setTimeout(() => gR.bridge?.sendScrollSection(e.id), 0);
+	vR.devices.find((e) => e.id === "mobile")?.viewport !== "mobile" && vR.setPhonePref({ size: "phone" }), vR.deviceId = "mobile", e && setTimeout(() => vR.bridge?.sendScrollSection(e.id), 0);
 }
-function lH(e) {
+function dH(e) {
 	$.blockMenu && (e.target instanceof Element && e.target.closest(".block-menu, dialog") || ($.blockMenu = null));
 }
-function uH(e) {
+function fH(e) {
 	if (e.key === "Escape" && $.blockMenu && !(e.target instanceof Element && e.target.closest("dialog"))) {
 		$.blockMenu = null;
 		return;
@@ -38278,14 +38292,14 @@ function uH(e) {
 		"color"
 	].includes(t.type) || !!t.closest("dialog, [role=\"dialog\"]"));
 	if (QM(e, n)) {
-		e.preventDefault(), DU();
+		e.preventDefault(), kU();
 		return;
 	}
 	if (!(e.ctrlKey || e.metaKey) || e.target instanceof Element && e.target.closest("dialog")) return;
 	let r = e.key.toLowerCase();
 	if (r === "k" && !e.altKey && !e.shiftKey || r === "p" && e.shiftKey && !e.altKey) {
 		if (n && r === "k") return;
-		e.preventDefault(), _L.openPalette();
+		e.preventDefault(), yL.openPalette();
 		return;
 	}
 	if (r === "d") {
@@ -38295,8 +38309,8 @@ function uH(e) {
 			"checkbox",
 			"range",
 			"color"
-		].includes(t.type)) || !$.selectedBlock || gR.viewMode === "mobile") return;
-		e.preventDefault(), gR.bridge?.sendDuplicate();
+		].includes(t.type)) || !$.selectedBlock || vR.viewMode === "mobile") return;
+		e.preventDefault(), vR.bridge?.sendDuplicate();
 		return;
 	}
 	if (r !== "z" && r !== "y") return;
@@ -38306,18 +38320,18 @@ function uH(e) {
 		"checkbox",
 		"range",
 		"color"
-	].includes(i.type)) || (e.preventDefault(), r === "y" || e.shiftKey ? sV.redo() : sV.undo());
+	].includes(i.type)) || (e.preventDefault(), r === "y" || e.shiftKey ? lV.redo() : lV.undo());
 }
-async function dH() {
-	qF.site = Zc(await (await fetch("/content/site.json")).json()), qF.siteStore = qM("urd-draft-site", () => qF.site, rH), (qF.siteStore.data.schemaVersion ?? 1) > 5 && (console.warn(`Urd: the site draft has schemaVersion ${qF.siteStore.data.schemaVersion} (the engine has 5) and is discarded`), qF.siteStore.replace(Xe(qF.site))), qF.siteStore.replace(Zc(qF.siteStore.data)), qF.siteStore.save(), qF.linkSiteDraft(), qF.grid = {
+async function pH() {
+	qF.site = Zc(await (await fetch("/content/site.json")).json()), qF.siteStore = qM("urd-draft-site", () => qF.site, aH), (qF.siteStore.data.schemaVersion ?? 1) > 5 && (console.warn(`Urd: the site draft has schemaVersion ${qF.siteStore.data.schemaVersion} (the engine has 5) and is discarded`), qF.siteStore.replace(Xe(qF.site))), qF.siteStore.replace(Zc(qF.siteStore.data)), qF.siteStore.save(), qF.linkSiteDraft(), qF.grid = {
 		snap: !0,
 		...qF.siteDraft.grid
-	}, await $.selectPage(new URLSearchParams(location.search).get("page") ?? qF.siteDraft.pages[0].id), await RR.initPlugins(), await KV.initCollections(), await TP.initTemplates(), await rU(), I(aH) && YI.refreshBaseSha(), I(aH)?.allowed && YI.loadUpdateCheck(), tU(), qF.siteDraft.site.setup === !0 && !localStorage.getItem("urd-setup-done") && (A(vH, qF.siteDraft.site.title, !0), A(yH, qF.siteDraft.theme.tokens.color.accent, !0), A(bH, qF.siteDraft.theme.tokens.color.bg, !0), A(_H, !0));
+	}, await $.selectPage(new URLSearchParams(location.search).get("page") ?? qF.siteDraft.pages[0].id), await BR.initPlugins(), await JV.initCollections(), await TP.initTemplates(), await aU(), I(sH) && ZI.refreshBaseSha(), I(sH)?.allowed && ZI.loadUpdateCheck(), rU(), qF.siteDraft.site.setup === !0 && !localStorage.getItem("urd-setup-done") && (A(bH, qF.siteDraft.site.title, !0), A(xH, qF.siteDraft.theme.tokens.color.accent, !0), A(SH, qF.siteDraft.theme.tokens.color.bg, !0), A(yH, !0));
 }
-var fH = /* @__PURE__ */ k(null);
-function pH({ title: e, lines: t = [], okLabel: n = J("confirm.ok"), cancelLabel: r = J("confirm.cancel") }) {
+var mH = /* @__PURE__ */ k(null);
+function hH({ title: e, lines: t = [], okLabel: n = J("confirm.ok"), cancelLabel: r = J("confirm.cancel") }) {
 	return new Promise((i) => {
-		A(fH, {
+		A(mH, {
 			title: e,
 			lines: t,
 			okLabel: n,
@@ -38326,9 +38340,9 @@ function pH({ title: e, lines: t = [], okLabel: n = J("confirm.ok"), cancelLabel
 		}, !0);
 	});
 }
-function mH({ title: e, lines: t = [], value: n = "", placeholder: r = "", okLabel: i = J("confirm.ok"), cancelLabel: a = J("confirm.cancel") }) {
+function gH({ title: e, lines: t = [], value: n = "", placeholder: r = "", okLabel: i = J("confirm.ok"), cancelLabel: a = J("confirm.cancel") }) {
 	return new Promise((o) => {
-		A(fH, {
+		A(mH, {
 			title: e,
 			lines: t,
 			okLabel: i,
@@ -38340,41 +38354,41 @@ function mH({ title: e, lines: t = [], value: n = "", placeholder: r = "", okLab
 		}, !0);
 	});
 }
-function hH(e) {
-	I(fH)?.resolve(I(fH).prompt ? e ? I(fH).value : null : e), A(fH, null);
+function _H(e) {
+	I(mH)?.resolve(I(mH).prompt ? e ? I(mH).value : null : e), A(mH, null);
 }
-var gH = !1, _H = /* @__PURE__ */ k(!1), vH = /* @__PURE__ */ k(""), yH = /* @__PURE__ */ k("#7c5cff"), bH = /* @__PURE__ */ k("#0b0e14");
-function xH() {
-	localStorage.setItem("urd-setup-done", "1"), A(_H, !1);
+var vH = !1, yH = /* @__PURE__ */ k(!1), bH = /* @__PURE__ */ k(""), xH = /* @__PURE__ */ k("#7c5cff"), SH = /* @__PURE__ */ k("#0b0e14");
+function CH() {
+	localStorage.setItem("urd-setup-done", "1"), A(yH, !1);
 }
-function SH() {
-	let e = I(vH).trim();
+function wH() {
+	let e = I(bH).trim();
 	e && (qF.siteMutate("setup", () => {
 		qF.siteDraft.site.title = e, qF.siteDraft.nav.logo = {
 			type: "text",
 			value: e
-		}, qF.siteDraft.theme.tokens.color.accent = I(yH), qF.siteDraft.theme.tokens.color.bg = I(bH), delete qF.siteDraft.site.setup;
-	}), xH(), nH(J("status.setupDone"), "ok"));
+		}, qF.siteDraft.theme.tokens.color.accent = I(xH), qF.siteDraft.theme.tokens.color.bg = I(SH), delete qF.siteDraft.site.setup;
+	}), CH(), iH(J("status.setupDone"), "ok"));
 }
-var CH = "urd-admin-panels", wH = "urd-admin-panel-open", TH = "urd-admin-panel-folded", EH = "urd-admin-panels-start", DH = /* @__PURE__ */ k(pn(iN(localStorage.getItem(CH))));
-function OH(e) {
-	A(DH, iN(e), !0), I(DH) === "remember" ? localStorage.removeItem(CH) : localStorage.setItem(CH, I(DH));
-}
-var kH = /* @__PURE__ */ k(pn(localStorage.getItem(EH) ?? "pages"));
+var TH = "urd-admin-panels", EH = "urd-admin-panel-open", DH = "urd-admin-panel-folded", OH = "urd-admin-panels-start", kH = /* @__PURE__ */ k(pn(iN(localStorage.getItem(TH))));
 function AH(e) {
-	A(kH, e, !0), e === "pages" ? localStorage.removeItem(EH) : localStorage.setItem(EH, e);
+	A(kH, iN(e), !0), I(kH) === "remember" ? localStorage.removeItem(TH) : localStorage.setItem(TH, I(kH));
 }
-var jH = /* @__PURE__ */ k(null), MH = [
+var jH = /* @__PURE__ */ k(pn(localStorage.getItem(OH) ?? "pages"));
+function MH(e) {
+	A(jH, e, !0), e === "pages" ? localStorage.removeItem(OH) : localStorage.setItem(OH, e);
+}
+var NH = /* @__PURE__ */ k(null), PH = [
 	"rail",
 	"sidebar",
 	"panel-tabs",
 	"top-tabs",
 	"page-tabs"
-], NH = "urd-admin-layout", PH = /* @__PURE__ */ k(pn(MH.includes(localStorage.getItem(NH)) ? localStorage.getItem(NH) : "rail"));
-function FH(e) {
-	A(PH, MH.includes(e) ? e : "rail", !0), I(PH) === "rail" ? localStorage.removeItem(NH) : localStorage.setItem(NH, I(PH)), I(AU) === "site" && A(AU, null);
+], FH = "urd-admin-layout", IH = /* @__PURE__ */ k(pn(PH.includes(localStorage.getItem(FH)) ? localStorage.getItem(FH) : "rail"));
+function LH(e) {
+	A(IH, PH.includes(e) ? e : "rail", !0), I(IH) === "rail" ? localStorage.removeItem(FH) : localStorage.setItem(FH, I(IH)), I(MU) === "site" && A(MU, null);
 }
-var IH = /* @__PURE__ */ O(() => MH.map((e) => [e, J(`opt.adminLayout.${e}`)])), LH = /* @__PURE__ */ O(() => eN(YI.updateAvailable, qF.siteDraft?.admin?.updateNotice, I(MU).view)), RH = /* @__PURE__ */ O(() => $M.map((e) => [e, J(`opt.updateNotice.${e}`)])), zH = /* @__PURE__ */ k(!1), BH = [
+var RH = /* @__PURE__ */ O(() => PH.map((e) => [e, J(`opt.adminLayout.${e}`)])), zH = /* @__PURE__ */ O(() => eN(ZI.updateAvailable, qF.siteDraft?.admin?.updateNotice, I(PU).view)), BH = /* @__PURE__ */ O(() => $M.map((e) => [e, J(`opt.updateNotice.${e}`)])), VH = /* @__PURE__ */ k(!1), HH = [
 	[
 		"pages",
 		"blocks",
@@ -38390,133 +38404,133 @@ var IH = /* @__PURE__ */ O(() => MH.map((e) => [e, J(`opt.adminLayout.${e}`)])),
 		"plugins"
 	],
 	["history", "update"]
-], VH = [
+], UH = [
 	"rail.thisPage",
 	"rail.site",
 	"rail.system"
-], HH = /* @__PURE__ */ O(() => ({
-	...Object.fromEntries(BH.flat().map((e) => [e, J(`panel.${e}`)])),
+], WH = /* @__PURE__ */ O(() => ({
+	...Object.fromEntries(HH.flat().map((e) => [e, J(`panel.${e}`)])),
 	settings: J("settings.title")
 }));
 {
-	let e = BH.flat(), t = sN({
-		pref: I(DH),
-		layout: I(PH),
+	let e = HH.flat(), t = sN({
+		pref: I(kH),
+		layout: I(IH),
 		panels: e,
-		stored: localStorage.getItem(wH),
-		storedFolded: localStorage.getItem(TH) === "1",
-		start: I(kH)
+		stored: localStorage.getItem(EH),
+		storedFolded: localStorage.getItem(DH) === "1",
+		start: I(jH)
 	});
-	A(jH, t.panel, !0), A(zH, t.folded, !0), e.includes(I(kH)) || A(kH, rN, !0);
+	A(NH, t.panel, !0), A(VH, t.folded, !0), e.includes(I(jH)) || A(jH, rN, !0);
 }
-var UH = {
+var GH = {
 	remember: "settings.panelsRemember",
 	reset: "settings.panelsReset",
 	fixed: "settings.panelsFixed",
 	folded: "settings.panelsFolded"
-}, WH = /* @__PURE__ */ O(() => aN(I(PH)).map((e) => [e, J(UH[e])])), GH = /* @__PURE__ */ O(() => BH.flat().map((e) => [e, I(HH)[e]])), KH = {
+}, KH = /* @__PURE__ */ O(() => aN(I(IH)).map((e) => [e, J(GH[e])])), qH = /* @__PURE__ */ O(() => HH.flat().map((e) => [e, I(WH)[e]])), JH = {
 	pages: ["hint.pages.drafts"],
 	blocks: ["hint.blocks.intro"],
 	grid: ["hint.grid.intro", "hint.grid.section"],
 	collections: ["hint.collections.intro"],
 	plugins: ["hint.plugins.intro"],
 	history: ["hint.history.intro"]
-}, qH = [
+}, YH = [
 	["se", "Davvisámegiella"],
 	["en-GB", "English (UK)"],
 	["nb", "Norsk bokmål"],
 	["nn", "Norsk nynorsk"],
 	["tr", "Türkçe"]
-], JH = (e) => [...e].sort((e, t) => e[1].localeCompare(t[1]));
-function YH(e, t) {
+], XH = (e) => [...e].sort((e, t) => e[1].localeCompare(t[1]));
+function ZH(e, t) {
 	let n = [];
-	for (let r of e) for (let e of RR.pluginInfo[r]?.languages ?? []) e?.[t] === !0 && typeof e.code == "string" && typeof e.name == "string" && e.name && (qH.some(([t]) => t === e.code) || n.some(([t]) => t === e.code) || n.push([e.code, e.name]));
+	for (let r of e) for (let e of BR.pluginInfo[r]?.languages ?? []) e?.[t] === !0 && typeof e.code == "string" && typeof e.name == "string" && e.name && (YH.some(([t]) => t === e.code) || n.some(([t]) => t === e.code) || n.push([e.code, e.name]));
 	return n;
 }
-function XH() {
-	let e = JH([...qH, ...YH(RR.publishedPluginIds, "admin")]);
-	return QH === "auto" || e.some(([e]) => e === QH) ? e : [[QH, QH], ...e];
+function QH() {
+	let e = XH([...YH, ...ZH(BR.publishedPluginIds, "admin")]);
+	return eU === "auto" || e.some(([e]) => e === eU) ? e : [[eU, eU], ...e];
 }
-var ZH = () => YH(RR.pluginsView?.enabled ?? [], "site"), QH = localStorage.getItem("urd-admin-lang") ?? "auto";
-function $H(e) {
-	e !== QH && (e === "auto" ? localStorage.removeItem("urd-admin-lang") : localStorage.setItem("urd-admin-lang", e), location.reload());
+var $H = () => ZH(BR.pluginsView?.enabled ?? [], "site"), eU = localStorage.getItem("urd-admin-lang") ?? "auto";
+function tU(e) {
+	e !== eU && (e === "auto" ? localStorage.removeItem("urd-admin-lang") : localStorage.setItem("urd-admin-lang", e), location.reload());
 }
-function eU(e) {
-	A(jH, I(jH) === e ? null : e, !0), A(AU, null), A(zH, !1), tU();
+function nU(e) {
+	A(NH, I(NH) === e ? null : e, !0), A(MU, null), A(VH, !1), rU();
 }
-function tU() {
-	I(jH) === "history" && YI.loadHistory(), I(jH) === "update" && !YI.updateBusy && YI.loadUpdateCheck();
+function rU() {
+	I(NH) === "history" && ZI.loadHistory(), I(NH) === "update" && !ZI.updateBusy && ZI.loadUpdateCheck();
 }
-var nU = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-async function rU() {
+var iU = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+async function aU() {
 	try {
 		let e = await fetch("/api/github/me");
-		e.ok ? A(aH, await e.json(), !0) : e.status !== 503 && A(aH, null);
+		e.ok ? A(sH, await e.json(), !0) : e.status !== 503 && A(sH, null);
 	} catch {
-		A(aH, null);
+		A(sH, null);
 	}
 }
-var iU = /* @__PURE__ */ k(localStorage.getItem("urd-guides") === "1"), aU = /* @__PURE__ */ k(!1), oU = "urd-settings-place", sU = "urd-settings-pictures", cU = /* @__PURE__ */ k(pn(lN(localStorage.getItem(oU)))), lU = /* @__PURE__ */ k(pn(uN(localStorage.getItem(sU))));
-function uU(e) {
+var oU = /* @__PURE__ */ k(localStorage.getItem("urd-guides") === "1"), sU = /* @__PURE__ */ k(!1), cU = "urd-settings-place", lU = "urd-settings-pictures", uU = /* @__PURE__ */ k(pn(lN(localStorage.getItem(cU)))), dU = /* @__PURE__ */ k(pn(uN(localStorage.getItem(lU))));
+function fU(e) {
 	let t = lN(e);
-	if (t === I(cU)) return;
-	let n = I(aU) || I(jH) === "settings";
-	A(cU, t, !0), t === "dialog" ? localStorage.removeItem(oU) : localStorage.setItem(oU, t), n && (t === "panel" ? (A(aU, !1), A(jH, "settings"), A(zH, !1)) : (I(jH) === "settings" && A(jH, null), A(aU, !0)));
+	if (t === I(uU)) return;
+	let n = I(sU) || I(NH) === "settings";
+	A(uU, t, !0), t === "dialog" ? localStorage.removeItem(cU) : localStorage.setItem(cU, t), n && (t === "panel" ? (A(sU, !1), A(NH, "settings"), A(VH, !1)) : (I(NH) === "settings" && A(NH, null), A(sU, !0)));
 }
-function dU(e) {
-	A(lU, uN(e), !0), I(lU) === "words" ? localStorage.setItem(sU, "words") : localStorage.removeItem(sU);
+function pU(e) {
+	A(dU, uN(e), !0), I(dU) === "words" ? localStorage.setItem(lU, "words") : localStorage.removeItem(lU);
 }
-var fU = "urd-collections-layout", pU = /* @__PURE__ */ k(pn(QD(localStorage.getItem(fU))));
-function mU(e) {
-	A(pU, QD(e), !0), I(pU) === "drill" ? localStorage.removeItem(fU) : localStorage.setItem(fU, I(pU));
+var mU = "urd-collections-layout", hU = /* @__PURE__ */ k(pn(QD(localStorage.getItem(mU))));
+function gU(e) {
+	A(hU, QD(e), !0), I(hU) === "drill" ? localStorage.removeItem(mU) : localStorage.setItem(mU, I(hU));
 }
-var hU = /* @__PURE__ */ O(() => ZD.map((e) => [e, J(`opt.collectionsLayout.${e}`)])), gU = /* @__PURE__ */ O(() => cN.map((e) => [e, J(`opt.settingsPlace.${e}`)])), _U = /* @__PURE__ */ O(() => [["pictures", J("opt.settingsPictures.pictures")], ["words", J("opt.settingsPictures.words")]]), vU = /* @__PURE__ */ k(pn(localStorage.getItem("urd-layout-picker") === "menu" ? "menu" : "strip")), yU = /* @__PURE__ */ k(pn(localStorage.getItem("urd-spellcheck") === "off" ? "off" : "on"));
-function bU(e) {
-	A(yU, e === "off" ? "off" : "on", !0), I(yU) === "off" ? localStorage.setItem("urd-spellcheck", "off") : localStorage.removeItem("urd-spellcheck"), gR.bridge?.sendSpellcheck(I(yU) === "on");
-}
-var xU = /* @__PURE__ */ k(pn(localStorage.getItem("urd-link-editor") === "popover" ? "popover" : "dialog"));
+var _U = /* @__PURE__ */ O(() => ZD.map((e) => [e, J(`opt.collectionsLayout.${e}`)])), vU = /* @__PURE__ */ O(() => cN.map((e) => [e, J(`opt.settingsPlace.${e}`)])), yU = /* @__PURE__ */ O(() => [["pictures", J("opt.settingsPictures.pictures")], ["words", J("opt.settingsPictures.words")]]), bU = /* @__PURE__ */ k(pn(localStorage.getItem("urd-layout-picker") === "menu" ? "menu" : "strip")), xU = /* @__PURE__ */ k(pn(localStorage.getItem("urd-spellcheck") === "off" ? "off" : "on"));
 function SU(e) {
-	A(xU, e === "popover" ? "popover" : "dialog", !0), I(xU) === "popover" ? localStorage.setItem("urd-link-editor", "popover") : localStorage.removeItem("urd-link-editor");
+	A(xU, e === "off" ? "off" : "on", !0), I(xU) === "off" ? localStorage.setItem("urd-spellcheck", "off") : localStorage.removeItem("urd-spellcheck"), vR.bridge?.sendSpellcheck(I(xU) === "on");
 }
-function CU(e) {
-	A(vU, e === "menu" ? "menu" : "strip", !0), I(vU) === "menu" ? localStorage.setItem("urd-layout-picker", "menu") : localStorage.removeItem("urd-layout-picker");
+var CU = /* @__PURE__ */ k(pn(localStorage.getItem("urd-link-editor") === "popover" ? "popover" : "dialog"));
+function wU(e) {
+	A(CU, e === "popover" ? "popover" : "dialog", !0), I(CU) === "popover" ? localStorage.setItem("urd-link-editor", "popover") : localStorage.removeItem("urd-link-editor");
 }
-var wU = /* @__PURE__ */ k(pn(localStorage.getItem("urd-add-block-menu") === "slim" ? "slim" : "side"));
 function TU(e) {
-	A(wU, e === "slim" ? "slim" : "side", !0), I(wU) === "slim" ? localStorage.setItem("urd-add-block-menu", "slim") : localStorage.removeItem("urd-add-block-menu");
+	A(bU, e === "menu" ? "menu" : "strip", !0), I(bU) === "menu" ? localStorage.setItem("urd-layout-picker", "menu") : localStorage.removeItem("urd-layout-picker");
 }
-var EU = /* @__PURE__ */ k(!1);
-function DU() {
-	I(fH) || qF.iconEditorImage || (A(aU, !1), A(AU, null), qF.pageMenuFor = null, A(EU, !0));
+var EU = /* @__PURE__ */ k(pn(localStorage.getItem("urd-add-block-menu") === "slim" ? "slim" : "side"));
+function DU(e) {
+	A(EU, e === "slim" ? "slim" : "side", !0), I(EU) === "slim" ? localStorage.setItem("urd-add-block-menu", "slim") : localStorage.removeItem("urd-add-block-menu");
 }
-var OU = {
+var OU = /* @__PURE__ */ k(!1);
+function kU() {
+	I(mH) || qF.iconEditorImage || (A(sU, !1), A(MU, null), qF.pageMenuFor = null, A(OU, !0));
+}
+var AU = {
 	view: 1079,
 	device: 999,
 	zoom: 919
-}, kU = { "page-tabs": 80 }, AU = /* @__PURE__ */ k(null), jU = /* @__PURE__ */ k(null), MU = /* @__PURE__ */ k(pn({
+}, jU = { "page-tabs": 80 }, MU = /* @__PURE__ */ k(null), NU = /* @__PURE__ */ k(null), PU = /* @__PURE__ */ k(pn({
 	view: !1,
 	device: !1,
 	zoom: !1
 }));
-function NU() {
-	A(iU, !I(iU)), localStorage.setItem("urd-guides", I(iU) ? "1" : "0"), gR.bridge?.sendShowGuides(I(iU));
-}
-var PU = /* @__PURE__ */ k(localStorage.getItem("urd-grid-overlay") === "1");
 function FU() {
-	A(PU, !I(PU)), localStorage.setItem("urd-grid-overlay", I(PU) ? "1" : "0"), gR.bridge?.sendShowGrid(I(PU));
+	A(oU, !I(oU)), localStorage.setItem("urd-guides", I(oU) ? "1" : "0"), vR.bridge?.sendShowGuides(I(oU));
 }
-var IU = /* @__PURE__ */ k(null), LU = /* @__PURE__ */ k(!1), RU = /* @__PURE__ */ k(!1), zU = (e) => e.length > 0 && [...e].every((e) => e.open);
-function BU() {
-	let e = I(IU)?.querySelectorAll("details.group") ?? [];
-	A(LU, e.length > 0), A(RU, zU(e), !0);
+var IU = /* @__PURE__ */ k(localStorage.getItem("urd-grid-overlay") === "1");
+function LU() {
+	A(IU, !I(IU)), localStorage.setItem("urd-grid-overlay", I(IU) ? "1" : "0"), vR.bridge?.sendShowGrid(I(IU));
 }
-function VU() {
-	let e = !I(RU);
-	I(IU)?.querySelectorAll("details.group").forEach((t) => {
+var RU = /* @__PURE__ */ k(null), zU = /* @__PURE__ */ k(!1), BU = /* @__PURE__ */ k(!1), VU = (e) => e.length > 0 && [...e].every((e) => e.open);
+function HU() {
+	let e = I(RU)?.querySelectorAll("details.group") ?? [];
+	A(zU, e.length > 0), A(BU, VU(e), !0);
+}
+function UU() {
+	let e = !I(BU);
+	I(RU)?.querySelectorAll("details.group").forEach((t) => {
 		t.open = e;
-	}), BU();
+	}), HU();
 }
-function HU(e) {
+function WU(e) {
 	for (let t of e.querySelectorAll("details.group")) {
 		let e = t.querySelector(":scope > summary");
 		if (!e || e.querySelector(".fold-sub")) continue;
@@ -38525,7 +38539,7 @@ function HU(e) {
 		let r = document.createElement("button");
 		r.type = "button", r.className = "fold-sub fold-toggle", r.innerHTML = Y.foldToggle;
 		let i = () => {
-			let e = zU(n());
+			let e = VU(n());
 			r.classList.toggle("collapse", e), r.title = J(e ? "ui.collapseSub" : "ui.expandSub"), r.setAttribute("aria-label", r.title);
 		};
 		r.addEventListener("click", (e) => {
@@ -38537,327 +38551,327 @@ function HU(e) {
 		}), t.addEventListener("toggle", i, !0), i(), e.appendChild(r);
 	}
 }
-function UU() {
+function GU() {
 	Nn(() => {
-		document.documentElement.dataset.adminTheme = I(YV), localStorage.setItem("urd-admin-theme", I(YV)), XV();
+		document.documentElement.dataset.adminTheme = I(ZV), localStorage.setItem("urd-admin-theme", I(ZV)), QV();
 	}), Nn(() => {
-		if (!I(fH)) return;
+		if (!I(mH)) return;
 		let e = (e) => {
-			e.key === "Escape" && (e.stopPropagation(), hH(!1));
+			e.key === "Escape" && (e.stopPropagation(), _H(!1));
 		};
 		return document.addEventListener("keydown", e, !0), () => document.removeEventListener("keydown", e, !0);
 	}), Nn(() => {
-		I(DH) === "remember" ? (I(jH) ? localStorage.setItem(wH, I(jH)) : localStorage.removeItem(wH), I(zH) ? localStorage.setItem(TH, "1") : localStorage.removeItem(TH)) : (localStorage.removeItem(wH), localStorage.removeItem(TH));
+		I(kH) === "remember" ? (I(NH) ? localStorage.setItem(EH, I(NH)) : localStorage.removeItem(EH), I(VH) ? localStorage.setItem(DH, "1") : localStorage.removeItem(DH)) : (localStorage.removeItem(EH), localStorage.removeItem(DH));
 	}), Nn(() => {
-		let e = kU[I(PH)] ?? 0, t = Object.entries(OU).map(([t, n]) => {
+		let e = jU[I(IH)] ?? 0, t = Object.entries(AU).map(([t, n]) => {
 			let r = window.matchMedia(`(max-width: ${n + e}px)`), i = () => {
-				I(MU)[t] = r.matches;
+				I(PU)[t] = r.matches;
 			};
 			return i(), r.addEventListener("change", i), () => r.removeEventListener("change", i);
 		});
 		return () => t.forEach((e) => e());
 	}), Nn(() => {
-		I(AU) && I(AU) !== "site" && I(AU) !== "phone" && I(AU) !== "screen" && !I(MU)[I(AU)] && A(AU, null);
+		I(MU) && I(MU) !== "site" && I(MU) !== "phone" && I(MU) !== "screen" && !I(PU)[I(MU)] && A(MU, null);
 	}), Nn(() => {
-		if (!I(AU)) return;
+		if (!I(MU)) return;
 		let e = (e) => {
-			I(jU)?.contains(e.target) || A(AU, null);
+			I(NU)?.contains(e.target) || A(MU, null);
 		}, t = (e) => {
-			e.key === "Escape" && A(AU, null);
+			e.key === "Escape" && A(MU, null);
 		}, n = () => {
-			A(AU, null);
+			A(MU, null);
 		};
 		return document.addEventListener("pointerdown", e, !0), document.addEventListener("keydown", t), window.addEventListener("blur", n), () => {
 			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t), window.removeEventListener("blur", n);
 		};
 	}), Nn(() => {
-		I(jH), Er().then(BU);
+		I(NH), Er().then(HU);
 	}), Nn(() => {
-		let e = I(IU);
+		let e = I(RU);
 		if (!e) return;
 		let t = new MutationObserver(() => {
-			HU(e), BU();
+			WU(e), HU();
 		});
 		return t.observe(e, {
 			childList: !0,
 			subtree: !0
-		}), e.addEventListener("toggle", BU, !0), HU(e), () => {
-			t.disconnect(), e.removeEventListener("toggle", BU, !0);
+		}), e.addEventListener("toggle", HU, !0), WU(e), () => {
+			t.disconnect(), e.removeEventListener("toggle", HU, !0);
 		};
 	});
 }
-var WU = {
+var KU = {
 	get ADMIN_THEMES() {
-		return I(qV);
-	},
-	LEGACY_ADMIN_THEMES: JV,
-	get adminTheme() {
 		return I(YV);
 	},
-	set adminTheme(e) {
-		A(YV, e, !0);
+	LEGACY_ADMIN_THEMES: XV,
+	get adminTheme() {
+		return I(ZV);
 	},
-	sendAdminTheme: XV,
-	readableOn: ZV,
+	set adminTheme(e) {
+		A(ZV, e, !0);
+	},
+	sendAdminTheme: QV,
+	readableOn: $V,
 	get status() {
-		return I(QV);
+		return I(eH);
 	},
 	set status(e) {
-		A(QV, e, !0);
+		A(eH, e, !0);
 	},
 	get statusKind() {
-		return I($V);
-	},
-	get statusAction() {
 		return I(tH);
 	},
+	get statusAction() {
+		return I(rH);
+	},
 	set statusKind(e) {
-		A($V, e, !0);
+		A(tH, e, !0);
 	},
 	get statusSeq() {
-		return eH;
+		return nH;
 	},
 	set statusSeq(e) {
-		eH = e;
+		nH = e;
 	},
-	setStatus: nH,
-	draftSaveError: rH,
-	writeDraftKey: iH,
+	setStatus: iH,
+	draftSaveError: aH,
+	writeDraftKey: oH,
 	get auth() {
-		return I(aH);
+		return I(sH);
 	},
 	set auth(e) {
-		A(aH, e, !0);
+		A(sH, e, !0);
 	},
 	get attentionCount() {
-		return I(oH);
+		return I(cH);
 	},
 	set attentionCount(e) {
-		A(oH, e, !0);
+		A(cH, e, !0);
 	},
-	updateAttention: sH,
-	jumpToAttention: cH,
-	onPointerdownWindow: lH,
-	onKeydown: uH,
-	init: dH,
+	updateAttention: lH,
+	jumpToAttention: uH,
+	onPointerdownWindow: dH,
+	onKeydown: fH,
+	init: pH,
 	get confirmBox() {
-		return I(fH);
+		return I(mH);
 	},
 	set confirmBox(e) {
-		A(fH, e, !0);
+		A(mH, e, !0);
 	},
-	askConfirm: pH,
-	askPrompt: mH,
-	answerConfirm: hH,
+	askConfirm: hH,
+	askPrompt: gH,
+	answerConfirm: _H,
 	get confirmDownOnOverlay() {
-		return gH;
+		return vH;
 	},
 	set confirmDownOnOverlay(e) {
-		gH = e;
+		vH = e;
 	},
 	get showSetup() {
-		return I(_H);
-	},
-	set showSetup(e) {
-		A(_H, e, !0);
-	},
-	get setupName() {
-		return I(vH);
-	},
-	set setupName(e) {
-		A(vH, e, !0);
-	},
-	get setupAccent() {
 		return I(yH);
 	},
-	set setupAccent(e) {
+	set showSetup(e) {
 		A(yH, e, !0);
 	},
-	get setupBg() {
+	get setupName() {
 		return I(bH);
 	},
-	set setupBg(e) {
+	set setupName(e) {
 		A(bH, e, !0);
 	},
-	closeSetup: xH,
-	applySetup: SH,
-	PANELS_PREF_KEY: CH,
-	PANEL_OPEN_KEY: wH,
+	get setupAccent() {
+		return I(xH);
+	},
+	set setupAccent(e) {
+		A(xH, e, !0);
+	},
+	get setupBg() {
+		return I(SH);
+	},
+	set setupBg(e) {
+		A(SH, e, !0);
+	},
+	closeSetup: CH,
+	applySetup: wH,
+	PANELS_PREF_KEY: TH,
+	PANEL_OPEN_KEY: EH,
 	get panelsPref() {
-		return I(DH);
-	},
-	set panelsPref(e) {
-		A(DH, e, !0);
-	},
-	setPanelsPref: OH,
-	get panelsStart() {
 		return I(kH);
 	},
-	setPanelsStart: AH,
-	get PANELS_PREF_OPTIONS() {
-		return I(WH);
+	set panelsPref(e) {
+		A(kH, e, !0);
 	},
-	get PANELS_START_OPTIONS() {
-		return I(GH);
-	},
-	get activePanel() {
+	setPanelsPref: AH,
+	get panelsStart() {
 		return I(jH);
 	},
+	setPanelsStart: MH,
+	get PANELS_PREF_OPTIONS() {
+		return I(KH);
+	},
+	get PANELS_START_OPTIONS() {
+		return I(qH);
+	},
+	get activePanel() {
+		return I(NH);
+	},
 	set activePanel(e) {
-		A(jH, e, !0), e && A(zH, !1);
+		A(NH, e, !0), e && A(VH, !1);
 	},
-	PANEL_GROUPS: BH,
-	PANEL_GROUP_KEYS: VH,
+	PANEL_GROUPS: HH,
+	PANEL_GROUP_KEYS: UH,
 	get PANEL_LABELS() {
-		return I(HH);
+		return I(WH);
 	},
-	PANEL_INTROS: KH,
-	LANG_OPTIONS: qH,
-	sortLangs: JH,
-	packLangOptions: YH,
-	adminLangOptions: XH,
-	sitePackLangs: ZH,
-	adminLangChoice: QH,
-	setAdminLang: $H,
-	togglePanel: eU,
-	loadPanelData: tU,
-	reducedMotion: nU,
-	checkAuth: rU,
+	PANEL_INTROS: JH,
+	LANG_OPTIONS: YH,
+	sortLangs: XH,
+	packLangOptions: ZH,
+	adminLangOptions: QH,
+	sitePackLangs: $H,
+	adminLangChoice: eU,
+	setAdminLang: tU,
+	togglePanel: nU,
+	loadPanelData: rU,
+	reducedMotion: iU,
+	checkAuth: aU,
 	get guidesOn() {
-		return I(iU);
+		return I(oU);
 	},
 	set guidesOn(e) {
-		A(iU, e, !0);
+		A(oU, e, !0);
 	},
 	get settingsOpen() {
-		return I(aU);
+		return I(sU);
 	},
 	get spellcheckPref() {
-		return I(yU);
-	},
-	setSpellcheck: bU,
-	get linkEditorPref() {
 		return I(xU);
 	},
-	setLinkEditor: SU,
+	setSpellcheck: SU,
+	get linkEditorPref() {
+		return I(CU);
+	},
+	setLinkEditor: wU,
 	set settingsOpen(e) {
-		A(aU, e, !0);
+		A(sU, e, !0);
 	},
-	ADMIN_LAYOUTS: MH,
+	ADMIN_LAYOUTS: PH,
 	get ADMIN_LAYOUT_OPTIONS() {
-		return I(IH);
-	},
-	get updateNotice() {
-		return I(LH);
-	},
-	get UPDATE_NOTICE_OPTIONS() {
 		return I(RH);
 	},
-	get panelFolded() {
+	get updateNotice() {
 		return I(zH);
 	},
+	get UPDATE_NOTICE_OPTIONS() {
+		return I(BH);
+	},
+	get panelFolded() {
+		return I(VH);
+	},
 	set panelFolded(e) {
-		A(zH, e, !0);
+		A(VH, e, !0);
 	},
 	get adminLayout() {
-		return I(PH);
+		return I(IH);
 	},
 	set adminLayout(e) {
-		A(PH, e, !0);
+		A(IH, e, !0);
 	},
-	setAdminLayout: FH,
+	setAdminLayout: LH,
 	get layoutPickerPref() {
-		return I(vU);
+		return I(bU);
 	},
 	set layoutPickerPref(e) {
-		A(vU, e, !0);
+		A(bU, e, !0);
 	},
-	setLayoutPicker: CU,
+	setLayoutPicker: TU,
 	get addBlockMenuPref() {
-		return I(wU);
-	},
-	setAddBlockMenu: TU,
-	get shortcutsOpen() {
 		return I(EU);
 	},
+	setAddBlockMenu: DU,
+	get shortcutsOpen() {
+		return I(OU);
+	},
 	set shortcutsOpen(e) {
-		A(EU, e, !0);
+		A(OU, e, !0);
 	},
-	openShortcuts: DU,
+	openShortcuts: kU,
 	get collectionsLayout() {
-		return I(pU);
-	},
-	setCollectionsLayout: mU,
-	get COLLECTIONS_LAYOUT_OPTIONS() {
 		return I(hU);
 	},
-	get settingsPlace() {
-		return I(cU);
-	},
-	setSettingsPlace: uU,
-	get settingsPictures() {
-		return I(lU);
-	},
-	setSettingsPictures: dU,
-	get SETTINGS_PLACE_OPTIONS() {
-		return I(gU);
-	},
-	get SETTINGS_PICTURES_OPTIONS() {
+	setCollectionsLayout: gU,
+	get COLLECTIONS_LAYOUT_OPTIONS() {
 		return I(_U);
 	},
-	FOLD_MQ: OU,
+	get settingsPlace() {
+		return I(uU);
+	},
+	setSettingsPlace: fU,
+	get settingsPictures() {
+		return I(dU);
+	},
+	setSettingsPictures: pU,
+	get SETTINGS_PLACE_OPTIONS() {
+		return I(vU);
+	},
+	get SETTINGS_PICTURES_OPTIONS() {
+		return I(yU);
+	},
+	FOLD_MQ: AU,
 	get toolMenu() {
-		return I(AU);
-	},
-	set toolMenu(e) {
-		A(AU, e, !0);
-	},
-	get toolMenuEl() {
-		return I(jU);
-	},
-	set toolMenuEl(e) {
-		A(jU, e, !0);
-	},
-	get folded() {
 		return I(MU);
 	},
-	set folded(e) {
+	set toolMenu(e) {
 		A(MU, e, !0);
 	},
-	toggleGuides: NU,
-	get gridOn() {
+	get toolMenuEl() {
+		return I(NU);
+	},
+	set toolMenuEl(e) {
+		A(NU, e, !0);
+	},
+	get folded() {
 		return I(PU);
 	},
-	set gridOn(e) {
+	set folded(e) {
 		A(PU, e, !0);
 	},
-	toggleGrid: FU,
-	get panelEl() {
+	toggleGuides: FU,
+	get gridOn() {
 		return I(IU);
 	},
-	set panelEl(e) {
+	set gridOn(e) {
 		A(IU, e, !0);
 	},
-	get panelHasGroups() {
-		return I(LU);
-	},
-	set panelHasGroups(e) {
-		A(LU, e, !0);
-	},
-	get panelAllOpen() {
+	toggleGrid: LU,
+	get panelEl() {
 		return I(RU);
 	},
-	set panelAllOpen(e) {
+	set panelEl(e) {
 		A(RU, e, !0);
 	},
-	allOpen: zU,
-	syncPanelFolds: BU,
-	togglePanelGroups: VU,
-	decorateSubFolds: HU,
-	effects: UU
+	get panelHasGroups() {
+		return I(zU);
+	},
+	set panelHasGroups(e) {
+		A(zU, e, !0);
+	},
+	get panelAllOpen() {
+		return I(BU);
+	},
+	set panelAllOpen(e) {
+		A(BU, e, !0);
+	},
+	allOpen: VU,
+	syncPanelFolds: HU,
+	togglePanelGroups: UU,
+	decorateSubFolds: WU,
+	effects: GU
 };
 // src/state/media.svelte.js
-async function GU(e, t) {
+async function qU(e, t) {
 	try {
 		let n = new Image();
 		await new Promise((t, r) => {
@@ -38881,10 +38895,10 @@ async function GU(e, t) {
 		return null;
 	}
 }
-async function KU(e) {
+async function JU(e) {
 	let t = await e.text(), n = Zp(t), r = $p(t);
 	if (!r) return n;
-	let i = await GU(n.dataUrl, r);
+	let i = await qU(n.dataUrl, r);
 	if (!i) return n;
 	let a = Qp(t, i);
 	if (a === t) return n;
@@ -38894,24 +38908,24 @@ async function KU(e) {
 		return n;
 	}
 }
-async function qU(e) {
-	if (e.type === "image/svg+xml" || /\.svg$/i.test(e.name || "")) return KU(e);
+async function YU(e) {
+	if (e.type === "image/svg+xml" || /\.svg$/i.test(e.name || "")) return JU(e);
 	let t = await Jp(e);
-	return t.animated && t.bytes > 1e6 && WU.setStatus(J("status.animatedLarge", { mb: (t.bytes / 1e6).toFixed(1) }), "error"), t;
+	return t.animated && t.bytes > 1e6 && KU.setStatus(J("status.animatedLarge", { mb: (t.bytes / 1e6).toFixed(1) }), "error"), t;
 }
-function JU(e) {
+function XU(e) {
 	return e?.code === "animatedTooLarge" ? J("status.animatedTooLarge", {
 		mb: (e.bytes / 1e6).toFixed(1),
 		max: Math.round(Rp / 1e6)
 	}) : J("status.imageReadError");
 }
-function YU(e, t, n) {
+function ZU(e, t, n) {
 	if (!["video/mp4", "video/webm"].includes(e.type)) {
-		WU.setStatus(J(t), "error");
+		KU.setStatus(J(t), "error");
 		return;
 	}
 	if (e.size > 15e6) {
-		WU.setStatus(J("status.videoTooLarge", {
+		KU.setStatus(J("status.videoTooLarge", {
 			mb: (e.size / 1e6).toFixed(1),
 			max: Math.round(Ip / 1e6)
 		}), "error");
@@ -38919,14 +38933,14 @@ function YU(e, t, n) {
 	}
 	let r = new FileReader();
 	r.onload = () => {
-		n(String(r.result ?? "")), e.size > 4e6 && WU.setStatus(J("status.videoLarge", { mb: (e.size / 1e6).toFixed(1) }), "error");
-	}, r.onerror = () => WU.setStatus(J("status.imageReadError"), "error"), r.readAsDataURL(e);
+		n(String(r.result ?? "")), e.size > 4e6 && KU.setStatus(J("status.videoLarge", { mb: (e.size / 1e6).toFixed(1) }), "error");
+	}, r.onerror = () => KU.setStatus(J("status.imageReadError"), "error"), r.readAsDataURL(e);
 }
-var XU = () => 1 + Math.floor(Math.random() * 1e6);
-async function ZU(e) {
+var QU = () => 1 + Math.floor(Math.random() * 1e6);
+async function $U(e) {
 	let t = [], n = 0, r = 0;
 	for (let i of e) try {
-		let e = await qU(i);
+		let e = await YU(i);
 		e.bytes > 4e5 && (r += 1), t.push({
 			src: e.dataUrl,
 			alt: rm(i.name).replaceAll("-", " "),
@@ -38942,10 +38956,10 @@ async function ZU(e) {
 		big: r
 	};
 }
-async function QU(e) {
-	WU.setStatus(J("status.compressingImage"));
+async function eW(e) {
+	KU.setStatus(J("status.compressingImage"));
 	try {
-		let t = await qU(e);
+		let t = await YU(e);
 		return {
 			src: t.dataUrl,
 			alt: rm(e.name).replaceAll("-", " "),
@@ -38954,28 +38968,28 @@ async function QU(e) {
 			bytes: t.bytes
 		};
 	} catch (e) {
-		return WU.setStatus(JU(e), "error"), null;
+		return KU.setStatus(XU(e), "error"), null;
 	}
 }
-function $U(e) {
-	e > 4e5 ? WU.setStatus(J("status.imageLarge", { kb: Math.round(e / 1024) }), "error") : WU.setStatus("");
+function tW(e) {
+	e > 4e5 ? KU.setStatus(J("status.imageLarge", { kb: Math.round(e / 1024) }), "error") : KU.setStatus("");
 }
-function eW(e, t, n) {
-	t ? WU.setStatus(J("status.imagesReadFailed", { n: t }), "error") : n ? WU.setStatus(J("status.imagesLarge", { n }), "error") : WU.setStatus(e ? "" : J("status.noImagesAdded"));
+function nW(e, t, n) {
+	t ? KU.setStatus(J("status.imagesReadFailed", { n: t }), "error") : n ? KU.setStatus(J("status.imagesLarge", { n }), "error") : KU.setStatus(e ? "" : J("status.noImagesAdded"));
 }
-var tW = {
-	svgContentBBox: GU,
-	svgAutoTrim: KU,
-	compressOrTrim: qU,
-	imageErrorText: JU,
-	readVideoFile: YU,
-	newSeed: XU,
-	compressMany: ZU,
-	imageForBlock: QU,
-	reportImage: $U,
-	reportUpload: eW
-}, nW = /* @__PURE__ */ R("<label><input type=\"checkbox\"/> </label>"), rW = /* @__PURE__ */ R("<p class=\"ld-none svelte-p8cpd3\"> </p>"), iW = /* @__PURE__ */ R("<span class=\"ld-aside svelte-p8cpd3\"> </span>"), aW = /* @__PURE__ */ R("<button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span><!></button>"), oW = /* @__PURE__ */ R("<div class=\"ld-list svelte-p8cpd3\" role=\"group\"><button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span></button> <!></div>"), sW = /* @__PURE__ */ R("<label class=\"field-stack\"> <input placeholder=\"https://\" spellcheck=\"false\" autocomplete=\"off\"/></label>"), cW = /* @__PURE__ */ R("<label class=\"field-stack\"> <input type=\"email\" spellcheck=\"false\" autocomplete=\"off\"/></label> <label class=\"field-stack\"> <input/></label>", 1), lW = /* @__PURE__ */ R("<label class=\"field-stack\"> <input type=\"tel\" spellcheck=\"false\" autocomplete=\"off\"/></label>"), uW = /* @__PURE__ */ R("<button type=\"button\" class=\"ld-row on svelte-p8cpd3\" aria-pressed=\"true\"><span class=\"ld-text svelte-p8cpd3\"> </span><span class=\"ld-aside svelte-p8cpd3\"> </span></button>"), dW = /* @__PURE__ */ R("<button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span></button>"), fW = /* @__PURE__ */ R("<p> </p>"), pW = /* @__PURE__ */ R("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"application/pdf,.pdf\"/></label> <!>", 1), mW = /* @__PURE__ */ R("<label class=\"ld-check svelte-p8cpd3\"><input type=\"checkbox\"/> </label>"), hW = /* @__PURE__ */ R("<input class=\"ld-search svelte-p8cpd3\" type=\"search\"/> <div class=\"ld-list svelte-p8cpd3\" role=\"group\"><!> <!></div> <!> <!>", 1), gW = /* @__PURE__ */ R("<!> <!>", 1), _W = /* @__PURE__ */ R("<span class=\"ld-dim svelte-p8cpd3\">›</span> ", 1), vW = /* @__PURE__ */ R("<button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> <!></span> <span class=\"ld-aside svelte-p8cpd3\"> <!></span></button>"), yW = /* @__PURE__ */ R("<p class=\"ld-label svelte-p8cpd3\"> </p> <!>", 1), bW = /* @__PURE__ */ R("<input class=\"ld-search svelte-p8cpd3\" type=\"search\"/> <div class=\"ld-list svelte-p8cpd3\" role=\"group\"></div> <!>", 1), xW = /* @__PURE__ */ R("<button type=\"button\" class=\"ghost ld-small svelte-p8cpd3\"> </button>"), SW = /* @__PURE__ */ R("<dialog class=\"ld-pop svelte-p8cpd3\"><form class=\"ld-card ld-card-pop svelte-p8cpd3\"><!> <div class=\"ld-body panel-body svelte-p8cpd3\"><!></div> <div class=\"ld-actions svelte-p8cpd3\"><!> <!> <span class=\"ld-gap svelte-p8cpd3\"></span> <button type=\"button\" class=\"ghost ld-small svelte-p8cpd3\"> </button> <button type=\"submit\" class=\"primary ld-small svelte-p8cpd3\"> </button></div></form></dialog>"), CW = /* @__PURE__ */ R("<label><input type=\"radio\" class=\"svelte-p8cpd3\"/> </label>"), wW = /* @__PURE__ */ R("<div class=\"ld-rail svelte-p8cpd3\" role=\"radiogroup\"><span class=\"ld-rail-head svelte-p8cpd3\"> </span> <!></div>"), TW = /* @__PURE__ */ R("<button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span><span class=\"ld-aside svelte-p8cpd3\"> </span></button>"), EW = /* @__PURE__ */ R("<p class=\"ld-label svelte-p8cpd3\"> </p> <div class=\"ld-list ld-tall svelte-p8cpd3\" role=\"group\"><button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span></button> <!></div>", 1), DW = /* @__PURE__ */ R("<p class=\"ld-label svelte-p8cpd3\"> </p> <p class=\"ld-none svelte-p8cpd3\"> </p>", 1), OW = /* @__PURE__ */ R("<div class=\"ld-cols svelte-p8cpd3\"><div class=\"ld-col svelte-p8cpd3\"><input class=\"ld-search svelte-p8cpd3\" type=\"search\"/> <div class=\"ld-list ld-tall svelte-p8cpd3\" role=\"group\"></div></div> <div class=\"ld-col svelte-p8cpd3\"><!></div></div>"), kW = /* @__PURE__ */ R("<dialog class=\"ld-overlay svelte-p8cpd3\" aria-labelledby=\"ld-title\"><form><!> <div class=\"ld-main svelte-p8cpd3\"><div class=\"ld-head svelte-p8cpd3\"><h2 id=\"ld-title\" class=\"svelte-p8cpd3\"> </h2> <span class=\"ld-gap svelte-p8cpd3\"></span> <!> <!> <button type=\"button\" class=\"ghost ld-small svelte-p8cpd3\"> </button> <button type=\"submit\" class=\"primary ld-small svelte-p8cpd3\"> </button></div> <div class=\"ld-body panel-body svelte-p8cpd3\"><!></div></div></form></dialog>");
-function AW(e, t) {
+var rW = {
+	svgContentBBox: qU,
+	svgAutoTrim: JU,
+	compressOrTrim: YU,
+	imageErrorText: XU,
+	readVideoFile: ZU,
+	newSeed: QU,
+	compressMany: $U,
+	imageForBlock: eW,
+	reportImage: tW,
+	reportUpload: nW
+}, iW = /* @__PURE__ */ R("<label><input type=\"checkbox\"/> </label>"), aW = /* @__PURE__ */ R("<p class=\"ld-none svelte-p8cpd3\"> </p>"), oW = /* @__PURE__ */ R("<span class=\"ld-aside svelte-p8cpd3\"> </span>"), sW = /* @__PURE__ */ R("<button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span><!></button>"), cW = /* @__PURE__ */ R("<div class=\"ld-list svelte-p8cpd3\" role=\"group\"><button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span></button> <!></div>"), lW = /* @__PURE__ */ R("<label class=\"field-stack\"> <input placeholder=\"https://\" spellcheck=\"false\" autocomplete=\"off\"/></label>"), uW = /* @__PURE__ */ R("<label class=\"field-stack\"> <input type=\"email\" spellcheck=\"false\" autocomplete=\"off\"/></label> <label class=\"field-stack\"> <input/></label>", 1), dW = /* @__PURE__ */ R("<label class=\"field-stack\"> <input type=\"tel\" spellcheck=\"false\" autocomplete=\"off\"/></label>"), fW = /* @__PURE__ */ R("<button type=\"button\" class=\"ld-row on svelte-p8cpd3\" aria-pressed=\"true\"><span class=\"ld-text svelte-p8cpd3\"> </span><span class=\"ld-aside svelte-p8cpd3\"> </span></button>"), pW = /* @__PURE__ */ R("<button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span></button>"), mW = /* @__PURE__ */ R("<p> </p>"), hW = /* @__PURE__ */ R("<label class=\"ghost filepick\"> <input type=\"file\" accept=\"application/pdf,.pdf\"/></label> <!>", 1), gW = /* @__PURE__ */ R("<label class=\"ld-check svelte-p8cpd3\"><input type=\"checkbox\"/> </label>"), _W = /* @__PURE__ */ R("<input class=\"ld-search svelte-p8cpd3\" type=\"search\"/> <div class=\"ld-list svelte-p8cpd3\" role=\"group\"><!> <!></div> <!> <!>", 1), vW = /* @__PURE__ */ R("<!> <!>", 1), yW = /* @__PURE__ */ R("<span class=\"ld-dim svelte-p8cpd3\">›</span> ", 1), bW = /* @__PURE__ */ R("<button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> <!></span> <span class=\"ld-aside svelte-p8cpd3\"> <!></span></button>"), xW = /* @__PURE__ */ R("<p class=\"ld-label svelte-p8cpd3\"> </p> <!>", 1), SW = /* @__PURE__ */ R("<input class=\"ld-search svelte-p8cpd3\" type=\"search\"/> <div class=\"ld-list svelte-p8cpd3\" role=\"group\"></div> <!>", 1), CW = /* @__PURE__ */ R("<button type=\"button\" class=\"ghost ld-small svelte-p8cpd3\"> </button>"), wW = /* @__PURE__ */ R("<dialog class=\"ld-pop svelte-p8cpd3\"><form class=\"ld-card ld-card-pop svelte-p8cpd3\"><!> <div class=\"ld-body panel-body svelte-p8cpd3\"><!></div> <div class=\"ld-actions svelte-p8cpd3\"><!> <!> <span class=\"ld-gap svelte-p8cpd3\"></span> <button type=\"button\" class=\"ghost ld-small svelte-p8cpd3\"> </button> <button type=\"submit\" class=\"primary ld-small svelte-p8cpd3\"> </button></div></form></dialog>"), TW = /* @__PURE__ */ R("<label><input type=\"radio\" class=\"svelte-p8cpd3\"/> </label>"), EW = /* @__PURE__ */ R("<div class=\"ld-rail svelte-p8cpd3\" role=\"radiogroup\"><span class=\"ld-rail-head svelte-p8cpd3\"> </span> <!></div>"), DW = /* @__PURE__ */ R("<button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span><span class=\"ld-aside svelte-p8cpd3\"> </span></button>"), OW = /* @__PURE__ */ R("<p class=\"ld-label svelte-p8cpd3\"> </p> <div class=\"ld-list ld-tall svelte-p8cpd3\" role=\"group\"><button type=\"button\"><span class=\"ld-text svelte-p8cpd3\"> </span></button> <!></div>", 1), kW = /* @__PURE__ */ R("<p class=\"ld-label svelte-p8cpd3\"> </p> <p class=\"ld-none svelte-p8cpd3\"> </p>", 1), AW = /* @__PURE__ */ R("<div class=\"ld-cols svelte-p8cpd3\"><div class=\"ld-col svelte-p8cpd3\"><input class=\"ld-search svelte-p8cpd3\" type=\"search\"/> <div class=\"ld-list ld-tall svelte-p8cpd3\" role=\"group\"></div></div> <div class=\"ld-col svelte-p8cpd3\"><!></div></div>"), jW = /* @__PURE__ */ R("<dialog class=\"ld-overlay svelte-p8cpd3\" aria-labelledby=\"ld-title\"><form><!> <div class=\"ld-main svelte-p8cpd3\"><div class=\"ld-head svelte-p8cpd3\"><h2 id=\"ld-title\" class=\"svelte-p8cpd3\"> </h2> <span class=\"ld-gap svelte-p8cpd3\"></span> <!> <!> <button type=\"button\" class=\"ghost ld-small svelte-p8cpd3\"> </button> <button type=\"submit\" class=\"primary ld-small svelte-p8cpd3\"> </button></div> <div class=\"ld-body panel-body svelte-p8cpd3\"><!></div></div></form></dialog>");
+function MW(e, t) {
 	it(t, !0);
 	let n = (e) => {
 		var t = Zr(), n = M(t), r = (e) => {
@@ -38984,7 +38998,7 @@ function AW(e, t) {
 				"web",
 				"file"
 			].includes(m.kind));
-			var n = nW();
+			var n = iW();
 			let r;
 			var i = j(n);
 			G(i);
@@ -38997,20 +39011,20 @@ function AW(e, t) {
 			c && e(r);
 		}), z(e, t);
 	}, r = (e) => {
-		var t = oW(), n = j(t);
+		var t = cW(), n = j(t);
 		let r;
 		var i = N(j(n), !0);
 		D(n);
 		var a = P(n, 2), o = (e) => {
-			var t = rW(), n = N(t, !0);
+			var t = aW(), n = N(t, !0);
 			F((e) => B(n, e), [() => J("link.spotsLoading")]), z(e, t);
 		}, s = (e) => {
 			var t = Zr();
 			H(M(t), 17, () => I(g), (e) => e.id, (e, t) => {
-				var n = aW();
+				var n = sW();
 				let r;
 				var i = j(n), a = N(i, !0), o = P(i), s = (e) => {
-					var n = iW(), r = N(n);
+					var n = oW(), r = N(n);
 					F(() => B(r, `#${I(t).name ?? ""}`)), z(e, n);
 				};
 				V(o, (e) => {
@@ -39029,13 +39043,13 @@ function AW(e, t) {
 			q(t, "aria-label", e), r = W(n, 1, "ld-row svelte-p8cpd3", null, r, { on: !m.target }), q(n, "aria-pressed", !m.target), B(i, a);
 		}, [() => J("link.spot"), () => J("link.spotTop")]), L("click", n, () => m.target = ""), z(e, t);
 	}, i = (e) => {
-		var t = gW(), n = M(t), r = (e) => {
-			var t = sW(), n = j(t), r = P(n);
+		var t = vW(), n = M(t), r = (e) => {
+			var t = lW(), n = j(t), r = P(n);
 			G(r), D(t), F((e, r) => {
 				q(t, "title", e), B(n, `${r ?? ""} `);
 			}, [() => J("tip.link.web"), () => J("link.url")]), Ji(r, () => m.url, (e) => m.url = e), z(e, t);
 		}, i = (e) => {
-			var t = cW(), n = M(t), r = j(n), i = P(r);
+			var t = uW(), n = M(t), r = j(n), i = P(r);
 			G(i), D(n);
 			var a = P(n, 2), o = j(a), s = P(o);
 			G(s), D(a), F((e, t, i, s) => {
@@ -39047,15 +39061,15 @@ function AW(e, t) {
 				() => J("link.subject")
 			]), Ji(i, () => m.email, (e) => m.email = e), Ji(s, () => m.subject, (e) => m.subject = e), z(e, t);
 		}, a = (e) => {
-			var t = lW(), n = j(t), r = P(n);
+			var t = dW(), n = j(t), r = P(n);
 			G(r), D(t), F((e, r) => {
 				q(t, "title", e), B(n, `${r ?? ""} `);
 			}, [() => J("tip.link.phone"), () => J("link.phone")]), Ji(r, () => m.phone, (e) => m.phone = e), z(e, t);
 		}, s = (e) => {
-			var t = hW(), n = M(t);
+			var t = _W(), n = M(t);
 			G(n);
 			var r = P(n, 2), i = j(r), a = (e) => {
-				var t = uW(), n = j(t), r = N(n, !0), i = N(P(n), !0);
+				var t = fW(), n = j(t), r = N(n, !0), i = N(P(n), !0);
 				D(t), F((e, t) => {
 					B(r, e), B(i, t);
 				}, [() => hh(m.file), () => J("link.fileHeld")]), z(e, t);
@@ -39063,7 +39077,7 @@ function AW(e, t) {
 			V(i, (e) => {
 				I(s) && e(a);
 			}), H(P(i, 2), 16, () => I(E), (e) => e, (e, t) => {
-				var n = dW();
+				var n = pW();
 				let r;
 				var i = N(j(n), !0);
 				D(n), F((e) => {
@@ -39071,7 +39085,7 @@ function AW(e, t) {
 				}, [() => hh(t)]), L("click", n, () => m.file = t), z(e, n);
 			}, (e) => {
 				var t = Zr(), n = M(t), r = (e) => {
-					var t = rW(), n = N(t, !0);
+					var t = aW(), n = N(t, !0);
 					F((e) => B(n, e), [() => I(y) === null ? J("link.filesLoading") : J("link.noFiles")]), z(e, t);
 				}, i = /* @__PURE__ */ O(() => !ph(m.file));
 				V(n, (e) => {
@@ -39079,10 +39093,10 @@ function AW(e, t) {
 				}), z(e, t);
 			}), D(r);
 			var c = P(r, 2), u = (e) => {
-				var t = pW(), n = M(t), r = j(n), i = P(r);
+				var t = hW(), n = M(t), r = j(n), i = P(r);
 				D(n);
 				var a = P(n, 2), o = (e) => {
-					var t = fW();
+					var t = mW();
 					let n;
 					var r = N(t, !0);
 					F(() => {
@@ -39099,7 +39113,7 @@ function AW(e, t) {
 				l && e(u);
 			});
 			var d = P(c, 2), f = (e) => {
-				var t = mW(), n = j(t);
+				var t = gW(), n = j(t);
 				G(n);
 				var r = P(n);
 				D(t), F((e, n) => {
@@ -39122,7 +39136,7 @@ function AW(e, t) {
 		var c = P(n, 2), u = (e) => {
 			var t = Zr();
 			H(M(t), 16, () => ec, (e) => e, (e, t) => {
-				var n = mW(), r = j(n);
+				var n = gW(), r = j(n);
 				G(r);
 				var i = P(r);
 				D(n), F((e, t, a) => {
@@ -39279,7 +39293,7 @@ function AW(e, t) {
 		t.request.apply(null), se();
 	}
 	var me = Zr(), he = M(me), ge = (e) => {
-		var a = SW(), o = j(a), s = j(o), c = (e) => {
+		var a = wW(), o = j(a), s = j(o), c = (e) => {
 			{
 				let t = /* @__PURE__ */ O(() => J("lbl.goesTo")), n = /* @__PURE__ */ O(() => J("tip.link.field")), r = /* @__PURE__ */ O(() => vh.map((e) => [e, J(ee[e])]));
 				Ru(e, {
@@ -39303,14 +39317,14 @@ function AW(e, t) {
 			t.request.pagesOnly || e(c);
 		});
 		var l = P(s, 2), d = j(l), f = (e) => {
-			var t = bW(), n = M(t);
+			var t = SW(), n = M(t);
 			G(n);
 			var i = P(n, 2);
 			H(i, 21, () => I(ae), (e) => e.key, (e, t) => {
-				var n = vW();
+				var n = bW();
 				let r;
 				var i = j(n), a = j(i, !0), o = P(a), s = (e) => {
-					var n = _W(), r = P(M(n), 1, !0);
+					var n = yW(), r = P(M(n), 1, !0);
 					F((e) => B(r, e), [() => ie(I(t).spot)]), z(e, n);
 				};
 				V(o, (e) => {
@@ -39326,11 +39340,11 @@ function AW(e, t) {
 					r = W(n, 1, "ld-row svelte-p8cpd3", null, r, { on: I(t).page.id === m.page && (I(t).spot ? m.target === I(t).spot.id : !m.target) }), q(n, "aria-pressed", I(t).page.id === m.page && (I(t).spot ? m.target === I(t).spot.id : !m.target)), B(a, I(t).page.title), B(l, I(t).page.path);
 				}), L("click", n, () => ue(I(t))), z(e, n);
 			}, (e) => {
-				var t = rW(), n = N(t, !0);
+				var t = aW(), n = N(t, !0);
 				F((e) => B(n, e), [() => J("link.noPages")]), z(e, t);
 			}), D(i);
 			var a = P(i, 2), o = (e) => {
-				var t = yW(), n = M(t), i = N(n, !0), a = P(n, 2);
+				var t = xW(), n = M(t), i = N(n, !0), a = P(n, 2);
 				r(a), F((e) => B(i, e), [() => J("link.onPage", { page: I(re).title })]), z(e, t);
 			};
 			V(a, (e) => {
@@ -39351,7 +39365,7 @@ function AW(e, t) {
 		var g = P(l, 2), _ = j(g);
 		n(_);
 		var v = P(_, 2), y = (e) => {
-			var t = xW(), n = N(t, !0);
+			var t = CW(), n = N(t, !0);
 			F((e) => B(n, e), [() => J("link.remove")]), L("click", t, pe), z(e, t);
 		};
 		V(v, (e) => {
@@ -39369,12 +39383,12 @@ function AW(e, t) {
 			e.preventDefault(), fe();
 		}), L("click", b, se), z(e, a);
 	}, _e = (e) => {
-		var r = kW(), a = j(r);
+		var r = jW(), a = j(r);
 		let o;
 		var s = j(a), c = (e) => {
-			var t = wW(), n = j(t), r = N(n, !0);
+			var t = EW(), n = j(t), r = N(n, !0);
 			H(P(n, 2), 16, () => vh, (e) => e, (e, t) => {
-				var n = CW();
+				var n = TW();
 				let r;
 				var i = j(n);
 				G(i);
@@ -39392,7 +39406,7 @@ function AW(e, t) {
 		var l = P(s, 2), d = j(l), f = j(d), p = N(f, !0), _ = P(f, 4);
 		n(_);
 		var v = P(_, 2), y = (e) => {
-			var t = xW(), n = N(t, !0);
+			var t = CW(), n = N(t, !0);
 			F((e) => B(n, e), [() => J("link.remove")]), L("click", t, pe), z(e, t);
 		};
 		V(v, (e) => {
@@ -39401,35 +39415,35 @@ function AW(e, t) {
 		var b = P(v, 2), w = N(b, !0), T = P(b, 2), ne = N(T, !0);
 		D(d);
 		var E = P(d, 2), ae = j(E), oe = (e) => {
-			var t = OW(), n = j(t), r = j(n);
+			var t = AW(), n = j(t), r = j(n);
 			G(r);
 			var i = P(r, 2);
 			H(i, 21, () => I(te), (e) => e.id, (e, t) => {
-				var n = TW();
+				var n = DW();
 				let r;
 				var i = j(n), a = N(i, !0), o = N(P(i), !0);
 				D(n), F(() => {
 					r = W(n, 1, "ld-row svelte-p8cpd3", null, r, { on: I(t).id === m.page }), q(n, "aria-pressed", I(t).id === m.page), B(a, I(t).title), B(o, I(t).path);
 				}), L("click", n, () => le(I(t).id)), z(e, n);
 			}, (e) => {
-				var t = rW(), n = N(t, !0);
+				var t = aW(), n = N(t, !0);
 				F((e) => B(n, e), [() => J("link.noPages")]), z(e, t);
 			}), D(i), D(n);
 			var a = P(n, 2), o = j(a), s = (e) => {
-				var t = EW(), n = M(t), r = N(n, !0), i = P(n, 2), a = j(i);
+				var t = OW(), n = M(t), r = N(n, !0), i = P(n, 2), a = j(i);
 				let o;
 				var s = N(j(a), !0);
 				D(a);
 				var c = P(a, 2), l = (e) => {
-					var t = rW(), n = N(t, !0);
+					var t = aW(), n = N(t, !0);
 					F((e) => B(n, e), [() => J("link.spotsLoading")]), z(e, t);
 				}, u = (e) => {
 					var t = Zr();
 					H(M(t), 17, () => I(g), (e) => e.id, (e, t) => {
-						var n = aW();
+						var n = sW();
 						let r;
 						var i = j(n), a = N(i, !0), o = P(i), s = (e) => {
-							var n = iW(), r = N(n);
+							var n = oW(), r = N(n);
 							F(() => B(r, `#${I(t).name ?? ""}`)), z(e, n);
 						};
 						V(o, (e) => {
@@ -39453,7 +39467,7 @@ function AW(e, t) {
 					() => J("link.spotTop")
 				]), L("click", a, () => m.target = ""), z(e, t);
 			}, c = (e) => {
-				var t = DW(), n = M(t), r = N(n, !0), i = N(P(n, 2), !0);
+				var t = kW(), n = M(t), r = N(n, !0), i = N(P(n, 2), !0);
 				F((e, t, a) => {
 					q(n, "title", e), B(r, t), B(i, a);
 				}, [
@@ -39497,8 +39511,8 @@ Br([
 	"pointerdown"
 ]);
 // src/lib/ShortcutSheet.svelte
-var jW = /* @__PURE__ */ R("<span class=\"sk-or svelte-ln1zno\"> </span>"), MW = /* @__PURE__ */ R("<span class=\"sk-plus svelte-ln1zno\" aria-hidden=\"true\">+</span>"), NW = /* @__PURE__ */ Yr("<path></path>"), PW = /* @__PURE__ */ R("<kbd class=\"sk-arrow svelte-ln1zno\" role=\"img\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"></svg></kbd>"), FW = /* @__PURE__ */ R("<kbd> </kbd>"), IW = /* @__PURE__ */ R("<kbd class=\"svelte-ln1zno\"> </kbd>"), LW = /* @__PURE__ */ R("<!> <!>", 1), RW = /* @__PURE__ */ R("<!> <span class=\"sk-way svelte-ln1zno\"></span>", 1), zW = /* @__PURE__ */ R("<div class=\"sk-row svelte-ln1zno\"><dt class=\"svelte-ln1zno\"> </dt> <dd class=\"svelte-ln1zno\"></dd></div>"), BW = /* @__PURE__ */ R("<section class=\"sk-group svelte-ln1zno\"><h3 class=\"svelte-ln1zno\"> </h3> <dl class=\"svelte-ln1zno\"></dl></section>"), VW = /* @__PURE__ */ R("<dialog class=\"sk-overlay svelte-ln1zno\" aria-labelledby=\"sk-title\"><div class=\"sk-card svelte-ln1zno\"><div class=\"sk-head svelte-ln1zno\"><h2 id=\"sk-title\" class=\"svelte-ln1zno\"> </h2> <button type=\"button\" class=\"sk-close svelte-ln1zno\"></button></div> <div class=\"sk-body svelte-ln1zno\"><div class=\"sk-cols svelte-ln1zno\"></div></div></div></dialog>");
-function HW(e, t) {
+var NW = /* @__PURE__ */ R("<span class=\"sk-or svelte-ln1zno\"> </span>"), PW = /* @__PURE__ */ R("<span class=\"sk-plus svelte-ln1zno\" aria-hidden=\"true\">+</span>"), FW = /* @__PURE__ */ Yr("<path></path>"), IW = /* @__PURE__ */ R("<kbd class=\"sk-arrow svelte-ln1zno\" role=\"img\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"></svg></kbd>"), LW = /* @__PURE__ */ R("<kbd> </kbd>"), RW = /* @__PURE__ */ R("<kbd class=\"svelte-ln1zno\"> </kbd>"), zW = /* @__PURE__ */ R("<!> <!>", 1), BW = /* @__PURE__ */ R("<!> <span class=\"sk-way svelte-ln1zno\"></span>", 1), VW = /* @__PURE__ */ R("<div class=\"sk-row svelte-ln1zno\"><dt class=\"svelte-ln1zno\"> </dt> <dd class=\"svelte-ln1zno\"></dd></div>"), HW = /* @__PURE__ */ R("<section class=\"sk-group svelte-ln1zno\"><h3 class=\"svelte-ln1zno\"> </h3> <dl class=\"svelte-ln1zno\"></dl></section>"), UW = /* @__PURE__ */ R("<dialog class=\"sk-overlay svelte-ln1zno\" aria-labelledby=\"sk-title\"><div class=\"sk-card svelte-ln1zno\"><div class=\"sk-head svelte-ln1zno\"><h2 id=\"sk-title\" class=\"svelte-ln1zno\"> </h2> <button type=\"button\" class=\"sk-close svelte-ln1zno\"></button></div> <div class=\"sk-body svelte-ln1zno\"><div class=\"sk-cols svelte-ln1zno\"></div></div></div></dialog>");
+function WW(e, t) {
 	it(t, !0);
 	let n = /* @__PURE__ */ k(null), r = !1, i = document.activeElement, a = () => I(n)?.close();
 	function o() {
@@ -39517,16 +39531,16 @@ function HW(e, t) {
 			"M21 12h-7M18 9l3 3-3 3"
 		]
 	};
-	var c = VW(), l = j(c), u = j(l), d = j(u), f = N(d, !0), p = P(d, 2);
+	var c = UW(), l = j(c), u = j(l), d = j(u), f = N(d, !0), p = P(d, 2);
 	U(p, () => Y.cross, !0), D(p), D(u);
 	var m = P(u, 2), h = j(m);
 	H(h, 21, () => ZM, (e) => e.id, (e, t) => {
-		var n = BW(), r = j(n), i = N(r, !0), a = P(r, 2);
+		var n = HW(), r = j(n), i = N(r, !0), a = P(r, 2);
 		H(a, 21, () => I(t).rows, (e) => e.labelKey, (e, t) => {
-			var n = zW(), r = j(n), i = N(r, !0), a = P(r, 2);
+			var n = VW(), r = j(n), i = N(r, !0), a = P(r, 2);
 			H(a, 21, () => I(t).ways, ui, (e, t, n) => {
-				var r = RW(), i = M(r), a = (e) => {
-					var t = jW(), n = N(t, !0);
+				var r = BW(), i = M(r), a = (e) => {
+					var t = NW(), n = N(t, !0);
 					F((e) => B(n, e), [() => J("shortcuts.or")]), z(e, t);
 				};
 				V(i, (e) => {
@@ -39534,29 +39548,29 @@ function HW(e, t) {
 				});
 				var o = P(i, 2);
 				H(o, 21, () => I(t), ui, (e, t, n) => {
-					var r = LW(), i = M(r), a = (e) => {
-						z(e, MW());
+					var r = zW(), i = M(r), a = (e) => {
+						z(e, PW());
 					};
 					V(i, (e) => {
 						n && e(a);
 					});
 					var o = P(i, 2), c = (e) => {
-						var n = PW(), r = j(n);
+						var n = IW(), r = j(n);
 						H(r, 20, () => s[I(t)], (e) => e, (e, t) => {
-							var n = NW();
+							var n = FW();
 							F(() => q(n, "d", t)), z(e, n);
 						}), D(r), D(n), F((e) => {
 							q(n, "aria-label", e), q(r, "width", I(t) === "arrows" ? 16 : 12), q(r, "height", I(t) === "arrows" ? 16 : 12);
 						}, [() => J(JM[I(t)])]), z(e, n);
 					}, l = /* @__PURE__ */ O(() => XM.includes(I(t))), u = (e) => {
-						var n = FW();
+						var n = LW();
 						let r;
 						var i = N(n, !0);
 						F((e, t) => {
 							r = W(n, 1, "svelte-ln1zno", null, r, { "sk-pointer": e }), B(i, t);
 						}, [() => YM.includes(I(t)), () => J(JM[I(t)])]), z(e, n);
 					}, d = (e) => {
-						var n = IW(), r = N(n, !0);
+						var n = RW(), r = N(n, !0);
 						F(() => B(r, I(t))), z(e, n);
 					};
 					V(o, (e) => {
@@ -39579,7 +39593,7 @@ function HW(e, t) {
 }
 Br(["pointerdown", "click"]);
 // src/lib/settings-pictures.js
-var UW = "var(--urd-color-accent, #7c5cff)", WW = {
+var GW = "var(--urd-color-accent, #7c5cff)", KW = {
 	purple: {
 		bg: "#0b0e17",
 		surface: "#151a2b",
@@ -39622,57 +39636,57 @@ var UW = "var(--urd-color-accent, #7c5cff)", WW = {
 		accent: "#d65d0e",
 		text: "#ebdbb2"
 	}
-}, GW = 64, KW = 40, qW = (e) => `<svg viewBox="0 0 ${GW} ${KW}" width="${GW}" height="${KW}" aria-hidden="true" fill="none"><rect x="0.5" y="0.5" width="63" height="39" rx="3" stroke="currentColor" opacity="0.35"/>${e}</svg>`, JW = (e, t, n, r, i = .14) => `<rect x="${e}" y="${t}" width="${n}" height="${r}" fill="currentColor" opacity="${i}"/>`, YW = (e, t, n, r, i = 1) => `<rect x="${e}" y="${t}" width="${n}" height="${r}" rx="${i}" fill="${UW}"/>`, XW = (e, t, n, r = 2) => JW(e, t, n, r, .45), ZW = () => JW(1, 1, 62, 6, .18), QW = (e, t = 7) => `<rect x="${e}" y="${t}" width="${63 - e}" height="${39 - t}" fill="currentColor" opacity="0.05"/>`, $W = {
+}, qW = 64, JW = 40, YW = (e) => `<svg viewBox="0 0 ${qW} ${JW}" width="${qW}" height="${JW}" aria-hidden="true" fill="none"><rect x="0.5" y="0.5" width="63" height="39" rx="3" stroke="currentColor" opacity="0.35"/>${e}</svg>`, XW = (e, t, n, r, i = .14) => `<rect x="${e}" y="${t}" width="${n}" height="${r}" fill="currentColor" opacity="${i}"/>`, ZW = (e, t, n, r, i = 1) => `<rect x="${e}" y="${t}" width="${n}" height="${r}" rx="${i}" fill="${GW}"/>`, QW = (e, t, n, r = 2) => XW(e, t, n, r, .45), $W = () => XW(1, 1, 62, 6, .18), eG = (e, t = 7) => `<rect x="${e}" y="${t}" width="${63 - e}" height="${39 - t}" fill="currentColor" opacity="0.05"/>`, tG = {
 	layout: {
-		rail: ZW() + JW(1, 7, 8, 32) + YW(3, 10, 4, 4) + XW(3, 17, 4, 4) + XW(3, 24, 4, 4) + JW(9, 7, 18, 32, .08) + QW(27),
-		sidebar: ZW() + JW(1, 7, 20, 32) + YW(4, 11, 10, 2) + XW(4, 16, 13, 2) + XW(4, 21, 9, 2) + XW(4, 26, 12, 2) + JW(21, 7, 14, 32, .08) + QW(35),
-		"panel-tabs": ZW() + JW(1, 7, 26, 32, .08) + YW(3, 10, 6, 3) + XW(11, 10, 6, 3) + XW(19, 10, 6, 3) + XW(3, 18, 18, 2) + XW(3, 23, 14, 2) + QW(27),
-		"top-tabs": ZW() + JW(1, 7, 62, 6, .1) + YW(4, 9, 7, 2) + XW(13, 9, 7, 2) + XW(22, 9, 7, 2) + XW(31, 9, 7, 2) + XW(40, 9, 7, 2) + JW(1, 13, 22, 26, .08) + QW(23, 13),
-		"page-tabs": ZW() + YW(44, 2.5, 12, 3) + JW(1, 7, 26, 32, .08) + YW(3, 10, 7, 3) + XW(12, 10, 6, 3) + XW(20, 10, 5, 3) + XW(3, 18, 18, 2) + XW(3, 23, 14, 2) + QW(27)
+		rail: $W() + XW(1, 7, 8, 32) + ZW(3, 10, 4, 4) + QW(3, 17, 4, 4) + QW(3, 24, 4, 4) + XW(9, 7, 18, 32, .08) + eG(27),
+		sidebar: $W() + XW(1, 7, 20, 32) + ZW(4, 11, 10, 2) + QW(4, 16, 13, 2) + QW(4, 21, 9, 2) + QW(4, 26, 12, 2) + XW(21, 7, 14, 32, .08) + eG(35),
+		"panel-tabs": $W() + XW(1, 7, 26, 32, .08) + ZW(3, 10, 6, 3) + QW(11, 10, 6, 3) + QW(19, 10, 6, 3) + QW(3, 18, 18, 2) + QW(3, 23, 14, 2) + eG(27),
+		"top-tabs": $W() + XW(1, 7, 62, 6, .1) + ZW(4, 9, 7, 2) + QW(13, 9, 7, 2) + QW(22, 9, 7, 2) + QW(31, 9, 7, 2) + QW(40, 9, 7, 2) + XW(1, 13, 22, 26, .08) + eG(23, 13),
+		"page-tabs": $W() + ZW(44, 2.5, 12, 3) + XW(1, 7, 26, 32, .08) + ZW(3, 10, 7, 3) + QW(12, 10, 6, 3) + QW(20, 10, 5, 3) + QW(3, 18, 18, 2) + QW(3, 23, 14, 2) + eG(27)
 	},
 	place: {
-		dialog: ZW() + QW(1) + JW(12, 9, 40, 24, .22) + JW(12, 9, 13, 24, .14) + YW(14, 12, 9, 2) + XW(14, 16, 8, 2) + XW(14, 20, 9, 2) + XW(28, 13, 20, 2) + XW(28, 18, 20, 2) + XW(28, 23, 20, 2),
-		panel: ZW() + JW(1, 7, 22, 32, .22) + YW(3, 10, 12, 2) + XW(3, 15, 16, 2) + XW(3, 20, 14, 2) + XW(3, 25, 16, 2) + QW(23),
-		sheet: ZW() + QW(1) + JW(8, 9, 48, 24, .22) + YW(11, 12, 7, 5) + XW(20, 12, 7, 5, 5) + XW(29, 12, 7, 5, 5) + YW(11, 20, 7, 5) + XW(20, 20, 7, 5, 5) + XW(40, 13, 13, 2) + XW(40, 18, 13, 2) + XW(40, 23, 13, 2)
+		dialog: $W() + eG(1) + XW(12, 9, 40, 24, .22) + XW(12, 9, 13, 24, .14) + ZW(14, 12, 9, 2) + QW(14, 16, 8, 2) + QW(14, 20, 9, 2) + QW(28, 13, 20, 2) + QW(28, 18, 20, 2) + QW(28, 23, 20, 2),
+		panel: $W() + XW(1, 7, 22, 32, .22) + ZW(3, 10, 12, 2) + QW(3, 15, 16, 2) + QW(3, 20, 14, 2) + QW(3, 25, 16, 2) + eG(23),
+		sheet: $W() + eG(1) + XW(8, 9, 48, 24, .22) + ZW(11, 12, 7, 5) + QW(20, 12, 7, 5, 5) + QW(29, 12, 7, 5, 5) + ZW(11, 20, 7, 5) + QW(20, 20, 7, 5, 5) + QW(40, 13, 13, 2) + QW(40, 18, 13, 2) + QW(40, 23, 13, 2)
 	},
 	updateNotice: {
-		dot: ZW() + JW(1, 7, 8, 32) + XW(3, 10, 4, 4) + XW(3, 17, 4, 4) + XW(3, 24, 4, 4) + `<circle cx="7" cy="25" r="1.8" fill="${UW}"/>` + QW(9),
-		pill: ZW() + YW(42, 2, 14, 4, 2) + JW(1, 7, 8, 32) + XW(3, 10, 4, 4) + XW(3, 17, 4, 4) + QW(9)
+		dot: $W() + XW(1, 7, 8, 32) + QW(3, 10, 4, 4) + QW(3, 17, 4, 4) + QW(3, 24, 4, 4) + `<circle cx="7" cy="25" r="1.8" fill="${GW}"/>` + eG(9),
+		pill: $W() + ZW(42, 2, 14, 4, 2) + XW(1, 7, 8, 32) + QW(3, 10, 4, 4) + QW(3, 17, 4, 4) + eG(9)
 	},
 	addBlock: {
-		side: JW(1, 1, 62, 38, .06) + JW(6, 6, 18, 28, .14) + YW(8, 9, 10, 2) + XW(8, 14, 12, 2) + XW(8, 19, 9, 2) + XW(8, 24, 12, 2) + XW(28, 8, 8, 6, 6) + XW(39, 8, 8, 6, 6) + XW(50, 8, 8, 6, 6) + XW(28, 17, 8, 6, 6) + XW(39, 17, 8, 6, 6) + XW(50, 17, 8, 6, 6) + XW(28, 26, 8, 6, 6) + XW(39, 26, 8, 6, 6),
-		slim: JW(1, 1, 62, 38, .06) + JW(18, 4, 28, 32, .14) + YW(21, 8, 16, 2) + XW(21, 13, 20, 2) + XW(21, 18, 14, 2) + XW(21, 23, 18, 2) + XW(21, 28, 12, 2)
+		side: XW(1, 1, 62, 38, .06) + XW(6, 6, 18, 28, .14) + ZW(8, 9, 10, 2) + QW(8, 14, 12, 2) + QW(8, 19, 9, 2) + QW(8, 24, 12, 2) + QW(28, 8, 8, 6, 6) + QW(39, 8, 8, 6, 6) + QW(50, 8, 8, 6, 6) + QW(28, 17, 8, 6, 6) + QW(39, 17, 8, 6, 6) + QW(50, 17, 8, 6, 6) + QW(28, 26, 8, 6, 6) + QW(39, 26, 8, 6, 6),
+		slim: XW(1, 1, 62, 38, .06) + XW(18, 4, 28, 32, .14) + ZW(21, 8, 16, 2) + QW(21, 13, 20, 2) + QW(21, 18, 14, 2) + QW(21, 23, 18, 2) + QW(21, 28, 12, 2)
 	},
 	layoutPicker: {
-		strip: JW(1, 1, 62, 38, .06) + JW(4, 4, 56, 9, .16) + YW(7, 6, 6, 5) + XW(15, 6, 6, 5, 5) + XW(23, 6, 6, 5, 5) + XW(31, 6, 6, 5, 5) + XW(39, 6, 6, 5, 5) + JW(4, 16, 56, 20, .1),
-		menu: JW(1, 1, 62, 38, .06) + JW(14, 4, 36, 32, .16) + YW(17, 8, 9, 6) + XW(28, 8, 9, 6, 6) + XW(39, 8, 8, 6, 6) + XW(17, 17, 9, 6, 6) + XW(28, 17, 9, 6, 6) + XW(39, 17, 8, 6, 6) + XW(17, 26, 9, 6, 6) + XW(28, 26, 9, 6, 6)
+		strip: XW(1, 1, 62, 38, .06) + XW(4, 4, 56, 9, .16) + ZW(7, 6, 6, 5) + QW(15, 6, 6, 5, 5) + QW(23, 6, 6, 5, 5) + QW(31, 6, 6, 5, 5) + QW(39, 6, 6, 5, 5) + XW(4, 16, 56, 20, .1),
+		menu: XW(1, 1, 62, 38, .06) + XW(14, 4, 36, 32, .16) + ZW(17, 8, 9, 6) + QW(28, 8, 9, 6, 6) + QW(39, 8, 8, 6, 6) + QW(17, 17, 9, 6, 6) + QW(28, 17, 9, 6, 6) + QW(39, 17, 8, 6, 6) + QW(17, 26, 9, 6, 6) + QW(28, 26, 9, 6, 6)
 	},
 	menuWidth: {
-		wide: JW(1, 1, 62, 38, .06) + JW(4, 4, 56, 32, .14) + YW(7, 7, 14, 2) + XW(7, 12, 14, 2) + XW(7, 17, 11, 2) + XW(24, 7, 14, 2) + XW(24, 12, 12, 2) + XW(24, 17, 14, 2) + XW(41, 7, 14, 2) + XW(41, 12, 13, 2) + XW(41, 17, 10, 2),
-		narrow: JW(1, 1, 62, 38, .06) + JW(20, 4, 24, 32, .14) + YW(23, 7, 6, 3) + XW(30, 7, 5, 3, 3) + XW(36, 7, 5, 3, 3) + XW(23, 14, 18, 2) + XW(23, 19, 15, 2) + XW(23, 24, 18, 2) + XW(23, 29, 12, 2)
+		wide: XW(1, 1, 62, 38, .06) + XW(4, 4, 56, 32, .14) + ZW(7, 7, 14, 2) + QW(7, 12, 14, 2) + QW(7, 17, 11, 2) + QW(24, 7, 14, 2) + QW(24, 12, 12, 2) + QW(24, 17, 14, 2) + QW(41, 7, 14, 2) + QW(41, 12, 13, 2) + QW(41, 17, 10, 2),
+		narrow: XW(1, 1, 62, 38, .06) + XW(20, 4, 24, 32, .14) + ZW(23, 7, 6, 3) + QW(30, 7, 5, 3, 3) + QW(36, 7, 5, 3, 3) + QW(23, 14, 18, 2) + QW(23, 19, 15, 2) + QW(23, 24, 18, 2) + QW(23, 29, 12, 2)
 	},
 	linkEditor: {
-		dialog: JW(1, 1, 62, 38, .06) + JW(14, 8, 36, 24, .22) + YW(17, 12, 10, 2) + XW(17, 17, 30, 4, 4) + XW(17, 24, 14, 3) + XW(40, 24, 7, 3),
-		popover: JW(1, 1, 62, 38, .06) + JW(4, 6, 22, 28, .1) + XW(7, 10, 16, 3) + YW(7, 16, 16, 4) + XW(7, 24, 12, 3) + JW(28, 13, 32, 16, .22) + XW(31, 16, 26, 4, 4) + XW(31, 23, 10, 2)
+		dialog: XW(1, 1, 62, 38, .06) + XW(14, 8, 36, 24, .22) + ZW(17, 12, 10, 2) + QW(17, 17, 30, 4, 4) + QW(17, 24, 14, 3) + QW(40, 24, 7, 3),
+		popover: XW(1, 1, 62, 38, .06) + XW(4, 6, 22, 28, .1) + QW(7, 10, 16, 3) + ZW(7, 16, 16, 4) + QW(7, 24, 12, 3) + XW(28, 13, 32, 16, .22) + QW(31, 16, 26, 4, 4) + QW(31, 23, 10, 2)
 	},
 	collectionsLayout: {
-		drill: ZW() + JW(1, 7, 8, 32) + JW(9, 7, 22, 32, .2) + XW(11, 10, 10, 2) + JW(11, 14, 18, 6, .16) + YW(26, 16, 2, 2) + JW(11, 22, 18, 6, .16) + XW(26, 24, 2, 2) + JW(11, 30, 18, 6, .16) + XW(26, 32, 2, 2) + QW(31),
-		columns: ZW() + JW(1, 7, 8, 32) + JW(9, 7, 40, 32, .2) + JW(9, 7, 15, 32, .12) + XW(11, 10, 11, 3) + YW(11, 15, 11, 3) + XW(11, 20, 11, 3) + XW(11, 25, 11, 3) + XW(27, 10, 18, 2) + XW(27, 15, 14, 2) + XW(27, 20, 18, 4, 4) + QW(49),
-		table: ZW() + JW(1, 7, 8, 32) + JW(9, 7, 54, 32, .2) + XW(11, 10, 30, 2) + YW(11, 15, 30, 3) + XW(11, 20, 30, 2) + XW(11, 25, 30, 2) + XW(11, 30, 30, 2) + JW(44, 7, 19, 32, .12) + XW(46, 11, 14, 2) + XW(46, 16, 12, 2) + XW(46, 21, 14, 4, 4)
+		drill: $W() + XW(1, 7, 8, 32) + XW(9, 7, 22, 32, .2) + QW(11, 10, 10, 2) + XW(11, 14, 18, 6, .16) + ZW(26, 16, 2, 2) + XW(11, 22, 18, 6, .16) + QW(26, 24, 2, 2) + XW(11, 30, 18, 6, .16) + QW(26, 32, 2, 2) + eG(31),
+		columns: $W() + XW(1, 7, 8, 32) + XW(9, 7, 40, 32, .2) + XW(9, 7, 15, 32, .12) + QW(11, 10, 11, 3) + ZW(11, 15, 11, 3) + QW(11, 20, 11, 3) + QW(11, 25, 11, 3) + QW(27, 10, 18, 2) + QW(27, 15, 14, 2) + QW(27, 20, 18, 4, 4) + eG(49),
+		table: $W() + XW(1, 7, 8, 32) + XW(9, 7, 54, 32, .2) + QW(11, 10, 30, 2) + ZW(11, 15, 30, 3) + QW(11, 20, 30, 2) + QW(11, 25, 30, 2) + QW(11, 30, 30, 2) + XW(44, 7, 19, 32, .12) + QW(46, 11, 14, 2) + QW(46, 16, 12, 2) + QW(46, 21, 14, 4, 4)
 	}
 };
-function eG(e) {
-	let t = WW[e];
-	return t ? `<svg viewBox="0 0 ${GW} ${KW}" width="${GW}" height="${KW}" aria-hidden="true" fill="none"><rect x="0.5" y="0.5" width="63" height="39" rx="3" fill="${t.bg}" stroke="currentColor" opacity="0.9"/><rect x="1" y="1" width="20" height="38" rx="2" fill="${t.surface}"/><rect x="4" y="6" width="12" height="3" rx="1" fill="${t.accent}"/><rect x="4" y="13" width="14" height="2" fill="${t.text}" opacity="0.6"/><rect x="4" y="18" width="10" height="2" fill="${t.text}" opacity="0.6"/><rect x="26" y="8" width="30" height="4" rx="1" fill="${t.text}" opacity="0.8"/><rect x="26" y="16" width="24" height="2" fill="${t.text}" opacity="0.45"/><rect x="26" y="21" width="28" height="2" fill="${t.text}" opacity="0.45"/><rect x="26" y="28" width="12" height="5" rx="2.5" fill="${t.accent}"/></svg>` : null;
+function nG(e) {
+	let t = KW[e];
+	return t ? `<svg viewBox="0 0 ${qW} ${JW}" width="${qW}" height="${JW}" aria-hidden="true" fill="none"><rect x="0.5" y="0.5" width="63" height="39" rx="3" fill="${t.bg}" stroke="currentColor" opacity="0.9"/><rect x="1" y="1" width="20" height="38" rx="2" fill="${t.surface}"/><rect x="4" y="6" width="12" height="3" rx="1" fill="${t.accent}"/><rect x="4" y="13" width="14" height="2" fill="${t.text}" opacity="0.6"/><rect x="4" y="18" width="10" height="2" fill="${t.text}" opacity="0.6"/><rect x="26" y="8" width="30" height="4" rx="1" fill="${t.text}" opacity="0.8"/><rect x="26" y="16" width="24" height="2" fill="${t.text}" opacity="0.45"/><rect x="26" y="21" width="28" height="2" fill="${t.text}" opacity="0.45"/><rect x="26" y="28" width="12" height="5" rx="2.5" fill="${t.accent}"/></svg>` : null;
 }
-function tG(e, t) {
-	if (e === "theme") return eG(t);
-	let n = $W[e]?.[t];
-	return n ? qW(n) : null;
+function rG(e, t) {
+	if (e === "theme") return nG(t);
+	let n = tG[e]?.[t];
+	return n ? YW(n) : null;
 }
 // src/settings/SettingControl.svelte
-var nG = /* @__PURE__ */ R("<button type=\"button\"><span class=\"st-pic svelte-153m4im\"></span> <span class=\"st-tile-name svelte-153m4im\"> </span></button>"), rG = /* @__PURE__ */ R("<div role=\"group\"></div>"), iG = /* @__PURE__ */ R("<button type=\"button\"> </button>"), aG = /* @__PURE__ */ R("<div class=\"st-seg-wrap svelte-153m4im\"><div class=\"seg st-seg svelte-153m4im\" role=\"group\"></div></div>"), oG = /* @__PURE__ */ R("<input type=\"text\" class=\"st-text svelte-153m4im\" spellcheck=\"false\"/>");
-function sG(e, t) {
+var iG = /* @__PURE__ */ R("<button type=\"button\"><span class=\"st-pic svelte-153m4im\"></span> <span class=\"st-tile-name svelte-153m4im\"> </span></button>"), aG = /* @__PURE__ */ R("<div role=\"group\"></div>"), oG = /* @__PURE__ */ R("<button type=\"button\"> </button>"), sG = /* @__PURE__ */ R("<div class=\"st-seg-wrap svelte-153m4im\"><div class=\"seg st-seg svelte-153m4im\" role=\"group\"></div></div>"), cG = /* @__PURE__ */ R("<input type=\"text\" class=\"st-text svelte-153m4im\" spellcheck=\"false\"/>");
+function lG(e, t) {
 	it(t, !0);
 	let n = nt("urd-editor"), r = sa(t, "pictures", 3, "pictures"), i = sa(t, "compact", 3, !1), a = {
 		ed: n,
@@ -39681,15 +39695,15 @@ function sG(e, t) {
 		setMenuWidthPref: tb
 	}, o = /* @__PURE__ */ O(() => t.setting.options ? t.setting.options(a) : []), s = /* @__PURE__ */ O(() => t.setting.get(a)), c = /* @__PURE__ */ O(() => i() && I(o).length > 5 ? 4 : I(o).length);
 	var l = Zr(), u = M(l), d = (e) => {
-		var n = rG();
+		var n = aG();
 		let r;
 		H(n, 21, () => I(o), ([e, t]) => e, (e, n) => {
 			var r = /* @__PURE__ */ O(() => g(I(n), 2));
 			let i = () => I(r)[0], o = () => I(r)[1];
-			var c = nG();
+			var c = iG();
 			let l;
 			var u = j(c);
-			U(u, () => tG(t.setting.look, i()), !0), D(u);
+			U(u, () => rG(t.setting.look, i()), !0), D(u);
 			var d = N(P(u, 2), !0);
 			D(c), F(() => {
 				l = W(c, 1, "st-tile svelte-153m4im", null, l, { on: I(s) === i() }), q(c, "aria-pressed", I(s) === i()), q(c, "title", o()), B(d, o());
@@ -39711,11 +39725,11 @@ function sG(e, t) {
 			onchange: (e) => t.setting.set(a, e)
 		});
 	}, m = (e) => {
-		var n = aG(), r = j(n);
+		var n = sG(), r = j(n);
 		H(r, 21, () => I(o), ([e, t]) => e, (e, n) => {
 			var r = /* @__PURE__ */ O(() => g(I(n), 2));
 			let i = () => I(r)[0], o = () => I(r)[1];
-			var c = iG();
+			var c = oG();
 			let l;
 			var u = N(c, !0);
 			F(() => {
@@ -39723,7 +39737,7 @@ function sG(e, t) {
 			}), L("click", c, () => t.setting.set(a, i())), z(e, c);
 		}), D(r), D(n), F(() => q(r, "aria-labelledby", t.nameId)), z(e, n);
 	}, h = (e) => {
-		var n = oG();
+		var n = cG();
 		G(n), F((e) => {
 			q(n, "placeholder", e), q(n, "aria-labelledby", t.nameId), K(n, I(s));
 		}, [() => t.setting.placeholderKey ? J(t.setting.placeholderKey) : ""]), L("change", n, (e) => t.setting.set(a, e.target.value)), z(e, n);
@@ -39734,8 +39748,8 @@ function sG(e, t) {
 }
 Br(["click", "change"]);
 // src/settings/SettingsBody.svelte
-var cG = /* @__PURE__ */ R("<span class=\"st-shared svelte-10nxify\"><!> </span>"), lG = /* @__PURE__ */ R("<span class=\"st-chosen svelte-10nxify\"> </span>"), uG = /* @__PURE__ */ R("<div><span class=\"st-name svelte-10nxify\"><span> </span><!></span> <!></div>"), dG = /* @__PURE__ */ R("<details class=\"group st-fold svelte-10nxify\" open=\"\"><summary class=\"svelte-10nxify\"> <!></summary> <div class=\"group-items st-items svelte-10nxify\"></div></details>"), fG = /* @__PURE__ */ R("<div><span class=\"st-name svelte-10nxify\"> </span> <!></div>"), pG = /* @__PURE__ */ R("<section class=\"st-section svelte-10nxify\"><h3 class=\"svelte-10nxify\"> <!></h3> <!></section>"), mG = /* @__PURE__ */ R("<p class=\"st-empty svelte-10nxify\"> </p>");
-function hG(e, t) {
+var uG = /* @__PURE__ */ R("<span class=\"st-shared svelte-10nxify\"><!> </span>"), dG = /* @__PURE__ */ R("<span class=\"st-chosen svelte-10nxify\"> </span>"), fG = /* @__PURE__ */ R("<div><span class=\"st-name svelte-10nxify\"><span> </span><!></span> <!></div>"), pG = /* @__PURE__ */ R("<details class=\"group st-fold svelte-10nxify\" open=\"\"><summary class=\"svelte-10nxify\"> <!></summary> <div class=\"group-items st-items svelte-10nxify\"></div></details>"), mG = /* @__PURE__ */ R("<div><span class=\"st-name svelte-10nxify\"> </span> <!></div>"), hG = /* @__PURE__ */ R("<section class=\"st-section svelte-10nxify\"><h3 class=\"svelte-10nxify\"> <!></h3> <!></section>"), gG = /* @__PURE__ */ R("<p class=\"st-empty svelte-10nxify\"> </p>");
+function _G(e, t) {
 	it(t, !0);
 	let n = nt("urd-editor"), r = sa(t, "place", 3, "dialog"), i = sa(t, "only", 3, null), a = sa(t, "query", 3, ""), o = sa(t, "idPrefix", 3, "st-sec"), s = sa(t, "empty", 3, !0), c = {
 		ed: n,
@@ -39751,8 +39765,8 @@ function hG(e, t) {
 	var p = Zr();
 	H(M(p), 17, () => I(l), (e) => e.id, (e, t) => {
 		var r = Zr(), i = M(r), a = (e) => {
-			var r = dG(), i = j(r), a = j(i), s = P(a), c = (e) => {
-				var t = cG(), n = j(t);
+			var r = pG(), i = j(r), a = j(i), s = P(a), c = (e) => {
+				var t = uG(), n = j(t);
 				U(n, () => f);
 				var r = P(n, 1, !0);
 				D(t), F((e) => B(r, e), [() => J("settings.shared")]), z(e, t);
@@ -39762,15 +39776,15 @@ function hG(e, t) {
 			}), D(i);
 			var l = P(i, 2);
 			H(l, 21, () => I(t).settings, (e) => e.id, (e, t) => {
-				var r = uG();
+				var r = fG();
 				let i;
 				var a = j(r), s = j(a), c = N(s, !0), l = P(s), u = (e) => {
-					var n = lG(), r = N(n, !0);
+					var n = dG(), r = N(n, !0);
 					F((e) => B(r, e), [() => d(I(t))]), z(e, n);
 				}, f = /* @__PURE__ */ O(() => fN(I(t), n.settingsPictures));
 				V(l, (e) => {
 					I(f) && e(u);
-				}), D(a), sG(P(a, 2), {
+				}), D(a), lG(P(a, 2), {
 					get setting() {
 						return I(t);
 					},
@@ -39788,8 +39802,8 @@ function hG(e, t) {
 				q(i, "title", e), B(a, `${t ?? ""} `);
 			}, [() => I(t).shared ? J("tip.settings.shared") : void 0, () => J(I(t).labelKey)]), z(e, r);
 		}, s = (e) => {
-			var r = pG(), i = j(r), a = j(i), s = P(a), c = (e) => {
-				var t = cG(), n = j(t);
+			var r = hG(), i = j(r), a = j(i), s = P(a), c = (e) => {
+				var t = uG(), n = j(t);
 				U(n, () => f);
 				var r = P(n, 1, !0);
 				D(t), F((e) => B(r, e), [() => J("settings.shared")]), z(e, t);
@@ -39797,10 +39811,10 @@ function hG(e, t) {
 			V(s, (e) => {
 				I(t).shared && e(c);
 			}), D(i), H(P(i, 2), 19, () => I(t).settings, (e) => e.id, (e, r, i) => {
-				var a = fG();
+				var a = mG();
 				let s;
 				var c = j(a), l = N(c, !0);
-				sG(P(c, 2), {
+				lG(P(c, 2), {
 					get setting() {
 						return I(r);
 					},
@@ -39830,7 +39844,7 @@ function hG(e, t) {
 		}), z(e, r);
 	}, (e) => {
 		var t = Zr(), n = M(t), r = (e) => {
-			var t = mG(), n = N(t, !0);
+			var t = gG(), n = N(t, !0);
 			F((e) => B(n, e), [() => J("settings.noMatch")]), z(e, t);
 		};
 		V(n, (e) => {
@@ -39839,11 +39853,11 @@ function hG(e, t) {
 	}), z(e, p), at();
 }
 // src/settings/SettingsDialog.svelte
-var gG = /* @__PURE__ */ R("<button type=\"button\" class=\"st-keys svelte-dtvb2i\"><!><span class=\"svelte-dtvb2i\"> </span><kbd class=\"svelte-dtvb2i\">?</kbd></button>"), _G = /* @__PURE__ */ R("<p class=\"st-empty svelte-dtvb2i\"> </p>"), vG = /* @__PURE__ */ R("<div class=\"st-card st-sheet svelte-dtvb2i\"><div class=\"st-head svelte-dtvb2i\"><h2 id=\"st-title\" class=\"svelte-dtvb2i\"> </h2> <input type=\"text\" class=\"st-search svelte-dtvb2i\"/> <span class=\"st-version svelte-dtvb2i\"> </span> <button type=\"button\" class=\"st-close svelte-dtvb2i\"></button></div> <div class=\"st-sheet-cols svelte-dtvb2i\"><div class=\"st-col st-col-look svelte-dtvb2i\"><!> <!></div> <div class=\"st-col st-col-plain svelte-dtvb2i\"><!> <!></div></div></div>"), yG = /* @__PURE__ */ R("<span class=\"st-nav-shared svelte-dtvb2i\"> </span>"), bG = /* @__PURE__ */ R("<button type=\"button\" class=\"st-nav-item svelte-dtvb2i\"><!><span class=\"st-nav-name svelte-dtvb2i\"> </span> <!></button>"), xG = /* @__PURE__ */ R("<div class=\"st-card st-dialog svelte-dtvb2i\"><nav class=\"st-nav svelte-dtvb2i\"><h2 id=\"st-title\" class=\"svelte-dtvb2i\"> </h2> <input type=\"text\" class=\"st-search svelte-dtvb2i\"/> <!> <span class=\"st-nav-end svelte-dtvb2i\"></span> <!> <span class=\"st-version svelte-dtvb2i\"> </span></nav> <div class=\"st-content svelte-dtvb2i\"><button type=\"button\" class=\"st-close svelte-dtvb2i\"></button> <!></div></div>"), SG = /* @__PURE__ */ R("<dialog class=\"st-overlay svelte-dtvb2i\" aria-labelledby=\"st-title\"><!></dialog>");
-function CG(e, t) {
+var vG = /* @__PURE__ */ R("<button type=\"button\" class=\"st-keys svelte-dtvb2i\"><!><span class=\"svelte-dtvb2i\"> </span><kbd class=\"svelte-dtvb2i\">?</kbd></button>"), yG = /* @__PURE__ */ R("<p class=\"st-empty svelte-dtvb2i\"> </p>"), bG = /* @__PURE__ */ R("<div class=\"st-card st-sheet svelte-dtvb2i\"><div class=\"st-head svelte-dtvb2i\"><h2 id=\"st-title\" class=\"svelte-dtvb2i\"> </h2> <input type=\"text\" class=\"st-search svelte-dtvb2i\"/> <span class=\"st-version svelte-dtvb2i\"> </span> <button type=\"button\" class=\"st-close svelte-dtvb2i\"></button></div> <div class=\"st-sheet-cols svelte-dtvb2i\"><div class=\"st-col st-col-look svelte-dtvb2i\"><!> <!></div> <div class=\"st-col st-col-plain svelte-dtvb2i\"><!> <!></div></div></div>"), xG = /* @__PURE__ */ R("<span class=\"st-nav-shared svelte-dtvb2i\"> </span>"), SG = /* @__PURE__ */ R("<button type=\"button\" class=\"st-nav-item svelte-dtvb2i\"><!><span class=\"st-nav-name svelte-dtvb2i\"> </span> <!></button>"), CG = /* @__PURE__ */ R("<div class=\"st-card st-dialog svelte-dtvb2i\"><nav class=\"st-nav svelte-dtvb2i\"><h2 id=\"st-title\" class=\"svelte-dtvb2i\"> </h2> <input type=\"text\" class=\"st-search svelte-dtvb2i\"/> <!> <span class=\"st-nav-end svelte-dtvb2i\"></span> <!> <span class=\"st-version svelte-dtvb2i\"> </span></nav> <div class=\"st-content svelte-dtvb2i\"><button type=\"button\" class=\"st-close svelte-dtvb2i\"></button> <!></div></div>"), wG = /* @__PURE__ */ R("<dialog class=\"st-overlay svelte-dtvb2i\" aria-labelledby=\"st-title\"><!></dialog>");
+function TG(e, t) {
 	it(t, !0);
 	let n = (e) => {
-		var t = gG(), n = j(t);
+		var t = vG(), n = j(t);
 		U(n, () => Y.keyboard);
 		var r = N(P(n), !0);
 		ke(), D(t), F((e, n) => {
@@ -39884,13 +39898,13 @@ function CG(e, t) {
 	function v() {
 		m(), r.openShortcuts();
 	}
-	var y = SG(), b = j(y), x = (e) => {
-		var t = vG(), i = j(t), a = j(i), s = N(a, !0), c = P(a, 2);
+	var y = wG(), b = j(y), x = (e) => {
+		var t = bG(), i = j(t), a = j(i), s = N(a, !0), c = P(a, 2);
 		G(c);
 		var l = P(c, 2), u = N(l, !0), f = P(l, 2);
 		U(f, () => Y.cross, !0), D(f), D(i);
 		var p = P(i, 2), h = j(p), g = j(h);
-		hG(g, {
+		_G(g, {
 			place: "sheet",
 			only: "look",
 			get query() {
@@ -39900,14 +39914,14 @@ function CG(e, t) {
 			empty: !1
 		});
 		var _ = P(g, 2), v = (e) => {
-			var t = _G(), n = N(t, !0);
+			var t = yG(), n = N(t, !0);
 			F((e) => B(n, e), [() => J("settings.noMatch")]), z(e, t);
 		};
 		V(_, (e) => {
 			I(d).length || e(v);
 		}), D(h);
 		var y = P(h, 2), b = j(y);
-		hG(b, {
+		_G(b, {
 			place: "sheet",
 			only: "plain",
 			get query() {
@@ -39928,14 +39942,14 @@ function CG(e, t) {
 			() => J("ui.close")
 		]), Ji(c, () => I(o), (e) => A(o, e)), L("click", f, m), z(e, t);
 	}, S = (e) => {
-		var t = xG(), i = j(t), s = j(i), c = N(s, !0), l = P(s, 2);
+		var t = CG(), i = j(t), s = j(i), c = N(s, !0), l = P(s, 2);
 		G(l);
 		var u = P(l, 2);
 		H(u, 17, () => I(d), (e) => e.id, (e, t) => {
-			var n = bG(), r = j(n);
+			var n = SG(), r = j(n);
 			U(r, () => Y[p[I(t).id]] ?? "");
 			var i = P(r), a = N(i, !0), o = P(i, 2), s = (e) => {
-				var t = yG(), n = N(t, !0);
+				var t = xG(), n = N(t, !0);
 				F((e, r) => {
 					q(t, "title", e), B(n, r);
 				}, [() => J("tip.settings.shared"), () => J("settings.shared")]), z(e, t);
@@ -39951,7 +39965,7 @@ function CG(e, t) {
 		var v = N(P(h, 2), !0);
 		D(i);
 		var y = P(i, 2), b = j(y);
-		U(b, () => Y.cross, !0), D(b), hG(P(b, 2), {
+		U(b, () => Y.cross, !0), D(b), _G(P(b, 2), {
 			place: "dialog",
 			get query() {
 				return I(o);
@@ -39974,17 +39988,17 @@ function CG(e, t) {
 }
 Br(["click", "pointerdown"]);
 // src/panels/SettingsPanel.svelte
-var wG = /* @__PURE__ */ R("<div class=\"panel-body st-panel svelte-xaf3vi\"><input type=\"text\" class=\"st-search svelte-xaf3vi\"/> <!> <button type=\"button\" class=\"ghost st-keys svelte-xaf3vi\"><!><span class=\"svelte-xaf3vi\"> </span><kbd class=\"svelte-xaf3vi\">?</kbd></button> <p class=\"st-version svelte-xaf3vi\"> </p></div>");
-function TG(e, t) {
+var EG = /* @__PURE__ */ R("<div class=\"panel-body st-panel svelte-xaf3vi\"><input type=\"text\" class=\"st-search svelte-xaf3vi\"/> <!> <button type=\"button\" class=\"ghost st-keys svelte-xaf3vi\"><!><span class=\"svelte-xaf3vi\"> </span><kbd class=\"svelte-xaf3vi\">?</kbd></button> <p class=\"st-version svelte-xaf3vi\"> </p></div>");
+function DG(e, t) {
 	it(t, !0);
 	let n = nt("urd-editor"), r = /* @__PURE__ */ k(""), i = /* @__PURE__ */ k(null);
 	Nn(() => {
 		I(i)?.focus({ preventScroll: !0 });
 	});
-	var a = wG(), o = j(a);
+	var a = EG(), o = j(a);
 	G(o), ta(o, (e) => A(i, e), () => I(i));
 	var s = P(o, 2);
-	hG(s, {
+	_G(s, {
 		place: "panel",
 		get query() {
 			return I(r);
@@ -40009,8 +40023,8 @@ function TG(e, t) {
 }
 Br(["click"]);
 // src/panels/collections/CollectionsTable.svelte
-var EG = /* @__PURE__ */ R("<div class=\"ct-barrow svelte-14kr6ao\"><!></div>"), DG = /* @__PURE__ */ R("<th> </th>"), OG = /* @__PURE__ */ R("<img alt=\"\" class=\"svelte-14kr6ao\"/>"), kG = /* @__PURE__ */ R("<td> </td>"), AG = /* @__PURE__ */ R("<tr><td class=\"ct-tick svelte-14kr6ao\"><input type=\"checkbox\" class=\"tick-box\"/></td><td class=\"ct-pic svelte-14kr6ao\"><span><!></span></td><td class=\"ct-name svelte-14kr6ao\"><button type=\"button\" class=\"ct-open svelte-14kr6ao\"> </button></td><!></tr>"), jG = /* @__PURE__ */ R("<p class=\"panel-hint\"> </p>"), MG = /* @__PURE__ */ R("<button class=\"ghost nav-act\"></button> <button class=\"ghost nav-act\"></button>", 1), NG = /* @__PURE__ */ R("<span class=\"ct-drawer-head svelte-14kr6ao\"><span class=\"ct-drawer-name svelte-14kr6ao\"> </span> <!> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span> <div class=\"panel-body ct-fields svelte-14kr6ao\"><!></div>", 1), PG = /* @__PURE__ */ R("<section><div class=\"ct-head svelte-14kr6ao\"><h2 class=\"ct-title svelte-14kr6ao\"> </h2> <input type=\"text\" class=\"ct-search svelte-14kr6ao\"/> <span class=\"ct-grow svelte-14kr6ao\"></span> <button class=\"ghost action ct-new\"> </button> <!> <button class=\"ghost row-tool ct-close\"></button></div> <!> <div class=\"ct-body svelte-14kr6ao\"><div class=\"ct-scroll svelte-14kr6ao\"><table class=\"ct-table svelte-14kr6ao\"><thead><tr><th class=\"ct-tick svelte-14kr6ao\"><input type=\"checkbox\" class=\"tick-box\"/></th><th class=\"ct-pic svelte-14kr6ao\"><span class=\"sr-only svelte-14kr6ao\"> </span></th><th class=\"svelte-14kr6ao\"> </th><!></tr></thead><tbody class=\"svelte-14kr6ao\"></tbody></table> <!></div> <aside class=\"ct-drawer svelte-14kr6ao\"><!></aside></div></section>");
-function FG(e, t) {
+var OG = /* @__PURE__ */ R("<div class=\"ct-barrow svelte-14kr6ao\"><!></div>"), kG = /* @__PURE__ */ R("<th> </th>"), AG = /* @__PURE__ */ R("<img alt=\"\" class=\"svelte-14kr6ao\"/>"), jG = /* @__PURE__ */ R("<td> </td>"), MG = /* @__PURE__ */ R("<tr><td class=\"ct-tick svelte-14kr6ao\"><input type=\"checkbox\" class=\"tick-box\"/></td><td class=\"ct-pic svelte-14kr6ao\"><span><!></span></td><td class=\"ct-name svelte-14kr6ao\"><button type=\"button\" class=\"ct-open svelte-14kr6ao\"> </button></td><!></tr>"), NG = /* @__PURE__ */ R("<p class=\"panel-hint\"> </p>"), PG = /* @__PURE__ */ R("<button class=\"ghost nav-act\"></button> <button class=\"ghost nav-act\"></button>", 1), FG = /* @__PURE__ */ R("<span class=\"ct-drawer-head svelte-14kr6ao\"><span class=\"ct-drawer-name svelte-14kr6ao\"> </span> <!> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span> <div class=\"panel-body ct-fields svelte-14kr6ao\"><!></div>", 1), IG = /* @__PURE__ */ R("<section><div class=\"ct-head svelte-14kr6ao\"><h2 class=\"ct-title svelte-14kr6ao\"> </h2> <input type=\"text\" class=\"ct-search svelte-14kr6ao\"/> <span class=\"ct-grow svelte-14kr6ao\"></span> <button class=\"ghost action ct-new\"> </button> <!> <button class=\"ghost row-tool ct-close\"></button></div> <!> <div class=\"ct-body svelte-14kr6ao\"><div class=\"ct-scroll svelte-14kr6ao\"><table class=\"ct-table svelte-14kr6ao\"><thead><tr><th class=\"ct-tick svelte-14kr6ao\"><input type=\"checkbox\" class=\"tick-box\"/></th><th class=\"ct-pic svelte-14kr6ao\"><span class=\"sr-only svelte-14kr6ao\"> </span></th><th class=\"svelte-14kr6ao\"> </th><!></tr></thead><tbody class=\"svelte-14kr6ao\"></tbody></table> <!></div> <aside class=\"ct-drawer svelte-14kr6ao\"><!></aside></div></section>");
+function LG(e, t) {
 	it(t, !0);
 	let n = nt("urd-editor"), r = RO(n), i = /* @__PURE__ */ k(""), a = /* @__PURE__ */ O(() => n.panelCollection), o = /* @__PURE__ */ O(() => n.collectionsView[I(a)]), s = /* @__PURE__ */ O(() => I(o) ? I(o).kind === "products" ? I(o).entries : XD(I(o).entries, !0) : []), c = /* @__PURE__ */ O(() => !!I(i).trim()), l = /* @__PURE__ */ O(() => I(c) ? I(s).filter((e) => tO(e, I(i), n.plainTitle)) : I(s)), u = /* @__PURE__ */ O(() => iO(I(o)?.kind)), d = /* @__PURE__ */ O(() => n.panelEntry ? I(s).find((e) => e.id === n.panelEntry) ?? null : null), f = /* @__PURE__ */ O(() => I(s).filter((e) => $D(I(o)?.kind, e))), p = /* @__PURE__ */ O(() => I(d) ? I(f).indexOf(I(d)) : -1), m = /* @__PURE__ */ O(() => I(o) ? hO(n.panelTicks, I(o).entries) : []), h = /* @__PURE__ */ O(() => I(l).map((e) => e.id)), g = /* @__PURE__ */ O(() => I(h).length > 0 && I(h).every((e) => I(m).includes(e))), _ = (e) => {
 		n.panelTicks = e;
@@ -40053,7 +40067,7 @@ function FG(e, t) {
 		r && (n.panelEntry = r, e.currentTarget.closest("tbody")?.querySelector(`.ct-open[data-entry-id="${CSS.escape(r)}"]`)?.focus());
 	}
 	var te = Zr(), ne = M(te), E = (e) => {
-		var t = PG();
+		var t = IG();
 		let s;
 		var v = j(t), te = j(v), ne = N(te, !0), E = P(te, 2);
 		G(E);
@@ -40067,7 +40081,7 @@ function FG(e, t) {
 		var oe = P(ae, 2);
 		U(oe, () => Y.cross, !0), D(oe), D(v);
 		var se = P(v, 2), ce = (e) => {
-			var t = EG();
+			var t = OG();
 			ik(j(t), {
 				get id() {
 					return I(a);
@@ -40090,7 +40104,7 @@ function FG(e, t) {
 		D(ge);
 		var ve = P(ge), ye = N(ve, !0);
 		H(P(ve), 17, () => I(u), (e) => e.key, (e, t) => {
-			var n = DG();
+			var n = kG();
 			let r;
 			var i = N(n, !0);
 			F((e) => {
@@ -40099,14 +40113,14 @@ function FG(e, t) {
 		}), D(pe), D(fe);
 		var be = P(fe);
 		H(be, 21, () => I(l), (e) => e.id, (e, t) => {
-			var r = AG();
+			var r = MG();
 			let i;
 			var a = j(r), o = j(a);
 			G(o), D(a);
 			var s = P(a), c = j(s);
 			let l;
 			var f = j(c), p = (e) => {
-				var n = OG();
+				var n = AG();
 				F(() => q(n, "src", I(t).image)), z(e, n);
 			}, h = (e) => {
 				var t = Zr();
@@ -40117,7 +40131,7 @@ function FG(e, t) {
 			}), D(c), D(s);
 			var g = P(s), _ = j(g), v = N(_, !0);
 			D(g), H(P(g), 17, () => I(u), (e) => e.key, (e, r) => {
-				var i = kG();
+				var i = jG();
 				let a;
 				var o = N(i, !0);
 				F((e) => {
@@ -40145,18 +40159,18 @@ function FG(e, t) {
 			}), z(e, r);
 		}), D(be), D(de);
 		var xe = P(de, 2), Se = (e) => {
-			var t = jG(), n = N(t, !0);
+			var t = NG(), n = N(t, !0);
 			F((e) => B(n, e), [() => J("hint.collections.empty")]), z(e, t);
 		}, Ce = (e) => {
-			var t = jG(), n = N(t, !0);
+			var t = NG(), n = N(t, !0);
 			F((e) => B(n, e), [() => J("collections.noMatch")]), z(e, t);
 		};
 		V(xe, (e) => {
 			I(o).entries.length ? I(l).length || e(Ce, 1) : e(Se);
 		}), D(ue);
 		var we = P(ue, 2), Te = j(we), Ee = (e) => {
-			var t = NG(), i = M(t), s = j(i), l = N(s, !0), u = P(s, 2), m = (e) => {
-				var t = MG(), n = M(t);
+			var t = FG(), i = M(t), s = j(i), l = N(s, !0), u = P(s, 2), m = (e) => {
+				var t = PG(), n = M(t);
 				U(n, () => Y.up, !0), D(n);
 				var i = P(n, 2);
 				U(i, () => Y.down, !0), D(i), F((e, t, r, a) => {
@@ -40223,8 +40237,8 @@ function FG(e, t) {
 }
 Br(["keydown", "click"]);
 // src/lib/CommandPalette.svelte
-var IG = /* @__PURE__ */ R("<p class=\"kp-none svelte-1yq04zr\"> </p>"), LG = /* @__PURE__ */ R("<span class=\"kp-item-hint svelte-1yq04zr\"> </span>"), RG = /* @__PURE__ */ R("<button type=\"button\"></button>"), zG = /* @__PURE__ */ R("<div><button type=\"button\" class=\"kp-item svelte-1yq04zr\"><span class=\"kp-item-label svelte-1yq04zr\"> </span> <!></button> <!></div>"), BG = /* @__PURE__ */ R("<div class=\"kp-group svelte-1yq04zr\"><p class=\"kp-group-title svelte-1yq04zr\"> </p> <!></div>"), VG = /* @__PURE__ */ R("<dialog class=\"kp-overlay svelte-1yq04zr\"><div class=\"kp-card svelte-1yq04zr\"><div class=\"kp-field svelte-1yq04zr\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"></circle><path d=\"M20 20l-3.5-3.5\"></path></svg> <input type=\"text\" class=\"kp-input svelte-1yq04zr\" aria-controls=\"kp-list\"/> <kbd class=\"kp-esc svelte-1yq04zr\">Esc</kbd></div> <div class=\"kp-list svelte-1yq04zr\" id=\"kp-list\"><!> <!></div></div></dialog>");
-function HG(e, t) {
+var RG = /* @__PURE__ */ R("<p class=\"kp-none svelte-1yq04zr\"> </p>"), zG = /* @__PURE__ */ R("<span class=\"kp-item-hint svelte-1yq04zr\"> </span>"), BG = /* @__PURE__ */ R("<button type=\"button\"></button>"), VG = /* @__PURE__ */ R("<div><button type=\"button\" class=\"kp-item svelte-1yq04zr\"><span class=\"kp-item-label svelte-1yq04zr\"> </span> <!></button> <!></div>"), HG = /* @__PURE__ */ R("<div class=\"kp-group svelte-1yq04zr\"><p class=\"kp-group-title svelte-1yq04zr\"> </p> <!></div>"), UG = /* @__PURE__ */ R("<dialog class=\"kp-overlay svelte-1yq04zr\"><div class=\"kp-card svelte-1yq04zr\"><div class=\"kp-field svelte-1yq04zr\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"></circle><path d=\"M20 20l-3.5-3.5\"></path></svg> <input type=\"text\" class=\"kp-input svelte-1yq04zr\" aria-controls=\"kp-list\"/> <kbd class=\"kp-esc svelte-1yq04zr\">Esc</kbd></div> <div class=\"kp-list svelte-1yq04zr\" id=\"kp-list\"><!> <!></div></div></dialog>");
+function WG(e, t) {
 	it(t, !0);
 	let n = sa(t, "commands", 19, () => []), r = sa(t, "pinned", 19, () => []), i = sa(t, "onpin", 3, null), a = /* @__PURE__ */ k(null), o = /* @__PURE__ */ k(""), s = /* @__PURE__ */ k(0), c = !1, l = eP(localStorage), u = /* @__PURE__ */ O(() => nP(n(), I(o), l, Il, r())), d = /* @__PURE__ */ O(() => rP(I(u))), f = document.activeElement, p = () => I(a)?.close();
 	function m() {
@@ -40250,29 +40264,29 @@ function HG(e, t) {
 			e.preventDefault(), I(d)[I(s)] && h(I(d)[I(s)]);
 		}
 	}
-	var _ = VG(), v = j(_), y = j(v), b = P(j(y), 2);
+	var _ = UG(), v = j(_), y = j(v), b = P(j(y), 2);
 	G(b), gt(b, !0), ke(2), D(y);
 	var x = P(y, 2), S = j(x), C = (e) => {
-		var t = IG(), n = N(t, !0);
+		var t = RG(), n = N(t, !0);
 		F((e) => B(n, e), [() => J("palette.none")]), z(e, t);
 	};
 	V(S, (e) => {
 		I(u).length || e(C);
 	}), H(P(S, 2), 17, () => I(u), (e) => e.group, (e, t) => {
-		var n = BG(), a = j(n), o = N(a, !0);
+		var n = HG(), a = j(n), o = N(a, !0);
 		H(P(a, 2), 17, () => I(t).items, (e) => e.id, (e, t) => {
 			let n = /* @__PURE__ */ O(() => I(d).indexOf(I(t))), a = /* @__PURE__ */ O(() => r().includes(I(t).id));
-			var o = zG();
+			var o = VG();
 			let c;
 			var l = j(o), u = j(l), f = N(u, !0), p = P(u, 2), m = (e) => {
-				var n = LG(), r = N(n, !0);
+				var n = zG(), r = N(n, !0);
 				F(() => B(r, I(t).hint)), z(e, n);
 			};
 			V(p, (e) => {
 				I(t).hint && e(m);
 			}), D(l);
 			var g = P(l, 2), _ = (e) => {
-				var n = RG();
+				var n = BG();
 				let r;
 				U(n, () => Y.pin, !0), D(n), F((e, t) => {
 					r = W(n, 1, "kp-pin svelte-1yq04zr", null, r, { on: I(a) }), q(n, "aria-pressed", I(a)), q(n, "title", e), q(n, "aria-label", t);
@@ -40298,24 +40312,24 @@ Br([
 	"keydown"
 ]);
 // src/App.svelte
-var UG = /* @__PURE__ */ R("<button class=\"chrome-restore\"><!> </button>"), WG = /* @__PURE__ */ R("<button type=\"button\"></button>"), GG = /* @__PURE__ */ R("<button type=\"button\" class=\"fold-all panel-fold\"></button>"), KG = /* @__PURE__ */ R("<div class=\"panel-head\"><h2> </h2> <span class=\"panel-head-tools\"><!> <!></span></div> <!>", 1), qG = /* @__PURE__ */ R("<aside><!> <!></aside>"), JG = /* @__PURE__ */ R("<!> <div class=\"workspace\"><!> <!> <div class=\"stage-area\"><!> <!></div></div>", 1), YG = /* @__PURE__ */ R("<p class=\"loading\"> </p>"), XG = /* @__PURE__ */ R("<button type=\"button\" class=\"toast-act\"> </button>"), ZG = /* @__PURE__ */ R("<div><span> </span> <!> <button class=\"toast-x\"></button></div>"), QG = /* @__PURE__ */ R("<div class=\"editor\"><!> <!> <!> <!> <!> <!> <!> <!> <!> <!> <!> <!></div> <!>", 1);
-function $G(e, t) {
+var GG = /* @__PURE__ */ R("<button class=\"chrome-restore\"><!> </button>"), KG = /* @__PURE__ */ R("<button type=\"button\"></button>"), qG = /* @__PURE__ */ R("<button type=\"button\" class=\"fold-all panel-fold\"></button>"), JG = /* @__PURE__ */ R("<div class=\"panel-head\"><h2> </h2> <span class=\"panel-head-tools\"><!> <!></span></div> <!>", 1), YG = /* @__PURE__ */ R("<aside><!> <!></aside>"), XG = /* @__PURE__ */ R("<!> <div class=\"workspace\"><!> <!> <div class=\"stage-area\"><!> <!></div></div>", 1), ZG = /* @__PURE__ */ R("<p class=\"loading\"> </p>"), QG = /* @__PURE__ */ R("<button type=\"button\" class=\"toast-act\"> </button>"), $G = /* @__PURE__ */ R("<div><span> </span> <!> <button class=\"toast-x\"></button></div>"), eK = /* @__PURE__ */ R("<div class=\"editor\"><!> <!> <!> <!> <!> <!> <!> <!> <!> <!> <!> <!></div> <!>", 1);
+function tK(e, t) {
 	it(t, !0);
 	let n = [
-		tW,
-		sV,
-		gR,
-		WU,
+		rW,
+		lV,
+		vR,
+		KU,
 		qF,
 		$,
-		KV,
+		JV,
 		TP,
-		RR,
-		YI,
+		BR,
+		ZI,
 		aI,
 		wI,
-		uL,
-		xL
+		fL,
+		CL
 	], r = {};
 	for (let e of n) Object.defineProperties(r, Object.getOwnPropertyDescriptors(e));
 	Object.assign(r, {
@@ -40323,10 +40337,10 @@ function $G(e, t) {
 		blockEntranceOptions: () => $.BLOCK_ENTRANCE_OPTIONS,
 		hoverOptions: () => $.HOVER_OPTIONS,
 		openPanel: (e, t = {}) => {
-			t.calendars && (qF.siteCalendarsOpen = !0), t.shop && (qF.siteShopOpen = !0, qF.focusShopCurrency = !0), WU.activePanel = e;
+			t.calendars && (qF.siteCalendarsOpen = !0), t.shop && (qF.siteShopOpen = !0, qF.focusShopCurrency = !0), KU.activePanel = e;
 		},
 		openCollection: (e) => {
-			KV.activeCollection = e, KV.openRequest = { id: e }, WU.activePanel = "collections";
+			JV.activeCollection = e, JV.openRequest = { id: e }, KU.activePanel = "collections";
 		},
 		openDesignPicker: () => {
 			$.designPicker = { mode: "set" };
@@ -40348,14 +40362,14 @@ function $G(e, t) {
 	ca(() => {
 		r.init();
 	});
-	var i = QG();
+	var i = eK();
 	zr("keydown", mn, function(...e) {
 		r.onKeydown?.apply(this, e);
 	}), zr("pointerdown", mn, function(...e) {
 		r.onPointerdownWindow?.apply(this, e);
 	});
 	var a = M(i), o = j(a), s = (e) => {
-		var t = UG(), n = j(t);
+		var t = GG(), n = j(t);
 		U(n, () => Y.pencil);
 		var i = P(n);
 		D(t), F((e, n) => {
@@ -40370,7 +40384,7 @@ function $G(e, t) {
 	var c = P(o, 2);
 	fM(c, {});
 	var l = P(c, 2), u = (e) => {
-		var t = JG(), n = M(t), i = (e) => {
+		var t = XG(), n = M(t), i = (e) => {
 			FM(e, {});
 		};
 		V(n, (e) => {
@@ -40379,13 +40393,13 @@ function $G(e, t) {
 		var a = P(n, 2), o = j(a);
 		SM(o, {});
 		var s = P(o, 2), c = (e) => {
-			var t = WG();
+			var t = KG();
 			let n;
 			U(t, () => Y.foldRight, !0), D(t), F((e, i) => {
 				n = W(t, 1, "panel-handle", null, n, { hidden: !r.chromeVisible }), q(t, "title", e), q(t, "aria-label", i);
 			}, [() => J("ui.openPanel"), () => J("ui.openPanel")]), L("click", t, () => r.panelFolded = !1), z(e, t);
 		}, l = (e) => {
-			var t = qG();
+			var t = YG();
 			let n;
 			var i = j(t), a = (e) => {
 				kM(e, {});
@@ -40394,8 +40408,8 @@ function $G(e, t) {
 				(r.adminLayout === "panel-tabs" || r.adminLayout === "page-tabs") && e(a);
 			});
 			var o = P(i, 2), s = (e) => {
-				var t = KG(), n = M(t), i = j(n), a = N(i, !0), o = P(i, 2), s = j(o), c = (e) => {
-					var t = WG();
+				var t = JG(), n = M(t), i = j(n), a = N(i, !0), o = P(i, 2), s = j(o), c = (e) => {
+					var t = KG();
 					let n;
 					U(t, () => Y.foldToggle, !0), D(t), F((e, i) => {
 						n = W(t, 1, "fold-all fold-toggle", null, n, { collapse: r.panelAllOpen }), q(t, "title", e), q(t, "aria-label", i);
@@ -40407,7 +40421,7 @@ function $G(e, t) {
 					r.panelHasGroups && e(c);
 				});
 				var l = P(s, 2), u = (e) => {
-					var t = GG();
+					var t = qG();
 					U(t, () => Y.foldLeft, !0), D(t), F((e, n) => {
 						q(t, "title", e), q(t, "aria-label", n);
 					}, [() => J("ui.foldPanel"), () => J("ui.foldPanel")]), L("click", t, () => r.activePanel = null), z(e, t);
@@ -40440,7 +40454,7 @@ function $G(e, t) {
 				}, C = (e) => {
 					zA(e, {});
 				}, w = (e) => {
-					TG(e, {});
+					DG(e, {});
 				};
 				V(d, (e) => {
 					r.activePanel === "pages" ? e(f) : r.activePanel === "nav" ? e(p, 1) : r.activePanel === "site" ? e(m, 2) : r.activePanel === "theme" ? e(h, 3) : r.activePanel === "blocks" ? e(g, 4) : r.activePanel === "grid" ? e(_, 5) : r.activePanel === "properties" ? e(v, 6) : r.activePanel === "footer" ? e(y, 7) : r.activePanel === "collections" ? e(b, 8) : r.activePanel === "plugins" ? e(x, 9) : r.activePanel === "history" ? e(S, 10) : r.activePanel === "update" ? e(C, 11) : r.activePanel === "settings" && e(w, 12);
@@ -40461,13 +40475,13 @@ function $G(e, t) {
 		var u = P(s, 2), d = j(u);
 		BM(d, {});
 		var f = P(d, 2), p = (e) => {
-			FG(e, {});
+			LG(e, {});
 		}, m = /* @__PURE__ */ O(() => r.activePanel === "collections" && r.collectionsLayout === "table" && r.panelCollection && r.collectionIds.includes(r.panelCollection) && r.chromeVisible && (r.adminLayout !== "panel-tabs" && r.adminLayout !== "page-tabs" || !r.panelFolded));
 		V(f, (e) => {
 			I(m) && e(p);
 		}), D(u), D(a), z(e, t);
 	}, d = (e) => {
-		var t = YG(), n = N(t, !0);
+		var t = ZG(), n = N(t, !0);
 		F((e) => B(n, e), [() => J("ui.loading")]), z(e, t);
 	};
 	V(l, (e) => {
@@ -40581,7 +40595,7 @@ function $G(e, t) {
 	var v = P(m, 2), y = (e) => {
 		var t = Zr();
 		li(M(t), () => r.linkRequest, (e) => {
-			AW(e, {
+			MW(e, {
 				get request() {
 					return r.linkRequest;
 				},
@@ -40595,21 +40609,21 @@ function $G(e, t) {
 		r.linkRequest && e(y);
 	});
 	var b = P(v, 2), x = (e) => {
-		CG(e, { onclose: () => r.settingsOpen = !1 });
+		TG(e, { onclose: () => r.settingsOpen = !1 });
 	};
 	V(b, (e) => {
 		r.settingsOpen && e(x);
 	});
 	var S = P(b, 2), C = (e) => {
-		HW(e, { onclose: () => r.shortcutsOpen = !1 });
+		WW(e, { onclose: () => r.shortcutsOpen = !1 });
 	};
 	V(S, (e) => {
 		r.shortcutsOpen && e(C);
 	});
 	var w = P(S, 2), ee = (e) => {
 		{
-			let t = /* @__PURE__ */ O(() => _L.buildCommands()), n = /* @__PURE__ */ O(() => r.siteDraft?.shortcuts ?? []), i = /* @__PURE__ */ O(() => r.siteDraft ? r.toggleShortcut : null);
-			HG(e, {
+			let t = /* @__PURE__ */ O(() => yL.buildCommands()), n = /* @__PURE__ */ O(() => r.siteDraft?.shortcuts ?? []), i = /* @__PURE__ */ O(() => r.siteDraft ? r.toggleShortcut : null);
+			WG(e, {
 				get commands() {
 					return I(t);
 				},
@@ -40619,22 +40633,22 @@ function $G(e, t) {
 				get onpin() {
 					return I(i);
 				},
-				onclose: () => _L.paletteOpen = !1
+				onclose: () => yL.paletteOpen = !1
 			});
 		}
 	};
 	V(w, (e) => {
-		_L.paletteOpen && e(ee);
+		yL.paletteOpen && e(ee);
 	});
 	var T = P(w, 2);
 	WM(T, {});
 	var te = P(T, 2);
 	KM(te, {});
 	var ne = P(te, 2), E = (e) => {
-		var t = ZG();
+		var t = $G();
 		let n;
 		var i = j(t), a = N(i, !0), o = P(i, 2), s = (e) => {
-			var t = XG(), n = N(t, !0);
+			var t = QG(), n = N(t, !0);
 			F(() => B(n, r.statusAction.label)), L("click", t, () => {
 				let e = r.statusAction.run;
 				r.setStatus(""), e();
@@ -40668,8 +40682,8 @@ function $G(e, t) {
 }
 Br(["click"]);
 // src/lib/seg-slide.js
-var eK = (e) => Math.round(e * 10) / 10;
-function tK(e, t) {
+var nK = (e) => Math.round(e * 10) / 10;
+function rK(e, t) {
 	let n = e.left - t.left, r = e.top - t.top, i = t.left + t.width - (e.left + e.width), a = t.top + t.height - (e.top + e.height);
 	return [
 		n,
@@ -40677,28 +40691,28 @@ function tK(e, t) {
 		i,
 		a
 	].every((e) => Math.abs(e) < .5) ? null : {
-		left: `${eK(n)}px`,
-		top: `${eK(r)}px`,
-		right: `${eK(i)}px`,
-		bottom: `${eK(a)}px`
+		left: `${nK(n)}px`,
+		top: `${nK(r)}px`,
+		right: `${nK(i)}px`,
+		bottom: `${nK(a)}px`
 	};
 }
-function nK(e) {
+function iK(e) {
 	let t = (e instanceof Element ? e.closest("button") : null)?.parentElement;
 	return t?.matches(".seg, .choice-seg") ? t : null;
 }
-function rK(e = document) {
+function aK(e = document) {
 	if (typeof KeyframeEffect > "u" || !("pseudoElement" in KeyframeEffect.prototype)) return;
 	let t = window.matchMedia("(prefers-reduced-motion: reduce)");
 	e.addEventListener("click", (e) => {
 		if (t.matches) return;
-		let n = nK(e.target), r = n?.querySelector(":scope > button.on");
+		let n = iK(e.target), r = n?.querySelector(":scope > button.on");
 		if (!r) return;
 		let i = r.getBoundingClientRect();
 		requestAnimationFrame(() => {
 			let e = n.querySelector(":scope > button.on");
 			if (!e || e === r || !e.isConnected) return;
-			let t = tK(i, e.getBoundingClientRect());
+			let t = rK(i, e.getBoundingClientRect());
 			t && e.animate([t, {
 				left: "0px",
 				top: "0px",
@@ -40712,6 +40726,6 @@ function rK(e = document) {
 		});
 	}, !0);
 }
-document.documentElement.lang = await Oa(), rK();
-var iK = ri($G, { target: document.getElementById("urd-admin") });
-export { iK as default };
+document.documentElement.lang = await Oa(), aK();
+var oK = ri(tK, { target: document.getElementById("urd-admin") });
+export { oK as default };

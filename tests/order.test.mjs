@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  validOrderPayload, orderAmountMinor, validVariants, validQuantities, quantityLimits, orderLineItems, orderDescription, currencyExponent,
+  validOrderPayload, orderAmountMinor, validVariants, validQuantities, quantityProblems, quantityLimits, orderLineItems, orderDescription, currencyExponent,
   makeReference, isReference, orderCurrency, vatRegistered, returnUrl, cancelUrl, PROVIDERS, pageCheckout,
 } from '../template/functions/_lib/order.js';
 
@@ -158,4 +158,15 @@ test('validQuantities: a line within its product\'s least and most passes, one o
   assert.equal(validQuantities([{ id: 'boller', qty: 11 }], catalogs), false);
   assert.equal(validQuantities([{ id: 'kake', qty: 4 }], catalogs), false);
   assert.equal(validQuantities([{ id: 'boller', qty: 5, variant: 'Stor' }, { id: 'boller', qty: 5, variant: 'Liten' }], catalogs), true, 'the limits hold per line');
+});
+
+test('quantityProblems: a line the payload repeats is added together, and each refused line carries the limits that hold', () => {
+  const catalogs = [{ kind: 'products', entries: [
+    { id: 'boller', price: 120, quantity: { min: 2, max: 10 } },
+    { id: 'kake', price: 350 },
+  ] }];
+  assert.deepEqual(quantityProblems([{ id: 'boller', qty: 10 }, { id: 'boller', qty: 10 }], catalogs), [{ id: 'boller', min: 2, max: 10 }], 'two lines of 10 are one line of 20');
+  assert.equal(validQuantities([{ id: 'boller', qty: 6, variant: 'Stor' }, { id: 'boller', qty: 6, variant: 'Stor' }], catalogs), false);
+  assert.deepEqual(quantityProblems([{ id: 'boller', qty: 1, variant: 'Stor' }, { id: 'kake', qty: 60 }], catalogs), [{ id: 'boller', variant: 'Stor', min: 2, max: 10 }]);
+  assert.deepEqual(quantityProblems([{ id: 'boller', qty: 4 }, { id: 'kake', qty: 99 }], catalogs), []);
 });

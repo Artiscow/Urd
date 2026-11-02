@@ -13,7 +13,7 @@ import {
   readCart, writeCart, cartTotal, formatPrice, orderLines, orderSummary,
   buildOrderBody, buildOrderMailto, buildOrderPayload, isEmail, onCartChange,
   paymentsOf, anyProvider, currencyWord, PAY_PROVIDERS, methodText, shownMethods,
-  orderRecord, saveOrder, readOrder,
+  orderRecord, saveOrder, readOrder, cartRelimit,
 } from '../shop.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t, siteLang } from '../i18n.js';
@@ -384,6 +384,13 @@ export const checkoutBlock = {
             // The provider, the payment's reference and the provider's own id are kept for the return, which asks whether this payment went through; the id never comes from the address, so a shared link confirms nothing.
             try { sessionStorage.setItem('urd-pay-reference', [provider, String(data.reference ?? ''), String(data.pid ?? '')].join(':')); } catch { /* no storage: the basket then stays after the payment */ }
             location.href = data.url;
+            return;
+          }
+          // A quantity outside a product's limits: the basket takes the limits the catalogue holds now, and the buyer checks it and pays again.
+          if (res.status === 400 && data?.code === 'orderQuantity') {
+            writeCart(cartRelimit(readCart(), data.lines));
+            setStatus(t('shop.qtyChanged'), true);
+            pay.disabled = false;
             return;
           }
           // 503: the provider is not set up; 404: the site has no functions, so the payment is not set up either; 400: this provider cannot take the order (the currency, a product); else a failure that may pass.

@@ -130,7 +130,7 @@ The source marks, the ID scheme and the status words are explained in [README.md
   - A block whose content grows pushes the blocks below ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)).
   - Each block has a height that follows its content or is its own; below the design width it wraps, shrinks in proportion, or shrinks and wraps; and «Size» scales it with bounds on its text ([ADR-0025](../adr/0025-the-sizing-model.md)).
 - **Mobile.** A synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)), hide on mobile, and a mobile review for sections with overrides, Urd's counterpart to Wix Studio's responsive scanner.
-- **Preview.** Four devices (Screen, laptop 1280, tablet 810, phone 390) and Clean view.
+- **Preview.** Two devices, the Screen (the window, four common sizes, five ratios or an own size) and the Phone (five sizes, the width alone, five ratios or an own size), any width dragged at the edge, and Clean view.
 - **The editor.**
   - 12 panels, with Content, Style and Placement tabs ([ADR-0016](../adr/0016-panel-language.md)).
   - An element menu with search, groups in every block, a quick row with pins, marks on own values with a reset per setting, keys 1, 2 and 3 for its areas and / for its search, placed beside the block and dragged by its head.
@@ -1902,7 +1902,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Zoom to fit or to the selection | FR, WH, BD | ⌘1 / ⌘2; Shift+1; scale-to-fit | Partial: fit and stepped zoom; no zoom to the selection | 0.7.10 canvas functions |
 | Zoom-out page overview | WP, SH (beta) | Ctrl+Shift+0 condensed section view | Missing | 0.7.10: reorder sections from above |
 | Pan the canvas by keyboard | FS | Arrows with nothing selected | n/a | - |
-| Switch breakpoint or device view | WF, WE, WH, CA, EL, BR, BD, WT, TI, FR, DV, SQ, SH | Number keys, Ctrl+J, Ctrl+B, ⌘⌥R | Has: 2 preview devices, the Screen at the window, four sizes, five ratios or an own size, the Phone at five sizes, the width alone, five ratios or an own size (0.7.10.26) | - |
+| Switch breakpoint or device view | WF, WE, WH, CA, EL, BR, BD, WT, TI, FR, DV, SQ, SH | Number keys, Ctrl+J, Ctrl+B, ⌘⌥R | Partial: 2 preview devices, the Screen at the window, four sizes, five ratios or an own size, the Phone at five sizes, the width alone, five ratios or an own size (0.7.10.26), switched by their buttons and the command palette; no key switches the device | 0.7.10: canvas functions |
 | Side-by-side breakpoints canvas | WF, FS | Breakpoint canvas; breakpoints as frames with cross-breakpoint edits | Missing | v0.8 PH-1 |
 | Preview mode | WF, WS, WE, WH, BR, TI, DU, WT, FS, SQ, WP, CA, SH, FR | Dedicated preview shortcut or toggle | Has: Clean view | - |
 | Inline preview on the canvas | FS | Shift+Space beside the design | n/a | - |

@@ -8,7 +8,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
-  quantityLimits, lineLimits, limitNote,
+  quantityLimits, lineLimits, limitNote, cartRelimit,
   isEmail, orderLines, orderSummary, buildOrderBody, buildOrderMailto, buildOrderPayload,
   methodText, shownMethods, paymentsOf, orderRecord, saveOrder, readOrder, ORDER_KEY,
 } = await engineImport('shop.js');
@@ -203,4 +203,17 @@ test('quantity limits: a product\'s least and most, held by the line it adds and
   assert.deepEqual(limitNote({ min: 6, max: 99 }), { key: 'shop.qtyLeast', vars: { min: 6 } });
   assert.deepEqual(limitNote({ min: 2, max: 10 }), { key: 'shop.qtyRange', vars: { min: 2, max: 10 } });
   assert.deepEqual(limitNote({ min: 4, max: 4 }), { key: 'shop.qtyExactly', vars: { min: 4, max: 4 } });
+});
+
+test('cartRelimit: the lines the checkout names take the limits that hold, and the rest stand', () => {
+  const items = [
+    { key: 'boller', id: 'boller', title: 'Boller', price: 120, qty: 8, max: 10 },
+    { key: 'boller|Stor', id: 'boller', title: 'Boller', price: 120, qty: 8, variant: 'Stor', max: 10 },
+    { key: 'kake', id: 'kake', title: 'Kake', price: 350, qty: 3 },
+  ];
+  const out = cartRelimit(items, [{ id: 'boller', min: 2, max: 5 }]);
+  assert.deepEqual(out[0], { key: 'boller', id: 'boller', title: 'Boller', price: 120, qty: 5, min: 2, max: 5 });
+  assert.equal(out[1].qty, 8, 'another variant is another line');
+  assert.equal(out[2], items[2]);
+  assert.deepEqual(cartRelimit(items, null), items);
 });

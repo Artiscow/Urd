@@ -155,7 +155,15 @@ let updateChecking = $state(false);
  *  outside the engine atom group; the server validates the same). */
 let updateSkip = $state(new Set());
 
-async function loadUpdateCheck() {
+/** The check on its way, which a second call joins instead of starting another. */
+let checkRun = null;
+
+function loadUpdateCheck() {
+  checkRun ??= runUpdateCheck().finally(() => { checkRun = null; });
+  return checkRun;
+}
+
+async function runUpdateCheck() {
   updateChecking = true;
   updateError = null;
   updateInfo = null;

@@ -140,19 +140,35 @@ export function quantityLimits(entry) {
 }
 
 /**
- * Whether every order line's quantity is within its product's limits, line by line as the basket holds them.
+ * The basket lines whose quantity lies outside their product's limits, each with the limits the catalogue holds now, so the basket can take them.
+ * A line is a product and its variant, as the basket keys it, and lines the payload repeats are added together first.
  * A product without limits takes any quantity the payload check let through (1 to 99).
- * @param {Array<{id: string, qty: number}>} order Cleaned order (validOrderPayload)
+ * @param {Array<{id: string, qty: number, variant?: string}>} order Cleaned order (validOrderPayload)
  * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
- * @returns {boolean}
+ * @returns {Array<{id: string, variant?: string, min: number, max: number}>}
  */
-export function validQuantities(order, catalogs) {
+export function quantityProblems(order, catalogs) {
   const products = productMap(catalogs);
+  const lines = new Map();
   for (const line of order) {
-    const limits = quantityLimits(products.get(line.id));
-    if (limits && (line.qty < limits.min || line.qty > limits.max)) return false;
+    const key = `${line.id}\u0000${line.variant ?? ''}`;
+    const held = lines.get(key);
+    if (held) held.qty += line.qty;
+    else lines.set(key, { id: line.id, variant: line.variant, qty: line.qty });
   }
-  return true;
+  const problems = [];
+  for (const line of lines.values()) {
+    const limits = quantityLimits(products.get(line.id));
+    if (limits && (line.qty < limits.min || line.qty > limits.max)) {
+      problems.push({ id: line.id, ...(line.variant ? { variant: line.variant } : {}), ...limits });
+    }
+  }
+  return problems;
+}
+
+/** Whether every basket line's quantity is within its product's limits (quantityProblems). */
+export function validQuantities(order, catalogs) {
+  return quantityProblems(order, catalogs).length === 0;
 }
 
 /**
@@ -300,9 +316,10 @@ export async function prepareOrder(request) {
   if (!validVariants(clean.order, shop.catalogs)) {
     return { error: json({ error: 'Unknown variant in the order', code: 'orderInvalid' }, 400) };
   }
-  // A quantity the product's least or most rules out was changed in the basket by hand.
-  if (!validQuantities(clean.order, shop.catalogs)) {
-    return { error: json({ error: 'A quantity outside the product\'s limits', code: 'orderInvalid' }, 400) };
+  // A quantity outside the product's least or most: limits changed since the line was added, or a basket changed by hand. The lines go back with the limits that hold, so the basket can take them.
+  const problems = quantityProblems(clean.order, shop.catalogs);
+  if (problems.length) {
+    return { error: json({ error: 'A quantity outside the product\'s limits', code: 'orderQuantity', lines: problems }, 400) };
   }
   return { clean, payload, origin, site: shop.site, catalogs: shop.catalogs, amountMinor, currency };
 }

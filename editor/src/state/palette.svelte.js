@@ -65,7 +65,7 @@ function buildCommands() {
     if (d.id !== previewState.deviceId) add(`device:${d.id}`, 'actions', ta('palette.device', { device: ta(`lbl.device.${d.id}`) }), () => { previewState.deviceId = d.id; });
   }
   add('shortcuts', 'actions', ta('shortcuts.title'), () => shellState.openShortcuts());
-  add('viewSite', 'actions', ta('ui.viewSite'), () => window.open(pageState.pageEntry()?.path ?? '/', '_blank', 'noopener'));
+  add('view-site', 'actions', ta('ui.viewSite'), () => window.open(pageState.pageEntry()?.path ?? '/', '_blank', 'noopener'));
 
   // The pages, the current one left out.
   for (const page of siteState.siteDraft?.pages ?? []) {

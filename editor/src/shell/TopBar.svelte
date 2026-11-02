@@ -96,9 +96,11 @@
     <span>{ta('lbl.ownSize')}</span>
     <span class="device-own-fields">
       <input type="number" class="tb-num" min={PHONE_WIDTH_MIN} max={PHONE_WIDTH_MAX} step="1" value={ed.phonePref.width} aria-label={ta('lbl.screen.w')}
+        title={ta('tip.phone.width', { min: PHONE_WIDTH_MIN, max: PHONE_WIDTH_MAX })}
         onchange={(e) => { ed.setPhonePref({ size: 'own', width: Number(e.target.value) }); ed.deviceId = 'mobile'; e.target.value = ed.phonePref.width; }} />
       <span aria-hidden="true">×</span>
       <input type="number" class="tb-num" min={PHONE_HEIGHT_MIN} max={PHONE_HEIGHT_MAX} step="1" value={ed.phonePref.height} aria-label={ta('lbl.screen.h')}
+        title={ta('tip.phone.height', { min: PHONE_HEIGHT_MIN, max: PHONE_HEIGHT_MAX })}
         onchange={(e) => { ed.setPhonePref({ size: 'own', height: Number(e.target.value) }); ed.deviceId = 'mobile'; e.target.value = ed.phonePref.height; }} />
     </span>
     <span class="device-ratio">{ratioOf(ed.phonePref.width, ed.phonePref.height)}</span>

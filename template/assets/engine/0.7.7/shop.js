@@ -82,6 +82,20 @@ function cleanItem(raw) {
 }
 
 /**
+ * The basket with the limits the checkout's function answered with (`orderQuantity`): each line of a product and variant named there takes those limits, its quantity held within them.
+ * @param {Array} items
+ * @param {Array<{id: string, variant?: string, min: number, max: number}>} lines
+ * @returns {Array} A new list
+ */
+export function cartRelimit(items, lines) {
+  const told = Array.isArray(lines) ? lines : [];
+  return items.map((item) => {
+    const line = told.find((l) => l && l.id === item.id && (l.variant ?? '') === (item.variant ?? ''));
+    return line ? cleanItem({ ...item, min: line.min, max: line.max }) ?? item : item;
+  });
+}
+
+/**
  * Adds a line to the basket: if the key is already there the quantity is
  * raised, otherwise the line is appended. Always returns a new list.
  * @param {Array} items

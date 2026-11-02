@@ -62,8 +62,7 @@
         await awaitUpdateDeploy(updateInfo.target.replace(/^v/, ''));
       } else if (res.status === 409) {
         setStatus(taApiError(data) ?? ta('update.checkFailed'), 'error');
-        // Awaited: otherwise ed.updateBusy is cleared during the re-check, and
-        // the panel sits blank in a window where an extra check can slip through.
+        // Awaited, so the panel stays busy until the fresh check has answered.
         await loadUpdateCheck();
       } else {
         setStatus(taApiError(data) ?? ta('update.failed'), 'error');

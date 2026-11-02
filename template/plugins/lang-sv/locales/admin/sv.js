@@ -382,6 +382,7 @@ export default {
     'api.geocodeUpstreamStatus': 'Adressökningen svarade {status}',
     'api.vippsNotConfigured': 'Betalningslagret är inte uppsatt (Vipps-hemligheterna saknas i Cloudflare-miljön)',
     'api.orderInvalid': 'Beställningen var ogiltig (okänd produkt eller ogiltiga fält)',
+    'api.orderQuantity': 'Ett antal i beställningen låg utanför produktens minsta eller största',
     'api.catalogUnreachable': 'Kunde inte läsa produktkatalogen från sidan',
     'api.vippsUnreachable': 'Fick ingen kontakt med Vipps',
     'api.vippsUpstreamStatus': 'Vipps svarade {status}',

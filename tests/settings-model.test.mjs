@@ -25,7 +25,6 @@ function ctx() {
     adminLangOptions: () => [['nb', 'Norsk bokmål']],
     adminTheme: 'grey', adminLayout: 'rail', settingsPlace: 'dialog', settingsPictures: 'pictures', adminLangChoice: 'auto',
     addBlockMenuPref: 'side', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
-    screenPref: { mode: 'own', width: 1440, height: 0 },
     siteDraft: { admin: {}, analytics: {} },
   };
   return { ed, ta: (k) => k, menu: { widthPref: 'wide' }, setMenuWidthPref() {} };

@@ -84,6 +84,7 @@ export default {
     'shop.quantity': 'Adet',
     'shop.qtyMost': 'En çok {max}',
     'shop.qtyLeast': 'En az {min}',
+    'shop.qtyChanged': 'Sepetteki bir adet ürünün sınırlarına göre ayarlandı. Sepeti kontrol edip yeniden ödeyin.',
     'shop.qtyRange': '{min} ile {max} arası',
     'shop.qtyExactly': 'Tam olarak {min}',
     'shop.decrease': 'Azalt',

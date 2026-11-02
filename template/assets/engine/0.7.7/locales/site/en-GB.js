@@ -85,6 +85,7 @@ export default {
     'shop.quantity': 'Quantity',
     'shop.qtyMost': 'At most {max}',
     'shop.qtyLeast': 'At least {min}',
+    'shop.qtyChanged': 'A quantity in the basket was set to the product\'s limits. Check the basket and pay again.',
     'shop.qtyRange': '{min} to {max}',
     'shop.qtyExactly': 'Exactly {min}',
     'shop.decrease': 'Fewer',

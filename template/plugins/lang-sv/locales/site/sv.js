@@ -59,6 +59,7 @@ export default {
     'shop.quantity': 'Antal',
     'shop.qtyMost': 'Högst {max}',
     'shop.qtyLeast': 'Minst {min}',
+    'shop.qtyChanged': 'Ett antal i varukorgen sattes inom produktens gränser. Kontrollera varukorgen och betala igen.',
     'shop.qtyRange': '{min} till {max}',
     'shop.qtyExactly': 'Exakt {min}',
     'shop.decrease': 'Färre',
