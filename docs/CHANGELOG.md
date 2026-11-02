@@ -8,6 +8,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.25 - The Collections panel steps in, with two columns and a table over the page to choose - 2 November 2026
+
+- The Collections panel held every collection and entry as folds in one long stack. It now steps in a level at a time, from the collections to a collection's entries with a picture and a search to one entry with steps to its neighbours, and keeps its place while closed (`panels/CollectionsPanel.svelte`).
+- «Collections editor» in Urd settings adds two columns in a panel widened while a collection is open, and a table over the page with a column per field and the chosen entry in a drawer (`panels/collections/CollectionsTable.svelte`), kept per browser.
+- The entry's fields, the entry list with its drag, the collection's tools and the actions are shared by the three layouts (`panels/collections/`), and the search, an entry's place and the table's columns are pure rules (`lib/collection-layout.js`).
+- A new entry opens at once with its title ready to type over (`addCollectionEntry` returns its id).
+- The comparison's «Collections» row names the three ways to edit, and the user guides describe them in en, nb and tr.
+- The independent review before the commit found these, all fixed:
+  - In two columns the chosen entry scrolled away with a long list. Its column now stays in view and scrolls on its own.
+  - Stepping in or back with the keys dropped the focus to the page. The focus now goes to the way back after a step in, and to the row stepped out of after a step back.
+  - A row's move arrows sat inside the row's own button, so a screen reader could miss them. They now stand beside it.
+  - A dated entry's row had lost its tooltip saying it stands by its date. It is back.
+  - The steps to the entry before and after used the same arrows that move an entry. They are now chevrons.
+  - The table stayed over the page when the tab layouts folded the panel away. It now folds away with the panel.
+  - The table's «+ New entry» did not focus the new title, and the panel's kept an old search that could hide the new entry. Both are fixed.
+  - Beside a list, an empty column said «Choose an entry in the list». The first entry is now chosen instead, and the key is removed.
+  - The old panel's collection fold styles were left in `app.css` and are removed, and the first bullet above was too long.
+
 ### 0.7.10.24 - The Urd settings as a dialog with sections, the look chosen from pictures - 2 November 2026
 
 - The Urd settings were a popover where long names wrapped beside narrow dropdowns and the site's shared values stood among the browser's own. They open as a dialog with the groups down the left and a search (`settings/SettingsDialog.svelte`), with «This site» marked Shared.

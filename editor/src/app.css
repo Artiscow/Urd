@@ -536,6 +536,20 @@
     font-size: 0.88rem;
   }
 
+  /* The two-column collections editor: the panel widened while a collection is open, never past more than half the window */
+  .panel.panel-wide {
+    width: min(680px, 50vw);
+  }
+
+  /* The stage's place in the workspace, holding the collections table over it */
+  .stage-area {
+    position: relative;
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+  }
+
   .panel-head {
     display: flex;
     align-items: center;
@@ -1599,20 +1613,6 @@
     justify-self: start;
   }
 
-  /* The entries stand in the collection's fold without the fold's own indent, since the cards carry their frames */
-  .collection-body {
-    display: grid;
-    gap: 0.4rem;
-    min-height: 0;
-    overflow: hidden;
-    padding: 0.4rem 1px 2px;
-  }
-
-  /* An open entry inside a collection keeps its frame without the floating shadow, which the opening collection would cut */
-  .collection-body .nav-item.open {
-    box-shadow: none;
-  }
-
   /* The entries are a little taller than the menu items, so a name and its date or price read at ease */
   .entries-list .nav-head {
     min-height: 2.6rem;
@@ -1672,66 +1672,6 @@
   .page-row.current .page-title {
     color: var(--urd-color-accent, #7c5cff);
     font-weight: 600;
-  }
-
-  /* A collection's head: its name, its kind and its count and the chevron, one bordered row, the accent while it stands open */
-  .panel-body .collection-head:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    min-height: 2.6rem;
-    padding: 0.35em 0.8em;
-    font: inherit;
-    font-size: 0.9rem;
-    color: inherit;
-    text-align: left;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: border-color 0.16s ease-out;
-  }
-
-  .panel-body .collection-fold.open > .collection-head:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
-    border-color: var(--urd-color-accent, #7c5cff);
-  }
-
-  .collection-head .collection-name {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 600;
-  }
-
-  .collection-head .collection-meta {
-    flex: none;
-    font-size: 0.75rem;
-    opacity: 0.65;
-  }
-
-  .collection-chev {
-    display: inline-flex;
-    opacity: 0.7;
-  }
-
-  .collection-chev svg {
-    transition: transform 0.15s ease;
-  }
-
-  .collection-fold.open .collection-chev svg {
-    transform: rotate(180deg);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .collection-chev svg,
-    .panel-body .collection-head { transition: none; }
-  }
-
-  .collection-fold + .collection-fold {
-    margin-top: 0.5rem;
   }
 
   /* The list of menu items, with a strip under the last row to drop on. */

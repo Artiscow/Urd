@@ -154,3 +154,50 @@ test('the shell renders the workspace with every panel open in turn, from the mo
   assert.equal(shellState.settingsOpen, true, 'and back into the dialog');
   shellState.settingsOpen = false;
 });
+
+test('the Collections panel steps in, widens to two columns, or opens a table over the page, by «Collections editor»', async () => {
+  const { default: App } = await import('../editor/src/App.svelte');
+  const { siteState } = await import('../editor/src/state/site.svelte.js');
+  const { shellState } = await import('../editor/src/state/shell.svelte.js');
+  const { collectionsState } = await import('../editor/src/state/collections.svelte.js');
+  const { liftSiteFile } = await import('$engine/migrate.js');
+  const { readFileSync } = await import('node:fs');
+  // The titles are read as plain words; node has no DOMParser, so a stand-in returns the text as it is.
+  globalThis.DOMParser ??= class { parseFromString(s) { return { body: { textContent: s } }; } };
+  const site = liftSiteFile(JSON.parse(readFileSync(new URL('../template/content/site.json', import.meta.url), 'utf8')));
+  siteState.site = site;
+  siteState.siteDraft = structuredClone(site);
+  collectionsState.collectionIds = ['kaker'];
+  collectionsState.collectionsView = { kaker: { name: 'Kaker', kind: 'products', entries: [{ id: 'a', title: 'Sjokoladekake', price: 350, sizes: ['Liten'] }, { id: 'b', title: 'Kanelboller', price: 120 }] } };
+  shellState.activePanel = 'collections';
+
+  collectionsState.panelCollection = null;
+  assert.match(render(App).body, /class="cl-collection/, 'the collections stand as rows');
+  collectionsState.panelCollection = 'kaker';
+  let body = render(App).body;
+  assert.match(body, /class="nav-item cl-row/, 'stepping in: the entries');
+  assert.doesNotMatch(body, /coll-entry/, 'no entry yet');
+  collectionsState.panelEntry = 'b';
+  body = render(App).body;
+  assert.match(body, /coll-entry/, 'stepping in: one entry with its fields');
+  assert.match(body, /coll-place/, 'its place among the entries');
+
+  shellState.setCollectionsLayout('columns');
+  body = render(App).body;
+  assert.match(body, /panel-wide/, 'two columns widen the panel');
+  assert.match(body, /class="nav-item cl-row/, 'with the entries');
+  assert.match(body, /coll-entry/, 'beside the chosen entry');
+
+  shellState.setCollectionsLayout('table');
+  body = render(App).body;
+  assert.doesNotMatch(body, /panel-wide/);
+  assert.match(body, /class="ct /, 'the table stands over the page');
+  assert.match(body, /<th[^>]*>lbl.price<\/th>/, 'with the product columns');
+  assert.match(body, /class="frame-wrap/, 'and the preview stays underneath');
+
+  shellState.setCollectionsLayout('drill');
+  collectionsState.panelCollection = null;
+  collectionsState.panelEntry = null;
+  collectionsState.collectionIds = [];
+  collectionsState.collectionsView = {};
+});

@@ -1,0 +1,143 @@
+/**
+ * What the Collections panel's layouts write through: an entry's fields, link, picture, sizes and colours, its move and removal, and a collection's CSV out and in.
+ * Built once per layout from the editor handle (`collectionActions(ed)`), so the drill-in, the two columns and the table change an entry the same way, each change one undo step through `mutateCollection`.
+ */
+import { ta } from '$engine/i18n.js';
+import { makeId } from '$engine/sections/presets.js';
+import { entriesToCsv, csvToEntries } from '$engine/collections-csv.js';
+import { stepAmong } from '../../lib/row-drag.js';
+import { setLinkOn } from '../../lib/link-edit.js';
+import { movable } from '../../lib/collection-layout.js';
+
+export function collectionActions(ed) {
+  const { mutateCollection, compressOrTrim, setStatus } = ed;
+
+  /** One entry of a collection, changed in place. */
+  const onEntry = (id, entryId, key, fn) => mutateCollection(id, key, (data) => {
+    const entry = data.entries.find((e) => e.id === entryId);
+    if (entry) fn(entry, data);
+  });
+
+  /** A field; an empty value removes it, except the title, which is never removed. */
+  function setEntryField(id, entryId, field, value) {
+    onEntry(id, entryId, `edit:collection:${id}:${entryId}:${field}`, (entry) => {
+      if (value === '' && field !== 'title') delete entry[field];
+      else entry[field] = value;
+    });
+  }
+
+  /** The entry's link from the link editor (the title links to it). */
+  function setEntryLink(id, entryId, link) {
+    onEntry(id, entryId, `collection:${id}:${entryId}:link`, (entry) => setLinkOn(entry, link));
+  }
+
+  /** The arrows: a step past the next entry that moves, the dated ones keeping their places. */
+  function moveEntry(id, entryId, dir) {
+    mutateCollection(id, `collection:${id}:move-entry`, (data) => {
+      data.entries = stepAmong(data.entries, (en) => movable(data.kind, en), (en) => en.id, entryId, dir);
+    });
+  }
+
+  function removeEntry(id, entryId) {
+    mutateCollection(id, `collection:${id}:remove-entry`, (data) => {
+      data.entries = data.entries.filter((e) => e.id !== entryId);
+    });
+  }
+
+  /** The entry's picture: the same webp flow as a block's image, materialised on publish. */
+  async function setEntryImage(id, entryId, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const img = await compressOrTrim(file);
+    setEntryField(id, entryId, 'image', img.dataUrl);
+  }
+
+  /** Sizes typed into the add field join the entry's sizes, one or several divided by commas, each once. */
+  function addEntrySizes(id, entryId, text) {
+    const typed = text.split(',').map((s) => s.trim()).filter(Boolean);
+    if (!typed.length) return;
+    onEntry(id, entryId, `collection:${id}:${entryId}:sizes`, (entry) => {
+      const sizes = Array.isArray(entry.sizes) ? entry.sizes : [];
+      entry.sizes = [...sizes, ...typed.filter((t) => !sizes.includes(t))];
+    });
+  }
+
+  function removeEntrySize(id, entryId, index) {
+    onEntry(id, entryId, `collection:${id}:${entryId}:sizes`, (entry) => {
+      if (!Array.isArray(entry.sizes)) return;
+      entry.sizes = entry.sizes.filter((_, i) => i !== index);
+      if (!entry.sizes.length) delete entry.sizes;
+    });
+  }
+
+  /** A new colour first in the list, named with the seed words the caller selects so typing names it. */
+  function addEntryColor(id, entryId) {
+    onEntry(id, entryId, `collection:${id}:${entryId}:colors`, (entry) => {
+      entry.colors = [{ name: ta('ph.colorName') }, ...(entry.colors ?? [])];
+    });
+  }
+
+  function setEntryColor(id, entryId, index, field, value) {
+    onEntry(id, entryId, `edit:collection:${id}:${entryId}:color:${index}:${field}`, (entry) => {
+      const color = entry.colors?.[index];
+      if (!color) return;
+      // The name can never be emptied (the schema requires it); the image can be removed.
+      if (field === 'image' && !value) delete color.image;
+      else if (value) color[field] = value;
+    });
+  }
+
+  async function setEntryColorImage(id, entryId, index, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const img = await compressOrTrim(file);
+    setEntryColor(id, entryId, index, 'image', img.dataUrl);
+  }
+
+  function removeEntryColor(id, entryId, index) {
+    onEntry(id, entryId, `collection:${id}:${entryId}:colors`, (entry) => {
+      if (!entry.colors) return;
+      entry.colors = entry.colors.filter((_, i) => i !== index);
+      if (!entry.colors.length) delete entry.colors;
+    });
+  }
+
+  /** CSV export: the entries are downloaded as <id>.csv. */
+  function exportCollectionCsv(id) {
+    const data = ed.collectionStores[id]?.data;
+    if (!data) return;
+    const url = URL.createObjectURL(new Blob([entriesToCsv(data.entries, ed.siteDraft?.pages ?? [])], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /** CSV import: the file's rows replace the collection's entries in one undo step; a missing or repeated id gets a new one, and the parsing lives in engine/collections-csv.js. */
+  async function importCollectionCsv(id, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const parsed = csvToEntries(await file.text(), ed.siteDraft?.pages ?? []);
+    if (!parsed) {
+      setStatus(ta('status.csvInvalid'), 'error');
+      return;
+    }
+    const used = new Set();
+    for (const entry of parsed.entries) {
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || used.has(entry.id)) entry.id = makeId('entry');
+      used.add(entry.id);
+    }
+    mutateCollection(id, `collection:${id}:import`, (data) => { data.entries = parsed.entries; });
+    setStatus(ta('status.csvImported', { count: String(parsed.entries.length) }), 'ok');
+  }
+
+  return {
+    setEntryField, setEntryLink, moveEntry, removeEntry, setEntryImage,
+    addEntrySizes, removeEntrySize, addEntryColor, setEntryColor, setEntryColorImage, removeEntryColor,
+    exportCollectionCsv, importCollectionCsv,
+  };
+}

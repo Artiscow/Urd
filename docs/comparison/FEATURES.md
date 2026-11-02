@@ -1198,7 +1198,7 @@ Urd has no user-defined fields: each collection kind shares a fixed set of field
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Collections | WX, WF, FR, FI, ZO, DU, NO, SU, SH (metaobjects) | Structured content types | no (if built statically) | Partial: collections of five fixed kinds with entries and CSV import and export; entries dragged into order where the page keeps the panel's order (products and undated entries; dated entries stand by their date, AR-3); no rename, kind change or entry duplication | 0.7.10 |
+| Collections | WX, WF, FR, FI, ZO, DU, NO, SU, SH (metaobjects) | Structured content types | no (if built statically) | Partial: collections of five fixed kinds with entries and CSV import and export; entries dragged into order where the page keeps the panel's order (products and undated entries; dated entries stand by their date, AR-3); edited by stepping in, in two columns or as a table with the entry in a drawer (0.7.10.25); no rename, kind change or entry duplication | 0.7.10 |
 | Collection and item limits | FR, WF, ZO | Plan caps | - | n/a: no plans or caps | - |
 | Field: plain text | WX, WF, FR, FI | Short text | no | Has | - |
 | Field: rich text or formatted text | WX, WF, FR, FI | HTML content | no | Has | - |

@@ -20,6 +20,8 @@ function ctx() {
     PANELS_PREF_OPTIONS: [['remember', 'Remember'], ['reset', 'None'], ['fixed', 'Same']],
     PANELS_START_OPTIONS: [['pages', 'Pages'], ['site', 'Site']],
     panelsStart: 'pages',
+    COLLECTIONS_LAYOUT_OPTIONS: [['drill', 'Step in'], ['columns', 'Two columns'], ['table', 'Table']],
+    collectionsLayout: 'drill',
     adminLangOptions: () => [['nb', 'Norsk bokmål']],
     adminTheme: 'grey', adminLayout: 'rail', settingsPlace: 'dialog', settingsPictures: 'pictures', adminLangChoice: 'auto',
     addBlockMenuPref: 'side', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',

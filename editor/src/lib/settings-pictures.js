@@ -74,6 +74,12 @@ const LINK_EDITORS = {
   popover: dim(1, 1, 62, 38, 0.06) + dim(4, 6, 22, 28, 0.1) + line(7, 10, 16, 3) + acc(7, 16, 16, 4) + line(7, 24, 12, 3) + dim(28, 13, 32, 16, 0.22) + line(31, 16, 26, 4, 4) + line(31, 23, 10, 2),
 };
 
+const COLLECTIONS_LAYOUTS = {
+  drill: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 22, H - 8, 0.2) + line(11, 10, 10, 2) + dim(11, 14, 18, 6, 0.16) + acc(26, 16, 2, 2) + dim(11, 22, 18, 6, 0.16) + line(26, 24, 2, 2) + dim(11, 30, 18, 6, 0.16) + line(26, 32, 2, 2) + stage(31),
+  columns: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 40, H - 8, 0.2) + dim(9, 7, 15, H - 8, 0.12) + line(11, 10, 11, 3) + acc(11, 15, 11, 3) + line(11, 20, 11, 3) + line(11, 25, 11, 3) + line(27, 10, 18, 2) + line(27, 15, 14, 2) + line(27, 20, 18, 4, 4) + stage(49),
+  table: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 54, H - 8, 0.2) + line(11, 10, 30, 2) + acc(11, 15, 30, 3) + line(11, 20, 30, 2) + line(11, 25, 30, 2) + line(11, 30, 30, 2) + dim(44, 7, 19, H - 8, 0.12) + line(46, 11, 14, 2) + line(46, 16, 12, 2) + line(46, 21, 14, 4, 4),
+};
+
 const LOOKS = {
   layout: LAYOUTS,
   place: PLACES,
@@ -82,6 +88,7 @@ const LOOKS = {
   layoutPicker: LAYOUT_PICKERS,
   menuWidth: MENU_WIDTHS,
   linkEditor: LINK_EDITORS,
+  collectionsLayout: COLLECTIONS_LAYOUTS,
 };
 
 /** A theme's swatch: its background with its surface, a line in its accent and a line in its text colour. */

@@ -50,6 +50,11 @@ function openEntry(msg) {
   shellState.activePanel = 'collections';
 }
 
+/** Where the Collections panel stands (panels/CollectionsPanel.svelte): the collection open in it and the entry chosen, kept while the panel is closed and opened again. */
+let panelCollection = $state(null);
+
+let panelEntry = $state(null);
+
 let newCollectionName = $state('');
 
 let newCollectionKind = $state('news');
@@ -215,26 +220,30 @@ function removeCollection(id) {
   collectionsIndexStore.save();
   collectionIds = collectionIds.filter((x) => x !== id);
   if (activeCollection === id) activeCollection = null;
+  if (panelCollection === id) { panelCollection = null; panelEntry = null; }
   historyState.updateDirty();
   syncCollectionsView();
 }
 
+/** A new entry, its id returned so the panel can open it. */
 function addCollectionEntry(id) {
+  const entryId = makeId('entry');
   mutateCollection(id, `collection:${id}:add-entry`, (data) => {
     if (data.kind === 'products') {
       // Products: no date (irrelevant), the price is set in the panel;
       // added LAST so the adder card in the preview gets the new card
       // next to it.
-      data.entries.push({ id: makeId('entry'), title: ta('seed.newProduct'), text: '' });
+      data.entries.push({ id: entryId, title: ta('seed.newProduct'), text: '' });
     } else {
       data.entries.unshift({
-        id: makeId('entry'),
+        id: entryId,
         title: ta('seed.newEntry'),
         date: new Date().toISOString().slice(0, 10),
         text: '',
       });
     }
   });
+  return entryId;
 }
 
 /** What the other parts read and write through, and the effects the shell runs once. */
@@ -261,6 +270,10 @@ export const collectionsState = {
   get focusEntry() { return focusEntry; },
   set focusEntry(v) { focusEntry = v; },
   openEntry,
+  get panelCollection() { return panelCollection; },
+  set panelCollection(v) { panelCollection = v; },
+  get panelEntry() { return panelEntry; },
+  set panelEntry(v) { panelEntry = v; },
   get newCollectionName() { return newCollectionName; },
   set newCollectionName(v) { newCollectionName = v; },
   get newCollectionKind() { return newCollectionKind; },

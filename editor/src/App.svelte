@@ -53,6 +53,7 @@
   import ShortcutSheet from './lib/ShortcutSheet.svelte';
   import SettingsDialog from './settings/SettingsDialog.svelte';
   import SettingsPanel from './panels/SettingsPanel.svelte';
+  import CollectionsTable from './panels/collections/CollectionsTable.svelte';
   import CommandPalette from './lib/CommandPalette.svelte';
   import { paletteState } from './state/palette.svelte.js';
 
@@ -118,7 +119,9 @@
       {#if (ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded}
         <button type="button" class="panel-handle" class:hidden={!ed.chromeVisible} title={ta('ui.openPanel')} aria-label={ta('ui.openPanel')} onclick={() => (ed.panelFolded = false)}>{@html ICONS.foldRight}</button>
       {:else if ed.activePanel || ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}
-        <aside class="panel" class:hidden={!ed.chromeVisible} bind:this={ed.panelEl}>
+        <!-- The two-column collections editor widens the panel while a collection is open in it -->
+        <aside class="panel" class:hidden={!ed.chromeVisible} bind:this={ed.panelEl}
+          class:panel-wide={ed.activePanel === 'collections' && ed.collectionsLayout === 'columns' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection)}>
           {#if ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}<PanelNav />{/if}
           {#if ed.activePanel}
           <div class="panel-head">
@@ -168,7 +171,14 @@
         </aside>
       {/if}
 
-      <PreviewStage />
+      <!-- The stage, with the collections table standing over it while a collection is open in that layout; the preview stays mounted underneath -->
+      <div class="stage-area">
+        <PreviewStage />
+        {#if ed.activePanel === 'collections' && ed.collectionsLayout === 'table' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection) && ed.chromeVisible
+          && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)}
+          <CollectionsTable />
+        {/if}
+      </div>
     </div>
   {:else}
     <p class="loading">{ta('ui.loading')}</p>
