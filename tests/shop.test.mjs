@@ -8,6 +8,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
+  quantityLimits, lineLimits, limitNote,
   isEmail, orderLines, orderSummary, buildOrderBody, buildOrderMailto, buildOrderPayload,
   methodText, shownMethods, paymentsOf, orderRecord, saveOrder, readOrder, ORDER_KEY,
 } = await engineImport('shop.js');
@@ -181,4 +182,25 @@ test('a basket block without a checkout page of its own links to the menu basket
   assert.equal(cartCheckoutHref({ page: 'gone' }, site), '/kasse', 'a page that is gone falls back');
   assert.equal(cartCheckoutHref({}, { pages: site.pages, nav: { cart: { show: true, href: '/checkout' } } }), '/checkout', 'the menu basket\'s path');
   assert.equal(cartCheckoutHref({}, { pages: site.pages, nav: {} }), '', 'neither: no checkout link');
+});
+
+test('quantity limits: a product\'s least and most, held by the line it adds and by its steps, with the words that tell them', () => {
+  const BOLLER = { key: 'boller', id: 'boller', title: 'Kanelboller', price: 120 };
+  assert.deepEqual(quantityLimits({ quantity: { min: 2, max: 10 } }), { min: 2, max: 10 });
+  assert.deepEqual(quantityLimits({ quantity: { max: '' } }), { min: 1, max: 99 }, 'an empty field leaves the limit open');
+  assert.equal(quantityLimits({}), null);
+  let items = cartAdd([], { ...BOLLER, qty: 1, min: 2, max: 10 });
+  assert.equal(items[0].qty, 2, 'a line under the least is raised to it');
+  assert.deepEqual(lineLimits(items[0]), { min: 2, max: 10 });
+  items = cartAdd(items, { ...BOLLER, qty: 9, min: 2, max: 10 });
+  assert.equal(items[0].qty, 10, 'adding to a line stops at the most');
+  assert.equal(cartSetQty(items, 'boller', 11)[0].qty, 10);
+  assert.equal(cartSetQty(items, 'boller', 1)[0].qty, 2, 'a step under the least keeps the least');
+  assert.equal(cartSetQty(items, 'boller', 0).length, 0, 'a removal still removes');
+  assert.deepEqual(cartAdd([], CAKE)[0].min, undefined, 'a product without limits stores none');
+  assert.deepEqual(limitNote({ min: 1, max: 99 }), null);
+  assert.deepEqual(limitNote({ min: 1, max: 10 }), { key: 'shop.qtyMost', vars: { max: 10 } });
+  assert.deepEqual(limitNote({ min: 6, max: 99 }), { key: 'shop.qtyLeast', vars: { min: 6 } });
+  assert.deepEqual(limitNote({ min: 2, max: 10 }), { key: 'shop.qtyRange', vars: { min: 2, max: 10 } });
+  assert.deepEqual(limitNote({ min: 4, max: 4 }), { key: 'shop.qtyExactly', vars: { min: 4, max: 4 } });
 });

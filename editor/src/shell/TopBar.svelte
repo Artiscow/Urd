@@ -1,35 +1,107 @@
 <script>
   /* The top bar: the page name, the view, device and zoom clusters with their fold steps, the draft status with Publish and Discard, and the tools on the right. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle. */
   import { getContext } from 'svelte';
-  import { ta } from '$engine/i18n.js';
+  import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import { fly } from 'svelte/transition';
   import SettingsGear from './SettingsGear.svelte';
   import { PHONE_FILL_WIDTH, PHONE_WIDTH_MIN, PHONE_WIDTH_MAX, PHONE_HEIGHT_MIN, PHONE_HEIGHT_MAX } from '../lib/preview-width.js';
+  import { SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MIN, SCREEN_HEIGHT_MAX } from '../lib/own-screen.js';
+  import { SCREEN_RATIOS, PHONE_RATIOS, RATIOS, ratioHeight, aspectOf, aspectText } from '../lib/aspect.js';
   const ed = getContext('urd-editor');
   /** The Site menu stands in the top bar in the layout whose panel holds the page's tabs alone. */
   const siteMenu = $derived(ed.adminLayout === 'page-tabs');
   /** The gear stands in the top bar when neither a rail nor the strip holds it. */
   const gearHere = $derived(ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs');
+  /** Each device's split button: the fold-out it opens, the icon it shows, and the name of its sizes. */
+  const SPLITS = { desktop: { menu: 'screen', sizesKey: 'lbl.screenSizes' }, mobile: { menu: 'phone', sizesKey: 'lbl.phoneSizes' } };
+  const deviceIcon = (id) => (id === 'mobile' ? ed.phoneIcon : ed.screenIcon);
+
+  /** A size picked in a fold-out sets its device and closes the fold-out. */
+  function pickScreen(patch) {
+    ed.setScreenPref(patch);
+    ed.deviceId = 'desktop';
+    ed.toolMenu = null;
+  }
+
+  function pickPhone(patch) {
+    ed.setPhonePref(patch);
+    ed.deviceId = 'mobile';
+    ed.toolMenu = null;
+  }
+
+  /** The width a device stands at now, which a common ratio keeps. */
+  const widthOf = (id) => ed.devices.find((d) => d.id === id)?.width ?? 0;
+
+  /** A size's ratio in the admin's number format («19,5:9» in Norwegian); empty for a size without a height. */
+  function ratioOf(width, height) {
+    const num = new Intl.NumberFormat(adminLang(), { maximumFractionDigits: 2 });
+    return aspectText(aspectOf(width, height), (n) => num.format(n));
+  }
+
+  /** A common ratio's name, written as a size's ratio is. */
+  const ratioName = (id) => ratioOf(RATIOS[id][0], RATIOS[id][1]);
 </script>
 
-{#snippet phoneSizes()}
-  <!-- The phone's sizes: the presets with their heights, the width alone, and an own size; the pick sets the Phone device -->
-  {#each ed.PHONE_SIZES as p (p.id)}
-    <button type="button" class="ghost phone-size" class:active={ed.deviceId === 'mobile' && !ed.freeWidth && ed.phonePref.size === p.id}
-      onclick={() => { ed.setPhonePref({ size: p.id }); ed.deviceId = 'mobile'; ed.toolMenu = null; }}><span>{ta(`lbl.phoneSize.${p.id}`)}</span><span class="phone-size-px">{p.width} × {p.height}</span></button>
+{#snippet screenSizes()}
+  <!-- The screen's sizes, each with its ratio: your own window, the common sizes with their heights, the common ratios at the width the Screen stands at, and an own size whose height may stay empty; the pick sets the Screen device -->
+  <button type="button" class="ghost device-size" class:active={ed.deviceId === 'desktop' && !ed.freeWidth && ed.screenPref.size === 'window'}
+    onclick={() => pickScreen({ size: 'window' })}><span>{ta('lbl.screen.own')}</span><span class="device-size-px">{ed.ownWidth}</span><span class="device-ratio"></span></button>
+  {#each ed.SCREEN_SIZES as s (s.id)}
+    <button type="button" class="ghost device-size" class:active={ed.deviceId === 'desktop' && !ed.freeWidth && ed.screenPref.size === s.id}
+      onclick={() => pickScreen({ size: s.id })}><span>{ta(`lbl.screenSize.${s.id}`)}</span><span class="device-size-px">{s.width} × {s.height}</span><span class="device-ratio">{ratioOf(s.width, s.height)}</span></button>
   {/each}
-  <button type="button" class="ghost phone-size" class:active={ed.deviceId === 'mobile' && !ed.freeWidth && ed.phonePref.size === 'fill'}
-    onclick={() => { ed.setPhonePref({ size: 'fill' }); ed.deviceId = 'mobile'; ed.toolMenu = null; }}><span>{ta('lbl.phoneSize.fill')}</span><span class="phone-size-px">{PHONE_FILL_WIDTH}</span></button>
-  <div class="phone-own" class:active={ed.deviceId === 'mobile' && !ed.freeWidth && ed.phonePref.size === 'own'}>
+  {@render ratios('desktop', SCREEN_RATIOS, ed.screenPref, false, (r, w) => pickScreen({ size: 'ratio', ratio: r, ratioWidth: w }))}
+  <div class="device-own" class:active={ed.deviceId === 'desktop' && !ed.freeWidth && ed.screenPref.size === 'own'}>
     <span>{ta('lbl.ownSize')}</span>
-    <span class="phone-own-fields">
+    <span class="device-own-fields">
+      <input type="number" class="tb-num" min={SCREEN_WIDTH_MIN} max={SCREEN_WIDTH_MAX} step="10" value={ed.screenPref.width} aria-label={ta('lbl.screen.w')}
+        title={ta('tip.screen.width', { min: SCREEN_WIDTH_MIN, max: SCREEN_WIDTH_MAX })}
+        onchange={(e) => { ed.setScreenPref({ size: 'own', width: Number(e.target.value) }); ed.deviceId = 'desktop'; e.target.value = ed.screenPref.width; }} />
+      <span aria-hidden="true">×</span>
+      <input type="number" class="tb-num" min="0" max={SCREEN_HEIGHT_MAX} step="10" placeholder="0" value={ed.screenPref.height || ''} aria-label={ta('lbl.screen.h')}
+        title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })}
+        onchange={(e) => { ed.setScreenPref({ size: 'own', height: Number(e.target.value) }); ed.deviceId = 'desktop'; e.target.value = ed.screenPref.height || ''; }} />
+    </span>
+    <span class="device-ratio">{ratioOf(ed.screenPref.width, ed.screenPref.height)}</span>
+  </div>
+{/snippet}
+
+{#snippet ratios(id, list, pref, upright, pick)}
+  <!-- The common ratios at the width the device stands at now, its height taken from the ratio -->
+  {@const w = widthOf(id)}
+  <div class="device-ratios" role="group" aria-label={ta('lbl.aspectRatios')}>
+    <span title={ta('tip.aspectRatios')}>{ta('lbl.aspectRatios')}</span>
+    <span class="device-ratio-chips">
+      {#each list as r (r)}
+        {@const on = ed.deviceId === id && !ed.freeWidth && pref.size === 'ratio' && pref.ratio === r}
+        <button type="button" class="ghost device-ratio-chip" class:active={on} aria-pressed={on}
+          title={ta('tip.aspectRatio', { r: ratioName(r), w, h: ratioHeight(w, r, upright) })}
+          onclick={() => pick(r, w)}>{ratioName(r)}</button>
+      {/each}
+    </span>
+  </div>
+{/snippet}
+
+{#snippet phoneSizes()}
+  <!-- The phone's sizes, each with its ratio: the presets with their heights, the width alone, the common ratios at the width the Phone stands at, and an own size; the pick sets the Phone device -->
+  {#each ed.PHONE_SIZES as p (p.id)}
+    <button type="button" class="ghost device-size" class:active={ed.deviceId === 'mobile' && !ed.freeWidth && ed.phonePref.size === p.id}
+      onclick={() => pickPhone({ size: p.id })}><span>{ta(`lbl.phoneSize.${p.id}`)}</span><span class="device-size-px">{p.width} × {p.height}</span><span class="device-ratio">{ratioOf(p.width, p.height)}</span></button>
+  {/each}
+  <button type="button" class="ghost device-size" class:active={ed.deviceId === 'mobile' && !ed.freeWidth && ed.phonePref.size === 'fill'}
+    onclick={() => pickPhone({ size: 'fill' })}><span>{ta('lbl.phoneSize.fill')}</span><span class="device-size-px">{PHONE_FILL_WIDTH}</span><span class="device-ratio"></span></button>
+  {@render ratios('mobile', PHONE_RATIOS, ed.phonePref, true, (r, w) => pickPhone({ size: 'ratio', ratio: r, ratioWidth: w }))}
+  <div class="device-own" class:active={ed.deviceId === 'mobile' && !ed.freeWidth && ed.phonePref.size === 'own'}>
+    <span>{ta('lbl.ownSize')}</span>
+    <span class="device-own-fields">
       <input type="number" class="tb-num" min={PHONE_WIDTH_MIN} max={PHONE_WIDTH_MAX} step="1" value={ed.phonePref.width} aria-label={ta('lbl.screen.w')}
         onchange={(e) => { ed.setPhonePref({ size: 'own', width: Number(e.target.value) }); ed.deviceId = 'mobile'; e.target.value = ed.phonePref.width; }} />
       <span aria-hidden="true">×</span>
       <input type="number" class="tb-num" min={PHONE_HEIGHT_MIN} max={PHONE_HEIGHT_MAX} step="1" value={ed.phonePref.height} aria-label={ta('lbl.screen.h')}
         onchange={(e) => { ed.setPhonePref({ size: 'own', height: Number(e.target.value) }); ed.deviceId = 'mobile'; e.target.value = ed.phonePref.height; }} />
     </span>
+    <span class="device-ratio">{ratioOf(ed.phonePref.width, ed.phonePref.height)}</span>
   </div>
 {/snippet}
 
@@ -75,16 +147,18 @@
             <button class="ghost" class:active={ed.toolMenu === 'device'}
               title={ta('lbl.group.device')}
               onclick={() => (ed.toolMenu = ed.toolMenu === 'device' ? null : 'device')}
-              >{@html ICONS[ed.deviceId === 'mobile' ? ed.phoneIcon : `device_${ed.deviceId}`]}{@html ICONS.caret}</button>
+              >{@html ICONS[deviceIcon(ed.deviceId)]}{@html ICONS.caret}</button>
             {#if ed.toolMenu === 'device'}
               <div class="tool-pop">
                 {#each ed.devices as d (d.id)}
                   <button class="ghost" class:active={ed.deviceId === d.id && !ed.freeWidth}
                     onclick={() => { ed.deviceId = d.id; ed.toolMenu = null; }}
                     title={ed.deviceTip(d)}
-                    >{@html ICONS[d.id === 'mobile' ? ed.phoneIcon : `device_${d.id}`]} {ta(`lbl.device.${d.id}`)}</button>
+                    >{@html ICONS[deviceIcon(d.id)]} {ta(`lbl.device.${d.id}`)}</button>
                 {/each}
-                <!-- The phone's sizes stand under the devices while the cluster is a menu -->
+                <!-- The devices' sizes stand under them while the cluster is a menu -->
+                <span class="mini-label">{ta('lbl.screenSizes')}</span>
+                {@render screenSizes()}
                 <span class="mini-label">{ta('lbl.phoneSizes')}</span>
                 {@render phoneSizes()}
               </div>
@@ -96,27 +170,22 @@
           <span class="tool-cap">{ta('lbl.group.device')}</span>
           <span class="viewswitch toolgrp">
             {#each ed.devices as d (d.id)}
-              {#if d.id === 'mobile'}
-                <!-- The Phone is a split button: the icon chooses the device, the caret opens its sizes and chooses it -->
-                <span class="toolmenu phone-split" class:active={ed.deviceId === 'mobile' && !ed.freeWidth}>
-                  <button class="ghost phone-btn" class:active={ed.deviceId === 'mobile' && !ed.freeWidth}
-                    onclick={() => (ed.deviceId = 'mobile')} title={ed.deviceTip(d)}>{@html ICONS[ed.phoneIcon]}</button>
-                  <button class="ghost phone-caret" class:active={ed.deviceId === 'mobile' && !ed.freeWidth} class:open={ed.toolMenu === 'phone'}
-                    onclick={() => { ed.toolMenu = ed.toolMenu === 'phone' ? null : 'phone'; }}
-                    title={ta('lbl.phoneSizes')} aria-label={ta('lbl.phoneSizes')} aria-expanded={ed.toolMenu === 'phone'}>{@html ICONS.caret}</button>
-                  {#if ed.toolMenu === 'phone'}
-                    <div class="tool-pop phone-pop">
-                      <span class="mini-label">{ta('lbl.phoneSizes')}</span>
-                      {@render phoneSizes()}
-                    </div>
-                  {/if}
-                </span>
-              {:else}
-                <button class="ghost" class:active={ed.deviceId === d.id && !ed.freeWidth}
-                  onclick={() => (ed.deviceId = d.id)}
-                  title={ed.deviceTip(d)}
-                  >{@html ICONS[`device_${d.id}`]}</button>
-              {/if}
+              {@const split = SPLITS[d.id]}
+              {@const on = ed.deviceId === d.id && !ed.freeWidth}
+              <!-- Each device is a split button: the icon chooses the device at its size, the caret opens its sizes -->
+              <span class="toolmenu device-split" class:active={on}>
+                <button class="ghost device-btn" class:active={on}
+                  onclick={() => (ed.deviceId = d.id)} title={ed.deviceTip(d)} aria-label={ed.deviceTip(d)}>{@html ICONS[deviceIcon(d.id)]}</button>
+                <button class="ghost device-caret" class:active={on} class:open={ed.toolMenu === split.menu}
+                  onclick={() => { ed.toolMenu = ed.toolMenu === split.menu ? null : split.menu; }}
+                  title={ta(split.sizesKey)} aria-label={ta(split.sizesKey)} aria-expanded={ed.toolMenu === split.menu}>{@html ICONS.caret}</button>
+                {#if ed.toolMenu === split.menu}
+                  <div class="tool-pop device-pop">
+                    <span class="mini-label">{ta(split.sizesKey)}</span>
+                    {#if d.id === 'mobile'}{@render phoneSizes()}{:else}{@render screenSizes()}{/if}
+                  </div>
+                {/if}
+              </span>
             {/each}
           </span>
           {#if ed.freeWidth}

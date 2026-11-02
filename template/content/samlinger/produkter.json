@@ -18,6 +18,7 @@
       "title": "Kanelboller (6 stk.)",
       "text": "Nybakte kanelboller med kardemomme.",
       "price": 120,
+      "quantity": { "max": 10 },
       "memberPrice": 100
     },
     {

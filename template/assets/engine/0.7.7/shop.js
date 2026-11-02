@@ -1,9 +1,10 @@
 /**
  * The shop (the ADR-0007 pattern applied to commerce): pure basket logic and
  * localStorage persistence. The basket is a flat list of lines {key, id,
- * title, price, qty, variant?, image?}; key identifies product plus variant
- * choice, so the same product in two sizes is two lines. The pure helpers
- * never mutate their input and are tested in tests/butikk.test.mjs; the
+ * title, price, qty, variant?, image?, min?, max?}; key identifies product plus variant
+ * choice, so the same product in two sizes is two lines, and min and max are the
+ * product's quantity limits, held per line. The pure helpers
+ * never mutate their input and are tested in tests/shop.test.mjs; the
  * blocks (blocks/product.js and blocks/cart.js) do the rendering.
  *
  * The core is gateway free: the basket lives with the visitor (localStorage),
@@ -29,15 +30,54 @@ function clampQty(value) {
   return Number.isFinite(n) ? Math.min(99, Math.max(0, n)) : 0;
 }
 
-/** One valid basket line from raw data (localStorage can hold anything). */
+/** A whole number from 1 to 99, or the fallback for anything else (an empty field among them). */
+function limit(value, fallback) {
+  if (value == null || value === '') return fallback;
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 && n <= 99 ? n : fallback;
+}
+
+/**
+ * A product's quantity limits where the buyer types the quantity (its `quantity`): the least and the most, each from 1 to 99 and either left open,
+ * the most never under the least; null for a product whose card adds one at a time.
+ * @param {{quantity?: {min?: number, max?: number}}} entry
+ * @returns {{min: number, max: number}|null}
+ */
+export function quantityLimits(entry) {
+  const q = entry?.quantity;
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return null;
+  const min = limit(q.min, 1);
+  return { min, max: Math.max(min, limit(q.max, 99)) };
+}
+
+/** A basket line's limits: the ones its product set, else 1 to 99. */
+export function lineLimits(line) {
+  const min = limit(line?.min, 1);
+  return { min, max: Math.max(min, limit(line?.max, 99)) };
+}
+
+/** What the limits say beside a quantity, as a dictionary key and its values; null where nothing limits it but the basket's own 1 to 99. */
+export function limitNote({ min, max }) {
+  if (min > 1 && max < 99) return { key: min === max ? 'shop.qtyExactly' : 'shop.qtyRange', vars: { min, max } };
+  if (min > 1) return { key: 'shop.qtyLeast', vars: { min } };
+  if (max < 99) return { key: 'shop.qtyMost', vars: { max } };
+  return null;
+}
+
+const within = (n, { min, max }) => Math.min(max, Math.max(min, n));
+
+/** One valid basket line from raw data (localStorage can hold anything); its quantity is held within its limits. */
 function cleanItem(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const qty = clampQty(raw.qty);
   const price = Number(raw.price);
   if (!qty || !raw.key || !raw.title || !Number.isFinite(price) || price < 0) return null;
-  const item = { key: String(raw.key), id: String(raw.id ?? ''), title: String(raw.title), price, qty };
+  const limits = lineLimits(raw);
+  const item = { key: String(raw.key), id: String(raw.id ?? ''), title: String(raw.title), price, qty: within(qty, limits) };
   if (raw.variant) item.variant = String(raw.variant);
   if (raw.image) item.image = String(raw.image);
+  if (limits.min > 1) item.min = limits.min;
+  if (limits.max < 99) item.max = limits.max;
   return item;
 }
 
@@ -52,16 +92,19 @@ export function cartAdd(items, item) {
   if (!clean) return [...items];
   const existing = items.find((line) => line.key === clean.key);
   if (!existing) return [...items, clean];
-  return items.map((line) => (line.key === clean.key
-    ? { ...line, qty: clampQty(line.qty + clean.qty) }
-    : line));
+  // The limits the product has now hold for the whole line.
+  return items.map((line) => {
+    if (line.key !== clean.key) return line;
+    const { min: _min, max: _max, ...rest } = line;
+    return cleanItem({ ...rest, min: clean.min, max: clean.max, qty: clampQty(line.qty + clean.qty) }) ?? line;
+  });
 }
 
-/** Sets the quantity on a line; 0 (or less) removes the line. */
+/** Sets the quantity on a line, held within the line's limits; 0 (or less) removes the line. */
 export function cartSetQty(items, key, qty) {
   const n = clampQty(qty);
   if (!n) return items.filter((line) => line.key !== key);
-  return items.map((line) => (line.key === key ? { ...line, qty: n } : line));
+  return items.map((line) => (line.key === key ? { ...line, qty: within(n, lineLimits(line)) } : line));
 }
 
 /** Removes a line from the basket. */

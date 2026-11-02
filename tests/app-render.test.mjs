@@ -177,10 +177,18 @@ test('the Collections panel steps in, widens to two columns, or opens a table ov
   let body = render(App).body;
   assert.match(body, /class="nav-item cl-row/, 'stepping in: the entries');
   assert.doesNotMatch(body, /coll-entry/, 'no entry yet');
+  assert.match(body, /class="cl-tick tick-box/, 'each row has its tick box');
+  assert.doesNotMatch(body, /class="sb[ "]/, 'no bar while nothing is ticked');
+  collectionsState.panelTicks = ['a'];
+  assert.match(render(App).body, /class="sb[ "]/, 'a tick brings the bar under the search');
+  collectionsState.panelTicks = [];
   collectionsState.panelEntry = 'b';
   body = render(App).body;
   assert.match(body, /coll-entry/, 'stepping in: one entry with its fields');
   assert.match(body, /coll-place/, 'its place among the entries');
+  assert.match(body, /class="sp-btn/, 'a product\'s sizes have their presets');
+  assert.match(body, /data-field="quantity"/, 'and the quantity switch');
+  assert.match(body, /tip.collections.duplicateEntry/, 'the entry can be duplicated');
 
   shellState.setCollectionsLayout('columns');
   body = render(App).body;
@@ -192,6 +200,7 @@ test('the Collections panel steps in, widens to two columns, or opens a table ov
   body = render(App).body;
   assert.doesNotMatch(body, /panel-wide/);
   assert.match(body, /class="ct /, 'the table stands over the page');
+  assert.match(body, /<th class="ct-tick/, 'with a tick column');
   assert.match(body, /<th[^>]*>lbl.price<\/th>/, 'with the product columns');
   assert.match(body, /class="frame-wrap/, 'and the preview stays underneath');
 

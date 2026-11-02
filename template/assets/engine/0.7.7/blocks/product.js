@@ -1,8 +1,8 @@
 /**
  * Core block: product cards (the shop, the data-block pattern in ADR-0007).
  * Renders the entries of a product collection (kind "products") as cards with
- * image, badge, price (and an optional member price), size and color choices
- * and an add-to-cart button. A color choice with its own image swaps the card
+ * image, badge, price (and an optional member price), size and color choices,
+ * the quantity the buyer types where the product has one, and an add-to-cart button. A color choice with its own image swaps the card
  * image. The catalog is git-owned data; the cart lives with the visitor (shop.js).
  *
  * For visitors, clicking the image or title opens a quick view: the product
@@ -23,7 +23,7 @@ import { applyEntryImageStyle } from './collection.js';
 import { renderCardAnimations } from '../render.js';
 import { stripActiveContent, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
-import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice } from '../shop.js';
+import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, quantityLimits, limitNote } from '../shop.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
@@ -168,11 +168,59 @@ function priceRow(entry, currency) {
 }
 
 /**
+ * The quantity the buyer types, for a product that has limits (its `quantity`, shop.js quantityLimits): «Quantity» with minus and plus around a number
+ * field held between the least and the most, the limits told beside it, and the line's sum under it once more than one is chosen.
+ * The steps use the basket's own buttons (blocks/cart.js), so the two read alike.
+ * @returns {{row: HTMLElement, get: () => number}}
+ */
+function quantityRow(limits, price, currency) {
+  const row = el2('div', 'urd-product-qty');
+  const id = `urd-qty-${Math.random().toString(36).slice(2, 10)}`;
+  const label = el2('label', 'urd-product-qty-label', t('shop.quantity'));
+  label.htmlFor = id;
+  const stepper = el2('span', 'urd-product-stepper');
+  const minus = el2('button', 'urd-cart-step', '−');
+  minus.type = 'button';
+  minus.setAttribute('aria-label', t('shop.decrease'));
+  const input = document.createElement('input');
+  Object.assign(input, { id, type: 'number', inputMode: 'numeric', min: String(limits.min), max: String(limits.max), step: '1', className: 'urd-product-qty-input' });
+  const plus = el2('button', 'urd-cart-step', '+');
+  plus.type = 'button';
+  plus.setAttribute('aria-label', t('shop.increase'));
+  stepper.append(minus, input, plus);
+  row.append(label, stepper);
+  const words = limitNote(limits);
+  if (words) row.appendChild(el2('span', 'urd-product-qty-note', t(words.key, words.vars)));
+  const sum = el2('span', 'urd-product-qty-sum');
+  sum.setAttribute('aria-live', 'polite');
+  row.appendChild(sum);
+  let qty = limits.min;
+  const show = () => {
+    input.value = String(qty);
+    minus.disabled = qty <= limits.min;
+    plus.disabled = qty >= limits.max;
+    const unit = Number(price);
+    sum.textContent = qty > 1 && Number.isFinite(unit) ? `${qty} × ${formatPrice(unit, currency)} = ${formatPrice(unit * qty, currency)}` : '';
+  };
+  const set = (value) => {
+    const n = Math.trunc(Number(value));
+    qty = Number.isFinite(n) ? Math.min(limits.max, Math.max(limits.min, n)) : limits.min;
+    show();
+  };
+  minus.addEventListener('click', () => set(qty - 1));
+  plus.addEventListener('click', () => set(qty + 1));
+  input.addEventListener('change', () => set(input.value));
+  show();
+  return { row, get: () => qty };
+}
+
+/**
  * The buy button, with an «added» receipt on the press. getChoice gives the chosen size's words and the chosen colour ({name, image}) or null;
  * ready says whether the choices the product asks for are made, and asks for the open ones when not.
+ * A product with quantity limits puts the quantity typed (getQty) in the basket, with the limits on its line; any other puts one.
  * A button held by holdBuy does nothing.
  */
-function buyButton(entry, getChoice, ready) {
+function buyButton(entry, getChoice, ready, getQty = () => 1) {
   const buy = el2('button', 'urd-product-buy', t('shop.addToCart'));
   buy.type = 'button';
   buy.addEventListener('click', () => {
@@ -180,7 +228,11 @@ function buyButton(entry, getChoice, ready) {
     if (!ready()) return;
     const { size, color: chosen } = getChoice();
     const variant = variantLabel(size, chosen?.name ?? null);
+    const limits = quantityLimits(entry);
     writeCart(cartAdd(readCart(), {
+      qty: getQty(),
+      min: limits?.min,
+      max: limits?.max,
       key: itemKey(entry.id, variant),
       id: entry.id,
       // The title is rich text; the cart line needs plain text.
@@ -270,12 +322,15 @@ function openQuickView(card, entry, props) {
       }, (i) => show(i ?? color));
       info.appendChild(rows.colors);
     }
+    const limits = quantityLimits(entry);
+    const amount = limits ? quantityRow(limits, entry.price, props.currency) : null;
     const buy = buyButton(entry,
       () => ({ size: size == null ? null : sizes[size], color: color == null ? null : colors[color] }),
-      () => choicesMade(entry, rows, { size, color }));
+      () => choicesMade(entry, rows, { size, color }),
+      () => amount?.get() ?? 1);
     sync = () => holdBuy(buy, entry, rows, { size, color });
     sync();
-    info.appendChild(buy);
+    info.appendChild(buyRow(amount, buy));
     body.appendChild(info);
     dialog.appendChild(body);
 
@@ -341,12 +396,15 @@ function renderCard(entry, props, editable, preview) {
     card.appendChild(rows.colors);
   }
 
+  const limits = quantityLimits(entry);
+  const amount = limits ? quantityRow(limits, entry.price, props.currency) : null;
   const buy = buyButton(entry,
     () => ({ size: chosenSize == null ? null : sizes[chosenSize], color: chosenColor == null ? null : colors[chosenColor] }),
-    () => choicesMade(entry, rows, { size: chosenSize, color: chosenColor }));
+    () => choicesMade(entry, rows, { size: chosenSize, color: chosenColor }),
+    () => amount?.get() ?? 1);
   sync = () => holdBuy(buy, entry, rows, { size: chosenSize, color: chosenColor });
   sync();
-  card.appendChild(buy);
+  card.appendChild(buyRow(amount, buy));
 
   // Quick view for visitors: the image and the title open the detail view.
   // In the editor clicks belong to editing (click-and-type), so nothing is wired
@@ -381,6 +439,14 @@ function renderCard(entry, props, editable, preview) {
   return card;
 }
 
+/** The buy button alone, or with the quantity above it in one row of the card, so the card list's shared rows (base.css) stay as many with or without it. */
+function buyRow(amount, buy) {
+  if (!amount) return buy;
+  const row = el2('div', 'urd-product-buyrow');
+  row.append(amount.row, buy);
+  return row;
+}
+
 /** The "+ Product" adder (editor only): asks the editor to add a new product to the collection. */
 function adderCard(collection) {
   const btn = el2('button', 'urd-product-adder', ta('canvas.addProduct'));
@@ -409,7 +475,8 @@ function wireEntryOpening(card, el, collection, entryId) {
       : target.closest('.urd-product-badge') ? 'badge'
         : target.closest('.urd-product-sizes') ? 'sizes'
           : target.closest('.urd-product-colors') ? 'colors'
-            : 'title';
+            : target.closest('.urd-product-qty') ? 'quantity'
+              : 'title';
     post({ type: 'urd-open-entry', collection, entryId, field });
   });
 }

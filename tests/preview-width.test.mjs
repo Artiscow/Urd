@@ -37,3 +37,13 @@ test('a dragged width snaps to the nearest stop inside the tolerance and stays i
   assert.equal(snapWidth(644, [640, 650], 8), 640);
   assert.equal(snapWidth(647, [640, 650], 8), 650);
 });
+
+test('phoneSetting: a common ratio keeps its own width and takes its height upright from the ratio', () => {
+  const pref = phoneSetting({ size: 'ratio', ratio: '19.5:9', ratioWidth: 390, width: 400, height: 700 });
+  assert.deepEqual(pref, { size: 'ratio', width: 400, height: 700, ratio: '19.5:9', ratioWidth: 390 }, 'the own size stays as it was');
+  assert.deepEqual(phoneViewport(pref), { width: 390, height: 845 });
+  assert.deepEqual(phoneViewport(phoneSetting({ size: 'ratio', ratio: '4:3', ratioWidth: 810 })), { width: 810, height: 1080 }, 'a tablet upright');
+  assert.equal(phoneSetting({ size: 'ratio', ratio: '20:9' }).ratioWidth, 393, 'no width: the common phone');
+  assert.equal(phoneSetting({ size: 'ratio', ratio: '20:9', ratioWidth: 50 }).ratioWidth, 280);
+  assert.equal(phoneSetting({ size: 'ratio', ratio: '21:9' }).size, 'phone', 'a screen ratio is not the phone\'s');
+});

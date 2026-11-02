@@ -44,13 +44,15 @@ export function collectionActions(ed) {
     });
   }
 
-  /** The entry's picture: the same webp flow as a block's image, materialised on publish. */
-  async function setEntryImage(id, entryId, event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    const img = await compressOrTrim(file);
-    setEntryField(id, entryId, 'image', img.dataUrl);
+  /** One part of the picture's style from the image editor (fit, shape, zoom, rounding, focus, filters), merged into the entry's own; an empty value removes the part. */
+  function setEntryImageStyle(id, entryId, field, value) {
+    onEntry(id, entryId, `edit:collection:${id}:${entryId}:imageStyle:${field}`, (entry) => {
+      const style = { ...(entry.imageStyle ?? {}) };
+      if (value == null || value === '') delete style[field];
+      else style[field] = value;
+      if (Object.keys(style).length) entry.imageStyle = style;
+      else delete entry.imageStyle;
+    });
   }
 
   /** Sizes typed into the add field join the entry's sizes, one or several divided by commas, each once. */
@@ -104,11 +106,12 @@ export function collectionActions(ed) {
     });
   }
 
-  /** CSV export: the entries are downloaded as <id>.csv. */
-  function exportCollectionCsv(id) {
+  /** CSV export: the entries, or only the ones named, are downloaded as <id>.csv. */
+  function exportCollectionCsv(id, onlyIds = null) {
     const data = ed.collectionStores[id]?.data;
     if (!data) return;
-    const url = URL.createObjectURL(new Blob([entriesToCsv(data.entries, ed.siteDraft?.pages ?? [])], { type: 'text/csv' }));
+    const entries = onlyIds ? data.entries.filter((e) => onlyIds.includes(e.id)) : data.entries;
+    const url = URL.createObjectURL(new Blob([entriesToCsv(entries, ed.siteDraft?.pages ?? [])], { type: 'text/csv' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = `${id}.csv`;
@@ -136,7 +139,7 @@ export function collectionActions(ed) {
   }
 
   return {
-    setEntryField, setEntryLink, moveEntry, removeEntry, setEntryImage,
+    setEntryField, setEntryLink, moveEntry, removeEntry, setEntryImageStyle,
     addEntrySizes, removeEntrySize, addEntryColor, setEntryColor, setEntryColorImage, removeEntryColor,
     exportCollectionCsv, importCollectionCsv,
   };

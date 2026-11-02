@@ -1,5 +1,5 @@
 <script>
-  /* One Urd setting's control (lib/settings-model.js): a picture per option when the setting has a look and the pictures are on (lib/settings-pictures.js), else a themed dropdown; segment buttons for a two-way choice; a text field; and the Screen device's mode with its size under it.
+  /* One Urd setting's control (lib/settings-model.js): a picture per option when the setting has a look and the pictures are on (lib/settings-pictures.js), else a themed dropdown; segment buttons for a two-way choice; and a text field.
      `compact` is the panel's narrow column: the tiles wrap into fewer columns and carry their names as tooltips only. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -7,7 +7,6 @@
   import { menu, setMenuWidthPref } from '../menu/state.svelte.js';
   import { pictured } from '../lib/settings-model.js';
   import { settingPicture } from '../lib/settings-pictures.js';
-  import { SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MAX, SCREEN_HEIGHT_MIN } from '../lib/own-screen.js';
 
   const ed = getContext('urd-editor');
   let { setting, pictures = 'pictures', compact = false, nameId } = $props();
@@ -29,26 +28,13 @@
   </div>
 {:else if setting.kind === 'choice'}
   <Dropdown {value} {options} labelledby={nameId} onchange={(v) => setting.set(c, v)} />
-{:else if setting.kind === 'seg' || setting.kind === 'screen'}
+{:else if setting.kind === 'seg'}
   <div class="st-seg-wrap">
     <div class="seg st-seg" role="group" aria-labelledby={nameId}>
       {#each options as [id, label] (id)}
         <button type="button" class:on={value === id} aria-pressed={value === id} onclick={() => setting.set(c, id)}>{label}</button>
       {/each}
     </div>
-    {#if setting.kind === 'screen' && ed.screenPref.mode === 'custom'}
-      <!-- The editing size (ADR-0018, Consequences): a width, and a height that pins the fold; 0 leaves the height to the content -->
-      <div class="ctl-row st-size">
-        <span class="mini-label">{ta('lbl.screen.w')}</span>
-        <input type="number" class="tb-num" min={SCREEN_WIDTH_MIN} max={SCREEN_WIDTH_MAX} step="10"
-          title={ta('tip.screen.width', { min: SCREEN_WIDTH_MIN, max: SCREEN_WIDTH_MAX })} aria-label={ta('lbl.screen.w')}
-          value={ed.screenPref.width} onchange={(e) => { ed.setScreenPref({ width: Number(e.target.value) }); e.target.value = ed.screenPref.width; }} />
-        <span class="mini-label">{ta('lbl.screen.h')}</span>
-        <input type="number" class="tb-num" min="0" max={SCREEN_HEIGHT_MAX} step="10" placeholder="0"
-          title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })} aria-label={ta('lbl.screen.h')}
-          value={ed.screenPref.height || ''} onchange={(e) => { ed.setScreenPref({ height: Number(e.target.value) }); e.target.value = ed.screenPref.height || ''; }} />
-      </div>
-    {/if}
   </div>
 {:else if setting.kind === 'text'}
   <input type="text" class="st-text" spellcheck="false" placeholder={setting.placeholderKey ? ta(setting.placeholderKey) : ''}
@@ -143,9 +129,6 @@
     padding: 5px 6px;
   }
 
-  .st-size .tb-num {
-    width: 3.6rem;
-  }
 
   /* A text field in the admin's own box: the darker ground, a faint border that turns to the accent while it has the focus */
   .st-text {

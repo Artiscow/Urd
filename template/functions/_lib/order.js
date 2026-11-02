@@ -126,6 +126,35 @@ export function validVariants(order, catalogs) {
   return true;
 }
 
+/** A product's quantity limits where the buyer types the quantity, as the basket reads them (shop.js quantityLimits): each from 1 to 99, the most never under the least; null without them. */
+export function quantityLimits(entry) {
+  const q = entry?.quantity;
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return null;
+  const limit = (value, fallback) => {
+    if (value == null || value === '') return fallback;
+    const n = Number(value);
+    return Number.isInteger(n) && n >= 1 && n <= 99 ? n : fallback;
+  };
+  const min = limit(q.min, 1);
+  return { min, max: Math.max(min, limit(q.max, 99)) };
+}
+
+/**
+ * Whether every order line's quantity is within its product's limits, line by line as the basket holds them.
+ * A product without limits takes any quantity the payload check let through (1 to 99).
+ * @param {Array<{id: string, qty: number}>} order Cleaned order (validOrderPayload)
+ * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
+ * @returns {boolean}
+ */
+export function validQuantities(order, catalogs) {
+  const products = productMap(catalogs);
+  for (const line of order) {
+    const limits = quantityLimits(products.get(line.id));
+    if (limits && (line.qty < limits.min || line.qty > limits.max)) return false;
+  }
+  return true;
+}
+
 /**
  * The order lines with the product's title, the variant and the prices in
  * the minor unit, for a provider's receipt or line items.
@@ -270,6 +299,10 @@ export async function prepareOrder(request) {
   // The variant text goes on the receipt, so it must be a choice the product has.
   if (!validVariants(clean.order, shop.catalogs)) {
     return { error: json({ error: 'Unknown variant in the order', code: 'orderInvalid' }, 400) };
+  }
+  // A quantity the product's least or most rules out was changed in the basket by hand.
+  if (!validQuantities(clean.order, shop.catalogs)) {
+    return { error: json({ error: 'A quantity outside the product\'s limits', code: 'orderInvalid' }, 400) };
   }
   return { clean, payload, origin, site: shop.site, catalogs: shop.catalogs, amountMinor, currency };
 }

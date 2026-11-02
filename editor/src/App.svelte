@@ -243,6 +243,10 @@
   {#if ed.status}
     <div class="toast" class:ok={ed.statusKind === 'ok'} class:error={ed.statusKind === 'error'}>
       <span>{ed.status}</span>
+      {#if ed.statusAction}
+        <!-- The one action the status offers, such as «Undo» after a delete of several entries -->
+        <button type="button" class="toast-act" onclick={() => { const run = ed.statusAction.run; ed.setStatus(''); run(); }}>{ed.statusAction.label}</button>
+      {/if}
       <button class="toast-x" onclick={() => ed.setStatus('')} title={ta('ui.close')}>{@html ICONS.cross}</button>
     </div>
   {/if}

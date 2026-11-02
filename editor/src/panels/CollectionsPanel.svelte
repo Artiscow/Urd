@@ -3,15 +3,18 @@
      stepping in (the default), the collections, then a collection's entries, then one entry, a level at a time with a back arrow and the arrows to the entry before or after;
      two columns, the panel widened while a collection is open with the entries at the left and the chosen entry at the right;
      or the table, the collections here and the open one as a table over the page (collections/CollectionsTable.svelte).
-     The place (`panelCollection`, `panelEntry`) lives in the collections state, so it is kept while the panel is closed and opened again. */
+     The place (`panelCollection`, `panelEntry`) and the ticked entries (`panelTicks`) live in the collections state, so they are kept while the panel is closed and opened again.
+     The ticked entries' bar stands under the search (collections/SelectionBar.svelte), and the collection's own ⋮ menu in its head (collections/CollectionMenu.svelte). */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
   import Dropdown from '../lib/Dropdown.svelte';
   import { ICONS } from '../lib/icons.js';
-  import { entryPosition, afterRemoval } from '../lib/collection-layout.js';
+  import { entryPosition, afterRemoval, entryMatches } from '../lib/collection-layout.js';
+  import { liveTicks } from '../lib/collection-bulk.js';
   import CollectionList from './collections/CollectionList.svelte';
-  import CollectionTools from './collections/CollectionTools.svelte';
+  import CollectionMenu from './collections/CollectionMenu.svelte';
+  import SelectionBar from './collections/SelectionBar.svelte';
   import EntryList from './collections/EntryList.svelte';
   import EntryFields from './collections/EntryFields.svelte';
   import { collectionActions } from './collections/actions.js';
@@ -30,6 +33,11 @@
   const entry = $derived(view && ed.panelEntry ? view.entries.find((en) => en.id === ed.panelEntry) ?? null : null);
   const ids = $derived(view ? (view.kind === 'products' ? view.entries : sortEntries(view.entries, true)).map((en) => en.id) : []);
   const place = $derived(entry ? entryPosition(ids, entry.id) : null);
+  /** The ticked entries that still exist, and the ones the search shows. */
+  const ticks = $derived(view ? liveTicks(ed.panelTicks, view.entries) : []);
+  const shownIds = $derived(view ? ids.filter((eid) => entryMatches(view.entries.find((en) => en.id === eid), query, ed.plainTitle)) : []);
+  const setTicks = (next) => { ed.panelTicks = next; };
+  const tickAll = () => setTicks(view ? view.entries.map((en) => en.id) : []);
 
   /** The focus follows a step, once the new level is drawn: to the way back after a step in, to the row stepped out of after a step back. */
   function focusAfter(selector) {
@@ -73,6 +81,14 @@
     const made = ed.addCollectionEntry(ed.panelCollection);
     ed.panelEntry = made;
     focusField(made, 'title', true);
+  }
+
+  /** A copy of the chosen entry under it, chosen at once with its title ready to type over. */
+  function duplicateEntry() {
+    const [copy] = ed.duplicateEntries(ed.panelCollection, [entry.id]);
+    if (!copy) return;
+    ed.panelEntry = copy;
+    focusField(copy, 'title', true);
   }
 
   /** The entry's removal, in one undo step: the next entry is chosen where a list stands beside it, and the drill-in steps back to the list. */
@@ -121,6 +137,9 @@
     <input type="text" bind:value={query} placeholder={ta('ph.collections.find')} aria-label={ta('ph.collections.find')} title={ta('ph.collections.find')} />
     <button class="ghost action" title={ta('ui.addEntry')} onclick={newEntry}>{ta('ui.addEntry')}</button>
   </span>
+  {#if ticks.length}
+    <SelectionBar id={ed.panelCollection} {ticks} {shownIds} onticks={setTicks} />
+  {/if}
 {/snippet}
 
 {#snippet entryHead()}
@@ -134,6 +153,7 @@
       <button class="ghost nav-act" title={ta('tip.collections.nextEntry')} aria-label={ta('tip.collections.nextEntry')} disabled={!place.next}
         onclick={() => { ed.panelEntry = place.next; }}>{@html NEXT_ICON}</button>
     {/if}
+    <button class="ghost row-tool" title={ta('tip.collections.duplicateEntry')} aria-label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry}>{@html ICONS.copy}</button>
     <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')} aria-label={ta('tip.collections.deleteEntry')} onclick={deleteEntry}>{@html ICONS.cross}</button>
   </span>
 {/snippet}
@@ -147,12 +167,12 @@
     <span class="coll-crumb">
       <button class="ghost nav-act" title={ta('tip.collections.back')} aria-label={ta('tip.collections.back')} onclick={closeCollection}>{@html BACK_ICON}</button>
       <span class="coll-switch"><Dropdown value={ed.panelCollection} options={collectionOptions} title={ta('tip.collections.chooseCollection')} onchange={openCollection} /></span>
-      <CollectionTools id={ed.panelCollection} />
+      <CollectionMenu id={ed.panelCollection} onselectall={tickAll} />
     </span>
     <div class="coll-cols">
       <div class="coll-list">
         {@render search()}
-        <EntryList id={ed.panelCollection} {view} {query} selected={ed.panelEntry} chevron={false} onselect={chooseEntry} />
+        <EntryList id={ed.panelCollection} {view} {query} selected={ed.panelEntry} chevron={false} onselect={chooseEntry} {ticks} onticks={setTicks} />
       </div>
       <div class="coll-detail">
         {#if entry}
@@ -166,10 +186,10 @@
     <span class="coll-crumb">
       <button class="ghost nav-act" title={ta('tip.collections.back')} aria-label={ta('tip.collections.back')} onclick={closeCollection}>{@html BACK_ICON}</button>
       <span class="coll-crumb-words"><span class="coll-crumb-up">{ta('panel.collections')}</span><span class="coll-crumb-name">{view.name ?? ed.panelCollection}</span></span>
-      <CollectionTools id={ed.panelCollection} />
+      <CollectionMenu id={ed.panelCollection} onselectall={tickAll} />
     </span>
     {@render search()}
-    <EntryList id={ed.panelCollection} {view} {query} onselect={chooseEntry} />
+    <EntryList id={ed.panelCollection} {view} {query} onselect={chooseEntry} {ticks} onticks={setTicks} />
   {:else}
     <!-- Stepping in, the third level: one entry with all its fields -->
     <span class="coll-crumb">

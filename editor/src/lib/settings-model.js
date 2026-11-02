@@ -21,7 +21,7 @@ export function settingsPictures(raw) {
 
 /**
  * The groups and their settings.
- * `kind`: `choice` (one of the options; a picture per option when `look` names a picture set and the pictures are on), `seg` (segment buttons), `text` (a text field), `screen` (the Screen device's mode and size).
+ * `kind`: `choice` (one of the options; a picture per option when `look` names a picture set and the pictures are on), `seg` (segment buttons) and `text` (a text field).
  * `shared` on a group: its values live in the site and are shared by everyone who edits it.
  * `when` on a group or a setting: whether it is shown at all.
  * `parent` on a setting: the setting it belongs to, drawn directly under it and shown with it.
@@ -75,9 +75,6 @@ export const SETTINGS_GROUPS = [
       { id: 'panelsStart', parent: 'panels', labelKey: 'settings.panelsStart', tipKey: 'tip.settings.panelsStart', kind: 'choice',
         when: (c) => c.ed.panelsPref === 'fixed',
         options: (c) => c.ed.PANELS_START_OPTIONS, get: (c) => c.ed.panelsStart, set: (c, v) => c.ed.setPanelsStart(v) },
-      { id: 'screen', labelKey: 'settings.screen', tipKey: 'tip.screen.mode', kind: 'screen',
-        options: (c) => [['own', c.ta('lbl.screen.own')], ['custom', c.ta('lbl.screen.size')]],
-        get: (c) => c.ed.screenPref.mode, set: (c, v) => c.ed.setScreenPref({ mode: v }) },
     ],
   },
   {

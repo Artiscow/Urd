@@ -88,9 +88,9 @@ test('the search keeps the settings a word of the query names, and the sheet spl
 test('the panel to start with stands under its choice only while «Always the same panel» is chosen, and a search for either shows both', () => {
   const c = ctx();
   const ids = (q) => visibleGroups(q, null, c).find((g) => g.id === 'window')?.settings.map((s) => s.id);
-  assert.deepEqual(ids(''), ['panels', 'screen']);
+  assert.deepEqual(ids(''), ['panels']);
   c.ed.panelsPref = 'fixed';
-  assert.deepEqual(ids(''), ['panels', 'panelsStart', 'screen']);
+  assert.deepEqual(ids(''), ['panels', 'panelsStart']);
   assert.deepEqual(ids('settings.panelsStart'), ['panels', 'panelsStart']);
   assert.deepEqual(ids('settings.panels'), ['panels', 'panelsStart']);
   c.ed.panelsPref = 'folded';

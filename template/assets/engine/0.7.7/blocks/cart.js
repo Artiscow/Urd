@@ -6,7 +6,7 @@
  * the total and an optional link to the checkout page. Badge and drawer both
  * follow the urd-cart-change event.
  */
-import { readCart, writeCart, cartSetQty, cartRemove, cartCount, cartTotal, formatPrice, onCartChange } from '../shop.js';
+import { readCart, writeCart, cartSetQty, cartRemove, cartCount, cartTotal, formatPrice, onCartChange, lineLimits, limitNote } from '../shop.js';
 import { iconSvg } from '../icons.js';
 import { isSafeHref, resolveLink } from '../nav-model.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
@@ -40,6 +40,10 @@ function renderDrawer(body, props, currency) {
     const info = el2('div', 'urd-cart-info');
     info.appendChild(el2('strong', null, item.title));
     if (item.variant) info.appendChild(el2('span', 'urd-cart-variant', item.variant));
+    // A line with its product's limits tells them, and its steps stop there.
+    const limits = lineLimits(item);
+    const words = limitNote(limits);
+    if (words) info.appendChild(el2('span', 'urd-cart-limit', t(words.key, words.vars)));
     row.appendChild(info);
 
     const qty = el2('div', 'urd-cart-count');
@@ -52,6 +56,9 @@ function renderDrawer(body, props, currency) {
     plus.type = 'button';
     plus.setAttribute('aria-label', t('shop.increase'));
     plus.addEventListener('click', () => writeCart(cartSetQty(readCart(), item.key, item.qty + 1)));
+    // The minus at the least waits, where a line without one would leave the basket; the remove button still takes it out.
+    minus.disabled = limits.min > 1 && item.qty <= limits.min;
+    plus.disabled = item.qty >= limits.max;
     qty.append(minus, count, plus);
     row.appendChild(qty);
 

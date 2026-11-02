@@ -8,6 +8,7 @@ import { slugify } from '$engine/imageTools.js';
 import { ta } from '$engine/i18n.js';
 import { makeId } from '$engine/sections/presets.js';
 import { historyState } from './history.svelte.js';
+import { withCopies, carryEntries, withField, entriesFit } from '../lib/collection-bulk.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
@@ -54,6 +55,9 @@ function openEntry(msg) {
 let panelCollection = $state(null);
 
 let panelEntry = $state(null);
+
+/** The entries ticked in the open collection (panels/collections/SelectionBar.svelte); cleared when another collection opens. */
+let panelTicks = $state([]);
 
 let newCollectionName = $state('');
 
@@ -134,6 +138,120 @@ function mutateCollection(id, key, fn, pushPreview = true) {
   syncCollectionsView(pushPreview);
 }
 
+/** Several collections changed in ONE undo step (a move of entries takes them from one and puts them in another). fn gets the collections' data by id. */
+function mutateCollections(ids, key, fn) {
+  const stores = ids.map((id) => collectionStores[id]);
+  if (stores.some((st) => !st)) return;
+  historyState.pushHistory(key);
+  fn(Object.fromEntries(ids.map((id, i) => [id, stores[i].data])));
+  for (const st of stores) st.save();
+  historyState.updateDirty();
+  syncCollectionsView();
+}
+
+/** The status after a change of several entries, with «Undo» beside it. The button undoes that step alone: once a later change stands on top of it, the button says so instead. */
+function doneWithUndo(message) {
+  const step = historyState.history.at(-1);
+  shellState.setStatus(message, 'ok', { label: ta('ui.undo'), run: () => {
+    if (historyState.history.at(-1) === step) historyState.undo();
+    else shellState.setStatus(ta('status.undoLater'));
+  } });
+}
+
+/** A collection's own name; its id, its file, its feed and the blocks that show it stay as they are. */
+function renameCollection(id, name) {
+  const next = String(name ?? '').trim();
+  if (!next) return;
+  mutateCollection(id, `collection:${id}:name`, (data) => { data.name = next; });
+}
+
+/** Another kind for a collection, only where its entries fit it (lib/collection-bulk.js entriesFit). */
+function setCollectionKind(id, kind) {
+  const data = collectionStores[id]?.data;
+  if (!data || data.kind === kind || !entriesFit(data.entries, kind).fits) return;
+  mutateCollection(id, `collection:${id}:kind`, (d) => { d.kind = kind; });
+}
+
+/** Copies of the entries, each under its original, in one undo step; the copies' ids are returned. */
+function duplicateEntries(id, entryIds) {
+  let copyIds = [];
+  mutateCollection(id, `collection:${id}:duplicate`, (data) => {
+    const out = withCopies(data.entries, entryIds, makeId);
+    data.entries = out.entries;
+    copyIds = out.copyIds;
+  });
+  if (entryIds.length > 1) doneWithUndo(ta('status.entriesDuplicated', { n: String(copyIds.length) }));
+  return copyIds;
+}
+
+/** The entries removed in one undo step, with «Undo» in the status. */
+function removeEntries(id, entryIds) {
+  const gone = new Set(entryIds);
+  mutateCollection(id, `collection:${id}:remove-entries`, (data) => { data.entries = data.entries.filter((e) => !gone.has(e.id)); });
+  panelTicks = panelTicks.filter((t) => !gone.has(t));
+  if (panelEntry && gone.has(panelEntry)) panelEntry = null;
+  doneWithUndo(ta('status.entriesDeleted', { n: String(entryIds.length) }));
+}
+
+/** One field set on the entries, or cleared with an empty value, in one undo step; false when the value does not fit the field. */
+function setFieldOn(id, entryIds, field, value) {
+  const data = collectionStores[id]?.data;
+  if (!data || !withField(data.entries, entryIds, field, value)) return false;
+  mutateCollection(id, `collection:${id}:set-field`, (d) => { d.entries = withField(d.entries, entryIds, field, value); });
+  doneWithUndo(ta(value === '' ? 'status.fieldCleared' : 'status.fieldSet', { n: String(entryIds.length) }));
+  return true;
+}
+
+/** The entries carried to another collection of a kind they fit, moved or copied, both collections in one undo step. */
+function carryToCollection(from, to, entryIds, copy) {
+  const target = collectionStores[to]?.data;
+  const source = collectionStores[from]?.data;
+  if (!target || !source || from === to) return false;
+  const carried = source.entries.filter((e) => entryIds.includes(e.id));
+  if (!entriesFit(carried, target.kind).fits) return false;
+  mutateCollections([from, to], `collections:${copy ? 'copy' : 'move'}`, (all) => {
+    const out = carryEntries(all[from].entries, all[to].entries, entryIds, copy, makeId);
+    all[from].entries = out.from;
+    all[to].entries = out.to;
+  });
+  if (!copy) {
+    const gone = new Set(entryIds);
+    panelTicks = panelTicks.filter((t) => !gone.has(t));
+    if (panelEntry && gone.has(panelEntry)) panelEntry = null;
+  }
+  doneWithUndo(ta(copy ? 'status.entriesCopied' : 'status.entriesMoved', { n: String(entryIds.length), name: target.name ?? to }));
+  return true;
+}
+
+/** A new collection of the same kind made for the entries, and the entries carried into it, all in one undo step. */
+function carryToNewCollection(from, name, entryIds, copy) {
+  const source = collectionStores[from]?.data;
+  const clean = String(name ?? '').trim();
+  const id = slugify(clean);
+  if (!source || !clean) return false;
+  if (!id || collectionIds.includes(id)) {
+    shellState.setStatus(id ? ta('status.collectionExists') : ta('status.invalidName'), 'error');
+    return false;
+  }
+  if (!collectionsIndexStore) return false;
+  historyState.pushHistory('collections');
+  insertCollection(id, clean, source.kind, false);
+  const out = carryEntries(source.entries, [], entryIds, copy, makeId);
+  source.entries = out.from;
+  collectionStores[id].data.entries = out.to;
+  collectionStores[from].save();
+  collectionStores[id].save();
+  if (!copy) {
+    const gone = new Set(entryIds);
+    panelTicks = panelTicks.filter((t) => !gone.has(t));
+    if (panelEntry && gone.has(panelEntry)) panelEntry = null;
+  }
+  historyState.updateDirty();
+  syncCollectionsView();
+  doneWithUndo(ta(copy ? 'status.entriesCopied' : 'status.entriesMoved', { n: String(entryIds.length), name: clean }));
+  return true;
+}
+
 /** The "+ Product" adder in the product block (urd-collection-add from the iframe). */
 function handleCollectionAdd(msg) {
   // Deleted/unknown collection: no-op (the guard also prevents a dead undo step).
@@ -166,7 +284,7 @@ function handleCollectionEdit(msg) {
 }
 
 /** Creates and activates a collection (the caller owns the history step). */
-function insertCollection(id, name, kind) {
+function insertCollection(id, name, kind, open = true) {
   // Without the index (it could not be read) no collection is made: the editor does not know what is published.
   if (!collectionsIndexStore) return;
   const fresh = { schemaVersion: 1, id, name, kind, entries: [] };
@@ -179,8 +297,10 @@ function insertCollection(id, name, kind) {
   collectionsIndexStore.data.samlinger = [...collectionIds, id];
   collectionsIndexStore.save();
   collectionIds = [...collectionIds, id];
-  activeCollection = id;
-  openRequest = { id };
+  if (open) {
+    activeCollection = id;
+    openRequest = { id };
+  }
   historyState.updateDirty();
   syncCollectionsView();
 }
@@ -220,7 +340,7 @@ function removeCollection(id) {
   collectionsIndexStore.save();
   collectionIds = collectionIds.filter((x) => x !== id);
   if (activeCollection === id) activeCollection = null;
-  if (panelCollection === id) { panelCollection = null; panelEntry = null; }
+  if (panelCollection === id) { panelCollection = null; panelEntry = null; panelTicks = []; }
   historyState.updateDirty();
   syncCollectionsView();
 }
@@ -271,9 +391,19 @@ export const collectionsState = {
   set focusEntry(v) { focusEntry = v; },
   openEntry,
   get panelCollection() { return panelCollection; },
-  set panelCollection(v) { panelCollection = v; },
+  set panelCollection(v) { if (v !== panelCollection) panelTicks = []; panelCollection = v; },
   get panelEntry() { return panelEntry; },
   set panelEntry(v) { panelEntry = v; },
+  get panelTicks() { return panelTicks; },
+  set panelTicks(v) { panelTicks = v; },
+  mutateCollections,
+  renameCollection,
+  setCollectionKind,
+  duplicateEntries,
+  removeEntries,
+  setFieldOn,
+  carryToCollection,
+  carryToNewCollection,
   get newCollectionName() { return newCollectionName; },
   set newCollectionName(v) { newCollectionName = v; },
   get newCollectionKind() { return newCollectionKind; },

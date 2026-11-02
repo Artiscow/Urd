@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  validOrderPayload, orderAmountMinor, validVariants, orderLineItems, orderDescription, currencyExponent,
+  validOrderPayload, orderAmountMinor, validVariants, validQuantities, quantityLimits, orderLineItems, orderDescription, currencyExponent,
   makeReference, isReference, orderCurrency, vatRegistered, returnUrl, cancelUrl, PROVIDERS, pageCheckout,
 } from '../template/functions/_lib/order.js';
 
@@ -141,4 +141,21 @@ test('pageCheckout: the checkout block on the page the return path names, the on
   } finally {
     globalThis.fetch = realFetch;
   }
+});
+
+test('validQuantities: a line within its product\'s least and most passes, one outside them is refused, and a product without limits takes any', () => {
+  const catalogs = [{ kind: 'products', entries: [
+    { id: 'boller', price: 120, quantity: { min: 2, max: 10 } },
+    { id: 'kake', price: 350, quantity: { max: 3 } },
+    { id: 'brod', price: 60 },
+  ] }];
+  assert.deepEqual(quantityLimits(catalogs[0].entries[0]), { min: 2, max: 10 });
+  assert.deepEqual(quantityLimits({ quantity: {} }), { min: 1, max: 99 });
+  assert.deepEqual(quantityLimits({ quantity: { min: 8, max: 4 } }), { min: 8, max: 8 }, 'the most is never under the least');
+  assert.equal(quantityLimits({ price: 1 }), null);
+  assert.equal(validQuantities([{ id: 'boller', qty: 2 }, { id: 'kake', qty: 3 }, { id: 'brod', qty: 40 }], catalogs), true);
+  assert.equal(validQuantities([{ id: 'boller', qty: 1 }], catalogs), false);
+  assert.equal(validQuantities([{ id: 'boller', qty: 11 }], catalogs), false);
+  assert.equal(validQuantities([{ id: 'kake', qty: 4 }], catalogs), false);
+  assert.equal(validQuantities([{ id: 'boller', qty: 5, variant: 'Stor' }, { id: 'boller', qty: 5, variant: 'Liten' }], catalogs), true, 'the limits hold per line');
 });

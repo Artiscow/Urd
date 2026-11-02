@@ -2,7 +2,7 @@
  * The preview: the iframe and the bridge to it, the device and the zoom, the Screen setting, the chrome, and the light or dark preview mode.
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
-import { ownWindowWidthOf, screenSetting, screenViewport } from '../lib/own-screen.js';
+import { ownWindowWidthOf, screenSetting, screenViewport, screenIcon as screenIconOf, SCREEN_SIZES } from '../lib/own-screen.js';
 import { contentBand } from '../lib/content-width.js';
 import { ta } from '$engine/i18n.js';
 import { previewScale } from '../lib/preview-scale.js';
@@ -28,16 +28,16 @@ let iframeEl = $state(null);
 /** Clean preview: hides all editing handles in the iframe */
 let chromeVisible = $state(true);
 
-/** The canvas target device (ADR-0018, the Squarespace model): each button
- *  is a REAL screen size, not a view mode. Then there is no "wrong" mode
- *  to be in. Screen is the owner's own browser window width by default
- *  (the window the published page is compared in), or an editing size
- *  chosen per browser (lib/own-screen.js, the Wix Studio model) with an
- *  optional height; only a set height pins both axes.
- *  The fixed devices pin the width and fill the panel.
+/** The canvas target devices (ADR-0018, the Squarespace model): each is a
+ *  REAL screen size, not a view mode, so there is no "wrong" mode to be in.
+ *  Screen is the owner's own browser window width by default (the window the
+ *  published page is compared in), a common screen size with its height, or
+ *  an own size (lib/own-screen.js); the Phone is a phone or tablet size
+ *  (lib/preview-width.js). Both are split buttons whose fold-out holds the
+ *  sizes; a size with a height pins both axes and shows the fold.
  *  `viewport` is what the ENGINE gets to know (it only knows
- *  desktop/mobile), so the laptop is desktop view to the engine, and the
- *  Phone's size is mobile below the site's phone breakpoint and desktop above it (a tablet). */
+ *  desktop/mobile): the Screen is desktop view, and the Phone's size is
+ *  mobile below the site's phone breakpoint and desktop above it (a tablet). */
 let ownWidth = $state(ownWindowWidthOf(typeof window !== 'undefined' ? window : null) ?? 1920);
 
 /** The Screen preference, per browser like the admin theme and language. */
@@ -55,6 +55,7 @@ let screenPref = $state(readScreenPref());
 function setScreenPref(patch) {
   screenPref = screenSetting({ ...$state.snapshot(screenPref), ...patch }, ownWidth);
   try { localStorage.setItem(SCREEN_PREF_KEY, JSON.stringify(screenPref)); } catch { /* blocked storage: the choice lasts the session */ }
+  freeWidth = null;
 }
 
 let screenTarget = $derived(screenViewport(screenPref, ownWidth));
@@ -78,15 +79,13 @@ function setPhonePref(patch) {
 
 let phoneTarget = $derived(phoneViewport(phonePref));
 
-const FIXED_DEVICES = [
-  { id: 'laptop', width: 1280, height: null, viewport: 'desktop' },
-];
-
 let devices = $derived([
   { id: 'desktop', width: screenTarget.width, height: screenTarget.height || null, viewport: 'desktop' },
-  ...FIXED_DEVICES,
   { id: 'mobile', width: phoneTarget.width, height: phoneTarget.height || null, viewport: phoneTarget.width <= (siteState.siteDraft?.breakpoints?.mobile ?? 640) ? 'mobile' : 'desktop' },
 ]);
+
+/** The icon the Screen button shows: a laptop while a laptop size is chosen. */
+const screenIcon = $derived(screenIconOf(screenPref));
 
 /** The icon the Phone button shows: a tablet while a tablet size is chosen. */
 const phoneIcon = $derived(phoneTarget.width > (siteState.siteDraft?.breakpoints?.mobile ?? 640) ? 'device_tablet' : 'device_mobile');
@@ -94,21 +93,20 @@ const phoneIcon = $derived(phoneTarget.width > (siteState.siteDraft?.breakpoints
 /** A width dragged at the canvas's edge, in canvas px; null while a device stands. Not remembered: the sizes to come back to are the devices'. */
 let freeWidth = $state(null);
 
-/** The widths a dragged edge snaps to: the devices', the phone presets' and the site's phone breakpoint. */
-const dragStops = $derived([...devices.map((d) => d.width), ...PHONE_SIZES.map((p) => p.width), siteState.siteDraft?.breakpoints?.mobile ?? 640]);
+/** The widths a dragged edge snaps to: the devices', the screen and phone sizes' and the site's phone breakpoint. */
+const dragStops = $derived([...devices.map((d) => d.width), ...SCREEN_SIZES.map((s) => s.width), ...PHONE_SIZES.map((p) => p.width), siteState.siteDraft?.breakpoints?.mobile ?? 640]);
 
 /** Sets the dragged width, snapped to the stops within the tolerance given in canvas px. */
 function setFreeWidth(width, tolerance = 0) {
   freeWidth = snapWidth(width, dragStops, tolerance);
 }
 
-/** The device tooltip: Screen names its mode, the Phone its size, the fixed devices their width, a dragged width its number. */
+/** The device tooltip: the Screen and the Phone name their size, a dragged width its number. */
 function deviceTip(d) {
   const c = Math.round(contentBand(siteState.layoutWidth, siteState.layoutGutter, d.width).width);
   const key = d.id === 'free' ? 'tip.view.free'
     : d.id === 'mobile' ? (d.viewport === 'desktop' ? 'tip.view.tabletH' : d.height ? 'tip.view.mobileH' : 'tip.view.mobile')
-    : d.id !== 'desktop' ? `tip.view.${d.id}`
-    : screenPref.mode === 'own' ? 'tip.view.desktop'
+    : screenPref.size === 'window' ? 'tip.view.desktop'
     : d.height ? 'tip.view.desktopSizeH' : 'tip.view.desktopSize';
   return ta(key, { w: d.width, h: d.height ?? 0, c });
 }
@@ -425,11 +423,12 @@ export const previewState = {
   SCREEN_PREF_KEY,
   readScreenPref,
   get screenPref() { return screenPref; },
+  get screenIcon() { return screenIcon; },
+  SCREEN_SIZES,
   set screenPref(v) { screenPref = v; },
   setScreenPref,
   get screenTarget() { return screenTarget; },
   set screenTarget(v) { screenTarget = v; },
-  FIXED_DEVICES,
   get devices() { return devices; },
   set devices(v) { devices = v; },
   deviceTip,

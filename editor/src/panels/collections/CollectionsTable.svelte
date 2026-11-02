@@ -1,12 +1,15 @@
 <script>
   /* The open collection as a table over the page («Table over the page» under Collections editor): the entries as rows with a column per field the kind has (lib/collection-layout.js), and the chosen entry's fields in a drawer at the right.
-     It stands over the stage while the Collections panel lists the collections, so the preview stays as it is underneath; the close button and Escape go back to the page. */
+     It stands over the stage while the Collections panel lists the collections, so the preview stays as it is underneath; the close button and Escape go back to the page.
+     A tick column with «select all» in its head ticks entries for the bar under the head (SelectionBar.svelte); Shift takes a run, Ctrl+A ticks every row shown, and Escape clears the ticks before it closes the table. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
   import { ICONS } from '../../lib/icons.js';
   import { movable, entryMatches, entryPosition, afterRemoval, tableColumns, cellText } from '../../lib/collection-layout.js';
-  import CollectionTools from './CollectionTools.svelte';
+  import { liveTicks, tickRun, withTicks } from '../../lib/collection-bulk.js';
+  import CollectionMenu from './CollectionMenu.svelte';
+  import SelectionBar from './SelectionBar.svelte';
   import EntryFields from './EntryFields.svelte';
   import { collectionActions } from './actions.js';
 
@@ -23,6 +26,37 @@
   const entry = $derived(ed.panelEntry ? shown.find((en) => en.id === ed.panelEntry) ?? null : null);
   const movables = $derived(shown.filter((en) => movable(view?.kind, en)));
   const at = $derived(entry ? movables.indexOf(entry) : -1);
+  const ticks = $derived(view ? liveTicks(ed.panelTicks, view.entries) : []);
+  const rowIds = $derived(rows.map((en) => en.id));
+  const allShown = $derived(rowIds.length > 0 && rowIds.every((r) => ticks.includes(r)));
+  const setTicks = (next) => { ed.panelTicks = next; };
+  /** The row ticked last, where a run with Shift starts. */
+  let anchor = null;
+  let headTick = $state(null);
+
+  // The head's box shows «some ticked» between none and all.
+  $effect(() => {
+    if (headTick) headTick.indeterminate = ticks.length > 0 && !allShown;
+  });
+
+  function tickRow(entryId, event) {
+    const on = !ticks.includes(entryId);
+    const run = event?.shiftKey && anchor ? tickRun(rowIds, anchor, entryId) : [entryId];
+    setTicks(withTicks(ticks, run, on));
+    anchor = entryId;
+  }
+
+  /** A copy of the chosen entry under it, chosen at once with its title ready to type over. */
+  function duplicateEntry() {
+    const [copy] = ed.duplicateEntries(id, [entry.id]);
+    if (!copy) return;
+    ed.panelEntry = copy;
+    tick().then(() => {
+      const title = document.querySelector('.ct-drawer [data-field="title"]');
+      title?.focus();
+      title?.select();
+    });
+  }
 
   function close() {
     ed.panelCollection = null;
@@ -46,10 +80,17 @@
     ed.panelEntry = next;
   }
 
-  /** Escape goes back to the page, except from a field, an open list or a picker inside, which answer it themselves. */
+  /** Ctrl+A ticks every row shown; Escape clears the ticks, else goes back to the page, except from a field, an open list or a picker inside, which answer it themselves. */
   function onKey(e) {
+    const inField = e.target instanceof Element && e.target.closest('input:not([type="checkbox"]), textarea, [popover], .dd, .dp-overlay, .cp');
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'a' && !inField) {
+      e.preventDefault();
+      setTicks(withTicks(ticks, rowIds, true));
+      return;
+    }
     if (e.key !== 'Escape' || e.defaultPrevented) return;
-    if (e.target instanceof Element && e.target.closest('input, textarea, [popover], .dd, .dp-overlay, .cp')) return;
+    if (ticks.length) { setTicks([]); return; }
+    if (inField) return;
     close();
   }
 
@@ -66,20 +107,25 @@
 
 {#if view}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <section class="ct" aria-label={view.name ?? id} onkeydown={onKey}>
+  <section class="ct" class:ct-ticking={ticks.length > 0} aria-label={view.name ?? id} onkeydown={onKey}>
     <div class="ct-head">
       <h2 class="ct-title">{view.name ?? id}</h2>
       <input type="text" class="ct-search" bind:value={query} placeholder={ta('ph.collections.find')} aria-label={ta('ph.collections.find')} title={ta('ph.collections.find')} />
       <span class="ct-grow"></span>
-      <CollectionTools {id} />
       <button class="ghost action ct-new" title={ta('ui.addEntry')} onclick={newEntry}>{ta('ui.addEntry')}</button>
+      <CollectionMenu {id} onselectall={() => setTicks(view.entries.map((en) => en.id))} />
       <button class="ghost row-tool ct-close" title={ta('tip.collections.closeTable')} aria-label={ta('tip.collections.closeTable')} onclick={close}>{@html ICONS.cross}</button>
     </div>
+    {#if ticks.length}
+      <div class="ct-barrow"><SelectionBar {id} {ticks} shownIds={rowIds} onticks={setTicks} /></div>
+    {/if}
     <div class="ct-body">
       <div class="ct-scroll">
         <table class="ct-table">
           <thead>
             <tr>
+              <th class="ct-tick"><input type="checkbox" class="tick-box" bind:this={headTick} checked={allShown} aria-label={ta('tip.collections.tickShown')} title={ta('tip.collections.tickShown')}
+                onclick={() => setTicks(allShown ? withTicks(ticks, rowIds, false) : withTicks(ticks, rowIds, true))} /></th>
               <th class="ct-pic"><span class="sr-only">{ta('collections.picture')}</span></th>
               <th>{ta('lbl.title')}</th>
               {#each columns as col (col.key)}<th class:num={col.numeric}>{ta(col.labelKey)}</th>{/each}
@@ -89,7 +135,9 @@
             {#each rows as en (en.id)}
               <!-- The whole row chooses the entry under the pointer; the title is the row's button for the keys -->
               <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-              <tr class:selected={entry?.id === en.id} onclick={() => (ed.panelEntry = en.id)}>
+              <tr class:selected={entry?.id === en.id} class:ticked={ticks.includes(en.id)} onclick={() => (ed.panelEntry = en.id)}>
+                <td class="ct-tick"><input type="checkbox" class="tick-box" checked={ticks.includes(en.id)} aria-label={ta('tip.collections.tickEntry', { name: ed.plainTitle(en.title) })}
+                  title={ta('tip.collections.tickEntry', { name: ed.plainTitle(en.title) })} onclick={(e) => { e.stopPropagation(); tickRow(en.id, e); }} /></td>
                 <td class="ct-pic"><span class="ct-thumb" class:empty={!en.image}>{#if en.image}<img src={en.image} alt="" />{:else}{@html ICONS.image}{/if}</span></td>
                 <td class="ct-name"><button type="button" class="ct-open" data-entry-id={en.id} aria-current={entry?.id === en.id ? 'true' : undefined}
                   title={ta('tip.collections.openEntry')} onkeydown={(e) => onRowKey(e, en.id)}
@@ -113,6 +161,7 @@
               <button class="ghost nav-act" title={ta('tip.moveUp')} aria-label={ta('tip.moveUp')} disabled={at <= 0} onclick={() => act.moveEntry(id, entry.id, -1)}>{@html ICONS.up}</button>
               <button class="ghost nav-act" title={ta('tip.moveDown')} aria-label={ta('tip.moveDown')} disabled={at === movables.length - 1} onclick={() => act.moveEntry(id, entry.id, 1)}>{@html ICONS.down}</button>
             {/if}
+            <button class="ghost row-tool" title={ta('tip.collections.duplicateEntry')} aria-label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry}>{@html ICONS.copy}</button>
             <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')} aria-label={ta('tip.collections.deleteEntry')} onclick={deleteEntry}>{@html ICONS.cross}</button>
           </span>
           <div class="panel-body ct-fields">
@@ -136,6 +185,23 @@
     color: var(--urd-color-text, #e8eaf0);
     font-family: var(--urd-font-body, system-ui, sans-serif);
     font-size: 0.88rem;
+  }
+
+  /* With entries ticked, the bar stands in a row of its own under the head */
+  .ct.ct-ticking {
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .ct-barrow {
+    padding: 0.5rem 1rem 0;
+  }
+
+  .ct-tick {
+    width: 1.6rem;
+  }
+
+  .ct-table tbody tr.ticked {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 9%, transparent);
   }
 
   .ct-head {

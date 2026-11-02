@@ -1198,7 +1198,7 @@ Urd has no user-defined fields: each collection kind shares a fixed set of field
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Collections | WX, WF, FR, FI, ZO, DU, NO, SU, SH (metaobjects) | Structured content types | no (if built statically) | Partial: collections of five fixed kinds with entries and CSV import and export; entries dragged into order where the page keeps the panel's order (products and undated entries; dated entries stand by their date, AR-3); edited by stepping in, in two columns or as a table with the entry in a drawer (0.7.10.25); no rename, kind change or entry duplication | 0.7.10 |
+| Collections | WX, WF, FR, FI, ZO, DU, NO, SU, SH (metaobjects) | Structured content types | no (if built statically) | Partial: collections of five fixed kinds with entries and CSV import and export; entries dragged into order where the page keeps the panel's order (products and undated entries; dated entries stand by their date, AR-3); edited by stepping in, in two columns or as a table with the entry in a drawer (0.7.10.25); renamed, given another kind its entries fit, an entry duplicated, and several entries ticked and deleted, duplicated, moved, copied, exported or given a field together in one undo step (0.7.10.26); no fields of the owner's own | v0.8: typed custom fields |
 | Collection and item limits | FR, WF, ZO | Plan caps | - | n/a: no plans or caps | - |
 | Field: plain text | WX, WF, FR, FI | Short text | no | Has | - |
 | Field: rich text or formatted text | WX, WF, FR, FI | HTML content | no | Has | - |
@@ -1381,7 +1381,7 @@ Urd's shop is a gateway-free core ([ADR-0020](../adr/0020-optional-payment-layer
 | Item modifiers | SO, SQ | Add-on choices; a form of questions when a product is added to the cart | yes | Missing | After v1.0: shop extensions |
 | Product add-ons | WP | Paid extras | yes | Missing | After v1.0: shop extensions |
 | Kits and bundles | WP, SH | Assembled products | yes | Missing | After v1.0: shop extensions |
-| Min/max quantities | WP, SQ (Core+), SH | Purchase limits per product or cart; a minimum or maximum order value | yes | Missing | After v1.0: shop extensions |
+| Min/max quantities | WP, SQ (Core+), SH | Purchase limits per product or cart; a minimum or maximum order value | yes | Partial: a least and a most per product, typed by the buyer on the card and held per basket line and in the checkout's function (0.7.10.26); no limit per basket or order value | After v1.0: shop extensions (the order value) |
 | Digital downloads | WX, SQ, ST, WF | Delivery after payment | yes | Missing | Not taken: gateway-free core |
 | Service products | WF, SQ | Sell services | yes | Missing | Not taken: gateway-free core |
 | Product subscriptions | WX, SQ, WF (Stripe), SO (Plus), SH | Recurring orders | yes | Missing | Not taken: gateway-free core |
@@ -1902,11 +1902,11 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Zoom to fit or to the selection | FR, WH, BD | ⌘1 / ⌘2; Shift+1; scale-to-fit | Partial: fit and stepped zoom; no zoom to the selection | 0.7.10 canvas functions |
 | Zoom-out page overview | WP, SH (beta) | Ctrl+Shift+0 condensed section view | Missing | 0.7.10: reorder sections from above |
 | Pan the canvas by keyboard | FS | Arrows with nothing selected | n/a | - |
-| Switch breakpoint or device view | WF, WE, WH, CA, EL, BR, BD, WT, TI, FR, DV, SQ, SH | Number keys, Ctrl+J, Ctrl+B, ⌘⌥R | Has: 3 preview devices, the Phone at seven sizes | - |
+| Switch breakpoint or device view | WF, WE, WH, CA, EL, BR, BD, WT, TI, FR, DV, SQ, SH | Number keys, Ctrl+J, Ctrl+B, ⌘⌥R | Has: 2 preview devices, the Screen at the window, four sizes, five ratios or an own size, the Phone at five sizes, the width alone, five ratios or an own size (0.7.10.26) | - |
 | Side-by-side breakpoints canvas | WF, FS | Breakpoint canvas; breakpoints as frames with cross-breakpoint edits | Missing | v0.8 PH-1 |
 | Preview mode | WF, WS, WE, WH, BR, TI, DU, WT, FS, SQ, WP, CA, SH, FR | Dedicated preview shortcut or toggle | Has: Clean view | - |
 | Inline preview on the canvas | FS | Shift+Space beside the design | n/a | - |
-| Preview resizing and device sizes | FS, WH, SH, FR, WP | Drag width, snap to breakpoint, slider, preview width | Has: Screen (the window or an editing size), Laptop 1280, and the Phone at four real phone sizes and a tablet with their heights, the width alone or an own size; any width dragged at the canvas's edge, snapping to the devices and the phone breakpoint (0.7.10.23) | - |
+| Preview resizing and device sizes | FS, WH, SH, FR, WP | Drag width, snap to breakpoint, slider, preview width | Has: the Screen at the window, four common sizes with their heights (the laptops among them) or an own size, and the Phone at four real phone sizes and a tablet with their heights, the width alone or an own size, every size named by its aspect ratio and the common ratios offered in each fold-out at the width the device stands at (0.7.10.23, 0.7.10.26); any width dragged at the canvas's edge, snapping to the devices and the phone breakpoint | - |
 | Hide UI, distraction-free, spotlight | WE, TI, WT, WP, WF, WS, EL | Shift+F, `⌘\`, Distraction Free, Spotlight, focus mode | Has: Clean view | - |
 | Movable panels, toolbar or workspaces | BR, CA, SQ, DV, WP | Toolbar on any side; move the UI; draggable panels; workspaces | Partial: the floating element menu is dragged by its head, keeps its place for the session and can be put back beside the block (0.7.20.6); panels, rail and toolbar are fixed; no workspaces | Not taken: the rail, the panels and the toolbar stay in one place, so the editor reads the same everywhere |
 | Dark editor UI | DV, WF, FR | Builder light/dark setting | Has: themed admin (ADR-0009) | - |
@@ -2130,7 +2130,7 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
 | Crop, rotate, flip | WP, DU, RM, SQ | Media editor modal; photo editor; crop and round | Partial: zoom toward a focal point, shapes and radius, brightness, contrast and saturation, all non-destructive; no free crop, rotate or flip | v0.8 image editor |
-| Focal point | SQ, SH | A point on the image that every responsive crop keeps in view | Partial: on image blocks, gallery images, the collection block's entries and the image layer; a product's picture has no focus point (the Collections panel's image editor) | 0.7.10 |
+| Focal point | SQ, SH | A point on the image that every responsive crop keeps in view | Has: on image blocks, gallery images, the collection block's entries, a product's picture from the Collections panel's image editor (0.7.10.26) and the image layer | - |
 | Alt-text field | TI, WS, FR, WP, CA, DU, SQ | Per-image alt text | Has | - |
 | AI alt text | DU, WP | Generate per image or site-wide | Missing | Not taken: third party or AI (MCP) |
 | Alt Text Manager (bulk) | DU | All images in one view | Missing | v0.8 AU-1 audit panel: the images without alt text in one list, edited in place |

@@ -240,6 +240,22 @@
     overflow-wrap: anywhere;
   }
 
+  .toast-act {
+    flex: none;
+    padding: 0.25em 0.7em;
+    font: inherit;
+    font-weight: 600;
+    color: var(--urd-color-text, #e8eaf0);
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 6px;
+  }
+
+  .toast-act:hover {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
   .toast.ok {
     border-color: rgb(46 204 113 / 45%);
     color: #7ee2a8;
@@ -1303,6 +1319,56 @@
     transform: translateX(0.9rem);
   }
 
+  /* A tick box where a list ticks its rows (the Collections panel's entries and table), not a switch: a small square with a drawn tick, the half state a dash */
+  input[type='checkbox'].tick-box:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border: 1.5px solid rgb(255 255 255 / 45%);
+    border-radius: 4px;
+    background: transparent;
+  }
+
+  input[type='checkbox'].tick-box:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+    top: 1px;
+    left: 4.5px;
+    width: 4px;
+    height: 8px;
+    border-radius: 0;
+    background: none;
+    border: solid var(--urd-color-bg, #0f1218);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+  }
+
+  input[type='checkbox'].tick-box:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    background: var(--urd-color-accent, #7c5cff);
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  input[type='checkbox'].tick-box:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+    transform: rotate(45deg) scale(1);
+  }
+
+  input[type='checkbox'].tick-box:indeterminate:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    background: var(--urd-color-accent, #7c5cff);
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  input[type='checkbox'].tick-box:indeterminate:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+    top: 5.5px;
+    left: 3px;
+    width: 7px;
+    height: 0;
+    border-width: 0 0 2px;
+    transform: none;
+  }
+
+  input[type='checkbox'].tick-box:focus-visible:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: 2px;
+  }
+
   /* All the "row buttons" in the panel (blocks, groups, file picker)
      share the same height and layout, so the list looks even */
   .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
@@ -1571,13 +1637,20 @@
     background: rgb(255 255 255 / 12%);
   }
 
-  .panel-body .entry-chip-add:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  /* The add field is part of the chips' box, with no frame of its own: the box carries the one frame and takes the accent while the field has the focus */
+  .panel-body .entry-chips .entry-chip-add:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
     flex: 1 1 6rem;
     min-width: 6rem;
     height: 1.6rem;
     border: 0;
+    outline: none;
+    box-shadow: none;
     background: transparent;
     padding: 0 4px;
+  }
+
+  .entry-chips:focus-within {
+    border-color: var(--urd-color-accent, #7c5cff);
   }
 
   /* The entry's picture large enough to tell what it shows, its change and removal beside it */
@@ -3571,19 +3644,19 @@
   }
   /* The Phone device's size menu and the dragged width's chip in the Device cluster. */
   /* The Phone's split button: the icon and the caret read as one control, the caret narrower. */
-  .phone-split { display: inline-flex; }
-  .phone-split .phone-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-  .phone-split .phone-caret:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .device-split { display: inline-flex; }
+  .device-split .device-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .device-split .device-caret:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
     padding-inline: 0.3em;
     margin-left: -1px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }
-  .phone-split .phone-caret.open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 13%); }
+  .device-split .device-caret.open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 13%); }
   /* The sizes: plain rows with the size in grey, the current one tinted. */
-  .phone-pop { min-width: 15.5rem; padding: 0.4rem; }
-  .phone-pop .mini-label { padding: 0.3rem 0.6rem 0.2rem; }
-  .tool-pop .phone-size:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .device-pop { min-width: 18rem; padding: 0.4rem; }
+  .device-pop .mini-label { padding: 0.3rem 0.6rem 0.2rem; }
+  .tool-pop .device-size:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
     justify-content: space-between;
     width: 100%;
     padding: 0.45rem 0.6rem;
@@ -3592,14 +3665,42 @@
     background: transparent;
     font-size: 0.88rem;
   }
-  .tool-pop .phone-size:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
-  .tool-pop .phone-size.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .tool-pop .device-size:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
+  .tool-pop .device-size.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
     color: inherit;
   }
-  .tool-pop .phone-size.active .phone-size-px { color: var(--urd-color-accent, #7c5cff); opacity: 1; }
-  .phone-size-px { margin-left: auto; padding-left: 1rem; opacity: 0.6; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
-  .phone-own {
+  .tool-pop .device-size.active .device-size-px { color: var(--urd-color-accent, #7c5cff); opacity: 1; }
+  .device-size-px { margin-left: auto; padding-left: 1rem; opacity: 0.6; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+  /* Every size's ratio in a column of its own at the right, so the ratios line up under each other. */
+  .device-ratio { flex: none; min-width: 3.4rem; padding-left: 0.6rem; text-align: right; opacity: 0.5; font-size: 0.75rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tool-pop .device-size.active .device-ratio { opacity: 0.85; }
+  /* The common ratios: a row of chips under their name, the chosen one tinted. */
+  .device-ratios {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.3rem;
+    padding: 0.45rem 0.6rem 0.35rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    font-size: 0.85rem;
+  }
+  .device-ratio-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tool-pop .ghost.device-ratio-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    width: auto;
+    min-height: 0;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    border: 1px solid rgb(255 255 255 / 18%);
+    border-radius: 999px;
+    background: transparent;
+  }
+  .tool-pop .ghost.device-ratio-chip:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
+  .tool-pop .ghost.device-ratio-chip.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
+  }
+  .device-own {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -3610,10 +3711,10 @@
     font-size: 0.85rem;
     border-radius: 0 0 6px 6px;
   }
-  .phone-own.active { background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent); }
-  .phone-own > span:first-child { white-space: nowrap; }
-  .phone-own-fields { display: inline-flex; align-items: center; gap: 0.3rem; }
-  .phone-own-fields .tb-num {
+  .device-own.active { background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent); }
+  .device-own > span:first-child { white-space: nowrap; }
+  .device-own-fields { display: inline-flex; align-items: center; gap: 0.3rem; }
+  .device-own-fields .tb-num {
     width: 3.6rem;
     height: 1.8rem;
     font: inherit;

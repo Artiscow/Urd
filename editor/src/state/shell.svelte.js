@@ -81,9 +81,13 @@ let statusKind = $state('info');
 let statusSeq = 0;
 
 /** Set the status message; 'ok' messages clear themselves after 8 s. */
-function setStatus(msg, kind = 'info') {
+/** The status line's one action beside its words, such as «Undo» after a delete of several entries; a new status clears it. */
+let statusAction = $state(null);
+
+function setStatus(msg, kind = 'info', action = null) {
   status = msg;
   statusKind = kind;
+  statusAction = msg && action && typeof action.run === 'function' ? { label: String(action.label ?? ''), run: action.run } : null;
   const mine = ++statusSeq;
   if (kind === 'ok') {
     setTimeout(() => {
@@ -748,7 +752,7 @@ export function effects() {
 
   /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu belongs to no cluster. */
   $effect(() => {
-    if (toolMenu && toolMenu !== 'site' && toolMenu !== 'phone' && !folded[toolMenu]) toolMenu = null;
+    if (toolMenu && toolMenu !== 'site' && toolMenu !== 'phone' && toolMenu !== 'screen' && !folded[toolMenu]) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. */
@@ -796,6 +800,7 @@ export const shellState = {
   get status() { return status; },
   set status(v) { status = v; },
   get statusKind() { return statusKind; },
+  get statusAction() { return statusAction; },
   set statusKind(v) { statusKind = v; },
   get statusSeq() { return statusSeq; },
   set statusSeq(v) { statusSeq = v; },
