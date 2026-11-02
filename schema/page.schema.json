@@ -23,7 +23,7 @@
           "properties": {
             "title": { "type": "string" },
             "description": { "type": "string" },
-            "image": { "type": "string", "description": "Sharing image: /media/ path (materialized at publish)" }
+            "image": { "type": "string", "description": "Sharing image: a /media/images/ path (materialized at publish)" }
           }
         }
       }

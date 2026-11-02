@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.28): the media folder sorted by kind, and the tidy
+
+- [ ] Add a picture to an image block, a PDF to a button in the link editor, a sound to an audio block and a film to a video block, then publish: the commit holds `media/images/…webp`, `media/files/…pdf`, `media/audio/…mp3` and `media/video/…mp4`, the page JSON references those paths, and the published page shows and plays them
+- [ ] A mark on the menu's tab, a portrait on a quote block and an own icon on a links block, published: each lands in `media/images/` and the page JSON holds the path, not inline data
+- [ ] The link editor's File kind lists a PDF that stands in `media/files/`, and a button linked to it reads as a file (its name, «save the file»); a PDF used only by a collection entry or a template is listed too
+- [ ] The Site panel's **Media** group: opened on a site with files at the root of `media/`, «Files outside the folders» shows their count; with unpublished changes the button is greyed and its tooltip says to publish first; «Tidy the media folder» publishes once, the commit moves every root file into its folder with no new upload and rewrites the pages, the menu, the footer and the collections that use them, the status line says how many moved, and the published pages show every picture; opened again, the count is 0 and the button greyed
+- [ ] On the template site as shipped (its seven files already in `media/images/`), the group shows 0 and the pages show every picture; a site built before the folders, never tidied, renders as before
+- [ ] The texts in bokmål and Turkish: Media, Files outside the folders, Tidy the media folder with its two tooltips, and the status lines after a tidy
+
 ### Test batch (0.7.10.27): the CSV round trip with its preview, and the Collections panel's one menu
 
 - [ ] Export CSV from a products collection in a Norwegian admin and open it in a spreadsheet: it opens in columns with æøå whole, prices with decimal commas, and the columns of a product only (no date); in an English admin the file has commas; Import the same file again: the preview says every row is unchanged and Import is greyed

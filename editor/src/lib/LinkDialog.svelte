@@ -175,13 +175,13 @@
     };
   });
 
-  // The site's files, read once the File kind is chosen: from the site, the page being edited, and every other page's draft or published file.
+  // The site's files, read once the File kind is chosen: from the site, the page being edited, every other page's draft or published file, the collections and the templates.
   $effect(() => {
     if (link.kind !== 'file' || files !== null) return;
     let live = true;
     const others = pages.filter((p) => p.id !== ed.pageId).map((entry) => ed.readPageDraft(entry).catch(() => null));
     Promise.all(others).then((read) => {
-      if (live) files = siteFiles($state.snapshot(ed.siteDraft), $state.snapshot(ed.store?.data), read);
+      if (live) files = siteFiles($state.snapshot(ed.siteDraft), $state.snapshot(ed.store?.data), read, $state.snapshot(ed.collectionsView), Object.values(ed.templateStores ?? {}).map((st) => $state.snapshot(st.data)));
     });
     return () => {
       live = false;

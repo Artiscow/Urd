@@ -136,3 +136,24 @@ test('compressToWebp: a large animated GIF is refused from its beginning, withou
   big.set(head.subarray(0, head.length - 1));
   await assert.rejects(compressToWebp(new File([big], 'big.gif', { type: 'image/gif' })), AnimatedTooLargeError);
 });
+
+test('the media folders: a file goes in the folder of its kind, the path keeps the slug and the hash, and a root path is tidied into its folder', async () => {
+  const { MEDIA_FOLDERS, mediaFolder, mediaPath, tidiedMediaPath, contentHash } = await engineImport('imageTools.js');
+  assert.equal(mediaFolder('webp'), 'images');
+  assert.equal(mediaFolder('PDF'), 'files');
+  assert.equal(mediaFolder('m4a'), 'audio');
+  assert.equal(mediaFolder('webm'), 'video');
+  assert.equal(mediaFolder('js'), null);
+  assert.equal(new Set(Object.values(MEDIA_FOLDERS).flat()).size, Object.values(MEDIA_FOLDERS).flat().length, 'an extension has one folder');
+  const png = 'data:image/png;base64,iVBORw0KGgo=';
+  assert.equal(mediaPath('kake', 'iVBORw0KGgo=', png), `media/images/kake-${contentHash('iVBORw0KGgo=')}.png`);
+  assert.equal(mediaPath('meny', 'JVBERi0x', 'data:application/pdf;name=meny;base64,JVBERi0x'), `media/files/meny-${contentHash('JVBERi0x')}.pdf`);
+  assert.match(mediaPath('film', 'AAAA', 'data:video/mp4;base64,AAAA'), /^media\/video\/film-[0-9a-f]{8}\.mp4$/);
+  assert.match(mediaPath('lyd', 'AAAA', 'data:audio/mpeg;base64,AAAA'), /^media\/audio\/lyd-[0-9a-f]{8}\.mp3$/);
+  assert.equal(tidiedMediaPath('/media/logo-91963a12.svg'), '/media/images/logo-91963a12.svg');
+  assert.equal(tidiedMediaPath('/media/meny-1a2b3c4d.pdf'), '/media/files/meny-1a2b3c4d.pdf');
+  assert.equal(tidiedMediaPath('/media/images/logo-91963a12.svg'), null, 'already in its folder');
+  assert.equal(tidiedMediaPath('/media/notes.txt'), null, 'not a kind media/ holds');
+  assert.equal(tidiedMediaPath('/om-oss'), null);
+  assert.equal(tidiedMediaPath('/media/'), null);
+});

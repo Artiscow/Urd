@@ -130,8 +130,9 @@ test('a file: a PDF held in the draft with its name, a path in media/, written w
   assert.equal(heldName(PDF_DATA), null, 'a PDF without its name is not one the editor holds');
   assert.equal(fileLabel(held), 'meny-for-hosten.pdf');
   assert.equal(fileLabel('/media/meny-1a2b3c4d.pdf'), 'meny-1a2b3c4d.pdf');
-  for (const file of [held, '/media/meny-1a2b3c4d.pdf', '/media/lyd-0a0b0c0d.mp3']) assert.equal(isFileHref(file), true, file);
-  for (const other of ['/media/', '/kaker', 'https://x.no/a.pdf', PDF_DATA, null]) assert.equal(isFileHref(other), false, String(other));
+  for (const file of [held, '/media/meny-1a2b3c4d.pdf', '/media/lyd-0a0b0c0d.mp3', '/media/files/meny-1a2b3c4d.pdf', '/media/audio/lyd-0a0b0c0d.mp3']) assert.equal(isFileHref(file), true, file);
+  for (const other of ['/media/', '/kaker', 'https://x.no/a.pdf', PDF_DATA, null, '/media/a/b/c.pdf']) assert.equal(isFileHref(other), false, String(other));
+  assert.equal(fileLabel('/media/files/meny-1a2b3c4d.pdf'), 'meny-1a2b3c4d.pdf', 'the file name alone');
   const state = { ...readLink({ href: held }), download: true, newTab: true };
   assert.equal(state.kind, 'file');
   assert.equal(linkReady(state), true);
@@ -152,6 +153,8 @@ test('siteFiles: the files in media/ the content uses, pictures left out, once e
   ] }] };
   const site = { footer: { columns: [{ links: [{ label: 'Lyd', href: '/media/sang-2b2b2b2b.mp3' }, { label: 'Logo', href: '/media/logo-3c3c3c3c.SVG' }] }] } };
   assert.deepEqual(siteFiles(site, page, [null, { sections: [] }]), ['/media/meny-1a2b3c4d.pdf', '/media/prisliste-0f0f0f0f.pdf', '/media/sang-2b2b2b2b.mp3']);
+  const sorted = { entries: [{ href: '/media/files/vedtekter-4d4d4d4d.pdf', image: '/media/images/kake-5e5e5e5e.webp' }] };
+  assert.deepEqual(siteFiles(sorted), ['/media/files/vedtekter-4d4d4d4d.pdf'], 'a file in its folder is listed, a picture in its folder is not');
 });
 
 test('publishHeldFiles: a held PDF under href or url becomes one file in media/ and its path', () => {
@@ -160,7 +163,7 @@ test('publishHeldFiles: a held PDF under href or url becomes one file in media/ 
   const files = [];
   publishHeldFiles(block, files);
   assert.equal(files.length, 1, 'the same file once');
-  assert.match(files[0].path, /^media\/meny-[0-9a-f]{8}\.pdf$/);
+  assert.match(files[0].path, /^media\/files\/meny-[0-9a-f]{8}\.pdf$/);
   assert.equal(files[0].content, 'JVBERi0xLjcKJcfsj6IK');
   assert.equal(files[0].encoding, 'base64');
   assert.equal(block.href, `/${files[0].path}`);

@@ -1,15 +1,15 @@
 /**
- * Publishing: the images and files materialised into media/, the commit, the deploy wait, and the discard of the draft.
+ * Publishing: the images and files materialised into media/ (lib/materialize.js), the commit, the deploy wait, and the discard of the draft.
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
-import { slugify, contentHash, mediaExtension } from '$engine/imageTools.js';
 import { ta, taApiError } from '$engine/i18n.js';
 import { liftPageFile } from '$engine/migrate.js';
 import { buildThemeCss } from '$engine/theme.js';
 import { resolveLink } from '$engine/nav-model.js';
 import { FEED_KINDS, buildRssXml, buildSitemapXml, buildRobotsTxt } from '$engine/feeds.js';
 import { createDraftStore } from '../lib/draftStore.js';
-import { publishHeldFiles } from '../lib/file-links.js';
+import { materializeField, materializeImages, materializeSiteImages, materializeEntryImages, materializeBackground, materializeSection, materializeBlockImages } from '../lib/materialize.js';
+import { tidyMedia as planTidy, rootMediaFiles } from '../lib/media-tidy.js';
 import {
   INDEX_PATH, LEGACY_INDEX_PATH, INDEX_DRAFT_KEY, LEGACY_DELETED_KEY, fetchIndex, indexPending, planIndexPublish,
 } from '../lib/collection-index.js';
@@ -24,98 +24,117 @@ import { templatesState } from './templates.svelte.js';
 import { updaterState } from './updater.svelte.js';
 
 /**
- * Turns unpublished images (data URLs in the draft) into files in
- * media/, and switches src to the path. Returns the file list for the
- * commit. The same image content yields the same file name
- * (deterministic hash), so republishing never duplicates files.
+ * The tidy of media/ (lib/media-tidy.js): the files at the root of media/ move into the folder of their kind, and the references follow.
+ * The listing comes from the publishing layer (/api/github/media); the rewritten documents go into the drafts and the moves ride on the next publish, which commits, adopts and waits for the deploy as it always does.
  */
-/** Turns a data URL in obj[field] into a media file; mutates obj.
- *  Images and audio share the flow; mediaExtension picks the extension. */
-function materializeField(obj, field, name, files) {
-  const src = obj?.[field];
-  if (!src?.startsWith('data:image/') && !src?.startsWith('data:audio/') && !src?.startsWith('data:video/')) return;
-  const base64 = src.split(',', 2)[1];
-  const path = `media/${slugify(name || 'image')}-${contentHash(base64)}.${mediaExtension(src)}`;
-  files.push({ path, content: base64, encoding: 'base64' });
-  obj[field] = `/${path}`;
+let mediaFiles = $state(null);
+
+let mediaBusy = $state(false);
+
+/** The moves the next publish carries (the commit's `from` entries), kept with the drafts until that publish is in or the drafts are discarded, so a reload between the tidy and its publish never leaves the rewritten documents without their moves. */
+const MOVES_KEY = 'urd-draft-media-moves';
+
+let pendingMoves = readMoves();
+
+function readMoves() {
+  try {
+    const list = JSON.parse(localStorage.getItem(MOVES_KEY) ?? '[]');
+    return Array.isArray(list) ? list.filter((m) => typeof m?.from === 'string' && typeof m?.to === 'string') : [];
+  } catch {
+    return [];
+  }
 }
 
-/** One collection entry's images: the main image + the product colors' images (kind products); and a PDF its link goes to. */
-function materializeEntryImages(entry, files) {
-  materializeField(entry, 'image', entry.title, files);
-  for (const color of entry.colors ?? []) materializeField(color, 'image', `${entry.title}-${color.name}`, files);
-  publishHeldFiles(entry, files);
+function setMoves(list) {
+  pendingMoves = list;
+  try {
+    if (list.length) localStorage.setItem(MOVES_KEY, JSON.stringify(list));
+    else localStorage.removeItem(MOVES_KEY);
+  } catch { /* blocked storage: the moves last the session */ }
 }
 
-/** The background layers' images (image and slideshow) - shared by section, nav and footer. */
-function materializeBackground(background, files) {
-  for (const layer of background?.layers ?? []) {
-    if (layer.type === 'image') materializeField(layer.props, 'src', 'background', files);
-    if (layer.type === 'slideshow') {
-      for (const img of layer.props.images ?? []) materializeField(img, 'src', 'background', files);
+/** How many files stand at the root of media/, by the listing; null before it is read. */
+const mediaRootCount = $derived(mediaFiles ? rootMediaFiles(mediaFiles).length : null);
+
+/** Whether the listing GitHub gave was cut short (a repository with more files than the tree call lists), which a tidy cannot work from. */
+let mediaTruncated = false;
+
+/** Reads the files media/ holds from the publishing layer; locally, where there is none, the count stays unknown. */
+async function loadMediaFiles() {
+  try {
+    const res = await fetch('/api/github/media', { cache: 'no-store' });
+    const data = await res.json().catch(() => null);
+    if (res.ok && Array.isArray(data?.files)) {
+      mediaFiles = data.files;
+      mediaTruncated = data.truncated === true;
+    } else {
+      shellState.setStatus(taApiError(data) ?? ta('media.listFailed'), 'error');
     }
-    if (layer.type === 'video') {
-      materializeField(layer.props, 'src', 'video', files);
-      materializeField(layer.props, 'poster', 'plakat', files);
+  } catch {
+    shellState.setStatus(ta('status.publishLayerUnreachable'), 'error');
+  }
+}
+
+/** The tidy: the plan from the published documents and the listing, the changed documents written into the drafts, and the moves given to a publish. The button stands busy from the press to the publish's answer. */
+async function tidyMedia() {
+  if (historyState.dirty || mediaBusy) return;
+  mediaBusy = true;
+  try {
+    await loadMediaFiles();
+    if (!mediaFiles) return;
+    if (mediaTruncated) {
+      shellState.setStatus(ta('media.listTruncated'), 'error');
+      return;
     }
+    const pages = [];
+    for (const entry of siteState.siteDraft.pages) {
+      pages.push([entry.id, entry.id === pageState.pageId ? $state.snapshot(pageState.store.data) : await pageState.readPageDraft(entry)]);
+    }
+    const docs = {
+      site: $state.snapshot(siteState.siteDraft),
+      pages,
+      collections: Object.entries(collectionsState.collectionStores).map(([id, st]) => [id, $state.snapshot(st.data)]),
+      templates: Object.entries(templatesState.templateStores).map(([id, st]) => [id, $state.snapshot(st.data)]),
+    };
+    const plan = planTidy(docs, mediaFiles);
+    if (!plan.moves.length) {
+      shellState.setStatus(ta('media.tidyNothing'));
+      return;
+    }
+    // The changed documents into the drafts, which the publish below picks up.
+    if (plan.site) {
+      siteState.siteStore.replace(plan.site);
+      siteState.siteStore.save();
+      siteState.linkSiteDraft();
+    }
+    for (const [id, doc] of plan.pages) {
+      if (id === pageState.pageId) {
+        pageState.store.replace(doc);
+        pageState.store.save();
+      } else {
+        shellState.writeDraftKey(`urd-draft-${id}`, JSON.stringify(doc));
+      }
+    }
+    for (const [id, doc] of plan.collections) {
+      collectionsState.collectionStores[id]?.replace(doc);
+      collectionsState.collectionStores[id]?.save();
+    }
+    for (const [id, doc] of plan.templates) {
+      templatesState.templateStores[id]?.replace(doc);
+      templatesState.templateStores[id]?.save();
+    }
+    if (plan.collections.length) collectionsState.syncCollectionsView();
+    if (plan.templates.length) templatesState.pushTemplatesToPreview();
+    historyState.updateDirty();
+    setMoves(plan.moves);
+    await publish();
+    if (!pendingMoves.length) {
+      shellState.setStatus(plan.remaining ? ta('media.tidyMore', { n: String(plan.moves.length), left: String(plan.remaining) }) : ta('media.tidyDone', { n: String(plan.moves.length) }), 'ok');
+      mediaFiles = mediaFiles.map((f) => plan.moves.find((m) => m.from === f.path) ? { ...f, path: plan.moves.find((m) => m.from === f.path).to } : f);
+    }
+  } finally {
+    mediaBusy = false;
   }
-}
-
-/** One block's images, and the PDFs its links go to - shared by page publishing and block-group templates. */
-function materializeBlockImages(block, files) {
-  publishHeldFiles(block.props, files);
-  if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
-  // The icon block's own uploaded icon is published as a media file the same way.
-  if (block.type === 'icon') materializeField(block.props, 'image', 'ikon', files);
-  if (block.type === 'gallery') {
-    for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'gallery', files);
-  }
-  if (block.type === 'audio') materializeField(block.props, 'src', block.props.title || 'lyd', files);
-  // The video block's own film and its poster (source 'file').
-  if (block.type === 'video') {
-    materializeField(block.props, 'src', block.props.title || 'video', files);
-    materializeField(block.props, 'poster', 'poster', files);
-  }
-}
-
-/** One section's images (background + blocks) - shared by page publishing and section templates. */
-function materializeSection(section, files) {
-  // Background images follow the same flow as image blocks.
-  materializeBackground(section.background, files);
-  for (const block of section.blocks) materializeBlockImages(block, files);
-}
-
-function materializeImages(page) {
-  const files = [];
-  // The sharing image (meta.og.image) is materialized like the block images.
-  if (page.meta?.og) materializeField(page.meta.og, 'image', 'share', files);
-  for (const section of page.sections) materializeSection(section, files);
-  return files;
-}
-
-/** Logo uploads in the site draft (nav.logo) are materialized the same way. */
-function materializeSiteImages(site) {
-  const files = [];
-  const logo = site.nav?.logo;
-  if (logo?.type === 'image') materializeField(logo, 'value', 'logo', files);
-  if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
-  // The legacy single nav background image (back compat) + the layered
-  // backgrounds on nav and footer.
-  if (site.nav?.style) materializeField(site.nav.style, 'image', 'menu', files);
-  materializeBackground(site.nav?.style?.background, files);
-  materializeBackground(site.footer?.background, files);
-  if (site.footer?.brand) materializeField(site.footer.brand, 'logo', 'footer-logo', files);
-  // The site's links' own icons.
-  for (const link of Array.isArray(site.site?.links) ? site.site.links : []) materializeField(link, 'image', 'link-icon', files);
-  // The launcher's own mark on the button, and one per shortcut.
-  if (site.nav?.launcher) {
-    materializeField(site.nav.launcher, 'image', 'snarvei', files);
-    for (const link of site.nav.launcher.links ?? []) materializeField(link, 'image', 'snarvei', files);
-  }
-  materializeField(site.site, 'icon', 'ikon', files);
-  // The PDFs the menu's, the footer's and the site's links go to.
-  publishHeldFiles(site, files);
-  return files;
 }
 
 // "Discard draft" requires two clicks on TWO different surfaces: the
@@ -145,6 +164,8 @@ function confirmDiscard() {
 
 function discard() {
   historyState.pushHistory('discard');
+  // A tidy's moves go with the documents it rewrote.
+  setMoves([]);
   for (const p of siteState.siteDraft.pages) {
     if (p.id !== pageState.pageId && !pageState.pendingPublished.has(p.id)) localStorage.removeItem(`urd-draft-${p.id}`);
   }
@@ -392,6 +413,9 @@ async function publish() {
   // created in the same commit (two pages swapping addresses) must not
   // be deleted: the last entry with the same path wins in the Git tree,
   // so such a deletion would remove the new copy.
+  // The media files the tidy moves (lib/media-tidy.js), each from its root path to its folder; the bytes stay in the repository.
+  for (const move of pendingMoves) files.push({ path: move.to, from: move.from });
+
   const created = new Set(files.map((f) => f.path));
   const del = (path) => { if (!created.has(path)) files.push({ path, delete: true }); };
   for (const p of siteState.site.pages) {
@@ -434,6 +458,7 @@ async function publish() {
     const { sha } = await res.json().catch(() => ({}));
     if (sha) updaterState.baseSha = sha;
     else updaterState.refreshBaseSha();
+    setMoves([]);
     // Mirror the materialization into memory now that the commit is
     // safely in (the same deterministic paths the clones got).
     materializeImages(pageState.store.data);
@@ -591,5 +616,9 @@ export const publishState = {
   confirmDiscard,
   discard,
   publish,
+  get mediaRootCount() { return mediaRootCount; },
+  get mediaBusy() { return mediaBusy; },
+  loadMediaFiles,
+  tidyMedia,
   effects,
 };

@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import {
-  isAllowedPath, isAllowedContent, MEDIA_PDF_MAX_BYTES, isDeletablePath, isAllowedLogin,
+  isAllowedPath, isAllowedContent, MEDIA_PDF_MAX_BYTES, isDeletablePath, isAllowedMove, isAllowedLogin,
   OWNED_PATTERNS, USER_PATTERNS, matchesPattern, isOwnedPath, isUserPath, isPageIndexCopy,
 } from '../template/functions/_lib/guard.js';
 
@@ -120,6 +120,19 @@ test('a plugin\'s whole folder may be deleted, never written in, and nothing els
   ]) {
     assert.equal(isDeletablePath(path), false, path);
   }
+});
+
+test('a move stays in media/, keeps the extension, and goes nowhere else', () => {
+  assert.equal(isAllowedMove('media/logo-91963a12.svg', 'media/images/logo-91963a12.svg'), true);
+  assert.equal(isAllowedMove('media/meny-1a2b.pdf', 'media/files/meny-1a2b.pdf'), true);
+  assert.equal(isAllowedMove('media/a.webp', 'media/images/a.WEBP'), true, 'the extension compared without case');
+  assert.equal(isAllowedMove('content/site.json', 'media/images/site.json'), false, 'from outside media/');
+  assert.equal(isAllowedMove('media/x.js', 'media/images/x.js'), false, 'a file media/ may not hold');
+  assert.equal(isAllowedMove('media/a.svg', 'media/files/a.pdf'), false, 'the extension changes');
+  assert.equal(isAllowedMove('media/a.webp', 'content/a.webp'), false, 'to outside media/');
+  assert.equal(isAllowedMove('media/a.webp', 'media/a.webp'), false, 'the same path');
+  assert.equal(isAllowedMove('media/../assets/x.webp', 'media/images/x.webp'), false);
+  assert.equal(isAllowedMove('/media/a.webp', 'media/images/a.webp'), false, 'a leading slash');
 });
 
 test('page index is allowed, but never the root or reserved directories', () => {

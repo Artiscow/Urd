@@ -1130,7 +1130,7 @@ The ADRs behind the «Where» column: [ADR-0009](../adr/0009-themed-ui-rule.md) 
 | Multi-site under one domain | FR | Rewrite rules combining projects | edge | n/a | v0.9: «any static host» covers sub-paths |
 | Sub-path or subdirectory hosting | SU (Custom), GH (+$50) | Serve the site at /blog or /docs | edge | n/a | v0.9: «any static host» covers sub-paths |
 | Reverse-proxy self-hosting | FR | Cloudflare or NGINX in front | edge | n/a | v0.9: «any static host» covers sub-paths |
-| Static file hosting | FR (Pro: 50 files), CA (Plus), SQ (20 MB per file), SH | Upload PDFs and other files | no | Partial: a PDF of at most 15 MB uploaded through the link editor, other files placed in media/ through git; no other file types in admin | ER-B: file list; v0.8 media library |
+| Static file hosting | FR (Pro: 50 files), CA (Plus), SQ (20 MB per file), SH | Upload PDFs and other files | no | Partial: a PDF of at most 15 MB uploaded through the link editor, stored in media/files/ beside images/, audio/ and video/ (0.7.10.28), other files placed in media/ through git; no other file types in admin | ER-B: file list; v0.8 media library |
 | Well-known files | FR, WF (Premium), SQ (ads.txt) | `/.well-known/*` verification files and root text files such as ads.txt | no | Partial: the repo can hold them, added by hand; publishing writes none and the admin has no field for them | v0.8 publish-time files |
 | Favicon and site icon | DU, WN, TI, ZO, NO, CA, FI, SH, SQ | Browser icon | no | Partial: one site icon (upload, square crop, filters), also the fallback share image and the JSON-LD logo; no dark-mode version | 0.7.13.19 |
 | Site QR codes | CA, SQ | QR code linking to the site | no | Partial: the contact block's QR design (0.7.24.5.2), from an encoder of Urd's own (`qr.js`) | ER-G: a code per page from `qr.js` (C119) |
@@ -2142,7 +2142,7 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | SVG styling or animation | BR, FR, WT | SVG per breakpoint; SVG animations; paste SVG | Partial: an uploaded SVG stays a vector with a trimmed viewBox, shown as an image; no styling, recolouring or animation of its parts | v0.8 OL-2 |
 | Vector drawing or booleans | FR, FS | Pen, paths, booleans | Missing | Not taken: third party or AI (MCP) |
 | Icon libraries or managers | RM, BR, WP, WN, DV | Noun Project; Icon Manager; Icon block | Has: icon library and icon editor | - |
-| Asset or media manager | WF, WH, BR, WT, SQ | Assets panel; Media Manager; bulk and metadata (BR) | Missing | v0.8 media library |
+| Asset or media manager | WF, WH, BR, WT, SQ | Assets panel; Media Manager; bulk and metadata (BR) | Partial: media/ sorted into folders by kind, a listing of its files from the publishing layer, and a tidy that moves a site's old files into the folders (0.7.10.28); no panel over the files | v0.8 media library |
 | Stock media | RM, DU, WN, WH, SQ, SH | Unsplash, GIPHY, Shutterstock | Missing | Not taken: third party or AI (MCP) |
 | Image optimisation | DU, SQ | Auto resize per device | Partial: WebP and size limits at upload; no sizes per device | v0.8 responsive pictures |
 | Image metadata import | SQ | EXIF and IPTC titles, captions and tags read at upload | Missing: the upload re-encodes a still picture as WebP, which drops its metadata, GPS position included | Not taken: low value |

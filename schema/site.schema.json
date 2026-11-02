@@ -28,7 +28,7 @@
             "properties": {
               "id": { "type": "string", "description": "Made by the editor" },
               "icon": { "type": "string", "description": "Id from the icon library (icons.js); image wins when both are set" },
-              "image": { "type": "string", "description": "An own icon: a /media/ path (a data URL in the draft until publishing)" },
+              "image": { "type": "string", "description": "An own icon: a /media/images/ path (a data URL in the draft until publishing)" },
               "label": { "type": "string", "description": "The accessible name; empty falls back to the icon's brand name" },
               "url": { "type": "string", "description": "http/https/mailto/tel, or a site path or anchor" }
             }
@@ -124,7 +124,7 @@
             }
           }
         },
-        "icon": { "type": "string", "description": "Site icon (favicon): path in media/ (data URL in draft). Additive field from v0.5." },
+        "icon": { "type": "string", "description": "Site icon (favicon): path in media/images/ (data URL in draft). Additive field from v0.5." },
         "setup": { "type": "boolean", "description": "Additive from v0.6: true in the template's default content triggers the setup wizard in admin; the wizard removes the field on completion. Replaces the old string matching on the template's default name." }
       }
     },
@@ -268,7 +268,7 @@
           "description": "The pull tab's own design (additive from 0.7.13.21); omitted = the burger lines in the menu's surface.",
           "properties": {
             "icon": { "type": "string", "description": "An id from the icon library; omitted = the burger lines" },
-            "image": { "type": "string", "description": "An own mark as a path in media/ (data URL in the draft); wins over icon" },
+            "image": { "type": "string", "description": "An own mark as a path in media/images/ (data URL in the draft); wins over icon" },
             "label": { "type": "string", "description": "The word on the tab; it is also the tab's accessible name (empty = the translated «Menu»)" },
             "color": { "type": "string", "description": "The tab's colour: theme token or raw colour" },
             "textColor": { "type": "string", "description": "The colour of the mark and the word" }
@@ -323,7 +323,7 @@
             "longNames": { "enum": ["cut", "wrap"], "default": "cut", "description": "A name too long for its tile: cut = one line ending in an ellipsis, with the whole name in the tile's tooltip; wrap = folded onto more lines" },
             "title": { "type": "string", "description": "The heading's own words; omitted = the translated default (nav.launcher)" },
             "icon": { "type": "string", "description": "An id from the icon library for the button; omitted = the nine dots" },
-            "image": { "type": "string", "description": "The owner's own mark on the button as a path in media/ (data URL in the draft); wins over icon" },
+            "image": { "type": "string", "description": "The owner's own mark on the button as a path in media/images/ (data URL in the draft); wins over icon" },
             "links": {
               "type": "array",
               "description": "The shortcuts. Every row is drawn; a row whose target is unsafe or empty is dimmed and goes nowhere.",
@@ -340,7 +340,7 @@
                   "download": { "$ref": "#/$defs/linkDownload" },
                   "rel": { "$ref": "#/$defs/linkRel" },
                   "icon": { "type": "string", "description": "An id from the icon library (icons.js); an unknown id leaves the tile with its label" },
-                  "image": { "type": "string", "description": "Own image or logo as a path in media/ (data URL in the draft); wins over icon" }
+                  "image": { "type": "string", "description": "Own image or logo as a path in media/images/ (data URL in the draft); wins over icon" }
                 }
               }
             }
@@ -378,7 +378,7 @@
               "default": true,
               "description": "Space above the floating pill (additive from v0.6; false = the pill sits flush at the top)."
             },
-            "image": { "type": "string", "description": "Background image in the menu (additive from v0.6): path in media/ (data URL in draft). bg/bgOpacity is laid as a veil over the image." },
+            "image": { "type": "string", "description": "Background image in the menu (additive from v0.6): path in media/images/ (data URL in draft). bg/bgOpacity is laid as a veil over the image." },
             "imageOpacity": {
               "type": "number",
               "minimum": 0,
@@ -679,7 +679,7 @@
             "title": { "type": "string" },
             "tagline": { "type": "string" },
             "mode": { "enum": ["text", "image", "both"], "default": "text", "description": "The brand is shown as text, uploaded logo (image), or both (logo + text). Mirrors the nav logo. Additive from v0.6." },
-            "logo": { "type": "string", "description": "Uploaded logo: path in media/ (data URL in draft). Shown when mode is image/both." },
+            "logo": { "type": "string", "description": "Uploaded logo: path in media/images/ (data URL in draft). Shown when mode is image/both." },
             "logoHeight": { "type": "number", "minimum": 16, "maximum": 160, "default": 40, "description": "Logo height in px." }
           }
         },

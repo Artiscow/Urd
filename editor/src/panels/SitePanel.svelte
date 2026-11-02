@@ -495,6 +495,18 @@
         onremove={(i) => removeSiteLink(i)} onmove={(i, dir) => moveSiteLink(i, dir)} />
     </div>
   </details>
+  <!-- The site's media files: how many still stand at the root of media/, and the tidy that moves them into the folders of their kind (lib/media-tidy.js) -->
+  <details class="group" bind:open={() => ed.siteMediaOpen, (v) => (ed.siteMediaOpen = v)} ontoggle={(e) => { if (e.currentTarget.open && ed.mediaRootCount === null) ed.loadMediaFiles(); }}>
+    <summary title={ta('tip.site.media')}>{ta('group.siteMedia')}</summary>
+    <div class="group-items">
+      <div class="ctl-row" title={ta('tip.site.mediaRoot')}>
+        <span>{ta('lbl.mediaRoot')}</span>
+        <span class="gridmenu-value">{ed.mediaRootCount ?? '-'}</span>
+      </div>
+      <button class="ghost action" disabled={ed.mediaBusy || ed.mediaRootCount === null || !ed.mediaRootCount || ed.dirty || ed.updateBusy || !ed.auth?.allowed}
+        title={ed.dirty ? ta('tip.media.tidyDirty') : ta('tip.media.tidy')} onclick={() => ed.tidyMedia()}>{ta('ui.tidyMedia')}</button>
+    </div>
+  </details>
   <!-- The association's legal and contact details (site.contact): typed once, drawn by the footer and written into the JSON-LD. The country's profile says which numbers there are -->
   <details class="group" bind:open={() => ed.siteContactOpen, (v) => (ed.siteContactOpen = v)}>
     <summary title={ta('tip.site.contact')}>{ta('group.siteContact')}</summary>

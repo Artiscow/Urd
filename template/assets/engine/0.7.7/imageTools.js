@@ -1,7 +1,7 @@
 /**
  * Image tools for the editor: compression to webp in the browser before
  * the image even enters the draft. Publishing materializes the data URLs
- * into files in media/.
+ * into files in media/, each in the folder of its kind (MEDIA_FOLDERS).
  */
 
 const MAX_DIMENSION = 1600;
@@ -344,4 +344,46 @@ export function contentHash(text) {
   let hash = 5381;
   for (let i = 0; i < text.length; i++) hash = ((hash << 5) + hash + text.charCodeAt(i)) >>> 0;
   return hash.toString(16).padStart(8, '0');
+}
+
+/** The folders of media/, by the kind of file each holds: a video's poster is a picture, so it stands with the images. */
+export const MEDIA_FOLDERS = {
+  images: ['webp', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'avif', 'ico'],
+  files: ['pdf'],
+  audio: ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac'],
+  video: ['mp4', 'webm'],
+};
+
+/** The folder of media/ a file goes in by its extension, or null for an extension media/ does not hold. */
+export function mediaFolder(extension) {
+  const ext = String(extension ?? '').toLowerCase();
+  return Object.keys(MEDIA_FOLDERS).find((folder) => MEDIA_FOLDERS[folder].includes(ext)) ?? null;
+}
+
+/**
+ * The path publishing writes a file to: its folder by kind, the slug, and the content's hash, so the same content gives the same path and a republish never duplicates a file.
+ * @param {string} slug The file's slug (slugify)
+ * @param {string} base64 The content, base64
+ * @param {string} dataUrl The data URL, for the extension (mediaExtension)
+ * @returns {string} `media/<folder>/<slug>-<hash>.<ext>`, without a leading slash
+ */
+export function mediaPath(slug, base64, dataUrl) {
+  const ext = mediaExtension(dataUrl);
+  return `media/${mediaFolder(ext) ?? 'files'}/${slug}-${contentHash(base64)}.${ext}`;
+}
+
+/** A path at the root of media/, as the files written before the folders came. */
+const ROOT_MEDIA_RE = /^\/media\/([a-z0-9][a-z0-9._-]*)\.([a-z0-9]+)$/i;
+
+/**
+ * The path a file at the root of media/ takes in its folder (the tidy of a site built before the folders): `/media/x.webp` gives `/media/images/x.webp`.
+ * Null for a path already in a folder, an extension media/ does not hold, or anything that is not a media path.
+ * @param {string} path
+ * @returns {string|null}
+ */
+export function tidiedMediaPath(path) {
+  const m = String(path ?? '').match(ROOT_MEDIA_RE);
+  if (!m) return null;
+  const folder = mediaFolder(m[2]);
+  return folder ? `/media/${folder}/${m[1]}.${m[2]}` : null;
 }

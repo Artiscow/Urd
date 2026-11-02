@@ -87,6 +87,23 @@ export function isAllowedContent(path, content, encoding) {
   return content.startsWith(PDF_BASE64_HEAD) && Math.floor((content.length * 3) / 4) <= MEDIA_PDF_MAX_BYTES;
 }
 
+/**
+ * Whether publishing may move a file in media/ (the tidy of a site built before the folders): both paths in media/ and allowed as writes, the same extension (so a move never changes what isAllowedContent checked), and not the same path.
+ * The file's bytes never travel: the commit takes the blob the source holds in the base tree (commitFiles).
+ * @param {string} from Repo-relative path of the file as it stands
+ * @param {string} to Repo-relative path it moves to
+ * @returns {boolean}
+ */
+export function isAllowedMove(from, to) {
+  const a = normalizePath(from);
+  const b = normalizePath(to);
+  if (!a || !b || a === b) return false;
+  if (!a.startsWith('media/') || !b.startsWith('media/')) return false;
+  if (!isAllowedPath(a) || !isAllowedPath(b)) return false;
+  const ext = (p) => p.slice(p.lastIndexOf('.') + 1).toLowerCase();
+  return ext(a) === ext(b);
+}
+
 /** A plugin's folder (`plugins/<id>`, the id as a manifest has it): publishing may delete it whole, never write in it, since a deletion cannot plant code (ADR-0003). */
 const PLUGIN_FOLDER_RE = /^plugins\/[a-z0-9][a-z0-9-]*$/;
 

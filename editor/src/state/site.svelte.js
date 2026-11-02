@@ -397,6 +397,8 @@ let focusSiteLink = $state(null);
 
 /** Whether the Site panel's Links group stands open; the buttons that lead there open it. */
 let siteLinksOpen = $state(false);
+
+let siteMediaOpen = $state(false);
 /** The Shop group of the Site panel, opened from the shop's blocks (the shop currency). */
 let siteShopOpen = $state(false);
 /** Set by the shop's «Shop currency» link: the Site panel brings the currency field into view and focuses it, then clears it. */
@@ -742,6 +744,8 @@ export const siteState = {
   set focusSiteLink(v) { focusSiteLink = v; },
   get siteLinksOpen() { return siteLinksOpen; },
   set siteLinksOpen(v) { siteLinksOpen = v; },
+  get siteMediaOpen() { return siteMediaOpen; },
+  set siteMediaOpen(v) { siteMediaOpen = v; },
   get siteContactOpen() { return siteContactOpen; },
   set siteContactOpen(v) { siteContactOpen = v; },
   siteCalendars,

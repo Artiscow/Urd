@@ -9,7 +9,7 @@
       "shop": true
     },
     "meetingHosts": [],
-    "icon": "/media/ikon-9740643c.webp",
+    "icon": "/media/images/ikon-9740643c.webp",
     "setup": true,
     "calendars": [
       {
@@ -155,7 +155,7 @@
     },
     "logo": {
       "type": "image",
-      "value": "/media/logo-91963a12.svg",
+      "value": "/media/images/logo-91963a12.svg",
       "size": 30,
       "mobileSize": 26,
       "order": "image-first",
@@ -292,7 +292,7 @@
       "title": "Urd",
       "tagline": "Bygg din egen nettside for din lille forening helt gratis!",
       "mode": "both",
-      "logo": "/media/footer-logo-84804c80.svg",
+      "logo": "/media/images/footer-logo-84804c80.svg",
       "logoHeight": 40
     },
     "columns": [
@@ -326,7 +326,7 @@
           },
           {
             "label": "Last ned logoen",
-            "href": "/media/footer-logo-84804c80.svg",
+            "href": "/media/images/footer-logo-84804c80.svg",
             "download": true
           }
         ]
