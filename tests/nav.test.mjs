@@ -1053,3 +1053,45 @@ test('resolveItem, the launcher and the announcement carry the link shape', () =
   assert.equal(items[0].kind, 'link');
 });
 
+
+test('navItems: an item to a hidden page is left out, and one with a submenu keeps the submenu as an opener', () => {
+  const site = {
+    pages: [
+      { id: 'hjem', path: '/' },
+      { id: 'kaker', path: '/kaker', hidden: true },
+      { id: 'shop', path: '/shop' },
+    ],
+    nav: {
+      items: [
+        { label: 'Hjem', page: 'hjem' },
+        { label: 'Kaker', page: 'kaker' },
+        { label: 'Butikk', page: 'kaker', children: [{ label: 'Shop', page: 'shop' }, { label: 'Kaker', page: 'kaker' }] },
+      ],
+    },
+  };
+  const items = navItems(site);
+  assert.deepEqual(items.map((i) => [i.label, i.kind]), [['Hjem', 'link'], ['Butikk', 'toggle']]);
+  assert.deepEqual(items[1].children.map((c) => c.label), ['Shop']);
+});
+
+test('navItems: an item to a hidden page whose submenu leads only to hidden pages is left out, its spot and its deepest children too', () => {
+  const site = {
+    pages: [
+      { id: 'hjem', path: '/' },
+      { id: 'kaker', path: '/kaker', hidden: true },
+      { id: 'arkiv', path: '/arkiv', hidden: true },
+      { id: 'shop', path: '/shop' },
+    ],
+    nav: {
+      items: [
+        { label: 'Kaker', page: 'kaker', children: [{ label: 'Arkiv', page: 'arkiv' }] },
+        { label: 'Priser', page: 'kaker', target: 'priser' },
+        { label: 'Tom', page: 'kaker', children: [] },
+        { label: 'Meny', children: [{ label: 'Under', page: 'shop', children: [{ label: 'Dypt', page: 'arkiv' }] }] },
+      ],
+    },
+  };
+  const items = navItems(site);
+  assert.deepEqual(items.map((i) => i.label), ['Meny']);
+  assert.deepEqual(items[0].children.map((c) => [c.label, c.children.length]), [['Under', 0]]);
+});

@@ -26,6 +26,8 @@ function ctx() {
     csvPreviewPref: 'dialog',
     PAGE_SETTINGS_OPTIONS: [['dialog', 'Dialog'], ['step', 'In the panel'], ['table', 'Table']],
     pageSettingsPref: 'dialog',
+    PRESS_OPTIONS: ['ripple', 'press', 'nudge', 'sink', 'ring', 'spring'].map((id) => [id, id]),
+    pressFeel: 'ripple',
     adminLangOptions: () => [['nb', 'Norsk bokmål']],
     adminTheme: 'grey', adminLayout: 'rail', settingsPlace: 'dialog', settingsPictures: 'pictures', adminLangChoice: 'auto',
     addBlockMenuPref: 'side', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',

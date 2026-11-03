@@ -1,6 +1,6 @@
 <script>
   /* The page switcher at the top bar's left end: the open page's name on a button, and under it the site's pages to switch to, found by a search, each with its address and a gear to its own settings; at the foot the open page's settings and a new page.
-     The pages stand in the Pages panel's order, the open one marked, the front page with a house, a page hidden from search with a crossed eye, and a page with unpublished changes with a dot.
+     The pages stand in the Pages panel's order, the open one marked, the front page with a house, a page hidden from visitors with an amber crossed eye, one hidden from search with a crossed magnifier, and a page with unpublished changes with a dot.
      A tool menu as the top bar's others (ed.toolMenu 'page'): a press outside, Escape and the window's blur close it; the arrows walk the found pages and Enter opens the marked one. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -98,7 +98,8 @@
             <button type="button" class="ghost page-open" title={ta('tip.openPage', { page: p.title || p.id })} onclick={() => openPage(p)}>
               <span class="page-name">{p.title || p.id}</span>
               {#if p.path === '/'}<span class="page-mark" title={ta('tip.pages.isFront')}>{@html ICONS.home}</span>{/if}
-              {#if p.noindex}<span class="page-mark" title={ta('lbl.hideFromSearch')}>{@html ICONS.eyeOff}</span>{/if}
+              {#if p.hidden}<span class="page-mark page-hidden" title={ta('tip.pages.hiddenMark')}>{@html ICONS.eyeOff}</span>{/if}
+              {#if p.noindex}<span class="page-mark" title={ta('lbl.hideFromSearch')}>{@html ICONS.searchOff}</span>{/if}
               {#if drafted.has(p.id)}<span class="page-dot" title={ta('tip.pageDraft')}></span>{/if}
               <span class="page-path">{p.path}</span>
             </button>
@@ -237,6 +238,12 @@
   .page-mark {
     display: inline-flex;
     opacity: 0.6;
+  }
+
+  /* A page hidden from visitors: its crossed eye in amber */
+  .page-mark.page-hidden {
+    color: #d9b44a;
+    opacity: 1;
   }
 
   .page-mark :global(svg) {

@@ -16,6 +16,7 @@ import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
 import { templatesState } from './templates.svelte.js';
+import { redirectsState } from './redirects.svelte.js';
 
 let dirty = $state(false);
 /** Counts the changes saved this session, so a view that reads the page's own data (which is not reactive) follows every change. */
@@ -34,7 +35,7 @@ function updateDirty() {
     || Object.values(templatesState.templateStores).some((st) => st.hasDraft());
   dirty = anyPageDraft
     || (pageState.store?.hasDraft() && !pageState.pendingPublished.has(pageState.pageId))
-    || siteState.siteStore?.hasDraft() || pluginsState.pluginsStore?.hasDraft() || anyCollectionDraft || anyTemplateDraft || false;
+    || siteState.siteStore?.hasDraft() || pluginsState.pluginsStore?.hasDraft() || redirectsState.redirectsStore?.hasDraft() || anyCollectionDraft || anyTemplateDraft || false;
 }
 
 /**
@@ -196,6 +197,7 @@ function stateObject() {
       ? Object.fromEntries(Object.entries(templatesState.templateStores).map(([id, st]) => [id, st.data]))
       : {},
     plugins: pluginsState.pluginsStore?.data ?? null,
+    redirects: redirectsState.redirectsStore?.data ?? null,
   };
 }
 
@@ -243,7 +245,7 @@ function pushHistory(key, { caret = null, pages = [] } = {}) {
 }
 
 function restore(snap) {
-  const { pageId: snapPageId, page, site: siteSnap, collectionsIndex, collections, templatesIndex, templates, plugins, others } = JSON.parse(snap);
+  const { pageId: snapPageId, page, site: siteSnap, collectionsIndex, collections, templatesIndex, templates, plugins, redirects, others } = JSON.parse(snap);
   restores += 1;
   // Pages beside the open one the step wrote: their drafts as they were, written back without leaving the page.
   for (const [id, doc] of Object.entries(others ?? {})) {
@@ -260,6 +262,7 @@ function restore(snap) {
   restoreCollections(collectionsIndex, collections ?? {});
   restoreTemplates(templatesIndex, templates ?? {});
   restorePlugins(plugins);
+  redirectsState.restoreRedirects(redirects);
 
   // The snapshot belongs to another page (undo across a page switch): put
   // the page content back as a draft THERE, and switch to it.

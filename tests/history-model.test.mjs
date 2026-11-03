@@ -51,7 +51,7 @@ test('stepKind: each kind of change named in words with an icon, a page change m
 });
 
 test('stepKind: every words key is in the admin base and every icon is drawn', () => {
-  const keys = ['edit:x', 'nav', 'footer', 'theme', 'site', 'pages', 'collections', 'templates', 'plugins', 'discard', 'page-meta:a:b', 'add-section', 'delete-section', 'move-section', 'duplicate-section', 'layout', 'add-block', 'delete-block', 'move-block', 'mobile-reset'];
+  const keys = ['edit:x', 'nav', 'footer', 'theme', 'site', 'pages', 'collections', 'templates', 'plugins', 'redirects', 'discard', 'page-meta:a:b', 'add-section', 'delete-section', 'move-section', 'duplicate-section', 'layout', 'add-block', 'delete-block', 'move-block', 'mobile-reset'];
   for (const key of [...keys.map((k) => stepKind(k)), stepKind('edit:x', { typed: true })]) {
     assert.ok(dict[key.labelKey], `${key.labelKey} in en-GB`);
     assert.ok(ICONS[key.icon], `${key.icon} drawn`);

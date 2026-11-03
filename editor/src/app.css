@@ -728,7 +728,7 @@
     position: absolute;
     right: 0.6em;
     top: 50%;
-    translate: 0 -50%;
+    transform: translateY(-50%);
     font-size: 0.8rem;
     opacity: 0.45;
     pointer-events: none;
@@ -1015,7 +1015,7 @@
     position: absolute;
     top: 50%;
     right: calc(2.1rem + 0.3rem);
-    translate: 0 -50%;
+    transform: translateY(-50%);
   }
 
   /* Any other pinnable setting stands as its words over its control, with the pin at the end of the words' line, so the control keeps the row's full width and ends where the rows around it end */
@@ -1054,7 +1054,7 @@
     position: absolute;
     top: 50%;
     right: 0.35rem;
-    translate: 0 -50%;
+    transform: translateY(-50%);
   }
 
   /* A payment instruction's row in the checkout menu: the name, the text and its remove button */
@@ -2574,7 +2574,7 @@
   }
 
   .page-slug {
-    flex: 0 0 5.5rem;
+    flex: 0 0 4.75rem;
     min-width: 0;
     opacity: 0.8;
   }
@@ -2609,7 +2609,7 @@
     width: 0.9rem;
     height: 0.9rem;
     padding: 0;
-    translate: -50% -50%;
+    transform: translate(-50%, -50%);
     border: 2px solid var(--urd-color-bg);
     border-radius: 999px;
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--urd-color-text) 45%, transparent);
@@ -2624,7 +2624,7 @@
 
   .grad-handle.dragging {
     cursor: grabbing;
-    scale: 1.2;
+    transform: translate(-50%, -50%) scale(1.2);
   }
 
   .grad-stop {
@@ -3355,7 +3355,7 @@
   .seg { display: inline-flex; isolation: isolate; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
   .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
   /* The chosen button's pill is a layer under every button's words (the segment isolates them), so a new choice can slide the pill across from the old one (lib/seg-slide.js) while the words stay put */
-  .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ position: relative; transition: color 0.18s ease, background 0.12s ease, transform 0.05s ease; }
+  .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ position: relative; transition: color 0.18s ease, background 0.12s ease; }
   .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ color: var(--urd-color-bg); }
   .seg button.on:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ background: transparent; }
   .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::before{ content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--urd-color-accent); }
@@ -3509,7 +3509,7 @@
     justify-content: center;
     gap: 0.4em;
     background: rgb(255 255 255 / 7%);
-    transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+    transition: background 0.12s ease, border-color 0.12s ease;
   }
 
   button:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
@@ -3518,9 +3518,90 @@
     border-color: rgb(255 255 255 / 38%);
   }
 
-  button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
-    transform: translateY(1px);
+  /* The press feel (Urd settings «Button press», lib/press-feel.js): every button and ghost control answers a press the way data-press on the root says, Ripple by default.
+     Movement uses translate and scale, which add to a control's own transform instead of replacing it, so a control placed by a transform keeps its place; under reduced motion only the colour changes. */
+  :root button:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  :root .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    transition: color 0.18s ease, background-color 0.12s ease, border-color 0.12s ease, translate 0.14s ease-out, scale 0.16s ease-out, filter 0.12s ease, box-shadow 0.22s ease-out;
   }
+
+  [data-press='sink'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  [data-press='sink'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 45%);
+    filter: brightness(0.85);
+    transition-duration: 0.05s;
+  }
+
+  /* Ripple: the ring a script draws from the press point (ripple in lib/press-feel.js), clipped to the control's shape */
+  [data-press='ripple'] .urd-ripple {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  [data-press='ripple'] .urd-ripple-ring {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0;
+    animation: urd-ripple 0.42s ease-out;
+  }
+
+  @keyframes urd-ripple {
+    from { opacity: 0.28; scale: 0; }
+    to { opacity: 0; scale: 22; }
+  }
+
+  [data-press='ring'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  [data-press='ring'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--urd-color-accent, #7c5cff) 45%, transparent);
+    transition-duration: 0.04s;
+  }
+
+  /* The moving feels, only where motion is welcome */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-press='nudge'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+    [data-press='nudge'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+      translate: 0 1px;
+      transition-duration: 0.05s;
+    }
+
+    [data-press='press'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+    [data-press='press'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+      scale: 0.96;
+      transition-duration: 0.07s;
+    }
+
+    /* Spring: in quickly, back out on a curve that overshoots a little as the press lets go */
+    [data-press='spring'] button:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+    [data-press='spring'] .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+      transition: color 0.18s ease, background-color 0.12s ease, border-color 0.12s ease, scale 0.3s cubic-bezier(0.3, 1.6, 0.55, 1), filter 0.12s ease;
+    }
+
+    [data-press='spring'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+    [data-press='spring'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+      scale: 0.94;
+      transition: scale 0.07s ease-in;
+    }
+  }
+
+  /* Under reduced motion the movements never apply, and a press darkens the control instead; the ripple is not drawn */
+  @media (prefers-reduced-motion: reduce) {
+    [data-press] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+    [data-press] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+      filter: brightness(0.85);
+    }
+
+    [data-press] .urd-ripple {
+      display: none;
+    }
+  }
+  /* End of the press feel */
 
   /* Controls must not inherit the page's airy line-height (1.6 from
      base.css via font: inherit): a tight line box gives even centering */
@@ -3864,11 +3945,8 @@
     position: absolute;
     top: calc(100% + 0.6rem);
     left: 50%;
-    /* Centred with the translate property, not transform: the global
-       button:active rule sets transform, and a transform here would be
-       replaced by it while the pointer is held down, moving the pill out
-       from under the pointer before the release. */
-    translate: -50% 0;
+    /* Centred by transform, which a press (translate and scale, the press feel) adds to rather than replaces. */
+    transform: translateX(-50%);
     z-index: 100002;
     display: inline-flex;
     align-items: center;

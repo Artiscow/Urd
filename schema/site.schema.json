@@ -227,7 +227,8 @@
           "title": { "type": "string", "minLength": 1 },
           "path": { "type": "string", "pattern": "^/" },
           "file": { "type": "string", "pattern": "^content/pages/.+\\.json$" },
-          "noindex": { "type": "boolean", "description": "Hide the page from search engines (additive from v0.7): meta robots noindex, no canonical, and omitted from sitemap.xml" }
+          "noindex": { "type": "boolean", "description": "Hide the page from search engines (additive from v0.7): meta robots noindex, no canonical, and omitted from sitemap.xml" },
+          "hidden": { "type": "boolean", "description": "Hidden from visitors (additive from v0.7): left out of the published nav, the sitemap and its address copy, while the admin still opens it; its address answers with the redirect content/redirects.json holds for it, or «not found»" }
         }
       }
     },

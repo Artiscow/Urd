@@ -83,3 +83,9 @@ test('buildRssXml: an invalid date gives no pubDate, an empty list gives a valid
   assert.ok(empty.includes('</channel>'));
   assert.ok(!empty.includes('<item>'));
 });
+
+test('buildSitemapXml: a hidden page is left out, as one hidden from search engines is', () => {
+  const xml = buildSitemapXml([{ path: '/' }, { path: '/kaker', hidden: true }, { path: '/shop' }], 'https://urd.example');
+  assert.ok(!xml.includes('/kaker'));
+  assert.ok(xml.includes('https://urd.example/shop'));
+});

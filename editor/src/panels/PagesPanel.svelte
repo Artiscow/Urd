@@ -47,7 +47,7 @@
   <PageSettingsStep />
   {:else}
   {#each siteDraft.pages as p (p.id)}
-    <div class="page-row" class:current={p.id === pageId}>
+    <div class="page-row" class:current={p.id === pageId} class:page-hidden={p.hidden}>
       <input class="page-title" value={ed.pageFieldValue(p, 'title')} title={ed.pageFieldError(p.id, 'title') ?? ta('tip.pages.title')} aria-invalid={ed.pageFieldError(p.id, 'title') ? 'true' : undefined}
         oninput={(e) => ed.typePageField(p.id, 'title', e.target.value)} onchange={(e) => ed.commitPageField(p, 'title', e.target.value)} />
       {#if p.path === '/'}
@@ -57,6 +57,11 @@
           oninput={(e) => ed.typePageField(p.id, 'slug', e.target.value)} onchange={(e) => ed.commitPageField(p, 'slug', e.target.value)} />
       {/if}
       <span class="row-tools">
+        <!-- Shown or hidden from visitors: hiding a published page asks where its visitors go -->
+        <button class="ghost row-tool" class:row-hidden={p.hidden} disabled={p.path === '/'} aria-pressed={p.hidden === true}
+          title={p.path === '/' ? ta('tip.pages.frontNoHide') : p.hidden ? ta('tip.pages.hiddenShow') : ta('tip.pages.hide')}
+          aria-label={p.path === '/' ? ta('tip.pages.frontNoHide') : p.hidden ? ta('tip.pages.hiddenShow') : ta('tip.pages.hide')}
+          onclick={() => ed.setPageHidden(p, !p.hidden)}>{@html p.hidden ? ICONS.eyeOff : ICONS.eye}</button>
         <button class="ghost row-tool" title={ta('tip.pages.open')}
           disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
         <button class="ghost row-tool" title={ta('tip.pages.settings')} aria-label={ta('ui.pageSettings')}
@@ -64,6 +69,11 @@
       </span>
     </div>
   {/each}
+  <!-- Old addresses sent on: the Redirects dialog -->
+  <button type="button" class="ghost action redirects-open" title={ta('tip.redirects.open')} onclick={() => ed.openRedirects()}>
+    {@html ICONS.redirect}<span>{ta('ui.redirects')}</span>
+    {#if ed.redirectRules.length}<span class="redirects-count">{ed.redirectRules.length}</span>{/if}
+  </button>
   {/if}
   <hr class="gridmenu-divider" />
   <input data-new-page placeholder={ta('ph.newPageName')} bind:value={() => ed.newPageTitle, (v) => { ed.newPageTitle = v; newPageError = null; }}
@@ -107,3 +117,29 @@
     </div>
   {/if}
 </div>
+
+<style>
+  /* A hidden page's row, dimmed, its eye in amber */
+  .page-row.page-hidden :global(.page-title),
+  .page-row.page-hidden :global(.page-slug) {
+    opacity: 0.55;
+  }
+
+  .row-hidden {
+    color: #d9b44a;
+  }
+
+  .redirects-open {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
+  }
+
+  .redirects-count {
+    margin-left: auto;
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+</style>

@@ -5,6 +5,8 @@
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import PageSettingsFields from './PageSettingsFields.svelte';
+  import HideButton from './HideButton.svelte';
+  import HiddenRow from './HiddenRow.svelte';
 
   const ed = getContext('urd-editor');
   let rootEl = $state(null);
@@ -62,6 +64,7 @@
               {#if footerShown}<th scope="col" class="pt-c">{ta('pages.col.footer')}</th>{/if}
               <th scope="col">{ta('lbl.searchTitle')}</th>
               <th scope="col">{ta('lbl.seoDescription')}</th>
+              <th scope="col" class="pt-c">{ta('pages.col.noSearch')}</th>
               <th scope="col" class="pt-c">{ta('pages.col.hidden')}</th>
             </tr>
           </thead>
@@ -81,6 +84,9 @@
                 <td><input class="pt-cell" value={metaOf(p.id).searchTitle} placeholder={p.title} aria-label={ta('lbl.searchTitle')} title={ta('tip.seo.searchTitle')} onchange={(e) => ed.setPageMeta(p.id, 'searchTitle', e.target.value)} /></td>
                 <td><input class="pt-cell pt-wide" value={metaOf(p.id).description} placeholder={ta('pages.noDescription')} aria-label={ta('lbl.seoDescription')} title={ta('tip.seo.description')} onchange={(e) => ed.setPageMeta(p.id, 'description', e.target.value)} /></td>
                 <td class="pt-c"><input type="checkbox" checked={p.noindex === true} aria-label={ta('lbl.hideFromSearch')} title={ta('tip.seo.hideFromSearch')} onchange={(e) => ed.setPageNoindex(e.target.checked, p.id)} /></td>
+                <!-- Hidden from visitors: hiding a published page asks where its visitors go, so the box shows what stands once that is answered -->
+                <td class="pt-c"><input type="checkbox" checked={p.hidden === true} disabled={p.path === '/'} aria-label={ta('ui.hidden')} title={p.path === '/' ? ta('tip.pages.frontNoHide') : ta('tip.pages.hide')}
+                  onchange={async (e) => { await ed.setPageHidden(p, e.target.checked); e.target.checked = p.hidden === true; }} /></td>
               </tr>
             {/each}
           </tbody>
@@ -88,7 +94,8 @@
       </div>
       <aside class="pt-drawer panel-body" aria-label={entry?.title ?? ''}>
         {#if entry}
-          <span class="pt-drawer-head"><span class="pt-drawer-name">{entry.title}</span><span class="pt-path">{entry.path}</span></span>
+          <span class="pt-drawer-head"><span class="pt-drawer-name">{entry.title}</span><span class="pt-path">{entry.path}</span><HideButton {id} /></span>
+          <HiddenRow {id} />
           {#key id}<PageSettingsFields {id} />{/key}
         {/if}
       </aside>
@@ -227,6 +234,11 @@
     display: grid;
     gap: 0.1rem;
     padding-bottom: 0.3rem;
+  }
+
+  .pt-drawer-head :global(.hide-btn) {
+    justify-self: start;
+    margin-top: 0.35rem;
   }
 
   .pt-drawer-name {

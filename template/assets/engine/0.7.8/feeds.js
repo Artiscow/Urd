@@ -26,7 +26,7 @@ export function escapeXml(text) {
 export function buildSitemapXml(pages, origin) {
   const base = String(origin ?? '').replace(/\/+$/, '');
   const urls = (pages ?? [])
-    .filter((p) => !p.noindex)
+    .filter((p) => !p.noindex && !p.hidden)
     .map((p) => `  <url><loc>${escapeXml(base + (p.path === '/' ? '/' : p.path))}</loc></url>`)
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n`

@@ -19,11 +19,13 @@ const pageSchema = load('schema/page.schema.json');
 const pluginSchema = load('schema/plugin.schema.json');
 const collectionSchema = load('schema/collection.schema.json');
 const templateSchema = load('schema/mal.schema.json');
+const redirectsSchema = load('schema/redirects.schema.json');
 ajv.addSchema(siteSchema); // page.schema.json references site.schema.json ($id)
 ajv.addSchema(pageSchema); // mal.schema.json references the page schema's $defs ($id)
 
 const cases = [
   ['template/content/site.json', siteSchema.$id],
+  ['template/content/redirects.json', redirectsSchema],
 ];
 
 // Every plugin folder with a manifest is validated, not a hand-picked list:

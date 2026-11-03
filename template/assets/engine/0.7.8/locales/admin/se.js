@@ -223,6 +223,8 @@ export default {
     'api.moveMissing': 'Fiila mii galggai sirdojuvvot ii leat šat media/ ruohttasis; sirdimat leat heaittihuvvon, de almmut ođđasit',
     'api.mediaListFailed': 'Ii sáhttán listet mediafiillaid',
     'api.fileNotAllowed': 'Fiila «{path}» ii leat PDF, dahje lea stuorát go 15 MB',
+    'api.redirectsNotAllowed': 'Ođđasitstivrenfiillas lea linnjá mii ii leat ođđasitstivren maid Urd čállá',
+    'api.redirectsReadFailed': 'Ii sáhttán lohkat ođđasitstivrenfiilla',
     'api.publishRace': 'Muhtin almmuhii aiddo dál - geahččal almmuhit ođđasit',
     'api.commitFailed': 'Ii sáhttán committet GitHubii: {detail}',
     'api.badRevertTarget': 'expect (almmuheapmi mii galgá gáđahuvvot) váilu dahje lea gustohis',

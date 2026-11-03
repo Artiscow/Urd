@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://urd.dev/schema/redirects.schema.json",
+  "title": "Urd redirects (content/redirects.json)",
+  "description": "The site's redirects, free of the host's format (ADR-0015): publishing writes the host's file from them (`_redirects` on Cloudflare Pages). Additive from v0.7. See docs/SCHEMA.md.",
+  "type": "object",
+  "required": ["version", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "rules": {
+      "type": "array",
+      "description": "The rules in order; for one old address only the first applies.",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The old address: a path from the site's root without a trailing slash, its last segment a * where the rule takes everything under a folder (never `/*`, which would take Urd's own addresses).",
+            "not": { "const": "/*" },
+            "pattern": "^/(?:[A-Za-z0-9._~%!$&'()+,;=@-]+/)*(?:[A-Za-z0-9._~%!$&'()+,;=@-]+|\\*)?$"
+          },
+          "to": {
+            "type": "string",
+            "description": "Where visitors go: a path from the root (a query or fragment allowed) or an http(s) address; a * gives on what the old address's * took.",
+            "pattern": "^(?:/\\S*|https?://\\S+)$"
+          },
+          "status": {
+            "enum": [301, 302],
+            "description": "301 permanent (moved for good), 302 temporary (a hidden page's address, a campaign)."
+          }
+        }
+      }
+    }
+  }
+}

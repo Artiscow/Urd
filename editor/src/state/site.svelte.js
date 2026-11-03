@@ -28,6 +28,8 @@ import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { templatesState } from './templates.svelte.js';
+import { redirectsState } from './redirects.svelte.js';
+import { pageMoved, withRule, withoutFrom } from '../lib/redirects-model.js';
 
 /** The background layer types in the order they are offered in the panel. */
 const BG_TYPES = [
@@ -306,9 +308,26 @@ function toggleFooterOnPage(pageId, show) {
 
 /** «Make front page»: the page takes / and the first place, the old front page its own id as its address (lib/page-settings.js frontPageSwap); the menu's links point at the pages and follow. */
 function makeFrontPage(id) {
+  const chosen = siteDraft.pages.find((p) => p.id === id);
   const swap = frontPageSwap($state.snapshot(siteDraft.pages), id);
-  if (!swap) return null;
-  siteMutate('pages', () => { siteDraft.pages = swap.pages; });
+  if (!swap || !chosen) return null;
+  const oldPath = chosen.path;
+  const wasHidden = chosen.hidden === true;
+  const published = publishedPathOf(id);
+  siteMutate('pages', () => {
+    siteDraft.pages = swap.pages;
+    // The front page is never hidden.
+    const front = siteDraft.pages.find((p) => p.id === id);
+    if (front) delete front.hidden;
+  });
+  // In the same undo step the redirects follow: the rules that led to the chosen page lead to /, a hidden page's own rule goes with its hiding, its published address is sent to /, and a rule from the old front page's new address goes.
+  redirectsState.mutateRedirects((rules) => {
+    let next = pageMoved(rules, oldPath, '/');
+    if (wasHidden) next = withoutFrom(next, oldPath);
+    if (swap.from) next = withoutFrom(next, swap.from.path);
+    if (published && published !== '/') next = withRule(next, published, '/', 301);
+    return next;
+  }, { push: false });
   return swap;
 }
 
@@ -373,14 +392,101 @@ function setPageSlug(entry, rawSlug) {
   // name) remains, so internal references (nav) never break. Publishing
   // cleans the old address's index.html via the diff against the
   // published site.json.
+  const oldPath = entry.path;
+  const published = publishedPathOf(entry.id);
   siteMutate('pages', () => {
     entry.path = `/${slug}`;
   });
+  // In the same undo step, the redirects follow the page: the rules that led to the old address lead to the new one, a hidden page's own rule moves with it, and the address the published site knows keeps working (on by default; the page settings' switch takes it away).
+  redirectsState.mutateRedirects((rules) => {
+    let next = pageMoved(rules, oldPath, entry.path);
+    if (entry.hidden) next = next.map((r) => (r.from === oldPath ? { ...r, from: entry.path } : r));
+    // Never from /, which would hide the front page.
+    if (published && published !== entry.path && published !== '/') next = withRule(next, published, entry.path, 301);
+    return next;
+  }, { push: false });
   return null;
 }
 
-function deletePage(entry) {
+/** The address a page has on the published site, or null for a page the published site does not have; a page hidden there has one too, answering with its redirect. */
+function publishedPathOf(id) {
+  return site?.pages?.find((p) => p.id === id)?.path ?? null;
+}
+
+/** Whether the address the published site knows for a page still leads to it (the page settings' switch under the address). */
+function keepsOldAddress(entry) {
+  const published = publishedPathOf(entry.id);
+  return !!published && published !== '/' && redirectsState.redirectRules.some((r) => r.from === published);
+}
+
+/** The page settings' switch under the address: the published address kept working, or let go; never / (the old front page's), which would hide the front page. */
+function setKeepOldAddress(entry, keep) {
+  const published = publishedPathOf(entry.id);
+  if (!published || published === entry.path || published === '/') return;
+  redirectsState.mutateRedirects((rules) => (keep ? withRule(rules, published, entry.path, 301) : withoutFrom(rules, published)));
+}
+
+/** The pages a deleted or hidden page's visitors can be sent to: every shown page but the front page and itself, as [path, title]. */
+function destinationsFor(entry) {
+  return siteDraft.pages.filter((p) => p.id !== entry.id && p.path !== '/' && !p.hidden).map((p) => [p.path, p.title || p.id]);
+}
+
+/**
+ * Hides a page from visitors, or shows it again (pages[].hidden): a hidden page stays in the admin, but publishing leaves it out of the nav, the sitemap and its address.
+ * Hiding a page the published site shows asks where its visitors go; the answer is a temporary (302) redirect from its address, which showing the page again takes away. All in one undo step.
+ */
+async function setPageHidden(entry, hide) {
+  if (!entry || entry.path === '/') return;
+  if (!hide) {
+    siteMutate('pages', () => { delete entry.hidden; });
+    redirectsState.mutateRedirects((rules) => withoutFrom(rules, entry.path), { push: false });
+    shellState.setStatus(ta('status.pageShown', { page: entry.title }));
+    return;
+  }
+  let to = null;
+  if (publishedPathOf(entry.id)) {
+    const answer = await shellState.askDestination({
+      title: ta('confirm.hidePage', { page: entry.title }),
+      lead: ta('dest.leadHide', { path: entry.path }),
+      okLabel: ta('ui.hidePage'),
+      options: destinationsFor(entry),
+    });
+    if (!answer) return;
+    to = answer.to;
+  }
+  siteMutate('pages', () => { entry.hidden = true; });
+  redirectsState.mutateRedirects((rules) => (to ? withRule(rules, entry.path, to, 302) : withoutFrom(rules, entry.path)), { push: false });
+  shellState.setStatus(ta('status.pageHidden', { page: entry.title }));
+}
+
+/** Where a hidden page's address sends its visitors: a path, or null for «not found». */
+function hiddenTargetOf(entry) {
+  return redirectsState.redirectRules.find((r) => r.from === entry.path)?.to ?? null;
+}
+
+/** The hidden page's row in its settings: its visitors sent elsewhere, or to «not found». */
+function setHiddenTarget(entry, to) {
+  redirectsState.mutateRedirects((rules) => (to ? withRule(rules, entry.path, to, 302) : withoutFrom(rules, entry.path)));
+}
+
+/**
+ * Deletes a page; one the published site shows asks first where its visitors go, and the answer is a permanent redirect from its address, the rules that led to the page following it. One undo step.
+ */
+async function deletePage(entry) {
   if (entry.path === '/') return; // the front page can never be deleted
+  const published = publishedPathOf(entry.id);
+  let to = null;
+  if (published) {
+    const answer = await shellState.askDestination({
+      title: ta('confirm.deletePage', { page: entry.title }),
+      lead: ta('dest.leadDelete', { path: published }),
+      okLabel: ta('ui.deletePage'),
+      options: destinationsFor(entry),
+    });
+    if (!answer) return;
+    to = answer.to;
+  }
+  const path = entry.path;
   siteMutate('pages', () => {
     siteDraft.pages = siteDraft.pages.filter((p) => p.id !== entry.id);
     // Items with a submenu survive their own page being deleted: the
@@ -397,6 +503,12 @@ function deletePage(entry) {
     }
     siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page || i.href || i.children);
   });
+  redirectsState.mutateRedirects((rules) => {
+    let next = withoutFrom(rules, path);
+    if (!to) return next;
+    next = pageMoved(next, path, to);
+    return withRule(next, published, to, 301);
+  }, { push: false });
   // The page's own draft is kept: Ctrl+Z restores everything.
   if (entry.id === pageState.pageId) pageState.selectPage(siteDraft.pages[0].id);
   shellState.setStatus(ta('status.pageRemoved'));
@@ -773,6 +885,12 @@ export const siteState = {
   get TITLE_FORMAT_OPTIONS() { return TITLE_FORMAT_OPTIONS; },
   get NAV_HIDE_MODE_OPTIONS() { return NAV_HIDE_MODE_OPTIONS; },
   setPageSlug,
+  keepsOldAddress,
+  setKeepOldAddress,
+  setPageHidden,
+  hiddenTargetOf,
+  setHiddenTarget,
+  publishedPathOf,
   pageFieldValue,
   pageFieldError,
   typePageField,

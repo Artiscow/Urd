@@ -360,17 +360,21 @@ function applyFavicon(href) {
  * Finds the page for the current URL in the page register.
  * ?page=<id> overrides (useful locally, where simple file servers do not
  * route the paths); otherwise location.pathname is matched; the fallback is
- * the first page in the register.
+ * the first page in the register. A hidden page is found only in the
+ * preview, where the owner works on it; for a visitor it is not there.
+ * @param {object} site
+ * @param {boolean} [preview]
  */
-function resolvePage(site) {
+function resolvePage(site, preview = false) {
+  const pages = preview ? site.pages : site.pages.filter((p) => !p.hidden);
   const params = new URLSearchParams(location.search);
   const wanted = params.get('page');
   if (wanted) {
-    const byId = site.pages.find((p) => p.id === wanted);
+    const byId = pages.find((p) => p.id === wanted);
     if (byId) return byId;
   }
   const path = location.pathname.replace(/\/$/, '') || '/';
-  return site.pages.find((p) => p.path === path) ?? site.pages[0];
+  return pages.find((p) => p.path === path) ?? site.pages[0];
 }
 
 /** The draft view's drafts (drafts.js, loaded for it alone); a browser whose storage is closed has none. */
@@ -781,7 +785,7 @@ export async function boot(opts) {
   applySiteLayout(site);
   applyFavicon(site.site.icon);
   // An empty page register (hand-edited site.json) gives an empty page, not a crash.
-  const entry = resolvePage(site) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
+  const entry = resolvePage(site, preview) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
   // A page file parked by the previous page's intent prefetch (prefetch.js) is used as it is and revalidated after the first render.
   // Visitors only: the preview receives its pages via postMessage, and the draft view reads the page's draft.
   const draftPage = drafts?.page(entry.id) ?? null;

@@ -1,10 +1,12 @@
 <script>
-  /* A page's settings as a dialog over the admin (the default «Page settings»): the pages down the left with the front page and the hidden ones marked, the chosen page's name and address at the top, and its fields at the right (PageSettingsFields.svelte).
+  /* A page's settings as a dialog over the admin (the default «Page settings»): the pages down the left with the front page, the hidden pages and the ones hidden from search marked, the chosen page's name, address and «Hide» at the top with a hidden page's row under them (HideButton, HiddenRow), and its fields at the right (PageSettingsFields.svelte).
      A native modal dialog (ADR-0011), as the Urd settings: Escape and a press on the backdrop close it, and every change is written as it is made. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import PageSettingsFields from './PageSettingsFields.svelte';
+  import HideButton from './HideButton.svelte';
+  import HiddenRow from './HiddenRow.svelte';
 
   const ed = getContext('urd-editor');
   let dialogEl = $state(null);
@@ -45,18 +47,21 @@
           <button type="button" class="ps-page" aria-current={p.id === id ? 'true' : undefined} title={p.path} onclick={() => pick(p.id)}>
             <span class="ps-page-name">{p.title || p.id}</span>
             {#if p.path === '/'}<span class="ps-mark" title={ta('tip.pages.isFront')}>{@html ICONS.home}</span>{/if}
-            {#if p.noindex}<span class="ps-mark" title={ta('lbl.hideFromSearch')}>{@html ICONS.eyeOff}</span>{/if}
+            {#if p.hidden}<span class="ps-mark ps-hidden" title={ta('tip.pages.hiddenMark')}>{@html ICONS.eyeOff}</span>{/if}
+            {#if p.noindex}<span class="ps-mark" title={ta('lbl.hideFromSearch')}>{@html ICONS.searchOff}</span>{/if}
           </button>
         {/each}
       </nav>
       <div class="ps-main">
         <div class="ps-head">
           <span class="ps-words">
-            <span class="ps-name">{entry?.title ?? ''}</span>
+            <span class="ps-name" class:ps-dim={entry?.hidden}>{entry?.title ?? ''}</span>
             <span class="ps-path">{entry?.path ?? ''}</span>
           </span>
+          {#if entry}<HideButton {id} />{/if}
           <button type="button" class="ps-x" bind:this={closeEl} title={ta('tip.pages.closeSettings')} aria-label={ta('tip.pages.closeSettings')} onclick={() => dialogEl.close()}>{@html ICONS.cross}</button>
         </div>
+        {#if entry}<HiddenRow {id} />{/if}
         <div class="ps-body panel-body">
           {#if entry}{#key id}<PageSettingsFields {id} wide />{/key}{/if}
         </div>
@@ -163,10 +168,25 @@
     height: 13px;
   }
 
+  /* The head, a hidden page's row under it, and the fields filling the rest in their own scroll */
   .ps-main {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     min-height: 0;
+  }
+
+  .ps-main > .ps-body {
+    flex: 1;
+  }
+
+  /* A hidden page's name, dimmed as it is in the lists */
+  .ps-dim {
+    opacity: 0.65;
+  }
+
+  .ps-hidden {
+    color: #d9b44a;
+    opacity: 1;
   }
 
   .ps-head {

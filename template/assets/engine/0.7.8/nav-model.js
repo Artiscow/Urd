@@ -128,10 +128,18 @@ export function resolveItem(item, pages) {
  */
 export function navItems(site) {
   const pages = site.pages ?? [];
+  // A hidden page is not on the published site, so no item leads to it: an item to one is left out, or stands as a plain opener while it keeps a submenu of items that still lead somewhere.
+  const hidden = new Set(pages.filter((p) => p.hidden).map((p) => p.id));
+  const toHidden = (item) => !!item.page && hidden.has(item.page);
   const model = (item, depth) => {
     const children = depth < 2 && Array.isArray(item.children)
-      ? item.children.map((child) => model(child, depth + 1))
+      ? item.children.map((child) => model(child, depth + 1)).filter(Boolean)
       : [];
+    if (toHidden(item)) {
+      if (!children.length) return null;
+      const { page: _page, target: _target, ...opener } = item;
+      item = opener;
+    }
     const hasTarget = !!(item.page || item.href || item.target);
     const kind = children.length === 0 ? 'link' : hasTarget ? 'split' : 'toggle';
     // A toggle item has no link of its own - resolveItem would flag it as
@@ -143,7 +151,7 @@ export function navItems(site) {
     const look = depth === 0 && item.look === 'button' ? 'button' : '';
     return { ...own, kind, children, description, look };
   };
-  return (site.nav.items ?? []).map((item) => model(item, 0));
+  return (site.nav.items ?? []).map((item) => model(item, 0)).filter(Boolean);
 }
 
 /** The burger's drawings (nav.style.burger.icon); the first is the default, and `none` leaves the word to stand alone. */

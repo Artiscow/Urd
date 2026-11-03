@@ -14,6 +14,7 @@ import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as 
 import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT } from '../lib/panels-start.js';
 import { COLLECTION_LAYOUTS, collectionLayoutOf, CSV_PREVIEWS, csvPreviewOf } from '../lib/collection-layout.js';
 import { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf } from '../lib/page-settings.js';
+import { PRESS_FEELS, pressFeelOf, pressTarget, ripple } from '../lib/press-feel.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -22,6 +23,7 @@ import { pluginsState } from './plugins.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { siteState } from './site.svelte.js';
 import { templatesState } from './templates.svelte.js';
+import { redirectsState } from './redirects.svelte.js';
 import { updaterState } from './updater.svelte.js';
 
 /**
@@ -222,6 +224,7 @@ async function init() {
   await pluginsState.initPlugins();
   await collectionsState.initCollections();
   await templatesState.initTemplates();
+  await redirectsState.initRedirects();
   // The steps kept from the last session in this browser, taken up when the drafts are the ones they were kept with.
   await historyState.loadKept();
   await checkAuth();
@@ -263,9 +266,26 @@ function askPrompt({ title, lines = [], value = '', placeholder = '', okLabel = 
   });
 }
 
+/**
+ * Asks where the visitors of an address go (a page deleted or hidden): the front page, another page from `options` ([path, title]), or nowhere.
+ * Resolves with { to } (a path, or null for «not found»), or null when the owner cancels.
+ */
+function askDestination({ title, lead, okLabel, options = [] }) {
+  return new Promise((resolve) => {
+    confirmBox = { title, lines: [], okLabel, cancelLabel: ta('confirm.cancel'), resolve, destination: { lead, choice: 'front', page: options[0]?.[0] ?? null, options } };
+  });
+}
+
 function answerConfirm(ok) {
-  confirmBox?.resolve(confirmBox.prompt ? (ok ? confirmBox.value : null) : ok);
+  const box = confirmBox;
   confirmBox = null;
+  if (!box) return;
+  if (box.destination) {
+    const d = box.destination;
+    box.resolve(ok ? { to: d.choice === 'front' ? '/' : d.choice === 'page' ? d.page : null } : null);
+    return;
+  }
+  box.resolve(box.prompt ? (ok ? box.value : null) : ok);
 }
 
 // Distinguishes a click on the backdrop from a text drag that started
@@ -547,6 +567,19 @@ function setCollectionsLayout(v) {
 
 const COLLECTIONS_LAYOUT_OPTIONS = $derived(COLLECTION_LAYOUTS.map((id) => [id, ta(`opt.collectionsLayout.${id}`)]));
 
+/** How the admin's buttons answer a press («Button press», lib/press-feel.js): Ripple by default, not stored; kept per browser. */
+const PRESS_KEY = 'urd-press';
+
+let pressFeel = $state(pressFeelOf(localStorage.getItem(PRESS_KEY)));
+
+function setPressFeel(v) {
+  pressFeel = pressFeelOf(v);
+  if (pressFeel === 'ripple') localStorage.removeItem(PRESS_KEY);
+  else localStorage.setItem(PRESS_KEY, pressFeel);
+}
+
+const PRESS_OPTIONS = $derived(PRESS_FEELS.map((id) => [id, ta(`opt.press.${id}`)]));
+
 /** Where a page's settings open («Page settings», lib/page-settings.js): a dialog over the admin (the default, not stored), a step in the Pages panel, or a table of every page over the canvas; kept per browser. */
 const PAGE_SETTINGS_KEY = 'urd-page-settings';
 
@@ -737,6 +770,19 @@ export function effects() {
     sendAdminTheme();
   });
 
+  // The press feel on the root, where app.css reads it; the ripple is drawn by a listener of its own, there only while it is chosen, and never under reduced motion.
+  $effect(() => {
+    document.documentElement.dataset.press = pressFeel;
+    if (pressFeel !== 'ripple') return;
+    const onDown = (e) => {
+      if (e.button !== 0 || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const control = pressTarget(e.target);
+      if (control) ripple(control, e);
+    };
+    document.addEventListener('pointerdown', onDown, true);
+    return () => document.removeEventListener('pointerdown', onDown, true);
+  });
+
   // Escape cancels, like every other closable surface in the editor. Its
   // own listener rather than the global keydown handler: the dialog must
   // respond to Escape as long as focus is in the admin document, and
@@ -848,6 +894,7 @@ export const shellState = {
   get confirmBox() { return confirmBox; },
   set confirmBox(v) { confirmBox = v; },
   askConfirm,
+  askDestination,
   askPrompt,
   answerConfirm,
   get confirmDownOnOverlay() { return confirmDownOnOverlay; },
@@ -918,6 +965,9 @@ export const shellState = {
   get COLLECTIONS_LAYOUT_OPTIONS() { return COLLECTIONS_LAYOUT_OPTIONS; },
   get csvPreviewPref() { return csvPreviewPref; },
   get pageSettingsPref() { return pageSettingsPref; },
+  get pressFeel() { return pressFeel; },
+  setPressFeel,
+  get PRESS_OPTIONS() { return PRESS_OPTIONS; },
   setPageSettingsPref,
   get PAGE_SETTINGS_OPTIONS() { return PAGE_SETTINGS_OPTIONS; },
   setCsvPreview,

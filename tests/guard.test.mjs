@@ -86,7 +86,6 @@ test('code and config paths are forbidden', () => {
     'index.html',
     '404.html',
     '_headers',
-    '_redirects',
     '.gitignore',
     'wrangler.toml',
     'plugins/kalender/index.js',
@@ -270,3 +269,41 @@ test('owned and publishable are disjoint classes', () => {
     assert.equal(isOwnedPath(path), false, path);
   }
 });
+
+/* ---------- The host's redirect file (0.7.23, ADR-0015) ---------- */
+
+test('_redirects: publishing may write it, holding redirects only, none from Urd\'s own addresses', async () => {
+  const { isAllowedRedirects } = await import('../template/functions/_lib/guard.js');
+  assert.equal(isAllowedPath('_redirects'), true);
+  assert.equal(isUserPath('_redirects'), true);
+  assert.equal(isOwnedPath('_redirects'), false);
+  const good = [
+    '# Written by Urd at publishing from content/redirects.json.',
+    '/om-oss /om-urd 301',
+    '/om-oss/ /om-urd 301',
+    '/pamelding https://forms.gle/vinterkurs 302',
+    '/blogg/* /nyheter/:splat 301',
+    '/ /hjem 301',
+    '',
+  ].join('\n');
+  assert.equal(isAllowedContent('_redirects', good, 'utf-8'), true);
+  assert.equal(isAllowedContent('_redirects', good, 'base64'), false, 'text only');
+  for (const bad of [
+    '/api/* /x 301',
+    '/admin /x 301',
+    '/admin/ /x 301',
+    '/index.html /x 301',
+    '/content/* /x 301',
+    '/a /b 200',
+    '/a /b 404',
+    '/a /b',
+    '/a javascript:alert(1) 301',
+    '/users/:id /p/:id 301',
+    '/* https://new.example/:splat 301',
+    '/a /b 301 extra',
+  ]) {
+    assert.equal(isAllowedRedirects(`${bad}\n`), false, bad);
+  }
+  assert.equal(isAllowedRedirects('/a /b 301\n'.repeat(60_000)), false, 'past the size cap');
+});
+

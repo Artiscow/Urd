@@ -8,6 +8,34 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.23 - Redirects in a dialog of their own, old addresses kept working, pages hidden from visitors, and a press feel for the admin's buttons - 3 November 2026
+
+- A renamed or deleted page's old address answered «not found», and `_redirects` was closed to publishing. The redirects live in `content/redirects.json` (schema, SCHEMA.md), publishing writes `_redirects` from it in Cloudflare's format, the guard lets the file through only in that shape (`isAllowedRedirects`), and urd.json classes it as a user path; ADR-0015 is rewritten.
+- The redirects are edited in a dialog of their own (a row in the Pages panel, and Ctrl+K), with the site's places to pick from, a pasted list, and CSV in and out (`shell/RedirectsDialog.svelte`, `shell/PlaceField.svelte`). A rule that cannot work stands in dark red and one that may not in amber, and publishing asks about the dark red ones (`lib/redirects-model.js`).
+- A published page's new address keeps the old one working by a permanent redirect, on by itself, with «Keep /old working» under the address in its settings; the rules that led to the old address follow the page.
+- Deleting a published page asks where its visitors go, the front page, another page or «not found», and the answer is a permanent redirect in the same undo step.
+- A page could only be deleted to keep it from visitors. It can be hidden (`pages[].hidden`, the eye on its row and «Hide» in its settings): publishing leaves it out of the nav, the sitemap and its address, which sends visitors on by a temporary redirect while it is hidden; the page lists mark it with an amber crossed eye, and a page hidden from search moves to a crossed magnifier.
+- A `_redirects` written by hand is read into the list through a new endpoint (`GET /api/github/redirects`) before publishing first writes the file.
+- The confirm dialog stood under a modal dialog. It is a modal `<dialog>` in the top layer, so a question asked from the page settings stands above them.
+- «Delete the page» in a page's settings stopped with an error, since the page was read after the settings had closed (test finding). The page is held before they close.
+- The table layout's «Hidden» column meant hidden from search; it is «Not in search», and «Hidden» is the page's own.
+- The arrow in an address field jumped out of its field on a press, since the editor's press replaced its transform (test finding). Every button answers a press without a transform, a ripple from where the pointer pressed by default, with Press in, Nudge, Sink, Ring and Spring to choose in Urd settings («Button press», `lib/press-feel.js`, the rules in app.css); under reduced motion only the colour changes.
+- AGENTS.md still placed `_redirects` in the guard's deny list. It names the file as publishing's, from `content/redirects.json`, let through by the guard only in Urd's shape.
+
+The independent review before the commit found these, all fixed:
+
+- A rule from `/*` passed the editor, the guard and the schema, and would have taken the admin and the engine's own files. It is turned down in all three.
+- Nudge and the reduced-motion rule set `translate`, which replaced the placing `translate` of the discard pill, the menu pins and the gradient handles, so the armed discard pill jumped from under the pointer. Those controls are placed by `transform`, the moving feels apply only where motion is welcome, and a test holds `translate` and `scale` to the press rules.
+- Making a hidden page the front page left it hidden at `/`, where it could not be shown again, and moved no redirect. The front page is shown, the rules follow it to `/`, its old address goes to `/`, and «Keep / working» is never offered for the old front page.
+- A hand-written `_redirects`'s lines the list cannot hold (a proxy, a placeholder) went without a word. The status line and «Before you publish» name them.
+- With the list unreadable and the repository's `_redirects` Urd's own, the list started empty and the next publish lost the earlier rules. Urd's own file is read back as well.
+- A web address typed with `Https://` and a stored old address with a trailing slash passed the editor but failed the guard, so the publish answered 400. The scheme is written in lower case, and the host's file is written from the normalised addresses.
+- A nav item to a hidden page whose submenu led only to hidden pages, an empty submenu, or a hidden spot stood as a dead entry in the published nav. Such items are left out.
+- A target on a spot of a moved page (`/kaker#priser`) did not follow the page. It does.
+- A page hidden on the published site was deleted or hidden again without the question, dropping its redirect. It counts as published, so the question is asked.
+- A guard comment wrapped mid-sentence, and the address field's arrow claimed the press did not reach it.
+- Two CHANGELOG bullets listed the interface item by item. They are trimmed.
+
 ### 0.7.10.32 - Undo by whole changes with the caret put back, undo buttons and the session's steps in the top bar, a page switcher, a page's name in its settings, and Escape to cancel a drag - 3 November 2026
 
 - A slider dragged across its range made one undo step per tick, so one drag could fill the 50 steps. A panel setting changed again within 500 ms joins the step before it (`joinsLast` in `lib/history-model.js`), as typing already did.

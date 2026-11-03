@@ -296,6 +296,8 @@ export default {
     'api.moveMissing': 'Ei fil som skulle flyttast står ikkje lenger i rota av media/; flyttingane er droppa, så publiser på nytt',
     'api.mediaListFailed': 'Kunne ikkje liste mediefilene',
     'api.fileNotAllowed': 'Fila «{path}» er ikkje ein PDF, eller er større enn 15 MB',
+    'api.redirectsNotAllowed': 'Omdirigeringsfila har ei linje som ikkje er ei omdirigering Urd skriv',
+    'api.redirectsReadFailed': 'Kunne ikkje lese omdirigeringsfila',
     'api.publishRace': 'Nokon publiserte akkurat no - prøv å publisere på nytt',
     'api.commitFailed': 'Kunne ikkje committe til GitHub: {detail}',
     'api.badRevertTarget': 'expect (publiseringa som skal angrast) manglar eller er ugyldig',

@@ -2,6 +2,25 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.23): redirects, old addresses kept working, and pages hidden from visitors
+
+- [ ] Pages panel: «Redirects» under the pages (with its count) and Ctrl+K «Redirects» open the dialog; a rule typed in the row at the foot is added with Enter, its kind set to Permanent or Temporary, its fields changed, and the rule removed with its cross; one undo takes each change back
+- [ ] The dialog's marks: `/kaker → /shop` (Kaker a page) dark red, «Hides the page Kaker» in the tooltip; `/a → /b` and `/b → /a` dark red, «Leads in a circle»; `/admin → /` dark red; `/gml → /butikk` amber, «Not a page on the site»; the same old address twice, the second amber; a typed old address with a space stays in its field in dark red
+- [ ] «Paste a list» with `/a /b`, `/c -> /d 302`, `/blogg/* /nyheter/*` and a line of words: three added, the line of words left out and said so; «Import CSV» with a file from a spreadsheet (comma or semicolon) reads the same; «Export CSV» saves `redirects.csv` with `from,to,status`
+- [ ] The count «N of 2,000 · M of 100 with a *» follows the rules, each old address without a * counted twice
+- [ ] Each address field's arrow opens the site's places: for the old address «Former addresses» (an address the published site has that no page has now, after a rename or a delete) and then the pages, for the target the pages and then «Places on the pages» (`/kaker#meld-deg-inn`); a pick fills the field, a target picked on the new row adds the rule; typing first narrows the list
+- [ ] «Paste a list» opens a framed box with Cancel and «Add these» at its right
+- [ ] On a deployed site: Om oss renamed to om-urd and published; `/om-oss` and `/om-oss/` answer 301 to `/om-urd`; the page settings show «Keep /om-oss working» on, and off then published, `/om-oss` answers «not found»; the page renamed back to om-oss: the switch is gone and the rule with it
+- [ ] Deleting a published page asks «Delete Kaker?» with the front page, another page or «Nowhere»; after the publish, `/kaker` answers 301 to the choice (or «not found»); one Ctrl+Z before publishing brings the page back and takes the rule away
+- [ ] Hiding: the eye on Kontakt's row asks «Hide Kontakt?», the row dims with an amber crossed eye; in the settings «Hidden» stands in amber at the top with «While hidden, visitors to /kontakt go to» and its choice; after the publish Kontakt is gone from the nav and the sitemap and `/kontakt` answers 302 to the choice, while the admin still opens and edits it; shown again and published, it answers at its address and the redirect is gone
+- [ ] Hide from inside the page settings dialog: the question stands above the dialog, centred, and Escape cancels the question only; the front page's eye and «Hide» are greyed
+- [ ] The page switcher and the page settings' list: a hidden page with the amber crossed eye, a page hidden from search with a crossed magnifier; the table layout's columns «Not in search» and «Hidden»
+- [ ] Publish with a rule that hides a page: «Before you publish» has «Redirects that cannot do what they say» naming it; Cancel publishes nothing
+- [ ] A site with a `_redirects` added by hand and no `content/redirects.json`: on opening the admin, «Redirects read from the site's _redirects file: N», the rules in the dialog; a change published writes both files, the hand rules kept
+- [ ] «Delete the page» in a page's settings deletes it (it stopped with an error before)
+- [ ] Urd settings «Button press» with six pictures, Ripple chosen: every button and ghost control shows a ring spreading from where the pointer pressed; each of Press in (shrinks a little while held), Nudge, Sink, Ring and Spring (a small bounce as the press lets go) answers as its picture says, the choice kept after a reload; the arrow in an address field stays inside its field under every feel; with reduced motion on in the system, only the colour changes
+- [ ] The dialog, the question, the hide controls, «Button press» and their tooltips in bokmål and Turkish
+
 ### Test batch (0.7.10.32): undo by whole changes, undo buttons and the session's steps, the page switcher, the device buttons, a page's name and address in its settings, and Escape to cancel a drag
 
 - [ ] The Theme panel's radius slider dragged from one end to the other, then Ctrl+Z once: the radius is back where it started; the nav's thickness and a footer slider the same

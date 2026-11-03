@@ -21,7 +21,9 @@ import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
 import { refusedPageFieldLine } from '../lib/page-settings.js';
+import { toHostFile, redirectIssues } from '../lib/redirects-model.js';
 import { templatesState } from './templates.svelte.js';
+import { redirectsState } from './redirects.svelte.js';
 import { updaterState } from './updater.svelte.js';
 
 /**
@@ -205,6 +207,7 @@ function discard() {
     }
     templatesState.pushTemplatesToPreview();
   }
+  redirectsState.discardRedirects();
   siteState.linkSiteDraft();
   siteState.grid = { snap: true, ...siteState.siteDraft.grid };
   historyState.updateDirty();
@@ -397,6 +400,20 @@ async function publish() {
     publishedTitles.push(ta('publish.part.plugins'));
   }
 
+  // The redirects (ADR-0015): the list, and the host's file written from it. A `_redirects` in the repository that has not been looked at yet is read first, so one written by hand joins the list instead of being written over; where it cannot be read, the list waits as a draft and the owner is told.
+  let redirectsWait = false;
+  if (redirectsState.redirectsStore?.hasDraft()) {
+    if (await redirectsState.ensureHostFileKnown()) {
+      const list = { version: 1, rules: $state.snapshot(redirectsState.redirectsDraft.rules) };
+      files.push({ path: 'content/redirects.json', content: JSON.stringify(list, null, 2) + '\n', encoding: 'utf-8' });
+      files.push({ path: '_redirects', content: toHostFile(list.rules), encoding: 'utf-8' });
+      draftKeys.push('urd-draft-redirects');
+      publishedTitles.push(ta('publish.part.redirects'));
+    } else {
+      redirectsWait = true;
+    }
+  }
+
   // Page routing on all static hosts: every page except the front page
   // gets its own <path>/index.html (a copy of the root index.html; the
   // engine routes on pathname). Generated on every publish - unchanged
@@ -404,7 +421,8 @@ async function publish() {
   try {
     const html = await (await fetch('/index.html')).text();
     for (const p of siteState.siteDraft.pages) {
-      if (p.path !== '/') {
+      // A hidden page has no address of its own on the published site (its redirect or «not found» answers there).
+      if (p.path !== '/' && !p.hidden) {
         files.push({ path: `${p.path.slice(1)}/index.html`, content: html, encoding: 'utf-8' });
       }
     }
@@ -435,6 +453,8 @@ async function publish() {
     } else if (still.path !== p.path && p.path !== '/') {
       del(`${p.path.slice(1)}/index.html`);
     }
+    // A page hidden since: its address copy goes, so the host answers with its redirect or «not found».
+    if (still?.hidden && still.path !== '/') del(`${still.path.slice(1)}/index.html`);
   }
 
   // The warnings before the commit, asked as one question with a section each: a page name or address typed but turned down (it never reached the draft, so the page goes out with what stands), and someone else's publish since we loaded touching the same files. The editor must actively choose to publish anyway.
@@ -444,6 +464,21 @@ async function publish() {
     warnings.push({
       heading: ta('confirm.pageFields.title'),
       lines: refused.map((f) => { const { key, vars } = refusedPageFieldLine(f); return ta(key, vars); }),
+    });
+  }
+  // Rules that cannot do what they say: one that hides a shown page, a circle, or one left out of the file as unsound.
+  const ruleIssues = redirectIssues(redirectsState.redirectRules, siteState.siteDraft.pages);
+  const badRules = redirectsState.redirectRules.map((rule, i) => ({ rule, issue: ruleIssues[i] })).filter((r) => r.issue?.level === 'error');
+  // Lines of a `_redirects` written by hand that the list cannot hold go as publishing first writes the file.
+  const unkept = files.some((f) => f.path === '_redirects') ? redirectsState.unkeptLines : 0;
+  if (badRules.length || redirectsWait || unkept) {
+    warnings.push({
+      heading: ta('confirm.redirects.title'),
+      lines: [
+        ...badRules.map(({ rule, issue }) => ta('confirm.redirects.line', { from: rule.from, issue: ta(`redirect.issue.${issue.key}`, { page: issue.page ?? '' }) })),
+        ...(unkept ? [ta('confirm.redirects.unkept', { count: unkept })] : []),
+        ...(redirectsWait ? [ta('confirm.redirects.wait')] : []),
+      ],
     });
   }
   const conflict = await updaterState.checkConflict(files);
@@ -495,6 +530,7 @@ async function publish() {
     siteState.site = JSON.parse(JSON.stringify(siteState.siteDraft));
     siteState.siteStore = createDraftStore('urd-draft-site', () => siteState.site, shellState.draftSaveError);
     siteState.linkSiteDraft();
+    if (files.some((f) => f.path === 'content/redirects.json')) redirectsState.adoptPublished();
     if (pluginsState.pluginsStore) {
       // The published index: the removals are done, and are not carried into the next draft.
       const { remove: _done, ...publishedPlugins } = JSON.parse(JSON.stringify(pluginsState.pluginsStore.data));

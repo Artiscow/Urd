@@ -45,10 +45,17 @@
   /* The name and the address are the Pages panel's row's own fields (site.svelte.js typedPageFields): the same text in both, turned down in dark red with the reason as the tooltip until the next keystroke. */
   const nameError = $derived(ed.pageFieldError(id, 'title'));
   const addressError = $derived(ed.pageFieldError(id, 'slug'));
+  /** The address the published site knows for the page, where it differs from the one it now has: the switch under the address keeps it working. Never / (an old front page's), since a rule from / would hide the front page. */
+  const oldAddress = $derived.by(() => {
+    const published = ed.publishedPathOf(id);
+    return published && published !== '/' && published !== entry?.path ? published : null;
+  });
 
+  /** The page is held before the settings close, since closing them ends this view and its page with it. */
   function deletePage() {
+    const page = entry;
     ed.closePageSettings();
-    ed.deletePage(entry);
+    ed.deletePage(page);
   }
 </script>
 
@@ -84,6 +91,16 @@
       </label>
     {/if}
   </div>
+  {#if oldAddress}
+    <!-- The published address kept working by a permanent redirect, on by itself when the address changed; under the address it concerns -->
+    <div class="ps-pair">
+      {#if wide}<span aria-hidden="true"></span>{/if}
+      <label class="gridmenu-snap" title={ta('tip.pages.keepOld', { path: oldAddress, now: entry.path })}>
+        <input type="checkbox" checked={ed.keepsOldAddress(entry)} onchange={(e) => ed.setKeepOldAddress(entry, e.target.checked)} />
+        {ta('lbl.keepOldAddress', { path: oldAddress })}
+      </label>
+    </div>
+  {/if}
 {/snippet}
 
 {#snippet onPage()}

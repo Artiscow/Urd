@@ -93,6 +93,17 @@ const PAGE_SETTINGS = {
   table: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 54, H - 8, 0.2) + line(11, 10, 50, 1, 1) + line(11, 14, 10, 2) + acc(26, 14, 2, 2) + line(32, 14, 12, 2) + line(48, 14, 12, 2) + line(11, 19, 10, 2) + line(26, 19, 2, 2) + line(32, 19, 12, 2) + line(48, 19, 12, 2) + line(11, 24, 10, 2) + line(26, 24, 2, 2) + line(32, 24, 12, 2) + line(48, 24, 12, 2) + line(11, 29, 10, 2) + line(26, 29, 2, 2) + line(32, 29, 12, 2),
 };
 
+/** How a button answers a press: a button in the middle of each picture, drawn as it stands mid-press, with the feel's own mark. */
+const btn = (x, y, w, h, o = 0.5) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="currentColor" opacity="${o}"/>`;
+const PRESS = {
+  press: btn(22, 15, 20, 10, 0.18) + btn(24, 16, 16, 8) + `<path d="M17 20h3M44 20h3" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`,
+  nudge: btn(22, 14, 20, 10, 0.18) + btn(22, 16, 20, 10) + `<path d="M32 6v5M30 9l2 2 2-2" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.6"/>`,
+  sink: btn(22, 15, 20, 10, 0.35) + `<rect x="22" y="15" width="20" height="3" rx="1.5" fill="currentColor" opacity="0.55"/>`,
+  ripple: btn(18, 14, 28, 12, 0.3) + `<circle cx="28" cy="20" r="5" fill="${ACCENT}" opacity="0.55"/><circle cx="28" cy="20" r="2" fill="${ACCENT}"/>`,
+  ring: btn(22, 15, 20, 10) + `<rect x="19" y="12" width="26" height="16" rx="5" stroke="${ACCENT}" stroke-width="2"/>`,
+  spring: btn(24, 16, 16, 8) + `<path d="M18 14l-3-2M18 26l-3 2M46 14l3-2M46 26l3 2" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`,
+};
+
 const LOOKS = {
   layout: LAYOUTS,
   place: PLACES,
@@ -104,6 +115,7 @@ const LOOKS = {
   collectionsLayout: COLLECTIONS_LAYOUTS,
   csvPreview: CSV_PREVIEWS,
   pageSettings: PAGE_SETTINGS,
+  press: PRESS,
 };
 
 /** A theme's swatch: its background with its surface, a line in its accent and a line in its text colour. */

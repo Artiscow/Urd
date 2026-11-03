@@ -5,6 +5,8 @@
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import PageSettingsFields from './PageSettingsFields.svelte';
+  import HideButton from './HideButton.svelte';
+  import HiddenRow from './HiddenRow.svelte';
 
   const ed = getContext('urd-editor');
   let backEl = $state(null);
@@ -30,7 +32,9 @@
       <button type="button" class="ghost coll-btn" bind:this={backEl} title={ta('tip.pages.back')} aria-label={ta('tip.pages.back')} onclick={() => ed.closePageSettings()}>{@html ICONS.foldLeft}</button>
       <span class="ps-words"><span class="ps-up">{ta('panel.pages')}</span><span class="ps-name">{entry.title}</span></span>
       <span class="ps-path">{entry.path}</span>
+      <HideButton {id} />
     </span>
+    <HiddenRow {id} />
     {#key id}<PageSettingsFields {id} grouped />{/key}
   </div>
 {/if}

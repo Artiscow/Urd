@@ -34,6 +34,7 @@
   import PanelStrip from './shell/PanelStrip.svelte';
   import PreviewStage from './shell/PreviewStage.svelte';
   import ConfirmDialog from './shell/ConfirmDialog.svelte';
+  import RedirectsDialog from './shell/RedirectsDialog.svelte';
   import SetupWizard from './shell/SetupWizard.svelte';
   import { mediaState } from './state/media.svelte.js';
   import { historyState } from './state/history.svelte.js';
@@ -61,8 +62,9 @@
   import CommandPalette from './lib/CommandPalette.svelte';
   import { paletteState } from './state/palette.svelte.js';
   import { pageSettingsState } from './state/page-settings.svelte.js';
+  import { redirectsState } from './state/redirects.svelte.js';
 
-  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState];
+  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
   /* The handle's own closures: what the element menu and the panels open or read across the modules. */
@@ -255,6 +257,7 @@
     <CommandPalette commands={paletteState.buildCommands()} pinned={ed.siteDraft?.shortcuts ?? []} onpin={ed.siteDraft ? ed.toggleShortcut : null} onclose={() => (paletteState.paletteOpen = false)} />
   {/if}
 
+  <RedirectsDialog />
   <ConfirmDialog />
 
   <SetupWizard />

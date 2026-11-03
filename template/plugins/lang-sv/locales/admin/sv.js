@@ -366,6 +366,8 @@ export default {
     'api.moveMissing': 'En fil som skulle flyttas finns inte längre i repot; ladda om sidan och försök igen',
     'api.mediaListFailed': 'Kunde inte lista mediefilerna',
     'api.fileNotAllowed': 'Filen «{path}» är inte en PDF, eller är större än 15 MB',
+    'api.redirectsNotAllowed': 'Omdirigeringsfilen har en rad som inte är en omdirigering Urd skriver',
+    'api.redirectsReadFailed': 'Kunde inte läsa omdirigeringsfilen',
     'api.publishRace': 'Någon publicerade just nu - försök publicera igen',
     'api.commitFailed': 'Kunde inte committa till GitHub: {detail}',
     'api.badRevertTarget': 'expect (publiceringen som ska ångras) saknas eller är ogiltig',
