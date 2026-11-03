@@ -13,6 +13,8 @@ import { patternLayer } from '$engine/backgrounds/pattern.js';
 import { grainLayer } from '$engine/backgrounds/grain.js';
 import { bindingWidth } from '../lib/content-width.js';
 import { copySlug } from '../lib/duplicate.js';
+import { frontPageSwap } from '../lib/page-settings.js';
+import { TITLE_FORMATS, titleFormatOf } from '$engine/seo.js';
 import { activeTokens } from '$engine/theme.js';
 import { ta } from '$engine/i18n.js';
 import { slugify } from '$engine/imageTools.js';
@@ -22,7 +24,6 @@ import { liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { tick } from 'svelte';
 import { historyState } from './history.svelte.js';
-import { mediaState } from './media.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
@@ -151,10 +152,6 @@ let newPageTitle = $state('');
    is a built-in starter pack, anything else is a user page template. */
 let newPageTemplate = $state(null);
 
-/* The kebab menu per page row: the id of the row with an open menu.
-   Closed by outside click, Escape and window blur (the settings pattern). */
-let pageMenuFor = $state(null);
-
 /** Mirrors guard.js: directories that can never become pages. */
 const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions', 'readme'];
 
@@ -200,18 +197,16 @@ function addPage() {
   pageState.selectPage(slug);
 }
 
-/** The kebab menu's "Save as template": the page's current data into the template core. */
+/** The page settings' «Save as template»: the page's current data into the template core. */
 async function savePageAsTemplate(entry) {
-  pageMenuFor = null;
   const data = entry.id === pageState.pageId
     ? JSON.parse(JSON.stringify(pageState.store.data))
     : await pageState.readPageDraft(entry);
   await templatesState.saveTemplate('page', data);
 }
 
-/** The row menu's «Duplicate the page»: the page as it stands, under a copy's title and the next free slug, opened as a draft; the copy stays out of the menu until the Nav panel adds it. */
+/** The page settings' «Duplicate the page»: the page as it stands, under a copy's title and the next free slug, opened as a draft; the copy stays out of the menu until the Nav panel adds it. */
 async function duplicatePage(entry) {
-  pageMenuFor = null;
   const source = entry.id === pageState.pageId
     ? JSON.parse(JSON.stringify(pageState.store.data))
     : await pageState.readPageDraft(entry);
@@ -250,46 +245,11 @@ function renamePage(entry, rawTitle) {
   }
 }
 
-/** Reactive mirror of the open page's SEO fields (the Pages panel reads
- *  this; the truth lives in store.data.meta and is mirrored in on page switch). */
-let seoDraft = $state({ description: '', ogTitle: '', ogDescription: '', ogImage: '' });
-
-function readSeoDraft() {
-  const meta = pageState.store?.data?.meta ?? {};
-  seoDraft = {
-    description: meta.description ?? '',
-    ogTitle: meta.og?.title ?? '',
-    ogDescription: meta.og?.description ?? '',
-    ogImage: meta.og?.image ?? '',
-  };
-}
-
-/** The SEO fields on the open page (Search and sharing). Empty fields
- *  are deleted from meta, so the page file stays clean; the og object is
- *  removed when emptied. */
-function setPageSeo(field, rawValue) {
-  const value = String(rawValue ?? '').trim();
-  if (field === 'description') {
-    if (value) pageState.store.data.meta.description = value;
-    else delete pageState.store.data.meta.description;
-  } else {
-    const key = { ogTitle: 'title', ogDescription: 'description', ogImage: 'image' }[field];
-    const og = { ...(pageState.store.data.meta.og ?? {}) };
-    if (value) og[key] = value;
-    else delete og[key];
-    if (Object.keys(og).length) pageState.store.data.meta.og = og;
-    else delete pageState.store.data.meta.og;
-  }
-  pageState.store.save();
-  historyState.updateDirty();
-  readSeoDraft();
-}
-
 /** Hide from search engines: the flag lives in the PAGE REGISTRY
  *  (site.json), so publishing can filter the sitemap without loading all
- *  the page files. */
-function setPageNoindex(checked) {
-  const entry = siteDraft.pages.find((p) => p.id === pageState.pageId);
+ *  the page files. Any page by its id; the open page without one. */
+function setPageNoindex(checked, id = pageState.pageId) {
+  const entry = siteDraft.pages.find((p) => p.id === id);
   if (!entry) return;
   siteMutate('edit:page-noindex', () => {
     if (checked) entry.noindex = true;
@@ -297,19 +257,68 @@ function setPageNoindex(checked) {
   });
 }
 
-/** The sharing image: compressed like other images and materialized to
- *  media/ on publish. */
-async function uploadOgImage(event) {
-  const file = event.target.files?.[0];
-  event.target.value = '';
-  if (!file) return;
-  try {
-    const img = await mediaState.compressOrTrim(file);
-    setPageSeo('ogImage', img.dataUrl);
-  } catch (err) {
-    shellState.setStatus(mediaState.imageErrorText(err), 'error');
-  }
+/** Per-page visibility of the menu: it shows on all pages except those in nav.hideOn (the Nav panel and the page's settings); the strip has its own list. */
+function toggleNavOnPage(pageId, show) {
+  siteMutate('nav', () => {
+    const hide = new Set(siteDraft.nav.hideOn ?? []);
+    if (show) hide.delete(pageId); else hide.add(pageId);
+    if (hide.size) siteDraft.nav.hideOn = [...hide]; else delete siteDraft.nav.hideOn;
+  });
 }
+
+/** Per-page visibility of the announcement strip: it shows on all pages except those in nav.announcement.hideOn (the Nav panel's Announcement group and the page's settings). */
+function toggleAnnouncementOnPage(pageId, show) {
+  if (!siteDraft.nav.announcement) return;
+  siteMutate('nav', () => {
+    const announcement = siteDraft.nav.announcement;
+    const hide = new Set(announcement.hideOn ?? []);
+    if (show) hide.delete(pageId); else hide.add(pageId);
+    if (hide.size) announcement.hideOn = [...hide]; else delete announcement.hideOn;
+  });
+}
+
+/** Whether the site's announcement strip is on, which is when its page switches mean anything. */
+function announcementOn() {
+  const a = siteDraft.nav?.announcement;
+  return a?.show === true && typeof a.text === 'string' && a.text.trim() !== '';
+}
+
+/** How the menu is reached on a page it stays off (nav.hideMode); hidden leaves the file. */
+function setNavHideMode(mode) {
+  siteMutate('nav', () => {
+    if (mode === 'hidden') delete siteDraft.nav.hideMode; else siteDraft.nav.hideMode = mode;
+  });
+}
+
+/** Per-page visibility of the footer: it shows on all pages except those in footer.hideOn (the Footer panel and the page's settings). */
+function toggleFooterOnPage(pageId, show) {
+  footerMutate('footer', (f) => {
+    const hide = new Set(f.hideOn ?? []);
+    if (show) hide.delete(pageId); else hide.add(pageId);
+    if (hide.size) f.hideOn = [...hide]; else delete f.hideOn;
+  });
+}
+
+/** «Make front page»: the page takes / and the first place, the old front page its own id as its address (lib/page-settings.js frontPageSwap); the menu's links point at the pages and follow. */
+function makeFrontPage(id) {
+  const swap = frontPageSwap($state.snapshot(siteDraft.pages), id);
+  if (!swap) return null;
+  siteMutate('pages', () => { siteDraft.pages = swap.pages; });
+  return swap;
+}
+
+/** The title format of every page's browser tab and search result (site.titleFormat, seo.js); the default leaves the file. */
+function setTitleFormat(value) {
+  const format = titleFormatOf(value);
+  siteMutate('edit:site-titleFormat', () => {
+    if (format === 'page-site') delete siteDraft.site.titleFormat; else siteDraft.site.titleFormat = format;
+  });
+}
+
+const TITLE_FORMAT_OPTIONS = $derived(TITLE_FORMATS.map((id) => [id, ta(`opt.titleFormat.${id}`)]));
+
+/** How the menu is reached on a page it stays off (nav.hideMode), as the Nav panel and the page's settings offer it. */
+const NAV_HIDE_MODE_OPTIONS = $derived(['hidden', 'hover', 'ghost', 'tab'].map((m) => [m, ta(`opt.navHide.${m}`)]));
 
 function setPageSlug(entry, rawSlug) {
   const slug = slugify(rawSlug);
@@ -637,21 +646,6 @@ const activeThemePreset = $derived.by(() => {
 export function effects() {
 
   $effect(() => {
-    if (!pageMenuFor) return;
-    const onDown = (e) => { if (!e.target.closest?.('.page-menu-wrap')) pageMenuFor = null; };
-    const onKey = (e) => { if (e.key === 'Escape') pageMenuFor = null; };
-    const onBlur = () => { pageMenuFor = null; };
-    document.addEventListener('pointerdown', onDown, true);
-    document.addEventListener('keydown', onKey);
-    window.addEventListener('blur', onBlur);
-    return () => {
-      document.removeEventListener('pointerdown', onDown, true);
-      document.removeEventListener('keydown', onKey);
-      window.removeEventListener('blur', onBlur);
-    };
-  });
-
-  $effect(() => {
     const id = focusSiteCalendar;
     if (!id) return;
     focusSiteCalendar = null;
@@ -720,20 +714,22 @@ export const siteState = {
   set newPageTitle(v) { newPageTitle = v; },
   get newPageTemplate() { return newPageTemplate; },
   set newPageTemplate(v) { newPageTemplate = v; },
-  get pageMenuFor() { return pageMenuFor; },
-  set pageMenuFor(v) { pageMenuFor = v; },
   RESERVED_SLUGS,
   pageSlugError,
   addPage,
   savePageAsTemplate,
   duplicatePage,
   renamePage,
-  get seoDraft() { return seoDraft; },
-  set seoDraft(v) { seoDraft = v; },
-  readSeoDraft,
-  setPageSeo,
   setPageNoindex,
-  uploadOgImage,
+  toggleNavOnPage,
+  toggleAnnouncementOnPage,
+  announcementOn,
+  setNavHideMode,
+  toggleFooterOnPage,
+  makeFrontPage,
+  setTitleFormat,
+  get TITLE_FORMAT_OPTIONS() { return TITLE_FORMAT_OPTIONS; },
+  get NAV_HIDE_MODE_OPTIONS() { return NAV_HIDE_MODE_OPTIONS; },
   setPageSlug,
   deletePage,
   get iconEditorImage() { return iconEditorImage; },

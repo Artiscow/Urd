@@ -56,10 +56,13 @@
   import CollectionsTable from './panels/collections/CollectionsTable.svelte';
   import ImportDialog from './panels/collections/ImportDialog.svelte';
   import ImportTable from './panels/collections/ImportTable.svelte';
+  import PageSettingsDialog from './panels/pages/PageSettingsDialog.svelte';
+  import PageSettingsTable from './panels/pages/PageSettingsTable.svelte';
   import CommandPalette from './lib/CommandPalette.svelte';
   import { paletteState } from './state/palette.svelte.js';
+  import { pageSettingsState } from './state/page-settings.svelte.js';
 
-  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState];
+  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
   /* The handle's own closures: what the element menu and the panels open or read across the modules. */
@@ -178,6 +181,8 @@
         <PreviewStage />
         {#if ed.csvImport?.view === 'table' && ed.chromeVisible}
           <ImportTable />
+        {:else if ed.pageSettingsFor && ed.pageSettingsPref === 'table' && ed.chromeVisible}
+          <PageSettingsTable />
         {:else if ed.activePanel === 'collections' && ed.collectionsLayout === 'table' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection) && ed.chromeVisible
           && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)}
           <CollectionsTable />
@@ -224,6 +229,11 @@
     {#key ed.linkRequest}
       <LinkDialog request={ed.linkRequest} onclose={ed.closeLink} />
     {/key}
+  {/if}
+
+  {#if ed.pageSettingsFor && ed.pageSettingsPref === 'dialog'}
+    <!-- A page's settings over the admin, in the default layout -->
+    <PageSettingsDialog />
   {/if}
 
   {#if ed.csvImport?.view === 'dialog'}

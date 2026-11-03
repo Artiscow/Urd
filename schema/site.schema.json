@@ -14,6 +14,7 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string", "minLength": 1 },
+        "titleFormat": { "type": "string", "enum": ["page-site", "site-page", "page"], "default": "page-site", "description": "How every page's title in the browser tab and in search results is put together (additive from 0.7.10.31): the page's name or search title and the site title, in that order with a hyphen between (the default), the site title first, or the page alone." },
         "lang": { "type": "string", "minLength": 2 },
         "timeZone": { "type": "string", "description": "Additive from 0.7.19.10: an IANA time zone (Europe/Oslo). When set, the calendar block shows every time on this zone's clock to every visitor; omitted, each visitor sees the times in their own zone." },
         "mapService": { "type": "string", "enum": ["osm", "duckduckgo", "brave", "here", "google", "apple", "norgeskart", "finn"], "description": "Additive from 0.7.0.39: the map service a place written as text links to (the calendar's places). Omitted is OpenStreetMap." },
@@ -260,7 +261,7 @@
           "default": false,
           "description": "Place the full-width bar on top of the first section instead of in its own band above it, so a transparent menu reveals the hero behind it (additive from v0.6). Applies only to variant bar; the first section should have enough clearance at the top. Floating/side variants already sit outside the flow."
         },
-        "hideOn": { "type": "array", "items": { "type": "string" }, "description": "Page ids where the menu is kept off, the announcement strip with it (per-page exception, additive from 0.7.13.21); the default (absent) is visible on all pages. The footer's hideOn is its own list." },
+        "hideOn": { "type": "array", "items": { "type": "string" }, "description": "Page ids where the menu is kept off (per-page exception, additive from 0.7.13.21); the default (absent) is visible on all pages. Until schemaVersion 6 the announcement strip went with it; it has its own list since (nav.announcement.hideOn), and the footer's hideOn is its own list." },
         "hideMode": { "enum": ["hidden", "hover", "ghost", "tab"], "default": "hidden", "description": "How the menu is reached on a page in hideOn (additive from 0.7.13.21): hidden = not at all; hover = the pointer at the top edge slides it in; ghost = the pointer at the top edge shows it faint, and it turns solid when the pointer rests on it; tab = a pull tab at the top edge at all times. A device without hover gets the tab in every mode but hidden." },
         "tab": {
           "type": "object",
@@ -280,6 +281,7 @@
           "description": "A strip above the menu inside the nav host (additive from v0.7): a short message, optionally a link. Rendered only with show true and a text.",
           "properties": {
             "show": { "type": "boolean", "default": false, "description": "The strip is drawn" },
+            "hideOn": { "type": "array", "items": { "type": "string" }, "description": "Page ids where the strip is kept off (per-page exception, additive from schemaVersion 6); absent = on every page. On a page the menu is hidden from (hideMode hidden) but the strip is not, the strip stands alone at the top of the page; a menu reached from the edge carries it inside. The site migration 5 -> 6 copies nav.hideOn into it where hideMode is hidden." },
             "text": { "type": "string" },
             "page": { "type": "string", "description": "A page id from site.pages the strip links to (takes precedence over href)" },
             "href": { "type": "string", "description": "A full address or a site path; unsafe values are dropped" },

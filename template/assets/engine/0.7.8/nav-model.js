@@ -173,6 +173,15 @@ export function navHidden(nav, pageId) {
   return !!pageId && Array.isArray(nav?.hideOn) && nav.hideOn.includes(pageId);
 }
 
+/**
+ * Whether the announcement strip stays off a page (nav.announcement.hideOn, additive from site schemaVersion 6): the page ids the owner listed, apart from the menu's own list.
+ * @param {{hideOn?: string[]}} [announcement] site.nav.announcement
+ * @param {string} [pageId]
+ */
+export function announcementHidden(announcement, pageId) {
+  return !!pageId && Array.isArray(announcement?.hideOn) && announcement.hideOn.includes(pageId);
+}
+
 /** How the menu stands on a page it is kept off (nav.hideMode); the first is the default. */
 export const HIDE_MODES = ['hidden', 'hover', 'ghost', 'tab'];
 
@@ -612,14 +621,16 @@ export function navClasses(site) {
  * true (the bar follows the menu), false lets it scroll away while the menu
  * stays; `dismiss` (default true) adds a cross for the visitor. `bg` and `color` are
  * resolved theme tokens or raw colours, empty when the CSS defaults (the
- * accent and its text colour) apply.
+ * accent and its text colour) apply. A page listed in the strip's own
+ * hideOn gets null.
  * @param {{show?: boolean, text?: string, page?: string, href?: string, sticky?: boolean, dismiss?: boolean, color?: string, textColor?: string}} [announcement]
  * @param {Array<{id: string, path: string}>} [pages] The page register (site.pages)
+ * @param {string|null} [pageId] The page being rendered
  * @returns {{text: string, href: string | null, sticky: boolean, dismiss: boolean, bg: string, color: string} | null}
  */
-export function announcementModel(announcement, pages = []) {
+export function announcementModel(announcement, pages = [], pageId = null) {
   const text = typeof announcement?.text === 'string' ? announcement.text.trim() : '';
-  if (announcement?.show !== true || !text) return null;
+  if (announcement?.show !== true || !text || announcementHidden(announcement, pageId)) return null;
   // The strip is a link only when its target resolves: an unknown page or a failing address leaves it as plain text.
   const link = resolveLink(announcement, pages);
   return {

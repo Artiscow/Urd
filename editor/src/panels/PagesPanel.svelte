@@ -1,19 +1,17 @@
 <script>
-  /* The Pages panel: the site's pages, a new page from a template, and each page's slug, search text and sharing image. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The Pages panel: the site's pages with their names and slugs, each page's settings and actions behind its row's gear (pages/PageSettingsStep.svelte here when «In the panel» is chosen, else the dialog or the table the shell mounts), and a new page from a template. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { pageThumb } from '$engine/preset-thumb.js';
   import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
   import { safeCssValue } from '$engine/theme.js';
   import { ICONS } from '../lib/icons.js';
+  import PageSettingsStep from './pages/PageSettingsStep.svelte';
   const ed = getContext('urd-editor');
   const pageId = $derived(ed.pageId);
-  const seoDraft = $derived(ed.seoDraft);
   const siteDraft = $derived(ed.siteDraft);
-  // The open page lacks a description, unless it is hidden from search: a hollow dot on its Search and sharing group points at the field.
-  const missingDescription = $derived(!siteDraft.pages.find((p) => p.id === pageId)?.noindex && !seoDraft.description);
   const templateIds = $derived(ed.templateIds);
-  const { addPage, deletePage, duplicatePage, handleDeleteTemplate, renamePage, savePageAsTemplate, selectPage, setPageNoindex, setPageSeo, setPageSlug, templateStores, uploadOgImage } = ed;
+  const { addPage, handleDeleteTemplate, renamePage, selectPage, setPageSlug, templateStores } = ed;
 
   /* The starter-pack thumbnails are built once (create() per section is
      cheap, but the grid rerenders on every keystroke in the name field). */
@@ -35,6 +33,9 @@
 </script>
 
 <div class="panel-body">
+  {#if ed.pageSettingsPref === 'step' && ed.pageSettingsFor}
+  <PageSettingsStep />
+  {:else}
   {#each siteDraft.pages as p (p.id)}
     <div class="page-row" class:current={p.id === pageId}>
       <input class="page-title" value={p.title} title={ta('tip.pages.title')}
@@ -48,65 +49,12 @@
       <span class="row-tools">
         <button class="ghost row-tool" title={ta('tip.pages.open')}
           disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
-        <span class="page-menu-wrap">
-          <button class="ghost row-tool" title={ta('tip.pages.menu')}
-            onclick={() => (ed.pageMenuFor = ed.pageMenuFor === p.id ? null : p.id)}>{@html ICONS.kebab}</button>
-          {#if ed.pageMenuFor === p.id}
-            <div class="page-menu">
-              <button class="ghost" title={ta('tip.pages.duplicate')} onclick={() => duplicatePage(p)}>
-                {@html ICONS.copy} {ta('ui.duplicatePage')}</button>
-              <button class="ghost" onclick={() => savePageAsTemplate(p)}>
-                {@html ICONS.bookmark} {ta('ui.savePageTemplate')}</button>
-              {#if p.path !== '/'}
-                <button class="ghost danger" title={ta('tip.pages.delete')}
-                  onclick={() => { ed.pageMenuFor = null; deletePage(p); }}>
-                  {@html ICONS.cross} {ta('ui.deletePage')}</button>
-              {/if}
-            </div>
-          {/if}
-        </span>
+        <button class="ghost row-tool" title={ta('tip.pages.settings')} aria-label={ta('ui.pageSettings')}
+          onclick={() => ed.openPageSettings(p.id)}>{@html ICONS.gear}</button>
       </span>
     </div>
   {/each}
-  <details class="group">
-    <summary>{ta('ui.seoGroup', { page: siteDraft.pages.find((p) => p.id === pageId)?.title ?? '' })}{#if missingDescription}<i class="note-dot" title={ta('tip.pages.missingDescription')}></i>{/if}</summary>
-    <div class="group-items">
-      <label title={ta('tip.seo.description')}>{ta('lbl.seoDescription')}
-        <textarea rows="2" value={seoDraft.description}
-          onchange={(e) => setPageSeo('description', e.target.value)}></textarea>
-      </label>
-      <label title={ta('tip.seo.ogTitle')}>{ta('lbl.ogTitle')}
-        <input value={seoDraft.ogTitle}
-          placeholder={siteDraft.pages.find((p) => p.id === pageId)?.title ?? ''}
-          onchange={(e) => setPageSeo('ogTitle', e.target.value)} />
-      </label>
-      <label title={ta('tip.seo.ogDescription')}>{ta('lbl.ogDescription')}
-        <textarea rows="2" value={seoDraft.ogDescription} placeholder={seoDraft.description}
-          onchange={(e) => setPageSeo('ogDescription', e.target.value)}></textarea>
-      </label>
-      <label title={ta('tip.seo.ogImage')}>{ta('lbl.ogImage')}
-        {#if seoDraft.ogImage}
-          <img class="site-icon-preview" src={seoDraft.ogImage} alt={ta('lbl.ogImage')} />
-        {/if}
-      </label>
-      <span class="toolbar-row">
-        <label class="ghost filepick tb-grow" title={ta('tip.seo.ogImage')}>
-          {seoDraft.ogImage ? ta('ui.changeImage') : ta('ui.chooseImage')}
-          <input type="file" accept="image/*" onchange={uploadOgImage} />
-        </label>
-        {#if seoDraft.ogImage}
-          <button class="ghost row-tool" title={ta('tip.seo.removeOgImage')}
-            onclick={() => setPageSeo('ogImage', '')}>{@html ICONS.cross}</button>
-        {/if}
-      </span>
-      <label class="gridmenu-snap" title={ta('tip.seo.hideFromSearch')}>
-        <input type="checkbox"
-          checked={siteDraft.pages.find((p) => p.id === pageId)?.noindex === true}
-          onchange={(e) => setPageNoindex(e.target.checked)} />
-        {ta('lbl.hideFromSearch')}
-      </label>
-    </div>
-  </details>
+  {/if}
   <hr class="gridmenu-divider" />
   <input placeholder={ta('ph.newPageName')} bind:value={() => ed.newPageTitle, (v) => (ed.newPageTitle = v)}
     onkeydown={(e) => e.key === 'Enter' && addPage()} />

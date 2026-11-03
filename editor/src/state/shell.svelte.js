@@ -13,6 +13,7 @@ import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
 import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as settingsPicturesOf } from '../lib/settings-model.js';
 import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT } from '../lib/panels-start.js';
 import { COLLECTION_LAYOUTS, collectionLayoutOf, CSV_PREVIEWS, csvPreviewOf } from '../lib/collection-layout.js';
+import { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf } from '../lib/page-settings.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -543,6 +544,19 @@ function setCollectionsLayout(v) {
 
 const COLLECTIONS_LAYOUT_OPTIONS = $derived(COLLECTION_LAYOUTS.map((id) => [id, ta(`opt.collectionsLayout.${id}`)]));
 
+/** Where a page's settings open («Page settings», lib/page-settings.js): a dialog over the admin (the default, not stored), a step in the Pages panel, or a table of every page over the canvas; kept per browser. */
+const PAGE_SETTINGS_KEY = 'urd-page-settings';
+
+let pageSettingsPref = $state(pageSettingsLayoutOf(localStorage.getItem(PAGE_SETTINGS_KEY)));
+
+function setPageSettingsPref(v) {
+  pageSettingsPref = pageSettingsLayoutOf(v);
+  if (pageSettingsPref === 'dialog') localStorage.removeItem(PAGE_SETTINGS_KEY);
+  else localStorage.setItem(PAGE_SETTINGS_KEY, pageSettingsPref);
+}
+
+const PAGE_SETTINGS_OPTIONS = $derived(PAGE_SETTINGS_LAYOUTS.map((id) => [id, ta(`opt.pageSettings.${id}`)]));
+
 /** Where a collection's CSV import shows what it will do («Import preview», lib/collection-layout.js): a dialog (the default, not stored), a step in the panel, or a table over the page; kept per browser. */
 const CSV_PREVIEW_KEY = 'urd-csv-preview';
 
@@ -611,7 +625,6 @@ function openShortcuts() {
   if (confirmBox || siteState.iconEditorImage) return;
   settingsOpen = false;
   toolMenu = null;
-  siteState.pageMenuFor = null;
   shortcutsOpen = true;
 }
 
@@ -901,6 +914,9 @@ export const shellState = {
   setCollectionsLayout,
   get COLLECTIONS_LAYOUT_OPTIONS() { return COLLECTIONS_LAYOUT_OPTIONS; },
   get csvPreviewPref() { return csvPreviewPref; },
+  get pageSettingsPref() { return pageSettingsPref; },
+  setPageSettingsPref,
+  get PAGE_SETTINGS_OPTIONS() { return PAGE_SETTINGS_OPTIONS; },
   setCsvPreview,
   get CSV_PREVIEW_OPTIONS() { return CSV_PREVIEW_OPTIONS; },
   get settingsPlace() { return settingsPlace; },

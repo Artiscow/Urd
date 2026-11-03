@@ -1100,12 +1100,12 @@ The ADRs behind the «Where» column: [ADR-0009](../adr/0009-themed-ui-rule.md) 
 | Conditional CMS detail layouts | FR | Show or hide sections by field values | no | Partial: collections render on pages | v0.8 entry pages |
 | Related-collection lists on detail pages | FR | A second collection shown on an item page | no | Partial: collections render on pages | v0.8 entry pages; v0.8 typed custom fields |
 | Reuse a page design with another collection | FR | Duplicate a CMS page and rebind its source | no | Partial: collections render on pages | v0.8 entry pages |
-| Landing page builder | WX | Standalone campaign pages | no | Partial: a Landing page template, a page left out of the menu and search, the footer hidden per page; no hiding the menu on one page | 0.7.10 |
+| Landing page builder | WX | Standalone campaign pages | no | Has: a Landing page template, a page left out of the menu and search, and the nav, the announcement bar and the footer each switched off per page in the page's settings | Delivered 0.7.10.31 |
 | Page and section templates | DU (2-5 custom templates), WX, SH (metaobjects) | Reusable page or section blueprints | no | Has: page, section and group templates | - |
-| Page duplication | WX, DU, SQ | Copy a page | yes | Has: the row's ⋮ menu in the Pages panel copies the page under «… (copy)» with the next free slug, opened as a draft outside the menu | Delivered 0.7.10.29 |
+| Page duplication | WX, DU, SQ | Copy a page | yes | Has: «Duplicate the page» in the page's settings copies it under «… (copy)» with the next free slug, opened as a draft outside the nav | Delivered 0.7.10.29 |
 | Hidden or not-linked pages | SQ, SU | Public but not in the navigation | no | Has | - |
 | Enable or disable pages | SQ, SH | Take a page offline | no | Missing | v0.8 AR-5: section hide, extended to whole pages |
-| Set homepage | SQ | Choose the root page | no | Missing: the page at / is always the front page and cannot be swapped for another | 0.7.10 |
+| Set homepage | SQ | Choose the root page | no | Has: «Make front page» in the page's settings and the settings table moves it to / and the old front page to its own address, the nav's links following | Delivered 0.7.10.31 |
 | Draft pages and single-page publish | ZO, WP | Unpublished pages; publish one page at a time | no | Partial: edits are drafts in this browser until one publish of the whole site; no unpublished page and no single-page publish | v0.8 AR-5; Watch: single-page publish |
 | Password-protected site or pages | FR, SQ, CA, FI, CV, SU, TI, ST, WF (Growth workspace), SH (private mode) | Shared password gate | yes | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
 | IP-restricted access | TI, SQ (SSO, Enterprise) | Allowlist by IP address, or sign-in through an identity provider (Okta, Entra ID, Google) | edge | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
@@ -1144,8 +1144,8 @@ The SEO services marked «Not taken» need a third party or a server. The MCP se
 
 | Function | Builders | What it covers | Server | Urd | Where |
 |---|---|---|---|---|---|
-| Meta title and description | WX, SQ, FR, WF, WN, TI, DR, CA, FI, SH | Per-page metadata | no | Partial: a description per page and a title of the page name and the site name; no separate search title | 0.7.10 |
-| Patterned or default meta templates | WX, FR, SQ (title formats) | Metadata from CMS fields | no | Missing | v0.8 entry and product pages; 0.7.10 |
+| Meta title and description | WX, SQ, FR, WF, WN, TI, DR, CA, FI, SH | Per-page metadata | no | Has: a search title and a description per page, the title in the site's format | Delivered 0.7.10.31 |
+| Patterned or default meta templates | WX, FR, SQ (title formats) | Metadata from CMS fields | no | Partial: a site-wide title format (the page and the site name in either order, or the page alone, 0.7.10.31); no pattern with fields | v0.8 entry and product pages |
 | Open Graph and social share images | WX, TI, CA, FI, FR, SQ, SH | og:image and og:title | no | Partial: og and twitter tags per page with fallbacks, written in the browser; no tags for link-preview crawlers that run no JavaScript | v0.8 baking |
 | Canonical tags | WX, FR, CA | rel=canonical, custom per site | no | Partial: an automatic canonical per page; no custom canonical | Watch: needed only for a page first published elsewhere |
 | robots.txt (automatic or editable) | WX, FR, TI, DR, SQ (fixed, with a site-wide crawler block), SH (editable template) | Crawler rules | no | Partial: generated at publishing, with /admin/ excluded and the sitemap named; not editable | v0.8 publish-time files |

@@ -8,6 +8,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.31 - A page's own settings in three layouts, a search title with the site's title format, and «Make front page» - 4 November 2026
+
+- A page's search settings stood in one group for the open page alone, its menu and footer switches in other panels. A gear on every row, in place of the ⋮ menu, and «Page settings» in the command palette open any page's settings with the page's actions among them (`panels/pages/PageSettingsFields.svelte`, written through `state/page-settings.svelte.js`).
+- Three layouts under Urd settings, «Page settings»: a dialog over the admin with the pages down its left (the default), a step in the Pages panel, and a table of every page over the canvas with the chosen page in a drawer (`PageSettingsDialog`, `PageSettingsStep`, `PageSettingsTable`).
+- The browser tab and search results showed «page name - site title» only. A page's `meta.searchTitle` takes the name's place, and `site.titleFormat` in the Site panel orders the page and the site title or leaves the page alone (`pageTitle` in seo.js); schema, SCHEMA.md and the checkout page's example change with it.
+- The announcement strip went with the nav on the pages in `nav.hideOn`. It has a page list of its own, `nav.announcement.hideOn`, also in the Nav panel's Announcement group, and stands alone at the top of a page the nav is hidden from (`stripElement` in nav.js).
+- The site migration 5 → 6 copies `nav.hideOn` into the strip's list where the nav is hidden outright, so a built site renders as before (`liftAnnouncementHideOn` in migrate.js); schema, SCHEMA.md and the template's site.json change with it.
+- «Make front page» in the settings and the table's radio: the page takes / and the first place, the old front page its own id as its address, or the next free number on it, and the nav's links follow (`frontPageSwap` in `lib/page-settings.js`).
+- The user guides describe the settings and the format, and the comparison's Landing page builder, Set homepage and Meta title rows are Has, the title formats Partial.
+- The independent review before the commit found these, all fixed:
+  - The dialog's page list was named by a key no dictionary holds. It takes the Pages panel's name.
+  - The site state kept the open page's SEO mirror and its writers after the group that read them was gone. They are removed.
+  - The menu's four reach modes were listed in the Nav panel and in the page's settings apart. One list on the site state serves both.
+- A second review of the whole diff found these, all fixed:
+  - The migration copied every page in `nav.hideOn`, so on a page whose nav is reached from the edge the strip would have left the pulled-down nav. Only a nav hidden outright is copied, and a tucked nav carries the strip as before.
+  - «Save as template» in the dialog asked for the name behind the modal dialog, out of reach. The dialog closes first.
+  - The palette's «Page settings» showed nothing with the step while another panel was open, or with the table in the clean view. It opens the Pages panel and brings the chrome back.
+  - Every row clicked in the table read every page file again, and a late read could overwrite a cell just typed. The table reads them once, as it opens.
+  - The guides still named a × on the rows and a front page that cannot move, and two comparison rows named the old row menu. They describe the gear and «Make front page».
+
 ## [0.7.8] - 2026-11-03
 
 ### 0.7.10.28-30p - Release 0.7.8: the media folder sorted by kind, duplication, and cut, copy and paste across pages - 3 November 2026

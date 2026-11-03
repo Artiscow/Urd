@@ -17,9 +17,39 @@ function absolute(origin, path) {
   }
 }
 
+/** The title formats a site can choose (site.titleFormat): the page then the site title, the site title then the page, or the page alone. */
+export const TITLE_FORMATS = ['page-site', 'site-page', 'page'];
+
+/** The stored title format, the default for anything else. */
+export function titleFormatOf(raw) {
+  return TITLE_FORMATS.includes(raw) ? raw : 'page-site';
+}
+
+/** The page's own part of the title: its search title, else its name, else the registry's name. */
+export function pageTitleOwn(page, entry) {
+  const meta = page?.meta ?? {};
+  return String(meta.searchTitle || meta.title || entry?.title || '').trim();
+}
+
+/**
+ * The document title of a page, as the browser tab and the search results show it: the page's own part and the site title in the site's format.
+ * A part that is empty is left out with its hyphen, so a site without a title shows the page alone.
+ * @param {object} site the site.json content (migrated)
+ * @param {{meta?: {title?: string, searchTitle?: string}}} page
+ * @param {{title?: string}} [entry] The page's entry in the page registry
+ */
+export function pageTitle(site, page, entry) {
+  const own = pageTitleOwn(page, entry);
+  const siteTitle = String(site?.site?.title ?? '').trim();
+  const format = titleFormatOf(site?.site?.titleFormat);
+  if (format === 'page' || !siteTitle) return own || siteTitle;
+  if (!own) return siteTitle;
+  return format === 'site-page' ? `${siteTitle} - ${own}` : `${own} - ${siteTitle}`;
+}
+
 /**
  * The meta tags for a page: [{tag, attrs}] in insertion order.
- * The og fields fall back stepwise: og.title -> page title, og.description
+ * The og fields fall back stepwise: og.title -> search title -> page title, og.description
  * -> page description -> site description, og.image -> the site icon.
  * The X/Twitter card needs only the card tag (the rest is read from the og fields).
  * A hidden page (noindex in the page registry) gets robots-noindex and no
@@ -35,7 +65,7 @@ export function pageMetaTags(site, page, origin, path, entry = {}) {
   const meta = page?.meta ?? {};
   const og = meta.og ?? {};
   const siteTitle = site?.site?.title ?? '';
-  const pageTitle = meta.title ?? '';
+  const ownTitle = pageTitleOwn(page, entry);
   const description = meta.description;
   const ogDescription = og.description ?? description ?? site?.site?.description ?? '';
   const image = og.image ?? site?.site?.icon ?? null;
@@ -47,7 +77,7 @@ export function pageMetaTags(site, page, origin, path, entry = {}) {
   if (canonical && !entry?.noindex) tags.push({ tag: 'link', attrs: { rel: 'canonical', href: canonical } });
   tags.push({ tag: 'meta', attrs: { property: 'og:type', content: 'website' } });
   tags.push({ tag: 'meta', attrs: { property: 'og:site_name', content: siteTitle } });
-  tags.push({ tag: 'meta', attrs: { property: 'og:title', content: og.title || pageTitle || siteTitle } });
+  tags.push({ tag: 'meta', attrs: { property: 'og:title', content: og.title || ownTitle || siteTitle } });
   if (ogDescription) tags.push({ tag: 'meta', attrs: { property: 'og:description', content: ogDescription } });
   if (canonical) tags.push({ tag: 'meta', attrs: { property: 'og:url', content: canonical } });
   const imageUrl = image ? absolute(origin, image) : null;

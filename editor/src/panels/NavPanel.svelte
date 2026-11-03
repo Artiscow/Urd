@@ -76,24 +76,14 @@
     });
   }
 
-  /** Per-page visibility: the menu shows on all pages except those in nav.hideOn. */
-  function toggleNavOnPage(pageId, show) {
-    siteMutate('nav', () => {
-      const hide = new Set(siteDraft.nav.hideOn ?? []);
-      if (show) hide.delete(pageId); else hide.add(pageId);
-      if (hide.size) siteDraft.nav.hideOn = [...hide]; else delete siteDraft.nav.hideOn;
-    });
-  }
+  /** Per-page visibility: the menu shows on all pages except those in nav.hideOn (the page's settings share it). */
+  const toggleNavOnPage = ed.toggleNavOnPage;
 
   /** Whether any page is without the menu, which is when the way to reach it matters. */
   const navHidesSome = $derived((siteDraft?.nav?.hideOn ?? []).length > 0);
 
-  /** How the menu is reached on an unticked page (nav.hideMode); hidden leaves the file. */
-  function setNavHideMode(mode) {
-    siteMutate('nav', () => {
-      if (mode === 'hidden') delete siteDraft.nav.hideMode; else siteDraft.nav.hideMode = mode;
-    });
-  }
+  /** How the menu is reached on an unticked page (nav.hideMode; the page's settings share it). */
+  const setNavHideMode = ed.setNavHideMode;
 
   /** The pull tab's design: the owner's own once any field of nav.tab is set; the choice alone opens the fields. */
   let tabOwnChoice = $state(null);
@@ -1485,7 +1475,7 @@
       <!-- How the menu is reached on the unticked pages, and the pull tab's design once a reveal is chosen -->
       {#if navHidesSome}
         <Choice label={ta('lbl.navHideMode')} title={ta('tip.nav.hideMode')} value={siteDraft.nav.hideMode ?? 'hidden'}
-          options={['hidden', 'hover', 'ghost', 'tab'].map((m) => [m, ta(`opt.navHide.${m}`)])}
+          options={ed.NAV_HIDE_MODE_OPTIONS}
           onchange={setNavHideMode} />
         {#if (siteDraft.nav.hideMode ?? 'hidden') !== 'hidden'}
           <Choice label={ta('lbl.navTab')} title={ta('tip.nav.tabDesign')} value={tabOwn ? 'own' : 'default'}
@@ -1801,6 +1791,18 @@
         <label title={ta('tip.nav.announceTextColor')}>{ta('lbl.textColor')}
           <ColorPicker value={siteDraft.nav.announcement?.textColor ?? 'accent-text'} tokens={themeSwatches()}
             label={ta('tip.nav.announceTextColor')} onchange={(hex) => setNavAnnouncement('textColor', hex)} /></label>
+        <p class="mini-label group-sub" title={ta('tip.nav.announceOnPage')}>{ta('group.showOnPages')}</p>
+        <!-- Two pages to a row, as the menu's own list -->
+        <div class="page-switches">
+          {#each siteDraft.pages ?? [] as pg (pg.id)}
+            <label class="gridmenu-snap" title={ta('tip.nav.announceOnPage')}>
+              <input type="checkbox"
+                checked={!(siteDraft.nav.announcement?.hideOn ?? []).includes(pg.id)}
+                onchange={(e) => ed.toggleAnnouncementOnPage(pg.id, e.target.checked)} />
+              <span class="page-switch-name">{pg.title || pg.id}</span>
+            </label>
+          {/each}
+        </div>
       {/if}
     </div>
   </details>

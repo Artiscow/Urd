@@ -12,6 +12,7 @@ import { registerSectionPresets } from '$engine/sections/presets.js';
 import { shellState } from './shell.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { pageState } from './page.svelte.js';
+import { pageSettingsState } from './page-settings.svelte.js';
 import { siteState } from './site.svelte.js';
 import { blocksState } from './blocks.svelte.js';
 import { bridgeState } from './bridge.svelte.js';
@@ -31,7 +32,6 @@ function openPalette() {
   if (shellState.confirmBox || siteState.iconEditorImage) return;
   shellState.settingsOpen = false;
   shellState.toolMenu = null;
-  siteState.pageMenuFor = null;
   shellState.shortcutsOpen = false;
   paletteOpen = true;
 }
@@ -66,6 +66,9 @@ function buildCommands() {
   }
   add('shortcuts', 'actions', ta('shortcuts.title'), () => shellState.openShortcuts());
   add('view-site', 'actions', ta('ui.viewSite'), () => window.open(pageState.pageEntry()?.path ?? '/', '_blank', 'noopener'));
+
+  // The open page's own settings, in the layout Urd settings chose.
+  if (pageState.pageEntry()) add('page-settings', 'pages', ta('ui.pageSettings'), () => pageSettingsState.openPageSettings(pageState.pageId), pageState.pageEntry().title);
 
   // The pages, the current one left out.
   for (const page of siteState.siteDraft?.pages ?? []) {

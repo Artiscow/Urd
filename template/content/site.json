@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "site": {
     "title": "Urd",
     "lang": "no",
@@ -148,6 +148,9 @@
     "version": 1,
     "announcement": {
       "show": true,
+      "hideOn": [
+        "checkout"
+      ],
       "text": "Nyhet: bestill kaker til høstferien",
       "page": "kaker",
       "place": "nav",

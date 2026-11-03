@@ -55,12 +55,14 @@ function handleFor(panel, siteDraft, extra = {}) {
     iframeEl: null,
     sections: [{ id: 'sec-1', blocks: [] }],
     // Pages
-    seoDraft: { description: '', ogTitle: '', ogDescription: '', ogImage: '' },
+    pageSettingsFor: null, pageSettingsPref: 'dialog', pageMetas: {},
+    // Site
+    TITLE_FORMAT_OPTIONS: [['page-site', 'Page - Site'], ['site-page', 'Site - Page'], ['page', 'Page']], setTitleFormat: noop,
+    NAV_HIDE_MODE_OPTIONS: [['hidden', 'Hidden'], ['hover', 'Hover'], ['ghost', 'Ghost'], ['tab', 'Tab']],
     templateIds: [],
     templateStores: {},
     newPageTitle: '',
     newPageTemplate: null,
-    pageMenuFor: null,
     // Site
     iconEditorImage: null,
     openSiteCalendar: calendars[0]?.id ?? null,
@@ -147,7 +149,7 @@ function handleFor(panel, siteDraft, extra = {}) {
     plainTitle: (s) => String(s ?? ''),
     imageErrorText: () => '',
     addPage: noop, deletePage: noop, renamePage: noop, savePageAsTemplate: noop, selectPage: noop, handleDeleteTemplate: noop,
-    setPageSeo: noop, setPageNoindex: noop, setPageSlug: noop, uploadOgImage: noop,
+    setPageNoindex: noop, setPageSlug: noop,
     siteMutate: noop, footerMutate: noop, mutateSection: noop, addSiteCalendar: noop, setGrid: noop, setStatus: noop,
     applyThemePreset: noop, compressOrTrim: noop, svgAutoTrim: noop, compressMany: noop, reportUpload: noop, readVideoFile: noop,
     setSectionGrid: noop, setSectionHeight: noop, toggleSectionGrid: noop,

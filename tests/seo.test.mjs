@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pageMetaTags, siteJsonLd } = await engineImport('seo.js');
+const { pageMetaTags, siteJsonLd, pageTitle, titleFormatOf, TITLE_FORMATS } = await engineImport('seo.js');
 
 // Norwegian titles, descriptions and slugs below are deliberate fixture data
 // (user site content).
@@ -77,4 +77,23 @@ test('siteJsonLd: optional fields are left out when they are missing', () => {
   assert.equal(data.name, 'X');
   assert.ok(!('description' in data));
   assert.ok(!('logo' in data));
+});
+
+test('pageTitle: the page name and the site title in the site\'s format, the search title in place of the name, an empty part left out', () => {
+  const page = { meta: { title: 'Kaker' } };
+  assert.equal(pageTitle(SITE, page), 'Kaker - Urd', 'the default is the page then the site');
+  assert.equal(pageTitle({ site: { title: 'Urd', titleFormat: 'site-page' } }, page), 'Urd - Kaker');
+  assert.equal(pageTitle({ site: { title: 'Urd', titleFormat: 'page' } }, page), 'Kaker');
+  assert.equal(pageTitle(SITE, { meta: { title: 'Checkout', searchTitle: 'Bestilling og betaling' } }), 'Bestilling og betaling - Urd');
+  assert.equal(pageTitle(SITE, { meta: {} }, { title: 'Kontakt' }), 'Kontakt - Urd', 'the registry\'s name when the page has none');
+  assert.equal(pageTitle({ site: { title: '' } }, page), 'Kaker', 'no site title, no hyphen');
+  assert.equal(pageTitle(SITE, { meta: { title: '' } }), 'Urd', 'no page part, no hyphen');
+  assert.equal(pageTitle({ site: { title: 'Urd', titleFormat: 'nonsense' } }, page), 'Kaker - Urd');
+  assert.deepEqual(TITLE_FORMATS, ['page-site', 'site-page', 'page']);
+  assert.equal(titleFormatOf(undefined), 'page-site');
+});
+
+test('pageMetaTags: og:title falls back to the search title before the page name', () => {
+  const tags = pageMetaTags(SITE, { meta: { title: 'Checkout', searchTitle: 'Bestilling og betaling' } }, 'https://eksempel.no', '/checkout');
+  assert.equal(find(tags, 'property', 'og:title').attrs.content, 'Bestilling og betaling');
 });

@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, launcherVars, LAUNCHER_SIZES, LAUNCHER_BOUNDS, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, subGrouped, hideMode, HIDE_MODES, tabModel } = await engineImport('nav-model.js');
+const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, launcherVars, LAUNCHER_SIZES, LAUNCHER_BOUNDS, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, announcementHidden, subGrouped, hideMode, HIDE_MODES, tabModel } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -164,6 +164,17 @@ test('navHidden: only a listed page id keeps the menu off, and only when the pag
   assert.equal(navHidden({ hideOn: 'kampanje' }, 'kampanje'), false);
   assert.equal(navHidden({}, 'kampanje'), false);
   assert.equal(navHidden(undefined, 'kampanje'), false);
+});
+
+test('announcementHidden and announcementModel: the strip has a page list of its own, apart from the menu\'s', () => {
+  const announcement = { show: true, text: 'Nyhet', hideOn: ['checkout'] };
+  assert.equal(announcementHidden(announcement, 'checkout'), true);
+  assert.equal(announcementHidden(announcement, 'hjem'), false);
+  assert.equal(announcementHidden(announcement, undefined), false);
+  assert.equal(announcementHidden({ hideOn: 'checkout' }, 'checkout'), false);
+  assert.equal(announcementModel(announcement, [], 'checkout'), null, 'off the listed page');
+  assert.equal(announcementModel(announcement, [], 'hjem').text, 'Nyhet', 'on the others');
+  assert.equal(announcementModel(announcement, []).text, 'Nyhet', 'with no page named, as the reset of a dismissal reads it');
 });
 
 test('hideMode: hidden by default, the three reveals allowlisted, and the schema agrees', async () => {

@@ -53,7 +53,7 @@ import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns } from './plugins.js';
 import { setCollectionsDraft, draftHasKind } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
-import { applyHeadMeta, mountAnalytics } from './seo.js';
+import { applyHeadMeta, mountAnalytics, pageTitle } from './seo.js';
 import { readPrefetched, revalidateFile, wirePrefetch, sessionStore } from './prefetch.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
@@ -465,6 +465,8 @@ function enablePreview(state, opts) {
       const samePage = msg.page?.meta?.id === state.page?.meta?.id;
       state.page = msg.page;
       if (!Array.isArray(state.page.sections)) state.page.sections = [];
+      // The tab title follows the page's search title and name as they are edited.
+      document.title = pageTitle(state.site, state.page, state.site.pages?.find((p) => p.id === state.page.meta?.id));
       const paint = () => renderPage(state.page, state.site, root, vp());
       if (samePage) keepScroll(() => typing(paint)); else paint();
       // Page switch in the editor: the footer and the menu can have per-page visibility (hideOn).
@@ -701,6 +703,8 @@ function enablePreview(state, opts) {
       state.site.theme ??= { version: 1, tokens: {} };
       state.site.nav ??= { version: 1, items: [] };
       refreshShopGate(state.site);
+      // The tab title follows the draft's title format and site title.
+      document.title = pageTitle(state.site, state.page, state.site.pages.find((p) => p.id === state.page?.meta?.id));
       const rerender = () => keepScroll(() => typing(() => {
         applyTheme(state.site.theme);
         applySiteLayout(state.site);
@@ -837,7 +841,7 @@ export async function boot(opts) {
   }
   if (!Array.isArray(page.sections)) page.sections = [];
   if (drafts) setCollectionsDraft(drafts.collections);
-  document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
+  document.title = pageTitle(site, page, entry);
   // SEO metadata (description, canonical, og: fields, JSON-LD) is set only
   // for visitors: the preview address (?preview=1) is never a canonical page.
   // The owner's own draft view is never counted.
@@ -888,7 +892,7 @@ export async function boot(opts) {
       served.page = { text: fresh.text, etag: fresh.etag };
       state.page = liftPageFile(fresh.page, rawSite);
       if (!Array.isArray(state.page.sections)) state.page.sections = [];
-      document.title = `${state.page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
+      document.title = pageTitle(site, state.page, entry);
       applyHeadMeta(site, state.page, location.origin, location.pathname, entry);
       const y = window.scrollY;
       renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });

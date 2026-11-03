@@ -16,6 +16,7 @@
         "id": { "$ref": "#/$defs/id" },
         "title": { "type": "string", "minLength": 1 },
         "description": { "type": "string", "description": "The page's description (meta description, additive from v0.7); also used as the og:description fallback" },
+        "searchTitle": { "type": "string", "description": "The page's title in the browser tab and in search results (additive from 0.7.10.31), in the site's title format in place of the page name; omitted, the page name stands there. Also the og:title fallback before the page name." },
         "og": {
           "type": "object",
           "additionalProperties": false,

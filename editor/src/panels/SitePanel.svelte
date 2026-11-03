@@ -379,6 +379,8 @@
     <input value={siteDraft.site.title ?? ''} placeholder={ta('ph.site.name')}
       oninput={(e) => setSiteName(e.target.value)} />
   </label>
+  <Choice label={ta('lbl.titleFormat')} title={ta('tip.site.titleFormat')} value={siteDraft.site.titleFormat ?? 'page-site'}
+    options={ed.TITLE_FORMAT_OPTIONS} onchange={ed.setTitleFormat} />
   <label class="field-stack" title={ta('tip.site.description')}>{ta('lbl.description')}
     <!-- One paragraph that wraps and grows downwards as it is typed -->
     <textarea class="field-grow" rows="1" value={siteDraft.site.description ?? ''} placeholder={ta('ph.site.description')} use:autogrow={siteDraft.site.description}

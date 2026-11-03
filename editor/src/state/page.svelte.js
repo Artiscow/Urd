@@ -887,7 +887,6 @@ async function selectPage(id, { keepHistory = false } = {}) {
     activeSectionId = null;
     sectionGrid = null;
     historyState.updateDirty();
-    siteState.readSeoDraft();
     shellState.updateAttention();
     shellState.status = '';
   })();

@@ -86,6 +86,13 @@ const CSV_PREVIEWS = {
   table: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 54, H - 8, 0.2) + line(11, 10, 20, 2) + acc(52, 10, 9, 3) + line(11, 15, 50, 1, 1) + line(11, 19, 12, 2) + acc(26, 18, 10, 4) + line(39, 19, 12, 2) + line(11, 24, 12, 2) + line(26, 24, 10, 2) + acc(39, 23, 12, 4) + line(11, 29, 12, 2) + line(26, 29, 10, 2) + line(39, 29, 12, 2),
 };
 
+/** A page's settings: a dialog with the pages down its left, a step in the panel with the fields under each other, or a table with a row per page. */
+const PAGE_SETTINGS = {
+  dialog: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 18, H - 8, 0.08) + stage(27) + dim(14, 10, 38, 24, 0.24) + dim(14, 10, 11, 24, 0.14) + line(16, 13, 7, 2) + acc(16, 17, 7, 2) + line(16, 21, 7, 2) + line(28, 13, 14, 2) + line(28, 18, 20, 3, 1) + line(28, 24, 20, 3, 1) + acc(28, 29, 8, 2),
+  step: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 22, H - 8, 0.22) + acc(11, 10, 3, 2) + line(15, 10, 10, 2) + line(11, 15, 17, 3, 1) + line(11, 20, 17, 3, 1) + acc(11, 25, 2, 2) + line(14, 25, 12, 2) + line(11, 30, 17, 3, 1) + stage(31),
+  table: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 54, H - 8, 0.2) + line(11, 10, 50, 1, 1) + line(11, 14, 10, 2) + acc(26, 14, 2, 2) + line(32, 14, 12, 2) + line(48, 14, 12, 2) + line(11, 19, 10, 2) + line(26, 19, 2, 2) + line(32, 19, 12, 2) + line(48, 19, 12, 2) + line(11, 24, 10, 2) + line(26, 24, 2, 2) + line(32, 24, 12, 2) + line(48, 24, 12, 2) + line(11, 29, 10, 2) + line(26, 29, 2, 2) + line(32, 29, 12, 2),
+};
+
 const LOOKS = {
   layout: LAYOUTS,
   place: PLACES,
@@ -96,6 +103,7 @@ const LOOKS = {
   linkEditor: LINK_EDITORS,
   collectionsLayout: COLLECTIONS_LAYOUTS,
   csvPreview: CSV_PREVIEWS,
+  pageSettings: PAGE_SETTINGS,
 };
 
 /** A theme's swatch: its background with its surface, a line in its accent and a line in its text colour. */

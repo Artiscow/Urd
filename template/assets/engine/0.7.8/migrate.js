@@ -67,7 +67,7 @@ export const MOBILE_ROW = 8;
 export const MOBILE_GAP = 16;
 
 /** Current version of the site.json format. */
-export const SITE_SCHEMA_VERSION = 5;
+export const SITE_SCHEMA_VERSION = 6;
 
 /**
  * File-level migrations. Each function lifts exactly one version and
@@ -383,7 +383,23 @@ const siteMigrations = {
   // 4 -> 5: the footer's social links became the site's links (site.links),
   // drawn by the footer, the menu's tools and the share block.
   4: (site) => liftFooterSocial(site),
+  // 5 -> 6: the announcement strip got a page list of its own
+  // (nav.announcement.hideOn), and nav.hideOn keeps the menu alone off its
+  // pages. Where the menu was hidden outright the strip went with it, so
+  // the menu's list is copied into the strip's; a menu reached from the
+  // edge carried the strip inside it and still does.
+  5: (site) => liftAnnouncementHideOn(site),
 };
+
+/** The site migration 5 -> 6: where the menu is hidden outright (hideMode hidden, the default), its pages are pages the strip stays off too, as before the strip had a list of its own; a menu reached from the edge keeps carrying the strip. */
+export function liftAnnouncementHideOn(site) {
+  const hide = Array.isArray(site?.nav?.hideOn) ? site.nav.hideOn : [];
+  const announcement = site?.nav?.announcement;
+  if (!hide.length || !announcement || typeof announcement !== 'object') return site;
+  if (['hover', 'ghost', 'tab'].includes(site.nav.hideMode)) return site;
+  const own = Array.isArray(announcement.hideOn) ? announcement.hideOn : [];
+  return { ...site, nav: { ...site.nav, announcement: { ...announcement, hideOn: [...new Set([...own, ...hide])] } } };
+}
 
 /**
  * Lifts site.json to the current schemaVersion. Same rules as

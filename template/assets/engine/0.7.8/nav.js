@@ -114,10 +114,63 @@ const TUCK_LEAVE = 300;
 /** The measured clearances a render writes on the root element. */
 const ROOT_VARS = ['--urd-nav-h', '--urd-nav-h-base', '--urd-announce-h', '--urd-nav-own-h', '--urd-announce-page-h', '--urd-scroll-clear'];
 
+/** Whether the visitor has closed the strip with this text. */
+function dismissedNow(key) {
+  try { return localStorage.getItem(key) === '1'; } catch { return false; }
+}
+
+/**
+ * The announcement strip as an element: its words or its link, its colours, and the cross that closes it for the visitor.
+ * A strip closed, here or in a document kept from before (a prerender, the back-forward cache), leaves and calls onGone.
+ * @param {object} announce announcementModel's result
+ * @param {AbortSignal} signal The render's listeners
+ * @param {() => void} onGone Called after the strip has left
+ */
+function stripElement(announce, signal, onGone) {
+  const key = dismissKeyFor(announce.text);
+  const el = document.createElement('div');
+  el.className = 'urd-nav-announce';
+  const inner = document.createElement(announce.link ? 'a' : 'span');
+  inner.className = 'urd-nav-announce-text';
+  inner.textContent = announce.text;
+  if (announce.link) Object.assign(inner, linkAttrs(announce.link));
+  if (announce.bg) el.style.setProperty('--urd-announce-bg', announce.bg);
+  if (announce.color) el.style.setProperty('--urd-announce-text', announce.color);
+  el.appendChild(inner);
+  if (!announce.dismiss) return el;
+  const leave = () => {
+    if (!el.isConnected) return;
+    el.remove();
+    onGone();
+  };
+  const cross = document.createElement('button');
+  cross.type = 'button';
+  cross.className = 'urd-nav-announce-close';
+  cross.setAttribute('aria-label', t('nav.dismissAnnouncement'));
+  cross.innerHTML = CROSS;
+  cross.addEventListener('click', () => {
+    try { localStorage.setItem(key, '1'); } catch { /* storage may be unavailable */ }
+    leave();
+  }, { signal });
+  el.appendChild(cross);
+  const recheck = () => { if (dismissedNow(key)) leave(); };
+  if (document.prerendering) document.addEventListener('prerenderingchange', recheck, { once: true, signal });
+  window.addEventListener('pageshow', (event) => { if (event.persisted) recheck(); }, { signal });
+  return el;
+}
+
+/** The strip on a page the menu is hidden from while the strip is not: alone at the top of the page, in the flow before the content. */
+function placeStripAlone(el) {
+  el.id = 'urd-announce';
+  el.classList.add('urd-announce-content');
+  const root = document.getElementById('urd-root');
+  if (root) root.before(el); else document.body.prepend(el);
+}
+
 /**
  * @param {object} site site.json, already parsed
  * @param {HTMLElement} host Element the navigation is built into
- * @param {string} [pageId] The page being rendered; the menu stays off the pages listed in nav.hideOn
+ * @param {string} [pageId] The page being rendered; the menu stays off the pages listed in nav.hideOn, the strip off those in nav.announcement.hideOn
  */
 export function renderNav(site, host, pageId) {
   navController?.abort();
@@ -138,6 +191,9 @@ export function renderNav(site, host, pageId) {
     document.body.classList.remove('urd-side-left', 'urd-side-right');
     document.body.style.removeProperty('--urd-nav-side-width');
     for (const name of ROOT_VARS) document.documentElement.style.setProperty(name, '0px');
+    // The strip has a list of its own: on a page it is not kept off, it stands alone at the top.
+    const alone = announcementModel(site.nav.announcement, site.pages, pageId);
+    if (alone && !(alone.dismiss && dismissedNow(dismissKeyFor(alone.text)))) placeStripAlone(stripElement(alone, signal, () => {}));
     return;
   }
   host.style.removeProperty('display');
@@ -168,41 +224,17 @@ export function renderNav(site, host, pageId) {
   // (localStorage keyed by the text). The preview reads and writes the same
   // key as the published page, so the editor shows what the visitor gets;
   // the Announcement panel has a control that clears it again.
-  const announce = announcementModel(site.nav.announcement, site.pages);
-  const dismissKey = announce ? dismissKeyFor(announce.text) : '';
-  let dismissed = false;
-  if (announce?.dismiss) {
-    try { dismissed = localStorage.getItem(dismissKey) === '1'; } catch { dismissed = false; }
-  }
+  const announce = announcementModel(site.nav.announcement, site.pages, pageId);
   let announceEl = null;
-  if (announce && !dismissed) {
-    announceEl = document.createElement('div');
-    announceEl.className = 'urd-nav-announce';
-    const inner = document.createElement(announce.link ? 'a' : 'span');
-    inner.className = 'urd-nav-announce-text';
-    inner.textContent = announce.text;
-    if (announce.link) Object.assign(inner, linkAttrs(announce.link));
-    if (announce.bg) announceEl.style.setProperty('--urd-announce-bg', announce.bg);
-    if (announce.color) announceEl.style.setProperty('--urd-announce-text', announce.color);
-    announceEl.appendChild(inner);
-    if (announce.dismiss) {
-      const cross = document.createElement('button');
-      cross.type = 'button';
-      cross.className = 'urd-nav-announce-close';
-      cross.setAttribute('aria-label', t('nav.dismissAnnouncement'));
-      cross.innerHTML = CROSS;
-      cross.addEventListener('click', () => {
-        try { localStorage.setItem(dismissKey, '1'); } catch { /* storage may be unavailable */ }
-        announceEl.remove();
-        announceEl = null;
-        setNavH();
-      }, { signal });
-      announceEl.appendChild(cross);
-    }
+  if (announce && !(announce.dismiss && dismissedNow(dismissKeyFor(announce.text)))) {
+    announceEl = stripElement(announce, signal, () => {
+      announceEl = null;
+      setNavH();
+    });
     // The side column honours the chosen place: the strip in the column
     // (its top), fixed across the whole page above column and content, or
-    // in the flow above the content beside the column. The other variants
-    // always carry it inside the host.
+    // in the flow above the content beside the column. The other variants,
+    // a menu waiting above the edge among them, carry it inside the host.
     const place = wantsSide && !narrowMq.matches ? announce.place : 'nav';
     if (place === 'page') {
       announceEl.id = 'urd-announce';
@@ -215,22 +247,6 @@ export function renderNav(site, host, pageId) {
       if (root) root.before(announceEl); else document.body.prepend(announceEl);
     } else {
       host.appendChild(announceEl);
-    }
-    // A document rendered ahead of its use (a prerender on link hover, or one
-    // kept in the back-forward cache) built the strip before the visitor
-    // could dismiss it elsewhere: the key is read again when it comes on
-    // screen, and the strip leaves with it.
-    if (announce.dismiss) {
-      const recheckDismiss = () => {
-        let gone = false;
-        try { gone = localStorage.getItem(dismissKey) === '1'; } catch { gone = false; }
-        if (!gone || !announceEl) return;
-        announceEl.remove();
-        announceEl = null;
-        setNavH();
-      };
-      if (document.prerendering) document.addEventListener('prerenderingchange', recheckDismiss, { once: true, signal });
-      window.addEventListener('pageshow', (event) => { if (event.persisted) recheckDismiss(); }, { signal });
     }
   }
   // Whether the strip actually scrolls away: the host must be in the flow

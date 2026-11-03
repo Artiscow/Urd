@@ -139,6 +139,22 @@ test('site v4 without footer.social gets no links and no footer change', () => {
   assert.equal(lifted.footer.text, 'x');
 });
 
+test('site v5 copies the pages the menu stays off into the strip\'s own list, so both stay off them as before', () => {
+  const lifted = liftSiteFile({ schemaVersion: 5, nav: { version: 1, items: [], hideOn: ['checkout'], announcement: { show: true, text: 'Nyhet' } } });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.deepEqual(lifted.nav.announcement.hideOn, ['checkout']);
+  assert.deepEqual(lifted.nav.hideOn, ['checkout'], 'the menu keeps its list');
+  const merged = liftSiteFile({ schemaVersion: 5, nav: { hideOn: ['a', 'b'], announcement: { show: true, text: 'x', hideOn: ['b', 'c'] } } });
+  assert.deepEqual(merged.nav.announcement.hideOn, ['b', 'c', 'a'], 'a list of its own is kept, the menu\'s pages added once');
+  assert.equal(liftSiteFile({ schemaVersion: 5, nav: { hideOn: ['a'] } }).nav.announcement, undefined, 'no strip, nothing written');
+  assert.equal(liftSiteFile({ schemaVersion: 5, nav: { announcement: { show: true, text: 'x' } } }).nav.announcement.hideOn, undefined, 'no list, nothing written');
+  for (const mode of ['hover', 'ghost', 'tab']) {
+    const tucked = liftSiteFile({ schemaVersion: 5, nav: { hideOn: ['checkout'], hideMode: mode, announcement: { show: true, text: 'x' } } });
+    assert.equal(tucked.nav.announcement.hideOn, undefined, `a menu reached from the edge (${mode}) keeps carrying the strip`);
+  }
+  assert.deepEqual(liftSiteFile({ schemaVersion: 5, nav: { hideOn: ['a'], hideMode: 'hidden', announcement: { show: true, text: 'x' } } }).nav.announcement.hideOn, ['a']);
+});
+
 test('site v3 that set nav.style.inset keeps its own value', () => {
   const lifted = liftSiteFile({ schemaVersion: 3, nav: { version: 1, items: [], style: { inset: true, size: 'lg' } } });
   assert.equal(lifted.nav.style.inset, true);

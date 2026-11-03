@@ -250,14 +250,8 @@
     });
   }
 
-  /** Per-page visibility: the footer shows on all pages except those in hideOn. */
-  function toggleFooterOnPage(pageId, show) {
-    footerMutate('footer', (f) => {
-      const hide = new Set(f.hideOn ?? []);
-      if (show) hide.delete(pageId); else hide.add(pageId);
-      if (hide.size) f.hideOn = [...hide]; else delete f.hideOn;
-    });
-  }
+  /** Per-page visibility: the footer shows on all pages except those in hideOn (the page's settings share it). */
+  const toggleFooterOnPage = ed.toggleFooterOnPage;
 
   function addFooterColumn() {
     footerMutate('footer', (f) => {

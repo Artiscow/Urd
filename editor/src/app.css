@@ -2681,40 +2681,6 @@
     justify-content: center;
   }
 
-  /* The kebab menu per page row: anchored in the row, floats above the
-     panel; closing (outside click/Escape/blur) is handled in the script. */
-  .page-menu-wrap {
-    position: relative;
-    display: inline-flex;
-    align-self: stretch;
-  }
-
-  .page-menu {
-    position: absolute;
-    top: calc(100% + 0.25rem);
-    right: 0;
-    z-index: 40;
-    min-width: 10.5rem;
-    display: grid;
-    gap: 0.15rem;
-    padding: 0.3rem;
-    background: var(--urd-color-surface, #151a23);
-    border: 1px solid rgb(255 255 255 / 14%);
-    border-radius: 9px;
-    box-shadow: 0 14px 30px -16px rgb(0 0 0 / 80%);
-  }
-
-  .page-menu .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
-    display: flex;
-    align-items: center;
-    gap: 0.5em;
-    white-space: nowrap;
-  }
-
-  .page-menu .ghost.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
-    color: #e05252;
-  }
-
   /* The "new page from template" grid: cards with a page thumbnail; the
      picked card decides what + Create page starts from. */
   .page-template-grid {
