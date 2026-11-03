@@ -22,38 +22,32 @@ async function refreshBaseSha() {
 
 /**
  * Conflict check before publishing: has someone else published since we
- * loaded, and do we touch the same files? Returns {ok, head}: ok=false
- * means the editor canceled; head is the HEAD we observed and is sent as
- * expect to the commit endpoint (closes the window between check and
- * commit server-side).
+ * loaded, and do we touch the same files? Returns {head, warning}: head is
+ * the HEAD we observed and is sent as expect to the commit endpoint
+ * (closes the window between check and commit server-side); warning is a
+ * section for the one question publishing asks ({heading, lines}), or null.
  */
-async function confirmNoConflict(files) {
+async function checkConflict(files) {
   if (!baseSha) {
     // The baseline slipped at load (GitHub down): fetch HEAD now, so
     // expect at least closes the commit window. Without the original
     // baseline we cannot diff, so the editor must make the call
     // explicitly instead of the guard being silently skipped.
     await refreshBaseSha();
-    const ok = await shellState.askConfirm({
-      title: ta('confirm.conflictUnknown.title'),
-      lines: [
-        ta('confirm.conflictUnknown.body'),
-        ta('confirm.conflictUnknown.warning'),
-      ],
-      okLabel: ta('confirm.publishAnyway'),
-      cancelLabel: ta('confirm.cancel'),
-    });
-    return { ok, head: baseSha };
+    return {
+      head: baseSha,
+      warning: { heading: ta('confirm.conflictUnknown.title'), lines: [ta('confirm.conflictUnknown.body'), ta('confirm.conflictUnknown.warning')] },
+    };
   }
   let data = null;
   try {
     const res = await fetch(`/api/github/latest?base=${baseSha}`);
     if (res.ok) data = await res.json().catch(() => null);
   } catch { /* unavailable: we do not stop the publish over that */ }
-  if (!data?.head) return { ok: true, head: null };
+  if (!data?.head) return { head: null, warning: null };
 
   const head = data.head;
-  if (head === baseSha) return { ok: true, head };
+  if (head === baseSha) return { head, warning: null };
 
   const mine = new Set(files.map((f) => f.path));
   // A deleted folder (a removed plugin's) overlaps every file someone else changed under it.
@@ -63,19 +57,12 @@ async function confirmNoConflict(files) {
   const overlap = data.truncated
     ? [ta('confirm.conflict.truncated')]
     : (data.changedFiles ?? []).filter((p) => mine.has(p) || folders.some((folder) => p.startsWith(folder)));
-  if (overlap.length === 0) return { ok: true, head };
+  if (overlap.length === 0) return { head, warning: null };
 
-  const ok = await shellState.askConfirm({
-    title: ta('confirm.conflict.title'),
-    lines: [
-      ta('confirm.conflict.intro'),
-      ...overlap.map((p) => `• ${p}`),
-      ta('confirm.conflict.warning'),
-    ],
-    okLabel: ta('confirm.publishAnyway'),
-    cancelLabel: ta('confirm.cancel'),
-  });
-  return { ok, head };
+  return {
+    head,
+    warning: { heading: ta('confirm.conflict.title'), lines: [ta('confirm.conflict.intro'), ...overlap.map((p) => `• ${p}`), ta('confirm.conflict.warning')] },
+  };
 }
 
 /** null = not loaded yet; [] = loaded and empty */
@@ -187,7 +174,7 @@ export const updaterState = {
   get baseSha() { return baseSha; },
   set baseSha(v) { baseSha = v; },
   refreshBaseSha,
-  confirmNoConflict,
+  checkConflict,
   get historyList() { return historyList; },
   set historyList(v) { historyList = v; },
   get historyError() { return historyError; },

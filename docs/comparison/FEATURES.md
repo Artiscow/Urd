@@ -1869,7 +1869,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Select all | WH, SQ, WP, TI, WT | Ctrl/⌘+A; in WP a repeat press selects the parent | Missing | 0.7.10 |
 | Select parent or child | WF, WS, WH, BR, BD, WE, RM, FS, DV | Arrows, Enter/Shift+Enter, Ctrl+click, Shift+Esc, breadcrumbs | n/a: flat blocks in sections | - |
 | Select the next or previous sibling | WF, WH, WE, SQ, FR, BR, WT, SH | Tab/Shift+Tab, arrow keys, Cycle Selection | Missing | 0.7.10 (Tab also in 0.7.11) |
-| Deselect or abort | WF, WS, WH, WP, BD, BR, WT | Esc (double Esc in WP) | Partial: Esc deselects and closes the menus; it does not abort a drag, and does not leave a text edit for the block | 0.7.10: undo quality and canvas functions |
+| Deselect or abort | WF, WS, WH, WP, BD, BR, WT | Esc (double Esc in WP) | Partial: Esc deselects, closes the menus and cancels a drag or a resize with the block back in place and no undo step (0.7.10.32); it does not leave a text edit for the block | 0.7.10 canvas functions |
 | Lock element | WS, TI, WP, SH | Lock icon in Layers, L key, Lock in List View | Missing | 0.7.9 layers panel |
 | Hide element in the editor | WS, FR, BR, DV, WP, SH, TI | Eye icon or `⌘;`; BR also hides on the live site | Partial: hide on mobile | 0.7.9 layers panel; v0.8 AR-5 section hide |
 | Group or ungroup | WH, WP, SQ, DV, TI, RM | Ctrl+G; Stacks (SQ); Module Groups (DV); nested groups (TI) | Partial: sticky group, block groups as templates | Watch |
@@ -2182,8 +2182,8 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Undo and redo | all with published shortcuts | ⌘Z / ⌘⇧Z | Partial: undo and redo keys over the whole draft, 50 steps; no buttons, nothing kept over a reload, and the selection is not restored | 0.7.10 |
-| History panel | EL, BR, FR, BD | Actions or revisions list | Partial: the History panel lists the 15 latest publishes; no list of editing steps to jump back to | 0.7.10 |
+| Undo and redo | all with published shortcuts | ⌘Z / ⌘⇧Z | Has: undo and redo keys and buttons in the top bar, greyed when there is nothing to undo and naming the step in their tooltip, over the whole draft, 50 steps, a slider drag or a burst of one change as one step, empty steps passed, the selected block and the typing's caret put back, kept in the browser over a reload (0.7.10.32) | Delivered 0.7.10.32 |
+| History panel | EL, BR, FR, BD | Actions or revisions list | Has: the session's steps listed from the top bar's undo buttons, newest first, a click going back to one or forward to an undone one (0.7.10.32); the History panel lists the 15 latest publishes | Delivered 0.7.10.32 |
 | Autosave | FR, WE | Auto-save; toggle (WE) | Has: drafts kept in the browser | - |
 | Snapshots or backups | WF, DU, WN, SH | Save snapshot; site backup | Has: git | - |
 | Version history or restore | FR, FS, WP, EL, BD, SH (beta) | Version history; rollback; revisions | Partial: the 15 latest publishes listed and the last one undone in admin; no restore of an older publish and no compare | v0.9 hardening; Watch, with the visual revision diff |
@@ -2210,7 +2210,7 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 | Theme or site export | WP, WT, BR, SH | Zip; self-host or CLI; transfer ZIP | Has: the repo | - |
 | Reset or restart the site | SQ | Reset the site styles to the template's defaults; clear the content and keep the styles | Missing | v0.9: a blank start for new sites |
 | Edit from mobile devices | WN, JI, SH, SQ | Phone editing; app | Partial: the phone view is a preview width; the canvas uses pointer drags and hover toolbars and is not made for touch | v0.9 touch friendliness |
-| Page settings shortcut | EL, DV, WT | ⌘⇧Y; O; ⌥-click | Partial: the command palette (Ctrl/⌘+K) opens the Pages panel and goes to a page; no key to a page's own settings | - |
+| Page settings shortcut | EL, DV, WT | ⌘⇧Y; O; ⌥-click | Partial: the top bar's page switcher opens any page's settings from its gear, and Ctrl+K «Page settings» the open page's (0.7.10.31 and 0.7.10.32); no single key | - |
 | Site settings shortcut | EL, FS | ⌘K; website settings | Has: site settings behind the gear | - |
 | Editor preferences | EL, WP, OX | Preferences panel | Has: a dialog with sections, a panel or a sheet (Settings window), every look choice as pictures or words, the panel a fresh load opens, the browser's own settings and the site's shared ones apart, kept per browser (0.7.10.24) | - |
 | Exit builder shortcut | EL, DV | Esc; ⌘E | Has: «See the site» | - |

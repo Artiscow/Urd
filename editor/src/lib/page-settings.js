@@ -76,3 +76,33 @@ export function frontPageSwap(pages, id) {
   chosen.path = '/';
   return { pages: [chosen, ...list.filter((p) => p !== chosen)], from };
 }
+
+/**
+ * The page names and addresses typed but turned down, in the pages' order, as publishing asks about them: each with its page, the field, the reason and what the page keeps.
+ * @param {Record<string, {text: string, reason: string|null}>} typed By `<page id>:title` or `<page id>:slug` (state/site.svelte.js)
+ * @param {Array<{id: string, title: string, path: string}>} pages The site's pages
+ * @returns {Array<{id: string, title: string, field: 'title'|'slug', text: string, reason: string, kept: string}>}
+ */
+export function refusedPageFields(typed, pages) {
+  const out = [];
+  for (const page of pages) {
+    for (const field of ['title', 'slug']) {
+      const entry = typed[`${page.id}:${field}`];
+      if (!entry?.reason) continue;
+      out.push({ id: page.id, title: page.title, field, text: entry.text, reason: entry.reason, kept: field === 'title' ? page.title : page.path });
+    }
+  }
+  return out;
+}
+
+/**
+ * The line publishing shows for a name or an address turned down: what was left in the field, and what the page is published with instead.
+ * @param {{id: string, title: string, field: 'title'|'slug', text: string, reason: string, kept: string}} f One of refusedPageFields
+ * @returns {{key: string, vars: Record<string, string>}} A dictionary key and its values
+ */
+export function refusedPageFieldLine(f) {
+  const vars = { page: f.title || f.id, text: f.text.trim(), reason: f.reason, kept: f.kept };
+  if (f.field === 'title') return { key: 'confirm.pageFields.emptyName', vars };
+  return { key: vars.text ? 'confirm.pageFields.address' : 'confirm.pageFields.emptyAddress', vars };
+}
+

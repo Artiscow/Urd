@@ -13,6 +13,7 @@
  *                  { type: 'urd-delete-section', sectionId }
  *                  { type: 'urd-duplicate-section', sectionId }
  *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut: the editor keeps it and hands it to the next page the preview loads)
+ *                  urd-edit from a text block carries `caret`: the characters into the text where the change began, kept with the undo step
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: the top-edge handle moves all blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
@@ -3181,15 +3182,29 @@ function post(msg) {
   window.parent?.postMessage(msg, location.origin);
 }
 
+// The editable texts typed in since they took the focus: their own undo is the browser's, which holds that typing.
+const typedIn = new WeakSet();
+const editableRoot = (node) => (node instanceof HTMLElement ? node.closest('[contenteditable]:not([contenteditable="false"])') : null);
+document.addEventListener('input', (event) => {
+  const root = editableRoot(event.target);
+  if (root) typedIn.add(root);
+}, true);
+document.addEventListener('focusin', (event) => {
+  const root = editableRoot(event.target);
+  if (root) typedIn.delete(root);
+}, true);
+
 // Ctrl+Z / Ctrl+Shift+Z inside the iframe is forwarded to the editor,
-// which owns the history - UNLESS focus sits in editable text (there the
-// browser's own text undo applies; urd-edit keeps the draft in sync).
+// which owns the history - UNLESS focus sits in editable text typed in
+// since it took the focus (there the browser's own text undo applies;
+// urd-edit keeps the draft in sync). A text the caret was only put back
+// in, by an undo or a click, has no typing of its own to undo.
 window.addEventListener('keydown', (event) => {
   if (!(event.ctrlKey || event.metaKey)) return;
   const key = event.key.toLowerCase();
   if (key !== 'z' && key !== 'y') return;
   const target = event.target;
-  if (target instanceof HTMLElement && target.isContentEditable) return;
+  if (target instanceof HTMLElement && target.isContentEditable && typedIn.has(editableRoot(target))) return;
   event.preventDefault();
   post({ type: 'urd-undo', redo: key === 'y' || event.shiftKey });
 });
@@ -3230,6 +3245,31 @@ export function setActiveSection(sectionId) {
     if (s !== host) s.classList.remove('urd-section-active');
   });
   host?.classList.add('urd-section-active');
+}
+
+/**
+ * The caret put back in a block's text after an undo (the urd-caret message): the text takes the focus with the caret at that many characters in, or at its end where the text is shorter now.
+ * @param {string} blockId
+ * @param {number} offset Characters from the text's start
+ */
+export function placeCaret(blockId, offset) {
+  const field = document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"] .urd-text[contenteditable="true"]`);
+  if (!field || !Number.isFinite(offset)) return;
+  const walker = document.createTreeWalker(field, NodeFilter.SHOW_TEXT);
+  let left = Math.max(0, offset);
+  let node = walker.nextNode();
+  while (node && left > node.length) {
+    left -= node.length;
+    node = walker.nextNode();
+  }
+  const range = document.createRange();
+  if (node) range.setStart(node, left);
+  else range.selectNodeContents(field);
+  range.collapse(!!node);
+  field.focus({ preventScroll: true });
+  const selection = document.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
 }
 
 /** The editor's clipboard for a page just loaded (the urd-clipboard message), checked before it is used. */
@@ -5075,6 +5115,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         handle.removeEventListener('pointercancel', onCancel);
+        document.removeEventListener('keydown', onEscape, true);
         for (const o of overlays) o.remove();
         clearGuides();
         markedTarget?.classList.remove('urd-drop-target');
@@ -5084,11 +5125,24 @@ function enhanceBlock(el, block, section, grid, host) {
         dropSticky();
       };
 
+      // Escape in the middle of the gesture: the blocks go back to where they stood, the push is drawn from the section as it is, and nothing is posted, so no undo step is left behind.
+      const onEscape = (event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        onCancel();
+        drawFrame(el, block.frames[frameKey] ?? orig);
+        for (const g of groupParts) drawFrame(g.el, g.block.frames.desktop);
+        pushPreview(host, new Map());
+        if (groupParts.length) updateMultiToolbar();
+      };
+
       const onUp = () => {
         stopEdgeScroll();
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         handle.removeEventListener('pointercancel', onCancel);
+        document.removeEventListener('keydown', onEscape, true);
         for (const o of overlays) o.remove();
         clearGuides();
         markedTarget?.classList.remove('urd-drop-target');
@@ -5172,6 +5226,7 @@ function enhanceBlock(el, block, section, grid, host) {
       handle.addEventListener('pointermove', onMove);
       handle.addEventListener('pointerup', onUp);
       handle.addEventListener('pointercancel', onCancel);
+      document.addEventListener('keydown', onEscape, true);
     });
   }
 }

@@ -4,8 +4,11 @@
  */
 import { untrack } from 'svelte';
 import { createDraftStore } from '../lib/draftStore.js';
+import { joinsLast, emptyTail, walkSteps, stepTyped, stepPage, keptHolds, HISTORY_LIMIT } from '../lib/history-model.js';
+import { readKept, writeKept } from '../lib/history-store.js';
 import { indexPending } from '../lib/collection-index.js';
 import { ta } from '$engine/i18n.js';
+import { contentHash } from '$engine/imageTools.js';
 import { collectionsState } from './collections.svelte.js';
 import { pageState } from './page.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
@@ -38,7 +41,13 @@ function updateDirty() {
  * Undo/redo: snapshot-based history over the page, site, collection and
  * plugin drafts. pushHistory is called BEFORE every mutation; the keys
  * are used to merge bursts of the same action (each keystroke in a text
- * block must not become its own undo step).
+ * block, each tick of a slider, must not become its own undo step;
+ * lib/history-model.js joinsLast). Each step is { snap, view, pages, key,
+ * at, made, typed, pageId }: the state before the change, the selection and
+ * caret it was made with (put back by an undo), the pages beside the open
+ * one whose drafts the state holds, the kind of change, when it last grew
+ * and when it was made, whether it was typing, and the page it was made on
+ * (the list of steps).
  */
 const history = [];
 
@@ -46,7 +55,127 @@ const redoStack = [];
 
 let lastHistoryKey = null;
 
-function snapshot() {
+/** When the step the history ends on last grew, for the window a slider's ticks join in. */
+let lastHistoryAt = 0;
+
+/** The redo steps a new step set aside: given back if that step turns out to have changed nothing. */
+let redoAside = null;
+
+/** Counts the undos and redos, so a view that caches page data reads it again after one. */
+let restores = $state(0);
+
+/** Counts every change to the steps, so the buttons and the list of steps follow them. */
+let stepsTick = $state(0);
+
+/** The kept steps are written a moment after they change, so a burst of steps is written once. */
+let keepTimer = 0;
+
+/** Whether the steps of the last session have been looked at: until then nothing is kept, so a change during the start never writes over them. */
+let keptTaken = false;
+
+/** Keeps the steps a moment after they change; the state they lead to is marked again as the page goes (keepOnLeave). */
+function scheduleKeep() {
+  if (!keptTaken) return;
+  clearTimeout(keepTimer);
+  keepTimer = setTimeout(keep, 100);
+}
+
+/** Marks the steps changed: the buttons and the list redraw, and the history is kept for a reload. */
+function stepsChanged() {
+  stepsTick += 1;
+  scheduleKeep();
+}
+
+/** Where the mark of the kept history stands: in localStorage, written at once, so it can be written as the page goes. */
+const MARK_KEY = 'urd-history-mark';
+
+/** Writes the steps for the next session in this browser (lib/history-store.js), and the mark of the state they lead to. */
+function keep() {
+  keepTimer = 0;
+  writeKept({ history, redoStack });
+  writeMark();
+}
+
+/** The state the steps lead to, hashed (lib/history-model.js keptHolds): the steps it was taken with, the open page apart from the rest, and that page's stored draft. */
+function writeMark() {
+  const { pageId, page, ...rest } = stateObject();
+  const mark = {
+    steps: history.length, top: history.at(-1)?.made ?? 0, redo: redoStack.length, redoTop: redoStack.at(-1)?.made ?? 0,
+    pageId, page: contentHash(JSON.stringify(page)), rest: contentHash(JSON.stringify(rest)),
+    draft: contentHash(localStorage.getItem(`urd-draft-${pageId}`) ?? ''),
+  };
+  try {
+    localStorage.setItem(MARK_KEY, JSON.stringify(mark));
+  } catch { /* storage full: the next session starts its own history */ }
+}
+
+/** The page goes or is hidden (a reload, a closed tab, another app): the mark follows the drafts as they stand, the typing that joined a step included. */
+function keepOnLeave(event) {
+  if (event.type === 'visibilitychange' && document.visibilityState !== 'hidden') return;
+  writeMark();
+}
+
+/**
+ * Takes up the steps kept from the last session, once the drafts are loaded: only when the drafts are the ones the steps were kept with, so an undo never writes back over drafts discarded or a site published since.
+ */
+async function loadKept() {
+  try {
+    const kept = await readKept();
+    if (!kept || !Array.isArray(kept.history) || !Array.isArray(kept.redoStack)) return;
+    let mark = null;
+    try { mark = JSON.parse(localStorage.getItem(MARK_KEY) ?? 'null'); } catch { /* a broken mark holds nothing */ }
+    const { pageId, page, ...rest } = stateObject();
+    const now = {
+      pageId, page: contentHash(JSON.stringify(page)), rest: contentHash(JSON.stringify(rest)),
+      draftOf: (id) => contentHash(localStorage.getItem(`urd-draft-${id}`) ?? ''),
+    };
+    if (!keptHolds(mark, kept, now)) return;
+    history.splice(0, history.length, ...kept.history.slice(-HISTORY_LIMIT));
+    redoStack.splice(0, redoStack.length, ...kept.redoStack);
+    stepsTick += 1;
+  } finally {
+    keptTaken = true;
+    window.addEventListener('pagehide', keepOnLeave);
+    document.addEventListener('visibilitychange', keepOnLeave);
+  }
+}
+
+/** The selection and the caret a change is made with: the page, the active section, the selected block and, for typing, the caret's place in its text. */
+function currentView(caret = null) {
+  return {
+    pageId: pageState.pageId,
+    sectionId: pageState.activeSectionId ?? null,
+    blockId: pageState.selectedBlock?.blockId ?? null,
+    caret: caret && Number.isFinite(caret.offset) ? caret : null,
+  };
+}
+
+/** The selection and the caret of a step put back on the page it was made on: the block selected again, the caret back in its text. */
+function restoreView(view) {
+  if (!view || view.pageId !== pageState.pageId) return;
+  const bridge = previewState.bridge;
+  if (view.blockId) {
+    bridge?.sendSelect(view.blockId);
+    if (view.caret) bridge?.sendCaret(view.caret.blockId ?? view.blockId, view.caret.offset);
+  } else if (view.sectionId) {
+    pageState.activeSectionId = view.sectionId;
+    bridge?.sendActiveSection(view.sectionId);
+  }
+}
+
+/**
+ * The state of every draft as one string: what a step holds and an undo compares.
+ * @param {string[]} [pageIds] Pages beside the open one whose drafts the state holds (a change made to a page that is not open)
+ */
+function snapshot(pageIds = []) {
+  return JSON.stringify({
+    ...stateObject(),
+    ...(pageIds?.length ? { others: Object.fromEntries(pageIds.map((id) => [id, readDraft(id)])) } : {}),
+  });
+}
+
+/** Every draft's state as one object, the open page first: what a snapshot holds, and what the kept history's mark hashes. */
+function stateObject() {
   // pageId is included: undo across page switches must put the page
   // content back on the PAGE it came from, not into the current page's draft.
   // Collections/plugins are null until their init flow has FINISHED (the
@@ -54,7 +183,7 @@ function snapshot() {
   // fill asynchronously afterwards, and a snapshot from that window would
   // miss collections that an undo would then delete); restore skips the
   // null parts.
-  return JSON.stringify({
+  return {
     pageId: pageState.pageId,
     page: pageState.store.data,
     site: siteState.siteStore.data,
@@ -67,19 +196,60 @@ function snapshot() {
       ? Object.fromEntries(Object.entries(templatesState.templateStores).map(([id, st]) => [id, st.data]))
       : {},
     plugins: pluginsState.pluginsStore?.data ?? null,
-  });
+  };
 }
 
-function pushHistory(key) {
-  if (key === lastHistoryKey && (key.startsWith('edit:') || key.startsWith('grid:'))) return;
-  history.push(snapshot());
-  if (history.length > 50) history.shift();
-  redoStack.length = 0;
+/** A page's draft as stored, parsed; null for a page without one. */
+function readDraft(id) {
+  try {
+    const raw = localStorage.getItem(`urd-draft-${id}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Records the state before a change, as a step undo goes back to; a change that joins the step before it (joinsLast) records nothing.
+ * A step whose change turned out to change nothing gives way to the next, and the redo steps it set aside come back.
+ * @param {string} key The kind of change, which decides what joins
+ * @param {{caret?: {blockId: string, offset: number}|null, pages?: string[]}} [options] The caret the change was typed at, and pages beside the open one the change writes, whose drafts the step holds
+ */
+function pushHistory(key, { caret = null, pages = [] } = {}) {
+  const now = Date.now();
+  if (joinsLast(lastHistoryKey === null ? null : { key: lastHistoryKey, at: lastHistoryAt }, key, now)) {
+    lastHistoryAt = now;
+    // The step's time follows the change it gathers, so the list of steps says when it last grew.
+    const top = history.at(-1);
+    if (top) top.at = now;
+    stepsTick += 1;
+    return;
+  }
+  const snap = snapshot(pages);
+  const top = history.at(-1);
+  // The state now as the step before holds it: the same string unless either names other pages.
+  if (top && redoAside && top.snap === (!top.pages?.length && !pages.length ? snap : snapshot(top.pages))) {
+    // The step before changed nothing: it goes, and the redo it set aside comes back for this step to set aside again.
+    history.pop();
+    redoStack.splice(0, redoStack.length, ...redoAside);
+  }
+  const view = currentView(caret);
+  history.push({ snap, view, pages, key, at: now, made: now, typed: !!view.caret, pageId: view.pageId });
+  if (history.length > HISTORY_LIMIT) history.shift();
+  redoAside = redoStack.splice(0);
   lastHistoryKey = key;
+  lastHistoryAt = now;
+  stepsChanged();
 }
 
 function restore(snap) {
-  const { pageId: snapPageId, page, site: siteSnap, collectionsIndex, collections, templatesIndex, templates, plugins } = JSON.parse(snap);
+  const { pageId: snapPageId, page, site: siteSnap, collectionsIndex, collections, templatesIndex, templates, plugins, others } = JSON.parse(snap);
+  restores += 1;
+  // Pages beside the open one the step wrote: their drafts as they were, written back without leaving the page.
+  for (const [id, doc] of Object.entries(others ?? {})) {
+    if (doc) shellState.writeDraftKey(`urd-draft-${id}`, JSON.stringify(doc));
+    else localStorage.removeItem(`urd-draft-${id}`);
+  }
   siteState.siteStore.replace(siteSnap);
   siteState.linkSiteDraft();
   siteState.siteStore.save();
@@ -192,22 +362,68 @@ function restorePlugins(pluginsSnap) {
   previewState.reloadPreview();
 }
 
+/**
+ * Goes back one step that changed something: steps at the end that hold the state as it is now changed nothing and are passed (lib/history-model.js emptyTail), with the redo a last empty step set aside given back.
+ */
 function undo() {
-  if (!history.length) return;
+  // The state now, once for the steps that hold the open page alone and once per step that holds other pages too.
+  let plain = null;
+  const nowFor = (pages) => (pages?.length ? snapshot(pages) : (plain ??= snapshot()));
+  const top = history.at(-1);
+  if (top && redoAside && top.snap === nowFor(top.pages)) redoStack.splice(0, redoStack.length, ...redoAside);
+  redoAside = null;
+  const passed = emptyTail(history.map((step) => ({ snap: step.snap === nowFor(step.pages) ? '' : step.snap })), '');
+  history.splice(history.length - passed, passed);
+  if (!history.length) {
+    // Only steps that changed nothing were left: they are gone, and the buttons and the list follow.
+    stepsChanged();
+    return;
+  }
   pageState.dropFits();
-  redoStack.push(snapshot());
-  restore(history.pop());
+  const step = history.pop();
+  redoStack.push({ snap: nowFor(step.pages), view: currentView(), pages: step.pages, key: step.key, at: step.at, made: step.made, typed: stepTyped(step), pageId: stepPage(step) });
+  restore(step.snap);
+  restoreView(step.view);
   lastHistoryKey = null;
+  stepsChanged();
   shellState.setStatus(ta('status.undone'));
 }
 
 function redo() {
   if (!redoStack.length) return;
+  redoAside = null;
   pageState.dropFits();
-  history.push(snapshot());
-  restore(redoStack.pop());
+  const step = redoStack.pop();
+  history.push({ snap: snapshot(step.pages), view: currentView(), pages: step.pages, key: step.key, at: step.at, made: step.made, typed: stepTyped(step), pageId: stepPage(step) });
+  restore(step.snap);
+  restoreView(step.view);
   lastHistoryKey = null;
+  stepsChanged();
   shellState.setStatus(ta('status.redone'));
+}
+
+/**
+ * The list of steps' jump: back to just after the step at that place in the history, or forward through the redo steps to one of them, as that many undos or redos with the state drawn once at the end.
+ * The pages beside the open one that any passed step wrote are carried along, each with its draft as the walk leaves it, and the selection put back is the last passed step's (lib/history-model.js walkSteps).
+ * @param {'back'|'forward'} way
+ * @param {number} count How many steps to go
+ */
+function goSteps(way, count) {
+  const from = way === 'back' ? history : redoStack;
+  const to = way === 'back' ? redoStack : history;
+  const n = Math.min(Math.max(0, count), from.length);
+  if (!n) return;
+  pageState.dropFits();
+  redoAside = null;
+  const steps = [];
+  for (let i = 0; i < n; i += 1) steps.push(from.pop());
+  const walk = walkSteps(steps, { state: snapshot(), view: currentView() }, readDraft);
+  to.push(...walk.passed);
+  restore(walk.state);
+  restoreView(walk.view);
+  lastHistoryKey = null;
+  stepsChanged();
+  shellState.setStatus(ta(way === 'back' ? 'status.undone' : 'status.redone'));
 }
 
 /** What the other parts read and write through, and the effects the shell runs once. */
@@ -220,6 +436,15 @@ export const historyState = {
   redoStack,
   get lastHistoryKey() { return lastHistoryKey; },
   set lastHistoryKey(v) { lastHistoryKey = v; },
+  get restores() { return restores; },
+  /** The steps as the buttons and the list show them: the history newest first, and the redo steps nearest first; each with its kind of change, its page and its time. */
+  get steps() {
+    void stepsTick;
+    const describe = (step) => ({ key: step.key ?? '', at: step.at ?? 0, pageId: stepPage(step), typed: stepTyped(step) });
+    return { undo: history.map(describe).reverse(), redo: redoStack.map(describe).reverse() };
+  },
+  goSteps,
+  loadKept,
   snapshot,
   pushHistory,
   restore,

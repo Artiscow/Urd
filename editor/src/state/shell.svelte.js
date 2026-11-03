@@ -222,6 +222,8 @@ async function init() {
   await pluginsState.initPlugins();
   await collectionsState.initCollections();
   await templatesState.initTemplates();
+  // The steps kept from the last session in this browser, taken up when the drafts are the ones they were kept with.
+  await historyState.loadKept();
   await checkAuth();
   // The publish baseline requires login: signed out, the call would just
   // produce 401 noise in the console. After login (OAuth redirect) the
@@ -247,9 +249,10 @@ async function init() {
 // undo are sequential flows).
 let confirmBox = $state(null);
 
-function askConfirm({ title, lines = [], okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel') }) {
+/** sections: several things to weigh in one question, each under its own heading ({heading, lines}), as publishing asks. */
+function askConfirm({ title, lines = [], sections = [], okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel') }) {
   return new Promise((resolve) => {
-    confirmBox = { title, lines, okLabel, cancelLabel, resolve };
+    confirmBox = { title, lines, sections, okLabel, cancelLabel, resolve };
   });
 }
 
@@ -776,9 +779,9 @@ export function effects() {
     return () => offs.forEach((off) => off());
   });
 
-  /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu belongs to no cluster. */
+  /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu, the devices' sizes, the page switcher and the steps belong to no cluster. */
   $effect(() => {
-    if (toolMenu && toolMenu !== 'site' && toolMenu !== 'phone' && toolMenu !== 'screen' && !folded[toolMenu]) toolMenu = null;
+    if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. */

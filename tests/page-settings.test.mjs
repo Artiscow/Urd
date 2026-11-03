@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { register } from 'node:module';
 
 register('./_svelte-loader.mjs', import.meta.url);
-const { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf, metaOf, withMeta, frontPageSwap } = await import('../editor/src/lib/page-settings.js');
+import { engineImport } from './_engine.mjs';
+const { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf, metaOf, withMeta, frontPageSwap, refusedPageFields, refusedPageFieldLine } = await import('../editor/src/lib/page-settings.js');
 
 test('pageSettingsLayoutOf: the three layouts, the dialog for anything else', () => {
   assert.deepEqual(PAGE_SETTINGS_LAYOUTS, ['dialog', 'step', 'table']);
@@ -57,3 +58,35 @@ test('frontPageSwap: the old front page takes the next free number when its id i
   const swap = frontPageSwap(pages, 'om-oss');
   assert.deepEqual(swap.pages.map((p) => [p.id, p.path]), [['om-oss', '/'], ['hjem', '/hjem-2'], ['kaker', '/hjem']]);
 });
+
+test('refusedPageFields: the names and addresses turned down, in the pages\' order, with what each page keeps', () => {
+  const pages = [
+    { id: 'hjem', title: 'Hjem', path: '/' },
+    { id: 'om-oss', title: 'Om oss', path: '/om-oss' },
+    { id: 'kontakt', title: 'Kontakt', path: '/kontakt' },
+  ];
+  const typed = {
+    'kontakt:slug': { text: 'kaker', reason: 'taken' },
+    'om-oss:slug': { text: '', reason: 'needs an address' },
+    'om-oss:title': { text: 'Om', reason: null },
+    'kontakt:title': { text: ' ', reason: 'needs a name' },
+    'gone:slug': { text: '', reason: 'needs an address' },
+  };
+  assert.deepEqual(refusedPageFields(typed, pages), [
+    { id: 'om-oss', title: 'Om oss', field: 'slug', text: '', reason: 'needs an address', kept: '/om-oss' },
+    { id: 'kontakt', title: 'Kontakt', field: 'title', text: ' ', reason: 'needs a name', kept: 'Kontakt' },
+    { id: 'kontakt', title: 'Kontakt', field: 'slug', text: 'kaker', reason: 'taken', kept: '/kontakt' },
+  ], 'a field still being typed is left out, and so is a page no longer on the site');
+  assert.deepEqual(refusedPageFields({}, pages), []);
+});
+
+test('refusedPageFieldLine: an empty address, an address that could not be used and an empty name each say what the page is published with', async () => {
+  const dict = (await engineImport('locales/admin/en-GB.js')).default.strings;
+  const empty = refusedPageFieldLine({ id: 'om-oss', title: 'Om oss', field: 'slug', text: '  ', reason: 'The page needs an address', kept: '/om-oss' });
+  assert.deepEqual(empty, { key: 'confirm.pageFields.emptyAddress', vars: { page: 'Om oss', text: '', reason: 'The page needs an address', kept: '/om-oss' } });
+  assert.equal(refusedPageFieldLine({ id: 'kontakt', title: 'Kontakt', field: 'slug', text: 'kaker', reason: 'taken', kept: '/kontakt' }).key, 'confirm.pageFields.address');
+  assert.equal(refusedPageFieldLine({ id: 'kontakt', title: 'Kontakt', field: 'title', text: '', reason: 'needs a name', kept: 'Kontakt' }).key, 'confirm.pageFields.emptyName');
+  assert.equal(refusedPageFieldLine({ id: 'x', title: '', field: 'slug', text: '', reason: 'r', kept: '/x' }).vars.page, 'x', 'a page without a name by its id');
+  for (const key of ['confirm.pageFields.emptyAddress', 'confirm.pageFields.address', 'confirm.pageFields.emptyName', 'confirm.pageFields.title', 'confirm.beforePublish']) assert.ok(dict[key], key);
+});
+

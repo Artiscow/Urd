@@ -70,6 +70,20 @@ export const textBlock = {
     // writes the desktop frame.
     if (ctx.preview && ctx.viewport !== 'mobile') {
       content.contentEditable = 'true';
+      // Where the caret stood as each change began, in characters into the text: sent with the words, so an undo of the typing puts the caret back there.
+      let caretBefore = null;
+      content.addEventListener('beforeinput', () => {
+        const selection = content.ownerDocument.getSelection();
+        if (!selection?.rangeCount || !content.contains(selection.anchorNode)) {
+          caretBefore = null;
+          return;
+        }
+        const range = selection.getRangeAt(0);
+        const upTo = content.ownerDocument.createRange();
+        upTo.selectNodeContents(content);
+        upTo.setEnd(range.startContainer, range.startOffset);
+        caretBefore = upTo.toString().length;
+      });
       content.addEventListener('input', () => {
         const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
@@ -111,6 +125,7 @@ export const textBlock = {
           sectionId: ctx.section.id,
           blockId: el.dataset.blockId,
           props: { ...props, html: content.innerHTML },
+          ...(caretBefore === null ? {} : { caret: caretBefore }),
         });
       });
     }

@@ -696,7 +696,6 @@ export default {
     'tip.sticky': 'Blohkka bissu láse bajimusas dan botta go galledeaddjit rullejit. Geahččal Čielga čájeheamis; ii guoskka mobiilii.',
     'tip.stickyOffset': 'Gaska láse bajimusas dan botta go blohkka lea giddejuvvon; gitta fállu sáhttá gáibidit stuorit gaskka',
     'tip.stickyUntil': 'Gos giddeneapmi nohká: iežas sekšuvnnas, dahje easka go maŋit sekšuvdna lea vássán',
-    'tip.switchPage': 'Molsso siiddu (rahpá Siiddut-panela)',
     'tip.theme.darkDefault': 'Bija sevdnjes standárdan',
     'tip.theme.defaultScheme': 'Modus maid ođđa galledeaddjit oidnet vuos',
     'tip.theme.dualMode': 'Addá siidui beaivváš/mánnu-molssu fálus',

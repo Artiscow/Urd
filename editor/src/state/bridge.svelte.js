@@ -58,7 +58,8 @@ function handleEdit(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
   if (!block) return;
-  historyState.pushHistory(`edit:${msg.blockId}`);
+  // The caret where the typing began goes with the step, for the undo to put back.
+  historyState.pushHistory(`edit:${msg.blockId}`, { caret: Number.isFinite(msg.caret) ? { blockId: msg.blockId, offset: msg.caret } : null });
   block.props = msg.props;
   pageState.store.save();
   historyState.updateDirty();

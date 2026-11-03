@@ -178,16 +178,6 @@
     flex: none;
   }
 
-  /* The page name is free text and is therefore the only thing allowed to
-     shrink. Block display gives an ellipsis instead of the buttons' inline-flex. */
-  .topbar .page-btn {
-    display: block;
-    flex: 0 1 auto;
-    min-width: 3rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 
   .topbar-right {
     margin-left: auto;
@@ -1433,6 +1423,12 @@
     height: 2.2rem;
     padding: 0 0.5em;
     min-width: 0;
+  }
+
+  /* A field whose value was turned down (a page's name or address): it keeps what was typed on a dark red ground, the reason in its tooltip */
+  .panel-body input[aria-invalid='true'] {
+    border-color: #b23b3b;
+    background: rgb(150 35 35 / 30%);
   }
 
   /* Number stepper (−/[number]/+), like the size field in the text editor. */
@@ -2989,6 +2985,26 @@
     margin: 0;
   }
 
+  /* One of several things a question weighs (publishing's warnings): its heading, then its lines; each after the first under a rule */
+  .setup-card.confirm-wide {
+    width: min(32rem, calc(100vw - 2rem));
+  }
+
+  .confirm-section {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .confirm-section h3 {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .confirm-section + .confirm-section {
+    padding-top: 0.8rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+  }
+
   .setup-overlay {
     position: fixed;
     inset: 0;
@@ -3627,16 +3643,11 @@
     white-space: nowrap;
   }
   /* The Phone device's size menu and the dragged width's chip in the Device cluster. */
-  /* The Phone's split button: the icon and the caret read as one control, the caret narrower. */
-  .device-split { display: inline-flex; }
-  .device-split .device-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-  .device-split .device-caret:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
-    padding-inline: 0.3em;
-    margin-left: -1px;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-  .device-split .device-caret.open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 13%); }
+  /* A device's button: its icon and an arrow in one control, as the page switcher's name and arrow. */
+  .device-one { display: inline-flex; }
+  .device-one .device-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { gap: 0.2em; padding-inline: 0.45em 0.3em; }
+  .device-one .device-btn svg:last-child { opacity: 0.7; }
+  .device-one .device-btn.open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 13%); }
   /* The sizes: plain rows with the size in grey, the current one tinted. */
   .device-pop { min-width: 18rem; padding: 0.4rem; }
   .device-pop .mini-label { padding: 0.3rem 0.6rem 0.2rem; }

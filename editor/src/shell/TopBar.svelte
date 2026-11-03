@@ -5,6 +5,8 @@
   import { ICONS } from '../lib/icons.js';
   import { fly } from 'svelte/transition';
   import SettingsGear from './SettingsGear.svelte';
+  import PageSwitcher from './PageSwitcher.svelte';
+  import UndoButtons from './UndoButtons.svelte';
   import { PHONE_FILL_WIDTH, PHONE_WIDTH_MIN, PHONE_WIDTH_MAX, PHONE_HEIGHT_MIN, PHONE_HEIGHT_MAX } from '../lib/preview-width.js';
   import { SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MIN, SCREEN_HEIGHT_MAX } from '../lib/own-screen.js';
   import { SCREEN_RATIOS, PHONE_RATIOS, RATIOS, ratioHeight, aspectOf, aspectText } from '../lib/aspect.js';
@@ -13,7 +15,7 @@
   const siteMenu = $derived(ed.adminLayout === 'page-tabs');
   /** The gear stands in the top bar when neither a rail nor the strip holds it. */
   const gearHere = $derived(ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs');
-  /** Each device's split button: the fold-out it opens, the icon it shows, and the name of its sizes. */
+  /** Each device's button: the fold-out it opens once shown, and the name of its sizes. */
   const SPLITS = { desktop: { menu: 'screen', sizesKey: 'lbl.screenSizes' }, mobile: { menu: 'phone', sizesKey: 'lbl.phoneSizes' } };
   const deviceIcon = (id) => (id === 'mobile' ? ed.phoneIcon : ed.screenIcon);
 
@@ -141,8 +143,8 @@
             </span>
           </nav>
         {/if}
-        <button class="ghost page-btn" title={ta('tip.switchPage')}
-          onclick={() => ed.togglePanel('pages')}>{ed.pageEntry()?.title ?? ''}</button>
+        <PageSwitcher />
+        <UndoButtons />
 
         {#if ed.folded.device}
           <span class="toolmenu">
@@ -174,13 +176,13 @@
             {#each ed.devices as d (d.id)}
               {@const split = SPLITS[d.id]}
               {@const on = ed.deviceId === d.id && !ed.freeWidth}
-              <!-- Each device is a split button: the icon chooses the device at its size, the caret opens its sizes -->
-              <span class="toolmenu device-split" class:active={on}>
-                <button class="ghost device-btn" class:active={on}
-                  onclick={() => (ed.deviceId = d.id)} title={ed.deviceTip(d)} aria-label={ed.deviceTip(d)}>{@html ICONS[deviceIcon(d.id)]}</button>
-                <button class="ghost device-caret" class:active={on} class:open={ed.toolMenu === split.menu}
-                  onclick={() => { ed.toolMenu = ed.toolMenu === split.menu ? null : split.menu; }}
-                  title={ta(split.sizesKey)} aria-label={ta(split.sizesKey)} aria-expanded={ed.toolMenu === split.menu}>{@html ICONS.caret}</button>
+              <!-- Each device is one button with its icon and an arrow, as the page switcher: a press on the device not shown switches to it, a press on the one shown opens its sizes -->
+              <span class="toolmenu device-one" class:active={on}>
+                <button class="ghost device-btn" class:active={on} class:open={ed.toolMenu === split.menu}
+                  onclick={() => { if (on) ed.toolMenu = ed.toolMenu === split.menu ? null : split.menu; else ed.deviceId = d.id; }}
+                  title={on ? ta('tip.device.sizes', { device: ed.deviceTip(d) }) : ed.deviceTip(d)}
+                  aria-label={on ? ta('tip.device.sizes', { device: ed.deviceTip(d) }) : ed.deviceTip(d)}
+                  aria-expanded={on ? ed.toolMenu === split.menu : undefined}>{@html ICONS[deviceIcon(d.id)]}{@html ICONS.caret}</button>
                 {#if ed.toolMenu === split.menu}
                   <div class="tool-pop device-pop">
                     <span class="mini-label">{ta(split.sizesKey)}</span>

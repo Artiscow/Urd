@@ -780,7 +780,6 @@ export default {
     'tip.sticky': 'Blokka blir ståande ved vindaugstoppen medan besøkjande scrollar. Seksjonen må vere høgare enn blokka, elles er det inga strekning å feste seg gjennom. Prøv i Rein vising; gjeld ikkje mobil.',
     'tip.stickyOffset': 'Avstanden frå toppen av vindauget medan blokka er festa; høgda på ein klistra meny blir lagt til automatisk',
     'tip.stickyUntil': 'Kvar festinga sluttar: ved eigen seksjon, eller først når ein seinare seksjon er passert',
-    'tip.switchPage': 'Byt side (opnar Sider-panelet)',
     'tip.theme.darkDefault': 'Set mørk som standard',
     'tip.theme.defaultScheme': 'Modusen nye besøkjande ser først',
     'tip.theme.dualMode': 'Gir sida ein sol/måne-brytar i menyen',

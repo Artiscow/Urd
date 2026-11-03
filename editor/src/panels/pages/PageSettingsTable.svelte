@@ -1,7 +1,7 @@
 <script>
   /* Every page's settings as a table over the canvas («Table over the page» under Page settings): a row per page with the quick settings as cells, the front page as a radio in its column, and the chosen page's every field in a drawer at the right (PageSettingsFields.svelte).
      A cell writes as it is left; Escape closes the table. */
-  import { getContext } from 'svelte';
+  import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import PageSettingsFields from './PageSettingsFields.svelte';
@@ -18,6 +18,15 @@
   const metaOf = (pid) => ed.pageMetas[pid] ?? { searchTitle: '', description: '' };
 
   $effect(() => { rootEl?.focus(); });
+
+  // An undo or a redo may have changed any page's fields: the cells read them again.
+  let restoresSeen = untrack(() => ed.restores);
+  $effect(() => {
+    const n = ed.restores;
+    if (n === restoresSeen) return;
+    restoresSeen = n;
+    untrack(() => ed.loadAllPageMetas());
+  });
 
   function onKey(e) {
     if (e.key !== 'Escape') return;

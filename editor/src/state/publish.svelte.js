@@ -20,6 +20,7 @@ import { pluginsState } from './plugins.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
+import { refusedPageFieldLine } from '../lib/page-settings.js';
 import { templatesState } from './templates.svelte.js';
 import { updaterState } from './updater.svelte.js';
 
@@ -436,13 +437,26 @@ async function publish() {
     }
   }
 
-  // Conflict warning: if someone else has published since we loaded and
-  // we touch the same files, the editor must actively choose to publish anyway.
-  const conflict = await updaterState.confirmNoConflict(files);
-  if (!conflict.ok) {
-    shellState.setStatus(ta('status.publishAborted'), 'error');
-    return;
+  // The warnings before the commit, asked as one question with a section each: a page name or address typed but turned down (it never reached the draft, so the page goes out with what stands), and someone else's publish since we loaded touching the same files. The editor must actively choose to publish anyway.
+  const warnings = [];
+  const refused = siteState.refusedPageFields();
+  if (refused.length) {
+    warnings.push({
+      heading: ta('confirm.pageFields.title'),
+      lines: refused.map((f) => { const { key, vars } = refusedPageFieldLine(f); return ta(key, vars); }),
+    });
   }
+  const conflict = await updaterState.checkConflict(files);
+  if (conflict.warning) warnings.push(conflict.warning);
+  if (warnings.length) {
+    const ok = await shellState.askConfirm({ title: ta('confirm.beforePublish'), sections: warnings, okLabel: ta('confirm.publishAnyway') });
+    if (!ok) {
+      // The advice to reload belongs to someone else's publish; a page field alone is fixed where it stands.
+      shellState.setStatus(ta(conflict.warning ? 'status.publishAborted' : 'status.publishCancelled'), 'error');
+      return;
+    }
+  }
+  if (refused.length) siteState.dropTypedPageFields();
 
   const body = {
     message: ta('publish.commitMessage', { titles: publishedTitles.join(', ') || ta('publish.theSite') }),

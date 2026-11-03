@@ -604,6 +604,9 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-close-menus') {
       // The owner clicked in the admin panels: close open menus (preset gallery, block menu).
       window.UrdPreviewEdit?.closeMenus();
+    } else if (msg?.type === 'urd-caret' && typeof msg.blockId === 'string') {
+      // An undo of typing: the caret back where the typing began, in the text as it now stands.
+      window.UrdPreviewEdit?.placeCaret?.(msg.blockId, Number(msg.offset));
     } else if (msg?.type === 'urd-active-section') {
       // A section the editor selected itself (new, duplicated or pasted): the page marks it as the active one.
       window.UrdPreviewEdit?.setActiveSection?.(msg.sectionId ?? null);

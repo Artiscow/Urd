@@ -11,7 +11,17 @@
   const pageId = $derived(ed.pageId);
   const siteDraft = $derived(ed.siteDraft);
   const templateIds = $derived(ed.templateIds);
-  const { addPage, handleDeleteTemplate, renamePage, selectPage, setPageSlug, templateStores } = ed;
+  const { addPage, handleDeleteTemplate, selectPage, templateStores } = ed;
+
+  /** The new page's name turned down: the field keeps it in dark red with the reason as its tooltip, until the next keystroke. The rows' names and addresses are shared with the page settings (site.svelte.js typedPageFields). */
+  let newPageError = $state(null);
+
+  function createPage() {
+    newPageError = addPage();
+  }
+
+  // The panel closed: a name or an address left turned down refills with what stands.
+  $effect(() => () => ed.dropTypedPageFields());
 
   /* The starter-pack thumbnails are built once (create() per section is
      cheap, but the grid rerenders on every keystroke in the name field). */
@@ -38,13 +48,13 @@
   {:else}
   {#each siteDraft.pages as p (p.id)}
     <div class="page-row" class:current={p.id === pageId}>
-      <input class="page-title" value={p.title} title={ta('tip.pages.title')}
-        onchange={(e) => renamePage(p, e.target.value)} />
+      <input class="page-title" value={ed.pageFieldValue(p, 'title')} title={ed.pageFieldError(p.id, 'title') ?? ta('tip.pages.title')} aria-invalid={ed.pageFieldError(p.id, 'title') ? 'true' : undefined}
+        oninput={(e) => ed.typePageField(p.id, 'title', e.target.value)} onchange={(e) => ed.commitPageField(p, 'title', e.target.value)} />
       {#if p.path === '/'}
         <span class="page-path" title={ta('tip.pages.homeLocked')}>/</span>
       {:else}
-        <input class="page-slug" value={p.path.slice(1)} title={ta('tip.pages.slug')}
-          onchange={(e) => setPageSlug(p, e.target.value)} />
+        <input class="page-slug" value={ed.pageFieldValue(p, 'slug')} title={ed.pageFieldError(p.id, 'slug') ?? ta('tip.pages.slug')} aria-invalid={ed.pageFieldError(p.id, 'slug') ? 'true' : undefined}
+          oninput={(e) => ed.typePageField(p.id, 'slug', e.target.value)} onchange={(e) => ed.commitPageField(p, 'slug', e.target.value)} />
       {/if}
       <span class="row-tools">
         <button class="ghost row-tool" title={ta('tip.pages.open')}
@@ -56,10 +66,11 @@
   {/each}
   {/if}
   <hr class="gridmenu-divider" />
-  <input placeholder={ta('ph.newPageName')} bind:value={() => ed.newPageTitle, (v) => (ed.newPageTitle = v)}
-    onkeydown={(e) => e.key === 'Enter' && addPage()} />
+  <input data-new-page placeholder={ta('ph.newPageName')} bind:value={() => ed.newPageTitle, (v) => { ed.newPageTitle = v; newPageError = null; }}
+    title={newPageError ?? ''} aria-invalid={newPageError ? 'true' : undefined}
+    onkeydown={(e) => e.key === 'Enter' && createPage()} />
   <button class="ghost action" title={ta('hint.pages.autoMenu')}
-    onclick={addPage} disabled={!ed.newPageTitle.trim()}>{ta('ui.createPage')}</button>
+    onclick={createPage} disabled={!ed.newPageTitle.trim()}>{ta('ui.createPage')}</button>
   <span class="mini-label">{ta('canvas.tabPresets')}</span>
   <div class="page-template-grid" style={thumbThemeStyle}>
     <div class="page-template-card" class:picked={ed.newPageTemplate === null}>

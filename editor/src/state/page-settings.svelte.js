@@ -55,8 +55,10 @@ async function openPageSettings(id) {
   await loadPageMeta(id);
 }
 
+/** The settings closed: a name or an address left turned down refills with what stands. */
 function closePageSettings() {
   pageSettingsFor = null;
+  siteState.dropTypedPageFields();
 }
 
 /** One meta field of a page written: the open page's store, else the page's draft; the settings' copy follows at once. */
@@ -64,13 +66,16 @@ async function setPageMeta(id, field, rawValue) {
   const value = String(rawValue ?? '').trim();
   const entry = entryOf(id);
   if (!entry) return;
+  // One step per field and page, a burst of changes to it joining; a page that is not open is held in the step with its draft.
   if (id === pageState.pageId) {
+    historyState.pushHistory(`page-meta:${id}:${field}`);
     withMeta(pageState.store.data, field, value);
     pageState.store.save();
     historyState.updateDirty();
     // The preview's tab title follows the search title.
     previewState.bridge?.sendPage(pageState.pageId, pageState.store.data);
   } else {
+    historyState.pushHistory(`page-meta:${id}:${field}`, { pages: [id] });
     await pageState.patchPageDraft(entry, (p) => withMeta(p, field, value));
   }
   pageMetas[id] = { ...(pageMetas[id] ?? metaOf(null)), [field]: value };

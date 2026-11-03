@@ -130,8 +130,9 @@
     'cover': subSvg('<rect x="1" y="1" width="46" height="32" rx="3" stroke-opacity="0.35"/><rect x="6" y="6" width="16" height="12" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="26" y="6" width="16" height="12" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><path d="M6 14h16M26 14h16" stroke-opacity="0.55" stroke-width="3"/><path d="M6 23h12M26 23h12" stroke-opacity="0.35"/>'),
   };
 
-  /** The title typed for «new page as menu item» in the Nav panel. */
+  /** The title typed for «new page as menu item» in the Nav panel, and the reason it was turned down, shown as the field's dark red and its tooltip until the next keystroke. */
   let navNewPageTitle = $state('');
+  let navNewPageError = $state(null);
 
   function addPageAsNavItem() {
     if (!navNewPageTitle.trim()) return;
@@ -139,7 +140,8 @@
     ed.newPageTemplate = null;
     // The title stays in the field when the slug is rejected, so it can be
     // corrected rather than typed again.
-    if (addPage() !== false) navNewPageTitle = '';
+    navNewPageError = addPage();
+    if (!navNewPageError) navNewPageTitle = '';
   }
 
   function setLogo(patch) {
@@ -885,7 +887,8 @@
       <button class="ghost action" onclick={addNavItem}>{ta('ui.addMenuItem')}</button>
       <!-- A new blank page that goes straight into the menu -->
       <span class="toolbar-row" title={ta('tip.nav.newPageAsItem')}>
-        <input class="tb-grow" placeholder={ta('ph.nav.newPageTitle')} bind:value={navNewPageTitle}
+        <input class="tb-grow" placeholder={ta('ph.nav.newPageTitle')} bind:value={() => navNewPageTitle, (v) => { navNewPageTitle = v; navNewPageError = null; }}
+          title={navNewPageError ?? undefined} aria-invalid={navNewPageError ? 'true' : undefined}
           onkeydown={(e) => { if (e.key === 'Enter') addPageAsNavItem(); }} />
         <button class="ghost action" disabled={!navNewPageTitle.trim()} onclick={addPageAsNavItem}>{ta('ui.newPageAsItem')}</button>
       </span>

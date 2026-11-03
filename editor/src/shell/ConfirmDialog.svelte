@@ -15,10 +15,18 @@
   <div class="setup-overlay"
     onpointerdown={(e) => (ed.confirmDownOnOverlay = e.target === e.currentTarget)}
     onclick={(e) => ed.confirmDownOnOverlay && e.target === e.currentTarget && ed.answerConfirm(false)}>
-    <div class="setup-card">
+    <div class="setup-card" class:confirm-wide={ed.confirmBox.sections?.length}>
       <h2>{ed.confirmBox.title}</h2>
       {#each ed.confirmBox.lines as line (line)}
         <p class="panel-hint confirm-line">{line}</p>
+      {/each}
+      {#each ed.confirmBox.sections ?? [] as section, i (i)}
+        <section class="confirm-section">
+          <h3>{section.heading}</h3>
+          {#each section.lines as line, j (j)}
+            <p class="panel-hint confirm-line">{line}</p>
+          {/each}
+        </section>
       {/each}
       {#if ed.confirmBox.prompt}
         <!-- svelte-ignore a11y_autofocus (single-field modal: focus belongs in the field) -->

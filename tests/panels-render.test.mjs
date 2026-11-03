@@ -150,6 +150,8 @@ function handleFor(panel, siteDraft, extra = {}) {
     imageErrorText: () => '',
     addPage: noop, deletePage: noop, renamePage: noop, savePageAsTemplate: noop, selectPage: noop, handleDeleteTemplate: noop,
     setPageNoindex: noop, setPageSlug: noop,
+    pageFieldValue: (entry, field) => (field === 'title' ? entry.title : entry.path.slice(1)), pageFieldError: () => null,
+    typePageField: noop, commitPageField: noop, dropTypedPageFields: noop,
     siteMutate: noop, footerMutate: noop, mutateSection: noop, addSiteCalendar: noop, setGrid: noop, setStatus: noop,
     applyThemePreset: noop, compressOrTrim: noop, svgAutoTrim: noop, compressMany: noop, reportUpload: noop, readVideoFile: noop,
     setSectionGrid: noop, setSectionHeight: noop, toggleSectionGrid: noop,

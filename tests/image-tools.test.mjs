@@ -58,6 +58,13 @@ test('slugText: Norwegian letters spelt out, accents dropped, hyphens only betwe
   assert.equal(slugify('...'), 'image');
 });
 
+test('slugify: with an empty fallback a name without a letter or a digit gives nothing, so a page or a collection can turn it down', () => {
+  for (const name of ['', '   ', '?', '!!!', '🎂', '-- --']) assert.equal(slugify(name, ''), '', JSON.stringify(name));
+  assert.equal(slugify('Om oss', ''), 'om-oss');
+  assert.equal(slugify('?', 'collection'), 'collection', 'a fallback word of its own');
+  assert.equal(slugify('?'), 'image', 'a file keeps its name');
+});
+
 /* ---------- Animated images: recognised from their own bytes ---------- */
 
 const text = (value) => [...value].map((ch) => ch.charCodeAt(0));

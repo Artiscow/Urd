@@ -13,6 +13,7 @@
  *                  { type: 'urd-duplicate' }                   (Ctrl+D in admin: duplicate the selected block)
  *                  { type: 'urd-clipboard', clipboard }        (the last copy or cut, for the page just loaded)
  *                  { type: 'urd-active-section', sectionId }   (a section the editor selected itself: new, duplicated or pasted)
+ *                  { type: 'urd-caret', blockId, offset }       (an undo of typing: the caret back in the block's text)
  *                  { type: 'urd-run-command', id }           (a plugin's command, run where it was registered)
  *   page → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (click-to-type/image editor)
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (drag/resize)
@@ -186,6 +187,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Runs a command a plugin registered in the preview (Urd.commands), chosen in the editor's palette. */
     sendRunCommand(id) {
       post({ type: 'urd-run-command', id });
+    },
+    /** The caret put back in a block's text after an undo of typing, that many characters in. */
+    sendCaret(blockId, offset) {
+      post({ type: 'urd-caret', blockId, offset });
     },
     /** A section the editor selected itself (new, duplicated or pasted), so the page marks the same one. */
     sendActiveSection(sectionId) {

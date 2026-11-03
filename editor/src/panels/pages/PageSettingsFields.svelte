@@ -1,8 +1,8 @@
 <script>
-  /* The settings of one page, shared by the three layouts (PageSettingsStep, PageSettingsDialog and PageSettingsTable): the menu and the footer on the page, its title in search with the title the site's format gives, the description, the sharing fields, and the page's own actions.
+  /* The settings of one page, shared by the three layouts (PageSettingsStep, PageSettingsDialog and PageSettingsTable): the page's name and address, the menu and the footer on the page, its title in search with the title the site's format gives, the description, the sharing fields, and the page's own actions.
      The meta fields come from the page-settings state, which writes the open page's store or another page's draft, so any page is edited without switching the canvas; the switches and the flag live in the site draft.
-     In the dialog's width (wide) the fields that belong together stand in pairs: the two switches, the search title beside the title it gives, the sharing title beside the image; in a panel's width they stand under each other. */
-  import { getContext } from 'svelte';
+     In the dialog's width (wide) the fields that belong together stand in pairs: the name beside the address, the two switches, the search title beside the title it gives, the sharing title beside the image; in a panel's width they stand under each other. */
+  import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import Choice from '../../lib/Choice.svelte';
@@ -21,6 +21,15 @@
   const footerOn = $derived(!(siteDraft.footer?.hideOn ?? []).includes(id));
   const front = $derived(entry?.path === '/');
 
+  // An undo or a redo may have changed the page's fields: they are read again.
+  let restoresSeen = untrack(() => ed.restores);
+  $effect(() => {
+    const n = ed.restores;
+    if (n === restoresSeen) return;
+    restoresSeen = n;
+    untrack(() => ed.loadPageMeta(id));
+  });
+
   function makeFront() {
     const swap = ed.makeFrontPage(id);
     if (swap) ed.frontPageStatus(entry, swap.from);
@@ -32,6 +41,10 @@
     if (ed.pageSettingsPref === 'dialog') ed.closePageSettings();
     ed.savePageAsTemplate(page);
   }
+
+  /* The name and the address are the Pages panel's row's own fields (site.svelte.js typedPageFields): the same text in both, turned down in dark red with the reason as the tooltip until the next keystroke. */
+  const nameError = $derived(ed.pageFieldError(id, 'title'));
+  const addressError = $derived(ed.pageFieldError(id, 'slug'));
 
   function deletePage() {
     ed.closePageSettings();
@@ -51,6 +64,26 @@
       {@render body()}
     </section>
   {/if}
+{/snippet}
+
+{#snippet nameAndAddress()}
+  <div class="ps-pair">
+    <label class="field-stack" title={nameError ?? ta('tip.pages.title')}>{ta('lbl.pageName')}
+      <input value={ed.pageFieldValue(entry, 'title')} aria-invalid={nameError ? 'true' : undefined}
+        oninput={(e) => ed.typePageField(id, 'title', e.target.value)} onchange={(e) => ed.commitPageField(entry, 'title', e.target.value)} />
+    </label>
+    {#if front}
+      <div class="ps-field" title={ta('tip.pages.homeLocked')}>
+        <span class="ps-name">{ta('lbl.pageAddress')}</span>
+        <span class="ps-address ps-locked"><span class="ps-slash">/</span></span>
+      </div>
+    {:else}
+      <label class="field-stack" title={addressError ?? ta('tip.pages.slug')}>{ta('lbl.pageAddress')}
+        <span class="ps-address"><span class="ps-slash" aria-hidden="true">/</span><input value={ed.pageFieldValue(entry, 'slug')} aria-invalid={addressError ? 'true' : undefined}
+          oninput={(e) => ed.typePageField(id, 'slug', e.target.value)} onchange={(e) => ed.commitPageField(entry, 'slug', e.target.value)} /></span>
+      </label>
+    {/if}
+  </div>
 {/snippet}
 
 {#snippet onPage()}
@@ -119,7 +152,8 @@
     </div>
   </div>
   <label class="field-stack" title={ta('tip.seo.ogDescription')}>{ta('lbl.ogDescription')}
-    <textarea rows="2" value={meta.ogDescription} placeholder={meta.description} onchange={(e) => ed.setPageMeta(id, 'ogDescription', e.target.value)}></textarea>
+    <!-- An empty field shows in grey the description it falls back to, or with none to fall back to, what the field is for -->
+    <textarea rows="2" value={meta.ogDescription} placeholder={meta.description || ta('ph.seo.ogDescription')} onchange={(e) => ed.setPageMeta(id, 'ogDescription', e.target.value)}></textarea>
   </label>
 {/snippet}
 
@@ -138,6 +172,7 @@
 
 {#if entry}
   <div class="ps-fields" class:ps-grouped={grouped} class:ps-wide={wide}>
+    {@render part('group.pageName', nameAndAddress)}
     {@render part('group.onThisPage', onPage)}
     {@render part('group.pageSearch', search)}
     {@render part('group.pageSharing', sharing)}
@@ -231,6 +266,35 @@
     font-weight: 600;
     white-space: nowrap;
     text-overflow: ellipsis;
+    background: rgb(255 255 255 / 6%);
+    border-radius: 6px;
+  }
+
+  /* The address with its slash inside the field's frame, as a prefix; the front page's slash alone, locked */
+  .ps-address {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    font-family: ui-monospace, monospace;
+  }
+
+  .ps-slash {
+    position: absolute;
+    left: 0.6rem;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .ps-fields .ps-address > input {
+    flex: 1;
+    min-width: 0;
+    padding-left: 1.35rem;
+    font-family: inherit;
+  }
+
+  .ps-locked {
+    height: 2.2rem;
     background: rgb(255 255 255 / 6%);
     border-radius: 6px;
   }

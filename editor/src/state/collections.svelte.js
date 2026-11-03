@@ -243,7 +243,7 @@ function carryToCollection(from, to, entryIds, copy) {
 function carryToNewCollection(from, name, entryIds, copy) {
   const source = collectionStores[from]?.data;
   const clean = String(name ?? '').trim();
-  const id = slugify(clean);
+  const id = slugify(clean, '');
   if (!source || !clean) return false;
   if (!id || collectionIds.includes(id)) {
     shellState.setStatus(id ? ta('status.collectionExists') : ta('status.invalidName'), 'error');
@@ -324,7 +324,7 @@ function insertCollection(id, name, kind, open = true) {
 function addCollection() {
   const name = newCollectionName.trim();
   if (!name) return;
-  const id = slugify(name);
+  const id = slugify(name, '');
   if (!id || collectionIds.includes(id)) {
     shellState.setStatus(id ? ta('status.collectionExists') : ta('status.invalidName'), 'error');
     return;
@@ -338,7 +338,7 @@ function addCollection() {
 function createCatalogForBlock() {
   if (collectionsUnavailable) return;
   const name = ta('seed.productCatalogName');
-  const base = slugify(name) || 'collection';
+  const base = slugify(name, 'collection');
   let id = base;
   // Slug dedup: a non-product collection can already own the base name.
   for (let n = 2; collectionIds.includes(id); n += 1) id = `${base}-${n}`;

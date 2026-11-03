@@ -946,7 +946,6 @@ export default {
     'tip.stickyEdge': 'Avståndet från kanterna blocket dockas till; centrerade placeringar använder det inte',
     'tip.stickyDock': 'Var i fönstret blocket står. Släppgräns gäller inte: det är synligt hela sidan igenom',
     'tip.stickyUntil': 'Var fästningen slutar: vid egen sektion, eller först när en senare sektion är passerad',
-    'tip.switchPage': 'Byt sida (öppnar Sidor-panelen)',
     'tip.theme.darkDefault': 'Sätt mörkt som standard',
     'tip.theme.defaultScheme': 'Läget nya besökare ser först',
     'tip.theme.dualMode': 'Ger sidan en sol/måne-knapp i menyn',

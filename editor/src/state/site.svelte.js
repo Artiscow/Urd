@@ -13,7 +13,7 @@ import { patternLayer } from '$engine/backgrounds/pattern.js';
 import { grainLayer } from '$engine/backgrounds/grain.js';
 import { bindingWidth } from '../lib/content-width.js';
 import { copySlug } from '../lib/duplicate.js';
-import { frontPageSwap } from '../lib/page-settings.js';
+import { frontPageSwap, refusedPageFields as listRefused } from '../lib/page-settings.js';
 import { TITLE_FORMATS, titleFormatOf } from '$engine/seo.js';
 import { activeTokens } from '$engine/theme.js';
 import { ta } from '$engine/i18n.js';
@@ -120,8 +120,9 @@ function setGrid(field, value) {
  * preview. Keys with the edit: prefix are merged in the undo history
  * (bursts of keystrokes/color drags become one undo step).
  */
-function siteMutate(key, fn) {
-  historyState.pushHistory(key);
+/** A change to the site draft as one undo step; `pages` names other pages whose drafts the change writes as well, so the step holds them (history.svelte.js pushHistory). */
+function siteMutate(key, fn, { pages } = {}) {
+  historyState.pushHistory(key, pages ? { pages } : undefined);
   fn();
   siteStore.save();
   historyState.updateDirty();
@@ -164,14 +165,13 @@ function pageSlugError(slug, ignoreId = null) {
   return null;
 }
 
+/** A new page from the name typed (newPageTitle) and the template picked; turned down, the reason for its field to show, otherwise null. */
 function addPage() {
   const title = newPageTitle.trim();
-  const slug = slugify(title);
+  // No fallback word: a name without a letter or a digit is turned down.
+  const slug = slugify(title, '');
   const err = pageSlugError(slug);
-  if (err) {
-    shellState.setStatus(err, 'error');
-    return false;
-  }
+  if (err) return err;
   // Starter packs are built fresh (create() yields new ids and
   // translated seeds); user templates store origin ids, so the clone
   // re-ids everything and sets meta to the new page (the re-id rule in
@@ -195,6 +195,7 @@ function addPage() {
   newPageTitle = '';
   newPageTemplate = null;
   pageState.selectPage(slug);
+  return null;
 }
 
 /** The page settings' «Save as template»: the page's current data into the template core. */
@@ -223,19 +224,22 @@ async function duplicatePage(entry) {
   shellState.setStatus(ta('status.pageDuplicated', { title }));
 }
 
+/** A page's new name; turned down, the reason for its field to show, otherwise null. */
 function renamePage(entry, rawTitle) {
   const title = rawTitle.trim();
-  if (!title || title === entry.title) return;
+  if (!title) return ta('error.pageNeedsName');
+  if (title === entry.title) return null;
   const old = entry.title;
+  const open = entry.id === pageState.pageId;
   siteMutate('pages', () => {
     entry.title = title;
     // Menu items still carrying the old name follow along.
     for (const item of siteDraft.nav.items) {
       if (item.page === entry.id && item.label === old) item.label = title;
     }
-  });
+  }, open ? {} : { pages: [entry.id] });
   // The page file's meta.title is kept in step (it drives the tab title).
-  if (entry.id === pageState.pageId) {
+  if (open) {
     pageState.store.data.meta.title = title;
     pageState.store.save();
     historyState.updateDirty();
@@ -243,6 +247,7 @@ function renamePage(entry, rawTitle) {
   } else {
     pageState.patchPageDraft(entry, (p) => { p.meta.title = title; });
   }
+  return null;
 }
 
 /** Hide from search engines: the flag lives in the PAGE REGISTRY
@@ -320,14 +325,50 @@ const TITLE_FORMAT_OPTIONS = $derived(TITLE_FORMATS.map((id) => [id, ta(`opt.tit
 /** How the menu is reached on a page it stays off (nav.hideMode), as the Nav panel and the page's settings offer it. */
 const NAV_HIDE_MODE_OPTIONS = $derived(['hidden', 'hover', 'ghost', 'tab'].map((m) => [m, ta(`opt.navHide.${m}`)]));
 
+/** A page's name or address as it is typed, by `<page id>:title` or `<page id>:slug`, shared by every field that shows it (the Pages panel's row and the page settings): the text, and the reason once the write turned it down. Dropped as the Pages panel or the page settings close, so the fields show what stands again. */
+let typedPageFields = $state({});
+
+/** What a page's name or address field shows: the text typed into it, else the page's own. */
+function pageFieldValue(entry, field) {
+  const typed = typedPageFields[`${entry.id}:${field}`];
+  if (typed) return typed.text;
+  return field === 'title' ? entry.title : entry.path.slice(1);
+}
+
+/** Why the text in a page's name or address field was turned down, or null. */
+function pageFieldError(id, field) {
+  return typedPageFields[`${id}:${field}`]?.reason ?? null;
+}
+
+/** A keystroke in a page's name or address field: every field for it shows the text, and the red goes. */
+function typePageField(id, field, text) {
+  typedPageFields[`${id}:${field}`] = { text, reason: null };
+}
+
+/** A page's name or address field left or Entered: written, the field shows what stands; turned down, the text stays with its reason. */
+function commitPageField(entry, field, text) {
+  const key = `${entry.id}:${field}`;
+  const reason = field === 'title' ? renamePage(entry, text) : setPageSlug(entry, text);
+  if (reason) typedPageFields[key] = { text, reason };
+  else delete typedPageFields[key];
+}
+
+/** The fields refill with what stands: the Pages panel or the page settings closed, or a publish went ahead past them. */
+function dropTypedPageFields() {
+  if (Object.keys(typedPageFields).length) typedPageFields = {};
+}
+
+/** The names and addresses typed but turned down, as publishing asks about them (lib/page-settings.js). */
+function refusedPageFields() {
+  return listRefused(typedPageFields, siteDraft.pages);
+}
+
+/** A page's new address; turned down, the reason for its field to show, otherwise null. */
 function setPageSlug(entry, rawSlug) {
-  const slug = slugify(rawSlug);
-  if (entry.path === '/' || `/${slug}` === entry.path) return;
-  const err = pageSlugError(slug, entry.id);
-  if (err) {
-    shellState.setStatus(err, 'error');
-    return;
-  }
+  const slug = slugify(rawSlug, '');
+  if (entry.path === '/' || `/${slug}` === entry.path) return null;
+  const err = slug ? pageSlugError(slug, entry.id) : ta('error.pageNeedsAddress');
+  if (err) return err;
   // Only the address changes; the id (and thus the draft key and file
   // name) remains, so internal references (nav) never break. Publishing
   // cleans the old address's index.html via the diff against the
@@ -335,6 +376,7 @@ function setPageSlug(entry, rawSlug) {
   siteMutate('pages', () => {
     entry.path = `/${slug}`;
   });
+  return null;
 }
 
 function deletePage(entry) {
@@ -731,6 +773,12 @@ export const siteState = {
   get TITLE_FORMAT_OPTIONS() { return TITLE_FORMAT_OPTIONS; },
   get NAV_HIDE_MODE_OPTIONS() { return NAV_HIDE_MODE_OPTIONS; },
   setPageSlug,
+  pageFieldValue,
+  pageFieldError,
+  typePageField,
+  commitPageField,
+  dropTypedPageFields,
+  refusedPageFields,
   deletePage,
   get iconEditorImage() { return iconEditorImage; },
   set iconEditorImage(v) { iconEditorImage = v; },
