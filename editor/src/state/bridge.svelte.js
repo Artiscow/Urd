@@ -6,6 +6,7 @@ import { DOCK_OPTIONS } from '../menu/options.js';
 import { makeId } from '$engine/sections/presets.js';
 import { claimAnchors } from '$engine/anchor-model.js';
 import { duplicatedSection } from '../lib/duplicate.js';
+import { pasteIndex } from '$engine/clipboard-model.js';
 import { ta } from '$engine/i18n.js';
 import { fitMoves } from '$engine/push-model.js';
 import { historyState } from './history.svelte.js';
@@ -270,6 +271,29 @@ function handleDuplicateSection(msg) {
   shellState.activePanel = 'properties';
 }
 
+/** The last copy or cut on the page (the urd-clipboard message, a plain object): handed to every page the preview loads, so it pastes on another page. */
+let clipboard = null;
+
+/** A copy or a cut in the preview: kept for the next page, and named in the status line. */
+function handleClipboard(msg) {
+  const clip = msg.clipboard;
+  if (!clip || typeof clip !== 'object') return;
+  clipboard = clip;
+  const cut = msg.cut === true;
+  if (clip.kind === 'section') {
+    shellState.setStatus(ta(cut ? 'status.sectionCut' : 'status.sectionCopied'), 'ok');
+    return;
+  }
+  const n = Array.isArray(clip.blocks) ? clip.blocks.length : 0;
+  shellState.setStatus(ta(`${cut ? 'status.blocksCut' : 'status.blocksCopied'}${n === 1 ? '.one' : ''}`, { n }), 'ok');
+}
+
+/** A section pasted from the clipboard, already with fresh ids: below the section named, or last, as a new section lands. */
+function handlePasteSection(msg) {
+  if (!msg.section || typeof msg.section !== 'object') return;
+  handleAddSection({ index: pasteIndex(pageState.store.data.sections, msg.afterId ?? null), section: msg.section });
+}
+
 function handleMoveSection(msg) {
   const s = pageState.store.data.sections;
   const i = s.findIndex((x) => x.id === msg.sectionId);
@@ -380,6 +404,9 @@ export const bridgeState = {
   handleBlockStyle,
   handleAddSection,
   handleDuplicateSection,
+  handleClipboard,
+  handlePasteSection,
+  get clipboard() { return clipboard; },
   handleMoveSection,
   handleDeleteSection,
   handleSectionSize,

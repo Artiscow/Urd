@@ -602,6 +602,9 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-close-menus') {
       // The owner clicked in the admin panels: close open menus (preset gallery, block menu).
       window.UrdPreviewEdit?.closeMenus();
+    } else if (msg?.type === 'urd-clipboard') {
+      // The editor's clipboard for the page just loaded: a copy made on another page pastes here.
+      window.UrdPreviewEdit?.setClipboard?.(msg.clipboard ?? null);
     } else if (msg?.type === 'urd-duplicate') {
       // Ctrl+D with focus in the admin panels: duplicate the selected block in the preview.
       window.UrdPreviewEdit?.duplicateSelected();

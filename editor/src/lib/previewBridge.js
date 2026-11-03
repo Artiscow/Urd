@@ -11,6 +11,7 @@
  *                  { type: 'urd-collections', collections }    (the collection drafts: id → data; the preview uses them instead of the server files)
  *                  { type: 'urd-viewport', mode }              (the editor's viewport choice: desktop/mobile)
  *                  { type: 'urd-duplicate' }                   (Ctrl+D in admin: duplicate the selected block)
+ *                  { type: 'urd-clipboard', clipboard }        (the last copy or cut, for the page just loaded)
  *                  { type: 'urd-run-command', id }           (a plugin's command, run where it was registered)
  *   page → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (click-to-type/image editor)
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (drag/resize)
@@ -27,6 +28,8 @@
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
  *                  { type: 'urd-duplicate-section', sectionId }
+ *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut on the page: blocks or a section)
+ *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? } (moves from the top-edge handle: [{blockId, dy}] in the same undo step)
  *                  { type: 'urd-undo', redo }                 (Ctrl+Z inside the iframe)
  *                  { type: 'urd-select-section', sectionId }  (active section for the palette)
@@ -97,6 +100,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-move-section') handlers.onMoveSection?.(msg);
     if (msg?.type === 'urd-delete-section') handlers.onDeleteSection?.(msg);
     if (msg?.type === 'urd-duplicate-section') handlers.onDuplicateSection?.(msg);
+    if (msg?.type === 'urd-clipboard') handlers.onClipboard?.(msg);
+    if (msg?.type === 'urd-paste-section') handlers.onPasteSection?.(msg);
     if (msg?.type === 'urd-section-size') handlers.onSectionSize?.(msg);
     if (msg?.type === 'urd-undo') handlers.onUndo?.(msg);
     if (msg?.type === 'urd-select-section') handlers.onSelectSection?.(msg);
@@ -180,6 +185,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Runs a command a plugin registered in the preview (Urd.commands), chosen in the editor's palette. */
     sendRunCommand(id) {
       post({ type: 'urd-run-command', id });
+    },
+    /** The last copy or cut, for the page the preview just loaded (a plain object, never a $state proxy). */
+    sendClipboard(clipboard) {
+      post({ type: 'urd-clipboard', clipboard });
     },
     /** Ctrl+D with focus in the admin panels: duplicate the selected block in the preview. */
     sendDuplicate() {

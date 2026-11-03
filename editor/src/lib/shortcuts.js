@@ -45,7 +45,8 @@ export const SHORTCUT_GROUPS = [
   { id: 'blocks', labelKey: 'shortcuts.group.blocks', tipKey: 'tip.shortcuts.blocks', rows: [
     { labelKey: 'shortcuts.newBlock', ways: [['/']] },
     { labelKey: 'shortcuts.copy', ways: [['ctrl', 'C']] },
-    { labelKey: 'shortcuts.paste', ways: [['ctrl', 'V']] },
+    { labelKey: 'shortcuts.cut', ways: [['ctrl', 'X']] },
+    { labelKey: 'shortcuts.paste', tipKey: 'tip.shortcuts.paste', ways: [['ctrl', 'V']] },
     { labelKey: 'shortcuts.duplicate', ways: [['ctrl', 'D']] },
     { labelKey: 'shortcuts.delete', ways: [['delete'], ['backspace']] },
     { labelKey: 'shortcuts.nudge', ways: [['arrows']] },
@@ -55,6 +56,11 @@ export const SHORTCUT_GROUPS = [
     { labelKey: 'shortcuts.copyStyle', ways: [['ctrl', 'alt', 'C']] },
     { labelKey: 'shortcuts.pasteStyle', ways: [['ctrl', 'alt', 'V']] },
     { labelKey: 'shortcuts.contextMenu', ways: [['shift', 'F10'], ['menu']] },
+  ] },
+  { id: 'sections', labelKey: 'shortcuts.group.sections', tipKey: 'tip.shortcuts.sections', rows: [
+    { labelKey: 'shortcuts.copySection', ways: [['ctrl', 'C']] },
+    { labelKey: 'shortcuts.cutSection', ways: [['ctrl', 'X']] },
+    { labelKey: 'shortcuts.pasteSection', ways: [['ctrl', 'V']] },
   ] },
   { id: 'text', labelKey: 'shortcuts.group.text', tipKey: 'tip.shortcuts.text', rows: [
     { labelKey: 'shortcuts.bold', ways: [['ctrl', 'B']] },

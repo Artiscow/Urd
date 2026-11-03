@@ -213,6 +213,8 @@ function onIframeLoad() {
     onMoveSection: bridgeState.handleMoveSection,
     onDeleteSection: bridgeState.handleDeleteSection,
     onDuplicateSection: bridgeState.handleDuplicateSection,
+    onClipboard: bridgeState.handleClipboard,
+    onPasteSection: bridgeState.handlePasteSection,
     onSectionSize: bridgeState.handleSectionSize,
     onUndo: (msg) => (msg.redo ? historyState.redo() : historyState.undo()),
     onSelectSection: pageState.onSelectSection,
@@ -270,6 +272,8 @@ async function onReady() {
   bridge?.sendZoom(scale);
   collectionsState.pushCollectionsToPreview();
   templatesState.pushTemplatesToPreview();
+  // A copy made on another page pastes on this one.
+  if (bridgeState.clipboard) bridge?.sendClipboard(bridgeState.clipboard);
   // A publish whose deploy is not out yet: the iframe has read the files from before it.
   if (siteState.siteStore.hasDraft() || pageState.held.has('content/site.json')) siteState.pushSiteToPreview();
   // Unpublished pages do not exist on the server (the iframe falls back

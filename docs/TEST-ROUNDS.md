@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.30): cut, copy and paste of blocks and sections, across pages
+
+- [ ] A block selected, Ctrl+C: the status line says it is copied; on another page Ctrl+V pastes it into the selected section, or into the section in view when none is selected, selected with Properties on it; Ctrl+Z removes it in one step
+- [ ] Ctrl+X on a block and on a set of three: they go in one step, the status line says so, Ctrl+V brings them back with their layout, and Ctrl+Z after the cut restores them
+- [ ] A block cut with Ctrl+X, then Ctrl+X again: nothing more goes, the section stays; Ctrl+Shift+X and Ctrl+Alt+X on a selected block do nothing
+- [ ] A section deleted with its × and brought back with Ctrl+Z: Ctrl+C right after copies nothing until the section's surface is clicked
+- [ ] A section's surface clicked (Properties on the section), no block selected: Ctrl+C copies the whole section; on another page Ctrl+V puts it below the selected section with all its blocks, selected with Properties open; Ctrl+X on it cuts it, and Ctrl+Z brings it back
+- [ ] A section with a name (`#priser`) pasted on a page that has `priser`: the copy is named `priser-2`; pasted where the name is free, it keeps `priser`
+- [ ] The block's right-click menu: Cut and Copy before Duplicate, with their keys; the section's: «Cut the section» and «Copy the section» before «Duplicate the section», and its first Paste item reads «Paste the section below» while a section is copied
+- [ ] The canvas zoomed out (for example 77 %), a right click near the right edge and near the bottom of the page: the menu stays whole inside the view
+- [ ] The shortcut sheet («?»): Cut under Blocks on the page, and the group Sections on the page with its three rows; the paste row's tooltip
+- [ ] The texts in bokmål and Turkish: Cut, Copy, the three section items, the four status lines, and the sheet's group and rows
+
 ### Test batch (0.7.10.29): a page and a section duplicated
 
 - [ ] The Pages panel: a row's ⋮ menu holds «Duplicate the page» first; on «Om oss» it adds «Om oss (copy)» at `om-oss-2` as the last row, opens it with every section and block of the original, the status line says it is created and opened, and the menu in the preview does not show it; the Navigation panel can add it; pressed again on «Om oss», the next copy is `om-oss-3`, and a copy of the copy is numbered on; Ctrl+Z removes the row

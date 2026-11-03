@@ -43,7 +43,7 @@ Ekranın üç bölümü vardır:
   - telefon simgesi: mobilde görünürlük (süsleme), aşağıya bak
   - × bloğu sil
 - **Döndürme**: bloğun sağ üst köşesindeki küçük ⟳ dairesini sürükle (15° adımlara oturur; serbest açı için Shift'i basılı tut). Tam derece değeri Özellikler panelinden de girilebilir.
-- **Seçili blokta klavye**: ok tuşları bir ızgara adımı taşır (Shift = 1 px), Delete siler, Esc seçimi kaldırır, Ctrl+D çoğaltır.
+- **Seçili blokta klavye**: ok tuşları bir ızgara adımı taşır (Shift = 1 px), Delete siler, Esc seçimi kaldırır, Ctrl+C, Ctrl+X ve Ctrl+V kopyalar, keser ve yapıştırır (bir kopya başka bir sayfaya da yapıştırılır), Ctrl+D çoğaltır. Bir bölüm seçiliyken ve blok seçili değilken Ctrl+C ve Ctrl+X bölümün tamamını alır, Ctrl+V de kopyalanan bir bölümü seçili olanın altına yapıştırır.
 - **Hizalama çizgileri**: bir bloğu başka bir bloğun kenarına ya da ortasına yaklaştırdığında ikisinin arasında bir çizgi belirir ve blok yerine oturur; bir komşuya olan uzaklık iki komşu arasındaki uzaklığa eşit olduğunda, uzaklıklar içinde sayı olan bantlar olarak gösterilir. Çizgiler bloğu üzerinde tuttuğun bölümden de gelir. Düz yatay ya da düz dikey taşımak için Shift'i, ızgarasız ve çizgisiz tamamen serbest yerleşim için Ctrl'yi (Mac'te Cmd) basılı tut.
 - **Geri alma**: Ctrl+Z (ve yinelemek için Ctrl+Shift+Z) her şeyde çalışır: taşıma, boyut, metin, silme, bölümler ve ızgara.
 

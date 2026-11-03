@@ -8,6 +8,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.30 - Cut, copy and paste of blocks and whole sections, across pages - 3 November 2026
+
+- The clipboard lived in the page, so a copy was lost on a page switch, nothing could be cut, and a section could not be copied. One clipboard now holds blocks or a whole section (`clipboard-model.js`); the editor keeps each copy (`urd-clipboard`) and hands it to every page the preview loads, so it pastes on another page.
+- Ctrl+X cuts a block, a set or a section in one undo step. With a section selected and no block, Ctrl+C and Ctrl+X take the section, unless text is selected on the page, and Ctrl+V pastes it below the selected section, or below the one in view, with fresh ids and free anchor names (`urd-paste-section`, `handlePasteSection` in bridge.svelte.js).
+- Blocks pasted on a page without their source section land in the section in view, not in the first one.
+- The block's right-click menu has Cut and Copy, and the section's has Cut, Copy and «Paste the section below». The status line says what was copied or cut. The shortcut sheet has Cut and a Sections group.
+- The page lost its marker for the selected section each time a section was drawn again, so after a paste the keys found no section while the editor showed it selected. The page keeps the marker by the section's id, and a pasted section takes it.
+- The right-click menu was measured before its scale to admin size, so near the window's right or bottom edge it ran out of the view on a zoomed-out canvas. It is measured as drawn.
+- The user guides describe the keys. In the comparison, «Copy, cut and paste elements» is Has, and C40 and C123 move to the Closed table.
+- The independent review before the commit found these, all fixed:
+  - Ctrl+Shift+X and Ctrl+Alt+X (AltGr+X on some keyboards) cut a selected block. The block's keys take Ctrl alone, as the section's do.
+  - A press on a block marks its section too, so a second Ctrl+X after cutting a block cut the whole section. The section's keys act only on a section chosen by a press on its bare surface or by a paste.
+  - A section deleted from the page came back marked as the selected one after Ctrl+Z, while the editor had let it go. The page forgets a section it deletes.
+  - The clipboard model read a clipboard without its kind as blocks, a form nothing sends. It is refused.
+
 ### 0.7.10.29 - A page duplicated from the Pages panel, and a section duplicated in place - 3 November 2026
 
 - A page could only be rebuilt by hand or through a saved template. «Duplicate the page» in its row's ⋮ menu copies it under «<title> (copy)» with the next free slug (`om-oss-2`), opened as a draft and left out of the menu (`copySlug` in `lib/duplicate.js`, `duplicatePage` in site.svelte.js).

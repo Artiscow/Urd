@@ -12,6 +12,8 @@
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
  *                  { type: 'urd-duplicate-section', sectionId }
+ *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut: the editor keeps it and hands it to the next page the preview loads)
+ *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: the top-edge handle moves all blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (arrow move in the mobile reading order)
@@ -27,6 +29,7 @@ import { followsContent, fitMovesAll, FIT_BY_WIDTH } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
+import { blocksClipboard, sectionClipboard, readClipboard, pastedSection } from './clipboard-model.js';
 import { loadSearchLanguages, searchLanguagesReady, searchItemsAny } from './search-langs.js';
 import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';
@@ -222,12 +225,11 @@ function showContextMenu(el, x, y, label, build) {
     window.removeEventListener('blur', onScroll);
     window.removeEventListener('resize', onScroll);
   };
-  // Measured once in the page, then kept inside the window.
+  // Measured once in the page as drawn, at the chrome's scale, then kept inside the window.
   menu.style.left = '0px';
   menu.style.top = '0px';
   document.body.appendChild(menu);
-  const w = menu.offsetWidth;
-  const h = menu.offsetHeight;
+  const { width: w, height: h } = menu.getBoundingClientRect();
   menu.style.left = `${Math.max(4, Math.min(x, window.innerWidth - w - 4))}px`;
   menu.style.top = `${Math.max(4, Math.min(y, window.innerHeight - h - 4))}px`;
   contextMenu = { el, menu, cleanup };
@@ -243,9 +245,12 @@ function openContextMenu(el, x, y) {
   showContextMenu(el, x, y, ta('canvas.ctx.label'), (item, sep) => {
     item(ta('canvas.ctx.settings'), 'Enter', () => openBlockSettings(el, section, block)).classList.add('urd-ctx-first');
     sep();
+    item(ta('canvas.ctx.cut'), 'Ctrl+X', () => copyBlocks(section, [block.id], true));
+    item(ta('canvas.ctx.copy'), 'Ctrl+C', () => copyBlocks(section, [block.id]));
+    item(ta('canvas.ctx.duplicate'), 'Ctrl+D', () => duplicateBlock(section, block));
+    sep();
     item(ta('canvas.ctx.copyStyle'), 'Ctrl+Alt+C', () => copyBlockStyle(block));
     item(ta('canvas.ctx.pasteStyle'), 'Ctrl+Alt+V', () => pasteBlockStyle(section, block), { disabled: !styleClipboard });
-    item(ta('canvas.ctx.duplicate'), 'Ctrl+D', () => duplicateBlock(section, block));
     sep();
     item(ta('canvas.ctx.toFront'), 'Ctrl+Shift+↑', () => bumpBlockZ(host, section, block, el, 1));
     item(ta('canvas.ctx.toBack'), 'Ctrl+Shift+↓', () => bumpBlockZ(host, section, block, el, -1));
@@ -277,7 +282,9 @@ function openSectionContextMenu(host, x, y) {
   };
   showContextMenu(host, x, y, ta('canvas.ctx.sectionLabel'), (item, sep) => {
     item(ta('canvas.ctx.newBlockHere'), '/', () => openBlockMenuAt(host, x, y)).classList.add('urd-ctx-first');
-    item(ta('canvas.ctx.paste'), 'Ctrl+V', () => pasteClipboard(), { disabled: !clipboard?.blocks?.length });
+    // One clipboard: blocks paste at this section, a section lands below it.
+    if (clipboard?.kind === 'section') item(ta('canvas.ctx.pasteSection'), 'Ctrl+V', () => pasteSection(host));
+    else item(ta('canvas.ctx.paste'), 'Ctrl+V', () => pasteClipboard(), { disabled: !clipboard?.blocks?.length });
     sep();
     // The section's settings: the section selected, and the Properties panel opened on it.
     item(ta('canvas.ctx.sectionSettings'), '', () => {
@@ -287,10 +294,13 @@ function openSectionContextMenu(host, x, y) {
     item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: !adderBelow() });
     item(ta('canvas.ctx.sectionUp'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     item(ta('canvas.ctx.sectionDown'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+    sep();
+    item(ta('canvas.ctx.cutSection'), 'Ctrl+X', () => copySection(host, true));
+    item(ta('canvas.ctx.copySection'), 'Ctrl+C', () => copySection(host));
     item(ta('canvas.ctx.duplicateSection'), '', () => post({ type: 'urd-duplicate-section', sectionId: section.id }));
     item(ta('canvas.ctx.saveSection'), '', () => post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) }));
     sep();
-    item(ta('canvas.ctx.deleteSection'), '', () => post({ type: 'urd-delete-section', sectionId: section.id }), { danger: true, arm: ta('canvas.ctx.pressAgain') });
+    item(ta('canvas.ctx.deleteSection'), '', () => deleteSection(section.id), { danger: true, arm: ta('canvas.ctx.pressAgain') });
   });
 }
 
@@ -850,8 +860,9 @@ export function enhanceSection(host, section, grid) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
   }
-  // The selection must survive re-renders (e.g. changes from the
-  // Properties panel, which re-renders the whole section).
+  // The active section and the selection must survive re-renders (e.g.
+  // changes from the Properties panel, which re-renders the whole section).
+  if (section.id === activeSectionId) host.classList.add('urd-section-active');
   if (selectedBlockId) {
     host.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?.classList.add('urd-selected');
   }
@@ -3043,7 +3054,7 @@ function addSectionToolbar(host, section, grid) {
     });
     bar.appendChild(save);
     mk(CROSS_SVG, ta('canvas.deleteSection'), () => {
-      post({ type: 'urd-delete-section', sectionId: section.id });
+      deleteSection(section.id);
     });
   }
 
@@ -3198,9 +3209,83 @@ let selectedBlockId = null;
 let multiIds = new Set();
 let multiSectionId = null;
 
-/** The clipboard for Ctrl+C/V: block JSON + the source section. Lives in
- *  the preview's module state, so it resets on page switch. */
+/** The section the owner last pressed on (markActiveVisual), by id, so the mark survives the section being drawn again. */
+let activeSectionId = null;
+
+/** The section chosen as a section, by a press on its bare surface or a paste, which Ctrl+C and Ctrl+X take whole; a press on a block chooses the block instead. */
+let chosenSectionId = null;
+
+/** The clipboard for Ctrl+C, Ctrl+X and Ctrl+V (clipboard-model.js): blocks
+ *  with their source section, or a whole section. Each copy goes to the
+ *  editor too, which hands it back to the next page the preview loads
+ *  (setClipboard), so a copy pastes on another page. */
 let clipboard = null;
+
+/** The editor's clipboard for a page just loaded (the urd-clipboard message), checked before it is used. */
+export function setClipboard(value) {
+  clipboard = readClipboard(value);
+}
+
+/** A copy or a cut onto the clipboard, and to the editor, which keeps it and tells the owner. */
+function holdClipboard(clip, cut) {
+  clipboard = clip;
+  post({ type: 'urd-clipboard', clipboard: clip, cut });
+}
+
+/** Blocks of a section onto the clipboard; a cut deletes them in the same undo step as one deletion. */
+function copyBlocks(section, ids, cut = false) {
+  const clip = blocksClipboard(section, ids);
+  if (!clip) return;
+  holdClipboard(clip, cut);
+  if (!cut) return;
+  const blockIds = clip.blocks.map((b) => b.id);
+  post(blockIds.length > 1
+    ? { type: 'urd-delete', sectionId: section.id, blockIds }
+    : { type: 'urd-delete', sectionId: section.id, blockId: blockIds[0] });
+  selectBlock(null);
+}
+
+/** A whole section onto the clipboard; a cut deletes it. */
+function copySection(host, cut = false) {
+  const clip = sectionClipboard(host?._urdSection);
+  if (!clip) return;
+  holdClipboard(clip, cut);
+  if (cut) deleteSection(clip.section.id);
+}
+
+/** A section deleted: the page forgets it as the active and the chosen one, as the editor does, so an undo brings it back unmarked. */
+function deleteSection(sectionId) {
+  if (activeSectionId === sectionId) activeSectionId = null;
+  if (chosenSectionId === sectionId) chosenSectionId = null;
+  post({ type: 'urd-delete-section', sectionId });
+}
+
+/** The section across the middle of the view, else the first one partly in it. */
+function sectionInView() {
+  const hosts = [...document.querySelectorAll('.urd-section')];
+  const mid = window.innerHeight / 2;
+  return hosts.find((h) => { const r = h.getBoundingClientRect(); return r.top <= mid && r.bottom >= mid; })
+    ?? hosts.find((h) => { const r = h.getBoundingClientRect(); return r.bottom > 0 && r.top < window.innerHeight; })
+    ?? null;
+}
+
+/** The clipboard's section on this page with fresh ids: below the section given, else the selected one, else the one in view; the editor selects it. */
+function pasteSection(afterHost = null) {
+  const section = pastedSection(clipboard, makeId);
+  if (!section) return;
+  const after = afterHost ?? document.querySelector('.urd-section-active') ?? sectionInView();
+  selectBlock(null);
+  // The pasted section is the active and chosen one once it is drawn, as the editor selects it.
+  activeSectionId = section.id;
+  chosenSectionId = section.id;
+  post({ type: 'urd-paste-section', afterId: after?.dataset.sectionId ?? null, section });
+}
+
+/** Text the owner has selected on the page, which Ctrl+C copies the browser's own way. */
+function textSelected() {
+  const selection = document.getSelection();
+  return Boolean(selection && !selection.isCollapsed && selection.toString().trim());
+}
 
 function selectedEls() {
   if (!multiIds.size) return [];
@@ -3325,8 +3410,9 @@ document.addEventListener('click', (event) => {
 });
 
 // Keyboard on a selected block/set: arrow keys move (grid steps;
-// Shift = 1 px), Delete deletes, Esc deselects, Ctrl+C/V copies and
-// pastes with the layout preserved, Ctrl+D duplicates. Never when focus
+// Shift = 1 px), Delete deletes, Esc deselects, Ctrl+C, Ctrl+X and Ctrl+V
+// copy, cut and paste with the layout preserved (a selected section with no
+// block is copied whole), Ctrl+D duplicates. Never when focus
 // sits in text/fields, and moving applies to the desktop view.
 window.addEventListener('keydown', (event) => {
   const target = event.target;
@@ -3388,6 +3474,17 @@ window.addEventListener('keydown', (event) => {
   }
 
   if (!selectedBlockId) {
+    // Ctrl+C and Ctrl+X: a set left without a single block, else the section chosen as a section.
+    if (ctrl && !event.altKey && !event.shiftKey && ['c', 'x'].includes(event.key.toLowerCase())) {
+      const cut = event.key.toLowerCase() === 'x';
+      const setCtx = multiIds.size > 1 ? selectedEls()[0]?._urdCtx : null;
+      const chosen = chosenSectionId ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(chosenSectionId)}"]`) : null;
+      if (isMobile() || (!setCtx && (!chosen || textSelected()))) return;
+      event.preventDefault();
+      if (setCtx) copySelection(setCtx, cut);
+      else copySection(chosen, cut);
+      return;
+    }
     // The section's menu from the keyboard, on the active section.
     if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
       const active = document.querySelector('.urd-section-active');
@@ -3447,10 +3544,10 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  if (ctrl && event.key.toLowerCase() === 'c') {
+  if (ctrl && !event.altKey && !event.shiftKey && ['c', 'x'].includes(event.key.toLowerCase())) {
     if (isMobile()) return;
     event.preventDefault();
-    copySelection(ctx);
+    copySelection(ctx, event.key.toLowerCase() === 'x');
     return;
   }
 
@@ -3532,6 +3629,8 @@ window.addEventListener('keydown', (event) => {
 // (then the block's own urd-select-block carries the section context, and
 // Properties stays on the block).
 function markActiveVisual(host) {
+  activeSectionId = host?.dataset.sectionId ?? null;
+  if (activeSectionId !== chosenSectionId) chosenSectionId = null;
   document.querySelectorAll('.urd-section-active').forEach((s) => {
     if (s !== host) s.classList.remove('urd-section-active');
   });
@@ -3539,6 +3638,7 @@ function markActiveVisual(host) {
 }
 function markActive(host) {
   markActiveVisual(host);
+  chosenSectionId = host?.dataset.sectionId ?? null;
   if (host) post({ type: 'urd-select-section', sectionId: host.dataset.sectionId });
 }
 
@@ -3569,6 +3669,7 @@ document.addEventListener('pointerdown', (event) => {
   // A right press marks the section visually only: the activation would
   // redraw it before the browser's contextmenu event, which then lands on
   // the detached node and never reaches the menu's listener.
+  if (blockEl) chosenSectionId = null;
   if (blockEl || event.button === 2) markActiveVisual(host);
   else markActive(host);
 });
@@ -3907,26 +4008,30 @@ function applyDistribute(axis) {
   applySelectionMoves(distributeMoves(selectionItems(), axis), settle);
 }
 
-/** Ctrl+C: the set (or the single selected block) to the clipboard. */
-function copySelection(ctx) {
-  const ids = multiIds.size > 1 ? multiIds : new Set([selectedBlockId]);
-  const blocks = ctx.section.blocks.filter((b) => ids.has(b.id));
-  if (!blocks.length) return;
-  clipboard = { sectionId: ctx.section.id, blocks: JSON.parse(JSON.stringify(blocks)) };
+/** Ctrl+C and Ctrl+X: the set (or the single selected block) to the clipboard. */
+function copySelection(ctx, cut = false) {
+  copyBlocks(ctx.section, multiIds.size > 1 ? [...multiIds] : [selectedBlockId], cut);
 }
 
 /**
  * Ctrl+V: paste the clipboard with the internal layout preserved - all
  * blocks get the SAME offset (slightly down/right, clamped by groupDelta
  * so the whole group stays within the section). The target is the active
- * section, otherwise the source section, otherwise the first. Sent
- * together as urd-add-blocks = ONE undo step, and the new set is
- * selected.
+ * section, otherwise the source section, otherwise the section in view,
+ * otherwise the first. Sent together as urd-add-blocks = ONE undo step,
+ * and the new set is selected. A section on the clipboard lands below the
+ * active section instead (pasteSection).
  */
 function pasteClipboard(source = clipboard) {
+  if (source?.kind === 'section') {
+    pasteSection();
+    return;
+  }
   if (!source?.blocks?.length) return;
+  const sourceHost = source.sectionId ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(source.sectionId)}"]`) : null;
   const host = document.querySelector('.urd-section-active')
-    ?? document.querySelector(`.urd-section[data-section-id="${CSS.escape(source.sectionId)}"]`)
+    ?? sourceHost
+    ?? sectionInView()
     ?? document.querySelector('.urd-section');
   if (!host) return;
   const sectionId = host.dataset.sectionId;
@@ -3944,7 +4049,7 @@ function pasteClipboard(source = clipboard) {
   const minBottom = Math.max(...blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
   post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
   // The next paste continues from the pasted content (no stacking on top of each other).
-  if (source === clipboard) clipboard = { sectionId, blocks: JSON.parse(JSON.stringify(blocks)) };
+  if (source === clipboard) clipboard = { kind: 'blocks', sectionId, blocks: JSON.parse(JSON.stringify(blocks)) };
   // The pasted content becomes the new set: the re-render after
   // urd-add-blocks reads multiIds/selectedBlockId (enhanceSection), and
   // the editor follows.
