@@ -250,7 +250,8 @@ function handleAddSection(msg) {
   pageState.store.save();
   historyState.updateDirty();
   previewState.bridge?.sendPage(pageState.pageId, pageState.store.data);
-  // The new section is selected and Properties opens, ready for tuning.
+  // The new section is selected, on the page too, and Properties opens, ready for tuning.
+  previewState.bridge?.sendActiveSection(msg.section.id);
   pageState.activeSectionId = msg.section.id;
   pageState.syncSectionMirrors(msg.section);
   // The grid overlay has its own toggle; a panel switch does not touch it.
@@ -266,6 +267,7 @@ function handleDuplicateSection(msg) {
   pageState.store.save();
   historyState.updateDirty();
   previewState.bridge?.sendPage(pageState.pageId, pageState.store.data);
+  previewState.bridge?.sendActiveSection(copy.section.id);
   pageState.activeSectionId = copy.section.id;
   pageState.syncSectionMirrors(copy.section);
   shellState.activePanel = 'properties';

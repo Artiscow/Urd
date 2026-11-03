@@ -3221,6 +3221,17 @@ let chosenSectionId = null;
  *  (setClipboard), so a copy pastes on another page. */
 let clipboard = null;
 
+/** The section the editor selected itself (the urd-active-section message: a new, duplicated or pasted section): active and chosen here, and marked once it is drawn. */
+export function setActiveSection(sectionId) {
+  activeSectionId = typeof sectionId === 'string' ? sectionId : null;
+  chosenSectionId = activeSectionId;
+  const host = activeSectionId ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(activeSectionId)}"]`) : null;
+  document.querySelectorAll('.urd-section-active').forEach((s) => {
+    if (s !== host) s.classList.remove('urd-section-active');
+  });
+  host?.classList.add('urd-section-active');
+}
+
 /** The editor's clipboard for a page just loaded (the urd-clipboard message), checked before it is used. */
 export function setClipboard(value) {
   clipboard = readClipboard(value);

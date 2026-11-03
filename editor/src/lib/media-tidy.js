@@ -9,8 +9,20 @@ import { tidiedMediaPath } from '$engine/imageTools.js';
 /** A path at the root of media/ in any text of a document. */
 const ROOT_PATH_RE = /\/media\/[a-z0-9][a-z0-9._-]*\.[a-z0-9]+/gi;
 
-/** How many moves one press takes at most, leaving the commit room for the documents and the page copies under its cap of 200 entries. */
+/** How many moves one press takes at most. */
 export const TIDY_ROOM = 120;
+
+/** How many entries one commit takes at most (the commit endpoint's cap). */
+export const COMMIT_FILES = 200;
+
+/**
+ * How many moves one press can take on a site: the cap less what every publish carries beside them, each page as its document and its index copy, each collection and template, and the site's own files (site.json, theme.css, the sitemap, robots, the feeds).
+ * Zero on a site with too many pages for a tidy in one commit.
+ * @param {{pages: number, collections?: number, templates?: number}} counts
+ */
+export function tidyRoom({ pages, collections = 0, templates = 0 }) {
+  return Math.max(0, Math.min(TIDY_ROOM, COMMIT_FILES - (pages * 2 + collections + templates + 8)));
+}
 
 /** The files at the root of media/ among the ones listed (a path with no folder between media/ and the name), each with the folder path it takes; a kind media/ does not hold stays. */
 export function rootMediaFiles(files) {

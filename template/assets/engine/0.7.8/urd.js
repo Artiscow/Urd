@@ -602,6 +602,9 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-close-menus') {
       // The owner clicked in the admin panels: close open menus (preset gallery, block menu).
       window.UrdPreviewEdit?.closeMenus();
+    } else if (msg?.type === 'urd-active-section') {
+      // A section the editor selected itself (new, duplicated or pasted): the page marks it as the active one.
+      window.UrdPreviewEdit?.setActiveSection?.(msg.sectionId ?? null);
     } else if (msg?.type === 'urd-clipboard') {
       // The editor's clipboard for the page just loaded: a copy made on another page pastes here.
       window.UrdPreviewEdit?.setClipboard?.(msg.clipboard ?? null);

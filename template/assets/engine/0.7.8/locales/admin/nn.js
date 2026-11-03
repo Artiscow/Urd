@@ -293,7 +293,7 @@ export default {
     'api.badFileEntry': 'Kvar fil treng path og content (eller delete: true)',
     'api.pathNotAllowed': 'Stien «{path}» kan ikkje publiserast herfrå',
     'api.moveNotAllowed': 'Fila «{path}» kan ikkje flyttast dit',
-    'api.moveMissing': 'Ei fil som skulle flyttast er ikkje lenger i repoet; last sida på nytt og prøv igjen',
+    'api.moveMissing': 'Ei fil som skulle flyttast står ikkje lenger i rota av media/; flyttingane er droppa, så publiser på nytt',
     'api.mediaListFailed': 'Kunne ikkje liste mediefilene',
     'api.fileNotAllowed': 'Fila «{path}» er ikkje ein PDF, eller er større enn 15 MB',
     'api.publishRace': 'Nokon publiserte akkurat no - prøv å publisere på nytt',

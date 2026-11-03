@@ -9,7 +9,7 @@ import { resolveLink } from '$engine/nav-model.js';
 import { FEED_KINDS, buildRssXml, buildSitemapXml, buildRobotsTxt } from '$engine/feeds.js';
 import { createDraftStore } from '../lib/draftStore.js';
 import { materializeField, materializeImages, materializeSiteImages, materializeEntryImages, materializeBackground, materializeSection, materializeBlockImages } from '../lib/materialize.js';
-import { tidyMedia as planTidy, rootMediaFiles } from '../lib/media-tidy.js';
+import { tidyMedia as planTidy, rootMediaFiles, tidyRoom } from '../lib/media-tidy.js';
 import {
   INDEX_PATH, LEGACY_INDEX_PATH, INDEX_DRAFT_KEY, LEGACY_DELETED_KEY, fetchIndex, indexPending, planIndexPublish,
 } from '../lib/collection-index.js';
@@ -67,6 +67,8 @@ async function loadMediaFiles() {
     if (res.ok && Array.isArray(data?.files)) {
       mediaFiles = data.files;
       mediaTruncated = data.truncated === true;
+    } else if (res.status === 404 && data === null) {
+      // A plain 404 is a server without the publishing layer (the local one): the count stays unknown, with no word about it.
     } else {
       shellState.setStatus(taApiError(data) ?? ta('media.listFailed'), 'error');
     }
@@ -96,7 +98,13 @@ async function tidyMedia() {
       collections: Object.entries(collectionsState.collectionStores).map(([id, st]) => [id, $state.snapshot(st.data)]),
       templates: Object.entries(templatesState.templateStores).map(([id, st]) => [id, $state.snapshot(st.data)]),
     };
-    const plan = planTidy(docs, mediaFiles);
+    // The room the commit has for moves beside the documents and the page copies it carries.
+    const room = tidyRoom({ pages: pages.length, collections: docs.collections.length, templates: docs.templates.length });
+    if (!room) {
+      shellState.setStatus(ta('media.tidyNoRoom'), 'error');
+      return;
+    }
+    const plan = planTidy(docs, mediaFiles, { room });
     if (!plan.moves.length) {
       shellState.setStatus(ta('media.tidyNothing'));
       return;
@@ -544,8 +552,10 @@ async function publish() {
     // check again and picks up the fresh changes.
     shellState.setStatus(ta('status.publishRace'), 'error');
   } else if (res) {
-    shellState.setStatus(taApiError(await res.json().catch(() => null))
-      ?? ta('status.publishFailed'), 'error');
+    const data = await res.json().catch(() => null);
+    // The files the moves name are not at the root any more (a publish whose answer was lost has moved them): the moves are dropped, and the documents, which already point at the folders, go with the next publish.
+    if (data?.code === 'moveMissing') setMoves([]);
+    shellState.setStatus(taApiError(data) ?? ta('status.publishFailed'), 'error');
   } else {
     shellState.setStatus(ta('status.publishUnavailable'), 'error');
   }

@@ -14,6 +14,8 @@ What has been delivered and waits for manual testing, in production or locally. 
 - [ ] The canvas zoomed out (for example 77 %), a right click near the right edge and near the bottom of the page: the menu stays whole inside the view
 - [ ] The shortcut sheet («?»): Cut under Blocks on the page, and the group Sections on the page with its three rows; the paste row's tooltip
 - [ ] The texts in bokmål and Turkish: Cut, Copy, the three section items, the four status lines, and the sheet's group and rows
+- [ ] A section added with «+ New section», duplicated, or inserted from a template: right after, Ctrl+V pastes below it and Shift+F10 opens its menu, the same section Properties shows
+- [ ] The Site panel's Media group opened on the local server: the count stays unknown and the status line stays quiet; on a site with so many pages that one publish cannot carry the moves, «Tidy the media folder» says so instead of failing
 
 ### Test batch (0.7.10.29): a page and a section duplicated
 

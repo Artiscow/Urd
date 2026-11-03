@@ -220,7 +220,7 @@ export default {
     'api.badFileEntry': 'Juohke fiila dárbbaša path ja content (dahje delete: true)',
     'api.pathNotAllowed': 'Bálggis «{path}» ii sáhte almmuhuvvot dáppe',
     'api.moveNotAllowed': 'Fiila «{path}» ii sáhte sirdojuvvot dohko',
-    'api.moveMissing': 'Fiila mii galggai sirdojuvvot ii leat šat repos; viečča siidu ođđasit ja geahččal fas',
+    'api.moveMissing': 'Fiila mii galggai sirdojuvvot ii leat šat media/ ruohttasis; sirdimat leat heaittihuvvon, de almmut ođđasit',
     'api.mediaListFailed': 'Ii sáhttán listet mediafiillaid',
     'api.fileNotAllowed': 'Fiila «{path}» ii leat PDF, dahje lea stuorát go 15 MB',
     'api.publishRace': 'Muhtin almmuhii aiddo dál - geahččal almmuhit ođđasit',

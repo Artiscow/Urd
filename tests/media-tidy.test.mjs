@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { register } from 'node:module';
 
 register('./_svelte-loader.mjs', import.meta.url);
-const { tidyMedia, rootMediaFiles, strandedReferences, TIDY_ROOM } = await import('../editor/src/lib/media-tidy.js');
+const { tidyMedia, rootMediaFiles, strandedReferences, tidyRoom, TIDY_ROOM, COMMIT_FILES } = await import('../editor/src/lib/media-tidy.js');
 
 const LISTING = [
   { path: 'media/logo-91963a12.svg', size: 531 },
@@ -60,6 +60,13 @@ test('tidyMedia: a full press moves the first files and rewrites only for them, 
   const tidy = tidyMedia({ site: { a: '/media/images/logo-91963a12.svg' } }, [{ path: 'media/images/logo-91963a12.svg' }]);
   assert.deepEqual([tidy.moves, tidy.site, tidy.remaining], [[], null, 0]);
   assert.ok(TIDY_ROOM < 200);
+});
+
+test('tidyRoom: the press takes what the commit has left beside the documents and the page copies, never more than the room, and nothing on a site too large', () => {
+  assert.equal(tidyRoom({ pages: 7, collections: 2, templates: 1 }), TIDY_ROOM);
+  assert.equal(tidyRoom({ pages: 40 }), COMMIT_FILES - 88);
+  assert.equal(tidyRoom({ pages: 96 }), 0);
+  assert.ok(COMMIT_FILES - (40 * 2 + 8) + 40 * 2 + 8 <= COMMIT_FILES, 'forty pages with their copies and the moves fit the cap');
 });
 
 test('strandedReferences: a root path the content names that the listing does not hold', () => {
