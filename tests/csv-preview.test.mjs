@@ -7,7 +7,8 @@ import { engineImport } from './_engine.mjs';
 import { groupsOf, chipsOf, changeOf, summaryOf, cellOf } from '../editor/src/lib/csv-preview.js';
 
 const { readCsv, importPlan, csvCell } = await engineImport('collections-csv.js');
-const plain = (html) => String(html).replace(/<[^>]+>/g, '');
+/** A stand-in for the editor's plainTitle: the words of a simple rich text. */
+const plain = (html) => String(html).split(/<[^>]*>/).join(' ').replace(/\s+/g, ' ').trim();
 
 // Deliberate Norwegian fixture entries: this is user collection content.
 const ENTRIES = [
