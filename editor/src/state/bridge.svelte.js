@@ -5,6 +5,7 @@
 import { DOCK_OPTIONS } from '../menu/options.js';
 import { makeId } from '$engine/sections/presets.js';
 import { claimAnchors } from '$engine/anchor-model.js';
+import { duplicatedSection } from '../lib/duplicate.js';
 import { ta } from '$engine/i18n.js';
 import { fitMoves } from '$engine/push-model.js';
 import { historyState } from './history.svelte.js';
@@ -255,6 +256,20 @@ function handleAddSection(msg) {
   shellState.activePanel = 'properties';
 }
 
+/** «Duplicate the section» from the section's toolbar or right-click menu: the copy lands directly below with fresh ids and free anchor names, selected, in one undo step. */
+function handleDuplicateSection(msg) {
+  const copy = duplicatedSection(pageState.store.data, msg.sectionId, makeId);
+  if (!copy) return;
+  historyState.pushHistory('duplicate-section');
+  pageState.store.data.sections.splice(copy.index, 0, copy.section);
+  pageState.store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendPage(pageState.pageId, pageState.store.data);
+  pageState.activeSectionId = copy.section.id;
+  pageState.syncSectionMirrors(copy.section);
+  shellState.activePanel = 'properties';
+}
+
 function handleMoveSection(msg) {
   const s = pageState.store.data.sections;
   const i = s.findIndex((x) => x.id === msg.sectionId);
@@ -364,6 +379,7 @@ export const bridgeState = {
   handleBlockFlag,
   handleBlockStyle,
   handleAddSection,
+  handleDuplicateSection,
   handleMoveSection,
   handleDeleteSection,
   handleSectionSize,

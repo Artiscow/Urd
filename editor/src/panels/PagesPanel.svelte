@@ -13,7 +13,7 @@
   // The open page lacks a description, unless it is hidden from search: a hollow dot on its Search and sharing group points at the field.
   const missingDescription = $derived(!siteDraft.pages.find((p) => p.id === pageId)?.noindex && !seoDraft.description);
   const templateIds = $derived(ed.templateIds);
-  const { addPage, deletePage, handleDeleteTemplate, renamePage, savePageAsTemplate, selectPage, setPageNoindex, setPageSeo, setPageSlug, templateStores, uploadOgImage } = ed;
+  const { addPage, deletePage, duplicatePage, handleDeleteTemplate, renamePage, savePageAsTemplate, selectPage, setPageNoindex, setPageSeo, setPageSlug, templateStores, uploadOgImage } = ed;
 
   /* The starter-pack thumbnails are built once (create() per section is
      cheap, but the grid rerenders on every keystroke in the name field). */
@@ -53,6 +53,8 @@
             onclick={() => (ed.pageMenuFor = ed.pageMenuFor === p.id ? null : p.id)}>{@html ICONS.kebab}</button>
           {#if ed.pageMenuFor === p.id}
             <div class="page-menu">
+              <button class="ghost" title={ta('tip.pages.duplicate')} onclick={() => duplicatePage(p)}>
+                {@html ICONS.copy} {ta('ui.duplicatePage')}</button>
               <button class="ghost" onclick={() => savePageAsTemplate(p)}>
                 {@html ICONS.bookmark} {ta('ui.savePageTemplate')}</button>
               {#if p.path !== '/'}

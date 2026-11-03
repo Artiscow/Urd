@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.29): a page and a section duplicated
+
+- [ ] The Pages panel: a row's ⋮ menu holds «Duplicate the page» first; on «Om oss» it adds «Om oss (copy)» at `om-oss-2` as the last row, opens it with every section and block of the original, the status line says it is created and opened, and the menu in the preview does not show it; the Navigation panel can add it; pressed again on «Om oss», the next copy is `om-oss-3`, and a copy of the copy is numbered on; Ctrl+Z removes the row
+- [ ] A duplicated page with unpublished changes on the original: the copy holds the changes as they stand; the SEO fields come along, and a rename of the copy changes nothing on the original
+- [ ] The section's toolbar (pointed at) holds a duplicate button between ↓ and the fit-height button, and the section's right-click menu holds «Duplicate the section» after «Move the section down»: the copy lands directly below the original with every block, is selected with Properties open, its blocks are edited and moved apart from the original's, and Ctrl+Z removes it in one step
+- [ ] A section with a name (`#priser`) duplicated: the copy's name is `priser-2` and a named block in it `name-2`; a section with a repeating template (cards, people) duplicated keeps its own plus button
+- [ ] The texts in bokmål and Turkish: Duplicate the page with its tooltip and status line, Duplicate the section in the toolbar's tooltip and the right-click menu
+
 ### Test batch (0.7.10.28): the media folder sorted by kind, and the tidy
 
 - [ ] Add a picture to an image block, a PDF to a button in the link editor, a sound to an audio block and a film to a video block, then publish: the commit holds `media/images/…webp`, `media/files/…pdf`, `media/audio/…mp3` and `media/video/…mp4`, the page JSON references those paths, and the published page shows and plays them

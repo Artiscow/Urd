@@ -212,6 +212,7 @@ function onIframeLoad() {
     onAddSection: bridgeState.handleAddSection,
     onMoveSection: bridgeState.handleMoveSection,
     onDeleteSection: bridgeState.handleDeleteSection,
+    onDuplicateSection: bridgeState.handleDuplicateSection,
     onSectionSize: bridgeState.handleSectionSize,
     onUndo: (msg) => (msg.redo ? historyState.redo() : historyState.undo()),
     onSelectSection: pageState.onSelectSection,

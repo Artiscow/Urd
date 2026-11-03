@@ -12,6 +12,7 @@ import { videoLayer } from '$engine/backgrounds/video.js';
 import { patternLayer } from '$engine/backgrounds/pattern.js';
 import { grainLayer } from '$engine/backgrounds/grain.js';
 import { bindingWidth } from '../lib/content-width.js';
+import { copySlug } from '../lib/duplicate.js';
 import { activeTokens } from '$engine/theme.js';
 import { ta } from '$engine/i18n.js';
 import { slugify } from '$engine/imageTools.js';
@@ -206,6 +207,25 @@ async function savePageAsTemplate(entry) {
     ? JSON.parse(JSON.stringify(pageState.store.data))
     : await pageState.readPageDraft(entry);
   await templatesState.saveTemplate('page', data);
+}
+
+/** The row menu's «Duplicate the page»: the page as it stands, under a copy's title and the next free slug, opened as a draft; the copy stays out of the menu until the Nav panel adds it. */
+async function duplicatePage(entry) {
+  pageMenuFor = null;
+  const source = entry.id === pageState.pageId
+    ? JSON.parse(JSON.stringify(pageState.store.data))
+    : await pageState.readPageDraft(entry);
+  const slug = copySlug(entry.id, siteDraft.pages);
+  const title = ta('page.copyTitle', { title: entry.title });
+  const fresh = clonePageForInsert(source, makeId, { id: slug, title });
+  siteMutate('pages', () => {
+    siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
+  });
+  shellState.writeDraftKey(`urd-draft-${slug}`, JSON.stringify(fresh));
+  historyState.updateDirty();
+  // The page switch clears the status line, so the word about the copy comes after it.
+  await pageState.selectPage(slug);
+  shellState.setStatus(ta('status.pageDuplicated', { title }));
 }
 
 function renamePage(entry, rawTitle) {
@@ -706,6 +726,7 @@ export const siteState = {
   pageSlugError,
   addPage,
   savePageAsTemplate,
+  duplicatePage,
   renamePage,
   get seoDraft() { return seoDraft; },
   set seoDraft(v) { seoDraft = v; },

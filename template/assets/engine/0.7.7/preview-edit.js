@@ -11,6 +11,7 @@
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
+ *                  { type: 'urd-duplicate-section', sectionId }
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: the top-edge handle moves all blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (arrow move in the mobile reading order)
@@ -286,6 +287,7 @@ function openSectionContextMenu(host, x, y) {
     item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: !adderBelow() });
     item(ta('canvas.ctx.sectionUp'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     item(ta('canvas.ctx.sectionDown'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+    item(ta('canvas.ctx.duplicateSection'), '', () => post({ type: 'urd-duplicate-section', sectionId: section.id }));
     item(ta('canvas.ctx.saveSection'), '', () => post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) }));
     sep();
     item(ta('canvas.ctx.deleteSection'), '', () => post({ type: 'urd-delete-section', sectionId: section.id }), { danger: true, arm: ta('canvas.ctx.pressAgain') });
@@ -3011,6 +3013,7 @@ function addSectionToolbar(host, section, grid) {
     }
     mk(ORDER_UP_SVG, ta('canvas.sectionUp'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     mk(ORDER_DOWN_SVG, ta('canvas.sectionDown'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+    mk(DUPLICATE_SVG, ta('canvas.duplicateSection'), () => post({ type: 'urd-duplicate-section', sectionId: section.id }));
     mk(FIT_HEIGHT_SVG, ta('canvas.fitHeight'), () => {
       const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
       const px = Math.max(grid.size * 3, maxBottom + grid.size);
@@ -3135,6 +3138,7 @@ const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" s
 const GRIP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
 const ROTATE_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.5 13a8.5 8.5 0 1 1-2-5.5L21 10"/></svg>';
 const FIT_HEIGHT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6 10l6 6 6-6"/><path d="M4 21h16"/></svg>';
+const DUPLICATE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
 const CARET_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg>';
 /** The slim block menu's arrow on a group's row, pointing to the side its panel opens on. */
 const CHEVRON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';

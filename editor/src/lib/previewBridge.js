@@ -26,6 +26,7 @@
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
+ *                  { type: 'urd-duplicate-section', sectionId }
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? } (moves from the top-edge handle: [{blockId, dy}] in the same undo step)
  *                  { type: 'urd-undo', redo }                 (Ctrl+Z inside the iframe)
  *                  { type: 'urd-select-section', sectionId }  (active section for the palette)
@@ -95,6 +96,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-add-section') handlers.onAddSection?.(msg);
     if (msg?.type === 'urd-move-section') handlers.onMoveSection?.(msg);
     if (msg?.type === 'urd-delete-section') handlers.onDeleteSection?.(msg);
+    if (msg?.type === 'urd-duplicate-section') handlers.onDuplicateSection?.(msg);
     if (msg?.type === 'urd-section-size') handlers.onSectionSize?.(msg);
     if (msg?.type === 'urd-undo') handlers.onUndo?.(msg);
     if (msg?.type === 'urd-select-section') handlers.onSelectSection?.(msg);
