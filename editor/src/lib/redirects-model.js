@@ -161,7 +161,7 @@ export function hostLines(rules) {
   for (const rule of writable(rules)) {
     const kind = kindOf(rule.status);
     if (rule.from.endsWith('*')) {
-      out.dynamic.push(`${rule.from} ${rule.to.replace('*', ':splat')} ${kind}`);
+      out.dynamic.push(`${rule.from} ${rule.to.replaceAll('*', ':splat')} ${kind}`);
     } else {
       for (const from of rule.from === '/' ? ['/'] : [rule.from, `${rule.from}/`]) out.static.push(`${from} ${rule.to} ${kind}`);
     }
@@ -191,7 +191,7 @@ function readKind(raw, fallback) {
 /** One rule from its old address, target and kind as written, or null where it cannot be one. */
 function ruleOf(from, to, kind) {
   const f = normalizeFrom(from);
-  const t = normalizeTo(String(to ?? '').replace(':splat', '*'));
+  const t = normalizeTo(String(to ?? '').replaceAll(':splat', '*'));
   return f && t ? { from: f, to: t, status: kind } : null;
 }
 

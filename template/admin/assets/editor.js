@@ -34788,7 +34788,7 @@ function CF(e) {
 	};
 	for (let n of SF(e)) {
 		let e = vF(n.status);
-		if (n.from.endsWith("*")) t.dynamic.push(`${n.from} ${n.to.replace("*", ":splat")} ${e}`);
+		if (n.from.endsWith("*")) t.dynamic.push(`${n.from} ${n.to.replaceAll("*", ":splat")} ${e}`);
 		else for (let r of n.from === "/" ? ["/"] : [n.from, `${n.from}/`]) t.static.push(`${r} ${n.to} ${e}`);
 	}
 	return t;
@@ -34822,7 +34822,7 @@ function EF(e, t) {
 	].includes(n) ? 302 : t;
 }
 function DF(e, t, n) {
-	let r = hF(e), i = gF(String(t ?? "").replace(":splat", "*"));
+	let r = hF(e), i = gF(String(t ?? "").replaceAll(":splat", "*"));
 	return r && i ? {
 		from: r,
 		to: i,

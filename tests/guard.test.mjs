@@ -283,6 +283,7 @@ test('_redirects: publishing may write it, holding redirects only, none from Urd
     '/om-oss/ /om-urd 301',
     '/pamelding https://forms.gle/vinterkurs 302',
     '/blogg/* /nyheter/:splat 301',
+    '/arkiv/* /gammelt/:splat/side/:splat 301',
     '/ /hjem 301',
     '',
   ].join('\n');

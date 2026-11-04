@@ -95,6 +95,9 @@ test('hostLines and toHostFile: the static rules twice, then the ones with a *, 
   assert.equal(isUrdHostFile('/old /new 301\n'), false);
   assert.deepEqual(hostLines([{ from: '/om-oss/', to: 'Https://x.no/a', status: 301 }]).static, ['/om-oss https://x.no/a 301', '/om-oss/ https://x.no/a 301'], 'written from the normalised addresses');
   assert.ok(file.endsWith('/blogg/* /nyheter/:splat 301\n'));
+  // Every star in a target is the matched part, not only the first.
+  const twice = hostLines([{ from: '/blogg/*', to: '/nyheter/*/arkiv/*', status: 301 }]).dynamic;
+  assert.deepEqual(twice, ['/blogg/* /nyheter/:splat/arkiv/:splat 301']);
 });
 
 test('parseHostFile: a file written by hand read into rules, the twins as one, the host\'s default kind kept, proxies and placeholders left out', () => {
@@ -104,6 +107,7 @@ test('parseHostFile: a file written by hand read into rules, the twins as one, t
     '/gammel/ /ny 301',
     '/kampanje /tilbud',
     '/blogg/* /nyheter/:splat 308',
+    '/arkiv/* /gammelt/:splat/side/:splat 301',
     '/api/* /backend/:splat 200',
     '/users/:id /profil/:id 301',
     '',
@@ -112,6 +116,7 @@ test('parseHostFile: a file written by hand read into rules, the twins as one, t
     { from: '/gammel', to: '/ny', status: 301 },
     { from: '/kampanje', to: '/tilbud', status: 302 },
     { from: '/blogg/*', to: '/nyheter/*', status: 301 },
+    { from: '/arkiv/*', to: '/gammelt/*/side/*', status: 301 },
   ]);
   assert.equal(skipped, 2);
 });

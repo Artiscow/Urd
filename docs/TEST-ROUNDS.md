@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.23.2): every star in a redirect's target
+
+- [ ] On a deployed site: a redirect `/arkiv/* → /gammelt/*/side/*` published; `/arkiv/2024` answers 301 to `/gammelt/2024/side/2024`, and the published `_redirects` has `/arkiv/* /gammelt/:splat/side/:splat 301`
+- [ ] GitHub's Security and quality tab: code scanning alerts #25 and #26 closed after the push
+
 ### Test batch (0.7.24.1.1): videos and maps behind a cover until a visitor presses, a video's shape and cover image editor, centring by the guide lines, and «Discard drafts» in the undo menu
 
 - [ ] A published page with a YouTube video, in a fresh private window: the cover in the site's colours with «YouTube» in a corner, the play button in the accent, «Play the video. It loads from YouTube…» and «Always load from YouTube on this site»; the browser's network panel shows no request to YouTube until the press, and the video loads on the press

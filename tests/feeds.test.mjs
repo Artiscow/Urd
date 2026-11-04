@@ -86,6 +86,8 @@ test('buildRssXml: an invalid date gives no pubDate, an empty list gives a valid
 
 test('buildSitemapXml: a hidden page is left out, as one hidden from search engines is', () => {
   const xml = buildSitemapXml([{ path: '/' }, { path: '/kaker', hidden: true }, { path: '/shop' }], 'https://urd.example');
-  assert.ok(!xml.includes('/kaker'));
-  assert.ok(xml.includes('https://urd.example/shop'));
+  // The addresses compared whole, never as a part of the text.
+  const locs = [...xml.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]);
+  assert.ok(!locs.some((loc) => new URL(loc).pathname.startsWith('/kaker')));
+  assert.ok(locs.some((loc) => loc === 'https://urd.example/shop'));
 });
