@@ -1009,7 +1009,7 @@ export default {
     'ui.removeDrawnIcon': 'Ta bort ritad ikon',
     'ui.removeOwnIcon': 'Ta bort egen ikon',
     'ui.resetAdjust': 'Nollställ justeringar',
-    'ui.revertLast': '↩ Ångra senaste publiceringen',
+    'ui.revertLast': 'Ångra senaste publiceringen',
     'ui.settings': 'Inställningar …',
     'ui.textBox': 'Textruta',
     'ui.unpublished': 'Opublicerat',

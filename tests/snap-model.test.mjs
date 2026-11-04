@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { SNAP_SCREEN_PX, snapTolerance, edgeSnap, gapSnap, lockAxis } = await engineImport('snap-model.js');
+const { SNAP_SCREEN_PX, snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis } = await engineImport('snap-model.js');
 
 test('snapTolerance: eight screen px, in the page\'s px at every zoom', () => {
   assert.equal(SNAP_SCREEN_PX, 8);
@@ -51,4 +51,29 @@ test('lockAxis: the smaller delta is dropped', () => {
   assert.deepEqual(lockAxis(10, 3), { dx: 10, dy: 0 });
   assert.deepEqual(lockAxis(-2, 9), { dx: 0, dy: 9 });
   assert.deepEqual(lockAxis(4, 4), { dx: 4, dy: 0 });
+});
+
+test('alignedLines: every line the box stands on, each place once with the spans joined', () => {
+  const quarters = [250, 500, 750].map((at) => ({ at, from: 0, to: 600 }));
+  // A block half the width snapped to the midline stands on all three.
+  assert.deepEqual(alignedLines(250, 500, quarters).map((l) => l.at), [250, 500, 750]);
+  // A block a little narrower stands on the midline only.
+  assert.deepEqual(alignedLines(255, 490, quarters).map((l) => l.at), [500]);
+  // A neighbour's edge on the midline joins the midline's span.
+  const joined = alignedLines(400, 200, [...quarters, { at: 500.4, from: 700, to: 900 }]);
+  assert.deepEqual(joined, [{ at: 500, from: 0, to: 900 }]);
+  assert.deepEqual(alignedLines(10, 20, quarters), [], 'no line, nothing drawn');
+});
+
+test('edgeSnap: a preferred line within reach wins over a nearer one, so a box can be centred', () => {
+  const quarter = { at: 352, from: 0, to: 600, surface: true };
+  const mid = { at: 704, from: 0, to: 600, surface: true, prefer: true };
+  // A box 699 px wide: its start is 1 px from the quarter, its middle 3.5 px from the midline.
+  assert.equal(edgeSnap(351, 699, [quarter, mid], 8).target, mid);
+  assert.equal(edgeSnap(351, 699, [quarter, { ...mid, prefer: false }], 8).target, quarter, 'without the mark the nearest wins');
+  // Its start 7 px from the quarter, its middle 9.5 px from the midline.
+  assert.equal(edgeSnap(345, 699, [quarter, mid], 8).target, quarter, 'out of reach the midline does not pull');
+  // A neighbour's edge 1 px from the box's start beats the midline 3.5 px from its middle: aligning with a block stays in reach.
+  const neighbour = { at: 352, from: 700, to: 900 };
+  assert.equal(edgeSnap(351, 699, [neighbour, mid], 8).target, neighbour);
 });

@@ -399,7 +399,8 @@ test('the map design shows the cover only with a point, and says where to find o
   assert.equal(box(NO, true).length, 1, 'the editor shows where the point is missing');
   const withPoint = box({ ...NO, geo: { lat: 63.4155, lon: 10.4042 } }, false);
   assert.equal(withPoint.length, 1);
-  assert.ok(withPoint[0].all().some((n) => n.className === 'urd-contact-mapbtn'), 'the map loads on a tap');
+  assert.ok(withPoint[0].all().some((n) => n.className === 'urd-cover urd-contact-cover'), 'the site\'s cover over the map');
+  assert.ok(withPoint[0].all().some((n) => n.className === 'urd-cover-play'), 'the map loads on a tap');
   assert.ok(!withPoint[0].all().some((n) => n.tagName === 'IFRAME'), 'no frame before the tap');
 });
 

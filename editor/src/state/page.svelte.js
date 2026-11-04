@@ -529,13 +529,13 @@ function setBlockFrame(field, value) {
   });
 }
 
-/** The width in px the selected block's canvas has at the design width
- *  (ADR-0018): the site's content width, or its section's own px width
- *  when that is narrower; 0 on a full-width site or section, or a section
- *  width that is not in px, where nothing has a design size. The engine
- *  computes the same in renderSection. */
-function designWidth() {
-  const section = store.data.sections.find((s) => s.id === selectedBlock?.sectionId);
+/** The width in px the selected block's canvas, or a given section's, has
+ *  at the design width (ADR-0018): the site's content width, or its
+ *  section's own px width when that is narrower; 0 on a full-width site or
+ *  section, or a section width that is not in px, where nothing has a
+ *  design size. The engine computes the same in renderSection. */
+function designWidth(sectionId = selectedBlock?.sectionId) {
+  const section = store.data.sections.find((s) => s.id === sectionId);
   const sec = section?.size?.maxWidth;
   const site = typeof siteState.layoutWidth === 'number' ? siteState.layoutWidth : 0;
   if (sec === 'full') return 0;

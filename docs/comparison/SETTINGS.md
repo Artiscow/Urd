@@ -185,14 +185,14 @@ Urd: the video block (ELEMENTS.md #55 and #57).
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
 | A file or an embed | EL, WS, GJ, KB | Partial: a file, or a YouTube or Vimeo link | Other hosts: No item |
-| Autoplay, loop, muted and controls | WP, EL, WS, GJ, BI, PL | Partial: loop, muted and «Start by itself» on a file, with the controls always shown; none on an embed | 0.7.24.1 (the embed's own options); v0.8 ER-B (a controls switch on a file) |
-| A poster image | WP, EL, GJ, BI, KB, PL | Partial: on a file only | 0.7.24.1 (an own still on the facade) |
+| Autoplay, loop, muted and controls | WP, EL, WS, GJ, BI, PL | Partial: loop, muted and «Start by itself» on a file, with the controls always shown; on an embed, «Start playing when pressed» (0.7.24.1.1), no loop, muted or controls yet | 0.7.24.1 (the embed's own options); v0.8 ER-B (a controls switch on a file) |
+| A poster image | WP, EL, GJ, BI, KB, PL | Has: on a file, and on an embed as its cover's picture, framed and adjusted in the image editor (Delivered 0.7.24.1.1) | - |
 | Plays inline, and preload | WP, EL, WS, BI, PL | Partial: always inline, preload always metadata | Not taken: inline and metadata suit every site |
 | Captions | WP, EL, WS | Missing | 0.7.11 (a captions file on a self-hosted video) |
 | A privacy mode | EL, WS, KB | Has: youtube-nocookie, and do-not-track on Vimeo | - |
-| Loading on a click, behind a preview image | EL, WS, BI | Missing | 0.7.24.1 (click-to-load frames) |
+| Loading on a click, behind a preview image | EL, WS, BI | Has: every embed behind a cover in the site's colours or the owner's own picture, the choice remembered per provider (Delivered 0.7.24.1.1) | - |
 | Start and end time | EL, WS | Missing | 0.7.24.1 (embeds); v0.8 ER-B (a file) |
-| Aspect ratio | EL, BI, KB | n/a: the frame is the size | - |
+| Aspect ratio | EL, BI, KB | Has: 16:9, 4:3, 1:1, 9:16, 21:9 and 4:5, the block's height following its width at the shape, or the frame as it is (Delivered 0.7.24.1.1) | - |
 | Opening in a lightbox | EL, KB, ST | Missing | v0.8 ER-B (video in a lightbox) |
 | A download button | EL, ST | Missing | Not taken: a link to the file does it (0.7.27.9) |
 | An accessible name | KB, ST | Has: «Title (for screen readers)» | - |

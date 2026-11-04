@@ -198,11 +198,12 @@ let previewMode = $state('light');
 function onIframeLoad() {
   bridge?.destroy();
   // A click in the preview (block, text field, canvas) closes the block
-  // menu. The iframe is same-origin, so we listen directly; the gear
-  // click closes first and reopens via the urd-block-menu message
-  // afterwards (it arrives later).
+  // menu and the top bar's tool menu. The iframe is same-origin, so we
+  // listen directly; the gear click closes first and reopens via the
+  // urd-block-menu message afterwards (it arrives later).
   iframeEl?.contentDocument?.addEventListener('pointerdown', () => {
     if (pageState.blockMenu) pageState.blockMenu = null;
+    if (shellState.toolMenu) shellState.toolMenu = null;
   }, true);
   bridge = createPreviewBridge(iframeEl, {
     onEdit: bridgeState.handleEdit,

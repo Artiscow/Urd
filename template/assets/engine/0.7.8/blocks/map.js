@@ -10,6 +10,7 @@ import { parseLocation, buildEmbedUrl, buildLargerMapUrl, OSM_HOST } from '../os
 // Called only at render (t) and in preview after the admin dictionary has
 // loaded (ta): never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
+import { coverFrame } from '../embed-cover.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -86,13 +87,18 @@ export const mapBlock = {
     if (loc) {
       const zoom = props.zoom ?? loc.zoom ?? 15;
       const largerUrl = buildLargerMapUrl({ lat: loc.lat, lon: loc.lon, zoom });
-      const frame = el2('iframe', 'urd-map-frame');
-      frame.src = buildEmbedUrl({ lat: loc.lat, lon: loc.lon, zoom });
-      frame.loading = 'lazy';
-      frame.title = t('map.mapTitle');
-      frame.setAttribute('referrerpolicy', 'no-referrer');
-      host.appendChild(frame);
-      watchCspBlock(host, frame, ctx, largerUrl);
+      const src = buildEmbedUrl({ lat: loc.lat, lon: loc.lon, zoom });
+      // The map behind its cover: nothing reaches OpenStreetMap before the visitor presses (or has let it load at once).
+      const makeFrame = () => {
+        const frame = el2('iframe', 'urd-map-frame');
+        frame.src = src;
+        frame.loading = 'lazy';
+        frame.title = t('map.mapTitle');
+        frame.setAttribute('referrerpolicy', 'no-referrer');
+        watchCspBlock(host, frame, ctx, largerUrl);
+        return frame;
+      };
+      coverFrame(host, { src, makeFrame, kind: 'map', preview: Boolean(ctx.preview) });
 
       const link = el2('div', 'urd-map-link');
       const a = el2('a', null, t('map.larger'));

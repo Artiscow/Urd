@@ -69,13 +69,24 @@
       {/if}
       <span class="setup-actions">
         <button class="ghost" onclick={() => ed.answerConfirm(false)}>{box.cancelLabel}</button>
-        <button class="primary" onclick={() => ed.answerConfirm(true)}>{box.okLabel}</button>
+        <button class="primary" class:danger={box.danger} onclick={() => ed.answerConfirm(true)}>{box.okLabel}</button>
       </span>
     </div>
   </dialog>
 {/if}
 
 <style>
+  /* An answer that undoes much: the panels' dark red, not the accent */
+  .setup-actions .primary.danger {
+    background: #8f2b2b;
+    border-color: #b23b3b;
+    color: #fff;
+  }
+
+  .setup-actions .primary.danger:hover {
+    background: #a33434;
+  }
+
   /* The card is the dialog's face; the dialog itself covers the window and centres it over a dimmed backdrop, so a press beside the card lands on the dialog */
   .confirm-dialog {
     position: fixed;

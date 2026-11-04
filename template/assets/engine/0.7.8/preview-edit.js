@@ -36,6 +36,8 @@ import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { openImageEditor, closeImageEditor } from './image-editor.js';
 import { applyImageStyle } from './blocks/image.js';
+import { coverImageStyle } from './embed-cover.js';
+import { embedUrl } from './blocks/video.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
@@ -43,7 +45,7 @@ import { fontChoices } from './fonts.js';
 import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
 import { topDrag } from './section-size.js';
-import { snapTolerance, edgeSnap, gapSnap, lockAxis } from './snap-model.js';
+import { snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
 import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, shopOn, recentKinds, rememberKind } from './block-palette.js';
@@ -340,12 +342,23 @@ function drawFrame(el, frame) {
   applyFrameCss(el, frame);
   const shift = pushShiftOf(el);
   if (shift) el.style.top = `${frame.y + shift}px`;
-  // frameToCss writes the design height, while the box the owner sees is the
-  // one the last push pass drew: grown past the frame by its content, unless
-  // a resize has made the frame the taller of the two, or at its content's
-  // height for a block that follows its content (ADR-0025).
+  const shown = shownHeight(el, frame.h);
+  if (shown !== frame.h) el.style.height = `${shown}px`;
+}
+
+/**
+ * The height of the box the owner sees for a frame of height h: frameToCss
+ * writes the design height, while the box shown is the one the last push
+ * pass drew: grown past the frame by its content, unless a resize has made
+ * the frame the taller of the two, or at its content's height for a block
+ * that follows its content (ADR-0025).
+ * @param {HTMLElement} el The block element
+ * @param {number} h The frame's height
+ * @returns {number}
+ */
+function shownHeight(el, h) {
   const drawn = pushDrawnOf(el);
-  if (drawn > frame.h || (drawn && el.dataset.urdHeight === 'content')) el.style.height = `${drawn}px`;
+  return drawn > h || (drawn && el.dataset.urdHeight === 'content') ? drawn : h;
 }
 
 /**
@@ -4265,6 +4278,24 @@ function enhanceBlock(el, block, section, grid, host) {
       },
     });
   };
+  // The same editor for an embedded video's cover picture: swap or remove it, its focus point, a zoom and the adjustments, drawn live on the cover.
+  const openCoverImageEditor = () => {
+    const cover = () => el.querySelector('.urd-cover');
+    openImageEditor(cover() ?? el, {
+      fields: ['image', 'remove', 'zoom', 'focus', 'filters'],
+      get: (field) => (field === 'image' ? block.props.poster || null : block.props.coverStyle?.[field]),
+      set: (field, value) => {
+        block.props = field === 'image'
+          ? { ...block.props, poster: value }
+          : { ...block.props, coverStyle: { ...block.props.coverStyle, [field]: value } };
+        const img = cover()?.querySelector('.urd-cover-img');
+        if (img && field !== 'image') coverImageStyle(img, block.props.coverStyle);
+        post({ type: 'urd-edit', sectionId: section.id, blockId: block.id, props: block.props, rerender: field === 'image' });
+      },
+    });
+  };
+  // Only where a cover is drawn: an embed with a link the video block can play.
+  const coverEditable = block.type === 'video' && block.props.source !== 'file' && Boolean(embedUrl(block.props.url));
   if (block.type === 'image' && !mobile) {
     el.addEventListener('dblclick', (event) => {
       event.preventDefault();
@@ -4356,12 +4387,12 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.appendChild(hideBtn);
 
     const DUP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
-    if (block.type === 'image') {
+    if (block.type === 'image' || coverEditable) {
       const imgBtn = document.createElement('button');
       imgBtn.className = 'urd-edit-image';
       imgBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>';
-      imgBtn.title = ta('canvas.editImage');
-      imgBtn.addEventListener('click', () => openBlockImageEditor());
+      imgBtn.title = ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage');
+      imgBtn.addEventListener('click', () => (coverEditable ? openCoverImageEditor() : openBlockImageEditor()));
       toolbar.appendChild(imgBtn);
     }
 
@@ -4910,8 +4941,9 @@ function enhanceBlock(el, block, section, grid, host) {
           const oy = cr.top - here.top;
           const secTop = sectionHost.getBoundingClientRect().top - here.top;
           const secBottom = secTop + sectionHost.offsetHeight;
-          for (const share of [0.25, 0.5, 0.75]) xs.push({ at: ox + c.clientWidth * share, from: secTop, to: secBottom });
-          ys.push({ at: oy + c.clientHeight / 2, from: ox, to: ox + c.clientWidth });
+          // The surface's own lines, its midlines preferred among them (edgeSnap): centring wins where a quarter line lies as near.
+          for (const share of [0.25, 0.5, 0.75]) xs.push({ at: ox + c.clientWidth * share, from: secTop, to: secBottom, surface: true, prefer: share === 0.5 });
+          ys.push({ at: oy + c.clientHeight / 2, from: ox, to: ox + c.clientWidth, surface: true, prefer: true });
           for (const other of c.querySelectorAll(':scope > .urd-block')) {
             if (other === el || groupParts.some((g) => g.el === other)) continue;
             // Measured as drawn, push shift included: the guides compare what is shown.
@@ -4962,14 +4994,21 @@ function enhanceBlock(el, block, section, grid, host) {
         canvas.appendChild(g);
         guideEls.push(g);
       };
-      /** Adjusts current toward the nearest snap line or equal gap and draws it. */
-      const applyGuides = () => {
+      /**
+       * Moves current onto the nearest snap line or equal gap and draws it, with every other line the box then stands on.
+       * The lines are found from where the pointer holds the block (`raw`), before the grid: a line the grid's steps never land on, such as the middle of a block whose half-width is no whole number of steps, can still be reached, and an axis with no line within reach keeps the grid's place.
+       * @param {{x: number, y: number}} raw The frame's x (percent) and y (px) under the pointer, unsnapped
+       */
+      const applyGuides = (raw) => {
         clearGuides();
         if (kind !== 'move') return;
-        const wPx = (current.w / 100) * canvas.clientWidth;
-        const hPx = current.h;
-        const leftPx = (current.x / 100) * canvas.clientWidth;
-        const topPx = current.y + pushShiftOf(el);
+        const cw = canvas.clientWidth;
+        const wPx = (current.w / 100) * cw;
+        // The box as shown, which the lines are drawn against.
+        const hPx = shownHeight(el, current.h);
+        const shift = pushShiftOf(el);
+        const leftPx = (raw.x / 100) * cw;
+        const topPx = raw.y + shift;
         const box = { left: leftPx, top: topPx, right: leftPx + wPx, bottom: topPx + hPx };
         const besideX = targets.boxes.filter((b) => b.bottom > box.top && b.top < box.bottom).map((b) => ({ start: b.left, end: b.right }));
         const besideY = targets.boxes.filter((b) => b.right > box.left && b.left < box.right).map((b) => ({ start: b.top, end: b.bottom }));
@@ -4978,14 +5017,14 @@ function enhanceBlock(el, block, section, grid, host) {
         const gx = ex ? null : gapSnap(leftPx, wPx, besideX, tol);
         const ey = edgeSnap(topPx, hPx, targets.ys, tol);
         const gy = ey ? null : gapSnap(topPx, hPx, besideY, tol);
-        const dx = ex?.d ?? gx?.d ?? 0;
-        const dy = ey?.d ?? gy?.d ?? 0;
-        if (dx) current = { ...current, x: clamp(r2(((leftPx + dx) * 100) / canvas.clientWidth), 0, r2(100 - current.w)) };
-        if (dy) current = { ...current, y: Math.max(yMin, current.y + dy) };
-        const snapped = { left: leftPx + dx, top: topPx + dy, right: leftPx + dx + wPx, bottom: topPx + dy + hPx };
-        if (ex) drawLine('v', ex.target.at, Math.min(snapped.top, ex.target.from), Math.max(snapped.bottom, ex.target.to));
+        if (ex || gx) current = { ...current, x: clamp(r2(((leftPx + (ex?.d ?? gx.d)) * 100) / cw), 0, r2(100 - current.w)) };
+        if (ey || gy) current = { ...current, y: Math.max(yMin, raw.y + (ey?.d ?? gy.d)) };
+        const left = (current.x / 100) * cw;
+        const top = current.y + shift;
+        const snapped = { left, top, right: left + wPx, bottom: top + hPx };
+        if (ex) for (const line of alignedLines(left, wPx, targets.xs)) drawLine('v', line.at, Math.min(snapped.top, line.from), Math.max(snapped.bottom, line.to));
         if (gx) for (const gap of gx.gaps) drawGap('v', gap.from, gap.to, { from: snapped.top, to: snapped.bottom });
-        if (ey) drawLine('h', ey.target.at, Math.min(snapped.left, ey.target.from), Math.max(snapped.right, ey.target.to));
+        if (ey) for (const line of alignedLines(top, hPx, targets.ys)) drawLine('h', line.at, Math.min(snapped.left, line.from), Math.max(snapped.right, line.to));
         if (gy) for (const gap of gy.gaps) drawGap('h', gap.from, gap.to, { from: snapped.left, to: snapped.right });
       };
 
@@ -5052,7 +5091,7 @@ function enhanceBlock(el, block, section, grid, host) {
               h: edge.y < 0 ? orig.y + orig.h - yTop : h,
             };
         // Free = the smart guides are off too.
-        if (!free) applyGuides();
+        if (!free) applyGuides({ x: clamp(orig.x + dx, 0, r2(100 - orig.w)), y: Math.max(yMin, orig.y + dy) });
         else clearGuides();
         const frames = new Map([[block.id, current]]);
         if (groupParts.length) {

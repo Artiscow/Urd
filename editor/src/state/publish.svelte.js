@@ -160,26 +160,31 @@ function requestDiscard() {
   discardArmed = !discardArmed;
 }
 
+/** @returns {boolean} whether the drafts were discarded; a failure has said so in the status line */
 function confirmDiscard() {
   discardArmed = false;
   try {
     discard();
     shellState.setStatus(ta('ui.discarded'), 'info');
+    return true;
   } catch (err) {
     // A failed discard must never pass silently: the drafts may be half
     // reset, and the owner needs to know that a reload is the way out.
     console.error('Urd: discard failed', err);
     shellState.setStatus(String(err?.message ?? err), 'error');
+    return false;
   }
 }
 
 function discard() {
-  historyState.pushHistory('discard');
+  // The other pages' drafts go too, so the step holds them, and an undo of the discard writes them back.
+  const others = siteState.siteDraft.pages
+    .filter((p) => p.id !== pageState.pageId && !pageState.pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null)
+    .map((p) => p.id);
+  historyState.pushHistory('discard', { pages: others });
   // A tidy's moves go with the documents it rewrote.
   setMoves([]);
-  for (const p of siteState.siteDraft.pages) {
-    if (p.id !== pageState.pageId && !pageState.pendingPublished.has(p.id)) localStorage.removeItem(`urd-draft-${p.id}`);
-  }
+  for (const id of others) localStorage.removeItem(`urd-draft-${id}`);
   const freshPage = pageState.store.reset();
   siteState.siteStore.reset();
   if (pluginsState.pluginsStore) {

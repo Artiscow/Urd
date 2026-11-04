@@ -24,9 +24,14 @@ export function snapTolerance(chromeScale) {
 
 /**
  * The nearest line a box's start, middle or end can snap to on one axis.
+ * Among the content surface's own lines (`surface`), one marked `prefer`
+ * (the midline) wins over the others whenever it is within reach, so a box
+ * can be centred even where an edge of it lies a little nearer a quarter
+ * line; against a neighbour's edge or centre the nearest line wins, so
+ * aligning with another block stays in reach.
  * @param {number} start The box's start on the axis, in px
  * @param {number} size The box's size on the axis, in px
- * @param {Array<{at: number, from: number, to: number}>} targets The lines, each with the span it comes from on the other axis
+ * @param {Array<{at: number, from: number, to: number, surface?: boolean, prefer?: boolean}>} targets The lines, each with the span it comes from on the other axis
  * @param {number} tol The snap distance
  * @returns {{d: number, target: {at: number, from: number, to: number}, edge: 'start'|'middle'|'end'}|null} The move that lands the box on the line
  */
@@ -35,10 +40,38 @@ export function edgeSnap(start, size, targets, tol) {
   for (const target of targets) {
     for (const [edge, offset] of [['start', 0], ['middle', size / 2], ['end', size]]) {
       const d = target.at - (start + offset);
-      if (Math.abs(d) <= tol && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, target, edge };
+      if (Math.abs(d) > tol) continue;
+      const ranked = target.surface && best?.target.surface && Boolean(target.prefer) !== Boolean(best.target.prefer);
+      const wins = !best || (ranked ? Boolean(target.prefer) : Math.abs(d) < Math.abs(best.d));
+      if (wins) best = { d, target, edge };
     }
   }
   return best;
+}
+
+/**
+ * Every line a box's start, middle or end stands on, within a hair: a box
+ * placed by one snap can stand on more lines than that one (a block half the
+ * width snapped to the midline also stands on the quarters), and all of them
+ * are drawn. A place met by several lines comes back once, with their spans
+ * joined.
+ * @param {number} start The box's start on the axis, in px
+ * @param {number} size The box's size on the axis, in px
+ * @param {Array<{at: number, from: number, to: number}>} targets The lines
+ * @param {number} [eps] How near counts as on the line, in px
+ * @returns {Array<{at: number, from: number, to: number}>}
+ */
+export function alignedLines(start, size, targets, eps = 1) {
+  const byAt = new Map();
+  for (const target of targets) {
+    if (![0, size / 2, size].some((offset) => Math.abs(target.at - (start + offset)) <= eps)) continue;
+    const key = Math.round(target.at);
+    const seen = byAt.get(key);
+    byAt.set(key, seen
+      ? { at: seen.at, from: Math.min(seen.from, target.from), to: Math.max(seen.to, target.to) }
+      : { at: target.at, from: target.from, to: target.to });
+  }
+  return [...byAt.values()];
 }
 
 /**

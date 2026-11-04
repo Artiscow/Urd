@@ -745,7 +745,7 @@ export default {
     'ui.removeDrawnIcon': 'Váldde sárgojuvvon ikona eret',
     'ui.removeOwnIcon': 'Váldde iežas ikona eret',
     'ui.resetAdjust': 'Nulle heivehusaid',
-    'ui.revertLast': '↩ Gáđat maŋimus almmuheami',
+    'ui.revertLast': 'Gáđat maŋimus almmuheami',
     'ui.settings': 'Heivehusat …',
     'ui.textBox': 'Teakstabovssa',
     'ui.unpublished': 'Almmutkeahtes',

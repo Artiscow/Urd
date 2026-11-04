@@ -830,7 +830,7 @@ export default {
     'ui.removeDrawnIcon': 'Fjern teikna ikon',
     'ui.removeOwnIcon': 'Fjern eige ikon',
     'ui.resetAdjust': 'Nullstill justeringar',
-    'ui.revertLast': '↩ Angre siste publisering',
+    'ui.revertLast': 'Angre siste publisering',
     'ui.settings': 'Innstillingar …',
     'ui.textBox': 'Tekstboks',
     'ui.unpublished': 'Upublisert',

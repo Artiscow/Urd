@@ -12,6 +12,7 @@ import { legalText } from '../footer.js';
 import { iconSvg } from '../icons.js';
 import { buildEmbedUrl, buildLargerMapUrl } from '../osm.js';
 import { watchCspBlock } from './map.js';
+import { coverFrame } from '../embed-cover.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -218,20 +219,17 @@ function drawMap(box, model, extras, site, ctx) {
 
   const figure = node('div', 'urd-contact-mapbox');
   if (model.geo) {
-    const cover = node('span', 'urd-contact-mapcover');
-    const show = node('button', 'urd-contact-mapbtn');
-    show.type = 'button';
-    show.append(icon('map-pin'), node('span', null, t('contact.showMap')));
-    cover.append(show, node('span', 'urd-contact-mapnote', t('contact.mapNote')));
-    show.addEventListener('click', () => {
+    // The map behind the site's one cover (embed-cover.js): nothing reaches OpenStreetMap before the visitor presses.
+    const src = buildEmbedUrl({ ...model.geo, zoom: 16 });
+    const makeFrame = () => {
       const frame = node('iframe', 'urd-contact-mapframe');
-      frame.src = buildEmbedUrl({ ...model.geo, zoom: 16 });
+      frame.src = src;
       frame.title = t('map.mapTitle');
       frame.setAttribute('referrerpolicy', 'no-referrer');
-      cover.replaceWith(frame);
       watchCspBlock(figure, frame, ctx, buildLargerMapUrl({ ...model.geo, zoom: 16 }));
-    });
-    figure.append(cover);
+      return frame;
+    };
+    coverFrame(figure, { src, makeFrame, kind: 'map', preview: Boolean(ctx.preview), extraClass: 'urd-contact-cover' });
     box.append(figure);
   } else if (ctx.preview) {
     // Without a point the published page shows the details alone; the editor says where the point is found.

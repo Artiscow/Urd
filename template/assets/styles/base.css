@@ -1059,6 +1059,130 @@ html {
   opacity: 0.6;
 }
 
+/* The cover a third-party frame stands behind until the visitor presses it (embed-cover.js): a card in the site's own colours with the provider named in a corner, the play button in the accent, a line on what loading does and the box that remembers the choice; the owner's own image under it, darkened a little so the words read. */
+.urd-cover {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.7em;
+  width: 100%;
+  height: 100%;
+  min-height: 3.5em;
+  padding: 1.2em 1em;
+  overflow: hidden;
+  text-align: center;
+  /* The cover fills the box it is given and never grows it: its own size decides what it has room for (the queries below) */
+  container: urd-cover / size;
+  color: var(--urd-color-text);
+  background: var(--urd-color-surface);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 14%, transparent);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.urd-cover > :not(.urd-cover-img) {
+  position: relative;
+}
+
+.urd-cover > .urd-cover-provider {
+  position: absolute;
+  top: 0.75em;
+  left: 0.9em;
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* The button stands above the words and the box, which come before it in the reading order (embed-cover.js) */
+.urd-cover-play {
+  order: -1;
+  display: grid;
+  place-items: center;
+  width: 3.4em;
+  height: 3.4em;
+  padding: 0;
+  color: var(--urd-color-accent-text);
+  cursor: pointer;
+  background: var(--urd-color-accent);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 25%);
+}
+
+.urd-cover-play svg {
+  width: 1.35em;
+  height: 1.35em;
+}
+
+.urd-cover-play:focus-visible {
+  outline: 3px solid var(--urd-color-accent);
+  outline-offset: 3px;
+}
+
+.urd-cover-note {
+  max-width: 34ch;
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.urd-cover-always {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-size: 0.8em;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+/* A small cover keeps the button whole: the line goes first, then the box, then the provider's corner; the button still names the provider and is described by the line */
+@container urd-cover (max-height: 13em) or (max-width: 15em) {
+  .urd-cover-note {
+    display: none;
+  }
+}
+
+@container urd-cover (max-height: 9em) {
+  .urd-cover-always {
+    display: none;
+  }
+}
+
+@container urd-cover (max-height: 6em) {
+  .urd-cover > .urd-cover-provider {
+    display: none;
+  }
+}
+
+.urd-cover-always input {
+  accent-color: var(--urd-color-accent);
+}
+
+/* On the owner's own image the words are light, with a shadow to read on any picture */
+.urd-cover.urd-cover-pic {
+  color: #fff;
+  background: #000;
+  border: 0;
+}
+
+.urd-cover-pic .urd-cover-note,
+.urd-cover-pic .urd-cover-always,
+.urd-cover-pic .urd-cover-provider {
+  text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+  opacity: 1;
+}
+
 /* The form block: the visitor form. */
 .urd-form {
   position: relative;
@@ -12721,6 +12845,18 @@ a.urd-collection-title:hover {
 
 /* The video block: a placeholder without a URL, and a click shield while editing
    (a click should select the block, not start the player) */
+/* A video given a shape: that shape at the block's width, and the block's height follows it (keepsShape in push-model.js) */
+.urd-video-ratio {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--urd-ratio, 1.7778);
+}
+
+.urd-video-ratio > .urd-video-file {
+  width: 100%;
+  height: 100%;
+}
+
 .urd-video-empty {
   display: grid;
   place-items: center;
@@ -15892,7 +16028,8 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
    surface spans its section, so preview-edit sets the span inline. */
 .urd-preview .urd-smart-guide {
   position: absolute;
-  z-index: 1001;
+  /* Above the block lift (99999): the dragged block is raised to it, and a line through an opaque block (a video, a picture) must still show */
+  z-index: 100000;
   /* The thickness is counter-scaled (urd-zoom), so the line keeps its on-screen
      thickness at every zoom level. The color is DELIBERATELY a fixed magenta and not
      the admin accent: guides must stand apart from both the grid (which uses
@@ -15925,7 +16062,7 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 1001;
+  z-index: 100000;
   height: calc(2px * var(--urd-chrome-scale, 1));
   background: #ff2d87;
   box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 70%, transparent);
@@ -15936,7 +16073,7 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
    in the same magenta as the lines */
 .urd-preview .urd-smart-gap {
   position: absolute;
-  z-index: 1001;
+  z-index: 100000;
   display: grid;
   place-items: center;
   pointer-events: none;
@@ -16042,7 +16179,8 @@ body.urd-marqueeing {
    nothing. */
 .urd-preview .urd-page-guide {
   position: absolute;
-  z-index: 1000;
+  /* Above the block lift (99999), like the smart guides: the lines are drawn over the blocks, so an opaque block (a video, a picture) never hides one */
+  z-index: 100000;
   pointer-events: none;
   opacity: 0.9;
 }
@@ -16731,27 +16869,15 @@ a.urd-contact-tile .urd-contact-value {
   padding: 1.2em;
   text-align: center;
 }
-.urd-contact-mapbtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6em;
-  min-height: 3em;
-  padding: 0 1.5em;
-  border: 0;
-  border-radius: 999px;
-  background: var(--urd-color-accent);
-  color: var(--urd-color-accent-text);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-.urd-contact-mapnote {
-  max-width: 22em;
-  font-size: 0.8em;
-  opacity: 0.75;
-}
 .urd-contact-mapempty {
   opacity: 0.7;
+}
+/* The site's cover over the contact map: it fills the box and leaves the box's own grid behind it */
+.urd-contact-mapbox > .urd-cover {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: 0;
 }
 .urd-contact-mapframe {
   position: absolute;

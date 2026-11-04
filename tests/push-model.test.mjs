@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, typedFrames, followsContent, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -154,6 +154,20 @@ test('the block types ADR-0025 names follow their content, and no other', () => 
     assert.equal(followsContent({ type }), false, type);
   }
   assert.equal(followsContent(null), false);
+});
+
+test('a video given a shape follows it: its height is its width over the shape', () => {
+  assert.equal(keepsShape({ type: 'video', props: { aspect: '1:1' } }), true);
+  assert.equal(followsContent({ type: 'video', props: { aspect: '9:16' } }), true);
+  assert.equal(followsContent({ type: 'video', props: {} }), false, 'without a shape the video fills its frame');
+  assert.equal(followsContent({ type: 'video', props: { aspect: '5:3' } }), false, 'a shape off the list is none');
+  assert.equal(keepsShape({ type: 'image', props: { aspect: '1:1' } }), false, 'only a video keeps a shape');
+  assert.equal(keepsShape(null), false);
+  const square = { type: 'video', props: { aspect: '1:1' }, frames: { desktop: { w: 25 } } };
+  assert.equal(shapeHeight(square, 1440), 360, 'a quarter of 1440 px, square');
+  assert.equal(shapeHeight({ ...square, props: { aspect: '9:16' } }, 1440), 640);
+  assert.equal(shapeHeight({ ...square, props: {} }, 1440), 0, 'no shape, no height from it');
+  assert.equal(shapeHeight(square, 0), 0, 'a full-width section has no design width to measure by');
 });
 
 test('a block given its own height no longer follows its content, and places its content by align', () => {

@@ -47,7 +47,7 @@ export function materializeBlockImages(block, files) {
     for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'gallery', files);
   }
   if (block.type === 'audio') materializeField(block.props, 'src', block.props.title || 'audio', files);
-  // The video block's own film and its poster (source 'file').
+  // The video block's own film (source 'file') and its poster, which is also an embed's cover picture.
   if (block.type === 'video') {
     materializeField(block.props, 'src', block.props.title || 'video', files);
     materializeField(block.props, 'poster', 'poster', files);

@@ -252,10 +252,10 @@ async function init() {
 // undo are sequential flows).
 let confirmBox = $state(null);
 
-/** sections: several things to weigh in one question, each under its own heading ({heading, lines}), as publishing asks. */
-function askConfirm({ title, lines = [], sections = [], okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel') }) {
+/** sections: several things to weigh in one question, each under its own heading ({heading, lines}), as publishing asks; danger: the answer undoes much, and its button is dark red. */
+function askConfirm({ title, lines = [], sections = [], okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel'), danger = false }) {
   return new Promise((resolve) => {
-    confirmBox = { title, lines, sections, okLabel, cancelLabel, resolve };
+    confirmBox = { title, lines, sections, okLabel, cancelLabel, danger, resolve };
   });
 }
 
@@ -830,12 +830,13 @@ export function effects() {
     if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
   });
 
-  /* One open tool menu at a time, same closing pattern as the settings. */
+  /* One open tool menu at a time, same closing pattern as the settings. A question asked from a menu (the steps' «Discard drafts») is part of it: pressing in the question or answering it with Escape leaves the menu open. */
   $effect(() => {
     if (!toolMenu) return;
-    const onDown = (e) => { if (!toolMenuEl?.contains(e.target)) toolMenu = null; };
-    const onKey = (e) => { if (e.key === 'Escape') toolMenu = null; };
-    const onBlur = () => { toolMenu = null; };
+    const onDown = (e) => { if (!toolMenuEl?.contains(e.target) && !e.target?.closest?.('.confirm-dialog')) toolMenu = null; };
+    const onKey = (e) => { if (e.key === 'Escape' && !confirmBox) toolMenu = null; };
+    // Focus moving into the preview (a jump between steps selects a block there) is no press outside: a press in the preview closes the menu from there (preview.svelte.js).
+    const onBlur = () => { if (document.activeElement?.tagName !== 'IFRAME') toolMenu = null; };
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey);
     window.addEventListener('blur', onBlur);

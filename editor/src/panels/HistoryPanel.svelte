@@ -2,6 +2,7 @@
   /* The History panel: the published commits and the revert of the last one. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
+  import { ICONS } from '../lib/icons.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const auth = $derived(ed.auth);
@@ -113,10 +114,10 @@
       <p class="panel-hint">{historyError}</p>
     {/if}
     {#if historyList.length > 0}
-      <button class="ghost" onclick={revertLast}
+      <button class="ghost revert-last" onclick={revertLast}
         disabled={historyBusy || !auth?.allowed}
         title={auth?.allowed ? ta('tip.history.revert') : ta('tip.history.needsAccess')}>
-        {ta('ui.revertLast')}
+        {@html ICONS.undo}{ta('ui.revertLast')}
       </button>
       {#each historyList as c, i (c.sha)}
         <div class="history-row" class:head={i === 0}>
@@ -129,3 +130,17 @@
     {/if}
   {/if}
 </div>
+
+<style>
+  /* Undoing a publish takes the live site back, so it stands in the panels' dark red, as «Discard drafts» does */
+  .panel-body .ghost.revert-last {
+    gap: 0.45rem;
+    border-color: #b23b3b;
+    background: rgb(150 35 35 / 30%);
+    color: #f2b8b3;
+  }
+
+  .panel-body .ghost.revert-last:hover:not(:disabled) {
+    background: rgb(150 35 35 / 48%);
+  }
+</style>

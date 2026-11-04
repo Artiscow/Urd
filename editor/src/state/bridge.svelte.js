@@ -8,7 +8,7 @@ import { claimAnchors } from '$engine/anchor-model.js';
 import { duplicatedSection } from '../lib/duplicate.js';
 import { pasteIndex } from '$engine/clipboard-model.js';
 import { ta } from '$engine/i18n.js';
-import { fitMoves } from '$engine/push-model.js';
+import { fitMoves, shapeHeight } from '$engine/push-model.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
@@ -105,12 +105,15 @@ function handleMove(msg) {
 function handleGrow(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
-  if (!block?.frames?.desktop || block.frames.desktop.h === msg.h) return;
+  if (!block?.frames?.desktop) return;
   if (msg.fit) {
     // A fit is for the desktop frame, and only the latest one asked for counts.
-    if (previewState.viewMode === 'desktop' && msg.seq === pageState.fitSeq.get(msg.blockId)) applyFit(section, block, msg.h);
+    // A video that keeps a shape takes the height its width gives at the design width, whatever width the preview's surface has.
+    const h = shapeHeight(block, pageState.designWidth(section.id)) || msg.h;
+    if (block.frames.desktop.h !== h && previewState.viewMode === 'desktop' && msg.seq === pageState.fitSeq.get(msg.blockId)) applyFit(section, block, h);
     return;
   }
+  if (block.frames.desktop.h === msg.h) return;
   // Autogrowth is a MEASUREMENT, not an edit: data blocks report their
   // height on EVERY render, and the measurement varies with content,
   // feed responses and window. The measurement is therefore recorded in

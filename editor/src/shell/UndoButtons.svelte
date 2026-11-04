@@ -1,7 +1,7 @@
 <script>
-  /* Undo, redo and the session's steps, right after the page switcher: the arrows greyed when there is nothing to take back or bring back, their tooltips naming the step, and the caret opening the steps newest first, the undone ones greyed above «now» and the start of the session last.
+  /* Undo, redo and the session's steps, right after the page switcher: the arrows greyed when there is nothing to take back or bring back, their tooltips naming the step, and the caret opening the steps newest first, the undone ones greyed above «now», and at the foot «Discard drafts» with «Redo everything» beside it while there is something to bring back.
      A step's row goes back to just after it, or forward to an undone one, in one go (historyState.goSteps); the steps are kept in this browser over a reload (lib/history-store.js).
-     A tool menu as the top bar's others (ed.toolMenu 'steps'). */
+     A tool menu as the top bar's others (ed.toolMenu 'steps'), which stays open through a jump between steps and through the discard's question, and closes on a press outside it or Escape. */
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -34,6 +34,28 @@
     return minutes < 60 ? format.format(-minutes, 'minute') : format.format(-Math.round(minutes / 60), 'hour');
   }
 
+  /**
+   * «Discard drafts» at the menu's foot: the top bar's discard (publishState.discard, one undo step back to the published version), asked first since it takes every unpublished change at once.
+   * The drafts come back in one press: «Redo everything» in the message that follows and at the menu's foot undoes the discard.
+   */
+  async function discardAll() {
+    const ok = await ed.askConfirm({ title: ta('confirm.discardDrafts'), lines: [ta('confirm.discardDraftsLine')], okLabel: ta('ui.discard'), danger: true });
+    if (!ok || !ed.confirmDiscard()) return;
+    ed.setStatus(ta('ui.discarded'), 'info', { label: ta('ui.redoAll'), run: () => redoAll() });
+  }
+
+  /** The undone steps «Redo everything» brings back: the nearest ones up to a discard, which it never redoes, since that would take the drafts again. */
+  const redoCount = $derived.by(() => {
+    const at = steps.redo.findIndex((step) => step.key === 'discard');
+    return at === -1 ? steps.redo.length : at;
+  });
+  /** Right after a discard, with nothing to redo before one: «Redo everything» undoes the discard. */
+  const discardOnTop = $derived(!redoCount && steps.undo[0]?.key === 'discard');
+  function redoAll() {
+    if (redoCount) ed.goSteps('forward', redoCount);
+    else if (discardOnTop) ed.undo();
+  }
+
   const undoTip = $derived(steps.undo.length ? ta('tip.undoStep', { step: label(steps.undo[0]).text }) : ta('tip.undoNone'));
   const redoTip = $derived(steps.redo.length ? ta('tip.redoStep', { step: label(steps.redo[0]).text }) : ta('tip.redoNone'));
 </script>
@@ -50,22 +72,30 @@
         {#each ahead as step, i (`r${i}`)}
           {@const l = label(step)}
           <!-- An undone step: forward to it, as many redos as it stands from «now» -->
-          <button type="button" class="ghost step-row step-ahead" title={ta('tip.stepForward')} onclick={() => { ed.toolMenu = null; ed.goSteps('forward', ahead.length - i); }}>
-            <span class="step-ico">{@html l.icon}</span><span class="step-words">{l.text}{#if l.page}<span class="step-page"> · {l.page}</span>{/if}</span><small>{ta('history.undone')}</small>
+          <button type="button" class="ghost step-row step-ahead" title={ta('tip.stepForward')} onclick={() => ed.goSteps('forward', ahead.length - i)}>
+            <span class="step-ico">{@html l.icon}</span><span class="step-words">{l.text}{#if l.page}<span class="step-page">{` · ${l.page}`}</span>{/if}</span><small>{ta('history.undone')}</small>
           </button>
         {/each}
         {#each steps.undo as step, i (`u${i}`)}
           {@const l = label(step)}
           <button type="button" class="ghost step-row" class:step-now={i === 0} title={i === 0 ? ta('tip.stepNow') : ta('tip.stepBack')} aria-current={i === 0 ? 'step' : undefined}
-            onclick={() => { ed.toolMenu = null; if (i) ed.goSteps('back', i); }}>
-            <span class="step-ico">{@html l.icon}</span><span class="step-words">{l.text}{#if l.page}<span class="step-page"> · {l.page}</span>{/if}</span><small>{ago(step.at)}</small>
+            onclick={() => { if (i) ed.goSteps('back', i); }}>
+            <span class="step-ico">{@html l.icon}</span><span class="step-words">{l.text}{#if l.page}<span class="step-page">{` · ${l.page}`}</span>{/if}</span><small>{ago(step.at)}</small>
           </button>
         {/each}
       </div>
       <span class="steps-sep" aria-hidden="true"></span>
-      <button type="button" class="ghost step-row step-start" disabled={!steps.undo.length} title={ta('tip.stepStart')} onclick={() => { ed.toolMenu = null; ed.goSteps('back', steps.undo.length); }}>
-        <span class="step-ico step-dot" aria-hidden="true"></span><span class="step-words">{ta('history.start')}</span>
-      </button>
+      <!-- The two ends: every draft discarded, and every undone step (or the discard) brought back -->
+      <span class="steps-foot">
+        <button type="button" class="ghost step-row step-start" disabled={!ed.dirty} title={ta('tip.discard')} onclick={discardAll}>
+          <span class="step-ico" aria-hidden="true">{@html ICONS.restore}</span><span class="step-words">{ta('ui.discard')}</span>
+        </button>
+        {#if redoCount || discardOnTop}
+          <button type="button" class="ghost step-row step-redo-all" title={ta('tip.redoAll')} onclick={redoAll}>
+            <span class="step-ico">{@html ICONS.redo}</span><span class="step-words">{ta('ui.redoAll')}</span>
+          </button>
+        {/if}
+      </span>
     </div>
   {/if}
 </span>
@@ -110,9 +140,11 @@
     background: rgb(255 255 255 / 13%);
   }
 
+  /* As wide as the longest step needs, from 21rem to 30rem; a longer one is cut short with an ellipsis */
   .steps-pop {
-    width: 21rem;
-    max-width: calc(100vw - 2rem);
+    width: max-content;
+    min-width: 21rem;
+    max-width: min(30rem, calc(100vw - 2rem));
   }
 
   .steps-head {
@@ -128,16 +160,20 @@
     opacity: 0.6;
   }
 
+  /* One column the rows can never widen past the menu: the words give way, never the time */
   .steps-list {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2px;
     max-height: min(24rem, 60vh);
+    overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
   }
 
   .step-row {
     display: flex;
+    min-width: 0;
     align-items: center;
     gap: 0.5rem;
     padding: 0.4rem 0.55rem;
@@ -154,6 +190,7 @@
 
   /* The time at the row's right edge */
   .step-row small {
+    flex: none;
     margin-left: auto;
     padding-left: 0.6rem;
     font-size: 0.72rem;
@@ -201,16 +238,40 @@
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
   }
 
-  .step-start {
-    opacity: 0.75;
+  /* «Discard drafts» takes every unpublished change, so it stands in the panels' dark red */
+  .step-row.step-start:not(:disabled) {
+    background: rgb(150 35 35 / 30%);
+    color: #f2b8b3;
   }
 
-  .step-dot::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
+  .step-row.step-start:hover:not(:disabled) {
+    background: rgb(150 35 35 / 48%);
+  }
+
+  .step-row.step-start:disabled {
+    opacity: 0.4;
+  }
+
+  /* The foot: «Discard drafts» takes the row, «Redo everything» stands at its right while there is something to bring back */
+  .steps-foot {
+    display: flex;
+    gap: 4px;
+  }
+
+  .steps-foot .step-start {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+  }
+
+  .step-row.step-redo-all {
+    flex: none;
+    width: auto;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
+  }
+
+  .step-row.step-redo-all:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 28%, transparent);
   }
 
   .steps-sep {

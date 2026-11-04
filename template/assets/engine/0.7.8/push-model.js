@@ -30,14 +30,53 @@ export const PUSH_SECTION_PAD = 24;
  */
 export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout', 'collection', 'contact', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
 
+/** The shapes a video can be given, width:height: widescreen first (YouTube's own), then classic, square, vertical (Shorts and reels), cinema and portrait. Without one the video fills its frame. */
+export const VIDEO_ASPECTS = ['16:9', '4:3', '1:1', '9:16', '21:9', '4:5'];
+
+/**
+ * A shape as its width divided by its height, or null for none (the video fills its frame).
+ * @param {unknown} aspect
+ * @returns {number|null}
+ */
+export function aspectRatio(aspect) {
+  if (!VIDEO_ASPECTS.includes(aspect)) return null;
+  const [w, h] = aspect.split(':').map(Number);
+  return w / h;
+}
+
+/**
+ * Whether a block keeps a shape (ADR-0025): a video given one is drawn at
+ * that shape at its own width, so its height follows its width.
+ * @param {{type?: string, props?: {aspect?: unknown}}} block
+ * @returns {boolean}
+ */
+export function keepsShape(block) {
+  return block?.type === 'video' && aspectRatio(block.props?.aspect) !== null;
+}
+
+/**
+ * The frame height of a block that keeps a shape, for a content surface of
+ * the given width: its width there over the shape. The editor fits the frame
+ * with it at the design width, which the preview's own surface need not have.
+ * @param {{type?: string, props?: {aspect?: unknown}, frames?: {desktop?: {w?: number}}}} block
+ * @param {number} surfacePx The content surface's width in px
+ * @returns {number} 0 for a block without a shape or a width to measure by
+ */
+export function shapeHeight(block, surfacePx) {
+  const w = Number(block?.frames?.desktop?.w);
+  if (!keepsShape(block) || !(surfacePx > 0) || !(w > 0)) return 0;
+  return Math.max(1, Math.round(((w / 100) * surfacePx) / aspectRatio(block.props.aspect)));
+}
+
 /**
  * Whether a block's height follows its content (ADR-0025): one of the types
- * above, unless the block has been given its own height (`height.mode`).
- * @param {{type?: string, height?: {mode?: string}}} block
+ * above, unless the block has been given its own height (`height.mode`), or
+ * a block that keeps a shape.
+ * @param {{type?: string, height?: {mode?: string}, props?: object}} block
  * @returns {boolean}
  */
 export function followsContent(block) {
-  return FOLLOWS_CONTENT.has(block?.type) && block.height?.mode !== 'own';
+  return keepsShape(block) || (FOLLOWS_CONTENT.has(block?.type) && block.height?.mode !== 'own');
 }
 
 /**
