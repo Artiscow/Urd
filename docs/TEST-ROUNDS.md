@@ -2,6 +2,12 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.29.5): the image block's menu without the editor's sliders, and a pencil on each gallery picture
+
+- [ ] The image block's menu: «Open the image editor» first in Content; Style holds only Fit and Corners, each with its pin, and no focus, zoom, brightness, contrast or saturation slider stands anywhere in the menu; the Fit and Corners quick tiles change the picture and can be unpinned and pinned again from Style; «brightness» or «zoom» typed in the menu's search finds the editor's button
+- [ ] A gallery's menu: a pencil on each picture opens the image editor on that picture, its crop window at the tile's shape (square on the grid view); its changes show on the canvas and stay after «Done»
+- [ ] The pencil's tooltip in bokmål and Turkish
+
 ### Test batch (0.7.29.4): the other pictures in the image editor, and loading an embed without its cover
 
 - [ ] Site panel: a new site icon opens the image editor at a square, titled «Site icon»; after a look, a turn and «Done» the icon beside the field is the edited one; the pencil opens it again from the original (the picture at its own size, the look and turn still set), and a second edit is as sharp as the first; «Remove» in the editor takes the icon away; Cancel leaves it as it was

@@ -19,6 +19,14 @@
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
+
+  /** The image editor on one of the gallery's pictures, with its tile's shape and size as the preview draws it (the first tile showing that picture). */
+  function editGalleryPicture(i) {
+    const tile = ed.iframeEl?.contentDocument?.querySelector(`[data-block-id="${selectedBlock.blockId}"] .urd-gallery-edit[data-index="${i}"]`);
+    const w = tile?.offsetWidth ?? 0;
+    const h = tile?.offsetHeight ?? 0;
+    ed.openPicture({ kind: 'gallery', sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId, index: i, frameRatio: h ? w / h : 0, frameWidth: w, frameHeight: h });
+  }
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setBlockFrame, addGalleryImages, moveGalleryImage, removeGalleryImage, setGalleryImageField, setGalleryImageLink, themeSwatches, newSeed } = ed;
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
@@ -36,6 +44,8 @@
         <span class="toolbar-row" title={ta('hint.gallery')}>
           <img class="site-icon-preview" src={img.src} alt="" />
           <span class="row-tools">
+            <button class="ghost row-tool" title={ta('tip.gallery.editPicture')} aria-label={ta('tip.gallery.editPicture')}
+              onclick={() => editGalleryPicture(i)}>{@html ICONS.pencil}</button>
             <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
             <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveGalleryImage(i, 1)}
               disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>

@@ -299,7 +299,7 @@ const ribbonReach = (w) => (w === 'canvas' || w === 'page' ? w : 'content');
 const RIBBON_MOTIONS = () => [['roll', ta('opt.ribbonMotion.roll')], ['sway', ta('opt.ribbonMotion.sway')],
   ['step', ta('opt.ribbonMotion.step')], ['none', ta('opt.ribbonMotion.none')]];
 
-/** The image editor (PictureEditor.svelte), opened from the block's menu on the selected image block's picture or video's cover (the floating menu steps aside for it). */
+/** The image editor (PictureEditor.svelte) on the selected block's picture: an image block's, a video's cover or a quote's portrait (the floating menu steps aside for it). */
 function openImageEditor() {
   if (!selectedBlock) return;
   const kind = selectedBlock.type === 'video' ? 'cover' : selectedBlock.type === 'quote' ? 'portrait' : 'image';

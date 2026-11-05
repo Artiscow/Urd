@@ -62,6 +62,8 @@ function makeTile(props, index, ctx, blockEl) {
   const tile = el2(asLink ? 'a' : clickable ? 'button' : 'span', 'urd-gallery-tile');
   if (asLink) Object.assign(tile, linkAttrs(link));
   if (tile.tagName === 'BUTTON') tile.type = 'button';
+  // Its picture's place in the list, so the editor's menu finds the tile it opens the image editor for.
+  tile.dataset.index = String(index);
 
   const image = document.createElement('img');
   image.src = img.src;

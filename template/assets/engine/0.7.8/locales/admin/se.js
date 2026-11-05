@@ -699,7 +699,6 @@ export default {
     'tip.thinner': 'Asehit',
     'tip.webpAuto': 'Komprimerejuvvo automáhtalaččat webp-hápmái',
     'tip.webpAutoPublish': 'Komprimerejuvvo automáhtalaččat webp-hápmái; materialiserejuvvo media/ máhppii almmuheamis',
-    'tip.zoomCrop': 'Čuohppá fokusčuoggá guvlui',
     'tip.zoomCurrent': 'Dálá zoom',
     'tip.zoomFit': 'Heivet lerreha lássii',
     'ui.addBaselineLink': '+ Ođđa vuolimuš linnjá liŋka',

@@ -948,7 +948,6 @@ export default {
     'tip.thinner': 'Tunnare',
     'tip.webpAuto': 'Komprimeras automatiskt till webp',
     'tip.webpAutoPublish': 'Komprimeras automatiskt till webp; materialiseras till media/ vid publicering',
-    'tip.zoomCrop': 'Beskär in mot fokuspunkten',
     'tip.zoomCurrent': 'Aktuell zoom',
     'tip.zoomFit': 'Anpassa arbetsytan till fönstret',
     'ui.addBaselineLink': '+ Ny bottenradslänk',

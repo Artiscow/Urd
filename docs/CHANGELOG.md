@@ -8,6 +8,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.29.5 - The image block's menu without the image editor's sliders, and a pencil on each gallery picture - 5 November 2026
+
+- The image block's menu held the Crop group (fit, focus X and Y, zoom) and the Filters group (brightness, contrast, saturation) as sliders the image editor holds too. The sliders are gone, «Open the image editor» stands first in Content with a tooltip naming the editor's settings, and Style keeps Fit and Corners with their pins; three keys nothing uses any more are gone from every dictionary.
+- A gallery's pictures were reached in the editor only from the canvas. Each picture row in the gallery's menu has a pencil that opens it on that picture, at the tile's shape as the preview draws it (`data-index` on the tile, gallery.js).
+- The milestone 0.7.29 the image editor closes, in ROADMAP and VEIKART too; 0.7.30, every block menu redesigned, stands in the v0.7 section of BACKLOG with what this round found for it.
+
+The independent review before the commit found these, all fixed:
+
+1. The gallery's pencil opened the editor without the tile's shape, so the crop window stood at 16:9 over a square tile and the sharpness check was off. The pencil measures the tile in the preview.
+2. The Fit and Corners quick tiles could be unpinned but never pinned again, since their pins stood in the removed groups. Fit and Corners stand in Style with their pins.
+3. The menu's search found none of the picture's settings once the sliders were gone. It finds Fit and Corners again, and the editor's button by the settings its tooltip names.
+4. ARCHITECTURE.md said the menus hold none of the editor's settings, though Fit and Corners write the same fields. It says what the menu holds.
+5. Image.svelte's header named a Style area the file no longer drew. It draws one again.
+
 ### 0.7.29.4 - The site icon, the sharing image, the logos, the portrait, uploaded icons and the background pictures in the image editor, and an embed loaded without its cover - 5 November 2026
 
 - The site icon had an editor of its own that baked a 128 px icon and edited that icon again, losing sharpness each time. The image editor opens on it at a square, «Done» bakes the icon from the original (`lib/picture-bake.js`, `bakeLayout` in picture-edit.js), and the original with its settings is kept beside it (`site.iconSource`); `IconEditor.svelte` and its keys are gone.

@@ -4,10 +4,9 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import { PICTURE_BOUNDS } from '$engine/picture.js';
+  import Pin from '../Pin.svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
-  import Pin from '../Pin.svelte';
   import { slugify } from '$engine/imageTools.js';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
@@ -18,7 +17,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps, setBlockLink, openImageEditor, compressOrTrim, imageErrorText, setStatus } = ed;
-  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   /** Whether the picture links somewhere (a page, a spot or an address). */
   const imageLinked = $derived(Object.keys(linkOf(selectedBlock.props)).some((key) => key !== 'newTab' && key !== 'rel'));
   let { area } = $props();
@@ -75,7 +74,8 @@
   <MenuGroup id="img-link" title={ta('group.linkClick')} value={imageLinked ? linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) : (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none'))}
     group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</MenuGroup>
 {:else if area === 'style'}
-  {#snippet imgCrop()}
+  <!-- The two one-press choices beside the editor, each with its pin for the quick row; the rest of the picture's settings are the editor's -->
+  {#snippet imgFit()}
     <Setting key="fit">
       <div class="pin-line">
         <label title={ta('tip.image.fit')}>{ta('lbl.imageFit')}
@@ -85,32 +85,6 @@
         <Pin id="imgFit" />
       </div>
     </Setting>
-    <label title={ta('tip.image.focusX')}>{ta('lbl.focusX')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
-    <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.x ?? 0.5}
-      oninput={(e) => setBlockProp('x', Number(e.target.value))} />
-    <label title={ta('tip.image.focusY')}>{ta('lbl.focusY')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
-    <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.y ?? 0.5}
-      oninput={(e) => setBlockProp('y', Number(e.target.value))} />
-    <label title={ta('tip.zoomCrop')}>{ta('lbl.zoom')}
-      <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
-    <input type="range" min="1" max={PICTURE_BOUNDS.zoom.max} step="0.01" value={selectedBlock.props.zoom ?? 1}
-      oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
-  {/snippet}
-  {#snippet imgFilters()}
-    <label title={ta('tip.image.brightness')}>{ta('lbl.brightness')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
-    <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
-      oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
-    <label title={ta('tip.image.contrast')}>{ta('lbl.contrast')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
-    <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
-      oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
-    <label title={ta('tip.image.saturate')}>{ta('lbl.saturate')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
-    <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.saturate ?? 1}
-      oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
   {/snippet}
   {#snippet imgCorners()}
     <Setting key="radius">
@@ -123,10 +97,7 @@
       </div>
     </Setting>
   {/snippet}
-  {@const cropN = groupChanged({ fit: 'cover', x: 0.5, y: 0.5, zoom: 1 })}
-  {@const filterN = groupChanged({ brightness: 1, contrast: 1, saturate: 1 })}
-  <MenuGroup id="img-crop" title={ta('group.crop')} value={cropN ? ta('menu.changed', { n: cropN }) : ta('menu.standard')} group={groupOf('img-crop', { fit: 'cover', x: 0.5, y: 0.5, zoom: 1 })}>{@render imgCrop()}</MenuGroup>
-  <MenuGroup id="img-filters" title={ta('group.filters')} value={filterN ? ta('menu.changed', { n: filterN }) : ta('menu.standard')} group={groupOf('img-filters', { brightness: 1, contrast: 1, saturate: 1 })}>{@render imgFilters()}</MenuGroup>
+  <MenuGroup id="img-fit" title={ta('lbl.imageFit')} value={selectedBlock.props.fit === 'contain' ? ta('opt.fitFrame.contain') : ta('opt.fitFrame.cover')} group={groupOf('img-fit', { fit: 'cover' })}>{@render imgFit()}</MenuGroup>
   <MenuGroup id="img-corners" title={ta('group.corners')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} group={groupOf('img-corners', { radius: 'md' })}>{@render imgCorners()}</MenuGroup>
 {/if}
 

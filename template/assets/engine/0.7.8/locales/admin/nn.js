@@ -783,7 +783,6 @@ export default {
     'tip.thinner': 'Tynnare',
     'tip.webpAuto': 'Blir automatisk komprimert til webp',
     'tip.webpAutoPublish': 'Blir automatisk komprimert til webp; blir materialisert til media/ ved publisering',
-    'tip.zoomCrop': 'Skjer inn mot fokuspunktet',
     'tip.zoomCurrent': 'Gjeldande zoom',
     'tip.zoomFit': 'Tilpass lerretet til vindauget',
     'ui.addBaselineLink': '+ Ny botnlinje-lenkje',
