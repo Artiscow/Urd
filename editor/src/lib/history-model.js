@@ -48,6 +48,7 @@ export function stepKind(key, { typed = false } = {}) {
   if (k === 'templates') return kind('templates', 'bookmark', false);
   if (k === 'plugins') return kind('plugins', 'panel_plugins', false);
   if (k === 'redirects') return kind('redirects', 'redirect', false);
+  if (k.startsWith('edit:picture:')) return kind('picture', 'image', true);
   if (k === 'add-section') return kind('addSection', 'plus', true);
   if (k === 'delete-section') return kind('deleteSection', 'cross', true);
   if (k === 'move-section') return kind('moveSection', 'up', true);

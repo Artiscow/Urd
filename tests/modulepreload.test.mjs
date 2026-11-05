@@ -108,7 +108,7 @@ function contentHash(text) {
 // Modules loaded dynamically (await import) or only in the editor: they must
 // NEVER be preloaded for visitors.
 const EDITOR_ONLY = [
-  'preview-edit.js', 'preset-thumb.js', 'image-editor.js', 'imageTools.js',
+  'preview-edit.js', 'preset-thumb.js', 'imageTools.js',
   'color-picker.js', 'dropdown.js', 'glyphs.js', 'fonts.js', 'text-typo.js',
   'place.js', 'section-size.js', 'selection.js', 'lightbox.js', 'hint.js',
   'page-presets.js', 'anchored.js',

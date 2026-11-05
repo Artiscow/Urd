@@ -40,6 +40,7 @@
  *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
  *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
  *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
+ *                  { type: 'urd-picture-edit', kind, sectionId?, blockId?, index?, collection?, entryId?, frameRatio, frameWidth, frameHeight } (a picture on the canvas asks the image editor to open: an image block's, a video's cover, a gallery picture or a collection entry's, with its frame's width over its height and its size in pixels as drawn)
  *                  { type: 'urd-link-edit', value, text }     (the text toolbar's link or Ctrl+K: the link at the caret in the link shape, or null, and the selected words)
  *                  { type: 'urd-add-block', sectionId, block } (block placed from the palette)
  *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
@@ -79,7 +80,6 @@
  *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
  *                  { type: 'urd-fit-block', sectionId, blockId, seq } (ask for the height of a block that follows its content, ADR-0025; answered with urd-grow)
  *                  { type: 'urd-frames', sectionId, frames } (frames fitted to their content, block id to desktop frame: put in place without drawing the section again)
- *                  { type: 'urd-open-image-editor', blockId } (open an image block's editor in the preview, from its menu)
  *                  { type: 'urd-edit-text', blockId }         (open a text block's words for editing, with the text toolbar)
  *                  { type: 'urd-text-style', blockId, style } (a font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's)
  */
@@ -95,6 +95,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (event.origin !== location.origin || event.source !== iframe.contentWindow) return;
     const msg = event.data;
     if (msg?.type === 'urd-edit') handlers.onEdit?.(msg);
+    if (msg?.type === 'urd-picture-edit') handlers.onPictureEdit?.(msg);
     if (msg?.type === 'urd-move') handlers.onMove?.(msg);
     if (msg?.type === 'urd-grow') handlers.onGrow?.(msg);
     if (msg?.type === 'urd-delete') handlers.onDelete?.(msg);
@@ -256,9 +257,6 @@ export function createPreviewBridge(iframe, handlers = {}) {
       post({ type: 'urd-demo-motion' });
     },
     /** Open an image block's editor in the preview, from its menu. */
-    sendOpenImageEditor(blockId) {
-      post({ type: 'urd-open-image-editor', blockId });
-    },
     /** Open a text block's words for editing in the preview, from its menu. */
     sendEditText(blockId) {
       post({ type: 'urd-edit-text', blockId });

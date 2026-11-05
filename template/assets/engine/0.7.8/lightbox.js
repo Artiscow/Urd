@@ -11,6 +11,7 @@
  */
 import { stepIndex } from './gallery-model.js';
 import { t } from './i18n.js';
+import { pictureStyle, pictureFilter, duotoneAt } from './picture.js';
 
 let overlay = null;
 
@@ -36,14 +37,21 @@ const el2 = (tag, className, textContent) => {
   return node;
 };
 
-/** The non-destructive colour adjustments follow into the full view; the
- *  cropping (fit/focus/zoom) does not: the lightbox shows the whole image. */
-function filterCss(style) {
-  const filters = [];
-  if (style?.brightness != null && style.brightness !== 1) filters.push(`brightness(${Number(style.brightness) || 1})`);
-  if (style?.contrast != null && style.contrast !== 1) filters.push(`contrast(${Number(style.contrast) || 1})`);
-  if (style?.saturate != null && style.saturate !== 1) filters.push(`saturate(${Number(style.saturate) || 1})`);
-  return filters.join(' ');
+/**
+ * A picture's settings in the full view: its look (a duotone's colours too), adjustments, turn and flips follow it (picture.js); the framing (fit, focus point, zoom) does not, since the lightbox shows the whole picture.
+ * A quarter turn lays the picture across, so its largest width and height swap.
+ * @param {HTMLImageElement} image
+ * @param {object} [raw] The picture's stored settings
+ */
+function drawWhole(image, raw) {
+  const style = pictureStyle(raw);
+  image.style.filter = pictureFilter(style, { duotone: duotoneAt(style, image.parentElement ?? image) });
+  const angle = style.rotate + style.straighten;
+  const parts = [];
+  if (angle) parts.push(`rotate(${angle}deg)`);
+  if (style.flipX || style.flipY) parts.push(`scale(${style.flipX ? -1 : 1}, ${style.flipY ? -1 : 1})`);
+  image.style.transform = parts.join(' ');
+  image.classList.toggle('urd-lightbox-across', style.rotate === 90 || style.rotate === 270);
 }
 
 /**
@@ -71,7 +79,7 @@ export function openLightbox(images, startIndex = 0) {
     const entry = list[index];
     image.src = entry.src;
     image.alt = entry.alt ?? '';
-    image.style.filter = filterCss(entry.style);
+    drawWhole(image, entry.style);
     caption.textContent = entry.alt ?? '';
     caption.style.display = entry.alt ? '' : 'none';
     // The neighbouring images are preloaded, so paging feels immediate.

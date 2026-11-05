@@ -557,9 +557,6 @@ function enablePreview(state, opts) {
       // The plugin block's settings open from Properties: click the hidden
       // config toggle in the block.
       root.querySelector(`[data-block-id="${msg.blockId}"] .urd-cfg-toggle`)?.click();
-    } else if (msg?.type === 'urd-open-image-editor' && msg.blockId) {
-      // An image block's editor, or a video cover picture's, opened from its menu: press the block's own image button.
-      root.querySelector(`[data-block-id="${CSS.escape(msg.blockId)}"] .urd-edit-image`)?.click();
     } else if ((msg?.type === 'urd-edit-text' || msg?.type === 'urd-text-style') && msg.blockId) {
       // A text block's words opened from its menu: the field takes focus, which brings the text toolbar.
       // A style for the whole text is handed to the toolbar as an event on the field (preview-edit.js).

@@ -30,7 +30,7 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressOrTrim(file);
+      const img = await compressOrTrim(file, 'portrait');
       mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.image = img.dataUrl; });
     } catch (err) {
       setStatus(imageErrorText(err), 'error');

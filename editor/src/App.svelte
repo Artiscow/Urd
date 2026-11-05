@@ -34,6 +34,7 @@
   import PanelStrip from './shell/PanelStrip.svelte';
   import PreviewStage from './shell/PreviewStage.svelte';
   import ConfirmDialog from './shell/ConfirmDialog.svelte';
+  import PictureEditor from './lib/PictureEditor.svelte';
   import RedirectsDialog from './shell/RedirectsDialog.svelte';
   import SetupWizard from './shell/SetupWizard.svelte';
   import { mediaState } from './state/media.svelte.js';
@@ -63,8 +64,9 @@
   import { paletteState } from './state/palette.svelte.js';
   import { pageSettingsState } from './state/page-settings.svelte.js';
   import { redirectsState } from './state/redirects.svelte.js';
+  import { pictureEditorState } from './state/picture-editor.svelte.js';
 
-  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState];
+  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState, pictureEditorState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
   /* The handle's own closures: what the element menu and the panels open or read across the modules. */
@@ -258,6 +260,7 @@
   {/if}
 
   <RedirectsDialog />
+  <PictureEditor />
   <ConfirmDialog />
 
   <SetupWizard />

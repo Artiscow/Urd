@@ -93,8 +93,13 @@ export function collectionActions(ed) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    const img = await compressOrTrim(file);
-    setEntryColor(id, entryId, index, 'image', img.dataUrl);
+    try {
+      const img = await compressOrTrim(file, 'entry');
+      setEntryColor(id, entryId, index, 'image', img.dataUrl);
+    } catch (err) {
+      // A picture that cannot be taken (an animation over the limit) says why, as every upload does.
+      ed.setStatus(ed.imageErrorText(err), 'error');
+    }
   }
 
   function removeEntryColor(id, entryId, index) {

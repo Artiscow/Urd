@@ -13,7 +13,10 @@ import { t, ta } from '../i18n.js';
 import { isSafeImage } from '../nav-model.js';
 import { isSafeVideo } from '../backgrounds/video.js';
 import { coverFrame } from '../embed-cover.js';
-import { aspectRatio } from '../push-model.js';
+import { aspectRatio, VIDEO_ASPECTS } from '../push-model.js';
+
+/** A video's shape as its ratio, or null for none: only the video's own shapes count. */
+const videoRatio = (aspect) => (VIDEO_ASPECTS.includes(aspect) ? aspectRatio(aspect) : null);
 
 /** Where the film comes from; an embed for anything unknown. */
 export const VIDEO_SOURCES = ['embed', 'file'];
@@ -105,7 +108,7 @@ export const videoBlock = {
   defaults: () => ({ url: '', title: 'Video', aspect: '16:9' }),
   migrations: {},
   // On the phone a video with a shape is that shape at the row's width; one without keeps its frame's height.
-  autoGrow: (props) => aspectRatio(props.aspect) !== null,
+  autoGrow: (props) => videoRatio(props.aspect) !== null,
   /**
    * @param {HTMLElement} el
    * @param {{url: string, title?: string, source?: 'embed'|'file', src?: string, poster?: string (the file's poster, or the embed's cover image),
@@ -117,7 +120,7 @@ export const videoBlock = {
   render(el, props, ctx) {
     const editing = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
     // A chosen shape: the video is that shape at the block's width, and the block's height follows it (keepsShape in push-model.js).
-    const ratio = aspectRatio(props.aspect);
+    const ratio = videoRatio(props.aspect);
     let box = el;
     if (ratio) {
       box = document.createElement('div');

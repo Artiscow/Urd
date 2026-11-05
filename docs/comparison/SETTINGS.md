@@ -149,12 +149,12 @@ Urd: the image block (ELEMENTS.md #48, #69 and #72).
 | A link with target and rel | WP, EL, KB, SP | Has (0.7.27) | - |
 | Lightbox | WP, EL, ST | Has | - |
 | A title or tooltip | WP, BI, KB, SP | Missing | Not taken: a tooltip hides its words from touch and keyboard; the alt text and a caption say it |
-| Size and aspect ratio | WP, EL, WS, BI, KB, ST | Has: the frame | - |
-| Fit and focal point | WP, EL, BI, SP, ST, GB | Has: fill or the whole image, focus and zoom | - |
+| Size and aspect ratio | WP, EL, WS, BI, KB, ST | Has: the frame, or a shape the height follows (free, the picture's own, 1:1, 4:3, 3:2, 16:9, 9:16 and 4:5; Delivered 0.7.29.1-3) | - |
+| Fit and focal point | WP, EL, BI, SP, ST, GB | Has: fill or the whole image, the frame dragged over the picture and zoom | - |
 | Image sizes and `srcset` | WP, WS, BI, KB, SP | Missing | v0.8 responsive pictures |
 | Lazy or eager loading | BI, KB, SP | Partial: always lazy | 0.7.0 (T44: the first picture of a page eager) |
-| Filters | EL, KB, ST | Has: brightness, contrast and saturation | - |
-| An overlay, or an effect on hover | EL, KB, SP, ST | Partial: the shared lift | v0.8 ER-B (an overlay colour and a zoom on hover, shown on focus too) |
+| Filters | EL, KB, ST | Has: brightness, contrast, saturation and blur, and twelve looks with a two-colour duotone (Delivered 0.7.29.1-3) | - |
+| An overlay, or an effect on hover | EL, KB, SP, ST | Partial: an overlay colour with its strength (Delivered 0.7.29.1-3) and the shared lift; no overlay or zoom on hover | v0.8 ER-B (an overlay colour and a zoom on hover, shown on focus too) |
 | A mask or shape | KB, SP, ST | Partial: three corner choices | 0.7.9 (mask shapes on the image block) |
 | Border and shadow | EL, KB, SP, ST | Missing | 0.7.9 (box styles on more blocks) |
 

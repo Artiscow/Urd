@@ -292,7 +292,7 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressOrTrim(file);
+      const img = await compressOrTrim(file, 'background');
       setBgProp(bg, i, 'src', img.dataUrl);
     } catch (err) {
       setStatus(imageErrorText(err), 'error');
@@ -312,7 +312,7 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressOrTrim(file);
+      const img = await compressOrTrim(file, 'background');
       setBgProp(bg, i, 'poster', img.dataUrl);
     } catch (err) {
       setStatus(imageErrorText(err), 'error');
@@ -341,7 +341,7 @@
     event.target.value = '';
     if (!files.length) return;
     setStatus(ta('status.compressingImages'));
-    const { images, failed, big } = await compressMany(files);
+    const { images, failed } = await compressMany(files, 'background');
     if (images.length) {
       bg.mutate(bg.keyPrefix, (t) => {
         const props = t.background.layers[i].props;
@@ -349,7 +349,7 @@
         props.images.push(...images.map(({ src }) => ({ src, x: 0.5, y: 0.5 })));
       });
     }
-    reportUpload(images.length, failed, big);
+    reportUpload(images.length, failed);
   }
 
   function moveBgGalleryImage(bg, i, j, dir) {

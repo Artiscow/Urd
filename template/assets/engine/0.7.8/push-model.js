@@ -33,25 +33,34 @@ export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout',
 /** The shapes a video can be given, width:height: widescreen first (YouTube's own), then classic, square, vertical (Shorts and reels), cinema and portrait. Without one the video fills its frame. */
 export const VIDEO_ASPECTS = ['16:9', '4:3', '1:1', '9:16', '21:9', '4:5'];
 
+/** The shapes an image block can be given in the image editor: its picture's own, and the common ratios. Without one the picture fills its frame. */
+export const IMAGE_ASPECTS = ['original', '1:1', '4:3', '3:2', '16:9', '9:16', '4:5'];
+
+/** Every ratio a shape can name, width:height. */
+const RATIOS = new Set([...VIDEO_ASPECTS, ...IMAGE_ASPECTS.filter((a) => a !== 'original')]);
+
 /**
- * A shape as its width divided by its height, or null for none (the video fills its frame).
+ * A shape as its width divided by its height, or null for none (the video fills its frame) and for a picture's own shape, which only the picture knows.
  * @param {unknown} aspect
  * @returns {number|null}
  */
 export function aspectRatio(aspect) {
-  if (!VIDEO_ASPECTS.includes(aspect)) return null;
+  if (!RATIOS.has(aspect)) return null;
   const [w, h] = aspect.split(':').map(Number);
   return w / h;
 }
 
 /**
- * Whether a block keeps a shape (ADR-0025): a video given one is drawn at
- * that shape at its own width, so its height follows its width.
- * @param {{type?: string, props?: {aspect?: unknown}}} block
+ * Whether a block keeps a shape (ADR-0025): a video given one, or an image
+ * block with a picture given one, is drawn at that shape at its own width,
+ * so its height follows its width.
+ * @param {{type?: string, props?: {aspect?: unknown, src?: unknown}}} block
  * @returns {boolean}
  */
 export function keepsShape(block) {
-  return block?.type === 'video' && aspectRatio(block.props?.aspect) !== null;
+  if (block?.type === 'video') return VIDEO_ASPECTS.includes(block.props?.aspect);
+  if (block?.type === 'image') return IMAGE_ASPECTS.includes(block.props?.aspect) && Boolean(block.props?.src);
+  return false;
 }
 
 /**
@@ -60,12 +69,13 @@ export function keepsShape(block) {
  * with it at the design width, which the preview's own surface need not have.
  * @param {{type?: string, props?: {aspect?: unknown}, frames?: {desktop?: {w?: number}}}} block
  * @param {number} surfacePx The content surface's width in px
- * @returns {number} 0 for a block without a shape or a width to measure by
+ * @returns {number} 0 for a block without a shape, with the picture's own shape (the preview measures it), or without a width to measure by
  */
 export function shapeHeight(block, surfacePx) {
   const w = Number(block?.frames?.desktop?.w);
-  if (!keepsShape(block) || !(surfacePx > 0) || !(w > 0)) return 0;
-  return Math.max(1, Math.round(((w / 100) * surfacePx) / aspectRatio(block.props.aspect)));
+  const ratio = keepsShape(block) ? aspectRatio(block.props.aspect) : null;
+  if (!ratio || !(surfacePx > 0) || !(w > 0)) return 0;
+  return Math.max(1, Math.round(((w / 100) * surfacePx) / ratio));
 }
 
 /**

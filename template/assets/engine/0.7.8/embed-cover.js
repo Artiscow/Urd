@@ -5,6 +5,7 @@
  */
 import { t } from './i18n.js';
 import { isSafeImage } from './nav-model.js';
+import { drawPicture } from './picture.js';
 
 /** The providers a cover names, by the end of the frame's host: an id for the stored choice and the name the visitor reads. */
 const PROVIDERS = [
@@ -83,29 +84,16 @@ const MARKS = {
 };
 
 /** How dark the owner's picture is drawn under the cover's words, so the light words read on any picture. */
-const COVER_DIM = 0.7;
-
-const within = (value, min, max, fallback) => {
-  const n = Number(value);
-  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
-};
+export const COVER_DIM = 0.7;
 
 /**
- * Draws the cover's picture with the owner's framing and adjustments from the image editor: the focus point (`x`, `y`, 0..1), a zoom towards it (1..3) and brightness, contrast and saturation (0..2), the brightness on top of the cover's own dimming.
- * @param {HTMLImageElement} img
- * @param {{x?: number, y?: number, zoom?: number, brightness?: number, contrast?: number, saturate?: number}} [style]
+ * Draws the cover's picture with the owner's settings from the image editor (picture.js: the focus point, zoom, turn, look and adjustments), darkened under the cover's words.
+ * @param {HTMLElement} frame The cover's picture frame (`.urd-cover-frame`) with the img inside
+ * @param {object} [style] The video's `coverStyle`
  */
-export function coverImageStyle(img, style) {
-  const s = style && typeof style === 'object' ? style : {};
-  const focus = `${within(s.x, 0, 1, 0.5) * 100}% ${within(s.y, 0, 1, 0.5) * 100}%`;
-  img.style.objectPosition = focus;
-  const zoom = within(s.zoom, 1, 3, 1);
-  img.style.transform = zoom !== 1 ? `scale(${zoom})` : '';
-  img.style.transformOrigin = focus;
-  const brightness = Math.round(COVER_DIM * within(s.brightness, 0, 2, 1) * 1000) / 1000;
-  const contrast = within(s.contrast, 0, 2, 1);
-  const saturate = within(s.saturate, 0, 2, 1);
-  img.style.filter = [`brightness(${brightness})`, contrast !== 1 ? `contrast(${contrast})` : '', saturate !== 1 ? `saturate(${saturate})` : ''].filter(Boolean).join(' ');
+export function coverImageStyle(frame, style) {
+  const img = frame.querySelector('img');
+  if (img) drawPicture(frame, img, style ?? {}, { dim: COVER_DIM });
 }
 
 /** Numbers the covers' lines, so each button can name its own line as its description. */
@@ -130,13 +118,16 @@ export function coverFrame(host, { src, makeFrame, kind = 'video', image, imageS
   const cover = document.createElement('div');
   cover.className = ['urd-cover', extraClass, pictured ? 'urd-cover-pic' : ''].filter(Boolean).join(' ');
   if (pictured) {
+    const frame = document.createElement('span');
+    frame.className = 'urd-cover-frame';
     const picture = document.createElement('img');
     picture.className = 'urd-cover-img';
     picture.src = image;
     picture.alt = '';
     picture.loading = 'lazy';
-    coverImageStyle(picture, imageStyle);
-    cover.append(picture);
+    frame.append(picture);
+    coverImageStyle(frame, imageStyle);
+    cover.append(frame);
   }
   const name = document.createElement('span');
   name.className = 'urd-cover-provider';

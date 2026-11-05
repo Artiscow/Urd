@@ -1,9 +1,9 @@
 <script>
   /* One entry's fields, the same in every layout of the Collections panel: the title, the date, the text and the link, the picture with its alt text, and a product's price, member price, badge, sizes (with their presets), colours and the quantity the buyer types.
-     The picture opens the image editor the canvas uses (engine image-editor.js): a new picture, its crop, focus, filters and alt text.
+     The picture opens the image editor (PictureEditor.svelte), the same the canvas's pictures open, and its thumbnail is drawn as the page draws it (engine picture.js).
      The layout around it owns the entry's delete and its moves. `data-field` marks the fields a click on a card in the preview asks to focus. */
   import { getContext, tick } from 'svelte';
-  import { openImageEditor, closeImageEditor } from '$engine/image-editor.js';
+  import { drawPicture } from '$engine/picture.js';
   import { ta } from '$engine/i18n.js';
   import DatePicker from '../../lib/DatePicker.svelte';
   import LinkField from '../../lib/LinkField.svelte';
@@ -17,39 +17,34 @@
   let { id, entry, kind } = $props();
   const act = collectionActions(ed);
   let root = $state(null);
-  let pictureEl = $state(null);
 
-  /** The entry as it stands now in its collection, for the image editor, which reads it after every change. */
+  /** The entry as it stands now in its collection. */
   const current = () => ed.collectionsView[id]?.entries.find((e) => e.id === entry.id) ?? entry;
 
-  /** The editor the canvas's pictures use, here writing to the entry: the picture itself, its alt text, and its style part by part. */
-  const pictureAdapter = {
-    fields: ['image', 'remove', 'alt', 'fit', 'shape', 'zoom', 'radius', 'focus', 'filters'],
-    get: (field) => {
-      const e = current();
-      if (field === 'image') return e.image ?? null;
-      if (field === 'alt') return e.imageAlt ?? '';
-      return (e.imageStyle ?? {})[field];
-    },
-    set: (field, value) => {
-      if (field === 'image') act.setEntryField(id, entry.id, 'image', value || '');
-      else if (field === 'alt') act.setEntryField(id, entry.id, 'imageAlt', String(value ?? '').trim());
-      else act.setEntryImageStyle(id, entry.id, field, value);
-    },
-  };
-
+  /** The image editor on the entry's picture. */
   function editPicture() {
-    if (pictureEl) openImageEditor(pictureEl, pictureAdapter);
+    ed.openPicture({ kind: 'entry', collection: id, entryId: entry.id });
   }
 
-  // The image editor belongs to the entry it opened for: it closes when the fields go.
-  $effect(() => () => closeImageEditor());
+  /** A first picture for the entry, through the same checks as every upload, and then the editor on it. */
+  async function addPicture(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await ed.compressOrTrim(file, 'entry');
+      act.setEntryField(id, entry.id, 'image', img.dataUrl);
+      editPicture();
+    } catch (err) {
+      ed.setStatus(ed.imageErrorText(err), 'error');
+    }
+  }
 
-  /** The picture in the panel as the page shows it: its fit, its focus and its filters. */
-  function thumbStyle(style) {
-    const s = style ?? {};
-    const filter = ['brightness', 'contrast', 'saturate'].filter((f) => s[f] != null).map((f) => `${f}(${s[f]})`).join(' ');
-    return `object-fit: ${s.fit ?? 'cover'}; object-position: ${(s.x ?? 0.5) * 100}% ${(s.y ?? 0.5) * 100}%;${filter ? ` filter: ${filter};` : ''}`;
+  /** The thumbnail drawn as the page draws the picture: its fit, focus point, zoom, turn, look, adjustments and overlay, in its button's frame. */
+  function drawThumb(img, style) {
+    const draw = (s) => drawPicture(img.closest('.entry-image-edit') ?? img.parentElement, img, s ?? {});
+    draw(style);
+    return { update: draw };
   }
 
   /** The least or the most the buyer may order; an empty field leaves it open, and the other limit follows so the most is never under the least. */
@@ -105,14 +100,15 @@
   <!-- The picture large enough to tell what it shows, drawn as the page draws it; it opens the image editor, and so does the button beside it -->
   <div class="entry-image" class:empty={!entry.image}>
     {#if entry.image}
-      <button type="button" class="entry-image-edit" bind:this={pictureEl} title={ta('tip.entry.editPicture')} aria-label={ta('tip.entry.editPicture')} onclick={editPicture}>
-        <img class="entry-image-thumb" src={entry.image} alt="" style={thumbStyle(entry.imageStyle)} /></button>
+      <button type="button" class="entry-image-edit" title={ta('tip.entry.editPicture')} aria-label={ta('tip.entry.editPicture')} onclick={editPicture}>
+        <img class="entry-image-thumb" src={entry.image} alt="" use:drawThumb={entry.imageStyle} /></button>
       <span class="entry-image-actions">
         <button type="button" class="ghost" title={ta('tip.entry.editPicture')} onclick={editPicture}>{ta('ui.editPicture')}</button>
       </span>
     {:else}
       <span class="entry-image-actions">
-        <button type="button" class="ghost" bind:this={pictureEl} title={ta('tip.entry.image')} onclick={editPicture}>{ta('ui.addImage')}</button>
+        <label class="ghost filepick" title={ta('tip.entry.image')}>{ta('ui.addImage')}
+          <input type="file" accept="image/*" onchange={addPicture} /></label>
       </span>
     {/if}
   </div>
@@ -204,12 +200,16 @@
 </div>
 
 <style>
+  /* The thumbnail's frame, which clips the picture as the page's frame does (picture.js draws the zoom and the turn inside it) */
   .entry-image-edit {
     display: block;
+    width: 7rem;
+    aspect-ratio: 4 / 3;
     padding: 0;
+    overflow: hidden;
     cursor: pointer;
     background: none;
-    border: 0;
+    border: 1px solid rgb(255 255 255 / 12%);
     border-radius: 6px;
   }
 

@@ -10,7 +10,7 @@ const FALLBACK_QUALITY = 0.6;
 /** Above this the user is warned (git and static hosts like small files). */
 export const WARN_BYTES = 400_000;
 /* The media limits, set as one whole: images are compressed to webp (max
-   1600px, warning above WARN_BYTES), audio is published unchanged (warning
+   1600px, into their use's budget, PICTURE_BUDGETS), audio is published unchanged (warning
    above WARN_BYTES), video warns above VIDEO_WARN_BYTES and is rejected
    hard above VIDEO_MAX_BYTES - well below the host's file limit
    (Cloudflare Pages 25 MiB), and with margin for the base64 draft in
@@ -23,11 +23,32 @@ export const VIDEO_MAX_BYTES = 15_000_000;
 export const PDF_WARN_BYTES = VIDEO_WARN_BYTES;
 export const PDF_MAX_BYTES = VIDEO_MAX_BYTES;
 /* An animated image (GIF, animated WebP, APNG) is kept as the file it is: a
-   canvas holds one frame, so compressing it would freeze it. It is warned
-   about above ANIMATED_WARN_BYTES and rejected above ANIMATED_MAX_BYTES,
-   where a video does the same job at a fraction of the size. */
-export const ANIMATED_WARN_BYTES = 1_000_000;
+   canvas holds one frame, so compressing it would freeze it. Above its
+   use's budget the owner is asked before it is kept, and above
+   ANIMATED_MAX_BYTES it is rejected, where a video does the same job at a
+   fraction of the size. */
 export const ANIMATED_MAX_BYTES = 4_000_000;
+
+/**
+ * The most a picture should weigh for each use, in bytes: a picture is compressed into its budget (compressToWebp's `budget`), and one that cannot be (an animation, a drawing) is asked about before it is kept.
+ * image and gallery are the image block's and a gallery's pictures, entry a collection's or a product's, cover the video's cover, share a page's share image, portrait the quote's, logo the nav's and the footer's marks, icon the site icon, background a section's layers.
+ */
+export const PICTURE_BUDGETS = Object.freeze({
+  image: 400_000,
+  gallery: 400_000,
+  entry: 300_000,
+  cover: 300_000,
+  share: 300_000,
+  portrait: 150_000,
+  logo: 100_000,
+  icon: 50_000,
+  background: 600_000,
+});
+
+/** The qualities a picture over its budget is tried at, and then the step it is made smaller by at the last of them, never below BUDGET_MIN_DIMENSION on its longest side. */
+const BUDGET_QUALITIES = [0.72, 0.62];
+const BUDGET_SHRINK = 0.85;
+const BUDGET_MIN_DIMENSION = 640;
 /** How much of a larger file is read to tell whether it moves: the flag of a WebP, the chunk of a PNG and the loop block of a GIF come before the first frame's picture. */
 const ANIMATED_HEAD_BYTES = 256_000;
 
@@ -180,31 +201,46 @@ async function keepAnimated(file) {
  * SVG is not rasterized: the vector is kept (after sanitizing), because a
  * logo must be sharp at every size. An animated image is kept as the file
  * it is (keepAnimated), marked `animated`, unless `still` asks for a still
- * picture at the size given (an icon). The file name at publish time gets
- * the right extension via mediaExtension.
- * @param {File} file
+ * picture at the size given (an icon). With a `budget` (PICTURE_BUDGETS),
+ * a picture over it is tried at lower qualities and then made smaller step
+ * by step until it fits or reaches BUDGET_MIN_DIMENSION, where the canvas
+ * writes WebP; without one, a picture above WARN_BYTES is taken at
+ * FALLBACK_QUALITY. The file name at
+ * publish time gets the right extension via mediaExtension.
+ * @param {Blob} file
  * @param {number} [maxDim]
- * @param {{still?: boolean}} [opts]
+ * @param {{still?: boolean, budget?: number}} [opts]
  * @returns {Promise<{dataUrl: string, bytes: number, width: number, height: number, animated?: boolean}>}
  */
-export async function compressToWebp(file, maxDim = MAX_DIMENSION, { still = false } = {}) {
+export async function compressToWebp(file, maxDim = MAX_DIMENSION, { still = false, budget = 0 } = {}) {
   if (isSvgFile(file)) return svgToDataUrl(await file.text());
   const kept = still ? null : await keepAnimated(file);
   if (kept) return kept;
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
-
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
+  const draw = (longest) => {
+    const scale = Math.min(1, longest / Math.max(bitmap.width, bitmap.height));
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  };
+  draw(maxDim);
 
   const toBlob = (quality) => new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
   let blob = await toBlob(TARGET_QUALITY);
-  if (blob.size > WARN_BYTES) blob = await toBlob(FALLBACK_QUALITY);
+  // A canvas that cannot write WebP gives PNG, which has no quality to lower: the picture is kept whole, and its size is the caller's to ask about.
+  if (budget > 0 && blob.type === 'image/webp') {
+    for (const quality of BUDGET_QUALITIES) {
+      if (blob.size <= budget) break;
+      blob = await toBlob(quality);
+    }
+    while (blob.size > budget && Math.max(canvas.width, canvas.height) * BUDGET_SHRINK >= BUDGET_MIN_DIMENSION) {
+      draw(Math.floor(Math.max(canvas.width, canvas.height) * BUDGET_SHRINK));
+      blob = await toBlob(BUDGET_QUALITIES.at(-1));
+    }
+  } else if (blob.size > WARN_BYTES) blob = await toBlob(FALLBACK_QUALITY);
+  bitmap.close();
+  const { width, height } = canvas;
 
   const dataUrl = await new Promise((resolve) => {
     const reader = new FileReader();

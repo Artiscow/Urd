@@ -284,16 +284,16 @@ async function handleRequestBlock(msg) {
     if (!img) return;
     block.props = { ...block.props, src: img.src, alt: img.alt };
     block.frames.desktop.h = Math.max(40, Math.round((img.height / img.width) * (block.frames.desktop.w / 100) * (previewState.iframeEl?.clientWidth ?? 1280)));
-    report = () => mediaState.reportImage(img.bytes);
+    report = () => shellState.setStatus('');
   } else if (files.length && msg.kind === 'gallery') {
     shellState.setStatus(ta('status.compressingImages'));
-    const { images, failed, big } = await mediaState.compressMany(files);
+    const { images, failed } = await mediaState.compressMany(files, 'gallery');
     if (!images.length) {
-      mediaState.reportUpload(0, failed, big);
+      mediaState.reportUpload(0, failed);
       return;
     }
     block.props = { ...block.props, images };
-    report = () => mediaState.reportUpload(images.length, failed, big);
+    report = () => mediaState.reportUpload(images.length, failed);
   }
   if (!stillThere()) {
     shellState.setStatus(ta('status.blockNotPlaced'), 'error');

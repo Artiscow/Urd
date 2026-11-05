@@ -34,9 +34,6 @@ import { blocksClipboard, sectionClipboard, readClipboard, pastedSection } from 
 import { loadSearchLanguages, searchLanguagesReady, searchItemsAny } from './search-langs.js';
 import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';
-import { openImageEditor, closeImageEditor } from './image-editor.js';
-import { applyImageStyle } from './blocks/image.js';
-import { coverImageStyle } from './embed-cover.js';
 import { embedUrl } from './blocks/video.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
@@ -849,7 +846,6 @@ export function keepTyping(paint) {
 export function closeMenus() {
   collapseOpenPresetMenu?.();
   collapseOpenPresetMenu = null;
-  closeImageEditor();
   closeColorPicker();
   closeDropdowns();
   document.querySelectorAll('.urd-add-block-menu.open').forEach((m) => {
@@ -4257,49 +4253,17 @@ function enhanceBlock(el, block, section, grid, host) {
   updateToolbarSide();
   el.addEventListener('pointerenter', updateToolbarSide);
 
-  // The shared image editor for image blocks: all the fields, with live DOM updates
-  // (only an image swap needs a re-render, and then the panel closes).
-  const openBlockImageEditor = () => {
-    const frame = () => el.querySelector('.urd-image-frame');
-    // The full editor: swap/remove, alt, fit, zoom, rounding, link, focus
-    // point (with a rule-of-thirds grid) and filters (grayscale/reset).
-    openImageEditor(frame() ?? el.querySelector('img') ?? el, {
-      fields: ['image', 'remove', 'alt', 'fit', 'zoom', 'radius', 'href', 'focus', 'filters'],
-      get: (field) => (field === 'image' ? block.props.src || null : block.props[field]),
-      set: (field, value) => {
-        const key = field === 'image' ? 'src' : field;
-        block.props = { ...block.props, [key]: value };
-        // Swapping/removing the image requires a new render (the frame is
-        // rebuilt); other fields update live via the shared
-        // applyImageStyle.
-        const node = frame();
-        if (node && field !== 'image') applyImageStyle(node, block.props);
-        post({ type: 'urd-edit', sectionId: section.id, blockId: block.id, props: block.props, rerender: field === 'image' });
-      },
-    });
-  };
-  // The same editor for an embedded video's cover picture: swap or remove it, its focus point, a zoom and the adjustments, drawn live on the cover.
-  const openCoverImageEditor = () => {
-    const cover = () => el.querySelector('.urd-cover');
-    openImageEditor(cover() ?? el, {
-      fields: ['image', 'remove', 'zoom', 'focus', 'filters'],
-      get: (field) => (field === 'image' ? block.props.poster || null : block.props.coverStyle?.[field]),
-      set: (field, value) => {
-        block.props = field === 'image'
-          ? { ...block.props, poster: value }
-          : { ...block.props, coverStyle: { ...block.props.coverStyle, [field]: value } };
-        const img = cover()?.querySelector('.urd-cover-img');
-        if (img && field !== 'image') coverImageStyle(img, block.props.coverStyle);
-        post({ type: 'urd-edit', sectionId: section.id, blockId: block.id, props: block.props, rerender: field === 'image' });
-      },
-    });
+  // The image editor is the admin's (PictureEditor.svelte): the block asks it to open, with its frame's shape as drawn here, so the editor's crop window has the frame's real proportions.
+  const askPictureEditor = (kind) => {
+    const box = (kind === 'cover' ? el.querySelector('.urd-cover') : el.querySelector('.urd-image-frame')) ?? el;
+    post({ type: 'urd-picture-edit', kind, sectionId: section.id, blockId: block.id, frameRatio: box.offsetHeight ? box.offsetWidth / box.offsetHeight : 0, frameWidth: box.offsetWidth, frameHeight: box.offsetHeight });
   };
   // Only where a cover is drawn: an embed with a link the video block can play.
   const coverEditable = block.type === 'video' && block.props.source !== 'file' && Boolean(embedUrl(block.props.url));
-  if (block.type === 'image' && !mobile) {
+  if (block.type === 'image') {
     el.addEventListener('dblclick', (event) => {
       event.preventDefault();
-      openBlockImageEditor();
+      askPictureEditor('image');
     });
   }
 
@@ -4392,7 +4356,7 @@ function enhanceBlock(el, block, section, grid, host) {
       imgBtn.className = 'urd-edit-image';
       imgBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>';
       imgBtn.title = ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage');
-      imgBtn.addEventListener('click', () => (coverEditable ? openCoverImageEditor() : openBlockImageEditor()));
+      imgBtn.addEventListener('click', () => askPictureEditor(coverEditable ? 'cover' : 'image'));
       toolbar.appendChild(imgBtn);
     }
 

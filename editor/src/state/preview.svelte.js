@@ -17,6 +17,7 @@ import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
 import { shellState } from './shell.svelte.js';
+import { pictureEditorState } from './picture-editor.svelte.js';
 import { paletteState } from './palette.svelte.js';
 import { siteState } from './site.svelte.js';
 import { templatesState } from './templates.svelte.js';
@@ -207,6 +208,7 @@ function onIframeLoad() {
   }, true);
   bridge = createPreviewBridge(iframeEl, {
     onEdit: bridgeState.handleEdit,
+    onPictureEdit: (msg) => pictureEditorState.openPicture(msg),
     onMove: bridgeState.handleMove,
     onGrow: bridgeState.handleGrow,
     onDelete: bridgeState.handleDelete,

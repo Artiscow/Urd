@@ -19,7 +19,7 @@
   const grid = $derived(ed.grid);
   const siteDraft = $derived(ed.siteDraft);
   const bridge = $derived(ed.bridge);
-  const { addPage, compressOrTrim, navBgCtx, setStatus, siteMutate, themeSwatches } = ed;
+  const { addPage, compressOrTrim, imageErrorText, navBgCtx, setStatus, siteMutate, themeSwatches } = ed;
 
   // Drawn tiles for the Nav panel's picture choices (ADR-0009: drawn SVG, never characters).
   const navSvg = (body) => `<svg width="40" height="26" viewBox="0 0 40 26" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${body}</svg>`;
@@ -115,10 +115,10 @@
   async function uploadNavTabImage(file) {
     if (!file) return;
     try {
-      const img = await compressOrTrim(file);
+      const img = await compressOrTrim(file, 'logo');
       siteMutate('nav', () => { siteDraft.nav.tab = { ...(siteDraft.nav.tab ?? {}), image: img.dataUrl }; });
-    } catch {
-      setStatus(ta('status.imageReadErrorSvg'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err, 'status.imageReadErrorSvg'), 'error');
     }
   }
 
@@ -184,14 +184,14 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressOrTrim(file);
+      const img = await compressOrTrim(file, 'logo');
       siteMutate('nav', () => {
         const logo = siteDraft.nav.logo;
         if (logo.type === 'both') logo.image = img.dataUrl;
         else logo.value = img.dataUrl;
       });
-    } catch {
-      setStatus(ta('status.imageReadErrorSvg'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err, 'status.imageReadErrorSvg'), 'error');
     }
   }
 
@@ -383,14 +383,14 @@
   async function uploadLauncherImage(file, i) {
     if (!file) return;
     try {
-      const img = await compressOrTrim(file);
+      const img = await compressOrTrim(file, 'logo');
       siteMutate('nav', () => {
         siteDraft.nav.launcher ??= { links: [] };
         if (i === null) siteDraft.nav.launcher.image = img.dataUrl;
         else siteDraft.nav.launcher.links[i].image = img.dataUrl;
       });
-    } catch {
-      setStatus(ta('status.imageReadErrorSvg'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err, 'status.imageReadErrorSvg'), 'error');
     }
   }
 

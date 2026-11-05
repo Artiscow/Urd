@@ -46,33 +46,9 @@ async function openLightboxAt(images, index) {
   openLightbox(images, index);
 }
 
-/** The image editor for one tile: the adapter reads and writes props.images[index]
- *  and posts the whole props to the editor (which owns the draft). Remove deletes the tile. */
-async function openTileEditor(tile, props, index, ctx, blockEl) {
-  const { openImageEditor } = await import('../image-editor.js');
-  const img = props.images[index];
-  openImageEditor(tile, {
-    fields: ['image', 'remove', 'alt', 'fit', 'zoom', 'focus', 'filters'],
-    get: (field) => {
-      if (field === 'image') return img.src || null;
-      if (field === 'alt') return img.alt ?? '';
-      return (img.style ?? {})[field];
-    },
-    set: (field, value) => {
-      let rerender = false;
-      if (field === 'image') {
-        if (value) img.src = value;
-        else props.images.splice(index, 1);
-        rerender = true;
-      } else if (field === 'alt') {
-        img.alt = value;
-      } else {
-        img.style = { ...(img.style ?? {}), [field]: value };
-        applyImageStyle(tile, { ...img.style, alt: img.alt, radius: props.radius });
-      }
-      post({ type: 'urd-edit', sectionId: ctx.section.id, blockId: blockEl.dataset.blockId, props, rerender });
-    },
-  });
+/** The image editor for one tile is the admin's (PictureEditor.svelte): the tile asks it to open on props.images[index], with the tile's shape as drawn here. */
+function openTileEditor(tile, index, ctx, blockEl) {
+  post({ type: 'urd-picture-edit', kind: 'gallery', sectionId: ctx.section.id, blockId: blockEl.dataset.blockId, index, frameRatio: tile.offsetHeight ? tile.offsetWidth / tile.offsetHeight : 0, frameWidth: tile.offsetWidth, frameHeight: tile.offsetHeight });
 }
 
 /** One tile: a clipping frame plus an img with the shared image style. The element
@@ -98,7 +74,8 @@ function makeTile(props, index, ctx, blockEl) {
     image.addEventListener('error', () => { image.style.visibility = ''; }, { once: true });
   }
   tile.appendChild(image);
-  applyImageStyle(tile, { ...(img.style ?? {}), alt: img.alt, radius: props.radius });
+  // A ribbon's tile is as wide as its picture, so a turned picture gives it the turned picture's ratio.
+  applyImageStyle(tile, { ...(img.style ?? {}), alt: img.alt, radius: props.radius }, { ratioFromPicture: galleryView(props.view) === 'ribbon' });
 
   if (ctx.preview) {
     // Chrome on: the image editor. Clean view: the lightbox, as for visitors.
@@ -111,7 +88,7 @@ function makeTile(props, index, ctx, blockEl) {
         if (props.lightbox) openLightboxAt(props.images, index);
         return;
       }
-      openTileEditor(tile, props, index, ctx, blockEl);
+      openTileEditor(tile, index, ctx, blockEl);
     });
   } else if (!asLink && props.lightbox) {
     tile.addEventListener('click', () => openLightboxAt(props.images, index));

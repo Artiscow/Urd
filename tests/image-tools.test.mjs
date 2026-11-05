@@ -8,8 +8,8 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const {
   svgViewBox, tightSvgViewBox, mediaExtension, slugify, slugText, isAnimatedImage, animatedImageKind,
-  AnimatedTooLargeError, ANIMATED_WARN_BYTES, ANIMATED_MAX_BYTES, VIDEO_WARN_BYTES, compressToWebp,
-  PDF_WARN_BYTES, PDF_MAX_BYTES,
+  AnimatedTooLargeError, ANIMATED_MAX_BYTES, VIDEO_WARN_BYTES, compressToWebp,
+  PDF_WARN_BYTES, PDF_MAX_BYTES, PICTURE_BUDGETS, WARN_BYTES,
 } = await engineImport('imageTools.js');
 const { MEDIA_PDF_MAX_BYTES } = await import('../template/functions/_lib/guard.js');
 
@@ -127,12 +127,18 @@ test('the kept animations publish under their own extension, and the caps are in
   assert.equal(mediaExtension('data:image/apng;base64,abc'), 'png');
   assert.equal(mediaExtension('data:image/webp;base64,abc'), 'webp');
   assert.equal(mediaExtension('data:image/jpeg;base64,abc'), 'webp');
-  assert.ok(ANIMATED_WARN_BYTES < ANIMATED_MAX_BYTES);
   // Above the animation's cap a video is the answer, and that is where the video's own warning starts.
   assert.ok(ANIMATED_MAX_BYTES <= VIDEO_WARN_BYTES);
   const err = new AnimatedTooLargeError(5_000_000);
   assert.equal(err.code, 'animatedTooLarge');
   assert.equal(err.bytes, 5_000_000);
+});
+
+test('the size budgets: one for every use, each below an animation\'s cap, the image block\'s at WARN_BYTES', () => {
+  assert.deepEqual(Object.keys(PICTURE_BUDGETS).sort(), ['background', 'cover', 'entry', 'gallery', 'icon', 'image', 'logo', 'portrait', 'share']);
+  for (const bytes of Object.values(PICTURE_BUDGETS)) assert.ok(bytes > 0 && bytes < ANIMATED_MAX_BYTES);
+  assert.equal(PICTURE_BUDGETS.image, WARN_BYTES);
+  assert.ok(Object.isFrozen(PICTURE_BUDGETS));
 });
 
 test('compressToWebp: a large animated GIF is refused from its beginning, without reading the whole file', async () => {

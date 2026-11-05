@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { register } from 'node:module';
 
 register('./_svelte-loader.mjs', import.meta.url);
-const { PRESS_FEELS, pressFeelOf } = await import('../editor/src/lib/press-feel.js');
+const { PRESS_FEELS, pressFeelOf, ripple } = await import('../editor/src/lib/press-feel.js');
 
 test('pressFeelOf: the six feels, Ripple for anything else', () => {
   assert.deepEqual(PRESS_FEELS, ['ripple', 'press', 'nudge', 'sink', 'ring', 'spring']);
@@ -39,3 +39,33 @@ test('the editor places its controls by transform: translate and scale belong to
   for (const file of walk(dir)) assert.deepEqual(declares(readFileSync(file, 'utf8')), [], file);
 });
 
+
+test('ripple: a quick second press keeps its ring in the control, which gets its own position back when the last ring ends', () => {
+  // A minimal page: elements that keep their listeners, a control that is not positioned.
+  const make = () => {
+    const el = { style: {}, children: [], listeners: {}, className: '', parent: null,
+      setAttribute() {}, append(...nodes) { for (const n of nodes) { n.parent = el; el.children.push(n); } },
+      addEventListener(type, fn) { el.listeners[type] = fn; },
+      remove() { if (el.parent) el.parent.children = el.parent.children.filter((c) => c !== el); } };
+    return el;
+  };
+  const saved = { document: globalThis.document, getComputedStyle: globalThis.getComputedStyle };
+  globalThis.document = { createElement: make };
+  globalThis.getComputedStyle = (el) => ({ position: el.style.position || 'static' });
+  try {
+    const control = make();
+    control.getBoundingClientRect = () => ({ left: 10, top: 20 });
+    ripple(control, { clientX: 15, clientY: 25 });
+    ripple(control, { clientX: 16, clientY: 26 });
+    assert.equal(control.style.position, 'relative');
+    const [first, second] = control.children.map((layer) => layer.children[0]);
+    first.listeners.animationend();
+    assert.equal(control.style.position, 'relative', 'the second ring still runs in the control');
+    second.listeners.animationend();
+    assert.equal(control.style.position, undefined, 'given back as it was');
+    assert.equal(control.children.length, 0);
+  } finally {
+    globalThis.document = saved.document;
+    globalThis.getComputedStyle = saved.getComputedStyle;
+  }
+});

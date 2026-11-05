@@ -15,7 +15,7 @@
   const templateIds = $derived(ed.templateIds);
   const templateStores = $derived(ed.templateStores);
   const viewMode = $derived(ed.viewMode);
-  const { addCalendarDesign, buildBlock, compressMany, imageForBlock, reportImage, reportUpload, requestPlacement, setStatus } = ed;
+  const { addCalendarDesign, buildBlock, compressMany, imageForBlock, reportUpload, requestPlacement, setStatus } = ed;
 
   function addBlock(kind) {
     requestPlacement(buildBlock(kind));
@@ -116,7 +116,7 @@
       animation: null,
       frames: { desktop: { x: 4, y: 8, w: 30, h: Math.max(40, height), z: 1, rot: 0 }, mobile: null },
     });
-    reportImage(img.bytes);
+    setStatus('');
   }
 
   /** "Gallery with images" in the palette: build the block pre-filled. */
@@ -125,15 +125,15 @@
     event.target.value = '';
     if (!files.length) return;
     setStatus(ta('status.compressingImages'));
-    const { images, failed, big } = await compressMany(files);
+    const { images, failed } = await compressMany(files, 'gallery');
     if (!images.length) {
-      reportUpload(0, failed, big);
+      reportUpload(0, failed);
       return;
     }
     const block = buildBlock('gallery');
     block.props.images = images;
     requestPlacement(block);
-    reportUpload(images.length, failed, big);
+    reportUpload(images.length, failed);
   }
 </script>
 

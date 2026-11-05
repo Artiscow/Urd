@@ -148,7 +148,8 @@ function applyPush(host) {
     // down only.
     el.style.height = `${frame.h}px`;
     fitContent(el, frame.h, block);
-    const measure = () => (followsContent(block) ? hugHeight(el) : 0) || Math.max(frame.h, Math.round(contentHeight(el)));
+    // An image block's picture fills its frame and never grows it: a zoomed or turned picture overflows its clipping frame, which is no content to make room for.
+    const measure = () => (followsContent(block) ? hugHeight(el) : 0) || (block.type === 'image' ? frame.h : Math.max(frame.h, Math.round(contentHeight(el))));
     const needed = measure();
     // The editor's own parts (the adders, the placeholders of empty fields)
     // are drawn but never push: the growth is the content a visitor sees, so

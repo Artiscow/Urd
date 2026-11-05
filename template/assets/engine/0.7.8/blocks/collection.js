@@ -13,6 +13,7 @@ import { stripActiveContent } from '../sanitize.js';
 import { resolveLink, linkAttrs } from '../nav-model.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
+import { drawPicture } from '../picture.js';
 
 /** Editing context while a collection renders in preview: {collection}, or null (visitors). */
 let editCtx = null;
@@ -35,42 +36,14 @@ function editable(node, entryId, field, html = false) {
   return node;
 }
 
-/** Image editing in preview: a click opens the SHARED image editor with the WHOLE palette
- *  (dynamic import: visitors never load it). The style fields live in entry.imageStyle (additive). */
+/** Image editing in the preview: a click asks the admin's image editor (PictureEditor.svelte) to open on the entry's picture, with the picture's box as drawn here. The settings live in entry.imageStyle (additive). */
 function wireImageEdit(target, entry) {
   if (!editCtx) return;
   const collection = editCtx.collection;
   target.classList.add('urd-collection-image-edit');
   target.title = ta('canvas.editImage');
-  target.addEventListener('click', async () => {
-    const { openImageEditor } = await import('../image-editor.js');
-    openImageEditor(target, {
-      fields: ['image', 'remove', 'alt', 'fit', 'shape', 'zoom', 'radius', 'focus', 'filters'],
-      get: (field) => {
-        if (field === 'image') return entry.image ?? null;
-        if (field === 'alt') return entry.imageAlt ?? '';
-        return (entry.imageStyle ?? {})[field];
-      },
-      set: (field, value) => {
-        if (field === 'image') {
-          post({ type: 'urd-collection-edit', collection, entryId: entry.id, field, value });
-          return;
-        }
-        if (field === 'alt') {
-          entry.imageAlt = value;
-        } else {
-          entry.imageStyle = { ...(entry.imageStyle ?? {}), [field]: value };
-        }
-        applyEntryImageStyle(target, entry);
-        post({
-          type: 'urd-collection-edit',
-          collection,
-          entryId: entry.id,
-          field: field === 'alt' ? 'imageAlt' : 'imageStyle',
-          value: field === 'alt' ? value : entry.imageStyle,
-        });
-      },
-    });
+  target.addEventListener('click', () => {
+    post({ type: 'urd-picture-edit', kind: 'entry', collection, entryId: entry.id, frameRatio: target.offsetHeight ? target.offsetWidth / target.offsetHeight : 0, frameWidth: target.offsetWidth, frameHeight: target.offsetHeight });
   });
 }
 
@@ -129,25 +102,17 @@ function titleNode(entry) {
 /** The shapes: the frame's aspect ratio. Circle is 1:1 with full rounding. */
 const SHAPE_ASPECTS = { wide: '16 / 9', square: '1 / 1', portrait: '3 / 4', circle: '1 / 1' };
 
-/** Entry image with the additive style (imageStyle) and the description applied.
- *  node is the wrapper (a span with an img inside) or a standalone img: the image gets
- *  focus, filters and zoom, the frame gets shape and rounding and clips the zoom (overflow). */
+/**
+ * An entry's picture with its settings (imageStyle, drawn by picture.js) and its description, and the frame's shape and rounding.
+ * node is the frame (a span with the img inside), or the img alone, whose parent is then its frame.
+ */
 export function applyEntryImageStyle(node, entry) {
   const img = node instanceof HTMLImageElement ? node : node.querySelector?.('img');
   if (!img) return;
+  const frame = node instanceof HTMLImageElement ? (node.closest('.urd-collection-imgwrap') ?? node.parentElement) : node;
   const style = entry.imageStyle ?? {};
-  const focus = `${(style.x ?? 0.5) * 100}% ${(style.y ?? 0.5) * 100}%`;
   img.alt = entry.imageAlt ?? '';
-  img.style.objectFit = style.fit ?? 'cover';
-  img.style.objectPosition = focus;
-  const zoom = Number(style.zoom) || 1;
-  img.style.transform = zoom !== 1 ? `scale(${zoom})` : '';
-  img.style.transformOrigin = focus;
-  const filters = [];
-  if (style.brightness != null && style.brightness !== 1) filters.push(`brightness(${style.brightness})`);
-  if (style.contrast != null && style.contrast !== 1) filters.push(`contrast(${style.contrast})`);
-  if (style.saturate != null && style.saturate !== 1) filters.push(`saturate(${style.saturate})`);
-  img.style.filter = filters.join(' ');
+  if (frame) drawPicture(frame, img, style);
   node.style.borderRadius = style.shape === 'circle' ? '50%'
     : style.radius ? `var(--urd-radius-${style.radius})` : '';
   node.style.aspectRatio = SHAPE_ASPECTS[style.shape] ?? '';

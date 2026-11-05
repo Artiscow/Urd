@@ -2,7 +2,7 @@
  * The uploads: the SVG trim, the image compression, the video reading and the upload report, shared by every file the editor takes in.
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
-import { svgToDataUrl, svgViewBox, tightSvgViewBox, compressToWebp, ANIMATED_WARN_BYTES, ANIMATED_MAX_BYTES, VIDEO_MAX_BYTES, VIDEO_WARN_BYTES, WARN_BYTES, slugify } from '$engine/imageTools.js';
+import { svgToDataUrl, svgViewBox, tightSvgViewBox, compressToWebp, ANIMATED_MAX_BYTES, VIDEO_MAX_BYTES, VIDEO_WARN_BYTES, PICTURE_BUDGETS, slugify } from '$engine/imageTools.js';
 import { ta } from '$engine/i18n.js';
 import { shellState } from './shell.svelte.js';
 
@@ -56,26 +56,60 @@ async function svgAutoTrim(file) {
   try { return svgToDataUrl(trimmed); } catch { return first; }
 }
 
-/* SVGs are auto-trimmed (viewBox tightened to the subject); raster is
-   compressed to webp. Shared entry for all image uploads, so an SVG
-   logo/icon fills its space. */
-async function compressOrTrim(file) {
+/** The budget for a use (imageTools' PICTURE_BUDGETS), the image block's for a use not named there. */
+const budgetFor = (use) => PICTURE_BUDGETS[use] ?? PICTURE_BUDGETS.image;
+
+/** One picture as it is kept: an SVG trimmed to its subject, anything else compressed into the use's budget. */
+async function compressOne(file, use) {
   const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
   if (isSvg) return svgAutoTrim(file);
-  const img = await compressToWebp(file);
-  // An animation is kept as the file it is, so its size is the owner's to know about.
-  if (img.animated && img.bytes > ANIMATED_WARN_BYTES) {
-    shellState.setStatus(ta('status.animatedLarge', { mb: (img.bytes / 1_000_000).toFixed(1) }), 'error');
+  return compressToWebp(file, undefined, { budget: budgetFor(use) });
+}
+
+/**
+ * Asks before pictures that stayed over their use's budget are kept (an animation is kept as it is, and a drawing is not compressed): true keeps them.
+ * @param {{bytes: number, animated?: boolean}[]} over
+ * @param {string} use
+ */
+async function keepOverBudget(over, use) {
+  const budget = Math.round(budgetFor(use) / 1000);
+  const lines = [over.length === 1
+    ? ta('pic.budget.one', { kb: Math.round(over[0].bytes / 1000), budget })
+    : ta('pic.budget.many', { n: over.length, budget })];
+  if (over.some((img) => img.animated)) lines.push(ta('pic.budget.animated'));
+  return shellState.askConfirm({ title: ta('pic.budget.title'), lines, okLabel: ta('pic.budget.keep') });
+}
+
+/** Thrown when the owner chose not to keep a picture over its budget. */
+class PictureLeftOut extends Error {
+  constructor() {
+    super('The picture was left out');
+    this.code = 'pictureLeftOut';
   }
+}
+
+/**
+ * The shared entry for every picture the editor takes in: SVGs auto-trimmed (viewBox tightened to the subject) so a logo or icon fills its space, anything else compressed to webp into its use's budget, and a picture still over it asked about before it is kept.
+ * @param {File} file
+ * @param {keyof typeof PICTURE_BUDGETS} [use]
+ */
+async function compressOrTrim(file, use = 'image') {
+  const img = await compressOne(file, use);
+  if (img.bytes > budgetFor(use) && !(await keepOverBudget([img], use))) throw new PictureLeftOut();
   return img;
 }
 
-/** What to say when an image could not be taken: a too-large animation names its size and the limit. */
-function imageErrorText(err) {
+/**
+ * What to say when a picture was not taken: a too-large animation names its size and the limit, a picture left out over its budget says so, and anything else is the read error (`fallback`, a key).
+ * @param {unknown} err
+ * @param {string} [fallback]
+ */
+function imageErrorText(err, fallback = 'status.imageReadError') {
   if (err?.code === 'animatedTooLarge') {
     return ta('status.animatedTooLarge', { mb: (err.bytes / 1_000_000).toFixed(1), max: Math.round(ANIMATED_MAX_BYTES / 1_000_000) });
   }
-  return ta('status.imageReadError');
+  if (err?.code === 'pictureLeftOut') return ta('status.pictureLeftOut');
+  return ta(fallback);
 }
 
 /** A video file as a data URL for the draft, inside the media limits from imageTools (the
@@ -103,22 +137,28 @@ function readVideoFile(file, formatKey, done) {
 /** A fresh seed for a scatter the owner wants to keep: never 0, which means the visit's. Not a secret, so Math.random is enough. */
 const newSeed = () => 1 + Math.floor(Math.random() * 1000000);
 
-/** Multiple images in one upload (the galleries): compress all;
- *  one unreadable image does not stop the rest of the batch. */
-async function compressMany(fileList) {
-  const images = [];
+/**
+ * Several pictures in one upload (the galleries): each compressed into the use's budget, one unreadable picture not stopping the rest, and those still over the budget asked about once, together.
+ * @param {Iterable<File>} fileList
+ * @param {keyof typeof PICTURE_BUDGETS} [use]
+ * @returns {Promise<{images: {src: string, alt: string, href: null, style: object}[], failed: number}>}
+ */
+async function compressMany(fileList, use = 'gallery') {
+  const taken = [];
   let failed = 0;
-  let big = 0;
   for (const file of fileList) {
     try {
-      const img = await compressOrTrim(file);
-      if (img.bytes > WARN_BYTES) big += 1;
-      images.push({ src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), href: null, style: {} });
+      taken.push({ img: await compressOne(file, use), file });
     } catch {
       failed += 1;
     }
   }
-  return { images, failed, big };
+  const over = taken.filter(({ img }) => img.bytes > budgetFor(use));
+  const keep = !over.length || (await keepOverBudget(over.map(({ img }) => img), use));
+  const images = taken
+    .filter(({ img }) => keep || img.bytes <= budgetFor(use))
+    .map(({ img, file }) => ({ src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), href: null, style: {} }));
+  return { images, failed };
 }
 
 /**
@@ -129,7 +169,7 @@ async function compressMany(fileList) {
 async function imageForBlock(file) {
   shellState.setStatus(ta('status.compressingImage'));
   try {
-    const img = await compressOrTrim(file);
+    const img = await compressOrTrim(file, 'image');
     return { src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), width: img.width, height: img.height, bytes: img.bytes };
   } catch (err) {
     shellState.setStatus(imageErrorText(err), 'error');
@@ -137,15 +177,9 @@ async function imageForBlock(file) {
   }
 }
 
-/** The status line once an image block from a picture is placed: the size, when the picture is larger than WARN_BYTES, and otherwise clear. */
-function reportImage(bytes) {
-  if (bytes > WARN_BYTES) shellState.setStatus(ta('status.imageLarge', { kb: Math.round(bytes / 1024) }), 'error');
-  else shellState.setStatus('');
-}
-
-function reportUpload(ok, failed, big) {
+/** The status line once several pictures are in: the ones that could not be read, nothing added, or clear. */
+function reportUpload(ok, failed) {
   if (failed) shellState.setStatus(ta('status.imagesReadFailed', { n: failed }), 'error');
-  else if (big) shellState.setStatus(ta('status.imagesLarge', { n: big }), 'error');
   else shellState.setStatus(ok ? '' : ta('status.noImagesAdded'));
 }
 
@@ -153,12 +187,12 @@ function reportUpload(ok, failed, big) {
 export const mediaState = {
   svgContentBBox,
   svgAutoTrim,
+  budgetFor,
   compressOrTrim,
   imageErrorText,
   readVideoFile,
   newSeed,
   compressMany,
   imageForBlock,
-  reportImage,
   reportUpload,
 };

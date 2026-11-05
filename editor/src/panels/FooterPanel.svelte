@@ -15,7 +15,7 @@
   const ed = getContext('urd-editor');
   const pageId = $derived(ed.pageId);
   const siteDraft = $derived(ed.siteDraft);
-  const { compressOrTrim, footerBgCtx, footerMutate, setStatus } = ed;
+  const { compressOrTrim, footerBgCtx, footerMutate, imageErrorText, setStatus } = ed;
 
   function setFooterBrand(field, value) {
     footerMutate(`edit:footer-brand-${field}`, (f) => {
@@ -39,10 +39,10 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressOrTrim(file);
+      const img = await compressOrTrim(file, 'logo');
       footerMutate('footer', (f) => { f.brand ??= {}; f.brand.logo = img.dataUrl; if (!f.brand.mode) f.brand.mode = 'both'; });
-    } catch {
-      setStatus(ta('status.imageReadErrorSvg'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err, 'status.imageReadErrorSvg'), 'error');
     }
   }
 

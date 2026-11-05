@@ -65,18 +65,43 @@
           },
           "imageStyle": {
             "type": "object",
-            "description": "Non-destructive image style (additive from v0.6): focus point, filters, fit, shape, zoom, rounding",
+            "description": "Non-destructive image style (additive from v0.6): focus point, filters, fit, shape, zoom, rounding; the turn, the look, the blur and the overlay additive from 0.7.29.1 (picture.js draws them all)",
             "additionalProperties": false,
             "properties": {
               "fit": { "enum": ["cover", "contain"] },
               "radius": { "enum": ["sm", "md"] },
               "shape": { "enum": ["wide", "square", "portrait", "circle"], "description": "The frame's shape (aspect ratio); circle is 1:1 with full rounding" },
-              "zoom": { "type": "number", "minimum": 1, "maximum": 3, "description": "Crops in toward the focus point; the frame clips the rest" },
+              "zoom": { "type": "number", "minimum": 1, "maximum": 4, "description": "Crops in toward the focus point; the frame clips the rest" },
               "x": { "type": "number", "minimum": 0, "maximum": 1 },
               "y": { "type": "number", "minimum": 0, "maximum": 1 },
               "brightness": { "type": "number", "minimum": 0, "maximum": 2 },
               "contrast": { "type": "number", "minimum": 0, "maximum": 2 },
-              "saturate": { "type": "number", "minimum": 0, "maximum": 2 }
+              "saturate": { "type": "number", "minimum": 0, "maximum": 2 },
+              "rotate": { "enum": [0, 90, 180, 270], "description": "Quarter turns, drawn by the page; the file is never turned" },
+              "flipX": { "type": "boolean", "description": "Mirrored across" },
+              "flipY": { "type": "boolean", "description": "Mirrored up and down" },
+              "straighten": { "type": "number", "minimum": -15, "maximum": 15, "description": "Degrees; the picture is drawn just large enough to keep its frame filled" },
+              "look": { "enum": ["natural", "mono", "sepia", "vintage", "faded", "warm", "cool", "duotone", "punchy", "noir", "dim", "pop"], "description": "The slideshow layer's tones as a finish on the picture" },
+              "blur": { "type": "number", "minimum": 0, "maximum": 20, "description": "In px" },
+              "duotone": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "The duotone look's two colours: the shadows (dark) and the highlights (light), each a site colour token or a hex colour; absent = black and the accent",
+                "properties": {
+                  "dark": { "type": "string", "pattern": "^(?:[a-z][a-z0-9-]*|#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})$" },
+                  "light": { "type": "string", "pattern": "^(?:[a-z][a-z0-9-]*|#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})$" }
+                }
+              },
+              "overlay": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "A layer over the picture in a site colour (a token such as accent) or a hex colour, at a strength from 0 to 1",
+                "properties": {
+                  "color": { "type": "string", "pattern": "^(?:[a-z][a-z0-9-]*|#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})$" },
+                  "strength": { "type": "number", "minimum": 0, "maximum": 1 }
+                },
+                "required": ["color"]
+              }
             }
           }
         }

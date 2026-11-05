@@ -23,9 +23,12 @@ export function pressTarget(node) {
   return control;
 }
 
+/** The rings running on each control, and the position a control not positioned had before the first of them made it a containing block. */
+const running = new WeakMap();
+
 /**
  * The ripple: a ring from where the pointer pressed, inside the control's own shape, gone when it has spread.
- * A control that is not positioned is made a containing block for the time the ring runs, and given back as it was.
+ * A control that is not positioned is made a containing block while its rings run, and given back as it was when the last of them ends, so a quick second press never loses its ring's place.
  * @param {Element} control
  * @param {{clientX: number, clientY: number}} point
  */
@@ -39,12 +42,20 @@ export function ripple(control, point) {
   ring.style.left = `${point.clientX - box.left}px`;
   ring.style.top = `${point.clientY - box.top}px`;
   layer.append(ring);
-  const placed = getComputedStyle(control).position !== 'static';
-  const before = control.style.position;
-  if (!placed) control.style.position = 'relative';
+  let held = running.get(control);
+  if (!held) {
+    const placed = getComputedStyle(control).position !== 'static';
+    held = { count: 0, placed, before: control.style.position };
+    if (!placed) control.style.position = 'relative';
+    running.set(control, held);
+  }
+  held.count += 1;
   control.append(layer);
   ring.addEventListener('animationend', () => {
     layer.remove();
-    if (!placed) control.style.position = before;
+    held.count -= 1;
+    if (held.count > 0) return;
+    running.delete(control);
+    if (!held.placed) control.style.position = held.before;
   }, { once: true });
 }

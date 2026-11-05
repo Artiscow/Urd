@@ -8,7 +8,7 @@ import { claimAnchors } from '$engine/anchor-model.js';
 import { duplicatedSection } from '../lib/duplicate.js';
 import { pasteIndex } from '$engine/clipboard-model.js';
 import { ta } from '$engine/i18n.js';
-import { fitMoves, shapeHeight } from '$engine/push-model.js';
+import { fitMoves, shapeHeight, followsContent } from '$engine/push-model.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
@@ -107,7 +107,8 @@ function handleGrow(msg) {
   const block = section?.blocks.find((b) => b.id === msg.blockId);
   if (!block?.frames?.desktop) return;
   if (msg.fit) {
-    // A fit is for the desktop frame, and only the latest one asked for counts.
+    // A fit is for the desktop frame of a block that follows its content, and only the latest one asked for counts: an answer measured late, after the block stopped following its content (a shape taken off), is not its height.
+    if (!followsContent(block)) return;
     // A video that keeps a shape takes the height its width gives at the design width, whatever width the preview's surface has.
     const h = shapeHeight(block, pageState.designWidth(section.id)) || msg.h;
     if (block.frames.desktop.h !== h && previewState.viewMode === 'desktop' && msg.seq === pageState.fitSeq.get(msg.blockId)) applyFit(section, block, h);

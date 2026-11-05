@@ -2,6 +2,25 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.29.1-3): one drawing for every picture, the image editor in a dialog, size budgets per use, and a sharpness check
+
+- [ ] Every picture on the example site (the image blocks, a gallery, the news and product cards, a video's cover, the lightbox) looks exactly as before, in the editor and on the published page
+- [ ] The image editor opens from an image block's pencil, a double-click on it and «Open the image editor» in its menu; from a click on a gallery picture; from a collection or product picture on the canvas and in the Collections panel; and from a video's «Edit cover image»: one large dialog with the picture at its true shape in the middle
+- [ ] The frame: dragged over the picture it chooses the part that shows, a click beside it moves it there, the arrow keys move it (Shift a larger step), a corner dragged zooms, the wheel and + and - zoom; the canvas behind shows each change at once
+- [ ] An image block's shapes under the picture: 16:9 and 1:1 keep the block's height and set its width, «The picture's own» takes the picture's shape, «Free» keeps the frame as dragged; the block's height then follows its width when it is dragged wider, on the phone and on the published page; a collection picture's shapes (auto, wide, 1:1, tall, round) change the card
+- [ ] Turn: a quarter left and right, mirroring across and up and down, and straightening to 15 degrees either way, with no empty corners; the same on the published page and in the lightbox
+- [ ] Look: the twelve looks, each with a thumbnail of the picture; Duotone shows Shadows and Highlights with black, white and the site's colours, and the rainbow swatch opens the colour picker for any colour; two colours shade the picture from one to the other (no solid colour), and a theme change follows on the canvas
+- [ ] Adjust: brightness, contrast, saturation and blur; each value beside a slider typed, stepped with its small arrows (held, it repeats) or with the keyboard's up and down arrows (Shift for ten)
+- [ ] Overlay: none, the site's colours or an own colour from the picker, with its strength; Corners: none, small, large (not on a round picture)
+- [ ] The dialog's undo and redo step through the changes, a slider's drag one step; Compare held shows the picture as it was opened; each section's Reset and «Reset all» take their settings back; the cross and Escape cancel the whole edit, the image block's frame too; «Done» keeps it, and one Ctrl+Z in the admin takes the whole edit back
+- [ ] A description typed and closed with «Done» at once is kept; «Upload another» swaps the picture; «Remove» takes it away (a gallery picture leaves the gallery)
+- [ ] A press on the dialog's buttons in quick succession under the Ripple press feel: the ring always spreads from the button pressed, never from the window's upper left corner
+- [ ] Size: an image block's picture shows «N kB of 400 kB» on a meter; a picture over it (an old upload) shows the meter red and «Make smaller», which brings it under; a 600 px wide picture in a wide block, or a picture zoomed far in, reads «Not sharp: … px wide, shown at … px» with the numbers explained in its tooltip; an SVG reads «A drawing: sharp at every size»
+- [ ] A large photo added to an image block, a gallery, a collection picture, a video cover, a share image, the quote's portrait, a logo and a background layer comes in under that place's budget, sharp at its size; an animated GIF or an SVG over the budget asks «Larger than its budget» before it is kept, Cancel leaves it out (said in the status line) and «Keep anyway» keeps it; several pictures to a gallery ask once
+- [ ] In Safari: a photo added comes in whole (the canvas there writes PNG), and when it is over its budget the question is asked
+- [ ] A gallery picture's «Apply to all» gives every picture in the gallery its look, adjustments and overlay, each keeping its own framing and turn; the dialog's undo takes it back, Cancel takes it back, and after «Done» one Ctrl+Z does
+- [ ] The dialog, its tooltips, the size line and the budget question in bokmål and Turkish
+
 ### Test batch (0.7.23.2): every star in a redirect's target
 
 - [ ] On a deployed site: a redirect `/arkiv/* → /gammelt/*/side/*` published; `/arkiv/2024` answers 301 to `/gammelt/2024/side/2024`, and the published `_redirects` has `/arkiv/* /gammelt/:splat/side/:splat 301`

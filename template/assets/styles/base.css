@@ -1081,15 +1081,22 @@ html {
   border-radius: var(--urd-radius-md);
 }
 
-.urd-cover-img {
+/* The owner's picture under the cover's words, in a frame of its own that clips it (picture.js draws its settings) */
+.urd-cover-frame {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.urd-cover-img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.urd-cover > :not(.urd-cover-img) {
+.urd-cover > :not(.urd-cover-frame) {
   position: relative;
 }
 
@@ -12340,228 +12347,6 @@ body.urd-chrome-off .urd-cp {
 /* The help chip (ADR-0008) styles itself: engine/hint.js injects its own
    style tag, so the chip can never end up unstyled with an outdated base.css. */
 
-/* The shared image editor (image-editor.js): a floating panel in preview mode */
-.urd-imged {
-  /* Counter-scaling (urd-zoom), as for the multi toolbar: the panel is
-     admin chrome and keeps the admin's size at any preview zoom. The
-     anchor is set by JS in viewport coordinates, so the origin is that
-     corner. */
-  transform: scale(var(--urd-chrome-scale, 1));
-  transform-origin: top left;
-  position: fixed;
-  z-index: 100002;
-  width: 260px;
-  max-height: calc((100vh - 16px) / var(--urd-chrome-scale, 1));
-  overflow-y: auto;
-  display: grid;
-  gap: 8px;
-  padding: 10px;
-  background: #151a23;
-  color: #e8eaf0;
-  border: 1px solid rgb(255 255 255 / 18%);
-  border-radius: 10px;
-  box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
-  font: 13px/1.4 system-ui, sans-serif;
-}
-
-.urd-imged-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.urd-imged-close {
-  display: inline-flex;
-  align-items: center;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  font-size: 15px;
-  line-height: 1;
-  padding: 4px 6px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.urd-imged-close:hover {
-  background: rgb(255 255 255 / 12%);
-}
-
-.urd-imged-thumb {
-  position: relative;
-  height: 130px;
-  border-radius: 8px;
-  background-size: cover;
-  background-position: center;
-  background-color: rgb(255 255 255 / 6%);
-  cursor: crosshair;
-  touch-action: none;
-}
-
-.urd-imged-thumb-empty::after {
-  content: attr(data-empty);
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  opacity: 0.5;
-}
-
-.urd-imged-dot {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  background: rgb(0 0 0 / 35%);
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 1px rgb(0 0 0 / 45%);
-  pointer-events: none;
-}
-
-.urd-imged-dot::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #fff;
-}
-
-.urd-imged-hint {
-  font-size: 10.5px;
-  line-height: 1.35;
-  opacity: 0.62;
-}
-
-/* Rule-of-thirds grid (as in cameras): over the image on the canvas while the editor
-   is open, and in the panel thumbnail. Faint lines at the thirds. */
-.urd-imged-grid,
-.urd-imged-thumbgrid {
-  background-image:
-    linear-gradient(to right, transparent calc(33.33% - 1px), rgb(255 255 255 / 40%) 0 33.33%, transparent 0 calc(66.67% - 1px), rgb(255 255 255 / 40%) 0 66.67%, transparent 0),
-    linear-gradient(to bottom, transparent calc(33.33% - 1px), rgb(255 255 255 / 40%) 0 33.33%, transparent 0 calc(66.67% - 1px), rgb(255 255 255 / 40%) 0 66.67%, transparent 0);
-}
-
-.urd-imged-grid {
-  position: fixed;
-  z-index: 100001;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.urd-imged-thumbgrid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-body.urd-chrome-off .urd-imged-grid {
-  display: none !important;
-}
-
-.urd-imged-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.urd-imged-btn {
-  flex: 1;
-  font: inherit;
-  color: inherit;
-  background: rgb(255 255 255 / 8%);
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 6px;
-  padding: 5px 8px;
-  cursor: pointer;
-}
-
-.urd-imged-btn:hover {
-  background: rgb(255 255 255 / 15%);
-}
-
-.urd-imged-danger {
-  flex: 0 0 auto;
-  border-color: color-mix(in srgb, #e05252 60%, transparent);
-}
-
-.urd-imged-row {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.urd-imged-row input[type='range'] {
-  width: 100%;
-  accent-color: #7c5cff;
-}
-
-.urd-imged-slider {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.urd-imged-value {
-  flex: 0 0 auto;
-  width: 30px;
-  text-align: right;
-  font: 10px/1 ui-monospace, monospace;
-  opacity: 0.7;
-}
-
-.urd-imged-row input:not([type='range']) {
-  font: inherit;
-  color: inherit;
-  background: rgb(255 255 255 / 6%);
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 6px;
-  padding: 4px 6px;
-  min-width: 0;
-  color-scheme: dark;
-}
-
-/* Segmented choices (Fit/Rounding): a styled replacement for a native select */
-.urd-imged-seg {
-  display: flex;
-  padding: 2px;
-  background: rgb(255 255 255 / 6%);
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 6px;
-}
-
-.urd-imged-seg button {
-  flex: 1;
-  padding: 4px 2px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: inherit;
-  font: 11px/1.2 system-ui, sans-serif;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.urd-imged-seg button:hover {
-  background: rgb(255 255 255 / 10%);
-}
-
-.urd-imged-seg button.selected {
-  background: #7c5cff;
-  color: #fff;
-}
-
-body.urd-chrome-off .urd-imged {
-  display: none !important;
-}
-
 /* Animations (Urd.animations). Entrance animations start invisible and
    slide in when .urd-anim-in is set (IntersectionObserver in animations/
    core.js). Duration and delay are set as CSS variables per element.
@@ -12920,6 +12705,73 @@ a.urd-collection-title:hover {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* An image given a shape in the image editor: the frame is that shape at the block's width, and the block's height follows it (keepsShape in push-model.js) */
+.urd-image-frame.urd-image-shaped {
+  height: auto;
+}
+
+/* The picture's own shape: the picture gives the frame its height (a turned one gives it its ratio, picture.js) */
+.urd-image-frame.urd-image-own:not(.urd-pic-turned) img {
+  height: auto;
+}
+
+/* A picture's settings beyond the focus point, zoom and adjustments (picture.js).
+   The turn (quarter turns, flips, straightening) is drawn on a wrapper around the image, so the zoom keeps its focal point inside it; a quarter turn lays the wrapper across its frame, which is then a size container for it.
+   The vintage look's vignette and the overlay are drawn over the picture inside its frame, which isolates them; the duotone is a filter on the picture (an SVG gradient map, picture.js).
+   The frame is placed for its layers only where it has no place of its own (:where), so a frame laid over its box (the embed cover's) stays where it is. */
+:where(.urd-pic-turned, .urd-pic-look-vintage, .urd-pic-overlaid) {
+  position: relative;
+  isolation: isolate;
+}
+
+.urd-pic-turn {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+}
+
+/* Over the views' own image sizes (a ribbon's image is as wide as it is), so the turned image fills its wrapper */
+.urd-pic-turned.urd-pic-turned > .urd-pic-turn > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+.urd-pic-quarter {
+  container-type: size;
+}
+
+.urd-pic-quarter > .urd-pic-turn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100cqh;
+  height: 100cqw;
+  translate: -50% -50%;
+}
+
+.urd-pic-look-vintage::before,
+.urd-pic-overlaid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* The vintage tone's vignette, as the slideshow lays it over its pictures */
+.urd-pic-look-vintage::before {
+  box-shadow: inset 0 0 60px rgb(0 0 0 / 0.45);
+}
+
+.urd-pic-overlaid::after {
+  background: var(--urd-pic-overlay);
+  opacity: var(--urd-pic-overlay-strength, 0.35);
 }
 
 /* Image block with a lightbox: a zoom cursor for visitors and in Clean view;
@@ -13602,6 +13454,12 @@ body:has(dialog:modal) {
   max-height: 82vh;
   object-fit: contain;
   border-radius: 4px;
+}
+
+/* A picture given a quarter turn lies across the view, so its largest width and height swap */
+.urd-lightbox-img.urd-lightbox-across {
+  max-width: 82vh;
+  max-height: 92vw;
 }
 
 .urd-lightbox-caption {

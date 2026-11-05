@@ -5,31 +5,26 @@
  *
  * The image sits in a frame (.urd-image-frame) that clips: rounding is
  * therefore ALWAYS visible (also with "show the whole image"/contain), and
- * zoom crops in towards the focal point. One shared applyImageStyle serves
- * both render AND the floating image editor, so the two can never drift apart.
+ * zoom crops in towards the focal point. The picture's settings are drawn by
+ * picture.js, the same drawing every picture on the site uses.
  */
 
 import { resolveLink, linkAttrs } from '../nav-model.js';
 import { ta, t } from '../i18n.js';
+import { drawPicture } from '../picture.js';
+import { aspectRatio, IMAGE_ASPECTS } from '../push-model.js';
 
-/** Applies the non-destructive image style to the frame and the image.
- *  @param {HTMLElement} frame The frame element (.urd-image-frame) with the <img> inside */
-export function applyImageStyle(frame, props) {
+/**
+ * Applies a picture's settings to the frame and the image (picture.js draws them for every picture), with the description and the frame's rounding beside them.
+ * @param {HTMLElement} frame The frame element (.urd-image-frame) with the <img> inside
+ * @param {object} props The block's props, or a gallery picture's style with its alt text and the block's rounding
+ * @param {{ratioFromPicture?: boolean}} [options] passed on to drawPicture
+ */
+export function applyImageStyle(frame, props, options) {
   const img = frame.querySelector('img');
   if (!img) return;
-  const focus = `${(props.x ?? 0.5) * 100}% ${(props.y ?? 0.5) * 100}%`;
   img.alt = props.alt ?? '';
-  img.style.objectFit = props.fit ?? 'cover';
-  img.style.objectPosition = focus;
-  // Zoom crops in towards the focal point; the frame clips the rest.
-  const zoom = Number(props.zoom) || 1;
-  img.style.transform = zoom !== 1 ? `scale(${zoom})` : '';
-  img.style.transformOrigin = focus;
-  const filters = [];
-  if (props.brightness != null && props.brightness !== 1) filters.push(`brightness(${props.brightness})`);
-  if (props.contrast != null && props.contrast !== 1) filters.push(`contrast(${props.contrast})`);
-  if (props.saturate != null && props.saturate !== 1) filters.push(`saturate(${props.saturate})`);
-  img.style.filter = filters.join(' ');
+  drawPicture(frame, img, props, options);
   // Rounding on the FRAME (which clips), so it shows whatever the fit is.
   frame.style.borderRadius = props.radius ? `var(--urd-radius-${props.radius})` : '';
 }
@@ -47,9 +42,12 @@ export const imageBlock = {
     lightbox: false,
   }),
   migrations: {},
+  // On the phone an image with a shape is that shape at the row's width; one without keeps its frame's height.
+  autoGrow: (props) => IMAGE_ASPECTS.includes(props.aspect) && Boolean(props.src),
   /**
    * @param {HTMLElement} el
-   * @param {{src: string, alt: string, fit: 'cover'|'contain', radius: string|null, href: string|null}} props
+   * @param {{src: string, alt: string, fit: 'cover'|'contain', radius: string|null, href: string|null, aspect?: string}} props
+   *   aspect: one of IMAGE_ASPECTS (push-model.js) from the image editor, the frame's shape with its height following its width
    * @param {object} ctx
    */
   render(el, props, ctx) {
@@ -82,7 +80,13 @@ export const imageBlock = {
       img.addEventListener('error', () => { img.style.visibility = ''; }, { once: true });
     }
     frame.appendChild(img);
-    applyImageStyle(frame, props);
+    // A shape from the image editor: the frame is that shape at the block's width (keepsShape in push-model.js), or the picture's own shape, which the picture gives it.
+    const ratio = aspectRatio(props.aspect);
+    const own = props.aspect === 'original';
+    if (ratio || own) frame.classList.add('urd-image-shaped');
+    if (ratio) frame.style.aspectRatio = String(Math.round(ratio * 10000) / 10000);
+    if (own) frame.classList.add('urd-image-own');
+    applyImageStyle(frame, props, { ratioFromPicture: own });
 
     // One link (resolveLink): a page, a spot on it, or an address through the shared safe-URL gate; one that goes nowhere is treated as if it were not there.
     const resolved = props.page || props.href || props.target ? resolveLink(props, ctx.site?.pages ?? []) : null;

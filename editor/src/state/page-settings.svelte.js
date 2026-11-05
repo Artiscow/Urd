@@ -87,7 +87,7 @@ async function uploadPageOgImage(id, event) {
   event.target.value = '';
   if (!file) return;
   try {
-    const img = await mediaState.compressOrTrim(file);
+    const img = await mediaState.compressOrTrim(file, 'share');
     await setPageMeta(id, 'ogImage', img.dataUrl);
   } catch (err) {
     shellState.setStatus(mediaState.imageErrorText(err), 'error');

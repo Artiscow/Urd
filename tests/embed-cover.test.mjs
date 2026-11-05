@@ -58,21 +58,3 @@ test('the video block: a shape as its ratio, and a pressed player\'s address tha
   assert.equal(withAutoplay('https://player.vimeo.com/video/1?h=ab&dnt=1'), 'https://player.vimeo.com/video/1?h=ab&dnt=1&autoplay=1');
   assert.equal(withAutoplay('not a url'), 'not a url');
 });
-
-test('the cover picture takes the image editor\'s focus, zoom and adjustments, on top of the cover\'s dimming', async () => {
-  const { coverImageStyle } = await engineImport('embed-cover.js');
-  const img = { style: {} };
-  coverImageStyle(img, undefined);
-  assert.equal(img.style.objectPosition, '50% 50%');
-  assert.equal(img.style.transform, '');
-  assert.equal(img.style.filter, 'brightness(0.7)', 'darkened so the light words read');
-  coverImageStyle(img, { x: 0.2, y: 1, zoom: 2, brightness: 1.5, contrast: 1.2, saturate: 0 });
-  assert.equal(img.style.objectPosition, '20% 100%');
-  assert.equal(img.style.transform, 'scale(2)');
-  assert.equal(img.style.transformOrigin, '20% 100%');
-  assert.equal(img.style.filter, 'brightness(1.05) contrast(1.2) saturate(0)');
-  coverImageStyle(img, { x: 'left', zoom: 9, brightness: -1 });
-  assert.equal(img.style.objectPosition, '50% 50%', 'a value that is not a number is the middle');
-  assert.equal(img.style.transform, 'scale(3)', 'the zoom stops at 3');
-  assert.equal(img.style.filter, 'brightness(0)');
-});

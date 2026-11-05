@@ -4,6 +4,7 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
+  import { PICTURE_BOUNDS } from '$engine/picture.js';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
@@ -27,7 +28,7 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressOrTrim(file);
+      const img = await compressOrTrim(file, 'image');
       mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
         b.props.src = img.dataUrl;
         b.props.alt = b.props.alt || slugify(file.name).replaceAll('-', ' ');
@@ -87,18 +88,18 @@
       oninput={(e) => setBlockProp('y', Number(e.target.value))} />
     <label title={ta('tip.zoomCrop')}>{ta('lbl.zoom')}
       <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
-    <input type="range" min="1" max="3" step="0.01" value={selectedBlock.props.zoom ?? 1}
+    <input type="range" min="1" max={PICTURE_BOUNDS.zoom.max} step="0.01" value={selectedBlock.props.zoom ?? 1}
       oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
     <button type="button" class="linkish" onclick={openImageEditor}>{ta('ui.openImageEditor')}</button>
   {/snippet}
   {#snippet imgFilters()}
     <label title={ta('tip.image.brightness')}>{ta('lbl.brightness')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
-    <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
+    <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
       oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
     <label title={ta('tip.image.contrast')}>{ta('lbl.contrast')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
-    <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
+    <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
       oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
     <label title={ta('tip.image.saturate')}>{ta('lbl.saturate')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>

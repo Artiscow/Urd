@@ -173,4 +173,28 @@ if (validateSite(contactSite)) {
   }
 }
 
+// A synthetic collection whose entry's picture carries every image editor setting (imageStyle, additive from 0.7.29.1-3).
+// The example collections ship without pictures, so the contract is validated here.
+const pictureCollection = load('template/content/samlinger/produkter.json');
+pictureCollection.entries = pictureCollection.entries.slice(0, 1).map((entry) => ({
+  ...entry,
+  image: '/media/images/test.webp',
+  imageAlt: 'A test picture',
+  imageStyle: {
+    x: 0.3, y: 0.7, zoom: 4, rotate: 90, flipX: true, flipY: true, straighten: -12.5, look: 'duotone',
+    duotone: { dark: '#000000', light: 'accent' }, brightness: 1.2, contrast: 0.8, saturate: 1.5, blur: 4,
+    overlay: { color: '#e8590c', strength: 0.4 }, fit: 'contain', shape: 'portrait', radius: 'md',
+  },
+}));
+const validateCollection = ajv.compile(collectionSchema);
+if (validateCollection(pictureCollection)) {
+  console.log('OK    synthetic collection with every picture setting');
+} else {
+  failed = true;
+  console.error('ERROR synthetic collection with every picture setting');
+  for (const err of validateCollection.errors ?? []) {
+    console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
+  }
+}
+
 process.exit(failed ? 1 : 0);

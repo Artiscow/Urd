@@ -161,7 +161,11 @@ test('a video given a shape follows it: its height is its width over the shape',
   assert.equal(followsContent({ type: 'video', props: { aspect: '9:16' } }), true);
   assert.equal(followsContent({ type: 'video', props: {} }), false, 'without a shape the video fills its frame');
   assert.equal(followsContent({ type: 'video', props: { aspect: '5:3' } }), false, 'a shape off the list is none');
-  assert.equal(keepsShape({ type: 'image', props: { aspect: '1:1' } }), false, 'only a video keeps a shape');
+  assert.equal(keepsShape({ type: 'image', props: { aspect: '1:1' } }), false, 'an image block with no picture keeps none');
+  assert.equal(keepsShape({ type: 'image', props: { src: '/media/a.webp', aspect: '3:2' } }), true, 'an image block with a picture keeps its shape');
+  assert.equal(keepsShape({ type: 'image', props: { src: '/media/a.webp', aspect: 'original' } }), true, 'or the picture\'s own');
+  assert.equal(keepsShape({ type: 'video', props: { aspect: '3:2' } }), false, 'a video keeps only its own shapes');
+  assert.equal(shapeHeight({ type: 'image', props: { src: '/media/a.webp', aspect: 'original' }, frames: { desktop: { w: 25 } } }, 1440), 0, 'the picture\'s own shape is measured by the preview');
   assert.equal(keepsShape(null), false);
   const square = { type: 'video', props: { aspect: '1:1' }, frames: { desktop: { w: 25 } } };
   assert.equal(shapeHeight(square, 1440), 360, 'a quarter of 1440 px, square');

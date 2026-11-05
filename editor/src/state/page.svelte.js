@@ -21,6 +21,7 @@ import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { mediaState } from './media.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
+import { pictureEditorState } from './picture-editor.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
@@ -247,6 +248,20 @@ function mutateBlock(key, fn) {
   fitBlockSoon(section.id, block);
 }
 
+/** A block's change by its section and its id rather than the selection: the image editor writes the block it was opened on, whichever is selected meanwhile. */
+function mutateBlockAt(sectionId, blockId, key, fn) {
+  const { section, block } = readBlock(sectionId, blockId);
+  if (!block) return;
+  if (key) historyState.pushHistory(key);
+  fn(block, section);
+  markDesktopChange(section, 'block-edited');
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  syncSelectedBlock();
+  fitBlockSoon(section.id, block);
+}
+
 function setBlockProp(name, value) {
   // The key includes the property name: changing the label and then the
   // style must be TWO undo steps, while a burst in the same field coalesces.
@@ -284,9 +299,10 @@ const ribbonReach = (w) => (w === 'canvas' || w === 'page' ? w : 'content');
 const RIBBON_MOTIONS = () => [['roll', ta('opt.ribbonMotion.roll')], ['sway', ta('opt.ribbonMotion.sway')],
   ['step', ta('opt.ribbonMotion.step')], ['none', ta('opt.ribbonMotion.none')]];
 
-/** The image editor in the preview, opened from the block's menu (the floating menu steps aside for it). */
+/** The image editor (PictureEditor.svelte), opened from the block's menu on the selected image block's picture or video's cover (the floating menu steps aside for it). */
 function openImageEditor() {
-  previewState.bridge?.sendOpenImageEditor(selectedBlock.blockId);
+  if (!selectedBlock) return;
+  pictureEditorState.openPicture({ kind: selectedBlock.type === 'video' ? 'cover' : 'image', sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId });
   blockMenu = null;
 }
 
@@ -712,7 +728,7 @@ async function setBlockVideoPoster(event) {
   event.target.value = '';
   if (!file) return;
   try {
-    const img = await mediaState.compressOrTrim(file);
+    const img = await mediaState.compressOrTrim(file, 'cover');
     setBlockProp('poster', img.dataUrl);
   } catch (err) {
     shellState.setStatus(mediaState.imageErrorText(err), 'error');
@@ -989,9 +1005,9 @@ async function addGalleryImages(event) {
   event.target.value = '';
   if (!files.length) return;
   shellState.setStatus(ta('status.compressingImages'));
-  const { images, failed, big } = await mediaState.compressMany(files);
+  const { images, failed } = await mediaState.compressMany(files, 'gallery');
   if (images.length) mutateBlock('gallery-add', (b) => { b.props.images.push(...images); });
-  mediaState.reportUpload(images.length, failed, big);
+  mediaState.reportUpload(images.length, failed);
 }
 
 function moveGalleryImage(i, dir) {
@@ -1100,6 +1116,8 @@ export const pageState = {
   set searchBlockId(v) { searchBlockId = v; },
   onBlockMenu,
   mutateBlock,
+  mutateBlockAt,
+  readBlock,
   setBlockProp,
   setBlockProps,
   groupReset,
