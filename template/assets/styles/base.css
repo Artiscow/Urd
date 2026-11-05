@@ -16412,6 +16412,75 @@ body.urd-marqueeing {
   margin-top: 1.2rem;
 }
 
+/* The privacy block (blocks/privacy.js): the site's privacy page, written from its settings: running text with the page's headings, the lists of forms and of the visitor's own choices, and the press that takes a choice back */
+.urd-privacy {
+  max-width: 68ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--urd-color-text);
+}
+
+.urd-privacy h2 {
+  margin: 1.6em 0 0.4em;
+  font-size: 1.3em;
+}
+
+.urd-privacy h3 {
+  margin: 1.1em 0 0.3em;
+  font-size: 1.05em;
+}
+
+.urd-privacy p,
+.urd-privacy ul {
+  margin: 0 0 0.75em;
+}
+
+.urd-privacy-intro {
+  opacity: 0.85;
+}
+
+.urd-privacy a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.urd-privacy-list {
+  list-style: none;
+  padding: 0;
+}
+
+.urd-privacy-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.urd-privacy-takeback {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--urd-color-accent);
+  border-radius: var(--urd-radius-sm);
+  background: transparent;
+  color: var(--urd-color-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.urd-privacy-takeback:hover,
+.urd-privacy-takeback:focus-visible {
+  background: var(--urd-color-accent);
+  color: var(--urd-color-bg);
+}
+
+.urd-privacy-said {
+  font-size: 0.9em;
+  opacity: 0.85;
+}
+
 /* The contact block (blocks/contact.js): the site's contact details in one of its designs, an <address> whose own width picks each design's narrow layout (a container query), so a phone and a narrow frame both get it. Links keep the text colour, labels and actions take the accent. */
 .urd-contact {
   container-type: inline-size;

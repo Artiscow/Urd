@@ -21,7 +21,7 @@ import { shopOn } from '$engine/block-palette.js';
 // bar's typography row).
 
 /** Names of the block types in the panel. */
-const BLOCK_LABELS = $derived({ text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), ribbon: ta('blocks.ribbon'), table: ta('blocks.table'), share: ta('blocks.share'), contact: ta('blocks.contact'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar') });
+const BLOCK_LABELS = $derived({ text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), ribbon: ta('blocks.ribbon'), table: ta('blocks.table'), share: ta('blocks.share'), contact: ta('blocks.contact'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar'), privacy: ta('blocks.privacy') });
 
 /** The block palette: a new block ready to be dragged where it belongs. */
 /** w in percent of the section width, h in px (physical units). The wide
@@ -120,6 +120,11 @@ const BLOCK_DEFAULTS = $derived({
     type: 'contact',
     props: { parts: ['name', 'address', 'phone', 'email'], design: 'lines' },
     w: 30, h: 130,
+  },
+  privacy: {
+    type: 'privacy',
+    props: {},
+    w: 60, h: 600,
   },
   // The links block (type id `share`, blocks/share.js version 2): the site's links, with no own list.
   share: {

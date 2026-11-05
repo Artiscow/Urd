@@ -32,6 +32,7 @@ import { ribbonBlock } from './blocks/ribbon.js';
 import { tableBlock } from './blocks/table.js';
 import { shareBlock } from './blocks/share.js';
 import { contactBlock } from './blocks/contact.js';
+import { privacyBlock } from './blocks/privacy.js';
 import { countdownBlock } from './blocks/countdown.js';
 import { audioBlock } from './blocks/audio.js';
 import { productBlock } from './blocks/product.js';
@@ -109,6 +110,7 @@ function registerCore() {
   Urd.blocks.define('table', tableBlock);
   Urd.blocks.define('share', shareBlock);
   Urd.blocks.define('contact', contactBlock);
+  Urd.blocks.define('privacy', privacyBlock);
   Urd.blocks.define('countdown', countdownBlock);
   Urd.blocks.define('audio', audioBlock);
   Urd.blocks.define('product', productBlock);

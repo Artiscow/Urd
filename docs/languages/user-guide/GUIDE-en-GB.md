@@ -62,6 +62,7 @@ Open the **Blocks** panel and click the block you want; it is placed in the midd
 - **Collection**: shows the entries from a collection (see the Collections panel) as cards, a list or a year-grouped archive.
 - **Icon**: a character or an emoji in any size and theme colour. In Properties the character button opens a menu with hundreds of characters and emojis (with the recently used at the top), and at the bottom of the menu you can upload your own icon image that is shown instead of the character.
 - **Shapes**: line, arrow, circle, rectangle and triangle for decoration.
+- **Privacy page**: the site's privacy statement, written from the site itself: who is responsible (the Site panel's contact details), what each form and the shop send and to whom, whether visits are counted, which companies' videos and maps the pages hold, the host, the visitor's rights, and a list of the companies the visitor has let load with the page, each taken back with one press. It has no settings: change the site and the page follows. A new page from the **Privacy** template holds it under a heading.
 
 In the editor, links and buttons are never triggered when you click them - the click selects the block. Test the links via **View site ↗**.
 
@@ -106,7 +107,7 @@ Click a block and open **Properties** to fine-tune it with numbers and choices i
 
 The page is built from sections stacked on top of each other. Point at the border between two sections to get **+ New section**: it opens a gallery of ready-made section templates, grouped with a short description per template. All the templates are starting points: after insertion you edit the blocks freely as usual, and the colours follow your theme.
 
-- **Basics**: empty section, hero (left-aligned or centred with two buttons), images, contact and a simple footer section.
+- **Basics**: empty section, hero (left-aligned or centred with two buttons), images, contact, privacy and a simple footer section.
 - **Cards and lists**: feature cards with icons, news cards, events with date badges and a sign-up button, team/board, FAQ, step by step, lead story (one big story + two small) and products/merch (point the **Buy** button at a payment link, for example Vipps, in Properties).
 - **Highlight**: CTA banner («Join us»), quote, statistics numbers, a greyscale sponsor row and membership with price tiers.
 

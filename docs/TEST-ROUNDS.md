@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.24.2.1): the privacy page
+
+- [ ] Pages panel, a new page from the «Privacy» template: a page with the heading «Personvern» and the privacy block under it; the block has no settings in its menu, and no plugin «Settings» button
+- [ ] On the published site, the page reads in the site's language with these parts: who is responsible (the Site panel's legal name, organisation number, address, email and phone; the site's title where there are none), what the site collects (a line per form with its page, its fields and its recipient or the service's host; the shop with its page and its payment providers linked; «Counting visits» when analytics is on; «Videos and maps from other companies» naming the providers the pages hold, each linked to its terms), what is kept in the browser (no cookies; the light or dark choice, the cart, the embed choice, each only where it applies), the host, the rights with Datatilsynet linked, and the visitor's choices
+- [ ] Switch analytics on in the Site panel: «Counting visits» appears on the page; add a form on another page and publish: the form is listed; set a map to load with the page: the page says OpenStreetMap sees every visit to that page; remove the last video from Vimeo: Vimeo is gone from the list
+- [ ] In a fresh private window, tick «Always load from YouTube on this site» on a video, then open the privacy page: YouTube is listed under the visitor's choices; «Ask me first again» removes it, says so, and the next page with a YouTube video shows the cover again
+- [ ] The page in a screen reader: the outline is the heading, then the parts as second-level headings with the collecting parts under them as third-level
+- [ ] The page in bokmål, English and Turkish; the block's name, tooltip and the template's name in the admin in bokmål and Turkish
+
 ### Test batch (0.7.29.5): the image block's menu without the editor's sliders, and a pencil on each gallery picture
 
 - [ ] The image block's menu: «Open the image editor» first in Content; Style holds only Fit and Corners, each with its pin, and no focus, zoom, brightness, contrast or saturation slider stands anywhere in the menu; the Fit and Corners quick tiles change the picture and can be unpinned and pinned again from Style; «brightness» or «zoom» typed in the menu's search finds the editor's button

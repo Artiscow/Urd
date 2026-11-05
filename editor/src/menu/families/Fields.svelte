@@ -137,7 +137,7 @@
     </label>
   {:else if pluginFields.length}
     {@render fieldList()}
-  {:else}
+  {:else if pluginBlocks.some((b) => b.type === selectedBlock.type)}
     <button class="ghost" title={ta('hint.pluginBlock')}
       onclick={() => ed.bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
   {/if}

@@ -7,13 +7,23 @@ import { t } from './i18n.js';
 import { isSafeImage } from './nav-model.js';
 import { drawPicture } from './picture.js';
 
-/** The providers a cover names, by the end of the frame's host: an id for the stored choice and the name the visitor reads. */
+/* The providers a cover names: the end of the frame's host, the id the visitor's choice is kept under, the name on the cover, and the provider's own privacy terms the privacy page links to. A new provider goes here, in `_headers`' frame-src and in the block that embeds it. */
 const PROVIDERS = [
-  ['youtube-nocookie.com', 'youtube', 'YouTube'],
-  ['youtube.com', 'youtube', 'YouTube'],
-  ['vimeo.com', 'vimeo', 'Vimeo'],
-  ['openstreetmap.org', 'openstreetmap', 'OpenStreetMap'],
+  ['youtube-nocookie.com', 'youtube', 'YouTube', 'https://policies.google.com/privacy'],
+  ['youtube.com', 'youtube', 'YouTube', 'https://policies.google.com/privacy'],
+  ['vimeo.com', 'vimeo', 'Vimeo', 'https://vimeo.com/privacy'],
+  ['openstreetmap.org', 'openstreetmap', 'OpenStreetMap', 'https://osmfoundation.org/wiki/Privacy_Policy'],
 ];
+
+/** A provider's name by its id, or the id itself for one the covers do not name. */
+export function providerName(id) {
+  return PROVIDERS.find(([, pid]) => pid === id)?.[2] ?? String(id);
+}
+
+/** The address of a provider's own privacy terms by its id, '' for one the covers do not name. */
+export function providerPrivacyUrl(id) {
+  return PROVIDERS.find(([, pid]) => pid === id)?.[3] ?? '';
+}
 
 /** Where the visitor's choice is kept: the ids of the providers whose frames load at once on this site. */
 export const ALLOWED_KEY = 'urd-embeds';

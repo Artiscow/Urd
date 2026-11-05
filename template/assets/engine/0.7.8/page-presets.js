@@ -33,6 +33,8 @@ export const PAGE_PRESETS = [
   { id: 'shop', labelKey: 'pageTemplate.shop', sections: ['shop-hero', 'shop', 'faq', 'cta'] },
   { id: 'shop-front', labelKey: 'pageTemplate.shopFront', sections: ['shop-hero', 'shop', 'shop-categories', 'shop-showcase', 'shop-trust', 'cta'] },
   { id: 'checkout', labelKey: 'pageTemplate.checkout', sections: ['checkout', 'contact'] },
+  // The privacy page: its one section holds the block that writes the page from the site's settings.
+  { id: 'privacy', labelKey: 'pageTemplate.privacy', sections: ['privacy'] },
 ];
 
 /**

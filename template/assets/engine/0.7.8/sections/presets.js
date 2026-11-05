@@ -75,6 +75,16 @@ const contact = (fr, props = {}) => ({
   frames: fr,
 });
 
+const privacy = (fr) => ({
+  id: makeId('blk'),
+  type: 'privacy',
+  version: 1,
+  // The block writes the page from the site's settings, so the preset carries no text.
+  props: {},
+  animation: null,
+  frames: fr,
+});
+
 const icon = (fr, glyph, size = 40) => ({
   id: makeId('blk'),
   type: 'icon',
@@ -477,6 +487,19 @@ export function registerSectionPresets(Urd) {
     create: () => section('contact', '320px', bg(colorLayer('surface'), glowLayer(0.2, 0.8, 0.2)), [
       text(frame(10, 32, 40, 36), ta('seed.contact.title')),
       contact(frame(10, 84, 40, 150)),
+    ]),
+  });
+
+  Urd.sections.define('privacy', {
+    label: 'Privacy',
+    labelKey: 'preset.privacy.label',
+    group: 'Basics',
+    groupKey: 'presetGroup.basic',
+    hint: 'The privacy page, written from the site\'s settings under a heading',
+    hintKey: 'preset.privacy.hint',
+    create: () => section('privacy', '720px', bg(colorLayer('bg')), [
+      text(frame(10, 32, 80, 36), ta('seed.privacy.title')),
+      privacy(frame(10, 90, 80, 600)),
     ]),
   });
 

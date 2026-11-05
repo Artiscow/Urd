@@ -28,7 +28,7 @@ export const PUSH_SECTION_PAD = 24;
  * other type keeps the height of its frame, and text is at least as tall as
  * its words.
  */
-export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout', 'collection', 'contact', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
+export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout', 'collection', 'contact', 'countdown', 'faq', 'form', 'privacy', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
 
 /** The shapes a video can be given, width:height: widescreen first (YouTube's own), then classic, square, vertical (Shorts and reels), cinema and portrait. Without one the video fills its frame. */
 export const VIDEO_ASPECTS = ['16:9', '4:3', '1:1', '9:16', '21:9', '4:5'];
@@ -96,7 +96,7 @@ export function followsContent(block) {
  * stores it as `mobileHeight` (0.7.21.7); the loading state stands at it on
  * the phone, so the first load of a session does not jump.
  */
-export const FETCHES_CONTENT = new Set(['calendar', 'collection', 'product']);
+export const FETCHES_CONTENT = new Set(['calendar', 'collection', 'privacy', 'product']);
 
 /**
  * The height in px the loading state of a block stands at on the phone: the

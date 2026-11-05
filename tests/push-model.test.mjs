@@ -148,7 +148,7 @@ test('fitFloorPx: the width-floor types get their share of the design width time
 });
 
 test('the block types ADR-0025 names follow their content, and no other', () => {
-  assert.deepEqual([...FOLLOWS_CONTENT].sort(), ['audio', 'calendar', 'cart', 'checkout', 'collection', 'contact', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
+  assert.deepEqual([...FOLLOWS_CONTENT].sort(), ['audio', 'calendar', 'cart', 'checkout', 'collection', 'contact', 'countdown', 'faq', 'form', 'privacy', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
   assert.equal(followsContent({ type: 'faq' }), true);
   for (const type of ['text', 'image', 'video', 'icon', 'shape', 'button', 'gallery', 'ribbon', 'map']) {
     assert.equal(followsContent({ type }), false, type);
@@ -293,7 +293,7 @@ test('a stale block settled where it stands moves nothing', () => {
 });
 
 test('mobileLoadingHeight: the stored phone height of a block that fetches its content, 0 otherwise', () => {
-  assert.deepEqual([...FETCHES_CONTENT].sort(), ['calendar', 'collection', 'product']);
+  assert.deepEqual([...FETCHES_CONTENT].sort(), ['calendar', 'collection', 'privacy', 'product']);
   for (const type of FETCHES_CONTENT) assert.ok(FOLLOWS_CONTENT.has(type), `${type} follows its content`);
   assert.equal(mobileLoadingHeight({ type: 'calendar', mobileHeight: 353 }), 353);
   assert.equal(mobileLoadingHeight({ type: 'collection', mobileHeight: 412.6 }), 413);

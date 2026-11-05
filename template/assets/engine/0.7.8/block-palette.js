@@ -32,6 +32,7 @@ export const PALETTE_KINDS = {
   'countdown': { labelKey: 'blocks.countdown', tipKey: 'tip.blocks.countdown', picture: draw('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>') },
   'form': { labelKey: 'blocks.form', tipKey: 'tip.blocks.form', picture: draw('<rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="8" height="4" rx="2"/>') },
   'contact': { labelKey: 'blocks.contact', tipKey: 'tip.blocks.contact', picture: draw('<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.5 17c.8-2 2-3 3.5-3s2.7 1 3.5 3M14 10h5M14 13h4"/>') },
+  'privacy': { labelKey: 'blocks.privacy', tipKey: 'tip.blocks.privacy', picture: draw('<path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>') },
   'share': { labelKey: 'blocks.share', tipKey: 'tip.blocks.share', picture: draw('<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"/>') },
   'product': { labelKey: 'blocks.product', tipKey: 'tip.blocks.product', picture: draw('<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>') },
   'cart': { labelKey: 'blocks.cart', tipKey: 'tip.blocks.cart', picture: draw('<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6L20.5 8H7"/>') },
@@ -50,7 +51,7 @@ export const PALETTE_GROUPS = [
   { id: 'media', labelKey: 'blockGroup.media', icon: 'image', kinds: ['image', 'gallery', 'gallery-images', 'video', 'audio'] },
   { id: 'facts', labelKey: 'blockGroup.facts', icon: 'stats', kinds: ['faq', 'timeline', 'stats', 'table', 'collection'] },
   { id: 'events', labelKey: 'blockGroup.events', icon: 'calendar', kinds: ['calendar', 'calendar-designs', 'map', 'countdown'] },
-  { id: 'contact', labelKey: 'blockGroup.contact', icon: 'form', kinds: ['form', 'contact', 'share'] },
+  { id: 'contact', labelKey: 'blockGroup.contact', icon: 'form', kinds: ['form', 'contact', 'share', 'privacy'] },
   { id: 'shop', labelKey: 'blockGroup.shop', icon: 'cart', kinds: ['product', 'cart', 'checkout'] },
   { id: 'decor', labelKey: 'blockGroup.decor', icon: 'shape-circle', kinds: ['ribbon', 'shape-line', 'shape-arrow', 'shape-circle', 'shape-rect', 'shape-triangle'] },
 ];

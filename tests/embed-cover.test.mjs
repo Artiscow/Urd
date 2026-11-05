@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { providerOf, allowedProviders, setProviderAllowed, ALLOWED_KEY, coverFrame } = await engineImport('embed-cover.js');
+const { providerOf, allowedProviders, setProviderAllowed, ALLOWED_KEY, coverFrame, providerName, providerPrivacyUrl } = await engineImport('embed-cover.js');
 
 /** A storage in memory, as the browser's localStorage answers. */
 function memoryStorage() {
@@ -69,4 +69,13 @@ test('an embed the owner loads with the page (askFirst off): the frame at once a
     assert.equal(got, frame);
     assert.deepEqual(appended, [frame]);
   }
+});
+
+test('every provider the covers name has a name and its own privacy terms for the privacy page', () => {
+  for (const id of ['youtube', 'vimeo', 'openstreetmap']) {
+    assert.notEqual(providerName(id), id);
+    assert.match(providerPrivacyUrl(id), /^https:\/\//);
+  }
+  assert.equal(providerName('nonsense'), 'nonsense');
+  assert.equal(providerPrivacyUrl('nonsense'), '');
 });
