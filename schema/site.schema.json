@@ -126,6 +126,7 @@
           }
         },
         "icon": { "type": "string", "description": "Site icon (favicon): path in media/images/ (data URL in draft). Additive field from v0.5." },
+        "iconSource": { "$ref": "#/$defs/pictureSource", "description": "The site icon's kept original and the settings it is baked with (additive from 0.7.29.4); the image editor bakes `icon` from it" },
         "setup": { "type": "boolean", "description": "Additive from v0.6: true in the template's default content triggers the setup wizard in admin; the wizard removes the field on completion. Replaces the old string matching on the template's default name." }
       }
     },
@@ -581,7 +582,8 @@
             "textSize": { "type": "number", "minimum": 8, "maximum": 96, "description": "Text size in px (empty = inherit)" },
             "bold": { "type": "boolean", "default": true },
             "italic": { "type": "boolean", "default": false },
-            "radius": { "type": "number", "minimum": 0, "maximum": 64, "description": "The image's corner rounding in px" }
+            "radius": { "type": "number", "minimum": 0, "maximum": 64, "description": "The image's corner rounding in px" },
+            "imageSource": { "$ref": "#/$defs/pictureSource", "description": "The logo image's kept original and the settings it is baked with (additive from 0.7.29.4); the image editor bakes the image in `value` or `image` from it" }
           }
         },
         "items": {
@@ -683,6 +685,7 @@
             "tagline": { "type": "string" },
             "mode": { "enum": ["text", "image", "both"], "default": "text", "description": "The brand is shown as text, uploaded logo (image), or both (logo + text). Mirrors the nav logo. Additive from v0.6." },
             "logo": { "type": "string", "description": "Uploaded logo: path in media/images/ (data URL in draft). Shown when mode is image/both." },
+            "logoSource": { "$ref": "#/$defs/pictureSource", "description": "The logo's kept original and the settings it is baked with (additive from 0.7.29.4)" },
             "logoHeight": { "type": "number", "minimum": 16, "maximum": 160, "default": 40, "description": "Logo height in px." }
           }
         },
@@ -813,6 +816,142 @@
       "properties": {
         "version": { "type": "integer", "minimum": 1 },
         "layers": { "type": "array", "items": { "$ref": "#/$defs/typedProps" } }
+      }
+    },
+    "pictureSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "src"
+      ],
+      "description": "A baked picture's kept original (additive from 0.7.29.4): the original's file and the image editor's settings the picture is baked with, so a new edit starts from the original. The settings are an entry's imageStyle's (collection.schema.json) without the fit and the shape, each at none left out, and a logo's shape (`ratio`).",
+      "properties": {
+        "src": {
+          "type": "string",
+          "description": "The original: a path in media/images/ (a data URL in the draft)"
+        },
+        "zoom": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Crops in toward the focus point; the frame clips the rest"
+        },
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "brightness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "contrast": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "saturate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "rotate": {
+          "enum": [
+            0,
+            90,
+            180,
+            270
+          ],
+          "description": "Quarter turns, drawn by the page; the file is never turned"
+        },
+        "flipX": {
+          "type": "boolean",
+          "description": "Mirrored across"
+        },
+        "flipY": {
+          "type": "boolean",
+          "description": "Mirrored up and down"
+        },
+        "straighten": {
+          "type": "number",
+          "minimum": -15,
+          "maximum": 15,
+          "description": "Degrees; the picture is drawn just large enough to keep its frame filled"
+        },
+        "look": {
+          "enum": [
+            "natural",
+            "mono",
+            "sepia",
+            "vintage",
+            "faded",
+            "warm",
+            "cool",
+            "duotone",
+            "punchy",
+            "noir",
+            "dim",
+            "pop"
+          ],
+          "description": "The slideshow layer's tones as a finish on the picture"
+        },
+        "blur": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "In px"
+        },
+        "duotone": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The duotone look's two colours: the shadows (dark) and the highlights (light), each a site colour token or a hex colour; absent = black and the accent",
+          "properties": {
+            "dark": {
+              "type": "string",
+              "pattern": "^(?:[a-z][a-z0-9-]*|#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})$"
+            },
+            "light": {
+              "type": "string",
+              "pattern": "^(?:[a-z][a-z0-9-]*|#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})$"
+            }
+          }
+        },
+        "overlay": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "A layer over the picture in a site colour (a token such as accent) or a hex colour, at a strength from 0 to 1",
+          "properties": {
+            "color": {
+              "type": "string",
+              "pattern": "^(?:[a-z][a-z0-9-]*|#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})$"
+            },
+            "strength": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [
+            "color"
+          ]
+        },
+        "ratio": {
+          "enum": [
+            "1:1",
+            "4:3",
+            "3:2",
+            "16:9",
+            "9:16",
+            "4:5"
+          ],
+          "description": "A logo's shape (additive from 0.7.29.4); omitted, the original's own shape"
+        }
       }
     }
   }

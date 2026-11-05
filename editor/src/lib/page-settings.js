@@ -13,7 +13,7 @@ export function pageSettingsLayoutOf(raw) {
   return PAGE_SETTINGS_LAYOUTS.includes(raw) ? raw : 'dialog';
 }
 
-/** The fields of a page's meta as the settings show them, every one a string. */
+/** The fields of a page's meta as the settings show them, every one a string but the share image's kept original (an object, or null). */
 export function metaOf(page) {
   const meta = page?.meta ?? {};
   return {
@@ -22,7 +22,24 @@ export function metaOf(page) {
     ogTitle: meta.og?.title ?? '',
     ogDescription: meta.og?.description ?? '',
     ogImage: meta.og?.image ?? '',
+    ogImageSource: meta.og?.imageSource ?? null,
   };
+}
+
+/**
+ * The share image's kept original written into a page's meta beside the baked image (`og.imageSource`): the original's file and the settings the image is baked with; null takes it away, and the og object goes when it empties.
+ * The page is changed in place and returned.
+ * @param {{meta?: object}} page
+ * @param {object|null} source
+ */
+export function withShareSource(page, source) {
+  page.meta ??= {};
+  const og = { ...(page.meta.og ?? {}) };
+  if (source?.src) og.imageSource = source;
+  else delete og.imageSource;
+  if (Object.keys(og).length) page.meta.og = og;
+  else delete page.meta.og;
+  return page;
 }
 
 /** The meta key behind each field, `og` for the sharing fields. */

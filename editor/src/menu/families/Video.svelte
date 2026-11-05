@@ -57,14 +57,22 @@
       <label title={ta('hint.video')}>{ta('lbl.videoUrl')}</label>
       <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
         onchange={(e) => setBlockProp('url', e.target.value)} />
-      <!-- The cover's own picture: the video stands behind the cover until a visitor presses play; once chosen it is framed, adjusted, swapped or removed in the image editor -->
-      {#if selectedBlock.props.poster}
-        <button type="button" class="ghost action" title={ta('tip.video.coverEdit')} onclick={openImageEditor}>{ta('ui.editCover')}</button>
-      {:else}
-        <label class="ghost action filepick" title={ta('tip.video.cover')}>
-          {ta('ui.chooseCover')}
-          <input type="file" accept="image/*" onchange={setBlockVideoPoster} />
-        </label>
+      <!-- Whether the video stands behind a cover until a visitor presses play, or loads with the page -->
+      <label title={ta('tip.embed.askFirst')} class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.askFirst !== false}
+          onchange={(e) => setBlockProp('askFirst', e.target.checked)} />
+        {ta('lbl.embedAskFirst')}
+      </label>
+      <!-- The cover's own picture, only while there is a cover; once chosen it is framed, adjusted, swapped or removed in the image editor -->
+      {#if selectedBlock.props.askFirst !== false}
+        {#if selectedBlock.props.poster}
+          <button type="button" class="ghost action" title={ta('tip.video.coverEdit')} onclick={openImageEditor}>{ta('ui.editCover')}</button>
+        {:else}
+          <label class="ghost action filepick" title={ta('tip.video.cover')}>
+            {ta('ui.chooseCover')}
+            <input type="file" accept="image/*" onchange={setBlockVideoPoster} />
+          </label>
+        {/if}
       {/if}
     {:else}
       <label class="ghost action filepick" title={ta('tip.video.file')}>
@@ -107,8 +115,8 @@
   {#if vsource === 'file'}
     {@const playOn = [selectedBlock.props.loop === true, selectedBlock.props.muted === true, selectedBlock.props.autoplay === true].filter(Boolean).length}
     <MenuGroup id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')} group={groupOf('video-play', { loop: false, muted: false, autoplay: false })}>{@render videoPlay()}</MenuGroup>
-  {:else}
-    <!-- An embedded video: whether the press on its cover also starts it -->
+  {:else if selectedBlock.props.askFirst !== false}
+    <!-- An embedded video behind its cover: whether the press on the cover also starts it -->
     <label title={ta('tip.video.playOnPress')} class="gridmenu-snap">
       <input type="checkbox" checked={selectedBlock.props.playOnPress !== false}
         onchange={(e) => setBlockProp('playOnPress', e.target.checked)} />

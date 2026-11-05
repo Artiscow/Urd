@@ -4,13 +4,14 @@
  */
 import { ta } from '$engine/i18n.js';
 import { pageTitle } from '$engine/seo.js';
-import { metaOf, withMeta } from '../lib/page-settings.js';
+import { metaOf, withMeta, withShareSource } from '../lib/page-settings.js';
 import { historyState } from './history.svelte.js';
 import { mediaState } from './media.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
+import { pictureEditorState } from './picture-editor.svelte.js';
 
 /** The page whose settings are open, by id; null while none is. */
 let pageSettingsFor = $state(null);
@@ -81,17 +82,47 @@ async function setPageMeta(id, field, rawValue) {
   pageMetas[id] = { ...(pageMetas[id] ?? metaOf(null)), [field]: value };
 }
 
-/** The sharing image of a page: compressed like other images and materialised to media/ on publish. */
+/** A page's share image chosen: the picture is kept as the original, and the image editor opens on it to crop it to the share image's shape; «Done» bakes the image (setPageShareImage). */
 async function uploadPageOgImage(id, event) {
   const file = event.target.files?.[0];
   event.target.value = '';
   if (!file) return;
   try {
-    const img = await mediaState.compressOrTrim(file, 'share');
-    await setPageMeta(id, 'ogImage', img.dataUrl);
+    const img = await mediaState.compressOrTrim(file, 'image');
+    pictureEditorState.openPicture({ kind: 'share', pageId: id, fresh: true, source: { src: img.dataUrl } });
   } catch (err) {
     shellState.setStatus(mediaState.imageErrorText(err), 'error');
   }
+}
+
+/** The image editor on a page's share image: from its kept original, or from the image itself where none is kept. */
+function editPageOgImage(id) {
+  const meta = pageMetas[id] ?? metaOf(null);
+  const source = meta.ogImageSource?.src ? meta.ogImageSource : meta.ogImage ? { src: meta.ogImage } : null;
+  if (source) pictureEditorState.openPicture({ kind: 'share', pageId: id, source });
+}
+
+/**
+ * A page's share image baked by the image editor, with its kept original, as one step; an empty image takes both away.
+ * @param {string} id
+ * @param {string} image
+ * @param {object|null} source
+ */
+async function setPageShareImage(id, image, source) {
+  const value = String(image ?? '').trim();
+  const entry = entryOf(id);
+  if (!entry) return;
+  const apply = (p) => withShareSource(withMeta(p, 'ogImage', value), value ? source : null);
+  if (id === pageState.pageId) {
+    historyState.pushHistory(`page-meta:${id}:ogImage`);
+    apply(pageState.store.data);
+    pageState.store.save();
+    historyState.updateDirty();
+  } else {
+    historyState.pushHistory(`page-meta:${id}:ogImage`, { pages: [id] });
+    await pageState.patchPageDraft(entry, apply);
+  }
+  pageMetas[id] = { ...(pageMetas[id] ?? metaOf(null)), ogImage: value, ogImageSource: value && source?.src ? source : null };
 }
 
 /** The title the browser tab and search results get for a page, from the site's format and the page's search title or name (seo.js pageTitle). */
@@ -119,6 +150,8 @@ export const pageSettingsState = {
   loadAllPageMetas,
   setPageMeta,
   uploadPageOgImage,
+  editPageOgImage,
+  setPageShareImage,
   pageTitleOf,
   frontPageStatus,
 };

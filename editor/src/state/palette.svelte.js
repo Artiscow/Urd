@@ -15,6 +15,7 @@ import { pageState } from './page.svelte.js';
 import { pageSettingsState } from './page-settings.svelte.js';
 import { redirectsState } from './redirects.svelte.js';
 import { siteState } from './site.svelte.js';
+import { pictureEditorState } from './picture-editor.svelte.js';
 import { blocksState } from './blocks.svelte.js';
 import { bridgeState } from './bridge.svelte.js';
 import { historyState } from './history.svelte.js';
@@ -27,10 +28,10 @@ let paletteOpen = $state(false);
 let pluginCommands = $state([]);
 
 /**
- * Opens the palette. It stays shut while a confirmation or the icon editor is open, and it closes the light menus first, as the shortcut sheet does.
+ * Opens the palette. It stays shut while a confirmation or the image editor is open, and it closes the light menus first, as the shortcut sheet does.
  */
 function openPalette() {
-  if (shellState.confirmBox || siteState.iconEditorImage) return;
+  if (shellState.confirmBox || pictureEditorState.picture) return;
   shellState.settingsOpen = false;
   shellState.toolMenu = null;
   shellState.shortcutsOpen = false;

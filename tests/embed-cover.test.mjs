@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { providerOf, allowedProviders, setProviderAllowed, ALLOWED_KEY } = await engineImport('embed-cover.js');
+const { providerOf, allowedProviders, setProviderAllowed, ALLOWED_KEY, coverFrame } = await engineImport('embed-cover.js');
 
 /** A storage in memory, as the browser's localStorage answers. */
 function memoryStorage() {
@@ -57,4 +57,16 @@ test('the video block: a shape as its ratio, and a pressed player\'s address tha
   assert.equal(withAutoplay('https://www.youtube-nocookie.com/embed/abc'), 'https://www.youtube-nocookie.com/embed/abc?autoplay=1');
   assert.equal(withAutoplay('https://player.vimeo.com/video/1?h=ab&dnt=1'), 'https://player.vimeo.com/video/1?h=ab&dnt=1&autoplay=1');
   assert.equal(withAutoplay('not a url'), 'not a url');
+});
+
+test('an embed the owner loads with the page (askFirst off): the frame at once and no cover, in the editor too', () => {
+  const appended = [];
+  const host = { append: (node) => appended.push(node) };
+  const frame = { frame: true };
+  for (const preview of [true, false]) {
+    appended.length = 0;
+    const got = coverFrame(host, { src: 'https://www.youtube-nocookie.com/embed/abc', makeFrame: () => frame, ask: false, preview });
+    assert.equal(got, frame);
+    assert.deepEqual(appended, [frame]);
+  }
 });

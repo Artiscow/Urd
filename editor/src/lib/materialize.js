@@ -68,8 +68,9 @@ export function materializeSection(section, files) {
 
 export function materializeImages(page) {
   const files = [];
-  // The sharing image (meta.og.image) is materialized like the block images.
+  // The sharing image (meta.og.image) is materialized like the block images, and its kept original beside it.
   if (page.meta?.og) materializeField(page.meta.og, 'image', 'share', files);
+  if (page.meta?.og?.imageSource) materializeField(page.meta.og.imageSource, 'src', 'share-original', files);
   for (const section of page.sections) materializeSection(section, files);
   return files;
 }
@@ -80,12 +81,14 @@ export function materializeSiteImages(site) {
   const logo = site.nav?.logo;
   if (logo?.type === 'image') materializeField(logo, 'value', 'logo', files);
   if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
+  if (logo?.imageSource) materializeField(logo.imageSource, 'src', 'logo-original', files);
   // The legacy single nav background image (back compat) + the layered
   // backgrounds on nav and footer.
   if (site.nav?.style) materializeField(site.nav.style, 'image', 'menu', files);
   materializeBackground(site.nav?.style?.background, files);
   materializeBackground(site.footer?.background, files);
   if (site.footer?.brand) materializeField(site.footer.brand, 'logo', 'footer-logo', files);
+  if (site.footer?.brand?.logoSource) materializeField(site.footer.brand.logoSource, 'src', 'footer-logo-original', files);
   // The site's links' own icons.
   for (const link of Array.isArray(site.site?.links) ? site.site.links : []) materializeField(link, 'image', 'link-icon', files);
   // The launcher's own mark on the button, and one per shortcut; the tab's own mark.
@@ -95,6 +98,7 @@ export function materializeSiteImages(site) {
   }
   if (site.nav?.tab) materializeField(site.nav.tab, 'image', 'tab', files);
   materializeField(site.site, 'icon', 'icon', files);
+  if (site.site?.iconSource) materializeField(site.site.iconSource, 'src', 'icon-original', files);
   // The PDFs the menu's, the footer's and the site's links go to.
   publishHeldFiles(site, files);
   return files;

@@ -65,6 +65,14 @@
     {#if design.geo || design.points}
       <button class="ghost action" onclick={editDetails}>{ta('ui.editSiteContact')}</button>
     {/if}
+    <!-- The map design's map: behind a cover until a visitor presses it, or with the page -->
+    {#if design.geo}
+      <label class="gridmenu-snap" title={ta('tip.embed.askFirst')}>
+        <input type="checkbox" checked={selectedBlock.props.askFirst !== false}
+          onchange={(e) => setBlockProp('askFirst', e.target.checked)} />
+        {ta('lbl.embedAskFirst')}
+      </label>
+    {/if}
     {#if design.id !== 'strip'}
       <label class="gridmenu-snap" title={ta('tip.contact.vcard')}>
         <input type="checkbox" checked={selectedBlock.props.vcard === true}
@@ -79,5 +87,5 @@
     </label>
   {/snippet}
   <MenuGroup id="contact-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.contact.${design.id}`)}
-    group={groupOf('contact-look', { design: 'lines', band: true, vcard: false, dock: false })}>{@render contactLook()}</MenuGroup>
+    group={groupOf('contact-look', { design: 'lines', band: true, vcard: false, dock: false, askFirst: true })}>{@render contactLook()}</MenuGroup>
 {/if}

@@ -197,4 +197,28 @@ if (validateCollection(pictureCollection)) {
   }
 }
 
+// A synthetic site icon, share image and logos with their kept originals (iconSource, og.imageSource, nav.logo.imageSource, footer.brand.logoSource, additive from 0.7.29.4).
+// The template ships neither, so the contract is validated here.
+const keptOriginal = { src: '/media/images/original.webp', x: 0.4, zoom: 1.5, rotate: 270, look: 'mono', overlay: { color: 'accent', strength: 0.3 } };
+const iconSite = load('template/content/site.json');
+iconSite.site.icon = '/media/images/icon.webp';
+iconSite.site.iconSource = keptOriginal;
+iconSite.nav.logo = { ...iconSite.nav.logo, type: 'image', value: '/media/images/logo.webp', imageSource: { ...keptOriginal, ratio: '1:1' } };
+iconSite.footer = { ...(iconSite.footer ?? { version: 1 }), brand: { ...(iconSite.footer?.brand ?? {}), mode: 'both', logo: '/media/images/footer-logo.webp', logoSource: keptOriginal } };
+const sharePage = load('template/content/pages/hjem.json');
+sharePage.meta = { ...(sharePage.meta ?? {}), og: { image: '/media/images/share.webp', imageSource: keptOriginal } };
+const validatePage = ajv.getSchema(pageSchema.$id);
+for (const [label, ok, errors] of [
+  ['synthetic site icon and logos with their kept originals', validateSite(iconSite), validateSite.errors],
+  ['synthetic share image with its kept original', validatePage(sharePage), validatePage.errors],
+]) {
+  if (ok) {
+    console.log(`OK    ${label}`);
+  } else {
+    failed = true;
+    console.error(`ERROR ${label}`);
+    for (const err of errors ?? []) console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
+  }
+}
+
 process.exit(failed ? 1 : 0);

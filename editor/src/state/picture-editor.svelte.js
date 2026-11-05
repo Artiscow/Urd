@@ -2,11 +2,15 @@
  * The image editor's state (0.7.29.2): which picture is open, the picture as the editor holds it (lib/picture-edit.js readPicture), and its writes.
  * Every change is written at once through the place the picture lives (the image block's or video's props, a gallery picture, a collection entry), so the canvas behind the dialog shows it live, all under one history key per opening: the whole edit is one undo step in the admin.
  * The dialog keeps its own undo and redo for the changes made while it is open; Cancel and Escape write the picture back as it was opened.
+ * A baked picture (the site icon, a page's share image, 0.7.29.4) is edited from its kept original in the dialog alone, and «Done» bakes its file and stores both (lib/picture-bake.js).
  */
 import { ta } from '$engine/i18n.js';
 import { compressToWebp } from '$engine/imageTools.js';
-import { readPicture, writePicture, ratioValue, resetStyle, withShared, KIND_TOOLS } from '../lib/picture-edit.js';
+import { readPicture, writePicture, ratioValue, resetStyle, withShared, sourceOf, isBaked, isDrawing, sectionChanged, logoBakeSize, KIND_TOOLS } from '../lib/picture-edit.js';
+import { bakePicture } from '../lib/picture-bake.js';
 import { pageState } from './page.svelte.js';
+import { siteState } from './site.svelte.js';
+import { pageSettingsState } from './page-settings.svelte.js';
 import { collectionsState } from './collections.svelte.js';
 import { mediaState } from './media.svelte.js';
 import { shellState } from './shell.svelte.js';
@@ -29,6 +33,9 @@ let redoSteps = $state([]);
 
 /** The dialog's state as it was opened, for Cancel. */
 let openedStep = null;
+
+/** True while a baked picture's file is being drawn on «Done»: the dialog takes no change until it is stored. */
+let baking = $state(false);
 
 /** Compare held: the stage shows the picture as it was opened. */
 let comparing = $state(false);
@@ -68,8 +75,13 @@ function restore(step) {
 
 const sameStep = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-/** Where the picture lives now, read from the draft. */
+/** Where the picture lives now, read from the draft; a baked picture's kept original comes with the opening, and a background's picture is read by the panel that opened it (`place`). */
 function readSource(t) {
+  if (isBaked(t.kind)) return t.source?.src ? clone(t.source) : null;
+  if (t.place?.read) {
+    const value = t.place.read();
+    return value ? clone(value) : null;
+  }
   if (t.kind === 'entry') {
     const entry = collectionsState.collectionsView[t.collection]?.entries?.find((e) => e.id === t.entryId);
     return entry ? clone(entry) : null;
@@ -82,7 +94,9 @@ function readSource(t) {
 
 /**
  * Opens the editor on a picture.
- * @param {{kind: 'image'|'gallery'|'entry'|'cover', sectionId?: string, blockId?: string, index?: number, collection?: string, entryId?: string, frameRatio?: number}} t
+ * @param {{kind: 'image'|'gallery'|'entry'|'cover'|'icon'|'share'|'portrait'|'glyph'|'logo'|'layer'|'slide', sectionId?: string, blockId?: string, index?: number, collection?: string, entryId?: string, pageId?: string, place?: 'nav'|'footer'|{read: () => object|null, mutate: (key: string, fn: (place: object) => void) => void}, fresh?: boolean, source?: object, onbaked?: (dataUrl: string) => void, frameRatio?: number}} t
+ *   source is a baked picture's kept original (its file and settings), or for a new one only its file; onbaked takes a handed picture's baked file (a glyph);
+ *   place is a logo's ('nav' or 'footer'), or for a background's picture the panel's reader and writer ({read, mutate(key, fn)}); fresh marks a baked picture opened on a new upload, not yet stored
  */
 function open(t) {
   if (!KIND_TOOLS[t?.kind]) return;
@@ -105,15 +119,23 @@ function open(t) {
   comparing = false;
   gestureBefore = null;
   openings += 1;
-  key = `edit:picture:${t.blockId ?? t.entryId}:${openings}`;
+  key = `edit:picture:${t.blockId ?? t.entryId ?? t.pageId ?? (typeof t.place === 'string' ? t.place : t.kind)}:${openings}`;
   openedStep = snapshot();
   pageState.blockMenu = null;
+}
+
+/** A ratio as the frame takes it: the picture's own shape, with a quarter turn, is the turned picture's. */
+function ownTurned(ratio, value) {
+  const quarter = pic?.style.rotate === 90 || pic?.style.rotate === 270;
+  return value && ratio === 'original' && quarter ? 1 / value : value;
 }
 
 /** The frame's width over its height the crop window is drawn with: the chosen shape's, else an image block's frame as a shape left it, else the frame as the preview drew it, else the block's frame at the design width. */
 function frameRatio() {
   if (!target || !pic) return 1;
-  const chosen = ratioValue(pic.ratio, natural);
+  const fixed = KIND_TOOLS[target.kind].bake ?? KIND_TOOLS[target.kind].frame;
+  if (fixed?.width && fixed.height) return fixed.width / fixed.height;
+  const chosen = ownTurned(pic.ratio, ratioValue(pic.ratio, natural));
   if (chosen) return chosen;
   if (target.kind === 'image' && pic.frame && opened?.frame && !sameStep(pic.frame, opened.frame)) {
     const w = pageState.designWidth(target.sectionId) * (pic.frame.w / 100);
@@ -135,6 +157,8 @@ function frameRatio() {
  */
 function frameSize() {
   if (!target || !pic) return null;
+  const fixed = KIND_TOOLS[target.kind].bake ?? KIND_TOOLS[target.kind].frame;
+  if (fixed?.width && fixed.height) return { width: fixed.width, height: fixed.height };
   if (target.kind === 'image' || target.kind === 'cover') {
     const { block } = pageState.readBlock(target.sectionId, target.blockId);
     const f = (target.kind === 'image' && pic.frame) || block?.frames?.desktop;
@@ -156,8 +180,12 @@ function galleryCount() {
  */
 function write(next) {
   const t = target;
-  if (!t) return;
+  if (!t || isBaked(t.kind)) return;
   const value = clone(next);
+  if (t.place?.mutate) {
+    t.place.mutate(key, (place) => writePicture(t.kind, place, value));
+    return;
+  }
   if (t.kind === 'entry') {
     collectionsState.mutateCollection(t.collection, key, (data) => {
       const entry = data.entries.find((e) => e.id === t.entryId);
@@ -182,7 +210,7 @@ function write(next) {
  * @param {string} ratio
  */
 function frameForRatio(frame, ratio) {
-  const value = ratioValue(ratio, natural);
+  const value = ownTurned(ratio, ratioValue(ratio, natural));
   const designPx = pageState.designWidth(target.sectionId);
   if (!value || !frame || !(designPx > 0)) return null;
   const w = Math.max(1, Math.min(Math.round(((frame.h * value) / designPx) * 10000) / 100, 100));
@@ -196,6 +224,7 @@ function frameForRatio(frame, ratio) {
  * @param {{gesture?: boolean}} [options]
  */
 function change(patch, { gesture = false } = {}) {
+  if (baking) return;
   if (!pic) return;
   const before = clone(pic);
   const next = { ...before, ...patch, style: patch.style ? { ...before.style, ...patch.style } : before.style };
@@ -223,6 +252,7 @@ function endGesture() {
 }
 
 function undo() {
+  if (baking) return;
   endGesture();
   if (!undoSteps.length) return;
   const prev = undoSteps.at(-1);
@@ -232,6 +262,7 @@ function undo() {
 }
 
 function redo() {
+  if (baking) return;
   endGesture();
   if (!redoSteps.length) return;
   const next = redoSteps.at(-1);
@@ -242,6 +273,7 @@ function redo() {
 
 /** «Apply to all» in a gallery: every other picture there takes the open one's look, adjustments and overlay (lib/picture-edit.js withShared), as one of the dialog's steps. */
 function applyToAll() {
+  if (baking) return;
   const t = target;
   if (!t || t.kind !== 'gallery' || !pic) return;
   endGesture();
@@ -277,13 +309,14 @@ async function pictureBlob(src) {
 
 /** «Make smaller»: the open picture compressed again into its use's budget, kept only when it came out lighter (an animation is kept as it is). */
 async function shrink() {
+  if (baking) return;
   const t = target;
   const from = pic?.src;
   if (!t || !from) return;
   shellState.setStatus(ta('status.compressingImage'));
   try {
     const blob = await pictureBlob(from);
-    const img = await compressToWebp(blob, undefined, { budget: mediaState.budgetFor(t.kind) });
+    const img = await compressToWebp(blob, undefined, { budget: mediaState.budgetFor(KIND_TOOLS[t.kind].budget ?? t.kind) });
     if (target !== t || pic?.src !== from) return;
     if (img.animated) {
       shellState.setStatus(ta('pic.budget.animated'));
@@ -303,16 +336,19 @@ async function shrink() {
 
 /** A section, or every setting, back to none. */
 function reset(section) {
+  if (baking) return;
   if (!pic) return;
   change({ style: resetStyle(pic.style, section) });
 }
 
 /** A new picture in place of the open one, through the same checks as a first upload (an SVG trimmed, the picture compressed into its use's budget, one still over it asked about). */
 async function replace(file) {
+  if (baking) return;
   const t = target;
   if (!file || !pic) return;
   try {
-    const img = await mediaState.compressOrTrim(file, t.kind);
+    // A baked picture's original is kept at the size an image block's would be, so every bake is drawn from more pixels than it needs.
+    const img = await mediaState.compressOrTrim(file, isBaked(t.kind) ? 'image' : KIND_TOOLS[t.kind].budget ?? t.kind);
     if (target !== t) return;
     natural = 0;
     change({ src: img.dataUrl });
@@ -321,12 +357,21 @@ async function replace(file) {
   }
 }
 
-/** Takes the picture away and closes: the image block and the video's cover stand without one, a gallery picture leaves the gallery, an entry keeps its other fields. */
+/** Takes the picture away and closes: the image block, the video's cover and the quote stand without one, a gallery picture leaves the gallery, an entry keeps its other fields, and a baked picture goes with its original. */
 function remove() {
+  if (baking) return;
   const t = target;
   if (!t || !pic) return;
   endGesture();
-  if (t.kind === 'gallery') {
+  // A handed picture, a background's and a baked picture opened on a new upload (`fresh`) have nothing stored here to take away.
+  if (KIND_TOOLS[t.kind].handed || KIND_TOOLS[t.kind].removable === false || (isBaked(t.kind) && t.fresh)) {
+    close();
+    return;
+  }
+  if (t.kind === 'icon') siteState.setSiteIcon('', null);
+  else if (t.kind === 'logo') siteState.setLogoPicture(t.place, '', null);
+  else if (t.kind === 'share') pageSettingsState.setPageShareImage(t.pageId, '', null);
+  else if (t.kind === 'gallery') {
     pageState.mutateBlockAt(t.sectionId, t.blockId, key, (block) => {
       block.props.images?.splice(t.index, 1);
     });
@@ -340,10 +385,45 @@ function remove() {
   shellState.setStatus(ta('pic.removed'));
 }
 
-/** «Done»: the changes stay, as one step in the admin's history. */
-function done() {
+/** A site colour's value for a token, as the site's theme gives it, for a baked picture's colours. */
+function siteColour(token) {
+  if (String(token).startsWith('#')) return token;
+  return siteState.siteDraft?.theme?.tokens?.color?.[token] || '#000000';
+}
+
+/** «Done»: the changes stay, as one step in the admin's history; a baked picture's file is drawn from its original first, and the two are stored together. */
+async function done() {
   endGesture();
-  close();
+  const t = target;
+  if (!t || !isBaked(t.kind) || !pic?.src) {
+    close();
+    return;
+  }
+  if (baking) return;
+  baking = true;
+  const source = sourceOf(pic);
+  try {
+    // A logo drawn as it is (an SVG with no settings, at its own shape) stays the drawing it is.
+    if (t.kind === 'logo' && isDrawing(source.src) && !sectionChanged(pic.style, 'all') && pic.ratio === 'original') {
+      siteState.setLogoPicture(t.place, source.src, null);
+      close();
+      return;
+    }
+    const bake = KIND_TOOLS[t.kind].bake;
+    const quarter = pic.style.rotate === 90 || pic.style.rotate === 270;
+    const size = bake.longest ? (own) => logoBakeSize({ natural: own, ratio: pic.ratio, zoom: pic.style.zoom, quarter, drawing: isDrawing(source.src), longest: bake.longest }) : null;
+    const baked = await bakePicture(source, { width: bake.width, height: bake.height, size, use: t.kind === 'glyph' ? 'icon' : t.kind, color: siteColour });
+    if (target !== t) return;
+    if (KIND_TOOLS[t.kind].handed) t.onbaked?.(baked.dataUrl);
+    else if (t.kind === 'logo') siteState.setLogoPicture(t.place, baked.dataUrl, source);
+    else if (t.kind === 'icon') siteState.setSiteIcon(baked.dataUrl, source);
+    else await pageSettingsState.setPageShareImage(t.pageId, baked.dataUrl, source);
+    close();
+  } catch {
+    shellState.setStatus(ta('status.imageReadError'), 'error');
+  } finally {
+    baking = false;
+  }
 }
 
 /** Cancel or Escape: the picture, and a gallery's other pictures, back as they were opened. */
@@ -377,6 +457,7 @@ export const pictureEditorState = {
   get pictureFrameRatio() { return frameRatio(); },
   get pictureFrameSize() { return frameSize(); },
   get pictureGalleryCount() { return galleryCount(); },
+  get pictureBaking() { return baking; },
   openPicture: open,
   changePicture: change,
   endPictureGesture: endGesture,

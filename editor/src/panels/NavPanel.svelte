@@ -173,26 +173,29 @@
       } else {
         if (imageInValue) logo.value = siteDraft.site.title;
         delete logo.image;
+        delete logo.imageSource;
       }
       logo.type = type;
     });
   }
 
-  /** Logo image: same webp flow as the image block (materialized on publish). */
+  /** The logo's picture chosen: kept as the original, and the image editor opens on it; «Done» bakes the logo (setLogoPicture), materialized on publish. */
   async function uploadLogoImage(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressOrTrim(file, 'logo');
-      siteMutate('nav', () => {
-        const logo = siteDraft.nav.logo;
-        if (logo.type === 'both') logo.image = img.dataUrl;
-        else logo.value = img.dataUrl;
-      });
+      const img = await compressOrTrim(file, 'image');
+      ed.openPicture({ kind: 'logo', place: 'nav', fresh: true, source: { src: img.dataUrl } });
     } catch (err) {
       setStatus(imageErrorText(err, 'status.imageReadErrorSvg'), 'error');
     }
+  }
+
+  /** The image editor on the logo: from its kept original, or from the logo itself where none is kept. */
+  function editLogoImage(src) {
+    const kept = siteDraft.nav.logo?.imageSource;
+    ed.openPicture({ kind: 'logo', place: 'nav', source: kept?.src ? kept : { src } });
   }
 
   function setNavLayout(value) {
@@ -976,7 +979,10 @@
               {logoSrc ? ta('ui.changeImage') : ta('ui.chooseImage')}
               <input type="file" accept="image/*" onchange={uploadLogoImage} />
             </label>
-            {#if logoSrc}<span class="logo-file">{logoSrc.split('/').pop()}</span>{/if}
+            {#if logoSrc}
+              <span class="logo-file">{logoSrc.split('/').pop()}</span>
+              <button type="button" class="ghost row-tool" title={ta('tip.logo.edit')} aria-label={ta('tip.logo.edit')} onclick={() => editLogoImage(logoSrc)}>{@html ICONS.pencil}</button>
+            {/if}
           </span>
         </div>
         <div class="ctl-triple">

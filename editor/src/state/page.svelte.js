@@ -302,7 +302,8 @@ const RIBBON_MOTIONS = () => [['roll', ta('opt.ribbonMotion.roll')], ['sway', ta
 /** The image editor (PictureEditor.svelte), opened from the block's menu on the selected image block's picture or video's cover (the floating menu steps aside for it). */
 function openImageEditor() {
   if (!selectedBlock) return;
-  pictureEditorState.openPicture({ kind: selectedBlock.type === 'video' ? 'cover' : 'image', sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId });
+  const kind = selectedBlock.type === 'video' ? 'cover' : selectedBlock.type === 'quote' ? 'portrait' : 'image';
+  pictureEditorState.openPicture({ kind, sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId });
   blockMenu = null;
 }
 

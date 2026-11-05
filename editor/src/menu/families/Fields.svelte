@@ -129,6 +129,12 @@
   {/snippet}
   {#if selectedBlock.type === 'map'}
     <MenuGroup id="map-place" defaultOpen title={ta('group.place')} value={selectedBlock.props.location || ta('common.none')}>{@render fieldList()}</MenuGroup>
+    <!-- Whether the map stands behind a cover until a visitor presses it, or loads with the page -->
+    <label title={ta('tip.embed.askFirst')} class="gridmenu-snap">
+      <input type="checkbox" checked={selectedBlock.props.askFirst !== false}
+        onchange={(e) => setBlockProp('askFirst', e.target.checked)} />
+      {ta('lbl.embedAskFirst')}
+    </label>
   {:else if pluginFields.length}
     {@render fieldList()}
   {:else}

@@ -22,7 +22,6 @@
   import PluginsPanel from './panels/PluginsPanel.svelte';
   import HistoryPanel from './panels/HistoryPanel.svelte';
   import UpdatePanel from './panels/UpdatePanel.svelte';
-  import IconEditor from './lib/IconEditor.svelte';
   import DesignPicker from './lib/DesignPicker.svelte';
   import { calDesign, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
   import { calendarDesignSource, blockDesignSource, blockDesigns, footerDesignSource } from './lib/design-sources.js';
@@ -197,9 +196,6 @@
     <p class="loading">{ta('ui.loading')}</p>
   {/if}
 
-  {#if ed.iconEditorImage}
-    <IconEditor image={ed.iconEditorImage} onapply={ed.applyIcon} oncancel={() => (ed.iconEditorImage = null)} />
-  {/if}
   {#if ed.designPicker?.kind === 'block'}
     <!-- A block's designs, a core block's or a plugin block's: the picked one is written to the prop the block keeps its design in; a block that is gone takes the picker with it -->
     {@const storedSection = ed.selectedBlock && ed.store?.data.sections.find((sec) => sec.id === ed.selectedBlock.sectionId)}

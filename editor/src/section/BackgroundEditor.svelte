@@ -371,6 +371,19 @@
     });
   }
 
+  /** The image editor on an image layer's picture (its look and adjustments) or a slideshow picture (its focus point), read and written through this background. */
+  function editBgPicture(bg, i, j = null) {
+    const read = () => {
+      const props = $state.snapshot(layers[i]?.props);
+      return j === null ? props ?? null : props?.images?.[j] ?? null;
+    };
+    const mutate = (key, fn) => bg.mutate(key, (t) => {
+      const props = t.background.layers[i].props;
+      fn(j === null ? props : props.images[j]);
+    });
+    ed.openPicture({ kind: j === null ? 'layer' : 'slide', place: { read, mutate } });
+  }
+
   /** A gallery layer's props as the engine draws them: the editor keeps a layer at the version
       it was stored with, so one from before the styles is read through the layer's own lift. */
   const galleryView = (layer) => ((layer.version ?? 1) < slideshowLayer.version
@@ -387,6 +400,7 @@
       <span class="toolbar-row">
         <img class="site-icon-preview" src={img.src} alt="" />
         <span class="row-tools">
+          <button class="ghost row-tool" title={ta('tip.bg.editSlide')} aria-label={ta('tip.bg.editSlide')} onclick={() => editBgPicture(bg, i, j)}>{@html ICONS.pencil}</button>
           <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveBgGalleryImage(bg, i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
           <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveBgGalleryImage(bg, i, j, 1)}
             disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
@@ -595,10 +609,15 @@
           {ta('lbl.patternInvert')}
         </label>
       {:else if layer.type === 'image'}
-        <label class="ghost filepick" title={ta('tip.webpAuto')}>
-          {layer.props.src ? ta('ui.changeImage') : ta('ui.chooseImage')}
-          <input type="file" accept="image/*" onchange={(e) => setBgImage(bg, i, e)} />
-        </label>
+        <span class="toolbar-row">
+          <label class="ghost filepick tb-grow" title={ta('tip.webpAuto')}>
+            {layer.props.src ? ta('ui.changeImage') : ta('ui.chooseImage')}
+            <input type="file" accept="image/*" onchange={(e) => setBgImage(bg, i, e)} />
+          </label>
+          {#if layer.props.src}
+            <button class="ghost row-tool" title={ta('tip.bg.editImage')} aria-label={ta('tip.bg.editImage')} onclick={() => editBgPicture(bg, i)}>{@html ICONS.pencil}</button>
+          {/if}
+        </span>
         {@const isTile = layer.props.fit === 'tile' || layer.props.fit === 'repeat'}
         <label title={ta('tip.bg.fit')}>{ta('lbl.imageFit')}
           <Dropdown value={isTile ? 'tile' : 'plain'}

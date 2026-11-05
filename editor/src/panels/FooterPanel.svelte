@@ -39,8 +39,8 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressOrTrim(file, 'logo');
-      footerMutate('footer', (f) => { f.brand ??= {}; f.brand.logo = img.dataUrl; if (!f.brand.mode) f.brand.mode = 'both'; });
+      const img = await compressOrTrim(file, 'image');
+      ed.openPicture({ kind: 'logo', place: 'footer', fresh: true, source: { src: img.dataUrl } });
     } catch (err) {
       setStatus(imageErrorText(err, 'status.imageReadErrorSvg'), 'error');
     }
@@ -49,7 +49,7 @@
   function removeFooterLogo() {
     footerMutate('footer', (f) => {
       if (!f.brand) return;
-      delete f.brand.logo; delete f.brand.mode; delete f.brand.logoHeight;
+      delete f.brand.logo; delete f.brand.logoSource; delete f.brand.mode; delete f.brand.logoHeight;
       if (!f.brand.title && !f.brand.tagline) delete f.brand;
     });
   }
@@ -373,6 +373,8 @@
             <input type="file" accept="image/*" onchange={uploadFooterLogo} />
           </label>
           {#if siteDraft.footer?.brand?.logo}
+            <button class="ghost row-tool" title={ta('tip.logo.edit')} aria-label={ta('tip.logo.edit')}
+              onclick={() => ed.openPicture({ kind: 'logo', place: 'footer', source: siteDraft.footer.brand.logoSource?.src ? siteDraft.footer.brand.logoSource : { src: siteDraft.footer.brand.logo } })}>{@html ICONS.pencil}</button>
             <button class="ghost row-tool" title={ta('tip.footer.removeLogo')}
               onclick={removeFooterLogo}>{@html ICONS.cross}</button>
           {/if}

@@ -100,3 +100,10 @@ test('the picture layers place a frame only where it has no place of its own, so
     assert.ok(!(framed && /(?:^|;)\s*position\s*:/.test(body)), `a bare picture layer rule sets a position: ${selector.trim()}`);
   }
 });
+
+test('an image background layer with only a blur draws the filter it always had', async () => {
+  const { pictureFilter, pictureStyle } = await engineImport('picture.js');
+  assert.equal(pictureFilter(pictureStyle({ blur: 4 })), 'blur(4px)');
+  assert.equal(pictureFilter(pictureStyle({})), '');
+  assert.equal(pictureFilter(pictureStyle({ look: 'sepia', brightness: 1.1, blur: 2 })).endsWith('brightness(1.1) blur(2px)'), true);
+});

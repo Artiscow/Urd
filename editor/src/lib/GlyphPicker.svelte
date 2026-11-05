@@ -15,6 +15,7 @@
   import { searchLangs } from './search-langs.svelte.js';
   import { cellWalker } from './cell-walk.js';
   import { tick } from 'svelte';
+  import { pictureEditorState } from '../state/picture-editor.svelte.js';
 
   let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage, iconsOnly = false } = $props();
 
@@ -99,9 +100,10 @@
     event.target.value = '';
     if (!file) return;
     try {
-      // An icon is a still picture at icon size, also from an animated file.
-      const img = await compressToWebp(file, 256, { still: true });
-      onimage?.(img.dataUrl);
+      // The image editor opens on a still picture of the file (also from an animated one) to frame it as a square; «Done» hands back the icon baked at 256 px.
+      const img = await compressToWebp(file, undefined, { still: true });
+      const deliver = onimage;
+      pictureEditorState.openPicture({ kind: 'glyph', source: { src: img.dataUrl }, onbaked: (dataUrl) => deliver?.(dataUrl) });
     } catch (error) {
       console.warn('Urd: the icon could not be read', error);
     }

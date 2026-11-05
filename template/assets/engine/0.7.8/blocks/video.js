@@ -112,7 +112,8 @@ export const videoBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{url: string, title?: string, source?: 'embed'|'file', src?: string, poster?: string (the file's poster, or the embed's cover image),
-   *          loop?: boolean, muted?: boolean, autoplay?: boolean, aspect?: string, playOnPress?: boolean, coverStyle?: object}} props
+   *          loop?: boolean, muted?: boolean, autoplay?: boolean, aspect?: string, playOnPress?: boolean, coverStyle?: object, askFirst?: boolean}} props
+   *   askFirst: false loads an embed with the page instead of behind its cover (additive from 0.7.29.4)
    *   aspect: one of VIDEO_ASPECTS (push-model.js), the shape the video is drawn at, its height following its width; playOnPress: false keeps a pressed embed from starting by itself;
    *   coverStyle: the cover picture's focus, zoom and adjustments from the image editor (coverImageStyle in embed-cover.js)
    * @param {object} ctx
@@ -187,7 +188,7 @@ export const videoBlock = {
       frame.style.cssText = 'width:100%;height:100%;border:0;display:block;';
       return frame;
     };
-    coverFrame(box, { src, makeFrame, kind: 'video', image: props.poster, imageStyle: props.coverStyle, preview: Boolean(ctx.preview) });
+    coverFrame(box, { src, makeFrame, kind: 'video', image: props.poster, imageStyle: props.coverStyle, preview: Boolean(ctx.preview), ask: props.askFirst !== false });
     // In edit mode a click selects the block instead of starting the player.
     if (editing) {
       const shield = document.createElement('div');

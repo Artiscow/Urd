@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.29.4): the other pictures in the image editor, and loading an embed without its cover
+
+- [ ] Site panel: a new site icon opens the image editor at a square, titled «Site icon»; after a look, a turn and «Done» the icon beside the field is the edited one; the pencil opens it again from the original (the picture at its own size, the look and turn still set), and a second edit is as sharp as the first; «Remove» in the editor takes the icon away; Cancel leaves it as it was
+- [ ] A page's settings: «Choose image» under Sharing opens the editor at 1.91:1, «Sharing image»; after «Done» the thumbnail is the crop, the pencil edits it from the original and the cross removes it; on the deployed site a link to the page pasted into a chat or a social network shows the crop
+- [ ] Nav panel, an image logo: the pencil beside the logo opens «Logo» with the shapes Original, 1:1, 4:3, 3:2, 16:9, 9:16 and 4:5; «Done» with nothing changed keeps the SVG logo as it is; cut to 1:1 with a look, the nav shows the new logo, and the pencil opens the original again; switching the logo to text and back leaves no stray picture; the Footer panel's logo the same
+- [ ] An icon uploaded for a site link or the icon block (the glyph picker's own picture): the editor opens at a square, «Icon», and «Done» puts the cropped icon in the field; Cancel puts nothing there
+- [ ] A quote in the card design with a portrait: a new portrait opens the editor at its circle; zoom, a turn and a look show on the portrait in the card, on the published page too; «Edit the portrait» and a double-click on the portrait open it again; «Remove the portrait» takes it and its settings away; an old portrait looks exactly as before
+- [ ] A section's image background layer: the pencil beside «Change image» opens «Background picture» with Look (ten looks), Adjust and Size, no frame or zoom; a look, a brightness and the blur show on the section at once and stay after «Done»; one undo takes the edit back; the layer's size and position are unchanged
+- [ ] A slideshow layer's picture: its pencil opens «Slideshow picture» with the frame alone; dragging the frame moves the part the slideshow keeps in view
+- [ ] The video, the map and the contact block's map design: «Ask before loading» on by default; off, the video or map loads with the page and no cover, in the editor and on the published page; on a video, the cover picture's button and «Start playing when pressed» are hidden while it is off
+- [ ] The image block's menu: «Open the image editor» with its pencil first in Content
+- [ ] An image block or a logo at the picture's own shape, turned a quarter in the editor: the crop window covers the whole turned picture; a new site icon, sharing image or logo shows no «Remove» until it is stored; while «Done» bakes, the sliders take no change
+- [ ] The new titles, buttons and tooltips in bokmål and Turkish
+
 ### Test batch (0.7.29.1-3): one drawing for every picture, the image editor in a dialog, size budgets per use, and a sharpness check
 
 - [ ] Every picture on the example site (the image blocks, a gallery, the news and product cards, a video's cover, the lightbox) looks exactly as before, in the editor and on the published page

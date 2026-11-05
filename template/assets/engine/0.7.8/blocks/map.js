@@ -72,7 +72,8 @@ export const mapBlock = {
    * The map's box is its frame (ADR-0025 decision 2): the iframe fills the
    * height the frame leaves over the «Larger map» line (base.css).
    * @param {HTMLElement} el
-   * @param {{location?: string, lat?: number, lon?: number, zoom?: number}} props
+   * @param {{location?: string, lat?: number, lon?: number, zoom?: number, askFirst?: boolean}} props
+   *   askFirst: false loads the map with the page instead of behind its cover (additive from 0.7.29.4)
    *   `lat`/`lon` are written by the address search in admin; `location` is
    *   parsed at render when they are missing (coordinates or an OSM link).
    * @param {object} ctx Render context
@@ -98,7 +99,7 @@ export const mapBlock = {
         watchCspBlock(host, frame, ctx, largerUrl);
         return frame;
       };
-      coverFrame(host, { src, makeFrame, kind: 'map', preview: Boolean(ctx.preview) });
+      coverFrame(host, { src, makeFrame, kind: 'map', preview: Boolean(ctx.preview), ask: props.askFirst !== false });
 
       const link = el2('div', 'urd-map-link');
       const a = el2('a', null, t('map.larger'));

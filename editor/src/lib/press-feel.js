@@ -14,7 +14,7 @@ export function pressFeelOf(raw) {
 
 /** The controls a press reaches: a button or a ghost control, not disabled, outside the pickers that draw their own (the same exclusions as the shell's button rules). */
 export const PRESS_TARGET = 'button:not(:disabled), .ghost';
-const OWN_PRESS = '.dd, .cp, .gp, .mp, .dp-overlay, .ie-overlay, .choice';
+const OWN_PRESS = '.dd, .cp, .gp, .mp, .dp-overlay, .choice';
 
 /** The control a pointer press landed on, or null. */
 export function pressTarget(node) {

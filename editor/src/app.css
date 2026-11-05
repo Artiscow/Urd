@@ -4,7 +4,7 @@
  * stage. Global, since the parts of the editor share the classes; a rule
  * whose subject is a form element, a .ghost or a .primary keeps out of the
  * lib components (Dropdown, ColorPicker, GlyphPicker, MarkPicker,
- * DesignPicker, IconEditor, Choice), which draw their own controls; the
+ * DesignPicker, Choice), which draw their own controls; the
  * guard is a :where(), so it adds no specificity and every rule keeps its
  * place against the others.
  */
@@ -186,7 +186,7 @@
   }
 
   /* Buttons with an SVG icon: icon and text in line, vertically centered */
-  .topbar .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .topbar .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .chrome-restore,
   .badge.attention {
     display: inline-flex;
@@ -307,7 +307,7 @@
     overflow-y: auto;
   }
 
-  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     border: 0;
     background: transparent;
     font-family: inherit;
@@ -322,7 +322,7 @@
     opacity: 0.75;
   }
 
-  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     opacity: 1;
     background: rgb(255 255 255 / 6%);
   }
@@ -348,14 +348,14 @@
     padding: 0.6rem 0;
     gap: 0.2rem;
   }
-  .rail-icons .rail-icon:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .rail-icons .rail-icon:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     width: 2.5rem;
     height: 2.25rem;
     padding: 0;
     justify-content: center;
     border-radius: 8px;
   }
-  .rail-icons .rail-icon.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .rail-icons .rail-icon.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     background: var(--urd-color-accent, #7c5cff);
     color: var(--urd-color-surface, #151a23);
   }
@@ -381,13 +381,13 @@
   }
   .topnav-btn { position: relative; }
   .topnav-btn .update-dot { top: -3px; right: -3px; }
-  .topbar .update-pill:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .topbar .update-pill:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     border-color: var(--urd-color-accent, #7c5cff);
     border-radius: 999px;
     color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 14%, transparent);
   }
-  .topbar .update-pill:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .topbar .update-pill:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 26%, transparent);
   }
   .rail-divider {
@@ -422,7 +422,7 @@
     flex-wrap: wrap;
     gap: 0 0.1rem;
   }
-  .panel-tab:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .panel-tab:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -431,8 +431,8 @@
     opacity: 0.75;
     box-shadow: inset 0 -2px 0 transparent;
   }
-  .panel-tab:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { opacity: 1; }
-  .panel-tab.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .panel-tab:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { opacity: 1; }
+  .panel-tab.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     opacity: 1;
     color: var(--urd-color-accent, #7c5cff);
     box-shadow: inset 0 -2px 0 var(--urd-color-accent, #7c5cff);
@@ -468,7 +468,7 @@
 
   /* The top bar's Site menu («page-tabs»). */
   .topnav { display: inline-flex; align-items: center; gap: 0.25rem; }
-  .topnav-btn.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .topnav-btn.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     background: var(--urd-color-accent, #7c5cff);
     color: var(--urd-color-surface, #151a23);
     border-color: transparent;
@@ -520,7 +520,7 @@
   }
 
   /* The open panel: its name in the accent on a faint surface, never a line at the edge; the weight stays, so the names never shift on a selection */
-  .rail button.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .rail button.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     opacity: 1;
     background: rgb(255 255 255 / 8%);
     color: var(--urd-color-accent, #7c5cff);
@@ -566,7 +566,7 @@
   .panel-head-tools { display: inline-flex; align-items: center; gap: 0.3rem; }
   .panel-tabs .panel-fold { margin-left: auto; align-self: center; }
   /* The fold button: a box of its own size with the chevrons centred in it. */
-  .panel-fold:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .panel-fold:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     display: grid;
     place-items: center;
     width: 1.75rem;
@@ -576,7 +576,7 @@
   }
   .panel-fold svg { display: block; }
   /* The tab layouts' column folded to a handle at the workspace's edge. */
-  .panel-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .panel-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     flex: none;
     width: 1.6rem;
     border: 0;
@@ -589,7 +589,7 @@
     align-items: flex-start;
     padding-top: 0.9rem;
   }
-  .panel-handle:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { opacity: 1; }
+  .panel-handle:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { opacity: 1; }
   .panel-handle.hidden { display: none; }
 
   .panel h2 {
@@ -969,12 +969,12 @@
     font-size: 11px;
   }
 
-  .emenu-root.narrow .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .emenu-root.narrow .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     padding: 7px 6px;
     font-size: 13px;
   }
 
-  .emenu-root.narrow .menu-quick-item input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .emenu-root.narrow .menu-quick-item input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .emenu-root.narrow .menu-quick-open {
     padding: 7px 10px;
     font-size: 13px;
@@ -1007,7 +1007,7 @@
   }
 
   /* A toggle's pin stands just left of the toggle, in room the row keeps for it, so the toggles of a group line up at the right edge whether they can be pinned or not */
-  .pin-line > .gridmenu-snap:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .pin-line > .gridmenu-snap:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     gap: calc(0.6rem + 24px + 0.3rem);
   }
 
@@ -1019,7 +1019,7 @@
   }
 
   /* Any other pinnable setting stands as its words over its control, with the pin at the end of the words' line, so the control keeps the row's full width and ends where the rows around it end */
-  .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .pin-line > .field-stack:has(+ .menu-pin),
   .pin-line > .choice:has(+ .menu-pin) {
     flex-direction: column;
@@ -1104,13 +1104,13 @@
     opacity: 1;
   }
 
-  .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex: 1;
     padding: 4px 6px;
     font-size: 0.75rem;
   }
 
-  .menu-quick-item input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .menu-quick-item input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .menu-quick-open {
     width: 100%;
     box-sizing: border-box;
@@ -1155,7 +1155,7 @@
 
 
   /* A group of the element menu: the title to the left, the current value muted to the right */
-  .menu-group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .menu-group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     gap: 0.6rem;
   }
 
@@ -1246,7 +1246,7 @@
   }
 
   /* In the element menu a label stands over its control, in the wide columns and the narrow menu alike, so a control keeps the row's width */
-  .emenu-col label:not(.gridmenu-snap):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .emenu-col label:not(.gridmenu-snap):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
@@ -1275,7 +1275,7 @@
   }
 
   /* Checkboxes as modern toggles: a pill with a sliding knob */
-  input[type='checkbox']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  input[type='checkbox']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     appearance: none;
     width: 2.1rem;
     height: 1.2rem;
@@ -1288,7 +1288,7 @@
     transition: background 0.15s ease, border-color 0.15s ease;
   }
 
-  input[type='checkbox']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+  input[type='checkbox']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::after{
     content: '';
     position: absolute;
     top: 2px;
@@ -1300,17 +1300,17 @@
     transition: transform 0.15s ease;
   }
 
-  input[type='checkbox']:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  input[type='checkbox']:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     background: var(--urd-color-accent, #7c5cff);
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  input[type='checkbox']:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+  input[type='checkbox']:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::after{
     transform: translateX(0.9rem);
   }
 
   /* A tick box where a list ticks its rows (the Collections panel's entries and table), not a switch: a small square with a drawn tick, the half state a dash */
-  input[type='checkbox'].tick-box:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  input[type='checkbox'].tick-box:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 16px;
     height: 16px;
     margin: 0;
@@ -1319,7 +1319,7 @@
     background: transparent;
   }
 
-  input[type='checkbox'].tick-box:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+  input[type='checkbox'].tick-box:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::after{
     top: 1px;
     left: 4.5px;
     width: 4px;
@@ -1331,21 +1331,21 @@
     transform: rotate(45deg) scale(0);
   }
 
-  input[type='checkbox'].tick-box:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  input[type='checkbox'].tick-box:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     background: var(--urd-color-accent, #7c5cff);
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  input[type='checkbox'].tick-box:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+  input[type='checkbox'].tick-box:checked:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::after{
     transform: rotate(45deg) scale(1);
   }
 
-  input[type='checkbox'].tick-box:indeterminate:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  input[type='checkbox'].tick-box:indeterminate:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     background: var(--urd-color-accent, #7c5cff);
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  input[type='checkbox'].tick-box:indeterminate:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+  input[type='checkbox'].tick-box:indeterminate:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::after{
     top: 5.5px;
     left: 3px;
     width: 7px;
@@ -1354,15 +1354,15 @@
     transform: none;
   }
 
-  input[type='checkbox'].tick-box:focus-visible:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  input[type='checkbox'].tick-box:focus-visible:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     outline: 2px solid var(--urd-color-accent, #7c5cff);
     outline-offset: 2px;
   }
 
   /* All the "row buttons" in the panel (blocks, groups, file picker)
      share the same height and layout, so the list looks even */
-  .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     display: flex;
     align-items: center;
     min-height: 2.2rem;
@@ -1374,16 +1374,16 @@
      list), even though buttons otherwise center their content. Action
      buttons (.action: create page, add layer, etc.) are centered like
      regular buttons. */
-  .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     justify-content: flex-start;
   }
 
-  .panel-body .ghost.action:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .ghost.action:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     justify-content: center;
     text-align: center;
   }
 
-  .panel-body label:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body label:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1391,12 +1391,12 @@
     font-size: 0.85rem;
   }
 
-  .panel-body input[type='range']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body input[type='range']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 100%;
     accent-color: var(--urd-color-accent, #7c5cff);
   }
 
-  .panel-body button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
+  .panel-body button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .panel-body .filepick {
     text-align: left;
   }
@@ -1408,12 +1408,12 @@
 
   /* Shared control height (2.2rem) and size in the panels: fields and
      buttons must line up wherever they stand */
-  .panel-body input:not([type]):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .panel-body input[type='text']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .panel-body input[type='tel']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .panel-body input[type='email']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .panel-body input[type='url']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .panel-body input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body input:not([type]):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body input[type='text']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body input[type='tel']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body input[type='email']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body input[type='url']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     font: inherit;
     font-size: 0.85rem;
     color: inherit;
@@ -1438,20 +1438,20 @@
     gap: 4px;
   }
 
-  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 3.4rem;
     text-align: center;
     appearance: textfield;
     -moz-appearance: textfield;
   }
 
-  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::-webkit-outer-spin-button,
-  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::-webkit-inner-spin-button{
+  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::-webkit-outer-spin-button,
+  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::-webkit-inner-spin-button{
     -webkit-appearance: none;
     margin: 0;
   }
 
-  .num-stepper button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .num-stepper button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 2.2rem;
     height: 2.2rem;
     display: inline-flex;
@@ -1465,7 +1465,7 @@
     cursor: pointer;
   }
 
-  .num-stepper button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .num-stepper button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     background: rgb(255 255 255 / 10%);
   }
 
@@ -1525,7 +1525,7 @@
     gap: 6px;
   }
 
-  .menu-stack > button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .menu-stack > button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
@@ -1540,7 +1540,7 @@
     align-items: center;
   }
 
-  .panel-body .entry-fields input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .entry-fields input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 100%;
     height: 2rem;
   }
@@ -1568,7 +1568,7 @@
   }
 
   /* A colour name another colour has too: the field's frame and a mark in the amber the panels warn in */
-  .panel-body .entry-color.twice input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .entry-color.twice input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     border-color: #e2b84a;
   }
 
@@ -1615,7 +1615,7 @@
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent);
   }
 
-  .panel-body .entry-chip-x:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .entry-chip-x:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     display: inline-grid;
     place-items: center;
     width: 1.2rem;
@@ -1628,13 +1628,13 @@
     opacity: 0.7;
   }
 
-  .panel-body .entry-chip-x:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .entry-chip-x:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     opacity: 1;
     background: rgb(255 255 255 / 12%);
   }
 
   /* The add field is part of the chips' box, with no frame of its own: the box carries the one frame and takes the accent while the field has the focus */
-  .panel-body .entry-chips .entry-chip-add:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .entry-chips .entry-chip-add:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex: 1 1 6rem;
     min-width: 6rem;
     height: 1.6rem;
@@ -1677,7 +1677,7 @@
     justify-content: center;
   }
 
-  .panel-body .entry-add-color:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body .entry-add-color:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     justify-self: start;
   }
 
@@ -1943,7 +1943,7 @@
 
   /* The name is the row's text: no frame until it has focus (the selector
      outranks the panel's shared field rule) */
-  .panel-body input.nav-item-name:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body input.nav-item-name:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     height: 1.5rem;
     padding: 0 0.2rem;
     border-color: transparent;
@@ -1951,7 +1951,7 @@
     font-size: 0.85rem;
   }
 
-  .panel-body input.nav-item-name:focus:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body input.nav-item-name:focus:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     border-color: var(--urd-color-accent);
     outline: none;
   }
@@ -2362,7 +2362,7 @@
     font-size: 0.78rem;
     opacity: 0.85;
   }
-  .site-cal-field input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .site-cal-field input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 100%;
     min-width: 0;
   }
@@ -2567,7 +2567,7 @@
   }
 
   .page-title,
-  .nav-line input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .nav-line input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex: 1 1 0;
     min-width: 0;
   }
@@ -2648,8 +2648,8 @@
   }
 
   /* The Collections panel's square tools: the way back, the collection's menu, and an entry's steps, copy and removal, one size with the icon in the middle; the removal in red, as the selection bar's */
-  .ghost.coll-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .panel-body .ghost.coll-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .ghost.coll-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body .ghost.coll-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     flex: none;
     width: 2rem;
     height: 2rem;
@@ -2659,11 +2659,11 @@
     align-items: center;
   }
   .ghost.coll-btn svg { display: block; }
-  .ghost.coll-btn.coll-danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .ghost.coll-btn.coll-danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     color: #f08a8a;
     border-color: rgb(224 82 82 / 50%);
   }
-  .ghost.coll-btn.coll-danger:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(224 82 82 / 14%); }
+  .ghost.coll-btn.coll-danger:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(224 82 82 / 14%); }
 
   /* Row buttons (arrows/cross): fixed square width and centered glyph,
      follows the field's height - not the block buttons' min height or the
@@ -3029,7 +3029,7 @@
     font-size: 1.15rem;
   }
 
-  .setup-card label:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .setup-card label:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -3037,7 +3037,7 @@
     font-size: 0.88rem;
   }
 
-  .setup-card input:not([type='color']):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .setup-card input:not([type='color']):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex: 1 1 55%;
     min-width: 0;
     font: inherit;
@@ -3072,7 +3072,7 @@
   }
 
   /* Fields inside panel labels must never blow up the width */
-  .panel-body label > input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body label > input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     min-width: 0;
     max-width: 100%;
   }
@@ -3125,7 +3125,7 @@
 
   /* A text field with its label above in capitals (the announcement's text and
      address): filled, without a frame, an accent underline while it has focus. */
-  .panel-body label.field-stack:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body label.field-stack:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex-direction: column;
     align-items: stretch;
     gap: 5px;
@@ -3187,7 +3187,7 @@
     min-width: 8rem;
   }
 
-  .panel-body textarea:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .panel-body textarea:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     font: inherit;
     font-size: 0.85rem;
     line-height: 1.4;
@@ -3207,13 +3207,13 @@
     gap: 0.4rem 0.6rem;
   }
 
-  .frame-grid input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .frame-grid input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 4.2rem;
   }
 
   /* Groups in the panel (Text, Shapes): look like the block buttons, but
      with an arrow - open into a vertical list of blocks below */
-  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     list-style: none;
     justify-content: space-between;
     cursor: pointer;
@@ -3225,7 +3225,7 @@
   /* The fold marker: a drawn chevron that points along the row while the
      group is closed and turns down when it opens. Child combinators keep a
      closed group inside an open one at its own state. */
-  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+  .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::after{
     content: '';
     flex-shrink: 0;
     width: 0.55em;
@@ -3237,23 +3237,23 @@
     transition: transform 0.18s ease;
   }
 
-  .group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+  .group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::after{
     transform: rotate(90deg);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::after{
+    .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::after{
       transition: none;
     }
   }
 
-  .group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
   /* The placement group is a SECTION fold, not a chip: drop the pill
      frame, let it read as a simple heading row. */
-  .frame-group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .frame-group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     border: 0;
     border-radius: 0;
     padding-left: 0.1em;
@@ -3261,7 +3261,7 @@
     opacity: 0.9;
   }
 
-  .frame-group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .frame-group[open] > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     border-color: transparent;
   }
 
@@ -3297,7 +3297,7 @@
   .ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
   .mini-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.6; }
   .chip { border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 999px; padding: 2px 9px; font: 600 10px system-ui, sans-serif; background: transparent; color: inherit; opacity: 0.75; }
-  button.chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ cursor: pointer; }
+  button.chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ cursor: pointer; }
   .chip.accent { border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 20%, transparent); opacity: 1; }
   .sample { padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
 
@@ -3330,10 +3330,10 @@
   .cw-legend { display: flex; justify-content: space-between; padding-top: 2px; opacity: 0.45; }
   .cw-binds { padding-top: 7px; text-transform: none; letter-spacing: 0; opacity: 0.55; }
   .cw-seg { display: flex; width: 100%; }
-  .cw-seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ flex: 1; white-space: nowrap; }
+  .cw-seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ flex: 1; white-space: nowrap; }
   /* The sliders in the control rows: the label on the left, the value at
      the far right, the track takes the rest. */
-  .ctl-row input[type="range"]:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ flex: 1; min-width: 0; }
+  .ctl-row input[type="range"]:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ flex: 1; min-width: 0; }
 
   /* Theme suggestions: a row of palette thumbnails (all on one row) */
   .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }
@@ -3352,12 +3352,12 @@
   .autorow { margin: 8px 0 2px; }
   .autorow .autolbl { font-size: 0.85rem; opacity: 0.75; }
   .seg { display: inline-flex; isolation: isolate; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
-  .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
+  .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
   /* The chosen button's pill is a layer under every button's words (the segment isolates them), so a new choice can slide the pill across from the old one (lib/seg-slide.js) while the words stay put */
-  .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ position: relative; transition: color 0.18s ease, background 0.12s ease; }
-  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ color: var(--urd-color-bg); }
-  .seg button.on:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ background: transparent; }
-  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *))::before{ content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--urd-color-accent); }
+  .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ position: relative; transition: color 0.18s ease, background 0.12s ease; }
+  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ color: var(--urd-color-bg); }
+  .seg button.on:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ background: transparent; }
+  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::before{ content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--urd-color-accent); }
   .palhead { margin: 13px 0 6px; }
   .palcells { display: flex; gap: 6px; }
   .palcells .palcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
@@ -3426,7 +3426,7 @@
     box-shadow: 0 0 0 1px rgb(0 0 0 / 45%);
     pointer-events: none;
   }
-  label.sub:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  label.sub:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     font-size: 0.85em;
     opacity: 0.8;
   }
@@ -3436,7 +3436,7 @@
     gap: 6px;
     margin: 2px 0 6px;
   }
-  .sizestep button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .sizestep button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 28px;
     height: 28px;
     border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
@@ -3447,8 +3447,8 @@
     line-height: 1;
     cursor: pointer;
   }
-  .sizestep button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border-color: var(--urd-color-accent); }
-  .sizestep input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .sizestep button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border-color: var(--urd-color-accent); }
+  .sizestep input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: 60px;
     text-align: center;
     padding: 5px 4px;
@@ -3461,7 +3461,7 @@
   .sizeunit { opacity: 0.6; }
   /* "Cover" / "Show all" quick buttons for Size */
   .sizefill { display: flex; gap: 6px; margin: 0 0 8px; }
-  .sizefill button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .sizefill button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex: 1;
     padding: 5px 8px;
     border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
@@ -3471,7 +3471,7 @@
     font-size: 0.85em;
     cursor: pointer;
   }
-  .sizefill button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border-color: var(--urd-color-accent); }
+  .sizefill button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border-color: var(--urd-color-accent); }
 
   .gridmenu-divider {
     border: 0;
@@ -3483,12 +3483,12 @@
     cursor: pointer;
   }
 
-  .filepick input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .filepick input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     display: none;
   }
 
-  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     font: inherit;
     color: inherit;
     background: transparent;
@@ -3501,8 +3501,8 @@
 
   /* Buttons must LOOK like buttons: a filled surface, clear hover and a
      small press on click. Fields (input) stay flat. */
-  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3511,21 +3511,21 @@
     transition: background 0.12s ease, border-color 0.12s ease;
   }
 
-  button:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .ghost:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  button:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .ghost:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     background: rgb(255 255 255 / 13%);
     border-color: rgb(255 255 255 / 38%);
   }
 
   /* The press feel (Urd settings «Button press», lib/press-feel.js): every button and ghost control answers a press the way data-press on the root says, Ripple by default.
      Movement uses translate and scale, which add to a control's own transform instead of replacing it, so a control placed by a transform keeps its place; under reduced motion only the colour changes. */
-  :root button:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  :root .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  :root button:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  :root .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     transition: color 0.18s ease, background-color 0.12s ease, border-color 0.12s ease, translate 0.14s ease-out, scale 0.16s ease-out, filter 0.12s ease, box-shadow 0.22s ease-out;
   }
 
-  [data-press='sink'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  [data-press='sink'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  [data-press='sink'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  [data-press='sink'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     box-shadow: inset 0 2px 4px rgb(0 0 0 / 45%);
     filter: brightness(0.85);
     transition-duration: 0.05s;
@@ -3556,34 +3556,34 @@
     to { opacity: 0; scale: 22; }
   }
 
-  [data-press='ring'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  [data-press='ring'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  [data-press='ring'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  [data-press='ring'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--urd-color-accent, #7c5cff) 45%, transparent);
     transition-duration: 0.04s;
   }
 
   /* The moving feels, only where motion is welcome */
   @media (prefers-reduced-motion: no-preference) {
-    [data-press='nudge'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-    [data-press='nudge'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    [data-press='nudge'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+    [data-press='nudge'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
       translate: 0 1px;
       transition-duration: 0.05s;
     }
 
-    [data-press='press'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-    [data-press='press'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    [data-press='press'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+    [data-press='press'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
       scale: 0.96;
       transition-duration: 0.07s;
     }
 
     /* Spring: in quickly, back out on a curve that overshoots a little as the press lets go */
-    [data-press='spring'] button:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-    [data-press='spring'] .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    [data-press='spring'] button:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+    [data-press='spring'] .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
       transition: color 0.18s ease, background-color 0.12s ease, border-color 0.12s ease, scale 0.3s cubic-bezier(0.3, 1.6, 0.55, 1), filter 0.12s ease;
     }
 
-    [data-press='spring'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-    [data-press='spring'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    [data-press='spring'] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+    [data-press='spring'] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
       scale: 0.94;
       transition: scale 0.07s ease-in;
     }
@@ -3591,8 +3591,8 @@
 
   /* Under reduced motion the movements never apply, and a press darkens the control instead; the ripple is not drawn */
   @media (prefers-reduced-motion: reduce) {
-    [data-press] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-    [data-press] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+    [data-press] button:active:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+    [data-press] .ghost:active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
       filter: brightness(0.85);
     }
 
@@ -3604,18 +3604,18 @@
 
   /* Controls must not inherit the page's airy line-height (1.6 from
      base.css via font: inherit): a tight line box gives even centering */
-  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)),
-  input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     line-height: 1.3;
   }
 
-  button:disabled:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  button:disabled:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     opacity: 0.4;
     cursor: default;
   }
 
-  .primary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .primary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     background: var(--urd-color-accent, #7c5cff);
     border-color: transparent;
     color: #fff;
@@ -3661,7 +3661,7 @@
     position: relative;
   }
   /* The width handle: a bar along the canvas's right edge, inside it so no fit clips it; the readout and the phone breakpoint's mark stand while a drag runs. */
-  .stage-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .stage-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     position: absolute;
     top: 0;
     right: 0;
@@ -3725,13 +3725,13 @@
   /* The Phone device's size menu and the dragged width's chip in the Device cluster. */
   /* A device's button: its icon and an arrow in one control, as the page switcher's name and arrow. */
   .device-one { display: inline-flex; }
-  .device-one .device-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { gap: 0.2em; padding-inline: 0.45em 0.3em; }
+  .device-one .device-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { gap: 0.2em; padding-inline: 0.45em 0.3em; }
   .device-one .device-btn svg:last-child { opacity: 0.7; }
-  .device-one .device-btn.open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 13%); }
+  .device-one .device-btn.open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(255 255 255 / 13%); }
   /* The sizes: plain rows with the size in grey, the current one tinted. */
   .device-pop { min-width: 18rem; padding: 0.4rem; }
   .device-pop .mini-label { padding: 0.3rem 0.6rem 0.2rem; }
-  .tool-pop .device-size:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .tool-pop .device-size:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     justify-content: space-between;
     width: 100%;
     padding: 0.45rem 0.6rem;
@@ -3740,8 +3740,8 @@
     background: transparent;
     font-size: 0.88rem;
   }
-  .tool-pop .device-size:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
-  .tool-pop .device-size.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .tool-pop .device-size:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
+  .tool-pop .device-size.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
     color: inherit;
   }
@@ -3760,7 +3760,7 @@
     font-size: 0.85rem;
   }
   .device-ratio-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-  .tool-pop .ghost.device-ratio-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .tool-pop .ghost.device-ratio-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     width: auto;
     min-height: 0;
     padding: 0.2rem 0.55rem;
@@ -3770,8 +3770,8 @@
     border-radius: 999px;
     background: transparent;
   }
-  .tool-pop .ghost.device-ratio-chip:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
-  .tool-pop .ghost.device-ratio-chip.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)) {
+  .tool-pop .ghost.device-ratio-chip:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
+  .tool-pop .ghost.device-ratio-chip.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     border-color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
   }
@@ -3846,8 +3846,8 @@
     border-radius: 8px;
   }
 
-  .toolgrp .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border-color: transparent; }
-  .toolgrp .ghost.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){ border-color: var(--urd-color-accent, #7c5cff); }
+  .toolgrp .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border-color: transparent; }
+  .toolgrp .ghost.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border-color: var(--urd-color-accent, #7c5cff); }
 
   .tool-cap {
     font-size: 0.56rem;
@@ -4078,7 +4078,7 @@
     display: inline-flex;
   }
 
-  .toolmenu > .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .toolmenu > .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     gap: 0.25em;
     padding: 0.35em 0.55em;
   }
@@ -4110,13 +4110,13 @@
 
   /* Vertical menu: icon and text start at the left edge, not centered
      as the global button style does. */
-  .tool-pop .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .tool-pop .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     justify-content: flex-start;
     width: 100%;
     border-color: transparent;
   }
 
-  .tool-pop .ghost.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .tool-pop .ghost.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     border-color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
   }
@@ -4144,7 +4144,7 @@
     gap: 2px;
   }
 
-  .tool-pop-row .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .ie-overlay *, .choice *)){
+  .tool-pop-row .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     width: auto;
     justify-content: center;
   }

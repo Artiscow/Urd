@@ -64,7 +64,6 @@ function handleFor(panel, siteDraft, extra = {}) {
     newPageTitle: '',
     newPageTemplate: null,
     // Site
-    iconEditorImage: null,
     openSiteCalendar: calendars[0]?.id ?? null,
     siteCalendarsOpen: true,
     siteZoneBad: false,

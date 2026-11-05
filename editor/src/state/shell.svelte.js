@@ -22,6 +22,7 @@ import { paletteState } from './palette.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { siteState } from './site.svelte.js';
+import { pictureEditorState } from './picture-editor.svelte.js';
 import { templatesState } from './templates.svelte.js';
 import { redirectsState } from './redirects.svelte.js';
 import { updaterState } from './updater.svelte.js';
@@ -655,10 +656,10 @@ let shortcutsOpen = $state(false);
 
 /**
  * Opens the shortcut sheet over the editor.
- * It stays shut while a confirmation or the icon editor is open, overlays that answer Escape themselves, and it closes the Urd settings dialog, a tool menu and a page's menu first, so the sheet is the one thing open over the editor.
+ * It stays shut while a confirmation or the image editor is open, overlays that answer Escape themselves, and it closes the Urd settings dialog, a tool menu and a page's menu first, so the sheet is the one thing open over the editor.
  */
 function openShortcuts() {
-  if (confirmBox || siteState.iconEditorImage) return;
+  if (confirmBox || pictureEditorState.picture) return;
   settingsOpen = false;
   toolMenu = null;
   shortcutsOpen = true;

@@ -13,6 +13,8 @@
  * - x/y (0..1, 0.5 = centered): focal point via background-position percentages. The
  *   point stays visible whatever the section format, with no empty space.
  * - size (fraction, 1 = 100% of the width): only in 'custom' mode.
+ * - look, brightness, contrast, saturate (additive from 0.7.29.4, the image editor): the
+ *   picture's finish as a filter (picture.js), the looks a filter draws alone.
  * - blur (px): mood background behind text. opacity (0..1). parallax (0..1): the layer
  *   lags behind on scroll. bleed: let the parallax flow into the neighbouring sections.
  * - motion ('none' | 'kenburns' | 'drift') with motionSpeed (seconds per cycle): the
@@ -21,6 +23,7 @@
  */
 
 import { isSafeImage } from '../nav-model.js';
+import { pictureStyle, pictureFilter } from '../picture.js';
 import { placeholderPhoto } from '../gallery-layout.js';
 
 /** Maximum vertical travel (fraction of the viewport height) a parallax layer gets at
@@ -349,9 +352,11 @@ export const imageLayer = {
     paint.style.backgroundPosition = bgPosition(props.x, props.y);
     // Blur: stretch the image a touch past the edge (clipped by the layer) so the
     // transparent fringe blur() creates ends up outside. No deliberate zoom.
+    // The finish (a look and the adjustments) goes in the same filter, before the blur.
+    const finish = pictureFilter(pictureStyle({ look: props.look, brightness: props.brightness, contrast: props.contrast, saturate: props.saturate, blur: props.blur }));
+    if (finish) paint.style.filter = finish;
     let blurMargin = 0;
     if (props.blur > 0) {
-      paint.style.filter = `blur(${props.blur}px)`;
       blurMargin = Math.ceil(props.blur);
       paint.style.left = `-${blurMargin}px`;
       paint.style.right = `-${blurMargin}px`;

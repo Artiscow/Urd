@@ -13,6 +13,7 @@
 // Called only in preview (after the admin dictionary has loaded): never at module level.
 import { ta } from '../i18n.js';
 import { accentCss } from './timeline.js';
+import { drawPicture } from '../picture.js';
 
 export const quoteBlock = {
   version: 2,
@@ -37,8 +38,9 @@ export const quoteBlock = {
   },
   /**
    * @param {HTMLElement} el
-   * @param {{text: string, attribution: string, role: string, variant?: string, image?: string, accent?: string|null,
+   * @param {{text: string, attribution: string, role: string, variant?: string, image?: string, imageStyle?: object, accent?: string|null,
    *          card?: boolean}} props
+   *   imageStyle: the portrait's settings from the image editor (picture.js pictureStyle), additive from 0.7.29.4
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
@@ -54,14 +56,25 @@ export const quoteBlock = {
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
+    // The portrait in its round frame, with the image editor's settings (imageStyle, additive from 0.7.29.4) drawn by picture.js.
     if (kort && props.image) {
+      const frame = document.createElement('span');
+      frame.className = 'urd-quote-portrait';
       const img = document.createElement('img');
-      img.className = 'urd-quote-portrait';
       img.alt = props.attribution ?? '';
       img.loading = 'lazy';
       img.decoding = 'async';
       img.src = props.image;
-      host.appendChild(img);
+      frame.appendChild(img);
+      drawPicture(frame, img, props.imageStyle);
+      host.appendChild(frame);
+      if (editable) {
+        frame.title = ta('canvas.editImage');
+        frame.addEventListener('dblclick', (event) => {
+          event.preventDefault();
+          post({ type: 'urd-picture-edit', kind: 'portrait', sectionId: ctx.section.id, blockId: el.dataset.blockId, frameRatio: 1, frameWidth: frame.offsetWidth, frameHeight: frame.offsetHeight });
+        });
+      }
     }
 
     const body = document.createElement('div');

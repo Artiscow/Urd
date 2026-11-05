@@ -11,7 +11,7 @@
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { mutateBlock, setBlockProp, setBlockProps, compressOrTrim, imageErrorText, setStatus, themeSwatches } = ed;
+  const { mutateBlock, setBlockProp, setBlockProps, compressOrTrim, imageErrorText, openImageEditor, setStatus, themeSwatches } = ed;
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 
@@ -24,14 +24,18 @@
     return text.length > 40 ? `${text.slice(0, 40)}…` : text;
   });
 
-  /** The quote block's portrait (the card variant): same webp path as the image block. */
+  /** The quote block's portrait (the card variant): through the upload's checks, then the image editor on it to frame it in its circle. */
   async function setQuotePortrait(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     try {
       const img = await compressOrTrim(file, 'portrait');
-      mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.image = img.dataUrl; });
+      mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+        b.props.image = img.dataUrl;
+        delete b.props.imageStyle;
+      });
+      openImageEditor();
     } catch (err) {
       setStatus(imageErrorText(err), 'error');
     }
@@ -62,7 +66,8 @@
         <input type="file" accept="image/*" onchange={setQuotePortrait} />
       </label>
       {#if selectedBlock.props.image}
-        <button class="ghost" onclick={() => setBlockProp('image', '')}>{ta('ui.quotePortraitRemove')}</button>
+        <button class="ghost" title={ta('tip.quote.editPortrait')} onclick={openImageEditor}>{ta('ui.quotePortraitEdit')}</button>
+        <button class="ghost" onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.image = ''; delete b.props.imageStyle; })}>{ta('ui.quotePortraitRemove')}</button>
       {/if}
     {:else}
       <!-- The large spread can stand in a card; the short one already is one -->

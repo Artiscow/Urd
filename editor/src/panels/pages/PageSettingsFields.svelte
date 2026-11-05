@@ -13,7 +13,7 @@
 
   const siteDraft = $derived(ed.siteDraft);
   const entry = $derived(siteDraft.pages.find((p) => p.id === id) ?? null);
-  const meta = $derived(ed.pageMetas[id] ?? { searchTitle: '', description: '', ogTitle: '', ogDescription: '', ogImage: '' });
+  const meta = $derived(ed.pageMetas[id] ?? { searchTitle: '', description: '', ogTitle: '', ogDescription: '', ogImage: '', ogImageSource: null });
   const navOn = $derived(!(siteDraft.nav?.hideOn ?? []).includes(id));
   const stripShown = $derived(ed.announcementOn());
   const stripOn = $derived(!(siteDraft.nav?.announcement?.hideOn ?? []).includes(id));
@@ -163,7 +163,8 @@
           <input type="file" accept="image/*" onchange={(e) => ed.uploadPageOgImage(id, e)} />
         </label>
         {#if meta.ogImage}
-          <button class="ghost row-tool" title={ta('tip.seo.removeOgImage')} aria-label={ta('tip.seo.removeOgImage')} onclick={() => ed.setPageMeta(id, 'ogImage', '')}>{@html ICONS.cross}</button>
+          <button class="ghost row-tool" title={ta('tip.seo.editOgImage')} aria-label={ta('tip.seo.editOgImage')} onclick={() => ed.editPageOgImage(id)}>{@html ICONS.pencil}</button>
+          <button class="ghost row-tool" title={ta('tip.seo.removeOgImage')} aria-label={ta('tip.seo.removeOgImage')} onclick={() => ed.setPageShareImage(id, '', null)}>{@html ICONS.cross}</button>
         {/if}
       </span>
     </div>

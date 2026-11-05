@@ -190,7 +190,7 @@ Urd: the video block (ELEMENTS.md #55 and #57).
 | Plays inline, and preload | WP, EL, WS, BI, PL | Partial: always inline, preload always metadata | Not taken: inline and metadata suit every site |
 | Captions | WP, EL, WS | Missing | 0.7.11 (a captions file on a self-hosted video) |
 | A privacy mode | EL, WS, KB | Has: youtube-nocookie, and do-not-track on Vimeo | - |
-| Loading on a click, behind a preview image | EL, WS, BI | Has: every embed behind a cover in the site's colours or the owner's own picture, the choice remembered per provider (Delivered 0.7.24.1.1) | - |
+| Loading on a click, behind a preview image | EL, WS, BI | Has: every embed behind a cover in the site's colours or the owner's own picture, the choice remembered per provider (Delivered 0.7.24.1.1), and «Ask before loading» to load it with the page instead (Delivered 0.7.29.4) | - |
 | Start and end time | EL, WS | Missing | 0.7.24.1 (embeds); v0.8 ER-B (a file) |
 | Aspect ratio | EL, BI, KB | Has: 16:9, 4:3, 1:1, 9:16, 21:9 and 4:5, the block's height following its width at the shape, or the frame as it is (Delivered 0.7.24.1.1) | - |
 | Opening in a lightbox | EL, KB, ST | Missing | v0.8 ER-B (video in a lightbox) |
@@ -301,7 +301,7 @@ Urd: the quote block (ELEMENTS.md #31, #32, #137 and #138).
 |---|---|---|---|
 | The quote and who said it | WP, EL, KB, SP | Has: the quote and a name | - |
 | A role or company | EL, KB, SP | Has: the role | - |
-| A portrait and its position | EL, KB, SP | Partial: a round portrait in the card design | 0.7.9 box styles and block designs |
+| A portrait and its position | EL, KB, SP | Partial: a round portrait in the card design, framed, turned and finished in the image editor (0.7.29.4); no position choice | 0.7.9 box styles and block designs |
 | A star rating | KB, SP | Missing | Not taken: low value |
 | Alignment | WP, EL, SP | Missing | 0.7.9 (the quote's alignment, background and border) |
 | A style variant | WP, SP | Has: «Large quote» and «Card with portrait» | - |

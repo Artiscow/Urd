@@ -2,7 +2,7 @@
  * The image editor's rules (0.7.29.2), pure so they are tested: what each kind of picture keeps and where, the crop window the stage draws over the whole picture, a pointer on the turned picture as a point on the picture itself, the zoom a corner handle gives, and the resets.
  * The drawing on the page is the engine's picture.js; the dialog is PictureEditor.svelte, and the writes go through state/picture-editor.svelte.js.
  */
-import { pictureStyle, PICTURE_BOUNDS, DUOTONE_DEFAULT } from '$engine/picture.js';
+import { pictureStyle, PICTURE_BOUNDS, PICTURE_LOOKS, DUOTONE_DEFAULT, straightenScale } from '$engine/picture.js';
 import { aspectRatio } from '$engine/push-model.js';
 
 /** The settings the editor writes beside the picture, in the order its sections show them. */
@@ -22,6 +22,15 @@ export const SECTIONS = {
 /** The shapes the image block offers: free (the frame as dragged), the picture's own, and the common ratios. */
 export const IMAGE_RATIOS = ['free', 'original', '1:1', '4:3', '3:2', '16:9', '9:16', '4:5'];
 
+/** The looks drawn by a filter alone: a background layer has no frame for the vintage vignette or the duotone's colours. */
+export const FILTER_LOOKS = PICTURE_LOOKS.filter((look) => look !== 'vintage' && look !== 'duotone');
+
+/** The shapes a logo is cut to: its own, and the common ratios. */
+export const LOGO_RATIOS = ['original', '1:1', '4:3', '3:2', '16:9', '9:16', '4:5'];
+
+/** The longest side a baked logo has: sharp at twice the largest height the nav and the footer draw a logo at. */
+export const LOGO_LONGEST = 800;
+
 /** The shapes a collection or product picture has in its card, as the entry's `imageStyle.shape`. */
 export const ENTRY_SHAPES = ['auto', 'wide', 'square', 'portrait', 'circle'];
 
@@ -31,29 +40,48 @@ const ENTRY_SHAPE_RATIO = { wide: 16 / 9, square: 1, portrait: 3 / 4, circle: 1 
 /**
  * What each kind of picture can do in the editor: its shapes, the fit, the corners, the overlay and the description.
  * The video's cover has the video's own shape and no description (it is decoration on a button); a gallery picture takes the gallery's shape and corners.
+ * The site icon and a page's share image are read from their file by the browser and by link previews, so they are baked (`bake`, their size in pixels) from an original kept beside them.
+ * The quote's portrait stands in a round frame of a fixed size (`frame`, in pixels), shaped and drawn by the page.
+ * An uploaded icon for a link or the icon block (a glyph) is baked as it comes in and handed back to the field that asked (`handed`), with no original kept.
+ * A logo (the nav's or the footer's) is baked at its own shape, its size from the original (`longest`, logoBakeSize), since the nav draws its file at its own width.
+ * A background's image layer keeps its own placement (its size, tiling and a focus that may pass the edge), so the editor gives it only a finish (`frameless`): the looks drawn by a filter alone and the adjustments. A slideshow layer's picture takes only its focus point, the layer's tone being its look.
+ * `budget` names the use a picture is weighed by where it is not the kind's own, and `removable: false` leaves taking the picture away to the panel it came from.
  */
 export const KIND_TOOLS = {
   image: { ratios: IMAGE_RATIOS, fit: true, corners: true, overlay: true, alt: true },
   gallery: { ratios: null, fit: true, corners: false, overlay: true, alt: true },
   entry: { ratios: ENTRY_SHAPES, fit: true, corners: true, overlay: true, alt: true },
   cover: { ratios: null, fit: false, corners: false, overlay: false, alt: false },
+  icon: { ratios: null, fit: false, corners: false, overlay: true, alt: false, bake: { width: 128, height: 128 } },
+  share: { ratios: null, fit: false, corners: false, overlay: true, alt: false, bake: { width: 1200, height: 630 } },
+  portrait: { ratios: null, fit: false, corners: false, overlay: true, alt: false, round: true, frame: { width: 48, height: 48 } },
+  glyph: { ratios: null, fit: false, corners: false, overlay: true, alt: false, bake: { width: 256, height: 256 }, handed: true },
+  logo: { ratios: LOGO_RATIOS, fit: false, corners: false, overlay: true, alt: false, bake: { longest: LOGO_LONGEST } },
+  layer: { ratios: null, fit: false, corners: false, overlay: false, alt: false, frameless: true, turn: false, looks: FILTER_LOOKS, budget: 'background', removable: false },
+  slide: { ratios: null, fit: false, corners: false, overlay: false, alt: false, turn: false, look: false, adjust: false, zoom: false, budget: 'background', removable: false },
 };
 
+/** The settings an image background layer takes from the editor, beside its own placement: its look and adjustments (the blur is the layer's own). */
+export const LAYER_KEYS = ['look', 'brightness', 'contrast', 'saturate', 'blur'];
+
+/** Whether a kind of picture is baked into a file of its own (the site icon, a share image). */
+export const isBaked = (kind) => Boolean(KIND_TOOLS[kind]?.bake);
+
 /**
- * A picture as the editor holds it, read from where its kind keeps it: the image block's props, a gallery picture, a collection entry or the video's cover.
- * @param {'image'|'gallery'|'entry'|'cover'} kind
- * @param {object} source The block's props (image, cover), the gallery picture (gallery) or the entry (entry)
+ * A picture as the editor holds it, read from where its kind keeps it: the image block's props, a gallery picture, a collection entry, the video's cover, or a baked picture's kept original (its file and settings side by side).
+ * @param {'image'|'gallery'|'entry'|'cover'|'icon'|'share'} kind
+ * @param {object} source The block's props (image, cover), the gallery picture (gallery), the entry (entry) or the kept original (icon, share)
  * @returns {{src: string, alt: string, fit: 'cover'|'contain', ratio: string, radius: string, style: object}}
  */
 export function readPicture(kind, source) {
   const s = source ?? {};
-  const raw = kind === 'image' ? s : kind === 'gallery' ? (s.style ?? {}) : kind === 'entry' ? (s.imageStyle ?? {}) : (s.coverStyle ?? {});
+  const raw = kind === 'image' || kind === 'layer' || kind === 'slide' || isBaked(kind) ? s : kind === 'gallery' ? (s.style ?? {}) : kind === 'entry' || kind === 'portrait' ? (s.imageStyle ?? {}) : (s.coverStyle ?? {});
   const style = pictureStyle(raw);
   return {
-    src: String((kind === 'entry' ? s.image : kind === 'cover' ? s.poster : s.src) ?? ''),
+    src: String((kind === 'entry' || kind === 'portrait' ? s.image : kind === 'cover' ? s.poster : s.src) ?? ''),
     alt: String((kind === 'entry' ? s.imageAlt : s.alt) ?? ''),
     fit: raw.fit === 'contain' ? 'contain' : 'cover',
-    ratio: kind === 'image' ? (IMAGE_RATIOS.includes(s.aspect) ? s.aspect : 'free') : kind === 'entry' ? (ENTRY_SHAPES.includes(raw.shape) ? raw.shape : 'auto') : '',
+    ratio: kind === 'image' ? (IMAGE_RATIOS.includes(s.aspect) ? s.aspect : 'free') : kind === 'entry' ? (ENTRY_SHAPES.includes(raw.shape) ? raw.shape : 'auto') : kind === 'logo' ? (LOGO_RATIOS.includes(s.ratio) ? s.ratio : 'original') : '',
     radius: ['sm', 'md'].includes(kind === 'entry' ? raw.radius : s.radius) ? (kind === 'entry' ? raw.radius : s.radius) : '',
     style,
   };
@@ -99,6 +127,26 @@ export function writePicture(kind, target, pic) {
     else target.radius = null;
     if (pic.ratio && pic.ratio !== 'free') target.aspect = pic.ratio;
     else delete target.aspect;
+    return;
+  }
+  if (kind === 'layer') {
+    target.src = pic.src;
+    for (const key of LAYER_KEYS) {
+      if (key in style) target[key] = style[key];
+      else delete target[key];
+    }
+    return;
+  }
+  if (kind === 'slide') {
+    target.src = pic.src;
+    target.x = pic.style.x;
+    target.y = pic.style.y;
+    return;
+  }
+  if (kind === 'portrait') {
+    target.image = pic.src;
+    if (Object.keys(style).length) target.imageStyle = style;
+    else delete target.imageStyle;
     return;
   }
   if (kind === 'cover') {
@@ -313,4 +361,61 @@ export function withShared(stored, from) {
   const out = { ...(stored ?? {}) };
   for (const key of STYLE_KEYS) delete out[key];
   return { ...out, ...storedStyle(next) };
+}
+
+/**
+ * A baked picture's kept original as it is stored beside the baked file: the original's file and the settings it is baked with, those at none left out.
+ * @param {ReturnType<typeof readPicture>} pic
+ * @returns {object}
+ */
+export function sourceOf(pic) {
+  const ratio = pic.ratio && pic.ratio !== 'original' && LOGO_RATIOS.includes(pic.ratio) ? { ratio: pic.ratio } : {};
+  return { src: pic.src, ...storedStyle(pic.style), ...ratio };
+}
+
+/**
+ * A logo's baked size in pixels: the part its shape and zoom show of the original (a quarter turn lays the original across it), no larger than `longest` on its longest side; a drawing (SVG) has no pixels of its own, so it is drawn at `longest`.
+ * @param {{natural: {width: number, height: number}, ratio: string, zoom?: number, quarter?: boolean, drawing?: boolean, longest?: number}} p
+ * @returns {{width: number, height: number}}
+ */
+export function logoBakeSize({ natural, ratio, zoom = 1, quarter = false, drawing = false, longest = LOGO_LONGEST }) {
+  const nw = Math.max(1, (quarter ? natural.height : natural.width) || 1);
+  const nh = Math.max(1, (quarter ? natural.width : natural.height) || 1);
+  const r = ratioValue(ratio, nw / nh) ?? nw / nh;
+  let w = nw / nh > r ? nh * r : nw;
+  let h = w / r;
+  w /= Math.max(1, zoom);
+  h /= Math.max(1, zoom);
+  const scale = drawing ? longest / Math.max(w, h) : Math.min(1, longest / Math.max(w, h));
+  return { width: Math.max(1, Math.round(w * scale)), height: Math.max(1, Math.round(h * scale)) };
+}
+
+/**
+ * Where a baked picture's original is drawn on its canvas, the way picture.js draws a picture in its frame: the turn (`angle` in radians, `sx` and `sy` with the mirrors and the straightening's growth) around the canvas's centre, and the picture's rectangle before the turn, covered (or whole) in its box, placed by the focus point and zoomed towards it.
+ * A quarter turn lays the box across the canvas. Coordinates are from the canvas's centre.
+ * @param {{natural: {width: number, height: number}, out: {width: number, height: number}, style: object, fit?: string}} p
+ * @returns {{angle: number, sx: number, sy: number, rect: {x: number, y: number, w: number, h: number}}}
+ */
+export function bakeLayout({ natural, out, style, fit = 'cover' }) {
+  const s = pictureStyle(style);
+  const quarter = s.rotate === 90 || s.rotate === 270;
+  const bw = quarter ? out.height : out.width;
+  const bh = quarter ? out.width : out.height;
+  const nw = natural.width > 0 ? natural.width : bw;
+  const nh = natural.height > 0 ? natural.height : bh;
+  const fill = fit === 'contain' ? Math.min(bw / nw, bh / nh) : Math.max(bw / nw, bh / nh);
+  const dw = nw * fill;
+  const dh = nh * fill;
+  // object-position: the leftover room shared by the focus point; the zoom scales about the same point.
+  const ox = (bw - dw) * s.x;
+  const oy = (bh - dh) * s.y;
+  const fx = s.x * bw;
+  const fy = s.y * bh;
+  const grow = straightenScale(s.straighten);
+  return {
+    angle: ((s.rotate + s.straighten) * Math.PI) / 180,
+    sx: (s.flipX ? -1 : 1) * grow,
+    sy: (s.flipY ? -1 : 1) * grow,
+    rect: { x: fx + (ox - fx) * s.zoom - bw / 2, y: fy + (oy - fy) * s.zoom - bh / 2, w: dw * s.zoom, h: dh * s.zoom },
+  };
 }

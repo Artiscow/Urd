@@ -24,7 +24,8 @@
           "properties": {
             "title": { "type": "string" },
             "description": { "type": "string" },
-            "image": { "type": "string", "description": "Sharing image: a /media/images/ path (materialized at publish)" }
+            "image": { "type": "string", "description": "Sharing image: a /media/images/ path (materialized at publish), baked at 1200 x 630 by the image editor" },
+            "imageSource": { "$ref": "site.schema.json#/$defs/pictureSource", "description": "The share image's kept original and the settings it is baked with (additive from 0.7.29.4)" }
           }
         }
       }

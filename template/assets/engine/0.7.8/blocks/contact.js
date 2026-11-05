@@ -206,8 +206,8 @@ function drawButtons(box, model, extras, site) {
   if (model.legal.length) box.append(node('span', 'urd-contact-legal', legalText(model.legal)));
 }
 
-/** Beside a map: the details with a directions link, and OpenStreetMap's map behind a cover that loads it only on a tap. */
-function drawMap(box, model, extras, site, ctx) {
+/** Beside a map: the details with a directions link, and OpenStreetMap's map behind a cover that loads it only on a tap, or with the page where the owner chose so (`askFirst: false`). */
+function drawMap(box, model, extras, site, ctx, props = {}) {
   const details = node('span', 'urd-contact-side');
   details.append(label(t('contact.findUs')));
   if (model.name) details.append(node('strong', 'urd-contact-name', model.name));
@@ -229,7 +229,7 @@ function drawMap(box, model, extras, site, ctx) {
       watchCspBlock(figure, frame, ctx, buildLargerMapUrl({ ...model.geo, zoom: 16 }));
       return frame;
     };
-    coverFrame(figure, { src, makeFrame, kind: 'map', preview: Boolean(ctx.preview), extraClass: 'urd-contact-cover' });
+    coverFrame(figure, { src, makeFrame, kind: 'map', preview: Boolean(ctx.preview), ask: props.askFirst !== false, extraClass: 'urd-contact-cover' });
     box.append(figure);
   } else if (ctx.preview) {
     // Without a point the published page shows the details alone; the editor says where the point is found.
@@ -416,7 +416,7 @@ export const contactBlock = {
       host.append(box);
       const name = model.name || String(ctx.site?.site?.title ?? '');
       const extras = props.vcard && design !== 'strip' ? [saveButton(ctx.site, name, model)] : [];
-      DRAW[design](box, model, extras, ctx.site, ctx);
+      DRAW[design](box, model, extras, ctx.site, ctx, props);
       if (props.dock && ctx.viewport === 'mobile') {
         const bar = dockBar(model, ctx.site);
         // The bar stands beside the <address>, which may not hold navigation.

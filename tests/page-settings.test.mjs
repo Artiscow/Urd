@@ -7,7 +7,7 @@ import { register } from 'node:module';
 
 register('./_svelte-loader.mjs', import.meta.url);
 import { engineImport } from './_engine.mjs';
-const { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf, metaOf, withMeta, frontPageSwap, refusedPageFields, refusedPageFieldLine } = await import('../editor/src/lib/page-settings.js');
+const { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf, metaOf, withMeta, withShareSource, frontPageSwap, refusedPageFields, refusedPageFieldLine } = await import('../editor/src/lib/page-settings.js');
 
 test('pageSettingsLayoutOf: the three layouts, the dialog for anything else', () => {
   assert.deepEqual(PAGE_SETTINGS_LAYOUTS, ['dialog', 'step', 'table']);
@@ -18,7 +18,7 @@ test('pageSettingsLayoutOf: the three layouts, the dialog for anything else', ()
 
 test('metaOf and withMeta: the fields as strings, an empty value deleting its key and the og object when it empties', () => {
   const page = { meta: { id: 'kaker', title: 'Kaker', description: 'Kakesiden', og: { title: 'Kaker hos oss' } } };
-  assert.deepEqual(metaOf(page), { searchTitle: '', description: 'Kakesiden', ogTitle: 'Kaker hos oss', ogDescription: '', ogImage: '' });
+  assert.deepEqual(metaOf(page), { searchTitle: '', description: 'Kakesiden', ogTitle: 'Kaker hos oss', ogDescription: '', ogImage: '', ogImageSource: null });
   withMeta(page, 'searchTitle', '  Kaker til fest ');
   assert.equal(page.meta.searchTitle, 'Kaker til fest');
   withMeta(page, 'searchTitle', '');
@@ -30,7 +30,20 @@ test('metaOf and withMeta: the fields as strings, an empty value deleting its ke
   assert.equal('og' in page.meta, false, 'the og object goes when it empties');
   withMeta(page, 'nonsense', 'x');
   assert.deepEqual(Object.keys(page.meta).sort(), ['description', 'id', 'title']);
-  assert.deepEqual(metaOf(null), { searchTitle: '', description: '', ogTitle: '', ogDescription: '', ogImage: '' });
+  assert.deepEqual(metaOf(null), { searchTitle: '', description: '', ogTitle: '', ogDescription: '', ogImage: '', ogImageSource: null });
+});
+
+test('withShareSource: the share image\'s kept original beside the image, taken away with null, and the og object gone when it empties', () => {
+  const page = { meta: { title: 'Kaker' } };
+  withMeta(page, 'ogImage', '/media/images/share.webp');
+  withShareSource(page, { src: '/media/images/original.webp', zoom: 2 });
+  assert.deepEqual(page.meta.og, { image: '/media/images/share.webp', imageSource: { src: '/media/images/original.webp', zoom: 2 } });
+  assert.deepEqual(metaOf(page).ogImageSource, { src: '/media/images/original.webp', zoom: 2 });
+  withShareSource(page, { zoom: 2 });
+  assert.equal('imageSource' in page.meta.og, false, 'an original without a file is not kept');
+  withMeta(page, 'ogImage', '');
+  withShareSource(page, null);
+  assert.equal('og' in page.meta, false);
 });
 
 test('frontPageSwap: the chosen page at / and first, the old front page at its id, the rest in order; nothing for the front page itself or an unknown id', () => {

@@ -514,13 +514,63 @@ async function deletePage(entry) {
   shellState.setStatus(ta('status.pageRemoved'));
 }
 
-/** Site icon (favicon): small webp, materialized on publish. */
-// The icon editor (IconEditor): the source being edited. null = closed.
-let iconEditorImage = $state(null);
+/**
+ * The site icon (favicon) and its kept original: the icon baked by the image editor (a small WebP, materialized on publish) and the original with the settings it is baked with, so a new edit starts from the original. An empty icon takes both away.
+ * @param {string} icon
+ * @param {object|null} source
+ */
+function setSiteIcon(icon, source) {
+  siteMutate('edit:site-icon', () => {
+    if (icon) siteDraft.site.icon = icon;
+    else delete siteDraft.site.icon;
+    if (icon && source?.src) siteDraft.site.iconSource = source;
+    else delete siteDraft.site.iconSource;
+  });
+}
 
-function applyIcon(dataUrl) {
-  siteMutate('edit:site-icon', () => { siteDraft.site.icon = dataUrl; });
-  iconEditorImage = null;
+/**
+ * A logo baked by the image editor, with its kept original: the nav's (in `value` for an image logo, `image` beside the text, and an image logo when it was text alone) or the footer's brand (`logo`, shown with the title when no mode was chosen). An empty logo takes both away and leaves the name in text, as the panels' own remove does.
+ * @param {'nav'|'footer'} place
+ * @param {string} image
+ * @param {object|null} source
+ */
+function setLogoPicture(place, image, source) {
+  const kept = image && source?.src ? source : null;
+  if (place === 'footer') {
+    footerMutate('footer', (f) => {
+      if (!image) {
+        if (!f.brand) return;
+        delete f.brand.logo;
+        delete f.brand.logoSource;
+        delete f.brand.mode;
+        delete f.brand.logoHeight;
+        if (!f.brand.title && !f.brand.tagline) delete f.brand;
+        return;
+      }
+      f.brand ??= {};
+      f.brand.logo = image;
+      if (!f.brand.mode) f.brand.mode = 'both';
+      if (kept) f.brand.logoSource = kept;
+      else delete f.brand.logoSource;
+    });
+    return;
+  }
+  siteMutate('nav', () => {
+    const logo = siteDraft.nav.logo;
+    // Without a picture the logo is the site's name, as the Nav panel's «Text» leaves it.
+    if (!image) {
+      if (logo.type === 'image') logo.value = siteDraft.site.title;
+      logo.type = 'text';
+      delete logo.image;
+      delete logo.imageSource;
+      return;
+    }
+    if (logo.type === 'text') logo.type = 'image';
+    if (logo.type === 'both') logo.image = image;
+    else logo.value = image;
+    if (kept) logo.imageSource = kept;
+    else delete logo.imageSource;
+  });
 }
 
 /** Visitor measurement (site.analytics): a site value published with the
@@ -898,9 +948,8 @@ export const siteState = {
   dropTypedPageFields,
   refusedPageFields,
   deletePage,
-  get iconEditorImage() { return iconEditorImage; },
-  set iconEditorImage(v) { iconEditorImage = v; },
-  applyIcon,
+  setSiteIcon,
+  setLogoPicture,
   setAnalyticsToken,
   get layoutWidth() { return layoutWidth; },
   set layoutWidth(v) { layoutWidth = v; },

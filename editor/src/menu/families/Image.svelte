@@ -14,6 +14,7 @@
   import { makeGroupHelpers } from '../groups.js';
   import LinkField from '../../lib/LinkField.svelte';
   import { linkOf, linkText } from '../../lib/link-edit.js';
+  import { ICONS } from '../../lib/icons.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps, setBlockLink, openImageEditor, compressOrTrim, imageErrorText, setStatus } = ed;
@@ -39,7 +40,13 @@
   }
 </script>
 
+{#snippet editorButton()}
+  <!-- The image editor first in Content: framing, turn, look, adjustments and overlay in one place -->
+  <button type="button" class="ghost action pe-open" title={ta('tip.image.openEditor')} onclick={openImageEditor}>{@html ICONS.pencil}{ta('ui.openImageEditor')}</button>
+{/snippet}
+
 {#if area === 'content'}
+  {@render editorButton()}
   {#snippet imgImage()}
     <label title={ta('tip.image.change')} class="ghost filepick">
       {ta('ui.changeImage')}
@@ -90,7 +97,6 @@
       <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
     <input type="range" min="1" max={PICTURE_BOUNDS.zoom.max} step="0.01" value={selectedBlock.props.zoom ?? 1}
       oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
-    <button type="button" class="linkish" onclick={openImageEditor}>{ta('ui.openImageEditor')}</button>
   {/snippet}
   {#snippet imgFilters()}
     <label title={ta('tip.image.brightness')}>{ta('lbl.brightness')}
@@ -123,3 +129,9 @@
   <MenuGroup id="img-filters" title={ta('group.filters')} value={filterN ? ta('menu.changed', { n: filterN }) : ta('menu.standard')} group={groupOf('img-filters', { brightness: 1, contrast: 1, saturate: 1 })}>{@render imgFilters()}</MenuGroup>
   <MenuGroup id="img-corners" title={ta('group.corners')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} group={groupOf('img-corners', { radius: 'md' })}>{@render imgCorners()}</MenuGroup>
 {/if}
+
+<style>
+  .pe-open {
+    gap: 0.45rem;
+  }
+</style>

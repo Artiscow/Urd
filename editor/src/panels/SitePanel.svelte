@@ -21,35 +21,25 @@
   const site = $derived(ed.site);
   const siteDraft = $derived(ed.siteDraft);
   import LinkList from '../lib/LinkList.svelte';
-  const { addSiteCalendar, setStatus, siteCalendars, siteLangOptions, siteLangValue, siteMutate, svgAutoTrim, themeSwatches, siteLinks, addSiteLink, removeSiteLink, moveSiteLink, setSiteLink } = ed;
+  const { addSiteCalendar, setStatus, siteCalendars, siteLangOptions, siteLangValue, siteMutate, themeSwatches, siteLinks, addSiteLink, removeSiteLink, moveSiteLink, setSiteLink } = ed;
 
+  /* The site icon chosen: the picture is kept as the original (an SVG trimmed to its mark, so the icon is filled by it), and the image editor opens on it; «Done» bakes the icon, which stays raster, since Safari does not use an SVG favicon. */
   async function uploadSiteIcon(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
-    if (isSvg) {
-      // The SVG is auto-trimmed (viewBox tightened to the subject) BEFORE
-      // the icon editor, so the rasterized favicon is filled tightly by
-      // the mark. The favicon stays raster: universal support (Safari does
-      // not use SVG favicons).
-      try {
-        const img = await svgAutoTrim(file);
-        ed.iconEditorImage = img.dataUrl;
-      } catch {
-        setStatus(ta('status.imageReadErrorSvg'), 'error');
-      }
-      return;
+    try {
+      const img = await ed.compressOrTrim(file, 'image');
+      ed.openPicture({ kind: 'icon', fresh: true, source: { src: img.dataUrl } });
+    } catch (err) {
+      setStatus(ed.imageErrorText(err, 'status.imageReadErrorSvg'), 'error');
     }
-    // Read the raw file at full resolution, so the editor has something to crop and zoom in.
-    const reader = new FileReader();
-    reader.onload = () => { ed.iconEditorImage = String(reader.result); };
-    reader.onerror = () => setStatus(ta('status.imageReadError'), 'error');
-    reader.readAsDataURL(file);
   }
 
-  function removeSiteIcon() {
-    siteMutate('edit:site-icon', () => { delete siteDraft.site.icon; });
+  /** The image editor on the site icon: from its kept original, or from the icon itself where none is kept. */
+  function editSiteIcon() {
+    const kept = siteDraft.site.iconSource;
+    ed.openPicture({ kind: 'icon', source: kept?.src ? kept : { src: siteDraft.site.icon } });
   }
 
   /** The site name (site.title): half the tab title (`<page> - <name>`)
@@ -727,10 +717,10 @@
       <input type="file" accept="image/*" onchange={uploadSiteIcon} />
     </label>
     {#if siteDraft.site.icon}
-      <button class="ghost row-tool" title={ta('tip.site.editIcon')}
-        onclick={() => (ed.iconEditorImage = siteDraft.site.icon)}>{@html ICONS.pencil ?? '✎'}</button>
-      <button class="ghost row-tool" title={ta('tip.site.removeIcon')}
-        onclick={removeSiteIcon}>{@html ICONS.cross}</button>
+      <button class="ghost row-tool" title={ta('tip.site.editIcon')} aria-label={ta('tip.site.editIcon')}
+        onclick={editSiteIcon}>{@html ICONS.pencil}</button>
+      <button class="ghost row-tool" title={ta('tip.site.removeIcon')} aria-label={ta('tip.site.removeIcon')}
+        onclick={() => ed.setSiteIcon('', null)}>{@html ICONS.cross}</button>
     {/if}
   </span>
 </div>

@@ -100,16 +100,16 @@ export function coverImageStyle(frame, style) {
 let coverCount = 0;
 
 /**
- * A frame behind its cover: the frame at once where the visitor has let its provider load, else the cover, which makes the frame on a press.
- * The editor's preview always shows the cover, as a visitor first sees it.
+ * A frame behind its cover: the frame at once where the visitor has let its provider load or the owner chose to load it with the page (`ask: false`, the block's `askFirst`), else the cover, which makes the frame on a press.
+ * The editor's preview shows the cover whenever the owner asks first, as a visitor first sees it.
  * @param {HTMLElement} host Where the cover or the frame goes (appended)
- * @param {{src: string, makeFrame: (how: {pressed: boolean}) => HTMLIFrameElement, kind?: 'video'|'map', image?: string, imageStyle?: object, preview?: boolean, extraClass?: string}} options
+ * @param {{src: string, makeFrame: (how: {pressed: boolean}) => HTMLIFrameElement, kind?: 'video'|'map', image?: string, imageStyle?: object, preview?: boolean, ask?: boolean, extraClass?: string}} options
  *   makeFrame builds the frame when it is wanted, told whether the visitor pressed this cover (a video may start then); image is the owner's own picture for the cover, imageStyle its framing and adjustments (coverImageStyle)
  * @returns {HTMLElement} What was appended: the cover or the frame
  */
-export function coverFrame(host, { src, makeFrame, kind = 'video', image, imageStyle, preview = false, extraClass }) {
+export function coverFrame(host, { src, makeFrame, kind = 'video', image, imageStyle, preview = false, ask = true, extraClass }) {
   const provider = providerOf(src);
-  if (!provider || (!preview && allowedProviders().includes(provider.id))) {
+  if (!provider || !ask || (!preview && allowedProviders().includes(provider.id))) {
     const frame = makeFrame({ pressed: false });
     host.append(frame);
     return frame;

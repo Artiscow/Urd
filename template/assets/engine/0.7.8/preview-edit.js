@@ -4258,8 +4258,8 @@ function enhanceBlock(el, block, section, grid, host) {
     const box = (kind === 'cover' ? el.querySelector('.urd-cover') : el.querySelector('.urd-image-frame')) ?? el;
     post({ type: 'urd-picture-edit', kind, sectionId: section.id, blockId: block.id, frameRatio: box.offsetHeight ? box.offsetWidth / box.offsetHeight : 0, frameWidth: box.offsetWidth, frameHeight: box.offsetHeight });
   };
-  // Only where a cover is drawn: an embed with a link the video block can play.
-  const coverEditable = block.type === 'video' && block.props.source !== 'file' && Boolean(embedUrl(block.props.url));
+  // Only where a cover is drawn: an embed with a link the video block can play, asked about before it loads.
+  const coverEditable = block.type === 'video' && block.props.source !== 'file' && block.props.askFirst !== false && Boolean(embedUrl(block.props.url));
   if (block.type === 'image') {
     el.addEventListener('dblclick', (event) => {
       event.preventDefault();

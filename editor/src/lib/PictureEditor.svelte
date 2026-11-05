@@ -6,7 +6,7 @@
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { pictureFilter, pictureStyle, PICTURE_LOOKS, PICTURE_BOUNDS, LOOK_FILTERS, straightenScale, parseColor, duotoneFilterUrl } from '$engine/picture.js';
-  import { cropWindow, pointOnPicture, zoomFromCorner, turned, sectionChanged, KIND_TOOLS, ratioValue, movedFrame, frameAt, sharpness, dataUrlBytes, isDrawing } from './picture-edit.js';
+  import { cropWindow, pointOnPicture, zoomFromCorner, turned, sectionChanged, KIND_TOOLS, ratioValue, movedFrame, frameAt, sharpness, dataUrlBytes, isDrawing, isBaked } from './picture-edit.js';
   import { ICONS } from './icons.js';
   import StepField from './StepField.svelte';
   import ColorPicker from './ColorPicker.svelte';
@@ -76,7 +76,7 @@
 
   /** The frame moved over the picture: dragged from where it is pressed, or, pressed beside it, first put where the press is; one step when it is let go. */
   function startMove(event) {
-    if (event.button !== 0 || !boxEl || !win || !style) return;
+    if (event.button !== 0 || !boxEl || !win || !style || tools.frameless) return;
     event.preventDefault();
     stageEl.focus({ preventScroll: true });
     let from = pointAt(event);
@@ -142,7 +142,7 @@
   }
 
   function onWheel(event) {
-    if (!style) return;
+    if (!style || tools.frameless || tools.zoom === false) return;
     event.preventDefault();
     const zoom = Math.min(PICTURE_BOUNDS.zoom.max, Math.max(1, style.zoom - event.deltaY * 0.002));
     nudge({ zoom: Math.round(zoom * 100) / 100 });
@@ -150,14 +150,14 @@
 
   /** The arrow keys move the frame (Shift a larger step); + and - zoom. */
   function onStageKey(event) {
-    if (!style || !win) return;
+    if (!style || !win || tools.frameless) return;
     const step = event.shiftKey ? 0.05 : 0.01;
     const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
     if (moves[event.key]) {
       event.preventDefault();
       const [dx, dy] = moves[event.key];
       nudge(movedFrame(win, dx, dy, { x: style.x, y: style.y }));
-    } else if (event.key === '+' || event.key === '-') {
+    } else if ((event.key === '+' || event.key === '-') && tools.zoom !== false) {
       event.preventDefault();
       nudge({ zoom: Math.round(Math.min(PICTURE_BOUNDS.zoom.max, Math.max(1, style.zoom + (event.key === '+' ? 0.1 : -0.1))) * 100) / 100 });
     }
@@ -235,7 +235,8 @@
     return () => { live = false; };
   });
   const drawing = $derived(isDrawing(src));
-  const budget = $derived(target ? ed.budgetFor(target.kind) : 0);
+  /** The budget the file is weighed against; a baked picture's original has none, since its bake is made within the budget. */
+  const budget = $derived(target && !isBaked(target.kind) ? ed.budgetFor(tools.budget ?? target.kind) : 0);
   const overBudget = $derived(fileBytes != null && budget > 0 && fileBytes > budget);
   /** Whether the picture has the pixels its frame draws it at on the page, with the zoom and the turn it has now. */
   const sharp = $derived(pic && !drawing ? sharpness({
@@ -281,9 +282,9 @@
               onload={(e) => { const i = e.currentTarget; if (i.naturalWidth && i.naturalHeight) ed.pictureNatural = i.naturalWidth / i.naturalHeight; }} />
             {#if style.look === 'vintage'}<span class="pe-layer urd-pic-look-vintage"></span>{/if}
             {#if style.overlay}<span class="pe-overlay" style:background={siteColor(style.overlay.color)} style:opacity={style.overlay.strength}></span>{/if}
-            {#if win}
-              <span class="pe-window" class:pe-round={pic.ratio === 'circle'} style:left="{win.left * 100}%" style:top="{win.top * 100}%" style:width="{win.width * 100}%" style:height="{win.height * 100}%">
-                {#each ['tl', 'tr', 'bl', 'br'] as corner (corner)}
+            {#if win && !tools.frameless}
+              <span class="pe-window" class:pe-round={tools.round || pic.ratio === 'circle'} style:left="{win.left * 100}%" style:top="{win.top * 100}%" style:width="{win.width * 100}%" style:height="{win.height * 100}%">
+                {#each tools.zoom === false ? [] : ['tl', 'tr', 'bl', 'br'] as corner (corner)}
                   <!-- svelte-ignore a11y_no_static_element_interactions -->
                   <span class="pe-handle pe-{corner}" title={ta('tip.pic.zoom')} onpointerdown={(e) => startCorner(e, corner)}></span>
                 {/each}
@@ -313,69 +314,77 @@
             <button type="button" class="pe-chip" class:on={pic.fit === 'contain'} role="radio" aria-checked={pic.fit === 'contain'} title={ta('opt.fitFrame.contain')} onclick={() => ed.changePicture({ fit: 'contain' })}>{ta('pic.fit.contain')}</button>
           </div>
         {/if}
-        <label class="pe-slider" title={ta('tip.pic.zoom')}><span>{ta('lbl.zoom')}</span>
-          <input type="range" min="1" max={PICTURE_BOUNDS.zoom.max} step="0.01" value={pic.style.zoom} oninput={slide('zoom')} onchange={settle} />
-          <StepField value={pic.style.zoom} min={1} max={PICTURE_BOUNDS.zoom.max} step={0.05} decimals={2} label={ta('lbl.zoom')} onchange={(v) => nudge({ zoom: v })} /></label>
+        {#if !tools.frameless && tools.zoom !== false}
+          <label class="pe-slider" title={ta('tip.pic.zoom')}><span>{ta('lbl.zoom')}</span>
+            <input type="range" min="1" max={PICTURE_BOUNDS.zoom.max} step="0.01" value={pic.style.zoom} oninput={slide('zoom')} onchange={settle} />
+            <StepField value={pic.style.zoom} min={1} max={PICTURE_BOUNDS.zoom.max} step={0.05} decimals={2} label={ta('lbl.zoom')} onchange={(v) => nudge({ zoom: v })} /></label>
+        {/if}
       </div>
 
       <aside class="pe-tools">
-        <section class="pe-sec">
-          <div class="pe-sec-t"><span>{ta('pic.sec.look')}</span>{#if sectionChanged(pic.style, 'look')}<button type="button" class="linkish" title={ta('tip.pic.reset')} onclick={() => ed.resetPicture('look')}>{ta('pic.reset')}</button>{/if}</div>
-          <div class="pe-looks" role="radiogroup" aria-label={ta('pic.sec.look')} style:--urd-color-accent={siteColor('accent')}>
-            {#each PICTURE_LOOKS as look (look)}
-              <button type="button" class="pe-look" class:on={pic.style.look === look} role="radio" aria-checked={pic.style.look === look} onclick={() => ed.changePicture({ style: { look } })}>
-                <span class="pe-look-pic">
-                  {#if pic.src}<img src={pic.src} alt="" draggable="false" style:filter={look === 'duotone' ? duotoneUrl(pic.style.duotone) || LOOK_FILTERS.duotone : LOOK_FILTERS[look]} />{/if}
-                  {#if look === 'vintage'}<span class="pe-layer urd-pic-look-vintage"></span>{/if}
-                </span>
-                <span class="pe-look-name">{ta(`opt.galleryTone.${look}`)}</span>
-              </button>
-            {/each}
-          </div>
-          {#if pic.style.look === 'duotone'}
-            <!-- The duotone's two colours: the shadows and the highlights -->
-            {#each [['dark', 'pic.duo.dark', 'tip.pic.duo.dark'], ['light', 'pic.duo.light', 'tip.pic.duo.light']] as [end, label, tip] (end)}
-              <div class="pe-duo" role="radiogroup" aria-label={ta(label)} title={ta(tip)}>
-                <span class="pe-duo-label">{ta(label)}</span>
-                {#each DUO_COLORS as [color, name] (color)}
-                  <button type="button" class="pe-swatch" class:on={pic.style.duotone[end] === color} role="radio" aria-checked={pic.style.duotone[end] === color}
-                    style:background={siteColor(color)} title={ta(name)} aria-label={ta(name)}
-                    onclick={() => ed.changePicture({ style: { duotone: { ...pic.style.duotone, [end]: color } } })}></button>
-                {/each}
-                <!-- Any colour: the picker, ringed while the colour chosen is none of the swatches -->
-                <span class="pe-own" class:on={!DUO_COLORS.some(([c]) => c === pic.style.duotone[end])} title={ta('pic.ownColour')}>
-                  <ColorPicker value={pic.style.duotone[end]} tokens={ed.themeSwatches()} label={ta('pic.ownColour')}
-                    onchange={(v) => { const c = pickedColour(v); if (c) ed.changePicture({ style: { duotone: { ...pic.style.duotone, [end]: c } } }); }} />
-                </span>
-              </div>
-            {/each}
-          {/if}
-        </section>
+        {#if tools.look !== false}
+          <section class="pe-sec">
+            <div class="pe-sec-t"><span>{ta('pic.sec.look')}</span>{#if sectionChanged(pic.style, 'look')}<button type="button" class="linkish" title={ta('tip.pic.reset')} onclick={() => ed.resetPicture('look')}>{ta('pic.reset')}</button>{/if}</div>
+            <div class="pe-looks" role="radiogroup" aria-label={ta('pic.sec.look')} style:--urd-color-accent={siteColor('accent')}>
+              {#each tools.looks ?? PICTURE_LOOKS as look (look)}
+                <button type="button" class="pe-look" class:on={pic.style.look === look} role="radio" aria-checked={pic.style.look === look} onclick={() => ed.changePicture({ style: { look } })}>
+                  <span class="pe-look-pic">
+                    {#if pic.src}<img src={pic.src} alt="" draggable="false" style:filter={look === 'duotone' ? duotoneUrl(pic.style.duotone) || LOOK_FILTERS.duotone : LOOK_FILTERS[look]} />{/if}
+                    {#if look === 'vintage'}<span class="pe-layer urd-pic-look-vintage"></span>{/if}
+                  </span>
+                  <span class="pe-look-name">{ta(`opt.galleryTone.${look}`)}</span>
+                </button>
+              {/each}
+            </div>
+            {#if pic.style.look === 'duotone'}
+              <!-- The duotone's two colours: the shadows and the highlights -->
+              {#each [['dark', 'pic.duo.dark', 'tip.pic.duo.dark'], ['light', 'pic.duo.light', 'tip.pic.duo.light']] as [end, label, tip] (end)}
+                <div class="pe-duo" role="radiogroup" aria-label={ta(label)} title={ta(tip)}>
+                  <span class="pe-duo-label">{ta(label)}</span>
+                  {#each DUO_COLORS as [color, name] (color)}
+                    <button type="button" class="pe-swatch" class:on={pic.style.duotone[end] === color} role="radio" aria-checked={pic.style.duotone[end] === color}
+                      style:background={siteColor(color)} title={ta(name)} aria-label={ta(name)}
+                      onclick={() => ed.changePicture({ style: { duotone: { ...pic.style.duotone, [end]: color } } })}></button>
+                  {/each}
+                  <!-- Any colour: the picker, ringed while the colour chosen is none of the swatches -->
+                  <span class="pe-own" class:on={!DUO_COLORS.some(([c]) => c === pic.style.duotone[end])} title={ta('pic.ownColour')}>
+                    <ColorPicker value={pic.style.duotone[end]} tokens={ed.themeSwatches()} label={ta('pic.ownColour')}
+                      onchange={(v) => { const c = pickedColour(v); if (c) ed.changePicture({ style: { duotone: { ...pic.style.duotone, [end]: c } } }); }} />
+                  </span>
+                </div>
+              {/each}
+            {/if}
+          </section>
+        {/if}
 
-        <section class="pe-sec">
-          <div class="pe-sec-t"><span>{ta('pic.sec.turn')}</span>{#if sectionChanged(pic.style, 'turn')}<button type="button" class="linkish" title={ta('tip.pic.reset')} onclick={() => ed.resetPicture('turn')}>{ta('pic.reset')}</button>{/if}</div>
-          <div class="pe-row">
-            <button type="button" class="ghost pe-icon" title={ta('pic.rotateLeft')} aria-label={ta('pic.rotateLeft')} onclick={() => ed.changePicture({ style: { rotate: turned(pic.style.rotate, -1) } })}>{@html ICONS.rotateLeft}</button>
-            <button type="button" class="ghost pe-icon" title={ta('pic.rotateRight')} aria-label={ta('pic.rotateRight')} onclick={() => ed.changePicture({ style: { rotate: turned(pic.style.rotate, 1) } })}>{@html ICONS.rotateRight}</button>
-            <button type="button" class="ghost pe-icon" class:on={pic.style.flipX} aria-pressed={pic.style.flipX} title={ta('pic.flipX')} aria-label={ta('pic.flipX')} onclick={() => ed.changePicture({ style: { flipX: !pic.style.flipX } })}>{@html ICONS.flipX}</button>
-            <button type="button" class="ghost pe-icon" class:on={pic.style.flipY} aria-pressed={pic.style.flipY} title={ta('pic.flipY')} aria-label={ta('pic.flipY')} onclick={() => ed.changePicture({ style: { flipY: !pic.style.flipY } })}>{@html ICONS.flipY}</button>
-          </div>
-          <label class="pe-slider" title={ta('tip.pic.straighten')}><span>{ta('pic.straighten')}</span>
-            <input type="range" min={PICTURE_BOUNDS.straighten.min} max={PICTURE_BOUNDS.straighten.max} step="0.5" value={pic.style.straighten} oninput={slide('straighten')} onchange={settle} />
-            <StepField value={pic.style.straighten} min={PICTURE_BOUNDS.straighten.min} max={PICTURE_BOUNDS.straighten.max} step={0.5} decimals={1} unit="°" label={ta('pic.straighten')} onchange={(v) => nudge({ straighten: v })} /></label>
-        </section>
+        {#if tools.turn !== false}
+          <section class="pe-sec">
+            <div class="pe-sec-t"><span>{ta('pic.sec.turn')}</span>{#if sectionChanged(pic.style, 'turn')}<button type="button" class="linkish" title={ta('tip.pic.reset')} onclick={() => ed.resetPicture('turn')}>{ta('pic.reset')}</button>{/if}</div>
+            <div class="pe-row">
+              <button type="button" class="ghost pe-icon" title={ta('pic.rotateLeft')} aria-label={ta('pic.rotateLeft')} onclick={() => ed.changePicture({ style: { rotate: turned(pic.style.rotate, -1) } })}>{@html ICONS.rotateLeft}</button>
+              <button type="button" class="ghost pe-icon" title={ta('pic.rotateRight')} aria-label={ta('pic.rotateRight')} onclick={() => ed.changePicture({ style: { rotate: turned(pic.style.rotate, 1) } })}>{@html ICONS.rotateRight}</button>
+              <button type="button" class="ghost pe-icon" class:on={pic.style.flipX} aria-pressed={pic.style.flipX} title={ta('pic.flipX')} aria-label={ta('pic.flipX')} onclick={() => ed.changePicture({ style: { flipX: !pic.style.flipX } })}>{@html ICONS.flipX}</button>
+              <button type="button" class="ghost pe-icon" class:on={pic.style.flipY} aria-pressed={pic.style.flipY} title={ta('pic.flipY')} aria-label={ta('pic.flipY')} onclick={() => ed.changePicture({ style: { flipY: !pic.style.flipY } })}>{@html ICONS.flipY}</button>
+            </div>
+            <label class="pe-slider" title={ta('tip.pic.straighten')}><span>{ta('pic.straighten')}</span>
+              <input type="range" min={PICTURE_BOUNDS.straighten.min} max={PICTURE_BOUNDS.straighten.max} step="0.5" value={pic.style.straighten} oninput={slide('straighten')} onchange={settle} />
+              <StepField value={pic.style.straighten} min={PICTURE_BOUNDS.straighten.min} max={PICTURE_BOUNDS.straighten.max} step={0.5} decimals={1} unit="°" label={ta('pic.straighten')} onchange={(v) => nudge({ straighten: v })} /></label>
+          </section>
+        {/if}
 
-        <section class="pe-sec">
-          <div class="pe-sec-t"><span>{ta('pic.sec.adjust')}</span>{#if sectionChanged(pic.style, 'adjust')}<button type="button" class="linkish" title={ta('tip.pic.reset')} onclick={() => ed.resetPicture('adjust')}>{ta('pic.reset')}</button>{/if}</div>
-          {#each [['brightness', 'lbl.brightness'], ['contrast', 'lbl.contrast'], ['saturate', 'lbl.saturate']] as [key, label] (key)}
-            <label class="pe-slider" title={ta(`tip.image.${key}`)}><span>{ta(label)}</span>
-              <input type="range" min="0" max="2" step="0.01" value={pic.style[key]} oninput={slide(key)} onchange={settle} />
-              <StepField value={pic.style[key]} min={0} max={2} scale={100} unit="%" label={ta(label)} onchange={(v) => nudge({ [key]: v })} /></label>
-          {/each}
-          <label class="pe-slider" title={ta('tip.pic.blur')}><span>{ta('lbl.blur')}</span>
-            <input type="range" min="0" max={PICTURE_BOUNDS.blur.max} step="0.5" value={pic.style.blur} oninput={slide('blur')} onchange={settle} />
-            <StepField value={pic.style.blur} min={0} max={PICTURE_BOUNDS.blur.max} step={0.5} decimals={1} unit="px" label={ta('lbl.blur')} onchange={(v) => nudge({ blur: v })} /></label>
-        </section>
+        {#if tools.adjust !== false}
+          <section class="pe-sec">
+            <div class="pe-sec-t"><span>{ta('pic.sec.adjust')}</span>{#if sectionChanged(pic.style, 'adjust')}<button type="button" class="linkish" title={ta('tip.pic.reset')} onclick={() => ed.resetPicture('adjust')}>{ta('pic.reset')}</button>{/if}</div>
+            {#each [['brightness', 'lbl.brightness'], ['contrast', 'lbl.contrast'], ['saturate', 'lbl.saturate']] as [key, label] (key)}
+              <label class="pe-slider" title={ta(`tip.image.${key}`)}><span>{ta(label)}</span>
+                <input type="range" min="0" max="2" step="0.01" value={pic.style[key]} oninput={slide(key)} onchange={settle} />
+                <StepField value={pic.style[key]} min={0} max={2} scale={100} unit="%" label={ta(label)} onchange={(v) => nudge({ [key]: v })} /></label>
+            {/each}
+            <label class="pe-slider" title={ta('tip.pic.blur')}><span>{ta('lbl.blur')}</span>
+              <input type="range" min="0" max={PICTURE_BOUNDS.blur.max} step="0.5" value={pic.style.blur} oninput={slide('blur')} onchange={settle} />
+              <StepField value={pic.style.blur} min={0} max={PICTURE_BOUNDS.blur.max} step={0.5} decimals={1} unit="px" label={ta('lbl.blur')} onchange={(v) => nudge({ blur: v })} /></label>
+          </section>
+        {/if}
 
         {#if tools.corners && pic.ratio !== 'circle'}
           <section class="pe-sec">
@@ -421,7 +430,7 @@
           </section>
         {/if}
 
-        {#if pic.src && (fileBytes != null || sharp || drawing)}
+        {#if pic.src && ((budget > 0 && fileBytes != null) || sharp || drawing)}
           <section class="pe-sec">
             <div class="pe-sec-t"><span>{ta('pic.sec.size')}</span></div>
             {#if fileBytes != null && budget > 0}
@@ -443,7 +452,7 @@
       </aside>
 
       <footer class="pe-foot">
-        {#if pic.src}
+        {#if pic.src && !tools.handed && tools.removable !== false && !(tools.bake && target.fresh)}
           <button type="button" class="ghost pe-remove" onclick={() => ed.removePicture()}>{ta('ui.remove')}</button>
         {/if}
         {#if target.kind === 'gallery' && ed.pictureGalleryCount > 1}
@@ -451,7 +460,7 @@
         {/if}
         <label class="ghost filepick pe-upload" title={ta('tip.pic.upload')}>{@html ICONS.upload}{pic.src ? ta('pic.upload') : ta('ui.chooseImage')}
           <input type="file" accept="image/*" onchange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; ed.replacePicture(f); }} /></label>
-        <button type="button" class="primary pe-done" onclick={() => ed.donePicture()}>{ta('pic.done')}</button>
+        <button type="button" class="primary pe-done" disabled={ed.pictureBaking} onclick={() => ed.donePicture()}>{ta('pic.done')}</button>
       </footer>
     </div>
   </dialog>

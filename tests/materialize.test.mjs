@@ -14,7 +14,7 @@ const MP4 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29t';
 
 test('a page: every upload lands in the folder of its kind, and the field takes the path', () => {
   const page = {
-    meta: { og: { image: PNG } },
+    meta: { og: { image: PNG, imageSource: { src: PNG, zoom: 2 } } },
     sections: [{ background: { layers: [{ type: 'video', props: { src: MP4, poster: PNG } }] }, blocks: [
       { type: 'image', props: { src: PNG, alt: 'Kake' } },
       { type: 'audio', props: { src: MP3, title: 'Sang' } },
@@ -32,17 +32,22 @@ test('a page: every upload lands in the folder of its kind, and the field takes 
   assert.match(page.sections[0].blocks[2].props.image, /^\/media\/images\/kari-/, 'the quote\'s portrait');
   assert.match(page.sections[0].blocks[3].props.links[0].image, /^\/media\/images\/share-icon-/, 'the links block\'s own icon');
   assert.match(page.meta.og.image, /^\/media\/images\/share-/);
+  assert.match(page.meta.og.imageSource.src, /^\/media\/images\/share-original-/, 'the share image\'s kept original');
+  assert.equal(page.meta.og.imageSource.zoom, 2);
 });
 
 test('the site: the logo, the favicon, the tab\'s mark and the shortcuts; a path already published is left as it is', () => {
   const site = {
-    site: { icon: PNG, links: [{ url: 'https://x.no', image: PNG }] },
-    nav: { logo: { type: 'image', value: PNG }, tab: { image: PNG }, launcher: { image: PNG, links: [{ image: '/media/images/old-1a2b3c4d.webp' }] } },
-    footer: { brand: { logo: PNG } },
+    site: { icon: PNG, iconSource: { src: PNG, look: 'mono' }, links: [{ url: 'https://x.no', image: PNG }] },
+    nav: { logo: { type: 'image', value: PNG, imageSource: { src: PNG, ratio: '1:1' } }, tab: { image: PNG }, launcher: { image: PNG, links: [{ image: '/media/images/old-1a2b3c4d.webp' }] } },
+    footer: { brand: { logo: PNG, logoSource: { src: PNG } } },
   };
   const files = materializeSiteImages(site);
   assert.match(site.nav.tab.image, /^\/media\/images\/tab-/, 'the tab\'s mark');
   assert.match(site.site.icon, /^\/media\/images\/icon-/);
+  assert.match(site.site.iconSource.src, /^\/media\/images\/icon-original-/, 'the icon\'s kept original');
+  assert.match(site.nav.logo.imageSource.src, /^\/media\/images\/logo-original-/, 'the logo\'s kept original');
+  assert.match(site.footer.brand.logoSource.src, /^\/media\/images\/footer-logo-original-/, 'the footer logo\'s kept original');
   assert.equal(site.nav.launcher.links[0].image, '/media/images/old-1a2b3c4d.webp');
   assert.ok(files.every((f) => f.path.startsWith('media/images/')));
 });
