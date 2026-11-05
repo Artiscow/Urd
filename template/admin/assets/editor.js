@@ -2612,6 +2612,7 @@ var ua = {
 		"contact.representative": "Ansvarlig",
 		"contact.kicker": "Kontakt",
 		"contact.findUs": "Finn fram",
+		"privacy.title": "Personvern",
 		"privacy.intro": "Denne siden er skrevet ut fra nettstedets egne innstillinger. Den sier hva nettstedet samler inn om deg, hvorfor, hvor det går, og hva du kan gjøre med det.",
 		"privacy.controller.heading": "Hvem som er ansvarlig",
 		"privacy.controller.line": "{name} er ansvarlig for personopplysningene dette nettstedet behandler.",
@@ -3945,7 +3946,7 @@ var ls = () => ({ mobile: {
 	id: cs("blk"),
 	type: "privacy",
 	version: 1,
-	props: {},
+	props: { heading: !0 },
 	animation: null,
 	frames: e
 }), gs = (e, t, n = 40) => ({
@@ -4437,9 +4438,9 @@ function Rs(e) {
 		labelKey: "preset.privacy.label",
 		group: "Basics",
 		groupKey: "presetGroup.basic",
-		hint: "The privacy page, written from the site's settings under a heading",
+		hint: "The privacy page with its heading, written from the site's settings",
 		hintKey: "preset.privacy.hint",
-		create: () => Ls("privacy", "720px", As(js("bg")), [ds(us(10, 32, 80, 36), J("seed.privacy.title")), hs(us(10, 90, 80, 600))])
+		create: () => Ls("privacy", void 0, As(js("bg")), [hs(us(10, 56, 80, 700))])
 	}), e.sections.define("feature-cards", {
 		label: "Feature cards",
 		labelKey: "preset.feature-cards.label",
@@ -21235,7 +21236,12 @@ function YT() {
 		}), I(NT).nav.items.push({
 			label: e,
 			page: t
-		});
+		}), I(KT) === "preset:privacy" && !I(NT).pages.some((e) => e.id === I(NT).footer?.privacyPage) && (I(NT).footer ??= {
+			version: 1,
+			show: !1,
+			text: "",
+			align: "center"
+		}, I(NT).footer.privacyPage = t);
 	}), Z.writeDraftKey(`urd-draft-${t}`, JSON.stringify(i)), iP.updateDirty(), A(GT, ""), A(KT, null), Q.selectPage(t), null;
 }
 async function XT(e) {
@@ -21426,7 +21432,7 @@ async function wE(e) {
 	}
 	let r = e.path;
 	HT("pages", () => {
-		I(NT).pages = I(NT).pages.filter((t) => t.id !== e.id), I(NT).nav.items = I(NT).nav.items.filter((t) => t.page !== e.id || t.children);
+		I(NT).footer?.privacyPage === e.id && delete I(NT).footer.privacyPage, I(NT).pages = I(NT).pages.filter((t) => t.id !== e.id), I(NT).nav.items = I(NT).nav.items.filter((t) => t.page !== e.id || t.children);
 		for (let t of I(NT).nav.items) t.page === e.id && delete t.page, t.children && (t.children = t.children.filter((t) => t.page !== e.id), t.children.length === 0 && delete t.children);
 		I(NT).nav.items = I(NT).nav.items.filter((e) => e.page || e.href || e.children);
 	}), ET.mutateRedirects((e) => {
@@ -31356,7 +31362,7 @@ function HV(e, t) {
 }
 Br(["click", "change"]);
 // src/menu/families/Video.svelte
-var UV = /* @__PURE__ */ R("<button type=\"button\" class=\"ghost action\"> </button>"), WV = /* @__PURE__ */ R("<label class=\"ghost action filepick\"> <input type=\"file\" accept=\"image/*\"/></label>"), GV = /* @__PURE__ */ R("<label> </label> <input/> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!>", 1), KV = /* @__PURE__ */ R("<label class=\"ghost action filepick\"> <input type=\"file\" accept=\"video/mp4,video/webm\"/></label> <label class=\"ghost action filepick\"> <input type=\"file\" accept=\"image/*\"/></label>", 1), qV = /* @__PURE__ */ R("<div class=\"pin-line\"><!> <!></div> <!>", 1), JV = /* @__PURE__ */ R("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), YV = /* @__PURE__ */ R("<!> <!> <!>", 1), XV = /* @__PURE__ */ R("<!> <!> <label> <input/></label>", 1), ZV = /* @__PURE__ */ R("<label> <!></label>");
+var UV = /* @__PURE__ */ R("<button type=\"button\" class=\"ghost action\"> </button> <button type=\"button\" class=\"ghost action\"> </button>", 1), WV = /* @__PURE__ */ R("<label class=\"ghost action filepick\"> <input type=\"file\" accept=\"image/*\"/></label>"), GV = /* @__PURE__ */ R("<label> </label> <input/> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!>", 1), KV = /* @__PURE__ */ R("<label class=\"ghost action filepick\"> <input type=\"file\" accept=\"video/mp4,video/webm\"/></label> <label class=\"ghost action filepick\"> <input type=\"file\" accept=\"image/*\"/></label>", 1), qV = /* @__PURE__ */ R("<div class=\"pin-line\"><!> <!></div> <!>", 1), JV = /* @__PURE__ */ R("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), YV = /* @__PURE__ */ R("<!> <!> <!>", 1), XV = /* @__PURE__ */ R("<!> <!> <label> <input/></label>", 1), ZV = /* @__PURE__ */ R("<label> <!></label>");
 function QV(e, t) {
 	it(t, !0);
 	let n = nt("urd-editor"), r = /* @__PURE__ */ O(() => n.selectedBlock), { setBlockProp: i, setBlockProps: a, setBlockVideoFile: o, setBlockVideoPoster: s, openImageEditor: c } = n, { groupChanged: l, groupOf: u } = TV(() => I(r).props, a), d = /* @__PURE__ */ O(() => [["free", J("opt.videoAspect.free")], ...Sc.map((e) => [e, J(`opt.videoAspect.${e.replace(":", "x")}`)])]), f = /* @__PURE__ */ O(() => Sc.includes(I(r).props.aspect) ? I(r).props.aspect : "free");
@@ -31375,16 +31381,16 @@ function QV(e, t) {
 	}
 	var m = Zr(), h = M(m), g = (e) => {
 		let t = (e) => {
-			var t = qV(), n = M(t), a = j(n);
+			var t = qV(), a = M(t), l = j(a);
 			{
 				let e = /* @__PURE__ */ O(() => J("lbl.videoSource")), t = /* @__PURE__ */ O(() => [["embed", J("opt.videoSource.embed")], ["file", J("opt.videoSource.file")]]);
-				pl(a, {
+				pl(l, {
 					stack: !0,
 					get label() {
 						return I(e);
 					},
 					get value() {
-						return I(l);
+						return I(d);
 					},
 					get options() {
 						return I(t);
@@ -31392,42 +31398,49 @@ function QV(e, t) {
 					onchange: (e) => i("source", e)
 				});
 			}
-			Tz(P(a, 2), { id: "videoSource" }), D(n);
-			var u = P(n, 2), d = (e) => {
-				var t = GV(), n = M(t), a = N(n, !0), o = P(n, 2);
-				G(o);
-				var l = P(o, 2), u = j(l);
-				G(u);
-				var d = P(u);
-				D(l);
-				var f = P(l, 2), p = (e) => {
-					var t = Zr(), n = M(t), i = (e) => {
-						var t = UV(), n = N(t, !0);
-						F((e, r) => {
-							q(t, "title", e), B(n, r);
-						}, [() => J("tip.video.coverEdit"), () => J("ui.editCover")]), L("click", t, c), z(e, t);
-					}, a = (e) => {
+			Tz(P(l, 2), { id: "videoSource" }), D(a);
+			var u = P(a, 2), f = (e) => {
+				var t = GV(), a = M(t), o = N(a, !0), l = P(a, 2);
+				G(l);
+				var u = P(l, 2), d = j(u);
+				G(d);
+				var f = P(d);
+				D(u);
+				var p = P(u, 2), m = (e) => {
+					var t = Zr(), i = M(t), a = (e) => {
+						var t = UV(), i = M(t), a = N(i, !0), o = P(i, 2), s = N(o, !0);
+						F((e, t, n, r) => {
+							q(i, "title", e), B(a, t), q(o, "title", n), B(s, r);
+						}, [
+							() => J("tip.video.coverEdit"),
+							() => J("ui.editCover"),
+							() => J("tip.video.coverRemove"),
+							() => J("ui.removeCover")
+						]), L("click", i, c), L("click", o, () => n.mutateBlock(`edit:${I(r).blockId}`, (e) => {
+							e.props.poster = "", delete e.props.coverStyle;
+						})), z(e, t);
+					}, o = (e) => {
 						var t = WV(), n = j(t), r = P(n);
 						D(t), F((e, r) => {
 							q(t, "title", e), B(n, `${r ?? ""} `);
 						}, [() => J("tip.video.cover"), () => J("ui.chooseCover")]), L("change", r, s), z(e, t);
 					};
-					V(n, (e) => {
-						I(r).props.poster ? e(i) : e(a, -1);
+					V(i, (e) => {
+						I(r).props.poster ? e(a) : e(o, -1);
 					}), z(e, t);
 				};
-				V(f, (e) => {
-					I(r).props.askFirst !== !1 && e(p);
-				}), F((e, t, i, s, c) => {
-					q(n, "title", e), B(a, t), K(o, I(r).props.url ?? ""), q(o, "placeholder", i), q(l, "title", s), Wi(u, I(r).props.askFirst !== !1), B(d, ` ${c ?? ""}`);
+				V(p, (e) => {
+					I(r).props.askFirst !== !1 && e(m);
+				}), F((e, t, n, i, s) => {
+					q(a, "title", e), B(o, t), K(l, I(r).props.url ?? ""), q(l, "placeholder", n), q(u, "title", i), Wi(d, I(r).props.askFirst !== !1), B(f, ` ${s ?? ""}`);
 				}, [
 					() => J("hint.video"),
 					() => J("lbl.videoUrl"),
 					() => J("ph.videoUrl"),
 					() => J("tip.embed.askFirst"),
 					() => J("lbl.embedAskFirst")
-				]), L("change", o, (e) => i("url", e.target.value)), L("change", u, (e) => i("askFirst", e.target.checked)), z(e, t);
-			}, f = (e) => {
+				]), L("change", l, (e) => i("url", e.target.value)), L("change", d, (e) => i("askFirst", e.target.checked)), z(e, t);
+			}, p = (e) => {
 				var t = KV(), n = M(t), i = j(n), a = P(i);
 				D(n);
 				var c = P(n, 2), l = j(c), u = P(l);
@@ -31441,9 +31454,9 @@ function QV(e, t) {
 				]), L("change", a, o), L("change", u, s), z(e, t);
 			};
 			V(u, (e) => {
-				I(l) === "embed" ? e(d) : e(f, -1);
+				I(d) === "embed" ? e(f) : e(p, -1);
 			}), z(e, t);
-		}, n = (e) => {
+		}, l = (e) => {
 			var t = YV(), n = M(t);
 			{
 				let e = /* @__PURE__ */ O(() => J("common.off"));
@@ -31508,17 +31521,17 @@ function QV(e, t) {
 			V(s, (e) => {
 				I(r).props.muted === !0 && e(c);
 			}), z(e, t);
-		}, l = /* @__PURE__ */ O(() => I(r).props.source === "file" ? "file" : "embed");
-		var d = XV(), f = M(d);
-		t(f);
-		var p = P(f, 2), m = (e) => {
+		}, d = /* @__PURE__ */ O(() => I(r).props.source === "file" ? "file" : "embed");
+		var f = XV(), p = M(f);
+		t(p);
+		var m = P(p, 2), h = (e) => {
 			let t = /* @__PURE__ */ O(() => [
 				I(r).props.loop === !0,
 				I(r).props.muted === !0,
 				I(r).props.autoplay === !0
 			].filter(Boolean).length);
 			{
-				let r = /* @__PURE__ */ O(() => J("group.playback")), i = /* @__PURE__ */ O(() => I(t) ? J("menu.onCount", { n: I(t) }) : J("common.off")), a = /* @__PURE__ */ O(() => u("video-play", {
+				let n = /* @__PURE__ */ O(() => J("group.playback")), r = /* @__PURE__ */ O(() => I(t) ? J("menu.onCount", { n: I(t) }) : J("common.off")), i = /* @__PURE__ */ O(() => u("video-play", {
 					loop: !1,
 					muted: !1,
 					autoplay: !1
@@ -31526,21 +31539,21 @@ function QV(e, t) {
 				jB(e, {
 					id: "video-play",
 					get title() {
-						return I(r);
+						return I(n);
 					},
 					get value() {
-						return I(i);
+						return I(r);
 					},
 					get group() {
-						return I(a);
+						return I(i);
 					},
 					children: (e, t) => {
-						n(e);
+						l(e);
 					},
 					$$slots: { default: !0 }
 				});
 			}
-		}, h = (e) => {
+		}, g = (e) => {
 			var t = JV(), n = j(t);
 			G(n);
 			var a = P(n);
@@ -31548,13 +31561,13 @@ function QV(e, t) {
 				q(t, "title", e), Wi(n, I(r).props.playOnPress !== !1), B(a, ` ${i ?? ""}`);
 			}, [() => J("tip.video.playOnPress"), () => J("lbl.videoPlayOnPress")]), L("change", n, (e) => i("playOnPress", e.target.checked)), z(e, t);
 		};
-		V(p, (e) => {
-			I(l) === "file" ? e(m) : I(r).props.askFirst !== !1 && e(h, 1);
+		V(m, (e) => {
+			I(d) === "file" ? e(h) : I(r).props.askFirst !== !1 && e(g, 1);
 		});
-		var g = P(p, 2), _ = j(g), v = P(_);
-		G(v), D(g), F((e, t) => {
-			q(g, "title", e), B(_, `${t ?? ""} `), K(v, I(r).props.title ?? "");
-		}, [() => J("tip.video.title"), () => J("lbl.videoTitle")]), L("change", v, (e) => i("title", e.target.value)), z(e, d);
+		var _ = P(m, 2), v = j(_), y = P(v);
+		G(y), D(_), F((e, t) => {
+			q(_, "title", e), B(v, `${t ?? ""} `), K(y, I(r).props.title ?? "");
+		}, [() => J("tip.video.title"), () => J("lbl.videoTitle")]), L("change", y, (e) => i("title", e.target.value)), z(e, f);
 	}, _ = (e) => {
 		var t = ZV(), n = j(t);
 		Ua(P(n), {
@@ -36949,20 +36962,28 @@ function VG(e, t) {
 			}
 		}
 	}
-	let l = { map: [{
-		key: "location",
-		type: "place",
-		label: J("lbl.mapLocation"),
-		hint: J("tip.map.location"),
-		placeholder: J("ph.mapLocation")
-	}, {
-		key: "zoom",
-		type: "number",
-		label: J("lbl.mapZoom"),
-		hint: J("tip.map.zoom"),
-		min: 1,
-		max: 19
-	}] };
+	let l = {
+		privacy: [{
+			key: "heading",
+			type: "toggle",
+			label: J("lbl.privacyHeading"),
+			hint: J("tip.privacy.heading")
+		}],
+		map: [{
+			key: "location",
+			type: "place",
+			label: J("lbl.mapLocation"),
+			hint: J("tip.map.location"),
+			placeholder: J("ph.mapLocation")
+		}, {
+			key: "zoom",
+			type: "number",
+			label: J("lbl.mapZoom"),
+			hint: J("tip.map.zoom"),
+			min: 1,
+			max: 19
+		}]
+	};
 	var u = Zr(), d = M(u), f = (e) => {
 		let t = (e) => {
 			var t = Zr();
@@ -38199,7 +38220,7 @@ function xK(e, t = 0) {
 	return n += `<rect x="8" y="70" width="40" height="3" rx="1.5" fill="${e}" opacity="0.6"/>`, t && (n += `<g fill="${e}" opacity="0.6">` + Array.from({ length: t }, (e, t) => `<rect x="${120 - t * 16}" y="70" width="12" height="3" rx="1.5"/>`).join("") + "</g>"), n;
 }
 // src/panels/FooterPanel.svelte
-var SK = /* @__PURE__ */ R("<div class=\"nav-row nav-sub-row\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span> <span class=\"nav-target\"><!></span></div>"), CK = /* @__PURE__ */ R("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), wK = /* @__PURE__ */ R("<details class=\"group\"><summary> </summary> <div class=\"group-items\"></div></details>"), TK = /* @__PURE__ */ R("<button class=\"footer-tp\"><span class=\"footer-tp-thumb\"></span> <span class=\"footer-tp-name\"> </span></button>"), EK = /* @__PURE__ */ R("<button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button>", 1), DK = /* @__PURE__ */ R("<label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"16\" max=\"160\" step=\"2\"/>", 1), OK = /* @__PURE__ */ R("<span class=\"toolbar-row\"><label class=\"ghost filepick tb-grow\"> <input type=\"file\" accept=\"image/*\"/></label> <!></span> <!>", 1), kK = /* @__PURE__ */ R("<div class=\"nav-row\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></div> <!>", 1), AK = /* @__PURE__ */ R("<label> <input/></label> <label> <input/></label> <label> <input/></label>", 1), jK = /* @__PURE__ */ R("<label> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label> <input/></label> <label> <input/></label> <label> <input/></label> <!>", 1), MK = /* @__PURE__ */ R("<label> <!></label> <hr class=\"gridmenu-divider\"/>", 1), NK = /* @__PURE__ */ R("<div class=\"panel-body\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <details class=\"group\"><summary> <span class=\"menu-group-value\"> </span></summary> <div class=\"group-items\"><button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"footer-tpick\"></div></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label> <input/></label> <label> <input/></label> <label> <!></label> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <button class=\"ghost action\"> </button> <label> <!></label></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <!> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <p class=\"panel-strong\"> </p> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label> <input/></label> <p class=\"panel-strong\"> </p> <!> <button class=\"ghost action\"> </button></div></details></div>");
+var SK = /* @__PURE__ */ R("<div class=\"nav-row nav-sub-row\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span> <span class=\"nav-target\"><!></span></div>"), CK = /* @__PURE__ */ R("<label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label>"), wK = /* @__PURE__ */ R("<details class=\"group\"><summary> </summary> <div class=\"group-items\"></div></details>"), TK = /* @__PURE__ */ R("<button class=\"footer-tp\"><span class=\"footer-tp-thumb\"></span> <span class=\"footer-tp-name\"> </span></button>"), EK = /* @__PURE__ */ R("<button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button>", 1), DK = /* @__PURE__ */ R("<label> <span class=\"gridmenu-value\"> </span></label> <input type=\"range\" min=\"16\" max=\"160\" step=\"2\"/>", 1), OK = /* @__PURE__ */ R("<span class=\"toolbar-row\"><label class=\"ghost filepick tb-grow\"> <input type=\"file\" accept=\"image/*\"/></label> <!></span> <!>", 1), kK = /* @__PURE__ */ R("<div class=\"nav-row\"><input/> <span class=\"row-tools\"><button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button> <button class=\"ghost row-tool\"></button></span></div> <!>", 1), AK = /* @__PURE__ */ R("<label> <input/></label> <label> <input/></label> <label> <input/></label>", 1), jK = /* @__PURE__ */ R("<label> <!></label> <label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <label> <input/></label> <label> <input/></label> <label> <input/></label> <!>", 1), MK = /* @__PURE__ */ R("<label> <!></label> <hr class=\"gridmenu-divider\"/>", 1), NK = /* @__PURE__ */ R("<div class=\"panel-body\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!> <details class=\"group\"><summary> <span class=\"menu-group-value\"> </span></summary> <div class=\"group-items\"><button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><div class=\"footer-tpick\"></div></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label> <input/></label> <label> <input/></label> <label> <!></label> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <button class=\"ghost action\"> </button> <label> <!></label></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <label> <!></label> <!> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label class=\"gridmenu-snap\"><input type=\"checkbox\"/> </label> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <button class=\"ghost action\"> </button></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><!> <p class=\"panel-strong\"> </p> <!></div></details> <details class=\"group\"><summary> </summary> <div class=\"group-items\"><label> <input/></label> <p class=\"panel-strong\"> </p> <!> <button class=\"ghost action\"> </button></div></details></div>");
 function PK(e, t) {
 	it(t, !0);
 	let n = (e, t = f, n = f) => {
@@ -38386,17 +38407,20 @@ function PK(e, t) {
 		})), a = (e, t) => ({
 			label: e,
 			href: t
-		}), o = `© ${t}`;
+		}), o = n.some((e) => e.id === I(i).footer?.privacyPage) ? I(i).footer.privacyPage : null, s = () => o ? {
+			label: J("seed.footer.privacy"),
+			page: o
+		} : a(J("seed.footer.privacy"), "#"), c = () => o ? [] : [a(J("seed.footer.privacy"), "#")], l = `© ${t}`;
 		return e === "minimal" ? {
 			align: "center",
 			brand: { title: t },
-			copyright: o,
-			baseline: [a(J("seed.footer.privacy"), "#")]
+			copyright: l,
+			baseline: c()
 		} : e === "centered" ? {
 			align: "center",
 			brand: { title: t },
 			linkRow: r(5),
-			copyright: `${o} · ${J("seed.footer.madeWith")}`
+			copyright: `${l} · ${J("seed.footer.madeWith")}`
 		} : e === "columns" ? {
 			align: "left",
 			brand: {
@@ -38420,13 +38444,13 @@ function PK(e, t) {
 					title: J("seed.footer.colResources"),
 					links: [
 						a(J("seed.footer.bylaws"), "#"),
-						a(J("seed.footer.privacy"), "#"),
+						s(),
 						a(J("seed.footer.contact"), "#")
 					]
 				}
 			],
-			copyright: o,
-			baseline: [a(J("seed.footer.privacy"), "#"), a(J("seed.footer.terms"), "#")]
+			copyright: l,
+			baseline: [...c(), a(J("seed.footer.terms"), "#")]
 		} : e === "sitemap" ? {
 			align: "left",
 			brand: {
@@ -38463,15 +38487,15 @@ function PK(e, t) {
 				{
 					title: J("seed.footer.colLegal"),
 					links: [
-						a(J("seed.footer.privacy"), "#"),
+						s(),
 						a(J("seed.footer.terms"), "#"),
 						a(J("seed.footer.bylaws"), "#")
 					]
 				}
 			],
-			copyright: o,
+			copyright: l,
 			baseline: [
-				a(J("seed.footer.privacy"), "#"),
+				...c(),
 				a(J("seed.footer.terms"), "#"),
 				a(J("seed.footer.cookies"), "#")
 			]
@@ -38496,11 +38520,11 @@ function PK(e, t) {
 				links: [
 					a(J("seed.footer.about"), "#"),
 					a(J("seed.footer.contact"), "#"),
-					a(J("seed.footer.privacy"), "#")
+					s()
 				]
 			}],
-			copyright: o,
-			baseline: [a(J("seed.footer.privacy"), "#")]
+			copyright: l,
+			baseline: c()
 		} : e === "bigcta" ? {
 			align: "center",
 			cta: {
@@ -38512,8 +38536,8 @@ function PK(e, t) {
 				href: "#"
 			},
 			linkRow: r(4),
-			copyright: o,
-			baseline: [a(J("seed.footer.privacy"), "#"), a(J("seed.footer.terms"), "#")]
+			copyright: l,
+			baseline: [...c(), a(J("seed.footer.terms"), "#")]
 		} : e === "contact" ? {
 			align: "left",
 			brand: {
@@ -38524,8 +38548,8 @@ function PK(e, t) {
 				title: J("seed.footer.colPages"),
 				links: r(4)
 			}],
-			copyright: o,
-			baseline: [a(J("seed.footer.privacy"), "#")]
+			copyright: l,
+			baseline: c()
 		} : e === "chapters" ? {
 			align: "left",
 			design: "chapters",
@@ -38555,8 +38579,8 @@ function PK(e, t) {
 					]
 				}
 			],
-			copyright: o,
-			baseline: [a(J("seed.footer.privacy"), "#"), a(J("seed.footer.terms"), "#")]
+			copyright: l,
+			baseline: [...c(), a(J("seed.footer.terms"), "#")]
 		} : e === "split" ? {
 			align: "left",
 			design: "split",
@@ -38578,11 +38602,11 @@ function PK(e, t) {
 				links: [
 					a(J("seed.footer.about"), "#"),
 					a(J("seed.footer.contact"), "#"),
-					a(J("seed.footer.privacy"), "#")
+					s()
 				]
 			}],
-			copyright: o,
-			baseline: [a(J("seed.footer.privacy"), "#")]
+			copyright: l,
+			baseline: c()
 		} : {
 			align: "left",
 			brand: {
@@ -38596,8 +38620,8 @@ function PK(e, t) {
 				title: J("seed.footer.colFollow"),
 				links: [a(J("seed.footer.newsletter"), "#"), a(J("seed.email"), `mailto:${J("seed.email")}`)]
 			}],
-			copyright: o,
-			baseline: [a(J("seed.footer.privacy"), "#"), a(J("seed.footer.madeWith"), "#")],
+			copyright: l,
+			baseline: [...c(), a(J("seed.footer.madeWith"), "#")],
 			background: {
 				version: 1,
 				layers: [{
@@ -38929,7 +38953,23 @@ function PK(e, t) {
 	V(vt, (e) => {
 		I(bt) && e(yt);
 	});
-	var xt = P(vt, 2), St = (e) => {
+	var xt = P(vt, 2), St = j(xt), Ct = P(St);
+	{
+		let e = /* @__PURE__ */ O(() => I(i).footer?.privacyPage ?? ""), t = /* @__PURE__ */ O(() => [["", J("common.none")], ...(I(i).pages ?? []).filter((e) => !e.hidden).map((e) => [e.id, e.title])]);
+		Ua(Ct, {
+			get value() {
+				return I(e);
+			},
+			get options() {
+				return I(t);
+			},
+			onchange: (e) => s("footer", (t) => {
+				e ? t.privacyPage = e : delete t.privacyPage;
+			})
+		});
+	}
+	D(xt);
+	var wt = P(xt, 2), Tt = (e) => {
 		var t = CK(), n = j(t);
 		G(n);
 		var r = P(n);
@@ -38938,17 +38978,17 @@ function PK(e, t) {
 		}, [() => J("tip.footer.contact"), () => J("ui.footerContact")]), L("change", n, (e) => s("footer", (t) => {
 			e.target.checked ? delete t.contact : t.contact = !1;
 		})), z(e, t);
-	}, Ct = /* @__PURE__ */ O(() => pg(og(I(i))));
-	V(xt, (e) => {
-		I(Ct) && e(St);
+	}, Et = /* @__PURE__ */ O(() => pg(og(I(i))));
+	V(wt, (e) => {
+		I(Et) && e(Tt);
 	});
-	var wt = P(xt, 2), Tt = N(wt, !0);
+	var Dt = P(wt, 2), Ot = N(Dt, !0);
 	D(_t), D(mt);
-	var Et = P(mt, 2), Dt = j(Et), Ot = N(Dt, !0), kt = P(Dt, 2), At = j(kt), jt = j(At);
-	G(jt);
-	var Mt = P(jt);
-	D(At);
-	var Nt = P(At, 2), Pt = (e) => {
+	var kt = P(mt, 2), At = j(kt), jt = N(At, !0), Mt = P(At, 2), Nt = j(Mt), Pt = j(Nt);
+	G(Pt);
+	var Ft = P(Pt);
+	D(Nt);
+	var It = P(Nt, 2), Lt = (e) => {
 		let t = /* @__PURE__ */ O(() => I(i).footer.cta);
 		var n = jK(), r = M(n), a = j(r), o = P(a);
 		{
@@ -39031,14 +39071,14 @@ function PK(e, t) {
 			() => J("ph.footer.ctaLabel")
 		]), L("change", c, (e) => te("big", e.target.checked)), L("input", f, (e) => te("heading", e.target.value)), L("input", h, (e) => te("sub", e.target.value)), L("input", v, (e) => te("label", e.target.value)), z(e, n);
 	};
-	V(Nt, (e) => {
-		I(i).footer?.cta && e(Pt);
-	}), D(kt), D(Et);
-	var Ft = P(Et, 2), It = j(Ft), Lt = N(It, !0), Rt = P(It, 2), zt = j(Rt);
-	n(zt, () => "linkRow", () => I(i).footer?.linkRow ?? []);
-	var Bt = P(zt, 2), Vt = N(Bt, !0);
-	D(Rt), D(Ft);
-	var Ht = P(Ft, 2), Ut = j(Ht), Wt = N(Ut, !0), Gt = P(Ut, 2), Kt = j(Gt), qt = (e) => {
+	V(It, (e) => {
+		I(i).footer?.cta && e(Lt);
+	}), D(Mt), D(kt);
+	var Rt = P(kt, 2), zt = j(Rt), Bt = N(zt, !0), Vt = P(zt, 2), Ht = j(Vt);
+	n(Ht, () => "linkRow", () => I(i).footer?.linkRow ?? []);
+	var Ut = P(Ht, 2), Wt = N(Ut, !0);
+	D(Vt), D(Rt);
+	var Gt = P(Rt, 2), Kt = j(Gt), qt = N(Kt, !0), Jt = P(Kt, 2), Yt = j(Jt), Xt = (e) => {
 		var t = MK(), n = M(t), r = j(n), a = P(r);
 		{
 			let e = /* @__PURE__ */ O(() => I(i).footer?.align ?? "left"), t = /* @__PURE__ */ O(() => [
@@ -39062,13 +39102,13 @@ function PK(e, t) {
 			q(n, "title", e), B(r, `${t ?? ""} `);
 		}, [() => J("tip.footer.align"), () => J("lbl.align")]), z(e, t);
 	};
-	V(Kt, (e) => {
-		I(i).footer?.cta?.big !== !0 && e(qt);
+	V(Yt, (e) => {
+		I(i).footer?.cta?.big !== !0 && e(Xt);
 	});
-	var Jt = P(Kt, 2), Yt = N(Jt, !0), Xt = P(Jt, 2);
+	var Zt = P(Yt, 2), Qt = N(Zt, !0), $t = P(Zt, 2);
 	{
 		let e = /* @__PURE__ */ O(() => I(i).footer?.background?.layers ?? []);
-		km(Xt, {
+		km($t, {
 			get bg() {
 				return o;
 			},
@@ -39077,14 +39117,14 @@ function PK(e, t) {
 			}
 		});
 	}
-	D(Gt), D(Ht);
-	var Zt = P(Ht, 2), Qt = j(Zt), $t = N(Qt, !0), en = P(Qt, 2), tn = j(en), nn = j(tn), rn = P(nn);
-	G(rn), D(tn);
-	var k = P(tn, 2), an = N(k, !0), on = P(k, 2);
-	n(on, () => "baseline", () => I(i).footer?.baseline ?? []);
-	var A = P(on, 2), sn = N(A, !0);
-	D(en), D(Zt), D(fe), F((e, t, n, r, a, o, s, c, l, u, d, f, p, m, h, g, _, v, y, b, x, S, C, w, T, ee, te, ne, E, re, ie, ae, oe, se, ce, le, ue, de, fe, ge, _e, ve) => {
-		q(pe, "title", e), Wi(me, t), B(he, ` ${n ?? ""}`), B(be, r), B(xe, a), q(Ce, "title", o), B(we, s), B(De, c), B(Ne, l), q(Fe, "title", u), B(Ie, `${d ?? ""} `), K(Le, I(i).footer?.brand?.title ?? ""), q(Le, "placeholder", f), q(Re, "title", p), B(ze, `${m ?? ""} `), K(Be, I(i).footer?.brand?.tagline ?? ""), q(Ve, "title", h), B(He, `${g ?? ""} `), B(Je, _), B(Qe, v), q($e, "title", y), B(et, `${b ?? ""} `), q(ot, "title", x), B(st, S), q(lt, "title", C), Wi(ut, I(i).footer?.links !== !1), B(dt, ` ${w ?? ""}`), B(pt, T), q(ht, "title", ee), B(gt, te), B(Tt, ne), B(Ot, E), q(At, "title", re), Wi(jt, ie), B(Mt, ` ${ae ?? ""}`), B(Lt, oe), B(Vt, se), B(Wt, ce), B(Yt, le), B($t, ue), q(tn, "title", de), B(nn, `${fe ?? ""} `), K(rn, I(i).footer?.copyright ?? ""), q(rn, "placeholder", ge), B(an, _e), B(sn, ve);
+	D(Jt), D(Gt);
+	var en = P(Gt, 2), tn = j(en), nn = N(tn, !0), rn = P(tn, 2), k = j(rn), an = j(k), on = P(an);
+	G(on), D(k);
+	var A = P(k, 2), sn = N(A, !0), cn = P(A, 2);
+	n(cn, () => "baseline", () => I(i).footer?.baseline ?? []);
+	var ln = P(cn, 2), un = N(ln, !0);
+	D(rn), D(en), D(fe), F((e, t, n, r, a, o, s, c, l, u, d, f, p, m, h, g, _, v, y, b, x, S, C, w, T, ee, te, ne, E, re, ie, ae, oe, se, ce, le, ue, de, fe, ge, _e, ve, ye, Se) => {
+		q(pe, "title", e), Wi(me, t), B(he, ` ${n ?? ""}`), B(be, r), B(xe, a), q(Ce, "title", o), B(we, s), B(De, c), B(Ne, l), q(Fe, "title", u), B(Ie, `${d ?? ""} `), K(Le, I(i).footer?.brand?.title ?? ""), q(Le, "placeholder", f), q(Re, "title", p), B(ze, `${m ?? ""} `), K(Be, I(i).footer?.brand?.tagline ?? ""), q(Ve, "title", h), B(He, `${g ?? ""} `), B(Je, _), B(Qe, v), q($e, "title", y), B(et, `${b ?? ""} `), q(ot, "title", x), B(st, S), q(lt, "title", C), Wi(ut, I(i).footer?.links !== !1), B(dt, ` ${w ?? ""}`), B(pt, T), q(ht, "title", ee), B(gt, te), q(xt, "title", ne), B(St, `${E ?? ""} `), B(Ot, re), B(jt, ie), q(Nt, "title", ae), Wi(Pt, oe), B(Ft, ` ${se ?? ""}`), B(Bt, ce), B(Wt, le), B(qt, ue), B(Qt, de), B(nn, fe), q(k, "title", ge), B(an, `${_e ?? ""} `), K(on, I(i).footer?.copyright ?? ""), q(on, "placeholder", ve), B(sn, ye), B(un, Se);
 	}, [
 		() => J("tip.footer.show"),
 		() => !!I(i).footer?.show,
@@ -39113,6 +39153,8 @@ function PK(e, t) {
 		() => J("ui.editSiteLinks"),
 		() => J("tip.footer.contact"),
 		() => J("group.siteContact"),
+		() => J("tip.footer.privacy"),
+		() => J("lbl.footerPrivacy"),
 		() => J("ui.editSiteContact"),
 		() => J("group.cta"),
 		() => J("tip.footer.cta"),
@@ -39134,9 +39176,9 @@ function PK(e, t) {
 		e.target.checked ? delete t.links : t.links = !1;
 	})), L("click", ft, () => {
 		r.siteLinksOpen = !0, r.openPanel("site");
-	}), L("click", wt, () => {
+	}), L("click", Dt, () => {
 		r.siteContactOpen = !0, r.openPanel("site");
-	}), L("change", jt, (e) => ee(e.target.checked)), L("click", Bt, () => b("linkRow")), L("input", rn, (e) => g(e.target.value)), L("click", A, () => b("baseline")), z(e, fe), at();
+	}), L("change", Pt, (e) => ee(e.target.checked)), L("click", Ut, () => b("linkRow")), L("input", on, (e) => g(e.target.value)), L("click", ln, () => b("baseline")), z(e, fe), at();
 }
 Br([
 	"input",

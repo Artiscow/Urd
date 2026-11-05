@@ -40,7 +40,9 @@ test('presets: create() gives well-formed sections', () => {
     const section = def.create();
     assert.ok(section.id && section.preset === id, `${id}: section missing id/preset`);
     assert.ok(section.background?.layers?.length, `${id}: section missing background`);
-    assert.ok(section.size?.minHeight, `${id}: section missing min height`);
+    // The privacy page has no height of its own: its length is the settings' (sections/presets.js).
+    if (id !== 'privacy') assert.ok(section.size?.minHeight, `${id}: section missing min height`);
+    else assert.equal(section.size.minHeight, undefined, `${id}: the section takes its blocks' height`);
     for (const block of section.blocks) assertBlock(block, id);
     const ids = section.blocks.map((b) => b.id);
     assert.equal(new Set(ids).size, ids.length, `${id}: duplicate block ids`);

@@ -12,6 +12,7 @@ const {
   footerSocial,
   footerBaseline,
   footerBaselineLinks,
+  footerPrivacyLink,
   footerLinkRow,
   footerCta,
   hasRichFooter,
@@ -188,4 +189,13 @@ test('the footer designs: each has its name and its description in nb, en-GB and
     }
     assert.ok(existsSync(new URL(`../template/admin/designs/footer-${id}.webp`, import.meta.url)), `footer-${id}.webp`);
   }
+});
+
+test('footerPrivacyLink: the chosen page by its title, nothing for no choice, a page that is gone or one hidden', () => {
+  const pages = [{ id: 'personvern', title: 'Personvern', path: '/personvern' }, { id: 'skjult', title: 'Skjult', path: '/skjult', hidden: true }];
+  assert.deepEqual(footerPrivacyLink({ pages, footer: { privacyPage: 'personvern' } }), { label: 'Personvern', href: '/personvern' });
+  assert.equal(footerPrivacyLink({ pages, footer: {} }), null);
+  assert.equal(footerPrivacyLink({ pages, footer: { privacyPage: 'borte' } }), null);
+  assert.equal(footerPrivacyLink({ pages, footer: { privacyPage: 'skjult' } }), null);
+  assert.equal(footerPrivacyLink({ pages: [{ id: 'ut', title: 'Ut', path: '//evil.example' }], footer: { privacyPage: 'ut' } })?.href?.startsWith('//') ?? false, false, 'a path edited by hand never leads off the site');
 });

@@ -27,6 +27,7 @@ export default {
     'contact.representative': 'Representative',
     'contact.kicker': 'Contact',
     'contact.findUs': 'Find us',
+    'privacy.title': 'Privacy',
     'privacy.intro': 'This page is written from the site\'s own settings. It says what this site collects about you, why, where it goes, and what you can do about it.',
     'privacy.controller.heading': 'Who is responsible',
     'privacy.controller.line': '{name} is responsible for the personal data this site handles.',

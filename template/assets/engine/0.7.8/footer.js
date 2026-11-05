@@ -23,6 +23,7 @@ import {
   footerDesign,
   footerContact,
   footerLegal,
+  footerPrivacyLink,
   hasRichFooter,
 } from './footer-model.js';
 import {
@@ -284,11 +285,12 @@ export function renderFooter(site, host, pageId) {
   const baseline = footerBaseline(site);
   const contact = footerContact(site);
   const legal = footerLegal(site);
+  const privacy = footerPrivacyLink(site);
 
   // On, but with no content: a visible yet COMPLETELY empty footer. No text,
   // no placeholder, no page title; it fills up once something is entered in
   // the Footer panel. (show off gives no footer at all, handled above.)
-  if (!rich && !baseline.length && !contact && !legal) {
+  if (!rich && !baseline.length && !contact && !legal && !privacy) {
     host.style.display = '';
     const inner = document.createElement('div');
     inner.className = 'urd-footer urd-footer-empty';
@@ -315,6 +317,7 @@ export function renderFooter(site, host, pageId) {
       p.textContent = legalText(legal);
       inner.appendChild(p);
     }
+    if (privacy) inner.appendChild(buildLinks([privacy], 'urd-footer-privacy'));
     mountFooterBg(footer, inner);
     host.appendChild(inner);
     return;
@@ -426,7 +429,9 @@ export function renderFooter(site, host, pageId) {
   if (linkRow.length) wrap.appendChild(buildLinks(linkRow, 'urd-footer-linkrow'));
 
   // The baseline: copyright/text and the legal line on the left, optional links on the right.
-  if (baseline.length || baselineLinks.length || legal) {
+  // The privacy page's link stands first among the baseline's links.
+  const bottomLinks = privacy ? [privacy, ...baselineLinks] : baselineLinks;
+  if (baseline.length || bottomLinks.length || legal) {
     const base = document.createElement('div');
     base.className = 'urd-footer-baseline';
     const left = document.createElement('div');
@@ -443,7 +448,7 @@ export function renderFooter(site, host, pageId) {
       left.appendChild(span);
     }
     base.appendChild(left);
-    if (baselineLinks.length) base.appendChild(buildLinks(baselineLinks, 'urd-footer-baseline-links'));
+    if (bottomLinks.length) base.appendChild(buildLinks(bottomLinks, 'urd-footer-baseline-links'));
     wrap.appendChild(base);
   }
 

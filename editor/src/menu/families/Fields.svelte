@@ -71,6 +71,9 @@
 
   /** The settings of the core blocks that use the field contract. */
   const CORE_FIELDS = {
+    privacy: [
+      { key: 'heading', type: 'toggle', label: ta('lbl.privacyHeading'), hint: ta('tip.privacy.heading') },
+    ],
     map: [
       { key: 'location', type: 'place', label: ta('lbl.mapLocation'), hint: ta('tip.map.location'), placeholder: ta('ph.mapLocation') },
       { key: 'zoom', type: 'number', label: ta('lbl.mapZoom'), hint: ta('tip.map.zoom'), min: 1, max: 19 },

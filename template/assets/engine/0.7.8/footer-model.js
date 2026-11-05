@@ -76,6 +76,22 @@ export function footerBaselineLinks(site) {
 }
 
 /**
+ * The link to the site's privacy page (`footer.privacyPage`, a page id, additive from 0.7.24.2.2): drawn with the page's title on every page's footer, so the page is one press away as the privacy rules ask; nothing where no page is chosen or the chosen one is gone or hidden.
+ * @param {object} site
+ * @returns {{label: string, href: string}|null}
+ */
+export function footerPrivacyLink(site) {
+  const id = str(site.footer?.privacyPage).trim();
+  if (!id) return null;
+  const pages = site.pages ?? [];
+  const page = pages.find((p) => p?.id === id);
+  if (!page || page.hidden === true) return null;
+  // The page link as every footer link resolves it, so a path edited by hand can never lead off the site.
+  const link = resolveItem({ label: str(page.title).trim() || id, page: id }, pages);
+  return link.missing || !link.href ? null : { label: link.label, href: link.href };
+}
+
+/**
  * The doormat link row: one centered row of links (the Centered and Big CTA
  * templates). Additive since v0.6.
  * @param {object} site

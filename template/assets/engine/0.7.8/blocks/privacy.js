@@ -5,8 +5,8 @@
  * sends and to whom, the shop and its payment providers, the measuring, the
  * videos and maps from other companies, the host, the visitor's rights, and
  * the visitor's own choices on this site (the providers they have let load
- * at once, each taken back with one press). The block has no settings: the
- * owner changes the page by changing the site.
+ * at once, each taken back with one press). Its one setting is whether it
+ * opens with the page's heading; the owner changes the page by changing the site.
  * The page files are read over the network as published; in the editor's
  * preview the other pages' drafts are not seen until they are published.
  */
@@ -76,9 +76,14 @@ function paragraphWith(text, names) {
 
 const joinNames = (names) => (names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} ${t('privacy.and')} ${names.at(-1)}`);
 
+/** The page's heading in the site's language, where the block carries it (`heading`, the template's), so it reads in the same language as the page under it. */
+function heading(props) {
+  return props?.heading === true ? [el2('h1', 'urd-privacy-title', t('privacy.title'))] : [];
+}
+
 /** The page's parts, drawn from the facts. */
-function draw(host, model) {
-  host.replaceChildren();
+function draw(host, model, props) {
+  host.replaceChildren(...heading(props));
   const c = model.controller;
   host.append(el2('p', 'urd-privacy-intro', t('privacy.intro')));
 
@@ -214,17 +219,17 @@ export const privacyBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {object} props No settings: the page is the site's
+   * @param {{heading?: boolean}} props heading: the block opens with the page's heading in the site's language (additive from 0.7.24.2.2; the template's block carries it); the rest is the site's
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = el2('div', 'urd-privacy');
-    host.append(el2('p', 'urd-privacy-intro', t('privacy.intro')));
+    host.append(...heading(props), el2('p', 'urd-privacy-intro', t('privacy.intro')));
     el.appendChild(host);
     // The facts need the pages: drawn once they are read, and with the site alone where none can be.
     loadPages(ctx.site).then((pages) => {
       if (!host.isConnected) return;
-      draw(host, privacyModel(ctx.site, pages));
+      draw(host, privacyModel(ctx.site, pages), props);
     });
     if (Boolean(ctx.preview) && ctx.viewport !== 'mobile') {
       // The help chip (ADR-0008): where the page's facts come from, and when another page's change shows.

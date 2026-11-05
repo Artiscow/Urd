@@ -30,6 +30,7 @@ export default {
     'contact.representative': 'Ansvarlig',
     'contact.kicker': 'Kontakt',
     'contact.findUs': 'Finn fram',
+    'privacy.title': 'Personvern',
     'privacy.intro': 'Denne siden er skrevet ut fra nettstedets egne innstillinger. Den sier hva nettstedet samler inn om deg, hvorfor, hvor det går, og hva du kan gjøre med det.',
     'privacy.controller.heading': 'Hvem som er ansvarlig',
     'privacy.controller.line': '{name} er ansvarlig for personopplysningene dette nettstedet behandler.',

@@ -722,6 +722,7 @@
         "links": { "type": "boolean", "default": true, "description": "The site's links (site.links) as a row in the footer (additive from 0.7.0.52); false leaves the row out" },
         "contact": { "type": "boolean", "default": true, "description": "The site's address, phone and email (site.contact) in the footer (additive from 0.7.24.5); false leaves them out" },
         "legal": { "type": "boolean", "default": true, "description": "The legal line (the legal name, the organisation numbers, the VAT number and the representative of site.contact) in the footer (additive from 0.7.24.5); false leaves it out" },
+        "privacyPage": { "$ref": "#/$defs/id", "description": "The id of the site's privacy page (additive from 0.7.24.2.2): its title is linked in every page's footer, first among the baseline's links; set when a page is made from the Privacy template, chosen in the Footer panel; a page that is gone or hidden draws no link" },
         "social": {
           "type": "array",
           "description": "Social links (v0.6 to 0.7.0.51; lifted into site.links by the site migration 4 -> 5, never written by the editor since): icon id from the icon library + URL (http/https/mailto/tel).",

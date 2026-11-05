@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.24.2.2): the privacy page in the footer and in the site's language, and the video cover's play button
+
+- [ ] Pages panel, a new page from the «Privacy» template, with the admin in English and the site in bokmål: the page's heading reads «Personvern» like the text under it; the block's menu has «Page heading» (on), which takes the heading away, and no plugin «Settings» button
+- [ ] A long privacy page in the editor: the section grows with the text and the footer stands below it, never over it
+- [ ] Footer panel, the contact group: «Privacy page» with every page; a page chosen shows its title as a link in every page's footer (the rich footer: first among the bottom links; the simple footer: a line under the legal line); a new page from the «Privacy» template is chosen by itself where none is; a hidden page, or «None», draws no link
+- [ ] A video with the owner's cover picture: the play button stands on the picture, in the editor's Clean view and on the published page; in the editor's desktop view a press on the video selects the block; in Clean view the pressed player can be paused
+- [ ] The video's menu with a cover picture: «Remove the cover image» beside «Edit cover image» takes the picture away, the cover then in the site's colours; one undo brings it back
+- [ ] Footer panel, a footer layout chosen with a privacy page set: the columns' «Privacy» links the privacy page, and the bottom row has no second «Privacy»; deleting the privacy page takes the footer's link away, and a new page from the template is chosen again
+
 ### Test batch (0.7.24.2.1): the privacy page
 
 - [ ] Pages panel, a new page from the «Privacy» template: a page with the heading «Personvern» and the privacy block under it; the block has no settings in its menu, and no plugin «Settings» button

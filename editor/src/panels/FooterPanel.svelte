@@ -94,10 +94,14 @@
     const pages = siteDraft.pages ?? [];
     const pageLinks = (n) => pages.slice(0, n).map((p) => ({ label: p.title || p.id, page: p.id }));
     const ext = (label, href) => ({ label, href });
+    // The site's privacy page, where the footer has one: the columns link it, and the bottom row leaves its placeholder out, since the footer draws the real link there.
+    const privacyId = pages.some((p) => p.id === siteDraft.footer?.privacyPage) ? siteDraft.footer.privacyPage : null;
+    const privacy = () => (privacyId ? { label: ta('seed.footer.privacy'), page: privacyId } : ext(ta('seed.footer.privacy'), '#'));
+    const bottomPrivacy = () => (privacyId ? [] : [ext(ta('seed.footer.privacy'), '#')]);
     const copyright = `© ${title}`;
     if (name === 'minimal') {
       return { align: 'center', brand: { title },
-        copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
+        copyright, baseline: bottomPrivacy() };
     }
     if (name === 'centered') {
       return { align: 'center', brand: { title }, linkRow: pageLinks(5),
@@ -108,10 +112,10 @@
         columns: [
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
           { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.join'), '#'), ext(ta('seed.footer.press'), '#')] },
-          { title: ta('seed.footer.colResources'), links: [ext(ta('seed.footer.bylaws'), '#'), ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.contact'), '#')] },
+          { title: ta('seed.footer.colResources'), links: [ext(ta('seed.footer.bylaws'), '#'), privacy(), ext(ta('seed.footer.contact'), '#')] },
         ],
         copyright,
-        baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
+        baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'sitemap') {
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline2') },
@@ -119,25 +123,25 @@
           { title: ta('seed.footer.colExplore'), links: [ext(ta('seed.footer.home'), '#'), ext(ta('seed.footer.events'), '#'), ext(ta('seed.footer.gallery'), '#'), ext(ta('seed.footer.blog'), '#')] },
           { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.history'), '#'), ext(ta('seed.footer.press'), '#'), ext(ta('seed.footer.contact'), '#')] },
           { title: ta('seed.footer.colSupport'), links: [ext(ta('seed.join'), '#'), ext(ta('seed.footer.faq'), '#'), ext(ta('seed.footer.help'), '#')] },
-          { title: ta('seed.footer.colLegal'), links: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.bylaws'), '#')] },
+          { title: ta('seed.footer.colLegal'), links: [privacy(), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.bylaws'), '#')] },
         ],
         copyright,
-        baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.cookies'), '#')] };
+        baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.cookies'), '#')] };
     }
     if (name === 'newsletter') {
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline3') },
         cta: { kind: 'newsletter', heading: ta('seed.footer.newsletterHeading'), label: ta('seed.footer.newsletterButton'), recipient: ta('seed.email'), success: ta('seed.footer.newsletterSuccess') },
         columns: [
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
-          { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), ext(ta('seed.footer.privacy'), '#')] },
+          { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), privacy()] },
         ],
-        copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
+        copyright, baseline: bottomPrivacy() };
     }
     if (name === 'bigcta') {
       return { align: 'center',
         cta: { kind: 'button', big: true, heading: ta('seed.footer.ctaHeading'), sub: ta('seed.footer.ctaSub'), label: ta('seed.join'), href: '#' },
         linkRow: pageLinks(4), copyright,
-        baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
+        baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'contact') {
       // The contact column after the pages is the site's own contact details (the Site panel), never sample text.
@@ -145,7 +149,7 @@
         columns: [
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
         ],
-        copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
+        copyright, baseline: bottomPrivacy() };
     }
     if (name === 'chapters') {
       // The link columns as numbered chapters under a rule each (footer.design).
@@ -155,7 +159,7 @@
           { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.history'), '#'), ext(ta('seed.footer.contact'), '#')] },
           { title: ta('seed.footer.colSupport'), links: [ext(ta('seed.join'), '#'), ext(ta('seed.footer.faq'), '#'), ext(ta('seed.footer.help'), '#')] },
         ],
-        copyright, baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
+        copyright, baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'split') {
       // The brand with a call to action on a tinted half, the columns in the other half (footer.design).
@@ -163,9 +167,9 @@
         cta: { kind: 'button', heading: ta('seed.footer.ctaHeading'), label: ta('seed.join'), href: '#' },
         columns: [
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
-          { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), ext(ta('seed.footer.privacy'), '#')] },
+          { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), privacy()] },
         ],
-        copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
+        copyright, baseline: bottomPrivacy() };
     }
     // mega: columns + background layers (glow + grain).
     return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline5') },
@@ -174,7 +178,7 @@
         { title: ta('seed.footer.colFollow'), links: [ext(ta('seed.footer.newsletter'), '#'), ext(ta('seed.email'), `mailto:${ta('seed.email')}`)] },
       ],
       copyright,
-      baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.madeWith'), '#')],
+      baseline: [...bottomPrivacy(), ext(ta('seed.footer.madeWith'), '#')],
       background: { version: 1, layers: [
         { type: 'glow', version: glowLayer.version ?? 1, props: { ...glowLayer.defaults(), color: 'accent', x: 0.12, y: 0, radius: 0.6, opacity: 0.45 } },
         { type: 'grain', version: grainLayer.version ?? 1, props: { ...grainLayer.defaults(), opacity: 0.08 } },
@@ -455,6 +459,11 @@
           {ta('ui.footerLegal')}
         </label>
       {/if}
+      <!-- The privacy page the footer links to: any page, the one made from the Privacy template chosen by itself -->
+      <label title={ta('tip.footer.privacy')}>{ta('lbl.footerPrivacy')}
+        <Dropdown value={siteDraft.footer?.privacyPage ?? ''}
+          options={[['', ta('common.none')], ...(siteDraft.pages ?? []).filter((p) => !p.hidden).map((p) => [p.id, p.title])]}
+          onchange={(v) => footerMutate('footer', (f) => { if (v) f.privacyPage = v; else delete f.privacyPage; })} /></label>
       {#if contactParts(siteContact(siteDraft))}
         <label class="gridmenu-snap" title={ta('tip.footer.contact')}>
           <input type="checkbox" checked={siteDraft.footer?.contact !== false}

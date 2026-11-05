@@ -79,8 +79,8 @@ const privacy = (fr) => ({
   id: makeId('blk'),
   type: 'privacy',
   version: 1,
-  // The block writes the page from the site's settings, so the preset carries no text.
-  props: {},
+  // The block writes the page from the site's settings, its heading too, all in the site's language, so the preset carries no text.
+  props: { heading: true },
   animation: null,
   frames: fr,
 });
@@ -495,11 +495,11 @@ export function registerSectionPresets(Urd) {
     labelKey: 'preset.privacy.label',
     group: 'Basics',
     groupKey: 'presetGroup.basic',
-    hint: 'The privacy page, written from the site\'s settings under a heading',
+    hint: 'The privacy page with its heading, written from the site\'s settings',
     hintKey: 'preset.privacy.hint',
-    create: () => section('privacy', '720px', bg(colorLayer('bg')), [
-      text(frame(10, 32, 80, 36), ta('seed.privacy.title')),
-      privacy(frame(10, 90, 80, 600)),
+    // No height of its own: the page is as long as the settings make it, in the preview too.
+    create: () => section('privacy', undefined, bg(colorLayer('bg')), [
+      privacy(frame(10, 56, 80, 700)),
     ]),
   });
 

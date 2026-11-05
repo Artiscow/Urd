@@ -67,6 +67,7 @@
       {#if selectedBlock.props.askFirst !== false}
         {#if selectedBlock.props.poster}
           <button type="button" class="ghost action" title={ta('tip.video.coverEdit')} onclick={openImageEditor}>{ta('ui.editCover')}</button>
+          <button type="button" class="ghost action" title={ta('tip.video.coverRemove')} onclick={() => ed.mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.poster = ''; delete b.props.coverStyle; })}>{ta('ui.removeCover')}</button>
         {:else}
           <label class="ghost action filepick" title={ta('tip.video.cover')}>
             {ta('ui.chooseCover')}

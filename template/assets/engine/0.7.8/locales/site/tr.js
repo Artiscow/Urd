@@ -26,6 +26,7 @@ export default {
     'contact.representative': 'Temsilci',
     'contact.kicker': 'İletişim',
     'contact.findUs': 'Bizi bulun',
+    'privacy.title': 'Gizlilik',
     'privacy.intro': 'Bu sayfa sitenin kendi ayarlarından yazılır. Bu sitenin sizin hakkınızda ne topladığını, neden topladığını, nereye gittiğini ve bu konuda ne yapabileceğinizi söyler.',
     'privacy.controller.heading': 'Kim sorumlu',
     'privacy.controller.line': 'Bu sitenin işlediği kişisel verilerden {name} sorumludur.',

@@ -142,6 +142,12 @@
       "title": "Shop",
       "path": "/shop",
       "file": "content/pages/shop.json"
+    },
+    {
+      "id": "personvern",
+      "title": "Personvern",
+      "path": "/personvern",
+      "file": "content/pages/personvern.json"
     }
   ],
   "nav": {
@@ -374,14 +380,11 @@
     },
     "baseline": [
       {
-        "label": "Personvern",
-        "href": "#"
-      },
-      {
         "label": "Laget med Urd",
         "href": "#"
       }
     ],
-    "copyright": "© Min forening"
+    "copyright": "© Min forening",
+    "privacyPage": "personvern"
   }
 }

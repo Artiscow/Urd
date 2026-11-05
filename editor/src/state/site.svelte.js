@@ -190,6 +190,11 @@ function addPage() {
     siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
     // New pages go straight into the menu; the Nav panel can remove them.
     siteDraft.nav.items.push({ label: title, page: slug });
+    // The footer links the privacy page on every page once the site has one.
+    if (newPageTemplate === 'preset:privacy' && !siteDraft.pages.some((p) => p.id === siteDraft.footer?.privacyPage)) {
+      siteDraft.footer ??= { version: 1, show: false, text: '', align: 'center' };
+      siteDraft.footer.privacyPage = slug;
+    }
   });
   // The page's own draft, ready to publish.
   shellState.writeDraftKey(`urd-draft-${slug}`, JSON.stringify(fresh));
@@ -488,6 +493,8 @@ async function deletePage(entry) {
   }
   const path = entry.path;
   siteMutate('pages', () => {
+    // The footer's privacy link goes with its page.
+    if (siteDraft.footer?.privacyPage === entry.id) delete siteDraft.footer.privacyPage;
     siteDraft.pages = siteDraft.pages.filter((p) => p.id !== entry.id);
     // Items with a submenu survive their own page being deleted: the
     // target is removed and the item becomes a pure opener, so the
