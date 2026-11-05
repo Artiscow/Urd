@@ -136,6 +136,11 @@ Recorded before the split, 14 October 2026: `editor/src/App.svelte` held the who
 - `media`: the SVG trim, the image compression, the video reading and the upload report.
 - `blocks`: `BLOCK_DEFAULTS` and `BLOCK_LABELS` (tests/palette.test.mjs reads them there), building and placing a new block, the calendar designs as blocks.
 - `bridge`: the handlers of the preview's messages (`handleEdit` to `handleDelete`, the sections, the sticky dock).
+- `link`: the link editor's dialog (lib/LinkDialog.svelte), opened by every link field, the quick row, the panels and the text toolbar.
+- `palette`: the command palette's commands, its query and its recent and pinned entries.
+- `page-settings`: which page's settings are open, each page's meta fields as the settings show them, and the writes to any page, open on the canvas or not.
+- `redirects`: the site's redirects as a draft beside the site's, the Redirects dialog's open flag and its writes (ADR-0015).
+- `picture-editor`: the picture the image editor is open on, its own undo and redo, and its writes through the place the picture lives.
 
 **The CSS.** The admin's stylesheet is global, in `editor/src/app.css`, imported by `main.js` after the components so that it wins a tie with a lib component's rule as it did when its specificity was one class higher. It moved out of App.svelte as one block in its order (0.7.26.2), with the `:global()` wrappers unwrapped, so the cascade among its own rules stays as it was, and a rule whose subject is a form element, a `.ghost` or a `.primary` carries a guard that keeps it out of the lib components (`Dropdown`, `ColorPicker`, `GlyphPicker`, `MarkPicker`, `DesignPicker`, `Choice`), which draw their own controls and were never reached by the scoped rules. A rule only one part uses moves into that part's `<style>` once the part is split out and no rule of its ties with a shared one. `tests/topbar-fold.test.mjs` pins the fold steps in app.css and `FOLD_MQ` in App.svelte, and `tests/styled-blocks.test.mjs` pins the stats and FAQ variants of the design catalogue to the blocks' own lists.
 
@@ -154,7 +159,7 @@ editor/src/
   panels/   PagesPanel, NavPanel, SitePanel, ThemePanel, BlocksPanel, GridPanel, PropertiesPanel, FooterPanel, CollectionsPanel, PluginsPanel, HistoryPanel, UpdatePanel
   section/  BackgroundEditor
   menu/     ElementMenu, FloatingMenu, MenuGroup, Pin, SearchField, BoxStyle, Placement, families/, state.svelte.js, options.js, groups.js
-  state/    shell, preview, page, site, history, collections, templates, plugins, updater, publish, media, blocks, bridge, picture-editor (.svelte.js)
+  state/    shell, preview, page, site, history, collections, templates, plugins, updater, publish, media, blocks, bridge, link, palette, page-settings, redirects, picture-editor (.svelte.js)
   lib/      the pickers and the pure modules, as before
 ```
 

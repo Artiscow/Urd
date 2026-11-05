@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.10.31-0.7.29.5p - Push preparation: page settings, undo by whole changes, redirects and hidden pages, the embed cover, and the image editor in a dialog for every picture - 5 November 2026
+
+- The full round was green, and the committed bundle matched a fresh build. The publish from the deployed site in the span (`Update Hjem, collections via Urd admin`) wrote two content files and nothing Urd-owned.
+- BACKLOG.md's done items are shortened to one line each with their delivery (837 lines to 571); the open items stand as they were, and 0.7.6 keeps the remainder its text named.
+
+The span review found these; the first two are fixed:
+
+1. ARCHITECTURE.md's list of the state modules lacked `page-settings` and `redirects`, added in the span, and `link` and `palette` from before it; `picture-editor` stood in the tree line only. All five are listed with what each owns.
+2. SCHEMA.md's video line still described `coverStyle` with the old vocabulary (zoom to 3, three adjustments, clamped by `coverImageStyle`), while «A picture's settings» in the same document gives every picture one set with zoom to 4, the turn, the look and the blur, which the cover draws through picture.js. The video line points to that paragraph.
+3. For the tester: TEST-ROUNDS' batch 0.7.10.32 names «Start of the session» in the undo menu, which 0.7.24.1.1 renamed «Discard drafts» (its batch records the rename); the older batch stands as written, since nothing is removed there.
+
 ### 0.7.29.5 - The image block's menu without the image editor's sliders, and a pencil on each gallery picture - 5 November 2026
 
 - The image block's menu held the Crop group (fit, focus X and Y, zoom) and the Filters group (brightness, contrast, saturation) as sliders the image editor holds too. The sliders are gone, «Open the image editor» stands first in Content with a tooltip naming the editor's settings, and Style keeps Fit and Corners with their pins; three keys nothing uses any more are gone from every dictionary.
