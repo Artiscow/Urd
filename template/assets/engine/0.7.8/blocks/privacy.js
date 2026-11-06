@@ -5,14 +5,16 @@
  * sends and to whom, the shop and its payment providers, the measuring, the
  * videos and maps from other companies, the host, the visitor's rights, and
  * the visitor's own choices on this site (the providers they have let load
- * at once, each taken back with one press). Its one setting is whether it
- * opens with the page's heading; the owner changes the page by changing the site.
+ * at once, each taken back with one press). Its settings are whether it opens
+ * with the page's heading, its design and its look (doc-look.js); the owner
+ * changes what it says by changing the site.
  * The page files are read over the network as published; in the editor's
  * preview the other pages' drafts are not seen until they are published.
  */
 import { t, ta, adminLocaleReady } from '../i18n.js';
-import { privacyModel } from '../privacy-model.js';
+import { privacyModel, BROWSER_KEEPS } from '../privacy-model.js';
 import { allowedProviders, setProviderAllowed, providerName, providerPrivacyUrl } from '../embed-cover.js';
+import { privacyDesign, applyDocLook, buildContents } from '../doc-look.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -62,7 +64,11 @@ function nameLink(id, name) {
 
 /** A paragraph from a text with «{names}» in it, the names set in as links, the text around them as it is. */
 function paragraphWith(text, names) {
-  const p = el2('p');
+  return withNames(el2('p'), text, names);
+}
+
+/** An element filled from a text with «{names}» in it, the names set in as links, the text around them as it is. */
+function withNames(p, text, names) {
   const parts = text.split('{names}');
   parts.forEach((part, i) => {
     if (part) p.append(part);
@@ -76,111 +82,289 @@ function paragraphWith(text, names) {
 
 const joinNames = (names) => (names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} ${t('privacy.and')} ${names.at(-1)}`);
 
+/** The designs that set out what is collected row by row: the table and the cards. */
+const LEDGERS = new Set(['ledger', 'ledger-cards']);
+
 /** The page's heading in the site's language, where the block carries it (`heading`, the template's), so it reads in the same language as the page under it. */
 function heading(props) {
   return props?.heading === true ? [el2('h1', 'urd-privacy-title', t('privacy.title'))] : [];
 }
 
-/** The page's parts, drawn from the facts. */
-function draw(host, model, props) {
-  host.replaceChildren(...heading(props));
-  const c = model.controller;
-  host.append(el2('p', 'urd-privacy-intro', t('privacy.intro')));
+/** A list of lines as one paragraph, a line break between them. */
+function linesParagraph(lines) {
+  const p = el2('p');
+  lines.forEach((line, i) => { if (i) p.append(el2('br')); p.append(line); });
+  return p;
+}
 
-  // Who is responsible.
-  host.append(el2('h2', null, t('privacy.controller.heading')));
-  host.append(el2('p', null, t('privacy.controller.line', { name: c.name || t('privacy.controller.owner') })));
+/** Where a form or the checkout sends what it holds, in words. */
+const sentTo = (item) => (item.mode === 'endpoint' || item.host ? t('privacy.forms.toService', { host: item.host }) : item.recipient ? t('privacy.forms.byEmail', { email: item.recipient }) : t('privacy.forms.toOwner'));
+
+/** The names of the other parties that get something: the payment providers, the frames' providers and the host. */
+function otherNames(model) {
+  const pay = (model.checkout?.providers ?? []).filter((id) => id !== 'manual').map((id) => OTHER_PARTIES[id]?.[0] ?? id);
+  return [...pay, ...model.embeds.map(providerName), OTHER_PARTIES.cloudflare[0]];
+}
+
+/** What the site collects, as the forms', the shop's, the measuring's and the frames' parts. */
+function collectedNodes(model) {
+  const nodes = [];
+  const nothing = !model.forms.length && !model.checkout && !model.analytics && !model.embeds.length;
+  if (nothing) nodes.push(el2('p', null, t('privacy.nothing')));
+  if (model.forms.length) {
+    nodes.push(el2('h3', null, t('privacy.forms.heading')));
+    const list = el2('ul');
+    for (const form of model.forms) {
+      const fields = form.fields.length ? t('privacy.forms.fields', { fields: form.fields.join(', ') }) : t('privacy.forms.whatYouFill');
+      list.append(el2('li', null, form.footer ? t('privacy.forms.footer', { to: sentTo(form) }) : t('privacy.forms.line', { page: form.page, what: fields, to: sentTo(form) })));
+    }
+    nodes.push(list, el2('p', null, t('privacy.forms.basis')));
+    if (model.forms.some((f) => f.footer)) nodes.push(el2('p', null, t('privacy.keep.newsletter')));
+  }
+  if (model.checkout) {
+    const s = model.checkout;
+    nodes.push(el2('h3', null, t('privacy.shop.heading')));
+    nodes.push(el2('p', null, t('privacy.shop.sends', { page: s.page, to: sentTo(s) })));
+    nodes.push(...paymentNodes(s), el2('p', null, t('privacy.shop.basis', { name: model.controller.name || t('privacy.controller.owner') })));
+  }
+  if (model.analytics) {
+    nodes.push(el2('h3', null, t('privacy.analytics.heading')));
+    nodes.push(...analyticsNodes());
+  }
+  if (model.embeds.length) {
+    nodes.push(el2('h3', null, t('privacy.embeds.heading')));
+    nodes.push(...embedNodes(model));
+  }
+  return nodes;
+}
+
+/** The counting of visits: what it reads, on what basis, and that it is kept as totals alone. */
+const analyticsNodes = () => [paragraphWith(t('privacy.analytics.text'), [nameLink('cloudflare', 'Cloudflare Web Analytics')]), el2('p', null, t('privacy.keep.analytics'))];
+
+/** The host: what it keeps, for how long, and where it may process it. */
+const hostNodes = () => [paragraphWith(t('privacy.host.text'), [nameLink('cloudflare', 'Cloudflare Pages')])];
+
+/** The checkout's payment providers and its manual ways to pay. */
+function paymentNodes(s) {
+  const nodes = [];
+  const providers = s.providers.filter((id) => id !== 'manual');
+  if (providers.length) nodes.push(paragraphWith(t('privacy.shop.payment'), providers.map((id) => nameLink(id, OTHER_PARTIES[id]?.[0] ?? id))));
+  if (s.providers.includes('manual')) nodes.push(el2('p', null, t('privacy.shop.manual')));
+  return nodes;
+}
+
+/** The frames from other companies: behind a cover until a press, or with the page, and how long the companies keep what they learn (`keep`; the ledger's table says that in its own column). */
+function embedNodes(model, { keep = true } = {}) {
+  const asking = model.embeds.filter((id) => !model.atOnce.includes(id));
+  const links = model.embeds.map((id) => nameLink(id, providerName(id)));
+  if (!asking.length) return [paragraphWith(t('privacy.embeds.allAtOnce'), links), ...(keep ? [embedKeepNode()] : [])];
+  const nodes = [paragraphWith(t('privacy.embeds.text'), links)];
+  if (model.atOnce.length) nodes.push(el2('p', null, t('privacy.embeds.atOnce', { names: joinNames(model.atOnce.map(providerName)) })));
+  if (keep) nodes.push(embedKeepNode());
+  nodes.push(el2('p', null, t('privacy.embeds.choice')));
+  return nodes;
+}
+
+/** How long the frames' companies keep what they learn: by their own terms, which their names link to. */
+const embedKeepNode = () => el2('p', null, t('privacy.keep.embeds'));
+
+/**
+ * The ledgers (the designs that set out what is collected): a row for each thing the site or another party gets, with why, who gets it and how long it is kept (GDPR article 13: the purposes, the recipients and the period).
+ * Rows that differ only in who gets them (the frames' companies) are one row with every company named.
+ * `ledger` draws them as a table of three columns, who gets it under the why; `ledger-cards` as a card each, its lines named.
+ */
+function ledgerNodes(model, design) {
+  const owner = model.controller.name || t('privacy.controller.owner');
+  // Who gets what a form or the checkout sends: the service it goes to, the address it is emailed to, or the one responsible.
+  const who = (item) => item.host || item.recipient || owner;
+  const rows = [];
+  /* A row's recipients are names, or [id, name] for another company, whose own terms tell how long it keeps it (`keep` null: the row links them). */
+  const add = (what, why, recipients, keep) => {
+    const names = [recipients].flat().map((r) => (Array.isArray(r) ? { id: r[0], name: r[1] } : { name: r }));
+    const same = rows.find((r) => r.what === what && r.why === why && r.keep === keep);
+    if (same) same.who.push(...names.filter((n) => !same.who.some((w) => w.name === n.name)));
+    else rows.push({ what, why, who: names, keep });
+  };
+  for (const form of model.forms) {
+    if (form.footer) add(t('privacy.ledger.emailAddress'), t('privacy.ledger.why.newsletter'), who(form), t('privacy.ledger.keep.newsletter'));
+    else add(form.fields.length ? form.fields.join(', ') : t('privacy.ledger.whatYouFill'), t('privacy.ledger.why.form', { page: form.page }), who(form), t('privacy.ledger.keep.form'));
+  }
+  if (model.checkout) {
+    const pay = model.checkout.providers.filter((id) => id !== 'manual').map((id) => OTHER_PARTIES[id]?.[0] ?? id);
+    add(t('privacy.ledger.order'), t('privacy.ledger.why.order'), [who(model.checkout), ...pay], t('privacy.ledger.keep.order', { name: owner }));
+  }
+  if (model.analytics) add(t('privacy.ledger.visits'), t('privacy.ledger.why.analytics'), [['cloudflare', 'Cloudflare']], null);
+  for (const id of model.embeds) {
+    add(t('privacy.ledger.ip'), t(model.atOnce.includes(id) ? 'privacy.ledger.why.embedAtOnce' : 'privacy.ledger.why.embed'), [[id, providerName(id)]], null);
+  }
+  add(t('privacy.ledger.ipLogs'), t('privacy.ledger.why.host'), [['cloudflare', 'Cloudflare']], null);
+  const nodes = [design === 'ledger-cards' ? ledgerCards(rows) : ledgerTable(rows)];
+  // What the rows cannot hold, said as the other designs say it, so every design tells the same.
+  const nothing = !model.forms.length && !model.checkout && !model.analytics && !model.embeds.length;
+  if (nothing) nodes.push(el2('p', null, t('privacy.nothing')));
+  if (model.forms.length) nodes.push(el2('p', null, t('privacy.forms.basis')));
+  if (model.checkout) nodes.push(...paymentNodes(model.checkout), el2('p', null, t('privacy.shop.basis', { name: owner })));
+  if (model.analytics) nodes.push(paragraphWith(t('privacy.analytics.text'), [nameLink('cloudflare', 'Cloudflare Web Analytics')]));
+  if (model.embeds.length) nodes.push(...embedNodes(model, { keep: false }));
+  nodes.push(...hostNodes());
+  return nodes;
+}
+
+/** A row's keeping into an element: its own words, or another company's terms, linked, where that company decides. */
+function keepInto(cell, row) {
+  if (row.keep !== null) cell.textContent = row.keep;
+  else withNames(cell, t('privacy.ledger.keep.theirs'), row.who.filter((w) => w.id).map((w) => nameLink(w.id, w.name)));
+  return cell;
+}
+
+/** The ledger's rows as a table: what, why with who gets it under it, and how long. */
+function ledgerTable(rows) {
+  const table = el2('table', 'urd-doc-ledger');
+  const head = el2('tr');
+  for (const key of ['privacy.ledger.what', 'privacy.ledger.whyWho', 'privacy.ledger.keep']) {
+    const th = el2('th', null, t(key));
+    th.scope = 'col';
+    head.append(th);
+  }
+  table.append(el2('thead'), el2('tbody'));
+  table.tHead.append(head);
+  for (const row of rows) {
+    const why = el2('td', null, row.why);
+    why.append(el2('span', 'urd-doc-who', joinNames(row.who.map((w) => w.name))));
+    const tr = el2('tr');
+    tr.append(el2('td', null, row.what), why, keepInto(el2('td'), row));
+    table.tBodies[0].append(tr);
+  }
+  const wrap = el2('div', 'urd-doc-ledger-wrap');
+  wrap.append(table);
+  return wrap;
+}
+
+/** The ledger's rows as cards: what as the card's title, then why, who gets it and how long, each named. */
+function ledgerCards(rows) {
+  const list = el2('ul', 'urd-doc-ledger-cards');
+  for (const row of rows) {
+    const dl = el2('dl');
+    dl.append(el2('dt', null, t('privacy.ledger.why')), el2('dd', null, row.why), el2('dt', null, t('privacy.ledger.who')), el2('dd', null, joinNames(row.who.map((w) => w.name))), el2('dt', null, t('privacy.ledger.keep')), keepInto(el2('dd'), row));
+    const li = el2('li');
+    li.append(el2('b', null, row.what), dl);
+    list.append(li);
+  }
+  return list;
+}
+
+/** The four answers most visitors look for, as cards above the page: who is responsible, what is collected, who else gets something, and the cookies. */
+function glanceNodes(model) {
+  const c = model.controller;
+  const collects = [];
+  if (model.forms.length) collects.push(t('privacy.glance.forms'));
+  if (model.checkout) collects.push(t('privacy.glance.orders'));
+  if (model.analytics) collects.push(t('privacy.glance.visits'));
+  const facts = [
+    [t('privacy.glance.controller'), c.name || t('privacy.controller.owner')],
+    [t('privacy.glance.collects'), collects.length ? capitalise(joinNames(collects)) : t('privacy.glance.nothing')],
+    [t('privacy.glance.others'), joinNames(otherNames(model))],
+    [t('privacy.glance.cookies'), model.atOnce.length ? t('privacy.glance.cookiesOthers', { names: joinNames(model.atOnce.map(providerName)) }) : t('privacy.glance.cookiesNone')],
+  ];
+  const grid = el2('div', 'urd-doc-glance');
+  for (const [label, value] of facts) {
+    const fact = el2('div', 'urd-doc-fact');
+    fact.append(el2('b', null, label), el2('span', null, value));
+    grid.append(fact);
+  }
+  return [grid];
+}
+
+const capitalise = (text) => (text ? text[0].toLocaleUpperCase() + text.slice(1) : text);
+
+/**
+ * The page's parts, each a key (its heading's and its question's), what it holds, and what stands above it (`lead`).
+ * The ledgers set out what is collected under who is responsible, and the host's row stands among them, so the controller's and the host's parts are left out there.
+ */
+function pageParts(model, design) {
+  const c = model.controller;
+  const parts = [];
   const lines = [];
   if (c.org) lines.push(t('privacy.controller.org', { org: c.org }));
   if (c.representative) lines.push(t('privacy.controller.representative', { name: c.representative }));
   if (c.address) lines.push(c.address);
   if (c.email) lines.push(c.email);
   if (c.phone) lines.push(c.phone);
-  if (lines.length) {
-    const p = el2('p');
-    lines.forEach((line, i) => { if (i) p.append(el2('br')); p.append(line); });
-    host.append(p);
-  }
-
-  // What the site collects, and why.
-  host.append(el2('h2', null, t('privacy.what.heading')));
-  const nothing = !model.forms.length && !model.checkout && !model.analytics && !model.embeds.length;
-  if (nothing) host.append(el2('p', null, t('privacy.nothing')));
-  if (model.forms.length) {
-    host.append(el2('h3', null, t('privacy.forms.heading')));
-    const list = el2('ul');
-    for (const form of model.forms) {
-      const fields = form.fields.length ? t('privacy.forms.fields', { fields: form.fields.join(', ') }) : t('privacy.forms.whatYouFill');
-      const to = form.mode === 'endpoint' ? t('privacy.forms.toService', { host: form.host }) : form.recipient ? t('privacy.forms.byEmail', { email: form.recipient }) : t('privacy.forms.toOwner');
-      list.append(el2('li', null, form.footer ? t('privacy.forms.footer', { to }) : t('privacy.forms.line', { page: form.page, what: fields, to })));
-    }
-    host.append(list, el2('p', null, t('privacy.forms.basis')));
-  }
-  if (model.checkout) {
-    const s = model.checkout;
-    host.append(el2('h3', null, t('privacy.shop.heading')));
-    const to = s.host ? t('privacy.forms.toService', { host: s.host }) : s.recipient ? t('privacy.forms.byEmail', { email: s.recipient }) : t('privacy.forms.toOwner');
-    host.append(el2('p', null, t('privacy.shop.sends', { page: s.page, to })));
-    const providers = s.providers.filter((id) => id !== 'manual');
-    if (providers.length) host.append(paragraphWith(t('privacy.shop.payment'), providers.map((id) => nameLink(id, OTHER_PARTIES[id]?.[0] ?? id))));
-    if (s.providers.includes('manual')) host.append(el2('p', null, t('privacy.shop.manual')));
-    host.append(el2('p', null, t('privacy.shop.basis')));
-  }
-  if (model.analytics) {
-    host.append(el2('h3', null, t('privacy.analytics.heading')));
-    host.append(paragraphWith(t('privacy.analytics.text'), [nameLink('cloudflare', 'Cloudflare Web Analytics')]));
-  }
-  if (model.embeds.length) {
-    host.append(el2('h3', null, t('privacy.embeds.heading')));
-    const asking = model.embeds.filter((id) => !model.atOnce.includes(id));
-    const links = model.embeds.map((id) => nameLink(id, providerName(id)));
-    if (asking.length) {
-      host.append(paragraphWith(t('privacy.embeds.text'), links));
-      if (model.atOnce.length) host.append(el2('p', null, t('privacy.embeds.atOnce', { names: joinNames(model.atOnce.map(providerName)) })));
-      host.append(el2('p', null, t('privacy.embeds.choice')));
-    } else {
-      // Every frame loads with its page: no cover, no choice to keep.
-      host.append(paragraphWith(t('privacy.embeds.allAtOnce'), links));
-    }
-  }
+  const controller = [el2('p', null, t('privacy.controller.line', { name: c.name || t('privacy.controller.owner') })), ...(lines.length ? [linesParagraph(lines)] : [])];
+  // The ledger names who is responsible above its table, as the table's lead; the other designs give it a part of its own.
+  if (LEDGERS.has(design)) parts.push({ key: 'what', lead: controller, nodes: ledgerNodes(model, design) });
+  else parts.push({ key: 'controller', nodes: controller }, { key: 'what', nodes: collectedNodes(model) });
 
   // What the site keeps in the visitor's own browser.
-  host.append(el2('h2', null, t('privacy.browser.heading')));
-  const kept = [t('privacy.browser.pages')];
-  if (model.browser.theme) kept.push(t('privacy.browser.theme'));
-  if (model.browser.announcement) kept.push(t('privacy.browser.announcement'));
-  if (model.browser.shop) kept.push(t('privacy.browser.cart'));
-  if (model.embeds.some((id) => !model.atOnce.includes(id))) kept.push(t('privacy.browser.embeds'));
-  host.append(el2('p', null, t('privacy.browser.text')));
+  const applies = { pages: true, theme: model.browser.theme, announcement: model.browser.announcement, cart: model.browser.shop, calendar: model.browser.calendar, embeds: model.embeds.some((id) => !model.atOnce.includes(id)) };
+  const kept = BROWSER_KEEPS.filter((keep) => applies[keep.id]).map((keep) => t(`privacy.browser.${keep.id}`));
   const list = el2('ul');
   for (const line of kept) list.append(el2('li', null, line));
-  host.append(list);
+  parts.push({ key: 'browser', nodes: [el2('p', null, t('privacy.browser.text')), list] });
 
-  // The host.
-  host.append(el2('h2', null, t('privacy.host.heading')));
-  host.append(paragraphWith(t('privacy.host.text'), [nameLink('cloudflare', 'Cloudflare Pages')]));
+  if (!LEDGERS.has(design)) parts.push({ key: 'host', nodes: hostNodes() });
 
-  // The visitor's rights.
-  host.append(el2('h2', null, t('privacy.rights.heading')));
-  host.append(el2('p', null, t('privacy.rights.text', { name: c.name || t('privacy.controller.owner'), email: c.email || t('privacy.rights.theSite') })));
+  // The visitor's rights, and the authority for the country.
   const authority = el2('p');
   if (c.country === 'NO') {
     const a = el2('a', null, 'Datatilsynet');
     a.href = 'https://www.datatilsynet.no/';
     a.target = '_blank';
     a.rel = 'noopener';
-    const parts = t('privacy.rights.authority', { authority: '{authority}' }).split('{authority}');
-    authority.append(parts[0], a, parts[1] ?? '');
+    const words = t('privacy.rights.authority', { authority: '{authority}' }).split('{authority}');
+    authority.append(words[0], a, words[1] ?? '');
   } else {
     authority.textContent = t('privacy.rights.authority', { authority: t('privacy.rights.authorityOther') });
   }
-  host.append(authority);
+  parts.push({ key: 'rights', nodes: [el2('p', null, t('privacy.rights.text', { name: c.name || t('privacy.controller.owner'), email: c.email || t('privacy.rights.theSite') })), authority] });
 
   // The visitor's own choices on this site.
-  host.append(el2('h2', null, t('privacy.choices.heading')));
   const choices = el2('div', 'urd-privacy-choices');
-  host.append(choices);
   drawChoices(choices);
+  parts.push({ key: 'choices', nodes: [choices] });
+  return parts;
+}
+
+/** The page drawn in its design from the facts. */
+function draw(host, model, props, blockId) {
+  const design = privacyDesign(props?.design);
+  host.replaceChildren(...heading(props), el2('p', 'urd-privacy-intro urd-doc-lead', t('privacy.intro')));
+  if (design === 'glance') host.append(...glanceNodes(model));
+  const parts = pageParts(model, design);
+  const prefix = `urd-privacy-${blockId ?? 'page'}`;
+  if (design === 'questions') {
+    // Each part as the question a visitor would ask, one open at a time, the first open.
+    parts.forEach((part, i) => {
+      const item = el2('details', 'urd-doc-part');
+      item.name = prefix;
+      if (i === 0) item.open = true;
+      const summary = el2('summary');
+      summary.append(el2('h2', null, t(`privacy.q.${part.key}`)));
+      const answer = el2('div', 'urd-doc-answer');
+      answer.append(...part.nodes);
+      item.append(summary, answer);
+      host.append(item);
+    });
+    return;
+  }
+  const sections = parts.map((part) => {
+    const section = el2('section', 'urd-doc-part');
+    section.append(el2('h2', null, t(`privacy.${part.key}.heading`)), ...part.nodes);
+    return section;
+  });
+  // A part's lead stands above it, outside the part.
+  const leads = parts.flatMap((part) => part.lead ?? []);
+  if (design === 'contents') {
+    // The heading and the introduction stand in the text's column, the folded contents of a narrow page under them.
+    const { nav, fold } = buildContents(sections.map((s) => s.firstElementChild), prefix);
+    const cols = el2('div', 'urd-doc-cols');
+    const body = el2('div', 'urd-doc-body');
+    body.append(...host.childNodes, fold, ...sections);
+    cols.append(nav, body);
+    host.replaceChildren(cols);
+    return;
+  }
+  host.append(...leads, ...sections);
 }
 
 /** The providers this browser lets load at once, each with the press that takes the choice back. */
@@ -219,17 +403,18 @@ export const privacyBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{heading?: boolean}} props heading: the block opens with the page's heading in the site's language (additive from 0.7.24.2.2; the template's block carries it); the rest is the site's
+   * @param {{heading?: boolean, design?: string, accent?: string, headingColor?: string, cardColor?: string, rules?: boolean, corners?: string, headingFont?: string, font?: string}} props heading: the block opens with the page's heading in the site's language (additive from 0.7.24.2.2; the template's block carries it); design and the look beside it (additive from 0.7.24.2.4, doc-look.js): the layout the page is drawn in and how it is dressed; the words are the site's
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
-    const host = el2('div', 'urd-privacy');
-    host.append(...heading(props), el2('p', 'urd-privacy-intro', t('privacy.intro')));
+    const host = el2('div', 'urd-privacy urd-doc');
+    applyDocLook(host, privacyDesign(props?.design), props);
+    host.append(...heading(props), el2('p', 'urd-privacy-intro urd-doc-lead', t('privacy.intro')));
     el.appendChild(host);
     // The facts need the pages: drawn once they are read, and with the site alone where none can be.
     loadPages(ctx.site).then((pages) => {
       if (!host.isConnected) return;
-      draw(host, privacyModel(ctx.site, pages), props);
+      draw(host, privacyModel(ctx.site, pages), props, el.dataset.blockId);
     });
     if (Boolean(ctx.preview) && ctx.viewport !== 'mobile') {
       // The help chip (ADR-0008): where the page's facts come from, and when another page's change shows.

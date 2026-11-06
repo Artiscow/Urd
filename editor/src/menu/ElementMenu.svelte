@@ -45,6 +45,7 @@
   import Table from './families/Table.svelte';
   import Share from './families/Share.svelte';
   import Contact from './families/Contact.svelte';
+  import Privacy from './families/Privacy.svelte';
   import Countdown from './families/Countdown.svelte';
   import Audio from './families/Audio.svelte';
   import Collection from './families/Collection.svelte';
@@ -56,7 +57,7 @@
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockFit, setBlockSize, endSizeGesture, setBlockHideMobile, designWidth, themeSwatches } = ed;
   /** The family of each block type; a type without one of its own shows the field contract. */
-  const FAMILIES = { text: Text, button: Button, image: Image, video: Video, icon: Icon, shape: Shape, gallery: Gallery, ribbon: Ribbon, calendar: Calendar, form: Form, faq: Faq, timeline: Timeline, quote: Quote, stats: Stats, table: Table, share: Share, contact: Contact, countdown: Countdown, audio: Audio, collection: Collection, product: Product, cart: Cart, checkout: Checkout };
+  const FAMILIES = { text: Text, button: Button, image: Image, video: Video, icon: Icon, shape: Shape, gallery: Gallery, ribbon: Ribbon, calendar: Calendar, form: Form, faq: Faq, timeline: Timeline, quote: Quote, stats: Stats, table: Table, share: Share, contact: Contact, privacy: Privacy, countdown: Countdown, audio: Audio, collection: Collection, product: Product, cart: Cart, checkout: Checkout };
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
   let { wide, query = '' } = $props();
   // A typed query loads the other languages once; the search runs again when they are in.
@@ -93,6 +94,7 @@
     // A plugin block with designs (the design contract) gets the same tile.
     if (designs && !BLOCK_DESIGNS[b.type]) items.push(designItem('design'));
     if (b.type === 'text') {
+      items.push(designItem('textDesign'));
       items.push({ id: 'align', label: ta('lbl.align'), kind: 'choice', value: p.align ?? 'left',
         options: [['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]], set: (v) => setBlockProp('align', v) });
       items.push({ id: 'textBox', label: ta('group.textBox'), kind: 'choice', value: p.box ? 'on' : 'off', options: onOff(), set: (v) => setBlockProp('box', v === 'on') });
@@ -131,6 +133,8 @@
     } else if (b.type === 'table') {
       items.push({ id: 'tableLines', label: ta('lbl.tableLines'), kind: 'select', value: p.lines ?? 'rows',
         options: [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]], set: (v) => setBlockProp('lines', v) });
+    } else if (b.type === 'privacy') {
+      items.push(designItem('privacyDesign'));
     } else if (b.type === 'quote') {
       items.push(designItem('variant'));
     } else if (b.type === 'stats') {

@@ -3,6 +3,7 @@
  * types in FOLLOWS_WIDTH are size containers, and every width rule that asks
  * them keeps the window's media query as its twin for a browser without
  * container queries, behind @supports not, with the same declarations.
+ * A document (doc-look.js) is a container of its own, urd-doc, held to the same twins.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,7 +42,8 @@ const TOP = rules(CSS);
 const FALLBACKS = TOP.filter(([prelude]) => squash(prelude) === '@supports not (container-type: inline-size)')
   .flatMap(([, body]) => rules(body))
   .map(([prelude, body]) => [squash(prelude), squash(body)]);
-const TWINS = TOP.filter(([prelude]) => prelude.startsWith('@container urd-block'))
+const CONTAINERS = ['urd-block', 'urd-doc'];
+const TWINS = TOP.filter(([prelude]) => CONTAINERS.some((name) => prelude.startsWith(`@container ${name}`)))
   .map(([prelude, body]) => [squash(prelude), squash(body)]);
 
 test('the seven block types with columns or cards lay themselves out by their own width', () => {
@@ -62,7 +64,7 @@ test('every window fallback has a container twin with the same condition and the
   assert.ok(FALLBACKS.length >= 5, 'the calendar\'s fallbacks are found');
   for (const [prelude, body] of FALLBACKS) {
     const condition = prelude.replace(/^@media\s*/, '');
-    assert.ok(TWINS.some(([p, b]) => p === `@container urd-block ${condition}` && b === body), `${prelude} { ${body.slice(0, 60)} } has a container twin that says the same`);
+    assert.ok(TWINS.some(([p, b]) => CONTAINERS.some((name) => p === `@container ${name} ${condition}`) && b === body), `${prelude} { ${body.slice(0, 60)} } has a container twin that says the same`);
   }
 });
 

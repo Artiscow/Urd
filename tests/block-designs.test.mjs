@@ -16,7 +16,7 @@ const PICTURES = new URL('../template/admin/designs/', import.meta.url);
 const FAMILIES = new URL('../editor/src/menu/families/', import.meta.url);
 
 test('every block\'s designs are unique, and a stored value reads as one of them', () => {
-  assert.deepEqual(DESIGN_BLOCK_TYPES, ['contact', 'gallery', 'stats', 'collection', 'countdown', 'ribbon', 'faq', 'timeline', 'quote', 'share', 'cart', 'button', 'shape']);
+  assert.deepEqual(DESIGN_BLOCK_TYPES, ['contact', 'gallery', 'stats', 'collection', 'countdown', 'ribbon', 'faq', 'timeline', 'quote', 'share', 'cart', 'button', 'privacy', 'text', 'shape']);
   for (const type of DESIGN_BLOCK_TYPES) {
     const { prop, ids } = BLOCK_DESIGNS[type];
     assert.ok(ids.length >= 2 && new Set(ids).size === ids.length, type);
@@ -26,7 +26,9 @@ test('every block\'s designs are unique, and a stored value reads as one of them
   }
   assert.deepEqual(BLOCK_DESIGNS.contact.ids, CONTACT_DESIGNS.map((d) => d.id));
   assert.deepEqual(BLOCK_DESIGNS.gallery.ids, GALLERY_VIEWS);
-  assert.equal(blockDesignOf('text', {}), null, 'a block without designs');
+  assert.equal(blockDesignOf('image', {}), null, 'a block without designs');
+  assert.equal(blockDesignOf('text', {}), 'plain', 'a text without a design is plain text');
+  assert.equal(blockDesignOf('privacy', {}), 'long', 'a privacy page without a design is the long read');
 });
 
 test('the families hold every design once', () => {
@@ -76,6 +78,10 @@ test('the samples: the contact designs draw a sample association, and a block wi
   assert.equal(blockDesignEmpty('gallery', { images: [{ src: '/media/a.webp' }] }), false);
   assert.equal(blockDesignEmpty('collection', { collection: 'nyheter' }), false);
   assert.equal(blockDesignEmpty('stats', {}), false);
+  assert.equal(blockDesignEmpty('text', { html: '<p>Words</p>' }), true, 'a text without a heading is drawn with the sample');
+  assert.equal(blockDesignEmpty('text', { html: '<h2>Part</h2><p>Words</p>' }), false);
+  assert.match(blockDesignSample('text', (key) => key).props.html, /^seed\.design\.doc$/);
+  for (const strings of Object.values(DICTS)) assert.match(strings['seed.design.doc'], /<h2>/);
 });
 
 test('the catalogue stays outside the visitor closure', () => {

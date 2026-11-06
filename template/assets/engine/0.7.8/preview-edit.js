@@ -24,6 +24,7 @@
  *                  urd-select-section carries `open: true` from the right-click menu's «Section settings»: the editor opens the Properties panel on the section
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
+ *                  { type: 'urd-block-design', sectionId, blockId }  (open the design picker for a block with designs, from its toolbar)
  */
 import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH } from './push-model.js';
@@ -47,6 +48,8 @@ import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selecti
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
 import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, shopOn, recentKinds, rememberKind } from './block-palette.js';
 import { styleOf, pasteStyle } from './block-style.js';
+import { BLOCK_DESIGNS } from './block-designs.js';
+import { pluginBlockDesigns } from './plugins.js';
 import { nearestDock } from './sticky-model.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
 import { pathTo, nodeAt } from './caret-path.js';
@@ -93,6 +96,19 @@ function bumpBlockZ(host, section, block, el, dir) {
   block.frames.desktop = frame;
   el.style.zIndex = String(z);
   post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame, coalesce: true, groupKey: `z-${block.id}` });
+}
+
+/** Whether a block has designs to choose among: the calendar's, a core block's in the catalogue (block-designs.js), or a plugin block's (the design contract). */
+function hasDesigns(block) {
+  if (block.type === 'calendar' || BLOCK_DESIGNS[block.type]) return true;
+  const def = window.Urd.blocks.get(block.type);
+  return Boolean(def?.fromPlugin && pluginBlockDesigns(def, ta));
+}
+
+/** The design picker in the editor, for the block (the toolbar's design button beside the gear). */
+function openBlockDesign(el, section, block) {
+  selectBlock(el);
+  post({ type: 'urd-block-design', sectionId: section.id, blockId: block.id });
 }
 
 /** The block menu in the editor, opened at the block (the toolbar's gear and the right-click menu's «Settings»). */
@@ -3445,6 +3461,13 @@ document.addEventListener('click', (event) => {
   const linksRow = a.classList.contains('urd-share-button') && (chromeOff || a.closest('.urd-block')?.classList.contains('urd-selected'));
   // A basket's drawer is opened on purpose, so its «Go to checkout» switches the editor to that page, as the menu basket's does.
   const cartDrawer = Boolean(a.closest('.urd-cart-dialog'));
+  // A document's contents jump to their parts in the preview too, without changing the preview's address; the page's scroll padding keeps the part clear of the menu.
+  const docPart = a.closest('.urd-doc-toc, .urd-doc-fold') ? document.getElementById((a.getAttribute('href') ?? '').slice(1)) : null;
+  if (docPart) {
+    event.preventDefault();
+    docPart.scrollIntoView({ block: 'start' });
+    return;
+  }
   if (a.closest('.urd-block') && !cleanCalendar && !linksRow && !cartDrawer) {
     event.preventDefault();
     return;
@@ -4371,6 +4394,18 @@ function enhanceBlock(el, block, section, grid, host) {
     // (the calendar pattern). The menu itself lives in the editor (the
     // same controls as Properties); only the position is reported here.
     const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
+    // The design picker one press away, beside the gear, on a block that has designs.
+    if (hasDesigns(block)) {
+      const designBtn = document.createElement('button');
+      designBtn.className = 'urd-edit-design';
+      designBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="4"/></svg>';
+      designBtn.title = ta('canvas.blockDesign');
+      designBtn.setAttribute('aria-label', ta('canvas.blockDesign'));
+      designBtn.addEventListener('pointerdown', (event) => event.stopPropagation());
+      designBtn.addEventListener('click', () => openBlockDesign(el, section, block));
+      toolbar.appendChild(designBtn);
+    }
+
     const menuBtn = document.createElement('button');
     menuBtn.innerHTML = GEAR_SVG;
     menuBtn.title = ta('canvas.blockMenu');
@@ -4679,6 +4714,11 @@ function enhanceBlock(el, block, section, grid, host) {
         const calendarPress = target?.closest('.urd-cal-event, .urd-cal-wheel-seg, .urd-cal-wheel-month');
         if (document.body.classList.contains('urd-chrome-off') && calendarPress) return;
         if (calendarPress && selectedBlockId === block.id && multiIds.size <= 1) return;
+        // A document's contents are its navigation: a press on an entry jumps to its part at once, the block selected or not (the click below).
+        if (target?.closest('.urd-doc-toc a, .urd-doc-fold a')) return;
+        // A document's fold-outs (the privacy page's questions, the contents folded into one row) follow the same two steps: a press on the selected block's row opens it, and so does one in the Clean view.
+        const foldPress = target?.closest('.urd-doc-part > summary, .urd-doc-fold > summary');
+        if (foldPress && (document.body.classList.contains('urd-chrome-off') || (selectedBlockId === block.id && multiIds.size <= 1))) return;
         // The plugin config panels are guarded by class name, the old
         // reference plugin names included: plugin copies in user repos
         // keep them forever (see the compatibility surface in SCHEMA.md).

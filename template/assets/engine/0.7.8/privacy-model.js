@@ -11,6 +11,34 @@ import { providerOf } from './embed-cover.js';
 import { embedUrl } from './blocks/video.js';
 import { parseLocation } from './osm.js';
 
+/**
+ * What the site keeps in the visitor's own browser (ADR-0029), each with the engine modules that keep it: the privacy page names every one that applies, in its words `privacy.browser.<id>`.
+ * A module that stores something in a visitor's browser stands here, or the guard in tests/privacy-registry.test.mjs fails.
+ */
+export const BROWSER_KEEPS = [
+  { id: 'pages', modules: ['prefetch.js'] },
+  { id: 'theme', modules: ['theme.js', 'theme-init.js'] },
+  { id: 'announcement', modules: ['nav.js'] },
+  { id: 'cart', modules: ['shop.js', 'blocks/checkout.js'] },
+  { id: 'calendar', modules: ['blocks/calendar.js'] },
+  { id: 'embeds', modules: ['embed-cover.js'] },
+];
+
+/** The hosts the counting of visits reaches (Cloudflare Web Analytics): its script and its beacon. */
+export const ANALYTICS_HOSTS = ['static.cloudflareinsights.com', 'cloudflareinsights.com'];
+
+/**
+ * What the privacy page names an outside host by (ADR-0029): the counting of visits, a frame's provider by the covers' list, or null for a host the page does not name.
+ * Every host the site's CSP lets a page reach must have a name here (tests/privacy-registry.test.mjs).
+ * @param {string} host
+ * @returns {string|null}
+ */
+export function privacyNameOfHost(host) {
+  const name = String(host ?? '').toLowerCase();
+  if (ANALYTICS_HOSTS.includes(name)) return 'analytics';
+  return providerOf(`https://${name}/`)?.id ?? null;
+}
+
 /** The payment providers a checkout can hold, in the order the page names them. */
 export const PAYMENT_PROVIDERS = ['vipps', 'stripe', 'paypal', 'manual'];
 
@@ -78,6 +106,7 @@ export function pageFacts(entry, page, { siteGeo = false } = {}) {
   const forms = [];
   let checkout = null;
   let shop = false;
+  let calendar = false;
   const embeds = new Set();
   const atOnce = new Set();
   const frame = (id, props) => {
@@ -92,6 +121,8 @@ export function pageFacts(entry, page, { siteGeo = false } = {}) {
         forms.push({ page: title, path, fields: fieldNames(p.fields), mode: byEndpoint ? 'endpoint' : 'mailto', recipient: byEndpoint ? '' : String(p.recipient ?? '').trim(), host: byEndpoint || '' });
       } else if (block.type === 'product' || block.type === 'cart') {
         shop = true;
+      } else if (block.type === 'calendar') {
+        calendar = true;
       } else if (block.type === 'checkout' && !checkout) {
         shop = true;
         checkout = { page: title, path, providers: paymentProviders(p.payments), recipient: String(p.recipient ?? '').trim(), host: endpointHost(p.endpoint) };
@@ -106,16 +137,16 @@ export function pageFacts(entry, page, { siteGeo = false } = {}) {
       }
     }
   }
-  return { forms, checkout, shop, embeds: [...embeds], atOnce: [...atOnce] };
+  return { forms, checkout, shop, calendar, embeds: [...embeds], atOnce: [...atOnce] };
 }
 
 /**
  * The facts of the whole site.
  * @param {object} site site.json
  * @param {Array<{entry: object, page: object}>} pages Every page in the registry with its file; one that could not be read is left out
- * @returns {{controller: object, forms: object[], checkout: object|null, analytics: boolean, embeds: string[], atOnce: string[], host: 'cloudflare', browser: {theme: boolean, shop: boolean}}}
+ * @returns {{controller: object, forms: object[], checkout: object|null, analytics: boolean, embeds: string[], atOnce: string[], host: 'cloudflare', browser: {theme: boolean, shop: boolean, calendar: boolean, announcement: boolean}}}
  *   embeds are the third parties whose frames the pages hold, atOnce those of them some page loads with the page (`askFirst: false`) rather than behind the cover;
- *   browser says what the site keeps in the visitor's own browser beside the embed choice: the light or dark choice where the theme has both, the cart with the last order where a page sells, and the closing of the announcement strip where there is one;
+ *   browser says what the site keeps in the visitor's own browser beside the embed choice: the light or dark choice where the theme has both, the cart with the last order where a page sells, a calendar's events and height where a page has one, and the closing of the announcement strip where there is one (BROWSER_KEEPS);
  *   forms hold the footer's newsletter sign-up first (`footer: true`), then every page's forms
  */
 export function privacyModel(site, pages) {
@@ -136,12 +167,14 @@ export function privacyModel(site, pages) {
   const embeds = new Set();
   const atOnce = new Set();
   let shop = false;
+  let calendar = false;
   const siteGeo = Boolean(contact.geo);
   for (const { entry, page } of pages ?? []) {
     const facts = pageFacts(entry, page, { siteGeo });
     forms.push(...facts.forms);
     if (facts.checkout && !checkout) checkout = facts.checkout;
     if (facts.shop) shop = true;
+    if (facts.calendar) calendar = true;
     for (const id of facts.embeds) embeds.add(id);
     for (const id of facts.atOnce) atOnce.add(id);
   }
@@ -153,6 +186,6 @@ export function privacyModel(site, pages) {
     embeds: [...embeds],
     atOnce: [...atOnce],
     host: 'cloudflare',
-    browser: { theme: Boolean(site?.theme?.alt?.tokens), shop, announcement: site?.nav?.announcement?.show === true && Boolean(String(site.nav.announcement.text ?? '').trim()) },
+    browser: { theme: Boolean(site?.theme?.alt?.tokens), shop, calendar, announcement: site?.nav?.announcement?.show === true && Boolean(String(site.nav.announcement.text ?? '').trim()) },
   };
 }

@@ -35,6 +35,7 @@ const OWN = {
   countdown: ['seconds'],
   audio: ['loop'],
   map: ['zoom'],
+  privacy: ['privacyDesign'],
 };
 
 /**

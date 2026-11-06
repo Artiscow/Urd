@@ -37,6 +37,7 @@
  *                  { type: 'urd-select-section', sectionId }  (active section for the palette)
  *                  { type: 'urd-select-block', sectionId, blockId } (selected block, null = deselected)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? } (open the block menu at the block; `group` opens that group in its Content area)
+ *                  { type: 'urd-block-design', sectionId, blockId } (open the design picker for the block, from the design button on its toolbar)
  *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
  *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
  *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
@@ -111,6 +112,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-select-block') handlers.onSelectBlock?.(msg);
     if (msg?.type === 'urd-menu-area') handlers.onMenuArea?.(msg);
     if (msg?.type === 'urd-block-menu') handlers.onBlockMenu?.(msg);
+    if (msg?.type === 'urd-block-design') handlers.onBlockDesign?.(msg);
     if (msg?.type === 'urd-plugin-blocks') handlers.onPluginBlocks?.(msg);
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);

@@ -49,7 +49,7 @@ test('pageFacts: a form by email or to a service, the checkout, and the frames o
   assert.deepEqual(pageFacts({ id: 'm' }, page([{ type: 'map', props: { location: 'https://www.openstreetmap.org/#map=15/63.43/10.39' } }])).embeds, ['openstreetmap']);
   assert.deepEqual(facts.atOnce, ['openstreetmap'], 'a map set to load with the page');
   assert.equal(facts.shop, true);
-  assert.deepEqual(pageFacts({ id: 'x' }, { sections: [] }), { forms: [], checkout: null, shop: false, embeds: [], atOnce: [] });
+  assert.deepEqual(pageFacts({ id: 'x' }, { sections: [] }), { forms: [], checkout: null, shop: false, calendar: false, embeds: [], atOnce: [] });
 });
 
 test('privacyModel: the controller from the contact details, the pages gathered, analytics by its token, the host', () => {
@@ -66,7 +66,7 @@ test('privacyModel: the controller from the contact details, the pages gathered,
   assert.deepEqual(model.embeds, ['openstreetmap']);
   assert.deepEqual(model.atOnce, []);
   assert.equal(model.host, 'cloudflare');
-  assert.deepEqual(model.browser, { theme: false, shop: true, announcement: false });
+  assert.deepEqual(model.browser, { theme: false, shop: true, calendar: false, announcement: false });
   // The footer's newsletter sign-up is a form on every page, and the announcement strip's closing is kept.
   const withFooter = privacyModel({ ...site, footer: { cta: { kind: 'newsletter', endpoint: 'https://news.example.org/subscribe' } }, nav: { announcement: { show: true, text: 'Hei' } } }, []);
   assert.deepEqual(withFooter.forms, [{ page: '', path: '', footer: true, fields: [], mode: 'endpoint', recipient: '', host: 'news.example.org' }]);

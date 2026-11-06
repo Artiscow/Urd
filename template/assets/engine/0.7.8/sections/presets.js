@@ -75,10 +75,6 @@ const contact = (fr, props = {}) => ({
   frames: fr,
 });
 
-/* The terms read as a document: room above each part and between the paragraphs, written into the text's own HTML so it stays as the owner edits it. */
-const SPACING = { h1: 'margin:0 0 0.5em', h2: 'margin:1.8em 0 0.5em', h3: 'margin:1.4em 0 0.4em', p: 'margin:0 0 0.75em' };
-const spaced = (html) => html.replace(/<(h1|h2|h3|p)>/g, (all, tag) => `<${tag} style="${SPACING[tag]}">`);
-
 /** Plain words set into a text's HTML: the site's names and the form's words are text, never markup. */
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
@@ -104,13 +100,16 @@ export function termsHtml({ text = ta, formText = null, facts = {} } = {}) {
   const details = facts.details ? escapeHtml(facts.details) : fillIn(escapeHtml(text('seed.terms.details')), 'contact');
   const privacyLink = facts.privacy ? text('seed.terms.privacyLink', { href: escapeHtml(facts.privacy.href), page: escapeHtml(facts.privacy.page), title: escapeHtml(facts.privacy.title) }) : '';
   const words = (key) => escapeHtml(formText(key));
+  // The standard withdrawal form, set apart as a form (`data-urd-form`): a document design draws it as a card a visitor can print alone (doc-look.js).
   const form = formText
-    ? [`<h3>${words('shop.wfTitle')}</h3>`, `<p>${words('shop.wfInstruction')}</p>`, `<p>${words('shop.wfTo')} ${seller}, ${details}</p>`,
-      ...['shop.wfDeclaration', 'shop.wfOrdered', 'shop.wfName', 'shop.wfAddress', 'shop.wfSignature', 'shop.wfDate', 'shop.wfDelete'].map((k) => `<p>${words(k)}</p>`)].join('')
+    ? `<blockquote data-urd-form>${[`<h3>${words('shop.wfTitle')}</h3>`, `<p>${words('shop.wfInstruction')}</p>`, `<p>${words('shop.wfTo')} ${seller}, ${details}</p>`,
+      ...['shop.wfDeclaration', 'shop.wfOrdered', 'shop.wfName', 'shop.wfAddress', 'shop.wfSignature', 'shop.wfDate', 'shop.wfDelete'].map((k) => `<p>${words(k)}</p>`)].join('')}</blockquote>`
     : '';
-  return spaced([
+  return [
     own('seed.terms.title'),
     own('seed.terms.intro', { seller }),
+    // The main points, which the at-a-glance design draws as cards and the others as a list.
+    own('seed.terms.glance'),
     own('seed.terms.agreement'),
     own('seed.terms.parties', { seller, details }),
     own('seed.terms.prices'),
@@ -121,7 +120,7 @@ export function termsHtml({ text = ta, formText = null, facts = {} } = {}) {
     own('seed.terms.defects'),
     own('seed.terms.privacy', { privacyLink }),
     own('seed.terms.disputes'),
-  ].join(''));
+  ].join('');
 }
 
 const privacy = (fr) => ({
@@ -563,7 +562,8 @@ export function registerSectionPresets(Urd) {
     pageOnly: true,
     // No height of its own: the section is as long as the text.
     create: (opts = {}) => section('terms', undefined, bg(colorLayer('bg')), [
-      text(frame(20, 56, 60, 700), termsHtml(opts)),
+      // A document in the long read (doc-look.js); the design picker draws it in the others.
+      text(frame(20, 56, 60, 700), termsHtml(opts), { design: 'long' }),
     ]),
   });
 

@@ -246,7 +246,8 @@ try {
       window.postMessage({ type: 'urd-chrome', visible: false }, location.origin);
       await sleep(400);
       const el = document.querySelector('.urd-block[data-block-id="pic-block"]');
-      el.scrollIntoView({ block: 'center' });
+      // A block taller than the window is shown from its top, so what follows the reader down (a document's contents) stands where it starts.
+      el.scrollIntoView({ block: el.offsetHeight > innerHeight ? 'start' : 'center' });
       await sleep(300);
       const r = el.getBoundingClientRect();
       return { x: Math.round(r.left), y: Math.round(r.top + window.scrollY), w: Math.round(r.width), h: Math.round(r.height) };

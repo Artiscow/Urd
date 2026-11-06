@@ -8,6 +8,9 @@
   import Setting from '../Setting.svelte';
   import Pin from '../Pin.svelte';
   import BoxStyle from '../BoxStyle.svelte';
+  import DesignRow from '../DesignRow.svelte';
+  import DocLook from '../DocLook.svelte';
+  import { textDesign } from '$engine/doc-look.js';
   import { ta } from '$engine/i18n.js';
   import { fontChoices } from '$engine/fonts.js';
   import { SIZE_MIN, SIZE_MAX, clampSize, matchFontStack } from '$engine/text-typo.js';
@@ -37,6 +40,8 @@
   }
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
+  const design = $derived(textDesign(selectedBlock.props.design));
+  const LOOK = { design: 'plain', contentsSide: null, placement: null, accent: null, headingColor: null, cardColor: null, rules: null, corners: null, headingFont: null };
 </script>
 
 {#if area === 'content'}
@@ -54,6 +59,14 @@
     {/key}
   {/if}
 {:else if area === 'style'}
+  {#snippet textDesignLook()}
+    <Setting key="design">
+      <DesignRow pin="textDesign" />
+    </Setting>
+    <!-- A document design's look, directly under the design it dresses -->
+    <DocLook type="text" {design} />
+  {/snippet}
+  <MenuGroup id="text-design" title={ta('group.appearance')} value={ta(`opt.textDesign.${design}`)} group={groupOf('text-design', LOOK)}>{@render textDesignLook()}</MenuGroup>
   {#snippet textAlign()}
     <Setting key="align">
       <div class="pin-line">

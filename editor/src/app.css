@@ -1256,6 +1256,13 @@
     flex: none;
   }
 
+  /* A colour stands as its words and its swatch on one line, as a switch does: the swatch needs no row of its own */
+  .emenu-col label:not(.gridmenu-snap):has(> .cp):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
   .menu-group-value {
     flex: 0 1 auto;
     min-width: 0;

@@ -10,6 +10,7 @@ import { boxStyleCss } from '../box-style.js';
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
 import { typedFrames } from '../push-model.js';
+import { textDesign, applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
 
 /** Per text block, the section's frames before the typing in it began, and the last few frames the typing wrote. */
 const typingFrom = new Map();
@@ -27,7 +28,8 @@ export const textBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el The block element (positioned by render.js)
-   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number}} props
+   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number, design?: string, accent?: string, headingColor?: string, cardColor?: string, rules?: boolean, corners?: string, headingFont?: string}} props
+   *   design (additive from 0.7.24.2.4): plain text, or a document design (doc-look.js) with its look beside it
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
@@ -61,7 +63,53 @@ export const textBlock = {
     content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button').forEach((n) => n.remove());
     // Visitor protection (shared with collection entries): executable code is always stripped on render.
     stripActiveContent(content, ctx.site?.pages ?? []);
-    el.appendChild(content);
+    // A document design (doc-look.js) draws the text in a root of its own, with the contents beside it where the design has them; plain text stands alone as it always has.
+    const design = textDesign(props.design);
+    const prefix = `urd-doc-${el.dataset.blockId ?? 'text'}`;
+    let doc = null;
+    let contentsKey = '';
+    const drawContents = () => {
+      const headings = [...content.querySelectorAll(':scope > h2')];
+      const key = headings.map((h) => h.textContent).join('\n');
+      if (key === contentsKey && doc.querySelector('.urd-doc-toc')) return;
+      contentsKey = key;
+      const { nav, fold } = buildContents(headings, prefix);
+      const oldNav = doc.querySelector('.urd-doc-toc');
+      if (oldNav) oldNav.replaceWith(nav);
+      else doc.querySelector('.urd-doc-cols').prepend(nav);
+      const oldFold = doc.querySelector('.urd-doc-fold');
+      if (oldFold) oldFold.replaceWith(fold);
+      else doc.prepend(fold);
+    };
+    if (design === 'plain') {
+      el.appendChild(content);
+    } else {
+      doc = document.createElement('div');
+      doc.className = 'urd-doc urd-text-doc';
+      doc.style.cssText = 'width:100%;min-height:100%;';
+      content.style.minHeight = '';
+      applyDocLook(doc, design, props);
+      if (design === 'contents') {
+        const cols = document.createElement('div');
+        cols.className = 'urd-doc-cols';
+        const body = document.createElement('div');
+        body.className = 'urd-doc-body';
+        body.appendChild(content);
+        cols.appendChild(body);
+        doc.appendChild(cols);
+        drawContents();
+      } else {
+        doc.appendChild(content);
+      }
+      // For a visitor the questions fold out and a withdrawal form prints alone; in the editor the text is typed into, so it keeps its own shape there.
+      if (!ctx.preview) {
+        if (design === 'questions') foldParts(content, prefix);
+        addFormPrint(content);
+      }
+      el.appendChild(doc);
+    }
+    /** The box the words fill: the document's root where there is one, with the contents row above the text in a narrow block. */
+    const box = doc ?? content;
 
     // Click-and-type: in preview mode (inside the editor's iframe) the text is
     // directly editable, and every change is posted to the editor, which owns
@@ -91,7 +139,8 @@ export const textBlock = {
         // The start holds while the section's frames are ones the typing wrote, the last few included, so a redraw a keystroke behind keeps it; any other change starts afresh.
         // The words are measured with the box at its own height, since the text fills a box taller than them, and converted from the content's zoom (a text set to shrink) to the block's.
         const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
-        if (block?.frames?.desktop) {
+        // A text drawn as questions follows its closed rows (push-model.js foldsIntoQuestions): the editor fits its frame after the typing, so the typing grows nothing here.
+        if (block?.frames?.desktop && design !== 'questions') {
           const now = framesKey(ctx.section);
           let start = typingFrom.get(block.id);
           if (!start?.written.includes(now)) {
@@ -99,7 +148,7 @@ export const textBlock = {
           }
           const height = el.style.height;
           el.style.height = 'auto';
-          const needed = content.scrollHeight * ((content.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1));
+          const needed = box.scrollHeight * ((box.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1));
           el.style.height = height;
           const frames = typedFrames(start.before, block.id, needed, ctx.grid?.size ?? 8);
           for (const other of ctx.section.blocks) {
@@ -126,12 +175,14 @@ export const textBlock = {
         for (const part of content.querySelectorAll('[data-urd-fill]')) {
           if (!/\[[^\]]*\]/.test(part.textContent)) part.removeAttribute('data-urd-fill');
         }
+        // The contents follow the headings as they are typed.
+        if (design === 'contents') drawContents();
 
         post({
           type: 'urd-edit',
           sectionId: ctx.section.id,
           blockId: el.dataset.blockId,
-          props: { ...props, html: content.innerHTML },
+          props: { ...props, html: storedDocHtml(content) },
           ...(caretBefore === null ? {} : { caret: caretBefore }),
         });
       });
@@ -148,8 +199,8 @@ export const textBlock = {
     // or short text keeps the space the owner gave it. The tolerance keeps
     // rounding from causing endless small adjustments.
     requestAnimationFrame(() => {
-      if (!el.isConnected || ctx.viewport === 'mobile') return;
-      const needed = content.scrollHeight * ((content.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1));
+      if (!el.isConnected || ctx.viewport === 'mobile' || design === 'questions') return;
+      const needed = box.scrollHeight * ((box.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1));
       if (needed <= el.clientHeight + 4) return;
       const step = ctx.grid?.size ?? 8;
       const newH = Math.ceil(needed / step) * step;

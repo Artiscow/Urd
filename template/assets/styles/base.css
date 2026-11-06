@@ -16439,12 +16439,769 @@ body.urd-marqueeing {
   margin-top: 1.2rem;
 }
 
-/* The privacy block (blocks/privacy.js): the site's privacy page, written from its settings: a long read in a comfortable measure, each part set apart by a short rule in the accent, the lists with room, and the visitor's own choices in a card with the press that takes a choice back */
+/* Documents (doc-look.js): a long text in one of its designs, the privacy page (blocks/privacy.js) and a text block's document designs (blocks/text.js).
+   The root's own width picks the narrow layout (a container query), so a phone and a narrow block both get it. The look comes as custom properties
+   the owner sets (the accent, the headings' and the cards' colours, the corners, the fonts), each falling back to the theme; data-rules="off" takes the lines between the parts away. */
+.urd-doc {
+  container: urd-doc / inline-size;
+}
+
+.urd-doc :is(h1, h2, h3) {
+  font-family: var(--urd-doc-heading-font, var(--urd-font-heading));
+  color: var(--urd-doc-heading, inherit);
+}
+
+/* A text in a document design: room above each heading and between the paragraphs, the text's own sizes kept. */
+.urd-text-doc .urd-text > h1 {
+  margin: 0 0 0.5em;
+}
+
+.urd-text-doc .urd-text > h2 {
+  margin: 1.8em 0 0.5em;
+}
+
+.urd-text-doc .urd-text > h3 {
+  margin: 1.4em 0 0.4em;
+}
+
+.urd-text-doc .urd-text > :is(p, ul, ol, blockquote),
+.urd-doc-answer > :is(p, ul, ol, blockquote) {
+  margin: 0 0 0.75em;
+}
+
+.urd-text-doc .urd-text > :first-child {
+  margin-top: 0;
+}
+
+.urd-text-doc .urd-text a {
+  color: var(--urd-doc-accent, var(--urd-color-accent));
+}
+
+/* The lines between the parts: a short rule in the accent over each part's heading, in the long read, the contents, the main points and the ledgers. */
+.urd-doc:not([data-rules="off"]):is([data-design="long"], [data-design="contents"], [data-design="glance"], [data-design="ledger"], [data-design="ledger-cards"]) :is(.urd-text > h2, .urd-doc-part > h2) {
+  position: relative;
+  padding-top: 0.8em;
+}
+
+.urd-doc:not([data-rules="off"]):is([data-design="long"], [data-design="contents"], [data-design="glance"], [data-design="ledger"], [data-design="ledger-cards"]) :is(.urd-text > h2, .urd-doc-part > h2)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2.5rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--urd-doc-accent, var(--urd-color-accent));
+}
+
+/* A withdrawal form in a text (data-urd-form, the terms of sale): a card with a dashed edge, set apart to be filled in or printed. */
+.urd-text-doc [data-urd-form] {
+  margin: 1em 0;
+  padding: 1em 1.2em;
+  border: 1.5px dashed color-mix(in srgb, currentColor 38%, transparent);
+  border-radius: var(--urd-doc-radius, var(--urd-radius-md));
+  background: var(--urd-doc-card, var(--urd-color-surface));
+  opacity: 1;
+}
+
+.urd-text-doc [data-urd-form] > :first-child {
+  margin-top: 0;
+}
+
+.urd-text-doc [data-urd-form] > :last-child {
+  margin-bottom: 0;
+}
+
+.urd-doc-print {
+  margin: -0.4em 0 1em;
+  padding: 0.5em 1em;
+  border: 1px solid var(--urd-doc-accent, var(--urd-color-accent));
+  border-radius: var(--urd-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.urd-doc-print:hover,
+.urd-doc-print:focus-visible {
+  background: var(--urd-doc-accent, var(--urd-color-accent));
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
+}
+
+/* Contents beside: the parts listed in a column that follows the reader down, the part they are in marked; a narrow document folds the list into one row above the text. */
+.urd-doc-cols {
+  display: grid;
+  grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.urd-doc[data-side="right"] .urd-doc-cols {
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 13rem);
+}
+
+.urd-doc[data-side="right"] .urd-doc-toc {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.urd-doc[data-side="right"] .urd-doc-body {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* The text centred: it stands in the middle column and the list at the block's outer edge, an empty column of the list's width on the other side, so a block as wide as the page centres its text on the page. */
+.urd-doc[data-align="center"] .urd-doc-cols {
+  grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr) minmax(8rem, 13rem);
+}
+
+.urd-doc[data-align="center"] .urd-doc-toc {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.urd-doc[data-align="center"][data-side="right"] .urd-doc-toc {
+  grid-column: 3;
+}
+
+.urd-doc[data-align="center"] .urd-doc-body {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.urd-doc-toc {
+  position: sticky;
+  top: calc(var(--urd-scroll-clear, 0px) + 1rem);
+  font-size: 0.9em;
+  line-height: 1.3;
+}
+
+.urd-doc-toc-label {
+  margin: 0 0 0.7em;
+  font-family: var(--urd-doc-heading-font, var(--urd-font-heading));
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-doc-toc ol,
+.urd-doc-fold ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5em;
+}
+
+.urd-doc-toc a,
+.urd-doc-fold a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.urd-doc-toc a {
+  display: block;
+  opacity: 0.72;
+}
+
+.urd-doc-toc a:hover,
+.urd-doc-fold a:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-decoration-color: var(--urd-doc-accent, var(--urd-color-accent));
+}
+
+.urd-doc-toc a[aria-current] {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.urd-doc-toc a[aria-current]::before {
+  content: '';
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-right: 0.45em;
+  border-radius: 50%;
+  vertical-align: 0.12em;
+  background: var(--urd-doc-accent, var(--urd-color-accent));
+}
+
+.urd-doc-fold {
+  display: none;
+  margin: 0 0 1.4em;
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  border-radius: var(--urd-doc-radius, var(--urd-radius-md));
+  background: var(--urd-doc-card, var(--urd-color-surface));
+}
+
+.urd-doc-fold > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.7em 1em;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.urd-doc-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.urd-doc-fold > summary::after,
+.urd-doc .urd-doc-part > summary::after,
+.urd-doc[data-design="questions"] .urd-text > h2::after {
+  content: '';
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid var(--urd-doc-accent, var(--urd-color-accent));
+  border-bottom: 2px solid var(--urd-doc-accent, var(--urd-color-accent));
+  transform: translateY(-0.15em) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.urd-doc-fold[open] > summary::after {
+  transform: translateY(0.1em) rotate(-135deg);
+}
+
+.urd-doc-fold ol {
+  padding: 0 1em 0.9em 1em;
+}
+
+@container urd-doc (max-width: 640px) {
+  .urd-doc .urd-doc-cols,
+  .urd-doc[data-side="right"] .urd-doc-cols,
+  .urd-doc[data-align="center"] .urd-doc-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .urd-doc[data-align="center"] .urd-doc-body {
+    grid-column: 1;
+  }
+
+  .urd-doc-toc {
+    display: none;
+  }
+
+  .urd-doc-fold {
+    display: block;
+  }
+}
+
+@supports not (container-type: inline-size) {
+  @media (max-width: 640px) {
+    .urd-doc .urd-doc-cols,
+    .urd-doc[data-side="right"] .urd-doc-cols,
+    .urd-doc[data-align="center"] .urd-doc-cols {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .urd-doc[data-align="center"] .urd-doc-body {
+      grid-column: 1;
+    }
+
+    .urd-doc-toc {
+      display: none;
+    }
+
+    .urd-doc-fold {
+      display: block;
+    }
+  }
+}
+
+/* The main points at a glance: cards above the page, a marker in the accent beside each label. In a text they are its first list before the first heading, each item a bold label over its words. */
+.urd-doc-glance,
+.urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 1em 0 1.4em;
+  padding: 0;
+  list-style: none;
+}
+
+/* The cards fill their rows: two by two, three or four across where the document is wide enough for them, one under the other in a very narrow one. */
+@container urd-doc (min-width: 560px) {
+  .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul):has(> li:nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container urd-doc (min-width: 820px) {
+  .urd-doc-glance,
+  .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul):has(> li:nth-child(4):last-child) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@container urd-doc (max-width: 300px) {
+  .urd-doc-glance,
+  .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.urd-doc-fact,
+.urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul) > li {
+  display: grid;
+  align-content: start;
+  gap: 0.25em;
+  margin: 0;
+  padding: 0.8em 1em;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: var(--urd-doc-radius, var(--urd-radius-md));
+  background: var(--urd-doc-card, var(--urd-color-surface));
+  line-height: 1.4;
+}
+
+.urd-doc-fact > b,
+.urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul) > li > strong:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45em;
+  font-family: var(--urd-doc-heading-font, var(--urd-font-heading));
+  font-size: 0.78em;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* The marker's foot stands on the label's baseline and its height is about the capitals', so it centres on the uppercase label in any font. */
+.urd-doc-fact > b::before,
+.urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul) > li > strong:first-child::before {
+  content: '';
+  flex: none;
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 2px;
+  background: var(--urd-doc-accent, var(--urd-color-accent));
+}
+
+.urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul) > li > strong:first-child + br {
+  display: none;
+}
+
+/* Questions: each part a row that folds out, a line between the rows (data-rules="off" takes the lines away). For a visitor each is a <details>; in the editor the text is typed into, so its headings are drawn as open rows. */
+.urd-doc[data-design="questions"] :is(.urd-doc-part, .urd-text > h2) {
+  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.urd-doc[data-design="questions"] .urd-doc-part:last-of-type {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.urd-doc[data-design="questions"][data-rules="off"] :is(.urd-doc-part, .urd-doc-part:last-of-type, .urd-text > h2) {
+  border-top: 0;
+  border-bottom: 0;
+}
+
+/* The row's room is the heading's own (in its own size), so a row is as tall in the editor, where the heading is the row, as on the page. */
+.urd-doc .urd-doc-part > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+/* In the editor a question's row is its heading itself, a plain block so its formatted words keep their spaces, the chevron at its right. */
+.urd-doc[data-design="questions"] .urd-text > h2 {
+  position: relative;
+  margin: 0;
+  padding: 0.8em 2em 0.8em 0;
+}
+
+.urd-doc .urd-doc-part > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.urd-doc .urd-doc-part > summary::-webkit-details-marker {
+  display: none;
+}
+
+.urd-doc .urd-doc-part > summary > h2 {
+  margin: 0;
+  padding: 0.8em 0;
+}
+
+.urd-privacy .urd-doc-part > summary > h2 {
+  font-size: 1.1em;
+}
+
+.urd-doc[data-design="questions"] .urd-text > h2::after {
+  position: absolute;
+  top: calc(50% - 0.2em);
+  right: 0.3em;
+  transform: rotate(-135deg);
+}
+
+.urd-doc .urd-doc-part[open] > summary::after {
+  transform: translateY(0.1em) rotate(-135deg);
+}
+
+.urd-doc .urd-doc-part > summary:focus-visible {
+  outline: 2px solid var(--urd-doc-accent, var(--urd-color-accent));
+  outline-offset: 3px;
+}
+
+.urd-privacy .urd-doc-answer {
+  padding: 0 0 0.4em;
+}
+
+@supports (interpolate-size: allow-keywords) {
+  .urd-doc {
+    interpolate-size: allow-keywords;
+  }
+
+  .urd-doc :is(.urd-doc-part, .urd-doc-fold)::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size 0.3s ease, content-visibility 0.3s allow-discrete;
+  }
+
+  .urd-doc :is(.urd-doc-part, .urd-doc-fold)[open]::details-content {
+    block-size: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urd-doc-fold > summary::after,
+  .urd-doc .urd-doc-part > summary::after {
+    transition: none;
+  }
+
+  @supports (interpolate-size: allow-keywords) {
+    .urd-doc :is(.urd-doc-part, .urd-doc-fold)::details-content {
+      transition: none;
+    }
+  }
+}
+
+/* Numbered clauses: each part numbered in a badge in the accent, and its paragraphs numbered under it (7.1, 7.2), as a contract sets them; a withdrawal form inside is left unnumbered. */
+.urd-text-doc[data-design="clauses"] .urd-text {
+  counter-reset: urd-clause;
+}
+
+.urd-text-doc[data-design="clauses"] .urd-text > h2 {
+  counter-increment: urd-clause;
+  counter-reset: urd-sub;
+}
+
+/* The clause's number stands before the heading's words as an inline badge, so the words keep their own spacing. */
+.urd-text-doc[data-design="clauses"] .urd-text > h2::before {
+  content: counter(urd-clause);
+  display: inline-block;
+  margin-right: 0.6em;
+  vertical-align: 0.12em;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0 0.3em;
+  box-sizing: border-box;
+  border-radius: min(var(--urd-doc-radius, var(--urd-radius-md)), 0.8em);
+  background: var(--urd-doc-accent, var(--urd-color-accent));
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
+  font-size: 0.8em;
+  line-height: 1.6em;
+  text-align: center;
+}
+
+.urd-text-doc[data-design="clauses"] .urd-text > h2 ~ p {
+  position: relative;
+  padding-left: 2.8em;
+  counter-increment: urd-sub;
+}
+
+.urd-text-doc[data-design="clauses"] .urd-text > h2 ~ p::before {
+  content: counter(urd-clause) '.' counter(urd-sub);
+  position: absolute;
+  left: 0;
+  font-family: var(--urd-doc-heading-font, var(--urd-font-heading));
+  font-weight: 700;
+  opacity: 0.6;
+}
+
+/* The ledgers: what is collected, why, who gets it and how long, at the text's own width and with the same look on a phone.
+   The table puts it in three columns, who gets it under the why in a quieter line; the cards give each kind its own card, the names beside their lines. */
+.urd-doc-ledger-wrap {
+  margin: 0.4em 0 1em;
+}
+
+.urd-doc-ledger {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  line-height: 1.45;
+}
+
+.urd-doc-ledger th {
+  padding: 0.5em 0.8em 0.5em 0;
+  border-bottom: 2px solid var(--urd-doc-accent, var(--urd-color-accent));
+  font-family: var(--urd-doc-heading-font, var(--urd-font-heading));
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+  vertical-align: bottom;
+}
+
+.urd-doc[data-rules="off"] .urd-doc-ledger th {
+  border-bottom-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.urd-doc-ledger td {
+  padding: 0.6em 0.8em 0.6em 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  vertical-align: top;
+  overflow-wrap: break-word;
+}
+
+.urd-doc-ledger td:first-child {
+  width: 34%;
+  font-weight: 700;
+}
+
+.urd-doc-ledger td:last-child {
+  width: 26%;
+  padding-right: 0;
+}
+
+.urd-doc-who {
+  display: block;
+  margin-top: 0.15em;
+  opacity: 0.68;
+}
+
+/* A narrow document keeps the table, a little tighter. */
+@container urd-doc (max-width: 480px) {
+  .urd-doc-ledger {
+    font-size: 0.84em;
+  }
+
+  .urd-doc-ledger :is(th, td) {
+    padding-right: 0.6em;
+  }
+}
+
+@supports not (container-type: inline-size) {
+  @media (max-width: 480px) {
+    .urd-doc-ledger {
+      font-size: 0.84em;
+    }
+
+    .urd-doc-ledger :is(th, td) {
+      padding-right: 0.6em;
+    }
+  }
+}
+
+.urd-doc-ledger-cards,
+.urd-privacy .urd-doc-ledger-cards {
+  display: grid;
+  gap: 0.6em;
+  margin: 0.4em 0 1em;
+  padding: 0;
+  list-style: none;
+}
+
+.urd-privacy .urd-doc-ledger-cards > li {
+  margin: 0;
+  padding: 0.75em 1em;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: var(--urd-doc-radius, var(--urd-radius-md));
+  background: var(--urd-doc-card, var(--urd-color-surface));
+  line-height: 1.45;
+}
+
+.urd-doc-ledger-cards b {
+  display: block;
+  margin-bottom: 0.45em;
+  padding-bottom: 0.4em;
+  border-bottom: 2px solid var(--urd-doc-accent, var(--urd-color-accent));
+}
+
+.urd-doc[data-rules="off"] .urd-doc-ledger-cards b {
+  border-bottom-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.urd-doc-ledger-cards dl {
+  display: grid;
+  grid-template-columns: minmax(6.5em, max-content) minmax(0, 1fr);
+  gap: 0.2em 0.9em;
+  margin: 0;
+  font-size: 0.95em;
+}
+
+.urd-doc-ledger-cards dt {
+  opacity: 0.65;
+}
+
+.urd-doc-ledger-cards dd {
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+/* A withdrawal form printed alone (doc-look.js addFormPrint): everything else on the page is left out of the print. */
+@media print {
+  html.urd-print-form body > :not(:has([data-urd-printing])),
+  html.urd-print-form #urd-root > :not(:has([data-urd-printing])),
+  html.urd-print-form .urd-section:has([data-urd-printing]) > :not(:has([data-urd-printing])),
+  html.urd-print-form .urd-canvas:has([data-urd-printing]) > :not(:has([data-urd-printing])),
+  html.urd-print-form :is(.urd-doc, .urd-doc-cols, .urd-doc-body, .urd-text, .urd-doc-answer):has([data-urd-printing]) > :not([data-urd-printing], :has([data-urd-printing])),
+  html.urd-print-form details.urd-doc-part:has([data-urd-printing]) > summary {
+    display: none;
+  }
+
+  /* The blocks and sections carry their sizes inline (render.js frameToCss), so the print's reset has to outweigh them, or the form prints with the section's height of blank paper after it. */
+  html.urd-print-form :is(.urd-section, .urd-canvas, .urd-block, .urd-doc, .urd-text):has([data-urd-printing]) {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    zoom: 1 !important;
+    background: #fff;
+  }
+
+  html.urd-print-form [data-urd-printing] {
+    margin: 0;
+    border: 0;
+    padding: 0;
+    color: #000;
+    background: #fff;
+    font-size: 11pt;
+  }
+}
+
+/* The privacy block (blocks/privacy.js): the site's privacy page, written from its settings, in its document design: a long read in a comfortable measure, the lists with room, and the visitor's own choices in a card with the press that takes a choice back. */
 .urd-privacy {
   max-width: 68ch;
+  padding-bottom: 3.5rem;
+  font-family: var(--urd-doc-font, inherit);
   font-size: 1.05rem;
   line-height: 1.65;
   color: var(--urd-color-text);
+}
+
+.urd-privacy[data-design="contents"] {
+  max-width: none;
+}
+
+/* The privacy page centred in its block, as it stands unless the owner sets it to the left: its column stands in the middle of the block (the contents design centres its text between the list and the block's other edge instead). */
+.urd-privacy[data-align="center"]:not([data-design="contents"]) {
+  margin-inline: auto;
+}
+
+/* Beside its contents the privacy page keeps its text at its measure, on either side; a narrow page has the one column every document has. */
+@container urd-doc (min-width: 641px) {
+  .urd-privacy .urd-doc-cols {
+    grid-template-columns: minmax(8rem, 13rem) minmax(0, 68ch);
+  }
+
+  .urd-privacy[data-side="right"] .urd-doc-cols {
+    grid-template-columns: minmax(0, 68ch) minmax(8rem, 13rem);
+  }
+
+  .urd-privacy[data-align="center"] .urd-doc-cols {
+    grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr) minmax(8rem, 13rem);
+  }
+
+  .urd-privacy[data-align="center"] .urd-doc-body {
+    justify-self: center;
+    width: 100%;
+  }
+}
+
+@supports not (container-type: inline-size) {
+  @media (min-width: 641px) {
+    .urd-privacy .urd-doc-cols {
+      grid-template-columns: minmax(8rem, 13rem) minmax(0, 68ch);
+    }
+
+    .urd-privacy[data-side="right"] .urd-doc-cols {
+      grid-template-columns: minmax(0, 68ch) minmax(8rem, 13rem);
+    }
+
+    .urd-privacy[data-align="center"] .urd-doc-cols {
+      grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr) minmax(8rem, 13rem);
+    }
+
+    .urd-privacy[data-align="center"] .urd-doc-body {
+      justify-self: center;
+      width: 100%;
+    }
+  }
+}
+
+/* Contents and text centred between them need room for both columns and the text: a document narrower than that stands beside its list, centred again once the block is wide enough. */
+@container urd-doc (min-width: 641px) and (max-width: 940px) {
+  .urd-doc[data-align="center"] .urd-doc-cols {
+    grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr);
+  }
+
+  .urd-doc[data-align="center"][data-side="right"] .urd-doc-cols {
+    grid-template-columns: minmax(0, 1fr) minmax(8rem, 13rem);
+  }
+
+  .urd-doc[data-align="center"] .urd-doc-toc {
+    grid-column: 1;
+  }
+
+  .urd-doc[data-align="center"][data-side="right"] .urd-doc-toc {
+    grid-column: 2;
+  }
+
+  .urd-doc[data-align="center"] .urd-doc-body {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .urd-doc[data-align="center"][data-side="right"] .urd-doc-body {
+    grid-column: 1;
+  }
+}
+
+@supports not (container-type: inline-size) {
+  @media (min-width: 641px) and (max-width: 940px) {
+    .urd-doc[data-align="center"] .urd-doc-cols {
+      grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr);
+    }
+
+    .urd-doc[data-align="center"][data-side="right"] .urd-doc-cols {
+      grid-template-columns: minmax(0, 1fr) minmax(8rem, 13rem);
+    }
+
+    .urd-doc[data-align="center"] .urd-doc-toc {
+      grid-column: 1;
+    }
+
+    .urd-doc[data-align="center"][data-side="right"] .urd-doc-toc {
+      grid-column: 2;
+    }
+
+    .urd-doc[data-align="center"] .urd-doc-body {
+      grid-column: 2;
+      justify-self: start;
+    }
+
+    .urd-doc[data-align="center"][data-side="right"] .urd-doc-body {
+      grid-column: 1;
+    }
+  }
+}
+
+.urd-privacy .urd-doc-body {
+  max-width: 68ch;
 }
 
 .urd-privacy-title {
@@ -16459,23 +17216,14 @@ body.urd-marqueeing {
   opacity: 0.9;
 }
 
-.urd-privacy h2 {
+.urd-privacy .urd-doc-part > h2 {
   margin: 2.2em 0 0.6em;
-  padding-top: 0.9em;
   font-size: 1.4em;
   line-height: 1.2;
-  position: relative;
 }
 
-.urd-privacy h2::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 2.5rem;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--urd-color-accent);
+.urd-privacy[data-design="questions"] .urd-doc-part:first-of-type {
+  margin-top: 1.2em;
 }
 
 .urd-privacy h3 {
@@ -16498,18 +17246,23 @@ body.urd-marqueeing {
 }
 
 .urd-privacy a {
-  color: var(--urd-color-accent);
+  color: var(--urd-doc-accent, var(--urd-color-accent));
   text-decoration: underline;
   text-underline-offset: 0.18em;
   text-decoration-thickness: 1px;
+}
+
+.urd-privacy :is(.urd-doc-toc, .urd-doc-fold) a {
+  color: inherit;
+  text-decoration: none;
 }
 
 .urd-privacy-choices {
   margin-top: 0.4em;
   padding: 1.1rem 1.3rem;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 14%, transparent);
-  border-radius: var(--urd-radius-md);
-  background: var(--urd-color-surface);
+  border-radius: var(--urd-doc-radius, var(--urd-radius-md));
+  background: var(--urd-doc-card, var(--urd-color-surface));
 }
 
 .urd-privacy-choices > p:last-child,
@@ -16535,17 +17288,17 @@ body.urd-marqueeing {
 
 .urd-privacy-takeback {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--urd-color-accent);
+  border: 1px solid var(--urd-doc-accent, var(--urd-color-accent));
   border-radius: var(--urd-radius-sm);
   background: transparent;
-  color: var(--urd-color-accent);
+  color: var(--urd-doc-accent, var(--urd-color-accent));
   font: inherit;
   cursor: pointer;
 }
 
 .urd-privacy-takeback:hover,
 .urd-privacy-takeback:focus-visible {
-  background: var(--urd-color-accent);
+  background: var(--urd-doc-accent, var(--urd-color-accent));
   color: var(--urd-color-bg);
 }
 

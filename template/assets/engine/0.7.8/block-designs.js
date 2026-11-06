@@ -7,6 +7,7 @@
  */
 import { CONTACT_DESIGNS, contactDesign } from './contact-model.js';
 import { GALLERY_VIEWS, galleryView } from './gallery-model.js';
+import { PRIVACY_DESIGNS, TEXT_DESIGNS, privacyDesign, textDesign } from './doc-look.js';
 
 /** A drawn sample picture: a landscape in one hue, at a ratio of its own, as an inline SVG the preview may load from itself. */
 function samplePicture(hue, w, h) {
@@ -135,6 +136,24 @@ export const BLOCK_DESIGNS = {
     labelPrefix: 'opt.btn.',
     read: (props) => (props?.style === 'secondary' ? 'secondary' : 'primary'),
     frame: { w: 20, h: 50 },
+  },
+  privacy: {
+    prop: 'design',
+    ids: PRIVACY_DESIGNS,
+    labelPrefix: 'opt.privacyDesign.',
+    read: (props) => privacyDesign(props?.design),
+    frame: { w: 70, h: 900 },
+    sample: () => ({ props: { heading: true } }),
+  },
+  text: {
+    prop: 'design',
+    ids: TEXT_DESIGNS,
+    labelPrefix: 'opt.textDesign.',
+    read: (props) => textDesign(props?.design),
+    frame: { w: 70, h: 700 },
+    sample: (text) => ({ props: { html: text('seed.design.doc') } }),
+    // The document designs are drawn from a text's headings: a text without one is shown with the sample.
+    empty: (props) => !/<h2[\s>]/i.test(String(props?.html ?? '')),
   },
   shape: {
     prop: 'kind',

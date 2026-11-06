@@ -86,7 +86,16 @@ export function shapeHeight(block, surfacePx) {
  * @returns {boolean}
  */
 export function followsContent(block) {
-  return keepsShape(block) || (FOLLOWS_CONTENT.has(block?.type) && block.height?.mode !== 'own');
+  return keepsShape(block) || foldsIntoQuestions(block) || (FOLLOWS_CONTENT.has(block?.type) && block.height?.mode !== 'own');
+}
+
+/**
+ * A text drawn as questions (doc-look.js): its rows fold out, so its height is the closed rows', and an open part is view state, as an FAQ's answer is.
+ * @param {{type?: string, props?: object}} block
+ * @returns {boolean}
+ */
+export function foldsIntoQuestions(block) {
+  return block?.type === 'text' && block.props?.design === 'questions';
 }
 
 /**

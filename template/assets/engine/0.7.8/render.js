@@ -418,6 +418,14 @@ function unfoldedHeight(el) {
     const closed = (details.querySelector(':scope > summary')?.offsetHeight ?? 0) + edges;
     unfolded += Math.max(0, details.offsetHeight - closed) * ((details.currentCSSZoom ?? 1) / z);
   }
+  // A text drawn as questions stands in the editor with every part open to be written in (blocks/text.js): what lies between one question's row and the next is an open part, as an unfolded fold's answer is.
+  for (const text of el.querySelectorAll('.urd-text-doc[data-design="questions"] .urd-text')) {
+    const rows = [...text.querySelectorAll(':scope > h2')];
+    rows.forEach((row, i) => {
+      const end = rows[i + 1]?.getBoundingClientRect().top ?? text.getBoundingClientRect().bottom;
+      unfolded += Math.max(0, end - row.getBoundingClientRect().bottom) / z;
+    });
+  }
   return unfolded;
 }
 

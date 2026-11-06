@@ -192,6 +192,13 @@ function onBlockMenu(msg) {
   blockMenu = menuPlaceFor(msg.rect);
 }
 
+/** The design button on a block's toolbar: the block selected and its design picker open, the calendar's own or the one every other block with designs shares. */
+function onBlockDesign(msg) {
+  onSelectBlock(msg);
+  if (!selectedBlock) return;
+  designPicker = selectedBlock.type === 'calendar' ? { mode: 'set' } : { kind: 'block', blockId: selectedBlock.blockId };
+}
+
 /** The menu's box as the stylesheet sizes it (app.css .block-menu): the width for the chosen form, the height its ceiling. */
 function menuSize() {
   measureMenuRoom();
@@ -1116,6 +1123,7 @@ export const pageState = {
   get searchBlockId() { return searchBlockId; },
   set searchBlockId(v) { searchBlockId = v; },
   onBlockMenu,
+  onBlockDesign,
   mutateBlock,
   mutateBlockAt,
   readBlock,

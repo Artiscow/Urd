@@ -2,6 +2,22 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.24.2.4): the designs of the privacy page and long texts, the same facts in every design, and the design button
+
+- [ ] The privacy block's menu, Appearance: «Design» opens the picker with six designs (Long read, Contents at the side, At a glance, Questions, Ledger table, Ledger cards), each with a picture, a description and a live preview of the site's own page; a design chosen there draws on the canvas at once
+- [ ] A text block's menu, Appearance: «Design» opens the picker with Plain text and five document designs; an existing text stays Plain text until a design is chosen, and a text without headings is previewed with a sample
+- [ ] The design button (the four squares) on the toolbar of a text, a privacy page, a calendar or another block with designs, beside the gear, opens the picker; an image, a map or product cards have no such button
+- [ ] Contents at the side, on the privacy page and on a long text: the list follows the reader down and marks the part in view; a press on an entry jumps there, in the editor too; «Contents side» puts the list right; on a phone the list folds into one row
+- [ ] Placement: a privacy page in every design stands centred in its block unless set to Left; Contents at the side in a block about 950 px wide or more centres the text with the list at the block's edge, and stands beside the list in a narrower block
+- [ ] At a glance: the privacy page's four cards (responsible, what is collected, who else gets something, cookies); on a text, its first list before the first heading as cards, the squares centred on the labels
+- [ ] Questions: on the published page the parts fold out one at a time, smoothly in Chrome-based browsers and at once elsewhere; in the editor a text's parts all stand open, and a privacy page's question opens on a press once the block is selected; switching a long text to Questions leaves no empty space under its rows, on the published page with a part opened too
+- [ ] Ledger table and Ledger cards at the width of the text, on a wide page and on a phone; the video and map companies share one row; «How long» for another company reads «Står i vilkårene til …» with each name linking to its terms; the orders' row ends «gjerne spør oss»
+- [ ] Numbered clauses: each part numbered in a badge and its paragraphs 7.1, 7.2; the withdrawal form inside is not numbered; a heading with italic or a link keeps its spacing
+- [ ] The look settings: accent, heading and card colours, lines over the parts off, the four corners, the heading font and the privacy page's text font, each changing the canvas; a colour row stands on one line in the menu
+- [ ] A new terms page from the template: Long read, the main points as a list under the introduction, the withdrawal form as a card; on the published page «Skriv ut skjemaet» prints the form alone on one page
+- [ ] The privacy page in every design: how long each kind is kept (the newsletter, the forms, the orders by the neutral wording, the host and the counting by their companies' terms), the calendar's events and height when a page has a calendar, and the card under «Dine valg» with room before the section's end and its words about videos and maps from other companies
+- [ ] The designs' names, descriptions and settings in bokmål and Turkish
+
 ### Test batch (0.7.24.2.3): the shop's terms of sale page, its parts to fill in, and the checkout's link
 
 - [ ] Pages panel, a new page from the «Terms of sale» template with the admin in English and the site in bokmål: the whole page is in bokmål (heading «Kjøpsvilkår», the parts, and the standard withdrawal form under «Angrerett»), with room above each heading and between paragraphs

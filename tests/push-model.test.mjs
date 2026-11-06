@@ -154,6 +154,8 @@ test('the block types ADR-0025 names follow their content, and no other', () => 
     assert.equal(followsContent({ type }), false, type);
   }
   assert.equal(followsContent(null), false);
+  assert.equal(followsContent({ type: 'text', props: { design: 'questions' } }), true, 'a text drawn as questions follows its closed rows');
+  assert.equal(followsContent({ type: 'text', props: { design: 'long' } }), false);
 });
 
 test('a video given a shape follows it: its height is its width over the shape', () => {

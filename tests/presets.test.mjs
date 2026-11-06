@@ -127,8 +127,9 @@ test('termsHtml: the site\'s facts and the form\'s words set in as text, the for
   assert.ok(html.includes('seller=Lag &amp; Co &lt;b&gt;'), 'the seller is text, never markup');
   assert.ok(!html.includes('<b>'));
   assert.ok(html.includes('href=/personvern') && html.includes('page=personvern') && html.includes('title=Personvern'), 'the privacy page is linked by its id, so the link follows its address');
-  assert.ok(html.includes('<h3 style="margin:1.4em 0 0.4em">shop.wfTitle &amp; &lt;i&gt;</h3>'), 'the withdrawal form in the visitor texts, spaced as a document');
-  assert.ok(!/<(h1|h2|h3|p)>/.test(html), 'every heading and paragraph has its room');
+  assert.ok(html.includes('<blockquote data-urd-form><h3>shop.wfTitle &amp; &lt;i&gt;</h3>'), 'the withdrawal form in the visitor texts, set apart as a form');
+  assert.match(html, /<blockquote data-urd-form>[^]*shop\.wfDelete[^]*<\/blockquote>/, 'the whole form inside it');
+  assert.ok(html.indexOf('seed.terms.glance') < html.indexOf('seed.terms.agreement'), 'the main points before the first part');
   assert.ok(html.includes('shop.wfTo &amp; &lt;i&gt; Lag &amp; Co &lt;b&gt;, Gate 1'), 'the form is addressed to the seller');
   const bare = termsHtml({ text });
   assert.ok(!bare.includes('shop.wf'), 'no form without its words');
@@ -138,6 +139,7 @@ test('termsHtml: the site\'s facts and the form\'s words set in as text, the for
 
 test('presets: the terms of sale are a page of their own, never in the section lists', () => {
   assert.equal(defs.get('terms').pageOnly, true);
+  assert.equal(defs.get('terms').create().blocks[0].props.design, 'long', 'the terms are a document in the long read');
 });
 
 test('termsHtml: the template\'s [bracketed] words are marked to fill in, the seller\'s missing details as contact parts, the site\'s own words never', () => {
