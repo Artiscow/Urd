@@ -65,9 +65,10 @@ test('groupChip: each heading\'s state, with one and many counted apart', () => 
   assert.deepEqual(groupChip('who', state), { key: 'legal.chip.toFill', tone: 'warn', n: 3 });
   assert.deepEqual(groupChip('privacy', state), { key: 'legal.chip.noPage', tone: 'warn' });
   assert.deepEqual(groupChip('terms', state), { key: 'legal.chip.partsToFill.one', tone: 'warn', n: 1 });
-  const done = legalState({ site: site({ footer: { privacyPage: 'personvern' }, site: { commerce: { termsPage: 'vilkar' } } }), facts: SHOP, termsOpen: 0 });
+  assert.deepEqual(groupChip('privacy', legalState({ site: site({ footer: { privacyPage: 'personvern' } }), facts: SHOP })), { key: 'legal.chip.undecided.one', tone: 'warn', n: 1 }, 'a shop with the orders\' keeping not decided');
+  const done = legalState({ site: site({ footer: { privacyPage: 'personvern' }, site: { commerce: { termsPage: 'vilkar' } } }), facts: { ...SHOP, retention: { orders: { until: 'bookkeeping' } } }, termsOpen: 0 });
   assert.deepEqual(groupChip('who', done), { key: 'legal.chip.filledIn', tone: 'ok' });
-  assert.deepEqual(groupChip('privacy', done), { key: 'legal.chip.pageChosen', tone: 'ok' });
+  assert.deepEqual(groupChip('privacy', done), { key: 'legal.chip.filledIn', tone: 'ok' });
   assert.deepEqual(groupChip('terms', done), { key: 'legal.chip.pageChosen', tone: 'ok' });
 });
 
@@ -83,5 +84,9 @@ test('the Privacy group: the kinds the site has, those not decided counted on it
   const all = legalState({ site: withPage, facts: { ...both, retention: { forms: { until: 'closed' }, newsletter: { until: 'unsubscribe' } } } });
   assert.deepEqual(groupChip('privacy', all), { key: 'legal.chip.filledIn', tone: 'ok' });
   assert.deepEqual(legalState({ site: withPage, facts: NONE }).privacy.kinds, [], 'a site without forms has no kinds to set');
+  const shop = legalState({ site: withPage, facts: { ...both, checkout: { page: 'Butikk', providers: [] }, controller: { country: 'NO' } } });
+  assert.deepEqual(shop.privacy.kinds, ['forms', 'newsletter', 'orders'], 'a checkout adds the orders');
+  assert.equal(shop.privacy.country, 'NO', 'the country decides which duties the orders offer');
+  assert.equal(none.privacy.country, 'XX', 'no details read as no country');
   assert.equal(none.dot, false, 'a kind not decided marks the heading, not the tab');
 });

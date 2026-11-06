@@ -119,11 +119,28 @@ function periodText(r, key) {
 const KEEP_LINE = {
   forms: { period: 'privacy.keep.forms.period', closed: 'privacy.keep.forms.closed', ask: 'privacy.keep.forms.ask', askUs: 'privacy.keep.forms.askUs' },
   newsletter: { period: 'privacy.keep.newsletter.period', unsubscribe: 'privacy.keep.newsletter', ask: 'privacy.keep.newsletter.ask', askUs: 'privacy.keep.newsletter.askUs' },
+  orders: { period: 'privacy.keep.orders.period', bookkeeping: 'privacy.keep.orders.bookkeeping', nif: 'privacy.keep.orders.nif', ask: 'privacy.keep.orders.ask', askUs: 'privacy.keep.orders.askUs' },
 };
 const KEEP_CELL = {
   forms: { period: 'privacy.ledger.keep.formPeriod', closed: 'privacy.ledger.keep.form' },
   newsletter: { period: 'privacy.ledger.keep.newsletterPeriod', unsubscribe: 'privacy.ledger.keep.newsletter' },
+  orders: { period: 'privacy.ledger.keep.orderPeriod', bookkeeping: 'privacy.ledger.keep.orderBookkeeping', nif: 'privacy.ledger.keep.orderNif' },
 };
+
+/** The acts that keep an order: each choice's name and where it is read, set into the sentence and the cell as a link («{names}»). */
+const KEEP_LAWS = {
+  bookkeeping: ['bokføringsloven § 13', 'https://lovdata.no/lov/2004-11-19-73/§13'],
+  nif: ['NIFs lov § 2-11', 'https://www.idrettsforbundet.no/tema/juss/nifs-lov/'],
+};
+
+/** A law as a link in a sentence. */
+function lawLink([name, url]) {
+  const a = el2('a', null, name);
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  return a;
+}
 
 /** How long the association keeps a kind, as a sentence: the period or the criterion the owner chose, or, not decided, that it is not and where to ask (the association's email where it has one). */
 function keepLine(model, kind) {
@@ -133,10 +150,18 @@ function keepLine(model, kind) {
   return email ? t(KEEP_LINE[kind].ask, { email }) : t(KEEP_LINE[kind].askUs);
 }
 
-/** The same as the ledger's «How long» cell, which stands under the association's details. */
+/** The sentence as a paragraph, the act that keeps an order set in as a link. */
+function keepNode(model, kind) {
+  const law = KEEP_LAWS[model.retention?.[kind]?.until];
+  return law ? paragraphWith(keepLine(model, kind), [lawLink(law)]) : el2('p', null, keepLine(model, kind));
+}
+
+/** The same as the ledger's «How long» cell, which stands under the association's details: words, or an element where the act is linked. */
 function keepCell(model, kind) {
   const r = model.retention?.[kind];
   if (!r) return t('privacy.ledger.keep.ask');
+  const law = KEEP_LAWS[r.until];
+  if (law) return withNames(el2('span'), t(KEEP_CELL[kind][r.until]), [lawLink(law)]);
   return t(KEEP_CELL[kind][r.until], r.until === 'period' ? { period: periodText(r, KEEP_CELL[kind][r.until]) } : undefined);
 }
 
@@ -153,14 +178,14 @@ function collectedNodes(model) {
       list.append(el2('li', null, form.footer ? t('privacy.forms.footer', { to: sentTo(form) }) : t('privacy.forms.line', { page: form.page, what: fields, to: sentTo(form) })));
     }
     nodes.push(list, el2('p', null, t('privacy.forms.basis')));
-    if (model.forms.some((f) => !f.footer)) nodes.push(el2('p', null, keepLine(model, 'forms')));
-    if (model.forms.some((f) => f.footer)) nodes.push(el2('p', null, keepLine(model, 'newsletter')));
+    if (model.forms.some((f) => !f.footer)) nodes.push(keepNode(model, 'forms'));
+    if (model.forms.some((f) => f.footer)) nodes.push(keepNode(model, 'newsletter'));
   }
   if (model.checkout) {
     const s = model.checkout;
     nodes.push(el2('h3', null, t('privacy.shop.heading')));
     nodes.push(el2('p', null, t('privacy.shop.sends', { page: s.page, to: sentTo(s) })));
-    nodes.push(...paymentNodes(s), el2('p', null, t('privacy.shop.basis', { name: model.controller.name || t('privacy.controller.owner') })));
+    nodes.push(...paymentNodes(s), el2('p', null, t('privacy.shop.basis')), keepNode(model, 'orders'));
   }
   if (model.analytics) {
     nodes.push(el2('h3', null, t('privacy.analytics.heading')));
@@ -226,7 +251,7 @@ function ledgerNodes(model, design) {
   }
   if (model.checkout) {
     const pay = model.checkout.providers.filter((id) => id !== 'manual').map((id) => OTHER_PARTIES[id]?.[0] ?? id);
-    add(t('privacy.ledger.order'), t('privacy.ledger.why.order'), [who(model.checkout), ...pay], t('privacy.ledger.keep.order', { name: owner }));
+    add(t('privacy.ledger.order'), t('privacy.ledger.why.order'), [who(model.checkout), ...pay], keepCell(model, 'orders'));
   }
   if (model.analytics) add(t('privacy.ledger.visits'), t('privacy.ledger.why.analytics'), [['cloudflare', 'Cloudflare']], null);
   for (const id of model.embeds) {
@@ -238,7 +263,7 @@ function ledgerNodes(model, design) {
   const nothing = !model.forms.length && !model.checkout && !model.analytics && !model.embeds.length;
   if (nothing) nodes.push(el2('p', null, t('privacy.nothing')));
   if (model.forms.length) nodes.push(el2('p', null, t('privacy.forms.basis')));
-  if (model.checkout) nodes.push(...paymentNodes(model.checkout), el2('p', null, t('privacy.shop.basis', { name: owner })));
+  if (model.checkout) nodes.push(...paymentNodes(model.checkout), el2('p', null, t('privacy.shop.basis')));
   if (model.analytics) nodes.push(paragraphWith(t('privacy.analytics.text'), [nameLink('cloudflare', 'Cloudflare Web Analytics')]));
   if (model.embeds.length) nodes.push(...embedNodes(model, { keep: false }));
   nodes.push(...hostNodes());
@@ -247,7 +272,8 @@ function ledgerNodes(model, design) {
 
 /** A row's keeping into an element: its own words, or another company's terms, linked, where that company decides. */
 function keepInto(cell, row) {
-  if (row.keep !== null) cell.textContent = row.keep;
+  if (row.keep instanceof Node) cell.append(row.keep);
+  else if (row.keep !== null) cell.textContent = row.keep;
   else withNames(cell, t('privacy.ledger.keep.theirs'), row.who.filter((w) => w.id).map((w) => nameLink(w.id, w.name)));
   return cell;
 }

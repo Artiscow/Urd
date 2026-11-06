@@ -57,6 +57,7 @@ export function legalState({ site, facts, termsOpen = 0, shopOn = false }) {
   const kinds = [];
   if ((facts?.forms ?? []).some((f) => !f.footer)) kinds.push('forms');
   if ((facts?.forms ?? []).some((f) => f.footer)) kinds.push('newsletter');
+  if (facts?.checkout) kinds.push('orders');
   const undecided = kinds.filter((kind) => !facts?.retention?.[kind]);
   const reasons = [];
   if ((forms || sells) && (missing.includes('legalName') || missing.includes('email'))) reasons.push('who');
@@ -64,7 +65,7 @@ export function legalState({ site, facts, termsOpen = 0, shopOn = false }) {
   if (sells && open > 0) reasons.push('terms');
   return {
     who: { missing },
-    privacy: { page: privacyPage?.id ?? null, kinds, undecided },
+    privacy: { page: privacyPage?.id ?? null, kinds, undecided, country: facts?.controller?.country ?? 'XX' },
     terms: { shown: sells || shopOn || Boolean(termsId), page: termsPage?.id ?? null, open },
     reasons,
     dot: reasons.length > 0,

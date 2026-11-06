@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { privacyModel, pageFacts, endpointHost, paymentProviders, footerForm, retentionOf } = await engineImport('privacy-model.js');
+const { privacyModel, pageFacts, endpointHost, paymentProviders, footerForm, retentionOf, orderKeepChoices, RETENTION_KINDS } = await engineImport('privacy-model.js');
 
 const site = {
   site: { title: 'Kakeklubben', contact: { country: 'NO', legalName: 'Kakeklubben Trondheim', ids: { org: '974760673' }, address: { street: 'Gata 1', postalCode: '7034', city: 'Trondheim' }, email: 'post@kake.no', phone: '+47 400 00 000' } },
@@ -92,5 +92,17 @@ test('retentionOf: a set period of 1 to 99 months or years, the closing of the m
   assert.equal(of({ forms: { until: 'period', count: 1.5, unit: 'months' } }, 'forms'), null);
   assert.equal(of({ forms: { until: 'period', count: 3, unit: 'weeks' } }, 'forms'), null);
   assert.equal(of(undefined, 'forms'), null, 'a site without the field reads as not decided');
-  assert.deepEqual(privacyModel({ site: { retention: { forms: { until: 'closed' } } } }, []).retention, { forms: { until: 'closed' }, newsletter: null });
+  assert.deepEqual(privacyModel({ site: { retention: { forms: { until: 'closed' } } } }, []).retention, { forms: { until: 'closed' }, newsletter: null, orders: null });
+});
+
+test('retentionOf for orders: the bookkeeping duty, a sports club under NIF or a set period; orderKeepChoices offers the duties in Norway alone', () => {
+  const of = (retention) => retentionOf({ site: { retention } }, 'orders');
+  assert.deepEqual(of({ orders: { until: 'bookkeeping' } }), { until: 'bookkeeping' });
+  assert.deepEqual(of({ orders: { until: 'nif' } }), { until: 'nif' });
+  assert.deepEqual(of({ orders: { until: 'period', count: 3, unit: 'years' } }), { until: 'period', count: 3, unit: 'years' });
+  assert.equal(of({ orders: { until: 'closed' } }), null, 'a choice of another kind');
+  assert.equal(of({ orders: { until: 'unknown' } }), null, 'not decided is the kind left out, never a value');
+  assert.deepEqual(orderKeepChoices('NO'), RETENTION_KINDS.orders);
+  assert.deepEqual(orderKeepChoices('SE'), ['period']);
+  assert.deepEqual(orderKeepChoices(undefined), ['period']);
 });

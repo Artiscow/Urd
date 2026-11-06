@@ -87,6 +87,13 @@
                 { "$ref": "#/$defs/retentionPeriod" },
                 { "type": "object", "additionalProperties": false, "required": ["until"], "properties": { "until": { "const": "unsubscribe" } } }
               ]
+            },
+            "orders": {
+              "description": "The orders the checkout takes: five years after the end of the financial year under bokføringsloven § 13 (bookkeeping) or NIFs lov § 2-11 (nif), or a set time from the order",
+              "oneOf": [
+                { "$ref": "#/$defs/retentionPeriod" },
+                { "type": "object", "additionalProperties": false, "required": ["until"], "properties": { "until": { "enum": ["bookkeeping", "nif"] } } }
+              ]
             }
           }
         },

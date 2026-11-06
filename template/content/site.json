@@ -10,7 +10,8 @@
     },
     "retention": {
       "forms": { "until": "period", "count": 12, "unit": "months" },
-      "newsletter": { "until": "unsubscribe" }
+      "newsletter": { "until": "unsubscribe" },
+      "orders": { "until": "bookkeeping" }
     },
     "meetingHosts": [],
     "icon": "/media/images/ikon-9740643c.webp",

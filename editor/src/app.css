@@ -4302,6 +4302,23 @@
     background: #e2b84a;
     vertical-align: middle;
   }
+  /* A kind's keeping: its name over its dropdown, as a stacked label stands, the name labelling the dropdown by id */
+  .legal-keep {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    font-size: 0.85rem;
+  }
+  .legal-keep > .dd { flex: 1 1 auto; width: 100%; }
+  /* The «?» by a kind's name in the Legal panel (the orders' duties), small beside the name */
+  .legal-help {
+    width: 16px;
+    height: 16px;
+    margin-left: 0.4rem;
+    font-size: 10px;
+    vertical-align: middle;
+  }
   .panel-body input.legal-need:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     border-color: rgb(226 184 74 / 70%);
   }

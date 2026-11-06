@@ -6,7 +6,8 @@
   import ContactFields from './legal/ContactFields.svelte';
   import { ta } from '$engine/i18n.js';
   import { groupChip } from '../lib/legal-model.js';
-  import { retentionOf, RETENTION_MAX } from '$engine/privacy-model.js';
+  import { retentionOf, RETENTION_MAX, orderKeepChoices } from '$engine/privacy-model.js';
+  import { toggleHintCard } from '$engine/hint.js';
   import { ICONS } from '../lib/icons.js';
   const ed = getContext('urd-editor');
   const siteDraft = $derived(ed.siteDraft);
@@ -34,6 +35,20 @@
     forms: [['period', 'opt.keep.period'], ['closed', 'opt.keep.closed'], ['', 'opt.keep.undecided']],
     newsletter: [['unsubscribe', 'opt.keep.unsubscribe'], ['period', 'opt.keep.period'], ['', 'opt.keep.undecided']],
   };
+
+  /** A kind's choices: orders take the duties researched for the owner's country (privacy-model.js orderKeepChoices), a duty stored under another country kept in the list while it stands, so the panel shows what the page says; the other kinds their own. */
+  function keepOptions(kind) {
+    if (kind !== 'orders') return KEEP_OPTIONS[kind];
+    const stored = retentionOf(siteDraft, 'orders')?.until;
+    const choices = orderKeepChoices(legal?.privacy.country);
+    const shown = stored && stored !== 'period' && !choices.includes(stored) ? [stored, ...choices] : choices;
+    return [...shown.map((c) => [c, `opt.keep.${c}`]), ['', 'opt.keep.undecided']];
+  }
+
+  /** The help card on the orders' choice: the thresholds that put an association under each duty, with their sources. */
+  function ordersHelp(anchor) {
+    toggleHintCard(anchor, { title: ta('hint.orders.title'), lines: [1, 2, 3, 4, 5].map((n) => ta(`hint.orders.${n}`)) });
+  }
 
   /** A set time chosen before its number is typed, by kind, with the unit picked: it stands in the panel and nothing is stored, so the privacy page never names a period the owner did not type. */
   let pending = $state({});
@@ -136,8 +151,9 @@
         {#each legal.privacy.kinds as kind (kind)}
           {@const kept = retentionOf(siteDraft, kind)}
           {@const shown = keepShown(kind)}
-          <label class="field-stack" title={ta(`tip.legal.keep.${kind}`)}><span>{ta(`legal.keep.${kind}`)}{#if !kept}<span class="legal-need-dot" title={ta('tip.legal.undecided')} aria-hidden="true"></span>{/if}</span>
-            <Dropdown value={shown?.until ?? ''} options={KEEP_OPTIONS[kind].map(([v, key]) => [v, ta(key)])} onchange={(v) => setKeepChoice(kind, v)} /></label>
+          <!-- The name labels the dropdown by id, so the «?» beside it (orders) stays a button of its own, outside what a press on the name reaches -->
+          <div class="legal-keep" title={ta(`tip.legal.keep.${kind}`)}><span><span id={`legal-keep-${kind}`}>{ta(`legal.keep.${kind}`)}</span>{#if !kept}<span class="legal-need-dot" title={ta('tip.legal.undecided')} aria-hidden="true"></span>{/if}{#if kind === 'orders'}<button type="button" class="help-chip legal-help" title={ta('hint.how', { title: ta('hint.orders.title') })} aria-label={ta('hint.how', { title: ta('hint.orders.title') })} onclick={(e) => ordersHelp(e.currentTarget)}>?</button>{/if}</span>
+            <Dropdown value={shown?.until ?? ''} labelledby={`legal-keep-${kind}`} options={keepOptions(kind).map(([v, key]) => [v, ta(key)])} onchange={(v) => setKeepChoice(kind, v)} /></div>
           {#if shown?.until === 'period'}
             <div class="field-pair">
               <input type="number" min="1" max={RETENTION_MAX} step="1" value={shown.count ?? ''} aria-label={ta('lbl.keepCount')} title={ta('tip.legal.keepCount')}

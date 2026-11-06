@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.31.3): how long orders are kept
+
+- [ ] The Legal panel's Privacy fold on a site with a checkout: «Orders» under «How long you keep», with «We keep accounts by law», «A sports club under NIF», «For a set time» and «Not decided» while the country under Who you are is Norway, and only the last two with another country; a site without a checkout shows no Orders row
+- [ ] The «?» beside Orders opens a help card with five lines: the business and the association's thresholds, the sports club, a set time, not decided, and the sources with their date; a press on it does not open the dropdown
+- [ ] The privacy page's shop section in the long read: with «We keep accounts by law» the sentence «Your order is kept for five years after the end of the financial year, as bokføringsloven § 13 requires…» with the law linked to Lovdata; with «A sports club under NIF» the same years under NIFs lov § 2-11, linked to idrettsforbundet.no; with a set time «kept for 3 years after it is placed»; with «Not decided» «has not been decided yet; feel free to ask at …»
+- [ ] The ledger designs (table and cards): the order row's «How long» cell says the same, the law linked; the old «depends on the accounting rules…» appears nowhere
+- [ ] The Privacy heading counts an undecided Orders («1 not decided») and clears when a choice is made
+- [ ] A new terms of sale page: the «Personal data» clause says how long the order is kept stands on the privacy page, with the link
+- [ ] The Site and Legal panels' tooltips, the checkout's seller tooltip and the setup's name and email placeholders no longer name an association; in bokmål and Turkish too
+- [ ] The new words (the choices, the Orders row, the help card, the privacy sentences) in bokmål and Turkish
+
 ### Test batch (0.7.0.77): the dialogs fading in and out
 
 - [ ] The large dialogs (the image editor, the design picker, Urd settings, the shortcut sheet, page settings, redirects) fade in quickly as they open and out as they close, the dark backdrop with them, nothing moving; the small ones (the command palette, the link dialog in both its forms, the CSV import, the confirm question) fade a little slower, as the menus do
