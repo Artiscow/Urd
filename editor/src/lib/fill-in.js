@@ -10,6 +10,19 @@ const PART = /<span\b[^>]*?\bdata-urd-fill(?:="(\w*)")?[^>]*>([^]*?)<\/span>/g;
 /** Words in brackets left in a part: it is not filled in. */
 const OPEN = /\[[^\]]*\]/;
 
+const TAG = /<[^>]*>/g;
+
+/** A part's words without the formatting inside them, the tags taken off until none is left. */
+function bareWords(words) {
+  let text = String(words);
+  let before;
+  do {
+    before = text;
+    text = text.replace(TAG, '');
+  } while (text !== before);
+  return text;
+}
+
 /**
  * The open parts in a text's HTML.
  * @param {string} html
@@ -18,7 +31,7 @@ const OPEN = /\[[^\]]*\]/;
 export function openFills(html) {
   const open = { own: 0, contact: 0 };
   for (const [, kind, words] of String(html ?? '').matchAll(PART)) {
-    if (!OPEN.test(words.replace(/<[^>]*>/g, ''))) continue;
+    if (!OPEN.test(bareWords(words))) continue;
     if (kind === 'contact') open.contact += 1;
     else open.own += 1;
   }

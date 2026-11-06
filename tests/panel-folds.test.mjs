@@ -28,11 +28,17 @@ test('the ids are the folds marked in each panel, in the panel\'s order, each na
   }
 });
 
-/** A fold's content, between its heading and its end. */
+/** A fold's content, between its heading and its end, the comments taken out until none is left. */
 function foldBody(text, id) {
   const at = text.indexOf(`data-fold="${id}"`);
   const from = text.indexOf('</summary>', at) + '</summary>'.length;
-  return text.slice(from, text.indexOf('</details>', from)).replace(/<!--[^]*?-->/g, '').trim();
+  let body = text.slice(from, text.indexOf('</details>', from));
+  let before;
+  do {
+    before = body;
+    body = body.replace(/<!--[^]*?-->/g, '');
+  } while (body !== before);
+  return body.trim();
 }
 
 /** A fold that holds one button and nothing else. */
