@@ -2,6 +2,7 @@
   /* The site's redirects (content/redirects.json, ADR-0015), as a dialog over the admin opened from the Pages panel and Ctrl+K: each rule an old address, where it goes and its kind, permanent (301) or temporary (302).
      A rule that cannot do what it says stands in dark red, one that may not in amber, the reason in the field's tooltip (lib/redirects-model.js redirectIssues); an address typed that cannot be one stays in its field in dark red until it is fixed.
      Rules are added one at a time from the row at the foot, as a pasted list or from a CSV file, and the list leaves as a CSV file; each address field offers the site's places (PlaceField): the pages and the addresses the published site still knows for the old address, the pages and their named spots for the target. A native modal dialog (ADR-0011): Escape and a press on the backdrop close it. */
+  import { rowMotion } from '../lib/motion.svelte.js';
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -185,7 +186,7 @@
         </span>
       </div>
       {#if pasting}
-        <div class="rd-paste">
+        <div class="rd-paste" transition:rowMotion>
           <textarea rows="4" bind:value={pasted} placeholder={ta('ph.redirects.paste')} aria-label={ta('redirects.paste')} title={ta('tip.redirects.paste')}></textarea>
           <span class="rd-paste-acts">
             <button type="button" class="ghost" title={ta('tip.redirects.closePaste')} onclick={() => { pasted = ''; pasting = false; }}>{ta('confirm.cancel')}</button>

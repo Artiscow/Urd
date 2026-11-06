@@ -6,6 +6,7 @@
    * with iconsOnly the glyphs are left out, so the picker offers the library and an own image alone (the links' icons).
    * Two branches (ADR-0011 addendum, anchored.js decides): in the top layer, anchored under the button's right edge with the browser flipping it away from the viewport edge and light dismiss; otherwise position: fixed (the panels clip absolute content), placed by measuring, closing on a click outside, Escape or a scroll outside. The same pattern as ColorPicker.
    */
+  import { lingering, menuMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { compressToWebp } from '$engine/imageTools.js';
   import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph, readRecentIcons, saveRecentIcon } from '$engine/glyphs.js';
@@ -29,6 +30,8 @@
   let popEl = $state(null);
   let fileEl = $state(null);
   let open = $state(false);
+  /** The picker stays drawn while the closing pop-up fades out (app.css). */
+  const drawn = lingering(() => open);
   let pos = $state({ top: 0, left: 0 });
   let query = $state('');
   let searchEl = $state(null);
@@ -150,12 +153,12 @@
   {#if native}
     <div class="gp-pop gp-anchored" id={popId} popover="auto" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={onToggle}>
-      {#if open}
+      {#if drawn.shown}
         {@render pickerBody()}
       {/if}
     </div>
   {:else if open}
-    <div class="gp-pop" style="top: {pos.top}px; left: {pos.left}px">
+    <div class="gp-pop" style="top: {pos.top}px; left: {pos.left}px" transition:menuMotion>
       {@render pickerBody()}
     </div>
   {/if}

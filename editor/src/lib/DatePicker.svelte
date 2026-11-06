@@ -5,6 +5,7 @@
    * Two branches, as the dropdown has them (ADR-0011 addendum, anchored.js decides): the popover anchored under the field in the top layer with light dismiss, else a fixed box placed by measuring that closes on a click outside or Escape.
    * `value` is kept as the fields keep it: `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM` with `time`.
    */
+  import { lingering, menuMotion } from './motion.svelte.js';
   import { ta, adminLang } from '$engine/i18n.js';
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
   import { parseDateValue, formatDateValue, weekStartFor, weekdayNames, monthName, monthGrid, shiftMonth, shiftDays, todayParts, formatDateLabel } from './date-grid.js';
@@ -20,6 +21,8 @@
   const today = todayParts();
 
   let open = $state(false);
+  /** The calendar stays drawn while the closing pop-up fades out (app.css). */
+  const drawn = lingering(() => open);
   let rootEl = $state(null);
   let popEl = $state(null);
   let gridEl = $state(null);
@@ -181,7 +184,7 @@
       <svg class="dp-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
     </button>
     <div class="dp-pop dp-anchored" id={popId} popover="auto" bind:this={popEl} style="position-anchor: {anchor}" ontoggle={(e) => { open = e.newState === 'open'; }}>
-      {#if open}{@render calendar()}{/if}
+      {#if drawn.shown}{@render calendar()}{/if}
     </div>
   {:else}
     <button type="button" class="dp-btn" class:dp-empty={!label} {title} onclick={toggle}>
@@ -189,7 +192,7 @@
       <svg class="dp-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
     </button>
     {#if open}
-      <div class="dp-pop" style="top: {pos.top}px; left: {pos.left}px">{@render calendar()}</div>
+      <div class="dp-pop" style="top: {pos.top}px; left: {pos.left}px" transition:menuMotion>{@render calendar()}</div>
     {/if}
   {/if}
 </span>

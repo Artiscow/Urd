@@ -3,7 +3,7 @@
  * The order summary is read from the basket (shop.js), the contact fields (name, email, phone, comment) are validated, and the order is sent as an email draft (mailto, zero setup), as JSON to an optional endpoint, or to the optional payment layer (ADR-0020, ADR-0028: Vipps, a card at Vipps or Stripe, PayPal).
  * The order lines and the total are repeated right above the order buttons, and the buttons' texts say that ordering is a purchase or a payment: angrerettloven § 16 asks for both, and without the wording the buyer is not bound.
  * The buttons are described by the summary, so a screen reader that tabs to them hears the order and the total.
- * Under the buttons the seller is named from the Site panel's contact details (angrerettloven § 8 d), unless the block leaves it out (`seller: false`).
+ * Under the buttons the seller is named from the Legal panel's contact details (angrerettloven § 8 d), unless the block leaves it out (`seller: false`).
  * After an order, by any path, the page shows a printable confirmation with the order lines, the total, the buyer, how it is paid, the seller with the organisation number, and the standard withdrawal form (angrerettloven § 18 and § 20); it is kept in this tab's sessionStorage, so a refresh keeps it.
  * The honeypot field stops simple bots (filled in = discarded silently).
  * Payment instructions (a Vipps number, a bank account, pay at pickup) are shown in the form above the order summary: one as a line, two or more as a choice the buyer makes before ordering, and the chosen one is named in the order and repeated after it is sent.

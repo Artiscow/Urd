@@ -18,6 +18,7 @@
    * instant, and a close-on-scroll rule would slam the popup shut before
    * anything could be picked.
    */
+  import { lingering, menuMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
 
   let { value = null, options = [], onchange, title = null, disabled = false, filled = false, compact = false, labelledby = null } = $props();
@@ -29,6 +30,8 @@
   const btnId = `${popId}-btn`;
 
   let open = $state(false);
+  /** The list stays drawn while the closing pop-up fades out (app.css). */
+  const drawn = lingering(() => open);
   let rootEl = $state(null);
   let popEl = $state(null);
   let pos = $state({ top: 0, left: 0, width: 160 });
@@ -114,7 +117,7 @@
     </button>
     <div class="dd-pop dd-anchored" id={popId} popover="auto" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={(e) => { open = e.newState === 'open'; }}>
-      {#if open}
+      {#if drawn.shown}
         {#each options as [v, label, note, face] (`${v ?? ''}`)}
           <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
             onclick={() => pick(v)}>{@render named(label, face)}{#if note}<span class="dd-note">{note}</span>{/if}</button>
@@ -127,7 +130,7 @@
       {@render caret()}
     </button>
     {#if open}
-      <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px">
+      <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px" transition:menuMotion>
         {#each options as [v, label, note, face] (`${v ?? ''}`)}
           <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
             onclick={() => pick(v)}>{@render named(label, face)}{#if note}<span class="dd-note">{note}</span>{/if}</button>

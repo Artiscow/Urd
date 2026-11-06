@@ -389,7 +389,7 @@ let panelFolded = $state(false);
  *  user sees. */
 const PANEL_GROUPS = [
   ['pages', 'blocks', 'properties', 'grid'],
-  ['site', 'theme', 'nav', 'footer', 'collections', 'plugins'],
+  ['site', 'legal', 'theme', 'nav', 'footer', 'collections', 'plugins'],
   ['history', 'update'],
 ];
 

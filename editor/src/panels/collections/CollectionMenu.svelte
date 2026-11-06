@@ -5,6 +5,7 @@
      The menu is a card under the ⋮; the new name takes the card's place, and an item with a submenu (the kind, the fields, the collections to move or copy to) opens it beside the card when the mouse rests on it, or on a press, Enter or the right arrow; a field in the list of fields opens its value beside the list the same way.
      A submenu stays while the pointer crosses to it or a field in it has the focus, and Escape or the left arrow steps back a level; it stands in the top layer, so the panel's scroll never clips it (ADR-0011): a popover placed by CSS anchoring where the browser has it, else measured and placed fixed (anchored.js).
      Every change is one undo step, offered again as «Undo» in the status line (state/collections.svelte.js). */
+  import { menuMotion } from '../../lib/motion.svelte.js';
   import { getContext, tick } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
@@ -326,7 +327,7 @@
   <button type="button" class="ghost coll-btn" bind:this={opener} aria-expanded={open}
     title={ta('tip.collections.menu')} aria-label={ta('tip.collections.menu')} onclick={() => (open ? close() : (open = true))}>{@html ICONS.kebab}</button>
   {#if open}
-    <div class="cm-card" role="group" aria-label={view?.name ?? id} bind:this={card} use:dismiss={{ close, opener }}>
+    <div class="cm-card" role="group" aria-label={view?.name ?? id} bind:this={card} use:dismiss={{ close, opener }} transition:menuMotion>
       {#if page === 'main'}
         <button type="button" title={ta('tip.collections.rename')} onpointerenter={leaveSoon} onclick={() => go('rename')}>{ta('ui.rename')}</button>
         {#if kinds.length}{@render subItem('kind', ta('common.type'), kindLabel(view?.kind))}{/if}
@@ -351,7 +352,7 @@
 
         {#if sub}
           <!-- The open submenu beside the card, in the top layer -->
-          <div class="cm-sub" class:cm-sub-anchored={native} class:cm-sub-fixed={!native} popover={native ? 'manual' : undefined} bind:this={subEl}
+          <div class="cm-sub" transition:menuMotion class:cm-sub-anchored={native} class:cm-sub-fixed={!native} popover={native ? 'manual' : undefined} bind:this={subEl}
             role="group" aria-label={sub === 'kind' ? ta('common.type') : sub === 'field' ? ta('ui.setField') : ta(sub === 'copy' ? 'ui.copyToCollection' : 'ui.moveToCollection')}
             style={native ? `position-anchor: ${anchors[sub]}` : `top: ${subPos.top}px; left: ${subPos.left}px`}
             onpointerenter={cancelClose} onpointerleave={leaveSoon}>
@@ -372,7 +373,7 @@
               {/each}
               {#if chosenField}
                 <!-- One field's value: what the entries hold now, the new value, the badges in use to press, and the field cleared or set on all of them -->
-                <div class="cm-sub" class:cm-sub-anchored={native} class:cm-sub-fixed={!native} popover={native ? 'manual' : undefined} bind:this={fieldEl}
+                <div class="cm-sub" transition:menuMotion class:cm-sub-anchored={native} class:cm-sub-fixed={!native} popover={native ? 'manual' : undefined} bind:this={fieldEl}
                   role="group" aria-label={counted('collections.fieldFor', ticks.length, { field: ta(chosenField.labelKey) })}
                   style={native ? `position-anchor: ${fieldAnchors[chosenField.field]}` : `top: ${fieldPos.top}px; left: ${fieldPos.left}px`}
                   onpointerenter={cancelFieldClose} onpointerleave={leaveFieldSoon}>

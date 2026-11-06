@@ -2848,6 +2848,11 @@
     padding: 0.4rem 0 0.5rem 0.5rem;
     border-left: 2px solid rgb(255 255 255 / 12%);
   }
+  .bg-layer-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+  }
 
   /* A layer's fold: the caret points right while the layer's settings are folded away, down while they show. */
   .bg-fold svg {
@@ -3166,7 +3171,7 @@
     gap: 0.5rem;
   }
 
-  /* A contact point in the Site panel: its role with the remove button beside the field, then its email, phone and note, set apart by a rule. */
+  /* A contact point in the Legal panel: its role with the remove button beside the field, then its email, phone and note, set apart by a rule. */
   .panel-body .contact-point {
     display: flex;
     flex-direction: column;
@@ -3284,6 +3289,51 @@
     gap: 0.4rem;
     margin-top: 0.4rem;
     padding-left: 0.8rem;
+  }
+
+  /* A fold opens and closes smoothly: its content's row grows from nothing to its height inside ::details-content, the space over it with it, and shrinks back the same way.
+     The content is clipped while it is folded or opening, and shows past its edges (a focus ring) once it stands open. Under reduced motion, or in a browser without ::details-content, a fold opens and closes at once. */
+  .group::details-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.24s cubic-bezier(0.4, 0, 0.2, 1), content-visibility 0.24s allow-discrete;
+  }
+  .group[open]::details-content { grid-template-rows: 1fr; }
+  .group > .group-items {
+    min-height: 0;
+    margin-top: 0;
+    overflow-y: clip;
+    transition: margin-top 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .group[open] > .group-items {
+    margin-top: 0.4rem;
+    overflow-y: visible;
+    transition: margin-top 0.24s cubic-bezier(0.4, 0, 0.2, 1), overflow-y 0s 0.24s allow-discrete;
+  }
+  /* Two rules, so a browser that does not know ::details-content still keeps the content's own transitions still */
+  @media (prefers-reduced-motion: reduce) {
+    .group::details-content { transition: none; }
+    .group > .group-items,
+    .group[open] > .group-items { transition: none; }
+  }
+
+  /* A pop-up in the top layer (the anchored lists and pickers) fades and slides in as it opens and out as it closes; through the fade it keeps its place in the top layer where the browser can (overlay), and leaves it at once where it cannot.
+     Its content stays drawn for the fade (lingering in lib/motion.svelte.js). */
+  :is(.dd-anchored, .cp-anchored, .gp-anchored, .dp-anchored, .mp-anchored, .sp-anchored, .pf-pop) {
+    transition: opacity 0.15s ease, transform 0.15s ease, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
+  }
+  :is(.dd-anchored, .cp-anchored, .gp-anchored, .dp-anchored, .mp-anchored, .sp-anchored, .pf-pop):not(:popover-open) {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  @starting-style {
+    :is(.dd-anchored, .cp-anchored, .gp-anchored, .dp-anchored, .mp-anchored, .sp-anchored, .pf-pop):popover-open {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(.dd-anchored, .cp-anchored, .gp-anchored, .dp-anchored, .mp-anchored, .sp-anchored, .pf-pop) { transition: none; }
   }
 
   .panel-hint {
@@ -4182,4 +4232,132 @@
   .loading {
     padding: 2rem;
     text-align: center;
+  }
+
+  /* The Legal panel (0.7.31): the state on each fold's heading, the heading lit when a link opens the panel at it, the rows the other panels keep for its settings, the amber dot on its tab, and the strip's Legal menu. */
+  .legal-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    flex-shrink: 0;
+    padding: 0.1em 0.55em;
+    border-radius: 999px;
+    font-size: 0.78em;
+    line-height: 1.5;
+    white-space: nowrap;
+    color: #7ee2a8;
+    background: rgb(46 204 113 / 14%);
+  }
+  .legal-chip.warn {
+    color: #e2b84a;
+    background: rgb(226 184 74 / 16%);
+  }
+  .legal-chip svg { width: 0.85em; height: 0.85em; }
+  .legal-fold > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    gap: 0.5em;
+    transition: box-shadow 0.6s ease, border-color 0.12s ease;
+  }
+  .legal-fold-name { margin-right: auto; }
+  .legal-fold.lit > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--urd-color-accent, #7c5cff) 55%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .legal-fold > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { transition: none; }
+  }
+  /* A detail the law asks for, still empty: a dot by its name and the field framed, in the amber the panels warn in */
+  .legal-need-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-left: 0.4rem;
+    border-radius: 50%;
+    background: #e2b84a;
+    vertical-align: middle;
+  }
+  .panel-body input.legal-need:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    border-color: rgb(226 184 74 / 70%);
+  }
+  .legal-page-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+  }
+  .legal-page-row > .field-stack { flex: 1; min-width: 0; }
+  .panel-body .legal-page-row > .row-tool { height: 2.2rem; }
+
+  /* A row another panel keeps for a setting that moved to the Legal panel: its name over what is set, shown and not edited, which opens the panel there */
+  .legal-row {
+    display: grid;
+    gap: 5px;
+  }
+  .legal-value:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    justify-content: flex-start;
+    gap: 0.6em;
+    width: 100%;
+    min-height: 2.2rem;
+    text-align: left;
+    border-style: dashed;
+    background: transparent;
+  }
+  .legal-value-name {
+    margin-right: auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.75;
+  }
+  .legal-goto-to {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    flex-shrink: 0;
+    font-size: 0.86em;
+    color: var(--urd-color-accent, #7c5cff);
+  }
+
+  /* The amber dot: something the law asks for is missing (lib/legal-model.js) */
+  .legal-dot,
+  .rail-icon.active .legal-dot {
+    background: #e2b84a;
+  }
+  .rail-icon.active .legal-dot { box-shadow: 0 0 0 2px var(--urd-color-accent, #7c5cff); }
+
+  /* The strip's Legal tab: one button with the word, the dot and the arrow, and the menu flush under it, so a mouse moving down keeps it open */
+  .legal-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .legal-tab-caret {
+    display: inline-flex;
+    margin-left: 0.4rem;
+    opacity: 0.6;
+    transition: transform 0.15s ease;
+  }
+  .legal-tab .panel-tab.menu-open .legal-tab-caret { opacity: 1; transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) {
+    .legal-tab-caret { transition: none; }
+  }
+  .legal-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 100002;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 15rem;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgb(255 255 255 / 12%);
+    background: var(--urd-color-surface, #151a23);
+    box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  }
+  .legal-menu button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    justify-content: space-between;
+    gap: 0.8em;
+    padding: 0.45em 0.6em;
+    border-color: transparent;
+    text-align: left;
   }

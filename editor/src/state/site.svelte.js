@@ -211,13 +211,13 @@ async function makePage() {
     siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
     // New pages go straight into the menu; the Nav panel can remove them.
     siteDraft.nav.items.push({ label: title, page: slug });
-    // The footer links the privacy page on every page once the site has one.
-    if (template === 'preset:privacy' && !siteDraft.pages.some((p) => p.id === siteDraft.footer?.privacyPage)) {
+    // The footer links the privacy page on every page once the site has one; a page chosen before that is deleted or hidden, which links nothing, gives way to the new one.
+    if (template === 'preset:privacy' && !siteDraft.pages.some((p) => p.id === siteDraft.footer?.privacyPage && !p.hidden)) {
       siteDraft.footer ??= { version: 1, show: false, text: '', align: 'center' };
       siteDraft.footer.privacyPage = slug;
     }
-    // The checkout links the terms of sale once the site has them.
-    if (template === 'preset:terms' && !siteDraft.pages.some((p) => p.id === siteDraft.site.commerce?.termsPage)) {
+    // The checkout links the terms of sale once the site has them, in place of a chosen page that is deleted or hidden.
+    if (template === 'preset:terms' && !siteDraft.pages.some((p) => p.id === siteDraft.site.commerce?.termsPage && !p.hidden)) {
       siteDraft.site.commerce ??= {};
       siteDraft.site.commerce.termsPage = slug;
     }
@@ -671,8 +671,6 @@ let siteShopOpen = $state(false);
 /** Set by the shop's «Shop currency» link: the Site panel brings the currency field into view and focuses it, then clears it. */
 let focusShopCurrency = $state(false);
 
-/** Whether the Site panel's contact details group is open; the Footer panel opens it with «Edit contact details». */
-let siteContactOpen = $state(false);
 
 function addSiteLink() {
   const link = { id: makeId('link'), icon: 'globe', label: '', url: '' };
@@ -1012,8 +1010,6 @@ export const siteState = {
   set siteLinksOpen(v) { siteLinksOpen = v; },
   get siteMediaOpen() { return siteMediaOpen; },
   set siteMediaOpen(v) { siteMediaOpen = v; },
-  get siteContactOpen() { return siteContactOpen; },
-  set siteContactOpen(v) { siteContactOpen = v; },
   siteCalendars,
   siteCalendarById,
   addSiteCalendar,

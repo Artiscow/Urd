@@ -2,6 +2,7 @@
   /* The page switcher at the top bar's left end: the open page's name on a button, and under it the site's pages to switch to, found by a search, each with its address and a gear to its own settings; at the foot the open page's settings and a new page.
      The pages stand in the Pages panel's order, the open one marked, the front page with a house, a page hidden from visitors with an amber crossed eye, one hidden from search with a crossed magnifier, and a page with unpublished changes with a dot.
      A tool menu as the top bar's others (ed.toolMenu 'page'): a press outside, Escape and the window's blur close it; the arrows walk the found pages and Enter opens the marked one. */
+  import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -86,7 +87,7 @@
   <button type="button" class="ghost page-btn" class:open bind:this={buttonEl} title={ta('tip.switchPage')} aria-haspopup="true" aria-expanded={open}
     onclick={toggle}><span class="page-btn-name">{current?.title ?? ''}</span>{@html ICONS.caret}</button>
   {#if open}
-    <div class="tool-pop page-pop" role="dialog" aria-label={ta('tip.switchPage')}>
+    <div class="tool-pop page-pop" transition:menuMotion role="dialog" aria-label={ta('tip.switchPage')}>
       <label class="page-find" title={ta('ph.findPage')}>
         {@html ICONS.search}
         <input type="text" bind:this={searchEl} bind:value={() => query, (v) => { query = v; marked = 0; }} placeholder={ta('ph.findPage')} aria-label={ta('ph.findPage')} onkeydown={onSearchKey} />

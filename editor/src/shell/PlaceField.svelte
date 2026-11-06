@@ -1,6 +1,7 @@
 <script>
   /* An address field with the site's places to pick from (the Redirects dialog's old address and target): the field takes a typed address, and the arrow at its right end opens the places, grouped, narrowed to what the field holds, a pick written into the field.
      The list is a popover in the top layer (above the dialog), placed under the field when it opens; Escape and a press outside close it. */
+  import { lingering } from '../lib/motion.svelte.js';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
 
@@ -10,6 +11,8 @@
   let wrapEl = $state(null);
   let popEl = $state(null);
   let open = $state(false);
+  /** The places stay drawn while the closing pop-up fades out (app.css). */
+  const drawn = lingering(() => open);
   /** What the field held as the list opened. */
   let query = $state('');
   const uid = `pf-${Math.random().toString(36).slice(2, 8)}`;
@@ -53,7 +56,7 @@
   <button type="button" class="pf-caret" class:open popovertarget={uid} title={ta('tip.redirects.places')} aria-label={ta('tip.redirects.places')} aria-expanded={open} tabindex="-1">{@html ICONS.caret}</button>
 </span>
 <div class="pf-pop" id={uid} popover="auto" bind:this={popEl} ontoggle={onToggle}>
-  {#if open}
+  {#if drawn.shown}
     {#each shown as place, i (`${place.group}:${place.path}`)}
       {#if i === 0 || shown[i - 1].group !== place.group}
         <span class="pf-group">{place.group}</span>

@@ -1,5 +1,6 @@
 <script>
   /* The top bar: the page name, the view, device and zoom clusters with their fold steps, the draft status with Publish and Discard, and the tools on the right. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle. */
+  import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -129,13 +130,13 @@
           <nav class="topnav" aria-label={ta('rail.panels')}>
             <span class="toolmenu">
               <button type="button" class="ghost topnav-btn" class:active={ed.toolMenu === 'site'} title={ta('tip.siteMenu')}
-                onclick={() => (ed.toolMenu = ed.toolMenu === 'site' ? null : 'site')}>{ta('rail.siteMenu')}{@html ICONS.caret}{#if ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{/if}</button>
+                onclick={() => (ed.toolMenu = ed.toolMenu === 'site' ? null : 'site')}>{ta('rail.siteMenu')}{@html ICONS.caret}{#if ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{:else if ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}</button>
               {#if ed.toolMenu === 'site'}
-                <div class="tool-pop site-pop">
+                <div class="tool-pop site-pop" transition:menuMotion>
                   {#each ed.PANEL_GROUPS.slice(1) as group, gi (gi)}
                     <span class="mini-label">{ta(ed.PANEL_GROUP_KEYS[gi + 1])}</span>
                     {#each group as name (name)}
-                      <button type="button" class="ghost" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}</button>
+                      <button type="button" class="ghost" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}{#if name === 'legal' && ed.legal?.dot}<span class="update-dot update-dot-inline legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}</button>
                     {/each}
                   {/each}
                 </div>
@@ -153,7 +154,7 @@
               onclick={() => (ed.toolMenu = ed.toolMenu === 'device' ? null : 'device')}
               >{@html ICONS[deviceIcon(ed.deviceId)]}{@html ICONS.caret}</button>
             {#if ed.toolMenu === 'device'}
-              <div class="tool-pop">
+              <div class="tool-pop" transition:menuMotion>
                 {#each ed.devices as d (d.id)}
                   <button class="ghost" class:active={ed.deviceId === d.id && !ed.freeWidth}
                     onclick={() => { ed.deviceId = d.id; ed.toolMenu = null; }}
@@ -184,7 +185,7 @@
                   aria-label={on ? ta('tip.device.sizes', { device: ed.deviceTip(d) }) : ed.deviceTip(d)}
                   aria-expanded={on ? ed.toolMenu === split.menu : undefined}>{@html ICONS[deviceIcon(d.id)]}{@html ICONS.caret}</button>
                 {#if ed.toolMenu === split.menu}
-                  <div class="tool-pop device-pop">
+                  <div class="tool-pop device-pop" transition:menuMotion>
                     <span class="mini-label">{ta(split.sizesKey)}</span>
                     {#if d.id === 'mobile'}{@render phoneSizes()}{:else}{@render screenSizes()}{/if}
                   </div>
@@ -207,7 +208,7 @@
               <!-- The menu stays open while stepping: zoom is adjusted in
                    several clicks, and a menu that closed on every click
                    would have to be reopened for each step. -->
-              <div class="tool-pop">
+              <div class="tool-pop" transition:menuMotion>
                 <div class="tool-pop-row">
                   <button class="ghost" onclick={() => ed.stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
                   <span class="zoom-readout" title={ta('tip.zoomCurrent')}>{Math.round(ed.scale * 100)}%</span>
@@ -237,7 +238,7 @@
               onclick={() => (ed.toolMenu = ed.toolMenu === 'view' ? null : 'view')}
               >{@html ICONS.gridToggle}{@html ICONS.caret}</button>
             {#if ed.toolMenu === 'view'}
-              <div class="tool-pop">
+              <div class="tool-pop" transition:menuMotion>
                 <button class="ghost" class:active={ed.gridOn} onclick={ed.toggleGrid}
                   title={ta('tip.gridToggle')}>{@html ICONS.gridToggle} {ta('lbl.view.grid')}</button>
                 <button class="ghost" class:active={ed.guidesOn} onclick={ed.toggleGuides}

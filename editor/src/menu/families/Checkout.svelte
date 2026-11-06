@@ -106,7 +106,7 @@
         {ta('lbl.checkoutSeller')}
       </label>
     </Setting>
-    <button class="ghost action" onclick={() => { ed.siteContactOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteContact')}</button>
+    <button class="ghost action" onclick={() => ed.openPanel('legal', { legal: 'who' })}>{ta('ui.editSiteContact')}</button>
   {/snippet}
   <MenuGroup id="checkout-order" title={ta('group.order')} value={selectedBlock.props.recipient || selectedBlock.props.endpoint || ta('common.none')} group={groupOf('checkout-order', { currency: 'kr' })}>{@render checkoutOrder()}</MenuGroup>
   <MenuGroup id="checkout-payment" title={ta('group.payment')} value={paymentValue} group={groupOf('checkout-payment', { payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } })}>{@render checkoutPayment()}</MenuGroup>

@@ -2,6 +2,7 @@
   /* Undo, redo and the session's steps, right after the page switcher: the arrows greyed when there is nothing to take back or bring back, their tooltips naming the step, and the caret opening the steps newest first, the undone ones greyed above «now», and at the foot «Discard drafts» with «Redo everything» beside it while there is something to bring back.
      A step's row goes back to just after it, or forward to an undone one, in one go (historyState.goSteps); the steps are kept in this browser over a reload (lib/history-store.js).
      A tool menu as the top bar's others (ed.toolMenu 'steps'), which stays open through a jump between steps and through the discard's question, and closes on a press outside it or Escape. */
+  import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -66,7 +67,7 @@
   <button type="button" class="ghost undo-caret" class:open disabled={!steps.undo.length && !steps.redo.length} title={ta('tip.steps')} aria-label={ta('tip.steps')} aria-expanded={open}
     onclick={() => (ed.toolMenu = open ? null : 'steps')}>{@html ICONS.caret}</button>
   {#if open}
-    <div class="tool-pop steps-pop" role="dialog" aria-label={ta('history.title')}>
+    <div class="tool-pop steps-pop" transition:menuMotion role="dialog" aria-label={ta('history.title')}>
       <span class="steps-head"><b>{ta('history.title')}</b><small>{ta('history.kept')}</small></span>
       <div class="steps-list">
         {#each ahead as step, i (`r${i}`)}

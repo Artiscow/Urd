@@ -1,6 +1,6 @@
 /**
  * The association's legal and contact details (site.site.contact, additive from 0.7.24.5): the country, the legal name, the organisation numbers the country's profile knows (contact-profiles.js), the VAT status, the representative, the address with its point on the map, the phone, the email and the contact points by role.
- * They are typed once in the Site panel and read by the footer, the contact block and the Organization JSON-LD.
+ * They are typed once in the admin's Legal panel and read by the footer, the contact block and the Organization JSON-LD.
  * Pure functions with no DOM and no language: the render layer adds the words through t() (ADR-0012), and tests/contact.test.mjs covers them.
  */
 

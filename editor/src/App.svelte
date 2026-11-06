@@ -18,6 +18,7 @@
   import GridPanel from './panels/GridPanel.svelte';
   import PropertiesPanel from './panels/PropertiesPanel.svelte';
   import FooterPanel from './panels/FooterPanel.svelte';
+  import LegalPanel from './panels/LegalPanel.svelte';
   import CollectionsPanel from './panels/CollectionsPanel.svelte';
   import PluginsPanel from './panels/PluginsPanel.svelte';
   import HistoryPanel from './panels/HistoryPanel.svelte';
@@ -64,8 +65,9 @@
   import { pageSettingsState } from './state/page-settings.svelte.js';
   import { redirectsState } from './state/redirects.svelte.js';
   import { pictureEditorState } from './state/picture-editor.svelte.js';
+  import { legalPanelState } from './state/legal.svelte.js';
 
-  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState, pictureEditorState];
+  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState, pictureEditorState, legalPanelState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
   /* The handle's own closures: what the element menu and the panels open or read across the modules. */
@@ -75,6 +77,8 @@
     hoverOptions: () => pageState.HOVER_OPTIONS,
     openPanel: (panel, opts = {}) => {
       if (opts.calendars) siteState.siteCalendarsOpen = true;
+      // The Legal panel at one of its groups: unfolded, brought into view and lit (LegalPanel.svelte).
+      if (opts.legal) legalPanelState.focusLegal(opts.legal);
       if (opts.shop) {
         siteState.siteShopOpen = true;
         siteState.focusShopCurrency = true;
@@ -158,6 +162,8 @@
             <NavPanel />
           {:else if ed.activePanel === 'site'}
             <SitePanel />
+          {:else if ed.activePanel === 'legal'}
+            <LegalPanel />
           {:else if ed.activePanel === 'theme'}
             <ThemePanel />
           {:else if ed.activePanel === 'blocks'}

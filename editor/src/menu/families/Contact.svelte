@@ -1,6 +1,6 @@
 <script>
-  /* The contact block in the element menu: which of the Site panel's contact details it shows, its design, and the save button and the phone bar.
-     The details themselves are typed once in the Site panel, so the menu points there. */
+  /* The contact block in the element menu: which of the Legal panel's contact details it shows, its design, and the save button and the phone bar.
+     The details themselves are typed once in the Legal panel, so the menu points there. */
   import { getContext } from 'svelte';
   import MenuGroup from '../MenuGroup.svelte';
   import Setting from '../Setting.svelte';
@@ -28,16 +28,15 @@
     });
   }
 
-  /** Opens the Site panel at the contact details. */
+  /** Opens the Legal panel at the contact details. */
   function editDetails() {
-    ed.siteContactOpen = true;
-    ed.openPanel('site');
+    ed.openPanel('legal', { legal: 'who' });
   }
 </script>
 
 {#if area === 'content'}
   {#snippet contactParts()}
-    <!-- The parts this block shows; what they hold is typed in the Site panel -->
+    <!-- The parts this block shows; what they hold is typed in the Legal panel -->
     {#each CONTACT_PARTS as part (part)}
       <label title={ta('tip.contact.part')} class="gridmenu-snap">
         <input type="checkbox" checked={shown.has(part)}

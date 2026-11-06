@@ -1,5 +1,6 @@
 <script>
   /* The Nav panel: the logo, the menu items with their drag order, the bar's variant, size, surface and behaviour, the launcher and the announcement strip. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  import { rowMotion } from '../lib/motion.svelte.js';
   import { getContext } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import ColorPicker from '../lib/ColorPicker.svelte';
@@ -1702,7 +1703,7 @@
               <span class="lrow-chev" aria-hidden="true">{@html ICONS.caret}</span>
             </div>
             {#if launcherOpen === i}
-              <div class="lrow-body">
+              <div class="lrow-body" transition:rowMotion>
                 <!-- The tile as the menu draws it, and the way to change the mark -->
                 <MarkPicker icon={link.icon ?? ''} image={link.image ?? ''} images={launcherImages()}
                   klass="lrow-tile" label={ta('mp.pickMark')}

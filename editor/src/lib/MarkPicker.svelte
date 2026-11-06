@@ -18,6 +18,7 @@
    * close the menu: the mark is applied at once and the menu stays for the
    * next try, until Escape, a click outside or the trigger closes it.
    */
+  import { lingering, menuMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '$engine/icons.js';
   import { ICONS } from './icons.js';
@@ -38,6 +39,8 @@
   let popEl = $state(null);
   let fileEl = $state(null);
   let open = $state(false);
+  /** The picker stays drawn while the closing pop-up fades out (app.css). */
+  const drawn = lingering(() => open);
   let tab = $state('icons');
   let query = $state('');
   let searchEl = $state(null);
@@ -168,10 +171,10 @@
   {#if native}
     <div class="mp-pop mp-anchored" id={popId} popover="auto" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={onToggle}>
-      {#if open}{@render body()}{/if}
+      {#if drawn.shown}{@render body()}{/if}
     </div>
   {:else if open}
-    <div class="mp-pop" style="top: {pos.top}px; left: {pos.left}px">
+    <div class="mp-pop" style="top: {pos.top}px; left: {pos.left}px" transition:menuMotion>
       {@render body()}
     </div>
   {/if}

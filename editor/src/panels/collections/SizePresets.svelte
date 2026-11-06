@@ -2,6 +2,7 @@
   /* The Sizes label with «Presets» beside it, and the card of plain buttons and fields it opens, which adds a set of sizes in one press (lib/size-presets.js), each size once and in one undo step.
      The sets other products of the shop use, named by the product they come from; the common sets; and a numbered set whose wording the owner writes, where «#» stands for each number, with the sizes it gives shown before they are added.
      The card floats against the button, below it or above it where the window has no room below, so the panel's scroll never clips it (ADR-0011): a popover placed by CSS anchoring where the browser has it, else measured and placed fixed, as the dropdowns are (anchored.js). */
+  import { lingering, menuMotion } from '../../lib/motion.svelte.js';
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
@@ -20,6 +21,8 @@
   const CARD_W = 320;
 
   let open = $state(false);
+  /** The sets stay drawn while the closing pop-up fades out (app.css). */
+  const drawn = lingering(() => open);
   let opener = $state(null);
   let card = $state(null);
   let pos = $state({ top: 0, left: 0 });
@@ -127,10 +130,10 @@
   <div class="sp-card sp-anchored" id={popId} popover="auto" role="group" aria-label={ta('ui.presets')} bind:this={card}
     style="position-anchor: {anchor}" ontoggle={(e) => { if (e.newState === 'open') opened(); else open = false; }}
     onkeydown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); opener?.focus(); } }}>
-    {#if open}{@render sets()}{/if}
+    {#if drawn.shown}{@render sets()}{/if}
   </div>
 {:else if open}
-  <div class="sp-card sp-fixed" role="group" aria-label={ta('ui.presets')} bind:this={card} use:dismiss={{ close, opener }}
+  <div class="sp-card sp-fixed" role="group" aria-label={ta('ui.presets')} bind:this={card} use:dismiss={{ close, opener }} transition:menuMotion
     style="top: {pos.top}px; left: {pos.left}px">
     {@render sets()}
   </div>

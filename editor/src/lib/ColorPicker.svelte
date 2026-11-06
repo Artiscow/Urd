@@ -16,6 +16,7 @@
    * on a click outside or Escape. Both close on a window blur (a click in
    * the preview iframe never reaches this document).
    */
+  import { lingering, menuMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from './icons.js';
@@ -44,6 +45,8 @@
 
   let rootEl = $state(null);
   let open = $state(false);
+  /** The card stays drawn while the closing pop-up fades out (app.css). */
+  const drawn = lingering(() => open);
   let pos = $state({ top: 0, left: 0 });
 
   // HSV state while the picker is open (a = alpha 0..1)
@@ -297,13 +300,13 @@
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="cp-pop cp-anchored" id={popId} popover="auto" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={onToggle} onclick={(e) => e.preventDefault()}>
-      {#if open}
+      {#if drawn.shown}
         {@render card()}
       {/if}
     </div>
   {:else if open}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="cp-pop" style="top: {pos.top}px; left: {pos.left}px"
+    <div class="cp-pop" style="top: {pos.top}px; left: {pos.left}px" transition:menuMotion
       onclick={(e) => e.preventDefault()}>
       {@render card()}
     </div>

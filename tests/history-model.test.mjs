@@ -43,6 +43,8 @@ test('stepKind: each kind of change named in words with an icon, a page change m
   assert.equal(stepKind('edit:nav-style-padY').labelKey, 'history.step.nav');
   assert.equal(stepKind('theme').onPage, false);
   assert.equal(stepKind('edit:site-title').labelKey, 'history.step.site');
+  assert.deepEqual(stepKind('legal'), { labelKey: 'history.step.legal', icon: 'panel_legal', onPage: false });
+  assert.equal(stepKind('edit:legal-contact-email').labelKey, 'history.step.legal');
   assert.equal(stepKind('page-meta:kaker:searchTitle').labelKey, 'history.step.pageSettings');
   assert.equal(stepKind('move-block').labelKey, 'history.step.moveBlock');
   assert.equal(stepKind('edit:multi-arrow').labelKey, 'history.step.moveBlock');

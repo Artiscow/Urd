@@ -1,6 +1,6 @@
 /**
  * Core block: the association's contact details (type id `contact`, 0.7.24.5).
- * It draws what the Site panel holds under Contact details (site.contact, contact-model.js), so a changed phone number shows on every page at once.
+ * It draws what the Legal panel holds under Who you are (site.contact, contact-model.js), so a changed phone number shows on every page at once.
  * The details are an <address> in one of the designs of CONTACT_DESIGNS: the plain lines, icon rows, a card, three tiles, a fact list, action buttons, beside a map that loads on a tap, a strip, a poster, the contact points by role, or beside a QR code that saves the contact.
  * Two options work with the designs: a button that saves the details as a contact card (vCard), and a bar docked to the bottom of a phone's screen with the call, email and map actions.
  * Each design has its narrow layout in base.css by the block's own width (a container query), so a phone and a narrow frame both get it.

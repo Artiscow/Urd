@@ -144,7 +144,7 @@
         baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'contact') {
-      // The contact column after the pages is the site's own contact details (the Site panel), never sample text.
+      // The contact column after the pages is the site's own contact details (the Legal panel), never sample text.
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline4') },
         columns: [
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
@@ -451,7 +451,7 @@
   <details class="group">
     <summary title={ta('tip.footer.contact')}>{ta('group.siteContact')}</summary>
     <div class="group-items">
-      <!-- The legal line and the address, phone and email come from the Site panel; a switch shows only when there is something to leave out -->
+      <!-- The legal line and the address, phone and email come from the Legal panel; a switch shows only when there is something to leave out -->
       {#if legalParts(siteContact(siteDraft)).length}
         <label class="gridmenu-snap" title={ta('tip.footer.legal')}>
           <input type="checkbox" checked={siteDraft.footer?.legal !== false}
@@ -459,11 +459,13 @@
           {ta('ui.footerLegal')}
         </label>
       {/if}
-      <!-- The privacy page the footer links to: any shown page, the one made from the Privacy template chosen by itself; a chosen page since hidden stays named, and draws no link while hidden -->
-      <label title={ta('tip.footer.privacy')}>{ta('lbl.footerPrivacy')}
-        <Dropdown value={siteDraft.footer?.privacyPage ?? ''}
-          options={[['', ta('common.none')], ...(siteDraft.pages ?? []).filter((p) => !p.hidden || p.id === siteDraft.footer?.privacyPage).map((p) => [p.id, p.title])]}
-          onchange={(v) => footerMutate('footer', (f) => { if (v) f.privacyPage = v; else delete f.privacyPage; })} /></label>
+      <!-- The privacy page the footer links to is chosen in the Legal panel: the page chosen is shown here, and the row opens the panel at «Privacy» -->
+      <div class="legal-row">
+        <span id="legal-row-privacy" title={ta('tip.footer.privacy')}>{ta('lbl.footerPrivacy')}</span>
+        <button type="button" class="legal-value" id="legal-row-privacy-value" aria-labelledby="legal-row-privacy legal-row-privacy-value" title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { legal: 'privacy' })}>
+          <span class="legal-value-name">{(siteDraft.pages ?? []).find((p) => p.id === siteDraft.footer?.privacyPage)?.title ?? ta('common.none')}</span><span class="legal-goto-to">{ta('panel.legal')}{@html ICONS.right}</span>
+        </button>
+      </div>
       {#if contactParts(siteContact(siteDraft))}
         <label class="gridmenu-snap" title={ta('tip.footer.contact')}>
           <input type="checkbox" checked={siteDraft.footer?.contact !== false}
@@ -471,7 +473,7 @@
           {ta('ui.footerContact')}
         </label>
       {/if}
-      <button class="ghost action" onclick={() => { ed.siteContactOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteContact')}</button>
+      <button class="ghost action" onclick={() => ed.openPanel('legal', { legal: 'who' })}>{ta('ui.editSiteContact')}</button>
     </div>
   </details>
 

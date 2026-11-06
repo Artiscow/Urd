@@ -10,7 +10,7 @@ export const HISTORY_LIMIT = 50;
 export const MERGE_MS = 500;
 
 /** The keys a burst joins within MERGE_MS: the panels' settings, where a slider writes on every tick. An action (a block added or deleted, a section moved, a page renamed, a collection's change) is one step each however fast they come. */
-const TIME_JOINED = new Set(['nav', 'footer', 'theme', 'site', 'section-size', 'section-theme', 'section-hover', 'section-anim']);
+const TIME_JOINED = new Set(['nav', 'footer', 'theme', 'site', 'legal', 'section-size', 'section-theme', 'section-hover', 'section-anim']);
 const TIME_JOINED_PREFIX = ['section-divider-', 'sticky-group:', 'sticky-dock:', 'page-meta:'];
 
 /**
@@ -43,6 +43,7 @@ export function stepKind(key, { typed = false } = {}) {
   if (k === 'nav' || k.startsWith('nav-') || k.startsWith('edit:nav-')) return kind('nav', 'panel_nav', false);
   if (k === 'footer' || k.startsWith('footer-')) return kind('footer', 'panel_footer', false);
   if (k === 'theme' || k.startsWith('edit:theme-')) return kind('theme', 'panel_theme', false);
+  if (k === 'legal' || k.startsWith('edit:legal-')) return kind('legal', 'panel_legal', false);
   if (k === 'site' || k === 'setup' || k === 'site-shortcuts' || k === 'grid:site' || k.startsWith('edit:site-')) return kind('site', 'panel_site', false);
   if (k === 'collections') return kind('collections', 'panel_collections', false);
   if (k === 'templates') return kind('templates', 'bookmark', false);

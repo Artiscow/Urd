@@ -492,7 +492,7 @@ async function publish() {
       ],
     });
   }
-  // A page made from a template with parts in [brackets] not yet filled in: the parts by page, and the seller's details, which the Site panel's contact details hold or still lack.
+  // A page made from a template with parts in [brackets] not yet filled in: the parts by page, and the seller's details, which the Legal panel's contact details hold or still lack.
   if (unfilled.length) {
     const haveDetails = hasSellerDetails(siteState.siteDraft);
     warnings.push({
