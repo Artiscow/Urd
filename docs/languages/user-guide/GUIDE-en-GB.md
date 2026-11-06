@@ -37,6 +37,7 @@ The screen has three parts:
 
 - **Writing text**: click in a text block and type straight into the page.
 - **Moving a block**: grab it and drag. The block snaps to the guide lines (see Grid below).
+- **Phone design**: the gallery, collection, contact details, statistics, privacy page and text have a **Phone design** row under their Design: the design the block draws while it is narrow, on a phone or in a narrow column of a wide page, for example the long read on a computer and the questions on a phone. **Same as the design** keeps the block's own. In the phone view the toolbar's design button opens it, and the gear the block's menu.
 - **Resizing**: drag the handle in the corner of the block. A block whose content decides its height (Calendar, Collection, Product cards, Basket, Checkout, Contact details, Countdown, FAQ, Form, Quote, Share buttons, Statistic, Table, Timeline and Audio) is always as tall as what it shows: its handle changes the width only, a pull up or down stops at the edge of the content with a mark that says so, and its outline follows by itself when you change its settings. A block with columns or cards (Calendar, Collection, Gallery, Product cards, Statistic, Timeline and Table) lays itself out by its own width: dragged narrower it shows its narrow layout at once, and in a narrow column of a wide page it looks as it does on a phone.
 - **The toolbar above the selected block**:
   - ⠿ move (drag)

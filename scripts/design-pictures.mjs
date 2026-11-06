@@ -7,7 +7,8 @@
  * drawn at a phone's width as another block's phone view (a design of a span view over a block of that view), under phone-<id>.webp, cut at
  * 4:5 from the top; then the card designs (the neutral card, every design's card, and the card designs designs lend, calCardCandidates), each
  * the card open over a plain list, under card-<id>.webp; then every other block's designs (block-designs.js), each drawn from its sample over the
- * block's defaults in the site's language, under block-<type>-<id>.webp; and the footer's designs (footer-model.js), the site's own
+ * block's defaults in the site's language, under block-<type>-<id>.webp, and the phone designs of the blocks that have them at a phone's width,
+ * under block-<type>-<id>-phone.webp; and the footer's designs (footer-model.js), the site's own
  * footer drawn in each on an empty page, under footer-<id>.webp.
  *
  * Run from the repo root with the local server up (python3 dev-server.py 8123) and a Chromium-family browser on the machine:
@@ -262,6 +263,57 @@ try {
     writeFileSync(join(OUT, `block-${type}-${id}.webp`), Buffer.from(data, 'base64'));
     console.log(`block-${type}-${id}: ${box.w}x${box.h} block, picture written`);
   }
+  // The phone designs of the blocks that have them (PHONE_DESIGN_TYPES in block-designs.js): each design drawn at a phone's width from the same sample, under block-<type>-<id>-phone.webp, cut at 4:5 from the top as the calendar's phone designs are.
+  const phoneBlockDesigns = await cdp.evaluate(`(async () => {
+    const { engine } = await (await fetch('/urd.json')).json();
+    const { BLOCK_DESIGNS, PHONE_DESIGN_TYPES } = await import('/assets/engine/' + engine + '/block-designs.js');
+    return PHONE_DESIGN_TYPES.flatMap((type) => BLOCK_DESIGNS[type].ids.map((id) => [type, id]));
+  })()`);
+  const chosenPhoneBlocks = ONLY.length ? phoneBlockDesigns.filter(([type, id]) => ONLY.includes(`block-${type}-${id}-phone`)) : phoneBlockDesigns;
+  if (chosenPhoneBlocks.length) await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 1000, deviceScaleFactor: 1, mobile: true });
+  for (const [type, id] of chosenPhoneBlocks) {
+    const box = await cdp.evaluate(`(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const { engine } = await (await fetch('/urd.json')).json();
+      const { BLOCK_DESIGNS, blockDesignSample } = await import('/assets/engine/' + engine + '/block-designs.js');
+      const { ta, initAdminLocale } = await import('/assets/engine/' + engine + '/i18n.js');
+      const site = await (await fetch('/content/site.json')).json();
+      await initAdminLocale(site.site?.lang ?? 'nb');
+      const type = ${JSON.stringify(type)};
+      const entry = BLOCK_DESIGNS[type];
+      const sample = blockDesignSample(type, ta);
+      if (sample.contact) site.site.contact = sample.contact;
+      window.postMessage({ type: 'urd-site', site }, location.origin);
+      await sleep(500);
+      const def = window.Urd.blocks.get(type);
+      const page = await (await fetch('/content/pages/hjem.json')).json();
+      const props = { ...def.defaults(), ...sample.props, [entry.prop]: ${JSON.stringify(id)} };
+      page.sections = [{ id: 'pic-sec', version: 1, size: { minHeight: '900px' }, grid: null, background: { version: 1, layers: [] }, blocks: [
+        { id: 'pic-block', type, version: def.version ?? 1, decor: false, hideMobile: false, animation: null, props, frames: { desktop: { x: 5, y: 24, w: 90, h: entry.frame.h, z: 1, rot: 0 }, mobile: null } },
+      ] }];
+      if (!document.getElementById('pic-style')) {
+        const style = document.createElement('style');
+        style.id = 'pic-style';
+        style.textContent = '.urd-nav, #urd-announce, .urd-nav-announce, .urd-totop { display: none !important; }';
+        document.head.appendChild(style);
+      }
+      window.postMessage({ type: 'urd-preview-full', page }, location.origin);
+      await sleep(2500);
+      window.postMessage({ type: 'urd-chrome', visible: false }, location.origin);
+      await sleep(400);
+      const el = document.querySelector('.urd-block[data-block-id="pic-block"]');
+      el.scrollIntoView({ block: 'start' });
+      await sleep(300);
+      const r = el.getBoundingClientRect();
+      return { x: Math.round(r.left), y: Math.round(r.top + window.scrollY), w: Math.round(r.width), h: Math.round(r.height) };
+    })()`);
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, captureBeyondViewport: true, clip: { x: box.x, y: box.y, width: box.w, height: Math.min(box.h, Math.round(box.w * 5 / 4)), scale: 2 } });
+    const data = shot.result?.data;
+    if (!data) throw new Error(`block-${type}-${id}-phone: no picture (${JSON.stringify(shot)})`);
+    writeFileSync(join(OUT, `block-${type}-${id}-phone.webp`), Buffer.from(data, 'base64'));
+    console.log(`block-${type}-${id}-phone: ${box.w}x${box.h} block, picture written`);
+  }
+  if (chosenPhoneBlocks.length) await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: 1000, deviceScaleFactor: 1, mobile: false });
   // The footer's designs (footer-model.js FOOTER_DESIGNS, and the standard footer): the site's own footer drawn in each on an empty page, under footer-<id>.webp.
   const footerDesigns = ['standard', ...await cdp.evaluate(`(async () => {
     const { engine } = await (await fetch('/urd.json')).json();

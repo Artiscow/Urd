@@ -8,6 +8,7 @@
 import { CONTACT_DESIGNS, contactDesign } from './contact-model.js';
 import { GALLERY_VIEWS, galleryView } from './gallery-model.js';
 import { PRIVACY_DESIGNS, TEXT_DESIGNS, privacyDesign, textDesign } from './doc-look.js';
+import { PHONE_DESIGNS } from './push-model.js';
 
 /** A drawn sample picture: a landscape in one hue, at a ratio of its own, as an inline SVG the preview may load from itself. */
 function samplePicture(hue, w, h) {
@@ -185,6 +186,14 @@ export function designAboutKey(type, id) {
 /** The picture of a design, under template/admin/designs/ beside the calendar's. */
 export function designPicture(type, id) {
   return `block-${type}-${id}.webp`;
+}
+
+/** The block types with a phone design (PHONE_DESIGNS in push-model.js), in the catalogue's order. */
+export const PHONE_DESIGN_TYPES = Object.keys(BLOCK_DESIGNS).filter((type) => PHONE_DESIGNS[type]);
+
+/** The picture of a design drawn at a phone's width, for the phone design picker. */
+export function designPhonePicture(type, id) {
+  return `block-${type}-${id}-phone.webp`;
 }
 
 /**

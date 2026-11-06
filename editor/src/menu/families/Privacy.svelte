@@ -15,7 +15,7 @@
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
   const design = $derived(privacyDesign(selectedBlock.props.design));
-  const LOOK = { design: 'long', contentsSide: null, placement: null, accent: null, headingColor: null, cardColor: null, rules: null, corners: null, headingFont: null, font: null };
+  const LOOK = { design: 'long', phoneDesign: null, contentsSide: null, placement: null, accent: null, headingColor: null, cardColor: null, rules: null, corners: null, headingFont: null, font: null };
 </script>
 
 {#if area === 'content'}
@@ -28,6 +28,10 @@
   {#snippet privacyLook()}
     <Setting key="design">
       <DesignRow pin="privacyDesign" />
+    </Setting>
+    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
+    <Setting key="phoneDesign">
+      <DesignRow phone pin="phoneDesign" />
     </Setting>
     <DocLook type="privacy" {design} />
   {/snippet}

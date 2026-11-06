@@ -6,7 +6,8 @@ import { ta, adminLang } from '$engine/i18n.js';
 import { CAL_VIEWS, calDesign, calDesignFamilies, calOptionDefs, calPhoneDesignDef, calPhoneFamilies, calCardDesignDef, calCardFamilies } from '$engine/calendar-designs.js';
 import { calendarThumb } from '$engine/calendar-thumb.js';
 import { FOOTER_DESIGNS, footerDesign, hasRichFooter } from '$engine/footer-model.js';
-import { BLOCK_DESIGNS, blockDesignOf, blockDesignFamilies, designLabelKey, designAboutKey, designPicture, blockDesignSample, blockDesignEmpty, designPreviewFrame } from '$engine/block-designs.js';
+import { BLOCK_DESIGNS, blockDesignOf, blockDesignFamilies, designLabelKey, designAboutKey, designPicture, designPhonePicture, blockDesignSample, blockDesignEmpty, designPreviewFrame } from '$engine/block-designs.js';
+import { PHONE_DESIGNS } from '$engine/push-model.js';
 
 /** Phrases joined as the admin language joins a list («a, b og c»), with commas where the language has no rules for it. */
 function joined(parts) {
@@ -140,11 +141,13 @@ export function blockDesigns(type, pluginBlocks = []) {
     return {
       blockName: ta(`blocks.${type}`),
       prop: entry.prop,
+      phone: Boolean(PHONE_DESIGNS[type]),
       read: (props) => blockDesignOf(type, props),
       families: () => blockDesignFamilies(type).map((f) => ({ family: f.family, label: ta(f.labelKey), designs: f.ids.map((id) => ({ id })) })),
       name: (id) => ta(designLabelKey(type, id)),
       about: (id) => ta(designAboutKey(type, id)),
       picture: (id) => `/admin/designs/${designPicture(type, id)}`,
+      phonePicture: (id) => `/admin/designs/${designPhonePicture(type, id)}`,
       frame: entry.frame,
       sample: blockDesignSample(type, ta),
       empty: (props, site) => blockDesignEmpty(type, props, site),
@@ -204,7 +207,9 @@ export function blockDesignSource({ block, site = null, designs, sectionWidth })
     viewport: 'desktop',
     blockId: 'design-picker-block',
     previewPage(id, page, siteNow) {
-      const props = designs.empty(block.props, siteNow) ? { ...block.props, ...designs.sample.props } : block.props;
+      const props = designs.empty(block.props, siteNow) ? { ...block.props, ...designs.sample.props } : { ...block.props };
+      // The design itself, whatever the block draws while narrow: a phone design never stands in for the one being chosen.
+      delete props.phoneDesign;
       return onePage(page, {
         ...block, id: 'design-picker-block', hideMobile: false, animation: null, sticky: null,
         props: { ...props, [designs.prop]: id },
@@ -212,6 +217,79 @@ export function blockDesignSource({ block, site = null, designs, sectionWidth })
       });
     },
     /** The contact designs read the site's details; without any the preview borrows the sample association. */
+    previewSite(siteNow) {
+      if (!designs.sample.contact || !designs.empty(block.props, siteNow)) return siteNow;
+      return { ...siteNow, site: { ...(siteNow?.site ?? {}), contact: designs.sample.contact } };
+    },
+    extraBottom: () => 0,
+    afterDraw: null,
+  };
+}
+
+/** The phone design picker's first entry: the block keeps its own design on a phone. */
+export const SAME_DESIGN = 'same';
+
+/**
+ * The phone design a block's props hold, or SAME_DESIGN where none is chosen or the one stored is not among the block's designs.
+ * @param {object} designs the block's designs (blockDesigns)
+ * @param {object} props
+ */
+export function phoneDesignOf(designs, props) {
+  const id = props?.phoneDesign;
+  return typeof id === 'string' && id && designs.read({ [designs.prop]: id }) === id ? id : SAME_DESIGN;
+}
+
+/** A phone design's name as the menu shows it: the design's own, or that the block keeps its design. */
+export function phoneDesignName(designs, props) {
+  const id = phoneDesignOf(designs, props);
+  return id === SAME_DESIGN ? ta('picker.phoneSameShort') : designs.name(id);
+}
+
+/**
+ * A block's phone design (PHONE_DESIGNS in push-model.js): the design it draws while it is narrow, on a phone or in a narrow column, as the calendar's phone view.
+ * The first entry keeps the block's own design; the others are its designs, each pictured at a phone's width, and the preview draws the block with the owner's content at a phone's width in the design marked.
+ * @param {{block: object, site: object|null, designs: object}} opts the selected block as the page stores it, the site, and the block's designs (blockDesigns)
+ */
+export function blockPhoneDesignSource({ block, site = null, designs }) {
+  const own = designs.read(block.props);
+  const current = phoneDesignOf(designs, block.props);
+  const name = (d) => (d.id === SAME_DESIGN ? ta('picker.phoneSame', { name: designs.name(own) }) : designs.name(d.id));
+  return {
+    title: ta('picker.phoneTitle', { block: designs.blockName }),
+    label: ta('picker.phoneTitle', { block: designs.blockName }),
+    searchLabel: ta('picker.search'),
+    countText: (n) => ta('picker.count', { n }),
+    noneText: ta('picker.none'),
+    currentText: ta('picker.current'),
+    aboutHead: ta('picker.aboutHead'),
+    yoursHead: '',
+    useLabel: ta('picker.use'),
+    previewTitle: (n) => ta('picker.preview', { name: n }),
+    current,
+    initial: current,
+    filters: null,
+    families: () => designs.families().map((f, i) => ({ ...f, designs: i === 0 ? [{ id: SAME_DESIGN }, ...f.designs] : f.designs })),
+    name,
+    searchText: name,
+    def: (id) => ({ id }),
+    sideTag: () => '',
+    picture: (id) => designs.phonePicture(id === SAME_DESIGN ? own : id),
+    thumb: () => '',
+    about: (d) => (d.id === SAME_DESIGN ? ta('picker.phoneSameAbout') : designs.about(d.id)),
+    yours: () => [],
+    previewWidth: 390,
+    viewport: 'mobile',
+    blockId: 'design-picker-block',
+    previewPage(id, page, siteNow) {
+      const props = designs.empty(block.props, siteNow) ? { ...block.props, ...designs.sample.props } : { ...block.props };
+      if (id === SAME_DESIGN) delete props.phoneDesign;
+      else props.phoneDesign = id;
+      return onePage(page, {
+        ...block, id: 'design-picker-block', hideMobile: false, animation: null, sticky: null,
+        props,
+        frames: { desktop: { ...(block.frames?.desktop ?? { x: 5, y: 24, w: 90, h: designs.frame.h }), y: 24, z: 1, rot: 0 }, mobile: null },
+      });
+    },
     previewSite(siteNow) {
       if (!designs.sample.contact || !designs.empty(block.props, siteNow)) return siteNow;
       return { ...siteNow, site: { ...(siteNow?.site ?? {}), contact: designs.sample.contact } };

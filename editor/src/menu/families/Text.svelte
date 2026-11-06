@@ -41,7 +41,7 @@
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
   const design = $derived(textDesign(selectedBlock.props.design));
-  const LOOK = { design: 'plain', contentsSide: null, placement: null, accent: null, headingColor: null, cardColor: null, rules: null, corners: null, headingFont: null };
+  const LOOK = { design: 'plain', phoneDesign: null, contentsSide: null, placement: null, accent: null, headingColor: null, cardColor: null, rules: null, corners: null, headingFont: null };
 </script>
 
 {#if area === 'content'}
@@ -62,6 +62,10 @@
   {#snippet textDesignLook()}
     <Setting key="design">
       <DesignRow pin="textDesign" />
+    </Setting>
+    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
+    <Setting key="phoneDesign">
+      <DesignRow phone pin="phoneDesign" />
     </Setting>
     <!-- A document design's look, directly under the design it dresses -->
     <DocLook type="text" {design} />

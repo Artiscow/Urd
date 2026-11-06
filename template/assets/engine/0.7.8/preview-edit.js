@@ -24,10 +24,10 @@
  *                  urd-select-section carries `open: true` from the right-click menu's «Section settings»: the editor opens the Properties panel on the section
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
- *                  { type: 'urd-block-design', sectionId, blockId }  (open the design picker for a block with designs, from its toolbar)
+ *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  */
 import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
-import { followsContent, fitMovesAll, FIT_BY_WIDTH } from './push-model.js';
+import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -105,10 +105,40 @@ function hasDesigns(block) {
   return Boolean(def?.fromPlugin && pluginBlockDesigns(def, ta));
 }
 
-/** The design picker in the editor, for the block (the toolbar's design button beside the gear). */
-function openBlockDesign(el, section, block) {
+/** The design picker in the editor, for the block (the toolbar's design button beside the gear); `phone` asks for the design it draws on a phone (the phone view's button). */
+function openBlockDesign(el, section, block, phone = false) {
   selectBlock(el);
-  post({ type: 'urd-block-design', sectionId: section.id, blockId: block.id });
+  post({ type: 'urd-block-design', sectionId: section.id, blockId: block.id, ...(phone ? { phone: true } : {}) });
+}
+
+const DESIGN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="4"/></svg>';
+const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
+
+/** The toolbar's design button: the block's design picker one press away; in the phone view its design on a phone. */
+function designButton(el, section, block, phone) {
+  const btn = document.createElement('button');
+  btn.className = 'urd-edit-design';
+  btn.innerHTML = DESIGN_SVG;
+  btn.title = ta(phone ? 'canvas.blockPhoneDesign' : 'canvas.blockDesign');
+  btn.setAttribute('aria-label', btn.title);
+  // Without the stop, pointerdown would bubble to the document's selection listener, which can draw the section again before the click (the same guard as the gear).
+  btn.addEventListener('pointerdown', (event) => event.stopPropagation());
+  btn.addEventListener('click', () => openBlockDesign(el, section, block, phone));
+  return btn;
+}
+
+/** The toolbar's gear: the block's menu in the editor, opened at the block. */
+function menuButton(el, section, block) {
+  const btn = document.createElement('button');
+  btn.innerHTML = GEAR_SVG;
+  btn.title = ta('canvas.blockMenu');
+  // Without the stop, pointerdown would bubble to the document's selection
+  // listener, which can trigger a re-render (section activation) BEFORE click
+  // fires - and then the button is swapped out mid-click (the same guard as
+  // the handles).
+  btn.addEventListener('pointerdown', (event) => event.stopPropagation());
+  btn.addEventListener('click', () => openBlockSettings(el, section, block));
+  return btn;
 }
 
 /** The block menu in the editor, opened at the block (the toolbar's gear and the right-click menu's «Settings»). */
@@ -4334,6 +4364,12 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.appendChild(resetBtn);
   }
 
+  // In the phone view the block's design on a phone and its menu are one press away too: the design button opens the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS), its design otherwise, and the gear its menu.
+  if (mobile) {
+    if (hasDesigns(block)) toolbar.appendChild(designButton(el, section, block, block.type === 'calendar' || Boolean(PHONE_DESIGNS[block.type])));
+    toolbar.appendChild(menuButton(el, section, block));
+  }
+
   const bumpZ = (dir) => bumpBlockZ(host, section, block, el, dir);
   // Structure (z-order, decor, deletion) is edited in the desktop view;
   // the mobile view is pure layout adjustment.
@@ -4393,29 +4429,9 @@ function enhanceBlock(el, block, section, grid, host) {
     // Block menu: all the block settings in a floating menu by the block
     // (the calendar pattern). The menu itself lives in the editor (the
     // same controls as Properties); only the position is reported here.
-    const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
     // The design picker one press away, beside the gear, on a block that has designs.
-    if (hasDesigns(block)) {
-      const designBtn = document.createElement('button');
-      designBtn.className = 'urd-edit-design';
-      designBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="4"/></svg>';
-      designBtn.title = ta('canvas.blockDesign');
-      designBtn.setAttribute('aria-label', ta('canvas.blockDesign'));
-      designBtn.addEventListener('pointerdown', (event) => event.stopPropagation());
-      designBtn.addEventListener('click', () => openBlockDesign(el, section, block));
-      toolbar.appendChild(designBtn);
-    }
-
-    const menuBtn = document.createElement('button');
-    menuBtn.innerHTML = GEAR_SVG;
-    menuBtn.title = ta('canvas.blockMenu');
-    // Without the stop, pointerdown would bubble to the document's
-    // selection listener, which can trigger a re-render (section
-    // activation) BEFORE click fires - and then the button is swapped out
-    // mid-click (the same guard as the handles).
-    menuBtn.addEventListener('pointerdown', (event) => event.stopPropagation());
-    menuBtn.addEventListener('click', () => openBlockSettings(el, section, block));
-    toolbar.appendChild(menuBtn);
+    if (hasDesigns(block)) toolbar.appendChild(designButton(el, section, block, false));
+    toolbar.appendChild(menuButton(el, section, block));
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'urd-edit-delete';

@@ -4,6 +4,7 @@
    * What it shows comes from a source (design-sources.js): the calendar's designs, its phone and card designs, or another block's designs (block-designs.js).
    * The pictures are the engine's own drawings of each design (template/admin/designs/, made by scripts/design-pictures.mjs), each the design's own box, shown whole and centred on the tile's dark surface; a design without one shows its schematic thumbnail where the source has one.
    * The marked design is drawn live in a preview iframe of its own, in the site's theme and language, so the owner sees it before it is applied; under the preview it is described, with what the owner can change on it where the source says.
+ * A design the mouse rests on is shown there in its place until the pointer leaves the list, and the arrow keys move the mark from tile to tile as they stand (the rows by where the tiles are drawn), so the preview follows the eye and the keys alike; Enter on the marked tile applies it.
    * The preview frame is told the site, the enabled plugins and the draft collections, as the editor's own preview is, so a plugin block and a collection block draw there too.
    * `onpick(id)` applies, `onclose` leaves.
    */
@@ -16,6 +17,11 @@
   let query = $state('');
   let view = $state('');
   let chosen = $state(source.initial);
+  /** The design under the mouse, shown in the marked one's place while it rests there. */
+  let hovered = $state(null);
+  let hoverTimer = 0;
+  /** The design the preview and the description show: the one under the mouse, else the marked one. */
+  const shown = $derived(hovered ?? chosen);
   let broken = $state(new Set());
   let iframeEl = $state(null);
   let paneW = $state(0);
@@ -35,6 +41,7 @@
   });
   const count = $derived(families.reduce((n, f) => n + f.designs.length, 0));
   const chosenDef = $derived(source.def(chosen));
+  const shownDef = $derived(source.def(shown));
   const scale = $derived(paneW ? Math.min(1, paneW / source.previewWidth) : 0.4);
 
   // A native modal dialog (ADR-0011): the top layer places it over the whole editor whatever the panel it was opened from is transformed by, and Escape is its own cancel.
@@ -87,8 +94,8 @@
 
   function sendPreview() {
     // A source whose design is the site's (the footer) sends the site anew with the choice.
-    if (source.siteVaries && site) post({ type: 'urd-site', site: source.previewSite(site, chosen) });
-    post({ type: 'urd-preview-full', pageId: 'design-picker', page: source.previewPage(chosen, page, site) });
+    if (source.siteVaries && site) post({ type: 'urd-site', site: source.previewSite(site, shown) });
+    post({ type: 'urd-preview-full', pageId: 'design-picker', page: source.previewPage(shown, page, site) });
     watchPreview();
   }
 
@@ -105,7 +112,7 @@
       style.textContent = `.urd-nav, #urd-announce, .urd-nav-announce, .urd-totop${source.showsFooter ? '' : ', #urd-footer'} { display: none !important; } html { overflow: hidden !important; }`;
       doc.head.appendChild(style);
     }
-    if (site) post({ type: 'urd-site', site: source.previewSite(site, chosen) });
+    if (site) post({ type: 'urd-site', site: source.previewSite(site, shown) });
     if (plugins.length) post({ type: 'urd-plugins', enabled: plugins });
     if (collections) post({ type: 'urd-collections', collections });
     post({ type: 'urd-viewport', mode: source.viewport });
@@ -115,9 +122,82 @@
   }
 
   $effect(() => {
-    chosen;
+    shown;
     if (previewReady) sendPreview();
   });
+
+  /** The design the mouse is on its way to show. */
+  let hoverNext = null;
+
+  /** The mouse moving over a design shows it, after a moment so a pointer crossing the tiles does not draw each one; only a moving mouse counts, so a picker that opens under a still pointer shows the marked design, and a touch or a pen leaves the preview to the press (a tap would hover and press at once). */
+  function hoverSoon(id, event) {
+    if (event && event.pointerType !== 'mouse') return;
+    if (id === hoverNext) return;
+    hoverNext = id;
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(() => (hovered = id), id === null ? 60 : 140);
+  }
+
+  $effect(() => () => clearTimeout(hoverTimer));
+
+  /** The keys take the preview back from the mouse: what they mark is what is shown, until the mouse moves again. */
+  function dropHover() {
+    clearTimeout(hoverTimer);
+    hoverNext = null;
+    hovered = null;
+  }
+
+  /**
+   * The arrow keys on a tile move the mark to the next tile in the direction pressed: left and right in the tiles' order, up and down to the tile in the row above or below whose middle is nearest, so the families' rows read as one grid; Home and End go to the first and the last.
+   * The mark follows the focus, so the preview shows the tile the keys stand on; Enter on the marked tile applies it.
+   */
+  function tileKeys(event, id) {
+    if (event.key === 'Enter' && id === chosen) {
+      event.preventDefault();
+      pick(id);
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') dropHover();
+    const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+    if (!keys.includes(event.key)) return;
+    const tiles = [...(dialogEl?.querySelectorAll('.dp-tile') ?? [])];
+    const here = tiles.indexOf(event.currentTarget);
+    if (here < 0) return;
+    let next = null;
+    if (event.key === 'ArrowLeft') next = tiles[here - 1];
+    else if (event.key === 'ArrowRight') next = tiles[here + 1];
+    else if (event.key === 'Home') next = tiles[0];
+    else if (event.key === 'End') next = tiles.at(-1);
+    else {
+      const from = event.currentTarget.getBoundingClientRect();
+      const down = event.key === 'ArrowDown';
+      const middle = (r) => r.left + r.width / 2;
+      // The nearest row in the direction pressed, then the tile in it nearest the middle of this one.
+      const rows = tiles.map((t) => [t, t.getBoundingClientRect()]).filter(([, r]) => (down ? r.top > from.bottom - 2 : r.bottom < from.top + 2));
+      if (rows.length) {
+        const rowTop = down ? Math.min(...rows.map(([, r]) => r.top)) : Math.max(...rows.map(([, r]) => r.top));
+        const row = rows.filter(([, r]) => Math.abs(r.top - rowTop) < 4);
+        next = row.reduce((best, cur) => (Math.abs(middle(cur[1]) - middle(from)) < Math.abs(middle(best[1]) - middle(from)) ? cur : best))[0];
+      }
+    }
+    event.preventDefault();
+    if (!next) return;
+    next.focus();
+    next.scrollIntoView({ block: 'nearest' });
+    dropHover();
+    chosen = next.dataset.id;
+  }
+
+  /** From the search field the down arrow goes to the marked tile, or the first one. */
+  function searchKeys(event) {
+    if (event.key !== 'ArrowDown') return;
+    const tile = dialogEl?.querySelector('.dp-tile.on') ?? dialogEl?.querySelector('.dp-tile');
+    if (!tile) return;
+    event.preventDefault();
+    tile.focus();
+    dropHover();
+    chosen = tile.dataset.id;
+  }
 
   $effect(() => () => watcher?.disconnect());
 
@@ -156,7 +236,7 @@
   <div class="dp-card" class:nofilters={!source.filters}>
     <div class="dp-head">
       <h2>{source.title}</h2>
-      <input class="dp-search" type="search" bind:this={searchEl} bind:value={query} placeholder={source.searchLabel} aria-label={source.searchLabel} />
+      <input class="dp-search" type="search" bind:this={searchEl} bind:value={query} placeholder={source.searchLabel} aria-label={source.searchLabel} onkeydown={searchKeys} />
       <span class="dp-count">{source.countText(count)}</span>
       <button type="button" class="dp-close" aria-label={ta('ui.close')} title={ta('ui.close')} onclick={() => dialogEl.close()}>
         <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
@@ -171,14 +251,15 @@
     </div>
     {/if}
     <div class="dp-body">
-      <div class="dp-list">
+      <div class="dp-list" role="presentation" onpointerleave={(e) => hoverSoon(null, e)}>
         {#each families as family (family.family)}
           <section class="dp-family">
             <h3>{family.label ?? ta(family.labelKey)}</h3>
             <div class="dp-grid">
               {#each family.designs as d (d.id)}
                 <button type="button" class="dp-tile" class:on={d.id === chosen} class:current={source.current !== null && d.id === source.current} aria-pressed={d.id === chosen}
-                  title={source.name(d)} onclick={() => (chosen = d.id)} ondblclick={() => pick(d.id)}>
+                  data-id={d.id} title={source.name(d)} onclick={() => (chosen = d.id)} ondblclick={() => pick(d.id)}
+                  onpointermove={(e) => hoverSoon(d.id, e)} onkeydown={(e) => tileKeys(e, d.id)}>
                   <span class="dp-pic">
                     {#if broken.has(d.id) || !source.picture(d.id)}
                       {@html source.thumb(d.id)}
@@ -201,27 +282,27 @@
       </div>
       <aside class="dp-side">
         <div class="dp-side-head">
-          <strong>{source.name(chosenDef)}</strong>
-          {#if source.sideTag(chosenDef)}
-            <span class="dp-side-view">{source.sideTag(chosenDef)}</span>
+          <strong>{source.name(shownDef)}</strong>
+          {#if source.sideTag(shownDef)}
+            <span class="dp-side-view">{source.sideTag(shownDef)}</span>
           {/if}
         </div>
         <div class="dp-preview" bind:clientWidth={paneW}>
           <div class="dp-stage" style="width:{source.previewWidth * scale}px; height:{previewH * scale}px">
-            <iframe bind:this={iframeEl} title={source.previewTitle(source.name(chosenDef))} src="/?preview=1"
+            <iframe bind:this={iframeEl} title={source.previewTitle(source.name(shownDef))} src="/?preview=1"
               style="width:{source.previewWidth}px; height:{previewH}px; transform:scale({scale}); transform-origin:top left"></iframe>
           </div>
         </div>
         <div class="dp-info">
           <section>
             <h3>{source.aboutHead}</h3>
-            <p>{source.about(chosenDef)}</p>
+            <p>{source.about(shownDef)}</p>
           </section>
-          {#if source.yours(chosenDef).length}
+          {#if source.yours(shownDef).length}
             <section>
               <h3>{source.yoursHead}</h3>
               <dl>
-                {#each source.yours(chosenDef) as [label, lines] (label)}
+                {#each source.yours(shownDef) as [label, lines] (label)}
                   <dt>{label}</dt>
                   <dd>{#each lines as line, i (i)}<span>{line}</span>{/each}</dd>
                 {/each}

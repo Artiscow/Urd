@@ -66,6 +66,10 @@
     <Setting key="view">
       <DesignRow pin="galleryView" />
     </Setting>
+    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
+    <Setting key="phoneDesign">
+      <DesignRow phone pin="phoneDesign" />
+    </Setting>
     {#if gview === 'ribbon'}
       <Setting key="width">
         <Choice label={ta('lbl.ribbonWidth')} value={ribbonReach(selectedBlock.props.width)}
@@ -206,7 +210,7 @@
       </label>
     </Setting>
   {/snippet}
-  <MenuGroup id="gallery-view" title={ta('lbl.view')} value={ta(`opt.galleryView.${gview}`)} group={groupOf('gallery-view', { view: 'grid', columns: 3, gap: 12, interval: 5, width: 'canvas', rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined })}>{@render galleryView()}</MenuGroup>
+  <MenuGroup id="gallery-view" title={ta('lbl.view')} value={ta(`opt.galleryView.${gview}`)} group={groupOf('gallery-view', { view: 'grid', phoneDesign: null, columns: 3, gap: 12, interval: 5, width: 'canvas', rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined })}>{@render galleryView()}</MenuGroup>
   {#if gview === 'ribbon'}
     <MenuGroup id="gallery-roll" title={ta('lbl.ribbonMotion')} value={`${selectedBlock.props.speed ?? 60} px/s`} group={groupOf('gallery-roll', { rows: undefined, direction: undefined, speed: undefined, pauseOnHover: undefined, pause: undefined, fade: undefined })}>{@render galleryRoll()}</MenuGroup>
   {/if}

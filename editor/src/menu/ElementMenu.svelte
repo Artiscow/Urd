@@ -14,7 +14,7 @@
   import { paymentsOf } from '$engine/shop.js';
   import { GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
   import { BLOCK_DESIGNS } from '$engine/block-designs.js';
-  import { blockDesigns } from '../lib/design-sources.js';
+  import { blockDesigns, phoneDesignName } from '../lib/design-sources.js';
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize, sizeRange } from '$engine/push-model.js';
   import { ribbonMotions, colorTokens, onOff } from './options.js';
@@ -93,6 +93,8 @@
     const designItem = (id) => ({ id, label: ta('lbl.design'), kind: 'open', value: designs ? designs.name(designs.read(p)) : '', run: ed.openBlockDesignPicker });
     // A plugin block with designs (the design contract) gets the same tile.
     if (designs && !BLOCK_DESIGNS[b.type]) items.push(designItem('design'));
+    // A block with a phone design can pin a tile for it, which opens the phone design picker.
+    if (designs?.phone) items.push({ id: 'phoneDesign', label: ta('lbl.phoneDesign'), kind: 'open', value: phoneDesignName(designs, p), run: ed.openBlockPhonePicker });
     if (b.type === 'text') {
       items.push(designItem('textDesign'));
       items.push({ id: 'align', label: ta('lbl.align'), kind: 'choice', value: p.align ?? 'left',

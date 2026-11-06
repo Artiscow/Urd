@@ -8,7 +8,7 @@ import { claimAnchors } from '$engine/anchor-model.js';
 import { duplicatedSection } from '../lib/duplicate.js';
 import { pasteIndex } from '$engine/clipboard-model.js';
 import { ta } from '$engine/i18n.js';
-import { fitMoves, shapeHeight, followsContent } from '$engine/push-model.js';
+import { fitMoves, shapeHeight, followsContent, PHONE_DESIGNS } from '$engine/push-model.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
@@ -60,7 +60,14 @@ function handleEdit(msg) {
   if (!block) return;
   // The caret where the typing began goes with the step, for the undo to put back.
   historyState.pushHistory(`edit:${msg.blockId}`, { caret: Number.isFinite(msg.caret) ? { blockId: msg.blockId, offset: msg.caret } : null });
-  block.props = msg.props;
+  // An edit on the canvas never changes a block's design: a block drawn in its phone design (PHONE_DESIGNS) hands its words back with that design in its props, and the stored design stays.
+  const props = { ...msg.props };
+  const designProp = PHONE_DESIGNS[block.type];
+  if (designProp) {
+    if (block.props?.[designProp] === undefined) delete props[designProp];
+    else props[designProp] = block.props[designProp];
+  }
+  block.props = props;
   pageState.store.save();
   historyState.updateDirty();
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
@@ -72,6 +79,12 @@ function handleEdit(msg) {
   // Typing in a block that follows its content changes its height too; the
   // fit comes back without drawing the section again, so the caret stays.
   pageState.fitBlockSoon(section.id, block);
+}
+
+/** A block with a phone design crossed its width's line in the preview: the section is sent again from the draft, which holds what was typed since it was drawn, so the preview draws it in the other design without losing a word. */
+function handleRedrawSection(msg) {
+  const section = pageState.store?.data.sections.find((s) => s.id === msg.sectionId);
+  if (section) previewState.bridge?.sendSection(pageState.pageId, section);
 }
 
 /** Drag/resize from the iframe: the iframe already shows the snapped
@@ -401,6 +414,7 @@ export const bridgeState = {
   handleStickyDock,
   handleStickyGroup,
   handleEdit,
+  handleRedrawSection,
   handleMove,
   handleGrow,
   applyFit,

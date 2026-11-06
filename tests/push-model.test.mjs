@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { PHONE_DESIGNS, NARROW_PX, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -304,4 +304,22 @@ test('mobileLoadingHeight: the stored phone height of a block that fetches its c
   assert.equal(mobileLoadingHeight({ type: 'calendar', mobileHeight: 'tall' }), 0);
   assert.equal(mobileLoadingHeight({ type: 'text', mobileHeight: 200 }), 0);
   assert.equal(mobileLoadingHeight(undefined), 0);
+});
+
+test('a phone design: drawn in its design\'s place while the block is narrow, and only where one is chosen', () => {
+  assert.equal(NARROW_PX, 540);
+  assert.deepEqual(Object.keys(PHONE_DESIGNS).sort(), ['collection', 'contact', 'gallery', 'privacy', 'stats', 'text']);
+  const props = { design: 'long', phoneDesign: 'questions', html: '<h2>A</h2>' };
+  assert.equal(hasPhoneDesign('text', props), true);
+  assert.equal(hasPhoneDesign('text', { design: 'long' }), false, 'none chosen');
+  assert.equal(hasPhoneDesign('button', { style: 'primary', phoneDesign: 'secondary' }), false, 'a block without phone designs');
+  assert.deepEqual(propsForWidth('text', props, true), { ...props, design: 'questions' });
+  assert.equal(propsForWidth('text', props, false), props, 'a wide block keeps its own props');
+  assert.deepEqual(propsForWidth('gallery', { view: 'mosaic', phoneDesign: 'slides' }, true), { view: 'slides', phoneDesign: 'slides' });
+  assert.equal(propsForWidth('stats', { variant: 'band' }, true).variant, 'band', 'no phone design: the design itself');
+  assert.equal(hasPhoneDesign('text', { design: 'long', phoneDesign: 'nonsense' }), false, 'an id that is not one of the block\'s designs is no phone design');
+  const text = { type: 'text', props: props };
+  assert.equal(drawnBlock(text, false), text);
+  assert.equal(drawnBlock(text, true).props.design, 'questions', 'the layout rules read the design drawn');
+  assert.equal(followsContent(drawnBlock(text, true)), true, 'a text drawn as questions follows its closed rows');
 });

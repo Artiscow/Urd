@@ -38,6 +38,10 @@
     <Setting key="variant">
       <DesignRow pin="variant" />
     </Setting>
+    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
+    <Setting key="phoneDesign">
+      <DesignRow phone pin="phoneDesign" />
+    </Setting>
     <Setting key="countUp" shown={ta('common.on')}>
       <label class="gridmenu-snap" title={ta('tip.stat.countUp')}>
         <input type="checkbox" checked={selectedBlock.props.countUp !== false}
@@ -46,5 +50,5 @@
       </label>
     </Setting>
   {/snippet}
-  <MenuGroup id="stat-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.statVariant.${variant}`)} group={groupOf('stat-look', { variant: 'plain', countUp: true })}>{@render statLook()}</MenuGroup>
+  <MenuGroup id="stat-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.statVariant.${variant}`)} group={groupOf('stat-look', { variant: 'plain', phoneDesign: null, countUp: true })}>{@render statLook()}</MenuGroup>
 {/if}

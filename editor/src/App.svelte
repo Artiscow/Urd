@@ -24,7 +24,7 @@
   import UpdatePanel from './panels/UpdatePanel.svelte';
   import DesignPicker from './lib/DesignPicker.svelte';
   import { calDesign, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
-  import { calendarDesignSource, blockDesignSource, blockDesigns, footerDesignSource } from './lib/design-sources.js';
+  import { calendarDesignSource, blockDesignSource, blockDesigns, footerDesignSource, blockPhoneDesignSource, SAME_DESIGN } from './lib/design-sources.js';
   import ColorPicker from './lib/ColorPicker.svelte';
   import FloatingMenu from './menu/FloatingMenu.svelte';
   import TopBar from './shell/TopBar.svelte';
@@ -98,6 +98,10 @@
     /** The design picker for the selected block's designs (block-designs.js), kept to that block. */
     openBlockDesignPicker: () => {
       pageState.designPicker = { kind: 'block', blockId: ed.selectedBlock?.blockId ?? null };
+    },
+    /** The phone design picker for the selected block (PHONE_DESIGNS in push-model.js): the design it draws while narrow. */
+    openBlockPhonePicker: () => {
+      pageState.designPicker = { kind: 'block', blockId: ed.selectedBlock?.blockId ?? null, phone: true };
     },
   });
   setContext('urd-editor', ed);
@@ -202,10 +206,14 @@
     {@const stored = storedSection?.blocks.find((blk) => blk.id === ed.selectedBlock.blockId)}
     {@const designs = ed.selectedBlock ? blockDesigns(ed.selectedBlock.type, ed.pluginBlocks) : null}
     {#if stored && designs}
-      <DesignPicker source={blockDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs, sectionWidth: storedSection.size?.maxWidth })}
+      <!-- The phone form chooses the design the block draws while narrow (phoneDesign), the first entry keeping its own -->
+      {@const phone = ed.designPicker.phone === true && designs.phone}
+      <DesignPicker source={phone
+          ? blockPhoneDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs })
+          : blockDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs, sectionWidth: storedSection.size?.maxWidth })}
         site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
         plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
-        onpick={(id) => { ed.setBlockProp(designs.prop, id); ed.designPicker = null; }}
+        onpick={(id) => { if (phone) ed.setBlockProp('phoneDesign', id === SAME_DESIGN ? null : id); else ed.setBlockProp(designs.prop, id); ed.designPicker = null; }}
         onclose={() => (ed.designPicker = null)} />
     {/if}
   {:else if ed.designPicker?.kind === 'footer'}

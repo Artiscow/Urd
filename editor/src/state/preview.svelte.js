@@ -208,6 +208,7 @@ function onIframeLoad() {
   }, true);
   bridge = createPreviewBridge(iframeEl, {
     onEdit: bridgeState.handleEdit,
+    onRedrawSection: bridgeState.handleRedrawSection,
     onPictureEdit: (msg) => pictureEditorState.openPicture(msg),
     onMove: bridgeState.handleMove,
     onGrow: bridgeState.handleGrow,

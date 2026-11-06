@@ -6,7 +6,7 @@ import { tick } from 'svelte';
 import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea, menuOpen } from '../menu/state.svelte.js';
 import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
-import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES } from '$engine/push-model.js';
+import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
@@ -192,11 +192,13 @@ function onBlockMenu(msg) {
   blockMenu = menuPlaceFor(msg.rect);
 }
 
-/** The design button on a block's toolbar: the block selected and its design picker open, the calendar's own or the one every other block with designs shares. */
+/** The design button on a block's toolbar: the block selected and its design picker open, the calendar's own or the one every other block with designs shares; from the phone view, the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS in push-model.js). */
 function onBlockDesign(msg) {
   onSelectBlock(msg);
   if (!selectedBlock) return;
-  designPicker = selectedBlock.type === 'calendar' ? { mode: 'set' } : { kind: 'block', blockId: selectedBlock.blockId };
+  const phone = msg.phone === true;
+  if (selectedBlock.type === 'calendar') designPicker = { mode: phone ? 'phone' : 'set' };
+  else designPicker = { kind: 'block', blockId: selectedBlock.blockId, ...(phone && PHONE_DESIGNS[selectedBlock.type] ? { phone: true } : {}) };
 }
 
 /** The menu's box as the stylesheet sizes it (app.css .block-menu): the width for the chosen form, the height its ceiling. */

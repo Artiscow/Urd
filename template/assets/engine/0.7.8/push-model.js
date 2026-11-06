@@ -99,6 +99,60 @@ export function foldsIntoQuestions(block) {
 }
 
 /**
+ * The blocks with a phone design: the design a block draws while it is narrow (`phoneDesign`, additive), by the prop its design is kept in, the way the calendar has its phone view.
+ * Narrow is the block's own width, on a phone or in a narrow column of a wide page alike (ADR-0025): below NARROW_PX it draws its phone design, and it is drawn again when it crosses the line (render.js).
+ */
+export const PHONE_DESIGNS = { gallery: 'view', collection: 'view', contact: 'design', stats: 'variant', privacy: 'design', text: 'design' };
+
+/* Each such block's design ids, the ones a phone design may name: the blocks' own catalogues hold the same (tests/block-designs.test.mjs holds them equal). */
+const PHONE_DESIGN_IDS = {
+  gallery: ['grid', 'carousel', 'slides', 'ribbon', 'mosaic', 'polaroid'],
+  collection: ['cards', 'list', 'archive'],
+  contact: ['lines', 'icons', 'card', 'tiles', 'facts', 'buttons', 'map', 'strip', 'poster', 'roles', 'qr'],
+  stats: ['plain', 'cards', 'band'],
+  privacy: ['long', 'contents', 'glance', 'questions', 'ledger', 'ledger-cards'],
+  text: ['plain', 'long', 'contents', 'glance', 'questions', 'clauses'],
+};
+
+/** The design ids a block's phone design may name (its own designs), empty for a block without phone designs. */
+export function phoneDesignIds(type) {
+  return PHONE_DESIGN_IDS[type] ?? [];
+}
+
+/** The width in px below which a block is narrow: where seven columns stop being readable, the calendar's narrow layouts and the phone designs alike. */
+export const NARROW_PX = 540;
+
+/**
+ * Whether a block draws a phone design of its own: a block that has phone designs, with one of its own designs chosen.
+ * @param {string} type
+ * @param {object} props
+ */
+export function hasPhoneDesign(type, props) {
+  return phoneDesignIds(type).includes(props?.phoneDesign);
+}
+
+/**
+ * The props a block is drawn with at its width: its phone design in its design's place while it is narrow, its own props otherwise.
+ * @param {string} type
+ * @param {object} props
+ * @param {boolean} narrow
+ * @returns {object}
+ */
+export function propsForWidth(type, props, narrow) {
+  if (!narrow || !hasPhoneDesign(type, props)) return props;
+  return { ...props, [PHONE_DESIGNS[type]]: props.phoneDesign };
+}
+
+/**
+ * A block as it is drawn at its width: with its phone design in its design's place while narrow, so the rules that read the design (the height following the content, the growth in the phone's flow) read the one drawn.
+ * @param {{type?: string, props?: object}} block
+ * @param {boolean} narrow
+ */
+export function drawnBlock(block, narrow) {
+  return narrow && hasPhoneDesign(block?.type, block?.props) ? { ...block, props: propsForWidth(block.type, block.props, true) } : block;
+}
+
+/**
  * The block types that follow their content and fetch it (a feed, a
  * collection), so their height on the phone is unknown until the content is
  * drawn. The editor measures each at the phone width after an edit and

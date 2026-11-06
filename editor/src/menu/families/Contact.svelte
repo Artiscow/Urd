@@ -54,6 +54,10 @@
     <Setting key="design">
       <DesignRow pin="design" />
     </Setting>
+    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
+    <Setting key="phoneDesign">
+      <DesignRow phone pin="phoneDesign" />
+    </Setting>
     <!-- The design's own choice sits directly under it -->
     {#if design.band}
       <label class="gridmenu-snap" title={ta('tip.contact.band')}>
@@ -87,5 +91,5 @@
     </label>
   {/snippet}
   <MenuGroup id="contact-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.contact.${design.id}`)}
-    group={groupOf('contact-look', { design: 'lines', band: true, vcard: false, dock: false, askFirst: true })}>{@render contactLook()}</MenuGroup>
+    group={groupOf('contact-look', { design: 'lines', phoneDesign: null, band: true, vcard: false, dock: false, askFirst: true })}>{@render contactLook()}</MenuGroup>
 {/if}

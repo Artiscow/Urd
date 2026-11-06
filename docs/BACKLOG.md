@@ -531,8 +531,8 @@ What comes, in order (brought up to date 20 October 2026):
 6. Then the build that stays in v0.7, each followed by its test round: 0.7.23 and 0.7.24.1 to 0.7.24.4, 0.7.9 the design stretch, 0.7.11 (the published page first, then the editor), 0.7.22, the open ends of 0.7.3 and 0.7.13 (0.7.13.14 to 0.7.13.19), and in 0.7.19 the last seven retro designs (0.7.19.23), 0.7.19.28, a plain 0.7.19.30 and 0.7.19.33.
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
-- [ ] The design menu: hover over or using arrow keys should show preview of the design in focus.
-- [ ] Quick element button for the phone design + phone design menus
+- [x] The design menu: hover over or using arrow keys should show preview of the design in focus. DELIVERED 0.7.0.76 (6 November 2026)
+- [x] Quick element button for the phone design + phone design menus DELIVERED 0.7.0.76 (6 November 2026)
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene

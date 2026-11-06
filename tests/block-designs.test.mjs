@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { BLOCK_DESIGNS, DESIGN_BLOCK_TYPES, blockDesignOf, designLabelKey, designAboutKey, designPicture, blockDesignFamilies, blockDesignSample, blockDesignEmpty, designPreviewFrame } = await engineImport('block-designs.js');
+const { BLOCK_DESIGNS, DESIGN_BLOCK_TYPES, PHONE_DESIGN_TYPES, blockDesignOf, designLabelKey, designAboutKey, designPicture, designPhonePicture, blockDesignFamilies, blockDesignSample, blockDesignEmpty, designPreviewFrame } = await engineImport('block-designs.js');
+const { PHONE_DESIGNS, phoneDesignIds } = await engineImport('push-model.js');
 const { CONTACT_DESIGNS } = await engineImport('contact-model.js');
 const { GALLERY_VIEWS } = await engineImport('gallery-model.js');
 
@@ -108,4 +109,18 @@ test('the preview page keeps a block at its real width and fills the pane with i
   assert.ok(Math.abs((inOwn.w / 100) * inOwn.width * 0.88 - 300) < 1, 'the block is drawn 300 px wide');
   // A full section is the screen less the gutters, as a full-width site is.
   assert.equal(designPreviewFrame({ layout: { contentWidth: 1100, gutter: 6 } }, 100, 'full').width, 1440);
+});
+
+test('the blocks with a phone design: each keeps its design in the prop its catalogue names, has a picture of every design at a phone\'s width, and opens its phone picker from a row under its design', () => {
+  assert.deepEqual(PHONE_DESIGN_TYPES, ['contact', 'gallery', 'stats', 'collection', 'privacy', 'text']);
+  for (const type of PHONE_DESIGN_TYPES) {
+    assert.equal(PHONE_DESIGNS[type], BLOCK_DESIGNS[type].prop, `${type}: the phone design stands in for its design`);
+    assert.deepEqual([...phoneDesignIds(type)].sort(), [...BLOCK_DESIGNS[type].ids].sort(), `${type}: a phone design names one of the block's own designs`);
+    for (const id of BLOCK_DESIGNS[type].ids) assert.ok(existsSync(new URL(designPhonePicture(type, id), PICTURES)), designPhonePicture(type, id));
+    const file = new URL(`${type[0].toUpperCase()}${type.slice(1)}.svelte`, FAMILIES);
+    assert.match(readFileSync(file, 'utf8'), /<DesignRow phone pin="phoneDesign" \/>/, type);
+  }
+  for (const [lang, strings] of Object.entries(DICTS)) {
+    for (const key of ['lbl.phoneDesign', 'tip.picker.phoneDesign', 'picker.phoneTitle', 'picker.phoneSame', 'picker.phoneSameShort', 'picker.phoneSameAbout', 'canvas.blockPhoneDesign']) assert.ok(strings[key], `${lang} ${key}`);
+  }
 });

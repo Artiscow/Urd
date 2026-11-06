@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.76): the design picker's preview on hover and keys, and phone designs for six blocks
+
+- [ ] The design picker (any block's): moving the mouse over a tile shows its preview and description; a picker opening under a resting mouse shows the marked design; leaving the list shows the marked design again
+- [ ] The design picker with the keyboard: the arrow keys move the mark (up and down to the nearest tile), Home and End to the first and last, and the preview follows; Enter applies the marked design; with the mouse resting over another tile, a key press makes the preview follow the keys
+- [ ] The menu's Appearance on a gallery, a collection, contact details, numbers (stats), a privacy page and a text: «Phone design» under Design opens a picker at phone width with «Same as the design» first and a phone picture of each design; a choice there changes the block in the phone view only
+- [ ] The phone view's toolbar: the design button beside the gear on those six blocks and the calendar opens the phone picker; on a block with designs but no phone design (a quote, an FAQ) it opens the design picker
+- [ ] A block with a phone design in a narrow column on the desktop (under 540 px, a stats block at its default width among them) draws its phone design; dragged wider than the line it keeps the phone design while dragged and switches when released; dragged back narrower it switches back
+- [ ] Typing into a text in a narrow column drawn in its phone design: the words stay, and the menu still shows the main design; reloading keeps both
+- [ ] A gallery set to Grid with Ribbon as its phone design: on the phone the ribbon has its height; a text in Long read with Questions on a phone: the folded rows stand without empty space under them, on the published page at phone width
+- [ ] The published page widened and narrowed across the phone width: each of the six blocks changes design at the line without flickering, and a calendar is unaffected
+- [ ] «Phone design», the picker's title and «Same as the design» in bokmål and Turkish
+
 ### Test batch (0.7.24.2.4): the designs of the privacy page and long texts, the same facts in every design, and the design button
 
 - [ ] The privacy block's menu, Appearance: «Design» opens the picker with six designs (Long read, Contents at the side, At a glance, Questions, Ledger table, Ledger cards), each with a picture, a description and a live preview of the site's own page; a design chosen there draws on the canvas at once

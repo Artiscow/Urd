@@ -65,6 +65,7 @@ The source marks, the ID scheme and the status words are explained in [README.md
 - **Views and designs:**
   - the gallery has six views (grid, carousel, slides, ribbon, mosaic, polaroid) and a lightbox on `<dialog>`
   - the calendar has 41 designs and eight views, with a phone design and a pop-up design chosen per calendar
+  - the gallery, collections, contact, stats, privacy and text blocks take a phone design of their own, drawn below 540 px (0.7.0.76)
 - **Plugins.** The plugin layer takes third-party blocks and section presets. The template ships one plugin, the Swedish language pack lang-sv, so the «Plugins» group in the block palette stays empty until a third-party plugin fills it.
 
 **Gaps.**

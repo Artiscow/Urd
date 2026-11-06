@@ -21,6 +21,7 @@ import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
 import { stripActiveContent, safeHtmlFragment, plainLines } from '../sanitize.js';
 import { WIDTH_QUERIES } from '../render.js';
+import { NARROW_PX } from '../push-model.js';
 import { linkAttrs } from '../nav-model.js';
 
 /** An element with its class and its content: a text, or a node such as a text the owner rewrites. */
@@ -1657,8 +1658,6 @@ if (typeof location !== 'undefined' && new URLSearchParams(location.search).has(
 
 /* ---------- The block ---------- */
 
-/** The width in px below which a calendar draws its narrow layouts (drawCalendar): the width at which seven columns stop being readable, the same as the week strip's own container query in base.css. */
-const NARROW_PX = 540;
 
 function renderCalendar(el, props, ctx) {
   closeOrphanCards();

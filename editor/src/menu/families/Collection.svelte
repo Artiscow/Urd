@@ -48,6 +48,10 @@
     <Setting key="view">
       <DesignRow pin="collectionView" />
     </Setting>
+    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
+    <Setting key="phoneDesign">
+      <DesignRow phone pin="phoneDesign" />
+    </Setting>
   {/snippet}
-  <MenuGroup id="collection-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.view ?? 'cards'))?.[1] ?? ''} group={groupOf('collection-view', { view: 'cards' })}>{@render collectionView()}</MenuGroup>
+  <MenuGroup id="collection-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.view ?? 'cards'))?.[1] ?? ''} group={groupOf('collection-view', { view: 'cards', phoneDesign: null })}>{@render collectionView()}</MenuGroup>
 {/if}
