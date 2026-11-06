@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { registerSectionPresets } = await engineImport('sections/presets.js');
+const { registerSectionPresets, termsHtml } = await engineImport('sections/presets.js');
 
 const defs = new Map();
 registerSectionPresets({ sections: { define: (id, def) => defs.set(id, def) } });
@@ -40,8 +40,8 @@ test('presets: create() gives well-formed sections', () => {
     const section = def.create();
     assert.ok(section.id && section.preset === id, `${id}: section missing id/preset`);
     assert.ok(section.background?.layers?.length, `${id}: section missing background`);
-    // The privacy page has no height of its own: its length is the settings' (sections/presets.js).
-    if (id !== 'privacy') assert.ok(section.size?.minHeight, `${id}: section missing min height`);
+    // The privacy page and the terms of sale have no height of their own: their length is their text's (sections/presets.js).
+    if (id !== 'privacy' && id !== 'terms') assert.ok(section.size?.minHeight, `${id}: section missing min height`);
     else assert.equal(section.size.minHeight, undefined, `${id}: the section takes its blocks' height`);
     for (const block of section.blocks) assertBlock(block, id);
     const ids = section.blocks.map((b) => b.id);
@@ -117,4 +117,39 @@ test('presets: item() fills the gap when a middle element is deleted', () => {
     const second = def.item(section);
     assertNoOverlap(section, second, id, ' (after deletion)');
   }
+});
+
+test('termsHtml: the site\'s facts and the form\'s words set in as text, the form only where its words are given', () => {
+  const text = (key, vars = {}) => `<p>${key}${Object.entries(vars).map(([k, v]) => ` ${k}=${v}`).join('')}</p>`;
+  const formText = (key) => `${key} & <i>`;
+  const facts = { seller: 'Lag & Co <b>', details: 'Gate 1', privacy: { href: '/personvern', page: 'personvern', title: 'Personvern' } };
+  const html = termsHtml({ text, formText, facts });
+  assert.ok(html.includes('seller=Lag &amp; Co &lt;b&gt;'), 'the seller is text, never markup');
+  assert.ok(!html.includes('<b>'));
+  assert.ok(html.includes('href=/personvern') && html.includes('page=personvern') && html.includes('title=Personvern'), 'the privacy page is linked by its id, so the link follows its address');
+  assert.ok(html.includes('<h3 style="margin:1.4em 0 0.4em">shop.wfTitle &amp; &lt;i&gt;</h3>'), 'the withdrawal form in the visitor texts, spaced as a document');
+  assert.ok(!/<(h1|h2|h3|p)>/.test(html), 'every heading and paragraph has its room');
+  assert.ok(html.includes('shop.wfTo &amp; &lt;i&gt; Lag &amp; Co &lt;b&gt;, Gate 1'), 'the form is addressed to the seller');
+  const bare = termsHtml({ text });
+  assert.ok(!bare.includes('shop.wf'), 'no form without its words');
+  assert.ok(bare.includes('seed.terms.sellerPlaceholder') && bare.includes('seed.terms.details'), 'the seller\'s place is marked to fill in');
+  assert.ok(bare.includes('privacyLink=</p>'), 'no privacy link without a privacy page');
+});
+
+test('presets: the terms of sale are a page of their own, never in the section lists', () => {
+  assert.equal(defs.get('terms').pageOnly, true);
+});
+
+test('termsHtml: the template\'s [bracketed] words are marked to fill in, the seller\'s missing details as contact parts, the site\'s own words never', () => {
+  const text = (key, vars = {}) => ({
+    'seed.terms.prices': '<p>Prices. [Write what shipping costs.]</p>',
+    'seed.terms.parties': `<p>The seller is ${vars.seller}, ${vars.details}.</p>`,
+    'seed.terms.sellerPlaceholder': '[the seller\'s name]',
+    'seed.terms.details': '[organisation number, address]',
+  })[key] ?? '';
+  const html = termsHtml({ text, facts: { seller: 'Lag [Oslo]' } });
+  assert.ok(html.includes('<span data-urd-fill>[Write what shipping costs.]</span>'), 'the template\'s own part');
+  assert.ok(html.includes('The seller is Lag [Oslo], <span data-urd-fill="contact">[organisation number, address]</span>'), 'a bracket in the seller\'s name is the site\'s, the missing details a contact part');
+  const bare = termsHtml({ text });
+  assert.ok(bare.includes('<span data-urd-fill="contact">[the seller&#39;s name]</span>') || bare.includes('<span data-urd-fill="contact">[the seller\'s name]</span>'));
 });

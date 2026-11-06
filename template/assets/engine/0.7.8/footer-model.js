@@ -81,13 +81,23 @@ export function footerBaselineLinks(site) {
  * @returns {{label: string, href: string}|null}
  */
 export function footerPrivacyLink(site) {
-  const id = str(site.footer?.privacyPage).trim();
-  if (!id) return null;
-  const pages = site.pages ?? [];
-  const page = pages.find((p) => p?.id === id);
+  return sitePageLink(site, site?.footer?.privacyPage);
+}
+
+/**
+ * A link to one of the site's own pages by its id, named by the page's title: null for no id, a page that is gone or one that is hidden.
+ * @param {object} site
+ * @param {string} id
+ * @returns {{label: string, href: string}|null}
+ */
+export function sitePageLink(site, id) {
+  const pageId = str(id).trim();
+  if (!pageId) return null;
+  const pages = site?.pages ?? [];
+  const page = pages.find((p) => p?.id === pageId);
   if (!page || page.hidden === true) return null;
   // The page link as every footer link resolves it, so a path edited by hand can never lead off the site.
-  const link = resolveItem({ label: str(page.title).trim() || id, page: id }, pages);
+  const link = resolveItem({ label: str(page.title).trim() || pageId, page: pageId }, pages);
   return link.missing || !link.href ? null : { label: link.label, href: link.href };
 }
 

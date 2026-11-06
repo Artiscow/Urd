@@ -75,6 +75,55 @@ const contact = (fr, props = {}) => ({
   frames: fr,
 });
 
+/* The terms read as a document: room above each part and between the paragraphs, written into the text's own HTML so it stays as the owner edits it. */
+const SPACING = { h1: 'margin:0 0 0.5em', h2: 'margin:1.8em 0 0.5em', h3: 'margin:1.4em 0 0.4em', p: 'margin:0 0 0.75em' };
+const spaced = (html) => html.replace(/<(h1|h2|h3|p)>/g, (all, tag) => `<${tag} style="${SPACING[tag]}">`);
+
+/** Plain words set into a text's HTML: the site's names and the form's words are text, never markup. */
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+/*
+ * A part the owner fills in: the template's words in [brackets], marked so the editor counts the parts still open and the preview shows them (editor/src/lib/fill-in.js, base.css).
+ * `contact` marks the seller's details where the site's contact details had none; the text block drops a part's mark once its brackets are gone (blocks/text.js).
+ */
+const fillIn = (words, kind = '') => `<span data-urd-fill${kind ? `="${kind}"` : ''}>${words}</span>`;
+const markFills = (html) => html.replace(/\[[^[\]<>]+\]/g, (part) => fillIn(part));
+
+/**
+ * The terms of sale as one text, from the seed texts in the site's language (`opts.text`, the admin's own where none are given) and the site's facts (`opts.facts`): the seller and its details, the privacy page's link, and the standard withdrawal form in the visitor texts (`opts.formText`).
+ * @param {{text?: (key: string, vars?: object) => string, formText?: (key: string) => string, facts?: {seller?: string, details?: string, privacy?: {href: string, page: string, title: string}|null}}} opts
+ * @returns {string}
+ */
+export function termsHtml({ text = ta, formText = null, facts = {} } = {}) {
+  // The template's own brackets are marked before the site's facts are set in, so a bracket in the seller's name is never a part to fill in.
+  const own = (key, vars = {}) => {
+    const slots = Object.fromEntries(Object.keys(vars).map((name) => [name, `\u0001${name}\u0001`]));
+    return markFills(text(key, slots)).replace(/\u0001(\w+)\u0001/g, (all, name) => vars[name] ?? '');
+  };
+  const seller = facts.seller ? escapeHtml(facts.seller) : fillIn(escapeHtml(text('seed.terms.sellerPlaceholder')), 'contact');
+  const details = facts.details ? escapeHtml(facts.details) : fillIn(escapeHtml(text('seed.terms.details')), 'contact');
+  const privacyLink = facts.privacy ? text('seed.terms.privacyLink', { href: escapeHtml(facts.privacy.href), page: escapeHtml(facts.privacy.page), title: escapeHtml(facts.privacy.title) }) : '';
+  const words = (key) => escapeHtml(formText(key));
+  const form = formText
+    ? [`<h3>${words('shop.wfTitle')}</h3>`, `<p>${words('shop.wfInstruction')}</p>`, `<p>${words('shop.wfTo')} ${seller}, ${details}</p>`,
+      ...['shop.wfDeclaration', 'shop.wfOrdered', 'shop.wfName', 'shop.wfAddress', 'shop.wfSignature', 'shop.wfDate', 'shop.wfDelete'].map((k) => `<p>${words(k)}</p>`)].join('')
+    : '';
+  return spaced([
+    own('seed.terms.title'),
+    own('seed.terms.intro', { seller }),
+    own('seed.terms.agreement'),
+    own('seed.terms.parties', { seller, details }),
+    own('seed.terms.prices'),
+    own('seed.terms.order'),
+    own('seed.terms.payment'),
+    own('seed.terms.delivery'),
+    own('seed.terms.withdrawal') + form,
+    own('seed.terms.defects'),
+    own('seed.terms.privacy', { privacyLink }),
+    own('seed.terms.disputes'),
+  ].join(''));
+}
+
 const privacy = (fr) => ({
   id: makeId('blk'),
   type: 'privacy',
@@ -500,6 +549,21 @@ export function registerSectionPresets(Urd) {
     // No height of its own: the page is as long as the settings make it, in the preview too.
     create: () => section('privacy', undefined, bg(colorLayer('bg')), [
       privacy(frame(10, 56, 80, 700)),
+    ]),
+  });
+
+  // The shop's terms of sale, made only by the page template (`pageOnly`), which hands over the seed texts in the site's language and the site's facts: the seller from the contact details, and the privacy page.
+  Urd.sections.define('terms', {
+    label: 'Terms of sale',
+    labelKey: 'preset.terms.label',
+    group: 'Basics',
+    groupKey: 'presetGroup.basic',
+    hint: 'The shop\'s terms of sale with the right of withdrawal and its form, to fill in',
+    hintKey: 'preset.terms.hint',
+    pageOnly: true,
+    // No height of its own: the section is as long as the text.
+    create: (opts = {}) => section('terms', undefined, bg(colorLayer('bg')), [
+      text(frame(20, 56, 60, 700), termsHtml(opts)),
     ]),
   });
 

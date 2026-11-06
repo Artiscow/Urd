@@ -134,13 +134,13 @@
   let navNewPageTitle = $state('');
   let navNewPageError = $state(null);
 
-  function addPageAsNavItem() {
+  async function addPageAsNavItem() {
     if (!navNewPageTitle.trim()) return;
     ed.newPageTitle = navNewPageTitle;
     ed.newPageTemplate = null;
     // The title stays in the field when the slug is rejected, so it can be
     // corrected rather than typed again.
-    navNewPageError = addPage();
+    navNewPageError = await addPage();
     if (!navNewPageError) navNewPageTitle = '';
   }
 

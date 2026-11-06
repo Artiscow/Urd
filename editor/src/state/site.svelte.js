@@ -22,6 +22,7 @@ import { buildPagePreset } from '$engine/page-presets.js';
 import { clonePageForInsert } from '$engine/templates-model.js';
 import { liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
+import { termsSeed } from '../lib/site-seed.js';
 import { tick } from 'svelte';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -167,22 +168,42 @@ function pageSlugError(slug, ignoreId = null) {
   return null;
 }
 
+/** A page being made: a second press while the first waits for its words does nothing. */
+let addingPage = false;
+
 /** A new page from the name typed (newPageTitle) and the template picked; turned down, the reason for its field to show, otherwise null. */
-function addPage() {
+async function addPage() {
+  if (addingPage) return null;
+  addingPage = true;
+  try {
+    return await makePage();
+  } finally {
+    addingPage = false;
+  }
+}
+
+async function makePage() {
   const title = newPageTitle.trim();
+  const template = newPageTemplate;
   // No fallback word: a name without a letter or a digit is turned down.
   const slug = slugify(title, '');
   const err = pageSlugError(slug);
   if (err) return err;
+  // The terms of sale are written in the site's language with the site's facts (lib/site-seed.js), read before the page is made; the name is checked again after the wait.
+  const seed = template === 'preset:terms' ? await termsSeed(siteDraft) : undefined;
+  if (seed) {
+    const again = pageSlugError(slug);
+    if (again) return again;
+  }
   // Starter packs are built fresh (create() yields new ids and
   // translated seeds); user templates store origin ids, so the clone
   // re-ids everything and sets meta to the new page (the re-id rule in
   // SCHEMA.md). The liftPageFile wash makes templates stored under older
   // schema versions safe.
-  const templatePage = newPageTemplate && !newPageTemplate.startsWith('preset:')
-    ? templatesState.templateStores[newPageTemplate]?.data?.page : null;
-  const fresh = newPageTemplate?.startsWith('preset:')
-    ? (buildPagePreset(newPageTemplate.slice(7), { pageId: slug, title }) ?? pageState.blankPage({ id: slug, title }))
+  const templatePage = template && !template.startsWith('preset:')
+    ? templatesState.templateStores[template]?.data?.page : null;
+  const fresh = template?.startsWith('preset:')
+    ? (buildPagePreset(template.slice(7), { pageId: slug, title, seed }) ?? pageState.blankPage({ id: slug, title }))
     : templatePage
       ? clonePageForInsert(liftPageFile(JSON.parse(JSON.stringify(templatePage)), siteStore.data), makeId, { id: slug, title })
       : pageState.blankPage({ id: slug, title });
@@ -191,9 +212,14 @@ function addPage() {
     // New pages go straight into the menu; the Nav panel can remove them.
     siteDraft.nav.items.push({ label: title, page: slug });
     // The footer links the privacy page on every page once the site has one.
-    if (newPageTemplate === 'preset:privacy' && !siteDraft.pages.some((p) => p.id === siteDraft.footer?.privacyPage)) {
+    if (template === 'preset:privacy' && !siteDraft.pages.some((p) => p.id === siteDraft.footer?.privacyPage)) {
       siteDraft.footer ??= { version: 1, show: false, text: '', align: 'center' };
       siteDraft.footer.privacyPage = slug;
+    }
+    // The checkout links the terms of sale once the site has them.
+    if (template === 'preset:terms' && !siteDraft.pages.some((p) => p.id === siteDraft.site.commerce?.termsPage)) {
+      siteDraft.site.commerce ??= {};
+      siteDraft.site.commerce.termsPage = slug;
     }
   });
   // The page's own draft, ready to publish.
@@ -495,6 +521,7 @@ async function deletePage(entry) {
   siteMutate('pages', () => {
     // The footer's privacy link goes with its page.
     if (siteDraft.footer?.privacyPage === entry.id) delete siteDraft.footer.privacyPage;
+    if (siteDraft.site.commerce?.termsPage === entry.id) delete siteDraft.site.commerce.termsPage;
     siteDraft.pages = siteDraft.pages.filter((p) => p.id !== entry.id);
     // Items with a submenu survive their own page being deleted: the
     // target is removed and the item becomes a pure opener, so the

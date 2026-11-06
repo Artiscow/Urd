@@ -35,20 +35,23 @@ export const PAGE_PRESETS = [
   { id: 'checkout', labelKey: 'pageTemplate.checkout', sections: ['checkout', 'contact'] },
   // The privacy page: its one section holds the block that writes the page from the site's settings.
   { id: 'privacy', labelKey: 'pageTemplate.privacy', sections: ['privacy'] },
+  // The shop's terms of sale: one text in the site's language, filled in by the owner (sections/presets.js termsHtml).
+  { id: 'terms', labelKey: 'pageTemplate.terms', sections: ['terms'] },
 ];
 
 /**
  * Builds a complete, valid page file from a starter pack.
  * @param {string} id Starter pack id from PAGE_PRESETS
- * @param {{pageId: string, title: string}} meta The new page's slug and title
+ * @param {{pageId: string, title: string, seed?: object}} meta The new page's slug and title, and what a section made from the site's language takes (sections/presets.js termsHtml)
  * @returns {object|null} Page file, or null for an unknown id
  */
-export function buildPagePreset(id, { pageId, title }) {
+export function buildPagePreset(id, { pageId, title, seed }) {
   const preset = PAGE_PRESETS.find((p) => p.id === id);
   if (!preset) return null;
   return {
     schemaVersion: PAGE_SCHEMA_VERSION,
     meta: { id: pageId, title },
-    sections: preset.sections.map((sid) => defs.get(sid).create()),
+    // `seed` reaches a section that is made from the site's language and facts (the terms of sale); the others take nothing.
+    sections: preset.sections.map((sid) => defs.get(sid).create(seed)),
   };
 }

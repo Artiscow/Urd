@@ -25,6 +25,8 @@ import { toHostFile, redirectIssues } from '../lib/redirects-model.js';
 import { templatesState } from './templates.svelte.js';
 import { redirectsState } from './redirects.svelte.js';
 import { updaterState } from './updater.svelte.js';
+import { pageFills } from '../lib/fill-in.js';
+import { hasSellerDetails } from '../lib/site-seed.js';
 
 /**
  * The tidy of media/ (lib/media-tidy.js): the files at the root of media/ move into the folder of their kind, and the references follow.
@@ -244,6 +246,8 @@ async function publish() {
   const publishedTitles = [];
   const draftKeys = [];
   const newPageIds = [];
+  // The pages going out with parts of a template still to fill in (lib/fill-in.js), for the warnings below.
+  const unfilled = [];
   // The committed files the editor reads in place of the server's until the deploy serves them.
   const committed = [];
 
@@ -275,6 +279,8 @@ async function publish() {
     files.push(...materializeImages(out));
     files.push({ path: entry.file, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
     publishedTitles.push(entry.title);
+    const open = entry.hidden ? null : pageFills(out);
+    if (open && open.own + open.contact) unfilled.push({ title: entry.title, ...open });
     // New pages do not exist on the server until the deploy finishes:
     // the draft is kept as the source until then, and cleaned up
     // automatically on the next visit.
@@ -462,7 +468,7 @@ async function publish() {
     if (still?.hidden && still.path !== '/') del(`${still.path.slice(1)}/index.html`);
   }
 
-  // The warnings before the commit, asked as one question with a section each: a page name or address typed but turned down (it never reached the draft, so the page goes out with what stands), and someone else's publish since we loaded touching the same files. The editor must actively choose to publish anyway.
+  // The warnings before the commit, asked as one question with a section each: a page name or address typed but turned down (it never reached the draft, so the page goes out with what stands), a page with parts of its template still to fill in, and someone else's publish since we loaded touching the same files. The editor must actively choose to publish anyway.
   const warnings = [];
   const refused = siteState.refusedPageFields();
   if (refused.length) {
@@ -484,6 +490,17 @@ async function publish() {
         ...(unkept ? [ta('confirm.redirects.unkept', { count: unkept })] : []),
         ...(redirectsWait ? [ta('confirm.redirects.wait')] : []),
       ],
+    });
+  }
+  // A page made from a template with parts in [brackets] not yet filled in: the parts by page, and the seller's details, which the Site panel's contact details hold or still lack.
+  if (unfilled.length) {
+    const haveDetails = hasSellerDetails(siteState.siteDraft);
+    warnings.push({
+      heading: ta('confirm.fills.title'),
+      lines: unfilled.flatMap((page) => [
+        ...(page.own ? [ta('confirm.fills.line', { page: page.title, count: page.own })] : []),
+        ...(page.contact ? [ta(haveDetails ? 'confirm.fills.contactCopy' : 'confirm.fills.contactMissing', { page: page.title })] : []),
+      ]),
     });
   }
   const conflict = await updaterState.checkConflict(files);

@@ -13,6 +13,7 @@ const {
   footerBaseline,
   footerBaselineLinks,
   footerPrivacyLink,
+  sitePageLink,
   footerLinkRow,
   footerCta,
   hasRichFooter,
@@ -198,4 +199,13 @@ test('footerPrivacyLink: the chosen page by its title, nothing for no choice, a 
   assert.equal(footerPrivacyLink({ pages, footer: { privacyPage: 'borte' } }), null);
   assert.equal(footerPrivacyLink({ pages, footer: { privacyPage: 'skjult' } }), null);
   assert.equal(footerPrivacyLink({ pages: [{ id: 'ut', title: 'Ut', path: '//evil.example' }], footer: { privacyPage: 'ut' } })?.href?.startsWith('//') ?? false, false, 'a path edited by hand never leads off the site');
+});
+
+test('sitePageLink: a page by its id, nothing for no id, a page that is gone or one hidden', () => {
+  const pages = [{ id: 'vilkar', title: 'Kjøpsvilkår', path: '/vilkar' }, { id: 'skjult', title: 'Skjult', path: '/skjult', hidden: true }];
+  assert.deepEqual(sitePageLink({ pages }, 'vilkar'), { label: 'Kjøpsvilkår', href: '/vilkar' });
+  assert.equal(sitePageLink({ pages }, ''), null);
+  assert.equal(sitePageLink({ pages }, undefined), null);
+  assert.equal(sitePageLink({ pages }, 'borte'), null);
+  assert.equal(sitePageLink({ pages }, 'skjult'), null);
 });

@@ -6,6 +6,7 @@
   import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
   import { safeCssValue } from '$engine/theme.js';
   import { ICONS } from '../lib/icons.js';
+  import { pageFills } from '../lib/fill-in.js';
   import PageSettingsStep from './pages/PageSettingsStep.svelte';
   const ed = getContext('urd-editor');
   const pageId = $derived(ed.pageId);
@@ -16,12 +17,32 @@
   /** The new page's name turned down: the field keeps it in dark red with the reason as its tooltip, until the next keystroke. The rows' names and addresses are shared with the page settings (site.svelte.js typedPageFields). */
   let newPageError = $state(null);
 
-  function createPage() {
-    newPageError = addPage();
+  async function createPage() {
+    newPageError = await addPage();
   }
 
   // The panel closed: a name or an address left turned down refills with what stands.
   $effect(() => () => ed.dropTypedPageFields());
+
+  /* The parts of a template each page still has to fill in (lib/fill-in.js): the open page's after every change (its data is not reactive, the count of changes is), the others' read from their drafts as the panel opens and as pages come and go. */
+  const openHere = $derived.by(() => {
+    void ed.edits;
+    void pageId;
+    return pageFills(ed.store?.data);
+  });
+  let openElsewhere = $state({});
+  $effect(() => {
+    const others = siteDraft.pages.filter((p) => p.id !== pageId && !p.hidden).map((p) => $state.snapshot(p));
+    let live = true;
+    Promise.all(others.map((entry) => ed.readPageDraft(entry).then(pageFills).catch(() => null)))
+      .then((counts) => { if (live) openElsewhere = Object.fromEntries(others.map((entry, i) => [entry.id, counts[i]])); });
+    return () => { live = false; };
+  });
+  const openOn = (p) => {
+    if (p.hidden) return 0;
+    const open = p.id === pageId ? openHere : openElsewhere[p.id];
+    return open ? open.own + open.contact : 0;
+  };
 
   /* The starter-pack thumbnails are built once (create() per section is
      cheap, but the grid rerenders on every keystroke in the name field). */
@@ -57,6 +78,8 @@
           oninput={(e) => ed.typePageField(p.id, 'slug', e.target.value)} onchange={(e) => ed.commitPageField(p, 'slug', e.target.value)} />
       {/if}
       <span class="row-tools">
+        <!-- The parts of a template still to fill in on the page, marked on the page itself -->
+        {#if openOn(p)}<span class="page-fills" title={ta('tip.pages.fills', { count: openOn(p) })}>{openOn(p)}</span>{/if}
         <!-- Shown or hidden from visitors: hiding a published page asks where its visitors go -->
         <button class="ghost row-tool" class:row-hidden={p.hidden} disabled={p.path === '/'} aria-pressed={p.hidden === true}
           title={p.path === '/' ? ta('tip.pages.frontNoHide') : p.hidden ? ta('tip.pages.hiddenShow') : ta('tip.pages.hide')}
@@ -127,6 +150,20 @@
 
   .row-hidden {
     color: #d9b44a;
+  }
+
+  /* The count of parts still to fill in, in the same amber as a hidden page's eye */
+  .page-fills {
+    align-self: center;
+    min-width: 1.2rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, #d9b44a 22%, transparent);
+    color: #d9b44a;
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    line-height: 1.2rem;
+    text-align: center;
   }
 
   .redirects-open {

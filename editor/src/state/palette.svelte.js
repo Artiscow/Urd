@@ -104,6 +104,7 @@ function buildCommands() {
   // The section templates, added at the foot of the page; a shop template stands here while the shop's blocks do.
   for (const [id, def] of sectionPresets()) {
     if (def.shop && !shop) continue;
+    if (def.pageOnly) continue;
     add(`section:${id}`, 'sections', ta('palette.insertSection', { name: def.labelKey ? ta(def.labelKey) : def.label }), () => {
       const sections = pageState.store?.data.sections ?? [];
       bridgeState.handleAddSection({ index: sections.length, section: def.create() });

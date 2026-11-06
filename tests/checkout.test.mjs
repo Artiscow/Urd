@@ -178,9 +178,20 @@ test('two or more payment instructions are a radio group above the order summary
 test('with a provider on the prices show the site currency\'s word; without one the block\'s own word', () => {
   const totalOf = (props, site) => renderCheckout(CART, props, site).children.find((c) => c.className === 'urd-checkout-recap').textContent;
   assert.match(totalOf({ currency: 'EUR' }), /820 EUR/);
-  assert.match(totalOf({ currency: 'EUR', payments: { vipps: true } }, { commerce: { currency: 'DKK' } }), /820 kr/);
-  assert.match(totalOf({ payments: { card: 'vipps' } }, { commerce: { currency: 'EUR' } }), /820 €/);
+  assert.match(totalOf({ currency: 'EUR', payments: { vipps: true } }, { site: { commerce: { currency: 'DKK' } } }), /820 kr/);
+  assert.match(totalOf({ payments: { card: 'vipps' } }, { site: { commerce: { currency: 'EUR' } } }), /820 €/);
   assert.match(totalOf({ payments: { vipps: true } }), /820 kr/, 'no site currency means NOK');
+});
+
+test('the checkout links the shop\'s terms of sale under its order buttons, and nothing for a page that is gone or hidden', () => {
+  const pages = [{ id: 'vilkar', title: 'Vilkår', path: '/vilkar' }, { id: 'skjult', title: 'Skjult', path: '/skjult', hidden: true }];
+  const termsOf = (termsPage) => renderCheckout(CART, {}, { pages, site: { commerce: { termsPage } } }).children.find((c) => c.className === 'urd-checkout-terms');
+  const line = termsOf('vilkar');
+  assert.ok(line, 'the terms line stands in the form');
+  assert.equal(line.children[0].href, '/vilkar');
+  assert.equal(termsOf('skjult'), undefined);
+  assert.equal(termsOf('borte'), undefined);
+  assert.equal(termsOf(undefined), undefined);
 });
 
 test('the migration 1 -> 2 turns the Vipps flag into the provider and the Vipps number into the first instruction', () => {

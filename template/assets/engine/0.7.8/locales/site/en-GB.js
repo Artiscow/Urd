@@ -175,6 +175,7 @@ export default {
     'shop.paidVia.vipps': 'Paid with Vipps',
     'shop.paidVia.stripe': 'Paid by card',
     'shop.paidVia.paypal': 'Paid with PayPal',
+    'shop.terms': 'Terms of sale',
     'shop.withdrawalHeading': 'Right of withdrawal',
     'shop.withdrawalNote': 'You may withdraw from the purchase without giving a reason within 14 days of receiving the goods, by telling the seller in a clear statement. The form below may be used.',
     'shop.wfTitle': 'Model withdrawal form',

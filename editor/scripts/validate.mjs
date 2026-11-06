@@ -205,6 +205,8 @@ iconSite.site.icon = '/media/images/icon.webp';
 iconSite.site.iconSource = keptOriginal;
 iconSite.nav.logo = { ...iconSite.nav.logo, type: 'image', value: '/media/images/logo.webp', imageSource: { ...keptOriginal, ratio: '1:1' } };
 iconSite.footer = { ...(iconSite.footer ?? { version: 1 }), brand: { ...(iconSite.footer?.brand ?? {}), mode: 'both', logo: '/media/images/footer-logo.webp', logoSource: keptOriginal }, privacyPage: 'personvern' };
+// The shop's terms of sale page (site.commerce.termsPage, additive from 0.7.24.2.3), which the template does not ship.
+iconSite.site.commerce = { ...(iconSite.site.commerce ?? {}), termsPage: 'kjopsvilkar' };
 const sharePage = load('template/content/pages/hjem.json');
 sharePage.meta = { ...(sharePage.meta ?? {}), og: { image: '/media/images/share.webp', imageSource: keptOriginal } };
 const validatePage = ajv.getSchema(pageSchema.$id);

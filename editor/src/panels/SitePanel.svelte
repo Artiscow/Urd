@@ -349,7 +349,11 @@
     if (ed.siteCurrencyBad) return;
     siteMutate('site', () => {
       if (code) siteDraft.site.commerce = { ...(siteDraft.site.commerce ?? {}), currency: code };
-      else delete siteDraft.site.commerce;
+      else if (siteDraft.site.commerce) {
+        // The shop's other settings (the block lists, the terms page) stay.
+        delete siteDraft.site.commerce.currency;
+        if (!Object.keys(siteDraft.site.commerce).length) delete siteDraft.site.commerce;
+      }
     });
   }
 
@@ -646,6 +650,15 @@
       <label class="field-stack" title={ta('tip.settings.currency')}>{ta('settings.currency')}
         <input value={siteDraft.site.commerce?.currency ?? ''} placeholder="NOK" maxlength="3" spellcheck="false" class:place-error={ed.siteCurrencyBad} data-field="shop-currency"
           onchange={(e) => setSiteCurrency(e.target.value)} /></label>
+      <!-- The terms of sale the checkout links under its order buttons: any shown page, the one made from the Terms of sale template chosen by itself; a chosen page since hidden stays named, and draws no link while hidden -->
+      <label class="field-stack" title={ta('tip.settings.termsPage')}>{ta('settings.termsPage')}
+        <Dropdown value={siteDraft.site.commerce?.termsPage ?? ''}
+          options={[['', ta('common.none')], ...(siteDraft.pages ?? []).filter((p) => !p.hidden || p.id === siteDraft.site.commerce?.termsPage).map((p) => [p.id, p.title])]}
+          onchange={(v) => siteMutate('site', () => {
+            siteDraft.site.commerce ??= {};
+            if (v) siteDraft.site.commerce.termsPage = v;
+            else delete siteDraft.site.commerce.termsPage;
+          })} /></label>
     </div>
   </details>
   <hr class="gridmenu-divider" />

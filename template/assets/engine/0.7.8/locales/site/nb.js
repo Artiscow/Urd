@@ -178,6 +178,7 @@ export default {
     'shop.paidVia.vipps': 'Betalt med Vipps',
     'shop.paidVia.stripe': 'Betalt med kort',
     'shop.paidVia.paypal': 'Betalt med PayPal',
+    'shop.terms': 'Kjøpsvilkår',
     'shop.withdrawalHeading': 'Angrerett',
     'shop.withdrawalNote': 'Du kan gå fra kjøpet uten å oppgi grunn innen 14 dager etter at du mottok varen, ved å gi selgeren beskjed på en tydelig måte (angrerettloven § 20 og § 21). Skjemaet under kan brukes.',
     'shop.wfTitle': 'Standardangreskjema',

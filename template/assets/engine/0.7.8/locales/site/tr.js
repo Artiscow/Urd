@@ -174,6 +174,7 @@ export default {
     'shop.paidVia.vipps': 'Vipps ile ödendi',
     'shop.paidVia.stripe': 'Kartla ödendi',
     'shop.paidVia.paypal': 'PayPal ile ödendi',
+    'shop.terms': 'Satış koşulları',
     'shop.withdrawalHeading': 'Cayma hakkı',
     'shop.withdrawalNote': 'Malı teslim aldıktan sonra 14 gün içinde, satıcıya açık bir bildirimle, gerekçe göstermeden satın almadan cayabilirsiniz. Aşağıdaki form kullanılabilir.',
     'shop.wfTitle': 'Örnek cayma formu',

@@ -459,10 +459,10 @@
           {ta('ui.footerLegal')}
         </label>
       {/if}
-      <!-- The privacy page the footer links to: any page, the one made from the Privacy template chosen by itself -->
+      <!-- The privacy page the footer links to: any shown page, the one made from the Privacy template chosen by itself; a chosen page since hidden stays named, and draws no link while hidden -->
       <label title={ta('tip.footer.privacy')}>{ta('lbl.footerPrivacy')}
         <Dropdown value={siteDraft.footer?.privacyPage ?? ''}
-          options={[['', ta('common.none')], ...(siteDraft.pages ?? []).filter((p) => !p.hidden).map((p) => [p.id, p.title])]}
+          options={[['', ta('common.none')], ...(siteDraft.pages ?? []).filter((p) => !p.hidden || p.id === siteDraft.footer?.privacyPage).map((p) => [p.id, p.title])]}
           onchange={(v) => footerMutate('footer', (f) => { if (v) f.privacyPage = v; else delete f.privacyPage; })} /></label>
       {#if contactParts(siteContact(siteDraft))}
         <label class="gridmenu-snap" title={ta('tip.footer.contact')}>

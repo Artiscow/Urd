@@ -112,12 +112,19 @@ export const textBlock = {
               const otherEl = el.parentElement?.querySelector(`:scope > .urd-block[data-block-id="${CSS.escape(other.id)}"]`);
               if (otherEl) otherEl.style.top = `${frame.y}px`;
             }
-            // The section is left alone: if the text grows past the edge it
-            // hangs over (sections never clip, and the height is the user's).
+            // The section is left alone: a section with a height of its own
+            // lets the text hang past its edge (sections never clip, and the
+            // height is the user's); one without follows its blocks' frames
+            // (writePush in render.js).
             post({ type: 'urd-move', sectionId: ctx.section.id, blockId: other.id, frame, coalesce: true, groupKey: block.id });
           }
           start.written = [...start.written.slice(-7), framesKey(ctx.section)];
           typingFrom.set(block.id, start);
+        }
+
+        // A part to fill in (sections/presets.js) is the owner's own once no words in brackets remain in it: its mark goes, the words and the caret stay.
+        for (const part of content.querySelectorAll('[data-urd-fill]')) {
+          if (!/\[[^\]]*\]/.test(part.textContent)) part.removeAttribute('data-urd-fill');
         }
 
         post({

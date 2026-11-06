@@ -19,6 +19,7 @@ import {
 import { ta, adminLocaleReady, t, siteLang } from '../i18n.js';
 import { sellerParts } from '../contact-model.js';
 import { legalText } from '../footer.js';
+import { sitePageLink } from '../footer-model.js';
 
 /**
  * What a provider's function says of itself: `{configured, test}`, or null where the site has no functions (a local server, a host without them).
@@ -228,7 +229,7 @@ export const checkoutBlock = {
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
     // The payment layer charges in the site's currency, so with a provider on the prices show that currency's word whatever word the block holds.
     const pays = paymentsOf(props);
-    const currency = anyProvider(pays) ? currencyWord(ctx.site?.commerce?.currency) : (props.currency || 'kr');
+    const currency = anyProvider(pays) ? currencyWord(ctx.site?.site?.commerce?.currency) : (props.currency || 'kr');
 
     // The last order's confirmation stands first, kept across a refresh of this tab; a new order replaces it.
     const seller = props.seller === false ? null : sellerParts(ctx.site);
@@ -328,6 +329,15 @@ export const checkoutBlock = {
     status.hidden = true;
     form.appendChild(status);
     if (seller) form.appendChild(buildSeller(seller));
+    // The shop's terms of sale, where the site names a page for them (site.commerce.termsPage).
+    const terms = sitePageLink(ctx.site, ctx.site?.site?.commerce?.termsPage);
+    if (terms) {
+      const line = el2('p', 'urd-checkout-terms');
+      const a = el2('a', null, t('shop.terms'));
+      a.href = terms.href;
+      line.appendChild(a);
+      form.appendChild(line);
+    }
     const setStatus = (text, isError) => {
       status.textContent = text;
       status.hidden = false;

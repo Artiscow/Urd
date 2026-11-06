@@ -1783,8 +1783,9 @@ function makeSectionAdder(index, above = null) {
     const pluginDefs = [];
     for (const id of window.Urd.sections.ids()) {
       const def = window.Urd.sections.get(id);
-      // A shop template stands in the gallery while the shop's blocks do.
+      // A shop template stands in the gallery while the shop's blocks do; a section made only by its page template never does.
       if (def.shop && !shopBlocksOn) continue;
+      if (def.pageOnly) continue;
       if (def.fromPlugin) {
         pluginDefs.push(def);
         continue;

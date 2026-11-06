@@ -11757,6 +11757,23 @@ body.urd-mobile .urd-cal-note {
 .urd-checkout-seller-label {
   font-weight: 600;
 }
+/* A part of a template's text the owner fills in (sections/presets.js), marked in the editor's preview only: visitors see the words as text. */
+.urd-preview [data-urd-fill] {
+  background: color-mix(in srgb, var(--urd-color-accent) 16%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--urd-color-accent) 70%, transparent);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+/* The shop's terms of sale under the seller, in the same small type. */
+.urd-checkout-terms {
+  margin: 0;
+  font-size: 0.8em;
+  opacity: 0.8;
+}
+.urd-checkout-terms a {
+  color: inherit;
+}
 
 /* The formatting bar for text fields (preview mode only): shown above
    the block for as long as the field is being edited. Two fixed rows (Office style)

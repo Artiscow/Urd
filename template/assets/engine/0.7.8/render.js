@@ -186,8 +186,12 @@ function writePush(host, items, skipBox) {
   // growth raises it, so a visitor's content never lies over the next
   // section (ADR-0025 decision 8).
   host.style.minHeight = host.dataset.urdMinHeight ?? '';
+  // A section with no height of its own reaches the bottom of its blocks' frames as they stand now, a frame a typed text has written since the section was drawn included; between draws it only grows, so the section a dragged block leaves keeps its height.
+  const own = Boolean(host._urdPushSection?.size?.minHeight);
+  const framesBottom = own ? 0 : Math.max(0, ...items.filter((it) => !skipBox?.has(it.id)).map((it) => it.y + it.h));
+  if (framesBottom > (Number.parseFloat(host.style.minHeight) || 0)) host.style.minHeight = `${framesBottom}px`;
   const designPx = Number.parseFloat(getComputedStyle(host).minHeight) || 0;
-  const held = host._urdPushPreview && Boolean(host._urdPushSection?.size?.minHeight);
+  const held = host._urdPushPreview && own;
   const inside = (it) => !held && (designPx <= 0 || it.y + it.h <= designPx);
   let grew = false;
   let bottom = 0;

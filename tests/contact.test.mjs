@@ -197,6 +197,15 @@ test('sellerParts: the name, the numbers and the address on one line, without th
   assert.equal(sellerParts(undefined), null);
 });
 
+test('sellerDetailsText: the numbers with their labels, the address, the email and the phone on one line', () => {
+  const { sellerDetailsText } = CONTACT_MODEL;
+  const label = (key) => `<${key}>`;
+  assert.equal(sellerDetailsText(siteWith({ ...NO, representative: 'Kari Nordmann' }), label), 'Org.nr. 974 760 673 MVA · Foretaksregisteret, Høgskoleringen 5, 7034 Trondheim, post@apeiron.no, +47 73 59 00 00');
+  assert.equal(sellerDetailsText(siteWith({ country: 'DK', ids: { cvr: '13585628' }, email: 'a@b.dk' }), label), 'CVR-nr. 13585628, a@b.dk', 'a number outside Norway with its own label');
+  assert.equal(sellerDetailsText(siteWith({ legalName: 'Lag' }), label), '', 'a name alone gives no details');
+  assert.equal(sellerDetailsText(siteWith(undefined), label), '');
+});
+
 test('Norway names Frivillighetsregisteret beside the number', () => {
   assert.deepEqual(PROFILES.NO.ids[0].registers, ['Enhetsregisteret', 'Foretaksregisteret', 'Frivillighetsregisteret']);
   assert.deepEqual(legalParts(siteContact(siteWith({ country: 'NO', ids: { org: '974760673' }, registers: { org: 'Frivillighetsregisteret' } }))).map((p) => p.text), ['Org.nr. 974 760 673 · Frivillighetsregisteret']);

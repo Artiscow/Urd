@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.24.2.3): the shop's terms of sale page, its parts to fill in, and the checkout's link
+
+- [ ] Pages panel, a new page from the «Terms of sale» template with the admin in English and the site in bokmål: the whole page is in bokmål (heading «Kjøpsvilkår», the parts, and the standard withdrawal form under «Angrerett»), with room above each heading and between paragraphs
+- [ ] The Site panel's Contact details filled in (legal name, organisation number, address, email, phone): a new terms page names the seller and those details in «Partene» and in the withdrawal form's «Til:» line; with the details empty, both stand as a marked [placeholder]; with a privacy page set in the footer, «Personopplysninger» links it
+- [ ] The template's [bracket] parts are tinted with a dashed outline in the editor; writing over a part and deleting its brackets takes the tint away; on the published page no part is tinted
+- [ ] The page's row in the Pages panel shows the number of parts left in amber, its tooltip saying what it counts; the number drops as parts are written, and stands on the row while another page is open
+- [ ] Publish with parts left on the terms page: the question before publishing has «Parts not filled in» with the page and its count, and a line about the seller's details where they are missing; «Publish anyway» publishes, Cancel stops
+- [ ] The checkout page after making the terms page: «Kjøpsvilkår» stands under the seller line and leads to the terms page; the Site panel's Shop group has «Terms of sale page» with the page chosen, «None» takes the link away, and deleting the terms page takes it away too
+- [ ] Shop currency set to EUR with a payment provider on: the checkout's prices show €; clearing the currency afterwards keeps the terms link
+- [ ] Typing a long answer into the terms text in the editor: the section grows with the text, and the footer stays below it
+- [ ] The template's name, «Terms of sale page», its tooltip, the row count's tooltip and the publish warning in bokmål and Turkish
+
 ### Test batch (0.7.24.2.2): the privacy page in the footer and in the site's language, and the video cover's play button
 
 - [ ] Pages panel, a new page from the «Privacy» template, with the admin in English and the site in bokmål: the page's heading reads «Personvern» like the text under it; the block's menu has «Page heading» (on), which takes the heading away, and no plugin «Settings» button

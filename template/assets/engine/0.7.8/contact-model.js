@@ -247,6 +247,19 @@ export function sellerParts(site) {
 }
 
 /**
+ * The seller's details as one line of text, as the terms of sale write them after the name: the numbers with their labels, the VAT mark and the register, the address, the email and the phone; '' where the site has none.
+ * @param {object} site
+ * @param {(key: string) => string} label The visitor text a number's label is read from, in the language the line is written in
+ * @returns {string}
+ */
+export function sellerDetailsText(site, label) {
+  const seller = sellerParts(site);
+  if (!seller) return '';
+  const legal = seller.legal.map((p) => (p.labelKey ? `${label(p.labelKey)} ${p.text}` : p.text));
+  return [...legal, seller.address, seller.email?.label, seller.phone?.label].filter(Boolean).join(', ');
+}
+
+/**
  * The legal and contact details as schema.org Organization properties, with every empty field left out.
  * The contact points by role become ContactPoint entries.
  * The first number with an ISO 6523 code goes into iso6523Code, the VAT number into vatID, the other numbers into identifier, a status with a schema.org type into nonprofitStatus; a number that fails a refusing check is left out.
