@@ -38,14 +38,15 @@ export function shownPage(pages, id) {
  * The panel's state.
  * The tab carries the dot while something the law asks for is missing: the legal name or the email while the site has a form or sells, a privacy page while it has a form, and parts of the terms page to fill while it sells.
  * The Terms of sale group shows while the site sells, the shop's blocks are shown, or a terms page is set.
- * The Privacy group sets how long the association keeps each kind the site has (form messages with a form on a page, the newsletter list with the footer's sign-up), and counts those not decided.
+ * The Privacy group sets how long each kind the site has is kept (form messages with a form on a page, the newsletter list with the footer's sign-up, orders with a checkout), and counts those not decided; it names Cloudflare's own counting of visits where Cloudflare puts its beacon on the published pages without the site switching counting on (`cloudflare`).
  * @param {object} input
  * @param {object} input.site The site as drafted (site.json with its pages)
  * @param {{forms?: Array<{footer?: boolean}>, checkout?: object|null, browser?: {shop?: boolean}, retention?: {forms?: object|null, newsletter?: object|null}}} input.facts privacyModel's facts for the whole site
  * @param {number} [input.termsOpen] The parts of a template left to fill on the terms page (lib/fill-in.js)
  * @param {boolean} [input.shopOn] Whether the shop's blocks stand in the block lists
+ * @param {boolean} [input.beacon] Whether the published front page carries Cloudflare Web Analytics' beacon (privacy-model.js cloudflareBeacon)
  */
-export function legalState({ site, facts, termsOpen = 0, shopOn = false }) {
+export function legalState({ site, facts, termsOpen = 0, shopOn = false, beacon = false }) {
   const pages = site?.pages ?? [];
   const forms = (facts?.forms ?? []).length > 0;
   const sells = Boolean(facts?.checkout) || facts?.browser?.shop === true;
@@ -65,7 +66,7 @@ export function legalState({ site, facts, termsOpen = 0, shopOn = false }) {
   if (sells && open > 0) reasons.push('terms');
   return {
     who: { missing },
-    privacy: { page: privacyPage?.id ?? null, kinds, undecided, country: facts?.controller?.country ?? 'XX' },
+    privacy: { page: privacyPage?.id ?? null, kinds, undecided, country: facts?.controller?.country ?? 'XX', cloudflare: beacon && !String(site?.analytics?.token ?? '').trim() },
     terms: { shown: sells || shopOn || Boolean(termsId), page: termsPage?.id ?? null, open },
     reasons,
     dot: reasons.length > 0,

@@ -15,6 +15,8 @@ These are the surveys the ADRs and milestones cite: the layout, navigation and s
 | [What a shop needs](#what-a-shop-needs-how-the-builders-sell-19-october-2026) | 19 October 2026 | ADR-0027 (v1.1) |
 | [How an organisation names itself](#how-an-organisation-names-itself-numbers-registers-and-the-law-in-57-countries-20-october-2026) | 20 October 2026 | Milestone 0.7.24 (0.7.24.5) |
 | [What a link can point to](#what-a-link-can-point-to-and-what-every-element-carries-21-october-2026) | 21 October 2026 | Milestone 0.7.27 |
+| [What a payment provider gives the optional layer](#what-a-payment-provider-gives-the-optional-layer-23-october-2026) | 23 October 2026 | ADR-0028 (0.7.28) |
+| [What the privacy watchers say about the companies a site names](#what-the-privacy-watchers-say-about-the-companies-a-site-names-7-november-2026) | 7 November 2026 | ADR-0029 (0.7.31.5, 0.7.31.6) |
 
 ## The preview canvas (27 July 2026)
 
@@ -354,6 +356,25 @@ A pass on the payment providers that fit Urd's optional layer (a function on the
 4. The currency is the site's, since every provider charges in the catalogue's currency, and some take only some currencies or whole units.
 
 **What Urd takes (23 October 2026):** milestone 0.7.28 and [ADR-0028](../adr/0028-payment-providers-in-the-optional-layer.md): Vipps MobilePay with its card page, Stripe Checkout and PayPal per checkout block, the site's currency, when Stripe takes the money, and the payment instructions as a choice.
+
+## What the privacy watchers say about the companies a site names (7 November 2026)
+
+A pass over what consumer and privacy watchers have found about the companies an Urd site's privacy page names (Google for YouTube, Vimeo, OpenStreetMap, Cloudflare, Vipps MobilePay, Stripe and PayPal), read from the consumer councils, the data protection authorities, ToS;DR, a consumer-rights wiki and the companies' own documentation.
+
+**What the watchers found:**
+- **Google:** the Norwegian Consumer Council's *Every Step You Take* (2018) on location tracking by deceptive design led, through BEUC and the Irish DPC, to a fine of €403 million on 21 September 2026. Datatilsynet found Google Analytics unlawful until the EU–US Data Privacy Framework (2023). The «privacy-enhanced» youtube-nocookie player still writes the browser's local storage before the visitor presses play.
+- **Vipps MobilePay:** the Consumer Council complained to Datatilsynet in March 2025 that Vipps pressed its users to let their purchase history be used for targeted advertising; Vipps withdrew the plan in April 2025 and said it may ask again. No decision was found. Its privacy statement moved to vipps.no/personvern (section 2.7 on how long); the address the privacy page linked answered 404.
+- **PayPal:** graded E by ToS;DR (retroactive changes, data used for profiling and advertising); in the US it shares shopping data with merchants by default from 27 November 2024, and its January 2026 statement names its own ad network. A consumer-rights voice's long record is of account freezes and holds.
+- **Stripe:** Stripe.js collects device signals for fraud on every page it is loaded on and sets a cookie for a year; no ToS;DR grade.
+- **Cloudflare:** graded D by ToS;DR (logs kept for an undefined period); it terminates TLS, so it sees the traffic it serves; the Consumer Rights Wiki records a registrar's DNS lock-in and an ID check after a domain sale. Since 15 October 2025 it turns Web Analytics on by itself for every domain on its free plan and adds its script to the pages, leaving out only visitors through its EU and UK data centres.
+- **Vimeo and OpenStreetMap:** Vimeo's `dnt=1` drops its two-year analytics cookie but keeps Cloudflare's; OpenStreetMap's tiles pass a US CDN and must carry the Referer, and its usage logs are kept for 180 days.
+
+**Three rules from the survey:**
+1. A frame that loads with the page writes the visitor's browser before any choice, whatever the provider calls its mode, so the cover stays the default and the switch that drops it names ekomloven § 3-15.
+2. The host can add to the page what the site never put there, so the privacy page tells what is on the page as served, not only what the site's settings switch on.
+3. The privacy page states facts and links each company's own terms; grades, complaints and verdicts are the reader's to look up, and never stand on the page.
+
+**What Urd takes (7 November 2026):** confirmed as built: covers by default, youtube-nocookie and Vimeo `dnt=1` (`blocks/video.js`), Stripe and Vipps by redirect to their own pages, so neither's script runs on a site. Taken: each company's own part on how long it keeps data, linked and dated (0.7.31.5, `KEEP_TERMS` in privacy-model.js), the Vipps address corrected, and Cloudflare's own counting told on the privacy page where its script is on the page and named in the Legal panel with how to turn it off (0.7.31.6, `cloudflareBeacon`).
 
 ## Sources
 
@@ -756,3 +777,23 @@ Each list is the survey's own sources, as cited in its text, and belongs to the 
 - [PayPal: move your app to production](https://developer.paypal.com/api/rest/production) (primary)
 - [PayPal: merchant fees in Norway](https://www.paypal.com/no/webapps/mpp/merchant-fees) (primary)
 - [Kustom: supported methods](https://docs.kustom.co/checkout/surfaces/supported-methods) (primary)
+
+### Survey 7 November 2026 (the privacy watchers)
+
+- [Forbrukerrådet: Every Step You Take](https://storage02.forbrukerradet.no/media/2018/11/27-11-18-every-step-you-take.pdf) (primary)
+- [BEUC: Every Step You Take, the enforcement](https://www.beuc.eu/enforcement/every-step-you-take) (primary)
+- [PPC Land: Google faces €403m fine over location tracking](https://ppc.land/google-faces-eur403m-fine-over-location-tracking-flagged-in-2018/) (secondary)
+- [Forbrukerrådet: Vipps' use of purchase history](https://www.forbrukerradet.no/siste-nytt/forbrukerradet-mener-vipps-bruk-av-kjopshistorikk-er-ulovlig/) (primary)
+- [Adresseavisen: Vipps reverses on purchase history](https://www.adressa.no/nyheter/innenriks/i/25e0Gl/vipps-snur-om-bruk-av-kundenes-kjoepshistorikk) (secondary)
+- [Datatilsynet: the Google Analytics decision](https://www.datatilsynet.no/regelverk-og-verktoy/lover-og-regler/avgjorelser-fra-datatilsynet/2023/vedtak-i-google-analytics-saken/) (primary)
+- [Datatilsynet: guidance on consent to cookies](https://www.datatilsynet.no/aktuelt/aktuelle-nyheter-2025/ny-veiledning-om-samtykke-til-informasjonskapsler-og-sporingsteknologier-er-klar/) (primary)
+- [ToS;DR: Cloudflare](https://tosdr.org/en/service/894), [Vimeo](https://tosdr.org/en/service/164), [Stripe](https://tosdr.org/en/service/882), [grade E services](https://tosdr.org/en/services/E) (secondary)
+- [Consumer Rights Wiki: Cloudflare](https://consumerrights.wiki/w/Cloudflare) (secondary)
+- [gHacks: PayPal's data sharing setting](https://www.ghacks.net/2024/10/02/paypals-data-sharing-controversy-new-setting-raises-privacy-concerns/) (secondary)
+- [PayPal: global privacy statement, 22 January 2026](https://www.paypalobjects.com/marketing/ua/OA/privacy-full/en-GLOB-012226.pdf) (primary)
+- [Stripe: privacy and security of Stripe.js](https://support.stripe.com/questions/privacy-and-security-of-stripe-js) (primary)
+- [Cloud Four: YouTube no-cookies adds cookies](https://cloudfour.com/thinks/youtube-no-cookies-adds-cookies/) (secondary)
+- [Vimeo: player cookies](https://help.vimeo.com/hc/en-us/articles/26080940921361-Vimeo-Player-Cookies) (primary)
+- [OSMF: GDPR privacy statement](https://osmfoundation.org/wiki/GDPR_Privacy_Statement) and [tile usage policy](https://operations.osmfoundation.org/policies/tiles/) (primary)
+- [Vipps: personvernerklæring](https://vipps.no/personvern/) (primary)
+- [Cloudflare: The RUM Diaries, enabling Web Analytics by default](https://blog.cloudflare.com/the-rum-diaries-enabling-web-analytics-by-default/) (primary)

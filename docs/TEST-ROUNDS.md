@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.31.5): how long the other companies keep what they get, and Cloudflare's own counting of visits
+
+- [ ] The privacy page in a prose design (long read, contents at the side): each frame provider, each payment provider, the counting of visits and the host have the line «How long … keeps what it gets is set out in its own terms, under «…», as read on 6 November 2026», the section's name a link that opens the right part (Google's retention page, Vimeo's Data Retention, OpenStreetMap's automatic data, Cloudflare's section 11, Vipps' «2.7 Lagringstid», Stripe's section 5, PayPal's statement)
+- [ ] The ledger designs (table and cards): the «How long» cell of every other company's row links the same part; each payment provider has its own row «Your payment details», «To take the payment»
+- [ ] The Vipps link opens vipps.no/personvern (the old vippsmobilepay.com/privacy answered 404)
+- [ ] The date in bokmål and Turkish is written in the language of the sentence («6. november 2026»)
+- [ ] On a deployed site on its own domain on Cloudflare's free plan with Cloudflare's Web Analytics on: the page source of `/` carries `beacon.min.js`; the privacy page has its «Besøkstelling» part though counting is off in Urd; the Legal panel's Privacy fold says «Cloudflare counts the visits», and its «?» tells how to turn it off
+- [ ] With Cloudflare's Web Analytics disabled (Web Analytics, Manage RUM Settings, Disable): the beacon is gone from `/`, the privacy page has no counting part (with counting off in Urd), and the Legal panel's row is gone
+- [ ] On a plain `*.pages.dev` address: note whether Cloudflare adds its beacon there too
+- [ ] The setup guides' own-domain step names Cloudflare's own counting and how to turn it off (en-GB and nb)
+
 ### Test batch (0.7.31.4): how long the visitor's browser keeps each thing
 
 - [ ] The privacy page's «What is kept in your browser», in every design: each line ends with its period: the page fetched early «for up to 5 minutes», the light or dark choice «until you change it», the closed announcement «until the announcement is changed», the cart «until the order is placed or you empty it», the last order and a calendar's height «while the tab is open», a payment's reference «while you pay», a calendar's events «for up to 10 minutes», the loaded providers «until you take the choice back»

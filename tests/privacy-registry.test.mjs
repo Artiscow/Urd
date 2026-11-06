@@ -9,7 +9,8 @@ import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { BROWSER_KEEPS, BROWSER_UNTIL, CALENDAR_FEED_MINUTES, PREFETCH_MINUTES, privacyNameOfHost, privacyModel } = await engineImport('privacy-model.js');
+const { BROWSER_KEEPS, BROWSER_UNTIL, CALENDAR_FEED_MINUTES, PREFETCH_MINUTES, KEEP_TERMS, KEEP_SOURCES, RETENTION_KINDS, PAYMENT_PROVIDERS, privacyNameOfHost, privacyModel } = await engineImport('privacy-model.js');
+const { providerPrivacyUrl } = await engineImport('embed-cover.js');
 const dict = async (lang) => (await engineImport(`locales/site/${lang}.js`)).default.strings;
 const DICTS = { nb: await dict('nb'), 'en-GB': await dict('en-GB'), tr: await dict('tr') };
 
@@ -85,4 +86,31 @@ test('a page with a calendar has the calendar\'s keeping named', () => {
   const page = (type) => [{ entry: { id: 'p', title: 'P' }, page: { sections: [{ blocks: [{ type, props: {} }] }] } }];
   assert.equal(privacyModel({ site: {} }, page('calendar')).browser.calendar, true);
   assert.equal(privacyModel({ site: {} }, page('text')).browser.calendar, false);
+});
+
+test('every company the privacy page names says where its own terms tell how long, read on a stated day, and every kind has its source for how long', () => {
+  const embedIds = [...code('embed-cover.js').matchAll(/\['[a-z0-9.-]+', '([a-z0-9-]+)', '[^']+', 'https:[^']+'\]/g)].map((m) => m[1]);
+  const parties = code('blocks/privacy.js').match(/const OTHER_PARTIES = \{([^}]*)\}/)?.[1] ?? '';
+  const partyIds = [...parties.matchAll(/^\s+([a-z0-9-]+): \[/gm)].map((m) => m[1]);
+  for (const id of PAYMENT_PROVIDERS.filter((p) => p !== 'manual')) assert.ok(partyIds.includes(id), `${id} is a payment provider the page names with its own terms (OTHER_PARTIES in blocks/privacy.js)`);
+  assert.equal(embedIds.length, (code('embed-cover.js').match(/^\s+\['/gm) ?? []).length, 'every provider row of the covers\' list was read');
+  assert.ok(embedIds.length >= 3 && partyIds.length >= 4, 'the providers and the other parties were read from their lists');
+  for (const id of new Set([...embedIds, ...partyIds])) {
+    const terms = KEEP_TERMS[id];
+    assert.ok(terms, `${id} has the part of its terms that says how long (KEEP_TERMS in privacy-model.js)`);
+    assert.match(terms.url, /^https:\/\/[a-z0-9.-]+\/[^\s]*$/, `${id}: an https address`);
+    assert.ok(terms.company && terms.section, `${id}: the company and the section's name`);
+    assert.match(terms.checked, /^20\d\d-\d\d-\d\d$/, `${id}: the day the terms were read`);
+    if (providerPrivacyUrl(id)) assert.equal(new URL(terms.url).host.replace(/^www\./, '').split('.').slice(-2).join('.'), new URL(providerPrivacyUrl(id)).host.replace(/^www\./, '').split('.').slice(-2).join('.'), `${id}: the part on how long is on the same company's site as its terms`);
+  }
+  const kinds = [...Object.keys(RETENTION_KINDS), ...BROWSER_KEEPS.map((keep) => keep.id), ...Object.keys(KEEP_TERMS)];
+  const sourced = Object.values(KEEP_SOURCES).flat();
+  for (const kind of kinds) assert.equal(sourced.filter((k) => k === kind).length, 1, `${kind} has one source for how long (KEEP_SOURCES)`);
+  for (const kind of sourced) assert.ok(kinds.includes(kind), `${kind} in KEEP_SOURCES is a kind the page tells`);
+  assert.deepEqual(KEEP_SOURCES.owner, Object.keys(RETENTION_KINDS));
+  assert.deepEqual(KEEP_SOURCES.terms, Object.keys(KEEP_TERMS));
+  for (const [lang, strings] of Object.entries(DICTS)) {
+    for (const key of ['privacy.keep.company', 'privacy.ledger.keep.theirs']) assert.ok(strings[key]?.includes('{names}'), `${lang} ${key} places the link`);
+    assert.ok(strings['privacy.keep.company'].includes('{date}') && strings['privacy.keep.company'].includes('{company}'), `${lang} privacy.keep.company names the company and the day`);
+  }
 });

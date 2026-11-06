@@ -40,6 +40,8 @@ A new site starts from the template repository [urd-template](https://github.com
 
 If you use your own domain later, update both URLs in the OAuth app.
 
+On Cloudflare's free plan, Cloudflare turns its own visit counting (Web Analytics) on by itself for a domain you add, and puts its script on your pages. The privacy page then tells your visitors so, and the Legal panel names it. If you do not want it: Cloudflare's dashboard, the domain, **Web Analytics**, **Manage RUM Settings**, **Disable**; Cloudflare does not turn it on again. The Legal panel sees it only on the front page as Cloudflare serves it to you, and Cloudflare leaves the script out for some visitors (those its EU and UK data centres serve), so the setting in Cloudflare is the one to check.
+
 ## 3. Set the environment variables in Cloudflare
 
 Go to the project → **Settings** → **Variables and Secrets** → **Add**.

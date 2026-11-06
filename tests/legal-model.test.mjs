@@ -90,3 +90,10 @@ test('the Privacy group: the kinds the site has, those not decided counted on it
   assert.equal(none.privacy.country, 'XX', 'no details read as no country');
   assert.equal(none.dot, false, 'a kind not decided marks the heading, not the tab');
 });
+
+test('the Privacy group names Cloudflare\'s own counting of visits where the published pages carry its beacon and the site has not switched counting on', () => {
+  const page = site({ footer: { privacyPage: 'personvern' } });
+  assert.equal(legalState({ site: page, facts: NONE }).privacy.cloudflare, false, 'no beacon read');
+  assert.equal(legalState({ site: page, facts: NONE, beacon: true }).privacy.cloudflare, true);
+  assert.equal(legalState({ site: { ...page, analytics: { token: 'abc' } }, facts: NONE, beacon: true }).privacy.cloudflare, false, 'the site counts visits itself, and the page names it');
+});

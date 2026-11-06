@@ -38,6 +38,8 @@ Ny side starter fra malrepoet [urd-template](https://github.com/Artiscow/urd-tem
 
 Bruker du eget domene senere, oppdater begge URL-ene i OAuth-appen.
 
+På Cloudflares gratisplan slår Cloudflare på sin egen besøkstelling (Web Analytics) av seg selv for et domene du legger til, og legger skriptet sitt på sidene dine. Personvernsiden forteller da de besøkende det, og Juridisk-panelet nevner det. Vil du ikke ha det: Cloudflares dashbord, domenet, **Web Analytics**, **Manage RUM Settings**, **Disable**; Cloudflare slår det ikke på igjen. Juridisk-panelet ser det bare på forsiden slik Cloudflare leverer den til deg, og Cloudflare utelater skriptet for noen besøkende (dem datasentrene i EU og Storbritannia betjener), så det er innstillingen i Cloudflare du bør sjekke.
+
 ## 3. Sett miljøvariablene i Cloudflare
 
 Gå til prosjektet → **Settings** → **Variables and Secrets** → **Add**.

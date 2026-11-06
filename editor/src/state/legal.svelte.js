@@ -2,7 +2,7 @@
  * The Legal panel's state (panels/LegalPanel.svelte): the privacy facts of the whole site (privacy-model.js), gathered from the open page and every other page's draft or published file, and the panel's state from them (lib/legal-model.js), read by the panel, the amber dot on its tab and the tab's menu (shell/PanelTab.svelte).
  * Also the folds' open state, kept while other panels are open.
  */
-import { privacyModel } from '$engine/privacy-model.js';
+import { privacyModel, cloudflareBeacon } from '$engine/privacy-model.js';
 import { legalState } from '../lib/legal-model.js';
 import { pageFills } from '../lib/fill-in.js';
 import { siteState } from './site.svelte.js';
@@ -12,6 +12,10 @@ import { blocksState } from './blocks.svelte.js';
 
 /** The other pages' files by id, read as the pages come and go and as another page is opened. */
 let otherPages = $state({});
+
+/** Whether the published front page carries Cloudflare Web Analytics' beacon, as the site serves it: read once per session, false where it cannot be read (a local server serves no beacon). */
+let beacon = $state(false);
+let beaconRead = false;
 
 /** Whether each of the panel's folds stands open. */
 let legalOpen = $state({ who: false, privacy: false, terms: false });
@@ -26,7 +30,7 @@ const legal = $derived.by(() => {
   const pages = (draft.pages ?? []).map((entry) => ({ entry, page: fileOf(entry.id) })).filter((p) => p.page);
   const facts = privacyModel(draft, pages);
   const fills = pageFills(fileOf(draft.site?.commerce?.termsPage));
-  return legalState({ site: draft, facts, termsOpen: fills.own + fills.contact, shopOn: blocksState.shopBlocksOn() });
+  return legalState({ site: draft, facts, termsOpen: fills.own + fills.contact, shopOn: blocksState.shopBlocksOn(), beacon });
 });
 
 /** The published files read for pages without a draft, by file: fetched once, since a page's file on the server changes only by a publish, which writes the pages that had drafts (read from their drafts, then from the held files, until the site serves them). */
@@ -42,7 +46,25 @@ function readOther(entry) {
   return fetched.get(entry.file);
 }
 
+/** The front page as the site serves it, its scripts read for Cloudflare's beacon, which Cloudflare adds to the HTML on its way. */
+function readBeacon() {
+  if (beaconRead) return;
+  beaconRead = true;
+  fetch('/', { cache: 'no-store' })
+    .then((res) => (res.ok ? res.text() : ''))
+    .then((html) => {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      beacon = cloudflareBeacon([...doc.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')));
+    })
+    .catch(() => {});
+}
+
 function effects() {
+  // The beacon is read once the editor has the site.
+  $effect(() => {
+    if (siteState.siteDraft) readBeacon();
+  });
+
   // The other pages are read again as pages come and go, as another page is opened (the page left behind is one of them now), and as the drafts are published or discarded.
   $effect(() => {
     const draft = siteState.siteDraft;

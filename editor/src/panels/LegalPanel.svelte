@@ -45,6 +45,11 @@
     return [...shown.map((c) => [c, `opt.keep.${c}`]), ['', 'opt.keep.undecided']];
   }
 
+  /** The help card on Cloudflare's own counting of visits: where it comes from, what the privacy page says of it, and how it is turned off. */
+  function cloudflareHelp(anchor) {
+    toggleHintCard(anchor, { title: ta('hint.cloudflare.title'), lines: [1, 2, 3].map((n) => ta(`hint.cloudflare.${n}`)) });
+  }
+
   /** The help card on the orders' choice: the thresholds that put an association under each duty, with their sources. */
   function ordersHelp(anchor) {
     toggleHintCard(anchor, { title: ta('hint.orders.title'), lines: [1, 2, 3, 4, 5].map((n) => ta(`hint.orders.${n}`)) });
@@ -144,6 +149,10 @@
       {@render pageChoice(ta('lbl.footerPrivacy'), ta('tip.footer.privacy'), siteDraft.footer?.privacyPage ?? '', setPrivacyPage, legal?.privacy.page)}
       {#if legal && !legal.privacy.page}
         <button type="button" class="ghost action" title={ta('tip.legal.makePage')} onclick={() => makePage('privacy')}>{@html ICONS.plus} {ta('ui.makePrivacyPage')}</button>
+      {/if}
+      {#if legal?.privacy.cloudflare}
+        <!-- Cloudflare counts the visits by itself: the privacy page tells it, and the «?» says how it is turned off -->
+        <div class="legal-cf" title={ta('tip.legal.cloudflare')}><span>{ta('legal.cloudflare')}</span><button type="button" class="help-chip legal-help" title={ta('hint.how', { title: ta('hint.cloudflare.title') })} aria-label={ta('hint.how', { title: ta('hint.cloudflare.title') })} onclick={(e) => cloudflareHelp(e.currentTarget)}>?</button></div>
       {/if}
       <!-- How long the association keeps each kind the site has; one not decided is marked, as the privacy page says it is not decided -->
       {#if legal?.privacy.kinds.length}

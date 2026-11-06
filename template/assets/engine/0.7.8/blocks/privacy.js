@@ -12,7 +12,7 @@
  * preview the other pages' drafts are not seen until they are published.
  */
 import { t, ta, adminLocaleReady, siteTextLang } from '../i18n.js';
-import { privacyModel, BROWSER_KEEPS } from '../privacy-model.js';
+import { privacyModel, cloudflareBeacon, BROWSER_KEEPS, KEEP_TERMS } from '../privacy-model.js';
 import { allowedProviders, setProviderAllowed, providerName, providerPrivacyUrl } from '../embed-cover.js';
 import { privacyDesign, applyDocLook, buildContents } from '../doc-look.js';
 
@@ -46,7 +46,7 @@ async function loadPages(site, fetchFn = fetch) {
 /* The third parties beside the frames' providers (which embed-cover.js names, with their privacy terms): the payment providers and the host, each with its name and its own privacy terms. */
 const OTHER_PARTIES = {
   cloudflare: ['Cloudflare', 'https://www.cloudflare.com/privacypolicy/'],
-  vipps: ['Vipps MobilePay', 'https://vippsmobilepay.com/privacy'],
+  vipps: ['Vipps MobilePay', 'https://vipps.no/personvern/'],
   stripe: ['Stripe', 'https://stripe.com/privacy'],
   paypal: ['PayPal', 'https://www.paypal.com/legalhub/privacy-full'],
 };
@@ -60,6 +60,33 @@ function nameLink(id, name) {
   a.target = '_blank';
   a.rel = 'noopener';
   return a;
+}
+
+/** The part of a company's own terms that says how long it keeps what it gets (KEEP_TERMS), as a link named by that part. */
+function termsLink(id) {
+  const terms = KEEP_TERMS[id];
+  if (!terms) return el2('span', null, String(id));
+  const a = el2('a', null, terms.section);
+  a.href = terms.url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  return a;
+}
+
+/** The day a company's terms were read, in the language of the sentence it stands in. */
+function checkedText(id, key) {
+  const day = KEEP_TERMS[id]?.checked ?? '';
+  try {
+    return new Intl.DateTimeFormat(siteTextLang(key), { dateStyle: 'long' }).format(new Date(`${day}T00:00:00`));
+  } catch {
+    return day;
+  }
+}
+
+/** How long a company keeps what it gets, as a sentence: set out in the part of its own terms the link names, read on the day named. */
+function keepTermsNode(id) {
+  const company = KEEP_TERMS[id]?.company ?? OTHER_PARTIES[id]?.[0] ?? providerName(id);
+  return paragraphWith(t('privacy.keep.company', { company, date: checkedText(id, 'privacy.keep.company') }), [termsLink(id)]);
 }
 
 /** A paragraph from a text with «{names}» in it, the names set in as links, the text around them as it is. */
@@ -198,17 +225,18 @@ function collectedNodes(model) {
   return nodes;
 }
 
-/** The counting of visits: what it reads, on what basis, and that it is kept as totals alone. */
-const analyticsNodes = () => [paragraphWith(t('privacy.analytics.text'), [nameLink('cloudflare', 'Cloudflare Web Analytics')]), el2('p', null, t('privacy.keep.analytics'))];
+/** The counting of visits: what it reads, on what basis, and how long Cloudflare keeps it (`keep`; the ledger's table says that in its own column). */
+const analyticsNodes = ({ keep = true } = {}) => [paragraphWith(t('privacy.analytics.text'), [nameLink('cloudflare', 'Cloudflare Web Analytics')]), ...(keep ? [keepTermsNode('cloudflare')] : [])];
 
-/** The host: what it keeps, for how long, and where it may process it. */
-const hostNodes = () => [paragraphWith(t('privacy.host.text'), [nameLink('cloudflare', 'Cloudflare Pages')])];
+/** The host: what it keeps, where it may process it, and how long (`keep`: where the counting of visits stands, its line has told Cloudflare's terms already, and the ledger's table says it in its own column). */
+const hostNodes = ({ keep = true } = {}) => [paragraphWith(t('privacy.host.text'), [nameLink('cloudflare', 'Cloudflare Pages')]), ...(keep ? [keepTermsNode('cloudflare')] : [])];
 
-/** The checkout's payment providers and its manual ways to pay. */
-function paymentNodes(s) {
+/** The checkout's payment providers, how long each keeps what it gets (`keep`; the ledger's table says that in its own column), and its manual ways to pay. */
+function paymentNodes(s, { keep = true } = {}) {
   const nodes = [];
   const providers = s.providers.filter((id) => id !== 'manual');
   if (providers.length) nodes.push(paragraphWith(t('privacy.shop.payment'), providers.map((id) => nameLink(id, OTHER_PARTIES[id]?.[0] ?? id))));
+  if (keep) nodes.push(...providers.map(keepTermsNode));
   if (s.providers.includes('manual')) nodes.push(el2('p', null, t('privacy.shop.manual')));
   return nodes;
 }
@@ -217,16 +245,13 @@ function paymentNodes(s) {
 function embedNodes(model, { keep = true } = {}) {
   const asking = model.embeds.filter((id) => !model.atOnce.includes(id));
   const links = model.embeds.map((id) => nameLink(id, providerName(id)));
-  if (!asking.length) return [paragraphWith(t('privacy.embeds.allAtOnce'), links), ...(keep ? [embedKeepNode()] : [])];
+  if (!asking.length) return [paragraphWith(t('privacy.embeds.allAtOnce'), links), ...(keep ? model.embeds.map(keepTermsNode) : [])];
   const nodes = [paragraphWith(t('privacy.embeds.text'), links)];
   if (model.atOnce.length) nodes.push(el2('p', null, t('privacy.embeds.atOnce', { names: joinNames(model.atOnce.map(providerName)) })));
-  if (keep) nodes.push(embedKeepNode());
+  if (keep) nodes.push(...model.embeds.map(keepTermsNode));
   nodes.push(el2('p', null, t('privacy.embeds.choice')));
   return nodes;
 }
-
-/** How long the frames' companies keep what they learn: by their own terms, which their names link to. */
-const embedKeepNode = () => el2('p', null, t('privacy.keep.embeds'));
 
 /**
  * The ledgers (the designs that set out what is collected): a row for each thing the site or another party gets, with why, who gets it and how long it is kept (GDPR article 13: the purposes, the recipients and the period).
@@ -238,10 +263,10 @@ function ledgerNodes(model, design) {
   // Who gets what a form or the checkout sends: the service it goes to, the address it is emailed to, or the one responsible.
   const who = (item) => item.host || item.recipient || owner;
   const rows = [];
-  /* A row's recipients are names, or [id, name] for another company, whose own terms tell how long it keeps it (`keep` null: the row links them). */
+  /* A row's recipients are names, or [id, name] for another company, whose own terms tell how long it keeps it (`keep` null: the row links them, one company to a row). */
   const add = (what, why, recipients, keep) => {
     const names = [recipients].flat().map((r) => (Array.isArray(r) ? { id: r[0], name: r[1] } : { name: r }));
-    const same = rows.find((r) => r.what === what && r.why === why && r.keep === keep);
+    const same = keep === null ? null : rows.find((r) => r.what === what && r.why === why && r.keep === keep);
     if (same) same.who.push(...names.filter((n) => !same.who.some((w) => w.name === n.name)));
     else rows.push({ what, why, who: names, keep });
   };
@@ -250,8 +275,9 @@ function ledgerNodes(model, design) {
     else add(form.fields.length ? form.fields.join(', ') : t('privacy.ledger.whatYouFill'), t('privacy.ledger.why.form', { page: form.page }), who(form), keepCell(model, 'forms'));
   }
   if (model.checkout) {
-    const pay = model.checkout.providers.filter((id) => id !== 'manual').map((id) => OTHER_PARTIES[id]?.[0] ?? id);
-    add(t('privacy.ledger.order'), t('privacy.ledger.why.order'), [who(model.checkout), ...pay], keepCell(model, 'orders'));
+    const pay = model.checkout.providers.filter((id) => id !== 'manual');
+    add(t('privacy.ledger.order'), t('privacy.ledger.why.order'), [who(model.checkout), ...pay.map((id) => OTHER_PARTIES[id]?.[0] ?? id)], keepCell(model, 'orders'));
+    for (const id of pay) add(t('privacy.ledger.paymentDetails'), t('privacy.ledger.why.payment'), [[id, OTHER_PARTIES[id]?.[0] ?? id]], null);
   }
   if (model.analytics) add(t('privacy.ledger.visits'), t('privacy.ledger.why.analytics'), [['cloudflare', 'Cloudflare']], null);
   for (const id of model.embeds) {
@@ -263,18 +289,21 @@ function ledgerNodes(model, design) {
   const nothing = !model.forms.length && !model.checkout && !model.analytics && !model.embeds.length;
   if (nothing) nodes.push(el2('p', null, t('privacy.nothing')));
   if (model.forms.length) nodes.push(el2('p', null, t('privacy.forms.basis')));
-  if (model.checkout) nodes.push(...paymentNodes(model.checkout), el2('p', null, t('privacy.shop.basis')));
-  if (model.analytics) nodes.push(paragraphWith(t('privacy.analytics.text'), [nameLink('cloudflare', 'Cloudflare Web Analytics')]));
+  if (model.checkout) nodes.push(...paymentNodes(model.checkout, { keep: false }), el2('p', null, t('privacy.shop.basis')));
+  if (model.analytics) nodes.push(...analyticsNodes({ keep: false }));
   if (model.embeds.length) nodes.push(...embedNodes(model, { keep: false }));
-  nodes.push(...hostNodes());
+  nodes.push(...hostNodes({ keep: false }));
   return nodes;
 }
 
-/** A row's keeping into an element: its own words, or another company's terms, linked, where that company decides. */
+/** A row's keeping into an element: its own words, or the company's own terms, named and linked, where that company decides. */
 function keepInto(cell, row) {
   if (row.keep instanceof Node) cell.append(row.keep);
   else if (row.keep !== null) cell.textContent = row.keep;
-  else withNames(cell, t('privacy.ledger.keep.theirs'), row.who.filter((w) => w.id).map((w) => nameLink(w.id, w.name)));
+  else {
+    const id = row.who.find((w) => w.id)?.id;
+    withNames(cell, t('privacy.ledger.keep.theirs', { company: KEEP_TERMS[id]?.company ?? row.who[0]?.name ?? '' }), [termsLink(id)]);
+  }
   return cell;
 }
 
@@ -368,7 +397,7 @@ function pageParts(model, design) {
   for (const line of kept) list.append(el2('li', null, line));
   parts.push({ key: 'browser', nodes: [el2('p', null, t('privacy.browser.text')), list] });
 
-  if (!LEDGERS.has(design)) parts.push({ key: 'host', nodes: hostNodes() });
+  if (!LEDGERS.has(design)) parts.push({ key: 'host', nodes: hostNodes({ keep: !model.analytics }) });
 
   // The visitor's rights, and the authority for the country.
   const authority = el2('p');
@@ -478,9 +507,12 @@ export const privacyBlock = {
     host.append(...heading(props), el2('p', 'urd-privacy-intro urd-doc-lead', t('privacy.intro')));
     el.appendChild(host);
     // The facts need the pages: drawn once they are read, and with the site alone where none can be.
+    // The counting of visits is told where the site switches it on, and where Cloudflare has put its beacon on the page itself.
     loadPages(ctx.site).then((pages) => {
       if (!host.isConnected) return;
-      draw(host, privacyModel(ctx.site, pages), props, el.dataset.blockId);
+      const model = privacyModel(ctx.site, pages);
+      if (!model.analytics && cloudflareBeacon([...document.scripts].map((s) => s.src))) model.analytics = true;
+      draw(host, model, props, el.dataset.blockId);
     });
     if (Boolean(ctx.preview) && ctx.viewport !== 'mobile') {
       // The help chip (ADR-0008): where the page's facts come from, and when another page's change shows.

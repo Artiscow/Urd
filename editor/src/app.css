@@ -4311,6 +4311,12 @@
     font-size: 0.85rem;
   }
   .legal-keep > .dd { flex: 1 1 auto; width: 100%; }
+  /* Cloudflare's own counting of visits, named in the Privacy fold with its «?» */
+  .legal-cf {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+  }
   /* The «?» by a kind's name in the Legal panel (the orders' duties), small beside the name */
   .legal-help {
     width: 16px;

@@ -39,8 +39,47 @@ export const BROWSER_KEEPS = [
 /** The periods a kind may be kept for, each with its words in the site dictionaries. */
 export const BROWSER_UNTIL = ['tab', 'changed', 'taken', 'renewed', 'ordered', 'emptied', 'paid', 'minutes'];
 
+/**
+ * Where each company the privacy page names says how long it keeps what it gets (ADR-0029 decision 4): the most precise part of its own terms it publishes, by the section's name as published, read on `checked`.
+ * A company the page names stands here, or tests/privacy-registry.test.mjs fails; a link is checked again when the company's terms move.
+ */
+export const KEEP_TERMS = {
+  youtube: { company: 'Google', url: 'https://policies.google.com/technologies/retention', section: 'How Google retains data we collect', checked: '2026-11-06' },
+  vimeo: { company: 'Vimeo', url: 'https://vimeo.com/legal/privacy/policy', section: 'Privacy Policy, 7. Data Retention', checked: '2026-11-06' },
+  openstreetmap: { company: 'OpenStreetMap', url: 'https://osmfoundation.org/wiki/Privacy_Policy#Personal_data_we_receive_automatically', section: 'Privacy Policy, personal data we receive automatically', checked: '2026-11-06' },
+  cloudflare: { company: 'Cloudflare', url: 'https://www.cloudflare.com/privacypolicy/#11-data-retention', section: 'Privacy Policy, 11. Data retention', checked: '2026-11-06' },
+  vipps: { company: 'Vipps MobilePay', url: 'https://vipps.no/personvern/', section: 'Personvernerklæring, 2.7 Lagringstid', checked: '2026-11-06' },
+  stripe: { company: 'Stripe', url: 'https://stripe.com/privacy#5-security-and-retention', section: 'Privacy Policy, 5. Security and retention', checked: '2026-11-06' },
+  paypal: { company: 'PayPal', url: 'https://www.paypal.com/legalhub/privacy-full', section: 'Privacy Statement, How long does PayPal store your Personal Data?', checked: '2026-11-06' },
+};
+
+/**
+ * Where the «how long» of every kind the privacy page tells comes from: `owner` for what the owner sets in the Legal panel (RETENTION_KINDS), `code` for what the visitor's browser keeps (BROWSER_KEEPS), `terms` for what another company keeps (KEEP_TERMS). The guard holds every kind to one of them.
+ */
+export const KEEP_SOURCES = {
+  owner: ['forms', 'newsletter', 'orders'],
+  code: ['pages', 'theme', 'announcement', 'cart', 'order', 'payment', 'calendar', 'calendarHeight', 'embeds'],
+  terms: ['youtube', 'vimeo', 'openstreetmap', 'cloudflare', 'vipps', 'stripe', 'paypal'],
+};
+
 /** The hosts the counting of visits reaches (Cloudflare Web Analytics): its script and its beacon. */
 export const ANALYTICS_HOSTS = ['static.cloudflareinsights.com', 'cloudflareinsights.com'];
+
+/**
+ * Whether one of a page's scripts is Cloudflare Web Analytics' beacon: added by Urd with a token (seo.js mountAnalytics), or by Cloudflare itself, which turns its visit counting on for a domain on its free plan unless the owner turns it off there.
+ * Each address is parsed and its host compared exactly.
+ * @param {Iterable<string>} srcs The scripts' addresses
+ * @returns {boolean}
+ */
+export function cloudflareBeacon(srcs) {
+  for (const src of srcs ?? []) {
+    try {
+      const url = new URL(String(src));
+      if (url.protocol === 'https:' && url.host === ANALYTICS_HOSTS[0] && url.pathname.startsWith('/beacon')) return true;
+    } catch { /* not an address */ }
+  }
+  return false;
+}
 
 /**
  * What the privacy page names an outside host by (ADR-0029): the counting of visits, a frame's provider by the covers' list, or null for a host the page does not name.

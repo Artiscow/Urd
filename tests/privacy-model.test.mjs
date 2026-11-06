@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { privacyModel, pageFacts, endpointHost, paymentProviders, footerForm, retentionOf, orderKeepChoices, RETENTION_KINDS } = await engineImport('privacy-model.js');
+const { privacyModel, pageFacts, endpointHost, paymentProviders, footerForm, retentionOf, orderKeepChoices, RETENTION_KINDS, cloudflareBeacon } = await engineImport('privacy-model.js');
 
 const site = {
   site: { title: 'Kakeklubben', contact: { country: 'NO', legalName: 'Kakeklubben Trondheim', ids: { org: '974760673' }, address: { street: 'Gata 1', postalCode: '7034', city: 'Trondheim' }, email: 'post@kake.no', phone: '+47 400 00 000' } },
@@ -105,4 +105,14 @@ test('retentionOf for orders: the bookkeeping duty, a sports club under NIF or a
   assert.deepEqual(orderKeepChoices('NO'), RETENTION_KINDS.orders);
   assert.deepEqual(orderKeepChoices('SE'), ['period']);
   assert.deepEqual(orderKeepChoices(undefined), ['period']);
+});
+
+test('cloudflareBeacon: Cloudflare Web Analytics\' script found by its parsed address, never by a substring', () => {
+  assert.equal(cloudflareBeacon(['/assets/engine/boot.js', 'https://static.cloudflareinsights.com/beacon.min.js']), true, 'the beacon Cloudflare or Urd adds');
+  assert.equal(cloudflareBeacon(['https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015']), true, 'the versioned address Cloudflare injects');
+  assert.equal(cloudflareBeacon(['https://evil.example/static.cloudflareinsights.com/beacon.min.js']), false, 'the host is compared, not the text');
+  assert.equal(cloudflareBeacon(['https://static.cloudflareinsights.com.evil.example/beacon.min.js']), false);
+  assert.equal(cloudflareBeacon(['http://static.cloudflareinsights.com/beacon.min.js']), false, 'https only');
+  assert.equal(cloudflareBeacon(['', 'not a url', null]), false);
+  assert.equal(cloudflareBeacon(undefined), false);
 });
