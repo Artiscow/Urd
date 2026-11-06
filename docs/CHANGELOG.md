@@ -8,6 +8,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.24.2.1-0.7.0.77p - Push preparation: the privacy page and its designs, the terms of sale, the Legal panel, menus and folds with motion, the tabs' menus and the dialogs' fade - 6 November 2026
+
+- The commits of the span were pushed one by one as they were made, so the preparation covers what was already on the remote and the dialogs' fade, whose commit entry 0.7.0.77 lands in the same commit as this entry.
+- Every admin dialog opened and closed at once, the last surfaces outside the motion rule. Chosen on the Design canvas «Dialog Motion»: a fade and nothing moving, quick for the large dialogs and as the menus for the small ones (0.7.0.77).
+
+The span review found these; the first three are fixed:
+
+1. ARCHITECTURE.md named none of the span's engine modules for the privacy page (`privacy-model.js`, `blocks/privacy.js`, `doc-look.js`), nor `menu/DocLook.svelte` beside the menu's other shared parts, nor `lib/motion.svelte.js`. Each is listed with what it owns.
+2. In BACKLOG, 0.7.32.2's «Done when» line had slid under 0.7.32.3 when that step was inserted between them. It stands under its own step.
+3. SCHEMA.md's `props` paragraph pointed to «A document's design and look» below it; the paragraph stands above.
+4. Noted without a change: 0.7.32.1 was delivered in commit 0.7.31.2, a number under another milestone; the reference resolves. `phoneDesign` is described in SCHEMA.md and the schema, and no example page carries one, as no example carries a `design` either.
+
+### 0.7.0.77 - The dialogs fading in and out - 6 November 2026
+
+- The admin's dialogs appeared and vanished at once, against the rule that what opens and closes does so smoothly. Every dialog fades in as it opens and out as it closes, its backdrop with it and nothing moving: the large ones (the image editor, the design picker, Urd settings, the shortcut sheet, page settings, redirects) in 100 ms and out in 80, the small ones (the command palette, the link dialog in both its forms, the CSV import, the confirm question) in 160 and out in 120; with reduced motion at once (`dialog.dx` in app.css, `fadingDialog` and `dialogOut` in lib/motion.svelte.js).
+- A dialog's own close() fades it before it closes, so its buttons, Escape and a press on the backdrop all fade, and a dialog taken away while it is open fades before it leaves. Where the browser lets no page hold Escape (no press since the dialog opened, as close watchers specify) the dialog closes at once.
+
+The independent review before the commit found these, all fixed:
+
+1. The command palette ran its command while it was still closing, so Enter twice within the fade ran it twice, and a command that moves the focus lost it to the modal palette. The command runs once the palette has closed, and a second press while it closes runs nothing.
+2. A design taken in the design picker, «Keyboard shortcuts» in Urd settings and the palette's commands that open another dialog took the dialog away at once, with no fade and the focus falling to the body. The choice, the sheet and the command follow in the dialog's close event, after the fade and the focus given back.
+3. Page settings and the CSV import closed by their own buttons (Delete page, Save as template, Import, Cancel) vanished at once, since their fade-out transition was local to a block their parent takes away. The transition is global on every dialog.
+4. A dialog drawn again during its fade-out would have kept the closing class, open and invisible. The transition takes the class off when Svelte resets it, and waits two frames longer than the fade, so the close() running beside it closes the dialog first and the browser gives the focus back.
+
 ### 0.7.32.3 - The Collections tab's menu, entry rows without arrows, and the image editor opening at the picture's shape - 6 November 2026
 
 - The Collections tab had no menu, so reaching one news story or product took several steps in the panel. Its menu lists the site's collections, each with a submenu of its entries in the panel's order ending in «New entry», and beside each entry a menu with «Add image» or «Edit image» and «Duplicate»; «New collection» stands at the menu's foot (`PanelTab.svelte`, `collectionMenuRows` in lib/panel-folds.js).

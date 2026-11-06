@@ -6,6 +6,7 @@
    */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from '../lib/motion.svelte.js';
   import { ICONS } from '../lib/icons.js';
   import { menu, setMenuWidthPref } from '../menu/state.svelte.js';
   import { visibleGroups } from '../lib/settings-model.js';
@@ -28,11 +29,15 @@
 
   const close = () => dialogEl?.close();
 
-  /** Every way of closing ends here: the focus goes back to what had it, or to the gear when that is gone (a tile in the settings panel the dialog took over from). */
+  /** Whether the shortcut sheet opens once the dialog has closed. */
+  let toKeys = false;
+
+  /** Every way of closing ends here: the focus goes back to what had it, or to the gear when that is gone (a tile in the settings panel the dialog took over from), and the shortcut sheet opens where it was asked for. */
   function onClosed() {
     const back = opener instanceof HTMLElement && opener.isConnected && opener !== document.body ? opener : document.querySelector('.rail-gear');
     back?.focus({ preventScroll: true });
     onclose?.();
+    if (toKeys) ed.openShortcuts();
   }
 
   $effect(() => {
@@ -61,8 +66,8 @@
   }
 
   function openKeys() {
+    toKeys = true;
     close();
-    ed.openShortcuts();
   }
 </script>
 
@@ -71,7 +76,7 @@
 {/snippet}
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<dialog class="st-overlay" bind:this={dialogEl} aria-labelledby="st-title" onclose={onClosed}
+<dialog class="st-overlay dx dx-large" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-labelledby="st-title" onclose={onClosed}
   onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
   onclick={(e) => downOnBackdrop && e.target === e.currentTarget && close()}>
   {#if ed.settingsPlace === 'sheet'}

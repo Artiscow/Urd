@@ -3336,6 +3336,33 @@
     :is(.dd-anchored, .cp-anchored, .gp-anchored, .dp-anchored, .mp-anchored, .sp-anchored, .pf-pop) { transition: none; }
   }
 
+  /* An admin dialog (`dx`) fades in as it opens and out as it closes, its backdrop with it, nothing moving: a small one in 0.16s and out in 0.12s, as the menus, a large one (`dx-large`) in 0.1s and out in 0.08s.
+     The opening is drawn from @starting-style, so a browser without it opens the dialog at once; the closing is the class fadingDialog and dialogOut (lib/motion.svelte.js) set before the dialog closes or leaves. */
+  dialog.dx[open],
+  dialog.dx[open]::backdrop {
+    opacity: 1;
+    transition: opacity 0.16s ease-out;
+  }
+  dialog.dx.dx-large[open],
+  dialog.dx.dx-large[open]::backdrop { transition-duration: 0.1s; }
+  @starting-style {
+    dialog.dx[open],
+    dialog.dx[open]::backdrop { opacity: 0; }
+  }
+  dialog.dx.dx-closing,
+  dialog.dx.dx-closing::backdrop {
+    opacity: 0;
+    transition: opacity 0.12s ease-in;
+  }
+  dialog.dx.dx-large.dx-closing,
+  dialog.dx.dx-large.dx-closing::backdrop { transition-duration: 0.08s; }
+  @media (prefers-reduced-motion: reduce) {
+    dialog.dx[open],
+    dialog.dx[open]::backdrop,
+    dialog.dx.dx-closing,
+    dialog.dx.dx-closing::backdrop { transition: none; }
+  }
+
   .panel-hint {
     margin: 0;
     font-size: 0.8rem;

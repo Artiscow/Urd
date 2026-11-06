@@ -8,6 +8,7 @@
      Two forms, chosen in the admin settings (linkEditorPref): a native modal dialog (ADR-0011: Escape, Cancel and a press on the backdrop close it, and focus goes back to the field that opened it) with the pages and the spots side by side and the actions in its header; or, for a request that names the field it came from, a small non-modal dialog placed beside that field, with one search over pages and spots and the chosen page's spots unfolding under the results, closed by a click outside, Escape, or the focus leaving for the preview. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { matchWords } from '$engine/palette-search.js';
   import { pageSpots } from '$engine/anchor-model.js';
   import { LINK_RELS } from '$engine/nav-model.js';
@@ -332,7 +333,7 @@
 
 {#if beside}
   <!-- Beside the field: not modal, placed by measuring, closed by the ways the effect above wires -->
-  <dialog class="ld-pop" bind:this={dialogEl} aria-label={ta('link.title')} style="top: {pos.top}px; left: {pos.left}px; width: {POP_WIDTH}px" onclose={() => onclose()}>
+  <dialog class="ld-pop dx" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-label={ta('link.title')} style="top: {pos.top}px; left: {pos.left}px; width: {POP_WIDTH}px" onclose={() => onclose()}>
     <form class="ld-card ld-card-pop" onsubmit={(e) => { e.preventDefault(); use(); }}>
       {#if !request.pagesOnly}
         <Choice label={ta('lbl.goesTo')} title={ta('tip.link.field')} value={link.kind} options={LINK_KINDS.map((kind) => [kind, ta(KIND_KEYS[kind])])} onchange={(v) => (link.kind = v)} />
@@ -374,7 +375,7 @@
 {:else}
   <!-- A press that starts and ends on the backdrop cancels; Escape is the keyboard's way, and the Cancel button the focusable one -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-  <dialog class="ld-overlay" bind:this={dialogEl} aria-labelledby="ld-title" onclose={() => onclose()}
+  <dialog class="ld-overlay dx" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-labelledby="ld-title" onclose={() => onclose()}
     onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
     onclick={(e) => downOnBackdrop && e.target === e.currentTarget && leave()}>
     <form class="ld-card" class:ld-railed={!request.pagesOnly} onsubmit={(e) => { e.preventDefault(); use(); }}>

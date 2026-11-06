@@ -5,6 +5,7 @@
      Every change is written at once through state/picture-editor.svelte.js, so the canvas behind shows it, and the rules (the crop window, a pointer on the turned picture, the zoom a corner gives) are lib/picture-edit.js. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { pictureFilter, pictureStyle, PICTURE_LOOKS, PICTURE_BOUNDS, LOOK_FILTERS, straightenScale, parseColor, duotoneFilterUrl } from '$engine/picture.js';
   import { cropWindow, pointOnPicture, zoomFromCorner, turned, sectionChanged, KIND_TOOLS, ratioValue, movedFrame, frameAt, sharpness, dataUrlBytes, isDrawing, isBaked } from './picture-edit.js';
   import { ICONS } from './icons.js';
@@ -279,7 +280,7 @@
 </script>
 
 {#if pic}
-  <dialog class="pe" bind:this={dialogEl} oncancel={onCancel} onkeydown={onDialogKey} aria-labelledby="pe-title">
+  <dialog class="pe dx dx-large" bind:this={dialogEl} use:fadingDialog out:dialogOut|global oncancel={onCancel} onkeydown={onDialogKey} aria-labelledby="pe-title">
     <div class="pe-card">
       <header class="pe-head">
         <b id="pe-title">{ta(`pic.title.${target.kind}`)}</b>

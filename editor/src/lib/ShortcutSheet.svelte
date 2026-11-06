@@ -5,6 +5,7 @@
    * A native modal dialog (ADR-0011): Escape is its own cancel, and a press outside its card closes it as it does the design picker.
    */
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { ICONS } from './icons.js';
   import { SHORTCUT_GROUPS, KEY_LABELS, POINTER_TOKENS, ARROW_TOKENS } from './shortcuts.js';
 
@@ -37,7 +38,7 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<dialog class="sk-overlay" bind:this={dialogEl} aria-labelledby="sk-title" onclose={onClosed}
+<dialog class="sk-overlay dx dx-large" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-labelledby="sk-title" onclose={onClosed}
   onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
   onclick={(e) => downOnBackdrop && e.target === e.currentTarget && close()}>
   <div class="sk-card">

@@ -3,6 +3,7 @@
      A native modal dialog (ADR-0011), as the Urd settings: Escape and a press on the backdrop close it, and every change is written as it is made. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from '../../lib/motion.svelte.js';
   import { ICONS } from '../../lib/icons.js';
   import PageSettingsFields from './PageSettingsFields.svelte';
   import HideButton from './HideButton.svelte';
@@ -37,7 +38,7 @@
 </script>
 
 {#if id}
-  <dialog class="ps-overlay" bind:this={dialogEl} aria-labelledby="ps-title" onclose={onClosed}
+  <dialog class="ps-overlay dx dx-large" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-labelledby="ps-title" onclose={onClosed}
     onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
     onclick={(e) => downOnBackdrop && e.target === e.currentTarget && dialogEl.close()}>
     <div class="ps-card">

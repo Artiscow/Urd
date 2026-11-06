@@ -3,6 +3,7 @@
      A modal <dialog> in the browser's top layer, so a question asked from another modal dialog (the page settings) stands above it; Escape cancels. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from '../lib/motion.svelte.js';
   import Dropdown from '../lib/Dropdown.svelte';
 
   const ed = getContext('urd-editor');
@@ -27,7 +28,7 @@
   <!-- The backdrop is a mouse shortcut: Escape is the keyboard path and
        the Cancel button the focusable one. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-  <dialog class="confirm-dialog" bind:this={dialogEl} aria-labelledby="confirm-title" oncancel={onCancel}
+  <dialog class="confirm-dialog dx" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-labelledby="confirm-title" oncancel={onCancel}
     onpointerdown={(e) => (ed.confirmDownOnOverlay = e.target === e.currentTarget)}
     onclick={(e) => ed.confirmDownOnOverlay && e.target === e.currentTarget && ed.answerConfirm(false)}>
     <div class="setup-card" class:confirm-wide={box.sections?.length}>

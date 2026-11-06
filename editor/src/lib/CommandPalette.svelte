@@ -4,6 +4,7 @@
    * Opened by Ctrl/⌘+K in the panels and on the page; in a text Ctrl+K stays the link key. A native modal dialog (ADR-0011), closed by a press outside its card as the shortcut sheet is.
    */
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { ICONS } from '../lib/icons.js';
   import { searchItems } from '$engine/palette-search.js';
   import { arrangeCommands, canPin, flatItems, readRecent, rememberCommand, RECENT_KEY } from './command-palette.js';
@@ -20,10 +21,15 @@
   const opener = document.activeElement;
 
   const close = () => dialogEl?.close();
+  /** The command picked, run once the palette has closed. */
+  let pending = null;
 
   function onClosed() {
     if (opener instanceof HTMLElement && opener.isConnected && opener !== document.body) opener.focus({ preventScroll: true });
     onclose?.();
+    const item = pending;
+    pending = null;
+    item?.run();
   }
 
   $effect(() => {
@@ -36,13 +42,14 @@
     marked = 0;
   });
 
-  /** Runs a command: remembered as recent, then the palette closes and the command does its work with the focus back where it was. */
+  /** Runs a command: remembered as recent, then the palette closes, and the command does its work once it has, with the focus back where it was; a second press while it closes runs nothing. */
   function run(item) {
+    if (pending) return;
     try {
       localStorage.setItem(RECENT_KEY, JSON.stringify(rememberCommand(recent, item.id)));
     } catch { /* a full store keeps no recent list */ }
+    pending = item;
     close();
-    item.run();
   }
 
   function onKey(e) {
@@ -61,7 +68,7 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<dialog class="kp-overlay" bind:this={dialogEl} aria-label={ta('palette.title')} onclose={onClosed}
+<dialog class="kp-overlay dx" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-label={ta('palette.title')} onclose={onClosed}
   onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
   onclick={(e) => downOnBackdrop && e.target === e.currentTarget && close()}>
   <div class="kp-card" onkeydown={onKey}>

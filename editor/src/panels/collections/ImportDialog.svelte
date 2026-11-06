@@ -3,6 +3,7 @@
      A native modal dialog (ADR-0011): Escape and a press on the backdrop cancel the import, and nothing is stored until Import. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from '../../lib/motion.svelte.js';
   import { ICONS } from '../../lib/icons.js';
   import ImportSummary from './ImportSummary.svelte';
   import ImportChoices from './ImportChoices.svelte';
@@ -30,7 +31,7 @@
 </script>
 
 {#if session}
-  <dialog class="ip-overlay" bind:this={dialogEl} aria-labelledby="ip-title" onclose={onClosed}
+  <dialog class="ip-overlay dx" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-labelledby="ip-title" onclose={onClosed}
     onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
     onclick={(e) => downOnBackdrop && e.target === e.currentTarget && dialogEl.close()}>
     <div class="ip-card">

@@ -9,6 +9,7 @@
    * `onpick(id)` applies, `onclose` leaves.
    */
   import { ta } from '$engine/i18n.js';
+  import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { matchAny } from '$engine/search-langs.js';
   import { searchLangs } from './search-langs.svelte.js';
 
@@ -209,17 +210,21 @@
     if (opener instanceof HTMLElement && opener.isConnected && opener !== document.body) opener.focus({ preventScroll: true });
   }
 
-  /** The dialog closing (Escape, its ×, a press outside its card, or a close the browser forces) leaves the picker. */
+  /** The design taken, applied once the dialog has closed. */
+  let picked = null;
+
+  /** The dialog closing (Escape, its ×, a press outside its card, a design taken, or a close the browser forces) leaves the picker, applying a taken design. */
   function onClosed() {
     giveBack();
-    onclose?.();
+    if (picked !== null) onpick?.(picked);
+    else onclose?.();
   }
 
-  /** A design taken: the dialog closes first, since nothing outside a modal dialog can take the focus, then the choice is applied. */
+  /** A design taken: the dialog closes first, since nothing outside a modal dialog can take the focus, and the choice is applied as it has closed. */
   function pick(id) {
+    if (picked !== null) return;
+    picked = id;
     dialogEl?.close();
-    giveBack();
-    onpick?.(id);
   }
 
   function pictureFailed(id) {
@@ -230,7 +235,7 @@
 <svelte:window onmessage={onMessage} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<dialog class="dp-overlay" bind:this={dialogEl} aria-label={source.label} onclose={onClosed}
+<dialog class="dp-overlay dx dx-large" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-label={source.label} onclose={onClosed}
   onpointerdown={(e) => (downOnBackdrop = e.target === e.currentTarget)}
   onclick={(e) => downOnBackdrop && e.target === e.currentTarget && dialogEl.close()}>
   <div class="dp-card" class:nofilters={!source.filters}>

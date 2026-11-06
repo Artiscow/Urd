@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.77): the dialogs fading in and out
+
+- [ ] The large dialogs (the image editor, the design picker, Urd settings, the shortcut sheet, page settings, redirects) fade in quickly as they open and out as they close, the dark backdrop with them, nothing moving; the small ones (the command palette, the link dialog in both its forms, the CSV import, the confirm question) fade a little slower, as the menus do
+- [ ] Every way out fades: the dialog's own buttons (Done, Cancel, ×), Escape, a press on the backdrop, and a dialog that closes because its question was answered
+- [ ] The confirm question asked from inside page settings fades over it, and page settings stay until their own close; focus returns to the button that opened a dialog once it has faded
+- [ ] Escape pressed right after a dialog opened from the keyboard, without a click or a keystroke inside it, may close it at once (the browser's own rule); after any press inside it, Escape fades
+- [ ] With reduced motion in the system settings, every dialog opens and closes at once
+
 ### Test batch (0.7.32.3): the Collections tab's menu, entry rows without arrows, and the image editor opening at the picture's shape
 
 - [ ] The strip and the panel's own tabs: Collections has an arrow and a menu of the site's collections by name; a collection made in the panel shows in the menu at once, with «New collection» at the foot
