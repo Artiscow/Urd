@@ -9,7 +9,7 @@ import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { BROWSER_KEEPS, privacyNameOfHost, privacyModel } = await engineImport('privacy-model.js');
+const { BROWSER_KEEPS, BROWSER_UNTIL, CALENDAR_FEED_MINUTES, PREFETCH_MINUTES, privacyNameOfHost, privacyModel } = await engineImport('privacy-model.js');
 const dict = async (lang) => (await engineImport(`locales/site/${lang}.js`)).default.strings;
 const DICTS = { nb: await dict('nb'), 'en-GB': await dict('en-GB'), tr: await dict('tr') };
 
@@ -64,10 +64,20 @@ test('every module that keeps something in a visitor\'s browser is on the privac
   for (const file of Object.keys(OWNER_STORAGE)) assert.ok(users.includes(file), `${file} is exempt but keeps nothing in the browser`);
 });
 
-test('every kind the browser keeps has its words in nb, en-GB and tr', () => {
+test('every kind the browser keeps has its words and its period, with the period\'s words, in nb, en-GB and tr', () => {
   assert.equal(new Set(BROWSER_KEEPS.map((keep) => keep.id)).size, BROWSER_KEEPS.length);
+  for (const keep of BROWSER_KEEPS) {
+    assert.ok(BROWSER_UNTIL.includes(keep.until), `${keep.id} names how long it is kept (until)`);
+    if (keep.until === 'minutes') assert.ok(Number.isInteger(keep.minutes) && keep.minutes > 0, `${keep.id} names its minutes`);
+  }
+  assert.equal(BROWSER_KEEPS.find((keep) => keep.id === 'calendar').minutes, CALENDAR_FEED_MINUTES);
+  assert.equal(BROWSER_KEEPS.find((keep) => keep.id === 'pages').minutes, PREFETCH_MINUTES);
+  assert.match(code('blocks/calendar.js'), /CALENDAR_FEED_MINUTES \* 60 \* 1000/, 'blocks/calendar.js keeps a feed for the minutes the page names');
+  assert.match(code('prefetch.js'), /PREFETCH_MINUTES \* 60 \* 1000/, 'prefetch.js keeps a fetched page for the minutes the page names');
   for (const [lang, strings] of Object.entries(DICTS)) {
     for (const keep of BROWSER_KEEPS) assert.ok(strings[`privacy.browser.${keep.id}`], `${lang} privacy.browser.${keep.id}`);
+    for (const until of BROWSER_UNTIL) assert.ok(strings[`privacy.browser.until.${until}`], `${lang} privacy.browser.until.${until}`);
+    assert.ok(strings['privacy.browser.line']?.includes('{what}') && strings['privacy.browser.line'].includes('{until}'), `${lang} privacy.browser.line joins what and until`);
   }
 });
 

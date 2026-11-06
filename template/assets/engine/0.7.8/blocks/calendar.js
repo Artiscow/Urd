@@ -23,6 +23,7 @@ import { stripActiveContent, safeHtmlFragment, plainLines } from '../sanitize.js
 import { WIDTH_QUERIES } from '../render.js';
 import { NARROW_PX } from '../push-model.js';
 import { linkAttrs } from '../nav-model.js';
+import { CALENDAR_FEED_MINUTES } from '../privacy-model.js';
 
 /** An element with its class and its content: a text, or a node such as a text the owner rewrites. */
 const el2 = (tag, className, content) => {
@@ -35,13 +36,14 @@ const el2 = (tag, className, content) => {
 
 /* ---------- Fetching (proxy + short-lived cache) ---------- */
 
-const CACHE_TTL = 10 * 60 * 1000;
+const CACHE_TTL = CALENDAR_FEED_MINUTES * 60 * 1000;
 
 async function fetchSource(url) {
   const key = `urd-cal-cache:${url}`;
   try {
     const cached = JSON.parse(sessionStorage.getItem(key) ?? 'null');
     if (cached && Date.now() - cached.t < CACHE_TTL) return cached.text;
+    if (cached) sessionStorage.removeItem(key);
   } catch { /* a corrupt cache entry is ignored */ }
   const res = await fetch(`/api/ics?url=${encodeURIComponent(url)}`);
   if (!res.ok) {

@@ -465,7 +465,10 @@ export const checkoutBlock = {
             return;
           }
           const open = !data || data.open === true;
-          if (!open) settle();
+          if (!open) {
+            try { sessionStorage.removeItem('urd-pay-reference'); } catch { /* no storage */ }
+            settle();
+          }
           else if (left > 0) setTimeout(() => ask(left - 1), 2000);
         };
         ask(5);

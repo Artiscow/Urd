@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.31.4): how long the visitor's browser keeps each thing
+
+- [ ] The privacy page's «What is kept in your browser», in every design: each line ends with its period: the page fetched early «for up to 5 minutes», the light or dark choice «until you change it», the closed announcement «until the announcement is changed», the cart «until the order is placed or you empty it», the last order and a calendar's height «while the tab is open», a payment's reference «while you pay», a calendar's events «for up to 10 minutes», the loaded providers «until you take the choice back»
+- [ ] The lines shown follow the site: the cart line where a page sells («until you empty it» with no checkout or an email-draft checkout), the order line only with a checkout, the payment line only with a payment provider, the two calendar lines only with a calendar, the providers line only with a covered frame; the first two always
+- [ ] The first line explains the fetching ahead plainly: a page whose link you point at, press or move to, fetched early
+- [ ] A payment cancelled at the provider leaves no «urd-pay-reference» in session storage once the page has asked and been told the payment is not open
+- [ ] The same lines in bokmål and Turkish, with the minutes as digits
+
 ### Test batch (0.7.31.3): how long orders are kept
 
 - [ ] The Legal panel's Privacy fold on a site with a checkout: «Orders» under «How long you keep», with «We keep accounts by law», «A sports club under NIF», «For a set time» and «Not decided» while the country under Who you are is Norway, and only the last two with another country; a site without a checkout shows no Orders row

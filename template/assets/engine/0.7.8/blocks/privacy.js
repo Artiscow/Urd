@@ -357,8 +357,13 @@ function pageParts(model, design) {
   else parts.push({ key: 'controller', nodes: controller }, { key: 'what', nodes: collectedNodes(model) });
 
   // What the site keeps in the visitor's own browser.
-  const applies = { pages: true, theme: model.browser.theme, announcement: model.browser.announcement, cart: model.browser.shop, calendar: model.browser.calendar, embeds: model.embeds.some((id) => !model.atOnce.includes(id)) };
-  const kept = BROWSER_KEEPS.filter((keep) => applies[keep.id]).map((keep) => t(`privacy.browser.${keep.id}`));
+  // The cart is emptied by an order only through a checkout that sends it itself; one that opens an email draft leaves it, as does a shop without a checkout. A payment's reference is kept only where a provider takes the payment.
+  const shop = model.browser.shop;
+  const pays = (model.checkout?.providers ?? []).some((id) => id !== 'manual');
+  const empties = Boolean(model.checkout?.host) || pays;
+  const applies = { pages: true, theme: model.browser.theme, announcement: model.browser.announcement, cart: shop, order: Boolean(model.checkout), payment: pays, calendar: model.browser.calendar, calendarHeight: model.browser.calendar, embeds: model.embeds.some((id) => !model.atOnce.includes(id)) };
+  const untilOf = (keep) => (keep.id === 'cart' && !empties ? 'emptied' : keep.until);
+  const kept = BROWSER_KEEPS.filter((keep) => applies[keep.id]).map((keep) => t('privacy.browser.line', { what: t(`privacy.browser.${keep.id}`), until: t(`privacy.browser.until.${untilOf(keep)}`, { n: keep.minutes }) }));
   const list = el2('ul');
   for (const line of kept) list.append(el2('li', null, line));
   parts.push({ key: 'browser', nodes: [el2('p', null, t('privacy.browser.text')), list] });

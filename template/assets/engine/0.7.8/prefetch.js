@@ -11,9 +11,11 @@
  * in the editor preview, where page switches happen via postMessage.
  */
 
+import { PREFETCH_MINUTES } from './privacy-model.js';
+
 const KEY = 'urd-prefetch';
 /** A parked page older than this is ignored: the click did not follow the hover. */
-const MAX_AGE_MS = 5 * 60 * 1000;
+const MAX_AGE_MS = PREFETCH_MINUTES * 60 * 1000;
 /** Upper bound on parked pages, so a long hover session never grows the store. */
 const MAX_ENTRIES = 8;
 

@@ -12,17 +12,32 @@ import { embedUrl } from './blocks/video.js';
 import { parseLocation } from './osm.js';
 
 /**
- * What the site keeps in the visitor's own browser (ADR-0029), each with the engine modules that keep it: the privacy page names every one that applies, in its words `privacy.browser.<id>`.
- * A module that stores something in a visitor's browser stands here, or the guard in tests/privacy-registry.test.mjs fails.
+ * How long a calendar block keeps a feed's events in the browser before it fetches them again (blocks/calendar.js reads it from here, so the privacy page's minutes are the code's).
+ */
+export const CALENDAR_FEED_MINUTES = 10;
+
+/** How long a page fetched ahead of a press on its link is kept in the browser (prefetch.js reads it from here, as the calendar does its minutes). */
+export const PREFETCH_MINUTES = 5;
+
+/**
+ * What the site keeps in the visitor's own browser (ADR-0029 decision 4), each with the engine modules that keep it and how long (`until`): the privacy page names every one that applies, in its words `privacy.browser.<id>`, with the period's words `privacy.browser.until.<until>` after them.
+ * The periods: `tab` while the tab is open (sessionStorage), `changed` until the visitor changes it, `taken` until the visitor takes the choice back, `renewed` until the owner changes the announcement, `ordered` until the order is placed or the cart is emptied (`emptied` where no checkout empties it: none, or one that opens an email draft), `paid` while a payment is under way, `minutes` for the minutes in `minutes`, never past the tab's closing.
+ * A module that stores something in a visitor's browser stands here, or the guard in tests/privacy-registry.test.mjs fails, as it does for a kind without its period or its words.
  */
 export const BROWSER_KEEPS = [
-  { id: 'pages', modules: ['prefetch.js'] },
-  { id: 'theme', modules: ['theme.js', 'theme-init.js'] },
-  { id: 'announcement', modules: ['nav.js'] },
-  { id: 'cart', modules: ['shop.js', 'blocks/checkout.js'] },
-  { id: 'calendar', modules: ['blocks/calendar.js'] },
-  { id: 'embeds', modules: ['embed-cover.js'] },
+  { id: 'pages', modules: ['prefetch.js'], until: 'minutes', minutes: PREFETCH_MINUTES },
+  { id: 'theme', modules: ['theme.js', 'theme-init.js'], until: 'changed' },
+  { id: 'announcement', modules: ['nav.js'], until: 'renewed' },
+  { id: 'cart', modules: ['shop.js'], until: 'ordered' },
+  { id: 'order', modules: ['shop.js'], until: 'tab' },
+  { id: 'payment', modules: ['blocks/checkout.js'], until: 'paid' },
+  { id: 'calendar', modules: ['blocks/calendar.js'], until: 'minutes', minutes: CALENDAR_FEED_MINUTES },
+  { id: 'calendarHeight', modules: ['blocks/calendar.js'], until: 'tab' },
+  { id: 'embeds', modules: ['embed-cover.js'], until: 'taken' },
 ];
+
+/** The periods a kind may be kept for, each with its words in the site dictionaries. */
+export const BROWSER_UNTIL = ['tab', 'changed', 'taken', 'renewed', 'ordered', 'emptied', 'paid', 'minutes'];
 
 /** The hosts the counting of visits reaches (Cloudflare Web Analytics): its script and its beacon. */
 export const ANALYTICS_HOSTS = ['static.cloudflareinsights.com', 'cloudflareinsights.com'];
