@@ -73,6 +73,21 @@ export function foldGroups(folds) {
 }
 
 /**
+ * The Collections tab's rows (shell/PanelTab.svelte): each collection by its name, with its entries in the order the Collections panel lists them (a product catalogue as stored, the others newest first), for the submenu beside its row.
+ * @param {string[]} ids The collections, in the site's order
+ * @param {Record<string, {name?: string, kind?: string, entries?: object[]}>} views The collections as the editor holds them
+ * @param {(entries: object[], newestFirst: boolean) => object[]} sort The engine's sortEntries (collections.js)
+ * @returns {Array<{id: string, name: string, entries: object[]}>}
+ */
+export function collectionMenuRows(ids, views, sort) {
+  return (ids ?? []).map((id) => {
+    const view = views?.[id];
+    const entries = view?.entries ?? [];
+    return { id, name: view?.name || id, entries: view?.kind === 'products' ? entries : sort(entries, true) };
+  });
+}
+
+/**
  * The folds a panel's menu lists now: those it draws in the case at hand.
  * @param {string} panel The panel's id
  * @param {{site?: object, legal?: object|null}} ctx The site as drafted, and the Legal panel's state

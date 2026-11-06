@@ -44,7 +44,7 @@
   {#if ed.collectionIds.length}<hr class="gridmenu-divider" />{/if}
   <p class="mini-label group-sub">{ta('ui.newCollection')}</p>
   <label title={ta('tip.collections.newName')}>{ta('lbl.newCollectionName')}
-    <input bind:value={() => ed.newCollectionName, (v) => (ed.newCollectionName = v)} placeholder={ta('ph.collections.name')}
+    <input data-new-collection bind:value={() => ed.newCollectionName, (v) => (ed.newCollectionName = v)} placeholder={ta('ph.collections.name')}
       onkeydown={(e) => e.key === 'Enter' && create()} /></label>
   <label title={ta('tip.collections.kind')}>{ta('common.type')}
     <Dropdown value={ed.newCollectionKind} options={KINDS} onchange={(v) => (ed.newCollectionKind = v)} /></label>

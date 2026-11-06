@@ -25,9 +25,34 @@
   let stageW = $state(0);
   let stageH = $state(0);
 
+  /** How long the dialog waits for its picture before it opens without it. */
+  const OPEN_WAIT_MS = 400;
+
+  // The dialog opens once its picture is decoded, so the stage draws the picture at its own shape from the first frame; a picture that takes longer, or does not load, opens it anyway.
   $effect(() => {
-    if (!dialogEl) return;
-    if (pic && !dialogEl.open) dialogEl.showModal();
+    if (!dialogEl || !pic || dialogEl.open) return;
+    const at = pic.src;
+    let live = true;
+    const show = () => {
+      if (!live || !dialogEl || dialogEl.open) return;
+      live = false;
+      dialogEl.showModal();
+    };
+    if (!at) {
+      show();
+      return;
+    }
+    const probe = new Image();
+    probe.src = at;
+    probe.decode()
+      .then(() => { if (live && probe.naturalWidth && probe.naturalHeight) ed.pictureNatural = probe.naturalWidth / probe.naturalHeight; })
+      .catch(() => {})
+      .finally(show);
+    const timer = setTimeout(show, OPEN_WAIT_MS);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
   });
 
   $effect(() => {

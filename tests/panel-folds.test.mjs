@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { PANEL_FOLDS, panelFolds, foldGroups, tabMenuStyleOf } from '../editor/src/lib/panel-folds.js';
+import { PANEL_FOLDS, panelFolds, foldGroups, tabMenuStyleOf, collectionMenuRows } from '../editor/src/lib/panel-folds.js';
 
 const PANEL_FILES = { site: 'SitePanel', legal: 'LegalPanel', theme: 'ThemePanel', nav: 'NavPanel', footer: 'FooterPanel' };
 const source = (panel) => readFileSync(new URL(`../editor/src/panels/${PANEL_FILES[panel]}.svelte`, import.meta.url), 'utf8');
@@ -83,4 +83,18 @@ test('tabMenuStyleOf: the groups for anything not stored', () => {
   assert.equal(tabMenuStyleOf('lines'), 'lines');
   assert.equal(tabMenuStyleOf('plain'), 'plain');
   assert.equal(tabMenuStyleOf('zebra'), 'groups');
+});
+
+test('collectionMenuRows: each collection by its name with its entries in the panel\'s order, a catalogue as stored and the others newest first', () => {
+  const newest = (entries) => [...entries].sort((a, b) => b.date.localeCompare(a.date));
+  const views = {
+    nyheter: { name: 'Nyheter', kind: 'news', entries: [{ id: 'a', date: '2026-01-01' }, { id: 'b', date: '2026-03-01' }] },
+    produkter: { name: 'Produkter', kind: 'products', entries: [{ id: 'p2', date: '2026-02-01' }, { id: 'p1', date: '2026-05-01' }] },
+  };
+  const rows = collectionMenuRows(['nyheter', 'produkter', 'ny'], views, newest);
+  assert.deepEqual(rows.map((r) => [r.id, r.name, r.entries.map((e) => e.id)]), [
+    ['nyheter', 'Nyheter', ['b', 'a']],
+    ['produkter', 'Produkter', ['p2', 'p1']],
+    ['ny', 'ny', []],
+  ]);
 });

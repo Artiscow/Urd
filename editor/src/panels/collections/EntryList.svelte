@@ -1,11 +1,11 @@
 <script>
   /* A collection's entries as rows, in the order the page shows them: each with its picture, its title and its date or price, the chosen one marked.
-     An entry that moves is dragged by its row, with a faint clone where it lands (row-drag.js), or stepped with its arrows; a dated entry stands by its date, as on the page.
+     An entry that moves is dragged by its row, with a faint clone where it lands (row-drag.js), or stepped with Alt and the arrow keys on its focused row; a dated entry stands by its date, as on the page.
      While a search narrows the rows, nothing moves, since the neighbours an entry would pass are hidden.
      With `onticks`, each row's tick box stands in the drag grip's place before its picture: under the pointer or the focus, and on every row once one is ticked.
      Shift and a press on a tick take the run from the last one ticked, Space ticks the focused row, Ctrl+A ticks every row shown and Escape clears the ticks.
      While any row is ticked, a press on a row ticks or unticks it as its tick does, and Enter opens it, so the ticks can always be taken away one by one. */
-  import { getContext } from 'svelte';
+  import { getContext, tick } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
   import { rowDropAt, reorderRows } from '../../lib/row-drag.js';
@@ -28,6 +28,7 @@
   const rows = $derived(searching ? shown.filter((en) => entryMatches(en, query, ed.plainTitle)) : shown);
   const movables = $derived(shown.filter((en) => movable(view.kind, en)));
 
+  let listEl = $state(null);
   let drag = $state(null);
   let drop = $state(null);
   /** The row ticked last, where a run with Shift starts. */
@@ -53,6 +54,14 @@
       e.stopPropagation();
       onticks([]);
     }
+  }
+
+  /** An entry stepped one place among those that move, its row keeping the focus. */
+  async function step(entryId, dir, at) {
+    if (at + dir < 0 || at + dir >= movables.length) return;
+    act.moveEntry(id, entryId, dir);
+    await tick();
+    listEl?.querySelector(`[data-entry-id="${CSS.escape(entryId)}"] .cl-head`)?.focus();
   }
 
   /** What a row says under its title: the date in the admin's language, or a product's price and sizes. */
@@ -122,7 +131,7 @@
 {/snippet}
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="nav-list entries-list cl-list" class:cl-ticking={ticking} role="list" ondragover={onDragOver} ondrop={(e) => { e.preventDefault(); land(); }} onkeydown={onListKey}>
+<div class="nav-list entries-list cl-list" class:cl-ticking={ticking} role="list" bind:this={listEl} ondragover={onDragOver} ondrop={(e) => { e.preventDefault(); land(); }} onkeydown={onListKey}>
   {#each rows as entry (entry.id)}
     {@const canMove = !searching && movable(view.kind, entry)}
     {@const at = movables.indexOf(entry)}
@@ -130,8 +139,8 @@
     {@const ticked = ticks.includes(entry.id)}
     <div class="nav-item cl-row" class:selected={selected === entry.id} class:ticked class:dragging={drag === entry.id}
       data-entry-id={entry.id} data-movable={canMove || undefined} role="listitem">
-      <!-- The line is the drag handle; the head opens the entry, and the tick and the arrows stand beside it, so no control sits inside another.
-           The arrows are the keyboard's way to move an entry, so the drag itself needs no role of its own. -->
+      <!-- The line is the drag handle; the head opens the entry, and the tick stands beside it, so no control sits inside another.
+           Alt and the arrow keys on the head are the keyboard's way to move an entry, so the drag itself needs no role of its own. -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div class="cl-line" draggable={canMove ? 'true' : undefined}
         ondragstart={(e) => { if (!canMove || e.target instanceof HTMLInputElement) { e.preventDefault(); return; } drag = entry.id; e.dataTransfer?.setData(ENTRY_DRAG_TYPE, entry.id); }}
@@ -143,12 +152,13 @@
             title={ta('tip.collections.tickEntry', { name: ed.plainTitle(entry.title) })} onclick={(e) => tickRow(entry.id, e)} />
         {/if}
       </span>
-      <div class="nav-head cl-head" role="button" tabindex="0"
+      <div class="nav-head cl-head" role="button" tabindex="0" aria-keyshortcuts={canMove ? 'Alt+ArrowUp Alt+ArrowDown' : undefined}
         title={ticking && onticks ? ta('tip.collections.tickRow') : canMove ? ta('tip.collections.dragEntry') : searching ? ta('tip.collections.openEntry') : ta('tip.collections.datedOrder')} aria-current={selected === entry.id ? 'true' : undefined}
         onclick={(e) => (ticking && onticks ? tickRow(entry.id, e) : onselect?.(entry.id))}
         onkeydown={(e) => {
           if (e.target !== e.currentTarget) return;
-          if (e.key === 'Enter' || (e.key === ' ' && !onticks)) { e.preventDefault(); onselect?.(entry.id); }
+          if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); if (canMove) step(entry.id, e.key === 'ArrowUp' ? -1 : 1, at); }
+          else if (e.key === 'Enter' || (e.key === ' ' && !onticks)) { e.preventDefault(); onselect?.(entry.id); }
           else if (e.key === ' ') { e.preventDefault(); tickRow(entry.id, e); }
         }}>
         {@render thumb(entry)}
@@ -158,12 +168,6 @@
         </span>
         {#if chevron}<span class="cl-next" aria-hidden="true">{@html NEXT_ICON}</span>{/if}
       </div>
-      {#if canMove}
-        <span class="nav-head-tools cl-tools">
-          <button class="ghost nav-act" title={ta('tip.moveUp')} aria-label={ta('tip.moveUp')} disabled={at === 0} onclick={() => act.moveEntry(id, entry.id, -1)}>{@html ICONS.up}</button>
-          <button class="ghost nav-act" title={ta('tip.moveDown')} aria-label={ta('tip.moveDown')} disabled={at === movables.length - 1} onclick={() => act.moveEntry(id, entry.id, 1)}>{@html ICONS.down}</button>
-        </span>
-      {/if}
       </div>
     </div>
     {#if drag && drop?.id === entry.id && drop.pos === 'after'}{@render ghost()}{/if}
@@ -224,11 +228,6 @@
   /* A ticked row: a faint accent surface, the chosen one keeping its frame */
   .cl-row.ticked {
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 9%, transparent);
-  }
-
-  .cl-tools {
-    flex: none;
-    padding-right: 0.3rem;
   }
 
   /* The entry's picture, small and square, or the image mark where it has none */

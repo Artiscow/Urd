@@ -39,17 +39,17 @@ let collectionsUnavailable = $state(false);
 let collectionsView = $state({});
 
 let activeCollection = $state(null);
-/** The entry and field a click on a product card in the preview asks for: the panel opens the entry and focuses the field, then clears it. */
+/** The entry and field a click on a product card in the preview asks for: the panel opens the entry and focuses the field, its text selected where `select` asks, then clears it. */
 let focusEntry = $state(null);
 
 /** A collection to open in the Collections panel, asked from outside it («Edit the product catalogue», a new collection); a fresh object each time, so the same collection opens again after it was folded. */
 let openRequest = $state(null);
 
-/** A click on a card in the preview (urd-open-entry): the Collections panel on that collection, with the entry open and its field focused. */
+/** A click on a card in the preview (urd-open-entry), or an entry picked in the Collections tab's menu: the Collections panel on that collection, with the entry open and its field focused, and selected for a new entry or a copy (`select`). */
 function openEntry(msg) {
   if (typeof msg?.collection !== 'string' || !collectionIds.includes(msg.collection) || typeof msg.entryId !== 'string') return;
   activeCollection = msg.collection;
-  focusEntry = { id: msg.entryId, field: typeof msg.field === 'string' ? msg.field : 'title' };
+  focusEntry = { id: msg.entryId, field: typeof msg.field === 'string' ? msg.field : 'title', select: msg.select === true };
   shellState.activePanel = 'collections';
 }
 

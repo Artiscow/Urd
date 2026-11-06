@@ -134,7 +134,7 @@
     ed.openRequest = null;
   });
 
-  // A click on a card in the preview (urd-open-entry): its collection opens with the entry chosen and the field asked for focused.
+  // A click on a card in the preview (urd-open-entry), or an entry picked in the Collections tab's menu: its collection opens with the entry chosen and the field asked for focused, selected where asked.
   $effect(() => {
     const want = ed.focusEntry;
     const collection = ed.activeCollection;
@@ -142,7 +142,7 @@
     openCollection(collection);
     ed.panelEntry = want.id;
     ed.focusEntry = null;
-    focusField(want.id, want.field);
+    focusField(want.id, want.field, want.select === true);
   });
 
   const collectionOptions = $derived(ed.collectionIds.map((id) => [id, ed.collectionsView[id]?.name ?? id]));

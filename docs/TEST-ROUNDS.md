@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.32.3): the Collections tab's menu, entry rows without arrows, and the image editor opening at the picture's shape
+
+- [ ] The strip and the panel's own tabs: Collections has an arrow and a menu of the site's collections by name; a collection made in the panel shows in the menu at once, with «New collection» at the foot
+- [ ] Resting on a collection opens its entries beside it in the panel's order (a product catalogue as stored, news newest first), with «New entry» at the foot, an empty collection included; a click on a collection opens it in the panel and a click on an entry opens the entry
+- [ ] Resting on an entry opens a third menu: «Add image» on an entry without a picture asks for a file and then opens the image editor on it; «Edit image» on one with a picture opens the image editor; «Duplicate» makes a copy and opens it
+- [ ] «New entry» adds an entry to its collection and opens it; «New collection» opens the Collections panel with the caret in the new collection's name
+- [ ] The keyboard: the down arrow on the tab opens the menu, the right arrow opens a collection's entries and an entry's actions, the left arrow and Escape go back one level, and Escape on the first menu returns to the tab
+- [ ] The Collections panel's entry rows have no up and down arrows; a row moves by dragging, or by Alt and the up or down arrow on the focused row, which keeps the focus; the row's tooltip says so; the table view's drawer keeps its arrows
+- [ ] The image editor opens with the picture at its own shape from the first frame, with no empty frame or 16:9 box before it: from the Collections panel, the tab menu, a collection picture on the page, a double-click on an image block and the menu's «Open the image editor»
+- [ ] The new words (New entry, Edit image, Duplicate, the row's tooltip) in bokmål and Turkish
+
 ### Test batch (0.7.31.2): how long form messages and the newsletter are kept, and the tabs' menus of their folds
 
 - [ ] The Legal panel's Privacy fold, on a site with a form on a page and the footer's newsletter sign-up: «How long you keep» with Form messages and Newsletter list; a site without one shows no row for it, and a site with neither shows no heading

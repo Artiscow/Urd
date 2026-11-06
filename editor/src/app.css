@@ -4366,7 +4366,7 @@
     background: var(--urd-color-surface, #151a23);
     box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
     font-size: 0.8rem;
-    overflow: visible;
+    overflow-y: auto;
   }
   .tab-menu-group { display: flex; flex-direction: column; }
   /* «Tab menus» Grouped: a little space between the groups, and each group's small label */
@@ -4393,7 +4393,8 @@
     white-space: nowrap;
   }
   /* «Tab menus» Lines: a hairline between the rows, inset as the highlight is, quiet beside the row under the mouse or the keys */
-  .tab-menu-list.lines button + button::before {
+  .tab-menu-row { position: relative; }
+  .tab-menu-list.lines .tab-menu-row + .tab-menu-row::before {
     content: '';
     position: absolute;
     top: 0;
@@ -4402,9 +4403,21 @@
     height: 1px;
     background: rgb(255 255 255 / 7%);
   }
-  .tab-menu-list.lines button:is(:hover, :focus-visible)::before,
-  .tab-menu-list.lines button:is(:hover, :focus-visible) + button::before { opacity: 0; }
+  .tab-menu-list.lines .tab-menu-row:is(:hover, :focus-within)::before,
+  .tab-menu-list.lines .tab-menu-row:is(:hover, :focus-within) + .tab-menu-row::before { opacity: 0; }
   .tab-menu-act { display: inline-flex; flex: none; opacity: 0.6; }
+  /* A collection's row with entries, its arrow, and the row whose submenu stands open lit as a hovered one */
+  .tab-menu-more { display: inline-flex; flex: none; margin-left: 14px; opacity: 0.6; }
+  .tab-menu .tab-menu-list button.sub-open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
+  /* The submenu of a collection's entries: as tall as the window allows, scrolling beyond, its long titles cut with an ellipsis */
+  .tab-menu-sub { max-width: 22rem; overflow-y: auto; }
+  .tab-menu-sub .tab-menu-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .tab-menu-scroll { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+  .tab-menu-sub > .tab-menu-new { flex: none; }
+  /* New collection and New entry, under the rows with a little space */
+  .tab-menu-list .tab-menu-new:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { margin-top: 6px; gap: 8px; opacity: 0.85; }
+  /* An action's icon before its name, in the entries' actions */
+  .tab-menu-sub .tab-menu-row > svg { flex: none; opacity: 0.7; }
   .tab-menu .tab-menu-list button:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .tab-menu .tab-menu-list button:focus-visible:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     border-color: transparent;
