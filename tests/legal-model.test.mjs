@@ -70,3 +70,18 @@ test('groupChip: each heading\'s state, with one and many counted apart', () => 
   assert.deepEqual(groupChip('privacy', done), { key: 'legal.chip.pageChosen', tone: 'ok' });
   assert.deepEqual(groupChip('terms', done), { key: 'legal.chip.pageChosen', tone: 'ok' });
 });
+
+test('the Privacy group: the kinds the site has, those not decided counted on its heading', () => {
+  const both = { forms: [{ page: 'Kontakt' }, { footer: true }], checkout: null, browser: { shop: false } };
+  const withPage = site({ footer: { privacyPage: 'personvern' } });
+  const none = legalState({ site: withPage, facts: both });
+  assert.deepEqual(none.privacy.kinds, ['forms', 'newsletter']);
+  assert.deepEqual(none.privacy.undecided, ['forms', 'newsletter']);
+  assert.deepEqual(groupChip('privacy', none), { key: 'legal.chip.undecided', tone: 'warn', n: 2 });
+  const one = legalState({ site: withPage, facts: { ...both, retention: { forms: { until: 'closed' }, newsletter: null } } });
+  assert.deepEqual(groupChip('privacy', one), { key: 'legal.chip.undecided.one', tone: 'warn', n: 1 });
+  const all = legalState({ site: withPage, facts: { ...both, retention: { forms: { until: 'closed' }, newsletter: { until: 'unsubscribe' } } } });
+  assert.deepEqual(groupChip('privacy', all), { key: 'legal.chip.filledIn', tone: 'ok' });
+  assert.deepEqual(legalState({ site: withPage, facts: NONE }).privacy.kinds, [], 'a site without forms has no kinds to set');
+  assert.equal(none.dot, false, 'a kind not decided marks the heading, not the tab');
+});

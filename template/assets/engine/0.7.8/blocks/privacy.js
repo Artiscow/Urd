@@ -11,7 +11,7 @@
  * The page files are read over the network as published; in the editor's
  * preview the other pages' drafts are not seen until they are published.
  */
-import { t, ta, adminLocaleReady } from '../i18n.js';
+import { t, ta, adminLocaleReady, siteTextLang } from '../i18n.js';
 import { privacyModel, BROWSER_KEEPS } from '../privacy-model.js';
 import { allowedProviders, setProviderAllowed, providerName, providerPrivacyUrl } from '../embed-cover.js';
 import { privacyDesign, applyDocLook, buildContents } from '../doc-look.js';
@@ -106,6 +106,40 @@ function otherNames(model) {
   return [...pay, ...model.embeds.map(providerName), OTHER_PARTIES.cloudflare[0]];
 }
 
+/** A set period in the browser's own words for the unit («12 months», «12 måneder»), in the language of the sentence it stands in (`key`), so a site whose language lacks the sentence reads it whole in bokmål. */
+function periodText(r, key) {
+  try {
+    return new Intl.NumberFormat(siteTextLang(key), { style: 'unit', unit: r.unit === 'years' ? 'year' : 'month', unitDisplay: 'long' }).format(r.count);
+  } catch {
+    return `${r.count} ${r.unit}`;
+  }
+}
+
+/** The words for how long the association keeps each kind it sets a period for (privacy-model.js retentionOf): a sentence in the prose, a cell in the ledger. */
+const KEEP_LINE = {
+  forms: { period: 'privacy.keep.forms.period', closed: 'privacy.keep.forms.closed', ask: 'privacy.keep.forms.ask', askUs: 'privacy.keep.forms.askUs' },
+  newsletter: { period: 'privacy.keep.newsletter.period', unsubscribe: 'privacy.keep.newsletter', ask: 'privacy.keep.newsletter.ask', askUs: 'privacy.keep.newsletter.askUs' },
+};
+const KEEP_CELL = {
+  forms: { period: 'privacy.ledger.keep.formPeriod', closed: 'privacy.ledger.keep.form' },
+  newsletter: { period: 'privacy.ledger.keep.newsletterPeriod', unsubscribe: 'privacy.ledger.keep.newsletter' },
+};
+
+/** How long the association keeps a kind, as a sentence: the period or the criterion the owner chose, or, not decided, that it is not and where to ask (the association's email where it has one). */
+function keepLine(model, kind) {
+  const r = model.retention?.[kind];
+  if (r) return t(KEEP_LINE[kind][r.until], r.until === 'period' ? { period: periodText(r, KEEP_LINE[kind][r.until]) } : undefined);
+  const email = model.controller.email;
+  return email ? t(KEEP_LINE[kind].ask, { email }) : t(KEEP_LINE[kind].askUs);
+}
+
+/** The same as the ledger's «How long» cell, which stands under the association's details. */
+function keepCell(model, kind) {
+  const r = model.retention?.[kind];
+  if (!r) return t('privacy.ledger.keep.ask');
+  return t(KEEP_CELL[kind][r.until], r.until === 'period' ? { period: periodText(r, KEEP_CELL[kind][r.until]) } : undefined);
+}
+
 /** What the site collects, as the forms', the shop's, the measuring's and the frames' parts. */
 function collectedNodes(model) {
   const nodes = [];
@@ -119,7 +153,8 @@ function collectedNodes(model) {
       list.append(el2('li', null, form.footer ? t('privacy.forms.footer', { to: sentTo(form) }) : t('privacy.forms.line', { page: form.page, what: fields, to: sentTo(form) })));
     }
     nodes.push(list, el2('p', null, t('privacy.forms.basis')));
-    if (model.forms.some((f) => f.footer)) nodes.push(el2('p', null, t('privacy.keep.newsletter')));
+    if (model.forms.some((f) => !f.footer)) nodes.push(el2('p', null, keepLine(model, 'forms')));
+    if (model.forms.some((f) => f.footer)) nodes.push(el2('p', null, keepLine(model, 'newsletter')));
   }
   if (model.checkout) {
     const s = model.checkout;
@@ -186,8 +221,8 @@ function ledgerNodes(model, design) {
     else rows.push({ what, why, who: names, keep });
   };
   for (const form of model.forms) {
-    if (form.footer) add(t('privacy.ledger.emailAddress'), t('privacy.ledger.why.newsletter'), who(form), t('privacy.ledger.keep.newsletter'));
-    else add(form.fields.length ? form.fields.join(', ') : t('privacy.ledger.whatYouFill'), t('privacy.ledger.why.form', { page: form.page }), who(form), t('privacy.ledger.keep.form'));
+    if (form.footer) add(t('privacy.ledger.emailAddress'), t('privacy.ledger.why.newsletter'), who(form), keepCell(model, 'newsletter'));
+    else add(form.fields.length ? form.fields.join(', ') : t('privacy.ledger.whatYouFill'), t('privacy.ledger.why.form', { page: form.page }), who(form), keepCell(model, 'forms'));
   }
   if (model.checkout) {
     const pay = model.checkout.providers.filter((id) => id !== 'manual').map((id) => OTHER_PARTIES[id]?.[0] ?? id);

@@ -8,6 +8,10 @@
       "currency": "NOK",
       "shop": true
     },
+    "retention": {
+      "forms": { "until": "period", "count": 12, "unit": "months" },
+      "newsletter": { "until": "unsubscribe" }
+    },
     "meetingHosts": [],
     "icon": "/media/images/ikon-9740643c.webp",
     "setup": true,

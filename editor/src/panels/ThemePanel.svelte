@@ -194,7 +194,7 @@
     {#if dualMode}{@render themePreview(darkPal, ta('lbl.dark'))}{/if}
   </div>
 
-  <details class="group">
+  <details class="group" data-fold="typography">
     <summary>{ta('group.typography')}</summary>
     <div class="group-items">
       <label title={ta('tip.theme.headingFont')}>{ta('lbl.headings')}
@@ -210,7 +210,7 @@
     </div>
   </details>
 
-  <details class="group">
+  <details class="group" data-fold="shape">
     <summary>{ta('group.shape')}</summary>
     <div class="group-items">
       <div class="sample form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">

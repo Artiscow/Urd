@@ -781,7 +781,7 @@
 <div class="panel-body">
   <!-- Eight groups by what the owner sets together, in the order a menu is set up: the items, the logo, the bar's layout and size, its colours and frame,
        the phone, scrolling and the pages the menu shows on, the tools beside the burger and the announcement bar. -->
-  <details class="group">
+  <details class="group" data-fold="items">
     <summary title={ta('hint.nav.submenu')}>{ta('group.menuItems')}</summary>
     <div class="group-items">
   <!-- One compact row per item: grip, the name with its target beneath,
@@ -943,7 +943,7 @@
       {/if}
     </div>
   </details>
-  <details class="group">
+  <details class="group" data-fold="logo">
     <summary title={ta('hint.nav.logoHome')}>{ta('group.logo')}</summary>
     <div class="group-items">
       <Choice label={ta('common.type')} value={siteDraft.nav.logo?.type ?? 'text'}
@@ -1018,7 +1018,7 @@
       {/if}
     </div>
   </details>
-  <details class="group">
+  <details class="group" data-fold="layout">
     <summary>{ta('group.navLayoutSize')}</summary>
     <div class="group-items">
       <!-- The six menu forms as drawn tiles -->
@@ -1153,7 +1153,7 @@
       {/if}
     </div>
   </details>
-  <details class="group">
+  <details class="group" data-fold="colours">
     <summary>{ta('group.navColoursFrame')}</summary>
     <div class="group-items">
       <!-- The hover styles as samples of a menu word drawn with each style -->
@@ -1245,7 +1245,7 @@
       {/if}
     </div>
   </details>
-  <details class="group">
+  <details class="group" data-fold="mobile">
     <summary title={ta('tip.nav.mobileSame')}>{ta('group.mobile')}</summary>
     <div class="group-items">
       <!-- Two parts: the bar on a phone, where every choice starts on «same as on the desktop» and only then writes a value of its own, and the menu the burger opens.
@@ -1411,7 +1411,7 @@
       {/if}
     </div>
   </details>
-  <details class="group">
+  <details class="group" data-fold="scroll">
     <summary>{ta('group.navScrollPages')}</summary>
     <div class="group-items">
       <!-- What happens when the page scrolls (the bar and the floating forms; the column stands still), then the pages the menu shows on -->
@@ -1521,7 +1521,7 @@
   </details>
   <!-- The tool cluster: the buttons that stand beside the burger. Each
        tool is switched on here, beside its own settings -->
-  <details class="group">
+  <details class="group" data-fold="tools">
     <summary title={ta('tip.nav.tools')}>{ta('group.tools')}</summary>
     <div class="group-items">
       <!-- The tool cluster (theme, cart, burger) at the end or the start of the
@@ -1740,7 +1740,7 @@
       {/each}
     </div>
   </details>
-  <details class="group">
+  <details class="group" data-fold="announcement">
     <summary title={ta('tip.nav.announce')}>{ta('group.announcement')}</summary>
     <div class="group-items">
       <!-- The strip above the menu: off by default, the fields appear when on -->

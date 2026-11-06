@@ -77,8 +77,8 @@
     hoverOptions: () => pageState.HOVER_OPTIONS,
     openPanel: (panel, opts = {}) => {
       if (opts.calendars) siteState.siteCalendarsOpen = true;
-      // The Legal panel at one of its groups: unfolded, brought into view and lit (LegalPanel.svelte).
-      if (opts.legal) legalPanelState.focusLegal(opts.legal);
+      // A panel at one of its folds (lib/panel-folds.js): unfolded, brought into view and its heading lit.
+      if (opts.fold) shellState.showFold(panel, opts.fold, { press: opts.press === true });
       if (opts.shop) {
         siteState.siteShopOpen = true;
         siteState.focusShopCurrency = true;

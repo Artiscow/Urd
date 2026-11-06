@@ -104,6 +104,15 @@ const PRESS = {
   spring: btn(24, 16, 16, 8) + `<path d="M18 14l-3-2M18 26l-3 2M46 14l3-2M46 26l3 2" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`,
 };
 
+/** How a tab's menu sets its rows apart: a tab over a menu of short rows, in groups under small labels, with a hairline between the rows, or as a plain list. */
+const tabMenu = (inner) => dim(18, 3, 16, 4, 0.4) + `<rect x="14" y="8" width="36" height="29" rx="2" fill="currentColor" opacity="0.12"/>` + inner;
+const row = (y, w) => line(18, y, w);
+const TAB_MENUS = {
+  groups: tabMenu(dim(18, 11, 7, 1.5, 0.35) + row(14, 20) + row(18, 16) + dim(18, 23, 9, 1.5, 0.35) + row(26, 22) + row(30, 14) + `<rect x="17" y="17" width="30" height="4" rx="1" fill="${ACCENT}" opacity="0.35"/>`),
+  lines: tabMenu(row(11, 20) + dim(18, 15, 28, 0.6, 0.3) + row(17, 16) + dim(18, 21, 28, 0.6, 0.3) + row(23, 22) + dim(18, 27, 28, 0.6, 0.3) + row(29, 14) + dim(18, 33, 28, 0.6, 0.3)),
+  plain: tabMenu(row(11, 20) + row(16, 16) + row(21, 22) + row(26, 14) + row(31, 18)),
+};
+
 const LOOKS = {
   layout: LAYOUTS,
   place: PLACES,
@@ -116,6 +125,7 @@ const LOOKS = {
   csvPreview: CSV_PREVIEWS,
   pageSettings: PAGE_SETTINGS,
   press: PRESS,
+  tabMenus: TAB_MENUS,
 };
 
 /** A theme's swatch: its background with its surface, a line in its accent and a line in its text colour. */

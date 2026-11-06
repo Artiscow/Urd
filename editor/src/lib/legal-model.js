@@ -38,9 +38,10 @@ export function shownPage(pages, id) {
  * The panel's state.
  * The tab carries the dot while something the law asks for is missing: the legal name or the email while the site has a form or sells, a privacy page while it has a form, and parts of the terms page to fill while it sells.
  * The Terms of sale group shows while the site sells, the shop's blocks are shown, or a terms page is set.
+ * The Privacy group sets how long the association keeps each kind the site has (form messages with a form on a page, the newsletter list with the footer's sign-up), and counts those not decided.
  * @param {object} input
  * @param {object} input.site The site as drafted (site.json with its pages)
- * @param {{forms?: object[], checkout?: object|null, browser?: {shop?: boolean}}} input.facts privacyModel's facts for the whole site
+ * @param {{forms?: Array<{footer?: boolean}>, checkout?: object|null, browser?: {shop?: boolean}, retention?: {forms?: object|null, newsletter?: object|null}}} input.facts privacyModel's facts for the whole site
  * @param {number} [input.termsOpen] The parts of a template left to fill on the terms page (lib/fill-in.js)
  * @param {boolean} [input.shopOn] Whether the shop's blocks stand in the block lists
  */
@@ -53,13 +54,17 @@ export function legalState({ site, facts, termsOpen = 0, shopOn = false }) {
   const termsId = site?.site?.commerce?.termsPage;
   const termsPage = shownPage(pages, termsId);
   const open = termsPage ? Math.max(0, Number(termsOpen) || 0) : 0;
+  const kinds = [];
+  if ((facts?.forms ?? []).some((f) => !f.footer)) kinds.push('forms');
+  if ((facts?.forms ?? []).some((f) => f.footer)) kinds.push('newsletter');
+  const undecided = kinds.filter((kind) => !facts?.retention?.[kind]);
   const reasons = [];
   if ((forms || sells) && (missing.includes('legalName') || missing.includes('email'))) reasons.push('who');
   if (forms && !privacyPage) reasons.push('privacy');
   if (sells && open > 0) reasons.push('terms');
   return {
     who: { missing },
-    privacy: { page: privacyPage?.id ?? null },
+    privacy: { page: privacyPage?.id ?? null, kinds, undecided },
     terms: { shown: sells || shopOn || Boolean(termsId), page: termsPage?.id ?? null, open },
     reasons,
     dot: reasons.length > 0,
@@ -80,7 +85,12 @@ export function groupChip(group, state) {
   }
   const page = group === 'privacy' ? state.privacy.page : state.terms.page;
   if (!page) return { key: 'legal.chip.noPage', tone: 'warn' };
-  const n = group === 'terms' ? state.terms.open : 0;
+  if (group === 'privacy') {
+    const n = state.privacy.undecided.length;
+    if (n) return { key: n === 1 ? 'legal.chip.undecided.one' : 'legal.chip.undecided', tone: 'warn', n };
+    return { key: state.privacy.kinds.length ? 'legal.chip.filledIn' : 'legal.chip.pageChosen', tone: 'ok' };
+  }
+  const n = state.terms.open;
   if (!n) return { key: 'legal.chip.pageChosen', tone: 'ok' };
   return { key: n === 1 ? 'legal.chip.partsToFill.one' : 'legal.chip.partsToFill', tone: 'warn', n };
 }

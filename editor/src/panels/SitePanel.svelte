@@ -195,7 +195,7 @@
       onchange={(v) => setSiteMapService(v)} /></label>
   <!-- The site's calendars (site.calendars): registered once with their settings, picked by the calendar blocks as references.
        A list of closed rows (the colour, the name, the address) with one row open at a time; the new calendar opens with the caret in its name -->
-  <details class="group" bind:open={() => ed.siteCalendarsOpen, (v) => (ed.siteCalendarsOpen = v)}>
+  <details class="group" data-fold="calendars" bind:open={() => ed.siteCalendarsOpen, (v) => (ed.siteCalendarsOpen = v)}>
     <summary title={ta('tip.site.calendars')}>{ta('group.siteCalendars')}</summary>
     <div class="group-items">
       <button type="button" class="site-cal-add" onclick={() => addSiteCalendar()}>{@html ICONS.plus} {ta('ui.addSiteCalendar')}</button>
@@ -281,7 +281,7 @@
   </details>
 
   <!-- The site's links (site.links): the owner's addresses with an icon, drawn by the footer, the menu's tools and the share block -->
-  <details class="group" bind:open={() => ed.siteLinksOpen, (v) => (ed.siteLinksOpen = v)}>
+  <details class="group" data-fold="links" bind:open={() => ed.siteLinksOpen, (v) => (ed.siteLinksOpen = v)}>
     <summary title={ta('tip.site.links')}>{ta('group.siteLinks')}</summary>
     <div class="group-items">
       <LinkList scope="site" links={siteLinks()}
@@ -290,7 +290,7 @@
     </div>
   </details>
   <!-- The site's media files: how many still stand at the root of media/, and the tidy that moves them into the folders of their kind (lib/media-tidy.js) -->
-  <details class="group" bind:open={() => ed.siteMediaOpen, (v) => (ed.siteMediaOpen = v)} ontoggle={(e) => { if (e.currentTarget.open && ed.mediaRootCount === null) ed.loadMediaFiles(); }}>
+  <details class="group" data-fold="media" bind:open={() => ed.siteMediaOpen, (v) => (ed.siteMediaOpen = v)} ontoggle={(e) => { if (e.currentTarget.open && ed.mediaRootCount === null) ed.loadMediaFiles(); }}>
     <summary title={ta('tip.site.media')}>{ta('group.siteMedia')}</summary>
     <div class="group-items">
       <div class="ctl-row" title={ta('tip.site.mediaRoot')}>
@@ -304,7 +304,7 @@
   <!-- The contact details are set in the Legal panel: the legal name and what is still to fill in show here, and the row opens the panel at «Who you are» -->
   <div class="legal-row">
     <span id="legal-row-who" title={ta('tip.legal.who')}>{ta('group.siteContact')}</span>
-    <button type="button" class="legal-value" id="legal-row-who-value" aria-labelledby="legal-row-who legal-row-who-value" title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { legal: 'who' })}>
+    <button type="button" class="legal-value" id="legal-row-who-value" aria-labelledby="legal-row-who legal-row-who-value" title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { fold: 'who' })}>
       <span class="legal-value-name">{siteDraft.site.contact?.legalName ?? ''}</span>
       {#if ed.legal?.who.missing.length}
         {@const c = groupChip('who', ed.legal)}
@@ -314,7 +314,7 @@
     </button>
   </div>
   <!-- The shop's settings for the whole site -->
-  <details class="group" bind:open={() => ed.siteShopOpen, (v) => (ed.siteShopOpen = v)}>
+  <details class="group" data-fold="shop" bind:open={() => ed.siteShopOpen, (v) => (ed.siteShopOpen = v)}>
     <summary title={ta('tip.site.shop')}>{ta('group.siteShop')}</summary>
     <div class="group-items">
       <!-- The shop's blocks in the block lists (block-palette.js shopOn): the site's own choice, else shown while a product catalogue exists. A choice of Shown or Hidden, never a switch, so it cannot read as the shop itself going off -->
@@ -329,7 +329,7 @@
       {#if ed.legal?.terms.shown}
         <div class="legal-row">
           <span id="legal-row-terms" title={ta('tip.settings.termsPage')}>{ta('settings.termsPage')}</span>
-          <button type="button" class="legal-value" id="legal-row-terms-value" aria-labelledby="legal-row-terms legal-row-terms-value" title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { legal: 'terms' })}>
+          <button type="button" class="legal-value" id="legal-row-terms-value" aria-labelledby="legal-row-terms legal-row-terms-value" title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { fold: 'terms' })}>
             <span class="legal-value-name">{(siteDraft.pages ?? []).find((p) => p.id === siteDraft.site.commerce?.termsPage)?.title ?? ta('common.none')}</span><span class="legal-goto-to">{ta('panel.legal')}{@html ICONS.right}</span>
           </button>
         </div>

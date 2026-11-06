@@ -19,6 +19,6 @@ A privacy text written by hand goes wrong the day one of those lands: the owner 
 ## Consequences
 
 - A new block, design or function that stores or shares cannot pass the tests until the privacy page tells it; the guard reads the engine's code and `_headers`, so it needs no list of features to be kept by hand.
-- The owner's own periods, and which bookkeeping case the association is in, are set in a Legal panel of their own (0.7.31, chosen 6 November 2026), beside the contact details and the choice of the privacy and the terms pages. Until then the page gives the criteria it has today for form messages and the newsletter, and names no period for orders, asking the reader to ask.
+- The owner's own periods, and which bookkeeping case the association is in, are set in a Legal panel of their own (0.7.31, chosen 6 November 2026), beside the contact details and the choice of the privacy and the terms pages. A kind the owner has not decided is said to be so on the page, with the association's email to ask, and the page names no period for orders, asking the reader to ask, while the panel has no choice of bookkeeping case.
 - The bookkeeping act binds only some associations (the research of 6 November 2026, in BACKLOG 0.7.31.3), so the page never states a legal period for orders without the owner's answer to which case is theirs.
 - A plugin that reaches an outside host declares it in its manifest's `csp` (ADR-0006); the privacy page names those hosts with the consent work of 0.7.24.3, and the guard covers the core's own hosts until then.

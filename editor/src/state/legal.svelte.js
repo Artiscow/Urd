@@ -1,6 +1,6 @@
 /**
- * The Legal panel's state (panels/LegalPanel.svelte): the privacy facts of the whole site (privacy-model.js), gathered from the open page and every other page's draft or published file, and the panel's state from them (lib/legal-model.js), read by the panel, the amber dot on its tab and the strip's Legal menu.
- * Also the folds' open state, kept while other panels are open, and the group a link asks the panel to open.
+ * The Legal panel's state (panels/LegalPanel.svelte): the privacy facts of the whole site (privacy-model.js), gathered from the open page and every other page's draft or published file, and the panel's state from them (lib/legal-model.js), read by the panel, the amber dot on its tab and the tab's menu (shell/PanelTab.svelte).
+ * Also the folds' open state, kept while other panels are open.
  */
 import { privacyModel } from '$engine/privacy-model.js';
 import { legalState } from '../lib/legal-model.js';
@@ -15,9 +15,6 @@ let otherPages = $state({});
 
 /** Whether each of the panel's folds stands open. */
 let legalOpen = $state({ who: false, privacy: false, terms: false });
-
-/** The group a link asked the panel to open: the panel unfolds it, brings it into view and lights its heading, then clears it. */
-let legalFocus = $state(null);
 
 /** The panel's state, after every change to the site or the open page (the open page's data is not reactive; the count of changes is). */
 const legal = $derived.by(() => {
@@ -45,12 +42,6 @@ function readOther(entry) {
   return fetched.get(entry.file);
 }
 
-/** Opens the Legal panel at a group: the caller sets the open panel. */
-function focusLegal(group) {
-  legalOpen = { ...legalOpen, [group]: true };
-  legalFocus = group;
-}
-
 function effects() {
   // The other pages are read again as pages come and go, as another page is opened (the page left behind is one of them now), and as the drafts are published or discarded.
   $effect(() => {
@@ -70,8 +61,5 @@ export const legalPanelState = {
   get legal() { return legal; },
   get legalOpen() { return legalOpen; },
   set legalOpen(v) { legalOpen = v; },
-  get legalFocus() { return legalFocus; },
-  set legalFocus(v) { legalFocus = v; },
-  focusLegal,
   effects,
 };

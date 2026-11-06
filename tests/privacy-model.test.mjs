@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { privacyModel, pageFacts, endpointHost, paymentProviders, footerForm } = await engineImport('privacy-model.js');
+const { privacyModel, pageFacts, endpointHost, paymentProviders, footerForm, retentionOf } = await engineImport('privacy-model.js');
 
 const site = {
   site: { title: 'Kakeklubben', contact: { country: 'NO', legalName: 'Kakeklubben Trondheim', ids: { org: '974760673' }, address: { street: 'Gata 1', postalCode: '7034', city: 'Trondheim' }, email: 'post@kake.no', phone: '+47 400 00 000' } },
@@ -77,4 +77,20 @@ test('privacyModel: the controller from the contact details, the pages gathered,
   // A site with no contact details is named by its title, measures nobody and holds nothing.
   const bare = privacyModel({ site: { title: 'Urd' } }, []);
   assert.deepEqual([bare.controller.name, bare.controller.org, bare.analytics, bare.forms, bare.checkout, bare.embeds], ['Urd', '', false, [], null, []]);
+});
+
+test('retentionOf: a set period of 1 to 99 months or years, the closing of the matter for forms, the unsubscribing for the newsletter; anything else is not decided', () => {
+  const of = (retention, kind) => retentionOf({ site: { retention } }, kind);
+  assert.deepEqual(of({ forms: { until: 'period', count: 12, unit: 'months' } }, 'forms'), { until: 'period', count: 12, unit: 'months' });
+  assert.deepEqual(of({ forms: { until: 'closed' } }, 'forms'), { until: 'closed' });
+  assert.deepEqual(of({ newsletter: { until: 'unsubscribe' } }, 'newsletter'), { until: 'unsubscribe' });
+  assert.deepEqual(of({ newsletter: { until: 'period', count: 2, unit: 'years' } }, 'newsletter'), { until: 'period', count: 2, unit: 'years' });
+  assert.equal(of({ forms: { until: 'unsubscribe' } }, 'forms'), null, 'a choice of the other kind');
+  assert.equal(of({ newsletter: { until: 'closed' } }, 'newsletter'), null);
+  assert.equal(of({ forms: { until: 'period', count: 0, unit: 'months' } }, 'forms'), null);
+  assert.equal(of({ forms: { until: 'period', count: 100, unit: 'months' } }, 'forms'), null);
+  assert.equal(of({ forms: { until: 'period', count: 1.5, unit: 'months' } }, 'forms'), null);
+  assert.equal(of({ forms: { until: 'period', count: 3, unit: 'weeks' } }, 'forms'), null);
+  assert.equal(of(undefined, 'forms'), null, 'a site without the field reads as not decided');
+  assert.deepEqual(privacyModel({ site: { retention: { forms: { until: 'closed' } } } }, []).retention, { forms: { until: 'closed' }, newsletter: null });
 });

@@ -69,10 +69,31 @@
             "termsPage": { "$ref": "#/$defs/id", "description": "Additive from 0.7.24.2.3: the page with the shop's terms of sale, which the checkout links under its order buttons; omitted, or a page that is gone or hidden, gives no link" }
           }
         },
+        "retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Additive from 0.7.31.2 (ADR-0029): how long the association keeps what it gets, per kind, set in the Legal panel and said on the privacy page (retentionOf in privacy-model.js). A kind left out is not decided, and the page then names no period and asks the reader to ask",
+          "properties": {
+            "forms": {
+              "description": "What visitors send through the forms on the pages: a set time from its arrival, or until the matter is closed",
+              "oneOf": [
+                { "$ref": "#/$defs/retentionPeriod" },
+                { "type": "object", "additionalProperties": false, "required": ["until"], "properties": { "until": { "const": "closed" } } }
+              ]
+            },
+            "newsletter": {
+              "description": "The email addresses on the footer's newsletter list: until they unsubscribe, or a set time (or until they unsubscribe, if that comes first)",
+              "oneOf": [
+                { "$ref": "#/$defs/retentionPeriod" },
+                { "type": "object", "additionalProperties": false, "required": ["until"], "properties": { "until": { "const": "unsubscribe" } } }
+              ]
+            }
+          }
+        },
         "contact": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Additive from 0.7.24.5: the association's legal and contact details, typed once in the Site panel and read by the footer and the Organization JSON-LD (contact-model.js). Which numbers exist, their form and check, and how the VAT number is written follow the country's profile (contact-profiles.js); every field is optional and left out when empty.",
+          "description": "Additive from 0.7.24.5: the association's legal and contact details, typed once in the Legal panel and read by the footer and the Organization JSON-LD (contact-model.js). Which numbers exist, their form and check, and how the VAT number is written follow the country's profile (contact-profiles.js); every field is optional and left out when empty.",
           "properties": {
             "country": { "type": "string", "pattern": "^[A-Z]{2}$", "description": "The country whose profile applies (ISO 3166-1 alpha-2; XX for a country outside the list, which gives a free label and number). Omitted, the site language suggests one." },
             "legalName": { "type": "string", "description": "The registered name, when it differs from the site's title; shown first in the footer's legal line" },
@@ -769,6 +790,17 @@
     }
   },
   "$defs": {
+    "retentionPeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["until", "count", "unit"],
+      "description": "A set time a kind is kept (site.retention): a whole number of months or years",
+      "properties": {
+        "until": { "const": "period" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 99 },
+        "unit": { "enum": ["months", "years"] }
+      }
+    },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
     "linkTarget": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,80}$", "description": "The id of a section or block the link lands on (additive from 0.7.27.3): on the page in page, or on the page the link stands on without one. The id, not the name, so a rename never breaks the link; the address shows the name once the visitor lands" },
     "linkNewTab": { "type": "boolean", "default": false, "description": "Open the link in a new tab (additive from 0.7.27.3); gets rel noopener" },

@@ -140,11 +140,35 @@ export function pageFacts(entry, page, { siteGeo = false } = {}) {
   return { forms, checkout, shop, calendar, embeds: [...embeds], atOnce: [...atOnce] };
 }
 
+/** The kinds the association keeps whose period the owner sets in the Legal panel (`site.retention`, 0.7.31.2, ADR-0029 decision 4), each with the choices it takes beside a set period; a kind left out is not decided. */
+export const RETENTION_KINDS = { forms: ['period', 'closed'], newsletter: ['unsubscribe', 'period'] };
+
+/** The units a set period is counted in, and its bounds. */
+export const RETENTION_UNITS = ['months', 'years'];
+export const RETENTION_MAX = 99;
+
+/**
+ * A kind's period as stored, read safely: `{until: 'period', count, unit}`, `{until: 'closed'}` (form messages) or `{until: 'unsubscribe'}` (the newsletter); null for not decided, which a stored value that is none of these reads as too.
+ * @param {object} site site.json
+ * @param {'forms'|'newsletter'} kind
+ * @returns {{until: string, count?: number, unit?: string}|null}
+ */
+export function retentionOf(site, kind) {
+  const value = site?.site?.retention?.[kind];
+  const choices = RETENTION_KINDS[kind];
+  if (!choices || !value || !choices.includes(value.until)) return null;
+  if (value.until !== 'period') return { until: value.until };
+  const count = Number(value.count);
+  if (!Number.isInteger(count) || count < 1 || count > RETENTION_MAX || !RETENTION_UNITS.includes(value.unit)) return null;
+  return { until: 'period', count, unit: value.unit };
+}
+
 /**
  * The facts of the whole site.
  * @param {object} site site.json
  * @param {Array<{entry: object, page: object}>} pages Every page in the registry with its file; one that could not be read is left out
- * @returns {{controller: object, forms: object[], checkout: object|null, analytics: boolean, embeds: string[], atOnce: string[], host: 'cloudflare', browser: {theme: boolean, shop: boolean, calendar: boolean, announcement: boolean}}}
+ * @returns {{controller: object, forms: object[], checkout: object|null, analytics: boolean, embeds: string[], atOnce: string[], host: 'cloudflare', retention: {forms: object|null, newsletter: object|null}, browser: {theme: boolean, shop: boolean, calendar: boolean, announcement: boolean}}}
+ *   retention is how long the association keeps the form messages and the newsletter list (retentionOf), null where it is not decided;
  *   embeds are the third parties whose frames the pages hold, atOnce those of them some page loads with the page (`askFirst: false`) rather than behind the cover;
  *   browser says what the site keeps in the visitor's own browser beside the embed choice: the light or dark choice where the theme has both, the cart with the last order where a page sells, a calendar's events and height where a page has one, and the closing of the announcement strip where there is one (BROWSER_KEEPS);
  *   forms hold the footer's newsletter sign-up first (`footer: true`), then every page's forms
@@ -186,6 +210,7 @@ export function privacyModel(site, pages) {
     embeds: [...embeds],
     atOnce: [...atOnce],
     host: 'cloudflare',
+    retention: { forms: retentionOf(site, 'forms'), newsletter: retentionOf(site, 'newsletter') },
     browser: { theme: Boolean(site?.theme?.alt?.tokens), shop, calendar, announcement: site?.nav?.announcement?.show === true && Boolean(String(site.nav.announcement.text ?? '').trim()) },
   };
 }

@@ -319,7 +319,7 @@
   </label>
 
   {#if siteDraft.footer?.show}
-    <details class="group">
+    <details class="group" data-fold="pages">
       <summary>{ta('group.showOnPages')}</summary>
       <div class="group-items">
         {#each siteDraft.pages ?? [] as pg (pg.id)}
@@ -335,14 +335,14 @@
   {/if}
 
   <!-- The footer's look, chosen in the shared design picker; the content stays as it is -->
-  <details class="group">
+  <details class="group" data-fold="design">
     <summary>{ta('lbl.design')}<span class="menu-group-value">{ta(`footerDesign.${footerDesign(siteDraft) || 'standard'}`)}</span></summary>
     <div class="group-items">
       <button class="ghost action" title={ta('tip.footer.design')} onclick={() => (ed.designPicker = { kind: 'footer' })}>{ta('ui.chooseDesign')}</button>
     </div>
   </details>
 
-  <details class="group">
+  <details class="group" data-fold="startpoint">
     <summary>{ta('group.startpoint')}</summary>
     <div class="group-items">
       <div class="footer-tpick">
@@ -357,7 +357,22 @@
     </div>
   </details>
 
-  <details class="group">
+  <details class="group" data-fold="appearance">
+    <summary>{ta('group.appearance')}</summary>
+    <div class="group-items">
+      {#if siteDraft.footer?.cta?.big !== true}
+        <label title={ta('tip.footer.align')}>{ta('lbl.align')}
+          <Dropdown value={siteDraft.footer?.align ?? 'left'}
+            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+            onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
+        <hr class="gridmenu-divider" />
+      {/if}
+      <p class="panel-strong">{ta('lbl.background')}</p>
+      <BackgroundEditor bg={footerBgCtx} layers={siteDraft.footer?.background?.layers ?? []} />
+    </div>
+  </details>
+
+  <details class="group" data-fold="brand">
     <summary>{ta('group.brand')}</summary>
     <div class="group-items">
       <label title={ta('tip.footer.brandTitle')}>{ta('lbl.title')}
@@ -393,7 +408,7 @@
     </div>
   </details>
 
-  <details class="group">
+  <details class="group" data-fold="columns">
     <summary>{ta('group.columns')}</summary>
     <div class="group-items">
       {#each siteDraft.footer?.columns ?? [] as col, ci}
@@ -435,7 +450,7 @@
     </div>
   </details>
 
-  <details class="group">
+  <details class="group" data-fold="social">
     <summary title={ta('tip.footer.links')}>{ta('group.social')}</summary>
     <div class="group-items">
       <!-- The row shows the site's links (site.links), edited in the Site panel -->
@@ -448,7 +463,7 @@
     </div>
   </details>
 
-  <details class="group">
+  <details class="group" data-fold="contact">
     <summary title={ta('tip.footer.contact')}>{ta('group.siteContact')}</summary>
     <div class="group-items">
       <!-- The legal line and the address, phone and email come from the Legal panel; a switch shows only when there is something to leave out -->
@@ -462,7 +477,7 @@
       <!-- The privacy page the footer links to is chosen in the Legal panel: the page chosen is shown here, and the row opens the panel at «Privacy» -->
       <div class="legal-row">
         <span id="legal-row-privacy" title={ta('tip.footer.privacy')}>{ta('lbl.footerPrivacy')}</span>
-        <button type="button" class="legal-value" id="legal-row-privacy-value" aria-labelledby="legal-row-privacy legal-row-privacy-value" title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { legal: 'privacy' })}>
+        <button type="button" class="legal-value" id="legal-row-privacy-value" aria-labelledby="legal-row-privacy legal-row-privacy-value" title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { fold: 'privacy' })}>
           <span class="legal-value-name">{(siteDraft.pages ?? []).find((p) => p.id === siteDraft.footer?.privacyPage)?.title ?? ta('common.none')}</span><span class="legal-goto-to">{ta('panel.legal')}{@html ICONS.right}</span>
         </button>
       </div>
@@ -473,11 +488,11 @@
           {ta('ui.footerContact')}
         </label>
       {/if}
-      <button class="ghost action" onclick={() => ed.openPanel('legal', { legal: 'who' })}>{ta('ui.editSiteContact')}</button>
+      <button class="ghost action" onclick={() => ed.openPanel('legal', { fold: 'who' })}>{ta('ui.editSiteContact')}</button>
     </div>
   </details>
 
-  <details class="group">
+  <details class="group" data-fold="cta">
     <summary>{ta('group.cta')}</summary>
     <div class="group-items">
       <label class="gridmenu-snap" title={ta('tip.footer.cta')}>
@@ -522,7 +537,7 @@
     </div>
   </details>
 
-  <details class="group">
+  <details class="group" data-fold="linkrow">
     <summary>{ta('group.linkRow')}</summary>
     <div class="group-items">
       {@render footerLinkList('linkRow', siteDraft.footer?.linkRow ?? [])}
@@ -530,22 +545,7 @@
     </div>
   </details>
 
-  <details class="group">
-    <summary>{ta('group.appearance')}</summary>
-    <div class="group-items">
-      {#if siteDraft.footer?.cta?.big !== true}
-        <label title={ta('tip.footer.align')}>{ta('lbl.align')}
-          <Dropdown value={siteDraft.footer?.align ?? 'left'}
-            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-            onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
-        <hr class="gridmenu-divider" />
-      {/if}
-      <p class="panel-strong">{ta('lbl.background')}</p>
-      <BackgroundEditor bg={footerBgCtx} layers={siteDraft.footer?.background?.layers ?? []} />
-    </div>
-  </details>
-
-  <details class="group">
+  <details class="group" data-fold="baseline">
     <summary>{ta('group.baseline')}</summary>
     <div class="group-items">
       <label title={ta('tip.footer.copyright')}>{ta('lbl.copyright')}

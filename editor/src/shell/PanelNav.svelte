@@ -3,6 +3,7 @@
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
+  import PanelTab from './PanelTab.svelte';
   const ed = getContext('urd-editor');
   let pickedGroup = $state(0);
   const groupOf = (panel) => Math.max(0, ed.PANEL_GROUPS.findIndex((g) => g.includes(panel)));
@@ -28,8 +29,7 @@
   {/if}
   <div class="panel-tabs">
     {#each tabs as name (name)}
-      <button type="button" class="panel-tab" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined}
-        onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}{#if name === 'legal' && ed.legal?.dot}<span class="update-dot update-dot-inline legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}</button>
+      <PanelTab {name} />
     {/each}
     {#if ed.adminLayout !== 'panel-tabs'}{@render fold()}{/if}
   </div>

@@ -15,6 +15,7 @@ import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT } from 
 import { COLLECTION_LAYOUTS, collectionLayoutOf, CSV_PREVIEWS, csvPreviewOf } from '../lib/collection-layout.js';
 import { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf } from '../lib/page-settings.js';
 import { PRESS_FEELS, pressFeelOf, pressTarget, ripple } from '../lib/press-feel.js';
+import { TAB_MENU_STYLES, tabMenuStyleOf } from '../lib/panel-folds.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -581,6 +582,28 @@ function setPressFeel(v) {
 
 const PRESS_OPTIONS = $derived(PRESS_FEELS.map((id) => [id, ta(`opt.press.${id}`)]));
 
+/** How the tabs' menus set their rows apart (Urd settings «Tab menus», lib/panel-folds.js): the groups by default, remembered per browser. */
+const TAB_MENUS_KEY = 'urd-tab-menus';
+let tabMenus = $state(tabMenuStyleOf(localStorage.getItem(TAB_MENUS_KEY)));
+
+function setTabMenus(v) {
+  tabMenus = tabMenuStyleOf(v);
+  if (tabMenus === 'groups') localStorage.removeItem(TAB_MENUS_KEY);
+  else localStorage.setItem(TAB_MENUS_KEY, tabMenus);
+}
+
+const TAB_MENU_OPTIONS = $derived(TAB_MENU_STYLES.map((id) => [id, ta(`opt.tabMenus.${id}`)]));
+
+/** Whether a tab's menu stays open after a row is picked until the mouse leaves it (the default), or closes at the pick (Urd settings «After a pick»), remembered per browser. */
+const TAB_MENU_STAY_KEY = 'urd-tab-menu-stay';
+let tabMenuStay = $state(localStorage.getItem(TAB_MENU_STAY_KEY) === 'close' ? 'close' : 'stay');
+
+function setTabMenuStay(v) {
+  tabMenuStay = v === 'close' ? 'close' : 'stay';
+  if (tabMenuStay === 'stay') localStorage.removeItem(TAB_MENU_STAY_KEY);
+  else localStorage.setItem(TAB_MENU_STAY_KEY, tabMenuStay);
+}
+
 /** Where a page's settings open («Page settings», lib/page-settings.js): a dialog over the admin (the default, not stored), a step in the Pages panel, or a table of every page over the canvas; kept per browser. */
 const PAGE_SETTINGS_KEY = 'urd-page-settings';
 
@@ -709,6 +732,15 @@ function toggleGrid() {
 // buttons are shown only for a panel that has group folds at all.
 let panelEl = $state(null);
 
+/** A fold asked for by a link or a tab's menu (lib/panel-folds.js): once its panel stands open, the fold is unfolded alone, the panel's other folds closing, brought into view and its heading lit for a moment, or, for a fold that holds one button (`press`), the button is pressed. */
+let foldFocus = $state(null);
+
+/** Opens a panel at one of its folds, by the fold's `data-fold`; `press` presses the fold's one button instead. */
+function showFold(panel, fold, { press = false } = {}) {
+  foldFocus = { panel, fold, press };
+  activePanel = panel;
+}
+
 let panelHasGroups = $state(false);
 
 let panelAllOpen = $state(false);
@@ -764,6 +796,34 @@ function decorateSubFolds(root) {
 
 /** The effects of this module, run once by the shell at its start. */
 export function effects() {
+
+  // A fold asked for: unfolded alone, brought into view, its heading focused and lit, once its panel has drawn it; a fold the panel does not draw now leaves the panel as it opens.
+  // The panel's other folds close with their own motion (app.css, 0.24 s), and the scroll waits for it, so the fold asked for is brought to where it stands once they have closed.
+  $effect(() => {
+    const want = foldFocus;
+    if (!want || activePanel !== want.panel || !panelEl) return;
+    tick().then(() => {
+      if (foldFocus !== want) return;
+      foldFocus = null;
+      const fold = panelEl?.querySelector(`details.group[data-fold="${CSS.escape(want.fold)}"]`);
+      if (!fold) return;
+      if (want.press) {
+        fold.querySelector(':scope > .group-items > button')?.click();
+        return;
+      }
+      for (const other of panelEl.querySelectorAll('details.group[open]')) {
+        const topLevel = !other.parentElement?.closest('details.group');
+        if (topLevel && other !== fold && !other.contains(fold)) other.open = false;
+      }
+      fold.open = true;
+      const bring = () => fold.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+      if (reducedMotion) bring();
+      else setTimeout(bring, 260);
+      fold.querySelector(':scope > summary')?.focus({ preventScroll: true });
+      fold.classList.add('fold-lit');
+      setTimeout(() => fold.classList.remove('fold-lit'), 1400);
+    });
+  });
 
   $effect(() => {
     document.documentElement.dataset.adminTheme = adminTheme;
@@ -968,6 +1028,11 @@ export const shellState = {
   get csvPreviewPref() { return csvPreviewPref; },
   get pageSettingsPref() { return pageSettingsPref; },
   get pressFeel() { return pressFeel; },
+  get tabMenus() { return tabMenus; },
+  setTabMenus,
+  get tabMenuStay() { return tabMenuStay; },
+  setTabMenuStay,
+  get TAB_MENU_OPTIONS() { return TAB_MENU_OPTIONS; },
   setPressFeel,
   get PRESS_OPTIONS() { return PRESS_OPTIONS; },
   setPageSettingsPref,
@@ -1000,6 +1065,7 @@ export const shellState = {
   allOpen,
   syncPanelFolds,
   togglePanelGroups,
+  showFold,
   decorateSubFolds,
   effects,
 };

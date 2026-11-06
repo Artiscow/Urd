@@ -4234,7 +4234,7 @@
     text-align: center;
   }
 
-  /* The Legal panel (0.7.31): the state on each fold's heading, the heading lit when a link opens the panel at it, the rows the other panels keep for its settings, the amber dot on its tab, and the strip's Legal menu. */
+  /* The Legal panel (0.7.31): the state on each fold's heading, the marks on the fields it asks for, the rows the other panels keep for its settings, and the amber dot on its tab. */
   .legal-chip {
     display: inline-flex;
     align-items: center;
@@ -4253,16 +4253,17 @@
     background: rgb(226 184 74 / 16%);
   }
   .legal-chip svg { width: 0.85em; height: 0.85em; }
-  .legal-fold > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    gap: 0.5em;
+  .legal-fold > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { gap: 0.5em; }
+  .legal-fold-name { margin-right: auto; }
+  /* A fold a link or a tab's menu opened: its heading lit for a moment (showFold in state/shell.svelte.js) */
+  .group > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     transition: box-shadow 0.6s ease, border-color 0.12s ease;
   }
-  .legal-fold-name { margin-right: auto; }
-  .legal-fold.lit > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .group.fold-lit > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--urd-color-accent, #7c5cff) 55%, transparent);
   }
   @media (prefers-reduced-motion: reduce) {
-    .legal-fold > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { transition: none; }
+    .group > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { transition: none; }
   }
   /* A detail the law asks for, still empty: a dot by its name and the field framed, in the amber the panels warn in */
   .legal-need-dot {
@@ -4323,41 +4324,97 @@
   }
   .rail-icon.active .legal-dot { box-shadow: 0 0 0 2px var(--urd-color-accent, #7c5cff); }
 
-  /* The strip's Legal tab: one button with the word, the dot and the arrow, and the menu flush under it, so a mouse moving down keeps it open */
-  .legal-tab {
+  /* A panel's tab with a menu of its folds (shell/PanelTab.svelte): one button with the name, the Legal dot on the name's corner taking no room, and the arrow close after it */
+  .tab-menu {
     position: relative;
     display: inline-flex;
     align-items: center;
   }
-  .legal-tab-caret {
+  .tab-menu-word { position: relative; }
+  .tab-menu-dot {
+    position: absolute;
+    top: -2px;
+    right: -5px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e2b84a;
+  }
+  .tab-menu-caret {
     display: inline-flex;
-    margin-left: 0.4rem;
+    margin-left: 4px;
     opacity: 0.6;
     transition: transform 0.15s ease;
   }
-  .legal-tab .panel-tab.menu-open .legal-tab-caret { opacity: 1; transform: rotate(180deg); }
+  .tab-menu .panel-tab.menu-open .tab-menu-caret { opacity: 1; transform: rotate(180deg); }
   @media (prefers-reduced-motion: reduce) {
-    .legal-tab-caret { transition: none; }
+    .tab-menu-caret { transition: none; }
   }
-  .legal-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
+  /* The menu: in the top layer where the browser has it, else fixed above the page; placed under the tab by its own top and left, flush, so a mouse moving down keeps it open */
+  .tab-menu-list {
+    position: fixed;
+    inset: auto;
+    margin: 0;
     z-index: 100002;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-width: 15rem;
-    padding: 6px;
-    border-radius: 10px;
+    width: max-content;
+    padding: 4px;
+    border-radius: 9px;
     border: 1px solid rgb(255 255 255 / 12%);
+    color: inherit;
     background: var(--urd-color-surface, #151a23);
     box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+    font-size: 0.8rem;
+    overflow: visible;
   }
-  .legal-menu button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    justify-content: space-between;
-    gap: 0.8em;
-    padding: 0.45em 0.6em;
+  .tab-menu-group { display: flex; flex-direction: column; }
+  /* «Tab menus» Grouped: a little space between the groups, and each group's small label */
+  .tab-menu-group + .tab-menu-group { margin-top: 7px; }
+  .tab-menu-label {
+    padding: 6px 9px 3px;
+    font-size: 0.56rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+  /* Compact rows, lit on hover and focus, as in a usual dropdown; as wide as the longest name */
+  .tab-menu-list button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    position: relative;
+    justify-content: flex-start;
+    gap: 10px;
+    height: 28px;
+    padding: 0 9px;
     border-color: transparent;
+    border-radius: 5px;
+    background: transparent;
     text-align: left;
+    white-space: nowrap;
+  }
+  /* «Tab menus» Lines: a hairline between the rows, inset as the highlight is, quiet beside the row under the mouse or the keys */
+  .tab-menu-list.lines button + button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 9px;
+    right: 9px;
+    height: 1px;
+    background: rgb(255 255 255 / 7%);
+  }
+  .tab-menu-list.lines button:is(:hover, :focus-visible)::before,
+  .tab-menu-list.lines button:is(:hover, :focus-visible) + button::before { opacity: 0; }
+  .tab-menu-act { display: inline-flex; flex: none; opacity: 0.6; }
+  .tab-menu .tab-menu-list button:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .tab-menu .tab-menu-list button:focus-visible:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    border-color: transparent;
+    background: rgb(255 255 255 / 8%);
+  }
+  .tab-menu-name { margin-right: auto; }
+  .tab-menu-mark {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #e2b84a;
   }

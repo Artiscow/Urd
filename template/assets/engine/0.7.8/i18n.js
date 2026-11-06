@@ -183,6 +183,15 @@ export function themeString(themeKey, baseKey, form) {
 }
 
 /**
+ * The language a site text is written in: the site's own where its dictionary has the key, else bokmål, whose words a missing key falls back to.
+ * For words formatted beside the text (a period's unit by Intl), so they are in the same language as the sentence around them.
+ * @param {string} key
+ */
+export function siteTextLang(key) {
+  return site.own[key] !== undefined ? site.lang : 'nb';
+}
+
+/**
  * Plural lookup: the key of the count's plural form (pluralForm).
  * The count is always available as {n}.
  */

@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.31.2): how long form messages and the newsletter are kept, and the tabs' menus of their folds
+
+- [ ] The Legal panel's Privacy fold, on a site with a form on a page and the footer's newsletter sign-up: «How long you keep» with Form messages and Newsletter list; a site without one shows no row for it, and a site with neither shows no heading
+- [ ] Form messages: «For a set time» shows an empty number and Months, and stores nothing until a number is typed (the privacy page still says not decided); a number stores the period, 0 or 250 is held at 1 or 99, an emptied field keeps the number; «Until the matter is closed» and «Not decided» each change the page
+- [ ] The privacy page, published or in the draft view, in the long read and the ledgers: «beholdes i 6 måneder etter at det kom inn», «til saken er avsluttet», the newsletter «i 2 år, eller til du melder deg av om det skjer før», and with not decided «er ikke bestemt ennå; gjerne spør oss på …» (or «gjerne spør oss» without an email); no sentence keeps «så lenge saken trenger»
+- [ ] The Privacy heading says «1 not decided» or «2 not decided», its tooltip naming them, and each undecided row has the amber mark; the tab's amber dot does not come for it
+- [ ] The strip's Legal tab: the dot on the word's top corner and the arrow close after it, about as wide as Nav or Footer with their arrows
+- [ ] The strip and the panel's own tabs: Site, Legal, Theme, Nav and Footer have an arrow and a menu of their folds; Pages, Blocks, Properties, Grid, Collections, Plugins, History and Updates have none
+- [ ] A row in a menu opens its panel with that fold alone unfolded and brought into view, the other folds (Site's Advanced among them) closing with their motion; Footer's Design opens the design picker at once
+- [ ] The menu stays open after a pick until the mouse leaves it, in the strip and in the panel's tabs while the panel scrolls; «After a pick» set to Closes in Urd settings closes it at the pick
+- [ ] «Tab menus» in Urd settings (shown in the strip and the panel's tabs layouts only): Grouped puts Nav's and Footer's rows under Content, Look, Behaviour, Extras and Look, Content, Bottom row (no label repeats a row's name); Lines between draws a faint line between the rows; Plain list neither; the choice's pictures match
+- [ ] The Footer panel's Appearance fold stands after Starting point, as in its menu
+- [ ] The new words (the kinds and their choices, the menu groups, the settings and their options) in bokmål and Turkish, and a nynorsk site's privacy page reading its period in bokmål with the rest of the sentence
+
 ### Test batch (0.7.31.1): the Legal panel, and folds, menus and pop-ups that open and close smoothly
 
 - [ ] Every admin layout (Icon rail, Sidebar of words, Tabs at the top of the panel, Strip under the top bar, the page's tabs and a Site menu): Legal stands right after Site, with the scales in the rail

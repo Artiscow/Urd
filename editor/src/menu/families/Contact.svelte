@@ -30,7 +30,7 @@
 
   /** Opens the Legal panel at the contact details. */
   function editDetails() {
-    ed.openPanel('legal', { legal: 'who' });
+    ed.openPanel('legal', { fold: 'who' });
   }
 </script>
 
