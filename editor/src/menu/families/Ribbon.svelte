@@ -8,17 +8,19 @@
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ribbonMotions, ribbonReaches, ribbonReach, ribbonSepOptions, ribbonMainOptions, ribbonStripeOptions, RIBBON_SEP_ICONS, ribbonInk } from '../options.js';
   import { ICONS } from '../../lib/icons.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
+  import { pinnedNow } from '../pinned.js';
+  import RibbonMotion from './RibbonMotion.svelte';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps, themeSwatches } = ed;
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  /** A fold whose every setting stands in Pinned is left out. */
+  const pinned = pinnedNow();
   let { area } = $props();
 
   /* The ribbon block: the words are edited both here and directly in the band,
@@ -95,63 +97,11 @@
   {@const stripesOn = [selectedBlock.props.above ?? 'none', selectedBlock.props.below ?? 'none'].filter((v) => v !== 'none').length}
   {@const colourN = groupChanged({ bg: undefined, color: undefined })}
   {#snippet ribbonMotion()}
-      <Setting key="motion">
-        <div class="pin-line">
-          <label title={ta('tip.ribbon.motion')}>{ta('group.motion')}
-            <Dropdown filled value={motion} options={ribbonMotions()} onchange={(v) => setBlockProp('motion', v)} /></label>
-          <Pin id="ribbonMotion" />
-        </div>
+      <Setting key="motion" pin="ribbonMotion">
+        <label title={ta('tip.ribbon.motion')}>{ta('group.motion')}
+          <Dropdown filled value={motion} options={ribbonMotions()} onchange={(v) => setBlockProp('motion', v)} /></label>
       </Setting>
-      {#if motion !== 'none'}
-        <!-- The band stands still while editing, so the words can be read and typed -->
-        <button class="ghost action" title={ta('tip.ribbon.play')}
-          onclick={() => ed.bridge?.sendDemoMotion()}>{ta('ui.ribbonPlay')}</button>
-        <Setting key="direction">
-          <Choice label={ta('lbl.ribbonDirection')} value={selectedBlock.props.direction ?? 'left'}
-            options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
-            onchange={(v) => setBlockProp('direction', v)} />
-        </Setting>
-        {#if motion === 'step'}
-          <!-- A ticker is timed per word, not per pixel -->
-          <Setting key="dwell" shown="2.5">
-            <div class="ctl-row" title={ta('tip.ribbon.dwell')}>
-              <span class="mini-label ctl-name">{ta('lbl.ribbonDwell')}</span>
-              <input type="range" min="0.5" max="10" step="0.5" value={selectedBlock.props.dwell ?? 2.5}
-                oninput={(e) => setBlockProp('dwell', e.target.valueAsNumber)} />
-              <span class="gridmenu-value">{selectedBlock.props.dwell ?? 2.5} s</span>
-            </div>
-          </Setting>
-        {:else}
-          <Setting key="speed" shown="60">
-            <div class="ctl-row" title={ta('tip.ribbon.speed')}>
-              <span class="mini-label ctl-name">{ta('lbl.ribbonSpeed')}</span>
-              <input type="range" min="10" max="300" step="5" value={selectedBlock.props.speed ?? 60}
-                oninput={(e) => setBlockProp('speed', e.target.valueAsNumber)} />
-              <span class="gridmenu-value">{selectedBlock.props.speed ?? 60}</span>
-              <Pin id="speed" />
-            </div>
-          </Setting>
-        {/if}
-        <Setting key="pauseOnHover" shown={ta('common.on')}>
-          <label class="gridmenu-snap" title={ta('tip.ribbon.pause')}>
-            <input type="checkbox" checked={selectedBlock.props.pauseOnHover !== false}
-              onchange={(e) => setBlockProp('pauseOnHover', e.target.checked)} />
-            {ta('lbl.ribbonPause')}
-          </label>
-        </Setting>
-        <Setting key="pause">
-          <Choice label={ta('lbl.bandPause')} value={selectedBlock.props.pause ?? 'button'} title={ta('tip.ribbon.pauseMode')}
-            options={[['button', ta('opt.bandPause.button')], ['touch', ta('opt.bandPause.touch')]]}
-            onchange={(v) => setBlockProp('pause', v)} />
-        </Setting>
-        <Setting key="fade" shown={ta('common.on')}>
-          <label class="gridmenu-snap" title={ta('tip.ribbon.fade')}>
-            <input type="checkbox" checked={selectedBlock.props.fade !== false}
-              onchange={(e) => setBlockProp('fade', e.target.checked)} />
-            {ta('lbl.ribbonFade')}
-          </label>
-        </Setting>
-      {/if}
+      <RibbonMotion />
   {/snippet}
   {#snippet ribbonStripes()}
       <Setting key="above">
@@ -213,9 +163,6 @@
         <Choice label={ta('lbl.ribbonWidth')} value={ribbonReach(selectedBlock.props.width)}
           options={ribbonReaches()}
           onchange={(v) => setBlockProp('width', v)} />
-      </Setting>
-      <Setting key="variant">
-        <DesignRow pin="design" />
       </Setting>
       <Setting key="tilt" shown="0">
         <div class="ctl-row" title={ta('tip.ribbon.tilt')}>
@@ -284,9 +231,10 @@
         </div>
       </Setting>
   {/snippet}
-  <Fold id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''} group={groupOf('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true })}>{@render ribbonMotion()}</Fold>
+  <!-- The motion's own settings go with it into Pinned -->
+  {#if !pinned.all('ribbonMotion')}<Fold id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''} group={groupOf('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true })}>{@render ribbonMotion()}</Fold>{/if}
   <Fold id="ribbon-stripes" title={ta('lbl.ribbonStripes')} value={stripesOn ? ta('menu.onCount', { n: stripesOn }) : ta('common.off')} group={groupOf('ribbon-stripes', { above: 'none', below: 'none', main: 'text', aboveColor: undefined, belowColor: undefined, stripePlace: 'stack', thickness: 8 })}>{@render ribbonStripes()}</Fold>
-  <Fold id="ribbon-shape" title={ta('lbl.ribbonShape')} value={ribbonReaches().find(([v]) => v === ribbonReach(selectedBlock.props.width))?.[1] ?? ''} group={groupOf('ribbon-shape', { width: 'canvas', variant: 'band', tilt: 0 })}>{@render ribbonShape()}</Fold>
+  <Fold id="ribbon-shape" title={ta('lbl.ribbonShape')} value={ribbonReaches().find(([v]) => v === ribbonReach(selectedBlock.props.width))?.[1] ?? ''} group={groupOf('ribbon-shape', { width: 'canvas', tilt: 0 })}>{@render ribbonShape()}</Fold>
   <Fold id="ribbon-text" title={ta('lbl.ribbonText')} value={{ sm: ta('opt.size.sm'), md: ta('opt.size.md'), lg: ta('opt.size.lg'), xl: ta('opt.size.xl') }[selectedBlock.props.size ?? 'md']} group={groupOf('ribbon-text', { size: 'md', caps: false, weight: 'normal', outline: false, gap: 40 })}>{@render ribbonText()}</Fold>
   <Fold id="ribbon-colours" title={ta('group.navColours')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('ribbon-colours', { bg: undefined, color: undefined })}>{@render ribbonColours()}</Fold>
 {/if}

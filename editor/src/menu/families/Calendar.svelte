@@ -10,13 +10,14 @@
   /* The calendar block in the element menu (0.7.26.2): its Content and Style areas,
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
+  import Setting from '../../lib/rows/Setting.svelte';
+  import PictureRow from '../../lib/rows/PictureRow.svelte';
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import Choice from '../../lib/Choice.svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import MarkPicker from '../../lib/MarkPicker.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
-  import Pin from '../Pin.svelte';
   import { calDesign, calView, calOptionDefs, calOptions, calOptionShown, calStripe, calHasExcerpt, calDescription, calSwitcherViews, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, CAL_FIELDS, CAL_SIZE, calHasTextOverrides, calResetTexts, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
   import { iconSvg } from '$engine/icons.js';
   import { fontChoices } from '$engine/fonts.js';
@@ -266,12 +267,11 @@
       onchange={(v) => setBlockProp('description', v === 'rows' ? undefined : v)} />
   {/if}
   {#if ['list', 'cards', 'agenda'].includes(selectedBlock.props.view ?? 'list')}
-    <div class="pin-line">
+    <Setting pin="limit">
       <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
         <input type="number" min="1" max="50" value={selectedBlock.props.limit ?? 6}
           onchange={(e) => setBlockProp('limit', Math.max(1, Math.min(50, Number(e.target.value) || 6)))} /></label>
-      <Pin id="limit" />
-    </div>
+    </Setting>
     <!-- A list folds the events beyond the max count; the regular-event design folds its own dates -->
     {#if calView(selectedBlock.props) === 'list' && calDesign(selectedBlock.props.design).module !== 'more'}
       <label class="gridmenu-snap" title={ta('tip.calendar.showMore')}>
@@ -335,14 +335,13 @@
       {ta('calendar.showEarlier')}
     </label>
   {/if}
-  <div class="pin-line">
+  <Setting pin="subscribe">
     <label title={ta('tip.calendar.subscribe')} class="gridmenu-snap">
       <input type="checkbox" checked={selectedBlock.props.showSubscribe !== false}
         onchange={(e) => setBlockProp('showSubscribe', e.target.checked)} />
       {ta('calendar.showSubscribe')}
     </label>
-    <Pin id="subscribe" />
-  </div>
+  </Setting>
   <label title={ta('tip.calendar.signup')} class="gridmenu-snap">
     <input type="checkbox" checked={selectedBlock.props.showSignup === true}
       onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
@@ -421,27 +420,18 @@
   {/if}
 {:else if area === 'style'}
   {@const calDef = calDesign(selectedBlock.props.design)}
-  <!-- The design: a row naming it, opening the picker over the whole menu -->
-  <div class="pin-line">
-    <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.design')} onclick={ed.openDesignPicker}>
-      <span class="menu-group-title">{ta('calendar.design')}</span><span class="menu-group-value">{ta(calDef.labelKey)}</span>
-    </button>
-    <Pin id="design" />
-  </div>
+  <!-- The design: a row naming it, opening the picker over the whole menu, first in Style as every block's design row -->
+  <Setting pin="design">
+    <PictureRow label={ta('calendar.design')} value={ta(calDef.labelKey)} title={ta('tip.calendar.design')} onclick={ed.openDesignPicker} />
+  </Setting>
   <!-- The phone design: what the calendar draws on a phone, the design's own default until the owner picks another -->
-  <div class="pin-line">
-    <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.phoneView')} onclick={ed.openPhonePicker}>
-      <span class="menu-group-title">{ta('calendar.phoneView')}</span><span class="menu-group-value">{ta(calPhoneDesignDef(calPhoneView(selectedBlock.props), selectedBlock.props).labelKey)}</span>
-    </button>
-    <Pin id="phoneView" />
-  </div>
+  <Setting pin="phoneView">
+    <PictureRow label={ta('calendar.phoneView')} value={ta(calPhoneDesignDef(calPhoneView(selectedBlock.props), selectedBlock.props).labelKey)} title={ta('tip.calendar.phoneView')} onclick={ed.openPhonePicker} />
+  </Setting>
   <!-- The card design: how the card that opens at a press looks, the design's own default until the owner picks another -->
-  <div class="pin-line">
-    <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.card')} onclick={ed.openCardPicker}>
-      <span class="menu-group-title">{ta('calendar.card')}</span><span class="menu-group-value">{ta(calCardDesignDef(calCardDesign(selectedBlock.props)).labelKey)}</span>
-    </button>
-    <Pin id="card" />
-  </div>
+  <Setting pin="card">
+    <PictureRow label={ta('calendar.card')} value={ta(calCardDesignDef(calCardDesign(selectedBlock.props)).labelKey)} title={ta('tip.calendar.card')} onclick={ed.openCardPicker} />
+  </Setting>
   {@const cm = calMenu()}
   {#snippet calOpts()}
   <!-- The design's own settings, directly under the design they belong to -->
@@ -522,7 +512,9 @@
       label={ta('calendar.fieldColor')} onchange={(v) => setCalField({ color: v || undefined })} />
   </span>
   {/snippet}
-  <Fold id="cal-opts" title={ta('calendar.section.options')} value={cm.opts} reset={cm.optsReset}>{@render calOpts()}</Fold>
+  {#if calOptionDefs(selectedBlock.props.design).some((def) => calOptionShown(def, calOptions(selectedBlock.props)))}
+    <Fold id="cal-opts" title={ta('calendar.section.options')} value={cm.opts} reset={cm.optsReset}>{@render calOpts()}</Fold>
+  {/if}
   <Fold id="cal-colors" title={ta('calendar.colors')} value={cm.colors} reset={cm.colorsReset}>{@render calColours()}</Fold>
   <Fold id="cal-stripe" title={ta('calendar.stripe')} value={cm.stripe} reset={cm.stripeReset}>{@render calStripeGroup()}</Fold>
   <Fold id="cal-fields" title={ta('calendar.fieldStyle')} value={cm.fields} reset={cm.fieldsReset}>{@render calFields()}</Fold>

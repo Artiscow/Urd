@@ -7,7 +7,6 @@
   import LinkList from '../../lib/LinkList.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeId } from '$engine/sections/presets.js';
   import { ICON_LIBRARY, iconSvg } from '$engine/icons.js';
@@ -36,7 +35,6 @@
   }
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
-  const variantOptions = () => [['icons', ta('opt.share.icons')], ['labels', ta('opt.share.labels')]];
 
 </script>
 
@@ -74,9 +72,6 @@
     group={groupOf('share-services', { useSite: true, hidden: [] })}>{@render shareLinks()}</Fold>
 {:else if area === 'style'}
   {#snippet shareLook()}
-    <Setting key="variant">
-      <DesignRow pin="variant" />
-    </Setting>
     <Setting key="size" shown="38">
       <label title={ta('tip.share.size')}>{ta('lbl.size')}
         <input type="number" min="24" max="64" value={selectedBlock.props.size ?? 38}
@@ -88,5 +83,5 @@
           onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} /></label>
     </Setting>
   {/snippet}
-  <Fold id="share-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'icons'))?.[1] ?? ''} group={groupOf('share-look', { variant: 'icons', size: 38, color: '' })}>{@render shareLook()}</Fold>
+  <Fold id="share-look" defaultOpen title={ta('group.appearance')} value={`${selectedBlock.props.size ?? 38} px`} group={groupOf('share-look', { size: 38, color: '' })}>{@render shareLook()}</Fold>
 {/if}

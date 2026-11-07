@@ -2,6 +2,24 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.3): the element menu's frame, Pinned, and one icon button
+
+- [ ] The element menu, wide: Pinned at the top with the block's pinned settings as rows in two columns, no gap at the top of either; under it Content, Style and Placement running through two columns, no group split between them, no empty column
+- [ ] A pinned setting stands in Pinned only: unpinning the text box puts its switch back in Style's «Text box» fold; pinning Alignment and the text box on a text block leaves no Style area at all; «Reset Pinned» brings the defaults back
+- [ ] A block with designs (a button, a quote, a gallery, the privacy page): the Design row with its picture first in Style when unpinned, and in Pinned while pinned (the default for most); a block with a phone design has its Phone design row under it; a pin made before the update (a gallery's view) still stands in Pinned as Design
+- [ ] The text block's «Edit the text» and the image's «Open the image editor» first in Content
+- [ ] A calendar whose design has no options: no empty Options fold; a filled circle: no thickness in Pinned or in Style
+- [ ] Narrow (the menu's width button, and the Properties panel): Pinned's heading in small accent capitals, its rows under each other, then the three areas with their sticky headings
+- [ ] The menu's head: the width button and close are squares of one size, as tall as the search field; Link target's copy button is as tall as the link name field, square, its icon in the middle
+- [ ] Placement's Size and Smallest scale (with Shrink chosen): the two sliders equally wide, each with its value at the right; Size's pin on the line of its name
+- [ ] The search in the wide menu: the three areas' matches in two columns, an area without a match saying so; 1, 2 and 3 still go to the areas
+- [ ] What belongs to a pinned choice stands under it in Pinned: Shrink or Both under Narrow screen brings Smallest scale under it (and none in Placement); the text box switched on brings its colour, shadow, border and glass under it; a ribbon's motion has Play, the direction, the speed and the pausing under it
+- [ ] Every row in Pinned shows its setting's tooltip on hover
+- [ ] A design other than the block's first (a privacy page as Ledger) shows the amber dot on its Design row in Style and a reset that brings the first design back; a phone design chosen does the same on its row
+- [ ] The privacy page's and the terms of sale's menus open with their Appearance fold; a contact block's menu opens
+- [ ] A quote and a gallery: the fold under the design is «Settings for the design» and says Standard or what differs; a gallery as a carousel has no such fold
+- [ ] The new and changed words in bokmål and Turkish: Pinned, Pin to the top, Take out of Pinned, Reset Pinned, Settings for the design
+
 ### Test batch (0.7.30.2): the row kit, the terms of sale as a block of their own, and the grid and guides
 
 - [ ] The Grid panel: dragging Cell size changes the grid and the value beside it follows (16 px, 24 px …); Snap to grid switches snapping; «Drawn as» switches between Lines, Dots and In a drag at once, and the choice is still there after a reload

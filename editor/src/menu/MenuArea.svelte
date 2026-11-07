@@ -1,10 +1,7 @@
 <script>
-  /* One area of the element menu (Content, Style or Placement): its heading
-     and the groups under it. Wide, the area is a column; narrow, the three
-     areas stand under each other and the heading sticks to the top while the
-     area scrolls, saying how many groups it holds and how many stand changed
-     (the groups report in through the menu-area context). The Placement
-     heading carries the «?» chip of the layout help. */
+  /* One area of the element menu (Content, Style or Placement): its heading and the groups under it.
+     Wide, the areas pour through two columns with the heading where its area starts; narrow, the three areas stand under each other and the heading sticks to the top while the area scrolls, saying how many groups it holds and how many stand changed (the groups report in through the menu-area context).
+     The Placement heading carries the «?» chip of the layout help. */
   import { setContext } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { ta } from '$engine/i18n.js';

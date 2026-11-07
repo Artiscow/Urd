@@ -9,6 +9,7 @@
   import { ANCHOR_MAX, anchorError, suggestAnchor, spotLinks } from '$engine/anchor-model.js';
   import { slugText } from '$engine/imageTools.js';
   import { ICONS } from './icons.js';
+  import IconButton from './rows/IconButton.svelte';
   const ed = getContext('urd-editor');
   /** value: the stored name ('' = none); own: the spot's id; taken: () => the ids in use on the page apart from this spot; words: what the suggestion is made from; path: the page's address. */
   let { value = '', own, taken, words = '', path = '/', onchange } = $props();
@@ -79,7 +80,7 @@
           typed = null;
         }
       }} /></label>
-  <button type="button" class="ghost row-tool" title={ta('tip.copyLink')} aria-label={ta('tip.copyLink')} onclick={copyLink}>{@html ICONS.copy}</button>
+  <IconButton icon={ICONS.copy} label={ta('tip.copyLink')} onclick={copyLink} />
 </div>
 {#if suggestion}
   <button type="button" class="linkish anchor-suggest" title={ta('tip.anchorSuggest')} onclick={useSuggestion}>{ta('ui.useName', { name: suggestion })}</button>

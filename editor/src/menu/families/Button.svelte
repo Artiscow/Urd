@@ -6,8 +6,6 @@
   import LinkField from '../../lib/LinkField.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   import { linkOf, linkText } from '../../lib/link-edit.js';
@@ -23,17 +21,9 @@
     <label title={ta('tip.button.text')}>{ta('blocks.text')}
       <input value={selectedBlock.props.label}
         onchange={(e) => setBlockProp('label', e.target.value)} /></label>
-    <div class="pin-line">
+    <Setting pin="goesTo">
       <LinkField label={ta('lbl.goesTo')} value={linkOf(selectedBlock.props)} onchange={setBlockLink} />
-      <Pin id="goesTo" />
-    </div>
-  {/snippet}
-  <Fold id="btn-link" defaultOpen title={ta('group.textLink')} value={linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) || ta('link.none')}>{@render btnLink()}</Fold>
-{:else if area === 'style'}
-  {#snippet btnLook()}
-    <Setting key="style">
-      <DesignRow pin="btnStyle" />
     </Setting>
   {/snippet}
-  <Fold id="btn-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary')} group={groupOf('btn-look', { style: 'primary' })}>{@render btnLook()}</Fold>
+  <Fold id="btn-link" defaultOpen title={ta('group.textLink')} value={linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) || ta('link.none')}>{@render btnLink()}</Fold>
 {/if}

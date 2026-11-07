@@ -5,7 +5,6 @@
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   import LinkField from '../../lib/LinkField.svelte';
@@ -16,7 +15,6 @@
   const { setBlockProp, setBlockProps, setBlockLink } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
-  const viewOptions = () => [['button', ta('opt.cart.button')], ['icon', ta('opt.cart.icon')]];
   /** The checkout the drawer links to, in words: the block's own page, else the menu basket's, else none. */
   const checkoutText = () => linkText(linkOf(selectedBlock.props), { pages: siteDraft.pages, here: ed.pageId })
     || linkText(linkOf(siteDraft.nav?.cart ?? {}), { pages: siteDraft.pages, here: ed.pageId })
@@ -33,11 +31,4 @@
     </Setting>
   {/snippet}
   <Fold id="cart-checkout" defaultOpen title={ta('group.checkout')} value={checkoutText()} group={groupOf('cart-checkout', { currency: 'kr' })}>{@render cartCheckout()}</Fold>
-{:else if area === 'style'}
-  {#snippet cartView()}
-    <Setting key="variant">
-      <DesignRow pin="cartView" />
-    </Setting>
-  {/snippet}
-  <Fold id="cart-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'button'))?.[1] ?? ''} group={groupOf('cart-view', { variant: 'button' })}>{@render cartView()}</Fold>
 {/if}

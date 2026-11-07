@@ -5,12 +5,14 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
+  import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   import ShopLinks from '../ShopLinks.svelte';
   const ed = getContext('urd-editor');
+  /** A fold whose every setting stands in Pinned is left out. */
+  const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const collectionIds = $derived(ed.collectionIds);
   const collectionsView = $derived(ed.collectionsView);
@@ -55,14 +57,11 @@
   <Fold id="product-price" title={ta('lbl.price')} value={selectedBlock.props.currency ?? 'kr'} group={groupOf('product-price', { currency: 'kr' })}>{@render productPrice()}</Fold>
 {:else if area === 'style'}
   {#snippet productGrid()}
-    <Setting key="columns" shown={ta('common.auto')}>
-      <div class="pin-line">
-        <label title={ta('tip.product.columns')}>{ta('lbl.columns')}
-          <input type="number" min="0" max="6" value={selectedBlock.props.columns || ''} placeholder={ta('common.auto')}
-            onchange={(e) => { const n = Math.max(0, Math.min(6, Math.round(Number(e.target.value)) || 0)); setBlockProp('columns', n); e.target.value = n || ''; }} /></label>
-        <Pin id="columns" />
-      </div>
+    <Setting key="columns" shown={ta('common.auto')} pin="columns">
+      <label title={ta('tip.product.columns')}>{ta('lbl.columns')}
+        <input type="number" min="0" max="6" value={selectedBlock.props.columns || ''} placeholder={ta('common.auto')}
+          onchange={(e) => { const n = Math.max(0, Math.min(6, Math.round(Number(e.target.value)) || 0)); setBlockProp('columns', n); e.target.value = n || ''; }} /></label>
     </Setting>
   {/snippet}
-  <Fold id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('common.auto')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</Fold>
+  {#if !pinned.all('columns')}<Fold id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('common.auto')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</Fold>{/if}
 {/if}

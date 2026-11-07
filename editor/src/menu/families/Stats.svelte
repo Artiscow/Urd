@@ -5,16 +5,13 @@
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
-  import { blockDesignOf } from '$engine/block-designs.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
-  const variant = $derived(blockDesignOf('stats', selectedBlock.props));
 </script>
 
 {#if area === 'content'}
@@ -35,13 +32,6 @@
   <Fold id="stat-number" defaultOpen title={ta('group.number')} value={`${selectedBlock.props.prefix ?? ''}${selectedBlock.props.value ?? ''}${selectedBlock.props.suffix ?? ''}`.trim()}>{@render statNumber()}</Fold>
 {:else if area === 'style'}
   {#snippet statLook()}
-    <Setting key="variant">
-      <DesignRow pin="variant" />
-    </Setting>
-    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
-    <Setting key="phoneDesign">
-      <DesignRow phone pin="phoneDesign" />
-    </Setting>
     <Setting key="countUp" shown={ta('common.on')}>
       <label class="gridmenu-snap" title={ta('tip.stat.countUp')}>
         <input type="checkbox" checked={selectedBlock.props.countUp !== false}
@@ -50,5 +40,5 @@
       </label>
     </Setting>
   {/snippet}
-  <Fold id="stat-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.statVariant.${variant}`)} group={groupOf('stat-look', { variant: 'plain', phoneDesign: null, countUp: true })}>{@render statLook()}</Fold>
+  <Fold id="stat-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.countUp !== false ? ta('common.on') : ta('common.off')} group={groupOf('stat-look', { countUp: true })}>{@render statLook()}</Fold>
 {/if}

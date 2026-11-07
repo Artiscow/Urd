@@ -59,10 +59,13 @@ test('every design has its picture', () => {
   }
 });
 
-test('every block with designs opens the picker from the design row in its menu', () => {
+test('every block with designs opens the picker from the design row the menu draws first in Style, and no family draws one of its own', () => {
+  // The row itself, per block type and width, is checked in tests/menu-render.test.mjs.
+  const menu = readFileSync(new URL('../editor/src/menu/ElementMenu.svelte', import.meta.url), 'utf8');
+  assert.match(menu, /\{#snippet menuStyle\(\)\}\s*\{#if designs\}\s*(?:<!--[^>]*-->\s*)?<Setting pin="design"[\s\S]*?><DesignRow \/><\/Setting>/);
   for (const type of DESIGN_BLOCK_TYPES) {
     const file = new URL(`${type[0].toUpperCase()}${type.slice(1)}.svelte`, FAMILIES);
-    assert.match(readFileSync(file, 'utf8'), /<DesignRow pin="[A-Za-z]+" \/>/, type);
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /<DesignRow\b/, type);
   }
 });
 
@@ -118,9 +121,8 @@ test('the blocks with a phone design: each keeps its design in the prop its cata
     assert.equal(PHONE_DESIGNS[type], BLOCK_DESIGNS[type].prop, `${type}: the phone design stands in for its design`);
     assert.deepEqual([...phoneDesignIds(type)].sort(), [...BLOCK_DESIGNS[type].ids].sort(), `${type}: a phone design names one of the block's own designs`);
     for (const id of BLOCK_DESIGNS[type].ids) assert.ok(existsSync(new URL(designPhonePicture(type, id), PICTURES)), designPhonePicture(type, id));
-    const file = new URL(`${type[0].toUpperCase()}${type.slice(1)}.svelte`, FAMILIES);
-    assert.match(readFileSync(file, 'utf8'), /<DesignRow phone pin="phoneDesign" \/>/, type);
   }
+  assert.match(readFileSync(new URL('../editor/src/menu/ElementMenu.svelte', import.meta.url), 'utf8'), /<Setting pin="design"[\s\S]*?><DesignRow \/><\/Setting>\s*\{#if designs\.phone\}<Setting pin="phoneDesign"[\s\S]*?><DesignRow phone \/><\/Setting>\{\/if\}/);
   for (const [lang, strings] of Object.entries(DICTS)) {
     for (const key of ['lbl.phoneDesign', 'tip.picker.phoneDesign', 'picker.phoneTitle', 'picker.phoneSame', 'picker.phoneSameShort', 'picker.phoneSameAbout', 'canvas.blockPhoneDesign']) assert.ok(strings[key], `${lang} ${key}`);
   }

@@ -6,7 +6,6 @@
   import Dropdown from '../../lib/Dropdown.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -58,13 +57,10 @@
 
 {#if area === 'content'}
   {#snippet formSending()}
-    <Setting key="mode">
-      <div class="pin-line">
-        <label title={ta('form.modeTitle')}>{ta('form.mode')}
-          <Dropdown value={mode} options={modeOptions()}
-            onchange={(v) => setBlockProp('mode', v)} /></label>
-        <Pin id="sendMode" />
-      </div>
+    <Setting key="mode" pin="sendMode">
+      <label title={ta('form.modeTitle')}>{ta('form.mode')}
+        <Dropdown value={mode} options={modeOptions()}
+          onchange={(v) => setBlockProp('mode', v)} /></label>
     </Setting>
     {#if mode === 'endpoint'}
       <label title={ta('form.endpointNote')}>{ta('form.endpoint')}

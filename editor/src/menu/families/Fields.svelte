@@ -9,15 +9,12 @@
 </script>
 
 <script>
-  /* The field contract (0.7.26.2): the settings of a core block listed in
-     CORE_FIELDS and of a plugin block with `fields`, and the button that opens
-     a plugin block's own config panel in the preview; and the design contract,
-     the design row of a plugin block with `designs`. */
+  /* The field contract (0.7.26.2): the settings of a core block listed in CORE_FIELDS and of a plugin block with `fields`, and the button that opens a plugin block's own config panel in the preview.
+     A plugin block with `designs` (the design contract) has its design row drawn first in Style by the menu itself (ElementMenu.svelte). */
+  import Setting from '../../lib/rows/Setting.svelte';
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
-  import Pin from '../Pin.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import LinkField from '../../lib/LinkField.svelte';
   import { ta, taApiError } from '$engine/i18n.js';
   const ed = getContext('urd-editor');
@@ -98,13 +95,12 @@
           <p class="panel-hint" class:place-error={placeStatus[k].err}>{placeStatus[k].text}</p>
         {/if}
       {:else if f.type === 'number'}
-        <div class="pin-line">
+        <Setting pin={selectedBlock.type === 'map' && f.key === 'zoom' ? 'zoom' : null}>
           <label title={f.hint || f.label}>{f.label}
             <input type="number" min={f.min} max={f.max} step={f.step ?? 1}
               value={selectedBlock.props[f.key]}
               onchange={(e) => setBlockProp(f.key, clampField(f, Number(e.target.value)))} /></label>
-          {#if selectedBlock.type === 'map' && f.key === 'zoom'}<Pin id="zoom" />{/if}
-        </div>
+        </Setting>
       {:else if f.type === 'toggle'}
         <label title={f.hint || f.label} class="gridmenu-snap">
           <input type="checkbox" checked={Boolean(selectedBlock.props[f.key])}
@@ -141,7 +137,4 @@
     <button class="ghost" title={ta('hint.pluginBlock')}
       onclick={() => ed.bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
   {/if}
-{:else if area === 'style' && pluginBlocks.find((b) => b.type === selectedBlock.type)?.designs}
-  <!-- The design contract: a plugin block with designs opens the design picker as the core blocks do -->
-  <DesignRow pin="design" />
 {/if}

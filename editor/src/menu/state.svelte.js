@@ -1,13 +1,13 @@
 /**
- * The element menu's own state (0.7.26.2), shared by every copy of the menu (the Properties panel, the floating menu and the search's copy of the areas): the width the floating menu opens in, the room it has, the two search queries, and the quick row's choices per block type.
+ * The element menu's own state (0.7.26.2), shared by every copy of the menu (the Properties panel, the floating menu and the search's copy of the areas): the width the floating menu opens in, the room it has, the two search queries, and the Pinned choices per block type.
  * Which groups stand open is kept with every other surface's folds (lib/folds.svelte.js).
  */
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
 
 /** The admin setting is the width a menu opens in, kept in the browser; the button in the menu's head switches for the session. */
 const MENU_WIDTH_KEY = 'urd-admin-menu-width';
-/** The floating menu's width with the three areas as columns. */
-export const MENU_WIDE_W = 740;
+/** The floating menu's width with the areas poured through two columns (app.css, .block-menu.wide). */
+export const MENU_WIDE_W = 660;
 
 export const menu = $state({
   widthPref: localStorage.getItem(MENU_WIDTH_KEY) === 'narrow' ? 'narrow' : 'wide',
@@ -44,23 +44,20 @@ export function measureMenuRoom(left) {
 export const MENU_AREAS = ['content', 'style', 'placement'];
 
 /**
- * The keys of the areas (0.7.20.9): scrolls the area into view, a column
- * when wide and a stacked area when narrow, and, unless the focus is in the
- * search field, puts it on the area's first group head or button (never the
- * help chip, never a field), so the next key is still the menu's. `root` is
- * the menu the key was pressed in (the floating menu, or the Properties
- * panel's body).
+ * The keys of the areas (0.7.20.9): scrolls to where the area starts, its heading in the two columns when wide and the stacked area when narrow.
+ * Unless the focus is in the search field, it puts the focus on the area's first group head or button (never the help chip, never a field), so the next key is still the menu's.
+ * `root` is the menu the key was pressed in (the floating menu, or the Properties panel's body).
  */
 export function chooseArea(area, root = null) {
   if (!MENU_AREAS.includes(area)) return;
   const col = root?.querySelectorAll('.emenu-cols > .emenu-col')[MENU_AREAS.indexOf(area)];
   if (!col) return;
-  col.scrollIntoView({ block: 'start' });
+  // An area poured through two columns spans both, so its heading tells where it starts.
+  (col.closest('.emenu-flow') ? col.firstElementChild ?? col : col).scrollIntoView({ block: 'start' });
   if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button:not(.help-chip)')?.focus();
 }
 
-/* The quick row (0.7.20.3, lib/quick-row.js): what the owner pinned or took
-   out, kept per block type in the browser. */
+/* Pinned (0.7.20.3, lib/quick-row.js): what the owner pinned or took out, kept per block type in the browser. */
 const quick = $state({ choices: readChoices(localStorage) });
 
 export function quickChoice(type) {
@@ -72,7 +69,7 @@ export function setQuickChoice(type, choice) {
   writeChoices(localStorage, $state.snapshot(quick.choices));
 }
 
-/** The pin beside a setting, or on its tile: the setting joins the row or leaves it. */
+/** The pin beside a setting: the setting joins Pinned or leaves it. */
 export function pinToggle(type, id) {
   setQuickChoice(type, togglePin(type, quickChoice(type), id));
 }

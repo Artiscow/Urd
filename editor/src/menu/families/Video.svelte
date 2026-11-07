@@ -7,7 +7,6 @@
   import Dropdown from '../../lib/Dropdown.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -47,12 +46,11 @@
 {#if area === 'content'}
   {@const vsource = selectedBlock.props.source === 'file' ? 'file' : 'embed'}
   {#snippet videoSource()}
-    <div class="pin-line">
+    <Setting pin="videoSource">
       <Choice stack label={ta('lbl.videoSource')} value={vsource}
         options={[['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]]}
         onchange={(v) => setBlockProp('source', v)} />
-      <Pin id="videoSource" />
-    </div>
+    </Setting>
     {#if vsource === 'embed'}
       <label title={ta('hint.video')}>{ta('lbl.videoUrl')}</label>
       <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}

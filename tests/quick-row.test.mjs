@@ -1,5 +1,5 @@
 /**
- * The element menu's quick row (editor/src/lib/quick-row.js, 0.7.20.3):
+ * The element menu's Pinned rows (editor/src/lib/quick-row.js, 0.7.20.3):
  * defaults per block type, pins, defaults taken out, and the choice kept in
  * the browser.
  */
@@ -43,6 +43,19 @@ test('togglePin: a pin joins at the end and leaves again; a default leaves and r
 test('cleanChoice: two lists of distinct string ids, whatever was stored', () => {
   assert.deepEqual(cleanChoice({ pinned: ['a', 'a', 3, ''], removed: 'x' }), { pinned: ['a'], removed: [] });
   assert.deepEqual(cleanChoice(null), { pinned: [], removed: [] });
+});
+
+test('cleanChoice: a design kept under its older id reads as the one id every design has now', () => {
+  assert.deepEqual(cleanChoice({ pinned: ['galleryView', 'size'], removed: ['variant'] }), { pinned: ['design', 'size'], removed: ['design'] });
+  assert.deepEqual(cleanChoice({ pinned: ['btnStyle', 'design'], removed: [] }), { pinned: ['design'], removed: [] });
+  // A quote whose design was taken out stays without it in Pinned.
+  assert.deepEqual(quickIds('quote', cleanChoice({ pinned: [], removed: ['variant'] }), all('design', 'fit', 'phone')), ['fit', 'phone']);
+});
+
+test('quickDefaults: every block with designs that starts with its design pinned has it under the one id', () => {
+  for (const type of ['button', 'gallery', 'quote', 'stats', 'faq', 'timeline', 'collection', 'cart', 'share', 'privacy', 'terms']) {
+    assert.ok(quickDefaults(type).includes('design'), type);
+  }
 });
 
 test('readChoices and writeChoices: kept per type, a type at its defaults left out, a broken store read as none', () => {

@@ -11,6 +11,7 @@
   import { menu, menuIsWide } from './state.svelte.js';
   import ElementMenu from './ElementMenu.svelte';
   import SearchField from '../lib/rows/SearchField.svelte';
+  import IconButton from '../lib/rows/IconButton.svelte';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   /** Where the menu stands, in editor coordinates, and what closes it. */
@@ -57,11 +58,11 @@
     <span class="block-menu-title">{ta('blocks.suffix', { label: ed.blockLabel(selectedBlock.type) })}</span>
     <SearchField get={() => menu.menuQuery} set={(v) => (menu.menuQuery = v)} />
     {#if menu.place}
-      <button class="ghost row-tool" title={ta('menu.backToBlock')} aria-label={ta('menu.backToBlock')} onclick={menuBackToBlock}>{@html BACK_ICON}</button>
+      <IconButton icon={BACK_ICON} label={ta('menu.backToBlock')} onclick={menuBackToBlock} />
     {/if}
-    <button class="ghost row-tool menu-width" title={menu.wide ? ta('menu.toNarrow') : ta('menu.toWide')} aria-label={menu.wide ? ta('menu.toNarrow') : ta('menu.toWide')}
-      onclick={() => (menu.wide = !menu.wide)}>{@html menu.wide ? MENU_NARROW_ICON : MENU_WIDE_ICON}</button>
-    <button class="ghost row-tool" title={ta('tip.closeEsc')} onclick={onclose}>{@html ICONS.cross}</button>
+    <IconButton class="menu-width" icon={menu.wide ? MENU_NARROW_ICON : MENU_WIDE_ICON} label={menu.wide ? ta('menu.toNarrow') : ta('menu.toWide')}
+      onclick={() => (menu.wide = !menu.wide)} />
+    <IconButton icon={ICONS.cross} label={ta('tip.closeEsc')} onclick={onclose} />
   </header>
   <div class="panel-body block-menu-body">
     <ElementMenu wide={menuIsWide()} query={menu.menuQuery} />

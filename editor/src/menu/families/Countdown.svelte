@@ -5,17 +5,17 @@
   import DatePicker from '../../lib/DatePicker.svelte';
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
+  import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
+  /** A fold whose every setting stands in Pinned is left out. */
+  const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
-  const variantOptions = () => [['boxes', ta('opt.countdown.boxes')], ['plain', ta('opt.countdown.plain')]];
 </script>
 
 {#if area === 'content'}
@@ -32,19 +32,13 @@
   <Fold id="countdown-target" defaultOpen title={ta('group.target')} value={selectedBlock.props.target ? selectedBlock.props.target.replace('T', ' ') : ta('common.none')}>{@render countdownTarget()}</Fold>
 {:else if area === 'style'}
   {#snippet countdownLook()}
-    <Setting key="variant">
-      <DesignRow pin="design" />
-    </Setting>
-    <Setting key="showSeconds" shown={ta('common.on')}>
-      <div class="pin-line">
-        <label title={ta('tip.countdown.seconds')} class="gridmenu-snap">
-          <input type="checkbox" checked={selectedBlock.props.showSeconds !== false}
-            onchange={(e) => setBlockProp('showSeconds', e.target.checked)} />
-          {ta('lbl.countdownSeconds')}
-        </label>
-        <Pin id="seconds" />
-      </div>
+    <Setting key="showSeconds" shown={ta('common.on')} pin="seconds">
+      <label title={ta('tip.countdown.seconds')} class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.showSeconds !== false}
+          onchange={(e) => setBlockProp('showSeconds', e.target.checked)} />
+        {ta('lbl.countdownSeconds')}
+      </label>
     </Setting>
   {/snippet}
-  <Fold id="countdown-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'boxes'))?.[1] ?? ''} group={groupOf('countdown-look', { variant: 'boxes', showSeconds: true })}>{@render countdownLook()}</Fold>
+  {#if !pinned.all('seconds')}<Fold id="countdown-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.showSeconds !== false ? ta('common.on') : ta('common.off')} group={groupOf('countdown-look', { showSeconds: true })}>{@render countdownLook()}</Fold>{/if}
 {/if}

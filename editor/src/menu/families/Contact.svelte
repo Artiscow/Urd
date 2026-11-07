@@ -4,14 +4,15 @@
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { CONTACT_PARTS, contactDesign } from '$engine/contact-model.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps } = ed;
-  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  /** The look's own choices, each shown where the design has it. */
+  const CONTACT_LOOK = { band: true, vcard: false, dock: false, askFirst: true };
   let { area } = $props();
 
   const DEFAULT_PARTS = ['name', 'address', 'phone', 'email'];
@@ -50,14 +51,7 @@
     group={groupOf('contact-parts', { parts: DEFAULT_PARTS })}>{@render contactParts()}</Fold>
 {:else if area === 'style'}
   {#snippet contactLook()}
-    <Setting key="design">
-      <DesignRow pin="design" />
-    </Setting>
-    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
-    <Setting key="phoneDesign">
-      <DesignRow phone pin="phoneDesign" />
-    </Setting>
-    <!-- The design's own choice sits directly under it -->
+    <!-- The design's own choices, under the design row the menu draws first in Style -->
     {#if design.band}
       <label class="gridmenu-snap" title={ta('tip.contact.band')}>
         <input type="checkbox" checked={selectedBlock.props.band !== false}
@@ -89,6 +83,6 @@
       {ta('lbl.contactDock')}
     </label>
   {/snippet}
-  <Fold id="contact-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.contact.${design.id}`)}
-    group={groupOf('contact-look', { design: 'lines', phoneDesign: null, band: true, vcard: false, dock: false, askFirst: true })}>{@render contactLook()}</Fold>
+  <Fold id="contact-look" defaultOpen title={ta('group.appearance')} value={groupChanged(CONTACT_LOOK) ? ta('menu.changed', { n: groupChanged(CONTACT_LOOK) }) : ta('menu.standard')}
+    group={groupOf('contact-look', CONTACT_LOOK)}>{@render contactLook()}</Fold>
 {/if}

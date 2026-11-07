@@ -5,13 +5,14 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
+  import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { colorTokens, shapeKinds } from '../options.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
+  /** A fold whose every setting stands in Pinned is left out. */
+  const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setBlockFrame, designWidth, shapePx, setShapeSizePx } = ed;
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
@@ -19,35 +20,26 @@
 </script>
 
 {#if area === 'content'}
-  {#snippet shapeShape()}
-    <DesignRow pin="design" />
-    {#if selectedBlock.props.kind === 'line'}
-      <label title={ta('tip.shape.label')}>{ta('lbl.shapeLabel')}
-        <input value={selectedBlock.props.label ?? ''}
-          onchange={(e) => setBlockProp('label', e.target.value.trim() || undefined)} /></label>
-    {/if}
-  {/snippet}
-  <Fold id="shape-shape" defaultOpen title={ta('blocks.shape')} value={shapeKinds().find(([v]) => v === selectedBlock.props.kind)?.[1] ?? ''}>{@render shapeShape()}</Fold>
+  <!-- The words a line carries; the shape itself is the design, first in Style -->
+  {#if selectedBlock.props.kind === 'line'}
+    <label title={ta('tip.shape.label')}>{ta('lbl.shapeLabel')}
+      <input value={selectedBlock.props.label ?? ''}
+        onchange={(e) => setBlockProp('label', e.target.value.trim() || undefined)} /></label>
+  {/if}
 {:else if area === 'style'}
   {#snippet shapeStroke()}
-    <Setting key="color">
-      <div class="pin-line">
-        <label title={ta('tip.shape.color')}>{ta('lbl.color')}
-          <Dropdown value={selectedBlock.props.color}
-            options={colorTokens()}
-            onchange={(v) => setBlockProp('color', v)} /></label>
-        <Pin id="shapeColor" />
-      </div>
+    <Setting key="color" pin="shapeColor">
+      <label title={ta('tip.shape.color')}>{ta('lbl.color')}
+        <Dropdown value={selectedBlock.props.color}
+          options={colorTokens()}
+          onchange={(v) => setBlockProp('color', v)} /></label>
     </Setting>
     <!-- Thickness draws the line, the arrow and the stroke of an unfilled circle or rectangle; Filled fills a circle or a rectangle (a triangle is always filled) -->
     {#if ['line', 'arrow'].includes(selectedBlock.props.kind) || (['circle', 'rect'].includes(selectedBlock.props.kind) && !selectedBlock.props.fill)}
-      <Setting key="thickness" shown="2">
-        <div class="pin-line">
-          <label title={ta('tip.shape.thickness')}>{ta('lbl.thickness')}
-            <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
-              onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
-          <Pin id="thickness" />
-        </div>
+      <Setting key="thickness" shown="2" pin="thickness">
+        <label title={ta('tip.shape.thickness')}>{ta('lbl.thickness')}
+          <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
+            onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
       </Setting>
     {/if}
     {#if ['circle', 'rect'].includes(selectedBlock.props.kind)}
@@ -80,7 +72,8 @@
     {/if}
   {/snippet}
   {@const lineKind = selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
-  <Fold id="shape-stroke" title={ta('group.strokeFill')} value={`${colorTokens().find(([v]) => v === selectedBlock.props.color)?.[1] ?? ''} · ${selectedBlock.props.thickness ?? 2} px`} group={groupOf('shape-stroke', { color: 'accent', thickness: 2, fill: null })}>{@render shapeStroke()}</Fold>
+  {@const stroked = lineKind || (['circle', 'rect'].includes(selectedBlock.props.kind) && !selectedBlock.props.fill)}
+  {#if !pinned.all('shapeColor', ...(stroked ? ['thickness'] : [])) || ['circle', 'rect'].includes(selectedBlock.props.kind)}<Fold id="shape-stroke" title={ta('group.strokeFill')} value={`${colorTokens().find(([v]) => v === selectedBlock.props.color)?.[1] ?? ''} · ${selectedBlock.props.thickness ?? 2} px`} group={groupOf('shape-stroke', { color: 'accent', thickness: 2, fill: null })}>{@render shapeStroke()}</Fold>{/if}
   {#if lineKind || designWidth()}
     <Fold id="shape-size" title={ta('group.measures')} value={designWidth() ? `${shapePx(selectedBlock.frame.w)} px` : `${selectedBlock.frame.w} %`}>{@render shapeSize()}</Fold>
   {/if}

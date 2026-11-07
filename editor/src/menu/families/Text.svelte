@@ -4,14 +4,16 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
+  import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
   import BoxStyle from '../BoxStyle.svelte';
   import { ta } from '$engine/i18n.js';
   import { fontChoices } from '$engine/fonts.js';
   import { SIZE_MIN, SIZE_MAX, clampSize, matchFontStack } from '$engine/text-typo.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
+  /** A fold whose every setting stands in Pinned is left out. */
+  const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const viewMode = $derived(ed.viewMode);
   const { setBlockProp, setBlockProps, editText, setTextStyle } = ed;
@@ -54,31 +56,26 @@
   {/if}
 {:else if area === 'style'}
   {#snippet textAlign()}
-    <Setting key="align">
-      <div class="pin-line">
-        <label title={ta('tip.text.align')}>{ta('lbl.align')}
-          <Dropdown value={selectedBlock.props.align ?? 'left'}
-            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-            onchange={(v) => setBlockProp('align', v)} /></label>
-        <Pin id="align" />
-      </div>
+    <Setting key="align" pin="align">
+      <label title={ta('tip.text.align')}>{ta('lbl.align')}
+        <Dropdown value={selectedBlock.props.align ?? 'left'}
+          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+          onchange={(v) => setBlockProp('align', v)} /></label>
     </Setting>
   {/snippet}
   {#snippet textBox()}
-    <Setting key="box" shown={ta('common.off')}>
-      <div class="pin-line">
-        <label title={ta('tip.blocks.textBox')} class="gridmenu-snap">
-          <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
-            onchange={(e) => setBlockProp('box', e.target.checked)} />
-          {ta('lbl.textBoxToggle')}
-        </label>
-        <Pin id="textBox" />
-      </div>
+    <Setting key="box" shown={ta('common.off')} pin="textBox">
+      <label title={ta('tip.blocks.textBox')} class="gridmenu-snap">
+        <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
+          onchange={(e) => setBlockProp('box', e.target.checked)} />
+        {ta('lbl.textBoxToggle')}
+      </label>
     </Setting>
     {#if selectedBlock.props.box}
       <BoxStyle />
     {/if}
   {/snippet}
-  <Fold id="text-align" title={ta('lbl.align')} value={{ left: ta('common.left'), center: ta('common.center'), right: ta('common.right') }[selectedBlock.props.align ?? 'left']} group={groupOf('text-align', { align: 'left' })}>{@render textAlign()}</Fold>
-  <Fold id="text-box" title={ta('group.textBox')} value={selectedBlock.props.box ? ta('common.on') : ta('common.off')} group={groupOf('text-box', { box: false, boxStyle: null })}>{@render textBox()}</Fold>
+  {#if !pinned.all('align')}<Fold id="text-align" title={ta('lbl.align')} value={{ left: ta('common.left'), center: ta('common.center'), right: ta('common.right') }[selectedBlock.props.align ?? 'left']} group={groupOf('text-align', { align: 'left' })}>{@render textAlign()}</Fold>{/if}
+  <!-- The box's own style goes with the text box's switch into Pinned -->
+  {#if !pinned.all('textBox')}<Fold id="text-box" title={ta('group.textBox')} value={selectedBlock.props.box ? ta('common.on') : ta('common.off')} group={groupOf('text-box', { box: false, boxStyle: null })}>{@render textBox()}</Fold>{/if}
 {/if}

@@ -6,7 +6,6 @@
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
@@ -15,7 +14,6 @@
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 
-  const variantOptions = () => [['large', ta('opt.quote.large')], ['short', ta('opt.quote.short')]];
   /** The closed Quote group reads the name, else the quote's first words. */
   const quoteValue = $derived.by(() => {
     const name = (selectedBlock.props.attribution ?? '').trim();
@@ -57,9 +55,6 @@
   <Fold id="quote-words" defaultOpen title={ta('group.quote')} value={quoteValue}>{@render quoteWords()}</Fold>
 {:else if area === 'style'}
   {#snippet quoteVariant()}
-    <Setting key="variant">
-      <DesignRow pin="variant" />
-    </Setting>
     {#if selectedBlock.props.variant === 'short'}
       <label title={ta('tip.quote.portrait')} class="ghost filepick">
         {ta('ui.quotePortrait')}
@@ -88,6 +83,8 @@
     </Setting>
   {/snippet}
   {@const colourN = groupChanged({ accent: null })}
-  <Fold id="quote-variant" title={ta('lbl.variant')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'large'))?.[1] ?? ''} group={groupOf('quote-variant', { variant: 'large', card: false, image: '' })}>{@render quoteVariant()}</Fold>
+  <!-- The chosen design's own settings, under the design row: the portrait for the short quote, the card for the large -->
+  {@const variantN = groupChanged({ card: false, image: '' })}
+  <Fold id="quote-variant" title={ta('group.designSettings')} value={variantN ? ta('menu.changed', { n: variantN }) : ta('menu.standard')} group={groupOf('quote-variant', { card: false, image: '' })}>{@render quoteVariant()}</Fold>
   <Fold id="quote-colour" title={ta('lbl.color')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('quote-colour', { accent: null })}>{@render quoteColour()}</Fold>
 {/if}

@@ -6,7 +6,6 @@
   import Dropdown from '../../lib/Dropdown.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
@@ -62,13 +61,10 @@
   <Fold id="table-shape" defaultOpen title={ta('group.rowsColumns')} value={shape} group={groupOf('table-shape', { header: true })}>{@render tableShape()}</Fold>
 {:else if area === 'style'}
   {#snippet tableLines()}
-    <Setting key="lines">
-      <div class="pin-line">
-        <label title={ta('tip.table.lines')}>{ta('lbl.tableLines')}
-          <Dropdown value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
-            onchange={(v) => setBlockProp('lines', v)} /></label>
-        <Pin id="tableLines" />
-      </div>
+    <Setting key="lines" pin="tableLines">
+      <label title={ta('tip.table.lines')}>{ta('lbl.tableLines')}
+        <Dropdown value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
+          onchange={(v) => setBlockProp('lines', v)} /></label>
     </Setting>
     <Setting key="striped" shown={ta('common.off')}>
       <label title={ta('tip.table.striped')} class="gridmenu-snap">

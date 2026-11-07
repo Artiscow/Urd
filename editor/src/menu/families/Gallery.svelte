@@ -8,9 +8,7 @@
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
   import { GRID_VIEWS, MOSAIC_ROW, POLAROID_TILT, galleryView as blockGalleryView } from '$engine/gallery-model.js';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ribbonReaches, ribbonReach } from '../options.js';
   import { ICONS } from '../../lib/icons.js';
@@ -63,13 +61,6 @@
 {:else if area === 'style'}
   {@const gview = blockGalleryView(selectedBlock.props.view)}
   {#snippet galleryView()}
-    <Setting key="view">
-      <DesignRow pin="galleryView" />
-    </Setting>
-    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
-    <Setting key="phoneDesign">
-      <DesignRow phone pin="phoneDesign" />
-    </Setting>
     {#if gview === 'ribbon'}
       <Setting key="width">
         <Choice label={ta('lbl.ribbonWidth')} value={ribbonReach(selectedBlock.props.width)}
@@ -79,13 +70,10 @@
     {/if}
     <!-- The three views that are grids of tiles share the columns and the gap -->
     {#if GRID_VIEWS.includes(gview)}
-      <Setting key="columns" shown="3">
-        <div class="pin-line">
-          <label title={ta('tip.gallery.columns')}>{ta('lbl.columns')}
-            <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
-              onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
-          <Pin id="columns" />
-        </div>
+      <Setting key="columns" shown="3" pin="columns">
+        <label title={ta('tip.gallery.columns')}>{ta('lbl.columns')}
+          <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
+            onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
       </Setting>
       <label title={ta('tip.gallery.gap')}>{ta('lbl.imageGap')}
         <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
@@ -210,7 +198,11 @@
       </label>
     </Setting>
   {/snippet}
-  <Fold id="gallery-view" title={ta('lbl.view')} value={ta(`opt.galleryView.${gview}`)} group={groupOf('gallery-view', { view: 'grid', phoneDesign: null, columns: 3, gap: 12, interval: 5, width: 'canvas', rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined })}>{@render galleryView()}</Fold>
+  <!-- The chosen design's own settings, under the design row; the carousel has none -->
+  {#if gview === 'ribbon' || gview === 'slides' || GRID_VIEWS.includes(gview)}
+    {@const viewDefaults = { columns: 3, gap: 12, interval: 5, width: 'canvas', rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined }}
+    <Fold id="gallery-view" title={ta('group.designSettings')} value={groupChanged(viewDefaults) ? ta('menu.changed', { n: groupChanged(viewDefaults) }) : ta('menu.standard')} group={groupOf('gallery-view', viewDefaults)}>{@render galleryView()}</Fold>
+  {/if}
   {#if gview === 'ribbon'}
     <Fold id="gallery-roll" title={ta('lbl.ribbonMotion')} value={`${selectedBlock.props.speed ?? 60} px/s`} group={groupOf('gallery-roll', { rows: undefined, direction: undefined, speed: undefined, pauseOnHover: undefined, pause: undefined, fade: undefined })}>{@render galleryRoll()}</Fold>
   {/if}

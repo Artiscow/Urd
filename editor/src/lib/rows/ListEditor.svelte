@@ -3,6 +3,7 @@
      `row` draws a row's own fields; `key` gives each row a lasting key, so a row keeps the focus while it moves; `onmove(from, to)` gets the row's index before and after the move. */
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../icons.js';
+  import IconButton from './IconButton.svelte';
   import { rowDropAt, reorderRows } from '../row-drag.js';
   let { items, row, label, key = (item, i) => item?.id ?? i, onmove, onremove = undefined, onadd = undefined, addLabel = '' } = $props();
 
@@ -59,7 +60,7 @@
         ondragend={() => { drag = null; drop = null; }}>{@html GRIP}</span>
       <div class="row-list-body">{@render row(item, i)}</div>
       {#if onremove}
-        <button type="button" class="ghost row-tool" title={ta('ui.remove')} aria-label={ta('ui.remove')} onclick={() => onremove(i)}>{@html ICONS.cross}</button>
+        <IconButton icon={ICONS.cross} label={ta('ui.remove')} onclick={() => onremove(i)} />
       {/if}
     </div>
     {#if drag !== null && drop?.id === String(i) && drop.pos === 'after'}{@render ghost()}{/if}

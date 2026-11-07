@@ -41,7 +41,7 @@ function patternNames(pattern, out) {
   walk(pattern, (n) => { if (n.type === 'Identifier') out.add(n.name); });
 }
 
-/** The names a file brings in or declares: its imports, its top-level declarations and its snippets. */
+/** The names a file brings in or declares: its imports, its top-level declarations, its snippets, and the names its each blocks and {@const} tags bind (a component drawn from a list's item, `<item.below />`). */
 function declared(root) {
   const names = new Set();
   for (const script of [root.instance, root.module]) {
@@ -52,7 +52,11 @@ function declared(root) {
       else if ((n.type === 'FunctionDeclaration' || n.type === 'ClassDeclaration') && n.id) names.add(n.id.name);
     });
   }
-  walk(root.fragment, (n) => { if (n.type === 'SnippetBlock') names.add(n.expression.name); });
+  walk(root.fragment, (n) => {
+    if (n.type === 'SnippetBlock') names.add(n.expression.name);
+    else if (n.type === 'EachBlock' && n.context) patternNames(n.context, names);
+    else if (n.type === 'VariableDeclarator') patternNames(n.id, names);
+  });
   return names;
 }
 
@@ -73,12 +77,12 @@ test('every component tag and directive function in editor/src is imported or de
   assert.deepEqual([...new Set(problems)], []);
 });
 
-test('the check sees a component tag and an out transition without an import', () => {
-  const root = parse('<script>\n  let open = true;\n</script>\n{#if open}<Dropdown out:fly />{/if}', { modern: true });
+test('the check sees a component tag and an out transition without an import, and takes a component from a list\'s item as declared', () => {
+  const root = parse('<script>\n  let open = true;\n  let rows = [];\n</script>\n{#if open}<Dropdown out:fly />{/if}{#each rows as row}<row.below />{/each}', { modern: true });
   const have = declared(root);
   const missing = [];
   walk(root.fragment, (n) => {
-    if (n.type === 'Component' && !have.has(n.name)) missing.push(n.name);
+    if (n.type === 'Component' && !have.has(n.name.split('.')[0])) missing.push(n.name);
     if (n.type === 'TransitionDirective' && !have.has(n.name)) missing.push(n.name);
   });
   assert.deepEqual(missing, ['Dropdown', 'fly']);

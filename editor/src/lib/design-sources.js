@@ -131,7 +131,7 @@ function openPreviewCard(win, block, watch, tries) {
 }
 
 /**
- * A block's designs as the picker, the menu's design row and its quick tile read them: the core catalogue's (block-designs.js), or a plugin block's (the design contract, pluginBlockDesigns in plugins.js, posted by the preview with its words resolved), or null for a block without designs.
+ * A block's designs as the picker, the menu's design row and its row in Pinned read them: the core catalogue's (block-designs.js), or a plugin block's (the design contract, pluginBlockDesigns in plugins.js, posted by the preview with its words resolved), or null for a block without designs.
  * @param {string} type
  * @param {Array<object>} [pluginBlocks] the plugin blocks the preview reported
  */

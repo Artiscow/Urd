@@ -105,7 +105,7 @@ Urd.blocks.define('venue', {
 
 The engine resolves the label keys before they are sent to the admin, so use a `labelKey` from the plugin's own dictionary. A field can also have a help text, `hintKey` (or `hint`), shown as the field's «?» tooltip; without it the tooltip shows the field's label. Without `fields`, Properties shows a «Settings …» button that opens the plugin's own config panel in the preview (the reference plugins calendar and form showed that pattern up to and including v0.7.3; it suits settings that are more than a flat list of fields, such as a list of sources). The contract is described in [docs/SCHEMA.md](../../docs/SCHEMA.md#plugins).
 
-**Designs (the design contract)**: if your block has several looks, declare them as `designs` on the block definition. The menu then gets the same Design row, quick tile and design picker as the core's blocks, with a picture and a live preview of the owner's own block in each design:
+**Designs (the design contract)**: if your block has several looks, declare them as `designs` on the block definition. The menu then gets the same Design row (first in Style, with its pin for Pinned) and design picker as the core's blocks, with a picture and a live preview of the owner's own block in each design:
 
 ```js
 Urd.blocks.define('venue', {

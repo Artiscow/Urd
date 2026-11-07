@@ -133,8 +133,8 @@ The source marks, the ID scheme and the status words are explained in [README.md
 - **Mobile.** A synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)), hide on mobile, and a mobile review for sections with overrides, Urd's counterpart to Wix Studio's responsive scanner.
 - **Preview.** Two devices, the Screen (the window, four common sizes, five ratios or an own size) and the Phone (five sizes, the width alone, five ratios or an own size), any width dragged at the edge, and Clean view.
 - **The editor.**
-  - 12 panels, with Content, Style and Placement tabs ([ADR-0016](../adr/0016-panel-language.md)).
-  - An element menu with search, groups in every block, a quick row with pins, marks on own values with a reset per setting, keys 1, 2 and 3 for its areas and / for its search, placed beside the block and dragged by its head.
+  - 12 panels, and an element menu in Content, Style and Placement areas ([ADR-0016](../adr/0016-panel-language.md)).
+  - An element menu with search, groups in every block, Pinned rows at the top (a pinned setting stands there instead of in its area), the block's designs first in Style, marks on own values with a reset per setting, keys 1, 2 and 3 for its areas and / for its search, placed beside the block and dragged by its head.
   - «/» opens the block menu on the canvas.
   - «Save as template» and «Change layout».
 - **The theme.**
@@ -1964,7 +1964,7 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Content and style tabs | EL, TI, WF, WT, WP, BR, SQ | Separate panels or tabs with shortcuts | Has: Content/Style tabs | - |
+| Content and style tabs | EL, TI, WF, WT, WP, BR, SQ | Separate panels or tabs with shortcuts | Has: Content, Style and Placement areas, reached with the keys 1, 2 and 3 | - |
 | Flexbox layout controls | EL, DV, BR, WS, DU, FR, FS, WT | Direction, align, wrap, gap; stacks or auto layout | n/a: free placement | - |
 | CSS Grid editor | BR, DV, EL, WS, DU, WT, OX, FR | Visual tracks, fr, spans, placement, masonry or bento | n/a: free placement | - |
 | Spacing with linked sides or presets | WP, WF, WT, OX, BR | Link toggle; Shift/⌘-drag; preset slider; Apply All / Opposite | n/a: free placement | - |

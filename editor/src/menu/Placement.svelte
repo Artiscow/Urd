@@ -4,17 +4,23 @@
   import { getContext } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import Fold from '../lib/rows/Fold.svelte';
-  import Pin from './Pin.svelte';
+  import Setting from '../lib/rows/Setting.svelte';
+  import SliderRow from '../lib/rows/SliderRow.svelte';
+  import IconButton from '../lib/rows/IconButton.svelte';
+  import FitMin from './FitMin.svelte';
+  import { pinnedNow } from './pinned.js';
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, FOLLOWS_CONTENT, SIZE, SIZE_BY_FRAME, SIZE_TEXT, baseTextPx, blockSize, sizeBounds, sizeRange } from '$engine/push-model.js';
   import { DOCK_OPTIONS } from './options.js';
   import AnchorField from '../lib/AnchorField.svelte';
   import { blockWords } from '$engine/anchor-model.js';
   const ed = getContext('urd-editor');
+  /** Which settings stand in Pinned now: what belongs to one of them goes with it. */
+  const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const viewMode = $derived(ed.viewMode);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockFitMin, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions, designWidth, handleMobileReset } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions, designWidth, handleMobileReset } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** What a closed group shows: how the block fits a narrower screen, and its motion. */
@@ -46,13 +52,11 @@
 
 {#snippet menuSize()}
   <!-- The block's size (ADR-0025 decision 6): the whole block, text included, drawn smaller or larger; no drag changes it, and the slider ends where the base text meets a bound the owner set -->
-  <div class="ctl-row" title={ta('tip.scale')}>
-    <span class="mini-label">{ta('lbl.scale')}</span>
-    <input type="range" min={Math.round(sizeRange(selectedBlock).min * 100)} max={Math.round(sizeRange(selectedBlock).max * 100)} step={Math.round(SIZE.step * 100)} value={Math.round(blockSize(selectedBlock) * 100)}
-      aria-label={ta('lbl.scale')} oninput={(e) => setBlockSize(e.target.valueAsNumber / 100)} onchange={ed.endSizeGesture} />
-    <span class="gridmenu-value">{Math.round(blockSize(selectedBlock) * 100)} %</span>
-    <Pin id="size" />
-  </div>
+  <Setting pin="size">
+    <SliderRow label={ta('lbl.scale')} title={ta('tip.scale')} min={Math.round(sizeRange(selectedBlock).min * 100)} max={Math.round(sizeRange(selectedBlock).max * 100)} step={Math.round(SIZE.step * 100)}
+      value={Math.round(blockSize(selectedBlock) * 100)} shown={`${Math.round(blockSize(selectedBlock) * 100)} %`}
+      oninput={(v) => setBlockSize(v / 100)} onchange={ed.endSizeGesture} />
+  </Setting>
   {#if blockSize(selectedBlock) !== 1}
     <!-- The bounds the owner may give the base text, where the slider then ends, shown only while a size is set, side by side so the menu keeps its height; empty, each shows the base text's size now -->
     <div class="frame-grid">
@@ -65,24 +69,16 @@
 {/snippet}
 {#snippet menuFit()}
   <!-- Below the design width: block-level on every block (ADR-0024); the content wraps, shrinks in proportion, or shrinks as little as it can and wraps, or the frame keeps a floor -->
-  <div class="pin-line">
+  <Setting pin="fit">
     <label title={ta('tip.fit')}>{ta('lbl.fit')}
       <Dropdown value={selectedBlock.fit ?? 'wrap'}
         options={FIT_BY_WIDTH.has(selectedBlock.type)
           ? [['wrap', ta('opt.fit.fluid')], ['shrink', ta('opt.fit.floor')]]
           : [['wrap', ta('opt.fit.wrap')], ...(designWidth() || selectedBlock.fit === 'shrink' ? [['shrink', ta('opt.fit.shrink')]] : []), ['both', ta('opt.fit.both')]]}
         onchange={(v) => setBlockFit(v)} /></label>
-    <Pin id="fit" />
-  </div>
-  {#if selectedBlock.fit}
-    <div class="ctl-row" title={ta('tip.fitMin')}>
-      <span class="mini-label">{ta('lbl.fitMin')}</span>
-      <input type="range" min="1" max="100" step="1"
-        value={Math.round((selectedBlock.fitMin ?? 0.6) * 100)}
-        oninput={(e) => setBlockFitMin(e.target.valueAsNumber / 100)} />
-      <span class="gridmenu-value">{Math.round((selectedBlock.fitMin ?? 0.6) * 100)} %</span>
-    </div>
-  {/if}
+  </Setting>
+  <!-- What belongs to the narrow-screen choice goes with it into Pinned -->
+  {#if !pinned.has('fit')}<FitMin />{/if}
 {/snippet}
 {#snippet menuMotion()}
   <label class="field-stack" title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
@@ -167,16 +163,16 @@
         </div>
       {:else}
         <!-- The phone: a block flows in the reading order as on desktop, or holds its own place in the row grid (ADR-0019) -->
-        {@const pinned = selectedBlock.mobileRow !== null}
-        <div class="setting" class:own={pinned}>
+        {@const held = selectedBlock.mobileRow !== null}
+        <div class="setting" class:own={held}>
           <i class="setting-dot" aria-hidden="true"></i>
           <div class="setting-body">
             <span class="mini-label">{ta('lbl.phonePlacement')}</span>
-            <span class="setting-source">{pinned ? ta('menu.phoneRow', { n: selectedBlock.mobileRow + 1 }) : ta('menu.followsDesktop', { v: ta('menu.phoneFlow') })}</span>
+            <span class="setting-source">{held ? ta('menu.phoneRow', { n: selectedBlock.mobileRow + 1 }) : ta('menu.followsDesktop', { v: ta('menu.phoneFlow') })}</span>
           </div>
-          {#if pinned}
-            <button type="button" class="setting-reset" title={ta('menu.resetPhone')} aria-label={ta('menu.resetPhone')}
-              onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })}>{@html RESET_ICON}</button>
+          {#if held}
+            <IconButton size="sm" quiet class="setting-reset" icon={RESET_ICON} label={ta('menu.resetPhone')}
+              onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
           {/if}
         </div>
       {/if}
@@ -207,14 +203,13 @@
   {@render menuSize()}
 {/if}
 {@render menuFit()}
-<div class="pin-line">
+<Setting pin="phone">
   <label class="gridmenu-snap" title={ta('tip.hideMobile')}>
     <input type="checkbox" checked={selectedBlock.hideMobile}
       onchange={(e) => setBlockHideMobile(e.target.checked)} />
     {ta('lbl.hideMobile')}
   </label>
-  <Pin id="phone" />
-</div>
+</Setting>
 {@render menuSticky()}
 {#snippet menuTarget()}
   <!-- The block's name for links, typed or suggested from its own words -->

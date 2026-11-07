@@ -6,7 +6,6 @@
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import Pin from '../Pin.svelte';
   import Choice from '../../lib/Choice.svelte';
   import { ta } from '$engine/i18n.js';
   import { paymentsOf, anyProvider, currencyWord, CARD_PROVIDERS } from '$engine/shop.js';
@@ -58,28 +57,26 @@
   {/snippet}
   {#snippet checkoutPayment()}
     <!-- The payments are one prop, so the group's own mark and reset stand for them -->
-    <div class="pin-line">
+    <Setting pin="vippsButton">
       <label class="gridmenu-snap" title={ta('tip.checkout.vippsCheckout')}>
         <input type="checkbox" checked={pays.vipps}
           onchange={(e) => setPay({ vipps: e.target.checked })} />
         {ta('lbl.vippsCheckout')}
       </label>
-      <Pin id="vippsButton" />
-    </div>
+    </Setting>
     <Choice label={ta('lbl.payCard')} value={pays.card} title={ta('tip.checkout.payCard')}
       options={cardOptions} onchange={(v) => setPay({ card: v })} />
     {#if captureShown}
       <Choice label={ta('lbl.payCapture')} value={pays.capture} title={ta('tip.checkout.payCapture')}
         options={[['ship', ta('opt.payCapture.ship')], ['now', ta('opt.payCapture.now')]]} onchange={(v) => setPay({ capture: v })} />
     {/if}
-    <div class="pin-line">
+    <Setting pin="paypalButton">
       <label class="gridmenu-snap" title={ta('tip.checkout.payPaypal')}>
         <input type="checkbox" checked={pays.paypal}
           onchange={(e) => setPay({ paypal: e.target.checked })} />
         {ta('lbl.payPaypal')}
       </label>
-      <Pin id="paypalButton" />
-    </div>
+    </Setting>
     {#if providerOn}
       <button type="button" class="ghost action" title={ta('tip.testPayment')} onclick={ed.testPayment}>{ta('ui.testPayment')}</button>
     {/if}

@@ -702,7 +702,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    padding: 0.55rem 0.8rem;
+    padding: 0.45rem 0.8rem;
     font-weight: 600;
     font-size: 0.85rem;
     border-bottom: 1px solid rgb(255 255 255 / 12%);
@@ -723,16 +723,16 @@
     opacity: 0.6;
   }
 
-  /* Wide: as wide as its columns, an area without settings taking none */
+  /* Wide: room for two columns of settings (MENU_WIDE_W in menu/state.svelte.js) */
   .block-menu.wide {
-    --menu-w: min(740px, 100vw - var(--menu-min, 8px) - 8px);
-    width: fit-content;
-    max-width: var(--menu-w);
+    --menu-w: min(660px, 100vw - var(--menu-min, 8px) - 8px);
   }
 
   .block-menu-head .menu-width {
     margin-left: auto;
   }
+
+
 
   /* The title gives way to the search field where the head is narrow */
   .block-menu-title {
@@ -771,7 +771,7 @@
     width: 100%;
     min-width: 6rem;
     box-sizing: border-box;
-    height: 1.9rem;
+    height: 2.2rem;
     padding: 0 1.5em 0 0.6em;
     font: inherit;
     font-size: 0.82rem;
@@ -785,10 +785,6 @@
   .panel-body > .menu-search-wrap {
     display: flex;
     max-width: none;
-  }
-
-  .panel-body > .menu-search-wrap .menu-search {
-    height: 2.2rem;
   }
 
   /* The search's copy of the areas: what does not match is left out, an area
@@ -808,18 +804,9 @@
     display: block;
   }
 
-  .emenu-cols.stacked {
-    grid-auto-flow: row;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  /* Wide: Content, Style and Placement side by side, each column scrolling with the menu.
-     Two areas take 280px each, so a label stands on one line beside its toggle; three share the wide menu's width. */
   .emenu-cols {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 280px);
-    grid-template-columns: none;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.6rem;
     align-items: start;
   }
@@ -834,7 +821,41 @@
     border-radius: 10px;
   }
 
-  .emenu-col:not(:has(> :not(.panel-strong, .emenu-none))) {
+  /* Wide: Content, Style and Placement pour through two columns as a newspaper's text does (0.7.30.3).
+     A group or a row never splits between the columns, a heading keeps to the start of its area, and the areas lie on the menu's own surface. */
+  .emenu-cols.emenu-flow {
+    display: block;
+    columns: 2;
+    column-gap: 1.1rem;
+  }
+
+  .emenu-flow > .emenu-col {
+    display: block;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+  }
+
+  .emenu-flow > .emenu-col > * {
+    break-inside: avoid;
+  }
+
+  .emenu-flow > .emenu-col > * + * {
+    margin-top: 0.5rem;
+  }
+
+  .emenu-flow > .emenu-col + .emenu-col {
+    margin-top: 1rem;
+  }
+
+  .emenu-flow > .emenu-col > :is(.emenu-head, .emenu-title) {
+    break-after: avoid;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  /* An area with nothing in it but its heading is not drawn: no empty column, no empty heading */
+  .emenu-cols > .emenu-col:not(:has(> :not(.panel-strong, .emenu-none, .emenu-head))) {
     display: none;
   }
 
@@ -870,44 +891,45 @@
     border-radius: 50%;
   }
 
-  /* The quick row: a tile per setting, the label over its control, in columns of at least 168px, so a segment of three choices fits its tile: two tiles to a row in the narrow menu, three or four in the wide one.
-     The controls of a row line up at the bottom. */
-  .menu-quick {
+  /* Pinned (0.7.30.3): the settings used most, over the areas, as the rows they are in their areas, each with its pin.
+     Wide, they run down two columns as the areas below do, so a short row leaves no gap beside a tall one; narrow, they stand under each other.
+     A rule under them sets them apart from the areas. */
+  .emenu-pinned {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(168px, 100%), 1fr));
-    gap: 0.5rem;
-    padding-bottom: 0.6rem;
+    gap: 0.45rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.8rem;
     border-bottom: 1px solid rgb(255 255 255 / 12%);
   }
 
-  .menu-quick-item {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 0.3rem;
-    min-width: 0;
-    padding: 0.45rem 0.5rem;
-    background: rgb(0 0 0 / 18%);
-    border: 1px solid rgb(255 255 255 / 12%);
-    border-radius: 8px;
+  .emenu-pinned-rows {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
   }
 
-  .menu-quick-item .seg {
-    display: flex;
+  .emenu-root:not(.narrow) .emenu-pinned-rows {
+    display: block;
+    columns: 2;
+    column-gap: 1.1rem;
   }
 
-  /* A tile's label with the pin that takes it out of the row */
-  .menu-quick-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.25rem;
+  .emenu-root:not(.narrow) .emenu-pinned-rows > * {
+    break-inside: avoid;
+  }
+
+  /* A pinned row with what belongs to it under it (the smallest scale under the narrow screen, a box's style under the text box) */
+  .emenu-pinned-item {
+    display: grid;
+    gap: 0.5rem;
     min-width: 0;
   }
 
-  .menu-quick-reset {
-    grid-column: 1 / -1;
-    justify-self: start;
+  .emenu-root:not(.narrow) .emenu-pinned-rows > * + * {
+    margin-top: 0.5rem;
+  }
+
+  .menu-pinned-reset {
     font-size: 0.75rem;
   }
 
@@ -973,39 +995,11 @@
     color: var(--urd-color-accent);
   }
 
-  /* Narrow: the quick tiles as small cards with the whole words on segments the
-     height of a field; a tile of three choices takes the whole row, the others
-     stand two to a row and pack upward into the room a wide tile leaves, so no
-     half row stands empty. The row's own rule goes: the heading under it draws the line. */
-  .emenu-root.narrow .menu-quick {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-flow: dense;
-    border-bottom: 0;
-    padding-bottom: 0.3rem;
-  }
-
-  .emenu-root.narrow .menu-quick-item:has(.seg > button:nth-child(3)) {
-    grid-column: 1 / -1;
-  }
-
-  .emenu-root.narrow .menu-quick-item {
-    padding: 0.6rem 0.65rem;
-    gap: 0.4rem;
-  }
-
-  .emenu-root.narrow .menu-quick-head .mini-label {
+  .emenu-root.narrow .emenu-pinned .panel-strong {
     font-size: 11px;
-  }
-
-  .emenu-root.narrow .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
-    padding: 7px 6px;
-    font-size: 13px;
-  }
-
-  .emenu-root.narrow .menu-quick-item input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
-  .emenu-root.narrow .menu-quick-open {
-    padding: 7px 10px;
-    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--urd-color-accent);
   }
 
   .help-chip {
@@ -1026,7 +1020,7 @@
     opacity: 1;
   }
 
-  /* A setting that can stand in the quick row, with its pin at the end */
+  /* A setting that can stand in Pinned, with its pin at the end */
   .pin-line {
     position: relative;
     display: flex;
@@ -1049,7 +1043,8 @@
   /* Any other pinnable setting stands as its words over its control, with the pin at the end of the words' line, so the control keeps the row's full width and ends where the rows around it end */
   .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .pin-line > .field-stack:has(+ .menu-pin),
-  .pin-line > .choice:has(+ .menu-pin) {
+  .pin-line > .choice:has(+ .menu-pin),
+  .pin-line > .row-slider:has(+ .menu-pin) {
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
@@ -1058,19 +1053,23 @@
 
   .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin) > :last-child,
   .pin-line > .field-stack:has(+ .menu-pin) > :last-child,
-  .pin-line > .choice:has(+ .menu-pin) > :last-child {
+  .pin-line > .choice:has(+ .menu-pin) > :last-child,
+  .pin-line > .row-slider:has(+ .menu-pin) > :last-child {
     flex: none;
     box-sizing: border-box;
     width: calc(100% + 30px);
     max-width: none;
   }
 
+  /* The pin keeps inside its row's box, lifted to the words' line by a transform, which moves only what is drawn: a box reaching above its row would keep the two-column flow from balancing its columns */
   .pin-line > label:not(.gridmenu-snap) + .menu-pin,
   .pin-line > .field-stack + .menu-pin,
-  .pin-line > .choice + .menu-pin {
+  .pin-line > .choice + .menu-pin,
+  .pin-line > .row-slider + .menu-pin {
     position: absolute;
-    top: -4px;
+    top: 0;
     right: 0;
+    transform: translateY(-4px);
   }
 
   /* A row that opens a picker keeps its pin inside its own border, at its end */
@@ -1098,66 +1097,10 @@
     min-width: 0;
   }
 
-  /* The pin itself: the icon alone on a square the size of a small target,
-     quiet until the pointer or the keyboard reaches it, and in the accent
-     while its setting stands in the row */
-  .menu-pin {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    color: inherit;
-    background: transparent;
-    border: 0;
-    border-radius: 6px;
-    opacity: 0.4;
-    cursor: pointer;
-  }
-
-  .menu-pin:hover,
-  .menu-pin:focus-visible {
-    opacity: 1;
-    background: rgb(255 255 255 / 8%);
-  }
-
-  .menu-pin:focus-visible {
-    outline: 2px solid var(--urd-color-accent, #7c5cff);
-    outline-offset: 1px;
-  }
-
-  .menu-pin.on {
+  /* The pin itself is the kit's small quiet icon button (Pin.svelte), in the accent while its setting stands in Pinned */
+  .icon-btn.menu-pin.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     color: var(--urd-color-accent, #7c5cff);
     opacity: 1;
-  }
-
-  .menu-quick-item .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
-    flex: 1;
-    padding: 4px 6px;
-    font-size: 0.75rem;
-  }
-
-  .menu-quick-item input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
-  .menu-quick-open {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 4px 8px;
-    font: inherit;
-    color: inherit;
-    text-align: left;
-    background: rgb(255 255 255 / 6%);
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 6px;
-  }
-
-  /* A block, not the flex box a button is: the ellipsis needs one, and the words start at the left */
-  .menu-quick-open {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: pointer;
   }
 
   /* A row that opens something over the menu: looks like a closed group */
@@ -1241,31 +1184,9 @@
     opacity: 0.6;
   }
 
+  /* The reset is the kit's small quiet icon button, level with the first line of its setting */
   .setting-reset {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
     margin-top: 0.55rem;
-    padding: 0;
-    color: inherit;
-    background: transparent;
-    border: 0;
-    border-radius: 6px;
-    opacity: 0.6;
-    cursor: pointer;
-  }
-
-  .setting-reset:hover,
-  .setting-reset:focus-visible {
-    opacity: 1;
-    background: rgb(255 255 255 / 8%);
-  }
-
-  .setting-reset:focus-visible {
-    outline: 2px solid var(--urd-color-accent, #7c5cff);
-    outline-offset: 1px;
   }
 
   .menu-group-reset {
@@ -1274,18 +1195,18 @@
   }
 
   /* In the element menu a label stands over its control, in the wide columns and the narrow menu alike, so a control keeps the row's width */
-  .emenu-col label:not(.gridmenu-snap):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
+  :is(.emenu-col, .emenu-pinned) label:not(.gridmenu-snap):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
   }
 
-  .panel-body .emenu-col label:not(.gridmenu-snap) > * {
+  .panel-body :is(.emenu-col, .emenu-pinned) label:not(.gridmenu-snap) > * {
     flex: none;
   }
 
   /* A colour stands as its words and its swatch on one line, as a switch does: the swatch needs no row of its own */
-  .emenu-col label:not(.gridmenu-snap):has(> .cp):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
+  :is(.emenu-col, .emenu-pinned) label:not(.gridmenu-snap):has(> .cp):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -2699,6 +2620,60 @@
     border-color: rgb(224 82 82 / 50%);
   }
   .ghost.coll-btn.coll-danger:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(224 82 82 / 14%); }
+
+  /* The row kit's icon button (lib/rows/IconButton.svelte): a square of the control height with the icon in its middle, so it lines up with the field beside it.
+     Small, it is the square of a tool inside a row; quiet, it has no frame and stays faint until reached. */
+  .icon-btn:is(.ghost, .quiet):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body .icon-btn:is(.ghost, .quiet):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    flex: none;
+    display: inline-grid;
+    place-content: center;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    min-height: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
+  .icon-btn.sm:is(.ghost, .quiet):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body .icon-btn.sm:is(.ghost, .quiet):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 6px;
+  }
+
+  .icon-btn.quiet:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: inherit;
+    background: transparent;
+    border: 0;
+    opacity: 0.55;
+  }
+
+  .icon-btn.quiet:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .icon-btn.quiet:focus-visible:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    opacity: 1;
+    background: rgb(255 255 255 / 8%);
+  }
+
+  .icon-btn.quiet:focus-visible:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: 1px;
+  }
+
+  .icon-btn svg {
+    display: block;
+  }
+
+  .icon-btn.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: #f08a8a;
+    border-color: rgb(224 82 82 / 50%);
+  }
+
+  .icon-btn.danger:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    background: rgb(224 82 82 / 14%);
+  }
 
   /* Row buttons (arrows/cross): fixed square width and centered glyph,
      follows the field's height - not the block buttons' min height or the

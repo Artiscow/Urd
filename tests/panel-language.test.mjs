@@ -4,7 +4,8 @@
  * Outside the kit this test finds the hand-made rows the kit replaces: a raw segment (`.seg`, where lib/Choice.svelte
  * is the kit's), a plain fold (`<details class="group">`, where lib/rows/Fold.svelte is), a raw slider, a checkbox in
  * a label (on and off, which lib/rows/SwitchRow.svelte draws), prose in a panel (`.panel-hint`, where the empty state
- * and the error line stand), and the old sub-heading classes (`.group-sub`, `.panel-strong`).
+ * and the error line stand), the old sub-heading classes (`.group-sub`, `.panel-strong`), and a square icon button
+ * drawn by hand (`.row-tool`, `.coll-btn`, a setting's reset or pin, where lib/rows/IconButton.svelte gives every one the same sizes).
  * The files not yet moved stand on RATCHET with what each still holds. The list only shrinks: a file that no longer
  * holds a pattern fails the test until the pattern leaves its entry, and a new file is built from the kit.
  * The files are read through Svelte's own parser, so the markup is walked as a tree, never scanned as text.
@@ -61,6 +62,7 @@ function patternsIn(source) {
       if (node.name === 'input' && attr(node, 'type') === 'checkbox' && parent?.name === 'label') found.add('switch');
       if (cls.has('panel-hint')) found.add('hint');
       if (cls.has('group-sub') || cls.has('panel-strong')) found.add('subheading');
+      if (node.name === 'button' && (cls.has('row-tool') || cls.has('coll-btn') || cls.has('setting-reset') || cls.has('menu-pin'))) found.add('iconbutton');
       next = node;
     } else if (node.type === 'Component' || node.type === 'SvelteElement') {
       next = node;
@@ -96,58 +98,68 @@ function findings() {
 /** The files not yet moved to the row kit, by the step of 0.7.30 (BACKLOG) that moves them, with the patterns each still holds. */
 const RATCHET = {
   // 0.7.30.3, the element menu's frame
-  'menu/ElementMenu.svelte': ['segment', 'subheading'],
+  'menu/ElementMenu.svelte': ['subheading'],
   'menu/MenuArea.svelte': ['subheading'],
-  'menu/Placement.svelte': ['slider', 'switch'],
+  'menu/Placement.svelte': ['switch'],
   // 0.7.30.4 and 0.7.30.5, the blocks' menus
   'menu/BoxStyle.svelte': ['switch'],
   'menu/DocLook.svelte': ['switch'],
   'menu/families/Audio.svelte': ['switch'],
-  'menu/families/Calendar.svelte': ['slider', 'switch'],
+  'menu/families/Calendar.svelte': ['iconbutton', 'slider', 'switch'],
   'menu/families/Checkout.svelte': ['switch'],
   'menu/families/Collection.svelte': ['switch'],
   'menu/families/Contact.svelte': ['switch'],
   'menu/families/Countdown.svelte': ['switch'],
-  'menu/families/Faq.svelte': ['switch'],
+  'menu/families/Faq.svelte': ['iconbutton', 'switch'],
   'menu/families/Fields.svelte': ['hint', 'switch'],
-  'menu/families/Form.svelte': ['switch'],
-  'menu/families/Gallery.svelte': ['slider', 'switch'],
+  'menu/families/Form.svelte': ['iconbutton', 'switch'],
+  'menu/families/Gallery.svelte': ['iconbutton', 'slider', 'switch'],
   'menu/families/Image.svelte': ['switch'],
   'menu/families/Privacy.svelte': ['switch'],
   'menu/families/Quote.svelte': ['switch'],
-  'menu/families/Ribbon.svelte': ['slider', 'switch'],
+  'menu/families/Ribbon.svelte': ['iconbutton', 'slider', 'switch'],
+  'menu/families/RibbonMotion.svelte': ['slider', 'switch'],
   'menu/families/Shape.svelte': ['switch'],
   'menu/families/Share.svelte': ['switch'],
   'menu/families/Stats.svelte': ['switch'],
   'menu/families/Table.svelte': ['switch'],
   'menu/families/Text.svelte': ['switch'],
+  'menu/families/Timeline.svelte': ['iconbutton'],
   'menu/families/Video.svelte': ['switch'],
   // 0.7.30.6, the section's settings
   'panels/PropertiesPanel.svelte': ['hint', 'slider', 'subheading', 'switch'],
-  'section/BackgroundEditor.svelte': ['slider', 'switch'],
+  'section/BackgroundEditor.svelte': ['iconbutton', 'slider', 'switch'],
   // 0.7.30.8, the Site, Theme, Legal and Footer panels
-  'panels/SitePanel.svelte': ['fold', 'hint', 'segment', 'slider', 'subheading', 'switch'],
+  'panels/SitePanel.svelte': ['fold', 'hint', 'iconbutton', 'segment', 'slider', 'subheading', 'switch'],
   'panels/ThemePanel.svelte': ['fold', 'segment', 'slider', 'subheading', 'switch'],
-  'panels/LegalPanel.svelte': ['fold'],
-  'panels/legal/ContactFields.svelte': ['hint', 'subheading', 'switch'],
-  'panels/FooterPanel.svelte': ['fold', 'slider', 'subheading', 'switch'],
+  'panels/LegalPanel.svelte': ['fold', 'iconbutton'],
+  'panels/legal/ContactFields.svelte': ['hint', 'iconbutton', 'subheading', 'switch'],
+  'panels/FooterPanel.svelte': ['fold', 'iconbutton', 'slider', 'subheading', 'switch'],
   // 0.7.30.9, the Nav panel
-  'panels/NavPanel.svelte': ['fold', 'segment', 'slider', 'subheading', 'switch'],
+  'panels/NavPanel.svelte': ['fold', 'iconbutton', 'segment', 'slider', 'subheading', 'switch'],
   // 0.7.30.10, the other panels and the dialogs
   'panels/BlocksPanel.svelte': ['fold', 'hint', 'subheading'],
+  'panels/CollectionsPanel.svelte': ['iconbutton'],
+  'panels/PagesPanel.svelte': ['iconbutton'],
   'panels/HistoryPanel.svelte': ['hint'],
-  'panels/PluginsPanel.svelte': ['hint', 'subheading', 'switch'],
+  'panels/PluginsPanel.svelte': ['hint', 'iconbutton', 'subheading', 'switch'],
   'panels/UpdatePanel.svelte': ['fold', 'hint', 'subheading'],
   'panels/collections/CollectionList.svelte': ['hint', 'subheading'],
-  'panels/collections/CollectionsTable.svelte': ['hint'],
-  'panels/collections/EntryFields.svelte': ['switch'],
+  'panels/collections/CollectionMenu.svelte': ['iconbutton'],
+  'panels/collections/CollectionsTable.svelte': ['hint', 'iconbutton'],
+  'panels/collections/EntryFields.svelte': ['iconbutton', 'switch'],
   'panels/collections/EntryList.svelte': ['hint'],
   'panels/collections/ImportChoices.svelte': ['segment'],
-  'panels/pages/PageSettingsFields.svelte': ['fold', 'switch'],
+  'panels/collections/ImportStep.svelte': ['iconbutton'],
+  'panels/pages/PageSettingsFields.svelte': ['fold', 'iconbutton', 'switch'],
+  'panels/pages/PageSettingsStep.svelte': ['iconbutton'],
+  'panels/pages/PageSettingsTable.svelte': ['iconbutton'],
   'lib/AnchorField.svelte': ['hint'],
+  'lib/LinkList.svelte': ['iconbutton'],
   'lib/LinkDialog.svelte': ['switch'],
   'shell/ConfirmDialog.svelte': ['hint'],
   'shell/PanelNav.svelte': ['segment'],
+  'shell/RedirectsDialog.svelte': ['iconbutton'],
   'shell/SetupWizard.svelte': ['hint'],
   // 0.7.33.5, the Urd settings window
   'settings/SettingControl.svelte': ['segment'],

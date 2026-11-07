@@ -7,7 +7,6 @@
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -16,7 +15,6 @@
   const { mutateBlock, setBlockProp, setBlockProps, themeSwatches } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
-  const variantOptions = () => [['left', ta('opt.timeline.left')], ['alternating', ta('opt.timeline.alternating')]];
 
   /* The timeline block: the event list is edited here; the texts also directly in the preview. */
 
@@ -69,9 +67,6 @@
   <Fold id="tl-events" defaultOpen title={ta('lbl.timelineItems')} value={String(selectedBlock.props.items?.length ?? 0)}>{@render tlEvents()}</Fold>
 {:else if area === 'style'}
   {#snippet tlLook()}
-    <Setting key="variant">
-      <DesignRow pin="variant" />
-    </Setting>
     <Setting key="marker">
       <label title={ta('tip.timeline.marker')}>{ta('lbl.timelineMarker')}
         <Dropdown value={selectedBlock.props.marker ?? 'filled'}
@@ -84,5 +79,5 @@
           onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
     </Setting>
   {/snippet}
-  <Fold id="tl-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'left'))?.[1] ?? ''} group={groupOf('tl-look', { variant: 'left', marker: 'filled', accent: null })}>{@render tlLook()}</Fold>
+  <Fold id="tl-look" defaultOpen title={ta('group.appearance')} value={(selectedBlock.props.marker ?? 'filled') === 'ring' ? ta('opt.timeline.ring') : ta('opt.timeline.filled')} group={groupOf('tl-look', { marker: 'filled', accent: null })}>{@render tlLook()}</Fold>
 {/if}

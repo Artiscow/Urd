@@ -6,7 +6,6 @@
   import BoxStyle from '../BoxStyle.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
-  import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -67,16 +66,10 @@
   {/snippet}
   <Fold id="faq-questions" defaultOpen title={ta('lbl.questions')} value={String(selectedBlock.props.items?.length ?? 0)} group={groupOf('faq-questions', { multi: false })}>{@render faqQuestions()}</Fold>
 {:else if area === 'style'}
-  {#snippet faqVariant()}
-    <Setting key="variant">
-      <DesignRow pin="variant" />
-    </Setting>
-  {/snippet}
   {#snippet faqCard()}
     <BoxStyle />
   {/snippet}
   {@const cardN = groupChanged({ boxStyle: undefined })}
-  <Fold id="faq-variant" title={ta('lbl.variant')} value={ta(`opt.faqVariant.${variant}`)} group={groupOf('faq-variant', { variant: 'cards' })}>{@render faqVariant()}</Fold>
   <!-- The card style belongs to the cards; the list's rows are bare -->
   {#if variant !== 'list'}
     <Fold id="faq-card" title={ta('lbl.cardStyle')} value={cardN ? ta('menu.changed', { n: cardN }) : ta('menu.standard')} group={groupOf('faq-card', { boxStyle: undefined })}>{@render faqCard()}</Fold>

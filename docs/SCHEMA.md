@@ -452,7 +452,7 @@ Plugins use the **same** define APIs as the core and are subject to the same mig
 - The labels (`labelKey`/`hintKey`/`placeholderKey`, with `label`/`hint`/`placeholder` as fallback) are resolved on the iframe side where the plugin dictionary lives, and are sent ready-made in the `urd-plugin-blocks` message, as `label`/`variants`. The hint (additive from 0.7.10.7) is the field's «?» tooltip; without it the tooltip is the label.
 - Without `fields`, Properties shows as before a «Settings …» button that opens the plugin's own config panel in the preview (`urd-open-block-config`). The core map block uses the same field types through the editor's `CORE_FIELDS` table; the core calendar and form blocks have their own Content panels in the editor.
 
-**The design contract** (additive from 0.7.24.5): a plugin block with more than one look declares them as `designs: { prop, items: [{ id, labelKey/label, aboutKey/about?, picture? }] }` on its def, and its menu gets the Design row, the quick tile and the design picker the core blocks have.
+**The design contract** (additive from 0.7.24.5): a plugin block with more than one look declares them as `designs: { prop, items: [{ id, labelKey/label, aboutKey/about?, picture? }] }` on its def, and its menu gets the Design row first in Style, its pin in Pinned and the design picker the core blocks have.
 
 - `prop` is the prop the block keeps its design in (a plain name), and `id` the value written to it (a short word of letters, digits and hyphens); a stored value that is no design reads as the first.
 - The label and the description are resolved on the iframe side like the fields' (`pluginBlockDesigns` in `plugins.js`) and sent in the `urd-plugin-blocks` message as `designs`.

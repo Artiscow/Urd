@@ -72,13 +72,20 @@ Saved block groups and templates appear in the same menus under «My templates»
   - pinned control groups, Bricks 2.3 [bricksbuilder.io](https://bricksbuilder.io/release/bricks-2-3/) (primary, 18 Mar 2026);
   - inherited-value indicators: Oxygen 6 shows inherited values as placeholders [oxygenbuilder.com](https://oxygenbuilder.com/oxygen-6-is-now-available/) (primary, 24 Feb 2026), Tilda's Zero Block marks changed against inherited values per breakpoint [help.tilda.cc](https://help.tilda.cc/zero) (primary), and WordPress 7.1 adds inherited-style indicators [Roadmap to 7.1](https://make.wordpress.org/core/2026/06/19/roadmap-to-7-1/) (primary);
   - movable toolbar and panels with saved workspace profiles, Bricks 2.4 [bricksbuilder.io](https://bricksbuilder.io/release/bricks-2-4/) (primary, 16 Sep 2026); draggable panels and right-click menus, Squarespace Finish Layer [squarespace.com/blog](https://www.squarespace.com/blog/finish-layer-website-design-tools) (primary, 16 Apr 2026).
+- **Four patterns of the inspector** (eight builders sketched from their own help pages on the Design canvas «Builder Inspectors», 7 November 2026):
+  1. A side panel with tabs, each tab a stack of folds: Elementor (Content, Style, Advanced), Bricks (Content and Style, pinned groups, property search) and WordPress (Settings and Styles, the style variations as pictures first in Styles, ⋮ adding optional controls).
+  2. One long column of headed sections, the same for every element: Webflow (Style, Settings and Interactions on S, D and H) and Framer (no tabs; an optional property added with «+» on its section's heading).
+  3. A bar on the element whose tools open small floating panels: Wix Harmony (the dynamic action bar) and Squarespace (Edit opens a floating panel with Content and Design, the layouts as pictures first in Design).
+  4. A plain list of settings under plain headings, decided by the theme: Shopify (a setting hidden until its condition holds).
 
-**Urd today.** The Properties panel and the floating element menu from the gear on a block are drawn by the same snippet ([ADR-0016](../adr/0016-panel-language.md)):
-- three areas, Content, Style and Placement, wide as three columns or narrow as three tabs (the admin setting «Element menu» chooses the width);
-- collapsible groups that show their value while closed, a quick row of the most used settings, and a search;
+**Urd today.** The Properties panel and the floating element menu from the gear on a block are drawn by the same snippet ([ADR-0016](../adr/0016-panel-language.md)), a merge of patterns 1 and 3 (0.7.30.3):
+- three areas, Content, Style and Placement; wide, they pour through two columns, a group never split; narrow, they stand under each other, each heading sticking to the top of its area (the admin setting «Element menu» chooses the width), and an area with nothing in it is not drawn;
+- Pinned above the areas: the most used settings, as the rows they are in their areas, each standing there instead of in its area while pinned;
+- the way into a block's own editor first in Content, and a block's designs as a picture row first in Style;
+- collapsible groups that show their value while closed, and a search;
 - Placement holds the same settings for every block in the same order, and there is no «Advanced» drawer.
 
-Every block has its groups (0.7.20.5), the quick row has pins (0.7.20.3), the menu stands beside the block and is dragged by its head (0.7.20.6), own values are marked with a reset per setting (0.7.20.7), blocks and sections have right-click menus and a style clipboard (0.7.20.8), and 1, 2 and 3 reach the menu's areas (0.7.20.9).
+Every block has its groups (0.7.20.5), settings have pins (0.7.20.3), the menu stands beside the block and is dragged by its head (0.7.20.6), own values are marked with a reset per setting (0.7.20.7), blocks and sections have right-click menus and a style clipboard (0.7.20.8), and 1, 2 and 3 reach the menu's areas (0.7.20.9).
 
 On the canvas, text is edited by clicking and writing. A floating text toolbar appears on a selection, with headings, B/I/U/S, colours, highlight, links (external, internal, mailto), alignment, lists and quote. Explanations live in «?» tooltips and the help chip, never in panel prose ([ADR-0008](../adr/0008-help-chip-rule.md)), and every choice list is a themed dropdown or segment buttons ([ADR-0009](../adr/0009-themed-ui-rule.md)).
 
@@ -348,7 +355,7 @@ Urd covers most of the delivery patterns. The remaining gaps are the command pal
 | Pattern | Urd has | Open |
 |---|---|---|
 | [Insertion](#insertion) | Blocks panel with search, «+ New block» at the pointer, «/» on the canvas, «My templates» in the same menus | Command palette (E1), drop indicators (E2), paste pipeline (E3), element manager (E4) |
-| [Configuration surfaces](#configuration-surfaces) | Element menu with Content, Style and Placement in two widths, groups, a quick row with pins, marks on own values with a reset per setting, and search; the menu beside the block, dragged by its head; right-click menus and the style clipboard; floating text toolbar; click-and-write; themed dropdowns; help chips | Layout decision chip (E5) |
+| [Configuration surfaces](#configuration-surfaces) | Element menu with Content, Style and Placement in two widths, groups, Pinned rows with pins, the designs first in Style, marks on own values with a reset per setting, and search; the menu beside the block, dragged by its head; right-click menus and the style clipboard; floating text toolbar; click-and-write; themed dropdowns; help chips | Layout decision chip (E5) |
 | [Structure and layers](#structure-and-layers) | Sections up and down (also from the right-click menu), z-order buttons, Ctrl+Shift+Up and Down and the right-click menu, the Pages panel | Layers panel (E6), zoom-out overview (E7), page duplication (E8), region navigation (E9) |
 | [Global design](#global-design) | Theme tokens, light and dark, theme suggestions, section themes, «Text on accent» Auto | Font packs and palette themes (E10), style book and modes (E11) |
 | [Reuse with sync](#reuse-with-sync) | Presets, «Save as template» for sections, block groups and pages, global nav and footer, plugin blocks | Synced global blocks (E12) |

@@ -1,9 +1,8 @@
 /**
- * The element menu's quick row (0.7.20.3): the settings a block type shows at
- * the top of its menu. Each type has default tiles; the owner pins more with
- * the pin beside a setting and takes any tile out, a default too, with the
- * pin on the tile. The choice is kept per block type in the browser, as a
- * working preference rather than site data. Pure functions, node-tested.
+ * The element menu's Pinned rows (0.7.20.3, drawn as rows since 0.7.30.3): the settings a block type shows at the top of its menu.
+ * Each type has default rows; the owner pins more with the pin beside a setting and takes any row out, a default too, with the same pin.
+ * The choice is kept per block type in the browser, as a working preference rather than site data.
+ * Pure functions, node-tested.
  */
 
 /** The browser key the choices are kept under: one object, block type to its choice. */
@@ -14,33 +13,33 @@ const SHARED = ['fit', 'phone'];
 const OWN = {
   calendar: ['design', 'limit'],
   text: ['align', 'textBox'],
-  button: ['goesTo', 'btnStyle'],
+  button: ['goesTo', 'design'],
   image: ['imgFit', 'radius'],
   video: ['videoSource'],
   icon: ['iconSize', 'iconColor'],
   shape: ['shapeColor', 'thickness'],
-  gallery: ['galleryView', 'columns'],
-  ribbon: ['ribbonMotion', 'speed'],
+  gallery: ['design', 'columns'],
+  ribbon: ['ribbonMotion'],
   table: ['tableLines'],
-  quote: ['variant'],
-  stats: ['variant'],
-  faq: ['variant'],
-  timeline: ['variant'],
+  quote: ['design'],
+  stats: ['design'],
+  faq: ['design'],
+  timeline: ['design'],
   form: ['sendMode'],
-  collection: ['collectionView', 'limit'],
+  collection: ['design', 'limit'],
   product: ['columns'],
-  cart: ['cartView'],
+  cart: ['design'],
   checkout: ['vippsButton'],
-  share: ['variant'],
+  share: ['design'],
   countdown: ['seconds'],
   audio: ['loop'],
   map: ['zoom'],
-  privacy: ['privacyDesign'],
+  privacy: ['design'],
   terms: ['design'],
 };
 
 /**
- * A block type's default tiles, in order.
+ * A block type's default rows in Pinned, in order.
  * @param {string} type
  * @returns {string[]}
  */
@@ -48,21 +47,26 @@ export function quickDefaults(type) {
   return [...(OWN[type] ?? []), ...SHARED];
 }
 
+/** The ids a block's design was kept under before every design took the one id `design`; a stored choice reads them as it. */
+const DESIGN_IDS = new Set(['btnStyle', 'galleryView', 'variant', 'collectionView', 'cartView', 'privacyDesign', 'textDesign']);
+
 /** An empty choice: the defaults alone. */
 export const NO_CHOICE = Object.freeze({ pinned: [], removed: [] });
 
 /**
- * A stored choice made safe: two lists of distinct ids.
+ * A stored choice made safe: two lists of distinct ids, a design's older id read as `design`.
  * @param {unknown} value
  * @returns {{pinned: string[], removed: string[]}}
  */
 export function cleanChoice(value) {
-  const ids = (list) => (Array.isArray(list) ? [...new Set(list.filter((id) => typeof id === 'string' && id))] : []);
+  const ids = (list) => (Array.isArray(list)
+    ? [...new Set(list.filter((id) => typeof id === 'string' && id).map((id) => (DESIGN_IDS.has(id) ? 'design' : id)))]
+    : []);
   return { pinned: ids(value?.pinned), removed: ids(value?.removed) };
 }
 
 /**
- * The tiles a block shows, in order: its defaults that are not taken out,
+ * The rows a block shows in Pinned, in order: its defaults that are not taken out,
  * then the settings pinned, in the order they were pinned. Only settings the
  * block has right now are shown (a calendar's count, for one, only on the
  * views that have it).
@@ -90,7 +94,7 @@ export function isInRow(type, choice, id) {
 }
 
 /**
- * The choice after the pin beside a setting, or on its tile, is pressed: a
+ * The choice after the pin beside a setting, in its area or in Pinned, is pressed: a
  * setting in the row leaves it, one out of it joins it at the end. A
  * default taken out and pinned again returns to its own place.
  * @param {string} type
