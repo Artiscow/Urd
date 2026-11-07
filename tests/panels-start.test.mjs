@@ -3,7 +3,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PANELS_PREFS, panelsPrefOf, panelsPrefsFor, panelsPrefIn, startPanels } from '../editor/src/lib/panels-start.js';
+import { PANELS_PREFS, panelsPrefOf, panelsPrefsFor, panelsPrefIn, startPanels, foldsEmpty, unfoldedPanel } from '../editor/src/lib/panels-start.js';
 
 const PANELS = ['pages', 'blocks', 'properties', 'site', 'update'];
 const start = (o) => startPanels({ layout: 'rail', panels: PANELS, stored: null, storedFolded: false, start: null, ...o });
@@ -20,6 +20,8 @@ test('the folded column is offered only in the layouts that keep the column, and
   for (const layout of ['rail', 'sidebar', 'top-tabs']) assert.ok(!panelsPrefsFor(layout).includes('folded'), layout);
   assert.equal(panelsPrefIn('folded', 'rail'), 'reset');
   assert.equal(panelsPrefIn('folded', 'panel-tabs'), 'folded');
+  assert.ok(!panelsPrefsFor('page-tabs').includes('reset'), 'the page\'s tabs fold their column whenever no panel is open, so «no panel» is the folded column');
+  assert.equal(panelsPrefIn('reset', 'page-tabs'), 'folded');
 });
 
 test('remember opens the last panel, and its fold only in a layout with the column', () => {
@@ -35,4 +37,15 @@ test('none, the same panel and the folded column', () => {
   assert.deepEqual(start({ pref: 'fixed', start: 'gone' }), { panel: 'pages', folded: false }, 'an unknown panel falls to Pages');
   assert.deepEqual(start({ pref: 'folded', layout: 'panel-tabs', stored: 'site' }), { panel: null, folded: true });
   assert.deepEqual(start({ pref: 'folded', layout: 'rail', stored: 'site' }), { panel: null, folded: false });
+});
+
+test('the page\'s tabs: the column folds without a panel, and its handle opens the panel last open', () => {
+  assert.equal(foldsEmpty('page-tabs', null), true);
+  assert.equal(foldsEmpty('page-tabs', 'blocks'), false);
+  assert.equal(foldsEmpty('panel-tabs', null), false, 'the panel\'s tabs keep their column with the three groups');
+  assert.equal(unfoldedPanel('page-tabs', null, 'theme'), 'theme');
+  assert.equal(unfoldedPanel('page-tabs', null, null), 'pages');
+  assert.equal(unfoldedPanel('page-tabs', null, 'settings'), 'pages', 'the settings panel is never reopened by the handle');
+  assert.equal(unfoldedPanel('page-tabs', 'grid', 'theme'), 'grid', 'a panel already open stays');
+  assert.equal(unfoldedPanel('panel-tabs', null, 'theme'), null);
 });

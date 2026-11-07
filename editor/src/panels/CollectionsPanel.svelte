@@ -9,7 +9,6 @@
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
-  import Dropdown from '../lib/Dropdown.svelte';
   import { ICONS } from '../lib/icons.js';
   import { entryPosition, afterRemoval, entryMatches } from '../lib/collection-layout.js';
   import { liveTicks } from '../lib/collection-bulk.js';
@@ -23,7 +22,8 @@
 
   const ed = getContext('urd-editor');
   const act = collectionActions(ed);
-  let query = $state('');
+  /** The search over the open collection's entries (state/collections.svelte.js), shared with the heading's menu in the two columns. */
+  const query = $derived(ed.panelQuery);
 
   /** The chevrons stand a unit toward their open side, so they read as centred in their square: a «<» drawn on its exact centre looks left-heavy. */
   const BACK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 6l-6 6 6 6"/></svg>';
@@ -47,16 +47,17 @@
   }
 
   function openCollection(id) {
-    if (ed.panelCollection !== id) { ed.panelEntry = null; query = ''; }
+    if (ed.panelCollection !== id) { ed.panelEntry = null; ed.panelQuery = ''; }
     ed.panelCollection = id;
-    if (ed.collectionsLayout !== 'table') focusAfter('.coll-panel .coll-crumb button');
+    if (ed.collectionsLayout === 'columns') focusAfter('.panel-head .coll-heading-up');
+    else if (ed.collectionsLayout !== 'table') focusAfter('.coll-panel .coll-crumb button');
   }
 
   function closeCollection() {
     const left = ed.panelCollection;
     ed.panelCollection = null;
     ed.panelEntry = null;
-    query = '';
+    ed.panelQuery = '';
     focusAfter(`.cl-collection[data-collection-id="${CSS.escape(left)}"]`);
   }
 
@@ -79,7 +80,7 @@
 
   /** A new entry, chosen at once with its title ready to type over. */
   function newEntry() {
-    query = '';
+    ed.panelQuery = '';
     const made = ed.addCollectionEntry(ed.panelCollection);
     ed.panelEntry = made;
     focusField(made, 'title', true);
@@ -145,12 +146,11 @@
     focusField(want.id, want.field, want.select === true);
   });
 
-  const collectionOptions = $derived(ed.collectionIds.map((id) => [id, ed.collectionsView[id]?.name ?? id]));
 </script>
 
 {#snippet search()}
   <span class="toolbar-row coll-search">
-    <input type="text" bind:value={query} placeholder={ta('ph.collections.find')} aria-label={ta('ph.collections.find')} title={ta('ph.collections.find')} />
+    <input type="text" bind:value={() => ed.panelQuery, (v) => (ed.panelQuery = v)} placeholder={ta('ph.collections.find')} aria-label={ta('ph.collections.find')} title={ta('ph.collections.find')} />
     <button class="ghost action" title={ta('ui.addEntry')} onclick={newEntry}>{ta('ui.addEntry')}</button>
   </span>
   {#if ticks.length}
@@ -158,9 +158,10 @@
   {/if}
 {/snippet}
 
-{#snippet entryHead()}
-  <!-- The chosen entry's head: where it stands among its collection's entries, the steps to its neighbours, and its removal -->
-  <span class="coll-entry-head">
+{#snippet entryHead(named = false)}
+  <!-- The chosen entry's head: its name beside the list (the two columns), where it stands among its collection's entries, the steps to its neighbours, and its removal -->
+  <span class="coll-entry-head" class:coll-entry-head-named={named}>
+    {#if named}<span class="coll-entry-name">{ed.plainTitle(entry.title)}</span>{/if}
     {#if place}<span class="coll-place">{ta('collections.position', { n: place.index + 1, count: place.count })}</span>{/if}
     <span class="coll-grow"></span>
     {#if place}
@@ -174,27 +175,32 @@
   </span>
 {/snippet}
 
-<div class="panel-body coll-panel">
+<div class="panel-body coll-panel" class:coll-panel-cols={ed.collectionsLayout === 'columns' && view && ed.csvImport?.view !== 'panel'}>
   {#if ed.csvImport?.view === 'panel'}
     <ImportStep />
   {:else if ed.collectionsLayout === 'table' || !view}
     <!-- The collections: the first level of the drill-in and of the two columns, and the table's own list -->
     <CollectionList selected={ed.collectionsLayout === 'table' ? ed.panelCollection : null} onselect={openCollection} />
   {:else if ed.collectionsLayout === 'columns'}
-    <!-- Two columns: the collection chosen at the top, its entries at the left and the chosen entry at the right -->
-    <span class="coll-crumb">
-      <button class="ghost coll-btn" title={ta('tip.collections.back')} aria-label={ta('tip.collections.back')} onclick={closeCollection}>{@html BACK_ICON}</button>
-      <span class="coll-switch"><Dropdown value={ed.panelCollection} options={collectionOptions} title={ta('tip.collections.chooseCollection')} onchange={openCollection} /></span>
-      <CollectionMenu id={ed.panelCollection} {ticks} {shownIds} onticks={setTicks} />
-    </span>
+    <!-- Two columns: the collection named in the panel's heading with its menu (CollectionHeading.svelte); its entries at the left between the search, held at the top, and New entry, held at the foot, the entries scrolling between them; the chosen entry at the right under its head, held while its fields scroll -->
     <div class="coll-cols">
       <div class="coll-list">
-        {@render search()}
-        <EntryList id={ed.panelCollection} {view} {query} selected={ed.panelEntry} chevron={false} onselect={chooseEntry} {ticks} onticks={setTicks} />
+        <div class="coll-list-head">
+          <span class="toolbar-row coll-search">
+            <input type="text" bind:value={() => ed.panelQuery, (v) => (ed.panelQuery = v)} placeholder={ta('ph.collections.find')} aria-label={ta('ph.collections.find')} title={ta('ph.collections.find')} />
+          </span>
+          {#if ticks.length}<SelectionBar id={ed.panelCollection} {ticks} {shownIds} onticks={setTicks} />{/if}
+        </div>
+        <div class="coll-list-body">
+          <EntryList id={ed.panelCollection} {view} {query} selected={ed.panelEntry} chevron={false} onselect={chooseEntry} {ticks} onticks={setTicks} />
+        </div>
+        <div class="coll-list-foot">
+          <button class="ghost action coll-new" title={ta('ui.addEntry')} onclick={newEntry}>{ta('ui.addEntry')}</button>
+        </div>
       </div>
       <div class="coll-detail">
         {#if entry}
-          {@render entryHead()}
+          {@render entryHead(true)}
           {#key entry.id}<EntryFields id={ed.panelCollection} {entry} kind={view.kind} />{/key}
         {/if}
       </div>
@@ -255,11 +261,6 @@
     text-overflow: ellipsis;
   }
 
-  .coll-switch {
-    flex: 1;
-    min-width: 0;
-  }
-
   .coll-search input {
     flex: 1;
     min-width: 0;
@@ -280,7 +281,13 @@
     flex: 1;
   }
 
-  /* Two columns: the entries at the left, the chosen entry at the right, held in view while the list scrolls past and scrolling on its own when it is taller than the panel */
+  /* Two columns: the panel's height under the picker, the entries at the left and the chosen entry at the right, each scrolling on its own while the panel itself stands still */
+  .coll-panel-cols {
+    flex: 1;
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 0;
+  }
+
   .coll-cols {
     display: grid;
     grid-template-columns: minmax(13rem, 2fr) minmax(0, 3fr);
@@ -288,25 +295,82 @@
     min-height: 0;
   }
 
-  .coll-list {
-    display: grid;
-    gap: 0.5rem;
-    align-content: start;
+  .coll-list,
+  .coll-detail {
     min-width: 0;
-    padding-right: 0.8rem;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  /* The list: the search held at the top and New entry at the foot, on the panel's own surface, so the entries pass behind them as they scroll; a short list leaves New entry at the column's foot */
+  .coll-list {
+    display: flex;
+    flex-direction: column;
+    padding-right: 0.6rem;
     border-right: 1px solid rgb(255 255 255 / 8%);
   }
 
-  .coll-detail {
+  .coll-list-head,
+  .coll-list-foot {
     position: sticky;
-    top: 0;
+    z-index: 2;
     display: grid;
     gap: 0.5rem;
+    background: var(--urd-color-surface, #151a23);
+  }
+
+  .coll-list-head {
+    top: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  .coll-list-body {
+    flex: 1 0 auto;
+    padding-block: 0.5rem;
+  }
+
+  .coll-list-foot {
+    bottom: 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  .coll-cols .coll-search input,
+  .coll-list-foot .coll-new {
+    box-sizing: border-box;
+    height: 2rem;
+    min-height: 0;
+  }
+
+  .coll-list-foot .coll-new {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* The chosen entry: its head held at the top on the panel's surface, level with the search beside it, its fields scrolling under it */
+  .coll-detail {
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: 0.5rem;
     align-content: start;
-    align-self: start;
+  }
+
+  .coll-detail > .coll-entry-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+    background: var(--urd-color-surface, #151a23);
+  }
+
+  .coll-entry-name {
+    overflow: hidden;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     min-width: 0;
-    max-height: calc(100vh - 8rem);
-    overflow-y: auto;
-    scrollbar-width: thin;
   }
 </style>

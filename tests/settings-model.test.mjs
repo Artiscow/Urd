@@ -31,6 +31,9 @@ function ctx() {
     TAB_MENU_OPTIONS: ['groups', 'lines', 'plain'].map((id) => [id, id]),
     tabMenus: 'groups',
     tabMenuStay: 'stay',
+    SIDEBAR_FOLDS_OPTIONS: [['tree', 'tree'], ['hover', 'hover'], ['flyout', 'flyout']],
+    sidebarFolds: 'tree',
+    panelTabMenus: false,
     adminLangOptions: () => [['nb', 'Norsk bokmål']],
     adminTheme: 'grey', adminLayout: 'rail', settingsPlace: 'dialog', settingsPictures: 'pictures', adminLangChoice: 'auto',
     addBlockMenuPref: 'side', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
@@ -83,11 +86,12 @@ test('the search keeps the settings a word of the query names, and the sheet spl
   assert.ok(!settingMatches(SETTINGS_GROUPS[0].settings[0], 'nothing-here', c));
   const all = visibleGroups('', null, c);
   assert.deepEqual(all.map((g) => g.id), ['look', 'editing', 'window', 'site']);
+  // A setting under another (`parent`) stands with it, so «After a pick» goes with «Tab menus» into the look and brings it into the rest.
   const look = visibleGroups('', 'look', c).flatMap((g) => g.settings);
-  assert.ok(look.every((s) => s.look));
+  assert.ok(look.every((s) => s.look || look.some((p) => p.id === s.parent)));
   const plain = visibleGroups('', 'plain', c).flatMap((g) => g.settings);
-  assert.ok(plain.every((s) => !s.look));
-  assert.equal(look.length + plain.length, all.flatMap((g) => g.settings).length);
+  assert.ok(plain.every((s) => !s.look || plain.some((child) => child.parent === s.id)));
+  assert.deepEqual(new Set([...look, ...plain].map((s) => s.id)), new Set(all.flatMap((g) => g.settings).map((s) => s.id)));
   assert.deepEqual(visibleGroups('spellcheck', null, c).map((g) => [g.id, g.settings.map((s) => s.id)]), [['editing', ['spellcheck']]]);
   c.ed.siteDraft = null;
   assert.ok(!visibleGroups('', null, c).some((g) => g.id === 'site'));

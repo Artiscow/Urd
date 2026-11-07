@@ -1,6 +1,6 @@
 <script>
-  /* A panel's tab, in the strip under the top bar and in the panel's own tabs (PanelStrip, PanelNav): one button, which opens the panel on a click.
-     A panel with folds (lib/panel-folds.js) has an arrow close after its name and a menu of the folds: a mouse resting on the tab, or the down arrow key on it, opens the menu, and a row opens the panel with that fold alone unfolded, or presses the fold's one button where that is all it holds. The menu stands in the top layer, placed under the tab, so a narrow panel never clips it, and it slides in and out.
+  /* A panel's button with its menu of folds, in every layout that reaches a panel this way (`variant`): a tab in the strip under the top bar and in the panel's own tabs (PanelStrip, PanelNav), a row of the top bar's Site menu in «The page's tabs» (TopBar), an icon of the rail and a word of the sidebar in its flyout form (Rail). One button, which opens the panel on a click.
+     A panel with folds (lib/panel-folds.js) has a menu of the folds: a mouse resting on the button, or the down arrow key on a tab and the right arrow key on the others, opens it, and a row opens the panel with that fold alone unfolded, or presses the fold's one button where that is all it holds. The menu stands in the top layer, under a tab and beside the others, so a narrow panel never clips it, and it slides in and out. Beside a rail's icon it is headed by the panel's name, which stands in place of the icon's tooltip and opens the panel.
      The rows are set apart as the Urd settings' «Tab menus» chooses: in short groups under small labels (the default), with a hairline between them, or as a plain list. A row that presses a button carries that button's mark.
      The arrow keys move through the rows, and Escape closes the menu and returns to the tab. Hover counts only for a mouse, so a tap on a touch screen opens the panel, where every fold stands.
      The Legal tab carries an amber dot on its name's corner while something the law asks for is missing, and the same dot on the rows that need looking at (lib/legal-model.js).
@@ -15,15 +15,25 @@
   import { groupChip } from '../lib/legal-model.js';
   import { ICONS } from '../lib/icons.js';
   const ed = getContext('urd-editor');
-  let { name } = $props();
+  let { name, variant = 'tab', menus = true } = $props();
+  /** The menu stands beside its button (a row, an icon, a word) rather than under it (a tab). */
+  const beside = $derived(variant !== 'tab');
+  const label = $derived(ed.PANEL_LABELS[name]);
+  const updateDot = $derived(name === 'update' && ed.updateNotice === 'dot');
+  const legalDot = $derived(name === 'legal' && ed.legal?.dot === true);
+  /** The button's own look in each layout: a tab, a row of the Site menu, an icon of the rail, a word of the sidebar. */
+  const buttonClass = $derived({ tab: 'panel-tab', row: 'ghost site-row', rail: 'rail-icon', word: 'side-word' }[variant] ?? 'panel-tab');
+  /** An icon is named by its label, read out with the amber dot's meaning; the words and the tabs carry their names. */
+  const ariaLabel = $derived(variant === 'rail' ? (legalDot ? `${label}, ${ta('legal.dotLabel')}` : label) : undefined);
+  /** The tooltip: the update's, else an icon's name where no menu's head names it. */
+  const titleText = $derived(updateDot ? ta('tip.updateOut', { version: ed.updateTarget }) : variant === 'rail' && !hasMenu ? label : undefined);
 
   /** The folds the menu lists: those the panel draws now, and a menu only where there is a choice of two or more. */
   const folds = $derived(panelFolds(name, { site: ed.siteDraft, legal: ed.legal }));
   /** The Collections tab's rows: the collections with their entries; its menu stands while the collections can be read, with New collection alone where there are none. */
   const collections = $derived(name === 'collections' ? collectionMenuRows(ed.collectionIds, ed.collectionsView, sortEntries) : []);
-  const hasMenu = $derived(name === 'collections' ? !ed.collectionsUnavailable : folds.length > 1);
+  const hasMenu = $derived(menus && (name === 'collections' ? !ed.collectionsUnavailable : folds.length > 1));
   const menuId = $derived(`panel-tab-menu-${name}`);
-  const updateDot = $derived(name === 'update' && ed.updateNotice === 'dot');
   /** The rows as the «Tab menus» setting sets them apart: in their groups under small labels, or as one run with or without lines. */
   const groups = $derived(ed.tabMenus === 'groups' ? foldGroups(folds) : [{ label: null, folds }]);
 
@@ -63,12 +73,20 @@
     setOpen(next);
   }
 
-  /** The menu placed under the tab, kept inside the window at its right edge. */
+  /** The menu's place: under a tab, or beside a row, an icon or a word, at its height; held inside the window, a menu beside its button turning to the button's other side where the window has no room. */
+  function place() {
+    if (!tab) return pos;
+    const r = tab.getBoundingClientRect();
+    const width = list?.offsetWidth ?? 0;
+    const height = list?.offsetHeight ?? 0;
+    if (!beside) return { top: r.bottom, left: Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) };
+    const left = r.right + 2 + width > window.innerWidth - 8 && r.left - width - 2 >= 8 ? r.left - width - 2 : r.right + 2;
+    return { top: Math.max(8, Math.min(r.top - 5, window.innerHeight - height - 8)), left };
+  }
+
+  /** The menu opened or closed, placed again once it is drawn and its size is known. */
   async function setOpen(next) {
-    if (next && !open && tab) {
-      const r = tab.getBoundingClientRect();
-      pos = { top: r.bottom, left: r.left };
-    }
+    if (next && !open) pos = place();
     open = next;
     if (!next) {
       clearTimeout(subTimer);
@@ -78,8 +96,7 @@
       return;
     }
     await tick();
-    const width = list?.offsetWidth ?? 0;
-    if (pos.left + width > window.innerWidth - 8) pos = { ...pos, left: Math.max(8, window.innerWidth - width - 8) };
+    pos = place();
   }
 
   $effect(() => () => { clearTimeout(timer); clearTimeout(subTimer); clearTimeout(actTimer); });
@@ -161,8 +178,7 @@
         now(false);
         return;
       }
-      const width = list?.offsetWidth ?? 0;
-      pos = { top: r.bottom, left: Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) };
+      pos = place();
     };
     window.addEventListener('pointerdown', away, true);
     window.addEventListener('scroll', scrolled, true);
@@ -246,12 +262,28 @@
     document.querySelector('[data-new-collection]')?.focus();
   }
 
-  /** The down and up arrows open the menu and move through the rows of the menu the focus is in; the right arrow on a collection opens its entries at the first, and on an entry its actions; the left arrow or Escape goes back a level; Escape in the first menu closes it and returns to the tab. */
+  /** The down and up arrows open a tab's menu and move through the rows of the menu the focus is in; the right arrow opens the menu beside a row, an icon or a word, on a collection its entries at the first, and on an entry its actions; the left arrow or Escape goes back a level; Escape in the first menu, and the left arrow in a menu beside its button, close it and return to the button. */
   async function keys(event) {
     if (!hasMenu) return;
     const active = document.activeElement;
     const inAct = actEl?.contains(active);
     const inSub = !inAct && subEl?.contains(active);
+    if (beside && event.key === 'ArrowRight' && active === tab) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!open) await setOpen(true);
+      clearTimeout(timer);
+      await tick();
+      list?.querySelector('button')?.focus();
+      return;
+    }
+    if (beside && event.key === 'ArrowLeft' && open && list?.contains(active)) {
+      event.preventDefault();
+      event.stopPropagation();
+      now(false);
+      tab?.focus();
+      return;
+    }
     if ((inAct || inSub) && (event.key === 'ArrowLeft' || event.key === 'Escape')) {
       event.preventDefault();
       event.stopPropagation();
@@ -287,6 +319,7 @@
       return;
     }
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    if (!open && (beside || active !== tab)) return;
     event.preventDefault();
     if (!open) {
       await setOpen(true);
@@ -310,24 +343,39 @@
 {/snippet}
 
 {#snippet dots()}
-  {#if name === 'legal' && ed.legal?.dot}<span class="tab-menu-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}
+  {#if legalDot}<span class="tab-menu-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}
+{/snippet}
+
+<!-- The button's face in each layout: a tab's word with its arrow, an icon with its dots at the corner, a row's or a word's name with its arrow toward the menu beside it -->
+{#snippet face()}
+  {#if variant === 'rail'}
+    {@html ICONS[`panel_${name}`]}{#if updateDot}<span class="update-dot" aria-hidden="true"></span>{/if}{#if legalDot}<span class="update-dot legal-dot" aria-hidden="true"></span>{/if}
+  {:else if variant === 'tab'}
+    <span class="tab-menu-word">{label}{@render dots()}</span>{#if hasMenu}<span class="tab-menu-caret" aria-hidden="true">{@html ICONS.caret}</span>{/if}{#if updateDot}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}
+  {:else}
+    <span class="tab-menu-name">{label}</span>{#if updateDot}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}{#if legalDot}<span class="update-dot update-dot-inline legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}{#if hasMenu}<span class="tab-menu-more" aria-hidden="true">{@html ICONS.chevronRight}</span>{/if}
+  {/if}
 {/snippet}
 
 {#if hasMenu}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <span class="tab-menu" bind:this={wrap}
-    onpointerenter={(e) => { if (e.pointerType === 'mouse') { hovering = true; soon(true, 180); } }}
+  <span class="tab-menu tab-menu-is-{variant}" bind:this={wrap}
+    onpointerenter={(e) => { if (e.pointerType === 'mouse') { hovering = true; soon(true, variant === 'row' ? 140 : 180); } }}
     onpointerleave={(e) => { if (e.pointerType === 'mouse') { hovering = false; soon(false, 280); } }}
     onkeydown={keys}
     onfocusout={(e) => { if (!wrap?.contains(e.relatedTarget) && !(ed.tabMenuStay === 'stay' && hovering)) now(false); }}>
-    <button type="button" class="panel-tab" class:active={ed.activePanel === name} class:menu-open={open} bind:this={tab}
-      aria-pressed={ed.activePanel === name} aria-keyshortcuts="ArrowDown" aria-expanded={open} aria-controls={open ? menuId : undefined}
-      onclick={() => { now(false); ed.togglePanel(name); }}><span class="tab-menu-word">{ed.PANEL_LABELS[name]}{@render dots()}</span><span class="tab-menu-caret" aria-hidden="true">{@html ICONS.caret}</span></button>
+    <button type="button" class={buttonClass} class:active={ed.activePanel === name} class:menu-open={open} bind:this={tab} aria-label={ariaLabel} title={titleText}
+      aria-pressed={ed.activePanel === name} aria-keyshortcuts={beside ? 'ArrowRight' : 'ArrowDown'} aria-expanded={open} aria-controls={open ? menuId : undefined}
+      onclick={() => { now(false); ed.togglePanel(name); }}>{@render face()}</button>
     {#if open}
       <!-- A press on a row keeps the focus where it is, so a browser that does not focus a pressed button never closes the menu under the click (the focusout above) -->
       <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
       <div class="tab-menu-list" class:lines={ed.tabMenus === 'lines'} id={menuId} popover="manual" role="group" aria-label={name === 'collections' ? ed.PANEL_LABELS[name] : ta('tip.panelTab.menu', { panel: ed.PANEL_LABELS[name] })}
         style="top: {pos.top}px; left: {pos.left}px; max-height: calc(100vh - {pos.top}px - 8px)" bind:this={list} use:topLayer transition:menuMotion onmousedown={(e) => e.preventDefault()}>
+        {#if variant === 'rail'}
+          <!-- Beside an icon, the panel's name heads the menu in the tooltip's place, and opens the panel -->
+          <button type="button" class="tab-menu-head" onclick={() => { now(false); ed.togglePanel(name); }}>{label}</button>
+        {/if}
         {#if name === 'collections'}
           {#each collections as c (c.id)}
             <!-- A collection carries the arrow of the submenu its row opens beside it: its entries, and New entry -->
@@ -384,7 +432,6 @@
     {#if name === 'collections'}<input type="file" accept="image/*" hidden bind:this={fileInput} onchange={filePicked} />{/if}
   </span>
 {:else}
-  <button type="button" class="panel-tab" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name}
-    title={updateDot ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined}
-    onclick={() => ed.togglePanel(name)}><span class="tab-menu-word">{ed.PANEL_LABELS[name]}{@render dots()}</span>{#if updateDot}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}</button>
+  <button type="button" class={buttonClass} class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} aria-label={ariaLabel} title={titleText}
+    onclick={() => ed.togglePanel(name)}>{@render face()}</button>
 {/if}

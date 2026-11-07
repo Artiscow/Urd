@@ -1,13 +1,15 @@
 <script>
   /* The open collection as a table over the page («Table over the page» under Collections editor): the entries as rows with a column per field the kind has (lib/collection-layout.js), and the chosen entry's fields in a drawer at the right.
      It stands over the stage while the Collections panel lists the collections, so the preview stays as it is underneath; the close button and Escape go back to the page.
-     A tick column with «select all» in its head ticks entries for the bar under the head (SelectionBar.svelte); Shift takes a run, Ctrl+A ticks every row shown, and Escape clears the ticks before it closes the table. */
+     A tick column with «select all» in its head ticks entries for the bar under the head (SelectionBar.svelte); Shift takes a run, Ctrl+A ticks every row shown, and Escape clears the ticks before it closes the table.
+     An entry that moves is dragged by its row, with a faint row where it lands (row-drag.js), or stepped with Alt and the arrow keys on its title, as in the list; a dated entry stands by its date, and nothing moves while a search narrows the rows. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
   import { ICONS } from '../../lib/icons.js';
   import { movable, entryMatches, entryPosition, afterRemoval, tableColumns, cellText } from '../../lib/collection-layout.js';
   import { liveTicks, tickRun, withTicks } from '../../lib/collection-bulk.js';
+  import { rowDropAt, reorderRows } from '../../lib/row-drag.js';
   import CollectionMenu from './CollectionMenu.svelte';
   import SelectionBar from './SelectionBar.svelte';
   import EntryFields from './EntryFields.svelte';
@@ -94,16 +96,80 @@
     close();
   }
 
-  /** The arrow keys step from a row's title to the row above or below and choose it. */
+  const ENTRY_DRAG_TYPE = 'application/x-urd-collection-entry';
+  let drag = $state(null);
+  let drop = $state(null);
+
+  /** The drag over the rows: the faint row's place follows the pointer, among the entries that move. */
+  function onDragOver(e) {
+    if (!drag) return;
+    const boxes = [...e.currentTarget.querySelectorAll('tr[data-movable]')].map((r) => { const b = r.getBoundingClientRect(); return { id: r.dataset.entryId, top: b.top, bottom: b.bottom }; });
+    const landing = rowDropAt(boxes, drag, e.clientY);
+    if (!landing) { drop = null; return; }
+    e.preventDefault();
+    if (drop?.id !== landing.id || drop?.pos !== landing.pos) drop = landing;
+  }
+
+  /** The drop, in one undo step: the entry leaves its place and lands before or after the row it was dropped by. */
+  function land() {
+    const from = drag;
+    const to = drop;
+    drag = null;
+    drop = null;
+    if (!from || !to) return;
+    ed.mutateCollection(id, `collection:${id}:move-entry`, (data) => {
+      data.entries = reorderRows(data.entries, (en) => en.id, from, to);
+    });
+  }
+
+  /** The end of a drag: a release outside the rows still lands the entry where the faint row last stood; a drag cancelled with Escape moves nothing. */
+  function endDrag(e) {
+    if (drop && e?.dataTransfer?.dropEffect !== 'none') land();
+    drag = null;
+    drop = null;
+  }
+
+  // While an entry is dragged the whole admin document accepts the drop, so a release beside the table is a drop and Escape is the only cancel.
+  $effect(() => {
+    if (!drag) return;
+    const accept = (e) => e.preventDefault();
+    window.addEventListener('dragover', accept);
+    window.addEventListener('drop', accept);
+    return () => {
+      window.removeEventListener('dragover', accept);
+      window.removeEventListener('drop', accept);
+    };
+  });
+
+  /** An entry stepped one place among those that move with Alt and the arrow keys, its title keeping the focus. */
+  async function stepEntry(entryId, dir) {
+    const from = movables.findIndex((en) => en.id === entryId);
+    if (from < 0 || from + dir < 0 || from + dir >= movables.length) return;
+    act.moveEntry(id, entryId, dir);
+    await tick();
+    document.querySelector(`.ct-open[data-entry-id="${CSS.escape(entryId)}"]`)?.focus();
+  }
+
+  /** The arrow keys step from a row's title to the row above or below and choose it; with Alt they move the entry. */
   function onRowKey(e, entryId) {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
     e.preventDefault();
+    if (e.altKey) {
+      if (!searching) stepEntry(entryId, e.key === 'ArrowUp' ? -1 : 1);
+      return;
+    }
     const to = entryPosition(rows.map((en) => en.id), entryId)?.[e.key === 'ArrowDown' ? 'next' : 'prev'];
     if (!to) return;
     ed.panelEntry = to;
     e.currentTarget.closest('tbody')?.querySelector(`.ct-open[data-entry-id="${CSS.escape(to)}"]`)?.focus();
   }
 </script>
+
+<!-- The faint row where a dragged entry lands -->
+{#snippet ghost()}
+  {@const dragged = view.entries.find((en) => en.id === drag)}
+  <tr class="ct-ghost" aria-hidden="true"><td colspan={3 + columns.length}>{dragged ? ed.plainTitle(dragged.title) : ''}</td></tr>
+{/snippet}
 
 {#if view}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -114,7 +180,7 @@
       <span class="ct-grow"></span>
       <button class="ghost action ct-new" title={ta('ui.addEntry')} onclick={newEntry}>{ta('ui.addEntry')}</button>
       <CollectionMenu {id} {ticks} shownIds={rowIds} onticks={setTicks} />
-      <button class="ghost row-tool ct-close" title={ta('tip.collections.closeTable')} aria-label={ta('tip.collections.closeTable')} onclick={close}>{@html ICONS.cross}</button>
+      <button class="ghost coll-btn ct-close" title={ta('tip.collections.closeTable')} aria-label={ta('tip.collections.closeTable')} onclick={close}>{@html ICONS.cross}</button>
     </div>
     {#if ticks.length}
       <div class="ct-barrow"><SelectionBar {id} {ticks} shownIds={rowIds} onticks={setTicks} /></div>
@@ -131,11 +197,17 @@
               {#each columns as col (col.key)}<th class:num={col.numeric}>{ta(col.labelKey)}</th>{/each}
             </tr>
           </thead>
-          <tbody>
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <tbody ondragover={onDragOver} ondrop={(e) => { e.preventDefault(); land(); }}>
             {#each rows as en (en.id)}
-              <!-- The whole row chooses the entry under the pointer; the title is the row's button for the keys -->
+              {@const canMove = !searching && movable(view.kind, en)}
+              {#if drag && drop?.id === en.id && drop.pos === 'before'}{@render ghost()}{/if}
+              <!-- The whole row chooses the entry under the pointer and is the drag handle of an entry that moves; the title is the row's button for the keys, Alt and the arrows moving it -->
               <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-              <tr class:selected={entry?.id === en.id} class:ticked={ticks.includes(en.id)} onclick={() => (ed.panelEntry = en.id)}>
+              <tr class:selected={entry?.id === en.id} class:ticked={ticks.includes(en.id)} class:ct-dragging={drag === en.id} data-entry-id={en.id} data-movable={canMove || undefined}
+                draggable={canMove ? 'true' : undefined} title={canMove ? ta('tip.collections.dragEntry') : undefined}
+                ondragstart={(e) => { if (!canMove || e.target instanceof HTMLInputElement) { e.preventDefault(); return; } drag = en.id; e.dataTransfer?.setData(ENTRY_DRAG_TYPE, en.id); }}
+                ondragend={endDrag} onclick={() => (ed.panelEntry = en.id)}>
                 <td class="ct-tick"><input type="checkbox" class="tick-box" checked={ticks.includes(en.id)} aria-label={ta('tip.collections.tickEntry', { name: ed.plainTitle(en.title) })}
                   title={ta('tip.collections.tickEntry', { name: ed.plainTitle(en.title) })} onclick={(e) => { e.stopPropagation(); tickRow(en.id, e); }} /></td>
                 <td class="ct-pic"><span class="ct-thumb" class:empty={!en.image}>{#if en.image}<img src={en.image} alt="" />{:else}{@html ICONS.image}{/if}</span></td>
@@ -144,6 +216,7 @@
                   onclick={(e) => { e.stopPropagation(); ed.panelEntry = en.id; }}>{ed.plainTitle(en.title)}</button></td>
                 {#each columns as col (col.key)}<td class:num={col.numeric} class:ct-text={col.key === 'text'}>{cellText(col.key, en, ed.plainTitle) || '-'}</td>{/each}
               </tr>
+              {#if drag && drop?.id === en.id && drop.pos === 'after'}{@render ghost()}{/if}
             {/each}
           </tbody>
         </table>
@@ -231,6 +304,24 @@
 
   .ct-grow {
     flex: 1;
+  }
+
+  /* An entry that moves is grabbed by its row; the row dragged fades, and a faint dashed row stands where it lands */
+  tr[data-movable] { cursor: grab; }
+  tr.ct-dragging { opacity: 0.4; }
+  .ct-ghost td {
+    padding: 0.7rem 0.8rem;
+    opacity: 0.55;
+    border: 1px dashed color-mix(in srgb, var(--urd-color-accent, #7c5cff) 70%, transparent);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 8%, transparent);
+  }
+
+  /* New entry stands as tall as the collection's menu and the close beside it, and as the search */
+  .ct-head .ct-new {
+    box-sizing: border-box;
+    height: 2rem;
+    min-height: 0;
+    padding: 0 0.8rem;
   }
 
   .ct-body {
@@ -360,7 +451,10 @@
     text-overflow: ellipsis;
   }
 
+  /* The entry's fields keep their own height at the drawer's top and scroll beyond it, rather than being stretched over the drawer or squeezed into it */
   .ct-fields {
+    grid-auto-rows: max-content;
+    align-content: start;
     min-height: 0;
     padding: 0 0.6rem 1rem 0.8rem;
     overflow-y: auto;

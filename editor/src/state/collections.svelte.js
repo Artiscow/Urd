@@ -61,6 +61,9 @@ let panelEntry = $state(null);
 /** The entries ticked in the open collection (panels/collections/SelectionBar.svelte); cleared when another collection opens. */
 let panelTicks = $state([]);
 
+/** The search over the open collection's entries, read by the panel's list and by the collection's menu in the two columns' heading (CollectionHeading.svelte); cleared when another collection opens. */
+let panelQuery = $state('');
+
 /**
  * A CSV import waiting for the owner's word (panels/collections/ImportDialog.svelte, ImportStep.svelte, ImportTable.svelte): the file read and checked (readCsv),
  * what rows that match an entry do, what becomes of the entries the file does not name, and the view it shows in. Nothing is stored until it is applied.
@@ -453,11 +456,13 @@ export const collectionsState = {
   set focusEntry(v) { focusEntry = v; },
   openEntry,
   get panelCollection() { return panelCollection; },
-  set panelCollection(v) { if (v !== panelCollection) panelTicks = []; panelCollection = v; },
+  set panelCollection(v) { if (v !== panelCollection) { panelTicks = []; panelQuery = ''; } panelCollection = v; },
   get panelEntry() { return panelEntry; },
   set panelEntry(v) { panelEntry = v; },
   get panelTicks() { return panelTicks; },
   set panelTicks(v) { panelTicks = v; },
+  get panelQuery() { return panelQuery; },
+  set panelQuery(v) { panelQuery = String(v ?? ''); },
   get csvImport() { return csvImport; },
   get csvPlan() { return csvPlan; },
   startCsvImport,

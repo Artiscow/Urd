@@ -2,7 +2,7 @@
   /* A collection's one menu, the ⋮ in its head: rename it, give it another kind where there is one to choose (kindChoices in lib/collection-bulk.js: never for products, else only the kinds its entries fit), and select every entry shown (Ctrl+A).
      Then what acts on the selected entries, greyed while none is selected: set a field on all of them (the fields with what the entries hold now, then one field's value, with the badges the collection already uses to press), move or copy them to another collection (the ones they fit, the others greyed with their reason, or a new one), and export them as CSV.
      Then the collection's CSV out and in, and the removal of the selected entries and of the whole collection, both in red.
-     The menu is a card under the ⋮; the new name takes the card's place, and an item with a submenu (the kind, the fields, the collections to move or copy to) opens it beside the card when the mouse rests on it, or on a press, Enter or the right arrow; a field in the list of fields opens its value beside the list the same way.
+     The menu is a card under the ⋮, opened by a press or a mouse's rest on it and closed a moment after the mouse leaves it (unless the focus has gone into it, a name typed), standing to whichever side of the ⋮ the window has room for; the new name takes the card's place, and an item with a submenu (the kind, the fields, the collections to move or copy to) opens it beside the card when the mouse rests on it, or on a press, Enter or the right arrow; a field in the list of fields opens its value beside the list the same way.
      A submenu stays while the pointer crosses to it or a field in it has the focus, and Escape or the left arrow steps back a level; it stands in the top layer, so the panel's scroll never clips it (ADR-0011): a popover placed by CSS anchoring where the browser has it, else measured and placed fixed (anchored.js).
      Every change is one undo step, offered again as «Undo» in the status line (state/collections.svelte.js). */
   import { menuMotion } from '../../lib/motion.svelte.js';
@@ -28,6 +28,9 @@
   const SUB_W = 272;
 
   let open = $state(false);
+  /** The card's side of the ⋮: its right edge under the ⋮'s, or its left edge where there is no room for that (a ⋮ near the panel's left edge). */
+  let fromLeft = $state(false);
+  let wrapEl = $state(null);
   let page = $state('main');
   let sub = $state(null);
   let name = $state('');
@@ -188,10 +191,38 @@
 
   function close() {
     cancelClose();
+    clearTimeout(restTimer);
     setSub(null);
     open = false;
     page = 'main';
   }
+
+  /** The card opened on the side of the ⋮ it has room on, inside the panel that would clip it, else the window. */
+  function openCard() {
+    const r = opener?.getBoundingClientRect();
+    const width = Math.min(17 * 16, window.innerWidth * 0.8);
+    const edge = opener?.closest('aside.panel')?.getBoundingClientRect().left ?? 0;
+    fromLeft = Boolean(r) && r.right - width < edge + 8;
+    open = true;
+  }
+
+  /** Whether a rest opened the card: the press that often follows keeps it open. */
+  let restOpened = false;
+
+  /** A mouse's rest on the ⋮ opens the card after a moment, and the mouse leaving the ⋮ and its card closes it a moment later, as the tabs' menus do; a card the focus has gone into stays until a press outside or Escape. */
+  let restTimer = 0;
+  function rest(on, event) {
+    if (event.pointerType !== 'mouse') return;
+    clearTimeout(restTimer);
+    restTimer = setTimeout(() => {
+      if (on && !open) {
+        restOpened = true;
+        openCard();
+      }
+      else if (!on && open && !wrapEl?.contains(document.activeElement)) close();
+    }, on ? 180 : 280);
+  }
+  $effect(() => () => clearTimeout(restTimer));
 
   /** The new name in the card's place, its field taking the focus. */
   function go(next) {
@@ -323,11 +354,12 @@
     <span>{label}</span><span class="cm-val">{extra ?? ''}{@html NEXT}</span></button>
 {/snippet}
 
-<span class="cm-wrap">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<span class="cm-wrap" bind:this={wrapEl} onpointerenter={(e) => rest(true, e)} onpointerleave={(e) => rest(false, e)}>
   <button type="button" class="ghost coll-btn" bind:this={opener} aria-expanded={open}
-    title={ta('tip.collections.menu')} aria-label={ta('tip.collections.menu')} onclick={() => (open ? close() : (open = true))}>{@html ICONS.kebab}</button>
+    aria-label={ta('tip.collections.menu')} onclick={() => { clearTimeout(restTimer); if (open && restOpened) { restOpened = false; return; } restOpened = false; if (open) close(); else openCard(); }}>{@html ICONS.kebab}</button>
   {#if open}
-    <div class="cm-card" role="group" aria-label={view?.name ?? id} bind:this={card} use:dismiss={{ close, opener }} transition:menuMotion>
+    <div class="cm-card" class:cm-card-left={fromLeft} role="group" aria-label={view?.name ?? id} bind:this={card} use:dismiss={{ close, opener }} transition:menuMotion>
       {#if page === 'main'}
         <button type="button" title={ta('tip.collections.rename')} onpointerenter={leaveSoon} onclick={() => go('rename')}>{ta('ui.rename')}</button>
         {#if kinds.length}{@render subItem('kind', ta('common.type'), kindLabel(view?.kind))}{/if}
@@ -445,7 +477,7 @@
     display: inline-flex;
   }
 
-  /* The card under the ⋮, right-aligned, over what follows in the panel */
+  /* The card under the ⋮, its right edge under the ⋮'s, or its left edge where the ⋮ stands near the panel's left edge, over what follows in the panel */
   .cm-card {
     position: absolute;
     top: calc(100% + 6px);
@@ -460,6 +492,11 @@
     border: 1px solid rgb(255 255 255 / 16%);
     border-radius: 10px;
     box-shadow: 0 14px 40px rgb(0 0 0 / 55%);
+  }
+
+  .cm-card.cm-card-left {
+    right: auto;
+    left: 0;
   }
 
   /* The submenu beside the card, on the same surface */

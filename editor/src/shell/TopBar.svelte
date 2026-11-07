@@ -1,5 +1,6 @@
 <script>
   /* The top bar: the page name, the view, device and zoom clusters with their fold steps, the draft status with Publish and Discard, and the tools on the right. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle. */
+  import PanelTab from './PanelTab.svelte';
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
@@ -14,6 +15,32 @@
   const ed = getContext('urd-editor');
   /** The Site menu stands in the top bar in the layout whose panel holds the page's tabs alone. */
   const siteMenu = $derived(ed.adminLayout === 'page-tabs');
+  /** A tool menu (the Site menu, a device's sizes) opened on a mouse's rest on its button and closed a moment after the mouse leaves it, as the tabs' menus are, each menu with its own wait; a pass on the way elsewhere opens nothing, and a menu the focus has gone into (a size typed) stays until a press outside or Escape. */
+  const restTimers = {};
+  /** The menu a rest opened, which the press that often follows the rest keeps open rather than closing. */
+  let restOpened = null;
+  function menuRest(id, on, event) {
+    if (event.pointerType !== 'mouse') return;
+    const wrap = event.currentTarget;
+    clearTimeout(restTimers[id]);
+    restTimers[id] = setTimeout(() => {
+      if (on && ed.toolMenu !== id) {
+        ed.toolMenu = id;
+        restOpened = id;
+      } else if (!on && ed.toolMenu === id && !wrap?.contains(document.activeElement)) ed.toolMenu = null;
+    }, on ? 180 : 280);
+  }
+  /** A press on a menu's button: it opens or closes the menu, but leaves one a rest just opened standing. */
+  function pressMenu(id) {
+    clearTimeout(restTimers[id]);
+    if (ed.toolMenu === id && restOpened === id) {
+      restOpened = null;
+      return;
+    }
+    restOpened = null;
+    ed.toolMenu = ed.toolMenu === id ? null : id;
+  }
+  $effect(() => () => Object.values(restTimers).forEach(clearTimeout));
   /** The gear stands in the top bar when neither a rail nor the strip holds it. */
   const gearHere = $derived(ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs');
   /** Each device's button: the fold-out it opens once shown, and the name of its sizes. */
@@ -128,15 +155,18 @@
       <span class="toolset" bind:this={ed.toolMenuEl}>
         {#if siteMenu}
           <nav class="topnav" aria-label={ta('rail.panels')}>
-            <span class="toolmenu">
-              <button type="button" class="ghost topnav-btn" class:active={ed.toolMenu === 'site'} title={ta('tip.siteMenu')}
-                onclick={() => (ed.toolMenu = ed.toolMenu === 'site' ? null : 'site')}>{ta('rail.siteMenu')}{@html ICONS.caret}{#if ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{:else if ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}</button>
+            <!-- The Site menu opens on a press, and on a mouse's rest as the tabs' menus do; it closes a moment after the mouse leaves it and its submenus -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <span class="toolmenu" onpointerenter={(e) => menuRest('site', true, e)} onpointerleave={(e) => menuRest('site', false, e)}>
+              <button type="button" class="ghost topnav-btn" class:active={ed.toolMenu === 'site'} aria-expanded={ed.toolMenu === 'site'}
+                onclick={() => pressMenu('site')}>{ta('rail.siteMenu')}<span class="topnav-caret" aria-hidden="true">{@html ICONS.caret}</span>{#if ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{:else if ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}</button>
               {#if ed.toolMenu === 'site'}
                 <div class="tool-pop site-pop" transition:menuMotion>
                   {#each ed.PANEL_GROUPS.slice(1) as group, gi (gi)}
                     <span class="mini-label">{ta(ed.PANEL_GROUP_KEYS[gi + 1])}</span>
                     {#each group as name (name)}
-                      <button type="button" class="ghost" class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} title={name === 'update' && ed.updateNotice === 'dot' ? ta('tip.updateOut', { version: ed.updateTarget }) : undefined} onclick={() => ed.togglePanel(name)}>{ed.PANEL_LABELS[name]}{#if name === 'update' && ed.updateNotice === 'dot'}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}{#if name === 'legal' && ed.legal?.dot}<span class="update-dot update-dot-inline legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}</button>
+                      <!-- A row with folds opens them beside it on a rest or the right arrow, as the strip's tabs do under them -->
+                      <PanelTab {name} variant="row" />
                     {/each}
                   {/each}
                 </div>
@@ -148,10 +178,11 @@
         <UndoButtons />
 
         {#if ed.folded.device}
-          <span class="toolmenu">
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <span class="toolmenu" onpointerenter={(e) => menuRest('device', true, e)} onpointerleave={(e) => menuRest('device', false, e)}>
             <button class="ghost" class:active={ed.toolMenu === 'device'}
-              title={ta('lbl.group.device')}
-              onclick={() => (ed.toolMenu = ed.toolMenu === 'device' ? null : 'device')}
+              aria-label={ta('lbl.group.device')}
+              onclick={() => pressMenu('device')}
               >{@html ICONS[deviceIcon(ed.deviceId)]}{@html ICONS.caret}</button>
             {#if ed.toolMenu === 'device'}
               <div class="tool-pop" transition:menuMotion>
@@ -177,11 +208,11 @@
             {#each ed.devices as d (d.id)}
               {@const split = SPLITS[d.id]}
               {@const on = ed.deviceId === d.id && !ed.freeWidth}
-              <!-- Each device is one button with its icon and an arrow, as the page switcher: a press on the device not shown switches to it, a press on the one shown opens its sizes -->
-              <span class="toolmenu device-one" class:active={on}>
+              <!-- Each device is one button with its icon and an arrow, as the page switcher: a press on the device not shown switches to it, a press on the one shown opens its sizes, and a mouse's rest on either opens its sizes, a size picked switching to it -->
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <span class="toolmenu device-one" class:active={on} onpointerenter={(e) => menuRest(split.menu, true, e)} onpointerleave={(e) => menuRest(split.menu, false, e)}>
                 <button class="ghost device-btn" class:active={on} class:open={ed.toolMenu === split.menu}
-                  onclick={() => { if (on) ed.toolMenu = ed.toolMenu === split.menu ? null : split.menu; else ed.deviceId = d.id; }}
-                  title={on ? ta('tip.device.sizes', { device: ed.deviceTip(d) }) : ed.deviceTip(d)}
+                  onclick={() => { if (on) pressMenu(split.menu); else ed.deviceId = d.id; }}
                   aria-label={on ? ta('tip.device.sizes', { device: ed.deviceTip(d) }) : ed.deviceTip(d)}
                   aria-expanded={on ? ed.toolMenu === split.menu : undefined}>{@html ICONS[deviceIcon(d.id)]}{@html ICONS.caret}</button>
                 {#if ed.toolMenu === split.menu}

@@ -26,6 +26,13 @@ export function settingsPictures(raw) {
  * `when` on a group or a setting: whether it is shown at all.
  * `parent` on a setting: the setting it belongs to, drawn directly under it and shown with it.
  */
+/** Whether the layout opens menus of folds, so their look and «After a pick» have something to set. */
+const menusShown = (c) => {
+  if (c.ed.adminLayout === 'panel-tabs') return c.ed.panelTabMenus === true;
+  if (c.ed.adminLayout === 'sidebar') return c.ed.sidebarFolds === 'flyout';
+  return true;
+};
+
 export const SETTINGS_GROUPS = [
   {
     id: 'look',
@@ -35,16 +42,25 @@ export const SETTINGS_GROUPS = [
         options: (c) => c.ed.ADMIN_THEMES, get: (c) => c.ed.adminTheme, set: (c, v) => { c.ed.adminTheme = v; } },
       { id: 'layout', labelKey: 'settings.layout', tipKey: 'tip.settings.layout', kind: 'choice', look: 'layout',
         options: (c) => c.ed.ADMIN_LAYOUT_OPTIONS, get: (c) => c.ed.adminLayout, set: (c, v) => c.ed.setAdminLayout(v) },
+      // The sidebar of words shows a panel's folds under the open panel's word, or beside each word.
+      { id: 'sidebarFolds', parent: 'layout', labelKey: 'settings.sidebarFolds', tipKey: 'tip.settings.sidebarFolds', kind: 'choice', look: 'sidebarFolds',
+        when: (c) => c.ed.adminLayout === 'sidebar',
+        options: (c) => c.ed.SIDEBAR_FOLDS_OPTIONS, get: (c) => c.ed.sidebarFolds, set: (c, v) => c.ed.setSidebarFolds(v) },
+      // The panel's own tabs open no menus unless they are switched on.
+      { id: 'panelTabMenus', parent: 'layout', labelKey: 'settings.panelTabMenus', tipKey: 'tip.settings.panelTabMenus', kind: 'seg',
+        when: (c) => c.ed.adminLayout === 'panel-tabs',
+        options: (c) => [['on', c.ta('common.on')], ['off', c.ta('common.off')]],
+        get: (c) => (c.ed.panelTabMenus ? 'on' : 'off'), set: (c, v) => c.ed.setPanelTabMenus(v) },
       { id: 'place', labelKey: 'settings.place', tipKey: 'tip.settings.place', kind: 'choice', look: 'place',
         options: (c) => c.ed.SETTINGS_PLACE_OPTIONS, get: (c) => c.ed.settingsPlace, set: (c, v) => c.ed.setSettingsPlace(v) },
       { id: 'press', labelKey: 'settings.press', tipKey: 'tip.settings.press', kind: 'choice', look: 'press',
         options: (c) => c.ed.PRESS_OPTIONS, get: (c) => c.ed.pressFeel, set: (c, v) => c.ed.setPressFeel(v) },
-      // The tabs' menus stand in the two layouts whose tabs have them: the strip under the top bar and the panel's own tabs.
+      // The menus of folds stand under the strip's tabs, beside the Site menu's rows and the rail's icons, beside the sidebar's words where they open there, and under the panel's own tabs where those are switched on.
       { id: 'tabMenus', labelKey: 'settings.tabMenus', tipKey: 'tip.settings.tabMenus', kind: 'choice', look: 'tabMenus',
-        when: (c) => c.ed.adminLayout === 'top-tabs' || c.ed.adminLayout === 'panel-tabs',
+        when: menusShown,
         options: (c) => c.ed.TAB_MENU_OPTIONS, get: (c) => c.ed.tabMenus, set: (c, v) => c.ed.setTabMenus(v) },
       { id: 'tabMenuStay', parent: 'tabMenus', labelKey: 'settings.tabMenuStay', tipKey: 'tip.settings.tabMenuStay', kind: 'seg',
-        when: (c) => c.ed.adminLayout === 'top-tabs' || c.ed.adminLayout === 'panel-tabs',
+        when: menusShown,
         options: (c) => [['close', c.ta('opt.tabMenuStay.close')], ['stay', c.ta('opt.tabMenuStay.stay')]],
         get: (c) => c.ed.tabMenuStay, set: (c, v) => c.ed.setTabMenuStay(v) },
       { id: 'pictures', labelKey: 'settings.pictures', tipKey: 'tip.settings.pictures', kind: 'seg',

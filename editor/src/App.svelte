@@ -30,6 +30,7 @@
   import FloatingMenu from './menu/FloatingMenu.svelte';
   import TopBar from './shell/TopBar.svelte';
   import Rail from './shell/Rail.svelte';
+  import CollectionHeading from './panels/collections/CollectionHeading.svelte';
   import PanelNav from './shell/PanelNav.svelte';
   import PanelStrip from './shell/PanelStrip.svelte';
   import PreviewStage from './shell/PreviewStage.svelte';
@@ -110,6 +111,8 @@
   });
   setContext('urd-editor', ed);
   for (const part of parts) part.effects?.();
+  /** The two columns name the open collection in the panel's heading (panels/collections/CollectionHeading.svelte). */
+  const collectionHeading = $derived(ed.activePanel === 'collections' && ed.collectionsLayout === 'columns' && ed.collectionIds.includes(ed.panelCollection) && ed.csvImport?.view !== 'panel');
   onMount(() => { ed.init(); });
 </script>
 
@@ -132,16 +135,22 @@
       <Rail />
 
       <!-- The tab layouts keep the panel's column standing with its tabs while no panel is open, or folded to a handle at the edge -->
-      {#if (ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded}
-        <button type="button" class="panel-handle" class:hidden={!ed.chromeVisible} title={ta('ui.openPanel')} aria-label={ta('ui.openPanel')} onclick={() => (ed.panelFolded = false)}>{@html ICONS.foldRight}</button>
+      {#if (ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && (ed.panelFolded || (ed.adminLayout === 'page-tabs' && !ed.activePanel))}
+        <button type="button" class="panel-handle" class:hidden={!ed.chromeVisible} title={ta('ui.openPanel')} aria-label={ta('ui.openPanel')} onclick={() => ed.unfoldPanel()}>{@html ICONS.foldRight}</button>
       {:else if ed.activePanel || ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}
         <!-- The two-column collections editor widens the panel while a collection is open in it -->
         <aside class="panel" class:hidden={!ed.chromeVisible} bind:this={ed.panelEl}
-          class:panel-wide={ed.activePanel === 'collections' && ed.collectionsLayout === 'columns' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection)}>
+          class:panel-wide={ed.activePanel === 'collections' && ed.collectionsLayout === 'columns' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection)}
+          class:panel-still={collectionHeading}>
           {#if ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}<PanelNav />{/if}
           {#if ed.activePanel}
           <div class="panel-head">
-            <h2 title={ed.PANEL_INTROS[ed.activePanel]?.map((k) => ta(k)).join('\n')}>{ed.PANEL_LABELS[ed.activePanel]}</h2>
+            {#if collectionHeading}
+              <!-- The two columns name the open collection in the heading's place, with its menu beside the name -->
+              <CollectionHeading />
+            {:else}
+              <h2 title={ed.PANEL_INTROS[ed.activePanel]?.map((k) => ta(k)).join('\n')}>{ed.PANEL_LABELS[ed.activePanel]}</h2>
+            {/if}
             <span class="panel-head-tools">
               {#if ed.panelHasGroups}
                 <button type="button" class="fold-all fold-toggle" class:collapse={ed.panelAllOpen}

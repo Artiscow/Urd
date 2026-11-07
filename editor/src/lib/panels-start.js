@@ -17,15 +17,18 @@ export function panelsPrefOf(raw) {
   return PANELS_PREFS.includes(raw) ? raw : 'remember';
 }
 
-/** The choices that make sense in a layout: the folded column only where the column stands. */
+/** The choices that make sense in a layout: the folded column only where the column stands, and in «The page's tabs», whose column folds whenever no panel is open, no separate «no panel». */
 export function panelsPrefsFor(layout) {
+  if (layout === 'page-tabs') return PANELS_PREFS.filter((p) => p !== 'reset');
   return COLUMN_LAYOUTS.includes(layout) ? PANELS_PREFS : PANELS_PREFS.filter((p) => p !== 'folded');
 }
 
-/** The choice in effect in a layout: the folded column is no panel where there is no column to fold. */
+/** The choice in effect in a layout: the folded column is no panel where there is no column to fold, and no panel is the folded column in «The page's tabs». */
 export function panelsPrefIn(pref, layout) {
   const p = panelsPrefOf(pref);
-  return p === 'folded' && !COLUMN_LAYOUTS.includes(layout) ? 'reset' : p;
+  if (p === 'folded' && !COLUMN_LAYOUTS.includes(layout)) return 'reset';
+  if (p === 'reset' && layout === 'page-tabs') return 'folded';
+  return p;
 }
 
 /**
@@ -46,4 +49,26 @@ export function startPanels({ pref, layout, panels, stored, storedFolded, start 
     default:
       return { panel: known(stored), folded: COLUMN_LAYOUTS.includes(layout) && !!storedFolded };
   }
+}
+
+/**
+ * The page's tabs with the site in a menu («page-tabs»): its column never stands open without a panel, since only the page's tabs would stand in it; it folds to its handle, and the handle opens the panel last open (Pages where none has been).
+ * @param {string} layout
+ * @param {string|null} panel The open panel
+ * @returns {boolean} Whether the column folds
+ */
+export function foldsEmpty(layout, panel) {
+  return layout === 'page-tabs' && !panel;
+}
+
+/**
+ * The panel the handle opens: the one already open, else in «page-tabs» the one last open, or Pages.
+ * @param {string} layout
+ * @param {string|null} panel
+ * @param {string|null} last
+ * @returns {string|null}
+ */
+export function unfoldedPanel(layout, panel, last) {
+  if (panel || layout !== 'page-tabs') return panel;
+  return last && last !== 'settings' ? last : PANELS_START_DEFAULT;
 }

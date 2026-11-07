@@ -29,7 +29,7 @@
   {/if}
   <div class="panel-tabs">
     {#each tabs as name (name)}
-      <PanelTab {name} />
+      <PanelTab {name} menus={ed.panelTabMenus} />
     {/each}
     {#if ed.adminLayout !== 'panel-tabs'}{@render fold()}{/if}
   </div>

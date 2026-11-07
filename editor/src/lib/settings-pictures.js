@@ -113,6 +113,14 @@ const TAB_MENUS = {
   plain: tabMenu(row(11, 20) + row(16, 16) + row(21, 22) + row(26, 14) + row(31, 18)),
 };
 
+/** Where the sidebar shows a panel's folds: under the open panel's word, indented, or in a flyout beside the word. */
+const sideWords = () => topbar() + dim(1, 7, 20, H - 8) + line(4, 10, 11, 2) + stage(21);
+const SIDEBAR_FOLDS = {
+  tree: sideWords() + acc(4, 14, 12, 2) + line(7, 18, 9, 1.5) + line(7, 21, 11, 1.5) + line(7, 24, 8, 1.5) + line(4, 28, 10, 2) + line(4, 32, 12, 2),
+  hover: sideWords() + line(4, 14, 12, 2) + acc(4, 18, 10, 2) + line(7, 22, 9, 1.5) + line(7, 25, 11, 1.5) + line(7, 28, 8, 1.5) + line(4, 32, 12, 2) + `<path d="M15 17l0 6 1.6-1.6 1.4 2.6 1-.5-1.4-2.6 2.2-.1z" fill="currentColor" opacity="0.7"/>`,
+  flyout: sideWords() + acc(4, 14, 12, 2) + line(4, 18, 10, 2) + line(4, 22, 12, 2) + line(4, 26, 9, 2) + `<rect x="22" y="12" width="20" height="18" rx="2" fill="currentColor" opacity="0.18"/>` + line(25, 15, 12, 1.5) + line(25, 19, 14, 1.5) + line(25, 23, 10, 1.5) + line(25, 27, 13, 1.5),
+};
+
 const LOOKS = {
   layout: LAYOUTS,
   place: PLACES,
@@ -126,6 +134,7 @@ const LOOKS = {
   pageSettings: PAGE_SETTINGS,
   press: PRESS,
   tabMenus: TAB_MENUS,
+  sidebarFolds: SIDEBAR_FOLDS,
 };
 
 /** A theme's swatch: its background with its surface, a line in its accent and a line in its text colour. */

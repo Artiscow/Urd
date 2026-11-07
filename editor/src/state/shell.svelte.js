@@ -11,7 +11,7 @@ import { ICONS } from '../lib/icons.js';
 import { opensShortcuts } from '../lib/shortcuts.js';
 import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
 import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as settingsPicturesOf } from '../lib/settings-model.js';
-import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT } from '../lib/panels-start.js';
+import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT, foldsEmpty, unfoldedPanel } from '../lib/panels-start.js';
 import { COLLECTION_LAYOUTS, collectionLayoutOf, CSV_PREVIEWS, csvPreviewOf } from '../lib/collection-layout.js';
 import { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf } from '../lib/page-settings.js';
 import { PRESS_FEELS, pressFeelOf, pressTarget, ripple } from '../lib/press-feel.js';
@@ -369,6 +369,8 @@ let adminLayout = $state(ADMIN_LAYOUTS.includes(localStorage.getItem(ADMIN_LAYOU
 
 function setAdminLayout(v) {
   adminLayout = ADMIN_LAYOUTS.includes(v) ? v : 'rail';
+  // The column folded because no panel was open in «The page's tabs» stands open in a layout that keeps it with its tabs.
+  if (!activePanel && adminLayout !== 'page-tabs') panelFolded = false;
   if (adminLayout === 'rail') localStorage.removeItem(ADMIN_LAYOUT_KEY);
   else localStorage.setItem(ADMIN_LAYOUT_KEY, adminLayout);
   if (toolMenu === 'site') toolMenu = null;
@@ -383,6 +385,19 @@ const UPDATE_NOTICE_OPTIONS = $derived(UPDATE_NOTICES.map((id) => [id, ta(`opt.u
 
 /** Whether the tab layouts' column is folded to a handle at the edge; a panel opened from anywhere unfolds it (the activePanel setter). */
 let panelFolded = $state(false);
+
+/** The panel open last, which the handle opens again in «The page's tabs» (lib/panels-start.js unfoldedPanel). */
+let lastPanel = null;
+
+/** The handle at the column's edge: the column unfolds, in «The page's tabs» with the panel last open, since it never stands empty there. */
+function unfoldPanel() {
+  const panel = unfoldedPanel(adminLayout, activePanel, lastPanel);
+  panelFolded = false;
+  if (panel !== activePanel) {
+    activePanel = panel;
+    loadPanelData();
+  }
+}
 
 /** The panels grouped by workflow: build the page, style the site,
  *  tools. Shown with dividers in the panel picker. The ids are stable
@@ -604,6 +619,30 @@ function setTabMenuStay(v) {
   else localStorage.setItem(TAB_MENU_STAY_KEY, tabMenuStay);
 }
 
+/** Where the sidebar of words shows a panel's folds (Urd settings «Folds in the sidebar»): under the open panel's word as a tree (the default, not stored), under the word the mouse rests on, or in a flyout beside each word; kept per browser. */
+const SIDEBAR_FOLDS_KEY = 'urd-sidebar-folds';
+const SIDEBAR_FOLDS = ['tree', 'hover', 'flyout'];
+const sidebarFoldsOf = (v) => (SIDEBAR_FOLDS.includes(v) ? v : 'tree');
+let sidebarFolds = $state(sidebarFoldsOf(localStorage.getItem(SIDEBAR_FOLDS_KEY)));
+
+function setSidebarFolds(v) {
+  sidebarFolds = sidebarFoldsOf(v);
+  if (sidebarFolds === 'tree') localStorage.removeItem(SIDEBAR_FOLDS_KEY);
+  else localStorage.setItem(SIDEBAR_FOLDS_KEY, sidebarFolds);
+}
+
+const SIDEBAR_FOLDS_OPTIONS = $derived(SIDEBAR_FOLDS.map((id) => [id, ta(`opt.sidebarFolds.${id}`)]));
+
+/** Whether the panel's own tabs («Tabs at the top of the panel») open a menu of a panel's folds (Urd settings «Menus under the tabs»): off by default, on where chosen; kept per browser. */
+const PANEL_TAB_MENUS_KEY = 'urd-panel-tab-menus';
+let panelTabMenus = $state(localStorage.getItem(PANEL_TAB_MENUS_KEY) === 'on');
+
+function setPanelTabMenus(v) {
+  panelTabMenus = v === 'on' || v === true;
+  if (panelTabMenus) localStorage.setItem(PANEL_TAB_MENUS_KEY, 'on');
+  else localStorage.removeItem(PANEL_TAB_MENUS_KEY);
+}
+
 /** Where a page's settings open («Page settings», lib/page-settings.js): a dialog over the admin (the default, not stored), a step in the Pages panel, or a table of every page over the canvas; kept per browser. */
 const PAGE_SETTINGS_KEY = 'urd-page-settings';
 
@@ -796,6 +835,12 @@ function decorateSubFolds(root) {
 
 /** The effects of this module, run once by the shell at its start. */
 export function effects() {
+
+  // In «The page's tabs» the column folds once no panel is open (closed by its tab, its head's fold button or the Site menu), rather than standing with the page's tabs alone; the panel open last is kept for the handle.
+  $effect(() => {
+    if (activePanel && activePanel !== 'settings') lastPanel = activePanel;
+    if (foldsEmpty(adminLayout, activePanel) && !panelFolded) panelFolded = true;
+  });
 
   // A fold asked for: unfolded alone, brought into view, its heading focused and lit, once its panel has drawn it; a fold the panel does not draw now leaves the panel as it opens.
   // The panel's other folds close with their own motion (app.css, 0.24 s), and the scroll waits for it, so the fold asked for is brought to where it stands once they have closed.
@@ -1011,6 +1056,7 @@ export const shellState = {
   get UPDATE_NOTICE_OPTIONS() { return UPDATE_NOTICE_OPTIONS; },
   get panelFolded() { return panelFolded; },
   set panelFolded(v) { panelFolded = v; },
+  unfoldPanel,
   get adminLayout() { return adminLayout; },
   set adminLayout(v) { adminLayout = v; },
   setAdminLayout,
@@ -1033,6 +1079,11 @@ export const shellState = {
   get tabMenuStay() { return tabMenuStay; },
   setTabMenuStay,
   get TAB_MENU_OPTIONS() { return TAB_MENU_OPTIONS; },
+  get sidebarFolds() { return sidebarFolds; },
+  setSidebarFolds,
+  get SIDEBAR_FOLDS_OPTIONS() { return SIDEBAR_FOLDS_OPTIONS; },
+  get panelTabMenus() { return panelTabMenus; },
+  setPanelTabMenus,
   setPressFeel,
   get PRESS_OPTIONS() { return PRESS_OPTIONS; },
   setPageSettingsPref,

@@ -294,9 +294,10 @@
     display: flex;
     flex-direction: column;
     /* The longest label is "Oppdatering": eleven characters in 0.74rem
-       monospace is just over 80 px, plus twice 0.9rem indent. 8.5rem gives
-       air without the rail taking space from the canvas. */
-    width: 8.5rem;
+       monospace is just over 80 px, plus twice 0.9rem indent, and a word
+       with folds carries its dot and its arrow after it. 9.75rem gives them
+       room without the rail taking much space from the canvas. */
+    width: 9.75rem;
     flex: none;
     gap: 0;
     padding: 0.55rem 0;
@@ -307,7 +308,7 @@
     overflow-y: auto;
   }
 
-  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
+  .rail button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .tab-menu-list *)){
     border: 0;
     background: transparent;
     font-family: inherit;
@@ -322,7 +323,7 @@
     opacity: 0.75;
   }
 
-  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
+  .rail button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .tab-menu-list *)){
     opacity: 1;
     background: rgb(255 255 255 / 6%);
   }
@@ -469,13 +470,32 @@
   /* The top bar's Site menu («page-tabs»). */
   .topnav { display: inline-flex; align-items: center; gap: 0.25rem; }
   .topnav-btn.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    background: var(--urd-color-accent, #7c5cff);
-    color: var(--urd-color-surface, #151a23);
-    border-color: transparent;
+    color: var(--urd-color-accent, #7c5cff);
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 10%, transparent);
   }
-  .site-pop { min-width: 11rem; }
-  .site-pop .mini-label { padding: 0.35rem 0.5rem 0.1rem; }
-  .site-pop .mini-label:not(:first-child) { margin-top: 0.3rem; border-top: 1px solid rgb(255 255 255 / 10%); padding-top: 0.55rem; }
+  /* The Site menu of «The page's tabs»: the same compact rows and small group labels as the tabs' menus, the open panel's name in the accent */
+  .tool-pop.site-pop { min-width: 10rem; gap: 0; padding: 4px; border-radius: 9px; font-size: 0.8rem; }
+  .tool-pop.site-pop .mini-label { padding: 6px 9px 3px; font-size: 0.56rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; opacity: 0.5; }
+  .tool-pop.site-pop .mini-label:not(:first-child) { margin-top: 7px; }
+  .tool-pop.site-pop .ghost.site-row:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    height: 28px;
+    padding: 0 9px;
+    gap: 10px;
+    border-color: transparent;
+    border-radius: 5px;
+    background: transparent;
+    font-size: inherit;
+    white-space: nowrap;
+  }
+  .tool-pop.site-pop .ghost.site-row:is(:hover, :focus-visible, .menu-open):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
+  .tool-pop.site-pop .ghost.site-row.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { color: var(--urd-color-accent, #7c5cff); border-color: transparent; }
+  /* The Site button: a framed button as the page switcher beside it, its arrow turning and its border and text in the accent while its menu stands open */
+  .topnav-caret { display: inline-flex; transition: transform 0.2s ease; }
+  .topnav-btn.active .topnav-caret { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) {
+    .topnav-caret { transition: none; }
+  }
 
   /* The mark lives at the bottom by the gear: mark on the left, settings
      on the right, with a divider above. */
@@ -545,6 +565,14 @@
   /* The two-column collections editor: the panel widened while a collection is open, never past more than half the window */
   .panel.panel-wide {
     width: min(680px, 50vw);
+  }
+
+  /* The two columns: the panel stands still and its columns scroll on their own (panels/CollectionsPanel.svelte); a CSV import shown in the panel scrolls the panel as any other */
+  .panel.panel-still {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    scrollbar-gutter: auto;
   }
 
   /* The stage's place in the workspace, holding the collections table over it */
@@ -4379,6 +4407,35 @@
     position: relative;
     display: inline-flex;
     align-items: center;
+  }
+  /* A row of the Site menu and a word of the sidebar fill their line; an icon of the rail keeps its own size */
+  .tab-menu-is-row,
+  .tab-menu-is-word { display: flex; width: 100%; }
+  .tab-menu-is-row > button,
+  .tab-menu-is-word > button { flex: 1 1 auto; }
+  /* A menu beside the rail or a sidebar word reads in the admin's own type, as the strip's menus do, not in the rail's */
+  .rail .tab-menu-list { font-family: var(--urd-font-body, system-ui, -apple-system, "Segoe UI", sans-serif); }
+  .site-row .tab-menu-name,
+  .side-word .tab-menu-name { margin-right: auto; }
+  .site-row .tab-menu-more,
+  .side-word .tab-menu-more { margin-left: 14px; }
+  /* Beside a rail's icon, the panel's name heads the menu and opens the panel */
+  .tab-menu-list .tab-menu-head:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    height: 30px;
+    margin-bottom: 4px;
+    font-weight: 600;
+    border-bottom: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 5px 5px 0 0;
+  }
+  /* The sidebar's tree: the open panel's folds under its word, indented, and the word's arrow turned down */
+  .rail .side-name { margin-right: auto; }
+  .rail .side-more { display: inline-flex; margin-left: 0.6rem; opacity: 0.55; transition: transform 0.2s ease; }
+  .rail .side-more.open { transform: rotate(90deg); }
+  .rail .side-item { display: flex; flex-direction: column; }
+  .rail .side-folds { display: flex; flex-direction: column; padding-bottom: 0.2rem; }
+  .rail .side-folds .side-fold:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { padding-left: 1.7rem; font-size: 0.7rem; opacity: 0.62; }
+  @media (prefers-reduced-motion: reduce) {
+    .rail .side-more { transition: none; }
   }
   .tab-menu-word { position: relative; }
   .tab-menu-dot {

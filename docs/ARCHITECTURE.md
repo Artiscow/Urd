@@ -156,7 +156,7 @@ Recorded before the split, 14 October 2026: `editor/src/App.svelte` held the who
 ```
 editor/src/
   main.js  App.svelte  app.css
-  shell/    TopBar, Rail, PreviewStage, ConfirmDialog, SetupWizard, PanelTab (a panel's tab with the menu of its folds, lib/panel-folds.js)
+  shell/    TopBar, Rail, PreviewStage, ConfirmDialog, SetupWizard, PanelTab (a panel's button with the menu of its folds, lib/panel-folds.js: a tab in the strip and the panel's tabs, a row of the Site menu, an icon of the rail and a word of the sidebar's flyout form; the sidebar's tree is drawn by Rail)
   panels/   PagesPanel, NavPanel, SitePanel, LegalPanel, ThemePanel, BlocksPanel, GridPanel, PropertiesPanel, FooterPanel, CollectionsPanel, PluginsPanel, HistoryPanel, UpdatePanel
   section/  BackgroundEditor
   menu/     ElementMenu, FloatingMenu, MenuGroup, Pin, SearchField, BoxStyle, Placement, DocLook, families/, state.svelte.js, options.js, groups.js
