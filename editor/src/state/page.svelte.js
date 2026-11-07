@@ -317,12 +317,6 @@ function openImageEditor() {
   blockMenu = null;
 }
 
-/** The text block's words, opened for editing in the preview with the text toolbar (the floating menu steps aside). */
-function editText() {
-  previewState.bridge?.sendEditText(selectedBlock.blockId);
-  blockMenu = null;
-}
-
 /** A font or a size for the whole text of the block, applied by the preview's text toolbar (`{fontFamily}` or `{fontSize}`, null takes the theme's). */
 function setTextStyle(style) {
   previewState.bridge?.sendTextStyle(selectedBlock.blockId, style);
@@ -1021,11 +1015,12 @@ async function addGalleryImages(event) {
   mediaState.reportUpload(images.length, failed);
 }
 
-function moveGalleryImage(i, dir) {
+/** Moves a gallery picture from one place to another, as the list editor's drag and keys do. */
+function moveGalleryImage(from, to) {
   mutateBlock('gallery-move', (b) => {
-    const j = i + dir;
-    if (j < 0 || j >= b.props.images.length) return;
-    [b.props.images[i], b.props.images[j]] = [b.props.images[j], b.props.images[i]];
+    const list = b.props.images;
+    if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return;
+    list.splice(to, 0, ...list.splice(from, 1));
   });
 }
 
@@ -1139,7 +1134,6 @@ export const pageState = {
   ribbonReach,
   RIBBON_MOTIONS,
   openImageEditor,
-  editText,
   setTextStyle,
   fitTimers,
   fitSeq,

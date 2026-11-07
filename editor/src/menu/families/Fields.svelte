@@ -13,7 +13,10 @@
      A plugin block with `designs` (the design contract) has its design row drawn first in Style by the menu itself (ElementMenu.svelte). */
   import Setting from '../../lib/rows/Setting.svelte';
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
+  import SelectRow from '../../lib/rows/SelectRow.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import NumberRow from '../../lib/rows/NumberRow.svelte';
+  import ErrorLine from '../../lib/rows/ErrorLine.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import LinkField from '../../lib/LinkField.svelte';
   import { ta, taApiError } from '$engine/i18n.js';
@@ -91,31 +94,25 @@
             oninput={(e) => { placeDrafts[k] = e.target.value; }}
             onkeydown={(e) => { if (e.key === 'Enter') searchPlace(f); }} /></label>
         <button class="ghost" disabled={placeBusy} onclick={() => searchPlace(f)}>{ta('props.place.search')}</button>
-        {#if placeStatus[k]}
-          <p class="panel-hint" class:place-error={placeStatus[k].err}>{placeStatus[k].text}</p>
+        {#if placeStatus[k]?.err}
+          <ErrorLine text={placeStatus[k].text} />
+        {:else if placeStatus[k]}
+          <span class="field-note" aria-live="polite">{placeStatus[k].text}</span>
         {/if}
       {:else if f.type === 'number'}
         <Setting pin={selectedBlock.type === 'map' && f.key === 'zoom' ? 'zoom' : null}>
-          <label title={f.hint || f.label}>{f.label}
-            <input type="number" min={f.min} max={f.max} step={f.step ?? 1}
-              value={selectedBlock.props[f.key]}
-              onchange={(e) => setBlockProp(f.key, clampField(f, Number(e.target.value)))} /></label>
+          <NumberRow label={f.label} title={f.hint || f.label} value={selectedBlock.props[f.key]} min={f.min} max={f.max} step={f.step ?? 1}
+            onchange={(v) => setBlockProp(f.key, clampField(f, v))} />
         </Setting>
       {:else if f.type === 'toggle'}
-        <label title={f.hint || f.label} class="gridmenu-snap">
-          <input type="checkbox" checked={Boolean(selectedBlock.props[f.key])}
-            onchange={(e) => setBlockProp(f.key, e.target.checked)} />
-          {f.label}
-        </label>
+        <SwitchRow label={f.label} title={f.hint || f.label} checked={Boolean(selectedBlock.props[f.key])} onchange={(on) => setBlockProp(f.key, on)} />
       {:else if f.type === 'link'}
         <!-- The link shape under the field's own key, set through the link editor; null when it is removed -->
         <LinkField label={f.label} title={f.hint || f.label} value={selectedBlock.props[f.key] ?? null}
           onchange={(next) => setBlockProp(f.key, next)} />
       {:else if f.type === 'select'}
-        <label title={f.hint || f.label}>{f.label}
-          <Dropdown value={selectedBlock.props[f.key]}
-            options={(f.options ?? []).map((o) => [o.value, o.label])}
-            onchange={(v) => setBlockProp(f.key, v)} /></label>
+        <SelectRow label={f.label} title={f.hint || f.label} value={selectedBlock.props[f.key]} options={(f.options ?? []).map((o) => [o.value, o.label])}
+          onchange={(v) => setBlockProp(f.key, v)} />
       {:else}
         <label title={f.hint || f.label}>{f.label}
           <input type="text" placeholder={f.placeholder} value={selectedBlock.props[f.key] ?? ''}
@@ -126,11 +123,9 @@
   {#if selectedBlock.type === 'map'}
     <Fold id="map-place" defaultOpen title={ta('group.place')} value={selectedBlock.props.location || ta('common.none')}>{@render fieldList()}</Fold>
     <!-- Whether the map stands behind a cover until a visitor presses it, or loads with the page -->
-    <label title={ta('tip.embed.askFirst')} class="gridmenu-snap">
-      <input type="checkbox" checked={selectedBlock.props.askFirst !== false}
-        onchange={(e) => setBlockProp('askFirst', e.target.checked)} />
-      {ta('lbl.embedAskFirst')}
-    </label>
+    <Setting key="askFirst" own={selectedBlock.props.askFirst === false} reset={() => setBlockProp('askFirst', undefined)}>
+      <SwitchRow label={ta('lbl.embedAskFirst')} title={ta('tip.embed.askFirst')} checked={selectedBlock.props.askFirst !== false} onchange={(on) => setBlockProp('askFirst', on)} />
+    </Setting>
   {:else if pluginFields.length}
     {@render fieldList()}
   {:else if pluginBlocks.some((b) => b.type === selectedBlock.type)}

@@ -8,6 +8,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.30.4 - Every block's menu on the row kit: one control for a setting, no group of one, every list alike, and two columns that hold still - 7 November 2026
+
+- A pinned setting drew one control in Pinned and another in its area (Alignment a segment above and a dropdown below, Size and Speed a number above and a slider below, «Hide on mobile» a segment above and a switch below). Each draws the same control with the same words in both places, on every block type.
+- Folds held a single setting (the image's fit and its corners, the audio's loop, the shape's measure, the calendar's colours and its stripe, the product's shop and its price). A fold told how many settings it holds (`rows` in `lib/rows/Fold.svelte`) draws none as nothing and one as that setting alone, still marked as the block's own, and folds that belonged together were merged.
+- Lists were edited several ways, with up and down buttons. The ribbon's words, the FAQ's questions, the timeline's events, the gallery's pictures, the links (the site's in the Site panel too), the calendar's sources, the form's fields and the checkout's payment instructions use the list editor: a grip to drag, Alt and the arrow keys, a cross, the add button at the foot.
+- The gallery's lightbox, the quote's portrait and the contact's «Ask before loading» stood in Style, and the text's font and size in Content. The lightbox, «Ask before loading» and the image editor stand in Content and the fonts in Style on every block.
+- The switches, sliders, dropdowns, numbers, colours and icon buttons in every block's menu are the row kit's, and panel-language.test.mjs's list no longer names any part of the element menu.
+- tests/menu-render.test.mjs holds every block type, core and plugin, to the same control in Pinned and in its area, to no fold of one setting, and to the shared settings' areas.
+- 25 dictionary keys no code read any more are removed.
+- Test findings, fixed in the round:
+  - The text block's «Edit the text» repeated what a click on the text does. It is gone with the message it sent, and the text's font and size stand in Style (`menu/WholeText.svelte`), for the terms of sale too, which had lost them.
+  - In the wide menu an opening fold drew over what stood below, and what stood below moved at another pace. The wide menu stands in two plain columns, Pinned and the areas cut once where they come out most even when a block's menu opens.
+  - The first such split kept Pinned above the columns and left one of them nearly empty. Pinned takes part in the cut.
+  - The icon's size field pushed its words onto two lines. The kit's number field has a width of its own.
+  - A menu without Content left a gap above Style. The room between the areas stands under each.
+- ADR-0016's decision 3 is rewritten for the text block and the two columns, the text as it stood in `docs/adr/amended/0016-panel-language-until-2026-11-07c.md`.
+
+The independent review before the commit found these, all fixed:
+
+1. The two columns were measured anew after every edit, since the measure read the whole block, so an area could move to the other column under a slider being dragged. They are measured for another block only.
+2. A setting standing alone that gained a neighbour moved into a closed fold, out of sight with the control just used. A fold of one keeps its markup, drawn bare, and opens where it stands when a second setting joins.
+3. Alt and an arrow left the focus at the row's old place in a list keyed by place, so a second press moved the row back. The focus follows the row to its new place.
+4. ADR-0016 did not record that a group of one is drawn alone, that a shared setting keeps one area, or the plain columns, and ARCHITECTURE.md did not name the fold's count. Both do.
+5. The contact's «Ask before loading» and the short quote's portrait, each shown by one design only, left the design row for Content. ADR-0016 records that a shared setting keeps its one area even there.
+6. Five more dictionary keys had no reader, a test item asked for words no longer drawn, the Typography fold showed the alignment while it was pinned, a linked image lost its own-value mark for a page link, and the frame test could not see a setting hidden from both Pinned and its area. The keys are removed, the item replaced, the value and the mark fixed, and the test checks every setting Pinned can hold against the areas.
+
 ### 0.7.30.3 - The element menu's frame: Pinned at the top, two columns when wide, the designs and the editor first, and one icon button - 7 November 2026
 
 - A pinned setting stood twice, as a tile in the quick row and as a row in its area. The quick row is Pinned: the pinned settings as rows at the top, each drawn there instead of in its area (`menu/PinScope.svelte`, `menu/pinned.js`); a fold whose every setting is pinned is left out, and an area left with nothing is not drawn.

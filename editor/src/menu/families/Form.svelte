@@ -7,12 +7,17 @@
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
-  import { ICONS } from '../../lib/icons.js';
+  import SelectRow from '../../lib/rows/SelectRow.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import ListEditor from '../../lib/rows/ListEditor.svelte';
   import { makeGroupHelpers } from '../groups.js';
+  import { pinnedNow } from '../pinned.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  /** A fold counts the settings it holds now: one of a single setting is that setting alone. */
+  const pinned = pinnedNow();
   let { area } = $props();
   const mode = $derived((selectedBlock.props.mode ?? 'mailto') === 'endpoint' ? 'endpoint' : 'mailto');
   const modeOptions = () => [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]];
@@ -46,21 +51,17 @@
   function removeFormField(i) {
     mutateBlock('form-field', (b) => { b.props.fields.splice(i, 1); });
   }
-  function moveFormField(i, dir) {
-    const j = i + dir;
-    mutateBlock('form-field', (b) => {
-      if (j < 0 || j >= b.props.fields.length) return;
-      [b.props.fields[i], b.props.fields[j]] = [b.props.fields[j], b.props.fields[i]];
-    });
+  /** Moves a field from one place to another, as the list editor's drag and keys do. */
+  function moveFormField(from, to) {
+    mutateBlock('form-field', (b) => { b.props.fields.splice(to, 0, ...b.props.fields.splice(from, 1)); });
   }
+
 </script>
 
 {#if area === 'content'}
   {#snippet formSending()}
     <Setting key="mode" pin="sendMode">
-      <label title={ta('form.modeTitle')}>{ta('form.mode')}
-        <Dropdown value={mode} options={modeOptions()}
-          onchange={(v) => setBlockProp('mode', v)} /></label>
+      <SelectRow label={ta('form.mode')} title={ta('form.modeTitle')} value={mode} options={modeOptions()} onchange={(v) => setBlockProp('mode', v)} />
     </Setting>
     {#if mode === 'endpoint'}
       <label title={ta('form.endpointNote')}>{ta('form.endpoint')}
@@ -76,31 +77,26 @@
     {/if}
   {/snippet}
   {#snippet formFields()}
-  {#each selectedBlock.props.fields ?? [] as field, i (field.id ?? i)}
-    <span class="nav-line">
-      <input value={field.label} placeholder={ta('form.fieldNamePh')}
-        onchange={(e) => setFormField(i, { label: e.target.value.trim() || ta('form.fieldFallback') })} />
-      <Dropdown value={field.type ?? 'text'}
-        options={FORM_FIELD_TYPES.map((t) => [t, ta(`form.type${t[0].toUpperCase()}${t.slice(1)}`)])}
-        onchange={(v) => setFormField(i, { type: v })} />
-      <span class="row-tools">
-        <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFormField(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-        <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFormField(i, 1)}
-          disabled={i === (selectedBlock.props.fields?.length ?? 0) - 1}>{@html ICONS.down}</button>
-        <button class="ghost row-tool" title={ta('form.removeField')} onclick={() => removeFormField(i)}>{@html ICONS.cross}</button>
-      </span>
-    </span>
-    <label title={ta('tip.form.required')} class="gridmenu-snap">
-      <input type="checkbox" checked={field.required === true}
-        onchange={(e) => setFormField(i, { required: e.target.checked })} />
-      {ta('form.required')}
-    </label>
-    {#if FORM_OPTION_TYPES.has(field.type)}
-      <input value={(field.options ?? []).join(', ')} placeholder={ta('form.optionsPh')}
-        onchange={(e) => setFormFieldOptions(i, e.target.value)} />
-    {/if}
-  {/each}
-  <button class="ghost action" onclick={addFormField}>{ta('form.addField')}</button>
+    <!-- Each field as its name and its kind, whether it must be filled in, and the choices of a list -->
+    <ListEditor items={selectedBlock.props.fields ?? []} label={ta('form.fields')} key={(field, i) => field.id ?? i}
+      onmove={moveFormField} onremove={removeFormField} onadd={addFormField} addLabel={ta('form.addField')}>
+      {#snippet row(field, i)}
+        <div class="form-field-row">
+          <span class="nav-line">
+            <input value={field.label} placeholder={ta('form.fieldNamePh')} aria-label={ta('form.fieldNamePh')}
+              onchange={(e) => setFormField(i, { label: e.target.value.trim() || ta('form.fieldFallback') })} />
+            <Dropdown value={field.type ?? 'text'}
+              options={FORM_FIELD_TYPES.map((t) => [t, ta(`form.type${t[0].toUpperCase()}${t.slice(1)}`)])}
+              onchange={(v) => setFormField(i, { type: v })} />
+          </span>
+          <SwitchRow label={ta('form.required')} title={ta('tip.form.required')} checked={field.required === true} onchange={(on) => setFormField(i, { required: on })} />
+          {#if FORM_OPTION_TYPES.has(field.type)}
+            <input value={(field.options ?? []).join(', ')} placeholder={ta('form.optionsPh')} aria-label={ta('form.optionsPh')}
+              onchange={(e) => setFormFieldOptions(i, e.target.value)} />
+          {/if}
+        </div>
+      {/snippet}
+    </ListEditor>
   {/snippet}
   {#snippet formReceipt()}
     <label title={ta('tip.form.buttonText')}>{ta('lbl.buttonText')}
@@ -113,7 +109,16 @@
           onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
     {/if}
   {/snippet}
-  <Fold id="form-sending" title={ta('group.sending')} value={mode === 'endpoint' ? (selectedBlock.props.endpoint || ta('form.modeEndpoint')) : (selectedBlock.props.recipient || ta('form.modeMailto'))} group={groupOf('form-sending', { mode: 'mailto' })}>{@render formSending()}</Fold>
+  <Fold id="form-sending" title={ta('group.sending')} value={mode === 'endpoint' ? (selectedBlock.props.endpoint || ta('form.modeEndpoint')) : (selectedBlock.props.recipient || ta('form.modeMailto'))} rows={pinned.left('sendMode') + (mode === 'endpoint' ? 1 : 2)} group={groupOf('form-sending', { mode: 'mailto' })}>{@render formSending()}</Fold>
   <Fold id="form-fields" title={ta('form.fields')} value={String(selectedBlock.props.fields?.length ?? 0)}>{@render formFields()}</Fold>
-  <Fold id="form-receipt" title={ta('group.buttonReceipt')} value={selectedBlock.props.submitLabel || ta('form.sendDefault')}>{@render formReceipt()}</Fold>
+  <!-- The receipt only after a send to an address of the site's own; with an email the button's words stand alone -->
+  <Fold id="form-receipt" title={ta('group.buttonReceipt')} value={selectedBlock.props.submitLabel || ta('form.sendDefault')} rows={mode === 'endpoint' ? 2 : 1}>{@render formReceipt()}</Fold>
 {/if}
+
+<style>
+  .form-field-row {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+</style>

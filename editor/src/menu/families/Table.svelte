@@ -3,7 +3,9 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
+  import Choice from '../../lib/Choice.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import { pinnedNow } from '../pinned.js';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
@@ -11,6 +13,8 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps } = ed;
+  /** A fold counts the settings it holds now: one of a single setting is that setting alone. */
+  const pinned = pinnedNow();
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 
@@ -51,28 +55,19 @@
       <button class="ghost" onclick={() => tableResize(0, -1)}>{ta('ui.removeColumn')}</button>
     </span>
     <Setting key="header" shown={ta('common.on')}>
-      <label class="gridmenu-snap" title={ta('tip.table.header')}>
-        <input type="checkbox" checked={selectedBlock.props.header !== false}
-          onchange={(e) => setBlockProp('header', e.target.checked)} />
-        {ta('lbl.tableHeader')}
-      </label>
+      <SwitchRow label={ta('lbl.tableHeader')} title={ta('tip.table.header')} checked={selectedBlock.props.header !== false} onchange={(on) => setBlockProp('header', on)} />
     </Setting>
   {/snippet}
   <Fold id="table-shape" defaultOpen title={ta('group.rowsColumns')} value={shape} group={groupOf('table-shape', { header: true })}>{@render tableShape()}</Fold>
 {:else if area === 'style'}
   {#snippet tableLines()}
     <Setting key="lines" pin="tableLines">
-      <label title={ta('tip.table.lines')}>{ta('lbl.tableLines')}
-        <Dropdown value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
-          onchange={(v) => setBlockProp('lines', v)} /></label>
+      <Choice stack label={ta('lbl.tableLines')} title={ta('tip.table.lines')} value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
+        onchange={(v) => setBlockProp('lines', v)} />
     </Setting>
     <Setting key="striped" shown={ta('common.off')}>
-      <label title={ta('tip.table.striped')} class="gridmenu-snap">
-        <input type="checkbox" checked={Boolean(selectedBlock.props.striped)}
-          onchange={(e) => setBlockProp('striped', e.target.checked)} />
-        {ta('lbl.tableStriped')}
-      </label>
+      <SwitchRow label={ta('lbl.tableStriped')} title={ta('tip.table.striped')} checked={Boolean(selectedBlock.props.striped)} onchange={(on) => setBlockProp('striped', on)} />
     </Setting>
   {/snippet}
-  <Fold id="table-lines" defaultOpen title={ta('lbl.tableLines')} value={lineOptions().find(([v]) => v === (selectedBlock.props.lines ?? 'rows'))?.[1] ?? ''} group={groupOf('table-lines', { lines: 'rows', striped: false })}>{@render tableLines()}</Fold>
+  <Fold id="table-lines" defaultOpen rows={1 + pinned.left('tableLines')} title={ta('lbl.tableLines')} value={lineOptions().find(([v]) => v === (selectedBlock.props.lines ?? 'rows'))?.[1] ?? ''} group={groupOf('table-lines', { lines: 'rows', striped: false })}>{@render tableLines()}</Fold>
 {/if}

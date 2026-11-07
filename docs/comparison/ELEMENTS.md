@@ -79,8 +79,8 @@ Saved block groups and templates appear in the same menus under «My templates»
   4. A plain list of settings under plain headings, decided by the theme: Shopify (a setting hidden until its condition holds).
 
 **Urd today.** The Properties panel and the floating element menu from the gear on a block are drawn by the same snippet ([ADR-0016](../adr/0016-panel-language.md)), a merge of patterns 1 and 3 (0.7.30.3):
-- three areas, Content, Style and Placement; wide, they pour through two columns, a group never split; narrow, they stand under each other, each heading sticking to the top of its area (the admin setting «Element menu» chooses the width), and an area with nothing in it is not drawn;
-- Pinned above the areas: the most used settings, as the rows they are in their areas, each standing there instead of in its area while pinned;
+- three areas, Content, Style and Placement, after Pinned; wide, Pinned and the areas stand in two columns, each whole, cut where they come out most even when the menu opens; narrow, they stand under each other, each heading sticking to the top of its area (the admin setting «Element menu» chooses the width), and an area with nothing in it is not drawn;
+- Pinned first: the most used settings, as the rows they are in their areas, each standing there instead of in its area while pinned;
 - the way into a block's own editor first in Content, and a block's designs as a picture row first in Style;
 - collapsible groups that show their value while closed, and a search;
 - Placement holds the same settings for every block in the same order, and there is no «Advanced» drawer.

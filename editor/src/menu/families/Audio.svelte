@@ -5,13 +5,11 @@
   import { getContext } from 'svelte';
   import { WARN_BYTES } from '$engine/imageTools.js';
   import Fold from '../../lib/rows/Fold.svelte';
-  import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
-  /** A fold whose every setting stands in Pinned is left out. */
-  const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setStatus } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
@@ -47,16 +45,10 @@
     <label title={ta('tip.audio.title')}>{ta('lbl.audioTitle')}
       <input value={selectedBlock.props.title ?? ''}
         onchange={(e) => setBlockProp('title', e.target.value)} /></label>
-  {/snippet}
-  {#snippet audioPlayback()}
     <Setting key="loop" shown={ta('common.off')} pin="loop">
-      <label title={ta('tip.audio.loop')} class="gridmenu-snap">
-        <input type="checkbox" checked={Boolean(selectedBlock.props.loop)}
-          onchange={(e) => setBlockProp('loop', e.target.checked)} />
-        {ta('lbl.audioLoop')}
-      </label>
+      <SwitchRow label={ta('lbl.audioLoop')} title={ta('tip.audio.loop')} checked={Boolean(selectedBlock.props.loop)} onchange={(on) => setBlockProp('loop', on)} />
     </Setting>
   {/snippet}
-  <Fold id="audio-file" title={ta('group.audioFile')} value={selectedBlock.props.title || (selectedBlock.props.src ? ta('blocks.audio') : ta('common.none'))}>{@render audioFile()}</Fold>
-  {#if !pinned.all('loop')}<Fold id="audio-playback" title={ta('group.playback')} value={selectedBlock.props.loop ? ta('lbl.audioLoop') : ta('menu.standard')} group={groupOf('audio-playback', { loop: false })}>{@render audioPlayback()}</Fold>{/if}
+  <Fold id="audio-file" title={ta('blocks.audio')} value={selectedBlock.props.title || (selectedBlock.props.src ? ta('blocks.audio') : ta('common.none'))}
+    group={groupOf('audio-file', { loop: false })}>{@render audioFile()}</Fold>
 {/if}

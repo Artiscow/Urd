@@ -3,7 +3,8 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
+  import SelectRow from '../../lib/rows/SelectRow.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
@@ -19,21 +20,16 @@
 
 {#if area === 'content'}
   {#snippet collectionSource()}
-    <label title={ta('tip.collection.source')}>{ta('blocks.collection')}
-      <Dropdown value={selectedBlock.props.collection ?? ''}
-        options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
-        onchange={(v) => setBlockProp('collection', v || null)} /></label>
+    <SelectRow label={ta('blocks.collection')} title={ta('tip.collection.source')} value={selectedBlock.props.collection ?? ''}
+      options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
+      onchange={(v) => setBlockProp('collection', v || null)} />
     <Setting key="limit" shown="6" pin="limit">
       <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
         <input type="number" min="0" max="100" value={(selectedBlock.props.limit ?? 6) || ''} placeholder={ta('common.all')}
           onchange={(e) => { const n = Math.max(0, Math.min(100, Math.round(Number(e.target.value)) || 0)); setBlockProp('limit', n); e.target.value = n || ''; }} /></label>
     </Setting>
     <Setting key="newestFirst" shown={ta('common.on')}>
-      <label title={ta('tip.collection.newestFirst')} class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.newestFirst !== false}
-          onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
-        {ta('lbl.newestFirst')}
-      </label>
+      <SwitchRow label={ta('lbl.newestFirst')} title={ta('tip.collection.newestFirst')} checked={selectedBlock.props.newestFirst !== false} onchange={(on) => setBlockProp('newestFirst', on)} />
     </Setting>
   {/snippet}
   <Fold id="collection-source" defaultOpen title={ta('group.source')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('collection-source', { limit: 6, newestFirst: true })}>{@render collectionSource()}</Fold>

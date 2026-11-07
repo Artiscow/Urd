@@ -3,7 +3,8 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
+  import Choice from '../../lib/Choice.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
@@ -15,7 +16,7 @@
   import { linkOf, linkText } from '../../lib/link-edit.js';
   import { ICONS } from '../../lib/icons.js';
   const ed = getContext('urd-editor');
-  /** A fold whose every setting stands in Pinned is left out. */
+  /** A fold counts the settings it holds now: one whose every setting stands in Pinned is left out, and one of a single setting is that setting alone. */
   const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps, setBlockLink, openImageEditor, compressOrTrim, imageErrorText, setStatus } = ed;
@@ -58,43 +59,35 @@
         onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
   {/snippet}
   {#snippet imgLink()}
-    <Setting key="href">
+    <Setting key="href" own={imageLinked} reset={() => setBlockLink(null)}>
       <LinkField label={ta('lbl.link')} value={linkOf(selectedBlock.props)} placeholder={ta('ph.optionalImageLink')} onchange={setBlockLink} />
     </Setting>
     <!-- The lightbox only for a picture without a link: a link wins the click -->
     {#if !imageLinked}
       <Setting key="lightbox" shown={ta('common.off')}>
-        <label class="gridmenu-snap" title={ta('tip.lightbox')}>
-          <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
-            onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
-          {ta('lbl.lightbox')}
-        </label>
+        <SwitchRow label={ta('lbl.lightbox')} title={ta('tip.lightbox')} checked={Boolean(selectedBlock.props.lightbox)} onchange={(on) => setBlockProp('lightbox', on)} />
       </Setting>
     {/if}
   {/snippet}
   <Fold id="img-image" title={ta('blocks.image')} value={selectedBlock.props.alt || ta('menu.noAlt')}>{@render imgImage()}</Fold>
   <Fold id="img-link" title={ta('group.linkClick')} value={imageLinked ? linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) : (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none'))}
-    group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</Fold>
+    rows={imageLinked ? 1 : 2} group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</Fold>
 {:else if area === 'style'}
   <!-- The two one-press choices beside the editor, each with its pin for Pinned; the rest of the picture's settings are the editor's -->
-  {#snippet imgFit()}
+  {#snippet imgLook()}
     <Setting key="fit" pin="imgFit">
-      <label title={ta('tip.image.fit')}>{ta('lbl.imageFit')}
-        <Dropdown value={selectedBlock.props.fit ?? 'cover'}
-          options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
-          onchange={(v) => setBlockProp('fit', v)} /></label>
+      <Choice stack label={ta('lbl.imageFit')} title={ta('tip.image.fit')} value={selectedBlock.props.fit ?? 'cover'}
+        options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
+        onchange={(v) => setBlockProp('fit', v)} />
     </Setting>
-  {/snippet}
-  {#snippet imgCorners()}
     <Setting key="radius" pin="radius">
-      <label title={ta('tip.image.radius')}>{ta('lbl.radius')}
-        <Dropdown value={selectedBlock.props.radius ?? ''}
-          options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
-          onchange={(v) => setBlockProp('radius', v || null)} /></label>
+      <Choice stack label={ta('lbl.radius')} title={ta('tip.image.radius')} value={selectedBlock.props.radius ?? ''}
+        options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
+        onchange={(v) => setBlockProp('radius', v || null)} />
     </Setting>
   {/snippet}
-  {#if !pinned.all('imgFit')}<Fold id="img-fit" title={ta('lbl.imageFit')} value={selectedBlock.props.fit === 'contain' ? ta('opt.fitFrame.contain') : ta('opt.fitFrame.cover')} group={groupOf('img-fit', { fit: 'cover' })}>{@render imgFit()}</Fold>{/if}
-  {#if !pinned.all('radius')}<Fold id="img-corners" title={ta('group.corners')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} group={groupOf('img-corners', { radius: 'md' })}>{@render imgCorners()}</Fold>{/if}
+  <Fold id="img-look" title={ta('group.appearance')} value={`${selectedBlock.props.fit === 'contain' ? ta('opt.fitFrame.contain') : ta('opt.fitFrame.cover')} · ${{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']}`}
+    rows={pinned.left('imgFit', 'radius')} group={groupOf('img-look', { fit: 'cover', radius: 'md' })}>{@render imgLook()}</Fold>
 {/if}
 
 <style>

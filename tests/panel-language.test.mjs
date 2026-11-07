@@ -97,35 +97,6 @@ function findings() {
 
 /** The files not yet moved to the row kit, by the step of 0.7.30 (BACKLOG) that moves them, with the patterns each still holds. */
 const RATCHET = {
-  // 0.7.30.3, the element menu's frame
-  'menu/ElementMenu.svelte': ['subheading'],
-  'menu/MenuArea.svelte': ['subheading'],
-  'menu/Placement.svelte': ['switch'],
-  // 0.7.30.4 and 0.7.30.5, the blocks' menus
-  'menu/BoxStyle.svelte': ['switch'],
-  'menu/DocLook.svelte': ['switch'],
-  'menu/families/Audio.svelte': ['switch'],
-  'menu/families/Calendar.svelte': ['iconbutton', 'slider', 'switch'],
-  'menu/families/Checkout.svelte': ['switch'],
-  'menu/families/Collection.svelte': ['switch'],
-  'menu/families/Contact.svelte': ['switch'],
-  'menu/families/Countdown.svelte': ['switch'],
-  'menu/families/Faq.svelte': ['iconbutton', 'switch'],
-  'menu/families/Fields.svelte': ['hint', 'switch'],
-  'menu/families/Form.svelte': ['iconbutton', 'switch'],
-  'menu/families/Gallery.svelte': ['iconbutton', 'slider', 'switch'],
-  'menu/families/Image.svelte': ['switch'],
-  'menu/families/Privacy.svelte': ['switch'],
-  'menu/families/Quote.svelte': ['switch'],
-  'menu/families/Ribbon.svelte': ['iconbutton', 'slider', 'switch'],
-  'menu/families/RibbonMotion.svelte': ['slider', 'switch'],
-  'menu/families/Shape.svelte': ['switch'],
-  'menu/families/Share.svelte': ['switch'],
-  'menu/families/Stats.svelte': ['switch'],
-  'menu/families/Table.svelte': ['switch'],
-  'menu/families/Text.svelte': ['switch'],
-  'menu/families/Timeline.svelte': ['iconbutton'],
-  'menu/families/Video.svelte': ['switch'],
   // 0.7.30.6, the section's settings
   'panels/PropertiesPanel.svelte': ['hint', 'slider', 'subheading', 'switch'],
   'section/BackgroundEditor.svelte': ['iconbutton', 'slider', 'switch'],
@@ -155,7 +126,6 @@ const RATCHET = {
   'panels/pages/PageSettingsStep.svelte': ['iconbutton'],
   'panels/pages/PageSettingsTable.svelte': ['iconbutton'],
   'lib/AnchorField.svelte': ['hint'],
-  'lib/LinkList.svelte': ['iconbutton'],
   'lib/LinkDialog.svelte': ['switch'],
   'shell/ConfirmDialog.svelte': ['hint'],
   'shell/PanelNav.svelte': ['segment'],

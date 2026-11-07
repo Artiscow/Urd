@@ -7,10 +7,11 @@
   import Fold from '../../lib/rows/Fold.svelte';
   import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
-  /** A fold whose every setting stands in Pinned is left out. */
+  /** A fold counts the settings it holds now: one whose every setting stands in Pinned is left out, and one of a single setting is that setting alone. */
   const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps } = ed;
@@ -33,12 +34,9 @@
 {:else if area === 'style'}
   {#snippet countdownLook()}
     <Setting key="showSeconds" shown={ta('common.on')} pin="seconds">
-      <label title={ta('tip.countdown.seconds')} class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.showSeconds !== false}
-          onchange={(e) => setBlockProp('showSeconds', e.target.checked)} />
-        {ta('lbl.countdownSeconds')}
-      </label>
+      <SwitchRow label={ta('lbl.countdownSeconds')} title={ta('tip.countdown.seconds')} checked={selectedBlock.props.showSeconds !== false} onchange={(on) => setBlockProp('showSeconds', on)} />
     </Setting>
   {/snippet}
-  {#if !pinned.all('seconds')}<Fold id="countdown-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.showSeconds !== false ? ta('common.on') : ta('common.off')} group={groupOf('countdown-look', { showSeconds: true })}>{@render countdownLook()}</Fold>{/if}
+  <Fold id="countdown-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.showSeconds !== false ? ta('common.on') : ta('common.off')}
+    rows={pinned.left('seconds')} group={groupOf('countdown-look', { showSeconds: true })}>{@render countdownLook()}</Fold>
 {/if}

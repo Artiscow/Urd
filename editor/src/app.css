@@ -821,41 +821,35 @@
     border-radius: 10px;
   }
 
-  /* Wide: Content, Style and Placement pour through two columns as a newspaper's text does (0.7.30.3).
-     A group or a row never splits between the columns, a heading keeps to the start of its area, and the areas lie on the menu's own surface. */
-  .emenu-cols.emenu-flow {
-    display: block;
-    columns: 2;
+  /* Wide: two columns, each area whole in one of them, on the menu's own surface (ElementMenu.svelte chooses which area stands where).
+     Two plain columns rather than CSS columns: a fold that opens grows inside its own column, and nothing is poured across while it does. */
+  .emenu-cols.emenu-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1.1rem;
   }
 
-  .emenu-flow > .emenu-col {
-    display: block;
+  .emenu-column {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .emenu-two .emenu-col {
+    gap: 0.5rem;
     padding: 0;
     background: none;
     border-radius: 0;
   }
 
-  .emenu-flow > .emenu-col > * {
-    break-inside: avoid;
-  }
-
-  .emenu-flow > .emenu-col > * + * {
-    margin-top: 0.5rem;
-  }
-
-  .emenu-flow > .emenu-col + .emenu-col {
-    margin-top: 1rem;
-  }
-
-  .emenu-flow > .emenu-col > :is(.emenu-head, .emenu-title) {
-    break-after: avoid;
+  .emenu-two .emenu-col > :is(.emenu-head, .emenu-title) {
     padding-bottom: 0.35rem;
     border-bottom: 1px solid rgb(255 255 255 / 8%);
   }
 
   /* An area with nothing in it but its heading is not drawn: no empty column, no empty heading */
-  .emenu-cols > .emenu-col:not(:has(> :not(.panel-strong, .emenu-none, .emenu-head))) {
+  .emenu-cols .emenu-col:not(:has(> :not(.emenu-title, .emenu-none, .emenu-head))) {
     display: none;
   }
 
@@ -891,15 +885,23 @@
     border-radius: 50%;
   }
 
-  /* Pinned (0.7.30.3): the settings used most, over the areas, as the rows they are in their areas, each with its pin.
-     Wide, they run down two columns as the areas below do, so a short row leaves no gap beside a tall one; narrow, they stand under each other.
-     A rule under them sets them apart from the areas. */
+  /* Pinned (0.7.30.3): the settings used most, as the rows they are in their areas, each with its pin.
+     Narrow, it stands over the areas with a rule under it; wide, it is the first part of the two columns, headed as an area is. */
   .emenu-pinned {
     display: grid;
     gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .emenu-root.narrow .emenu-pinned {
     margin-bottom: 0.8rem;
     padding-bottom: 0.8rem;
     border-bottom: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  .emenu-two .emenu-pinned > .emenu-head {
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
   }
 
   .emenu-pinned-rows {
@@ -908,25 +910,11 @@
     gap: 0.5rem;
   }
 
-  .emenu-root:not(.narrow) .emenu-pinned-rows {
-    display: block;
-    columns: 2;
-    column-gap: 1.1rem;
-  }
-
-  .emenu-root:not(.narrow) .emenu-pinned-rows > * {
-    break-inside: avoid;
-  }
-
   /* A pinned row with what belongs to it under it (the smallest scale under the narrow screen, a box's style under the text box) */
   .emenu-pinned-item {
     display: grid;
     gap: 0.5rem;
     min-width: 0;
-  }
-
-  .emenu-root:not(.narrow) .emenu-pinned-rows > * + * {
-    margin-top: 0.5rem;
   }
 
   .menu-pinned-reset {
@@ -942,8 +930,11 @@
     min-width: 0;
   }
 
-  .emenu-head .panel-strong {
+  /* An area's name, and the search copy's: the menu's own headings */
+  .emenu-head-name,
+  .emenu-title {
     margin: 0;
+    font-weight: 600;
   }
 
   .emenu-head-title {
@@ -988,14 +979,14 @@
     font-size: 10px;
   }
 
-  .emenu-stack .emenu-head .panel-strong {
+  .emenu-stack .emenu-head .emenu-head-name {
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--urd-color-accent);
   }
 
-  .emenu-root.narrow .emenu-pinned .panel-strong {
+  .emenu-root.narrow .emenu-pinned .emenu-head-name {
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -1044,7 +1035,8 @@
   .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .pin-line > .field-stack:has(+ .menu-pin),
   .pin-line > .choice:has(+ .menu-pin),
-  .pin-line > .row-slider:has(+ .menu-pin) {
+  .pin-line > .row-slider:has(+ .menu-pin),
+  .pin-line > .row-select:has(+ .menu-pin) {
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
@@ -1054,7 +1046,8 @@
   .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin) > :last-child,
   .pin-line > .field-stack:has(+ .menu-pin) > :last-child,
   .pin-line > .choice:has(+ .menu-pin) > :last-child,
-  .pin-line > .row-slider:has(+ .menu-pin) > :last-child {
+  .pin-line > .row-slider:has(+ .menu-pin) > :last-child,
+  .pin-line > .row-select:has(+ .menu-pin) > :last-child {
     flex: none;
     box-sizing: border-box;
     width: calc(100% + 30px);
@@ -1065,11 +1058,36 @@
   .pin-line > label:not(.gridmenu-snap) + .menu-pin,
   .pin-line > .field-stack + .menu-pin,
   .pin-line > .choice + .menu-pin,
-  .pin-line > .row-slider + .menu-pin {
+  .pin-line > .row-slider + .menu-pin,
+  .pin-line > .row-select + .menu-pin {
     position: absolute;
     top: 0;
     right: 0;
     transform: translateY(-4px);
+  }
+
+  /* A row with its words on the left and its control on the right (a number, a colour) keeps the control at the row's right edge, with the pin just left of it, as beside a switch */
+  .pin-line:has(> .ctl-row + .menu-pin) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 0.3rem;
+  }
+
+  .pin-line > .ctl-row:has(+ .menu-pin) {
+    display: contents;
+  }
+
+  .pin-line > .ctl-row:has(+ .menu-pin) > :first-child {
+    order: 1;
+    min-width: 0;
+  }
+
+  .pin-line > .ctl-row + .menu-pin {
+    order: 2;
+  }
+
+  .pin-line > .ctl-row:has(+ .menu-pin) > :last-child {
+    order: 3;
   }
 
   /* A row that opens a picker keeps its pin inside its own border, at its end */
@@ -1084,10 +1102,10 @@
     transform: translateY(-50%);
   }
 
-  /* A payment instruction's row in the checkout menu: the name, the text and its remove button */
+  /* A payment instruction's row in the checkout menu: the name beside the text, in a row of the list editor */
   .pay-instruction {
     display: grid;
-    grid-template-columns: 5.5rem 1fr auto;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
     gap: 0.3rem;
     align-items: center;
   }
@@ -3292,6 +3310,23 @@
     gap: 0.4rem;
     margin-top: 0.4rem;
     padding-left: 0.8rem;
+  }
+
+  /* A fold of one setting is drawn bare: no heading, no frame, the setting in the place of the fold (lib/rows/Fold.svelte) */
+  .group.bare:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .group.bare > summary {
+    display: none;
+  }
+
+  .group.bare > .group-items,
+  .group.bare[open] > .group-items {
+    margin-top: 0;
+    padding-left: 0;
   }
 
   /* A fold opens and closes smoothly: its content's row grows from nothing to its height inside ::details-content, the space over it with it, and shrinks back the same way.

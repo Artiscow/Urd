@@ -6,6 +6,8 @@
   import Fold from '../lib/rows/Fold.svelte';
   import Setting from '../lib/rows/Setting.svelte';
   import SliderRow from '../lib/rows/SliderRow.svelte';
+  import SwitchRow from '../lib/rows/SwitchRow.svelte';
+  import Choice from '../lib/Choice.svelte';
   import IconButton from '../lib/rows/IconButton.svelte';
   import FitMin from './FitMin.svelte';
   import { pinnedNow } from './pinned.js';
@@ -23,13 +25,7 @@
   const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions, designWidth, handleMobileReset } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
-  /** What a closed group shows: how the block fits a narrower screen, and its motion. */
-  function menuFitValue() {
-    const byWidth = FIT_BY_WIDTH.has(selectedBlock.type);
-    if (selectedBlock.fit === 'shrink') return byWidth ? ta('opt.fit.floor') : ta('opt.fit.shrink');
-    if (selectedBlock.fit === 'both') return ta('opt.fit.both');
-    return byWidth ? ta('opt.fit.fluid') : ta('opt.fit.wrap');
-  }
+  /** What the Motion group shows while closed. */
   function menuMotionValue() {
     const id = isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : selectedBlock.hover?.type;
     const hit = id ? [...blockEntranceOptions(), ...hoverOptions()].find(([v]) => v === id) : null;
@@ -70,12 +66,11 @@
 {#snippet menuFit()}
   <!-- Below the design width: block-level on every block (ADR-0024); the content wraps, shrinks in proportion, or shrinks as little as it can and wraps, or the frame keeps a floor -->
   <Setting pin="fit">
-    <label title={ta('tip.fit')}>{ta('lbl.fit')}
-      <Dropdown value={selectedBlock.fit ?? 'wrap'}
-        options={FIT_BY_WIDTH.has(selectedBlock.type)
-          ? [['wrap', ta('opt.fit.fluid')], ['shrink', ta('opt.fit.floor')]]
-          : [['wrap', ta('opt.fit.wrap')], ...(designWidth() || selectedBlock.fit === 'shrink' ? [['shrink', ta('opt.fit.shrink')]] : []), ['both', ta('opt.fit.both')]]}
-        onchange={(v) => setBlockFit(v)} /></label>
+    <Choice stack label={ta('lbl.fit')} title={ta('tip.fit')} value={selectedBlock.fit === 'shrink' || selectedBlock.fit === 'both' ? selectedBlock.fit : 'wrap'}
+      options={FIT_BY_WIDTH.has(selectedBlock.type)
+        ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
+        : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || selectedBlock.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]]}
+      onchange={(v) => setBlockFit(v)} />
   </Setting>
   <!-- What belongs to the narrow-screen choice goes with it into Pinned -->
   {#if !pinned.has('fit')}<FitMin />{/if}
@@ -102,13 +97,10 @@
 {/snippet}
 {#snippet menuSticky()}
   {#if viewMode === 'desktop'}
-    <label class="gridmenu-snap" title={ta('tip.sticky')}>
-      <input type="checkbox" checked={Boolean(selectedBlock.sticky)}
-        onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-          b.sticky = e.target.checked ? { offset: 16, until: null } : null;
-        })} />
-      {ta('lbl.sticky')}
-    </label>
+    <SwitchRow label={ta('lbl.sticky')} title={ta('tip.sticky')} checked={Boolean(selectedBlock.sticky)}
+      onchange={(on) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+        b.sticky = on ? { offset: 16, until: null } : null;
+      })} />
     {#if selectedBlock.sticky}
       <label title={ta('tip.stickyMode')}>{ta('lbl.stickyMode')}
         <Dropdown value={selectedBlock.sticky.mode ?? 'scroll'}
@@ -176,11 +168,7 @@
           {/if}
         </div>
       {/if}
-      <label class="gridmenu-snap" title={ta('tip.decor')}>
-        <input type="checkbox" checked={selectedBlock.decor}
-          onchange={(e) => setBlockDecor(e.target.checked)} />
-        {ta('lbl.decor')}
-      </label>
+      <SwitchRow label={ta('lbl.decor')} title={ta('tip.decor')} checked={Boolean(selectedBlock.decor)} onchange={(on) => setBlockDecor(on)} />
 {/snippet}
 
 <!-- The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target, motion and the frame are groups -->
@@ -204,11 +192,7 @@
 {/if}
 {@render menuFit()}
 <Setting pin="phone">
-  <label class="gridmenu-snap" title={ta('tip.hideMobile')}>
-    <input type="checkbox" checked={selectedBlock.hideMobile}
-      onchange={(e) => setBlockHideMobile(e.target.checked)} />
-    {ta('lbl.hideMobile')}
-  </label>
+  <SwitchRow label={ta('lbl.hideMobile')} title={ta('tip.hideMobile')} checked={Boolean(selectedBlock.hideMobile)} onchange={(on) => setBlockHideMobile(on)} />
 </Setting>
 {@render menuSticky()}
 {#snippet menuTarget()}
@@ -221,6 +205,7 @@
     <span class="field-note" title={ta('menu.anchorHiddenMobile')}><i class="note-dot"></i>{ta('lbl.hideMobile')}</span>
   {/if}
 {/snippet}
-<Fold id="link-target" title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</Fold>
+<!-- The block's name for links is one setting, so it stands alone -->
+<Fold id="link-target" rows={1} title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</Fold>
 <Fold id="motion" title={ta('group.motion')} value={menuMotionValue()}>{@render menuMotion()}</Fold>
 <Fold id="frame" title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</Fold>

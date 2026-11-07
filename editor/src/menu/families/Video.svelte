@@ -4,7 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import SelectRow from '../../lib/rows/SelectRow.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
@@ -14,7 +15,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setBlockVideoFile, setBlockVideoPoster, openImageEditor } = ed;
-  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
 
   const aspectOptions = $derived([['free', ta('opt.videoAspect.free')], ...VIDEO_ASPECTS.map((a) => [a, ta(`opt.videoAspect.${a.replace(':', 'x')}`)])]);
@@ -45,34 +46,17 @@
 
 {#if area === 'content'}
   {@const vsource = selectedBlock.props.source === 'file' ? 'file' : 'embed'}
-  {#snippet videoSource()}
-    <Setting pin="videoSource">
-      <Choice stack label={ta('lbl.videoSource')} value={vsource}
-        options={[['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]]}
-        onchange={(v) => setBlockProp('source', v)} />
-    </Setting>
+  {@const askFirst = selectedBlock.props.askFirst !== false}
+  <Setting pin="videoSource">
+    <Choice stack label={ta('lbl.videoSource')} value={vsource}
+      options={[['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]]}
+      onchange={(v) => setBlockProp('source', v)} />
+  </Setting>
+  {#snippet videoWhat()}
     {#if vsource === 'embed'}
-      <label title={ta('hint.video')}>{ta('lbl.videoUrl')}</label>
-      <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
-        onchange={(e) => setBlockProp('url', e.target.value)} />
-      <!-- Whether the video stands behind a cover until a visitor presses play, or loads with the page -->
-      <label title={ta('tip.embed.askFirst')} class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.askFirst !== false}
-          onchange={(e) => setBlockProp('askFirst', e.target.checked)} />
-        {ta('lbl.embedAskFirst')}
-      </label>
-      <!-- The cover's own picture, only while there is a cover; once chosen it is framed, adjusted, swapped or removed in the image editor -->
-      {#if selectedBlock.props.askFirst !== false}
-        {#if selectedBlock.props.poster}
-          <button type="button" class="ghost action" title={ta('tip.video.coverEdit')} onclick={openImageEditor}>{ta('ui.editCover')}</button>
-          <button type="button" class="ghost action" title={ta('tip.video.coverRemove')} onclick={() => ed.mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.poster = ''; delete b.props.coverStyle; })}>{ta('ui.removeCover')}</button>
-        {:else}
-          <label class="ghost action filepick" title={ta('tip.video.cover')}>
-            {ta('ui.chooseCover')}
-            <input type="file" accept="image/*" onchange={setBlockVideoPoster} />
-          </label>
-        {/if}
-      {/if}
+      <label title={ta('hint.video')}>{ta('lbl.videoUrl')}
+        <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
+          onchange={(e) => setBlockProp('url', e.target.value)} /></label>
     {:else}
       <label class="ghost action filepick" title={ta('tip.video.file')}>
         {selectedBlock.props.src ? ta('ui.changeVideo') : ta('ui.chooseVideo')}
@@ -83,49 +67,55 @@
         <input type="file" accept="image/*" onchange={setBlockVideoPoster} />
       </label>
     {/if}
+    <label title={ta('tip.video.title')}>{ta('lbl.videoTitle')}
+      <input value={selectedBlock.props.title ?? ''}
+        onchange={(e) => setBlockProp('title', e.target.value)} /></label>
   {/snippet}
   {#snippet videoPlay()}
-    <Setting key="loop" shown={ta('common.off')}>
-      <label title={ta('tip.video.loop')} class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.loop === true}
-          onchange={(e) => setBlockProp('loop', e.target.checked)} />
-        {ta('lbl.videoLoop')}
-      </label>
-    </Setting>
-    <!-- Unmuting takes the self-start with it: only a muted film may start by itself -->
-    <Setting key="muted" shown={ta('common.off')}>
-      <label title={ta('tip.video.muted')} class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.muted === true}
-          onchange={(e) => setBlockProps('muted', e.target.checked ? { muted: true } : { muted: false, autoplay: false })} />
-        {ta('lbl.videoMuted')}
-      </label>
-    </Setting>
-    {#if selectedBlock.props.muted === true}
-      <Setting key="autoplay" shown={ta('common.off')}>
-        <label class="gridmenu-snap" title={ta('tip.video.autoplay')}>
-          <input type="checkbox" checked={selectedBlock.props.autoplay === true}
-            onchange={(e) => setBlockProp('autoplay', e.target.checked)} />
-          {ta('lbl.videoAutoplay')}
-        </label>
+    {#if vsource === 'embed'}
+      <!-- Whether the video stands behind a cover until a visitor presses play, or loads with the page -->
+      <Setting key="askFirst" shown={ta('common.on')}>
+        <SwitchRow label={ta('lbl.embedAskFirst')} title={ta('tip.embed.askFirst')} checked={askFirst} onchange={(on) => setBlockProp('askFirst', on)} />
       </Setting>
+      {#if askFirst}
+        <!-- The cover's own picture; once chosen it is framed, adjusted, swapped or removed in the image editor -->
+        {#if selectedBlock.props.poster}
+          <button type="button" class="ghost action" title={ta('tip.video.coverEdit')} onclick={openImageEditor}>{ta('ui.editCover')}</button>
+          <button type="button" class="ghost action" title={ta('tip.video.coverRemove')} onclick={() => ed.mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.poster = ''; delete b.props.coverStyle; })}>{ta('ui.removeCover')}</button>
+        {:else}
+          <label class="ghost action filepick" title={ta('tip.video.cover')}>
+            {ta('ui.chooseCover')}
+            <input type="file" accept="image/*" onchange={setBlockVideoPoster} />
+          </label>
+        {/if}
+        <!-- Whether the press on the cover also starts the video -->
+        <Setting key="playOnPress" shown={ta('common.on')}>
+          <SwitchRow label={ta('lbl.videoPlayOnPress')} title={ta('tip.video.playOnPress')} checked={selectedBlock.props.playOnPress !== false} onchange={(on) => setBlockProp('playOnPress', on)} />
+        </Setting>
+      {/if}
+    {:else}
+      <Setting key="loop" shown={ta('common.off')}>
+        <SwitchRow label={ta('lbl.videoLoop')} title={ta('tip.video.loop')} checked={selectedBlock.props.loop === true} onchange={(on) => setBlockProp('loop', on)} />
+      </Setting>
+      <!-- Unmuting takes the self-start with it: only a muted film may start by itself -->
+      <Setting key="muted" shown={ta('common.off')}>
+        <SwitchRow label={ta('lbl.videoMuted')} title={ta('tip.video.muted')} checked={selectedBlock.props.muted === true}
+          onchange={(on) => setBlockProps('muted', on ? { muted: true } : { muted: false, autoplay: false })} />
+      </Setting>
+      {#if selectedBlock.props.muted === true}
+        <Setting key="autoplay" shown={ta('common.off')}>
+          <SwitchRow label={ta('lbl.videoAutoplay')} title={ta('tip.video.autoplay')} checked={selectedBlock.props.autoplay === true} onchange={(on) => setBlockProp('autoplay', on)} />
+        </Setting>
+      {/if}
     {/if}
   {/snippet}
-  {@render videoSource()}
-  {#if vsource === 'file'}
-    {@const playOn = [selectedBlock.props.loop === true, selectedBlock.props.muted === true, selectedBlock.props.autoplay === true].filter(Boolean).length}
-    <Fold id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')} group={groupOf('video-play', { loop: false, muted: false, autoplay: false })}>{@render videoPlay()}</Fold>
-  {:else if selectedBlock.props.askFirst !== false}
-    <!-- An embedded video behind its cover: whether the press on the cover also starts it -->
-    <label title={ta('tip.video.playOnPress')} class="gridmenu-snap">
-      <input type="checkbox" checked={selectedBlock.props.playOnPress !== false}
-        onchange={(e) => setBlockProp('playOnPress', e.target.checked)} />
-      {ta('lbl.videoPlayOnPress')}
-    </label>
-  {/if}
-  <label title={ta('tip.video.title')}>{ta('lbl.videoTitle')}
-    <input value={selectedBlock.props.title ?? ''}
-      onchange={(e) => setBlockProp('title', e.target.value)} /></label>
+  {@const playDefaults = vsource === 'embed' ? { askFirst: true, playOnPress: true } : { loop: false, muted: false, autoplay: false }}
+  {@const playOn = (vsource === 'embed'
+    ? [askFirst, askFirst && selectedBlock.props.playOnPress !== false]
+    : [selectedBlock.props.loop === true, selectedBlock.props.muted === true, selectedBlock.props.autoplay === true]).filter(Boolean).length}
+  <Fold id="video-what" title={ta('blocks.video')} value={vsource === 'embed' ? selectedBlock.props.url || ta('common.none') : selectedBlock.props.title || ta('blocks.video')}>{@render videoWhat()}</Fold>
+  <Fold id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')}
+    rows={vsource === 'embed' && !askFirst ? 1 : 2} group={groupOf('video-play', playDefaults)}>{@render videoPlay()}</Fold>
 {:else if area === 'style'}
-  <label title={ta('tip.video.aspect')}>{ta('lbl.videoAspect')}
-    <Dropdown value={aspectValue} options={aspectOptions} onchange={setAspect} /></label>
+  <SelectRow label={ta('lbl.videoAspect')} title={ta('tip.video.aspect')} value={aspectValue} options={aspectOptions} onchange={setAspect} />
 {/if}

@@ -35,7 +35,7 @@ const BLOCKS = {
   text: [{}, { align: 'center', box: true, boxStyle: { shadow: 'soft', border: { color: 'accent', width: 2 } } }],
   button: [{ label: 'Go', style: 'primary', page: null, href: '#' }, { label: 'Go', style: 'secondary', page: 'hjem' }],
   image: [{ src: 'x', alt: '' }, { src: 'x', href: 'https://a', fit: 'contain', x: 0.2, radius: 'sm' }],
-  video: [{ source: 'embed', url: '' }, { source: 'file', src: 'x', muted: true, autoplay: true }],
+  video: [{ source: 'embed', url: '' }, { source: 'file', src: 'x', muted: true, autoplay: true }, { source: 'embed', url: 'https://v', poster: 'p' }, { source: 'embed', url: 'https://v', askFirst: false }],
   icon: [{ glyph: '★' }, { icon: 'heart', image: 'data:x', size: 64, color: 'text' }],
   shape: [{ kind: 'line', color: 'accent', thickness: 2 }, { kind: 'circle', color: 'text', thickness: 4, fill: 'text' }],
   gallery: [{ images: [], view: 'grid' }, { images: [{ src: 'a' }, { src: 'b' }], view: 'ribbon', rows: 2, width: 'page' }, { images: [{ src: 'a' }], view: 'mosaic' }, { images: [{ src: 'a' }], view: 'polaroid', tilt: 0 }, { images: [], view: 'slides' }, { images: [{ src: 'a' }], view: 'carousel' }],
@@ -203,12 +203,15 @@ const DESIGN_TYPES = new Set(DESIGN_BLOCK_TYPES);
 
 test('the menu frame: no fold left empty, no area holding an empty part, and no setting drawn twice, with Pinned as it starts, emptied, and holding every setting that can be pinned', () => {
   const css = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8');
-  assert.match(css, /\.emenu-cols > \.emenu-col:not\(:has\(> :not\(\.panel-strong, \.emenu-none, \.emenu-head\)\)\)\s*\{\s*display: none;/, 'an area with only its heading is not drawn');
+  assert.match(css, /\.emenu-cols \.emenu-col:not\(:has\(> :not\(\.emenu-title, \.emenu-none, \.emenu-head\)\)\)\s*\{\s*display: none;/, 'an area with only its heading is not drawn');
   for (const type of CORE_TYPES) {
     for (const props of BLOCKS[type]) {
-      // Every setting that can stand in Pinned, read from the menu with nothing pinned.
-      setQuickChoice(type, { pinned: [], removed: ['fit', 'phone', 'design', 'limit', 'align', 'textBox', 'goesTo', 'imgFit', 'radius', 'videoSource', 'iconSize', 'iconColor', 'shapeColor', 'thickness', 'columns', 'ribbonMotion', 'speed', 'tableLines', 'sendMode', 'vippsButton', 'seconds', 'loop', 'zoom'] });
+      // Every setting that can stand in Pinned, read from the menu with nothing pinned; each one Pinned can hold stands in an area then, so no setting is lost from both.
+      setQuickChoice(type, { pinned: [], removed: PIN_IDS });
       const all = [...new Set(pinsIn(menuOf(type, props, true).tree))];
+      setQuickChoice(type, { pinned: PIN_IDS, removed: [] });
+      const pinnable = pinsIn(menuOf(type, props, true).pinned);
+      assert.deepEqual(pinnable.filter((id) => !all.includes(id)), [], `${type} ${JSON.stringify(props).slice(0, 40)}: a setting Pinned can hold stands in no area`);
       for (const choice of [NO_CHOICE, { pinned: [], removed: all }, { pinned: all, removed: [] }]) {
         setQuickChoice(type, choice);
         for (const wide of [true, false]) {
@@ -232,8 +235,114 @@ test('the menu frame: no fold left empty, no area holding an empty part, and no 
   }
 });
 
-test('the way into a block\'s own editor stands first in Content', () => {
-  for (const [type, props, words] of [['text', {}, 'ui.editText'], ['image', { src: 'x', alt: '' }, 'ui.openImageEditor']]) {
+/** The kind of control a setting row draws, as the owner sees and works it. */
+function controlOf(node) {
+  const all = find({ children: [node] }, () => true);
+  const has = (pick) => all.some(pick);
+  const cls = (n, c) => (n.attrs.class ?? '').split(/\s+/).includes(c);
+  if (has((n) => cls(n, 'row-picture'))) return 'picture';
+  if (has((n) => cls(n, 'link-field'))) return 'link';
+  if (has((n) => n.tag === 'input' && n.attrs.type === 'checkbox')) return 'switch';
+  if (has((n) => cls(n, 'choice'))) return 'segment';
+  if (has((n) => cls(n, 'dd'))) return 'dropdown';
+  if (has((n) => n.tag === 'input' && n.attrs.type === 'range')) return 'slider';
+  if (has((n) => cls(n, 'step-field'))) return 'stepper';
+  if (has((n) => n.tag === 'input' && n.attrs.type === 'number')) return 'number';
+  if (has((n) => cls(n, 'cp'))) return 'colour';
+  return 'other';
+}
+
+/** Every block type, core and plugin, its menu built from the row kit (0.7.30.4 and 0.7.30.5). */
+const KIT_TYPES = Object.keys(BLOCKS);
+const PIN_IDS = ['fit', 'phone', 'size', 'design', 'phoneDesign', 'phoneView', 'card', 'limit', 'subscribe', 'align', 'textBox', 'goesTo', 'imgFit', 'radius', 'videoSource', 'iconSize', 'iconColor', 'shapeColor', 'thickness', 'columns', 'ribbonMotion', 'speed', 'tableLines', 'sendMode', 'vippsButton', 'paypalButton', 'seconds', 'loop', 'zoom'];
+
+test('a setting draws the same control with the same words in Pinned as in its area', () => {
+  const differ = [];
+  for (const type of KIT_TYPES) {
+    for (const props of BLOCKS[type]) {
+      const kinds = (choice, inPinned) => {
+        setQuickChoice(type, choice);
+        const { areas, pinned } = menuOf(type, props, true);
+        const where = inPinned ? [pinned].filter(Boolean) : areas;
+        // A row's control and its words (its label, its options and its value), all but the dimmed default under a row in its area
+        const wordsOf = (n) => (hasClass(n, 'setting-source') ? '' : `${n.text} ${n.children.map(wordsOf).join(' ')}`);
+        return Object.fromEntries(where.flatMap((n) => find(n, (x) => x.attrs['data-pin'] !== undefined))
+          .map((n) => [n.attrs['data-pin'], `${controlOf(n)}: ${wordsOf(n).replace(/\s+/g, ' ').trim()}`]));
+      };
+      const inAreas = kinds({ pinned: [], removed: PIN_IDS }, false);
+      const inPinned = kinds({ pinned: Object.keys(inAreas), removed: [] }, true);
+      for (const [id, kind] of Object.entries(inAreas)) {
+        if (inPinned[id] && inPinned[id] !== kind) differ.push(`${type} «${id}»: ${kind} in its area, ${inPinned[id]} in Pinned`);
+      }
+    }
+    setQuickChoice(type, NO_CHOICE);
+  }
+  assert.deepEqual([...new Set(differ)], []);
+});
+
+test('no fold holds one setting alone, with nothing pinned or with the defaults pinned; a list counts as many', () => {
+  const alone = [];
+  for (const type of KIT_TYPES) {
+    for (const props of BLOCKS[type]) {
+      for (const choice of [{ pinned: [], removed: PIN_IDS }, NO_CHOICE]) {
+        setQuickChoice(type, choice);
+        for (const viewMode of ['desktop', 'mobile']) {
+          const context = new Map([['urd-editor', handleFor(block(type, props, {}), viewMode)]]);
+          const tree = parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body);
+          for (const fold of find(tree, (n) => n.tag === 'details' && !hasClass(n, 'bare'))) {
+            const items = find(fold, (n) => hasClass(n, 'group-items'))[0];
+            const rows = items.children.filter((n) => !hasClass(n, 'menu-group-reset'));
+            const list = find(items, (n) => hasClass(n, 'row-list')).length > 0;
+            const title = find(fold, (n) => hasClass(n, 'menu-group-title'))[0]?.text.trim();
+            if (!list && rows.length === 1) alone.push(`${type} ${JSON.stringify(props).slice(0, 40)} ${viewMode} ${choice === NO_CHOICE ? 'defaults' : 'none'} pinned: «${title}»`);
+          }
+        }
+      }
+    }
+    setQuickChoice(type, NO_CHOICE);
+  }
+  assert.deepEqual([...new Set(alone)], [], 'folds of one setting');
+});
+
+/** The area every block keeps a shared setting in, by the key of its words: what happens on a press (the lightbox), what a visitor agrees to first (ask before loading) and the picture's editor in Content, the fonts in Style. */
+const SETTING_AREA = {
+  'lbl.lightbox': 0,
+  'lbl.embedAskFirst': 0,
+  'ui.openImageEditor': 0,
+  'ui.quotePortraitEdit': 0,
+  'ui.editCover': 0,
+  'lbl.wholeFont': 1,
+  'lbl.wholeSize': 1,
+};
+
+test('the lightbox, «Ask before loading» and the image editor stand in Content, and the fonts in Style, on every block that has them', () => {
+  const seen = new Set();
+  for (const type of KIT_TYPES) {
+    for (const props of BLOCKS[type]) {
+      setQuickChoice(type, { pinned: [], removed: PIN_IDS });
+      const { areas } = menuOf(type, props, true);
+      const textOf = (n) => n.text + n.children.map(textOf).join(' ');
+      for (const [words, area] of Object.entries(SETTING_AREA)) {
+        for (const [i, node] of areas.entries()) {
+          if (!textOf(node).includes(words)) continue;
+          seen.add(words);
+          assert.equal(i, area, `${type}: «${words}» stands in ${['Content', 'Style', 'Placement'][i]}`);
+        }
+      }
+    }
+    setQuickChoice(type, NO_CHOICE);
+  }
+  assert.deepEqual([...seen].sort(), Object.keys(SETTING_AREA).sort(), 'every shared setting is reached by a fixture');
+});
+
+test('the way into a block\'s own editor stands first in Content, and a text, written on the page, has no Content in its menu', () => {
+  for (const type of ['text', 'terms']) {
+    setQuickChoice(type, { pinned: [], removed: PIN_IDS });
+    const content = menuOf(type, BLOCKS[type][0], true).areas[0].children.filter((n) => !hasClass(n, 'emenu-head'));
+    assert.deepEqual(content, [], `${type}: nothing in Content`);
+    setQuickChoice(type, NO_CHOICE);
+  }
+  for (const [type, props, words] of [['image', { src: 'x', alt: '' }, 'ui.openImageEditor']]) {
     for (const wide of [true, false]) {
       const content = menuOf(type, props, wide).areas[0].children.filter((n) => !hasClass(n, 'emenu-head'));
       assert.equal(content[0]?.tag, 'button', `${type}: a button first in Content`);

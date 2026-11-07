@@ -7,7 +7,8 @@
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
-  import { ICONS } from '../../lib/icons.js';
+  import ListEditor from '../../lib/rows/ListEditor.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
@@ -32,36 +33,24 @@
     mutateBlock('faq-item', (b) => { b.props.items.splice(i, 1); });
   }
 
-  function moveFaqItem(i, dir) {
-    const j = i + dir;
-    mutateBlock('faq-item', (b) => {
-      if (j < 0 || j >= b.props.items.length) return;
-      [b.props.items[i], b.props.items[j]] = [b.props.items[j], b.props.items[i]];
-    });
+  /** Moves a question from one place to another, as the list editor's drag and keys do. */
+  function moveFaqItem(from, to) {
+    mutateBlock('faq-item', (b) => { b.props.items.splice(to, 0, ...b.props.items.splice(from, 1)); });
   }
 </script>
 
 {#if area === 'content'}
   {#snippet faqQuestions()}
-    {#each selectedBlock.props.items ?? [] as item, i (i)}
-      <span class="nav-line">
-        <input value={item.q} title={ta('tip.faq.question')}
+    <!-- The questions, each typed here; the answers are written on the page -->
+    <ListEditor items={selectedBlock.props.items ?? []} label={ta('lbl.questions')} key={(item, i) => i}
+      onmove={moveFaqItem} onremove={removeFaqItem} onadd={addFaqItem} addLabel={ta('ui.addQuestion')}>
+      {#snippet row(item, i)}
+        <input value={item.q} title={ta('tip.faq.question')} aria-label={ta('tip.faq.question')}
           onchange={(e) => setFaqItem(i, { q: e.target.value })} />
-        <span class="row-tools">
-          <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-          <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFaqItem(i, 1)}
-            disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
-          <button class="ghost row-tool" title={ta('tip.faq.remove')} onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
-        </span>
-      </span>
-    {/each}
-    <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
+      {/snippet}
+    </ListEditor>
     <Setting key="multi" shown={ta('common.off')}>
-      <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
-        <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
-          onchange={(e) => setBlockProp('multi', e.target.checked)} />
-        {ta('lbl.faqMulti')}
-      </label>
+      <SwitchRow label={ta('lbl.faqMulti')} title={ta('tip.faq.multi')} checked={Boolean(selectedBlock.props.multi)} onchange={(on) => setBlockProp('multi', on)} />
     </Setting>
   {/snippet}
   <Fold id="faq-questions" defaultOpen title={ta('lbl.questions')} value={String(selectedBlock.props.items?.length ?? 0)} group={groupOf('faq-questions', { multi: false })}>{@render faqQuestions()}</Fold>

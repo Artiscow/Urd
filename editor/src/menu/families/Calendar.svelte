@@ -11,6 +11,11 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import Setting from '../../lib/rows/Setting.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import SliderRow from '../../lib/rows/SliderRow.svelte';
+  import NumberRow from '../../lib/rows/NumberRow.svelte';
+  import ColourRow from '../../lib/rows/ColourRow.svelte';
+  import ListEditor from '../../lib/rows/ListEditor.svelte';
   import PictureRow from '../../lib/rows/PictureRow.svelte';
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
@@ -22,7 +27,6 @@
   import { iconSvg } from '$engine/icons.js';
   import { fontChoices } from '$engine/fonts.js';
   import { ta, adminLang as currentAdminLang } from '$engine/i18n.js';
-  import { ICONS } from '../../lib/icons.js';
   import { swatchCss } from '../../lib/swatch.js';
   import LinkField from '../../lib/LinkField.svelte';
   import { linkOf, setLinkOn } from '../../lib/link-edit.js';
@@ -136,6 +140,12 @@
   function removeCalendarSource(i) {
     setBlockProp('sources', $state.snapshot(selectedBlock.props.sources ?? []).filter((_, j) => j !== i));
   }
+  /** Moves a calendar from one place to another, as the list editor's drag and keys do. */
+  function moveCalendarSource(from, to) {
+    const list = $state.snapshot(selectedBlock.props.sources ?? []);
+    list.splice(to, 0, ...list.splice(from, 1));
+    setBlockProp('sources', list);
+  }
 
   /**
    * The calendar's groups in the element menu: what each shows while closed,
@@ -169,9 +179,7 @@
       opts: optCount ? ta('menu.changed', { n: optCount }) : ta('menu.standard'),
       optsReset: optCount ? reset('cal-opts', { options: undefined }) : null,
       colors: colorCount ? ta('menu.changedOf', { n: colorCount, m: def.slots.length }) : ta('menu.standard'),
-      colorsReset: colorCount ? reset('cal-colors', { colors: undefined }) : null,
-      stripe: calStripe(def, p.stripe).show ? ta('common.on') : ta('common.off'),
-      stripeReset: p.stripe ? reset('cal-stripe', { stripe: undefined }) : null,
+      colorsReset: colorCount || p.stripe ? reset('cal-colors', { colors: undefined, stripe: undefined }) : null,
       fields: fieldCount ? ta('menu.changed', { n: fieldCount }) : ta('menu.standard'),
       fieldsReset: fieldCount ? reset('cal-fields', { fieldStyle: undefined }) : null,
     };
@@ -184,43 +192,36 @@
   {#snippet calSources()}
   <!-- One row per calendar: one of the site's calendars (read-only here, edited in the Site panel), or an address of
        its own with a name and a colour. A named calendar is a category in the filter, whatever its events' titles say -->
-  {#each selectedBlock.props.sources ?? [] as src, i (i)}
-    {@const cal = calSource(src)}
-    {#if cal.ref}
-      {@const reg = siteCalendarById(cal.ref)}
-      <div class="bg-layer">
+  <ListEditor items={selectedBlock.props.sources ?? []} label={ta('calendar.sources')} key={(src, i) => i}
+    onmove={moveCalendarSource} onremove={removeCalendarSource} onadd={addCalendarRow} addLabel={ta('ui.addCalendar')}>
+    {#snippet row(src, i)}
+      {@const cal = calSource(src)}
+      {#if cal.ref}
+        {@const reg = siteCalendarById(cal.ref)}
         <span class="toolbar-row">
           <span class="cal-ref-swatch" style:background={swatchCss(reg?.color)} aria-hidden="true"></span>
           <span class="tb-grow cal-ref-name" class:muted={!reg}>{reg ? (reg.name || reg.url) : ta('calendar.refMissing')}</span>
-          <button class="ghost row-tool" title={ta('ui.remove')} onclick={() => removeCalendarSource(i)}>{@html ICONS.cross}</button>
         </span>
-      </div>
-    {:else}
-      <div class="bg-layer">
-        <span class="toolbar-row">
-          <input class="tb-grow" value={cal.url} placeholder={ta('calendar.sourcesPh')} spellcheck="false"
-            title={ta('calendar.sourceUrl')} onchange={(e) => setCalendarSource(i, { url: e.target.value.trim() })} />
-          <button class="ghost row-tool" title={ta('ui.remove')} onclick={() => removeCalendarSource(i)}>{@html ICONS.cross}</button>
-        </span>
-        <span class="toolbar-row">
-          <input class="tb-grow" value={cal.name} placeholder={ta('calendar.sourceName')} title={ta('tip.calendar.sourceName')}
-            onchange={(e) => setCalendarSource(i, { name: e.target.value.trim() })} />
-          <ColorPicker value={cal.color || 'accent'} tokens={themeSwatches()} allowClear
-            label={ta('tip.calendar.sourceColor')} onchange={(hex) => setCalendarSource(i, { color: hex ?? '' })} />
-        </span>
-        <button type="button" class="ghost action" title={ta('tip.calendar.saveToSite')} disabled={!cal.url.trim()}
-          onclick={() => saveCalendarToSite(i)}>{ta('calendar.saveToSite')}</button>
-      </div>
-    {/if}
-  {/each}
-  <button type="button" class="ghost action" onclick={addCalendarRow}>{@html ICONS.plus} {ta('ui.addCalendar')}</button>
+      {:else}
+        <div class="cal-source">
+          <input value={cal.url} placeholder={ta('calendar.sourcesPh')} spellcheck="false"
+            title={ta('calendar.sourceUrl')} aria-label={ta('calendar.sourceUrl')} onchange={(e) => setCalendarSource(i, { url: e.target.value.trim() })} />
+          <span class="toolbar-row">
+            <input class="tb-grow" value={cal.name} placeholder={ta('calendar.sourceName')} title={ta('tip.calendar.sourceName')} aria-label={ta('tip.calendar.sourceName')}
+              onchange={(e) => setCalendarSource(i, { name: e.target.value.trim() })} />
+            <ColorPicker value={cal.color || 'accent'} tokens={themeSwatches()} allowClear
+              label={ta('tip.calendar.sourceColor')} onchange={(hex) => setCalendarSource(i, { color: hex ?? '' })} />
+          </span>
+          <button type="button" class="ghost action" title={ta('tip.calendar.saveToSite')} disabled={!cal.url.trim()}
+            onclick={() => saveCalendarToSite(i)}>{ta('calendar.saveToSite')}</button>
+        </div>
+      {/if}
+    {/snippet}
+  </ListEditor>
   <!-- The site's calendars: the ticked ones are shown by this block -->
   <span class="mini-label" title={ta('tip.calendar.siteSources')}>{ta('calendar.siteSources')}</span>
   {#each siteCalendars() as reg (reg.id)}
-    <label title={`${ta('tip.calendar.useSource')}${reg.url ? `\n${reg.url}` : ''}`} class="gridmenu-snap">
-      <input type="checkbox" checked={calRefs().has(reg.id)} onchange={(e) => toggleCalendarRef(reg.id, e.target.checked)} />
-      {reg.name || reg.url}
-    </label>
+    <SwitchRow label={reg.name || reg.url} title={`${ta('tip.calendar.useSource')}${reg.url ? `\n${reg.url}` : ''}`} checked={calRefs().has(reg.id)} onchange={(on) => toggleCalendarRef(reg.id, on)} />
   {/each}
   {#if !siteCalendars().length}
     <span class="gridmenu-value">{ta('calendar.siteSourcesNone')}</span>
@@ -237,11 +238,7 @@
   {/if}
   <!-- The view switcher, for the views that list what is coming: the visitor can turn the block to the week or the month -->
   {#if CAL_SWITCH_VIEWS.includes(calView(selectedBlock.props))}
-    <label class="gridmenu-snap" title={ta('tip.calendar.switcher')}>
-      <input type="checkbox" checked={selectedBlock.props.switcher === true}
-        onchange={(e) => setBlockProp('switcher', e.target.checked || undefined)} />
-      {ta('calendar.switcher')}
-    </label>
+    <SwitchRow label={ta('calendar.switcher')} title={ta('tip.calendar.switcher')} checked={selectedBlock.props.switcher === true} onchange={(on) => setBlockProp('switcher', on || undefined)} />
     {#if selectedBlock.props.switcher === true}
       <!-- The designs behind the switcher's Week and Month buttons, directly under the switch they belong to -->
       {@const sw = calSwitcherViews(selectedBlock.props)}
@@ -268,30 +265,16 @@
   {/if}
   {#if ['list', 'cards', 'agenda'].includes(selectedBlock.props.view ?? 'list')}
     <Setting pin="limit">
-      <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
-        <input type="number" min="1" max="50" value={selectedBlock.props.limit ?? 6}
-          onchange={(e) => setBlockProp('limit', Math.max(1, Math.min(50, Number(e.target.value) || 6)))} /></label>
+      <NumberRow label={ta('lbl.maxCount')} title={ta('tip.collection.limit')} value={selectedBlock.props.limit ?? 6} min={1} max={50} onchange={(v) => setBlockProp('limit', v)} />
     </Setting>
     <!-- A list folds the events beyond the max count; the regular-event design folds its own dates -->
     {#if calView(selectedBlock.props) === 'list' && calDesign(selectedBlock.props.design).module !== 'more'}
-      <label class="gridmenu-snap" title={ta('tip.calendar.showMore')}>
-        <input type="checkbox" checked={selectedBlock.props.showMore !== false}
-          onchange={(e) => setBlockProp('showMore', e.target.checked ? undefined : false)} />
-        {ta('calendar.showMore')}
-      </label>
+      <SwitchRow label={ta('calendar.showMore')} title={ta('tip.calendar.showMore')} checked={selectedBlock.props.showMore !== false} onchange={(on) => setBlockProp('showMore', on ? undefined : false)} />
     {/if}
   {/if}
   <!-- Cancelled events, the clock (24 hours unless set to 12) and the week (the site language's unless set here) -->
-  <label class="gridmenu-snap" title={ta('tip.calendar.showCancelled')}>
-    <input type="checkbox" checked={selectedBlock.props.showCancelled !== false}
-      onchange={(e) => setBlockProp('showCancelled', e.target.checked ? undefined : false)} />
-    {ta('calendar.showCancelled')}
-  </label>
-  <label class="gridmenu-snap" title={ta('tip.calendar.structuredData')}>
-    <input type="checkbox" checked={selectedBlock.props.structuredData !== false}
-      onchange={(e) => setBlockProp('structuredData', e.target.checked ? undefined : false)} />
-    {ta('calendar.structuredData')}
-  </label>
+  <SwitchRow label={ta('calendar.showCancelled')} title={ta('tip.calendar.showCancelled')} checked={selectedBlock.props.showCancelled !== false} onchange={(on) => setBlockProp('showCancelled', on ? undefined : false)} />
+  <SwitchRow label={ta('calendar.structuredData')} title={ta('tip.calendar.structuredData')} checked={selectedBlock.props.structuredData !== false} onchange={(on) => setBlockProp('structuredData', on ? undefined : false)} />
   <Choice label={ta('calendar.clock')} title={ta('tip.calendar.clock')} value={selectedBlock.props.clock === '12' ? '12' : '24'}
     options={[['24', ta('calendar.clock.24')], ['12', ta('calendar.clock.12')]]}
     onchange={(v) => setBlockProp('clock', v === '12' ? '12' : undefined)} />
@@ -305,58 +288,26 @@
     <Choice label={ta('calendar.nextCount')} title={ta('tip.calendar.nextCount')} value={String(Math.min(3, Math.max(1, Number(selectedBlock.props.nextCount) || 1)))}
       options={[['1', '1'], ['2', '2'], ['3', '3']]}
       onchange={(v) => setBlockProp('nextCount', Number(v))} />
-    <div class="ctl-row" title={ta('tip.calendar.laterCount')}>
-      <span class="mini-label ctl-name">{ta('calendar.laterCount')}</span>
-      <input type="range" min="0" max="10" step="1" value={selectedBlock.props.laterCount ?? 0}
-        oninput={(e) => setBlockProp('laterCount', e.target.valueAsNumber)} />
-      <span class="gridmenu-value">{selectedBlock.props.laterCount ?? 0}</span>
-    </div>
+    <SliderRow label={ta('calendar.laterCount')} title={ta('tip.calendar.laterCount')} value={selectedBlock.props.laterCount ?? 0} min={0} max={10} step={1}
+      shown={String(selectedBlock.props.laterCount ?? 0)} oninput={(v) => setBlockProp('laterCount', v)} />
   {/if}
   {/snippet}
   {#snippet calButtons()}
   <!-- A design with calendar switches of its own has no chip row to switch -->
   {#if !calDesign(selectedBlock.props.design).ownFilter}
-    <label class="gridmenu-snap" title={ta('tip.calendar.showCategories')}>
-      <input type="checkbox" checked={selectedBlock.props.showCategories === true}
-        onchange={(e) => setBlockProp('showCategories', e.target.checked)} />
-      {ta('calendar.showCategories')}
-    </label>
+    <SwitchRow label={ta('calendar.showCategories')} title={ta('tip.calendar.showCategories')} checked={selectedBlock.props.showCategories === true} onchange={(on) => setBlockProp('showCategories', on)} />
   {/if}
   <!-- What a visitor finds events with: a search field, and the events that are over -->
-  <label class="gridmenu-snap" title={ta('tip.calendar.showSearch')}>
-    <input type="checkbox" checked={selectedBlock.props.showSearch === true}
-      onchange={(e) => setBlockProp('showSearch', e.target.checked ? true : undefined)} />
-    {ta('calendar.showSearch')}
-  </label>
+  <SwitchRow label={ta('calendar.showSearch')} title={ta('tip.calendar.showSearch')} checked={selectedBlock.props.showSearch === true} onchange={(on) => setBlockProp('showSearch', on ? true : undefined)} />
   {#if !['month', 'week', 'day', 'year'].includes(calView(selectedBlock.props))}
-    <label class="gridmenu-snap" title={ta('tip.calendar.showEarlier')}>
-      <input type="checkbox" checked={selectedBlock.props.showEarlier === true}
-        onchange={(e) => setBlockProp('showEarlier', e.target.checked ? true : undefined)} />
-      {ta('calendar.showEarlier')}
-    </label>
+    <SwitchRow label={ta('calendar.showEarlier')} title={ta('tip.calendar.showEarlier')} checked={selectedBlock.props.showEarlier === true} onchange={(on) => setBlockProp('showEarlier', on ? true : undefined)} />
   {/if}
   <Setting pin="subscribe">
-    <label title={ta('tip.calendar.subscribe')} class="gridmenu-snap">
-      <input type="checkbox" checked={selectedBlock.props.showSubscribe !== false}
-        onchange={(e) => setBlockProp('showSubscribe', e.target.checked)} />
-      {ta('calendar.showSubscribe')}
-    </label>
+    <SwitchRow label={ta('calendar.showSubscribe')} title={ta('tip.calendar.subscribe')} checked={selectedBlock.props.showSubscribe !== false} onchange={(on) => setBlockProp('showSubscribe', on)} />
   </Setting>
-  <label title={ta('tip.calendar.signup')} class="gridmenu-snap">
-    <input type="checkbox" checked={selectedBlock.props.showSignup === true}
-      onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
-    {ta('calendar.showSignup')}
-  </label>
-  <label class="gridmenu-snap" title={ta('tip.calendar.showAdd')}>
-    <input type="checkbox" checked={selectedBlock.props.showAdd !== false}
-      onchange={(e) => setBlockProp('showAdd', e.target.checked ? undefined : false)} />
-    {ta('calendar.showAdd')}
-  </label>
-  <label class="gridmenu-snap" title={ta('tip.calendar.showRecurring')}>
-    <input type="checkbox" checked={selectedBlock.props.showRecurring === true}
-      onchange={(e) => setBlockProp('showRecurring', e.target.checked ? true : undefined)} />
-    {ta('calendar.showRecurring')}
-  </label>
+  <SwitchRow label={ta('calendar.showSignup')} title={ta('tip.calendar.signup')} checked={selectedBlock.props.showSignup === true} onchange={(on) => setBlockProp('showSignup', on)} />
+  <SwitchRow label={ta('calendar.showAdd')} title={ta('tip.calendar.showAdd')} checked={selectedBlock.props.showAdd !== false} onchange={(on) => setBlockProp('showAdd', on ? undefined : false)} />
+  <SwitchRow label={ta('calendar.showRecurring')} title={ta('tip.calendar.showRecurring')} checked={selectedBlock.props.showRecurring === true} onchange={(on) => setBlockProp('showRecurring', on ? true : undefined)} />
   {#if calDesign(selectedBlock.props.design).program}
     <label title={ta('tip.calendar.programHref')}>{ta('calendar.programHref')}
       <input value={selectedBlock.props.programHref ?? ''} placeholder="/program" spellcheck="false"
@@ -378,11 +329,7 @@
   {#snippet calNotice()}
   <!-- The announcement note, on the designs that have one: a switch and the link it leads to -->
   {#if calDesign(selectedBlock.props.design).notice}
-    <label class="gridmenu-snap" title={ta('tip.calendar.showNotice')}>
-      <input type="checkbox" checked={selectedBlock.props.notice?.show === true}
-        onchange={(e) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), show: e.target.checked })} />
-      {ta('calendar.showNotice')}
-    </label>
+    <SwitchRow label={ta('calendar.showNotice')} title={ta('tip.calendar.showNotice')} checked={selectedBlock.props.notice?.show === true} onchange={(on) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), show: on })} />
     {#if selectedBlock.props.notice?.show === true}
       <!-- A design that can draw the announcement as an alert band offers the choice -->
       {#if calDesign(selectedBlock.props.design).noticeBand}
@@ -439,10 +386,7 @@
     {@const calOpt = calOptions(selectedBlock.props)}
     {#each calOptionDefs(selectedBlock.props.design).filter((def) => calOptionShown(def, calOpt)) as def (def.key)}
       {#if def.kind === 'switch'}
-        <label class="gridmenu-snap" title={def.tipKey ? ta(def.tipKey) : undefined}>
-          <input type="checkbox" checked={calOpt[def.key]} onchange={(e) => setCalOption(def, e.target.checked)} />
-          {ta(def.labelKey)}
-        </label>
+        <SwitchRow label={ta(def.labelKey)} title={def.tipKey ? ta(def.tipKey) : undefined} checked={calOpt[def.key]} onchange={(on) => setCalOption(def, on)} />
       {:else if def.kind === 'hour'}
         <label title={ta('tip.calendar.opt.hours')}>{ta(def.labelKey)}
           <input type="number" min="0" max="24" value={calOpt[def.key] ?? ''} placeholder={ta('calendar.opt.columns.auto')}
@@ -477,17 +421,11 @@
   {/each}
   {/snippet}
   {#snippet calStripeGroup()}
-  <label class="gridmenu-snap" title={ta('tip.calendar.stripe')}>
-    <input type="checkbox" checked={calStripe(calDef, selectedBlock.props.stripe).show}
-      onchange={(e) => setCalStripe({ show: e.target.checked })} />
-    {ta('calendar.stripe')}
-  </label>
+  <!-- The edge stripe on the boxes, with its colour directly under its switch -->
+  <SwitchRow label={ta('calendar.stripe')} title={ta('tip.calendar.stripe')} checked={calStripe(calDef, selectedBlock.props.stripe).show} onchange={(on) => setCalStripe({ show: on })} />
   {#if calStripe(calDef, selectedBlock.props.stripe).show}
-    <div class="ctl-row" title={ta('tip.calendar.stripeColor')}>
-      <span class="mini-label ctl-name">{ta('calendar.stripeColor')}</span>
-      <ColorPicker value={selectedBlock.props.stripe?.color ?? ''} tokens={themeSwatches()} allowClear
-        label={ta('calendar.stripeColor')} onchange={(v) => setCalStripe({ color: v || undefined })} />
-    </div>
+    <ColourRow label={ta('calendar.stripeColor')} title={ta('tip.calendar.stripeColor')} value={selectedBlock.props.stripe?.color ?? ''} tokens={themeSwatches()} allowClear
+      onchange={(v) => setCalStripe({ color: v || undefined })} />
   {/if}
   {/snippet}
   {#snippet calFields()}
@@ -515,7 +453,15 @@
   {#if calOptionDefs(selectedBlock.props.design).some((def) => calOptionShown(def, calOptions(selectedBlock.props)))}
     <Fold id="cal-opts" title={ta('calendar.section.options')} value={cm.opts} reset={cm.optsReset}>{@render calOpts()}</Fold>
   {/if}
-  <Fold id="cal-colors" title={ta('calendar.colors')} value={cm.colors} reset={cm.colorsReset}>{@render calColours()}</Fold>
-  <Fold id="cal-stripe" title={ta('calendar.stripe')} value={cm.stripe} reset={cm.stripeReset}>{@render calStripeGroup()}</Fold>
+  <!-- The design's colours and the edge stripe on its boxes, one group of the calendar's colours -->
+  <Fold id="cal-colors" title={ta('calendar.colors')} value={cm.colors} reset={cm.colorsReset}>{@render calColours()}{@render calStripeGroup()}</Fold>
   <Fold id="cal-fields" title={ta('calendar.fieldStyle')} value={cm.fields} reset={cm.fieldsReset}>{@render calFields()}</Fold>
 {/if}
+
+<style>
+  .cal-source {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+</style>

@@ -689,12 +689,12 @@ function removeSiteLink(i) {
   });
 }
 
-function moveSiteLink(i, dir) {
-  const j = i + dir;
+/** Moves a link from one place in the list to another, as the list editor's drag and keys do. */
+function moveSiteLink(from, to) {
   siteMutate('site', () => {
     const list = siteDraft.site.links;
-    if (j < 0 || j >= list.length) return;
-    [list[i], list[j]] = [list[j], list[i]];
+    if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return;
+    list.splice(to, 0, ...list.splice(from, 1));
   });
 }
 

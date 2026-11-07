@@ -3,7 +3,7 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
+  import SelectRow from '../../lib/rows/SelectRow.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
@@ -11,7 +11,7 @@
   import { makeGroupHelpers } from '../groups.js';
   import ShopLinks from '../ShopLinks.svelte';
   const ed = getContext('urd-editor');
-  /** A fold whose every setting stands in Pinned is left out. */
+  /** A fold counts the settings it holds now: one whose every setting stands in Pinned is left out, and one of a single setting is that setting alone. */
   const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const collectionIds = $derived(ed.collectionIds);
@@ -23,10 +23,9 @@
 
 {#if area === 'content'}
   {#snippet productCatalog()}
-    <label title={ta('tip.product.source')}>{ta('blocks.collection')}
-      <Dropdown value={selectedBlock.props.collection ?? ''}
-        options={[['', ta('common.choose')], ...collectionIds.filter((id) => collectionsView[id]?.kind === 'products').map((id) => [id, collectionsView[id]?.name ?? id])]}
-        onchange={(v) => setBlockProp('collection', v || null)} /></label>
+    <SelectRow label={ta('blocks.collection')} title={ta('tip.product.source')} value={selectedBlock.props.collection ?? ''}
+      options={[['', ta('common.choose')], ...collectionIds.filter((id) => collectionsView[id]?.kind === 'products').map((id) => [id, collectionsView[id]?.name ?? id])]}
+      onchange={(v) => setBlockProp('collection', v || null)} />
     {#if selectedBlock.props.collection && collectionsView[selectedBlock.props.collection]?.kind === 'products'}
       <!-- The two actions stacked, each on one line across the column -->
       <span class="menu-stack">
@@ -45,7 +44,8 @@
           onchange={(e) => { const n = Math.max(0, Math.min(100, Math.round(Number(e.target.value)) || 0)); setBlockProp('limit', n); e.target.value = n || ''; }} /></label>
     </Setting>
   {/snippet}
-  {#snippet productPrice()}
+  {#snippet productShop()}
+    <ShopLinks from="product" />
     <Setting key="currency">
       <label title={ta('tip.product.currency')}>{ta('lbl.currency')}
         <input value={selectedBlock.props.currency ?? 'kr'}
@@ -53,8 +53,8 @@
     </Setting>
   {/snippet}
   <Fold id="product-catalog" title={ta('group.catalog')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('product-catalog', { limit: 0 })}>{@render productCatalog()}</Fold>
-  <Fold id="product-shop" title={ta('group.siteShop')} value={ed.siteDraft?.site?.commerce?.currency || 'NOK'}><ShopLinks from="product" /></Fold>
-  <Fold id="product-price" title={ta('lbl.price')} value={selectedBlock.props.currency ?? 'kr'} group={groupOf('product-price', { currency: 'kr' })}>{@render productPrice()}</Fold>
+  <!-- The shop's own settings in its panel, and the word the prices are written with here -->
+  <Fold id="product-shop" title={ta('group.siteShop')} value={selectedBlock.props.currency ?? 'kr'} group={groupOf('product-shop', { currency: 'kr' })}>{@render productShop()}</Fold>
 {:else if area === 'style'}
   {#snippet productGrid()}
     <Setting key="columns" shown={ta('common.auto')} pin="columns">
@@ -63,5 +63,6 @@
           onchange={(e) => { const n = Math.max(0, Math.min(6, Math.round(Number(e.target.value)) || 0)); setBlockProp('columns', n); e.target.value = n || ''; }} /></label>
     </Setting>
   {/snippet}
-  {#if !pinned.all('columns')}<Fold id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('common.auto')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</Fold>{/if}
+  <Fold id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('common.auto')}
+    rows={pinned.left('columns')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</Fold>
 {/if}

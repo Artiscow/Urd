@@ -116,11 +116,11 @@ export function readParts(container, skip = '') {
  * Narrows the search's copy of the areas: a part the query does not show gets
  * `menu-miss`, a group it shows is opened, and an area with nothing left gets
  * `menu-empty`. The area's title and its «No match» line are not parts.
- * @param {Element} root The search's copy of the areas, one child per area
+ * @param {Element} root The search's copy of the areas, each a `.emenu-col`, in a column of its own when wide
  * @param {(text: string) => boolean} match
  */
 export function narrowMenu(root, match) {
-  for (const area of root.children) {
+  for (const area of root.querySelectorAll('.emenu-col')) {
     const parts = readParts(area, '.emenu-title, .emenu-none');
     const shown = searchParts(parts, match);
     const mark = (list) => {

@@ -13,4 +13,10 @@
   .row-number {
     font-size: 0.85rem;
   }
+
+  /* The field as wide as a number of a few digits with its unit and arrows, so the words beside it keep their line */
+  .row-number :global(.step-field) {
+    flex: none;
+    width: 6.5rem;
+  }
 </style>

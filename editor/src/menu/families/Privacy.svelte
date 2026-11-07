@@ -4,6 +4,8 @@
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import DocLook from '../DocLook.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { privacyDesign } from '$engine/doc-look.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -17,11 +19,9 @@
 </script>
 
 {#if area === 'content'}
-  <label title={ta('tip.privacy.heading')} class="gridmenu-snap">
-    <input type="checkbox" checked={selectedBlock.props.heading === true}
-      onchange={(e) => setBlockProp('heading', e.target.checked)} />
-    {ta('lbl.privacyHeading')}
-  </label>
+  <Setting key="heading" own={selectedBlock.props.heading === true} reset={() => setBlockProp('heading', undefined)}>
+    <SwitchRow label={ta('lbl.privacyHeading')} title={ta('tip.privacy.heading')} checked={selectedBlock.props.heading === true} onchange={(on) => setBlockProp('heading', on)} />
+  </Setting>
 {:else if area === 'style'}
   {#snippet privacyLook()}
     <DocLook type="privacy" {design} />

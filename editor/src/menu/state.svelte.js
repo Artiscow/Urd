@@ -44,16 +44,15 @@ export function measureMenuRoom(left) {
 export const MENU_AREAS = ['content', 'style', 'placement'];
 
 /**
- * The keys of the areas (0.7.20.9): scrolls to where the area starts, its heading in the two columns when wide and the stacked area when narrow.
+ * The keys of the areas (0.7.20.9): scrolls to where the area starts, in its column when wide and stacked when narrow.
  * Unless the focus is in the search field, it puts the focus on the area's first group head or button (never the help chip, never a field), so the next key is still the menu's.
  * `root` is the menu the key was pressed in (the floating menu, or the Properties panel's body).
  */
 export function chooseArea(area, root = null) {
   if (!MENU_AREAS.includes(area)) return;
-  const col = root?.querySelectorAll('.emenu-cols > .emenu-col')[MENU_AREAS.indexOf(area)];
+  const col = root?.querySelector(`.emenu-cols [data-area="${area}"]`);
   if (!col) return;
-  // An area poured through two columns spans both, so its heading tells where it starts.
-  (col.closest('.emenu-flow') ? col.firstElementChild ?? col : col).scrollIntoView({ block: 'start' });
+  col.scrollIntoView({ block: 'start' });
   if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button:not(.help-chip)')?.focus();
 }
 

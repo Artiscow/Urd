@@ -3,14 +3,16 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
   import Choice from '../../lib/Choice.svelte';
-  import ColorPicker from '../../lib/ColorPicker.svelte';
+  import SelectRow from '../../lib/rows/SelectRow.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import SliderRow from '../../lib/rows/SliderRow.svelte';
+  import ColourRow from '../../lib/rows/ColourRow.svelte';
+  import ListEditor from '../../lib/rows/ListEditor.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
   import { ribbonMotions, ribbonReaches, ribbonReach, ribbonSepOptions, ribbonMainOptions, ribbonStripeOptions, RIBBON_SEP_ICONS, ribbonInk } from '../options.js';
-  import { ICONS } from '../../lib/icons.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
   import { pinnedNow } from '../pinned.js';
@@ -18,8 +20,8 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps, themeSwatches } = ed;
-  const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
-  /** A fold whose every setting stands in Pinned is left out. */
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  /** A fold counts the settings it holds now: one whose every setting stands in Pinned is left out, and one of a single setting is that setting alone. */
   const pinned = pinnedNow();
   let { area } = $props();
 
@@ -38,36 +40,107 @@
     mutateBlock('ribbon-item', (b) => { b.props.items.splice(i, 1); });
   }
 
-  function moveRibbonItem(i, dir) {
-    const j = i + dir;
-    mutateBlock('ribbon-item', (b) => {
-      if (j < 0 || j >= b.props.items.length) return;
-      [b.props.items[i], b.props.items[j]] = [b.props.items[j], b.props.items[i]];
-    });
+  /** Moves a word from one place to another, as the list editor's drag and keys do. */
+  function moveRibbonItem(from, to) {
+    mutateBlock('ribbon-item', (b) => { b.props.items.splice(to, 0, ...b.props.items.splice(from, 1)); });
   }
 </script>
 
 {#if area === 'content'}
   {#snippet ribbonWords()}
-    <!-- The words are typed in the band as well; the list owns order and count -->
-    {#each selectedBlock.props.items ?? [] as item, i (i)}
-      <span class="nav-line">
-        <input value={item} title={ta('tip.ribbon.item')}
+    <!-- The words are typed in the band as well; the list owns their order and count -->
+    <ListEditor items={selectedBlock.props.items ?? []} label={ta('lbl.ribbonItems')} key={(item, i) => i}
+      onmove={moveRibbonItem} onremove={removeRibbonItem} onadd={addRibbonItem} addLabel={ta('ui.addRibbonItem')}>
+      {#snippet row(item, i)}
+        <input value={item} title={ta('tip.ribbon.item')} aria-label={ta('tip.ribbon.item')}
           onchange={(e) => setRibbonItem(i, e.target.value)} />
-        <span class="row-tools">
-          <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveRibbonItem(i, -1)}
-            disabled={i === 0}>{@html ICONS.up}</button>
-          <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveRibbonItem(i, 1)}
-            disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
-          <button class="ghost row-tool" title={ta('tip.ribbon.remove')}
-            onclick={() => removeRibbonItem(i)}>{@html ICONS.cross}</button>
-        </span>
-      </span>
-    {/each}
-    <button class="ghost action" onclick={addRibbonItem}>{ta('ui.addRibbonItem')}</button>
+      {/snippet}
+    </ListEditor>
   {/snippet}
-  {#snippet ribbonSep()}
-    <!-- The separator: a drawn mark, nothing, or the owner's own text -->
+  <Fold id="ribbon-words" defaultOpen title={ta('lbl.ribbonItems')} value={ta('menu.wordCount', { n: selectedBlock.props.items?.length ?? 0 })}>{@render ribbonWords()}</Fold>
+{:else if area === 'style'}
+  {@const motion = selectedBlock.props.motion ?? 'roll'}
+  {@const plain = (selectedBlock.props.variant ?? 'band') === 'plain'}
+  {@const stripesOn = [selectedBlock.props.above ?? 'none', selectedBlock.props.below ?? 'none'].filter((v) => v !== 'none').length}
+  {#snippet ribbonMotion()}
+    <Setting key="motion" pin="ribbonMotion">
+      <SelectRow label={ta('group.motion')} title={ta('tip.ribbon.motion')} value={motion} options={ribbonMotions()} onchange={(v) => setBlockProp('motion', v)} />
+    </Setting>
+    <RibbonMotion />
+  {/snippet}
+  {#snippet ribbonStripes()}
+    <Setting key="above">
+      <SelectRow label={ta('lbl.ribbonAbove')} title={ta('tip.ribbon.above')} value={selectedBlock.props.above ?? 'none'} options={ribbonStripeOptions()} onchange={(v) => setBlockProp('above', v)} />
+    </Setting>
+    {#if (selectedBlock.props.above ?? 'none') !== 'none'}
+      <Setting key="aboveColor" source="theme">
+        <ColourRow label={ta('lbl.colour')} title={ta('tip.ribbon.stripeColor')} value={selectedBlock.props.aboveColor ?? ribbonInk(selectedBlock.props)} tokens={themeSwatches()}
+          onchange={(hex) => setBlockProp('aboveColor', hex)} />
+      </Setting>
+    {/if}
+    <Setting key="main">
+      <SelectRow label={ta('lbl.ribbonMain')} title={ta('tip.ribbon.main')} value={selectedBlock.props.main ?? 'text'} options={ribbonMainOptions()} onchange={(v) => setBlockProp('main', v)} />
+    </Setting>
+    <Setting key="below">
+      <SelectRow label={ta('lbl.ribbonBelow')} title={ta('tip.ribbon.below')} value={selectedBlock.props.below ?? 'none'} options={ribbonStripeOptions()} onchange={(v) => setBlockProp('below', v)} />
+    </Setting>
+    {#if (selectedBlock.props.below ?? 'none') !== 'none'}
+      <Setting key="belowColor" source="theme">
+        <ColourRow label={ta('lbl.colour')} title={ta('tip.ribbon.stripeColor')} value={selectedBlock.props.belowColor ?? ribbonInk(selectedBlock.props)} tokens={themeSwatches()}
+          onchange={(hex) => setBlockProp('belowColor', hex)} />
+      </Setting>
+    {/if}
+    {#if stripesOn}
+      <Setting key="stripePlace">
+        <Choice stack label={ta('lbl.ribbonStripePlace')} title={ta('tip.ribbon.stripePlace')} value={selectedBlock.props.stripePlace ?? 'stack'}
+          options={[['stack', ta('opt.ribbonPlace.stack')], ['edge', ta('opt.ribbonPlace.edge')]]}
+          onchange={(v) => setBlockProp('stripePlace', v)} />
+      </Setting>
+      <Setting key="thickness" shown="8">
+        <SliderRow label={ta('lbl.ribbonThickness')} title={ta('tip.ribbon.thickness')} value={selectedBlock.props.thickness ?? 8} min={2} max={40} step={1}
+          shown={`${selectedBlock.props.thickness ?? 8} px`} oninput={(v) => setBlockProp('thickness', v)} />
+      </Setting>
+    {/if}
+  {/snippet}
+  {#snippet ribbonShape()}
+    <Setting key="width">
+      <Choice stack label={ta('lbl.ribbonWidth')} value={ribbonReach(selectedBlock.props.width)} options={ribbonReaches()} onchange={(v) => setBlockProp('width', v)} />
+    </Setting>
+    <Setting key="tilt" shown="0">
+      <SliderRow label={ta('lbl.ribbonTilt')} title={ta('tip.ribbon.tilt')} value={selectedBlock.props.tilt ?? 0} min={-10} max={10} step={1}
+        shown={`${selectedBlock.props.tilt ?? 0}°`} oninput={(v) => setBlockProp('tilt', v)} />
+    </Setting>
+    <!-- The band's colour; the plain design has no band -->
+    {#if !plain}
+      <Setting key="bg" source="theme">
+        <ColourRow label={ta('lbl.background')} title={ta('tip.ribbon.bg')} value={selectedBlock.props.bg ?? 'accent'} tokens={themeSwatches()} onchange={(hex) => setBlockProp('bg', hex)} />
+      </Setting>
+    {/if}
+  {/snippet}
+  {#snippet ribbonText()}
+    <Setting key="size">
+      <SelectRow label={ta('lbl.size')} title={ta('tip.ribbon.size')} value={selectedBlock.props.size ?? 'md'}
+        options={[['sm', ta('opt.size.sm')], ['md', ta('opt.size.md')], ['lg', ta('opt.size.lg')], ['xl', ta('opt.size.xl')]]}
+        onchange={(v) => setBlockProp('size', v)} />
+    </Setting>
+    <Setting key="color" source="theme">
+      <ColourRow label={ta('lbl.textColor')} title={ta('tip.ribbon.color')} value={selectedBlock.props.color ?? (plain ? 'text' : 'accent-text')} tokens={themeSwatches()}
+        onchange={(hex) => setBlockProp('color', hex)} />
+    </Setting>
+    <Setting key="caps" shown={ta('common.off')}>
+      <SwitchRow label={ta('lbl.ribbonCaps')} title={ta('tip.ribbon.caps')} checked={selectedBlock.props.caps === true} onchange={(on) => setBlockProp('caps', on)} />
+    </Setting>
+    <Setting key="weight">
+      <SwitchRow label={ta('lbl.ribbonBold')} title={ta('tip.ribbon.bold')} checked={selectedBlock.props.weight === 'bold'} onchange={(on) => setBlockProp('weight', on ? 'bold' : 'normal')} />
+    </Setting>
+    <Setting key="outline" shown={ta('common.off')}>
+      <SwitchRow label={ta('lbl.ribbonOutline')} title={ta('tip.ribbon.outline')} checked={selectedBlock.props.outline === true} onchange={(on) => setBlockProp('outline', on)} />
+    </Setting>
+    <Setting key="gap" shown="40">
+      <SliderRow label={ta('lbl.ribbonGap')} title={ta('tip.ribbon.gap')} value={selectedBlock.props.gap ?? 40} min={8} max={120} step={2}
+        shown={`${selectedBlock.props.gap ?? 40} px`} oninput={(v) => setBlockProp('gap', v)} />
+    </Setting>
+    <!-- What stands between the words: a drawn mark, nothing, or the owner's own text -->
     <Setting key="sep">
       <div class="ctl-field">
         <span class="mini-label">{ta('lbl.ribbonSep')}</span>
@@ -89,152 +162,12 @@
         </label>
       </Setting>
     {/if}
-      {/snippet}
-  <Fold id="ribbon-words" title={ta('lbl.ribbonItems')} value={ta('menu.wordCount', { n: selectedBlock.props.items?.length ?? 0 })}>{@render ribbonWords()}</Fold>
-  <Fold id="ribbon-sep" title={ta('lbl.ribbonSep')} value={ribbonSepOptions().find(([v]) => v === (selectedBlock.props.sep ?? 'dot'))?.[1] ?? ''} group={groupOf('ribbon-sep', { sep: 'dot', sepText: undefined })}>{@render ribbonSep()}</Fold>
-{:else if area === 'style'}
-  {@const motion = selectedBlock.props.motion ?? 'roll'}
-  {@const stripesOn = [selectedBlock.props.above ?? 'none', selectedBlock.props.below ?? 'none'].filter((v) => v !== 'none').length}
-  {@const colourN = groupChanged({ bg: undefined, color: undefined })}
-  {#snippet ribbonMotion()}
-      <Setting key="motion" pin="ribbonMotion">
-        <label title={ta('tip.ribbon.motion')}>{ta('group.motion')}
-          <Dropdown filled value={motion} options={ribbonMotions()} onchange={(v) => setBlockProp('motion', v)} /></label>
-      </Setting>
-      <RibbonMotion />
   {/snippet}
-  {#snippet ribbonStripes()}
-      <Setting key="above">
-        <label class="field-stack" title={ta('tip.ribbon.above')}>
-          <span class="mini-label">{ta('lbl.ribbonAbove')}</span>
-          <Dropdown filled value={selectedBlock.props.above ?? 'none'} options={ribbonStripeOptions()}
-            onchange={(v) => setBlockProp('above', v)} />
-        </label>
-      </Setting>
-      {#if (selectedBlock.props.above ?? 'none') !== 'none'}
-        <Setting key="aboveColor" source="theme">
-          <label title={ta('tip.ribbon.stripeColor')}>{ta('lbl.colour')}
-            <ColorPicker value={selectedBlock.props.aboveColor ?? ribbonInk(selectedBlock.props)} tokens={themeSwatches()}
-              label={ta('tip.ribbon.stripeColor')}
-              onchange={(hex) => setBlockProp('aboveColor', hex)} /></label>
-        </Setting>
-      {/if}
-      <Setting key="main">
-        <label class="field-stack" title={ta('tip.ribbon.main')}>
-          <span class="mini-label">{ta('lbl.ribbonMain')}</span>
-          <Dropdown filled value={selectedBlock.props.main ?? 'text'} options={ribbonMainOptions()}
-            onchange={(v) => setBlockProp('main', v)} />
-        </label>
-      </Setting>
-      <Setting key="below">
-        <label class="field-stack" title={ta('tip.ribbon.below')}>
-          <span class="mini-label">{ta('lbl.ribbonBelow')}</span>
-          <Dropdown filled value={selectedBlock.props.below ?? 'none'} options={ribbonStripeOptions()}
-            onchange={(v) => setBlockProp('below', v)} />
-        </label>
-      </Setting>
-      {#if (selectedBlock.props.below ?? 'none') !== 'none'}
-        <Setting key="belowColor" source="theme">
-          <label title={ta('tip.ribbon.stripeColor')}>{ta('lbl.colour')}
-            <ColorPicker value={selectedBlock.props.belowColor ?? ribbonInk(selectedBlock.props)} tokens={themeSwatches()}
-              label={ta('tip.ribbon.stripeColor')}
-              onchange={(hex) => setBlockProp('belowColor', hex)} /></label>
-        </Setting>
-      {/if}
-      {#if (selectedBlock.props.above ?? 'none') !== 'none' || (selectedBlock.props.below ?? 'none') !== 'none'}
-        <Setting key="stripePlace">
-          <Choice label={ta('lbl.ribbonStripePlace')} title={ta('tip.ribbon.stripePlace')}
-            value={selectedBlock.props.stripePlace ?? 'stack'}
-            options={[['stack', ta('opt.ribbonPlace.stack')], ['edge', ta('opt.ribbonPlace.edge')]]}
-            onchange={(v) => setBlockProp('stripePlace', v)} />
-        </Setting>
-        <Setting key="thickness" shown="8">
-          <div class="ctl-row" title={ta('tip.ribbon.thickness')}>
-            <span class="mini-label ctl-name">{ta('lbl.ribbonThickness')}</span>
-            <input type="range" min="2" max="40" step="1" value={selectedBlock.props.thickness ?? 8}
-              oninput={(e) => setBlockProp('thickness', e.target.valueAsNumber)} />
-            <span class="gridmenu-value">{selectedBlock.props.thickness ?? 8} px</span>
-          </div>
-        </Setting>
-      {/if}
-  {/snippet}
-  {#snippet ribbonShape()}
-      <Setting key="width">
-        <Choice label={ta('lbl.ribbonWidth')} value={ribbonReach(selectedBlock.props.width)}
-          options={ribbonReaches()}
-          onchange={(v) => setBlockProp('width', v)} />
-      </Setting>
-      <Setting key="tilt" shown="0">
-        <div class="ctl-row" title={ta('tip.ribbon.tilt')}>
-          <span class="mini-label ctl-name">{ta('lbl.ribbonTilt')}</span>
-          <input type="range" min="-10" max="10" step="1" value={selectedBlock.props.tilt ?? 0}
-            oninput={(e) => setBlockProp('tilt', e.target.valueAsNumber)} />
-          <span class="gridmenu-value">{selectedBlock.props.tilt ?? 0}&deg;</span>
-        </div>
-      </Setting>
-  {/snippet}
-  {#snippet ribbonText()}
-      <Setting key="size">
-        <label title={ta('tip.ribbon.size')} class="field-stack">
-          <span class="mini-label">{ta('lbl.size')}</span>
-          <Dropdown filled value={selectedBlock.props.size ?? 'md'}
-            options={[['sm', ta('opt.size.sm')], ['md', ta('opt.size.md')], ['lg', ta('opt.size.lg')], ['xl', ta('opt.size.xl')]]}
-            onchange={(v) => setBlockProp('size', v)} />
-        </label>
-      </Setting>
-      <Setting key="caps" shown={ta('common.off')}>
-        <label class="gridmenu-snap" title={ta('tip.ribbon.caps')}>
-          <input type="checkbox" checked={selectedBlock.props.caps === true}
-            onchange={(e) => setBlockProp('caps', e.target.checked)} />
-          {ta('lbl.ribbonCaps')}
-        </label>
-      </Setting>
-      <Setting key="weight">
-        <label class="gridmenu-snap" title={ta('tip.ribbon.bold')}>
-          <input type="checkbox" checked={selectedBlock.props.weight === 'bold'}
-            onchange={(e) => setBlockProp('weight', e.target.checked ? 'bold' : 'normal')} />
-          {ta('lbl.ribbonBold')}
-        </label>
-      </Setting>
-      <Setting key="outline" shown={ta('common.off')}>
-        <label class="gridmenu-snap" title={ta('tip.ribbon.outline')}>
-          <input type="checkbox" checked={selectedBlock.props.outline === true}
-            onchange={(e) => setBlockProp('outline', e.target.checked)} />
-          {ta('lbl.ribbonOutline')}
-        </label>
-      </Setting>
-      <Setting key="gap" shown="40">
-        <div class="ctl-row" title={ta('tip.ribbon.gap')}>
-          <span class="mini-label ctl-name">{ta('lbl.ribbonGap')}</span>
-          <input type="range" min="8" max="120" step="2" value={selectedBlock.props.gap ?? 40}
-            oninput={(e) => setBlockProp('gap', e.target.valueAsNumber)} />
-          <span class="gridmenu-value">{selectedBlock.props.gap ?? 40} px</span>
-        </div>
-      </Setting>
-  {/snippet}
-  {#snippet ribbonColours()}
-      <Setting key="bg">
-        <div class="swatch-row">
-          {#if (selectedBlock.props.variant ?? 'band') !== 'plain'}
-            <div class="swatch-cell" title={ta('tip.ribbon.bg')}>
-              <ColorPicker value={selectedBlock.props.bg ?? 'accent'} tokens={themeSwatches()}
-                label={ta('tip.ribbon.bg')} onchange={(hex) => setBlockProp('bg', hex)} />
-              <span class="mini-label">{ta('lbl.background')}</span>
-            </div>
-          {/if}
-          <div class="swatch-cell" title={ta('tip.ribbon.color')}>
-            <ColorPicker value={selectedBlock.props.color ?? ((selectedBlock.props.variant ?? 'band') === 'plain' ? 'text' : 'accent-text')}
-              tokens={themeSwatches()} label={ta('tip.ribbon.color')}
-              onchange={(hex) => setBlockProp('color', hex)} />
-            <span class="mini-label">{ta('lbl.textColor')}</span>
-          </div>
-        </div>
-      </Setting>
-  {/snippet}
-  <!-- The motion's own settings go with it into Pinned -->
-  {#if !pinned.all('ribbonMotion')}<Fold id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''} group={groupOf('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true })}>{@render ribbonMotion()}</Fold>{/if}
+  <!-- The motion's own settings go with it into Pinned; a band that stands still has the choice alone -->
+  <Fold id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''}
+    rows={pinned.has('ribbonMotion') ? 0 : motion === 'none' ? 1 : undefined}
+    group={groupOf('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true })}>{@render ribbonMotion()}</Fold>
   <Fold id="ribbon-stripes" title={ta('lbl.ribbonStripes')} value={stripesOn ? ta('menu.onCount', { n: stripesOn }) : ta('common.off')} group={groupOf('ribbon-stripes', { above: 'none', below: 'none', main: 'text', aboveColor: undefined, belowColor: undefined, stripePlace: 'stack', thickness: 8 })}>{@render ribbonStripes()}</Fold>
-  <Fold id="ribbon-shape" title={ta('lbl.ribbonShape')} value={ribbonReaches().find(([v]) => v === ribbonReach(selectedBlock.props.width))?.[1] ?? ''} group={groupOf('ribbon-shape', { width: 'canvas', tilt: 0 })}>{@render ribbonShape()}</Fold>
-  <Fold id="ribbon-text" title={ta('lbl.ribbonText')} value={{ sm: ta('opt.size.sm'), md: ta('opt.size.md'), lg: ta('opt.size.lg'), xl: ta('opt.size.xl') }[selectedBlock.props.size ?? 'md']} group={groupOf('ribbon-text', { size: 'md', caps: false, weight: 'normal', outline: false, gap: 40 })}>{@render ribbonText()}</Fold>
-  <Fold id="ribbon-colours" title={ta('group.navColours')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('ribbon-colours', { bg: undefined, color: undefined })}>{@render ribbonColours()}</Fold>
+  <Fold id="ribbon-shape" title={ta('lbl.ribbonShape')} value={ribbonReaches().find(([v]) => v === ribbonReach(selectedBlock.props.width))?.[1] ?? ''} group={groupOf('ribbon-shape', { width: 'canvas', tilt: 0, bg: undefined })}>{@render ribbonShape()}</Fold>
+  <Fold id="ribbon-text" title={ta('lbl.ribbonText')} value={{ sm: ta('opt.size.sm'), md: ta('opt.size.md'), lg: ta('opt.size.lg'), xl: ta('opt.size.xl') }[selectedBlock.props.size ?? 'md']} group={groupOf('ribbon-text', { size: 'md', color: undefined, caps: false, weight: 'normal', outline: false, gap: 40, sep: 'dot', sepText: undefined })}>{@render ribbonText()}</Fold>
 {/if}

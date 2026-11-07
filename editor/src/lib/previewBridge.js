@@ -83,7 +83,6 @@
  *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
  *                  { type: 'urd-fit-block', sectionId, blockId, seq } (ask for the height of a block that follows its content, ADR-0025; answered with urd-grow)
  *                  { type: 'urd-frames', sectionId, frames } (frames fitted to their content, block id to desktop frame: put in place without drawing the section again)
- *                  { type: 'urd-edit-text', blockId }         (open a text block's words for editing, with the text toolbar)
  *                  { type: 'urd-text-style', blockId, style } (a font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's)
  */
 
@@ -263,10 +262,6 @@ export function createPreviewBridge(iframe, handlers = {}) {
       post({ type: 'urd-demo-motion' });
     },
     /** Open an image block's editor in the preview, from its menu. */
-    /** Open a text block's words for editing in the preview, from its menu. */
-    sendEditText(blockId) {
-      post({ type: 'urd-edit-text', blockId });
-    },
     /** A font or a size for the whole text of a block, from its menu. */
     sendTextStyle(blockId, style) {
       post({ type: 'urd-text-style', blockId, style });

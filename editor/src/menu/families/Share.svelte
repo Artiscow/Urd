@@ -3,7 +3,10 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import ColorPicker from '../../lib/ColorPicker.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import NumberRow from '../../lib/rows/NumberRow.svelte';
+  import ColourRow from '../../lib/rows/ColourRow.svelte';
+  import SubHeading from '../../lib/rows/SubHeading.svelte';
   import LinkList from '../../lib/LinkList.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
@@ -42,30 +45,24 @@
   {#snippet shareLinks()}
     <!-- The site's links from the Site panel first, then the block's own after them -->
     <Setting key="useSite" shown={ta('common.on')}>
-      <label class="gridmenu-snap" title={ta('tip.share.useSite')}>
-        <input type="checkbox" checked={useSite}
-          onchange={(e) => setBlockProp('useSite', e.target.checked)} />
-        {ta('lbl.useSiteLinks')}
-      </label>
+      <SwitchRow label={ta('lbl.useSiteLinks')} title={ta('tip.share.useSite')} checked={useSite} onchange={(on) => setBlockProp('useSite', on)} />
     </Setting>
     {#if useSite}
       <!-- Each of the site's links can be left out of this block alone (hidden, by id) -->
       {#each siteLinks() as link (link.id)}
-        <label title={`${ta('tip.share.pick')}${link.url ? `\n${link.url}` : ''}`} class="gridmenu-snap link-pick">
-          <input type="checkbox" checked={!(selectedBlock.props.hidden ?? []).includes(link.id)}
-            onchange={(e) => toggleSiteLink(link.id, e.target.checked)} />
-          <span class="footer-soc-preview" aria-hidden="true">{#if link.image}<img src={link.image} alt="">{:else}{@html iconSvg(link.icon) || ''}{/if}</span>
-          {link.label || ICON_LIBRARY[link.icon]?.label || link.url}
-        </label>
+        <SwitchRow label={link.label || ICON_LIBRARY[link.icon]?.label || link.url} title={`${ta('tip.share.pick')}${link.url ? `\n${link.url}` : ''}`}
+          checked={!(selectedBlock.props.hidden ?? []).includes(link.id)} onchange={(on) => toggleSiteLink(link.id, on)}>
+          {#snippet lead()}<span class="footer-soc-preview" aria-hidden="true">{#if link.image}<img src={link.image} alt="">{:else}{@html iconSvg(link.icon) || ''}{/if}</span>{/snippet}
+        </SwitchRow>
       {/each}
       <button class="ghost action" onclick={() => { ed.siteLinksOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteLinks')}</button>
     {/if}
-    <span class="mini-label">{ta('lbl.ownLinks')}</span>
-    <LinkList links={selectedBlock.props.links ?? []}
+    <SubHeading text={ta('lbl.ownLinks')} />
+    <LinkList label={ta('lbl.ownLinks')} links={selectedBlock.props.links ?? []}
       onchange={(i, patch) => ownLinks((list) => { list[i] = { ...list[i], ...patch }; })}
       onadd={() => ownLinks((list) => list.push({ id: makeId('link'), icon: 'globe', label: '', url: '' }))}
       onremove={(i) => ownLinks((list) => list.splice(i, 1))}
-      onmove={(i, dir) => ownLinks((list) => { const j = i + dir; if (j >= 0 && j < list.length) [list[i], list[j]] = [list[j], list[i]]; })} />
+      onmove={(from, to) => ownLinks((list) => list.splice(to, 0, ...list.splice(from, 1)))} />
   {/snippet}
   <Fold id="share-services" defaultOpen title={ta('group.siteLinks')}
     value={String((useSite ? siteLinks().filter((l) => !(selectedBlock.props.hidden ?? []).includes(l.id)).length : 0) + (selectedBlock.props.links ?? []).length)}
@@ -73,14 +70,11 @@
 {:else if area === 'style'}
   {#snippet shareLook()}
     <Setting key="size" shown="38">
-      <label title={ta('tip.share.size')}>{ta('lbl.size')}
-        <input type="number" min="24" max="64" value={selectedBlock.props.size ?? 38}
-          onchange={(e) => setBlockProp('size', Number(e.target.value) || 38)} /></label>
+      <NumberRow label={ta('lbl.size')} title={ta('tip.share.size')} value={selectedBlock.props.size ?? 38} min={24} max={64} unit="px" onchange={(v) => setBlockProp('size', v)} />
     </Setting>
     <Setting key="color" source="theme">
-      <label title={ta('tip.share.color')}>{ta('lbl.color')}
-        <ColorPicker value={selectedBlock.props.color || 'accent'} tokens={themeSwatches()}
-          onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} /></label>
+      <ColourRow label={ta('lbl.color')} title={ta('tip.share.color')} value={selectedBlock.props.color || 'accent'} tokens={themeSwatches()}
+        onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} />
     </Setting>
   {/snippet}
   <Fold id="share-look" defaultOpen title={ta('group.appearance')} value={`${selectedBlock.props.size ?? 38} px`} group={groupOf('share-look', { size: 38, color: '' })}>{@render shareLook()}</Fold>

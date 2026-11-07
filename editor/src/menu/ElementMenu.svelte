@@ -1,8 +1,8 @@
 <script>
   /* The element menu (ADR-0016 decision 3): Content is what the block says and shows, Style is how it looks, Placement is where it sits and how it behaves there.
-     Above them stands Pinned: the settings used most, a block type's own first and then the two every block has (how it fits a narrower screen, and whether it shows on a phone).
+     Before them stands Pinned: the settings used most, a block type's own first and then the two every block has (how it fits a narrower screen, and whether it shows on a phone).
      A pinned setting stands there instead of in its area, so no setting is drawn twice (PinScope.svelte), and an area left with nothing in it is not drawn.
-     Wide, the areas pour through two columns, a group never split and a heading where its area starts; narrow, they stand under each other with a heading each.
+     Wide, Pinned and the areas share two columns, each whole, cut where they come out most even (`balanceAreas`); narrow, they stand under each other with a heading each.
      A block with designs has its design, and its phone design, as the first rows of Style. */
   import { getContext } from 'svelte';
   import Choice from '../lib/Choice.svelte';
@@ -12,6 +12,8 @@
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import ColourRow from '../lib/rows/ColourRow.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
+  import SliderRow from '../lib/rows/SliderRow.svelte';
+  import LinkField from '../lib/LinkField.svelte';
   import PinScope from './PinScope.svelte';
   import DesignRow from './DesignRow.svelte';
   import FitMin from './FitMin.svelte';
@@ -30,7 +32,7 @@
   import { matchAny } from '$engine/search-langs.js';
   import { searchLangs } from '../lib/search-langs.svelte.js';
   import { menuSearch } from '../lib/menu-search.js';
-  import { linkOf, linkText } from '../lib/link-edit.js';
+  import { linkOf } from '../lib/link-edit.js';
   import Placement from './Placement.svelte';
   import MenuArea from './MenuArea.svelte';
   import { toggleHintCard } from '$engine/hint.js';
@@ -90,14 +92,14 @@
       if (['list', 'cards', 'agenda'].includes(calView(b.props))) {
         items.push({ id: 'limit', label: ta('lbl.maxCount'), tip: ta('tip.collection.limit'), kind: 'number', min: 1, max: 50, value: b.props.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(1, Math.min(50, Number(v) || 6))) });
       }
-      items.push({ id: 'subscribe', label: ta('quick.subscribe'), tip: ta('tip.calendar.subscribe'), kind: 'switch', value: b.props.showSubscribe !== false, set: (on) => setBlockProp('showSubscribe', on) });
+      items.push({ id: 'subscribe', label: ta('calendar.showSubscribe'), tip: ta('tip.calendar.subscribe'), kind: 'switch', value: b.props.showSubscribe !== false, set: (on) => setBlockProp('showSubscribe', on) });
     }
     const byWidth = FIT_BY_WIDTH.has(b.type);
-    items.push({ id: 'fit', label: ta('quick.fit'), tip: ta('tip.fit'), below: FitMin, kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
+    items.push({ id: 'fit', label: ta('lbl.fit'), tip: ta('tip.fit'), below: FitMin, kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
       options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
         : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
       set: (v) => setBlockFit(v) });
-    items.push({ id: 'phone', label: ta('quick.phone'), tip: ta('tip.hideMobile'), kind: 'choice', value: b.hideMobile ? 'off' : 'on', options: [['on', ta('quick.phone.show')], ['off', ta('quick.phone.hide')]], set: (v) => setBlockHideMobile(v === 'off') });
+    items.push({ id: 'phone', label: ta('lbl.hideMobile'), tip: ta('tip.hideMobile'), kind: 'switch', value: Boolean(b.hideMobile), set: (on) => setBlockHideMobile(on) });
     const p = b.props;
     // A block's design, as the calendar's: one id for every block with designs, core or plugin (block-designs.js, the design contract), opening the design picker.
     if (designs) items.push({ id: 'design', label: ta('lbl.design'), tip: ta('tip.picker.design'), kind: 'open', value: designs.name(designs.read(p)), picture: designs.picture?.(designs.read(p)) ?? '', run: ed.openBlockDesignPicker });
@@ -106,14 +108,13 @@
     if (b.type === 'text') {
       items.push({ id: 'align', label: ta('lbl.align'), tip: ta('tip.text.align'), kind: 'choice', value: p.align ?? 'left',
         options: [['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]], set: (v) => setBlockProp('align', v) });
-      items.push({ id: 'textBox', label: ta('group.textBox'), tip: ta('tip.blocks.textBox'), below: p.box ? BoxStyle : null, kind: 'switch', value: Boolean(p.box), set: (on) => setBlockProp('box', on) });
+      items.push({ id: 'textBox', label: ta('lbl.textBoxToggle'), tip: ta('tip.blocks.textBox'), below: p.box ? BoxStyle : null, kind: 'switch', value: Boolean(p.box), set: (on) => setBlockProp('box', on) });
     } else if (b.type === 'button') {
-      items.push({ id: 'goesTo', label: ta('lbl.goesTo'), tip: ta('tip.link.field'), kind: 'open', value: linkText(linkOf(p), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) || ta('link.none'),
-        run: () => ed.openLink({ value: linkOf(p), here: ed.pageId, apply: (link) => ed.setBlockLink(link) }) });
+      items.push({ id: 'goesTo', label: ta('lbl.goesTo'), kind: 'link', value: linkOf(p), set: (link) => ed.setBlockLink(link) });
     } else if (b.type === 'image') {
-      items.push({ id: 'imgFit', label: ta('lbl.imageFit'), tip: ta('tip.image.fit'), kind: 'select', value: p.fit ?? 'cover',
+      items.push({ id: 'imgFit', label: ta('lbl.imageFit'), tip: ta('tip.image.fit'), kind: 'choice', value: p.fit ?? 'cover',
         options: [['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]], set: (v) => setBlockProp('fit', v) });
-      items.push({ id: 'radius', label: ta('group.corners'), tip: ta('tip.image.radius'), kind: 'choice', value: p.radius ?? '',
+      items.push({ id: 'radius', label: ta('lbl.radius'), tip: ta('tip.image.radius'), kind: 'choice', value: p.radius ?? '',
         options: [['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]], set: (v) => setBlockProp('radius', v || null) });
     } else if (b.type === 'video') {
       items.push({ id: 'videoSource', label: ta('lbl.videoSource'), kind: 'choice', value: p.source === 'file' ? 'file' : 'embed',
@@ -128,16 +129,16 @@
       }
     } else if (b.type === 'ribbon') {
       const motion = p.motion ?? 'roll';
-      items.push({ id: 'ribbonMotion', label: ta('lbl.ribbonMotion'), tip: ta('tip.ribbon.motion'), below: RibbonMotion, kind: 'select', value: motion, options: ribbonMotions(), set: (v) => setBlockProp('motion', v) });
+      items.push({ id: 'ribbonMotion', label: ta('group.motion'), tip: ta('tip.ribbon.motion'), below: RibbonMotion, kind: 'select', value: motion, options: ribbonMotions(), set: (v) => setBlockProp('motion', v) });
       if (motion === 'roll' || motion === 'sway') {
-        items.push({ id: 'speed', label: ta('lbl.ribbonSpeed'), tip: ta('tip.ribbon.speed'), kind: 'number', min: 10, max: 300, step: 5, value: p.speed ?? 60, set: (v) => setBlockProp('speed', Math.max(10, Math.min(300, Number(v) || 60))) });
+        items.push({ id: 'speed', label: ta('lbl.ribbonSpeed'), tip: ta('tip.ribbon.speed'), kind: 'slider', min: 10, max: 300, step: 5, value: p.speed ?? 60, shown: String(p.speed ?? 60), input: (v) => setBlockProp('speed', v) });
       }
     } else if (b.type === 'shape') {
       items.push({ id: 'shapeColor', label: ta('lbl.color'), tip: ta('tip.shape.color'), kind: 'select', value: p.color ?? 'accent', options: colorTokens(), set: (v) => setBlockProp('color', v) });
       // The thickness only where the shape draws a stroke, as in Style.
       if (['line', 'arrow'].includes(p.kind) || (['circle', 'rect'].includes(p.kind) && !p.fill)) items.push({ id: 'thickness', label: ta('lbl.thickness'), tip: ta('tip.shape.thickness'), kind: 'number', min: 1, max: 40, value: p.thickness ?? 2, set: (v) => setBlockProp('thickness', Math.max(1, Math.min(40, Number(v) || 2))) });
     } else if (b.type === 'table') {
-      items.push({ id: 'tableLines', label: ta('lbl.tableLines'), tip: ta('tip.table.lines'), kind: 'select', value: p.lines ?? 'rows',
+      items.push({ id: 'tableLines', label: ta('lbl.tableLines'), tip: ta('tip.table.lines'), kind: 'choice', value: p.lines ?? 'rows',
         options: [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]], set: (v) => setBlockProp('lines', v) });
     } else if (b.type === 'form') {
       items.push({ id: 'sendMode', label: ta('form.mode'), tip: ta('form.modeTitle'), kind: 'select', value: p.mode === 'endpoint' ? 'endpoint' : 'mailto',
@@ -147,9 +148,8 @@
     } else if (b.type === 'product') {
       items.push({ id: 'columns', label: ta('lbl.columns'), tip: ta('tip.product.columns'), kind: 'number', min: 0, max: 6, value: p.columns ?? 0, zero: ta('common.auto'), set: (v) => { const n = Math.max(0, Math.min(6, Math.round(Number(v)) || 0)); setBlockProp('columns', n); return n; } });
     } else if (b.type === 'checkout') {
-      // The providers' names alone in Pinned: the rows in Content name the buttons in full.
-      items.push({ id: 'vippsButton', label: 'Vipps', tip: ta('tip.checkout.vippsCheckout'), kind: 'switch', value: Boolean(paymentsOf(p).vipps), set: (on) => setBlockProp('payments', { ...paymentsOf(p), vipps: on }) });
-      items.push({ id: 'paypalButton', label: 'PayPal', tip: ta('tip.checkout.payPaypal'), kind: 'switch', value: Boolean(paymentsOf(p).paypal), set: (on) => setBlockProp('payments', { ...paymentsOf(p), paypal: on }) });
+      items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), tip: ta('tip.checkout.vippsCheckout'), kind: 'switch', value: Boolean(paymentsOf(p).vipps), set: (on) => setBlockProp('payments', { ...paymentsOf(p), vipps: on }) });
+      items.push({ id: 'paypalButton', label: ta('lbl.payPaypal'), tip: ta('tip.checkout.payPaypal'), kind: 'switch', value: Boolean(paymentsOf(p).paypal), set: (on) => setBlockProp('payments', { ...paymentsOf(p), paypal: on }) });
     } else if (b.type === 'countdown') {
       items.push({ id: 'seconds', label: ta('lbl.countdownSeconds'), tip: ta('tip.countdown.seconds'), kind: 'switch', value: p.showSeconds !== false, set: (on) => setBlockProp('showSeconds', on) });
     } else if (b.type === 'audio') {
@@ -160,10 +160,39 @@
     if (!SIZE_BY_FRAME.has(b.type)) {
       // The size ends where the block's base text meets a bound the owner set (sizeRange); setBlockSize holds it there.
       const range = sizeRange(b);
-      items.push({ id: 'size', label: ta('lbl.scale'), tip: ta('tip.scale'), kind: 'number', min: Math.round(range.min * 100), max: Math.round(range.max * 100), step: Math.round(SIZE.step * 100), value: Math.round(blockSize(b) * 100),
-        set: (v) => { endSizeGesture(); setBlockSize((Number(v) || 100) / 100); endSizeGesture(); } });
+      items.push({ id: 'size', label: ta('lbl.scale'), tip: ta('tip.scale'), kind: 'slider', min: Math.round(range.min * 100), max: Math.round(range.max * 100), step: Math.round(SIZE.step * 100), value: Math.round(blockSize(b) * 100),
+        shown: `${Math.round(blockSize(b) * 100)} %`, input: (v) => setBlockSize(v / 100), done: endSizeGesture });
     }
     return items;
+  }
+
+  /* Wide, Pinned and the three areas stand in two columns, in their order and each whole, cut once between the columns where they come out most even.
+     The cut is chosen as a block's menu opens, from the parts' heights then, and kept while the owner works in it, so a fold that opens grows its own column and moves nothing across. */
+  const PARTS = ['pinned', 'content', 'style', 'placement'];
+  /** How many of the parts stand in the left column. */
+  let cut = $state(2);
+  /** The selected block's id alone, so an edit to the block does not measure the columns anew. */
+  const blockId = $derived(selectedBlock.blockId);
+  /** Measures the parts once the menu stands, and again for another block or another width. */
+  function balanceAreas(node) {
+    const measuredFor = blockId;
+    if (!wide) return;
+    const frame = requestAnimationFrame(() => {
+      const heights = PARTS.map((part) => node.querySelector(`[data-area="${part}"]`)?.offsetHeight ?? 0);
+      const gap = 16;
+      const column = (list) => list.reduce((sum, h) => (h ? sum + h + (sum ? gap : 0) : sum), 0);
+      let best = cut;
+      let bestTall = Infinity;
+      for (let k = 1; k < PARTS.length; k++) {
+        const left = column(heights.slice(0, k));
+        const right = column(heights.slice(k));
+        // An empty column wastes its half, so a cut that leaves one counts as the whole height
+        const tall = left && right ? Math.max(left, right) : left + right;
+        if (tall < bestTall) { best = k; bestTall = tall; }
+      }
+      if (measuredFor === blockId) cut = best;
+    });
+    return () => cancelAnimationFrame(frame);
   }
 
   /* The keys of the menu's areas (0.7.20.9, proposal O on the Design canvas): with the focus in the menu and not in a field, 1, 2 and 3 choose Content, Style and Placement (scrolling to where the area starts), and / goes to the search field of the menu the focus is in.
@@ -212,65 +241,86 @@
     onclick={(e) => toggleHintCard(e.currentTarget, { title: ta('hint.layout.title'), lines: [1, 2, 3, 4, 5, 6].map((n) => ta(`hint.layout.${n}`)) })}>?</button>
 {/snippet}
 
-{#if !query.trim() && pinnedItems.length}
-  <!-- Pinned: the settings used most, each drawn here instead of in its area; the pin on a row takes it back there -->
-  <section class="emenu-pinned">
-    <header class="emenu-head">
-      <span class="emenu-head-title"><span class="panel-strong">{ta('menu.pinned')}</span></span>
-      {#if choiceChanged(quickChoice(selectedBlock.type))}
-        <button type="button" class="linkish menu-pinned-reset" onclick={() => setQuickChoice(selectedBlock.type, NO_CHOICE)}>{ta('menu.quickReset')}</button>
-      {/if}
-    </header>
-    <div class="emenu-pinned-rows">
-      {#each pinnedItems as item (item.id)}
-        <!-- A row with what belongs to it, kept together in one column; a setting under it that is pinned itself stands as its own row -->
-        <div class="emenu-pinned-item">
-          <Setting pin={item.id}>
-            {#if item.kind === 'open'}
-              <PictureRow label={item.label} title={item.tip} value={item.value} picture={item.picture ?? ''} onclick={item.run} />
-            {:else if item.kind === 'number' && item.zero}
-              <!-- A number whose zero means «all» or «automatic» shows that word in an empty field; the set returns the stored value, written back, so a clamped or zero entry shows what the block holds -->
-              <label title={item.tip}>{item.label}
-                <input type="number" min={item.min} max={item.max} step={item.step ?? 1} value={item.value || ''} placeholder={item.zero}
-                  onchange={(e) => { const stored = item.set(e.target.value); if (stored !== undefined) e.target.value = stored || ''; }} /></label>
-            {:else if item.kind === 'number'}
-              <NumberRow label={item.label} title={item.tip} value={item.value} min={item.min} max={item.max} step={item.step ?? 1} onchange={(v) => item.set(v)} />
-            {:else if item.kind === 'select'}
-              <SelectRow label={item.label} title={item.tip} value={item.value} options={item.options} onchange={(v) => item.set(v)} />
-            {:else if item.kind === 'color'}
-              <ColourRow label={item.label} title={item.tip} value={item.value} tokens={themeSwatches()} onchange={(v) => item.set(v)} />
-            {:else if item.kind === 'switch'}
-              <SwitchRow label={item.label} title={item.tip} checked={item.value} onchange={(on) => item.set(on)} />
-            {:else}
-              <Choice label={item.label} title={item.tip} value={item.value} options={item.options} stack onchange={(v) => item.set(v)} />
+{#snippet pinnedPart()}
+  {#if pinnedItems.length}
+    <!-- Pinned: the settings used most, each drawn here instead of in its area; the pin on a row takes it back there -->
+    <section class="emenu-pinned" data-area="pinned">
+      <header class="emenu-head">
+        <span class="emenu-head-title"><span class="emenu-head-name">{ta('menu.pinned')}</span></span>
+        {#if choiceChanged(quickChoice(selectedBlock.type))}
+          <button type="button" class="linkish menu-pinned-reset" onclick={() => setQuickChoice(selectedBlock.type, NO_CHOICE)}>{ta('menu.quickReset')}</button>
+        {/if}
+      </header>
+      <div class="emenu-pinned-rows">
+        {#each pinnedItems as item (item.id)}
+          <!-- A row with what belongs to it, kept together in one column; a setting under it that is pinned itself stands as its own row -->
+          <div class="emenu-pinned-item">
+            <Setting pin={item.id}>
+              {#if item.kind === 'open'}
+                <PictureRow label={item.label} title={item.tip} value={item.value} picture={item.picture ?? ''} onclick={item.run} />
+              {:else if item.kind === 'number' && item.zero}
+                <!-- A number whose zero means «all» or «automatic» shows that word in an empty field; the set returns the stored value, written back, so a clamped or zero entry shows what the block holds -->
+                <label title={item.tip}>{item.label}
+                  <input type="number" min={item.min} max={item.max} step={item.step ?? 1} value={item.value || ''} placeholder={item.zero}
+                    onchange={(e) => { const stored = item.set(e.target.value); if (stored !== undefined) e.target.value = stored || ''; }} /></label>
+              {:else if item.kind === 'slider'}
+                <SliderRow label={item.label} title={item.tip} value={item.value} min={item.min} max={item.max} step={item.step ?? 1} shown={item.shown} oninput={(v) => item.input(v)} onchange={() => item.done?.()} />
+              {:else if item.kind === 'link'}
+                <LinkField label={item.label} value={item.value} onchange={(link) => item.set(link)} />
+              {:else if item.kind === 'number'}
+                <NumberRow label={item.label} title={item.tip} value={item.value} min={item.min} max={item.max} step={item.step ?? 1} onchange={(v) => item.set(v)} />
+              {:else if item.kind === 'select'}
+                <SelectRow label={item.label} title={item.tip} value={item.value} options={item.options} onchange={(v) => item.set(v)} />
+              {:else if item.kind === 'color'}
+                <ColourRow label={item.label} title={item.tip} value={item.value} tokens={themeSwatches()} onchange={(v) => item.set(v)} />
+              {:else if item.kind === 'switch'}
+                <SwitchRow label={item.label} title={item.tip} checked={item.value} onchange={(on) => item.set(on)} />
+              {:else}
+                <Choice label={item.label} title={item.tip} value={item.value} options={item.options} stack onchange={(v) => item.set(v)} />
+              {/if}
+            </Setting>
+            {#if item.below}
+              <PinScope away={() => pinnedIds}><item.below /></PinScope>
             {/if}
-          </Setting>
-          {#if item.below}
-            <PinScope away={() => pinnedIds}><item.below /></PinScope>
-          {/if}
-        </div>
-      {/each}
-    </div>
-  </section>
-{/if}
+          </div>
+        {/each}
+      </div>
+    </section>
+  {/if}
+{/snippet}
 {#if query.trim()}
   <!-- The search: a copy of the three areas of its own, narrowed to what matches (menu-search.js),
-       as columns when wide and under each other when narrow, each area saying when nothing in it matches -->
-  <div class="emenu-cols emenu-search" class:emenu-flow={wide} {@attach menuSearch(query, searchLangs.ready ? matchAny : matchWords)}>
+       Content and Style beside Placement when wide and under each other when narrow, each area saying when nothing in it matches -->
+  {#snippet foundContent()}<section class="emenu-col" data-area="content"><p class="emenu-title">{ta('props.tabContent')}</p>{@render menuContent()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
+  {#snippet foundStyle()}<section class="emenu-col" data-area="style"><p class="emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
+  {#snippet foundPlacement()}<section class="emenu-col" data-area="placement"><p class="emenu-title">{ta('props.tabPlacement')}{@render layoutChip()}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
+  <div class="emenu-cols emenu-search" class:emenu-two={wide} {@attach menuSearch(query, searchLangs.ready ? matchAny : matchWords)}>
     <PinScope away={() => NONE_PINNED}>
-      <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabContent')}</p>{@render menuContent()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
-      <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
-      <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabPlacement')}{@render layoutChip()}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
+      {#if wide}
+        <div class="emenu-column">{@render foundContent()}{@render foundStyle()}</div>
+        <div class="emenu-column">{@render foundPlacement()}</div>
+      {:else}
+        {@render foundContent()}{@render foundStyle()}{@render foundPlacement()}
+      {/if}
     </PinScope>
   </div>
 {:else}
-  <!-- Wide: the areas poured through two columns; narrow: under each other, each heading sticking to the top of its area and counting its groups -->
-  <div class="emenu-cols" class:emenu-flow={wide} class:emenu-stack={!wide}>
-    <PinScope away={() => pinnedIds}>
-      <MenuArea title={ta('props.tabContent')} counts={!wide}>{@render menuContent()}</MenuArea>
-      <MenuArea title={ta('props.tabStyle')} counts={!wide}>{@render menuStyle()}</MenuArea>
-      <MenuArea title={ta('props.tabPlacement')} counts={!wide} chip={layoutChip}>{@render menuPlacement()}</MenuArea>
-    </PinScope>
-  </div>
+  <!-- Wide: Pinned and the areas in two columns, cut once where they come out most even (`balanceAreas`); narrow: Pinned, then the areas under each other, each heading sticking to the top of its area and counting its groups.
+       Pinned stands outside the scope that takes its settings out of the areas. -->
+  {#snippet areaContent()}<PinScope away={() => pinnedIds}><MenuArea area="content" title={ta('props.tabContent')} counts={!wide}>{@render menuContent()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaStyle()}<PinScope away={() => pinnedIds}><MenuArea area="style" title={ta('props.tabStyle')} counts={!wide}>{@render menuStyle()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaPlacement()}<PinScope away={() => pinnedIds}><MenuArea area="placement" title={ta('props.tabPlacement')} counts={!wide} chip={layoutChip}>{@render menuPlacement()}</MenuArea></PinScope>{/snippet}
+  {@const parts = { pinned: pinnedPart, content: areaContent, style: areaStyle, placement: areaPlacement }}
+  {#if wide}
+    <div class="emenu-cols emenu-two" {@attach balanceAreas}>
+      <div class="emenu-column">{#each PARTS.slice(0, cut) as part (part)}{@render parts[part]()}{/each}</div>
+      <div class="emenu-column">{#each PARTS.slice(cut) as part (part)}{@render parts[part]()}{/each}</div>
+    </div>
+  {:else}
+    {@render pinnedPart()}
+    <div class="emenu-cols emenu-stack">
+      {@render areaContent()}{@render areaStyle()}{@render areaPlacement()}
+    </div>
+  {/if}
 {/if}
 </div>

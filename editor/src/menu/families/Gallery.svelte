@@ -3,9 +3,13 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../../lib/Dropdown.svelte';
   import Choice from '../../lib/Choice.svelte';
-  import ColorPicker from '../../lib/ColorPicker.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import SliderRow from '../../lib/rows/SliderRow.svelte';
+  import NumberRow from '../../lib/rows/NumberRow.svelte';
+  import ColourRow from '../../lib/rows/ColourRow.svelte';
+  import IconButton from '../../lib/rows/IconButton.svelte';
+  import ListEditor from '../../lib/rows/ListEditor.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { GRID_VIEWS, MOSAIC_ROW, POLAROID_TILT, galleryView as blockGalleryView } from '$engine/gallery-model.js';
@@ -33,61 +37,88 @@
 
 {#if area === 'content'}
   {#snippet galleryImages()}
-    <label class="ghost filepick" title={ta('tip.gallery.addImages')}>
+    <!-- The pictures in their order, each with its editor, its description and its link -->
+    <ListEditor items={selectedBlock.props.images ?? []} label={ta('group.images')} key={(img, i) => i} onmove={moveGalleryImage} onremove={removeGalleryImage}>
+      {#snippet row(img, i)}
+        <div class="gallery-row" title={ta('hint.gallery')}>
+          <span class="toolbar-row">
+            <img class="site-icon-preview" src={img.src} alt="" />
+            <IconButton icon={ICONS.pencil} label={ta('tip.gallery.editPicture')} onclick={() => editGalleryPicture(i)} />
+          </span>
+          <label title={ta('tip.gallery.alt')}>{ta('lbl.description')}
+            <input value={img.alt ?? ''} placeholder={ta('ph.altShort')}
+              onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
+          <LinkField label={ta('lbl.link')} value={linkOf(img)} placeholder={ta('ph.galleryHref')} onchange={(link) => setGalleryImageLink(i, link)} />
+        </div>
+      {/snippet}
+    </ListEditor>
+    <label class="ghost action filepick" title={ta('tip.gallery.addImages')}>
       {ta('ui.addImages')}
       <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
     </label>
-    {#each selectedBlock.props.images ?? [] as img, i (i)}
-      <div class="bg-layer">
-        <span class="toolbar-row" title={ta('hint.gallery')}>
-          <img class="site-icon-preview" src={img.src} alt="" />
-          <span class="row-tools">
-            <button class="ghost row-tool" title={ta('tip.gallery.editPicture')} aria-label={ta('tip.gallery.editPicture')}
-              onclick={() => editGalleryPicture(i)}>{@html ICONS.pencil}</button>
-            <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-            <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveGalleryImage(i, 1)}
-              disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>
-            <button class="ghost row-tool" title={ta('tip.removeImage')} onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
-          </span>
-        </span>
-        <label title={ta('tip.gallery.alt')}>{ta('lbl.description')}
-          <input value={img.alt ?? ''} placeholder={ta('ph.altShort')}
-            onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
-        <LinkField label={ta('lbl.link')} value={linkOf(img)} placeholder={ta('ph.galleryHref')} onchange={(link) => setGalleryImageLink(i, link)} />
-      </div>
-    {/each}
+    <!-- What a press on a picture does: the lightbox, as on the image block -->
+    <Setting key="lightbox" shown={ta('common.on')}>
+      <SwitchRow label={ta('lbl.lightbox')} title={ta('tip.lightbox')} checked={selectedBlock.props.lightbox !== false} onchange={(on) => setBlockProp('lightbox', on)} />
+    </Setting>
   {/snippet}
-  <Fold id="gallery-images" defaultOpen title={ta('group.images')} value={ta('menu.imageCount', { n: selectedBlock.props.images?.length ?? 0 })}>{@render galleryImages()}</Fold>
+  <Fold id="gallery-images" defaultOpen title={ta('group.images')} value={ta('menu.imageCount', { n: selectedBlock.props.images?.length ?? 0 })}
+    group={groupOf('gallery-images', { lightbox: true })}>{@render galleryImages()}</Fold>
 {:else if area === 'style'}
   {@const gview = blockGalleryView(selectedBlock.props.view)}
-  {#snippet galleryView()}
+  <!-- The chosen design's own settings under the design row, then the corners every design has -->
+  {#snippet galleryLook()}
     {#if gview === 'ribbon'}
       <Setting key="width">
-        <Choice label={ta('lbl.ribbonWidth')} value={ribbonReach(selectedBlock.props.width)}
-          options={ribbonReaches()}
-          onchange={(v) => setBlockProp('width', v)} />
+        <Choice stack label={ta('lbl.ribbonWidth')} value={ribbonReach(selectedBlock.props.width)} options={ribbonReaches()} onchange={(v) => setBlockProp('width', v)} />
       </Setting>
+      <!-- The band: one row, or a second one running the other way -->
+      <Setting key="rows">
+        <Choice stack label={ta('lbl.ribbonRows')} value={String(selectedBlock.props.rows ?? 1)}
+          options={[['1', ta('opt.ribbonRows.one')], ['2', ta('opt.ribbonRows.two')]]}
+          onchange={(v) => setBlockProp('rows', Number(v))} />
+      </Setting>
+      <Setting key="direction">
+        <Choice stack label={ta('lbl.ribbonDirection')} value={selectedBlock.props.direction ?? 'left'}
+          options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
+          onchange={(v) => setBlockProp('direction', v)} />
+      </Setting>
+      <Setting key="speed" shown="60">
+        <SliderRow label={ta('lbl.ribbonSpeed')} title={ta('tip.ribbon.speed')} value={selectedBlock.props.speed ?? 60} min={10} max={300} step={5}
+          shown={String(selectedBlock.props.speed ?? 60)} oninput={(v) => setBlockProp('speed', v)} />
+      </Setting>
+      <!-- The band fills the block's box, so its height is the frame's -->
+      <SliderRow label={ta('lbl.ribbonHeight')} title={ta('tip.ribbon.bandHeight')} value={selectedBlock.frame.h} min={60} max={800} step={10}
+        shown={`${selectedBlock.frame.h} px`} oninput={(v) => setBlockFrame('h', v)} />
     {/if}
-    <!-- The three views that are grids of tiles share the columns and the gap -->
+    <!-- The three views that are grids of tiles share the columns -->
     {#if GRID_VIEWS.includes(gview)}
       <Setting key="columns" shown="3" pin="columns">
-        <label title={ta('tip.gallery.columns')}>{ta('lbl.columns')}
-          <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
-            onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
+        <NumberRow label={ta('lbl.columns')} title={ta('tip.gallery.columns')} value={selectedBlock.props.columns ?? 3} min={1} max={6} onchange={(v) => setBlockProp('columns', v)} />
       </Setting>
-      <label title={ta('tip.gallery.gap')}>{ta('lbl.imageGap')}
-        <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
-      <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
-        oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
+    {/if}
+    {#if gview === 'ribbon' || GRID_VIEWS.includes(gview)}
+      <Setting key="gap" shown="12">
+        <SliderRow label={ta('lbl.imageGap')} title={ta('tip.gallery.gap')} value={selectedBlock.props.gap ?? 12} min={0} max={32} step={2}
+          shown={`${selectedBlock.props.gap ?? 12} px`} oninput={(v) => setBlockProp('gap', v)} />
+      </Setting>
+    {/if}
+    {#if gview === 'ribbon'}
+      <Setting key="pauseOnHover" shown={ta('common.on')}>
+        <SwitchRow label={ta('lbl.ribbonPause')} title={ta('tip.ribbon.pause')} checked={selectedBlock.props.pauseOnHover !== false} onchange={(on) => setBlockProp('pauseOnHover', on)} />
+      </Setting>
+      <Setting key="pause">
+        <Choice stack label={ta('lbl.bandPause')} title={ta('tip.ribbon.pauseMode')} value={selectedBlock.props.pause ?? 'button'}
+          options={[['button', ta('opt.bandPause.button')], ['touch', ta('opt.bandPause.touch')]]}
+          onchange={(v) => setBlockProp('pause', v)} />
+      </Setting>
+      <Setting key="fade" shown={ta('common.on')}>
+        <SwitchRow label={ta('lbl.ribbonFade')} title={ta('tip.ribbon.fade')} checked={selectedBlock.props.fade !== false} onchange={(on) => setBlockProp('fade', on)} />
+      </Setting>
     {/if}
     {#if gview === 'mosaic'}
       <Setting key="rowHeight">
-        <div class="ctl-row" title={ta('tip.gallery.rowHeight')}>
-          <span class="mini-label ctl-name">{ta('lbl.galleryRowHeight')}</span>
-          <input type="range" min={MOSAIC_ROW.min} max={MOSAIC_ROW.max} step="10" value={selectedBlock.props.rowHeight ?? MOSAIC_ROW.dflt}
-            oninput={(e) => setBlockProp('rowHeight', e.target.valueAsNumber)} />
-          <span class="gridmenu-value">{selectedBlock.props.rowHeight ?? MOSAIC_ROW.dflt} px</span>
-        </div>
+        <SliderRow label={ta('lbl.galleryRowHeight')} title={ta('tip.gallery.rowHeight')} value={selectedBlock.props.rowHeight ?? MOSAIC_ROW.dflt} min={MOSAIC_ROW.min} max={MOSAIC_ROW.max} step={10}
+          shown={`${selectedBlock.props.rowHeight ?? MOSAIC_ROW.dflt} px`} oninput={(v) => setBlockProp('rowHeight', v)} />
       </Setting>
       <button type="button" class="ghost action" title={ta('tip.gallery.shuffleMosaic')}
         onclick={() => setBlockProp('seed', newSeed())}>
@@ -96,12 +127,8 @@
     {/if}
     {#if gview === 'polaroid'}
       <Setting key="tilt">
-        <div class="ctl-row" title={ta('tip.gallery.tilt')}>
-          <span class="mini-label ctl-name">{ta('lbl.polaroidTilt')}</span>
-          <input type="range" min={POLAROID_TILT.min} max={POLAROID_TILT.max} step="1" value={selectedBlock.props.tilt ?? POLAROID_TILT.dflt}
-            oninput={(e) => setBlockProp('tilt', e.target.valueAsNumber)} />
-          <span class="gridmenu-value">{selectedBlock.props.tilt ?? POLAROID_TILT.dflt}&deg;</span>
-        </div>
+        <SliderRow label={ta('lbl.polaroidTilt')} title={ta('tip.gallery.tilt')} value={selectedBlock.props.tilt ?? POLAROID_TILT.dflt} min={POLAROID_TILT.min} max={POLAROID_TILT.max} step={1}
+          shown={`${selectedBlock.props.tilt ?? POLAROID_TILT.dflt}°`} oninput={(v) => setBlockProp('tilt', v)} />
       </Setting>
       <!-- A new lean only where the cards lean at all -->
       {#if (selectedBlock.props.tilt ?? POLAROID_TILT.dflt) > 0}
@@ -111,100 +138,35 @@
         </button>
       {/if}
       <Setting key="frameColor" source="theme">
-        <label title={ta('tip.gallery.frameColor')}>{ta('lbl.frameColor')}
-          <ColorPicker value={selectedBlock.props.frameColor || '#ffffff'} tokens={themeSwatches()} allowClear
-            label={ta('tip.gallery.frameColor')} onchange={(hex) => setBlockProp('frameColor', hex ?? '')} /></label>
+        <ColourRow label={ta('lbl.frameColor')} title={ta('tip.gallery.frameColor')} value={selectedBlock.props.frameColor || '#ffffff'} tokens={themeSwatches()} allowClear
+          onchange={(hex) => setBlockProp('frameColor', hex ?? '')} />
       </Setting>
       <Setting key="captions">
-        <label class="gridmenu-snap" title={ta('tip.gallery.captions')}>
-          <input type="checkbox" checked={selectedBlock.props.captions === true}
-            onchange={(e) => setBlockProp('captions', e.target.checked)} />
-          {ta('lbl.galleryCaptions')}
-        </label>
+        <SwitchRow label={ta('lbl.galleryCaptions')} title={ta('tip.gallery.captions')} checked={selectedBlock.props.captions === true} onchange={(on) => setBlockProp('captions', on)} />
       </Setting>
     {/if}
     {#if gview === 'slides'}
       <Setting key="interval" shown="5">
-        <label title={ta('tip.gallery.interval')}>{ta('lbl.secondsPerImage')}
-          <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
-            onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>
+        <NumberRow label={ta('lbl.secondsPerImage')} title={ta('tip.gallery.interval')} value={selectedBlock.props.interval ?? 5} min={2} max={60} unit="s" onchange={(v) => setBlockProp('interval', v)} />
       </Setting>
     {/if}
-  {/snippet}
-  {#snippet galleryRoll()}
-    <!-- The band: one row, or a second one running the other way -->
-    <Setting key="rows">
-      <Choice label={ta('lbl.ribbonRows')} value={String(selectedBlock.props.rows ?? 1)}
-        options={[['1', ta('opt.ribbonRows.one')], ['2', ta('opt.ribbonRows.two')]]}
-        onchange={(v) => setBlockProp('rows', Number(v))} />
-    </Setting>
-    <Setting key="direction">
-      <Choice label={ta('lbl.ribbonDirection')} value={selectedBlock.props.direction ?? 'left'}
-        options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
-        onchange={(v) => setBlockProp('direction', v)} />
-    </Setting>
-    <Setting key="speed">
-      <div class="ctl-row" title={ta('tip.ribbon.speed')}>
-        <span class="mini-label ctl-name">{ta('lbl.ribbonSpeed')}</span>
-        <input type="range" min="10" max="300" step="5" value={selectedBlock.props.speed ?? 60}
-          oninput={(e) => setBlockProp('speed', e.target.valueAsNumber)} />
-        <span class="gridmenu-value">{selectedBlock.props.speed ?? 60}</span>
-      </div>
-    </Setting>
-    <!-- The band fills the block's box, so its height is the frame's -->
-    <div class="ctl-row" title={ta('tip.ribbon.bandHeight')}>
-      <span class="mini-label ctl-name">{ta('lbl.ribbonHeight')}</span>
-      <input type="range" min="60" max="800" step="10" value={selectedBlock.frame.h}
-        oninput={(e) => setBlockFrame('h', e.target.valueAsNumber)} />
-      <span class="gridmenu-value">{selectedBlock.frame.h} px</span>
-    </div>
-    <label title={ta('tip.gallery.gap')}>{ta('lbl.imageGap')}
-      <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
-    <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
-      oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
-    <Setting key="pauseOnHover">
-      <label class="gridmenu-snap" title={ta('tip.ribbon.pause')}>
-        <input type="checkbox" checked={selectedBlock.props.pauseOnHover !== false}
-          onchange={(e) => setBlockProp('pauseOnHover', e.target.checked)} />
-        {ta('lbl.ribbonPause')}
-      </label>
-    </Setting>
-    <Setting key="pause">
-      <Choice label={ta('lbl.bandPause')} value={selectedBlock.props.pause ?? 'button'} title={ta('tip.ribbon.pauseMode')}
-        options={[['button', ta('opt.bandPause.button')], ['touch', ta('opt.bandPause.touch')]]}
-        onchange={(v) => setBlockProp('pause', v)} />
-    </Setting>
-    <Setting key="fade">
-      <label class="gridmenu-snap" title={ta('tip.ribbon.fade')}>
-        <input type="checkbox" checked={selectedBlock.props.fade !== false}
-          onchange={(e) => setBlockProp('fade', e.target.checked)} />
-        {ta('lbl.ribbonFade')}
-      </label>
-    </Setting>
-
-  {/snippet}
-  {#snippet galleryLook()}
     <Setting key="radius">
-      <label title={ta('tip.gallery.radius')}>{ta('lbl.radius')}
-        <Dropdown value={selectedBlock.props.radius ?? ''}
-          options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
-          onchange={(v) => setBlockProp('radius', v || null)} /></label>
-    </Setting>
-    <Setting key="lightbox" shown={ta('common.on')}>
-      <label class="gridmenu-snap" title={ta('tip.lightbox')}>
-        <input type="checkbox" checked={selectedBlock.props.lightbox !== false}
-          onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
-        {ta('lbl.lightbox')}
-      </label>
+      <Choice stack label={ta('lbl.radius')} title={ta('tip.gallery.radius')} value={selectedBlock.props.radius ?? ''}
+        options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
+        onchange={(v) => setBlockProp('radius', v || null)} />
     </Setting>
   {/snippet}
-  <!-- The chosen design's own settings, under the design row; the carousel has none -->
-  {#if gview === 'ribbon' || gview === 'slides' || GRID_VIEWS.includes(gview)}
-    {@const viewDefaults = { columns: 3, gap: 12, interval: 5, width: 'canvas', rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined }}
-    <Fold id="gallery-view" title={ta('group.designSettings')} value={groupChanged(viewDefaults) ? ta('menu.changed', { n: groupChanged(viewDefaults) }) : ta('menu.standard')} group={groupOf('gallery-view', viewDefaults)}>{@render galleryView()}</Fold>
-  {/if}
-  {#if gview === 'ribbon'}
-    <Fold id="gallery-roll" title={ta('lbl.ribbonMotion')} value={`${selectedBlock.props.speed ?? 60} px/s`} group={groupOf('gallery-roll', { rows: undefined, direction: undefined, speed: undefined, pauseOnHover: undefined, pause: undefined, fade: undefined })}>{@render galleryRoll()}</Fold>
-  {/if}
-  <Fold id="gallery-look" title={ta('group.galleryImages')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} group={groupOf('gallery-look', { radius: 'md', lightbox: true })}>{@render galleryLook()}</Fold>
+  {@const lookDefaults = { columns: 3, gap: 12, interval: 5, width: 'canvas', rows: undefined, direction: undefined, speed: undefined, pauseOnHover: undefined, pause: undefined, fade: undefined, rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined, radius: 'md' }}
+  {@const lookN = groupChanged(lookDefaults)}
+  <!-- The carousel has only the corners; a grid with its columns pinned keeps the gap and the corners -->
+  <Fold id="gallery-look" title={ta('group.appearance')} value={lookN ? ta('menu.changed', { n: lookN }) : ta('menu.standard')}
+    rows={gview === 'carousel' ? 1 : undefined} group={groupOf('gallery-look', lookDefaults)}>{@render galleryLook()}</Fold>
 {/if}
+
+<style>
+  .gallery-row {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+</style>

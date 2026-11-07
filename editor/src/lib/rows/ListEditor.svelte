@@ -1,6 +1,7 @@
 <script>
   /* A list whose rows are moved, removed and added, in the row kit (0.7.30.2): a grip on each row to drag it by, Alt and the arrow keys to move the row the focus is in, a cross to remove it, and the add button at the list's foot.
      `row` draws a row's own fields; `key` gives each row a lasting key, so a row keeps the focus while it moves; `onmove(from, to)` gets the row's index before and after the move. */
+  import { tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../icons.js';
   import IconButton from './IconButton.svelte';
@@ -36,13 +37,20 @@
     drop = null;
   }
 
-  function moveKeys(e, i) {
+  /** Alt and an arrow move the row the focus is in; the focus follows it, to the same field in the row's new place. */
+  async function moveKeys(e, i) {
     if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
     const to = i + (e.key === 'ArrowUp' ? -1 : 1);
     if (to < 0 || to >= items.length) return;
     e.preventDefault();
+    const at = [...e.currentTarget.querySelectorAll(FOCUSABLE)].indexOf(document.activeElement);
     onmove(i, to);
+    await tick();
+    const row = listEl?.querySelectorAll(':scope > .row-list-item')[to];
+    const fields = [...(row?.querySelectorAll(FOCUSABLE) ?? [])];
+    (fields[at] ?? fields[0])?.focus();
   }
+  const FOCUSABLE = 'input, select, textarea, button, [tabindex="0"]';
 
   const GRIP = '<svg width="10" height="16" viewBox="0 0 12 18" fill="currentColor" aria-hidden="true"><circle cx="3" cy="3" r="1.6"/><circle cx="9" cy="3" r="1.6"/><circle cx="3" cy="9" r="1.6"/><circle cx="9" cy="9" r="1.6"/><circle cx="3" cy="15" r="1.6"/><circle cx="9" cy="15" r="1.6"/></svg>';
 </script>
@@ -66,7 +74,8 @@
     {#if drag !== null && drop?.id === String(i) && drop.pos === 'after'}{@render ghost()}{/if}
   {/each}
   {#if onadd}
-    <button type="button" class="ghost action row-list-add" onclick={onadd}>{@html ICONS.plus}{addLabel}</button>
+    <!-- The button draws its own plus, so the words go without theirs -->
+    <button type="button" class="ghost action row-list-add" onclick={onadd}>{@html ICONS.plus}{addLabel.replace(/^\+\s*/, '')}</button>
   {/if}
 </div>
 

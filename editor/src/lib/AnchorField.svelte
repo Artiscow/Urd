@@ -109,8 +109,10 @@
     min-width: 0;
   }
 
+  /* The suggestion keeps its own width at the row's start, in a grid or a column alike */
   .anchor-suggest {
     justify-self: start;
+    align-self: flex-start;
     text-align: left;
   }
 

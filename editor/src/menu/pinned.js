@@ -13,5 +13,7 @@ export function pinnedNow() {
     has,
     /** Whether every one of these settings stands in Pinned now. */
     all: (...ids) => ids.every(has),
+    /** How many of these settings stand in their area now, not in Pinned: a fold's count of rows (lib/rows/Fold.svelte). */
+    left: (...ids) => ids.filter((id) => !has(id)).length,
   };
 }

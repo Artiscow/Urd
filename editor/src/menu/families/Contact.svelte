@@ -4,6 +4,7 @@
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { CONTACT_PARTS, contactDesign } from '$engine/contact-model.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -12,7 +13,7 @@
   const { mutateBlock, setBlockProp, setBlockProps } = ed;
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   /** The look's own choices, each shown where the design has it. */
-  const CONTACT_LOOK = { band: true, vcard: false, dock: false, askFirst: true };
+  const CONTACT_LOOK = { band: true, vcard: false, dock: false };
   let { area } = $props();
 
   const DEFAULT_PARTS = ['name', 'address', 'phone', 'email'];
@@ -39,50 +40,35 @@
   {#snippet contactParts()}
     <!-- The parts this block shows; what they hold is typed in the Legal panel -->
     {#each CONTACT_PARTS as part (part)}
-      <label title={ta('tip.contact.part')} class="gridmenu-snap">
-        <input type="checkbox" checked={shown.has(part)}
-          onchange={(e) => togglePart(part, e.target.checked)} />
-        {ta(`contactPart.${part}`)}
-      </label>
+      <SwitchRow label={ta(`contactPart.${part}`)} title={ta('tip.contact.part')} checked={shown.has(part)} onchange={(on) => togglePart(part, on)} />
     {/each}
     <button class="ghost action" onclick={editDetails}>{ta('ui.editSiteContact')}</button>
+    <!-- The map design's map: behind a cover until a visitor presses it, or with the page -->
+    {#if design.geo}
+      <Setting key="askFirst" shown={ta('common.on')}>
+        <SwitchRow label={ta('lbl.embedAskFirst')} title={ta('tip.embed.askFirst')} checked={selectedBlock.props.askFirst !== false} onchange={(on) => setBlockProp('askFirst', on)} />
+      </Setting>
+    {/if}
   {/snippet}
   <Fold id="contact-parts" defaultOpen title={ta('group.siteContact')} value={String(shown.size)}
-    group={groupOf('contact-parts', { parts: DEFAULT_PARTS })}>{@render contactParts()}</Fold>
+    group={groupOf('contact-parts', { parts: DEFAULT_PARTS, askFirst: true })}>{@render contactParts()}</Fold>
 {:else if area === 'style'}
   {#snippet contactLook()}
     <!-- The design's own choices, under the design row the menu draws first in Style -->
     {#if design.band}
-      <label class="gridmenu-snap" title={ta('tip.contact.band')}>
-        <input type="checkbox" checked={selectedBlock.props.band !== false}
-          onchange={(e) => setBlockProp('band', e.target.checked)} />
-        {ta('lbl.contactBand')}
-      </label>
-    {/if}
-    {#if design.geo || design.points}
-      <button class="ghost action" onclick={editDetails}>{ta('ui.editSiteContact')}</button>
-    {/if}
-    <!-- The map design's map: behind a cover until a visitor presses it, or with the page -->
-    {#if design.geo}
-      <label class="gridmenu-snap" title={ta('tip.embed.askFirst')}>
-        <input type="checkbox" checked={selectedBlock.props.askFirst !== false}
-          onchange={(e) => setBlockProp('askFirst', e.target.checked)} />
-        {ta('lbl.embedAskFirst')}
-      </label>
+      <Setting key="band" shown={ta('common.on')}>
+        <SwitchRow label={ta('lbl.contactBand')} title={ta('tip.contact.band')} checked={selectedBlock.props.band !== false} onchange={(on) => setBlockProp('band', on)} />
+      </Setting>
     {/if}
     {#if design.id !== 'strip'}
-      <label class="gridmenu-snap" title={ta('tip.contact.vcard')}>
-        <input type="checkbox" checked={selectedBlock.props.vcard === true}
-          onchange={(e) => setBlockProp('vcard', e.target.checked)} />
-        {ta('lbl.contactVcard')}
-      </label>
+      <Setting key="vcard" shown={ta('common.off')}>
+        <SwitchRow label={ta('lbl.contactVcard')} title={ta('tip.contact.vcard')} checked={selectedBlock.props.vcard === true} onchange={(on) => setBlockProp('vcard', on)} />
+      </Setting>
     {/if}
-    <label class="gridmenu-snap" title={ta('tip.contact.dock')}>
-      <input type="checkbox" checked={selectedBlock.props.dock === true}
-        onchange={(e) => setBlockProp('dock', e.target.checked)} />
-      {ta('lbl.contactDock')}
-    </label>
+    <Setting key="dock" shown={ta('common.off')}>
+      <SwitchRow label={ta('lbl.contactDock')} title={ta('tip.contact.dock')} checked={selectedBlock.props.dock === true} onchange={(on) => setBlockProp('dock', on)} />
+    </Setting>
   {/snippet}
   <Fold id="contact-look" defaultOpen title={ta('group.appearance')} value={groupChanged(CONTACT_LOOK) ? ta('menu.changed', { n: groupChanged(CONTACT_LOOK) }) : ta('menu.standard')}
-    group={groupOf('contact-look', CONTACT_LOOK)}>{@render contactLook()}</Fold>
+    rows={1 + (design.band ? 1 : 0) + (design.id !== 'strip' ? 1 : 0)} group={groupOf('contact-look', CONTACT_LOOK)}>{@render contactLook()}</Fold>
 {/if}

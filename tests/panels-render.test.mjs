@@ -246,7 +246,7 @@ test('the Properties panel renders a section with every setting on, and a select
   assert.doesNotMatch(draw(panels.Properties, 'properties', structuredClone(site), { ...section, viewMode: 'mobile' }), />opt\.sectionWidth\.own</);
   body = draw(panels.Properties, 'properties', structuredClone(site), { selectedBlock: textBlock });
   assert.match(body, /emenu-pinned/, 'the element menu is drawn for the selected block');
-  assert.equal([...body.matchAll(/<section class="emenu-col emenu-area"><header class="emenu-head">/g)].length, 3, 'the three areas stand under each other with a heading each');
+  assert.equal([...body.matchAll(/<section class="emenu-col emenu-area"[^>]*><header class="emenu-head">/g)].length, 3, 'the three areas stand under each other with a heading each');
   assert.match(body, /class="help-chip"/, 'the Placement heading carries the layout help chip');
 });
 

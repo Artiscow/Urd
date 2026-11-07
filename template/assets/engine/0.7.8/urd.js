@@ -560,14 +560,13 @@ function enablePreview(state, opts) {
       // The plugin block's settings open from Properties: click the hidden
       // config toggle in the block.
       root.querySelector(`[data-block-id="${msg.blockId}"] .urd-cfg-toggle`)?.click();
-    } else if ((msg?.type === 'urd-edit-text' || msg?.type === 'urd-text-style') && msg.blockId) {
-      // A text block's words opened from its menu: the field takes focus, which brings the text toolbar.
-      // A style for the whole text is handed to the toolbar as an event on the field (preview-edit.js).
+    } else if (msg?.type === 'urd-text-style' && msg.blockId) {
+      // A style for the whole text from the text's menu: the field takes focus, which brings the text toolbar, and the style is handed to the toolbar as an event on the field (preview-edit.js).
       const field = root.querySelector(`[data-block-id="${CSS.escape(msg.blockId)}"] .urd-text[contenteditable="true"]`);
       if (field) {
         field.scrollIntoView({ block: 'center', behavior: 'instant' });
         field.focus({ preventScroll: true });
-        if (msg.type === 'urd-text-style' && msg.style && typeof msg.style === 'object') field.dispatchEvent(new CustomEvent('urd-text-style', { detail: msg.style, bubbles: true }));
+        if (msg.style && typeof msg.style === 'object') field.dispatchEvent(new CustomEvent('urd-text-style', { detail: msg.style, bubbles: true }));
       }
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
       // The editor detected desktop drift in an overridden section: mark it live.

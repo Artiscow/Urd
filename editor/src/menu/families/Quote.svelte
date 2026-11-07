@@ -3,7 +3,8 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import ColorPicker from '../../lib/ColorPicker.svelte';
+  import ColourRow from '../../lib/rows/ColourRow.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
@@ -51,10 +52,7 @@
     <label title={ta('tip.quote.role')}>{ta('lbl.quoteRole')}
       <input value={selectedBlock.props.role ?? ''}
         onchange={(e) => setBlockProp('role', e.target.value)} /></label>
-  {/snippet}
-  <Fold id="quote-words" defaultOpen title={ta('group.quote')} value={quoteValue}>{@render quoteWords()}</Fold>
-{:else if area === 'style'}
-  {#snippet quoteVariant()}
+    <!-- The short quote's portrait, framed in its circle in the image editor -->
     {#if selectedBlock.props.variant === 'short'}
       <label title={ta('tip.quote.portrait')} class="ghost filepick">
         {ta('ui.quotePortrait')}
@@ -64,27 +62,23 @@
         <button class="ghost" title={ta('tip.quote.editPortrait')} onclick={openImageEditor}>{ta('ui.quotePortraitEdit')}</button>
         <button class="ghost" onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.image = ''; delete b.props.imageStyle; })}>{ta('ui.quotePortraitRemove')}</button>
       {/if}
-    {:else}
-      <!-- The large spread can stand in a card; the short one already is one -->
-      <Setting key="card" shown={ta('common.off')}>
-        <label class="gridmenu-snap" title={ta('tip.quote.card')}>
-          <input type="checkbox" checked={selectedBlock.props.card === true}
-            onchange={(e) => setBlockProp('card', e.target.checked)} />
-          {ta('lbl.quoteCard')}
-        </label>
-      </Setting>
     {/if}
   {/snippet}
-  {#snippet quoteColour()}
+  <Fold id="quote-words" defaultOpen title={ta('group.quote')} value={quoteValue}>{@render quoteWords()}</Fold>
+{:else if area === 'style'}
+  {#snippet quoteLook()}
+    <!-- The large spread can stand in a card; the short one already is one -->
+    {#if selectedBlock.props.variant !== 'short'}
+      <Setting key="card" shown={ta('common.off')}>
+        <SwitchRow label={ta('lbl.quoteCard')} title={ta('tip.quote.card')} checked={selectedBlock.props.card === true} onchange={(on) => setBlockProp('card', on)} />
+      </Setting>
+    {/if}
     <Setting key="accent" source="theme">
-      <label title={ta('tip.quote.color')}>{ta('lbl.color')}
-        <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
-          onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
+      <ColourRow label={ta('lbl.color')} title={ta('tip.quote.color')} value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
+        onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} />
     </Setting>
   {/snippet}
-  {@const colourN = groupChanged({ accent: null })}
-  <!-- The chosen design's own settings, under the design row: the portrait for the short quote, the card for the large -->
-  {@const variantN = groupChanged({ card: false, image: '' })}
-  <Fold id="quote-variant" title={ta('group.designSettings')} value={variantN ? ta('menu.changed', { n: variantN }) : ta('menu.standard')} group={groupOf('quote-variant', { card: false, image: '' })}>{@render quoteVariant()}</Fold>
-  <Fold id="quote-colour" title={ta('lbl.color')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('quote-colour', { accent: null })}>{@render quoteColour()}</Fold>
+  {@const lookN = groupChanged({ card: false, accent: null })}
+  <Fold id="quote-look" title={ta('group.appearance')} value={lookN ? ta('menu.changed', { n: lookN }) : ta('menu.standard')}
+    rows={selectedBlock.props.variant === 'short' ? 1 : 2} group={groupOf('quote-look', { card: false, accent: null })}>{@render quoteLook()}</Fold>
 {/if}

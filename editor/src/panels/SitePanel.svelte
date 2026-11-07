@@ -286,7 +286,7 @@
     <div class="group-items">
       <LinkList scope="site" links={siteLinks()}
         onchange={(i, patch) => setSiteLink(i, patch)} onadd={() => addSiteLink()}
-        onremove={(i) => removeSiteLink(i)} onmove={(i, dir) => moveSiteLink(i, dir)} />
+        onremove={(i) => removeSiteLink(i)} onmove={(from, to) => moveSiteLink(from, to)} />
     </div>
   </details>
   <!-- The site's media files: how many still stand at the root of media/, and the tidy that moves them into the folders of their kind (lib/media-tidy.js) -->

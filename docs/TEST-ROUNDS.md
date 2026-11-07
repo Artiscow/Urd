@@ -2,6 +2,21 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.4): every block's menu on the row kit
+
+- [ ] Wide: groups open and close smoothly in several blocks, what stands below moves with them, and nothing jumps between the columns
+- [ ] Wide: neither column stands nearly empty (a text block: Pinned and Style left, Placement right; a calendar: Pinned, Content and Style left, Placement right); another block, or another width, splits them anew
+- [ ] 1, 2 and 3 still go to Content, Style and Placement, and the search still finds a setting, wide and narrow
+- [ ] A pinned setting looks the same in Pinned as in its area: Alignment and «On narrower screens» are segments, «Hide on mobile» a switch, «Goes to» the link field, Size and Speed sliders, Vipps and PayPal with their full names
+- [ ] Pinning and unpinning moves a setting between Pinned and its area, never shown twice; what belongs to a pinned choice goes with it (Smallest scale, the text box's style, the ribbon's direction and speed)
+- [ ] No group opens on a single setting; a setting standing alone still shows its amber dot and its reset when changed
+- [ ] The lists (ribbon words, FAQ questions, timeline events, gallery pictures, a links block's own links and the site's links in the Site panel, calendar sources, form fields, payment instructions): drag by the grip lands where the line showed, Alt and the arrows move the row with the focus, the cross removes, the button at the foot adds, and Undo puts each back
+- [ ] A text block's menu has no Content, and Style › Typography holds the alignment, and on the desktop the font and the size; the terms of sale have their font and size in Style › Typography
+- [ ] The gallery's lightbox and the quote's portrait in Content; the video's «Ask before loading» and cover under Playback; the contact's «Ask before loading» (map design) in Content
+- [ ] The calendar's edge stripe inside Colours; the checkout's shop links inside Order; the product's price word inside Shop
+- [ ] A number field (an icon's size, the map's zoom, a calendar's count) is compact, its words on one line
+- [ ] A setting standing alone that gains a neighbour (the text box switched on, a ribbon's motion chosen, «Ask before loading» on a video): its group opens where it stands, and the control just used keeps the focus
+
 ### Test batch (0.7.30.3): the element menu's frame, Pinned, and one icon button
 
 - [ ] The element menu, wide: Pinned at the top with the block's pinned settings as rows in two columns, no gap at the top of either; under it Content, Style and Placement running through two columns, no group split between them, no empty column

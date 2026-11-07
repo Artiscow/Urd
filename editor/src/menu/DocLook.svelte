@@ -2,8 +2,9 @@
   /* A document's look (doc-look.js): the side the contents stand on, the accent, the headings' and the cards' colours, the lines between the parts, the corners and the fonts, for the privacy page and the terms of sale.
      Only the settings the chosen design draws are shown (docLookSettings); each falls back to the theme until the owner chooses. */
   import { getContext } from 'svelte';
-  import Dropdown from '../lib/Dropdown.svelte';
-  import ColorPicker from '../lib/ColorPicker.svelte';
+  import SelectRow from '../lib/rows/SelectRow.svelte';
+  import ColourRow from '../lib/rows/ColourRow.svelte';
+  import SwitchRow from '../lib/rows/SwitchRow.svelte';
   import Choice from '../lib/Choice.svelte';
   import Setting from '../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
@@ -42,54 +43,45 @@
 {/if}
 {#if shows.accent}
   <Setting key="accent" source="theme">
-    <label title={ta('tip.doc.accent')}>{ta('lbl.docAccent')}
-      <ColorPicker value={p.accent ?? ''} tokens={themeSwatches()} allowClear label={ta('tip.doc.accent')}
-        onchange={(v) => setBlockProp('accent', v || null)} /></label>
+    <ColourRow label={ta('lbl.docAccent')} title={ta('tip.doc.accent')} value={p.accent ?? ''} tokens={themeSwatches()} allowClear
+      onchange={(v) => setBlockProp('accent', v || null)} />
   </Setting>
 {/if}
 {#if shows.headingColor}
   <Setting key="headingColor" source="theme">
-    <label title={ta('tip.doc.headingColor')}>{ta('lbl.docHeadingColor')}
-      <ColorPicker value={p.headingColor ?? ''} tokens={themeSwatches()} allowClear label={ta('tip.doc.headingColor')}
-        onchange={(v) => setBlockProp('headingColor', v || null)} /></label>
+    <ColourRow label={ta('lbl.docHeadingColor')} title={ta('tip.doc.headingColor')} value={p.headingColor ?? ''} tokens={themeSwatches()} allowClear
+      onchange={(v) => setBlockProp('headingColor', v || null)} />
   </Setting>
 {/if}
 {#if shows.cardColor}
   <Setting key="cardColor" source="theme">
-    <label title={ta('tip.doc.cardColor')}>{ta('lbl.docCardColor')}
-      <ColorPicker value={p.cardColor ?? ''} tokens={themeSwatches()} allowClear label={ta('tip.doc.cardColor')}
-        onchange={(v) => setBlockProp('cardColor', v || null)} /></label>
+    <ColourRow label={ta('lbl.docCardColor')} title={ta('tip.doc.cardColor')} value={p.cardColor ?? ''} tokens={themeSwatches()} allowClear
+      onchange={(v) => setBlockProp('cardColor', v || null)} />
   </Setting>
 {/if}
 {#if shows.rules}
   <!-- The questions' lines are the rows' own; the other designs' are the rule over each part -->
   <Setting key="rules">
-    <label class="gridmenu-snap" title={ta(design === 'questions' ? 'tip.doc.rulesQuestions' : 'tip.doc.rules')}>
-      <input type="checkbox" checked={p.rules !== false}
-        onchange={(e) => setBlockProp('rules', e.target.checked ? null : false)} />
-      {ta(design === 'questions' ? 'lbl.docRulesQuestions' : 'lbl.docRules')}
-    </label>
+    <SwitchRow label={ta(design === 'questions' ? 'lbl.docRulesQuestions' : 'lbl.docRules')} title={ta(design === 'questions' ? 'tip.doc.rulesQuestions' : 'tip.doc.rules')}
+      checked={p.rules !== false} onchange={(on) => setBlockProp('rules', on ? null : false)} />
   </Setting>
 {/if}
 {#if shows.corners}
   <Setting key="corners" source="theme">
-    <label title={ta('tip.doc.corners')}>{ta('group.corners')}
-      <Dropdown value={DOC_CORNERS.includes(p.corners) ? p.corners : 'md'}
-        options={DOC_CORNERS.map((c) => [c, ta(`opt.docCorners.${c}`)])}
-        onchange={(v) => setBlockProp('corners', v === 'md' ? null : v)} /></label>
+    <SelectRow label={ta('group.corners')} title={ta('tip.doc.corners')} value={DOC_CORNERS.includes(p.corners) ? p.corners : 'md'}
+      options={DOC_CORNERS.map((c) => [c, ta(`opt.docCorners.${c}`)])}
+      onchange={(v) => setBlockProp('corners', v === 'md' ? null : v)} />
   </Setting>
 {/if}
 {#if shows.headingFont}
   <Setting key="headingFont" source="theme">
-    <label title={ta('tip.doc.headingFont')}>{ta('lbl.docHeadingFont')}
-      <Dropdown value={p.headingFont ?? ''} options={fonts()}
-        onchange={(v) => setBlockProp('headingFont', v || null)} /></label>
+    <SelectRow label={ta('lbl.docHeadingFont')} title={ta('tip.doc.headingFont')} value={p.headingFont ?? ''} options={fonts()}
+      onchange={(v) => setBlockProp('headingFont', v || null)} />
   </Setting>
 {/if}
 {#if shows.font}
   <Setting key="font" source="theme">
-    <label title={ta('tip.doc.font')}>{ta('lbl.docFont')}
-      <Dropdown value={p.font ?? ''} options={fonts()}
-        onchange={(v) => setBlockProp('font', v || null)} /></label>
+    <SelectRow label={ta('lbl.docFont')} title={ta('tip.doc.font')} value={p.font ?? ''} options={fonts()}
+      onchange={(v) => setBlockProp('font', v || null)} />
   </Setting>
 {/if}

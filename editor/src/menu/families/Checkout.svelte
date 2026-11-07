@@ -7,6 +7,9 @@
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import Choice from '../../lib/Choice.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import SubHeading from '../../lib/rows/SubHeading.svelte';
+  import ListEditor from '../../lib/rows/ListEditor.svelte';
   import { ta } from '$engine/i18n.js';
   import { paymentsOf, anyProvider, currencyWord, CARD_PROVIDERS } from '$engine/shop.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -26,6 +29,12 @@
   const setInstruction = (i, patch) => setPay({ manual: pays.manual.map((m, j) => (j === i ? { ...m, ...patch } : m)) });
   const addInstruction = () => setPay({ manual: [...pays.manual, { id: `pay-${Date.now().toString(36)}`, label: '', text: '' }] });
   const removeInstruction = (i) => setPay({ manual: pays.manual.filter((_, j) => j !== i) });
+  /** Moves an instruction from one place to another, as the list editor's drag and keys do. */
+  const moveInstruction = (from, to) => {
+    const manual = [...pays.manual];
+    manual.splice(to, 0, ...manual.splice(from, 1));
+    setPay({ manual });
+  };
   /** The closed value of the Payment group: the providers on, else the count of instructions. */
   const paymentValue = $derived.by(() => {
     const on = [];
@@ -54,15 +63,13 @@
         <input value={providerOn ? siteCurrency : (selectedBlock.props.currency ?? 'kr')} disabled={providerOn}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     </Setting>
+    <!-- The shop's own settings stand in its panel -->
+    <ShopLinks from="checkout" />
   {/snippet}
   {#snippet checkoutPayment()}
     <!-- The payments are one prop, so the group's own mark and reset stand for them -->
     <Setting pin="vippsButton">
-      <label class="gridmenu-snap" title={ta('tip.checkout.vippsCheckout')}>
-        <input type="checkbox" checked={pays.vipps}
-          onchange={(e) => setPay({ vipps: e.target.checked })} />
-        {ta('lbl.vippsCheckout')}
-      </label>
+      <SwitchRow label={ta('lbl.vippsCheckout')} title={ta('tip.checkout.vippsCheckout')} checked={pays.vipps} onchange={(on) => setPay({ vipps: on })} />
     </Setting>
     <Choice label={ta('lbl.payCard')} value={pays.card} title={ta('tip.checkout.payCard')}
       options={cardOptions} onchange={(v) => setPay({ card: v })} />
@@ -71,42 +78,32 @@
         options={[['ship', ta('opt.payCapture.ship')], ['now', ta('opt.payCapture.now')]]} onchange={(v) => setPay({ capture: v })} />
     {/if}
     <Setting pin="paypalButton">
-      <label class="gridmenu-snap" title={ta('tip.checkout.payPaypal')}>
-        <input type="checkbox" checked={pays.paypal}
-          onchange={(e) => setPay({ paypal: e.target.checked })} />
-        {ta('lbl.payPaypal')}
-      </label>
+      <SwitchRow label={ta('lbl.payPaypal')} title={ta('tip.checkout.payPaypal')} checked={pays.paypal} onchange={(on) => setPay({ paypal: on })} />
     </Setting>
     {#if providerOn}
       <button type="button" class="ghost action" title={ta('tip.testPayment')} onclick={ed.testPayment}>{ta('ui.testPayment')}</button>
     {/if}
     <!-- The ways to pay without a provider: a label and a text each, shown above the order summary -->
-    <span class="mini-label" title={ta('tip.checkout.instructions')}>{ta('lbl.payInstructions')}</span>
-    {#each pays.manual as method, i (method.id)}
-      <div class="pay-instruction">
-        <input value={method.label} placeholder={ta('ph.instructionLabel')} aria-label={ta('lbl.name')}
-          onchange={(e) => setInstruction(i, { label: e.target.value.trim() })} />
-        <input value={method.text} placeholder={ta('ph.instructionText')} aria-label={ta('lbl.instructionText')}
-          onchange={(e) => setInstruction(i, { text: e.target.value.trim() })} />
-        <button class="ghost" title={ta('ui.remove')} aria-label={ta('ui.remove')} onclick={() => removeInstruction(i)}>
-          <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" /></svg>
-        </button>
-      </div>
-    {/each}
-    <button class="ghost action" onclick={addInstruction}>{ta('ui.addInstruction')}</button>
+    <SubHeading text={ta('lbl.payInstructions')} />
+    <ListEditor items={pays.manual} label={ta('lbl.payInstructions')} key={(method) => method.id}
+      onmove={moveInstruction} onremove={removeInstruction} onadd={addInstruction} addLabel={ta('ui.addInstruction')}>
+      {#snippet row(method, i)}
+        <div class="pay-instruction" title={ta('tip.checkout.instructions')}>
+          <input value={method.label} placeholder={ta('ph.instructionLabel')} aria-label={ta('lbl.name')}
+            onchange={(e) => setInstruction(i, { label: e.target.value.trim() })} />
+          <input value={method.text} placeholder={ta('ph.instructionText')} aria-label={ta('lbl.instructionText')}
+            onchange={(e) => setInstruction(i, { text: e.target.value.trim() })} />
+        </div>
+      {/snippet}
+    </ListEditor>
   {/snippet}
   {#snippet checkoutSeller()}
     <Setting key="seller" shown={ta('common.on')}>
-      <label class="gridmenu-snap" title={ta('tip.checkout.seller')}>
-        <input type="checkbox" checked={selectedBlock.props.seller !== false}
-          onchange={(e) => setBlockProp('seller', e.target.checked)} />
-        {ta('lbl.checkoutSeller')}
-      </label>
+      <SwitchRow label={ta('lbl.checkoutSeller')} title={ta('tip.checkout.seller')} checked={selectedBlock.props.seller !== false} onchange={(on) => setBlockProp('seller', on)} />
     </Setting>
     <button class="ghost action" onclick={() => ed.openPanel('legal', { fold: 'who' })}>{ta('ui.editSiteContact')}</button>
   {/snippet}
   <Fold id="checkout-order" title={ta('group.order')} value={selectedBlock.props.recipient || selectedBlock.props.endpoint || ta('common.none')} group={groupOf('checkout-order', { currency: 'kr' })}>{@render checkoutOrder()}</Fold>
   <Fold id="checkout-payment" title={ta('group.payment')} value={paymentValue} group={groupOf('checkout-payment', { payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } })}>{@render checkoutPayment()}</Fold>
-  <Fold id="checkout-shop" title={ta('group.siteShop')} value={ed.siteDraft?.site?.commerce?.currency || 'NOK'}><ShopLinks from="checkout" /></Fold>
   <Fold id="checkout-seller" title={ta('lbl.checkoutSeller')} value={selectedBlock.props.seller === false ? ta('common.off') : ta('common.on')} group={groupOf('checkout-seller', { seller: true })}>{@render checkoutSeller()}</Fold>
 {/if}
