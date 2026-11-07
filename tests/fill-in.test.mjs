@@ -14,11 +14,12 @@ test('openFills: a marked part in its brackets is open, one written over or unma
   assert.deepEqual(openFills(undefined), { own: 0, contact: 0 });
 });
 
-test('pageFills: every text block on the page, other blocks never', () => {
+test('pageFills: every text block and the terms of sale on the page, other blocks never', () => {
   const page = { sections: [
     { blocks: [{ type: 'text', props: { html: '<span data-urd-fill="">[a]</span><span data-urd-fill="contact">[b]</span>' } }, { type: 'button', props: { html: '<span data-urd-fill="">[c]</span>' } }] },
     { blocks: [{ type: 'text', props: { html: '<span data-urd-fill="">[d]</span>' } }] },
+    { blocks: [{ type: 'terms', props: { html: '<span data-urd-fill="contact">[e]</span><span data-urd-fill="">[f]</span>' } }] },
   ] };
-  assert.deepEqual(pageFills(page), { own: 2, contact: 1 });
+  assert.deepEqual(pageFills(page), { own: 3, contact: 2 });
   assert.deepEqual(pageFills(null), { own: 0, contact: 0 });
 });

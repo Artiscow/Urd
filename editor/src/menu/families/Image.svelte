@@ -5,8 +5,8 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import Pin from '../Pin.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import { slugify } from '$engine/imageTools.js';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
@@ -70,9 +70,9 @@
       </Setting>
     {/if}
   {/snippet}
-  <MenuGroup id="img-image" title={ta('blocks.image')} value={selectedBlock.props.alt || ta('menu.noAlt')}>{@render imgImage()}</MenuGroup>
-  <MenuGroup id="img-link" title={ta('group.linkClick')} value={imageLinked ? linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) : (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none'))}
-    group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</MenuGroup>
+  <Fold id="img-image" title={ta('blocks.image')} value={selectedBlock.props.alt || ta('menu.noAlt')}>{@render imgImage()}</Fold>
+  <Fold id="img-link" title={ta('group.linkClick')} value={imageLinked ? linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) : (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none'))}
+    group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</Fold>
 {:else if area === 'style'}
   <!-- The two one-press choices beside the editor, each with its pin for the quick row; the rest of the picture's settings are the editor's -->
   {#snippet imgFit()}
@@ -97,8 +97,8 @@
       </div>
     </Setting>
   {/snippet}
-  <MenuGroup id="img-fit" title={ta('lbl.imageFit')} value={selectedBlock.props.fit === 'contain' ? ta('opt.fitFrame.contain') : ta('opt.fitFrame.cover')} group={groupOf('img-fit', { fit: 'cover' })}>{@render imgFit()}</MenuGroup>
-  <MenuGroup id="img-corners" title={ta('group.corners')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} group={groupOf('img-corners', { radius: 'md' })}>{@render imgCorners()}</MenuGroup>
+  <Fold id="img-fit" title={ta('lbl.imageFit')} value={selectedBlock.props.fit === 'contain' ? ta('opt.fitFrame.contain') : ta('opt.fitFrame.cover')} group={groupOf('img-fit', { fit: 'cover' })}>{@render imgFit()}</Fold>
+  <Fold id="img-corners" title={ta('group.corners')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} group={groupOf('img-corners', { radius: 'md' })}>{@render imgCorners()}</Fold>
 {/if}
 
 <style>

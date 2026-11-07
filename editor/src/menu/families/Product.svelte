@@ -4,8 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -50,9 +50,9 @@
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     </Setting>
   {/snippet}
-  <MenuGroup id="product-catalog" title={ta('group.catalog')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('product-catalog', { limit: 0 })}>{@render productCatalog()}</MenuGroup>
-  <MenuGroup id="product-shop" title={ta('group.siteShop')} value={ed.siteDraft?.site?.commerce?.currency || 'NOK'}><ShopLinks from="product" /></MenuGroup>
-  <MenuGroup id="product-price" title={ta('lbl.price')} value={selectedBlock.props.currency ?? 'kr'} group={groupOf('product-price', { currency: 'kr' })}>{@render productPrice()}</MenuGroup>
+  <Fold id="product-catalog" title={ta('group.catalog')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('product-catalog', { limit: 0 })}>{@render productCatalog()}</Fold>
+  <Fold id="product-shop" title={ta('group.siteShop')} value={ed.siteDraft?.site?.commerce?.currency || 'NOK'}><ShopLinks from="product" /></Fold>
+  <Fold id="product-price" title={ta('lbl.price')} value={selectedBlock.props.currency ?? 'kr'} group={groupOf('product-price', { currency: 'kr' })}>{@render productPrice()}</Fold>
 {:else if area === 'style'}
   {#snippet productGrid()}
     <Setting key="columns" shown={ta('common.auto')}>
@@ -64,5 +64,5 @@
       </div>
     </Setting>
   {/snippet}
-  <MenuGroup id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('common.auto')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</MenuGroup>
+  <Fold id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('common.auto')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</Fold>
 {/if}

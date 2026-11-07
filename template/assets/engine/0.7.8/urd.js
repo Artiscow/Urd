@@ -16,7 +16,7 @@ import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrame
 import { renderNav, refreshNavScroll, clearAnnounceDismissal, holdNavForJump } from './nav.js';
 import { isSafeImage, hashTarget, samePageHash, jumpOnArrival } from './nav-model.js';
 import { renderFooter } from './footer.js';
-import { textBlock } from './blocks/text.js';
+import { textBlock, termsBlock } from './blocks/text.js';
 import { imageBlock } from './blocks/image.js';
 import { buttonBlock } from './blocks/button.js';
 import { shapeBlock } from './blocks/shape.js';
@@ -111,6 +111,7 @@ function registerCore() {
   Urd.blocks.define('share', shareBlock);
   Urd.blocks.define('contact', contactBlock);
   Urd.blocks.define('privacy', privacyBlock);
+  Urd.blocks.define('terms', termsBlock);
   Urd.blocks.define('countdown', countdownBlock);
   Urd.blocks.define('audio', audioBlock);
   Urd.blocks.define('product', productBlock);

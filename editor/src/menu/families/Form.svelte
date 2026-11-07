@@ -4,8 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
@@ -117,7 +117,7 @@
           onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
     {/if}
   {/snippet}
-  <MenuGroup id="form-sending" title={ta('group.sending')} value={mode === 'endpoint' ? (selectedBlock.props.endpoint || ta('form.modeEndpoint')) : (selectedBlock.props.recipient || ta('form.modeMailto'))} group={groupOf('form-sending', { mode: 'mailto' })}>{@render formSending()}</MenuGroup>
-  <MenuGroup id="form-fields" title={ta('form.fields')} value={String(selectedBlock.props.fields?.length ?? 0)}>{@render formFields()}</MenuGroup>
-  <MenuGroup id="form-receipt" title={ta('group.buttonReceipt')} value={selectedBlock.props.submitLabel || ta('form.sendDefault')}>{@render formReceipt()}</MenuGroup>
+  <Fold id="form-sending" title={ta('group.sending')} value={mode === 'endpoint' ? (selectedBlock.props.endpoint || ta('form.modeEndpoint')) : (selectedBlock.props.recipient || ta('form.modeMailto'))} group={groupOf('form-sending', { mode: 'mailto' })}>{@render formSending()}</Fold>
+  <Fold id="form-fields" title={ta('form.fields')} value={String(selectedBlock.props.fields?.length ?? 0)}>{@render formFields()}</Fold>
+  <Fold id="form-receipt" title={ta('group.buttonReceipt')} value={selectedBlock.props.submitLabel || ta('form.sendDefault')}>{@render formReceipt()}</Fold>
 {/if}

@@ -39,7 +39,7 @@ export function openFills(html) {
 }
 
 /**
- * The open parts on a page: every text block's, summed.
+ * The open parts on a page: every text block's and the terms of sale's, summed.
  * @param {{sections?: Array<{blocks?: Array<{type?: string, props?: {html?: string}}>}>}|null} page
  * @returns {{own: number, contact: number}}
  */
@@ -47,7 +47,7 @@ export function pageFills(page) {
   const open = { own: 0, contact: 0 };
   for (const section of page?.sections ?? []) {
     for (const block of section?.blocks ?? []) {
-      if (block?.type !== 'text') continue;
+      if (block?.type !== 'text' && block?.type !== 'terms') continue;
       const parts = openFills(block.props?.html);
       open.own += parts.own;
       open.contact += parts.contact;

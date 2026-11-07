@@ -4,7 +4,7 @@
      holds the block's own value, and otherwise, where the family tells what
      the value falls back to, the inherited value dimmed with its source
      («From the theme: None», «Default: Off»). The group's defaults come
-     through MenuGroup's context, so a row needs only its key. */
+     through the fold's context (Fold.svelte), so a row needs only its key. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   const group = getContext('menu-group');

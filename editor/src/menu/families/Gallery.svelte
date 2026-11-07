@@ -6,8 +6,8 @@
   import Dropdown from '../../lib/Dropdown.svelte';
   import Choice from '../../lib/Choice.svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import { GRID_VIEWS, MOSAIC_ROW, POLAROID_TILT, galleryView as blockGalleryView } from '$engine/gallery-model.js';
   import DesignRow from '../DesignRow.svelte';
@@ -59,7 +59,7 @@
       </div>
     {/each}
   {/snippet}
-  <MenuGroup id="gallery-images" defaultOpen title={ta('group.images')} value={ta('menu.imageCount', { n: selectedBlock.props.images?.length ?? 0 })}>{@render galleryImages()}</MenuGroup>
+  <Fold id="gallery-images" defaultOpen title={ta('group.images')} value={ta('menu.imageCount', { n: selectedBlock.props.images?.length ?? 0 })}>{@render galleryImages()}</Fold>
 {:else if area === 'style'}
   {@const gview = blockGalleryView(selectedBlock.props.view)}
   {#snippet galleryView()}
@@ -210,9 +210,9 @@
       </label>
     </Setting>
   {/snippet}
-  <MenuGroup id="gallery-view" title={ta('lbl.view')} value={ta(`opt.galleryView.${gview}`)} group={groupOf('gallery-view', { view: 'grid', phoneDesign: null, columns: 3, gap: 12, interval: 5, width: 'canvas', rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined })}>{@render galleryView()}</MenuGroup>
+  <Fold id="gallery-view" title={ta('lbl.view')} value={ta(`opt.galleryView.${gview}`)} group={groupOf('gallery-view', { view: 'grid', phoneDesign: null, columns: 3, gap: 12, interval: 5, width: 'canvas', rowHeight: undefined, tilt: undefined, frameColor: undefined, captions: undefined })}>{@render galleryView()}</Fold>
   {#if gview === 'ribbon'}
-    <MenuGroup id="gallery-roll" title={ta('lbl.ribbonMotion')} value={`${selectedBlock.props.speed ?? 60} px/s`} group={groupOf('gallery-roll', { rows: undefined, direction: undefined, speed: undefined, pauseOnHover: undefined, pause: undefined, fade: undefined })}>{@render galleryRoll()}</MenuGroup>
+    <Fold id="gallery-roll" title={ta('lbl.ribbonMotion')} value={`${selectedBlock.props.speed ?? 60} px/s`} group={groupOf('gallery-roll', { rows: undefined, direction: undefined, speed: undefined, pauseOnHover: undefined, pause: undefined, fade: undefined })}>{@render galleryRoll()}</Fold>
   {/if}
-  <MenuGroup id="gallery-look" title={ta('group.galleryImages')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} group={groupOf('gallery-look', { radius: 'md', lightbox: true })}>{@render galleryLook()}</MenuGroup>
+  <Fold id="gallery-look" title={ta('group.galleryImages')} value={{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']} group={groupOf('gallery-look', { radius: 'md', lightbox: true })}>{@render galleryLook()}</Fold>
 {/if}

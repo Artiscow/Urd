@@ -8,7 +8,8 @@ import { liftSiteFile, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
 import { createDraftStore } from '../lib/draftStore.js';
 import { tick } from 'svelte';
 import { ICONS } from '../lib/icons.js';
-import { opensShortcuts } from '../lib/shortcuts.js';
+import { opensShortcuts, togglesGrid } from '../lib/shortcuts.js';
+import { gridLookOf } from '$engine/snap-model.js';
 import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
 import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as settingsPicturesOf } from '../lib/settings-model.js';
 import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT, foldsEmpty, unfoldedPanel } from '../lib/panels-start.js';
@@ -164,6 +165,12 @@ function onKeydown(e) {
   if (opensShortcuts(e, typed)) {
     e.preventDefault();
     openShortcuts();
+    return;
+  }
+  // G shows or hides the grid, as the top bar's Grid button does, wherever in the panels it is not typed.
+  if (togglesGrid(e, typed)) {
+    e.preventDefault();
+    toggleGrid();
     return;
   }
   if (!(e.ctrlKey || e.metaKey)) return;
@@ -762,6 +769,18 @@ function toggleGrid() {
   previewState.bridge?.sendShowGrid(gridOn);
 }
 
+/** How the grid is drawn (0.7.34, snap-model.js GRID_LOOKS): a quiet grid of lines, the default, dots, or only in a drag. Kept per browser, and only when it is not the default; the preview reads it where it draws the grid. */
+let gridLook = $state(gridLookOf(localStorage.getItem('urd-grid-look')));
+
+function setGridLook(v) {
+  gridLook = gridLookOf(v);
+  if (gridLook === 'lines') localStorage.removeItem('urd-grid-look');
+  else localStorage.setItem('urd-grid-look', gridLook);
+  // What stands on the page is drawn again in the new look.
+  if (gridOn) previewState.bridge?.sendShowGrid(true);
+  if (guidesOn) previewState.bridge?.sendShowGuides(true);
+}
+
 /* Submenu (one level, additive): the children always have their own
  * target; the parent can additionally be a pure opener ('__none' in
  * setNavTarget). */
@@ -1107,6 +1126,8 @@ export const shellState = {
   get gridOn() { return gridOn; },
   set gridOn(v) { gridOn = v; },
   toggleGrid,
+  get gridLook() { return gridLook; },
+  setGridLook,
   get panelEl() { return panelEl; },
   set panelEl(v) { panelEl = v; },
   get panelHasGroups() { return panelHasGroups; },

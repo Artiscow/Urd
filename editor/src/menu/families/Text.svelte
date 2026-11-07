@@ -1,16 +1,12 @@
 <script>
-  /* The text block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The text block in the element menu (0.7.26.2): its Content and Style areas, drawn where the menu asks for one, and the settings it writes through the editor handle.
+     A text block is plain text; the document designs are the terms of sale's (Terms.svelte), which draws its Content area with this one. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import BoxStyle from '../BoxStyle.svelte';
-  import DesignRow from '../DesignRow.svelte';
-  import DocLook from '../DocLook.svelte';
-  import { textDesign } from '$engine/doc-look.js';
   import { ta } from '$engine/i18n.js';
   import { fontChoices } from '$engine/fonts.js';
   import { SIZE_MIN, SIZE_MAX, clampSize, matchFontStack } from '$engine/text-typo.js';
@@ -40,8 +36,6 @@
   }
   const { groupChanged, groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
-  const design = $derived(textDesign(selectedBlock.props.design));
-  const LOOK = { design: 'plain', phoneDesign: null, contentsSide: null, placement: null, accent: null, headingColor: null, cardColor: null, rules: null, corners: null, headingFont: null };
 </script>
 
 {#if area === 'content'}
@@ -59,18 +53,6 @@
     {/key}
   {/if}
 {:else if area === 'style'}
-  {#snippet textDesignLook()}
-    <Setting key="design">
-      <DesignRow pin="textDesign" />
-    </Setting>
-    <!-- The design it draws while narrow, on a phone or in a narrow column, directly under the design -->
-    <Setting key="phoneDesign">
-      <DesignRow phone pin="phoneDesign" />
-    </Setting>
-    <!-- A document design's look, directly under the design it dresses -->
-    <DocLook type="text" {design} />
-  {/snippet}
-  <MenuGroup id="text-design" title={ta('group.appearance')} value={ta(`opt.textDesign.${design}`)} group={groupOf('text-design', LOOK)}>{@render textDesignLook()}</MenuGroup>
   {#snippet textAlign()}
     <Setting key="align">
       <div class="pin-line">
@@ -97,6 +79,6 @@
       <BoxStyle />
     {/if}
   {/snippet}
-  <MenuGroup id="text-align" title={ta('lbl.align')} value={{ left: ta('common.left'), center: ta('common.center'), right: ta('common.right') }[selectedBlock.props.align ?? 'left']} group={groupOf('text-align', { align: 'left' })}>{@render textAlign()}</MenuGroup>
-  <MenuGroup id="text-box" title={ta('group.textBox')} value={selectedBlock.props.box ? ta('common.on') : ta('common.off')} group={groupOf('text-box', { box: false, boxStyle: null })}>{@render textBox()}</MenuGroup>
+  <Fold id="text-align" title={ta('lbl.align')} value={{ left: ta('common.left'), center: ta('common.center'), right: ta('common.right') }[selectedBlock.props.align ?? 'left']} group={groupOf('text-align', { align: 'left' })}>{@render textAlign()}</Fold>
+  <Fold id="text-box" title={ta('group.textBox')} value={selectedBlock.props.box ? ta('common.on') : ta('common.off')} group={groupOf('text-box', { box: false, boxStyle: null })}>{@render textBox()}</Fold>
 {/if}

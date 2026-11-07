@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { PRIVACY_DESIGNS, TEXT_DESIGNS, DOC_CORNERS, privacyDesign, textDesign, docColor, docRadius, docLookVars, docLookSettings } = await engineImport('doc-look.js');
+const { PRIVACY_DESIGNS, TEXT_DESIGNS, TERMS_DESIGNS, DOC_CORNERS, privacyDesign, textDesign, termsDesign, docColor, docRadius, docLookVars, docLookSettings } = await engineImport('doc-look.js');
 
 test('a stored design reads as one of the block\'s, a missing or unknown one as its first', () => {
   assert.deepEqual(PRIVACY_DESIGNS, ['long', 'contents', 'glance', 'questions', 'ledger', 'ledger-cards']);
@@ -16,6 +16,10 @@ test('a stored design reads as one of the block\'s, a missing or unknown one as 
   assert.equal(privacyDesign('clauses'), 'long', 'numbered clauses are a text\'s design');
   assert.equal(textDesign('ledger'), 'plain', 'the ledger is the privacy page\'s');
   assert.equal(textDesign(null), 'plain');
+  assert.deepEqual(TERMS_DESIGNS, TEXT_DESIGNS.filter((id) => id !== 'plain'), 'the terms of sale take the document designs');
+  for (const id of TERMS_DESIGNS) assert.equal(termsDesign(id), id);
+  assert.equal(termsDesign(undefined), 'long');
+  assert.equal(termsDesign('plain'), 'long', 'the terms of sale are always a document');
 });
 
 test('the look: a colour is a hex value or a theme token, a font a plain stack, the corners one of four', () => {
@@ -42,10 +46,10 @@ test('the look: a colour is a hex value or a theme token, a font a plain stack, 
 test('the menu shows the settings a design draws, and none for plain text', () => {
   const on = (s) => Object.entries(s).filter(([, v]) => v).map(([k]) => k).sort();
   assert.deepEqual(on(docLookSettings('text', 'plain')), []);
-  assert.deepEqual(on(docLookSettings('text', 'long', { html: '<h2>A</h2>' })), ['accent', 'headingColor', 'headingFont', 'rules']);
-  assert.deepEqual(on(docLookSettings('text', 'long', { html: '<blockquote data-urd-form></blockquote>' })), ['accent', 'cardColor', 'corners', 'headingColor', 'headingFont', 'rules'], 'a withdrawal form is a card');
-  assert.deepEqual(on(docLookSettings('text', 'glance', {})), ['accent', 'cardColor', 'corners', 'headingColor', 'headingFont', 'rules']);
-  assert.deepEqual(on(docLookSettings('text', 'contents', {})), ['accent', 'align', 'cardColor', 'corners', 'headingColor', 'headingFont', 'rules', 'side'], 'the side the contents stand on and the text\'s place, with the contents alone');
+  assert.deepEqual(on(docLookSettings('terms', 'long', { html: '<h2>A</h2>' })), ['accent', 'headingColor', 'headingFont', 'rules']);
+  assert.deepEqual(on(docLookSettings('terms', 'long', { html: '<blockquote data-urd-form></blockquote>' })), ['accent', 'cardColor', 'corners', 'headingColor', 'headingFont', 'rules'], 'a withdrawal form is a card');
+  assert.deepEqual(on(docLookSettings('terms', 'glance', {})), ['accent', 'cardColor', 'corners', 'headingColor', 'headingFont', 'rules']);
+  assert.deepEqual(on(docLookSettings('terms', 'contents', {})), ['accent', 'align', 'cardColor', 'corners', 'headingColor', 'headingFont', 'rules', 'side'], 'the side the contents stand on and the text\'s place, with the contents alone');
   assert.deepEqual(on(docLookSettings('text', 'clauses', {})), ['accent', 'corners', 'headingColor', 'headingFont'], 'numbered clauses have no lines, and their numbers have corners');
   for (const design of PRIVACY_DESIGNS) {
     const contents = design === 'contents';

@@ -15912,9 +15912,9 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   }
 }
 
-/* Smart guides: snap lines while a block is dragged (preview only). A line
-   between the block and a neighbour spans the two, a line of the content
-   surface spans its section, so preview-edit sets the span inline. */
+/* Smart guides: snap lines while a block is dragged (preview only).
+   A line between the block and a neighbour spans the two, a line of the content surface reaches a little past the block with its share in a label, so preview-edit sets the span inline.
+   Each line ends in a dot. */
 .urd-preview .urd-smart-guide {
   position: absolute;
   /* Above the block lift (99999): the dragged block is raised to it, and a line through an opaque block (a video, a picture) must still show */
@@ -15925,16 +15925,57 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
      the accent) and the page's own colors, whatever the admin theme. The same
      convention as Figma and Wix. The shadow gives contrast against light surfaces. */
   background: #ff2d87;
-  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 70%, transparent);
+  box-shadow: 0 0 0 calc(0.5px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 45%, transparent);
   pointer-events: none;
 }
 
 .urd-preview .urd-smart-guide-v {
-  width: calc(3px * var(--urd-chrome-scale, 1));
+  width: calc(1.5px * var(--urd-chrome-scale, 1));
 }
 
 .urd-preview .urd-smart-guide-h {
-  height: calc(3px * var(--urd-chrome-scale, 1));
+  height: calc(1.5px * var(--urd-chrome-scale, 1));
+}
+
+/* A dot at each end of the line, so a short line reads as a measure between two points. */
+.urd-preview .urd-smart-guide::before,
+.urd-preview .urd-smart-guide::after {
+  content: '';
+  position: absolute;
+  width: calc(7px * var(--urd-chrome-scale, 1));
+  height: calc(7px * var(--urd-chrome-scale, 1));
+  border-radius: 50%;
+  background: #ff2d87;
+  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 50%, transparent);
+  translate: -50% -50%;
+}
+
+.urd-preview .urd-smart-guide-v::before { left: 50%; top: 0; }
+.urd-preview .urd-smart-guide-v::after { left: 50%; top: 100%; }
+.urd-preview .urd-smart-guide-h::before { left: 0; top: 50%; }
+.urd-preview .urd-smart-guide-h::after { left: 100%; top: 50%; }
+
+/* A line of the content's own: its share in a label past the line's end, below a block (clear of its toolbar above) and left of it. */
+.urd-preview .urd-smart-guide-share {
+  position: absolute;
+  padding: calc(2px * var(--urd-chrome-scale, 1)) calc(5px * var(--urd-chrome-scale, 1));
+  font: 600 calc(10px * var(--urd-chrome-scale, 1)) / 1 system-ui, sans-serif;
+  color: #fff;
+  white-space: nowrap;
+  background: #ff2d87;
+  border-radius: calc(3px * var(--urd-chrome-scale, 1));
+}
+
+.urd-preview .urd-smart-guide-v .urd-smart-guide-share {
+  left: 50%;
+  top: calc(100% + 10px * var(--urd-chrome-scale, 1));
+  translate: -50% 0;
+}
+
+.urd-preview .urd-smart-guide-h .urd-smart-guide-share {
+  left: calc(-10px * var(--urd-chrome-scale, 1));
+  top: 50%;
+  translate: -100% -50%;
 }
 
 /* The section a dragged block will move to (preview-edit.js): a dashed frame
@@ -16060,40 +16101,63 @@ body.urd-marqueeing {
   white-space: nowrap;
 }
 
-/* Page-wide guides (the on/off button next to the view choices):
-   a dashed accent, in contrast to the solid smart drag lines.
-   Below the smart guides in z, never clickable, never shown to visitors.
-   Line and dash are counter-scaled like the rest of the editing chrome, so
-   the guide stays readable at a strong zoom out instead of thinning to
-   nothing. */
 .urd-preview .urd-page-guide {
   position: absolute;
   /* Above the block lift (99999), like the smart guides: the lines are drawn over the blocks, so an opaque block (a video, a picture) never hides one */
   z-index: 100000;
   pointer-events: none;
-  opacity: 0.9;
 }
 
+/* Page-wide guides (the on/off button next to the view choices): the content's quarters as solid lines in the full accent with a thin dark edge, each with its share written at its top.
+   Opaque, so the three look the same whether or not a grid line lies under one, and set apart from the grid's faint lines and from the smart guides' magenta.
+   Never clickable, never shown to visitors.
+   Line and label are counter-scaled like the rest of the editing chrome, so the guide stays readable at a strong zoom out instead of thinning to nothing. */
 .urd-preview .urd-page-guide-v {
   top: 0;
   bottom: 0;
-  width: calc(2px * var(--urd-chrome-scale, 1));
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--urd-admin-accent, #5f6a75) 0 calc(6px * var(--urd-chrome-scale, 1)),
-    transparent calc(6px * var(--urd-chrome-scale, 1)) calc(12px * var(--urd-chrome-scale, 1))
-  );
+  width: calc(1.5px * var(--urd-chrome-scale, 1));
+  background: var(--urd-admin-accent, #5f6a75);
+  box-shadow: 0 0 0 calc(0.5px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 40%, transparent);
 }
 
-.urd-preview .urd-page-guide-h {
-  left: 0;
-  right: 0;
-  height: calc(2px * var(--urd-chrome-scale, 1));
-  background: repeating-linear-gradient(
-    to right,
-    var(--urd-admin-accent, #5f6a75) 0 calc(6px * var(--urd-chrome-scale, 1)),
-    transparent calc(6px * var(--urd-chrome-scale, 1)) calc(12px * var(--urd-chrome-scale, 1))
-  );
+.urd-preview .urd-page-guide-share {
+  position: absolute;
+  top: calc(4px * var(--urd-chrome-scale, 1));
+  left: calc(4px * var(--urd-chrome-scale, 1));
+  padding: calc(2px * var(--urd-chrome-scale, 1)) calc(4px * var(--urd-chrome-scale, 1));
+  font: 600 calc(10px * var(--urd-chrome-scale, 1)) / 1 ui-monospace, monospace;
+  white-space: nowrap;
+  color: var(--urd-admin-accent, #5f6a75);
+  background: color-mix(in srgb, var(--urd-admin-bg, #0e0f11) 70%, transparent);
+  border-radius: calc(3px * var(--urd-chrome-scale, 1));
+}
+
+/* Where the grid is drawn as dots: a tick on the section's top and bottom edges, with a faint line between and the share by the top tick. */
+.urd-preview .urd-page-guide-v.urd-page-guide-ticks {
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 22%, transparent);
+  box-shadow: none;
+}
+
+.urd-preview .urd-page-guide-ticks::before,
+.urd-preview .urd-page-guide-ticks::after {
+  content: '';
+  position: absolute;
+  left: calc(-0.5px * var(--urd-chrome-scale, 1));
+  width: calc(2px * var(--urd-chrome-scale, 1));
+  height: calc(14px * var(--urd-chrome-scale, 1));
+  background: var(--urd-admin-accent, #5f6a75);
+}
+
+.urd-preview .urd-page-guide-ticks::before {
+  top: 0;
+}
+
+.urd-preview .urd-page-guide-ticks::after {
+  bottom: 0;
+}
+
+.urd-preview .urd-page-guide-ticks .urd-page-guide-share {
+  top: calc(16px * var(--urd-chrome-scale, 1));
 }
 
 /* Shared footer (site.footer): shown on every page when show is on */
@@ -18740,16 +18804,59 @@ body.urd-mobile .urd-section-resize-top {
 /* The editing layer - applies ONLY in preview mode (body.urd-preview,
    set by the engine inside the editor's iframe) */
 .urd-preview .urd-grid-overlay {
+  /* The cell size (preview-edit.js sets --urd-grid) and the line's width.
+     The line width is counter-scaled (urd-zoom), so the lines keep their on-screen width and stay crisp at every zoom level.
+     The cell size itself is NOT counter-scaled: it is the page's own geometry and follows the zoom. */
+  --urd-grid-cell: var(--urd-grid, 16px);
+  --urd-grid-line: calc(1px * var(--urd-chrome-scale, 1));
+  --urd-grid-minor: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 10%, transparent);
+  --urd-grid-major: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 26%, transparent);
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  /* The line width is counter-scaled (urd-zoom), so the lines keep their on-screen
-     width and stay crisp at every zoom level. The cell size itself is
-     NOT counter-scaled: it is the page's own geometry and follows the zoom. */
+  /* The quiet grid (0.7.34, the default look): faint lines with every fourth stronger, so it measures without covering the page.
+     The columns are counted out from the content's middle: a line on its centre (each tile starts at 50 % plus half its own width), the part cell left over split equally between the two edges, as snap-model.js gridLine snaps.
+     The rows run from the section's top. */
   background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent) calc(1px * var(--urd-chrome-scale, 1)), transparent calc(1px * var(--urd-chrome-scale, 1))),
-    linear-gradient(to bottom, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent) calc(1px * var(--urd-chrome-scale, 1)), transparent calc(1px * var(--urd-chrome-scale, 1)));
+    linear-gradient(to right, var(--urd-grid-major) var(--urd-grid-line), transparent var(--urd-grid-line)),
+    linear-gradient(to bottom, var(--urd-grid-major) var(--urd-grid-line), transparent var(--urd-grid-line)),
+    linear-gradient(to right, var(--urd-grid-minor) var(--urd-grid-line), transparent var(--urd-grid-line)),
+    linear-gradient(to bottom, var(--urd-grid-minor) var(--urd-grid-line), transparent var(--urd-grid-line));
+  background-size:
+    calc(var(--urd-grid-cell) * 4) calc(var(--urd-grid-cell) * 4),
+    calc(var(--urd-grid-cell) * 4) calc(var(--urd-grid-cell) * 4),
+    var(--urd-grid-cell) var(--urd-grid-cell),
+    var(--urd-grid-cell) var(--urd-grid-cell);
+  background-position:
+    calc(50% + var(--urd-grid-cell) * 2) 0,
+    0 0,
+    calc(50% + var(--urd-grid-cell) / 2) 0,
+    0 0;
+}
+
+/* The grid as dots where its lines would cross, larger every fourth, centred on the crossings: the page between them stays untouched. */
+.urd-preview .urd-grid-overlay[data-look="dots"] {
+  --urd-grid-dot: calc(2px * var(--urd-chrome-scale, 1));
+  background-image:
+    radial-gradient(circle at var(--urd-grid-dot) var(--urd-grid-dot), color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 70%, transparent) calc(1.6px * var(--urd-chrome-scale, 1)), transparent calc(2px * var(--urd-chrome-scale, 1))),
+    radial-gradient(circle at var(--urd-grid-dot) var(--urd-grid-dot), color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 40%, transparent) calc(1px * var(--urd-chrome-scale, 1)), transparent calc(1.4px * var(--urd-chrome-scale, 1)));
+  background-size:
+    calc(var(--urd-grid-cell) * 4) calc(var(--urd-grid-cell) * 4),
+    var(--urd-grid-cell) var(--urd-grid-cell);
+  background-position:
+    calc(50% + var(--urd-grid-cell) * 2 - var(--urd-grid-dot)) calc(0px - var(--urd-grid-dot)),
+    calc(50% + var(--urd-grid-cell) / 2 - var(--urd-grid-dot)) calc(0px - var(--urd-grid-dot));
+}
+
+/* The grid drawn only in a drag: at rest the content's edges and its quarters as faint alternate columns, the cells left to the drag. */
+.urd-preview .urd-grid-overlay[data-look="columns"] {
+  background-image:
+    linear-gradient(to right, var(--urd-grid-major) var(--urd-grid-line), transparent var(--urd-grid-line)),
+    linear-gradient(to left, var(--urd-grid-major) var(--urd-grid-line), transparent var(--urd-grid-line)),
+    linear-gradient(to right, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 6%, transparent) 0 25%, transparent 25% 50%, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 6%, transparent) 50% 75%, transparent 75%);
+  background-size: 100% 100%;
+  background-position: 0 0;
 }
 
 .urd-preview .urd-editable:hover {

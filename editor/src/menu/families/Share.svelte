@@ -5,8 +5,8 @@
   import { getContext } from 'svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import LinkList from '../../lib/LinkList.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeId } from '$engine/sections/presets.js';
@@ -69,9 +69,9 @@
       onremove={(i) => ownLinks((list) => list.splice(i, 1))}
       onmove={(i, dir) => ownLinks((list) => { const j = i + dir; if (j >= 0 && j < list.length) [list[i], list[j]] = [list[j], list[i]]; })} />
   {/snippet}
-  <MenuGroup id="share-services" defaultOpen title={ta('group.siteLinks')}
+  <Fold id="share-services" defaultOpen title={ta('group.siteLinks')}
     value={String((useSite ? siteLinks().filter((l) => !(selectedBlock.props.hidden ?? []).includes(l.id)).length : 0) + (selectedBlock.props.links ?? []).length)}
-    group={groupOf('share-services', { useSite: true, hidden: [] })}>{@render shareLinks()}</MenuGroup>
+    group={groupOf('share-services', { useSite: true, hidden: [] })}>{@render shareLinks()}</Fold>
 {:else if area === 'style'}
   {#snippet shareLook()}
     <Setting key="variant">
@@ -88,5 +88,5 @@
           onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} /></label>
     </Setting>
   {/snippet}
-  <MenuGroup id="share-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'icons'))?.[1] ?? ''} group={groupOf('share-look', { variant: 'icons', size: 38, color: '' })}>{@render shareLook()}</MenuGroup>
+  <Fold id="share-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'icons'))?.[1] ?? ''} group={groupOf('share-look', { variant: 'icons', size: 38, color: '' })}>{@render shareLook()}</Fold>
 {/if}

@@ -15,7 +15,7 @@
   import Choice from '../../lib/Choice.svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import MarkPicker from '../../lib/MarkPicker.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
   import Pin from '../Pin.svelte';
   import { calDesign, calView, calOptionDefs, calOptions, calOptionShown, calStripe, calHasExcerpt, calDescription, calSwitcherViews, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, CAL_FIELDS, CAL_SIZE, calHasTextOverrides, calResetTexts, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
   import { iconSvg } from '$engine/icons.js';
@@ -408,12 +408,12 @@
     {/if}
   {/if}
   {/snippet}
-  <MenuGroup id="cal-sources" title={ta('calendar.sources')} value={cm.sources}>{@render calSources()}</MenuGroup>
-  <MenuGroup id="cal-view" title={ta('calendar.group.view')} value={cm.view} reset={cm.viewReset}>{@render calViewGroup()}</MenuGroup>
-  <MenuGroup id="cal-buttons" title={ta('calendar.group.buttons')} value={cm.buttons} reset={cm.buttonsReset}>{@render calButtons()}</MenuGroup>
-  <MenuGroup id="cal-empty" title={ta('calendar.group.empty')} value={cm.empty} reset={cm.emptyReset}>{@render calEmpty()}</MenuGroup>
+  <Fold id="cal-sources" title={ta('calendar.sources')} value={cm.sources}>{@render calSources()}</Fold>
+  <Fold id="cal-view" title={ta('calendar.group.view')} value={cm.view} reset={cm.viewReset}>{@render calViewGroup()}</Fold>
+  <Fold id="cal-buttons" title={ta('calendar.group.buttons')} value={cm.buttons} reset={cm.buttonsReset}>{@render calButtons()}</Fold>
+  <Fold id="cal-empty" title={ta('calendar.group.empty')} value={cm.empty} reset={cm.emptyReset}>{@render calEmpty()}</Fold>
   {#if calDesign(selectedBlock.props.design).notice}
-    <MenuGroup id="cal-notice" title={ta('calendar.group.notice')} value={cm.notice} reset={cm.noticeReset}>{@render calNotice()}</MenuGroup>
+    <Fold id="cal-notice" title={ta('calendar.group.notice')} value={cm.notice} reset={cm.noticeReset}>{@render calNotice()}</Fold>
   {/if}
   <!-- The design's words are rewritten by clicking them in the preview; this puts the defaults back and the removed lines too, keeping the announcement's own words -->
   {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
@@ -522,8 +522,8 @@
       label={ta('calendar.fieldColor')} onchange={(v) => setCalField({ color: v || undefined })} />
   </span>
   {/snippet}
-  <MenuGroup id="cal-opts" title={ta('calendar.section.options')} value={cm.opts} reset={cm.optsReset}>{@render calOpts()}</MenuGroup>
-  <MenuGroup id="cal-colors" title={ta('calendar.colors')} value={cm.colors} reset={cm.colorsReset}>{@render calColours()}</MenuGroup>
-  <MenuGroup id="cal-stripe" title={ta('calendar.stripe')} value={cm.stripe} reset={cm.stripeReset}>{@render calStripeGroup()}</MenuGroup>
-  <MenuGroup id="cal-fields" title={ta('calendar.fieldStyle')} value={cm.fields} reset={cm.fieldsReset}>{@render calFields()}</MenuGroup>
+  <Fold id="cal-opts" title={ta('calendar.section.options')} value={cm.opts} reset={cm.optsReset}>{@render calOpts()}</Fold>
+  <Fold id="cal-colors" title={ta('calendar.colors')} value={cm.colors} reset={cm.colorsReset}>{@render calColours()}</Fold>
+  <Fold id="cal-stripe" title={ta('calendar.stripe')} value={cm.stripe} reset={cm.stripeReset}>{@render calStripeGroup()}</Fold>
+  <Fold id="cal-fields" title={ta('calendar.fieldStyle')} value={cm.fields} reset={cm.fieldsReset}>{@render calFields()}</Fold>
 {/if}

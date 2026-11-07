@@ -23,6 +23,7 @@
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
  *                  urd-select-section carries `open: true` from the right-click menu's «Section settings»: the editor opens the Properties panel on the section
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
+ *                  { type: 'urd-toggle-grid' }  (G on the page: the editor shows or hides the grid)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  */
@@ -43,7 +44,7 @@ import { fontChoices } from './fonts.js';
 import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
 import { topDrag } from './section-size.js';
-import { snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis } from './snap-model.js';
+import { snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis, gridLookOf, gridLine } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
 import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, shopOn, recentKinds, rememberKind } from './block-palette.js';
@@ -939,7 +940,7 @@ export function enhanceSection(host, section, grid) {
   }
   // Persistent grid display (the grid menu in the editor is open) must
   // survive re-renders of the section.
-  if (gridOverlaysOn) showGridOverlay(host, grid).classList.add('urd-grid-persistent');
+  if (gridOverlaysOn) showGridOverlay(host, grid, restingGridLook()).classList.add('urd-grid-persistent');
   // Likewise the guide lines (a re-render removes the overlay elements).
   if (guideOverlaysOn) addGuideOverlays(host);
 }
@@ -1010,6 +1011,21 @@ export function demoAnimation(el) {
 /** Whether persistent grid display is on (controlled by the editor's grid menu). */
 let gridOverlaysOn = false;
 
+/** How the grid is drawn, as the editor keeps it in the browser (`urd-grid-look`, snap-model.js GRID_LOOKS); read where it is drawn, so a change shows at the next drawing. */
+function gridLook() {
+  try {
+    return gridLookOf(localStorage.getItem('urd-grid-look'));
+  } catch {
+    return gridLookOf(null);
+  }
+}
+
+/** The grid at rest: its lines or its dots, or, for the grid drawn only in a drag, the content's quarters as columns. */
+const restingGridLook = () => (gridLook() === 'drag' ? 'columns' : gridLook());
+
+/** The grid in a drag: its dots where they are chosen, else its lines. */
+const draggingGridLook = () => (gridLook() === 'dots' ? 'dots' : 'lines');
+
 /**
  * Toggles the grid display in all sections. Used while the grid menu in
  * the editor is open, so setting changes are seen immediately.
@@ -1021,7 +1037,7 @@ export function toggleGridOverlays(visible, page, site) {
   for (const host of document.querySelectorAll('.urd-section')) {
     const section = page.sections.find((s) => s.id === host.dataset.sectionId);
     if (!section) continue;
-    showGridOverlay(host, section.grid ?? site.grid).classList.add('urd-grid-persistent');
+    showGridOverlay(host, section.grid ?? site.grid, restingGridLook()).classList.add('urd-grid-persistent');
   }
 }
 
@@ -1029,11 +1045,9 @@ export function toggleGridOverlays(visible, page, site) {
 let guideOverlaysOn = false;
 
 /**
- * Always-visible guide lines for the whole page: the content surface's
- * quarters (25 %, the midline, 75 %) and each section's horizontal center.
- * Dashed, in contrast to the solid smart lines shown only during drag, and
- * drawn in the content surface, the same lines the drag snaps to. Editor
- * chrome only: hidden in Clean view and never present for visitors.
+ * Always-visible guide lines for the whole page: the content surface's quarters (25 %, the midline, 75 %), each with its share written at its top, as lines in the accent, or, where the grid is drawn as dots, as ticks on the section's edges with a faint line between.
+ * Drawn in the content surface, the same lines the drag snaps to.
+ * Editor chrome only: hidden in Clean view and never present for visitors.
  */
 export function toggleGuideOverlays(visible) {
   guideOverlaysOn = visible;
@@ -1044,16 +1058,18 @@ export function toggleGuideOverlays(visible) {
 
 function addGuideOverlays(host) {
   const surface = canvasOf(host);
-  const line = (cls, style) => {
-    const el = document.createElement('div');
-    el.className = `urd-page-guide ${cls}`;
-    el.style.cssText = style;
-    surface.appendChild(el);
-  };
-  line('urd-page-guide-v', 'left:25%;');
-  line('urd-page-guide-v', 'left:50%;');
-  line('urd-page-guide-v', 'left:75%;');
-  line('urd-page-guide-h', 'top:50%;');
+  const ticks = gridLook() === 'dots';
+  const share = new Intl.NumberFormat(adminLang(), { style: 'percent' });
+  for (const at of [0.25, 0.5, 0.75]) {
+    const line = document.createElement('div');
+    line.className = `urd-page-guide urd-page-guide-v${ticks ? ' urd-page-guide-ticks' : ''}`;
+    line.style.left = `${at * 100}%`;
+    const label = document.createElement('span');
+    label.className = 'urd-page-guide-share';
+    label.textContent = share.format(at);
+    line.appendChild(label);
+    surface.appendChild(line);
+  }
 }
 
 /**
@@ -3552,6 +3568,13 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  // G asks the editor to show or hide the grid, as the top bar's Grid button does; a dialog on the page keeps the key.
+  if (String(event.key ?? '').toLowerCase() === 'g' && !ctrl && !event.altKey && !(target instanceof Element && target.closest('dialog, [role="dialog"]'))) {
+    event.preventDefault();
+    post({ type: 'urd-toggle-grid' });
+    return;
+  }
+
   // «?» asks the editor for its shortcut sheet, which lists every key here and in the panels; a dialog on the page (a calendar event, the basket) keeps the key.
   if (event.key === '?' && !ctrl && !event.altKey && !(target instanceof Element && target.closest('dialog, [role="dialog"]'))) {
     event.preventDefault();
@@ -4247,14 +4270,17 @@ function duplicateBlock(section, block) {
 }
 
 /**
- * Visible grid overlay in the section while dragging/resizing, so the
- * snapping has something visible to snap against. The lines are drawn
- * with CSS gradients at the exact column width/row height.
+ * Visible grid overlay in the section while dragging/resizing, so the snapping has something visible to snap against.
+ * The lines, the dots or the columns are drawn with CSS gradients at the exact cell size (base.css, by `look`), the cells counted out from the content's middle.
+ * @param {HTMLElement} host
+ * @param {{size: number}} grid
+ * @param {'lines'|'dots'|'columns'} look
  */
-function showGridOverlay(host, grid) {
+function showGridOverlay(host, grid, look) {
   const overlay = document.createElement('div');
   overlay.className = 'urd-grid-overlay';
-  overlay.style.backgroundSize = `${grid.size}px ${grid.size}px`;
+  overlay.dataset.look = look;
+  overlay.style.setProperty('--urd-grid', `${grid.size}px`);
   // In the content surface, not in the section: the snapping is relative
   // to the surface, so the cells must start where the blocks start.
   canvasOf(host).appendChild(overlay);
@@ -4896,10 +4922,10 @@ function enhanceBlock(el, block, section, grid, host) {
       const yMin = yFloor(host);
       // The grid: on this section, and under a move on every other section
       // too, since a block released wholly outside its own section moves there.
-      const overlays = [showGridOverlay(host, grid)];
+      const overlays = [showGridOverlay(host, grid, draggingGridLook())];
       if (kind === 'move') {
         for (const other of document.querySelectorAll('.urd-section')) {
-          if (other !== host) overlays.push(showGridOverlay(other, other._urdGrid ?? grid));
+          if (other !== host) overlays.push(showGridOverlay(other, other._urdGrid ?? grid, draggingGridLook()));
         }
       }
       let current = orig;
@@ -4932,14 +4958,9 @@ function enhanceBlock(el, block, section, grid, host) {
         onMove(lastEv);
       };
 
-      // Smart guides (snap-model.js): the neighbours' edges and centres, the
-      // content surface's quarters and midline, and the gaps the neighbours
-      // keep between them, as snap lines, within a distance that follows the
-      // preview's zoom. The targets come from the section the block came
-      // from and the section it is held over, measured in this canvas's px,
-      // and the lines are drawn here, where they may run into that section.
-      // A line between the block and a neighbour spans the two; a line of the
-      // content surface spans its section; an equal gap is a band with its size.
+      // Smart guides (snap-model.js): the neighbours' edges and centres, the content surface's quarters and midline, and the gaps the neighbours keep between them, as snap lines, within a distance that follows the preview's zoom.
+      // The targets come from the section the block came from and the section it is held over, measured in this canvas's px, and the lines are drawn here, where they may run into that section.
+      // A line between the block and a neighbour spans the two; a line of the content surface reaches a little past the block, with its share; an equal gap is a band with its size.
       const tol = snapTolerance(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'));
       const guideEls = [];
       const clearGuides = () => {
@@ -4963,8 +4984,8 @@ function enhanceBlock(el, block, section, grid, host) {
           const secTop = sectionHost.getBoundingClientRect().top - here.top;
           const secBottom = secTop + sectionHost.offsetHeight;
           // The surface's own lines, its midlines preferred among them (edgeSnap): centring wins where a quarter line lies as near.
-          for (const share of [0.25, 0.5, 0.75]) xs.push({ at: ox + c.clientWidth * share, from: secTop, to: secBottom, surface: true, prefer: share === 0.5 });
-          ys.push({ at: oy + c.clientHeight / 2, from: ox, to: ox + c.clientWidth, surface: true, prefer: true });
+          for (const share of [0.25, 0.5, 0.75]) xs.push({ at: ox + c.clientWidth * share, from: secTop, to: secBottom, surface: true, share, prefer: share === 0.5 });
+          ys.push({ at: oy + c.clientHeight / 2, from: ox, to: ox + c.clientWidth, surface: true, share: 0.5, prefer: true });
           for (const other of c.querySelectorAll(':scope > .urd-block')) {
             if (other === el || groupParts.some((g) => g.el === other)) continue;
             // Measured as drawn, push shift included: the guides compare what is shown.
@@ -4980,7 +5001,9 @@ function enhanceBlock(el, block, section, grid, host) {
         targets = { xs, ys, boxes };
       };
       collectTargets();
-      const drawLine = (axis, at, from, to) => {
+      const shareText = new Intl.NumberFormat(adminLang(), { style: 'percent' });
+      /** A snap line from `from` to `to`, with a dot at each end, and where it is a line of the content its share in a label past its end. */
+      const drawLine = (axis, at, from, to, share) => {
         const g = document.createElement('div');
         g.className = `urd-smart-guide urd-smart-guide-${axis}`;
         if (axis === 'v') {
@@ -4991,6 +5014,12 @@ function enhanceBlock(el, block, section, grid, host) {
           g.style.top = `${at}px`;
           g.style.left = `${from}px`;
           g.style.width = `${to - from}px`;
+        }
+        if (share !== undefined) {
+          const label = document.createElement('span');
+          label.className = 'urd-smart-guide-share';
+          label.textContent = shareText.format(share);
+          g.appendChild(label);
         }
         canvas.appendChild(g);
         guideEls.push(g);
@@ -5043,9 +5072,17 @@ function enhanceBlock(el, block, section, grid, host) {
         const left = (current.x / 100) * cw;
         const top = current.y + shift;
         const snapped = { left, top, right: left + wPx, bottom: top + hPx };
-        if (ex) for (const line of alignedLines(left, wPx, targets.xs)) drawLine('v', line.at, Math.min(snapped.top, line.from), Math.max(snapped.bottom, line.to));
+        // The reach of a content line past the block, in the page's px: the chrome's 16 screen px at every zoom.
+        const reach = 16 * (Number(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale')) || 1);
+        if (ex) for (const line of alignedLines(left, wPx, targets.xs)) {
+          if (line.share !== undefined) drawLine('v', line.at, snapped.top - reach, snapped.bottom + reach, line.share);
+          else drawLine('v', line.at, Math.min(snapped.top, line.from), Math.max(snapped.bottom, line.to));
+        }
         if (gx) for (const gap of gx.gaps) drawGap('v', gap.from, gap.to, { from: snapped.top, to: snapped.bottom });
-        if (ey) for (const line of alignedLines(top, hPx, targets.ys)) drawLine('h', line.at, Math.min(snapped.left, line.from), Math.max(snapped.right, line.to));
+        if (ey) for (const line of alignedLines(top, hPx, targets.ys)) {
+          if (line.share !== undefined) drawLine('h', line.at, snapped.left - reach, snapped.right + reach, line.share);
+          else drawLine('h', line.at, Math.min(snapped.left, line.from), Math.max(snapped.right, line.to));
+        }
         if (gy) for (const gap of gy.gaps) drawGap('h', gap.from, gap.to, { from: snapped.left, to: snapped.right });
       };
 
@@ -5062,7 +5099,9 @@ function enhanceBlock(el, block, section, grid, host) {
         // the ratio.
         const keepRatio = Boolean(ratio) && ev.shiftKey;
         const free = grid.snap === false || ev.ctrlKey || ev.metaKey;
+        // A width is whole cells, and a position a line of the grid, the lines counted out from the content's middle (snap-model.js gridLine), so a block of an even number of cells can stand centred.
         const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
+        const snapX = free ? snapPct : (v) => r2(gridLine(v, colStep));
         const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
         let dxPx = ev.clientX - start.x;
         let dyPx = ev.clientY - start.y + (kind === 'move' ? scrolled : 0);
@@ -5096,7 +5135,7 @@ function enhanceBlock(el, block, section, grid, host) {
         current = kind === 'move'
           ? {
               ...orig,
-              x: clamp(snapPct(orig.x + dx), 0, r2(100 - orig.w)),
+              x: clamp(snapX(orig.x + dx), 0, r2(100 - orig.w)),
               // y is open downwards, and upwards too except in the first
               // section (yFloor): a block may hang above its section's top,
               // just as below the bottom.

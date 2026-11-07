@@ -234,6 +234,7 @@ function onIframeLoad() {
     onRequestBlock: blocksState.handleRequestBlock,
     onCalendarDesigns: (msg) => { pageState.designPicker = { mode: 'add', place: { sectionId: msg.sectionId, at: msg.at } }; },
     onShortcuts: () => shellState.openShortcuts(),
+    onToggleGrid: () => shellState.toggleGrid(),
     onPalette: () => paletteState.openPalette(),
     onCommands: (msg) => { paletteState.pluginCommands = msg.commands; },
     onMoveBlockSection: bridgeState.handleMoveBlockSection,

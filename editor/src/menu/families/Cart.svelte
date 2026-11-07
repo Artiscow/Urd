@@ -3,8 +3,8 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -32,12 +32,12 @@
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     </Setting>
   {/snippet}
-  <MenuGroup id="cart-checkout" defaultOpen title={ta('group.checkout')} value={checkoutText()} group={groupOf('cart-checkout', { currency: 'kr' })}>{@render cartCheckout()}</MenuGroup>
+  <Fold id="cart-checkout" defaultOpen title={ta('group.checkout')} value={checkoutText()} group={groupOf('cart-checkout', { currency: 'kr' })}>{@render cartCheckout()}</Fold>
 {:else if area === 'style'}
   {#snippet cartView()}
     <Setting key="variant">
       <DesignRow pin="cartView" />
     </Setting>
   {/snippet}
-  <MenuGroup id="cart-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'button'))?.[1] ?? ''} group={groupOf('cart-view', { variant: 'button' })}>{@render cartView()}</MenuGroup>
+  <Fold id="cart-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'button'))?.[1] ?? ''} group={groupOf('cart-view', { variant: 'button' })}>{@render cartView()}</Fold>
 {/if}

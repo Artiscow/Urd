@@ -6,7 +6,7 @@
      field's end is the key that brings the focus here (ElementMenu's keys),
      shown while the field is empty. */
   import { ta } from '$engine/i18n.js';
-  import { chooseArea, MENU_AREAS } from './state.svelte.js';
+  import { chooseArea, MENU_AREAS } from '../../menu/state.svelte.js';
   let { get, set } = $props();
 
   /** Escape empties a field with words; Enter in a field with words moves the focus to the first setting the words left standing; 1, 2 and 3 in an empty field choose the area, so the keys work the moment a menu opens with the focus here. */

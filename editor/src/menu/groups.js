@@ -20,7 +20,7 @@ export function makeGroupHelpers(props, setProps) {
     groupReset: (id, defaults) => (changed(defaults).length ? () => setProps(id, { ...defaults }) : null),
     /** How many of a group's settings hold their own value, for its closed value. */
     groupChanged: (defaults) => changed(defaults).length,
-    /** The group as MenuGroup takes it: its id and defaults, its reset, and what each setting in it needs. */
+    /** The group as the fold (lib/rows/Fold.svelte) takes it: its id and defaults, its reset, and what each setting in it needs. */
     groupOf: (id, defaults) => ({
       id,
       defaults,

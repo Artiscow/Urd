@@ -4,8 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
@@ -27,7 +27,7 @@
           onchange={(e) => setBlockProp('label', e.target.value.trim() || undefined)} /></label>
     {/if}
   {/snippet}
-  <MenuGroup id="shape-shape" defaultOpen title={ta('blocks.shape')} value={shapeKinds().find(([v]) => v === selectedBlock.props.kind)?.[1] ?? ''}>{@render shapeShape()}</MenuGroup>
+  <Fold id="shape-shape" defaultOpen title={ta('blocks.shape')} value={shapeKinds().find(([v]) => v === selectedBlock.props.kind)?.[1] ?? ''}>{@render shapeShape()}</Fold>
 {:else if area === 'style'}
   {#snippet shapeStroke()}
     <Setting key="color">
@@ -80,8 +80,8 @@
     {/if}
   {/snippet}
   {@const lineKind = selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
-  <MenuGroup id="shape-stroke" title={ta('group.strokeFill')} value={`${colorTokens().find(([v]) => v === selectedBlock.props.color)?.[1] ?? ''} · ${selectedBlock.props.thickness ?? 2} px`} group={groupOf('shape-stroke', { color: 'accent', thickness: 2, fill: null })}>{@render shapeStroke()}</MenuGroup>
+  <Fold id="shape-stroke" title={ta('group.strokeFill')} value={`${colorTokens().find(([v]) => v === selectedBlock.props.color)?.[1] ?? ''} · ${selectedBlock.props.thickness ?? 2} px`} group={groupOf('shape-stroke', { color: 'accent', thickness: 2, fill: null })}>{@render shapeStroke()}</Fold>
   {#if lineKind || designWidth()}
-    <MenuGroup id="shape-size" title={ta('group.measures')} value={designWidth() ? `${shapePx(selectedBlock.frame.w)} px` : `${selectedBlock.frame.w} %`}>{@render shapeSize()}</MenuGroup>
+    <Fold id="shape-size" title={ta('group.measures')} value={designWidth() ? `${shapePx(selectedBlock.frame.w)} px` : `${selectedBlock.frame.w} %`}>{@render shapeSize()}</Fold>
   {/if}
 {/if}

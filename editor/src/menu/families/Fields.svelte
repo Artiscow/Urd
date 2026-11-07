@@ -15,7 +15,7 @@
      the design row of a plugin block with `designs`. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
   import Pin from '../Pin.svelte';
   import DesignRow from '../DesignRow.svelte';
   import LinkField from '../../lib/LinkField.svelte';
@@ -128,7 +128,7 @@
     {/each}
   {/snippet}
   {#if selectedBlock.type === 'map'}
-    <MenuGroup id="map-place" defaultOpen title={ta('group.place')} value={selectedBlock.props.location || ta('common.none')}>{@render fieldList()}</MenuGroup>
+    <Fold id="map-place" defaultOpen title={ta('group.place')} value={selectedBlock.props.location || ta('common.none')}>{@render fieldList()}</Fold>
     <!-- Whether the map stands behind a cover until a visitor presses it, or loads with the page -->
     <label title={ta('tip.embed.askFirst')} class="gridmenu-snap">
       <input type="checkbox" checked={selectedBlock.props.askFirst !== false}

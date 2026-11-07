@@ -17,7 +17,7 @@ const PICTURES = new URL('../template/admin/designs/', import.meta.url);
 const FAMILIES = new URL('../editor/src/menu/families/', import.meta.url);
 
 test('every block\'s designs are unique, and a stored value reads as one of them', () => {
-  assert.deepEqual(DESIGN_BLOCK_TYPES, ['contact', 'gallery', 'stats', 'collection', 'countdown', 'ribbon', 'faq', 'timeline', 'quote', 'share', 'cart', 'button', 'privacy', 'text', 'shape']);
+  assert.deepEqual(DESIGN_BLOCK_TYPES, ['contact', 'gallery', 'stats', 'collection', 'countdown', 'ribbon', 'faq', 'timeline', 'quote', 'share', 'cart', 'button', 'privacy', 'terms', 'shape']);
   for (const type of DESIGN_BLOCK_TYPES) {
     const { prop, ids } = BLOCK_DESIGNS[type];
     assert.ok(ids.length >= 2 && new Set(ids).size === ids.length, type);
@@ -28,7 +28,8 @@ test('every block\'s designs are unique, and a stored value reads as one of them
   assert.deepEqual(BLOCK_DESIGNS.contact.ids, CONTACT_DESIGNS.map((d) => d.id));
   assert.deepEqual(BLOCK_DESIGNS.gallery.ids, GALLERY_VIEWS);
   assert.equal(blockDesignOf('image', {}), null, 'a block without designs');
-  assert.equal(blockDesignOf('text', {}), 'plain', 'a text without a design is plain text');
+  assert.equal(blockDesignOf('text', {}), null, 'a text block is plain text, with no designs');
+  assert.equal(blockDesignOf('terms', {}), 'long', 'the terms of sale without a design are the long read');
   assert.equal(blockDesignOf('privacy', {}), 'long', 'a privacy page without a design is the long read');
 });
 
@@ -79,9 +80,9 @@ test('the samples: the contact designs draw a sample association, and a block wi
   assert.equal(blockDesignEmpty('gallery', { images: [{ src: '/media/a.webp' }] }), false);
   assert.equal(blockDesignEmpty('collection', { collection: 'nyheter' }), false);
   assert.equal(blockDesignEmpty('stats', {}), false);
-  assert.equal(blockDesignEmpty('text', { html: '<p>Words</p>' }), true, 'a text without a heading is drawn with the sample');
-  assert.equal(blockDesignEmpty('text', { html: '<h2>Part</h2><p>Words</p>' }), false);
-  assert.match(blockDesignSample('text', (key) => key).props.html, /^seed\.design\.doc$/);
+  assert.equal(blockDesignEmpty('terms', { html: '<p>Words</p>' }), true, 'terms without a heading are drawn with the sample');
+  assert.equal(blockDesignEmpty('terms', { html: '<h2>Part</h2><p>Words</p>' }), false);
+  assert.match(blockDesignSample('terms', (key) => key).props.html, /^seed\.design\.doc$/);
   for (const strings of Object.values(DICTS)) assert.match(strings['seed.design.doc'], /<h2>/);
 });
 
@@ -112,7 +113,7 @@ test('the preview page keeps a block at its real width and fills the pane with i
 });
 
 test('the blocks with a phone design: each keeps its design in the prop its catalogue names, has a picture of every design at a phone\'s width, and opens its phone picker from a row under its design', () => {
-  assert.deepEqual(PHONE_DESIGN_TYPES, ['contact', 'gallery', 'stats', 'collection', 'privacy', 'text']);
+  assert.deepEqual(PHONE_DESIGN_TYPES, ['contact', 'gallery', 'stats', 'collection', 'privacy', 'terms']);
   for (const type of PHONE_DESIGN_TYPES) {
     assert.equal(PHONE_DESIGNS[type], BLOCK_DESIGNS[type].prop, `${type}: the phone design stands in for its design`);
     assert.deepEqual([...phoneDesignIds(type)].sort(), [...BLOCK_DESIGNS[type].ids].sort(), `${type}: a phone design names one of the block's own designs`);

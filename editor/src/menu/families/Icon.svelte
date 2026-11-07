@@ -5,8 +5,8 @@
   import { getContext } from 'svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import GlyphPicker from '../../lib/GlyphPicker.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
@@ -51,7 +51,7 @@
       </span>
     {/if}
   {/snippet}
-  <MenuGroup id="icon-icon" defaultOpen title={ta('blocks.icon')} value={selectedBlock.props.image ? ta('gp.ownIcon') : selectedBlock.props.icon ? ta('menu.drawnIcon') : (selectedBlock.props.glyph ?? '★')}>{@render iconIcon()}</MenuGroup>
+  <Fold id="icon-icon" defaultOpen title={ta('blocks.icon')} value={selectedBlock.props.image ? ta('gp.ownIcon') : selectedBlock.props.icon ? ta('menu.drawnIcon') : (selectedBlock.props.glyph ?? '★')}>{@render iconIcon()}</Fold>
 {:else if area === 'style'}
   {#snippet iconLook()}
     <Setting key="size" shown="48">
@@ -71,5 +71,5 @@
       </div>
     </Setting>
   {/snippet}
-  <MenuGroup id="icon-look" defaultOpen title={ta('group.appearance')} value={`${selectedBlock.props.size ?? 48} px`} group={groupOf('icon-look', { size: 48, color: 'accent' })}>{@render iconLook()}</MenuGroup>
+  <Fold id="icon-look" defaultOpen title={ta('group.appearance')} value={`${selectedBlock.props.size ?? 48} px`} group={groupOf('icon-look', { size: 48, color: 'accent' })}>{@render iconLook()}</Fold>
 {/if}

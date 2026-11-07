@@ -4,8 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import LinkField from '../../lib/LinkField.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
@@ -28,12 +28,12 @@
       <Pin id="goesTo" />
     </div>
   {/snippet}
-  <MenuGroup id="btn-link" defaultOpen title={ta('group.textLink')} value={linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) || ta('link.none')}>{@render btnLink()}</MenuGroup>
+  <Fold id="btn-link" defaultOpen title={ta('group.textLink')} value={linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) || ta('link.none')}>{@render btnLink()}</Fold>
 {:else if area === 'style'}
   {#snippet btnLook()}
     <Setting key="style">
       <DesignRow pin="btnStyle" />
     </Setting>
   {/snippet}
-  <MenuGroup id="btn-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary')} group={groupOf('btn-look', { style: 'primary' })}>{@render btnLook()}</MenuGroup>
+  <Fold id="btn-look" defaultOpen title={ta('group.appearance')} value={selectedBlock.props.style === 'secondary' ? ta('opt.btn.secondary') : ta('opt.btn.primary')} group={groupOf('btn-look', { style: 'primary' })}>{@render btnLook()}</Fold>
 {/if}

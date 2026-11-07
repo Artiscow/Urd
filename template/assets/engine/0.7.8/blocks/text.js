@@ -10,7 +10,7 @@ import { boxStyleCss } from '../box-style.js';
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
 import { typedFrames } from '../push-model.js';
-import { textDesign, applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
+import { textDesign, termsDesign, applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
 
 /** Per text block, the section's frames before the typing in it began, and the last few frames the typing wrote. */
 const typingFrom = new Map();
@@ -29,10 +29,11 @@ export const textBlock = {
   /**
    * @param {HTMLElement} el The block element (positioned by render.js)
    * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number, design?: string, accent?: string, headingColor?: string, cardColor?: string, rules?: boolean, corners?: string, headingFont?: string}} props
-   *   design (additive from 0.7.24.2.4): plain text, or a document design (doc-look.js) with its look beside it
+   *   design (additive from 0.7.24.2.4): the design the text is drawn in; a text block is plain text, and the terms block (below) a document design (doc-look.js) with its look beside it
    * @param {object} ctx Render context
+   * @param {string} [design] The design it is drawn in: plain text for a text block, unless one from before page v8 still holds a document design
    */
-  render(el, props, ctx) {
+  render(el, props, ctx, design = textDesign(props.design)) {
     // The text lives in its own inner element: the editing handles that
     // preview-edit puts on the block must NEVER end up inside the editable
     // content (or in the stored props.html).
@@ -64,7 +65,6 @@ export const textBlock = {
     // Visitor protection (shared with collection entries): executable code is always stripped on render.
     stripActiveContent(content, ctx.site?.pages ?? []);
     // A document design (doc-look.js) draws the text in a root of its own, with the contents beside it where the design has them; plain text stands alone as it always has.
-    const design = textDesign(props.design);
     const prefix = `urd-doc-${el.dataset.blockId ?? 'text'}`;
     let doc = null;
     let contentsKey = '';
@@ -209,5 +209,19 @@ export const textBlock = {
       // (ADR-0024), in the editor as on the published page.
       el.style.height = `${newH}px`;
     });
+  },
+};
+
+/**
+ * Core block: the terms of sale (0.7.24.8). The owner's own text, written on the page as a text block's is, always drawn in one of the document designs (doc-look.js TERMS_DESIGNS) with its look; the renderer is the text block's.
+ */
+export const termsBlock = {
+  version: 1,
+  label: 'Terms of sale',
+  labelKey: 'blocks.terms',
+  defaults: () => ({ html: ta('seed.design.doc'), align: 'left', design: 'long' }),
+  migrations: {},
+  render(el, props, ctx) {
+    textBlock.render(el, props, ctx, termsDesign(props.design));
   },
 };

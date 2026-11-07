@@ -10,7 +10,7 @@
   import { ICONS } from '../lib/icons.js';
   import { menu, menuIsWide } from './state.svelte.js';
   import ElementMenu from './ElementMenu.svelte';
-  import SearchField from './SearchField.svelte';
+  import SearchField from '../lib/rows/SearchField.svelte';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   /** Where the menu stands, in editor coordinates, and what closes it. */

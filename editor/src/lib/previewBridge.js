@@ -49,6 +49,7 @@
  *                  { type: 'urd-request-block', sectionId, kind, at?, files? } ("+ Add block"; at = click point {x in %, y in px}, without = centered; files = the pictures an image or a gallery is made from, picked in the preview)
  *                  { type: 'urd-calendar-designs', sectionId, at? } ("All calendar designs …" in "+ Add block": the design picker, the calendar then placed as a requested block)
  *                  { type: 'urd-shortcuts' }                  («?» on the page: the shortcut sheet)
+ *                  { type: 'urd-toggle-grid' }                (G on the page: the grid shown or hidden)
  *                  { type: 'urd-palette' }                    (Ctrl/⌘+K on the page outside a text: the command palette)
  *                  { type: 'urd-commands', commands }          (the commands plugins registered in the preview: [{ id, label }])
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey? } (block dropped in another section; groupKey joins the frames its drag settled in the source)
@@ -124,6 +125,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-request-block') handlers.onRequestBlock?.(msg);
     if (msg?.type === 'urd-calendar-designs') handlers.onCalendarDesigns?.(msg);
     if (msg?.type === 'urd-shortcuts') handlers.onShortcuts?.();
+    if (msg?.type === 'urd-toggle-grid') handlers.onToggleGrid?.();
     if (msg?.type === 'urd-palette') handlers.onPalette?.();
     if (msg?.type === 'urd-commands') handlers.onCommands?.(msg);
     if (msg?.type === 'urd-move-block-section') handlers.onMoveBlockSection?.(msg);

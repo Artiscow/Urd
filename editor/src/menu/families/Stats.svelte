@@ -3,8 +3,8 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import { getContext } from 'svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { blockDesignOf } from '$engine/block-designs.js';
@@ -32,7 +32,7 @@
       <input value={selectedBlock.props.label ?? ''}
         onchange={(e) => setBlockProp('label', e.target.value)} /></label>
   {/snippet}
-  <MenuGroup id="stat-number" defaultOpen title={ta('group.number')} value={`${selectedBlock.props.prefix ?? ''}${selectedBlock.props.value ?? ''}${selectedBlock.props.suffix ?? ''}`.trim()}>{@render statNumber()}</MenuGroup>
+  <Fold id="stat-number" defaultOpen title={ta('group.number')} value={`${selectedBlock.props.prefix ?? ''}${selectedBlock.props.value ?? ''}${selectedBlock.props.suffix ?? ''}`.trim()}>{@render statNumber()}</Fold>
 {:else if area === 'style'}
   {#snippet statLook()}
     <Setting key="variant">
@@ -50,5 +50,5 @@
       </label>
     </Setting>
   {/snippet}
-  <MenuGroup id="stat-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.statVariant.${variant}`)} group={groupOf('stat-look', { variant: 'plain', phoneDesign: null, countUp: true })}>{@render statLook()}</MenuGroup>
+  <Fold id="stat-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.statVariant.${variant}`)} group={groupOf('stat-look', { variant: 'plain', phoneDesign: null, countUp: true })}>{@render statLook()}</Fold>
 {/if}

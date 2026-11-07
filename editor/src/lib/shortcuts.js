@@ -41,6 +41,7 @@ export const SHORTCUT_GROUPS = [
     { labelKey: 'shortcuts.escape', ways: [['esc']] },
     { labelKey: 'shortcuts.sheet', ways: [['?']] },
     { labelKey: 'shortcuts.palette', ways: [['ctrl', 'K'], ['ctrl', 'shift', 'P']] },
+    { labelKey: 'shortcuts.grid', ways: [['G']] },
   ] },
   { id: 'blocks', labelKey: 'shortcuts.group.blocks', tipKey: 'tip.shortcuts.blocks', rows: [
     { labelKey: 'shortcuts.newBlock', ways: [['/']] },
@@ -108,4 +109,14 @@ export const SHORTCUT_GROUPS = [
  */
 export function opensShortcuts(event, inField) {
   return event.key === '?' && !event.ctrlKey && !event.metaKey && !event.altKey && !inField;
+}
+
+/**
+ * Whether a key press in the panels shows or hides the grid: G with no Ctrl, Cmd or Alt, outside a place where it is typed.
+ * The page asks the same in its own key handler (preview-edit.js), which then sends `urd-toggle-grid`.
+ * @param {{ key: string, ctrlKey: boolean, metaKey: boolean, altKey: boolean }} event
+ * @param {boolean} inField The focus stands where text is typed
+ */
+export function togglesGrid(event, inField) {
+  return !inField && String(event.key ?? '').toLowerCase() === 'g' && !event.ctrlKey && !event.metaKey && !event.altKey;
 }

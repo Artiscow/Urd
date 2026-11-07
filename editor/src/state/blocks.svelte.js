@@ -4,7 +4,8 @@
  */
 import { ta } from '$engine/i18n.js';
 import { defaultFormFields } from '$engine/blocks/form.js';
-import { makeId } from '$engine/sections/presets.js';
+import { makeId, termsHtml } from '$engine/sections/presets.js';
+import { termsSeed } from '../lib/site-seed.js';
 import { calDesign } from '$engine/calendar-designs.js';
 import { frameAtPoint } from '$engine/place.js';
 import { claimAnchors } from '$engine/anchor-model.js';
@@ -21,7 +22,7 @@ import { shopOn } from '$engine/block-palette.js';
 // bar's typography row).
 
 /** Names of the block types in the panel. */
-const BLOCK_LABELS = $derived({ text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), ribbon: ta('blocks.ribbon'), table: ta('blocks.table'), share: ta('blocks.share'), contact: ta('blocks.contact'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar'), privacy: ta('blocks.privacy') });
+const BLOCK_LABELS = $derived({ text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), ribbon: ta('blocks.ribbon'), table: ta('blocks.table'), share: ta('blocks.share'), contact: ta('blocks.contact'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar'), privacy: ta('blocks.privacy'), terms: ta('blocks.terms') });
 
 /** The block palette: a new block ready to be dragged where it belongs. */
 /** w in percent of the section width, h in px (physical units). The wide
@@ -126,6 +127,12 @@ const BLOCK_DEFAULTS = $derived({
     props: {},
     w: 60, h: 600,
   },
+  // The terms of sale (blocks/text.js termsBlock): written in the site's language with the site's facts before it is placed (seedTerms), as the page template writes them.
+  terms: {
+    type: 'terms',
+    props: { html: '', align: 'left', design: 'long' },
+    w: 60, h: 700,
+  },
   // The links block (type id `share`, blocks/share.js version 2): the site's links, with no own list.
   share: {
     type: 'share',
@@ -178,9 +185,17 @@ function buildBlock(kind) {
   };
 }
 
+/** The terms of sale's words, in the site's language with the site's facts (lib/site-seed.js), as the page template «Terms of sale» writes them. */
+async function seedTerms(block) {
+  if (block?.type === 'terms') block.props.html = termsHtml(await termsSeed(siteState.siteDraft));
+  return block;
+}
+
 /** The iframe places the block in the middle of the viewport (it knows
  *  where the user has scrolled) and reports back via urd-add-block → insertBlock. */
-function requestPlacement(block) {
+async function requestPlacement(block) {
+  if (!block) return;
+  await seedTerms(block);
   if (previewState.bridge) {
     previewState.bridge.sendPlaceBlock(block);
   } else {
@@ -300,6 +315,7 @@ async function handleRequestBlock(msg) {
     block.props = { ...block.props, images };
     report = () => mediaState.reportUpload(images.length, failed);
   }
+  await seedTerms(block);
   if (!stillThere()) {
     shellState.setStatus(ta('status.blockNotPlaced'), 'error');
     return;

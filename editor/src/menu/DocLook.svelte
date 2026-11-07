@@ -1,17 +1,17 @@
 <script>
-  /* A document's look (doc-look.js): the side the contents stand on, the accent, the headings' and the cards' colours, the lines between the parts, the corners and the fonts, for the privacy page and a text in a document design.
+  /* A document's look (doc-look.js): the side the contents stand on, the accent, the headings' and the cards' colours, the lines between the parts, the corners and the fonts, for the privacy page and the terms of sale.
      Only the settings the chosen design draws are shown (docLookSettings); each falls back to the theme until the owner chooses. */
   import { getContext } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import ColorPicker from '../lib/ColorPicker.svelte';
   import Choice from '../lib/Choice.svelte';
-  import Setting from './Setting.svelte';
+  import Setting from '../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
   import { fontChoices } from '$engine/fonts.js';
   import { DOC_CORNERS, docLookSettings } from '$engine/doc-look.js';
   const ed = getContext('urd-editor');
   const { setBlockProp, themeSwatches } = ed;
-  /** `type` is the block ('privacy' or 'text'), `design` the design it is drawn in. */
+  /** `type` is the block ('privacy' or 'terms'), `design` the design it is drawn in. */
   let { type, design } = $props();
   const p = $derived(ed.selectedBlock.props);
   const shows = $derived(docLookSettings(type, design, p));

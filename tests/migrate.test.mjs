@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW } = await engineImport('migrate.js');
+const { lift, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW } = await engineImport('migrate.js');
 const { mapBlock } = await engineImport('blocks/map.js');
 
 const textV3 = {
@@ -487,4 +487,38 @@ test('page v6 -> v7 is idempotent, and a payload lifts only a gallery that still
   assert.equal(payload.blocks[0].frames.desktop.h, 320);
   assert.equal(payload.blocks[1].frames.desktop.h, 120);
   assert.equal('bandHeight' in payload.blocks[1].props, false);
+});
+
+test('page v7 -> v8: a text block in a document design becomes the terms block, its words, design and look kept; plain text stays a text block', () => {
+  const look = { html: '<h2>Ordering</h2><p>Words</p>', align: 'left', design: 'clauses', accent: 'accent', rules: false, phoneDesign: 'questions' };
+  const page = {
+    schemaVersion: 7,
+    meta: { id: 'vilkar', title: 'Vilkår' },
+    sections: [{
+      id: 's', version: 1,
+      blocks: [
+        { id: 'doc', type: 'text', version: 1, props: look, frames: { desktop: { x: 20, y: 56, w: 60, h: 700 } } },
+        { id: 'plain', type: 'text', version: 1, props: { html: '<p>Hello</p>', align: 'left', design: 'plain' }, frames: { desktop: { x: 20, y: 800, w: 30, h: 40 } } },
+        { id: 'bare', type: 'text', version: 1, props: { html: '<p>Hi</p>' }, frames: { desktop: { x: 60, y: 800, w: 30, h: 40 } } },
+        { id: 'phoneOnly', type: 'text', version: 1, props: { html: '<p>Hi</p>', design: 'plain', phoneDesign: 'questions' }, frames: { desktop: { x: 60, y: 860, w: 30, h: 40 } } },
+        { id: 'plainPhone', type: 'text', version: 1, props: { html: '<h2>A</h2>', design: 'long', phoneDesign: 'plain' }, frames: { desktop: { x: 60, y: 920, w: 30, h: 40 } } },
+      ],
+    }],
+  };
+  const lifted = liftPageFile(page, {});
+  assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
+  const [doc, plain, bare, phoneOnly, plainPhone] = lifted.sections[0].blocks;
+  assert.equal(doc.type, 'terms');
+  assert.deepEqual(doc.props, look, 'a phone design among the terms block\'s designs is kept');
+  assert.equal(plain.type, 'text');
+  assert.equal(bare.type, 'text');
+  // A phone design the type no longer has is dropped: a text block has no designs, and plain text is none of the terms block's.
+  assert.equal(phoneOnly.type, 'text');
+  assert.equal('phoneDesign' in phoneOnly.props, false);
+  assert.equal(plainPhone.type, 'terms');
+  assert.equal('phoneDesign' in plainPhone.props, false);
+  assert.equal(page.sections[0].blocks[0].type, 'text', 'the original is never changed');
+  // A template's blocks, inserted outside the page lift, are lifted the same way.
+  const blocks = [{ type: 'text', props: { design: 'long' } }, { type: 'text', props: {} }, { type: 'image', props: { design: 'long' } }];
+  assert.deepEqual(liftTermsBlocks(blocks).map((b) => b.type), ['terms', 'text', 'image']);
 });

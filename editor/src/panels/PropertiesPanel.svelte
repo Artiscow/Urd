@@ -4,14 +4,14 @@
   import ColorPicker from '../lib/ColorPicker.svelte';
   import { menu } from '../menu/state.svelte.js';
   import ElementMenu from '../menu/ElementMenu.svelte';
-  import SearchField from '../menu/SearchField.svelte';
+  import SearchField from '../lib/rows/SearchField.svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import { ta } from '$engine/i18n.js';
   import { DIVIDER_SHAPES, DIVIDER_HEIGHT } from '$engine/divider-model.js';
   import { SECTION_THEME_LABELS, sectionThemeVars } from '$engine/theme.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
   import AnchorField from '../lib/AnchorField.svelte';
-  import MenuGroup from '../menu/MenuGroup.svelte';
+  import Fold from '../lib/rows/Fold.svelte';
   import { sectionWords } from '$engine/anchor-model.js';
   import Choice from '../lib/Choice.svelte';
   import { SECTION_WIDTH_MIN, SECTION_WIDTH_MAX, SECTION_WIDTH_STEP, sectionWidthOf, sectionWidthValue } from '../lib/content-width.js';
@@ -142,7 +142,7 @@
   {:else if activeSectionId}
     <p class="panel-strong">{ta('lbl.section')}</p>
     <!-- The section's settings in groups, as a block's menu has them: each shows its value while closed -->
-    <MenuGroup id="sec-size" title={ta('group.sectionSize')} value={[sectionWidthWord, sectionMinHeight || ta('common.auto'), sectionGrid ? `${ta('group.grid')} ${sectionGrid.size} px` : ''].filter(Boolean).join(' · ')}>
+    <Fold id="sec-size" title={ta('group.sectionSize')} value={[sectionWidthWord, sectionMinHeight || ta('common.auto'), sectionGrid ? `${ta('group.grid')} ${sectionGrid.size} px` : ''].filter(Boolean).join(' · ')}>
       <!-- The content width binds on the desktop only: on a phone the content fills the screen whatever is set -->
       {#if ed.viewMode === 'desktop'}
         <Choice label={ta('lbl.contentWidth')} title={ta('tip.props.sectionWidth')} value={sectionWidth.mode}
@@ -173,9 +173,9 @@
         <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
           oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
       {/if}
-    </MenuGroup>
+    </Fold>
 
-    <MenuGroup id="sec-theme" title={ta('lbl.sectionTheme')} value={ta(SECTION_THEME_LABELS[sectionTheme] ?? 'common.standard')}>
+    <Fold id="sec-theme" title={ta('lbl.sectionTheme')} value={ta(SECTION_THEME_LABELS[sectionTheme] ?? 'common.standard')}>
       <div class="rs-grid">
         {#each [['', 'common.standard'], ...Object.entries(SECTION_THEME_LABELS)] as [id, key] (id)}
           {@const c = sectionThemeSample(id)}
@@ -190,22 +190,22 @@
           </button>
         {/each}
       </div>
-    </MenuGroup>
+    </Fold>
 
-    <MenuGroup id="sec-link" title={ta('group.linkTarget')} value={ed.sectionAnchor ? `#${ed.sectionAnchor}` : ''}>
+    <Fold id="sec-link" title={ta('group.linkTarget')} value={ed.sectionAnchor ? `#${ed.sectionAnchor}` : ''}>
       <!-- The section's name for links, typed or suggested from its first heading -->
       {#key activeSectionId}
         <AnchorField value={ed.sectionAnchor} own={activeSectionId} taken={() => ed.anchorsTaken(activeSectionId)}
           words={sectionWords(ed.sections.find((s) => s.id === activeSectionId))} path={ed.pageEntry()?.path ?? '/'}
           onchange={(name) => ed.setSectionAnchor(name)} />
       {/key}
-    </MenuGroup>
+    </Fold>
 
-    <MenuGroup id="sec-bg" title={ta('lbl.background')} value={sectionBg.map((layer) => ta(`bgLayer.${layer.type}`)).join(' · ') || ta('common.none')}>
+    <Fold id="sec-bg" title={ta('lbl.background')} value={sectionBg.map((layer) => ta(`bgLayer.${layer.type}`)).join(' · ') || ta('common.none')}>
       <BackgroundEditor bg={sectionBgCtx} layers={sectionBg} />
-    </MenuGroup>
+    </Fold>
 
-    <MenuGroup id="sec-edges" title={ta('lbl.sectionDividers')} value={edgesValue()}>
+    <Fold id="sec-edges" title={ta('lbl.sectionDividers')} value={edgesValue()}>
       {#each [['top', 'lbl.dividerTop'], ['bottom', 'lbl.dividerBottom']] as [edge, key] (edge)}
         {@const own = sectionDivider[edge]}
         <label title={ta('tip.props.dividers')}>{ta(key)}
@@ -235,9 +235,9 @@
           </label>
         {/if}
       {/each}
-    </MenuGroup>
+    </Fold>
 
-    <MenuGroup id="sec-motion" title={ta('group.motion')} value={motionValue()}>
+    <Fold id="sec-motion" title={ta('group.motion')} value={motionValue()}>
       <label class="field-stack" title={ta('tip.props.sectionAnim')}>{ta('lbl.animIn')}
         <Dropdown value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
           options={ENTRANCE_OPTIONS}
@@ -268,7 +268,7 @@
         <Dropdown value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
           options={HOVER_OPTIONS}
           onchange={(v) => setSectionHover(v || null)} /></label>
-    </MenuGroup>
+    </Fold>
   {:else}
     <p class="panel-hint">{ta('hint.props.empty')}</p>
   {/if}

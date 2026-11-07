@@ -5,8 +5,8 @@
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
@@ -66,7 +66,7 @@
   {/each}
   <button class="ghost action" onclick={addTlItem}>{ta('ui.addTlItem')}</button>
   {/snippet}
-  <MenuGroup id="tl-events" defaultOpen title={ta('lbl.timelineItems')} value={String(selectedBlock.props.items?.length ?? 0)}>{@render tlEvents()}</MenuGroup>
+  <Fold id="tl-events" defaultOpen title={ta('lbl.timelineItems')} value={String(selectedBlock.props.items?.length ?? 0)}>{@render tlEvents()}</Fold>
 {:else if area === 'style'}
   {#snippet tlLook()}
     <Setting key="variant">
@@ -84,5 +84,5 @@
           onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
     </Setting>
   {/snippet}
-  <MenuGroup id="tl-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'left'))?.[1] ?? ''} group={groupOf('tl-look', { variant: 'left', marker: 'filled', accent: null })}>{@render tlLook()}</MenuGroup>
+  <Fold id="tl-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'left'))?.[1] ?? ''} group={groupOf('tl-look', { variant: 'left', marker: 'filled', accent: null })}>{@render tlLook()}</Fold>
 {/if}

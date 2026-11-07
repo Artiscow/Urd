@@ -4,8 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -59,7 +59,7 @@
       </label>
     </Setting>
   {/snippet}
-  <MenuGroup id="table-shape" defaultOpen title={ta('group.rowsColumns')} value={shape} group={groupOf('table-shape', { header: true })}>{@render tableShape()}</MenuGroup>
+  <Fold id="table-shape" defaultOpen title={ta('group.rowsColumns')} value={shape} group={groupOf('table-shape', { header: true })}>{@render tableShape()}</Fold>
 {:else if area === 'style'}
   {#snippet tableLines()}
     <Setting key="lines">
@@ -78,5 +78,5 @@
       </label>
     </Setting>
   {/snippet}
-  <MenuGroup id="table-lines" defaultOpen title={ta('lbl.tableLines')} value={lineOptions().find(([v]) => v === (selectedBlock.props.lines ?? 'rows'))?.[1] ?? ''} group={groupOf('table-lines', { lines: 'rows', striped: false })}>{@render tableLines()}</MenuGroup>
+  <Fold id="table-lines" defaultOpen title={ta('lbl.tableLines')} value={lineOptions().find(([v]) => v === (selectedBlock.props.lines ?? 'rows'))?.[1] ?? ''} group={groupOf('table-lines', { lines: 'rows', striped: false })}>{@render tableLines()}</Fold>
 {/if}

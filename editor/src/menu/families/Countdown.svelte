@@ -4,8 +4,8 @@
      editor handle. */
   import DatePicker from '../../lib/DatePicker.svelte';
   import { getContext } from 'svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
@@ -29,7 +29,7 @@
       <input value={selectedBlock.props.doneText ?? ''}
         onchange={(e) => setBlockProp('doneText', e.target.value)} /></label>
   {/snippet}
-  <MenuGroup id="countdown-target" defaultOpen title={ta('group.target')} value={selectedBlock.props.target ? selectedBlock.props.target.replace('T', ' ') : ta('common.none')}>{@render countdownTarget()}</MenuGroup>
+  <Fold id="countdown-target" defaultOpen title={ta('group.target')} value={selectedBlock.props.target ? selectedBlock.props.target.replace('T', ' ') : ta('common.none')}>{@render countdownTarget()}</Fold>
 {:else if area === 'style'}
   {#snippet countdownLook()}
     <Setting key="variant">
@@ -46,5 +46,5 @@
       </div>
     </Setting>
   {/snippet}
-  <MenuGroup id="countdown-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'boxes'))?.[1] ?? ''} group={groupOf('countdown-look', { variant: 'boxes', showSeconds: true })}>{@render countdownLook()}</MenuGroup>
+  <Fold id="countdown-look" defaultOpen title={ta('group.appearance')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'boxes'))?.[1] ?? ''} group={groupOf('countdown-look', { variant: 'boxes', showSeconds: true })}>{@render countdownLook()}</Fold>
 {/if}

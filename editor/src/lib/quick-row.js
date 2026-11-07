@@ -36,6 +36,7 @@ const OWN = {
   audio: ['loop'],
   map: ['zoom'],
   privacy: ['privacyDesign'],
+  terms: ['design'],
 };
 
 /**

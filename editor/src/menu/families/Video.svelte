@@ -5,8 +5,8 @@
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
@@ -115,7 +115,7 @@
   {@render videoSource()}
   {#if vsource === 'file'}
     {@const playOn = [selectedBlock.props.loop === true, selectedBlock.props.muted === true, selectedBlock.props.autoplay === true].filter(Boolean).length}
-    <MenuGroup id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')} group={groupOf('video-play', { loop: false, muted: false, autoplay: false })}>{@render videoPlay()}</MenuGroup>
+    <Fold id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')} group={groupOf('video-play', { loop: false, muted: false, autoplay: false })}>{@render videoPlay()}</Fold>
   {:else if selectedBlock.props.askFirst !== false}
     <!-- An embedded video behind its cover: whether the press on the cover also starts it -->
     <label title={ta('tip.video.playOnPress')} class="gridmenu-snap">

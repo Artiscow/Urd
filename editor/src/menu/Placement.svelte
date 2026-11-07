@@ -3,7 +3,7 @@
      The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target, motion and the frame are groups that show their value while closed. */
   import { getContext } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
-  import MenuGroup from './MenuGroup.svelte';
+  import Fold from '../lib/rows/Fold.svelte';
   import Pin from './Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, FOLLOWS_CONTENT, SIZE, SIZE_BY_FRAME, SIZE_TEXT, baseTextPx, blockSize, sizeBounds, sizeRange } from '$engine/push-model.js';
@@ -226,6 +226,6 @@
     <span class="field-note" title={ta('menu.anchorHiddenMobile')}><i class="note-dot"></i>{ta('lbl.hideMobile')}</span>
   {/if}
 {/snippet}
-<MenuGroup id="link-target" title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</MenuGroup>
-<MenuGroup id="motion" title={ta('group.motion')} value={menuMotionValue()}>{@render menuMotion()}</MenuGroup>
-<MenuGroup id="frame" title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</MenuGroup>
+<Fold id="link-target" title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</Fold>
+<Fold id="motion" title={ta('group.motion')} value={menuMotionValue()}>{@render menuMotion()}</Fold>
+<Fold id="frame" title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</Fold>

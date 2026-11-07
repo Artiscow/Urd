@@ -160,7 +160,7 @@ function shapeShapes(x, y, w, h, props) {
 }
 
 function blockShapes(type, x, y, w, h, props) {
-  if (type === 'text') return textShapes(x, y, w, h, props);
+  if (type === 'text' || type === 'terms') return textShapes(x, y, w, h, props);
   if (type === 'image') return imageShapes(x, y, w, h, !props?.src);
   if (type === 'gallery') return galleryShapes(x, y, w, h, props);
   if (type === 'collection') return collectionShapes(x, y, w, h);

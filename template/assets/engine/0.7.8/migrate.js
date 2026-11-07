@@ -52,9 +52,10 @@ export function lift(data, def) {
 
 import { liftFooterSocial } from './links-model.js';
 import { fitMoves, SIZE, SIZE_BY_FRAME } from './push-model.js';
+import { TERMS_DESIGNS } from './doc-look.js';
 
 /** Current version of the page file format (content/pages/*.json). */
-export const PAGE_SCHEMA_VERSION = 7;
+export const PAGE_SCHEMA_VERSION = 8;
 
 /**
  * The row height of the mobile row grid (ADR-0019), in px. A model
@@ -203,6 +204,23 @@ export function liftContractTokens(target) {
     }
     if (V2_SECTION_THEMES[target.theme]) target.theme = V2_SECTION_THEMES[target.theme];
     if (V3_PRESET_IDS[target.preset]) target.preset = V3_PRESET_IDS[target.preset];
+  }
+  return target;
+}
+
+/**
+ * The text blocks drawn in a document design become the terms of sale (0.7.24.8): from page v8 the document designs are the terms block's, and a text block is plain text.
+ * The words, the design and its look stay as they were. A phone design the block's type no longer has is dropped: a text block has no designs, and plain text is none of the terms block's, so the phone draws the block's own design.
+ * Accepts a section-like object or a bare block array; used by pageMigrations[7] and by template insertion (templates-model), which inserts stored payloads outside the page lift.
+ * @param {{blocks?: object[]}|object[]} target
+ */
+export function liftTermsBlocks(target) {
+  const blocks = Array.isArray(target) ? target : target.blocks ?? [];
+  for (const block of blocks) {
+    if (block.type !== 'text' || !block.props) continue;
+    if (TERMS_DESIGNS.includes(block.props.design)) block.type = 'terms';
+    const phone = block.props.phoneDesign;
+    if (phone !== undefined && !(block.type === 'terms' && TERMS_DESIGNS.includes(phone))) delete block.props.phoneDesign;
   }
   return target;
 }
@@ -357,6 +375,11 @@ const pageMigrations = {
   // 6 -> 7 (ADR-0025 decision 2): the gallery band's height moves into the frame.
   6: (page) => {
     for (const section of page.sections ?? []) liftGalleryBands(section, true);
+    return page;
+  },
+  // 7 -> 8 (0.7.24.8): a text block in a document design becomes the terms block.
+  7: (page) => {
+    for (const section of page.sections ?? []) liftTermsBlocks(section);
     return page;
   },
 };

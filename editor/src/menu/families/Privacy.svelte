@@ -2,8 +2,8 @@
   /* The privacy block in the element menu: whether it opens with the page's heading, and its design with the look beside it (doc-look.js).
      What the page says comes from the site's settings, so nothing else is set here. */
   import { getContext } from 'svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import DesignRow from '../DesignRow.svelte';
   import DocLook from '../DocLook.svelte';
   import { ta } from '$engine/i18n.js';
@@ -35,6 +35,6 @@
     </Setting>
     <DocLook type="privacy" {design} />
   {/snippet}
-  <MenuGroup id="privacy-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.privacyDesign.${design}`)}
-    group={groupOf('privacy-look', LOOK)}>{@render privacyLook()}</MenuGroup>
+  <Fold id="privacy-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.privacyDesign.${design}`)}
+    group={groupOf('privacy-look', LOOK)}>{@render privacyLook()}</Fold>
 {/if}

@@ -12,7 +12,7 @@ const r2 = (v) => Math.round(v * 100) / 100;
 
 /** Textual types are read as the text column in the split layouts; every other
  *  movable type (image, video, gallery, icon, collection, plugin blocks) is media. */
-const TEXT_TYPES = new Set(['text', 'button', 'faq', 'timeline', 'quote', 'stats', 'table']);
+const TEXT_TYPES = new Set(['text', 'terms', 'button', 'faq', 'timeline', 'quote', 'stats', 'table']);
 
 /** The blocks a layout may move: never decor, never shapes. */
 export function movableBlocks(blocks) {

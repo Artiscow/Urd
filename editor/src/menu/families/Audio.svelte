@@ -4,8 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import { WARN_BYTES } from '$engine/imageTools.js';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -58,6 +58,6 @@
       </div>
     </Setting>
   {/snippet}
-  <MenuGroup id="audio-file" title={ta('group.audioFile')} value={selectedBlock.props.title || (selectedBlock.props.src ? ta('blocks.audio') : ta('common.none'))}>{@render audioFile()}</MenuGroup>
-  <MenuGroup id="audio-playback" title={ta('group.playback')} value={selectedBlock.props.loop ? ta('lbl.audioLoop') : ta('menu.standard')} group={groupOf('audio-playback', { loop: false })}>{@render audioPlayback()}</MenuGroup>
+  <Fold id="audio-file" title={ta('group.audioFile')} value={selectedBlock.props.title || (selectedBlock.props.src ? ta('blocks.audio') : ta('common.none'))}>{@render audioFile()}</Fold>
+  <Fold id="audio-playback" title={ta('group.playback')} value={selectedBlock.props.loop ? ta('lbl.audioLoop') : ta('menu.standard')} group={groupOf('audio-playback', { loop: false })}>{@render audioPlayback()}</Fold>
 {/if}

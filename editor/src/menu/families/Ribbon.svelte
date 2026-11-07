@@ -6,8 +6,8 @@
   import Dropdown from '../../lib/Dropdown.svelte';
   import Choice from '../../lib/Choice.svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
@@ -88,8 +88,8 @@
       </Setting>
     {/if}
       {/snippet}
-  <MenuGroup id="ribbon-words" title={ta('lbl.ribbonItems')} value={ta('menu.wordCount', { n: selectedBlock.props.items?.length ?? 0 })}>{@render ribbonWords()}</MenuGroup>
-  <MenuGroup id="ribbon-sep" title={ta('lbl.ribbonSep')} value={ribbonSepOptions().find(([v]) => v === (selectedBlock.props.sep ?? 'dot'))?.[1] ?? ''} group={groupOf('ribbon-sep', { sep: 'dot', sepText: undefined })}>{@render ribbonSep()}</MenuGroup>
+  <Fold id="ribbon-words" title={ta('lbl.ribbonItems')} value={ta('menu.wordCount', { n: selectedBlock.props.items?.length ?? 0 })}>{@render ribbonWords()}</Fold>
+  <Fold id="ribbon-sep" title={ta('lbl.ribbonSep')} value={ribbonSepOptions().find(([v]) => v === (selectedBlock.props.sep ?? 'dot'))?.[1] ?? ''} group={groupOf('ribbon-sep', { sep: 'dot', sepText: undefined })}>{@render ribbonSep()}</Fold>
 {:else if area === 'style'}
   {@const motion = selectedBlock.props.motion ?? 'roll'}
   {@const stripesOn = [selectedBlock.props.above ?? 'none', selectedBlock.props.below ?? 'none'].filter((v) => v !== 'none').length}
@@ -284,9 +284,9 @@
         </div>
       </Setting>
   {/snippet}
-  <MenuGroup id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''} group={groupOf('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true })}>{@render ribbonMotion()}</MenuGroup>
-  <MenuGroup id="ribbon-stripes" title={ta('lbl.ribbonStripes')} value={stripesOn ? ta('menu.onCount', { n: stripesOn }) : ta('common.off')} group={groupOf('ribbon-stripes', { above: 'none', below: 'none', main: 'text', aboveColor: undefined, belowColor: undefined, stripePlace: 'stack', thickness: 8 })}>{@render ribbonStripes()}</MenuGroup>
-  <MenuGroup id="ribbon-shape" title={ta('lbl.ribbonShape')} value={ribbonReaches().find(([v]) => v === ribbonReach(selectedBlock.props.width))?.[1] ?? ''} group={groupOf('ribbon-shape', { width: 'canvas', variant: 'band', tilt: 0 })}>{@render ribbonShape()}</MenuGroup>
-  <MenuGroup id="ribbon-text" title={ta('lbl.ribbonText')} value={{ sm: ta('opt.size.sm'), md: ta('opt.size.md'), lg: ta('opt.size.lg'), xl: ta('opt.size.xl') }[selectedBlock.props.size ?? 'md']} group={groupOf('ribbon-text', { size: 'md', caps: false, weight: 'normal', outline: false, gap: 40 })}>{@render ribbonText()}</MenuGroup>
-  <MenuGroup id="ribbon-colours" title={ta('group.navColours')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('ribbon-colours', { bg: undefined, color: undefined })}>{@render ribbonColours()}</MenuGroup>
+  <Fold id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''} group={groupOf('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true })}>{@render ribbonMotion()}</Fold>
+  <Fold id="ribbon-stripes" title={ta('lbl.ribbonStripes')} value={stripesOn ? ta('menu.onCount', { n: stripesOn }) : ta('common.off')} group={groupOf('ribbon-stripes', { above: 'none', below: 'none', main: 'text', aboveColor: undefined, belowColor: undefined, stripePlace: 'stack', thickness: 8 })}>{@render ribbonStripes()}</Fold>
+  <Fold id="ribbon-shape" title={ta('lbl.ribbonShape')} value={ribbonReaches().find(([v]) => v === ribbonReach(selectedBlock.props.width))?.[1] ?? ''} group={groupOf('ribbon-shape', { width: 'canvas', variant: 'band', tilt: 0 })}>{@render ribbonShape()}</Fold>
+  <Fold id="ribbon-text" title={ta('lbl.ribbonText')} value={{ sm: ta('opt.size.sm'), md: ta('opt.size.md'), lg: ta('opt.size.lg'), xl: ta('opt.size.xl') }[selectedBlock.props.size ?? 'md']} group={groupOf('ribbon-text', { size: 'md', caps: false, weight: 'normal', outline: false, gap: 40 })}>{@render ribbonText()}</Fold>
+  <Fold id="ribbon-colours" title={ta('group.navColours')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('ribbon-colours', { bg: undefined, color: undefined })}>{@render ribbonColours()}</Fold>
 {/if}

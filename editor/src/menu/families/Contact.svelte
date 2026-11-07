@@ -2,8 +2,8 @@
   /* The contact block in the element menu: which of the Legal panel's contact details it shows, its design, and the save button and the phone bar.
      The details themselves are typed once in the Legal panel, so the menu points there. */
   import { getContext } from 'svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { CONTACT_PARTS, contactDesign } from '$engine/contact-model.js';
@@ -46,8 +46,8 @@
     {/each}
     <button class="ghost action" onclick={editDetails}>{ta('ui.editSiteContact')}</button>
   {/snippet}
-  <MenuGroup id="contact-parts" defaultOpen title={ta('group.siteContact')} value={String(shown.size)}
-    group={groupOf('contact-parts', { parts: DEFAULT_PARTS })}>{@render contactParts()}</MenuGroup>
+  <Fold id="contact-parts" defaultOpen title={ta('group.siteContact')} value={String(shown.size)}
+    group={groupOf('contact-parts', { parts: DEFAULT_PARTS })}>{@render contactParts()}</Fold>
 {:else if area === 'style'}
   {#snippet contactLook()}
     <Setting key="design">
@@ -89,6 +89,6 @@
       {ta('lbl.contactDock')}
     </label>
   {/snippet}
-  <MenuGroup id="contact-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.contact.${design.id}`)}
-    group={groupOf('contact-look', { design: 'lines', phoneDesign: null, band: true, vcard: false, dock: false, askFirst: true })}>{@render contactLook()}</MenuGroup>
+  <Fold id="contact-look" defaultOpen title={ta('group.appearance')} value={ta(`opt.contact.${design.id}`)}
+    group={groupOf('contact-look', { design: 'lines', phoneDesign: null, band: true, vcard: false, dock: false, askFirst: true })}>{@render contactLook()}</Fold>
 {/if}

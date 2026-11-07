@@ -45,6 +45,16 @@ const text = (fr, html, props = {}) => ({
   frames: fr,
 });
 
+/** The terms of sale: the owner's own text in a document design (blocks/text.js termsBlock). */
+const terms = (fr, html) => ({
+  id: makeId('blk'),
+  type: 'terms',
+  version: 1,
+  props: { html, align: 'left', design: 'long' },
+  animation: null,
+  frames: fr,
+});
+
 const image = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'image',
@@ -562,8 +572,8 @@ export function registerSectionPresets(Urd) {
     pageOnly: true,
     // No height of its own: the section is as long as the text.
     create: (opts = {}) => section('terms', undefined, bg(colorLayer('bg')), [
-      // A document in the long read (doc-look.js); the design picker draws it in the others.
-      text(frame(20, 56, 60, 700), termsHtml(opts), { design: 'long' }),
+      // The terms block, in the long read (doc-look.js); the design picker draws it in the others.
+      terms(frame(20, 56, 60, 700), termsHtml(opts)),
     ]),
   });
 

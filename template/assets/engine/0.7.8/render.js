@@ -706,16 +706,13 @@ export function reorderMobileKey(blocks, blockId, dir) {
 }
 
 /**
- * Whether a block's height on the phone follows its content in the row grid:
- * text always, and a type that says so with `autoGrow` on its definition,
- * either a flag or a function of the block's props (a gallery grows in its
- * grid views and keeps its frame's height as a ribbon).
+ * Whether a block's height on the phone follows its content in the row grid: text and the terms of sale always, and a type that says so with `autoGrow` on its definition, either a flag or a function of the block's props (a gallery grows in its grid views and keeps its frame's height as a ribbon).
  * @param {{type?: string, props?: object}} block
  * @param {{autoGrow?: boolean|((props: object) => boolean)}|undefined} def
  * @returns {boolean}
  */
 export function autoGrows(block, def) {
-  if (block?.type === 'text') return true;
+  if (block?.type === 'text' || block?.type === 'terms') return true;
   return typeof def?.autoGrow === 'function' ? Boolean(def.autoGrow(block.props ?? {})) : Boolean(def?.autoGrow);
 }
 

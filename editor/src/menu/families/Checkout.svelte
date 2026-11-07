@@ -4,8 +4,8 @@
      editor handle. The payment settings (block version 2, ADR-0028) are one
      object, written whole through paymentsOf so every field keeps its shape. */
   import { getContext } from 'svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import Choice from '../../lib/Choice.svelte';
   import { ta } from '$engine/i18n.js';
@@ -108,8 +108,8 @@
     </Setting>
     <button class="ghost action" onclick={() => ed.openPanel('legal', { fold: 'who' })}>{ta('ui.editSiteContact')}</button>
   {/snippet}
-  <MenuGroup id="checkout-order" title={ta('group.order')} value={selectedBlock.props.recipient || selectedBlock.props.endpoint || ta('common.none')} group={groupOf('checkout-order', { currency: 'kr' })}>{@render checkoutOrder()}</MenuGroup>
-  <MenuGroup id="checkout-payment" title={ta('group.payment')} value={paymentValue} group={groupOf('checkout-payment', { payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } })}>{@render checkoutPayment()}</MenuGroup>
-  <MenuGroup id="checkout-shop" title={ta('group.siteShop')} value={ed.siteDraft?.site?.commerce?.currency || 'NOK'}><ShopLinks from="checkout" /></MenuGroup>
-  <MenuGroup id="checkout-seller" title={ta('lbl.checkoutSeller')} value={selectedBlock.props.seller === false ? ta('common.off') : ta('common.on')} group={groupOf('checkout-seller', { seller: true })}>{@render checkoutSeller()}</MenuGroup>
+  <Fold id="checkout-order" title={ta('group.order')} value={selectedBlock.props.recipient || selectedBlock.props.endpoint || ta('common.none')} group={groupOf('checkout-order', { currency: 'kr' })}>{@render checkoutOrder()}</Fold>
+  <Fold id="checkout-payment" title={ta('group.payment')} value={paymentValue} group={groupOf('checkout-payment', { payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } })}>{@render checkoutPayment()}</Fold>
+  <Fold id="checkout-shop" title={ta('group.siteShop')} value={ed.siteDraft?.site?.commerce?.currency || 'NOK'}><ShopLinks from="checkout" /></Fold>
+  <Fold id="checkout-seller" title={ta('lbl.checkoutSeller')} value={selectedBlock.props.seller === false ? ta('common.off') : ta('common.on')} group={groupOf('checkout-seller', { seller: true })}>{@render checkoutSeller()}</Fold>
 {/if}

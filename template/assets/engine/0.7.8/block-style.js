@@ -7,6 +7,7 @@
 /** The props that are a block's content (its words, pictures, addresses and sources), kept out of a copied style, per type. */
 export const CONTENT_KEYS = {
   text: ['html', 'text'],
+  terms: ['html'],
   button: ['label', 'href', 'page', 'target', 'newTab', 'rel'],
   image: ['src', 'alt', 'href', 'page', 'target', 'newTab', 'rel', 'lightbox', 'caption'],
   video: ['url', 'src', 'poster', 'file', 'title'],

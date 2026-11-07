@@ -308,18 +308,19 @@ test('mobileLoadingHeight: the stored phone height of a block that fetches its c
 
 test('a phone design: drawn in its design\'s place while the block is narrow, and only where one is chosen', () => {
   assert.equal(NARROW_PX, 540);
-  assert.deepEqual(Object.keys(PHONE_DESIGNS).sort(), ['collection', 'contact', 'gallery', 'privacy', 'stats', 'text']);
+  assert.deepEqual(Object.keys(PHONE_DESIGNS).sort(), ['collection', 'contact', 'gallery', 'privacy', 'stats', 'terms']);
   const props = { design: 'long', phoneDesign: 'questions', html: '<h2>A</h2>' };
-  assert.equal(hasPhoneDesign('text', props), true);
-  assert.equal(hasPhoneDesign('text', { design: 'long' }), false, 'none chosen');
+  assert.equal(hasPhoneDesign('terms', props), true);
+  assert.equal(hasPhoneDesign('text', props), false, 'a text block has no designs, so no phone design');
+  assert.equal(hasPhoneDesign('terms', { design: 'long' }), false, 'none chosen');
   assert.equal(hasPhoneDesign('button', { style: 'primary', phoneDesign: 'secondary' }), false, 'a block without phone designs');
-  assert.deepEqual(propsForWidth('text', props, true), { ...props, design: 'questions' });
-  assert.equal(propsForWidth('text', props, false), props, 'a wide block keeps its own props');
+  assert.deepEqual(propsForWidth('terms', props, true), { ...props, design: 'questions' });
+  assert.equal(propsForWidth('terms', props, false), props, 'a wide block keeps its own props');
   assert.deepEqual(propsForWidth('gallery', { view: 'mosaic', phoneDesign: 'slides' }, true), { view: 'slides', phoneDesign: 'slides' });
   assert.equal(propsForWidth('stats', { variant: 'band' }, true).variant, 'band', 'no phone design: the design itself');
-  assert.equal(hasPhoneDesign('text', { design: 'long', phoneDesign: 'nonsense' }), false, 'an id that is not one of the block\'s designs is no phone design');
-  const text = { type: 'text', props: props };
-  assert.equal(drawnBlock(text, false), text);
-  assert.equal(drawnBlock(text, true).props.design, 'questions', 'the layout rules read the design drawn');
-  assert.equal(followsContent(drawnBlock(text, true)), true, 'a text drawn as questions follows its closed rows');
+  assert.equal(hasPhoneDesign('terms', { design: 'long', phoneDesign: 'nonsense' }), false, 'an id that is not one of the block\'s designs is no phone design');
+  const terms = { type: 'terms', props: props };
+  assert.equal(drawnBlock(terms, false), terms);
+  assert.equal(drawnBlock(terms, true).props.design, 'questions', 'the layout rules read the design drawn');
+  assert.equal(followsContent(drawnBlock(terms, true)), true, 'terms drawn as questions follow their closed rows');
 });

@@ -1,12 +1,32 @@
 /**
- * Snapping on the desktop canvas (0.7.10, the grid and guides rework): the
- * pure rules behind the smart guides. A dragged box snaps to the edges and
- * centres of its neighbours, to the content surface's quarters and midlines,
- * and to the gaps its neighbours keep between them (equal-gap snapping, the
- * tldraw rule), within a tolerance that follows the preview's zoom, so a snap
- * feels the same at every zoom level (the Excalidraw rule: eight screen px).
+ * Snapping on the desktop canvas (0.7.10, the grid and guides rework): the pure rules behind the smart guides.
+ * A dragged box snaps to the edges and centres of its neighbours, to the content surface's quarters and midlines, and to the gaps its neighbours keep between them (equal-gap snapping, the tldraw rule), within a tolerance that follows the preview's zoom, so a snap feels the same at every zoom level (the Excalidraw rule: eight screen px).
  * preview-edit.js measures the DOM and draws the lines; nothing here touches it.
+ * The grid is counted out from the middle of the content (0.7.34): a line on its centre and the cells counted out to both sides, so a block lined up with the grid can stand centred, and the part cell left over is split equally between the two edges.
  */
+
+/** How the grid is drawn, per browser (`urd-grid-look`): a quiet grid of lines, the default; dots where the lines would cross; or only in a drag, with the content's quarters as columns at rest. */
+export const GRID_LOOKS = ['lines', 'dots', 'drag'];
+
+/**
+ * The grid's look a stored value reads as: a known one, else the default.
+ * @param {string|null|undefined} raw
+ * @returns {'lines'|'dots'|'drag'}
+ */
+export function gridLookOf(raw) {
+  return GRID_LOOKS.includes(raw) ? raw : 'lines';
+}
+
+/**
+ * The grid line nearest a position, the lines counted out from the middle of the content.
+ * @param {number} at The position, in percent of the content's width
+ * @param {number} step The cell's width, in the same percent
+ * @param {number} [middle] The content's centre
+ * @returns {number}
+ */
+export function gridLine(at, step, middle = 50) {
+  return middle + Math.round((at - middle) / step) * step;
+}
 
 /** The snap distance on screen, in px, whatever the preview's zoom. */
 export const SNAP_SCREEN_PX = 8;
@@ -59,7 +79,7 @@ export function edgeSnap(start, size, targets, tol) {
  * @param {number} size The box's size on the axis, in px
  * @param {Array<{at: number, from: number, to: number}>} targets The lines
  * @param {number} [eps] How near counts as on the line, in px
- * @returns {Array<{at: number, from: number, to: number}>}
+ * @returns {Array<{at: number, from: number, to: number, share?: number}>} A line of the content keeps its `share` (0.25, 0.5, 0.75)
  */
 export function alignedLines(start, size, targets, eps = 1) {
   const byAt = new Map();
@@ -67,9 +87,13 @@ export function alignedLines(start, size, targets, eps = 1) {
     if (![0, size / 2, size].some((offset) => Math.abs(target.at - (start + offset)) <= eps)) continue;
     const key = Math.round(target.at);
     const seen = byAt.get(key);
-    byAt.set(key, seen
+    const line = seen
       ? { at: seen.at, from: Math.min(seen.from, target.from), to: Math.max(seen.to, target.to) }
-      : { at: target.at, from: target.from, to: target.to });
+      : { at: target.at, from: target.from, to: target.to };
+    // A line of the content itself carries its share of the content, for the label it is drawn with.
+    const share = seen?.share ?? target.share;
+    if (share !== undefined) line.share = share;
+    byAt.set(key, line);
   }
   return [...byAt.values()];
 }

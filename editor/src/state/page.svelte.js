@@ -3,7 +3,8 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { tick } from 'svelte';
-import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea, menuOpen } from '../menu/state.svelte.js';
+import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea } from '../menu/state.svelte.js';
+import { folds } from '../lib/folds.svelte.js';
 import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
@@ -185,7 +186,7 @@ function onBlockMenu(msg) {
   if (!selectedBlock) return;
   // A request for one group (the product cards' «Choose the catalogue») opens it in the Content area.
   if (typeof msg.group === 'string' && /^[a-z-]+$/.test(msg.group)) {
-    menuOpen.add(msg.group);
+    folds.set('menu', msg.group, true);
     chooseArea('content');
   }
   menuAnchor = msg.rect;

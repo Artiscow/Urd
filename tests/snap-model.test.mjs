@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { SNAP_SCREEN_PX, snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis } = await engineImport('snap-model.js');
+const { SNAP_SCREEN_PX, snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis, GRID_LOOKS, gridLookOf, gridLine } = await engineImport('snap-model.js');
 
 test('snapTolerance: eight screen px, in the page\'s px at every zoom', () => {
   assert.equal(SNAP_SCREEN_PX, 8);
@@ -76,4 +76,32 @@ test('edgeSnap: a preferred line within reach wins over a nearer one, so a box c
   // A neighbour's edge 1 px from the box's start beats the midline 3.5 px from its middle: aligning with a block stays in reach.
   const neighbour = { at: 352, from: 700, to: 900 };
   assert.equal(edgeSnap(351, 699, [neighbour, mid], 8).target, neighbour);
+});
+
+test('gridLine: the grid counted out from the middle, so a line stands on the centre at every width and cell size, the part cells at the two edges are equal, and an even number of cells can stand centred', () => {
+  for (const step of [1.11, 2.5, 3.7, 6.25, 13]) {
+    assert.equal(gridLine(50, step), 50, `${step}: a line on the centre`);
+    assert.equal(gridLine(50 + step * 3 + step * 0.4, step), 50 + step * 3, `${step}: the nearest line to the right`);
+    assert.equal(gridLine(50 - step * 2 - step * 0.4, step), 50 - step * 2, `${step}: the nearest line to the left`);
+    // The lines nearest the two edges stand as far in from each.
+    const first = 50 - Math.floor(50 / step) * step;
+    const last = 50 + Math.floor(50 / step) * step;
+    assert.ok(Math.abs(first - (100 - last)) < 1e-9, `${step}: the part cells at the edges are equal`);
+    // A block of twelve cells, snapped where it is held a little off the middle, stands centred.
+    const w = 12 * step;
+    const x = gridLine(50 - w / 2 + step * 0.3, step);
+    assert.ok(Math.abs(x + w / 2 - 50) < 1e-9, `${step}: twelve cells centred`);
+  }
+});
+
+test('the grid\'s looks: lines, the default, dots, and in a drag only; anything else reads as lines', () => {
+  assert.deepEqual(GRID_LOOKS, ['lines', 'dots', 'drag']);
+  for (const look of GRID_LOOKS) assert.equal(gridLookOf(look), look);
+  assert.equal(gridLookOf(null), 'lines');
+  assert.equal(gridLookOf('columns'), 'lines');
+});
+
+test('alignedLines: a line of the content keeps its share for the label it is drawn with', () => {
+  const lines = alignedLines(100, 50, [{ at: 125, from: 0, to: 400, share: 0.5 }, { at: 125, from: 10, to: 60 }, { at: 150, from: 0, to: 30 }]);
+  assert.deepEqual(lines, [{ at: 125, from: 0, to: 400, share: 0.5 }, { at: 150, from: 0, to: 30 }]);
 });

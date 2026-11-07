@@ -90,19 +90,19 @@ export function followsContent(block) {
 }
 
 /**
- * A text drawn as questions (doc-look.js): its rows fold out, so its height is the closed rows', and an open part is view state, as an FAQ's answer is.
+ * The terms of sale drawn as questions (doc-look.js), or a text block from before page v8 still in that design: its rows fold out, so its height is the closed rows', and an open part is view state, as an FAQ's answer is.
  * @param {{type?: string, props?: object}} block
  * @returns {boolean}
  */
 export function foldsIntoQuestions(block) {
-  return block?.type === 'text' && block.props?.design === 'questions';
+  return (block?.type === 'terms' || block?.type === 'text') && block.props?.design === 'questions';
 }
 
 /**
  * The blocks with a phone design: the design a block draws while it is narrow (`phoneDesign`, additive), by the prop its design is kept in, the way the calendar has its phone view.
  * Narrow is the block's own width, on a phone or in a narrow column of a wide page alike (ADR-0025): below NARROW_PX it draws its phone design, and it is drawn again when it crosses the line (render.js).
  */
-export const PHONE_DESIGNS = { gallery: 'view', collection: 'view', contact: 'design', stats: 'variant', privacy: 'design', text: 'design' };
+export const PHONE_DESIGNS = { gallery: 'view', collection: 'view', contact: 'design', stats: 'variant', privacy: 'design', terms: 'design' };
 
 /* Each such block's design ids, the ones a phone design may name: the blocks' own catalogues hold the same (tests/block-designs.test.mjs holds them equal). */
 const PHONE_DESIGN_IDS = {
@@ -111,7 +111,7 @@ const PHONE_DESIGN_IDS = {
   contact: ['lines', 'icons', 'card', 'tiles', 'facts', 'buttons', 'map', 'strip', 'poster', 'roles', 'qr'],
   stats: ['plain', 'cards', 'band'],
   privacy: ['long', 'contents', 'glance', 'questions', 'ledger', 'ledger-cards'],
-  text: ['plain', 'long', 'contents', 'glance', 'questions', 'clauses'],
+  terms: ['long', 'contents', 'glance', 'questions', 'clauses'],
 };
 
 /** The design ids a block's phone design may name (its own designs), empty for a block without phone designs. */
@@ -275,14 +275,13 @@ export function drawnScale(block) {
 }
 
 /**
- * The base text of a block in px at size 1: a text block's own size, else
- * the page's (SIZE_TEXT.base) at its type's scale.
+ * The base text of a block in px at size 1: a text's own size (a text block, the terms of sale), else the page's (SIZE_TEXT.base) at its type's scale.
  * @param {{type?: string, props?: {size?: number}}} block
  * @returns {number}
  */
 export function baseTextPx(block) {
   const own = Number(block?.props?.size);
-  if (block?.type === 'text' && Number.isFinite(own) && own > 0) return own;
+  if ((block?.type === 'text' || block?.type === 'terms') && Number.isFinite(own) && own > 0) return own;
   return SIZE_TEXT.base * (TYPE_SCALE.get(block?.type) ?? 1);
 }
 

@@ -1,5 +1,5 @@
 /**
- * Documents: the designs a long text is drawn in (the privacy page, blocks/privacy.js, and a text block's document designs, blocks/text.js) and the look the owner sets on them.
+ * Documents: the designs a long text is drawn in (the privacy page, blocks/privacy.js, and the terms of sale, the terms block in blocks/text.js) and the look the owner sets on them.
  * A design is the layout (a long read, contents at the side, the main points at a glance, questions that fold out, the privacy page's ledger as a table or as cards, numbered clauses); the look is the accent, the headings' colour, the cards' colour, the lines between the parts, the corners and the fonts, written as CSS custom properties base.css draws with.
  * The stored text is never restructured: a design's parts, contents and numbers are drawn from the text's own headings, so a text keeps its words whatever design it is shown in.
  * Pure helpers beside the DOM ones; tests/doc-look.test.mjs holds the pure ones.
@@ -9,8 +9,11 @@ import { t } from './i18n.js';
 /** The privacy page's designs, in the picker's order; the first is the one a block without a choice is drawn in. */
 export const PRIVACY_DESIGNS = ['long', 'contents', 'glance', 'questions', 'ledger', 'ledger-cards'];
 
-/** A text block's designs: plain text, the way every text is drawn without a choice, and the document designs. */
+/** The designs a text is drawn in: plain text, the way every text block is drawn, and the document designs the terms of sale take. A text block from before page v8 that stood in a document design is a terms block (migrate.js liftTermsBlocks). */
 export const TEXT_DESIGNS = ['plain', 'long', 'contents', 'glance', 'questions', 'clauses'];
+
+/** The terms of sale's designs, in the picker's order; the first is the one a block without a choice is drawn in. */
+export const TERMS_DESIGNS = ['long', 'contents', 'glance', 'questions', 'clauses'];
 
 /** The corners a document's boxes take: none, the theme's small and medium radius, and round. */
 export const DOC_CORNERS = ['none', 'sm', 'md', 'round'];
@@ -20,9 +23,14 @@ export function privacyDesign(value) {
   return PRIVACY_DESIGNS.includes(value) ? value : 'long';
 }
 
-/** A text block's design a stored value reads as. */
+/** A text's design a stored value reads as. */
 export function textDesign(value) {
   return TEXT_DESIGNS.includes(value) ? value : 'plain';
+}
+
+/** The terms of sale's design a stored value reads as. */
+export function termsDesign(value) {
+  return TERMS_DESIGNS.includes(value) ? value : 'long';
 }
 
 const SAFE_HEX = /^#[0-9a-fA-F]{3,8}$/;
@@ -72,7 +80,7 @@ export function docLookVars(props) {
  * Every document design has an accent, a heading colour and a heading font; the privacy page has its text font too, and its choices card in every design.
  * The lines are the accent rule over each part (the long read, the contents, the main points, the ledger) or the line between the questions; numbered clauses have none.
  * Cards are the main points, the phone's contents row, the ledger's rows on a phone and the privacy page's choices; a text's withdrawal form (`data-urd-form`) is a card in every document design.
- * @param {'privacy'|'text'} type
+ * @param {'privacy'|'terms'|'text'} type
  * @param {string} design
  * @param {{html?: string}} [props]
  * The side the contents stand on belongs to the contents design alone; the placement in the block to the privacy page in every design, and to a text with contents.
@@ -80,7 +88,7 @@ export function docLookVars(props) {
  */
 export function docLookSettings(type, design, props = {}) {
   const none = { side: false, align: false, accent: false, headingColor: false, cardColor: false, rules: false, corners: false, headingFont: false, font: false };
-  if (type === 'text' && design === 'plain') return none;
+  if (design === 'plain') return none;
   const cards = type === 'privacy' || ['contents', 'glance'].includes(design) || /data-urd-form/.test(String(props.html ?? ''));
   return {
     side: design === 'contents',

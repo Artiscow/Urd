@@ -1,11 +1,7 @@
 /**
- * The element menu's own state (0.7.26.2), shared by every copy of the menu
- * (the Properties panel, the floating menu and the search's copy of the
- * areas): the width the floating menu opens in, the room it has, the two
- * search queries, the groups left open, and the quick row's choices per
- * block type.
+ * The element menu's own state (0.7.26.2), shared by every copy of the menu (the Properties panel, the floating menu and the search's copy of the areas): the width the floating menu opens in, the room it has, the two search queries, and the quick row's choices per block type.
+ * Which groups stand open is kept with every other surface's folds (lib/folds.svelte.js).
  */
-import { SvelteSet } from 'svelte/reactivity';
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
 
 /** The admin setting is the width a menu opens in, kept in the browser; the button in the menu's head switches for the session. */
@@ -62,12 +58,6 @@ export function chooseArea(area, root = null) {
   col.scrollIntoView({ block: 'start' });
   if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button:not(.help-chip)')?.focus();
 }
-
-/** The groups of the element menu that stand open, by id; a group stays as it was left when another block is selected. */
-export const menuOpen = new SvelteSet();
-
-/** The groups that have had their first showing this session: a group that starts open does so once, and is then left as the owner leaves it. */
-export const menuSeen = new Set();
 
 /* The quick row (0.7.20.3, lib/quick-row.js): what the owner pinned or took
    out, kept per block type in the browser. */

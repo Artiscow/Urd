@@ -2,6 +2,24 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.2): the row kit, the terms of sale as a block of their own, and the grid and guides
+
+- [ ] The Grid panel: dragging Cell size changes the grid and the value beside it follows (16 px, 24 px …); Snap to grid switches snapping; «Drawn as» switches between Lines, Dots and In a drag at once, and the choice is still there after a reload
+- [ ] The element menu, floating and in the Properties panel: folds open and close, and stay as left when another block of the same kind is selected; a fold alone in its area starts open the first time (a button's «Text and link»); the product block's «Choose the catalogue» on the canvas opens the menu with the catalogue fold open
+- [ ] A block with designs (a quote, a gallery, the privacy page, the terms of sale): the Design row shows the chosen design's picture and opens the design picker; the Phone design row shows the phone design's picture, or the design's own with «Same as the design»; the pins beside them still work
+- [ ] The menu's search: typing narrows the settings, Escape empties the field, Enter goes to the first match, / puts the cursor in the field and 1, 2 and 3 go to the areas
+- [ ] A setting made the block's own inside a fold (the text box's shadow): the amber dot and the reset appear, and the reset puts it back
+- [ ] «Terms of sale» stands in the Blocks list beside the privacy page and adds a block in the Long read, written in the site's language with the seller's details from the Legal panel, the withdrawal form as a card and the parts to fill in marked; its menu has Design with its picture, Phone design and the look, and the picker holds five designs
+- [ ] A text block: no design button on its bar and no Appearance fold in its menu; Alignment and Text box remain
+- [ ] A new page from the «Terms of sale» template starts with the terms block; the Pages panel counts its parts to fill in, the warning before publishing names them, and the Legal panel's terms fold gives its reason
+- [ ] A page saved before the update with a text in a document design (a terms page made earlier) draws the same after it, now as a Terms of sale block; one with a phone design of plain text draws its own design on the phone
+- [ ] The grid as Lines: faint, every fourth line stronger, the page readable under it; a line on the content's centre and equal part cells at both edges; a block twelve cells wide dragged to the middle stands centred with both edges on lines
+- [ ] The grid as Dots: a dot on each crossing, larger every fourth; as In a drag: the content's quarters as faint columns at rest, the quiet grid while a block is held
+- [ ] Guides on: the lines at 25, 50 and 75 % alike in colour and thickness, each with its share at the top, on a dark site and a light one; with the grid as Dots, ticks on the section's edges instead; no line across the section's middle
+- [ ] A drag: a snap to the content's quarters or middle draws a short magenta line just past the block with its share below it; a snap to a neighbour draws the line between the two; every line ends in a dot; equal gaps still show their bands
+- [ ] G shows and hides the grid with the focus on the canvas and in the panels, but not while typing; the shortcut sheet lists it, and the Grid button's tooltip names it
+- [ ] The new words in bokmål and Turkish: Drawn as with Lines, Dots and In a drag; Terms of sale and its tooltip; the G row in the shortcut sheet; the guides' tooltip
+
 ### Test batch (0.7.32.2): menus of folds in every layout, menus on hover in the top bar, and the Collections table and two columns
 
 - [ ] «The page's tabs»: resting on the Site button opens its menu (a pass on the way elsewhere does not), its rows compact and evenly spaced like the tabs' menus; resting on Footer opens its folds beside the row; Collections leads to its collections and entries; the menu closes a moment after the mouse leaves it; the Site button is outlined in the accent while open, its arrow turned

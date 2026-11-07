@@ -4,8 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import Pin from '../Pin.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
@@ -42,7 +42,7 @@
       </label>
     </Setting>
   {/snippet}
-  <MenuGroup id="collection-source" defaultOpen title={ta('group.source')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('collection-source', { limit: 6, newestFirst: true })}>{@render collectionSource()}</MenuGroup>
+  <Fold id="collection-source" defaultOpen title={ta('group.source')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('collection-source', { limit: 6, newestFirst: true })}>{@render collectionSource()}</Fold>
 {:else if area === 'style'}
   {#snippet collectionView()}
     <Setting key="view">
@@ -53,5 +53,5 @@
       <DesignRow phone pin="phoneDesign" />
     </Setting>
   {/snippet}
-  <MenuGroup id="collection-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.view ?? 'cards'))?.[1] ?? ''} group={groupOf('collection-view', { view: 'cards', phoneDesign: null })}>{@render collectionView()}</MenuGroup>
+  <Fold id="collection-view" defaultOpen title={ta('lbl.view')} value={viewOptions().find(([v]) => v === (selectedBlock.props.view ?? 'cards'))?.[1] ?? ''} group={groupOf('collection-view', { view: 'cards', phoneDesign: null })}>{@render collectionView()}</Fold>
 {/if}

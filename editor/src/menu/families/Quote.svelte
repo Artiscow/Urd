@@ -4,8 +4,8 @@
      editor handle. */
   import { getContext } from 'svelte';
   import ColorPicker from '../../lib/ColorPicker.svelte';
-  import MenuGroup from '../MenuGroup.svelte';
-  import Setting from '../Setting.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import Setting from '../../lib/rows/Setting.svelte';
   import DesignRow from '../DesignRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -54,7 +54,7 @@
       <input value={selectedBlock.props.role ?? ''}
         onchange={(e) => setBlockProp('role', e.target.value)} /></label>
   {/snippet}
-  <MenuGroup id="quote-words" defaultOpen title={ta('group.quote')} value={quoteValue}>{@render quoteWords()}</MenuGroup>
+  <Fold id="quote-words" defaultOpen title={ta('group.quote')} value={quoteValue}>{@render quoteWords()}</Fold>
 {:else if area === 'style'}
   {#snippet quoteVariant()}
     <Setting key="variant">
@@ -88,6 +88,6 @@
     </Setting>
   {/snippet}
   {@const colourN = groupChanged({ accent: null })}
-  <MenuGroup id="quote-variant" title={ta('lbl.variant')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'large'))?.[1] ?? ''} group={groupOf('quote-variant', { variant: 'large', card: false, image: '' })}>{@render quoteVariant()}</MenuGroup>
-  <MenuGroup id="quote-colour" title={ta('lbl.color')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('quote-colour', { accent: null })}>{@render quoteColour()}</MenuGroup>
+  <Fold id="quote-variant" title={ta('lbl.variant')} value={variantOptions().find(([v]) => v === (selectedBlock.props.variant ?? 'large'))?.[1] ?? ''} group={groupOf('quote-variant', { variant: 'large', card: false, image: '' })}>{@render quoteVariant()}</Fold>
+  <Fold id="quote-colour" title={ta('lbl.color')} value={colourN ? ta('menu.changed', { n: colourN }) : ta('menu.standard')} group={groupOf('quote-colour', { accent: null })}>{@render quoteColour()}</Fold>
 {/if}
