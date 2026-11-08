@@ -23,7 +23,6 @@
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
- *                  { type: 'urd-select-section', sectionId, open? }  (open: the Properties panel is opened on the section)
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-delete', sectionId, blockId | blockIds } (blockIds from a multi-selection: the whole selection in one undo step)
  *                  { type: 'urd-add-section', index, section }
@@ -37,6 +36,7 @@
  *                  { type: 'urd-select-section', sectionId }  (active section for the palette)
  *                  { type: 'urd-select-block', sectionId, blockId } (selected block, null = deselected)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? } (open the block menu at the block; `group` opens that group in its Content area)
+ *                  { type: 'urd-section-menu', sectionId, rect }  (open the section's settings in the floating menu, beside the section)
  *                  { type: 'urd-redraw-section', sectionId } (a block with a phone design crossed its width's line: the section is sent again from the draft)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? } (open the design picker for the block, from the design button on its toolbar; `phone` from the phone view: its design on a phone)
  *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
@@ -113,6 +113,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-select-block') handlers.onSelectBlock?.(msg);
     if (msg?.type === 'urd-menu-area') handlers.onMenuArea?.(msg);
     if (msg?.type === 'urd-block-menu') handlers.onBlockMenu?.(msg);
+    if (msg?.type === 'urd-section-menu') handlers.onSectionMenu?.(msg);
     if (msg?.type === 'urd-block-design') handlers.onBlockDesign?.(msg);
     if (msg?.type === 'urd-redraw-section') handlers.onRedrawSection?.(msg);
     if (msg?.type === 'urd-plugin-blocks') handlers.onPluginBlocks?.(msg);

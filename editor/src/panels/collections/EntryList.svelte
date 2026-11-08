@@ -1,6 +1,6 @@
 <script>
   /* A collection's entries as rows, in the order the page shows them: each with its picture, its title and its date or price, the chosen one marked.
-     An entry that moves is dragged by its row, with a faint clone where it lands (row-drag.js), or stepped with Alt and the arrow keys on its focused row; a dated entry stands by its date, as on the page.
+     An entry that moves is dragged by its row, the row kit's drag (lib/rows/row-drag.svelte.js), or stepped with Alt and the arrow keys on its focused row; a dated entry stands by its date, as on the page.
      While a search narrows the rows, nothing moves, since the neighbours an entry would pass are hidden.
      With `onticks`, each row's tick box stands in the drag grip's place before its picture: under the pointer or the focus, and on every row once one is ticked.
      Shift and a press on a tick take the run from the last one ticked, Space ticks the focused row, Ctrl+A ticks every row shown and Escape clears the ticks.
@@ -8,7 +8,8 @@
   import { getContext, tick } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
-  import { rowDropAt, reorderRows } from '../../lib/row-drag.js';
+  import { reorderRows } from '../../lib/row-drag.js';
+  import { RowDrag, slotOut } from '../../lib/rows/row-drag.svelte.js';
   import { movable, entryMatches } from '../../lib/collection-layout.js';
   import { tickRun, withTicks } from '../../lib/collection-bulk.js';
   import { ICONS } from '../../lib/icons.js';
@@ -20,7 +21,6 @@
 
   const GRIP_ICON = '<svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true"><circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/></svg>';
   const NEXT_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-  const ENTRY_DRAG_TYPE = 'application/x-urd-collection-entry';
 
   /** The entries in the order the page shows them: products as stored; other kinds with the dated ones newest first and the undated after them in their stored order. */
   const shown = $derived(view.kind === 'products' ? view.entries : sortEntries(view.entries, true));
@@ -29,8 +29,15 @@
   const movables = $derived(shown.filter((en) => movable(view.kind, en)));
 
   let listEl = $state(null);
-  let drag = $state(null);
-  let drop = $state(null);
+  /** The drag, in one undo step: the entry leaves its place and lands before or after the target; its card shows its picture, its title and what the row says under it. */
+  const drag = new RowDrag((from, to) => {
+    ed.mutateCollection(id, `collection:${id}:move-entry`, (data) => {
+      data.entries = reorderRows(data.entries, (en) => en.id, from, to);
+    });
+  }, (entryId) => {
+    const en = view.entries.find((x) => x.id === entryId);
+    return en ? { name: ed.plainTitle(en.title), detail: meta(en), src: en.image ?? '', icon: en.image ? '' : ICONS.image } : null;
+  });
   /** The row ticked last, where a run with Shift starts. */
   let anchor = null;
   const ticking = $derived(ticks.length > 0);
@@ -62,6 +69,7 @@
     act.moveEntry(id, entryId, dir);
     await tick();
     listEl?.querySelector(`[data-entry-id="${CSS.escape(entryId)}"] .cl-head`)?.focus();
+    drag.landed(entryId);
   }
 
   /** What a row says under its title: the date in the admin's language, or a product's price and sizes. */
@@ -74,77 +82,27 @@
       return entry.date;
     }
   }
-
-  /** The drag over the list: the clone's place follows the pointer, among the entries that move. */
-  function onDragOver(e) {
-    if (!drag) return;
-    const boxes = [...e.currentTarget.querySelectorAll('.nav-item[data-movable]:not(.ghost)')].map((r) => { const b = r.getBoundingClientRect(); return { id: r.dataset.entryId, top: b.top, bottom: b.bottom }; });
-    const at = rowDropAt(boxes, drag, e.clientY);
-    if (!at) { drop = null; return; }
-    e.preventDefault();
-    if (drop?.id !== at.id || drop?.pos !== at.pos) drop = at;
-  }
-
-  /** The drop, in one undo step: the entry leaves its place and lands before or after the target. */
-  function land() {
-    const from = drag; const to = drop;
-    drag = null; drop = null;
-    if (!from || !to) return;
-    ed.mutateCollection(id, `collection:${id}:move-entry`, (data) => {
-      data.entries = reorderRows(data.entries, (en) => en.id, from, to);
-    });
-  }
-
-  /** The end of a drag: a release outside the list still lands the entry where the clone last stood; a drag cancelled with Escape moves nothing. */
-  function endDrag(e) {
-    if (drop && e?.dataTransfer?.dropEffect !== 'none') land();
-    drag = null; drop = null;
-  }
-
-  // While an entry is dragged the whole admin document accepts the drop, so a release beside the list is a drop and Escape is the only cancel.
-  $effect(() => {
-    if (!drag) return;
-    const accept = (e) => e.preventDefault();
-    window.addEventListener('dragover', accept);
-    window.addEventListener('drop', accept);
-    return () => {
-      window.removeEventListener('dragover', accept);
-      window.removeEventListener('drop', accept);
-    };
-  });
 </script>
 
 {#snippet thumb(entry)}
   <span class="cl-thumb" class:empty={!entry.image} aria-hidden="true">{#if entry.image}<img src={entry.image} alt="" />{:else}{@html ICONS.image}{/if}</span>
 {/snippet}
 
-{#snippet ghost()}
-  {@const dragged = view.entries.find((en) => en.id === drag)}
-  <!-- The faint clone at the landing place -->
-  <div class="nav-item ghost" aria-hidden="true">
-    <div class="nav-head cl-head">
-      <span class="nav-grip">{@html GRIP_ICON}</span>
-      {#if dragged}{@render thumb(dragged)}{/if}
-      <span class="cl-words"><span class="nav-head-name ghost-name">{dragged ? ed.plainTitle(dragged.title) : ''}</span></span>
-    </div>
-  </div>
-{/snippet}
+{#snippet slot()}<div class="row-drag-slot" {@attach drag.slot} out:slotOut></div>{/snippet}
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="nav-list entries-list cl-list" class:cl-ticking={ticking} role="list" bind:this={listEl} ondragover={onDragOver} ondrop={(e) => { e.preventDefault(); land(); }} onkeydown={onListKey}>
+<div class="nav-list entries-list cl-list" class:cl-ticking={ticking} role="list" bind:this={listEl} {@attach drag.list} onkeydown={onListKey}>
   {#each rows as entry (entry.id)}
     {@const canMove = !searching && movable(view.kind, entry)}
     {@const at = movables.indexOf(entry)}
-    {#if drag && drop?.id === entry.id && drop.pos === 'before'}{@render ghost()}{/if}
+    {#if drag.at(entry.id, 'before')}{@render slot()}{/if}
     {@const ticked = ticks.includes(entry.id)}
-    <div class="nav-item cl-row" class:selected={selected === entry.id} class:ticked class:dragging={drag === entry.id}
-      data-entry-id={entry.id} data-movable={canMove || undefined} role="listitem">
+    <div class="nav-item cl-row" class:selected={selected === entry.id} class:ticked
+      data-entry-id={entry.id} data-drag-id={canMove ? entry.id : undefined} role="listitem">
       <!-- The line is the drag handle; the head opens the entry, and the tick stands beside it, so no control sits inside another.
            Alt and the arrow keys on the head are the keyboard's way to move an entry, so the drag itself needs no role of its own. -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="cl-line" draggable={canMove ? 'true' : undefined}
-        ondragstart={(e) => { if (!canMove || e.target instanceof HTMLInputElement) { e.preventDefault(); return; } drag = entry.id; e.dataTransfer?.setData(ENTRY_DRAG_TYPE, entry.id); }}
-        ondragend={endDrag}>
+      <div class="cl-line" {@attach drag.handle(entry.id, canMove)}>
       <span class="cl-slot">
         <span class="nav-grip" class:nav-grip-off={!canMove}>{@html GRIP_ICON}</span>
         {#if onticks}
@@ -170,7 +128,7 @@
       </div>
       </div>
     </div>
-    {#if drag && drop?.id === entry.id && drop.pos === 'after'}{@render ghost()}{/if}
+    {#if drag.at(entry.id, 'after')}{@render slot()}{/if}
   {/each}
 </div>
 {#if !view.entries.length}

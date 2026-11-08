@@ -1,6 +1,6 @@
 # ADR-0010: Nav submenus follow the disclosure pattern (never role="menu")
 
-Date: 22 July 2026. Status: accepted (v0.6 M5).
+Date: 22 July 2026. Status: accepted (v0.6 M5); decision 4 amended 8 November 2026 (three submenu levels under the bar, the fourth level the menu's last), earlier text in [amended/](amended/0010-disclosure-navigation-until-2026-11-08.md).
 
 ## Context
 
@@ -11,7 +11,7 @@ M5 gave the nav dropdown submenus, and WAI-ARIA has two established patterns to 
 1. **Disclosure navigation, never menubar**: submenus in the nav (and future visitor-facing menu UI) are built as `<nav>` with ordinary links and real `<button>` openers with `aria-expanded`/`aria-controls`. `role="menu"`, `role="menuitem"` and roving tabindex are forbidden in website nav.
 2. **An item with its own target AND a submenu is rendered as a link plus a separate arrow button** (chosen 22 July 2026): the page is always reachable by click/Enter, the arrow opens the submenu. An item without its own target is one button where the whole item is the opener. The model is called `kind: link/split/toggle` in `nav-model.js` in the engine.
 3. **The interaction contract**: hover opens only for a real mouse (`pointerType === 'mouse'`, guarded by `(hover: hover) and (pointer: fine)`), click toggles, only one submenu open at a time, Escape closes and refocuses the opener, focus leaving the item closes, click outside closes everything. Natural Tab order, no focus trap.
-4. **One level**: submenus cannot have submenus (grandchildren are ignored defensively in the engine, the schema does not allow them).
+4. **Four levels in all**: the bar's items and three submenu levels under them (`NAV_DEPTH` in `nav-model.js`, the same shape at every level in the schema). The engine leaves anything deeper out, and the Nav panel lets a row be nested only where the menu's depth still holds it. A second level opens beside the panel or stands as a headed group; the deeper levels nest the same way.
 5. **The mobile menu is the same disclosure**: the burger is a button with `aria-expanded` that shows the same list as a column panel; the submenus become accordions. Non-modal: no scroll lock, the panel scrolls itself.
 
 ## Consequences

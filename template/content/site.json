@@ -208,7 +208,14 @@
               {
                 "label": "Checkout",
                 "page": "checkout",
-                "description": "Betaling og levering"
+                "description": "Betaling og levering",
+                "children": [
+                  {
+                    "label": "Personvern",
+                    "page": "personvern",
+                    "description": "Slik behandler vi opplysningene dine"
+                  }
+                ]
               }
             ]
           },

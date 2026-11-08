@@ -79,6 +79,7 @@
   {#snippet formFields()}
     <!-- Each field as its name and its kind, whether it must be filled in, and the choices of a list -->
     <ListEditor items={selectedBlock.props.fields ?? []} label={ta('form.fields')} key={(field, i) => field.id ?? i}
+      card={(field) => ({ name: field.label ?? '', detail: ta(`form.type${(field.type ?? 'text')[0].toUpperCase()}${(field.type ?? 'text').slice(1)}`) })}
       onmove={moveFormField} onremove={removeFormField} onadd={addFormField} addLabel={ta('form.addField')}>
       {#snippet row(field, i)}
         <div class="form-field-row">

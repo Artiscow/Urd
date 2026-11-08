@@ -88,6 +88,8 @@ export const SETTINGS_GROUPS = [
         options: (c) => c.ed.CSV_PREVIEW_OPTIONS, get: (c) => c.ed.csvPreviewPref, set: (c, v) => c.ed.setCsvPreview(v) },
       { id: 'pageSettings', labelKey: 'settings.pageSettings', tipKey: 'tip.settings.pageSettings', kind: 'choice', look: 'pageSettings',
         options: (c) => c.ed.PAGE_SETTINGS_OPTIONS, get: (c) => c.ed.pageSettingsPref, set: (c, v) => c.ed.setPageSettingsPref(v) },
+      { id: 'dragMark', labelKey: 'settings.dragMark', tipKey: 'tip.settings.dragMark', kind: 'choice', look: 'dragMark',
+        options: (c) => c.ed.DRAG_MARK_OPTIONS, get: (c) => c.ed.dragMark, set: (c, v) => c.ed.setDragMark(v) },
       { id: 'linkEditor', labelKey: 'settings.linkEditor', tipKey: 'tip.settings.linkEditor', kind: 'choice', look: 'linkEditor',
         options: (c) => [['dialog', c.ta('opt.linkEditor.dialog')], ['popover', c.ta('opt.linkEditor.popover')]],
         get: (c) => c.ed.linkEditorPref, set: (c, v) => c.ed.setLinkEditor(v) },

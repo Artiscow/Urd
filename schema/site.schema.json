@@ -633,7 +633,7 @@
               "look": { "enum": ["button"], "description": "The item drawn as a button, a call to action in the bar and in the mobile menu (additive from 0.7.13.21); omitted = a plain item" },
               "children": {
                 "type": "array",
-                "description": "Submenu (additive from v0.6; a second level additive from 0.7.13.21). An item with children but no page/href is a pure opener (the whole item opens the submenu); with a target of its own the link is shown plus an arrow button. A child with children of its own opens a second level beside the panel, or stands as a headed group when the submenu is laid out in columns or as the flyout.",
+                "description": "Submenu (additive from v0.6; a second level additive from 0.7.13.21, a third from 0.7.30.6). An item with children but no page/href is a pure opener (the whole item opens the submenu); with a target of its own the link is shown plus an arrow button. A child with children of its own opens a second level beside the panel, or stands as a headed group when the submenu is laid out in columns or as the flyout.",
                 "items": {
                   "type": "object",
                   "required": ["label"],
@@ -649,7 +649,7 @@
                     "description": { "$ref": "#/$defs/navDescription" },
                     "children": {
                       "type": "array",
-                      "description": "The second submenu level (additive from 0.7.13.21): the child's own submenu. Each entry must have its own target; nothing nests below it.",
+                      "description": "The second submenu level (additive from 0.7.13.21): the child's own submenu, each entry with its own target or a third level under it (additive from 0.7.30.6).",
                       "items": {
                         "type": "object",
                         "required": ["label"],
@@ -662,12 +662,38 @@
                           "newTab": { "$ref": "#/$defs/linkNewTab" },
                           "download": { "$ref": "#/$defs/linkDownload" },
                           "rel": { "$ref": "#/$defs/linkRel" },
-                          "description": { "$ref": "#/$defs/navDescription" }
+                          "description": { "$ref": "#/$defs/navDescription" },
+                          "children": {
+                            "type": "array",
+                            "description": "The third submenu level (additive from 0.7.30.6), the menu's last: each entry must have its own target, and nothing nests below it.",
+                            "items": {
+                              "type": "object",
+                              "required": ["label"],
+                              "additionalProperties": false,
+                              "properties": {
+                                "label": { "type": "string", "minLength": 1 },
+                                "page": { "$ref": "#/$defs/id", "description": "Id from the page registry" },
+                                "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section" },
+                                "target": { "$ref": "#/$defs/linkTarget" },
+                                "newTab": { "$ref": "#/$defs/linkNewTab" },
+                                "download": { "$ref": "#/$defs/linkDownload" },
+                                "rel": { "$ref": "#/$defs/linkRel" },
+                                "description": { "$ref": "#/$defs/navDescription" }
+                              },
+                              "anyOf": [
+                                { "required": ["page"] },
+                                { "required": ["href"] },
+                                { "required": ["target"] }
+                              ],
+                              "not": { "required": ["page", "href"] }
+                            }
+                          }
                         },
                         "anyOf": [
                           { "required": ["page"] },
                           { "required": ["href"] },
-                          { "required": ["target"] }
+                          { "required": ["target"] },
+                          { "required": ["children"] }
                         ],
                         "not": { "required": ["page", "href"] }
                       }

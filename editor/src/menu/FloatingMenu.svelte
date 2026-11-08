@@ -1,15 +1,13 @@
 <script>
-  /* The block menu: all block settings in a floating menu next to the block
-     (the calendar pattern; opened from the gear on the block's toolbar). The
-     same ElementMenu as the Properties panel, so the two never diverge. Wide
-     shows the three areas as columns, narrow as tabs; the admin setting
-     chooses which a menu opens in. */
+  /* The floating menu: a block's settings next to the block, from the gear on its bar, or a section's beside the section (`pos.section`, section/SectionMenu.svelte).
+     The same menus as the Settings panel draws, so the two never diverge; the admin setting chooses the width a menu opens in. */
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext, onMount } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import { menu, menuIsWide } from './state.svelte.js';
   import ElementMenu from './ElementMenu.svelte';
+  import SectionMenu from '../section/SectionMenu.svelte';
   import SearchField from '../lib/rows/SearchField.svelte';
   import IconButton from '../lib/rows/IconButton.svelte';
   const ed = getContext('urd-editor');
@@ -55,16 +53,20 @@
 <div class="block-menu" transition:menuMotion|global bind:this={rootEl} class:wide={menuIsWide()} class:dragging style="--menu-left: {pos.left}px; --menu-top: {pos.top}px; --menu-min: {menu.min}px">
   <header class="block-menu-head" title={ta('tip.menu.dragHead')} onpointerdown={dragHead}>
     <span class="block-menu-grip" aria-hidden="true">{@html GRIP_ICON}</span>
-    <span class="block-menu-title">{ta('blocks.suffix', { label: ed.blockLabel(selectedBlock.type) })}</span>
+    <span class="block-menu-title">{pos.section ? ta('lbl.section') : ta('blocks.suffix', { label: ed.blockLabel(selectedBlock.type) })}</span>
     <SearchField get={() => menu.menuQuery} set={(v) => (menu.menuQuery = v)} />
     {#if menu.place}
-      <IconButton icon={BACK_ICON} label={ta('menu.backToBlock')} onclick={menuBackToBlock} />
+      <IconButton icon={BACK_ICON} label={ta(pos.section ? 'menu.backToSection' : 'menu.backToBlock')} onclick={menuBackToBlock} />
     {/if}
     <IconButton class="menu-width" icon={menu.wide ? MENU_NARROW_ICON : MENU_WIDE_ICON} label={menu.wide ? ta('menu.toNarrow') : ta('menu.toWide')}
       onclick={() => (menu.wide = !menu.wide)} />
     <IconButton icon={ICONS.cross} label={ta('tip.closeEsc')} onclick={onclose} />
   </header>
   <div class="panel-body block-menu-body">
-    <ElementMenu wide={menuIsWide()} query={menu.menuQuery} />
+    {#if pos.section}
+      <SectionMenu wide={menuIsWide()} query={menu.menuQuery} />
+    {:else}
+      <ElementMenu wide={menuIsWide()} query={menu.menuQuery} />
+    {/if}
   </div>
 </div>

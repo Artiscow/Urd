@@ -106,10 +106,10 @@ test('navItems: empty submenu counts as a plain link', () => {
   assert.equal(navItems(site)[0].kind, 'link');
 });
 
-test('navItems: a child carries a second level, and anything deeper is ignored (0.7.13.21)', () => {
+test('navItems: a child carries a second and a third level, and anything deeper is ignored (0.7.13.21, 0.7.30.6)', () => {
   const site = {
     pages: PAGES,
-    nav: { items: [{ label: 'Mer', children: [{ label: 'Hjem', page: 'hjem', children: [{ label: 'Dypt', page: 'om-oss', children: [{ label: 'Dypere', page: 'hjem' }] }] }] }] },
+    nav: { items: [{ label: 'Mer', children: [{ label: 'Hjem', page: 'hjem', children: [{ label: 'Dypt', page: 'om-oss', children: [{ label: 'Dypere', page: 'hjem', children: [{ label: 'Dypest', page: 'om-oss' }] }] }] }] }] },
   };
   const [item] = navItems(site);
   assert.equal(item.children.length, 1);
@@ -117,8 +117,11 @@ test('navItems: a child carries a second level, and anything deeper is ignored (
   assert.equal(child.kind, 'split');
   assert.equal(child.children.length, 1);
   assert.equal(child.children[0].href, '/om-oss');
-  assert.equal(child.children[0].kind, 'link');
-  assert.deepEqual(child.children[0].children, []);
+  assert.equal(child.children[0].kind, 'split');
+  const third = child.children[0].children[0];
+  assert.equal(third.href, '/');
+  assert.equal(third.kind, 'link');
+  assert.deepEqual(third.children, []);
   // A child with its own items and no link is the second level's opener.
   const opener = navItems({ pages: PAGES, nav: { items: [{ label: 'Mer', children: [{ label: 'Gruppe', children: [{ label: 'Hjem', page: 'hjem' }] }] }] } })[0].children[0];
   assert.equal(opener.kind, 'toggle');

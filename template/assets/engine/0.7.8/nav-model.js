@@ -114,6 +114,9 @@ export function resolveItem(item, pages) {
   return { label: item.label, ...resolveLink(item, pages) };
 }
 
+/** How many submenu levels stand under the bar: the menu is four levels deep in all (ADR-0010). */
+export const NAV_DEPTH = 3;
+
 /**
  * Builds the menu model nav.js renders from. Each item gets a `kind`:
  * 'link' (plain link), 'split' (own target plus submenu: link plus arrow
@@ -127,12 +130,13 @@ export function resolveItem(item, pages) {
  * @returns {Array<{label: string, href: string, external: boolean, missing: boolean, kind: string, children: Array<object>, description: string, look: string}>}
  */
 export function navItems(site) {
+  // The bar's items and three submenu levels under them; anything deeper is left out.
   const pages = site.pages ?? [];
   // A hidden page is not on the published site, so no item leads to it: an item to one is left out, or stands as a plain opener while it keeps a submenu of items that still lead somewhere.
   const hidden = new Set(pages.filter((p) => p.hidden).map((p) => p.id));
   const toHidden = (item) => !!item.page && hidden.has(item.page);
   const model = (item, depth) => {
-    const children = depth < 2 && Array.isArray(item.children)
+    const children = depth < NAV_DEPTH && Array.isArray(item.children)
       ? item.children.map((child) => model(child, depth + 1)).filter(Boolean)
       : [];
     if (toHidden(item)) {

@@ -718,7 +718,7 @@ export function renderNav(site, host, pageId) {
    * One menu item as a list row, its submenu built the same way one level
    * down. `path` is the item's place in the menu and names the submenu.
    * @param {object} item From navItems
-   * @param {number} depth 0 in the bar, 1 and 2 in the submenus
+   * @param {number} depth 0 in the bar, 1 to 3 in the submenus
    * @param {string} path
    * @returns {HTMLLIElement}
    */

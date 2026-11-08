@@ -38,7 +38,7 @@
 {#if area === 'content'}
   {#snippet galleryImages()}
     <!-- The pictures in their order, each with its editor, its description and its link -->
-    <ListEditor items={selectedBlock.props.images ?? []} label={ta('group.images')} key={(img, i) => i} onmove={moveGalleryImage} onremove={removeGalleryImage}>
+    <ListEditor items={selectedBlock.props.images ?? []} label={ta('group.images')} key={(img, i) => i} card={(img) => ({ name: img.alt ?? '', src: img.src })} onmove={moveGalleryImage} onremove={removeGalleryImage}>
       {#snippet row(img, i)}
         <div class="gallery-row" title={ta('hint.gallery')}>
           <span class="toolbar-row">

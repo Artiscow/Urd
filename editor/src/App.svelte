@@ -296,7 +296,7 @@
   {/if}
 </div>
 
-{#if ed.blockMenu && ed.selectedBlock}
+{#if ed.blockMenu && (ed.selectedBlock || (ed.blockMenu.section && ed.activeSectionId))}
   <FloatingMenu pos={ed.blockMenu} onclose={() => (ed.blockMenu = null)} />
 {/if}
 

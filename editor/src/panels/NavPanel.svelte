@@ -1,8 +1,10 @@
 <script>
   /* The Nav panel: the logo, the menu items with their drag order, the bar's variant, size, surface and behaviour, the launcher and the announcement strip. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
   import { rowMotion } from '../lib/motion.svelte.js';
-  import { getContext } from 'svelte';
+  import { getContext, tick } from 'svelte';
   import { cubicOut } from 'svelte/easing';
+  import { slotOut, landNow, placesOf, glideFrom } from '../lib/rows/row-drag.svelte.js';
+  import { navRowAt as rowAt, navKeyOf as keyOf, navDropAt as dropAt, navDropOrNull as dropOrNull, canonicalDrop, parentKey, navDepthOf, landLevel } from '../lib/nav-drop.js';
   import ColorPicker from '../lib/ColorPicker.svelte';
   import MarkPicker from '../lib/MarkPicker.svelte';
   import { PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, SHRINK_AT, SHRINK_MS, COL_WIDTH, LOGO_SIZE, RADIUS, SIZE_IDS, clampRange, effectivePadY, effectiveTextSize, sizePresetOf } from '../lib/nav-size.js';
@@ -10,7 +12,7 @@
   import Choice from '../lib/Choice.svelte';
   import { ta } from '$engine/i18n.js';
   import { fontChoices } from '$engine/fonts.js';
-  import { resolveLink, toolOrder, burgerModel, BURGER_ICONS, LAUNCHER_BOUNDS } from '$engine/nav-model.js';
+  import { resolveLink, toolOrder, burgerModel, BURGER_ICONS, LAUNCHER_BOUNDS, NAV_DEPTH } from '$engine/nav-model.js';
   import { iconSvg, ICON_LIBRARY } from '$engine/icons.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
@@ -504,35 +506,31 @@
     });
   }
 
-  function setNavLabel(i, value) {
-    siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
-  }
+  /** The menu is NAV_DEPTH submenu levels deep under the bar (nav-model.js); a row's key is its path, and the drop places are reckoned in lib/nav-drop.js. */
+  const navRowAt = (key) => rowAt(siteDraft.nav.items, key);
+  const navNode = (key) => navRowAt(key).node;
 
-  /** The item at a place in the menu: the top level (i), a submenu item (i, j) or a second-level item (i, j, k). */
-  function navNode(i, j = null, k = null) {
-    let node = siteDraft.nav.items[i];
-    if (j !== null) node = node.children[j];
-    if (k !== null) node = node.children[k];
-    return node;
+  function setNavLabel(key, value) {
+    siteMutate(`edit:nav-label-${key}`, () => { navNode(key).label = value; });
   }
 
   /** An emptied name takes the linked page's title, the link's address, or the seed word, so no item is published without a name (the schema's minLength 1). */
-  function fillNavLabel(i, j = null, k = null) {
-    const node = navNode(i, j, k);
+  function fillNavLabel(key) {
+    const node = navNode(key);
     if (node?.label?.trim()) return;
     const page = node.page ? siteDraft.pages.find((p) => p.id === node.page) : null;
-    siteMutate(`edit:nav-label-fill-${i}-${j}-${k}`, () => { node.label = page?.title || node.href || ta('seed.link'); });
+    siteMutate(`edit:nav-label-fill-${key}`, () => { node.label = page?.title || node.href || ta('seed.link'); });
   }
 
-  /** A menu item's link, or a submenu item's (j, and k one level down), from the link editor; an item with a submenu and no link is the submenu's opener. */
-  function setNavLink(i, j, link, k = null) {
-    siteMutate('nav', () => setLinkOn(navNode(i, j, k), link));
+  /** A row's link at any level, from the link editor; an item with a submenu and no link is the submenu's opener. */
+  function setNavLink(key, link) {
+    siteMutate('nav', () => setLinkOn(navNode(key), link));
   }
 
   /** The one-line description under an item at any level; an emptied field leaves the file. */
-  function setNavDescription(i, j, k, value) {
-    siteMutate(`edit:nav-desc-${i}-${j}-${k}`, () => {
-      const node = navNode(i, j, k);
+  function setNavDescription(key, value) {
+    siteMutate(`edit:nav-desc-${key}`, () => {
+      const node = navNode(key);
       if (value.trim()) node.description = value; else delete node.description;
     });
   }
@@ -554,15 +552,24 @@
   const DESC_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h9"/></svg>';
   const CHEV_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 
-  function moveNavItem(i, dir) {
-    const j = i + dir;
-    const items = siteDraft.nav.items;
-    if (j < 0 || j >= items.length) return;
-    siteMutate('nav', () => { [items[i], items[j]] = [items[j], items[i]]; });
+  /** A row stepped one place within its list, at any level. */
+  function moveNavAt(key, dir) {
+    const { list, index } = navRowAt(key);
+    const to = index + dir;
+    if (to < 0 || to >= list.length) return;
+    siteMutate('nav', () => { [list[index], list[to]] = [list[to], list[index]]; });
   }
 
-  function removeNavItem(i) {
-    siteMutate('nav', () => { siteDraft.nav.items.splice(i, 1); });
+  /** A row removed at any level; an emptied submenu leaves the file, and a pure opener left without children gets the front page, so the item stays valid. */
+  function removeNavAt(key) {
+    siteMutate('nav', () => {
+      const { list, index, parent } = navRowAt(key);
+      list.splice(index, 1);
+      if (parent && list.length === 0) {
+        delete parent.children;
+        if (!parent.page && !parent.href && !parent.target) parent.page = siteDraft.pages[0].id;
+      }
+    });
   }
 
   /** The menu item whose actions are shown ('i' or 'i.j'); a click on a row selects it. */
@@ -574,66 +581,18 @@
   /** Where the dragged row would land: { key, pos } with pos before, after or into; null = nowhere. */
   let navDrop = $state(null);
 
-  /** The row at a key: its list, index and parent (null at the top level). */
-  function navRowAt(key) {
-    const [a, b] = key.split('.').map(Number);
-    const items = siteDraft.nav.items;
-    return b === undefined ? { list: items, index: a, parent: null } : { list: items[a].children, index: b, parent: items[a] };
-  }
+  /** The list of menu rows, whose rows glide to their new places as a move lands (the row kit's glide, row-drag.svelte.js). */
+  let navListEl = $state(null);
 
-  /** The drop position over a row from the pointer. On a top-level row the left quarter decides
-      before or after by the row's midline, and everything right of it is into: the dragged row
-      becomes the row's last child, so a drag a quarter of the way to the right, or a hover over
-      the row itself, nests it. A row with a submenu can not be nested, and nothing nests under a
-      child (one level). On a child row the grip column is the way out: there the drop lands at the
-      top level, after the whole submenu. A position that would change nothing gives no drop. */
-  function navDropAt(row, key, clientX, clientY) {
-    if (!navDrag || navDrag === key) return null;
-    const rect = row.getBoundingClientRect();
-    const y = (clientY - rect.top) / rect.height;
-    const x = clientX - rect.left;
-    const src = navRowAt(navDrag); const tgt = navRowAt(key);
-    const moving = src.list[src.index];
-    let drop;
-    if (tgt.parent) {
-      drop = x < 28 ? { key: key.split('.')[0], pos: 'after' } : { key, pos: y < 0.5 ? 'before' : 'after' };
-    } else if (!moving.children?.length && x > rect.width * 0.25) {
-      drop = { key, pos: 'into' };
-    } else {
-      drop = { key, pos: y < 0.5 ? 'before' : 'after' };
-    }
-    return navDropOrNull(drop, moving, src);
-  }
-
-  /** The drop unless the row would land exactly where it is. A submenu never nests: a row with
-      children dropped among another row's children lands after that row instead, and a row's
-      own children are no place for it. */
-  function navDropOrNull(drop, moving, src) {
-    let dest = navRowAt(drop.key);
-    if (dest.parent) {
-      if (dest.parent === moving) return null;
-      if (moving.children?.length) {
-        drop = { key: drop.key.split('.')[0], pos: 'after' };
-        dest = navRowAt(drop.key);
-      }
-    }
-    const targetObj = dest.list[dest.index];
-    if (drop.pos === 'into') {
-      const kids = targetObj.children ?? [];
-      if (kids.length && kids[kids.length - 1] === moving) return null;
-      return drop;
-    }
-    const list = dest.parent ? dest.parent.children : siteDraft.nav.items;
-    const after = list.filter((it) => it !== moving);
-    const idx = after.indexOf(targetObj) + (drop.pos === 'after' ? 1 : 0);
-    if (list === src.list && idx === src.index) return null;
-    return drop;
+  /** The drop position over a row from the pointer, as nav-drop.js reckons it from the pointer's place in the row. */
+  function navDropAt(rect, key, clientX, clientY) {
+    return dropAt(siteDraft.nav.items, navDrag, key, clientX - rect.left, (clientY - rect.top) / rect.height, NAV_DEPTH);
   }
 
   /** The dragged row's name and target, for the faint clone at the landing place. */
   function navGhostText() {
     if (!navDrag) return { label: '', target: '' };
-    const src = navRowAt(navDrag); const it = src.list[src.index];
+    const it = navNode(navDrag);
     const page = it.page ? siteDraft.pages.find((p) => p.id === it.page) : null;
     return { label: it.label, target: page ? page.title : (it.href ?? ta('opt.noLink')) };
   }
@@ -663,27 +622,31 @@
   /** The drag's own data type: a row key that no text field can take as text. */
   const NAV_DRAG_TYPE = 'application/x-urd-nav-row';
 
-  /** Drag over the whole list: over a row the row's zones decide; in a gap, on the clone or below
-      the last row the nearest row by its midpoint decides, so the clone never flips while it pushes
-      the rows. Below everything the drop is the end of the top level. */
+  /** Drag over the whole list: over a row the row's zones decide; between rows or below the last the nearest row by its midpoint decides.
+      Over the clone itself nothing is reckoned anew, so the rows a moving clone pushes never change the landing place under a still pointer.
+      Below everything the drop is the end of the top level. */
   function onNavListDragOver(e) {
     if (!navDrag) return;
-    const rows = [...e.currentTarget.querySelectorAll('.nav-item:not(.ghost):not(.grand)')];
+    const list = e.currentTarget;
+    const onClone = [...list.querySelectorAll(':scope > .nav-item.ghost')].some((g) => { const b = g.getBoundingClientRect(); return e.clientY >= b.top && e.clientY <= b.bottom; });
+    if (onClone) { if (navDrop) e.preventDefault(); return; }
+    const rows = [...list.querySelectorAll('.nav-item:not(.ghost)')].map((el) => ({ el, key: el.dataset.key, child: el.dataset.key.includes('.'), rect: el.getBoundingClientRect() }));
     if (!rows.length) return;
-    const hit = rows.find((r) => { const b = r.getBoundingClientRect(); return e.clientY >= b.top && e.clientY <= b.bottom; });
+    const hit = rows.find((r) => e.clientY >= r.rect.top && e.clientY <= r.rect.bottom);
     let drop = null;
     if (hit) {
-      drop = navDropAt(hit, hit.dataset.key, e.clientX, e.clientY);
+      drop = navDropAt(hit.rect, hit.key, e.clientX, e.clientY);
     } else {
-      const src = navRowAt(navDrag); const moving = src.list[src.index];
-      const next = rows.find((r) => { const b = r.getBoundingClientRect(); return b.top + b.height / 2 > e.clientY; });
+      const items = siteDraft.nav.items;
+      const next = rows.find((r) => r.rect.top + r.rect.height / 2 > e.clientY);
       if (next) {
-        drop = next.dataset.key === navDrag ? null : navDropOrNull({ key: next.dataset.key, pos: 'before' }, moving, src);
+        drop = next.key === navDrag ? null : dropOrNull(items, navDrag, { key: next.key, pos: 'before' }, NAV_DEPTH);
       } else {
-        const lastTop = [...rows].reverse().find((r) => !r.classList.contains('child'));
-        drop = lastTop.dataset.key === navDrag ? null : navDropOrNull({ key: lastTop.dataset.key, pos: 'after' }, moving, src);
+        const lastTop = [...rows].reverse().find((r) => !r.child);
+        drop = lastTop.key === navDrag ? null : dropOrNull(items, navDrag, { key: lastTop.key, pos: 'after' }, NAV_DEPTH);
       }
     }
+    drop = canonicalDrop(siteDraft.nav.items, drop);
     if (!drop) { navDrop = null; return; }
     e.preventDefault();
     if (navDrop?.key !== drop.key || navDrop?.pos !== drop.pos) navDrop = drop;
@@ -695,39 +658,44 @@
     const from = navDrag; const drop = navDrop;
     navDrag = ''; navDrop = null;
     if (!from || !drop || drop.key !== targetKey || from === targetKey) return;
-    {
-      // The same guard as navDropOrNull, so a stale position can never nest a submenu.
-      const src = navRowAt(from); const tgt = navRowAt(targetKey);
-      const moving = src.list[src.index];
-      if (tgt.parent && (tgt.parent === moving || moving.children?.length)) return;
-      if (drop.pos === 'into' && moving.children?.length) return;
-    }
+    const src = navRowAt(from); const tgt = navRowAt(targetKey);
+    const moving = src.node;
+    // The same guards as the reckoning, so a stale position can never nest a row inside itself or where the depth does not hold it.
+    for (let k = targetKey; k !== null; k = parentKey(k)) if (navNode(k) === moving) return;
+    if (landLevel(drop) + navDepthOf(moving) > NAV_DEPTH) return;
+    // The rows are keyed by their items, so each row's element moves with its item and glides from its old place; the clone leaves at once.
+    const places = navListEl ? placesOf(navListEl.querySelectorAll('.nav-item:not(.ghost)')) : new Map();
+    landNow();
     siteMutate('nav', () => {
-      const items = siteDraft.nav.items;
-      const src = navRowAt(from); const tgt = navRowAt(targetKey);
-      const moving = src.list[src.index];
-      const targetObj = tgt.list[tgt.index];
-      if (moving === targetObj) return;
       src.list.splice(src.index, 1);
-      if (src.parent && src.parent.children.length === 0) {
-        // An empty submenu is removed from the file; a pure opener left
-        // without children has no target and gets the front page, so the
-        // item stays valid (the same rule as removeNavChild).
+      if (src.parent && src.list.length === 0) {
+        // An empty submenu is removed from the file; a pure opener left without children has no target and gets the front page, so the item stays valid (the same rule as removeNavAt).
         delete src.parent.children;
         if (!src.parent.page && !src.parent.href) src.parent.page = siteDraft.pages[0].id;
       }
       if (drop.pos === 'into') {
-        targetObj.children ??= [];
-        targetObj.children.push(moving);
+        tgt.node.children ??= [];
+        tgt.node.children.push(moving);
       } else {
-        const list = tgt.parent ? tgt.parent.children : items;
-        const idx = list.indexOf(targetObj) + (drop.pos === 'after' ? 1 : 0);
-        list.splice(idx, 0, moving);
+        const idx = tgt.list.indexOf(tgt.node) + (drop.pos === 'after' ? 1 : 0);
+        tgt.list.splice(idx, 0, moving);
       }
       // A row that becomes a child needs a target of its own (a pure opener has none).
       if (!moving.page && moving.href == null && !moving.children?.length) moving.page = siteDraft.pages[0].id;
     });
     navSel = '';
+    glideFrom(places);
+    flashNavRow(moving);
+  }
+
+  /** The landed row flashes the accent once, as every moved row in the admin does, found by its new key. */
+  async function flashNavRow(item) {
+    await tick();
+    const key = keyOf(siteDraft.nav.items, item);
+    const row = key && navListEl?.querySelector(`.nav-item[data-key="${key}"]`);
+    if (!row) return;
+    row.setAttribute('data-row-landed', '');
+    row.addEventListener('animationend', () => row.removeAttribute('data-row-landed'), { once: true });
   }
 
   const GRIP_ICON = '<svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true"><circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/></svg>';
@@ -740,40 +708,12 @@
     });
   }
 
-  /** A new submenu item under a top-level item, or under a submenu item (j) as the second level. */
-  function addNavChild(i, j = null) {
+  /** A new item under a row, at any level the menu's depth allows. */
+  function addNavChild(key) {
     siteMutate('nav', () => {
-      const item = navNode(i, j);
+      const item = navNode(key);
       item.children ??= [];
       item.children.push({ label: ta('seed.link'), page: siteDraft.pages[0].id });
-    });
-  }
-
-  function setNavChildLabel(i, j, value, k = null) {
-    siteMutate(`edit:nav-child-label-${i}-${j}-${k}`, () => { navNode(i, j, k).label = value; });
-  }
-
-  /** Moves a submenu item (i, j), or a second-level item (i, j, k), one step within its list. */
-  function moveNavChild(i, j, dir, k = null) {
-    const children = k === null ? navNode(i).children : navNode(i, j).children;
-    const at = k === null ? j : k;
-    const to = at + dir;
-    if (to < 0 || to >= children.length) return;
-    siteMutate('nav', () => { [children[at], children[to]] = [children[to], children[at]]; });
-  }
-
-  /** Removes a submenu item (i, j), or a second-level item (i, j, k). */
-  function removeNavChild(i, j, k = null) {
-    siteMutate('nav', () => {
-      const item = k === null ? navNode(i) : navNode(i, j);
-      item.children.splice(k === null ? j : k, 1);
-      if (item.children.length === 0) {
-        // An empty submenu is removed from the file; a pure opener without
-        // children has no target and gets the front page, so the item
-        // stays valid.
-        delete item.children;
-        if (!item.page && !item.href && !item.target) item.page = siteDraft.pages[0].id;
-      }
     });
   }
 </script>
@@ -790,10 +730,10 @@
        faint clone of the row shows where it lands, the middle of a
        top-level row takes it in as a child, and the grip column of a child
        row leads back out to the top level. -->
-  {#snippet navGhost(child)}
+  {#snippet navGhost(level)}
     {@const g = navGhostText()}
-    <!-- The faint clone at the landing place -->
-    <div class="nav-item ghost" class:child aria-hidden="true">
+    <!-- The faint clone at the landing place, indented to the level it would land at -->
+    <div class="nav-item ghost" class:child={level === 1} class:grand={level === 2} class:great={level === 3} aria-hidden="true" out:slotOut>
       <div class="nav-head">
         <span class="nav-grip">{@html GRIP_ICON}</span>
         <span class="nav-head-name ghost-name">{g.label}</span>
@@ -801,34 +741,27 @@
       </div>
     </div>
   {/snippet}
-  <!-- One row per item at every level: closed it is one line with the name,
-       the link, small marks for what is set and the arrows; open it is a
-       card with every field. One row is open at a time. The top two levels
-       are reordered by dragging the row's head (a faint clone shows where
-       the row lands, the middle of a top-level row takes it in as a child,
-       and the grip column of a child row leads back out); the second level
-       is ordered with the arrows alone. -->
-  {#snippet navCard(node, key, level, i, j, k, index, count)}
+  <!-- One row per item at every level: closed it is one line with the name, the link, small marks for what is set and the arrows; open it is a card with every field.
+       One row is open at a time. Every row is reordered by dragging its head: a faint clone shows where the row lands, the middle of a row takes it in as a child where the menu's depth holds it, and the grip column of a row under the bar leads one level out. -->
+  {#snippet navCard(node, key, level, index, count)}
     {@const open = navSel === key}
-    <div class="nav-item" class:child={level === 1} class:grand={level === 2} class:open class:dragging={navDrag === key}
-      data-key={level < 2 ? key : undefined}
-      class:drop-target={level === 0 && navDrop?.key === key && navDrop.pos === 'into'}>
+    <div class="nav-item" class:child={level === 1} class:grand={level === 2} class:great={level === 3} class:open class:dragging={navDrag === key}
+      data-key={key}
+      class:drop-target={navDrop?.key === key && navDrop.pos === 'into'}>
       <!-- The head is the handle: the fields sit in the body, so a drag never fights a text selection -->
-      <div class="nav-head" draggable={level < 2 ? 'true' : undefined} title={level < 2 ? ta('tip.nav.dragItem') : undefined}
+      <div class="nav-head" draggable="true" title={ta('tip.nav.dragItem')}
         onclick={(e) => { e.stopPropagation(); navSel = open ? '' : key; }}
-        ondragstart={(e) => { if (level === 2) { e.preventDefault(); return; } e.stopPropagation(); navDrag = key; e.dataTransfer?.setData(NAV_DRAG_TYPE, key); }}
+        ondragstart={(e) => { e.stopPropagation(); navDrag = key; e.dataTransfer?.setData(NAV_DRAG_TYPE, key); }}
         ondragend={endNavDrag}>
-        {#if level < 2}<span class="nav-grip">{@html GRIP_ICON}</span>{/if}
+        <span class="nav-grip">{@html GRIP_ICON}</span>
         <span class="nav-head-name">{node.label || ta('seed.link')}</span>
         <span class="nav-head-link">{linkText(linkOf(node), { pages: siteDraft.pages }) || (node.children?.length ? ta('opt.noLink') : '')}</span>
         {#if node.look === 'button'}<span class="nav-head-mark" title={ta('opt.navLook.button')}>{@html PILL_ICON}</span>{/if}
         {#if node.description}<span class="nav-head-mark" title={node.description}>{@html DESC_ICON}</span>{/if}
         {#if node.children?.length}<span class="nav-item-sub" title={ta('tip.nav.hasSubmenu')}>{@html SUB_ICON}</span>{/if}
         <span class="nav-head-tools" onclick={(e) => e.stopPropagation()}>
-          <button class="ghost nav-act" title={ta('tip.moveUp')} disabled={index === 0}
-            onclick={() => (level === 0 ? moveNavItem(i, -1) : moveNavChild(i, j, -1, level === 2 ? k : null))}>{@html ICONS.up}</button>
-          <button class="ghost nav-act" title={ta('tip.moveDown')} disabled={index === count - 1}
-            onclick={() => (level === 0 ? moveNavItem(i, 1) : moveNavChild(i, j, 1, level === 2 ? k : null))}>{@html ICONS.down}</button>
+          <button class="ghost nav-act" title={ta('tip.moveUp')} disabled={index === 0} onclick={() => moveNavAt(key, -1)}>{@html ICONS.up}</button>
+          <button class="ghost nav-act" title={ta('tip.moveDown')} disabled={index === count - 1} onclick={() => moveNavAt(key, 1)}>{@html ICONS.down}</button>
         </span>
         <button class="ghost nav-act nav-chev" aria-expanded={open} title={ta('tip.nav.openItem')} aria-label={ta('tip.nav.openItem')}>{@html CHEV_ICON}</button>
       </div>
@@ -838,55 +771,49 @@
         <div class="nav-body">
           <span class="nav-body-label">{ta('lbl.name')}</span>
           <input class="field-filled" value={node.label} title={level === 0 ? ta('tip.nav.itemLabel') : ta('tip.nav.childLabel')}
-            oninput={(e) => (level === 0 ? setNavLabel(i, e.target.value) : setNavChildLabel(i, j, e.target.value, level === 2 ? k : null))}
-            onblur={() => fillNavLabel(i, level === 0 ? null : j, level === 2 ? k : null)} />
+            oninput={(e) => setNavLabel(key, e.target.value)} onblur={() => fillNavLabel(key)} />
           <span class="nav-body-label">{ta('lbl.link')}</span>
           <!-- An item with items under it may have no link and is then their opener -->
           <LinkField scope="site" value={linkOf(node)} title={ta('tip.linkTarget')} removable={Boolean(node.children?.length)}
             placeholder={node.children?.length ? ta('opt.noLink') : ''}
-            onchange={(link) => setNavLink(i, level === 0 ? null : j, link, level === 2 ? k : null)} />
+            onchange={(link) => setNavLink(key, link)} />
           <span class="nav-body-label">{ta('ph.nav.itemDescription')}</span>
           <input class="field-filled" value={node.description ?? ''} placeholder={ta('ph.nav.itemDescription')} title={ta('tip.nav.itemDescription')}
-            oninput={(e) => setNavDescription(i, level === 0 ? null : j, level === 2 ? k : null, e.target.value)} />
+            oninput={(e) => setNavDescription(key, e.target.value)} />
           {#if level === 0}
             <div class="nav-body-wide">
               <Choice label={ta('lbl.navItemLook')} title={ta('tip.nav.itemButton')} value={node.look === 'button' ? 'button' : 'plain'}
                 options={[['plain', ta('opt.navLook.plain')], ['button', ta('opt.navLook.button')]]}
-                onchange={(v) => setNavLook(i, v)} />
+                onchange={(v) => setNavLook(Number(key), v)} />
             </div>
           {/if}
           <div class="nav-body-actions">
-            {#if level < 2}
-              <button class="ghost action" onclick={() => addNavChild(i, level === 0 ? null : j)}>{level === 0 ? ta('ui.addMenuChild') : ta('ui.addMenuGrandchild')}</button>
+            {#if level < NAV_DEPTH}
+              <button class="ghost action" onclick={() => addNavChild(key)}>{level === 0 ? ta('ui.addMenuChild') : ta('ui.addMenuGrandchild')}</button>
             {/if}
             <span class="nav-body-spacer"></span>
             <button class="ghost nav-act" title={level === 0 ? ta('tip.nav.removeItem') : ta('tip.nav.removeChild')}
-              onclick={() => { navSel = ''; if (level === 0) removeNavItem(i); else removeNavChild(i, j, level === 2 ? k : null); }}>{@html ICONS.cross}</button>
+              onclick={() => { navSel = ''; removeNavAt(key); }}>{@html ICONS.cross}</button>
           </div>
         </div>
         </div>
       {/if}
     </div>
   {/snippet}
-  <div class="nav-list" role="list"
+  <!-- The rows of one list and, under each, the rows of its submenu; one clone per place (canonicalDrop): before the first row, or after a row and its submenu, indented there while the row takes the dragged row in -->
+  {#snippet navRows(items, above, level)}
+    {#each items as node, index (node)}
+      {@const key = above === null ? `${index}` : `${above}.${index}`}
+      {#if index === 0 && navDrop?.key === key && navDrop.pos === 'before'}{@render navGhost(level)}{/if}
+      {@render navCard(node, key, level, index, items.length)}
+      {#if node.children?.length}{@render navRows(node.children, key, level + 1)}{/if}
+      {#if navDrop?.key === key && (navDrop.pos === 'after' || navDrop.pos === 'into')}{@render navGhost(navDrop.pos === 'into' ? level + 1 : level)}{/if}
+    {/each}
+  {/snippet}
+  <div class="nav-list" role="list" bind:this={navListEl}
     ondragover={onNavListDragOver}
     ondrop={(e) => { e.preventDefault(); dropNavRow(navDrop?.key ?? ''); }}>
-  {#each siteDraft.nav.items as item, i (i)}
-    {@const key = `${i}`}
-    {#if navDrop?.key === key && navDrop.pos === 'before'}{@render navGhost(false)}{/if}
-    {@render navCard(item, key, 0, i, null, null, i, siteDraft.nav.items.length)}
-    {#each item.children ?? [] as child, j (j)}
-      {@const ckey = `${i}.${j}`}
-      {#if navDrop?.key === ckey && navDrop.pos === 'before'}{@render navGhost(true)}{/if}
-      {@render navCard(child, ckey, 1, i, j, null, j, item.children.length)}
-      {#each child.children ?? [] as grand, k (k)}
-        {@render navCard(grand, `${i}.${j}.${k}`, 2, i, j, k, k, child.children.length)}
-      {/each}
-      {#if navDrop?.key === ckey && navDrop.pos === 'after'}{@render navGhost(true)}{/if}
-    {/each}
-    {#if navDrop?.key === key && navDrop.pos === 'into'}{@render navGhost(true)}{/if}
-    {#if navDrop?.key === key && navDrop.pos === 'after'}{@render navGhost(false)}{/if}
-  {/each}
+  {@render navRows(siteDraft.nav.items, null, 0)}
   </div>
       <button class="ghost action" onclick={addNavItem}>{ta('ui.addMenuItem')}</button>
       <!-- A new blank page that goes straight into the menu -->

@@ -121,6 +121,14 @@ const SIDEBAR_FOLDS = {
   flyout: sideWords() + acc(4, 14, 12, 2) + line(4, 18, 10, 2) + line(4, 22, 12, 2) + line(4, 26, 9, 2) + `<rect x="22" y="12" width="20" height="18" rx="2" fill="currentColor" opacity="0.18"/>` + line(25, 15, 12, 1.5) + line(25, 19, 14, 1.5) + line(25, 23, 10, 1.5) + line(25, 27, 13, 1.5),
 };
 
+/** Where a dragged row will land: a list of rows with the dragged one faint at the top and its card under the pointer, and a dashed slot, or a line with a ring at its start, between two rows. */
+const listRows = (ys) => ys.map((y) => dim(14, y, 36, 4, 0.3)).join('') + dim(14, 6, 36, 4, 0.1);
+const dragCard = (y) => `<rect x="24" y="${y}" width="30" height="5.5" rx="1.5" fill="currentColor" opacity="0.6" stroke="${ACCENT}" stroke-width="0.8"/>`;
+const DRAG_MARKS = {
+  slot: listRows([12, 18, 30]) + `<rect x="14.5" y="24.5" width="35" height="3.5" rx="1" stroke="${ACCENT}" stroke-width="0.8" stroke-dasharray="2 1.4"/>` + dragCard(17.5),
+  line: listRows([12, 18, 24, 30]) + acc(16, 22.4, 34, 1.2, 0.6) + `<circle cx="15" cy="23" r="1.3" stroke="${ACCENT}" stroke-width="0.8"/>` + dragCard(14.5),
+};
+
 const LOOKS = {
   layout: LAYOUTS,
   place: PLACES,
@@ -135,6 +143,7 @@ const LOOKS = {
   press: PRESS,
   tabMenus: TAB_MENUS,
   sidebarFolds: SIDEBAR_FOLDS,
+  dragMark: DRAG_MARKS,
 };
 
 /** A theme's swatch: its background with its surface, a line in its accent and a line in its text colour. */

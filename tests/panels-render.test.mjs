@@ -186,7 +186,7 @@ test('the Nav and Footer panels draw the background editor', () => {
     draft.nav.style = { ...(draft.nav.style ?? {}), background: { version: 1, layers: allLayers() } };
     draft.footer = { ...(draft.footer ?? { version: 1, show: true, text: '', align: 'center' }), background: { version: 1, layers: allLayers() } };
     const body = draw(panels[name], name.toLowerCase(), draft);
-    assert.match(body, /bg-layer/, `${name}: the layers are drawn`);
+    assert.match(body, /card-list-item/, `${name}: the layers are drawn`);
   }
 });
 
@@ -233,7 +233,7 @@ test('the Properties panel renders a section with every setting on, and a select
   };
   let body = draw(panels.Properties, 'properties', structuredClone(site), section);
   assert.match(body, /panel-body/);
-  assert.match(body, /bg-layer/, 'the background layers are drawn');
+  assert.match(body, /card-list-item/, 'the background layers are drawn');
   assert.match(body, /900 px/, 'the section\'s own width stands in its group and beside its slider');
   assert.match(body, /type="range" min="320" max="1920" step="10" value="900"/, 'the own width has its slider');
   // On a full-width site «Full width» is the site's own, and is not offered; in the phone view the content width has no effect, and is not shown.
@@ -289,7 +289,7 @@ test('the background editor renders a layer of every type, with the sizes, the s
     props: { bg: { mutate: noop, keyPrefix: 'bg', keyId: 'sec-1' }, layers },
     context: new Map([['urd-editor', handleFor('properties', structuredClone(site), { sectionBg: layers })]]),
   }).body;
-  assert.equal([...body.matchAll(/class="bg-layer/g)].length >= layers.length, true, 'one row per layer');
+  assert.equal([...body.matchAll(/class="nav-item card-list-item/g)].length, layers.length, 'one card per layer');
 });
 
 test('the Collections, Plugins, History and Update panels render with content', () => {

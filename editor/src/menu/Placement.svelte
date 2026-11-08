@@ -9,6 +9,8 @@
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
   import Choice from '../lib/Choice.svelte';
   import IconButton from '../lib/rows/IconButton.svelte';
+  import ActionRow from '../lib/rows/ActionRow.svelte';
+  import { ICONS } from '../lib/icons.js';
   import FitMin from './FitMin.svelte';
   import { pinnedNow } from './pinned.js';
   import { ta } from '$engine/i18n.js';
@@ -209,3 +211,13 @@
 <Fold id="link-target" rows={1} title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</Fold>
 <Fold id="motion" title={ta('group.motion')} value={menuMotionValue()}>{@render menuMotion()}</Fold>
 <Fold id="frame" title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</Fold>
+<!-- The block's actions, as on its bar and in its right-click menu: the layer order only on the desktop, where the blocks overlap -->
+<ActionRow label={ta('canvas.ctx.label')} actions={[
+  { id: 'duplicate', icon: ICONS.copy, label: ta('canvas.ctx.duplicate'), run: () => ed.bridge?.sendDuplicate() },
+  ...(viewMode === 'desktop' ? [
+    { id: 'front', icon: ICONS.up, label: ta('canvas.ctx.toFront'), run: () => ed.setBlockLayer(1) },
+    { id: 'back', icon: ICONS.down, label: ta('canvas.ctx.toBack'), run: () => ed.setBlockLayer(-1) },
+  ] : []),
+  { id: 'delete', icon: ICONS.cross, label: ta('canvas.ctx.delete'), arm: ta('canvas.ctx.pressAgain'),
+    run: () => ed.handleDelete({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId }) },
+]} />

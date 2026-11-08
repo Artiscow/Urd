@@ -604,6 +604,19 @@ function setPressFeel(v) {
 
 const PRESS_OPTIONS = $derived(PRESS_FEELS.map((id) => [id, ta(`opt.press.${id}`)]));
 
+/** How a list shows where a dragged row will land (Urd settings «Moving rows», lib/rows/row-drag.svelte.js): the slot by default, not stored, or the line; kept per browser. */
+const DRAG_MARK_KEY = 'urd-drag-mark';
+const DRAG_MARKS = ['slot', 'line'];
+let dragMark = $state(localStorage.getItem(DRAG_MARK_KEY) === 'line' ? 'line' : 'slot');
+
+function setDragMark(v) {
+  dragMark = v === 'line' ? 'line' : 'slot';
+  if (dragMark === 'slot') localStorage.removeItem(DRAG_MARK_KEY);
+  else localStorage.setItem(DRAG_MARK_KEY, dragMark);
+}
+
+const DRAG_MARK_OPTIONS = $derived(DRAG_MARKS.map((id) => [id, ta(`opt.dragMark.${id}`)]));
+
 /** How the tabs' menus set their rows apart (Urd settings «Tab menus», lib/panel-folds.js): the groups by default, remembered per browser. */
 const TAB_MENUS_KEY = 'urd-tab-menus';
 let tabMenus = $state(tabMenuStyleOf(localStorage.getItem(TAB_MENUS_KEY)));
@@ -895,6 +908,12 @@ export function effects() {
     sendAdminTheme();
   });
 
+  // The drag mark on the root, where the row kit's drag reads it as a drag starts.
+  $effect(() => {
+    if (dragMark === 'line') document.documentElement.dataset.dragMark = 'line';
+    else delete document.documentElement.dataset.dragMark;
+  });
+
   // The press feel on the root, where app.css reads it; the ripple is drawn by a listener of its own, there only while it is chosen, and never under reduced motion.
   $effect(() => {
     document.documentElement.dataset.press = pressFeel;
@@ -1105,6 +1124,9 @@ export const shellState = {
   setPanelTabMenus,
   setPressFeel,
   get PRESS_OPTIONS() { return PRESS_OPTIONS; },
+  get dragMark() { return dragMark; },
+  setDragMark,
+  get DRAG_MARK_OPTIONS() { return DRAG_MARK_OPTIONS; },
   setPageSettingsPref,
   get PAGE_SETTINGS_OPTIONS() { return PAGE_SETTINGS_OPTIONS; },
   setCsvPreview,

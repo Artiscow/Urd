@@ -5,7 +5,7 @@
   import GlyphPicker from './GlyphPicker.svelte';
   import LinkField from './LinkField.svelte';
   import { ta } from '$engine/i18n.js';
-  import { ICON_LIBRARY } from '$engine/icons.js';
+  import { ICON_LIBRARY, iconSvg } from '$engine/icons.js';
   import { ICONS } from './icons.js';
   import ListEditor from './rows/ListEditor.svelte';
   import IconButton from './rows/IconButton.svelte';
@@ -13,7 +13,9 @@
   let { links = [], scope = 'page', label = '', onchange, onadd, onremove, onmove } = $props();
 </script>
 
-<ListEditor items={links} label={label || ta('group.siteLinks')} key={(link, i) => link.id ?? i} {onmove} {onremove} {onadd} addLabel={ta('ui.addSiteLink')}>
+<!-- A dragged link's card: its own image or its icon, its label and its address -->
+<ListEditor items={links} label={label || ta('group.siteLinks')} key={(link, i) => link.id ?? i} {onmove} {onremove} {onadd} addLabel={ta('ui.addSiteLink')}
+  card={(link) => ({ name: link.label || ICON_LIBRARY[link.icon]?.label || '', detail: link.url ?? '', src: link.image || '', icon: link.image ? '' : (iconSvg(link.icon) ?? '') })}>
   {#snippet row(link, i)}
     <div class="nav-row link-row">
       <span class="nav-line">

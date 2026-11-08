@@ -21,7 +21,7 @@
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
- *                  urd-select-section carries `open: true` from the right-click menu's «Section settings»: the editor opens the Properties panel on the section
+ *                  { type: 'urd-section-menu', sectionId, rect }  (open the section's settings in the editor's floating menu: the gear on its bar and «Settings» in its right-click menu)
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-toggle-grid' }  (G on the page: the editor shows or hides the grid)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
@@ -52,6 +52,7 @@ import { styleOf, pasteStyle } from './block-style.js';
 import { BLOCK_DESIGNS } from './block-designs.js';
 import { pluginBlockDesigns } from './plugins.js';
 import { nearestDock } from './sticky-model.js';
+import { layerChanges } from './layer-order.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
 import { pathTo, nodeAt } from './caret-path.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
@@ -72,31 +73,18 @@ function eventTarget(event) {
 /** The text a block lets the owner type in on the canvas, whichever editing mode it asked for. */
 const EDITABLE_TEXT = '[contenteditable="true"], [contenteditable="plaintext-only"]';
 
-/** z-order: puts the block at the top or the bottom among the section's blocks (the toolbar's arrows and the right-click menu). */
+/** The layer order: puts the block in front of the section's other blocks or behind them all (the toolbar's arrows, the right-click menu and the keys; layer-order.js). */
 function bumpBlockZ(host, section, block, el, dir) {
-  const others = section.blocks.filter((b) => b.id !== block.id);
-  const zs = others.map((b) => b.frames.desktop.z ?? 1);
-  let z;
-  if (dir > 0) {
-    z = zs.length ? Math.max(...zs) + 1 : 1;
-  } else if (!zs.length || Math.min(...zs) > 1) {
-    z = 1;
-  } else {
-    // Someone already sits at the bottom: push the others one notch up
-    // instead, so this one can go last (z never goes below 1).
-    z = 1;
-    for (const other of others) {
-      const frame = { ...other.frames.desktop, z: (other.frames.desktop.z ?? 1) + 1 };
-      other.frames.desktop = frame;
-      host.querySelector(`[data-block-id="${other.id}"]`)?.style.setProperty('z-index', String(frame.z));
-      // groupKey collects the whole z reordering (all blocks) into ONE undo step in the editor.
-      post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true, groupKey: `z-${block.id}` });
-    }
+  const changes = layerChanges(section.blocks, block.id, dir);
+  for (const other of section.blocks) {
+    if (!changes.has(other.id)) continue;
+    const frame = { ...other.frames.desktop, z: changes.get(other.id) };
+    other.frames.desktop = frame;
+    const node = other.id === block.id ? el : host.querySelector(`[data-block-id="${other.id}"]`);
+    node?.style.setProperty('z-index', String(frame.z));
+    // groupKey collects the whole reordering into ONE undo step in the editor.
+    post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true, groupKey: `z-${block.id}` });
   }
-  const frame = { ...block.frames.desktop, z };
-  block.frames.desktop = frame;
-  el.style.zIndex = String(z);
-  post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame, coalesce: true, groupKey: `z-${block.id}` });
 }
 
 /** Whether a block has designs to choose among: the calendar's, a core block's in the catalogue (block-designs.js), or a plugin block's (the design contract). */
@@ -192,7 +180,7 @@ function closeContextMenu(returnFocus = true) {
 
 /**
  * Shows a menu at (x, y) for `el`, filled by `build(item, sep)`. An item
- * with `arm` asks for a second press, the way the toolbar's deletions do.
+ * with `arm` asks for a second press, the way the section bar's deletion does (armedButton).
  */
 function showContextMenu(el, x, y, label, build) {
   closeContextMenu(false);
@@ -333,11 +321,8 @@ function openSectionContextMenu(host, x, y) {
     if (clipboard?.kind === 'section') item(ta('canvas.ctx.pasteSection'), 'Ctrl+V', () => pasteSection(host));
     else item(ta('canvas.ctx.paste'), 'Ctrl+V', () => pasteClipboard(), { disabled: !clipboard?.blocks?.length });
     sep();
-    // The section's settings: the section selected, and the Properties panel opened on it.
-    item(ta('canvas.ctx.sectionSettings'), '', () => {
-      markActiveVisual(host);
-      post({ type: 'urd-select-section', sectionId: section.id, open: true });
-    });
+    // The section's settings, in the floating menu as the gear on its bar opens them.
+    item(ta('canvas.ctx.sectionSettings'), '', () => openSectionSettings(host, section));
     item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: !adderBelow() });
     item(ta('canvas.ctx.sectionUp'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     item(ta('canvas.ctx.sectionDown'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
@@ -3126,12 +3111,58 @@ function addSectionToolbar(host, section, grid) {
       post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) });
     });
     bar.appendChild(save);
-    mk(CROSS_SVG, ta('canvas.deleteSection'), () => {
-      deleteSection(section.id);
-    });
   }
+  // The gear: the section's settings in the floating menu, beside the section; in both views, since the settings hold in both.
+  const gear = document.createElement('button');
+  gear.innerHTML = GEAR_SVG;
+  gear.title = ta('canvas.ctx.sectionSettings');
+  gear.setAttribute('aria-label', gear.title);
+  // The same guard as the block's gear: a pointerdown reaching the document's selection listener would draw the section anew before the click.
+  gear.addEventListener('pointerdown', (event) => event.stopPropagation());
+  gear.addEventListener('click', () => openSectionSettings(host, section));
+  bar.appendChild(gear);
+  if (!isMobile()) bar.appendChild(armedButton(CROSS_SVG, ta('canvas.deleteSection'), () => deleteSection(section.id)));
 
   if (bar.childElementCount) host.appendChild(bar);
+}
+
+/**
+ * A button that acts at its second press, as the right-click menu's deletion does: the first press arms it, red, its tooltip asking for the second.
+ * A mouse leaving the button, or the focus leaving it, disarms it; a touch lifts before its click, so a lifted finger never disarms what it is about to press.
+ */
+function armedButton(svg, title, run) {
+  const btn = document.createElement('button');
+  btn.innerHTML = svg;
+  btn.title = title;
+  btn.setAttribute('aria-label', title);
+  let armed = false;
+  const disarm = () => {
+    armed = false;
+    btn.classList.remove('urd-armed');
+    btn.title = title;
+    btn.setAttribute('aria-label', title);
+  };
+  btn.addEventListener('click', () => {
+    if (!armed) {
+      armed = true;
+      btn.classList.add('urd-armed');
+      btn.title = ta('canvas.ctx.pressAgain');
+      btn.setAttribute('aria-label', btn.title);
+      return;
+    }
+    disarm();
+    run();
+  });
+  btn.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') disarm(); });
+  btn.addEventListener('blur', disarm);
+  return btn;
+}
+
+/** The section's settings in the editor's floating menu, opened beside the section (its bar's gear and its right-click menu's «Settings»). */
+function openSectionSettings(host, section) {
+  markActiveVisual(host);
+  const r = host.getBoundingClientRect();
+  post({ type: 'urd-section-menu', sectionId: section.id, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
 }
 
 /** Relative time for the attention card, in the admin language ("2 hours ago"). */

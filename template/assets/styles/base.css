@@ -19912,6 +19912,12 @@ body.urd-mobile .urd-section-resize-top {
   color: var(--urd-admin-accent-text, #fff);
 }
 
+/* A deletion armed by its first press (preview-edit.js armedButton): red until the second press, or until the pointer or the focus leaves it */
+.urd-preview .urd-section-toolbar button.urd-armed {
+  background: #c62828;
+  color: #fff;
+}
+
 /* The section's name for links (preview-edit.js addSectionToolbar) */
 .urd-preview .urd-section-toolbar .urd-anchor-tag {
   align-self: center;

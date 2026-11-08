@@ -4,8 +4,9 @@
  * Outside the kit this test finds the hand-made rows the kit replaces: a raw segment (`.seg`, where lib/Choice.svelte
  * is the kit's), a plain fold (`<details class="group">`, where lib/rows/Fold.svelte is), a raw slider, a checkbox in
  * a label (on and off, which lib/rows/SwitchRow.svelte draws), prose in a panel (`.panel-hint`, where the empty state
- * and the error line stand), the old sub-heading classes (`.group-sub`, `.panel-strong`), and a square icon button
- * drawn by hand (`.row-tool`, `.coll-btn`, a setting's reset or pin, where lib/rows/IconButton.svelte gives every one the same sizes).
+ * and the error line stand), the old sub-heading classes (`.group-sub`, `.panel-strong`), a square icon button
+ * drawn by hand (`.row-tool`, `.coll-btn`, a setting's reset or pin, where lib/rows/IconButton.svelte gives every one the same sizes),
+ * and a row drag built by hand (`draggable` or a dragstart handler, where lib/rows/row-drag.svelte.js gives every list the same drag).
  * The files not yet moved stand on RATCHET with what each still holds. The list only shrinks: a file that no longer
  * holds a pattern fails the test until the pattern leaves its entry, and a new file is built from the kit.
  * The files are read through Svelte's own parser, so the markup is walked as a tree, never scanned as text.
@@ -63,6 +64,8 @@ function patternsIn(source) {
       if (cls.has('panel-hint')) found.add('hint');
       if (cls.has('group-sub') || cls.has('panel-strong')) found.add('subheading');
       if (node.name === 'button' && (cls.has('row-tool') || cls.has('coll-btn') || cls.has('setting-reset') || cls.has('menu-pin'))) found.add('iconbutton');
+      // A picture kept from being dragged (draggable="false") is no drag of its own
+      if (node.attributes.some((a) => a.type === 'Attribute' && a.name === 'ondragstart') || (node.attributes.some((a) => a.name === 'draggable') && attr(node, 'draggable') !== 'false')) found.add('drag');
       next = node;
     } else if (node.type === 'Component' || node.type === 'SvelteElement') {
       next = node;
@@ -97,9 +100,6 @@ function findings() {
 
 /** The files not yet moved to the row kit, by the step of 0.7.30 (BACKLOG) that moves them, with the patterns each still holds. */
 const RATCHET = {
-  // 0.7.30.6, the section's settings
-  'panels/PropertiesPanel.svelte': ['hint', 'slider', 'subheading', 'switch'],
-  'section/BackgroundEditor.svelte': ['iconbutton', 'slider', 'switch'],
   // 0.7.30.8, the Site, Theme, Legal and Footer panels
   'panels/SitePanel.svelte': ['fold', 'hint', 'iconbutton', 'segment', 'slider', 'subheading', 'switch'],
   'panels/ThemePanel.svelte': ['fold', 'segment', 'slider', 'subheading', 'switch'],
@@ -107,7 +107,7 @@ const RATCHET = {
   'panels/legal/ContactFields.svelte': ['hint', 'iconbutton', 'subheading', 'switch'],
   'panels/FooterPanel.svelte': ['fold', 'iconbutton', 'slider', 'subheading', 'switch'],
   // 0.7.30.9, the Nav panel
-  'panels/NavPanel.svelte': ['fold', 'iconbutton', 'segment', 'slider', 'subheading', 'switch'],
+  'panels/NavPanel.svelte': ['drag', 'fold', 'iconbutton', 'segment', 'slider', 'subheading', 'switch'],
   // 0.7.30.10, the other panels and the dialogs
   'panels/BlocksPanel.svelte': ['fold', 'hint', 'subheading'],
   'panels/CollectionsPanel.svelte': ['iconbutton'],
@@ -144,8 +144,9 @@ test('patternsIn: each hand-made row is found, and the kit and its look-alikes a
     '<label class="gridmenu-snap">{#if a}<input type="checkbox" />{/if} On</label>',
     '<p class="panel-hint">Text</p>',
     '<span class="mini-label group-sub">Part</span>',
+    '<div draggable={on ? "true" : undefined} ondragstart={f}>Row</div>',
   ].join('\n'));
-  assert.deepEqual(held, ['fold', 'hint', 'segment', 'slider', 'subheading', 'switch']);
+  assert.deepEqual(held, ['drag', 'fold', 'hint', 'segment', 'slider', 'subheading', 'switch']);
   const clean = patternsIn([
     '<Fold id="a" title="A" value="B">x</Fold>',
     '<SwitchRow label="On" checked={true} onchange={f} />',
@@ -153,6 +154,8 @@ test('patternsIn: each hand-made row is found, and the kit and its look-alikes a
     '<td><input type="checkbox" aria-label="Shown" /></td>',
     '<details class="frame-group"><summary>S</summary></details>',
     '<div class="choice-seg"></div>',
+    '<img src="a.png" alt="" draggable="false" />',
+    '<span class="row-list-grip" {@attach drag.handle(i)}></span>',
   ].join('\n'));
   assert.deepEqual(clean, []);
 });

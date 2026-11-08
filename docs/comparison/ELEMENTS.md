@@ -78,11 +78,13 @@ Saved block groups and templates appear in the same menus under «My templates»
   3. A bar on the element whose tools open small floating panels: Wix Harmony (the dynamic action bar) and Squarespace (Edit opens a floating panel with Content and Design, the layouts as pictures first in Design).
   4. A plain list of settings under plain headings, decided by the theme: Shopify (a setting hidden until its condition holds).
 
-**Urd today.** The Properties panel and the floating element menu from the gear on a block are drawn by the same snippet ([ADR-0016](../adr/0016-panel-language.md)), a merge of patterns 1 and 3 (0.7.30.3):
+**Urd today.** The Settings panel and the floating element menu from the gear on a block are drawn by the same snippet ([ADR-0016](../adr/0016-panel-language.md)), a merge of patterns 1 and 3 (0.7.30.3):
 - three areas, Content, Style and Placement, after Pinned; wide, Pinned and the areas stand in two columns, each whole, cut where they come out most even when the menu opens; narrow, they stand under each other, each heading sticking to the top of its area (the admin setting «Element menu» chooses the width), and an area with nothing in it is not drawn;
 - Pinned first: the most used settings, as the rows they are in their areas, each standing there instead of in its area while pinned;
 - the way into a block's own editor first in Content, and a block's designs as a picture row first in Style;
 - collapsible groups that show their value while closed, and a search;
+- a section's settings open in the same floating menu, from a gear on its bar or «Settings» in its right-click menu, with Style and Placement;
+- duplicate, delete and the layer order stand at the foot of a block's Placement as well, and duplicate, move and delete at the foot of a section's;
 - Placement holds the same settings for every block in the same order, and there is no «Advanced» drawer.
 
 Every block has its groups (0.7.20.5), settings have pins (0.7.20.3), the menu stands beside the block and is dragged by its head (0.7.20.6), own values are marked with a reset per setting (0.7.20.7), blocks and sections have right-click menus and a style clipboard (0.7.20.8), and 1, 2 and 3 reach the menu's areas (0.7.20.9).
@@ -105,7 +107,7 @@ On the canvas, text is edited by clicking and writing. A floating text toolbar a
 
 **Urd today.** There is no tree. What exists instead:
 - sections move up and down from the section toolbar;
-- blocks change z-order with «Bring forwards» and «Send backwards» in the block toolbar, «To the front» and «To the back» in the right-click menu, Ctrl+Shift+Up and Down, and the layer number in Placement;
+- blocks change z-order with «To the front» and «To the back» in the block toolbar, in the right-click menu and in the element menu, Ctrl+Shift+Up and Down, and the layer number in Placement;
 - the Pages panel switches page without reloading the editor.
 
 A smaller block that lies over a larger one cannot be selected today, because hover picks the larger one first (a BACKLOG 0.7.10 finding). The layers panel answers that (E6). The phone order has up and down buttons (0.7.3); keys for it are 0.7.3.6.

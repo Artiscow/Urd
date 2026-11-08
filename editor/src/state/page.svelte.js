@@ -8,6 +8,7 @@ import { folds } from '../lib/folds.svelte.js';
 import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
+import { layerChanges } from '$engine/layer-order.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
@@ -152,9 +153,8 @@ function onSelectBlock(msg) {
   // click never does.
 }
 
-/** The block menu (the gear on the block's toolbar): position in editor
- *  coordinates, null = closed. The content is the same snippet as the
- *  Properties panel. */
+/** The floating menu (the gear on a block's or a section's bar): position in editor coordinates, null = closed.
+ *  `section: true` holds a section's settings, else the selected block's; the content is the same as in the Settings panel. */
 let blockMenu = $state(null);
 
 /** The room for the floating menu (menu/state.svelte.js): measured from
@@ -191,6 +191,15 @@ function onBlockMenu(msg) {
   }
   menuAnchor = msg.rect;
   blockMenu = menuPlaceFor(msg.rect);
+}
+
+/** The gear on a section's bar, or «Settings» in its right-click menu: the section chosen, no block selected, and its settings in the floating menu beside it. */
+function onSectionMenu(msg) {
+  onSelectBlock({});
+  if (!store?.data.sections.some((s) => s.id === msg.sectionId)) return;
+  onSelectSection({ sectionId: msg.sectionId });
+  menuAnchor = msg.rect;
+  blockMenu = { ...menuPlaceFor(msg.rect), section: true };
 }
 
 /** The design button on a block's toolbar: the block selected and its design picker open, the calendar's own or the one every other block with designs shares; from the phone view, the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS in push-model.js). */
@@ -230,17 +239,27 @@ function menuPlaceFor(rect) {
   return { left, top };
 }
 
+/** The layer order from the element menu: the selected block in front of its section's other blocks or behind them all, as on the canvas (layer-order.js), in one undo step. */
+function setBlockLayer(dir) {
+  mutateBlock(`layer:${selectedBlock?.blockId}`, (block, section) => {
+    const changes = layerChanges(section.blocks, block.id, dir);
+    for (const other of section.blocks) {
+      if (changes.has(other.id)) other.frames.desktop = { ...other.frames.desktop, z: changes.get(other.id) };
+    }
+  });
+}
+
 /** The menu dragged by its head: the place is kept for the session and the menu stands there for every block. The menu's own measured box, when given, is what is kept inside the window. */
 function moveBlockMenu(place, size = menuSize()) {
   const next = clampPlace(place, size, { w: window.innerWidth, h: window.innerHeight }, menu.min);
   menu.place = next;
-  blockMenu = next;
+  blockMenu = { ...next, ...(blockMenu?.section ? { section: true } : {}) };
 }
 
 /** «Back beside the block»: the remembered place is dropped, and the menu stands beside the block it was opened at. */
 function menuBackToBlock() {
   menu.place = null;
-  if (menuAnchor) blockMenu = menuPlaceFor(menuAnchor);
+  if (menuAnchor) blockMenu = { ...menuPlaceFor(menuAnchor), ...(blockMenu?.section ? { section: true } : {}) };
 }
 
 /** Shared flow for block changes from the Properties panel. */
@@ -704,8 +723,6 @@ function measureSecBox() {
 function onSelectSection(msg) {
   activeSectionId = msg.sectionId;
   syncSectionMirrors(store?.data.sections.find((s) => s.id === msg.sectionId));
-  // «Section settings» in the preview's right-click menu: the Properties panel on the section.
-  if (msg.open) shellState.activePanel = 'properties';
 }
 
 /** Shared flow for section changes from the Properties panel. */
@@ -1064,7 +1081,8 @@ export function effects() {
   });
 
   $effect(() => {
-    const id = selectedBlock?.blockId ?? null;
+    // A block's menu, or a section's when no block is selected: another one empties the searches.
+    const id = selectedBlock?.blockId ?? (activeSectionId ? `section:${activeSectionId}` : null);
     if (id === searchBlockId) return;
     searchBlockId = id;
     menu.menuQuery = '';
@@ -1121,6 +1139,8 @@ export const pageState = {
   get searchBlockId() { return searchBlockId; },
   set searchBlockId(v) { searchBlockId = v; },
   onBlockMenu,
+  onSectionMenu,
+  setBlockLayer,
   onBlockDesign,
   mutateBlock,
   mutateBlockAt,

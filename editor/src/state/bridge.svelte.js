@@ -331,6 +331,8 @@ function handleDeleteSection(msg) {
   if (msg.sectionId === pageState.activeSectionId) {
     pageState.activeSectionId = null;
     pageState.sectionGrid = null;
+    // The section's settings, open in the floating menu, go with it.
+    if (pageState.blockMenu?.section) pageState.blockMenu = null;
   }
   // A selected block in the deleted section must not linger in the Properties panel.
   if (pageState.selectedBlock?.sectionId === msg.sectionId) pageState.selectedBlock = null;

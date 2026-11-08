@@ -2,6 +2,22 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.6): the canvas bars, the section's settings, one drag for every list, and a menu four levels deep
+
+- [ ] «Settings» is the one name on a block's gear, in the right-click menu and on the panel; every phone setting says «phone»
+- [ ] The section bar's gear opens the section's settings in the floating menu beside the section (Style: theme, background, edges; Placement: size and grid, link name, motion, actions); the Settings panel shows the same for a selected section; deleting the section closes the menu
+- [ ] Z-order: the buttons and the menu's actions move a block to the front or the back as their names say; delete on the section's bar and in the menu is red after the first press and acts at the second; moving the mouse off disarms it, a lifted finger on a touchscreen does not
+- [ ] Dragging any list row (a background layer, a link, a FAQ question, a form field, a collection entry in the list and the table): press and hold anywhere on the row outside its fields, a one-line card with the row's picture or icon, name and detail follows the pointer with no box behind it, the row dims in place, and a dashed one-line slot grows where it lands and shrinks away as the place moves
+- [ ] A press in a text field in a row still types and selects text; a drag never starts from it
+- [ ] Releasing beside the list lands the row where the slot stood; over the page preview or with Escape nothing moves; on landing the rows glide to their places and the landed row flashes once
+- [ ] Alt and the arrow keys move the focused row the same way, with the flash; a screen reader hears «… moved to 2 of 4»
+- [ ] Urd settings › Editing › «Moving rows»: Line draws a line with a ring at its start between the rows instead of the slot; the choice survives a reload; Slot is the default and stores nothing
+- [ ] With reduced motion on, the slot, the line, the dimming and the glide appear at once; the flash stays
+- [ ] The background layers are cards: closed, one line with the layer's colour, gradient, picture or icon, its kind and its strength; a press on the head opens the kind dropdown, the settings and the cross; the head drags; removing a layer folds that card shut
+- [ ] The Nav panel: the top third of an item places the dragged item before it, the middle third under it (the item tinted), the bottom third after it; holding still anywhere never flips the mark; near an item's bottom edge the mark neither flashes nor regrows; the mark grows and shrinks, the items glide on landing and the moved item flashes
+- [ ] The Nav panel: an item can go under a sub-item and under a sub-sub-item (four levels in all), no further; an item with a submenu dropped too deep lands beside the item instead, as the mark shows before the drop; the preview and the published site draw the fourth level in the submenu, the phone menu, the columns and the flyout
+- [ ] The grip column of a sub-item still leads the dragged item back out one level
+
 ### Test batch (0.7.30.4): every block's menu on the row kit
 
 - [ ] Wide: groups open and close smoothly in several blocks, what stands below moves with them, and nothing jumps between the columns

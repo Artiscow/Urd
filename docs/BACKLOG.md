@@ -522,6 +522,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
  - [ ] Footer design preview is too tall. It should just show the footer section
  - [ ] Clicking on the element menus settings while settings window is open just closes and opens it
+ - [ ] Section "on pointer" settings affect the background instead of every block in the section - this should be two settings; every element in the section, and; the section background
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene
@@ -575,7 +576,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
     Done when: the render test holds each shared setting to one area across these types and finds no group with fewer than two settings.
   - [x] 0.7.30.5 DELIVERED 0.7.30.4 (7 November 2026) The data, shop and plugin blocks' menus to the kit (calendar, form, contact, privacy, countdown, collection, product, cart, checkout, the map and the field contract), by the rules of 0.7.30.4.
     Done when: the render test covers every core block type, and the walk through every block's menu in the browser, wide and narrow, finds nothing outside the design.
-  - [ ] 0.7.30.6 The canvas bars and the section's settings: one name, «Settings», on the gear, in the right-click menu and on the panel; a gear on the section's bar that opens the section's settings in the element menu's form; «phone» for every phone setting; the z-order buttons named for what they do; a section deleted from its bar armed as in the right-click menu; and duplicate, delete and z-order reachable from the menu as well.
+  - [x] 0.7.30.6 DELIVERED 0.7.30.6 (8 November 2026; with the round's test findings: the row kit's one drag for every list, chosen as direction A of the «Moving Rows» canvas with the line as a Urd setting, the background layers as cards like the Nav items, and the menu three submenu levels deep) The canvas bars and the section's settings: one name, «Settings», on the gear, in the right-click menu and on the panel; a gear on the section's bar that opens the section's settings in the element menu's form; «phone» for every phone setting; the z-order buttons named for what they do; a section deleted from its bar armed as in the right-click menu; and duplicate, delete and z-order reachable from the menu as well.
     Done when: each of these is seen on a block and on a section in the browser, and no canvas button that opens on hover carries a tooltip over what it opens.
   - [ ] 0.7.30.7 The text toolbar, the multi-selection bar, the colour picker and the canvas dropdowns in the admin's theme.
     Done when: in each of the seven admin themes the four take the theme's colours.

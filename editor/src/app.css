@@ -1887,9 +1887,13 @@
     margin-left: 1.3rem;
   }
 
-  /* The second submenu level: one step further in, ordered with the arrows */
+  /* The second and the third submenu level: each one step further in */
   .nav-item.grand {
     margin-left: 2.6rem;
+  }
+
+  .nav-item.great {
+    margin-left: 3.9rem;
   }
 
 
@@ -1937,6 +1941,8 @@
     border: 1px dashed var(--urd-color-accent);
     background: color-mix(in srgb, var(--urd-color-accent) 10%, transparent);
     min-height: 2rem;
+    overflow: hidden;
+    animation: row-drag-slot-in 0.15s ease-out;
   }
 
   .ghost-name {
@@ -1963,6 +1969,169 @@
   /* The row being dragged stays in view, dimmed, until it lands */
   .nav-item.dragging {
     opacity: 0.55;
+  }
+
+  /* The row kit's drag (lib/rows/row-drag.svelte.js), the one look of a row moved anywhere in the admin.
+     The row dims in its place, its card of one line stands under the pointer, and a dashed slot with the card's faint copy, or the line chosen in the Urd settings, marks where it will land.
+     Once it has landed, the row flashes the accent. */
+  [data-row-dragging] {
+    opacity: 0.4;
+    animation: row-drag-dim 0.15s ease-out;
+  }
+
+  @keyframes row-drag-dim {
+    from { opacity: 1; }
+  }
+
+  .row-drag-holder {
+    position: fixed;
+    top: 0;
+    left: -10000px;
+  }
+
+  /* Words for a screen reader only, such as where a moved row went */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .row-drag-card,
+  .row-drag-slot {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    height: 2.75rem;
+    padding: 0 0.75rem 0 0.3rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    overflow: hidden;
+  }
+
+  .row-drag-card {
+    border: 1px solid var(--urd-color-accent);
+    background: var(--urd-color-surface);
+    color: var(--urd-color-text);
+  }
+
+  .row-drag-slot {
+    border: 1px dashed var(--urd-color-accent);
+    background: color-mix(in srgb, var(--urd-color-accent) 9%, transparent);
+    pointer-events: none;
+    animation: row-drag-slot-in 0.15s ease-out;
+  }
+
+  .row-drag-slot > * {
+    opacity: 0.55;
+  }
+
+  @keyframes row-drag-slot-in {
+    from { height: 0; min-height: 0; padding-block: 0; opacity: 0; }
+  }
+
+  .row-drag-grip {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1rem;
+    opacity: 0.7;
+  }
+
+  .row-drag-sign {
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  .row-drag-icon {
+    display: inline-grid;
+    place-items: center;
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  .row-drag-icon > svg {
+    max-width: 62%;
+    max-height: 62%;
+  }
+
+  /* The name keeps its words up to most of the card; the detail takes what is left */
+  .row-drag-name {
+    flex: 0 0 auto;
+    max-width: 62%;
+    min-width: 0;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-drag-detail {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.8rem;
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The line between the rows, with a ring at its start, over every panel */
+  .row-drag-line {
+    position: fixed;
+    z-index: 10000;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--urd-color-accent);
+    pointer-events: none;
+    transition: top 0.1s ease;
+    animation: row-drag-line-in 0.12s ease-out;
+  }
+
+  @keyframes row-drag-line-in {
+    from { opacity: 0; }
+  }
+
+  .row-drag-line::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: -4px;
+    width: 6px;
+    height: 6px;
+    border: 2px solid var(--urd-color-accent);
+    border-radius: 50%;
+    background: var(--urd-color-bg);
+  }
+
+  /* A slot in a table stands in a row of its own across every column */
+  .row-drag-slot-row > td {
+    padding: 4px 0;
+    border: 0;
+  }
+
+  [data-row-landed] {
+    animation: row-landed 0.8s ease-out;
+  }
+
+  @keyframes row-landed {
+    from {
+      background-color: color-mix(in srgb, var(--urd-color-accent) 30%, transparent);
+      box-shadow: 0 0 0 1px var(--urd-color-accent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-row-dragging],
+    .row-drag-slot,
+    .nav-item.ghost,
+    .row-drag-line { animation: none; transition: none; }
   }
 
   /* The row that takes the dragged row in as a child */
@@ -2605,6 +2774,12 @@
     gap: 0.4rem;
   }
 
+  /* The stop's position slider takes the room left beside its colour, its alpha and its remove */
+  .grad-stop > .row-slider {
+    flex: 1;
+    min-width: 0;
+  }
+
   .grad-stop .grad-alpha {
     flex: 0 0 3.6rem;
     width: 3.6rem;
@@ -2861,30 +3036,11 @@
     object-fit: cover;
   }
 
-  /* The background layers in the section properties */
-  .bg-layer {
+  /* A slide of a slideshow layer: its picture with its editor, then its focal point */
+  .bg-slide {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.4rem;
-    padding: 0.4rem 0 0.5rem 0.5rem;
-    border-left: 2px solid rgb(255 255 255 / 12%);
-  }
-  .bg-layer-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.4rem;
-  }
-
-  /* A layer's fold: the caret points right while the layer's settings are folded away, down while they show. */
-  .bg-fold svg {
-    rotate: -90deg;
-    transition: rotate 0.15s ease;
-  }
-
-  .bg-fold.open svg { rotate: 0deg; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .bg-fold svg { transition: none; }
+    gap: 4px;
+    min-width: 0;
   }
 
   /* Compact toolbar rows (word-processor style) in the panels */

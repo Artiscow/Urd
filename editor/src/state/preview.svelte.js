@@ -224,6 +224,7 @@ function onIframeLoad() {
     onSelectSection: pageState.onSelectSection,
     onSelectBlock: pageState.onSelectBlock,
     onBlockMenu: pageState.onBlockMenu,
+    onSectionMenu: pageState.onSectionMenu,
     onBlockDesign: pageState.onBlockDesign,
     onMenuArea: pageState.onMenuArea,
     onReady,
