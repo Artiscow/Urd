@@ -156,7 +156,8 @@ const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input'
 function parseHtml(html) {
   const root = { tag: '#root', attrs: {}, children: [], text: '' };
   const stack = [root];
-  const re = /<!--[\s\S]*?-->|<\/([a-zA-Z][\w-]*)\s*>|<([a-zA-Z][\w-]*)((?:\s+[^\s=>\/]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(\/?)>|([^<]+)/g;
+  // An open tag's attributes are one flat run of quoted strings and other characters up to the closing bracket, so no two parts of the pattern can take the same characters.
+  const re = /<!--[\s\S]*?-->|<\/([a-zA-Z][\w-]*)\s*>|<([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^"'>])*)>|([^<]+)/g;
   for (const m of html.matchAll(re)) {
     const top = stack[stack.length - 1];
     if (m[1]) {
@@ -164,12 +165,14 @@ function parseHtml(html) {
       if (at > 0) stack.length = at;
     } else if (m[2]) {
       const attrs = {};
-      for (const a of m[3].matchAll(/([^\s=>\/]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)) attrs[a[1]] = a[2] ?? a[3] ?? a[4] ?? '';
+      const selfClosing = /\/\s*$/.test(m[3]);
+      const run = m[3].replace(/\/\s*$/, '');
+      for (const a of run.matchAll(/([^\s=\/"']+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"']+)))?/g)) attrs[a[1]] = a[2] ?? a[3] ?? a[4] ?? '';
       const node = { tag: m[2].toLowerCase(), attrs, children: [], text: '' };
       top.children.push(node);
-      if (!m[4] && !VOID.has(node.tag)) stack.push(node);
-    } else if (m[5]) {
-      top.text += m[5];
+      if (!selfClosing && !VOID.has(node.tag)) stack.push(node);
+    } else if (m[4]) {
+      top.text += m[4];
     }
   }
   return root;
