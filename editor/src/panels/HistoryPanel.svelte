@@ -3,6 +3,8 @@
   import { getContext } from 'svelte';
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
+  import EmptyState from '../lib/rows/EmptyState.svelte';
+  import ErrorLine from '../lib/rows/ErrorLine.svelte';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const auth = $derived(ed.auth);
@@ -108,10 +110,10 @@
 
 <div class="panel-body">
   {#if historyList === null}
-    <p class="panel-hint">{ta('hint.history.loading')}</p>
+    <EmptyState text={ta('hint.history.loading')} />
   {:else}
     {#if historyError}
-      <p class="panel-hint">{historyError}</p>
+      <ErrorLine text={historyError} />
     {/if}
     {#if historyList.length > 0}
       <button class="ghost revert-last" onclick={revertLast}

@@ -4,7 +4,7 @@
  * A word stands for a label when, in some language, the label's string has a word that starts with it, or holds it inside a compound once the word is five letters long («farge» in «Tekstfarge»).
  * Only short strings count as labels; the words of a sentence (a tooltip, a hint) would find too much.
  * A label found this way matches the menu's text only where it starts a word there, and a label shorter than four letters only as a whole word, so «Mål» found for «size» does not match inside «Normal»; a label of one or two letters is not used.
- * The admin dictionaries are loaded on the first search, from the absolute paths initAdminLocale uses, so a language already loaded is not fetched again.
+ * The admin dictionaries are loaded on the first search, from the absolute paths initAdminLocale uses, so a language already loaded is not fetched again; the admin dictionaries of the enabled language packs (language-packs.js) are loaded with them, so a word in a pack's language is found too.
  * The core is pure (buildIndex, makeLanguageSearch) and node-tested with plain dictionaries; the menus use the bound functions below.
  */
 import { SUPPORTED_LANGS, ta } from './i18n.js';
@@ -138,18 +138,37 @@ let loading = null;
 let ready = false;
 
 /**
- * Loads every built-in admin dictionary once and builds the index; a language that fails to load is left out.
+ * The admin dictionaries of the enabled language packs that offer admin strings; none where the packs cannot be read.
+ * @param {{ packLanguages: () => Promise<Array<{ code: string, admin: boolean }>>, loadPackStrings: (code: string, kind: string) => Promise<Record<string, string>|null> }} [packs] The pack loader, by default language-packs.js, outside the engine's static closure
+ * @returns {Promise<Array<Record<string, string>|null>>}
+ */
+export async function packDictionaries(packs) {
+  try {
+    packs ??= await import(/* @vite-ignore */ '/assets/urd/language-packs.js');
+    const langs = (await packs.packLanguages()).filter((lang) => lang.admin);
+    return await Promise.all(langs.map((lang) => packs.loadPackStrings(lang.code, 'admin')));
+  } catch {
+    return [];
+  }
+}
+
+/** A built-in admin dictionary, from the path initAdminLocale uses; null where it cannot be loaded. */
+async function builtinDictionary(code) {
+  try {
+    return (await import(/* @vite-ignore */ `/assets/urd/locales/admin/${code}.js`)).default.strings;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Loads every built-in admin dictionary and every language pack's once and builds the index; a language that fails to load is left out.
+ * @param {{ builtin?: (code: string) => Promise<Record<string, string>|null>, packs?: () => Promise<Array<Record<string, string>|null>> }} [load] The loaders, by default the files on the site (node-tested with dictionaries of its own)
  * @returns {Promise<void>}
  */
-export function loadSearchLanguages() {
-  loading ??= Promise.all(SUPPORTED_LANGS.map(async (code) => {
-    try {
-      return (await import(/* @vite-ignore */ `/assets/urd/locales/admin/${code}.js`)).default.strings;
-    } catch {
-      return null;
-    }
-  })).then((dicts) => {
-    search = makeLanguageSearch(buildIndex(dicts.filter(Boolean)), ta);
+export function loadSearchLanguages({ builtin = builtinDictionary, packs = packDictionaries } = {}) {
+  loading ??= Promise.all([...SUPPORTED_LANGS.map((code) => builtin(code)), packs()]).then((dicts) => {
+    search = makeLanguageSearch(buildIndex(dicts.flat().filter(Boolean)), ta);
     ready = true;
   });
   return loading;

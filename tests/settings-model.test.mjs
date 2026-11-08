@@ -86,6 +86,8 @@ test('the search keeps the settings a word of the query names, and the sheet spl
   const c = ctx();
   assert.ok(settingMatches(SETTINGS_GROUPS[0].settings[0], 'settings.THEME', c));
   assert.ok(!settingMatches(SETTINGS_GROUPS[0].settings[0], 'nothing-here', c));
+  // With the search in every language, the context's match decides: a word of another language finds the setting.
+  assert.ok(settingMatches(SETTINGS_GROUPS[0].settings[0], 'tema', { ...c, match: (text, q) => q === 'tema' && text === c.ta(SETTINGS_GROUPS[0].settings[0].labelKey) }));
   const all = visibleGroups('', null, c);
   assert.deepEqual(all.map((g) => g.id), ['look', 'editing', 'window', 'site']);
   // A setting under another (`parent`) stands with it, so «After a pick» goes with «Tab menus» into the look and brings it into the rest.

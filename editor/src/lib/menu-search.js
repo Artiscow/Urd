@@ -61,8 +61,8 @@ export function searchParts(parts, match, context = '', shown = new Set()) {
 
 /** Inside a part, the text of these is a value or a control, not the setting's name. */
 const VALUE_TEXT = 'button, select, textarea, svg, [popover], .dd, .gridmenu-value, .menu-group-value';
-/** Tooltips that name a tool on many rows, or a choice inside a picker, not the setting. */
-const TOOL_TITLE = '.row-tool, .cp-clear, [popover] *';
+/** Tooltips that name a tool on many rows (the small icon buttons inside a row, a setting's reset and pin), or a choice inside a picker, not the setting. */
+const TOOL_TITLE = '.icon-btn.sm, .cp-clear, [popover] *';
 
 /**
  * The words a part is found by: its visible text without the values its
@@ -103,7 +103,7 @@ export function readParts(container, skip = '') {
       parts.push({ kind: 'group', el, text: summary ? partText(summary) : '', children: readParts(body, 'summary') });
     } else if (el.tagName === 'HR') {
       parts.push({ kind: 'rule', el, text: '' });
-    } else if (el.matches('.panel-strong, .mini-label')) {
+    } else if (el.matches('.row-sub, .mini-label')) {
       parts.push({ kind: 'heading', el, text: partText(el) });
     } else {
       parts.push({ kind: 'row', el, text: partText(el) });

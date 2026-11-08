@@ -415,9 +415,7 @@
     border-bottom: 1px solid rgb(255 255 255 / 10%);
   }
   .panel-nav-row { display: flex; align-items: center; gap: 0.4rem; }
-  .panel-nav-groups { display: flex; flex: 1; }
-  .panel-nav-groups button { flex: 1; position: relative; }
-  .panel-nav-groups .update-dot { top: -3px; right: -3px; }
+  .panel-nav-row .update-dot { top: -3px; right: -3px; }
   .panel-tabs {
     display: flex;
     flex-wrap: wrap;
@@ -1703,17 +1701,9 @@
     opacity: 0.6;
   }
 
-  .plugin-head .row-tools {
+  /* A plugin's own button (its removal, or the adding of one found) at the head's right edge */
+  .plugin-head > .icon-btn {
     margin-left: auto;
-    align-items: center;
-  }
-
-  .plugin-toggle {
-    font-size: 0.8rem;
-  }
-
-  .plugin-warn {
-    color: #e2b84a;
   }
 
   /* The page open on the canvas: its name in the accent and bold */
@@ -2492,29 +2482,6 @@
     height: 1.7rem;
   }
 
-  .row-tool {
-    padding: 0.2em 0.5em;
-    font-size: 0.8rem;
-  }
-
-  /* The Collections panel's square tools: the way back, the collection's menu, and an entry's steps, copy and removal, one size with the icon in the middle; the removal in red, as the selection bar's */
-  .ghost.coll-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
-  .panel-body .ghost.coll-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    flex: none;
-    width: 2rem;
-    height: 2rem;
-    min-height: 0;
-    padding: 0;
-    justify-content: center;
-    align-items: center;
-  }
-  .ghost.coll-btn svg { display: block; }
-  .ghost.coll-btn.coll-danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    color: #f08a8a;
-    border-color: rgb(224 82 82 / 50%);
-  }
-  .ghost.coll-btn.coll-danger:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(224 82 82 / 14%); }
-
   /* The row kit's icon button (lib/rows/IconButton.svelte): a square of the control height with the icon in its middle, so it lines up with the field beside it.
      Small, it is the square of a tool inside a row; quiet, it has no frame and stays faint until reached. */
   .icon-btn:is(.ghost, .quiet):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
@@ -2568,17 +2535,6 @@
 
   .icon-btn.danger:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     background: rgb(224 82 82 / 14%);
-  }
-
-  /* Row buttons (arrows/cross): fixed square width and centered glyph,
-     follows the field's height - not the block buttons' min height or the
-     panel list's left alignment */
-  .panel-body .row-tool {
-    min-height: 0;
-    height: 100%;
-    width: 2.1rem;
-    padding: 0;
-    justify-content: center;
   }
 
   /* The "new page from template" grid: cards with a page thumbnail; the
@@ -2726,11 +2682,6 @@
     text-align: right;
   }
 
-  .panel-strong {
-    margin: 0;
-    font-weight: 600;
-  }
-
   .site-icon-preview {
     width: 1.6rem;
     height: 1.6rem;
@@ -2766,7 +2717,6 @@
   .ctl-field { display: grid; gap: 4px; min-width: 0; }
   .panel-body .ctl-field .tb-num { width: 100%; padding: 0 0.3em; text-align: center; }
   /* The heading of a part inside a group (the Nav panel's groups hold several parts) */
-  .group-sub { margin: 0.2rem 0 0; }
   /* The pages the menu and the announcement strip show on, two to a row */
   .page-switches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.15rem 0.9rem; }
   .page-switches .gridmenu-snap { min-width: 0; }
@@ -2865,7 +2815,14 @@
 
   .update-run { margin-top: 0.5rem; width: 100%; }
 
-  /* The setup wizard */
+  /* A dialog's own words: a question's lines and the setup wizard's welcome, muted under the heading */
+  .dialog-line {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.65;
+  }
+
+  /* The lead of a question's choice of where visitors go */
   .confirm-line {
     opacity: 0.9;
     margin: 0;
@@ -3237,18 +3194,6 @@
     dialog.dx[open]::backdrop,
     dialog.dx.dx-closing,
     dialog.dx.dx-closing::backdrop { transition: none; }
-  }
-
-  .panel-hint {
-    margin: 0;
-    font-size: 0.8rem;
-    opacity: 0.65;
-  }
-
-  /* The field contract's search status (place fields): errors in destructive red. */
-  .panel-hint.place-error {
-    color: #e05252;
-    opacity: 1;
   }
 
   /* The panel language (ADR-0016): shared building blocks all the panels

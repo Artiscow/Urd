@@ -4,21 +4,23 @@
    * Up to four short options sit beside the label on one row; five or more, or longer option texts, get the label above in capitals and the segment on its own line.
    * An option of more than 18 characters puts every option on a row of its own, and so does `rows`.
    * `stack` asks for the label above whatever the options, as a pinnable choice stands.
-   * @type {{ label: string, title?: string, value: string, options: Array<[string, string]>, onchange: (value: string) => void, stack?: boolean, rows?: boolean }}
+   * An option may carry a third word, its own tooltip.
+   * `fill` is a segment of its own across the row, its buttons of one width and its label for a screen reader alone, as the panel's groups stand over its tabs; `mark(value)` draws what follows an option's words, such as a dot.
+   * @type {{ label: string, title?: string, value: string, options: Array<[string, string, string?]>, onchange: (value: string) => void, stack?: boolean, rows?: boolean, fill?: boolean, mark?: import('svelte').Snippet<[string]> }}
    */
-  let { label, title = undefined, value, options, onchange, stack = false, rows = false } = $props();
+  let { label, title = undefined, value, options, onchange, stack = false, rows = false, fill = false, mark = undefined } = $props();
   const lengths = $derived(options.map(([, text]) => `${text}`.length));
-  const stacked = $derived(stack || rows || options.length > 4 || lengths.reduce((n, l) => n + l, 0) > 14);
+  const stacked = $derived(!fill && (stack || rows || options.length > 4 || lengths.reduce((n, l) => n + l, 0) > 14));
   /** Options too long to share a row stand under each other instead of wrapping two and one. */
-  const vertical = $derived(rows || (stacked && Math.max(0, ...lengths) > 18));
+  const vertical = $derived(!fill && (rows || (stacked && Math.max(0, ...lengths) > 18)));
   const key = (v) => `${v ?? ''}`;
 </script>
 
-<div class="choice" class:stacked class:vertical {title}>
-  <span class="choice-label">{label}</span>
+<div class="choice" class:stacked class:vertical class:fill {title}>
+  {#if !fill}<span class="choice-label">{label}</span>{/if}
   <div class="choice-seg" role="group" aria-label={label}>
-    {#each options as [v, text] (key(v))}
-      <button type="button" class:on={key(v) === key(value)} aria-pressed={key(v) === key(value)} onclick={() => onchange(v)}>{text}</button>
+    {#each options as [v, text, tip] (key(v))}
+      <button type="button" class:on={key(v) === key(value)} aria-pressed={key(v) === key(value)} title={tip} onclick={() => onchange(v)}>{text}{#if mark}{@render mark(v)}{/if}</button>
     {/each}
   </div>
 </div>
@@ -53,6 +55,16 @@
     border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
     border-radius: 999px;
     overflow: hidden;
+  }
+
+  .choice.fill,
+  .choice.fill .choice-seg {
+    display: flex;
+    flex: 1;
+  }
+
+  .choice.fill .choice-seg button {
+    flex: 1;
   }
 
   .choice.stacked .choice-seg {

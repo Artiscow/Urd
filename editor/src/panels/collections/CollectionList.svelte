@@ -3,6 +3,8 @@
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import Dropdown from '../../lib/Dropdown.svelte';
+  import SubHeading from '../../lib/rows/SubHeading.svelte';
+  import ErrorLine from '../../lib/rows/ErrorLine.svelte';
 
   const ed = getContext('urd-editor');
   let { selected = null, onselect } = $props();
@@ -25,7 +27,7 @@
 </script>
 
 {#if ed.collectionsUnavailable}
-  <p class="panel-hint place-error">{ta('collections.unreadable')}</p>
+  <ErrorLine text={ta('collections.unreadable')} />
 {/if}
 <div class="cl-collections">
   {#each ed.collectionIds as id (id)}
@@ -42,7 +44,7 @@
 </div>
 {#if !ed.collectionsUnavailable}
   {#if ed.collectionIds.length}<hr class="gridmenu-divider" />{/if}
-  <p class="mini-label group-sub">{ta('ui.newCollection')}</p>
+  <SubHeading text={ta('ui.newCollection')} />
   <label title={ta('tip.collections.newName')}>{ta('lbl.newCollectionName')}
     <input data-new-collection bind:value={() => ed.newCollectionName, (v) => (ed.newCollectionName = v)} placeholder={ta('ph.collections.name')}
       onkeydown={(e) => e.key === 'Enter' && create()} /></label>

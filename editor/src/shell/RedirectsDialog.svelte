@@ -9,6 +9,8 @@
   import { HOST_LIMITS, REDIRECT_KINDS, normalizeFrom, normalizeTo, redirectIssues, hostLines, kindOf, parseList, rulesFromCsv, rulesToCsv, mergeRules } from '../lib/redirects-model.js';
   import { pageSpots } from '$engine/anchor-model.js';
   import PlaceField from './PlaceField.svelte';
+  import IconButton from '../lib/rows/IconButton.svelte';
+  import Choice from '../lib/Choice.svelte';
 
   const ed = getContext('urd-editor');
   let dialogEl = $state(null);
@@ -97,6 +99,9 @@
     ed.mutateRedirects((list) => list.map((r, j) => (j === i ? { ...r, [field]: value } : r)));
   }
 
+  /** The two kinds of redirect as the segment offers them, each with its tooltip. */
+  const kindOptions = () => REDIRECT_KINDS.map((kind) => [kind, ta(`redirects.kind.${kind}`), ta(`tip.redirects.kind.${kind}`)]);
+
   function setKind(i, status) {
     if (kindOf(rules[i]?.status) === status) return;
     ed.mutateRedirects((list) => list.map((r, j) => (j === i ? { ...r, status } : r)));
@@ -172,7 +177,7 @@
       <div class="rd-head">
         <span class="rd-ico" aria-hidden="true">{@html ICONS.redirect}</span>
         <h2 id="rd-title">{ta('ui.redirects')}</h2>
-        <button type="button" class="rd-x" bind:this={closeEl} title={ta('tip.redirects.close')} aria-label={ta('tip.redirects.close')} onclick={() => dialogEl.close()}>{@html ICONS.cross}</button>
+        <IconButton icon={ICONS.cross} label={ta('tip.redirects.close')} bind:el={closeEl} onclick={() => dialogEl.close()} />
       </div>
       <div class="rd-tools">
         <button type="button" class="ghost rd-tool" class:on={pasting} aria-expanded={pasting} title={ta('tip.redirects.paste')} onclick={() => (pasting = !pasting)}>{@html ICONS.paste}<span>{ta('redirects.paste')}</span></button>
@@ -217,12 +222,8 @@
                 invalid={toBad} warn={issue?.level === 'warn' && issue.field === 'to'}
                 title={typed[`${i}:to`] !== undefined ? ta('redirect.issue.badTo') : issue?.field === 'to' ? issueText(issue) : ta('tip.redirects.to')}
                 onchange={(text) => setField(i, 'to', text)} onpick={(path) => setField(i, 'to', path)} />
-              <span class="rd-kind" role="group" aria-label={ta('redirects.col.kind')}>
-                {#each REDIRECT_KINDS as kind (kind)}
-                  <button type="button" class:on={kindOf(rule.status) === kind} aria-pressed={kindOf(rule.status) === kind} title={ta(`tip.redirects.kind.${kind}`)} onclick={() => setKind(i, kind)}>{ta(`redirects.kind.${kind}`)}</button>
-                {/each}
-              </span>
-              <button type="button" class="ghost row-tool rd-remove" title={ta('tip.redirects.remove')} aria-label={ta('tip.redirects.remove')} onclick={() => removeRule(i)}>{@html ICONS.cross}</button>
+              <Choice fill label={ta('redirects.col.kind')} value={kindOf(rule.status)} options={kindOptions()} onchange={(kind) => setKind(i, kind)} />
+              <IconButton icon={ICONS.cross} label={ta('tip.redirects.remove')} onclick={() => removeRule(i)} />
             </div>
           {/each}
           {#if !rules.length}
@@ -238,12 +239,8 @@
               invalid={fresh.error === 'to'} title={fresh.error === 'to' ? ta('redirect.issue.badTo') : ta('tip.redirects.to')}
               oninput={(text) => { fresh.to = text; fresh.error = null; }} onkeydown={onFreshKey} onchange={addFresh}
               onpick={(path) => { fresh.to = path; fresh.error = null; addFresh(); }} />
-            <span class="rd-kind" role="group" aria-label={ta('redirects.col.kind')}>
-              {#each REDIRECT_KINDS as kind (kind)}
-                <button type="button" class:on={fresh.status === kind} aria-pressed={fresh.status === kind} title={ta(`tip.redirects.kind.${kind}`)} onclick={() => (fresh.status = kind)}>{ta(`redirects.kind.${kind}`)}</button>
-              {/each}
-            </span>
-            <button type="button" class="ghost row-tool rd-add" title={ta('tip.redirects.add')} aria-label={ta('tip.redirects.add')} onclick={addFresh}>{@html ICONS.plus}</button>
+            <Choice fill label={ta('redirects.col.kind')} value={fresh.status} options={kindOptions()} onchange={(kind) => (fresh.status = kind)} />
+            <IconButton icon={ICONS.plus} label={ta('tip.redirects.add')} onclick={addFresh} />
           </div>
         </div>
       </div>
@@ -306,23 +303,6 @@
   .rd-ico {
     display: inline-flex;
     opacity: 0.75;
-  }
-
-  .rd-x {
-    display: grid;
-    place-items: center;
-    width: 1.9rem;
-    height: 1.9rem;
-    padding: 0;
-    color: inherit;
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 18%);
-    border-radius: 8px;
-  }
-
-  .rd-x:hover {
-    background: rgb(255 255 255 / 7%);
   }
 
   .rd-tools {
@@ -413,7 +393,7 @@
 
   .rd-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 1rem minmax(0, 1.3fr) auto 1.9rem;
+    grid-template-columns: minmax(0, 1fr) 1rem minmax(0, 1.3fr) auto 2.2rem;
     gap: 0.4rem;
     align-items: center;
   }
@@ -430,37 +410,6 @@
     display: grid;
     place-items: center;
     opacity: 0.5;
-  }
-
-  .rd-kind {
-    display: inline-grid;
-    grid-template-columns: 1fr 1fr;
-    overflow: hidden;
-    border: 1px solid rgb(255 255 255 / 16%);
-    border-radius: 7px;
-  }
-
-  .rd-kind button {
-    height: 2rem;
-    padding: 0 0.6rem;
-    font: inherit;
-    font-size: 0.78rem;
-    color: inherit;
-    cursor: pointer;
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    opacity: 0.7;
-  }
-
-  .rd-kind button + button {
-    border-left: 1px solid rgb(255 255 255 / 16%);
-  }
-
-  .rd-kind button.on {
-    color: #fff;
-    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 70%, transparent);
-    opacity: 1;
   }
 
   .rd-none {

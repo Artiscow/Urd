@@ -4,6 +4,7 @@
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
+  import IconButton from '../../lib/rows/IconButton.svelte';
   import PageSettingsFields from './PageSettingsFields.svelte';
   import HideButton from './HideButton.svelte';
   import HiddenRow from './HiddenRow.svelte';
@@ -29,7 +30,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="ps-step" onkeydown={onKey}>
     <span class="ps-crumb">
-      <button type="button" class="ghost coll-btn" bind:this={backEl} title={ta('tip.pages.back')} aria-label={ta('tip.pages.back')} onclick={() => ed.closePageSettings()}>{@html ICONS.foldLeft}</button>
+      <IconButton icon={ICONS.foldLeft} label={ta('tip.pages.back')} bind:el={backEl} onclick={() => ed.closePageSettings()} />
       <span class="ps-words"><span class="ps-up">{ta('panel.pages')}</span><span class="ps-name">{entry.title}</span></span>
       <span class="ps-path">{entry.path}</span>
       <HideButton {id} />

@@ -11,6 +11,7 @@
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
   import { currencyWord } from '$engine/shop.js';
   import { ICONS } from '../../lib/icons.js';
+  import IconButton from '../../lib/rows/IconButton.svelte';
   import { dismiss } from '../../lib/dismiss.js';
   import DatePicker from '../../lib/DatePicker.svelte';
   import { kindChoices, entriesFit, settableFields, fieldSummary, valuesInUse } from '../../lib/collection-bulk.js';
@@ -356,8 +357,8 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <span class="cm-wrap" bind:this={wrapEl} onpointerenter={(e) => rest(true, e)} onpointerleave={(e) => rest(false, e)}>
-  <button type="button" class="ghost coll-btn" bind:this={opener} aria-expanded={open}
-    aria-label={ta('tip.collections.menu')} onclick={() => { clearTimeout(restTimer); if (open && restOpened) { restOpened = false; return; } restOpened = false; if (open) close(); else openCard(); }}>{@html ICONS.kebab}</button>
+  <IconButton icon={ICONS.kebab} label={ta('tip.collections.menu')} tip={false} expanded={open} bind:el={opener}
+    onclick={() => { clearTimeout(restTimer); if (open && restOpened) { restOpened = false; return; } restOpened = false; if (open) close(); else openCard(); }} />
   {#if open}
     <div class="cm-card" class:cm-card-left={fromLeft} role="group" aria-label={view?.name ?? id} bind:this={card} use:dismiss={{ close, opener }} transition:menuMotion>
       {#if page === 'main'}

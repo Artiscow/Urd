@@ -4,6 +4,7 @@
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import PanelTab from './PanelTab.svelte';
+  import Choice from '../lib/Choice.svelte';
   const ed = getContext('urd-editor');
   let pickedGroup = $state(0);
   const groupOf = (panel) => Math.max(0, ed.PANEL_GROUPS.findIndex((g) => g.includes(panel)));
@@ -18,12 +19,11 @@
   {/snippet}
   {#if ed.adminLayout === 'panel-tabs'}
     <div class="panel-nav-row">
-      <div class="seg panel-nav-groups">
-        {#each ed.PANEL_GROUP_KEYS as key, gi (key)}
-          <!-- The update dot stands on the System group's button while its tabs are out of sight -->
-          <button type="button" class:on={shownGroup === gi} onclick={() => { pickedGroup = gi; if (ed.activePanel && groupOf(ed.activePanel) !== gi) ed.activePanel = null; }}>{ta(key)}{#if gi === 2 && shownGroup !== 2 && ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{/if}{#if gi === 1 && shownGroup !== 1 && ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}</button>
-        {/each}
-      </div>
+      <Choice fill label={ta('rail.panels')} value={shownGroup} options={ed.PANEL_GROUP_KEYS.map((key, gi) => [gi, ta(key)])}
+        onchange={(gi) => { pickedGroup = gi; if (ed.activePanel && groupOf(ed.activePanel) !== gi) ed.activePanel = null; }}>
+        <!-- The update dot stands on the System group's button, and Legal's on the Site group's, while their tabs are out of sight -->
+        {#snippet mark(gi)}{#if gi === 2 && shownGroup !== 2 && ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{/if}{#if gi === 1 && shownGroup !== 1 && ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}{/snippet}
+      </Choice>
       {@render fold()}
     </div>
   {/if}

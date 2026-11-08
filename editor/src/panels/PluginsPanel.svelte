@@ -3,6 +3,11 @@
   import { getContext } from 'svelte';
   import { ta, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
+  import SwitchRow from '../lib/rows/SwitchRow.svelte';
+  import IconButton from '../lib/rows/IconButton.svelte';
+  import SubHeading from '../lib/rows/SubHeading.svelte';
+  import EmptyState from '../lib/rows/EmptyState.svelte';
+  import ErrorLine from '../lib/rows/ErrorLine.svelte';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const liveCsp = $derived(ed.liveCsp);
@@ -57,7 +62,7 @@
 
 <div class="panel-body">
   {#if !knownPlugins().length}
-    <p class="panel-hint">{ta('hint.plugins.empty')}</p>
+    <EmptyState text={ta('plugins.none')} title={ta('hint.plugins.empty')} />
   {/if}
   {#each knownPlugins() as id (id)}
     {@const info = pluginInfo[id]}
@@ -66,47 +71,38 @@
       <span class="plugin-head">
         <span class="plugin-name">{info?.names?.[currentAdminLang()] ?? info?.name ?? id}</span>
         {#if info?.version}<span class="plugin-meta">v{info.version}</span>{/if}
-        <span class="row-tools">
-          <label class="gridmenu-snap plugin-toggle" title={enabled ? ta('tip.plugins.on') : ta('tip.plugins.off')}>
-            <input type="checkbox" checked={enabled} disabled={Boolean(info?.errors?.length)}
-              onchange={(e) => setPluginEnabled(id, e.target.checked)} />
-            {enabled ? ta('ui.on') : ta('ui.off')}
-          </label>
-          <button class="ghost row-tool" title={ta('tip.plugins.remove')}
-            onclick={() => removePlugin(id)}>{@html ICONS.cross}</button>
-        </span>
+        <IconButton size="sm" icon={ICONS.cross} label={ta('tip.plugins.remove')} onclick={() => removePlugin(id)} />
       </span>
+      <SwitchRow label={ta('lbl.pluginActive')} title={enabled ? ta('tip.plugins.on') : ta('tip.plugins.off')} checked={enabled}
+        disabled={Boolean(info?.errors?.length)} onchange={(on) => setPluginEnabled(id, on)} />
       {#if info?.errors?.length}
-        <p class="panel-hint plugin-warn">{info.errors.join('; ')}</p>
+        <ErrorLine polite text={info.errors.join('; ')} />
       {:else if info && !info.satisfied}
-        <p class="panel-hint plugin-warn">{ta('plugin.engineMismatch', { required: info.requiresEngine, current: pluginEngine })}</p>
+        <ErrorLine polite text={ta('plugin.engineMismatch', { required: info.requiresEngine, current: pluginEngine })} />
       {:else if info?.csp && cspMissing(info.csp).length}
-        <p class="panel-hint plugin-warn">{ta('plugin.cspNeeded', { list: cspMissing(info.csp).join(', ') })}</p>
+        <ErrorLine tone="warn" text={ta('plugin.cspNeeded', { list: cspMissing(info.csp).join(', ') })} />
       {/if}
       {#if info?.languages?.length}
-        <p class="panel-hint">{ta('plugin.languages', { list: info.languages.map((l) => l.name).join(', ') })}</p>
+        <ErrorLine tone="note" text={ta('plugin.languages', { list: info.languages.map((l) => l.name).join(', ') })} />
       {/if}
     </div>
   {/each}
   {#if ed.pluginsFound.length}
     <hr class="gridmenu-divider" />
-    <p class="panel-strong">{ta('hint.plugins.found')}</p>
+    <SubHeading text={ta('lbl.pluginsFound')} title={ta('hint.plugins.autoDiscover')} />
     {#each ed.pluginsFound as id (id)}
       <div class="plugin-row">
         <span class="plugin-head">
           <span class="plugin-name">{pluginInfo[id]?.names?.[currentAdminLang()] ?? pluginInfo[id]?.name ?? id}</span>
           {#if pluginInfo[id]?.version}<span class="plugin-meta">v{pluginInfo[id].version}</span>{/if}
-          <span class="row-tools">
-            <button class="ghost row-tool" title={ta('tip.plugins.addFound')}
-              onclick={() => addFoundPlugin(id)}>{@html ICONS.right}</button>
-          </span>
+          <IconButton size="sm" icon={ICONS.plus} label={ta('tip.plugins.addFound')} onclick={() => addFoundPlugin(id)} />
         </span>
       </div>
     {/each}
   {/if}
   {#if pluginDiscovery === 'ok'}
     {#if !ed.pluginsFound.length}
-      <p class="panel-hint" title={ta('hint.plugins.autoDiscover')}>{ta('plugins.noneFound')}</p>
+      <EmptyState text={ta('plugins.noneFound')} title={ta('hint.plugins.autoDiscover')} />
     {/if}
   {:else}
     <!-- Fallback when repo discovery is unavailable (local server / not logged in) -->
@@ -115,7 +111,7 @@
       onkeydown={(e) => e.key === 'Enter' && addPlugin()} />
     <button class="ghost action" onclick={addPlugin} disabled={!newPluginId.trim()}>{ta('ui.addPlugin')}</button>
     {#if pluginError}
-      <p class="panel-hint plugin-warn">{pluginError}</p>
+      <ErrorLine text={pluginError} />
     {/if}
   {/if}
 </div>

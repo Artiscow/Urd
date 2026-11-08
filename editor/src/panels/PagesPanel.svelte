@@ -8,6 +8,7 @@
   import { ICONS } from '../lib/icons.js';
   import { pageFills } from '../lib/fill-in.js';
   import PageSettingsStep from './pages/PageSettingsStep.svelte';
+  import IconButton from '../lib/rows/IconButton.svelte';
   const ed = getContext('urd-editor');
   const pageId = $derived(ed.pageId);
   const siteDraft = $derived(ed.siteDraft);
@@ -81,14 +82,11 @@
         <!-- The parts of a template still to fill in on the page, marked on the page itself -->
         {#if openOn(p)}<span class="page-fills" title={ta('tip.pages.fills', { count: openOn(p) })}>{openOn(p)}</span>{/if}
         <!-- Shown or hidden from visitors: hiding a published page asks where its visitors go -->
-        <button class="ghost row-tool" class:row-hidden={p.hidden} disabled={p.path === '/'} aria-pressed={p.hidden === true}
-          title={p.path === '/' ? ta('tip.pages.frontNoHide') : p.hidden ? ta('tip.pages.hiddenShow') : ta('tip.pages.hide')}
-          aria-label={p.path === '/' ? ta('tip.pages.frontNoHide') : p.hidden ? ta('tip.pages.hiddenShow') : ta('tip.pages.hide')}
-          onclick={() => ed.setPageHidden(p, !p.hidden)}>{@html p.hidden ? ICONS.eyeOff : ICONS.eye}</button>
-        <button class="ghost row-tool" title={ta('tip.pages.open')}
-          disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
-        <button class="ghost row-tool" title={ta('tip.pages.settings')} aria-label={ta('ui.pageSettings')}
-          onclick={() => ed.openPageSettings(p.id)}>{@html ICONS.gear}</button>
+        <IconButton icon={p.hidden ? ICONS.eyeOff : ICONS.eye} class={p.hidden ? 'row-hidden' : ''} disabled={p.path === '/'} pressed={p.hidden === true}
+          label={p.path === '/' ? ta('tip.pages.frontNoHide') : p.hidden ? ta('tip.pages.hiddenShow') : ta('tip.pages.hide')}
+          onclick={() => ed.setPageHidden(p, !p.hidden)} />
+        <IconButton icon={ICONS.right} label={ta('tip.pages.open')} disabled={p.id === pageId} onclick={() => selectPage(p.id)} />
+        <IconButton icon={ICONS.gear} label={ta('tip.pages.settings')} onclick={() => ed.openPageSettings(p.id)} />
       </span>
     </div>
   {/each}
@@ -148,7 +146,7 @@
     opacity: 0.55;
   }
 
-  .row-hidden {
+  .page-row :global(.row-hidden) {
     color: #d9b44a;
   }
 

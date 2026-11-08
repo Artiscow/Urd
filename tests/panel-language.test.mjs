@@ -100,29 +100,6 @@ function findings() {
 
 /** The files not yet moved to the row kit, by the step of 0.7.30 (BACKLOG) that moves them, with the patterns each still holds. */
 const RATCHET = {
-  // 0.7.30.10, the other panels and the dialogs
-  'panels/BlocksPanel.svelte': ['fold', 'hint', 'subheading'],
-  'panels/CollectionsPanel.svelte': ['iconbutton'],
-  'panels/PagesPanel.svelte': ['iconbutton'],
-  'panels/HistoryPanel.svelte': ['hint'],
-  'panels/PluginsPanel.svelte': ['hint', 'iconbutton', 'subheading', 'switch'],
-  'panels/UpdatePanel.svelte': ['fold', 'hint', 'subheading'],
-  'panels/collections/CollectionList.svelte': ['hint', 'subheading'],
-  'panels/collections/CollectionMenu.svelte': ['iconbutton'],
-  'panels/collections/CollectionsTable.svelte': ['hint', 'iconbutton'],
-  'panels/collections/EntryFields.svelte': ['iconbutton', 'switch'],
-  'panels/collections/EntryList.svelte': ['hint'],
-  'panels/collections/ImportChoices.svelte': ['segment'],
-  'panels/collections/ImportStep.svelte': ['iconbutton'],
-  'panels/pages/PageSettingsFields.svelte': ['fold', 'iconbutton', 'switch'],
-  'panels/pages/PageSettingsStep.svelte': ['iconbutton'],
-  'panels/pages/PageSettingsTable.svelte': ['iconbutton'],
-  'lib/AnchorField.svelte': ['hint'],
-  'lib/LinkDialog.svelte': ['switch'],
-  'shell/ConfirmDialog.svelte': ['hint'],
-  'shell/PanelNav.svelte': ['segment'],
-  'shell/RedirectsDialog.svelte': ['iconbutton'],
-  'shell/SetupWizard.svelte': ['hint'],
   // 0.7.33.5, the Urd settings window
   'settings/SettingControl.svelte': ['segment'],
   'settings/SettingsBody.svelte': ['fold'],

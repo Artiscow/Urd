@@ -6,6 +6,9 @@
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
   import Choice from '../../lib/Choice.svelte';
+  import Fold from '../../lib/rows/Fold.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import IconButton from '../../lib/rows/IconButton.svelte';
 
   const ed = getContext('urd-editor');
   /** id: the page; grouped: each part as a fold-out group (the step) instead of a heading; wide: the pairs side by side (the dialog); actions: the page's own actions at the end. */
@@ -61,10 +64,7 @@
 
 {#snippet part(key, body)}
   {#if grouped}
-    <details class="group" open>
-      <summary>{ta(key)}</summary>
-      <div class="group-items">{@render body()}</div>
-    </details>
+    <Fold id={key} surface="page-settings" title={ta(key)} defaultOpen>{@render body()}</Fold>
   {:else}
     <section class="ps-part">
       <h3 class="mini-label ps-head">{ta(key)}</h3>
@@ -95,31 +95,20 @@
     <!-- The published address kept working by a permanent redirect, on by itself when the address changed; under the address it concerns -->
     <div class="ps-pair">
       {#if wide}<span aria-hidden="true"></span>{/if}
-      <label class="gridmenu-snap" title={ta('tip.pages.keepOld', { path: oldAddress, now: entry.path })}>
-        <input type="checkbox" checked={ed.keepsOldAddress(entry)} onchange={(e) => ed.setKeepOldAddress(entry, e.target.checked)} />
-        {ta('lbl.keepOldAddress', { path: oldAddress })}
-      </label>
+      <SwitchRow label={ta('lbl.keepOldAddress', { path: oldAddress })} title={ta('tip.pages.keepOld', { path: oldAddress, now: entry.path })}
+        checked={ed.keepsOldAddress(entry)} onchange={(on) => ed.setKeepOldAddress(entry, on)} />
     </div>
   {/if}
 {/snippet}
 
 {#snippet onPage()}
   <div class="ps-pair ps-switches">
-    <label class="gridmenu-snap" title={ta('tip.pages.navOnPage')}>
-      <input type="checkbox" checked={navOn} onchange={(e) => ed.toggleNavOnPage(id, e.target.checked)} />
-      {ta('lbl.navOnPage')}
-    </label>
+    <SwitchRow label={ta('lbl.navOnPage')} title={ta('tip.pages.navOnPage')} checked={navOn} onchange={(on) => ed.toggleNavOnPage(id, on)} />
     {#if stripShown}
-      <label class="gridmenu-snap" title={ta('tip.pages.announcementOnPage')}>
-        <input type="checkbox" checked={stripOn} onchange={(e) => ed.toggleAnnouncementOnPage(id, e.target.checked)} />
-        {ta('lbl.announcementOnPage')}
-      </label>
+      <SwitchRow label={ta('lbl.announcementOnPage')} title={ta('tip.pages.announcementOnPage')} checked={stripOn} onchange={(on) => ed.toggleAnnouncementOnPage(id, on)} />
     {/if}
     {#if footerShown}
-      <label class="gridmenu-snap" title={ta('tip.pages.footerOnPage')}>
-        <input type="checkbox" checked={footerOn} onchange={(e) => ed.toggleFooterOnPage(id, e.target.checked)} />
-        {ta('lbl.footerOnPage')}
-      </label>
+      <SwitchRow label={ta('lbl.footerOnPage')} title={ta('tip.pages.footerOnPage')} checked={footerOn} onchange={(on) => ed.toggleFooterOnPage(id, on)} />
     {/if}
   </div>
   {#if !navOn}
@@ -143,10 +132,7 @@
     <!-- An empty field says in grey what the description is and where it shows -->
     <textarea rows="2" value={meta.description} placeholder={ta('ph.seo.description')} onchange={(e) => ed.setPageMeta(id, 'description', e.target.value)}></textarea>
   </label>
-  <label class="gridmenu-snap" title={ta('tip.seo.hideFromSearch')}>
-    <input type="checkbox" checked={entry?.noindex === true} onchange={(e) => ed.setPageNoindex(e.target.checked, id)} />
-    {ta('lbl.hideFromSearch')}
-  </label>
+  <SwitchRow label={ta('lbl.hideFromSearch')} title={ta('tip.seo.hideFromSearch')} checked={entry?.noindex === true} onchange={(on) => ed.setPageNoindex(on, id)} />
 {/snippet}
 
 {#snippet sharing()}
@@ -163,8 +149,8 @@
           <input type="file" accept="image/*" onchange={(e) => ed.uploadPageOgImage(id, e)} />
         </label>
         {#if meta.ogImage}
-          <button class="ghost row-tool" title={ta('tip.seo.editOgImage')} aria-label={ta('tip.seo.editOgImage')} onclick={() => ed.editPageOgImage(id)}>{@html ICONS.pencil}</button>
-          <button class="ghost row-tool" title={ta('tip.seo.removeOgImage')} aria-label={ta('tip.seo.removeOgImage')} onclick={() => ed.setPageShareImage(id, '', null)}>{@html ICONS.cross}</button>
+          <IconButton icon={ICONS.pencil} label={ta('tip.seo.editOgImage')} onclick={() => ed.editPageOgImage(id)} />
+          <IconButton icon={ICONS.cross} label={ta('tip.seo.removeOgImage')} onclick={() => ed.setPageShareImage(id, '', null)} />
         {/if}
       </span>
     </div>
@@ -249,12 +235,12 @@
   }
 
   /* A switch's name on one line, so the tiles in the row stand the same height */
-  .ps-wide .ps-switches .gridmenu-snap {
+  .ps-wide .ps-switches :global(.gridmenu-snap) {
     white-space: nowrap;
   }
 
   /* In the dialog's width every switch stands on its own faint tile with its name, so a switch is never read as the next one's */
-  .ps-wide .gridmenu-snap {
+  .ps-wide :global(.gridmenu-snap) {
     padding: 0.55rem 0.75rem;
     background: rgb(255 255 255 / 4%);
     border: 1px solid rgb(255 255 255 / 10%);

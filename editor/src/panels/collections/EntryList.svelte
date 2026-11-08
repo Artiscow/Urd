@@ -13,6 +13,7 @@
   import { movable, entryMatches } from '../../lib/collection-layout.js';
   import { tickRun, withTicks } from '../../lib/collection-bulk.js';
   import { ICONS } from '../../lib/icons.js';
+  import EmptyState from '../../lib/rows/EmptyState.svelte';
   import { collectionActions } from './actions.js';
 
   const ed = getContext('urd-editor');
@@ -132,9 +133,9 @@
   {/each}
 </div>
 {#if !view.entries.length}
-  <p class="panel-hint">{ta('hint.collections.empty')}</p>
+  <EmptyState text={ta('hint.collections.empty')} />
 {:else if !rows.length}
-  <p class="panel-hint">{ta('collections.noMatch')}</p>
+  <EmptyState text={ta('collections.noMatch')} />
 {/if}
 
 <style>

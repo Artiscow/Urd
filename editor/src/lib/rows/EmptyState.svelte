@@ -1,10 +1,10 @@
 <script>
   /* An empty list or panel, in the row kit (0.7.30.2): what will stand here, and the way to add the first.
-     `action` is the button's words and `onaction` what it does; `children` takes anything else the empty place offers. */
-  let { text, action = undefined, onaction = undefined, children = undefined } = $props();
+     `action` is the button's words and `onaction` what it does; `children` takes anything else the empty place offers, and `title` explains in a tooltip how the place fills. */
+  let { text, title = undefined, action = undefined, onaction = undefined, children = undefined } = $props();
 </script>
 
-<div class="row-empty">
+<div class="row-empty" {title}>
   <span>{text}</span>
   {#if action && onaction}
     <button type="button" class="ghost action" onclick={onaction}>{action}</button>

@@ -7,6 +7,10 @@
   import { searchLangs } from '../lib/search-langs.svelte.js';
   import { calDesignGroups } from '$engine/calendar-designs.js';
   import { PALETTE_KINDS, paletteGroupsFor } from '$engine/block-palette.js';
+  import Fold from '../lib/rows/Fold.svelte';
+  import SearchField from '../lib/rows/SearchField.svelte';
+  import SubHeading from '../lib/rows/SubHeading.svelte';
+  import EmptyState from '../lib/rows/EmptyState.svelte';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const bridge = $derived(ed.bridge);
@@ -139,8 +143,7 @@
 
 <div class="panel-body" class:locked={viewMode === 'mobile'}
   title={viewMode === 'mobile' ? ta('tip.blocks.mobileLocked') : undefined}>
-  <input type="text" bind:value={blockSearch}
-    placeholder={ta('canvas.searchBlocks')} title={ta('canvas.searchBlocks')} />
+  <SearchField get={() => blockSearch} set={(v) => (blockSearch = v)} menu={false} label={ta('canvas.searchBlocks')} />
   {#if blockSearch.trim()}
     <!-- An active search shows a flat, ranked hit list instead
          of the groups. -->
@@ -159,12 +162,12 @@
         <button class="ghost" onclick={() => runPanelItem(item)}>{item.label}</button>
       {/if}
     {:else}
-      <p class="panel-hint">{ta('canvas.searchEmpty')}</p>
+      <EmptyState text={ta('canvas.searchEmpty')} />
     {/each}
   {:else}
   <!-- The palette's groups in the order the canvas's «+ New block» shares (block-palette.js), a picture and a name per entry; the shop's group while the shop is on -->
   {#each paletteGroupsFor(ed.shopBlocksOn()) as group (group.id)}
-    <p class="mini-label group-sub">{ta(group.labelKey)}</p>
+    <SubHeading text={ta(group.labelKey)} />
     <div class="tile-grid cols-3 palette-grid">
       {#each group.kinds as kind (kind)}
         {@const def = PALETTE_KINDS[kind]}
@@ -181,38 +184,29 @@
   {/each}
   {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
     {@const blockGroupTemplates = templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
-    <details class="group">
-      <summary>{ta('canvas.tabMyTemplates')}</summary>
-      <div class="group-items">
-        {#each blockGroupTemplates as id (id)}
-          <button class="ghost" title={ta('canvas.insertGroup')}
-            onclick={() => bridge?.sendInsertTemplate(id)}>{templateStores[id].data.mal.name}</button>
-        {/each}
-      </div>
-    </details>
+    <Fold id="templates" surface="blocks" title={ta('canvas.tabMyTemplates')} value={String(blockGroupTemplates.length)}>
+      {#each blockGroupTemplates as id (id)}
+        <button class="ghost" title={ta('canvas.insertGroup')}
+          onclick={() => bridge?.sendInsertTemplate(id)}>{templateStores[id].data.mal.name}</button>
+      {/each}
+    </Fold>
   {/if}
   {#if pluginBlocks.length}
-    <details class="group">
-      <summary>{ta('panel.plugins')}</summary>
-      <div class="group-items">
-        {#each pluginBlocks as entry (entry.type)}
-          {#if entry.variants?.length}
-            <details class="group">
-              <summary>{entry.label}</summary>
-              <div class="group-items">
-                {#each entry.variants as variant (variant.label)}
-                  <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
-                    onclick={() => addPluginBlock(entry, variant.props)}>{variant.label}</button>
-                {/each}
-              </div>
-            </details>
-          {:else}
-            <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
-              onclick={() => addPluginBlock(entry)}>{entry.label}</button>
-          {/if}
-        {/each}
-      </div>
-    </details>
+    <Fold id="plugins" surface="blocks" title={ta('panel.plugins')} value={String(pluginBlocks.length)}>
+      {#each pluginBlocks as entry (entry.type)}
+        {#if entry.variants?.length}
+          <Fold id={`plugin:${entry.type}`} surface="blocks" title={entry.label} value={String(entry.variants.length)}>
+            {#each entry.variants as variant (variant.label)}
+              <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
+                onclick={() => addPluginBlock(entry, variant.props)}>{variant.label}</button>
+            {/each}
+          </Fold>
+        {:else}
+          <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
+            onclick={() => addPluginBlock(entry)}>{entry.label}</button>
+        {/if}
+      {/each}
+    </Fold>
   {/if}
   {/if}
 </div>

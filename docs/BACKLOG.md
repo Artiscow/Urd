@@ -529,6 +529,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [ ] Colour picker is a bit shabby - needs design reevaluation 
  - [x] Right click on nav - settings - takes one to nav settings panel. Right click on spescific parts of nav - settings - should take on to the spescific parts settings. F.ex right click on launcher - settings - should open launcher settings. FIXED 0.7.30.9 (8 November 2026; a menu item opens the Menu items fold, not the item's own card)
  - [ ] Nav settings: possibility to turn logo on or off in nav
+ - [ ] Button block does not have colour settings/options
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene
@@ -590,7 +591,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
     Done when: every control in the four panels stands in a fold its tab's menu opens, and the test's list no longer names them.
   - [x] 0.7.30.9 DELIVERED 0.7.30.9 (8 November 2026; with the round's test findings: the colour picker kept in the window, the red cross, one tab menu at a time, and the right-click menu on the site's menu) The Nav panel to the kit, split into parts of its own while it is moved.
     Done when: no part of the Nav panel is over about 400 lines, and the test's list no longer names it.
-  - [ ] 0.7.30.10 The other panels and the dialogs to the kit (Pages, Collections, Blocks, Plugins, Updates, History and Grid; page settings, import, redirects, the link editor and the confirm dialog), with prose in a panel moved to «?» tooltips and the help chip.
+  - [x] 0.7.30.10 DELIVERED 0.7.30.10 (8 November 2026; with the round's test finding: search in every language, the language packs too) The other panels and the dialogs to the kit (Pages, Collections, Blocks, Plugins, Updates, History and Grid; page settings, import, redirects, the link editor and the confirm dialog), with prose in a panel moved to «?» tooltips and the help chip.
     Done when: the test's list names only the settings window, which 0.7.33.5 moves.
   - [ ] 0.7.30.11 The unpublished changes and «Discard drafts» in the History panel (added 8 November 2026): the top bar's «Unpublished» pill and «Discard drafts» button move to the top of the History panel, as «Not published yet» with the count, what changed and «Discard drafts», above the published history, so one panel holds what waits to be published and what has been; the top bar loses its widest status and its one destructive action, and keeps a mark of unpublished work beside Publish (a count on the Publish button, or a dot on the History tab as Updates has one) that opens History there.
     Done when: the top bar has neither the pill nor «Discard drafts»; with unpublished changes the mark beside Publish shows their count and a press on it opens History at «Not published yet»; «Discard drafts» there asks before it acts and empties the count; and with nothing unpublished neither the mark nor the part shows.

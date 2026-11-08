@@ -2,6 +2,22 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.10): the other panels and the dialogs on the row kit, and search in every language
+
+- [ ] Blocks: the search field narrows the palette, an empty search shows the dashed «No matches» box, the groups stand under small headings, and My templates and Plugins are folds with their counts
+- [ ] Pages: each row's hide, open and settings buttons are squares the height of the fields; a hidden page's eye stands in amber
+- [ ] Plugins: a plugin is a card with its name, version and cross, an «Active» switch, and its warnings in red or amber; the language pack's languages as a muted line; with no plugins, «No plugins yet» with the explanation in its tooltip
+- [ ] History and Updates: loading and «up to date» in the dashed box, a failed check in red with «Try again»; Updates' «About this version», `_headers` (a warning mark while closed) and the engine files are folds
+- [ ] Collections: the back, step, copy, delete (red) and menu buttons are squares of one size; the menu button opens on hover without a tooltip; a product's «must choose» switches and its quantity switch work as before, and a colour's picture pick is the same square as its cross
+- [ ] The import's two choices are segments with a tooltip on each option
+- [ ] Page settings: the switches work in the panel step, the dialog and the table; in the dialog each switch stands on its tile
+- [ ] In «tabs at the top of the panel», the This page / The site / System segment switches the groups, and the update and Legal dots still show on it
+- [ ] Link editor: «New tab», «Download» and the rel words are switch rows; «New tab» is greyed for an email or a phone link
+- [ ] Redirects: a rule's kind and the new rule's kind are segments with a tooltip on each; the remove, add and close buttons are squares; the close button has the focus as the dialog opens
+- [ ] An anchor name with an error shows the red line under the field
+- [ ] With the admin in English and the site in Norwegian: «kundvagn» (Swedish), «handlekurv» (Norwegian) and «sepet» (Turkish) find Basket in Blocks and in the canvas's «+ New block»; «innstillinger» finds the settings commands in Ctrl+K; «fargetema» finds Colour theme in the Urd settings; with the admin in Norwegian, English words find the same
+- [ ] Page names, entries and files are found as written, never through another language
+
 ### Test batch (0.7.30.9): the Nav panel on the row kit, and the menu's right-click menu
 
 - [ ] The Nav tab's menu lists the eight folds, and every fold says its value while closed (the number of items, the logo, the layout, the colours, the phone, scrolling, the tools, the announcement)

@@ -7,6 +7,8 @@
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
   import { ICONS } from '../../lib/icons.js';
+  import IconButton from '../../lib/rows/IconButton.svelte';
+  import EmptyState from '../../lib/rows/EmptyState.svelte';
   import { movable, entryMatches, entryPosition, afterRemoval, tableColumns, cellText } from '../../lib/collection-layout.js';
   import { liveTicks, tickRun, withTicks } from '../../lib/collection-bulk.js';
   import { reorderRows } from '../../lib/row-drag.js';
@@ -144,7 +146,7 @@
       <span class="ct-grow"></span>
       <button class="ghost action ct-new" title={ta('ui.addEntry')} onclick={newEntry}>{ta('ui.addEntry')}</button>
       <CollectionMenu {id} {ticks} shownIds={rowIds} onticks={setTicks} />
-      <button class="ghost coll-btn ct-close" title={ta('tip.collections.closeTable')} aria-label={ta('tip.collections.closeTable')} onclick={close}>{@html ICONS.cross}</button>
+      <IconButton icon={ICONS.cross} label={ta('tip.collections.closeTable')} onclick={close} />
     </div>
     {#if ticks.length}
       <div class="ct-barrow"><SelectionBar {id} {ticks} shownIds={rowIds} onticks={setTicks} /></div>
@@ -182,9 +184,9 @@
           </tbody>
         </table>
         {#if !view.entries.length}
-          <p class="panel-hint">{ta('hint.collections.empty')}</p>
+          <EmptyState text={ta('hint.collections.empty')} />
         {:else if !rows.length}
-          <p class="panel-hint">{ta('collections.noMatch')}</p>
+          <EmptyState text={ta('collections.noMatch')} />
         {/if}
       </div>
       <aside class="ct-drawer" aria-label={entry ? ed.plainTitle(entry.title) : (view.name ?? id)}>
@@ -192,11 +194,11 @@
           <span class="ct-drawer-head">
             <span class="ct-drawer-name">{ed.plainTitle(entry.title)}</span>
             {#if movable(view.kind, entry) && !searching}
-              <button class="ghost nav-act" title={ta('tip.moveUp')} aria-label={ta('tip.moveUp')} disabled={at <= 0} onclick={() => act.moveEntry(id, entry.id, -1)}>{@html ICONS.up}</button>
-              <button class="ghost nav-act" title={ta('tip.moveDown')} aria-label={ta('tip.moveDown')} disabled={at === movables.length - 1} onclick={() => act.moveEntry(id, entry.id, 1)}>{@html ICONS.down}</button>
+              <IconButton icon={ICONS.up} label={ta('tip.moveUp')} disabled={at <= 0} onclick={() => act.moveEntry(id, entry.id, -1)} />
+              <IconButton icon={ICONS.down} label={ta('tip.moveDown')} disabled={at === movables.length - 1} onclick={() => act.moveEntry(id, entry.id, 1)} />
             {/if}
-            <button class="ghost coll-btn" title={ta('tip.collections.duplicateEntry')} aria-label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry}>{@html ICONS.copy}</button>
-            <button class="ghost coll-btn coll-danger" title={ta('tip.collections.deleteEntry')} aria-label={ta('tip.collections.deleteEntry')} onclick={deleteEntry}>{@html ICONS.cross}</button>
+            <IconButton icon={ICONS.copy} label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry} />
+            <IconButton icon={ICONS.cross} danger label={ta('tip.collections.deleteEntry')} onclick={deleteEntry} />
           </span>
           <div class="panel-body ct-fields">
             {#key entry.id}<EntryFields {id} {entry} kind={view.kind} />{/key}

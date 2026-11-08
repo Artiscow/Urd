@@ -10,6 +10,7 @@
   import { slugText } from '$engine/imageTools.js';
   import { ICONS } from './icons.js';
   import IconButton from './rows/IconButton.svelte';
+  import ErrorLine from './rows/ErrorLine.svelte';
   const ed = getContext('urd-editor');
   /** value: the stored name ('' = none); own: the spot's id; taken: () => the ids in use on the page apart from this spot; words: what the suggestion is made from; path: the page's address. */
   let { value = '', own, taken, words = '', path = '/', onchange } = $props();
@@ -86,7 +87,7 @@
   <button type="button" class="linkish anchor-suggest" title={ta('tip.anchorSuggest')} onclick={useSuggestion}>{ta('ui.useName', { name: suggestion })}</button>
 {/if}
 {#if error}
-  <p id="anchor-note-{uid}" class="panel-hint place-error" aria-live="polite">{ta(ERROR_KEYS[error])}</p>
+  <ErrorLine id="anchor-note-{uid}" polite text={ta(ERROR_KEYS[error])} />
 {/if}
 {#if uses.length}
   <div class="anchor-uses">

@@ -4,6 +4,7 @@
   import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
+  import IconButton from '../../lib/rows/IconButton.svelte';
   import PageSettingsFields from './PageSettingsFields.svelte';
   import HideButton from './HideButton.svelte';
   import HiddenRow from './HiddenRow.svelte';
@@ -49,7 +50,7 @@
     <div class="pt-head">
       <h2 class="pt-title">{ta('ui.pageSettings')}</h2>
       <span class="pt-grow"></span>
-      <button class="ghost row-tool pt-close" title={ta('tip.pages.closeSettings')} aria-label={ta('tip.pages.closeSettings')} onclick={() => ed.closePageSettings()}>{@html ICONS.cross}</button>
+      <IconButton icon={ICONS.cross} label={ta('tip.pages.closeSettings')} onclick={() => ed.closePageSettings()} />
     </div>
     <div class="pt-body">
       <div class="pt-scroll">

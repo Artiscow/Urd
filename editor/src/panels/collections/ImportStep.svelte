@@ -4,6 +4,7 @@
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import ImportSummary from './ImportSummary.svelte';
+  import IconButton from '../../lib/rows/IconButton.svelte';
   import ImportChoices from './ImportChoices.svelte';
 
   const ed = getContext('urd-editor');
@@ -29,7 +30,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="is" onkeydown={onKey}>
     <span class="is-crumb">
-      <button type="button" class="ghost coll-btn" bind:this={backEl} title={ta('tip.csv.cancel')} aria-label={ta('tip.csv.cancel')} onclick={() => ed.cancelCsvImport()}>{@html BACK_ICON}</button>
+      <IconButton icon={BACK_ICON} label={ta('tip.csv.cancel')} bind:el={backEl} onclick={() => ed.cancelCsvImport()} />
       <span class="is-words"><span class="is-up">{name}</span><span class="is-name">{ta('csv.step')}</span></span>
       <button type="button" class="is-cells" title={ta('tip.csv.cells')} onclick={() => ed.setCsvImport({ view: 'table', from: 'panel' })}>{ta('csv.cellsShort')}</button>
     </span>

@@ -10,6 +10,7 @@
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
   import { ICONS } from '../lib/icons.js';
+  import IconButton from '../lib/rows/IconButton.svelte';
   import { entryPosition, afterRemoval, entryMatches } from '../lib/collection-layout.js';
   import { liveTicks } from '../lib/collection-bulk.js';
   import CollectionList from './collections/CollectionList.svelte';
@@ -165,13 +166,11 @@
     {#if place}<span class="coll-place">{ta('collections.position', { n: place.index + 1, count: place.count })}</span>{/if}
     <span class="coll-grow"></span>
     {#if place}
-      <button class="ghost coll-btn" title={ta('tip.collections.prevEntry')} aria-label={ta('tip.collections.prevEntry')} disabled={!place.prev}
-        onclick={() => { ed.panelEntry = place.prev; }}>{@html PREV_ICON}</button>
-      <button class="ghost coll-btn" title={ta('tip.collections.nextEntry')} aria-label={ta('tip.collections.nextEntry')} disabled={!place.next}
-        onclick={() => { ed.panelEntry = place.next; }}>{@html NEXT_ICON}</button>
+      <IconButton icon={PREV_ICON} label={ta('tip.collections.prevEntry')} disabled={!place.prev} onclick={() => { ed.panelEntry = place.prev; }} />
+      <IconButton icon={NEXT_ICON} label={ta('tip.collections.nextEntry')} disabled={!place.next} onclick={() => { ed.panelEntry = place.next; }} />
     {/if}
-    <button class="ghost coll-btn" title={ta('tip.collections.duplicateEntry')} aria-label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry}>{@html ICONS.copy}</button>
-    <button class="ghost coll-btn coll-danger" title={ta('tip.collections.deleteEntry')} aria-label={ta('tip.collections.deleteEntry')} onclick={deleteEntry}>{@html ICONS.cross}</button>
+    <IconButton icon={ICONS.copy} label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry} />
+    <IconButton icon={ICONS.cross} danger label={ta('tip.collections.deleteEntry')} onclick={deleteEntry} />
   </span>
 {/snippet}
 
@@ -208,7 +207,7 @@
   {:else if !entry}
     <!-- Stepping in, the second level: a collection's entries -->
     <span class="coll-crumb">
-      <button class="ghost coll-btn" title={ta('tip.collections.back')} aria-label={ta('tip.collections.back')} onclick={closeCollection}>{@html BACK_ICON}</button>
+      <IconButton icon={BACK_ICON} label={ta('tip.collections.back')} onclick={closeCollection} />
       <span class="coll-crumb-words"><span class="coll-crumb-up">{ta('panel.collections')}</span><span class="coll-crumb-name">{view.name ?? ed.panelCollection}</span></span>
       <CollectionMenu id={ed.panelCollection} {ticks} {shownIds} onticks={setTicks} />
     </span>
@@ -217,8 +216,7 @@
   {:else}
     <!-- Stepping in, the third level: one entry with all its fields -->
     <span class="coll-crumb">
-      <button class="ghost coll-btn" title={ta('tip.collections.backToEntries', { name: view.name ?? ed.panelCollection })}
-        aria-label={ta('tip.collections.backToEntries', { name: view.name ?? ed.panelCollection })} onclick={backToEntries}>{@html BACK_ICON}</button>
+      <IconButton icon={BACK_ICON} label={ta('tip.collections.backToEntries', { name: view.name ?? ed.panelCollection })} onclick={backToEntries} />
       <span class="coll-crumb-words"><span class="coll-crumb-up">{view.name ?? ed.panelCollection}</span><span class="coll-crumb-name">{ed.plainTitle(entry.title)}</span></span>
     </span>
     {@render entryHead()}

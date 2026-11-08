@@ -7,6 +7,8 @@
   import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { ICONS } from '../lib/icons.js';
   import { searchItems } from '$engine/palette-search.js';
+  import { searchItemsAny } from '$engine/search-langs.js';
+  import { searchLangs } from './search-langs.svelte.js';
   import { arrangeCommands, canPin, flatItems, readRecent, rememberCommand, RECENT_KEY } from './command-palette.js';
 
   /** `pinned` is the site's shared shortcuts (site.shortcuts), command ids pinned first for everyone who edits the site; `onpin` toggles one, and without it the rows carry no pin. */
@@ -16,7 +18,9 @@
   let marked = $state(0);
   let downOnBackdrop = false;
   const recent = readRecent(localStorage);
-  const groups = $derived(arrangeCommands(commands, query, recent, searchItems, pinned));
+  // A command is found by its words in any language (search-langs.js); a typed query loads the other languages once, and the list is made again when they are in.
+  $effect(() => searchLangs.need(query));
+  const groups = $derived(arrangeCommands(commands, query, recent, searchLangs.ready ? searchItemsAny : searchItems, pinned));
   const items = $derived(flatItems(groups));
   const opener = document.activeElement;
 

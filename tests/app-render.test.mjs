@@ -55,7 +55,7 @@ test('every panel layout draws its own way to the panels, and the gear stands on
   const marks = {
     rail: [/class="rail rail-icons/, /class="rail-icon/, /fold-all panel-fold/],
     sidebar: [/class="rail"/, /class="rail-group/],
-    'panel-tabs': [/class="panel-nav/, /class="seg panel-nav-groups/, /class="panel-tab /],
+    'panel-tabs': [/class="panel-nav/, /class="panel-nav-row"><div class="choice[^"]* fill"/, /class="panel-tab /],
     'top-tabs': [/class="panel-strip/, /class="strip-group/],
     'page-tabs': [/class="panel-nav/, /class="topnav/, /class="tool-pop site-pop/],
   };

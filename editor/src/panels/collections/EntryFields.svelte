@@ -10,6 +10,8 @@
   import { linkOf } from '../../lib/link-edit.js';
   import { sameColorName } from '../../lib/collection-layout.js';
   import { ICONS } from '../../lib/icons.js';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import IconButton from '../../lib/rows/IconButton.svelte';
   import { collectionActions } from './actions.js';
   import SizePresets from './SizePresets.svelte';
 
@@ -73,11 +75,10 @@
 
 {#snippet holdSwitch()}
   <!-- How «Add to basket» waits for the required choices: greyed and unpressable until they are made, or (off) asking for them when pressed -->
-  <label class="gridmenu-snap entry-require entry-require-sub" title={ta('tip.entry.disableUntilChosen')}>
-    <input type="checkbox" checked={entry.disableUntilChosen === true}
-      onchange={(e) => act.setEntryField(id, entry.id, 'disableUntilChosen', e.target.checked || '')} />
-    {ta('lbl.disableUntilChosen')}
-  </label>
+  <div class="entry-require entry-require-sub">
+    <SwitchRow label={ta('lbl.disableUntilChosen')} title={ta('tip.entry.disableUntilChosen')} checked={entry.disableUntilChosen === true}
+      onchange={(on) => act.setEntryField(id, entry.id, 'disableUntilChosen', on || '')} />
+  </div>
 {/snippet}
 
 <div class="entry-body coll-entry" data-entry-id={entry.id} bind:this={root}>
@@ -135,11 +136,10 @@
     <SizePresets {id} {entry} label={ta('lbl.sizes')} tip={ta('tip.entry.sizes')} />
     {#if entry.sizes?.length}
       <!-- This product's buyer must choose a size before «Add to basket» -->
-      <label class="gridmenu-snap entry-require" title={ta('tip.entry.requireSize')}>
-        <input type="checkbox" checked={entry.requireSize === true}
-          onchange={(e) => act.setEntryField(id, entry.id, 'requireSize', e.target.checked || '')} />
-        {ta('lbl.requireSize')}
-      </label>
+      <div class="entry-require">
+        <SwitchRow label={ta('lbl.requireSize')} title={ta('tip.entry.requireSize')} checked={entry.requireSize === true}
+          onchange={(on) => act.setEntryField(id, entry.id, 'requireSize', on || '')} />
+      </div>
       {#if entry.requireSize === true}{@render holdSwitch()}{/if}
     {/if}
     <div class="entry-chips">
@@ -155,11 +155,10 @@
     <span class="nav-body-label entry-part" title={ta('tip.entry.colors')}>{ta('lbl.colors')}</span>
     {#if entry.colors?.some((c) => c?.name)}
       <!-- This product's buyer must choose a colour before «Add to basket» -->
-      <label class="gridmenu-snap entry-require" title={ta('tip.entry.requireColor')}>
-        <input type="checkbox" checked={entry.requireColor === true}
-          onchange={(e) => act.setEntryField(id, entry.id, 'requireColor', e.target.checked || '')} />
-        {ta('lbl.requireColor')}
-      </label>
+      <div class="entry-require">
+        <SwitchRow label={ta('lbl.requireColor')} title={ta('tip.entry.requireColor')} checked={entry.requireColor === true}
+          onchange={(on) => act.setEntryField(id, entry.id, 'requireColor', on || '')} />
+      </div>
       <!-- The one grey-out switch stands under the first requirement that is on: here when the size asks for nothing -->
       {#if entry.requireColor === true && !(entry.sizes?.length && entry.requireSize === true)}{@render holdSwitch()}{/if}
     {/if}
@@ -172,20 +171,19 @@
           aria-invalid={twice || undefined}
           onchange={(e) => act.setEntryColor(id, entry.id, ci, 'name', e.target.value)} />
         {#if twice}<span class="entry-color-warn" title={ta('tip.entry.colorTwice')} role="img" aria-label={ta('tip.entry.colorTwice')}>{@html ICONS.warn}</span>{/if}
-        <label title={color.image ? ta('ui.changeImage') : ta('tip.entry.colorImage')} class="ghost row-tool filepick entry-color-pick" aria-label={color.image ? ta('ui.changeImage') : ta('ui.addImage')}>
+        <label title={color.image ? ta('ui.changeImage') : ta('tip.entry.colorImage')} class="icon-btn ghost filepick entry-color-pick" aria-label={color.image ? ta('ui.changeImage') : ta('ui.addImage')}>
           {#if color.image}<img class="entry-color-thumb" src={color.image} alt="" />{:else}{@html ICONS.image}{/if}
           <input type="file" accept="image/*" onchange={(e) => act.setEntryColorImage(id, entry.id, ci, e)} />
         </label>
-        <button class="ghost row-tool" title={ta('tip.entry.removeColor')} onclick={() => act.removeEntryColor(id, entry.id, ci)}>{@html ICONS.cross}</button>
+        <IconButton icon={ICONS.cross} label={ta('tip.entry.removeColor')} onclick={() => act.removeEntryColor(id, entry.id, ci)} />
       </span>
     {/each}
     <!-- The quantity the buyer types: off unless turned on; its least and most stand only while it is on, and each may stay empty -->
     <span class="nav-body-label entry-part" title={ta('tip.entry.quantity')}>{ta('lbl.quantity')}</span>
-    <label class="gridmenu-snap entry-require" title={ta('tip.entry.quantity')}>
-      <input type="checkbox" data-field="quantity" checked={Boolean(entry.quantity)}
-        onchange={(e) => act.setEntryField(id, entry.id, 'quantity', e.target.checked ? {} : '')} />
-      {ta('lbl.buyerQuantity')}
-    </label>
+    <div class="entry-require">
+      <SwitchRow label={ta('lbl.buyerQuantity')} title={ta('tip.entry.quantity')} field="quantity" checked={Boolean(entry.quantity)}
+        onchange={(on) => act.setEntryField(id, entry.id, 'quantity', on ? {} : '')} />
+    </div>
     {#if entry.quantity}
       <div class="entry-fields entry-qty">
         <span class="nav-body-label" title={ta('tip.entry.qtyMin')}>{ta('lbl.qtyMin')}</span>

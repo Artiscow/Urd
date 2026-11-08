@@ -128,12 +128,12 @@ export function pictured(setting, pictures) {
   return setting.kind === 'choice' && !!setting.look && pictures === 'pictures';
 }
 
-/** Whether a setting answers to a search: a word of the query in its name or in one of its options. */
+/** Whether a setting answers to a search: the query in its name or in one of its options, through `c.match(text, query)` where the context has it (the search in every language), else as typed. */
 export function settingMatches(setting, query, c) {
   const q = (query ?? '').trim().toLowerCase();
   if (!q) return true;
   const words = [c.ta(setting.labelKey), ...(setting.options ? setting.options(c).map(([, label]) => label) : [])];
-  return words.some((w) => String(w).toLowerCase().includes(q));
+  return words.some((w) => (c.match ? c.match(String(w), q) : String(w).toLowerCase().includes(q)));
 }
 
 /**

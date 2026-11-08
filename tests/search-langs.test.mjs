@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { buildIndex, makeLanguageSearch } = await engineImport('search-langs.js');
+const { buildIndex, makeLanguageSearch, packDictionaries, loadSearchLanguages, searchLanguagesReady, matchAny: matchLoaded } = await engineImport('search-langs.js');
 
 const nb = { 'blocks.calendar': 'Kalender', 'lbl.textColor': 'Tekstfarge', 'lbl.vertical': 'Vertikal', 'tip.long': 'En lang setning om kalenderen som forklarer en innstilling i detalj', 'lbl.count': '{n} kalendere' };
 const en = { 'blocks.calendar': 'Calendar', 'lbl.textColor': 'Text colour', 'lbl.vertical': 'Vertical', 'tip.long': 'A long sentence about the calendar that explains a setting in detail', 'lbl.count': '{n} calendars' };
@@ -29,6 +29,34 @@ test('a Norwegian or Turkish word finds the English label', () => {
   assert.ok(matchAny('Calendar', 'takvim'));
   assert.ok(matchAny('Calendar', 'Kalénder'), 'case and diacritics do not matter');
   assert.ok(!matchAny('Vertical', 'kalender'));
+});
+
+test('a language pack\'s admin dictionary in the index: a Swedish word finds the English label, the admin and the site set to any language', () => {
+  const sv = { 'blocks.calendar': 'Kalender', 'lbl.textColor': 'Textfärg', 'lbl.vertical': 'Lodrät' };
+  const { matchAny } = makeLanguageSearch(buildIndex([nb, en, tr, sv]), english);
+  assert.ok(matchAny('Vertical', 'lodrät'));
+  assert.ok(matchAny('Text colour', 'textfärg'));
+  const norwegian = (key) => nb[key] ?? key;
+  assert.ok(makeLanguageSearch(buildIndex([nb, en, tr, sv]), norwegian).matchAny('Vertikal', 'lodrat'), 'diacritics do not matter, whatever the admin shows');
+});
+
+test('the loader: a pack that offers admin strings joins the built-in dictionaries, a pack without them or one that cannot be read is left out', async () => {
+  const sv = { 'lbl.vertical': 'Lodrät' };
+  const packs = {
+    packLanguages: async () => [{ code: 'sv', admin: true }, { code: 'da', admin: false }],
+    loadPackStrings: async (code, kind) => (code === 'sv' && kind === 'admin' ? sv : { 'lbl.vertical': 'Lodret' }),
+  };
+  assert.deepEqual(await packDictionaries(packs), [sv]);
+  assert.deepEqual(await packDictionaries({ packLanguages: async () => { throw new Error('no plugin index'); } }), []);
+  const { addAdminDict } = await engineImport('i18n.js');
+  addAdminDict(en);
+  const dicts = { nb, 'en-GB': en, tr };
+  assert.equal(searchLanguagesReady(), false);
+  await loadSearchLanguages({ builtin: async (code) => dicts[code] ?? null, packs: () => packDictionaries(packs) });
+  assert.equal(searchLanguagesReady(), true);
+  assert.ok(matchLoaded('Vertical', 'lodrät'), 'a word of the pack');
+  assert.ok(matchLoaded('Vertical', 'dikey'), 'a word of a built-in language');
+  assert.ok(!matchLoaded('Vertical', 'lodret'), 'a pack without admin strings is not read');
 });
 
 test('a short word is matched at the start of a word, a longer one inside a compound too', () => {

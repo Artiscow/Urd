@@ -8,6 +8,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.30.10 - The other panels and the dialogs on the row kit, and search in every language with the language packs - 8 November 2026
+
+- The Blocks, Pages, Collections, History, Plugins and Updates panels and the page settings, import, redirects, link, anchor, confirm and setup dialogs had hand-made switches, segments, folds, icon buttons, sub-headings and hint lines. They are on the row kit, and panel-language.test.mjs's list names only the settings window.
+- Blocks: the search is the kit's search field, the palette's groups are sub-headings, and My templates and Plugins are folds that say their count while closed.
+- Plugins: each plugin is a card with its cross at the head, an «Active» switch and its warnings as error lines; an empty list says so in a few words, with how it fills as the tooltip.
+- Updates: «About this version», the template's `_headers` (marked as a warning while closed) and the engine files are folds.
+- The panel's group segment over its tabs, the import's two choices and a redirect's kind are the kit's segment.
+- The kit gained a panel's own search field, a bound element on the icon button, a field mark on the switch row, a tooltip on the empty state, a polite error line, and a tooltip per option, a full-width form and a mark after an option's words on the segment.
+- The old classes' CSS (`.coll-btn`, `.row-tool`, `.panel-hint`, `.panel-strong`, `.group-sub`) and the dictionary keys `ui.on`, `ui.off` and `hint.plugins.found` had nothing left to serve and are removed; the menu search reads the kit's sub-headings as headings.
+- Test findings, fixed in the round:
+  - A word in a language pack's language found nothing, and the command palette, the Urd settings and the link editor's spots found only the words as typed. The enabled language packs' admin dictionaries join the search's index (`search-langs.js`), and the three searches match in every language, whatever the admin and the site are set to.
+
+The independent review before the commit found these, all fixed:
+
+1. In the wide page settings the switches lost their tiles: the dialog's scoped rule no longer reached the switch inside the switch row. The rule reaches it.
+2. The guides said every search finds words in every language, while the link editor's pages went through that match and the other searches over the owner's words did not. The owner's words match as typed everywhere, and the guides and ARCHITECTURE.md say so.
+3. The new test drove the index with a Swedish dictionary but never the loading of the packs. `packDictionaries` and `loadSearchLanguages` take their loaders, and tests/search-langs.test.mjs drives them with dictionaries of its own.
+4. The redirects dialog's kind and close button and a product colour's picture pick were still drawn by hand, out of the test's sight. They are the kit's segment and icon button.
+5. The anchor field's live name check and a broken plugin's lines were read out at once, interrupting the reader as the owner typed or the panel opened. They wait for a pause.
+
 ### 0.7.30.9 - The Nav panel on the row kit in parts of its own, the tree on the shared drag, and the menu's right-click menu - 8 November 2026
 
 - The Nav panel was one file of 1,819 lines with hand-made rows. It is a frame of eight folds with each fold's rows in a part of its own under `panels/nav/`, none over 340 lines; every fold says its value while closed and carries the amber dot and its reset, and panel-language.test.mjs's list no longer names it.

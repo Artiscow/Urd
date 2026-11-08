@@ -5,13 +5,17 @@
      A shared group (the site's own values) carries its mark in the heading. `only` keeps one side of the sheet, `query` is the search, `idPrefix` keeps the ids apart when two bodies stand in one window, and `empty` says whether a search that finds nothing says so here. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { matchAny } from '$engine/search-langs.js';
+  import { searchLangs } from '../lib/search-langs.svelte.js';
   import { menu, setMenuWidthPref } from '../menu/state.svelte.js';
   import { visibleGroups, pictured } from '../lib/settings-model.js';
   import SettingControl from './SettingControl.svelte';
 
   const ed = getContext('urd-editor');
   let { place = 'dialog', only = null, query = '', idPrefix = 'st-sec', empty = true } = $props();
-  const c = { ed, ta, menu, setMenuWidthPref };
+  // A setting is found by its words in any language once the other languages are in (search-langs.js); a typed query loads them.
+  const c = { ed, ta, menu, setMenuWidthPref, get match() { return searchLangs.ready ? matchAny : null; } };
+  $effect(() => searchLangs.need(query));
   const groups = $derived(visibleGroups(query, only, c));
   const compact = $derived(place === 'panel');
 

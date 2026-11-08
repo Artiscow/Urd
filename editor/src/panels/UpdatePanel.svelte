@@ -4,6 +4,9 @@
   import { ta, taApiError } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import Fold from '../lib/rows/Fold.svelte';
+  import SubHeading from '../lib/rows/SubHeading.svelte';
+  import EmptyState from '../lib/rows/EmptyState.svelte';
+  import ErrorLine from '../lib/rows/ErrorLine.svelte';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const auth = $derived(ed.auth);
@@ -99,9 +102,9 @@
 
 <div class="panel-body">
   {#if ed.updateChecking && !updateInfo}
-    <p class="panel-hint">{ta('update.checking')}</p>
+    <EmptyState text={ta('update.checking')} />
   {:else if updateError}
-    <p class="panel-hint">{updateError}</p>
+    <ErrorLine text={updateError} />
     <button class="ghost" onclick={loadUpdateCheck}>{ta('update.retry')}</button>
   {:else if updateInfo}
     <div class="update-versions">
@@ -112,29 +115,23 @@
       {/if}
     </div>
     {#if updateInfo.upToDate}
-      <p class="panel-hint">{ta('update.upToDate')}</p>
+      <EmptyState text={ta('update.upToDate')} />
     {:else}
       <p class="update-summary">{ta('update.summary', {
         writes: updateInfo.changes.filter((c) => c.action === 'write').length,
         deletes: updateInfo.changes.filter((c) => c.action === 'delete').length,
       })}</p>
       {#if updateInfo.notes}
-        <details class="group">
-          <summary>{ta('update.aboutVersion', { target: updateInfo.target })}</summary>
-          <div class="group-items">
-            <p class="update-notes">{updateInfo.notes}</p>
-          </div>
-        </details>
+        <Fold id="notes" surface="update" title={ta('update.aboutVersion', { target: updateInfo.target })}>
+          <p class="update-notes">{updateInfo.notes}</p>
+        </Fold>
       {/if}
       {#if updateInfo.headers?.upstream}
-        <details class="group">
-          <summary title={ta('update.headersManual')}>
-            <span class="update-warn">{@html ICONS.warn}</span> {ta('update.headersTitle')}
-          </summary>
-          <div class="group-items">
-            <pre class="update-headers">{updateInfo.headers.upstream}</pre>
-          </div>
-        </details>
+        <!-- The template's _headers, which the update never writes (ADR-0014): marked as a warning while closed -->
+        <Fold id="headers" surface="update" title={ta('update.headersTitle')} tip={ta('update.headersManual')}>
+          {#snippet value()}<span class="update-warn">{@html ICONS.warn}</span>{/snippet}
+          <pre class="update-headers">{updateInfo.headers.upstream}</pre>
+        </Fold>
       {/if}
       <!-- Hand-edited engine files must be seen without a click;
            the rest of the atom group is one combined swap and
@@ -148,22 +145,17 @@
           </span>
         </div>
       {/each}
-      <details class="group">
-        <summary title={ta('update.atomGroup.title')}>
-          {ta('update.atomTitle')} · {updateInfo.changes.filter((c) => c.atom).length}
-        </summary>
-        <div class="group-items">
-          {#each updateInfo.changes.filter((c) => c.atom && !c.conflict) as c (c.path)}
-            <div class="update-row">
-              <span class="update-path" title={c.path}>{c.path}</span>
-              {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
-            </div>
-          {/each}
-        </div>
-      </details>
+      <Fold id="engine" surface="update" title={ta('update.atomTitle')} tip={ta('update.atomGroup.title')} value={String(updateInfo.changes.filter((c) => c.atom).length)}>
+        {#each updateInfo.changes.filter((c) => c.atom && !c.conflict) as c (c.path)}
+          <div class="update-row">
+            <span class="update-path" title={c.path}>{c.path}</span>
+            {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
+          </div>
+        {/each}
+      </Fold>
       {#if updateInfo.changes.some((c) => !c.atom)}
         <div class="ctl-row update-opt-head">
-          <p class="panel-strong">{ta('update.optionalTitle')}</p>
+          <SubHeading text={ta('update.optionalTitle')} />
           <span class="mini-label">{ta('update.keepMine')}</span>
         </div>
         {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}

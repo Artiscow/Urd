@@ -34,13 +34,13 @@
     <div class="setup-card" class:confirm-wide={box.sections?.length}>
       <h2 id="confirm-title">{box.title}</h2>
       {#each box.lines as line (line)}
-        <p class="panel-hint confirm-line">{line}</p>
+        <p class="dialog-line">{line}</p>
       {/each}
       {#each box.sections ?? [] as section, i (i)}
         <section class="confirm-section">
           <h3>{section.heading}</h3>
           {#each section.lines as line, j (j)}
-            <p class="panel-hint confirm-line">{line}</p>
+            <p class="dialog-line">{line}</p>
           {/each}
         </section>
       {/each}

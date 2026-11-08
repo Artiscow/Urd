@@ -3,6 +3,7 @@
      Import stores the plan as one undo step (state/collections.svelte.js applyCsvImport) and stands greyed while it would store nothing. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import Choice from '../../lib/Choice.svelte';
 
   const ed = getContext('urd-editor');
   /** inline: the table's bar, where the choices and the buttons stand in one row. */
@@ -17,26 +18,14 @@
 {#if plan}
   <div class="ic" class:ic-inline={inline}>
     {#if matches}
-      <span class="ic-choice">
-        <span class="ic-label" title={ta('tip.csv.matched')}>{ta('csv.matched')}</span>
-        <span class="seg" role="group" aria-label={ta('csv.matched')}>
-          {#each ['update', 'skip'] as v (v)}
-            <button type="button" class:on={session.matched === v} aria-pressed={session.matched === v} title={ta(`tip.csv.matched.${v}`)}
-              onclick={() => ed.setCsvImport({ matched: v })}>{ta(`csv.matched.${v}`)}</button>
-          {/each}
-        </span>
-      </span>
+      <Choice label={ta('csv.matched')} title={ta('tip.csv.matched')} value={session.matched}
+        options={['update', 'skip'].map((v) => [v, ta(`csv.matched.${v}`), ta(`tip.csv.matched.${v}`)])}
+        onchange={(v) => ed.setCsvImport({ matched: v })} />
     {/if}
     {#if plan.counts.missing}
-      <span class="ic-choice">
-        <span class="ic-label" title={ta('tip.csv.missing')}>{ta('csv.missing')}</span>
-        <span class="seg" role="group" aria-label={ta('csv.missing')}>
-          {#each ['keep', 'remove'] as v (v)}
-            <button type="button" class:on={session.missing === v} aria-pressed={session.missing === v} title={ta(`tip.csv.missing.${v}`)}
-              onclick={() => ed.setCsvImport({ missing: v })}>{ta(`csv.missing.${v}`)}</button>
-          {/each}
-        </span>
-      </span>
+      <Choice label={ta('csv.missing')} title={ta('tip.csv.missing')} value={session.missing}
+        options={['keep', 'remove'].map((v) => [v, ta(`csv.missing.${v}`), ta(`tip.csv.missing.${v}`)])}
+        onchange={(v) => ed.setCsvImport({ missing: v })} />
     {/if}
     <span class="ic-actions">
       <button type="button" class="ic-btn" title={ta('tip.csv.cancel')} onclick={() => ed.cancelCsvImport()}>{ta('confirm.cancel')}</button>
@@ -56,15 +45,6 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.6rem 1rem;
-  }
-
-  .ic-choice {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem 0.8rem;
-    font-size: 0.8rem;
   }
 
   .ic-actions {

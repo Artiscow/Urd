@@ -6,6 +6,8 @@
    */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { matchAny } from '$engine/search-langs.js';
+  import { searchLangs } from '../lib/search-langs.svelte.js';
   import { fadingDialog, dialogOut } from '../lib/motion.svelte.js';
   import { ICONS } from '../lib/icons.js';
   import { menu, setMenuWidthPref } from '../menu/state.svelte.js';
@@ -21,7 +23,9 @@
   let downOnBackdrop = false;
 
   const opener = document.activeElement;
-  const c = { ed, ta, menu, setMenuWidthPref };
+  // A setting is found by its words in any language once the other languages are in (search-langs.js); a typed query loads them.
+  const c = { ed, ta, menu, setMenuWidthPref, get match() { return searchLangs.ready ? matchAny : null; } };
+  $effect(() => searchLangs.need(query));
   const navGroups = $derived(visibleGroups(query, null, c));
   /** The section marked in the list: the one in view, or the first one a search leaves when it hides that one. */
   const marked = $derived(navGroups.some((g) => g.id === current) ? current : navGroups[0]?.id);

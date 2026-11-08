@@ -10,9 +10,12 @@
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { matchWords } from '$engine/palette-search.js';
+  import { matchAny } from '$engine/search-langs.js';
+  import { searchLangs } from './search-langs.svelte.js';
   import { pageSpots } from '$engine/anchor-model.js';
   import { LINK_RELS } from '$engine/nav-model.js';
   import Choice from './Choice.svelte';
+  import SwitchRow from './rows/SwitchRow.svelte';
   import { PDF_MAX_BYTES, PDF_WARN_BYTES } from '$engine/imageTools.js';
   import { LINK_KINDS, readLink, writeLink, linkReady, webHref, hasLink } from './link-edit.js';
   import { siteFiles, heldPdf, heldName, fileLabel } from './file-links.js';
@@ -60,6 +63,9 @@
 
   const KIND_KEYS = { page: 'link.kind.page', web: 'link.kind.web', email: 'link.kind.email', phone: 'link.kind.phone', file: 'link.kind.file' };
   const REL_KEYS = { nofollow: ['link.nofollow', 'tip.link.nofollow'], sponsored: ['link.sponsored', 'tip.link.sponsored'] };
+  // A page's name and address are the owner's words, matched as typed; a spot's words hold the admin's own («Section 2»), found in any language once the other languages are in (search-langs.js), which a typed query loads.
+  $effect(() => searchLangs.need(query));
+  const spotMatch = $derived(searchLangs.ready ? matchAny : matchWords);
   const shownPages = $derived(pages.filter((p) => matchWords(`${p.title} ${p.path}`, query)));
   const leavesForWeb = $derived(link.kind === 'web' && /^https?:\/\//i.test(webHref(link.url)));
   const shownFiles = $derived((files ?? []).filter((path) => matchWords(fileLabel(path), fileQuery)));
@@ -76,7 +82,7 @@
     if (query.trim() && allSpots) {
       for (const p of pages) {
         for (const spot of allSpots[p.id] ?? []) {
-          if (matchWords(`${p.title} ${spotText(spot)} ${spot.name ? `#${spot.name}` : ''}`, query)) rows.push({ key: `s:${p.id}:${spot.id}`, page: p, spot });
+          if (spotMatch(`${p.title} ${spotText(spot)} ${spot.name ? `#${spot.name}` : ''}`, query)) rows.push({ key: `s:${p.id}:${spot.id}`, page: p, spot });
         }
       }
     }
@@ -248,10 +254,8 @@
   <!-- An email or phone link opens the visitor's own app, so the choice stands greyed there, with the reason as its tooltip -->
   {#if offerNewTab}
     {@const noTab = !['page', 'web', 'file'].includes(link.kind)}
-    <label class="ld-check" class:ld-off={noTab} title={noTab ? ta('tip.link.newTabNone') : ta('tip.link.newTab')}>
-      <input type="checkbox" bind:checked={link.newTab} disabled={noTab} />
-      {ta('link.newTab')}
-    </label>
+    <SwitchRow label={ta('link.newTab')} title={noTab ? ta('tip.link.newTabNone') : ta('tip.link.newTab')} checked={link.newTab} disabled={noTab}
+      onchange={(on) => (link.newTab = on)} />
   {/if}
 {/snippet}
 
@@ -314,19 +318,13 @@
       {/if}
     {/if}
     {#if shape === 'link'}
-      <label class="ld-check" title={ta('tip.link.download')}>
-        <input type="checkbox" bind:checked={link.download} />
-        {ta('link.download')}
-      </label>
+      <SwitchRow label={ta('link.download')} title={ta('tip.link.download')} checked={link.download} onchange={(on) => (link.download = on)} />
     {/if}
   {/if}
   <!-- The rel words only for a link to the web: a search engine reads them there and nowhere else -->
   {#if shape === 'link' && leavesForWeb}
     {#each LINK_RELS as word (word)}
-      <label class="ld-check" title={ta(REL_KEYS[word][1])}>
-        <input type="checkbox" checked={link.rel.includes(word)} onchange={(e) => toggleRel(word, e.target.checked)} />
-        {ta(REL_KEYS[word][0])}
-      </label>
+      <SwitchRow label={ta(REL_KEYS[word][0])} title={ta(REL_KEYS[word][1])} checked={link.rel.includes(word)} onchange={(on) => toggleRel(word, on)} />
     {/each}
   {/if}
 {/snippet}
@@ -591,23 +589,6 @@
     padding: 0.35rem 0.7rem;
     font-size: 0.85rem;
     white-space: nowrap;
-  }
-
-  .ld-check,
-  .ld-body .ld-check {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.45rem;
-    width: auto;
-    align-self: flex-start;
-    font-size: 0.85rem;
-    white-space: nowrap;
-  }
-
-  .ld-check.ld-off {
-    opacity: 0.45;
-    cursor: not-allowed;
   }
 
   .ld-body {
