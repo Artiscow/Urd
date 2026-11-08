@@ -975,13 +975,13 @@ export function effects() {
 
   /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu, the devices' sizes, the page switcher and the steps belong to no cluster. */
   $effect(() => {
-    if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
+    if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps', 'publish'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. A question asked from a menu (the steps' «Discard drafts») is part of it: pressing in the question or answering it with Escape leaves the menu open. */
   $effect(() => {
     if (!toolMenu) return;
-    const onDown = (e) => { if (!toolMenuEl?.contains(e.target) && !e.target?.closest?.('.confirm-dialog')) toolMenu = null; };
+    const onDown = (e) => { if (!toolMenuEl?.contains(e.target) && !e.target?.closest?.('.confirm-dialog, .publish-wrap')) toolMenu = null; };
     const onKey = (e) => { if (e.key === 'Escape' && !confirmBox) toolMenu = null; };
     // Focus moving into the preview (a jump between steps selects a block there) is no press outside: a press in the preview closes the menu from there (preview.svelte.js).
     const onBlur = () => { if (document.activeElement?.tagName !== 'IFRAME') toolMenu = null; };

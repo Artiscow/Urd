@@ -11,8 +11,8 @@
  *    exist BOTH as a CSS threshold and as a number in FOLD_MQ. If they drift
  *    apart, there is a band where a cluster still sits unfolded while the CSS
  *    has tightened around it, or the other way around.
- * 3. The short forms (the "!" in the status pill, the number in the mobile
- *    badge) are hidden by default and enabled in a media query with the SAME
+ * 3. The short forms (the number in the mobile badge) are hidden by default
+ *    and enabled in a media query with the SAME
  *    specificity. Source order then decides: if the default rule comes after
  *    the query, it wins, and the short form stays invisible at exactly the
  *    widths it exists for.
@@ -106,7 +106,7 @@ test('a layout that folds earlier (FOLD_OFFSET) has every shifted step in CSS to
   }
 });
 
-for (const short of ['.badge-mini', '.chip-mini']) {
+for (const short of ['.badge-mini']) {
   test(`${short} is hidden before it is enabled`, () => {
     const hidden = NO_COMMENTS.search(new RegExp(`\\${short}[^{]*\\{[^}]*display:\\s*none`));
     const shown = NO_COMMENTS.search(new RegExp(`\\${short}\\s*\\{\\s*display:\\s*inline`));

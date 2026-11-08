@@ -66,7 +66,7 @@ Skjermen har tre deler:
 - **Kjøpsvilkår**: kjøpsvilkårene som en egen blokk, skrevet rett på siden slik en tekst er, og tegnet i en dokumentdesign under **Design** i menyens Utseende: **Lang tekst** (luft mellom avsnittene og en kort strek over hver del), **Innhold i margen** (delene listet i margen ved teksten ut fra overskriftene på andre nivå, til venstre eller høyre etter **Innholdets side**, teksten **Midtstilt** med listen ytterst i blokken (når blokken er rundt 950 px bred) eller ved listen, fulgt nedover mens man leser, og foldet til én rad på telefon), **Kort fortalt** (den første listen før den første overskriften som kort, med de fete ordene i hvert punkt som etikett), **Spørsmål** (hver del foldes ut under overskriften sin, én om gangen, for besøkende; i redigeringen står alle delene åpne så du kan skrive i dem) og **Nummererte punkter** (hver del og avsnittene i den nummerert, 7.1, 7.2). Ved siden av designen: aksent-, overskrifts- og kortfarge, strekene over delene, hjørnene og skriften i overskriftene, hver vist bare der designen tegner den. Sidemalen **Kjøpsvilkår** starter med én, skrevet på nettstedets språk med nettstedets opplysninger, og blokklisten legger til én med den samme teksten å fylle ut. En tekst som sto i en dokumentdesign fra før, er en Kjøpsvilkår-blokk etter oppdateringen, med ordene og utseendet beholdt.
 - **Former**: strek, pil, sirkel, rektangel og trekant til dekorasjon.
 
-I editoren utløses aldri lenker og knapper når du klikker på dem - klikket markerer blokken. Test lenkene via «Se siden ↗».
+I editoren utløses aldri lenker og knapper når du klikker på dem - klikket markerer blokken. Test lenkene via «Se den publiserte siden» i Publiser-menyen.
 
 ### Hva betyr telefonikonet (dekor)?
 
@@ -203,10 +203,9 @@ Kassen følger EUs forbrukerrettsdirektiv (2011/83/EU), som gjelder i hele EØS;
 
 ## Utkast og publisering
 
-- Alt du gjør lagres som utkast i din nettleser, også på tvers av sider. «Upubliserte endringer» i topplinjen viser at du har noe upublisert.
-- **Publiser** legger alle utkastene ut på siden. Det tar omtrent ett minutt før endringene er synlige for besøkende.
-- **Forkast utkast** sletter utkastene og tar deg tilbake til slik siden er publisert. Knappen spør «Sikker?» (rød) før den gjør det; klikk en gang til for å forkaste, eller hvor som helst ellers for å avbryte.
-- **Se siden ↗** åpner den publiserte siden i ny fane.
+- Alt du gjør lagres som utkast i din nettleser, også på tvers av sider. Mens noe er upublisert, bærer **Publiser** et tall: hver side med endringer, nettstedets innstillinger, en samling, malene, tilleggene og omdirigeringene teller én hver.
+- **Publiser** åpner menyen sin, ved et trykk eller når musen hviler på den: **Publiser nå** legger alle utkastene ut på siden (det tar omtrent ett minutt før besøkende ser dem), **Se den publiserte siden** åpner den publiserte siden i ny fane, og **Forkast utkast** sletter utkastene og tar deg tilbake til slik siden er publisert, etter å ha spurt. Under dem lister **Ikke publisert ennå** endringene; et trykk på en tar deg dit. Bunnen nevner forrige publisering og åpner **Historikk**.
+- **Historikk**-panelet viser den samme listen under **Ikke publisert ennå**, med **Forkast utkast** nederst (den står også nederst i angreknappenes liste). Meldingen etter en forkasting henter utkastene tilbake så lenge ingenting annet er gjort.
 
 Publisering krever at GitHub-brukeren din har fått tilgang av sideeieren (se [oppsettsguiden](../setup-publication/SETUP-nb.md)).
 
@@ -214,7 +213,7 @@ Er dere flere som redigerer, sier editoren ifra hvis noen andre har publisert en
 
 ## Historikk og angring av publisering
 
-**Historikk**-panelet viser de siste publiseringene: hva som ble endret, av hvem og når. «↩ Angre siste publisering» ruller siden tilbake til slik den var før forrige publisering. Angringen er selv en publisering, så ingenting slettes fra historikken, og du kan angre angringen. Etter en angring laster du admin på nytt (etter ~1 minutt) før du redigerer videre, editoren sier ifra.
+**Historikk**-panelet viser først det som venter på å bli publisert, under **Ikke publisert ennå**, og under det de siste publiseringene: hva som ble endret, av hvem og når. «↩ Angre siste publisering» ruller siden tilbake til slik den var før forrige publisering. Angringen er selv en publisering, så ingenting slettes fra historikken, og du kan angre angringen. Etter en angring laster du admin på nytt (etter ~1 minutt) før du redigerer videre, editoren sier ifra.
 
 (Ctrl+Z angrer utkast i nettleseren FØR du publiserer; Historikk-panelet angrer det som allerede er publisert.)
 

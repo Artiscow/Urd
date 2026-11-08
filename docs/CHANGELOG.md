@@ -8,6 +8,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.30.11 - Publish with its menu, and «Not published yet» in the History panel - 8 November 2026
+
+- The top bar held an «Unpublished» pill, a «Discard drafts» button armed by two clicks and a «View site» link. They are gone: Publish carries the count of what waits and opens a menu on a press or a mouse's rest, with the acts first (Publish now, View the published site, Discard drafts), then the changes not published yet, and at its foot the last publish, which opens History. Chosen 8 November 2026 as directions G and 4 of the «Not Published Yet» canvas (the link in BACKLOG), after a count chip beside Publish was tried first.
+- What waits to be published is one tested list (`lib/unpublished.js`): a part for each page with a draft, the site, the list of collections and each collection, the templates, the plugins and the redirects; the editor's dirty flag is whether the list holds anything, so the count and the greyed acts never disagree.
+- The rows are drawn once (`lib/UnpublishedRows.svelte`) for the menu and for History's «Not published yet» fold: a press on a row's name goes to the change (the page onto the canvas, a collection into its panel, the rest to theirs), and its chevron opens the steps made on the part since the last publish, from the undo history, each with its words and how long ago; a publish stamps its time in the browser for this. History holds «Discard drafts» under the rows, and «Published» over the commit list.
+- The discard is one act asked for by its three callers (`publishState.askDiscard`: the question, the discard, and a message whose action brings the drafts back while the discard is the last step); the two-click arming and its floating pill are gone with their styles, and the top bar's fold steps lost the step for the discard's words.
+- The undo list's «2 min ago» and the menu's foot share one helper (`lib/time-ago.js`, with days after a day).
+- The backlog has 0.7.35 Save beside Publish, the two-button form of the canvas, with what must be clarified before it starts; the two Suggestions bullets about a whole-site draft in git and the Ctrl+S menu moved into it.
+- Test findings, fixed in the round:
+  - «Discard drafts» in History stood as red words. It is a button in the panel's dark red at the row's width, as «Undo last publish».
+  - The menu's acts and its rows had different heights. Every row is the control height.
+  - The rows' chevrons promised more than a jump. A row opens to its steps.
+
+The independent review before the commit found these, all fixed:
+
+1. A page's search title and description were credited to the site's row and missing from the page's: the page's settings are the page file's, only its search visibility is the site file's, and a step made from a panel on a page that is not open names that page in `pages`, which the steps did not carry. The steps carry it, and the parts take their steps by it.
+2. The Publish button's name was the count's sentence, so «Publish» was not in it. The button keeps its name, and the count is described beside it for a screen reader.
+3. The ask, the discard and the message stood three times. One `askDiscard` on the publish state serves the menu, History and the undo list.
+4. The menu's comment said it stays open behind the question; it closes with the answer, as the comment now says.
+5. The 0.7.35 «Done when» was indented under its last sub-item. It stands under the milestone.
+6. The rows' chevrons lacked `aria-controls` to the steps they open. They have it, with ids that tell the menu's list from History's.
+
 ### 0.7.30.10 - The other panels and the dialogs on the row kit, and search in every language with the language packs - 8 November 2026
 
 - The Blocks, Pages, Collections, History, Plugins and Updates panels and the page settings, import, redirects, link, anchor, confirm and setup dialogs had hand-made switches, segments, folds, icon buttons, sub-headings and hint lines. They are on the row kit, and panel-language.test.mjs's list names only the settings window.

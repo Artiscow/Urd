@@ -3750,164 +3750,87 @@
     white-space: nowrap;
   }
 
-  /* The draft status stands in its own group between the tools and
-     publishing, so it does not read as part of either. */
-  .topbar-draft {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex: none;
-    /* Anchor for the confirmation pill, which floats below the bar. */
+  /* Publish with its menu: the count of what waits inside the button, and the menu under its right edge with the acts, the rows of what waits and the last publish */
+  .publish-wrap {
     position: relative;
+    display: inline-flex;
   }
 
-  /* Shell for the exit transition: chip + discard slide out as ONE piece. */
-  .draft-cluster {
+  .publish-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.45rem;
   }
 
-  .draft-chip {
-    /* Flex, not inline: the short form "!" must center in a circle with a
-       set width and height at the narrowest fold step. */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-color: color-mix(in srgb, #e2b84a 55%, transparent);
-    background: color-mix(in srgb, #e2b84a 13%, transparent);
-    color: #e2b84a;
-    opacity: 1;
-    /* .chip is 10px, sized for the panels where the surrounding text is
-       small. In the top bar the buttons use font: inherit (0.9rem), so
-       the chip must go up to avoid being half the size of everything
-       next to it. */
-    font-size: 0.78rem;
-    font-weight: 600;
-    padding: 0.3em 0.8em;
-  }
-
-  /* Widest: a full pill with the text. From the first fold step: just the
-     circle. Armed, it grows TO THE LEFT, so everything to the right
-     stands still as you click. */
-  .discard-dot {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    height: 1.7rem;
-    padding: 0 0.75rem 0 0.6rem;
-    flex: none;
-    border: 1px solid color-mix(in srgb, #e2705f 55%, transparent);
-    background: color-mix(in srgb, #e2705f 12%, transparent);
-    color: #e2705f;
+  .publish-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.35rem;
+    box-sizing: border-box;
     border-radius: 999px;
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.78rem;
+    background: rgb(0 0 0 / 22%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 
-  /* :not(:disabled) gives the hover rules in the discard family as many
-     parts as the global `button:hover:not(:disabled)`, so the red surface
-     wins over the white veil there. */
-  .discard-dot:hover:not(:disabled) {
-    background: color-mix(in srgb, #e2705f 22%, transparent);
-    border-color: color-mix(in srgb, #e2705f 70%, transparent);
+  .tool-pop.publish-pop {
+    left: auto;
+    right: 0;
+    min-width: 17rem;
+    max-width: 22rem;
   }
 
-  /* Armed changes color, not width: the confirmation lives in the pill below. */
-  .discard-dot.armed,
-  .discard-dot.armed:hover:not(:disabled) {
-    background: #d94f3d;
-    border-color: #d94f3d;
-    color: #fff;
-  }
-
-  .discard-wrap {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* The confirmation floats below the top bar, centered under the button
-     it belongs to. Its own surface and its own click target: a new
-     position requires a deliberate hit, so a quick double click on the
-     discard button cannot throw away the draft by accident. */
-  .discard-confirm {
-    position: absolute;
-    top: calc(100% + 0.6rem);
-    left: 50%;
-    /* Centred by transform, which a press (translate and scale, the press feel) adds to rather than replaces. */
-    transform: translateX(-50%);
-    z-index: 100002;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
+  /* The acts and the rows of what waits share one height, so the menu reads as one list */
+  .publish-pop .publish-act:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    min-height: 2.2rem;
+    padding-block: 0;
+    gap: 0.5rem;
     white-space: nowrap;
-    padding: 0.4rem 0.95rem;
-    border: 1px solid color-mix(in srgb, #e2705f 55%, transparent);
-    border-radius: 999px;
-    /* Rest borrows the discard button's resting dress: dark surface, red
-       border, red text. A solid surface here keeps the pill readable
-       without frost support; the frost is added in @supports below. */
-    background: var(--urd-color-surface, #151a23);
-    color: #e2705f;
-    font: inherit;
-    font-size: 0.82rem;
+  }
+
+  .publish-pop .gridmenu-divider {
+    margin: 4px 0;
+  }
+
+  .publish-pop .publish-main:not(:disabled) {
+    color: var(--urd-color-accent, #7c5cff);
     font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 8px 22px rgb(0 0 0 / 40%);
   }
 
-  /* Under the pointer it fills completely: the dangerous action flares
-     into color the moment it can be triggered. */
-  .discard-confirm:hover:not(:disabled) {
-    background: #d94f3d;
-    border-color: #d94f3d;
-    color: #fff;
+  .publish-pop .publish-red:not(:disabled) {
+    color: #f2b8b3;
   }
 
-  @supports (backdrop-filter: blur(1px)) {
-    .discard-confirm {
-      background: color-mix(in srgb, var(--urd-color-surface, #151a23) 72%, transparent);
-      backdrop-filter: blur(14px);
-    }
-    /* The frost applies to the resting state. Hover is solid red,
-       regardless of what lies behind. */
-    .discard-confirm:hover:not(:disabled) {
-      background: #d94f3d;
-      backdrop-filter: none;
-    }
+  .publish-pop .publish-foot {
+    font-size: 0.78rem;
+    opacity: 0.75;
+  }
+
+  .publish-pop .publish-head {
+    padding: 4px 8px 2px;
   }
 
   /* ---- Foldetrinnene (the fold steps; tests/topbar-fold.test.mjs anchors
      on this heading) ---------------------------------------------------------
      The top bar keeps one height and folds in fixed steps, in this order:
-     the discard text, the group labels, the button texts on the right,
+     the group labels, the button texts on the right,
      and then the clusters ONE AT A TIME. The thresholds are calibrated
      for the LONGEST language (Turkish), not Bokmål, so a step never kicks
      in too late and forces the bar to wrap. The last three each have a
      twin in FOLD_MQ. The short forms are hidden here, before the steps
      that turn them on: equal specificity means source order decides. */
-  .badge-mini,
-  .chip-mini { display: none; }
+  .badge-mini { display: none; }
 
-  /* Step 1: the discard button drops its text and becomes the circle. */
-  @media (max-width: 1499px) {
-    .discard-dot {
-      width: 1.7rem;
-      padding: 0;
-    }
-    .discard-label { display: none; }
-  }
-
-  /* Step 2: the uppercase labels above the clusters disappear. The
+  /* Step 1: the uppercase labels above the clusters disappear. The
      cluster frames remain, so the three groups still read separately. */
   @media (max-width: 1359px) {
     .tool-cap { display: none; }
   }
 
-  /* Step 3: the buttons on the right become pure icons, and the GitHub
+  /* Step 2: the buttons on the right become pure icons, and the GitHub
      user yields. Publish always keeps its word: it is the bar's only
      dangerous action. */
   @media (max-width: 1179px) {
@@ -3922,32 +3845,20 @@
     .editor[data-layout="page-tabs"] .topbar-group { gap: 0.5rem; }
   }
 
-  /* Step 4: the View cluster becomes a menu (FOLD_MQ.view). Grid and
+  /* Step 3: the View cluster becomes a menu (FOLD_MQ.view). Grid and
      guides are toggled rarely, so it yields first of the three. */
   @media (max-width: 1079px) {
     .topbar { gap: 0.5rem; }
     .topbar-group { gap: 0.5rem; }
-    .editor[data-layout="page-tabs"] .chip-full { display: none; }
-    .editor[data-layout="page-tabs"] .chip-mini { display: inline; }
-    .editor[data-layout="page-tabs"] .draft-chip { width: 1.7rem; height: 1.7rem; padding: 0; }
   }
 
-  /* Step 5: the Device cluster becomes a menu (FOLD_MQ.device) and the status becomes "!". */
+  /* Step 4: the Device cluster becomes a menu (FOLD_MQ.device). */
   @media (max-width: 999px) {
-    .chip-full { display: none; }
-    .chip-mini { display: inline; }
-    /* The status becomes a circle the size of the discard circle next to
-       it, so the two read as one pair instead of pill plus dot. */
-    .draft-chip {
-      width: 1.7rem;
-      height: 1.7rem;
-      padding: 0;
-    }
     .editor[data-layout="page-tabs"] .topbar { gap: 0.4rem; padding-inline: 0.7rem; }
     .editor[data-layout="page-tabs"] .topbar-group { gap: 0.4rem; }
   }
 
-  /* Step 6: the Zoom cluster becomes a menu (FOLD_MQ.zoom). Zoom is
+  /* Step 5: the Zoom cluster becomes a menu (FOLD_MQ.zoom). Zoom is
      adjusted most often of the three and therefore keeps plus and minus
      the longest. Gaps and edge margins are tightened fully at the same
      time: now they are the last thing left to take. */

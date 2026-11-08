@@ -1,11 +1,12 @@
 <script>
-  /* The top bar: the page name, the view, device and zoom clusters with their fold steps, the draft status with Publish and Discard, and the tools on the right. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle. */
+  /* The top bar: the page name, the view, device and zoom clusters with their fold steps, and on the right the tools and Publish with its menu: the publishing acts, what waits to be published, and the last publish. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle. */
   import PanelTab from './PanelTab.svelte';
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
-  import { fly } from 'svelte/transition';
+  import UnpublishedRows from '../lib/UnpublishedRows.svelte';
+  import { timeAgo } from '../lib/time-ago.js';
   import SettingsGear from './SettingsGear.svelte';
   import PageSwitcher from './PageSwitcher.svelte';
   import UndoButtons from './UndoButtons.svelte';
@@ -13,6 +14,34 @@
   import { SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MIN, SCREEN_HEIGHT_MAX } from '../lib/own-screen.js';
   import { SCREEN_RATIOS, PHONE_RATIOS, RATIOS, ratioHeight, aspectOf, aspectText } from '../lib/aspect.js';
   const ed = getContext('urd-editor');
+
+  /** The last publish, for the foot of the Publish menu: who and how long ago, read from the history the menu loads as it opens. */
+  const lastPublish = $derived.by(() => {
+    const last = ed.historyList?.[0];
+    if (!last?.date) return null;
+    return { who: last.author, when: timeAgo(new Date(last.date).getTime(), adminLang()) || ta('history.now') };
+  });
+  $effect(() => {
+    if (ed.toolMenu === 'publish' && ed.historyList === null) ed.loadHistory();
+  });
+
+  /** «Publish now» in the menu: the menu closes and the publish runs. */
+  function publishNow() {
+    ed.toolMenu = null;
+    ed.publish();
+  }
+
+  /** «Discard drafts» in the menu: the question is asked (publishState.askDiscard), and the menu closes with the answer. */
+  async function discardFromMenu() {
+    await ed.askDiscard();
+    ed.toolMenu = null;
+  }
+
+  /** A row of the menu's list: the menu closes and the owner is taken to the change. */
+  function goTo(part) {
+    ed.toolMenu = null;
+    ed.goToUnpublished(part);
+  }
   /** The Site menu stands in the top bar in the layout whose panel holds the page's tabs alone. */
   const siteMenu = $derived(ed.adminLayout === 'page-tabs');
   /** A tool menu (the Site menu, a device's sizes) opened on a mouse's rest on its button and closed a moment after the mouse leaves it, as the tabs' menus are, each menu with its own wait; a pass on the way elsewhere opens nothing, and a menu the focus has gone into (a size typed) stays until a press outside or Escape. */
@@ -300,43 +329,6 @@
 
   </span>
 
-  <span class="topbar-group topbar-draft">
-    {#if ed.dirty}
-      <!-- The cluster slides out to the right with a quick fade when the
-           draft is discarded or published; the space collapses only
-           afterwards, so the bar never jumps mid-motion. Reduced motion
-           gives a plain cut. -->
-      <span class="draft-cluster" out:fly={{ x: 24, duration: ed.reducedMotion ? 0 : 150 }}>
-      <!-- The status is a STATE, not an action: the pill shape remains,
-           but with the chip idiom rather than a filled accent surface
-           (ADR-0016), so Publish is the only filled surface in the bar. -->
-      <!-- The narrowest step shows only the exclamation mark; the title
-           carries the word, and both forms are aria-hidden so screen
-           readers get it once. -->
-      <span class="chip draft-chip" title={ta('ui.unpublished')} aria-label={ta('ui.unpublished')}>
-        <span class="chip-full" aria-hidden="true">{ta('ui.unpublished')}</span>
-        <span class="chip-mini" aria-hidden="true">!</span>
-      </span>
-      <!-- Discard is destructive and would otherwise take prime space. A
-           full pill when there is room, otherwise a small red circle.
-           The restore glyph, not a back arrow: the latter means undo.
-           The button keeps its width when armed; the confirmation comes
-           as its own pill below the bar. -->
-      <!-- The shell exists for the anchoring: the pill is centered under
-           the BUTTON, not under the group, so it points at what it confirms. -->
-      <span class="discard-wrap" bind:this={ed.discardWrapEl}>
-        <button class="discard-dot" class:armed={ed.discardArmed} onclick={ed.requestDiscard}
-          title={ed.discardArmed ? ta('tip.discardArmed') : ta('tip.discard')}
-        >{@html ICONS.restore}<span class="discard-label">{ta('ui.discard')}</span></button>
-        {#if ed.discardArmed}
-          <button class="discard-confirm" onclick={ed.confirmDiscard} title={ta('tip.discardArmed')}
-            >{@html ICONS.restore} {ta('ui.discardConfirm')}</button>
-        {/if}
-      </span>
-      </span>
-    {/if}
-  </span>
-
   <span class="topbar-group topbar-right">
   {#if ed.site}
     <!-- A new Urd as a pill naming the version, where the site asks for it and the bar is wide; it opens the Updates panel -->
@@ -358,9 +350,30 @@
            would be empty, and it is the entry point to publishing at all. -->
       <a class="ghost" href="/api/github/login">{ta('ui.loginGitHub')}</a>
     {/if}
-    <a class="ghost" href={ed.pageEntry()?.path ?? '/'} target="_blank" rel="noopener"
-      title={ta('ui.viewSite')}>{@html ICONS.external} <span class="btn-label">{ta('ui.viewSite')}</span></a>
-    <button class="primary" onclick={ed.publish} disabled={!ed.dirty}>{ta('ui.publish')}</button>
+    <!-- Publish with its menu: the button carries the count of what waits, and opens on a press or a mouse's rest as the bar's other menus do (no tooltip on a button that opens on rest).
+         The menu holds the acts first (Publish now, the published site, Discard drafts), then what waits to be published as rows that lead to the change, and at its foot the last publish, which opens History. -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <span class="toolmenu publish-wrap" onpointerenter={(e) => menuRest('publish', true, e)} onpointerleave={(e) => menuRest('publish', false, e)}>
+      <button type="button" class="primary publish-btn" aria-expanded={ed.toolMenu === 'publish'} aria-haspopup="true" aria-describedby={ed.dirty ? 'publish-waiting' : undefined}
+        onclick={() => pressMenu('publish')}>{ta('ui.publish')}{#if ed.dirty}<span class="publish-count" aria-hidden="true">{ed.unpublished.length}</span><span class="sr-only" id="publish-waiting">{ta(ed.unpublished.length === 1 ? 'publish.waiting.one' : 'publish.waiting', { n: ed.unpublished.length })}</span>{/if}{@html ICONS.caret}</button>
+      {#if ed.toolMenu === 'publish'}
+        <div class="tool-pop publish-pop" transition:menuMotion role="group" aria-label={ta('publish.menu')}>
+          <button type="button" class="ghost publish-act publish-main" disabled={!ed.dirty || !ed.auth?.allowed}
+            title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={publishNow}>{@html ICONS.upload}<span>{ta('publish.now')}</span></button>
+          <a class="ghost publish-act" href={ed.pageEntry()?.path ?? '/'} target="_blank" rel="noopener" onclick={() => (ed.toolMenu = null)}>{@html ICONS.external}<span>{ta('publish.viewLive')}</span></a>
+          <button type="button" class="ghost publish-act publish-red" disabled={!ed.dirty} onclick={discardFromMenu}>{@html ICONS.restore}<span>{ta('ui.discard')}</span></button>
+          {#if ed.dirty}
+            <hr class="gridmenu-divider" />
+            <span class="mini-label publish-head">{ta('history.unpublished')} · {ed.unpublished.length}</span>
+            <UnpublishedRows parts={ed.unpublished} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={goTo} />
+          {/if}
+          <hr class="gridmenu-divider" />
+          <button type="button" class="ghost publish-act publish-foot" onclick={() => { ed.toolMenu = null; ed.openPanel('history'); }}>
+            {@html ICONS.panel_history}<span>{lastPublish ? ta('publish.lastBy', { when: lastPublish.when, who: lastPublish.who }) : ta('publish.openHistory')}</span>
+          </button>
+        </div>
+      {/if}
+    </span>
   {/if}
   </span>
 </header>

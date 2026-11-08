@@ -1,0 +1,215 @@
+<script>
+  /* What waits to be published, as rows that lead to the change (lib/unpublished.js): a sign for the kind, the part's name, what it is, and a chevron that opens the row.
+     Open, a row lists the steps made on the part since the last publish, newest first, from the undo history (stepsForPart), each with its words and how long ago; a part with no step of its own kept (made inside another step, or before the kept steps) says so.
+     Drawn in the Publish menu and in History's «Not published yet», from the same parts, so the two never disagree; `onpick(part)` takes the owner to the change. */
+  import { ta, adminLang } from '$engine/i18n.js';
+  import { ICONS } from './icons.js';
+  import { stepsForPart } from './unpublished.js';
+  import { timeAgo } from './time-ago.js';
+  import { rowMotion } from './motion.svelte.js';
+  let { parts, steps = [], publishedAt = 0, onpick } = $props();
+
+  /** The sign and the words of a part without a name of its own. */
+  const KINDS = {
+    page: { icon: ICONS.panel_pages, word: 'unpublished.page' },
+    site: { icon: ICONS.panel_site, name: 'unpublished.site' },
+    collections: { icon: ICONS.panel_collections, name: 'unpublished.collections' },
+    collection: { icon: ICONS.panel_collections, word: 'unpublished.collection' },
+    templates: { icon: ICONS.panel_blocks, name: 'canvas.tabMyTemplates' },
+    plugins: { icon: ICONS.panel_plugins, name: 'panel.plugins' },
+    redirects: { icon: ICONS.redirect, name: 'ui.redirects' },
+  };
+  const keyOf = (part) => `${part.kind}:${part.id ?? ''}`;
+  /** Tells this list's step ids from the other list's, since the rows stand in the menu and in History at once. */
+  const uid = Math.random().toString(36).slice(2, 7);
+  const nameOf = (part) => part.name ?? ta(KINDS[part.kind].name);
+  const wordOf = (part) => (KINDS[part.kind].word ? ta(KINDS[part.kind].word) : '');
+  const ago = (at) => timeAgo(at, adminLang()) || ta('history.now');
+
+  /** The rows that stand open, by the part's key. */
+  let open = $state(new Set());
+  function toggle(part) {
+    const next = new Set(open);
+    if (next.has(keyOf(part))) next.delete(keyOf(part));
+    else next.add(keyOf(part));
+    open = next;
+  }
+</script>
+
+<div class="unpub-rows" role="list">
+  {#each parts as part (keyOf(part))}
+    {@const isOpen = open.has(keyOf(part))}
+    <div class="unpub-item" role="listitem">
+      <div class="unpub-row">
+        <button type="button" class="unpub-go" title={ta('tip.unpublished.go', { name: nameOf(part) })} onclick={() => onpick(part)}>
+          <span class="unpub-sign">{@html KINDS[part.kind].icon}</span>
+          <span class="unpub-name">{nameOf(part)}</span>
+          {#if wordOf(part)}<span class="unpub-kind">{wordOf(part)}</span>{/if}
+        </button>
+        <button type="button" class="unpub-chev" class:open={isOpen} aria-expanded={isOpen} aria-controls={`unpub-steps-${uid}-${keyOf(part)}`} aria-label={ta('tip.unpublished.steps', { name: nameOf(part) })} title={ta('tip.unpublished.steps', { name: nameOf(part) })} onclick={() => toggle(part)}>{@html ICONS.chevronDown}</button>
+      </div>
+      {#if isOpen}
+        {@const list = stepsForPart(part, steps, publishedAt)}
+        <div class="unpub-steps" id={`unpub-steps-${uid}-${keyOf(part)}`} transition:rowMotion>
+          {#each list as step, i (`${step.at}:${i}`)}
+            <div class="unpub-step"><span class="unpub-step-ico">{@html ICONS[step.icon] ?? ICONS.pencil}</span><span class="unpub-step-words">{ta(step.labelKey)}</span><small>{ago(step.at)}</small></div>
+          {:else}
+            <div class="unpub-step unpub-step-none">{ta('unpublished.noSteps')}</div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/each}
+</div>
+
+<style>
+  .unpub-rows {
+    display: grid;
+    gap: 2px;
+  }
+
+  .unpub-row {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .unpub-go,
+  .unpub-chev {
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .unpub-go {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    min-height: 2.2rem;
+    padding: 0 0.4rem;
+    box-sizing: border-box;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  .unpub-go:hover,
+  .unpub-go:focus-visible,
+  .unpub-chev:hover,
+  .unpub-chev:focus-visible {
+    background: rgb(255 255 255 / 7%);
+  }
+
+  .unpub-go:focus-visible,
+  .unpub-chev:focus-visible {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: -2px;
+  }
+
+  .unpub-sign {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 6px;
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid rgb(255 255 255 / 10%);
+    opacity: 0.8;
+  }
+
+  .unpub-sign :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  .unpub-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .unpub-kind {
+    flex: none;
+    font-size: 0.74rem;
+    opacity: 0.6;
+  }
+
+  /* The chevron opens the row's steps; it turns as the row opens */
+  .unpub-chev {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 1.8rem;
+    padding: 0;
+    opacity: 0.55;
+  }
+
+  .unpub-chev :global(svg) {
+    width: 0.75rem;
+    height: 0.75rem;
+    transition: transform 0.15s ease;
+  }
+
+  .unpub-chev.open :global(svg) {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unpub-chev :global(svg) { transition: none; }
+  }
+
+  /* The steps under an open row, set in under the sign */
+  .unpub-steps {
+    display: grid;
+    gap: 1px;
+    padding: 0 0.4rem 0.4rem 2.5rem;
+    overflow: hidden;
+  }
+
+  .unpub-step {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 1.6rem;
+    font-size: 0.78rem;
+    opacity: 0.85;
+  }
+
+  .unpub-step-ico {
+    display: inline-flex;
+    flex: none;
+    opacity: 0.7;
+  }
+
+  .unpub-step-ico :global(svg) {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  .unpub-step-words {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .unpub-step small {
+    flex: none;
+    font-size: 0.7rem;
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .unpub-step-none {
+    opacity: 0.55;
+  }
+</style>

@@ -150,21 +150,22 @@ async function tidyMedia() {
   }
 }
 
-// "Discard draft" requires two clicks on TWO different surfaces: the
-// first click arms the button, and the confirmation is its own floating
-// pill below the top bar. The button keeps its width when armed. A click
-// anywhere else, Escape or focus into the preview disarms.
-let discardArmed = $state(false);
-
-let discardWrapEl = $state(null);
-
-function requestDiscard() {
-  discardArmed = !discardArmed;
+/**
+ * «Discard drafts» as the Publish menu, the History panel and the undo list's foot offer it: the question first, since it takes every unpublished change at once, then the discard, and a message whose action brings the drafts back while the discard is still the last step.
+ * @returns {Promise<boolean>} whether the drafts were discarded
+ */
+async function askDiscard() {
+  const ok = await shellState.askConfirm({ title: ta('confirm.discardDrafts'), lines: [ta('confirm.discardDraftsLine')], okLabel: ta('ui.discard'), danger: true });
+  if (!ok || !discardDrafts()) return false;
+  shellState.setStatus(ta('ui.discarded'), 'info', { label: ta('ui.redoAll'), run: () => { if (historyState.steps.undo[0]?.key === 'discard') historyState.undo(); } });
+  return true;
 }
 
-/** @returns {boolean} whether the drafts were discarded; a failure has said so in the status line */
-function confirmDiscard() {
-  discardArmed = false;
+/**
+ * Throws every draft away, back to the published version, as one undo step.
+ * @returns {boolean} whether the drafts were discarded; a failure has said so in the status line
+ */
+function discardDrafts() {
   try {
     discard();
     shellState.setStatus(ta('ui.discarded'), 'info');
@@ -604,6 +605,7 @@ async function publish() {
       // New page: the draft is the source until the deploy finishes - keep it.
       shellState.writeDraftKey(`urd-draft-${pageState.pageId}`, JSON.stringify(pageSnap));
     }
+    historyState.markPublished();
     historyState.updateDirty();
     const wave = pageState.held.hold(committed);
     // The wait keeps the message up (info never auto-clears) until the
@@ -633,55 +635,7 @@ async function publish() {
   }
 }
 
-/** The effects of this module, run once by the shell at its start. */
-export function effects() {
-
-  $effect(() => {
-    if (!discardArmed) return;
-    // `contains` against the bound shell covers both the button and the
-    // pill, also when the hit lands on an SVG node inside them. Same
-    // pattern as the settings and the tool menus.
-    // The confirmation is taken here, in the capture phase on window,
-    // and not left to the pill's own delegated handler: the click then
-    // counts whatever else runs on the way down to the pill.
-    const disarm = (e) => {
-      if (!discardWrapEl?.contains(e.target)) { discardArmed = false; return; }
-      if (e.target instanceof Element && e.target.closest('.discard-confirm')) {
-        e.preventDefault();
-        e.stopPropagation();
-        confirmDiscard();
-      }
-    };
-    const onKey = (e) => {
-      if (e.key === 'Escape') discardArmed = false;
-    };
-    // A click in the preview (the iframe) never reaches this document, but
-    // moves focus out of the window - window blur covers that. A blur that
-    // arrives while the pointer is held down on the button or the pill is
-    // not that click: it would unmount the pill under the pointer before
-    // its own click lands, so it is ignored until the pointer is released.
-    let held = false;
-    const onDown = (e) => { held = !!discardWrapEl?.contains(e.target); };
-    const onUp = () => { held = false; };
-    const onBlur = () => { if (!held) discardArmed = false; };
-    // Outside clicks disarm on click: the confirmation pill is then
-    // unmounted only after the click it may have targeted has landed.
-    window.addEventListener('pointerdown', onDown, true);
-    window.addEventListener('pointerup', onUp, true);
-    window.addEventListener('click', disarm, true);
-    window.addEventListener('keydown', onKey, true);
-    window.addEventListener('blur', onBlur);
-    return () => {
-      window.removeEventListener('pointerdown', onDown, true);
-      window.removeEventListener('pointerup', onUp, true);
-      window.removeEventListener('click', disarm, true);
-      window.removeEventListener('keydown', onKey, true);
-      window.removeEventListener('blur', onBlur);
-    };
-  });
-}
-
-/** What the other parts read and write through, and the effects the shell runs once. */
+/** What the other parts read and write through. */
 export const publishState = {
   materializeField,
   materializeEntryImages,
@@ -690,17 +644,12 @@ export const publishState = {
   materializeSection,
   materializeImages,
   materializeSiteImages,
-  get discardArmed() { return discardArmed; },
-  set discardArmed(v) { discardArmed = v; },
-  get discardWrapEl() { return discardWrapEl; },
-  set discardWrapEl(v) { discardWrapEl = v; },
-  requestDiscard,
-  confirmDiscard,
+  askDiscard,
+  discardDrafts,
   discard,
   publish,
   get mediaRootCount() { return mediaRootCount; },
   get mediaBusy() { return mediaBusy; },
   loadMediaFiles,
   tidyMedia,
-  effects,
 };

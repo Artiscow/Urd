@@ -1,10 +1,13 @@
 <script>
-  /* The History panel: the published commits and the revert of the last one. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The History panel: what waits to be published («Not published yet», with «Discard drafts»), then the published commits and the revert of the last one. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import EmptyState from '../lib/rows/EmptyState.svelte';
   import ErrorLine from '../lib/rows/ErrorLine.svelte';
+  import Fold from '../lib/rows/Fold.svelte';
+  import SubHeading from '../lib/rows/SubHeading.svelte';
+  import UnpublishedRows from '../lib/UnpublishedRows.svelte';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const auth = $derived(ed.auth);
@@ -109,6 +112,14 @@
 </script>
 
 <div class="panel-body">
+  <!-- What a publish will write, above what has been published: the same rows as the Publish menu's, each leading to its change, and the discard as red words at the foot -->
+  {#if ed.dirty}
+    <Fold id="unpublished" surface="history" title={ta('history.unpublished')} tip={ta('tip.history.unpublished')} value={String(ed.unpublished.length)} defaultOpen>
+      <UnpublishedRows parts={ed.unpublished} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={(part) => ed.goToUnpublished(part)} />
+      <button type="button" class="ghost action discard-drafts" title={ta('tip.discard')} onclick={() => ed.askDiscard()}>{@html ICONS.restore}{ta('ui.discard')}</button>
+    </Fold>
+    <SubHeading text={ta('history.published')} />
+  {/if}
   {#if historyList === null}
     <EmptyState text={ta('hint.history.loading')} />
   {:else}
@@ -134,7 +145,7 @@
 </div>
 
 <style>
-  /* Undoing a publish takes the live site back, so it stands in the panels' dark red, as «Discard drafts» does */
+  /* Undoing a publish takes the live site back, so it stands in the panels' dark red */
   .panel-body .ghost.revert-last {
     gap: 0.45rem;
     border-color: #b23b3b;
@@ -143,6 +154,19 @@
   }
 
   .panel-body .ghost.revert-last:hover:not(:disabled) {
+    background: rgb(150 35 35 / 48%);
+  }
+
+  /* Discarding the drafts takes every unpublished change, so it stands under the rows in the panels' dark red, the revert's look */
+  .panel-body .ghost.discard-drafts {
+    margin-top: 0.3rem;
+    gap: 0.4rem;
+    border-color: #b23b3b;
+    background: rgb(150 35 35 / 30%);
+    color: #f2b8b3;
+  }
+
+  .panel-body .ghost.discard-drafts:hover:not(:disabled) {
     background: rgb(150 35 35 / 48%);
   }
 </style>

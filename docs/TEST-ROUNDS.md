@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.11): Publish with its menu, and «Not published yet» in History
+
+- [ ] The top bar has no «Unpublished» pill, no «Discard drafts» and no «View site»; Publish stands alone at the right with a count inside it while something is unpublished, and without the count when nothing is
+- [ ] Publish's menu opens on a press and when the mouse rests on it, under its right edge, and closes a moment after the mouse leaves; no tooltip on the button
+- [ ] In the menu: «Publish now» is greyed with nothing to publish or without publishing access and otherwise publishes; «View the published site» opens the live page in a new tab; «Discard drafts» asks first, and afterwards the count and the rows are gone, with the message's action bringing the drafts back
+- [ ] «Not published yet · n» lists each page with changes by name, Site settings, each collection, the templates, the plugins and the redirects; a press on a row's name goes there (a page opens on the canvas, a collection in its panel, Site settings opens the Site panel, the redirects open their dialog) and the menu closes
+- [ ] A row's chevron opens the steps made on that part since the last publish («Changed the pages · just now»), newest first; a page renamed from the Pages panel shows under Site settings (the pages list) and its own row says «No steps kept for this»; a page's search title changed in its settings shows under that page
+- [ ] After a publish the rows show no steps made before it, also after a reload
+- [ ] The menu's foot names the last publish («Last published 2 hr ago by …») once the history is loaded, else «Open History»; a press opens History
+- [ ] History: «Not published yet» at the top holds the same rows with the same chevrons, a full-width red «Discard drafts» under them, and «Published» over the list of publishes; with nothing unpublished the fold and the heading are gone
+- [ ] The undo list's foot «Discard drafts» and History's and the menu's all ask the same question and leave the same message
+- [ ] The top bar still folds in steps without wrapping at 1300, 1150, 1000 and 900 px wide; Publish keeps its word and count
+
 ### Test batch (0.7.30.10): the other panels and the dialogs on the row kit, and search in every language
 
 - [ ] Blocks: the search field narrows the palette, an empty search shows the dashed «No matches» box, the groups stand under small headings, and My templates and Plugins are folds with their counts

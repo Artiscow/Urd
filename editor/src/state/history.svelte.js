@@ -1,5 +1,5 @@
 /**
- * Undo and redo: one stack over the page, the site, the collections, the templates and the plugins, and the dirty flag.
+ * Undo and redo: one stack over the page, the site, the collections, the templates and the plugins, and what waits to be published with the dirty flag that follows it.
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { untrack } from 'svelte';
@@ -7,6 +7,7 @@ import { createDraftStore } from '../lib/draftStore.js';
 import { joinsLast, emptyTail, walkSteps, stepTyped, stepPage, keptHolds, HISTORY_LIMIT } from '../lib/history-model.js';
 import { readKept, writeKept } from '../lib/history-store.js';
 import { indexPending } from '../lib/collection-index.js';
+import { unpublishedParts } from '../lib/unpublished.js';
 import { ta } from '$engine/i18n.js';
 import { contentHash } from '$engine/imageTools.js';
 import { collectionsState } from './collections.svelte.js';
@@ -19,23 +20,55 @@ import { templatesState } from './templates.svelte.js';
 import { redirectsState } from './redirects.svelte.js';
 
 let dirty = $state(false);
+/** What waits to be published, one part per thing a publish would write (lib/unpublished.js); the dirty flag is whether it holds any. */
+let unpublished = $state.raw([]);
+/** When the last publish from this browser was made, kept over a reload, so a part's row shows only the steps since. */
+let publishedAt = $state(Number(localStorage.getItem('urd-published-at')) || 0);
 /** Counts the changes saved this session, so a view that reads the page's own data (which is not reactive) follows every change. */
 let edits = $state(0);
+
+function markPublished() {
+  publishedAt = Date.now();
+  localStorage.setItem('urd-published-at', String(publishedAt));
+}
 
 function updateDirty() {
   // Read without tracking, so an effect that saves never follows its own count.
   edits = untrack(() => edits) + 1;
   // Drafts on ALL pages count, not just the current one - but not newly
-  // published pages that are just waiting for deploy.
-  const anyPageDraft = siteState.siteDraft?.pages?.some((p) =>
-    !pageState.pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
-  const anyCollectionDraft = indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds)
-    || Object.values(collectionsState.collectionStores).some((st) => st.hasDraft());
-  const anyTemplateDraft = templatesState.templatesIndexStore?.hasDraft()
-    || Object.values(templatesState.templateStores).some((st) => st.hasDraft());
-  dirty = anyPageDraft
-    || (pageState.store?.hasDraft() && !pageState.pendingPublished.has(pageState.pageId))
-    || siteState.siteStore?.hasDraft() || pluginsState.pluginsStore?.hasDraft() || redirectsState.redirectsStore?.hasDraft() || anyCollectionDraft || anyTemplateDraft || false;
+  // published pages that are just waiting for deploy. The open page counts by its store too, also before its draft is written.
+  const pages = [...(siteState.siteDraft?.pages ?? [])];
+  if (pageState.pageId && !pages.some((p) => p.id === pageState.pageId)) pages.push({ id: pageState.pageId });
+  const pageDraft = (id) => !pageState.pendingPublished.has(id)
+    && (localStorage.getItem(`urd-draft-${id}`) !== null || (id === pageState.pageId && Boolean(pageState.store?.hasDraft())));
+  unpublished = unpublishedParts({
+    pages,
+    pageDraft,
+    site: Boolean(siteState.siteStore?.hasDraft()),
+    collectionsIndex: indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds),
+    collections: Object.entries(collectionsState.collectionStores)
+      // A collection's name is read without tracking, so an effect that saves never follows the view it refreshes.
+      .map(([id, st]) => ({ id, name: untrack(() => collectionsState.collectionsView[id]?.name), draft: st.hasDraft() })),
+    templates: Boolean(templatesState.templatesIndexStore?.hasDraft() || Object.values(templatesState.templateStores).some((st) => st.hasDraft())),
+    plugins: Boolean(pluginsState.pluginsStore?.hasDraft()),
+    redirects: Boolean(redirectsState.redirectsStore?.hasDraft()),
+  });
+  dirty = unpublished.length > 0;
+}
+
+/** Takes the owner to a part that waits to be published (lib/UnpublishedRows.svelte): the page onto the canvas, a collection into its panel, the rest to the panel or the dialog that holds it. */
+function goToUnpublished(part) {
+  if (part.kind === 'page') pageState.selectPage(part.id);
+  else if (part.kind === 'site') shellState.activePanel = 'site';
+  else if (part.kind === 'collections' || part.kind === 'collection') {
+    if (part.kind === 'collection') {
+      collectionsState.panelCollection = part.id;
+      collectionsState.panelEntry = null;
+    }
+    shellState.activePanel = 'collections';
+  } else if (part.kind === 'templates') shellState.showFold('blocks', 'templates');
+  else if (part.kind === 'plugins') shellState.activePanel = 'plugins';
+  else if (part.kind === 'redirects') redirectsState.openRedirects();
 }
 
 /**
@@ -432,7 +465,11 @@ function goSteps(way, count) {
 /** What the other parts read and write through, and the effects the shell runs once. */
 export const historyState = {
   get dirty() { return dirty; },
-  set dirty(v) { dirty = v; },
+  /** What waits to be published, for the Publish menu and History's «Not published yet». */
+  get unpublished() { return unpublished; },
+  goToUnpublished,
+  get publishedAt() { return publishedAt; },
+  markPublished,
   get edits() { return edits; },
   updateDirty,
   history,
@@ -443,7 +480,7 @@ export const historyState = {
   /** The steps as the buttons and the list show them: the history newest first, and the redo steps nearest first; each with its kind of change, its page and its time. */
   get steps() {
     void stepsTick;
-    const describe = (step) => ({ key: step.key ?? '', at: step.at ?? 0, pageId: stepPage(step), typed: stepTyped(step) });
+    const describe = (step) => ({ key: step.key ?? '', at: step.at ?? 0, pageId: stepPage(step), pages: step.pages ?? [], typed: stepTyped(step) });
     return { undo: history.map(describe).reverse(), redo: redoStack.map(describe).reverse() };
   },
   goSteps,

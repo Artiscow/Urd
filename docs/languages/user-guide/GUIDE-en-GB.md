@@ -68,7 +68,7 @@ Open the **Blocks** panel and click the block you want; it is placed in the midd
 - **Privacy page**: the site's privacy statement, written from the site itself: who is responsible (the contact details in the Legal panel), what each form and the shop send and to whom, whether visits are counted, which companies' videos and maps the pages hold, the host, the visitor's rights, and a list of the companies the visitor has let load with the page, each taken back with one press. What it says has no settings of its own: change the site and the page follows. A new page from the **Privacy** template holds it with its heading in the site's language (**Page heading** in its menu takes the heading away where the page has its own), and the footer then links it on every page (**Privacy page** under Privacy in the **Legal** panel chooses another, or none). **Design** in its menu's Appearance draws the page as a **Long read**, with the **Contents at the side**, with the main points **At a glance** as four cards, as **Questions** that fold out, or as a **Ledger table** or **Ledger cards** that set out what is collected, why, who gets it and how long it is kept; the colours, the lines over the parts, the corners, the fonts and **Placement** (centred in the block, or at its left edge) stand beside it.
 - **Terms of sale**: the terms of sale as a block of their own, written on the page as a text is, and drawn in a document design under **Design** in its menu's Appearance: **Long read** (room between the paragraphs and a short line over each part), **Contents at the side** (the parts listed at the side of the text from its second-level headings, on the left or the right as **Contents side** says, the text **Centred** with the list at the block's outer edge (once the block is about 950 px wide) or beside the list, following the reader down, and folded into one row on a phone), **At a glance** (the first list before the first heading as cards, each item's bold words as its label), **Questions** (each part folds out under its heading, one at a time, for visitors; in the editor every part stands open so you can write in it) and **Numbered clauses** (each part and its paragraphs numbered, 7.1, 7.2). Beside the design: the accent, heading and card colours, the lines over the parts, the corners and the heading font, each shown only where the design draws it. The **Terms of sale** page template starts with one, written in the site's language with its facts, and the block list adds one with the same text to fill in. A text that stood in a document design before is a Terms of sale block after the update, its words and look kept.
 
-In the editor, links and buttons are never triggered when you click them - the click selects the block. Test the links via **View site ↗**.
+In the editor, links and buttons are never triggered when you click them - the click selects the block. Test the links via **View the published site** in the Publish menu.
 
 ### What does the phone icon (decor) mean?
 
@@ -205,10 +205,9 @@ The checkout follows the EU consumer rights directive (2011/83/EU), which applie
 
 ## Drafts and publishing
 
-- Everything you do is saved as a draft in your browser, also across pages. «Unpublished changes» in the top bar shows that you have something unpublished.
-- **Publish** puts all the drafts out on the site. It takes about one minute before the changes are visible to visitors.
-- **Discard drafts** deletes the drafts and takes you back to the site as it is published. The button asks «Sure?» (red) before it does it; click once more to discard, or anywhere else to cancel.
-- **View site ↗** opens the published page in a new tab.
+- Everything you do is saved as a draft in your browser, also across pages. While something is unpublished, **Publish** carries a count: each page with changes, the site settings, a collection, the templates, the plugins and the redirects count one each.
+- **Publish** opens its menu, on a press or when the mouse rests on it: **Publish now** puts all the drafts out on the site (it takes about one minute before visitors see them), **View the published site** opens the live page in a new tab, and **Discard drafts** deletes the drafts and takes you back to the site as it is published, after asking. Under them, **Not published yet** lists the changes; a press on one takes you to it. The foot names the last publish and opens **History**.
+- The **History** panel shows the same list under **Not published yet**, with **Discard drafts** at its foot (it is also at the foot of the undo buttons' list). The message after a discard brings the drafts back while nothing else has been done.
 
 Publishing requires that your GitHub user has been given access by the site owner (see [the setup guide](../setup-publication/SETUP-en-GB.md)).
 
@@ -216,7 +215,7 @@ If several of you are editing, the editor says so if someone else has published 
 
 ## History and undoing a publish
 
-The **History** panel shows the most recent publishes: what was changed, by whom and when. **↩ Undo last publish** rolls the site back to how it was before the previous publish. The undo is itself a publish, so nothing is deleted from the history, and you can undo the undo. After an undo you reload admin (after ~1 minute) before you edit further; the editor says so.
+The **History** panel shows what waits to be published first, under **Not published yet**, and below it the most recent publishes: what was changed, by whom and when. **↩ Undo last publish** rolls the site back to how it was before the previous publish. The undo is itself a publish, so nothing is deleted from the history, and you can undo the undo. After an undo you reload admin (after ~1 minute) before you edit further; the editor says so.
 
 (Ctrl+Z undoes drafts in the browser BEFORE you publish; the History panel undoes what is already published.)
 

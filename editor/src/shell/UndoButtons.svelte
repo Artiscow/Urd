@@ -6,6 +6,7 @@
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
+  import { timeAgo } from '../lib/time-ago.js';
   import { stepKind } from '../lib/history-model.js';
 
   const ed = getContext('urd-editor');
@@ -21,29 +22,9 @@
     return { text: ta(kind.labelKey), page, icon: ICONS[kind.icon] ?? ICONS.pencil };
   }
 
-  /** How long ago a step was made, in the admin's language: «now» under a minute. */
-  function ago(at) {
-    const seconds = Math.round((Date.now() - (at || Date.now())) / 1000);
-    if (seconds < 60) return ta('history.now');
-    const minutes = Math.round(seconds / 60);
-    let format;
-    try {
-      format = new Intl.RelativeTimeFormat(adminLang(), { style: 'narrow', numeric: 'auto' });
-    } catch {
-      format = new Intl.RelativeTimeFormat(undefined, { style: 'narrow', numeric: 'auto' });
-    }
-    return minutes < 60 ? format.format(-minutes, 'minute') : format.format(-Math.round(minutes / 60), 'hour');
-  }
+  /** How long ago a step was made, in the admin's language (lib/time-ago.js): «now» under a minute. */
+  const ago = (at) => timeAgo(at, adminLang()) || ta('history.now');
 
-  /**
-   * «Discard drafts» at the menu's foot: the top bar's discard (publishState.discard, one undo step back to the published version), asked first since it takes every unpublished change at once.
-   * The drafts come back in one press: «Redo everything» in the message that follows and at the menu's foot undoes the discard.
-   */
-  async function discardAll() {
-    const ok = await ed.askConfirm({ title: ta('confirm.discardDrafts'), lines: [ta('confirm.discardDraftsLine')], okLabel: ta('ui.discard'), danger: true });
-    if (!ok || !ed.confirmDiscard()) return;
-    ed.setStatus(ta('ui.discarded'), 'info', { label: ta('ui.redoAll'), run: () => redoAll() });
-  }
 
   /** The undone steps «Redo everything» brings back: the nearest ones up to a discard, which it never redoes, since that would take the drafts again. */
   const redoCount = $derived.by(() => {
@@ -88,7 +69,7 @@
       <span class="steps-sep" aria-hidden="true"></span>
       <!-- The two ends: every draft discarded, and every undone step (or the discard) brought back -->
       <span class="steps-foot">
-        <button type="button" class="ghost step-row step-start" disabled={!ed.dirty} title={ta('tip.discard')} onclick={discardAll}>
+        <button type="button" class="ghost step-row step-start" disabled={!ed.dirty} title={ta('tip.discard')} onclick={() => ed.askDiscard()}>
           <span class="step-ico" aria-hidden="true">{@html ICONS.restore}</span><span class="step-words">{ta('ui.discard')}</span>
         </button>
         {#if redoCount || discardOnTop}
