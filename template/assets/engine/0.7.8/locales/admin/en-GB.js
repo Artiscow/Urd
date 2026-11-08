@@ -486,7 +486,7 @@ export default {
     'tip.nav.tabLabel': 'The word on the tab; it is also what a screen reader says',
     'tip.nav.tabColor': 'The tab\'s colour',
     'tip.nav.tabTextColor': 'The colour of the mark and the word',
-    'lbl.navItemLook': 'Look',
+    'lbl.navItemLook': 'Shown as',
     'opt.navLook.plain': 'Plain',
     'opt.navLook.button': 'Button',
     'tip.nav.openItem': 'Open the item',

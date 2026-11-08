@@ -489,7 +489,7 @@ export default {
     'tip.nav.tabLabel': 'Ordet på fanen; det er også det en skjermleser sier',
     'tip.nav.tabColor': 'Fanens farge',
     'tip.nav.tabTextColor': 'Fargen på merket og ordet',
-    'lbl.navItemLook': 'Utseende',
+    'lbl.navItemLook': 'Vises som',
     'opt.navLook.plain': 'Vanlig',
     'opt.navLook.button': 'Knapp',
     'tip.nav.openItem': 'Åpne punktet',

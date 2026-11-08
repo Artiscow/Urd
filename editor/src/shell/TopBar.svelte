@@ -307,7 +307,7 @@
             {/if}
           </span>
         {:else}
-          <span class="tool-cap">{ta('lbl.group.view')}</span>
+          <!-- The grid and the guides carry no caption: their icons say it, and the folded form keeps the word as its tooltip -->
           <span class="toolgrp">
             <button class="ghost" class:active={ed.gridOn} onclick={ed.toggleGrid}
               title={ta('tip.gridToggle')}>{@html ICONS.gridToggle}</button>

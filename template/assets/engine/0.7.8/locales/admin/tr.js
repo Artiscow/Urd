@@ -486,7 +486,7 @@ export default {
     'tip.nav.tabLabel': 'Sekmedeki kelime; ekran okuyucunun söylediği de budur',
     'tip.nav.tabColor': 'Sekmenin rengi',
     'tip.nav.tabTextColor': 'İşaretin ve kelimenin rengi',
-    'lbl.navItemLook': 'Görünüm',
+    'lbl.navItemLook': 'Gösterim',
     'opt.navLook.plain': 'Düz',
     'opt.navLook.button': 'Düğme',
     'tip.nav.openItem': 'Öğeyi aç',

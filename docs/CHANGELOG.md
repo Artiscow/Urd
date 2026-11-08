@@ -8,6 +8,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.2 - The names of the admin designs, their parts and their options - 8 November 2026
+
+- The four admin designs and their six new parts carried working names. Each has its name in en-GB, nb and tr, chosen 8 November 2026 on the «Admin Design Names» canvas and written into BACKLOG: the designs Floating menu, Small panels, Side panel and One column; the row Admin design; the parts Element menu, Folds, Toolbar, Designs, Extra settings and Shortcuts with their options. The Admin Designs canvas carries the names in place of the working ones.
+- Of the words the inventory of 7 November 2026 found standing for two things, two changed: a nav item's «Look» reads «Shown as», and the grid and guides buttons in the top bar lost their «Show» caption, the folded form keeping the word as its tooltip. The rest stay, with the record in BACKLOG of which rows keep «Placement», «Motion», «Style» and «Look».
+- 0.7.30 is closed: every step delivered, and panel-language.test.mjs's list names only the settings window.
+
+The independent review before the commit found these, all fixed:
+
+1. The record of the kept words named the search copy's heading as a «Look», which is a «Style», and missed the two places that hold the word: the tab menus' group of folds and the image editor's section heading. The record names them.
+2. The record counted six «Placement» rows where five place a part of a thing and the sixth is the tabs block's row. It counts them apart.
+3. The canvas link stood as a bare address where the file links every canvas by its name. It is a link.
+
 ### 0.7.0.79 - The menu render test's tag tokeniser without backtracking - 8 November 2026
 
 - CodeQL's alert 29: the menu render test's tag tokeniser read an open tag's attributes with a nested loop whose parts could take the same characters, which backtracks on a long tag. The attributes are one flat run of quoted strings and other characters up to the bracket, with the self-closing slash read from the run.

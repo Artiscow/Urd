@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.2): two names in the admin
+
+- [ ] Nav panel, an item's card: the Text / Button choice is labelled «Shown as» (nb «Vises som»)
+- [ ] The top bar: the grid and guides buttons stand without a caption over them at full width; folded into one button at a narrow width, the button's tooltip still reads «Show»
+
 ### Test batch (0.7.30.11): Publish with its menu, and «Not published yet» in History
 
 - [ ] The top bar has no «Unpublished» pill, no «Discard drafts» and no «View site»; Publish stands alone at the right with a count inside it while something is unpublished, and without the count when nothing is
