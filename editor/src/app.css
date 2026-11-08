@@ -1148,9 +1148,10 @@
     gap: 0.6rem;
   }
 
-  /* The title is never narrower than its longest word; the value gives way with an ellipsis */
+  /* A fold's title takes the room it needs, never more than the line, and the value beside it gives way with an ellipsis */
   .menu-group-title {
-    flex: 1;
+    flex: 1 0 auto;
+    max-width: 100%;
   }
 
   /* The mark on a group that differs from the defaults, right after its title so the titles of a column line up, and the reset under its controls */
@@ -1757,8 +1758,9 @@
     cursor: pointer;
   }
 
+  /* A row's name keeps its words before the link beside it does: the link takes the room left and ends in an ellipsis */
   .nav-head-name {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
     font-size: 0.85rem;
     white-space: nowrap;
@@ -1766,10 +1768,9 @@
     text-overflow: ellipsis;
   }
 
-  /* The link or the date beside the name takes its own words' width, up to half the head */
   .nav-head-link {
-    flex: 0 1 auto;
-    max-width: 50%;
+    flex: 1 1 0;
+    text-align: right;
     min-width: 0;
     font-size: 0.74rem;
     opacity: 0.6;
@@ -1794,7 +1795,8 @@
     transition: transform 0.15s ease;
   }
 
-  .nav-item.open .nav-chev svg {
+  /* Only the open card's own chevron turns, never those of the cards inside it */
+  .nav-item.open > .nav-head .nav-chev svg {
     transform: rotate(180deg);
   }
 
@@ -1937,43 +1939,6 @@
   .panel-body input.nav-item-name:focus:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     border-color: var(--urd-color-accent);
     outline: none;
-  }
-
-  /* Where a dragged row lands: a faint clone of it, dashed, in the gap or
-     indented as a child */
-  .nav-item.ghost {
-    opacity: 0.55;
-    border: 1px dashed var(--urd-color-accent);
-    background: color-mix(in srgb, var(--urd-color-accent) 10%, transparent);
-    min-height: 2rem;
-    overflow: hidden;
-    animation: row-drag-slot-in 0.15s ease-out;
-  }
-
-  .ghost-name {
-    display: block;
-    height: 1.5rem;
-    line-height: 1.5rem;
-    padding: 0 0.2rem;
-    font-size: 0.85rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .ghost-target {
-    display: block;
-    padding: 0 0.2rem;
-    font-size: 0.72rem;
-    opacity: 0.75;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* The row being dragged stays in view, dimmed, until it lands */
-  .nav-item.dragging {
-    opacity: 0.55;
   }
 
   /* The row kit's drag (lib/rows/row-drag.svelte.js), the one look of a row moved anywhere in the admin.
@@ -2135,7 +2100,6 @@
   @media (prefers-reduced-motion: reduce) {
     [data-row-dragging],
     .row-drag-slot,
-    .nav-item.ghost,
     .row-drag-line { animation: none; transition: none; }
   }
 
@@ -2203,91 +2167,11 @@
     opacity: 1;
   }
 
-  /* The social icon's preview in the Footer panel */
-  /* A shortcut row (B3): closed it is one line, open it is a card with the
-     tile drawn as the menu draws it. The preview is the mark picker's own
-     trigger, so a click on the tile changes the mark. */
-  .lrow {
-    border: 1px solid rgb(255 255 255 / 12%);
-    border-radius: 9px;
-    background: rgb(255 255 255 / 4%);
-  }
-
-  .lrow + .lrow {
-    margin-top: 5px;
-  }
-
-  .lrow.open {
-    border-color: var(--urd-admin-accent, #6c5ce7);
-    box-shadow: 0 8px 22px rgb(0 0 0 / 30%);
-  }
-
-  .lrow-head {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 7px;
-    cursor: pointer;
-  }
-
-  .lrow-mark {
-    flex: 0 0 auto;
-    width: 1.7rem;
-    height: 1.7rem;
-    display: grid;
-    place-items: center;
-    border-radius: 7px;
-    background: rgb(255 255 255 / 7%);
-    overflow: hidden;
-    opacity: 0.9;
-  }
-
-  .lrow-mark svg {
-    width: 0.95rem;
-    height: 0.95rem;
-  }
-
-  .lrow-mark img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .lrow-name {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.85rem;
-  }
-
-  .lrow-warn {
-    flex: 0 0 auto;
-    display: inline-flex;
-    color: #f5a09a;
-  }
-
-  .lrow-chev {
-    flex: 0 0 auto;
-    display: inline-flex;
-    opacity: 0.6;
-    transition: transform 0.15s ease;
-  }
-
-  .lrow.open .lrow-chev {
-    transform: rotate(180deg);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .lrow-chev { transition: none; }
-  }
-
+  /* An open shortcut's card: the tile drawn as the menu draws it, which is the mark picker's own trigger, beside the shortcut's fields. */
   .lrow-body {
     display: grid;
     grid-template-columns: 5.2rem minmax(0, 1fr);
     gap: 9px;
-    padding: 2px 8px 9px;
   }
 
   /* The live tile: the mark above the name, as in the menu's grid. */
@@ -2418,22 +2302,6 @@
   .lbtn-name {
     font-size: 0.82rem;
     opacity: 0.8;
-  }
-
-  /* Each tool's header in the Tools group: its name, and the arrows that move
-     it in the cluster. The panel's order is the menu's order. */
-  .tool-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem;
-    width: 100%;
-  }
-
-  .tool-move {
-    display: flex;
-    gap: 0.15rem;
-    flex-shrink: 0;
   }
 
   /* A field whose value can never be used (a shared folder's address that cannot be read): drawn as unusable. */
@@ -2692,6 +2560,7 @@
     display: block;
   }
 
+  /* A removal, as the Collections panel draws its deletion: a red cross in a red frame, the frame filling faintly under the pointer */
   .icon-btn.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     color: #f08a8a;
     border-color: rgb(224 82 82 / 50%);
@@ -2884,27 +2753,23 @@
     min-width: 0;
   }
 
-  .panel-body .toolbar-row .tb-num,
-  .panel-body .ctl-row .tb-num {
+  .panel-body .toolbar-row .tb-num {
     width: 3.4rem;
     flex: 0 0 auto;
     padding: 0 0.3em;
     text-align: center;
   }
 
-  /* The Nav panel's size rows: a fixed-width name, the slider, an editable number; and two fields side by side. */
+  /* A control row's fixed-width name, and two fields side by side (the Nav panel's sizes). */
   .ctl-row .ctl-name { flex: 0 0 4.4rem; }
   .ctl-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; align-items: end; }
   .ctl-field { display: grid; gap: 4px; min-width: 0; }
   .panel-body .ctl-field .tb-num { width: 100%; padding: 0 0.3em; text-align: center; }
-  .toolbar-row.ctl-end { justify-content: flex-end; gap: 0.4rem; }
-  .nav-view-seg { align-self: flex-start; }
   /* The heading of a part inside a group (the Nav panel's groups hold several parts) */
   .group-sub { margin: 0.2rem 0 0; }
-  /* The pages the menu shows on, two to a row, a long title cut with an ellipsis */
+  /* The pages the menu and the announcement strip show on, two to a row */
   .page-switches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.15rem 0.9rem; }
   .page-switches .gridmenu-snap { min-width: 0; }
-  .page-switch-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .panel-body .toolbar-row .tbtn {
     flex: 0 0 auto;
@@ -3126,9 +2991,6 @@
   .hover-sample.hover-pill { color: var(--urd-color-bg); background: var(--urd-color-accent); padding: 0 8px; border-radius: 999px; }
   .hover-sample.hover-lift-plain { translate: 0 -2px; }
   .hover-sample.hover-lift { text-shadow: 0 3px 10px color-mix(in srgb, var(--urd-color-accent) 70%, transparent); }
-  /* Colours as a row of swatches with the name beneath each. */
-  .swatch-row { display: flex; justify-content: space-around; gap: 8px; }
-  .swatch-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; min-width: 0; }
   /* The logo's thumbnail beside its picker, and three sizes on one row. */
   .logo-pick { display: flex; align-items: center; gap: 12px; }
   .logo-thumb {
@@ -3139,11 +3001,6 @@
   .logo-pick-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
   .logo-file { font-size: 11px; opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ctl-triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; }
-  /* A small titled card inside a group (the Nav panel's scrolling settings). */
-  .mini-card {
-    display: flex; flex-direction: column; gap: 10px; padding: 10px 12px;
-    background: color-mix(in srgb, currentColor 4%, transparent); border: 1px solid color-mix(in srgb, currentColor 10%, transparent); border-radius: 9px;
-  }
 
   /* A text field with its label above in capitals (the announcement's text and
      address): filled, without a frame, an accent underline while it has focus. */
@@ -3430,11 +3287,6 @@
   .cw-margin { text-align: right; font-size: 10px; opacity: 0.7; }
   .cw-legend { display: flex; justify-content: space-between; padding-top: 2px; opacity: 0.45; }
   .cw-binds { padding-top: 7px; text-transform: none; letter-spacing: 0; opacity: 0.55; }
-  .cw-seg { display: flex; width: 100%; }
-  .cw-seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ flex: 1; white-space: nowrap; }
-  /* The sliders in the control rows: the label on the left, the value at
-     the far right, the track takes the rest. */
-  .ctl-row input[type="range"]:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ flex: 1; min-width: 0; }
 
   /* Theme suggestions: a row of palette thumbnails (all on one row) */
   .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }
@@ -4487,4 +4339,11 @@
     height: 7px;
     border-radius: 50%;
     background: #e2b84a;
+  }
+
+  /* A pop-up that does not fit under its anchor: moved up until its foot stands at the window's foot (the colour picker's first fallback) */
+  @position-try --cp-fit {
+    top: auto;
+    bottom: 8px;
+    margin: 0;
   }

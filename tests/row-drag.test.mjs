@@ -1,9 +1,9 @@
 /**
- * Reordering a flat list by dragging (editor/src/lib/row-drag.js, the Collections panel's entries): the landing place from the pointer, and the list in its new order.
+ * Reordering a flat list by dragging (editor/src/lib/row-drag.js, every flat list of the row kit's drag): the landing place from the pointer, with one name for each place, and the list in its new order.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rowDropAt, reorderRows, stepAmong } from '../editor/src/lib/row-drag.js';
+import { rowDropAt, flatDropAt, reorderRows, stepAmong } from '../editor/src/lib/row-drag.js';
 
 const rows = [
   { id: 'a', top: 0, bottom: 40 },
@@ -33,6 +33,17 @@ test('a landing place that changes nothing gives no drop', () => {
   assert.equal(rowDropAt([], 'a', 10), null);
   assert.equal(rowDropAt(rows, 'zz', 10), null);
   assert.equal(rowDropAt([rows[0]], 'a', 10), null);
+});
+
+test('flatDropAt names the place between two rows once: after a row is before the next, and only after the last row is «after»', () => {
+  // a held at y 70 lands after b, which is the place before c.
+  assert.deepEqual(flatDropAt(rows, 'a', 70), { id: 'c', pos: 'before' });
+  // a held below every row lands after c, the last row.
+  assert.deepEqual(flatDropAt(rows, 'a', 300), { id: 'c', pos: 'after' });
+  // Moving up, the place is already named «before».
+  assert.deepEqual(flatDropAt(rows, 'c', 55), { id: 'a', pos: 'before' });
+  // No drop stays no drop.
+  assert.equal(flatDropAt(rows, 'c', 120), null);
 });
 
 test('the list is reordered by the drop, and left alone when the drop names a row it does not hold', () => {

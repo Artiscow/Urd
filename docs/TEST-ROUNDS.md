@@ -2,6 +2,21 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.9): the Nav panel on the row kit, and the menu's right-click menu
+
+- [ ] The Nav tab's menu lists the eight folds, and every fold says its value while closed (the number of items, the logo, the layout, the colours, the phone, scrolling, the tools, the announcement)
+- [ ] A Nav setting changed from its default shows the amber dot on its fold and beside it, and both resets put it back, also where a fold's settings stand in both the menu and its style (Layout and size, Colours and frame)
+- [ ] The menu items: a row is pressed, held and dragged as in every list, with the card under the pointer, the dimmed row, the slot (or the line with «Moving rows») and the flash; onto the middle of a row it goes under it, down to the third submenu level; Alt and the arrows move it, and an open card stays open on its item
+- [ ] The line after a row with a submenu stands below the whole submenu, and the line for «under» one step in
+- [ ] The cross in an open item's card, a shortcut's, a footer column's, a calendar's and a background layer's is the red cross of the Collections panel
+- [ ] Tools: the tools are cards in the menu's order, saying On or Off; a card dragged, or moved with Alt and the arrows, moves the tool in the menu, and back in the default order nothing is stored
+- [ ] The link launcher's shortcuts are cards with their mark and name, a warning on one whose link leads nowhere; «+ New shortcut» opens the new card; a card drags by its head
+- [ ] A right click on the site's menu in the page opens its menu with Settings and the eight folds; «Settings» on the logo, an item, the burger, the announcement, the link launcher, the cart, the theme button and the links opens that part's fold (a tool's own card under Tools), also with the panel folded away
+- [ ] An announcement strip placed above the page or the content opens the same menu on a right click
+- [ ] Resting on the next tab while a tab's menu is open closes the first at once
+- [ ] The colour picker from a row low in a panel stays in the window, moved up rather than turned above its row
+- [ ] A long fold title in a narrow panel wraps rather than running past the edge
+
 ### Test batch (0.7.30.8): the Site, Theme, Legal and Footer panels on the row kit
 
 - [ ] Each of the four tabs' menus lists the panel's folds (Site in four groups), and a row opens the panel at that fold, the others closing

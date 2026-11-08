@@ -11,7 +11,8 @@ const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-red
 
 /** A menu or a pop-up a block draws: it slides down a little and fades in, and back out. */
 export function menuMotion(node, params = {}) {
-  return fly(node, { y: -6, duration: still() ? 0 : 150, ...params });
+  const { duration, ...rest } = params;
+  return fly(node, { y: -6, duration: still() ? 0 : (duration ?? 150), ...rest });
 }
 
 /** A row that opens in a list: its body grows from nothing to its height, and shrinks back. */

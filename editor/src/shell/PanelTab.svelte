@@ -6,6 +6,7 @@
      The Legal tab carries an amber dot on its name's corner while something the law asks for is missing, and the same dot on the rows that need looking at (lib/legal-model.js).
      The Collections tab's menu lists the site's collections, kept in step as they come and go, and ends in New collection. A mouse resting on a collection, or the right arrow key, opens a submenu of its entries beside it, ending in New entry; on an entry, a third menu of its common actions (its picture added or edited, the entry duplicated); the left arrow or Escape goes back a level.
      A collection's row opens it in the panel, and an entry's row opens the entry. */
+  import { tabMenuOpen } from './tab-menu-open.svelte.js';
   import { getContext, tick } from 'svelte';
   import { menuMotion } from '../lib/motion.svelte.js';
   import { ta } from '$engine/i18n.js';
@@ -84,10 +85,28 @@
     return { top: Math.max(8, Math.min(r.top - 5, window.innerHeight - height - 8)), left };
   }
 
+  /** This tab, as the one whose menu stands open (tab-menu-open.svelte.js): a symbol, which the shared state keeps as it is. */
+  const self = Symbol(name);
+  /** Whether the menu closes because another tab's menu took its place: then it is gone at once, with no closing motion beside the new one. */
+  let replaced = $state(false);
+  // Another tab's menu opening closes this one at once.
+  $effect(() => {
+    if (open && tabMenuOpen.owner !== self) {
+      clearTimeout(timer);
+      replaced = true;
+      setOpen(false);
+    }
+  });
+
   /** The menu opened or closed, placed again once it is drawn and its size is known. */
   async function setOpen(next) {
     if (next && !open) pos = place();
     open = next;
+    if (next) {
+      tabMenuOpen.owner = self;
+      replaced = false;
+    }
+    else if (tabMenuOpen.owner === self) tabMenuOpen.owner = null;
     if (!next) {
       clearTimeout(subTimer);
       clearTimeout(actTimer);
@@ -371,7 +390,7 @@
       <!-- A press on a row keeps the focus where it is, so a browser that does not focus a pressed button never closes the menu under the click (the focusout above) -->
       <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
       <div class="tab-menu-list" class:lines={ed.tabMenus === 'lines'} id={menuId} popover="manual" role="group" aria-label={name === 'collections' ? ed.PANEL_LABELS[name] : ta('tip.panelTab.menu', { panel: ed.PANEL_LABELS[name] })}
-        style="top: {pos.top}px; left: {pos.left}px; max-height: calc(100vh - {pos.top}px - 8px)" bind:this={list} use:topLayer transition:menuMotion onmousedown={(e) => e.preventDefault()}>
+        style="top: {pos.top}px; left: {pos.left}px; max-height: calc(100vh - {pos.top}px - 8px)" bind:this={list} use:topLayer transition:menuMotion={{ duration: replaced ? 0 : undefined }} onmousedown={(e) => e.preventDefault()}>
         {#if variant === 'rail'}
           <!-- Beside an icon, the panel's name heads the menu in the tooltip's place, and opens the panel -->
           <button type="button" class="tab-menu-head" onclick={() => { now(false); ed.togglePanel(name); }}>{label}</button>

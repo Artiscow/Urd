@@ -246,6 +246,13 @@ function onIframeLoad() {
     onBlockStyle: bridgeState.handleBlockStyle,
     onCollectionEdit: collectionsState.handleCollectionEdit,
     onOpenEntry: collectionsState.openEntry,
+    // The canvas opens only the Nav panel, at one of the folds its tab's menu lists or at its top.
+    onOpenPanel: (msg) => {
+      if (msg.panel !== 'nav') return;
+      const name = (value) => (typeof value === 'string' && /^[a-z]+$/.test(value) ? value : null);
+      if (name(msg.fold)) shellState.showFold('nav', name(msg.fold), { part: name(msg.part) });
+      else shellState.activePanel = 'nav';
+    },
     onCollectionAdd: collectionsState.handleCollectionAdd,
     onSaveTemplate: templatesState.handleSaveTemplate,
     onStickyGroup: bridgeState.handleStickyGroup,

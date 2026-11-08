@@ -32,3 +32,20 @@ export function siteGroup(read, write, id, defaults) {
     resetKey: (key) => clear(`${id}:${key}`, [key]),
   };
 }
+
+/**
+ * One fold's group made of groups whose settings stand in different objects (the menu's own fields and its style, say): a setting is the fold's own where any part holds it as its own, the reset runs the reset of every part that has one, and a setting's reset goes to the first part that names its key.
+ * @param {...ReturnType<typeof siteGroup>} groups
+ */
+export function mergeGroups(...groups) {
+  const holder = (key) => groups.find((group) => key in group.defaults);
+  const resets = groups.map((group) => group.reset).filter(Boolean);
+  return {
+    id: groups[0]?.id,
+    defaults: Object.assign({}, ...[...groups].reverse().map((group) => group.defaults)),
+    changed: groups.reduce((sum, group) => sum + group.changed, 0),
+    reset: resets.length ? () => { for (const reset of resets) reset(); } : null,
+    own: (key) => groups.some((group) => group.own(key)),
+    resetKey: (key) => holder(key)?.resetKey(key),
+  };
+}

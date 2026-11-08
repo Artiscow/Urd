@@ -100,8 +100,6 @@ function findings() {
 
 /** The files not yet moved to the row kit, by the step of 0.7.30 (BACKLOG) that moves them, with the patterns each still holds. */
 const RATCHET = {
-  // 0.7.30.9, the Nav panel
-  'panels/NavPanel.svelte': ['drag', 'fold', 'iconbutton', 'segment', 'slider', 'subheading', 'switch'],
   // 0.7.30.10, the other panels and the dialogs
   'panels/BlocksPanel.svelte': ['fold', 'hint', 'subheading'],
   'panels/CollectionsPanel.svelte': ['iconbutton'],

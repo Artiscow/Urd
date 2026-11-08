@@ -302,6 +302,38 @@ function openContextMenu(el, x, y) {
   });
 }
 
+/** The Nav panel's folds by their `data-fold`, with their titles, in the panel's order. */
+const NAV_FOLDS = [
+  ['items', 'group.menuItems'], ['logo', 'group.logo'], ['layout', 'group.navLayoutSize'], ['colours', 'group.navColoursFrame'],
+  ['mobile', 'group.mobile'], ['scroll', 'group.navScrollPages'], ['tools', 'group.tools'], ['announcement', 'group.announcement'],
+];
+
+/** The part of the site's menu a right click landed on, as the Nav panel's fold that holds its settings and, for a tool, its card in the Tools fold; the bar itself has no fold of its own. */
+function navPartAt(target) {
+  if (target.closest('.urd-nav-announce')) return { fold: 'announcement' };
+  for (const [selector, part] of [['.urd-nav-launcher-wrap', 'launcher'], ['.urd-nav-cart', 'cart'], ['.urd-nav-theme', 'theme'], ['.urd-nav-links', 'links']]) {
+    if (target.closest(selector)) return { fold: 'tools', part };
+  }
+  if (target.closest('.urd-nav-tools')) return { fold: 'tools' };
+  if (target.closest('.urd-nav-logo')) return { fold: 'logo' };
+  if (target.closest('.urd-nav-burger')) return { fold: 'mobile' };
+  if (target.closest('.urd-nav-list')) return { fold: 'items' };
+  return { fold: null };
+}
+
+/** The site's menu's own menu: the settings of the part under the pointer, and each of the Nav panel's folds, opened there. */
+function openNavContextMenu(nav, target, x, y) {
+  if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+  selectBlock(null);
+  const here = navPartAt(target);
+  const open = (fold, part = null) => post({ type: 'urd-open-panel', panel: 'nav', fold, part });
+  showContextMenu(nav, x, y, ta('canvas.ctx.navLabel'), (item, sep) => {
+    item(ta('canvas.ctx.settings'), 'Enter', () => open(here.fold, here.part)).classList.add('urd-ctx-first');
+    sep();
+    for (const [fold, title] of NAV_FOLDS) item(ta(title), '', () => open(fold));
+  });
+}
+
 /** The section's menu, on its empty surface: a new block at the point, the clipboard, the section's settings and its own actions. */
 function openSectionContextMenu(host, x, y) {
   if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
@@ -352,6 +384,13 @@ document.addEventListener('contextmenu', (event) => {
     if (text && activeBeforePress && text.contains(activeBeforePress)) return;
     event.preventDefault();
     openContextMenu(el, event.clientX, event.clientY);
+    return;
+  }
+  // The announcement strip may stand outside the menu (above the page or the content), and belongs to it all the same.
+  const nav = target.closest('#urd-nav, .urd-nav-announce');
+  if (nav && !target.closest('.urd-ctx, input, textarea, [contenteditable]')) {
+    event.preventDefault();
+    openNavContextMenu(nav, target, event.clientX, event.clientY);
     return;
   }
   const host = target.closest('.urd-section');

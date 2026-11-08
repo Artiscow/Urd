@@ -162,7 +162,8 @@
     const panel = rootEl.closest('.panel-body')?.getBoundingClientRect();
     const rightEdge = panel ? panel.right : window.innerWidth;
     const left = Math.max(8, Math.min(r.right - W, rightEdge - W - 8));
-    const top = r.bottom + H + 8 > window.innerHeight ? Math.max(8, r.top - H - 8) : r.bottom + 6;
+    // Under the swatch where it fits, else moved up as far as it must to stay in the window.
+    const top = Math.max(8, Math.min(r.bottom + 6, window.innerHeight - H - 8));
     pos = { top, left };
     open = true;
   }
@@ -442,7 +443,7 @@
   }
 
   /* The anchored branch: under the swatch, right edges aligned (the card
-     extends left over the panel), flipped by the browser when it does not fit. */
+     extends left over the panel); where it does not fit under the swatch it is moved up to the window's foot (--cp-fit, app.css), and only a window too short for that turns it above the swatch. */
   @supports (anchor-name: --a) {
     .cp-anchored {
       inset: auto;
@@ -460,7 +461,7 @@
 
     @supports (position-try-fallbacks: flip-block) {
       .cp-anchored {
-        position-try-fallbacks: flip-block;
+        position-try-fallbacks: --cp-fit, flip-block;
       }
     }
   }

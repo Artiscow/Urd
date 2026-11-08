@@ -1,7 +1,7 @@
 /**
- * Reordering a flat list by dragging a row, as the Collections panel's entries are reordered: where the dragged row lands from the pointer, and the list in its new order.
- * The Nav panel keeps its own drop logic, since its rows form a tree with nesting.
- * Pure, so it is node-tested (tests/row-drag.test.mjs); the panel draws a faint clone at the landing place and moves the row on the drop.
+ * Reordering a flat list by dragging a row, as every flat list of the row kit's drag (lib/rows/row-drag.svelte.js) is reordered: where the dragged row lands from the pointer, and the list in its new order.
+ * The Nav panel's tree reckons its own landing place (lib/nav-drop.js), since its rows nest.
+ * Pure, so it is node-tested (tests/row-drag.test.mjs).
  */
 
 /**
@@ -38,6 +38,21 @@ export function rowDropAt(rows, dragId, y) {
   const rest = others.map((r) => r.id);
   const to = rest.indexOf(drop.id) + (drop.pos === 'after' ? 1 : 0);
   return to === from ? null : drop;
+}
+
+/**
+ * Where a row lands in a flat list, as rowDropAt reckons it but with one name for one place: after a row is before the row under it, so the mark is never torn down and regrown where it already stands.
+ * Only after the last row is a place named «after».
+ * @param {Array<{ id: string, top: number, bottom: number }>} rows As rowDropAt takes them
+ * @param {string} dragId
+ * @param {number} y
+ * @returns {{ id: string, pos: 'before'|'after' }|null}
+ */
+export function flatDropAt(rows, dragId, y) {
+  const at = rowDropAt(rows, dragId, y);
+  if (at?.pos !== 'after') return at;
+  const next = rows[rows.findIndex((r) => r.id === at.id) + 1];
+  return next && next.id !== dragId ? { id: next.id, pos: 'before' } : at;
 }
 
 /**

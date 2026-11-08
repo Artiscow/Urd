@@ -1,8 +1,9 @@
 <script>
   /* A list of cards in the row kit, drawn as the Nav tab draws its items: closed, a card is one line with its grip, its sign, its name and its detail; open, it holds its own settings, with the cross that removes it at its foot.
      A card is moved by pressing, holding and dragging its head (the row kit's drag, row-drag.svelte.js) or by Alt and the arrow keys on its head, and a press on the head opens or closes it.
-     `card(item, i)` gives the head's sign (`src` for a picture, `swatch` for a colour, `icon` for an icon), name and detail, and the dragged card the same; `body(item, i)` draws an open card's settings.
-     `isOpen(i)` and `ontoggle(i)` keep which cards stand open with the list's owner; `onmove(from, to)` gets a card's index before and after a move. */
+     `card(item, i)` gives the head's sign (`src` for a picture, `swatch` for a colour, `icon` for an icon), name and detail, and the dragged card the same, with `warn` as the words of a warning mark on the head; `body(item, i)` draws an open card's settings.
+     `isOpen(i)` and `ontoggle(i)` keep which cards stand open with the list's owner; `onmove(from, to)` gets a card's index before and after a move.
+     A card whose key is a word carries it as `data-part`, where a fold asked for with a part finds the card to open (showFold in state/shell.svelte.js). */
   import { tick } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { ta } from '$engine/i18n.js';
@@ -54,8 +55,9 @@
   {#each items as item, i (key(item, i))}
     {@const c = card(item, i)}
     {@const open = isOpen(i)}
+    {@const k = key(item, i)}
     {#if drag.at(i, 'before')}{@render slot()}{/if}
-    <div class="nav-item card-list-item" class:open data-drag-id={i} role="listitem">
+    <div class="nav-item card-list-item" class:open data-drag-id={i} data-part={typeof k === 'string' ? k : undefined} role="listitem">
       <div class="nav-head" role="button" tabindex="0" aria-expanded={open} aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown" title={ta('tip.list.card')}
         {@attach drag.handle(i)} onclick={() => ontoggle(i)} onkeydown={(e) => headKeys(e, i)}>
         <span class="nav-grip">{@html GRIP}</span>
@@ -68,6 +70,7 @@
         {/if}
         <span class="nav-head-name">{c.name}</span>
         {#if c.detail}<span class="nav-head-link">{c.detail}</span>{/if}
+        {#if c.warn}<span class="card-list-warn" title={c.warn}>{@html ICONS.warn}</span>{/if}
         <span class="nav-chev" aria-hidden="true">{@html CHEV}</span>
       </div>
       {#if open}
@@ -78,7 +81,7 @@
             {#if onremove}
               <div class="nav-body-actions">
                 <span class="nav-body-spacer"></span>
-                <IconButton icon={ICONS.cross} label={removeLabel || ta('ui.remove')} onclick={() => onremove(i)} />
+                <IconButton icon={ICONS.cross} danger label={removeLabel || ta('ui.remove')} onclick={() => onremove(i)} />
               </div>
             {/if}
           </div>
@@ -114,20 +117,17 @@
     max-height: 62%;
   }
 
-  /* The name keeps its words before the detail does: the detail takes the room left and ends in an ellipsis */
-  .card-list-item :global(.nav-head-name) {
-    flex: 0 1 auto;
+  .card-list-warn {
+    display: inline-flex;
+    flex: none;
+    color: #f5a09a;
   }
 
-  .card-list-item :global(.nav-head-link) {
-    flex: 1 1 0;
-    max-width: none;
-    text-align: right;
-  }
-
+  /* The chevron stands at the head's right edge, with a detail or without */
   .nav-chev {
     display: inline-flex;
     flex: none;
+    margin-left: auto;
     padding: 0 0.25rem;
     opacity: 0.7;
   }

@@ -8,6 +8,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.30.9 - The Nav panel on the row kit in parts of its own, the tree on the shared drag, and the menu's right-click menu - 8 November 2026
+
+- The Nav panel was one file of 1,819 lines with hand-made rows. It is a frame of eight folds with each fold's rows in a part of its own under `panels/nav/`, none over 340 lines; every fold says its value while closed and carries the amber dot and its reset, and panel-language.test.mjs's list no longer names it.
+- A fold whose settings stand in both `nav` and `nav.style` marks and resets them as one group (`mergeGroups` in `lib/site-groups.js`).
+- The menu items' tree moved by a drag of its own. It moves on the row kit's drag with the tree's own landing place (`lib/nav-drop.js`): the same card, dimmed row, slot or line and flash as every list, and a line after a row stands after the row's whole branch, one step in for «into».
+- A flat list names each landing place once (`flatDropAt` in `lib/row-drag.js`), so the slot is never torn down and regrown where it stands.
+- The Tools fold's tools are cards in the menu's order, each saying whether it is on, and the link launcher's shortcuts are cards with a warning mark where the link leads nowhere.
+- The cross in every card list (the menu items, the shortcuts, the footer's columns, the site's calendars, the background layers) has the Collections panel's red look.
+- Test findings, fixed in the round:
+  - The colour picker under a row low in a panel stood partly out of the window, or turned above its row too early. It moves up just as far as it must (`--cp-fit`, and the same rule without anchoring), and turns above only in a window too short for that.
+  - The menu items' cross was small and grey. It is the Collections panel's red cross.
+  - A tab's menu stayed open while the next tab's opened beside it. One menu stands open at a time (`shell/tab-menu-open.svelte.js`), and the one replaced closes at once.
+  - A right click on the site's menu in the page opened nothing. It opens a menu of its own, whose «Settings» opens the settings of the part under the pointer: the menu items, the logo, the burger's Phone fold, the announcement, and the link launcher, the cart, the theme button and the links each in its own card under Tools (`urd-open-panel`).
+
+The independent review before the commit found these, all fixed:
+
+1. A fold opened from the canvas set the panel but left a folded sidebar folded. `showFold` unfolds it, for the tab menus too.
+2. The right-click menu listed five of the eight folds, and an announcement strip placed above the page or the content had no right-click menu. All eight are listed, and the strip opens the menu wherever it stands.
+3. The link launcher's shortcuts were hand-made cards and the tools a list editor, among the kit's cards. Both are card lists, and the shortcut rows' own CSS is gone.
+4. ARCHITECTURE.md and both guides had the Nav panel as one file, its items moved with ↑/↓ and removed with ×, and nothing on the right-click menu or the tab menus. They describe what was built.
+5. The submenu pill colour's tooltip key and the old drag clone's CSS had nothing left to serve. They are removed.
+6. A fold's title was held to one line, so a long title in a narrow panel ran past its edge. It wraps within the line.
+7. The one name for each place in a flat list lived in the drag without a test. It is `flatDropAt`, with tests in tests/row-drag.test.mjs.
+8. A tool moved back to the default order stored the order anyway. The order leaves the file at the default.
+9. A screen reader heard a moved item's place counted among every row of the tree, and a move by the keys opened the card of the item that took its place. The place is counted among its siblings, and the open card stays with its item.
+
 ### 0.7.30.8 - The Site, Theme, Legal and Footer panels on the row kit: every control in a fold the tab's menu reaches - 8 November 2026
 
 - The four panels had loose controls between their folds, closed folds that said nothing, hand-made switches, segments, sliders and icon buttons, and lists moved with arrows. Every control stands in a fold of the row kit that its tab's menu reaches, each fold says its value while closed, and panel-language.test.mjs's list no longer names them.

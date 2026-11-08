@@ -7,10 +7,11 @@
    As a row lands the slot is gone at once and the rows glide from their old places to their new ones, the landed row from where its mark stood.
    The landed row flashes the accent once and a screen reader hears where it went; a move by the keys ends the same way through `landed`.
    A list takes it in three places: `{@attach drag.list}` on the list, whose rows that move carry `data-drag-id` and stand directly in it; `{@attach drag.handle(id)}` on what a row is dragged by; and the slot, drawn where `drag.at(id, pos)` says, as an element with `{@attach drag.slot}` (and `out:slotOut` where it may shrink away).
-   Where the row lands is reckoned by lib/row-drag.js, and the list moves the row in the `land` it gives. */
+   Where the row lands is reckoned by lib/row-drag.js, and the list moves the row in the `land` it gives.
+   A tree (the Nav panel's menu) gives its own `reckon`, which may also land a row `into` another; its rows are keyed by their paths ('2', '2.0') and carry their level as `data-row-level`, so the line after a row stands after the row's whole branch, one step in for `into`, its rows glide by their own elements as the move lands, and a landed row is counted among its siblings. */
 import { tick } from 'svelte';
 import { ta } from '$engine/i18n.js';
-import { rowDropAt, reorderRows } from '../row-drag.js';
+import { flatDropAt, reorderRows } from '../row-drag.js';
 
 const TYPE = 'application/x-urd-row';
 /** What a press in a row leaves to the control under it: typing, selecting text and sliding. */
@@ -53,6 +54,9 @@ export async function glideFrom(places) {
   if (still()) return;
   for (const [el, from] of places) if (el.isConnected) glide(el, from);
 }
+
+/** How far a line for `into` stands in from its row: one level of the tree. */
+const TREE_STEP = 20;
 
 /** One polite region for every list, where a screen reader hears where a row went. */
 let voice = null;
@@ -116,6 +120,20 @@ export function slotOut(node) {
   return { duration: still() ? 0 : 150, css: (t) => `height: ${t * h}px; min-height: 0; margin-top: ${(t - 1) * gap}px; opacity: ${t}; animation: none;` };
 }
 
+/**
+ * The rows a landed row is counted among: in a flat list all of them; in a tree, whose rows carry `data-row-level`, the rows of its level under the same parent.
+ */
+function siblingsOf(row, all) {
+  if (row.dataset.rowLevel === undefined) return all;
+  const level = (r) => Number(r.dataset.rowLevel) || 0;
+  const own = level(row);
+  let first = all.indexOf(row);
+  let last = first;
+  while (first > 0 && level(all[first - 1]) >= own) first--;
+  while (last < all.length - 1 && level(all[last + 1]) >= own) last++;
+  return all.slice(first, last + 1).filter((r) => level(r) === own);
+}
+
 export class RowDrag {
   /** The dragged row's id while a drag is on. */
   drag = $state(null);
@@ -130,14 +148,17 @@ export class RowDrag {
   #lineEl = null;
   #land;
   #card;
+  #reckon;
 
   /**
-   * @param {(id: string, drop: { id: string, pos: 'before'|'after' }) => (string|void)} land Moves the row `id` before or after the row the drop names, and gives the landed row's id when it changes with the move
+   * @param {(id: string, drop: { id: string, pos: 'before'|'after'|'into' }) => (string|void)} land Moves the row `id` before or after the row the drop names, or into it, and gives the landed row's id when it changes with the move
    * @param {(id: string) => ({ name: string, detail?: string, src?: string, swatch?: string, icon?: string }|null)} [card] The card of the row `id`; without it the card is read from the row
+   * @param {{ reckon?: (rows: Array<{ id: string, el: Element, rect: DOMRect }>, e: DragEvent, drag: string) => ({ id: string, pos: 'before'|'after'|'into' }|null) }} [tree] A tree's own reckoning of the landing place, from the rows as seen and the pointer
    */
-  constructor(land, card = null) {
+  constructor(land, card = null, tree = {}) {
     this.#land = land;
     this.#card = card;
+    this.#reckon = tree.reckon ?? null;
     $effect(() => {
       if (this.drag === null) return;
       const accept = (e) => e.preventDefault();
@@ -163,11 +184,8 @@ export class RowDrag {
       if (this.drag === null) return;
       const onSlot = [...el.querySelectorAll(':scope > .row-drag-slot, :scope > .row-drag-slot-row')].some((m) => { const b = m.getBoundingClientRect(); return e.clientY >= b.top && e.clientY <= b.bottom; });
       if (onSlot) { if (this.drop) e.preventDefault(); return; }
-      const boxes = [...el.querySelectorAll(':scope > [data-drag-id]')].map((r) => {
-        const b = r.getBoundingClientRect();
-        return { id: r.dataset.dragId, top: b.top, bottom: b.bottom };
-      });
-      const at = rowDropAt(boxes, this.drag, e.clientY);
+      const rows = [...el.querySelectorAll(':scope > [data-drag-id]')].map((r) => ({ id: r.dataset.dragId, el: r, rect: r.getBoundingClientRect() }));
+      const at = this.#reckon ? this.#reckon(rows, e, this.drag) : flatDropAt(rows.map((r) => ({ id: r.id, top: r.rect.top, bottom: r.rect.bottom })), this.drag, e.clientY);
       if (!at) {
         this.drop = null;
         this.#placeLine(null);
@@ -242,8 +260,8 @@ export class RowDrag {
     void row.offsetWidth;
     row.setAttribute('data-row-landed', '');
     row.addEventListener('animationend', () => row.removeAttribute('data-row-landed'), { once: true });
-    const rows = [...list.querySelectorAll(':scope > [data-drag-id]')];
     const face = this.#faceOf(String(id), row);
+    const rows = siblingsOf(row, [...list.querySelectorAll(':scope > [data-drag-id]')]);
     say(ta('list.moved', { name: face.name || '', n: rows.indexOf(row) + 1, count: rows.length }));
   }
 
@@ -287,17 +305,27 @@ export class RowDrag {
       this.#lineEl = null;
       return;
     }
+    // After a row of a tree, or into it, the line stands under the row's whole branch.
+    let last = row;
+    if (this.#reckon && at.pos !== 'before') {
+      for (let next = row.nextElementSibling; next; next = next.nextElementSibling) {
+        if (next.dataset.dragId?.startsWith(`${at.id}.`)) last = next;
+        else if (next.dataset.dragId) break;
+      }
+    }
     const b = row.getBoundingClientRect();
+    const end = last.getBoundingClientRect();
     const gap = parseFloat(getComputedStyle(this.#list).rowGap) || 0;
-    const y = at.pos === 'before' ? b.top - gap / 2 : b.bottom + gap / 2;
+    const y = at.pos === 'before' ? b.top - gap / 2 : end.bottom + gap / 2;
+    const step = at.pos === 'into' ? TREE_STEP : 0;
     if (!this.#lineEl) {
       this.#lineEl = document.createElement('div');
       this.#lineEl.className = 'row-drag-line';
       this.#lineEl.setAttribute('aria-hidden', 'true');
       document.body.append(this.#lineEl);
     }
-    this.#lineEl.style.left = `${b.left}px`;
-    this.#lineEl.style.width = `${b.width}px`;
+    this.#lineEl.style.left = `${b.left + step}px`;
+    this.#lineEl.style.width = `${b.width - step}px`;
     this.#lineEl.style.top = `${y - 1}px`;
   }
 
@@ -306,7 +334,7 @@ export class RowDrag {
     const id = this.drag;
     const at = this.drop;
     const goes = lands && id !== null && at;
-    const before = goes ? this.#places(id) : null;
+    const before = goes ? (this.#reckon ? placesOf(this.#list?.querySelectorAll(':scope > [data-drag-id]') ?? []) : this.#places(id)) : null;
     if (goes) landNow();
     this.#row?.removeAttribute('data-row-dragging');
     this.#row = null;
@@ -315,7 +343,8 @@ export class RowDrag {
     this.drop = null;
     if (!goes) return;
     const moved = this.#land(id, at);
-    this.#glide(before, id, at);
+    if (this.#reckon) glideFrom(before);
+    else this.#glide(before, id, at);
     this.landed(moved ?? id);
   }
 

@@ -803,13 +803,14 @@ function setGridLook(v) {
 // buttons are shown only for a panel that has group folds at all.
 let panelEl = $state(null);
 
-/** A fold asked for by a link or a tab's menu (lib/panel-folds.js): once its panel stands open, the fold is unfolded alone, the panel's other folds closing, brought into view and its heading lit for a moment, or, for a fold that holds one button (`press`), the button is pressed. */
+/** A fold asked for by a link or a tab's menu (lib/panel-folds.js): once its panel stands open, the fold is unfolded alone, the panel's other folds closing, brought into view and its heading lit for a moment, or, for a fold that holds one button (`press`), the button is pressed; `part` names a card in the fold (its `data-part`) that opens too and is what is brought into view. */
 let foldFocus = $state(null);
 
-/** Opens a panel at one of its folds, by the fold's `data-fold`; `press` presses the fold's one button instead. */
-function showFold(panel, fold, { press = false } = {}) {
-  foldFocus = { panel, fold, press };
+/** Opens a panel at one of its folds, by the fold's `data-fold`, unfolding a folded sidebar; `press` presses the fold's one button instead, and `part` opens a card in the fold. */
+function showFold(panel, fold, { press = false, part = null } = {}) {
+  foldFocus = { panel, fold, press, part };
   activePanel = panel;
+  panelFolded = false;
 }
 
 let panelHasGroups = $state(false);
@@ -893,10 +894,13 @@ export function effects() {
         if (topLevel && other !== fold && !other.contains(fold)) other.open = false;
       }
       fold.open = true;
-      const bring = () => fold.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+      const part = want.part ? fold.querySelector(`[data-part="${CSS.escape(want.part)}"]`) : null;
+      part?.querySelector(':scope > [aria-expanded="false"]')?.click();
+      const target = part ?? fold;
+      const bring = () => target.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
       if (reducedMotion) bring();
       else setTimeout(bring, 260);
-      fold.querySelector(':scope > summary')?.focus({ preventScroll: true });
+      (part?.querySelector(':scope > [aria-expanded]') ?? fold.querySelector(':scope > summary'))?.focus({ preventScroll: true });
       fold.classList.add('fold-lit');
       setTimeout(() => fold.classList.remove('fold-lit'), 1400);
     });
