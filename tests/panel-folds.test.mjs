@@ -14,15 +14,25 @@ test('every panel with a menu has its file here', () => {
   assert.deepEqual(Object.keys(PANEL_FOLDS).sort(), Object.keys(PANEL_FILES).sort());
 });
 
+/** Where a fold opens in a panel's markup: a plain `details.group` with its `data-fold`, or the row kit's Fold with its `id`. */
+const FOLD_MARK = /<details class="group[^"]*" data-fold="([a-z]+)"|<Fold id="([a-z]+)"/g;
+const foldAt = (text, id) => {
+  const kit = text.indexOf(`<Fold id="${id}"`);
+  return kit >= 0 ? { at: kit, kit: true } : { at: text.indexOf(`data-fold="${id}"`), kit: false };
+};
+/** A fold's heading: the summary of a plain fold, the opening tag of the kit's Fold, which names it by its title. */
+function foldHeading(text, id) {
+  const { at, kit } = foldAt(text, id);
+  return text.slice(at, kit ? text.indexOf('>\n', at) : text.indexOf('</summary>', at));
+}
+
 test('the ids are the folds marked in each panel, in the panel\'s order, each named by its heading\'s key', () => {
   for (const [panel, folds] of Object.entries(PANEL_FOLDS)) {
     const text = source(panel);
-    const marked = [...text.matchAll(/<details class="group[^"]*" data-fold="([a-z]+)"/g)].map((m) => m[1]);
+    const marked = [...text.matchAll(FOLD_MARK)].map((m) => m[1] ?? m[2]);
     assert.deepEqual(marked, folds.map((f) => f.id), panel);
     for (const fold of folds) {
-      const at = text.indexOf(`data-fold="${fold.id}"`);
-      const summary = text.slice(at, text.indexOf('</summary>', at));
-      assert.ok(summary.includes(`ta('${fold.key}')`), `${panel}/${fold.id} is named by ${fold.key}`);
+      assert.ok(foldHeading(text, fold.id).includes(`ta('${fold.key}')`), `${panel}/${fold.id} is named by ${fold.key}`);
       assert.ok(nb.includes(`'${fold.key}':`), `${fold.key} stands in the bokmål dictionary`);
     }
   }
@@ -30,9 +40,9 @@ test('the ids are the folds marked in each panel, in the panel\'s order, each na
 
 /** A fold's content, between its heading and its end, the comments taken out until none is left. */
 function foldBody(text, id) {
-  const at = text.indexOf(`data-fold="${id}"`);
-  const from = text.indexOf('</summary>', at) + '</summary>'.length;
-  let body = text.slice(from, text.indexOf('</details>', from));
+  const { at, kit } = foldAt(text, id);
+  const from = kit ? text.indexOf('>\n', at) + 2 : text.indexOf('</summary>', at) + '</summary>'.length;
+  let body = text.slice(from, text.indexOf(kit ? '</Fold>' : '</details>', from));
   let before;
   do {
     before = body;
@@ -41,8 +51,8 @@ function foldBody(text, id) {
   return body.trim();
 }
 
-/** A fold that holds one button and nothing else. */
-const ONE_BUTTON = /^<div class="group-items">\s*<button\b[^>]*>[^<]*<\/button>\s*<\/div>$/;
+/** A fold that holds one button and nothing else: inside a plain fold's items, or alone in the kit's Fold. */
+const ONE_BUTTON = /^(?:<div class="group-items">\s*<button\b[^>]*>[^<]*<\/button>\s*<\/div>|<button\b[^>]*>[^<]*<\/button>)$/;
 
 test('a fold that holds one button is pressed from the menu, and only such a fold', () => {
   for (const [panel, folds] of Object.entries(PANEL_FOLDS)) {
@@ -54,8 +64,7 @@ test('a fold that holds one button is pressed from the menu, and only such a fol
 });
 
 test('panelFolds: the folds drawn in the case at hand, none for a panel without a menu', () => {
-  assert.deepEqual(panelFolds('footer', { site: { footer: { show: false } } }).map((f) => f.id)[0], 'design', 'the pages a footer shows on, only while it is on');
-  assert.equal(panelFolds('footer', { site: { footer: { show: true } } })[0].id, 'pages');
+  assert.equal(panelFolds('footer', { site: { footer: { show: false } } })[0].id, 'pages', 'the footer\'s pages, with the switch that turns it on, whether it is on or off');
   assert.deepEqual(panelFolds('legal', { legal: { terms: { shown: false } } }).map((f) => f.id), ['who', 'privacy']);
   assert.deepEqual(panelFolds('legal', { legal: { terms: { shown: true } } }).map((f) => f.id), ['who', 'privacy', 'terms']);
   assert.deepEqual(panelFolds('pages'), []);
@@ -78,10 +87,16 @@ test('the groups: each group\'s folds stand together, its label is in the dictio
   assert.deepEqual(footer.map((g) => [g.label, g.folds.map((f) => f.id)]), [
     [null, ['pages']],
     ['menuGroup.look', ['design', 'startpoint', 'appearance']],
-    ['menuGroup.content', ['brand', 'columns', 'social', 'contact', 'cta']],
-    ['menuGroup.bottom', ['linkrow', 'baseline']],
+    ['menuGroup.content', ['brand', 'columns', 'shared', 'cta']],
+    ['menuGroup.bottom', ['bottom']],
   ]);
-  assert.deepEqual(foldGroups(panelFolds('site')).map((g) => g.label), [null], 'a short menu is one group without a label');
+  assert.deepEqual(foldGroups(panelFolds('site')).map((g) => [g.label, g.folds.map((f) => f.id)]), [
+    ['menuGroup.about', ['identity', 'region']],
+    ['menuGroup.look', ['width']],
+    ['menuGroup.content', ['calendars', 'links']],
+    ['menuGroup.shop', ['shop']],
+  ]);
+  assert.deepEqual(foldGroups(panelFolds('theme')).map((g) => g.label), [null], 'a short menu is one group without a label');
 });
 
 test('tabMenuStyleOf: the groups for anything not stored', () => {

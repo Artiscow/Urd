@@ -1,8 +1,9 @@
 <script>
-  /* The Update panel: the engine version against the template's tag, the changes an update brings, and the update itself. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The Update panel: the engine version against the template's tag, the changes an update brings, the update itself, and the tidy that moves the media files at the root of media/ into their folders. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
   import { ta, taApiError } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
+  import Fold from '../lib/rows/Fold.svelte';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const auth = $derived(ed.auth);
@@ -185,4 +186,14 @@
       </button>
     {/if}
   {/if}
+  <!-- The site's media files: how many still stand at the root of media/, and the tidy that moves them into the folders of their kind (lib/media-tidy.js), for the sites made before the folders; the count is read as the fold first opens -->
+  <Fold id="media" surface="update" title={ta('group.siteMedia')} tip={ta('tip.site.media')} value={ed.mediaRootCount ? ta('site.mediaRootShort', { n: ed.mediaRootCount }) : ''}
+    ontoggle={(open) => { if (open && ed.mediaRootCount === null) ed.loadMediaFiles(); }}>
+    <div class="ctl-row" title={ta('tip.site.mediaRoot')}>
+      <span>{ta('lbl.mediaRoot')}</span>
+      <span class="gridmenu-value">{ed.mediaRootCount ?? '-'}</span>
+    </div>
+    <button class="ghost action" disabled={ed.mediaBusy || ed.mediaRootCount === null || !ed.mediaRootCount || ed.dirty || ed.updateBusy || !ed.auth?.allowed}
+      title={ed.dirty ? ta('tip.media.tidyDirty') : ta('tip.media.tidy')} onclick={() => ed.tidyMedia()}>{ta('ui.tidyMedia')}</button>
+  </Fold>
 </div>

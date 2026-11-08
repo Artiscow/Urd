@@ -2,6 +2,11 @@
   /* The contact details of the site (site.contact), the Legal panel's «Who you are» group: the country, the legal name, the numbers its country's profile asks for, the VAT status, the representative, the address with its point on the map, the phone, the email and the contact points by role. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
+  import SwitchRow from '../../lib/rows/SwitchRow.svelte';
+  import ErrorLine from '../../lib/rows/ErrorLine.svelte';
+  import SubHeading from '../../lib/rows/SubHeading.svelte';
+  import IconButton from '../../lib/rows/IconButton.svelte';
+  import ListEditor from '../../lib/rows/ListEditor.svelte';
   import { ta, taApiError, adminLang } from '$engine/i18n.js';
   import { normaliseId, validateId, formatId } from '$engine/contact-model.js';
   import { COUNTRY_CODES, profileOf, countryForLanguage } from '$engine/contact-profiles.js';
@@ -227,11 +232,8 @@
       oninput={(e) => setContact('legalName', e.target.value)} /></label>
   {#snippet idField(def)}
     {#if def.status}
-      <label title={ta('tip.site.idStatus')} class="gridmenu-snap">
-        <input type="checkbox" checked={siteDraft.site.contact?.ids?.[def.key] === true}
-          onchange={(e) => setContactMap('ids', def.key, e.target.checked)} />
-        {def.label}
-      </label>
+      <SwitchRow label={def.label} title={ta('tip.site.idStatus')} checked={siteDraft.site.contact?.ids?.[def.key] === true}
+        onchange={(on) => setContactMap('ids', def.key, on)} />
     {:else}
       {#if def.ownLabel}
         <label title={ta('tip.site.ownLabel')} class="field-stack">{ta('lbl.ownLabel')}
@@ -243,7 +245,7 @@
           aria-invalid={state === 'bad' || state === 'form'} aria-describedby={state === 'ok' ? undefined : `contact-note-${def.key}`}
           onchange={(e) => setContactId(def, e.target.value)} /></label>
       {#if state !== 'ok'}
-        <p id={`contact-note-${def.key}`} class="panel-hint" class:place-error={state !== 'warn'}>{ta(state === 'form' ? 'site.formBad' : state === 'bad' ? 'site.checkBad' : 'site.checkWarn')}</p>
+        <ErrorLine id={`contact-note-${def.key}`} tone={state === 'warn' ? 'warn' : 'error'} text={ta(state === 'form' ? 'site.formBad' : state === 'bad' ? 'site.checkBad' : 'site.checkWarn')} />
       {/if}
       <!-- What the number is written with, and the register it stands in, only once the number is there -->
       {#if siteDraft.site.contact?.ids?.[def.key]}
@@ -272,11 +274,8 @@
     {/if}
   {/each}
   {#if contactProfile.vat.kind !== 'none'}
-    <label class="gridmenu-snap" title={ta('tip.site.vat')}>
-      <input type="checkbox" checked={siteDraft.site.contact?.vat?.registered === true}
-        onchange={(e) => setContactVat({ registered: e.target.checked })} />
-      {contactProfile.vat.kind === 'status' ? contactProfile.vat.label : ta('lbl.vatRegistered')}
-    </label>
+    <SwitchRow label={contactProfile.vat.kind === 'status' ? contactProfile.vat.label : ta('lbl.vatRegistered')} title={ta('tip.site.vat')}
+      checked={siteDraft.site.contact?.vat?.registered === true} onchange={(on) => setContactVat({ registered: on })} />
     {#if contactProfile.vat.kind === 'separate' && siteDraft.site.contact?.vat?.registered}
       {@const vatState = idState.vat ?? 'ok'}
       <label title={ta('tip.site.vatNumber')} class="field-stack">{contactProfile.vat.label ?? ta('lbl.vatNumber')}
@@ -284,7 +283,7 @@
           aria-invalid={vatState === 'bad' || vatState === 'form'} aria-describedby={vatState === 'ok' ? undefined : 'contact-note-vat'}
           onchange={(e) => setContactVatNumber(e.target.value)} /></label>
       {#if vatState !== 'ok'}
-        <p id="contact-note-vat" class="panel-hint" class:place-error={vatState !== 'warn'}>{ta(vatState === 'form' ? 'site.formBad' : vatState === 'bad' ? 'site.checkBad' : 'site.checkWarn')}</p>
+        <ErrorLine id="contact-note-vat" tone={vatState === 'warn' ? 'warn' : 'error'} text={ta(vatState === 'form' ? 'site.formBad' : vatState === 'bad' ? 'site.checkBad' : 'site.checkWarn')} />
       {/if}
     {/if}
   {/if}
@@ -307,13 +306,13 @@
     {#if siteDraft.site.contact?.geo}
       <div class="pin-line">
         <span class="mini-label">{ta('site.onMap', { lat: siteDraft.site.contact.geo.lat, lon: siteDraft.site.contact.geo.lon })}</span>
-        <button class="ghost row-tool" title={ta('tip.clearGeo')} onclick={clearContactGeo}>{@html ICONS.cross}</button>
+        <IconButton icon={ICONS.cross} label={ta('tip.clearGeo')} onclick={clearContactGeo} />
       </div>
     {:else}
       <button class="ghost action" title={ta('tip.site.findOnMap')} disabled={geoBusy} onclick={findContactOnMap}>{ta('ui.findOnMap')}</button>
     {/if}
     {#if geoStatus}
-      <p class="panel-hint" class:place-error={geoStatus.err} role="status">{geoStatus.text}</p>
+      <ErrorLine tone={geoStatus.err ? 'error' : 'note'} text={geoStatus.text} />
     {/if}
   {/if}
   <label title={ta('tip.site.phone')} class="field-stack">{ta('lbl.phone')}
@@ -323,29 +322,25 @@
     <input type="email" value={siteDraft.site.contact?.email ?? ''} autocomplete="off" spellcheck="false" aria-required="true" class:legal-need={need.email}
       oninput={(e) => setContact('email', e.target.value)} /></label>
   <!-- The contact points by role (site.contact.points): the contact block's By role design and the JSON-LD's ContactPoint entries -->
-  <p class="panel-strong" title={ta('tip.site.contactPoints')}>{ta('lbl.contactPoints')}</p>
-  {#each contactPoints as point, i (i)}
-    <div class="contact-point">
-      <div class="contact-point-role">
-        <label title={ta('tip.contact.role')} for={`contact-point-${i}`}>{ta('lbl.contactRole')}</label>
-        <span class="nav-line">
-          <input id={`contact-point-${i}`} value={point.role ?? ''} placeholder={ta('ph.contactRole')} autocomplete="off"
-            oninput={(e) => setPointField(i, 'role', e.target.value)} />
-          <span class="row-tools">
-            <button class="ghost row-tool" title={ta('tip.removeContactPoint')}
-              onclick={() => pointsMutate('legal', (points) => points.splice(i, 1))}>{@html ICONS.cross}</button>
-          </span>
-        </span>
+  <SubHeading text={ta('lbl.contactPoints')} title={ta('tip.site.contactPoints')} />
+  <ListEditor items={contactPoints} label={ta('lbl.contactPoints')} key={(point, i) => i} card={(point) => ({ name: point.role ?? '', detail: point.email ?? point.phone ?? '' })}
+    onmove={(from, to) => pointsMutate('legal', (points) => points.splice(to, 0, ...points.splice(from, 1)))}
+    onremove={(i) => pointsMutate('legal', (points) => points.splice(i, 1))} removeLabel={ta('tip.removeContactPoint')}
+    onadd={() => pointsMutate('legal', (points) => points.push({}))} addLabel={ta('ui.addContactPoint')}>
+    {#snippet row(point, i)}
+      <div class="contact-point">
+        <label title={ta('tip.contact.role')} class="field-stack">{ta('lbl.contactRole')}
+          <input value={point.role ?? ''} placeholder={ta('ph.contactRole')} autocomplete="off"
+            oninput={(e) => setPointField(i, 'role', e.target.value)} /></label>
+        <label title={ta('tip.contact.email')} class="field-stack">{ta('lbl.email')}
+          <input type="email" value={point.email ?? ''} autocomplete="off" spellcheck="false"
+            oninput={(e) => setPointField(i, 'email', e.target.value)} /></label>
+        <label title={ta('tip.contact.phone')} class="field-stack">{ta('lbl.phone')}
+          <input type="tel" value={point.phone ?? ''} autocomplete="off"
+            oninput={(e) => setPointField(i, 'phone', e.target.value)} /></label>
+        <label title={ta('tip.contact.note')} class="field-stack">{ta('lbl.contactNote')}
+          <input value={point.note ?? ''} placeholder={ta('ph.contactNote')} autocomplete="off"
+            oninput={(e) => setPointField(i, 'note', e.target.value)} /></label>
       </div>
-      <label title={ta('tip.contact.email')} class="field-stack">{ta('lbl.email')}
-        <input type="email" value={point.email ?? ''} autocomplete="off" spellcheck="false"
-          oninput={(e) => setPointField(i, 'email', e.target.value)} /></label>
-      <label title={ta('tip.contact.phone')} class="field-stack">{ta('lbl.phone')}
-        <input type="tel" value={point.phone ?? ''} autocomplete="off"
-          oninput={(e) => setPointField(i, 'phone', e.target.value)} /></label>
-      <label title={ta('tip.contact.note')} class="field-stack">{ta('lbl.contactNote')}
-        <input value={point.note ?? ''} placeholder={ta('ph.contactNote')} autocomplete="off"
-          oninput={(e) => setPointField(i, 'note', e.target.value)} /></label>
-    </div>
-  {/each}
-  <button class="ghost action" onclick={() => pointsMutate('legal', (points) => points.push({}))}>{ta('ui.addContactPoint')}</button>
+    {/snippet}
+  </ListEditor>

@@ -17,8 +17,6 @@ let otherPages = $state({});
 let beacon = $state(false);
 let beaconRead = false;
 
-/** Whether each of the panel's folds stands open. */
-let legalOpen = $state({ who: false, privacy: false, terms: false });
 
 /** The panel's state, after every change to the site or the open page (the open page's data is not reactive; the count of changes is). */
 const legal = $derived.by(() => {
@@ -81,7 +79,5 @@ function effects() {
 
 export const legalPanelState = {
   get legal() { return legal; },
-  get legalOpen() { return legalOpen; },
-  set legalOpen(v) { legalOpen = v; },
   effects,
 };

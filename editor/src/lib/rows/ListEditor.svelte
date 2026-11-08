@@ -1,13 +1,13 @@
 <script>
   /* A list whose rows are moved, removed and added, in the row kit (0.7.30.2): a row is pressed, held and dragged anywhere outside its fields (the row kit's drag, row-drag.svelte.js, the grip its sign), Alt and the arrow keys move the row the focus is in, a cross removes it, and the add button stands at the list's foot.
-     `row` draws a row's own fields; `card(item, i)` gives the dragged row's card (its name, detail and sign), read from the row's first field without it; `key` gives each row a lasting key, so a row keeps the focus while it moves; `onmove(from, to)` gets the row's index before and after the move. */
+     `row` draws a row's own fields; `card(item, i)` gives the dragged row's card (its name, detail and sign), read from the row's first field without it; `key` gives each row a lasting key, so a row keeps the focus while it moves; `onmove(from, to)` gets the row's index before and after the move; `removeLabel` names the cross for what it removes. */
   import { tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../icons.js';
   import IconButton from './IconButton.svelte';
   import { reorderRows } from '../row-drag.js';
   import { RowDrag, slotOut } from './row-drag.svelte.js';
-  let { items, row, label, key = (item, i) => item?.id ?? i, card = null, onmove, onremove = undefined, onadd = undefined, addLabel = '' } = $props();
+  let { items, row, label, key = (item, i) => item?.id ?? i, card = null, onmove, onremove = undefined, removeLabel = '', onadd = undefined, addLabel = '' } = $props();
 
   let listEl = $state();
   /** The drag, the row kit's own (row-drag.svelte.js): the rows go by their index, so the landed row's id is its new index. */
@@ -47,7 +47,7 @@
       <span class="row-list-grip" title={ta('tip.list.move')} aria-hidden="true">{@html GRIP}</span>
       <div class="row-list-body">{@render row(item, i)}</div>
       {#if onremove}
-        <IconButton icon={ICONS.cross} label={ta('ui.remove')} onclick={() => onremove(i)} />
+        <IconButton icon={ICONS.cross} label={removeLabel || ta('ui.remove')} onclick={() => onremove(i)} />
       {/if}
     </div>
     {#if drag.at(i, 'after')}{@render slot()}{/if}

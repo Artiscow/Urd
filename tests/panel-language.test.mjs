@@ -100,12 +100,6 @@ function findings() {
 
 /** The files not yet moved to the row kit, by the step of 0.7.30 (BACKLOG) that moves them, with the patterns each still holds. */
 const RATCHET = {
-  // 0.7.30.8, the Site, Theme, Legal and Footer panels
-  'panels/SitePanel.svelte': ['fold', 'hint', 'iconbutton', 'segment', 'slider', 'subheading', 'switch'],
-  'panels/ThemePanel.svelte': ['fold', 'segment', 'slider', 'subheading', 'switch'],
-  'panels/LegalPanel.svelte': ['fold', 'iconbutton'],
-  'panels/legal/ContactFields.svelte': ['hint', 'iconbutton', 'subheading', 'switch'],
-  'panels/FooterPanel.svelte': ['fold', 'iconbutton', 'slider', 'subheading', 'switch'],
   // 0.7.30.9, the Nav panel
   'panels/NavPanel.svelte': ['drag', 'fold', 'iconbutton', 'segment', 'slider', 'subheading', 'switch'],
   // 0.7.30.10, the other panels and the dialogs

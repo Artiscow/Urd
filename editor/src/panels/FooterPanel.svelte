@@ -1,9 +1,20 @@
 <script>
-  /* The Footer panel: the brand, the columns with their links, the social icons, the call to action, the templates and the footer's background. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The Footer panel: where it shows, its design and start points, its look and background, the brand, the columns with their links, the site's links and contact details, the call to action and the bottom row, each a fold of the row kit its tab's menu reaches (lib/panel-folds.js).
+     A fold says its value while closed, and a fold of settings carries its reset (lib/site-groups.js). The state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
-  import Dropdown from '../lib/Dropdown.svelte';
+  import Fold from '../lib/rows/Fold.svelte';
+  import Setting from '../lib/rows/Setting.svelte';
+  import SelectRow from '../lib/rows/SelectRow.svelte';
+  import SliderRow from '../lib/rows/SliderRow.svelte';
+  import SwitchRow from '../lib/rows/SwitchRow.svelte';
+  import SubHeading from '../lib/rows/SubHeading.svelte';
+  import IconButton from '../lib/rows/IconButton.svelte';
+  import ListEditor from '../lib/rows/ListEditor.svelte';
+  import CardList from '../lib/rows/CardList.svelte';
+  import PanelLinkRow from '../lib/rows/PanelLinkRow.svelte';
+  import { siteGroup } from '../lib/site-groups.js';
   import { ta } from '$engine/i18n.js';
-  import { footerDesign } from '$engine/footer-model.js';
+  import { footerDesign, hasRichFooter } from '$engine/footer-model.js';
   import { glowLayer } from '$engine/backgrounds/glow.js';
   import { grainLayer } from '$engine/backgrounds/grain.js';
   import { footerThumb } from '$engine/footer-thumb.js';
@@ -211,12 +222,9 @@
     footerMutate('footer', (f) => { f[field].splice(i, 1); if (!f[field].length) delete f[field]; });
   }
 
-  function moveFooterListLink(field, i, dir) {
-    footerMutate('footer', (f) => {
-      const a = f[field]; const j = i + dir;
-      if (j < 0 || j >= a.length) return;
-      [a[i], a[j]] = [a[j], a[i]];
-    });
+  /** Moves a link of the link row or the bottom line from one place to another, as the list editor's drag and keys do. */
+  function moveFooterListLink(field, from, to) {
+    footerMutate('footer', (f) => { f[field].splice(to, 0, ...f[field].splice(from, 1)); });
   }
 
   function setFooterListLinkLabel(field, i, value) {
@@ -268,12 +276,9 @@
     footerMutate('footer', (f) => { f.columns.splice(ci, 1); if (!f.columns.length) delete f.columns; });
   }
 
-  function moveFooterColumn(ci, dir) {
-    footerMutate('footer', (f) => {
-      const j = ci + dir;
-      if (j < 0 || j >= f.columns.length) return;
-      [f.columns[ci], f.columns[j]] = [f.columns[j], f.columns[ci]];
-    });
+  /** Moves a column from one place to another, as the list editor's drag and keys do. */
+  function moveFooterColumn(from, to) {
+    footerMutate('footer', (f) => { f.columns.splice(to, 0, ...f.columns.splice(from, 1)); });
   }
 
   function setFooterColumnTitle(ci, value) {
@@ -291,13 +296,9 @@
     footerMutate('footer', (f) => { f.columns[ci].links.splice(li, 1); });
   }
 
-  function moveFooterLink(ci, li, dir) {
-    footerMutate('footer', (f) => {
-      const links = f.columns[ci].links;
-      const j = li + dir;
-      if (j < 0 || j >= links.length) return;
-      [links[li], links[j]] = [links[j], links[li]];
-    });
+  /** Moves a column's link from one place to another within the column. */
+  function moveFooterLink(ci, from, to) {
+    footerMutate('footer', (f) => { f.columns[ci].links.splice(to, 0, ...f.columns[ci].links.splice(from, 1)); });
   }
 
   function setFooterLinkLabel(ci, li, value) {
@@ -309,270 +310,230 @@
     footerMutate('footer', (f) => setLinkOn(f.columns[ci].links[li], link));
   }
 
+  /** The groups of settings with a value of their own to go back from: the pages it is kept off, the alignment, the columns' alignment, the brand's form and logo, and the parts the site's links and contact details show. */
+  const writeFooter = (name, change) => footerMutate(name, () => change());
+  /** The alignment the engine draws without one of its own: a footer of plain lines centred, one with columns or a brand at the left (footer.js). */
+  const alignDefault = () => (hasRichFooter(siteDraft) ? 'left' : 'center');
+  const pagesGroup = () => siteGroup(() => siteDraft.footer, writeFooter, 'footer-pages', { hideOn: undefined });
+  // A big call to action centres the footer, so its alignment is neither shown nor reset then.
+  const lookGroup = () => siteGroup(() => siteDraft.footer, writeFooter, 'footer-look', siteDraft.footer?.cta?.big === true ? {} : { align: alignDefault() });
+  const brandGroup = () => siteGroup(() => siteDraft.footer?.brand, writeFooter, 'footer-brand', { mode: 'text', logoHeight: 40 });
+  const columnsGroup = () => siteGroup(() => siteDraft.footer, writeFooter, 'footer-columns', { columnsAlign: 'left' });
+  /** The parts the footer can show from the site's links and contact details: the links, and the legal line and the contact details where there is something to show; a switch and its reset stand only for these. */
+  const sharedParts = () => {
+    const contact = siteContact(siteDraft);
+    return ['links', legalParts(contact).length > 0 && 'legal', Boolean(contactParts(contact)) && 'contact'].filter(Boolean);
+  };
+  const sharedGroup = () => siteGroup(() => siteDraft.footer, writeFooter, 'footer-shared', Object.fromEntries(sharedParts().map((key) => [key, undefined])));
+
+  /** The words for the closed folds. */
+  const pagesValue = () => {
+    if (!siteDraft.footer?.show) return ta('common.off');
+    const pages = siteDraft.pages ?? [];
+    return `${pages.filter((pg) => !(siteDraft.footer?.hideOn ?? []).includes(pg.id)).length} / ${pages.length}`;
+  };
+  const alignName = (v) => ta(v === 'center' ? 'common.center' : v === 'right' ? 'common.right' : 'common.left');
+  /** How many of those parts the footer shows. */
+  const sharedValue = () => `${sharedParts().filter((key) => siteDraft.footer?.[key] !== false).length} / ${sharedParts().length}`;
+  const bottomValue = () => siteDraft.footer?.copyright || `${(siteDraft.footer?.linkRow?.length ?? 0) + (siteDraft.footer?.baseline?.length ?? 0)}`;
+  const F = 'footer';
+
+  /** The column whose card stands open, one at a time: the column itself, so the card goes with it as the columns move, and none stands open once an undo or a start point brings other columns. */
+  let openColumn = $state(null);
+  const columnAt = (ci) => siteDraft.footer?.columns?.[ci];
 </script>
 
 <div class="panel-body">
-  <label class="gridmenu-snap" title={ta('tip.footer.show')}>
-    <input type="checkbox" checked={Boolean(siteDraft.footer?.show)}
-      onchange={(e) => footerMutate('footer', (f) => { f.show = e.target.checked; })} />
-    {ta('lbl.showFooter')}
-  </label>
-
-  {#if siteDraft.footer?.show}
-    <details class="group" data-fold="pages">
-      <summary>{ta('group.showOnPages')}</summary>
-      <div class="group-items">
+  <!-- Whether the site has a footer, and the pages it is kept off (the page's settings share it) -->
+  <Fold id="pages" surface={F} title={ta('group.showOnPages')} value={pagesValue()} group={pagesGroup()}>
+    <SwitchRow label={ta('lbl.showFooter')} title={ta('tip.footer.show')} checked={Boolean(siteDraft.footer?.show)}
+      onchange={(on) => footerMutate('footer', (f) => { f.show = on; })} />
+    {#if siteDraft.footer?.show}
+      <Setting key="hideOn">
         {#each siteDraft.pages ?? [] as pg (pg.id)}
-          <label class="gridmenu-snap" title={ta('tip.footer.hideOnPage')}>
-            <input type="checkbox"
-              checked={!(siteDraft.footer?.hideOn ?? []).includes(pg.id)}
-              onchange={(e) => toggleFooterOnPage(pg.id, e.target.checked)} />
-            {pg.title || pg.id}
-          </label>
+          <SwitchRow label={pg.title || pg.id} title={ta('tip.footer.hideOnPage')} checked={!(siteDraft.footer?.hideOn ?? []).includes(pg.id)}
+            onchange={(on) => toggleFooterOnPage(pg.id, on)} />
         {/each}
-      </div>
-    </details>
-  {/if}
+      </Setting>
+    {/if}
+  </Fold>
 
   <!-- The footer's look, chosen in the shared design picker; the content stays as it is -->
-  <details class="group" data-fold="design">
-    <summary>{ta('lbl.design')}<span class="menu-group-value">{ta(`footerDesign.${footerDesign(siteDraft) || 'standard'}`)}</span></summary>
-    <div class="group-items">
-      <button class="ghost action" title={ta('tip.footer.design')} onclick={() => (ed.designPicker = { kind: 'footer' })}>{ta('ui.chooseDesign')}</button>
-    </div>
-  </details>
+  <Fold id="design" surface={F} title={ta('lbl.design')} value={ta(`footerDesign.${footerDesign(siteDraft) || 'standard'}`)}>
+    <button class="ghost action" title={ta('tip.footer.design')} onclick={() => (ed.designPicker = { kind: 'footer' })}>{ta('ui.chooseDesign')}</button>
+  </Fold>
 
-  <details class="group" data-fold="startpoint">
-    <summary>{ta('group.startpoint')}</summary>
-    <div class="group-items">
-      <div class="footer-tpick">
-        {#each FOOTER_TEMPLATES as t (t.id)}
-          <button class="footer-tp" title={ta('tip.footer.template', { label: t.label })}
-            onclick={() => applyFooterTemplate(t.id)}>
-            <span class="footer-tp-thumb">{@html footerThumb(t.thumb)}</span>
-            <span class="footer-tp-name">{t.label}</span>
-          </button>
-        {/each}
-      </div>
-    </div>
-  </details>
-
-  <details class="group" data-fold="appearance">
-    <summary>{ta('group.appearance')}</summary>
-    <div class="group-items">
-      {#if siteDraft.footer?.cta?.big !== true}
-        <label title={ta('tip.footer.align')}>{ta('lbl.align')}
-          <Dropdown value={siteDraft.footer?.align ?? 'left'}
-            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-            onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
-        <hr class="gridmenu-divider" />
-      {/if}
-      <p class="panel-strong">{ta('lbl.background')}</p>
-      <BackgroundEditor bg={footerBgCtx} layers={siteDraft.footer?.background?.layers ?? []} />
-    </div>
-  </details>
-
-  <details class="group" data-fold="brand">
-    <summary>{ta('group.brand')}</summary>
-    <div class="group-items">
-      <label title={ta('tip.footer.brandTitle')}>{ta('lbl.title')}
-        <input value={siteDraft.footer?.brand?.title ?? ''} placeholder={ta('ph.footer.brandTitle')}
-          oninput={(e) => setFooterBrand('title', e.target.value)} /></label>
-      <label title={ta('tip.footer.tagline')}>{ta('lbl.tagline')}
-        <input value={siteDraft.footer?.brand?.tagline ?? ''}
-          oninput={(e) => setFooterBrand('tagline', e.target.value)} /></label>
-      <label title={ta('tip.footer.brandMode')}>{ta('lbl.brandMode')}
-        <Dropdown value={siteDraft.footer?.brand?.mode ?? 'text'}
-          options={[['text', ta('blocks.text')], ['image', ta('opt.brand.image')], ['both', ta('opt.brand.both')]]}
-          onchange={(v) => setFooterBrandMode(v)} /></label>
-      {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
-        <span class="toolbar-row">
-          <label class="ghost filepick tb-grow" title={ta('tip.webpAutoPublish')}>
-            {siteDraft.footer?.brand?.logo ? ta('ui.changeLogo') : ta('ui.uploadLogo')}
-            <input type="file" accept="image/*" onchange={uploadFooterLogo} />
-          </label>
-          {#if siteDraft.footer?.brand?.logo}
-            <button class="ghost row-tool" title={ta('tip.logo.edit')} aria-label={ta('tip.logo.edit')}
-              onclick={() => ed.openPicture({ kind: 'logo', place: 'footer', source: siteDraft.footer.brand.logoSource?.src ? siteDraft.footer.brand.logoSource : { src: siteDraft.footer.brand.logo } })}>{@html ICONS.pencil}</button>
-            <button class="ghost row-tool" title={ta('tip.footer.removeLogo')}
-              onclick={removeFooterLogo}>{@html ICONS.cross}</button>
-          {/if}
-        </span>
-        {#if siteDraft.footer?.brand?.logo}
-          <label title={ta('tip.footer.logoHeight')}>{ta('lbl.logoHeight')}
-            <span class="gridmenu-value">{siteDraft.footer?.brand?.logoHeight ?? 40} px</span></label>
-          <input type="range" min="16" max="160" step="2" value={siteDraft.footer?.brand?.logoHeight ?? 40}
-            oninput={(e) => setFooterLogoHeight(e.target.value)} />
-        {/if}
-      {/if}
-    </div>
-  </details>
-
-  <details class="group" data-fold="columns">
-    <summary>{ta('group.columns')}</summary>
-    <div class="group-items">
-      {#each siteDraft.footer?.columns ?? [] as col, ci}
-        <div class="nav-row">
-          <input value={col.title} title={ta('tip.footer.columnTitle')}
-            oninput={(e) => setFooterColumnTitle(ci, e.target.value)} />
-          <span class="row-tools">
-            <button class="ghost row-tool" title={ta('tip.footer.addLink')}
-              onclick={() => addFooterLink(ci)}>{@html ICONS.plus}</button>
-            <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFooterColumn(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
-            <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFooterColumn(ci, 1)}
-              disabled={ci === siteDraft.footer.columns.length - 1}>{@html ICONS.down}</button>
-            <button class="ghost row-tool" title={ta('tip.footer.removeColumn')}
-              onclick={() => removeFooterColumn(ci)}>{@html ICONS.cross}</button>
-          </span>
-        </div>
-        {#each col.links ?? [] as link, li}
-          <div class="nav-row nav-sub-row">
-            <input value={link.label} title={ta('tip.linkLabel')}
-              oninput={(e) => setFooterLinkLabel(ci, li, e.target.value)} />
-            <span class="row-tools">
-              <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFooterLink(ci, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
-              <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFooterLink(ci, li, 1)}
-                disabled={li === col.links.length - 1}>{@html ICONS.down}</button>
-              <button class="ghost row-tool" title={ta('tip.removeLink')}
-                onclick={() => removeFooterLink(ci, li)}>{@html ICONS.cross}</button>
-            </span>
-            <span class="nav-target">
-              <LinkField scope="site" removable={false} value={linkOf(link)} title={ta('tip.linkTarget')} onchange={(next) => setFooterLink(ci, li, next)} />
-            </span>
-          </div>
-        {/each}
-      {/each}
-      <button class="ghost action" onclick={addFooterColumn}>{ta('ui.addColumn')}</button>
-      <label title={ta('tip.footer.columnsAlign')}>{ta('lbl.splitColumnAlign')}
-        <Dropdown value={siteDraft.footer?.columnsAlign ?? 'left'}
-          options={[['left', ta('common.left')], ['center', ta('common.center')]]}
-          onchange={(v) => setFooterColumnsAlign(v)} /></label>
-    </div>
-  </details>
-
-  <details class="group" data-fold="social">
-    <summary title={ta('tip.footer.links')}>{ta('group.social')}</summary>
-    <div class="group-items">
-      <!-- The row shows the site's links (site.links), edited in the Site panel -->
-      <label class="gridmenu-snap" title={ta('tip.footer.links')}>
-        <input type="checkbox" checked={siteDraft.footer?.links !== false}
-          onchange={(e) => footerMutate('footer', (f) => { if (e.target.checked) delete f.links; else f.links = false; })} />
-        {ta('ui.footerLinks')}
-      </label>
-      <button class="ghost action" onclick={() => { ed.siteLinksOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteLinks')}</button>
-    </div>
-  </details>
-
-  <details class="group" data-fold="contact">
-    <summary title={ta('tip.footer.contact')}>{ta('group.siteContact')}</summary>
-    <div class="group-items">
-      <!-- The legal line and the address, phone and email come from the Legal panel; a switch shows only when there is something to leave out -->
-      {#if legalParts(siteContact(siteDraft)).length}
-        <label class="gridmenu-snap" title={ta('tip.footer.legal')}>
-          <input type="checkbox" checked={siteDraft.footer?.legal !== false}
-            onchange={(e) => footerMutate('footer', (f) => { if (e.target.checked) delete f.legal; else f.legal = false; })} />
-          {ta('ui.footerLegal')}
-        </label>
-      {/if}
-      <!-- The privacy page the footer links to is chosen in the Legal panel: the page chosen is shown here, and the row opens the panel at «Privacy» -->
-      <div class="legal-row">
-        <span id="legal-row-privacy" title={ta('tip.footer.privacy')}>{ta('lbl.footerPrivacy')}</span>
-        <button type="button" class="legal-value" id="legal-row-privacy-value" aria-labelledby="legal-row-privacy legal-row-privacy-value" title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { fold: 'privacy' })}>
-          <span class="legal-value-name">{(siteDraft.pages ?? []).find((p) => p.id === siteDraft.footer?.privacyPage)?.title ?? ta('common.none')}</span><span class="legal-goto-to">{ta('panel.legal')}{@html ICONS.right}</span>
+  <!-- A start point fills the footer with a whole layout of content and look -->
+  <Fold id="startpoint" surface={F} title={ta('group.startpoint')} value="">
+    <div class="footer-tpick">
+      {#each FOOTER_TEMPLATES as t (t.id)}
+        <button class="footer-tp" title={ta('tip.footer.template', { label: t.label })}
+          onclick={() => applyFooterTemplate(t.id)}>
+          <span class="footer-tp-thumb">{@html footerThumb(t.thumb)}</span>
+          <span class="footer-tp-name">{t.label}</span>
         </button>
-      </div>
-      {#if contactParts(siteContact(siteDraft))}
-        <label class="gridmenu-snap" title={ta('tip.footer.contact')}>
-          <input type="checkbox" checked={siteDraft.footer?.contact !== false}
-            onchange={(e) => footerMutate('footer', (f) => { if (e.target.checked) delete f.contact; else f.contact = false; })} />
-          {ta('ui.footerContact')}
-        </label>
-      {/if}
-      <button class="ghost action" onclick={() => ed.openPanel('legal', { fold: 'who' })}>{ta('ui.editSiteContact')}</button>
+      {/each}
     </div>
-  </details>
+  </Fold>
 
-  <details class="group" data-fold="cta">
-    <summary>{ta('group.cta')}</summary>
-    <div class="group-items">
-      <label class="gridmenu-snap" title={ta('tip.footer.cta')}>
-        <input type="checkbox" checked={Boolean(siteDraft.footer?.cta)}
-          onchange={(e) => enableFooterCta(e.target.checked)} />
-        {ta('lbl.showCta')}
-      </label>
-      {#if siteDraft.footer?.cta}
-        {@const cta = siteDraft.footer.cta}
-        <label title={ta('tip.footer.ctaKind')}>{ta('common.type')}
-          <Dropdown value={cta.kind ?? 'button'}
-            options={[['button', ta('opt.cta.button')], ['newsletter', ta('opt.cta.newsletter')]]}
-            onchange={(v) => setFooterCtaField('kind', v)} /></label>
-        <label class="gridmenu-snap" title={ta('tip.footer.ctaBig')}>
-          <input type="checkbox" checked={cta.big === true}
-            onchange={(e) => setFooterCtaField('big', e.target.checked)} />
-          {ta('lbl.bigCentered')}
+  <Fold id="appearance" surface={F} title={ta('group.appearance')} value={siteDraft.footer?.cta?.big === true ? '' : alignName(siteDraft.footer?.align ?? alignDefault())} group={lookGroup()}>
+    {#if siteDraft.footer?.cta?.big !== true}
+      <Setting key="align">
+        <SelectRow label={ta('lbl.align')} title={ta('tip.footer.align')} value={siteDraft.footer?.align ?? alignDefault()}
+          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+          onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} />
+      </Setting>
+    {/if}
+    <SubHeading text={ta('lbl.background')} />
+    <BackgroundEditor bg={footerBgCtx} layers={siteDraft.footer?.background?.layers ?? []} />
+  </Fold>
+
+  <Fold id="brand" surface={F} title={ta('group.brand')} value={siteDraft.footer?.brand?.title || ''} group={brandGroup()}>
+    <label class="field-stack" title={ta('tip.footer.brandTitle')}>{ta('lbl.title')}
+      <input value={siteDraft.footer?.brand?.title ?? ''} placeholder={ta('ph.footer.brandTitle')}
+        oninput={(e) => setFooterBrand('title', e.target.value)} /></label>
+    <label class="field-stack" title={ta('tip.footer.tagline')}>{ta('lbl.tagline')}
+      <input value={siteDraft.footer?.brand?.tagline ?? ''}
+        oninput={(e) => setFooterBrand('tagline', e.target.value)} /></label>
+    <Setting key="mode">
+      <SelectRow label={ta('lbl.brandMode')} title={ta('tip.footer.brandMode')} value={siteDraft.footer?.brand?.mode ?? 'text'}
+        options={[['text', ta('blocks.text')], ['image', ta('opt.brand.image')], ['both', ta('opt.brand.both')]]}
+        onchange={(v) => setFooterBrandMode(v)} />
+    </Setting>
+    {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
+      <span class="toolbar-row">
+        <label class="ghost filepick tb-grow" title={ta('tip.webpAutoPublish')}>
+          {siteDraft.footer?.brand?.logo ? ta('ui.changeLogo') : ta('ui.uploadLogo')}
+          <input type="file" accept="image/*" onchange={uploadFooterLogo} />
         </label>
-        <label title={ta('tip.footer.ctaHeading')}>{ta('lbl.heading')}
-          <input value={cta.heading ?? ''} placeholder={ta('ph.footer.ctaHeading')}
-            oninput={(e) => setFooterCtaField('heading', e.target.value)} /></label>
-        <label title={ta('tip.footer.ctaSub')}>{ta('lbl.subText')}
-          <input value={cta.sub ?? ''}
-            oninput={(e) => setFooterCtaField('sub', e.target.value)} /></label>
-        <label title={ta('tip.footer.ctaLabel')}>{ta('lbl.buttonText')}
-          <input value={cta.label ?? ''} placeholder={ta('ph.footer.ctaLabel')}
-            oninput={(e) => setFooterCtaField('label', e.target.value)} /></label>
-        {#if (cta.kind ?? 'button') === 'button'}
-          <LinkField scope="site" removable={false} label={ta('lbl.buttonTarget')} title={ta('tip.footer.ctaTarget')} value={linkOf(cta)} onchange={setFooterCtaLink} />
-        {:else}
-          <label title={ta('tip.footer.ctaEndpoint')}>{ta('lbl.newsletterEndpoint')}
-            <input value={cta.endpoint ?? ''} placeholder={ta('ph.endpoint')}
-              onchange={(e) => setFooterCtaField('endpoint', e.target.value)} /></label>
-          <label title={ta('tip.footer.ctaRecipient')}>{ta('lbl.recipientFallback')}
-            <input value={cta.recipient ?? ''} placeholder={ta('ph.email')}
-              onchange={(e) => setFooterCtaField('recipient', e.target.value)} /></label>
-          <label title={ta('tip.footer.ctaSuccess')}>{ta('lbl.confirmation')}
-            <input value={cta.success ?? ''} placeholder={ta('ph.footer.ctaSuccess')}
-              oninput={(e) => setFooterCtaField('success', e.target.value)} /></label>
+        {#if siteDraft.footer?.brand?.logo}
+          <IconButton icon={ICONS.pencil} label={ta('tip.logo.edit')}
+            onclick={() => ed.openPicture({ kind: 'logo', place: 'footer', source: siteDraft.footer.brand.logoSource?.src ? siteDraft.footer.brand.logoSource : { src: siteDraft.footer.brand.logo } })} />
+          <IconButton icon={ICONS.cross} label={ta('tip.footer.removeLogo')} onclick={removeFooterLogo} />
         {/if}
+      </span>
+      {#if siteDraft.footer?.brand?.logo}
+        <Setting key="logoHeight">
+          <SliderRow label={ta('lbl.logoHeight')} title={ta('tip.footer.logoHeight')} value={siteDraft.footer?.brand?.logoHeight ?? 40} min={16} max={160} step={2}
+            shown={`${siteDraft.footer?.brand?.logoHeight ?? 40} px`} oninput={(v) => setFooterLogoHeight(v)} />
+        </Setting>
       {/if}
-    </div>
-  </details>
+    {/if}
+  </Fold>
 
-  <details class="group" data-fold="linkrow">
-    <summary>{ta('group.linkRow')}</summary>
-    <div class="group-items">
-      {@render footerLinkList('linkRow', siteDraft.footer?.linkRow ?? [])}
-      <button class="ghost action" onclick={() => addFooterListLink('linkRow')}>{ta('ui.addRowLink')}</button>
-    </div>
-  </details>
+  <!-- The columns, each with its heading and its links -->
+  <Fold id="columns" surface={F} title={ta('group.columns')} value={(siteDraft.footer?.columns ?? []).length ? `${siteDraft.footer.columns.length}` : ta('common.none')} group={columnsGroup()}>
+    <!-- Cards like the Nav tab's items: closed, a column's heading and how many links it holds; open, its heading and its links -->
+    <CardList items={siteDraft.footer?.columns ?? []} label={ta('group.columns')} key={(col) => col}
+      card={(col) => ({ name: col.title || ta('seed.column'), detail: `${(col.links ?? []).length}` })}
+      isOpen={(ci) => columnAt(ci) !== undefined && openColumn === columnAt(ci)} ontoggle={(ci) => (openColumn = openColumn === columnAt(ci) ? null : columnAt(ci))}
+      onmove={moveFooterColumn} onremove={removeFooterColumn} removeLabel={ta('tip.footer.removeColumn')}>
+      {#snippet body(col, ci)}
+        <label class="field-stack" title={ta('tip.footer.columnTitle')}>{ta('lbl.heading')}
+          <input value={col.title} oninput={(e) => setFooterColumnTitle(ci, e.target.value)} /></label>
+        <ListEditor items={col.links ?? []} label={col.title || ta('group.columns')} key={(link, li) => li}
+          card={(link) => ({ name: link.label ?? '' })}
+          onmove={(from, to) => moveFooterLink(ci, from, to)} onremove={(li) => removeFooterLink(ci, li)} removeLabel={ta('tip.removeLink')}
+          onadd={() => addFooterLink(ci)} addLabel={ta('ui.addColumnLink')}>
+          {#snippet row(link, li)}
+            {@render linkFields(link, (v) => setFooterLinkLabel(ci, li, v), (next) => setFooterLink(ci, li, next))}
+          {/snippet}
+        </ListEditor>
+      {/snippet}
+    </CardList>
+    <button type="button" class="ghost action" onclick={() => { addFooterColumn(); openColumn = siteDraft.footer?.columns?.at(-1) ?? null; }}>{@html ICONS.plus}{ta('ui.addColumn').replace(/^\+\s*/, '')}</button>
+    <Setting key="columnsAlign">
+      <SelectRow label={ta('lbl.splitColumnAlign')} title={ta('tip.footer.columnsAlign')} value={siteDraft.footer?.columnsAlign ?? 'left'}
+        options={[['left', ta('common.left')], ['center', ta('common.center')]]}
+        onchange={(v) => setFooterColumnsAlign(v)} />
+    </Setting>
+  </Fold>
 
-  <details class="group" data-fold="baseline">
-    <summary>{ta('group.baseline')}</summary>
-    <div class="group-items">
-      <label title={ta('tip.footer.copyright')}>{ta('lbl.copyright')}
-        <input value={siteDraft.footer?.copyright ?? ''} placeholder={ta('ph.footer.copyright')}
-          oninput={(e) => setFooterCopyright(e.target.value)} /></label>
-      <p class="panel-strong">{ta('lbl.baselineLinks')}</p>
-      {@render footerLinkList('baseline', siteDraft.footer?.baseline ?? [])}
-      <button class="ghost action" onclick={() => addFooterListLink('baseline')}>{ta('ui.addBaselineLink')}</button>
-    </div>
-  </details>
+  <!-- The site's links (site.links, edited in the Site panel) and its legal line and contact details (set in the Legal panel), each shown here or left out; a switch shows only where there is something to leave out -->
+  <Fold id="shared" surface={F} title={ta('group.footerShared')} tip={ta('tip.footer.shared')} value={sharedValue()} group={sharedGroup()}>
+    <Setting key="links">
+      <SwitchRow label={ta('ui.footerLinks')} title={ta('tip.footer.links')} checked={siteDraft.footer?.links !== false}
+        onchange={(on) => footerMutate('footer', (f) => { if (on) delete f.links; else f.links = false; })} />
+    </Setting>
+    <PanelLinkRow label={ta('group.siteLinks')} to={ta('panel.site')} title={ta('ui.editSiteLinks')} onclick={() => { ed.siteLinksOpen = true; ed.openPanel('site'); }} />
+    {#if legalParts(siteContact(siteDraft)).length}
+      <Setting key="legal">
+        <SwitchRow label={ta('ui.footerLegal')} title={ta('tip.footer.legal')} checked={siteDraft.footer?.legal !== false}
+          onchange={(on) => footerMutate('footer', (f) => { if (on) delete f.legal; else f.legal = false; })} />
+      </Setting>
+    {/if}
+    {#if contactParts(siteContact(siteDraft))}
+      <Setting key="contact">
+        <SwitchRow label={ta('ui.footerContact')} title={ta('tip.footer.contact')} checked={siteDraft.footer?.contact !== false}
+          onchange={(on) => footerMutate('footer', (f) => { if (on) delete f.contact; else f.contact = false; })} />
+      </Setting>
+    {/if}
+    <PanelLinkRow label={ta('group.siteContact')} to={ta('panel.legal')} title={ta('ui.editSiteContact')} onclick={() => ed.openPanel('legal', { fold: 'who' })} />
+    <!-- The privacy page the footer links to is chosen in the Legal panel: the page chosen shows here, and the row opens the panel at «Privacy» -->
+    <PanelLinkRow label={ta('lbl.footerPrivacy')} to={ta('panel.legal')} title={ta('tip.footer.privacy')} onclick={() => ed.openPanel('legal', { fold: 'privacy' })}>
+      {#snippet value()}<span>{(siteDraft.pages ?? []).find((p) => p.id === siteDraft.footer?.privacyPage)?.title ?? ta('common.none')}</span>{/snippet}
+    </PanelLinkRow>
+  </Fold>
+
+  <Fold id="cta" surface={F} title={ta('group.cta')} value={siteDraft.footer?.cta ? ta((siteDraft.footer.cta.kind ?? 'button') === 'button' ? 'opt.cta.button' : 'opt.cta.newsletter') : ta('common.off')}>
+    <SwitchRow label={ta('lbl.showCta')} title={ta('tip.footer.cta')} checked={Boolean(siteDraft.footer?.cta)} onchange={(on) => enableFooterCta(on)} />
+    {#if siteDraft.footer?.cta}
+      {@const cta = siteDraft.footer.cta}
+      <SelectRow label={ta('common.type')} title={ta('tip.footer.ctaKind')} value={cta.kind ?? 'button'}
+        options={[['button', ta('opt.cta.button')], ['newsletter', ta('opt.cta.newsletter')]]}
+        onchange={(v) => setFooterCtaField('kind', v)} />
+      <SwitchRow label={ta('lbl.bigCentered')} title={ta('tip.footer.ctaBig')} checked={cta.big === true} onchange={(on) => setFooterCtaField('big', on)} />
+      <label class="field-stack" title={ta('tip.footer.ctaHeading')}>{ta('lbl.heading')}
+        <input value={cta.heading ?? ''} placeholder={ta('ph.footer.ctaHeading')}
+          oninput={(e) => setFooterCtaField('heading', e.target.value)} /></label>
+      <label class="field-stack" title={ta('tip.footer.ctaSub')}>{ta('lbl.subText')}
+        <input value={cta.sub ?? ''}
+          oninput={(e) => setFooterCtaField('sub', e.target.value)} /></label>
+      <label class="field-stack" title={ta('tip.footer.ctaLabel')}>{ta('lbl.buttonText')}
+        <input value={cta.label ?? ''} placeholder={ta('ph.footer.ctaLabel')}
+          oninput={(e) => setFooterCtaField('label', e.target.value)} /></label>
+      {#if (cta.kind ?? 'button') === 'button'}
+        <LinkField scope="site" removable={false} label={ta('lbl.buttonTarget')} title={ta('tip.footer.ctaTarget')} value={linkOf(cta)} onchange={setFooterCtaLink} />
+      {:else}
+        <label class="field-stack" title={ta('tip.footer.ctaEndpoint')}>{ta('lbl.newsletterEndpoint')}
+          <input value={cta.endpoint ?? ''} placeholder={ta('ph.endpoint')}
+            onchange={(e) => setFooterCtaField('endpoint', e.target.value)} /></label>
+        <label class="field-stack" title={ta('tip.footer.ctaRecipient')}>{ta('lbl.recipientFallback')}
+          <input value={cta.recipient ?? ''} placeholder={ta('ph.email')}
+            onchange={(e) => setFooterCtaField('recipient', e.target.value)} /></label>
+        <label class="field-stack" title={ta('tip.footer.ctaSuccess')}>{ta('lbl.confirmation')}
+          <input value={cta.success ?? ''} placeholder={ta('ph.footer.ctaSuccess')}
+            oninput={(e) => setFooterCtaField('success', e.target.value)} /></label>
+      {/if}
+    {/if}
+  </Fold>
+
+  <!-- The bottom row: a row of links above the bottom line, and the bottom line with the copyright and its own links -->
+  <Fold id="bottom" surface={F} title={ta('group.footerBottom')} value={bottomValue()}>
+    <SubHeading text={ta('group.linkRow')} />
+    {@render footerLinkList('linkRow', siteDraft.footer?.linkRow ?? [], ta('ui.addRowLink'))}
+    <SubHeading text={ta('group.baseline')} />
+    <label class="field-stack" title={ta('tip.footer.copyright')}>{ta('lbl.copyright')}
+      <input value={siteDraft.footer?.copyright ?? ''} placeholder={ta('ph.footer.copyright')}
+        oninput={(e) => setFooterCopyright(e.target.value)} /></label>
+    {@render footerLinkList('baseline', siteDraft.footer?.baseline ?? [], ta('ui.addBaselineLink'))}
+  </Fold>
 </div>
 
-{#snippet footerLinkList(field, links)}
-  {#each links as link, li}
-    <div class="nav-row nav-sub-row">
-      <input value={link.label} title={ta('tip.linkLabel')}
-        oninput={(e) => setFooterListLinkLabel(field, li, e.target.value)} />
-      <span class="row-tools">
-        <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveFooterListLink(field, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
-        <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveFooterListLink(field, li, 1)}
-          disabled={li === links.length - 1}>{@html ICONS.down}</button>
-        <button class="ghost row-tool" title={ta('tip.removeLink')}
-          onclick={() => removeFooterListLink(field, li)}>{@html ICONS.cross}</button>
-      </span>
-      <span class="nav-target">
-        <LinkField scope="site" removable={false} value={linkOf(link)} title={ta('tip.linkTarget')} onchange={(next) => setFooterListLink(field, li, next)} />
-      </span>
-    </div>
-  {/each}
+{#snippet linkFields(link, setLabel, setLink)}
+  <div class="footer-link">
+    <input value={link.label} title={ta('tip.linkLabel')} aria-label={ta('tip.linkLabel')} oninput={(e) => setLabel(e.target.value)} />
+    <LinkField scope="site" removable={false} value={linkOf(link)} title={ta('tip.linkTarget')} onchange={setLink} />
+  </div>
+{/snippet}
+
+{#snippet footerLinkList(field, links, addLabel)}
+  <ListEditor items={links} label={ta(field === 'linkRow' ? 'group.linkRow' : 'group.baseline')} key={(link, li) => li}
+    card={(link) => ({ name: link.label ?? '' })}
+    onmove={(from, to) => moveFooterListLink(field, from, to)} onremove={(li) => removeFooterListLink(field, li)} removeLabel={ta('tip.removeLink')}
+    onadd={() => addFooterListLink(field)} {addLabel}>
+    {#snippet row(link, li)}
+      {@render linkFields(link, (v) => setFooterListLinkLabel(field, li, v), (next) => setFooterListLink(field, li, next))}
+    {/snippet}
+  </ListEditor>
 {/snippet}

@@ -1,8 +1,13 @@
 <script>
-  /* The Theme panel: the colour tokens in light and dark, the fonts, the corner radius and the ready-made suggestions. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The Theme panel: the ready-made themes, the colour tokens in light and dark, the fonts and the corner radius, each a fold of the row kit its tab's menu reaches (lib/panel-folds.js), saying its value while closed.
+     The theme's values always come from a ready-made theme or the owner, so its folds have no defaults to go back to. The state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
   import ColorPicker from '../lib/ColorPicker.svelte';
-  import Dropdown from '../lib/Dropdown.svelte';
+  import Choice from '../lib/Choice.svelte';
+  import Fold from '../lib/rows/Fold.svelte';
+  import SelectRow from '../lib/rows/SelectRow.svelte';
+  import SliderRow from '../lib/rows/SliderRow.svelte';
+  import SwitchRow from '../lib/rows/SwitchRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { FONT_STACKS, fontChoices } from '$engine/fonts.js';
   const ed = getContext('urd-editor');
@@ -104,6 +109,11 @@
   const radiusNum = (v) => parseInt(v, 10) || 0;
 
   function setRadiusPx(name, n) { setRadiusToken(name, `${n}px`); }
+
+  /** The words for the closed folds: the theme chosen, the modes, the fonts' names and the corners. */
+  const presetName = () => THEME_PRESETS.find((pr) => pr.id === activeThemePreset)?.name ?? ta('opt.custom');
+  const fontName = (stack) => (fontChoices(ta, []).find(([v]) => v === stack)?.[1] ?? ta('opt.customFont'));
+  const T = 'theme';
 </script>
 
 <div class="panel-body">
@@ -117,111 +127,82 @@
       </div>
     </div>
   {/snippet}
-  <p class="panel-strong">{ta('lbl.themePresets')}</p>
-  <div class="theme-presets">
-    {#each THEME_PRESETS as pr (pr.id)}
-      <button type="button" class="theme-preset" class:sel={activeThemePreset === pr.id}
-        title={`${pr.name} - ${pr.note}`} onclick={() => applyThemePreset(pr)}>
-        <span class="tp-band">
-          <i style="background:{pr.light.bg}"></i><i style="background:{pr.light.surface}"></i><i style="background:{pr.light.accent}"></i><i style="background:{pr.light.text}"></i>
-        </span>
-        <small>{pr.name}</small>
-      </button>
-    {/each}
-  </div>
-  <p class="panel-strong">{ta('lbl.colors')}</p>
-  <label class="gridmenu-snap" title={ta('tip.theme.dualMode')}>
-    <input type="checkbox" checked={dualMode}
-      onchange={(e) => setDualMode(e.target.checked)} />
-    {ta('lbl.dualMode')}
-  </label>
-  {#if dualMode}
-    <div class="ctl-row autorow">
-      <span class="autolbl">{ta('lbl.darkColors')}</span>
-      <span class="seg">
-        <button type="button" class:on={altAuto} title={ta('hint.theme.autoDark')}
-          onclick={() => setAltAuto(true)}>{ta('opt.auto')}</button>
-        <button type="button" class:on={!altAuto} onclick={() => setAltAuto(false)}>{ta('opt.custom')}</button>
-      </span>
-    </div>
-  {/if}
 
-  <div class="ctl-row palhead">
+  <!-- The ready-made themes: a press sets the colours, the fonts and the corners at once -->
+  <Fold id="presets" surface={T} title={ta('lbl.themePresets')} value={presetName()}>
+    <div class="theme-presets">
+      {#each THEME_PRESETS as pr (pr.id)}
+        <button type="button" class="theme-preset" class:sel={activeThemePreset === pr.id}
+          title={`${pr.name} - ${pr.note}`} onclick={() => applyThemePreset(pr)}>
+          <span class="tp-band">
+            <i style="background:{pr.light.bg}"></i><i style="background:{pr.light.surface}"></i><i style="background:{pr.light.accent}"></i><i style="background:{pr.light.text}"></i>
+          </span>
+          <small>{pr.name}</small>
+        </button>
+      {/each}
+    </div>
+  </Fold>
+
+  <!-- The colours: the light palette, and with light and dark on, the dark one, derived or the owner's own, and which of the two a visitor sees first -->
+  <Fold id="colours" surface={T} title={ta('lbl.colors')} value={dualMode ? `${ta('lbl.light')} · ${ta('lbl.dark')}` : ta('lbl.light')}>
+    <SwitchRow label={ta('lbl.dualMode')} title={ta('tip.theme.dualMode')} checked={dualMode} onchange={(on) => setDualMode(on)} />
+    {#if dualMode}
+      <Choice label={ta('lbl.darkColors')} title={ta('hint.theme.autoDark')} value={altAuto ? 'auto' : 'custom'}
+        options={[['auto', ta('opt.auto')], ['custom', ta('opt.custom')]]} onchange={(v) => setAltAuto(v === 'auto')} />
+      <Choice label={ta('lbl.shownFirst')} title={ta('tip.theme.defaultScheme')} value={stdMode}
+        options={[['light', ta('lbl.light')], ['dark', ta('lbl.dark')]]} onchange={(v) => setThemeScheme(v)} />
+    {/if}
     {#if dualMode}<span class="mini-label">{ta('lbl.light')}</span>{/if}
-    <button type="button" class="chip" class:accent={stdMode === 'light'}
-      title={ta('tip.theme.defaultScheme')} onclick={() => setThemeScheme('light')}>{ta('common.standard')}</button>
-  </div>
-  <div class="palcells">
-    {#each PALETTE_KEYS as [key, full, short] (key)}
-      <div class="palcol">
-        <ColorPicker value={siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal)}
-          tokens={themeSwatches()} label={full} onchange={(hex) => setColorToken(key, hex)} />
-        <span class="palcap">{short}</span>
-        <b class="palhex">{themeHex(siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal), lightPal)}</b>
-      </div>
-    {/each}
-  </div>
-
-  {#if dualMode}
-    <div class="ctl-row palhead">
-      <span class="mini-label">{ta('lbl.dark')}</span>
-      <button type="button" class="chip" class:accent={stdMode === 'dark'}
-        title={ta('tip.theme.darkDefault')} onclick={() => setThemeScheme('dark')}>{ta('common.standard')}</button>
-    </div>
-    <div class="palcells" class:autopal={altAuto}>
+    <div class="palcells">
       {#each PALETTE_KEYS as [key, full, short] (key)}
         <div class="palcol">
-          <ColorPicker value={siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal)}
-            tokens={themeSwatches()} label={ta('theme.darkColorLabel', { name: full })} onchange={(hex) => setAltColorToken(key, hex)} />
+          <ColorPicker value={siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal)}
+            tokens={themeSwatches()} label={full} onchange={(hex) => setColorToken(key, hex)} />
           <span class="palcap">{short}</span>
-          <b class="palhex">{themeHex(siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal), darkPal)}</b>
+          <b class="palhex">{themeHex(siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal), lightPal)}</b>
         </div>
       {/each}
     </div>
-  {/if}
-
-  <!-- Auto for the text on accent: no token in either mode, the browser
-       picks black or white against the accent (contrast-color()). Its own
-       row below both palettes, since it applies to light and dark alike. -->
-  <div class="ctl-row palauto-row" title={ta('tip.theme.accentTextAuto')}>
-    <span class="mini-label ctl-name">{ta('palette.accentText')}</span>
-    <button type="button" class="chip palauto" class:accent={accentTextAuto}
-      onclick={() => setAccentTextAuto(!accentTextAuto)}>{ta('opt.auto')}</button>
-  </div>
-
-  <div class="theme-previews">
-    {@render themePreview(lightPal, dualMode ? ta('lbl.light') : '')}
-    {#if dualMode}{@render themePreview(darkPal, ta('lbl.dark'))}{/if}
-  </div>
-
-  <details class="group" data-fold="typography">
-    <summary>{ta('group.typography')}</summary>
-    <div class="group-items">
-      <label title={ta('tip.theme.headingFont')}>{ta('lbl.headings')}
-        <Dropdown value={siteDraft.theme.tokens.font.heading} options={fontOptions('heading')}
-          onchange={(v) => setFontToken('heading', v)} /></label>
-      <label title={ta('tip.theme.bodyFont')}>{ta('lbl.bodyText')}
-        <Dropdown value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
-          onchange={(v) => setFontToken('body', v)} /></label>
-      <div class="sample typo-sample">
-        <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">{ta('preview.heading')}</div>
-        <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">{ta('preview.bodySample')}</div>
+    {#if dualMode}
+      <span class="mini-label">{ta('lbl.dark')}</span>
+      <div class="palcells" class:autopal={altAuto}>
+        {#each PALETTE_KEYS as [key, full, short] (key)}
+          <div class="palcol">
+            <ColorPicker value={siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal)}
+              tokens={themeSwatches()} label={ta('theme.darkColorLabel', { name: full })} onchange={(hex) => setAltColorToken(key, hex)} />
+            <span class="palcap">{short}</span>
+            <b class="palhex">{themeHex(siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal), darkPal)}</b>
+          </div>
+        {/each}
       </div>
+    {/if}
+    <!-- The text on the accent chosen by the browser, black or white against the accent (contrast-color()), in light and dark alike -->
+    <SwitchRow label={ta('lbl.accentTextAuto')} title={ta('tip.theme.accentTextAuto')} checked={accentTextAuto} onchange={(on) => setAccentTextAuto(on)} />
+    <div class="theme-previews">
+      {@render themePreview(lightPal, dualMode ? ta('lbl.light') : '')}
+      {#if dualMode}{@render themePreview(darkPal, ta('lbl.dark'))}{/if}
     </div>
-  </details>
+  </Fold>
 
-  <details class="group" data-fold="shape">
-    <summary>{ta('group.shape')}</summary>
-    <div class="group-items">
-      <div class="sample form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">
-        <span class="fp-btn">{ta('preview.button')}</span>
-        <span class="fp-card">{ta('preview.card')}</span>
-      </div>
-      <label title={ta('tip.theme.radiusSm')} class="ctl-row">{ta('lbl.smallCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
-      <input type="range" min="0" max="24" step="1" value={radiusNum(siteDraft.theme.tokens.radius.sm)}
-        oninput={(e) => setRadiusPx('sm', Number(e.target.value))} />
-      <label title={ta('tip.theme.radiusMd')} class="ctl-row">{ta('lbl.largeCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
-      <input type="range" min="0" max="40" step="1" value={radiusNum(siteDraft.theme.tokens.radius.md)}
-        oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
-  </details>
+  <Fold id="typography" surface={T} title={ta('group.typography')} value={`${fontName(siteDraft.theme.tokens.font.heading)} · ${fontName(siteDraft.theme.tokens.font.body)}`}>
+    <SelectRow label={ta('lbl.headings')} title={ta('tip.theme.headingFont')} value={siteDraft.theme.tokens.font.heading} options={fontOptions('heading')}
+      onchange={(v) => setFontToken('heading', v)} />
+    <SelectRow label={ta('lbl.bodyText')} title={ta('tip.theme.bodyFont')} value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
+      onchange={(v) => setFontToken('body', v)} />
+    <div class="sample typo-sample">
+      <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">{ta('preview.heading')}</div>
+      <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">{ta('preview.bodySample')}</div>
+    </div>
+  </Fold>
+
+  <Fold id="shape" surface={T} title={ta('group.shape')} value={`${siteDraft.theme.tokens.radius.sm} · ${siteDraft.theme.tokens.radius.md}`}>
+    <div class="sample form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">
+      <span class="fp-btn">{ta('preview.button')}</span>
+      <span class="fp-card">{ta('preview.card')}</span>
+    </div>
+    <SliderRow label={ta('lbl.smallCorners')} title={ta('tip.theme.radiusSm')} value={radiusNum(siteDraft.theme.tokens.radius.sm)} min={0} max={24} step={1}
+      shown={siteDraft.theme.tokens.radius.sm} oninput={(v) => setRadiusPx('sm', v)} />
+    <SliderRow label={ta('lbl.largeCorners')} title={ta('tip.theme.radiusMd')} value={radiusNum(siteDraft.theme.tokens.radius.md)} min={0} max={40} step={1}
+      shown={siteDraft.theme.tokens.radius.md} oninput={(v) => setRadiusPx('md', v)} />
+  </Fold>
 </div>

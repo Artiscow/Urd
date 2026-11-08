@@ -1,6 +1,6 @@
 /**
  * The folds a panel's tab lists in its menu (shell/PanelTab.svelte): in the strip under the top bar and in the panel's own tabs, a mouse resting on the tab, or the down arrow key on it, opens a menu of the panel's folds, and a row opens the panel with that fold unfolded.
- * Each fold is named by its id, which stands as `data-fold` on its `details.group` in the panel, and by the dictionary key of its name; `when` leaves out a fold the panel draws only in some cases.
+ * Each fold is named by its id, which stands as `data-fold` on its `details.group` in the panel (the row kit's Fold sets it from its `id`), and by the dictionary key of its name; `when` leaves out a fold the panel draws only in some cases.
  * A fold that holds one button and nothing else is `press`: its row in the menu is that button, pressed at once (Footer's Design opens the design picker), with no fold to unfold, and `icon` names the mark the row carries for it (lib/icons.js).
  * `group` puts a long panel's folds in short groups by purpose, each under a small label in the menu (the «Grouped» tab menus, the default); a panel's folds stand in the panel in the same order, so a group's folds are next to each other there too.
  * A panel left out has no menu. Pure, node-tested (tests/panel-folds.test.mjs, which holds the ids to the panels' markup).
@@ -9,10 +9,12 @@
 /** The panels' folds, in the order the panels draw them. */
 export const PANEL_FOLDS = {
   site: [
-    { id: 'calendars', key: 'group.siteCalendars' },
-    { id: 'links', key: 'group.siteLinks' },
-    { id: 'media', key: 'group.siteMedia' },
-    { id: 'shop', key: 'group.siteShop' },
+    { id: 'identity', key: 'group.siteIdentity', group: 'about' },
+    { id: 'region', key: 'group.siteRegion', group: 'about' },
+    { id: 'width', key: 'lbl.contentWidth', group: 'look' },
+    { id: 'calendars', key: 'group.siteCalendars', group: 'content' },
+    { id: 'links', key: 'group.siteLinks', group: 'content' },
+    { id: 'shop', key: 'group.siteShop', group: 'shop' },
   ],
   legal: [
     { id: 'who', key: 'legal.group.who' },
@@ -20,6 +22,8 @@ export const PANEL_FOLDS = {
     { id: 'terms', key: 'legal.group.terms', when: (ctx) => ctx.legal?.terms.shown === true },
   ],
   theme: [
+    { id: 'presets', key: 'lbl.themePresets' },
+    { id: 'colours', key: 'lbl.colors' },
     { id: 'typography', key: 'group.typography' },
     { id: 'shape', key: 'group.shape' },
   ],
@@ -34,17 +38,15 @@ export const PANEL_FOLDS = {
     { id: 'announcement', key: 'group.announcement', group: 'extras' },
   ],
   footer: [
-    { id: 'pages', key: 'group.showOnPages', when: (ctx) => ctx.site?.footer?.show === true },
+    { id: 'pages', key: 'group.showOnPages' },
     { id: 'design', key: 'lbl.design', press: true, icon: 'designs', group: 'look' },
     { id: 'startpoint', key: 'group.startpoint', group: 'look' },
     { id: 'appearance', key: 'group.appearance', group: 'look' },
     { id: 'brand', key: 'group.brand', group: 'content' },
     { id: 'columns', key: 'group.columns', group: 'content' },
-    { id: 'social', key: 'group.social', group: 'content' },
-    { id: 'contact', key: 'group.siteContact', group: 'content' },
+    { id: 'shared', key: 'group.footerShared', group: 'content' },
     { id: 'cta', key: 'group.cta', group: 'content' },
-    { id: 'linkrow', key: 'group.linkRow', group: 'bottom' },
-    { id: 'baseline', key: 'group.baseline', group: 'bottom' },
+    { id: 'bottom', key: 'group.footerBottom', group: 'bottom' },
   ],
 };
 

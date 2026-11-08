@@ -14,6 +14,9 @@
 export const WIDTH_MIN = 960;
 export const WIDTH_MAX = 1920;
 export const WIDTH_STEP = 20;
+/** The width and the margin a site has until it sets its own (site.layout). */
+export const WIDTH_DEFAULT = 1440;
+export const GUTTER_DEFAULT = 6;
 
 /**
  * The side margin against the window edge, in PERCENT OF THE WINDOW WIDTH

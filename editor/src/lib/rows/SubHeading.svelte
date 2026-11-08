@@ -1,9 +1,9 @@
 <script>
   /* A part inside a fold, in the row kit (0.7.30.2): a small heading over the rows that belong to it. */
-  let { text } = $props();
+  let { text, title = undefined } = $props();
 </script>
 
-<h4 class="row-sub">{text}</h4>
+<h4 class="row-sub" {title}>{text}</h4>
 
 <style>
   .row-sub {

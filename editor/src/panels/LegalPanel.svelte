@@ -3,6 +3,10 @@
      Each fold's heading carries its state (lib/legal-model.js); a link from another panel or the tab's menu opens the panel at a fold by its `data-fold` (lib/panel-folds.js). */
   import { getContext, tick } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
+  import Fold from '../lib/rows/Fold.svelte';
+  import SelectRow from '../lib/rows/SelectRow.svelte';
+  import SubHeading from '../lib/rows/SubHeading.svelte';
+  import IconButton from '../lib/rows/IconButton.svelte';
   import ContactFields from './legal/ContactFields.svelte';
   import { ta } from '$engine/i18n.js';
   import { groupChip } from '../lib/legal-model.js';
@@ -126,65 +130,55 @@
 
 {#snippet pageChoice(label, tip, value, onchange, page)}
   <div class="legal-page-row">
-    <label class="field-stack" title={tip}>{label}
-      <Dropdown {value} options={pageOptions(value)} {onchange} /></label>
+    <SelectRow {label} title={tip} {value} options={pageOptions(value)} {onchange} />
     {#if page}
-      <button type="button" class="ghost row-tool" title={ta('tip.legal.openPage')} aria-label={ta('tip.legal.openPage')} onclick={() => ed.selectPage(page)}>{@html ICONS.pencil}</button>
+      <IconButton icon={ICONS.pencil} label={ta('tip.legal.openPage')} onclick={() => ed.selectPage(page)} />
     {/if}
   </div>
 {/snippet}
 
 <div class="panel-body">
-  <details class="group legal-fold" data-fold="who"
-    bind:open={() => ed.legalOpen.who, (v) => (ed.legalOpen = { ...ed.legalOpen, who: v })}>
-    <summary title={ta('tip.legal.who')}><span class="legal-fold-name">{ta('legal.group.who')}</span>{@render chip('who')}</summary>
-    <div class="group-items">
-      <ContactFields missing={legal?.who.missing ?? []} />
-    </div>
-  </details>
-  <details class="group legal-fold" data-fold="privacy"
-    bind:open={() => ed.legalOpen.privacy, (v) => (ed.legalOpen = { ...ed.legalOpen, privacy: v })}>
-    <summary title={ta('tip.legal.privacy')}><span class="legal-fold-name">{ta('legal.group.privacy')}</span>{@render chip('privacy')}</summary>
-    <div class="group-items">
-      {@render pageChoice(ta('lbl.footerPrivacy'), ta('tip.footer.privacy'), siteDraft.footer?.privacyPage ?? '', setPrivacyPage, legal?.privacy.page)}
-      {#if legal && !legal.privacy.page}
-        <button type="button" class="ghost action" title={ta('tip.legal.makePage')} onclick={() => makePage('privacy')}>{@html ICONS.plus} {ta('ui.makePrivacyPage')}</button>
-      {/if}
-      {#if legal?.privacy.cloudflare}
-        <!-- Cloudflare counts the visits by itself: the privacy page tells it, and the «?» says how it is turned off -->
-        <div class="legal-cf" title={ta('tip.legal.cloudflare')}><span>{ta('legal.cloudflare')}</span><button type="button" class="help-chip legal-help" title={ta('hint.how', { title: ta('hint.cloudflare.title') })} aria-label={ta('hint.how', { title: ta('hint.cloudflare.title') })} onclick={(e) => cloudflareHelp(e.currentTarget)}>?</button></div>
-      {/if}
-      <!-- How long the association keeps each kind the site has; one not decided is marked, as the privacy page says it is not decided -->
-      {#if legal?.privacy.kinds.length}
-        <span class="mini-label" title={ta('tip.legal.keep')}>{ta('legal.keep.heading')}</span>
-        {#each legal.privacy.kinds as kind (kind)}
-          {@const kept = retentionOf(siteDraft, kind)}
-          {@const shown = keepShown(kind)}
-          <!-- The name labels the dropdown by id, so the «?» beside it (orders) stays a button of its own, outside what a press on the name reaches -->
-          <div class="legal-keep" title={ta(`tip.legal.keep.${kind}`)}><span><span id={`legal-keep-${kind}`}>{ta(`legal.keep.${kind}`)}</span>{#if !kept}<span class="legal-need-dot" title={ta('tip.legal.undecided')} aria-hidden="true"></span>{/if}{#if kind === 'orders'}<button type="button" class="help-chip legal-help" title={ta('hint.how', { title: ta('hint.orders.title') })} aria-label={ta('hint.how', { title: ta('hint.orders.title') })} onclick={(e) => ordersHelp(e.currentTarget)}>?</button>{/if}</span>
-            <Dropdown value={shown?.until ?? ''} labelledby={`legal-keep-${kind}`} options={keepOptions(kind).map(([v, key]) => [v, ta(key)])} onchange={(v) => setKeepChoice(kind, v)} /></div>
-          {#if shown?.until === 'period'}
-            <div class="field-pair">
-              <input type="number" min="1" max={RETENTION_MAX} step="1" value={shown.count ?? ''} aria-label={ta('lbl.keepCount')} title={ta('tip.legal.keepCount')}
-                onchange={(e) => { e.currentTarget.value = String(setKeepPeriod(kind, { count: e.currentTarget.value }) ?? ''); }} />
-              <Dropdown value={shown.unit} title={ta('tip.legal.keepUnit')} options={[['months', ta('opt.keep.months')], ['years', ta('opt.keep.years')]]}
-                onchange={(v) => setKeepPeriod(kind, { unit: v })} />
-            </div>
-          {/if}
-        {/each}
-      {/if}
-    </div>
-  </details>
-  {#if legal?.terms.shown}
-    <details class="group legal-fold" data-fold="terms"
-      bind:open={() => ed.legalOpen.terms, (v) => (ed.legalOpen = { ...ed.legalOpen, terms: v })}>
-      <summary title={ta('tip.legal.terms')}><span class="legal-fold-name">{ta('legal.group.terms')}</span>{@render chip('terms')}</summary>
-      <div class="group-items">
-        {@render pageChoice(ta('settings.termsPage'), ta('tip.settings.termsPage'), siteDraft.site.commerce?.termsPage ?? '', setTermsPage, legal.terms.page)}
-        {#if !legal.terms.page}
-          <button type="button" class="ghost action" title={ta('tip.legal.makePage')} onclick={() => makePage('terms')}>{@html ICONS.plus} {ta('ui.makeTermsPage')}</button>
+  {#snippet whoChip()}{@render chip('who')}{/snippet}
+  {#snippet privacyChip()}{@render chip('privacy')}{/snippet}
+  {#snippet termsChip()}{@render chip('terms')}{/snippet}
+  <Fold id="who" surface="legal" title={ta('legal.group.who')} tip={ta('tip.legal.who')} value={whoChip}>
+    <ContactFields missing={legal?.who.missing ?? []} />
+  </Fold>
+  <Fold id="privacy" surface="legal" title={ta('legal.group.privacy')} tip={ta('tip.legal.privacy')} value={privacyChip}>
+    {@render pageChoice(ta('lbl.footerPrivacy'), ta('tip.footer.privacy'), siteDraft.footer?.privacyPage ?? '', setPrivacyPage, legal?.privacy.page)}
+    {#if legal && !legal.privacy.page}
+      <button type="button" class="ghost action" title={ta('tip.legal.makePage')} onclick={() => makePage('privacy')}>{@html ICONS.plus} {ta('ui.makePrivacyPage')}</button>
+    {/if}
+    {#if legal?.privacy.cloudflare}
+      <!-- Cloudflare counts the visits by itself: the privacy page tells it, and the «?» says how it is turned off -->
+      <div class="legal-cf" title={ta('tip.legal.cloudflare')}><span>{ta('legal.cloudflare')}</span><button type="button" class="help-chip legal-help" title={ta('hint.how', { title: ta('hint.cloudflare.title') })} aria-label={ta('hint.how', { title: ta('hint.cloudflare.title') })} onclick={(e) => cloudflareHelp(e.currentTarget)}>?</button></div>
+    {/if}
+    <!-- How long the association keeps each kind the site has; one not decided is marked, as the privacy page says it is not decided -->
+    {#if legal?.privacy.kinds.length}
+      <SubHeading text={ta('legal.keep.heading')} title={ta('tip.legal.keep')} />
+      {#each legal.privacy.kinds as kind (kind)}
+        {@const kept = retentionOf(siteDraft, kind)}
+        {@const shown = keepShown(kind)}
+        <!-- The name labels the dropdown by id, so the «?» beside it (orders) stays a button of its own, outside what a press on the name reaches -->
+        <div class="legal-keep" title={ta(`tip.legal.keep.${kind}`)}><span><span id={`legal-keep-${kind}`}>{ta(`legal.keep.${kind}`)}</span>{#if !kept}<span class="legal-need-dot" title={ta('tip.legal.undecided')} aria-hidden="true"></span>{/if}{#if kind === 'orders'}<button type="button" class="help-chip legal-help" title={ta('hint.how', { title: ta('hint.orders.title') })} aria-label={ta('hint.how', { title: ta('hint.orders.title') })} onclick={(e) => ordersHelp(e.currentTarget)}>?</button>{/if}</span>
+          <Dropdown value={shown?.until ?? ''} labelledby={`legal-keep-${kind}`} options={keepOptions(kind).map(([v, key]) => [v, ta(key)])} onchange={(v) => setKeepChoice(kind, v)} /></div>
+        {#if shown?.until === 'period'}
+          <div class="field-pair">
+            <input type="number" min="1" max={RETENTION_MAX} step="1" value={shown.count ?? ''} aria-label={ta('lbl.keepCount')} title={ta('tip.legal.keepCount')}
+              onchange={(e) => { e.currentTarget.value = String(setKeepPeriod(kind, { count: e.currentTarget.value }) ?? ''); }} />
+            <Dropdown value={shown.unit} title={ta('tip.legal.keepUnit')} options={[['months', ta('opt.keep.months')], ['years', ta('opt.keep.years')]]}
+              onchange={(v) => setKeepPeriod(kind, { unit: v })} />
+          </div>
         {/if}
-      </div>
-    </details>
+      {/each}
+    {/if}
+  </Fold>
+  {#if legal?.terms.shown}
+    <Fold id="terms" surface="legal" title={ta('legal.group.terms')} tip={ta('tip.legal.terms')} value={termsChip}>
+      {@render pageChoice(ta('settings.termsPage'), ta('tip.settings.termsPage'), siteDraft.site.commerce?.termsPage ?? '', setTermsPage, legal.terms.page)}
+      {#if !legal.terms.page}
+        <button type="button" class="ghost action" title={ta('tip.legal.makePage')} onclick={() => makePage('terms')}>{@html ICONS.plus} {ta('ui.makeTermsPage')}</button>
+      {/if}
+    </Fold>
   {/if}
 </div>

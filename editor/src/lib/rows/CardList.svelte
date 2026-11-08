@@ -114,6 +114,17 @@
     max-height: 62%;
   }
 
+  /* The name keeps its words before the detail does: the detail takes the room left and ends in an ellipsis */
+  .card-list-item :global(.nav-head-name) {
+    flex: 0 1 auto;
+  }
+
+  .card-list-item :global(.nav-head-link) {
+    flex: 1 1 0;
+    max-width: none;
+    text-align: right;
+  }
+
   .nav-chev {
     display: inline-flex;
     flex: none;

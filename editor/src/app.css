@@ -1242,6 +1242,11 @@
     text-overflow: ellipsis;
   }
 
+  /* A value drawn as a mark (the Legal panel's chips) keeps its full strength */
+  .menu-group-value.mark {
+    opacity: 1;
+  }
+
   .block-menu-body {
     padding: 0.7rem 0.8rem 0.9rem;
     overflow-y: auto;
@@ -2371,185 +2376,13 @@
     gap: 8px;
   }
 
-  /* The site's calendars in the Site panel: a list of rows, each a head that opens its body; one open at a time.
-     The body slides between its heights with a grid row that goes from 0fr to 1fr (no measuring), clipped by its own wrapper. */
-  .site-cal-add {
-    display: flex;
-    gap: 0.4rem;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 0.55rem;
-    font: inherit;
-    font-weight: 600;
-    color: var(--urd-color-accent, #7c5cff);
-    cursor: pointer;
-    background: transparent;
-    border: 1.5px dashed var(--urd-color-accent, #7c5cff);
-    border-radius: 0.6rem;
-  }
-  .site-cal-list {
+  /* The site icon in the Site panel: its name over the picture, the file chooser and the tools */
+  .site-icon-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    overflow: hidden;
-    border: 1px solid rgb(255 255 255 / 12%);
-    border-radius: 0.6rem;
-    /* The browser's scroll anchoring must not follow the rows while they slide, or the panel jumps with them. */
-    overflow-anchor: none;
+    gap: 5px;
+    font-size: 0.85rem;
   }
-  .site-cal-row {
-    border-top: 1px solid rgb(255 255 255 / 10%);
-    transition: background-color 240ms ease;
-  }
-  .site-cal-row:first-child {
-    border-top: 0;
-  }
-  .site-cal-row.open {
-    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 8%, transparent);
-  }
-  .site-cal-row .site-cal-head {
-    display: flex;
-    gap: 0.6rem;
-    align-items: center;
-    width: 100%;
-    padding: 0.6rem 0.5rem 0.6rem 0.7rem;
-    font: inherit;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
-    background: transparent;
-    border: 0;
-  }
-  .site-cal-row .site-cal-head:hover {
-    background: rgb(255 255 255 / 4%);
-  }
-  .site-cal-dot {
-    flex: none;
-    width: 0.75rem;
-    height: 0.75rem;
-    border: 1px solid rgb(255 255 255 / 25%);
-    border-radius: 999px;
-  }
-  .site-cal-text {
-    display: grid;
-    flex: 1;
-    gap: 0.1rem;
-    min-width: 0;
-  }
-  /* The head of a calendar without a name shows its address: cut with «…», like the address under it, so the row keeps its width. */
-  .site-cal-name {
-    overflow: hidden;
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .site-cal-row.open .site-cal-name {
-    font-weight: 700;
-  }
-  .site-cal-addr {
-    overflow: hidden;
-    font-size: 0.74rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    opacity: 0.65;
-  }
-  .site-cal-chev {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: 1.6rem;
-    height: 1.6rem;
-    line-height: 0;
-    opacity: 0.7;
-    transition: transform 240ms cubic-bezier(0.2, 0, 0, 1);
-  }
-  .site-cal-chev svg {
-    display: block;
-  }
-  .site-cal-row.open .site-cal-chev {
-    transform: rotate(180deg);
-  }
-  .site-cal-body {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 240ms cubic-bezier(0.2, 0, 0, 1);
-  }
-  .site-cal-row.open .site-cal-body {
-    grid-template-rows: 1fr;
-  }
-  .site-cal-clip {
-    min-height: 0;
-    overflow: clip;
-  }
-  .site-cal-fields {
-    display: grid;
-    gap: 0.5rem;
-    padding: 0 0.5rem 0.6rem 0.7rem;
-  }
-  .site-cal-section {
-    margin-top: 0.5rem;
-    padding-top: 0.7rem;
-    border-top: 1px solid rgb(255 255 255 / 12%);
-  }
-  .site-cal-fields > .site-cal-section:first-child {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-  }
-  .site-cal-row .site-cal-field {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.2rem;
-    align-items: stretch;
-    font-size: 0.78rem;
-    opacity: 0.85;
-  }
-  .site-cal-field input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
-    width: 100%;
-    min-width: 0;
-  }
-  .site-cal-colors {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.4rem;
-  }
-  .site-cal-color {
-    display: grid;
-    grid-template-rows: auto 2.4em;
-    gap: 0.25rem;
-    align-items: start;
-    justify-items: center;
-    font-size: 0.68rem;
-    line-height: 1.15;
-    text-align: center;
-    opacity: 0.85;
-  }
-  .site-cal-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgb(255 255 255 / 10%);
-  }
-  .site-cal-remove {
-    padding: 0.4rem 0.7rem;
-    font: inherit;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #ff9a9a;
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid rgb(255 154 154 / 35%);
-    border-radius: 0.5rem;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .site-cal-row,
-    .site-cal-chev,
-    .site-cal-body {
-      transition: none;
-    }
-  }
+
   /* A row that points at one of the site's calendars: its colour and name, read-only */
   .cal-ref-swatch {
     flex: none;
@@ -2680,7 +2513,7 @@
     text-align: center;
   }
 
-  /* A row of a list of links (the footer's columns, its link row, LinkList): the name with its tools on one line, the link field across the line under them. */
+  /* A row of a list of links (LinkList): the name with its tools on one line, the link field across the line under them. */
   .nav-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -2695,11 +2528,11 @@
     grid-column: 1 / -1;
   }
 
-  /* The links under a footer column's name, set in from it. */
-  .nav-sub-row {
-    margin-left: 0.8rem;
-    padding-left: 0.5rem;
-    border-left: 2px solid rgb(255 255 255 / 12%);
+  /* A footer link in its list: its words over its target */
+  .footer-link {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
   }
 
   .nav-line {
@@ -3348,19 +3181,11 @@
     gap: 0.5rem;
   }
 
-  /* A contact point in the Legal panel: its role with the remove button beside the field, then its email, phone and note, set apart by a rule. */
+  /* A contact point in the Legal panel, a row of the list editor: its role, email, phone and note under each other. */
   .panel-body .contact-point {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent);
-  }
-
-  .panel-body .contact-point-role {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
   }
 
   /* A dropdown under a stacked label fills the row. */
@@ -3575,8 +3400,6 @@
   .ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
   .mini-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.6; }
   .chip { border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 999px; padding: 2px 9px; font: 600 10px system-ui, sans-serif; background: transparent; color: inherit; opacity: 0.75; }
-  button.chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ cursor: pointer; }
-  .chip.accent { border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 20%, transparent); opacity: 1; }
   .sample { padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
 
   /* The content-width sample (ADR-0018): one strip per common screen
@@ -3626,9 +3449,7 @@
   .theme-preset .tp-band i { flex: 1; }
   .theme-preset small { display: block; text-align: center; font-size: 9px; padding: 2px 0 3px; opacity: 0.8; }
 
-  /* Colors: Auto/Custom, palette rows (Light+Dark), Standard chip */
-  .autorow { margin: 8px 0 2px; }
-  .autorow .autolbl { font-size: 0.85rem; opacity: 0.75; }
+  /* Colors: the segments and the palette rows (Light and Dark) */
   .seg { display: inline-flex; isolation: isolate; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
   .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
   /* The chosen button's pill is a layer under every button's words (the segment isolates them), so a new choice can slide the pill across from the old one (lib/seg-slide.js) while the words stay put */
@@ -3636,15 +3457,12 @@
   .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ color: var(--urd-color-bg); }
   .seg button.on:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ background: transparent; }
   .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *))::before{ content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--urd-color-accent); }
-  .palhead { margin: 13px 0 6px; }
   .palcells { display: flex; gap: 6px; }
   .palcells .palcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
   .palcells .cp { display: block; width: 100%; }
   .palcells .cp-swatch { width: 100%; height: 32px; }
   .palcells .palcap { text-align: center; font-size: 9px; opacity: 0.6; }
   .palcells .palhex { text-align: center; font: 400 9px ui-monospace, monospace; opacity: 0.7; letter-spacing: -0.02em; }
-  .palauto-row { margin-top: 8px; }
-  .palauto-row .palauto { font-size: 11px; padding: 2px 9px; }
   .palcells.autopal .palcol { opacity: 0.7; }
 
   /* Preview: how each color affects the page (light + dark with dual mode) */
@@ -4455,7 +4273,7 @@
     text-align: center;
   }
 
-  /* The Legal panel (0.7.31): the state on each fold's heading, the marks on the fields it asks for, the rows the other panels keep for its settings, and the amber dot on its tab. */
+  /* The Legal panel (0.7.31): the state on each fold's heading, the marks on the fields it asks for, and the amber dot on its tab. */
   .legal-chip {
     display: inline-flex;
     align-items: center;
@@ -4474,8 +4292,6 @@
     background: rgb(226 184 74 / 16%);
   }
   .legal-chip svg { width: 0.85em; height: 0.85em; }
-  .legal-fold > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { gap: 0.5em; }
-  .legal-fold-name { margin-right: auto; }
   /* A fold a link or a tab's menu opened: its heading lit for a moment (showFold in state/shell.svelte.js) */
   .group > summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     transition: box-shadow 0.6s ease, border-color 0.12s ease;
@@ -4527,39 +4343,7 @@
     align-items: flex-end;
     gap: 0.4rem;
   }
-  .legal-page-row > .field-stack { flex: 1; min-width: 0; }
-  .panel-body .legal-page-row > .row-tool { height: 2.2rem; }
-
-  /* A row another panel keeps for a setting that moved to the Legal panel: its name over what is set, shown and not edited, which opens the panel there */
-  .legal-row {
-    display: grid;
-    gap: 5px;
-  }
-  .legal-value:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    justify-content: flex-start;
-    gap: 0.6em;
-    width: 100%;
-    min-height: 2.2rem;
-    text-align: left;
-    border-style: dashed;
-    background: transparent;
-  }
-  .legal-value-name {
-    margin-right: auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    opacity: 0.75;
-  }
-  .legal-goto-to {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35em;
-    flex-shrink: 0;
-    font-size: 0.86em;
-    color: var(--urd-color-accent, #7c5cff);
-  }
+  .legal-page-row > .row-select { flex: 1; min-width: 0; }
 
   /* The amber dot: something the law asks for is missing (lib/legal-model.js) */
   .legal-dot,

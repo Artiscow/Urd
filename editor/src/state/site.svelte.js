@@ -3,6 +3,8 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { colorLayer } from '$engine/backgrounds/color.js';
+import { WIDTH_DEFAULT, GUTTER_DEFAULT } from '../lib/content-width.js';
+import { folds } from '../lib/folds.svelte.js';
 import { togglePinned } from '../lib/command-palette.js';
 import { gradientLayer } from '$engine/backgrounds/gradient.js';
 import { glowLayer } from '$engine/backgrounds/glow.js';
@@ -622,10 +624,10 @@ function setAnalyticsToken(value) {
  *  (limits, quick picks, reference screens, band calculation) lives as
  *  pure functions in lib/content-width.js, so the sample computes on
  *  the same thing the engine does. */
-let layoutWidth = $derived(siteDraft?.layout?.contentWidth ?? 1440);
+let layoutWidth = $derived(siteDraft?.layout?.contentWidth ?? WIDTH_DEFAULT);
 
 /** The side margin in percent of the window width (vw), not px. */
-let layoutGutter = $derived(siteDraft?.layout?.gutter ?? 6);
+let layoutGutter = $derived(siteDraft?.layout?.gutter ?? GUTTER_DEFAULT);
 
 /** The visitor language (site.lang, ADR-0012): the legacy value 'no' is
  *  shown as Bokmål; a hand-edited value outside the list is preserved as
@@ -642,10 +644,7 @@ function siteLangOptions() {
   return [...(known ? [] : [[cur, cur]]), ...options];
 }
 
-/** The site's calendars (site.calendars): registered once with their settings, and picked by the calendar blocks as references. */
-let siteCalendarsOpen = $state(false);
-
-/** The id of the calendar whose row stands open in the Site panel; one at a time. */
+/** The id of the site's calendar (site.calendars) whose card stands open in the Site panel; one at a time. */
 let openSiteCalendar = $state(null);
 
 /** A calendar's colour as CSS for a swatch: a hex value as it is, a theme token through its variable, none as the accent the engine falls back to. */
@@ -662,12 +661,8 @@ const siteLinks = () => siteDraft?.site?.links ?? [];
 /** The link whose label gets the caret once its row is drawn: the one just added. */
 let focusSiteLink = $state(null);
 
-/** Whether the Site panel's Links group stands open; the buttons that lead there open it. */
-let siteLinksOpen = $state(false);
+/* The Site panel's folds stand open by the row kit's fold store (lib/folds.svelte.js); the handle's siteCalendarsOpen, siteLinksOpen and siteShopOpen read and set them, for the buttons that lead there. */
 
-let siteMediaOpen = $state(false);
-/** The Shop group of the Site panel, opened from the shop's blocks (the shop currency). */
-let siteShopOpen = $state(false);
 /** Set by the shop's «Shop currency» link: the Site panel brings the currency field into view and focuses it, then clears it. */
 let focusShopCurrency = $state(false);
 
@@ -719,7 +714,7 @@ function addSiteCalendar(seed = {}) {
   });
   openSiteCalendar = cal.id;
   focusSiteCalendar = cal.id;
-  siteCalendarsOpen = true;
+  folds.set('site', 'calendars', true);
   return cal.id;
 }
 
@@ -989,10 +984,10 @@ export const siteState = {
   set layoutGutter(v) { layoutGutter = v; },
   siteLangValue,
   siteLangOptions,
-  get siteCalendarsOpen() { return siteCalendarsOpen; },
-  set siteCalendarsOpen(v) { siteCalendarsOpen = v; },
-  get siteShopOpen() { return siteShopOpen; },
-  set siteShopOpen(v) { siteShopOpen = v; },
+  get siteCalendarsOpen() { return folds.isOpen('site', 'calendars'); },
+  set siteCalendarsOpen(v) { folds.set('site', 'calendars', v); },
+  get siteShopOpen() { return folds.isOpen('site', 'shop'); },
+  set siteShopOpen(v) { folds.set('site', 'shop', v); },
   get focusShopCurrency() { return focusShopCurrency; },
   set focusShopCurrency(v) { focusShopCurrency = v; },
   get openSiteCalendar() { return openSiteCalendar; },
@@ -1006,10 +1001,8 @@ export const siteState = {
   setSiteLink,
   get focusSiteLink() { return focusSiteLink; },
   set focusSiteLink(v) { focusSiteLink = v; },
-  get siteLinksOpen() { return siteLinksOpen; },
-  set siteLinksOpen(v) { siteLinksOpen = v; },
-  get siteMediaOpen() { return siteMediaOpen; },
-  set siteMediaOpen(v) { siteMediaOpen = v; },
+  get siteLinksOpen() { return folds.isOpen('site', 'links'); },
+  set siteLinksOpen(v) { folds.set('site', 'links', v); },
   siteCalendars,
   siteCalendarById,
   addSiteCalendar,

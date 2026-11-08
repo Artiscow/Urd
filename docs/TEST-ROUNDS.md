@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.8): the Site, Theme, Legal and Footer panels on the row kit
+
+- [ ] Each of the four tabs' menus lists the panel's folds (Site in four groups), and a row opens the panel at that fold, the others closing
+- [ ] Every fold says its value while closed (Site: the name, the language, «1440 px · 6 vw», the number of calendars and links, «Shown · NOK»; Theme: the suggestion, the modes, the fonts, the corners; Legal: its chips at full strength; Footer: «8 / 8», the design, the alignment, the brand, the columns, «2 / 3», the call to action, the copyright)
+- [ ] A setting changed from its default shows the amber dot on its fold and beside it, and both resets put it back (the title form, the time zone, the map service, the content width and margin, the shop's blocks and currency; the footer's pages, alignment, brand form and logo height, the column alignment, the links and contact switches); a reset of a wrong time zone or currency takes its red line away
+- [ ] Site: the calendars are cards; «+ New calendar» opens a new card with the caret in its name; a card drags by its head and removes with its cross; a calendar block's «Save to the site» still opens the Calendars fold
+- [ ] Site: the buttons elsewhere that lead to the site's links (the share block, the footer, the nav) open the Links fold; the shop's «Shop currency» link brings the currency field into view
+- [ ] Updates: the Media fold stands at the panel's foot and counts the files at the root of media/ as it opens (on the published admin)
+- [ ] Theme: light and dark is a switch; «Dark colours» Auto or Custom and «Shown first» Light or Dark as segments; the automatic text on the accent as a switch
+- [ ] Legal: an organisation number's check shows red when it is wrong and amber when it only may be; the contact points move by drag and Alt and the arrows, and their crosses read «Remove the contact point»
+- [ ] Footer: «Show on pages» turns the footer on and off and lists the pages; the columns are cards that open one at a time, each with its own links; an open column stays open as it is dragged; «Links and contact» and «Bottom row» hold what Social, Contact details, Link row and Baseline held
+- [ ] A new footer (Show footer on a site without one) shows its alignment as Centred with no amber dot; with columns it reads Left
+
 ### Test batch (0.7.30.7): the canvas's popups in the admin's theme
 
 - [ ] In each admin theme (Purple, Well, Gold, Grey, Aurora, Dusk, Ember): the text toolbar, the bar over several selected blocks, the colour picker from the text toolbar and the toolbar's dropdowns (paragraph style, font) take the theme's surface and text colour, never the old dark grey

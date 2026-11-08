@@ -580,7 +580,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
     Done when: each of these is seen on a block and on a section in the browser, and no canvas button that opens on hover carries a tooltip over what it opens.
   - [x] 0.7.30.7 DELIVERED 0.7.30.7 (8 November 2026; the hidden-blocks list's and the right-click menu's lines too) The text toolbar, the multi-selection bar, the colour picker and the canvas dropdowns in the admin's theme.
     Done when: in each of the seven admin themes the four take the theme's colours.
-  - [ ] 0.7.30.8 The Site, Theme, Legal and Footer panels to the kit: every loose control into a fold the tab's menu reaches (`lib/panel-folds.js`), every fold with its summary and reset, and fewer folds in Footer.
+  - [x] 0.7.30.8 DELIVERED 0.7.30.8 (8 November 2026; the media tidy moved to the Updates panel) The Site, Theme, Legal and Footer panels to the kit: every loose control into a fold the tab's menu reaches (`lib/panel-folds.js`), every fold with its summary and reset, and fewer folds in Footer.
     Done when: every control in the four panels stands in a fold its tab's menu opens, and the test's list no longer names them.
   - [ ] 0.7.30.9 The Nav panel to the kit, split into parts of its own while it is moved.
     Done when: no part of the Nav panel is over about 400 lines, and the test's list no longer names it.
