@@ -11791,8 +11791,8 @@ body.urd-mobile .urd-cal-note {
   gap: 0;
   max-width: min(760px, calc(100vw - 16px));
   padding: 4px 6px;
-  background: #151a23;
-  border: 1px solid rgb(255 255 255 / 18%);
+  background: var(--urd-admin-surface, #151a23);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
 }
@@ -11806,7 +11806,7 @@ body.urd-mobile .urd-cal-note {
 }
 
 .urd-tt-row + .urd-tt-row {
-  border-top: 1px solid rgb(255 255 255 / 10%);
+  border-top: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 10%, transparent);
   padding-top: 4px;
   margin-top: 4px;
 }
@@ -11819,7 +11819,7 @@ body.urd-mobile .urd-cal-note {
 }
 
 .urd-tt-group + .urd-tt-group {
-  border-left: 1px solid rgb(255 255 255 / 18%);
+  border-left: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent);
   padding-left: 6px;
   margin-left: 2px;
 }
@@ -11849,15 +11849,15 @@ body.urd-mobile .urd-cal-note {
 }
 
 /* Active format button: the caret sits inside that format (bold, alignment, lists ...).
-   A neutral highlight (independent of the site theme), clear against the dark bar. */
+   The admin's accent, lightened a quarter toward its text, rings it at 3:1 or more against the bar and the fill in every admin theme. */
 .urd-text-toolbar button.active {
-  background: rgb(120 160 255 / 34%);
-  color: #fff;
-  box-shadow: inset 0 0 0 1px rgb(120 160 255 / 55%);
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 18%, transparent);
+  color: var(--urd-admin-text, #e8eaf0);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 75%, var(--urd-admin-text, #e8eaf0));
 }
 
 .urd-text-toolbar button.active:hover {
-  background: rgb(120 160 255 / 44%);
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 26%, transparent);
 }
 
 /* The line-height buttons in the spacing row. */
@@ -11874,7 +11874,7 @@ body.urd-mobile .urd-cal-note {
   align-items: center;
   padding-top: 4px;
   margin-top: 2px;
-  border-top: 1px solid rgb(255 255 255 / 14%);
+  border-top: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 14%, transparent);
 }
 
 .urd-tt-colorrow.visible {
@@ -11889,7 +11889,7 @@ body.urd-mobile .urd-cal-note {
   align-items: center;
   padding-top: 4px;
   margin-top: 2px;
-  border-top: 1px solid rgb(255 255 255 / 14%);
+  border-top: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 14%, transparent);
 }
 
 .urd-tt-spacerow.visible {
@@ -11900,16 +11900,16 @@ body.urd-mobile .urd-cal-note {
   font: 600 10px/1.2 system-ui, sans-serif;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgb(232 234 240 / 60%);
+  color: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 60%, transparent);
 }
 
 /* The number fields (size, letter spacing); an empty field means inherit from the theme */
 .urd-tt-num {
   width: 4em;
   font: 12px/1.3 system-ui, sans-serif;
-  color: #e8eaf0;
-  background: rgb(255 255 255 / 6%);
-  border: 1px solid rgb(255 255 255 / 20%);
+  color: var(--urd-admin-text, #e8eaf0);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 20%, transparent);
   border-radius: 5px;
   padding: 3px 4px;
 }
@@ -11923,7 +11923,7 @@ body.urd-mobile .urd-cal-note {
   overflow-y: auto;
   padding-top: 4px;
   margin-top: 2px;
-  border-top: 1px solid rgb(255 255 255 / 14%);
+  border-top: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 14%, transparent);
 }
 
 .urd-tt-glyphrow.visible {
@@ -11934,7 +11934,7 @@ body.urd-mobile .urd-cal-note {
   font: 600 10px/1.2 system-ui, sans-serif;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgb(232 234 240 / 60%);
+  color: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 60%, transparent);
   padding: 6px 2px 3px;
 }
 
@@ -11968,7 +11968,7 @@ body.urd-mobile .urd-cal-note {
   min-width: 26px;
   height: 26px;
   font: 600 12px/1 system-ui, sans-serif;
-  color: #e8eaf0;
+  color: var(--urd-admin-text, #e8eaf0);
   background: transparent;
   border: 0;
   border-radius: 5px;
@@ -11977,24 +11977,14 @@ body.urd-mobile .urd-cal-note {
 }
 
 .urd-text-toolbar button:hover {
-  background: rgb(255 255 255 / 12%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 12%, transparent);
 }
 
 .urd-tt-sep {
   width: 1px;
   height: 18px;
   margin: 0 3px;
-  background: rgb(255 255 255 / 18%);
-}
-
-.urd-tt-level {
-  font: 12px/1.2 system-ui, sans-serif;
-  color: #e8eaf0;
-  background: transparent;
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 5px;
-  padding: 4px 6px;
-  color-scheme: dark;
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent);
 }
 
 .urd-tt-color {
@@ -12002,7 +11992,7 @@ body.urd-mobile .urd-cal-note {
   height: 22px;
   padding: 1px;
   background: transparent;
-  border: 1px solid rgb(255 255 255 / 30%);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 30%, transparent);
   border-radius: 50%;
   cursor: pointer;
 }
@@ -12013,7 +12003,7 @@ body.urd-mobile .urd-cal-note {
   min-width: 18px;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid rgb(255 255 255 / 30%);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 30%, transparent);
 }
 
 /* Alignment icons: three bars with different alignment */
@@ -12098,15 +12088,15 @@ body.urd-mobile .urd-cal-note {
 
 .urd-text-toolbar .urd-tt-hl-free {
   background: transparent;
-  color: #e8eaf0;
-  border: 1px dashed rgb(255 255 255 / 45%);
+  color: var(--urd-admin-text, #e8eaf0);
+  border: 1px dashed color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 45%, transparent);
 }
 
 /* "Remove highlight": an A chip with a red diagonal stroke across it */
 .urd-text-toolbar .urd-tt-hl-none {
   background: linear-gradient(to top right, transparent 44%, #e05252 44% 56%, transparent 56%);
-  color: #e8eaf0;
-  border: 1px solid rgb(255 255 255 / 30%);
+  color: var(--urd-admin-text, #e8eaf0);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 30%, transparent);
 }
 
 body.urd-chrome-off .urd-text-toolbar {
@@ -12127,9 +12117,9 @@ body.urd-chrome-off .urd-text-toolbar {
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   padding: 10px;
-  background: #151a23;
-  color: #e8eaf0;
-  border: 1px solid rgb(255 255 255 / 18%);
+  background: var(--urd-admin-surface, #151a23);
+  color: var(--urd-admin-text, #e8eaf0);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent);
   border-radius: 10px;
   box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
   font: 12px/1.4 system-ui, sans-serif;
@@ -12176,7 +12166,7 @@ body.urd-chrome-off .urd-text-toolbar {
 }
 
 .urd-cp-close:hover {
-  background: rgb(255 255 255 / 12%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 12%, transparent);
 }
 
 .urd-cp-area {
@@ -12261,8 +12251,8 @@ body.urd-chrome-off .urd-text-toolbar {
 .urd-cp-fields input {
   font: 11px/1.3 ui-monospace, monospace;
   color: inherit;
-  background: rgb(255 255 255 / 6%);
-  border: 1px solid rgb(255 255 255 / 20%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 20%, transparent);
   border-radius: 5px;
   padding: 4px 5px;
   min-width: 0;
@@ -12280,8 +12270,8 @@ body.urd-chrome-off .urd-text-toolbar {
 .urd-cp-eye {
   flex: 0 0 auto;
   color: inherit;
-  background: rgb(255 255 255 / 8%);
-  border: 1px solid rgb(255 255 255 / 20%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 20%, transparent);
   border-radius: 5px;
   padding: 0 7px;
   cursor: pointer;
@@ -12305,7 +12295,7 @@ body.urd-chrome-off .urd-text-toolbar {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px solid rgb(255 255 255 / 35%);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 35%, transparent);
   cursor: pointer;
   padding: 0;
 }
@@ -12324,8 +12314,8 @@ body.urd-chrome-off .urd-text-toolbar {
   justify-content: center;
   padding: 0;
   color: inherit;
-  background: rgb(255 255 255 / 8%);
-  border: 1px solid rgb(255 255 255 / 20%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 20%, transparent);
   border-radius: 5px;
   font-size: 12px;
   line-height: 1;
@@ -12333,7 +12323,7 @@ body.urd-chrome-off .urd-text-toolbar {
 }
 
 .urd-cp-add:hover {
-  background: rgb(255 255 255 / 15%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 15%, transparent);
 }
 
 .urd-cp-saved {
@@ -16050,8 +16040,8 @@ body.urd-marqueeing {
   align-items: center;
   gap: 2px;
   padding: 4px 6px;
-  background: #151a23;
-  border: 1px solid rgb(255 255 255 / 18%);
+  background: var(--urd-admin-surface, #151a23);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
 }
@@ -16066,7 +16056,7 @@ body.urd-marqueeing {
   justify-content: center;
   min-width: 26px;
   height: 26px;
-  color: #e8eaf0;
+  color: var(--urd-admin-text, #e8eaf0);
   background: transparent;
   border: 0;
   border-radius: 5px;
@@ -16075,7 +16065,7 @@ body.urd-marqueeing {
 }
 
 .urd-multi-toolbar button:hover {
-  background: rgb(255 255 255 / 12%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 12%, transparent);
 }
 
 /* The delete button in the selection bar: a destructive tone on hover. */
@@ -16096,7 +16086,7 @@ body.urd-marqueeing {
 
 .urd-multi-count {
   font: 600 11px/1 system-ui, sans-serif;
-  color: rgb(232 234 240 / 70%);
+  color: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 70%, transparent);
   padding: 0 6px 0 2px;
   white-space: nowrap;
 }
@@ -18771,7 +18761,7 @@ body.urd-mobile .urd-section-resize-top {
   min-width: 170px;
   padding: 6px;
   border-radius: 10px;
-  border: 1px solid rgb(255 255 255 / 12%);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 12%, transparent);
   background: var(--urd-admin-surface, #151a23);
   color: var(--urd-admin-text, #e6e8ea);
   font: 500 12px system-ui, sans-serif;
@@ -18792,13 +18782,13 @@ body.urd-mobile .urd-section-resize-top {
   border: 0;
   border-radius: 6px;
   padding: 4px;
-  background: rgb(255 255 255 / 8%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 8%, transparent);
   color: inherit;
   cursor: pointer;
 }
 
 .urd-preview .urd-hidden-list button:hover {
-  background: rgb(255 255 255 / 16%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 16%, transparent);
 }
 
 /* The editing layer - applies ONLY in preview mode (body.urd-preview,
@@ -18913,7 +18903,7 @@ body.urd-mobile .urd-section-resize-top {
   box-sizing: border-box;
   background: var(--urd-admin-surface, #1b2030);
   color: var(--urd-admin-text, #e9ebf2);
-  border: 1px solid rgb(255 255 255 / 20%);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 20%, transparent);
   border-radius: 10px;
   box-shadow: 0 14px 34px rgb(0 0 0 / 55%);
   font: 500 13px/1.3 system-ui, sans-serif;
@@ -18980,7 +18970,7 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-ctx-sep {
   height: 1px;
   margin: 4px 6px;
-  background: rgb(255 255 255 / 12%);
+  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 12%, transparent);
 }
 
 .urd-preview .urd-edit-toolbar button {

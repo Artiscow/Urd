@@ -2,7 +2,8 @@
  * Theme-driven dropdown for the canvas (ADR-0009): native select popups are
  * drawn by the browser/OS and turn unreadable in dark toolbars and panels, so
  * ALL editing UI in the preview (and plugins) uses this instead.
- * Self-contained styling (its own style tag), like hint.js.
+ * Self-contained styling (its own style tag), like hint.js: the button takes the colour of what it stands in, and the menu takes the admin's theme (the --urd-admin-* variables the editor sends the preview), with a dark surface of its own outside the admin.
+ * The chosen item is ringed in the accent lightened a quarter toward the text, as the text toolbar's active button is, at 3:1 or more in every admin theme.
  *
  *   const dd = createDropdown({ value, options: [['p', 'Paragraph'], …], onchange });
  *   parent.appendChild(dd.el);  dd.set('h2');
@@ -33,10 +34,10 @@ const DD_CSS = `
 .urd-dd-btn {
   display: inline-flex; align-items: center; gap: 6px;
   font: 12px/1.2 system-ui, sans-serif; color: inherit;
-  background: rgb(255 255 255 / 6%); border: 1px solid rgb(255 255 255 / 20%);
+  background: color-mix(in srgb, currentColor 6%, transparent); border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
   border-radius: 5px; padding: 4px 8px; cursor: pointer; white-space: nowrap;
 }
-.urd-dd-btn:hover { background: rgb(255 255 255 / 12%); }
+.urd-dd-btn:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
 .urd-dd-caret { display: inline-flex; font-size: 9px; opacity: 0.65; }
 /* The menu is chrome: zoom keeps it at the admin's size at any preview zoom (--urd-chrome-scale).
    Since zoom scales its box, the anchoring and the flip below measure the size it is drawn at. */
@@ -44,8 +45,8 @@ const DD_CSS = `
   position: fixed; z-index: 100004; min-width: 120px; max-height: 300px; overflow-y: auto;
   zoom: var(--urd-chrome-scale, 1);
   display: grid; gap: 2px; padding: 5px;
-  background: #151a23; color: #e8eaf0;
-  border: 1px solid rgb(255 255 255 / 18%); border-radius: 8px;
+  background: var(--urd-admin-surface, #151a23); color: var(--urd-admin-text, #e8eaf0);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent); border-radius: 8px;
   box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
   font: 12px/1.3 system-ui, sans-serif;
 }
@@ -53,8 +54,11 @@ const DD_CSS = `
   font: inherit; color: inherit; text-align: left; background: transparent;
   border: 0; border-radius: 5px; padding: 5px 8px; cursor: pointer; white-space: nowrap;
 }
-.urd-dd-menu button:hover { background: rgb(255 255 255 / 10%); }
-.urd-dd-menu button.selected { background: color-mix(in srgb, #7c5cff 30%, transparent); }
+.urd-dd-menu button:hover { background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 10%, transparent); }
+.urd-dd-menu button.selected {
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 75%, var(--urd-admin-text, #e8eaf0));
+}
 .urd-dd-sample { margin-left: 0.5em; opacity: 0.8; }
 body.urd-chrome-off .urd-dd, body.urd-chrome-off .urd-dd-menu { display: none !important; }
 @supports (anchor-name: --a) {

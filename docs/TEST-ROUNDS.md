@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.30.7): the canvas's popups in the admin's theme
+
+- [ ] In each admin theme (Purple, Well, Gold, Grey, Aurora, Dusk, Ember): the text toolbar, the bar over several selected blocks, the colour picker from the text toolbar and the toolbar's dropdowns (paragraph style, font) take the theme's surface and text colour, never the old dark grey
+- [ ] The text toolbar's active buttons (bold, the alignment, a list) are ringed in the theme's accent and easy to see, in Grey, Aurora and Dusk too; the chosen item in a dropdown likewise
+- [ ] The colour picker's spectrum, hue and transparency sliders, and the red delete on a swatch, look as before
+- [ ] The right-click menu and the list of hidden blocks: their dividers and buttons follow the theme
+- [ ] Switching the admin theme while the text toolbar is open recolours it at once
+
 ### Test batch (0.7.30.6): the canvas bars, the section's settings, one drag for every list, and a menu four levels deep
 
 - [ ] «Settings» is the one name on a block's gear, in the right-click menu and on the panel; every phone setting says «phone»

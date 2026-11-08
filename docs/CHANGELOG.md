@@ -8,6 +8,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.30.7 - The canvas's text toolbar, multi-selection bar, colour picker and dropdowns in the admin's theme - 8 November 2026
+
+- The text toolbar, the multi-selection bar, the colour picker and the canvas dropdowns were drawn in a dark grey and a blue of their own in every admin theme. Their surface, text, lines and marks come from the admin theme the editor sends the preview (`--urd-admin-*`), with a fixed fallback outside the admin; the spectrum, its handles and the red of a deletion keep their own colours.
+- The text toolbar's active button and the dropdown's chosen item are ringed in the theme's accent lightened a quarter toward its text, at 3:1 or more against the bar in every admin theme.
+- The hidden-blocks list and the right-click menu drew white lines on the admin's surface. Their lines come from the admin's text colour too.
+- tests/canvas-chrome-theme.test.mjs fails on a colour written out in the canvas chrome's rules, in any notation, outside a variable's fallback, a shadow, a gradient or a part that draws colour or danger.
+
+The independent review before the commit found these, all fixed:
+
+1. The active button's fill and ring at 34 % and 55 % of the accent were nearly invisible in the Grey (default), Aurora and Dusk themes, the ring under 2:1 against the bar, and the dropdown's chosen item likewise. Both have a ring of the accent lightened toward the text, measured at 3:1 or more in all seven themes.
+2. The active button's comment still called it a neutral highlight, and dropdown.js named fallbacks it does not have. The comments say what the code does.
+3. The test looked only for the colours the four drew before, so a new `#fff` or `rgba(255,255,255,.1)` passed. It finds any colour written out, and covers the hidden-blocks list and the right-click menu as well.
+4. The test file's header broke a sentence across lines and told what the chrome drew before. It is rewritten.
+5. `.urd-tt-level` styled a class no code draws. The rule is removed.
+
 ### 0.7.30.6 - The canvas bars and the section's settings, one drag for every list, the layers as cards, and a menu four levels deep - 8 November 2026
 
 - Settings had four names across the gear, the right-click menu and the panel, and «mobile» and «phone» named the same thing. One name, «Settings», and «phone» everywhere.
