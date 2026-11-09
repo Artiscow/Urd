@@ -348,8 +348,8 @@
 </script>
 
 <div class="panel-body">
-  <!-- Whether the site has a footer, and the pages it is kept off (the page's settings share it) -->
-  <Fold id="pages" surface={F} title={ta('group.showOnPages')} value={pagesValue()} group={pagesGroup()}>
+  <!-- Whether the site has a footer, and the pages it is kept off (the page's settings share it): the switch alone until the footer is on -->
+  <Fold id="pages" surface={F} title={ta('group.showOnPages')} value={pagesValue()} group={pagesGroup()} rows={siteDraft.footer?.show ? undefined : 1}>
     <SwitchRow label={ta('lbl.showFooter')} title={ta('tip.footer.show')} checked={Boolean(siteDraft.footer?.show)}
       onchange={(on) => footerMutate('footer', (f) => { f.show = on; })} />
     {#if siteDraft.footer?.show}
@@ -482,7 +482,8 @@
     </PanelLinkRow>
   </Fold>
 
-  <Fold id="cta" surface={F} title={ta('group.cta')} value={siteDraft.footer?.cta ? ta((siteDraft.footer.cta.kind ?? 'button') === 'button' ? 'opt.cta.button' : 'opt.cta.newsletter') : ta('common.off')}>
+  <!-- The call to action: its switch alone until it is on, and a group of what it then holds -->
+  <Fold id="cta" surface={F} title={ta('group.cta')} value={siteDraft.footer?.cta ? ta((siteDraft.footer.cta.kind ?? 'button') === 'button' ? 'opt.cta.button' : 'opt.cta.newsletter') : ta('common.off')} rows={siteDraft.footer?.cta ? undefined : 1}>
     <SwitchRow label={ta('lbl.showCta')} title={ta('tip.footer.cta')} checked={Boolean(siteDraft.footer?.cta)} onchange={(on) => enableFooterCta(on)} />
     {#if siteDraft.footer?.cta}
       {@const cta = siteDraft.footer.cta}

@@ -43,7 +43,7 @@
 
 {#if area === 'content'}
   {#snippet shareLinks()}
-    <!-- The site's links from the Site panel first, in the row of the switch that shows them, whose way back shows them all again; then the block's own after them -->
+    <!-- The site's links from the Site panel first, in the row of the switch that shows them, each one's own switch showing it again; then the block's own after them -->
     <Setting own={!useSite || siteLinks().some((link) => (selectedBlock.props.hidden ?? []).includes(link.id))} reset={() => setBlockProps('useSite', { useSite: true, hidden: [] })}>
       <SwitchRow label={ta('lbl.useSiteLinks')} title={ta('tip.share.useSite')} checked={useSite} onchange={(on) => setBlockProp('useSite', on)} />
       {#if useSite}

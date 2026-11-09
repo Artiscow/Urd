@@ -1,8 +1,9 @@
 <script>
   /* Placement (0.7.26.2): how the block sits on the page and behaves there, and its name for links.
-     The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target and the frame are groups that show their value while closed. The block's motion stands in Style (MotionFold.svelte).
-     The height, the size, the fit, the phone switch, the pinning and the decor are setting rows that tell whether the block holds a value of its own, with the way back to the standard (lib/rows/Setting.svelte), and what belongs to each stands in its row; the frame's numbers and the name for links are plain rows, since every block has a place of its own and a way back on the name would cut the links to it. */
+     The height, the size and the narrow-screen fit stand open, and the frame is a group that shows its value while closed; hiding on phones, the pinning, the name for links and the decor are capabilities (ADR-0031), each a card while the block uses it or was given it this session, after the frame. The block's motion stands in Style (MotionFold.svelte).
+     The height, the size, the fit and the pinning's settings are setting rows that tell whether the block holds a value of its own, with the way back to the standard (lib/rows/Setting.svelte), and what belongs to each stands in its row; the pinning's switch is its own way back, and hiding on phones and the decor are switches on their cards; the frame's numbers and the name for links are plain rows, since every block has a place of its own and the name's card takes it away only while no link reaches the block by it. */
   import { getContext } from 'svelte';
+  import Capability from '../lib/rows/Capability.svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import Setting from '../lib/rows/Setting.svelte';
@@ -10,8 +11,6 @@
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
   import Choice from '../lib/Choice.svelte';
   import IconButton from '../lib/rows/IconButton.svelte';
-  import ActionRow from '../lib/rows/ActionRow.svelte';
-  import { ICONS } from '../lib/icons.js';
   import FitMin from './FitMin.svelte';
   import SizeBounds from './SizeBounds.svelte';
   import { ta } from '$engine/i18n.js';
@@ -23,8 +22,17 @@
   const selectedBlock = $derived(ed.selectedBlock);
   const viewMode = $derived(ed.viewMode);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, designWidth, handleMobileReset } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
+
+  /** Sets the pinning's own settings; a setting given as undefined goes back to the standard and is removed. */
+  function setSticky(patch) {
+    mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+      const next = { ...b.sticky, ...patch };
+      for (const key of Object.keys(next)) if (next[key] === undefined) delete next[key];
+      b.sticky = next;
+    });
+  }
 
   /** The "let go" options for sticky: only the sections AFTER the block's
    *  own (pinning backwards makes no sense; settings are shown only when
@@ -62,47 +70,47 @@
   </Setting>
 {/snippet}
 {#snippet menuSticky()}
-  {#if viewMode === 'desktop'}
-    <!-- The pinning and what belongs to it, one setting row -->
+  <Capability id="sticky">
+    <!-- The pinning and what belongs to it, one setting row: the switch is its own way back, and each of its settings is a row of its own with its way back to the standard -->
     <Setting own={Boolean(selectedBlock.sticky)} reset={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.sticky = null; })}>
       <SwitchRow label={ta('lbl.sticky')} title={ta('tip.sticky')} checked={Boolean(selectedBlock.sticky)}
         onchange={(on) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
           b.sticky = on ? { offset: 16, until: null } : null;
         })} />
       {#if selectedBlock.sticky}
-        <label title={ta('tip.stickyMode')}>{ta('lbl.stickyMode')}
-          <Dropdown value={selectedBlock.sticky.mode ?? 'scroll'}
-            options={[['scroll', ta('opt.sticky.modeScroll')], ['screen', ta('opt.sticky.modeScreen')]]}
-            onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-              b.sticky = { ...b.sticky, mode: v };
-            })} /></label>
+        <Setting own={(selectedBlock.sticky.mode ?? 'scroll') !== 'scroll'} reset={() => setSticky({ mode: undefined })}>
+          <label title={ta('tip.stickyMode')}>{ta('lbl.stickyMode')}
+            <Dropdown value={selectedBlock.sticky.mode ?? 'scroll'}
+              options={[['scroll', ta('opt.sticky.modeScroll')], ['screen', ta('opt.sticky.modeScreen')]]}
+              onchange={(v) => setSticky({ mode: v })} /></label>
+        </Setting>
         <!-- The offset applies only to the edges the block is docked to, so with both axes centred it has no effect and is hidden. -->
         {#if selectedBlock.sticky.mode !== 'screen' || (selectedBlock.sticky.dock ?? 'bottom-right') !== 'middle-center'}
-          <label title={selectedBlock.sticky.mode === 'screen' ? ta('tip.stickyEdge') : ta('tip.stickyOffset')}>
-            {selectedBlock.sticky.mode === 'screen' ? ta('lbl.stickyEdge') : ta('lbl.stickyOffset')}
-            <input type="number" min="0" max="400" value={selectedBlock.sticky.offset ?? 16}
-              onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-                b.sticky = { ...b.sticky, offset: Math.max(0, Number(e.target.value) || 0) };
-              })} /></label>
+          <Setting own={(selectedBlock.sticky.offset ?? 16) !== 16} reset={() => setSticky({ offset: 16 })}>
+            <label title={selectedBlock.sticky.mode === 'screen' ? ta('tip.stickyEdge') : ta('tip.stickyOffset')}>
+              {selectedBlock.sticky.mode === 'screen' ? ta('lbl.stickyEdge') : ta('lbl.stickyOffset')}
+              <input type="number" min="0" max="400" value={selectedBlock.sticky.offset ?? 16}
+                onchange={(e) => setSticky({ offset: Math.max(0, Number(e.target.value) || 0) })} /></label>
+          </Setting>
         {/if}
         {#if selectedBlock.sticky.mode === 'screen'}
-          <label title={ta('tip.stickyDock')}>{ta('lbl.stickyDock')}
-            <Dropdown value={selectedBlock.sticky.dock ?? 'bottom-right'}
-              options={DOCK_OPTIONS.map(([v, key]) => [v, ta(key)])}
-              onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-                b.sticky = { ...b.sticky, dock: v };
-              })} /></label>
+          <Setting own={(selectedBlock.sticky.dock ?? 'bottom-right') !== 'bottom-right'} reset={() => setSticky({ dock: undefined })}>
+            <label title={ta('tip.stickyDock')}>{ta('lbl.stickyDock')}
+              <Dropdown value={selectedBlock.sticky.dock ?? 'bottom-right'}
+                options={DOCK_OPTIONS.map(([v, key]) => [v, ta(key)])}
+                onchange={(v) => setSticky({ dock: v })} /></label>
+          </Setting>
         {:else}
-          <label title={ta('tip.stickyUntil')}>{ta('lbl.stickyUntil')}
-            <Dropdown value={selectedBlock.sticky.until ?? ''}
-              options={stickyUntilOptions()}
-              onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-                b.sticky = { ...b.sticky, until: v || null };
-              })} /></label>
+          <Setting own={selectedBlock.sticky.until != null} reset={() => setSticky({ until: null })}>
+            <label title={ta('tip.stickyUntil')}>{ta('lbl.stickyUntil')}
+              <Dropdown value={selectedBlock.sticky.until ?? ''}
+                options={stickyUntilOptions()}
+                onchange={(v) => setSticky({ until: v || null })} /></label>
+          </Setting>
         {/if}
       {/if}
     </Setting>
-  {/if}
+  </Capability>
 {/snippet}
 {#snippet menuFrame()}
       {#if viewMode === 'desktop'}
@@ -135,12 +143,9 @@
           {/if}
         </div>
       {/if}
-      <Setting own={Boolean(selectedBlock.decor) !== ed.blockStarts(selectedBlock.type, 'decor')} reset={() => setBlockDecor(ed.blockStarts(selectedBlock.type, 'decor'))}>
-        <SwitchRow label={ta('lbl.decor')} title={ta('tip.decor')} checked={Boolean(selectedBlock.decor)} onchange={(on) => setBlockDecor(on)} />
-      </Setting>
 {/snippet}
 
-<!-- The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target and the frame are groups -->
+<!-- The height, the size and the narrow-screen fit stand open; the frame is a group, and the capabilities' cards follow it -->
 {#if FOLLOWS_CONTENT.has(selectedBlock.type)}
   <!-- The height (ADR-0025 decision 3): the box is the content's, or the block's own with the content placed in it, which stands in the height's row -->
   <Setting own={selectedBlock.height?.mode === 'own'} reset={() => setBlockHeightMode('content')}>
@@ -162,10 +167,6 @@
   {@render menuSize()}
 {/if}
 {@render menuFit()}
-<Setting pin="phone" own={Boolean(selectedBlock.hideMobile) !== ed.blockStarts(selectedBlock.type, 'hideMobile')} reset={() => setBlockHideMobile(ed.blockStarts(selectedBlock.type, 'hideMobile'))}>
-  <SwitchRow label={ta('lbl.hideMobile')} title={ta('tip.hideMobile')} checked={Boolean(selectedBlock.hideMobile)} onchange={(on) => setBlockHideMobile(on)} />
-</Setting>
-{@render menuSticky()}
 {#snippet menuTarget()}
   <!-- The block's name for links, typed or suggested from its own words -->
   {#key selectedBlock.blockId}
@@ -176,16 +177,11 @@
     <span class="field-note" title={ta('menu.anchorHiddenMobile')}><i class="note-dot"></i>{ta('lbl.hideMobile')}</span>
   {/if}
 {/snippet}
-<!-- The block's name for links is one setting, so it stands alone -->
-<Fold id="link-target" rows={1} title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</Fold>
-<Fold id="frame" title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</Fold>
-<!-- The block's actions, as on its bar and in its right-click menu: the layer order only on the desktop, where the blocks overlap -->
-<ActionRow label={ta('canvas.ctx.label')} actions={[
-  { id: 'duplicate', icon: ICONS.copy, label: ta('canvas.ctx.duplicate'), run: () => ed.bridge?.sendDuplicate() },
-  ...(viewMode === 'desktop' ? [
-    { id: 'front', icon: ICONS.up, label: ta('canvas.ctx.toFront'), run: () => ed.setBlockLayer(1) },
-    { id: 'back', icon: ICONS.down, label: ta('canvas.ctx.toBack'), run: () => ed.setBlockLayer(-1) },
-  ] : []),
-  { id: 'delete', icon: ICONS.cross, label: ta('canvas.ctx.delete'), arm: ta('canvas.ctx.pressAgain'),
-    run: () => ed.handleDelete({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId }) },
-]} />
+<!-- The frame's numbers on the desktop, a group of its own; on a phone the one line of the phone's placement -->
+<Fold id="frame" rows={viewMode === 'desktop' ? undefined : 1} title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</Fold>
+<!-- The capabilities of Placement, after its core rows -->
+<!-- Hiding on phones and showing at once are one switch each, a card of one line with its chip (menu/capabilities.js `single`) -->
+<Capability id="phone" />
+{@render menuSticky()}
+<Capability id="link-target">{@render menuTarget()}</Capability>
+<Capability id="decor" />

@@ -290,12 +290,13 @@ function holderWords(holder) {
  * The links that point at a spot from its own page, the menu and the footer: by the spot's id, or by its name for a link typed as an address.
  * A link on the page that names no page points at a spot there; a link in the menu or the footer counts when it names the page, by its id or its address.
  * Each block with such a link is listed once, with its type and words; each menu or footer item once, with its words.
+ * With `byName` only the links that name the spot by its name count: those a cleared name would cut, since a link by the spot's id lands without it.
  * @param {{id: string, name?: string}} spot
- * @param {{page?: {sections?: Array<object>}, pageId?: string, path?: string, site?: {nav?: object, footer?: object}|null}} context The page, its id and path, and the site with its menu and footer
+ * @param {{page?: {sections?: Array<object>}, pageId?: string, path?: string, site?: {nav?: object, footer?: object}|null, byName?: boolean}} context The page, its id and path, the site with its menu and footer, and whether only the links by name count
  * @returns {Array<{area: 'page'|'menu'|'footer', words: string, sectionId?: string, blockId?: string, type?: string}>}
  */
-export function spotLinks(spot, { page = null, pageId = '', path = '/', site = null } = {}) {
-  const named = (target) => target === spot.id || (Boolean(spot.name) && target === spot.name);
+export function spotLinks(spot, { page = null, pageId = '', path = '/', site = null, byName = false } = {}) {
+  const named = (target) => (!byName && target === spot.id) || (Boolean(spot.name) && target === spot.name);
   const lands = (ref, onPage) => {
     if (!named(ref.target)) return false;
     if (ref.page) return ref.page === pageId;

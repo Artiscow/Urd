@@ -1,19 +1,16 @@
 <script>
-  /* The text block in the element menu (0.7.26.2): its Style area, the alignment and the whole text's font and size open at its top and the text box as a group, and the settings it writes through the editor handle; the words are written on the page.
+  /* The text block in the element menu (0.7.26.2): its Style area, the alignment and the whole text's font and size open at its top and the text box as a capability's card (ADR-0031), and the settings it writes through the editor handle; the words are written on the page.
      A text block is plain text; the document designs are the terms of sale's (Terms.svelte), which draws the whole text's font and size as this one does (WholeText.svelte). */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import WholeText from '../WholeText.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
-  import Fold from '../../lib/rows/Fold.svelte';
-  import { pinnedNow } from '../pinned.js';
+  import Capability from '../../lib/rows/Capability.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import BoxStyle from '../BoxStyle.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
-  /** A fold counts the settings it holds now: one whose every setting stands in Pinned is left out, and one of a single setting is that setting alone. */
-  const pinned = pinnedNow();
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
@@ -41,7 +38,6 @@
   {/snippet}
   <!-- The alignment, the font and the size stand open first in Style, not in a group -->
   {@render textType()}
-  <!-- The box's own style goes with the text box's switch into Pinned; off, the switch stands alone -->
-  <Fold id="text-box" title={ta('group.textBox')} value={selectedBlock.props.box ? ta('common.on') : ta('common.off')}
-    rows={pinned.has('textBox') ? 0 : selectedBlock.props.box ? 2 : 1} group={groupOf('text-box', { box: false, boxStyle: null })}>{@render textBox()}</Fold>
+  <!-- The box a capability (ADR-0031): a card while the text stands in one, or was given one this session; with its switch in Pinned the box's own style goes there with it -->
+  <Capability id="text-box" group={groupOf('text-box', { box: false, boxStyle: null })}>{@render textBox()}</Capability>
 {/if}

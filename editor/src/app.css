@@ -715,10 +715,16 @@
     cursor: grabbing;
   }
 
-  .block-menu-grip {
+  /* A small window's drawing, the tool's own from the bar, before its name */
+  .block-menu-icon {
     display: inline-flex;
     flex: none;
-    opacity: 0.6;
+    color: var(--urd-color-accent, #2ec8b5);
+  }
+
+  .block-menu-icon svg {
+    width: 14px;
+    height: 14px;
   }
 
   /* Wide: room for two columns of settings (MENU_WIDE_W in menu/state.svelte.js) */
@@ -726,14 +732,25 @@
     --menu-w: min(660px, 100vw - var(--menu-min, 8px) - 8px);
   }
 
-  /* Small: one group from a tool of the bar with small panels (MENU_SMALL_W in menu/state.svelte.js), kept inside the window by its own measured height (--menu-h, fitSmallMenu in state/page.svelte.js) */
+  /* Small: one group from a tool of the bar with small panels, as wide as what it holds between 18 and 25 rem, kept inside the window by its own measured size (--menu-fit-w and --menu-h, fitSmallMenu in state/page.svelte.js; MENU_SMALL_W in menu/state.svelte.js until it is measured) */
   .block-menu.small {
-    --menu-w: min(320px, 100vw - var(--menu-min, 8px) - 8px);
+    --menu-w: min(var(--menu-fit-w, 320px), 100vw - var(--menu-min, 8px) - 8px);
     top: clamp(8px, var(--menu-top), 100vh - min(var(--menu-h, 620px), 72vh, 620px) - 8px);
+    width: max-content;
+    min-width: min(18rem, 100vw - var(--menu-min, 8px) - 8px);
+    max-width: min(25rem, 100vw - var(--menu-min, 8px) - 8px);
   }
 
-  /* A small panel that holds one group alone (lib/only-group.js): the rest of the menu hidden, the areas' headings and frames left out, and a group's own heading too, since the panel's title names it */
-  .emenu-only [data-only-hidden],
+  /* The small window's name takes the room between its drawing and its buttons */
+  .block-menu.small .block-menu-title {
+    flex: 1 1 auto;
+  }
+
+  /* A small panel that holds one group alone (lib/only-group.js): the rest of the menu hidden, whatever a row's own layout says, as the search's copy hides what does not match; the areas' headings and frames left out, and a group's own heading too, since the panel's title names it */
+  .emenu-only [data-only-hidden] {
+    display: none !important;
+  }
+
   .emenu-only .emenu-head {
     display: none;
   }
@@ -744,8 +761,16 @@
   }
 
   .emenu-only[data-only-kind='fold'] .emenu-col > details.menu-group > summary,
+  .emenu-only[data-only-kind='fold'] .emenu-col > .cap-card > .cap-head,
   .emenu-only[data-only-kind='look'] .look-choice > .row-sub {
     display: none;
+  }
+
+  /* A capability's card in a small panel stands as the panel's group, with no frame of its own */
+  .emenu-only .cap-card {
+    padding: 0;
+    border: 0;
+    background: none;
   }
 
   .block-menu-head .menu-width {
@@ -1005,25 +1030,73 @@
     opacity: 0.6;
   }
 
-  /* «Extra settings» as a menu: the ⋮ at a fold's top, its list of the settings to add under it; a hidden setting row keeps out of the flow */
-  .menu-extra {
-    position: relative;
-    display: flex;
-    justify-content: flex-end;
+  /* A fold's foot (lib/rows/Fold.svelte): «Add a setting» at the left and the group's reset at the right, on one line under the rows; the settings to add open in place under it, pushing what follows down; a hidden setting row keeps out of the flow */
+  .menu-group-foot {
+    display: grid;
+    gap: 0.3rem;
   }
 
-  .menu-extra-pop {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    z-index: 5;
+  .menu-group-foot-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.8rem;
+  }
+
+  .menu-group-foot-line .menu-extra ~ .menu-group-reset {
+    margin-left: auto;
+  }
+
+  /* «Add a setting»: a chip whose box stands in the rows' column, a soft tint of the admin's accent at rest, and a stronger one under the pointer, at the keyboard's focus and while its list stands open; the foot's class puts it over the buttons' own hover */
+  .menu-group-foot-line .menu-extra:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 0;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.78rem;
+    color: inherit;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--urd-color-accent, #7c5cff) 28%, transparent);
+    border-radius: 999px;
+  }
+
+  .menu-group-foot-line .menu-extra:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)):is(:hover, :focus-visible, [aria-expanded='true']) {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 24%, transparent);
+    border-color: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 55%, transparent);
+  }
+
+  .menu-extra svg {
+    flex: none;
+    width: 11px;
+    height: 11px;
+  }
+
+  .menu-extra-list {
     display: grid;
-    min-width: 11rem;
-    padding: 0.3rem;
-    background: var(--urd-color-surface, #151a23);
-    border: 1px solid rgb(255 255 255 / 15%);
+    gap: 0.25rem;
+    padding: 0.25rem;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid rgb(255 255 255 / 10%);
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  }
+
+  /* The rows to add, and under a line those added, which a press takes away */
+  .menu-extra-part {
+    display: grid;
+  }
+
+  .menu-extra-part + .menu-extra-part {
+    padding-top: 0.25rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+  }
+
+  .menu-extra-list .menu-extra-opt {
+    justify-content: flex-start;
+  }
+
+  .menu-extra-opt.taken svg {
+    opacity: 0.9;
   }
 
   .menu-extra-opt {
@@ -1041,9 +1114,14 @@
     border-radius: 6px;
   }
 
-  .menu-extra-opt:hover,
-  .menu-extra-opt:focus-visible {
-    background: rgb(255 255 255 / 8%);
+  /* The list's rows answer the pointer at once, as a menu's items do, in the chip's soft tint of the admin's accent; the list's class puts them over the buttons' own fade and hover */
+  .menu-extra-list .menu-extra-part .menu-extra-opt:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    transition: none;
+  }
+
+  .menu-extra-list .menu-extra-part .menu-extra-opt:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)):is(:hover, :focus-visible) {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 20%, transparent);
+    border-color: transparent;
   }
 
   .menu-extra-opt svg {
@@ -1055,6 +1133,269 @@
 
   .menu-group .group-items > [data-extra-hidden] {
     display: none;
+  }
+
+  /* A capability's card (lib/rows/Capability.svelte, ADR-0031): a framed group whose head names it, with its way back, and its settings under it */
+  .cap-card {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.5rem 0.6rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--urd-color-accent, #7c5cff) 35%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 4%, transparent);
+  }
+
+  .cap-head {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    min-width: 0;
+    font-weight: 600;
+  }
+
+  .cap-icon {
+    display: inline-flex;
+    flex: none;
+    opacity: 0.8;
+  }
+
+  .cap-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cap-card > .cap-body {
+    margin-top: 0;
+    padding-left: 0;
+  }
+
+  /* A one-switch capability: a card of one line, its chip the switch */
+  .cap-card.cap-single {
+    padding-block: 0.35rem;
+  }
+
+  .cap-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    height: 1.4rem;
+    padding: 0 0.6rem;
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: inherit;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 999px;
+    opacity: 0.7;
+  }
+
+  .cap-chip[aria-checked='true']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 14%, transparent);
+    border-color: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 55%, transparent);
+    opacity: 1;
+  }
+
+  .cap-remove[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  /* The card just added glows once; with reduced motion it stands as it ends */
+  .cap-card.fresh {
+    animation: cap-glow 1.4s ease-out;
+  }
+
+  @keyframes cap-glow {
+    from { box-shadow: 0 0 0 3px color-mix(in srgb, var(--urd-color-accent, #7c5cff) 50%, transparent); }
+    to { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cap-card.fresh {
+      animation: none;
+    }
+  }
+
+  /* The way to add a capability from the menu's head: a «+» in the accent, its list under it, each capability under its area's name with one line on what it does */
+  .cap-add-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  /* In the floating menu's head the block's actions and the «+» stand at the right, before the buttons for the width and closing, every button there the size of the «+» */
+  .block-menu-head .block-actions,
+  .block-menu-head .cap-add-wrap {
+    margin-left: auto;
+  }
+
+  .block-menu-head .block-actions ~ .cap-add-wrap,
+  .block-menu-head :is(.block-actions, .cap-add-wrap) ~ .menu-width {
+    margin-left: 0;
+  }
+
+  :is(.block-menu-head, .block-menu-actions, .panel-head-tools) .icon-btn:is(.ghost, .quiet):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 6px;
+  }
+
+  .block-actions {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+  }
+
+  /* Where the search field stands in a narrow head, the actions take a line of their own under it */
+  .block-menu-actions {
+    display: flex;
+    padding: 0.4rem 0.8rem;
+    border-bottom: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  /* Delete in the dark red of a removal */
+  .block-actions .icon-btn.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: #ffd4d4;
+    background: #5e1c22;
+    border-color: #7d2a31;
+  }
+
+  .block-actions .icon-btn.danger:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    background: #7a222a;
+  }
+
+  .cap-add-head:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    color: var(--urd-color-bg, #0b0d12);
+    cursor: pointer;
+    background: var(--urd-color-accent, #7c5cff);
+    border: 0;
+    border-radius: 6px;
+  }
+
+  /* The add list in the top layer, placed under its «+» by CapabilityAdd.svelte; the browser's own popover look is left out, and the head's weight and grab cursor do not reach it */
+  .cap-pop {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    z-index: 400;
+    color: inherit;
+    font-weight: 400;
+    cursor: default;
+    display: grid;
+    gap: 0.15rem;
+    width: min(22rem, 86vw);
+    max-height: min(64vh, 30rem);
+    padding: 0.4rem;
+    overflow-y: auto;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgb(0 0 0 / 45%);
+  }
+
+  .cap-pop.cap-tiles {
+    width: min(27rem, 92vw);
+  }
+
+  .cap-pop-title {
+    margin: 0.25rem 0.5rem 0.15rem;
+    font-weight: 600;
+  }
+
+  .cap-pop .mini-label {
+    margin: 0.45rem 0.5rem 0.1rem;
+  }
+
+  .cap-opts {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .cap-tiles .cap-opts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.1rem;
+  }
+
+  .cap-opt:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: start;
+    justify-content: stretch;
+    padding: 0.45rem 0.5rem;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+  }
+
+  .cap-opt:is(:hover, :focus-visible) {
+    background: rgb(255 255 255 / 7%);
+  }
+
+  /* As tiles: the drawing over the words, each tile framed */
+  .cap-tiles .cap-opt:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    align-content: start;
+    min-height: 6rem;
+    padding: 0.6rem;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  .cap-tiles .cap-opt:is(:hover, :focus-visible) {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .cap-tile {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
+    border-radius: 8px;
+  }
+
+  .cap-opt-words {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .cap-opt-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .cap-opt-about {
+    font-size: 0.78rem;
+    opacity: 0.7;
+  }
+
+  /* What the block has already, at the list's foot */
+  .cap-opt.cap-opt-taken {
+    align-items: center;
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .cap-opt.cap-opt-taken:hover {
+    background: transparent;
   }
 
   .emenu-pinned {
@@ -2489,7 +2830,19 @@
     font-size: 0.85rem;
   }
 
-  /* A row that points at one of the site's calendars: its colour and name, read-only */
+  /* A row that points at one of the site's calendars: its colour and name, read-only, on one line with the list's grip and cross */
+  .cal-ref {
+    min-height: 2.2rem;
+  }
+
+  /* The calendar's colour slots by section: each section after the first, and the edge stripe after them, under a line of its own */
+  .cal-slot-head,
+  .cal-slots + .setting {
+    padding-top: 0.6rem;
+    margin-top: 0.2rem;
+    border-top: 1px solid rgb(255 255 255 / 12%);
+  }
+
   .cal-ref-swatch {
     flex: none;
     width: 0.9rem;

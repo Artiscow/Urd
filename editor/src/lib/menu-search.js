@@ -101,6 +101,11 @@ export function readParts(container, skip = '') {
       const summary = el.querySelector(':scope > summary');
       const body = el.querySelector(':scope > .group-items') ?? el;
       parts.push({ kind: 'group', el, text: summary ? partText(summary) : '', children: readParts(body, 'summary') });
+    } else if (el.matches('.cap-card')) {
+      // A capability's card is a group: its head names it, and its settings are its rows (lib/rows/Capability.svelte).
+      const head = el.querySelector(':scope > .cap-head');
+      const body = el.querySelector(':scope > .cap-body') ?? el;
+      parts.push({ kind: 'group', el, text: head ? partText(head) : '', children: readParts(body) });
     } else if (el.tagName === 'HR') {
       parts.push({ kind: 'rule', el, text: '' });
     } else if (el.matches('.row-sub, .mini-label')) {

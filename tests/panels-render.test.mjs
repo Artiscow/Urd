@@ -249,7 +249,7 @@ test('the Properties panel renders a section with every setting on, and a select
   body = draw(panels.Properties, 'properties', structuredClone(site), { selectedBlock: textBlock });
   assert.match(body, /emenu-pinned/, 'the element menu is drawn for the selected block');
   assert.equal([...body.matchAll(/<section class="emenu-col emenu-area"[^>]*><header class="emenu-head">/g)].length, 3, 'the three areas stand under each other with a heading each');
-  assert.match(body, /class="help-chip"/, 'the Placement heading carries the layout help chip');
+  assert.doesNotMatch(body, /class="help-chip"/, 'the areas\' headings carry no help chip');
 });
 
 test('the dropdown draws a face\'s name in its typeface, and a decorative face\'s in the UI font with its sample beside it', () => {

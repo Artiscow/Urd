@@ -2,7 +2,7 @@
  * The bar of tools on a selected block (Urd settings «Toolbar»: Tools with small panels): every group of the block's element menu is a tool, which opens that group alone in a small panel beside the block, so every setting is one press from the bar.
  * Each block type lists its tools in the menu's order, Content then Style: a group (`fold`, the id its fold carries in menu/families/*.svelte, with that fold's title key), or the rows of an area that stand in no group (`loose`, named by the area or by what they hold).
  * Every block adds its design first in Style where it has designs (the design picker, drawn by preview-edit.js), its motion last in Style, and its Placement, the area drawn alone; a block type not listed (a plugin's, the field contract's) has its Content and Style as tools.
- * Each tool carries a drawing's name (BAR_ICONS in preview-edit.js); one without a drawing of its own takes its area's.
+ * Each tool carries a drawing's name (BAR_ICONS); one without a drawing of its own takes its area's. The bar draws them (preview-edit.js), and the small window a tool opens names it with the same drawing (the editor's menu/FloatingMenu.svelte).
  * A group the menu draws only in some states carries the same condition (`when`), so the bar never offers a tool that opens nothing.
  * A section's bar has the groups of its own menu as tools (SECTION_TOOLS).
  * The bar's choices in Urd settings, as the engine reads them, stand here too (BAR_CHOICES).
@@ -29,6 +29,35 @@ export const TOOL_FORMS = ['panels', 'groups'];
 
 /** The looks that set the tools apart by area, each with the plain look a form without tools takes in its place. */
 export const AREA_LOOKS = { areas: 'squares', 'capsule-areas': 'capsule' };
+
+/** The drawings of the bar's tools, each at the bar's size, by the names the tools carry. */
+const svg = (inner) => `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+export const BAR_ICONS = {
+  pencil: svg('<path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/>'),
+  brush: svg('<path d="M14 4l6 6-8 8-6-6z"/><path d="M6 12l-3 7 7-3"/>'),
+  link: svg('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
+  picture: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/>'),
+  type: svg('<path d="M4 19l5-14 5 14M6 14h6"/><path d="M15 19v-6.5a2.5 2.5 0 015 0V19M15 15.5h5"/>'),
+  palette: svg('<path d="M12 3a9 9 0 100 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.8 0-1 .8-1.7 1.8-1.7H17a4 4 0 004-4c0-4.1-4-7.5-9-7.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="14.5" cy="7" r="1"/>'),
+  list: svg('<path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
+  calendar: svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+  filter: svg('<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'),
+  box: svg('<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/>'),
+  mail: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'),
+  cart: svg('<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11.5l2-8H6"/>'),
+  card: svg('<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6 15h4"/>'),
+  person: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'),
+  shape: svg('<circle cx="8" cy="8" r="5"/><rect x="11" y="11" width="10" height="10" rx="1.5"/>'),
+  number: svg('<path d="M9 3L7 21M17 3l-2 18M4 8h17M3 16h17"/>'),
+  play: svg('<path d="M7 4l13 8-13 8z"/>'),
+  quote: svg('<path d="M10 7H6a2 2 0 00-2 2v3h5v5H4M20 7h-4a2 2 0 00-2 2v3h5v5h-5"/>'),
+  place: svg('<path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'),
+  clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  file: svg('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>'),
+  motion: svg('<path d="M3 7h7M3 12h11M3 17h7"/><path d="M16 8l4 4-4 4"/>'),
+  arrange: svg('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'),
+  design: svg('<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="4"/>'),
+};
 
 const fold = (id, labelKey, area, icon, when = null) => ({ only: `fold:${id}`, labelKey, area, icon, ...(when ? { when } : {}) });
 const loose = (area, labelKey, icon, when = null) => ({ only: `loose:${area}`, labelKey, area, icon, ...(when ? { when } : {}) });

@@ -92,8 +92,17 @@
     else delete colors[key];
     setBlockProp('colors', Object.keys(colors).length ? colors : undefined);
   }
+  /** One of the designs behind the view switcher's Week and Month buttons; undefined goes back to the design's own, and an emptied object is removed. */
+  function setSwitcherView(key, value) {
+    const views = { ...(selectedBlock.props.switcherViews ?? {}) };
+    if (value === undefined) delete views[key];
+    else views[key] = value;
+    setBlockProp('switcherViews', Object.keys(views).length ? views : undefined);
+  }
+  /** The edge stripe's own settings; a switch set back to the design's own is no setting of the block's (the switch is its own way back). */
   function setCalStripe(patch) {
     const stripe = { ...(selectedBlock.props.stripe ?? {}), ...patch };
+    if (stripe.show === calDesign(selectedBlock.props.design).stripe) delete stripe.show;
     for (const key of Object.keys(stripe)) if (stripe[key] === undefined) delete stripe[key];
     setBlockProp('stripe', Object.keys(stripe).length ? stripe : undefined);
   }
@@ -201,7 +210,7 @@
       {@const cal = calSource(src)}
       {#if cal.ref}
         {@const reg = siteCalendarById(cal.ref)}
-        <span class="toolbar-row">
+        <span class="toolbar-row cal-ref">
           <span class="cal-ref-swatch" style:background={swatchCss(reg?.color)} aria-hidden="true"></span>
           <span class="tb-grow cal-ref-name" class:muted={!reg}>{reg ? (reg.name || reg.url) : ta('calendar.refMissing')}</span>
         </span>
@@ -247,16 +256,20 @@
     {#if selectedBlock.props.switcher === true}
       <!-- The designs behind the switcher's Week and Month buttons, directly under the switch they belong to -->
       {@const sw = calSwitcherViews(selectedBlock.props)}
-      <div class="ctl-row" title={ta('tip.calendar.switchWeek')}>
-        <span class="mini-label ctl-name">{ta('calendar.switchWeek')}</span>
-        <Dropdown value={sw.week} options={CAL_SWITCH_WEEKS.map((id) => [id, ta(`calendar.design.${id}`)])}
-          onchange={(v) => setBlockProp('switcherViews', { ...(selectedBlock.props.switcherViews ?? {}), week: v })} />
-      </div>
-      <div class="ctl-row" title={ta('tip.calendar.switchMonth')}>
-        <span class="mini-label ctl-name">{ta('calendar.switchMonth')}</span>
-        <Dropdown value={sw.month} options={CAL_SWITCH_MONTHS.map((id) => [id, id === 'month' ? ta('calendar.viewMonth') : ta(`calendar.design.${id}`)])}
-          onchange={(v) => setBlockProp('switcherViews', { ...(selectedBlock.props.switcherViews ?? {}), month: v })} />
-      </div>
+      <Setting own={selectedBlock.props.switcherViews?.week != null} reset={() => setSwitcherView('week', undefined)}>
+        <div class="ctl-row" title={ta('tip.calendar.switchWeek')}>
+          <span class="mini-label ctl-name">{ta('calendar.switchWeek')}</span>
+          <Dropdown value={sw.week} options={CAL_SWITCH_WEEKS.map((id) => [id, ta(`calendar.design.${id}`)])}
+            onchange={(v) => setSwitcherView('week', v)} />
+        </div>
+      </Setting>
+      <Setting own={selectedBlock.props.switcherViews?.month != null} reset={() => setSwitcherView('month', undefined)}>
+        <div class="ctl-row" title={ta('tip.calendar.switchMonth')}>
+          <span class="mini-label ctl-name">{ta('calendar.switchMonth')}</span>
+          <Dropdown value={sw.month} options={CAL_SWITCH_MONTHS.map((id) => [id, id === 'month' ? ta('calendar.viewMonth') : ta(`calendar.design.${id}`)])}
+            onchange={(v) => setSwitcherView('month', v)} />
+        </div>
+      </Setting>
     {/if}
     </Setting>
     <Setting own={['s', 'l'].includes(selectedBlock.props.toolsSize)} reset={() => setBlockProp('toolsSize', undefined)}>
@@ -351,13 +364,16 @@
   <label title={ta('tip.calendar.emptyText')}>{ta('calendar.emptyText')}
     <input value={selectedBlock.props.emptyText ?? ''} placeholder={ta('calendar.emptyPh')}
       onchange={(e) => setBlockProp('emptyText', e.target.value.trim() || undefined)} /></label>
+  <!-- The icon: its words and its button on one line, the button alone opening the picker -->
   <Setting own={selectedBlock.props.emptyIcon != null && selectedBlock.props.emptyIcon !== 'calendar'} reset={() => setBlockProp('emptyIcon', undefined)}>
-    <label title={ta('tip.calendar.emptyIcon')}>{ta('calendar.emptyIcon')}
+    <div class="ctl-row">
+      <span class="row-label">{ta('calendar.emptyIcon')}</span>
       <MarkPicker iconsOnly icon={selectedBlock.props.emptyIcon === 'none' ? '' : (selectedBlock.props.emptyIcon ?? 'calendar')}
         klass="lbtn-mark" label={ta('tip.calendar.emptyIcon')}
         onpick={(mark) => setBlockProp('emptyIcon', mark.icon || 'none')}>
         {#if selectedBlock.props.emptyIcon !== 'none'}{@html iconSvg(selectedBlock.props.emptyIcon ?? 'calendar') || iconSvg('calendar')}{/if}
-      </MarkPicker></label>
+      </MarkPicker>
+    </div>
   </Setting>
   {/snippet}
   {#snippet calNotice()}
@@ -398,7 +414,8 @@
   <Fold id="cal-buttons" title={ta('calendar.group.buttons')} value={cm.buttons} reset={cm.buttonsReset}>{@render calButtons()}</Fold>
   <Fold id="cal-empty" title={ta('calendar.group.empty')} value={cm.empty} reset={cm.emptyReset}>{@render calEmpty()}</Fold>
   {#if calDesign(selectedBlock.props.design).notice}
-    <Fold id="cal-notice" title={ta('calendar.group.notice')} value={cm.notice} reset={cm.noticeReset}>{@render calNotice()}</Fold>
+    <!-- The announcement is its switch alone until it is on, and a group of what it then holds -->
+    <Fold id="cal-notice" title={ta('calendar.group.notice')} value={cm.notice} reset={cm.noticeReset} rows={selectedBlock.props.notice?.show === true ? undefined : 1}>{@render calNotice()}</Fold>
   {/if}
   <!-- The design's words are rewritten by clicking them in the preview; this puts the defaults back and the removed lines too, keeping the announcement's own words -->
   {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
@@ -448,7 +465,7 @@
   <!-- The design's colour slots: empty follows the theme -->
   {#each calSlotGroups(calDef) as group, gi (group.section)}
     {#if gi > 0}
-      <span class="mini-label">{ta(`calendar.section.${group.section}`)}</span>
+      <span class="mini-label cal-slot-head">{ta(`calendar.section.${group.section}`)}</span>
     {/if}
     <!-- The swatches in rows, each with its name under it -->
     <div class="cal-slots">
@@ -467,14 +484,17 @@
   <Setting own={selectedBlock.props.stripe != null} reset={() => setBlockProp('stripe', undefined)}>
     <SwitchRow label={ta('calendar.stripe')} title={ta('tip.calendar.stripe')} checked={calStripe(calDef, selectedBlock.props.stripe).show} onchange={(on) => setCalStripe({ show: on })} />
     {#if calStripe(calDef, selectedBlock.props.stripe).show}
-      <ColourRow label={ta('calendar.stripeColor')} title={ta('tip.calendar.stripeColor')} value={selectedBlock.props.stripe?.color ?? ''} tokens={themeSwatches()} allowClear
-        onchange={(v) => setCalStripe({ color: v || undefined })} />
+      <Setting own={selectedBlock.props.stripe?.color != null} reset={() => setCalStripe({ color: undefined })}>
+        <ColourRow label={ta('calendar.stripeColor')} title={ta('tip.calendar.stripeColor')} value={selectedBlock.props.stripe?.color ?? ''} tokens={themeSwatches()} allowClear
+          onchange={(v) => setCalStripe({ color: v || undefined })} />
+      </Setting>
     {/if}
   </Setting>
   {/snippet}
   {#snippet calFields()}
   <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour; the picker chooses what the rows under it style, so it is no setting of its own -->
-  <Dropdown value={calField} title={ta('tip.calendar.fieldStyle')} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} />
+  <label title={ta('tip.calendar.fieldStyle')}>{ta('calendar.whichField')}
+    <Dropdown value={calField} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} /></label>
   <Setting own={calFieldStyleOf().font != null} reset={() => setCalField({ font: undefined })}>
     <label title={ta('tip.calendar.fieldFont')}>{ta('calendar.fieldFont')}
       <Dropdown value={calFieldStyleOf().font ?? ''}

@@ -22,6 +22,9 @@ globalThis.matchMedia ??= () => ({ matches: false, addEventListener() {}, remove
 
 register('./_svelte-loader.mjs', import.meta.url);
 const { render } = await import('svelte/server');
+const { capabilityOfPin, capability } = await import('../editor/src/menu/capabilities.js');
+const { keepCapability, dropCapability } = await import('../editor/src/menu/capabilities.svelte.js');
+const { default: CapabilityAdd } = await import('../editor/src/menu/CapabilityAdd.svelte');
 const { default: ElementMenu } = await import('../editor/src/menu/ElementMenu.svelte');
 const { default: FloatingMenu } = await import('../editor/src/menu/FloatingMenu.svelte');
 const { setQuickChoice } = await import('../editor/src/menu/state.svelte.js');
@@ -135,6 +138,48 @@ for (const [type, propsList] of Object.entries(BLOCKS)) {
   });
 }
 
+test('a small window names its tool with the bar\'s drawing and holds the way to the full menu, with no grip, and its design row leaves its way back to the head', () => {
+  const context = new Map([['urd-editor', handleFor(block('calendar', { sources: [], design: 'bento' }, {}))]]);
+  const small = render(FloatingMenu, { props: { pos: { left: 10, top: 10, only: 'look:design', title: 'Design', icon: 'design' } }, context }).body;
+  const full = render(FloatingMenu, { props: { pos: { left: 10, top: 10 } }, context }).body;
+  for (const body of [small, full]) assert.doesNotMatch(body, /block-menu-grip/, 'no grip: the head itself is held and dragged');
+  assert.match(small, /class="block-menu-icon"[^>]*>(<!---->)?<svg/, 'the tool\'s drawing names the window');
+  assert.match(small, /class="[^"]*menu-full/, 'the way to the full menu');
+  assert.doesNotMatch(full, /menu-full|block-menu-icon/, 'the full menu has neither');
+  const row = find(parseHtml(small), (n) => n.attrs['data-pin'] === 'design')[0];
+  assert.ok(row && row.attrs['data-own'] !== undefined, 'the design row holds a design of its own');
+  assert.ok(!row.children.some((c) => hasClass(c, 'setting-reset')), 'its way back stands in the head, not over the pictures');
+});
+
+test('«Extra settings» stands in a fold\'s foot in the full menu, under the rows, and a small window shows the whole group', () => {
+  const fold = readFileSync(new URL('../editor/src/lib/rows/Fold.svelte', import.meta.url), 'utf8');
+  assert.match(fold, /const menued = \$derived\([^\n]*&& !small\);/, 'a small window hides none of its group');
+  const markup = fold.slice(fold.indexOf('<div class="group-items"'));
+  assert.ok(markup.indexOf('{@render children()}') < markup.indexOf('class="menu-group-foot"'), 'the foot stands under the rows');
+  const css = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8');
+  const list = css.slice(css.indexOf('.menu-extra-list {'), css.indexOf('}', css.indexOf('.menu-extra-list {')));
+  assert.ok(list && !/position:\s*absolute/.test(list), 'the list opens in place, pushing what follows down');
+  // The list takes an added row away again: the row's own way back first, asked for by an event the row answers, then hidden.
+  assert.match(fold, /onclick=\{\(\) => takeAway\(name\)\}/, 'an added row is listed to take away');
+  assert.match(fold, /dispatchEvent\(new CustomEvent\('setting-back'\)\)[\s\S]*folds\.hide\(surface, id, name\)/, 'taken away: back to the standard, then hidden');
+  assert.match(readFileSync(new URL('../editor/src/lib/rows/Setting.svelte', import.meta.url), 'utf8'), /addEventListener\('setting-back', back\)/, 'a setting row answers with its own way back');
+  // A mouse resting on the chip opens the list; a touch does not (AGENTS.md, hybrid devices).
+  assert.match(fold, /function hoverIn\(event\) \{\s*if \(event\.pointerType !== 'mouse'\) return;/);
+});
+
+test('a group that only switches something on stands as its switch alone until it is on', async () => {
+  const noticeDesign = (await engineImport('calendar-designs.js')).CAL_DESIGNS.find((d) => d.notice).id;
+  for (const [show, bare] of [[false, true], [true, false]]) {
+    setQuickChoice('calendar', { pinned: [], removed: PIN_IDS });
+    const context = new Map([['urd-editor', handleFor(block('calendar', { sources: [], design: noticeDesign, notice: { show } }, {}))]]);
+    const tree = parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body);
+    setQuickChoice('calendar', NO_CHOICE);
+    const fold = find(tree, (n) => n.attrs['data-fold'] === 'cal-notice')[0];
+    assert.ok(fold, 'the announcement is drawn');
+    assert.equal(hasClass(fold, 'bare'), bare, show ? 'on: a group of what it holds' : 'off: its switch alone');
+  }
+});
+
 test('a plugin block\'s link field draws the link field the core blocks have, with where it goes', () => {
   const context = new Map([['urd-editor', handleFor(block('plugin-thing', { more: { page: 'hjem', target: 'kontakt' } }, {}))]]);
   const { body } = render(ElementMenu, { props: { wide: true, query: '' }, context });
@@ -211,12 +256,12 @@ test('the menu frame: no fold left empty, no area holding an empty part, and no 
   assert.match(css, /\.emenu-cols \.emenu-col:not\(:has\(> :not\(\.emenu-title, \.emenu-none, \.emenu-head\)\)\)\s*\{\s*display: none;/, 'an area with only its heading is not drawn');
   for (const type of CORE_TYPES) {
     for (const props of BLOCKS[type]) {
-      // Every setting that can stand in Pinned, read from the menu with nothing pinned; each one Pinned can hold stands in an area then, so no setting is lost from both.
+      // Every setting that can stand in Pinned, read from the menu with nothing pinned; each one Pinned can hold stands in an area then, or in a capability the block can add (ADR-0031), so no setting is lost from both.
       setQuickChoice(type, { pinned: [], removed: PIN_IDS });
       const all = [...new Set(pinsIn(menuOf(type, props, true).tree))];
       setQuickChoice(type, { pinned: PIN_IDS, removed: [] });
       const pinnable = pinsIn(menuOf(type, props, true).pinned);
-      assert.deepEqual(pinnable.filter((id) => !all.includes(id)), [], `${type} ${JSON.stringify(props).slice(0, 40)}: a setting Pinned can hold stands in no area`);
+      assert.deepEqual(pinnable.filter((id) => !all.includes(id) && !capabilityOfPin(id)), [], `${type} ${JSON.stringify(props).slice(0, 40)}: a setting Pinned can hold stands in no area`);
       for (const choice of [NO_CHOICE, { pinned: [], removed: all }, { pinned: all, removed: [] }]) {
         setQuickChoice(type, choice);
         for (const wide of [true, false]) {
@@ -227,7 +272,7 @@ test('the menu frame: no fold left empty, no area holding an empty part, and no 
           if (choice.pinned === all) assert.deepEqual(all.filter((id) => !pinsIn(pinned).includes(id)), [], `${where}: every pinned setting stands in Pinned`);
           for (const fold of find(tree, (n) => n.tag === 'details')) {
             const items = find(fold, (n) => hasClass(n, 'group-items'))[0];
-            const inside = items.children.filter((n) => !hasClass(n, 'menu-group-reset'));
+            const inside = items.children.filter((n) => !hasClass(n, 'menu-group-foot'));
             assert.ok(inside.some(holdsSomething), `${where}: the fold «${find(fold, (n) => hasClass(n, 'menu-group-title'))[0]?.text.trim()}» stands empty`);
           }
           for (const area of areas) {
@@ -297,11 +342,11 @@ test('no fold holds one setting alone, with nothing pinned or with the defaults 
           const tree = parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body);
           for (const fold of find(tree, (n) => n.tag === 'details' && !hasClass(n, 'bare'))) {
             const items = find(fold, (n) => hasClass(n, 'group-items'))[0];
-            const rows = items.children.filter((n) => !hasClass(n, 'menu-group-reset'));
+            const rows = items.children.filter((n) => !hasClass(n, 'menu-group-foot'));
             const list = find(items, (n) => hasClass(n, 'row-list')).length > 0;
             const title = find(fold, (n) => hasClass(n, 'menu-group-title'))[0]?.text.trim();
-            // A setting with what belongs to it standing in its row (Setting.svelte) counts as each of the rows it holds
-            const seen = (n) => (hasClass(n, 'setting') ? find(n, (x) => hasClass(x, 'setting-body'))[0]?.children.length ?? 1 : 1);
+            // A setting with what belongs to it standing in its row (Setting.svelte) counts as each of the rows it holds, and the frame's grid as each of its numbers
+            const seen = (n) => (hasClass(n, 'setting') ? find(n, (x) => hasClass(x, 'setting-body'))[0]?.children.length ?? 1 : hasClass(n, 'frame-grid') ? n.children.length : 1);
             if (!list && rows.reduce((sum, n) => sum + seen(n), 0) === 1) alone.push(`${type} ${JSON.stringify(props).slice(0, 40)} ${viewMode} ${choice === NO_CHOICE ? 'defaults' : 'none'} pinned: «${title}»`);
           }
         }
@@ -380,14 +425,14 @@ test('a block with designs has its design row first in Style, or in Pinned while
   }
 });
 
-test('the rows under a ribbon\'s motion show their way back in Pinned as in the Motion fold', () => {
+test('the rows under a ribbon\'s motion hold their own value in Pinned as in the Motion fold', () => {
   const ownIn = (choice, inPinned) => {
     setQuickChoice('ribbon', choice);
     const { areas, pinned } = menuOf('ribbon', { items: ['a'], direction: 'right', pauseOnHover: false }, true);
     setQuickChoice('ribbon', NO_CHOICE);
     const where = inPinned ? [pinned].filter(Boolean) : areas;
     const rows = where.flatMap((n) => find(n, (x) => ['direction', 'pauseOnHover', 'fade'].includes(x.attrs['data-setting'])));
-    return Object.fromEntries(rows.map((n) => [n.attrs['data-setting'], n.children.some((c) => hasClass(c, 'setting-reset'))]));
+    return Object.fromEntries(rows.map((n) => [n.attrs['data-setting'], n.attrs['data-own'] !== undefined]));
   };
   const inFold = ownIn({ pinned: [], removed: PIN_IDS }, false);
   const inPinned = ownIn({ pinned: ['ribbonMotion'], removed: [] }, true);
@@ -396,21 +441,38 @@ test('the rows under a ribbon\'s motion show their way back in Pinned as in the 
 });
 
 test('hiding on phones goes back to what the block type starts with: a shape starts hidden, a text shown', () => {
-  const ownOf = (type, hideMobile, choice) => {
-    setQuickChoice(type, choice);
-    const context = new Map([['urd-editor', handleFor(block(type, type === 'shape' ? { kind: 'line' } : {}, { hideMobile, decor: type === 'shape' }))]]);
+  // In Pinned the switch is a setting row that says whether it holds its own value; in Placement it is its capability's card of one line, in use where it differs from the type's start (ADR-0031).
+  const phone = capability('phone');
+  const ownOf = (type, hideMobile) => {
+    setQuickChoice(type, { pinned: ['phone'], removed: [] });
+    const handle = handleFor(block(type, type === 'shape' ? { kind: 'line' } : {}, { hideMobile, decor: type === 'shape' }));
+    const context = new Map([['urd-editor', handle]]);
     const tree = parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body);
     const row = find(tree, (n) => n.attrs['data-pin'] === 'phone')[0];
     setQuickChoice(type, NO_CHOICE);
-    return row ? row.children.some((c) => hasClass(c, 'setting-reset')) : 'no row';
+    const inPinned = row ? row.attrs['data-own'] !== undefined : 'no row';
+    assert.equal(phone.inUse(handle.selectedBlock, handle), inPinned, `${type} hidden ${hideMobile}: the capability in use as Pinned's row holds its own value`);
+    return inPinned;
   };
-  for (const choice of [{ pinned: [], removed: PIN_IDS }, { pinned: ['phone'], removed: [] }]) {
-    const where = choice.pinned.length ? 'in Pinned' : 'in Placement';
-    assert.equal(ownOf('shape', true, choice), false, `a shape hidden on phones holds its standard, ${where}`);
-    assert.equal(ownOf('shape', false, choice), true, `a shape shown on phones holds its own value, ${where}`);
-    assert.equal(ownOf('text', true, choice), true, `a text hidden on phones holds its own value, ${where}`);
-    assert.equal(ownOf('text', false, choice), false, `a text shown on phones holds its standard, ${where}`);
+  assert.equal(ownOf('shape', true), false, 'a shape hidden on phones holds its standard');
+  assert.equal(ownOf('shape', false), true, 'a shape shown on phones holds its own value');
+  assert.equal(ownOf('text', true), true, 'a text hidden on phones holds its own value');
+  assert.equal(ownOf('text', false), false, 'a text shown on phones holds its standard');
+});
+
+test('a one-switch capability is a card of one line whose chip is its switch', () => {
+  keepCapability('b1', 'decor');
+  setQuickChoice('text', { pinned: [], removed: PIN_IDS });
+  const draw = (decor) => parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context: new Map([['urd-editor', handleFor(block('text', {}, { decor }))]]) }).body);
+  for (const decor of [true, false]) {
+    const card = find(draw(decor), (n) => n.attrs['data-cap'] === 'decor')[0];
+    assert.ok(card && hasClass(card, 'cap-single'), 'the card stands, one line');
+    const chip = find(card, (n) => hasClass(n, 'cap-chip'))[0];
+    assert.equal(chip?.attrs['aria-checked'], String(decor), `the chip tells the switch, ${decor ? 'on' : 'off'}`);
+    assert.equal(find(card, (n) => hasClass(n, 'cap-body')).length, 0, 'no rows under its line');
   }
+  setQuickChoice('text', NO_CHOICE);
+  dropCapability('b1', 'decor');
 });
 
 test('what belongs to the size and the fit stands under their line, in Placement and in Pinned', () => {
@@ -473,6 +535,7 @@ test('every control in a block\'s menu stands in a setting row, but for a list a
     if (hasClass(n, 'cp')) return 'colour';
     if (hasClass(n, 'row-picture') || hasClass(n, 'look-choice')) return 'picker';
     if (n.tag === 'button' && n.attrs['aria-pressed'] !== undefined) return 'toggle';
+    if (n.attrs.role === 'switch') return 'switch';
     return null;
   };
   const ROWS = ['row-switch', 'choice', 'row-select', 'row-slider', 'ctl-row', 'field-stack', 'cal-slot'];
@@ -480,7 +543,8 @@ test('every control in a block\'s menu stands in a setting row, but for a list a
   // A list's rows are what the owner writes and orders, so the walk leaves a list alone.
   const walk = (n, inside, row, type) => {
     if (hasClass(n, 'row-list')) return;
-    const here = inside || hasClass(n, 'setting');
+    // A one-switch capability's card is its setting row, with its way back (lib/rows/Capability.svelte).
+    const here = inside || hasClass(n, 'setting') || hasClass(n, 'cap-single');
     const rowHere = n.tag === 'label' || ROWS.some((c) => hasClass(n, c)) ? n : row;
     const kind = kindOf(n);
     if (!kind) {
@@ -510,7 +574,7 @@ test('a plugin block\'s and the map\'s fields go back to what the block starts w
     setQuickChoice(type, { pinned: [], removed: PIN_IDS });
     const { areas } = menuOf(type, props, true);
     setQuickChoice(type, NO_CHOICE);
-    return areas.flatMap((a) => find(a, (n) => hasClass(n, 'setting') && n.children.some((c) => hasClass(c, 'setting-reset'))))
+    return areas.flatMap((a) => find(a, (n) => hasClass(n, 'setting') && n.attrs['data-own'] !== undefined))
       .map((n) => n.attrs['data-setting'] ?? (find(n, (x) => hasClass(x, 'row-label') || hasClass(x, 'row-switch'))[0] ? wordsOf(n).split(' ')[0] : ''))
       .filter((w) => ['N', 'On', 'S', 'zoom', 'lbl.mapZoom'].includes(w)).sort();
   };
@@ -521,4 +585,54 @@ test('a plugin block\'s and the map\'s fields go back to what the block starts w
   assert.deepEqual(resets('plugin-variant', { n: 4 }), [], 'a field its variants start differently has no standard');
   assert.deepEqual(resets('map', { location: 'Oslo', zoom: 15 }), [], 'a map at its zoom');
   assert.deepEqual(resets('map', { location: 'Oslo', zoom: 12 }).length, 1, 'a map with a zoom of its own');
+});
+
+test('a switch is its own way back: its row draws no reset, and still says it holds its own value', () => {
+  setQuickChoice('plugin-thing', { pinned: [], removed: PIN_IDS });
+  const { areas } = menuOf('plugin-thing', { n: 3, on: true, sel: 'a' }, true);
+  setQuickChoice('plugin-thing', NO_CHOICE);
+  const rows = areas.flatMap((a) => find(a, (n) => hasClass(n, 'setting') && n.attrs['data-own'] !== undefined));
+  const switched = rows.filter((n) => find(n, (x) => hasClass(x, 'row-switch')).length);
+  const others = rows.filter((n) => !find(n, (x) => hasClass(x, 'row-switch')).length);
+  assert.ok(switched.length && others.length, 'the block holds a switch and a number of its own');
+  for (const row of switched) assert.ok(!row.children.some((c) => hasClass(c, 'setting-reset')), 'a switch\'s row draws no reset');
+  for (const row of others) assert.ok(row.children.some((c) => hasClass(c, 'setting-reset')), 'another row draws its reset');
+});
+
+test('a capability\'s card stands while the block uses it or took it, in the search\'s copy and in its tool\'s panel, and nowhere else', () => {
+  const draw = (props, extra = {}, menuProps = {}) => {
+    setQuickChoice('text', { pinned: [], removed: PIN_IDS });
+    const context = new Map([['urd-editor', handleFor(block('text', props, extra))]]);
+    const tree = parseHtml(render(ElementMenu, { props: { wide: true, query: '', ...menuProps }, context }).body);
+    setQuickChoice('text', NO_CHOICE);
+    const card = (id) => find(tree, (n) => n.attrs['data-cap'] === id)[0] ?? null;
+    return { card, takes: (id) => Boolean(card(id) && find(card(id), (n) => hasClass(n, 'cap-remove')).length) };
+  };
+  // Not used and not taken: no card, no room.
+  const bare = draw({});
+  for (const id of ['motion', 'text-box', 'sticky', 'link-target', 'decor', 'phone']) assert.equal(bare.card(id), null, `${id}: no card on a block that does not use it`);
+  // In use: its card, with the way back.
+  const used = draw({ box: true }, { animation: { type: 'fade-in', props: { duration: 600 } }, sticky: { offset: 16, until: null }, anchor: 'priser', decor: true });
+  for (const id of ['motion', 'text-box', 'sticky', 'link-target', 'decor']) assert.ok(used.takes(id), `${id}: a card with its way back while in use`);
+  // Taken this session but holding nothing yet: its card stays.
+  keepCapability('b1', 'motion');
+  assert.ok(draw({}).takes('motion'), 'a capability taken this session stands before it holds a value');
+  dropCapability('b1', 'motion');
+  // The search's copy draws every capability, so its settings are found where they stand, with no way back on one the block has not taken.
+  const found = draw({}, {}, { query: 'motion' });
+  assert.ok(found.card('motion') && !found.takes('motion'), 'the search finds the motion\'s settings in a block without motion');
+  // A tool's small panel opens its capability whether the block uses it or not, and no other.
+  const panel = draw({}, {}, { only: 'fold:motion' });
+  assert.ok(panel.card('motion'), 'the bar\'s Motion opens the motion\'s card');
+  assert.equal(panel.card('decor'), null, 'a small panel draws no other capability');
+});
+
+test('the menu\'s head offers what the block can take, and nothing when the block can take nothing more', () => {
+  const offers = (type, props, extra = {}) => {
+    const context = new Map([['urd-editor', handleFor(block(type, props, extra))]]);
+    return parseHtml(render(CapabilityAdd, { context }).body);
+  };
+  assert.equal(find(offers('text', {}), (n) => hasClass(n, 'cap-add-head')).length, 1, 'a new text block can take capabilities');
+  const full = offers('text', { box: true }, { animation: { type: 'fade-in', props: {} }, sticky: { offset: 16, until: null }, anchor: 'priser', decor: true, hideMobile: true });
+  assert.equal(find(full, (n) => hasClass(n, 'cap-add-head')).length, 0, 'a block that uses every capability is offered none');
 });

@@ -200,10 +200,13 @@ function onIframeLoad() {
   bridge?.destroy();
   // A click in the preview (block, text field, canvas) closes the block
   // menu and the top bar's tool menu. The iframe is same-origin, so we
-  // listen directly; the gear click closes first and reopens via the
-  // urd-block-menu message afterwards (it arrives later).
-  iframeEl?.contentDocument?.addEventListener('pointerdown', () => {
-    if (pageState.blockMenu) pageState.blockMenu = null;
+  // listen directly. A press on a bar button that opens the menu (the gear,
+  // a tool, the design button, marked `data-opens-menu` by the engine)
+  // leaves the menu to the message that follows it, which opens the tool's
+  // group inside the menu standing open, closes it at a second press, or
+  // opens another (onBlockMenu and onSectionMenu in page.svelte.js).
+  iframeEl?.contentDocument?.addEventListener('pointerdown', (event) => {
+    if (pageState.blockMenu && !event.target?.closest?.('[data-opens-menu]')) pageState.blockMenu = null;
     if (shellState.toolMenu) shellState.toolMenu = null;
   }, true);
   bridge = createPreviewBridge(iframeEl, {

@@ -3,7 +3,7 @@
  * Which groups stand open is kept with every other surface's folds (lib/folds.svelte.js).
  */
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES } from './forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, CAP_LISTS } from './forms.js';
 
 /**
  * The form a menu opens in (Urd settings «Element menu»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
@@ -24,6 +24,9 @@ const DESIGN_CHOICE_KEY = 'urd-design-choice';
 /** What stands first in the menu («Shortcuts»): the Pinned rows, the same rows as tiles, the search field alone, or chips that jump to each area. */
 const SHORTCUTS_KEY = 'urd-menu-shortcuts';
 
+/** How the «+» list shows what a block can take («The add list»): a list, or tiles in two columns. */
+const CAP_LIST_KEY = 'urd-cap-list';
+
 const stored = (key, list) => (list.includes(localStorage.getItem(key)) ? localStorage.getItem(key) : list[0]);
 
 /** The floating menu's width with the areas poured through two columns (app.css, .block-menu.wide), and a small panel's, one group from a tool of the bar (.block-menu.small). */
@@ -37,6 +40,7 @@ export const menu = $state({
   extraPref: stored(EXTRA_KEY, EXTRA_MODES),
   designsPref: stored(DESIGN_CHOICE_KEY, DESIGN_CHOICES),
   shortcutsPref: stored(SHORTCUTS_KEY, SHORTCUTS_MODES),
+  capListPref: stored(CAP_LIST_KEY, CAP_LISTS),
   /** How many times «All open» has been chosen this session, so each choice opens every fold again (lib/rows/Fold.svelte). */
   foldsRound: 0,
   /** The area in view in a menu with tabs, for the session. */
@@ -86,6 +90,11 @@ export function setDesignsPref(v) {
   keep(DESIGN_CHOICE_KEY, menu.designsPref, DESIGN_CHOICES);
 }
 
+export function setCapListPref(v) {
+  menu.capListPref = CAP_LISTS.includes(v) ? v : CAP_LISTS[0];
+  keep(CAP_LIST_KEY, menu.capListPref, CAP_LISTS);
+}
+
 export function setShortcutsPref(v) {
   menu.shortcutsPref = SHORTCUTS_MODES.includes(v) ? v : SHORTCUTS_MODES[0];
   keep(SHORTCUTS_KEY, menu.shortcutsPref, SHORTCUTS_MODES);
@@ -124,7 +133,7 @@ export function chooseArea(area, root = null) {
     const col = root?.querySelector(`.emenu-cols [data-area="${area}"]`);
     if (!col) return;
     col.scrollIntoView({ block: 'start' });
-    if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button:not(.help-chip)')?.focus();
+    if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button:not(.help-chip, .cap-remove, [data-cap-add])')?.focus();
   });
 }
 

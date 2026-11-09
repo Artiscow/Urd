@@ -5,7 +5,7 @@
  * Pure, node-tested (tests/settings-model.test.mjs).
  */
 import { panelsPrefIn } from './panels-start.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS } from '../menu/forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS, CAP_LISTS } from '../menu/forms.js';
 
 /** Where the settings open: a dialog with the groups as sections down its left, a panel in the panel column, or a sheet with the look choices at the left and the rest as rows at the right. */
 export const SETTINGS_PLACES = ['dialog', 'panel', 'sheet'];
@@ -78,6 +78,9 @@ export const SETTINGS_GROUPS = [
       { id: 'extra', part: true, labelKey: 'adminPart.extra', tipKey: 'tip.adminPart.extra', kind: 'seg',
         options: (c) => EXTRA_MODES.map((id) => [id, c.ta(`opt.extraSettings.${id}`)]),
         get: (c) => c.menu.extraPref, set: (c, v) => c.setExtraPref(v) },
+      { id: 'capList', part: true, labelKey: 'adminPart.capList', tipKey: 'tip.adminPart.capList', kind: 'seg',
+        options: (c) => CAP_LISTS.map((id) => [id, c.ta(`opt.capList.${id}`)]),
+        get: (c) => c.menu.capListPref, set: (c, v) => c.setCapListPref(v) },
       // The chips jump between areas that stand under each other, so a form with tabs offers them only while they are chosen.
       { id: 'shortcuts', part: true, labelKey: 'adminPart.shortcuts', tipKey: 'tip.adminPart.shortcuts', kind: 'choice', look: 'shortcuts',
         options: (c) => SHORTCUTS_MODES.filter((id) => id !== 'chips' || !['tabs', 'docked-tabs'].includes(c.menu.formPref) || c.menu.shortcutsPref === 'chips')

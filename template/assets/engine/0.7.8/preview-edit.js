@@ -58,7 +58,7 @@ import { pathTo, nodeAt } from './caret-path.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
 import { ta, adminLang } from './i18n.js';
-import { barTools, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS } from './bar-tools.js';
+import { barTools, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, BAR_ICONS } from './bar-tools.js';
 
 /**
  * The event's target as an Element. The editing chrome draws its icons as
@@ -99,14 +99,13 @@ function hasDesigns(block) {
 function openBlockDesign(el, section, block, phone = false) {
   // The small window (Urd settings «Design button on the bar», the default) opens the design beside the block as a small panel of its pictures, as the bar's tools open their groups; the full window, and a phone design always, open the picker.
   if (!phone && barChoice(BAR_CHOICES.design) === 'small') {
-    openBlockTool(el, section, block, 'look:design', ta('lbl.design'));
+    openBlockTool(el, section, block, 'look:design', ta('lbl.design'), 'design');
     return;
   }
   selectBlock(el);
   post({ type: 'urd-block-design', sectionId: section.id, blockId: block.id, ...(phone ? { phone: true } : {}) });
 }
 
-const DESIGN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="4"/></svg>';
 const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
 
 /** The toolbar's design button: the block's designs one press away, in the picker or in a small panel as Urd settings «Design button on the bar» asks; in the phone view its design on a phone. */
@@ -114,13 +113,13 @@ function designButton(el, section, block, phone) {
   const btn = document.createElement('button');
   btn.className = 'urd-edit-design';
   btn.dataset.cap = ta('canvas.cap.design');
-  btn.innerHTML = DESIGN_SVG;
+  btn.innerHTML = BAR_ICONS.design;
   btn.title = ta(phone ? 'canvas.blockPhoneDesign' : 'canvas.blockDesign');
   btn.setAttribute('aria-label', btn.title);
   // Without the stop, pointerdown would bubble to the document's selection listener, which can draw the section again before the click (the same guard as the gear).
   btn.addEventListener('pointerdown', (event) => event.stopPropagation());
   btn.addEventListener('click', () => openBlockDesign(el, section, block, phone));
-  return btn;
+  return opensMenu(btn);
 }
 
 /**
@@ -154,32 +153,6 @@ function barLook(form = barForm()) {
   return !TOOL_FORMS.includes(form) && AREA_LOOKS[v] ? AREA_LOOKS[v] : v;
 }
 
-/** The drawings of the bar's tools (bar-tools.js), each at the bar's size. */
-const svg = (inner, opts = 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"') => `<svg width="12" height="12" viewBox="0 0 24 24" ${opts} aria-hidden="true">${inner}</svg>`;
-const BAR_ICONS = {
-  pencil: svg('<path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/>'),
-  brush: svg('<path d="M14 4l6 6-8 8-6-6z"/><path d="M6 12l-3 7 7-3"/>'),
-  link: svg('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
-  picture: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/>'),
-  type: svg('<path d="M4 19l5-14 5 14M6 14h6"/><path d="M15 19v-6.5a2.5 2.5 0 015 0V19M15 15.5h5"/>'),
-  palette: svg('<path d="M12 3a9 9 0 100 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.8 0-1 .8-1.7 1.8-1.7H17a4 4 0 004-4c0-4.1-4-7.5-9-7.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="14.5" cy="7" r="1"/>'),
-  list: svg('<path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
-  calendar: svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
-  filter: svg('<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'),
-  box: svg('<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/>'),
-  mail: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'),
-  cart: svg('<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11.5l2-8H6"/>'),
-  card: svg('<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6 15h4"/>'),
-  person: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'),
-  shape: svg('<circle cx="8" cy="8" r="5"/><rect x="11" y="11" width="10" height="10" rx="1.5"/>'),
-  number: svg('<path d="M9 3L7 21M17 3l-2 18M4 8h17M3 16h17"/>'),
-  play: svg('<path d="M7 4l13 8-13 8z"/>'),
-  quote: svg('<path d="M10 7H6a2 2 0 00-2 2v3h5v5H4M20 7h-4a2 2 0 00-2 2v3h5v5h-5"/>'),
-  place: svg('<path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'),
-  clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
-  file: svg('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>'),
-};
-
 /**
  * The tools of a bar whose tools belong to the menu's areas, placed in it: in a cluster of their area where the look sets the areas apart, else in a row.
  * Returns the function that places one tool by its area.
@@ -200,8 +173,6 @@ function toolPlacer(barBody, look) {
 }
 
 const MORE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
-const MOTION_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h7M3 12h11M3 17h7"/><path d="M16 8l4 4-4 4"/></svg>';
-const ARRANGE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>';
 
 /** A bar button: its drawing or its words, its tooltip and name, and what a press does; the pointerdown stops, so the document's selection listener never draws the section anew under the press. */
 function barButton(content, title, run, className = '', cap = '') {
@@ -241,11 +212,17 @@ function editTextIn(el) {
   sel?.addRange(range);
 }
 
+/** A button of the bar that opens the editor's menu or one of its small windows: a press on it leaves the menu standing open to the editor, which opens the tool's group inside it or closes it as the press asks (the editor's state/preview.svelte.js). */
+const opensMenu = (btn) => {
+  btn.dataset.opensMenu = '';
+  return btn;
+};
+
 /** A tool of the bar with small panels: the editor opens the block's or the section's menu beside it narrowed to one group (`only`). */
-function openBlockTool(el, section, block, only, title = '') {
+function openBlockTool(el, section, block, only, title = '', icon = '') {
   selectBlock(el);
   const r = el.getBoundingClientRect();
-  post({ type: 'urd-block-menu', sectionId: section.id, blockId: block.id, only, title, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
+  post({ type: 'urd-block-menu', sectionId: section.id, blockId: block.id, only, title, icon, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
 }
 
 /** The toolbar's gear: the block's menu in the editor, opened at the block. */
@@ -260,7 +237,7 @@ function menuButton(el, section, block) {
   // the handles).
   btn.addEventListener('pointerdown', (event) => event.stopPropagation());
   btn.addEventListener('click', () => openBlockSettings(el, section, block));
-  return btn;
+  return opensMenu(btn);
 }
 
 /** The block menu in the editor, opened at the block (the toolbar's gear and the right-click menu's «Settings»). */
@@ -3189,10 +3166,10 @@ function fitSectionHeight(host, section, grid) {
 }
 
 /** A tool of the section's bar with small panels: the editor opens the section's menu beside it narrowed to one group. */
-function openSectionTool(host, section, only, title = '') {
+function openSectionTool(host, section, only, title = '', icon = '') {
   markActiveVisual(host);
   const r = host.getBoundingClientRect();
-  post({ type: 'urd-section-menu', sectionId: section.id, only, title, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
+  post({ type: 'urd-section-menu', sectionId: section.id, only, title, icon, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
 }
 
 /** Toolbar at the section's top right. Desktop: move up/down, fit height,
@@ -3290,12 +3267,12 @@ function addSectionToolbar(host, section, grid) {
       layoutBtn.addEventListener('click', () => toggleLayoutPicker(host, section, grid));
       bar.appendChild(layoutBtn);
     }
-    if (form === 'panels') bar.appendChild(barButton(MOTION_SVG, ta('group.motion'), () => openSectionTool(host, section, 'motion')));
+    if (form === 'panels') bar.appendChild(opensMenu(barButton(BAR_ICONS.motion, ta('group.motion'), () => openSectionTool(host, section, 'motion', '', 'motion'))));
     // Every group a tool: each group of the section's menu, which the right-click menu under ⋮ follows with the rest.
     if (form === 'groups') {
       for (const tool of SECTION_TOOLS) {
         const label = ta(tool.labelKey);
-        bar.appendChild(barButton(tool.icon === 'motion' ? MOTION_SVG : tool.icon === 'arrange' ? ARRANGE_SVG : BAR_ICONS[tool.icon], label, () => openSectionTool(host, section, tool.only, label), '', label));
+        bar.appendChild(opensMenu(barButton(BAR_ICONS[tool.icon] ?? BAR_ICONS.pencil, label, () => openSectionTool(host, section, tool.only, label, tool.icon), '', label)));
       }
     }
     // "Save as template": a nameless snapshot to the editor, which names
@@ -3317,6 +3294,7 @@ function addSectionToolbar(host, section, grid) {
   // The same guard as the block's gear: a pointerdown reaching the document's selection listener would draw the section anew before the click.
   gear.addEventListener('pointerdown', (event) => event.stopPropagation());
   gear.addEventListener('click', () => openSectionSettings(host, section));
+  opensMenu(gear);
   // With small panels the gear is the word for the settings; with every group a tool, the groups and ⋮ hold the settings, and the gear stands in the phone view or where «Settings gear on the bar» asks for it.
   if (form === 'panels') {
     gear.textContent = ta('canvas.ctx.settings');
@@ -4767,12 +4745,12 @@ function enhanceBlock(el, block, section, grid, host) {
       for (const tool of barTools(block.type, { designs: hasDesigns(block), block })) {
         const label = ta(tool.labelKey);
         place(tool.design ? designButton(el, section, block, false)
-          : barButton(tool.icon === 'motion' ? MOTION_SVG : tool.icon === 'arrange' ? ARRANGE_SVG : BAR_ICONS[tool.icon] ?? BAR_ICONS.pencil, label, () => openBlockTool(el, section, block, tool.only, label), '', label), tool.area);
+          : opensMenu(barButton(BAR_ICONS[tool.icon] ?? BAR_ICONS.pencil, label, () => openBlockTool(el, section, block, tool.only, label, tool.icon), '', label)), tool.area);
       }
     } else if (hasDesigns(block)) place(designButton(el, section, block, false), 'style');
     if (form === 'panels') {
-      place(barButton(MOTION_SVG, ta('group.motion'), () => openBlockTool(el, section, block, 'motion'), '', ta('group.motion')), 'style');
-      place(barButton(ARRANGE_SVG, ta('props.tabPlacement'), () => openBlockTool(el, section, block, 'placement'), '', ta('props.tabPlacement')), 'placement');
+      place(opensMenu(barButton(BAR_ICONS.motion, ta('group.motion'), () => openBlockTool(el, section, block, 'motion', '', 'motion'), '', ta('group.motion'))), 'style');
+      place(opensMenu(barButton(BAR_ICONS.arrange, ta('props.tabPlacement'), () => openBlockTool(el, section, block, 'placement', '', 'arrange'), '', ta('props.tabPlacement'))), 'placement');
     }
     // The phone button on the shorter bars where «Phone button on the bar» asks for it, before the gear.
     if (barPhone()) barBody.appendChild(phoneButton());

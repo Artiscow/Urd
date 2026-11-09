@@ -16,6 +16,7 @@
   import SliderRow from '../lib/rows/SliderRow.svelte';
   import LinkField from '../lib/LinkField.svelte';
   import PinScope from './PinScope.svelte';
+  import CapScope from './CapScope.svelte';
   import DesignRow from './DesignRow.svelte';
   import FitMin from './FitMin.svelte';
   import SizeBounds from './SizeBounds.svelte';
@@ -39,7 +40,6 @@
   import MotionFold from './MotionFold.svelte';
   import { onlyGroup } from '../lib/only-group.js';
   import MenuArea from './MenuArea.svelte';
-  import { toggleHintCard } from '$engine/hint.js';
   import Text from './families/Text.svelte';
   import Button from './families/Button.svelte';
   import Image from './families/Image.svelte';
@@ -304,12 +304,6 @@
 {#snippet menuPlacement()}
   <Placement />
 {/snippet}
-<!-- «Which layout tool?» (comparison/ELEMENTS.md E5): the help chip rule (ADR-0008) on the heading of the area whose choices decide how a block is laid out -->
-{#snippet layoutChip()}
-  <button type="button" class="help-chip" title={ta('hint.how', { title: ta('hint.layout.title') })}
-    aria-label={ta('hint.how', { title: ta('hint.layout.title') })}
-    onclick={(e) => toggleHintCard(e.currentTarget, { title: ta('hint.layout.title'), lines: [1, 2, 3, 4, 5, 6].map((n) => ta(`hint.layout.${n}`)) })}>?</button>
-{/snippet}
 
 {#snippet pinnedPart()}
   {#if pinnedShown && pinnedItems.length}
@@ -367,26 +361,32 @@
 {#if only}
   <!-- A small panel from a tool of the bar: the areas drawn as ever, everything but the one group hidden, none of it taken to Pinned -->
   <PinScope away={() => NONE_PINNED} pins={false}>
-    <div class="emenu-cols emenu-stack emenu-only" {@attach onlyGroup(only)}>
-      <MenuArea area="content" title={ta('props.tabContent')}>{@render menuContent()}</MenuArea>
-      <MenuArea area="style" title={ta('props.tabStyle')}>{@render menuStyle()}</MenuArea>
-      <MenuArea area="placement" title={ta('props.tabPlacement')} chip={layoutChip}>{@render menuPlacement()}</MenuArea>
-    </div>
+    <!-- A tool that opens a capability opens its card whether the block uses it or not (ADR-0031) -->
+    <CapScope forced={(id) => only === `fold:${id}`}>
+      <div class="emenu-cols emenu-stack emenu-only" {@attach onlyGroup(only)}>
+        <MenuArea area="content" title={ta('props.tabContent')}>{@render menuContent()}</MenuArea>
+        <MenuArea area="style" title={ta('props.tabStyle')}>{@render menuStyle()}</MenuArea>
+        <MenuArea area="placement" title={ta('props.tabPlacement')}>{@render menuPlacement()}</MenuArea>
+      </div>
+    </CapScope>
   </PinScope>
 {:else if query.trim()}
   <!-- The search: a copy of the three areas of its own, narrowed to what matches (menu-search.js),
        Content and Style beside Placement when wide and under each other when narrow, each area saying when nothing in it matches -->
   {#snippet foundContent()}<section class="emenu-col" data-area="content"><p class="emenu-title">{ta('props.tabContent')}</p>{@render menuContent()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
   {#snippet foundStyle()}<section class="emenu-col" data-area="style"><p class="emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
-  {#snippet foundPlacement()}<section class="emenu-col" data-area="placement"><p class="emenu-title">{ta('props.tabPlacement')}{@render layoutChip()}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
+  {#snippet foundPlacement()}<section class="emenu-col" data-area="placement"><p class="emenu-title">{ta('props.tabPlacement')}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
   <div class="emenu-cols emenu-search" class:emenu-two={wide} {@attach menuSearch(query, searchLangs.ready ? matchAny : matchWords)}>
     <PinScope away={() => NONE_PINNED} pins={pinnedShown}>
-      {#if wide}
-        <div class="emenu-column">{@render foundContent()}{@render foundStyle()}</div>
-        <div class="emenu-column">{@render foundPlacement()}</div>
-      {:else}
-        {@render foundContent()}{@render foundStyle()}{@render foundPlacement()}
-      {/if}
+      <!-- Every capability stands in the search's copy, so a setting in one the block has not taken is found where it stands (ADR-0031) -->
+      <CapScope forced={() => true}>
+        {#if wide}
+          <div class="emenu-column">{@render foundContent()}{@render foundStyle()}</div>
+          <div class="emenu-column">{@render foundPlacement()}</div>
+        {:else}
+          {@render foundContent()}{@render foundStyle()}{@render foundPlacement()}
+        {/if}
+      </CapScope>
     </PinScope>
   </div>
 {:else}
@@ -394,7 +394,7 @@
        Pinned stands outside the scope that takes its settings out of the areas. -->
   {#snippet areaContent()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="content" title={ta('props.tabContent')} counts={layout === 'narrow'}>{@render menuContent()}</MenuArea></PinScope>{/snippet}
   {#snippet areaStyle()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="style" title={ta('props.tabStyle')} counts={layout === 'narrow'}>{@render menuStyle()}</MenuArea></PinScope>{/snippet}
-  {#snippet areaPlacement()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="placement" title={ta('props.tabPlacement')} counts={layout === 'narrow'} chip={layoutChip}>{@render menuPlacement()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaPlacement()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="placement" title={ta('props.tabPlacement')} counts={layout === 'narrow'}>{@render menuPlacement()}</MenuArea></PinScope>{/snippet}
   <!-- The chips: one for each area, jumping to where it starts, the area in view marked -->
   {#snippet chips()}
     {#if shortcuts === 'chips' && layout !== 'tabs'}

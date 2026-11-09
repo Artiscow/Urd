@@ -92,13 +92,18 @@ let lastHistoryKey = null;
 /** While a change runs as a step of its own (asOwnStep), and the number that sets it apart (ownStepKey). */
 let ownStepDepth = 0;
 let ownSteps = 0;
+/** The key of the step of its own running now: its first change's, which every change after it in the step takes, so several changes are one step (a capability's way back clears several settings). */
+let ownStepNow = null;
 
 /** Keys whose next change is a step of its own, for a change the preview makes and hands back after the call that asked for it has returned (ownStepNext). */
 const ownNext = new Set();
 
 /** Runs `fn` as an undo step of its own: a setting's way back never joins the change before it, so an undo right after brings that change back, and the next change never joins it. */
 function asOwnStep(fn) {
-  if (ownStepDepth === 0) ownSteps += 1;
+  if (ownStepDepth === 0) {
+    ownSteps += 1;
+    ownStepNow = null;
+  }
   ownStepDepth += 1;
   try {
     return fn();
@@ -274,7 +279,7 @@ function readDraft(id) {
  * @param {{caret?: {blockId: string, offset: number}|null, pages?: string[]}} [options] The caret the change was typed at, and pages beside the open one the change writes, whose drafts the step holds
  */
 function pushHistory(key, { caret = null, pages = [] } = {}) {
-  if (ownStepDepth > 0) key = ownStepKey(key, ownSteps);
+  if (ownStepDepth > 0) key = ownStepNow ??= ownStepKey(key, ownSteps);
   else if (ownNext.delete(key)) key = ownStepKey(key, (ownSteps += 1));
   const now = Date.now();
   if (joinsLast(lastHistoryKey === null ? null : { key: lastHistoryKey, at: lastHistoryAt }, key, now)) {

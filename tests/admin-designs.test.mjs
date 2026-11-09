@@ -155,12 +155,13 @@ function windowContext() {
     setCollectionsLayout(v) { this.collectionsLayout = v; keep('urd-collections-layout', v, 'drill'); },
     setCsvPreview(v) { this.csvPreviewPref = v; keep('urd-csv-preview', v, 'dialog'); },
   };
-  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', shortcutsPref: 'pinned', designsPref: 'row' };
+  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', capListPref: 'list', shortcutsPref: 'pinned', designsPref: 'row' };
   const c = {
     ed, ta: (k) => k, menu,
     setMenuFormPref(v) { menu.formPref = v; keep('urd-admin-menu-width', v, 'wide'); },
     setFoldsPref(v) { menu.foldsPref = v; keep('urd-folds', v, 'left'); },
     setExtraPref(v) { menu.extraPref = v; keep('urd-extra-settings', v, 'shown'); },
+    setCapListPref(v) { menu.capListPref = v; keep('urd-cap-list', v, 'list'); },
     setShortcutsPref(v) { menu.shortcutsPref = v; keep('urd-menu-shortcuts', v, 'pinned'); },
     setDesignsPref(v) { menu.designsPref = v; keep('urd-design-choice', v, 'row'); },
     get designs() {

@@ -1,7 +1,7 @@
 /**
  * Which folds stand open, in every surface of the admin (the row kit, 0.7.30.2): one store, keyed by the surface and the fold's id, so a fold stays as it was left when the surface is drawn again (another block selected, a panel reopened).
  * The element menu's surface is 'menu'; a panel's is its name.
- * It also keeps, for the session, which rows a fold's ⋮ has shown («Extra settings» as a menu, lib/rows/Fold.svelte), by the fold and the row's own name.
+ * It also keeps, for the session, which rows a fold's «Add a setting» has shown («Extra settings» as a menu, lib/rows/Fold.svelte), by the fold and the row's own name.
  */
 import { SvelteSet } from 'svelte/reactivity';
 
@@ -9,7 +9,7 @@ const open = new SvelteSet();
 /** The folds that have had their first showing this session: a fold that starts open does so once, and is then left as the owner leaves it. */
 const seen = new Set();
 const keyOf = (surface, id) => `${surface}:${id}`;
-/** The rows shown from a fold's ⋮, by the fold's key and the row's name. */
+/** The rows shown from a fold's «Add a setting», by the fold's key and the row's name. */
 const revealed = new Set();
 
 export const folds = {
@@ -28,10 +28,14 @@ export const folds = {
     seen.add(mark);
     open.add(key);
   },
-  /** Whether a row of the fold has been shown from its ⋮, or kept once it held a value of its own. */
+  /** Whether a row of the fold has been shown from its «Add a setting», or kept once it held a value of its own. */
   isShown: (surface, id, row) => revealed.has(`${keyOf(surface, id)}:${row}`),
   /** Keeps a row of the fold shown for the session. */
   show(surface, id, row) {
     revealed.add(`${keyOf(surface, id)}:${row}`);
+  },
+  /** Hides a row of the fold again, as the list it was shown from takes it away. */
+  hide(surface, id, row) {
+    revealed.delete(`${keyOf(surface, id)}:${row}`);
   },
 };

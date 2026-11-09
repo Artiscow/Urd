@@ -2,6 +2,36 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.12.1): capabilities as cards, and the small tool windows redrawn
+
+- [ ] A text block with nothing set: no card for Motion, the text box, «Pin while scrolling», «Hide on phones», the name for links or «Shows at once»; the «+» in the menu's head lists them by area, each with a line on what it does
+- [ ] Add Motion from the «+»: its card stands in Style, glows once and takes the focus; its × takes the motion away in one undo step, and the «+» offers it again
+- [ ] «Hide on phones» and «Shows at once» are cards of one line with an On/Off chip
+- [ ] A block with an entrance keeps its Motion card after a reload
+- [ ] A block whose name a link leads to: the × on the name for links is dimmed, with its tooltip
+- [ ] Urd settings «The add list»: «Tiles» shows the «+»'s list in two columns
+- [ ] The menu's head: copy, up, down and delete beside the «+», all the same size; delete takes the block away at one press, in dark red; no close button, and a press outside or Escape closes the menu
+- [ ] The bar's Motion tool on a block without motion opens Motion, and a change there leaves the block with its Motion card
+- [ ] With the block's full menu open, a tool on its bar opens its group inside the menu, open and in view, instead of closing the menu
+- [ ] The width button in the head keeps the menu beside its block
+- [ ] With «Folds: One at a time», every tool's small window shows its group
+- [ ] A small window: no grip; holding the head and dragging moves it; the tool's drawing and name stand at the left; the group's reset stands in the head while the group holds a value of its own; the expand button opens the full menu with the same group open
+- [ ] A small window shows every setting of its group, also with «Extra settings: Added from a menu», and is as wide as it needs («View and count» keeps «Tell search engines about the events» on one line)
+- [ ] A calendar's «Design» small window: the reset stands in the head, clear of the pictures
+- [ ] A small window under Style («Colours», «Text fields») on a calendar with a design of its own shows only its own group
+- [ ] A switch that holds a value of its own shows no reset arrow; other rows still show theirs
+- [ ] A calendar with a design that has an announcement: «Show the calendar's announcement» stands alone until it is on, then becomes the group with its settings; the same for the footer's «Show footer» and «Show call to action», and the nav's «Show announcement»
+- [ ] «Extra settings: Added from a menu» in the full menu: «+ Add a setting» stands under the group's rows beside «Reset this group», a soft tint of the admin's accent; resting the mouse on it opens its list in place, moving away closes it, and a press opens it with the focus on the first row
+- [ ] The rows of that list light up at once as the mouse moves over them
+- [ ] A setting added from the list and changed, then taken away from the same list: it goes back to its standard and hides again, and one undo brings it back
+- [ ] No «?» on the Placement heading
+- [ ] A calendar: «Show calendar filter» on one line, its explanation in the tooltip; «Field» over the picker in «Text fields»; «Icon when empty» opens its picker from its button only; a site calendar's dot and name stand on one line with the grip and the ×; the colour sections stand apart under lines
+- [ ] The gear pressed again closes the full menu, and a tool pressed again closes its small window
+- [ ] The docked Settings panel: the «+» list stands whole beside the panel, and a small window's expand button opens the panel at the same group
+- [ ] A calendar's «Week design» and «Month design» under «Show view switcher», and «Edge stripe on the boxes»' colour, each show their own reset arrow; so do «Pin while scrolling»'s «Pinning», «Distance from the top», «Position in the window» and «Release»
+- [ ] A shape: adding «Hide on phones» or «Shows at once» from the «+» keeps it hidden on phones and shown at once, and its card stands with the chip On
+- [ ] «Add a setting»: a switch taken away, then the undo: the switch is back on and shown again
+
 ### Test batch (0.7.33.10.4): the map's and the plugin blocks' fields as setting rows
 
 - [ ] A map: «Zoom (1 to 19)» shows its arrow when it is not 15, which takes it back to 15, in Pinned too

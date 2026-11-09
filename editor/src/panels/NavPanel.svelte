@@ -18,6 +18,7 @@
   /** Each fold's value while closed and its group of settings to go back from. */
   const fold = navFolds(ed);
   const N = 'nav';
+  const siteDraft = $derived(ed.siteDraft);
 </script>
 
 <div class="panel-body">
@@ -45,7 +46,8 @@
   <Fold id="tools" surface={N} title={ta('group.tools')} tip={ta('tip.nav.tools')} value={fold.toolsValue()} group={fold.toolsGroup()}>
     <NavTools />
   </Fold>
-  <Fold id="announcement" surface={N} title={ta('group.announcement')} tip={ta('tip.nav.announce')} value={fold.announcementValue()} group={fold.announcementGroup()}>
+  <!-- The announcement: its switch alone until it is on, and a group of what it then holds -->
+  <Fold id="announcement" surface={N} title={ta('group.announcement')} tip={ta('tip.nav.announce')} value={fold.announcementValue()} group={fold.announcementGroup()} rows={siteDraft.nav?.announcement?.show ? undefined : 1}>
     <NavAnnouncement />
   </Fold>
 </div>

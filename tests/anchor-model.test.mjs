@@ -163,6 +163,8 @@ test('spotLinks: the blocks, menu items and footer links that point at a spot, b
   assert.deepEqual(spotLinks({ id: 'sec-bbbb2222', name: '' }, { page, pageId: 'kaker', path: '/kaker', site }).map((u) => u.blockId), ['blk-6']);
   assert.deepEqual(spotLinks({ id: 'sec-aaaa1111', name: '' }, { page, pageId: 'kaker', path: '/kaker', site: null }).map((u) => u.blockId), ['blk-1', 'blk-2'], 'without its name a spot is found by its id alone');
   assert.deepEqual(spotLinks({ id: 'sec-x' }, {}), []);
+  assert.deepEqual(spotLinks({ id: 'sec-aaaa1111', name: 'priser' }, { page, pageId: 'kaker', path: '/kaker', site, byName: true }).map((u) => u.blockId ?? u.words), ['blk-3', 'Nye priser'],
+    'by name: only the links a cleared name would cut, not those that land by the spot\'s id');
   const front = { sections: [{ id: 'sec-topp1234', anchor: 'velkommen', blocks: [] }] };
   const frontSite = { footer: { baseline: [{ label: 'Til toppen', href: '/#velkommen' }, { label: 'Annen side', href: '/kaker#velkommen' }] } };
   assert.deepEqual(spotLinks({ id: 'sec-topp1234', name: 'velkommen' }, { page: front, pageId: 'hjem', path: '/', site: frontSite }), [{ area: 'footer', words: 'Til toppen' }], 'the front page\'s address is /');

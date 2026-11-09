@@ -1,8 +1,9 @@
 <script>
-  /* The block's motion, at the foot of Style in the element menu: how it comes in as the page scrolls to it, with its duration and delay, and what it does under the pointer; a group that shows the effect while closed, its rows from the row kit as a section's motion has them.
+  /* The block's motion, at the foot of Style in the element menu: how it comes in as the page scrolls to it, with its duration and delay, and what it does under the pointer, its rows from the row kit as a section's motion has them.
+     A capability (ADR-0031): a card while the block has an entrance or an effect, or was given motion this session, and nothing until then.
      The entrance and the pointer's effect are setting rows that tell whether the block has one, with the way back to none; the duration and the delay stand in the entrance's row. */
   import { getContext } from 'svelte';
-  import Fold from '../lib/rows/Fold.svelte';
+  import Capability from '../lib/rows/Capability.svelte';
   import Setting from '../lib/rows/Setting.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import NumberRow from '../lib/rows/NumberRow.svelte';
@@ -11,17 +12,11 @@
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions } = ed;
 
-  /** What the Motion group shows while closed. */
-  function menuMotionValue() {
-    const id = isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : selectedBlock.hover?.type;
-    const hit = id ? [...blockEntranceOptions(), ...hoverOptions()].find(([v]) => v === id) : null;
-    return hit ? hit[1] : ta('common.none');
-  }
   /** The effect under the pointer: the block's own, or one an older block keeps as its animation. */
   const hoverNow = $derived(selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''));
 </script>
 
-<Fold id="motion" title={ta('group.motion')} value={menuMotionValue()}>
+<Capability id="motion">
   <Setting own={isEntrance(selectedBlock.animation)} reset={() => setBlockAnimation(null)}>
     <SelectRow label={ta('lbl.animIn')} title={ta('tip.props.blockAnim')} value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
       options={blockEntranceOptions()} onchange={(v) => setBlockAnimation(v || null)} />
@@ -36,4 +31,4 @@
     <SelectRow label={ta('lbl.onHover')} title={ta('tip.props.blockHover')} value={hoverNow}
       options={hoverOptions()} onchange={(v) => setBlockHover(v || null)} />
   </Setting>
-</Fold>
+</Capability>

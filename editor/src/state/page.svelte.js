@@ -3,9 +3,12 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { tick } from 'svelte';
+import { capability } from '../menu/capabilities.js';
+import { keepCapability } from '../menu/capabilities.svelte.js';
 import { measureMenuRoom as measureRoom, menu, menuIsWide, MENU_WIDE_W, MENU_SMALL_W, chooseArea, menuDocked } from '../menu/state.svelte.js';
 import { folds } from '../lib/folds.svelte.js';
 import { onlyOf } from '../lib/only-group.js';
+import { BAR_ICONS } from '$engine/bar-tools.js';
 import { placeBesideBlock, clampPlace, givesWay } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
@@ -187,9 +190,50 @@ let menuOpens = 0;
 /** The last small panel's measured size, the best guess at the next one's until it is measured. */
 let smallMenuSize = null;
 
+/** Whether a press opens what stands open now: the same tool's menu or small panel, for the same block, or for the same section. */
+function opensAgain(only, section, id) {
+  if (!blockMenu || Boolean(blockMenu.section) !== section || (blockMenu.only ?? null) !== only) return false;
+  return section ? activeSectionId === id : selectedBlock?.blockId === id;
+}
+
+/**
+ * What a tool of the bar asks for, opened inside the full menu that stands open for its block, in place of a small window: its group opened and brought into view, its capability's card kept for the session (ADR-0031), or its area chosen.
+ */
+async function revealInMenu(only) {
+  const [kind, id] = only.split(':');
+  // The full menu floating, or the Settings panel where the menu is docked; a small window closing as the full menu opens is passed by.
+  const root = document.querySelector('.block-menu:not(.small)') ?? document.querySelector('aside.panel');
+  if (kind === 'area' || kind === 'loose') {
+    chooseArea(id, root);
+    return;
+  }
+  if (kind === 'fold') {
+    folds.set('menu', id, true);
+    if (capability(id) && selectedBlock) keepCapability(selectedBlock.blockId, id);
+  }
+  await tick();
+  const target = root?.querySelector(kind === 'look' ? `[data-pin="${id}"]` : `[data-fold="${id}"]`);
+  // A fold drawn closed, as a menu just drawn whose folds open one at a time leaves all but the first, is opened where it stands, which closes the others of its area.
+  if (target instanceof HTMLDetailsElement && !target.open) target.open = true;
+  const area = target?.closest('[data-area]')?.dataset.area;
+  if (area && menu.tab !== area) {
+    menu.tab = area;
+    await tick();
+  }
+  target?.scrollIntoView({ block: 'nearest' });
+}
+
 function onBlockMenu(msg) {
+  const only = onlyOf(msg.only);
+  // A tool pressed while the block's full menu stands open opens its group in that menu, not a small window in its place.
+  if (only && blockMenu && !blockMenu.only && !blockMenu.section && selectedBlock?.blockId === msg.blockId) {
+    revealInMenu(only);
+    return;
+  }
+  // A second press on the tool that opened the menu, for the same block, closes it, as the bar's buttons toggle; a request for one group always opens.
+  const again = typeof msg.group !== 'string' && opensAgain(only, false, msg.blockId);
   onSelectBlock(msg);
-  if (!selectedBlock) return;
+  if (again || !selectedBlock) return;
   // A request for one group (the product cards' «Choose the catalogue») opens it in the Content area.
   if (typeof msg.group === 'string' && /^[a-z-]+$/.test(msg.group)) {
     folds.set('menu', msg.group, true);
@@ -197,9 +241,8 @@ function onBlockMenu(msg) {
   }
   menuAnchor = msg.rect;
   // A tool of the bar with small panels asks for one group alone, in a small floating menu beside the block whatever the menu's form.
-  const only = onlyOf(msg.only);
   if (only?.startsWith('fold:')) folds.set('menu', only.slice(5), true);
-  if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), only, title: toolTitle(msg), opened: ++menuOpens };
+  if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), only, title: toolTitle(msg), icon: toolIcon(msg), opened: ++menuOpens };
   else if (menuDocked()) openDockedMenu();
   else blockMenu = menuPlaceFor(msg.rect);
 }
@@ -210,6 +253,26 @@ function toolTitle(msg) {
   return msg.only === 'placement' ? ta('props.tabPlacement') : ta('group.motion');
 }
 
+/** A small panel's drawing: the name of one of the bar's own drawings (BAR_ICONS in bar-tools.js), as the bar sends it, or the motion's and the placement's own. */
+function toolIcon(msg) {
+  if (typeof msg.icon === 'string' && Object.hasOwn(BAR_ICONS, msg.icon)) return msg.icon;
+  return msg.only === 'placement' ? 'arrange' : msg.only === 'motion' ? 'motion' : null;
+}
+
+/** What a small panel keeps when it is moved or put back beside its block. */
+const smallOf = (open) => (open?.only ? { only: open.only, title: open.title, icon: open.icon, w: open.w, h: open.h, opened: open.opened } : {});
+
+/** The small panel's way to the full menu: the block's or the section's menu in the form the Urd settings choose, with the group the panel held opened and in view there. */
+async function openFullMenu() {
+  if (!blockMenu?.only || !menuAnchor) return;
+  const { only, section } = blockMenu;
+  if (menuDocked()) openDockedMenu();
+  else if (section) blockMenu = { ...menuPlaceFor(menuAnchor, false, true), section: true };
+  else blockMenu = menuPlaceFor(menuAnchor);
+  await tick();
+  revealInMenu(only);
+}
+
 /** The docked forms of the menu («Element menu»): the gear opens the Settings panel in the panel column, and no menu floats. */
 function openDockedMenu() {
   blockMenu = null;
@@ -218,15 +281,23 @@ function openDockedMenu() {
 
 /** The gear on a section's bar, or «Settings» in its right-click menu: the section chosen, no block selected, and its settings in the floating menu beside it. */
 function onSectionMenu(msg) {
-  onSelectBlock({});
-  if (!store?.data.sections.some((s) => s.id === msg.sectionId)) return;
-  onSelectSection({ sectionId: msg.sectionId });
-  menuAnchor = msg.rect;
   // A section has no design, so a small panel of one is never drawn for it.
   const asked = msg.only === 'motion' ? 'fold:sec-motion' : onlyOf(msg.only);
   const only = asked?.startsWith('look:') ? null : asked;
+  // A tool pressed while the section's full menu stands open opens its group there, as a block's does.
+  if (only && blockMenu?.section && !blockMenu.only && activeSectionId === msg.sectionId) {
+    revealInMenu(only);
+    return;
+  }
+  // A second press on the tool that opened the section's menu closes it.
+  const again = opensAgain(only, true, msg.sectionId);
+  onSelectBlock({});
+  if (!store?.data.sections.some((s) => s.id === msg.sectionId)) return;
+  onSelectSection({ sectionId: msg.sectionId });
+  if (again) return;
+  menuAnchor = msg.rect;
   if (only?.startsWith('fold:')) folds.set('menu', only.slice(5), true);
-  if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), section: true, only, title: toolTitle(msg), opened: ++menuOpens };
+  if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), section: true, only, title: toolTitle(msg), icon: toolIcon(msg), opened: ++menuOpens };
   else if (menuDocked()) openDockedMenu();
   else blockMenu = { ...menuPlaceFor(msg.rect, false, true), section: true };
 }
@@ -245,7 +316,7 @@ function menuSize(small = false) {
   measureMenuRoom();
   // A small panel is as tall as what it holds: its measured height, once one has been measured, else the full menu's.
   return {
-    w: Math.min(small ? MENU_SMALL_W : menuIsWide() ? MENU_WIDE_W : 400, window.innerWidth - 16),
+    w: Math.min(small ? (smallMenuSize?.w ?? MENU_SMALL_W) : menuIsWide() ? MENU_WIDE_W : 400, window.innerWidth - 16),
     h: small && smallMenuSize ? smallMenuSize.h : Math.min(window.innerHeight * 0.72, 620),
   };
 }
@@ -259,8 +330,8 @@ function fitSmallMenu(size, first) {
   if (!blockMenu?.only) return;
   smallMenuSize = size;
   const placed = first && !menu.place && menuAnchor ? menuPlaceFor(menuAnchor, true, Boolean(blockMenu.section)) : null;
-  const next = { left: placed?.left ?? blockMenu.left, top: placed?.top ?? blockMenu.top, h: size.h };
-  if (next.left !== blockMenu.left || next.top !== blockMenu.top || next.h !== blockMenu.h) blockMenu = { ...blockMenu, ...next };
+  const next = { left: placed?.left ?? blockMenu.left, top: placed?.top ?? blockMenu.top, w: size.w, h: size.h };
+  if (next.left !== blockMenu.left || next.top !== blockMenu.top || next.w !== blockMenu.w || next.h !== blockMenu.h) blockMenu = { ...blockMenu, ...next };
 }
 
 /**
@@ -270,13 +341,13 @@ function fitSmallMenu(size, first) {
  * are multiplied by the scale before being added to the iframe's window
  * position (visual = ir + scale * inner).
  */
-function menuPlaceFor(rect, small = false, section = false) {
+function menuPlaceFor(rect, small = false, section = false, { keepForm = false } = {}) {
   const view = { w: window.innerWidth, h: window.innerHeight };
   const ir = previewState.iframeEl?.getBoundingClientRect();
   const s = previewState.scale;
   const block = ir ? { left: ir.left + s * rect.left, top: ir.top + s * rect.top, right: ir.left + s * rect.right, bottom: ir.top + s * rect.bottom } : null;
   // The wide menu opened beside a block gives way to one column where that covers clearly less of the block (givesWay); a section's menu, and one the owner dragged, keep their form.
-  if (!small) {
+  if (!small && !keepForm) {
     menu.cramped = false;
     menu.cramped = givesWay(block, view, { wide: menuIsWide(), wideW: MENU_WIDE_W, narrowW: 400, h: menuSize().h, min: menu.min, dragged: Boolean(menu.place), section });
   }
@@ -301,13 +372,20 @@ function setBlockLayer(dir) {
 function moveBlockMenu(place, size = menuSize(Boolean(blockMenu?.only))) {
   const next = clampPlace(place, size, { w: window.innerWidth, h: window.innerHeight }, menu.min);
   menu.place = next;
-  blockMenu = { ...next, ...(blockMenu?.section ? { section: true } : {}), ...(blockMenu?.only ? { only: blockMenu.only, title: blockMenu.title, h: blockMenu.h, opened: blockMenu.opened } : {}) };
+  blockMenu = { ...next, ...(blockMenu?.section ? { section: true } : {}), ...smallOf(blockMenu) };
+}
+
+/** The floating menu beside its block again at the width it has now, as the button in its head changes its form; a menu the owner dragged stays where it was put. */
+function placeMenuAgain() {
+  if (!blockMenu || menu.place || !menuAnchor) return;
+  const next = menuPlaceFor(menuAnchor, Boolean(blockMenu.only), Boolean(blockMenu.section), { keepForm: true });
+  blockMenu = { ...blockMenu, left: next.left, top: next.top };
 }
 
 /** «Back beside the block»: the remembered place is dropped, and the menu stands beside the block it was opened at. */
 function menuBackToBlock() {
   menu.place = null;
-  if (menuAnchor) blockMenu = { ...menuPlaceFor(menuAnchor, Boolean(blockMenu?.only), Boolean(blockMenu?.section)), ...(blockMenu?.section ? { section: true } : {}), ...(blockMenu?.only ? { only: blockMenu.only, title: blockMenu.title, h: blockMenu.h, opened: blockMenu.opened } : {}) };
+  if (menuAnchor) blockMenu = { ...menuPlaceFor(menuAnchor, Boolean(blockMenu?.only), Boolean(blockMenu?.section)), ...(blockMenu?.section ? { section: true } : {}), ...smallOf(blockMenu) };
 }
 
 /** Shared flow for block changes from the Properties panel. */
@@ -1181,7 +1259,9 @@ export const pageState = {
   set blockMenu(v) { blockMenu = v; },
   moveBlockMenu,
   menuBackToBlock,
+  placeMenuAgain,
   fitSmallMenu,
+  openFullMenu,
   onMenuArea,
   measureMenuRoom,
   get designPicker() { return designPicker; },

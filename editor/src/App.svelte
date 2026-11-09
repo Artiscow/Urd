@@ -9,6 +9,9 @@
   import { setContext, onMount } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from './lib/icons.js';
+  import CapabilityAdd from './menu/CapabilityAdd.svelte';
+  import BlockActions from './menu/BlockActions.svelte';
+  import { menu } from './menu/state.svelte.js';
   import Dropdown from './lib/Dropdown.svelte';
   import PagesPanel from './panels/PagesPanel.svelte';
   import NavPanel from './panels/NavPanel.svelte';
@@ -152,6 +155,9 @@
               <h2 title={ed.PANEL_INTROS[ed.activePanel]?.map((k) => ta(k)).join('\n')}>{ed.PANEL_LABELS[ed.activePanel]}</h2>
             {/if}
             <span class="panel-head-tools">
+              <!-- The docked menu's actions for the selected block and its way to add a capability to it (ADR-0031), as in the floating menu's head -->
+              {#if ed.activePanel === 'properties' && ed.selectedBlock}<BlockActions />{/if}
+              {#if ed.activePanel === 'properties' && ed.selectedBlock && !menu.propsQuery.trim()}<CapabilityAdd />{/if}
               {#if ed.panelHasGroups}
                 <button type="button" class="fold-all fold-toggle" class:collapse={ed.panelAllOpen}
                   title={ta(ed.panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
@@ -297,6 +303,6 @@
 </div>
 
 {#if ed.blockMenu && (ed.selectedBlock || (ed.blockMenu.section && ed.activeSectionId))}
-  <FloatingMenu pos={ed.blockMenu} onclose={() => (ed.blockMenu = null)} />
+  <FloatingMenu pos={ed.blockMenu} />
 {/if}
 

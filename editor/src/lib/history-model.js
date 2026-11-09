@@ -15,14 +15,14 @@ const TIME_JOINED_PREFIX = ['section-divider-', 'sticky-group:', 'sticky-dock:',
 
 /**
  * Whether a change joins the step before it instead of making its own.
- * The same key again joins: an `edit:` or `grid:` key at any pause (a text typed, a grid tuned), a panel setting's key while the changes come within MERGE_MS of each other (TIME_JOINED), and no other key.
+ * The same key again joins: an `edit:` or `grid:` key at any pause (a text typed, a grid tuned), a step of its own's key (ownStepKey) at any pause, a panel setting's key while the changes come within MERGE_MS of each other (TIME_JOINED), and no other key.
  * @param {{key: string, at: number}|null} last The step the history ended on, and when it last grew
  * @param {string} key The change's key
  * @param {number} now The time of the change, in ms
  */
 export function joinsLast(last, key, now) {
   if (!last || last.key !== key) return false;
-  if (key.startsWith('edit:') || key.startsWith('grid:')) return true;
+  if (key.startsWith('edit:') || key.startsWith('grid:') || OWN_STEP.test(key)) return true;
   if (!TIME_JOINED.has(key) && !TIME_JOINED_PREFIX.some((prefix) => key.startsWith(prefix))) return false;
   return now - last.at < MERGE_MS;
 }
@@ -34,6 +34,8 @@ export function joinsLast(last, key, now) {
  * @param {number} n A number no other such step has
  */
 export const ownStepKey = (key, n) => `${key}:own-step-${n}`;
+/** The mark a step of its own's key ends with (ownStepKey). */
+const OWN_STEP = /:own-step-\d+$/;
 
 /**
  * What kind of change a step was, from its key, as the list of steps names it: a dictionary key for its words, an icon, and whether it was made on a page (so the list names the page beside it).

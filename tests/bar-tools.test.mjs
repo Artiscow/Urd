@@ -9,8 +9,9 @@ import { register } from 'node:module';
 import { engineImport } from './_engine.mjs';
 register('./_svelte-loader.mjs', import.meta.url);
 
-const { BAR_GROUPS, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, barTools, isBarOnly } = await engineImport('bar-tools.js');
+const { BAR_GROUPS, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, BAR_ICONS, barTools, isBarOnly } = await engineImport('bar-tools.js');
 const { onlyOf } = await import('../editor/src/lib/only-group.js');
+const { capability } = await import('../editor/src/menu/capabilities.js');
 const ENGINE = JSON.parse(readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8')).engine;
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const family = (type) => read(`../editor/src/menu/families/${type === 'map' ? 'Fields' : type[0].toUpperCase() + type.slice(1)}.svelte`);
@@ -50,11 +51,18 @@ function conditionalFolds(source) {
   return found;
 }
 
-test('every group on a block\'s bar is a fold its family draws, under the same title', () => {
+test('every group on a block\'s bar is a fold its family draws, under the same title, or a capability\'s card it draws', () => {
   for (const [type, tools] of Object.entries(BAR_GROUPS)) {
-    const folds = foldsIn(family(type));
+    const source = family(type);
+    const folds = foldsIn(source);
+    // A capability's card carries its id as a fold does, and its title is the capability's own (menu/capabilities.js, ADR-0031).
+    const cards = new Set([...source.matchAll(/<Capability id="([^"]+)"/g)].map((m) => m[1]));
     for (const tool of tools.filter((t) => t.only.startsWith('fold:'))) {
       const id = tool.only.slice(5);
+      if (cards.has(id)) {
+        assert.ok(capability(id), `${type}: the card «${id}» is no capability in the catalogue`);
+        continue;
+      }
       assert.ok(folds.has(id), `${type}: no fold «${id}» in its family`);
       assert.equal(folds.get(id), tool.labelKey, `${type}: «${id}» is titled ${folds.get(id)}`);
     }
@@ -135,14 +143,40 @@ test('a block\'s bar ends in its motion and its placement, with its design first
 });
 
 test('every tool\'s name is in the core dictionaries, and its drawing in the engine\'s set', async () => {
-  const edit = read(`../template/assets/engine/${ENGINE}/preview-edit.js`);
-  const drawings = new Set([...edit.slice(edit.indexOf('const BAR_ICONS = {'), edit.indexOf('};', edit.indexOf('const BAR_ICONS = {'))).matchAll(/^ {2}([a-z]+):/gm)].map((m) => m[1]));
   const tools = [...Object.keys(BAR_GROUPS).flatMap((type) => barTools(type, { designs: true })), ...SECTION_TOOLS];
   for (const lang of ['en-GB', 'nb', 'tr']) {
     const dict = (await engineImport(`locales/admin/${lang}.js`)).default.strings;
     for (const tool of tools) assert.ok(dict[tool.labelKey], `${lang} lacks ${tool.labelKey}`);
   }
-  for (const tool of tools) assert.ok(['motion', 'arrange', 'design'].includes(tool.icon) || drawings.has(tool.icon), `no drawing «${tool.icon}»`);
+  for (const tool of tools) assert.match(BAR_ICONS[tool.icon] ?? '', /^<svg [^>]*aria-hidden="true">/, `no drawing «${tool.icon}»`);
+});
+
+test('the small window a tool opens names it with the tool\'s own drawing, sent by name and drawn from the same set', () => {
+  const edit = read(`../template/assets/engine/${ENGINE}/preview-edit.js`);
+  assert.ok(!/const BAR_ICONS = \{/.test(edit), 'the bar draws from the set in bar-tools.js');
+  for (const fn of ['openBlockTool', 'openSectionTool']) {
+    const start = edit.indexOf(`function ${fn}(`);
+    assert.match(edit.slice(start, edit.indexOf('\n}\n', start)), /only, title, icon, rect/, `${fn} sends the drawing's name`);
+  }
+  const page = read('../editor/src/state/page.svelte.js');
+  assert.match(page, /Object\.hasOwn\(BAR_ICONS, msg\.icon\)/, 'the editor takes only a name from the set');
+  assert.match(read('../editor/src/menu/FloatingMenu.svelte'), /BAR_ICONS\[pos\.icon\]/);
+});
+
+test('a press on a bar button that opens the menu leaves the menu standing to the message after it', () => {
+  const edit = read(`../template/assets/engine/${ENGINE}/preview-edit.js`);
+  // The gear, the design button and the section's gear are marked.
+  for (const fn of ['menuButton', 'designButton']) {
+    const start = edit.indexOf(`function ${fn}(`);
+    assert.match(edit.slice(start, edit.indexOf('\n}\n', start)), /return opensMenu\(btn\);/, fn);
+  }
+  assert.match(edit, /opensMenu\(gear\);/, 'the section\'s gear');
+  // Every tool that opens a small window is marked.
+  const tools = [...edit.matchAll(/barButton\([^\n]*open(?:Block|Section)Tool\(/g)];
+  assert.ok(tools.length >= 5, 'the block\'s and the section\'s tools are found');
+  for (const m of tools) assert.equal(edit.slice(m.index - 10, m.index), 'opensMenu(', edit.slice(m.index, m.index + 80));
+  // The editor's listener on the preview closes the menu at any other press only.
+  assert.match(read('../editor/src/state/preview.svelte.js'), /if \(pageState\.blockMenu && !event\.target\?\.closest\?\.\('\[data-opens-menu\]'\)\) pageState\.blockMenu = null;/);
 });
 
 test('the editor opens exactly what the bar asks for', () => {

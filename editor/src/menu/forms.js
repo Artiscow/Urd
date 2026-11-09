@@ -37,5 +37,8 @@ export const TOOLBAR_GEARS = ['on', 'off'];
 /** What the bar's design button opens (preview-edit.js openBlockDesign): a small window beside the block with every design's picture, by default, or the full window, the design picker. */
 export const TOOLBAR_DESIGNS = ['small', 'full'];
 
+/** How the list from the «+» in the element menu's head shows what a block can take (menu/CapabilityAdd.svelte): one under the other with a line on each, by default, or tiles in two columns. */
+export const CAP_LISTS = ['list', 'tiles'];
+
 /** The Pinned rows, the same rows as tiles, the search field alone, or chips that jump to each area. */
 export const SHORTCUTS_MODES = ['pinned', 'tiles', 'search', 'chips'];

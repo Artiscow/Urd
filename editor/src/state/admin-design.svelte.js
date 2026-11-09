@@ -8,7 +8,7 @@ import { matchAny } from '$engine/search-langs.js';
 import { PARTS, ADMIN_DESIGNS, partDefault, readParts, designState, designWrites, restoreWrites } from '../lib/admin-designs.js';
 import { SETTINGS_GROUPS } from '../lib/settings-model.js';
 import { searchLangs } from '../lib/search-langs.svelte.js';
-import { menu, setMenuFormPref, setFoldsPref, setExtraPref, setShortcutsPref, setDesignsPref } from '../menu/state.svelte.js';
+import { menu, setMenuFormPref, setFoldsPref, setExtraPref, setShortcutsPref, setDesignsPref, setCapListPref } from '../menu/state.svelte.js';
 
 const ROWS = Object.fromEntries(SETTINGS_GROUPS.flatMap((g) => g.settings).map((s) => [s.id, s]));
 
@@ -107,6 +107,7 @@ export function settingsContext(ed) {
     setMenuFormPref,
     setFoldsPref,
     setExtraPref,
+    setCapListPref,
     setShortcutsPref,
     setDesignsPref,
     get match() {

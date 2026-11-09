@@ -126,4 +126,5 @@ test('a setting\'s way back is a step of its own: it joins neither the change be
   assert.equal(joinsLast({ key: own, at: 0 }, ownStepKey(key, 2), 10), false, 'two ways back are two steps');
   assert.deepEqual(stepKind(own), stepKind(key));
   assert.deepEqual(stepKind(ownStepKey('edit:theme-accent', 3)), stepKind('edit:theme-accent'));
+  assert.equal(joinsLast({ key: ownStepKey('sticky', 4), at: 0 }, ownStepKey('sticky', 4), MERGE_MS * 10), true, 'the changes of one step of its own join it, whatever their key began as and however long they take');
 });
