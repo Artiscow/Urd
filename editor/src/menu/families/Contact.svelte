@@ -45,7 +45,7 @@
     <button class="ghost action" onclick={editDetails}>{ta('ui.editSiteContact')}</button>
     <!-- The map design's map: behind a cover until a visitor presses it, or with the page -->
     {#if design.geo}
-      <Setting key="askFirst" shown={ta('common.on')}>
+      <Setting key="askFirst">
         <SwitchRow label={ta('lbl.embedAskFirst')} title={ta('tip.embed.askFirst')} checked={selectedBlock.props.askFirst !== false} onchange={(on) => setBlockProp('askFirst', on)} />
       </Setting>
     {/if}
@@ -56,16 +56,16 @@
   {#snippet contactLook()}
     <!-- The design's own choices, under the design row the menu draws first in Style -->
     {#if design.band}
-      <Setting key="band" shown={ta('common.on')}>
+      <Setting key="band">
         <SwitchRow label={ta('lbl.contactBand')} title={ta('tip.contact.band')} checked={selectedBlock.props.band !== false} onchange={(on) => setBlockProp('band', on)} />
       </Setting>
     {/if}
     {#if design.id !== 'strip'}
-      <Setting key="vcard" shown={ta('common.off')}>
+      <Setting key="vcard">
         <SwitchRow label={ta('lbl.contactVcard')} title={ta('tip.contact.vcard')} checked={selectedBlock.props.vcard === true} onchange={(on) => setBlockProp('vcard', on)} />
       </Setting>
     {/if}
-    <Setting key="dock" shown={ta('common.off')}>
+    <Setting key="dock">
       <SwitchRow label={ta('lbl.contactDock')} title={ta('tip.contact.dock')} checked={selectedBlock.props.dock === true} onchange={(on) => setBlockProp('dock', on)} />
     </Setting>
   {/snippet}

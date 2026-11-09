@@ -23,12 +23,12 @@
     <SelectRow label={ta('blocks.collection')} title={ta('tip.collection.source')} value={selectedBlock.props.collection ?? ''}
       options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
       onchange={(v) => setBlockProp('collection', v || null)} />
-    <Setting key="limit" shown="6" pin="limit">
+    <Setting key="limit" pin="limit">
       <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
         <input type="number" min="0" max="100" value={(selectedBlock.props.limit ?? 6) || ''} placeholder={ta('common.all')}
           onchange={(e) => { const n = Math.max(0, Math.min(100, Math.round(Number(e.target.value)) || 0)); setBlockProp('limit', n); e.target.value = n || ''; }} /></label>
     </Setting>
-    <Setting key="newestFirst" shown={ta('common.on')}>
+    <Setting key="newestFirst">
       <SwitchRow label={ta('lbl.newestFirst')} title={ta('tip.collection.newestFirst')} checked={selectedBlock.props.newestFirst !== false} onchange={(on) => setBlockProp('newestFirst', on)} />
     </Setting>
   {/snippet}

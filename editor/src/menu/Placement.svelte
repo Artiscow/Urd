@@ -1,6 +1,6 @@
 <script>
   /* Placement (0.7.26.2): how the block sits on the page and behaves there, and its name for links.
-     The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target, motion and the frame are groups that show their value while closed. */
+     The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target and the frame are groups that show their value while closed. The block's motion stands in Style (MotionFold.svelte). */
   import { getContext } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import Fold from '../lib/rows/Fold.svelte';
@@ -24,15 +24,8 @@
   const selectedBlock = $derived(ed.selectedBlock);
   const viewMode = $derived(ed.viewMode);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions, designWidth, handleMobileReset } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockSizeBound, setBlockHeightMode, setBlockHeightAlign, canStretch, setBlockHideMobile, setBlockDecor, designWidth, handleMobileReset } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
-
-  /** What the Motion group shows while closed. */
-  function menuMotionValue() {
-    const id = isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : selectedBlock.hover?.type;
-    const hit = id ? [...blockEntranceOptions(), ...hoverOptions()].find(([v]) => v === id) : null;
-    return hit ? hit[1] : ta('common.none');
-  }
 
   /** The "let go" options for sticky: only the sections AFTER the block's
    *  own (pinning backwards makes no sense; settings are shown only when
@@ -76,26 +69,6 @@
   </Setting>
   <!-- What belongs to the narrow-screen choice goes with it into Pinned -->
   {#if !pinned.has('fit')}<FitMin />{/if}
-{/snippet}
-{#snippet menuMotion()}
-  <label class="field-stack" title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
-    <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
-      options={blockEntranceOptions()}
-      onchange={(v) => setBlockAnimation(v || null)} /></label>
-  {#if isEntrance(selectedBlock.animation)}
-    <label title={ta('tip.anim.duration')}>{ta('lbl.durationMs')}
-      <input type="number" min="100" max="4000" step="100"
-        value={selectedBlock.animation.props.duration}
-        onchange={(e) => setBlockAnimProp('duration', Number(e.target.value))} /></label>
-    <label title={ta('tip.anim.delay')}>{ta('lbl.delayMs')}
-      <input type="number" min="0" max="4000" step="100"
-        value={selectedBlock.animation.props.delay}
-        onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
-  {/if}
-  <label class="field-stack" title={ta('tip.props.blockHover')}>{ta('lbl.onHover')}
-    <Dropdown value={selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : '')}
-      options={hoverOptions()}
-      onchange={(v) => setBlockHover(v || null)} /></label>
 {/snippet}
 {#snippet menuSticky()}
   {#if viewMode === 'desktop'}
@@ -172,7 +145,7 @@
       <SwitchRow label={ta('lbl.decor')} title={ta('tip.decor')} checked={Boolean(selectedBlock.decor)} onchange={(on) => setBlockDecor(on)} />
 {/snippet}
 
-<!-- The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target, motion and the frame are groups -->
+<!-- The height, the narrow-screen fit, the phone switch and the pinning stand open; the link target and the frame are groups -->
 {#if FOLLOWS_CONTENT.has(selectedBlock.type)}
   <!-- The height (ADR-0025 decision 3): the box is the content's, or the block's own with the content placed in it -->
   <label title={ta('tip.height')}>{ta('lbl.height')}
@@ -208,7 +181,6 @@
 {/snippet}
 <!-- The block's name for links is one setting, so it stands alone -->
 <Fold id="link-target" rows={1} title={ta('group.linkTarget')} value={selectedBlock.anchor ? `#${selectedBlock.anchor}` : ''}>{@render menuTarget()}</Fold>
-<Fold id="motion" title={ta('group.motion')} value={menuMotionValue()}>{@render menuMotion()}</Fold>
 <Fold id="frame" title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</Fold>
 <!-- The block's actions, as on its bar and in its right-click menu: the layer order only on the desktop, where the blocks overlap -->
 <ActionRow label={ta('canvas.ctx.label')} actions={[

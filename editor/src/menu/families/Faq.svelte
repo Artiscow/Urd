@@ -49,7 +49,7 @@
           onchange={(e) => setFaqItem(i, { q: e.target.value })} />
       {/snippet}
     </ListEditor>
-    <Setting key="multi" shown={ta('common.off')}>
+    <Setting key="multi">
       <SwitchRow label={ta('lbl.faqMulti')} title={ta('tip.faq.multi')} checked={Boolean(selectedBlock.props.multi)} onchange={(on) => setBlockProp('multi', on)} />
     </Setting>
   {/snippet}

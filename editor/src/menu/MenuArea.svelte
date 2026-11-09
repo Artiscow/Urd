@@ -9,7 +9,11 @@
   let { area, title, counts = false, chip = null, children } = $props();
   /** The groups in the area, by their ids. */
   const groups = new SvelteMap();
+  /** The name this area's folds share while they open one at a time: one of its own, so another copy of the menu standing at the same time (the Settings panel beside the floating menu) is never in the same group. */
+  const uid = Math.random().toString(36).slice(2, 8);
   setContext('menu-area', {
+    get area() { return area; },
+    get group() { return `menu-${area}-${uid}`; },
     register: (id) => groups.set(id, true),
     unregister: (id) => groups.delete(id),
   });

@@ -1,6 +1,6 @@
 /**
  * The admin designs at work (ADR-0030, lib/admin-designs.js): the parts' values as stored, the design that stands and the parts that differ from it, and the writes that choose a design, take a part back to it, and undo a design as one step.
- * A part with a row in the Urd settings is written through that row's setter, so the admin follows at once, and then stored as the design has it; a part the menu reads more narrowly than it stores (the element menu's further forms) keeps the design's value that way.
+ * A part with a row in the Urd settings is written through that row's setter, so the admin follows at once, and then stored as the design has it.
  * The undo lives here with the settings window that offers the designs, not in the site's undo history; it is offered while the parts stand as the design left them.
  */
 import { ta } from '$engine/i18n.js';
@@ -8,7 +8,7 @@ import { matchAny } from '$engine/search-langs.js';
 import { PARTS, ADMIN_DESIGNS, partDefault, readParts, designState, designWrites, restoreWrites } from '../lib/admin-designs.js';
 import { SETTINGS_GROUPS } from '../lib/settings-model.js';
 import { searchLangs } from '../lib/search-langs.svelte.js';
-import { menu, setMenuWidthPref } from '../menu/state.svelte.js';
+import { menu, setMenuFormPref, setFoldsPref, setExtraPref, setShortcutsPref } from '../menu/state.svelte.js';
 
 const ROWS = Object.fromEntries(SETTINGS_GROUPS.flatMap((g) => g.settings).map((s) => [s.id, s]));
 
@@ -96,7 +96,7 @@ function designsFor(c) {
 }
 
 /**
- * The context the Urd settings' rows read and write through (lib/settings-model.js): the editor, the words, the element menu's width, the search in every language once the other languages are in (search-langs.js), and the admin designs, derived once for every change of a part.
+ * The context the Urd settings' rows read and write through (lib/settings-model.js): the editor, the words, the element menu's form and its three choices, the search in every language once the other languages are in (search-langs.js), and the admin designs, derived once for every change of a part.
  * @param {object} ed The editor's state (the `urd-editor` context)
  */
 export function settingsContext(ed) {
@@ -104,7 +104,10 @@ export function settingsContext(ed) {
     ed,
     ta,
     menu,
-    setMenuWidthPref,
+    setMenuFormPref,
+    setFoldsPref,
+    setExtraPref,
+    setShortcutsPref,
     get match() {
       return searchLangs.ready ? matchAny : null;
     },

@@ -54,7 +54,7 @@
       <button class="ghost" onclick={() => tableResize(0, 1)}>{ta('ui.addColumn')}</button>
       <button class="ghost" onclick={() => tableResize(0, -1)}>{ta('ui.removeColumn')}</button>
     </span>
-    <Setting key="header" shown={ta('common.on')}>
+    <Setting key="header">
       <SwitchRow label={ta('lbl.tableHeader')} title={ta('tip.table.header')} checked={selectedBlock.props.header !== false} onchange={(on) => setBlockProp('header', on)} />
     </Setting>
   {/snippet}
@@ -65,7 +65,7 @@
       <Choice stack label={ta('lbl.tableLines')} title={ta('tip.table.lines')} value={selectedBlock.props.lines ?? 'rows'} options={lineOptions()}
         onchange={(v) => setBlockProp('lines', v)} />
     </Setting>
-    <Setting key="striped" shown={ta('common.off')}>
+    <Setting key="striped">
       <SwitchRow label={ta('lbl.tableStriped')} title={ta('tip.table.striped')} checked={Boolean(selectedBlock.props.striped)} onchange={(on) => setBlockProp('striped', on)} />
     </Setting>
   {/snippet}

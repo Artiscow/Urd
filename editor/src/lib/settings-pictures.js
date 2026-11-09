@@ -34,6 +34,9 @@ const topbar = () => dim(1, 1, W - 2, 6, 0.18);
 /** The stage, the dark surface the page stands on. */
 const stage = (x, y = 7) => `<rect x="${x}" y="${y}" width="${W - 1 - x}" height="${H - 1 - y}" fill="currentColor" opacity="0.05"/>`;
 
+/** A block on the page, selected: its box with the accent's ring. */
+const block = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="currentColor" opacity="0.3" stroke="${ACCENT}" stroke-width="0.8"/>`;
+
 const LAYOUTS = {
   rail: topbar() + dim(1, 7, 8, H - 8) + acc(3, 10, 4, 4) + line(3, 17, 4, 4) + line(3, 24, 4, 4) + dim(9, 7, 18, H - 8, 0.08) + stage(27),
   sidebar: topbar() + dim(1, 7, 20, H - 8) + acc(4, 11, 10, 2) + line(4, 16, 13, 2) + line(4, 21, 9, 2) + line(4, 26, 12, 2) + dim(21, 7, 14, H - 8, 0.08) + stage(35),
@@ -64,9 +67,13 @@ const LAYOUT_PICKERS = {
   menu: dim(1, 1, 62, 38, 0.06) + dim(14, 4, 36, 32, 0.16) + acc(17, 8, 9, 6) + line(28, 8, 9, 6, 6) + line(39, 8, 8, 6, 6) + line(17, 17, 9, 6, 6) + line(28, 17, 9, 6, 6) + line(39, 17, 8, 6, 6) + line(17, 26, 9, 6, 6) + line(28, 26, 9, 6, 6),
 };
 
+/** The element menu's forms: beside the block in two columns or one, docked in the panel column in one column or with tabs, and beside the block with tabs. */
 const MENU_WIDTHS = {
   wide: dim(1, 1, 62, 38, 0.06) + dim(4, 4, 56, 32, 0.14) + acc(7, 7, 22, 2) + line(7, 12, 22, 2) + line(7, 17, 17, 2) + line(7, 22, 22, 2) + line(7, 27, 14, 2) + line(35, 7, 22, 2) + line(35, 12, 18, 2) + line(35, 17, 22, 2) + line(35, 22, 15, 2),
   narrow: dim(1, 1, 62, 38, 0.06) + dim(20, 4, 24, 32, 0.14) + acc(23, 7, 6, 3) + line(30, 7, 5, 3, 3) + line(36, 7, 5, 3, 3) + line(23, 14, 18, 2) + line(23, 19, 15, 2) + line(23, 24, 18, 2) + line(23, 29, 12, 2),
+  docked: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 22, H - 8, 0.2) + acc(11, 10, 12, 2) + line(11, 15, 17, 2) + line(11, 20, 14, 2) + line(11, 25, 17, 2) + line(11, 30, 12, 2) + stage(31) + block(38, 16, 18, 11),
+  'docked-tabs': topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 22, H - 8, 0.2) + line(11, 9, 17, 3, 1) + acc(11, 15, 5, 2.5) + line(17, 15, 5, 2.5) + line(23, 15, 5, 2.5) + line(11, 21, 17, 2) + line(11, 26, 14, 2) + line(11, 31, 17, 2) + stage(31) + block(38, 16, 18, 11),
+  tabs: dim(1, 1, 62, 38, 0.06) + block(6, 14, 12, 10) + dim(22, 4, 36, 32, 0.14) + acc(25, 8, 7, 2.5) + line(33, 8, 7, 2.5) + line(41, 8, 7, 2.5) + line(25, 15, 28, 2) + line(25, 20, 22, 2) + line(25, 25, 28, 2) + line(25, 30, 18, 2),
 };
 
 const LINK_EDITORS = {
@@ -130,7 +137,6 @@ const DRAG_MARKS = {
 };
 
 /** The admin designs (lib/admin-designs.js), each the whole admin with a block selected on the page: the menu floating beside it under the rail; the page's tabs with a bar on the block and a small panel beside it; the sidebar of words with a docked panel of tabs; and the rail with one long column of headed sections. */
-const block = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="currentColor" opacity="0.3" stroke="${ACCENT}" stroke-width="0.8"/>`;
 const ADMIN_DESIGN_PICS = {
   floating: topbar() + dim(1, 7, 8, H - 8) + acc(3, 10, 4, 4) + line(3, 17, 4, 4) + line(3, 24, 4, 4) + stage(9) + block(13, 18, 16, 10)
     + dim(33, 10, 27, 26, 0.24) + acc(35, 12, 10, 2) + line(35, 17, 10, 2) + line(35, 21, 8, 2) + line(35, 25, 10, 2) + line(48, 17, 10, 2) + line(48, 21, 9, 2) + line(48, 25, 7, 2),
@@ -142,8 +148,19 @@ const ADMIN_DESIGN_PICS = {
     + acc(11, 9, 8, 1.5) + line(11, 12, 17, 2) + line(11, 15, 14, 2) + acc(11, 19, 8, 1.5) + line(11, 22, 17, 2) + line(11, 25, 15, 2) + acc(11, 29, 8, 1.5) + line(11, 32, 17, 2) + stage(31) + block(37, 16, 20, 12),
 };
 
+/** What stands first in the element menu: the Pinned rows over the groups, the same as tiles, the search field alone, or a chip for each area. */
+const menuBox = () => dim(1, 1, 62, 38, 0.06) + dim(14, 3, 36, 34, 0.14);
+const groupsBelow = (y) => [0, 5, 10, 15].filter((d) => y + d < 34).map((d) => line(17, y + d, 28, 3, 1)).join('');
+const SHORTCUTS = {
+  pinned: menuBox() + acc(17, 6, 8, 1.5) + line(17, 10, 28, 2) + line(17, 14, 22, 2) + dim(17, 18.5, 30, 0.6, 0.3) + groupsBelow(22),
+  tiles: menuBox() + acc(17, 6, 14, 7, 1.5) + dim(33, 6, 14, 7, 0.35) + dim(17, 15, 14, 7, 0.35) + dim(33, 15, 14, 7, 0.35) + groupsBelow(25),
+  search: menuBox() + `<rect x="17" y="6" width="30" height="5" rx="2.5" stroke="${ACCENT}" stroke-width="0.8"/>` + groupsBelow(15),
+  chips: menuBox() + acc(17, 6, 8, 3.5, 1.75) + dim(27, 6, 8, 3.5, 0.35) + dim(37, 6, 9, 3.5, 0.35) + line(17, 13, 10, 1.5) + groupsBelow(17),
+};
+
 const LOOKS = {
   adminDesign: ADMIN_DESIGN_PICS,
+  shortcuts: SHORTCUTS,
   layout: LAYOUTS,
   place: PLACES,
   updateNotice: UPDATE_NOTICES,

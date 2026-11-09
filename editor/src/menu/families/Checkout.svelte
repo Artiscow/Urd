@@ -98,7 +98,7 @@
     </ListEditor>
   {/snippet}
   {#snippet checkoutSeller()}
-    <Setting key="seller" shown={ta('common.on')}>
+    <Setting key="seller">
       <SwitchRow label={ta('lbl.checkoutSeller')} title={ta('tip.checkout.seller')} checked={selectedBlock.props.seller !== false} onchange={(on) => setBlockProp('seller', on)} />
     </Setting>
     <button class="ghost action" onclick={() => ed.openPanel('legal', { fold: 'who' })}>{ta('ui.editSiteContact')}</button>

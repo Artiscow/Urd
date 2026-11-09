@@ -57,7 +57,7 @@
   <Fold id="icon-icon" defaultOpen rows={selectedBlock.props.image ? 2 : 1} title={ta('blocks.icon')} value={selectedBlock.props.image ? ta('gp.ownIcon') : selectedBlock.props.icon ? ta('menu.drawnIcon') : (selectedBlock.props.glyph ?? '★')}>{@render iconIcon()}</Fold>
 {:else if area === 'style'}
   {#snippet iconLook()}
-    <Setting key="size" shown="48" pin="iconSize">
+    <Setting key="size" pin="iconSize">
       <NumberRow label={ta('lbl.sizePx')} title={ta('tip.icon.size')} value={selectedBlock.props.size ?? 48} min={8} max={400} onchange={(v) => setBlockProp('size', v)} />
     </Setting>
     <Setting key="color" pin="iconColor">

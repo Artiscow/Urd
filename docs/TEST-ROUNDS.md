@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.6): the element menu's forms, folds, extra settings and shortcuts
+
+- [ ] Urd settings, Presets, «Element menu»: five pictures; «Beside the block, with tabs» opens the floating menu with Pinned over Content, Style and Placement as tabs, a tab whose area holds nothing for the block left out (a text block has no Content tab), and 1, 2 and 3 choose the tabs
+- [ ] «Docked, one column» and «Docked, with tabs»: the gear on a block, and on a section, opens the Settings panel in the panel column, no floating menu; with tabs a card names the block over the search
+- [ ] The floating menu's head button switches between wide and the chosen form for the session, named «Areas as tabs» when the form has tabs
+- [ ] «Folds: One at a time»: opening a fold in an area closes the other open fold in that area; folds in the panels (Theme, Nav, Blocks, History) behave as before
+- [ ] «Folds: All open»: every fold of the menu stands open on the next block; choose another mode and «All open» again, and they open again
+- [ ] «Extra settings: Added from a menu» on the ribbon block: a fold shows its first setting and the ones you changed, a ⋮ at its top lists the rest; the list takes the arrow keys, Escape closes it, and an added setting stays for the next block; panels and the menu's search show everything as before
+- [ ] «Shortcuts»: Pinned rows; the same as tiles two to a row; the search field alone over the menu (no Pinned, every setting in its area, no pins); chips over the areas that jump to each and mark the one in view; with a form with tabs the chips are not offered
+- [ ] The text block's Style starts with Alignment, Font and Size open, then Text box and Motion; no Typography fold
+- [ ] Motion stands at the foot of Style for every block and for a section, not in Placement; its entrance, duration, delay and hover work as before
+- [ ] No «Default: …» or «From the theme: …» line under any setting in the menus; the reset arrow still shows beside a changed setting
+- [ ] The presets Small panels (tabs, one fold at a time, the search first) and One column (docked, all open, chips) show these forms when chosen
+
 ### Test batch (0.7.33.5): the Urd settings window with Presets, three groups and no folds
 
 - [ ] The settings dialog's list stands in three groups (Presets, Local settings, This site) with the sections under each; a press jumps to the section, and the mark follows the scroll

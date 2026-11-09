@@ -1,5 +1,5 @@
 <script>
-  /* One setting's row in a group (0.7.20.7, proposal M on the Design canvas): the control, with a reset beside it while the setting holds the block's own value, and otherwise, where the family tells what the value falls back to, the inherited value dimmed with its source («From the theme: None», «Default: Off»).
+  /* One setting's row in a group (0.7.20.7, proposal M on the Design canvas): the control, with a reset beside it while the setting holds the block's own value; a value it falls back to is what the control shows, with no words of its own about where it comes from.
      The group's defaults come through the fold's context (Fold.svelte), so a row needs only its key.
      A setting that can stand in the element menu's Pinned rows carries its `pin`: the pin stands at the row's end, and while the setting is pinned the row is drawn in Pinned at the top instead of here, so it stands once (0.7.30.3, menu/PinScope.svelte tells which are). */
   import { getContext } from 'svelte';
@@ -10,26 +10,23 @@
   import { pinnedNow } from '../../menu/pinned.js';
   const group = getContext('menu-group');
   const pinned = pinnedNow();
-  /** `key` is the prop the row sets; `source` names where the value comes from when the block has none ('theme' or 'default'); `shown` is that value as words; `pin` is the setting's id in the Pinned rows.
+  /** `key` is the prop the row sets; `source` names where the value comes from when the block has none ('theme' or 'default'), which the reset's words follow; `pin` is the setting's id in the Pinned rows.
       A row outside a fold says itself whether it holds the block's own value (`own`) and how it goes back (`reset`). */
-  let { key = null, source = 'default', shown = null, pin = null, own: ownValue = undefined, reset = undefined, children } = $props();
+  let { key = null, source = 'default', pin = null, own: ownValue = undefined, reset = undefined, children } = $props();
   const own = $derived(ownValue ?? (Boolean(key) && group?.own(key)));
   const away = $derived(pinned.has(pin));
 </script>
 
 {#if !away}
-  <div class="setting" data-pin={pin ?? undefined}>
+  <div class="setting" data-pin={pin ?? undefined} data-setting={key ?? pin ?? undefined}>
     <div class="setting-body">
-      {#if pin}
+      {#if pin && pinned.pins()}
         <div class="pin-line">
           {@render children()}
           <Pin id={pin} />
         </div>
       {:else}
         {@render children()}
-      {/if}
-      {#if !own && shown !== null && shown !== undefined}
-        <span class="setting-source">{ta(source === 'theme' ? 'menu.sourceTheme' : 'menu.sourceDefault', { v: shown })}</span>
       {/if}
     </div>
     {#if own}

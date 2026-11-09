@@ -9,6 +9,7 @@ import { SETTINGS_PLACES } from './settings-model.js';
 import { COLLECTION_LAYOUTS, CSV_PREVIEWS } from './collection-layout.js';
 import { PAGE_SETTINGS_LAYOUTS } from './page-settings.js';
 import { TAB_MENU_STYLES } from './panel-folds.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES } from '../menu/forms.js';
 
 /** How the panels are reached (Urd settings «Panel navigation»), the first the default. */
 export const ADMIN_LAYOUTS = ['rail', 'sidebar', 'panel-tabs', 'top-tabs', 'page-tabs'];
@@ -16,17 +17,17 @@ export const ADMIN_LAYOUTS = ['rail', 'sidebar', 'panel-tabs', 'top-tabs', 'page
 /**
  * The parts, in the order the settings window lists them.
  * `key` is where the part is stored, `options` its values with the default first, `setting` the row of the Urd settings that sets it today (lib/settings-model.js, marked `part`), and `labelKey`/`optionKey` the words a new part is drawn with.
- * A part with no row yet (`setting: null`), or with options its row does not offer yet, names the step that builds what it chooses (`builds`).
+ * A part with no row yet (`setting: null`) names the step that builds what it chooses (`builds`).
  * @type {Array<{ id: string, key: string, options: string[], setting: string|null, builds?: string, labelKey?: string, optionKey?: string }>}
  */
 export const PARTS = [
-  // The element menu: where it opens and how it is laid out; today's width row grows into the whole form, keeping its key, so a stored «narrow» stays one column beside the block.
-  { id: 'menu', key: 'urd-admin-menu-width', options: ['wide', 'narrow', 'docked', 'docked-tabs', 'tabs'], setting: 'menuWidth', builds: '0.7.33.6', optionKey: 'opt.menuForm' },
-  { id: 'folds', key: 'urd-folds', options: ['left', 'one', 'all'], setting: null, builds: '0.7.33.6', labelKey: 'adminPart.folds', optionKey: 'opt.folds' },
+  // The element menu: where it opens and how it is laid out, «narrow» being the form one column beside the block; then how its folds behave, whether every setting is shown, and what stands first in it.
+  { id: 'menu', key: 'urd-admin-menu-width', options: MENU_FORMS, setting: 'menuWidth', optionKey: 'opt.menuForm' },
+  { id: 'folds', key: 'urd-folds', options: FOLDS_MODES, setting: 'folds', labelKey: 'adminPart.folds', optionKey: 'opt.folds' },
   { id: 'toolbar', key: 'urd-block-toolbar', options: ['full', 'panels', 'short'], setting: null, builds: '0.7.33.7', labelKey: 'adminPart.toolbar', optionKey: 'opt.toolbar' },
   { id: 'designs', key: 'urd-design-choice', options: ['row', 'inline'], setting: null, builds: '0.7.33.8', labelKey: 'adminPart.designs', optionKey: 'opt.designChoice' },
-  { id: 'extra', key: 'urd-extra-settings', options: ['shown', 'menu'], setting: null, builds: '0.7.33.6', labelKey: 'adminPart.extra', optionKey: 'opt.extraSettings' },
-  { id: 'shortcuts', key: 'urd-menu-shortcuts', options: ['pinned', 'tiles', 'search', 'chips'], setting: null, builds: '0.7.33.6', labelKey: 'adminPart.shortcuts', optionKey: 'opt.shortcuts' },
+  { id: 'extra', key: 'urd-extra-settings', options: EXTRA_MODES, setting: 'extra', labelKey: 'adminPart.extra', optionKey: 'opt.extraSettings' },
+  { id: 'shortcuts', key: 'urd-menu-shortcuts', options: SHORTCUTS_MODES, setting: 'shortcuts', labelKey: 'adminPart.shortcuts', optionKey: 'opt.shortcuts' },
   // The choices Urd settings has today, each a part under the key it has always had.
   { id: 'layout', key: 'urd-admin-layout', options: ADMIN_LAYOUTS, setting: 'layout' },
   { id: 'sidebarFolds', key: 'urd-sidebar-folds', options: ['tree', 'hover', 'flyout'], setting: 'sidebarFolds' },

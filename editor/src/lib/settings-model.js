@@ -1,10 +1,11 @@
 /**
  * Urd's own settings as data (the Urd settings, the gear): the groups, the sections in each group, and in each section the settings with their keys, their kind and the editor fields they read and write.
  * The three windows the settings open in (settings/SettingsDialog.svelte for the dialog and the sheet, panels/SettingsPanel.svelte for the panel) draw the same rows from this list, so a setting is declared once.
- * A setting's `options`, `get` and `set` take the context the window passes: `{ ed, ta, menu, setMenuWidthPref, designs }`, where `designs` holds the admin designs' options, the design that stands and the way to apply one (state/admin-design.svelte.js).
+ * A setting's `options`, `get` and `set` take the context the window passes: `{ ed, ta, menu, setMenuFormPref, setFoldsPref, setExtraPref, setShortcutsPref, designs }`, where `designs` holds the admin designs' options, the design that stands and the way to apply one (state/admin-design.svelte.js).
  * Pure, node-tested (tests/settings-model.test.mjs).
  */
 import { panelsPrefIn } from './panels-start.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES } from '../menu/forms.js';
 
 /** Where the settings open: a dialog with the groups as sections down its left, a panel in the panel column, or a sheet with the look choices at the left and the rest as rows at the right. */
 export const SETTINGS_PLACES = ['dialog', 'panel', 'sheet'];
@@ -63,8 +64,19 @@ export const SETTINGS_GROUPS = [
     tipKey: 'tip.settings.group.menu',
     settings: [
       { id: 'menuWidth', part: true, labelKey: 'settings.menuWidth', tipKey: 'tip.settings.menuWidth', kind: 'choice', look: 'menuWidth',
-        options: (c) => [['wide', c.ta('opt.menuForm.wide')], ['narrow', c.ta('opt.menuForm.narrow')]],
-        get: (c) => c.menu.widthPref, set: (c, v) => c.setMenuWidthPref(v) },
+        options: (c) => MENU_FORMS.map((id) => [id, c.ta(`opt.menuForm.${id}`)]),
+        get: (c) => c.menu.formPref, set: (c, v) => c.setMenuFormPref(v) },
+      { id: 'folds', part: true, labelKey: 'adminPart.folds', tipKey: 'tip.adminPart.folds', kind: 'seg',
+        options: (c) => FOLDS_MODES.map((id) => [id, c.ta(`opt.folds.${id}`)]),
+        get: (c) => c.menu.foldsPref, set: (c, v) => c.setFoldsPref(v) },
+      { id: 'extra', part: true, labelKey: 'adminPart.extra', tipKey: 'tip.adminPart.extra', kind: 'seg',
+        options: (c) => EXTRA_MODES.map((id) => [id, c.ta(`opt.extraSettings.${id}`)]),
+        get: (c) => c.menu.extraPref, set: (c, v) => c.setExtraPref(v) },
+      // The chips jump between areas that stand under each other, so a form with tabs offers them only while they are chosen.
+      { id: 'shortcuts', part: true, labelKey: 'adminPart.shortcuts', tipKey: 'tip.adminPart.shortcuts', kind: 'choice', look: 'shortcuts',
+        options: (c) => SHORTCUTS_MODES.filter((id) => id !== 'chips' || !['tabs', 'docked-tabs'].includes(c.menu.formPref) || c.menu.shortcutsPref === 'chips')
+          .map((id) => [id, c.ta(`opt.shortcuts.${id}`)]),
+        get: (c) => c.menu.shortcutsPref, set: (c, v) => c.setShortcutsPref(v) },
     ],
   },
   {

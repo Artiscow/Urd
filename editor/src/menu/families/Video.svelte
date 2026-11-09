@@ -74,7 +74,7 @@
   {#snippet videoPlay()}
     {#if vsource === 'embed'}
       <!-- Whether the video stands behind a cover until a visitor presses play, or loads with the page -->
-      <Setting key="askFirst" shown={ta('common.on')}>
+      <Setting key="askFirst">
         <SwitchRow label={ta('lbl.embedAskFirst')} title={ta('tip.embed.askFirst')} checked={askFirst} onchange={(on) => setBlockProp('askFirst', on)} />
       </Setting>
       {#if askFirst}
@@ -89,21 +89,21 @@
           </label>
         {/if}
         <!-- Whether the press on the cover also starts the video -->
-        <Setting key="playOnPress" shown={ta('common.on')}>
+        <Setting key="playOnPress">
           <SwitchRow label={ta('lbl.videoPlayOnPress')} title={ta('tip.video.playOnPress')} checked={selectedBlock.props.playOnPress !== false} onchange={(on) => setBlockProp('playOnPress', on)} />
         </Setting>
       {/if}
     {:else}
-      <Setting key="loop" shown={ta('common.off')}>
+      <Setting key="loop">
         <SwitchRow label={ta('lbl.videoLoop')} title={ta('tip.video.loop')} checked={selectedBlock.props.loop === true} onchange={(on) => setBlockProp('loop', on)} />
       </Setting>
       <!-- Unmuting takes the self-start with it: only a muted film may start by itself -->
-      <Setting key="muted" shown={ta('common.off')}>
+      <Setting key="muted">
         <SwitchRow label={ta('lbl.videoMuted')} title={ta('tip.video.muted')} checked={selectedBlock.props.muted === true}
           onchange={(on) => setBlockProps('muted', on ? { muted: true } : { muted: false, autoplay: false })} />
       </Setting>
       {#if selectedBlock.props.muted === true}
-        <Setting key="autoplay" shown={ta('common.off')}>
+        <Setting key="autoplay">
           <SwitchRow label={ta('lbl.videoAutoplay')} title={ta('tip.video.autoplay')} checked={selectedBlock.props.autoplay === true} onchange={(on) => setBlockProp('autoplay', on)} />
         </Setting>
       {/if}

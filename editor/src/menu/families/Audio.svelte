@@ -45,7 +45,7 @@
     <label title={ta('tip.audio.title')}>{ta('lbl.audioTitle')}
       <input value={selectedBlock.props.title ?? ''}
         onchange={(e) => setBlockProp('title', e.target.value)} /></label>
-    <Setting key="loop" shown={ta('common.off')} pin="loop">
+    <Setting key="loop" pin="loop">
       <SwitchRow label={ta('lbl.audioLoop')} title={ta('tip.audio.loop')} checked={Boolean(selectedBlock.props.loop)} onchange={(on) => setBlockProp('loop', on)} />
     </Setting>
   {/snippet}

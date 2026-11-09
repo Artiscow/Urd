@@ -885,6 +885,156 @@
 
   /* Pinned (0.7.30.3): the settings used most, as the rows they are in their areas, each with its pin.
      Narrow, it stands over the areas with a rule under it; wide, it is the first part of the two columns, headed as an area is. */
+  /* The shortcuts «Chips»: one chip for each area, jumping to where it starts, the one whose area is in view filled */
+  .emenu-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .emenu-chip {
+    padding: 0.25rem 0.7rem;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    border-radius: 999px;
+  }
+
+  .emenu-chip:hover {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .emenu-chip.on {
+    color: var(--urd-color-accent-text, #fff);
+    background: var(--urd-color-accent, #7c5cff);
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  /* The forms with tabs: the three areas over one area in view, the area's own heading left out since the tab names it */
+  .emenu-tabs {
+    display: flex;
+    margin-bottom: 0.6rem;
+  }
+
+  .emenu-tabbed .emenu-head .emenu-head-name {
+    display: none;
+  }
+
+  .emenu-tabbed .emenu-head:not(:has(.help-chip)) {
+    display: none;
+  }
+
+  .emenu-tabbed[data-tab='content'] .emenu-col:not([data-area='content']),
+  .emenu-tabbed[data-tab='style'] .emenu-col:not([data-area='style']),
+  .emenu-tabbed[data-tab='placement'] .emenu-col:not([data-area='placement']) {
+    display: none;
+  }
+
+  /* The shortcuts «Tiles»: the Pinned rows as boxes two to a row */
+  .emenu-pinned-rows.tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .emenu-pinned-rows.tiles .emenu-pinned-item {
+    min-width: 0;
+    padding: 0.5rem;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 8px;
+  }
+
+  /* The shortcuts «The search field»: the field alone over the menu's body, the head without it */
+  .menu-search-first {
+    display: flex;
+    margin-bottom: 0.6rem;
+  }
+
+  .menu-search-first .menu-search-wrap {
+    flex: 1;
+    max-width: none;
+  }
+
+  /* «Docked, with tabs»: a card naming the block over the search and the tabs */
+  .emenu-card {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.7rem;
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 9px;
+  }
+
+  .emenu-card-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  .emenu-card-kind {
+    font-size: 0.72rem;
+    opacity: 0.6;
+  }
+
+  /* «Extra settings» as a menu: the ⋮ at a fold's top, its list of the settings to add under it; a hidden setting row keeps out of the flow */
+  .menu-extra {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .menu-extra-pop {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 5;
+    display: grid;
+    min-width: 11rem;
+    padding: 0.3rem;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  }
+
+  .menu-extra-opt {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    padding: 0.4rem 0.6rem;
+    font: inherit;
+    font-size: 0.82rem;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+  }
+
+  .menu-extra-opt:hover,
+  .menu-extra-opt:focus-visible {
+    background: rgb(255 255 255 / 8%);
+  }
+
+  .menu-extra-opt svg {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    opacity: 0.7;
+  }
+
+  .menu-group .group-items > [data-extra-hidden] {
+    display: none;
+  }
+
   .emenu-pinned {
     display: grid;
     gap: 0.45rem;
@@ -1153,7 +1303,7 @@
   }
 
   /* A setting's row (Setting.svelte): the control, and the reset on the right while the value is the block's own;
-     the inherited value and its source as a dimmed line under the control */
+     a row that says its value in words (the phone placement in Placement.svelte) has them as a dimmed line under its label */
   .setting {
     display: flex;
     align-items: flex-start;

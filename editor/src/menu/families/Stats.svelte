@@ -33,7 +33,7 @@
   <Fold id="stat-number" defaultOpen title={ta('group.number')} value={`${selectedBlock.props.prefix ?? ''}${selectedBlock.props.value ?? ''}${selectedBlock.props.suffix ?? ''}`.trim()}>{@render statNumber()}</Fold>
 {:else if area === 'style'}
   {#snippet statLook()}
-    <Setting key="countUp" shown={ta('common.on')}>
+    <Setting key="countUp">
       <SwitchRow label={ta('lbl.statCountUp')} title={ta('tip.stat.countUp')} checked={selectedBlock.props.countUp !== false} onchange={(on) => setBlockProp('countUp', on)} />
     </Setting>
   {/snippet}

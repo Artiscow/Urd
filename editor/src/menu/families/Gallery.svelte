@@ -57,7 +57,7 @@
       <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
     </label>
     <!-- What a press on a picture does: the lightbox, as on the image block -->
-    <Setting key="lightbox" shown={ta('common.on')}>
+    <Setting key="lightbox">
       <SwitchRow label={ta('lbl.lightbox')} title={ta('tip.lightbox')} checked={selectedBlock.props.lightbox !== false} onchange={(on) => setBlockProp('lightbox', on)} />
     </Setting>
   {/snippet}
@@ -82,7 +82,7 @@
           options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
           onchange={(v) => setBlockProp('direction', v)} />
       </Setting>
-      <Setting key="speed" shown="60">
+      <Setting key="speed">
         <SliderRow label={ta('lbl.ribbonSpeed')} title={ta('tip.ribbon.speed')} value={selectedBlock.props.speed ?? 60} min={10} max={300} step={5}
           shown={String(selectedBlock.props.speed ?? 60)} oninput={(v) => setBlockProp('speed', v)} />
       </Setting>
@@ -92,18 +92,18 @@
     {/if}
     <!-- The three views that are grids of tiles share the columns -->
     {#if GRID_VIEWS.includes(gview)}
-      <Setting key="columns" shown="3" pin="columns">
+      <Setting key="columns" pin="columns">
         <NumberRow label={ta('lbl.columns')} title={ta('tip.gallery.columns')} value={selectedBlock.props.columns ?? 3} min={1} max={6} onchange={(v) => setBlockProp('columns', v)} />
       </Setting>
     {/if}
     {#if gview === 'ribbon' || GRID_VIEWS.includes(gview)}
-      <Setting key="gap" shown="12">
+      <Setting key="gap">
         <SliderRow label={ta('lbl.imageGap')} title={ta('tip.gallery.gap')} value={selectedBlock.props.gap ?? 12} min={0} max={32} step={2}
           shown={`${selectedBlock.props.gap ?? 12} px`} oninput={(v) => setBlockProp('gap', v)} />
       </Setting>
     {/if}
     {#if gview === 'ribbon'}
-      <Setting key="pauseOnHover" shown={ta('common.on')}>
+      <Setting key="pauseOnHover">
         <SwitchRow label={ta('lbl.ribbonPause')} title={ta('tip.ribbon.pause')} checked={selectedBlock.props.pauseOnHover !== false} onchange={(on) => setBlockProp('pauseOnHover', on)} />
       </Setting>
       <Setting key="pause">
@@ -111,7 +111,7 @@
           options={[['button', ta('opt.bandPause.button')], ['touch', ta('opt.bandPause.touch')]]}
           onchange={(v) => setBlockProp('pause', v)} />
       </Setting>
-      <Setting key="fade" shown={ta('common.on')}>
+      <Setting key="fade">
         <SwitchRow label={ta('lbl.ribbonFade')} title={ta('tip.ribbon.fade')} checked={selectedBlock.props.fade !== false} onchange={(on) => setBlockProp('fade', on)} />
       </Setting>
     {/if}
@@ -146,7 +146,7 @@
       </Setting>
     {/if}
     {#if gview === 'slides'}
-      <Setting key="interval" shown="5">
+      <Setting key="interval">
         <NumberRow label={ta('lbl.secondsPerImage')} title={ta('tip.gallery.interval')} value={selectedBlock.props.interval ?? 5} min={2} max={60} unit="s" onchange={(v) => setBlockProp('interval', v)} />
       </Setting>
     {/if}

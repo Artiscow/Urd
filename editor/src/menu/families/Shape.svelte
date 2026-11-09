@@ -35,7 +35,7 @@
     </Setting>
     <!-- Thickness draws the line, the arrow and the stroke of an unfilled circle or rectangle; Filled fills a circle or a rectangle (a triangle is always filled) -->
     {#if ['line', 'arrow'].includes(selectedBlock.props.kind) || (['circle', 'rect'].includes(selectedBlock.props.kind) && !selectedBlock.props.fill)}
-      <Setting key="thickness" shown="2" pin="thickness">
+      <Setting key="thickness" pin="thickness">
         <NumberRow label={ta('lbl.thickness')} title={ta('tip.shape.thickness')} value={selectedBlock.props.thickness ?? 2} min={1} max={40} onchange={(v) => setBlockProp('thickness', v)} />
       </Setting>
     {/if}

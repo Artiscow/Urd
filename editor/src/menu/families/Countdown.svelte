@@ -33,7 +33,7 @@
   <Fold id="countdown-target" defaultOpen title={ta('group.target')} value={selectedBlock.props.target ? selectedBlock.props.target.replace('T', ' ') : ta('common.none')}>{@render countdownTarget()}</Fold>
 {:else if area === 'style'}
   {#snippet countdownLook()}
-    <Setting key="showSeconds" shown={ta('common.on')} pin="seconds">
+    <Setting key="showSeconds" pin="seconds">
       <SwitchRow label={ta('lbl.countdownSeconds')} title={ta('tip.countdown.seconds')} checked={selectedBlock.props.showSeconds !== false} onchange={(on) => setBlockProp('showSeconds', on)} />
     </Setting>
   {/snippet}

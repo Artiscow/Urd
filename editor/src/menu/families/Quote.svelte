@@ -69,7 +69,7 @@
   {#snippet quoteLook()}
     <!-- The large spread can stand in a card; the short one already is one -->
     {#if selectedBlock.props.variant !== 'short'}
-      <Setting key="card" shown={ta('common.off')}>
+      <Setting key="card">
         <SwitchRow label={ta('lbl.quoteCard')} title={ta('tip.quote.card')} checked={selectedBlock.props.card === true} onchange={(on) => setBlockProp('card', on)} />
       </Setting>
     {/if}

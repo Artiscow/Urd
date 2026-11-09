@@ -44,7 +44,7 @@
 {#if area === 'content'}
   {#snippet shareLinks()}
     <!-- The site's links from the Site panel first, then the block's own after them -->
-    <Setting key="useSite" shown={ta('common.on')}>
+    <Setting key="useSite">
       <SwitchRow label={ta('lbl.useSiteLinks')} title={ta('tip.share.useSite')} checked={useSite} onchange={(on) => setBlockProp('useSite', on)} />
     </Setting>
     {#if useSite}
@@ -69,7 +69,7 @@
     group={groupOf('share-services', { useSite: true, hidden: [] })}>{@render shareLinks()}</Fold>
 {:else if area === 'style'}
   {#snippet shareLook()}
-    <Setting key="size" shown="38">
+    <Setting key="size">
       <NumberRow label={ta('lbl.size')} title={ta('tip.share.size')} value={selectedBlock.props.size ?? 38} min={24} max={64} unit="px" onchange={(v) => setBlockProp('size', v)} />
     </Setting>
     <Setting key="color" source="theme">

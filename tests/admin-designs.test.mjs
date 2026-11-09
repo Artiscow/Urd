@@ -88,8 +88,8 @@ test('every part with a row in the Urd settings is that row\'s part, every row m
   const named = PARTS.filter((p) => p.setting).map((p) => p.setting).sort();
   assert.deepEqual(marked, named);
   for (const part of PARTS.filter((p) => !p.setting)) assert.match(part.builds ?? '', /^0\.7\.33\.\d+$/, `${part.id} names the step that builds it`);
-  // The element menu's width row offers wide and narrow until its other forms are built.
-  assert.match(PARTS.find((p) => p.id === 'menu').builds ?? '', /^0\.7\.33\.\d+$/);
+  // The element menu's row offers every form (0.7.33.6).
+  assert.deepEqual(PARTS.find((p) => p.id === 'menu').options, ['wide', 'narrow', 'docked', 'docked-tabs', 'tabs']);
   for (const id of ['theme', 'language', 'press', 'pictures', 'spellcheck', 'dragMark', 'panels', 'panelsStart', 'updateNotice', 'analytics']) {
     assert.ok(!rows.find((r) => r.id === id)?.part, `${id} is the owner's or the site's own, never a part`);
   }
@@ -149,10 +149,13 @@ function windowContext() {
     setCollectionsLayout(v) { this.collectionsLayout = v; keep('urd-collections-layout', v, 'drill'); },
     setCsvPreview(v) { this.csvPreviewPref = v; keep('urd-csv-preview', v, 'dialog'); },
   };
-  const menu = { widthPref: 'wide' };
+  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', shortcutsPref: 'pinned' };
   const c = {
     ed, ta: (k) => k, menu,
-    setMenuWidthPref(v) { menu.widthPref = v === 'narrow' ? 'narrow' : 'wide'; keep('urd-admin-menu-width', menu.widthPref, 'wide'); },
+    setMenuFormPref(v) { menu.formPref = v; keep('urd-admin-menu-width', v, 'wide'); },
+    setFoldsPref(v) { menu.foldsPref = v; keep('urd-folds', v, 'left'); },
+    setExtraPref(v) { menu.extraPref = v; keep('urd-extra-settings', v, 'shown'); },
+    setShortcutsPref(v) { menu.shortcutsPref = v; keep('urd-menu-shortcuts', v, 'pinned'); },
     get designs() {
       const values = partValues(c);
       return { values, state: designState(values) };
@@ -170,8 +173,9 @@ test('a design chosen in the window sets every part through its row and as store
   const after = partValues(c);
   assert.deepEqual(designState(after), { design: 'panels', changed: [] });
   assert.equal(c.ed.adminLayout, 'page-tabs', 'the row\'s state follows at once');
-  assert.equal(local.get('urd-admin-menu-width'), 'tabs', 'a form the width row cannot hold yet is stored as the design has it');
-  assert.equal(local.get('urd-folds'), 'one', 'a part without a row is stored too');
+  assert.equal(local.get('urd-admin-menu-width'), 'tabs');
+  assert.equal(c.menu.foldsPref, 'one', 'the menu\'s own choices follow through their rows');
+  assert.equal(local.get('urd-block-toolbar'), 'panels', 'a part without a row is stored too');
   assert.ok(canUndo(after));
   undoDesign(c);
   assert.deepEqual(partValues(c), before);

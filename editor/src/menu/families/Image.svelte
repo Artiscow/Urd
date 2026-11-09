@@ -64,7 +64,7 @@
     </Setting>
     <!-- The lightbox only for a picture without a link: a link wins the click -->
     {#if !imageLinked}
-      <Setting key="lightbox" shown={ta('common.off')}>
+      <Setting key="lightbox">
         <SwitchRow label={ta('lbl.lightbox')} title={ta('tip.lightbox')} checked={Boolean(selectedBlock.props.lightbox)} onchange={(on) => setBlockProp('lightbox', on)} />
       </Setting>
     {/if}

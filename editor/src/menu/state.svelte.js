@@ -1,17 +1,41 @@
 /**
- * The element menu's own state (0.7.26.2), shared by every copy of the menu (the Properties panel, the floating menu and the search's copy of the areas): the width the floating menu opens in, the room it has, the two search queries, and the Pinned choices per block type.
+ * The element menu's own state (0.7.26.2), shared by every copy of the menu (the Properties panel, the floating menu and the search's copy of the areas): the form the menu opens in and the three choices beside it (ADR-0030's parts), the room it has, the two search queries, the tab in view, and the Pinned choices per block type.
  * Which groups stand open is kept with every other surface's folds (lib/folds.svelte.js).
  */
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES } from './forms.js';
 
-/** The admin setting is the width a menu opens in, kept in the browser; the button in the menu's head switches for the session. */
-const MENU_WIDTH_KEY = 'urd-admin-menu-width';
+/**
+ * The form a menu opens in (Urd settings «Element menu»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
+ * The button in the menu's head switches between wide and the chosen form for the session.
+ */
+const MENU_FORM_KEY = 'urd-admin-menu-width';
+const menuFormOf = (v) => (MENU_FORMS.includes(v) ? v : 'wide');
+
+/** How folds behave («Folds»): as the owner left them, one open at a time in an area, or all open. */
+const FOLDS_KEY = 'urd-folds';
+
+/** Whether every setting in a fold is shown, or the first and the changed ones with the rest added from a menu («Extra settings»). */
+const EXTRA_KEY = 'urd-extra-settings';
+
+/** What stands first in the menu («Shortcuts»): the Pinned rows, the same rows as tiles, the search field alone, or chips that jump to each area. */
+const SHORTCUTS_KEY = 'urd-menu-shortcuts';
+
+const stored = (key, list) => (list.includes(localStorage.getItem(key)) ? localStorage.getItem(key) : list[0]);
+
 /** The floating menu's width with the areas poured through two columns (app.css, .block-menu.wide). */
 export const MENU_WIDE_W = 660;
 
 export const menu = $state({
-  widthPref: localStorage.getItem(MENU_WIDTH_KEY) === 'narrow' ? 'narrow' : 'wide',
-  wide: localStorage.getItem(MENU_WIDTH_KEY) !== 'narrow',
+  formPref: menuFormOf(localStorage.getItem(MENU_FORM_KEY)),
+  wide: menuFormOf(localStorage.getItem(MENU_FORM_KEY)) === 'wide',
+  foldsPref: stored(FOLDS_KEY, FOLDS_MODES),
+  extraPref: stored(EXTRA_KEY, EXTRA_MODES),
+  shortcutsPref: stored(SHORTCUTS_KEY, SHORTCUTS_MODES),
+  /** How many times «All open» has been chosen this session, so each choice opens every fold again (lib/rows/Fold.svelte). */
+  foldsRound: 0,
+  /** The area in view in a menu with tabs, for the session. */
+  tab: 'content',
   /** The room for the floating menu: from the right edge of the admin's own panels to the window's edge. */
   min: 8,
   room: Infinity,
@@ -27,11 +51,43 @@ export function menuIsWide() {
   return menu.wide && menu.room >= MENU_WIDE_W;
 }
 
-export function setMenuWidthPref(v) {
-  menu.widthPref = v === 'narrow' ? 'narrow' : 'wide';
-  menu.wide = menu.widthPref === 'wide';
-  if (menu.widthPref === 'narrow') localStorage.setItem(MENU_WIDTH_KEY, 'narrow');
-  else localStorage.removeItem(MENU_WIDTH_KEY);
+/** A choice kept only where it differs from its default, the list's first. */
+function keep(key, value, list) {
+  if (value === list[0]) localStorage.removeItem(key);
+  else localStorage.setItem(key, value);
+}
+
+export function setMenuFormPref(v) {
+  menu.formPref = menuFormOf(v);
+  menu.wide = menu.formPref === 'wide';
+  keep(MENU_FORM_KEY, menu.formPref, MENU_FORMS);
+}
+
+export function setFoldsPref(v) {
+  menu.foldsPref = FOLDS_MODES.includes(v) ? v : FOLDS_MODES[0];
+  if (menu.foldsPref === 'all') menu.foldsRound += 1;
+  keep(FOLDS_KEY, menu.foldsPref, FOLDS_MODES);
+}
+
+export function setExtraPref(v) {
+  menu.extraPref = EXTRA_MODES.includes(v) ? v : EXTRA_MODES[0];
+  keep(EXTRA_KEY, menu.extraPref, EXTRA_MODES);
+}
+
+export function setShortcutsPref(v) {
+  menu.shortcutsPref = SHORTCUTS_MODES.includes(v) ? v : SHORTCUTS_MODES[0];
+  keep(SHORTCUTS_KEY, menu.shortcutsPref, SHORTCUTS_MODES);
+}
+
+/** Whether the menu opens docked in the panel column rather than beside the block. */
+export function menuDocked() {
+  return menu.formPref === 'docked' || menu.formPref === 'docked-tabs';
+}
+
+/** How the areas are laid out now: two columns while the menu stands wide, one area at a time behind tabs in the forms with tabs, else under each other. */
+export function menuLayout() {
+  if (menuIsWide()) return 'wide';
+  return menu.formPref === 'tabs' || menu.formPref === 'docked-tabs' ? 'tabs' : 'narrow';
 }
 
 /** The menu never lies over the panels: measured from the preview frame's left edge. */
@@ -50,10 +106,14 @@ export const MENU_AREAS = ['content', 'style', 'placement'];
  */
 export function chooseArea(area, root = null) {
   if (!MENU_AREAS.includes(area)) return;
-  const col = root?.querySelector(`.emenu-cols [data-area="${area}"]`);
-  if (!col) return;
-  col.scrollIntoView({ block: 'start' });
-  if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button:not(.help-chip)')?.focus();
+  menu.tab = area;
+  // In a menu with tabs the area is drawn once its tab is chosen, so it is found on the next frame.
+  requestAnimationFrame(() => {
+    const col = root?.querySelector(`.emenu-cols [data-area="${area}"]`);
+    if (!col) return;
+    col.scrollIntoView({ block: 'start' });
+    if (!document.activeElement?.classList.contains('menu-search')) col.querySelector('summary, button:not(.help-chip)')?.focus();
+  });
 }
 
 /* Pinned (0.7.20.3, lib/quick-row.js): what the owner pinned or took out, kept per block type in the browser. */

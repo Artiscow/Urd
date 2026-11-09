@@ -42,7 +42,7 @@ function ctx() {
     siteDraft: { admin: {}, analytics: {} },
   };
   const designs = { options: [['floating', 'Floating menu'], ['panels', 'Small panels'], ['side', 'Side panel'], ['column', 'One column']], values: {}, state: { design: 'floating', changed: [] }, apply() {} };
-  return { ed, ta: (k) => k, menu: { widthPref: 'wide' }, setMenuWidthPref() {}, designs };
+  return { ed, ta: (k) => k, menu: { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', shortcutsPref: 'pinned' }, setMenuFormPref() {}, setFoldsPref() {}, setExtraPref() {}, setShortcutsPref() {}, designs };
 }
 
 /** A setting by its id. */

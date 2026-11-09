@@ -2,8 +2,9 @@
   /* The element menu (ADR-0016 decision 3): Content is what the block says and shows, Style is how it looks, Placement is where it sits and how it behaves there.
      Before them stands Pinned: the settings used most, a block type's own first and then the two every block has (how it fits a narrower screen, and whether it shows on a phone).
      A pinned setting stands there instead of in its area, so no setting is drawn twice (PinScope.svelte), and an area left with nothing in it is not drawn.
-     Wide, Pinned and the areas share two columns, each whole, cut where they come out most even (`balanceAreas`); narrow, they stand under each other with a heading each.
-     A block with designs has its design, and its phone design, as the first rows of Style. */
+     Wide, Pinned and the areas share two columns, each whole, cut where they come out most even (`balanceAreas`); narrow, they stand under each other with a heading each; with tabs, one area stands at a time behind Content, Style and Placement (`layout`, menu/state.svelte.js menuLayout).
+     What stands first follows the Urd settings' «Shortcuts»: the Pinned rows, the same rows as tiles, nothing but the search (drawn by the menu's frame), or chips that jump to each area.
+     A block with designs has its design, and its phone design, as the first rows of Style, and every block its motion as the last group there. */
   import { getContext } from 'svelte';
   import Choice from '../lib/Choice.svelte';
   import Setting from '../lib/rows/Setting.svelte';
@@ -34,6 +35,7 @@
   import { menuSearch } from '../lib/menu-search.js';
   import { linkOf } from '../lib/link-edit.js';
   import Placement from './Placement.svelte';
+  import MotionFold from './MotionFold.svelte';
   import MenuArea from './MenuArea.svelte';
   import { toggleHintCard } from '$engine/hint.js';
   import Text from './families/Text.svelte';
@@ -68,7 +70,13 @@
   /** The family of each block type; a type without one of its own shows the field contract. */
   const FAMILIES = { text: Text, button: Button, image: Image, video: Video, icon: Icon, shape: Shape, gallery: Gallery, ribbon: Ribbon, calendar: Calendar, form: Form, faq: Faq, timeline: Timeline, quote: Quote, stats: Stats, table: Table, share: Share, contact: Contact, privacy: Privacy, terms: Terms, countdown: Countdown, audio: Audio, collection: Collection, product: Product, cart: Cart, checkout: Checkout };
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
-  let { wide, query = '' } = $props();
+  /** `layout` is 'wide', 'narrow' or 'tabs'. */
+  let { layout = 'narrow', query = '' } = $props();
+  const wide = $derived(layout === 'wide');
+  const shortcuts = $derived(menu.shortcutsPref);
+  /** The Pinned rows stand while the shortcuts are the rows or the tiles. */
+  const pinnedShown = $derived(shortcuts === 'pinned' || shortcuts === 'tiles');
+  const AREA_TABS = $derived([['content', ta('props.tabContent')], ['style', ta('props.tabStyle')], ['placement', ta('props.tabPlacement')]]);
   // A typed query loads the other languages once; the search runs again when they are in.
   $effect(() => searchLangs.need(query));
 
@@ -79,6 +87,8 @@
   });
   const pinnedIds = $derived(new Set(pinnedItems.map((item) => item.id)));
   const NONE_PINNED = new Set();
+  /** The settings that leave their areas: those in Pinned while Pinned is drawn, none while «Shortcuts» puts the search or the chips first. */
+  const areaAway = $derived(pinnedShown ? pinnedIds : NONE_PINNED);
   /** The selected block's designs, drawn as the first rows of Style; the calendar draws its own three in its family. */
   const designs = $derived(selectedBlock.type === 'calendar' ? null : blockDesigns(selectedBlock.type, ed.pluginBlocks));
   /** Every setting the selected block can show in Pinned now, each as its row there. */
@@ -195,6 +205,39 @@
     return () => cancelAnimationFrame(frame);
   }
 
+  /** The areas with nothing in them for this block, read from what is drawn (an area's heading alone), so their tabs are left out; the view moves off an empty area, also when a key chose one.
+      Read again for another block, when a setting is pinned or taken out of Pinned, and when the tab changes. */
+  let emptyAreas = $state(new Set());
+  function tabsIn(node) {
+    const measuredFor = blockId;
+    void areaAway;
+    void menu.tab;
+    const frame = requestAnimationFrame(() => {
+      if (measuredFor !== blockId) return;
+      const empty = new Set(MENU_AREAS.filter((area) => {
+        const col = node.querySelector(`[data-area="${area}"]`);
+        return !col || !col.querySelector(':scope > :not(.emenu-title, .emenu-none, .emenu-head)');
+      }));
+      emptyAreas = empty;
+      if (empty.has(menu.tab)) menu.tab = MENU_AREAS.find((area) => !empty.has(area)) ?? 'content';
+    });
+    return () => cancelAnimationFrame(frame);
+  }
+
+  /** With the chips, the area in view marks its chip: the first area whose top has come within the upper part of the menu's scroll, watched by the scroll's own observer. */
+  function areaInView(node) {
+    if (shortcuts !== 'chips' || layout === 'tabs') return;
+    const root = node.closest('.block-menu-body') ?? node.closest('.panel');
+    const seen = new Map();
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) seen.set(entry.target.dataset.area, entry.isIntersecting);
+      const first = MENU_AREAS.find((area) => seen.get(area));
+      if (first) menu.tab = first;
+    }, { root, rootMargin: '0px 0px -55% 0px' });
+    for (const col of node.querySelectorAll(':scope [data-area]')) if (MENU_AREAS.includes(col.dataset.area)) observer.observe(col);
+    return () => observer.disconnect();
+  }
+
   /* The keys of the menu's areas (0.7.20.9, proposal O on the Design canvas): with the focus in the menu and not in a field, 1, 2 and 3 choose Content, Style and Placement (scrolling to where the area starts), and / goes to the search field of the menu the focus is in.
      No key caps are drawn; the keys are listed in the shortcut sheet and the user guide. */
   function menuKeys(event) {
@@ -230,6 +273,7 @@
     {#if designs.phone}<Setting pin="phoneDesign" own={selectedBlock.props.phoneDesign !== undefined} reset={() => setBlockProp('phoneDesign', undefined)}><DesignRow phone /></Setting>{/if}
   {/if}
   <Family area="style" />
+  <MotionFold />
 {/snippet}
 {#snippet menuPlacement()}
   <Placement />
@@ -242,7 +286,7 @@
 {/snippet}
 
 {#snippet pinnedPart()}
-  {#if pinnedItems.length}
+  {#if pinnedShown && pinnedItems.length}
     <!-- Pinned: the settings used most, each drawn here instead of in its area; the pin on a row takes it back there -->
     <section class="emenu-pinned" data-area="pinned">
       <header class="emenu-head">
@@ -251,7 +295,7 @@
           <button type="button" class="linkish menu-pinned-reset" onclick={() => setQuickChoice(selectedBlock.type, NO_CHOICE)}>{ta('menu.quickReset')}</button>
         {/if}
       </header>
-      <div class="emenu-pinned-rows">
+      <div class="emenu-pinned-rows" class:tiles={shortcuts === 'tiles'}>
         {#each pinnedItems as item (item.id)}
           <!-- A row with what belongs to it, kept together in one column; a setting under it that is pinned itself stands as its own row -->
           <div class="emenu-pinned-item">
@@ -295,7 +339,7 @@
   {#snippet foundStyle()}<section class="emenu-col" data-area="style"><p class="emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
   {#snippet foundPlacement()}<section class="emenu-col" data-area="placement"><p class="emenu-title">{ta('props.tabPlacement')}{@render layoutChip()}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
   <div class="emenu-cols emenu-search" class:emenu-two={wide} {@attach menuSearch(query, searchLangs.ready ? matchAny : matchWords)}>
-    <PinScope away={() => NONE_PINNED}>
+    <PinScope away={() => NONE_PINNED} pins={pinnedShown}>
       {#if wide}
         <div class="emenu-column">{@render foundContent()}{@render foundStyle()}</div>
         <div class="emenu-column">{@render foundPlacement()}</div>
@@ -307,18 +351,37 @@
 {:else}
   <!-- Wide: Pinned and the areas in two columns, cut once where they come out most even (`balanceAreas`); narrow: Pinned, then the areas under each other, each heading sticking to the top of its area and counting its groups.
        Pinned stands outside the scope that takes its settings out of the areas. -->
-  {#snippet areaContent()}<PinScope away={() => pinnedIds}><MenuArea area="content" title={ta('props.tabContent')} counts={!wide}>{@render menuContent()}</MenuArea></PinScope>{/snippet}
-  {#snippet areaStyle()}<PinScope away={() => pinnedIds}><MenuArea area="style" title={ta('props.tabStyle')} counts={!wide}>{@render menuStyle()}</MenuArea></PinScope>{/snippet}
-  {#snippet areaPlacement()}<PinScope away={() => pinnedIds}><MenuArea area="placement" title={ta('props.tabPlacement')} counts={!wide} chip={layoutChip}>{@render menuPlacement()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaContent()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="content" title={ta('props.tabContent')} counts={layout === 'narrow'}>{@render menuContent()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaStyle()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="style" title={ta('props.tabStyle')} counts={layout === 'narrow'}>{@render menuStyle()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaPlacement()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="placement" title={ta('props.tabPlacement')} counts={layout === 'narrow'} chip={layoutChip}>{@render menuPlacement()}</MenuArea></PinScope>{/snippet}
+  <!-- The chips: one for each area, jumping to where it starts, the area in view marked -->
+  {#snippet chips()}
+    {#if shortcuts === 'chips' && layout !== 'tabs'}
+      <div class="emenu-chips" role="group" aria-label={ta('menu.areas')}>
+        {#each AREA_TABS as [area, word] (area)}
+          <button type="button" class="emenu-chip" class:on={menu.tab === area} aria-current={menu.tab === area ? 'true' : undefined} onclick={(e) => chooseArea(area, e.currentTarget.closest('.block-menu') ?? e.currentTarget.closest('.panel-body'))}>{word}</button>
+        {/each}
+      </div>
+    {/if}
+  {/snippet}
   {@const parts = { pinned: pinnedPart, content: areaContent, style: areaStyle, placement: areaPlacement }}
   {#if wide}
-    <div class="emenu-cols emenu-two" {@attach balanceAreas}>
+    {@render chips()}
+    <div class="emenu-cols emenu-two" {@attach balanceAreas} {@attach areaInView}>
       <div class="emenu-column">{#each PARTS.slice(0, cut) as part (part)}{@render parts[part]()}{/each}</div>
       <div class="emenu-column">{#each PARTS.slice(cut) as part (part)}{@render parts[part]()}{/each}</div>
     </div>
+  {:else if layout === 'tabs'}
+    <!-- With tabs: Pinned, then the three areas as tabs with one in view, every area drawn so a tab whose area holds nothing for this block can be left out (`tabsIn`); 1, 2 and 3 choose them too (chooseArea) -->
+    {@render pinnedPart()}
+    <div class="emenu-tabs"><Choice fill label={ta('menu.areas')} value={menu.tab} options={AREA_TABS.filter(([area]) => !emptyAreas.has(area))} onchange={(v) => (menu.tab = v)} /></div>
+    <div class="emenu-cols emenu-stack emenu-tabbed" data-tab={menu.tab} {@attach tabsIn}>
+      {@render areaContent()}{@render areaStyle()}{@render areaPlacement()}
+    </div>
   {:else}
     {@render pinnedPart()}
-    <div class="emenu-cols emenu-stack">
+    {@render chips()}
+    <div class="emenu-cols emenu-stack" {@attach areaInView}>
       {@render areaContent()}{@render areaStyle()}{@render areaPlacement()}
     </div>
   {/if}

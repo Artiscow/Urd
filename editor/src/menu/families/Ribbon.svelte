@@ -96,7 +96,7 @@
           options={[['stack', ta('opt.ribbonPlace.stack')], ['edge', ta('opt.ribbonPlace.edge')]]}
           onchange={(v) => setBlockProp('stripePlace', v)} />
       </Setting>
-      <Setting key="thickness" shown="8">
+      <Setting key="thickness">
         <SliderRow label={ta('lbl.ribbonThickness')} title={ta('tip.ribbon.thickness')} value={selectedBlock.props.thickness ?? 8} min={2} max={40} step={1}
           shown={`${selectedBlock.props.thickness ?? 8} px`} oninput={(v) => setBlockProp('thickness', v)} />
       </Setting>
@@ -106,7 +106,7 @@
     <Setting key="width">
       <Choice stack label={ta('lbl.ribbonWidth')} value={ribbonReach(selectedBlock.props.width)} options={ribbonReaches()} onchange={(v) => setBlockProp('width', v)} />
     </Setting>
-    <Setting key="tilt" shown="0">
+    <Setting key="tilt">
       <SliderRow label={ta('lbl.ribbonTilt')} title={ta('tip.ribbon.tilt')} value={selectedBlock.props.tilt ?? 0} min={-10} max={10} step={1}
         shown={`${selectedBlock.props.tilt ?? 0}°`} oninput={(v) => setBlockProp('tilt', v)} />
     </Setting>
@@ -127,16 +127,16 @@
       <ColourRow label={ta('lbl.textColor')} title={ta('tip.ribbon.color')} value={selectedBlock.props.color ?? (plain ? 'text' : 'accent-text')} tokens={themeSwatches()}
         onchange={(hex) => setBlockProp('color', hex)} />
     </Setting>
-    <Setting key="caps" shown={ta('common.off')}>
+    <Setting key="caps">
       <SwitchRow label={ta('lbl.ribbonCaps')} title={ta('tip.ribbon.caps')} checked={selectedBlock.props.caps === true} onchange={(on) => setBlockProp('caps', on)} />
     </Setting>
     <Setting key="weight">
       <SwitchRow label={ta('lbl.ribbonBold')} title={ta('tip.ribbon.bold')} checked={selectedBlock.props.weight === 'bold'} onchange={(on) => setBlockProp('weight', on ? 'bold' : 'normal')} />
     </Setting>
-    <Setting key="outline" shown={ta('common.off')}>
+    <Setting key="outline">
       <SwitchRow label={ta('lbl.ribbonOutline')} title={ta('tip.ribbon.outline')} checked={selectedBlock.props.outline === true} onchange={(on) => setBlockProp('outline', on)} />
     </Setting>
-    <Setting key="gap" shown="40">
+    <Setting key="gap">
       <SliderRow label={ta('lbl.ribbonGap')} title={ta('tip.ribbon.gap')} value={selectedBlock.props.gap ?? 40} min={8} max={120} step={2}
         shown={`${selectedBlock.props.gap ?? 40} px`} oninput={(v) => setBlockProp('gap', v)} />
     </Setting>

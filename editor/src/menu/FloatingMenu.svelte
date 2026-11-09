@@ -1,11 +1,11 @@
 <script>
   /* The floating menu: a block's settings next to the block, from the gear on its bar, or a section's beside the section (`pos.section`, section/SectionMenu.svelte).
-     The same menus as the Settings panel draws, so the two never diverge; the admin setting chooses the width a menu opens in. */
+     The same menus as the Settings panel draws, so the two never diverge; the Urd settings' «Element menu» chooses the form a menu opens in (menu/state.svelte.js menuLayout), and «Shortcuts» set to the search puts the field over the menu's body instead of in its head. */
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext, onMount } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
-  import { menu, menuIsWide } from './state.svelte.js';
+  import { menu, menuLayout } from './state.svelte.js';
   import ElementMenu from './ElementMenu.svelte';
   import SectionMenu from '../section/SectionMenu.svelte';
   import SearchField from '../lib/rows/SearchField.svelte';
@@ -15,6 +15,8 @@
   /** Where the menu stands, in editor coordinates, and what closes it. */
   let { pos, onclose } = $props();
   const { moveBlockMenu, menuBackToBlock } = ed;
+  const layout = $derived(menuLayout());
+  const searchFirst = $derived(menu.shortcutsPref === 'search');
 
   /* The head is the handle (0.7.20.6, proposal K): a drag moves the whole
      menu, the place is kept for the session, and the button in the head
@@ -50,23 +52,24 @@
   const MENU_NARROW_ICON = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4l4 5-4 5M16 4l-4 5 4 5"/></svg>';
 </script>
 
-<div class="block-menu" transition:menuMotion|global bind:this={rootEl} class:wide={menuIsWide()} class:dragging style="--menu-left: {pos.left}px; --menu-top: {pos.top}px; --menu-min: {menu.min}px">
+<div class="block-menu" transition:menuMotion|global bind:this={rootEl} class:wide={layout === 'wide'} class:dragging style="--menu-left: {pos.left}px; --menu-top: {pos.top}px; --menu-min: {menu.min}px">
   <header class="block-menu-head" title={ta('tip.menu.dragHead')} onpointerdown={dragHead}>
     <span class="block-menu-grip" aria-hidden="true">{@html GRIP_ICON}</span>
     <span class="block-menu-title">{pos.section ? ta('lbl.section') : ta('blocks.suffix', { label: ed.blockLabel(selectedBlock.type) })}</span>
-    <SearchField get={() => menu.menuQuery} set={(v) => (menu.menuQuery = v)} />
+    {#if !searchFirst}<SearchField get={() => menu.menuQuery} set={(v) => (menu.menuQuery = v)} />{/if}
     {#if menu.place}
       <IconButton icon={BACK_ICON} label={ta(pos.section ? 'menu.backToSection' : 'menu.backToBlock')} onclick={menuBackToBlock} />
     {/if}
-    <IconButton class="menu-width" icon={menu.wide ? MENU_NARROW_ICON : MENU_WIDE_ICON} label={menu.wide ? ta('menu.toNarrow') : ta('menu.toWide')}
+    <IconButton class="menu-width" icon={menu.wide ? MENU_NARROW_ICON : MENU_WIDE_ICON} label={menu.wide ? ta(menu.formPref === 'tabs' ? 'menu.toTabs' : 'menu.toNarrow') : ta('menu.toWide')}
       onclick={() => (menu.wide = !menu.wide)} />
     <IconButton icon={ICONS.cross} label={ta('tip.closeEsc')} onclick={onclose} />
   </header>
   <div class="panel-body block-menu-body">
+    {#if searchFirst}<div class="menu-search-first"><SearchField get={() => menu.menuQuery} set={(v) => (menu.menuQuery = v)} /></div>{/if}
     {#if pos.section}
-      <SectionMenu wide={menuIsWide()} query={menu.menuQuery} />
+      <SectionMenu wide={layout === 'wide'} query={menu.menuQuery} />
     {:else}
-      <ElementMenu wide={menuIsWide()} query={menu.menuQuery} />
+      <ElementMenu {layout} query={menu.menuQuery} />
     {/if}
   </div>
 </div>

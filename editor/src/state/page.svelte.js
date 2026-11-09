@@ -3,7 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { tick } from 'svelte';
-import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea } from '../menu/state.svelte.js';
+import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, chooseArea, menuDocked } from '../menu/state.svelte.js';
 import { folds } from '../lib/folds.svelte.js';
 import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
@@ -190,7 +190,14 @@ function onBlockMenu(msg) {
     chooseArea('content');
   }
   menuAnchor = msg.rect;
-  blockMenu = menuPlaceFor(msg.rect);
+  if (menuDocked()) openDockedMenu();
+  else blockMenu = menuPlaceFor(msg.rect);
+}
+
+/** The docked forms of the menu («Element menu»): the gear opens the Settings panel in the panel column, and no menu floats. */
+function openDockedMenu() {
+  blockMenu = null;
+  shellState.activePanel = 'properties';
 }
 
 /** The gear on a section's bar, or «Settings» in its right-click menu: the section chosen, no block selected, and its settings in the floating menu beside it. */
@@ -199,7 +206,8 @@ function onSectionMenu(msg) {
   if (!store?.data.sections.some((s) => s.id === msg.sectionId)) return;
   onSelectSection({ sectionId: msg.sectionId });
   menuAnchor = msg.rect;
-  blockMenu = { ...menuPlaceFor(msg.rect), section: true };
+  if (menuDocked()) openDockedMenu();
+  else blockMenu = { ...menuPlaceFor(msg.rect), section: true };
 }
 
 /** The design button on a block's toolbar: the block selected and its design picker open, the calendar's own or the one every other block with designs shares; from the phone view, the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS in push-model.js). */

@@ -1,5 +1,5 @@
 <script>
-  /* A section's settings in the element menu's form (0.7.30.6): Style (its theme, its background and its edges) and Placement (its size and grid, its name for links, its motion and its actions).
+  /* A section's settings in the element menu's form (0.7.30.6): Style (its theme, its background, its edges and its motion) and Placement (its size and grid, its name for links and its actions).
      The floating menu draws them beside the section, from the gear on its bar or «Settings» in its right-click menu, and the Settings panel draws the same.
      Wide, the two areas stand side by side; narrow, under each other with a heading each. With words in the search field, a copy of the areas narrowed to what matches (menu-search.js). */
   import { getContext } from 'svelte';
@@ -178,6 +178,28 @@
       {/if}
     {/each}
   </Fold>
+  <Fold id="sec-motion" title={ta('group.motion')} value={motionValue()}>
+    <SelectRow label={ta('lbl.animIn')} title={ta('tip.props.sectionAnim')} value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
+      options={ENTRANCE_OPTIONS} onchange={(v) => setSectionAnimation(v || null)} />
+    {#if isEntrance(sectionAnim)}
+      <NumberRow label={ta('lbl.durationMs')} title={ta('tip.anim.duration')} value={sectionAnim.props.duration} min={100} max={4000} step={100}
+        onchange={(v) => setSectionAnimProp('duration', v)} />
+      <NumberRow label={ta('lbl.delayMs')} title={ta('tip.anim.delay')} value={sectionAnim.props.delay ?? 0} min={0} max={4000} step={100}
+        onchange={(v) => setSectionAnimProp('delay', v)} />
+      {#if sectionAnim.type === 'stagger'}
+        <SelectRow label={ta('lbl.staggerEffect')} title={ta('tip.props.staggerEffect')} value={sectionAnim.props.effect ?? 'slide-up'}
+          options={[['fade-in', ta('anim.fadeIn')], ['slide-up', ta('anim.slideUp')], ['zoom-in', ta('anim.zoomIn')]]}
+          onchange={(v) => setSectionAnimStr('effect', v)} />
+        <NumberRow label={ta('lbl.stepMs')} title={ta('tip.props.staggerStep')} value={sectionAnim.props.step ?? 90} min={0} max={1000} step={10}
+          onchange={(v) => setSectionAnimProp('step', v)} />
+        <SelectRow label={ta('lbl.pattern')} title={ta('tip.props.staggerPattern')} value={sectionAnim.props.pattern ?? 'sequence'}
+          options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')], ['rows', ta('opt.stagger.rows')], ['center', ta('opt.stagger.center')]]}
+          onchange={(v) => setSectionAnimStr('pattern', v)} />
+      {/if}
+    {/if}
+    <SelectRow label={ta('lbl.onHover')} title={ta('tip.props.sectionHover')} value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
+      options={HOVER_OPTIONS} onchange={(v) => setSectionHover(v || null)} />
+  </Fold>
 {/snippet}
 
 {#snippet sectionPlacement()}
@@ -208,28 +230,6 @@
         words={sectionWords(ed.sections.find((s) => s.id === activeSectionId))} path={ed.pageEntry()?.path ?? '/'}
         onchange={(name) => ed.setSectionAnchor(name)} />
     {/key}
-  </Fold>
-  <Fold id="sec-motion" title={ta('group.motion')} value={motionValue()}>
-    <SelectRow label={ta('lbl.animIn')} title={ta('tip.props.sectionAnim')} value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
-      options={ENTRANCE_OPTIONS} onchange={(v) => setSectionAnimation(v || null)} />
-    {#if isEntrance(sectionAnim)}
-      <NumberRow label={ta('lbl.durationMs')} title={ta('tip.anim.duration')} value={sectionAnim.props.duration} min={100} max={4000} step={100}
-        onchange={(v) => setSectionAnimProp('duration', v)} />
-      <NumberRow label={ta('lbl.delayMs')} title={ta('tip.anim.delay')} value={sectionAnim.props.delay ?? 0} min={0} max={4000} step={100}
-        onchange={(v) => setSectionAnimProp('delay', v)} />
-      {#if sectionAnim.type === 'stagger'}
-        <SelectRow label={ta('lbl.staggerEffect')} title={ta('tip.props.staggerEffect')} value={sectionAnim.props.effect ?? 'slide-up'}
-          options={[['fade-in', ta('anim.fadeIn')], ['slide-up', ta('anim.slideUp')], ['zoom-in', ta('anim.zoomIn')]]}
-          onchange={(v) => setSectionAnimStr('effect', v)} />
-        <NumberRow label={ta('lbl.stepMs')} title={ta('tip.props.staggerStep')} value={sectionAnim.props.step ?? 90} min={0} max={1000} step={10}
-          onchange={(v) => setSectionAnimProp('step', v)} />
-        <SelectRow label={ta('lbl.pattern')} title={ta('tip.props.staggerPattern')} value={sectionAnim.props.pattern ?? 'sequence'}
-          options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')], ['rows', ta('opt.stagger.rows')], ['center', ta('opt.stagger.center')]]}
-          onchange={(v) => setSectionAnimStr('pattern', v)} />
-      {/if}
-    {/if}
-    <SelectRow label={ta('lbl.onHover')} title={ta('tip.props.sectionHover')} value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
-      options={HOVER_OPTIONS} onchange={(v) => setSectionHover(v || null)} />
   </Fold>
   <!-- The section's actions, as on its bar and in its right-click menu -->
   <ActionRow label={ta('canvas.ctx.sectionLabel')} actions={[
