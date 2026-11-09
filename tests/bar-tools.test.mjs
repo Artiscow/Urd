@@ -17,6 +17,19 @@ const family = (type) => read(`../editor/src/menu/families/${type === 'map' ? 'F
 /** The folds a source draws, by id, with their title keys. */
 const foldsIn = (source) => new Map([...source.matchAll(/<Fold id="([^"]+)"[^>]*?title=\{ta\('([^']+)'\)/gs)].map((m) => [m[1], m[2]]));
 
+/** What stands first in a source after a marker: the rest of the source from there, past white space, comments and `{@const}` tags, read with plain string steps. */
+function firstAfter(source, marker) {
+  const at = source.indexOf(marker);
+  if (at < 0) return '';
+  let rest = source.slice(at + marker.length);
+  for (;;) {
+    rest = rest.trimStart();
+    const end = rest.startsWith('<!--') ? rest.indexOf('-->') + 3 : rest.startsWith('{@const ') ? rest.indexOf('}') + 1 : 0;
+    if (end <= 0) return rest;
+    rest = rest.slice(end);
+  }
+}
+
 /** The folds a source draws under a condition other than the menu's area, by id, with that condition; a fold drawn for each item of a list counts as drawn under one. */
 function conditionalFolds(source) {
   const found = new Map();
@@ -91,8 +104,10 @@ test('the design button opens the small window or the picker as «Design button 
   assert.match(open, /openBlockTool\(el, section, block, 'look:design'/);
   assert.match(open, /type: 'urd-block-design'/);
   // lib/only-group.js keeps `look:design` among the Style area's own children: the design row stands first in the area, in no group.
-  assert.match(read('../editor/src/menu/ElementMenu.svelte'), /\{#snippet menuStyle\(\)\}\s*\{#if designs\}\s*(?:<!--[\s\S]*?-->\s*)*<Setting pin="design"/);
-  assert.match(read('../editor/src/menu/families/Calendar.svelte'), /\{:else if area === 'style'\}\s*(?:\{@const [^}]*\}\s*)?(?:<!--[\s\S]*?-->\s*)*<Setting pin="design"[\s>]/);
+  const menuStyle = firstAfter(read('../editor/src/menu/ElementMenu.svelte'), '{#snippet menuStyle()}');
+  assert.ok(menuStyle.startsWith('{#if designs}'), 'the Style area opens on the block\'s designs');
+  assert.match(firstAfter(menuStyle, '{#if designs}'), /^<Setting pin="design"[\s>]/, 'the design row stands first in the Style area');
+  assert.match(firstAfter(read('../editor/src/menu/families/Calendar.svelte'), "{:else if area === 'style'}"), /^<Setting pin="design"[\s>]/, 'the calendar\'s design row stands first in its Style area');
 });
 
 test('every group on a section\'s bar is a fold of the section\'s menu, and every fold is a tool', () => {

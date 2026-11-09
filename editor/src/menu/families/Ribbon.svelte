@@ -12,7 +12,7 @@
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
-  import { ribbonMotions, ribbonReaches, ribbonReach, ribbonSepOptions, ribbonMainOptions, ribbonStripeOptions, RIBBON_SEP_ICONS, ribbonInk } from '../options.js';
+  import { ribbonMotions, ribbonReaches, ribbonReach, ribbonSepOptions, ribbonMainOptions, ribbonStripeOptions, RIBBON_SEP_ICONS, ribbonInk, RIBBON_MOTION_STANDARD } from '../options.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
   import { pinnedNow } from '../pinned.js';
@@ -166,7 +166,7 @@
   <!-- The motion's own settings go with it into Pinned; a band that stands still has the choice alone -->
   <Fold id="ribbon-motion" title={ta('lbl.ribbonMotion')} value={ribbonMotions().find(([v]) => v === motion)?.[1] ?? ''}
     rows={pinned.has('ribbonMotion') ? 0 : motion === 'none' ? 1 : undefined}
-    group={groupOf('ribbon-motion', { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true })}>{@render ribbonMotion()}</Fold>
+    group={groupOf('ribbon-motion', RIBBON_MOTION_STANDARD)}>{@render ribbonMotion()}</Fold>
   <Fold id="ribbon-stripes" title={ta('lbl.ribbonStripes')} value={stripesOn ? ta('menu.onCount', { n: stripesOn }) : ta('common.off')} group={groupOf('ribbon-stripes', { above: 'none', below: 'none', main: 'text', aboveColor: undefined, belowColor: undefined, stripePlace: 'stack', thickness: 8 })}>{@render ribbonStripes()}</Fold>
   <Fold id="ribbon-shape" title={ta('lbl.ribbonShape')} value={ribbonReaches().find(([v]) => v === ribbonReach(selectedBlock.props.width))?.[1] ?? ''} group={groupOf('ribbon-shape', { width: 'canvas', tilt: 0, bg: undefined })}>{@render ribbonShape()}</Fold>
   <Fold id="ribbon-text" title={ta('lbl.ribbonText')} value={{ sm: ta('opt.size.sm'), md: ta('opt.size.md'), lg: ta('opt.size.lg'), xl: ta('opt.size.xl') }[selectedBlock.props.size ?? 'md']} group={groupOf('ribbon-text', { size: 'md', color: undefined, caps: false, weight: 'normal', outline: false, gap: 40, sep: 'dot', sepText: undefined })}>{@render ribbonText()}</Fold>

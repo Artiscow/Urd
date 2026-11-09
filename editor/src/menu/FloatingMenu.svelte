@@ -30,6 +30,19 @@
   /** The menu opens ready to type in: the focus goes to the search field, where 1, 2 and 3 still choose the areas. */
   let rootEl;
   onMount(() => rootEl?.querySelector('.menu-search')?.focus());
+  /* A small panel is placed by its own size, not the full menu's: measured as each panel opens (`opened`, a number that changes only then) and as it grows or shrinks (fitSmallMenu in state/page.svelte.js). */
+  const opened = $derived(pos.opened);
+  $effect(() => {
+    if (!only || !rootEl) return;
+    void opened;
+    let first = true;
+    const observer = new ResizeObserver(() => {
+      ed.fitSmallMenu({ w: rootEl.offsetWidth, h: rootEl.offsetHeight }, first);
+      first = false;
+    });
+    observer.observe(rootEl);
+    return () => observer.disconnect();
+  });
   function dragHead(event) {
     if (event.button !== 0 || event.target.closest('button, input, label')) return;
     event.preventDefault();
@@ -56,7 +69,7 @@
   const MENU_NARROW_ICON = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4l4 5-4 5M16 4l-4 5 4 5"/></svg>';
 </script>
 
-<div class="block-menu" transition:menuMotion|global bind:this={rootEl} class:wide={!only && layout === 'wide'} class:small={Boolean(only)} class:dragging style="--menu-left: {pos.left}px; --menu-top: {pos.top}px; --menu-min: {menu.min}px">
+<div class="block-menu" transition:menuMotion|global bind:this={rootEl} class:wide={!only && layout === 'wide'} class:small={Boolean(only)} class:dragging style="--menu-left: {pos.left}px; --menu-top: {pos.top}px; --menu-min: {menu.min}px{only && pos.h ? `; --menu-h: ${pos.h}px` : ''}">
   <header class="block-menu-head" title={ta('tip.menu.dragHead')} onpointerdown={dragHead}>
     <span class="block-menu-grip" aria-hidden="true">{@html GRIP_ICON}</span>
     <span class="block-menu-title">{only ? onlyTitle : pos.section ? ta('lbl.section') : ta('blocks.suffix', { label: ed.blockLabel(selectedBlock.type) })}</span>

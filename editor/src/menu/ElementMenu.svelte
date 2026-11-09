@@ -122,9 +122,12 @@
       options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
         : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
       set: (v) => setBlockFit(v) });
+    const hidden0 = ed.blockStarts(b.type, 'hideMobile');
     items.push({ id: 'phone', label: ta('lbl.hideMobile'), tip: ta('tip.hideMobile'), kind: 'switch', value: Boolean(b.hideMobile), set: (on) => setBlockHideMobile(on),
-      own: Boolean(b.hideMobile), reset: () => setBlockHideMobile(false) });
+      own: Boolean(b.hideMobile) !== hidden0, reset: () => setBlockHideMobile(hidden0) });
     const p = b.props;
+    /** A prop's own value against its standard, as the group of its row in its area counts it (menu/groups.js), and the way back to it. */
+    const standard = (key, value) => ({ own: p[key] !== undefined && JSON.stringify(p[key]) !== JSON.stringify(value), reset: () => setBlockProp(key, value) });
     // A block's design, as the calendar's: one id for every block with designs, core or plugin (block-designs.js, the design contract), opening the design picker.
     if (designs) items.push({ id: 'design', label: ta('lbl.design'), tip: ta('tip.picker.design'), kind: 'open', value: designs.name(designs.read(p)), picture: designs.picture?.(designs.read(p)) ?? '', run: ed.openBlockDesignPicker,
       current: designs.read(p), designs: () => pictureList(designs), pick: (id) => setBlockProp(designs.prop, id),
@@ -143,52 +146,49 @@
     } else if (b.type === 'image') {
       // The image's standards as its look group has them (families/Image.svelte): filling the frame, with the medium corners.
       items.push({ id: 'imgFit', label: ta('lbl.imageFit'), tip: ta('tip.image.fit'), kind: 'choice', value: p.fit ?? 'cover',
-        options: [['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]], set: (v) => setBlockProp('fit', v),
-        own: p.fit !== undefined && p.fit !== 'cover', reset: () => setBlockProp('fit', 'cover') });
+        options: [['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]], set: (v) => setBlockProp('fit', v), ...standard('fit', 'cover') });
       items.push({ id: 'radius', label: ta('lbl.radius'), tip: ta('tip.image.radius'), kind: 'choice', value: p.radius ?? '',
-        options: [['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]], set: (v) => setBlockProp('radius', v || null),
-        own: p.radius !== undefined && p.radius !== 'md', reset: () => setBlockProp('radius', 'md') });
+        options: [['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]], set: (v) => setBlockProp('radius', v || null), ...standard('radius', 'md') });
     } else if (b.type === 'video') {
       items.push({ id: 'videoSource', label: ta('lbl.videoSource'), kind: 'choice', value: p.source === 'file' ? 'file' : 'embed',
         options: [['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]], set: (v) => setBlockProp('source', v) });
     } else if (b.type === 'icon') {
-      items.push({ id: 'iconSize', label: ta('lbl.sizePx'), tip: ta('tip.icon.size'), kind: 'number', min: 8, max: 400, value: p.size ?? 48, set: (v) => setBlockProp('size', Math.max(8, Math.min(400, Number(v) || 48))) });
-      items.push({ id: 'iconColor', label: ta('lbl.color'), tip: ta('hint.icon.color'), kind: 'color', value: p.color ?? 'accent', set: (v) => setBlockProp('color', v) });
+      items.push({ id: 'iconSize', label: ta('lbl.sizePx'), tip: ta('tip.icon.size'), kind: 'number', min: 8, max: 400, value: p.size ?? 48, set: (v) => setBlockProp('size', Math.max(8, Math.min(400, Number(v) || 48))), ...standard('size', 48) });
+      items.push({ id: 'iconColor', label: ta('lbl.color'), tip: ta('hint.icon.color'), kind: 'color', value: p.color ?? 'accent', set: (v) => setBlockProp('color', v), ...standard('color', 'accent') });
     } else if (b.type === 'gallery') {
       const gview = blockGalleryView(p.view);
       if (GRID_VIEWS.includes(gview)) {
-        items.push({ id: 'columns', label: ta('lbl.columns'), tip: ta('tip.gallery.columns'), kind: 'number', min: 1, max: 6, value: p.columns ?? 3, set: (v) => setBlockProp('columns', Math.max(1, Math.min(6, Number(v) || 3))) });
+        items.push({ id: 'columns', label: ta('lbl.columns'), tip: ta('tip.gallery.columns'), kind: 'number', min: 1, max: 6, value: p.columns ?? 3, set: (v) => setBlockProp('columns', Math.max(1, Math.min(6, Number(v) || 3))), ...standard('columns', 3) });
       }
     } else if (b.type === 'ribbon') {
       const motion = p.motion ?? 'roll';
-      items.push({ id: 'ribbonMotion', label: ta('group.motion'), tip: ta('tip.ribbon.motion'), below: RibbonMotion, kind: 'select', value: motion, options: ribbonMotions(), set: (v) => setBlockProp('motion', v) });
+      items.push({ id: 'ribbonMotion', label: ta('group.motion'), tip: ta('tip.ribbon.motion'), below: RibbonMotion, kind: 'select', value: motion, options: ribbonMotions(), set: (v) => setBlockProp('motion', v), ...standard('motion', 'roll') });
       if (motion === 'roll' || motion === 'sway') {
-        items.push({ id: 'speed', label: ta('lbl.ribbonSpeed'), tip: ta('tip.ribbon.speed'), kind: 'slider', min: 10, max: 300, step: 5, value: p.speed ?? 60, shown: String(p.speed ?? 60), input: (v) => setBlockProp('speed', v) });
+        items.push({ id: 'speed', label: ta('lbl.ribbonSpeed'), tip: ta('tip.ribbon.speed'), kind: 'slider', min: 10, max: 300, step: 5, value: p.speed ?? 60, shown: String(p.speed ?? 60), input: (v) => setBlockProp('speed', v), ...standard('speed', 60) });
       }
     } else if (b.type === 'shape') {
-      items.push({ id: 'shapeColor', label: ta('lbl.color'), tip: ta('tip.shape.color'), kind: 'select', value: p.color ?? 'accent', options: colorTokens(), set: (v) => setBlockProp('color', v) });
+      items.push({ id: 'shapeColor', label: ta('lbl.color'), tip: ta('tip.shape.color'), kind: 'select', value: p.color ?? 'accent', options: colorTokens(), set: (v) => setBlockProp('color', v), ...standard('color', 'accent') });
       // The thickness only where the shape draws a stroke, as in Style.
-      if (['line', 'arrow'].includes(p.kind) || (['circle', 'rect'].includes(p.kind) && !p.fill)) items.push({ id: 'thickness', label: ta('lbl.thickness'), tip: ta('tip.shape.thickness'), kind: 'number', min: 1, max: 40, value: p.thickness ?? 2, set: (v) => setBlockProp('thickness', Math.max(1, Math.min(40, Number(v) || 2))) });
+      if (['line', 'arrow'].includes(p.kind) || (['circle', 'rect'].includes(p.kind) && !p.fill)) items.push({ id: 'thickness', label: ta('lbl.thickness'), tip: ta('tip.shape.thickness'), kind: 'number', min: 1, max: 40, value: p.thickness ?? 2, set: (v) => setBlockProp('thickness', Math.max(1, Math.min(40, Number(v) || 2))), ...standard('thickness', 2) });
     } else if (b.type === 'table') {
       items.push({ id: 'tableLines', label: ta('lbl.tableLines'), tip: ta('tip.table.lines'), kind: 'choice', value: p.lines ?? 'rows',
-        options: [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]], set: (v) => setBlockProp('lines', v) });
+        options: [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]], set: (v) => setBlockProp('lines', v), ...standard('lines', 'rows') });
     } else if (b.type === 'form') {
       items.push({ id: 'sendMode', label: ta('form.mode'), tip: ta('form.modeTitle'), kind: 'select', value: p.mode === 'endpoint' ? 'endpoint' : 'mailto',
-        options: [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]], set: (v) => setBlockProp('mode', v),
-        own: p.mode === 'endpoint', reset: () => setBlockProp('mode', 'mailto') });
+        options: [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]], set: (v) => setBlockProp('mode', v), ...standard('mode', 'mailto') });
     } else if (b.type === 'collection') {
-      items.push({ id: 'limit', label: ta('lbl.maxCount'), tip: ta('tip.collection.limit'), kind: 'number', min: 0, max: 100, value: p.limit ?? 6, zero: ta('common.all'), set: (v) => { const n = Math.max(0, Math.min(100, Math.round(Number(v)) || 0)); setBlockProp('limit', n); return n; } });
+      items.push({ id: 'limit', label: ta('lbl.maxCount'), tip: ta('tip.collection.limit'), kind: 'number', min: 0, max: 100, value: p.limit ?? 6, zero: ta('common.all'), set: (v) => { const n = Math.max(0, Math.min(100, Math.round(Number(v)) || 0)); setBlockProp('limit', n); return n; }, ...standard('limit', 6) });
     } else if (b.type === 'product') {
-      items.push({ id: 'columns', label: ta('lbl.columns'), tip: ta('tip.product.columns'), kind: 'number', min: 0, max: 6, value: p.columns ?? 0, zero: ta('common.auto'), set: (v) => { const n = Math.max(0, Math.min(6, Math.round(Number(v)) || 0)); setBlockProp('columns', n); return n; } });
+      items.push({ id: 'columns', label: ta('lbl.columns'), tip: ta('tip.product.columns'), kind: 'number', min: 0, max: 6, value: p.columns ?? 0, zero: ta('common.auto'), set: (v) => { const n = Math.max(0, Math.min(6, Math.round(Number(v)) || 0)); setBlockProp('columns', n); return n; }, ...standard('columns', 0) });
     } else if (b.type === 'checkout') {
       items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), tip: ta('tip.checkout.vippsCheckout'), kind: 'switch', value: Boolean(paymentsOf(p).vipps), set: (on) => setBlockProp('payments', { ...paymentsOf(p), vipps: on }),
         own: Boolean(paymentsOf(p).vipps), reset: () => setBlockProp('payments', { ...paymentsOf(p), vipps: false }) });
       items.push({ id: 'paypalButton', label: ta('lbl.payPaypal'), tip: ta('tip.checkout.payPaypal'), kind: 'switch', value: Boolean(paymentsOf(p).paypal), set: (on) => setBlockProp('payments', { ...paymentsOf(p), paypal: on }),
         own: Boolean(paymentsOf(p).paypal), reset: () => setBlockProp('payments', { ...paymentsOf(p), paypal: false }) });
     } else if (b.type === 'countdown') {
-      items.push({ id: 'seconds', label: ta('lbl.countdownSeconds'), tip: ta('tip.countdown.seconds'), kind: 'switch', value: p.showSeconds !== false, set: (on) => setBlockProp('showSeconds', on) });
+      items.push({ id: 'seconds', label: ta('lbl.countdownSeconds'), tip: ta('tip.countdown.seconds'), kind: 'switch', value: p.showSeconds !== false, set: (on) => setBlockProp('showSeconds', on), ...standard('showSeconds', true) });
     } else if (b.type === 'audio') {
-      items.push({ id: 'loop', label: ta('lbl.audioLoop'), tip: ta('tip.audio.loop'), kind: 'switch', value: Boolean(p.loop), set: (on) => setBlockProp('loop', on) });
+      items.push({ id: 'loop', label: ta('lbl.audioLoop'), tip: ta('tip.audio.loop'), kind: 'switch', value: Boolean(p.loop), set: (on) => setBlockProp('loop', on), ...standard('loop', false) });
     } else if (b.type === 'map') {
       items.push({ id: 'zoom', label: ta('lbl.mapZoom'), tip: ta('tip.map.zoom'), kind: 'number', min: 1, max: 19, value: p.zoom ?? 15, set: (v) => setBlockProp('zoom', Math.max(1, Math.min(19, Number(v) || 15))) });
     }

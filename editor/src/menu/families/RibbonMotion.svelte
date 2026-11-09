@@ -1,7 +1,9 @@
 <script>
   /* A ribbon's motion settings, shown while the band moves: the way to play it in the editor, its direction, its pace, and how a visitor pauses it.
-     They stand under the motion they belong to: in the Motion fold, or in Pinned while the motion is pinned (ElementMenu.svelte). */
-  import { getContext } from 'svelte';
+     They stand under the motion they belong to: in the Motion fold, or in Pinned while the motion is pinned (ElementMenu.svelte), and tell their own values against the motion group's standards in both. */
+  import { getContext, setContext } from 'svelte';
+  import { makeGroupHelpers } from '../groups.js';
+  import { RIBBON_MOTION_STANDARD } from '../options.js';
   import Choice from '../../lib/Choice.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import SliderRow from '../../lib/rows/SliderRow.svelte';
@@ -11,6 +13,7 @@
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp } = ed;
   const motion = $derived(selectedBlock.props.motion ?? 'roll');
+  setContext('menu-group', makeGroupHelpers(() => ed.selectedBlock.props, ed.setBlockProps).groupOf('ribbon-motion', RIBBON_MOTION_STANDARD));
 </script>
 
 {#if motion !== 'none'}

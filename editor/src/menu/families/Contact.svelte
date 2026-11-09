@@ -38,9 +38,11 @@
 
 {#if area === 'content'}
   {#snippet contactParts()}
-    <!-- The parts this block shows; what they hold is typed in the Legal panel -->
+    <!-- The parts this block shows, each going back to whether a new block shows it; what they hold is typed in the Legal panel -->
     {#each CONTACT_PARTS as part (part)}
-      <SwitchRow label={ta(`contactPart.${part}`)} title={ta('tip.contact.part')} checked={shown.has(part)} onchange={(on) => togglePart(part, on)} />
+      <Setting own={shown.has(part) !== DEFAULT_PARTS.includes(part)} reset={() => togglePart(part, DEFAULT_PARTS.includes(part))}>
+        <SwitchRow label={ta(`contactPart.${part}`)} title={ta('tip.contact.part')} checked={shown.has(part)} onchange={(on) => togglePart(part, on)} />
+      </Setting>
     {/each}
     <button class="ghost action" onclick={editDetails}>{ta('ui.editSiteContact')}</button>
     <!-- The map design's map: behind a cover until a visitor presses it, or with the page -->

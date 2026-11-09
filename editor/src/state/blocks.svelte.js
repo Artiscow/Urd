@@ -168,6 +168,12 @@ function shopBlocksOn() {
   return shopOn(siteState.siteDraft?.site, hasProducts);
 }
 
+/** Whether every new block of a type starts with a block-level flag on (`decor`, `hideMobile`): the shapes and the icon start as decor hidden on phones, so that is their standard. */
+function blockStarts(type, flag) {
+  const seeds = Object.values(BLOCK_DEFAULTS).filter((d) => d.type === type);
+  return seeds.length > 0 && seeds.every((d) => d[flag] === true);
+}
+
 function buildBlock(kind) {
   const d = BLOCK_DEFAULTS[kind];
   if (!d) return null;
@@ -331,6 +337,7 @@ export const blocksState = {
   get BLOCK_LABELS() { return BLOCK_LABELS; },
   shopBlocksOn,
   get BLOCK_DEFAULTS() { return BLOCK_DEFAULTS; },
+  blockStarts,
   buildBlock,
   requestPlacement,
   insertBlock,

@@ -90,6 +90,7 @@ function handleFor(selectedBlock, viewMode = 'desktop') {
     hoverOptions: () => [['', 'None'], ['lift', 'Lift']],
     isEntrance: (a) => a?.type === 'fade-in',
     themeSwatches: () => [['accent', '#7c5cff']],
+    blockStarts: (type, flag) => ['shape', 'icon'].includes(type) && ['decor', 'hideMobile'].includes(flag),
     siteCalendars: () => calendars,
     siteLinks: () => [],
     siteCalendarById: (id) => calendars.find((c) => c.id === id) ?? null,
@@ -259,7 +260,7 @@ function controlOf(node) {
 const KIT_TYPES = Object.keys(BLOCKS);
 const PIN_IDS = ['fit', 'phone', 'size', 'design', 'phoneDesign', 'phoneView', 'card', 'limit', 'subscribe', 'align', 'textBox', 'goesTo', 'imgFit', 'radius', 'videoSource', 'iconSize', 'iconColor', 'shapeColor', 'thickness', 'columns', 'ribbonMotion', 'speed', 'tableLines', 'sendMode', 'vippsButton', 'paypalButton', 'seconds', 'loop', 'zoom'];
 
-test('a setting draws the same control with the same words in Pinned as in its area', () => {
+test('a setting draws the same control with the same words, and the same way back, in Pinned as in its area', () => {
   const differ = [];
   for (const type of KIT_TYPES) {
     for (const props of BLOCKS[type]) {
@@ -267,10 +268,11 @@ test('a setting draws the same control with the same words in Pinned as in its a
         setQuickChoice(type, choice);
         const { areas, pinned } = menuOf(type, props, true);
         const where = inPinned ? [pinned].filter(Boolean) : areas;
-        // A row's control and its words (its label, its options and its value), all but the dimmed default under a row in its area
+        // A row's control and its words (its label, its options and its value), all but the dimmed default under a row in its area, and whether it shows its way back
         const wordsOf = (n) => (hasClass(n, 'setting-source') ? '' : `${n.text} ${n.children.map(wordsOf).join(' ')}`);
+        const own = (n) => (n.children.some((c) => hasClass(c, 'setting-reset')) ? ' (own)' : '');
         return Object.fromEntries(where.flatMap((n) => find(n, (x) => x.attrs['data-pin'] !== undefined))
-          .map((n) => [n.attrs['data-pin'], `${controlOf(n)}: ${wordsOf(n).replace(/\s+/g, ' ').trim()}`]));
+          .map((n) => [n.attrs['data-pin'], `${controlOf(n)}${own(n)}: ${wordsOf(n).replace(/\s+/g, ' ').trim()}`]));
       };
       const inAreas = kinds({ pinned: [], removed: PIN_IDS }, false);
       const inPinned = kinds({ pinned: Object.keys(inAreas), removed: [] }, true);
@@ -297,7 +299,9 @@ test('no fold holds one setting alone, with nothing pinned or with the defaults 
             const rows = items.children.filter((n) => !hasClass(n, 'menu-group-reset'));
             const list = find(items, (n) => hasClass(n, 'row-list')).length > 0;
             const title = find(fold, (n) => hasClass(n, 'menu-group-title'))[0]?.text.trim();
-            if (!list && rows.length === 1) alone.push(`${type} ${JSON.stringify(props).slice(0, 40)} ${viewMode} ${choice === NO_CHOICE ? 'defaults' : 'none'} pinned: «${title}»`);
+            // A setting with what belongs to it standing in its row (Setting.svelte) counts as each of the rows it holds
+            const seen = (n) => (hasClass(n, 'setting') ? find(n, (x) => hasClass(x, 'setting-body'))[0]?.children.length ?? 1 : 1);
+            if (!list && rows.reduce((sum, n) => sum + seen(n), 0) === 1) alone.push(`${type} ${JSON.stringify(props).slice(0, 40)} ${viewMode} ${choice === NO_CHOICE ? 'defaults' : 'none'} pinned: «${title}»`);
           }
         }
       }
@@ -372,6 +376,39 @@ test('a block with designs has its design row first in Style, or in Pinned while
       }
     }
     setQuickChoice(type, NO_CHOICE);
+  }
+});
+
+test('the rows under a ribbon\'s motion show their way back in Pinned as in the Motion fold', () => {
+  const ownIn = (choice, inPinned) => {
+    setQuickChoice('ribbon', choice);
+    const { areas, pinned } = menuOf('ribbon', { items: ['a'], direction: 'right', pauseOnHover: false }, true);
+    setQuickChoice('ribbon', NO_CHOICE);
+    const where = inPinned ? [pinned].filter(Boolean) : areas;
+    const rows = where.flatMap((n) => find(n, (x) => ['direction', 'pauseOnHover', 'fade'].includes(x.attrs['data-setting'])));
+    return Object.fromEntries(rows.map((n) => [n.attrs['data-setting'], n.children.some((c) => hasClass(c, 'setting-reset'))]));
+  };
+  const inFold = ownIn({ pinned: [], removed: PIN_IDS }, false);
+  const inPinned = ownIn({ pinned: ['ribbonMotion'], removed: [] }, true);
+  assert.deepEqual(inFold, { direction: true, pauseOnHover: true, fade: false }, 'in the Motion fold');
+  assert.deepEqual(inPinned, inFold, 'in Pinned');
+});
+
+test('hiding on phones goes back to what the block type starts with: a shape starts hidden, a text shown', () => {
+  const ownOf = (type, hideMobile, choice) => {
+    setQuickChoice(type, choice);
+    const context = new Map([['urd-editor', handleFor(block(type, type === 'shape' ? { kind: 'line' } : {}, { hideMobile, decor: type === 'shape' }))]]);
+    const tree = parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body);
+    const row = find(tree, (n) => n.attrs['data-pin'] === 'phone')[0];
+    setQuickChoice(type, NO_CHOICE);
+    return row ? row.children.some((c) => hasClass(c, 'setting-reset')) : 'no row';
+  };
+  for (const choice of [{ pinned: [], removed: PIN_IDS }, { pinned: ['phone'], removed: [] }]) {
+    const where = choice.pinned.length ? 'in Pinned' : 'in Placement';
+    assert.equal(ownOf('shape', true, choice), false, `a shape hidden on phones holds its standard, ${where}`);
+    assert.equal(ownOf('shape', false, choice), true, `a shape shown on phones holds its own value, ${where}`);
+    assert.equal(ownOf('text', true, choice), true, `a text hidden on phones holds its own value, ${where}`);
+    assert.equal(ownOf('text', false, choice), false, `a text shown on phones holds its standard, ${where}`);
   }
 });
 

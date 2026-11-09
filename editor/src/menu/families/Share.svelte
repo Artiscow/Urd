@@ -43,20 +43,20 @@
 
 {#if area === 'content'}
   {#snippet shareLinks()}
-    <!-- The site's links from the Site panel first, then the block's own after them -->
-    <Setting key="useSite">
+    <!-- The site's links from the Site panel first, in the row of the switch that shows them, whose way back shows them all again; then the block's own after them -->
+    <Setting own={!useSite || siteLinks().some((link) => (selectedBlock.props.hidden ?? []).includes(link.id))} reset={() => setBlockProps('useSite', { useSite: true, hidden: [] })}>
       <SwitchRow label={ta('lbl.useSiteLinks')} title={ta('tip.share.useSite')} checked={useSite} onchange={(on) => setBlockProp('useSite', on)} />
+      {#if useSite}
+        <!-- Each of the site's links can be left out of this block alone (hidden, by id) -->
+        {#each siteLinks() as link (link.id)}
+          <SwitchRow label={link.label || ICON_LIBRARY[link.icon]?.label || link.url} title={`${ta('tip.share.pick')}${link.url ? `\n${link.url}` : ''}`}
+            checked={!(selectedBlock.props.hidden ?? []).includes(link.id)} onchange={(on) => toggleSiteLink(link.id, on)}>
+            {#snippet lead()}<span class="footer-soc-preview" aria-hidden="true">{#if link.image}<img src={link.image} alt="">{:else}{@html iconSvg(link.icon) || ''}{/if}</span>{/snippet}
+          </SwitchRow>
+        {/each}
+        <button class="ghost action" onclick={() => { ed.siteLinksOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteLinks')}</button>
+      {/if}
     </Setting>
-    {#if useSite}
-      <!-- Each of the site's links can be left out of this block alone (hidden, by id) -->
-      {#each siteLinks() as link (link.id)}
-        <SwitchRow label={link.label || ICON_LIBRARY[link.icon]?.label || link.url} title={`${ta('tip.share.pick')}${link.url ? `\n${link.url}` : ''}`}
-          checked={!(selectedBlock.props.hidden ?? []).includes(link.id)} onchange={(on) => toggleSiteLink(link.id, on)}>
-          {#snippet lead()}<span class="footer-soc-preview" aria-hidden="true">{#if link.image}<img src={link.image} alt="">{:else}{@html iconSvg(link.icon) || ''}{/if}</span>{/snippet}
-        </SwitchRow>
-      {/each}
-      <button class="ghost action" onclick={() => { ed.siteLinksOpen = true; ed.openPanel('site'); }}>{ta('ui.editSiteLinks')}</button>
-    {/if}
     <SubHeading text={ta('lbl.ownLinks')} />
     <LinkList label={ta('lbl.ownLinks')} links={selectedBlock.props.links ?? []}
       onchange={(i, patch) => ownLinks((list) => { list[i] = { ...list[i], ...patch }; })}

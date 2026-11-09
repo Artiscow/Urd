@@ -726,9 +726,10 @@
     --menu-w: min(660px, 100vw - var(--menu-min, 8px) - 8px);
   }
 
-  /* Small: one group from a tool of the bar with small panels (MENU_SMALL_W in menu/state.svelte.js) */
+  /* Small: one group from a tool of the bar with small panels (MENU_SMALL_W in menu/state.svelte.js), kept inside the window by its own measured height (--menu-h, fitSmallMenu in state/page.svelte.js) */
   .block-menu.small {
     --menu-w: min(320px, 100vw - var(--menu-min, 8px) - 8px);
+    top: clamp(8px, var(--menu-top), 100vh - min(var(--menu-h, 620px), 72vh, 620px) - 8px);
   }
 
   /* A small panel that holds one group alone (lib/only-group.js): the rest of the menu hidden, the areas' headings and frames left out, and a group's own heading too, since the panel's title names it */

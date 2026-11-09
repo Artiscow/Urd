@@ -182,6 +182,11 @@ function onMenuArea(msg) {
 /** The block the floating menu was opened at, in the iframe's own coordinates, so «back beside the block» can place the menu again. */
 let menuAnchor = null;
 
+/** The small panels opened so far, each one's number telling the floating menu a new panel is to be measured and placed (fitSmallMenu). */
+let menuOpens = 0;
+/** The last small panel's measured size, the best guess at the next one's until it is measured. */
+let smallMenuSize = null;
+
 function onBlockMenu(msg) {
   onSelectBlock(msg);
   if (!selectedBlock) return;
@@ -194,7 +199,7 @@ function onBlockMenu(msg) {
   // A tool of the bar with small panels asks for one group alone, in a small floating menu beside the block whatever the menu's form.
   const only = onlyOf(msg.only);
   if (only?.startsWith('fold:')) folds.set('menu', only.slice(5), true);
-  if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), only, title: toolTitle(msg) };
+  if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), only, title: toolTitle(msg), opened: ++menuOpens };
   else if (menuDocked()) openDockedMenu();
   else blockMenu = menuPlaceFor(msg.rect);
 }
@@ -221,7 +226,7 @@ function onSectionMenu(msg) {
   const asked = msg.only === 'motion' ? 'fold:sec-motion' : onlyOf(msg.only);
   const only = asked?.startsWith('look:') ? null : asked;
   if (only?.startsWith('fold:')) folds.set('menu', only.slice(5), true);
-  if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), section: true, only, title: toolTitle(msg) };
+  if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), section: true, only, title: toolTitle(msg), opened: ++menuOpens };
   else if (menuDocked()) openDockedMenu();
   else blockMenu = { ...menuPlaceFor(msg.rect, false, true), section: true };
 }
@@ -238,10 +243,24 @@ function onBlockDesign(msg) {
 /** The menu's box as the stylesheet sizes it (app.css .block-menu): the width for the chosen form, or a small panel's, the height its ceiling. */
 function menuSize(small = false) {
   measureMenuRoom();
+  // A small panel is as tall as what it holds: its measured height, once one has been measured, else the full menu's.
   return {
     w: Math.min(small ? MENU_SMALL_W : menuIsWide() ? MENU_WIDE_W : 400, window.innerWidth - 16),
-    h: Math.min(window.innerHeight * 0.72, 620),
+    h: small && smallMenuSize ? smallMenuSize.h : Math.min(window.innerHeight * 0.72, 620),
   };
+}
+
+/**
+ * A small panel by its own measured size (FloatingMenu.svelte), measured when it opens and whenever it grows or shrinks.
+ * When it opens it is placed beside its block by that size, unless the owner dragged the menu.
+ * Its height (`h`) keeps it inside the window from then on (the top's clamp in app.css), so near the window's foot it stands by its block and rises only as far as it must.
+ */
+function fitSmallMenu(size, first) {
+  if (!blockMenu?.only) return;
+  smallMenuSize = size;
+  const placed = first && !menu.place && menuAnchor ? menuPlaceFor(menuAnchor, true, Boolean(blockMenu.section)) : null;
+  const next = { left: placed?.left ?? blockMenu.left, top: placed?.top ?? blockMenu.top, h: size.h };
+  if (next.left !== blockMenu.left || next.top !== blockMenu.top || next.h !== blockMenu.h) blockMenu = { ...blockMenu, ...next };
 }
 
 /**
@@ -282,13 +301,13 @@ function setBlockLayer(dir) {
 function moveBlockMenu(place, size = menuSize(Boolean(blockMenu?.only))) {
   const next = clampPlace(place, size, { w: window.innerWidth, h: window.innerHeight }, menu.min);
   menu.place = next;
-  blockMenu = { ...next, ...(blockMenu?.section ? { section: true } : {}), ...(blockMenu?.only ? { only: blockMenu.only, title: blockMenu.title } : {}) };
+  blockMenu = { ...next, ...(blockMenu?.section ? { section: true } : {}), ...(blockMenu?.only ? { only: blockMenu.only, title: blockMenu.title, h: blockMenu.h, opened: blockMenu.opened } : {}) };
 }
 
 /** «Back beside the block»: the remembered place is dropped, and the menu stands beside the block it was opened at. */
 function menuBackToBlock() {
   menu.place = null;
-  if (menuAnchor) blockMenu = { ...menuPlaceFor(menuAnchor, Boolean(blockMenu?.only), Boolean(blockMenu?.section)), ...(blockMenu?.section ? { section: true } : {}), ...(blockMenu?.only ? { only: blockMenu.only, title: blockMenu.title } : {}) };
+  if (menuAnchor) blockMenu = { ...menuPlaceFor(menuAnchor, Boolean(blockMenu?.only), Boolean(blockMenu?.section)), ...(blockMenu?.section ? { section: true } : {}), ...(blockMenu?.only ? { only: blockMenu.only, title: blockMenu.title, h: blockMenu.h, opened: blockMenu.opened } : {}) };
 }
 
 /** Shared flow for block changes from the Properties panel. */
@@ -1162,6 +1181,7 @@ export const pageState = {
   set blockMenu(v) { blockMenu = v; },
   moveBlockMenu,
   menuBackToBlock,
+  fitSmallMenu,
   onMenuArea,
   measureMenuRoom,
   get designPicker() { return designPicker; },

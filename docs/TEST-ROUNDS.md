@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.10.3): the content blocks as setting rows, and the small window beside its block
+
+- [ ] A video: «Shape» shows its arrow when set, which takes it back to «Fill the frame»
+- [ ] A video from a link: «Choose a cover image» and «Start playing when pressed» stand in the «Ask before loading» row; from a file, «Start by itself» stands under «Muted», and the arrow on «Muted» turns both off
+- [ ] A links block: the site's links stand in «The site's links», and its arrow shows them all again
+- [ ] A contact block: turning a part on or off shows its arrow, which takes it back to what a new contact block shows
+- [ ] A new shape or icon shows no arrow on «Hide on phones» or «Decor: skipped by the entrance wave»; turning either off shows it
+- [ ] Pinned: «Loop playback», a shape's «Colour» and «Thickness», an icon's «Size px» and «Colour», the ribbon's «Motion» and «Speed (px/s)», «Lines», «Show seconds», «Columns» and a collection's «Max count» show the same arrow as their rows
+- [ ] A block near the window's bottom or side: the bar's small windows (a tool's group, the design button's) open beside it, and one that grows (an entrance chosen in Motion) rises only as far as it must
+
 ### Test batch (0.7.33.10.2): the five test blocks as setting rows, and the way back on the setting's line
 
 - [ ] A text block: set «Font for the whole text» or «Size for the whole text», and each row shows its reset arrow («Back to the theme's»), which takes the text back to the theme's; an undo after typing and a font takes back the font only

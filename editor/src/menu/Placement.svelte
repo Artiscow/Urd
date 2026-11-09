@@ -135,7 +135,7 @@
           {/if}
         </div>
       {/if}
-      <Setting own={Boolean(selectedBlock.decor)} reset={() => setBlockDecor(false)}>
+      <Setting own={Boolean(selectedBlock.decor) !== ed.blockStarts(selectedBlock.type, 'decor')} reset={() => setBlockDecor(ed.blockStarts(selectedBlock.type, 'decor'))}>
         <SwitchRow label={ta('lbl.decor')} title={ta('tip.decor')} checked={Boolean(selectedBlock.decor)} onchange={(on) => setBlockDecor(on)} />
       </Setting>
 {/snippet}
@@ -162,7 +162,7 @@
   {@render menuSize()}
 {/if}
 {@render menuFit()}
-<Setting pin="phone" own={Boolean(selectedBlock.hideMobile)} reset={() => setBlockHideMobile(false)}>
+<Setting pin="phone" own={Boolean(selectedBlock.hideMobile) !== ed.blockStarts(selectedBlock.type, 'hideMobile')} reset={() => setBlockHideMobile(ed.blockStarts(selectedBlock.type, 'hideMobile'))}>
   <SwitchRow label={ta('lbl.hideMobile')} title={ta('tip.hideMobile')} checked={Boolean(selectedBlock.hideMobile)} onchange={(on) => setBlockHideMobile(on)} />
 </Setting>
 {@render menuSticky()}
