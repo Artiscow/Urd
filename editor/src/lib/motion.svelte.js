@@ -3,11 +3,18 @@
  * The folds (`details.group`) and the pop-ups in the top layer move by app.css; these are the Svelte transitions for what a block of markup draws and takes away, the helper that keeps a top-layer pop-up's content drawn while it fades out, and the dialogs' fade out.
  */
 import { fly, slide } from 'svelte/transition';
+import { cubicOut } from 'svelte/easing';
 
 /** How long a pop-up in the top layer takes to fade out (app.css); its content stays drawn that long. */
 export const POP_OUT_MS = 150;
 
 const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** A card's fold in a list (lib/rows/CardList.svelte, the Nav panel's items): its height grows from nothing to the height it is drawn at and shrinks back, its content clipped to it, so the cards under it move with what it shows. */
+export function cardFold(node) {
+  const height = node.offsetHeight;
+  return { duration: still() ? 0 : 160, easing: cubicOut, css: (t) => `height: ${t * height}px; overflow: clip;` };
+}
 
 /** A menu or a pop-up a block draws: it slides down a little and fades in, and back out. */
 export function menuMotion(node, params = {}) {

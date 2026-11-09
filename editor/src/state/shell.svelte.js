@@ -12,6 +12,7 @@ import { opensShortcuts, togglesGrid } from '../lib/shortcuts.js';
 import { gridLookOf } from '$engine/snap-model.js';
 import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
 import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as settingsPicturesOf } from '../lib/settings-model.js';
+import { ADMIN_LAYOUTS } from '../lib/admin-designs.js';
 import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT, foldsEmpty, unfoldedPanel } from '../lib/panels-start.js';
 import { COLLECTION_LAYOUTS, collectionLayoutOf, CSV_PREVIEWS, csvPreviewOf } from '../lib/collection-layout.js';
 import { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf } from '../lib/page-settings.js';
@@ -368,8 +369,6 @@ let activePanel = $state(null);
  * A personal workspace preference in localStorage, like the theme; the rail is the default and is not stored.
  * The rail, the sidebar and the strip toggle a panel; the two tab forms keep the panel's column standing with the tabs, folded to a handle at the edge when the owner asks (`panelFolded`), and the rail lets the panel fold away.
  */
-const ADMIN_LAYOUTS = ['rail', 'sidebar', 'panel-tabs', 'top-tabs', 'page-tabs'];
-
 const ADMIN_LAYOUT_KEY = 'urd-admin-layout';
 
 let adminLayout = $state(ADMIN_LAYOUTS.includes(localStorage.getItem(ADMIN_LAYOUT_KEY)) ? localStorage.getItem(ADMIN_LAYOUT_KEY) : 'rail');
@@ -893,6 +892,9 @@ export function effects() {
         const topLevel = !other.parentElement?.closest('details.group');
         if (topLevel && other !== fold && !other.contains(fold)) other.open = false;
       }
+      // A panel opened by the menu is drawn in this same frame; the fold's closed style and size are read first, so its opening grows from the fold as it stands closed.
+      void getComputedStyle(fold, '::details-content').blockSize;
+      void fold.offsetHeight;
       fold.open = true;
       const part = want.part ? fold.querySelector(`[data-part="${CSS.escape(want.part)}"]`) : null;
       part?.querySelector(':scope > [aria-expanded="false"]')?.click();

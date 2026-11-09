@@ -1,5 +1,5 @@
 <script>
-  /* One setting's row in a group (0.7.20.7, proposal M on the Design canvas): the control, with the amber dot and a reset beside it while the setting holds the block's own value, and otherwise, where the family tells what the value falls back to, the inherited value dimmed with its source («From the theme: None», «Default: Off»).
+  /* One setting's row in a group (0.7.20.7, proposal M on the Design canvas): the control, with a reset beside it while the setting holds the block's own value, and otherwise, where the family tells what the value falls back to, the inherited value dimmed with its source («From the theme: None», «Default: Off»).
      The group's defaults come through the fold's context (Fold.svelte), so a row needs only its key.
      A setting that can stand in the element menu's Pinned rows carries its `pin`: the pin stands at the row's end, and while the setting is pinned the row is drawn in Pinned at the top instead of here, so it stands once (0.7.30.3, menu/PinScope.svelte tells which are). */
   import { getContext } from 'svelte';
@@ -18,8 +18,7 @@
 </script>
 
 {#if !away}
-  <div class="setting" class:own data-pin={pin ?? undefined}>
-    <i class="setting-dot" aria-hidden="true"></i>
+  <div class="setting" data-pin={pin ?? undefined}>
     <div class="setting-body">
       {#if pin}
         <div class="pin-line">

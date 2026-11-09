@@ -5,7 +5,7 @@
      `isOpen(i)` and `ontoggle(i)` keep which cards stand open with the list's owner; `onmove(from, to)` gets a card's index before and after a move.
      A card whose key is a word carries it as `data-part`, where a fold asked for with a part finds the card to open (showFold in state/shell.svelte.js). */
   import { tick } from 'svelte';
-  import { cubicOut } from 'svelte/easing';
+  import { cardFold } from '../motion.svelte.js';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../icons.js';
   import IconButton from './IconButton.svelte';
@@ -21,12 +21,6 @@
     if (to !== Number(from)) onmove(Number(from), to);
     return String(to);
   }, (id) => card(items[Number(id)], Number(id)));
-
-  /** The card's closing: its fold shrinks its one grid row to nothing, the mirror of the opening animation in app.css. */
-  function foldShut() {
-    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    return { duration: still ? 0 : 160, easing: cubicOut, css: (t) => `grid-template-rows: ${t}fr` };
-  }
 
   /** Enter or Space on a head opens or closes its card; Alt and an arrow move the card, the focus going with it. */
   async function headKeys(e, i) {
@@ -74,8 +68,8 @@
         <span class="nav-chev" aria-hidden="true">{@html CHEV}</span>
       </div>
       {#if open}
-        <!-- The fold grows from nothing as the card opens (the CSS animation of .nav-fold in app.css) and shrinks back as it closes -->
-        <div class="nav-fold" out:foldShut>
+        <!-- The fold grows from nothing as the card opens and shrinks back as it closes (cardFold) -->
+        <div class="nav-fold" transition:cardFold>
           <div class="card-list-body">
             {@render body(item, i)}
             {#if onremove}
@@ -132,13 +126,11 @@
     opacity: 0.7;
   }
 
-  /* The open card's settings under each other, clipped while its fold grows and shrinks */
+  /* The open card's settings under each other; the fold clips them while it grows and shrinks (cardFold) */
   .card-list-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0.4rem;
-    min-height: 0;
-    overflow: hidden;
     padding: 2px 8px 9px;
   }
 </style>

@@ -8,6 +8,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.3 - The admin designs as data, folds that grow with what they show, and no marks on what was changed - 9 November 2026
+
+- The four admin designs had names but no data. `editor/src/lib/admin-designs.js` lists their parts (each with its stored key, its options and the Urd settings row that sets it, marked `part` in `lib/settings-model.js`), the designs as full sets of parts, the standing design read from the parts and never stored, and the writes that choose a design and take it back; the existing choices keep their keys, so nothing stored is migrated. `tests/admin-designs.test.mjs` holds it, and ADR-0030 «Admin designs» records it.
+- The list of the admin layouts moved from the shell's state into the model; the names of the designs and the new parts are in nb, en-GB and tr.
+- 0.7.33.2's list named Moving rows and Panels on a fresh load as parts, while the Admin Designs canvas keeps them the owner's own. The list follows the canvas.
+- Test findings, fixed in the round:
+  - A fold picked from a tab's menu while its panel was closed stood open at once, only its heading's ring moving. The fold's closed state is read before it opens (`showFold`), so it grows from it.
+  - While a fold opened, the folds under it ran ahead of its content, which filled in after them: the content's grid row grew as a fraction of a box that was itself growing. Where the browser interpolates to the content's height (`interpolate-size`), the content box's height is what grows, the grid row kept as the fallback.
+  - The cards in lists had the same lead of the card under them. They open and close by their measured height, one transition for every list (`cardFold` in `lib/motion.svelte.js`).
+  - The top bar's «Device» and «Zoom» captions are gone, the clusters standing apart by their frames; their fold step went with them.
+  - The amber dots on a changed fold and a changed setting cluttered the panels. They are gone, with the narrow menu's «N changed» count, since History tells what was changed; the resets stay, and the dots that ask for something to be filled in (Legal's, the update dot) are kept. ADR-0016 decision 1 is rewritten, the earlier text in `docs/adr/amended/0016-panel-language-until-2026-11-09.md`.
+
+The independent review before the commit found these, all fixed:
+
+1. Under reduced motion a fold still grew open: the open state's transition was stronger than the reduced-motion rule. The rule covers the open state too.
+2. The amended copy of ADR-0016 had three reference links that did not resolve from its folder. They resolve.
+3. The Side panel design set the tabs' menus, which have no effect in the sidebar with its folds as a tree, so a stored menu style read as «Side panel, changed» from a row the owner cannot see. Those parts are left without effect there, and a test reads each row's own condition to hold every design to it.
+4. The element menu's part offers forms its row does not offer yet, without naming the step that builds them, and the ADR and ARCHITECTURE.md spoke of six new parts. The part names its step, and the texts say five new parts and the widened menu form.
+5. Comments in the Nav items, the fold, the card list and the top bar still described the old animation, the marks and a tooltip the button does not carry. They describe the code.
+6. The card bodies still clipped their content once open, cutting a focus ring, and a setting kept the positioning that only served its dot. Both are gone.
+7. A comment told what would otherwise happen. It says what the code does.
+8. ADR-0016's status line lacked a comma, and decision 1 now also says that an area's heading counts no changed groups.
+9. ADR-0030 named a wish as the owners'. It is written as a choice with its date.
+
 ### 0.7.33.2 - The names of the admin designs, their parts and their options - 8 November 2026
 
 - The four admin designs and their six new parts carried working names. Each has its name in en-GB, nb and tr, chosen 8 November 2026 on the «Admin Design Names» canvas and written into BACKLOG: the designs Floating menu, Small panels, Side panel and One column; the row Admin design; the parts Element menu, Folds, Toolbar, Designs, Extra settings and Shortcuts with their options. The Admin Designs canvas carries the names in place of the working ones.

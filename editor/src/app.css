@@ -1152,40 +1152,12 @@
     max-width: 100%;
   }
 
-  /* The mark on a group that differs from the defaults, right after its title so the titles of a column line up, and the reset under its controls */
-  .menu-group-dot {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    margin-left: 0.45em;
-    vertical-align: middle;
-    background: #f2b84b;
-    border-radius: 50%;
-  }
-
-  /* A setting's row (Setting.svelte): the dot's column at the left, the
-     control, and the reset on the right while the value is the block's own;
+  /* A setting's row (Setting.svelte): the control, and the reset on the right while the value is the block's own;
      the inherited value and its source as a dimmed line under the control */
   .setting {
-    position: relative;
     display: flex;
     align-items: flex-start;
     gap: 0.4rem;
-  }
-
-  /* The dot stands in the group's left margin, so a setting's control lines up with the rows around it */
-  .setting-dot {
-    position: absolute;
-    top: 0.9rem;
-    left: -0.6rem;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: transparent;
-  }
-
-  .setting.own .setting-dot {
-    background: #f2b84b;
   }
 
   .setting-body {
@@ -1819,22 +1791,7 @@
     .nav-chev svg { transition: none; }
   }
 
-  /* The fold opens by growing its one grid row from nothing, which keeps
-     the card clipped to its growing height from the first frame. A browser
-     without animated track sizes shows the card at its full height at once. */
-  .nav-fold {
-    display: grid;
-    grid-template-rows: 1fr;
-    animation: nav-fold-open 0.16s ease-out;
-  }
-
-  @keyframes nav-fold-open {
-    from { grid-template-rows: 0fr; }
-    to { grid-template-rows: 1fr; }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .nav-fold { animation: none; }
     .nav-item { transition: none; }
   }
 
@@ -1844,8 +1801,6 @@
     gap: 6px 8px;
     align-items: center;
     padding: 2px 8px 9px 8px;
-    min-height: 0;
-    overflow: hidden;
   }
 
   .nav-body-label {
@@ -3124,7 +3079,8 @@
     padding-left: 0;
   }
 
-  /* A fold opens and closes smoothly: its content's row grows from nothing to its height inside ::details-content, the space over it with it, and shrinks back the same way.
+  /* A fold opens and closes smoothly: its content grows from nothing to its height inside ::details-content, the folds under it moving with it, and shrinks back the same way.
+     Where the browser interpolates to the content's own height (interpolate-size), the content box's height itself is what grows, so the box and what it shows are one; elsewhere its one grid row grows from 0fr to 1fr.
      The content is clipped while it is folded or opening, and shows past its edges (a focus ring) once it stands open. Under reduced motion, or in a browser without ::details-content, a fold opens and closes at once. */
   .group::details-content {
     display: grid;
@@ -3132,6 +3088,20 @@
     transition: grid-template-rows 0.24s cubic-bezier(0.4, 0, 0.2, 1), content-visibility 0.24s allow-discrete;
   }
   .group[open]::details-content { grid-template-rows: 1fr; }
+  @supports (interpolate-size: allow-keywords) {
+    .group { interpolate-size: allow-keywords; }
+    .group::details-content {
+      display: flow-root;
+      block-size: 0;
+      overflow-y: clip;
+      transition: block-size 0.24s cubic-bezier(0.4, 0, 0.2, 1), content-visibility 0.24s allow-discrete;
+    }
+    .group[open]::details-content {
+      block-size: auto;
+      overflow-y: visible;
+      transition: block-size 0.24s cubic-bezier(0.4, 0, 0.2, 1), content-visibility 0.24s allow-discrete, overflow-y 0s 0.24s allow-discrete;
+    }
+  }
   .group > .group-items {
     min-height: 0;
     margin-top: 0;
@@ -3145,7 +3115,8 @@
   }
   /* Two rules, so a browser that does not know ::details-content still keeps the content's own transitions still */
   @media (prefers-reduced-motion: reduce) {
-    .group::details-content { transition: none; }
+    .group::details-content,
+    .group[open]::details-content { transition: none; }
     .group > .group-items,
     .group[open] > .group-items { transition: none; }
   }
@@ -3742,14 +3713,6 @@
   .toolgrp .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border-color: transparent; }
   .toolgrp .ghost.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border-color: var(--urd-color-accent, #7c5cff); }
 
-  .tool-cap {
-    font-size: 0.56rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    opacity: 0.5;
-    white-space: nowrap;
-  }
-
   /* Publish with its menu: the count of what waits inside the button, and the menu under its right edge with the acts, the rows of what waits and the last publish */
   .publish-wrap {
     position: relative;
@@ -3816,21 +3779,14 @@
   /* ---- Foldetrinnene (the fold steps; tests/topbar-fold.test.mjs anchors
      on this heading) ---------------------------------------------------------
      The top bar keeps one height and folds in fixed steps, in this order:
-     the group labels, the button texts on the right,
-     and then the clusters ONE AT A TIME. The thresholds are calibrated
+     the button texts on the right, and then the clusters ONE AT A TIME. The thresholds are calibrated
      for the LONGEST language (Turkish), not Bokmål, so a step never kicks
      in too late and forces the bar to wrap. The last three each have a
      twin in FOLD_MQ. The short forms are hidden here, before the steps
      that turn them on: equal specificity means source order decides. */
   .badge-mini { display: none; }
 
-  /* Step 1: the uppercase labels above the clusters disappear. The
-     cluster frames remain, so the three groups still read separately. */
-  @media (max-width: 1359px) {
-    .tool-cap { display: none; }
-  }
-
-  /* Step 2: the buttons on the right become pure icons, and the GitHub
+  /* Step 1: the buttons on the right become pure icons, and the GitHub
      user yields. Publish always keeps its word: it is the bar's only
      dangerous action. */
   @media (max-width: 1179px) {
@@ -3845,20 +3801,20 @@
     .editor[data-layout="page-tabs"] .topbar-group { gap: 0.5rem; }
   }
 
-  /* Step 3: the View cluster becomes a menu (FOLD_MQ.view). Grid and
+  /* Step 2: the View cluster becomes a menu (FOLD_MQ.view). Grid and
      guides are toggled rarely, so it yields first of the three. */
   @media (max-width: 1079px) {
     .topbar { gap: 0.5rem; }
     .topbar-group { gap: 0.5rem; }
   }
 
-  /* Step 4: the Device cluster becomes a menu (FOLD_MQ.device). */
+  /* Step 3: the Device cluster becomes a menu (FOLD_MQ.device). */
   @media (max-width: 999px) {
     .editor[data-layout="page-tabs"] .topbar { gap: 0.4rem; padding-inline: 0.7rem; }
     .editor[data-layout="page-tabs"] .topbar-group { gap: 0.4rem; }
   }
 
-  /* Step 5: the Zoom cluster becomes a menu (FOLD_MQ.zoom). Zoom is
+  /* Step 4: the Zoom cluster becomes a menu (FOLD_MQ.zoom). Zoom is
      adjusted most often of the three and therefore keeps plus and minus
      the longest. Gaps and edge margins are tightened fully at the same
      time: now they are the last thing left to take. */

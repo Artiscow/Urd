@@ -59,7 +59,8 @@ const cssSteps = () => [...FOLD.matchAll(/@media \(max-width:\s*(\d+)px\)/g)].ma
 test('the fold steps exist and are strictly decreasing', () => {
   assert.ok(FOLD.length > 0, 'could not find the fold-step section in app.css');
   const steps = cssSteps();
-  assert.ok(steps.length >= 6, `expected at least six fold steps, found ${steps.length}`);
+  // The button texts, the page-tabs layout's earlier steps and the three clusters: five at the least.
+  assert.ok(steps.length >= 5, `expected at least five fold steps, found ${steps.length}`);
   for (let i = 1; i < steps.length; i += 1) {
     assert.ok(
       steps[i] < steps[i - 1],

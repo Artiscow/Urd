@@ -230,9 +230,7 @@
             {/if}
           </span>
         {:else}
-          <!-- Eleven controls in a row with identical borders read as one
-               strip. Three labeled clusters instead: Device, Zoom, View. -->
-          <span class="tool-cap">{ta('lbl.group.device')}</span>
+          <!-- The device, zoom and view controls stand as three framed clusters without captions, so eleven buttons never read as one strip; each folded form keeps its cluster's name for a screen reader -->
           <span class="viewswitch toolgrp">
             {#each ed.devices as d (d.id)}
               {@const split = SPLITS[d.id]}
@@ -281,7 +279,6 @@
             {/if}
           </span>
         {:else}
-          <span class="tool-cap">{ta('lbl.group.zoom')}</span>
           <span class="zoomswitch toolgrp">
             <button class="ghost" onclick={() => ed.stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
             <span class="zoom-readout" title={ta('tip.zoomCurrent')}>{Math.round(ed.scale * 100)}%</span>

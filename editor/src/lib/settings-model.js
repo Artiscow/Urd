@@ -25,6 +25,7 @@ export function settingsPictures(raw) {
  * `shared` on a group: its values live in the site and are shared by everyone who edits it.
  * `when` on a group or a setting: whether it is shown at all.
  * `parent` on a setting: the setting it belongs to, drawn directly under it and shown with it.
+ * `part` on a setting: it is a part of the admin designs (lib/admin-designs.js), which a design sets with every other part.
  */
 /** Whether the layout opens menus of folds, so their look and «After a pick» have something to set. */
 const menusShown = (c) => {
@@ -40,26 +41,26 @@ export const SETTINGS_GROUPS = [
     settings: [
       { id: 'theme', labelKey: 'settings.theme', tipKey: 'topbar.adminTheme.title', kind: 'choice', look: 'theme',
         options: (c) => c.ed.ADMIN_THEMES, get: (c) => c.ed.adminTheme, set: (c, v) => { c.ed.adminTheme = v; } },
-      { id: 'layout', labelKey: 'settings.layout', tipKey: 'tip.settings.layout', kind: 'choice', look: 'layout',
+      { id: 'layout', part: true, labelKey: 'settings.layout', tipKey: 'tip.settings.layout', kind: 'choice', look: 'layout',
         options: (c) => c.ed.ADMIN_LAYOUT_OPTIONS, get: (c) => c.ed.adminLayout, set: (c, v) => c.ed.setAdminLayout(v) },
       // The sidebar of words shows a panel's folds under the open panel's word, or beside each word.
-      { id: 'sidebarFolds', parent: 'layout', labelKey: 'settings.sidebarFolds', tipKey: 'tip.settings.sidebarFolds', kind: 'choice', look: 'sidebarFolds',
+      { id: 'sidebarFolds', part: true, parent: 'layout', labelKey: 'settings.sidebarFolds', tipKey: 'tip.settings.sidebarFolds', kind: 'choice', look: 'sidebarFolds',
         when: (c) => c.ed.adminLayout === 'sidebar',
         options: (c) => c.ed.SIDEBAR_FOLDS_OPTIONS, get: (c) => c.ed.sidebarFolds, set: (c, v) => c.ed.setSidebarFolds(v) },
       // The panel's own tabs open no menus unless they are switched on.
-      { id: 'panelTabMenus', parent: 'layout', labelKey: 'settings.panelTabMenus', tipKey: 'tip.settings.panelTabMenus', kind: 'seg',
+      { id: 'panelTabMenus', part: true, parent: 'layout', labelKey: 'settings.panelTabMenus', tipKey: 'tip.settings.panelTabMenus', kind: 'seg',
         when: (c) => c.ed.adminLayout === 'panel-tabs',
         options: (c) => [['on', c.ta('common.on')], ['off', c.ta('common.off')]],
         get: (c) => (c.ed.panelTabMenus ? 'on' : 'off'), set: (c, v) => c.ed.setPanelTabMenus(v) },
-      { id: 'place', labelKey: 'settings.place', tipKey: 'tip.settings.place', kind: 'choice', look: 'place',
+      { id: 'place', part: true, labelKey: 'settings.place', tipKey: 'tip.settings.place', kind: 'choice', look: 'place',
         options: (c) => c.ed.SETTINGS_PLACE_OPTIONS, get: (c) => c.ed.settingsPlace, set: (c, v) => c.ed.setSettingsPlace(v) },
       { id: 'press', labelKey: 'settings.press', tipKey: 'tip.settings.press', kind: 'choice', look: 'press',
         options: (c) => c.ed.PRESS_OPTIONS, get: (c) => c.ed.pressFeel, set: (c, v) => c.ed.setPressFeel(v) },
       // The menus of folds stand under the strip's tabs, beside the Site menu's rows and the rail's icons, beside the sidebar's words where they open there, and under the panel's own tabs where those are switched on.
-      { id: 'tabMenus', labelKey: 'settings.tabMenus', tipKey: 'tip.settings.tabMenus', kind: 'choice', look: 'tabMenus',
+      { id: 'tabMenus', part: true, labelKey: 'settings.tabMenus', tipKey: 'tip.settings.tabMenus', kind: 'choice', look: 'tabMenus',
         when: menusShown,
         options: (c) => c.ed.TAB_MENU_OPTIONS, get: (c) => c.ed.tabMenus, set: (c, v) => c.ed.setTabMenus(v) },
-      { id: 'tabMenuStay', parent: 'tabMenus', labelKey: 'settings.tabMenuStay', tipKey: 'tip.settings.tabMenuStay', kind: 'seg',
+      { id: 'tabMenuStay', part: true, parent: 'tabMenus', labelKey: 'settings.tabMenuStay', tipKey: 'tip.settings.tabMenuStay', kind: 'seg',
         when: menusShown,
         options: (c) => [['close', c.ta('opt.tabMenuStay.close')], ['stay', c.ta('opt.tabMenuStay.stay')]],
         get: (c) => c.ed.tabMenuStay, set: (c, v) => c.ed.setTabMenuStay(v) },
@@ -73,24 +74,24 @@ export const SETTINGS_GROUPS = [
     id: 'editing',
     labelKey: 'settings.group.editing',
     settings: [
-      { id: 'addBlockMenu', labelKey: 'settings.addBlockMenu', tipKey: 'tip.settings.addBlockMenu', kind: 'choice', look: 'addBlock',
+      { id: 'addBlockMenu', part: true, labelKey: 'settings.addBlockMenu', tipKey: 'tip.settings.addBlockMenu', kind: 'choice', look: 'addBlock',
         options: (c) => [['side', c.ta('settings.addBlockMenuSide')], ['slim', c.ta('settings.addBlockMenuSlim')]],
         get: (c) => c.ed.addBlockMenuPref, set: (c, v) => c.ed.setAddBlockMenu(v) },
-      { id: 'layoutPicker', labelKey: 'settings.layoutPicker', tipKey: 'tip.settings.layoutPicker', kind: 'choice', look: 'layoutPicker',
+      { id: 'layoutPicker', part: true, labelKey: 'settings.layoutPicker', tipKey: 'tip.settings.layoutPicker', kind: 'choice', look: 'layoutPicker',
         options: (c) => [['strip', c.ta('settings.layoutPickerStrip')], ['menu', c.ta('settings.layoutPickerMenu')]],
         get: (c) => c.ed.layoutPickerPref, set: (c, v) => c.ed.setLayoutPicker(v) },
-      { id: 'menuWidth', labelKey: 'settings.menuWidth', tipKey: 'tip.settings.menuWidth', kind: 'choice', look: 'menuWidth',
+      { id: 'menuWidth', part: true, labelKey: 'settings.menuWidth', tipKey: 'tip.settings.menuWidth', kind: 'choice', look: 'menuWidth',
         options: (c) => [['wide', c.ta('settings.menuWide')], ['narrow', c.ta('settings.menuNarrow')]],
         get: (c) => c.menu.widthPref, set: (c, v) => c.setMenuWidthPref(v) },
-      { id: 'collectionsLayout', labelKey: 'settings.collectionsLayout', tipKey: 'tip.settings.collectionsLayout', kind: 'choice', look: 'collectionsLayout',
+      { id: 'collectionsLayout', part: true, labelKey: 'settings.collectionsLayout', tipKey: 'tip.settings.collectionsLayout', kind: 'choice', look: 'collectionsLayout',
         options: (c) => c.ed.COLLECTIONS_LAYOUT_OPTIONS, get: (c) => c.ed.collectionsLayout, set: (c, v) => c.ed.setCollectionsLayout(v) },
-      { id: 'csvPreview', labelKey: 'settings.csvPreview', tipKey: 'tip.settings.csvPreview', kind: 'choice', look: 'csvPreview',
+      { id: 'csvPreview', part: true, labelKey: 'settings.csvPreview', tipKey: 'tip.settings.csvPreview', kind: 'choice', look: 'csvPreview',
         options: (c) => c.ed.CSV_PREVIEW_OPTIONS, get: (c) => c.ed.csvPreviewPref, set: (c, v) => c.ed.setCsvPreview(v) },
-      { id: 'pageSettings', labelKey: 'settings.pageSettings', tipKey: 'tip.settings.pageSettings', kind: 'choice', look: 'pageSettings',
+      { id: 'pageSettings', part: true, labelKey: 'settings.pageSettings', tipKey: 'tip.settings.pageSettings', kind: 'choice', look: 'pageSettings',
         options: (c) => c.ed.PAGE_SETTINGS_OPTIONS, get: (c) => c.ed.pageSettingsPref, set: (c, v) => c.ed.setPageSettingsPref(v) },
       { id: 'dragMark', labelKey: 'settings.dragMark', tipKey: 'tip.settings.dragMark', kind: 'choice', look: 'dragMark',
         options: (c) => c.ed.DRAG_MARK_OPTIONS, get: (c) => c.ed.dragMark, set: (c, v) => c.ed.setDragMark(v) },
-      { id: 'linkEditor', labelKey: 'settings.linkEditor', tipKey: 'tip.settings.linkEditor', kind: 'choice', look: 'linkEditor',
+      { id: 'linkEditor', part: true, labelKey: 'settings.linkEditor', tipKey: 'tip.settings.linkEditor', kind: 'choice', look: 'linkEditor',
         options: (c) => [['dialog', c.ta('opt.linkEditor.dialog')], ['popover', c.ta('opt.linkEditor.popover')]],
         get: (c) => c.ed.linkEditorPref, set: (c, v) => c.ed.setLinkEditor(v) },
       { id: 'spellcheck', labelKey: 'settings.spellcheck', tipKey: 'tip.settings.spellcheck', kind: 'seg',

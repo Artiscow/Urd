@@ -4,7 +4,7 @@
      Alt and the arrow keys on a row move it among its neighbours, as its arrows do.
      Under the items stand the new item, the new page as an item, and once an item has a submenu, the submenus' look and behaviour. */
   import { getContext } from 'svelte';
-  import { cubicOut } from 'svelte/easing';
+  import { cardFold } from '../../lib/motion.svelte.js';
   import { RowDrag, slotOut } from '../../lib/rows/row-drag.svelte.js';
   import { navRowAt as rowAt, navKeyOf as keyOf, navDropAt, navDropOrNull, canonicalDrop, parentKey } from '../../lib/nav-drop.js';
   import Choice from '../../lib/Choice.svelte';
@@ -167,11 +167,6 @@
     if (!navNewPageError) navNewPageTitle = '';
   }
 
-  /** The card's closing: its fold shrinks its one grid row to nothing, the mirror of the opening animation in app.css. */
-  function foldOut(node, { duration }) {
-    return { duration, easing: cubicOut, css: (t) => `grid-template-rows: ${t}fr` };
-  }
-
   const sideVariant = $derived(isSideNav(siteDraft?.nav));
 
   /** The submenu designs on offer: the column has no card, flat surface or flyout. */
@@ -225,8 +220,8 @@
       <button class="ghost nav-act nav-chev" aria-expanded={open} title={ta('tip.nav.openItem')} aria-label={ta('tip.nav.openItem')}>{@html CHEV_ICON}</button>
     </div>
     {#if open}
-      <!-- The fold grows from nothing as the card opens (a CSS animation on the wrapper, drawn with the first frame) and shrinks back as it closes -->
-      <div class="nav-fold" out:foldOut={{ duration: ed.reducedMotion ? 0 : 160 }}>
+      <!-- The fold grows from nothing as the card opens and shrinks back as it closes (cardFold) -->
+      <div class="nav-fold" transition:cardFold>
       <div class="nav-body">
         <span class="nav-body-label">{ta('lbl.name')}</span>
         <input class="field-filled" value={node.label} title={level === 0 ? ta('tip.nav.itemLabel') : ta('tip.nav.childLabel')}

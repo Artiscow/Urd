@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.3): folds that grow with what they show, and no marks on what was changed
+
+- [ ] With a panel closed, pick a fold from its tab's menu (Nav, Footer, Theme, Legal, Site): the panel opens and the fold grows open, not standing open at once
+- [ ] Open and close folds with many rows in the panels and in the element menu: the folds under them move down and up together with the content, with no empty band opening ahead of it
+- [ ] Open and close cards in a list (the Nav items, the tools, the link launcher's shortcuts, the footer's columns, the background layers): the card under them moves with the card's content
+- [ ] An open fold or card shows a focus ring at its edges whole
+- [ ] With reduced motion on in the system, folds and cards open and close at once
+- [ ] The top bar has no «Device» or «Zoom» caption; the clusters still stand apart, and folding at narrow widths works as before
+- [ ] No amber dot on a fold's heading or beside a setting anywhere when a value differs from the default; the circular reset beside a changed setting and «Reset this group» are still there; Legal's dots and the update dot still show
+- [ ] The narrow element menu's area headings say how many groups they hold, without «changed»
+
 ### Test batch (0.7.33.2): two names in the admin
 
 - [ ] Nav panel, an item's card: the Text / Button choice is labelled «Shown as» (nb «Vises som»)

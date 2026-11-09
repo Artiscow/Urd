@@ -158,8 +158,7 @@
       {:else}
         <!-- The phone: a block flows in the reading order as on desktop, or holds its own place in the row grid (ADR-0019) -->
         {@const held = selectedBlock.mobileRow !== null}
-        <div class="setting" class:own={held}>
-          <i class="setting-dot" aria-hidden="true"></i>
+        <div class="setting">
           <div class="setting-body">
             <span class="mini-label">{ta('lbl.phonePlacement')}</span>
             <span class="setting-source">{held ? ta('menu.phoneRow', { n: selectedBlock.mobileRow + 1 }) : ta('menu.followsDesktop', { v: ta('menu.phoneFlow') })}</span>
