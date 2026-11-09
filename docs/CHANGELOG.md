@@ -8,6 +8,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.10.4 - The map's and the plugin blocks' fields as setting rows, and a test that holds every control to one - 9 November 2026
+
+- The map's and the plugin blocks' numbers, switches and choices (the field contract) had no way back. They are setting rows going back to what the block starts with: the plugin's own `defaults`, or the map's zoom of 15 (`propStarts` in `state/blocks.svelte.js`), in Pinned too, tested.
+- Nothing held a new control to a setting row. `tests/menu-render.test.mjs` renders every block's menu and fails on a control outside one, leaving lists alone and naming each row that stands plain by rule with its reason (the frame, a block's kind, the content a block shows, a picker, the calendar's colour swatches).
+- The calendar's field picker in «Text fields» had no tooltip. It has one.
+
+The independent review before the commit found these, all fixed:
+
+1. A plugin field's standard ignored the block's variants, which Blocks lays over its defaults, so a new block from a variant showed a way back on what it started with. A field its variants start differently has no standard, tested.
+2. The guard let through any loose colour control in the calendar under the colour slots' reason, and did not see toggle buttons, so the field's italic, underline and colour stood outside a setting row. That row is a setting row whose way back takes all three back to the design's, its toggles tell their state (`aria-pressed`), and the guard names the slots by their tooltip and sees toggles.
+3. This entry said the picker «had no name»; a tooltip is a description, and the test of the fields' way back never tried a choice of its own. The entry says what was done, and the test tries one.
+
 ### 0.7.0.80 - The panel render test's missing helper, and the quick run with the render tests - 9 November 2026
 
 - The test run in CI failed after 0.7.33.10.3: the Properties panel render test draws the element menu with a stand-in editor handle that lacked `blockStarts`, so the menu threw. The stand-in has it (`tests/panels-render.test.mjs`).

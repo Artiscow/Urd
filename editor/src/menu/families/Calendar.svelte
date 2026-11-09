@@ -473,8 +473,8 @@
   </Setting>
   {/snippet}
   {#snippet calFields()}
-  <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour -->
-  <Dropdown value={calField} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} />
+  <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour; the picker chooses what the rows under it style, so it is no setting of its own -->
+  <Dropdown value={calField} title={ta('tip.calendar.fieldStyle')} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} />
   <Setting own={calFieldStyleOf().font != null} reset={() => setCalField({ font: undefined })}>
     <label title={ta('tip.calendar.fieldFont')}>{ta('calendar.fieldFont')}
       <Dropdown value={calFieldStyleOf().font ?? ''}
@@ -491,14 +491,17 @@
       options={[['', ta('common.inherit')], ['bold', ta('format.bold')], ['normal', ta('calendar.fieldNormal')]]}
       onchange={(v) => setCalField({ bold: v === 'bold' ? true : v === 'normal' ? false : undefined })} />
   </Setting>
-  <span class="toolbar-row">
-    <button type="button" class="tbtn" title={ta('format.italic')} class:active={calFieldStyleOf().italic === true}
-      onclick={() => setCalField({ italic: calFieldStyleOf().italic ? undefined : true })}><i>{ta('format.italicLetter')}</i></button>
-    <button type="button" class="tbtn" title={ta('calendar.fieldUnderline')} class:active={calFieldStyleOf().underline === true}
-      onclick={() => setCalField({ underline: calFieldStyleOf().underline ? undefined : true })}><u>{ta('format.underlineLetter')}</u></button>
-    <ColorPicker value={calFieldStyleOf().color ?? ''} tokens={themeSwatches()} allowClear
-      label={ta('calendar.fieldColor')} onchange={(v) => setCalField({ color: v || undefined })} />
-  </span>
+  <!-- The field's italic, underline and colour in one row, whose way back takes all three back to the design's -->
+  <Setting own={calFieldStyleOf().italic === true || calFieldStyleOf().underline === true || calFieldStyleOf().color != null} reset={() => setCalField({ italic: undefined, underline: undefined, color: undefined })}>
+    <span class="toolbar-row">
+      <button type="button" class="tbtn" title={ta('format.italic')} class:active={calFieldStyleOf().italic === true} aria-pressed={calFieldStyleOf().italic === true}
+        onclick={() => setCalField({ italic: calFieldStyleOf().italic ? undefined : true })}><i>{ta('format.italicLetter')}</i></button>
+      <button type="button" class="tbtn" title={ta('calendar.fieldUnderline')} class:active={calFieldStyleOf().underline === true} aria-pressed={calFieldStyleOf().underline === true}
+        onclick={() => setCalField({ underline: calFieldStyleOf().underline ? undefined : true })}><u>{ta('format.underlineLetter')}</u></button>
+      <ColorPicker value={calFieldStyleOf().color ?? ''} tokens={themeSwatches()} allowClear
+        label={ta('calendar.fieldColor')} onchange={(v) => setCalField({ color: v || undefined })} />
+    </span>
+  </Setting>
   {/snippet}
   {#if calOptionDefs(selectedBlock.props.design).some((def) => calOptionShown(def, calOptions(selectedBlock.props)))}
     <Fold id="cal-opts" title={ta('calendar.section.options')} value={cm.opts} reset={cm.optsReset}>{@render calOpts()}</Fold>

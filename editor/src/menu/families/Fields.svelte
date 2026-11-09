@@ -69,6 +69,21 @@
     }
   }
 
+  /** A field's standard: the value a new block of its type starts with, from the core block's seed or the plugin block's `defaults` where each of its variants (laid over the defaults in Blocks) starts it the same; undefined where none is given or they differ. */
+  const standardOf = (f) => {
+    if (CORE_FIELDS[selectedBlock.type]) return ed.propStarts(selectedBlock.type, f.key);
+    const plugin = pluginBlocks.find((b) => b.type === selectedBlock.type);
+    const start = plugin?.defaults?.[f.key];
+    const same = (variant) => !(f.key in (variant.props ?? {})) || JSON.stringify(variant.props[f.key]) === JSON.stringify(start);
+    return (plugin?.variants ?? []).every(same) ? start : undefined;
+  };
+  /** Whether a number or a choice holds a value of its own: only against a standard the block's type gives. */
+  const ownOf = (f) => {
+    const standard = standardOf(f);
+    const value = selectedBlock.props[f.key];
+    return standard !== undefined && value !== undefined && JSON.stringify(value) !== JSON.stringify(standard);
+  };
+
   /** The settings of the core blocks that use the field contract. */
   const CORE_FIELDS = {
     map: [
@@ -100,19 +115,25 @@
           <span class="field-note" aria-live="polite">{placeStatus[k].text}</span>
         {/if}
       {:else if f.type === 'number'}
-        <Setting pin={selectedBlock.type === 'map' && f.key === 'zoom' ? 'zoom' : null}>
+        <!-- A number, a switch and a choice go back to the type's standard; what the owner types, a place and a link are plain rows -->
+        <Setting pin={selectedBlock.type === 'map' && f.key === 'zoom' ? 'zoom' : null} own={ownOf(f)} reset={() => setBlockProp(f.key, standardOf(f))}>
           <NumberRow label={f.label} title={f.hint || f.label} value={selectedBlock.props[f.key]} min={f.min} max={f.max} step={f.step ?? 1}
             onchange={(v) => setBlockProp(f.key, clampField(f, v))} />
         </Setting>
       {:else if f.type === 'toggle'}
-        <SwitchRow label={f.label} title={f.hint || f.label} checked={Boolean(selectedBlock.props[f.key])} onchange={(on) => setBlockProp(f.key, on)} />
+        <!-- A switch without a standard of its own starts off -->
+        <Setting own={Boolean(selectedBlock.props[f.key]) !== Boolean(standardOf(f))} reset={() => setBlockProp(f.key, standardOf(f) ?? false)}>
+          <SwitchRow label={f.label} title={f.hint || f.label} checked={Boolean(selectedBlock.props[f.key])} onchange={(on) => setBlockProp(f.key, on)} />
+        </Setting>
       {:else if f.type === 'link'}
         <!-- The link shape under the field's own key, set through the link editor; null when it is removed -->
         <LinkField label={f.label} title={f.hint || f.label} value={selectedBlock.props[f.key] ?? null}
           onchange={(next) => setBlockProp(f.key, next)} />
       {:else if f.type === 'select'}
-        <SelectRow label={f.label} title={f.hint || f.label} value={selectedBlock.props[f.key]} options={(f.options ?? []).map((o) => [o.value, o.label])}
-          onchange={(v) => setBlockProp(f.key, v)} />
+        <Setting own={ownOf(f)} reset={() => setBlockProp(f.key, standardOf(f))}>
+          <SelectRow label={f.label} title={f.hint || f.label} value={selectedBlock.props[f.key]} options={(f.options ?? []).map((o) => [o.value, o.label])}
+            onchange={(v) => setBlockProp(f.key, v)} />
+        </Setting>
       {:else}
         <label title={f.hint || f.label}>{f.label}
           <input type="text" placeholder={f.placeholder} value={selectedBlock.props[f.key] ?? ''}

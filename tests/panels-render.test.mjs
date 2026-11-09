@@ -158,6 +158,7 @@ function handleFor(panel, siteDraft, extra = {}) {
     setSectionGrid: noop, setSectionHeight: noop, toggleSectionGrid: noop,
     buildBlock: () => ({}), requestPlacement: noop, addCalendarDesign: noop,
     blockStarts: (type, flag) => ['shape', 'icon'].includes(type) && ['decor', 'hideMobile'].includes(flag),
+    propStarts: (type, key) => (type === 'map' && key === 'zoom' ? 15 : undefined),
     addCollection: noop, addCollectionEntry: noop, mutateCollection: noop, removeCollection: noop, createCatalogForBlock: noop,
     loadPluginInfo: noop, removePlugin: noop, setPluginEnabled: noop,
     askConfirm: async () => true, loadHistory: noop, refreshBaseSha: async () => null, loadUpdateCheck: noop,

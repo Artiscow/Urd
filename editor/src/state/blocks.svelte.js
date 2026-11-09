@@ -174,6 +174,14 @@ function blockStarts(type, flag) {
   return seeds.length > 0 && seeds.every((d) => d[flag] === true);
 }
 
+/** The value a prop starts with on every new block of a type (BLOCK_DEFAULTS), or undefined where the type has no seed or its seeds start it differently: the map starts with a zoom of 15. */
+function propStarts(type, key) {
+  const seeds = Object.values(BLOCK_DEFAULTS).filter((d) => d.type === type);
+  if (!seeds.length) return undefined;
+  const first = JSON.stringify(seeds[0].props?.[key]);
+  return seeds.every((d) => JSON.stringify(d.props?.[key]) === first) ? seeds[0].props?.[key] : undefined;
+}
+
 function buildBlock(kind) {
   const d = BLOCK_DEFAULTS[kind];
   if (!d) return null;
@@ -338,6 +346,7 @@ export const blocksState = {
   shopBlocksOn,
   get BLOCK_DEFAULTS() { return BLOCK_DEFAULTS; },
   blockStarts,
+  propStarts,
   buildBlock,
   requestPlacement,
   insertBlock,

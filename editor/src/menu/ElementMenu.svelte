@@ -190,7 +190,7 @@
     } else if (b.type === 'audio') {
       items.push({ id: 'loop', label: ta('lbl.audioLoop'), tip: ta('tip.audio.loop'), kind: 'switch', value: Boolean(p.loop), set: (on) => setBlockProp('loop', on), ...standard('loop', false) });
     } else if (b.type === 'map') {
-      items.push({ id: 'zoom', label: ta('lbl.mapZoom'), tip: ta('tip.map.zoom'), kind: 'number', min: 1, max: 19, value: p.zoom ?? 15, set: (v) => setBlockProp('zoom', Math.max(1, Math.min(19, Number(v) || 15))) });
+      items.push({ id: 'zoom', label: ta('lbl.mapZoom'), tip: ta('tip.map.zoom'), kind: 'number', min: 1, max: 19, value: p.zoom ?? 15, set: (v) => setBlockProp('zoom', Math.max(1, Math.min(19, Number(v) || 15))), ...standard('zoom', ed.propStarts('map', 'zoom')) });
     }
     if (!SIZE_BY_FRAME.has(b.type)) {
       // The size ends where the block's base text meets a bound the owner set (sizeRange); setBlockSize holds it there.

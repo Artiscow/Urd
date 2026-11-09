@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.10.4): the map's and the plugin blocks' fields as setting rows
+
+- [ ] A map: «Zoom (1 to 19)» shows its arrow when it is not 15, which takes it back to 15, in Pinned too
+- [ ] A plugin block with fields: a number, a switch or a choice shows its arrow when it differs from the plugin's default, and the arrow takes it back
+- [ ] A calendar's «Text fields»: the field picker shows its tooltip
+- [ ] A calendar's «Text fields»: «Italic», «Underline» or a «Text colour» shows the row's arrow, which takes all three back to the design's
+
 ### Test batch (0.7.33.10.3): the content blocks as setting rows, and the small window beside its block
 
 - [ ] A video: «Shape» shows its arrow when set, which takes it back to «Fill the frame»

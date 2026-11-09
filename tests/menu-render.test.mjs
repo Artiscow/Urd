@@ -83,7 +83,7 @@ function handleFor(selectedBlock, viewMode = 'desktop') {
     sections: [{ id: 's1', blocks: [] }, { id: 's2', blocks: [] }],
     collectionIds: ['news', 'shop'],
     collectionsView: { news: { name: 'News', kind: 'posts' }, shop: { name: 'Shop', kind: 'products' } },
-    pluginBlocks: [{ type: 'plugin-thing', fields: [{ key: 'where', type: 'place', label: 'Where' }, { key: 'n', type: 'number', label: 'N', min: 1, max: 5 }, { key: 'on', type: 'toggle', label: 'On' }, { key: 'sel', type: 'select', label: 'S', options: [{ value: 'a', label: 'A' }] }, { key: 't', type: 'text', label: 'T' }, { key: 'more', type: 'link', label: 'More' }] }, { type: 'plugin-bare' }],
+    pluginBlocks: [{ type: 'plugin-thing', defaults: { n: 2, on: false, sel: 'a' }, fields: [{ key: 'where', type: 'place', label: 'Where' }, { key: 'n', type: 'number', label: 'N', min: 1, max: 5 }, { key: 'on', type: 'toggle', label: 'On' }, { key: 'sel', type: 'select', label: 'S', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] }, { key: 't', type: 'text', label: 'T' }, { key: 'more', type: 'link', label: 'More' }] }, { type: 'plugin-bare' }, { type: 'plugin-variant', defaults: { n: 2 }, variants: [{ label: 'Wide', props: { n: 4 } }], fields: [{ key: 'n', type: 'number', label: 'N', min: 1, max: 5 }] }],
     bridge: null,
     blockLabel: (t) => t,
     blockEntranceOptions: () => [['', 'None'], ['fade-in', 'Fade']],
@@ -91,6 +91,7 @@ function handleFor(selectedBlock, viewMode = 'desktop') {
     isEntrance: (a) => a?.type === 'fade-in',
     themeSwatches: () => [['accent', '#7c5cff']],
     blockStarts: (type, flag) => ['shape', 'icon'].includes(type) && ['decor', 'hideMobile'].includes(flag),
+    propStarts: (type, key) => (type === 'map' && key === 'zoom' ? 15 : undefined),
     siteCalendars: () => calendars,
     siteLinks: () => [],
     siteCalendarById: (id) => calendars.find((c) => c.id === id) ?? null,
@@ -441,4 +442,83 @@ test('what belongs to the size and the fit stands under their line, in Placement
     assert.equal(count(row, part), 1, `what belongs to ${pin} stands in its row in Pinned`);
   }
   setQuickChoice('text', NO_CHOICE);
+});
+
+
+/**
+ * The rows that stand as plain rows by rule, with no way back, by the block type (or any, `*`) and the key of their words or of their tooltip: the frame's numbers and sizes, a block's kind, the content a block shows, a picker of what the rows below it edit, and a swatch grid whose swatches clear themselves.
+ */
+const PLAIN_ROWS = {
+  '* frame.x': 'the frame', '* frame.y': 'the frame', '* frame.w': 'the frame', '* frame.h': 'the frame', '* frame.z': 'the frame', '* frame.rot': 'the frame',
+  'gallery lbl.ribbonHeight': 'the band\'s height is its frame\'s',
+  'shape lbl.length': 'a line\'s length is its frame\'s width',
+  'shape lbl.sizePx': 'a shape\'s size is its frame',
+  'calendar lbl.view': 'the calendar\'s kind',
+  'calendar tip.calendar.fieldStyle': 'chooses the field the rows under it style',
+  'calendar tip.calendar.useSource': 'the site\'s calendars this block shows, the content it shows',
+  'calendar tip.calendar.slot': 'the colour slots, each swatch clearing back to the design\'s colour',
+  'collection blocks.collection': 'the content the block shows',
+  'product blocks.collection': 'the content the block shows',
+};
+
+test('every control in a block\'s menu stands in a setting row, but for a list and the rows plain by rule', () => {
+  const wordsOf = (n) => `${n.text} ${n.children.map(wordsOf).join(' ')}`.replace(/\s+/g, ' ').trim();
+  const kindOf = (n) => {
+    if (n.tag === 'input' && n.attrs.type === 'checkbox') return 'switch';
+    if (hasClass(n, 'choice')) return 'segment';
+    if (hasClass(n, 'dd')) return 'dropdown';
+    if (n.tag === 'input' && n.attrs.type === 'range') return 'slider';
+    if (hasClass(n, 'step-field')) return 'stepper';
+    if (n.tag === 'input' && n.attrs.type === 'number') return 'number';
+    if (hasClass(n, 'cp')) return 'colour';
+    if (hasClass(n, 'row-picture') || hasClass(n, 'look-choice')) return 'picker';
+    if (n.tag === 'button' && n.attrs['aria-pressed'] !== undefined) return 'toggle';
+    return null;
+  };
+  const ROWS = ['row-switch', 'choice', 'row-select', 'row-slider', 'ctl-row', 'field-stack', 'cal-slot'];
+  const loose = new Set();
+  // A list's rows are what the owner writes and orders, so the walk leaves a list alone.
+  const walk = (n, inside, row, type) => {
+    if (hasClass(n, 'row-list')) return;
+    const here = inside || hasClass(n, 'setting');
+    const rowHere = n.tag === 'label' || ROWS.some((c) => hasClass(n, c)) ? n : row;
+    const kind = kindOf(n);
+    if (!kind) {
+      for (const c of n.children) walk(c, here, rowHere, type);
+      return;
+    }
+    if (here) return;
+    const named = rowHere ?? n;
+    const keys = [wordsOf(named).split(' ')[0], (named.attrs.title ?? find(named, (x) => x.attrs.title !== undefined)[0]?.attrs.title ?? '').split(/\s/)[0]];
+    if (!keys.some((key) => PLAIN_ROWS[`* ${key}`] || PLAIN_ROWS[`${type} ${key}`])) loose.add(`${type}: ${kind} «${wordsOf(named).slice(0, 60)}»`);
+  };
+  for (const type of KIT_TYPES) {
+    for (const props of BLOCKS[type]) {
+      for (const extra of PLACEMENTS) {
+        setQuickChoice(type, { pinned: [], removed: PIN_IDS });
+        const context = new Map([['urd-editor', handleFor(block(type, props, extra))]]);
+        walk(parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body), false, null, type);
+      }
+    }
+    setQuickChoice(type, NO_CHOICE);
+  }
+  assert.deepEqual([...loose].sort(), [], 'controls outside a setting row');
+});
+
+test('a plugin block\'s and the map\'s fields go back to what the block starts with', () => {
+  const resets = (type, props) => {
+    setQuickChoice(type, { pinned: [], removed: PIN_IDS });
+    const { areas } = menuOf(type, props, true);
+    setQuickChoice(type, NO_CHOICE);
+    return areas.flatMap((a) => find(a, (n) => hasClass(n, 'setting') && n.children.some((c) => hasClass(c, 'setting-reset'))))
+      .map((n) => n.attrs['data-setting'] ?? (find(n, (x) => hasClass(x, 'row-label') || hasClass(x, 'row-switch'))[0] ? wordsOf(n).split(' ')[0] : ''))
+      .filter((w) => ['N', 'On', 'S', 'zoom', 'lbl.mapZoom'].includes(w)).sort();
+  };
+  const wordsOf = (n) => `${n.text} ${n.children.map(wordsOf).join(' ')}`.replace(/\s+/g, ' ').trim();
+  assert.deepEqual(resets('plugin-thing', { n: 2, on: false, sel: 'a' }), [], 'a plugin block at its defaults');
+  assert.deepEqual(resets('plugin-thing', { n: 3, on: true, sel: 'a' }), ['N', 'On'], 'a plugin block with a number and a switch of its own');
+  assert.deepEqual(resets('plugin-thing', { n: 2, on: false, sel: 'b' }), ['S'], 'a plugin block with a choice of its own');
+  assert.deepEqual(resets('plugin-variant', { n: 4 }), [], 'a field its variants start differently has no standard');
+  assert.deepEqual(resets('map', { location: 'Oslo', zoom: 15 }), [], 'a map at its zoom');
+  assert.deepEqual(resets('map', { location: 'Oslo', zoom: 12 }).length, 1, 'a map with a zoom of its own');
 });
