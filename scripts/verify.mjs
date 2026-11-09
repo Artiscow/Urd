@@ -132,6 +132,10 @@ function select(paths) {
     if (path.startsWith('editor/src/') && path.endsWith('.svelte')) {
       for (const t of all) if (t.text.includes("'../editor/src/'")) tests.set(t.name, `walks the editor source (${name})`);
     }
+    // A test that renders the editor's components (svelte/server) draws every component and module under the one it renders, so it stands for each of them.
+    if (path.startsWith('editor/src/') && /\.(svelte|js)$/.test(path)) {
+      for (const t of all) if (t.text.includes("import('svelte/server')")) tests.set(t.name, `renders the editor (${name})`);
+    }
     for (const t of all) {
       if (t.text.includes(name)) tests.set(t.name, paths.includes(path) ? `names ${name}` : `names ${name}, which imports a changed module`);
       else if (byFolder) {
