@@ -2,6 +2,10 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.82): vite 8.3.6
+
+- [ ] The admin loads, and the element menu, the panels and the canvas work as before
+
 ### Test batch (0.7.0.81): every deletion button is now a bin on dark red
 
 - [ ] The admin: the bin on dark red, lighter under the pointer with no white ring, on a list row (a calendar's sources, an FAQ's questions), a Nav item's card, a collection entry (in the panel, in the table and for the ticked entries), a product's colour, a plugin, a redirect rule, a gradient stop, a page template and «Delete page»

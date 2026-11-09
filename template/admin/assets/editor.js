@@ -1703,7 +1703,7 @@ var ii = class {
 		}), this.#c &&= (this.#e.before(this.#c), null))) : this.parent && this.parent.#C(e, t);
 	}
 	update_pending_count(e, t) {
-		this.#C(e, t), this.#l += e, !(!this.#p || this.#d) && (this.#d = !0, ft(() => {
+		this.#C(e, t), this.#l += e, !this.#p || this.#d || (this.#d = !0, ft(() => {
 			this.#d = !1, this.#p && dn(this.#p, this.#l);
 		}));
 	}
@@ -13569,7 +13569,7 @@ function Jg(e, t) {
 		}, t || (e.style.position = "relative"), qg.set(e, a);
 	}
 	a.count += 1, e.append(r), i.addEventListener("animationend", () => {
-		r.remove(), --a.count, !(a.count > 0) && (qg.delete(e), a.placed || (e.style.position = a.before));
+		r.remove(), --a.count, a.count > 0 || (qg.delete(e), a.placed || (e.style.position = a.before));
 	}, { once: !0 });
 }
 // ../template/assets/engine/0.7.8/block-palette.js
@@ -14575,7 +14575,7 @@ function _v(e) {
 }
 var vv = /* @__PURE__ */ new Set(), yv = !1;
 function bv(e) {
-	vv.add(e), !(yv || typeof window > "u") && (yv = !0, window.addEventListener("resize", () => {
+	vv.add(e), yv || typeof window > "u" || (yv = !0, window.addEventListener("resize", () => {
 		for (let e of [...vv]) e() || vv.delete(e);
 	}));
 }
@@ -15158,7 +15158,7 @@ function tb() {
 	$y ||= requestAnimationFrame(eb);
 }
 function nb(e) {
-	Zy.add(e), e(), !(Qy || typeof window > "u") && (Qy = !0, window.addEventListener("scroll", tb, { passive: !0 }), window.addEventListener("resize", tb, { passive: !0 }));
+	Zy.add(e), e(), Qy || typeof window > "u" || (Qy = !0, window.addEventListener("scroll", tb, { passive: !0 }), window.addEventListener("resize", tb, { passive: !0 }));
 }
 function rb(e, t, n, r) {
 	let i = r === "cover" || r === "tile" || r === "repeat", a = e.closest(".urd-section") ?? e.parentElement?.closest(".urd-section") ?? e.parentElement, o = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -15187,7 +15187,7 @@ function lb() {
 	!sb && typeof requestAnimationFrame == "function" && (sb = requestAnimationFrame(cb));
 }
 function ub(e) {
-	ab.add(e), e(), !(ob || typeof window > "u") && (ob = !0, window.addEventListener("resize", lb, { passive: !0 }));
+	ab.add(e), e(), ob || typeof window > "u" || (ob = !0, window.addEventListener("resize", lb, { passive: !0 }));
 }
 function db(e, t, n, r) {
 	let i = r === "cover" || r === "tile" || r === "repeat", a = e.closest(".urd-section") ?? e.parentElement?.closest(".urd-section") ?? e.parentElement;
@@ -21560,7 +21560,7 @@ function AN(e) {
 		return;
 	}
 	let r = SN(n, !0, e.sectionId);
-	pN({}), oN?.data.sections.some((t) => t.id === e.sectionId) && (UP({ sectionId: e.sectionId }), !r && (yN = e.rect, n?.startsWith("fold:") && gd.set("menu", n.slice(5), !0), n ? k(mN, {
+	pN({}), oN?.data.sections.some((t) => t.id === e.sectionId) && (UP({ sectionId: e.sectionId }), r || (yN = e.rect, n?.startsWith("fold:") && gd.set("menu", n.slice(5), !0), n ? k(mN, {
 		...PN(e.rect, !0),
 		section: !0,
 		only: n,
@@ -23103,7 +23103,7 @@ function fL(e, t) {
 	}), c = /* @__PURE__ */ D(() => F(a) ? lu.filter((e) => fu(e, F(a), n) && (e.inUse(F(a), n) || Su(F(a).blockId, e.id)) && !o(e)) : []), l = /* @__PURE__ */ D(() => Ju.capListPref === "tiles"), u = /* @__PURE__ */ O(!1), d = /* @__PURE__ */ O(null), f = /* @__PURE__ */ O(null), p = null, m = !1;
 	Fn(() => () => clearTimeout(p));
 	function h(e) {
-		e.pointerType === "mouse" && (clearTimeout(p), !F(u) && (p = setTimeout(() => {
+		e.pointerType === "mouse" && (clearTimeout(p), F(u) || (p = setTimeout(() => {
 			F(s).length && (k(u, !0), m = !0);
 		}, 120)));
 	}
@@ -23738,7 +23738,7 @@ function mR(e, t) {
 	let re = /* @__PURE__ */ D(() => F(v).hidden.length + F(v).shown.length > 0), ie = null, ae = !1;
 	Fn(() => () => clearTimeout(ie));
 	function oe(e) {
-		e.pointerType === "mouse" && (clearTimeout(ie), !F(b) && (ie = setTimeout(() => {
+		e.pointerType === "mouse" && (clearTimeout(ie), F(b) || (ie = setTimeout(() => {
 			k(b, !0), ae = !0;
 		}, 120)));
 	}
@@ -33186,7 +33186,7 @@ function XW(e, t) {
 	}
 	function me(e) {
 		let t = e.trim().toUpperCase();
-		n.siteCurrencyBad = t !== "" && !/^[A-Z]{3}$/.test(t), !n.siteCurrencyBad && p("site", () => {
+		n.siteCurrencyBad = t !== "" && !/^[A-Z]{3}$/.test(t), n.siteCurrencyBad || p("site", () => {
 			t ? F(o).site.commerce = {
 				...F(o).site.commerce ?? {},
 				currency: t
@@ -33217,7 +33217,7 @@ function XW(e, t) {
 	});
 	function Se(e) {
 		let t = e.trim();
-		n.siteZoneBad = t !== "" && !YU(t), !n.siteZoneBad && p("site", () => {
+		n.siteZoneBad = t !== "" && !YU(t), n.siteZoneBad || p("site", () => {
 			t ? F(o).site.timeZone = t : delete F(o).site.timeZone;
 		});
 	}
