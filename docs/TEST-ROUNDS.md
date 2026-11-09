@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.81): every deletion button is now a bin on dark red
+
+- [ ] The admin: the bin on dark red, lighter under the pointer with no white ring, on a list row (a calendar's sources, an FAQ's questions), a Nav item's card, a collection entry (in the panel, in the table and for the ticked entries), a product's colour, a plugin, a redirect rule, a gradient stop, a page template and «Delete page»
+- [ ] A section's menu: its delete is the bin on dark red, bright red after the first press, and deletes at the second
+- [ ] The canvas, with the «Quick» toolbar in every look: the block's delete is the bin on dark red; the section bar's delete is too, bright red after its first press; so are the delete on the bar of several selected blocks and a section template's delete in «+ New section»
+- [ ] An × that clears a field (the footer logo, the site icon), closes something or takes a size away from an entry stays a cross
+
 ### Test batch (0.7.33.12.2): the «+» on hover, and delete as a bin
 
 - [ ] The «+» in the menu's head: resting the mouse on it opens its list, moving down into the list keeps it open, and moving away closes it; a press or a tap opens it too, and it shows no tooltip

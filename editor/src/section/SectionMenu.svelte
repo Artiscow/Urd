@@ -243,7 +243,7 @@
     { id: 'up', icon: ICONS.up, label: ta('canvas.ctx.sectionUp'), disabled: sectionIndex <= 0, run: () => ed.handleMoveSection({ sectionId: activeSectionId, dir: -1 }) },
     { id: 'down', icon: ICONS.down, label: ta('canvas.ctx.sectionDown'), disabled: sectionIndex < 0 || sectionIndex >= ed.sections.length - 1,
       run: () => ed.handleMoveSection({ sectionId: activeSectionId, dir: 1 }) },
-    { id: 'delete', icon: ICONS.cross, label: ta('canvas.ctx.deleteSection'), arm: ta('canvas.ctx.pressAgain'), run: () => ed.handleDeleteSection({ sectionId: activeSectionId }) },
+    { id: 'delete', icon: ICONS.bin, danger: true, label: ta('canvas.ctx.deleteSection'), arm: ta('canvas.ctx.pressAgain'), run: () => ed.handleDeleteSection({ sectionId: activeSectionId }) },
   ]} />
 {/snippet}
 

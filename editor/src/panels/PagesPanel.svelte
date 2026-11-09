@@ -132,7 +132,7 @@
             <span class="page-template-name">{templateStores[id].data.mal.name}</span>
           </button>
           <button class="page-template-del" title={ta('canvas.deleteTemplate')}
-            onclick={() => handleDeleteTemplate({ id })}>{@html ICONS.cross}</button>
+            onclick={() => handleDeleteTemplate({ id })}>{@html ICONS.bin}</button>
         </div>
       {/each}
     </div>

@@ -175,7 +175,7 @@
           {#if color.image}<img class="entry-color-thumb" src={color.image} alt="" />{:else}{@html ICONS.image}{/if}
           <input type="file" accept="image/*" onchange={(e) => act.setEntryColorImage(id, entry.id, ci, e)} />
         </label>
-        <IconButton icon={ICONS.cross} label={ta('tip.entry.removeColor')} onclick={() => act.removeEntryColor(id, entry.id, ci)} />
+        <IconButton icon={ICONS.bin} danger label={ta('tip.entry.removeColor')} onclick={() => act.removeEntryColor(id, entry.id, ci)} />
       </span>
     {/each}
     <!-- The quantity the buyer types: off unless turned on; its least and most stand only while it is on, and each may stay empty -->

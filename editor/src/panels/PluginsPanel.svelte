@@ -71,7 +71,7 @@
       <span class="plugin-head">
         <span class="plugin-name">{info?.names?.[currentAdminLang()] ?? info?.name ?? id}</span>
         {#if info?.version}<span class="plugin-meta">v{info.version}</span>{/if}
-        <IconButton size="sm" icon={ICONS.cross} label={ta('tip.plugins.remove')} onclick={() => removePlugin(id)} />
+        <IconButton size="sm" icon={ICONS.bin} danger label={ta('tip.plugins.remove')} onclick={() => removePlugin(id)} />
       </span>
       <SwitchRow label={ta('lbl.pluginActive')} title={enabled ? ta('tip.plugins.on') : ta('tip.plugins.off')} checked={enabled}
         disabled={Boolean(info?.errors?.length)} onchange={(on) => setPluginEnabled(id, on)} />

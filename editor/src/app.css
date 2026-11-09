@@ -1257,17 +1257,6 @@
     border-bottom: 1px solid rgb(255 255 255 / 12%);
   }
 
-  /* Delete in the dark red of a removal */
-  .block-actions .icon-btn.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    color: #ffd4d4;
-    background: #5e1c22;
-    border-color: #7d2a31;
-  }
-
-  .block-actions .icon-btn.danger:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    background: #7a222a;
-  }
-
   .cap-add-head:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     display: inline-grid;
     place-items: center;
@@ -3112,14 +3101,24 @@
     display: block;
   }
 
-  /* A removal, as the Collections panel draws its deletion: a red cross in a red frame, the frame filling faintly under the pointer */
-  .icon-btn.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    color: #f08a8a;
-    border-color: rgb(224 82 82 / 50%);
+  /* Every deletion in the admin, as the element menu's head draws a block's: a bin (ICONS.bin) on the dark red of a removal, lighter under the pointer, and brightest while a deletion that acts at its second press waits for it (ActionRow.svelte) */
+  .icon-btn.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body .ghost.action.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: #ffd4d4;
+    background: #5e1c22;
+    border-color: #7d2a31;
   }
 
-  .icon-btn.danger:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    background: rgb(224 82 82 / 14%);
+  .icon-btn.danger:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .panel-body .ghost.action.danger:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    background: #7a222a;
+    border-color: #9a3a42;
+  }
+
+  .icon-btn.danger.armed:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: #fff;
+    background: #c62828;
+    border-color: #e04848;
   }
 
   /* The "new page from template" grid: cards with a page thumbnail; the
@@ -3173,26 +3172,27 @@
     opacity: 0.85;
   }
 
+  /* A template's deletion on its card: the admin's bin on the dark red of a removal */
   .page-template-del {
     position: absolute;
     top: 0.3rem;
     right: 0.3rem;
-    width: 1.4rem;
-    height: 1.4rem;
+    width: 1.5rem;
+    height: 1.5rem;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 0;
-    border-radius: 999px;
-    background: rgb(0 0 0 / 55%);
-    color: inherit;
+    border: 1px solid #7d2a31;
+    border-radius: 6px;
+    background: #5e1c22;
+    color: #ffd4d4;
     cursor: pointer;
-    opacity: 0.75;
   }
 
-  .page-template-del:hover {
-    opacity: 1;
+  .page-template-card > .page-template-del:is(:hover, :focus-visible) {
+    background: #7a222a;
+    border-color: #9a3a42;
   }
 
   /* The section theme picker: live samples in the site's actual theme

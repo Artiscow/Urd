@@ -198,7 +198,7 @@
               <IconButton icon={ICONS.down} label={ta('tip.moveDown')} disabled={at === movables.length - 1} onclick={() => act.moveEntry(id, entry.id, 1)} />
             {/if}
             <IconButton icon={ICONS.copy} label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry} />
-            <IconButton icon={ICONS.cross} danger label={ta('tip.collections.deleteEntry')} onclick={deleteEntry} />
+            <IconButton icon={ICONS.bin} danger label={ta('tip.collections.deleteEntry')} onclick={deleteEntry} />
           </span>
           <div class="panel-body ct-fields">
             {#key entry.id}<EntryFields {id} {entry} kind={view.kind} />{/key}

@@ -47,7 +47,7 @@
       <span class="row-list-grip" title={ta('tip.list.move')} aria-hidden="true">{@html GRIP}</span>
       <div class="row-list-body">{@render row(item, i)}</div>
       {#if onremove}
-        <IconButton icon={ICONS.cross} label={removeLabel || ta('ui.remove')} onclick={() => onremove(i)} />
+        <IconButton icon={ICONS.bin} danger label={removeLabel || ta('ui.remove')} onclick={() => onremove(i)} />
       {/if}
     </div>
     {#if drag.at(i, 'after')}{@render slot()}{/if}

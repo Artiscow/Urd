@@ -2117,7 +2117,7 @@ function makeSectionAdder(index, above = null) {
         const del = document.createElement('button');
         del.type = 'button';
         del.className = 'urd-template-delete';
-        del.innerHTML = CROSS_SVG;
+        del.innerHTML = BIN_SVG;
         del.title = ta('canvas.deleteTemplate');
         del.addEventListener('click', (event) => {
           // The editor owns the confirmation and deletion; the menu closes
@@ -3301,7 +3301,11 @@ function addSectionToolbar(host, section, grid) {
     gear.className = 'urd-edit-lead';
   }
   if (form !== 'groups' || isMobile() || barGear()) bar.appendChild(gear);
-  if (!isMobile() && form === 'full') bar.appendChild(armedButton(CROSS_SVG, ta('canvas.deleteSection'), () => deleteSection(section.id)));
+  if (!isMobile() && form === 'full') {
+    const del = armedButton(BIN_SVG, ta('canvas.deleteSection'), () => deleteSection(section.id));
+    del.classList.add('urd-sec-delete');
+    bar.appendChild(del);
+  }
   else if (!isMobile()) bar.appendChild(moreButton((x, y) => openSectionContextMenu(host, x, y)));
 
   if (bar.childElementCount) host.appendChild(bar);
@@ -3431,6 +3435,9 @@ function buildHiddenList(section, hidden) {
 // the rotate handle, the fit-height button and the folds' caret are drawn,
 // never characters.
 const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+/** Every deletion on the canvas draws a bin, as the admin's do (the editor's ICONS.bin), never the cross that closes things; the selection's bar draws the same lines at its own size. */
+const BIN_PATHS = '<path d="M3 6h18"/><path d="M8.5 6V3h7v3"/><path d="M5.5 6l1 15h11l1-15"/><path d="M10 10.5v6M14 10.5v6"/>';
+const BIN_SVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${BIN_PATHS}</svg>`;
 const GRIP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
 const ROTATE_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.5 13a8.5 8.5 0 1 1-2-5.5L21 10"/></svg>';
 const FIT_HEIGHT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6 10l6 6 6-6"/><path d="M4 21h16"/></svg>';
@@ -4187,7 +4194,7 @@ function buildMultiBar() {
   grip.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><g fill="currentColor"><circle cx="3" cy="3.5" r="1.4"/><circle cx="7" cy="3.5" r="1.4"/><circle cx="11" cy="3.5" r="1.4"/><circle cx="3" cy="10.5" r="1.4"/><circle cx="7" cy="10.5" r="1.4"/><circle cx="11" cy="10.5" r="1.4"/></g></svg>';
   grip.addEventListener('pointerdown', startSelectionDrag);
   multiBar.appendChild(grip);
-  const del = btn(svg('<path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>'), ta('canvas.deleteSelected'), deleteSelection);
+  const del = btn(svg(BIN_PATHS), ta('canvas.deleteSelected'), deleteSelection);
   del.classList.add('urd-multi-delete');
   document.body.appendChild(multiBar);
 }
@@ -4713,7 +4720,7 @@ function enhanceBlock(el, block, section, grid, host) {
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'urd-edit-delete';
     deleteBtn.dataset.cap = ta('canvas.cap.delete');
-    deleteBtn.innerHTML = CROSS_SVG;
+    deleteBtn.innerHTML = BIN_SVG;
     deleteBtn.title = ta('canvas.deleteBlock');
     deleteBtn.addEventListener('click', () => {
       post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });

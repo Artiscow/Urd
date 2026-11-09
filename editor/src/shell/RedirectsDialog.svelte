@@ -223,7 +223,7 @@
                 title={typed[`${i}:to`] !== undefined ? ta('redirect.issue.badTo') : issue?.field === 'to' ? issueText(issue) : ta('tip.redirects.to')}
                 onchange={(text) => setField(i, 'to', text)} onpick={(path) => setField(i, 'to', path)} />
               <Choice fill label={ta('redirects.col.kind')} value={kindOf(rule.status)} options={kindOptions()} onchange={(kind) => setKind(i, kind)} />
-              <IconButton icon={ICONS.cross} label={ta('tip.redirects.remove')} onclick={() => removeRule(i)} />
+              <IconButton icon={ICONS.bin} danger label={ta('tip.redirects.remove')} onclick={() => removeRule(i)} />
             </div>
           {/each}
           {#if !rules.length}

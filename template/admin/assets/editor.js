@@ -24173,7 +24173,7 @@ function MR(e, t) {
 		E(s);
 		var d = N(s, 2), f = (e) => {
 			var t = kR(), n = A(t);
-			V(n, () => J.cross);
+			V(n, () => J.bin);
 			var r = N(n);
 			E(t), P((e, n) => {
 				G(t, "title", e), z(r, ` ${n ?? ""}`);
@@ -24528,7 +24528,7 @@ function YR(e, t) {
 			var c = M(N(o, 2), !0);
 			E(a);
 			var u = N(a, 2);
-			V(u, () => J.cross, !0), E(u), E(r), P((e, o) => {
+			V(u, () => J.bin, !0), E(u), E(r), P((e, o) => {
 				i = H(r, 1, "page-template-card", null, i, { picked: n.newPageTemplate === t }), G(a, "title", e), z(c, l[t].data.mal.name), G(u, "title", o);
 			}, [() => q("tip.pages.templatePick", { name: l[t].data.mal.name }), () => q("canvas.deleteTemplate")]), I("click", a, () => n.newPageTemplate = n.newPageTemplate === t ? null : t), I("click", u, () => s({ id: t })), R(e, r);
 		}), E(o), P((e) => {
@@ -26091,7 +26091,7 @@ function HB(e, t) {
 				let e = /* @__PURE__ */ D(() => r() === 0 ? q("tip.nav.removeItem") : q("tip.nav.removeChild"));
 				mL(ne, {
 					get icon() {
-						return J.cross;
+						return J.bin;
 					},
 					danger: !0,
 					get label() {
@@ -27353,8 +27353,9 @@ function TV(e, t) {
 				let t = /* @__PURE__ */ D(() => o() || q("ui.remove"));
 				mL(e, {
 					get icon() {
-						return J.cross;
+						return J.bin;
 					},
+					danger: !0,
 					get label() {
 						return F(t);
 					},
@@ -27460,7 +27461,7 @@ function IV(e, t) {
 					let e = /* @__PURE__ */ D(() => a() || q("ui.remove"));
 					mL(n, {
 						get icon() {
-							return J.cross;
+							return J.bin;
 						},
 						danger: !0,
 						get label() {
@@ -28160,8 +28161,9 @@ function oH(e, t) {
 							let n = /* @__PURE__ */ D(() => q("tip.bg.removeStop"));
 							mL(e, {
 								get icon() {
-									return J.cross;
+									return J.bin;
 								},
+								danger: !0,
 								get label() {
 									return F(n);
 								},
@@ -46048,7 +46050,7 @@ function iZ(e, t) {
 	var i = rZ();
 	_i(i, 21, () => t.actions, (e) => e.id, (e, t) => {
 		{
-			let i = /* @__PURE__ */ D(() => F(n) === F(t).id ? F(t).arm : F(t).label), a = /* @__PURE__ */ D(() => F(n) === F(t).id);
+			let i = /* @__PURE__ */ D(() => F(n) === F(t).id ? F(t).arm : F(t).label), a = /* @__PURE__ */ D(() => F(t).danger || F(n) === F(t).id), o = /* @__PURE__ */ D(() => F(n) === F(t).id ? "armed" : "");
 			mL(e, {
 				get icon() {
 					return F(t).icon;
@@ -46058,6 +46060,9 @@ function iZ(e, t) {
 				},
 				get danger() {
 					return F(a);
+				},
+				get class() {
+					return F(o);
 				},
 				get disabled() {
 					return F(t).disabled;
@@ -46621,7 +46626,8 @@ function yZ(e, t) {
 				},
 				{
 					id: "delete",
-					icon: J.cross,
+					icon: J.bin,
+					danger: !0,
 					label: q("canvas.ctx.deleteSection"),
 					arm: q("canvas.ctx.pressAgain"),
 					run: () => a.handleDeleteSection({ sectionId: F(l) })
@@ -50187,7 +50193,7 @@ function b$(e, t) {
 	var p = N(c, 2);
 	V(p, () => J.copy, !0), E(p);
 	var m = N(p, 4);
-	V(m, () => J.cross, !0), E(m), E(o), P((e, t, n, r, i, a, o) => {
+	V(m, () => J.bin, !0), E(m), E(o), P((e, t, n, r, i, a, o) => {
 		G(s, "title", e), G(s, "aria-label", t), z(u, n), G(p, "title", r), G(p, "aria-label", i), G(m, "title", a), G(m, "aria-label", o);
 	}, [
 		() => q("tip.collections.clearTicks"),
@@ -50754,8 +50760,9 @@ function s1(e, t) {
 				let e = /* @__PURE__ */ D(() => q("tip.entry.removeColor"));
 				mL(g, {
 					get icon() {
-						return J.cross;
+						return J.bin;
 					},
+					danger: !0,
 					get label() {
 						return F(e);
 					},
@@ -51252,7 +51259,7 @@ function B1(e, t) {
 			let e = /* @__PURE__ */ D(() => q("tip.collections.deleteEntry"));
 			mL(v, {
 				get icon() {
-					return J.cross;
+					return J.bin;
 				},
 				danger: !0,
 				get label() {
@@ -51546,8 +51553,9 @@ function q1(e, t) {
 			mL(_, {
 				size: "sm",
 				get icon() {
-					return J.cross;
+					return J.bin;
 				},
+				danger: !0,
 				get label() {
 					return F(e);
 				},
@@ -55633,8 +55641,9 @@ function F3(e, t) {
 				let e = /* @__PURE__ */ D(() => q("tip.redirects.remove"));
 				mL(f, {
 					get icon() {
-						return J.cross;
+						return J.bin;
 					},
+					danger: !0,
 					get label() {
 						return F(e);
 					},
@@ -57693,7 +57702,7 @@ function D5(e, t) {
 				let e = /* @__PURE__ */ D(() => q("tip.collections.deleteEntry"));
 				mL(_, {
 					get icon() {
-						return J.cross;
+						return J.bin;
 					},
 					danger: !0,
 					get label() {

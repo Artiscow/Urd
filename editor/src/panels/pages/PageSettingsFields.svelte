@@ -169,7 +169,7 @@
     <button class="ghost action" title={ta('tip.pages.duplicate')} onclick={() => ed.duplicatePage(entry)}>{@html ICONS.copy} {ta('ui.duplicatePage')}</button>
     <button class="ghost action" title={ta('tip.pages.saveTemplate')} onclick={saveTemplate}>{@html ICONS.bookmark} {ta('ui.savePageTemplate')}</button>
     {#if !front}
-      <button class="ghost action danger" title={ta('tip.pages.delete')} onclick={deletePage}>{@html ICONS.cross} {ta('ui.deletePage')}</button>
+      <button class="ghost action danger" title={ta('tip.pages.delete')} onclick={deletePage}>{@html ICONS.bin} {ta('ui.deletePage')}</button>
     {/if}
   </div>
 {/snippet}
@@ -340,7 +340,4 @@
     gap: 0.4em;
   }
 
-  .ps-actions .danger {
-    color: #e05252;
-  }
 </style>

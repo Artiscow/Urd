@@ -523,7 +523,7 @@
             title={ta('tip.bg.stopAlpha')}
             onchange={(e) => setGradAlpha(bg, i, si, e.target.value)} />
           {#if g.stops.length > 2}
-            <IconButton icon={ICONS.cross} label={ta('tip.bg.removeStop')} onclick={() => removeGradStop(bg, i, si)} />
+            <IconButton icon={ICONS.bin} danger label={ta('tip.bg.removeStop')} onclick={() => removeGradStop(bg, i, si)} />
           {/if}
         </span>
       {/each}

@@ -535,8 +535,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [ ] A review of the design of admin settings 
  - [ ] A block's «?» help chip, at its top right at the toolbar's height, stands over the toolbar's tools wherever the bar is wider than its block (the calendar's Full bar in a canvas about 700px wide); the chip needs a place clear of the bar (found in the walk of 0.7.33.9)
  - [ ] The drop down for re-do/undo should open by hover
- - [ ] Remove tooltips for common things such as: click to drag
- - [ ] New toolbar designs need an "x" to delete block
+ - [x] All delete buttons be the toolmenus bin icon style FIXED 0.7.0.81 (9 November 2026)
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene

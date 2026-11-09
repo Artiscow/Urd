@@ -75,7 +75,7 @@
             {#if onremove}
               <div class="nav-body-actions">
                 <span class="nav-body-spacer"></span>
-                <IconButton icon={ICONS.cross} danger label={removeLabel || ta('ui.remove')} onclick={() => onremove(i)} />
+                <IconButton icon={ICONS.bin} danger label={removeLabel || ta('ui.remove')} onclick={() => onremove(i)} />
               </div>
             {/if}
           </div>

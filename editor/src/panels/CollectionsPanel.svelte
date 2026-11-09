@@ -170,7 +170,7 @@
       <IconButton icon={NEXT_ICON} label={ta('tip.collections.nextEntry')} disabled={!place.next} onclick={() => { ed.panelEntry = place.next; }} />
     {/if}
     <IconButton icon={ICONS.copy} label={ta('tip.collections.duplicateEntry')} onclick={duplicateEntry} />
-    <IconButton icon={ICONS.cross} danger label={ta('tip.collections.deleteEntry')} onclick={deleteEntry} />
+    <IconButton icon={ICONS.bin} danger label={ta('tip.collections.deleteEntry')} onclick={deleteEntry} />
   </span>
 {/snippet}
 

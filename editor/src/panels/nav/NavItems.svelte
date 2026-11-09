@@ -246,7 +246,7 @@
             <button class="ghost action" onclick={() => addNavChild(key)}>{level === 0 ? ta('ui.addMenuChild') : ta('ui.addMenuGrandchild')}</button>
           {/if}
           <span class="nav-body-spacer"></span>
-          <IconButton icon={ICONS.cross} danger label={level === 0 ? ta('tip.nav.removeItem') : ta('tip.nav.removeChild')}
+          <IconButton icon={ICONS.bin} danger label={level === 0 ? ta('tip.nav.removeItem') : ta('tip.nav.removeChild')}
             onclick={() => { navSel = ''; removeNavAt(key); }} />
         </div>
       </div>

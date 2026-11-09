@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.81 - Every deletion button is now a bin on dark red - 9 November 2026
+
+- The deletions in the admin and on the canvas were drawn four ways: a cross in a red outline, a bright red square, a red cross on nothing, and the element menu's red bin. Every deletion draws the bin on the dark red of the menu's head, lighter under the pointer and brightest while a deletion that acts at its second press waits for it: the admin's lists, cards, collection entries, plugins, redirects, gradient stops, page templates and «Delete page», the section menu's delete (`.icon-btn.danger` in `app.css`, `ICONS.bin`), and the block's, the section's, the selection's and a section template's on the canvas, in every bar look (`BIN_SVG` in `preview-edit.js`, `base.css`).
+- An × that clears a field, closes something or takes a chip away stays a cross, and a deletion named in words in a menu stays words. `tests/panel-language.test.mjs` holds every deletion to the bin.
+
+The independent review before the commit found these, all fixed:
+
+1. A product's colour variant was still removed with a cross. It is a deletion like the others.
+2. The test held a button marked as a deletion to the bin, but not a button whose words name a deletion to being marked as one, so four of the old crosses would have passed it again. It holds both, names the removals that only clear a field or a chip, and was seen to fail on an old cross put back.
+3. Under the pointer, the buttons' own hover gave every deletion a whitish ring and a page template's bin a see-through ground. Both keep their red.
+4. A deletion's first press, before the second deletes, lit only a little brighter than its hover. It turns the bright red it was before, in the admin and on the canvas.
+5. The selection bar's bin stood smaller than the icons beside it. It is drawn at their size; and two rules that no longer applied are gone.
+
 ### 0.7.33.12.2 - The «+» opens on hover, and delete is a bin - 9 November 2026
 
 - The «+» in the menu's head opened its list only at a press, unlike «+ Add a setting». It opens as the mouse rests on it or on its list and closes a moment after the mouse leaves both, a press still opens it, and as a menu that opens on hover it has its name and no tooltip (`menu/CapabilityAdd.svelte`).

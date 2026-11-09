@@ -16068,10 +16068,14 @@ body.urd-marqueeing {
   background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 12%, transparent);
 }
 
-/* The delete button in the selection bar: a destructive tone on hover. */
-.urd-multi-toolbar .urd-multi-delete:hover {
-  background: rgb(224 82 82 / 25%);
-  color: #ffb4b4;
+/* The delete button in the selection bar: the bin on the dark red of every deletion, lighter on hover. */
+.urd-multi-toolbar .urd-multi-delete {
+  background: #5e1c22;
+  color: #ffd4d4;
+}
+
+.urd-multi-toolbar .urd-multi-delete:is(:hover, :focus-visible) {
+  background: #7a222a;
 }
 
 /* The drag handle in the selection bar: the whole selection is dragged as one. */
@@ -19058,8 +19062,8 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-edit-toolbar:is(.urd-bar-strip, .urd-bar-glass, .urd-bar-glass-accent, .urd-bar-capsule, .urd-bar-glass-capsule, .urd-bar-capsule-areas, .urd-bar-large-capsule, .urd-bar-soft, .urd-bar-white) .urd-edit-delete {
-  background: transparent;
-  color: #ff8a7a;
+  background: #5e1c22;
+  color: #ffd4d4;
 }
 
 /* By area: the tools in three joined clusters, Content, Style and Placement, each its own shade of the accent */
@@ -19174,8 +19178,8 @@ body.urd-mobile .urd-section-resize-top {
   color: #23272c;
 }
 
-.urd-preview .urd-edit-toolbar.urd-bar-white .urd-edit-delete {
-  color: #c0392b;
+.urd-preview .urd-edit-toolbar:is(.urd-bar-strip, .urd-bar-glass, .urd-bar-glass-accent, .urd-bar-capsule, .urd-bar-glass-capsule, .urd-bar-capsule-areas, .urd-bar-large-capsule, .urd-bar-soft, .urd-bar-white) .urd-edit-delete:is(:hover, :focus-visible) {
+  background: #7a222a;
 }
 
 /* Areas apart: one capsule, a line between Content, Style and Placement */
@@ -19194,9 +19198,15 @@ body.urd-mobile .urd-section-resize-top {
   border-radius: 7px;
 }
 
+/* The block's delete on its bar: a bin on the dark red of every deletion, the admin's too, lighter on hover; each look above keeps it so */
 .urd-preview .urd-edit-toolbar .urd-edit-delete {
   cursor: pointer;
-  background: #c0392b;
+  background: #5e1c22;
+  color: #ffd4d4;
+}
+
+.urd-preview .urd-edit-toolbar .urd-edit-delete:is(:hover, :focus-visible) {
+  background: #7a222a;
 }
 
 .urd-preview .urd-edit-resize {
@@ -19967,16 +19977,19 @@ body.urd-mobile .urd-section-resize-top {
   opacity: 1;
   border: 0;
   border-radius: 5px;
-  padding: 2px 6px;
+  padding: 4px 5px;
   cursor: pointer;
-  background: rgb(224 82 82 / 25%);
-  color: #ffb4b4;
-  font-size: 11px;
-  line-height: 1.4;
+  background: #5e1c22;
+  color: #ffd4d4;
+  line-height: 0;
 }
 
 .urd-preview .urd-template-card:hover .urd-template-delete {
   display: block;
+}
+
+.urd-preview .urd-preset-menu .urd-template-delete:is(:hover, :focus-visible) {
+  background: #7a222a;
 }
 
 .urd-preview .urd-template-empty {
@@ -20107,8 +20120,18 @@ body.urd-mobile .urd-section-resize-top {
   color: var(--urd-admin-accent-text, #fff);
 }
 
-/* A deletion armed by its first press (preview-edit.js armedButton): red until the second press, or until the pointer or the focus leaves it */
-.urd-preview .urd-section-toolbar button.urd-armed {
+/* The section's delete: the bin on the dark red of every deletion, lighter on hover, and bright red while armed by its first press (preview-edit.js armedButton), until the second press or until the pointer or the focus leaves it */
+.urd-preview .urd-section-toolbar button.urd-sec-delete {
+  background: #5e1c22;
+  color: #ffd4d4;
+}
+
+.urd-preview .urd-section-toolbar button.urd-sec-delete:is(:hover, :focus-visible) {
+  background: #7a222a;
+  color: #ffd4d4;
+}
+
+.urd-preview .urd-section-toolbar button.urd-sec-delete.urd-armed {
   background: #c62828;
   color: #fff;
 }

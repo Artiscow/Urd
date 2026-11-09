@@ -140,3 +140,49 @@ test('each widget allowed its own inner controls still has them', () => {
     for (const p of patterns) assert.ok(held.includes(p), `${file} no longer holds ${p}; take it off ALLOWED`);
   }
 });
+
+/** The removals that clear a field or take a chip away, which stay a cross: a deletion is anything else whose words name a deletion or a removal. */
+const CLEARS = new Set(['tip.footer.removeLogo', 'tip.site.removeIcon', 'tip.seo.removeOgImage', 'ui.ownIconRemove', 'tip.clearGeo', 'tip.entry.removeSize', 'cp.removeSaved', 'cap.remove']);
+
+test('every deletion draws a bin on the dark red, in the admin and on the canvas, never the cross that closes things', () => {
+  // In the admin: a button whose words name a deletion draws ICONS.bin, and an icon button is marked as a deletion (`danger`) too; a button marked so draws the bin; the action rows' deletions alike.
+  const wrong = [];
+  const keysIn = (text) => [...text.matchAll(/ta\('([\w.-]+)'/g)].map((m) => m[1]);
+  const names = (key) => /delete|remove/i.test(key) && !CLEARS.has(key);
+  for (const file of svelteFiles(ROOT)) {
+    const source = readFileSync(file, 'utf8');
+    const where = file.slice(ROOT.length);
+    if (where.endsWith('ActionRow.svelte')) continue;
+    const textOf = (a) => (a?.value?.expression ? source.slice(a.value.expression.start, a.value.expression.end) : '');
+    const walk = (node) => {
+      if (!node || typeof node !== 'object') return;
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (node.type === 'Component' && node.name === 'IconButton') {
+        const icon = textOf(node.attributes.find((a) => a.name === 'icon'));
+        const danger = node.attributes.some((a) => a.name === 'danger');
+        const deletes = keysIn(textOf(node.attributes.find((a) => a.name === 'label'))).some(names);
+        if ((danger || deletes) && !(icon === 'ICONS.bin' && danger)) wrong.push(`${where}: ${icon || 'no icon'}${danger ? '' : ', not marked as a deletion'}`);
+      }
+      if (node.type === 'RegularElement' && node.name === 'button') {
+        const words = keysIn(source.slice(node.start, node.fragment?.nodes?.[0]?.start ?? node.end));
+        const drawn = (node.fragment?.nodes ?? []).filter((n) => n.type === 'HtmlTag').map((n) => source.slice(n.expression.start, n.expression.end));
+        if (words.some(names) && drawn.length && !drawn.includes('ICONS.bin')) wrong.push(`${where}: a deletion drawn as ${drawn.join(', ')}`);
+      }
+      for (const key of Object.keys(node)) if (key !== 'parent' && node[key] && typeof node[key] === 'object') walk(node[key]);
+    };
+    walk(parse(source, { modern: true }).fragment);
+    for (const m of source.matchAll(/\{ id: 'delete', icon: (ICONS\.\w+)(, danger: true)?/g)) if (m[1] !== 'ICONS.bin' || !m[2]) wrong.push(`${where}: an action row's delete draws ${m[1]}${m[2] ? '' : ', not marked as a deletion'}`);
+  }
+  assert.deepEqual(wrong, []);
+  // A deletion stands on the dark red, under the pointer as well, above the buttons' own hover.
+  const css = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8');
+  assert.match(css, /\.icon-btn\.danger:not\([^{]*\{\s*color: #ffd4d4;\s*background: #5e1c22;/);
+  assert.match(css, /\.icon-btn\.danger:is\(:hover, :focus-visible\)[^{]*\{\s*background: #7a222a;\s*border-color: #9a3a42;/);
+  // On the canvas: the block's, the section's, the selection's and a template's deletions draw the same bin.
+  const ENGINE = JSON.parse(readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8')).engine;
+  const edit = readFileSync(new URL(`../template/assets/engine/${ENGINE}/preview-edit.js`, import.meta.url), 'utf8');
+  assert.match(edit, /deleteBtn\.innerHTML = BIN_SVG;/, 'the block\'s bar');
+  assert.match(edit, /armedButton\(BIN_SVG, ta\('canvas\.deleteSection'\)/, 'the section\'s bar');
+  assert.match(edit, /btn\(svg\(BIN_PATHS\), ta\('canvas\.deleteSelected'\)/, 'the selection\'s bar');
+  assert.match(edit, /del\.className = 'urd-template-delete';\s*del\.innerHTML = BIN_SVG;/, 'a section template');
+});

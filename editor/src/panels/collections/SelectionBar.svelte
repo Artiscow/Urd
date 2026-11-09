@@ -31,7 +31,7 @@
   </span>
   <button type="button" class="sb-icon" title={ta('tip.collections.duplicateTicked')} aria-label={ta('tip.collections.duplicateTicked')} onclick={duplicate}>{@html ICONS.copy}</button>
   <span class="sb-divider" aria-hidden="true"></span>
-  <button type="button" class="sb-icon sb-danger" title={ta('tip.collections.deleteTicked')} aria-label={ta('tip.collections.deleteTicked')} onclick={remove}>{@html ICONS.cross}</button>
+  <button type="button" class="sb-icon sb-danger" title={ta('tip.collections.deleteTicked')} aria-label={ta('tip.collections.deleteTicked')} onclick={remove}>{@html ICONS.bin}</button>
 </div>
 
 <style>
@@ -77,9 +77,16 @@
     border-color: transparent;
   }
 
+  /* The deletion of the ticked entries, in the admin's bin on the dark red of a removal */
   .sb-danger {
-    color: #f08a8a;
-    border-color: rgb(224 82 82 / 50%);
+    color: #ffd4d4;
+    background: #5e1c22;
+    border-color: #7d2a31;
+  }
+
+  .sb-danger:is(:hover, :focus-visible) {
+    background: #7a222a;
+    border-color: #9a3a42;
   }
 
   .sb-divider {
