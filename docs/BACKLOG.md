@@ -529,6 +529,10 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [ ] Button block does not have colour settings/options
  - [ ] Footer "Brand" logo/image needs preview of image added
  - [ ] "Link" in text (both webaddress and site address) doesn't work
+ - [ ] New collections panel/menu for new product and overview - A 'floating' menu like other settings 
+ - [x] Urd Admin settings remember to which point you were scrolled until you close the site FIXED 0.7.33.7 (9 November 2026)
+ - [ ] When two elements are close together (above and below) the element belows' toolmenu cannot ble hovered over or clicked because the hover on the above block selects that instead.
+ - [ ] A review of the design of admin settings 
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene
@@ -547,6 +551,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [ ] Tooltip on elements needs a redesign - text is too small and doesn't scale well
 - [ ] Urd Admin custom themes 
 - [ ] A complete "Strip under the top bar" preset
+- [ ] More collection designs
 
 ## URGENT
 
@@ -614,7 +619,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
     Done when: the list stands in three groups (Presets, Local settings, This site) and every section stands open in one scroll with no fold, in the dialog, the panel and the sheet; choosing one of the four designs, drawn as picture tiles like the other settings, changes every part, and Undo takes it back as one step; a changed part names the design's value beside its name with the way back, and the design row reads «{design}, changed» with «Back to {design}»; and panel-language.test.mjs's list is empty.
   - [x] 0.7.33.6 DELIVERED 0.7.33.6 (9 November 2026; with the round's test findings: a text's alignment, font and size open in Style, motion moved to Style, and no «Default: …» line in the menus) The element menu's forms, how groups behave, optional settings and quick reach, built.
     Done when: each option is seen in the browser on the canvas's test blocks, wide and narrow.
-  - [ ] 0.7.33.7 The canvas bar's forms, built in the engine.
+  - [x] 0.7.33.7 DELIVERED 0.7.33.7 (9 November 2026; with the round's test findings: the bar's cursor, segments at their own width, a sharp bar at every size, pictures that draw the tools, and a settings list that folds out to every setting, centres and lights it, and keeps its place) The canvas bar's forms, built in the engine. The full bar, the tools with small panels and the short bar and a menu are built, and on 9 November 2026 on the Design canvas [«Block Toolbars»](https://claude.ai/code/artifact/b0d53ada-a587-4657-84ae-042a4a5b5e35) (a private claude.ai artifact) a fourth form was chosen beside them, every group of the block's menu a tool so that every setting is one press from the bar, with twelve looks for every bar (B1, B2, B5, B7, B8 and B9; G1, G3, G4, G7, G8 and G9 above the block): «Toolbar look» in Urd settings, a part of the admin designs. Later that day the defaults were set to the strip under the top bar for the panels, every group a tool for the bar, and a thirteenth look, glass with the main act in Urd's accent; «Settings gear on the bar» and «Phone button on the bar» (both shown by default) and «Toolbar size» were added beside them, parts of the presets, and the forms were named Full bar (every group a tool), Quick (every action), Essentials (the word with small panels) and Minimal (the short bar and its menu).
     Done when: each form is seen on a block and on a section in the browser, on the desktop and in the phone view.
   - [ ] 0.7.33.8 How a look is chosen, built across the panels and the settings.
     Done when: each form is seen in every panel that chooses a look.

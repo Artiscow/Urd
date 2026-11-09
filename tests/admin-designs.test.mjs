@@ -57,7 +57,7 @@ test('stored choices read as the default design with those parts changed, with n
   const values = readParts(s.get);
   assert.equal(values.menu, 'narrow', 'today\'s stored width reads as the form one column beside the block');
   assert.deepEqual(designState(values), { design: DEFAULT_DESIGN, changed: ['menu', 'linkEditor'] });
-  assert.equal(readParts(storage({ 'urd-admin-layout': 'nonsense' }).get).layout, 'rail', 'an unknown value is the default');
+  assert.equal(readParts(storage({ 'urd-admin-layout': 'nonsense' }).get).layout, 'top-tabs', 'an unknown value is the default');
 });
 
 test('choosing a design writes every part, reads back as that design, and the values before it take it back in one step', () => {
@@ -99,7 +99,7 @@ test('a part whose row the Urd settings hide under a design is left without effe
   const rows = SETTINGS_GROUPS.flatMap((g) => g.settings);
   for (const design of ADMIN_DESIGNS) {
     const v = (id) => design.parts[id] ?? partDefault(PARTS.find((p) => p.id === id));
-    const c = { ed: { adminLayout: v('layout'), sidebarFolds: v('sidebarFolds'), panelTabMenus: v('panelTabMenus') === 'on', siteDraft: {} }, ta: (k) => k };
+    const c = { ed: { adminLayout: v('layout'), sidebarFolds: v('sidebarFolds'), panelTabMenus: v('panelTabMenus') === 'on', toolbarPref: v('toolbar'), siteDraft: {} }, ta: (k) => k };
     for (const part of PARTS.filter((p) => p.setting)) {
       const row = rows.find((r) => r.id === part.setting);
       if (row.when && !row.when(c)) assert.equal(design.parts[part.id], null, `${design.id}.${part.id} has no effect there and must be null`);
@@ -134,15 +134,20 @@ test('every design has its picture, drawn for the design row and the picker', ()
 function windowContext() {
   const keep = (key, value, dflt) => (value === dflt ? local.delete(key) : local.set(key, value));
   const ed = {
-    adminLayout: 'rail', sidebarFolds: 'tree', panelTabMenus: false, tabMenus: 'groups', tabMenuStay: 'stay', settingsPlace: 'dialog',
-    addBlockMenuPref: 'side', layoutPickerPref: 'strip', linkEditorPref: 'dialog', pageSettingsPref: 'dialog', collectionsLayout: 'drill', csvPreviewPref: 'dialog',
-    setAdminLayout(v) { this.adminLayout = v; keep('urd-admin-layout', v, 'rail'); },
+    adminLayout: 'top-tabs', sidebarFolds: 'tree', panelTabMenus: false, tabMenus: 'groups', tabMenuStay: 'stay', settingsPlace: 'dialog',
+    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'glass-accent', toolbarGearPref: 'on', toolbarPhonePref: 'on', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', pageSettingsPref: 'dialog', collectionsLayout: 'drill', csvPreviewPref: 'dialog',
+    setAdminLayout(v) { this.adminLayout = v; keep('urd-admin-layout', v, 'top-tabs'); },
     setSidebarFolds(v) { this.sidebarFolds = v; keep('urd-sidebar-folds', v, 'tree'); },
     setPanelTabMenus(v) { this.panelTabMenus = v === 'on'; keep('urd-panel-tab-menus', v, 'off'); },
     setTabMenus(v) { this.tabMenus = v; keep('urd-tab-menus', v, 'groups'); },
     setTabMenuStay(v) { this.tabMenuStay = v; keep('urd-tab-menu-stay', v, 'stay'); },
     setSettingsPlace(v) { this.settingsPlace = v; keep('urd-settings-place', v, 'dialog'); },
     setAddBlockMenu(v) { this.addBlockMenuPref = v; keep('urd-add-block-menu', v, 'side'); },
+    setToolbar(v) { this.toolbarPref = v; keep('urd-block-toolbar', v, 'groups'); },
+    setToolbarLook(v) { this.toolbarLookPref = v; keep('urd-toolbar-look', v, 'glass-accent'); },
+    setToolbarGear(v) { this.toolbarGearPref = v; keep('urd-toolbar-gear', v, 'on'); },
+    setToolbarSize(v) { this.toolbarSizePref = v; keep('urd-toolbar-size', v, 'regular'); },
+    setToolbarPhone(v) { this.toolbarPhonePref = v; keep('urd-toolbar-phone', v, 'on'); },
     setLayoutPicker(v) { this.layoutPickerPref = v; keep('urd-layout-picker', v, 'strip'); },
     setLinkEditor(v) { this.linkEditorPref = v; keep('urd-link-editor', v, 'dialog'); },
     setPageSettingsPref(v) { this.pageSettingsPref = v; keep('urd-page-settings', v, 'dialog'); },
@@ -175,11 +180,12 @@ test('a design chosen in the window sets every part through its row and as store
   assert.equal(c.ed.adminLayout, 'page-tabs', 'the row\'s state follows at once');
   assert.equal(local.get('urd-admin-menu-width'), 'tabs');
   assert.equal(c.menu.foldsPref, 'one', 'the menu\'s own choices follow through their rows');
-  assert.equal(local.get('urd-block-toolbar'), 'panels', 'a part without a row is stored too');
+  assert.equal(c.ed.toolbarPref, 'panels', 'the bar on the blocks follows through its row');
+  assert.equal(local.get('urd-design-choice'), 'inline', 'a part without a row is stored too');
   assert.ok(canUndo(after));
   undoDesign(c);
   assert.deepEqual(partValues(c), before);
-  assert.equal(c.ed.adminLayout, 'rail');
+  assert.equal(c.ed.adminLayout, 'top-tabs');
   assert.ok(!canUndo(partValues(c)), 'the undo is one step');
   applyDesign('floating', c);
   assert.ok(canUndo(partValues(c)));

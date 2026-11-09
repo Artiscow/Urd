@@ -20,12 +20,14 @@
   import NumberRow from '../lib/rows/NumberRow.svelte';
   import ActionRow from '../lib/rows/ActionRow.svelte';
   import MenuArea from '../menu/MenuArea.svelte';
+  import { onlyGroup } from '../lib/only-group.js';
   import { ICONS } from '../lib/icons.js';
   import { menuSearch } from '../lib/menu-search.js';
   import { searchLangs } from '../lib/search-langs.svelte.js';
   import { SECTION_WIDTH_MIN, SECTION_WIDTH_MAX, SECTION_WIDTH_STEP, sectionWidthOf, sectionWidthValue } from '../lib/content-width.js';
   const ed = getContext('urd-editor');
-  let { wide = false, query = '' } = $props();
+  /** `only` draws one group alone, for a tool of the bar (lib/only-group.js). */
+  let { wide = false, query = '', only = null } = $props();
   // A typed query loads the other languages once; the search runs again when they are in.
   $effect(() => searchLangs.need(query));
 
@@ -141,6 +143,31 @@
   }
 </script>
 
+{#snippet sectionMotion()}
+  <Fold id="sec-motion" title={ta('group.motion')} value={motionValue()}>
+    <SelectRow label={ta('lbl.animIn')} title={ta('tip.props.sectionAnim')} value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
+      options={ENTRANCE_OPTIONS} onchange={(v) => setSectionAnimation(v || null)} />
+    {#if isEntrance(sectionAnim)}
+      <NumberRow label={ta('lbl.durationMs')} title={ta('tip.anim.duration')} value={sectionAnim.props.duration} min={100} max={4000} step={100}
+        onchange={(v) => setSectionAnimProp('duration', v)} />
+      <NumberRow label={ta('lbl.delayMs')} title={ta('tip.anim.delay')} value={sectionAnim.props.delay ?? 0} min={0} max={4000} step={100}
+        onchange={(v) => setSectionAnimProp('delay', v)} />
+      {#if sectionAnim.type === 'stagger'}
+        <SelectRow label={ta('lbl.staggerEffect')} title={ta('tip.props.staggerEffect')} value={sectionAnim.props.effect ?? 'slide-up'}
+          options={[['fade-in', ta('anim.fadeIn')], ['slide-up', ta('anim.slideUp')], ['zoom-in', ta('anim.zoomIn')]]}
+          onchange={(v) => setSectionAnimStr('effect', v)} />
+        <NumberRow label={ta('lbl.stepMs')} title={ta('tip.props.staggerStep')} value={sectionAnim.props.step ?? 90} min={0} max={1000} step={10}
+          onchange={(v) => setSectionAnimProp('step', v)} />
+        <SelectRow label={ta('lbl.pattern')} title={ta('tip.props.staggerPattern')} value={sectionAnim.props.pattern ?? 'sequence'}
+          options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')], ['rows', ta('opt.stagger.rows')], ['center', ta('opt.stagger.center')]]}
+          onchange={(v) => setSectionAnimStr('pattern', v)} />
+      {/if}
+    {/if}
+    <SelectRow label={ta('lbl.onHover')} title={ta('tip.props.sectionHover')} value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
+      options={HOVER_OPTIONS} onchange={(v) => setSectionHover(v || null)} />
+  </Fold>
+{/snippet}
+
 {#snippet sectionStyle()}
   <Fold id="sec-theme" title={ta('lbl.sectionTheme')} value={ta(SECTION_THEME_LABELS[sectionTheme] ?? 'common.standard')}>
     <div class="rs-grid">
@@ -178,28 +205,7 @@
       {/if}
     {/each}
   </Fold>
-  <Fold id="sec-motion" title={ta('group.motion')} value={motionValue()}>
-    <SelectRow label={ta('lbl.animIn')} title={ta('tip.props.sectionAnim')} value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
-      options={ENTRANCE_OPTIONS} onchange={(v) => setSectionAnimation(v || null)} />
-    {#if isEntrance(sectionAnim)}
-      <NumberRow label={ta('lbl.durationMs')} title={ta('tip.anim.duration')} value={sectionAnim.props.duration} min={100} max={4000} step={100}
-        onchange={(v) => setSectionAnimProp('duration', v)} />
-      <NumberRow label={ta('lbl.delayMs')} title={ta('tip.anim.delay')} value={sectionAnim.props.delay ?? 0} min={0} max={4000} step={100}
-        onchange={(v) => setSectionAnimProp('delay', v)} />
-      {#if sectionAnim.type === 'stagger'}
-        <SelectRow label={ta('lbl.staggerEffect')} title={ta('tip.props.staggerEffect')} value={sectionAnim.props.effect ?? 'slide-up'}
-          options={[['fade-in', ta('anim.fadeIn')], ['slide-up', ta('anim.slideUp')], ['zoom-in', ta('anim.zoomIn')]]}
-          onchange={(v) => setSectionAnimStr('effect', v)} />
-        <NumberRow label={ta('lbl.stepMs')} title={ta('tip.props.staggerStep')} value={sectionAnim.props.step ?? 90} min={0} max={1000} step={10}
-          onchange={(v) => setSectionAnimProp('step', v)} />
-        <SelectRow label={ta('lbl.pattern')} title={ta('tip.props.staggerPattern')} value={sectionAnim.props.pattern ?? 'sequence'}
-          options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')], ['rows', ta('opt.stagger.rows')], ['center', ta('opt.stagger.center')]]}
-          onchange={(v) => setSectionAnimStr('pattern', v)} />
-      {/if}
-    {/if}
-    <SelectRow label={ta('lbl.onHover')} title={ta('tip.props.sectionHover')} value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
-      options={HOVER_OPTIONS} onchange={(v) => setSectionHover(v || null)} />
-  </Fold>
+  {@render sectionMotion()}
 {/snippet}
 
 {#snippet sectionPlacement()}
@@ -242,7 +248,13 @@
 {/snippet}
 
 <div class="emenu-root" class:narrow={!wide}>
-  {#if query.trim()}
+  {#if only}
+    <!-- A small panel from a tool on the section's bar: the areas drawn as ever, everything but the one group hidden -->
+    <div class="emenu-cols emenu-stack emenu-only" {@attach onlyGroup(only)}>
+      <MenuArea area="style" title={ta('props.tabStyle')}>{@render sectionStyle()}</MenuArea>
+      <MenuArea area="placement" title={ta('props.tabPlacement')}>{@render sectionPlacement()}</MenuArea>
+    </div>
+  {:else if query.trim()}
     <!-- The search: a copy of the two areas, narrowed to what matches, each saying when nothing in it matches -->
     {#snippet foundStyle()}<section class="emenu-col" data-area="style"><p class="emenu-title">{ta('props.tabStyle')}</p>{@render sectionStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
     {#snippet foundPlacement()}<section class="emenu-col" data-area="placement"><p class="emenu-title">{ta('props.tabPlacement')}</p>{@render sectionPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}

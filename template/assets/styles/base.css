@@ -18986,7 +18986,212 @@ body.urd-mobile .urd-section-resize-top {
   font-size: 14px;
   line-height: 1;
   padding: 0 6px;
+  cursor: pointer;
+}
+
+/* The grip moves the block: the open hand on it alone, closed while it drags */
+.urd-preview .urd-edit-toolbar .urd-edit-move {
   cursor: grab;
+}
+
+.urd-preview .urd-edit-toolbar .urd-edit-move:active {
+  cursor: grabbing;
+}
+
+/* The bar's words (Urd settings «Toolbar»: the main act, or the settings, on the bar with small panels): a smaller, bolder word than the bar's drawn buttons */
+.urd-preview .urd-edit-toolbar .urd-edit-lead,
+.urd-preview .urd-section-toolbar .urd-edit-lead {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 9px;
+  cursor: pointer;
+}
+
+/* The bar's size (Urd settings «Toolbar size», preview-edit.js barSize), for the block's bar and the section's: the bar laid out at the size with zoom, so its words and drawings are drawn sharp at it rather than a scaled picture of them; the regular size, the default, is the bar as drawn, and a browser without zoom draws every size so */
+.urd-preview .urd-edit-toolbar.urd-bar-size-small .urd-bar-body,
+.urd-preview .urd-section-toolbar.urd-bar-size-small {
+  zoom: 0.85;
+}
+
+.urd-preview .urd-edit-toolbar.urd-bar-size-medium .urd-bar-body,
+.urd-preview .urd-section-toolbar.urd-bar-size-medium {
+  zoom: 1.12;
+}
+
+.urd-preview .urd-edit-toolbar.urd-bar-size-large .urd-bar-body,
+.urd-preview .urd-section-toolbar.urd-bar-size-large {
+  zoom: 1.25;
+}
+
+/* The bar's own body inside the toolbar, which keeps the hover bridge to the block; the looks below frame it (Urd settings «Toolbar look», preview-edit.js barLook) */
+.urd-preview .urd-edit-toolbar .urd-bar-body {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.urd-preview .urd-bar-cluster {
+  display: flex;
+  align-items: center;
+}
+
+/* Dark strip: light drawings on one dark strip, the main act alone in the accent */
+.urd-preview .urd-bar-strip .urd-bar-body,
+.urd-preview .urd-bar-glass .urd-bar-body,
+.urd-preview .urd-bar-glass-accent .urd-bar-body {
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 7px;
+  background: var(--urd-admin-surface, #1b252d);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+}
+
+.urd-preview .urd-edit-toolbar:is(.urd-bar-strip, .urd-bar-glass, .urd-bar-glass-accent, .urd-bar-capsule, .urd-bar-glass-capsule, .urd-bar-capsule-areas, .urd-bar-large-capsule, .urd-bar-soft, .urd-bar-white) button {
+  background: transparent;
+  color: var(--urd-admin-text, #e2e5e8);
+}
+
+.urd-preview .urd-edit-toolbar:is(.urd-bar-strip, .urd-bar-glass, .urd-bar-glass-accent, .urd-bar-capsule, .urd-bar-glass-capsule, .urd-bar-capsule-areas, .urd-bar-large-capsule, .urd-bar-soft, .urd-bar-white) .urd-edit-lead {
+  background: var(--urd-admin-accent, #5f6a75);
+  color: var(--urd-admin-accent-text, #fff);
+}
+
+.urd-preview .urd-edit-toolbar:is(.urd-bar-strip, .urd-bar-glass, .urd-bar-glass-accent, .urd-bar-capsule, .urd-bar-glass-capsule, .urd-bar-capsule-areas, .urd-bar-large-capsule, .urd-bar-soft, .urd-bar-white) .urd-edit-delete {
+  background: transparent;
+  color: #ff8a7a;
+}
+
+/* By area: the tools in three joined clusters, Content, Style and Placement, each its own shade of the accent */
+.urd-preview .urd-bar-areas .urd-bar-body {
+  gap: 6px;
+}
+
+.urd-preview .urd-bar-areas .urd-bar-cluster {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.urd-preview .urd-bar-areas .urd-bar-cluster button {
+  border-radius: 0;
+  border-left: 1px solid rgb(0 0 0 / 16%);
+}
+
+.urd-preview .urd-bar-areas .urd-bar-cluster button:first-child {
+  border-left: 0;
+}
+
+.urd-preview .urd-bar-areas .urd-bar-content button {
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 62%, #fff);
+}
+
+.urd-preview .urd-bar-areas .urd-bar-placement button {
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 72%, #000);
+  color: #fff;
+}
+
+/* Small captions: each tool's word in small capitals under its drawing */
+.urd-preview .urd-bar-captions button {
+  flex-direction: column;
+  gap: 2px;
+  height: 34px;
+  min-width: 40px;
+}
+
+.urd-preview .urd-bar-captions button[data-cap]::after {
+  content: attr(data-cap);
+  max-width: 64px;
+  overflow: hidden;
+  font: 600 8.5px/1 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.urd-preview .urd-bar-captions .urd-edit-lead {
+  height: 34px;
+}
+
+/* Glass: the strip frosted, the page showing through it (its body after the capsules', below); the accent glass, the default, keeps the main act in the admin's accent, the glass a white one */
+.urd-preview .urd-edit-toolbar:is(.urd-bar-glass, .urd-bar-glass-accent, .urd-bar-glass-capsule) button {
+  color: #fff;
+}
+
+.urd-preview .urd-edit-toolbar:is(.urd-bar-glass, .urd-bar-glass-capsule) .urd-edit-lead {
+  background: rgb(255 255 255 / 92%);
+  color: #17221f;
+}
+
+/* Large and round, and the large capsule: tools made for a finger as well as a pointer */
+.urd-preview .urd-edit-toolbar:is(.urd-bar-large, .urd-bar-large-capsule) button {
+  height: 34px;
+  min-width: 34px;
+}
+
+.urd-preview .urd-bar-large button {
+  border-radius: 9px;
+}
+
+.urd-preview .urd-edit-toolbar:is(.urd-bar-large, .urd-bar-large-capsule) button svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* The capsules: one rounded body, the tools round inside it */
+.urd-preview .urd-edit-toolbar:is(.urd-bar-capsule, .urd-bar-glass-capsule, .urd-bar-capsule-areas, .urd-bar-large-capsule, .urd-bar-soft, .urd-bar-white) .urd-bar-body {
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 999px;
+  background: var(--urd-admin-surface, #1b252d);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 35%);
+}
+
+.urd-preview .urd-edit-toolbar:is(.urd-bar-capsule, .urd-bar-glass-capsule, .urd-bar-capsule-areas, .urd-bar-large-capsule, .urd-bar-white) button {
+  border-radius: 999px;
+}
+
+/* The capsules' own bodies, at the weight of the capsule's rule above so they follow it: large, white, glass and soft square */
+.urd-preview .urd-edit-toolbar.urd-bar-large-capsule .urd-bar-body {
+  padding: 5px;
+}
+
+/* White capsule: dark drawings on white, standing on the page like part of it */
+.urd-preview .urd-edit-toolbar.urd-bar-white .urd-bar-body {
+  background: #fff;
+  border-color: rgb(0 0 0 / 12%);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 18%);
+}
+
+.urd-preview .urd-edit-toolbar:is(.urd-bar-glass, .urd-bar-glass-accent, .urd-bar-glass-capsule) .urd-bar-body {
+  background: rgb(27 37 45 / 55%);
+  border-color: rgb(255 255 255 / 25%);
+  backdrop-filter: blur(10px);
+}
+
+.urd-preview .urd-edit-toolbar.urd-bar-white button {
+  color: #23272c;
+}
+
+.urd-preview .urd-edit-toolbar.urd-bar-white .urd-edit-delete {
+  color: #c0392b;
+}
+
+/* Areas apart: one capsule, a line between Content, Style and Placement */
+.urd-preview .urd-bar-capsule-areas .urd-bar-cluster + .urd-bar-cluster {
+  margin-left: 4px;
+  padding-left: 4px;
+  border-left: 1px solid rgb(255 255 255 / 22%);
+}
+
+/* Soft square: the dark capsule with soft corners and square tools, as the admin's own buttons */
+.urd-preview .urd-edit-toolbar.urd-bar-soft .urd-bar-body {
+  border-radius: 10px;
+}
+
+.urd-preview .urd-bar-soft button {
+  border-radius: 7px;
 }
 
 .urd-preview .urd-edit-toolbar .urd-edit-delete {

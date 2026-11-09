@@ -42,9 +42,11 @@
     width: 100%;
   }
 
+  /* A tile is a button, which centres what it holds in the height the row stretches it to; its picture starts at the top, so the pictures of a row stand level whatever the length of the names under them */
   .st-tile {
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     gap: 0.3rem;
     box-sizing: border-box;
     width: 8.25rem;

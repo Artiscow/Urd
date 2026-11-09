@@ -58,6 +58,7 @@ import { pathTo, nodeAt } from './caret-path.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
 import { ta, adminLang } from './i18n.js';
+import { barTools, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS } from './bar-tools.js';
 
 /**
  * The event's target as an Element. The editing chrome draws its icons as
@@ -107,6 +108,7 @@ const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" st
 function designButton(el, section, block, phone) {
   const btn = document.createElement('button');
   btn.className = 'urd-edit-design';
+  btn.dataset.cap = ta('canvas.cap.design');
   btn.innerHTML = DESIGN_SVG;
   btn.title = ta(phone ? 'canvas.blockPhoneDesign' : 'canvas.blockDesign');
   btn.setAttribute('aria-label', btn.title);
@@ -116,9 +118,135 @@ function designButton(el, section, block, phone) {
   return btn;
 }
 
+/**
+ * The bar on a block and on a section, in the form Urd settings «Toolbar» chooses (ADR-0030, kept in the shared localStorage and read at every draw):
+ * `groups` (the default) every group of the block's menu as a tool (bar-tools.js), each opening that group alone in a small panel, and ⋮; `full` every action on the bar; `panels` a word for the main act, then tools that each open a small panel of their group in the editor, and ⋮;
+ * `short` the block's own one-press acts and the gear, with ⋮ opening the right-click menu that holds the rest.
+ */
+/** A choice of the bar as stored in the shared localStorage (BAR_CHOICES in bar-tools.js), its first option where none is stored or storage is closed. */
+function barChoice({ key, options }) {
+  try {
+    const v = localStorage.getItem(key);
+    return options.includes(v) ? v : options[0];
+  } catch {
+    return options[0];
+  }
+}
+const barForm = () => barChoice(BAR_CHOICES.form);
+/** Whether the gear stands on a bar whose tools open the settings themselves (Urd settings «Settings gear on the bar», on by default). */
+const barGear = () => barChoice(BAR_CHOICES.gear) === 'on';
+/** Whether the phone button (shown or hidden on phones) stands on a bar that leaves it to the right-click menu (Urd settings «Phone button on the bar», shown by default). */
+const barPhone = () => barChoice(BAR_CHOICES.phone) === 'on';
+/** How large the bar is drawn (Urd settings «Toolbar size»): its class, which base.css sizes the bar by. */
+const barSize = () => barChoice(BAR_CHOICES.size);
+
+/**
+ * The bar's look (Urd settings «Toolbar look», kept in the shared localStorage and read at every draw): the class `urd-bar-<look>` on the toolbar, which base.css draws.
+ * The area looks set the tools apart by Content, Style and Placement, so they hold only for the bar of tools; another form takes the plain look in their place.
+ */
+function barLook(form = barForm()) {
+  const v = barChoice(BAR_CHOICES.look);
+  return !TOOL_FORMS.includes(form) && AREA_LOOKS[v] ? AREA_LOOKS[v] : v;
+}
+
+/** The drawings of the bar's tools (bar-tools.js), each at the bar's size. */
+const svg = (inner, opts = 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"') => `<svg width="12" height="12" viewBox="0 0 24 24" ${opts} aria-hidden="true">${inner}</svg>`;
+const BAR_ICONS = {
+  pencil: svg('<path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/>'),
+  brush: svg('<path d="M14 4l6 6-8 8-6-6z"/><path d="M6 12l-3 7 7-3"/>'),
+  link: svg('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
+  picture: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/>'),
+  type: svg('<path d="M4 19l5-14 5 14M6 14h6"/><path d="M15 19v-6.5a2.5 2.5 0 015 0V19M15 15.5h5"/>'),
+  palette: svg('<path d="M12 3a9 9 0 100 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.8 0-1 .8-1.7 1.8-1.7H17a4 4 0 004-4c0-4.1-4-7.5-9-7.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="14.5" cy="7" r="1"/>'),
+  list: svg('<path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
+  calendar: svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+  filter: svg('<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'),
+  box: svg('<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/>'),
+  mail: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'),
+  cart: svg('<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11.5l2-8H6"/>'),
+  card: svg('<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6 15h4"/>'),
+  person: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'),
+  shape: svg('<circle cx="8" cy="8" r="5"/><rect x="11" y="11" width="10" height="10" rx="1.5"/>'),
+  number: svg('<path d="M9 3L7 21M17 3l-2 18M4 8h17M3 16h17"/>'),
+  play: svg('<path d="M7 4l13 8-13 8z"/>'),
+  quote: svg('<path d="M10 7H6a2 2 0 00-2 2v3h5v5H4M20 7h-4a2 2 0 00-2 2v3h5v5h-5"/>'),
+  place: svg('<path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'),
+  clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  file: svg('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>'),
+};
+
+/**
+ * The tools of a bar whose tools belong to the menu's areas, placed in it: in a cluster of their area where the look sets the areas apart, else in a row.
+ * Returns the function that places one tool by its area.
+ */
+function toolPlacer(barBody, look) {
+  const clustered = look === 'areas' || look === 'capsule-areas';
+  const clusters = new Map();
+  return (btn, area) => {
+    if (!clustered) { barBody.appendChild(btn); return; }
+    if (!clusters.has(area)) {
+      const cluster = document.createElement('span');
+      cluster.className = `urd-bar-cluster urd-bar-${area}`;
+      clusters.set(area, cluster);
+      barBody.appendChild(cluster);
+    }
+    clusters.get(area).appendChild(btn);
+  };
+}
+
+const MORE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+const MOTION_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h7M3 12h11M3 17h7"/><path d="M16 8l4 4-4 4"/></svg>';
+const ARRANGE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>';
+
+/** A bar button: its drawing or its words, its tooltip and name, and what a press does; the pointerdown stops, so the document's selection listener never draws the section anew under the press. */
+function barButton(content, title, run, className = '', cap = '') {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  if (className) btn.className = className;
+  if (cap) btn.dataset.cap = cap;
+  if (content.startsWith('<svg')) btn.innerHTML = content;
+  else btn.textContent = content;
+  btn.title = title;
+  btn.setAttribute('aria-label', title);
+  btn.addEventListener('pointerdown', (event) => event.stopPropagation());
+  btn.addEventListener('click', run);
+  return btn;
+}
+
+/** The ⋮ of the shorter bars: the right-click menu of the block or the section, opened under it. */
+function moreButton(open) {
+  const btn = barButton(MORE_SVG, ta('canvas.bar.more'), () => {
+    const r = btn.getBoundingClientRect();
+    open(r.left, r.bottom + 4);
+  }, 'urd-edit-more', ta('canvas.cap.more'));
+  btn.setAttribute('aria-haspopup', 'menu');
+  return btn;
+}
+
+/** «Edit text» on the bar: the caret at the end of the block's text, where it is written on the page. */
+function editTextIn(el) {
+  const text = el.querySelector('[contenteditable="true"]');
+  if (!text) return;
+  text.focus();
+  const range = document.createRange();
+  range.selectNodeContents(text);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(range);
+}
+
+/** A tool of the bar with small panels: the editor opens the block's or the section's menu beside it narrowed to one group (`only`). */
+function openBlockTool(el, section, block, only, title = '') {
+  selectBlock(el);
+  const r = el.getBoundingClientRect();
+  post({ type: 'urd-block-menu', sectionId: section.id, blockId: block.id, only, title, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
+}
+
 /** The toolbar's gear: the block's menu in the editor, opened at the block. */
 function menuButton(el, section, block) {
   const btn = document.createElement('button');
+  btn.dataset.cap = ta('canvas.cap.settings');
   btn.innerHTML = GEAR_SVG;
   btn.title = ta('canvas.blockMenu');
   // Without the stop, pointerdown would bubble to the document's selection
@@ -358,6 +486,7 @@ function openSectionContextMenu(host, x, y) {
     item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: !adderBelow() });
     item(ta('canvas.ctx.sectionUp'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     item(ta('canvas.ctx.sectionDown'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+    if (host._urdGrid) item(ta('canvas.fitHeight'), '', () => fitSectionHeight(host, section, host._urdGrid));
     sep();
     item(ta('canvas.ctx.cutSection'), 'Ctrl+X', () => copySection(host, true));
     item(ta('canvas.ctx.copySection'), 'Ctrl+C', () => copySection(host));
@@ -3042,11 +3171,30 @@ function initTextToolbar() {
   window.addEventListener('resize', () => { if (activeText) reposition(); });
 }
 
+/** The section's height brought to its blocks, one grid step under the lowest, from its bar or its right-click menu. */
+function fitSectionHeight(host, section, grid) {
+  const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
+  const px = Math.max(grid.size * 3, maxBottom + grid.size);
+  const minHeight = `${px}px`;
+  section.size = { ...section.size, minHeight };
+  setMinHeight(host, px);
+  post({ type: 'urd-section-size', sectionId: section.id, minHeight });
+}
+
+/** A tool of the section's bar with small panels: the editor opens the section's menu beside it narrowed to one group. */
+function openSectionTool(host, section, only, title = '') {
+  markActiveVisual(host);
+  const r = host.getBoundingClientRect();
+  post({ type: 'urd-section-menu', sectionId: section.id, only, title, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
+}
+
 /** Toolbar at the section's top right. Desktop: move up/down, fit height,
  *  delete. Mobile: reviewed (✓) and back to auto (↺). */
 function addSectionToolbar(host, section, grid) {
   const bar = document.createElement('div');
-  bar.className = 'urd-section-toolbar';
+  bar.className = `urd-section-toolbar urd-bar-size-${barSize()}`;
+  // The form of the bar (barForm): the shorter ones keep the section's own additions and its layout, and leave the rest to the right-click menu under ⋮.
+  const form = barForm();
 
   const mk = (label, title, onClick) => {
     const btn = document.createElement('button');
@@ -3119,17 +3267,12 @@ function addSectionToolbar(host, section, grid) {
         }, 150);
       });
     }
-    mk(ORDER_UP_SVG, ta('canvas.sectionUp'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
-    mk(ORDER_DOWN_SVG, ta('canvas.sectionDown'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
-    mk(DUPLICATE_SVG, ta('canvas.duplicateSection'), () => post({ type: 'urd-duplicate-section', sectionId: section.id }));
-    mk(FIT_HEIGHT_SVG, ta('canvas.fitHeight'), () => {
-      const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
-      const px = Math.max(grid.size * 3, maxBottom + grid.size);
-      const minHeight = `${px}px`;
-      section.size = { ...section.size, minHeight };
-      setMinHeight(host, px);
-      post({ type: 'urd-section-size', sectionId: section.id, minHeight });
-    });
+    if (form === 'full') {
+      mk(ORDER_UP_SVG, ta('canvas.sectionUp'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
+      mk(ORDER_DOWN_SVG, ta('canvas.sectionDown'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+      mk(DUPLICATE_SVG, ta('canvas.duplicateSection'), () => post({ type: 'urd-duplicate-section', sectionId: section.id }));
+      mk(FIT_HEIGHT_SVG, ta('canvas.fitHeight'), () => fitSectionHeight(host, section, grid));
+    }
     // "Change layout": only when the section has something to change
     // (the relevance rule: at least two movable blocks).
     if (applicableLayouts(section.blocks).length) {
@@ -3140,6 +3283,14 @@ function addSectionToolbar(host, section, grid) {
       layoutBtn.addEventListener('click', () => toggleLayoutPicker(host, section, grid));
       bar.appendChild(layoutBtn);
     }
+    if (form === 'panels') bar.appendChild(barButton(MOTION_SVG, ta('group.motion'), () => openSectionTool(host, section, 'motion')));
+    // Every group a tool: each group of the section's menu, which the right-click menu under ⋮ follows with the rest.
+    if (form === 'groups') {
+      for (const tool of SECTION_TOOLS) {
+        const label = ta(tool.labelKey);
+        bar.appendChild(barButton(tool.icon === 'motion' ? MOTION_SVG : tool.icon === 'arrange' ? ARRANGE_SVG : BAR_ICONS[tool.icon], label, () => openSectionTool(host, section, tool.only, label), '', label));
+      }
+    }
     // "Save as template": a nameless snapshot to the editor, which names
     // and stores the draft. Re-id happens only at insertion, never here.
     const save = document.createElement('button');
@@ -3149,7 +3300,7 @@ function addSectionToolbar(host, section, grid) {
     save.addEventListener('click', () => {
       post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) });
     });
-    bar.appendChild(save);
+    if (form === 'full') bar.appendChild(save);
   }
   // The gear: the section's settings in the floating menu, beside the section; in both views, since the settings hold in both.
   const gear = document.createElement('button');
@@ -3159,8 +3310,14 @@ function addSectionToolbar(host, section, grid) {
   // The same guard as the block's gear: a pointerdown reaching the document's selection listener would draw the section anew before the click.
   gear.addEventListener('pointerdown', (event) => event.stopPropagation());
   gear.addEventListener('click', () => openSectionSettings(host, section));
-  bar.appendChild(gear);
-  if (!isMobile()) bar.appendChild(armedButton(CROSS_SVG, ta('canvas.deleteSection'), () => deleteSection(section.id)));
+  // With small panels the gear is the word for the settings; with every group a tool, the groups and ⋮ hold the settings, and the gear stands in the phone view or where «Settings gear on the bar» asks for it.
+  if (form === 'panels') {
+    gear.textContent = ta('canvas.ctx.settings');
+    gear.className = 'urd-edit-lead';
+  }
+  if (form !== 'groups' || isMobile() || barGear()) bar.appendChild(gear);
+  if (!isMobile() && form === 'full') bar.appendChild(armedButton(CROSS_SVG, ta('canvas.deleteSection'), () => deleteSection(section.id)));
+  else if (!isMobile()) bar.appendChild(moreButton((x, y) => openSectionContextMenu(host, x, y)));
 
   if (bar.childElementCount) host.appendChild(bar);
 }
@@ -4367,7 +4524,11 @@ function enhanceBlock(el, block, section, grid, host) {
   const mobile = isMobile();
 
   const toolbar = document.createElement('div');
-  toolbar.className = 'urd-edit-toolbar';
+  toolbar.className = `urd-edit-toolbar urd-bar-${barLook()} urd-bar-size-${barSize()}`;
+  /** The bar itself, which a look frames: the toolbar around it keeps the invisible bridge down to the block. */
+  const barBody = document.createElement('div');
+  barBody.className = 'urd-bar-body';
+  toolbar.appendChild(barBody);
   // The toolbar sits above the block; at the top of the page or right
   // below the menu there is no visible room there (above the document top
   // or behind the menu). Then it flips below the block. Measured against
@@ -4421,7 +4582,8 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.className = 'urd-edit-move';
   moveHandle.innerHTML = GRIP_SVG;
   moveHandle.title = ta('canvas.dragMove');
-  toolbar.appendChild(moveHandle);
+  moveHandle.dataset.cap = ta('canvas.cap.move');
+  barBody.appendChild(moveHandle);
 
   // Flowing mobile block: arrows that move it in the reading order
   // (writes mobileOrder). Pinned blocks do not take part in the flow and
@@ -4431,13 +4593,14 @@ function enhanceBlock(el, block, section, grid, host) {
       const btn = document.createElement('button');
       btn.innerHTML = svg;
       btn.title = ta(key);
+      btn.dataset.cap = ta(dir < 0 ? 'canvas.cap.earlier' : 'canvas.cap.later');
       btn.addEventListener('click', () => {
         const order = reorderMobileKey(section.blocks, block.id, dir);
         if (order === null) return;
         block.mobileOrder = order;
         post({ type: 'urd-mobile-order', sectionId: section.id, blockId: block.id, mobileOrder: order });
       });
-      toolbar.appendChild(btn);
+      barBody.appendChild(btn);
     }
   }
 
@@ -4454,43 +4617,32 @@ function enhanceBlock(el, block, section, grid, host) {
     const resetBtn = document.createElement('button');
     resetBtn.innerHTML = RESET_SVG;
     resetBtn.title = ta('canvas.mobileResetBlock');
+    resetBtn.dataset.cap = ta('canvas.cap.reset');
     resetBtn.addEventListener('click', () => {
       post({ type: 'urd-mobile-reset', sectionId: section.id, blockId: block.id });
     });
-    toolbar.appendChild(resetBtn);
+    barBody.appendChild(resetBtn);
   }
 
   // In the phone view the block's design on a phone and its menu are one press away too: the design button opens the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS), its design otherwise, and the gear its menu.
   if (mobile) {
-    if (hasDesigns(block)) toolbar.appendChild(designButton(el, section, block, block.type === 'calendar' || Boolean(PHONE_DESIGNS[block.type])));
-    toolbar.appendChild(menuButton(el, section, block));
+    if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, block.type === 'calendar' || Boolean(PHONE_DESIGNS[block.type])));
+    // With small panels the gear is the word for the settings, as the desktop bar's first word is for a block without its own editor.
+    if (TOOL_FORMS.includes(barForm())) barBody.appendChild(barButton(ta('canvas.ctx.settings'), ta('canvas.blockMenu'), () => openBlockSettings(el, section, block), 'urd-edit-lead'));
+    else barBody.appendChild(menuButton(el, section, block));
   }
 
-  const bumpZ = (dir) => bumpBlockZ(host, section, block, el, dir);
-  // Structure (z-order, decor, deletion) is edited in the desktop view;
-  // the mobile view is pure layout adjustment.
-  if (!mobile) {
-    const Z_FRONT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14"/><path d="M12 20V9"/><path d="M7 13l5-5 5 5"/></svg>';
-    const Z_BACK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/></svg>';
-    const frontBtn = document.createElement('button');
-    frontBtn.innerHTML = Z_FRONT_SVG;
-    frontBtn.title = ta('canvas.zFront');
-    frontBtn.addEventListener('click', () => bumpZ(1));
-    toolbar.appendChild(frontBtn);
-
-    const backBtn = document.createElement('button');
-    backBtn.innerHTML = Z_BACK_SVG;
-    backBtn.title = ta('canvas.zBack');
-    backBtn.addEventListener('click', () => bumpZ(-1));
-    toolbar.appendChild(backBtn);
-
-    // Mobile visibility: phone = the block is shown on mobile, crossed-out
-    // phone = it is hidden (hideMobile). The icon IS the state (a drawn
-    // SVG, not emoji); the tooltip explains the click.
-    const PHONE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/></svg>';
-    const PHONE_OFF_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/><path d="M3.5 3.5l17 17"/></svg>';
+  const form = barForm();
+  // Mobile visibility: phone = the block is shown on mobile, crossed-out
+  // phone = it is hidden (hideMobile). The icon IS the state (a drawn
+  // SVG, not emoji); the tooltip explains the click. The full bar draws it,
+  // and the shorter bars where «Phone button on the bar» asks for it.
+  const PHONE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/></svg>';
+  const PHONE_OFF_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/><path d="M3.5 3.5l17 17"/></svg>';
+  const phoneButton = () => {
     const hideBtn = document.createElement('button');
     hideBtn.className = 'urd-edit-decor';
+    hideBtn.dataset.cap = ta('canvas.cap.phone');
     const syncHide = () => {
       hideBtn.innerHTML = block.hideMobile ? PHONE_OFF_SVG : PHONE_SVG;
       hideBtn.title = block.hideMobile
@@ -4504,33 +4656,60 @@ function enhanceBlock(el, block, section, grid, host) {
       syncHide();
       post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, hideMobile: block.hideMobile });
     });
-    toolbar.appendChild(hideBtn);
+    return hideBtn;
+  };
+  /** The image or cover editor, one press away. */
+  const imageButton = () => {
+    const imgBtn = document.createElement('button');
+    imgBtn.className = 'urd-edit-image';
+    imgBtn.dataset.cap = ta('canvas.cap.image');
+    imgBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>';
+    imgBtn.title = ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage');
+    imgBtn.addEventListener('click', () => askPictureEditor(coverEditable ? 'cover' : 'image'));
+    return imgBtn;
+  };
+  const bumpZ = (dir) => bumpBlockZ(host, section, block, el, dir);
+  // Structure (z-order, decor, deletion) is edited in the desktop view;
+  // the mobile view is pure layout adjustment.
+  if (!mobile && form === 'full') {
+    const Z_FRONT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14"/><path d="M12 20V9"/><path d="M7 13l5-5 5 5"/></svg>';
+    const Z_BACK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/></svg>';
+    const frontBtn = document.createElement('button');
+    frontBtn.innerHTML = Z_FRONT_SVG;
+    frontBtn.title = ta('canvas.zFront');
+    frontBtn.dataset.cap = ta('canvas.cap.front');
+    frontBtn.addEventListener('click', () => bumpZ(1));
+    barBody.appendChild(frontBtn);
+
+    const backBtn = document.createElement('button');
+    backBtn.innerHTML = Z_BACK_SVG;
+    backBtn.title = ta('canvas.zBack');
+    backBtn.dataset.cap = ta('canvas.cap.back');
+    backBtn.addEventListener('click', () => bumpZ(-1));
+    barBody.appendChild(backBtn);
+
+    barBody.appendChild(phoneButton());
 
     const DUP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
-    if (block.type === 'image' || coverEditable) {
-      const imgBtn = document.createElement('button');
-      imgBtn.className = 'urd-edit-image';
-      imgBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>';
-      imgBtn.title = ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage');
-      imgBtn.addEventListener('click', () => askPictureEditor(coverEditable ? 'cover' : 'image'));
-      toolbar.appendChild(imgBtn);
-    }
+    if (block.type === 'image' || coverEditable) barBody.appendChild(imageButton());
 
     const dupBtn = document.createElement('button');
     dupBtn.innerHTML = DUP_SVG;
     dupBtn.title = ta('canvas.duplicate');
+    dupBtn.dataset.cap = ta('canvas.cap.copy');
     dupBtn.addEventListener('click', () => duplicateBlock(section, block));
-    toolbar.appendChild(dupBtn);
+    barBody.appendChild(dupBtn);
 
     // Block menu: all the block settings in a floating menu by the block
     // (the calendar pattern). The menu itself lives in the editor (the
     // same controls as Properties); only the position is reported here.
     // The design picker one press away, beside the gear, on a block that has designs.
-    if (hasDesigns(block)) toolbar.appendChild(designButton(el, section, block, false));
-    toolbar.appendChild(menuButton(el, section, block));
+    if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, false));
+    barBody.appendChild(menuButton(el, section, block));
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'urd-edit-delete';
+    deleteBtn.dataset.cap = ta('canvas.cap.delete');
     deleteBtn.innerHTML = CROSS_SVG;
     deleteBtn.title = ta('canvas.deleteBlock');
     deleteBtn.addEventListener('click', () => {
@@ -4538,7 +4717,43 @@ function enhanceBlock(el, block, section, grid, host) {
       // Without deselecting, a phantom selection of the deleted block would survive in the module state.
       selectBlock(null);
     });
-    toolbar.appendChild(deleteBtn);
+    barBody.appendChild(deleteBtn);
+  }
+
+  // The shorter bars: the acts the full bar holds besides these stand in the right-click menu under ⋮.
+  if (!mobile && form !== 'full') {
+    // With small panels the bar starts with a word for the block's main act: the image or cover editor, the text, or its settings.
+    const picture = block.type === 'image' || coverEditable;
+    const leadIsSettings = form === 'panels' && !picture && block.type !== 'text';
+    if (form === 'panels') {
+      const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : block.type === 'text' ? ta('canvas.bar.editText') : ta('canvas.ctx.settings');
+      const tip = picture ? ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage') : leadIsSettings ? ta('canvas.blockMenu') : word;
+      const run = picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : block.type === 'text' ? () => editTextIn(el) : () => openBlockSettings(el, section, block);
+      barBody.appendChild(barButton(word, tip, run, 'urd-edit-lead'));
+    }
+    // Every group a tool: the word for the block's own editor where it has one, then a tool for each group of its menu, which the right-click menu under ⋮ follows with the rest.
+    if (form === 'groups' && (picture || block.type === 'text')) {
+      const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : ta('canvas.bar.editText');
+      barBody.appendChild(barButton(word, picture ? ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage') : word, picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : () => editTextIn(el), 'urd-edit-lead'));
+    }
+    const place = toolPlacer(barBody, barLook(form));
+    if (form === 'short' && picture) barBody.appendChild(imageButton());
+    if (form === 'groups') {
+      for (const tool of barTools(block.type, { designs: hasDesigns(block), block })) {
+        const label = ta(tool.labelKey);
+        place(tool.design ? designButton(el, section, block, false)
+          : barButton(tool.icon === 'motion' ? MOTION_SVG : tool.icon === 'arrange' ? ARRANGE_SVG : BAR_ICONS[tool.icon] ?? BAR_ICONS.pencil, label, () => openBlockTool(el, section, block, tool.only, label), '', label), tool.area);
+      }
+    } else if (hasDesigns(block)) place(designButton(el, section, block, false), 'style');
+    if (form === 'panels') {
+      place(barButton(MOTION_SVG, ta('group.motion'), () => openBlockTool(el, section, block, 'motion'), '', ta('group.motion')), 'style');
+      place(barButton(ARRANGE_SVG, ta('props.tabPlacement'), () => openBlockTool(el, section, block, 'placement'), '', ta('props.tabPlacement')), 'placement');
+    }
+    // The phone button on the shorter bars where «Phone button on the bar» asks for it, before the gear.
+    if (barPhone()) barBody.appendChild(phoneButton());
+    // The gear stands on the short bar, and on the bar of tools where nothing else opens the settings (not after the word «Settings», not where every group is a tool), or wherever «Settings gear on the bar» asks for it.
+    if (form === 'short' || (form === 'panels' && !leadIsSettings) || barGear()) barBody.appendChild(menuButton(el, section, block));
+    barBody.appendChild(moreButton((x, y) => openContextMenu(el, x, y)));
   }
   el.appendChild(toolbar);
 

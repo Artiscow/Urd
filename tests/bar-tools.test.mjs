@@ -1,0 +1,132 @@
+/**
+ * The bar where every group is a tool (bar-tools.js): every group it names is a fold its block's family draws (editor/src/menu/families/*.svelte), with the same title, and every group a section's bar names is one of the section's menu; a group drawn in some states only is a tool in those states only; each tool's name is in the three core dictionaries and its drawing in the engine's set; and the editor opens exactly the groups the bar asks for (lib/only-group.js).
+ * The bar's choices the engine reads (BAR_CHOICES) are the keys and options the editor writes as parts of the admin designs, and urd.js draws the bars anew on each of them.
+ */
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { register } from 'node:module';
+import { engineImport } from './_engine.mjs';
+register('./_svelte-loader.mjs', import.meta.url);
+
+const { BAR_GROUPS, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, barTools, isBarOnly } = await engineImport('bar-tools.js');
+const { onlyOf } = await import('../editor/src/lib/only-group.js');
+const ENGINE = JSON.parse(readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8')).engine;
+const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
+const family = (type) => read(`../editor/src/menu/families/${type === 'map' ? 'Fields' : type[0].toUpperCase() + type.slice(1)}.svelte`);
+/** The folds a source draws, by id, with their title keys. */
+const foldsIn = (source) => new Map([...source.matchAll(/<Fold id="([^"]+)"[^>]*?title=\{ta\('([^']+)'\)/gs)].map((m) => [m[1], m[2]]));
+
+/** The folds a source draws under a condition other than the menu's area, by id, with that condition; a fold drawn for each item of a list counts as drawn under one. */
+function conditionalFolds(source) {
+  const found = new Map();
+  const blocks = [];
+  const isArea = (cond) => /^area\s*===\s*'[a-z]+'$/.test(cond);
+  for (const m of source.matchAll(/\{#if\s+([^}]*)\}|\{:else if\s+([^}]*)\}|\{:else\}|\{\/if\}|\{#each\b[^}]*\}|\{\/each\}|<Fold id="([^"]+)"/g)) {
+    const token = m[0];
+    if (token.startsWith('{#if')) blocks.push({ conds: [m[1].trim()], otherwise: false });
+    else if (token.startsWith('{:else if')) blocks.at(-1).conds.push(m[2].trim());
+    else if (token === '{:else}') blocks.at(-1).otherwise = true;
+    else if (token === '{/if}' || token === '{/each}') blocks.pop();
+    else if (token.startsWith('{#each')) blocks.push({ each: true });
+    else {
+      const under = blocks.find((b) => b.each || (b.otherwise ? b.conds.some((c) => !isArea(c)) : !isArea(b.conds.at(-1))));
+      if (under) found.set(m[3], under.each ? 'each' : under.conds.join(' / '));
+    }
+  }
+  return found;
+}
+
+test('every group on a block\'s bar is a fold its family draws, under the same title', () => {
+  for (const [type, tools] of Object.entries(BAR_GROUPS)) {
+    const folds = foldsIn(family(type));
+    for (const tool of tools.filter((t) => t.only.startsWith('fold:'))) {
+      const id = tool.only.slice(5);
+      assert.ok(folds.has(id), `${type}: no fold «${id}» in its family`);
+      assert.equal(folds.get(id), tool.labelKey, `${type}: «${id}» is titled ${folds.get(id)}`);
+    }
+    // Every fold the family draws is a tool, so no group is left off the bar; a group drawn in some states only carries its condition.
+    const listed = new Set(tools.map((t) => t.only.slice(5)));
+    for (const id of folds.keys()) assert.ok(listed.has(id), `${type}: the fold «${id}» has no tool`);
+  }
+});
+
+test('a group the menu draws in some states only is a tool in those states only', () => {
+  for (const [type, tools] of Object.entries(BAR_GROUPS)) {
+    for (const [id, cond] of conditionalFolds(family(type))) {
+      // A family shared by several types draws a type's own groups for that type alone, which its bar already is.
+      if (cond === `selectedBlock.type === '${type}'`) continue;
+      assert.ok(tools.find((t) => t.only === `fold:${id}`)?.when, `${type}: «${id}» is drawn only when ${cond}, but its tool stands always`);
+    }
+  }
+  // A section's tools carry no condition, so its menu draws each of its groups always.
+  assert.deepEqual([...conditionalFolds(read('../editor/src/section/SectionMenu.svelte')).keys()], []);
+  const ids = (type, props) => barTools(type, { block: { props } }).map((t) => t.only);
+  assert.ok(!ids('faq', { variant: 'list' }).includes('fold:faq-card') && ids('faq', { variant: 'cards' }).includes('fold:faq-card'));
+});
+
+test('the engine reads the bar\'s choices under the keys and with the options the editor writes', async () => {
+  const { PARTS } = await import('../editor/src/lib/admin-designs.js');
+  const forms = await import('../editor/src/menu/forms.js');
+  const partOf = { form: 'toolbar', look: 'toolbarLook', gear: 'toolbarGear', phone: 'toolbarPhone', size: 'toolbarSize' };
+  for (const [choice, { key, options }] of Object.entries(BAR_CHOICES)) {
+    const part = PARTS.find((p) => p.id === partOf[choice]);
+    assert.equal(part?.key, key, choice);
+    assert.deepEqual(part.options, options, choice);
+  }
+  assert.deepEqual(TOOL_FORMS, forms.TOOL_FORMS);
+  assert.deepEqual(Object.keys(AREA_LOOKS), forms.AREA_LOOKS);
+  for (const plain of Object.values(AREA_LOOKS)) assert.ok(BAR_CHOICES.look.options.includes(plain) && !AREA_LOOKS[plain], plain);
+  // urd.js draws the bars anew when any of them changes in the editor, which shares the storage.
+  const urd = read(`../template/assets/engine/${ENGINE}/urd.js`);
+  const watched = urd.match(/if \(\[([^\]]*)\]\.includes\(event\.key\)/)?.[1].match(/'[^']+'/g)?.map((s) => s.slice(1, -1)) ?? [];
+  assert.deepEqual(watched.sort(), Object.values(BAR_CHOICES).map((c) => c.key).sort());
+});
+
+test('every group on a section\'s bar is a fold of the section\'s menu, and every fold is a tool', () => {
+  const folds = foldsIn(read('../editor/src/section/SectionMenu.svelte'));
+  for (const tool of SECTION_TOOLS) assert.equal(folds.get(tool.only.slice(5)), tool.labelKey, tool.only);
+  assert.deepEqual([...folds.keys()].sort(), SECTION_TOOLS.map((t) => t.only.slice(5)).sort());
+});
+
+test('a block\'s bar ends in its motion and its placement, with its design first in Style where it has designs', async () => {
+  const tools = barTools('image', { designs: true });
+  assert.deepEqual(tools.slice(-2).map((t) => t.only), ['fold:motion', 'area:placement']);
+  const design = tools.findIndex((t) => t.design);
+  assert.ok(design > tools.findIndex((t) => t.area === 'content' && !t.design) && tools[design + 1].area === 'style');
+  assert.deepEqual(barTools('a-plugin-block').map((t) => t.only), ['area:content', 'area:style', 'fold:motion', 'area:placement'], 'a block type not listed has its areas');
+  assert.ok(!barTools('text').some((t) => t.design));
+  // A group drawn in some states only is a tool in those states alone.
+  const ids = (type, props) => barTools(type, { block: { props } }).map((t) => t.only);
+  assert.ok(ids('shape', { kind: 'line' }).includes('loose:content') && !ids('shape', { kind: 'circle' }).includes('loose:content'));
+  const { CAL_DESIGNS } = await engineImport('calendar-designs.js');
+  const withNotice = CAL_DESIGNS.find((d) => d.notice);
+  const without = CAL_DESIGNS.find((d) => !d.notice);
+  assert.ok(withNotice && without, 'the designs hold both kinds');
+  assert.ok(ids('calendar', { design: withNotice.id }).includes('fold:cal-notice'));
+  assert.ok(!ids('calendar', { design: without.id }).includes('fold:cal-notice'));
+});
+
+test('every tool\'s name is in the core dictionaries, and its drawing in the engine\'s set', async () => {
+  const edit = read(`../template/assets/engine/${ENGINE}/preview-edit.js`);
+  const drawings = new Set([...edit.slice(edit.indexOf('const BAR_ICONS = {'), edit.indexOf('};', edit.indexOf('const BAR_ICONS = {'))).matchAll(/^ {2}([a-z]+):/gm)].map((m) => m[1]));
+  const tools = [...Object.keys(BAR_GROUPS).flatMap((type) => barTools(type, { designs: true })), ...SECTION_TOOLS];
+  for (const lang of ['en-GB', 'nb', 'tr']) {
+    const dict = (await engineImport(`locales/admin/${lang}.js`)).default.strings;
+    for (const tool of tools) assert.ok(dict[tool.labelKey], `${lang} lacks ${tool.labelKey}`);
+  }
+  for (const tool of tools) assert.ok(['motion', 'arrange', 'design'].includes(tool.icon) || drawings.has(tool.icon), `no drawing «${tool.icon}»`);
+});
+
+test('the editor opens exactly what the bar asks for', () => {
+  for (const tool of [...Object.keys(BAR_GROUPS).flatMap((type) => barTools(type)), ...SECTION_TOOLS].filter((t) => t.only)) {
+    assert.ok(isBarOnly(tool.only), tool.only);
+    assert.equal(onlyOf(tool.only), tool.only);
+  }
+  assert.equal(onlyOf('motion'), 'fold:motion');
+  assert.equal(onlyOf('placement'), 'area:placement');
+  for (const bad of ['fold:', 'area:nowhere', 'loose:placement', 'fold:a b', '<x>', null]) {
+    assert.equal(onlyOf(bad), null, String(bad));
+    assert.ok(!isBarOnly(bad), String(bad));
+  }
+});

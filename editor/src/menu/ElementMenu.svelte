@@ -36,6 +36,7 @@
   import { linkOf } from '../lib/link-edit.js';
   import Placement from './Placement.svelte';
   import MotionFold from './MotionFold.svelte';
+  import { onlyGroup } from '../lib/only-group.js';
   import MenuArea from './MenuArea.svelte';
   import { toggleHintCard } from '$engine/hint.js';
   import Text from './families/Text.svelte';
@@ -70,8 +71,8 @@
   /** The family of each block type; a type without one of its own shows the field contract. */
   const FAMILIES = { text: Text, button: Button, image: Image, video: Video, icon: Icon, shape: Shape, gallery: Gallery, ribbon: Ribbon, calendar: Calendar, form: Form, faq: Faq, timeline: Timeline, quote: Quote, stats: Stats, table: Table, share: Share, contact: Contact, privacy: Privacy, terms: Terms, countdown: Countdown, audio: Audio, collection: Collection, product: Product, cart: Cart, checkout: Checkout };
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
-  /** `layout` is 'wide', 'narrow' or 'tabs'. */
-  let { layout = 'narrow', query = '' } = $props();
+  /** `layout` is 'wide', 'narrow' or 'tabs'; `only` draws one group alone, for a tool of the bar (lib/only-group.js): a group, an area's loose rows or an area. */
+  let { layout = 'narrow', query = '', only = null } = $props();
   const wide = $derived(layout === 'wide');
   const shortcuts = $derived(menu.shortcutsPref);
   /** The Pinned rows stand while the shortcuts are the rows or the tiles. */
@@ -332,7 +333,16 @@
     </section>
   {/if}
 {/snippet}
-{#if query.trim()}
+{#if only}
+  <!-- A small panel from a tool of the bar: the areas drawn as ever, everything but the one group hidden, none of it taken to Pinned -->
+  <PinScope away={() => NONE_PINNED} pins={false}>
+    <div class="emenu-cols emenu-stack emenu-only" {@attach onlyGroup(only)}>
+      <MenuArea area="content" title={ta('props.tabContent')}>{@render menuContent()}</MenuArea>
+      <MenuArea area="style" title={ta('props.tabStyle')}>{@render menuStyle()}</MenuArea>
+      <MenuArea area="placement" title={ta('props.tabPlacement')} chip={layoutChip}>{@render menuPlacement()}</MenuArea>
+    </div>
+  </PinScope>
+{:else if query.trim()}
   <!-- The search: a copy of the three areas of its own, narrowed to what matches (menu-search.js),
        Content and Style beside Placement when wide and under each other when narrow, each area saying when nothing in it matches -->
   {#snippet foundContent()}<section class="emenu-col" data-area="content"><p class="emenu-title">{ta('props.tabContent')}</p>{@render menuContent()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}

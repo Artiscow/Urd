@@ -455,6 +455,11 @@ function enablePreview(state, opts) {
   /** The measures waiting per block for the editor's fit of its frame (urd-fit-block). */
   const fitTimers = new Map();
 
+  // The bars on the blocks and the sections take the form, the gear, the phone button and the size Urd settings choose, and a block's bar its look (BAR_CHOICES in bar-tools.js); a change in the editor, which shares the origin's storage, draws them anew.
+  window.addEventListener('storage', (event) => {
+    if (['urd-block-toolbar', 'urd-toolbar-look', 'urd-toolbar-gear', 'urd-toolbar-phone', 'urd-toolbar-size'].includes(event.key) && state.page) keepScroll(() => typing(() => renderPage(state.page, state.site, root, vp())));
+  });
+
   window.addEventListener('message', (event) => {
     // Only the editor on the same site, and only through the frame it holds: a window the page opened shares the origin but is not the editor.
     if (event.origin !== location.origin || event.source !== window.parent) return;

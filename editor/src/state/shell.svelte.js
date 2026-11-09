@@ -3,6 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { ta } from '$engine/i18n.js';
+import { TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_SIZES, TOOLBAR_GEARS, TOOLBAR_PHONES } from '../menu/forms.js';
 import { relativeLuminance, contrastRatio } from '$engine/theme.js';
 import { liftSiteFile, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
 import { createDraftStore } from '../lib/draftStore.js';
@@ -371,13 +372,13 @@ let activePanel = $state(null);
  */
 const ADMIN_LAYOUT_KEY = 'urd-admin-layout';
 
-let adminLayout = $state(ADMIN_LAYOUTS.includes(localStorage.getItem(ADMIN_LAYOUT_KEY)) ? localStorage.getItem(ADMIN_LAYOUT_KEY) : 'rail');
+let adminLayout = $state(ADMIN_LAYOUTS.includes(localStorage.getItem(ADMIN_LAYOUT_KEY)) ? localStorage.getItem(ADMIN_LAYOUT_KEY) : ADMIN_LAYOUTS[0]);
 
 function setAdminLayout(v) {
-  adminLayout = ADMIN_LAYOUTS.includes(v) ? v : 'rail';
+  adminLayout = ADMIN_LAYOUTS.includes(v) ? v : ADMIN_LAYOUTS[0];
   // The column folded because no panel was open in «The page's tabs» stands open in a layout that keeps it with its tabs.
   if (!activePanel && adminLayout !== 'page-tabs') panelFolded = false;
-  if (adminLayout === 'rail') localStorage.removeItem(ADMIN_LAYOUT_KEY);
+  if (adminLayout === ADMIN_LAYOUTS[0]) localStorage.removeItem(ADMIN_LAYOUT_KEY);
   else localStorage.setItem(ADMIN_LAYOUT_KEY, adminLayout);
   if (toolMenu === 'site') toolMenu = null;
 }
@@ -731,6 +732,33 @@ function setAddBlockMenu(v) {
   if (addBlockMenuPref === 'slim') localStorage.setItem('urd-add-block-menu', 'slim');
   else localStorage.removeItem('urd-add-block-menu');
 }
+
+/**
+ * The bar on the blocks and the sections (Urd settings «Toolbar», «Toolbar look», «Settings gear on the bar», «Phone button on the bar» and «Toolbar size», menu/forms.js): each the list's first by default, not stored, and stored only where it differs.
+ * The preview reads the keys at every draw, and draws the bars anew when one changes (urd.js).
+ */
+function storedOf(key, list) {
+  const v = localStorage.getItem(key);
+  return list.includes(v) ? v : list[0];
+}
+
+function keepOf(key, list, v) {
+  const value = list.includes(v) ? v : list[0];
+  if (value === list[0]) localStorage.removeItem(key);
+  else localStorage.setItem(key, value);
+  return value;
+}
+
+let toolbarPref = $state(storedOf('urd-block-toolbar', TOOLBAR_FORMS));
+const setToolbar = (v) => { toolbarPref = keepOf('urd-block-toolbar', TOOLBAR_FORMS, v); };
+let toolbarLookPref = $state(storedOf('urd-toolbar-look', TOOLBAR_LOOKS));
+const setToolbarLook = (v) => { toolbarLookPref = keepOf('urd-toolbar-look', TOOLBAR_LOOKS, v); };
+let toolbarGearPref = $state(storedOf('urd-toolbar-gear', TOOLBAR_GEARS));
+const setToolbarGear = (v) => { toolbarGearPref = keepOf('urd-toolbar-gear', TOOLBAR_GEARS, v); };
+let toolbarPhonePref = $state(storedOf('urd-toolbar-phone', TOOLBAR_PHONES));
+const setToolbarPhone = (v) => { toolbarPhonePref = keepOf('urd-toolbar-phone', TOOLBAR_PHONES, v); };
+let toolbarSizePref = $state(storedOf('urd-toolbar-size', TOOLBAR_SIZES));
+const setToolbarSize = (v) => { toolbarSizePref = keepOf('urd-toolbar-size', TOOLBAR_SIZES, v); };
 
 /** The shortcut sheet (lib/ShortcutSheet.svelte): opened by «?» in the panels and on the page, from the Urd settings and from the setup wizard. */
 let shortcutsOpen = $state(false);
@@ -1109,6 +1137,16 @@ export const shellState = {
   setLayoutPicker,
   get addBlockMenuPref() { return addBlockMenuPref; },
   setAddBlockMenu,
+  get toolbarPref() { return toolbarPref; },
+  setToolbar,
+  get toolbarLookPref() { return toolbarLookPref; },
+  setToolbarLook,
+  get toolbarGearPref() { return toolbarGearPref; },
+  setToolbarGear,
+  get toolbarPhonePref() { return toolbarPhonePref; },
+  setToolbarPhone,
+  get toolbarSizePref() { return toolbarSizePref; },
+  setToolbarSize,
   get shortcutsOpen() { return shortcutsOpen; },
   set shortcutsOpen(v) { shortcutsOpen = v; },
   openShortcuts,

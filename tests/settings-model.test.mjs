@@ -38,7 +38,7 @@ function ctx() {
     panelTabMenus: false,
     adminLangOptions: () => [['nb', 'Norsk bokmål']],
     adminTheme: 'grey', adminLayout: 'rail', settingsPlace: 'dialog', settingsPictures: 'pictures', adminLangChoice: 'auto',
-    addBlockMenuPref: 'side', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
+    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'squares', toolbarGearPref: 'off', toolbarPhonePref: 'on', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
     siteDraft: { admin: {}, analytics: {} },
   };
   const designs = { options: [['floating', 'Floating menu'], ['panels', 'Small panels'], ['side', 'Side panel'], ['column', 'One column']], values: {}, state: { design: 'floating', changed: [] }, apply() {} };
@@ -78,6 +78,10 @@ test('every option of a pictured setting has its picture, and no picture is draw
     }
   }
   assert.equal(settingPicture('layout', 'nonsense'), null);
+  // The looks that set the tools apart by area are offered only with a form whose tools belong to areas, or while chosen.
+  const looks = (form, chosen = 'squares') => SETTINGS_GROUPS.flatMap((g) => g.settings).find((x) => x.id === 'toolbarLook').options({ ...c, ed: { ...c.ed, toolbarPref: form, toolbarLookPref: chosen } }).map(([id]) => id);
+  assert.ok(!looks('full').includes('areas') && looks('groups').includes('areas') && looks('panels').includes('capsule-areas'));
+  assert.ok(looks('short', 'areas').includes('areas'));
   assert.ok(pictured(row('theme'), 'pictures'));
   assert.ok(!pictured(row('theme'), 'words'));
   assert.ok(pictured(row('adminDesign'), 'pictures'), 'the admin designs are chosen as the other looks are, from their pictures');
@@ -107,7 +111,8 @@ test('the search keeps the settings a word of the query names, and the sheet spl
   assert.ok(look.every((s) => s.look || look.some((p) => p.id === s.parent)));
   assert.ok(look.some((s) => s.design), 'the admin design stands with the looks');
   const plain = visibleGroups('', 'plain', c).flatMap((g) => g.settings);
-  assert.ok(plain.every((s) => !s.look || plain.some((child) => child.parent === s.id)));
+  // A pictured setting stands on the plain side only beside its family: as the parent of a plain setting there, or as a child of that parent.
+  assert.ok(plain.every((s) => !s.look || plain.some((child) => child.parent === s.id) || plain.some((p) => p.id === s.parent)));
   assert.deepEqual(new Set([...look, ...plain].map((s) => s.id)), new Set(all.flatMap((g) => g.settings).map((s) => s.id)));
   assert.deepEqual(visibleGroups('spellcheck', null, c).map((g) => [g.id, g.settings.map((s) => s.id)]), [['editing', ['spellcheck']]]);
   c.ed.siteDraft = null;

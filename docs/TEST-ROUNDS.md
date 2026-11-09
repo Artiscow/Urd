@@ -2,6 +2,24 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.7): the canvas toolbar's forms, looks and sizes, and the settings list
+
+- [ ] In a fresh browser (no Urd settings stored): the panels stand in the strip under the top bar, and a selected block shows the Full bar in glass with its main button in Urd's accent
+- [ ] Full bar: every group of the block's menu is a tool, each opening that group alone in a small panel beside the block, titled by the tool; try text, image, calendar (a design with an announcement and one without), form, checkout, ribbon, shape (a line and another shape) and a plugin's block; no tool opens an empty panel
+- [ ] Full bar on a section: theme, background, edges, motion, size and link name as tools, each opening its group alone
+- [ ] Quick has every action, as the full bar had; Essentials has the word for the main act (Edit image, Edit text or Settings) with design, motion and placement as tools; Minimal is the short bar with its menu
+- [ ] «Toolbar look»: thirteen looks, each on a block (a section's bar keeps its own drawing); the looks by area are offered only with Full bar and Essentials
+- [ ] «Toolbar size»: Small, Regular, Medium and Large, the bar sharp at each size
+- [ ] «Settings gear on the bar» and «Phone button on the bar»: Show and Hide put the gear and the phone button on and off the bar; the gear row is offered only with Full bar and Essentials, the phone row with every form but Quick
+- [ ] Change a toolbar setting with a block selected: the bar is drawn anew at once
+- [ ] In the phone view each form draws a bar that fits
+- [ ] The pointer is a pointing hand over the bar's buttons and an open hand only on the move grip
+- [ ] The toolbar pictures in Urd settings draw the tools, stand in line at the top, and show the open menu just right of ⋮
+- [ ] Segments (Folds, Extra settings, Toolbar size, the Show and Hide rows) stand beside their names at their own width, never clipped
+- [ ] The settings list: resting the mouse on a section folds out its settings, a click holds it open while a rest opens another beside it, and a click on the held one folds it back
+- [ ] A setting in the list brings its row to the middle of the window and lights it for about two seconds
+- [ ] Scroll the settings, close and reopen them, and reload the page: they open where they were, the held section still open; after a search they open at the top; the panel form and the sheet's two columns each keep their own place; a new tab opens at the top
+
 ### Test batch (0.7.33.6): the element menu's forms, folds, extra settings and shortcuts
 
 - [ ] Urd settings, Presets, «Element menu»: five pictures; «Beside the block, with tabs» opens the floating menu with Pinned over Content, Style and Placement as tabs, a tab whose area holds nothing for the block left out (a text block has no Content tab), and 1, 2 and 3 choose the tabs

@@ -84,7 +84,7 @@ test('every panel layout draws its own way to the panels, and the gear stands on
   shellState.adminLayout = 'rail';
   assert.doesNotMatch(render(App).body, /<aside class="panel/);
   shellState.setAdminLayout('nonsense');
-  assert.equal(shellState.adminLayout, 'rail');
+  assert.equal(shellState.adminLayout, 'top-tabs', 'an unknown layout is the default, the strip');
 });
 
 test('a new Urd is told as a dot on Updates in every layout, or as a pill in the top bar where the site asks for it', async () => {

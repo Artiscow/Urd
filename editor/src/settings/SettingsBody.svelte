@@ -1,7 +1,7 @@
 <script>
   /* The Urd settings' rows (lib/settings-model.js) in the form the window asks for, every section open in one scroll, with no folds.
      The sections stand in their groups (the admin design, Local settings, This site), a group named over its first section where that section's heading does not already say it, and not on the sheet's plain side, where the first group holds parts alone; a section is its heading, whose tooltip says what its settings act on, and its rows.
-     `place` dialog or sheet draws each setting as a row with its name at the left and its control at the right, a pictured choice and a text field under the name at the full width;
+     `place` dialog or sheet draws each setting as a row with its name at the left and its control at the right, a pictured choice and a text field under the name at the full width, and a few words side by side at their own width beside the name, never narrower than the control's column;
      the panel stacks every name over its control, shows the chosen picture's name beside the setting's name since the tiles carry none, and keeps each section's heading at the top while its section scrolls.
      The admin design stands first, its tiles under the line that names the design that stands and what differs from it (AdminDesignRow.svelte), and a part whose value differs from that design names the design's value beside its name, with the way back to it (state/admin-design.svelte.js).
      A shared section (the site's own values) carries its mark in the heading. `only` keeps one side of the sheet, `query` is the search, `idPrefix` keeps the ids apart when two bodies stand in one window, and `empty` says whether a search that finds nothing says so here. */
@@ -42,13 +42,13 @@
       {#each group.settings as s, i (s.id)}
         {@const note = s.part ? partNote(s.id, c) : null}
         {#if s.design}
-          <div class="st-row st-row-stack" title={ta(s.tipKey)}>
+          <div class="st-row st-row-stack" data-st-row={s.id} title={ta(s.tipKey)}>
             <AdminDesignRow {c} />
             <SettingControl setting={s} {c} pictures={ed.settingsPictures} {compact} nameId="{idPrefix}-h-{group.id}" />
           </div>
         {:else}
-          <div class="st-row" class:st-row-stack={pictured(s, ed.settingsPictures) || s.kind === 'text'}
-            class:st-has-sub={group.settings[i + 1]?.parent === s.id} class:st-sub={!!s.parent} title={ta(s.tipKey)}>
+          <div class="st-row" class:st-row-stack={pictured(s, ed.settingsPictures) || s.kind === 'text'} class:st-row-seg={s.kind === 'seg'}
+            class:st-has-sub={group.settings[i + 1]?.parent === s.id} class:st-sub={!!s.parent} data-st-row={s.id} title={ta(s.tipKey)}>
             <span class="st-name">
               <span id="{idPrefix}-n-{s.id}">{ta(s.labelKey)}</span>
               {#if compact && pictured(s, ed.settingsPictures)}<span class="st-chosen">{chosen(s)}</span>{/if}
@@ -96,6 +96,46 @@
 
   .st-row-stack {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* A row the list's settings jump to stands a little below the content's top, and lights in the accent for a moment when one jumps to it (SettingsDialog.svelte jumpTo), the light a layer under the row reaching a little past its edges, fading out; with reduced motion it stands lit and goes out at once */
+  .st-row {
+    position: relative;
+    isolation: isolate;
+    scroll-margin-top: 0.6rem;
+  }
+
+  .st-row:global(.st-flash)::before {
+    content: '';
+    position: absolute;
+    inset: 0 -0.6rem;
+    z-index: -1;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 22%, transparent);
+    animation: st-flash 1.9s ease-out forwards;
+    pointer-events: none;
+  }
+
+  @keyframes st-flash {
+    0%,
+    45% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .st-row:global(.st-flash)::before {
+      animation: none;
+    }
+  }
+
+  /* A few words side by side keep to their own width beside the name, growing past the control's column where the words are long */
+  .st-row-seg {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, max-content);
   }
 
   /* A setting that belongs to the choice above it: drawn directly under that row, the two kept together without a line between them, its name set in */

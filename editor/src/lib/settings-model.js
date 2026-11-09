@@ -5,7 +5,7 @@
  * Pure, node-tested (tests/settings-model.test.mjs).
  */
 import { panelsPrefIn } from './panels-start.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES } from '../menu/forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES } from '../menu/forms.js';
 
 /** Where the settings open: a dialog with the groups as sections down its left, a panel in the panel column, or a sheet with the look choices at the left and the rest as rows at the right. */
 export const SETTINGS_PLACES = ['dialog', 'panel', 'sheet'];
@@ -123,6 +123,23 @@ export const SETTINGS_GROUPS = [
     labelKey: 'settings.group.canvas',
     tipKey: 'tip.settings.group.canvas',
     settings: [
+      { id: 'toolbar', part: true, labelKey: 'adminPart.toolbar', tipKey: 'tip.adminPart.toolbar', kind: 'choice', look: 'toolbar',
+        options: (c) => TOOLBAR_FORMS.map((id) => [id, c.ta(`opt.toolbar.${id}`)]), get: (c) => c.ed.toolbarPref, set: (c, v) => c.ed.setToolbar(v) },
+      // The looks that set the tools apart by area are offered with the forms whose tools belong to areas, or while chosen.
+      { id: 'toolbarLook', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarLook', tipKey: 'tip.adminPart.toolbarLook', kind: 'choice', look: 'toolbarLook',
+        options: (c) => TOOLBAR_LOOKS.filter((id) => !AREA_LOOKS.includes(id) || TOOL_FORMS.includes(c.ed.toolbarPref) || c.ed.toolbarLookPref === id)
+          .map((id) => [id, c.ta(`opt.toolbarLook.${id}`)]),
+        get: (c) => c.ed.toolbarLookPref, set: (c, v) => c.ed.setToolbarLook(v) },
+      // The gear on a bar whose tools open the settings themselves; the other forms always have it.
+      { id: 'toolbarGear', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarGear', tipKey: 'tip.adminPart.toolbarGear', kind: 'seg',
+        when: (c) => TOOL_FORMS.includes(c.ed.toolbarPref),
+        options: (c) => [['on', c.ta('opt.showHide.show')], ['off', c.ta('opt.showHide.hide')]], get: (c) => c.ed.toolbarGearPref, set: (c, v) => c.ed.setToolbarGear(v) },
+      // The phone button on every bar but the full bar of actions, which always has it.
+      { id: 'toolbarPhone', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarPhone', tipKey: 'tip.adminPart.toolbarPhone', kind: 'seg',
+        when: (c) => c.ed.toolbarPref !== 'full',
+        options: (c) => [['on', c.ta('opt.showHide.show')], ['off', c.ta('opt.showHide.hide')]], get: (c) => c.ed.toolbarPhonePref, set: (c, v) => c.ed.setToolbarPhone(v) },
+      { id: 'toolbarSize', part: true, parent: 'toolbar', labelKey: 'settings.toolbarSize', tipKey: 'tip.settings.toolbarSize', kind: 'seg',
+        options: (c) => ['small', 'regular', 'medium', 'large'].filter((id) => TOOLBAR_SIZES.includes(id)).map((id) => [id, c.ta(`opt.toolbarSize.${id}`)]), get: (c) => c.ed.toolbarSizePref, set: (c, v) => c.ed.setToolbarSize(v) },
       { id: 'addBlockMenu', part: true, labelKey: 'settings.addBlockMenu', tipKey: 'tip.settings.addBlockMenu', kind: 'choice', look: 'addBlock',
         options: (c) => [['side', c.ta('settings.addBlockMenuSide')], ['slim', c.ta('settings.addBlockMenuSlim')]],
         get: (c) => c.ed.addBlockMenuPref, set: (c, v) => c.ed.setAddBlockMenu(v) },

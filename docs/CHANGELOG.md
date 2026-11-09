@@ -8,6 +8,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.7 - The canvas toolbar's forms, looks and sizes, and a settings list that reaches every setting - 9 November 2026
+
+- The presets stored a toolbar form, but the canvas drew one bar. «Toolbar» in Urd settings now has four forms for a block's and a section's bar: Full bar, every group of the element menu a tool; Quick, every action; Essentials, the block's main act with its design, motion and placement as tools; and Minimal, the short bar and its menu. A tool opens its group alone in a small panel beside the block (`assets/engine/0.7.8/bar-tools.js` lists each block type's groups, `editor/src/lib/only-group.js` keeps the one asked for).
+- «Toolbar look» (thirteen looks), «Toolbar size», «Settings gear on the bar» and «Phone button on the bar» stand under it, all parts of the presets; the canvas reads them at every draw and redraws its bar when one changes.
+- A fresh admin opens with the panels in the strip under the top bar and the Full bar in glass with the main act in Urd's accent; stored choices stay.
+- The settings list only jumped to a section. Each section folds out to its settings on a mouse rest or held by a click, a setting there brings its row to the middle of the window and lights it for a moment, and the window opens where it was left until the tab closes (`settings/keep-place.js`).
+- Test findings, fixed in the round:
+  - «Folds» was clipped in the settings window, and a segment took a whole line. A segment stands beside its name at its own width, growing past the control column where its words are long.
+  - The open hand showed over every button of the bar. It shows only on the move grip.
+  - The bar blurred at every size but Regular, since it was scaled. It is sized with `zoom`, in four sizes from Small to Large.
+  - The toolbar pictures in Urd settings drew no tools, and some stood lower than the rest. They draw each tool, the open menu just right of ⋮, and line up at the top.
+  - «Toolbar size» stood apart from the form and the look. It stands with them.
+
+The independent review before the commit found these, all fixed:
+
+1. On a FAQ in the list variant, the Card style tool opened an empty panel. Its tool stands only where the variant draws cards, and `tests/bar-tools.test.mjs` fails on any group the menu draws in some states only whose tool stands always.
+2. The engine kept its own copies of the bar's keys and options. They are one list, `BAR_CHOICES` in `bar-tools.js`, which the test holds to the editor's parts and to the keys `urd.js` watches.
+3. ARCHITECTURE.md and a comment in `urd.js` said the section's bar takes the look, which only a block's bar does. They say so.
+4. The «Toolbar» tooltip left out the Full bar, and «Toolbar look» spoke of a size that is now a setting of its own. Both say what the settings hold, in nb, en-GB and tr.
+5. base.css carried `-webkit-backdrop-filter` beside the standard property. It is gone, and the shells are restamped.
+6. Two comments described the code wrongly: `only-group.js` called the names the Essentials bar sends older names, and the section's gear was said to stand in the phone view alone. A CSS comment in `SettingsDialog.svelte` stood over the wrong rule. Each says what the code does.
+
 ### 0.7.33.6 - The element menu's forms, folds, extra settings and shortcuts - 9 November 2026
 
 - The presets stored the element menu's form, its folds, its extra settings and its shortcuts, but the menu read none of them. «Element menu» in Urd settings now offers five forms: beside the block in two columns or one, beside the block with the areas as tabs, and docked in the panel column in one column or with tabs under a card naming the block, where the gear opens the Settings panel instead of a floating menu (`menu/state.svelte.js` `menuLayout`, `menuDocked`; the lists in `menu/forms.js`).

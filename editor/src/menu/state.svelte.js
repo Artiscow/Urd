@@ -23,8 +23,9 @@ const SHORTCUTS_KEY = 'urd-menu-shortcuts';
 
 const stored = (key, list) => (list.includes(localStorage.getItem(key)) ? localStorage.getItem(key) : list[0]);
 
-/** The floating menu's width with the areas poured through two columns (app.css, .block-menu.wide). */
+/** The floating menu's width with the areas poured through two columns (app.css, .block-menu.wide), and a small panel's, one group from a tool of the bar (.block-menu.small). */
 export const MENU_WIDE_W = 660;
+export const MENU_SMALL_W = 320;
 
 export const menu = $state({
   formPref: menuFormOf(localStorage.getItem(MENU_FORM_KEY)),

@@ -726,6 +726,26 @@
     --menu-w: min(660px, 100vw - var(--menu-min, 8px) - 8px);
   }
 
+  /* Small: one group from a tool of the bar with small panels (MENU_SMALL_W in menu/state.svelte.js) */
+  .block-menu.small {
+    --menu-w: min(320px, 100vw - var(--menu-min, 8px) - 8px);
+  }
+
+  /* A small panel that holds one group alone (lib/only-group.js): the rest of the menu hidden, the areas' headings and frames left out, and a group's own heading too, since the panel's title names it */
+  .emenu-only [data-only-hidden],
+  .emenu-only .emenu-head {
+    display: none;
+  }
+
+  .emenu-only .emenu-col {
+    padding: 0;
+    background: none;
+  }
+
+  .emenu-only[data-only-kind='fold'] .emenu-col > details.menu-group > summary {
+    display: none;
+  }
+
   .block-menu-head .menu-width {
     margin-left: auto;
   }

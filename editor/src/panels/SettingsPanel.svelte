@@ -1,9 +1,11 @@
 <script>
-  /* The Urd settings as a panel in the panel column («Panel» under Settings window): the search at the top, every section open with its heading kept at the top while it scrolls and the settings stacked (settings/SettingsBody.svelte), and the way to the shortcut sheet and the version at the foot. The gear opens and closes it; the page stays in view while a setting is tried. */
+  /* The Urd settings as a panel in the panel column («Panel» under Settings window): the search at the top, every section open with its heading kept at the top while it scrolls and the settings stacked (settings/SettingsBody.svelte), and the way to the shortcut sheet and the version at the foot. The gear opens and closes it; the page stays in view while a setting is tried.
+     It opens where it was left in the panel column's scroll while the tab is open (settings/keep-place.js). */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import SettingsBody from '../settings/SettingsBody.svelte';
+  import { keepPlace } from '../settings/keep-place.js';
 
   const ed = getContext('urd-editor');
   let query = $state('');
@@ -15,7 +17,7 @@
   });
 </script>
 
-<div class="panel-body st-panel">
+<div class="panel-body st-panel" {@attach keepPlace('panel', query, (el) => el.closest('.panel'))}>
   <input type="text" class="st-search" placeholder={ta('settings.find')} aria-label={ta('settings.find')} bind:value={query} bind:this={searchEl} />
   <SettingsBody place="panel" {query} />
   <button type="button" class="ghost st-keys" title={ta('tip.shortcuts.open')} onclick={ed.openShortcuts}>{@html ICONS.keyboard}<span>{ta('shortcuts.title')}</span><kbd>?</kbd></button>

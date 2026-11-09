@@ -1,7 +1,9 @@
 <script>
   /**
    * Urd's own settings over the admin, in the form «Settings window» asks for: the dialog with the sections down the left in their three groups (the admin design, Local settings, This site), a search above them and every section's rows at the right, in one scroll a section button jumps in and the list follows;
+   * each section's entry folds out to its settings, which jump to their rows: on a rest of the mouse for as long as it stays, and held open by a press until it or another entry is pressed, while a rest on another still opens that one beside it;
    * or the sheet, with the look choices at the left and the rest as rows at the right. Both end in the way to the shortcut sheet and the version.
+   * It opens where it was left while the tab is open: each scroll at the row it stood at, and the entry the list held open (keep-place.js).
    * A native modal dialog (ADR-0011) like the shortcut sheet: Escape is its own cancel, and a press outside the card closes it.
    */
   import { getContext } from 'svelte';
@@ -11,6 +13,7 @@
   import { ICONS } from '../lib/icons.js';
   import { visibleGroups, inBands } from '../lib/settings-model.js';
   import { settingsContext } from '../state/admin-design.svelte.js';
+  import { keepPlace, recall, remember } from './keep-place.js';
   import SettingsBody from './SettingsBody.svelte';
 
   const ed = getContext('urd-editor');
@@ -48,11 +51,58 @@
     if (dialogEl && !dialogEl.open) dialogEl.showModal();
   });
 
-  /** A section button scrolls its section to the top of the content. */
+  /** A section button scrolls its section to the top of the content and holds its entry open; pressed while it is held, it folds the entry back, even under the resting mouse, and leaves the scroll where it is. */
   function jump(id) {
+    if (held === id) {
+      held = null;
+      rested = null;
+      clearTimeout(restTimer);
+      return;
+    }
     current = id;
+    held = id;
     contentEl?.querySelector(`#st-sec-${id}`)?.scrollIntoView({ block: 'start', behavior: ed.reducedMotion ? 'auto' : 'smooth' });
   }
+
+  /** A setting under an entry scrolls its row to the middle of the content and lights it for a moment, its section's entry held open; a setting without a row of its own (the presets) brings its section to the top. */
+  let flashTimer = 0;
+  function jumpTo(groupId, settingId) {
+    current = groupId;
+    held = groupId;
+    const row = contentEl?.querySelector(`#st-sec-n-${settingId}`)?.closest('.st-row');
+    if (!row) {
+      contentEl?.querySelector(`#st-sec-${groupId}`)?.scrollIntoView({ block: 'start', behavior: ed.reducedMotion ? 'auto' : 'smooth' });
+      return;
+    }
+    row.scrollIntoView({ block: 'center', behavior: ed.reducedMotion ? 'auto' : 'smooth' });
+    // The light starts anew at each press, on this row alone.
+    for (const lit of contentEl.querySelectorAll('.st-flash')) lit.classList.remove('st-flash');
+    void row.offsetWidth;
+    row.classList.add('st-flash');
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => row.classList.remove('st-flash'), 1900);
+  }
+  $effect(() => () => clearTimeout(flashTimer));
+
+  /* The entries that stand folded out: the one a press holds open, and the one the mouse rests on, after a moment so a pointer passing over the list opens nothing; leaving an entry folds it back unless it is held.
+     Only a mouse rests: a touch or a pen opens an entry by its press (the hybrid-device guard, AGENTS.md). */
+  let held = $state(recall('held'));
+  let rested = $state(null);
+  $effect(() => remember('held', held));
+  let restTimer = 0;
+  function restOn(event, id) {
+    if (event.pointerType !== 'mouse') return;
+    clearTimeout(restTimer);
+    restTimer = setTimeout(() => (rested = id), 160);
+  }
+  function restOff(event, id) {
+    if (event.pointerType !== 'mouse') return;
+    clearTimeout(restTimer);
+    if (rested === id) rested = null;
+  }
+  $effect(() => () => clearTimeout(restTimer));
+  /** Whether an entry lists its settings: not a section whose one setting bears its own name (the presets). */
+  const listsSettings = (group) => !(group.settings.length === 1 && group.settings[0].labelKey === group.labelKey);
 
   /** The section in view: the last one whose top has passed the content's top, and the last section of all once the content is scrolled to its end, since a short last section never reaches the top. */
   function track() {
@@ -92,11 +142,11 @@
         <button type="button" class="st-close" aria-label={ta('ui.close')} title={ta('ui.close')} onclick={close}>{@html ICONS.cross}</button>
       </div>
       <div class="st-sheet-cols">
-        <div class="st-col st-col-look">
+        <div class="st-col st-col-look" {@attach keepPlace('sheet-look', query)}>
           <SettingsBody place="sheet" only="look" {query} idPrefix="st-look" empty={false} />
           {#if !navGroups.length}<p class="st-empty">{ta('settings.noMatch')}</p>{/if}
         </div>
-        <div class="st-col st-col-plain">
+        <div class="st-col st-col-plain" {@attach keepPlace('sheet-plain', query)}>
           <SettingsBody place="sheet" only="plain" {query} idPrefix="st-plain" empty={false} />
           {@render keys()}
         </div>
@@ -111,10 +161,25 @@
           {#each navBands as band (band.id)}
             <span class="st-nav-band" title={ta(band.tipKey)}>{ta(band.labelKey)}</span>
             {#each band.groups as group (group.id)}
-              <button type="button" class="st-nav-item" aria-current={marked === group.id ? 'true' : undefined} onclick={() => jump(group.id)}>
-                {@html ICONS[GROUP_ICONS[group.id]] ?? ''}<span class="st-nav-name">{ta(group.labelKey)}</span>
-                {#if group.shared}<span class="st-nav-shared" title={ta('tip.settings.shared')}>{ta('settings.shared')}</span>{/if}
-              </button>
+              {@const lists = listsSettings(group)}
+              {@const open = lists && (held === group.id || rested === group.id)}
+              <div class="st-nav-entry" role="presentation" onpointerenter={(e) => restOn(e, group.id)} onpointerleave={(e) => restOff(e, group.id)}>
+                <button type="button" class="st-nav-item" aria-current={marked === group.id ? 'true' : undefined}
+                  aria-expanded={lists ? open : undefined} aria-controls={lists ? `st-nav-sub-${group.id}` : undefined} onclick={() => jump(group.id)}>
+                  {@html ICONS[GROUP_ICONS[group.id]] ?? ''}<span class="st-nav-name">{ta(group.labelKey)}</span>
+                  {#if group.shared}<span class="st-nav-shared" title={ta('tip.settings.shared')}>{ta('settings.shared')}</span>{/if}
+                </button>
+                {#if lists}
+                  <!-- The section's settings, each a way to its row; folded, they are out of reach of the keys and the screen reader -->
+                  <div class="st-nav-sub" class:open id={`st-nav-sub-${group.id}`} inert={!open}>
+                    <div class="st-nav-sub-items">
+                      {#each group.settings as s (s.id)}
+                        <button type="button" class="st-nav-subitem" class:child={!!s.parent} onclick={() => jumpTo(group.id, s.id)}>{ta(s.labelKey)}</button>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
+              </div>
             {/each}
           {/each}
         </div>
@@ -122,7 +187,7 @@
         {@render keys()}
         <span class="st-version">{ta('settings.version', { version: ed.pluginEngine })}</span>
       </nav>
-      <div class="st-content" bind:this={contentEl} onscroll={track}>
+      <div class="st-content" bind:this={contentEl} onscroll={track} {@attach keepPlace('dialog', query)}>
         <button type="button" class="st-close" aria-label={ta('ui.close')} title={ta('ui.close')} onclick={close}>{@html ICONS.cross}</button>
         <SettingsBody place="dialog" {query} />
       </div>
@@ -218,6 +283,73 @@
     min-height: 0;
     overflow-y: auto;
     scrollbar-width: thin;
+  }
+
+  /* An entry and its settings, the entry across the list's width as the entries stand */
+  .st-nav-entry {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* An entry's settings: folded to nothing until the entry opens, then growing to their height and back, at once with reduced motion */
+  .st-nav-sub {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.2s ease;
+  }
+
+  .st-nav-sub.open {
+    grid-template-rows: 1fr;
+  }
+
+  .st-nav-sub-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-height: 0;
+    overflow: hidden;
+    padding-left: 1.85rem;
+  }
+
+  .st-nav-sub.open .st-nav-sub-items {
+    padding-block: 0.15rem 0.35rem;
+  }
+
+  .st-nav-subitem {
+    display: flex;
+    justify-content: flex-start;
+    padding: 0.3rem 0.6rem;
+    font: inherit;
+    font-size: 0.8rem;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    opacity: 0.78;
+  }
+
+  .st-nav-subitem.child {
+    padding-left: 1.2rem;
+  }
+
+  .st-nav-subitem:hover,
+  .st-nav-subitem:focus-visible {
+    background: rgb(255 255 255 / 6%);
+    opacity: 1;
+  }
+
+  .st-nav-subitem:focus-visible,
+  .st-nav-item:focus-visible {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: -2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .st-nav-sub {
+      transition: none;
+    }
   }
 
   /* A group's name over its sections, as the row kit's sub-headings stand */

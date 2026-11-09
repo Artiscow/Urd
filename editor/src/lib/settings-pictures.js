@@ -136,10 +136,10 @@ const DRAG_MARKS = {
   line: listRows([12, 18, 24, 30]) + acc(16, 22.4, 34, 1.2, 0.6) + `<circle cx="15" cy="23" r="1.3" stroke="${ACCENT}" stroke-width="0.8"/>` + dragCard(14.5),
 };
 
-/** The admin designs (lib/admin-designs.js), each the whole admin with a block selected on the page: the menu floating beside it under the rail; the page's tabs with a bar on the block and a small panel beside it; the sidebar of words with a docked panel of tabs; and the rail with one long column of headed sections. */
+/** The admin designs (lib/admin-designs.js), each the whole admin with a block selected on the page: the menu floating beside it under the strip of panels; the page's tabs with a bar on the block and a small panel beside it; the sidebar of words with a docked panel of tabs; and the rail with one long column of headed sections. */
 const ADMIN_DESIGN_PICS = {
-  floating: topbar() + dim(1, 7, 8, H - 8) + acc(3, 10, 4, 4) + line(3, 17, 4, 4) + line(3, 24, 4, 4) + stage(9) + block(13, 18, 16, 10)
-    + dim(33, 10, 27, 26, 0.24) + acc(35, 12, 10, 2) + line(35, 17, 10, 2) + line(35, 21, 8, 2) + line(35, 25, 10, 2) + line(48, 17, 10, 2) + line(48, 21, 9, 2) + line(48, 25, 7, 2),
+  floating: topbar() + dim(1, 7, W - 2, 6, 0.1) + acc(4, 9, 7, 2) + line(13, 9, 7, 2) + line(22, 9, 7, 2) + line(31, 9, 7, 2) + stage(1, 13) + block(10, 20, 16, 10)
+    + dim(31, 15, 29, 22, 0.24) + acc(33, 17, 10, 2) + line(33, 22, 10, 2) + line(33, 26, 8, 2) + line(33, 30, 10, 2) + line(46, 22, 10, 2) + line(46, 26, 9, 2) + line(46, 30, 7, 2),
   panels: topbar() + acc(4, 2.5, 8, 3) + line(14, 2.5, 7, 3) + line(23, 2.5, 7, 3) + stage(1) + block(10, 20, 22, 11) + acc(10, 15, 15, 3.5, 1.5)
     + dim(36, 12, 22, 17, 0.24) + line(38, 15, 9, 2) + line(49, 15, 7, 2) + line(38, 20, 16, 2) + line(38, 24, 13, 2),
   side: topbar() + dim(1, 7, 14, H - 8) + acc(3, 10, 9, 2) + line(3, 15, 8, 2) + line(3, 20, 10, 2) + line(3, 25, 7, 2)
@@ -158,8 +158,132 @@ const SHORTCUTS = {
   chips: menuBox() + acc(17, 6, 8, 3.5, 1.75) + dim(27, 6, 8, 3.5, 0.35) + dim(37, 6, 9, 3.5, 0.35) + line(17, 13, 10, 1.5) + groupsBelow(17),
 };
 
+/**
+ * The bar over a selected block («Toolbar» and «Toolbar look»), drawn as the canvas draws it: a text block selected on a page, its bar above it, each tool its own small drawing (TOOL_ICONS, the same figures as the canvas's own), the main act a word drawn as a short line on its button.
+ * The forms show their own tools: every group a tool (Full bar); every action ending in the red cross (Quick); a word with Motion and Placement (Essentials) and the short bar (Minimal), each with what ⋮ opens beside it.
+ * The looks show the same bar of a text block, so only the look changes; the two area looks show an image block's tools, whose groups stand in three areas.
+ */
+const TOOL_ICONS = {
+  grip: '<circle cx="9" cy="6" r="1.9"/><circle cx="15" cy="6" r="1.9"/><circle cx="9" cy="12" r="1.9"/><circle cx="15" cy="12" r="1.9"/><circle cx="9" cy="18" r="1.9"/><circle cx="15" cy="18" r="1.9"/>',
+  more: '<circle cx="12" cy="5" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="12" cy="19" r="2.3"/>',
+  type: '<path d="M5 20L12 4l7 16M8 14h8"/>',
+  box: '<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/>',
+  motion: '<path d="M3 7h8M3 12h12M3 17h8M16 7l5 5-5 5"/>',
+  arrange: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 14l9 5 9-5"/>',
+  gear: '<circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
+  front: '<path d="M5 4h14M12 20V9M7 13l5-5 5 5"/>',
+  back: '<path d="M5 20h14M12 4v11M7 11l5 5 5-5"/>',
+  phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18h3"/>',
+  dup: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/>',
+  del: '<path d="M6 6l12 12M18 6L6 18"/>',
+  picture: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M21 16l-5-5-9 9"/>',
+  link: '<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>',
+  palette: '<circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="9" r="1.2"/><circle cx="14.5" cy="8.5" r="1.2"/><circle cx="8.5" cy="14" r="1.2"/>',
+};
+const FILLED = new Set(['grip', 'more']);
+/** One tool's drawing, `size` wide, centred on (cx, cy), in `ink`. */
+const toolIcon = (name, cx, cy, size, ink) => {
+  const k = size / 24;
+  const paint = FILLED.has(name) ? `fill="${ink}"` : `fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"`;
+  return `<g transform="translate(${cx - size / 2} ${cy - size / 2}) scale(${k})" ${paint}>${TOOL_ICONS[name]}</g>`;
+};
+const sq = (x, y, w, h, fill, o = 1, r = 1) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" opacity="${o}"/>`;
+const DARK = '#1b252d';
+const INK_DARK = '#0d1a1f';
+const INK_LIGHT = '#e2e5e8';
+const RED = '#c0392b';
+/** The page and the selected text block under every bar. */
+const scene = () => dim(1, 1, 62, 38, 0.06) + block(6, 22, 52, 14) + line(9, 25.5, 34, 1.6) + line(9, 29, 28, 1.6) + line(9, 32.5, 20, 1.6);
+/** The tools of a text block's bar where every group is a tool: Typography, Text box, Motion and Placement, the gear and ⋮. */
+const TEXT_TOOLS = ['type', 'box', 'motion', 'arrange', 'gear', 'more'];
+/** An image block's tools by area, for the looks that set the areas apart. */
+const IMAGE_AREAS = [['picture', 'link'], ['palette', 'motion'], ['arrange']];
+
+/**
+ * A bar of tiles, each tool its own filled button (the accent squares and their kin): the main act a wider tile with a word's line, the rest a square each with its drawing.
+ * `groups` splits the tools into clusters set a little apart, each in its own shade; `caps` draws each tool's caption under its drawing; `del` paints the last tool red.
+ */
+function tileBar({ tools = TEXT_TOOLS, groups = null, lead = true, y = 11, cell = 7, h = 7.6, r = 1, caps = false, del = false, shades = [ACCENT] } = {}) {
+  let x = 6;
+  let out = '';
+  const size = Math.min(cell, h) * 0.68;
+  if (lead) {
+    out += sq(x, y, 11, h, ACCENT, 1, r) + sq(x + 2.5, y + h / 2 - 0.55, 6, 1.1, INK_DARK, 0.85, 0.5);
+    x += 12;
+  }
+  const clusters = groups ?? [tools];
+  clusters.forEach((list, ci) => {
+    list.forEach((name, i) => {
+      const last = del && ci === clusters.length - 1 && i === list.length - 1;
+      out += sq(x, y, cell - 0.5, h, last ? RED : shades[ci % shades.length], 1, r);
+      const iconY = caps ? y + h * 0.38 : y + h / 2;
+      out += toolIcon(name, x + (cell - 0.5) / 2, iconY, size, last ? '#fff' : INK_DARK);
+      if (caps) out += sq(x + 1, y + h - 2.1, cell - 2.5, 0.8, INK_DARK, 0.6, 0.3);
+      x += cell;
+    });
+    x += groups ? 1.4 : 0;
+  });
+  return out;
+}
+
+/**
+ * A bar on one body (the strip, the glass and the capsules): the body behind, the main act a filled button with a word's line, the tools as drawings on the body with no boxes of their own.
+ * `seps` sets lines between the clusters of `groups`.
+ */
+function bodyBar({ tools = TEXT_TOOLS, groups = null, y = 10.5, h = 8.6, cell = 6.8, fill = DARK, opacity = 1, r = 2, ink = INK_LIGHT, leadFill = ACCENT, leadInk = INK_DARK, rim = null } = {}) {
+  const clusters = groups ?? [tools];
+  const count = clusters.reduce((n, list) => n + list.length, 0);
+  const width = 13 + count * cell + (clusters.length - 1) * 2 + 2;
+  let out = sq(5, y, width, h, fill, opacity, r);
+  if (rim) out += `<rect x="5.25" y="${y + 0.25}" width="${width - 0.5}" height="${h - 0.5}" rx="${r}" fill="none" stroke="${rim}" stroke-width="0.4" opacity="0.3"/>`;
+  const pad = 1.3;
+  out += sq(6.4, y + pad, 11, h - pad * 2, leadFill, 1, Math.min(r, (h - pad * 2) / 2)) + sq(8.9, y + h / 2 - 0.55, 6, 1.1, leadInk, 0.85, 0.5);
+  let x = 19;
+  const size = Math.min(cell, h) * 0.66;
+  clusters.forEach((list, ci) => {
+    if (ci) {
+      out += sq(x - 0.2, y + 1.6, 0.5, h - 3.2, ink, 0.35, 0);
+      x += 2;
+    }
+    for (const name of list) {
+      out += toolIcon(name, x + cell / 2, y + h / 2, size, ink);
+      x += cell;
+    }
+  });
+  return out;
+}
+
+/** What a press on ⋮ opens, drawn just right of it level with the bar: a small dark card with its title and two rows. */
+const openBox = (x) => sq(x, 11, 19, 15, DARK, 0.94, 1.5) + line(x + 2, 13.5, 9, 1.5) + sq(x + 2, 17, 15, 3, '#fff', 0.14, 0.8) + sq(x + 2, 21.5, 15, 3, '#fff', 0.14, 0.8);
+
+const TOOLBARS = {
+  groups: scene() + tileBar(),
+  full: scene() + tileBar({ lead: false, tools: ['grip', 'front', 'back', 'phone', 'dup', 'gear', 'del'], del: true }),
+  // A word for the main act with Motion and Placement, and a short bar: each with what ⋮ opens standing just right of it
+  panels: scene() + tileBar({ tools: ['motion', 'arrange', 'more'] }) + openBox(40),
+  short: scene() + tileBar({ lead: false, tools: ['grip', 'gear', 'more'] }) + openBox(28),
+};
+
+const TOOLBAR_LOOK_PICS = {
+  'glass-accent': scene() + bodyBar({ fill: DARK, opacity: 0.5, ink: '#fff', rim: '#fff' }),
+  squares: scene() + tileBar(),
+  strip: scene() + bodyBar(),
+  areas: scene() + tileBar({ groups: IMAGE_AREAS, shades: ['#7fd9cd', ACCENT, '#1f9e8f'], lead: false }),
+  captions: scene() + tileBar({ y: 9, h: 10, cell: 7.2, caps: true }),
+  glass: scene() + bodyBar({ fill: DARK, opacity: 0.5, ink: '#fff', rim: '#fff', leadFill: '#fff', leadInk: INK_DARK }),
+  large: scene() + tileBar({ tools: ['type', 'box', 'motion', 'arrange'], y: 8, h: 10, cell: 9, r: 2.5 }),
+  capsule: scene() + bodyBar({ r: 4 }),
+  white: scene() + bodyBar({ fill: '#fff', ink: '#23272c', r: 4 }),
+  'glass-capsule': scene() + bodyBar({ fill: DARK, opacity: 0.5, ink: '#fff', rim: '#fff', r: 4, leadFill: '#fff', leadInk: INK_DARK }),
+  'capsule-areas': scene() + bodyBar({ groups: IMAGE_AREAS, r: 4 }),
+  'large-capsule': scene() + bodyBar({ tools: ['type', 'box', 'motion', 'arrange', 'more'], y: 8, h: 11, cell: 7.6, r: 5.5 }),
+  soft: scene() + bodyBar({ r: 2.2 }),
+};
+
 const LOOKS = {
   adminDesign: ADMIN_DESIGN_PICS,
+  toolbar: TOOLBARS,
+  toolbarLook: TOOLBAR_LOOK_PICS,
   shortcuts: SHORTCUTS,
   layout: LAYOUTS,
   place: PLACES,
