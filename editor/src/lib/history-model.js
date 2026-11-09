@@ -28,6 +28,14 @@ export function joinsLast(last, key, now) {
 }
 
 /**
+ * The key of a change made as a step of its own (asOwnStep in state/history.svelte.js, a setting's way back): its own key with a mark of its own, so it never joins the change before it, nor the change after it it.
+ * The key keeps its start, so the list of steps names it as it names the change (stepKind).
+ * @param {string} key The change's own key
+ * @param {number} n A number no other such step has
+ */
+export const ownStepKey = (key, n) => `${key}:own-step-${n}`;
+
+/**
  * What kind of change a step was, from its key, as the list of steps names it: a dictionary key for its words, an icon, and whether it was made on a page (so the list names the page beside it).
  * @param {string} key The step's key (the history's pushHistory)
  * @param {{typed?: boolean}} [step] typed: the step carries a caret, so it was typing

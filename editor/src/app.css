@@ -1344,9 +1344,18 @@
     gap: 0.4rem;
   }
 
+  /* A setting's row and what belongs to it, apart as the rows of a group stand */
   .setting-body {
+    display: grid;
     flex: 1;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
     min-width: 0;
+  }
+
+  /* A dimmed line under a row's words (the phone placement) keeps its own small distance */
+  .setting-body:has(> .setting-source) {
+    gap: 0;
   }
 
   .setting-source {

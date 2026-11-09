@@ -8,6 +8,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.11 - Adding a setting: the field surveyed, and capabilities as cards chosen - 9 November 2026
+
+- «Extra settings: Added from a menu», tried on a text block, put its ⋮ on a line of its own and hid one setting of a group of two, so «On pointer» took three clicks and the menu saved no room. How the field hides settings and adds them back was surveyed (comparison/SURVEYS.md «Adding a setting»), recorded as E43 to E46 in ELEMENTS.md and a row in FEATURES.md's editor catalogue, with the raw notes kept outside the repo.
+- Two ways were drawn on the Design canvas «Adding a Setting», the ⋮ in the heading and capabilities as cards, the second in six variations. Capabilities as cards were chosen, in five forms offered in Urd settings with the add from the menu's head as the default; the build is BACKLOG 0.7.33.12.
+
+The independent review before the commit found these, all fixed:
+
+1. A recommendation cited Webflow and Elementor 4 through another's sources, which held only WordPress. E44 links its own.
+2. The survey named three builders it gave no source for, and singled one out. It lists the pages read, and names no builder alone.
+3. The editor catalogue's row pointed to the step that drew the ways, not the one that builds them. It points to 0.7.33.12.
+
+### 0.7.33.10.1 - The box style, the motion and Placement as setting rows - 9 November 2026
+
+- The rows every block shares were drawn by hand, so none could tell a value of its own: no way back per setting, and «Extra settings» could not hide them. The box style, the motion, and Placement's height, size, fit, phone switch, pinning and decor are setting rows with their own way back to the standard (`lib/rows/Setting.svelte`).
+- What belongs to a setting stands in its row, so it comes and goes with it: the shadow's colour, the border's colour and thickness, the entrance's duration and delay, the height's alignment, the size's text bounds, the fit's smallest scale and the pinning's options.
+- Pinned's fit, size and phone switch show the same way back as their rows in Placement. The frame's numbers and the name for links stay plain rows.
+
+The independent review before the commit found these, all fixed:
+
+1. With the pins drawn, a size's text bounds and a fit's smallest scale stood beside their control, since a row with a pin draws its content in one line. What belongs to a setting stands under its line (`more` in `lib/rows/Setting.svelte`), and `tests/menu-render.test.mjs` holds it there, in Placement and in Pinned.
+2. A pinned size left its text bounds nowhere. They are a part of their own, `menu/SizeBounds.svelte`, which a pinned size brings along.
+3. A way back pressed right after a change joined the change's undo step, so an undo seemed to do nothing; the design's and the alignment's ways back did the same. Every way back is an undo step of its own (`asOwnStep` in `state/history.svelte.js`, `ownStepKey` in `lib/history-model.js`, tested).
+4. Rows standing apart moved the phone placement's dimmed line away from its words. It keeps its small distance.
+5. Pinned's design, phone design and alignment showed no way back. They show it as their rows in the areas do.
+6. Comments said the box style goes back to the theme's, though the shadow and the glass go back to none, and that the fit's smallest scale reaches Pinned by standing in the row; two wrapped mid-sentence. Each says what the code does.
+
 ### 0.7.33.9 - The walk through every admin design: the menu beside its block, the bar inside the canvas, and Pinned's pictures - 9 November 2026
 
 - Every admin design was walked through every admin layout at 1500 and 1024 px in the browser: the panels and their tab menus; a text block's, a button's and the calendar's bar, element menu, small panel and design button; and the settings window. Three findings are fixed below; the help chip over a bar wider than its block is written into BACKLOG's bug list, and the narrow sidebar window under Known Limitations.

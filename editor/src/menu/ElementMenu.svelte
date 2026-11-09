@@ -18,6 +18,7 @@
   import PinScope from './PinScope.svelte';
   import DesignRow from './DesignRow.svelte';
   import FitMin from './FitMin.svelte';
+  import SizeBounds from './SizeBounds.svelte';
   import BoxStyle from './BoxStyle.svelte';
   import RibbonMotion from './families/RibbonMotion.svelte';
   import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
@@ -110,19 +111,24 @@
     }
     const byWidth = FIT_BY_WIDTH.has(b.type);
     items.push({ id: 'fit', label: ta('lbl.fit'), tip: ta('tip.fit'), below: FitMin, kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
+      own: b.fit === 'shrink' || b.fit === 'both', reset: () => setBlockFit('wrap'),
       options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
         : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
       set: (v) => setBlockFit(v) });
-    items.push({ id: 'phone', label: ta('lbl.hideMobile'), tip: ta('tip.hideMobile'), kind: 'switch', value: Boolean(b.hideMobile), set: (on) => setBlockHideMobile(on) });
+    items.push({ id: 'phone', label: ta('lbl.hideMobile'), tip: ta('tip.hideMobile'), kind: 'switch', value: Boolean(b.hideMobile), set: (on) => setBlockHideMobile(on),
+      own: Boolean(b.hideMobile), reset: () => setBlockHideMobile(false) });
     const p = b.props;
     // A block's design, as the calendar's: one id for every block with designs, core or plugin (block-designs.js, the design contract), opening the design picker.
     if (designs) items.push({ id: 'design', label: ta('lbl.design'), tip: ta('tip.picker.design'), kind: 'open', value: designs.name(designs.read(p)), picture: designs.picture?.(designs.read(p)) ?? '', run: ed.openBlockDesignPicker,
-      current: designs.read(p), designs: () => pictureList(designs), pick: (id) => setBlockProp(designs.prop, id) });
+      current: designs.read(p), designs: () => pictureList(designs), pick: (id) => setBlockProp(designs.prop, id),
+      own: designs.read(p) !== designs.read({}), reset: () => setBlockProp(designs.prop, undefined) });
     // A block with a phone design can pin its row too, which opens the phone design picker.
-    if (designs?.phone) items.push({ id: 'phoneDesign', label: ta('lbl.phoneDesign'), tip: ta('tip.picker.phoneDesign'), kind: 'open', value: phoneDesignName(designs, p), run: ed.openBlockPhonePicker });
+    if (designs?.phone) items.push({ id: 'phoneDesign', label: ta('lbl.phoneDesign'), tip: ta('tip.picker.phoneDesign'), kind: 'open', value: phoneDesignName(designs, p), run: ed.openBlockPhonePicker,
+      own: p.phoneDesign !== undefined, reset: () => setBlockProp('phoneDesign', undefined) });
     if (b.type === 'text') {
       items.push({ id: 'align', label: ta('lbl.align'), tip: ta('tip.text.align'), kind: 'choice', value: p.align ?? 'left',
-        options: [['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]], set: (v) => setBlockProp('align', v) });
+        options: [['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]], set: (v) => setBlockProp('align', v),
+        own: (p.align ?? 'left') !== 'left', reset: () => setBlockProp('align', 'left') });
       items.push({ id: 'textBox', label: ta('lbl.textBoxToggle'), tip: ta('tip.blocks.textBox'), below: p.box ? BoxStyle : null, kind: 'switch', value: Boolean(p.box), set: (on) => setBlockProp('box', on) });
     } else if (b.type === 'button') {
       items.push({ id: 'goesTo', label: ta('lbl.goesTo'), kind: 'link', value: linkOf(p), set: (link) => ed.setBlockLink(link) });
@@ -175,8 +181,9 @@
     if (!SIZE_BY_FRAME.has(b.type)) {
       // The size ends where the block's base text meets a bound the owner set (sizeRange); setBlockSize holds it there.
       const range = sizeRange(b);
-      items.push({ id: 'size', label: ta('lbl.scale'), tip: ta('tip.scale'), kind: 'slider', min: Math.round(range.min * 100), max: Math.round(range.max * 100), step: Math.round(SIZE.step * 100), value: Math.round(blockSize(b) * 100),
-        shown: `${Math.round(blockSize(b) * 100)} %`, input: (v) => setBlockSize(v / 100), done: endSizeGesture });
+      items.push({ id: 'size', label: ta('lbl.scale'), tip: ta('tip.scale'), below: SizeBounds, kind: 'slider', min: Math.round(range.min * 100), max: Math.round(range.max * 100), step: Math.round(SIZE.step * 100), value: Math.round(blockSize(b) * 100),
+        shown: `${Math.round(blockSize(b) * 100)} %`, input: (v) => setBlockSize(v / 100), done: endSizeGesture,
+        own: blockSize(b) !== 1, reset: () => { setBlockSize(1); endSizeGesture(); } });
     }
     return items;
   }
@@ -304,7 +311,7 @@
         {#each pinnedItems as item (item.id)}
           <!-- A row with what belongs to it, kept together in one column; a setting under it that is pinned itself stands as its own row -->
           <div class="emenu-pinned-item">
-            <Setting pin={item.id}>
+            <Setting pin={item.id} own={item.own} reset={item.reset}>
               {#if item.kind === 'open'}
                 <!-- A look is chosen as «Designs» asks, and as a row among the tiles, which stand two to a line -->
                 <LookChoice label={item.label} title={item.tip} value={item.value} picture={item.picture ?? ''} current={item.current ?? null}

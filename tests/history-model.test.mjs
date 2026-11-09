@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { register } from 'node:module';
 
 register('./_svelte-loader.mjs', import.meta.url);
-const { joinsLast, emptyTail, stepKind, walkSteps, stepTyped, stepPage, keptHolds, MERGE_MS, HISTORY_LIMIT } = await import('../editor/src/lib/history-model.js');
+const { joinsLast, emptyTail, stepKind, walkSteps, stepTyped, stepPage, keptHolds, MERGE_MS, HISTORY_LIMIT, ownStepKey } = await import('../editor/src/lib/history-model.js');
 import { engineImport } from './_engine.mjs';
 const dict = (await engineImport('locales/admin/en-GB.js')).default.strings;
 const { ICONS } = await import('../editor/src/lib/icons.js');
@@ -117,3 +117,13 @@ test('keptHolds: the kept steps are taken up while the drafts are the ones the m
   assert.equal(keptHolds(null, kept, now()), false, 'no mark');
 });
 
+test('a setting\'s way back is a step of its own: it joins neither the change before it nor the change after it, and is named as that change', () => {
+  const key = 'edit:blk-1:fit';
+  const own = ownStepKey(key, 1);
+  assert.equal(joinsLast({ key, at: 0 }, key, 10), true, 'the same edit joins at any pause');
+  assert.equal(joinsLast({ key, at: 0 }, own, 10), false, 'the way back right after the change is a step of its own');
+  assert.equal(joinsLast({ key: own, at: 0 }, key, 10), false, 'the next change does not join the way back');
+  assert.equal(joinsLast({ key: own, at: 0 }, ownStepKey(key, 2), 10), false, 'two ways back are two steps');
+  assert.deepEqual(stepKind(own), stepKind(key));
+  assert.deepEqual(stepKind(ownStepKey('edit:theme-accent', 3)), stepKind('edit:theme-accent'));
+});

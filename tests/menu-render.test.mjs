@@ -374,3 +374,30 @@ test('a block with designs has its design row first in Style, or in Pinned while
     setQuickChoice(type, NO_CHOICE);
   }
 });
+
+test('what belongs to the size and the fit stands under their line, in Placement and in Pinned', () => {
+  const extra = { fit: 'shrink', fitMin: 0.5, size: 1.2 };
+  const draw = (choice) => {
+    setQuickChoice('text', choice);
+    const context = new Map([['urd-editor', handleFor(block('text', {}, extra))]]);
+    return parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body);
+  };
+  const count = (node, name) => find(node, (n) => hasClass(n, name)).length;
+  // In Placement, with the pins drawn: the size's text bounds and the fit's smallest scale stand in the row, under its line.
+  const areas = draw({ pinned: [], removed: PIN_IDS });
+  for (const [pin, control, part] of [['size', 'row-slider', 'frame-grid'], ['fit', 'choice', 'row-slider']]) {
+    const row = find(areas, (n) => n.attrs['data-pin'] === pin)[0];
+    assert.ok(row, `the ${pin} row is drawn`);
+    const line = find(row, (n) => hasClass(n, 'pin-line'))[0];
+    assert.ok(line, `the ${pin} row draws its pin`);
+    assert.equal(count(line, control), 1, `the ${pin} row's line holds its control`);
+    assert.equal(count(line, part), 0, `what belongs to ${pin} stands under the line, not in it`);
+    assert.equal(count(row, part), 1, `what belongs to ${pin} stands in its row`);
+  }
+  // In Pinned: the pinned size brings its bounds and the pinned fit its smallest scale.
+  const pinned = find(draw({ pinned: ['size', 'fit'], removed: [] }), (n) => hasClass(n, 'emenu-pinned'))[0];
+  assert.ok(pinned, 'Pinned is drawn');
+  assert.equal(count(pinned, 'frame-grid'), 1, 'the size\'s bounds stand in Pinned');
+  assert.equal(count(pinned, 'row-slider'), 2, 'the size\'s slider and the fit\'s smallest scale stand in Pinned');
+  setQuickChoice('text', NO_CHOICE);
+});

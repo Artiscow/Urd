@@ -4,7 +4,7 @@
  */
 import { untrack } from 'svelte';
 import { createDraftStore } from '../lib/draftStore.js';
-import { joinsLast, emptyTail, walkSteps, stepTyped, stepPage, keptHolds, HISTORY_LIMIT } from '../lib/history-model.js';
+import { joinsLast, emptyTail, walkSteps, stepTyped, stepPage, keptHolds, HISTORY_LIMIT, ownStepKey } from '../lib/history-model.js';
 import { readKept, writeKept } from '../lib/history-store.js';
 import { indexPending } from '../lib/collection-index.js';
 import { unpublishedParts } from '../lib/unpublished.js';
@@ -88,6 +88,21 @@ const history = [];
 const redoStack = [];
 
 let lastHistoryKey = null;
+
+/** While a change runs as a step of its own (asOwnStep), and the number that sets it apart (ownStepKey). */
+let ownStepDepth = 0;
+let ownSteps = 0;
+
+/** Runs `fn` as an undo step of its own: a setting's way back never joins the change before it, so an undo right after brings that change back, and the next change never joins it. */
+function asOwnStep(fn) {
+  if (ownStepDepth === 0) ownSteps += 1;
+  ownStepDepth += 1;
+  try {
+    return fn();
+  } finally {
+    ownStepDepth -= 1;
+  }
+}
 
 /** When the step the history ends on last grew, for the window a slider's ticks join in. */
 let lastHistoryAt = 0;
@@ -251,6 +266,7 @@ function readDraft(id) {
  * @param {{caret?: {blockId: string, offset: number}|null, pages?: string[]}} [options] The caret the change was typed at, and pages beside the open one the change writes, whose drafts the step holds
  */
 function pushHistory(key, { caret = null, pages = [] } = {}) {
+  if (ownStepDepth > 0) key = ownStepKey(key, ownSteps);
   const now = Date.now();
   if (joinsLast(lastHistoryKey === null ? null : { key: lastHistoryKey, at: lastHistoryAt }, key, now)) {
     lastHistoryAt = now;
@@ -487,6 +503,7 @@ export const historyState = {
   loadKept,
   snapshot,
   pushHistory,
+  asOwnStep,
   restore,
   restoreCollections,
   restoreTemplates,

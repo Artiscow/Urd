@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.10.1): the box style, the motion and Placement as setting rows
+
+- [ ] A FAQ's Card style and a text box: change the colour, the shadow, the border or the glass, and each row shows its reset arrow, which takes it back to the theme's; the shadow's colour stands under the shadow and goes with it
+- [ ] Motion: an entrance shows its duration and delay under it, and its arrow takes the block back to no entrance; an effect on pointer has its own arrow
+- [ ] Placement: an own height (with its alignment), a size other than 100 % (with the text bounds), Shrink or Both on narrower screens (with the smallest scale), Hide on phones, Pin while scrolling (with its options) and Decor each show their reset arrow, which takes the block back to the standard in one undo step
+- [ ] Pinned: the fit, the size and Hide on phones show the same arrow there as in Placement
+- [ ] With «Extra settings: Added from a menu», the Card style group opens on its first setting with the rest behind the ⋮, and a setting with a value of its own stands
+
 ### Test batch (0.7.33.9): the walk through every admin design
 
 - [ ] In a window about 1024 px wide with a panel open (Floating menu), the gear on a block near the canvas's right edge opens the element menu in one column beside the block, not over it; the head button «Wide view» makes it wide where it stands
