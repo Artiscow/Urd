@@ -533,6 +533,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [x] Urd Admin settings remember to which point you were scrolled until you close the site FIXED 0.7.33.7 (9 November 2026)
  - [ ] When two elements are close together (above and below) the element belows' toolmenu cannot ble hovered over or clicked because the hover on the above block selects that instead.
  - [ ] A review of the design of admin settings 
+ - [ ] A block's «?» help chip, at its top right at the toolbar's height, stands over the toolbar's tools wherever the bar is wider than its block (the calendar's Full bar in a canvas about 700px wide); the chip needs a place clear of the bar (found in the walk of 0.7.33.9)
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene
@@ -623,7 +624,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
     Done when: each form is seen on a block and on a section in the browser, on the desktop and in the phone view.
   - [x] 0.7.33.8 DELIVERED 0.7.33.8 (9 November 2026; with the round's test findings: «Design button on the bar» under «Designs», the small window its default, and the options named Full window and Small menu) How a look is chosen, built across the panels and the settings.
     Done when: each form is seen in every panel that chooses a look.
-  - [ ] 0.7.33.9 The walk through every design.
+  - [x] 0.7.33.9 DELIVERED 0.7.33.9 (9 November 2026) The walk through every design. The four designs in the five admin layouts at 1500 and 1024 px: three findings fixed (the wide menu over its block, the bar past the canvas's edge, Pinned's pictures over the tabs), the help chip over a wide bar written into the bug list and the narrow sidebar window under Known Limitations.
     Done when: every design is walked through every admin layout, wide and narrow, with every finding fixed or written here.
   - [ ] 0.7.33.10 Every family's rows as setting rows (added 9 November 2026): «Extra settings» as a menu hides only the rows that can tell whether they hold a value of their own, the setting rows of the row kit, and most families still draw their rows by hand (labels with a dropdown or a field), so on the home page only the ribbon block has rows it can hide. Each family's rows move into setting rows with their key, so the mode reaches every block and every row says whether it holds the block's own value.
     Done when: with «Extra settings» set to a menu, every fold of more than one setting on the canvas's test blocks (text, image, calendar, form, checkout) shows its first setting and those with a value of their own, the rest behind its ⋮; and no fold hides a value the owner set.
@@ -642,6 +643,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - Utenfor scope for kjernen (fra kartleggingen 18. juli 2026): innlogging/medlemsområde, P2P-bruktmarked (ApeironLFs «Kjøp & bytte»), fulltekstsøk på siden (krever avhengighet à la minisearch - evt. community-plugin), sanntidsfeeds/personalisering. Krever server/CMS eller avhengigheter; Urd er statisk og avhengighetsfri; the collection search of v0.8 AR-3 and the v0.8 site search (to be weighed) are the nearest plans for search
 - Pictures from a Nextcloud share or a JSON list are proxied at their stored size (only Google's picture host resizes on request); the 12 MB cap applies, and the photo guide asks for sensibly sized files (review note, 0.7.0.16-35p)
 - The preview hides the page's scrollbar, so browsers with a classic scrollbar lay out the published page about 15 px narrower than the preview shows (ADR-0018, 16 September 2026)
+- In a window about 1024 px wide with the sidebar of words and a panel open, the canvas is about 560 px, so the floating element menu has no room beside a block and covers part of it, the least it can (`placeBesideBlock` and `wideFits` in `lib/menu-place.js`); the docked forms of «Element menu» keep the block in view (the walk of 0.7.33.9, 9 November 2026)
 - A plain file server such as `python3 -m http.server` serves every published page through its `<path>/index.html` copy, but a page created in the editor and not yet published has no copy and is reached only with `?page=<id>`; it also sends ordinary cache headers, so the browser may keep stale engine files after a change, and the preview can stay blank until a hard reload. `dev-server.py`, which every site gets with the template, never caches (DEVELOPMENT-en-GB.md)
 - Angring av en merge-commit gjenoppretter første forelders innholdstilstand (dokumentert i revert.js); sjelden via admin-flyten, men mulig når noen også jobber via git
 - Tekst-selvhelbrederen fjerner alle knapper i rik tekst ved rendering, også en bevisst innlimt HTML-knapp (vernet mot foreldreløse håndtak-knapper veier tyngre); innlimte event-attributter og script strippes alltid hos besøkende

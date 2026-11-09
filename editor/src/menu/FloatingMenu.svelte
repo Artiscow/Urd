@@ -6,7 +6,7 @@
   import { getContext, onMount } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
-  import { menu, menuLayout } from './state.svelte.js';
+  import { menu, menuLayout, MENU_WIDE_W } from './state.svelte.js';
   import ElementMenu from './ElementMenu.svelte';
   import SectionMenu from '../section/SectionMenu.svelte';
   import SearchField from '../lib/rows/SearchField.svelte';
@@ -64,8 +64,9 @@
     {#if menu.place}
       <IconButton icon={BACK_ICON} label={ta(pos.section ? 'menu.backToSection' : 'menu.backToBlock')} onclick={menuBackToBlock} />
     {/if}
-    {#if !only}<IconButton class="menu-width" icon={menu.wide ? MENU_NARROW_ICON : MENU_WIDE_ICON} label={menu.wide ? ta(menu.formPref === 'tabs' ? 'menu.toTabs' : 'menu.toNarrow') : ta('menu.toWide')}
-      onclick={() => (menu.wide = !menu.wide)} />{/if}
+    <!-- The head button follows the form drawn: from wide to the chosen form, and back to wide, also where the wide menu gave way to one column beside its block; where the window has no room for the wide form, it has nothing to switch and is not drawn -->
+    {#if !only && menu.room >= MENU_WIDE_W}<IconButton class="menu-width" icon={layout === 'wide' ? MENU_NARROW_ICON : MENU_WIDE_ICON} label={layout === 'wide' ? ta(menu.formPref === 'tabs' ? 'menu.toTabs' : 'menu.toNarrow') : ta('menu.toWide')}
+      onclick={() => { if (layout === 'wide') menu.wide = false; else if (menu.cramped) menu.cramped = false; else menu.wide = true; }} />{/if}
     <IconButton icon={ICONS.cross} label={ta('tip.closeEsc')} onclick={onclose} />
   </header>
   <div class="panel-body block-menu-body">

@@ -49,11 +49,13 @@ export const menu = $state({
   propsQuery: '',
   /** Where the owner dragged the floating menu, kept for the session; null = beside the block (lib/menu-place.js). */
   place: null,
+  /** Whether the wide floating menu gives way to one column for the block it is opened at, where it would cover more than a tenth of the block beyond what the column covers (wideFits in lib/menu-place.js); the head button takes it back to wide. */
+  cramped: false,
 });
 
-/** Whether the floating menu stands wide: chosen wide, and with the room for it. */
+/** Whether the floating menu stands wide: chosen wide, with the room for it, and not given way to one column beside its block. */
 export function menuIsWide() {
-  return menu.wide && menu.room >= MENU_WIDE_W;
+  return menu.wide && menu.room >= MENU_WIDE_W && !menu.cramped;
 }
 
 /** A choice kept only where it differs from its default, the list's first. */

@@ -546,6 +546,8 @@ function drawFrame(el, frame) {
   if (shift) el.style.top = `${frame.y + shift}px`;
   const shown = shownHeight(el, frame.h);
   if (shown !== frame.h) el.style.height = `${shown}px`;
+  // A block moved or resized keeps its bar inside the canvas as it goes.
+  el._urdKeepBar?.();
 }
 
 /**
@@ -3696,6 +3698,8 @@ function selectBlock(el, opts = {}) {
     if (b !== el) b.classList.remove('urd-selected');
   });
   el?.classList.add('urd-selected');
+  // The bar shows with the selection, and is kept inside the canvas once it is drawn.
+  el?._urdKeepBar?.();
   // The selected block takes the keyboard focus, so the keys on a selected
   // block (the arrows, Delete, 1, 2 and 3, Shift+F10) work right after the
   // click: the press that selects prevents its default, which would
@@ -4549,15 +4553,31 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.classList.toggle('urd-toolbar-under', under);
     placeToolbar(under);
   };
+  // An upright bar that would run past the canvas's right edge is moved left by what runs over, once it is drawn (shiftInto in place.js), so every tool stays in reach; the move is in the block's own px, the block's own scale taken out.
+  const keepToolbarIn = () => {
+    toolbar.style.translate = '';
+    if (!toolbar.isConnected || Number.parseFloat(el.style.getPropertyValue('--urd-block-rot'))) return;
+    const box = toolbar.getBoundingClientRect();
+    if (!box.width) return;
+    const shift = shiftInto(box.left, box.width, document.documentElement.clientWidth);
+    if (shift >= 0) return;
+    const zoom = el.getBoundingClientRect().width / el.offsetWidth || 1;
+    toolbar.style.translate = `${shift / zoom}px 0`;
+  };
+  // The block carries its bar's keeping, for selectBlock to ask for once the block is selected and its bar shows.
+  el._urdKeepBar = () => requestAnimationFrame(keepToolbarIn);
   // On a rotated block the toolbar is anchored at the block's bounding box
   // on the screen (toolbarAnchor), clear of the content, and turns itself
   // upright there; unrotated, base.css places it at the block's own edge.
   const placeToolbar = (under = toolbar.classList.contains('urd-toolbar-under')) => {
     const rot = Number.parseFloat(el.style.getPropertyValue('--urd-block-rot')) || 0;
+    // A shift kept from an upright bar is never carried onto a turned one; an upright bar is kept inside the canvas anew once drawn.
+    toolbar.style.translate = '';
     if (!rot) {
       toolbar.style.left = '';
       toolbar.style.top = '';
       toolbar.style.bottom = '';
+      requestAnimationFrame(keepToolbarIn);
       return;
     }
     const { left, top } = toolbarAnchor(el.offsetWidth, el.offsetHeight, rot, under);

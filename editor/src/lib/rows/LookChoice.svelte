@@ -26,10 +26,10 @@
     return { all, more: run.more, inRun: new Set(run.items.map((d) => d.id)) };
   });
 
-  /** In the design's own small panel, the design in use is brought to the middle of the box, once it is laid out, where it stands out of view: as the panel opens, and when the panel shows another block's design; the box alone scrolls. */
+  /** Where the pictures scroll in a box of their own (the design's small panel, Pinned), the design in use is brought to the middle of the box, once it is laid out, where it stands out of view: as the box opens, and when it shows another block's design; the box alone scrolls. */
   const intoView = (inUse) => (node) => {
     const frame = requestAnimationFrame(() => {
-      const tile = inUse !== null && node.closest('.emenu-only[data-only-kind="look"]') ? node.querySelector('.look-tile.on') : null;
+      const tile = inUse !== null && node.scrollHeight > node.clientHeight ? node.querySelector('.look-tile.on') : null;
       if (!tile) return;
       const box = node.getBoundingClientRect();
       const at = tile.getBoundingClientRect();
@@ -105,12 +105,24 @@
     display: flex;
   }
 
-  /* There the pictures scroll in a box about three lines of them high, so the panel keeps the size of a run, with room for a tile's focus ring at the box's edges */
+  /* There the pictures scroll in a box about three lines of them high, so the panel keeps the size of a run, and in Pinned one line high with the next showing, so the areas and their tabs stay in view; with room for a tile's focus ring at the box's edges */
+  :global(.emenu-pinned) .look-grid {
+    grid-auto-rows: max-content;
+    align-content: start;
+    max-height: 8.6rem;
+    padding: 3px 0.3rem 3px 3px;
+    scroll-padding: 3px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
   :global(.emenu-only[data-only-kind='look']) .look-grid {
     grid-auto-rows: max-content;
     align-content: start;
     max-height: 21.5rem;
     padding: 3px 0.3rem 3px 3px;
+    scroll-padding: 3px;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;

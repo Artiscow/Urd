@@ -19,3 +19,4 @@ template/.wrangler/
 # Miscellaneous
 .DS_Store
 *.log
+.vscode

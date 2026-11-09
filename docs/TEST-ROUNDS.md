@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.9): the walk through every admin design
+
+- [ ] In a window about 1024 px wide with a panel open (Floating menu), the gear on a block near the canvas's right edge opens the element menu in one column beside the block, not over it; the head button «Wide view» makes it wide where it stands
+- [ ] In a wide window the menu stays wide where it has room beside the block, and opens in one column only where the wide one would cover a good part of the block
+- [ ] A block near the canvas's right edge (the calendar with the Full bar, at 1024 px with a panel open): its bar ends inside the canvas with every tool in reach; a block at the left edge keeps its bar flush with its left side
+- [ ] Side panel with Designs on Small menu: the calendar's pinned design shows one line of pictures that scrolls, the design in use in view, and Content, Style and Placement right under Pinned
+- [ ] Each preset in each panel layout, wide and narrow: the panels, a block's bar and menu, a tool's small panel, the design button and the settings window open where they should
+
 ### Test batch (0.7.33.8): how a look is chosen, and the design button's small window
 
 - [ ] Urd settings, Presets, under the element menu: «Designs» with two pictures, Full window and Small menu, and «Design button on the bar» directly under it with Full window and Small window, Small window chosen in a fresh browser

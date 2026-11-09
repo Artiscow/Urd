@@ -3,10 +3,10 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { tick } from 'svelte';
-import { measureMenuRoom as measureRoom, menu, MENU_WIDE_W, MENU_SMALL_W, chooseArea, menuDocked } from '../menu/state.svelte.js';
+import { measureMenuRoom as measureRoom, menu, menuIsWide, MENU_WIDE_W, MENU_SMALL_W, chooseArea, menuDocked } from '../menu/state.svelte.js';
 import { folds } from '../lib/folds.svelte.js';
 import { onlyOf } from '../lib/only-group.js';
-import { placeBesideBlock, clampPlace } from '../lib/menu-place.js';
+import { placeBesideBlock, clampPlace, givesWay } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
@@ -223,7 +223,7 @@ function onSectionMenu(msg) {
   if (only?.startsWith('fold:')) folds.set('menu', only.slice(5), true);
   if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), section: true, only, title: toolTitle(msg) };
   else if (menuDocked()) openDockedMenu();
-  else blockMenu = { ...menuPlaceFor(msg.rect), section: true };
+  else blockMenu = { ...menuPlaceFor(msg.rect, false, true), section: true };
 }
 
 /** The design button on a block's toolbar: the block selected and its design picker open, the calendar's own or the one every other block with designs shares; from the phone view, the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS in push-model.js). */
@@ -239,7 +239,7 @@ function onBlockDesign(msg) {
 function menuSize(small = false) {
   measureMenuRoom();
   return {
-    w: Math.min(small ? MENU_SMALL_W : menu.wide && menu.room >= MENU_WIDE_W ? MENU_WIDE_W : 400, window.innerWidth - 16),
+    w: Math.min(small ? MENU_SMALL_W : menuIsWide() ? MENU_WIDE_W : 400, window.innerWidth - 16),
     h: Math.min(window.innerHeight * 0.72, 620),
   };
 }
@@ -251,14 +251,19 @@ function menuSize(small = false) {
  * are multiplied by the scale before being added to the iframe's window
  * position (visual = ir + scale * inner).
  */
-function menuPlaceFor(rect, small = false) {
-  const size = menuSize(small);
+function menuPlaceFor(rect, small = false, section = false) {
   const view = { w: window.innerWidth, h: window.innerHeight };
-  if (menu.place) return clampPlace(menu.place, size, view, menu.min);
   const ir = previewState.iframeEl?.getBoundingClientRect();
-  if (!ir) return { left: menu.min, top: 8 };
   const s = previewState.scale;
-  const block = { left: ir.left + s * rect.left, top: ir.top + s * rect.top, right: ir.left + s * rect.right, bottom: ir.top + s * rect.bottom };
+  const block = ir ? { left: ir.left + s * rect.left, top: ir.top + s * rect.top, right: ir.left + s * rect.right, bottom: ir.top + s * rect.bottom } : null;
+  // The wide menu opened beside a block gives way to one column where that covers clearly less of the block (givesWay); a section's menu, and one the owner dragged, keep their form.
+  if (!small) {
+    menu.cramped = false;
+    menu.cramped = givesWay(block, view, { wide: menuIsWide(), wideW: MENU_WIDE_W, narrowW: 400, h: menuSize().h, min: menu.min, dragged: Boolean(menu.place), section });
+  }
+  const size = menuSize(small);
+  if (menu.place) return clampPlace(menu.place, size, view, menu.min);
+  if (!block) return { left: menu.min, top: 8 };
   const { left, top } = placeBesideBlock(block, size, view, { min: menu.min });
   return { left, top };
 }
@@ -283,7 +288,7 @@ function moveBlockMenu(place, size = menuSize(Boolean(blockMenu?.only))) {
 /** «Back beside the block»: the remembered place is dropped, and the menu stands beside the block it was opened at. */
 function menuBackToBlock() {
   menu.place = null;
-  if (menuAnchor) blockMenu = { ...menuPlaceFor(menuAnchor, Boolean(blockMenu?.only)), ...(blockMenu?.section ? { section: true } : {}), ...(blockMenu?.only ? { only: blockMenu.only, title: blockMenu.title } : {}) };
+  if (menuAnchor) blockMenu = { ...menuPlaceFor(menuAnchor, Boolean(blockMenu?.only), Boolean(blockMenu?.section)), ...(blockMenu?.section ? { section: true } : {}), ...(blockMenu?.only ? { only: blockMenu.only, title: blockMenu.title } : {}) };
 }
 
 /** Shared flow for block changes from the Properties panel. */
