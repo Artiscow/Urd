@@ -65,6 +65,7 @@ export const ICONS = {
   gridToggle: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>',
   // Discard draft: restore, i.e. an arrow with a clock face. NOT a plain
   // back arrow, which is the universal undo glyph; discard is not undo.
+  reset: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>',
   restore: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 9"/><path d="M12 8v4.5l3 1.8"/></svg>',
   // Expand or collapse every group fold at once: two chevrons that point
   // outwards while the next click expands, and turn inwards (the .collapse

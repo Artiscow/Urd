@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.5): the Urd settings window with Presets, three groups and no folds
+
+- [ ] The settings dialog's list stands in three groups (Presets, Local settings, This site) with the sections under each; a press jumps to the section, and the mark follows the scroll
+- [ ] Every section stands open in one scroll, with no fold, in the dialog, the panel and the sheet; in the panel each section's heading stays at the top while its section scrolls
+- [ ] Presets first: four picture tiles (Floating menu, Small panels, Side panel, One column), each with its description as tooltip; the line over them names the one in use
+- [ ] A press on a tile changes the whole admin at once (the panels' form, the tab menus, where the settings and page settings open, the new block menu, the layout picker and the rest); Undo beside the line puts everything back, and disappears once a part is changed by hand
+- [ ] Change one part by hand (for example the link editor): the line reads «Floating menu, changed» with «Changed: Link editor» and «Back to Floating menu»; the part's row shows «Floating menu: Dialog» with an arrow that takes the part back
+- [ ] The segments (After a pick, Look choices, Spell check, Menus under the tabs) look like the row kit's segments elsewhere and fill their column
+- [ ] The Element menu row reads «Beside the block, two columns» and «Beside the block, one column», its first picture with two columns
+- [ ] In Norwegian the group is «Forhåndsvalg» and in Turkish «Hazır ayarlar»; the search finds a preset by its name in any language
+- [ ] With «Look choices» set to words, the presets are a dropdown with each description under its name
+
 ### Test batch (0.7.33.3): folds that grow with what they show, and no marks on what was changed
 
 - [ ] With a panel closed, pick a fold from its tab's menu (Nav, Footer, Theme, Legal, Site): the panel opens and the fold grows open, not standing open at once

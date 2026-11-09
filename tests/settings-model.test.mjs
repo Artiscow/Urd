@@ -1,9 +1,9 @@
 /**
- * The Urd settings as data (editor/src/lib/settings-model.js) and their pictures (settings-pictures.js): every setting's keys exist in the admin base, every pictured option has its picture, the stored place and picture choice are normalised, and the search and the sheet's sides filter the groups.
+ * The Urd settings as data (editor/src/lib/settings-model.js) and their pictures (settings-pictures.js): every setting's keys exist in the admin base, every pictured option has its picture, the stored place and picture choice are normalised, the sections stand in their three groups with the admin design's parts in its own, and the search and the sheet's sides filter the sections.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SETTINGS_GROUPS, SETTINGS_PLACES, settingsPlace, settingsPictures, pictured, settingMatches, visibleGroups } from '../editor/src/lib/settings-model.js';
+import { SETTINGS_BANDS, SETTINGS_GROUPS, SETTINGS_PLACES, settingsPlace, settingsPictures, pictured, settingMatches, visibleGroups, inBands } from '../editor/src/lib/settings-model.js';
 import { settingPicture, picturedIds, THEME_SWATCHES } from '../editor/src/lib/settings-pictures.js';
 import { engineImport } from './_engine.mjs';
 
@@ -41,13 +41,22 @@ function ctx() {
     addBlockMenuPref: 'side', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
     siteDraft: { admin: {}, analytics: {} },
   };
-  return { ed, ta: (k) => k, menu: { widthPref: 'wide' }, setMenuWidthPref() {} };
+  const designs = { options: [['floating', 'Floating menu'], ['panels', 'Small panels'], ['side', 'Side panel'], ['column', 'One column']], values: {}, state: { design: 'floating', changed: [] }, apply() {} };
+  return { ed, ta: (k) => k, menu: { widthPref: 'wide' }, setMenuWidthPref() {}, designs };
 }
+
+/** A setting by its id. */
+const row = (id) => SETTINGS_GROUPS.flatMap((g) => g.settings).find((s) => s.id === id);
 
 test('every setting names keys the admin base holds, and reads its value through the context', () => {
   const c = ctx();
+  for (const band of SETTINGS_BANDS) {
+    assert.ok(dict[band.labelKey], `${band.id}: ${band.labelKey}`);
+    assert.ok(dict[band.tipKey], `${band.id}: ${band.tipKey}`);
+  }
   for (const group of SETTINGS_GROUPS) {
     assert.ok(dict[group.labelKey], `${group.id}: ${group.labelKey}`);
+    if (group.tipKey) assert.ok(dict[group.tipKey], `${group.id}: ${group.tipKey}`);
     for (const s of group.settings) {
       assert.ok(dict[s.labelKey], `${s.id}: ${s.labelKey}`);
       assert.ok(dict[s.tipKey], `${s.id}: ${s.tipKey}`);
@@ -69,8 +78,9 @@ test('every option of a pictured setting has its picture, and no picture is draw
     }
   }
   assert.equal(settingPicture('layout', 'nonsense'), null);
-  assert.ok(pictured(SETTINGS_GROUPS[0].settings[0], 'pictures'));
-  assert.ok(!pictured(SETTINGS_GROUPS[0].settings[0], 'words'));
+  assert.ok(pictured(row('theme'), 'pictures'));
+  assert.ok(!pictured(row('theme'), 'words'));
+  assert.ok(pictured(row('adminDesign'), 'pictures'), 'the admin designs are chosen as the other looks are, from their pictures');
 });
 
 test('the stored place and picture choice fall to the dialog and to pictures', () => {
@@ -84,15 +94,18 @@ test('the stored place and picture choice fall to the dialog and to pictures', (
 
 test('the search keeps the settings a word of the query names, and the sheet splits the look from the rest', () => {
   const c = ctx();
-  assert.ok(settingMatches(SETTINGS_GROUPS[0].settings[0], 'settings.THEME', c));
-  assert.ok(!settingMatches(SETTINGS_GROUPS[0].settings[0], 'nothing-here', c));
+  assert.ok(settingMatches(row('theme'), 'settings.THEME', c));
+  assert.ok(!settingMatches(row('theme'), 'nothing-here', c));
   // With the search in every language, the context's match decides: a word of another language finds the setting.
-  assert.ok(settingMatches(SETTINGS_GROUPS[0].settings[0], 'tema', { ...c, match: (text, q) => q === 'tema' && text === c.ta(SETTINGS_GROUPS[0].settings[0].labelKey) }));
+  assert.ok(settingMatches(row('theme'), 'tema', { ...c, match: (text, q) => q === 'tema' && text === c.ta(row('theme').labelKey) }));
+  // The admin design is found by a design's name.
+  assert.deepEqual(visibleGroups('small panels', null, c).map((g) => g.id), ['design']);
   const all = visibleGroups('', null, c);
-  assert.deepEqual(all.map((g) => g.id), ['look', 'editing', 'window', 'site']);
+  assert.deepEqual(all.map((g) => g.id), ['design', 'menu', 'panels', 'canvas', 'look', 'editing', 'window', 'site']);
   // A setting under another (`parent`) stands with it, so «After a pick» goes with «Tab menus» into the look and brings it into the rest.
   const look = visibleGroups('', 'look', c).flatMap((g) => g.settings);
   assert.ok(look.every((s) => s.look || look.some((p) => p.id === s.parent)));
+  assert.ok(look.some((s) => s.design), 'the admin design stands with the looks');
   const plain = visibleGroups('', 'plain', c).flatMap((g) => g.settings);
   assert.ok(plain.every((s) => !s.look || plain.some((child) => child.parent === s.id)));
   assert.deepEqual(new Set([...look, ...plain].map((s) => s.id)), new Set(all.flatMap((g) => g.settings).map((s) => s.id)));
@@ -113,4 +126,19 @@ test('the panel to start with stands under its choice only while «Always the sa
   c.ed.adminLayout = 'rail';
   const panels = SETTINGS_GROUPS.find((g) => g.id === 'window').settings.find((s) => s.id === 'panels');
   assert.equal(panels.get(c), 'reset', 'the folded column reads as no panel in a layout without the column');
+});
+
+test('the sections stand in three groups: the admin design with every part, Local settings with none, and This site, shared', () => {
+  const c = ctx();
+  assert.deepEqual(SETTINGS_BANDS.map((b) => b.id), ['design', 'local', 'site']);
+  for (const group of SETTINGS_GROUPS) assert.ok(SETTINGS_BANDS.some((b) => b.id === group.band), `${group.id} stands in a group`);
+  const bands = inBands(visibleGroups('', null, c));
+  assert.deepEqual(bands.map((b) => [b.id, b.groups.map((g) => g.id)]), [['design', ['design', 'menu', 'panels', 'canvas']], ['local', ['look', 'editing', 'window']], ['site', ['site']]]);
+  const settings = (band) => SETTINGS_GROUPS.filter((g) => g.band === band).flatMap((g) => g.settings);
+  assert.ok(settings('design')[0].design, 'the admin design stands first');
+  assert.ok(settings('design').slice(1).every((s) => s.part), 'every row under the admin design is one of its parts');
+  assert.ok(!settings('local').some((s) => s.part) && !settings('site').some((s) => s.part), 'no design sets a local or a shared setting');
+  assert.ok(SETTINGS_GROUPS.filter((g) => g.band === 'site').every((g) => g.shared));
+  // A search that leaves one section keeps its group alone.
+  assert.deepEqual(inBands(visibleGroups('spellcheck', null, c)).map((b) => b.id), ['local']);
 });

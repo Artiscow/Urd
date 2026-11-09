@@ -65,7 +65,7 @@ const LAYOUT_PICKERS = {
 };
 
 const MENU_WIDTHS = {
-  wide: dim(1, 1, 62, 38, 0.06) + dim(4, 4, 56, 32, 0.14) + acc(7, 7, 14, 2) + line(7, 12, 14, 2) + line(7, 17, 11, 2) + line(24, 7, 14, 2) + line(24, 12, 12, 2) + line(24, 17, 14, 2) + line(41, 7, 14, 2) + line(41, 12, 13, 2) + line(41, 17, 10, 2),
+  wide: dim(1, 1, 62, 38, 0.06) + dim(4, 4, 56, 32, 0.14) + acc(7, 7, 22, 2) + line(7, 12, 22, 2) + line(7, 17, 17, 2) + line(7, 22, 22, 2) + line(7, 27, 14, 2) + line(35, 7, 22, 2) + line(35, 12, 18, 2) + line(35, 17, 22, 2) + line(35, 22, 15, 2),
   narrow: dim(1, 1, 62, 38, 0.06) + dim(20, 4, 24, 32, 0.14) + acc(23, 7, 6, 3) + line(30, 7, 5, 3, 3) + line(36, 7, 5, 3, 3) + line(23, 14, 18, 2) + line(23, 19, 15, 2) + line(23, 24, 18, 2) + line(23, 29, 12, 2),
 };
 
@@ -129,7 +129,21 @@ const DRAG_MARKS = {
   line: listRows([12, 18, 24, 30]) + acc(16, 22.4, 34, 1.2, 0.6) + `<circle cx="15" cy="23" r="1.3" stroke="${ACCENT}" stroke-width="0.8"/>` + dragCard(14.5),
 };
 
+/** The admin designs (lib/admin-designs.js), each the whole admin with a block selected on the page: the menu floating beside it under the rail; the page's tabs with a bar on the block and a small panel beside it; the sidebar of words with a docked panel of tabs; and the rail with one long column of headed sections. */
+const block = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="currentColor" opacity="0.3" stroke="${ACCENT}" stroke-width="0.8"/>`;
+const ADMIN_DESIGN_PICS = {
+  floating: topbar() + dim(1, 7, 8, H - 8) + acc(3, 10, 4, 4) + line(3, 17, 4, 4) + line(3, 24, 4, 4) + stage(9) + block(13, 18, 16, 10)
+    + dim(33, 10, 27, 26, 0.24) + acc(35, 12, 10, 2) + line(35, 17, 10, 2) + line(35, 21, 8, 2) + line(35, 25, 10, 2) + line(48, 17, 10, 2) + line(48, 21, 9, 2) + line(48, 25, 7, 2),
+  panels: topbar() + acc(4, 2.5, 8, 3) + line(14, 2.5, 7, 3) + line(23, 2.5, 7, 3) + stage(1) + block(10, 20, 22, 11) + acc(10, 15, 15, 3.5, 1.5)
+    + dim(36, 12, 22, 17, 0.24) + line(38, 15, 9, 2) + line(49, 15, 7, 2) + line(38, 20, 16, 2) + line(38, 24, 13, 2),
+  side: topbar() + dim(1, 7, 14, H - 8) + acc(3, 10, 9, 2) + line(3, 15, 8, 2) + line(3, 20, 10, 2) + line(3, 25, 7, 2)
+    + dim(15, 7, 20, H - 8, 0.2) + acc(17, 9, 5, 2.5) + line(23, 9, 5, 2.5) + line(29, 9, 4, 2.5) + line(17, 15, 15, 2) + line(17, 19, 12, 2) + line(17, 23, 15, 2) + line(17, 27, 10, 2) + stage(35) + block(40, 18, 18, 10),
+  column: topbar() + dim(1, 7, 8, H - 8) + acc(3, 10, 4, 4) + line(3, 17, 4, 4) + line(3, 24, 4, 4) + dim(9, 7, 22, H - 8, 0.2)
+    + acc(11, 9, 8, 1.5) + line(11, 12, 17, 2) + line(11, 15, 14, 2) + acc(11, 19, 8, 1.5) + line(11, 22, 17, 2) + line(11, 25, 15, 2) + acc(11, 29, 8, 1.5) + line(11, 32, 17, 2) + stage(31) + block(37, 16, 20, 12),
+};
+
 const LOOKS = {
+  adminDesign: ADMIN_DESIGN_PICS,
   layout: LAYOUTS,
   place: PLACES,
   updateNotice: UPDATE_NOTICES,

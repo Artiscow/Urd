@@ -524,10 +524,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [ ] Clicking on the element menus settings while settings window is open just closes and opens it
  - [ ] Section "on pointer" settings affect the background instead of every block in the section - this should be two settings; every element in the section, and; the section background
  - [ ] Footer design and layout is split into two: "Design" and "Starting Point". It is very unclear what the difference is. Let's have one of them, not both.
- - [x] Nav menu items: The cross to delete an entry is too small and should be a dark shade of red FIXED 0.7.30.9 (8 November 2026)
- - [x] Right click doesn't work in the pages/sites' nav FIXED 0.7.30.9 (8 November 2026)
  - [ ] Colour picker is a bit shabby - needs design reevaluation 
- - [x] Right click on nav - settings - takes one to nav settings panel. Right click on spescific parts of nav - settings - should take on to the spescific parts settings. F.ex right click on launcher - settings - should open launcher settings. FIXED 0.7.30.9 (8 November 2026; a menu item opens the Menu items fold, not the item's own card)
  - [ ] Nav settings: possibility to turn logo on or off in nav
  - [ ] Button block does not have colour settings/options
  - [ ] Footer "Brand" logo/image needs preview of image added
@@ -547,6 +544,8 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [ ] PNG XL support
 - [ ] Måte å simplifisere release på?
 - [ ] Tooltip on elements needs a redesign - text is too small and doesn't scale well
+- [ ] Urd Admin custom themes 
+- [ ] A complete "Strip under the top bar" preset
 
 ## URGENT
 
@@ -610,8 +609,8 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
     Done when: tests/admin-designs.test.mjs holds the default design equal to every part's default, so an owner with nothing stored sees the default and one with stored choices sees the default with those parts changed, and holds every part that has a row in Urd settings to that row and every row marked as a part to a part; a new part names the step that builds it (0.7.33.6 to 0.7.33.8) until it has its row.
   - [x] 0.7.33.4 DELIVERED 0.7.33.4 (9 November 2026) The Urd settings window redesigned on the Design canvas in two or three directions: the design first, as one picture row that opens the design picker, the parts folded under it by surface, and a way back to the design after a part is changed. Chosen 9 November 2026 on the canvas [«Urd Settings Window»](https://claude.ai/code/artifact/4893325a-056d-4d15-9866-6bb75fa8313f) (a private claude.ai artifact): direction A without folds. The list at the left stands in three groups and jumps to a section and follows the scroll: the admin design (the design row, then the element menu, the panels with the settings window, and the canvas, each a heading with a line on what its parts act on and the parts open with their options); Local settings in the normal categories (Look and language, Editing, Window), kept in this browser and never set by a design; and This site, marked Shared. Every section stands open in one scroll, with no folds. The design row reads «Floating menu» or «Floating menu, changed» with «Back to Floating menu», and a press on it opens the design picker; a part changed from the design names the design's value beside it with the reset arrow. In the panel form the section headings stick to the top while their section scrolls.
     Done when: a direction is chosen and written here with the canvas link.
-  - [ ] 0.7.33.5 The settings window built to the chosen direction and moved to the row kit.
-    Done when: the window has at most four groups at the top; no row of picture tiles stands open; choosing a design changes every part; a changed part shows the design as changed, with the way back; and panel-language.test.mjs's list is empty.
+  - [x] 0.7.33.5 DELIVERED 0.7.33.5 (9 November 2026) The settings window built to the chosen direction and moved to the row kit. The four designs are chosen as picture tiles like the other settings, and the design row is named Presets · Forhåndsvalg · Hazır ayarlar (chosen 9 November 2026), since «Design» names a block's look in Urd.
+    Done when: the list stands in three groups (Presets, Local settings, This site) and every section stands open in one scroll with no fold, in the dialog, the panel and the sheet; choosing one of the four designs, drawn as picture tiles like the other settings, changes every part, and Undo takes it back as one step; a changed part names the design's value beside its name with the way back, and the design row reads «{design}, changed» with «Back to {design}»; and panel-language.test.mjs's list is empty.
   - [ ] 0.7.33.6 The element menu's forms, how groups behave, optional settings and quick reach, built.
     Done when: each option is seen in the browser on the canvas's test blocks, wide and narrow.
   - [ ] 0.7.33.7 The canvas bar's forms, built in the engine.

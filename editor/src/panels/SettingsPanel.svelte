@@ -1,5 +1,5 @@
 <script>
-  /* The Urd settings as a panel in the panel column («Panel» under Settings window): the search at the top, the groups as folds with the settings stacked (settings/SettingsBody.svelte), and the way to the shortcut sheet and the version at the foot. The gear opens and closes it; the page stays in view while a setting is tried. */
+  /* The Urd settings as a panel in the panel column («Panel» under Settings window): the search at the top, every section open with its heading kept at the top while it scrolls and the settings stacked (settings/SettingsBody.svelte), and the way to the shortcut sheet and the version at the foot. The gear opens and closes it; the page stays in view while a setting is tried. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';

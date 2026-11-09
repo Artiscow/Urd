@@ -98,12 +98,8 @@ function findings() {
   return out;
 }
 
-/** The files not yet moved to the row kit, by the step of 0.7.30 (BACKLOG) that moves them, with the patterns each still holds. */
-const RATCHET = {
-  // 0.7.33.5, the Urd settings window
-  'settings/SettingControl.svelte': ['segment'],
-  'settings/SettingsBody.svelte': ['fold'],
-};
+/** The files not yet moved to the row kit, with the patterns each still holds: none since 0.7.33.5, so only a new file holding one can fail the test. */
+const RATCHET = {};
 
 test('patternsIn: each hand-made row is found, and the kit and its look-alikes are not', () => {
   const held = patternsIn([

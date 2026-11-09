@@ -1,7 +1,7 @@
 /**
- * Urd's own settings as data (the Urd settings, the gear): the groups, and in each group the settings with their keys, their kind and the editor fields they read and write.
+ * Urd's own settings as data (the Urd settings, the gear): the groups, the sections in each group, and in each section the settings with their keys, their kind and the editor fields they read and write.
  * The three windows the settings open in (settings/SettingsDialog.svelte for the dialog and the sheet, panels/SettingsPanel.svelte for the panel) draw the same rows from this list, so a setting is declared once.
- * A setting's `options`, `get` and `set` take the context the window passes: `{ ed, ta, menu, setMenuWidthPref }`.
+ * A setting's `options`, `get` and `set` take the context the window passes: `{ ed, ta, menu, setMenuWidthPref, designs }`, where `designs` holds the admin designs' options, the design that stands and the way to apply one (state/admin-design.svelte.js).
  * Pure, node-tested (tests/settings-model.test.mjs).
  */
 import { panelsPrefIn } from './panels-start.js';
@@ -20,10 +20,21 @@ export function settingsPictures(raw) {
 }
 
 /**
- * The groups and their settings.
- * `kind`: `choice` (one of the options; a picture per option when `look` names a picture set and the pictures are on), `seg` (segment buttons) and `text` (a text field).
- * `shared` on a group: its values live in the site and are shared by everyone who edits it.
- * `when` on a group or a setting: whether it is shown at all.
+ * The window's three groups, in the order the list shows them: the admin design with its parts (ADR-0030), the settings kept in this browser that no design sets, and the site's own, shared by everyone who edits it.
+ */
+export const SETTINGS_BANDS = [
+  { id: 'design', labelKey: 'adminDesign.row', tipKey: 'tip.settings.band.design' },
+  { id: 'local', labelKey: 'settings.band.local', tipKey: 'tip.settings.band.local' },
+  { id: 'site', labelKey: 'settings.group.site', tipKey: 'tip.settings.shared', shared: true },
+];
+
+/**
+ * The sections, each in its group (`band`), and in each section the settings.
+ * `kind`: `choice` (one of the options; a picture per option when `look` names a picture set and the pictures are on), `seg` (a few words side by side) and `text` (a text field).
+ * `design` on a setting: it is the admin design, read and chosen through the context's `designs`, with the parts that differ and the ways back beside it.
+ * `tipKey` on a section: what its settings act on, shown on its heading.
+ * `shared` on a section: its values live in the site and are shared by everyone who edits it.
+ * `when` on a section or a setting: whether it is shown at all.
  * `parent` on a setting: the setting it belongs to, drawn directly under it and shown with it.
  * `part` on a setting: it is a part of the admin designs (lib/admin-designs.js), which a design sets with every other part.
  */
@@ -36,11 +47,32 @@ const menusShown = (c) => {
 
 export const SETTINGS_GROUPS = [
   {
-    id: 'look',
-    labelKey: 'settings.group.look',
+    id: 'design',
+    band: 'design',
+    labelKey: 'adminDesign.row',
+    tipKey: 'tip.settings.band.design',
     settings: [
-      { id: 'theme', labelKey: 'settings.theme', tipKey: 'topbar.adminTheme.title', kind: 'choice', look: 'theme',
-        options: (c) => c.ed.ADMIN_THEMES, get: (c) => c.ed.adminTheme, set: (c, v) => { c.ed.adminTheme = v; } },
+      { id: 'adminDesign', design: true, labelKey: 'adminDesign.row', tipKey: 'tip.adminDesign.row', kind: 'choice', look: 'adminDesign',
+        options: (c) => c.designs.options, get: (c) => c.designs.state.design, set: (c, v) => c.designs.apply(v) },
+    ],
+  },
+  {
+    id: 'menu',
+    band: 'design',
+    labelKey: 'settings.group.menu',
+    tipKey: 'tip.settings.group.menu',
+    settings: [
+      { id: 'menuWidth', part: true, labelKey: 'settings.menuWidth', tipKey: 'tip.settings.menuWidth', kind: 'choice', look: 'menuWidth',
+        options: (c) => [['wide', c.ta('opt.menuForm.wide')], ['narrow', c.ta('opt.menuForm.narrow')]],
+        get: (c) => c.menu.widthPref, set: (c, v) => c.setMenuWidthPref(v) },
+    ],
+  },
+  {
+    id: 'panels',
+    band: 'design',
+    labelKey: 'settings.group.panels',
+    tipKey: 'tip.settings.group.panels',
+    settings: [
       { id: 'layout', part: true, labelKey: 'settings.layout', tipKey: 'tip.settings.layout', kind: 'choice', look: 'layout',
         options: (c) => c.ed.ADMIN_LAYOUT_OPTIONS, get: (c) => c.ed.adminLayout, set: (c, v) => c.ed.setAdminLayout(v) },
       // The sidebar of words shows a panel's folds under the open panel's word, or beside each word.
@@ -52,10 +84,6 @@ export const SETTINGS_GROUPS = [
         when: (c) => c.ed.adminLayout === 'panel-tabs',
         options: (c) => [['on', c.ta('common.on')], ['off', c.ta('common.off')]],
         get: (c) => (c.ed.panelTabMenus ? 'on' : 'off'), set: (c, v) => c.ed.setPanelTabMenus(v) },
-      { id: 'place', part: true, labelKey: 'settings.place', tipKey: 'tip.settings.place', kind: 'choice', look: 'place',
-        options: (c) => c.ed.SETTINGS_PLACE_OPTIONS, get: (c) => c.ed.settingsPlace, set: (c, v) => c.ed.setSettingsPlace(v) },
-      { id: 'press', labelKey: 'settings.press', tipKey: 'tip.settings.press', kind: 'choice', look: 'press',
-        options: (c) => c.ed.PRESS_OPTIONS, get: (c) => c.ed.pressFeel, set: (c, v) => c.ed.setPressFeel(v) },
       // The menus of folds stand under the strip's tabs, beside the Site menu's rows and the rail's icons, beside the sidebar's words where they open there, and under the panel's own tabs where those are switched on.
       { id: 'tabMenus', part: true, labelKey: 'settings.tabMenus', tipKey: 'tip.settings.tabMenus', kind: 'choice', look: 'tabMenus',
         when: menusShown,
@@ -64,15 +92,24 @@ export const SETTINGS_GROUPS = [
         when: menusShown,
         options: (c) => [['close', c.ta('opt.tabMenuStay.close')], ['stay', c.ta('opt.tabMenuStay.stay')]],
         get: (c) => c.ed.tabMenuStay, set: (c, v) => c.ed.setTabMenuStay(v) },
-      { id: 'pictures', labelKey: 'settings.pictures', tipKey: 'tip.settings.pictures', kind: 'seg',
-        options: (c) => c.ed.SETTINGS_PICTURES_OPTIONS, get: (c) => c.ed.settingsPictures, set: (c, v) => c.ed.setSettingsPictures(v) },
-      { id: 'language', labelKey: 'settings.language', tipKey: 'topbar.language.title', kind: 'choice',
-        options: (c) => [['auto', c.ta('lang.auto')], ...c.ed.adminLangOptions()], get: (c) => c.ed.adminLangChoice, set: (c, v) => c.ed.setAdminLang(v) },
+      { id: 'linkEditor', part: true, labelKey: 'settings.linkEditor', tipKey: 'tip.settings.linkEditor', kind: 'choice', look: 'linkEditor',
+        options: (c) => [['dialog', c.ta('opt.linkEditor.dialog')], ['popover', c.ta('opt.linkEditor.popover')]],
+        get: (c) => c.ed.linkEditorPref, set: (c, v) => c.ed.setLinkEditor(v) },
+      { id: 'pageSettings', part: true, labelKey: 'settings.pageSettings', tipKey: 'tip.settings.pageSettings', kind: 'choice', look: 'pageSettings',
+        options: (c) => c.ed.PAGE_SETTINGS_OPTIONS, get: (c) => c.ed.pageSettingsPref, set: (c, v) => c.ed.setPageSettingsPref(v) },
+      { id: 'collectionsLayout', part: true, labelKey: 'settings.collectionsLayout', tipKey: 'tip.settings.collectionsLayout', kind: 'choice', look: 'collectionsLayout',
+        options: (c) => c.ed.COLLECTIONS_LAYOUT_OPTIONS, get: (c) => c.ed.collectionsLayout, set: (c, v) => c.ed.setCollectionsLayout(v) },
+      { id: 'csvPreview', part: true, labelKey: 'settings.csvPreview', tipKey: 'tip.settings.csvPreview', kind: 'choice', look: 'csvPreview',
+        options: (c) => c.ed.CSV_PREVIEW_OPTIONS, get: (c) => c.ed.csvPreviewPref, set: (c, v) => c.ed.setCsvPreview(v) },
+      { id: 'place', part: true, labelKey: 'settings.place', tipKey: 'tip.settings.place', kind: 'choice', look: 'place',
+        options: (c) => c.ed.SETTINGS_PLACE_OPTIONS, get: (c) => c.ed.settingsPlace, set: (c, v) => c.ed.setSettingsPlace(v) },
     ],
   },
   {
-    id: 'editing',
-    labelKey: 'settings.group.editing',
+    id: 'canvas',
+    band: 'design',
+    labelKey: 'settings.group.canvas',
+    tipKey: 'tip.settings.group.canvas',
     settings: [
       { id: 'addBlockMenu', part: true, labelKey: 'settings.addBlockMenu', tipKey: 'tip.settings.addBlockMenu', kind: 'choice', look: 'addBlock',
         options: (c) => [['side', c.ta('settings.addBlockMenuSide')], ['slim', c.ta('settings.addBlockMenuSlim')]],
@@ -80,27 +117,38 @@ export const SETTINGS_GROUPS = [
       { id: 'layoutPicker', part: true, labelKey: 'settings.layoutPicker', tipKey: 'tip.settings.layoutPicker', kind: 'choice', look: 'layoutPicker',
         options: (c) => [['strip', c.ta('settings.layoutPickerStrip')], ['menu', c.ta('settings.layoutPickerMenu')]],
         get: (c) => c.ed.layoutPickerPref, set: (c, v) => c.ed.setLayoutPicker(v) },
-      { id: 'menuWidth', part: true, labelKey: 'settings.menuWidth', tipKey: 'tip.settings.menuWidth', kind: 'choice', look: 'menuWidth',
-        options: (c) => [['wide', c.ta('settings.menuWide')], ['narrow', c.ta('settings.menuNarrow')]],
-        get: (c) => c.menu.widthPref, set: (c, v) => c.setMenuWidthPref(v) },
-      { id: 'collectionsLayout', part: true, labelKey: 'settings.collectionsLayout', tipKey: 'tip.settings.collectionsLayout', kind: 'choice', look: 'collectionsLayout',
-        options: (c) => c.ed.COLLECTIONS_LAYOUT_OPTIONS, get: (c) => c.ed.collectionsLayout, set: (c, v) => c.ed.setCollectionsLayout(v) },
-      { id: 'csvPreview', part: true, labelKey: 'settings.csvPreview', tipKey: 'tip.settings.csvPreview', kind: 'choice', look: 'csvPreview',
-        options: (c) => c.ed.CSV_PREVIEW_OPTIONS, get: (c) => c.ed.csvPreviewPref, set: (c, v) => c.ed.setCsvPreview(v) },
-      { id: 'pageSettings', part: true, labelKey: 'settings.pageSettings', tipKey: 'tip.settings.pageSettings', kind: 'choice', look: 'pageSettings',
-        options: (c) => c.ed.PAGE_SETTINGS_OPTIONS, get: (c) => c.ed.pageSettingsPref, set: (c, v) => c.ed.setPageSettingsPref(v) },
-      { id: 'dragMark', labelKey: 'settings.dragMark', tipKey: 'tip.settings.dragMark', kind: 'choice', look: 'dragMark',
-        options: (c) => c.ed.DRAG_MARK_OPTIONS, get: (c) => c.ed.dragMark, set: (c, v) => c.ed.setDragMark(v) },
-      { id: 'linkEditor', part: true, labelKey: 'settings.linkEditor', tipKey: 'tip.settings.linkEditor', kind: 'choice', look: 'linkEditor',
-        options: (c) => [['dialog', c.ta('opt.linkEditor.dialog')], ['popover', c.ta('opt.linkEditor.popover')]],
-        get: (c) => c.ed.linkEditorPref, set: (c, v) => c.ed.setLinkEditor(v) },
+    ],
+  },
+  {
+    id: 'look',
+    band: 'local',
+    labelKey: 'settings.group.look',
+    settings: [
+      { id: 'theme', labelKey: 'settings.theme', tipKey: 'topbar.adminTheme.title', kind: 'choice', look: 'theme',
+        options: (c) => c.ed.ADMIN_THEMES, get: (c) => c.ed.adminTheme, set: (c, v) => { c.ed.adminTheme = v; } },
+      { id: 'language', labelKey: 'settings.language', tipKey: 'topbar.language.title', kind: 'choice',
+        options: (c) => [['auto', c.ta('lang.auto')], ...c.ed.adminLangOptions()], get: (c) => c.ed.adminLangChoice, set: (c, v) => c.ed.setAdminLang(v) },
+      { id: 'press', labelKey: 'settings.press', tipKey: 'tip.settings.press', kind: 'choice', look: 'press',
+        options: (c) => c.ed.PRESS_OPTIONS, get: (c) => c.ed.pressFeel, set: (c, v) => c.ed.setPressFeel(v) },
+      { id: 'pictures', labelKey: 'settings.pictures', tipKey: 'tip.settings.pictures', kind: 'seg',
+        options: (c) => c.ed.SETTINGS_PICTURES_OPTIONS, get: (c) => c.ed.settingsPictures, set: (c, v) => c.ed.setSettingsPictures(v) },
+    ],
+  },
+  {
+    id: 'editing',
+    band: 'local',
+    labelKey: 'settings.group.editing',
+    settings: [
       { id: 'spellcheck', labelKey: 'settings.spellcheck', tipKey: 'tip.settings.spellcheck', kind: 'seg',
         options: (c) => [['on', c.ta('common.on')], ['off', c.ta('common.off')]],
         get: (c) => c.ed.spellcheckPref, set: (c, v) => c.ed.setSpellcheck(v) },
+      { id: 'dragMark', labelKey: 'settings.dragMark', tipKey: 'tip.settings.dragMark', kind: 'choice', look: 'dragMark',
+        options: (c) => c.ed.DRAG_MARK_OPTIONS, get: (c) => c.ed.dragMark, set: (c, v) => c.ed.setDragMark(v) },
     ],
   },
   {
     id: 'window',
+    band: 'local',
     labelKey: 'settings.group.window',
     settings: [
       { id: 'panels', labelKey: 'settings.panels', tipKey: 'tip.settings.panels', kind: 'choice',
@@ -112,7 +160,9 @@ export const SETTINGS_GROUPS = [
   },
   {
     id: 'site',
+    band: 'site',
     labelKey: 'settings.group.site',
+    tipKey: 'tip.settings.shared',
     shared: true,
     when: (c) => !!c.ed.siteDraft,
     settings: [
@@ -138,7 +188,7 @@ export function settingMatches(setting, query, c) {
 }
 
 /**
- * The groups with the settings that answer the search and the side of the sheet asked for (`only`: 'look' for the pictured choices, 'plain' for the rest, null for all); a group with nothing left is dropped.
+ * The sections with the settings that answer the search and the side of the sheet asked for (`only`: 'look' for the pictured choices, 'plain' for the rest, null for all); a section with nothing left is dropped.
  * A setting whose `when` fails is left out; a setting with a `parent` stands and falls with its parent, so a search that finds either shows both.
  */
 export function visibleGroups(query, only, c) {
@@ -159,4 +209,9 @@ export function visibleGroups(query, only, c) {
     if (settings.length) out.push({ ...group, settings });
   }
   return out;
+}
+
+/** The sections as their groups hold them, in the groups' order; a group with no section left is dropped. */
+export function inBands(groups) {
+  return SETTINGS_BANDS.map((band) => ({ ...band, groups: groups.filter((g) => g.band === band.id) })).filter((b) => b.groups.length);
 }

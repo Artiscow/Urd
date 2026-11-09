@@ -1,17 +1,16 @@
 <script>
   /**
-   * Urd's own settings over the admin, in the form «Settings window» asks for: the dialog with the groups as sections down the left, a search above them and the chosen section's rows at the right, in one scroll a section button jumps in;
+   * Urd's own settings over the admin, in the form «Settings window» asks for: the dialog with the sections down the left in their three groups (the admin design, Local settings, This site), a search above them and every section's rows at the right, in one scroll a section button jumps in and the list follows;
    * or the sheet, with the look choices at the left and the rest as rows at the right. Both end in the way to the shortcut sheet and the version.
    * A native modal dialog (ADR-0011) like the shortcut sheet: Escape is its own cancel, and a press outside the card closes it.
    */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
-  import { matchAny } from '$engine/search-langs.js';
   import { searchLangs } from '../lib/search-langs.svelte.js';
   import { fadingDialog, dialogOut } from '../lib/motion.svelte.js';
   import { ICONS } from '../lib/icons.js';
-  import { menu, setMenuWidthPref } from '../menu/state.svelte.js';
-  import { visibleGroups } from '../lib/settings-model.js';
+  import { visibleGroups, inBands } from '../lib/settings-model.js';
+  import { settingsContext } from '../state/admin-design.svelte.js';
   import SettingsBody from './SettingsBody.svelte';
 
   const ed = getContext('urd-editor');
@@ -19,17 +18,18 @@
   let dialogEl = $state(null);
   let contentEl = $state(null);
   let query = $state('');
-  let current = $state('look');
+  let current = $state('design');
   let downOnBackdrop = false;
 
   const opener = document.activeElement;
   // A setting is found by its words in any language once the other languages are in (search-langs.js); a typed query loads them.
-  const c = { ed, ta, menu, setMenuWidthPref, get match() { return searchLangs.ready ? matchAny : null; } };
+  const c = settingsContext(ed);
   $effect(() => searchLangs.need(query));
   const navGroups = $derived(visibleGroups(query, null, c));
+  const navBands = $derived(inBands(navGroups));
   /** The section marked in the list: the one in view, or the first one a search leaves when it hides that one. */
   const marked = $derived(navGroups.some((g) => g.id === current) ? current : navGroups[0]?.id);
-  const GROUP_ICONS = { look: 'panel_theme', editing: 'pencil', window: 'device_desktop', site: 'panel_site' };
+  const GROUP_ICONS = { design: 'designs', menu: 'panel_properties', panels: 'foldLeft', canvas: 'panel_grid', look: 'panel_theme', editing: 'pencil', window: 'device_desktop', site: 'panel_site' };
 
   const close = () => dialogEl?.close();
 
@@ -107,12 +107,17 @@
       <nav class="st-nav" aria-label={ta('settings.title')}>
         <h2 id="st-title">{ta('settings.title')}</h2>
         <input type="text" class="st-search" placeholder={ta('settings.find')} aria-label={ta('settings.find')} bind:value={query} />
-        {#each navGroups as group (group.id)}
-          <button type="button" class="st-nav-item" aria-current={marked === group.id ? 'true' : undefined} onclick={() => jump(group.id)}>
-            {@html ICONS[GROUP_ICONS[group.id]] ?? ''}<span class="st-nav-name">{ta(group.labelKey)}</span>
-            {#if group.shared}<span class="st-nav-shared" title={ta('tip.settings.shared')}>{ta('settings.shared')}</span>{/if}
-          </button>
-        {/each}
+        <div class="st-nav-list">
+          {#each navBands as band (band.id)}
+            <span class="st-nav-band" title={ta(band.tipKey)}>{ta(band.labelKey)}</span>
+            {#each band.groups as group (group.id)}
+              <button type="button" class="st-nav-item" aria-current={marked === group.id ? 'true' : undefined} onclick={() => jump(group.id)}>
+                {@html ICONS[GROUP_ICONS[group.id]] ?? ''}<span class="st-nav-name">{ta(group.labelKey)}</span>
+                {#if group.shared}<span class="st-nav-shared" title={ta('tip.settings.shared')}>{ta('settings.shared')}</span>{/if}
+              </button>
+            {/each}
+          {/each}
+        </div>
         <span class="st-nav-end"></span>
         {@render keys()}
         <span class="st-version">{ta('settings.version', { version: ed.pluginEngine })}</span>
@@ -173,6 +178,7 @@
     flex-direction: column;
     gap: 0.25rem;
     box-sizing: border-box;
+    min-height: 0;
     padding: 1.1rem 0.8rem;
     background: var(--urd-color-bg, #0f1218);
     border-right: 1px solid rgb(255 255 255 / 8%);
@@ -204,11 +210,35 @@
     border-radius: 8px;
   }
 
+  /* The list scrolls on its own where the window is too low for every section */
+  .st-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  /* A group's name over its sections, as the row kit's sub-headings stand */
+  .st-nav-band {
+    padding: 0.7rem 0.6rem 0.25rem;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .st-nav-band:first-child {
+    padding-top: 0.1rem;
+  }
+
   .st-nav-item {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.55rem 0.6rem;
+    padding: 0.45rem 0.6rem;
     font: inherit;
     font-size: 0.88rem;
     color: inherit;
