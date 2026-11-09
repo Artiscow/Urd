@@ -3,6 +3,7 @@
      The values are read from the text's first paragraph (the preview writes them on every paragraph), and the text toolbar's own apply to a selection. */
   import { getContext } from 'svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
+  import Setting from '../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
   import { fontChoices } from '$engine/fonts.js';
   import { SIZE_MIN, SIZE_MAX, clampSize, matchFontStack } from '$engine/text-typo.js';
@@ -30,10 +31,15 @@
 
 {#if ed.viewMode === 'desktop'}
   {#key selectedBlock.blockId}
-    <SelectRow label={ta('lbl.wholeFont')} title={ta('tip.wholeFont')} value={wholeStyle.font} options={fontChoices(ta, [['', ta('tt.inheritFont')]])}
-      onchange={(v) => ed.setTextStyle({ fontFamily: v || null })} />
-    <label title={ta('tip.wholeSize')}>{ta('lbl.wholeSize')}
-      <input type="number" min={SIZE_MIN} max={SIZE_MAX} step="1" value={wholeStyle.size} placeholder={ta('tt.inheritFont')}
-        onchange={(e) => typeWholeSize(e.target)} /></label>
+    <!-- Each with its way back to the theme's font and size -->
+    <Setting source="theme" own={Boolean(wholeStyle.font)} reset={() => ed.setTextStyle({ fontFamily: null })}>
+      <SelectRow label={ta('lbl.wholeFont')} title={ta('tip.wholeFont')} value={wholeStyle.font} options={fontChoices(ta, [['', ta('tt.inheritFont')]])}
+        onchange={(v) => ed.setTextStyle({ fontFamily: v || null })} />
+    </Setting>
+    <Setting source="theme" own={Boolean(wholeStyle.size)} reset={() => ed.setTextStyle({ fontSize: null })}>
+      <label title={ta('tip.wholeSize')}>{ta('lbl.wholeSize')}
+        <input type="number" min={SIZE_MIN} max={SIZE_MAX} step="1" value={wholeStyle.size} placeholder={ta('tt.inheritFont')}
+          onchange={(e) => typeWholeSize(e.target)} /></label>
+    </Setting>
   {/key}
 {/if}

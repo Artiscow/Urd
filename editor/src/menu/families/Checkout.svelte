@@ -67,17 +67,23 @@
     <ShopLinks from="checkout" />
   {/snippet}
   {#snippet checkoutPayment()}
-    <!-- The payments are one prop, so the group's own mark and reset stand for them -->
-    <Setting pin="vippsButton">
+    <!-- Each provider is a setting row of its own inside the one payments prop, its way back turning that provider off; when to take the money stands under the card provider it belongs to -->
+    <Setting pin="vippsButton" own={pays.vipps} reset={() => setPay({ vipps: false })}>
       <SwitchRow label={ta('lbl.vippsCheckout')} title={ta('tip.checkout.vippsCheckout')} checked={pays.vipps} onchange={(on) => setPay({ vipps: on })} />
     </Setting>
-    <Choice label={ta('lbl.payCard')} value={pays.card} title={ta('tip.checkout.payCard')}
-      options={cardOptions} onchange={(v) => setPay({ card: v })} />
-    {#if captureShown}
-      <Choice label={ta('lbl.payCapture')} value={pays.capture} title={ta('tip.checkout.payCapture')}
-        options={[['ship', ta('opt.payCapture.ship')], ['now', ta('opt.payCapture.now')]]} onchange={(v) => setPay({ capture: v })} />
-    {/if}
-    <Setting pin="paypalButton">
+    <Setting own={pays.card !== 'none'} reset={() => setPay({ card: 'none', capture: 'ship' })}>
+      <Choice label={ta('lbl.payCard')} value={pays.card} title={ta('tip.checkout.payCard')}
+        options={cardOptions} onchange={(v) => setPay({ card: v })} />
+      {#snippet more()}
+        {#if captureShown}
+          <Setting own={pays.capture !== 'ship'} reset={() => setPay({ capture: 'ship' })}>
+            <Choice label={ta('lbl.payCapture')} value={pays.capture} title={ta('tip.checkout.payCapture')}
+              options={[['ship', ta('opt.payCapture.ship')], ['now', ta('opt.payCapture.now')]]} onchange={(v) => setPay({ capture: v })} />
+          </Setting>
+        {/if}
+      {/snippet}
+    </Setting>
+    <Setting pin="paypalButton" own={pays.paypal} reset={() => setPay({ paypal: false })}>
       <SwitchRow label={ta('lbl.payPaypal')} title={ta('tip.checkout.payPaypal')} checked={pays.paypal} onchange={(on) => setPay({ paypal: on })} />
     </Setting>
     {#if providerOn}

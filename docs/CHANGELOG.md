@@ -8,6 +8,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.10.2 - The five test blocks as setting rows, and the way back on the setting's line - 9 November 2026
+
+- The text's whole font and size, the calendar's view switcher, counts, buttons, designs and styles, and each of the checkout's payment providers drew by hand and had no way back. They are setting rows, each going back to what a new block starts with; written content, lists, links and the calendar's view (its kind) stay plain rows.
+- What belongs to a setting stands in its row: the week and month designs under the view switcher, «Fold the rest under «Show all»» under the max count (`menu/families/CalShowMore.svelte`), «The announcement as» under the announcement, the stripe's colour under the stripe, and when to take the money under the card payment.
+- Pinned's calendar rows, text box, image fit and rounding, form send mode and checkout providers had no way back. They show it as their rows in the areas do.
+- A pinned setting drew what belongs to it after its row, unlike in its area. It stands in its row, under its line (`more` on Pinned's items in `menu/ElementMenu.svelte`), tested in `tests/menu-render.test.mjs`.
+- The count a calendar starts with was worked out in two places, and Pinned needed it too. It is `calLimitStart` in `calendar-designs.js`, tested.
+- The way back stood in a column beside its control, so it narrowed the control and the rows under it and moved a switch out of line (found in testing). It stands at the end of the setting's words line, before the pin; a switch's just left of the toggle; and a one-line row's at the end of its line, with the rows under it at the full width (`app.css`).
+
+The independent review before the commit found these, all fixed:
+
+1. A number, a short choice or a picker's row kept its way back in a column, so «Fold the rest under «Show all»» under a changed max count stood out of line with the other switches. The way back shares the row's line only, and what stands under it takes the full width.
+2. A new calendar from Blocks as cards, a month or an agenda showed a way back on its view, which turned it into a list. The view is a plain row.
+3. The whole text's font and size come back from the preview as the text's edit, so their way back joined the typing before it in one undo step. That edit is a step of its own (`ownStepNext` in `state/history.svelte.js`).
+4. The whole text's way back said «Back to the default». It says «Back to the theme's».
+5. The card payment's way back left a hidden «Take the money» behind. It takes it back with it.
+6. A comment in `menu/Placement.svelte` said Pinned brings the fit's smallest scale as its `below`. It says `more`.
+7. The test items named settings in their own words, and this entry counted three places where there were two and claimed every calendar choice. They quote the labels, and the entry says what was done.
+
 ### 0.7.33.11 - Adding a setting: the field surveyed, and capabilities as cards chosen - 9 November 2026
 
 - «Extra settings: Added from a menu», tried on a text block, put its ⋮ on a line of its own and hid one setting of a group of two, so «On pointer» took three clicks and the menu saved no room. How the field hides settings and adds them back was surveyed (comparison/SURVEYS.md «Adding a setting»), recorded as E43 to E46 in ELEMENTS.md and a row in FEATURES.md's editor catalogue, with the raw notes kept outside the repo.

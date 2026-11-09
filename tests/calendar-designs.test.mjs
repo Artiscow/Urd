@@ -10,7 +10,7 @@ import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
-  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, calNoticeHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
+  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, calNoticeHref, CAL_OPTIONS, calOptionDefs, calOptionShown, calOptions, calDesignGroups, calDesign, calView, calLimitStart, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
   CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign, CAL_FAMILIES, calDesignFamilies,
   CAL_SHARED_OPTIONS, calThemeKey, calThemeTexts, calRewrites, CAL_PHONE_DESIGNS, calPhoneDesignDef, calPhoneFamilies, calPhoneView, calPhoneCandidates, CAL_CARD_DESIGNS, calCardDesignDef, calCardFamilies, calCardDesign, calCardCandidates, calCardDress,
@@ -58,6 +58,14 @@ test('calView: the plain design follows the block view, with the list for anythi
   assert.equal(calView({ view: 'posters' }), 'list');
   assert.equal(calView({}), 'list');
   assert.equal(calView({ design: 'no-such-design', view: 'cards' }), 'cards');
+});
+
+test('calLimitStart: the design\'s own count, else eight in the agenda and six elsewhere', () => {
+  assert.equal(calLimitStart({}), 6);
+  assert.equal(calLimitStart({ view: 'agenda' }), 8);
+  assert.equal(calLimitStart({ view: 'cards' }), 6);
+  assert.equal(calLimitStart({ design: 'index' }), 4);
+  assert.equal(calLimitStart(undefined), 6);
 });
 
 test('calColorCss: hex as it is, a theme token as its variable, anything else null', () => {

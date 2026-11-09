@@ -21,7 +21,7 @@
   import SizeBounds from './SizeBounds.svelte';
   import BoxStyle from './BoxStyle.svelte';
   import RibbonMotion from './families/RibbonMotion.svelte';
-  import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
+  import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef, calLimitStart } from '$engine/calendar-designs.js';
   import { paymentsOf } from '$engine/shop.js';
   import { GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
   import { blockDesigns, phoneDesignName, pictureList, calendarDesignSource } from '../lib/design-sources.js';
@@ -49,6 +49,7 @@
   import Gallery from './families/Gallery.svelte';
   import Ribbon from './families/Ribbon.svelte';
   import Calendar from './families/Calendar.svelte';
+  import CalShowMore from './families/CalShowMore.svelte';
   import Form from './families/Form.svelte';
   import Faq from './families/Faq.svelte';
   import Timeline from './families/Timeline.svelte';
@@ -101,16 +102,22 @@
     const items = [];
     if (b.type === 'calendar') {
       items.push({ id: 'design', label: ta('calendar.design'), tip: ta('tip.calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), run: ed.openDesignPicker,
-        current: calDesign(b.props.design).id, designs: () => pictureList(calendarDesignSource({})), pick: (id) => ed.setCalendarDesign(id) });
-      items.push({ id: 'phoneView', label: ta('calendar.phoneView'), tip: ta('tip.calendar.phoneView'), kind: 'open', value: ta(calPhoneDesignDef(calPhoneView(b.props), b.props).labelKey), run: ed.openPhonePicker });
-      items.push({ id: 'card', label: ta('calendar.card'), tip: ta('tip.calendar.card'), kind: 'open', value: ta(calCardDesignDef(calCardDesign(b.props)).labelKey), run: ed.openCardPicker });
+        current: calDesign(b.props.design).id, designs: () => pictureList(calendarDesignSource({})), pick: (id) => ed.setCalendarDesign(id),
+        own: calDesign(b.props.design).id !== 'plain', reset: () => ed.setCalendarDesign('plain') });
+      items.push({ id: 'phoneView', label: ta('calendar.phoneView'), tip: ta('tip.calendar.phoneView'), kind: 'open', value: ta(calPhoneDesignDef(calPhoneView(b.props), b.props).labelKey), run: ed.openPhonePicker,
+        own: b.props.phoneView != null || b.props.phoneDesign != null, reset: () => ed.setBlockProps('phoneView', { phoneView: undefined, phoneDesign: undefined }) });
+      items.push({ id: 'card', label: ta('calendar.card'), tip: ta('tip.calendar.card'), kind: 'open', value: ta(calCardDesignDef(calCardDesign(b.props)).labelKey), run: ed.openCardPicker,
+        own: b.props.card != null, reset: () => setBlockProp('card', undefined) });
       if (['list', 'cards', 'agenda'].includes(calView(b.props))) {
-        items.push({ id: 'limit', label: ta('lbl.maxCount'), tip: ta('tip.collection.limit'), kind: 'number', min: 1, max: 50, value: b.props.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(1, Math.min(50, Number(v) || 6))) });
+        const limit0 = calLimitStart(b.props);
+        items.push({ id: 'limit', label: ta('lbl.maxCount'), tip: ta('tip.collection.limit'), more: CalShowMore, kind: 'number', min: 1, max: 50, value: b.props.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(1, Math.min(50, Number(v) || 6))),
+          own: (b.props.limit ?? 6) !== limit0, reset: () => setBlockProp('limit', limit0) });
       }
-      items.push({ id: 'subscribe', label: ta('calendar.showSubscribe'), tip: ta('tip.calendar.subscribe'), kind: 'switch', value: b.props.showSubscribe !== false, set: (on) => setBlockProp('showSubscribe', on) });
+      items.push({ id: 'subscribe', label: ta('calendar.showSubscribe'), tip: ta('tip.calendar.subscribe'), kind: 'switch', value: b.props.showSubscribe !== false, set: (on) => setBlockProp('showSubscribe', on),
+        own: b.props.showSubscribe !== false, reset: () => setBlockProp('showSubscribe', false) });
     }
     const byWidth = FIT_BY_WIDTH.has(b.type);
-    items.push({ id: 'fit', label: ta('lbl.fit'), tip: ta('tip.fit'), below: FitMin, kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
+    items.push({ id: 'fit', label: ta('lbl.fit'), tip: ta('tip.fit'), more: FitMin, kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
       own: b.fit === 'shrink' || b.fit === 'both', reset: () => setBlockFit('wrap'),
       options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
         : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
@@ -129,14 +136,18 @@
       items.push({ id: 'align', label: ta('lbl.align'), tip: ta('tip.text.align'), kind: 'choice', value: p.align ?? 'left',
         options: [['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]], set: (v) => setBlockProp('align', v),
         own: (p.align ?? 'left') !== 'left', reset: () => setBlockProp('align', 'left') });
-      items.push({ id: 'textBox', label: ta('lbl.textBoxToggle'), tip: ta('tip.blocks.textBox'), below: p.box ? BoxStyle : null, kind: 'switch', value: Boolean(p.box), set: (on) => setBlockProp('box', on) });
+      items.push({ id: 'textBox', label: ta('lbl.textBoxToggle'), tip: ta('tip.blocks.textBox'), below: p.box ? BoxStyle : null, kind: 'switch', value: Boolean(p.box), set: (on) => setBlockProp('box', on),
+        own: Boolean(p.box), reset: () => setBlockProp('box', false) });
     } else if (b.type === 'button') {
       items.push({ id: 'goesTo', label: ta('lbl.goesTo'), kind: 'link', value: linkOf(p), set: (link) => ed.setBlockLink(link) });
     } else if (b.type === 'image') {
+      // The image's standards as its look group has them (families/Image.svelte): filling the frame, with the medium corners.
       items.push({ id: 'imgFit', label: ta('lbl.imageFit'), tip: ta('tip.image.fit'), kind: 'choice', value: p.fit ?? 'cover',
-        options: [['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]], set: (v) => setBlockProp('fit', v) });
+        options: [['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]], set: (v) => setBlockProp('fit', v),
+        own: p.fit !== undefined && p.fit !== 'cover', reset: () => setBlockProp('fit', 'cover') });
       items.push({ id: 'radius', label: ta('lbl.radius'), tip: ta('tip.image.radius'), kind: 'choice', value: p.radius ?? '',
-        options: [['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]], set: (v) => setBlockProp('radius', v || null) });
+        options: [['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]], set: (v) => setBlockProp('radius', v || null),
+        own: p.radius !== undefined && p.radius !== 'md', reset: () => setBlockProp('radius', 'md') });
     } else if (b.type === 'video') {
       items.push({ id: 'videoSource', label: ta('lbl.videoSource'), kind: 'choice', value: p.source === 'file' ? 'file' : 'embed',
         options: [['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]], set: (v) => setBlockProp('source', v) });
@@ -163,14 +174,17 @@
         options: [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]], set: (v) => setBlockProp('lines', v) });
     } else if (b.type === 'form') {
       items.push({ id: 'sendMode', label: ta('form.mode'), tip: ta('form.modeTitle'), kind: 'select', value: p.mode === 'endpoint' ? 'endpoint' : 'mailto',
-        options: [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]], set: (v) => setBlockProp('mode', v) });
+        options: [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]], set: (v) => setBlockProp('mode', v),
+        own: p.mode === 'endpoint', reset: () => setBlockProp('mode', 'mailto') });
     } else if (b.type === 'collection') {
       items.push({ id: 'limit', label: ta('lbl.maxCount'), tip: ta('tip.collection.limit'), kind: 'number', min: 0, max: 100, value: p.limit ?? 6, zero: ta('common.all'), set: (v) => { const n = Math.max(0, Math.min(100, Math.round(Number(v)) || 0)); setBlockProp('limit', n); return n; } });
     } else if (b.type === 'product') {
       items.push({ id: 'columns', label: ta('lbl.columns'), tip: ta('tip.product.columns'), kind: 'number', min: 0, max: 6, value: p.columns ?? 0, zero: ta('common.auto'), set: (v) => { const n = Math.max(0, Math.min(6, Math.round(Number(v)) || 0)); setBlockProp('columns', n); return n; } });
     } else if (b.type === 'checkout') {
-      items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), tip: ta('tip.checkout.vippsCheckout'), kind: 'switch', value: Boolean(paymentsOf(p).vipps), set: (on) => setBlockProp('payments', { ...paymentsOf(p), vipps: on }) });
-      items.push({ id: 'paypalButton', label: ta('lbl.payPaypal'), tip: ta('tip.checkout.payPaypal'), kind: 'switch', value: Boolean(paymentsOf(p).paypal), set: (on) => setBlockProp('payments', { ...paymentsOf(p), paypal: on }) });
+      items.push({ id: 'vippsButton', label: ta('lbl.vippsCheckout'), tip: ta('tip.checkout.vippsCheckout'), kind: 'switch', value: Boolean(paymentsOf(p).vipps), set: (on) => setBlockProp('payments', { ...paymentsOf(p), vipps: on }),
+        own: Boolean(paymentsOf(p).vipps), reset: () => setBlockProp('payments', { ...paymentsOf(p), vipps: false }) });
+      items.push({ id: 'paypalButton', label: ta('lbl.payPaypal'), tip: ta('tip.checkout.payPaypal'), kind: 'switch', value: Boolean(paymentsOf(p).paypal), set: (on) => setBlockProp('payments', { ...paymentsOf(p), paypal: on }),
+        own: Boolean(paymentsOf(p).paypal), reset: () => setBlockProp('payments', { ...paymentsOf(p), paypal: false }) });
     } else if (b.type === 'countdown') {
       items.push({ id: 'seconds', label: ta('lbl.countdownSeconds'), tip: ta('tip.countdown.seconds'), kind: 'switch', value: p.showSeconds !== false, set: (on) => setBlockProp('showSeconds', on) });
     } else if (b.type === 'audio') {
@@ -181,7 +195,7 @@
     if (!SIZE_BY_FRAME.has(b.type)) {
       // The size ends where the block's base text meets a bound the owner set (sizeRange); setBlockSize holds it there.
       const range = sizeRange(b);
-      items.push({ id: 'size', label: ta('lbl.scale'), tip: ta('tip.scale'), below: SizeBounds, kind: 'slider', min: Math.round(range.min * 100), max: Math.round(range.max * 100), step: Math.round(SIZE.step * 100), value: Math.round(blockSize(b) * 100),
+      items.push({ id: 'size', label: ta('lbl.scale'), tip: ta('tip.scale'), more: SizeBounds, kind: 'slider', min: Math.round(range.min * 100), max: Math.round(range.max * 100), step: Math.round(SIZE.step * 100), value: Math.round(blockSize(b) * 100),
         shown: `${Math.round(blockSize(b) * 100)} %`, input: (v) => setBlockSize(v / 100), done: endSizeGesture,
         own: blockSize(b) !== 1, reset: () => { setBlockSize(1); endSizeGesture(); } });
     }
@@ -336,6 +350,10 @@
               {:else}
                 <Choice label={item.label} title={item.tip} value={item.value} options={item.options} stack onchange={(v) => item.set(v)} />
               {/if}
+              <!-- What belongs to the setting and shows with some of its values stands in its row, under its line, as in its area -->
+              {#snippet more()}
+                {#if item.more}<PinScope away={() => pinnedIds}><item.more /></PinScope>{/if}
+              {/snippet}
             </Setting>
             {#if item.below}
               <PinScope away={() => pinnedIds}><item.below /></PinScope>

@@ -51,7 +51,7 @@
 {/snippet}
 {#snippet menuFit()}
   <!-- Below the design width: block-level on every block (ADR-0024); the content wraps, shrinks in proportion, or shrinks as little as it can and wraps, or the frame keeps a floor -->
-  <!-- What belongs to the narrow-screen choice stands under it in its row; in Pinned the row brings it along as its `below` (ElementMenu.svelte) -->
+  <!-- What belongs to the narrow-screen choice stands under it in its row; in Pinned the row brings it along as its `more` (ElementMenu.svelte) -->
   <Setting pin="fit" own={selectedBlock.fit === 'shrink' || selectedBlock.fit === 'both'} reset={() => setBlockFit('wrap')}>
     <Choice stack label={ta('lbl.fit')} title={ta('tip.fit')} value={selectedBlock.fit === 'shrink' || selectedBlock.fit === 'both' ? selectedBlock.fit : 'wrap'}
       options={FIT_BY_WIDTH.has(selectedBlock.type)

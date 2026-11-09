@@ -1190,7 +1190,7 @@
 
   /* A toggle's pin stands just left of the toggle, in room the row keeps for it, so the toggles of a group line up at the right edge whether they can be pinned or not */
   .pin-line > .gridmenu-snap:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    gap: calc(0.6rem + 24px + 0.3rem);
+    gap: calc(0.6rem + 24px + 0.3rem + var(--reset-room));
   }
 
   .pin-line > .gridmenu-snap + .menu-pin {
@@ -1209,7 +1209,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
-    padding-right: 30px;
+    padding-right: calc(30px + var(--reset-room));
   }
 
   .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin) > :last-child,
@@ -1219,7 +1219,7 @@
   .pin-line > .row-select:has(+ .menu-pin) > :last-child {
     flex: none;
     box-sizing: border-box;
-    width: calc(100% + 30px);
+    width: calc(100% + 30px + var(--reset-room));
     max-width: none;
   }
 
@@ -1339,6 +1339,7 @@
   /* A setting's row (Setting.svelte): the control, and the reset on the right while the value is the block's own;
      a row that says its value in words (the phone placement in Placement.svelte) has them as a dimmed line under its label */
   .setting {
+    --reset-room: 0px;
     display: flex;
     align-items: flex-start;
     gap: 0.4rem;
@@ -1368,7 +1369,89 @@
 
   /* The reset is the kit's small quiet icon button, level with the first line of its setting */
   .setting-reset {
+    right: 0;
     margin-top: 0.55rem;
+  }
+
+  /* A setting whose words stand over its control (a stacked choice, a slider, a dropdown, a label in the element menu) has its reset at the end of the words' line, before the pin where it has one, and the control keeps the row's full width under it */
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.choice.stacked, .row-select, .field-stack):first-child, > .setting-body > :is(.row-slider, .look-choice):first-child > :is(.row-label, .row-sub):first-child, > .setting-body > .pin-line:first-child > :is(label:not(.gridmenu-snap), .field-stack, .choice, .row-select):first-child, > .setting-body > .pin-line:first-child > :is(.row-slider, .look-choice):first-child > :is(.row-label, .row-sub):first-child),
+  :is(.emenu-col, .emenu-pinned) .setting:has(> .setting-reset):has(> .setting-body > label:not(.gridmenu-snap):first-child) {
+    --reset-room: 1.8rem;
+    position: relative;
+  }
+
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.choice.stacked, .row-select, .field-stack):first-child, > .setting-body > :is(.row-slider, .look-choice):first-child > :is(.row-label, .row-sub):first-child, > .setting-body > .pin-line:first-child > :is(label:not(.gridmenu-snap), .field-stack, .choice, .row-select):first-child, > .setting-body > .pin-line:first-child > :is(.row-slider, .look-choice):first-child > :is(.row-label, .row-sub):first-child) > .setting-reset,
+  :is(.emenu-col, .emenu-pinned) .setting:has(> .setting-reset):has(> .setting-body > label:not(.gridmenu-snap):first-child) > .setting-reset {
+    position: absolute;
+    top: 0;
+    margin-top: 0;
+    transform: translateY(-4px);
+  }
+
+  .setting:has(> .setting-body > .pin-line:first-child) > .setting-reset {
+    right: 30px;
+  }
+
+  /* A switch's reset stands just left of the toggle, before the pin where it has one, so the toggles of a group keep the right edge; with rows of its own under the switch it keeps to the switch's line (one line of words, 1.36rem, against the reset's 1.5rem) */
+  .setting:has(> .setting-reset):has(> .setting-body > .gridmenu-snap:first-child, > .setting-body > .pin-line:first-child > .gridmenu-snap:first-child) {
+    --reset-room: 1.8rem;
+    position: relative;
+  }
+
+  .setting:has(> .setting-reset):has(> .setting-body > .gridmenu-snap:first-child, > .setting-body > .pin-line:first-child > .gridmenu-snap:first-child) > .setting-reset {
+    position: absolute;
+    top: 50%;
+    right: calc(2.1rem + 0.3rem);
+    margin-top: 0;
+    transform: translateY(-50%);
+  }
+
+  .setting:has(> .setting-reset):has(> .setting-body > .pin-line:first-child > .gridmenu-snap:first-child) > .setting-reset {
+    right: calc(2.1rem + 0.3rem + 24px + 0.3rem);
+  }
+
+  .setting:has(> .setting-reset):has(> .setting-body > .gridmenu-snap:first-child, > .setting-body > .pin-line:first-child > .gridmenu-snap:first-child):has(> .setting-body > :nth-child(2)) > .setting-reset {
+    top: -1px;
+    transform: none;
+  }
+
+  .setting:has(> .setting-reset) > .setting-body > .gridmenu-snap:first-child:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    gap: calc(0.6rem + var(--reset-room));
+  }
+
+  /* A setting whose words and control share a line that is not a switch's (a number, a colour, a short choice, a picker's row) has its reset at the end of that line, centred on it, and what stands under the line keeps the row's full width */
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked), .row-picture):first-child, > .setting-body > .pin-line:first-child > :is(.ctl-row, .row-picture):first-child) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.4rem;
+  }
+
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked), .row-picture):first-child, > .setting-body > .pin-line:first-child > :is(.ctl-row, .row-picture):first-child) > .setting-body {
+    display: contents;
+  }
+
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked), .row-picture):first-child, > .setting-body > .pin-line:first-child > :is(.ctl-row, .row-picture):first-child) > .setting-body > :not(:first-child) {
+    grid-column: 1 / -1;
+  }
+
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked), .row-picture):first-child, > .setting-body > .pin-line:first-child > :is(.ctl-row, .row-picture):first-child) > .setting-reset {
+    grid-row: 1;
+    grid-column: 2;
+    align-self: center;
+    margin-top: 0;
+  }
+
+  /* The words keep the reset's room at the end of their line, and the control under them reaches across it, as beside the pin */
+  .setting:has(> .setting-reset) > .setting-body > :is(.choice.stacked, .row-select, .field-stack, .row-slider, .look-choice):first-child,
+  :is(.emenu-col, .emenu-pinned) .setting:has(> .setting-reset) > .setting-body > label:not(.gridmenu-snap):first-child {
+    padding-right: var(--reset-room);
+  }
+
+  .setting:has(> .setting-reset) > .setting-body > :is(.choice.stacked, .row-select, .field-stack, .row-slider, .look-choice):first-child > :last-child,
+  :is(.emenu-col, .emenu-pinned) .setting:has(> .setting-reset) > .setting-body > label:not(.gridmenu-snap):first-child > :last-child {
+    box-sizing: border-box;
+    width: calc(100% + var(--reset-room));
+    max-width: none;
   }
 
   .menu-group-reset {

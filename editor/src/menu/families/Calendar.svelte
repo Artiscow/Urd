@@ -18,6 +18,7 @@
   import ListEditor from '../../lib/rows/ListEditor.svelte';
   import PictureRow from '../../lib/rows/PictureRow.svelte';
   import LookChoice from '../../lib/rows/LookChoice.svelte';
+  import CalShowMore from './CalShowMore.svelte';
   import { pictureList, calendarDesignSource } from '../../lib/design-sources.js';
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
@@ -25,7 +26,7 @@
   import ColorPicker from '../../lib/ColorPicker.svelte';
   import MarkPicker from '../../lib/MarkPicker.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
-  import { calDesign, calView, calOptionDefs, calOptions, calOptionShown, calStripe, calHasExcerpt, calDescription, calSwitcherViews, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, CAL_FIELDS, CAL_SIZE, calHasTextOverrides, calResetTexts, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
+  import { calDesign, calView, calOptionDefs, calOptions, calOptionShown, calStripe, calHasExcerpt, calDescription, calSwitcherViews, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, CAL_FIELDS, CAL_SIZE, calHasTextOverrides, calResetTexts, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef, calLimitStart } from '$engine/calendar-designs.js';
   import { iconSvg } from '$engine/icons.js';
   import { fontChoices } from '$engine/fonts.js';
   import { ta, adminLang as currentAdminLang } from '$engine/i18n.js';
@@ -157,9 +158,9 @@
     const p = selectedBlock.props;
     const def = calDesign(p.design);
     const reset = (name, patch) => () => setBlockProps(name, patch);
-    // The counts a new calendar starts with: the design's own where it has one (Index cards: four), else eight in the agenda and six elsewhere, and three and three in a «Coming up» design.
+    // The counts a new calendar starts with (calLimitStart), and three and three in a «Coming up» design.
     const view = calView(p);
-    const limit0 = def.limit ?? (view === 'agenda' ? 8 : 6);
+    const limit0 = calLimitStart(p);
     const count0 = view === 'next' ? 3 : undefined;
     const viewChanged = p.switcher === true || p.switcherViews != null || p.toolsSize != null || p.description != null || p.showMore === false || (p.limit ?? 6) !== limit0 || p.nextCount !== count0 || p.laterCount !== count0 || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
     const on = [!def.ownFilter && p.showCategories === true, p.showSubscribe !== false, p.showSignup === true, p.showSearch === true, p.showEarlier === true, p.showRecurring === true].filter(Boolean).length;
@@ -233,6 +234,7 @@
   {#snippet calViewGroup()}
   <!-- A design with a view of its own (Style) fixes the view -->
   {#if !calDesign(selectedBlock.props.design).view}
+    <!-- The view is the calendar's kind, which a new calendar starts with from its place in Blocks, so it stands as a plain row -->
     <label title={ta('tip.calendar.view')}>{ta('lbl.view')}
       <Dropdown value={selectedBlock.props.view ?? 'list'}
         options={[['list', ta('calendar.viewList')], ['cards', ta('calendar.viewCards')], ['month', ta('calendar.viewMonth')], ['agenda', ta('calendar.viewAgenda')], ['next', ta('calendar.viewNext')]]}
@@ -240,6 +242,7 @@
   {/if}
   <!-- The view switcher, for the views that list what is coming: the visitor can turn the block to the week or the month -->
   {#if CAL_SWITCH_VIEWS.includes(calView(selectedBlock.props))}
+    <Setting own={selectedBlock.props.switcher === true} reset={() => setBlockProps('cal-switcher', { switcher: undefined, switcherViews: undefined })}>
     <SwitchRow label={ta('calendar.switcher')} title={ta('tip.calendar.switcher')} checked={selectedBlock.props.switcher === true} onchange={(on) => setBlockProp('switcher', on || undefined)} />
     {#if selectedBlock.props.switcher === true}
       <!-- The designs behind the switcher's Week and Month buttons, directly under the switch they belong to -->
@@ -255,61 +258,88 @@
           onchange={(v) => setBlockProp('switcherViews', { ...(selectedBlock.props.switcherViews ?? {}), month: v })} />
       </div>
     {/if}
-    <Choice label={ta('calendar.toolsSize')} title={ta('tip.calendar.toolsSize')} value={['s', 'l'].includes(selectedBlock.props.toolsSize) ? selectedBlock.props.toolsSize : 'm'}
-      options={[['s', ta('calendar.toolsSize.s')], ['m', ta('calendar.toolsSize.m')], ['l', ta('calendar.toolsSize.l')]]}
-      onchange={(v) => setBlockProp('toolsSize', v === 'm' ? undefined : v)} />
+    </Setting>
+    <Setting own={['s', 'l'].includes(selectedBlock.props.toolsSize)} reset={() => setBlockProp('toolsSize', undefined)}>
+      <Choice label={ta('calendar.toolsSize')} title={ta('tip.calendar.toolsSize')} value={['s', 'l'].includes(selectedBlock.props.toolsSize) ? selectedBlock.props.toolsSize : 'm'}
+        options={[['s', ta('calendar.toolsSize.s')], ['m', ta('calendar.toolsSize.m')], ['l', ta('calendar.toolsSize.l')]]}
+        onchange={(v) => setBlockProp('toolsSize', v === 'm' ? undefined : v)} />
+    </Setting>
   {/if}
   <!-- Where the description stands, on the designs with room for it in their rows -->
   {#if calHasExcerpt(selectedBlock.props)}
-    <Choice label={ta('calendar.opt.description')} title={ta('tip.calendar.opt.description')} value={calDescription(selectedBlock.props)}
-      options={[['rows', ta('calendar.descriptionRows')], ['card', ta('calendar.descriptionCard')]]}
-      onchange={(v) => setBlockProp('description', v === 'rows' ? undefined : v)} />
+    <Setting own={selectedBlock.props.description != null} reset={() => setBlockProp('description', undefined)}>
+      <Choice label={ta('calendar.opt.description')} title={ta('tip.calendar.opt.description')} value={calDescription(selectedBlock.props)}
+        options={[['rows', ta('calendar.descriptionRows')], ['card', ta('calendar.descriptionCard')]]}
+        onchange={(v) => setBlockProp('description', v === 'rows' ? undefined : v)} />
+    </Setting>
   {/if}
   {#if ['list', 'cards', 'agenda'].includes(selectedBlock.props.view ?? 'list')}
-    <Setting pin="limit">
+    {@const limit0 = calLimitStart(selectedBlock.props)}
+    <Setting pin="limit" own={(selectedBlock.props.limit ?? 6) !== limit0} reset={() => setBlockProp('limit', limit0)}>
       <NumberRow label={ta('lbl.maxCount')} title={ta('tip.collection.limit')} value={selectedBlock.props.limit ?? 6} min={1} max={50} onchange={(v) => setBlockProp('limit', v)} />
+      {#snippet more()}<CalShowMore />{/snippet}
     </Setting>
-    <!-- A list folds the events beyond the max count; the regular-event design folds its own dates -->
-    {#if calView(selectedBlock.props) === 'list' && calDesign(selectedBlock.props.design).module !== 'more'}
-      <SwitchRow label={ta('calendar.showMore')} title={ta('tip.calendar.showMore')} checked={selectedBlock.props.showMore !== false} onchange={(on) => setBlockProp('showMore', on ? undefined : false)} />
-    {/if}
   {/if}
   <!-- Cancelled events, the clock (24 hours unless set to 12) and the week (the site language's unless set here) -->
-  <SwitchRow label={ta('calendar.showCancelled')} title={ta('tip.calendar.showCancelled')} checked={selectedBlock.props.showCancelled !== false} onchange={(on) => setBlockProp('showCancelled', on ? undefined : false)} />
-  <SwitchRow label={ta('calendar.structuredData')} title={ta('tip.calendar.structuredData')} checked={selectedBlock.props.structuredData !== false} onchange={(on) => setBlockProp('structuredData', on ? undefined : false)} />
-  <Choice label={ta('calendar.clock')} title={ta('tip.calendar.clock')} value={selectedBlock.props.clock === '12' ? '12' : '24'}
-    options={[['24', ta('calendar.clock.24')], ['12', ta('calendar.clock.12')]]}
-    onchange={(v) => setBlockProp('clock', v === '12' ? '12' : undefined)} />
+  <Setting own={selectedBlock.props.showCancelled === false} reset={() => setBlockProp('showCancelled', undefined)}>
+    <SwitchRow label={ta('calendar.showCancelled')} title={ta('tip.calendar.showCancelled')} checked={selectedBlock.props.showCancelled !== false} onchange={(on) => setBlockProp('showCancelled', on ? undefined : false)} />
+  </Setting>
+  <Setting own={selectedBlock.props.structuredData === false} reset={() => setBlockProp('structuredData', undefined)}>
+    <SwitchRow label={ta('calendar.structuredData')} title={ta('tip.calendar.structuredData')} checked={selectedBlock.props.structuredData !== false} onchange={(on) => setBlockProp('structuredData', on ? undefined : false)} />
+  </Setting>
+  <Setting own={selectedBlock.props.clock === '12'} reset={() => setBlockProp('clock', undefined)}>
+    <Choice label={ta('calendar.clock')} title={ta('tip.calendar.clock')} value={selectedBlock.props.clock === '12' ? '12' : '24'}
+      options={[['24', ta('calendar.clock.24')], ['12', ta('calendar.clock.12')]]}
+      onchange={(v) => setBlockProp('clock', v === '12' ? '12' : undefined)} />
+  </Setting>
   {#if ['month', 'week', 'year', 'agenda'].includes(calView(selectedBlock.props)) || selectedBlock.props.design === 'bento' || selectedBlock.props.switcher === true}
-    <Choice label={ta('calendar.weekStart')} title={ta('tip.calendar.weekStart')} value={['mon', 'sun'].includes(selectedBlock.props.weekStart) ? selectedBlock.props.weekStart : 'auto'}
-      options={[['auto', ta('calendar.weekStart.auto')], ['mon', ta('calendar.weekStart.mon')], ['sun', ta('calendar.weekStart.sun')]]}
-      onchange={(v) => setBlockProp('weekStart', v === 'auto' ? undefined : v)} />
+    <Setting own={['mon', 'sun'].includes(selectedBlock.props.weekStart)} reset={() => setBlockProp('weekStart', undefined)}>
+      <Choice label={ta('calendar.weekStart')} title={ta('tip.calendar.weekStart')} value={['mon', 'sun'].includes(selectedBlock.props.weekStart) ? selectedBlock.props.weekStart : 'auto'}
+        options={[['auto', ta('calendar.weekStart.auto')], ['mon', ta('calendar.weekStart.mon')], ['sun', ta('calendar.weekStart.sun')]]}
+        onchange={(v) => setBlockProp('weekStart', v === 'auto' ? undefined : v)} />
+    </Setting>
   {/if}
   {#if selectedBlock.props.view === 'next'}
-    <!-- The card: how many events in full, and how many more as lines under «Later» -->
-    <Choice label={ta('calendar.nextCount')} title={ta('tip.calendar.nextCount')} value={String(Math.min(3, Math.max(1, Number(selectedBlock.props.nextCount) || 1)))}
-      options={[['1', '1'], ['2', '2'], ['3', '3']]}
-      onchange={(v) => setBlockProp('nextCount', Number(v))} />
-    <SliderRow label={ta('calendar.laterCount')} title={ta('tip.calendar.laterCount')} value={selectedBlock.props.laterCount ?? 0} min={0} max={10} step={1}
-      shown={String(selectedBlock.props.laterCount ?? 0)} oninput={(v) => setBlockProp('laterCount', v)} />
+    <!-- The card: how many events in full, and how many more as lines under «Later»; a «Coming up» design starts with three and three (setCalendarDesign) -->
+    <Setting own={Number(selectedBlock.props.nextCount) !== 3} reset={() => setBlockProp('nextCount', 3)}>
+      <Choice label={ta('calendar.nextCount')} title={ta('tip.calendar.nextCount')} value={String(Math.min(3, Math.max(1, Number(selectedBlock.props.nextCount) || 1)))}
+        options={[['1', '1'], ['2', '2'], ['3', '3']]}
+        onchange={(v) => setBlockProp('nextCount', Number(v))} />
+    </Setting>
+    <Setting own={Number(selectedBlock.props.laterCount) !== 3} reset={() => setBlockProp('laterCount', 3)}>
+      <SliderRow label={ta('calendar.laterCount')} title={ta('tip.calendar.laterCount')} value={selectedBlock.props.laterCount ?? 0} min={0} max={10} step={1}
+        shown={String(selectedBlock.props.laterCount ?? 0)} oninput={(v) => setBlockProp('laterCount', v)} />
+    </Setting>
   {/if}
   {/snippet}
   {#snippet calButtons()}
   <!-- A design with calendar switches of its own has no chip row to switch -->
   {#if !calDesign(selectedBlock.props.design).ownFilter}
-    <SwitchRow label={ta('calendar.showCategories')} title={ta('tip.calendar.showCategories')} checked={selectedBlock.props.showCategories === true} onchange={(on) => setBlockProp('showCategories', on)} />
+    <Setting own={selectedBlock.props.showCategories === true} reset={() => setBlockProp('showCategories', false)}>
+      <SwitchRow label={ta('calendar.showCategories')} title={ta('tip.calendar.showCategories')} checked={selectedBlock.props.showCategories === true} onchange={(on) => setBlockProp('showCategories', on)} />
+    </Setting>
   {/if}
   <!-- What a visitor finds events with: a search field, and the events that are over -->
-  <SwitchRow label={ta('calendar.showSearch')} title={ta('tip.calendar.showSearch')} checked={selectedBlock.props.showSearch === true} onchange={(on) => setBlockProp('showSearch', on ? true : undefined)} />
+  <Setting own={selectedBlock.props.showSearch === true} reset={() => setBlockProp('showSearch', undefined)}>
+    <SwitchRow label={ta('calendar.showSearch')} title={ta('tip.calendar.showSearch')} checked={selectedBlock.props.showSearch === true} onchange={(on) => setBlockProp('showSearch', on ? true : undefined)} />
+  </Setting>
   {#if !['month', 'week', 'day', 'year'].includes(calView(selectedBlock.props))}
-    <SwitchRow label={ta('calendar.showEarlier')} title={ta('tip.calendar.showEarlier')} checked={selectedBlock.props.showEarlier === true} onchange={(on) => setBlockProp('showEarlier', on ? true : undefined)} />
+    <Setting own={selectedBlock.props.showEarlier === true} reset={() => setBlockProp('showEarlier', undefined)}>
+      <SwitchRow label={ta('calendar.showEarlier')} title={ta('tip.calendar.showEarlier')} checked={selectedBlock.props.showEarlier === true} onchange={(on) => setBlockProp('showEarlier', on ? true : undefined)} />
+    </Setting>
   {/if}
-  <Setting pin="subscribe">
+  <Setting pin="subscribe" own={selectedBlock.props.showSubscribe !== false} reset={() => setBlockProp('showSubscribe', false)}>
     <SwitchRow label={ta('calendar.showSubscribe')} title={ta('tip.calendar.subscribe')} checked={selectedBlock.props.showSubscribe !== false} onchange={(on) => setBlockProp('showSubscribe', on)} />
   </Setting>
-  <SwitchRow label={ta('calendar.showSignup')} title={ta('tip.calendar.signup')} checked={selectedBlock.props.showSignup === true} onchange={(on) => setBlockProp('showSignup', on)} />
-  <SwitchRow label={ta('calendar.showAdd')} title={ta('tip.calendar.showAdd')} checked={selectedBlock.props.showAdd !== false} onchange={(on) => setBlockProp('showAdd', on ? undefined : false)} />
-  <SwitchRow label={ta('calendar.showRecurring')} title={ta('tip.calendar.showRecurring')} checked={selectedBlock.props.showRecurring === true} onchange={(on) => setBlockProp('showRecurring', on ? true : undefined)} />
+  <Setting own={selectedBlock.props.showSignup === true} reset={() => setBlockProp('showSignup', false)}>
+    <SwitchRow label={ta('calendar.showSignup')} title={ta('tip.calendar.signup')} checked={selectedBlock.props.showSignup === true} onchange={(on) => setBlockProp('showSignup', on)} />
+  </Setting>
+  <Setting own={selectedBlock.props.showAdd === false} reset={() => setBlockProp('showAdd', undefined)}>
+    <SwitchRow label={ta('calendar.showAdd')} title={ta('tip.calendar.showAdd')} checked={selectedBlock.props.showAdd !== false} onchange={(on) => setBlockProp('showAdd', on ? undefined : false)} />
+  </Setting>
+  <Setting own={selectedBlock.props.showRecurring === true} reset={() => setBlockProp('showRecurring', undefined)}>
+    <SwitchRow label={ta('calendar.showRecurring')} title={ta('tip.calendar.showRecurring')} checked={selectedBlock.props.showRecurring === true} onchange={(on) => setBlockProp('showRecurring', on ? true : undefined)} />
+  </Setting>
   {#if calDesign(selectedBlock.props.design).program}
     <label title={ta('tip.calendar.programHref')}>{ta('calendar.programHref')}
       <input value={selectedBlock.props.programHref ?? ''} placeholder="/program" spellcheck="false"
@@ -321,23 +351,29 @@
   <label title={ta('tip.calendar.emptyText')}>{ta('calendar.emptyText')}
     <input value={selectedBlock.props.emptyText ?? ''} placeholder={ta('calendar.emptyPh')}
       onchange={(e) => setBlockProp('emptyText', e.target.value.trim() || undefined)} /></label>
-  <label title={ta('tip.calendar.emptyIcon')}>{ta('calendar.emptyIcon')}
-    <MarkPicker iconsOnly icon={selectedBlock.props.emptyIcon === 'none' ? '' : (selectedBlock.props.emptyIcon ?? 'calendar')}
-      klass="lbtn-mark" label={ta('tip.calendar.emptyIcon')}
-      onpick={(mark) => setBlockProp('emptyIcon', mark.icon || 'none')}>
-      {#if selectedBlock.props.emptyIcon !== 'none'}{@html iconSvg(selectedBlock.props.emptyIcon ?? 'calendar') || iconSvg('calendar')}{/if}
-    </MarkPicker></label>
+  <Setting own={selectedBlock.props.emptyIcon != null && selectedBlock.props.emptyIcon !== 'calendar'} reset={() => setBlockProp('emptyIcon', undefined)}>
+    <label title={ta('tip.calendar.emptyIcon')}>{ta('calendar.emptyIcon')}
+      <MarkPicker iconsOnly icon={selectedBlock.props.emptyIcon === 'none' ? '' : (selectedBlock.props.emptyIcon ?? 'calendar')}
+        klass="lbtn-mark" label={ta('tip.calendar.emptyIcon')}
+        onpick={(mark) => setBlockProp('emptyIcon', mark.icon || 'none')}>
+        {#if selectedBlock.props.emptyIcon !== 'none'}{@html iconSvg(selectedBlock.props.emptyIcon ?? 'calendar') || iconSvg('calendar')}{/if}
+      </MarkPicker></label>
+  </Setting>
   {/snippet}
   {#snippet calNotice()}
   <!-- The announcement note, on the designs that have one: a switch and the link it leads to -->
   {#if calDesign(selectedBlock.props.design).notice}
+    <!-- The announcement and what belongs to it, one setting row; its way back hides it and keeps its words -->
+    <Setting own={selectedBlock.props.notice?.show === true} reset={() => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), show: false })}>
     <SwitchRow label={ta('calendar.showNotice')} title={ta('tip.calendar.showNotice')} checked={selectedBlock.props.notice?.show === true} onchange={(on) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), show: on })} />
     {#if selectedBlock.props.notice?.show === true}
       <!-- A design that can draw the announcement as an alert band offers the choice -->
       {#if calDesign(selectedBlock.props.design).noticeBand}
-        <Choice label={ta('calendar.noticeAs')} title={ta('tip.calendar.noticeAs')} value={selectedBlock.props.notice?.as === 'band' ? 'band' : 'note'}
-          options={[['note', ta('calendar.noticeAsNote')], ['band', ta('calendar.noticeAsBand')]]}
-          onchange={(v) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), as: v === 'band' ? 'band' : undefined })} />
+        <Setting own={selectedBlock.props.notice?.as === 'band'} reset={() => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), as: undefined })}>
+          <Choice label={ta('calendar.noticeAs')} title={ta('tip.calendar.noticeAs')} value={selectedBlock.props.notice?.as === 'band' ? 'band' : 'note'}
+            options={[['note', ta('calendar.noticeAsNote')], ['band', ta('calendar.noticeAsBand')]]}
+            onchange={(v) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), as: v === 'band' ? 'band' : undefined })} />
+        </Setting>
       {/if}
       <!-- The announcement's own words, also written by clicking them in the preview; the band shows the heading alone -->
       <label title={ta('tip.calendar.noticeHeading')}>{ta('calendar.noticeHeading')}
@@ -354,6 +390,7 @@
           setLinkOn(b.props.notice, link);
         })} />
     {/if}
+    </Setting>
   {/if}
   {/snippet}
   <Fold id="cal-sources" title={ta('calendar.sources')} value={cm.sources}>{@render calSources()}</Fold>
@@ -370,16 +407,16 @@
 {:else if area === 'style'}
   {@const calDef = calDesign(selectedBlock.props.design)}
   <!-- The design, first in Style as every block's design: a row naming it that opens the picker over the whole menu, or its pictures in place, as «Designs» asks -->
-  <Setting pin="design">
+  <Setting pin="design" own={calDef.id !== 'plain'} reset={() => ed.setCalendarDesign('plain')}>
     <LookChoice label={ta('calendar.design')} value={ta(calDef.labelKey)} title={ta('tip.calendar.design')} current={calDef.id}
       designs={() => pictureList(calendarDesignSource({}))} onpick={(id) => ed.setCalendarDesign(id)} onopen={ed.openDesignPicker} />
   </Setting>
   <!-- The phone design: what the calendar draws on a phone, the design's own default until the owner picks another -->
-  <Setting pin="phoneView">
+  <Setting pin="phoneView" own={selectedBlock.props.phoneView != null || selectedBlock.props.phoneDesign != null} reset={() => setBlockProps('phoneView', { phoneView: undefined, phoneDesign: undefined })}>
     <PictureRow label={ta('calendar.phoneView')} value={ta(calPhoneDesignDef(calPhoneView(selectedBlock.props), selectedBlock.props).labelKey)} title={ta('tip.calendar.phoneView')} onclick={ed.openPhonePicker} />
   </Setting>
   <!-- The card design: how the card that opens at a press looks, the design's own default until the owner picks another -->
-  <Setting pin="card">
+  <Setting pin="card" own={selectedBlock.props.card != null} reset={() => setBlockProp('card', undefined)}>
     <PictureRow label={ta('calendar.card')} value={ta(calCardDesignDef(calCardDesign(selectedBlock.props)).labelKey)} title={ta('tip.calendar.card')} onclick={ed.openCardPicker} />
   </Setting>
   {@const cm = calMenu()}
@@ -388,6 +425,7 @@
   {#if calOptionDefs(selectedBlock.props.design).length}
     {@const calOpt = calOptions(selectedBlock.props)}
     {#each calOptionDefs(selectedBlock.props.design).filter((def) => calOptionShown(def, calOpt)) as def (def.key)}
+      <Setting own={selectedBlock.props.options?.[def.key] != null} reset={() => setCalOption(def, null)}>
       {#if def.kind === 'switch'}
         <SwitchRow label={ta(def.labelKey)} title={def.tipKey ? ta(def.tipKey) : undefined} checked={calOpt[def.key]} onchange={(on) => setCalOption(def, on)} />
       {:else if def.kind === 'hour'}
@@ -402,6 +440,7 @@
       {:else}
         <Choice label={ta(def.labelKey)} title={def.tipKey ? ta(def.tipKey) : undefined} value={calOpt[def.key]} options={def.values.map((v) => [v, calOptionLabel(def, v)])} onchange={(v) => setCalOption(def, v)} />
       {/if}
+      </Setting>
     {/each}
   {/if}
   {/snippet}
@@ -425,25 +464,33 @@
   {/snippet}
   {#snippet calStripeGroup()}
   <!-- The edge stripe on the boxes, with its colour directly under its switch -->
-  <SwitchRow label={ta('calendar.stripe')} title={ta('tip.calendar.stripe')} checked={calStripe(calDef, selectedBlock.props.stripe).show} onchange={(on) => setCalStripe({ show: on })} />
-  {#if calStripe(calDef, selectedBlock.props.stripe).show}
-    <ColourRow label={ta('calendar.stripeColor')} title={ta('tip.calendar.stripeColor')} value={selectedBlock.props.stripe?.color ?? ''} tokens={themeSwatches()} allowClear
-      onchange={(v) => setCalStripe({ color: v || undefined })} />
-  {/if}
+  <Setting own={selectedBlock.props.stripe != null} reset={() => setBlockProp('stripe', undefined)}>
+    <SwitchRow label={ta('calendar.stripe')} title={ta('tip.calendar.stripe')} checked={calStripe(calDef, selectedBlock.props.stripe).show} onchange={(on) => setCalStripe({ show: on })} />
+    {#if calStripe(calDef, selectedBlock.props.stripe).show}
+      <ColourRow label={ta('calendar.stripeColor')} title={ta('tip.calendar.stripeColor')} value={selectedBlock.props.stripe?.color ?? ''} tokens={themeSwatches()} allowClear
+        onchange={(v) => setCalStripe({ color: v || undefined })} />
+    {/if}
+  </Setting>
   {/snippet}
   {#snippet calFields()}
   <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour -->
   <Dropdown value={calField} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} />
-  <label title={ta('tip.calendar.fieldFont')}>{ta('calendar.fieldFont')}
-    <Dropdown value={calFieldStyleOf().font ?? ''}
-      options={fontChoices(ta, [['', ta('common.inherit')]])}
-      onchange={(v) => setCalField({ font: v || undefined })} /></label>
-  <label title={ta('tip.calendar.fieldSize')}>{ta('calendar.fieldSize')}
-    <input type="number" min={CAL_SIZE.min} max={CAL_SIZE.max} value={calFieldStyleOf().size ?? ''} placeholder={ta('common.inherit')}
-      onchange={(e) => setCalField({ size: e.target.value === '' ? undefined : Math.max(CAL_SIZE.min, Math.min(CAL_SIZE.max, Number(e.target.value) || CAL_SIZE.min)) })} /></label>
-  <Choice label={ta('calendar.fieldWeight')} value={calFieldStyleOf().bold === true ? 'bold' : calFieldStyleOf().bold === false ? 'normal' : ''}
-    options={[['', ta('common.inherit')], ['bold', ta('format.bold')], ['normal', ta('calendar.fieldNormal')]]}
-    onchange={(v) => setCalField({ bold: v === 'bold' ? true : v === 'normal' ? false : undefined })} />
+  <Setting own={calFieldStyleOf().font != null} reset={() => setCalField({ font: undefined })}>
+    <label title={ta('tip.calendar.fieldFont')}>{ta('calendar.fieldFont')}
+      <Dropdown value={calFieldStyleOf().font ?? ''}
+        options={fontChoices(ta, [['', ta('common.inherit')]])}
+        onchange={(v) => setCalField({ font: v || undefined })} /></label>
+  </Setting>
+  <Setting own={calFieldStyleOf().size != null} reset={() => setCalField({ size: undefined })}>
+    <label title={ta('tip.calendar.fieldSize')}>{ta('calendar.fieldSize')}
+      <input type="number" min={CAL_SIZE.min} max={CAL_SIZE.max} value={calFieldStyleOf().size ?? ''} placeholder={ta('common.inherit')}
+        onchange={(e) => setCalField({ size: e.target.value === '' ? undefined : Math.max(CAL_SIZE.min, Math.min(CAL_SIZE.max, Number(e.target.value) || CAL_SIZE.min)) })} /></label>
+  </Setting>
+  <Setting own={calFieldStyleOf().bold != null} reset={() => setCalField({ bold: undefined })}>
+    <Choice label={ta('calendar.fieldWeight')} value={calFieldStyleOf().bold === true ? 'bold' : calFieldStyleOf().bold === false ? 'normal' : ''}
+      options={[['', ta('common.inherit')], ['bold', ta('format.bold')], ['normal', ta('calendar.fieldNormal')]]}
+      onchange={(v) => setCalField({ bold: v === 'bold' ? true : v === 'normal' ? false : undefined })} />
+  </Setting>
   <span class="toolbar-row">
     <button type="button" class="tbtn" title={ta('format.italic')} class:active={calFieldStyleOf().italic === true}
       onclick={() => setCalField({ italic: calFieldStyleOf().italic ? undefined : true })}><i>{ta('format.italicLetter')}</i></button>

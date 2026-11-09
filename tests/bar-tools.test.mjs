@@ -92,7 +92,7 @@ test('the design button opens the small window or the picker as «Design button 
   assert.match(open, /type: 'urd-block-design'/);
   // lib/only-group.js keeps `look:design` among the Style area's own children: the design row stands first in the area, in no group.
   assert.match(read('../editor/src/menu/ElementMenu.svelte'), /\{#snippet menuStyle\(\)\}\s*\{#if designs\}\s*(?:<!--[\s\S]*?-->\s*)*<Setting pin="design"/);
-  assert.match(read('../editor/src/menu/families/Calendar.svelte'), /\{:else if area === 'style'\}\s*(?:\{@const [^}]*\}\s*)?(?:<!--[\s\S]*?-->\s*)*<Setting pin="design">/);
+  assert.match(read('../editor/src/menu/families/Calendar.svelte'), /\{:else if area === 'style'\}\s*(?:\{@const [^}]*\}\s*)?(?:<!--[\s\S]*?-->\s*)*<Setting pin="design"[\s>]/);
 });
 
 test('every group on a section\'s bar is a fold of the section\'s menu, and every fold is a tool', () => {

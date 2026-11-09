@@ -394,10 +394,14 @@ test('what belongs to the size and the fit stands under their line, in Placement
     assert.equal(count(line, part), 0, `what belongs to ${pin} stands under the line, not in it`);
     assert.equal(count(row, part), 1, `what belongs to ${pin} stands in its row`);
   }
-  // In Pinned: the pinned size brings its bounds and the pinned fit its smallest scale.
+  // In Pinned: the pinned size brings its bounds and the pinned fit its smallest scale, each in its own row as in Placement.
   const pinned = find(draw({ pinned: ['size', 'fit'], removed: [] }), (n) => hasClass(n, 'emenu-pinned'))[0];
   assert.ok(pinned, 'Pinned is drawn');
   assert.equal(count(pinned, 'frame-grid'), 1, 'the size\'s bounds stand in Pinned');
   assert.equal(count(pinned, 'row-slider'), 2, 'the size\'s slider and the fit\'s smallest scale stand in Pinned');
+  for (const [pin, part] of [['size', 'frame-grid'], ['fit', 'row-slider']]) {
+    const row = find(pinned, (x) => x.attrs['data-pin'] === pin)[0];
+    assert.equal(count(row, part), 1, `what belongs to ${pin} stands in its row in Pinned`);
+  }
   setQuickChoice('text', NO_CHOICE);
 });

@@ -11,7 +11,7 @@ import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
-import { calDesign, calView, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
+import { calDesign, calView, calPhoneView, calCardDesign, calLimitStart } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
 import { PAGE_SCHEMA_VERSION, liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
@@ -367,6 +367,8 @@ function openImageEditor() {
 
 /** A font or a size for the whole text of the block, applied by the preview's text toolbar (`{fontFamily}` or `{fontSize}`, null takes the theme's). */
 function setTextStyle(style) {
+  // The preview writes the style into the text and hands it back as the text's edit, an undo step of its own.
+  historyState.ownStepNext(`edit:${selectedBlock.blockId}`);
   previewState.bridge?.sendTextStyle(selectedBlock.blockId, style);
 }
 
@@ -453,8 +455,7 @@ function setCalendarDesign(id) {
   const plainView = def.id === 'plain' && !['list', 'cards', 'month', 'agenda', 'next'].includes(calView(selectedBlock.props)) ? { view: 'list' } : {};
   const next = { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}), ...plainView };
   // A calendar that keeps the count it started with takes the new design's own (Index cards start with four).
-  const limitOf = (props) => calDesign(props.design).limit ?? (calView(props) === 'agenda' ? 8 : 6);
-  const limit = (selectedBlock.props.limit ?? 6) === limitOf(selectedBlock.props) ? { limit: limitOf({ ...selectedBlock.props, ...next }) } : {};
+  const limit = (selectedBlock.props.limit ?? 6) === calLimitStart(selectedBlock.props) ? { limit: calLimitStart({ ...selectedBlock.props, ...next }) } : {};
   // setBlockProps fits the frame to the new design.
   setBlockProps('design', { ...next, ...counts, ...limit });
 }

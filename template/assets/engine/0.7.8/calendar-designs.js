@@ -1041,6 +1041,11 @@ export function calView(props) {
   return CAL_VIEWS.includes(props?.view) ? props.view : 'list';
 }
 
+/** The number of events a calendar starts with: the design's own where it has one (Index cards: four), else eight in the agenda and six elsewhere. */
+export function calLimitStart(props) {
+  return calDesign(props?.design).limit ?? (calView(props) === 'agenda' ? 8 : 6);
+}
+
 /** The views that can carry the in-block view switcher: the ones that list what is coming. */
 export const CAL_SWITCH_VIEWS = ['list', 'cards', 'agenda', 'next'];
 

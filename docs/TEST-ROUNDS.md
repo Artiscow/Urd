@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.10.2): the five test blocks as setting rows, and the way back on the setting's line
+
+- [ ] A text block: set «Font for the whole text» or «Size for the whole text», and each row shows its reset arrow («Back to the theme's»), which takes the text back to the theme's; an undo after typing and a font takes back the font only
+- [ ] A calendar: change «Show view switcher», «Size of the tools», «Clock», «First day of the week», a switch in «Buttons and filter», «Icon when empty», «Design», «Design on a phone», «Pop-up», a design option, «Edge stripe on the boxes» or a text field's font, size or weight, and each row shows its arrow, which takes it back to what a new calendar starts with
+- [ ] A new calendar from Blocks as cards, a month or an agenda shows no arrow on «View»
+- [ ] A calendar: the week and month designs stand under «Show view switcher», «Fold the rest under «Show all»» under «Max count» (in Pinned too), «The announcement as» under the announcement and the stripe's colour under «Edge stripe on the boxes»
+- [ ] A checkout: ««Pay with Vipps» button», «Card payment» and ««Pay with PayPal» button» each show their arrow when on; «Take the money» stands under «Card payment» when it is Stripe, and the card payment's arrow takes both back
+- [ ] Pinned: the calendar's «Design», «Design on a phone», «Pop-up», «Max count» and «Show subscribe button», «Text box (card with background)», the image's «Fit» and «Rounding», the form's «Send mode» and the checkout's buttons show the same arrow as their rows
+- [ ] A setting whose name stands over its control («Alignment», «Font for the whole text», «Size of the tools») has its arrow at the end of the name's line, before the pin, and the control keeps the full width
+- [ ] A switch with its arrow («Show search field», «Show view switcher») has the arrow just left of the toggle, and the toggles of a group stay lined up at the right edge
+- [ ] A one-line row with its arrow («Clock», «Max count») has the arrow at the end of its line, and «Fold the rest under «Show all»» under «Max count» keeps its toggle in line with the others
+- [ ] With «Extra settings: Added from a menu», a calendar's «View and count» and «Buttons and filter» open on their first setting and those with a value of their own, the rest behind the ⋮
+
 ### Test batch (0.7.33.10.1): the box style, the motion and Placement as setting rows
 
 - [ ] A FAQ's Card style and a text box: change the colour, the shadow, the border or the glass, and each row shows its reset arrow, which takes it back to the theme's; the shadow's colour stands under the shadow and goes with it
