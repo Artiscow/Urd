@@ -5,7 +5,7 @@
  * Pure, node-tested (tests/settings-model.test.mjs).
  */
 import { panelsPrefIn } from './panels-start.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES } from '../menu/forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS } from '../menu/forms.js';
 
 /** Where the settings open: a dialog with the groups as sections down its left, a panel in the panel column, or a sheet with the look choices at the left and the rest as rows at the right. */
 export const SETTINGS_PLACES = ['dialog', 'panel', 'sheet'];
@@ -69,6 +69,12 @@ export const SETTINGS_GROUPS = [
       { id: 'folds', part: true, labelKey: 'adminPart.folds', tipKey: 'tip.adminPart.folds', kind: 'seg',
         options: (c) => FOLDS_MODES.map((id) => [id, c.ta(`opt.folds.${id}`)]),
         get: (c) => c.menu.foldsPref, set: (c, v) => c.setFoldsPref(v) },
+      { id: 'designs', part: true, labelKey: 'adminPart.designs', tipKey: 'tip.adminPart.designs', kind: 'choice', look: 'designs',
+        options: (c) => DESIGN_CHOICES.map((id) => [id, c.ta(`opt.designChoice.${id}`)]),
+        get: (c) => c.menu.designsPref, set: (c, v) => c.setDesignsPref(v) },
+      // What the design button on a block's bar opens, on every form of the bar: the small window by default or the full one, set under how a look is chosen; the full window stands first, as the row above names it.
+      { id: 'toolbarDesign', part: true, parent: 'designs', labelKey: 'adminPart.toolbarDesign', tipKey: 'tip.adminPart.toolbarDesign', kind: 'seg',
+        options: (c) => ['full', 'small'].filter((id) => TOOLBAR_DESIGNS.includes(id)).map((id) => [id, c.ta(`opt.toolbarDesign.${id}`)]), get: (c) => c.ed.toolbarDesignPref, set: (c, v) => c.ed.setToolbarDesign(v) },
       { id: 'extra', part: true, labelKey: 'adminPart.extra', tipKey: 'tip.adminPart.extra', kind: 'seg',
         options: (c) => EXTRA_MODES.map((id) => [id, c.ta(`opt.extraSettings.${id}`)]),
         get: (c) => c.menu.extraPref, set: (c, v) => c.setExtraPref(v) },

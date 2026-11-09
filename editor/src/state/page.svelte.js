@@ -217,7 +217,9 @@ function onSectionMenu(msg) {
   if (!store?.data.sections.some((s) => s.id === msg.sectionId)) return;
   onSelectSection({ sectionId: msg.sectionId });
   menuAnchor = msg.rect;
-  const only = msg.only === 'motion' ? 'fold:sec-motion' : onlyOf(msg.only);
+  // A section has no design, so a small panel of one is never drawn for it.
+  const asked = msg.only === 'motion' ? 'fold:sec-motion' : onlyOf(msg.only);
+  const only = asked?.startsWith('look:') ? null : asked;
   if (only?.startsWith('fold:')) folds.set('menu', only.slice(5), true);
   if (only) blockMenu = { ...menuPlaceFor(msg.rect, true), section: true, only, title: toolTitle(msg) };
   else if (menuDocked()) openDockedMenu();

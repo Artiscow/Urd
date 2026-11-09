@@ -4,6 +4,8 @@
   import { getContext } from 'svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import Setting from '../lib/rows/Setting.svelte';
+  import LookChoice from '../lib/rows/LookChoice.svelte';
+  import { pictureList, footerDesignSource } from '../lib/design-sources.js';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import SliderRow from '../lib/rows/SliderRow.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
@@ -337,6 +339,8 @@
   const sharedValue = () => `${sharedParts().filter((key) => siteDraft.footer?.[key] !== false).length} / ${sharedParts().length}`;
   const bottomValue = () => siteDraft.footer?.copyright || `${(siteDraft.footer?.linkRow?.length ?? 0) + (siteDraft.footer?.baseline?.length ?? 0)}`;
   const F = 'footer';
+  /** The footer's design in use, the standard one where none is set. */
+  const footerNow = $derived(footerDesign(siteDraft) || 'standard');
 
   /** The column whose card stands open, one at a time: the column itself, so the card goes with it as the columns move, and none stands open once an undo or a start point brings other columns. */
   let openColumn = $state(null);
@@ -358,9 +362,12 @@
     {/if}
   </Fold>
 
-  <!-- The footer's look, chosen in the shared design picker; the content stays as it is -->
-  <Fold id="design" surface={F} title={ta('lbl.design')} value={ta(`footerDesign.${footerDesign(siteDraft) || 'standard'}`)}>
-    <button class="ghost action" title={ta('tip.footer.design')} onclick={() => (ed.designPicker = { kind: 'footer' })}>{ta('ui.chooseDesign')}</button>
+  <!-- The footer's look, chosen as Urd settings «Designs» asks, in the shared design picker or by its pictures in place; the content stays as it is -->
+  <Fold id="design" surface={F} title={ta('lbl.design')} value={ta(`footerDesign.${footerNow}`)}>
+    <LookChoice label={ta('lbl.design')} value={ta(`footerDesign.${footerNow}`)} picture={`/admin/designs/footer-${footerNow}.webp`} title={ta('tip.footer.design')} current={footerNow} heading={false}
+      designs={() => pictureList(footerDesignSource({}))}
+      onpick={(id) => footerMutate('footer-design', (f) => { if (id && id !== 'standard') f.design = id; else delete f.design; })}
+      onopen={() => (ed.designPicker = { kind: 'footer' })} />
   </Fold>
 
   <!-- A start point fills the footer with a whole layout of content and look -->

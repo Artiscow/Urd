@@ -5,10 +5,10 @@
      Wide, Pinned and the areas share two columns, each whole, cut where they come out most even (`balanceAreas`); narrow, they stand under each other with a heading each; with tabs, one area stands at a time behind Content, Style and Placement (`layout`, menu/state.svelte.js menuLayout).
      What stands first follows the Urd settings' «Shortcuts»: the Pinned rows, the same rows as tiles, nothing but the search (drawn by the menu's frame), or chips that jump to each area.
      A block with designs has its design, and its phone design, as the first rows of Style, and every block its motion as the last group there. */
-  import { getContext } from 'svelte';
+  import { getContext, setContext } from 'svelte';
   import Choice from '../lib/Choice.svelte';
   import Setting from '../lib/rows/Setting.svelte';
-  import PictureRow from '../lib/rows/PictureRow.svelte';
+  import LookChoice from '../lib/rows/LookChoice.svelte';
   import NumberRow from '../lib/rows/NumberRow.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import ColourRow from '../lib/rows/ColourRow.svelte';
@@ -23,7 +23,7 @@
   import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef } from '$engine/calendar-designs.js';
   import { paymentsOf } from '$engine/shop.js';
   import { GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
-  import { blockDesigns, phoneDesignName } from '../lib/design-sources.js';
+  import { blockDesigns, phoneDesignName, pictureList, calendarDesignSource } from '../lib/design-sources.js';
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize, sizeRange } from '$engine/push-model.js';
   import { ribbonMotions, colorTokens } from './options.js';
@@ -73,6 +73,8 @@
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
   /** `layout` is 'wide', 'narrow' or 'tabs'; `only` draws one group alone, for a tool of the bar (lib/only-group.js): a group, an area's loose rows or an area. */
   let { layout = 'narrow', query = '', only = null } = $props();
+  // What a small panel keeps (lib/only-group.js), for the rows that draw otherwise there: the design's pictures stand in its own panel whatever «Designs» says (lib/rows/LookChoice.svelte).
+  setContext('menu-only', { get only() { return only; } });
   const wide = $derived(layout === 'wide');
   const shortcuts = $derived(menu.shortcutsPref);
   /** The Pinned rows stand while the shortcuts are the rows or the tiles. */
@@ -97,7 +99,8 @@
     const b = selectedBlock;
     const items = [];
     if (b.type === 'calendar') {
-      items.push({ id: 'design', label: ta('calendar.design'), tip: ta('tip.calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), run: ed.openDesignPicker });
+      items.push({ id: 'design', label: ta('calendar.design'), tip: ta('tip.calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), run: ed.openDesignPicker,
+        current: calDesign(b.props.design).id, designs: () => pictureList(calendarDesignSource({})), pick: (id) => ed.setCalendarDesign(id) });
       items.push({ id: 'phoneView', label: ta('calendar.phoneView'), tip: ta('tip.calendar.phoneView'), kind: 'open', value: ta(calPhoneDesignDef(calPhoneView(b.props), b.props).labelKey), run: ed.openPhonePicker });
       items.push({ id: 'card', label: ta('calendar.card'), tip: ta('tip.calendar.card'), kind: 'open', value: ta(calCardDesignDef(calCardDesign(b.props)).labelKey), run: ed.openCardPicker });
       if (['list', 'cards', 'agenda'].includes(calView(b.props))) {
@@ -113,7 +116,8 @@
     items.push({ id: 'phone', label: ta('lbl.hideMobile'), tip: ta('tip.hideMobile'), kind: 'switch', value: Boolean(b.hideMobile), set: (on) => setBlockHideMobile(on) });
     const p = b.props;
     // A block's design, as the calendar's: one id for every block with designs, core or plugin (block-designs.js, the design contract), opening the design picker.
-    if (designs) items.push({ id: 'design', label: ta('lbl.design'), tip: ta('tip.picker.design'), kind: 'open', value: designs.name(designs.read(p)), picture: designs.picture?.(designs.read(p)) ?? '', run: ed.openBlockDesignPicker });
+    if (designs) items.push({ id: 'design', label: ta('lbl.design'), tip: ta('tip.picker.design'), kind: 'open', value: designs.name(designs.read(p)), picture: designs.picture?.(designs.read(p)) ?? '', run: ed.openBlockDesignPicker,
+      current: designs.read(p), designs: () => pictureList(designs), pick: (id) => setBlockProp(designs.prop, id) });
     // A block with a phone design can pin its row too, which opens the phone design picker.
     if (designs?.phone) items.push({ id: 'phoneDesign', label: ta('lbl.phoneDesign'), tip: ta('tip.picker.phoneDesign'), kind: 'open', value: phoneDesignName(designs, p), run: ed.openBlockPhonePicker });
     if (b.type === 'text') {
@@ -302,7 +306,9 @@
           <div class="emenu-pinned-item">
             <Setting pin={item.id}>
               {#if item.kind === 'open'}
-                <PictureRow label={item.label} title={item.tip} value={item.value} picture={item.picture ?? ''} onclick={item.run} />
+                <!-- A look is chosen as «Designs» asks, and as a row among the tiles, which stand two to a line -->
+                <LookChoice label={item.label} title={item.tip} value={item.value} picture={item.picture ?? ''} current={item.current ?? null}
+                  designs={shortcuts === 'tiles' ? null : (item.designs ?? null)} onpick={item.pick ?? null} onopen={item.run} />
               {:else if item.kind === 'number' && item.zero}
                 <!-- A number whose zero means «all» or «automatic» shows that word in an empty field; the set returns the stored value, written back, so a clamped or zero entry shows what the block holds -->
                 <label title={item.tip}>{item.label}

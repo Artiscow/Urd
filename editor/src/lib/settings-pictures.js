@@ -158,6 +158,13 @@ const SHORTCUTS = {
   chips: menuBox() + acc(17, 6, 8, 3.5, 1.75) + dim(27, 6, 8, 3.5, 0.35) + dim(37, 6, 9, 3.5, 0.35) + line(17, 13, 10, 1.5) + groupsBelow(17),
 };
 
+/** How a look is chosen: a menu whose design is a row with its small picture and its name, or a heading over the designs' pictures, the chosen one ringed, each over the groups below. */
+const lookTile = (x, y, on = false) => `<rect x="${x}" y="${y}" width="8.5" height="6" rx="1" fill="currentColor" opacity="${on ? 0.42 : 0.28}"${on ? ` stroke="${ACCENT}" stroke-width="0.9"` : ''}/>`;
+const DESIGN_CHOICE_PICS = {
+  row: menuBox() + dim(17, 6, 30, 7, 0.22) + acc(18.5, 7.5, 6, 4, 0.8) + line(27, 8.5, 9, 2) + line(39, 8.5, 6, 2) + groupsBelow(16),
+  inline: menuBox() + line(17, 5, 8, 1.5) + lookTile(17, 8, true) + lookTile(27.75, 8) + lookTile(38.5, 8) + lookTile(17, 15.5) + lookTile(27.75, 15.5) + lookTile(38.5, 15.5) + groupsBelow(24),
+};
+
 /**
  * The bar over a selected block («Toolbar» and «Toolbar look»), drawn as the canvas draws it: a text block selected on a page, its bar above it, each tool its own small drawing (TOOL_ICONS, the same figures as the canvas's own), the main act a word drawn as a short line on its button.
  * The forms show their own tools: every group a tool (Full bar); every action ending in the red cross (Quick); a word with Motion and Placement (Essentials) and the short bar (Minimal), each with what ⋮ opens beside it.
@@ -285,6 +292,7 @@ const LOOKS = {
   toolbar: TOOLBARS,
   toolbarLook: TOOLBAR_LOOK_PICS,
   shortcuts: SHORTCUTS,
+  designs: DESIGN_CHOICE_PICS,
   layout: LAYOUTS,
   place: PLACES,
   updateNotice: UPDATE_NOTICES,

@@ -68,7 +68,7 @@ test('a group the menu draws in some states only is a tool in those states only'
 test('the engine reads the bar\'s choices under the keys and with the options the editor writes', async () => {
   const { PARTS } = await import('../editor/src/lib/admin-designs.js');
   const forms = await import('../editor/src/menu/forms.js');
-  const partOf = { form: 'toolbar', look: 'toolbarLook', gear: 'toolbarGear', phone: 'toolbarPhone', size: 'toolbarSize' };
+  const partOf = { form: 'toolbar', look: 'toolbarLook', gear: 'toolbarGear', phone: 'toolbarPhone', size: 'toolbarSize', design: 'toolbarDesign' };
   for (const [choice, { key, options }] of Object.entries(BAR_CHOICES)) {
     const part = PARTS.find((p) => p.id === partOf[choice]);
     assert.equal(part?.key, key, choice);
@@ -81,6 +81,18 @@ test('the engine reads the bar\'s choices under the keys and with the options th
   const urd = read(`../template/assets/engine/${ENGINE}/urd.js`);
   const watched = urd.match(/if \(\[([^\]]*)\]\.includes\(event\.key\)/)?.[1].match(/'[^']+'/g)?.map((s) => s.slice(1, -1)) ?? [];
   assert.deepEqual(watched.sort(), Object.values(BAR_CHOICES).map((c) => c.key).sort());
+});
+
+test('the design button opens the small window or the picker as «Design button on the bar» asks, and the small window finds the design row where it stands', () => {
+  const edit = read(`../template/assets/engine/${ENGINE}/preview-edit.js`);
+  const start = edit.indexOf('function openBlockDesign(');
+  const open = edit.slice(start, edit.indexOf('\n}\n', start));
+  assert.match(open, /!phone && barChoice\(BAR_CHOICES\.design\) === 'small'/);
+  assert.match(open, /openBlockTool\(el, section, block, 'look:design'/);
+  assert.match(open, /type: 'urd-block-design'/);
+  // lib/only-group.js keeps `look:design` among the Style area's own children: the design row stands first in the area, in no group.
+  assert.match(read('../editor/src/menu/ElementMenu.svelte'), /\{#snippet menuStyle\(\)\}\s*\{#if designs\}\s*(?:<!--[\s\S]*?-->\s*)*<Setting pin="design"/);
+  assert.match(read('../editor/src/menu/families/Calendar.svelte'), /\{:else if area === 'style'\}\s*(?:\{@const [^}]*\}\s*)?(?:<!--[\s\S]*?-->\s*)*<Setting pin="design">/);
 });
 
 test('every group on a section\'s bar is a fold of the section\'s menu, and every fold is a tool', () => {
@@ -123,6 +135,10 @@ test('the editor opens exactly what the bar asks for', () => {
     assert.ok(isBarOnly(tool.only), tool.only);
     assert.equal(onlyOf(tool.only), tool.only);
   }
+  // The design button opens the block's design alone where «Designs» puts the pictures in place.
+  assert.ok(isBarOnly('look:design'));
+  assert.equal(onlyOf('look:design'), 'look:design');
+  assert.equal(onlyOf('look:other'), null);
   assert.equal(onlyOf('motion'), 'fold:motion');
   assert.equal(onlyOf('placement'), 'area:placement');
   for (const bad of ['fold:', 'area:nowhere', 'loose:placement', 'fold:a b', '<x>', null]) {

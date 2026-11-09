@@ -742,7 +742,8 @@
     background: none;
   }
 
-  .emenu-only[data-only-kind='fold'] .emenu-col > details.menu-group > summary {
+  .emenu-only[data-only-kind='fold'] .emenu-col > details.menu-group > summary,
+  .emenu-only[data-only-kind='look'] .look-choice > .row-sub {
     display: none;
   }
 
@@ -1228,6 +1229,19 @@
   .pin-line > .choice + .menu-pin,
   .pin-line > .row-slider + .menu-pin,
   .pin-line > .row-select + .menu-pin {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translateY(-4px);
+  }
+
+  /* The designs' pictures take the row's whole width, the pin at the end of their heading's line (lib/rows/LookChoice.svelte) */
+  .pin-line > .look-choice {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pin-line > .look-choice + .menu-pin {
     position: absolute;
     top: 0;
     right: 0;

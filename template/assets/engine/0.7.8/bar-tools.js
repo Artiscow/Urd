@@ -12,7 +12,7 @@
 import { calDesign, calOptionDefs, calOptionShown, calOptions } from './calendar-designs.js';
 
 /**
- * The bar's choices in Urd settings, each kept in the shared localStorage under its key, with its options and the default first: the form, the look, the gear, the phone button and the size.
+ * The bar's choices in Urd settings, each kept in the shared localStorage under its key, with its options and the default first: the form, the look, the gear, the phone button, the size, and what the design button opens.
  * The editor writes them as parts of the admin designs (editor/src/lib/admin-designs.js), and tests/bar-tools.test.mjs holds the two lists equal.
  */
 export const BAR_CHOICES = {
@@ -21,6 +21,7 @@ export const BAR_CHOICES = {
   gear: { key: 'urd-toolbar-gear', options: ['on', 'off'] },
   phone: { key: 'urd-toolbar-phone', options: ['on', 'off'] },
   size: { key: 'urd-toolbar-size', options: ['regular', 'small', 'medium', 'large'] },
+  design: { key: 'urd-toolbar-design', options: ['small', 'full'] },
 };
 
 /** The forms whose tools belong to the menu's areas, which the area looks set apart. */
@@ -126,5 +127,5 @@ export const SECTION_TOOLS = [
   fold('sec-link', 'group.linkTarget', 'placement', 'link'),
 ];
 
-/** Whether a tool's `only` is one the editor opens: a group, an area's loose rows, or an area drawn whole. */
-export const isBarOnly = (only) => typeof only === 'string' && /^(fold:[a-z0-9-]+|loose:(content|style)|area:(content|style|placement))$/.test(only);
+/** Whether a tool's `only` is one the editor opens: a group, an area's loose rows, an area drawn whole, or the block's design (`look:design`). */
+export const isBarOnly = (only) => typeof only === 'string' && /^(fold:[a-z0-9-]+|loose:(content|style)|area:(content|style|placement)|look:design)$/.test(only);

@@ -8,6 +8,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.8 - How a look is chosen: the full window or a small menu, and the design button's small window - 9 November 2026
+
+- The presets stored how a look is chosen, but every design stood as a row that opens the design picker. «Designs» in Urd settings offers that row as «Full window», or «Small menu», the designs' pictures in place, a press choosing one at once (`lib/rows/LookChoice.svelte`); it reaches a block's design, the design in Pinned, the calendar's design and the Footer panel's, whose «Choose design» button became the row.
+- A choice of up to twelve designs stands whole, and the calendar's 41 as eight around the one in use beside «All designs», which opens the picker (`lib/look-choice.js`).
+- «Design button on the bar», under «Designs», chooses what the bar's design button opens: a small window beside the block with every design's picture, or the full window. Both rows are parts of the presets.
+- Test findings, fixed in the round:
+  - The bar's design button opened the picker whatever «Designs» said. It follows «Design button on the bar», with the small window as the default.
+  - The small window grew as tall as the menu once it showed every design. It keeps the size of three lines of pictures and scrolls, opening at the design in use.
+  - A press on one of the calendar's eight moved the eight to stand around it. They stay where they stand while the design picked is among them.
+  - The options were named «A row that opens the picker» and «Pictures in the menu». They are «Full window» and «Small menu».
+  - «Design button on the bar» stood among the toolbar's rows. It stands under «Designs».
+
+The independent review before the commit found these, all fixed:
+
+1. With «Small menu», a choice of twelve designs or fewer (every block's but the calendar's, and the footer's) had no way to the design picker and its live previews, nor had the small window. The last of the pictures opens it, named «Full window» where every design stands and «All designs» beside the calendar's run.
+2. Beside their pin the pictures stood as wide as their content, one column until they loaded. They take the row's width, with the pin on their heading's line.
+3. A picture that failed to load was meant to be hidden, but the tile's own style kept it shown. The style gives way to it.
+4. The small window brought the design in use into view by scrolling every box around it, and only as it opened. It scrolls its own box, also when it shows another block's design, and leaves a design in view where it stands.
+5. A section's small panel took `look:design`, though a section has no design. It is refused there.
+6. ADR-0030 said the default design keeps today's admin, and the guides that the Design row always opens a window. ADR-0030 names the default design as the admin a browser with nothing stored opens with, and the guides name the pictures in place.
+7. Neither the design button's two ways nor where the small window finds the design row were tested. `tests/bar-tools.test.mjs` holds both; the row standing in place of the pictures in Pinned's tiles is in the test round.
+
 ### 0.7.33.7 - The canvas toolbar's forms, looks and sizes, and a settings list that reaches every setting - 9 November 2026
 
 - The presets stored a toolbar form, but the canvas drew one bar. «Toolbar» in Urd settings now has four forms for a block's and a section's bar: Full bar, every group of the element menu a tool; Quick, every action; Essentials, the block's main act with its design, motion and placement as tools; and Minimal, the short bar and its menu. A tool opens its group alone in a small panel beside the block (`assets/engine/0.7.8/bar-tools.js` lists each block type's groups, `editor/src/lib/only-group.js` keeps the one asked for).

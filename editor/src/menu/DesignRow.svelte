@@ -1,11 +1,12 @@
 <script>
-  /* The row that names the selected block's design, with its picture, and opens the design picker over the whole menu, as the calendar's design row does; the designs are a core block's (block-designs.js) or a plugin block's (blockDesigns).
-     With `phone` it names and opens the block's phone design instead: the design it draws while narrow (PHONE_DESIGNS in push-model.js).
-     Drawn by the row kit's picture row (lib/rows/PictureRow.svelte); the menu sets it first in Style on a setting row that carries its pin (ElementMenu.svelte). */
+  /* The selected block's design, as Urd settings «Designs» asks: the row that names it, with its picture, and opens the design picker over the whole menu, or the designs' pictures in place (lib/rows/LookChoice.svelte); the designs are a core block's (block-designs.js) or a plugin block's (blockDesigns).
+     With `phone` it is always the row, naming and opening the block's phone design instead: the design it draws while narrow (PHONE_DESIGNS in push-model.js).
+     The menu sets it first in Style on a setting row that carries its pin (ElementMenu.svelte). */
   import { getContext } from 'svelte';
   import PictureRow from '../lib/rows/PictureRow.svelte';
+  import LookChoice from '../lib/rows/LookChoice.svelte';
   import { ta } from '$engine/i18n.js';
-  import { blockDesigns, phoneDesignName, phoneDesignOf, SAME_DESIGN } from '../lib/design-sources.js';
+  import { blockDesigns, phoneDesignName, phoneDesignOf, pictureList, SAME_DESIGN } from '../lib/design-sources.js';
   const ed = getContext('urd-editor');
   let { phone = false } = $props();
   const block = $derived(ed.selectedBlock);
@@ -21,5 +22,9 @@
   });
 </script>
 
-<PictureRow label={ta(phone ? 'lbl.phoneDesign' : 'lbl.design')} {value} {picture} title={ta(phone ? 'tip.picker.phoneDesign' : 'tip.picker.design')}
-  onclick={phone ? ed.openBlockPhonePicker : ed.openBlockDesignPicker} />
+{#if phone}
+  <PictureRow label={ta('lbl.phoneDesign')} {value} {picture} title={ta('tip.picker.phoneDesign')} onclick={ed.openBlockPhonePicker} />
+{:else}
+  <LookChoice label={ta('lbl.design')} {value} {picture} title={ta('tip.picker.design')} current={designs?.read(block.props) ?? null}
+    designs={designs ? () => pictureList(designs) : null} onpick={(id) => ed.setBlockProp(designs.prop, id)} onopen={ed.openBlockDesignPicker} />
+{/if}

@@ -1,5 +1,5 @@
 /**
- * The element menu's choices in Urd settings (ADR-0030's parts of the menu), each list with its default first: the form the menu opens in, how its folds behave, whether every setting is shown, and what stands first in it.
+ * The element menu's choices in Urd settings (ADR-0030's parts of the menu), each list with its default first: the form the menu opens in, how its folds behave, how a look is chosen, whether every setting is shown, and what stands first in it.
  * Pure, shared by the menu's state, the settings' rows and the admin designs.
  */
 
@@ -11,6 +11,9 @@ export const FOLDS_MODES = ['left', 'one', 'all'];
 
 /** Every setting shown, or the first and the changed ones with the rest added from a menu. */
 export const EXTRA_MODES = ['shown', 'menu'];
+
+/** How a look is chosen in the menus and the panels (lib/rows/LookChoice.svelte): a row naming the design that opens the design picker, or the designs' pictures in place. */
+export const DESIGN_CHOICES = ['row', 'inline'];
 
 /** The bar on a block and a section (the engine's preview-edit.js barForm), the default first: every group of the block's menu as a tool (the engine's bar-tools.js), every action, a word with tools that open small panels, or the block's own acts with the rest under ⋮. */
 export const TOOLBAR_FORMS = ['groups', 'full', 'panels', 'short'];
@@ -30,6 +33,9 @@ export const TOOLBAR_SIZES = ['regular', 'small', 'medium', 'large'];
 
 /** Whether the gear stands on a bar whose tools open the settings themselves (the forms of TOOL_FORMS), on by default; the other forms always have it. */
 export const TOOLBAR_GEARS = ['on', 'off'];
+
+/** What the bar's design button opens (preview-edit.js openBlockDesign): a small window beside the block with every design's picture, by default, or the full window, the design picker. */
+export const TOOLBAR_DESIGNS = ['small', 'full'];
 
 /** The Pinned rows, the same rows as tiles, the search field alone, or chips that jump to each area. */
 export const SHORTCUTS_MODES = ['pinned', 'tiles', 'search', 'chips'];

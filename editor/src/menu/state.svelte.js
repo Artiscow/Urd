@@ -1,9 +1,9 @@
 /**
- * The element menu's own state (0.7.26.2), shared by every copy of the menu (the Properties panel, the floating menu and the search's copy of the areas): the form the menu opens in and the three choices beside it (ADR-0030's parts), the room it has, the two search queries, the tab in view, and the Pinned choices per block type.
+ * The element menu's own state (0.7.26.2), shared by every copy of the menu (the Properties panel, the floating menu and the search's copy of the areas): the form the menu opens in and the four choices beside it (ADR-0030's parts), the room it has, the two search queries, the tab in view, and the Pinned choices per block type.
  * Which groups stand open is kept with every other surface's folds (lib/folds.svelte.js).
  */
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES } from './forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES } from './forms.js';
 
 /**
  * The form a menu opens in (Urd settings «Element menu»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
@@ -17,6 +17,9 @@ const FOLDS_KEY = 'urd-folds';
 
 /** Whether every setting in a fold is shown, or the first and the changed ones with the rest added from a menu («Extra settings»). */
 const EXTRA_KEY = 'urd-extra-settings';
+
+/** How a look is chosen («Designs»): a row that opens the design picker, or the designs' pictures in place (lib/rows/LookChoice.svelte). */
+const DESIGN_CHOICE_KEY = 'urd-design-choice';
 
 /** What stands first in the menu («Shortcuts»): the Pinned rows, the same rows as tiles, the search field alone, or chips that jump to each area. */
 const SHORTCUTS_KEY = 'urd-menu-shortcuts';
@@ -32,6 +35,7 @@ export const menu = $state({
   wide: menuFormOf(localStorage.getItem(MENU_FORM_KEY)) === 'wide',
   foldsPref: stored(FOLDS_KEY, FOLDS_MODES),
   extraPref: stored(EXTRA_KEY, EXTRA_MODES),
+  designsPref: stored(DESIGN_CHOICE_KEY, DESIGN_CHOICES),
   shortcutsPref: stored(SHORTCUTS_KEY, SHORTCUTS_MODES),
   /** How many times «All open» has been chosen this session, so each choice opens every fold again (lib/rows/Fold.svelte). */
   foldsRound: 0,
@@ -73,6 +77,11 @@ export function setFoldsPref(v) {
 export function setExtraPref(v) {
   menu.extraPref = EXTRA_MODES.includes(v) ? v : EXTRA_MODES[0];
   keep(EXTRA_KEY, menu.extraPref, EXTRA_MODES);
+}
+
+export function setDesignsPref(v) {
+  menu.designsPref = DESIGN_CHOICES.includes(v) ? v : DESIGN_CHOICES[0];
+  keep(DESIGN_CHOICE_KEY, menu.designsPref, DESIGN_CHOICES);
 }
 
 export function setShortcutsPref(v) {

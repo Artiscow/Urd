@@ -17,6 +17,8 @@
   import ColourRow from '../../lib/rows/ColourRow.svelte';
   import ListEditor from '../../lib/rows/ListEditor.svelte';
   import PictureRow from '../../lib/rows/PictureRow.svelte';
+  import LookChoice from '../../lib/rows/LookChoice.svelte';
+  import { pictureList, calendarDesignSource } from '../../lib/design-sources.js';
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import Choice from '../../lib/Choice.svelte';
@@ -367,9 +369,10 @@
   {/if}
 {:else if area === 'style'}
   {@const calDef = calDesign(selectedBlock.props.design)}
-  <!-- The design: a row naming it, opening the picker over the whole menu, first in Style as every block's design row -->
+  <!-- The design, first in Style as every block's design: a row naming it that opens the picker over the whole menu, or its pictures in place, as «Designs» asks -->
   <Setting pin="design">
-    <PictureRow label={ta('calendar.design')} value={ta(calDef.labelKey)} title={ta('tip.calendar.design')} onclick={ed.openDesignPicker} />
+    <LookChoice label={ta('calendar.design')} value={ta(calDef.labelKey)} title={ta('tip.calendar.design')} current={calDef.id}
+      designs={() => pictureList(calendarDesignSource({}))} onpick={(id) => ed.setCalendarDesign(id)} onopen={ed.openDesignPicker} />
   </Setting>
   <!-- The phone design: what the calendar draws on a phone, the design's own default until the owner picks another -->
   <Setting pin="phoneView">

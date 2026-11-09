@@ -6,6 +6,7 @@
   import SettingsGear from './SettingsGear.svelte';
   import PanelTab from './PanelTab.svelte';
   import { panelFolds, collectionMenuRows } from '../lib/panel-folds.js';
+  import { menu } from '../menu/state.svelte.js';
   import { sortEntries } from '$engine/collections.js';
   import { rowMotion } from '../lib/motion.svelte.js';
   const ed = getContext('urd-editor');
@@ -16,7 +17,7 @@
       if (ed.collectionsUnavailable) return [];
       return collectionMenuRows(ed.collectionIds, ed.collectionsView, sortEntries).map((c) => ({ id: c.id, label: c.name, collection: true }));
     }
-    const folds = panelFolds(name, { site: ed.siteDraft, legal: ed.legal });
+    const folds = panelFolds(name, { site: ed.siteDraft, legal: ed.legal, designs: menu.designsPref });
     return folds.length > 1 ? folds.map((f) => ({ id: f.id, label: ta(f.key), press: f.press === true })) : [];
   }
 

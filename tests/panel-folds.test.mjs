@@ -53,12 +53,16 @@ function foldBody(text, id) {
 
 /** A fold that holds one button and nothing else: inside a plain fold's items, or alone in the kit's Fold. */
 const ONE_BUTTON = /^(?:<div class="group-items">\s*<button\b[^>]*>[^<]*<\/button>\s*<\/div>|<button\b[^>]*>[^<]*<\/button>)$/;
+/** A look alone in the kit's Fold: one button while «Designs» stands as the row (lib/rows/LookChoice.svelte). */
+const ONE_LOOK = /^<LookChoice\b[\s\S]*?\/>$/;
 
 test('a fold that holds one button is pressed from the menu, and only such a fold', () => {
   for (const [panel, folds] of Object.entries(PANEL_FOLDS)) {
     const text = source(panel);
     for (const fold of folds) {
-      assert.equal(ONE_BUTTON.test(foldBody(text, fold.id)), fold.press === true, `${panel}/${fold.id}: ${fold.press ? 'marked press but holds more than one button' : 'holds one button, so its row should press it (press: true)'}`);
+      const body = foldBody(text, fold.id);
+      assert.equal(fold.look === true, ONE_LOOK.test(body), `${panel}/${fold.id}: a look alone in its fold is marked look, and only such a fold`);
+      assert.equal(ONE_BUTTON.test(body) || ONE_LOOK.test(body), fold.press === true, `${panel}/${fold.id}: ${fold.press ? 'marked press but holds more than one button' : 'holds one button, so its row should press it (press: true)'}`);
     }
   }
 });
@@ -68,6 +72,11 @@ test('panelFolds: the folds drawn in the case at hand, none for a panel without 
   assert.deepEqual(panelFolds('legal', { legal: { terms: { shown: false } } }).map((f) => f.id), ['who', 'privacy']);
   assert.deepEqual(panelFolds('legal', { legal: { terms: { shown: true } } }).map((f) => f.id), ['who', 'privacy', 'terms']);
   assert.deepEqual(panelFolds('pages'), []);
+  // A look's fold is pressed while «Designs» stands as the row, and unfolds to the pictures in place.
+  const design = (designs) => panelFolds('footer', { site: { footer: { show: true } }, designs }).find((f) => f.id === 'design');
+  assert.equal(design('row').press, true);
+  assert.equal(design('inline').press, false);
+  assert.equal(design('inline').icon, undefined);
 });
 
 test('the groups: each group\'s folds stand together, its label is in the dictionaries, and foldGroups splits the rows by them', () => {

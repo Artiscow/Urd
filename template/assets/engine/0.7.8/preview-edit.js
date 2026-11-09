@@ -97,6 +97,11 @@ function hasDesigns(block) {
 
 /** The design picker in the editor, for the block (the toolbar's design button beside the gear); `phone` asks for the design it draws on a phone (the phone view's button). */
 function openBlockDesign(el, section, block, phone = false) {
+  // The small window (Urd settings «Design button on the bar», the default) opens the design beside the block as a small panel of its pictures, as the bar's tools open their groups; the full window, and a phone design always, open the picker.
+  if (!phone && barChoice(BAR_CHOICES.design) === 'small') {
+    openBlockTool(el, section, block, 'look:design', ta('lbl.design'));
+    return;
+  }
   selectBlock(el);
   post({ type: 'urd-block-design', sectionId: section.id, blockId: block.id, ...(phone ? { phone: true } : {}) });
 }
@@ -104,7 +109,7 @@ function openBlockDesign(el, section, block, phone = false) {
 const DESIGN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="4"/></svg>';
 const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
 
-/** The toolbar's design button: the block's design picker one press away; in the phone view its design on a phone. */
+/** The toolbar's design button: the block's designs one press away, in the picker or in a small panel as Urd settings «Design button on the bar» asks; in the phone view its design on a phone. */
 function designButton(el, section, block, phone) {
   const btn = document.createElement('button');
   btn.className = 'urd-edit-design';

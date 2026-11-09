@@ -172,6 +172,18 @@ export function blockDesigns(type, pluginBlocks = []) {
 }
 
 /**
+ * A choice's designs as the menus and the panels show their pictures in place (lib/rows/LookChoice.svelte), in the picker's order, each with its id, name, picture and description.
+ * Read from a source the picker is given (calendarDesignSource, footerDesignSource), whose words are read from each design's definition (`def`), or from a block's designs (blockDesigns), whose words are read by id.
+ * @param {{ families: () => Array<{ designs: Array<{ id: string }> }>, name: Function, picture: (id: string) => string, about: Function, def?: (id: string) => object }} source
+ */
+export function pictureList(source) {
+  return source.families().flatMap((f) => f.designs).map(({ id }) => {
+    const def = source.def ? source.def(id) : id;
+    return { id, name: source.name(def), picture: source.picture(id), about: source.about(def) };
+  });
+}
+
+/**
  * Every other block's designs (blockDesigns): the selected block drawn in each design with its own content, at its real width and close up (designPreviewFrame); a block with nothing of its own to show (no pictures, no collection, no contact details) is drawn with the sample its picture has.
  * @param {{block: object, site: object|null, designs: object, sectionWidth?: string}} opts the selected block as the page stores it (its version, frames and props) and the site, as snapshots, the block's designs, and its section's own width (`size.maxWidth`)
  */

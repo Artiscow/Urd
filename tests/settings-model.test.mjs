@@ -38,11 +38,11 @@ function ctx() {
     panelTabMenus: false,
     adminLangOptions: () => [['nb', 'Norsk bokmål']],
     adminTheme: 'grey', adminLayout: 'rail', settingsPlace: 'dialog', settingsPictures: 'pictures', adminLangChoice: 'auto',
-    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'squares', toolbarGearPref: 'off', toolbarPhonePref: 'on', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
+    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'squares', toolbarGearPref: 'off', toolbarPhonePref: 'on', toolbarDesignPref: 'small', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
     siteDraft: { admin: {}, analytics: {} },
   };
   const designs = { options: [['floating', 'Floating menu'], ['panels', 'Small panels'], ['side', 'Side panel'], ['column', 'One column']], values: {}, state: { design: 'floating', changed: [] }, apply() {} };
-  return { ed, ta: (k) => k, menu: { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', shortcutsPref: 'pinned' }, setMenuFormPref() {}, setFoldsPref() {}, setExtraPref() {}, setShortcutsPref() {}, designs };
+  return { ed, ta: (k) => k, menu: { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', shortcutsPref: 'pinned', designsPref: 'row' }, setMenuFormPref() {}, setFoldsPref() {}, setExtraPref() {}, setShortcutsPref() {}, setDesignsPref() {}, designs };
 }
 
 /** A setting by its id. */

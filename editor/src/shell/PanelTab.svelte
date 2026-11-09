@@ -11,6 +11,7 @@
   import { menuMotion } from '../lib/motion.svelte.js';
   import { ta } from '$engine/i18n.js';
   import { panelFolds, foldGroups, collectionMenuRows } from '../lib/panel-folds.js';
+  import { menu } from '../menu/state.svelte.js';
   import { sortEntries } from '$engine/collections.js';
   import { collectionActions } from '../panels/collections/actions.js';
   import { groupChip } from '../lib/legal-model.js';
@@ -30,7 +31,7 @@
   const titleText = $derived(updateDot ? ta('tip.updateOut', { version: ed.updateTarget }) : variant === 'rail' && !hasMenu ? label : undefined);
 
   /** The folds the menu lists: those the panel draws now, and a menu only where there is a choice of two or more. */
-  const folds = $derived(panelFolds(name, { site: ed.siteDraft, legal: ed.legal }));
+  const folds = $derived(panelFolds(name, { site: ed.siteDraft, legal: ed.legal, designs: menu.designsPref }));
   /** The Collections tab's rows: the collections with their entries; its menu stands while the collections can be read, with New collection alone where there are none. */
   const collections = $derived(name === 'collections' ? collectionMenuRows(ed.collectionIds, ed.collectionsView, sortEntries) : []);
   const hasMenu = $derived(menus && (name === 'collections' ? !ed.collectionsUnavailable : folds.length > 1));

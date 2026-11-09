@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.8): how a look is chosen, and the design button's small window
+
+- [ ] Urd settings, Presets, under the element menu: «Designs» with two pictures, Full window and Small menu, and «Design button on the bar» directly under it with Full window and Small window, Small window chosen in a fresh browser
+- [ ] Designs, Full window: a block with designs (a button, a ribbon, a quote, a FAQ), the calendar and the Footer panel show the design as a row with its picture that opens the design picker
+- [ ] Designs, Small menu: the same places show the designs' pictures under «Design», the one in use ringed; a press chooses one at once, and Undo takes it back; the last tile, «Full window», opens the design picker
+- [ ] With Small menu the calendar shows eight designs around its own and «All designs», which opens the picker; after a press on one of the eight, the eight stay where they stand; beside the pin the pictures take the menu's width, three to a line
+- [ ] The Footer panel's Design fold: the three designs' pictures with Small menu, the row with Full window; «Design» in the Footer tab's menu opens the picker with Full window and unfolds the pictures with Small menu
+- [ ] A pinned design stands as the pictures with Small menu, and as a row while «Shortcuts» shows the tiles
+- [ ] Design button on the bar, Small window: a small Design panel beside the block, about three lines of pictures high, scrolling through every design and opening at the one in use, with «Full window» last, with Designs on either choice; press the design button on another calendar while it stands open, and it shows that calendar's design; Full window opens the design picker; in the phone view the button opens the phone design picker
+- [ ] The presets: Small panels and Side panel choose Small menu, Floating menu and One column Full window; every preset but One column the small window for the design button
+- [ ] In the docked menu the pictures stand two to a line with their names at the left, as in the floating menu
+
 ### Test batch (0.7.33.7): the canvas toolbar's forms, looks and sizes, and the settings list
 
 - [ ] In a fresh browser (no Urd settings stored): the panels stand in the strip under the top bar, and a selected block shows the Full bar in glass with its main button in Urd's accent

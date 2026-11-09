@@ -135,7 +135,7 @@ function windowContext() {
   const keep = (key, value, dflt) => (value === dflt ? local.delete(key) : local.set(key, value));
   const ed = {
     adminLayout: 'top-tabs', sidebarFolds: 'tree', panelTabMenus: false, tabMenus: 'groups', tabMenuStay: 'stay', settingsPlace: 'dialog',
-    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'glass-accent', toolbarGearPref: 'on', toolbarPhonePref: 'on', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', pageSettingsPref: 'dialog', collectionsLayout: 'drill', csvPreviewPref: 'dialog',
+    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'glass-accent', toolbarGearPref: 'on', toolbarPhonePref: 'on', toolbarDesignPref: 'small', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', pageSettingsPref: 'dialog', collectionsLayout: 'drill', csvPreviewPref: 'dialog',
     setAdminLayout(v) { this.adminLayout = v; keep('urd-admin-layout', v, 'top-tabs'); },
     setSidebarFolds(v) { this.sidebarFolds = v; keep('urd-sidebar-folds', v, 'tree'); },
     setPanelTabMenus(v) { this.panelTabMenus = v === 'on'; keep('urd-panel-tab-menus', v, 'off'); },
@@ -148,19 +148,21 @@ function windowContext() {
     setToolbarGear(v) { this.toolbarGearPref = v; keep('urd-toolbar-gear', v, 'on'); },
     setToolbarSize(v) { this.toolbarSizePref = v; keep('urd-toolbar-size', v, 'regular'); },
     setToolbarPhone(v) { this.toolbarPhonePref = v; keep('urd-toolbar-phone', v, 'on'); },
+    setToolbarDesign(v) { this.toolbarDesignPref = v; keep('urd-toolbar-design', v, 'small'); },
     setLayoutPicker(v) { this.layoutPickerPref = v; keep('urd-layout-picker', v, 'strip'); },
     setLinkEditor(v) { this.linkEditorPref = v; keep('urd-link-editor', v, 'dialog'); },
     setPageSettingsPref(v) { this.pageSettingsPref = v; keep('urd-page-settings', v, 'dialog'); },
     setCollectionsLayout(v) { this.collectionsLayout = v; keep('urd-collections-layout', v, 'drill'); },
     setCsvPreview(v) { this.csvPreviewPref = v; keep('urd-csv-preview', v, 'dialog'); },
   };
-  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', shortcutsPref: 'pinned' };
+  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', shortcutsPref: 'pinned', designsPref: 'row' };
   const c = {
     ed, ta: (k) => k, menu,
     setMenuFormPref(v) { menu.formPref = v; keep('urd-admin-menu-width', v, 'wide'); },
     setFoldsPref(v) { menu.foldsPref = v; keep('urd-folds', v, 'left'); },
     setExtraPref(v) { menu.extraPref = v; keep('urd-extra-settings', v, 'shown'); },
     setShortcutsPref(v) { menu.shortcutsPref = v; keep('urd-menu-shortcuts', v, 'pinned'); },
+    setDesignsPref(v) { menu.designsPref = v; keep('urd-design-choice', v, 'row'); },
     get designs() {
       const values = partValues(c);
       return { values, state: designState(values) };
@@ -181,7 +183,8 @@ test('a design chosen in the window sets every part through its row and as store
   assert.equal(local.get('urd-admin-menu-width'), 'tabs');
   assert.equal(c.menu.foldsPref, 'one', 'the menu\'s own choices follow through their rows');
   assert.equal(c.ed.toolbarPref, 'panels', 'the bar on the blocks follows through its row');
-  assert.equal(local.get('urd-design-choice'), 'inline', 'a part without a row is stored too');
+  assert.equal(c.menu.designsPref, 'inline', 'how a look is chosen follows through its row');
+  assert.equal(c.ed.toolbarDesignPref, 'small', 'and what the bar\'s design button opens');
   assert.ok(canUndo(after));
   undoDesign(c);
   assert.deepEqual(partValues(c), before);

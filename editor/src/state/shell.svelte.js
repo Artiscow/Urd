@@ -3,7 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { ta } from '$engine/i18n.js';
-import { TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_SIZES, TOOLBAR_GEARS, TOOLBAR_PHONES } from '../menu/forms.js';
+import { TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_SIZES, TOOLBAR_GEARS, TOOLBAR_PHONES, TOOLBAR_DESIGNS } from '../menu/forms.js';
 import { relativeLuminance, contrastRatio } from '$engine/theme.js';
 import { liftSiteFile, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
 import { createDraftStore } from '../lib/draftStore.js';
@@ -757,6 +757,8 @@ let toolbarGearPref = $state(storedOf('urd-toolbar-gear', TOOLBAR_GEARS));
 const setToolbarGear = (v) => { toolbarGearPref = keepOf('urd-toolbar-gear', TOOLBAR_GEARS, v); };
 let toolbarPhonePref = $state(storedOf('urd-toolbar-phone', TOOLBAR_PHONES));
 const setToolbarPhone = (v) => { toolbarPhonePref = keepOf('urd-toolbar-phone', TOOLBAR_PHONES, v); };
+let toolbarDesignPref = $state(storedOf('urd-toolbar-design', TOOLBAR_DESIGNS));
+const setToolbarDesign = (v) => { toolbarDesignPref = keepOf('urd-toolbar-design', TOOLBAR_DESIGNS, v); };
 let toolbarSizePref = $state(storedOf('urd-toolbar-size', TOOLBAR_SIZES));
 const setToolbarSize = (v) => { toolbarSizePref = keepOf('urd-toolbar-size', TOOLBAR_SIZES, v); };
 
@@ -1145,6 +1147,8 @@ export const shellState = {
   setToolbarGear,
   get toolbarPhonePref() { return toolbarPhonePref; },
   setToolbarPhone,
+  get toolbarDesignPref() { return toolbarDesignPref; },
+  setToolbarDesign,
   get toolbarSizePref() { return toolbarSizePref; },
   setToolbarSize,
   get shortcutsOpen() { return shortcutsOpen; },
