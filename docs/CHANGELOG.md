@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.12.2 - The «+» opens on hover, and delete is a bin - 9 November 2026
+
+- The «+» in the menu's head opened its list only at a press, unlike «+ Add a setting». It opens as the mouse rests on it or on its list and closes a moment after the mouse leaves both, a press still opens it, and as a menu that opens on hover it has its name and no tooltip (`menu/CapabilityAdd.svelte`).
+- Delete in the menu's head was a cross where the close button had stood. It is a bin, in the dark red, the size of its neighbours (`ICONS.bin` in `lib/icons.js`).
+
+The independent review before the commit found these, all fixed:
+
+1. With its own tooltip gone, the «+» in the floating menu showed the head's «Drag the head to move the menu» instead, which the test could not see, since it drew the «+» without its head. The «+» has an empty title, tested.
+2. A mouse that rested on the «+» or on «+ Add a setting» as it went away left a timer that could open its list later with nothing drawn. The timer is stopped as they go, and the «+» opens only while it has something to offer.
+3. The test held only the opening to a mouse, not the closing. It holds both.
+
 ### 0.7.33.12.1 - Capabilities as cards, and the small tool windows redrawn - 9 November 2026
 
 - What a block can carry but does not use took room in every menu. The motion, the text box, pinning while scrolling, hiding on phones, the name for links and «Shows at once» (the decor, renamed) are capabilities ([ADR-0031](adr/0031-capabilities-in-the-element-menu.md), `menu/capabilities.js`): a card stands only while the block uses it or it was added this session (`lib/rows/Capability.svelte`), and the search's copy and a tool's small window draw every card.

@@ -3,7 +3,8 @@
      Urd settings «The add list» draws them as a list, with what the block already has dimmed at its foot, or as tiles in two columns.
      A pick sets what the capability starts with (a switch it is), keeps its card on the block for the session, and gives the card the focus (lib/rows/Capability.svelte); with nothing left to add the «+» is not drawn.
      A capability whose settings all stand in Pinned is not offered, since Pinned holds it.
-     The list stands in the top layer (the Popover API, ADR-0011), so no panel's edge clips it, placed under the «+» with its right edge at the «+»'s and kept inside the window; without the API it stands fixed in the same place. */
+     The list stands in the top layer (the Popover API, ADR-0011), so no panel's edge clips it, placed under the «+» with its right edge at the «+»'s and kept inside the window; without the API it stands fixed in the same place.
+     The «+» opens the list at a press, and under a mouse as the pointer rests on it or on the list, closing a moment after the pointer leaves both; a touch is no hover (AGENTS.md, hybrid devices). As a menu that opens on hover, the «+» has its name for a screen reader and no tooltip, its empty title keeping the head's own from reaching it. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS, CAP_ICONS } from '../lib/icons.js';
@@ -38,9 +39,40 @@
   let opener = $state(null);
   let pop = $state(null);
 
+  let hoverTimer = null;
+  let openedByHover = false;
+  // A timer still running as the «+» goes away does nothing.
+  $effect(() => () => clearTimeout(hoverTimer));
+  function hoverIn(event) {
+    if (event.pointerType !== 'mouse') return;
+    clearTimeout(hoverTimer);
+    if (open) return;
+    hoverTimer = setTimeout(() => {
+      if (!offered.length) return;
+      open = true;
+      openedByHover = true;
+    }, 120);
+  }
+  function hoverOut(event) {
+    if (event.pointerType !== 'mouse') return;
+    clearTimeout(hoverTimer);
+    if (!openedByHover) return;
+    hoverTimer = setTimeout(() => {
+      if (pop?.contains(document.activeElement)) return;
+      open = false;
+      openedByHover = false;
+    }, 250);
+  }
+
+  /** A press on the «+» opens the list with the focus on its first capability, or brings the focus into a list the mouse opened; a press on the «+» closes a list a press opened. */
   async function toggle() {
-    open = !open;
-    if (!open) return;
+    clearTimeout(hoverTimer);
+    if (open && !openedByHover) {
+      open = false;
+      return;
+    }
+    open = true;
+    openedByHover = false;
     await tick();
     pop?.querySelector('button')?.focus();
   }
@@ -74,6 +106,7 @@
   function pick(cap) {
     const taken = block;
     open = false;
+    openedByHover = false;
     if (cap.add) historyState.asOwnStep(() => cap.add(ed, taken));
     if (menu.tab !== cap.area) menu.tab = cap.area;
     keepCapability(taken.blockId, cap.id, { fresh: true });
@@ -83,11 +116,11 @@
 {#if offered.length}
   <span class="cap-add-wrap">
     <button type="button" class="icon-btn cap-add-head" bind:this={opener} aria-expanded={open}
-      title={ta('cap.add')} aria-label={ta('cap.add')} onclick={toggle}>{@html ICONS.plus}</button>
+      title="" aria-label={ta('cap.add')} onclick={toggle} onpointerenter={hoverIn} onpointerleave={hoverOut}>{@html ICONS.plus}</button>
     {#if open}
       <!-- An empty title, so the head's tooltip does not reach into the list -->
       <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-      <div class="cap-pop" class:cap-tiles={tiles} popover="manual" title="" role="group" aria-label={ta('cap.add')} bind:this={pop} use:dismiss={{ close: () => (open = false), opener }} onkeydown={keys} {@attach placePop} transition:menuMotion>
+      <div class="cap-pop" class:cap-tiles={tiles} popover="manual" title="" role="group" aria-label={ta('cap.add')} bind:this={pop} use:dismiss={{ close: () => { open = false; openedByHover = false; }, opener }} onkeydown={keys} onpointerenter={hoverIn} onpointerleave={hoverOut} {@attach placePop} transition:menuMotion>
         <p class="cap-pop-title">{ta('cap.add')}</p>
         {#each offered as [area, list] (area)}
           <p class="mini-label">{ta(AREA_WORDS[area])}</p>

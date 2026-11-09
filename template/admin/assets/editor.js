@@ -3290,6 +3290,7 @@ var Pa = (e) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
 	download: "<svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4v11M7 10l5 5 5-5M4 20h16\"/></svg>",
 	upload: "<svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 15V4M7 9l5-5 5 5M4 20h16\"/></svg>",
 	plus: "<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"><path d=\"M12 5v14\"/><path d=\"M5 12h14\"/></svg>",
+	bin: "<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 6h18\"/><path d=\"M8.5 6V3h7v3\"/><path d=\"M5.5 6l1 15h11l1-15\"/><path d=\"M10 10.5v6M14 10.5v6\"/></svg>",
 	minus: "<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"><path d=\"M5 12h14\"/></svg>",
 	keyboard: "<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"2\" y=\"6\" width=\"20\" height=\"12\" rx=\"2\"/><path d=\"M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10\"/></svg>",
 	gear: "<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z\"/></svg>",
@@ -23078,7 +23079,7 @@ var aL = {
 	restorePlugins: tL,
 	undo: nL,
 	redo: rL
-}, oL = /* @__PURE__ */ L("<button type=\"button\" class=\"cap-opt\"><span class=\"cap-tile\" aria-hidden=\"true\"></span> <span class=\"cap-opt-words\"><span class=\"cap-opt-name\"> </span><span class=\"cap-opt-about\"> </span></span></button>"), sL = /* @__PURE__ */ L("<p class=\"mini-label\"> </p> <div class=\"cap-opts\" role=\"group\"></div>", 1), cL = /* @__PURE__ */ L("<span class=\"cap-opt cap-opt-taken\"><span class=\"cap-tile\" aria-hidden=\"true\"></span> <span class=\"cap-opt-words\"><span class=\"cap-opt-name\"> </span></span></span>"), lL = /* @__PURE__ */ L("<p class=\"mini-label\"> </p> <!>", 1), uL = /* @__PURE__ */ L("<div popover=\"manual\" title=\"\" role=\"group\"><p class=\"cap-pop-title\"> </p> <!> <!></div>"), dL = /* @__PURE__ */ L("<span class=\"cap-add-wrap\"><button type=\"button\" class=\"icon-btn cap-add-head\"></button> <!></span>");
+}, oL = /* @__PURE__ */ L("<button type=\"button\" class=\"cap-opt\"><span class=\"cap-tile\" aria-hidden=\"true\"></span> <span class=\"cap-opt-words\"><span class=\"cap-opt-name\"> </span><span class=\"cap-opt-about\"> </span></span></button>"), sL = /* @__PURE__ */ L("<p class=\"mini-label\"> </p> <div class=\"cap-opts\" role=\"group\"></div>", 1), cL = /* @__PURE__ */ L("<span class=\"cap-opt cap-opt-taken\"><span class=\"cap-tile\" aria-hidden=\"true\"></span> <span class=\"cap-opt-words\"><span class=\"cap-opt-name\"> </span></span></span>"), lL = /* @__PURE__ */ L("<p class=\"mini-label\"> </p> <!>", 1), uL = /* @__PURE__ */ L("<div popover=\"manual\" title=\"\" role=\"group\"><p class=\"cap-pop-title\"> </p> <!> <!></div>"), dL = /* @__PURE__ */ L("<span class=\"cap-add-wrap\"><button type=\"button\" class=\"icon-btn cap-add-head\" title=\"\"></button> <!></span>");
 function fL(e, t) {
 	ot(t, !0);
 	let n = it("urd-editor"), r = [
@@ -23099,15 +23100,26 @@ function fL(e, t) {
 		if (!F(a)) return [];
 		let e = lu.filter((e) => fu(e, F(a), n) && !e.inUse(F(a), n) && !Su(F(a).blockId, e.id) && !o(e));
 		return r.map((t) => [t, e.filter((e) => e.area === t)]).filter(([, e]) => e.length);
-	}), c = /* @__PURE__ */ D(() => F(a) ? lu.filter((e) => fu(e, F(a), n) && (e.inUse(F(a), n) || Su(F(a).blockId, e.id)) && !o(e)) : []), l = /* @__PURE__ */ D(() => Ju.capListPref === "tiles"), u = /* @__PURE__ */ O(!1), d = /* @__PURE__ */ O(null), f = /* @__PURE__ */ O(null);
-	async function p() {
-		k(u, !F(u)), F(u) && (await Or(), F(f)?.querySelector("button")?.focus());
+	}), c = /* @__PURE__ */ D(() => F(a) ? lu.filter((e) => fu(e, F(a), n) && (e.inUse(F(a), n) || Su(F(a).blockId, e.id)) && !o(e)) : []), l = /* @__PURE__ */ D(() => Ju.capListPref === "tiles"), u = /* @__PURE__ */ O(!1), d = /* @__PURE__ */ O(null), f = /* @__PURE__ */ O(null), p = null, m = !1;
+	Fn(() => () => clearTimeout(p));
+	function h(e) {
+		e.pointerType === "mouse" && (clearTimeout(p), !F(u) && (p = setTimeout(() => {
+			F(s).length && (k(u, !0), m = !0);
+		}, 120)));
 	}
-	function m(e) {
+	function g(e) {
+		e.pointerType === "mouse" && (clearTimeout(p), m && (p = setTimeout(() => {
+			F(f)?.contains(document.activeElement) || (k(u, !1), m = !1);
+		}, 250)));
+	}
+	async function v() {
+		clearTimeout(p), F(u) && !m ? k(u, !1) : (k(u, !0), m = !1, await Or(), F(f)?.querySelector("button")?.focus());
+	}
+	function y(e) {
 		let t = [...F(f)?.querySelectorAll("button") ?? []], n = t.indexOf(document.activeElement);
 		(e.key === "ArrowDown" || e.key === "ArrowUp") && (e.preventDefault(), t[(n + (e.key === "ArrowDown" ? 1 : t.length - 1)) % t.length]?.focus());
 	}
-	function h(e) {
+	function b(e) {
 		typeof e.showPopover == "function" && e.showPopover();
 		let t = () => {
 			let t = F(d).getBoundingClientRect(), n = e.offsetWidth, r = t.bottom + 4;
@@ -23115,11 +23127,11 @@ function fL(e, t) {
 		};
 		return t(), window.addEventListener("resize", t), () => window.removeEventListener("resize", t);
 	}
-	function g(e) {
+	function x(e) {
 		let t = F(a);
-		k(u, !1), e.add && aL.asOwnStep(() => e.add(n, t)), Ju.tab !== e.area && (Ju.tab = e.area), Cu(t.blockId, e.id, { fresh: !0 });
+		k(u, !1), m = !1, e.add && aL.asOwnStep(() => e.add(n, t)), Ju.tab !== e.area && (Ju.tab = e.area), Cu(t.blockId, e.id, { fresh: !0 });
 	}
-	var v = $r(), y = j(v), b = (e) => {
+	var S = $r(), C = j(S), w = (e) => {
 		var t = dL(), n = A(t);
 		V(n, () => J.plus, !0), E(n), sa(n, (e) => k(d, e), () => F(d));
 		var r = N(n, 2), a = (e) => {
@@ -23136,7 +23148,7 @@ function fL(e, t) {
 					var i = N(r, 2), a = A(i), o = M(a, !0), s = M(N(a), !0);
 					E(i), E(n), P((e, r) => {
 						G(n, "data-cap-add", F(t).id), z(o, e), z(s, r);
-					}, [() => q(`cap.${F(t).id}`), () => q(`cap.about.${F(t).id}`)]), I("click", n, () => g(F(t))), R(e, n);
+					}, [() => q(`cap.${F(t).id}`), () => q(`cap.about.${F(t).id}`)]), I("click", n, () => x(F(t))), R(e, n);
 				}), E(l), P((e, t) => {
 					z(c, e), G(l, "aria-label", t);
 				}, [() => q(i[r()]), () => q(i[r()])]), R(e, o);
@@ -23153,21 +23165,23 @@ function fL(e, t) {
 			B(p, (e) => {
 				!F(l) && F(c).length && e(v);
 			}), E(t), sa(t, (e) => k(f, e), () => F(f)), Fi(t, (e, t) => Ia?.(e, t), () => ({
-				close: () => k(u, !1),
+				close: () => {
+					k(u, !1), m = !1;
+				},
 				opener: F(d)
-			})), Ii(t, () => h), P((e, r) => {
+			})), Ii(t, () => b), P((e, r) => {
 				n = H(t, 1, "cap-pop", null, n, { "cap-tiles": F(l) }), G(t, "aria-label", e), z(a, r);
-			}, [() => q("cap.add"), () => q("cap.add")]), I("keydown", t, m), Ni(3, t, () => Ga), R(e, t);
+			}, [() => q("cap.add"), () => q("cap.add")]), I("keydown", t, y), Vr("pointerenter", t, h), Vr("pointerleave", t, g), Ni(3, t, () => Ga), R(e, t);
 		};
 		B(r, (e) => {
 			F(u) && e(a);
-		}), E(t), P((e, t) => {
-			G(n, "aria-expanded", F(u)), G(n, "title", e), G(n, "aria-label", t);
-		}, [() => q("cap.add"), () => q("cap.add")]), I("click", n, p), R(e, t);
+		}), E(t), P((e) => {
+			G(n, "aria-expanded", F(u)), G(n, "aria-label", e);
+		}, [() => q("cap.add")]), I("click", n, v), Vr("pointerenter", n, h), Vr("pointerleave", n, g), R(e, t);
 	};
-	B(y, (e) => {
-		F(s).length && e(b);
-	}), R(e, v), st();
+	B(C, (e) => {
+		F(s).length && e(w);
+	}), R(e, S), st();
 }
 Hr(["click", "keydown"]);
 // src/lib/rows/IconButton.svelte
@@ -23245,7 +23259,7 @@ function _L(e, t) {
 			let e = /* @__PURE__ */ D(() => q("canvas.ctx.delete"));
 			mL(s, {
 				get icon() {
-					return J.cross;
+					return J.bin;
 				},
 				danger: !0,
 				get label() {
@@ -23722,6 +23736,7 @@ function mR(e, t) {
 		}), () => i.disconnect();
 	}
 	let re = /* @__PURE__ */ D(() => F(v).hidden.length + F(v).shown.length > 0), ie = null, ae = !1;
+	Fn(() => () => clearTimeout(ie));
 	function oe(e) {
 		e.pointerType === "mouse" && (clearTimeout(ie), !F(b) && (ie = setTimeout(() => {
 			k(b, !0), ae = !0;

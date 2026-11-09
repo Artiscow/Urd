@@ -632,7 +632,15 @@ test('the menu\'s head offers what the block can take, and nothing when the bloc
     const context = new Map([['urd-editor', handleFor(block(type, props, extra))]]);
     return parseHtml(render(CapabilityAdd, { context }).body);
   };
-  assert.equal(find(offers('text', {}), (n) => hasClass(n, 'cap-add-head')).length, 1, 'a new text block can take capabilities');
+  const plus = find(offers('text', {}), (n) => hasClass(n, 'cap-add-head'));
+  assert.equal(plus.length, 1, 'a new text block can take capabilities');
+  // The «+» opens its list under a resting mouse, so it has its name and no tooltip, its empty title keeping the floating menu head's from reaching it; a touch is no hover.
+  assert.equal(plus[0].attrs.title, '', 'a menu that opens on hover shows no tooltip, nor its head\'s');
+  assert.ok(plus[0].attrs['aria-label'], 'the «+» is named for a screen reader');
+  const add = readFileSync(new URL('../editor/src/menu/CapabilityAdd.svelte', import.meta.url), 'utf8');
+  for (const fn of ['hoverIn', 'hoverOut']) assert.match(add, new RegExp(`function ${fn}\\(event\\) \\{\\s*if \\(event\\.pointerType !== 'mouse'\\) return;`), fn);
   const full = offers('text', { box: true }, { animation: { type: 'fade-in', props: {} }, sticky: { offset: 16, until: null }, anchor: 'priser', decor: true, hideMobile: true });
   assert.equal(find(full, (n) => hasClass(n, 'cap-add-head')).length, 0, 'a block that uses every capability is offered none');
+  // Delete in the head draws a bin, never the cross that closes things.
+  assert.match(readFileSync(new URL('../editor/src/menu/BlockActions.svelte', import.meta.url), 'utf8'), /<IconButton icon=\{ICONS\.bin\} danger label=\{ta\('canvas\.ctx\.delete'\)\}/);
 });

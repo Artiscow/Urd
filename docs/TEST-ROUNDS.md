@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.12.2): the «+» on hover, and delete as a bin
+
+- [ ] The «+» in the menu's head: resting the mouse on it opens its list, moving down into the list keeps it open, and moving away closes it; a press or a tap opens it too, and it shows no tooltip
+- [ ] Delete in the menu's head is a red bin, centred in its button, and takes the block away at one press
+
 ### Test batch (0.7.33.12.1): capabilities as cards, and the small tool windows redrawn
 
 - [ ] A text block with nothing set: no card for Motion, the text box, «Pin while scrolling», «Hide on phones», the name for links or «Shows at once»; the «+» in the menu's head lists them by area, each with a line on what it does

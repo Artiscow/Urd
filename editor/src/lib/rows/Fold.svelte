@@ -83,6 +83,8 @@
      A touch is no hover (AGENTS.md, hybrid devices), so only a mouse opens it so. */
   let hoverTimer = null;
   let openedByHover = false;
+  // A timer still running as the fold goes away does nothing.
+  $effect(() => () => clearTimeout(hoverTimer));
   function hoverIn(event) {
     if (event.pointerType !== 'mouse') return;
     clearTimeout(hoverTimer);
@@ -100,7 +102,7 @@
     }, 250);
   }
 
-  /** A press on the chip opens the list with the focus on its first row, or brings the focus into a list the pointer opened; a press on a list it opened closes it. */
+  /** A press on the chip opens the list with the focus on its first row, or brings the focus into a list the mouse opened; a press on the chip closes a list a press opened. */
   async function toggleExtra() {
     clearTimeout(hoverTimer);
     if (extraOpen && !openedByHover) {
