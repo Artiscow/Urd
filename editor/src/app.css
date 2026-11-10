@@ -894,7 +894,7 @@
   }
 
   /* An area with nothing in it but its heading is not drawn: no empty column, no empty heading */
-  .emenu-cols .emenu-col:not(:has(> :not(.emenu-title, .emenu-none, .emenu-head))) {
+  .emenu-cols .emenu-col:not(:has(> :not(.emenu-title, .emenu-none, .emenu-head), > .emenu-head .cap-icons)) {
     display: none;
   }
 
@@ -960,7 +960,7 @@
     display: none;
   }
 
-  .emenu-tabbed .emenu-head:not(:has(.help-chip)) {
+  .emenu-tabbed .emenu-head:not(:has(.help-chip, .cap-icons)) {
     display: none;
   }
 
@@ -1395,6 +1395,122 @@
     width: 12px;
     height: 12px;
     color: var(--urd-color-accent, #7c5cff);
+  }
+
+  /* Minimal (folded cards): what an area can take as one quiet line of names at its foot, lit in the accent under the pointer or the keys */
+  .cap-names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.9rem;
+    margin-top: 0.4rem;
+  }
+
+  .emenu-area .cap-add-name:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    gap: 0.25rem;
+    height: auto;
+    min-height: 0;
+    padding: 0.1rem 0;
+    font-size: 0.8rem;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+    background: transparent;
+    border: 0;
+  }
+
+  .emenu-area .cap-add-name:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: var(--urd-color-accent, #7c5cff);
+    background: transparent;
+  }
+
+  .emenu-area .cap-add-name svg {
+    flex: none;
+    width: 10px;
+    height: 10px;
+  }
+
+  /* A folded card's name: the line folds and opens the card, its value at the right while folded, the caret turning with it */
+  .cap-card .cap-head .cap-fold:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-start;
+    gap: 0.4rem;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: transparent;
+    border: 0;
+  }
+
+  .cap-card .cap-head .cap-fold:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    background: transparent;
+  }
+
+  .cap-fold .cap-value {
+    margin-left: auto;
+    overflow: hidden;
+    font-size: 0.82rem;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.65;
+  }
+
+  .cap-fold .cap-caret {
+    display: inline-flex;
+    flex: none;
+    opacity: 0.6;
+    transition: rotate 0.2s ease;
+  }
+
+  .cap-fold[aria-expanded='true'] .cap-caret {
+    rotate: 180deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cap-fold .cap-caret {
+      transition: none;
+    }
+  }
+
+  /* Icons in each area's heading: each capability's drawing in a box of the admin's accent, dashed while the block does not use it and lit while it does; the drawing keeps the text's colour */
+  .cap-icons {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-left: auto;
+  }
+
+  .emenu-head .cap-icon-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    min-height: 0;
+    padding: 0;
+    color: color-mix(in srgb, currentColor 60%, transparent);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 14%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--urd-color-accent, #7c5cff) 50%, transparent);
+    border-radius: 6px;
+  }
+
+  .emenu-head .cap-icon-btn.lit:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: inherit;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 34%, transparent);
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 70%, transparent);
+  }
+
+  .emenu-head .cap-icon-btn:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: inherit;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 26%, transparent);
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .emenu-head .cap-icon-btn svg {
+    width: 13px;
+    height: 13px;
   }
 
   .cap-tile {

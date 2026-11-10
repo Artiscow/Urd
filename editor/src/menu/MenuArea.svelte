@@ -1,7 +1,7 @@
 <script>
   /* One area of the element menu (Content, Style or Placement): its heading and the groups under it.
      Wide, the areas pour through two columns with the heading where its area starts; narrow, the three areas stand under each other and the heading sticks to the top while the area scrolls, saying how many groups it holds (the groups report in through the menu-area context).
-     A block's own menu (`adds`) ends each area with the way to add what the area can take, where Urd settings put it at the areas' feet (chips or an add button, menu/CapabilityAdd.svelte); an area holding only that stands, so what it can take is in reach. */
+     A block's own menu (`adds`) ends each area with the way to add what the area can take, where Urd settings put it at the areas' feet (chips, an add button or a line of names, menu/CapabilityAdd.svelte), or draws it in the area's heading (icons); an area holding only that stands, so what it can take is in reach. */
   import { setContext } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { ta } from '$engine/i18n.js';
@@ -24,6 +24,7 @@
 <section class="emenu-col emenu-area" data-area={area}>
   <header class="emenu-head">
     <span class="emenu-head-title"><span class="emenu-head-name">{title}</span></span>
+    {#if adds}<CapabilityAdd form="icons" {area} />{/if}
     {#if counts && total}
       <span class="emenu-head-meta">{total === 1 ? ta('menu.areaGroups.one') : ta('menu.areaGroups.other', { n: total })}</span>
     {/if}
@@ -32,5 +33,6 @@
   {#if adds}
     <CapabilityAdd form="chips" {area} />
     <CapabilityAdd form="button" {area} />
+    <CapabilityAdd form="folded" {area} />
   {/if}
 </section>

@@ -166,6 +166,8 @@ const CAP_ADD_PICS = {
   head: menuBox() + line(17, 5.5, 14, 2) + plusMark(43, 4.5) + groupLines(11, 5),
   chips: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 3) + line(17, 25.5, 10, 1.2) + dashed(17, 28.5, 8.5, 3.6, 1.8) + dashed(27, 28.5, 8.5, 3.6, 1.8) + dashed(37, 28.5, 8.5, 3.6, 1.8),
   button: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 3) + dashed(17, 27.5, 28, 5, 1) + plusMark(19, 28),
+  folded: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 2) + `<rect x="17" y="20" width="28" height="4" rx="1" stroke="${ACCENT}" stroke-width="0.6"/>` + line(19, 21.2, 9, 1.6) + line(37, 21.2, 6, 1.6) + line(17, 28, 7, 1.2) + line(27, 28, 7, 1.2) + line(37, 28, 7, 1.2),
+  icons: menuBox() + line(17, 5.5, 10, 2) + dashed(32, 4.5, 4, 4, 0.8) + dashed(37.5, 4.5, 4, 4, 0.8) + acc(43, 4.5, 4, 4, 0.8) + groupLines(11, 5),
 };
 
 /** How a look is chosen: a menu whose design is a row with its small picture and its name, or a heading over the designs' pictures, the chosen one ringed, each over the groups below. */

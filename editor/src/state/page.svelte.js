@@ -209,6 +209,8 @@ async function revealInMenu(only) {
   }
   if (kind === 'fold') {
     folds.set('menu', id, true);
+    // A capability's card opens too where the cards fold (Urd settings «Extra settings style» as Minimal).
+    if (capability(id)) folds.set('cap-folded', id, false);
     if (capability(id) && selectedBlock) keepCapability(selectedBlock.blockId, id);
   }
   await tick();

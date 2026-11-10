@@ -40,8 +40,8 @@ export const TOOLBAR_DESIGNS = ['small', 'full'];
 /** How the list from the «+» in the element menu's head shows what a block can take (menu/CapabilityAdd.svelte): one under the other with a line on each, by default, or tiles in two columns. */
 export const CAP_LISTS = ['list', 'tiles'];
 
-/** The way to add a capability to a block (ADR-0031, menu/CapabilityAdd.svelte), the default first: one «+» in the menu's head (B5), a chip for each at the foot of its area (B1), or one add button at the foot of each area (B2). */
-export const CAP_ADD_FORMS = ['head', 'chips', 'button'];
+/** The way to add a capability to a block (ADR-0031, menu/CapabilityAdd.svelte), the default first: one «+» in the menu's head (B5), a chip for each at the foot of its area (B1), one add button at the foot of each area (B2), a quiet line of names at the foot of each area with the cards folding (B3), or a drawing for each in its area's heading (B4). */
+export const CAP_ADD_FORMS = ['head', 'chips', 'button', 'folded', 'icons'];
 
 /** The forms that open a list of what can be added, which «The add list» shapes. */
 export const CAP_ADD_LISTS = ['head', 'button'];

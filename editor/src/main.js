@@ -12,6 +12,7 @@ import { mount } from 'svelte';
 import { initAdminLocale } from '$engine/i18n.js';
 import App from './App.svelte';
 import { installSegSlide } from './lib/seg-slide.js';
+import { installTipScope } from './lib/tip-scope.js';
 // The admin's global stylesheet, after the components so its rules win a tie with theirs.
 import './app.css';
 
@@ -22,5 +23,7 @@ document.documentElement.lang = await initAdminLocale();
 
 // A segment control's choice slides from the old button to the new one, in every panel and menu.
 installSegSlide();
+// A row's tooltip shows on its name, its fields and its buttons, not on its empty room.
+installTipScope();
 
 export default mount(App, { target: document.getElementById('urd-admin') });

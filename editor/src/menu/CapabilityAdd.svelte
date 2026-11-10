@@ -2,6 +2,7 @@
   /* The way to add a capability to the selected block (ADR-0031, menu/capabilities.js), in the form Urd settings «Extra settings style» chooses (`menu.capAddPref`); each form is drawn where it stands and only while it is the one chosen.
      `head` is the «+» in the menu's head (B5), which lists every capability the block can take, under its area's name, each with its drawing and one line on what it does.
      `button` is one dashed «+ Add to Style» at the foot of an area (`area`, B2), which opens the same list of that area's capabilities; `chips` names that area's capabilities as dashed chips at its foot (B1), each added at a press, its line in its tooltip.
+     `folded` names them as one quiet line of «+ Name» at the area's foot (B3), with the cards folding (lib/rows/Capability.svelte); `icons` draws each of the area's capabilities in the area's heading (B4), in a box of the admin's accent, dashed while the block does not use it and lit while it does: a press on a dashed one adds it, on a lit one brings its card into view.
      Urd settings «The add list» draws a list as a list, with what the block already has dimmed at its foot, or as tiles in two columns.
      A pick sets what the capability starts with (a switch it is), keeps its card on the block for the session, and gives the card the focus (lib/rows/Capability.svelte); with nothing left to add the «+» is not drawn.
      A capability whose settings all stand in Pinned is not offered, since Pinned holds it.
@@ -16,6 +17,7 @@
   import { historyState } from '../state/history.svelte.js';
   import { CAPABILITIES, carries } from './capabilities.js';
   import { isAdded, keepCapability } from './capabilities.svelte.js';
+  import { folds } from '../lib/folds.svelte.js';
   import { menu, quickChoice } from './state.svelte.js';
   const ed = getContext('urd-editor');
   /** The form this copy draws, and for the forms at an area's foot, the area. */
@@ -42,6 +44,18 @@
   });
   /** What the block has already, for the list's foot, so the whole set is seen. */
   const taken = $derived(block && shown ? CAPABILITIES.filter((cap) => areas.includes(cap.area) && carries(cap, block, ed) && (cap.inUse(block, ed) || isAdded(block.blockId, cap.id)) && !heldInPinned(cap)) : []);
+  /** Every capability of the area the block can carry, lit where it uses it or took it, for the drawings in the area's heading. */
+  const all = $derived(block && shown && form === 'icons'
+    ? CAPABILITIES.filter((cap) => cap.area === area && carries(cap, block, ed) && !heldInPinned(cap)).map((cap) => [cap, cap.inUse(block, ed) || isAdded(block.blockId, cap.id)])
+    : []);
+  /** A lit drawing's card, in the copy of the menu the drawing stands in, brought into view with the focus on its first setting (never its bin), at once under reduced motion. */
+  function toCard(cap, event) {
+    const home = event.currentTarget.closest('.block-menu, aside.panel') ?? document;
+    const card = home.querySelector(`.emenu-area [data-cap="${cap.id}"]`);
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    card?.scrollIntoView({ block: 'nearest', behavior: still ? 'auto' : 'smooth' });
+    (card?.querySelector('.cap-body :is(input, button, select, textarea, [tabindex="0"])') ?? card?.querySelector('.cap-chip, .cap-fold'))?.focus({ preventScroll: true });
+  }
   /** The words of an area's add button and list: «Add to Style». */
   const addWords = $derived(area ? ta('cap.addTo', { area: ta(AREA_WORDS[area]) }) : ta('cap.add'));
   const tiles = $derived(menu.capListPref === 'tiles');
@@ -134,6 +148,8 @@
     openedByHover = false;
     if (cap.add) historyState.asOwnStep(() => cap.add(ed, taken));
     if (menu.tab !== cap.area) menu.tab = cap.area;
+    // A card added stands open, also where the cards fold.
+    folds.set('cap-folded', cap.id, false);
     keepCapability(taken.blockId, cap.id, { fresh: true });
   }
 </script>
@@ -180,6 +196,23 @@
       onclick={toggle} onpointerenter={hoverIn} onpointerleave={hoverOut}>{@html ICONS.plus}<span>{addWords}</span></button>
     {#if open}{@render list()}{/if}
   </div>
+{:else if offered.length && form === 'folded'}
+  <!-- What this area can take, as one quiet line of names, each added at a press -->
+  <div class="cap-names" role="group" aria-label={addWords}>
+    {#each offered[0][1] as cap (cap.id)}
+      <button type="button" class="cap-add-name" data-cap-add={cap.id} title={ta(`cap.about.${cap.id}`)} onclick={() => pick(cap)}>{@html ICONS.plus}<span>{ta(`cap.${cap.id}`)}</span></button>
+    {/each}
+  </div>
+{:else if all.length && form === 'icons'}
+  <!-- Each capability of the area as its drawing in the heading: dashed until the block uses it, lit while it does -->
+  <span class="cap-icons" role="group" aria-label={addWords}>
+    {#each all as [cap, lit] (cap.id)}
+      <button type="button" class="cap-icon-btn" class:lit data-cap-add={lit ? undefined : cap.id}
+        title={lit ? ta(`cap.${cap.id}`) : `${ta('cap.addNamed', { name: ta(`cap.${cap.id}`) })}: ${ta(`cap.about.${cap.id}`)}`}
+        aria-label={lit ? ta('cap.goTo', { name: ta(`cap.${cap.id}`) }) : ta('cap.addNamed', { name: ta(`cap.${cap.id}`) })}
+        onclick={(e) => (lit ? toCard(cap, e) : pick(cap))}>{@html CAP_ICONS[cap.icon] ?? ''}</button>
+    {/each}
+  </span>
 {:else if offered.length && form === 'chips'}
   <!-- What this area can take, named, each added at a press -->
   <div class="cap-adds">

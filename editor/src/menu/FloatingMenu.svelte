@@ -91,7 +91,7 @@
 </script>
 
 <div class="block-menu" transition:menuMotion|global bind:this={rootEl} class:wide={!only && layout === 'wide'} class:small={Boolean(only)} class:dragging style="--menu-left: {pos.left}px; --menu-top: {pos.top}px; --menu-min: {menu.min}px{only && pos.h ? `; --menu-h: ${pos.h}px` : ''}{only && pos.w ? `; --menu-fit-w: ${pos.w}px` : ''}">
-  <header class="block-menu-head" title={ta('tip.menu.dragHead')} onpointerdown={dragHead}>
+  <header class="block-menu-head" title={ta('tip.menu.dragHead')} data-tip-whole onpointerdown={dragHead}>
     {#if onlyIcon}<span class="block-menu-icon" aria-hidden="true">{@html onlyIcon}</span>{/if}
     <span class="block-menu-title">{only ? onlyTitle : pos.section ? ta('lbl.section') : ta('blocks.suffix', { label: ed.blockLabel(selectedBlock.type) })}</span>
     <!-- The small window's way back for its group, and its way to the full menu at the same group -->

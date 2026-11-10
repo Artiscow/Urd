@@ -79,10 +79,12 @@ export function partText(el) {
     }
   };
   walk(el);
-  const own = el.getAttribute('title');
+  // A title set aside while a mouse stands on its row's room (lib/tip-scope.js) is read where it is kept.
+  const tipOf = (node) => node.dataset?.urdTip || node.getAttribute('title');
+  const own = tipOf(el);
   if (own) words.push(own);
   for (const tip of el.querySelectorAll('[title]')) {
-    if (!tip.matches(TOOL_TITLE)) words.push(tip.getAttribute('title'));
+    if (!tip.matches(TOOL_TITLE)) words.push(tipOf(tip));
   }
   return words.join(' ').replace(/\s+/g, ' ').trim();
 }

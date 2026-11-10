@@ -243,7 +243,7 @@
       if (measuredFor !== blockId) return;
       const empty = new Set(MENU_AREAS.filter((area) => {
         const col = node.querySelector(`[data-area="${area}"]`);
-        return !col || !col.querySelector(':scope > :not(.emenu-title, .emenu-none, .emenu-head)');
+        return !col || !col.querySelector(':scope > :not(.emenu-title, .emenu-none, .emenu-head), :scope > .emenu-head .cap-icons');
       }));
       emptyAreas = empty;
       if (empty.has(menu.tab)) menu.tab = MENU_AREAS.find((area) => !empty.has(area)) ?? 'content';

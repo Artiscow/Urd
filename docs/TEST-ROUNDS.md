@@ -2,11 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.12.5): Minimal, Icons in the headings, and tooltips on what they name
+
+- [ ] «Extra settings style» › «Minimal»: a text block's menu names «+ Motion» under Style and «+ Pin while scrolling», «+ Link name», «+ Shows at once» under Placement as a quiet line; a press adds the card open; the card's name folds it to one line with its value («Fade in», «#name», else «On» or «Standard») and opens it again, kept as you go between blocks; in the search's results and a bar tool's small panel the card never folds
+- [ ] «Icons in the headings»: each capability's drawing beside its area's name in a box of the admin's accent, dashed until used; a press on a dashed one adds the card and lights it; a press on a lit one brings its card into view; an area with only its icons still stands, and its tab and heading stay in the tabbed menu; the tooltip names each
+- [ ] «Add button in each area» is the option's name, in nb «Legg til-knapp i hvert område»
+- [ ] Tooltips: on a switch row, a number row, a label with its field and a fold's heading, the tooltip shows on the name's words, the field or the switch, and not on the empty room between them; a button, a link, a chip and a button-like label keep their tooltip over all of themselves; a menu that opens on hover still shows no tooltip
+
 ### Test batch (0.7.33.12.4): Extra settings style, and folds that open into view
 
-- [ ] Urd settings › The element menu › «Extra settings style»: three pictures; «From the menu's head» keeps the «+» in the menu's head, and «The add list» stands under it only for the head and «An add button in each area»
+- [ ] Urd settings › The element menu › «Extra settings style»: three pictures; «From the menu's head» keeps the «+» in the menu's head, and «The add list» stands under it only for the head and «Add button in each area»
 - [ ] «Chips in each area»: a text block's menu shows «Motion» under Style and «Pin while scrolling», «Link name» and «Shows at once» under Placement as dashed chips under «Add to the block»; a press adds the card and takes the chip away; the head has no «+»; a calendar and an image show their own; the docked Settings panel the same
-- [ ] «An add button in each area»: one dashed «+ Add to …» at each area's foot that opens, on hover or a press, the list of that area's capabilities only, as wide as the area; near the window's foot the list opens upward and stays inside the window
+- [ ] «Add button in each area»: one dashed «+ Add to …» at each area's foot that opens, on hover or a press, the list of that area's capabilities only, as wide as the area; near the window's foot the list opens upward and stays inside the window
 - [ ] Neither the chips nor the button stand in a small panel from a bar tool, in the search's results or in a section's menu; an area holding only its chips or its button still shows, and its tab stays in the tabbed menu
 - [ ] A fold opened by its heading near the foot of the floating menu, the docked menu or a side panel: the window scrolls along as it opens until the whole fold is in view, or its heading reaches the top; a scroll of your own during it stops it; «All open», «Expand all» and a bar tool open folds without moving the window
 - [ ] «Extra settings: Added from a menu»: «+ Add a setting» near the window's foot opens its list, by a press or a resting mouse, and the window follows it into view

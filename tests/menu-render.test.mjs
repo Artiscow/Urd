@@ -29,6 +29,7 @@ const { default: ElementMenu } = await import('../editor/src/menu/ElementMenu.sv
 const { default: FloatingMenu } = await import('../editor/src/menu/FloatingMenu.svelte');
 const { setQuickChoice, setCapAddPref } = await import('../editor/src/menu/state.svelte.js');
 const { NO_CHOICE } = await import('../editor/src/lib/quick-row.js');
+const { folds } = await import('../editor/src/lib/folds.svelte.js');
 const { DESIGN_BLOCK_TYPES } = await engineImport('block-designs.js');
 
 const noop = () => {};
@@ -253,7 +254,7 @@ const DESIGN_TYPES = new Set(DESIGN_BLOCK_TYPES);
 
 test('the menu frame: no fold left empty, no area holding an empty part, and no setting drawn twice, with Pinned as it starts, emptied, and holding every setting that can be pinned', () => {
   const css = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8');
-  assert.match(css, /\.emenu-cols \.emenu-col:not\(:has\(> :not\(\.emenu-title, \.emenu-none, \.emenu-head\)\)\)\s*\{\s*display: none;/, 'an area with only its heading is not drawn');
+  assert.match(css, /\.emenu-cols \.emenu-col:not\(:has\(> :not\(\.emenu-title, \.emenu-none, \.emenu-head\), > \.emenu-head \.cap-icons\)\)\s*\{\s*display: none;/, 'an area with only its heading is not drawn, unless its heading holds the drawings to add');
   for (const type of CORE_TYPES) {
     for (const props of BLOCKS[type]) {
       // Every setting that can stand in Pinned, read from the menu with nothing pinned; each one Pinned can hold stands in an area then, or in a capability the block can add (ADR-0031), so no setting is lost from both.
@@ -629,6 +630,27 @@ test('a capability\'s card stands while the block uses it or took it, in the sea
     const card = (id) => find(tree, (n) => n.attrs['data-cap'] === id)[0] ?? null;
     return { card, takes: (id) => Boolean(card(id) && find(card(id), (n) => hasClass(n, 'cap-remove')).length) };
   };
+  // Folded cards: the card's name folds it to one line saying its value, kept for the session; the search's copy never folds.
+  setCapAddPref('folded');
+  try {
+    const motion = { animation: { type: 'fade-in', props: { duration: 600 } } };
+    const openCard = draw({}, motion).card('motion');
+    assert.equal(find(openCard, (n) => hasClass(n, 'cap-fold'))[0].attrs['aria-expanded'], 'true', 'a card stands open until it is folded');
+    assert.ok(find(openCard, (n) => hasClass(n, 'cap-body')).length, 'with its settings');
+    folds.set('cap-folded', 'motion', true);
+    const foldedCard = draw({}, motion).card('motion');
+    assert.equal(find(foldedCard, (n) => hasClass(n, 'cap-fold'))[0].attrs['aria-expanded'], 'false');
+    assert.equal(find(foldedCard, (n) => hasClass(n, 'cap-body')).length, 0, 'folded to its line');
+    assert.equal(find(foldedCard, (n) => hasClass(n, 'cap-value'))[0]?.text.trim(), 'Fade', 'saying its value, the entrance by its name');
+    const searched = draw({}, motion, { query: 'motion' }).card('motion');
+    assert.equal(find(searched, (n) => hasClass(n, 'cap-fold')).length, 0, 'the search\'s copy never folds');
+  } finally {
+    folds.set('cap-folded', 'motion', false);
+    setCapAddPref('head');
+  }
+  // A card added from the add list, and one a tool of the bar opens, stands open where the cards fold.
+  assert.match(readFileSync(new URL('../editor/src/menu/CapabilityAdd.svelte', import.meta.url), 'utf8'), /folds\.set\('cap-folded', cap\.id, false\);\s*keepCapability\(taken\.blockId, cap\.id, \{ fresh: true \}\);/);
+  assert.match(readFileSync(new URL('../editor/src/state/page.svelte.js', import.meta.url), 'utf8'), /if \(capability\(id\)\) folds\.set\('cap-folded', id, false\);/);
   // Not used and not taken: no card, no room.
   const bare = draw({});
   for (const id of ['motion', 'text-box', 'sticky', 'link-target', 'decor', 'phone']) assert.equal(bare.card(id), null, `${id}: no card on a block that does not use it`);
@@ -672,6 +694,18 @@ test('«Extra settings style» draws one way to add at a time: the head\'s «+»
     assert.equal(button.length, 1);
     assert.equal(button[0].attrs.title, undefined, 'a button that opens on hover has no tooltip');
     assert.equal(named(draw({ form: 'chips', area: 'placement' }), 'cap-add-chip').length, 0);
+    // Folded cards: the area's capabilities as one quiet line of names at its foot.
+    setCapAddPref('folded');
+    assert.deepEqual(offeredIn(draw({ form: 'folded', area: 'style' })), ['motion']);
+    assert.ok(named(draw({ form: 'folded', area: 'style' }), 'cap-add-name').every((n) => n.attrs.title), 'each name says what it does');
+    // Icons in the headings: every capability of the area as its drawing, dashed and added at a press while unused, lit and leading to its card while used.
+    setCapAddPref('icons');
+    const icons = named(draw({ form: 'icons', area: 'placement' }), 'cap-icon-btn');
+    assert.ok(icons.length >= 3 && icons.every((n) => !hasClass(n, 'lit') && n.attrs['data-cap-add'] && n.attrs['aria-label']), 'unused: dashed, each added at a press, each named');
+    const usedContext = new Map([['urd-editor', handleFor(block('text', {}, { anchor: 'priser' }))]]);
+    const lit = find(parseHtml(render(CapabilityAdd, { context: usedContext, props: { form: 'icons', area: 'placement' } }).body), (n) => hasClass(n, 'cap-icon-btn') && hasClass(n, 'lit'));
+    assert.equal(lit.length, 1, 'the link name in use stands lit');
+    assert.equal(lit[0].attrs['data-cap-add'], undefined, 'and is not offered again');
   } finally {
     setCapAddPref('head');
   }
@@ -681,8 +715,12 @@ test('«Extra settings style» draws one way to add at a time: the head\'s «+»
   assert.match(add, /if \(form === 'button'\) node\.style\.width = `\$\{r\.width\}px`;/, 'an area\'s list as wide as its area');
   assert.match(add, /node\.style\.maxHeight = `min\(64vh, 30rem, \$\{room\}px\)`;\s*node\.style\.top = `\$\{up \? r\.top - 4 - node\.offsetHeight : r\.bottom \+ 4\}px`;/, 'never taller than its style allows, and above its opener by its real height');
   assert.match(add, /window\.addEventListener\('scroll', away, true\);/, 'placed again as the menu under it scrolls');
-  // The element menu's own areas end with the way to add; the small panels, the search's copy and a section's menu never draw it.
   const element = readFileSync(new URL('../editor/src/menu/ElementMenu.svelte', import.meta.url), 'utf8');
+  // The heading holds the drawings, so an area holding nothing else still stands, in the tabbed menu too.
+  const css = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8');
+  assert.match(css, /\.emenu-tabbed \.emenu-head:not\(:has\(\.help-chip, \.cap-icons\)\)/);
+  assert.match(element, /:scope > \.emenu-head \.cap-icons'\);/, 'and its tab stays');
+  // The element menu's own areas end with the way to add; the small panels, the search's copy and a section's menu never draw it.
   assert.equal((element.match(/counts=\{layout === 'narrow'\} adds>/g) ?? []).length, 3);
   assert.doesNotMatch(readFileSync(new URL('../editor/src/section/SectionMenu.svelte', import.meta.url), 'utf8'), /<MenuArea[^>]*\badds\b/);
 });

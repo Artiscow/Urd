@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.12.5 - Minimal and Icons in the headings, and tooltips only on what they name - 10 November 2026
+
+- «Extra settings style» had three of the five forms chosen on the canvas. «Minimal» names what each area can take as a quiet line at its foot, with the cards folding to one line at their name that shows the value (`summary` in `menu/capabilities.js`), and «Icons in the headings» draws each capability in its area's heading in a box of the admin's accent, dashed until used, a press adding it or bringing its card into view.
+- «An add button in each area» is «Add button in each area», in nb and tr too.
+- A tooltip showed wherever the pointer stood on a row, its empty room included (found in testing). It shows on the row's words, fields, buttons and chips only (`lib/tip-scope.js`).
+
+The independent review before the commit found these, all fixed:
+
+1. A tool of the block's bar, with the full menu open, scrolled to a folded card and left it folded. It opens the card.
+2. The tooltips still showed past the words of a name that stretches across its row, as a fold's heading's and a select row's do. A name counts where its words stand.
+3. A press on a lit icon put the focus on the card's bin, so a second Enter took the capability away. The focus goes to its first setting, and the card comes into view at once under reduced motion.
+4. A title set aside was gone from the menu's search, which reads the tooltips, came back late for the keys and the focus, could bring back one the row had taken away, and let an outer tooltip show through. It is blanked rather than removed, read by the search where it is kept, and back at any key, focus or press.
+5. The floating menu's head, dragged by its room, showed its tooltip only on its name. It keeps it over all of itself (`data-tip-whole`).
+6. A folded card's name took the buttons' grey box under the pointer. It stays clear.
+7. ADR-0031 still said the other ways to add would follow. The sentence on the build is gone.
+8. The tests held the tooltip rule by one case and the folded value by its presence. The rule is tested for stretched names, controls and drawings, the value by its words, and a pick and a bar tool for opening a folded card.
+
 ### 0.7.33.12.4 - Extra settings style: the «+» in the head, chips or an add button in each area, and folds followed into view - 10 November 2026
 
 - What a block can carry but does not use could be added only from the «+» in the menu's head. «Extra settings style» in Urd settings, with «The add list» under it, puts the way to add in the head (the default), as dashed chips at each area's foot, or as one dashed «+ Add to Style» per area whose list is as wide as its area and opens upward near the window's foot (`menu/CapabilityAdd.svelte`, `menu/MenuArea.svelte`, `lib/settings-pictures.js`).

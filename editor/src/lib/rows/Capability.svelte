@@ -2,7 +2,8 @@
   /* A capability's card in the element menu (ADR-0031, menu/capabilities.js): drawn while the block uses the capability, while it was added to the block this session, or where the menu draws every capability (menu/CapScope.svelte); otherwise it takes no room, and the add list offers it.
      Its head names it, with the way back, which takes every setting in it to the standard in one undo step and the capability back to the add list; its settings stand under the head as a group's rows, reading the group's standards where they ask by key (`group`).
      A capability that is one switch (`single` in the catalogue) is a card of one line: its drawing, its name, an On/Off chip for the switch, its pin where Pinned can hold it, and the way back.
-     The card carries its id as a fold does, so a tool of the block's bar opens it in a small panel (lib/only-group.js). */
+     The card carries its id as a fold does, so a tool of the block's bar opens it in a small panel (lib/only-group.js).
+     Where Urd settings «Extra settings style» asks for folded cards, its name is a button that folds it to one line saying its value (the catalogue's `summary`, else that it is on) and opens it again, kept for the session; a copy that draws every capability (the search, a small panel) never folds, so its settings are always there. */
   import { getContext, setContext, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS, CAP_ICONS } from '../icons.js';
@@ -12,6 +13,8 @@
   import Pin from '../../menu/Pin.svelte';
   import { capability, carries } from '../../menu/capabilities.js';
   import { isAdded, keepCapability, dropCapability, isFresh, capabilities } from '../../menu/capabilities.svelte.js';
+  import { menu } from '../../menu/state.svelte.js';
+  import { folds } from '../folds.svelte.js';
   const ed = getContext('urd-editor');
   const scope = getContext('menu-capabilities');
   const area = getContext('menu-area');
@@ -29,6 +32,11 @@
   const title = $derived(ta(`cap.${id}`));
   /** A one-switch capability's switch, as its chip shows it. */
   const switchedOn = $derived(Boolean(cap.single && block && cap.single.value(block, ed)));
+  /** Whether the card folds: folded cards chosen, a card with settings under its head, in a copy of the menu that does not draw every capability. */
+  const folding = $derived(menu.capAddPref === 'folded' && !cap.single && Boolean(children) && !scope?.forced(id));
+  /** A card stands open until the owner folds it; the fold is kept by the capability for the session. */
+  const folded = $derived(folding && folds.isOpen('cap-folded', id));
+  const summary = $derived(block ? (cap.summary?.(block, ed) || (inUse ? ta('common.on') : ta('menu.standard'))) : '');
   setContext('menu-group', {
     own: (key) => Boolean(group?.own(key)),
     resetKey: (key) => group?.resetKey(key),
@@ -88,8 +96,18 @@
 {#if shown}
   <div class="cap-card" class:fresh class:cap-single={Boolean(cap.single)} role="group" data-fold={id} data-cap={id} aria-label={title} bind:this={cardEl} transition:rowMotion>
     <header class="cap-head">
-      <span class="cap-icon" aria-hidden="true">{@html CAP_ICONS[cap.icon] ?? ''}</span>
-      <span class="cap-title">{title}</span>
+      {#if folding}
+        <!-- The name folds the card to its line and opens it again, saying its value while folded -->
+        <button type="button" class="cap-fold" aria-expanded={!folded} onclick={() => folds.set('cap-folded', id, !folded)}>
+          <span class="cap-icon" aria-hidden="true">{@html CAP_ICONS[cap.icon] ?? ''}</span>
+          <span class="cap-title">{title}</span>
+          {#if folded}<span class="cap-value">{summary}</span>{/if}
+          <span class="cap-caret" aria-hidden="true">{@html ICONS.caret}</span>
+        </button>
+      {:else}
+        <span class="cap-icon" aria-hidden="true">{@html CAP_ICONS[cap.icon] ?? ''}</span>
+        <span class="cap-title">{title}</span>
+      {/if}
       {#if cap.single}
         <button type="button" class="cap-chip" role="switch" aria-checked={switchedOn} aria-label={title} title={ta(`cap.about.${id}`)}
           onclick={() => cap.single.set(ed, !switchedOn)}>{switchedOn ? ta('common.on') : ta('common.off')}</button>
@@ -102,6 +120,6 @@
           onclick={takeAway}>{@html ICONS.bin}</button>
       {/if}
     </header>
-    {#if children && !cap.single}<div class="group-items cap-body">{@render children()}</div>{/if}
+    {#if children && !cap.single && !folded}<div class="group-items cap-body" transition:rowMotion>{@render children()}</div>{/if}
   </div>
 {/if}
