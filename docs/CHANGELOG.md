@@ -8,6 +8,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.12.4 - Extra settings style: the «+» in the head, chips or an add button in each area, and folds followed into view - 10 November 2026
+
+- What a block can carry but does not use could be added only from the «+» in the menu's head. «Extra settings style» in Urd settings, with «The add list» under it, puts the way to add in the head (the default), as dashed chips at each area's foot, or as one dashed «+ Add to Style» per area whose list is as wide as its area and opens upward near the window's foot (`menu/CapabilityAdd.svelte`, `menu/MenuArea.svelte`, `lib/settings-pictures.js`).
+- A fold opened near the window's foot, and a fold's «+ Add a setting» list, opened out of sight (found in testing). The window scrolls along as they open, never so far that the fold's heading leaves it, and the owner's own scroll stops it (`lib/follow-open.js`).
+- The user guide called a capability card's way back a cross, though it is a bin since 0.7.0.83. It says bin, in en-GB and nb.
+
+The independent review before the commit found these, all fixed:
+
+1. With an add button in each area, a card's bin left the focus nowhere, since neither the head's «+» nor the list stood. The focus goes to the capability's chip, else its area's add button, else the head's «+».
+2. A list took the whole room below or above it instead of its style's height, and one that opened upward by a height it then passed covered its own button. It keeps its style's height and stands above its button by the height it has.
+3. An area's list stayed where it was as the menu under it scrolled. It is placed again as the menu scrolls.
+4. The following of an opening fold went on against a press of the owner's, such as a drag of the scrollbar. A press stops it too.
+5. In the menu with tabs, an area that gained its chips as «Extra settings style» changed kept its tab left out. The tabs are read again as it changes.
+6. ARCHITECTURE.md counted six new admin parts where seven stand, the entry's first bullet ran to three sentences, the guide's words put the way to add in the head, and the backlog's «Left» forgot the other families' own capabilities. All are set right.
+7. The follow was tested by its source text alone. It is tested by what it does (`tests/follow-open.test.mjs`).
+
 ### 0.7.0.84 - The button's own colours, windows that open where they were left, a colour removed by its bin, and a drawing of its own for every tool - 10 November 2026
 
 - The Button block had no colour settings. Its «Colours» under Style, and a «Colours» tool on its bar, hold the fill, the text colour, the outline and the fill under the pointer, each a theme colour or an own one over the design's (`bg`, `color`, `borderColor`, `hoverBg`, SCHEMA.md; `blocks/button.js`, `base.css`).

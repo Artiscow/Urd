@@ -99,7 +99,7 @@ test('a part whose row the Urd settings hide under a design is left without effe
   const rows = SETTINGS_GROUPS.flatMap((g) => g.settings);
   for (const design of ADMIN_DESIGNS) {
     const v = (id) => design.parts[id] ?? partDefault(PARTS.find((p) => p.id === id));
-    const c = { ed: { adminLayout: v('layout'), sidebarFolds: v('sidebarFolds'), panelTabMenus: v('panelTabMenus') === 'on', toolbarPref: v('toolbar'), siteDraft: {} }, ta: (k) => k };
+    const c = { ed: { adminLayout: v('layout'), sidebarFolds: v('sidebarFolds'), panelTabMenus: v('panelTabMenus') === 'on', toolbarPref: v('toolbar'), siteDraft: {} }, menu: { capAddPref: v('capAdd') }, ta: (k) => k };
     for (const part of PARTS.filter((p) => p.setting)) {
       const row = rows.find((r) => r.id === part.setting);
       if (row.when && !row.when(c)) assert.equal(design.parts[part.id], null, `${design.id}.${part.id} has no effect there and must be null`);
@@ -155,13 +155,14 @@ function windowContext() {
     setCollectionsLayout(v) { this.collectionsLayout = v; keep('urd-collections-layout', v, 'drill'); },
     setCsvPreview(v) { this.csvPreviewPref = v; keep('urd-csv-preview', v, 'dialog'); },
   };
-  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', capListPref: 'list', shortcutsPref: 'pinned', designsPref: 'row' };
+  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', capListPref: 'list', capAddPref: 'head', shortcutsPref: 'pinned', designsPref: 'row' };
   const c = {
     ed, ta: (k) => k, menu,
     setMenuFormPref(v) { menu.formPref = v; keep('urd-admin-menu-width', v, 'wide'); },
     setFoldsPref(v) { menu.foldsPref = v; keep('urd-folds', v, 'left'); },
     setExtraPref(v) { menu.extraPref = v; keep('urd-extra-settings', v, 'shown'); },
     setCapListPref(v) { menu.capListPref = v; keep('urd-cap-list', v, 'list'); },
+    setCapAddPref(v) { menu.capAddPref = v; keep('urd-add-capability', v, 'head'); },
     setShortcutsPref(v) { menu.shortcutsPref = v; keep('urd-menu-shortcuts', v, 'pinned'); },
     setDesignsPref(v) { menu.designsPref = v; keep('urd-design-choice', v, 'row'); },
     get designs() {

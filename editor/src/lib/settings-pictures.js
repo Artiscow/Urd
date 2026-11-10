@@ -158,6 +158,16 @@ const SHORTCUTS = {
   chips: menuBox() + acc(17, 6, 8, 3.5, 1.75) + dim(27, 6, 8, 3.5, 0.35) + dim(37, 6, 9, 3.5, 0.35) + line(17, 13, 10, 1.5) + groupsBelow(17),
 };
 
+/** The way to add a capability: a «+» in the menu's head, a dashed chip for each at an area's foot, or one dashed add button there, each over the groups of the menu. */
+const groupLines = (y, n) => Array.from({ length: n }, (_, i) => line(17, y + i * 5, 28, 3, 1)).join('');
+const plusMark = (x, y) => acc(x, y + 1.5, 4, 1, 0.3) + acc(x + 1.5, y, 1, 4, 0.3);
+const dashed = (x, y, w, h, r) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" stroke="${ACCENT}" stroke-width="0.6" stroke-dasharray="1.2 0.8"/>`;
+const CAP_ADD_PICS = {
+  head: menuBox() + line(17, 5.5, 14, 2) + plusMark(43, 4.5) + groupLines(11, 5),
+  chips: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 3) + line(17, 25.5, 10, 1.2) + dashed(17, 28.5, 8.5, 3.6, 1.8) + dashed(27, 28.5, 8.5, 3.6, 1.8) + dashed(37, 28.5, 8.5, 3.6, 1.8),
+  button: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 3) + dashed(17, 27.5, 28, 5, 1) + plusMark(19, 28),
+};
+
 /** How a look is chosen: a menu whose design is a row with its small picture and its name, or a heading over the designs' pictures, the chosen one ringed, each over the groups below. */
 const lookTile = (x, y, on = false) => `<rect x="${x}" y="${y}" width="8.5" height="6" rx="1" fill="currentColor" opacity="${on ? 0.42 : 0.28}"${on ? ` stroke="${ACCENT}" stroke-width="0.9"` : ''}/>`;
 const DESIGN_CHOICE_PICS = {
@@ -292,6 +302,7 @@ const LOOKS = {
   toolbar: TOOLBARS,
   toolbarLook: TOOLBAR_LOOK_PICS,
   shortcuts: SHORTCUTS,
+  capAdd: CAP_ADD_PICS,
   designs: DESIGN_CHOICE_PICS,
   layout: LAYOUTS,
   place: PLACES,

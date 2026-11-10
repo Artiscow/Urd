@@ -72,12 +72,15 @@
   async function takeAway() {
     if (!removable) return;
     const taken = block;
-    // The copy of the menu the card stands in (the floating menu or the Settings panel), whose «+» takes the focus.
+    // Where it is added from, in the copy of the menu the card stands in (the floating menu or the Settings panel), in the form «Extra settings style» chooses: its own chip, else its area's add button, else the head's «+».
     const home = cardEl?.closest('.block-menu, aside.panel') ?? document;
+    const area = cardEl?.closest('.emenu-area')?.dataset.area;
     historyState.asOwnStep(() => cap.clear(ed, taken));
     dropCapability(taken.blockId, id);
     await tick();
-    const back = home.querySelector(`[data-cap-add="${id}"]`) ?? home.querySelector('.cap-add-head');
+    const back = home.querySelector(`[data-cap-add="${id}"]`)
+      ?? (area ? home.querySelector(`.emenu-area[data-area="${area}"] .cap-add-btn`) : null)
+      ?? home.querySelector('.cap-add-head');
     back?.focus();
   }
 </script>

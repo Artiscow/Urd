@@ -3,7 +3,7 @@
  * Which groups stand open is kept with every other surface's folds (lib/folds.svelte.js).
  */
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, CAP_LISTS } from './forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, CAP_LISTS, CAP_ADD_FORMS } from './forms.js';
 
 /**
  * The form a menu opens in (Urd settings «Element menu»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
@@ -27,6 +27,9 @@ const SHORTCUTS_KEY = 'urd-menu-shortcuts';
 /** How the «+» list shows what a block can take («The add list»): a list, or tiles in two columns. */
 const CAP_LIST_KEY = 'urd-cap-list';
 
+/** The way to add a capability («Extra settings style»): the «+» in the menu's head, chips at the foot of each area, or an add button at the foot of each area. */
+const CAP_ADD_KEY = 'urd-add-capability';
+
 const stored = (key, list) => (list.includes(localStorage.getItem(key)) ? localStorage.getItem(key) : list[0]);
 
 /** The floating menu's width with the areas poured through two columns (app.css, .block-menu.wide), and a small panel's, one group from a tool of the bar (.block-menu.small). */
@@ -41,6 +44,7 @@ export const menu = $state({
   designsPref: stored(DESIGN_CHOICE_KEY, DESIGN_CHOICES),
   shortcutsPref: stored(SHORTCUTS_KEY, SHORTCUTS_MODES),
   capListPref: stored(CAP_LIST_KEY, CAP_LISTS),
+  capAddPref: stored(CAP_ADD_KEY, CAP_ADD_FORMS),
   /** How many times «All open» has been chosen this session, so each choice opens every fold again (lib/rows/Fold.svelte). */
   foldsRound: 0,
   /** The area in view in a menu with tabs, for the session. */
@@ -93,6 +97,11 @@ export function setDesignsPref(v) {
 export function setCapListPref(v) {
   menu.capListPref = CAP_LISTS.includes(v) ? v : CAP_LISTS[0];
   keep(CAP_LIST_KEY, menu.capListPref, CAP_LISTS);
+}
+
+export function setCapAddPref(v) {
+  menu.capAddPref = CAP_ADD_FORMS.includes(v) ? v : CAP_ADD_FORMS[0];
+  keep(CAP_ADD_KEY, menu.capAddPref, CAP_ADD_FORMS);
 }
 
 export function setShortcutsPref(v) {

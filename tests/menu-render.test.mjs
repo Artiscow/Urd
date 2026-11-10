@@ -27,7 +27,7 @@ const { keepCapability, dropCapability } = await import('../editor/src/menu/capa
 const { default: CapabilityAdd } = await import('../editor/src/menu/CapabilityAdd.svelte');
 const { default: ElementMenu } = await import('../editor/src/menu/ElementMenu.svelte');
 const { default: FloatingMenu } = await import('../editor/src/menu/FloatingMenu.svelte');
-const { setQuickChoice } = await import('../editor/src/menu/state.svelte.js');
+const { setQuickChoice, setCapAddPref } = await import('../editor/src/menu/state.svelte.js');
 const { NO_CHOICE } = await import('../editor/src/lib/quick-row.js');
 const { DESIGN_BLOCK_TYPES } = await engineImport('block-designs.js');
 
@@ -646,6 +646,45 @@ test('a capability\'s card stands while the block uses it or took it, in the sea
   const panel = draw({}, {}, { only: 'fold:motion' });
   assert.ok(panel.card('motion'), 'the bar\'s Motion opens the motion\'s card');
   assert.equal(panel.card('decor'), null, 'a small panel draws no other capability');
+});
+
+test('«Extra settings style» draws one way to add at a time: the head\'s «+», chips at an area\'s foot, or an area\'s add button, each with the area\'s own', () => {
+  const draw = (props = {}) => {
+    const context = new Map([['urd-editor', handleFor(block('text', {}))]]);
+    return parseHtml(render(CapabilityAdd, { context, props }).body);
+  };
+  const named = (tree, cls) => find(tree, (n) => hasClass(n, cls));
+  const offeredIn = (tree) => find(tree, (n) => n.attrs?.['data-cap-add']).map((n) => n.attrs['data-cap-add']);
+  try {
+    // The head by default: its «+» and no area's.
+    assert.equal(named(draw(), 'cap-add-head').length, 1);
+    assert.equal(named(draw({ form: 'chips', area: 'style' }), 'cap-add-chip').length, 0, 'no chips while the head is chosen');
+    // Chips: the area's own capabilities named at its foot, each added at a press, its line in its tooltip; the head draws none.
+    setCapAddPref('chips');
+    assert.equal(named(draw(), 'cap-add-head').length, 0, 'no «+» in the head while the chips are chosen');
+    const style = draw({ form: 'chips', area: 'style' });
+    assert.deepEqual(offeredIn(style), ['motion'], 'the text\'s Style takes motion; its box stands in Pinned, which holds it');
+    assert.ok(named(style, 'cap-add-chip').every((chip) => chip.attrs.title), 'each chip says what it does');
+    assert.ok(!offeredIn(draw({ form: 'chips', area: 'placement' })).includes('motion'), 'an area offers only its own');
+    // The add button: one dashed line per area that names the area, and opens its list; no title, since it opens on hover.
+    setCapAddPref('button');
+    const button = named(draw({ form: 'button', area: 'placement' }), 'cap-add-btn');
+    assert.equal(button.length, 1);
+    assert.equal(button[0].attrs.title, undefined, 'a button that opens on hover has no tooltip');
+    assert.equal(named(draw({ form: 'chips', area: 'placement' }), 'cap-add-chip').length, 0);
+  } finally {
+    setCapAddPref('head');
+  }
+  // A list near the window's foot opens upward where there is more room above, so it never runs past the window.
+  const add = readFileSync(new URL('../editor/src/menu/CapabilityAdd.svelte', import.meta.url), 'utf8');
+  assert.match(add, /const up = wanted > below && above > below;/);
+  assert.match(add, /if \(form === 'button'\) node\.style\.width = `\$\{r\.width\}px`;/, 'an area\'s list as wide as its area');
+  assert.match(add, /node\.style\.maxHeight = `min\(64vh, 30rem, \$\{room\}px\)`;\s*node\.style\.top = `\$\{up \? r\.top - 4 - node\.offsetHeight : r\.bottom \+ 4\}px`;/, 'never taller than its style allows, and above its opener by its real height');
+  assert.match(add, /window\.addEventListener\('scroll', away, true\);/, 'placed again as the menu under it scrolls');
+  // The element menu's own areas end with the way to add; the small panels, the search's copy and a section's menu never draw it.
+  const element = readFileSync(new URL('../editor/src/menu/ElementMenu.svelte', import.meta.url), 'utf8');
+  assert.equal((element.match(/counts=\{layout === 'narrow'\} adds>/g) ?? []).length, 3);
+  assert.doesNotMatch(readFileSync(new URL('../editor/src/section/SectionMenu.svelte', import.meta.url), 'utf8'), /<MenuArea[^>]*\badds\b/);
 });
 
 test('the menu\'s head offers what the block can take, and nothing when the block can take nothing more', () => {

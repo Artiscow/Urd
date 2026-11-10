@@ -1,11 +1,13 @@
 <script>
   /* One area of the element menu (Content, Style or Placement): its heading and the groups under it.
-     Wide, the areas pour through two columns with the heading where its area starts; narrow, the three areas stand under each other and the heading sticks to the top while the area scrolls, saying how many groups it holds (the groups report in through the menu-area context). */
+     Wide, the areas pour through two columns with the heading where its area starts; narrow, the three areas stand under each other and the heading sticks to the top while the area scrolls, saying how many groups it holds (the groups report in through the menu-area context).
+     A block's own menu (`adds`) ends each area with the way to add what the area can take, where Urd settings put it at the areas' feet (chips or an add button, menu/CapabilityAdd.svelte); an area holding only that stands, so what it can take is in reach. */
   import { setContext } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { ta } from '$engine/i18n.js';
+  import CapabilityAdd from './CapabilityAdd.svelte';
   /** `area` names the area ('content', 'style' or 'placement') for the keys that reach it and the split of the wide menu. */
-  let { area, title, counts = false, children } = $props();
+  let { area, title, counts = false, adds = false, children } = $props();
   /** The groups in the area, by their ids. */
   const groups = new SvelteMap();
   /** The name this area's folds share while they open one at a time: one of its own, so another copy of the menu standing at the same time (the Settings panel beside the floating menu) is never in the same group. */
@@ -27,4 +29,8 @@
     {/if}
   </header>
   {@render children()}
+  {#if adds}
+    <CapabilityAdd form="chips" {area} />
+    <CapabilityAdd form="button" {area} />
+  {/if}
 </section>

@@ -5,7 +5,7 @@
  * Pure, node-tested (tests/settings-model.test.mjs).
  */
 import { panelsPrefIn } from './panels-start.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS, CAP_LISTS } from '../menu/forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS, CAP_LISTS, CAP_ADD_FORMS, CAP_ADD_LISTS } from '../menu/forms.js';
 
 /** Where the settings open: a dialog with the groups as sections down its left, a panel in the panel column, or a sheet with the look choices at the left and the rest as rows at the right. */
 export const SETTINGS_PLACES = ['dialog', 'panel', 'sheet'];
@@ -78,7 +78,12 @@ export const SETTINGS_GROUPS = [
       { id: 'extra', part: true, labelKey: 'adminPart.extra', tipKey: 'tip.adminPart.extra', kind: 'seg',
         options: (c) => EXTRA_MODES.map((id) => [id, c.ta(`opt.extraSettings.${id}`)]),
         get: (c) => c.menu.extraPref, set: (c, v) => c.setExtraPref(v) },
-      { id: 'capList', part: true, labelKey: 'adminPart.capList', tipKey: 'tip.adminPart.capList', kind: 'seg',
+      // The way to add a capability (ADR-0031), and under it how the list it opens is drawn, for the ways that open one.
+      { id: 'capAdd', part: true, labelKey: 'adminPart.capAdd', tipKey: 'tip.adminPart.capAdd', kind: 'choice', look: 'capAdd',
+        options: (c) => CAP_ADD_FORMS.map((id) => [id, c.ta(`opt.capAdd.${id}`)]),
+        get: (c) => c.menu.capAddPref, set: (c, v) => c.setCapAddPref(v) },
+      { id: 'capList', part: true, parent: 'capAdd', labelKey: 'adminPart.capList', tipKey: 'tip.adminPart.capList', kind: 'seg',
+        when: (c) => CAP_ADD_LISTS.includes(c.menu.capAddPref),
         options: (c) => CAP_LISTS.map((id) => [id, c.ta(`opt.capList.${id}`)]),
         get: (c) => c.menu.capListPref, set: (c, v) => c.setCapListPref(v) },
       // The chips jump between areas that stand under each other, so a form with tabs offers them only while they are chosen.

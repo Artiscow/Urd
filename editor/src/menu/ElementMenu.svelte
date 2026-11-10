@@ -232,12 +232,13 @@
   }
 
   /** The areas with nothing in them for this block, read from what is drawn (an area's heading alone), so their tabs are left out; the view moves off an empty area, also when a key chose one.
-      Read again for another block, when a setting is pinned or taken out of Pinned, and when the tab changes. */
+      Read again for another block, when a setting is pinned or taken out of Pinned, when the tab changes, and when «Extra settings style» moves the way to add into the areas or out of them. */
   let emptyAreas = $state(new Set());
   function tabsIn(node) {
     const measuredFor = blockId;
     void areaAway;
     void menu.tab;
+    void menu.capAddPref;
     const frame = requestAnimationFrame(() => {
       if (measuredFor !== blockId) return;
       const empty = new Set(MENU_AREAS.filter((area) => {
@@ -392,9 +393,9 @@
 {:else}
   <!-- Wide: Pinned and the areas in two columns, cut once where they come out most even (`balanceAreas`); narrow: Pinned, then the areas under each other, each heading sticking to the top of its area and counting its groups.
        Pinned stands outside the scope that takes its settings out of the areas. -->
-  {#snippet areaContent()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="content" title={ta('props.tabContent')} counts={layout === 'narrow'}>{@render menuContent()}</MenuArea></PinScope>{/snippet}
-  {#snippet areaStyle()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="style" title={ta('props.tabStyle')} counts={layout === 'narrow'}>{@render menuStyle()}</MenuArea></PinScope>{/snippet}
-  {#snippet areaPlacement()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="placement" title={ta('props.tabPlacement')} counts={layout === 'narrow'}>{@render menuPlacement()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaContent()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="content" title={ta('props.tabContent')} counts={layout === 'narrow'} adds>{@render menuContent()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaStyle()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="style" title={ta('props.tabStyle')} counts={layout === 'narrow'} adds>{@render menuStyle()}</MenuArea></PinScope>{/snippet}
+  {#snippet areaPlacement()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="placement" title={ta('props.tabPlacement')} counts={layout === 'narrow'} adds>{@render menuPlacement()}</MenuArea></PinScope>{/snippet}
   <!-- The chips: one for each area, jumping to where it starts, the area in view marked -->
   {#snippet chips()}
     {#if shortcuts === 'chips' && layout !== 'tabs'}

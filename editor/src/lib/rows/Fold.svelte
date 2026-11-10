@@ -16,6 +16,7 @@
   import { menu } from '../../menu/state.svelte.js';
   import { ICONS } from '../icons.js';
   import { rowMotion } from '../motion.svelte.js';
+  import { followOpen } from '../follow-open.js';
   /* `group` (groupOf in menu/groups.js) carries the defaults as well as the reset, so the Setting rows inside can offer the way back from the block's own values (0.7.20.7). */
   let { id, title, value, tip = undefined, reset = null, group = null, rows = undefined, defaultOpen = false, surface = 'menu', ontoggle = undefined, children } = $props();
   const folded = $derived(rows === undefined || rows > 1);
@@ -89,7 +90,11 @@
     if (event.pointerType !== 'mouse') return;
     clearTimeout(hoverTimer);
     if (extraOpen) return;
-    hoverTimer = setTimeout(() => { extraOpen = true; openedByHover = true; }, 120);
+    hoverTimer = setTimeout(() => {
+      extraOpen = true;
+      openedByHover = true;
+      tick().then(() => followOpen(extraPop?.closest('.menu-group-foot')));
+    }, 120);
   }
   function hoverOut(event) {
     if (event.pointerType !== 'mouse') return;
@@ -112,7 +117,8 @@
     extraOpen = true;
     openedByHover = false;
     await tick();
-    extraPop?.querySelector('button')?.focus();
+    extraPop?.querySelector('button')?.focus({ preventScroll: true });
+    followOpen(extraPop?.closest('.menu-group-foot'));
   }
 
   /** The arrow keys move between the rows to add and take away, and Escape closes the list and gives the focus back to the chip. */
@@ -185,7 +191,8 @@
       ontoggle?.(e.currentTarget.open);
       if (folded) folds.set(surface, id, e.currentTarget.open);
     }}>
-    <summary title={tip}><span class="menu-group-title">{title}</span>{#if typeof value === 'function'}<span class="menu-group-value mark">{@render value()}</span>{:else}<span class="menu-group-value">{value}</span>{/if}</summary>
+    <!-- A fold the owner opens by its heading is followed into view as it opens (lib/follow-open.js); one opened by «All open» or a tool of the bar is not -->
+    <summary title={tip} onclick={(e) => { const fold = e.currentTarget.parentElement; if (!fold.open && !fold.closest('.emenu-search')) followOpen(fold); }}><span class="menu-group-title">{title}</span>{#if typeof value === 'function'}<span class="menu-group-value mark">{@render value()}</span>{:else}<span class="menu-group-value">{value}</span>{/if}</summary>
     <div class="group-items" {@attach extraRows}>
       {@render children()}
       {#if anyExtra || footReset}

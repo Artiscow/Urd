@@ -1338,6 +1338,65 @@
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
+  /* The ways to add at an area's foot (Urd settings «Extra settings style»): the area's capabilities named as dashed chips under a small heading, or one dashed line that opens their list, a little apart from the groups above; dim until the pointer or the keys reach them */
+  .cap-adds {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+  }
+
+  .cap-adds .mini-label {
+    margin: 0;
+  }
+
+  .cap-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .emenu-area .cap-add-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    gap: 0.3rem;
+    height: 1.75rem;
+    min-height: 0;
+    padding: 0 0.65rem 0 0.45rem;
+    font-size: 0.82rem;
+    color: color-mix(in srgb, currentColor 72%, transparent);
+    background: transparent;
+    border: 1px dashed rgb(255 255 255 / 22%);
+    border-radius: 999px;
+  }
+
+  .cap-add-line {
+    margin-top: 0.4rem;
+  }
+
+  .emenu-area .cap-add-btn:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    justify-content: flex-start;
+    width: 100%;
+    height: 2rem;
+    min-height: 0;
+    padding: 0 0.6rem;
+    font-size: 0.84rem;
+    color: color-mix(in srgb, currentColor 72%, transparent);
+    background: transparent;
+    border: 1px dashed rgb(255 255 255 / 22%);
+    border-radius: 7px;
+  }
+
+  .emenu-area :is(.cap-add-chip, .cap-add-btn):is(:hover, :focus-visible, [aria-expanded='true']):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    color: inherit;
+    background: transparent;
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .emenu-area :is(.cap-add-chip, .cap-add-btn) svg {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    color: var(--urd-color-accent, #7c5cff);
+  }
+
   .cap-tile {
     display: grid;
     place-items: center;
