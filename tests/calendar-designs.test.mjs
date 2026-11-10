@@ -640,3 +640,15 @@ test('calProgramHref and calNoticeHref: the shared safe-URL gate, and the notice
   assert.equal(calNoticeHref({}, pages), '');
 });
 
+
+test('a calendar whose feed cannot be fetched offers the sample events in the preview, for the session, and says when the route itself is missing', () => {
+  const src = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
+  assert.match(src, /if \(!body && res\.status === 404\) throw new Error\(ta\('calendar\.noRoute'\)\);/, 'a 404 without the route\'s JSON is the route missing, as on a local server');
+  const failed = src.slice(src.indexOf('const failed = (error) => {'), src.indexOf('\n  };\n', src.indexOf('const failed = (error) => {')));
+  assert.match(failed, /const shown = EXAMPLES_SHOWN\.has\(key\);/);
+  assert.match(failed, /draw\(shown \? demoOccurrences\(\) : \[\], note\);/, 'the sample events or the empty calendar, with the note and its button');
+  assert.match(src, /if \(ctx\.preview\) failed\(errors\[0\]\);\s*else draw\(\[\], null\);/, 'visitors get the quiet empty state');
+  assert.match(src, /if \(ctx\.preview\) failed\(error\?\.message \?\? String\(error\)\);\s*else draw\(\[\], null\);/, 'a feed that cannot be read, too');
+  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  assert.match(css, /\.urd-cal-note-btn \{\s*pointer-events: auto;/, 'the button takes the pointer the note leaves');
+});

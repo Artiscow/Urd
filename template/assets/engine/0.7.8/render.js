@@ -112,6 +112,18 @@ const pushHosts = new Set();
 let pushSuspended = 0;
 
 /**
+ * A block's width across the canvas as drawn, in percent of the canvas: a width floor draws a picture wider than its frame on a narrow canvas (frameToCss), and the push reads the width a visitor sees, never less than the frame's.
+ * @param {HTMLElement} el The block element
+ * @param {HTMLElement} canvas The section's canvas
+ * @param {{w: number}} frame The block's desktop frame
+ * @returns {number}
+ */
+function drawnWidth(el, canvas, frame) {
+  const across = canvas.clientWidth;
+  return across && el.offsetWidth ? Math.max(frame.w, (el.offsetWidth / across) * 100) : frame.w;
+}
+
+/**
  * Measures every block against its frame and moves the blocks below a block
  * whose content grew (pure rules in push-model.js). The shifts live only on
  * the elements (style.top and data-urd-shift), never in the frames; the
@@ -164,7 +176,7 @@ function applyPush(host) {
     // is kept the same way, below.
     if (needed !== frame.h) el.dataset.urdDrawn = String(needed);
     else delete el.dataset.urdDrawn;
-    items.push({ id: el.dataset.blockId, x: frame.x, y: frame.y, h: frame.h, grow, el });
+    items.push({ id: el.dataset.blockId, x: frame.x, w: drawnWidth(el, canvas, frame), y: frame.y, h: frame.h, grow, el });
   }
   // The growth is kept for the drag's live pass (pushPreview).
   host._urdPushGrow = new Map(items.map((it) => [it.id, it.grow]));
@@ -174,7 +186,7 @@ function applyPush(host) {
 /**
  * Writes the shifts and the section height for a set of measured items.
  * @param {HTMLElement} host The section element
- * @param {Array<{id: string, x: number, y: number, h: number, grow: number, el: HTMLElement}>} items
+ * @param {Array<{id: string, x: number, w: number, y: number, h: number, grow: number, el: HTMLElement}>} items
  * @param {Set<string>} [skipBox] Ids left out of the section height (blocks under the pointer)
  */
 function writePush(host, items, skipBox) {
@@ -244,7 +256,7 @@ export function pushPreview(host, frames, grown, skip = new Set(frames.keys())) 
     const id = el.dataset.blockId;
     const frame = frames.get(id) ?? section.blocks.find((b) => b.id === id)?.frames?.desktop;
     if (!frame) continue;
-    items.push({ id, x: frame.x, y: frame.y, h: frame.h, grow: grown?.get(id) ?? grow.get(id) ?? 0, el });
+    items.push({ id, x: frame.x, w: drawnWidth(el, canvas, frame), y: frame.y, h: frame.h, grow: grown?.get(id) ?? grow.get(id) ?? 0, el });
   }
   writePush(host, items, skip);
 }

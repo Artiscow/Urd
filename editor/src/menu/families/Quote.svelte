@@ -9,6 +9,7 @@
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
+  import { ICONS } from '../../lib/icons.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps, compressOrTrim, imageErrorText, openImageEditor, setStatus, themeSwatches } = ed;
@@ -60,7 +61,7 @@
       </label>
       {#if selectedBlock.props.image}
         <button class="ghost" title={ta('tip.quote.editPortrait')} onclick={openImageEditor}>{ta('ui.quotePortraitEdit')}</button>
-        <button class="ghost" onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.image = ''; delete b.props.imageStyle; })}>{ta('ui.quotePortraitRemove')}</button>
+        <button class="ghost action danger" onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.image = ''; delete b.props.imageStyle; })}>{@html ICONS.bin} {ta('ui.quotePortraitRemove')}</button>
       {/if}
     {/if}
   {/snippet}

@@ -601,6 +601,7 @@
           "required": ["type", "value"],
           "additionalProperties": false,
           "properties": {
+            "show": { "type": "boolean", "default": true, "description": "false takes the logo out of the menu bar and the full-screen sheet; the bar's other parts keep their places (additive from 0.7.0.83)" },
             "type": { "enum": ["text", "image", "both"], "description": "both = image + text (additive from v0.5)" },
             "value": { "type": "string", "description": "Text (type text/both) or image URL (type image)" },
             "image": { "type": "string", "description": "Image URL when type is both" },

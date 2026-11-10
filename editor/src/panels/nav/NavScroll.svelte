@@ -113,7 +113,7 @@
         <SliderRow label={ta('lbl.navShrinkMs')} title={ta('tip.nav.shrinkMs')} value={siteDraft.nav.style?.shrinkMs ?? 220} min={0} max={1200} step={20}
           shown={`${siteDraft.nav.style?.shrinkMs ?? 220} ms`} oninput={(v) => setNavShrinkMs(v)} />
       </Setting>
-      {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
+      {#if siteDraft.nav.logo?.show !== false && (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
         <Setting key="shrinkLogo">
           <SwitchRow label={ta('lbl.navShrinkLogo')} title={ta('tip.nav.shrinkLogo')} checked={siteDraft.nav.style?.shrinkLogo === true}
             onchange={(on) => setNavStyle('shrinkLogo', on ? true : undefined)} />

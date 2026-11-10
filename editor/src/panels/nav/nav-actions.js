@@ -76,12 +76,14 @@ export function navFolds(ed) {
   /** How many items stand at the top of the menu. */
   const itemsValue = () => `${(nav()?.items ?? []).length}`;
 
+  /** The logo's settings while the bar shows it; its switch has no reset, as no switch has. */
   function logoGroup() {
     const type = nav()?.logo?.type ?? 'text';
+    const shown = nav()?.logo?.show !== false;
     return siteGroup(() => nav()?.logo, write(), 'nav-logo', pick([
-      ['font', undefined, type !== 'image'], ['textSize', undefined, type !== 'image'], ['bold', true, type !== 'image'], ['italic', false, type !== 'image'],
-      ['size', 32, type !== 'text'], ['mobileSize', undefined, type !== 'text'], ['radius', 0, type !== 'text'],
-      ['order', 'image-first', type === 'both'],
+      ['font', undefined, shown && type !== 'image'], ['textSize', undefined, shown && type !== 'image'], ['bold', true, shown && type !== 'image'], ['italic', false, shown && type !== 'image'],
+      ['size', 32, shown && type !== 'text'], ['mobileSize', undefined, shown && type !== 'text'], ['radius', 0, shown && type !== 'text'],
+      ['order', 'image-first', shown && type === 'both'],
     ]));
   }
   /** The logo's words, or that it is a picture. */
@@ -129,7 +131,7 @@ export function navFolds(ed) {
         ['overlay', undefined, bar], ['inset', undefined, bar],
       ])),
       siteGroup(style, write(), 'nav-mobile', pick([
-        ['mobileMenu', 'dropdown'], ['sheetMotion', 'top', sheet], ['sheetLogo', undefined, sheet],
+        ['mobileMenu', 'dropdown'], ['sheetMotion', 'top', sheet], ['sheetLogo', undefined, sheet && nav()?.logo?.show !== false],
         ['sheetTheme', undefined, sheet && Boolean(ed.siteDraft.theme?.alt?.tokens) && style()?.tools?.theme !== false],
         ['sheetCart', undefined, sheet && Boolean(nav()?.cart?.show)], ['sheetAnnounce', undefined, sheet && Boolean(nav()?.announcement?.show)],
         ['sheetToolLabels', undefined, sheet && Boolean(style()?.sheetTheme || style()?.sheetCart)],
@@ -151,7 +153,7 @@ export function navFolds(ed) {
         ['sticky', true, scrolls], ['scroll', 'none', scrolls && nav()?.sticky !== false], ['hideOn', undefined], ['hideMode', 'hidden', (nav()?.hideOn ?? []).length > 0],
       ])),
       siteGroup(style, write(), 'nav-scroll', pick([
-        ['shrinkTo', 0.5, shrink], ['shrinkAt', 80, shrink], ['shrinkMs', 220, shrink], ['shrinkLogo', undefined, shrink && (nav()?.logo?.type ?? 'text') !== 'text'],
+        ['shrinkTo', 0.5, shrink], ['shrinkAt', 80, shrink], ['shrinkMs', 220, shrink], ['shrinkLogo', undefined, shrink && nav()?.logo?.show !== false && (nav()?.logo?.type ?? 'text') !== 'text'],
         ['atTop', undefined, scrolls],
       ])),
     );

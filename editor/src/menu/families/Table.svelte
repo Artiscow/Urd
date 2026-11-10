@@ -10,6 +10,7 @@
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
+  import { ICONS } from '../../lib/icons.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { mutateBlock, setBlockProp, setBlockProps } = ed;
@@ -48,11 +49,11 @@
     <!-- The cells are typed directly on the canvas; the menu owns the grid's shape. -->
     <span class="toolbar-row">
       <button class="ghost" onclick={() => tableResize(1, 0)}>{ta('ui.addRow')}</button>
-      <button class="ghost" onclick={() => tableResize(-1, 0)}>{ta('ui.removeRow')}</button>
+      <button class="ghost action danger" onclick={() => tableResize(-1, 0)}>{@html ICONS.bin} {ta('ui.removeRow')}</button>
     </span>
     <span class="toolbar-row">
       <button class="ghost" onclick={() => tableResize(0, 1)}>{ta('ui.addColumn')}</button>
-      <button class="ghost" onclick={() => tableResize(0, -1)}>{ta('ui.removeColumn')}</button>
+      <button class="ghost action danger" onclick={() => tableResize(0, -1)}>{@html ICONS.bin} {ta('ui.removeColumn')}</button>
     </span>
     <Setting key="header">
       <SwitchRow label={ta('lbl.tableHeader')} title={ta('tip.table.header')} checked={selectedBlock.props.header !== false} onchange={(on) => setBlockProp('header', on)} />

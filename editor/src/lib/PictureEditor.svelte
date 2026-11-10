@@ -479,7 +479,7 @@
 
       <footer class="pe-foot">
         {#if pic.src && !tools.handed && tools.removable !== false && !(tools.bake && target.fresh)}
-          <button type="button" class="ghost pe-remove" onclick={() => ed.removePicture()}>{ta('ui.remove')}</button>
+          <button type="button" class="ghost pe-remove action danger" onclick={() => ed.removePicture()}>{@html ICONS.bin} {ta('ui.remove')}</button>
         {/if}
         {#if target.kind === 'gallery' && ed.pictureGalleryCount > 1}
           <button type="button" class="ghost" title={ta('tip.pic.applyAll')} onclick={() => ed.applyPictureToAll()}>{ta('pic.applyAll')}</button>

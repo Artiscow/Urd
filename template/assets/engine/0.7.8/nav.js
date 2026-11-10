@@ -257,8 +257,8 @@ export function renderNav(site, host, pageId) {
   host.classList.toggle('urd-nav-announce-scroll', announceScrolls);
 
   const nav = document.createElement('nav');
-  // layout (additive since v0.5): where the menu items sit; the logo is
-  // always first and doubles as the "Home" button.
+  // layout (additive since v0.5): where the menu items sit; the logo, where
+  // it is shown, is first and doubles as the "Home" button.
   nav.className = navClasses(effSite);
   // The burger follows the ACTUAL width via its own class on the nav: in
   // preview the editor's viewport choice owns body.urd-mobile (and with it
@@ -475,7 +475,10 @@ export function renderNav(site, host, pageId) {
   } else {
     logo.appendChild(logoText());
   }
-  nav.appendChild(logo);
+  // The logo stands in the bar unless the owner takes it out (nav.logo.show false); the bar's other parts keep their places without it.
+  const showLogo = logoDef.show !== false;
+  if (showLogo) nav.appendChild(logo);
+  nav.classList.toggle('urd-nav-no-logo', !showLogo);
 
   // The tool cluster at the far right: the launcher, the cart and the
   // light/dark toggle in the owner's own order (nav.style.tools.order), then
@@ -611,7 +614,7 @@ export function renderNav(site, host, pageId) {
   list.id = 'urd-nav-menu';
 
   const sheet = mobileMenuMode(site.nav.style) === 'sheet'
-    ? buildSheet(nav, { list, tools, burger, logo: site.nav.style?.sheetLogo === true ? logo : null, announce: () => (site.nav.style?.sheetAnnounce === true ? announceEl : null), withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, labels: site.nav.style?.sheetToolLabels === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}) }, signal)
+    ? buildSheet(nav, { list, tools, burger, logo: showLogo && site.nav.style?.sheetLogo === true ? logo : null, announce: () => (site.nav.style?.sheetAnnounce === true ? announceEl : null), withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, labels: site.nav.style?.sheetToolLabels === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}) }, signal)
     : null;
   // The announcement comes back to the host on close, so the clearance the
   // guard in setNavH held is measured again. Registered after buildSheet's

@@ -1098,3 +1098,19 @@ test('navItems: an item to a hidden page whose submenu leads only to hidden page
   assert.deepEqual(items.map((i) => i.label), ['Meny']);
   assert.deepEqual(items[0].children.map((c) => [c.label, c.children.length]), [['Under', 0]]);
 });
+
+test('the logo can be taken out of the bar, and the bar keeps its other parts in their places', async () => {
+  const { readFileSync } = await import('node:fs');
+  const schema = JSON.parse(readFileSync(new URL('../schema/site.schema.json', import.meta.url), 'utf-8'));
+  assert.deepEqual(schema.properties.nav.properties.logo.properties.show, { type: 'boolean', default: true, description: schema.properties.nav.properties.logo.properties.show.description });
+  const ENGINE = JSON.parse(readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8')).engine;
+  const nav = readFileSync(new URL(`../template/assets/engine/${ENGINE}/nav.js`, import.meta.url), 'utf8');
+  assert.match(nav, /const showLogo = logoDef\.show !== false;\s*if \(showLogo\) nav\.appendChild\(logo\);\s*nav\.classList\.toggle\('urd-nav-no-logo', !showLogo\);/);
+  assert.match(nav, /logo: showLogo && site\.nav\.style\?\.sheetLogo === true \? logo : null/, 'nor does the sheet take it in');
+  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  assert.match(css, /body\.urd-mobile \.urd-nav-no-logo:not\(\.urd-nav-tools-start\) \.urd-nav-tools,\s*\.urd-nav-mobile\.urd-nav-no-logo:not\(\.urd-nav-tools-start\) \.urd-nav-tools \{\s*margin-left: auto;/, 'the burger keeps its edge on the phone');
+  // The panel's switch leaves the default out of the file, and the fold holds the switch alone while it is off.
+  const panel = readFileSync(new URL('../editor/src/panels/nav/NavLogo.svelte', import.meta.url), 'utf8');
+  assert.match(panel, /if \(on\) delete siteDraft\.nav\.logo\.show;\s*else siteDraft\.nav\.logo\.show = false;/);
+  assert.match(readFileSync(new URL('../editor/src/panels/NavPanel.svelte', import.meta.url), 'utf8'), /<Fold id="logo"[^>]*rows=\{siteDraft\.nav\?\.logo\?\.show === false \? 1 : undefined\}>/);
+});

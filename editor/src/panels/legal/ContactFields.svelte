@@ -306,7 +306,7 @@
     {#if siteDraft.site.contact?.geo}
       <div class="pin-line">
         <span class="mini-label">{ta('site.onMap', { lat: siteDraft.site.contact.geo.lat, lon: siteDraft.site.contact.geo.lon })}</span>
-        <IconButton icon={ICONS.cross} label={ta('tip.clearGeo')} onclick={clearContactGeo} />
+        <IconButton icon={ICONS.bin} danger label={ta('tip.clearGeo')} onclick={clearContactGeo} />
       </div>
     {:else}
       <button class="ghost action" title={ta('tip.site.findOnMap')} disabled={geoBusy} onclick={findContactOnMap}>{ta('ui.findOnMap')}</button>

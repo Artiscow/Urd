@@ -94,9 +94,9 @@
       {/if}
       {#if takeable}
         <!-- Greyed, not disabled, so its words still tell why it cannot take the name away -->
-        <button type="button" class="icon-btn sm quiet cap-remove" aria-disabled={removable ? undefined : 'true'}
+        <button type="button" class="icon-btn sm ghost danger cap-remove" aria-disabled={removable ? undefined : 'true'}
           title={removable ? ta('cap.remove', { name: title }) : ta('cap.linked')} aria-label={removable ? ta('cap.remove', { name: title }) : ta('cap.linked')}
-          onclick={takeAway}>{@html ICONS.cross}</button>
+          onclick={takeAway}>{@html ICONS.bin}</button>
       {/if}
     </header>
     {#if children && !cap.single}<div class="group-items cap-body">{@render children()}</div>{/if}

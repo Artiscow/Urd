@@ -27,7 +27,8 @@
   <Fold id="items" surface={N} title={ta('group.menuItems')} tip={ta('hint.nav.submenu')} value={fold.itemsValue()} group={fold.itemsGroup()}>
     <NavItems />
   </Fold>
-  <Fold id="logo" surface={N} title={ta('group.logo')} tip={ta('hint.nav.logoHome')} value={fold.logoValue()} group={fold.logoGroup()}>
+  <!-- The logo: its switch alone while the bar shows none -->
+  <Fold id="logo" surface={N} title={ta('group.logo')} tip={ta('hint.nav.logoHome')} value={fold.logoValue()} group={fold.logoGroup()} rows={siteDraft.nav?.logo?.show === false ? 1 : undefined}>
     <NavLogo />
   </Fold>
   <Fold id="layout" surface={N} title={ta('group.navLayoutSize')} value={fold.layoutValue()} group={fold.layoutGroup()}>

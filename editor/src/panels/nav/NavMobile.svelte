@@ -193,10 +193,12 @@
     oninput={(e) => setNavBurger('label', e.target.value.trim() ? e.target.value : undefined)} />
 {/if}
 {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
-  <Setting key="sheetLogo">
-    <SwitchRow label={ta('lbl.sheetLogo')} title={ta('tip.nav.sheetLogo')} checked={siteDraft.nav.style?.sheetLogo === true}
-      onchange={(on) => setNavStyle('sheetLogo', on ? true : undefined)} />
-  </Setting>
+  {#if siteDraft.nav.logo?.show !== false}
+    <Setting key="sheetLogo">
+      <SwitchRow label={ta('lbl.sheetLogo')} title={ta('tip.nav.sheetLogo')} checked={siteDraft.nav.style?.sheetLogo === true}
+        onchange={(on) => setNavStyle('sheetLogo', on ? true : undefined)} />
+    </Setting>
+  {/if}
   {#if siteDraft.theme?.alt?.tokens && siteDraft.nav.style?.tools?.theme !== false}
     <Setting key="sheetTheme">
       <SwitchRow label={ta('lbl.sheetTheme')} title={ta('tip.nav.sheetTheme')} checked={siteDraft.nav.style?.sheetTheme === true}

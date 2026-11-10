@@ -15,6 +15,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { engineImport } from './_engine.mjs';
 
 const ROOT = new URL('../editor/src/', import.meta.url).pathname;
 const { parse } = await import(new URL('../editor/node_modules/svelte/src/compiler/index.js', import.meta.url).href);
@@ -141,14 +142,16 @@ test('each widget allowed its own inner controls still has them', () => {
   }
 });
 
-/** The removals that clear a field or take a chip away, which stay a cross: a deletion is anything else whose words name a deletion or a removal. */
-const CLEARS = new Set(['tip.footer.removeLogo', 'tip.site.removeIcon', 'tip.seo.removeOgImage', 'ui.ownIconRemove', 'tip.clearGeo', 'tip.entry.removeSize', 'cp.removeSaved', 'cap.remove']);
+/** Words that name a removal on a button that removes nothing itself: the fold foot's chip that opens the list of added settings, the hint a greyed submenu row gives, and «Discard drafts», which goes back to the published version. */
+const NOT_A_DELETION = new Set(['menu.removeSetting', 'tip.collections.deleteSelectedNone', 'tip.discard']);
+/** The admin's English words, so a button is read by what it says, a text that begins with Remove or Delete, as well as by its key's name. */
+const EN_WORDS = (await engineImport('locales/admin/en-GB.js')).default.strings;
 
 test('every deletion draws a bin on the dark red, in the admin and on the canvas, never the cross that closes things', () => {
-  // In the admin: a button whose words name a deletion draws ICONS.bin, and an icon button is marked as a deletion (`danger`) too; a button marked so draws the bin; the action rows' deletions alike.
+  // In the admin: every button whose words name a removal or a deletion, an icon alone, words with it or a menu's row, draws ICONS.bin and is marked as a deletion (`danger`, or a class that names it); the action rows' deletions alike.
   const wrong = [];
   const keysIn = (text) => [...text.matchAll(/ta\('([\w.-]+)'/g)].map((m) => m[1]);
-  const names = (key) => /delete|remove/i.test(key) && !CLEARS.has(key);
+  const names = (key) => !NOT_A_DELETION.has(key) && (/delete|remove/i.test(key) || /^(remove|delete)\b/i.test(EN_WORDS[key] ?? ''));
   for (const file of svelteFiles(ROOT)) {
     const source = readFileSync(file, 'utf8');
     const where = file.slice(ROOT.length);
@@ -164,9 +167,13 @@ test('every deletion draws a bin on the dark red, in the admin and on the canvas
         if ((danger || deletes) && !(icon === 'ICONS.bin' && danger)) wrong.push(`${where}: ${icon || 'no icon'}${danger ? '' : ', not marked as a deletion'}`);
       }
       if (node.type === 'RegularElement' && node.name === 'button') {
-        const words = keysIn(source.slice(node.start, node.fragment?.nodes?.[0]?.start ?? node.end));
-        const drawn = (node.fragment?.nodes ?? []).filter((n) => n.type === 'HtmlTag').map((n) => source.slice(n.expression.start, n.expression.end));
-        if (words.some(names) && drawn.length && !drawn.includes('ICONS.bin')) wrong.push(`${where}: a deletion drawn as ${drawn.join(', ')}`);
+        const whole = source.slice(node.start, node.end);
+        if (keysIn(whole).some(names)) {
+          const drawn = [...whole.matchAll(/\{@html ([^}]+)\}/g)].map((m) => m[1].trim());
+          const cls = node.attributes.find((a) => a.name === 'class');
+          const marked = /danger/.test(cls ? source.slice(cls.start, cls.end) : '');
+          if (!drawn.includes('ICONS.bin') || !marked) wrong.push(`${where}: a deletion drawn as ${drawn.join(', ') || 'words alone'}${marked ? '' : ', not marked as a deletion'}`);
+        }
       }
       for (const key of Object.keys(node)) if (key !== 'parent' && node[key] && typeof node[key] === 'object') walk(node[key]);
     };
@@ -185,4 +192,25 @@ test('every deletion draws a bin on the dark red, in the admin and on the canvas
   assert.match(edit, /armedButton\(BIN_SVG, ta\('canvas\.deleteSection'\)/, 'the section\'s bar');
   assert.match(edit, /btn\(svg\(BIN_PATHS\), ta\('canvas\.deleteSelected'\)/, 'the selection\'s bar');
   assert.match(edit, /del\.className = 'urd-template-delete';\s*del\.innerHTML = BIN_SVG;/, 'a section template');
+  assert.match(edit, /if \(opts\.danger\) b\.insertAdjacentHTML\('beforeend', BIN_SVG\);/, 'the right-click menu\'s deletions');
+  assert.match(readFileSync(new URL(`../template/assets/engine/${ENGINE}/color-picker.js`, import.meta.url), 'utf8'), /del\.innerHTML = BIN_SVG;/, 'a saved colour on the canvas');
+  const base = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  assert.match(base, /\.urd-preview \.urd-ctx-danger \{\s*color: #ffd4d4;\s*background: #5e1c22;/);
+  assert.match(base, /\.urd-cp-del \{[^}]*background: #5e1c22;/);
+});
+
+test('a menu\'s rows answer the pointer at once, a submenu\'s row included, and a picture\'s thumbnail stands as tall as its picker', () => {
+  const css = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8');
+  assert.match(css, /:root :is\(\.tool-pop, \.tab-menu-list, \.cm-card, \.cm-sub, \.cap-pop\) :is\(button, a\):not\(:disabled\) \{\s*transition: none;/, 'no fade on a menu\'s rows');
+  // The row whose submenu still stands goes dark as soon as the pointer is on another row of its list.
+  assert.match(css, /\.tab-menu \.tab-menu-list:has\(button:hover\) button\.sub-open:not\(:hover\)[^{]*\{ background: transparent; \}/);
+  const menu = readFileSync(new URL('../editor/src/panels/collections/CollectionMenu.svelte', import.meta.url), 'utf8');
+  assert.match(menu, /\.cm-card:has\(> button:hover:not\(:disabled\)\) > \.cm-sub-on:not\(:hover\),\s*\.cm-sub:has\(> button:hover:not\(:disabled\)\) > \.cm-sub-on:not\(:hover\) \{\s*background: transparent;/);
+  // The menu's logo and the footer's brand: the thumbnail square at its column's height.
+  for (const file of ['panels/nav/NavLogo.svelte', 'panels/FooterPanel.svelte']) {
+    assert.match(readFileSync(join(ROOT, file), 'utf8'), /<span class="logo-thumb" \{@attach squareBeside\}>/, file);
+  }
+  const square = readFileSync(join(ROOT, 'lib/square-beside.js'), 'utf8');
+  assert.match(square, /const column = node\.nextElementSibling;/);
+  assert.match(square, /new ResizeObserver\(fit\);\s*watch\.observe\(column\);/);
 });

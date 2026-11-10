@@ -131,7 +131,7 @@
             <span class="page-template-thumb">{@html pageThumb(templateStores[id].data.page)}</span>
             <span class="page-template-name">{templateStores[id].data.mal.name}</span>
           </button>
-          <button class="page-template-del" title={ta('canvas.deleteTemplate')}
+          <button class="page-template-del danger" title={ta('canvas.deleteTemplate')}
             onclick={() => handleDeleteTemplate({ id })}>{@html ICONS.bin}</button>
         </div>
       {/each}

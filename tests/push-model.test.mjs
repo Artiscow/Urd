@@ -1,12 +1,13 @@
 /**
  * Content push on the desktop canvas (ADR-0024): the Wix Editor gap rules
- * applied to every block below a block that grew.
+ * applied to the blocks below a block that grew and under its width.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { engineImport } from './_engine.mjs';
+import { readFileSync } from 'node:fs';
+import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { PHONE_DESIGNS, NARROW_PX, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -49,6 +50,28 @@ test('two blocks side by side below both move, and a block above never moves', (
   assert.equal(out.shifts.has('top'), false);
   assert.equal(out.shifts.get('l'), 25);
   assert.equal(out.shifts.get('r'), 25);
+});
+
+test('a block beside the grown one, in another column, keeps its place, and a pushed block pushes the blocks under its own width', () => {
+  // A heading and a text on the left, a calendar on the right that grows: the text keeps its place.
+  const out = pushLayout([at('heading', 0, 60, { x: 0, w: 45 }), at('cal', 0, 300, { x: 50, w: 45, grow: 120 }), at('text', 200, 80, { x: 0, w: 45 }), at('under', 320, 40, { x: 50, w: 45 })]);
+  assert.equal(out.shifts.has('text'), false, 'beside the calendar');
+  assert.equal(out.shifts.get('under'), 120, 'under the calendar');
+  // A block under both columns moves with the calendar; the cascade reaches a block under it on the left.
+  const wide = pushLayout([at('cal', 0, 300, { x: 50, w: 45, grow: 60 }), at('band', 320, 40, { x: 0, w: 100 }), at('left', 380, 40, { x: 0, w: 30 })]);
+  assert.equal(wide.shifts.get('band'), 60);
+  assert.equal(wide.shifts.get('left'), 60, 'pushed by the band, not by the calendar');
+  // Frames that only touch, or share less than PUSH_ACROSS_MIN, stand side by side.
+  assert.equal(pushLayout([at('a', 0, 100, { x: 0, w: 50, grow: 30 }), at('b', 120, 40, { x: 50, w: 50 })]).shifts.has('b'), false);
+  assert.equal(pushLayout([at('a', 0, 100, { x: 0, w: 50, grow: 30 }), at('b', 120, 40, { x: 50 - PUSH_ACROSS_MIN / 2, w: 50 })]).shifts.has('b'), false);
+  assert.equal(pushLayout([at('a', 0, 100, { x: 0, w: 50, grow: 30 }), at('b', 120, 40, { x: 49, w: 50 })]).shifts.get('b'), 30);
+  // The page's pass reads the width as drawn, which a picture's width floor can make wider than its frame on a narrow canvas.
+  const render = readFileSync(new URL('render.js', ENGINE_DIR), 'utf8');
+  assert.match(render, /return across && el\.offsetWidth \? Math\.max\(frame\.w, \(el\.offsetWidth \/ across\) \* 100\) : frame\.w;/);
+  assert.equal((render.match(/w: drawnWidth\(el, canvas, frame\)/g) ?? []).length, 2, 'the pass and the drag\'s live pass');
+  // The fit and the typing read the frames' widths the same way.
+  const blocks = [{ id: 'cal', frames: { desktop: { x: 50, y: 0, w: 45, h: 300 } } }, { id: 'text', frames: { desktop: { x: 0, y: 200, w: 45, h: 80 } } }];
+  assert.equal(fitMoves(blocks, 'cal', 420).size, 0);
 });
 
 test('two growing blocks give the larger shift, never the sum', () => {

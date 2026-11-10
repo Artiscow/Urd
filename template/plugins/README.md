@@ -70,6 +70,8 @@ if (ctx.preview) {
 }
 ```
 
+Give it the block's own element, the first one `render` gets: the chip then stands as the last tool on the block's toolbar, clear of the other tools.
+
 Plugin blocks and section templates show up by themselves in «Plugins» sections of their own in «+ New block», «+ New section» and the Blocks panel. A block definition can also have `variants: [{ label, props }, …]`: it then becomes a fold-out menu in the block menus (the core's calendar block uses it for its views).
 
 Blocks whose content decides their height (like the calendar, the form and the map in the core) set `autoGrow: true` on the block definition: the block then gets its natural height in the phone view's automatic stacking instead of the fixed desktop height, so taller content on a phone is never clipped. `autoGrow` can also be a function of the block's props, for a block that grows in some views and fills its frame in others (the core's gallery grows as a grid and keeps the frame's height as a strip). On desktop the engine's push pass owns the box's height (ADR-0024): a plugin block does not need to measure itself, and must never write a measured height into its frame.

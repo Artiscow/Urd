@@ -10799,6 +10799,23 @@ body.urd-mobile .urd-cal-note {
   position: static;
 }
 
+/* A note with an act (a feed that cannot be fetched offers the sample events): the act takes the pointer, the note stays clear */
+.urd-cal-note-act {
+  opacity: 0.8;
+}
+
+.urd-cal-note-btn {
+  pointer-events: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .urd-preview .urd-audio-empty {
   display: grid;
   place-items: center;
@@ -12331,28 +12348,34 @@ body.urd-chrome-off .urd-text-toolbar {
   display: inline-flex;
 }
 
+/* A saved colour's deletion: the bin on the dark red every deletion draws, small on the swatch's corner */
 .urd-cp-del {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 13px;
-  height: 13px;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
   display: none;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 0;
+  border: 1px solid #7d2a31;
   border-radius: 50%;
-  background: #e05252;
-  color: #fff;
+  background: #5e1c22;
+  color: #ffd4d4;
   font-size: 10px;
   line-height: 1;
   cursor: pointer;
 }
 
+.urd-cp-del:is(:hover, :focus-visible) {
+  background: #7a222a;
+  border-color: #9a3a42;
+}
+
 .urd-cp-del svg {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
 }
 
 .urd-cp-saved:hover .urd-cp-del {
@@ -14239,6 +14262,12 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-tools-none {
 }
 
 .urd-nav-left .urd-nav-tools {
+  margin-left: auto;
+}
+
+/* A bar without its logo (nav.logo.show false): on the phone, where the list has left the row, the burger keeps its outer edge */
+body.urd-mobile .urd-nav-no-logo:not(.urd-nav-tools-start) .urd-nav-tools,
+.urd-nav-mobile.urd-nav-no-logo:not(.urd-nav-tools-start) .urd-nav-tools {
   margin-left: auto;
 }
 
@@ -18957,8 +18986,20 @@ body.urd-mobile .urd-section-resize-top {
   font-weight: 700;
 }
 
+/* A deletion: the bin and its words on the dark red every deletion stands on, lighter under the pointer, brightest while a second press waits */
 .urd-preview .urd-ctx-danger {
-  color: #ff8a80;
+  color: #ffd4d4;
+  background: #5e1c22;
+}
+
+.urd-preview .urd-ctx-danger:hover,
+.urd-preview .urd-ctx-danger:focus-visible {
+  color: #ffd4d4;
+  background: #7a222a;
+}
+
+.urd-preview .urd-ctx-danger svg {
+  flex: none;
 }
 
 .urd-preview .urd-ctx-item[aria-disabled="true"] {
@@ -18966,8 +19007,9 @@ body.urd-mobile .urd-section-resize-top {
   cursor: default;
 }
 
-.urd-preview .urd-ctx-armed {
-  color: #ff8a80;
+.urd-preview .urd-ctx-danger.urd-ctx-armed {
+  color: #fff;
+  background: #c62828;
   font-weight: 700;
 }
 

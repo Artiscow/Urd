@@ -144,8 +144,8 @@
     {/if}
     <div class="entry-chips">
       {#each entry.sizes ?? [] as size, si (si)}
-        <span class="entry-chip">{size}<button type="button" class="entry-chip-x" title={ta('tip.entry.removeSize')} aria-label={ta('tip.entry.removeSize')}
-          onclick={() => act.removeEntrySize(id, entry.id, si)}>{@html ICONS.cross}</button></span>
+        <span class="entry-chip">{size}<button type="button" class="entry-chip-x danger" title={ta('tip.entry.removeSize')} aria-label={ta('tip.entry.removeSize')}
+          onclick={() => act.removeEntrySize(id, entry.id, si)}>{@html ICONS.bin}</button></span>
       {/each}
       <input class="entry-chip-add" placeholder={ta('ph.addSize')} title={ta('tip.entry.sizes')} data-field="sizes"
         onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); act.addEntrySizes(id, entry.id, e.currentTarget.value); e.currentTarget.value = ''; } }}

@@ -19,6 +19,7 @@
   import { PDF_MAX_BYTES, PDF_WARN_BYTES } from '$engine/imageTools.js';
   import { LINK_KINDS, readLink, writeLink, linkReady, webHref, hasLink } from './link-edit.js';
   import { siteFiles, heldPdf, heldName, fileLabel } from './file-links.js';
+  import { ICONS } from './icons.js';
   const ed = getContext('urd-editor');
   /** request: the value to start from, `shape`, `pagesOnly`, `here`, `anchor` (the field, for the editor beside it) and `apply` (state/link.svelte.js); onclose: leaves. */
   let { request, onclose } = $props();
@@ -362,7 +363,7 @@
       <div class="ld-actions">
         {@render newTab()}
         {#if removable}
-          <button type="button" class="ghost ld-small" onclick={remove}>{ta('link.remove')}</button>
+          <button type="button" class="ghost ld-small action danger" onclick={remove}>{@html ICONS.bin} {ta('link.remove')}</button>
         {/if}
         <span class="ld-gap"></span>
         <button type="button" class="ghost ld-small" onclick={leave}>{ta('confirm.cancel')}</button>
@@ -396,7 +397,7 @@
         <span class="ld-gap"></span>
         {@render newTab()}
         {#if removable}
-          <button type="button" class="ghost ld-small" onclick={remove}>{ta('link.remove')}</button>
+          <button type="button" class="ghost ld-small action danger" onclick={remove}>{@html ICONS.bin} {ta('link.remove')}</button>
         {/if}
         <button type="button" class="ghost ld-small" onclick={leave}>{ta('confirm.cancel')}</button>
         <button type="submit" class="primary ld-small" disabled={!linkReady(link)}>{ta('link.use')}</button>

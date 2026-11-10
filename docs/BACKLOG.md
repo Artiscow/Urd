@@ -525,19 +525,20 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [ ] Section "on pointer" settings affect the background instead of every block in the section - this should be two settings; every element in the section, and; the section background
  - [ ] Footer design and layout is split into two: "Design" and "Starting Point". It is very unclear what the difference is. Let's have one of them, not both.
  - [ ] Colour picker is a bit shabby - needs design reevaluation 
- - [ ] Nav settings: possibility to turn logo on or off in nav
+ - [x] Nav settings: possibility to turn logo on or off in nav FIXED 0.7.0.83 (10 November 2026)
  - [ ] Button block does not have colour settings/options
- - [ ] Footer "Brand" logo/image needs preview of image added
+ - [x] Footer "Brand" logo/image needs preview of image added FIXED 0.7.0.83 (10 November 2026)
  - [x] "Link" in text (both webaddress and site address) doesn't work FIXED 0.7.33.12.3 (10 November 2026)
  - [ ] New collections panel/menu for new product and overview - A 'floating' menu like other settings 
  - [x] Urd Admin settings remember to which point you were scrolled until you close the site FIXED 0.7.33.7 (9 November 2026)
  - [x] When two elements are close together (above and below) the element belows' toolmenu cannot ble hovered over or clicked because the hover on the above block selects that instead. FIXED 0.7.33.12.3 (10 November 2026)
  - [ ] A review of the design of admin settings 
- - [ ] A block's «?» help chip, at its top right at the toolbar's height, stands over the toolbar's tools wherever the bar is wider than its block (the calendar's Full bar in a canvas about 700px wide); the chip needs a place clear of the bar (found in the walk of 0.7.33.9)
+ - [x] A block's «?» help chip, at its top right at the toolbar's height, stands over the toolbar's tools wherever the bar is wider than its block (the calendar's Full bar in a canvas about 700px wide); the chip needs a place clear of the bar (found in the walk of 0.7.33.9) FIXED 0.7.0.83 (10 November 2026)
  - [x] The drop down for re-do/undo should open by hover FIXED 0.7.33.12.3 (10 November 2026)
  - [x] All delete buttons be the toolmenus bin icon style FIXED 0.7.0.81 (9 November 2026)
- - [ ] Calendar: while working locally or calendar can't fetch data, offer a 'show example calendar' view so a user can choose colours and edit the calendar
- - [ ] All drop down menu entry highlights feel slow to react when hovering over sections
+ - [x] Calendar: while working locally or calendar can't fetch data, offer a 'show example calendar' view so a user can choose colours and edit the calendar FIXED 0.7.0.83 (10 November 2026)
+ - [x] All drop down menu entry highlights feel slow to react when hovering over sections FIXED 0.7.0.83 (10 November 2026)
+ - [ ] Any large window menu with scroll should remember where the user left off until the site is reloaded or closed
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene

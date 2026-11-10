@@ -380,8 +380,8 @@
         <hr />
         <button type="button" class="cm-danger" disabled={!some} title={needs('tip.collections.deleteTicked')} onpointerenter={leaveSoon}
           onclick={() => { ed.removeEntries(id, ticks); onticks?.([]); close(); }}>
-          <span>{ta('ui.deleteSelected')}</span>{#if some}<span class="cm-val">{ticks.length}</span>{/if}</button>
-        <button type="button" class="cm-danger" title={ta('tip.collections.deleteCollection')} onpointerenter={leaveSoon} onclick={() => { close(); ed.removeCollection(id); }}>{ta('ui.deleteCollection')}</button>
+          <span class="cm-bin">{@html ICONS.bin}{ta('ui.deleteSelected')}</span>{#if some}<span class="cm-val">{ticks.length}</span>{/if}</button>
+        <button type="button" class="cm-danger" title={ta('tip.collections.deleteCollection')} onpointerenter={leaveSoon} onclick={() => { close(); ed.removeCollection(id); }}><span class="cm-bin">{@html ICONS.bin}{ta('ui.deleteCollection')}</span></button>
 
         {#if sub}
           <!-- The open submenu beside the card, in the top layer -->
@@ -568,6 +568,12 @@
     outline: none;
   }
 
+  /* The light follows the pointer at once: while another row of the same list is under it, the row whose submenu still stands until the next opens goes dark */
+  .cm-card:has(> button:hover:not(:disabled)) > .cm-sub-on:not(:hover),
+  .cm-sub:has(> button:hover:not(:disabled)) > .cm-sub-on:not(:hover) {
+    background: transparent;
+  }
+
   .cm-file-input {
     display: none;
   }
@@ -593,14 +599,25 @@
     background: rgb(255 255 255 / 10%);
   }
 
-  /* The removals in red, as the selection bar's Delete; what needs a selection greyed while none is selected */
+  /* The deletions: the bin and their words on the dark red every deletion stands on (app.css .icon-btn.danger), lighter under the pointer; what needs a selection greyed while none is selected */
   .cm-card > .cm-danger {
-    color: #f08a8a;
+    color: #ffd4d4;
+    background: #5e1c22;
+  }
+
+  .cm-card > .cm-danger + .cm-danger {
+    margin-top: 2px;
   }
 
   .cm-card > .cm-danger:hover:not(:disabled),
   .cm-card > .cm-danger:focus-visible {
-    background: rgb(224 82 82 / 14%);
+    background: #7a222a;
+  }
+
+  .cm-bin {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .cm-card > button:disabled {

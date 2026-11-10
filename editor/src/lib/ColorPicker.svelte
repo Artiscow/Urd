@@ -290,8 +290,8 @@
     popovertarget={native ? popId : undefined}
     aria-label={label} onclick={native ? undefined : () => (open ? close() : openPicker())}></button>
   {#if allowClear && value}
-    <button type="button" class="cp-clear" title={ta('cp.clearTitle')}
-      aria-label={ta('cp.clear')} onclick={() => onchange?.('')}>{@html ICONS.cross}</button>
+    <button type="button" class="cp-clear danger" title={ta('cp.clearTitle')}
+      aria-label={ta('cp.clear')} onclick={() => onchange?.('')}>{@html ICONS.bin}</button>
   {/if}
   <!-- The picker often sits inside a <label>: without preventDefault the browser
        forwards clicks on non-interactive surfaces (the color field, empty space)
@@ -360,8 +360,8 @@
             <span class="cp-saved">
               <button type="button" class="cp-token" style="background: {hex}"
                 title={hex} onclick={() => pick(hex)}></button>
-              <button type="button" class="cp-del" title={ta('cp.removeSaved')}
-                onclick={() => removeSaved(hex)}>{@html ICONS.cross}</button>
+              <button type="button" class="cp-del danger" title={ta('cp.removeSaved')}
+                onclick={() => removeSaved(hex)}>{@html ICONS.bin}</button>
             </span>
           {/each}
         </span>
@@ -400,6 +400,7 @@
       repeating-conic-gradient(rgb(255 255 255 / 12%) 0 25%, transparent 0 50%) 0 0 / 12px 12px !important;
   }
 
+  /* The colour's removal: the bin on the dark red every removal draws (app.css .icon-btn.danger) */
   .cp-clear {
     width: 1.4rem;
     height: 1.4rem;
@@ -409,15 +410,16 @@
     padding: 0;
     font-size: 15px;
     line-height: 1;
-    color: inherit;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 20%);
+    color: #ffd4d4;
+    background: #5e1c22;
+    border: 1px solid #7d2a31;
     border-radius: 5px;
     cursor: pointer;
   }
 
-  .cp-clear:hover {
-    background: rgb(255 255 255 / 12%);
+  .cp-clear:is(:hover, :focus-visible) {
+    background: #7a222a;
+    border-color: #9a3a42;
   }
 
   .cp-pop {
@@ -649,29 +651,35 @@
     display: inline-flex;
   }
 
+  /* A saved colour's deletion: the bin on the dark red every deletion draws (app.css .icon-btn.danger), small on the swatch's corner */
   .cp-del {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 13px;
-    height: 13px;
+    top: -6px;
+    right: -6px;
+    width: 16px;
+    height: 16px;
     min-height: 0;
     display: none;
     align-items: center;
     justify-content: center;
     padding: 0;
-    border: 0;
+    border: 1px solid #7d2a31;
     border-radius: 50%;
-    background: #e05252;
-    color: #fff;
+    background: #5e1c22;
+    color: #ffd4d4;
     font-size: 10px;
     line-height: 1;
     cursor: pointer;
   }
 
+  .cp-del:is(:hover, :focus-visible) {
+    background: #7a222a;
+    border-color: #9a3a42;
+  }
+
   .cp-del :global(svg) {
-    width: 7px;
-    height: 7px;
+    width: 9px;
+    height: 9px;
   }
 
   .cp-saved:hover .cp-del {

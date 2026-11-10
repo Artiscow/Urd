@@ -11,6 +11,7 @@
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
+  import { ICONS } from '../../lib/icons.js';
   import { VIDEO_ASPECTS, aspectRatio, shapeHeight } from '$engine/push-model.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
@@ -81,7 +82,7 @@
           <!-- The cover's own picture; once chosen it is framed, adjusted, swapped or removed in the image editor -->
           {#if selectedBlock.props.poster}
             <button type="button" class="ghost action" title={ta('tip.video.coverEdit')} onclick={openImageEditor}>{ta('ui.editCover')}</button>
-            <button type="button" class="ghost action" title={ta('tip.video.coverRemove')} onclick={() => ed.mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.poster = ''; delete b.props.coverStyle; })}>{ta('ui.removeCover')}</button>
+            <button type="button" class="ghost action danger" title={ta('tip.video.coverRemove')} onclick={() => ed.mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.poster = ''; delete b.props.coverStyle; })}>{@html ICONS.bin} {ta('ui.removeCover')}</button>
           {:else}
             <label class="ghost action filepick" title={ta('tip.video.cover')}>
               {ta('ui.chooseCover')}

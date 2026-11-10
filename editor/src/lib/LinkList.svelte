@@ -26,7 +26,7 @@
           data-link-label={link.id}
           onchange={(e) => onchange(i, { label: e.target.value.trim() })} />
         {#if link.image}
-          <IconButton icon={ICONS.cross} label={ta('ui.ownIconRemove')} onclick={() => onchange(i, { image: '', icon: 'globe' })} />
+          <IconButton icon={ICONS.bin} danger label={ta('ui.ownIconRemove')} onclick={() => onchange(i, { image: '', icon: 'globe' })} />
         {/if}
       </span>
       <span class="link-cell"><LinkField shape="address" {scope} value={link.url ?? ''} title={ta('tip.link.url')} onchange={(url) => onchange(i, { url: url ?? '' })} /></span>

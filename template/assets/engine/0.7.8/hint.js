@@ -21,9 +21,9 @@ let teardown = null;
 
 /* Self-contained styling (the same pattern as plugin CSS): the chip is a small
    circle shown ONLY while the pointer is over the block, like the source button.
-   It sits left of the rotate handle and above it in the stack, so the handle
-   neither covers the chip nor takes the pointer from it, and it counter-scales
-   and counter-rotates like the rest of the block chrome. */
+   On a host without a bar it sits left of the rotate handle and above it in the
+   stack, so the handle neither covers the chip nor takes the pointer from it,
+   and it counter-scales and counter-rotates like the rest of the block chrome. */
 const HINT_CSS = `
 .urd-hint-chip {
   position: absolute; top: -32px; z-index: 1001;
@@ -43,6 +43,11 @@ const HINT_CSS = `
 .urd-block:hover .urd-hint-chip,
 .urd-hint-chip:focus-visible {
   opacity: 0.92; pointer-events: auto;
+}
+/* On a block's bar the chip is the bar's last tool, after the tools, so a bar wider than its block never stands over it: it takes the bar's look, size and colours as the tools do, and shows with the bar. */
+.urd-edit-toolbar .urd-bar-body > .urd-hint-chip {
+  position: static; transform: none; width: auto;
+  opacity: 1; pointer-events: auto;
 }
 .urd-hint-card {
   position: fixed; z-index: 100003; width: 300px;
@@ -168,6 +173,8 @@ export function attachHint(host, { title, lines = [] }) {
     toggleHintCard(chip, { title, lines });
   });
 
-  host.appendChild(chip);
+  // A block with a bar has the chip as the bar's last tool; enhanceBlock in preview-edit.js takes in a chip drawn before the bar.
+  const bar = host.querySelector(':scope > .urd-edit-toolbar > .urd-bar-body');
+  (bar ?? host).appendChild(chip);
   return chip;
 }

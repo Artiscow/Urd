@@ -22,8 +22,10 @@ let teardown = null;
 const RECENT_KEY = 'urd-recent-colors';
 const SAVED_KEY = 'urd-saved-colors';
 const THEME_TOKENS = [['text', ta('lbl.textColor')], ['accent', ta('setup.accentPick')], ['bg', ta('lbl.background')], ['surface', ta('color.surface')]];
-/** The close and remove buttons carry a drawn cross, never a character. */
+/** The close button carries a drawn cross, never a character. */
 const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+/** The bin every deletion draws, as the block's bar draws it (BIN_SVG in preview-edit.js). */
+const BIN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8.5 6V3h7v3"/><path d="M5.5 6l1 15h11l1-15"/><path d="M10 10.5v6M14 10.5v6"/></svg>';
 
 export function closeColorPicker() {
   teardown?.();
@@ -275,7 +277,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
       const wrap = el2('span', 'urd-cp-saved');
       wrap.appendChild(swatch(hex));
       const del = el2('button', 'urd-cp-del');
-      del.innerHTML = CROSS_SVG;
+      del.innerHTML = BIN_SVG;
       del.type = 'button';
       del.title = ta('cp.removeSaved');
       del.addEventListener('click', () => {

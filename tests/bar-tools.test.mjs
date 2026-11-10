@@ -195,3 +195,11 @@ test('the editor opens exactly what the bar asks for', () => {
     assert.ok(!isBarOnly(bad), String(bad));
   }
 });
+
+test('a block\'s help chip is its bar\'s last tool, so a bar wider than its block never stands over it', () => {
+  const hint = read(`../template/assets/engine/${ENGINE}/hint.js`);
+  assert.match(hint, /const bar = host\.querySelector\(':scope > \.urd-edit-toolbar > \.urd-bar-body'\);\s*\(bar \?\? host\)\.appendChild\(chip\);/, 'a chip drawn after the bar goes into it');
+  const edit = read(`../template/assets/engine/${ENGINE}/preview-edit.js`);
+  assert.match(edit, /const hintChip = el\.querySelector\(':scope > \.urd-hint-chip'\);\s*if \(hintChip\) barBody\.appendChild\(hintChip\);\s*el\.appendChild\(toolbar\);/, 'a chip drawn before the bar is taken in, after the bar\'s last tool');
+  assert.match(hint, /\.urd-edit-toolbar \.urd-bar-body > \.urd-hint-chip \{\s*position: static; transform: none; width: auto;\s*opacity: 1; pointer-events: auto;/, 'standing in the bar\'s row, at the bar\'s size');
+});

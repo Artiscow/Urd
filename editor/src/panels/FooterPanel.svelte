@@ -15,6 +15,7 @@
   import CardList from '../lib/rows/CardList.svelte';
   import PanelLinkRow from '../lib/rows/PanelLinkRow.svelte';
   import { siteGroup } from '../lib/site-groups.js';
+  import { squareBeside } from '../lib/square-beside.js';
   import { ta } from '$engine/i18n.js';
   import { footerDesign, hasRichFooter } from '$engine/footer-model.js';
   import { glowLayer } from '$engine/backgrounds/glow.js';
@@ -408,17 +409,25 @@
         onchange={(v) => setFooterBrandMode(v)} />
     </Setting>
     {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
-      <span class="toolbar-row">
-        <label class="ghost filepick tb-grow" title={ta('tip.webpAutoPublish')}>
-          {siteDraft.footer?.brand?.logo ? ta('ui.changeLogo') : ta('ui.uploadLogo')}
-          <input type="file" accept="image/*" onchange={uploadFooterLogo} />
-        </label>
-        {#if siteDraft.footer?.brand?.logo}
-          <IconButton icon={ICONS.pencil} label={ta('tip.logo.edit')}
-            onclick={() => ed.openPicture({ kind: 'logo', place: 'footer', source: siteDraft.footer.brand.logoSource?.src ? siteDraft.footer.brand.logoSource : { src: siteDraft.footer.brand.logo } })} />
-          <IconButton icon={ICONS.cross} label={ta('tip.footer.removeLogo')} onclick={removeFooterLogo} />
-        {/if}
-      </span>
+      {@const logo = siteDraft.footer?.brand?.logo ?? ''}
+      <!-- The image as a thumbnail as tall as its picker and the file's row beside it, as the menu's logo has it, with its file's name, the way into the image editor and the bin -->
+      <div class="logo-pick">
+        <span class="logo-thumb" {@attach squareBeside}>{#if logo}<img src={logo} alt="" />{/if}</span>
+        <span class="logo-pick-col">
+          <label class="ghost filepick" title={ta('tip.webpAutoPublish')}>
+            {logo ? ta('ui.changeLogo') : ta('ui.uploadLogo')}
+            <input type="file" accept="image/*" onchange={uploadFooterLogo} />
+          </label>
+          {#if logo}
+            <span class="toolbar-row">
+              <span class="logo-file tb-grow">{logo.startsWith('data:') ? '' : logo.split('/').pop()}</span>
+              <IconButton icon={ICONS.pencil} label={ta('tip.logo.edit')}
+                onclick={() => ed.openPicture({ kind: 'logo', place: 'footer', source: siteDraft.footer.brand.logoSource?.src ? siteDraft.footer.brand.logoSource : { src: logo } })} />
+              <IconButton icon={ICONS.bin} danger label={ta('tip.footer.removeLogo')} onclick={removeFooterLogo} />
+            </span>
+          {/if}
+        </span>
+      </div>
       {#if siteDraft.footer?.brand?.logo}
         <Setting key="logoHeight">
           <SliderRow label={ta('lbl.logoHeight')} title={ta('tip.footer.logoHeight')} value={siteDraft.footer?.brand?.logoHeight ?? 40} min={16} max={160} step={2}

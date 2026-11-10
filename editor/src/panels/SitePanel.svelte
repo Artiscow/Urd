@@ -226,7 +226,7 @@
         </label>
         {#if siteDraft.site.icon}
           <IconButton icon={ICONS.pencil} label={ta('tip.site.editIcon')} onclick={editSiteIcon} />
-          <IconButton icon={ICONS.cross} label={ta('tip.site.removeIcon')} onclick={() => ed.setSiteIcon('', null)} />
+          <IconButton icon={ICONS.bin} danger label={ta('tip.site.removeIcon')} onclick={() => ed.setSiteIcon('', null)} />
         {/if}
       </span>
     </div>

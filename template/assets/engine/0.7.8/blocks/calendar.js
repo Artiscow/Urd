@@ -47,8 +47,10 @@ async function fetchSource(url) {
   } catch { /* a corrupt cache entry is ignored */ }
   const res = await fetch(`/api/ics?url=${encodeURIComponent(url)}`);
   if (!res.ok) {
-    const detail = taApiError(await res.json().catch(() => null));
-    throw new Error(detail ?? ta('calendar.feedStatus', { status: res.status }));
+    const body = await res.json().catch(() => null);
+    // The route answers every failure in JSON: a 404 without it is the route itself missing, as on a local server, where the site's functions do not run.
+    if (!body && res.status === 404) throw new Error(ta('calendar.noRoute'));
+    throw new Error(taApiError(body) ?? ta('calendar.feedStatus', { status: res.status }));
   }
   const text = await res.text();
   try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), text })); } catch { /* a full store is fine */ }
@@ -102,6 +104,9 @@ const DEMO_IMAGE = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://
 
 /** The sample calendars' colours, one per calendar, so the sample shows how coloured calendars look. */
 const DEMO_COLORS = { demoCat1: '#2f80ed', demoCat2: '#e0632c', demoCat3: '#2e9e5b' };
+
+/** The calendars whose feed could not be fetched that show the sample events instead, by block id, for the editing session. */
+const EXAMPLES_SHOWN = new Set();
 
 function demoOccurrences() {
   const day = 24 * 3600 * 1000;
@@ -1909,7 +1914,24 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     if (focused) [...host.querySelectorAll('[data-cal-key]')].find((node) => node.dataset.calKey === focused)?.focus({ preventScroll: true });
     // The note is editing chrome on the block, not content: it hangs below the block (base.css) and the push pass skips it, so it never makes the block taller in the preview than on the published page.
     el.querySelector(':scope > .urd-cal-note')?.remove();
-    if (note) el.appendChild(el2('p', 'urd-cal-note', note));
+    if (note) el.appendChild(note instanceof Node ? note : el2('p', 'urd-cal-note', note));
+  };
+
+  // A feed that cannot be fetched leaves the preview's calendar empty: its note says why and offers the sample events for the session, so the design and the colours can be set on them.
+  const failed = (error) => {
+    const key = el.dataset.blockId ?? '';
+    const shown = EXAMPLES_SHOWN.has(key);
+    const note = el2('p', 'urd-cal-note urd-cal-note-act', ta(shown ? 'calendar.exampleNote' : 'calendar.feedFailed', { error }));
+    const toggle = el2('button', 'urd-cal-note-btn', ta(shown ? 'calendar.hideExample' : 'calendar.showExample'));
+    toggle.type = 'button';
+    toggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (shown) EXAMPLES_SHOWN.delete(key);
+      else EXAMPLES_SHOWN.add(key);
+      if (host.isConnected) failed(error);
+    });
+    note.append(' ', toggle);
+    draw(shown ? demoOccurrences() : [], note);
   };
 
   if (!sources.length) {
@@ -1936,8 +1958,9 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     if (!host.isConnected) return;
     feedZone = fz;
     if (!occurrences.length && errors.length) {
-      // Visitors get a quiet empty state; the preview gets the error.
-      draw([], ctx.preview ? ta('calendar.feedFailed', { error: errors[0] }) : null);
+      // Visitors get a quiet empty state; the preview gets the error and the sample events to offer.
+      if (ctx.preview) failed(errors[0]);
+      else draw([], null);
       return;
     }
     draw(occurrences, ctx.preview && errors.length ? ta('calendar.sourceFailed', { error: errors[0] }) : null);
@@ -1945,7 +1968,9 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   }).catch((error) => {
     // A feed the block could not make sense of: visitors get the quiet empty state, the preview the reason.
     console.warn('Urd: the calendar feed could not be read', error);
-    if (host.isConnected) draw([], ctx.preview ? ta('calendar.feedFailed', { error: error?.message ?? String(error) }) : null);
+    if (!host.isConnected) return;
+    if (ctx.preview) failed(error?.message ?? String(error));
+    else draw([], null);
   });
 }
 

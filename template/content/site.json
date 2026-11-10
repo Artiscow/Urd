@@ -168,6 +168,7 @@
       "followNav": false
     },
     "logo": {
+      "show": true,
       "type": "image",
       "value": "/media/images/logo-91963a12.svg",
       "size": 30,

@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.83): the logo switch, the calendar's example events, the push by column, and every removal a bin
+
+- [ ] Every pop-up menu (the top bar's, a panel tab's, Collections with its entries and their actions, a collection's ⋮ menu with its submenus): the row under the pointer lights at once, and the row whose submenu still stands goes dark as the pointer moves to another row
+- [ ] The footer's Brand with an image: a square thumbnail beside «Change logo», as tall as the button and the file's row; the Nav panel's Logo the same, its file name and pencil on one row
+- [ ] A calendar with the Full bar in a canvas about 700 px wide: the «?» is the bar's last tool, never under another tool, in every bar look and size, and it stands on a selected block's bar too
+- [ ] Nav › Logo › «Show the logo» off: no logo in the bar or in the full-screen phone menu, the items where they stood in each layout, the burger at its edge on the phone, «Logo at the top of the menu» and «Shrink the logo too» gone, and the Logo fold the switch alone; on again brings it all back
+- [ ] On the local server, a calendar with a source: the note says the calendar is fetched on the published site and offers «Show example events»; shown, they stay while colours and designs change; «Hide example events» empties it again; the published page shows no note
+- [ ] A section with a calendar in one column and a heading and a text in the other: as the calendar grows (example events, a longer list), the text keeps its place, and a block under the calendar moves down
+- [ ] Every removal is a bin on dark red: the footer logo, the site icon, a page's sharing image, a link's own icon, the contact's map point, a product's size chip, a saved colour in both colour pickers, a colour's «Remove the colour» beside its swatch, a capability card's head, «Remove link», the quote's portrait, the video's cover, the icon block's drawn and own icon, the image editor's «Remove», the table's «Remove row» and «Remove column», and the audio; the canvas's right-click «Delete» and «Delete section» and a collection menu's «Delete ticked» and «Delete collection» as a bin and words on a dark red row (this replaces the crosses kept in the last item of 0.7.0.81)
+
 ### Test batch (0.7.33.12.3): the image's and the calendar's own capabilities, Clean view, and the top bar
 
 - [ ] A picture with no link and no lightbox shows no «Link and click»; the «+» offers it, and a link or the lightbox keeps the card after a reload; the bar's «Link and click» tool opens it on any picture

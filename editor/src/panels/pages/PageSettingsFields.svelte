@@ -150,7 +150,7 @@
         </label>
         {#if meta.ogImage}
           <IconButton icon={ICONS.pencil} label={ta('tip.seo.editOgImage')} onclick={() => ed.editPageOgImage(id)} />
-          <IconButton icon={ICONS.cross} label={ta('tip.seo.removeOgImage')} onclick={() => ed.setPageShareImage(id, '', null)} />
+          <IconButton icon={ICONS.bin} danger label={ta('tip.seo.removeOgImage')} onclick={() => ed.setPageShareImage(id, '', null)} />
         {/if}
       </span>
     </div>

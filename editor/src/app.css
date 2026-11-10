@@ -2172,6 +2172,7 @@
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent);
   }
 
+  /* A size's deletion in its chip: the bin on the dark red every deletion draws (.icon-btn.danger), round in the chip's end */
   .panel-body .entry-chip-x:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
     display: inline-grid;
     place-items: center;
@@ -2179,15 +2180,20 @@
     height: 1.2rem;
     min-height: 0;
     padding: 0;
-    border: 0;
+    border: 1px solid #7d2a31;
     border-radius: 999px;
-    background: transparent;
-    opacity: 0.7;
+    color: #ffd4d4;
+    background: #5e1c22;
   }
 
-  .panel-body .entry-chip-x:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
-    opacity: 1;
-    background: rgb(255 255 255 / 12%);
+  .panel-body .entry-chip-x:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){
+    background: #7a222a;
+    border-color: #9a3a42;
+  }
+
+  .entry-chip-x svg {
+    width: 10px;
+    height: 10px;
   }
 
   /* The add field is part of the chips' box, with no frame of its own: the box carries the one frame and takes the accent while the field has the focus */
@@ -3103,14 +3109,14 @@
 
   /* Every deletion in the admin, as the element menu's head draws a block's: a bin (ICONS.bin) on the dark red of a removal, lighter under the pointer, and brightest while a deletion that acts at its second press waits for it (ActionRow.svelte) */
   .icon-btn.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
-  .panel-body .ghost.action.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .ghost.action.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     color: #ffd4d4;
     background: #5e1c22;
     border-color: #7d2a31;
   }
 
   .icon-btn.danger:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
-  .panel-body .ghost.action.danger:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .ghost.action.danger:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     background: #7a222a;
     border-color: #9a3a42;
   }
@@ -3534,12 +3540,13 @@
   .hover-sample.hover-lift-plain { translate: 0 -2px; }
   .hover-sample.hover-lift { text-shadow: 0 3px 10px color-mix(in srgb, var(--urd-color-accent) 70%, transparent); }
   /* The logo's thumbnail beside its picker, and three sizes on one row. */
-  .logo-pick { display: flex; align-items: center; gap: 12px; }
+  /* A picture's row: the thumbnail square at the height of its column (squareBeside in lib/square-beside.js), the picker and the file's row in the column */
+  .logo-pick { display: flex; align-items: flex-start; gap: 12px; }
   .logo-thumb {
-    width: 52px; height: 52px; flex: 0 0 auto; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+    box-sizing: border-box; width: 2.2rem; height: 2.2rem; flex: 0 0 auto; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
     background: color-mix(in srgb, currentColor 8%, transparent); border: 1px solid color-mix(in srgb, currentColor 14%, transparent); overflow: hidden;
   }
-  .logo-thumb img { max-width: 44px; max-height: 44px; }
+  .logo-thumb img { max-width: 82%; max-height: 82%; }
   .logo-pick-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
   .logo-file { font-size: 11px; opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ctl-triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; }
@@ -4523,6 +4530,11 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* The rows of a menu that pops up (the top bar's, the panel tabs', a collection's, the «+» list) answer the pointer at once, as a menu's items do; the buttons' own fade (below) is for a button that stands alone, the tab that opens a menu included. The root in the selector puts it over that fade wherever it stands. */
+  :root :is(.tool-pop, .tab-menu-list, .cm-card, .cm-sub, .cap-pop) :is(button, a):not(:disabled) {
+    transition: none;
+  }
+
   .tool-pop {
     position: absolute;
     top: calc(100% + 6px);
@@ -4801,6 +4813,8 @@
   /* A collection's row with entries, its arrow, and the row whose submenu stands open lit as a hovered one */
   .tab-menu-more { display: inline-flex; flex: none; margin-left: 14px; opacity: 0.6; }
   .tab-menu .tab-menu-list button.sub-open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: rgb(255 255 255 / 8%); }
+  /* The light follows the pointer at once: while another row of the same list is under it, the row whose submenu still stands until the next opens goes dark */
+  .tab-menu .tab-menu-list:has(button:hover) button.sub-open:not(:hover):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) { background: transparent; }
   /* The submenu of a collection's entries: as tall as the window allows, scrolling beyond, its long titles cut with an ellipsis */
   .tab-menu-sub { max-width: 22rem; overflow-y: auto; }
   .tab-menu-sub .tab-menu-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }

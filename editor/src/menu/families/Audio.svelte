@@ -9,6 +9,7 @@
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
+  import { ICONS } from '../../lib/icons.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setStatus } = ed;
@@ -40,7 +41,7 @@
       <input type="file" accept="audio/*" onchange={setAudioFile} />
     </label>
     {#if selectedBlock.props.src}
-      <button class="ghost" onclick={() => setBlockProp('src', '')}>{ta('ui.removeAudio')}</button>
+      <button class="ghost action danger" onclick={() => setBlockProp('src', '')}>{@html ICONS.bin} {ta('ui.removeAudio')}</button>
     {/if}
     <label title={ta('tip.audio.title')}>{ta('lbl.audioTitle')}
       <input value={selectedBlock.props.title ?? ''}

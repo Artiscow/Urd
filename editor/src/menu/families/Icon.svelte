@@ -12,6 +12,7 @@
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
+  import { ICONS } from '../../lib/icons.js';
   const ed = getContext('urd-editor');
   /** A fold counts the settings it holds now: one whose every setting stands in Pinned is left out, and one of a single setting is that setting alone. */
   const pinned = pinnedNow();
@@ -43,14 +44,14 @@
             title={ta('tip.icon.typeGlyph')}
             onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
         {:else}
-          <button class="ghost" title={ta('tip.icon.backToGlyph')}
-            onclick={() => setBlockProp('icon', null)}>{ta('ui.removeDrawnIcon')}</button>
+          <button class="ghost action danger" title={ta('tip.icon.backToGlyph')}
+            onclick={() => setBlockProp('icon', null)}>{@html ICONS.bin} {ta('ui.removeDrawnIcon')}</button>
         {/if}
       </span></label>
     {#if selectedBlock.props.image}
       <span class="toolbar-row" title={ta('hint.icon.ownImage')}>
         <img class="site-icon-preview" src={selectedBlock.props.image} alt={ta('gp.ownIcon')} />
-        <button class="ghost" onclick={() => setBlockProp('image', null)}>{ta('ui.removeOwnIcon')}</button>
+        <button class="ghost action danger" onclick={() => setBlockProp('image', null)}>{@html ICONS.bin} {ta('ui.removeOwnIcon')}</button>
       </span>
     {/if}
   {/snippet}

@@ -304,6 +304,8 @@ function showContextMenu(el, x, y, label, build) {
     b.className = `urd-ctx-item${opts.danger ? ' urd-ctx-danger' : ''}`;
     b.setAttribute('role', 'menuitem');
     b.tabIndex = -1;
+    // A deletion draws the bin before its words, on the dark red every deletion stands on (base.css).
+    if (opts.danger) b.insertAdjacentHTML('beforeend', BIN_SVG);
     const span = document.createElement('span');
     span.textContent = text;
     b.appendChild(span);
@@ -4814,6 +4816,9 @@ function enhanceBlock(el, block, section, grid, host) {
     if (form === 'short' || (form === 'panels' && !leadIsSettings) || barGear()) barBody.appendChild(menuButton(el, section, block));
     barBody.appendChild(moreButton((x, y) => openContextMenu(el, x, y)));
   }
+  // The block's help chip, drawn before its bar, is the bar's last tool, as one drawn after it is (attachHint in hint.js).
+  const hintChip = el.querySelector(':scope > .urd-hint-chip');
+  if (hintChip) barBody.appendChild(hintChip);
   el.appendChild(toolbar);
 
   const resizeHandle = document.createElement('div');

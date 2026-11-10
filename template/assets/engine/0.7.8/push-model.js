@@ -3,12 +3,13 @@
  * absolutely with pixel frames, so a block whose content grows taller than
  * its frame (wrapped text, a longer feed) would draw over the blocks
  * beneath. This model moves the blocks below instead, with the rules the
- * Wix Editor publishes for its free canvas: only vertical position and size
- * count, a gap of PUSH_GAP_MAX px or less is preserved, a larger gap stays
- * until it would fall under PUSH_GAP_MIN px, a block whose top sits above the
- * grown block's vertical middle is a deliberate overlap and stays, and a move
- * cascades to the blocks below the moved block. Every block below moves, not
- * only the nearest one (the Fluid Engine reading of the same rule).
+ * Wix Editor publishes for its free canvas: a gap of PUSH_GAP_MAX px or less
+ * is preserved, a larger gap stays until it would fall under PUSH_GAP_MIN px,
+ * a block whose top sits above the grown block's vertical middle is a
+ * deliberate overlap and stays, and a move cascades to the blocks below the
+ * moved block. Every block below that shares some of the grown block's width
+ * moves, not only the nearest one; a block beside it, in another column,
+ * keeps its place.
  *
  * Pure: render.js measures the growth and writes the shifts; nothing here
  * touches the DOM or the stored frames.
@@ -337,9 +338,28 @@ export function fitFloorPx(block, designWidth) {
 }
 
 /**
- * The shift for each block below the blocks that grew.
- * @param {Array<{id: string, y: number, h: number, x?: number, grow?: number}>} items
- *   Frames in design px with the measured extra height in `grow` (0 or more).
+ * How much of the width two blocks must share, in percent of the section, for one to push the other: frames that only touch, or overlap by a rounding, stand side by side.
+ */
+export const PUSH_ACROSS_MIN = 0.1;
+
+/**
+ * Whether block b stands under block a's width, so a's growth reaches it (ADR-0024 decision 1): a block beside the grown one, in another column, keeps its place.
+ * An item without a width (`x` and `w` in percent) is taken to span the section.
+ * @param {{x?: number, w?: number}} a
+ * @param {{x?: number, w?: number}} b
+ * @returns {boolean}
+ */
+function sharesWidth(a, b) {
+  if (!Number.isFinite(a.w) || !Number.isFinite(b.w)) return true;
+  const ax = a.x ?? 0;
+  const bx = b.x ?? 0;
+  return Math.min(ax + a.w, bx + b.w) - Math.max(ax, bx) > PUSH_ACROSS_MIN;
+}
+
+/**
+ * The shift for each block below the blocks that grew, and under their width.
+ * @param {Array<{id: string, y: number, h: number, x?: number, w?: number, grow?: number}>} items
+ *   Frames in design px (`x` and `w` in percent) with the measured extra height in `grow` (0 or more).
  * @param {{gapMax?: number, gapMin?: number}} [opts]
  * @returns {{shifts: Map<string, number>, bottom: number}} The shift per id
  *   (only ids that move) and the lowest edge after the growth and the shifts.
@@ -362,7 +382,7 @@ export function pushLayout(items, opts = {}) {
     const middle = a.y + a.h / 2;
     const b0 = a.y + a.h;
     for (const b of list) {
-      if (b === a || b.y < middle) continue;
+      if (b === a || b.y < middle || !sharesWidth(a, b)) continue;
       const gap = Math.max(0, b.y - b0);
       const move = gap <= gapMax ? delta : Math.max(0, delta - (gap - gapMin));
       if (move > shift.get(b.id)) shift.set(b.id, move);
@@ -406,7 +426,7 @@ export function fitMovesAll(blocks, fits) {
     if (!frame || !Number.isFinite(frame.y) || !Number.isFinite(frame.h)) continue;
     const h = fits?.get(block.id);
     const grow = Number.isFinite(h) ? Math.max(0, h - frame.h) : 0;
-    items.push({ id: block.id, x: frame.x ?? 0, y: frame.y, h: frame.h, grow });
+    items.push({ id: block.id, x: frame.x ?? 0, w: frame.w, y: frame.y, h: frame.h, grow });
   }
   const moves = new Map();
   if (!items.some((it) => it.grow > 0)) return moves;
