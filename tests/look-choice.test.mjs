@@ -4,7 +4,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { register } from 'node:module';
 import { engineImport } from './_engine.mjs';
 // The design sources reach the engine through the editor's alias, which the loader resolves.
@@ -62,4 +62,23 @@ test('every design shown in place has its picture, in the picker\'s order', () =
     assert.ok(d.id && typeof d.name === 'string' && typeof d.about === 'string', d.id);
     assert.ok(existsSync(pictureFile(d.picture)), `${d.id}: no picture at ${d.picture}`);
   }
+});
+
+test('the footer\'s preview is measured again as the page above it empties and at every design chosen, so it shows the footer alone', () => {
+  // The footer stands through the draws, so the picker watches it afresh at each; a block source waits for the block its draw makes anew, past the one still standing.
+  const picker = readFileSync(new URL('../editor/src/lib/DesignPicker.svelte', import.meta.url), 'utf8');
+  assert.match(picker, /function watchPreview\(\) \{\s*watcher\?\.disconnect\(\);\s*watcher = null;\s*if \(source\.stays\) watched = null;/);
+  assert.match(picker, /if \(block && block !== watched\) \{/, 'a new block is waited for');
+  assert.equal(footerDesignSource({}).stays, true);
+  assert.equal(calendarDesignSource({}).stays, undefined, 'the calendar draws a new block at each choice');
+  // The page above the footer is watched too: it empties after the choice is drawn, moving the footer up without changing its size.
+  const watchedEls = [];
+  const root = { id: 'urd-root' };
+  const win = { document: { getElementById: (id) => (id === 'urd-root' ? root : null) } };
+  footerDesignSource({}).afterDraw(win, {}, (el) => watchedEls.push(el));
+  assert.deepEqual(watchedEls, [root]);
+  // The preview ends with the footer, which ends the page, and keeps no room for a scrollbar it never shows.
+  assert.equal(footerDesignSource({}).room, 0);
+  assert.match(picker, /Math\.ceil\(bottom \+ \(source\.room \?\? 24\)\)/);
+  assert.match(picker, /html \{ overflow: hidden !important; scrollbar-gutter: auto !important; \}/);
 });

@@ -62,16 +62,18 @@
     const block = drawn(doc);
     if (!block) return;
     const bottom = Math.max(block.getBoundingClientRect().bottom, source.extraBottom?.(doc) ?? 0) + (doc.defaultView?.scrollY ?? 0);
-    const next = Math.max(160, Math.ceil(bottom + 24));
+    // A block keeps a little of its page under it; a source that shows what ends the page (the footer) asks for none (`room`).
+    const next = Math.max(160, Math.ceil(bottom + (source.room ?? 24)));
     if (next !== previewH) previewH = next;
   }
 
   let watcher = null;
   let watched = null;
-  /** The block drawn for the choice is watched for its size by the preview window's own observer; each draw makes a new block, found as soon as it stands. */
+  /** The block drawn for the choice is watched for its size by the preview window's own observer; each draw makes a new block, found as soon as it stands, past the one the last draw made, while an element that stands through the draws (a source that `stays`, the footer) is watched afresh at each. */
   function watchPreview() {
     watcher?.disconnect();
     watcher = null;
+    if (source.stays) watched = null;
     const win = iframeEl?.contentWindow;
     if (!win?.ResizeObserver) return;
     let tries = 0;
@@ -105,12 +107,12 @@
     if (event.origin !== location.origin || event.source !== iframeEl?.contentWindow) return;
     if (event.data?.type !== 'urd-ready') return;
     // The preview shows the design alone: the site's header, announcement strip, footer and scroll-top button stay out of it, unless the footer is what the source shows.
-    // The frame is as tall as the drawn block (measure) and as wide as the view it shows, so the page in it never scrolls.
+    // The frame is as tall as the drawn block (measure) and as wide as the view it shows, so the page in it never scrolls, and keeps no room for a scrollbar it never shows.
     const doc = iframeEl?.contentDocument;
     if (doc && !doc.getElementById('design-picker-style')) {
       const style = doc.createElement('style');
       style.id = 'design-picker-style';
-      style.textContent = `.urd-nav, #urd-announce, .urd-nav-announce, .urd-totop${source.showsFooter ? '' : ', #urd-footer'} { display: none !important; } html { overflow: hidden !important; }`;
+      style.textContent = `.urd-nav, #urd-announce, .urd-nav-announce, .urd-totop${source.showsFooter ? '' : ', #urd-footer'} { display: none !important; } html { overflow: hidden !important; scrollbar-gutter: auto !important; }`;
       doc.head.appendChild(style);
     }
     if (site) post({ type: 'urd-site', site: source.previewSite(site, shown) });

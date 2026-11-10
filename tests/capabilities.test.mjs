@@ -26,6 +26,10 @@ function standIn(block, extra = {}) {
     setBlockHideMobile: (on) => { block.hideMobile = on; },
     setBlockDecor: (on) => { block.decor = on; },
     setBlockAnchor: (name) => { if (name) block.anchor = name; else delete block.anchor; },
+    setBlockLink: (link) => {
+      for (const key of ['href', 'page', 'target', 'newTab', 'rel', 'download']) delete block.props[key];
+      if (link) Object.assign(block.props, link);
+    },
     mutateBlock: (key, fn) => fn(block),
     store: { data: { sections: [] } },
     pageId: 'hjem',
@@ -44,6 +48,12 @@ const IN_USE = {
   sticky: (b) => { b.sticky = { offset: 16, until: null }; },
   'link-target': (b) => { b.anchor = 'priser'; },
   decor: (b) => { b.decor = true; },
+  'img-link': (b) => { b.props.href = 'https://example.com'; b.props.newTab = true; },
+  'cal-switcher': (b) => { b.props.switcher = true; b.props.switcherViews = { week: 'weekRows' }; },
+  'cal-time': (b) => { b.props.clock = '12'; b.props.weekStart = 'mon'; },
+  'cal-filter': (b) => { b.props.showCategories = true; b.props.showSearch = true; b.props.showEarlier = true; },
+  'cal-signup': (b) => { b.props.showSignup = true; },
+  'cal-colors': (b) => { b.props.colors = { bg: '#000000' }; b.props.stripe = { color: '#111111' }; },
 };
 
 test('every capability has a block in use to test, an area, a drawing and pins that name Pinned rows', () => {
@@ -104,6 +114,52 @@ test('a capability stands only on the blocks and in the views that carry it', ()
   assert.equal(carries(capability('text-box'), fresh('image'), ed), false, 'the box is the text block\'s');
   assert.equal(carries(capability('sticky'), fresh(), ed), true);
   assert.equal(carries(capability('sticky'), fresh(), { ...ed, viewMode: 'mobile' }), false, 'pinning while scrolling is the desktop\'s');
+  // A block's own capabilities stand on its type alone, and the view switcher on the views that list what is coming.
+  assert.equal(carries(capability('img-link'), fresh('image'), ed), true);
+  assert.equal(carries(capability('img-link'), fresh('calendar'), ed), false);
+  const calendar = (props) => ({ ...fresh('calendar'), props });
+  assert.equal(carries(capability('cal-switcher'), calendar({ view: 'list' }), ed), true);
+  assert.equal(carries(capability('cal-switcher'), calendar({ view: 'month' }), ed), false, 'a month has no switcher');
+  assert.equal(carries(capability('cal-colors'), calendar({}), ed), true);
+});
+
+test('an image\'s link and click is in use with a link or with the lightbox alone, and its way back takes both away', () => {
+  const cap = capability('img-link');
+  const block = { ...fresh('image'), props: { lightbox: true } };
+  const ed = standIn(block);
+  assert.equal(cap.inUse(block, ed), true, 'the lightbox alone');
+  block.props = { newTab: true, rel: 'nofollow' };
+  assert.equal(cap.inUse(block, ed), false, 'a new tab or a rel with no address is no link');
+  block.props = { page: 'om-oss', lightbox: true };
+  cap.clear(ed, block);
+  assert.equal(cap.inUse(block, ed), false);
+  assert.equal(block.props.page, undefined);
+  assert.equal(block.props.lightbox, false);
+});
+
+test('a calendar\'s capability counts only what its card shows in the calendar\'s view and design', async () => {
+  const calendar = (props) => ({ ...fresh('calendar'), props });
+  const inUse = (id, props) => { const b = calendar(props); return capability(id).inUse(b, standIn(b)); };
+  assert.equal(inUse('cal-filter', { view: 'list', showEarlier: true }), true);
+  assert.equal(inUse('cal-filter', { view: 'month', showEarlier: true }), false, 'a month offers no earlier events');
+  assert.equal(inUse('cal-time', { view: 'month', weekStart: 'mon' }), true);
+  assert.equal(inUse('cal-time', { view: 'list', weekStart: 'mon' }), false, 'a list draws no weeks');
+  assert.equal(inUse('cal-time', { view: 'list', weekStart: 'mon', switcher: true }), true, 'unless its switcher turns it to the week');
+  const { calDesign } = await engineImport('calendar-designs.js');
+  const slot = calDesign(undefined).slots[0].key;
+  assert.equal(inUse('cal-colors', { colors: { [slot]: '#000000' } }), true);
+  assert.equal(inUse('cal-colors', { colors: { notASlot: '#000000' } }), false, 'a colour the design has no slot for');
+});
+
+test('the calendar\'s filter and search does not count a design\'s own calendar switches', async () => {
+  const { CAL_DESIGNS } = await engineImport('calendar-designs.js');
+  const own = CAL_DESIGNS.find((d) => d.ownFilter);
+  assert.ok(own, 'a design draws its own calendar switches');
+  const cap = capability('cal-filter');
+  const block = { ...fresh('calendar'), props: { design: own.id, showCategories: true } };
+  assert.equal(cap.inUse(block, standIn(block)), false, 'its chips are the design\'s, not the block\'s');
+  block.props.showSearch = true;
+  assert.equal(cap.inUse(block, standIn(block)), true);
 });
 
 test('the name for links goes only while no link reaches the block by it', () => {

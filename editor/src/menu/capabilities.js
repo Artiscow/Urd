@@ -4,8 +4,11 @@
  * `area` is the menu's area the card stands in, `icon` its drawing (CAP_ICONS in lib/icons.js), `pins` the Pinned rows that hold its settings, `types` the block types that carry it (every type where absent).
  * A capability that is one switch has `single`: what the switch holds and how it is set, drawn as a card of one line with an On/Off chip (lib/rows/Capability.svelte); adding it switches it on, which on a block that starts with it on (a shape hidden on phones) leaves it as it is and keeps the card.
  * The words are `cap.<id>` (its title) and `cap.about.<id>` (one line on what it does) in the admin dictionaries.
+ * The shared capabilities stand first, then each block type's own; a block's own capability whose card a tool of the block's bar opens carries the id of the fold it was (bar-tools.js), so the tool finds it.
  */
 import { spotLinks } from '$engine/anchor-model.js';
+import { calDesign, calView, CAL_SWITCH_VIEWS } from '$engine/calendar-designs.js';
+import { linkOf } from '../lib/link-edit.js';
 
 /** The effect a block shows under the pointer: its own, or one an older block keeps as its animation. */
 const hoverOf = (block, ed) => block.hover?.type ?? (block.animation && !ed.isEntrance(block.animation) ? block.animation.type : '');
@@ -58,6 +61,58 @@ export const CAPABILITIES = [
     clear: (ed, block) => ed.setBlockDecor(starts(ed, block, 'decor')),
   },
 ];
+
+/* The image's and the calendar's own (ADR-0031): what a press on the picture does, and what the calendar can show beside its events.
+   A calendar's capability is in use by what its card shows in the calendar's view (menu/families/Calendar.svelte), so a setting the view leaves out does not keep a card. */
+/** The views that draw a grid of days, where the earlier events are not offered. */
+export const CAL_GRID_VIEWS = ['month', 'week', 'day', 'year'];
+/** Whether the calendar shows its first day of the week: the views that draw weeks, the bento design, and a calendar with the view switcher. */
+export const calShowsWeek = (props) => ['month', 'week', 'year', 'agenda'].includes(calView(props)) || props.design === 'bento' || props.switcher === true;
+CAPABILITIES.push(
+  {
+    id: 'img-link', area: 'content', icon: 'link', pins: [], types: ['image'],
+    // A link, or the lightbox for a picture without one: a link wins the press.
+    inUse: (block) => Object.keys(linkOf(block.props ?? {})).some((key) => key !== 'newTab' && key !== 'rel') || Boolean(block.props?.lightbox),
+    clear: (ed) => {
+      ed.setBlockLink(null);
+      ed.setBlockProp('lightbox', false);
+    },
+  },
+  {
+    id: 'cal-switcher', area: 'content', icon: 'views', pins: [], types: ['calendar'],
+    // Only the views that list what is coming can turn to the week or the month.
+    available: (block) => CAL_SWITCH_VIEWS.includes(calView(block.props ?? {})),
+    inUse: (block) => block.props?.switcher === true,
+    add: (ed) => ed.setBlockProp('switcher', true),
+    clear: (ed) => ed.setBlockProps('cal-switcher', { switcher: undefined, switcherViews: undefined }),
+  },
+  {
+    id: 'cal-time', area: 'content', icon: 'clock', pins: [], types: ['calendar'],
+    // The first day of the week counts where the card shows it: the views that draw weeks, the bento design and a calendar with the view switcher.
+    inUse: (block) => block.props?.clock === '12' || (['mon', 'sun'].includes(block.props?.weekStart) && calShowsWeek(block.props ?? {})),
+    clear: (ed) => ed.setBlockProps('cal-time', { clock: undefined, weekStart: undefined }),
+  },
+  {
+    id: 'cal-filter', area: 'content', icon: 'filter', pins: [], types: ['calendar'],
+    // A design with calendar switches of its own has no chip row, so its own switches do not count.
+    inUse: (block) => (!calDesign(block.props?.design).ownFilter && block.props?.showCategories === true) || block.props?.showSearch === true
+      || (block.props?.showEarlier === true && !CAL_GRID_VIEWS.includes(calView(block.props ?? {}))),
+    clear: (ed) => ed.setBlockProps('cal-filter', { showCategories: false, showSearch: undefined, showEarlier: undefined }),
+  },
+  {
+    id: 'cal-signup', area: 'content', icon: 'signup', pins: [], types: ['calendar'],
+    single: { value: (block) => block.props?.showSignup === true, set: (ed, on) => ed.setBlockProp('showSignup', on) },
+    inUse: (block) => block.props?.showSignup === true,
+    add: (ed) => ed.setBlockProp('showSignup', true),
+    clear: (ed) => ed.setBlockProp('showSignup', false),
+  },
+  {
+    id: 'cal-colors', area: 'style', icon: 'palette', pins: [], types: ['calendar'],
+    // The colours that count are the design's own slots, as the card draws them.
+    inUse: (block) => calDesign(block.props?.design).slots.some((slot) => block.props?.colors?.[slot.key]) || block.props?.stripe != null,
+    clear: (ed) => ed.setBlockProps('cal-colors', { colors: undefined, stripe: undefined }),
+  },
+);
 
 const BY_ID = new Map(CAPABILITIES.map((cap) => [cap.id, cap]));
 

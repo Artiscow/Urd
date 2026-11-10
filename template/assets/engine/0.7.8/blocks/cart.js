@@ -216,11 +216,12 @@ export const cartBlock = {
     // While editing, the drawer opens only when the block was already selected
     // AT the press (selection happens on pointerdown, before click): the
     // two-step pattern from the text blocks. The first click selects the
-    // block, the second opens the drawer.
+    // block, the second opens the drawer. In the Clean view, where no press
+    // selects a block, it opens at once, as on the published page.
     let openArmed = !ctx.preview;
     if (ctx.preview) {
       btn.addEventListener('pointerdown', () => {
-        openArmed = el.closest('.urd-block')?.classList.contains('urd-selected') ?? false;
+        openArmed = document.body.classList.contains('urd-chrome-off') || (el.closest('.urd-block')?.classList.contains('urd-selected') ?? false);
       });
     }
     btn.addEventListener('click', () => {

@@ -370,6 +370,13 @@ export function footerDesignSource({ site = null }) {
     showsFooter: true,
     findEl: (doc) => doc.getElementById('urd-footer'),
     extraBottom: () => 0,
-    afterDraw: null,
+    /** The footer ends the page, so the preview ends with it; it stands through the draws, so it is watched afresh at each. */
+    room: 0,
+    stays: true,
+    /** The page above the footer is watched too: it empties after the choice is drawn, which moves the footer up without changing its size, and the preview is measured again then. */
+    afterDraw: (win, footer, watch) => {
+      const page = win.document.getElementById('urd-root');
+      if (page) watch(page);
+    },
   };
 }

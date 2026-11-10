@@ -1,5 +1,5 @@
 /** Drawn SVG icons for the admin (stroke style, currentColor) - never emoji. Shared by App.svelte and the menu components. */
-/** The drawings of the capabilities (menu/capabilities.js), on their cards and in the add list; the box, the link and the motion as the block's bar draws them. */
+/** The drawings of the capabilities (menu/capabilities.js), on their cards and in the add list; the box, the link, the motion, the filter and the palette as the block's bar draws them. */
 const capSvg = (inner) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
 export const CAP_ICONS = {
   motion: capSvg('<path d="M3 7h7M3 12h11M3 17h7"/><path d="M16 8l4 4-4 4"/>'),
@@ -8,6 +8,11 @@ export const CAP_ICONS = {
   stick: capSvg('<path d="M5 4h14"/><path d="M12 20V9"/><path d="M8 13l4-4 4 4"/>'),
   link: capSvg('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
   decor: capSvg('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>'),
+  views: capSvg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M7 14h4M13 14h4M7 17.5h4"/>'),
+  clock: capSvg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  filter: capSvg('<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'),
+  signup: capSvg('<circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0114 0"/><path d="M16 11l2 2 4-4"/>'),
+  palette: capSvg('<path d="M12 3a9 9 0 100 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.8 0-1 .8-1.7 1.8-1.7H17a4 4 0 004-4c0-4.1-4-7.5-9-7.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="14.5" cy="7" r="1"/>'),
 };
 
 export const ICONS = {

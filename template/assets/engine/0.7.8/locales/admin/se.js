@@ -1112,7 +1112,7 @@ export default {
     'preset.whats-on.hint': 'Lágideapmelistu čuovvunvejolaš kaleandaris (iCal/Google)',
     'seed.whatsOn.title': '<h2>Mii dáhpáhuvvá</h2>',
     'calendar.group.view': 'Čájeheapmi ja lohku',
-    'calendar.group.buttons': 'Boalut ja filtar',
+    'calendar.group.buttons': 'Boalut',
     'calendar.group.empty': 'Go lea guorus',
     'calendar.group.notice': 'Dieđáhus',
     'calendar.clock': 'Diibmu',

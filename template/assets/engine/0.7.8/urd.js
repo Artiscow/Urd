@@ -403,6 +403,36 @@ function markDraftView() {
 let spellcheckOn = true;
 
 /**
+ * The Clean view's texts: every text the editor lets the owner write in place (contenteditable) is plain text while the Clean view stands, its own kind kept (data-urd-editable) and given back as the editing view returns.
+ * A text drawn while the Clean view stands (a section drawn anew, a calendar's card opened) is made plain as it comes.
+ */
+let cleanWatcher = null;
+function cleanTexts(on) {
+  const plain = () => {
+    for (const node of document.body.querySelectorAll('[contenteditable="true"], [contenteditable="plaintext-only"]')) {
+      node.dataset.urdEditable = node.getAttribute('contenteditable');
+      node.setAttribute('contenteditable', 'false');
+    }
+  };
+  cleanWatcher?.disconnect();
+  cleanWatcher = null;
+  if (on) {
+    if (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable) document.activeElement.blur();
+    plain();
+    // Only an element that comes is read again (a ticking countdown changes its text alone); the attribute set here is not watched, so the pass never calls itself.
+    cleanWatcher = new MutationObserver((records) => {
+      if (records.some((record) => [...record.addedNodes].some((node) => node.nodeType === Node.ELEMENT_NODE))) plain();
+    });
+    cleanWatcher.observe(document.body, { childList: true, subtree: true });
+    return;
+  }
+  for (const node of document.body.querySelectorAll('[data-urd-editable]')) {
+    node.setAttribute('contenteditable', node.dataset.urdEditable);
+    delete node.dataset.urdEditable;
+  }
+}
+
+/**
  * Attaches postMessage listening and height reporting in preview mode.
  * state = { page, site, viewport } is shared with boot, so breakpoint
  * switches and editor messages always work on the same data.
@@ -492,8 +522,8 @@ function enablePreview(state, opts) {
       // Clean view: hide/show the editing handles (CSS only, see base.css), and no spell marks, since nothing is being written.
       document.body.classList.toggle('urd-chrome-off', !msg.visible);
       document.body.spellcheck = spellcheckOn && msg.visible;
-      // The calendar's rewritable words are plain text in the Clean view, so the links and buttons around them work.
-      for (const node of document.querySelectorAll('.urd-cal-tx.urd-text')) node.contentEditable = msg.visible ? 'true' : 'false';
+      // Every text written in place is plain text in the Clean view, as on the published page: no caret, no focus frame, and the links and buttons around it work.
+      cleanTexts(!msg.visible);
       // The pinning and the menu's scroll state follow the switch at once,
       // not first at the next scroll.
       refreshSticky();

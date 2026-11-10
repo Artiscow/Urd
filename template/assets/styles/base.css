@@ -19395,6 +19395,16 @@ body.urd-mobile .urd-section-resize-top {
   cursor: text;
 }
 
+/* In the Clean view no block is moved and no text written in (preview-edit.js, urd.js), so the cursors are the published page's, and a link in a block, which is followed there, shows the pointer; while editing, a press on a link selects the block or places the caret, and the cursors above stand. */
+.urd-preview.urd-chrome-off .urd-editable {
+  cursor: auto;
+}
+
+.urd-preview.urd-chrome-off .urd-editable a[href],
+.urd-preview.urd-chrome-off .urd-editable a[href] * {
+  cursor: pointer;
+}
+
 /* While editing, the block under the pointer or the selected block is raised visually to the top, so that the handles can always be reached even if other blocks lie above it (z order).
    The raised one is the smallest block under the pointer (preview-edit.js sets the class), so a small block over a larger one can be reached.
    The true layer order is shown when the block is deselected - and ALWAYS in Clean view (chrome-off), which must be exactly what visitors see. */

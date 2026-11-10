@@ -1,7 +1,8 @@
 <script>
   /* Undo, redo and the session's steps, right after the page switcher: the arrows greyed when there is nothing to take back or bring back, their tooltips naming the step, and the caret opening the steps newest first, the undone ones greyed above «now», and at the foot «Discard drafts» with «Redo everything» beside it while there is something to bring back.
      A step's row goes back to just after it, or forward to an undone one, in one go (historyState.goSteps); the steps are kept in this browser over a reload (lib/history-store.js).
-     A tool menu as the top bar's others (ed.toolMenu 'steps'), which stays open through a jump between steps and through the discard's question, and closes on a press outside it or Escape. */
+     A tool menu as the top bar's others (ed.toolMenu 'steps'), which stays open through a jump between steps and through the discard's question, and closes on a press outside it or Escape.
+     As the top bar's other menus, the caret opens the steps on a mouse's rest on it, and a list a rest opened closes a moment after the mouse leaves the caret and the list, unless the focus has gone into it; a touch is no hover (AGENTS.md, hybrid devices). As a menu that opens on hover, the caret has its name for a screen reader and no tooltip. */
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
@@ -38,6 +39,36 @@
     else if (discardOnTop) ed.undo();
   }
 
+  /* The rest that opens the steps, and the list it opened, which the press that often follows the rest keeps open. */
+  let restTimer = null;
+  let restOpened = false;
+  $effect(() => () => clearTimeout(restTimer));
+  function rest(on, event) {
+    if (event.pointerType !== 'mouse') return;
+    // The list keeps itself open while the focus is in it; the focus left on undo or redo beside it does not.
+    const pop = event.currentTarget.closest('.undo-group')?.querySelector('.steps-pop');
+    clearTimeout(restTimer);
+    restTimer = setTimeout(() => {
+      if (on && !open && (steps.undo.length || steps.redo.length)) {
+        ed.toolMenu = 'steps';
+        restOpened = true;
+      } else if (!on && open && restOpened && !pop?.contains(document.activeElement)) {
+        ed.toolMenu = null;
+        restOpened = false;
+      }
+    }, on ? 180 : 280);
+  }
+  /** A press on the caret opens or closes the steps, but leaves a list a rest just opened standing, now as a list a press opened. */
+  function press() {
+    clearTimeout(restTimer);
+    if (open && restOpened) {
+      restOpened = false;
+      return;
+    }
+    restOpened = false;
+    ed.toolMenu = open ? null : 'steps';
+  }
+
   const undoTip = $derived(steps.undo.length ? ta('tip.undoStep', { step: label(steps.undo[0]).text }) : ta('tip.undoNone'));
   const redoTip = $derived(steps.redo.length ? ta('tip.redoStep', { step: label(steps.redo[0]).text }) : ta('tip.redoNone'));
 </script>
@@ -45,10 +76,10 @@
 <span class="toolmenu undo-group" role="group" aria-label={ta('history.title')}>
   <button type="button" class="ghost undo-btn" disabled={!steps.undo.length} title={undoTip} aria-label={undoTip} onclick={() => ed.undo()}>{@html ICONS.undo}</button>
   <button type="button" class="ghost undo-btn" disabled={!steps.redo.length} title={redoTip} aria-label={redoTip} onclick={() => ed.redo()}>{@html ICONS.redo}</button>
-  <button type="button" class="ghost undo-caret" class:open disabled={!steps.undo.length && !steps.redo.length} title={ta('tip.steps')} aria-label={ta('tip.steps')} aria-expanded={open}
-    onclick={() => (ed.toolMenu = open ? null : 'steps')}>{@html ICONS.caret}</button>
+  <button type="button" class="ghost undo-caret" class:open disabled={!steps.undo.length && !steps.redo.length} aria-label={ta('tip.steps')} aria-expanded={open}
+    onclick={press} onpointerenter={(e) => rest(true, e)} onpointerleave={(e) => rest(false, e)}>{@html ICONS.caret}</button>
   {#if open}
-    <div class="tool-pop steps-pop" transition:menuMotion role="dialog" aria-label={ta('history.title')}>
+    <div class="tool-pop steps-pop" transition:menuMotion role="dialog" tabindex="-1" aria-label={ta('history.title')} onpointerenter={(e) => rest(true, e)} onpointerleave={(e) => rest(false, e)}>
       <span class="steps-head"><b>{ta('history.title')}</b><small>{ta('history.kept')}</small></span>
       <div class="steps-list">
         {#each ahead as step, i (`r${i}`)}
@@ -93,11 +124,12 @@
     border-radius: 8px;
   }
 
+  /* The buttons as tall as the tool groups' (app.css), so the group stands as tall as theirs */
   .undo-btn,
   .undo-caret {
     display: grid;
     place-items: center;
-    height: 1.9rem;
+    height: 26px;
     padding: 0 0.45rem;
     background: transparent;
     border-color: transparent;

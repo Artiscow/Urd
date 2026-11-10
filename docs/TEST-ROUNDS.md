@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.12.3): the image's and the calendar's own capabilities, Clean view, and the top bar
+
+- [ ] A picture with no link and no lightbox shows no «Link and click»; the «+» offers it, and a link or the lightbox keeps the card after a reload; the bar's «Link and click» tool opens it on any picture
+- [ ] A new calendar shows none of «View switcher», «Time and week», «Filter and search», «Sign-up buttons» and «Colours»; the «+» offers each («View switcher» only in the views «List», «Cards», «Agenda» and «Next»), and each one's × takes it back to the standard
+- [ ] A calendar: «Sign-up buttons» is a card of one line with its On/Off chip; the bar's «Colours» tool opens the colours with the stripe, used or not
+- [ ] A calendar's «Buttons» (formerly «Buttons and filter») and «View and count» show their reset only for what they still hold
+- [ ] A button right under a text: its toolbar can be reached and pressed over the text
+- [ ] Words chosen in a text, then «Link»: a page of the site and a web address both land on the words, and stay after a reload
+- [ ] The footer's design picker: the preview is the footer alone, as tall as it is and its full width, for every design
+- [ ] The Clean view: a text's link, a button and a linked picture are followed (another site in a new tab), a link to a PDF of the site opens in a new tab and a download saves, the basket opens its drawer at a press, the hand pointer shows on a link and no move cursor on a block, a press on a text shows no frame and no caret, and the texts, a calendar's words too, can be written in again after «Edit»
+- [ ] The undo arrow opens the steps as the mouse rests on it and closes as it leaves; a press keeps the list open
+- [ ] The top bar: the page's name, undo, the screen, zoom and grid groups, Clean view and Publish stand one height, with and without a count; the zoom, fit, grid and guide icons stand in the middle of their buttons
+- [ ] The Publish count stands in the middle of its badge, and the Publish menu with a long list ends inside the window, the list scrolling and «Publish now» and the last publish in sight
+
 ### Test batch (0.7.0.82): vite 8.3.6
 
 - [ ] The admin loads, and the element menu, the panels and the canvas work as before

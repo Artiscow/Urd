@@ -1641,7 +1641,7 @@ export default {
     'ph.analyticsToken': 'Tom = ingen mätning',
     'tip.analytics': 'Integritetsvänlig besöksmätning med Cloudflare Web Analytics: inga kakor, ingen fingerprinting, ingen samtyckesbanner. Skapa webbplatsen under Web Analytics i Cloudflare-panelen och klistra in token-värdet från mätsnutten. Publiceras med webbplatsen; mäts bara på den publicerade sidan, aldrig här i redigeraren.',
     'calendar.group.view': 'Visning och antal',
-    'calendar.group.buttons': 'Knappar och filter',
+    'calendar.group.buttons': 'Knappar',
     'calendar.group.empty': 'När det är tomt',
     'calendar.group.notice': 'Meddelande',
     'calendar.clock': 'Klocka',

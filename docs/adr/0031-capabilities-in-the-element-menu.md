@@ -32,4 +32,4 @@ The field was surveyed on 9 November 2026 (comparison/SURVEYS.md «Adding a sett
 - `tests/menu-render.test.mjs` holds a card to standing while its capability is in use or added, in the search's copy and in its tool's panel, and nowhere else. `tests/bar-tools.test.mjs` lets a tool open a capability's card as it opens a fold.
 - The history joins the changes of one step of its own into one undo step (`lib/history-model.js`), so a way back that clears several settings is undone at once.
 - A family that moves a group into a capability takes the group's settings out of the reset and the count of the group it left.
-- The other families' own capabilities follow in a later item; until then their groups stand as folds.
+- The image's and the calendar's own capabilities stand with the shared ones; a block's own capability whose card a tool of its bar opens keeps the id of the fold it was, so the tool finds it. The other families' own capabilities follow in a later item; until then their groups stand as folds.

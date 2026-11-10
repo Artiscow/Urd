@@ -1225,7 +1225,7 @@ export default {
     'preset.whats-on.hint': 'Arrangementsliste frå ein abonnerbar kalender (iCal/Google)',
     'seed.whatsOn.title': '<h2>Kva skjer</h2>',
     'calendar.group.view': 'Vising og tal',
-    'calendar.group.buttons': 'Knappar og filter',
+    'calendar.group.buttons': 'Knappar',
     'calendar.group.empty': 'Når det er tomt',
     'calendar.group.notice': 'Kunngjering',
     'calendar.clock': 'Klokke',

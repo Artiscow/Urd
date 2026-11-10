@@ -119,3 +119,26 @@ for (const short of ['.badge-mini']) {
     );
   });
 }
+
+test('the top bar\'s buttons and groups stand one height, and the tool groups\' icons on whole pixels', () => {
+  // The tool groups' icon buttons at one even size: a drawing of 12 or 14 px stands on whole pixels in the middle of a 40 px button, and a group of 26 px buttons is 32 px tall.
+  assert.match(NO_COMMENTS, /\.toolgrp > \.ghost:not\([^{]*\{\s*justify-content: center;\s*box-sizing: border-box;\s*width: 40px;\s*height: 26px;\s*padding: 0;/);
+  // The bar's own buttons as tall as the groups, whatever they hold (Publish with its count).
+  assert.match(NO_COMMENTS, /\.topbar \.topbar-tall:not\([^{]*\{\s*box-sizing: border-box;\s*height: 32px;/);
+  const topbar = readFileSync(new URL('../editor/src/shell/TopBar.svelte', import.meta.url), 'utf-8');
+  assert.match(topbar, /class="primary publish-btn topbar-tall"/, 'Publish');
+  assert.match(topbar, /class="ghost topbar-tall"\s*onclick=\{ed\.toggleChrome\}/, 'Clean view');
+  assert.match(readFileSync(new URL('../editor/src/shell/PageSwitcher.svelte', import.meta.url), 'utf-8'), /class="ghost page-btn topbar-tall"/, 'the page\'s name');
+  // Undo and redo as tall as a tool group's buttons, in a frame like theirs.
+  const undo = readFileSync(new URL('../editor/src/shell/UndoButtons.svelte', import.meta.url), 'utf-8');
+  assert.match(undo, /\.undo-btn,\s*\.undo-caret \{\s*display: grid;\s*place-items: center;\s*height: 26px;/);
+  assert.match(undo, /\.undo-group \{[^}]*padding: 2px;[^}]*border: 1px solid/);
+});
+
+test('the Publish count is centred on its digits, and the Publish menu ends inside the window with what waits scrolling in a box of its own', () => {
+  assert.match(NO_COMMENTS, /@supports \(text-box: trim-both cap alphabetic\) \{\s*\.publish-count \{[^}]*padding: calc\(\(1\.25rem - 1cap\) \/ 2\) 0\.35rem;[^}]*text-box: trim-both cap alphabetic;/);
+  assert.doesNotMatch(NO_COMMENTS.slice(NO_COMMENTS.indexOf('.publish-count {'), NO_COMMENTS.indexOf('}', NO_COMMENTS.indexOf('.publish-count {'))), /tabular-nums/, 'a 1 stands in the middle as a 6 does');
+  assert.match(NO_COMMENTS, /\.tool-pop\.publish-pop \{[^}]*max-height: min\(40rem, calc\(100vh - 5rem\)\);/);
+  assert.match(NO_COMMENTS, /\.publish-pop > \.publish-rows \{\s*flex: 1 1 auto;\s*min-height: 4rem;\s*overflow-y: auto;/);
+  assert.match(readFileSync(new URL('../editor/src/shell/TopBar.svelte', import.meta.url), 'utf-8'), /<div class="publish-rows"><UnpublishedRows /);
+});

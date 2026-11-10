@@ -831,6 +831,7 @@ document.addEventListener('pointermove', (event) => {
 
 /**
  * The block raised under the pointer is the smallest one there, not the topmost, so a small block lying over a larger one can be reached.
+ * A block whose own bar or handles stand topmost under the pointer stays raised: its bar stands outside its box, over the block above or below it, and stays reachable there.
  * The class stands where :hover would in base.css; a block that is not under the pointer loses it, and the Clean view raises nothing.
  */
 let raisedEl = null;
@@ -841,8 +842,11 @@ function raiseSmallestUnder(x, y) {
     raiseFrame = 0;
     let best = null;
     if (!document.body.classList.contains('urd-chrome-off')) {
+      const hits = document.elementsFromPoint(x, y);
+      const chrome = hits[0] instanceof Element ? hits[0].closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate') : null;
+      best = chrome?.closest('.urd-editable') ?? null;
       let bestArea = Infinity;
-      for (const n of document.elementsFromPoint(x, y)) {
+      for (const n of best ? [] : hits) {
         if (!(n instanceof HTMLElement) || !n.classList.contains('urd-editable')) continue;
         const area = n.offsetWidth * n.offsetHeight;
         if (area < bestArea) {
@@ -2635,6 +2639,12 @@ function initTextToolbar() {
   // A link to a page or a spot on it keeps the page and the spot beside its address (data-urd-page, data-urd-target), which the text's render reads again, so the link follows a change of the page's address.
   /** The link being edited, or null for a new one on the selection. */
   let editedLink = null;
+  /** The text and its block a link was asked for: the focus goes to the editor's link editor meanwhile, which takes the text from the toolbar, so its answer is written where it was asked for.
+      The text's place among its block's texts and the words chosen as paths into it (caret-path.js) find both again on a text drawn anew meanwhile. */
+  let linkField = null;
+  let linkBlockId = null;
+  let linkFieldIndex = -1;
+  let linkWords = null;
   function editLink() {
     // Words that stand inside a link or a button already (the calendar's words) take no link of their own.
     if (!activeText || activeText.closest('a, button')) return;
@@ -2656,6 +2666,14 @@ function initTextToolbar() {
       ...(editedLink.hasAttribute('download') ? { download: true } : {}),
       rel: LINK_RELS.filter((word) => editedLink.relList.contains(word)),
     } : null;
+    linkField = activeText;
+    linkBlockId = activeBlockId;
+    const fields = [...(activeText.closest('.urd-block')?.querySelectorAll(EDITABLE_TEXT) ?? [])];
+    linkFieldIndex = fields.indexOf(activeText);
+    const range = savedRange;
+    linkWords = range && activeText.contains(range.startContainer) && activeText.contains(range.endContainer)
+      ? { start: pathTo(activeText, range.startContainer), startOffset: range.startOffset, end: pathTo(activeText, range.endContainer), endOffset: range.endOffset, inLink: Boolean(editedLink) }
+      : null;
     post({ type: 'urd-link-edit', value, text: editedLink ? '' : (sel?.toString() ?? '').trim() });
   }
 
@@ -2670,8 +2688,38 @@ function initTextToolbar() {
     if (link.target) a.dataset.urdTarget = link.target; else delete a.dataset.urdTarget;
   };
 
+  /** The text the link was asked for, or, where it was drawn anew meanwhile, the text in its place in its block with the words chosen again in it and the link they stood in; null where they cannot be found, and the answer is then left. */
+  const linkTarget = () => {
+    if (linkField?.isConnected) return linkField;
+    const fields = linkBlockId ? document.querySelector(`.urd-block[data-block-id="${linkBlockId}"]`)?.querySelectorAll(EDITABLE_TEXT) : null;
+    const field = fields?.[linkFieldIndex] ?? null;
+    if (!field || !linkWords) return null;
+    const start = nodeAt(field, linkWords.start);
+    const end = nodeAt(field, linkWords.end);
+    if (!start || !end) return null;
+    const range = document.createRange();
+    try {
+      range.setStart(start, linkWords.startOffset);
+      range.setEnd(end, linkWords.endOffset);
+    } catch {
+      return null;
+    }
+    savedRange = range;
+    const startEl = start instanceof Element ? start : start.parentElement;
+    editedLink = linkWords.inLink ? startEl?.closest('a') ?? null : null;
+    return field;
+  };
+
   textLinkApply = (link, pages) => {
-    if (!activeText?.isConnected) return;
+    // The text the link was asked for; the toolbar takes it back with the focus.
+    const field = linkTarget();
+    linkField = null;
+    if (!field) {
+      editedLink = null;
+      return;
+    }
+    activeText = field;
+    activeBlockId = linkBlockId;
     activeText.focus({ preventScroll: true });
     restoreSelection();
     if (!link) {
@@ -3707,8 +3755,8 @@ function selectBlock(el, opts = {}) {
 // and keeps the dropdown in sync); external links open in a new tab
 // instead of pulling the iframe out of editing mode. Links INSIDE blocks
 // (buttons, images, text links) never trigger while editing: the click
-// selects the block, and the link is tested via "View page" (a calendar's
-// links also in the Clean view).
+// selects the block. In the Clean view, which shows the page as visitors
+// see it, every link is followed.
 // A click the link's own handler has cancelled (a mobile menu item that
 // opens its submenu) navigates nowhere, as on the published page.
 document.addEventListener('click', (event) => {
@@ -3718,13 +3766,11 @@ document.addEventListener('click', (event) => {
   // The event in full is a dialog over the page: its links work as on the
   // published page (a new tab, a file to save).
   if (a.closest('.urd-cal-dialog')) return;
-  // In the Clean view a calendar's own links (a place, an address in a
-  // description, a sign-up) are followed too, and so is a links block's row,
-  // which in the editing view works once its block is selected (the first
-  // click selects, the next follows, the cart button's model); every other
-  // link in a block waits for «View page».
+  // In the Clean view every link in a block is followed, as on the published
+  // page; while editing, a links block's row works once its block is
+  // selected (the first click selects, the next follows, the cart button's
+  // model), and every other link in a block waits for «View page».
   const chromeOff = document.body.classList.contains('urd-chrome-off');
-  const cleanCalendar = chromeOff && a.closest('.urd-cal');
   const linksRow = a.classList.contains('urd-share-button') && (chromeOff || a.closest('.urd-block')?.classList.contains('urd-selected'));
   // A basket's drawer is opened on purpose, so its «Go to checkout» switches the editor to that page, as the menu basket's does.
   const cartDrawer = Boolean(a.closest('.urd-cart-dialog'));
@@ -3735,12 +3781,14 @@ document.addEventListener('click', (event) => {
     docPart.scrollIntoView({ block: 'start' });
     return;
   }
-  if (a.closest('.urd-block') && !cleanCalendar && !linksRow && !cartDrawer) {
+  if (a.closest('.urd-block') && !chromeOff && !linksRow && !cartDrawer) {
     event.preventDefault();
     return;
   }
   const href = a.getAttribute('href');
   if (!href || href.startsWith('#')) return;
+  // A file to save is the browser's, as on the published page.
+  if (a.hasAttribute('download')) return;
   let url;
   try {
     url = new URL(href, location.href);
@@ -3749,11 +3797,12 @@ document.addEventListener('click', (event) => {
     event.preventDefault();
     return;
   }
-  // A calendar link to another site that opens in a tab of its own is left
-  // to the browser; only a link to a page of this site goes through the editor.
-  if ((cleanCalendar || linksRow) && url.origin !== location.origin && a.target === '_blank') return;
+  // A link to another site that opens in a tab of its own is left to the
+  // browser; only a link to a page of this site goes through the editor.
+  if ((chromeOff || linksRow) && url.origin !== location.origin && a.target === '_blank') return;
   event.preventDefault();
-  if (url.origin === location.origin) {
+  // A page of this site goes through the editor; a file of the site (a PDF under media/) and another site open in a tab of their own.
+  if (url.origin === location.origin && !/\.[a-z0-9]{2,5}$/i.test(url.pathname)) {
     post({ type: 'urd-navigate', path: url.pathname, hash: url.hash });
   } else {
     window.open(url, '_blank', 'noopener');
@@ -5028,6 +5077,8 @@ function enhanceBlock(el, block, section, grid, host) {
   function wireDrag(handle, kind, opts = {}) {
     handle.addEventListener('pointerdown', (event) => {
       if (opts.surface) {
+        // In the Clean view a press is the published page's: no block is selected or dragged, so a link, a calendar's event, a document's fold and a links row answer as they do for a visitor, and the texts are plain text (urd.js).
+        if (document.body.classList.contains('urd-chrome-off')) return;
         const target = eventTarget(event);
         // Editable text is only exempt when the block is ALREADY selected
         // (then the text is being edited). An unselected block drags
@@ -5042,20 +5093,16 @@ function enhanceBlock(el, block, section, grid, host) {
         if (target?.closest('.urd-cart-button, .urd-share-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
         // A product card of the selected block follows the same two steps: its click opens the product's entry in the Collections panel (blocks/product.js).
         if (!mobile && target?.closest('.urd-product-card') && selectedBlockId === block.id && multiIds.size <= 1) return;
-        // In the Clean view a links row keeps its click too, as the calendar's links do.
-        if (document.body.classList.contains('urd-chrome-off') && target?.closest('.urd-share-button')) return;
-        // In the Clean view a calendar event keeps its click: it opens the event in full, as on the published page.
-        // So does an event of the selected calendar while editing, where the card's words are rewritten.
+        // An event of the selected calendar keeps its click while editing, where the card's words are rewritten.
         // The Year wheel's months are buttons drawn in SVG and follow the same two steps: a click picks the month.
         // An unselected calendar drags from its events and months too.
         const calendarPress = target?.closest('.urd-cal-event, .urd-cal-wheel-seg, .urd-cal-wheel-month');
-        if (document.body.classList.contains('urd-chrome-off') && calendarPress) return;
         if (calendarPress && selectedBlockId === block.id && multiIds.size <= 1) return;
         // A document's contents are its navigation: a press on an entry jumps to its part at once, the block selected or not (the click below).
         if (target?.closest('.urd-doc-toc a, .urd-doc-fold a')) return;
-        // A document's fold-outs (the privacy page's questions, the contents folded into one row) follow the same two steps: a press on the selected block's row opens it, and so does one in the Clean view.
+        // A document's fold-outs (the privacy page's questions, the contents folded into one row) follow the same two steps: a press on the selected block's row opens it.
         const foldPress = target?.closest('.urd-doc-part > summary, .urd-doc-fold > summary');
-        if (foldPress && (document.body.classList.contains('urd-chrome-off') || (selectedBlockId === block.id && multiIds.size <= 1))) return;
+        if (foldPress && selectedBlockId === block.id && multiIds.size <= 1) return;
         // The plugin config panels are guarded by class name, the old
         // reference plugin names included: plugin copies in user repos
         // keep them forever (see the compatibility surface in SCHEMA.md).

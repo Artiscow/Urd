@@ -4341,6 +4341,23 @@
   }
 
   .toolgrp .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border-color: transparent; }
+
+  /* A tool group's icon buttons (zoom, fit, the grid and the guides) at one even size, so each drawing stands on whole pixels in the middle of its button and every group is as tall as the next (32 px) */
+  .toolgrp > .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    justify-content: center;
+    box-sizing: border-box;
+    width: 40px;
+    height: 26px;
+    padding: 0;
+  }
+
+  /* The top bar's own buttons (the page's name, Clean view and Publish with its count) as tall as the tool groups, whatever they hold */
+  .topbar .topbar-tall:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    box-sizing: border-box;
+    height: 32px;
+    min-height: 0;
+    padding-block: 0;
+  }
   .toolgrp .ghost.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)){ border-color: var(--urd-color-accent, #7c5cff); }
 
   /* Publish with its menu: the count of what waits inside the button, and the menu under its right edge with the acts, the rows of what waits and the last publish */
@@ -4355,6 +4372,7 @@
     gap: 0.45rem;
   }
 
+  /* The count in its round badge, centred on its digits: proportional figures, so a 1 stands in the middle as a 6 does, and, where the browser trims a line to its capitals (text-box), the digits' own height between equal paddings rather than the font's line */
   .publish-count {
     display: inline-grid;
     place-items: center;
@@ -4366,14 +4384,37 @@
     background: rgb(0 0 0 / 22%);
     font-size: 0.75rem;
     font-weight: 600;
-    font-variant-numeric: tabular-nums;
   }
 
+  @supports (text-box: trim-both cap alphabetic) {
+    .publish-count {
+      display: inline-block;
+      height: auto;
+      padding: calc((1.25rem - 1cap) / 2) 0.35rem;
+      line-height: 1;
+      text-align: center;
+      text-box: trim-both cap alphabetic;
+    }
+  }
+
+  /* The menu ends inside the window: what waits scrolls in a box of its own, and the acts and the last publish keep their place */
   .tool-pop.publish-pop {
     left: auto;
     right: 0;
     min-width: 17rem;
     max-width: 22rem;
+    max-height: min(40rem, calc(100vh - 5rem));
+  }
+
+  .publish-pop > * {
+    flex: none;
+  }
+
+  .publish-pop > .publish-rows {
+    flex: 1 1 auto;
+    min-height: 4rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   /* The acts and the rows of what waits share one height, so the menu reads as one list */

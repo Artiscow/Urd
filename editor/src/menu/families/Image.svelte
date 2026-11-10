@@ -1,11 +1,13 @@
 <script>
   /* The image block in the element menu (0.7.26.2): its Content and Style areas,
      drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+     editor handle.
+     What a press on the picture does is a capability (ADR-0031): a card while the picture links somewhere or opens in the lightbox, or was given one this session. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
+  import Capability from '../../lib/rows/Capability.svelte';
   import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
   import { slugify } from '$engine/imageTools.js';
@@ -13,7 +15,7 @@
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
   import LinkField from '../../lib/LinkField.svelte';
-  import { linkOf, linkText } from '../../lib/link-edit.js';
+  import { linkOf } from '../../lib/link-edit.js';
   import { ICONS } from '../../lib/icons.js';
   const ed = getContext('urd-editor');
   /** A fold counts the settings it holds now: one whose every setting stands in Pinned is left out, and one of a single setting is that setting alone. */
@@ -70,8 +72,7 @@
     {/if}
   {/snippet}
   <Fold id="img-image" title={ta('blocks.image')} value={selectedBlock.props.alt || ta('menu.noAlt')}>{@render imgImage()}</Fold>
-  <Fold id="img-link" title={ta('group.linkClick')} value={imageLinked ? linkText(linkOf(selectedBlock.props), { pages: ed.siteDraft?.pages ?? [], here: ed.pageId }) : (selectedBlock.props.lightbox ? ta('menu.lightboxShort') : ta('common.none'))}
-    rows={imageLinked ? 1 : 2} group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</Fold>
+  <Capability id="img-link" group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</Capability>
 {:else if area === 'style'}
   <!-- The two one-press choices beside the editor, each with its pin for Pinned; the rest of the picture's settings are the editor's -->
   {#snippet imgLook()}

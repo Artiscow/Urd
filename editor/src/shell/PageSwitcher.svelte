@@ -118,7 +118,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <span class="toolmenu page-switch" bind:this={wrapEl} onpointerenter={(e) => rest(true, e)} onpointerleave={(e) => rest(false, e)}>
-  <button type="button" class="ghost page-btn" class:open bind:this={buttonEl} aria-haspopup="true" aria-expanded={open}
+  <button type="button" class="ghost page-btn topbar-tall" class:open bind:this={buttonEl} aria-haspopup="true" aria-expanded={open}
     onclick={toggle}><span class="page-btn-name">{current?.title ?? ''}</span>{@html ICONS.caret}</button>
   {#if open}
     <div class="tool-pop page-pop" transition:menuMotion role="dialog" aria-label={ta('tip.switchPage')}>

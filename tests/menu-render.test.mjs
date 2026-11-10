@@ -37,7 +37,7 @@ const noop = () => {};
 const BLOCKS = {
   text: [{}, { align: 'center', box: true, boxStyle: { shadow: 'soft', border: { color: 'accent', width: 2 } } }],
   button: [{ label: 'Go', style: 'primary', page: null, href: '#' }, { label: 'Go', style: 'secondary', page: 'hjem' }],
-  image: [{ src: 'x', alt: '' }, { src: 'x', href: 'https://a', fit: 'contain', x: 0.2, radius: 'sm' }],
+  image: [{ src: 'x', alt: '' }, { src: 'x', href: 'https://a', fit: 'contain', x: 0.2, radius: 'sm' }, { src: 'x', lightbox: true }],
   video: [{ source: 'embed', url: '' }, { source: 'file', src: 'x', muted: true, autoplay: true }, { source: 'embed', url: 'https://v', poster: 'p' }, { source: 'embed', url: 'https://v', askFirst: false }],
   icon: [{ glyph: '★' }, { icon: 'heart', image: 'data:x', size: 64, color: 'text' }],
   shape: [{ kind: 'line', color: 'accent', thickness: 2 }, { kind: 'circle', color: 'text', thickness: 4, fill: 'text' }],
@@ -47,7 +47,7 @@ const BLOCKS = {
     { sources: [] },
     { sources: ['https://x', { calendar: 'c1' }, { calendar: 'gone' }, { url: 'https://y', name: 'Y', color: '#fff' }], view: 'next', switcher: true, nextCount: 2, laterCount: 2 },
     { sources: [], design: 'bento', notice: { show: true, as: 'band', href: 'https://z' }, colors: { bg: '#000' }, stripe: { show: true, color: '#111' }, fieldStyle: { title: { bold: true, italic: true } }, options: {}, texts: { noticeTitle: 'A<br>B' } },
-    { sources: [], view: 'agenda', showSearch: true, showEarlier: true, emptyIcon: 'none', emptyText: 'None', limit: 12, showMore: false },
+    { sources: [], view: 'agenda', showSearch: true, showEarlier: true, emptyIcon: 'none', emptyText: 'None', limit: 12, showMore: false, clock: '12', weekStart: 'mon', showSignup: true },
   ],
   form: [{ fields: [{ id: 'f1', label: 'A', type: 'select', options: ['x'], required: true }], mode: 'endpoint', endpoint: 'https://e' }, { fields: [], mode: 'mailto' }],
   faq: [{ items: [{ q: 'Q', a: 'A' }], variant: 'list' }, { items: [], multi: true, boxStyle: { glass: true } }],
@@ -458,6 +458,27 @@ test('hiding on phones goes back to what the block type starts with: a shape sta
   assert.equal(ownOf('shape', false), true, 'a shape shown on phones holds its own value');
   assert.equal(ownOf('text', true), true, 'a text hidden on phones holds its own value');
   assert.equal(ownOf('text', false), false, 'a text shown on phones holds its standard');
+});
+
+test('the image\'s and the calendar\'s own capabilities stand as cards while the block uses them, and take no room before', () => {
+  const cards = (type, props) => {
+    setQuickChoice(type, { pinned: [], removed: PIN_IDS });
+    const context = new Map([['urd-editor', handleFor(block(type, props, {}))]]);
+    const tree = parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body);
+    setQuickChoice(type, NO_CHOICE);
+    return find(tree, (n) => n.attrs['data-cap'] !== undefined).map((n) => n.attrs['data-cap']).filter((id) => /^(img|cal)-/.test(id)).sort();
+  };
+  assert.deepEqual(cards('image', { src: 'x' }), [], 'a picture with no link and no lightbox');
+  assert.deepEqual(cards('image', { src: 'x', lightbox: true }), ['img-link']);
+  assert.deepEqual(cards('calendar', { sources: [] }), [], 'a new calendar');
+  assert.deepEqual(cards('calendar', { sources: [], view: 'list', switcher: true, clock: '12', showSearch: true, showSignup: true, stripe: { color: '#111111' } }),
+    ['cal-colors', 'cal-filter', 'cal-signup', 'cal-switcher', 'cal-time']);
+  // The groups they left neither count nor reset them.
+  const calendar = readFileSync(new URL('../editor/src/menu/families/Calendar.svelte', import.meta.url), 'utf8');
+  const groups = calendar.slice(calendar.indexOf('function calMenu()'), calendar.indexOf('</script>', calendar.indexOf('function calMenu()')));
+  for (const key of ['switcher', 'switcherViews', 'clock', 'weekStart', 'showCategories', 'showSearch', 'showEarlier', 'showSignup', 'colors', 'stripe']) {
+    assert.doesNotMatch(groups, new RegExp(`p\\.${key}\\b|[{,]\\s*${key}:`), `the groups leave ${key} to its card`);
+  }
 });
 
 test('a one-switch capability is a card of one line whose chip is its switch', () => {

@@ -334,7 +334,7 @@
     {/if}
     {#if gearHere}<SettingsGear />{/if}
     <button
-      class="ghost"
+      class="ghost topbar-tall"
       onclick={ed.toggleChrome}
       title={ed.chromeVisible ? ta('tip.chromeHide') : ta('tip.chromeShow')}
     >{#if ed.chromeVisible}{@html ICONS.eye} <span class="btn-label">{ta('ui.cleanView')}</span>{:else}{@html ICONS.pencil} <span class="btn-label">{ta('ui.edit')}</span>{/if}</button>
@@ -351,7 +351,7 @@
          The menu holds the acts first (Publish now, the published site, Discard drafts), then what waits to be published as rows that lead to the change, and at its foot the last publish, which opens History. -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <span class="toolmenu publish-wrap" onpointerenter={(e) => menuRest('publish', true, e)} onpointerleave={(e) => menuRest('publish', false, e)}>
-      <button type="button" class="primary publish-btn" aria-expanded={ed.toolMenu === 'publish'} aria-haspopup="true" aria-describedby={ed.dirty ? 'publish-waiting' : undefined}
+      <button type="button" class="primary publish-btn topbar-tall" aria-expanded={ed.toolMenu === 'publish'} aria-haspopup="true" aria-describedby={ed.dirty ? 'publish-waiting' : undefined}
         onclick={() => pressMenu('publish')}>{ta('ui.publish')}{#if ed.dirty}<span class="publish-count" aria-hidden="true">{ed.unpublished.length}</span><span class="sr-only" id="publish-waiting">{ta(ed.unpublished.length === 1 ? 'publish.waiting.one' : 'publish.waiting', { n: ed.unpublished.length })}</span>{/if}{@html ICONS.caret}</button>
       {#if ed.toolMenu === 'publish'}
         <div class="tool-pop publish-pop" transition:menuMotion role="group" aria-label={ta('publish.menu')}>
@@ -362,7 +362,8 @@
           {#if ed.dirty}
             <hr class="gridmenu-divider" />
             <span class="mini-label publish-head">{ta('history.unpublished')} · {ed.unpublished.length}</span>
-            <UnpublishedRows parts={ed.unpublished} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={goTo} />
+            <!-- What waits scrolls in its own box, so the acts above it and the last publish under it stay in sight -->
+            <div class="publish-rows"><UnpublishedRows parts={ed.unpublished} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={goTo} /></div>
           {/if}
           <hr class="gridmenu-divider" />
           <button type="button" class="ghost publish-act publish-foot" onclick={() => { ed.toolMenu = null; ed.openPanel('history'); }}>

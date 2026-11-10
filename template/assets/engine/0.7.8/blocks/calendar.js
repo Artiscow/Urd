@@ -298,9 +298,9 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     if (editable) {
       drawn.add(node);
       // The text toolbar attaches to .urd-text fields; a click in the words edits them and never reaches the button or link around them.
-      // In the Clean view the words are plain text and the link around them works (urd.js switches this with the handles).
+      // In the Clean view the words are plain text, as every text written in place is there, and the link around them works (cleanTexts in urd.js, which also gives them back).
       node.classList.add('urd-text');
-      node.contentEditable = clean() ? 'false' : 'true';
+      node.contentEditable = 'true';
       // The words stop the press, so a link around them is never followed.
       // A fold's summary follows the block's two-step model: the press that selects the block leaves the fold, the next press opens or closes it and goes into the words, and the presses after that edit the words until they lose focus.
       let selectedBefore = false;
