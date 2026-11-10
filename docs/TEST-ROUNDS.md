@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.84): the button's colours, windows that keep their place, a colour's bin, and the bars' drawings
+
+- [ ] A button's «Colours» under Style, and the «Colours» tool on its bar: each of the fill, the text colour, the outline and the fill under the pointer changes the button on the canvas and the published page, Filled and Outline alike; with none set the button looks as before; an own fill under the pointer replaces Filled's lightening
+- [ ] «Til toppen» on the om-oss page: the words and the outline in the text colour, the surface colour under the pointer
+- [ ] Scrolled and left, then opened again, each stands where it was until a reload: a side panel (another panel opens at its top), a block's element menu, floating and docked (another block's at its top), a section's menu, the design picker for a kind of design (the calendar's own picker too), the Collections table for a collection, and a page's settings in the window, the table's drawer and the step in the Pages panel (another page's at its top); after a reload all open at their top
+- [ ] A colour row holding its own value: a small dark red bin on the swatch's top right corner, no reset beside it, and the bin takes the colour back to the standard; a colour that may be empty (a text box's colour, a document's accent, a calendar's colour) is emptied by the same corner bin
+- [ ] The bars, with «Toolbar» on «Full bar» in Urd settings: the calendar's «When it is empty», announcement, «Text fields», «View and count» and «Settings for the design» each have their own drawing, as do the form's «Sending» and «Button and receipt», the product cards' «Catalogue» and «Grid», the ribbon's «Rolling», «Stripes» and the shared «Motion», the table's «Rows and columns» and «Lines», and the video's «Video» and «Playback»
+
 ### Test batch (0.7.0.83): the logo switch, the calendar's example events, the push by column, and every removal a bin
 
 - [ ] Every pop-up menu (the top bar's, a panel tab's, Collections with its entries and their actions, a collection's ⋮ menu with its submenus): the row under the pointer lights at once, and the row whose submenu still stands goes dark as the pointer moves to another row

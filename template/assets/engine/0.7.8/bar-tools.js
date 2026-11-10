@@ -56,6 +56,15 @@ export const BAR_ICONS = {
   file: svg('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>'),
   motion: svg('<path d="M3 7h7M3 12h11M3 17h7"/><path d="M16 8l4 4-4 4"/>'),
   arrange: svg('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'),
+  empty: svg('<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/>'),
+  notice: svg('<path d="M3 10v4h3l8 5V5l-8 5z"/><path d="M18 9a4 4 0 010 6"/>'),
+  options: svg('<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>'),
+  receipt: svg('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>'),
+  columns: svg('<rect x="3" y="4" width="4.5" height="16" rx="1"/><rect x="9.75" y="4" width="4.5" height="16" rx="1"/><rect x="16.5" y="4" width="4.5" height="16" rx="1"/>'),
+  stripes: svg('<rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M7 18l5-12M12.5 18l5-12"/>'),
+  roll: svg('<path d="M4 12a8 8 0 0113.7-5.7L20 8.5"/><path d="M20 4v4.5h-4.5"/><path d="M20 12a8 8 0 01-13.7 5.7L4 15.5"/><path d="M4 20v-4.5h4.5"/>'),
+  table: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M10 4v16"/>'),
+  film: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/>'),
   design: svg('<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="4"/>'),
 };
 
@@ -67,16 +76,16 @@ const STYLE = 'props.tabStyle';
 /** The groups and loose rows of each block type's Content and Style. */
 export const BAR_GROUPS = {
   audio: [fold('audio-file', 'blocks.audio', 'content', 'file')],
-  button: [fold('btn-link', 'group.textLink', 'content', 'link')],
+  button: [fold('btn-link', 'group.textLink', 'content', 'link'), fold('btn-colours', 'group.btnColours', 'style', 'palette')],
   calendar: [
     fold('cal-sources', 'calendar.sources', 'content', 'calendar'),
     fold('cal-view', 'calendar.group.view', 'content', 'list'),
     fold('cal-buttons', 'calendar.group.buttons', 'content', 'box'),
-    fold('cal-empty', 'calendar.group.empty', 'content', 'type'),
+    fold('cal-empty', 'calendar.group.empty', 'content', 'empty'),
     // The announcement belongs to the designs that draw one, the design's settings to those with an option shown now, as menu/families/Calendar.svelte draws them.
-    fold('cal-notice', 'calendar.group.notice', 'content', 'type', (b) => Boolean(calDesign(b.props?.design).notice)),
+    fold('cal-notice', 'calendar.group.notice', 'content', 'notice', (b) => Boolean(calDesign(b.props?.design).notice)),
     loose('style', STYLE, 'brush'),
-    fold('cal-opts', 'calendar.section.options', 'style', 'list', (b) => calOptionDefs(b.props?.design).some((def) => calOptionShown(def, calOptions(b.props)))),
+    fold('cal-opts', 'calendar.section.options', 'style', 'options', (b) => calOptionDefs(b.props?.design).some((def) => calOptionShown(def, calOptions(b.props)))),
     fold('cal-colors', 'calendar.colors', 'style', 'palette'),
     fold('cal-fields', 'calendar.fieldStyle', 'style', 'type'),
   ],
@@ -94,19 +103,19 @@ export const BAR_GROUPS = {
   form: [
     fold('form-sending', 'group.sending', 'content', 'mail'),
     fold('form-fields', 'form.fields', 'content', 'list'),
-    fold('form-receipt', 'group.buttonReceipt', 'content', 'mail'),
+    fold('form-receipt', 'group.buttonReceipt', 'content', 'receipt'),
   ],
   gallery: [fold('gallery-images', 'group.images', 'content', 'picture'), fold('gallery-look', 'group.appearance', 'style', 'palette')],
   icon: [fold('icon-icon', 'blocks.icon', 'content', 'shape'), fold('icon-look', 'group.appearance', 'style', 'palette')],
   image: [fold('img-image', 'blocks.image', 'content', 'picture'), fold('img-link', 'group.linkClick', 'content', 'link'), fold('img-look', 'group.appearance', 'style', 'palette')],
   map: [loose('content', CONTENT, 'pencil'), fold('map-place', 'group.place', 'content', 'place')],
   privacy: [loose('content', CONTENT, 'pencil'), fold('privacy-look', 'group.appearance', 'style', 'palette')],
-  product: [fold('product-catalog', 'group.catalog', 'content', 'list'), fold('product-shop', 'group.siteShop', 'content', 'cart'), fold('product-grid', 'group.grid', 'style', 'list')],
+  product: [fold('product-catalog', 'group.catalog', 'content', 'list'), fold('product-shop', 'group.siteShop', 'content', 'cart'), fold('product-grid', 'group.grid', 'style', 'columns')],
   quote: [fold('quote-words', 'group.quote', 'content', 'quote'), fold('quote-look', 'group.appearance', 'style', 'palette')],
   ribbon: [
     fold('ribbon-words', 'lbl.ribbonItems', 'content', 'list'),
-    fold('ribbon-motion', 'lbl.ribbonMotion', 'style', 'motion'),
-    fold('ribbon-stripes', 'lbl.ribbonStripes', 'style', 'list'),
+    fold('ribbon-motion', 'lbl.ribbonMotion', 'style', 'roll'),
+    fold('ribbon-stripes', 'lbl.ribbonStripes', 'style', 'stripes'),
     fold('ribbon-shape', 'lbl.ribbonShape', 'style', 'shape'),
     fold('ribbon-text', 'lbl.ribbonText', 'style', 'type'),
   ],
@@ -114,11 +123,11 @@ export const BAR_GROUPS = {
   shape: [loose('content', CONTENT, 'pencil', (b) => b.props?.kind === 'line'), fold('shape-look', 'group.appearance', 'style', 'palette')],
   share: [fold('share-services', 'group.siteLinks', 'content', 'link'), fold('share-look', 'group.appearance', 'style', 'palette')],
   stats: [fold('stat-number', 'group.number', 'content', 'number'), fold('stat-look', 'group.appearance', 'style', 'palette')],
-  table: [fold('table-shape', 'group.rowsColumns', 'content', 'list'), fold('table-lines', 'lbl.tableLines', 'style', 'list')],
+  table: [fold('table-shape', 'group.rowsColumns', 'content', 'table'), fold('table-lines', 'lbl.tableLines', 'style', 'list')],
   terms: [fold('terms-design', 'group.appearance', 'style', 'palette'), fold('terms-type', 'group.typography', 'style', 'type')],
   text: [loose('style', 'group.typography', 'type'), fold('text-box', 'group.textBox', 'style', 'box')],
   timeline: [fold('tl-events', 'lbl.timelineItems', 'content', 'list'), fold('tl-look', 'group.appearance', 'style', 'palette')],
-  video: [loose('content', CONTENT, 'pencil'), fold('video-what', 'blocks.video', 'content', 'play'), fold('video-play', 'group.playback', 'content', 'play'), loose('style', STYLE, 'brush')],
+  video: [loose('content', CONTENT, 'pencil'), fold('video-what', 'blocks.video', 'content', 'film'), fold('video-play', 'group.playback', 'content', 'play'), loose('style', STYLE, 'brush')],
 };
 
 /** The groups a block type not listed has: its Content and Style, each drawn whole. */

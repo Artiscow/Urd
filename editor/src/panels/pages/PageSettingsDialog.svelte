@@ -8,6 +8,7 @@
   import PageSettingsFields from './PageSettingsFields.svelte';
   import HideButton from './HideButton.svelte';
   import HiddenRow from './HiddenRow.svelte';
+  import { keepScroll } from '../../lib/scroll-place.js';
 
   const ed = getContext('urd-editor');
   let dialogEl = $state(null);
@@ -63,7 +64,8 @@
           <button type="button" class="ps-x" bind:this={closeEl} title={ta('tip.pages.closeSettings')} aria-label={ta('tip.pages.closeSettings')} onclick={() => dialogEl.close()}>{@html ICONS.cross}</button>
         </div>
         {#if entry}<HiddenRow {id} />{/if}
-        <div class="ps-body panel-body">
+        <!-- A page's settings open where they were left for that page (lib/scroll-place.js) -->
+        <div class="ps-body panel-body" {@attach keepScroll(id ? `page-settings:dialog:${id}` : null)}>
           {#if entry}{#key id}<PageSettingsFields {id} wide />{/key}{/if}
         </div>
       </div>

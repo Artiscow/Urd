@@ -526,7 +526,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [ ] Footer design and layout is split into two: "Design" and "Starting Point". It is very unclear what the difference is. Let's have one of them, not both.
  - [ ] Colour picker is a bit shabby - needs design reevaluation 
  - [x] Nav settings: possibility to turn logo on or off in nav FIXED 0.7.0.83 (10 November 2026)
- - [ ] Button block does not have colour settings/options
+ - [x] Button block does not have colour settings/options FIXED 0.7.0.84 (10 November 2026)
  - [x] Footer "Brand" logo/image needs preview of image added FIXED 0.7.0.83 (10 November 2026)
  - [x] "Link" in text (both webaddress and site address) doesn't work FIXED 0.7.33.12.3 (10 November 2026)
  - [ ] New collections panel/menu for new product and overview - A 'floating' menu like other settings 
@@ -538,7 +538,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [x] All delete buttons be the toolmenus bin icon style FIXED 0.7.0.81 (9 November 2026)
  - [x] Calendar: while working locally or calendar can't fetch data, offer a 'show example calendar' view so a user can choose colours and edit the calendar FIXED 0.7.0.83 (10 November 2026)
  - [x] All drop down menu entry highlights feel slow to react when hovering over sections FIXED 0.7.0.83 (10 November 2026)
- - [ ] Any large window menu with scroll should remember where the user left off until the site is reloaded or closed
+ - [x] Any large window menu with scroll should remember where the user left off until the site is reloaded or closed FIXED 0.7.0.84 (10 November 2026)
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene

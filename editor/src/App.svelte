@@ -70,10 +70,16 @@
   import { redirectsState } from './state/redirects.svelte.js';
   import { pictureEditorState } from './state/picture-editor.svelte.js';
   import { legalPanelState } from './state/legal.svelte.js';
+  import { keepScroll } from './lib/scroll-place.js';
 
   const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState, pictureEditorState, legalPanelState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
+  /** The side panel's place: the docked menu's per block or section, the Collections panel's per open collection, a page's settings per page where the Pages panel steps into them, every other panel's its own. */
+  const panelPlace = $derived(ed.activePanel === 'properties' ? (ed.selectedBlock ? `menu:dock:${ed.selectedBlock.blockId}` : ed.activeSectionId ? `menu:dock:section:${ed.activeSectionId}` : null)
+    : ed.activePanel === 'collections' ? `panel:collections:${ed.panelCollection ?? ''}`
+    : ed.activePanel === 'pages' && ed.pageSettingsPref === 'step' && ed.pageSettingsFor ? `page-settings:step:${ed.pageSettingsFor}`
+    : ed.activePanel ? `panel:${ed.activePanel}` : null);
   /* The handle's own closures: what the element menu and the panels open or read across the modules. */
   Object.assign(ed, {
     blockLabel: (type) => blocksState.BLOCK_LABELS[type] ?? type,
@@ -142,7 +148,8 @@
         <button type="button" class="panel-handle" class:hidden={!ed.chromeVisible} title={ta('ui.openPanel')} aria-label={ta('ui.openPanel')} onclick={() => ed.unfoldPanel()}>{@html ICONS.foldRight}</button>
       {:else if ed.activePanel || ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}
         <!-- The two-column collections editor widens the panel while a collection is open in it -->
-        <aside class="panel" class:hidden={!ed.chromeVisible} bind:this={ed.panelEl}
+        <!-- The panel opens where it was left: each panel, each block's and section's docked menu, and each collection in the Collections panel (lib/scroll-place.js) -->
+        <aside class="panel" class:hidden={!ed.chromeVisible} bind:this={ed.panelEl} {@attach keepScroll(panelPlace)}
           class:panel-wide={ed.activePanel === 'collections' && ed.collectionsLayout === 'columns' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection)}
           class:panel-still={collectionHeading}>
           {#if ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}<PanelNav />{/if}
@@ -234,6 +241,7 @@
           : blockDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs, sectionWidth: storedSection.size?.maxWidth })}
         site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
         plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
+        place={`block:${ed.selectedBlock.type}${phone ? ':phone' : ''}`}
         onpick={(id) => { if (phone) ed.setBlockProp('phoneDesign', id === SAME_DESIGN ? null : id); else ed.setBlockProp(designs.prop, id); ed.designPicker = null; }}
         onclose={() => (ed.designPicker = null)} />
     {/if}
@@ -242,6 +250,7 @@
     <DesignPicker source={footerDesignSource({ site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null })}
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
       plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
+      place="footer"
       onpick={(id) => { ed.footerMutate('footer-design', (f) => { if (id && id !== 'standard') f.design = id; else delete f.design; }); ed.designPicker = null; }}
       onclose={() => (ed.designPicker = null)} />
   {:else if ed.designPicker && ed.designPicker.kind !== 'block'}
@@ -249,6 +258,7 @@
       current: ed.designPicker.mode === 'set' ? calDesign(ed.selectedBlock?.props.design).id : ed.designPicker.mode === 'phone' ? calPhoneView(ed.selectedBlock?.props) : ed.designPicker.mode === 'card' ? calCardDesign(ed.selectedBlock?.props) : null,
       design: calDesign(ed.selectedBlock?.props.design).id, props: ed.selectedBlock ? $state.snapshot(ed.selectedBlock.props) : {} })}
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
+      place={`calendar:${ed.designPicker.mode ?? 'set'}`}
       onpick={(id) => { if (ed.designPicker.mode === 'add') ed.addCalendarDesign(id, ed.designPicker.place); else if (ed.designPicker.mode === 'phone') ed.setCalendarPhoneView(id); else if (ed.designPicker.mode === 'card') ed.setCalendarCard(id); else ed.setCalendarDesign(id); ed.designPicker = null; }}
       onclose={() => (ed.designPicker = null)} />
   {/if}

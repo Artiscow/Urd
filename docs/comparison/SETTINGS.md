@@ -125,12 +125,12 @@ Urd: the button block (ELEMENTS.md #153, #154 and #155).
 | A link, and a new tab | WP, EL, WS, PK, BI, KB, SP, GB | Has (0.7.27) | - |
 | nofollow and sponsored | WP, KB, SP, GB | Has, for a web address (0.7.27) | - |
 | Download | WS, KB | Has, for a file (0.7.27.9) | - |
-| A style variant (filled, outline, primary, secondary) | WP, EL, PK, GB | Partial: «Filled» and «Outline» | 0.7.9 (component tokens: pill and ghost looks, an own colour) |
+| A style variant (filled, outline, primary, secondary) | WP, EL, PK, GB | Partial: «Filled» and «Outline», each in colours of the owner's own (0.7.0.84); no pill or ghost look | 0.7.9 (component tokens: pill and ghost looks) |
 | Size presets | EL, KB, SP | Partial: the dragged frame and «Size» | 0.7.9 component tokens |
 | An icon before or after the label, or an icon alone | EL, KB, SP, ST, GB | Missing | v0.8 ER-G (an icon in the button block) |
-| Hover colours or an effect | EL, KB, SP, ST | Partial: the shared lift | 0.7.9 (button states) |
+| Hover colours or an effect | EL, KB, SP, ST | Partial: the shared lift and an own fill under the pointer (0.7.0.84); no colour of its own for the words or the outline under the pointer | 0.7.9 (button states) |
 | A gradient background | WP, KB, SP, GB | Missing | 0.7.9 component tokens |
-| Border, radius and shadow | EL, KB, SP, ST | Partial: the theme's small corners | 0.7.9 (component tokens: radius, border width) |
+| Border, radius and shadow | EL, KB, SP, ST | Partial: the theme's small corners and an own outline colour (0.7.0.84); no radius, border width or shadow of its own | 0.7.9 (component tokens: radius, border width) |
 | Width or full width | KB, ST | Has: the dragged width | - |
 | An accessible name apart from the label | WS, KB, GB | Missing | v0.8 ER-G (an accessible name in the link editor) |
 | An id for the button | EL, ST | Has: a name and a stable id (0.7.27) | - |

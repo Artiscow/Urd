@@ -37,7 +37,8 @@
   {#if bs.border !== 'none'}
     <!-- The border's colour and thickness also show for the theme's thin border, and picking a colour turns it into the block's own border. -->
     {@const bd = typeof bs.border === 'object' ? bs.border : { color: 'text', width: 1 }}
-    <ColourRow label={ta('lbl.borderColor')} title={ta('tip.box.borderColor')} value={bd.color} tokens={themeSwatches()}
+    <!-- The colour is one of the border's three controls, so the row keeps its reset for the whole border -->
+    <ColourRow label={ta('lbl.borderColor')} title={ta('tip.box.borderColor')} value={bd.color} tokens={themeSwatches()} ownsRow={false}
       onchange={(hex) => setBoxStyle({ border: { ...bd, color: hex } })} />
     <NumberRow label={ta('lbl.thicknessPx')} title={ta('tip.box.borderWidth')} value={bd.width} min={1} max={12} unit="px"
       onchange={(width) => setBoxStyle({ border: { ...bd, width } })} />

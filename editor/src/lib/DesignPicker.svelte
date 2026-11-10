@@ -6,14 +6,17 @@
    * The marked design is drawn live in a preview iframe of its own, in the site's theme and language, so the owner sees it before it is applied; under the preview it is described, with what the owner can change on it where the source says.
  * A design the mouse rests on is shown there in its place until the pointer leaves the list, and the arrow keys move the mark from tile to tile as they stand (the rows by where the tiles are drawn), so the preview follows the eye and the keys alike; Enter on the marked tile applies it.
    * The preview frame is told the site, the enabled plugins and the draft collections, as the editor's own preview is, so a plugin block and a collection block draw there too.
-   * `onpick(id)` applies, `onclose` leaves.
+   * `onpick(id)` applies, `onclose` leaves; `place` names the kind of design, under which the list keeps where it was left.
    */
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { matchAny } from '$engine/search-langs.js';
   import { searchLangs } from './search-langs.svelte.js';
+  import { keepScroll } from './scroll-place.js';
 
-  let { source, site = null, page = null, plugins = [], collections = null, onpick, onclose } = $props();
+  let { source, site = null, page = null, plugins = [], collections = null, place = null, onpick, onclose } = $props();
+  /** Where the list was left for this kind of design (lib/scroll-place.js). */
+  const listPlace = $derived(place ? `picker:${place}` : null);
 
   let query = $state('');
   let view = $state('');
@@ -258,7 +261,8 @@
     </div>
     {/if}
     <div class="dp-body">
-      <div class="dp-list" role="presentation" onpointerleave={(e) => hoverSoon(null, e)}>
+      <!-- The list opens where it was left for this kind of design (lib/scroll-place.js) -->
+      <div class="dp-list" role="presentation" onpointerleave={(e) => hoverSoon(null, e)} {@attach keepScroll(listPlace)}>
         {#each families as family (family.family)}
           <section class="dp-family">
             <h3>{family.label ?? ta(family.labelKey)}</h3>

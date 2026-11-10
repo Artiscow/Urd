@@ -214,3 +214,17 @@ test('a menu\'s rows answer the pointer at once, a submenu\'s row included, and 
   assert.match(square, /const column = node\.nextElementSibling;/);
   assert.match(square, /new ResizeObserver\(fit\);\s*watch\.observe\(column\);/);
 });
+
+test('a colour is taken away by the bin on its swatch\'s corner, never by a reset beside it', () => {
+  const setting = readFileSync(join(ROOT, 'lib/rows/Setting.svelte'), 'utf8');
+  assert.match(setting, /coloured: \(\) => \{ row\.colour = true; \},/);
+  assert.match(setting, /\{#if own && !row\.switch && !row\.colour && !inHead\}/, 'no reset beside a colour');
+  const row = readFileSync(join(ROOT, 'lib/rows/ColourRow.svelte'), 'utf8');
+  assert.match(row, /const row = ownsRow \? getContext\('setting-row'\) : null;\s*row\?\.coloured\(\);/, 'a colour that is its row\'s only control');
+  // The box's border row holds the border's kind, colour and thickness: its colour leaves the row the reset for the whole border.
+  assert.match(readFileSync(join(ROOT, 'menu/BoxStyle.svelte'), 'utf8'), /<ColourRow label=\{ta\('lbl\.borderColor'\)\}[^\n]*ownsRow=\{false\}/);
+  assert.match(row, /onremove=\{row\?\.own\(\) \? row\.back : undefined\}/, 'a colour of the block\'s own goes back to the standard by its bin');
+  const picker = readFileSync(join(ROOT, 'lib/ColorPicker.svelte'), 'utf8');
+  assert.match(picker, /const remove = \$derived\(onremove \?\? \(allowClear && value \? \(\) => onchange\?\.\(''\) : null\)\);/, 'or empties a colour that may be empty');
+  assert.match(picker, /\.cp-remove \{\s*position: absolute;\s*top: -6px;\s*right: -6px;/, 'on the swatch\'s top right corner');
+});

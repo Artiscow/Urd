@@ -931,7 +931,7 @@ Most missing elements that are taken go to the v0.8 milestone **Element round**,
 
 | # | Element (other names) | Builders | Variants | Native build and pitfalls | Urd | Where |
 |---|---|---|---|---|---|---|
-|153|Button (Button, Advanced Button, Regular Button)|all|icon, size, hover|`<a>` for navigation, `<button>` for actions; a target of at least 24 by 24 px (WCAG 2.5.8); `text-box` trim for optical centring (Baseline August 2026)|Partial: Filled and Outline designs, the shared hover and the one link editor (page, spot, web, email, phone, file, new tab); no icon, no own colour|ER-G; 0.7.9|
+|153|Button (Button, Advanced Button, Regular Button)|all|icon, size, hover|`<a>` for navigation, `<button>` for actions; a target of at least 24 by 24 px (WCAG 2.5.8); `text-box` trim for optical centring (Baseline August 2026)|Partial: Filled and Outline designs, the shared hover and the one link editor (page, spot, web, email, phone, file, new tab); colours of its own for the fill, the words, the outline and the fill under the pointer (0.7.0.84); no icon (ER-G), no size presets and no colour of its own for the words or the outline under the pointer (0.7.9)|ER-G; 0.7.9|
 |154|Button group (Buttons, Button Group)|WP BB OT SP|-|flex with `gap` and wrapping|Has: free placement|-|
 |155|Icon button (Icon Button)|ST|-|`<button>` with an accessible name|Partial: the links block draws icon-only links with an accessible name; the icon block has no link and the button block has no icon|ER-G: an icon in the button block|
 |156|Call to action (Call to Action, CTA)|EL DV BB SP ST GH|box, ribbon|a section with a heading and one primary action|Partial: CTA banner and hero presets (heading, text and a button on a colour or picture background); no whole-box link|ER-G|

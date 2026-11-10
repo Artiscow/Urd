@@ -16,6 +16,7 @@
   import SectionMenu from '../section/SectionMenu.svelte';
   import SearchField from '../lib/rows/SearchField.svelte';
   import IconButton from '../lib/rows/IconButton.svelte';
+  import { keepScroll } from '../lib/scroll-place.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   /** Where the menu stands, in editor coordinates; a press outside it or Escape closes it (state/shell.svelte.js). */
@@ -23,6 +24,8 @@
   const { moveBlockMenu, menuBackToBlock } = ed;
   const layout = $derived(menuLayout());
   const only = $derived(pos.only ?? null);
+  /** Where the floating menu was left, for its block or section; a small panel keeps none (lib/scroll-place.js). A string, so an edit of the block or a move of the menu does not count as another place. */
+  const menuPlace = $derived(only ? null : pos.section ? (ed.activeSectionId ? `menu:float:section:${ed.activeSectionId}` : null) : selectedBlock ? `menu:float:${selectedBlock.blockId}` : null);
   const searchFirst = $derived(!only && menu.shortcutsPref === 'search');
   /** The block's actions step down to a line of their own under the head where the search field stands in a narrow head with them. */
   const actionsBelow = $derived(!only && !searchFirst && layout !== 'wide');
@@ -107,7 +110,8 @@
       onclick={() => { if (layout === 'wide') menu.wide = false; else if (menu.cramped) menu.cramped = false; else menu.wide = true; ed.placeMenuAgain(); }} />{/if}
   </header>
   {#if !only && !pos.section && actionsBelow}<div class="block-menu-actions"><BlockActions /></div>{/if}
-  <div class="panel-body block-menu-body">
+  <!-- The menu opens where it was left for its block or section; a small panel opens at its top (lib/scroll-place.js) -->
+  <div class="panel-body block-menu-body" {@attach keepScroll(menuPlace)}>
     {#if searchFirst}<div class="menu-search-first"><SearchField get={() => menu.menuQuery} set={(v) => (menu.menuQuery = v)} /></div>{/if}
     {#if pos.section}
       <SectionMenu wide={!only && layout === 'wide'} query={only ? '' : menu.menuQuery} {only} />

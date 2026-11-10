@@ -21,7 +21,9 @@
   import { ta } from '$engine/i18n.js';
   import { ICONS } from './icons.js';
 
-  let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false } = $props();
+  let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false, onremove = undefined } = $props();
+  /** The colour's removal, the bin on the swatch's corner: the caller's (a setting row taking its own colour back to the standard), else emptying a colour that may be empty. */
+  const remove = $derived(onremove ?? (allowClear && value ? () => onchange?.('') : null));
 
   const RECENT_KEY = 'urd-recent-colors';
   const SAVED_KEY = 'urd-saved-colors';
@@ -289,9 +291,9 @@
     style="background: {value ? displayHex() : 'transparent'}{native ? `; anchor-name: ${anchor}` : ''}" title={linkedToken() ? ta('cp.linkedTitle', { label, token: linkedToken() }) : label}
     popovertarget={native ? popId : undefined}
     aria-label={label} onclick={native ? undefined : () => (open ? close() : openPicker())}></button>
-  {#if allowClear && value}
-    <button type="button" class="cp-clear danger" title={ta('cp.clearTitle')}
-      aria-label={ta('cp.clear')} onclick={() => onchange?.('')}>{@html ICONS.bin}</button>
+  {#if remove}
+    <button type="button" class="cp-remove danger" title={ta('cp.clearTitle')}
+      aria-label={ta('cp.clear')} onclick={() => remove()}>{@html ICONS.bin}</button>
   {/if}
   <!-- The picker often sits inside a <label>: without preventDefault the browser
        forwards clicks on non-interactive surfaces (the color field, empty space)
@@ -379,6 +381,7 @@
 
 <style>
   .cp {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -400,26 +403,35 @@
       repeating-conic-gradient(rgb(255 255 255 / 12%) 0 25%, transparent 0 50%) 0 0 / 12px 12px !important;
   }
 
-  /* The colour's removal: the bin on the dark red every removal draws (app.css .icon-btn.danger) */
-  .cp-clear {
-    width: 1.4rem;
-    height: 1.4rem;
+  /* The colour's removal: the bin on the dark red every removal draws (app.css .icon-btn.danger), small on the swatch's top right corner */
+  .cp-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    z-index: 1;
+    width: 18px;
+    height: 18px;
+    min-height: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-    font-size: 15px;
     line-height: 1;
     color: #ffd4d4;
     background: #5e1c22;
     border: 1px solid #7d2a31;
-    border-radius: 5px;
+    border-radius: 50%;
     cursor: pointer;
   }
 
-  .cp-clear:is(:hover, :focus-visible) {
+  .cp-remove:is(:hover, :focus-visible) {
     background: #7a222a;
     border-color: #9a3a42;
+  }
+
+  .cp-remove :global(svg) {
+    width: 10px;
+    height: 10px;
   }
 
   .cp-pop {

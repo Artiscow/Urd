@@ -151,6 +151,15 @@ test('every tool\'s name is in the core dictionaries, and its drawing in the eng
   for (const tool of tools) assert.match(BAR_ICONS[tool.icon] ?? '', /^<svg [^>]*aria-hidden="true">/, `no drawing «${tool.icon}»`);
 });
 
+test('no bar draws two of its tools alike, the shared design, motion and placement tools included, and no two drawings are the same', () => {
+  const twice = (icons) => icons.filter((icon, i) => icons.indexOf(icon) !== i);
+  for (const [type, groups] of Object.entries(BAR_GROUPS)) {
+    assert.deepEqual(twice([...groups.map((g) => g.icon), 'design', 'motion', 'arrange']), [], `${type}'s bar`);
+  }
+  assert.deepEqual(twice(SECTION_TOOLS.map((g) => g.icon)), [], 'the section\'s bar');
+  assert.deepEqual(twice(Object.values(BAR_ICONS)), [], 'each name its own drawing');
+});
+
 test('the small window a tool opens names it with the tool\'s own drawing, sent by name and drawn from the same set', () => {
   const edit = read(`../template/assets/engine/${ENGINE}/preview-edit.js`);
   assert.ok(!/const BAR_ICONS = \{/.test(edit), 'the bar draws from the set in bar-tools.js');

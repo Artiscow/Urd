@@ -17,6 +17,7 @@
   import SelectionBar from './SelectionBar.svelte';
   import EntryFields from './EntryFields.svelte';
   import { collectionActions } from './actions.js';
+  import { keepScroll } from '../../lib/scroll-place.js';
 
   const ed = getContext('urd-editor');
   const act = collectionActions(ed);
@@ -152,7 +153,8 @@
       <div class="ct-barrow"><SelectionBar {id} {ticks} shownIds={rowIds} onticks={setTicks} /></div>
     {/if}
     <div class="ct-body">
-      <div class="ct-scroll">
+      <!-- The table opens where it was left for its collection (lib/scroll-place.js) -->
+      <div class="ct-scroll" {@attach keepScroll(id ? `table:${id}` : null)}>
         <table class="ct-table">
           <thead>
             <tr>

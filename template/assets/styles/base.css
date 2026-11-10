@@ -18118,11 +18118,17 @@ body:has(.urd-contact-dock) {
   text-decoration: none;
 }
 
+/* The owner's colours (button.js) stand in --urd-btn-*: the fill, the words, the outline and the fill under the pointer; one not set falls back to the design's colour from the theme */
 .urd-button-primary {
-  background: var(--urd-color-accent);
+  background: var(--urd-btn-bg, var(--urd-color-accent));
   /* Text on accent: without the token the background color is used, so
      palettes that do not define it render unchanged */
-  color: var(--urd-color-accent-text, var(--urd-color-bg));
+  color: var(--urd-btn-text, var(--urd-color-accent-text, var(--urd-color-bg)));
+}
+
+/* A filled button has a line only where the owner gives it one, so a button without one keeps every pixel of its room for its words */
+.urd-button-primary.urd-button-own-border {
+  border: 1px solid var(--urd-btn-border);
 }
 
 .urd-button-primary:hover {
@@ -18130,8 +18136,15 @@ body:has(.urd-contact-dock) {
 }
 
 .urd-button-secondary {
-  border: 1px solid var(--urd-color-accent);
-  color: var(--urd-color-accent);
+  background: var(--urd-btn-bg, transparent);
+  border: 1px solid var(--urd-btn-border, var(--urd-color-accent));
+  color: var(--urd-btn-text, var(--urd-color-accent));
+}
+
+/* A fill of the owner's own under the pointer takes the place of the design's lightening */
+.urd-button.urd-button-own-hover:hover {
+  background: var(--urd-btn-hover);
+  filter: none;
 }
 
 /* Animated gradient background (pan/orbit): the gradient is painted on a 200 % runner

@@ -8,6 +8,7 @@
   import PageSettingsFields from './PageSettingsFields.svelte';
   import HideButton from './HideButton.svelte';
   import HiddenRow from './HiddenRow.svelte';
+  import { keepScroll } from '../../lib/scroll-place.js';
 
   const ed = getContext('urd-editor');
   let rootEl = $state(null);
@@ -93,7 +94,8 @@
           </tbody>
         </table>
       </div>
-      <aside class="pt-drawer panel-body" aria-label={entry?.title ?? ''}>
+      <!-- A page's settings open where they were left for that page (lib/scroll-place.js) -->
+      <aside class="pt-drawer panel-body" aria-label={entry?.title ?? ''} {@attach keepScroll(id ? `page-settings:table:${id}` : null)}>
         {#if entry}
           <span class="pt-drawer-head"><span class="pt-drawer-name">{entry.title}</span><span class="pt-path">{entry.path}</span><HideButton {id} /></span>
           <HiddenRow {id} />
