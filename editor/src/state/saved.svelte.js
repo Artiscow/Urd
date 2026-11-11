@@ -139,13 +139,13 @@ async function meetOnLoad() {
     for (const name of met.dropLocal) {
       for (const key of byPart.get(name) ?? []) localStorage.removeItem(key);
     }
-    if (met.takeIn.length) {
-      const parts = await call(`${ENDPOINT}?parts=${met.takeIn.join(',')}`, {}, deadline - Date.now());
-      for (const name of met.takeIn) {
-        if (!takeIn(name, parts.ok ? parts.body.parts?.[name] : null, byPart)) {
-          if (seen[name]) next[name] = seen[name];
-          else delete next[name];
-        }
+    // The parts are read only within the time left; past it the load goes on, and a part not taken in stays unseen for the next load.
+    const left = deadline - Date.now();
+    const parts = met.takeIn.length && left > 0 ? await call(`${ENDPOINT}?parts=${met.takeIn.join(',')}`, {}, left) : { ok: false };
+    for (const name of met.takeIn) {
+      if (!takeIn(name, parts.ok ? parts.body.parts?.[name] : null, byPart)) {
+        if (seen[name]) next[name] = seen[name];
+        else delete next[name];
       }
     }
     keepSeen(next);

@@ -20851,10 +20851,8 @@ async function LA() {
 			seen: F(CA)
 		}), a = { ...i.seen };
 		for (let e of i.dropLocal) for (let t of n.get(e) ?? []) localStorage.removeItem(t);
-		if (i.takeIn.length) {
-			let t = await DA(`${gA}?parts=${i.takeIn.join(",")}`, {}, e - Date.now());
-			for (let e of i.takeIn) RA(e, t.ok ? t.body.parts?.[e] : null, n) || (F(CA)[e] ? a[e] = F(CA)[e] : delete a[e]);
-		}
+		let o = e - Date.now(), s = i.takeIn.length && o > 0 ? await DA(`${gA}?parts=${i.takeIn.join(",")}`, {}, o) : { ok: !1 };
+		for (let e of i.takeIn) RA(e, s.ok ? s.body.parts?.[e] : null, n) || (F(CA)[e] ? a[e] = F(CA)[e] : delete a[e]);
 		EA(a);
 	} catch (e) {
 		console.warn("Urd: the saved drafts were not met", e);
@@ -21166,8 +21164,8 @@ function fj(e) {
 	].includes(i.type)) || (e.preventDefault(), r === "y" || e.shiftKey ? lR.redo() : lR.undo());
 }
 async function pj() {
-	let e = JA.meetOnLoad();
-	tT.site = km(await fetch("/content/site.json").then((e) => e.json())), await e, tT.siteStore = fo("urd-draft-site", () => tT.site, aj), (tT.siteStore.data.schemaVersion ?? 1) > 6 && (console.warn(`Urd: the site draft has schemaVersion ${tT.siteStore.data.schemaVersion} (the engine has 6) and is discarded`), tT.siteStore.replace(Qe(tT.site))), tT.siteStore.replace(km(tT.siteStore.data)), tT.siteStore.save(), tT.linkSiteDraft(), tT.grid = {
+	let e = JA.meetOnLoad(), t = km(await fetch("/content/site.json").then((e) => e.json()));
+	await e, tT.site = t, tT.siteStore = fo("urd-draft-site", () => tT.site, aj), (tT.siteStore.data.schemaVersion ?? 1) > 6 && (console.warn(`Urd: the site draft has schemaVersion ${tT.siteStore.data.schemaVersion} (the engine has 6) and is discarded`), tT.siteStore.replace(Qe(tT.site))), tT.siteStore.replace(km(tT.siteStore.data)), tT.siteStore.save(), tT.linkSiteDraft(), tT.grid = {
 		snap: !0,
 		...tT.siteDraft.grid
 	}, await X.selectPage(new URLSearchParams(location.search).get("page") ?? tT.siteDraft.pages[0].id), await ME.initPlugins(), await bL.initCollections(), await mA.initTemplates(), await gC.initRedirects(), await lR.loadKept(), await sM(), F(sj) && V_.refreshBaseSha(), F(sj)?.allowed && V_.loadUpdateCheck(), aM(), tT.siteDraft.site.setup === !0 && !localStorage.getItem("urd-setup-done") && (k(xj, tT.siteDraft.site.title, !0), k(Sj, tT.siteDraft.theme.tokens.color.accent, !0), k(Cj, tT.siteDraft.theme.tokens.color.bg, !0), k(bj, !0));
@@ -22109,7 +22107,7 @@ function lP(e, t) {
 		}
 	}, Y.updateAttention(), rA.bridge?.sendAttention(e.id, !0)));
 }
-var uP = null, dP = /* @__PURE__ */ new Set(), fP = Ug(), pP = () => tT.siteDraft.pages.find((e) => e.id === F(oP)), mP = /* @__PURE__ */ O(null);
+var uP = null, dP = /* @__PURE__ */ new Set(), fP = Ug(), pP = () => tT.siteDraft?.pages.find((e) => e.id === F(oP)), mP = /* @__PURE__ */ O(null);
 function hP(e, t) {
 	let n = uP?.data.sections.find((t) => t.id === e);
 	return {

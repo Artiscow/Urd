@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.35.2.2): the load with a panel open
+
+- [ ] Signed in on the deployed site, with the Site panel (or any panel) open when the admin was last closed: the admin opens with the panel, never stuck at «Loading», with and without a draft saved on another device (taken in where there is one)
+- [ ] Ctrl+K pressed while the admin still loads: nothing breaks, and the palette opens
+
 ### Test batch (0.7.35.2): Save beside Publish
 
 - [ ] On the local server: Save stands before Publish, greyed, with the tooltip «Saving needs the published site and a sign-in with publishing access»; Ctrl+S in the admin and on the canvas opens the menu under Save («Save the drafts», «Publish now»), and Escape closes it

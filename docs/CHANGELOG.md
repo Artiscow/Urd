@@ -8,6 +8,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.35.2.2 - The editor loads with a panel open while the saved drafts are read - 11 November 2026
+
+- A signed-in owner whose admin opened with the Site panel stood at «Loading» for good (found in testing on a second computer): while the saved drafts were read, the site was set without its draft, and the panel read the draft that was not there. The site is set together with its draft once the saved drafts are met (`init` in `state/shell.svelte.js`), held by a test.
+
+The independent review before the commit found these, all fixed:
+
+1. The test held the order up to the site's store, not up to the draft the panels read, so a wait put between the two would have passed. It holds the order up to the draft's link.
+2. The read of the parts to take in had no time limit where the first read and the hashing had used the load's five seconds, so the load could wait longer. Past the time the parts are not read, and stay unseen for the next load.
+3. Ctrl+K while the admin still loaded opened the palette, which read the open page's entry from a site draft not yet there. The entry reads as none while the draft is being read (`pageEntry` in `state/page.svelte.js`).
+
 ### 0.7.35.2 - Save beside Publish: three states per part, a save met on another device, and Ctrl+S - 11 November 2026
 
 - The drafts could only be published or lost with the browser. Save stands before Publish with its count of what stands in this browser alone, and keeps it on the drafts branch (`state/saved.svelte.js`, `shell/TopBar.svelte`); where there is no publishing layer or sign-in it stands greyed with the reason.

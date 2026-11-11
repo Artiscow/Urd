@@ -93,7 +93,8 @@ const pendingPublished = new Set();
  */
 const held = createHeld();
 
-const pageEntry = () => siteState.siteDraft.pages.find((p) => p.id === pageId);
+/** The open page's entry in the site's draft; none while the draft is still being read. */
+const pageEntry = () => siteState.siteDraft?.pages.find((p) => p.id === pageId);
 
 /**
  * The selected block in the preview, as a reactive COPY for the

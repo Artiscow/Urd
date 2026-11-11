@@ -230,3 +230,13 @@ test('Save stands beside Publish, greyed with the reason where there is nothing 
   assert.match(menu, /class="tool-pop save-pop/, 'Ctrl+S opens the menu under Save');
   shellState.toolMenu = null;
 });
+
+test('the site is set together with its draft, after the saved drafts are met, so a panel drawn meanwhile never finds a site without its draft', async () => {
+  const { readFileSync } = await import('node:fs');
+  const init = readFileSync(new URL('../editor/src/state/shell.svelte.js', import.meta.url), 'utf8').split('async function init()')[1];
+  const met = init.indexOf('await meeting');
+  const set = init.indexOf('siteState.site = ');
+  const store = init.indexOf('siteState.linkSiteDraft()');
+  assert.ok(met > 0 && set > met && store > set, 'the meeting, then the site, then its draft linked');
+  assert.doesNotMatch(init.slice(set, store), /await /, 'nothing waits between the site and its draft');
+});

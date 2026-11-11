@@ -224,10 +224,12 @@ function onKeydown(e) {
 
 async function init() {
   // The saved drafts are met before any store is built, so a part saved on another device is read where a reload reads drafts (ADR-0032).
+  // The site is set together with its draft once both are read, so nothing drawn meanwhile finds a site without one.
   const meeting = savedState.meetOnLoad();
   const siteFile = fetch('/content/site.json').then((res) => res.json());
-  siteState.site = liftSiteFile(await siteFile);
+  const published = liftSiteFile(await siteFile);
   await meeting;
+  siteState.site = published;
   siteState.siteStore = createDraftStore('urd-draft-site', () => siteState.site, draftSaveError);
   // Site drafts with a higher schemaVersion than the engine are
   // discarded, the same guard as for page drafts (liftSiteFile would
