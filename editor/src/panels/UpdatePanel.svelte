@@ -13,6 +13,33 @@
   const updateError = $derived(ed.updateError);
   const updateInfo = $derived(ed.updateInfo);
   const { askConfirm, loadUpdateCheck, setStatus } = ed;
+  /** While changes wait to be published, the tidy acts at its second press: the first says why in the status line and names what the second does, which publishes them and then tidies; a mouse or the focus leaving the button disarms it and clears the line. */
+  let tidyArmed = $state(false);
+  function disarmTidy() {
+    if (!tidyArmed) return;
+    tidyArmed = false;
+    setStatus('');
+  }
+  function pressTidy() {
+    const n = ed.unpublished.length;
+    if (ed.dirty && !tidyArmed) {
+      tidyArmed = true;
+      setStatus(ta(n === 1 ? 'media.tidyWaiting.one' : 'media.tidyWaiting', { n }));
+      return;
+    }
+    tidyArmed = false;
+    ed.tidyMedia({ withChanges: ed.dirty });
+  }
+  $effect(() => {
+    if (!ed.dirty) tidyArmed = false;
+  });
+  /** The media files are listed once as the panel opens for an owner who may publish, so the Media group stands only while files wait at the root of media/. */
+  let mediaAsked = false;
+  $effect(() => {
+    if (mediaAsked || ed.mediaRootCount !== null || !ed.auth?.allowed) return;
+    mediaAsked = true;
+    ed.loadMediaFiles();
+  });
 
   function toggleUpdateSkip(path) {
     const next = new Set(ed.updateSkip);
@@ -178,14 +205,25 @@
       </button>
     {/if}
   {/if}
-  <!-- The site's media files: how many still stand at the root of media/, and the tidy that moves them into the folders of their kind (lib/media-tidy.js), for the sites made before the folders; the count is read as the fold first opens -->
-  <Fold id="media" surface="update" title={ta('group.siteMedia')} tip={ta('tip.site.media')} value={ed.mediaRootCount ? ta('site.mediaRootShort', { n: ed.mediaRootCount }) : ''}
-    ontoggle={(open) => { if (open && ed.mediaRootCount === null) ed.loadMediaFiles(); }}>
+  <!-- The site's media files: how many still stand at the root of media/, and the tidy that moves them into the folders of their kind (lib/media-tidy.js), for the sites made before the folders; the group stands only while there is something to tidy -->
+  {#if ed.mediaRootCount}
+  <Fold id="media" surface="update" title={ta('group.siteMedia')} tip={ta('tip.site.media')} value={ta('site.mediaRootShort', { n: ed.mediaRootCount })}>
     <div class="ctl-row" title={ta('tip.site.mediaRoot')}>
       <span>{ta('lbl.mediaRoot')}</span>
-      <span class="gridmenu-value">{ed.mediaRootCount ?? '-'}</span>
+      <span class="gridmenu-value">{ed.mediaRootCount}</span>
     </div>
-    <button class="ghost action" disabled={ed.mediaBusy || ed.mediaRootCount === null || !ed.mediaRootCount || ed.dirty || ed.updateBusy || !ed.auth?.allowed}
-      title={ed.dirty ? ta('tip.media.tidyDirty') : ta('tip.media.tidy')} onclick={() => ed.tidyMedia()}>{ta('ui.tidyMedia')}</button>
+    <button class="ghost action tidy-media" class:armed={tidyArmed} disabled={ed.mediaBusy || ed.updateBusy || !ed.auth?.allowed}
+      title={ed.dirty ? ta('tip.media.tidyDirty') : ta('tip.media.tidy')} onclick={pressTidy}
+      onpointerleave={(e) => { if (e.pointerType === 'mouse') disarmTidy(); }} onblur={disarmTidy}
+      >{tidyArmed ? ta(ed.unpublished.length === 1 ? 'ui.tidyMediaWith.one' : 'ui.tidyMediaWith', { n: ed.unpublished.length }) : ta('ui.tidyMedia')}</button>
   </Fold>
+  {/if}
 </div>
+
+<style>
+  /* The tidy waiting for its second press stands in the accent, which names what it will do */
+  .tidy-media.armed {
+    color: var(--urd-color-accent, #7c5cff);
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+</style>

@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.85 - The media tidy in two presses while changes wait, and the Media group only while there is something to tidy - 11 November 2026
+
+- «Tidy the media folder» stood greyed out while any change waited to be published, with the reason only in its tooltip, so it seemed broken (found in testing). While changes wait, its first press says so in the status line and turns it into «Publish 1 change and tidy», and its second publishes them and then tidies (`UpdatePanel.svelte`, `tidyMedia` in `state/publish.svelte.js`).
+- The Updates panel's Media group stood with its count and a greyed button on a site with nothing at the root of `media/`. The files are listed as the panel opens, and the group stands only while files wait at the root.
+
+The independent review before the commit found these, all fixed:
+
+1. The listing ran as the panel opened for an owner who was signed out or had no access, so the status line showed an error each time. It runs only for an owner who may publish.
+2. Publishing the waiting changes in the tidy's own publish could carry more files than a publish takes, which would have left every later publish failing. The changes are published first, and the tidy runs only once that publish has gone through.
+3. The status line still said «press again» after the button was disarmed. Disarming clears it.
+4. The open page was copied before the other pages were read, so an edit made meanwhile could be lost. It is copied last.
+5. Two older gaps of the tidy, an undo after a failed tidy and the collections being unreadable, are written into BACKLOG's bug list.
+
 ## [0.7.9] - 2026-11-11
 
 ### 0.7.0.78-0.7.33.13p - Release 0.7.9: the Legal panel's keeping times, one row language for the admin, admin designs to choose, and capabilities as cards - 11 November 2026

@@ -536,6 +536,8 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [ ] Calendar Design, phone design and pop-up design buttons need designs that makes them look like buttons, not like all the other foldable menus
  - [ ] "Drag to set width": The edge of the page 'width' is sluggish and doesn't follow where the point drags it. It lags behind
  - [ ] The drag sections line between sections needs rework - it is difficult to drag it in the way one want, be it widening a section, widening and shortening, shortening etc
+ - [ ] The media tidy and undo (found in the review of 0.7.0.85, 11 November 2026): the tidy writes its rewritten paths into the drafts without an undo step, and the moves it waits to publish are not part of what an undo restores. After a tidy whose publish fails, an undo brings back the documents with the old root paths while the moves still wait, so the next publish moves the files under pages that point at the root. The tidy should be a step of its own, with its moves saved and restored by undo.
+ - [ ] The media tidy with the collections unreadable (found in the review of 0.7.0.85, 11 November 2026): while the collections index cannot be read, the tidy still moves the files but publishes no rewritten collections, so the live collections point at the old root paths. The tidy should wait, or say why, while a collection cannot be read.
 
 ## Suggestions, Ideas and Wishes
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene
@@ -555,6 +557,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [ ] Urd Admin custom themes 
 - [ ] A complete "Strip under the top bar" preset
 - [ ] More collection designs
+- [ ] New function: Force update - pulls the latest update again and let's the user replace or add the files
 
 ## URGENT
 

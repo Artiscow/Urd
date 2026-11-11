@@ -20138,46 +20138,46 @@ async function Uk() {
 		$M.setStatus(q("status.publishLayerUnreachable"), "error");
 	}
 }
-async function Wk() {
-	if (!(_L.dirty || I(Ik))) {
+async function Wk({ withChanges: e = !1 } = {}) {
+	if (!(_L.dirty && !e || I(Ik))) {
 		A(Ik, !0);
 		try {
-			if (await Uk(), !I(Fk)) return;
+			if (_L.dirty && (await Jk(), _L.dirty) || (await Uk(), !I(Fk))) return;
 			if (Hk) {
 				$M.setStatus(q("media.listTruncated"), "error");
 				return;
 			}
-			let e = [];
-			for (let t of Lw.siteDraft.pages) e.push([t.id, t.id === X.pageId ? Ze(X.store.data) : await X.readPageDraft(t)]);
-			let t = {
+			let e = /* @__PURE__ */ new Map();
+			for (let t of Lw.siteDraft.pages) t.id !== X.pageId && e.set(t.id, await X.readPageDraft(t));
+			let t = Lw.siteDraft.pages.map((t) => [t.id, t.id === X.pageId ? Ze(X.store.data) : e.get(t.id)]), n = {
 				site: Ze(Lw.siteDraft),
-				pages: e,
+				pages: t,
 				collections: Object.entries(OI.collectionStores).map(([e, t]) => [e, Ze(t.data)]),
 				templates: Object.entries(oS.templateStores).map(([e, t]) => [e, Ze(t.data)])
-			}, n = rk({
-				pages: e.length,
-				collections: t.collections.length,
-				templates: t.templates.length
+			}, r = rk({
+				pages: t.length,
+				collections: n.collections.length,
+				templates: n.templates.length
 			});
-			if (!n) {
+			if (!r) {
 				$M.setStatus(q("media.tidyNoRoom"), "error");
 				return;
 			}
-			let r = ok(t, I(Fk), { room: n });
-			if (!r.moves.length) {
+			let i = ok(n, I(Fk), { room: r });
+			if (!i.moves.length) {
 				$M.setStatus(q("media.tidyNothing"));
 				return;
 			}
-			r.site && (Lw.siteStore.replace(r.site), Lw.siteStore.save(), Lw.linkSiteDraft());
-			for (let [e, t] of r.pages) e === X.pageId ? (X.store.replace(t), X.store.save()) : $M.writeDraftKey(`urd-draft-${e}`, JSON.stringify(t));
-			for (let [e, t] of r.collections) OI.collectionStores[e]?.replace(t), OI.collectionStores[e]?.save();
-			for (let [e, t] of r.templates) oS.templateStores[e]?.replace(t), oS.templateStores[e]?.save();
-			r.collections.length && OI.syncCollectionsView(), r.templates.length && oS.pushTemplatesToPreview(), _L.updateDirty(), Bk(r.moves), await Jk(), Rk.length || ($M.setStatus(r.remaining ? q("media.tidyMore", {
-				n: String(r.moves.length),
-				left: String(r.remaining)
-			}) : q("media.tidyDone", { n: String(r.moves.length) }), "ok"), A(Fk, I(Fk).map((e) => r.moves.find((t) => t.from === e.path) ? {
+			i.site && (Lw.siteStore.replace(i.site), Lw.siteStore.save(), Lw.linkSiteDraft());
+			for (let [e, t] of i.pages) e === X.pageId ? (X.store.replace(t), X.store.save()) : $M.writeDraftKey(`urd-draft-${e}`, JSON.stringify(t));
+			for (let [e, t] of i.collections) OI.collectionStores[e]?.replace(t), OI.collectionStores[e]?.save();
+			for (let [e, t] of i.templates) oS.templateStores[e]?.replace(t), oS.templateStores[e]?.save();
+			i.collections.length && OI.syncCollectionsView(), i.templates.length && oS.pushTemplatesToPreview(), _L.updateDirty(), Bk(i.moves), await Jk(), Rk.length || ($M.setStatus(i.remaining ? q("media.tidyMore", {
+				n: String(i.moves.length),
+				left: String(i.remaining)
+			}) : q("media.tidyDone", { n: String(i.moves.length) }), "ok"), A(Fk, I(Fk).map((e) => i.moves.find((t) => t.from === e.path) ? {
 				...e,
-				path: r.moves.find((t) => t.from === e.path).to
+				path: i.moves.find((t) => t.from === e.path).to
 			} : e), !0));
 		} finally {
 			A(Ik, !1);
@@ -52458,15 +52458,29 @@ function V0(e, t) {
 }
 Vr(["click"]);
 // src/panels/UpdatePanel.svelte
-var H0 = /* @__PURE__ */ R("<!> <button class=\"ghost\"> </button>", 1), U0 = /* @__PURE__ */ R("<span class=\"update-arrow\"></span> <span class=\"badge\"> </span>", 1), W0 = /* @__PURE__ */ R("<p class=\"update-notes\"> </p>"), G0 = /* @__PURE__ */ R("<span class=\"update-warn\"></span>"), K0 = /* @__PURE__ */ R("<pre class=\"update-headers\"> </pre>"), q0 = /* @__PURE__ */ R("<span class=\"chip\"> </span>"), J0 = /* @__PURE__ */ R("<div class=\"update-row\"><span class=\"update-path\"> </span> <span class=\"update-flags\"><!> <span class=\"update-warn\"></span></span></div>"), Y0 = /* @__PURE__ */ R("<div class=\"update-row\"><span class=\"update-path\"> </span> <!></div>"), X0 = /* @__PURE__ */ R("<div class=\"update-row\"><span> </span> <span class=\"update-flags\"><!> <!> <input type=\"checkbox\"/></span></div>"), Z0 = /* @__PURE__ */ R("<div class=\"ctl-row update-opt-head\"><!> <span class=\"mini-label\"> </span></div> <!>", 1), Q0 = /* @__PURE__ */ R("<p class=\"update-summary\"> </p> <!> <!> <!> <!> <!> <button class=\"primary update-run\"> </button>", 1), $0 = /* @__PURE__ */ R("<div class=\"update-versions\"><span class=\"update-from\"> </span> <!></div> <!>", 1), e2 = /* @__PURE__ */ R("<div class=\"ctl-row\"><span> </span> <span class=\"gridmenu-value\"> </span></div> <button class=\"ghost action\"> </button>", 1), t2 = /* @__PURE__ */ R("<div class=\"panel-body\"><!> <!></div>");
+var H0 = /* @__PURE__ */ R("<!> <button class=\"ghost\"> </button>", 1), U0 = /* @__PURE__ */ R("<span class=\"update-arrow\"></span> <span class=\"badge\"> </span>", 1), W0 = /* @__PURE__ */ R("<p class=\"update-notes\"> </p>"), G0 = /* @__PURE__ */ R("<span class=\"update-warn\"></span>"), K0 = /* @__PURE__ */ R("<pre class=\"update-headers\"> </pre>"), q0 = /* @__PURE__ */ R("<span class=\"chip\"> </span>"), J0 = /* @__PURE__ */ R("<div class=\"update-row\"><span class=\"update-path\"> </span> <span class=\"update-flags\"><!> <span class=\"update-warn\"></span></span></div>"), Y0 = /* @__PURE__ */ R("<div class=\"update-row\"><span class=\"update-path\"> </span> <!></div>"), X0 = /* @__PURE__ */ R("<div class=\"update-row\"><span> </span> <span class=\"update-flags\"><!> <!> <input type=\"checkbox\"/></span></div>"), Z0 = /* @__PURE__ */ R("<div class=\"ctl-row update-opt-head\"><!> <span class=\"mini-label\"> </span></div> <!>", 1), Q0 = /* @__PURE__ */ R("<p class=\"update-summary\"> </p> <!> <!> <!> <!> <!> <button class=\"primary update-run\"> </button>", 1), $0 = /* @__PURE__ */ R("<div class=\"update-versions\"><span class=\"update-from\"> </span> <!></div> <!>", 1), e2 = /* @__PURE__ */ R("<div class=\"ctl-row\"><span> </span> <span class=\"gridmenu-value\"> </span></div> <button> </button>", 1), t2 = /* @__PURE__ */ R("<div class=\"panel-body\"><!> <!></div>");
 function n2(e, t) {
 	at(t, !0);
-	let n = rt("urd-editor"), r = /* @__PURE__ */ O(() => n.auth), i = /* @__PURE__ */ O(() => n.updateError), a = /* @__PURE__ */ O(() => n.updateInfo), { askConfirm: o, loadUpdateCheck: s, setStatus: c } = n;
-	function l(e) {
+	let n = rt("urd-editor"), r = /* @__PURE__ */ O(() => n.auth), i = /* @__PURE__ */ O(() => n.updateError), a = /* @__PURE__ */ O(() => n.updateInfo), { askConfirm: o, loadUpdateCheck: s, setStatus: c } = n, l = /* @__PURE__ */ k(!1);
+	function u() {
+		I(l) && (A(l, !1), c(""));
+	}
+	function d() {
+		let e = n.unpublished.length;
+		n.dirty && !I(l) ? (A(l, !0), c(q(e === 1 ? "media.tidyWaiting.one" : "media.tidyWaiting", { n: e }))) : (A(l, !1), n.tidyMedia({ withChanges: n.dirty }));
+	}
+	Pn(() => {
+		n.dirty || A(l, !1);
+	});
+	let f = !1;
+	Pn(() => {
+		!f && n.mediaRootCount === null && n.auth?.allowed && (f = !0, n.loadMediaFiles());
+	});
+	function p(e) {
 		let t = new Set(n.updateSkip);
 		t.has(e) ? t.delete(e) : t.add(e), n.updateSkip = t;
 	}
-	async function u() {
+	async function m() {
 		if (!I(a) || I(a).upToDate || n.updateBusy) return;
 		let e = [...n.updateSkip], t = I(a).changes.filter((e) => !n.updateSkip.has(e.path)), r = t.filter((e) => e.atom && e.conflict);
 		if (await o({
@@ -52494,14 +52508,14 @@ function n2(e, t) {
 					copied: n.copied,
 					total: n.total
 				}));
-				t.ok ? (c(q("update.committed", { target: I(a).target }), "ok"), await d(I(a).target.replace(/^v/, ""))) : t.status === 409 ? (c(ka(n) ?? q("update.checkFailed"), "error"), await s()) : c(ka(n) ?? q("update.failed"), "error");
+				t.ok ? (c(q("update.committed", { target: I(a).target }), "ok"), await h(I(a).target.replace(/^v/, ""))) : t.status === 409 ? (c(ka(n) ?? q("update.checkFailed"), "error"), await s()) : c(ka(n) ?? q("update.failed"), "error");
 			} catch {
 				c(q("status.publishLayerUnreachable"), "error");
 			}
 			n.updateBusy = !1;
 		}
 	}
-	async function d(e) {
+	async function h(e) {
 		for (let t = 0; t < 18; t++) {
 			await new Promise((e) => setTimeout(e, 1e4));
 			try {
@@ -52513,38 +52527,38 @@ function n2(e, t) {
 		}
 		c(q("update.deployTimeout"), "error");
 	}
-	var f = t2(), p = j(f), m = (e) => {
+	var g = t2(), _ = j(g), v = (e) => {
 		{
 			let t = /* @__PURE__ */ O(() => q("update.checking"));
 			HG(e, { get text() {
 				return I(t);
 			} });
 		}
-	}, h = (e) => {
+	}, y = (e) => {
 		var t = H0(), n = M(t);
 		yW(n, { get text() {
 			return I(i);
 		} });
 		var r = P(n, 2), a = N(r, !0);
 		F((e) => B(a, e), [() => q("update.retry")]), L("click", r, s), z(e, t);
-	}, g = (e) => {
-		var t = $0(), i = M(t), o = j(i), s = N(o, !0), c = P(o, 2), d = (e) => {
+	}, b = (e) => {
+		var t = $0(), i = M(t), o = j(i), s = N(o, !0), c = P(o, 2), l = (e) => {
 			var t = U0(), n = M(t);
 			H(n, () => J.right, !0), D(n);
 			var r = N(P(n, 2), !0);
 			F(() => B(r, I(a).target)), z(e, t);
 		};
 		V(c, (e) => {
-			I(a).upToDate || e(d);
+			I(a).upToDate || e(l);
 		}), D(i);
-		var f = P(i, 2), p = (e) => {
+		var u = P(i, 2), d = (e) => {
 			{
 				let t = /* @__PURE__ */ O(() => q("update.upToDate"));
 				HG(e, { get text() {
 					return I(t);
 				} });
 			}
-		}, m = (e) => {
+		}, f = (e) => {
 			var t = Q0(), i = M(t), o = N(i, !0), s = P(i, 2), c = (e) => {
 				{
 					let t = /* @__PURE__ */ O(() => q("update.aboutVersion", { target: I(a).target }));
@@ -52565,7 +52579,7 @@ function n2(e, t) {
 			V(s, (e) => {
 				I(a).notes && e(c);
 			});
-			var d = P(s, 2), f = (e) => {
+			var l = P(s, 2), u = (e) => {
 				{
 					let t = (e) => {
 						var t = G0();
@@ -52592,11 +52606,11 @@ function n2(e, t) {
 					});
 				}
 			};
-			V(d, (e) => {
-				I(a).headers?.upstream && e(f);
+			V(l, (e) => {
+				I(a).headers?.upstream && e(u);
 			});
-			var p = P(d, 2);
-			gi(p, 17, () => I(a).changes.filter((e) => e.atom && e.conflict), (e) => e.path, (e, t) => {
+			var d = P(l, 2);
+			gi(d, 17, () => I(a).changes.filter((e) => e.atom && e.conflict), (e) => e.path, (e, t) => {
 				var n = J0(), r = j(n), i = N(r, !0), a = P(r, 2), o = j(a), s = (e) => {
 					var t = q0(), n = N(t, !0);
 					F((e) => B(n, e), [() => q("update.actionDelete")]), z(e, t);
@@ -52609,10 +52623,10 @@ function n2(e, t) {
 					G(r, "title", I(t).path), B(i, I(t).path), G(c, "title", e);
 				}, [() => q(`update.conflict.${I(t).conflict}`)]), z(e, n);
 			});
-			var m = P(p, 2);
+			var f = P(d, 2);
 			{
 				let e = /* @__PURE__ */ O(() => q("update.atomTitle")), t = /* @__PURE__ */ O(() => q("update.atomGroup.title")), n = /* @__PURE__ */ O(() => String(I(a).changes.filter((e) => e.atom).length));
-				zR(m, {
+				zR(f, {
 					id: "engine",
 					surface: "update",
 					get title() {
@@ -52641,7 +52655,7 @@ function n2(e, t) {
 					$$slots: { default: !0 }
 				});
 			}
-			var h = P(m, 2), g = (e) => {
+			var h = P(f, 2), g = (e) => {
 				var t = Z0(), r = M(t), i = j(r);
 				{
 					let e = /* @__PURE__ */ O(() => q("update.optionalTitle"));
@@ -52653,29 +52667,29 @@ function n2(e, t) {
 				D(r), gi(P(r, 2), 17, () => I(a).changes.filter((e) => !e.atom), (e) => e.path, (e, t) => {
 					var r = X0(), i = j(r);
 					let a;
-					var o = N(i, !0), s = P(i, 2), c = j(s), u = (e) => {
+					var o = N(i, !0), s = P(i, 2), c = j(s), l = (e) => {
 						var t = q0(), n = N(t, !0);
 						F((e) => B(n, e), [() => q("update.actionDelete")]), z(e, t);
 					};
 					V(c, (e) => {
-						I(t).action === "delete" && e(u);
+						I(t).action === "delete" && e(l);
 					});
-					var d = P(c, 2), f = (e) => {
+					var u = P(c, 2), d = (e) => {
 						var n = G0();
 						H(n, () => J.warn, !0), D(n), F((e) => G(n, "title", e), [() => q(`update.conflict.${I(t).conflict}`)]), z(e, n);
 					};
-					V(d, (e) => {
-						I(t).conflict && e(f);
+					V(u, (e) => {
+						I(t).conflict && e(d);
 					});
-					var p = P(d, 2);
-					W(p), D(s), D(r), F((e, n, r, s) => {
-						a = U(i, 1, "update-path", null, a, { skipped: e }), G(i, "title", I(t).path), B(o, I(t).path), Zi(p, n), G(p, "title", r), G(p, "aria-label", s);
+					var f = P(u, 2);
+					W(f), D(s), D(r), F((e, n, r, s) => {
+						a = U(i, 1, "update-path", null, a, { skipped: e }), G(i, "title", I(t).path), B(o, I(t).path), Zi(f, n), G(f, "title", r), G(f, "aria-label", s);
 					}, [
 						() => n.updateSkip.has(I(t).path),
 						() => n.updateSkip.has(I(t).path),
 						() => q("update.keepMine.title"),
 						() => q("update.keepMine")
-					]), L("change", p, () => l(I(t).path)), z(e, r);
+					]), L("change", f, () => p(I(t).path)), z(e, r);
 				}), F((e) => B(o, e), [() => q("update.keepMine")]), z(e, t);
 			}, _ = /* @__PURE__ */ O(() => I(a).changes.some((e) => !e.atom));
 			V(h, (e) => {
@@ -52691,50 +52705,54 @@ function n2(e, t) {
 				}),
 				() => I(r)?.allowed ? q("update.run.title") : q("tip.history.needsAccess"),
 				() => q("update.run", { target: I(a).target })
-			]), L("click", v, u), z(e, t);
+			]), L("click", v, m), z(e, t);
 		};
-		V(f, (e) => {
-			I(a).upToDate ? e(p) : e(m, -1);
+		V(u, (e) => {
+			I(a).upToDate ? e(d) : e(f, -1);
 		}), F((e) => B(s, e), [() => q("update.current", { version: I(a).current })]), z(e, t);
 	};
-	V(p, (e) => {
-		n.updateChecking && !I(a) ? e(m) : I(i) ? e(h, 1) : I(a) && e(g, 2);
+	V(_, (e) => {
+		n.updateChecking && !I(a) ? e(v) : I(i) ? e(y, 1) : I(a) && e(b, 2);
 	});
-	var _ = P(p, 2);
-	{
-		let e = /* @__PURE__ */ O(() => q("group.siteMedia")), t = /* @__PURE__ */ O(() => q("tip.site.media")), r = /* @__PURE__ */ O(() => n.mediaRootCount ? q("site.mediaRootShort", { n: n.mediaRootCount }) : "");
-		zR(_, {
-			id: "media",
-			surface: "update",
-			get title() {
-				return I(e);
-			},
-			get tip() {
-				return I(t);
-			},
-			get value() {
-				return I(r);
-			},
-			ontoggle: (e) => {
-				e && n.mediaRootCount === null && n.loadMediaFiles();
-			},
-			children: (e, t) => {
-				var r = e2(), i = M(r), a = j(i), o = N(a, !0), s = N(P(a, 2), !0);
-				D(i);
-				var c = P(i, 2), l = N(c, !0);
-				F((e, t, r, a) => {
-					G(i, "title", e), B(o, t), B(s, n.mediaRootCount ?? "-"), c.disabled = n.mediaBusy || n.mediaRootCount === null || !n.mediaRootCount || n.dirty || n.updateBusy || !n.auth?.allowed, G(c, "title", r), B(l, a);
-				}, [
-					() => q("tip.site.mediaRoot"),
-					() => q("lbl.mediaRoot"),
-					() => n.dirty ? q("tip.media.tidyDirty") : q("tip.media.tidy"),
-					() => q("ui.tidyMedia")
-				]), L("click", c, () => n.tidyMedia()), z(e, r);
-			},
-			$$slots: { default: !0 }
-		});
-	}
-	D(f), z(e, f), ot();
+	var x = P(_, 2), S = (e) => {
+		{
+			let t = /* @__PURE__ */ O(() => q("group.siteMedia")), r = /* @__PURE__ */ O(() => q("tip.site.media")), i = /* @__PURE__ */ O(() => q("site.mediaRootShort", { n: n.mediaRootCount }));
+			zR(e, {
+				id: "media",
+				surface: "update",
+				get title() {
+					return I(t);
+				},
+				get tip() {
+					return I(r);
+				},
+				get value() {
+					return I(i);
+				},
+				children: (e, t) => {
+					var r = e2(), i = M(r), a = j(i), o = N(a, !0), s = N(P(a, 2), !0);
+					D(i);
+					var c = P(i, 2);
+					let f;
+					var p = N(c, !0);
+					F((e, t, r, a) => {
+						G(i, "title", e), B(o, t), B(s, n.mediaRootCount), f = U(c, 1, "ghost action tidy-media svelte-16rskwa", null, f, { armed: I(l) }), c.disabled = n.mediaBusy || n.updateBusy || !n.auth?.allowed, G(c, "title", r), B(p, a);
+					}, [
+						() => q("tip.site.mediaRoot"),
+						() => q("lbl.mediaRoot"),
+						() => n.dirty ? q("tip.media.tidyDirty") : q("tip.media.tidy"),
+						() => I(l) ? q(n.unpublished.length === 1 ? "ui.tidyMediaWith.one" : "ui.tidyMediaWith", { n: n.unpublished.length }) : q("ui.tidyMedia")
+					]), L("click", c, d), Br("pointerleave", c, (e) => {
+						e.pointerType === "mouse" && u();
+					}), Br("blur", c, u), z(e, r);
+				},
+				$$slots: { default: !0 }
+			});
+		}
+	};
+	V(x, (e) => {
+		n.mediaRootCount && e(S);
+	}), D(g), z(e, g), ot();
 }
 Vr(["click", "change"]);
 // src/lib/scroll-place.js

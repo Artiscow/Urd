@@ -2,6 +2,12 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.85): the media tidy in two presses, and the Media group only when needed
+
+- [ ] On a site with files at the root of `media/` and a change waiting to be published: Updates › Media › «Tidy the media folder» is pressable; the first press says in the status line that a change waits and turns the button into «Publish 1 change and tidy»; moving the mouse off takes it back and clears the line; a second press publishes the change, then moves the files in a publish of its own; signed out, the Updates panel opens without an error about the media files
+- [ ] The same with nothing waiting: one press tidies, as before
+- [ ] On a site with nothing at the root of `media/` (or once the tidy is done), the Updates panel has no Media group
+
 ### Test batch (0.7.0.78-0.7.33.13p): release 0.7.9
 
 - [ ] A terms of sale block (the terms page template): its bar has «Edit text», which puts the caret at the end of its text, with «Toolbar» on «Full bar» and on «Essentials»

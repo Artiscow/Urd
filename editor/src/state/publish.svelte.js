@@ -82,21 +82,28 @@ async function loadMediaFiles() {
   }
 }
 
-/** The tidy: the plan from the published documents and the listing, the changed documents written into the drafts, and the moves given to a publish. The button stands busy from the press to the publish's answer. */
-async function tidyMedia() {
-  if (historyState.dirty || mediaBusy) return;
+/** The tidy: the plan from the documents as they stand and the listing, the changed documents written into the drafts, and the moves given to a publish. With changes waiting it runs only where `withChanges` asks for them to be published first (the panel's second press), and only once that publish has gone through, so its own publish carries the moves and the paths it rewrites alone. The button stands busy from the press to the publish's answer. */
+async function tidyMedia({ withChanges = false } = {}) {
+  if ((historyState.dirty && !withChanges) || mediaBusy) return;
   mediaBusy = true;
   try {
+    if (historyState.dirty) {
+      await publish();
+      // A publish that did not go through has said why, and the tidy waits.
+      if (historyState.dirty) return;
+    }
     await loadMediaFiles();
     if (!mediaFiles) return;
     if (mediaTruncated) {
       shellState.setStatus(ta('media.listTruncated'), 'error');
       return;
     }
-    const pages = [];
+    // The other pages are read first and the open page taken last, so an edit made while they are read is in it.
+    const read = new Map();
     for (const entry of siteState.siteDraft.pages) {
-      pages.push([entry.id, entry.id === pageState.pageId ? $state.snapshot(pageState.store.data) : await pageState.readPageDraft(entry)]);
+      if (entry.id !== pageState.pageId) read.set(entry.id, await pageState.readPageDraft(entry));
     }
+    const pages = siteState.siteDraft.pages.map((entry) => [entry.id, entry.id === pageState.pageId ? $state.snapshot(pageState.store.data) : read.get(entry.id)]);
     const docs = {
       site: $state.snapshot(siteState.siteDraft),
       pages,

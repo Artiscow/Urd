@@ -182,6 +182,16 @@ for (const name of NAMES) {
   });
 }
 
+test('the Media group stands only while files wait at the root, and its tidy stays pressable while changes wait, since its first press says why and its second publishes them with it', () => {
+  const tidy = (extra) => draw(panels.Update, 'update', structuredClone(site), { updateInfo: { upToDate: true, target: 'v0.7.4', changes: [] }, mediaRootCount: 19, mediaBusy: false, updateBusy: false, ...extra })
+    .match(/<button[^>]*class="[^"]*tidy-media[^"]*"[^>]*>/)?.[0];
+  const waiting = tidy({ dirty: true, unpublished: [{ kind: 'page', id: 'hjem' }] });
+  assert.ok(waiting, 'the tidy is drawn');
+  assert.doesNotMatch(waiting, /\sdisabled/, 'pressable with a change waiting');
+  assert.equal(tidy({ dirty: false, unpublished: [], mediaRootCount: 0 }), undefined, 'nothing at the root: no group');
+  assert.equal(tidy({ dirty: false, unpublished: [], mediaRootCount: null }), undefined, 'not listed yet, or no publishing layer: no group');
+});
+
 test('the Nav and Footer panels draw the background editor', () => {
   for (const name of ['Nav', 'Footer']) {
     const draft = structuredClone(site);
