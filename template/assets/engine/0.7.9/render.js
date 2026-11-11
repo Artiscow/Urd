@@ -118,7 +118,7 @@ let pushSuspended = 0;
  * @param {{w: number}} frame The block's desktop frame
  * @returns {number}
  */
-function drawnWidth(el, canvas, frame) {
+export function drawnWidth(el, canvas, frame) {
   const across = canvas.clientWidth;
   return across && el.offsetWidth ? Math.max(frame.w, (el.offsetWidth / across) * 100) : frame.w;
 }

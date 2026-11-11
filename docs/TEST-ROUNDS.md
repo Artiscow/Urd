@@ -2,6 +2,12 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.78-0.7.33.13p): release 0.7.9
+
+- [ ] A terms of sale block (the terms page template): its bar has «Edit text», which puts the caret at the end of its text, with «Toolbar» on «Full bar» and on «Essentials»
+- [ ] On a canvas narrower than the design, a picture with a width floor drawn wider than its frame, reaching in under a text or an FAQ beside it: typing the text taller moves the picture down with it; with an FAQ answer opened, a drag of the FAQ leaves the picture where the push drew it, never back under the FAQ
+- [ ] After the update, a site on 0.7.9 opens and publishes as before, and the Updates panel of a site on 0.7.8 offers 0.7.9
+
 ### Test batch (0.7.33.13): the walk through every design again
 
 - [ ] A capability added near the menu's foot (a calendar's «Text fields» with «Minimal», in the floating menu): the whole card comes into view as it opens, and a scroll of your own during it stops the following

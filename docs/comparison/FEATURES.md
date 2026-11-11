@@ -134,7 +134,7 @@ The source marks, the ID scheme and the status words are explained in [README.md
 - **Preview.** Two devices, the Screen (the window, four common sizes, five ratios or an own size) and the Phone (five sizes, the width alone, five ratios or an own size), any width dragged at the edge, and Clean view.
 - **The editor.**
   - 12 panels, and an element menu in Content, Style and Placement areas ([ADR-0016](../adr/0016-panel-language.md)).
-  - An element menu with search, groups in every block, Pinned rows at the top (a pinned setting stands there instead of in its area), the block's designs first in Style, marks on own values with a reset per setting, keys 1, 2 and 3 for its areas and / for its search, placed beside the block and dragged by its head.
+  - An element menu with search, groups in every block, the search field or Pinned rows first as «Shortcuts» chooses (a pinned setting stands in Pinned instead of in its area), capabilities that take no room until added as cards, the block's designs first in Style, a reset per setting of its own, keys 1, 2 and 3 for its areas and / for its search, placed beside the block and dragged by its head.
   - «/» opens the block menu on the canvas.
   - «Save as template» and «Change layout».
 - **The theme.**

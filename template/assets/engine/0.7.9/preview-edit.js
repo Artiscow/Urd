@@ -27,7 +27,7 @@
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  */
-import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
+import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
@@ -590,7 +590,14 @@ function settleFrames(host, section, ids) {
     }
   }
   if (!fits.size) return null;
-  const moves = fitMovesAll(section.blocks, fits);
+  // Each block as wide as the pass draws it, so the moves are the pass's.
+  const widths = new Map();
+  for (const block of section.blocks) {
+    const frame = block?.frames?.desktop;
+    const el = frame ? canvas.querySelector(`:scope > .urd-block[data-block-id="${CSS.escape(block.id)}"]`) : null;
+    if (el) widths.set(block.id, drawnWidth(el, canvas, frame));
+  }
+  const moves = fitMovesAll(section.blocks, fits, widths);
   const before = new Map();
   const written = new Map();
   for (const block of section.blocks) {
@@ -4783,17 +4790,18 @@ function enhanceBlock(el, block, section, grid, host) {
 
   // The shorter bars: the acts the full bar holds besides these stand in the right-click menu under ⋮.
   if (!mobile && form !== 'full') {
-    // With small panels the bar starts with a word for the block's main act: the image or cover editor, the text, or its settings.
+    // With small panels the bar starts with a word for the block's main act: the image or cover editor, the text (a text block's or the terms of sale's, both written on the page), or its settings.
     const picture = block.type === 'image' || coverEditable;
-    const leadIsSettings = form === 'panels' && !picture && block.type !== 'text';
+    const written = block.type === 'text' || block.type === 'terms';
+    const leadIsSettings = form === 'panels' && !picture && !written;
     if (form === 'panels') {
-      const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : block.type === 'text' ? ta('canvas.bar.editText') : ta('canvas.ctx.settings');
+      const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : written ? ta('canvas.bar.editText') : ta('canvas.ctx.settings');
       const tip = picture ? ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage') : leadIsSettings ? ta('canvas.blockMenu') : word;
-      const run = picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : block.type === 'text' ? () => editTextIn(el) : () => openBlockSettings(el, section, block);
+      const run = picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : written ? () => editTextIn(el) : () => openBlockSettings(el, section, block);
       barBody.appendChild(barButton(word, tip, run, 'urd-edit-lead'));
     }
     // Every group a tool: the word for the block's own editor where it has one, then a tool for each group of its menu, which the right-click menu under ⋮ follows with the rest.
-    if (form === 'groups' && (picture || block.type === 'text')) {
+    if (form === 'groups' && (picture || written)) {
       const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : ta('canvas.bar.editText');
       barBody.appendChild(barButton(word, picture ? ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage') : word, picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : () => editTextIn(el), 'urd-edit-lead'));
     }

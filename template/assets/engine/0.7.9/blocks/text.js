@@ -10,6 +10,7 @@ import { boxStyleCss } from '../box-style.js';
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
 import { typedFrames } from '../push-model.js';
+import { drawnWidth } from '../render.js';
 import { textDesign, termsDesign, applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
 
 /** Per text block, the section's frames before the typing in it began, and the last few frames the typing wrote. */
@@ -150,7 +151,14 @@ export const textBlock = {
           el.style.height = 'auto';
           const needed = box.scrollHeight * ((box.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1));
           el.style.height = height;
-          const frames = typedFrames(start.before, block.id, needed, ctx.grid?.size ?? 8);
+          // Each block as wide as the push draws it, so the blocks below move as the pass would move them.
+          const canvas = el.parentElement;
+          const widths = new Map();
+          for (const other of ctx.section.blocks) {
+            const otherEl = other.frames?.desktop ? canvas?.querySelector(`:scope > .urd-block[data-block-id="${CSS.escape(other.id)}"]`) : null;
+            if (otherEl) widths.set(other.id, drawnWidth(otherEl, canvas, other.frames.desktop));
+          }
+          const frames = typedFrames(start.before, block.id, needed, ctx.grid?.size ?? 8, widths);
           for (const other of ctx.section.blocks) {
             const frame = frames.get(other.id);
             if (!frame || sameFrame(frame, other.frames?.desktop)) continue;

@@ -2598,7 +2598,7 @@ function pa(e) {
 		m: []
 	};
 }
-// ../template/assets/engine/0.7.8/locales/site/nb.js
+// ../template/assets/engine/0.7.9/locales/site/nb.js
 var ma = {
 	lang: "nb",
 	strings: {
@@ -3784,7 +3784,7 @@ function qo(e, t, n = 0) {
 	}
 	return r;
 }
-// ../template/assets/engine/0.7.8/imageTools.js
+// ../template/assets/engine/0.7.9/imageTools.js
 var Jo = 1600, Yo = .82, Xo = .6, Zo = 15e6, Qo = Zo, $o = 4e6, es = Object.freeze({
 	image: 4e5,
 	gallery: 4e5,
@@ -4031,7 +4031,7 @@ function Os(e) {
 	let n = Ts(t[2]);
 	return n ? `/media/${n}/${t[1]}.${t[2]}` : null;
 }
-// ../template/assets/engine/0.7.8/blocks/form.js
+// ../template/assets/engine/0.7.9/blocks/form.js
 var ks = () => [
 	{
 		id: "name",
@@ -4052,7 +4052,7 @@ var ks = () => [
 		required: !0
 	}
 ];
-// ../template/assets/engine/0.7.8/sections/presets.js
+// ../template/assets/engine/0.7.9/sections/presets.js
 function As(e) {
 	return typeof crypto < "u" && crypto.randomUUID ? `${e}-${crypto.randomUUID().slice(0, 8)}` : `${e}-${[...crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(4))].map((e) => e.toString(16).padStart(2, "0")).join("")}`;
 }
@@ -5283,7 +5283,7 @@ function dc(e) {
 		])
 	});
 }
-// ../template/assets/engine/0.7.8/theme.js
+// ../template/assets/engine/0.7.9/theme.js
 function fc(e, t, n) {
 	return t === "light" || t === "dark" ? t : n ? "dark" : "light";
 }
@@ -5409,7 +5409,7 @@ function Sc(e, t) {
 	let n = xc(e), r = xc(t);
 	return n == null || r == null ? null : (Math.max(n, r) + .05) / (Math.min(n, r) + .05);
 }
-// ../template/assets/engine/0.7.8/nav-model.js
+// ../template/assets/engine/0.7.9/nav-model.js
 var Cc = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/api\/photo\?[^\s"'<>\\]{1,2048}|\/(?!\/)[\w%./-]*)$/;
 function wc(e) {
 	return typeof e == "string" && Cc.test(e);
@@ -5521,7 +5521,7 @@ var Lc = {
 function zc(e) {
 	return typeof e == "string" && Rc.test(e);
 }
-// ../template/assets/engine/0.7.8/collections-csv.js
+// ../template/assets/engine/0.7.9/collections-csv.js
 var Bc = [
 	"id",
 	"title",
@@ -6309,7 +6309,7 @@ function ou(e, { page: t = null, pageId: n = "", path: r = "/", site: i = null, 
 	}
 	return c;
 }
-// ../template/assets/engine/0.7.8/calendar-designs.js
+// ../template/assets/engine/0.7.9/calendar-designs.js
 var su = [
 	"list",
 	"cards",
@@ -7733,7 +7733,7 @@ function ad(e) {
 	for (let n of Object.keys(uu)) rd(e?.[n]) || (t[n] = e[n]);
 	return Object.keys(t).length ? t : void 0;
 }
-// ../template/assets/engine/0.7.8/contact-profiles.js
+// ../template/assets/engine/0.7.9/contact-profiles.js
 var od = (e) => RegExp(`^[0-9]{${e}}$`), sd = /^.{1,80}$/, cd = {
 	ids: [{
 		key: "number",
@@ -9060,7 +9060,7 @@ function pd(e) {
 	let t = String(e ?? "");
 	return ud[t] ?? ud[t.split("-")[0]] ?? null;
 }
-// ../template/assets/engine/0.7.8/contact-checks.js
+// ../template/assets/engine/0.7.9/contact-checks.js
 var md = (e) => [...String(e)].map(Number);
 function hd(e, t) {
 	let n = md(e);
@@ -9741,7 +9741,7 @@ function Cd(e, t) {
 		return !1;
 	}
 }
-// ../template/assets/engine/0.7.8/contact-model.js
+// ../template/assets/engine/0.7.9/contact-model.js
 var wd = (e) => typeof e == "string" ? e.trim() : "", Td = [
 	"name",
 	"address",
@@ -11248,7 +11248,7 @@ function wp(e, t, n) {
 	let r = t?.[e];
 	return r == null || r === "" ? "" : e === "sizes" ? Array.isArray(r) ? r.join(", ") : "" : e === "colors" ? Array.isArray(r) ? r.map((e) => e?.name ?? "").filter(Boolean).join(", ") : "" : e === "text" ? n(String(r)) : String(r);
 }
-// ../template/assets/engine/0.7.8/icons.js
+// ../template/assets/engine/0.7.9/icons.js
 var Tp = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", Ep = "fill=\"currentColor\" stroke=\"none\"", Dp = {
 	facebook: {
 		label: "Facebook",
@@ -11604,7 +11604,7 @@ function kp(e) {
 	let t = typeof e == "string" ? Dp[e] : null;
 	return t ? `<svg viewBox="0 0 24 24" width="100%" height="100%" ${t.fill ? Ep : Tp} aria-hidden="true" focusable="false">${t.body}</svg>` : null;
 }
-// ../template/assets/engine/0.7.8/links-model.js
+// ../template/assets/engine/0.7.9/links-model.js
 function Ap(e) {
 	if (!e || typeof e != "object") return null;
 	let t = typeof e.url == "string" ? e.url.trim() : "";
@@ -11782,31 +11782,31 @@ function nm(e, t = {}) {
 function rm(e, t, n) {
 	return im(e, /* @__PURE__ */ new Map([[t, n]]));
 }
-function im(e, t) {
-	let n = [];
-	for (let r of e ?? []) {
-		let e = r?.frames?.desktop;
+function im(e, t, n) {
+	let r = [];
+	for (let i of e ?? []) {
+		let e = i?.frames?.desktop;
 		if (!e || !Number.isFinite(e.y) || !Number.isFinite(e.h)) continue;
-		let i = t?.get(r.id), a = Number.isFinite(i) ? Math.max(0, i - e.h) : 0;
-		n.push({
-			id: r.id,
+		let a = t?.get(i.id), o = Number.isFinite(a) ? Math.max(0, a - e.h) : 0;
+		r.push({
+			id: i.id,
 			x: e.x ?? 0,
-			w: e.w,
+			w: n?.get(i.id) ?? e.w,
 			y: e.y,
 			h: e.h,
-			grow: a
+			grow: o
 		});
 	}
-	let r = /* @__PURE__ */ new Map();
-	if (!n.some((e) => e.grow > 0)) return r;
-	let { shifts: i } = nm(n);
-	for (let e of n) {
-		let t = i.get(e.id) ?? 0;
-		t && r.set(e.id, e.y + t);
+	let i = /* @__PURE__ */ new Map();
+	if (!r.some((e) => e.grow > 0)) return i;
+	let { shifts: a } = nm(r);
+	for (let e of r) {
+		let t = a.get(e.id) ?? 0;
+		t && i.set(e.id, e.y + t);
 	}
-	return r;
+	return i;
 }
-// ../template/assets/engine/0.7.8/doc-look.js
+// ../template/assets/engine/0.7.9/doc-look.js
 var am = [
 	"long",
 	"contents",
@@ -11858,7 +11858,7 @@ function um(e, t, n = {}) {
 		font: e === "privacy"
 	};
 }
-// ../template/assets/engine/0.7.8/migrate.js
+// ../template/assets/engine/0.7.9/migrate.js
 function dm(e, t) {
 	if (!t) return {
 		ok: !1,
@@ -12121,7 +12121,7 @@ function Am(e, t) {
 	}
 	return n;
 }
-// ../template/assets/engine/0.7.8/templates-model.js
+// ../template/assets/engine/0.7.9/templates-model.js
 var jm = [
 	"section",
 	"blocks",
@@ -12968,7 +12968,7 @@ function Kh(e) {
 function qh(e) {
 	return e === "motion" ? "fold:motion" : e === "placement" ? "area:placement" : typeof e == "string" && /^(fold:[a-z0-9-]+|loose:(content|style)|area:(content|style|placement)|look:design)$/.test(e) ? e : null;
 }
-// ../template/assets/engine/0.7.8/bar-tools.js
+// ../template/assets/engine/0.7.9/bar-tools.js
 var Jh = (e) => `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${e}</svg>`, Yh = {
 	pencil: Jh("<path d=\"M17 3l4 4L8 20l-5 1 1-5L17 3z\"/>"),
 	brush: Jh("<path d=\"M14 4l6 6-8 8-6-6z\"/><path d=\"M6 12l-3 7 7-3\"/>"),
@@ -13070,7 +13070,7 @@ function ig(e, t, n, { min: r = 8, gap: i = 12, margin: a = 8 } = {}) {
 		side: s.side
 	};
 }
-// ../template/assets/engine/0.7.8/layer-order.js
+// ../template/assets/engine/0.7.9/layer-order.js
 var ag = (e) => e.frames?.desktop?.z ?? 1;
 function og(e, t, n) {
 	let r = e.filter((e) => e.id !== t), i = r.map(ag), a = /* @__PURE__ */ new Map();
@@ -13236,7 +13236,7 @@ function wg({ prepare: e, onHeight: t, title: n }) {
 		}
 	};
 }
-// ../template/assets/engine/0.7.8/animations/core.js
+// ../template/assets/engine/0.7.9/animations/core.js
 var Tg = () => ({
 	duration: 600,
 	delay: 0
@@ -13735,7 +13735,7 @@ function Jg(e, t) {
 function Yg(e, t) {
 	return !t && String(e.key ?? "").toLowerCase() === "g" && !e.ctrlKey && !e.metaKey && !e.altKey;
 }
-// ../template/assets/engine/0.7.8/snap-model.js
+// ../template/assets/engine/0.7.9/snap-model.js
 var Xg = [
 	"lines",
 	"dots",
@@ -13785,7 +13785,7 @@ function o_(e, t) {
 		r.remove(), --a.count, a.count > 0 || (a_.delete(e), a.placed || (e.style.position = a.before));
 	}, { once: !0 });
 }
-// ../template/assets/engine/0.7.8/block-palette.js
+// ../template/assets/engine/0.7.9/block-palette.js
 var s_ = (e) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${e}</svg>`, c_ = {
 	text: {
 		labelKey: "blocks.text",
@@ -14429,7 +14429,7 @@ function L_(e, t = {}) {
 		}
 	};
 }
-// ../template/assets/engine/0.7.8/footer-model.js
+// ../template/assets/engine/0.7.9/footer-model.js
 var R_ = (e) => typeof e == "string" ? e : "";
 function z_(e) {
 	let t = e.footer?.brand ?? {}, n = R_(t.title).trim(), r = R_(t.tagline).trim(), i = R_(t.logo).trim(), a = t.mode === "image" || t.mode === "both" ? t.mode : "text";
@@ -14565,7 +14565,7 @@ async function rv(e) {
 		}
 	};
 }
-// ../template/assets/engine/0.7.8/place.js
+// ../template/assets/engine/0.7.9/place.js
 function iv(e) {
 	let t = (e) => Math.round(e * 100) / 100, n = Math.max(0, t(100 - e.w)), r = Math.min(n, Math.max(0, t(e.x - e.w / 2))), i = Math.max(0, e.y - e.h / 2), a = e.snap === !1 || e.grid?.snap === !1, o = e.grid?.size || 8;
 	return i = a ? Math.round(i) : Math.round(i / o) * o, {
@@ -14573,7 +14573,7 @@ function iv(e) {
 		y: Math.max(0, i)
 	};
 }
-// ../template/assets/engine/0.7.8/backgrounds/color.js
+// ../template/assets/engine/0.7.9/backgrounds/color.js
 var av = {
 	version: 1,
 	label: "Colour",
@@ -14643,7 +14643,7 @@ function pv(e, t, n, r, i = []) {
 function mv(e) {
 	return e.flatMap((e) => e.items);
 }
-// ../template/assets/engine/0.7.8/backgrounds/gradient.js
+// ../template/assets/engine/0.7.9/backgrounds/gradient.js
 var hv = {
 	linear: [
 		"pan",
@@ -14867,7 +14867,7 @@ var Fv = {
 function Lv(e) {
 	return Number(e) === 2 ? 2 : 1;
 }
-// ../template/assets/engine/0.7.8/gallery-layout.js
+// ../template/assets/engine/0.7.9/gallery-layout.js
 var Rv = [
 	"floating",
 	"fill",
@@ -15129,7 +15129,7 @@ function jy(e, t, n, r = !1) {
 	let i = fy(e, "mosaic", n, r);
 	return Array.from({ length: i }, (e, n) => Ay(t, n));
 }
-// ../template/assets/engine/0.7.8/picture.js
+// ../template/assets/engine/0.7.9/picture.js
 var My = Vv, Ny = {
 	natural: "",
 	mono: "grayscale(1)",
@@ -15327,7 +15327,7 @@ function Qy(e, t, n, { dim: r = 1, ratioFromPicture: i = !1 } = {}) {
 	for (let t of Py) e.classList.toggle(`urd-pic-look-${t}`, a.look === t);
 	e.classList.toggle("urd-pic-overlaid", !!a.overlay), a.overlay ? (e.style.setProperty("--urd-pic-overlay", _c(a.overlay.color)), e.style.setProperty("--urd-pic-overlay-strength", String(a.overlay.strength))) : (e.style.removeProperty("--urd-pic-overlay"), e.style.removeProperty("--urd-pic-overlay-strength"));
 }
-// ../template/assets/engine/0.7.8/backgrounds/image.js
+// ../template/assets/engine/0.7.9/backgrounds/image.js
 var $y = .4, eb = [
 	"none",
 	"kenburns",
@@ -15475,7 +15475,7 @@ var wb = {
 function Tb(e, t, n, r) {
 	gb() ? Cb(e, t, n, r) : hb(e, t, n, r);
 }
-// ../template/assets/engine/0.7.8/gallery-model.js
+// ../template/assets/engine/0.7.9/gallery-model.js
 var Eb = [
 	"grid",
 	"carousel",
@@ -15509,7 +15509,7 @@ function Nb(e, { min: t = 2, fallback: n = 5 } = {}) {
 	let r = Number(e);
 	return !Number.isFinite(r) || r <= 0 ? n : Math.max(t, r);
 }
-// ../template/assets/engine/0.7.8/photo-source.js
+// ../template/assets/engine/0.7.9/photo-source.js
 var Pb = [
 	"drive",
 	"gphotos",
@@ -15701,7 +15701,7 @@ function cx(e, t, n) {
 		e.isConnected && r.photos.length && (e.textContent = "", e.removeAttribute("style"), e.className = "urd-bg-layer", n(e, t));
 	}), n(e, t);
 }
-// ../template/assets/engine/0.7.8/backgrounds/slideshow.js
+// ../template/assets/engine/0.7.9/backgrounds/slideshow.js
 var lx = {
 	source: "upload",
 	folder: "",
@@ -16090,7 +16090,7 @@ function Kx(e, t, n) {
 	let r = Gx(t, n), i = String(e?.site?.title ?? "").trim(), a = Wx(e?.site?.titleFormat);
 	return a === "page" || !i ? r || i : r ? a === "site-page" ? `${i} - ${r}` : `${r} - ${i}` : i;
 }
-// ../template/assets/engine/0.7.8/page-presets.js
+// ../template/assets/engine/0.7.9/page-presets.js
 var qx = /* @__PURE__ */ new Map();
 dc({ sections: { define: (e, t) => qx.set(e, t) } });
 var Jx = [
@@ -18176,7 +18176,7 @@ var Qw = {
 	["bottom-center", "opt.dock.bottomCenter"],
 	["bottom-right", "opt.dock.bottomRight"]
 ];
-// ../template/assets/engine/0.7.8/clipboard-model.js
+// ../template/assets/engine/0.7.9/clipboard-model.js
 function dT(e, t) {
 	let n = e ?? [], r = t ? n.findIndex((e) => e.id === t) : -1;
 	return r < 0 ? n.length : r + 1;
@@ -18380,7 +18380,7 @@ var FT = {
 	handleMoveBlockSection: NT,
 	handleDelete: PT
 };
-// ../template/assets/engine/0.7.8/plugins.js
+// ../template/assets/engine/0.7.9/plugins.js
 function IT(e) {
 	let t = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(e).trim());
 	return t ? [
@@ -19813,7 +19813,7 @@ var UO = {
 	toggleChrome: VO,
 	effects: HO
 };
-// ../template/assets/engine/0.7.8/feeds.js
+// ../template/assets/engine/0.7.9/feeds.js
 function WO(e) {
 	return String(e ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&apos;");
 }
@@ -23561,7 +23561,7 @@ function LL(e, t) {
 		I(r) && e(o);
 	}), z(e, i), ot();
 }
-// ../template/assets/engine/0.7.8/anchored.js
+// ../template/assets/engine/0.7.9/anchored.js
 function RL(e = globalThis) {
 	let t = e?.HTMLElement?.prototype, n = e?.CSS;
 	return !!(t && "popover" in t && typeof t.showPopover == "function" && typeof n?.supports == "function" && n.supports("anchor-name: --urd") && n.supports("position-try-fallbacks: flip-block"));
@@ -23722,7 +23722,7 @@ function QL(e, t) {
 	}), D(w), sa(w, (e) => A(g, e), () => I(g)), z(e, w), ot();
 }
 Vr(["click"]);
-// ../template/assets/engine/0.7.8/preset-thumb.js
+// ../template/assets/engine/0.7.9/preset-thumb.js
 var $L = /^#[0-9a-fA-F]{3,8}$/, eR = /^[a-z][a-z0-9-]*$/, tR = "#171c26", nR = "#232a38", rR = "#98a1b3", iR = "#7c5cff", aR = (e, t) => `var(--urd-color-${e}, ${t})`;
 function oR(e, t) {
 	return typeof e == "string" ? $L.test(e) ? e : eR.test(e) ? aR(e, t) : t : t;
@@ -26825,7 +26825,7 @@ Vr([
 	"keydown",
 	"input"
 ]);
-// ../template/assets/engine/0.7.8/fonts.js
+// ../template/assets/engine/0.7.9/fonts.js
 var mV = [
 	["font.system", "system-ui, sans-serif"],
 	["font.arial", "Arial, Helvetica, sans-serif"],
@@ -30995,7 +30995,7 @@ function eU(e) {
 		}
 	};
 }
-// ../template/assets/engine/0.7.8/palette-search.js
+// ../template/assets/engine/0.7.9/palette-search.js
 function tU(e) {
 	return String(e ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -31014,7 +31014,7 @@ function iU(e, t, n) {
 		rank: nU(n(e), t)
 	})).filter((e) => e.rank >= 0).sort((e, t) => e.rank - t.rank || e.i - t.i).map((e) => e.item);
 }
-// ../template/assets/engine/0.7.8/search-langs.js
+// ../template/assets/engine/0.7.9/search-langs.js
 var aU = 48, oU = 3, sU = 5, cU = 3, lU = 4;
 function uU(e) {
 	let t = /* @__PURE__ */ new Map();
@@ -32968,7 +32968,7 @@ function xW(e) {
 		}
 	};
 }
-// ../template/assets/engine/0.7.8/calendar-format.js
+// ../template/assets/engine/0.7.9/calendar-format.js
 function SW(e) {
 	if (typeof e != "string" || !e.trim()) return !1;
 	try {
@@ -32977,7 +32977,7 @@ function SW(e) {
 		return !1;
 	}
 }
-// ../template/assets/engine/0.7.8/map-links.js
+// ../template/assets/engine/0.7.9/map-links.js
 var CW = {
 	osm: {
 		url: "https://www.openstreetmap.org/search?query=",
@@ -33016,7 +33016,7 @@ function TW(e) {
 	let t = e?.site?.mapService;
 	return Object.hasOwn(CW, t) ? t : "osm";
 }
-// ../template/assets/engine/0.7.8/meeting-links.js
+// ../template/assets/engine/0.7.9/meeting-links.js
 var EW = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
 function DW(e) {
 	let t = Array.isArray(e) ? e : String(e ?? "").split(/[\s,;]+/), n = [];
@@ -35351,7 +35351,7 @@ function uK(e, t) {
 	var n = Qr();
 	Si(M(n), () => t.children), z(e, n), ot();
 }
-// ../template/assets/engine/0.7.8/calendar-thumb.js
+// ../template/assets/engine/0.7.9/calendar-thumb.js
 var dK = "#0e1512", fK = "#2fd6b6", pK = "#5c6b64", mK = "#22302a", hK = "#e8efe9", gK = "#16221d", _K = "#1c2340", vK = "#f3ecd8", yK = "#d0a74a", bK = (e) => e < 1 ? ` opacity="${e}"` : "", Q = (e, t, n, r, i, a = 1, o = 2) => `<rect x="${e}" y="${t}" width="${n}" height="${r}" rx="${o}" fill="${i}"${bK(a)}/>`, xK = (e, t, n, r, i = 1) => `<circle cx="${e}" cy="${t}" r="${n}" fill="${r}"${bK(i)}/>`, SK = (e, t, n, r, i, a = 1, o = 1) => `<line x1="${e}" y1="${t}" x2="${n}" y2="${r}" stroke="${i}" stroke-width="${a}"${bK(o)}/>`, CK = (e, t, n, r) => Array.from({ length: e }, (e, i) => r(t + i * n, i)).join(""), wK = (e, t = dK) => `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${t}"/>${e}</svg>`;
 function TK(e, t, n, r, i, a = pK) {
 	let o = "", s = n / 7, c = r / 4;
@@ -35524,7 +35524,7 @@ function DK(e) {
 	let t = EK[e] ?? EK.plain, n = ["booklet"].includes(e);
 	return wK(t(), n ? "#1a2620" : dK);
 }
-// ../template/assets/engine/0.7.8/block-designs.js
+// ../template/assets/engine/0.7.9/block-designs.js
 function OK(e, t, n) {
 	let r = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${t} ${n}"><rect width="${t}" height="${n}" fill="hsl(${e} 45% 82%)"/><circle cx="${Math.round(t * .75)}" cy="${Math.round(n * .3)}" r="${Math.round(Math.min(t, n) * .12)}" fill="hsl(${(e + 40) % 360} 80% 75%)"/><path d="M0 ${Math.round(n * .75)} L${Math.round(t * .25)} ${Math.round(n * .45)} L${Math.round(t * .45)} ${Math.round(n * .65)} L${Math.round(t * .7)} ${Math.round(n * .4)} L${t} ${Math.round(n * .7)} L${t} ${n} L0 ${n}Z" fill="hsl(${e} 40% 48%)"/></svg>`;
 	return `data:image/svg+xml,${encodeURIComponent(r)}`;
@@ -46494,7 +46494,7 @@ Vr([
 	"click",
 	"change"
 ]);
-// ../template/assets/engine/0.7.8/divider-model.js
+// ../template/assets/engine/0.7.9/divider-model.js
 var NZ = [
 	"wave",
 	"tilt",
@@ -47358,7 +47358,7 @@ function rQ(e, t) {
 		I(r) ? e(c) : I(i) ? e(l, 1) : e(u, -1);
 	}), D(o), z(e, o), ot();
 }
-// ../template/assets/engine/0.7.8/footer-thumb.js
+// ../template/assets/engine/0.7.9/footer-thumb.js
 function iQ(e = {}) {
 	let t = "#2fd6b6", n = "#5c6b64", r = e.mega ? "#16221d" : "#0e1512", i = e.cols ?? 0, a = e.social ?? 0, o = `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${r}"/>`;
 	if (e.mega && (o += `<circle cx="20" cy="6" r="34" fill="${t}" opacity="0.18"/>`), e.bigcta) return o += `<rect x="45" y="18" width="70" height="8" rx="3" fill="${n}" opacity="0.85"/>`, o += `<rect x="56" y="32" width="48" height="4" rx="2" fill="${n}" opacity="0.5"/>`, o += `<rect x="62" y="43" width="36" height="10" rx="3" fill="${t}"/>`, o += aQ(n, e.baselineLinks), o + "</svg>";
@@ -49340,7 +49340,7 @@ Vr([
 	"change",
 	"click"
 ]);
-// ../template/assets/engine/0.7.8/embed-cover.js
+// ../template/assets/engine/0.7.9/embed-cover.js
 var RQ = [
 	[
 		"youtube-nocookie.com",
@@ -49380,7 +49380,7 @@ function zQ(e) {
 		name: n[2]
 	} : null;
 }
-// ../template/assets/engine/0.7.8/blocks/video.js
+// ../template/assets/engine/0.7.9/blocks/video.js
 function BQ(e) {
 	let t;
 	try {
@@ -49409,7 +49409,7 @@ function BQ(e) {
 	}
 	return null;
 }
-// ../template/assets/engine/0.7.8/osm.js
+// ../template/assets/engine/0.7.9/osm.js
 var VQ = (e) => Math.max(-85, Math.min(85, e)), HQ = (e) => Math.max(-180, Math.min(180, e)), UQ = (e) => Math.max(1, Math.min(19, Math.round(e)));
 function WQ(e) {
 	let t = String(e ?? "").trim();
@@ -49432,7 +49432,7 @@ function WQ(e) {
 		zoom: null
 	} : null;
 }
-// ../template/assets/engine/0.7.8/privacy-model.js
+// ../template/assets/engine/0.7.9/privacy-model.js
 var GQ = ["static.cloudflareinsights.com", "cloudflareinsights.com"];
 function KQ(e) {
 	for (let t of e ?? []) try {
@@ -49587,7 +49587,7 @@ function o$(e, t) {
 		}
 	};
 }
-// ../template/assets/engine/0.7.8/hint.js
+// ../template/assets/engine/0.7.9/hint.js
 var s$ = null, c$ = null, l$ = "\n.urd-hint-chip {\n  position: absolute; top: -32px; z-index: 1001;\n  right: calc(18px * var(--urd-chrome-scale, 1));\n  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));\n  transform-origin: bottom right;\n  width: 32px; height: 32px;\n  display: inline-flex; align-items: center; justify-content: center;\n  padding: 0; border-radius: 50%;\n  /* A transparent border is an invisible bridge down to the block edge, so hover survives the trip up */\n  border: 6px solid transparent;\n  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 80%, black);\n  background-clip: padding-box;\n  color: #fff; font: 700 12px/1 system-ui, sans-serif; cursor: pointer;\n  opacity: 0; pointer-events: none; transition: opacity 0.15s;\n}\n.urd-block:hover .urd-hint-chip,\n.urd-hint-chip:focus-visible {\n  opacity: 0.92; pointer-events: auto;\n}\n/* On a block's bar the chip is the bar's last tool, after the tools, so a bar wider than its block never stands over it: it takes the bar's look, size and colours as the tools do, and shows with the bar. */\n.urd-edit-toolbar .urd-bar-body > .urd-hint-chip {\n  position: static; transform: none; width: auto;\n  opacity: 1; pointer-events: auto;\n}\n.urd-hint-card {\n  position: fixed; z-index: 100003; width: 300px;\n  /* The card is admin chrome, not part of the page being built: it keeps the\n     admin's size at any preview zoom (the text toolbar's and the image\n     editor's counter-scale) and takes the admin's colours, which the editor\n     reports as --urd-admin-* (urd-admin-theme in urd.js). The anchor is set by\n     JS in viewport coordinates, so the origin is that corner. */\n  transform: scale(var(--urd-chrome-scale, 1));\n  transform-origin: top left;\n  padding: 12px 14px; border-radius: 10px;\n  background: var(--urd-admin-surface, #151a23);\n  color: var(--urd-admin-text, #e8eaf0);\n  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);\n  box-shadow: 0 12px 36px rgb(0 0 0 / 55%);\n  font: 12px/1.5 system-ui, sans-serif;\n}\n.urd-hint-card ul { margin: 8px 0 0; padding-left: 16px; display: grid; gap: 5px; }\nbody.urd-chrome-off .urd-hint-chip,\nbody.urd-chrome-off .urd-hint-card { display: none !important; }\n";
 function u$() {
 	if (document.getElementById("urd-hint-css")) return;
@@ -50001,7 +50001,7 @@ function T$(e, t) {
 	z(e, S), ot();
 }
 Vr(["click", "change"]);
-// ../template/assets/engine/0.7.8/collections.js
+// ../template/assets/engine/0.7.9/collections.js
 function E$(e, t = !0) {
 	let n = e.filter((e) => e.date), r = e.filter((e) => !e.date);
 	return n.sort((e, n) => t ? n.date.localeCompare(e.date) : e.date.localeCompare(n.date)), [...n, ...r];

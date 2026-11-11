@@ -8,6 +8,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+## [0.7.9] - 2026-11-11
+
+### 0.7.0.78-0.7.33.13p - Release 0.7.9: the Legal panel's keeping times, one row language for the admin, admin designs to choose, and capabilities as cards - 11 November 2026
+
+- RELEASE: the engine bumped 0.7.8 to 0.7.9 after the ritual (urd.json, the engine folder renamed, the ten assets/urd/ shells, the eight HTML shells with byte-identical slug copies, editor/package.json and its lock, a rebuilt bundle); check-release green in full mode.
+- The commits of the span were pushed one by one as they were made, so the preparation covers what was already on the remote.
+- A test read the admin dictionary by a path naming the engine's version, which the rename broke. It reads it through the tests' engine helper (`tests/panel-folds.test.mjs`).
+- Milestones 0.7.30 to 0.7.34 left URGENT as one line each in the v0.7 section of the backlog, and the roadmap lists 0.7.30 to 0.7.34 as delivered, in en-GB and nb.
+
+The span review found these, all fixed:
+
+1. ADR-0030 said the admin designs' parts are never migrated, while 0.7.33.12.6 and 0.7.33.13 read a changed default once per browser. Decision 2 is amended, and ARCHITECTURE.md names the read and its mark.
+2. The comparison's element menu still stood with Pinned first, the hidden settings behind a ⋮, a block's actions at the foot of Placement and marks on own values, and named no capabilities; ADR-0016 put a block's actions beside a «+» the default way to add does not draw. ELEMENTS.md and FEATURES.md describe the menu as it stands, and ADR-0016's decision 3 is amended again.
+3. Ten words were left in the admin dictionaries by removals in the span (the calendar's sign-up switch, the decor row, three of the background layers' tips, a site calendar's remove, the footer's add link, the image's remove). They are gone from every dictionary, the Swedish pack's too.
+4. The terms of sale, written on the page as a text is, got no «Edit text» on its bar, and with Small panels its first word opened the settings. It takes the bar's text lead as a text block does (`preview-edit.js`).
+5. A fit after a gesture moved the blocks by their frames' widths, while the push draws a picture a width floor widens by its drawn width, so a block the push had moved could jump back. The fit takes the widths as drawn (`fitMovesAll` in `push-model.js`, `drawnWidth` in `render.js`), tested.
+6. Five bullets of the span's entries ran to three sentences or told the drag's mechanics. They are shortened, and the mechanics stand in `row-drag.svelte.js`.
+
+The span review also found one commit's message repeating its title; pushed history is left as it is.
+
+The review of the preparation's own changes found these, all fixed:
+
+1. Typing a text taller still moved the blocks below by their frames' widths, so a widened picture under it stayed and was covered. Typing takes the widths as drawn too (`typedFrames` in `push-model.js`, `blocks/text.js`), tested, and the test item for the fit grows an FAQ, since typing writes its own frames.
+2. The new test item named «Small panels» as a toolbar form, and ELEMENTS.md still spoke of marks on own values and counted the text's box among every block's capabilities. The item names «Full bar» and «Essentials», and ELEMENTS.md says a reset and the text's own box.
+3. A block's actions step down to a line under the head where a narrow menu's head holds the search field, which ADR-0016 and ELEMENTS.md did not say. Both say it.
+4. The roadmap's lists of delivered milestones stopped at 0.7.29. They list 0.7.30 to 0.7.34, in en-GB and nb.
+
 ### 0.7.33.13 - The walk through every admin design again: an added card followed into view, and the earlier defaults read once - 11 November 2026
 
 - Every admin design was walked through every admin layout at 1500 and 1024 px again, with the parts of 0.7.33.10 to 0.7.33.12: each design's way to add a capability and its shortcuts, and a card added and taken away on a text, a button and a calendar. Two findings are fixed below, and the menu over its block in the narrow sidebar window stays under Known Limitations.
@@ -360,7 +387,7 @@ The independent review before the commit found these, all fixed:
 ### 0.7.33.5 - The Urd settings window built: Presets, three groups and no folds - 9 November 2026
 
 - The settings window drew its groups as folds in the panel and had no place for the admin designs. It is built to the direction chosen in 0.7.33.4: the sections stand in three groups (`SETTINGS_BANDS` in `lib/settings-model.js`: Presets, Local settings, This site), every one open in one scroll with no fold; the dialog's list is grouped the same way and follows the scroll, the panel keeps each section's heading at the top while it scrolls, and the sheet keeps its two sides.
-- The four admin designs are chosen first, as picture tiles like the other settings (`lib/settings-pictures.js`, each design's one line its tile's tooltip), under a line that names the design in use, or «Floating menu, changed» with the parts that differ and «Back to Floating menu» (`settings/AdminDesignRow.svelte`). A changed part says the design's value beside its name, and its arrow takes it back. The row was first built as a press that opened the design picker, and on 9 November 2026 the tiles were chosen instead, with the row named Presets rather than Admin design.
+- The four admin designs are chosen first, as picture tiles like the other settings (`lib/settings-pictures.js`, each design's one line its tile's tooltip), under a line that names the design in use, or «Floating menu, changed» with the parts that differ and «Back to Floating menu» (`settings/AdminDesignRow.svelte`). A changed part says the design's value beside its name, and its arrow takes it back.
 - Choosing a design writes every part through its row's setter and as stored, and Undo beside the line takes it back as one step while the parts stand as the design left them (`state/admin-design.svelte.js`, ADR-0030).
 - The window's segments are the row kit's `Choice`, so panel-language.test.mjs's list of files not yet moved is empty; the Element menu row uses the names chosen in 0.7.33.2 and its picture draws two columns.
 
@@ -375,7 +402,7 @@ The independent review before the commit found these, all fixed:
 
 ### 0.7.33.4 - The Urd settings window chosen: one open scroll, the admin design first - 9 November 2026
 
-- The settings window had no form for the admin designs. Three directions were drawn on the «Urd Settings Window» canvas, and on 9 November 2026 direction A was chosen without its folds: the list at the left in three groups (the admin design with the element menu, the panels and the canvas; Local settings in the normal categories; This site, shared), every section open in one scroll that the list jumps in and follows, the design row with «Back to …», and a changed part naming the design's value beside its reset. Written into BACKLOG 0.7.33.4 with the link; 0.7.33.5 builds it.
+- The settings window had no form for the admin designs. Direction A of the «Urd Settings Window» canvas was chosen on 9 November 2026 without its folds and written into BACKLOG 0.7.33.4: the list at the left in three groups, every section open in one scroll that the list jumps in and follows, and the design row with «Back to …».
 
 ### 0.7.33.3 - The admin designs as data, folds that grow with what they show, and no marks on what was changed - 9 November 2026
 
@@ -403,7 +430,7 @@ The independent review before the commit found these, all fixed:
 
 ### 0.7.33.2 - The names of the admin designs, their parts and their options - 8 November 2026
 
-- The four admin designs and their six new parts carried working names. Each has its name in en-GB, nb and tr, chosen 8 November 2026 on the «Admin Design Names» canvas and written into BACKLOG: the designs Floating menu, Small panels, Side panel and One column; the row Admin design; the parts Element menu, Folds, Toolbar, Designs, Extra settings and Shortcuts with their options. The Admin Designs canvas carries the names in place of the working ones.
+- The four admin designs and their six new parts carried working names. Each has its name in en-GB, nb and tr, chosen 8 November 2026 on the «Admin Design Names» canvas and written into BACKLOG 0.7.33.2, and the Admin Designs canvas carries them.
 - Of the words the inventory of 7 November 2026 found standing for two things, two changed: a nav item's «Look» reads «Shown as», and the grid and guides buttons in the top bar lost their «Show» caption, the folded form keeping the word as its tooltip. The rest stay, with the record in BACKLOG of which rows keep «Placement», «Motion», «Style» and «Look».
 - 0.7.30 is closed: every step delivered, and panel-language.test.mjs's list names only the settings window.
 
@@ -419,7 +446,7 @@ The independent review before the commit found these, all fixed:
 
 ### 0.7.30.11 - Publish with its menu, and «Not published yet» in the History panel - 8 November 2026
 
-- The top bar held an «Unpublished» pill, a «Discard drafts» button armed by two clicks and a «View site» link. They are gone: Publish carries the count of what waits and opens a menu on a press or a mouse's rest, with the acts first (Publish now, View the published site, Discard drafts), then the changes not published yet, and at its foot the last publish, which opens History. Chosen 8 November 2026 as directions G and 4 of the «Not Published Yet» canvas (the link in BACKLOG), after a count chip beside Publish was tried first.
+- The top bar held an «Unpublished» pill, a «Discard drafts» button armed by two clicks and a «View site» link. Publish carries the count of what waits and opens a menu with Publish now, View the published site and Discard drafts, then the changes not published yet and the last publish, chosen 8 November 2026 as directions G and 4 of the «Not Published Yet» canvas.
 - What waits to be published is one tested list (`lib/unpublished.js`): a part for each page with a draft, the site, the list of collections and each collection, the templates, the plugins and the redirects; the editor's dirty flag is whether the list holds anything, so the count and the greyed acts never disagree.
 - The rows are drawn once (`lib/UnpublishedRows.svelte`) for the menu and for History's «Not published yet» fold: a press on a row's name goes to the change (the page onto the canvas, a collection into its panel, the rest to theirs), and its chevron opens the steps made on the part since the last publish, from the undo history, each with its words and how long ago; a publish stamps its time in the browser for this. History holds «Discard drafts» under the rows, and «Published» over the commit list.
 - The discard is one act asked for by its three callers (`publishState.askDiscard`: the question, the discard, and a message whose action brings the drafts back while the discard is the last step); the two-click arming and its floating pill are gone with their styles, and the top bar's fold steps lost the step for the discard's words.
@@ -528,7 +555,7 @@ The independent review before the commit found these, all fixed:
 - Settings had four names across the gear, the right-click menu and the panel, and «mobile» and «phone» named the same thing. One name, «Settings», and «phone» everywhere.
 - A section's settings were reached from the panel only. The section's bar has a gear that opens them in the element menu's form (`section/SectionMenu.svelte`: Style and Placement), the floating menu opens beside the section, and the Settings panel shows the same for a selected section.
 - The z-order buttons said one step but moved a block to the front or the back. They are named for what they do, the move reckoned in `layer-order.js` for the bar and the menu alike, and duplicate, delete and z-order stand in the menu too (`lib/rows/ActionRow.svelte`), a deletion armed at its first press there as on the bar.
-- Every list dragged its rows its own way, and a dragged row's picture was the bare row, which some systems draw with a box behind it. The row kit has one drag (`lib/rows/row-drag.svelte.js`, direction A of the «Moving Rows» canvas, 8 November 2026): a row is pressed, held and dragged by itself, outside its fields; a one-line card with its sign, name and detail follows the pointer; the row stays dimmed in its place; a dashed one-line slot grows where it will land and shrinks away as the place moves; a release beside the list lands the row, Escape moves nothing; on landing the rows glide to their places, the landed row flashes once and a screen reader hears where it went. The list editor, the Collections list and table use it, and panel-language.test.mjs finds a drag built by hand.
+- Every list dragged its rows its own way, and a dragged row's picture was the bare row, which some systems draw with a box behind it. The row kit has one drag, which the list editor and the Collections list and table use (`lib/rows/row-drag.svelte.js`, direction A of the «Moving Rows» canvas, 8 November 2026), and panel-language.test.mjs finds a drag built by hand.
 - The Urd settings have «Moving rows» (direction C): the line between the rows instead of the slot, kept per browser.
 - The background layers stood as rows with a caret, a dropdown and a cross. They are cards like the Nav tab's items (`lib/rows/CardList.svelte`): one line with the layer's colour, gradient, picture or icon, its kind and its strength; a press opens its settings with the kind and the cross inside; the head is dragged.
 - The Nav panel's drag: an item is placed by the thirds of a row (before, into, after) across its whole width, the clone grows and shrinks as the kit's slot does, the items glide on landing, and the moved item flashes. Its drop places are reckoned in `lib/nav-drop.js` with a node test.

@@ -5,10 +5,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PANEL_FOLDS, panelFolds, foldGroups, tabMenuStyleOf, collectionMenuRows } from '../editor/src/lib/panel-folds.js';
+import { ENGINE_DIR } from './_engine.mjs';
 
 const PANEL_FILES = { site: 'SitePanel', legal: 'LegalPanel', theme: 'ThemePanel', nav: 'NavPanel', footer: 'FooterPanel' };
 const source = (panel) => readFileSync(new URL(`../editor/src/panels/${PANEL_FILES[panel]}.svelte`, import.meta.url), 'utf8');
-const nb = readFileSync(new URL('../template/assets/engine/0.7.8/locales/admin/nb.js', import.meta.url), 'utf8');
+const nb = readFileSync(new URL('locales/admin/nb.js', ENGINE_DIR), 'utf8');
 
 test('every panel with a menu has its file here', () => {
   assert.deepEqual(Object.keys(PANEL_FOLDS).sort(), Object.keys(PANEL_FILES).sort());

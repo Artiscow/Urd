@@ -481,7 +481,7 @@
   {/if}
 {/snippet}
 
-<!-- The layers in their stack (the first drawn at the back, hint.bg.order), as cards like the Nav tab's items: a press on a card's head opens its settings, and the head is pressed, held and dragged, or moved with Alt and the arrows, to change the order -->
+<!-- The layers in their stack (the first drawn at the back), as cards like the Nav tab's items: a press on a card's head opens its settings, and the head is pressed, held and dragged, or moved with Alt and the arrows, to change the order -->
 <CardList items={layers} label={ta('lbl.background')} key={(layer) => layer} card={layerCard} {isOpen} ontoggle={toggleLayer}
   onmove={(from, to) => moveBgLayer(bg, from, to)} onremove={(i) => removeBgLayer(bg, i)}>
   {#snippet body(layer, i)}

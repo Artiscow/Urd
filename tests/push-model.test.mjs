@@ -298,6 +298,19 @@ test('fitMovesAll: two stale blocks settled at once move as the push pass draws 
   assert.equal(moves.get('c'), 240 + 90);
 });
 
+test('fitMovesAll: a block drawn wider than its frame moves as the pass draws it, by the width given', () => {
+  // A text at 50 to 90 % grows; under it a picture whose frame runs 0 to 40 %, drawn 0 to 70 % by its width floor on a narrow canvas.
+  const blocks = [{ id: 'text', frames: { desktop: { x: 50, y: 0, w: 40, h: 100 } } }, { id: 'pic', frames: { desktop: { x: 0, y: 110, w: 40, h: 40 } } }];
+  assert.equal(fitMovesAll(blocks, new Map([['text', 160]])).size, 0, 'by its frame it stands beside the text');
+  assert.equal(fitMovesAll(blocks, new Map([['text', 160]]), new Map([['pic', 70]])).get('pic'), 170, 'as drawn it stands under it');
+});
+
+test('typedFrames: typing moves a block drawn wider than its frame as the pass draws it, by the width given', () => {
+  const blocks = [{ id: 'text', frames: { desktop: { x: 50, y: 0, w: 40, h: 100 } } }, { id: 'pic', frames: { desktop: { x: 0, y: 110, w: 40, h: 40 } } }];
+  assert.equal(typedFrames(blocks, 'text', 160).get('pic').y, 110, 'by its frame it stands beside the text');
+  assert.equal(typedFrames(blocks, 'text', 160, 1, new Map([['pic', 70]])).get('pic').y, 170, 'as drawn it stands under it');
+});
+
 test('fitMoves is fitMovesAll with one fit', () => {
   const cases = [
     [[blk('faq', 0, 100), blk('near', 120, 40), blk('far', 400, 40), blk('badge', 20, 30)], 'faq', 130],

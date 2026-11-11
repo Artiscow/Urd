@@ -414,19 +414,22 @@ export function fitMoves(blocks, id, h) {
  * The same for several frames at once (the blocks under one gesture, settled
  * to the boxes the push pass draws for them): each block's growth counts as
  * the pass counted it, so the moves are the ones the pass drew with all of
- * them grown.
+ * them grown. A block takes its width as drawn where one is given, as the
+ * pass does for a picture a width floor draws wider than its frame on a
+ * narrow canvas; without one, the frame's width stands.
  * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} blocks The section's blocks
  * @param {Map<string, number>} fits Block id to its fitted height in px
+ * @param {Map<string, number>} [widths] Block id to its width as drawn, in percent of the canvas (render.js drawnWidth)
  * @returns {Map<string, number>}
  */
-export function fitMovesAll(blocks, fits) {
+export function fitMovesAll(blocks, fits, widths) {
   const items = [];
   for (const block of blocks ?? []) {
     const frame = block?.frames?.desktop;
     if (!frame || !Number.isFinite(frame.y) || !Number.isFinite(frame.h)) continue;
     const h = fits?.get(block.id);
     const grow = Number.isFinite(h) ? Math.max(0, h - frame.h) : 0;
-    items.push({ id: block.id, x: frame.x ?? 0, w: frame.w, y: frame.y, h: frame.h, grow });
+    items.push({ id: block.id, x: frame.x ?? 0, w: widths?.get(block.id) ?? frame.w, y: frame.y, h: frame.h, grow });
   }
   const moves = new Map();
   if (!items.some((it) => it.grow > 0)) return moves;
@@ -445,14 +448,15 @@ export function fitMovesAll(blocks, fits) {
  * @param {string} id The text block
  * @param {number} needed The height its words need now, in px
  * @param {number} [step] The grid step a grown height is rounded up to
+ * @param {Map<string, number>} [widths] Block id to its width as drawn, in percent of the canvas (fitMovesAll)
  * @returns {Map<string, object>} The desktop frame of every block with one
  */
-export function typedFrames(before, id, needed, step = 1) {
+export function typedFrames(before, id, needed, step = 1, widths) {
   const frames = new Map();
   const own = (before ?? []).find((b) => b?.id === id)?.frames?.desktop;
   if (!own) return frames;
   const h = needed > own.h ? Math.ceil(needed / step) * step : own.h;
-  const moves = fitMoves(before, id, h);
+  const moves = fitMovesAll(before, new Map([[id, h]]), widths);
   for (const block of before) {
     const frame = block?.frames?.desktop;
     if (!frame) continue;
