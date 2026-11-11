@@ -37,6 +37,18 @@
     ed.toolMenu = null;
   }
 
+  /** Save's tooltip: what it does, or why it cannot. */
+  const saveTip = $derived(ed.savedAvailable ? (ed.saveCount ? ta('tip.save') : ta('tip.save.nothing')) : ta('tip.save.unavailable'));
+  /** The menu Ctrl+S opens under Save: its first act that can act takes the focus. */
+  let savePop = $state(null);
+  $effect(() => {
+    if (ed.toolMenu === 'save' && savePop) savePop.querySelector('button:not(:disabled)')?.focus();
+  });
+  function saveNow() {
+    ed.toolMenu = null;
+    ed.saveDrafts();
+  }
+
   /** A row of the menu's list: the menu closes and the owner is taken to the change. */
   function goTo(part) {
     ed.toolMenu = null;
@@ -347,6 +359,17 @@
            would be empty, and it is the entry point to publishing at all. -->
       <a class="ghost" href="/api/github/login">{ta('ui.loginGitHub')}</a>
     {/if}
+    <!-- Save beside Publish (ADR-0032): it keeps what stands in this browser alone on the drafts branch, and carries the count of it; Ctrl+S opens a menu under it that asks to save or to publish -->
+    <span class="toolmenu save-wrap">
+      <button type="button" class="ghost topbar-tall save-btn" disabled={!ed.savedAvailable || !ed.saveCount || ed.savedBusy} title={saveTip}
+        aria-describedby={ed.savedAvailable && ed.saveCount ? 'save-waiting' : undefined} onclick={saveNow}>{@html ICONS.save}<span class="btn-label">{ta('ui.save')}</span>{#if ed.savedAvailable && ed.saveCount}<span class="publish-count save-count" aria-hidden="true">{ed.saveCount}</span><span class="sr-only" id="save-waiting">{ta(ed.saveCount === 1 ? 'save.waiting.one' : 'save.waiting', { n: ed.saveCount })}</span>{/if}</button>
+      {#if ed.toolMenu === 'save'}
+        <div class="tool-pop save-pop" transition:menuMotion role="group" aria-label={ta('saved.menu')} bind:this={savePop}>
+          <button type="button" class="ghost publish-act publish-main" disabled={!ed.savedAvailable || !ed.saveCount || ed.savedBusy} title={saveTip} onclick={saveNow}>{@html ICONS.save}<span>{ta('saved.saveNow')}</span></button>
+          <button type="button" class="ghost publish-act" disabled={!ed.dirty || !ed.auth?.allowed} title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={publishNow}>{@html ICONS.upload}<span>{ta('publish.now')}</span></button>
+        </div>
+      {/if}
+    </span>
     <!-- Publish with its menu: the button carries the count of what waits, and opens on a press or a mouse's rest as the bar's other menus do (no tooltip on a button that opens on rest).
          The menu holds the acts first (Publish now, the published site, Discard drafts), then what waits to be published as rows that lead to the change, and at its foot the last publish, which opens History. -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -359,11 +382,13 @@
             title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={publishNow}>{@html ICONS.upload}<span>{ta('publish.now')}</span></button>
           <a class="ghost publish-act" href={ed.pageEntry()?.path ?? '/'} target="_blank" rel="noopener" onclick={() => (ed.toolMenu = null)}>{@html ICONS.external}<span>{ta('publish.viewLive')}</span></a>
           <button type="button" class="ghost publish-act publish-red" disabled={!ed.dirty} onclick={discardFromMenu}>{@html ICONS.restore}<span>{ta('ui.discard')}</span></button>
-          {#if ed.dirty}
+          {#if ed.savedRows.length}
             <hr class="gridmenu-divider" />
-            <span class="mini-label publish-head">{ta('history.unpublished')} · {ed.unpublished.length}</span>
+            <!-- With the bands each band counts its own rows; without them the head counts what waits -->
+            <span class="mini-label publish-head">{ta('history.unpublished')}{#if !ed.savedAvailable} · {ed.savedRows.length}{/if}</span>
             <!-- What waits scrolls in its own box, so the acts above it and the last publish under it stay in sight -->
-            <div class="publish-rows"><UnpublishedRows parts={ed.unpublished} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={goTo} /></div>
+            <div class="publish-rows"><UnpublishedRows parts={ed.savedRows} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={goTo}
+              bands={ed.savedAvailable} onuse={(part) => { ed.toolMenu = null; ed.useSaved(part.part); }} whenSaved={ed.whenSaved} /></div>
           {/if}
           <hr class="gridmenu-divider" />
           <button type="button" class="ghost publish-act publish-foot" onclick={() => { ed.toolMenu = null; ed.openPanel('history'); }}>

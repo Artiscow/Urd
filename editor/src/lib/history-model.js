@@ -48,6 +48,7 @@ export function stepKind(key, { typed = false } = {}) {
   const kind = (labelKey, icon, onPage) => ({ labelKey: `history.step.${labelKey}`, icon, onPage });
   if (typed) return kind('typed', 'text', true);
   if (k === 'discard') return kind('discard', 'restore', false);
+  if (k === 'use-saved') return kind('useSaved', 'save', false);
   if (k.startsWith('page-meta:') || k === 'edit:page-noindex') return kind('pageSettings', 'gear', true);
   if (k === 'pages') return kind('pages', 'panel_pages', false);
   if (k === 'nav' || k.startsWith('nav-') || k.startsWith('edit:nav-')) return kind('nav', 'panel_nav', false);

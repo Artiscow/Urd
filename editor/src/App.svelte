@@ -70,9 +70,10 @@
   import { redirectsState } from './state/redirects.svelte.js';
   import { pictureEditorState } from './state/picture-editor.svelte.js';
   import { legalPanelState } from './state/legal.svelte.js';
+  import { savedState } from './state/saved.svelte.js';
   import { keepScroll } from './lib/scroll-place.js';
 
-  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState, pictureEditorState, legalPanelState];
+  const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState, pictureEditorState, legalPanelState, savedState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
   /** The side panel's place: the docked menu's per block or section, the Collections panel's per open collection, a page's settings per page where the Pages panel steps into them, every other panel's its own. */

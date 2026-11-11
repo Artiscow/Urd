@@ -3870,6 +3870,13 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  // Ctrl/⌘+S asks the editor for its menu that saves the drafts or publishes them, in place of the browser's saving of the page; a dialog on the page keeps the key.
+  if (ctrl && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's' && !(target instanceof Element && target.closest('dialog, [role="dialog"]'))) {
+    event.preventDefault();
+    post({ type: 'urd-save-key' });
+    return;
+  }
+
   // Slash command: "/" opens the + New block menu with the search field
   // focused, in the active section (otherwise the section under the
   // pointer); if the pointer sits in the section, the block lands at the

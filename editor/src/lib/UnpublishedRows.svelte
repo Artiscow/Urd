@@ -1,13 +1,18 @@
 <script>
   /* What waits to be published, as rows that lead to the change (lib/unpublished.js): a sign for the kind, the part's name, what it is, and a chevron that opens the row.
      Open, a row lists the steps made on the part since the last publish, newest first, from the undo history (stepsForPart), each with its words and how long ago; a part with no step of its own kept (made inside another step, or before the kept steps) says so.
-     Drawn in the Publish menu and in History's «Not published yet», from the same parts, so the two never disagree; `onpick(part)` takes the owner to the change. */
+     Drawn in the Publish menu and in History's «Not published yet», from the same parts, so the two never disagree; `onpick(part)` takes the owner to the change.
+     With `bands`, where the drafts can be saved (ADR-0032), the rows stand under «In this browser» and «Saved» by where each part stands (lib/saved-model.js standing), and a part saved on another device since this browser last saw it says so under its row, with `onuse(part)` taking the saved one. */
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from './icons.js';
   import { stepsForPart } from './unpublished.js';
   import { timeAgo } from './time-ago.js';
   import { rowMotion } from './motion.svelte.js';
-  let { parts, steps = [], publishedAt = 0, onpick } = $props();
+  let { parts, steps = [], publishedAt = 0, onpick, bands = false, onuse = null, whenSaved = (iso) => iso } = $props();
+  /** The rows in their bands, or one band of them all where the drafts are not saved. */
+  const groups = $derived(bands
+    ? [['browser', 'saved.band.browser'], ['saved', 'saved.band.saved']].map(([band, word]) => ({ band, word, rows: parts.filter((p) => p.band === band) })).filter((g) => g.rows.length)
+    : [{ band: null, word: null, rows: parts }]);
 
   /** The sign and the words of a part without a name of its own. */
   const KINDS = {
@@ -36,8 +41,10 @@
   }
 </script>
 
+{#each groups as group (group.band)}
+{#if group.word}<span class="mini-label unpub-band" class:saved={group.band === 'saved'}>{ta(group.word)} · {group.rows.length}</span>{/if}
 <div class="unpub-rows" role="list">
-  {#each parts as part (keyOf(part))}
+  {#each group.rows as part (keyOf(part))}
     {@const isOpen = open.has(keyOf(part))}
     <div class="unpub-item" role="listitem">
       <div class="unpub-row">
@@ -58,14 +65,63 @@
           {/each}
         </div>
       {/if}
+      {#if part.elsewhere && onuse}
+        <div class="unpub-elsewhere">
+          <span>{ta('saved.elsewhere', { when: whenSaved(part.elsewhere.savedAt), who: part.elsewhere.saver ?? '' })}</span>
+          <button type="button" class="ghost" title={ta('tip.saved.use')} onclick={() => onuse(part)}>{ta('saved.use')}</button>
+        </div>
+      {/if}
     </div>
   {/each}
 </div>
+{/each}
 
 <style>
   .unpub-rows {
     display: grid;
     gap: 2px;
+  }
+
+  /* A band's heading: where its parts stand, with a dot in the band's colour */
+  .unpub-band {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.35rem 0 0.1rem;
+  }
+
+  .unpub-band::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #e2b84a;
+  }
+
+  .unpub-band.saved::before {
+    background: var(--urd-color-accent, #7c5cff);
+  }
+
+  /* A part saved on another device since: the line under its row, with the way to take the saved one */
+  .unpub-elsewhere {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0 0.4rem 0.35rem 2.5rem;
+    font-size: 0.76rem;
+    opacity: 0.85;
+  }
+
+  .unpub-elsewhere span {
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+
+  .unpub-elsewhere .ghost {
+    min-height: 1.7rem;
+    padding: 0 0.55rem;
+    font-size: 0.76rem;
   }
 
   .unpub-row {

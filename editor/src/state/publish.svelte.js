@@ -15,6 +15,7 @@ import {
 } from '../lib/collection-index.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
+import { savedState } from './saved.svelte.js';
 import { pageState } from './page.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
 import { previewState } from './preview.svelte.js';
@@ -162,8 +163,12 @@ async function tidyMedia({ withChanges = false } = {}) {
  * @returns {Promise<boolean>} whether the drafts were discarded
  */
 async function askDiscard() {
-  const ok = await shellState.askConfirm({ title: ta('confirm.discardDrafts'), lines: [ta('confirm.discardDraftsLine')], okLabel: ta('ui.discard'), danger: true });
+  const saved = savedState.savedCount;
+  const lines = [ta('confirm.discardDraftsLine'), ...(saved ? [ta(saved === 1 ? 'confirm.discardSavedLine.one' : 'confirm.discardSavedLine', { n: saved })] : [])];
+  const ok = await shellState.askConfirm({ title: ta('confirm.discardDrafts'), lines, okLabel: ta('ui.discard'), danger: true });
   if (!ok || !discardDrafts()) return false;
+  // The saved drafts go with this browser's (ADR-0032); an undo brings back this browser's alone.
+  void savedState.discardSaved();
   shellState.setStatus(ta('ui.discarded'), 'info', { label: ta('ui.redoAll'), run: () => { if (historyState.steps.undo[0]?.key === 'discard') historyState.undo(); } });
   return true;
 }
@@ -250,6 +255,8 @@ async function publish() {
     return;
   }
   shellState.setStatus(ta('status.publishing'));
+  // The saved copies this publish makes stale, read while the drafts still stand.
+  const staleSaves = savedState.staleOnPublish();
   const files = [];
   const publishedTitles = [];
   const draftKeys = [];
@@ -614,6 +621,7 @@ async function publish() {
     }
     historyState.markPublished();
     historyState.updateDirty();
+    void savedState.afterPublish(staleSaves);
     const wave = pageState.held.hold(committed);
     // The wait keeps the message up (info never auto-clears) until the
     // site serves the commit or the wait gives up.

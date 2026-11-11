@@ -94,6 +94,10 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
       fn(base);
       baseline = JSON.stringify(base);
     },
+    /** The published state the draft is compared against, as a fresh object. */
+    published() {
+      return JSON.parse(baseline);
+    },
     /** Whether there is a draft to publish: stored, or held in memory when it could not be stored. */
     hasDraft() {
       return held || localStorage.getItem(key) !== null;

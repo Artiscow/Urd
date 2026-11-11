@@ -169,6 +169,7 @@ function handleFor(panel, siteDraft, extra = {}) {
     setShapeSizePx: noop, setBoxStyle: noop, setButtonTarget: noop, openImageEditor: noop,
     setBlockVideoFile: noop, setBlockVideoPoster: noop, addGalleryImages: noop, moveGalleryImage: noop, removeGalleryImage: noop, setGalleryImageField: noop,
     openPanel: noop, openCollection: noop, openDesignPicker: noop,
+    savedRows: [], savedAvailable: false, saveCount: 0, savedCount: 0, savedBusy: false, saveDrafts: noop, useSaved: noop, whenSaved: (iso) => iso,
     ...extra,
   };
 }
@@ -190,6 +191,19 @@ test('the Media group stands only while files wait at the root, and its tidy sta
   assert.doesNotMatch(waiting, /\sdisabled/, 'pressable with a change waiting');
   assert.equal(tidy({ dirty: false, unpublished: [], mediaRootCount: 0 }), undefined, 'nothing at the root: no group');
   assert.equal(tidy({ dirty: false, unpublished: [], mediaRootCount: null }), undefined, 'not listed yet, or no publishing layer: no group');
+});
+
+test('History\'s «Not published yet» stands in bands where the drafts are saved, with a part saved elsewhere told under its row', () => {
+  const rows = [
+    { kind: 'page', id: 'hjem', name: 'Hjem', part: 'page-hjem', band: 'browser', draft: true, elsewhere: { savedAt: '2026-11-11T10:00:00Z', saver: 'other' } },
+    { kind: 'site', part: 'site', band: 'saved', draft: true, elsewhere: null },
+  ];
+  const body = draw(panels.History, 'history', structuredClone(site), { dirty: true, unpublished: rows, savedRows: rows, savedAvailable: true, historyList: [], steps: { undo: [], redo: [] }, whenSaved: () => 'just now' });
+  assert.match(body, /class="mini-label unpub-band[^"]*"[^>]*>[^<]*· 1/, 'the band «In this browser» with its count');
+  assert.match(body, /class="mini-label unpub-band[^"]*saved"/, 'the band «Saved»');
+  assert.match(body, /class="unpub-elsewhere/, 'a part saved elsewhere says so');
+  const plain = draw(panels.History, 'history', structuredClone(site), { dirty: true, unpublished: rows, savedRows: rows, savedAvailable: false, historyList: [], steps: { undo: [], redo: [] } });
+  assert.doesNotMatch(plain, /unpub-band/, 'no bands where the drafts are not saved');
 });
 
 test('the Nav and Footer panels draw the background editor', () => {

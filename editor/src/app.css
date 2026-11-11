@@ -4622,6 +4622,41 @@
     padding: 4px 8px 2px;
   }
 
+  /* Save beside Publish (ADR-0032): its count of what stands in this browser alone in the amber of that band, and the menu Ctrl+S opens under its right edge */
+  .save-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .save-btn .save-count {
+    background: color-mix(in srgb, #e2b84a 18%, transparent);
+    color: #e2b84a;
+  }
+
+  .tool-pop.save-pop {
+    left: auto;
+    right: 0;
+    min-width: 13rem;
+  }
+
+  .save-pop .publish-act:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    min-height: 2.2rem;
+    padding-block: 0;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+
+  .save-pop .publish-main:not(:disabled) {
+    color: var(--urd-color-accent, #7c5cff);
+    font-weight: 600;
+  }
+
   /* ---- Foldetrinnene (the fold steps; tests/topbar-fold.test.mjs anchors
      on this heading) ---------------------------------------------------------
      The top bar keeps one height and folds in fixed steps, in this order:

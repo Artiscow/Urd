@@ -25,7 +25,7 @@ register('./_svelte-loader.mjs', import.meta.url);
 const { render } = await import('svelte/server');
 
 test('every state module loads, and no module reads another\'s handle while they load', async () => {
-  const names = ['media', 'history', 'preview', 'shell', 'site', 'page', 'collections', 'templates', 'plugins', 'updater', 'blocks', 'bridge', 'publish'];
+  const names = ['media', 'history', 'preview', 'shell', 'site', 'page', 'collections', 'templates', 'plugins', 'updater', 'blocks', 'bridge', 'publish', 'saved'];
   for (const name of names) {
     const mod = await import(`../editor/src/state/${name}.svelte.js`);
     const handle = mod[`${name}State`];
@@ -209,4 +209,24 @@ test('the Collections panel steps in, widens to two columns, or opens a table ov
   collectionsState.panelEntry = null;
   collectionsState.collectionIds = [];
   collectionsState.collectionsView = {};
+});
+
+test('Save stands beside Publish, greyed with the reason where there is nothing to save to, and Ctrl+S opens its menu', async () => {
+  const { default: App } = await import('../editor/src/App.svelte');
+  const { siteState } = await import('../editor/src/state/site.svelte.js');
+  const { shellState } = await import('../editor/src/state/shell.svelte.js');
+  const { liftSiteFile } = await import('$engine/migrate.js');
+  const { readFileSync } = await import('node:fs');
+  const site = liftSiteFile(JSON.parse(readFileSync(new URL('../template/content/site.json', import.meta.url), 'utf8')));
+  siteState.site = site;
+  siteState.siteDraft = structuredClone(site);
+  const body = render(App).body;
+  const save = body.match(/<button[^>]*class="[^"]*save-btn[^"]*"[^>]*>/)?.[0];
+  assert.ok(save, 'Save is drawn');
+  assert.match(save, /\sdisabled/, 'greyed while saving is not known to be possible');
+  assert.ok(body.indexOf('save-btn') < body.indexOf('publish-btn'), 'before Publish');
+  shellState.openSaveMenu();
+  const menu = render(App).body;
+  assert.match(menu, /class="tool-pop save-pop/, 'Ctrl+S opens the menu under Save');
+  shellState.toolMenu = null;
 });

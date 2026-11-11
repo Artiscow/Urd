@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.35.2): Save beside Publish
+
+- [ ] On the local server: Save stands before Publish, greyed, with the tooltip «Saving needs the published site and a sign-in with publishing access»; Ctrl+S in the admin and on the canvas opens the menu under Save («Save the drafts», «Publish now»), and Escape closes it
+- [ ] On the deployed site, signed in: a change shows Save with an amber 1 and the Publish menu's row under «In this browser · 1»; Save keeps it («1 change saved»), the row moves to «Saved · 1», Save greys, and the live site and History are unchanged
+- [ ] On a second browser or device, signed in: after a reload the saved change is there under «Saved», with nothing to save
+- [ ] Change the same page on both, save on the first, reload the second: the second keeps its own version, its row says «Saved on another device by …», and «Use the saved one» brings the saved version in; Ctrl+Z takes it back
+- [ ] Save on the second over a part saved on the first since: a question names the part, who saved it and when, before anything is written
+- [ ] Publish: the saved copies of what went are gone from the branch, and a reload on the other device shows nothing waiting
+- [ ] Discard drafts with something saved: the question says the saved drafts go too; after it the branch's index is empty
+- [ ] Undo the last publish (History) with something saved: the question says the saved drafts go too, and after the reload nothing saved comes back
+- [ ] Save a change on one device, then undo it back to live there and reload: it does not come back; Save offers to take the saved copy away
+
 ### Test batch (0.7.35.1): the saved drafts' branch
 
 - [ ] On the deployed site, signed in, in the browser's console: `await (await fetch('/api/github/drafts')).json()` gives `{ head: null, index: { version: 1, parts: {} } }` before anything is saved

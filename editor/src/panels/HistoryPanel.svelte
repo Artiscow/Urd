@@ -38,6 +38,7 @@
       lines: [
         `«${last.message}»`,
         ta('confirm.revert.body'),
+        ...(ed.savedCount ? [ta(ed.savedCount === 1 ? 'confirm.discardSavedLine.one' : 'confirm.discardSavedLine', { n: ed.savedCount })] : []),
       ],
       okLabel: ta('confirm.revert.ok'),
       cancelLabel: ta('confirm.cancel'),
@@ -98,7 +99,8 @@
       if (paths.some((path) => now[path] !== null && before[path] !== null && now[path] !== before[path])) {
         setStatus(ta('status.revertDeployed'), 'ok');
         // The drafts describe the state from BEFORE the revert; the server
-        // is the source of truth now.
+        // is the source of truth now. The saved drafts go with them (ADR-0032).
+        await ed.discardSaved();
         for (const key of Object.keys(localStorage).filter((k) => k.startsWith('urd-draft-'))) {
           localStorage.removeItem(key);
         }
@@ -113,9 +115,10 @@
 
 <div class="panel-body">
   <!-- What a publish will write, above what has been published: the same rows as the Publish menu's, each leading to its change, and the discard as red words at the foot -->
-  {#if ed.dirty}
-    <Fold id="unpublished" surface="history" title={ta('history.unpublished')} tip={ta('tip.history.unpublished')} value={String(ed.unpublished.length)} defaultOpen>
-      <UnpublishedRows parts={ed.unpublished} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={(part) => ed.goToUnpublished(part)} />
+  {#if ed.savedRows.length}
+    <Fold id="unpublished" surface="history" title={ta('history.unpublished')} tip={ta('tip.history.unpublished')} value={String(ed.savedRows.length)} defaultOpen>
+      <UnpublishedRows parts={ed.savedRows} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={(part) => ed.goToUnpublished(part)}
+        bands={ed.savedAvailable} onuse={(part) => ed.useSaved(part.part)} whenSaved={ed.whenSaved} />
       <button type="button" class="ghost action discard-drafts" title={ta('tip.discard')} onclick={() => ed.askDiscard()}>{@html ICONS.restore}{ta('ui.discard')}</button>
     </Fold>
     <SubHeading text={ta('history.published')} />

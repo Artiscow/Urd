@@ -41,6 +41,7 @@ export const SHORTCUT_GROUPS = [
     { labelKey: 'shortcuts.escape', ways: [['esc']] },
     { labelKey: 'shortcuts.sheet', ways: [['?']] },
     { labelKey: 'shortcuts.palette', ways: [['ctrl', 'K'], ['ctrl', 'shift', 'P']] },
+    { labelKey: 'shortcuts.save', ways: [['ctrl', 'S']] },
     { labelKey: 'shortcuts.grid', ways: [['G']] },
   ] },
   { id: 'blocks', labelKey: 'shortcuts.group.blocks', tipKey: 'tip.shortcuts.blocks', rows: [

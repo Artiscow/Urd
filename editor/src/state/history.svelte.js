@@ -58,7 +58,10 @@ function updateDirty() {
 
 /** Takes the owner to a part that waits to be published (lib/UnpublishedRows.svelte): the page onto the canvas, a collection into its panel, the rest to the panel or the dialog that holds it. */
 function goToUnpublished(part) {
-  if (part.kind === 'page') pageState.selectPage(part.id);
+  if (part.kind === 'page') {
+    // A page saved elsewhere that this browser's site settings do not list has nowhere to go to.
+    if (siteState.siteDraft.pages.some((p) => p.id === part.id)) pageState.selectPage(part.id);
+  }
   else if (part.kind === 'site') shellState.activePanel = 'site';
   else if (part.kind === 'collections' || part.kind === 'collection') {
     if (part.kind === 'collection') {

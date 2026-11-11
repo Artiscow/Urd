@@ -240,6 +240,7 @@ function onIframeLoad() {
     onShortcuts: () => shellState.openShortcuts(),
     onToggleGrid: () => shellState.toggleGrid(),
     onPalette: () => paletteState.openPalette(),
+    onSaveKey: () => shellState.openSaveMenu(),
     onCommands: (msg) => { paletteState.pluginCommands = msg.commands; },
     onMoveBlockSection: bridgeState.handleMoveBlockSection,
     onMobileReset: bridgeState.handleMobileReset,

@@ -21,6 +21,7 @@ import { PRESS_FEELS, pressFeelOf, pressTarget, ripple } from '../lib/press-feel
 import { TAB_MENU_STYLES, tabMenuStyleOf } from '../lib/panel-folds.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
+import { savedState } from './saved.svelte.js';
 import { pageState } from './page.svelte.js';
 import { paletteState } from './palette.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
@@ -179,6 +180,12 @@ function onKeydown(e) {
   // A dialog over the editor (the link editor, the design picker) keeps its keys: the page behind it is not changed.
   if (e.target instanceof Element && e.target.closest('dialog')) return;
   const key = e.key.toLowerCase();
+  // Ctrl+S anywhere in the admin asks whether to save the drafts or publish them, in place of the browser's saving of the page.
+  if (key === 's' && !e.altKey && !e.shiftKey) {
+    e.preventDefault();
+    openSaveMenu();
+    return;
+  }
   // Ctrl+K outside a text opens the command palette, and Ctrl+Shift+P everywhere a browser keeps Ctrl+K for itself; in a text Ctrl+K stays the link key (the text toolbar's).
   if ((key === 'k' && !e.altKey && !e.shiftKey) || (key === 'p' && e.shiftKey && !e.altKey)) {
     if (typed && key === 'k') return;
@@ -216,7 +223,11 @@ function onKeydown(e) {
 }
 
 async function init() {
-  siteState.site = liftSiteFile(await (await fetch('/content/site.json')).json());
+  // The saved drafts are met before any store is built, so a part saved on another device is read where a reload reads drafts (ADR-0032).
+  const meeting = savedState.meetOnLoad();
+  const siteFile = fetch('/content/site.json').then((res) => res.json());
+  siteState.site = liftSiteFile(await siteFile);
+  await meeting;
   siteState.siteStore = createDraftStore('urd-draft-site', () => siteState.site, draftSaveError);
   // Site drafts with a higher schemaVersion than the engine are
   // discarded, the same guard as for page drafts (liftSiteFile would
@@ -790,6 +801,10 @@ const FOLD_MQ = { view: 1079, device: 999, zoom: 919 };
 const FOLD_OFFSET = { 'page-tabs': 80 };
 
 let toolMenu = $state(null);
+/** Ctrl+S, in the admin or on the canvas: the menu under Save that asks whether to save the drafts or publish them. */
+function openSaveMenu() {
+  toolMenu = 'save';
+}
 
 let toolMenuEl = $state(null);
 
@@ -1007,13 +1022,13 @@ export function effects() {
 
   /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu, the devices' sizes, the page switcher and the steps belong to no cluster. */
   $effect(() => {
-    if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps', 'publish'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
+    if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps', 'publish', 'save'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. A question asked from a menu (the steps' «Discard drafts») is part of it: pressing in the question or answering it with Escape leaves the menu open. */
   $effect(() => {
     if (!toolMenu) return;
-    const onDown = (e) => { if (!toolMenuEl?.contains(e.target) && !e.target?.closest?.('.confirm-dialog, .publish-wrap')) toolMenu = null; };
+    const onDown = (e) => { if (!toolMenuEl?.contains(e.target) && !e.target?.closest?.('.confirm-dialog, .publish-wrap, .save-wrap')) toolMenu = null; };
     const onKey = (e) => { if (e.key === 'Escape' && !confirmBox) toolMenu = null; };
     // Focus moving into the preview (a jump between steps selects a block there) is no press outside: a press in the preview closes the menu from there (preview.svelte.js).
     const onBlur = () => { if (document.activeElement?.tagName !== 'IFRAME') toolMenu = null; };
@@ -1187,6 +1202,7 @@ export const shellState = {
   get SETTINGS_PICTURES_OPTIONS() { return SETTINGS_PICTURES_OPTIONS; },
   FOLD_MQ,
   get toolMenu() { return toolMenu; },
+  openSaveMenu,
   set toolMenu(v) { toolMenu = v; },
   get toolMenuEl() { return toolMenuEl; },
   set toolMenuEl(v) { toolMenuEl = v; },
