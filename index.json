@@ -1,12 +1,4 @@
 {
   "version": 1,
-  "parts": {
-    "page-hjem": {
-      "savedAt": "2026-11-11T20:33:31.985Z",
-      "saver": "Artiscow",
-      "hash": "3f9cb2a1",
-      "base": "077be122e4a52ce9696c5b079e10f2a6af910238",
-      "title": "Hjem"
-    }
-  }
+  "parts": {}
 }
