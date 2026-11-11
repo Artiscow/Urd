@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.13): the walk through every design again
+
+- [ ] A capability added near the menu's foot (a calendar's «Text fields» with «Minimal», in the floating menu): the whole card comes into view as it opens, and a scroll of your own during it stops the following
+- [ ] Just after adding a capability, type in another field of the menu at once: the focus stays where you typed
+- [ ] The narrow menu with the areas under each other: a card added, or a fold opened, near an area's sticky heading comes to rest below the heading, not under it
+- [ ] Small panels, then One column, chosen in Urd settings, each followed by a reload: the design row still reads the design unchanged, and the menu opens on its search field (Small panels) or its chips (One column)
+
 ### Test batch (0.7.33.12.6): the other families' capabilities, the new defaults, and tooltips that repeat a name
 
 - [ ] A button's «Colours», a ribbon's «Stripes» and a calendar's «Text fields» are not in the menu until added; each adds as a card under Style, its bin takes every setting back to the standard in one undo step, and one in use stands as a card after a reload; the bar's «Colours», «Stripes» and «Text fields» tools open them whether added or not

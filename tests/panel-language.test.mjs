@@ -229,11 +229,13 @@ test('a colour is taken away by the bin on its swatch\'s corner, never by a rese
   assert.match(picker, /\.cp-remove \{\s*position: absolute;\s*top: -6px;\s*right: -6px;/, 'on the swatch\'s top right corner');
 });
 
-test('a fold the owner opens, and a «+ Add a setting» list, are followed into view as they open', () => {
+test('a fold the owner opens, a «+ Add a setting» list and a card just added are followed into view as they open', () => {
   const follow = readFileSync(join(ROOT, 'lib/follow-open.js'), 'utf8');
-  assert.match(follow, /const by = Math\.min\(box\.bottom - \(view\.bottom - EDGE\), box\.top - \(view\.top \+ EDGE\)\);/, 'as far as its foot needs, no further than its top allows');
+  assert.match(follow, /const by = Math\.min\(box\.bottom - \(view\.bottom - EDGE\), box\.top - \(view\.top \+ top\)\);/, 'as far as its foot needs, no further than its top allows');
   assert.match(follow, /const OWNER = \['wheel', 'touchstart', 'pointerdown', 'keydown'\];/, 'the owner\'s own scroll or press stops it');
   const fold = readFileSync(join(ROOT, 'lib/rows/Fold.svelte'), 'utf8');
   assert.match(fold, /<summary title=\{tip\} onclick=\{\(e\) => \{ const fold = e\.currentTarget\.parentElement; if \(!fold\.open && !fold\.closest\('\.emenu-search'\)\) followOpen\(fold\); \}\}>/, 'a fold opened by its heading, not by a choice or a tool');
   assert.equal((fold.match(/followOpen\(extraPop\?\.closest\('\.menu-group-foot'\)\)/g) ?? []).length, 2, 'the list opened by a press and by a resting mouse');
+  const card = readFileSync(join(ROOT, 'lib/rows/Capability.svelte'), 'utf8');
+  assert.match(card, /followOpen\(cardEl\);/, 'a card just added');
 });

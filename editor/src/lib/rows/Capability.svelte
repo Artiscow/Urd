@@ -15,6 +15,7 @@
   import { isAdded, keepCapability, dropCapability, isFresh, capabilities } from '../../menu/capabilities.svelte.js';
   import { menu } from '../../menu/state.svelte.js';
   import { folds } from '../folds.svelte.js';
+  import { followOpen } from '../follow-open.js';
   const ed = getContext('urd-editor');
   const scope = getContext('menu-capabilities');
   const area = getContext('menu-area');
@@ -51,14 +52,17 @@
     return () => area?.unregister(`cap:${id}`);
   });
   let cardEl = $state(null);
-  const fresh = $derived(Boolean(block) && isFresh(block.blockId, id));
-  // The card just added glows once, and its first control takes the focus.
+  /** The block the card was just added to, or null: a string, so an edit of the block does not count as a new add. */
+  const freshOn = $derived(block && isFresh(block.blockId, id) ? block.blockId : null);
+  const fresh = $derived(freshOn !== null);
+  // The card just added glows once, comes into view and is followed as it grows (lib/follow-open.js), and its first control takes the focus, once for each add.
   $effect(() => {
-    if (!cardEl || !fresh) return;
-    const blockId = block.blockId;
+    if (!cardEl || !freshOn) return;
+    const blockId = freshOn;
     tick().then(() => {
       cardEl?.scrollIntoView({ block: 'nearest' });
-      (cardEl?.querySelector('.cap-body :is(input, button, select, textarea, [tabindex="0"])') ?? cardEl?.querySelector('.cap-chip'))?.focus();
+      (cardEl?.querySelector('.cap-body :is(input, button, select, textarea, [tabindex="0"])') ?? cardEl?.querySelector('.cap-chip'))?.focus({ preventScroll: true });
+      followOpen(cardEl);
     });
     const timer = setTimeout(() => {
       if (isFresh(blockId, id)) capabilities.fresh = null;

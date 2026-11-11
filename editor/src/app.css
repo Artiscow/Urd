@@ -1635,6 +1635,11 @@
     border-bottom: 1px solid rgb(255 255 255 / 8%);
   }
 
+  /* A card or a fold brought into view comes to rest below the sticky heading, not under it */
+  .emenu-stack :is(.cap-card, details.group) {
+    scroll-margin-top: 2.5rem;
+  }
+
   /* The chip in a heading is drawn at the size of its capitals */
   .emenu-head .help-chip {
     width: 16px;

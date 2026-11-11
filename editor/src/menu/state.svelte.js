@@ -33,7 +33,7 @@ const CAP_ADD_KEY = 'urd-add-capability';
 
 const stored = (key, list) => (list.includes(localStorage.getItem(key)) ? localStorage.getItem(key) : list[0]);
 
-/** A design chosen before «Minimal» and the search field became the defaults keeps the parts it had (lib/admin-designs.js earlierDefaultWrites). */
+/** A design chosen before «Minimal» and the search field became the defaults keeps the parts it had, read once in the browser (lib/admin-designs.js earlierDefaultWrites). */
 try {
   for (const { key, value } of earlierDefaultWrites((key) => localStorage.getItem(key))) localStorage.setItem(key, value);
 } catch {

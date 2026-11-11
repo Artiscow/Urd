@@ -17,7 +17,7 @@ globalThis.localStorage = {
   setItem: (key, value) => local.set(key, String(value)),
   removeItem: (key) => local.delete(key),
 };
-const { PARTS, ADMIN_DESIGNS, DEFAULT_DESIGN, DESIGN_ROW_KEY, DESIGN_CHANGED_KEY, partDefault, readParts, designState, designWrites, restoreWrites, earlierDefaultWrites } = await import('../editor/src/lib/admin-designs.js');
+const { PARTS, ADMIN_DESIGNS, DEFAULT_DESIGN, DESIGN_ROW_KEY, DESIGN_CHANGED_KEY, partDefault, readParts, designState, designWrites, restoreWrites, earlierDefaultWrites, EARLIER_READ_KEY } = await import('../editor/src/lib/admin-designs.js');
 const { CAP_ADD_FORMS, SHORTCUTS_MODES } = await import('../editor/src/menu/forms.js');
 const { SETTINGS_GROUPS } = await import('../editor/src/lib/settings-model.js');
 const { settingPicture } = await import('../editor/src/lib/settings-pictures.js');
@@ -220,8 +220,9 @@ test('a part changed by hand names the design\'s value on its row, and goes back
   assert.equal(c.ed.linkEditorPref, 'dialog');
 });
 
-test('a design chosen before «Minimal» and the search field became the defaults keeps the parts it had, and nothing else is written', () => {
+test('a design chosen before «Minimal» and the search field became the defaults keeps the parts it had, read once', () => {
   const EARLIER = { capAdd: 'head', shortcuts: 'pinned' };
+  const MARK = { key: EARLIER_READ_KEY, value: '1' };
   /** What choosing a design stored while «From the menu's head» and the Pinned rows were the defaults: nothing for a part at its default then. */
   const writtenThen = (id) => {
     const parts = id === DEFAULT_DESIGN ? EARLIER : ADMIN_DESIGNS.find((d) => d.id === id).parts;
@@ -235,14 +236,28 @@ test('a design chosen before «Minimal» and the search field became the default
     return map;
   };
   const getOf = (map) => (key) => map.get(key) ?? null;
-  assert.deepEqual(earlierDefaultWrites(() => null), [], 'nothing stored: the new defaults stand');
-  assert.deepEqual(earlierDefaultWrites(getOf(writtenThen(DEFAULT_DESIGN))), [], 'the default design takes the new defaults');
+  const apply = (map, writes) => { for (const { key, value } of writes) map.set(key, value); return map; };
+  assert.deepEqual(earlierDefaultWrites(() => null), [MARK], 'nothing stored: the new defaults stand, and the reading is marked');
+  assert.deepEqual(earlierDefaultWrites(getOf(writtenThen(DEFAULT_DESIGN))), [MARK], 'the default design takes the new defaults');
   for (const design of ADMIN_DESIGNS.filter((d) => d.id !== DEFAULT_DESIGN)) {
     const map = writtenThen(design.id);
-    const writes = earlierDefaultWrites(getOf(map));
-    for (const { key, value } of writes) map.set(key, value);
+    apply(map, earlierDefaultWrites(getOf(map)));
     assert.deepEqual(designState(readParts(getOf(map))), { design: design.id, changed: [] }, `${design.id} reads as it did`);
-    assert.deepEqual(earlierDefaultWrites(getOf(map)), [], `${design.id}: once written, nothing is read again`);
+    assert.deepEqual(earlierDefaultWrites(getOf(map)), [], `${design.id}: once read, never again`);
   }
-  assert.ok(earlierDefaultWrites(getOf(writtenThen(ADMIN_DESIGNS.find((d) => d.parts.shortcuts === 'pinned' && d.id !== DEFAULT_DESIGN).id))).length === 2, 'a design with the head and the Pinned rows gets both back');
+  // A design chosen after the reading stores nothing for a part at its new default, and keeps it so on the next load.
+  for (const design of ADMIN_DESIGNS) {
+    const map = apply(new Map(), earlierDefaultWrites(() => null));
+    for (const w of designWrites(design.id)) if (w.value != null) map.set(w.key, w.value);
+    assert.deepEqual(earlierDefaultWrites(getOf(map)), [], `${design.id} chosen after the reading`);
+    assert.deepEqual(designState(readParts(getOf(map))), { design: design.id, changed: [] });
+  }
+  // A design chosen under the new defaults before the mark existed: a stored earlier default tells it, and only the mark is written.
+  for (const design of ADMIN_DESIGNS.filter((d) => d.parts.capAdd === 'head')) {
+    const map = new Map();
+    for (const w of designWrites(design.id)) if (w.value != null) map.set(w.key, w.value);
+    assert.deepEqual(earlierDefaultWrites(getOf(map)), [MARK], `${design.id} chosen under the new defaults, unmarked`);
+  }
+  const side = ADMIN_DESIGNS.find((d) => d.parts.shortcuts === 'pinned' && d.id !== DEFAULT_DESIGN);
+  assert.equal(earlierDefaultWrites(getOf(writtenThen(side.id))).length, 3, 'a design with the head and the Pinned rows gets both back, and the mark');
 });

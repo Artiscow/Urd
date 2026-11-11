@@ -9,7 +9,7 @@ globalThis.window = {
   addEventListener: (type, fn) => listeners.set(type, fn),
   removeEventListener: (type) => listeners.delete(type),
 };
-globalThis.getComputedStyle = (el) => ({ overflowY: el.scrolls ? 'auto' : 'visible' });
+globalThis.getComputedStyle = (el) => ({ overflowY: el.scrolls ? 'auto' : 'visible', scrollMarginTop: el.margin ?? '0px' });
 const frames = new Map();
 let nextFrame = 1;
 globalThis.requestAnimationFrame = (fn) => {
@@ -46,6 +46,14 @@ test('a fold taller than the window stops with its top 12 px under the window\'s
   followOpen(fold);
   runFrame();
   assert.equal(scroller.scrollTop, 350 - 12);
+});
+
+test('a fold with a scroll margin larger than the edge, below a sticky heading, stops with its top that far under the window\'s top', () => {
+  const { scroller, fold } = scene(350, 900);
+  fold.margin = '40px';
+  followOpen(fold);
+  runFrame();
+  assert.equal(scroller.scrollTop, 350 - 40);
 });
 
 test('a fold already in view moves nothing, and the owner\'s press stops the following', () => {

@@ -161,18 +161,25 @@ export function restoreWrites(values) {
 /** The defaults «Extra settings style» and «Shortcuts» had until 11 November 2026, when «Minimal» and the search field took their place: a part whose key holds nothing was read as these until then. */
 const EARLIER_DEFAULTS = { capAdd: 'head', shortcuts: 'pinned' };
 
+/** The key that marks the earlier defaults as read, so they are read once: after it, a key that holds nothing is the new default. */
+export const EARLIER_READ_KEY = 'urd-earlier-defaults-read';
+
 /**
- * What keeps a design chosen before 11 November 2026 as it stood: the parts whose keys hold nothing are read as their earlier defaults, and where that makes a design other than the default, the earlier defaults are written, so the design reads as it did.
- * With nothing stored, or with the default design, nothing is written and the new defaults stand; once written, a key holds a value and the reading is not made again.
+ * What keeps a design chosen before 11 November 2026 as it stood, read once in a browser: the parts whose keys hold nothing are read as their earlier defaults, and where that makes a design other than the default, the earlier defaults are written, so the design reads as it did.
+ * With nothing stored, or with the default design, only the mark is written and the new defaults stand.
  * @param {(key: string) => string|null} get Reads a stored value (localStorage.getItem)
  * @returns {Array<{ key: string, value: string }>}
  */
 export function earlierDefaultWrites(get) {
+  if (get(EARLIER_READ_KEY) != null) return [];
+  const mark = { key: EARLIER_READ_KEY, value: '1' };
+  // An earlier default was never stored while it was the default, so one that is stored was written under the new defaults.
+  if (PARTS.some((part) => part.id in EARLIER_DEFAULTS && get(part.key) === EARLIER_DEFAULTS[part.id])) return [mark];
   const absent = PARTS.filter((part) => part.id in EARLIER_DEFAULTS && get(part.key) == null);
-  if (!absent.length) return [];
+  if (!absent.length) return [mark];
   const values = readParts(get);
   for (const part of absent) values[part.id] = EARLIER_DEFAULTS[part.id];
   const earlier = ADMIN_DESIGNS.map((d) => (d.id === DEFAULT_DESIGN ? { ...d, parts: { ...d.parts, ...EARLIER_DEFAULTS } } : d));
-  if (designState(values, earlier).design === DEFAULT_DESIGN) return [];
-  return absent.map((part) => ({ key: part.key, value: EARLIER_DEFAULTS[part.id] }));
+  if (designState(values, earlier).design === DEFAULT_DESIGN) return [mark];
+  return [...absent.map((part) => ({ key: part.key, value: EARLIER_DEFAULTS[part.id] })), mark];
 }
