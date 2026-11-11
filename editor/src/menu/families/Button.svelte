@@ -1,11 +1,12 @@
 <script>
   /* The button block in the element menu (0.7.26.2): its Content and Style areas, drawn where the menu asks for one, and the settings it writes through the editor handle.
-     Style holds the button's colours under its design: the fill, the words, the outline and the fill under the pointer, each empty while it follows the design and the theme. */
+     Style holds the button's colours under its design as a capability (ADR-0031), a card while the button uses them or they were added: the fill, the words, the outline and the fill under the pointer, each empty while it follows the design and the theme. */
   import { getContext } from 'svelte';
   import LinkField from '../../lib/LinkField.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import ColourRow from '../../lib/rows/ColourRow.svelte';
+  import Capability from '../../lib/rows/Capability.svelte';
   import { makeGroupHelpers } from '../groups.js';
   import { ta } from '$engine/i18n.js';
   import { pinnedNow } from '../pinned.js';
@@ -13,7 +14,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const { setBlockProp, setBlockProps, setBlockLink, themeSwatches } = ed;
-  const { groupOf, groupChanged } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
+  const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   /** The colours the menu writes, all empty by default: the design and the theme give the button its colours. */
   const COLOURS = { bg: undefined, color: undefined, borderColor: undefined, hoverBg: undefined };
   /** The colour a row shows while it is empty: the one the design draws, Filled in the accent with its text colour, Outline in the accent on nothing. */
@@ -45,5 +46,5 @@
       </Setting>
     {/each}
   {/snippet}
-  <Fold id="btn-colours" title={ta('group.btnColours')} value={groupChanged(COLOURS) ? ta('menu.changed', { n: groupChanged(COLOURS) }) : ta('menu.standard')} group={groupOf('btn-colours', COLOURS)}>{@render btnColours()}</Fold>
+  <Capability id="btn-colours" group={groupOf('btn-colours', COLOURS)}>{@render btnColours()}</Capability>
 {/if}

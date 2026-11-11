@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.33.12.6): the other families' capabilities, the new defaults, and tooltips that repeat a name
+
+- [ ] A button's «Colours», a ribbon's «Stripes» and a calendar's «Text fields» are not in the menu until added; each adds as a card under Style, its bin takes every setting back to the standard in one undo step, and one in use stands as a card after a reload; the bar's «Colours», «Stripes» and «Text fields» tools open them whether added or not
+- [ ] With nothing stored (a fresh browser, or the floating admin design chosen again): «Extra settings style» is «Minimal» and the element menu opens on the search field alone, with no Pinned rows
+- [ ] Urd settings › the element menu's shortcuts: the option reads «Search field», in nb «Søkefelt»
+- [ ] Urd settings › «Extra settings style»: no tooltip on the empty room between and beside the pictures; on the picture or the name of a tile, no tooltip either, since it would only repeat the name; the row's own name still shows its description
+- [ ] A button with a tooltip that says more than its words (an icon button, a row's name) still shows it; a name cut off by an ellipsis (a long path in the Updates panel) shows its full text as a tooltip
+- [ ] An admin that had Side panel, Small panels or One column chosen before this update: the design row in Urd settings still reads the design unchanged, Side panel keeps the «+» in the menu's head and its Pinned rows, and the other two keep the «+» in the head
+
 ### Test batch (0.7.33.12.5): Minimal, Icons in the headings, and tooltips on what they name
 
 - [ ] «Extra settings style» › «Minimal»: a text block's menu names «+ Motion» under Style and «+ Pin while scrolling», «+ Link name», «+ Shows at once» under Placement as a quiet line; a press adds the card open; the card's name folds it to one line with its value («Fade in», «#name», else «On» or «Standard») and opens it again, kept as you go between blocks; in the search's results and a bar tool's small panel the card never folds

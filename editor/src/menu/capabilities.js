@@ -67,7 +67,7 @@ export const CAPABILITIES = [
   },
 ];
 
-/* The image's and the calendar's own (ADR-0031): what a press on the picture does, and what the calendar can show beside its events.
+/* The image's, the calendar's, the button's and the ribbon's own (ADR-0031): what a press on the picture does, what the calendar can show beside its events and how its words are set, the button's colours, and the ribbon's stripes.
    A calendar's capability is in use by what its card shows in the calendar's view (menu/families/Calendar.svelte), so a setting the view leaves out does not keep a card. */
 /** The views that draw a grid of days, where the earlier events are not offered. */
 export const CAL_GRID_VIEWS = ['month', 'week', 'day', 'year'];
@@ -116,6 +116,22 @@ CAPABILITIES.push(
     // The colours that count are the design's own slots, as the card draws them.
     inUse: (block) => calDesign(block.props?.design).slots.some((slot) => block.props?.colors?.[slot.key]) || block.props?.stripe != null,
     clear: (ed) => ed.setBlockProps('cal-colors', { colors: undefined, stripe: undefined }),
+  },
+  {
+    id: 'cal-fields', area: 'style', icon: 'type', pins: [], types: ['calendar'],
+    inUse: (block) => Object.keys(block.props?.fieldStyle ?? {}).length > 0,
+    clear: (ed) => ed.setBlockProps('cal-fields', { fieldStyle: undefined }),
+  },
+  {
+    id: 'btn-colours', area: 'style', icon: 'palette', pins: [], types: ['button'],
+    inUse: (block) => ['bg', 'color', 'borderColor', 'hoverBg'].some((key) => Boolean(block.props?.[key])),
+    clear: (ed) => ed.setBlockProps('btn-colours', { bg: undefined, color: undefined, borderColor: undefined, hoverBg: undefined }),
+  },
+  {
+    id: 'ribbon-stripes', area: 'style', icon: 'stripes', pins: [], types: ['ribbon'],
+    // A stripe above or below, or the band's middle drawn as a stripe.
+    inUse: (block) => (block.props?.above ?? 'none') !== 'none' || (block.props?.below ?? 'none') !== 'none' || (block.props?.main ?? 'text') !== 'text',
+    clear: (ed) => ed.setBlockProps('ribbon-stripes', { above: undefined, below: undefined, main: undefined, aboveColor: undefined, belowColor: undefined, stripePlace: undefined, thickness: undefined }),
   },
 );
 

@@ -178,7 +178,6 @@
     const buttonsChanged = on > 0 || p.showAdd === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
     const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length;
-    const fieldCount = Object.keys(p.fieldStyle ?? {}).length;
     return {
       sources: String((p.sources ?? []).filter((src) => { const c = calSource(src); return c.ref ? Boolean(siteCalendarById(c.ref)) : c.url.trim(); }).length),
       view: ta(CAL_VIEW_KEYS[calView(p)]),
@@ -191,8 +190,6 @@
       noticeReset: p.notice ? reset('cal-notice', { notice: undefined }) : null,
       opts: optCount ? ta('menu.changed', { n: optCount }) : ta('menu.standard'),
       optsReset: optCount ? reset('cal-opts', { options: undefined }) : null,
-      fields: fieldCount ? ta('menu.changed', { n: fieldCount }) : ta('menu.standard'),
-      fieldsReset: fieldCount ? reset('cal-fields', { fieldStyle: undefined }) : null,
     };
   }
 </script>
@@ -537,7 +534,8 @@
   {/if}
   <!-- The design's colours and the edge stripe on its boxes, the calendar's colours as a capability (ADR-0031), whose card a tool of the bar opens -->
   <Capability id="cal-colors">{@render calColours()}{@render calStripeGroup()}</Capability>
-  <Fold id="cal-fields" title={ta('calendar.fieldStyle')} value={cm.fields} reset={cm.fieldsReset}>{@render calFields()}</Fold>
+  <!-- A font, size and weight per text field, a capability (ADR-0031): a card while a field has its own or it was added -->
+  <Capability id="cal-fields">{@render calFields()}</Capability>
 {/if}
 
 <style>

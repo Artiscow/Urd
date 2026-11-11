@@ -17,7 +17,8 @@ globalThis.localStorage = {
   setItem: (key, value) => local.set(key, String(value)),
   removeItem: (key) => local.delete(key),
 };
-const { PARTS, ADMIN_DESIGNS, DEFAULT_DESIGN, DESIGN_ROW_KEY, DESIGN_CHANGED_KEY, partDefault, readParts, designState, designWrites, restoreWrites } = await import('../editor/src/lib/admin-designs.js');
+const { PARTS, ADMIN_DESIGNS, DEFAULT_DESIGN, DESIGN_ROW_KEY, DESIGN_CHANGED_KEY, partDefault, readParts, designState, designWrites, restoreWrites, earlierDefaultWrites } = await import('../editor/src/lib/admin-designs.js');
+const { CAP_ADD_FORMS, SHORTCUTS_MODES } = await import('../editor/src/menu/forms.js');
 const { SETTINGS_GROUPS } = await import('../editor/src/lib/settings-model.js');
 const { settingPicture } = await import('../editor/src/lib/settings-pictures.js');
 const { applyDesign, undoDesign, canUndo, partBack, partNote, partValues } = await import('../editor/src/state/admin-design.svelte.js');
@@ -155,15 +156,15 @@ function windowContext() {
     setCollectionsLayout(v) { this.collectionsLayout = v; keep('urd-collections-layout', v, 'drill'); },
     setCsvPreview(v) { this.csvPreviewPref = v; keep('urd-csv-preview', v, 'dialog'); },
   };
-  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', capListPref: 'list', capAddPref: 'head', shortcutsPref: 'pinned', designsPref: 'row' };
+  const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', capListPref: 'list', capAddPref: CAP_ADD_FORMS[0], shortcutsPref: SHORTCUTS_MODES[0], designsPref: 'row' };
   const c = {
     ed, ta: (k) => k, menu,
     setMenuFormPref(v) { menu.formPref = v; keep('urd-admin-menu-width', v, 'wide'); },
     setFoldsPref(v) { menu.foldsPref = v; keep('urd-folds', v, 'left'); },
     setExtraPref(v) { menu.extraPref = v; keep('urd-extra-settings', v, 'shown'); },
     setCapListPref(v) { menu.capListPref = v; keep('urd-cap-list', v, 'list'); },
-    setCapAddPref(v) { menu.capAddPref = v; keep('urd-add-capability', v, 'head'); },
-    setShortcutsPref(v) { menu.shortcutsPref = v; keep('urd-menu-shortcuts', v, 'pinned'); },
+    setCapAddPref(v) { menu.capAddPref = v; keep('urd-add-capability', v, CAP_ADD_FORMS[0]); },
+    setShortcutsPref(v) { menu.shortcutsPref = v; keep('urd-menu-shortcuts', v, SHORTCUTS_MODES[0]); },
     setDesignsPref(v) { menu.designsPref = v; keep('urd-design-choice', v, 'row'); },
     get designs() {
       const values = partValues(c);
@@ -217,4 +218,31 @@ test('a part changed by hand names the design\'s value on its row, and goes back
   partBack(note.part, note.design, c);
   assert.deepEqual(designState(partValues(c)), { design: 'side', changed: [] });
   assert.equal(c.ed.linkEditorPref, 'dialog');
+});
+
+test('a design chosen before «Minimal» and the search field became the defaults keeps the parts it had, and nothing else is written', () => {
+  const EARLIER = { capAdd: 'head', shortcuts: 'pinned' };
+  /** What choosing a design stored while «From the menu's head» and the Pinned rows were the defaults: nothing for a part at its default then. */
+  const writtenThen = (id) => {
+    const parts = id === DEFAULT_DESIGN ? EARLIER : ADMIN_DESIGNS.find((d) => d.id === id).parts;
+    const map = new Map();
+    for (const w of designWrites(id)) if (w.value != null) map.set(w.key, w.value);
+    for (const part of PARTS.filter((p) => p.id in EARLIER)) {
+      const value = parts[part.id] ?? EARLIER[part.id];
+      if (value === EARLIER[part.id]) map.delete(part.key);
+      else map.set(part.key, value);
+    }
+    return map;
+  };
+  const getOf = (map) => (key) => map.get(key) ?? null;
+  assert.deepEqual(earlierDefaultWrites(() => null), [], 'nothing stored: the new defaults stand');
+  assert.deepEqual(earlierDefaultWrites(getOf(writtenThen(DEFAULT_DESIGN))), [], 'the default design takes the new defaults');
+  for (const design of ADMIN_DESIGNS.filter((d) => d.id !== DEFAULT_DESIGN)) {
+    const map = writtenThen(design.id);
+    const writes = earlierDefaultWrites(getOf(map));
+    for (const { key, value } of writes) map.set(key, value);
+    assert.deepEqual(designState(readParts(getOf(map))), { design: design.id, changed: [] }, `${design.id} reads as it did`);
+    assert.deepEqual(earlierDefaultWrites(getOf(map)), [], `${design.id}: once written, nothing is read again`);
+  }
+  assert.ok(earlierDefaultWrites(getOf(writtenThen(ADMIN_DESIGNS.find((d) => d.parts.shortcuts === 'pinned' && d.id !== DEFAULT_DESIGN).id))).length === 2, 'a design with the head and the Pinned rows gets both back');
 });

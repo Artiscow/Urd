@@ -4,6 +4,7 @@
  */
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
 import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, CAP_LISTS, CAP_ADD_FORMS } from './forms.js';
+import { earlierDefaultWrites } from '../lib/admin-designs.js';
 
 /**
  * The form a menu opens in (Urd settings «Element menu»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
@@ -21,16 +22,23 @@ const EXTRA_KEY = 'urd-extra-settings';
 /** How a look is chosen («Designs»): a row that opens the design picker, or the designs' pictures in place (lib/rows/LookChoice.svelte). */
 const DESIGN_CHOICE_KEY = 'urd-design-choice';
 
-/** What stands first in the menu («Shortcuts»): the Pinned rows, the same rows as tiles, the search field alone, or chips that jump to each area. */
+/** What stands first in the menu («Shortcuts»): the search field alone, the Pinned rows, the same rows as tiles, or chips that jump to each area. */
 const SHORTCUTS_KEY = 'urd-menu-shortcuts';
 
 /** How the «+» list shows what a block can take («The add list»): a list, or tiles in two columns. */
 const CAP_LIST_KEY = 'urd-cap-list';
 
-/** The way to add a capability («Extra settings style»): the «+» in the menu's head, chips at the foot of each area, or an add button at the foot of each area. */
+/** The way to add a capability («Extra settings style»): a quiet line of names at the foot of each area with the cards folding («Minimal»), the «+» in the menu's head, chips or an add button at the foot of each area, or icons in each area's heading. */
 const CAP_ADD_KEY = 'urd-add-capability';
 
 const stored = (key, list) => (list.includes(localStorage.getItem(key)) ? localStorage.getItem(key) : list[0]);
+
+/** A design chosen before «Minimal» and the search field became the defaults keeps the parts it had (lib/admin-designs.js earlierDefaultWrites). */
+try {
+  for (const { key, value } of earlierDefaultWrites((key) => localStorage.getItem(key))) localStorage.setItem(key, value);
+} catch {
+  /* The storage is blocked or full: the new defaults stand. */
+}
 
 /** The floating menu's width with the areas poured through two columns (app.css, .block-menu.wide), and a small panel's, one group from a tool of the bar (.block-menu.small). */
 export const MENU_WIDE_W = 660;

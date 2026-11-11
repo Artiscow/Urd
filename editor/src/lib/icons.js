@@ -12,6 +12,8 @@ export const CAP_ICONS = {
   clock: capSvg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
   filter: capSvg('<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'),
   signup: capSvg('<circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0114 0"/><path d="M16 11l2 2 4-4"/>'),
+  type: capSvg('<path d="M4 19l5-14 5 14M6 14h6"/><path d="M15 19v-6.5a2.5 2.5 0 015 0V19M15 15.5h5"/>'),
+  stripes: capSvg('<rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M7 18l5-12M12.5 18l5-12"/>'),
   palette: capSvg('<path d="M12 3a9 9 0 100 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.8 0-1 .8-1.7 1.8-1.7H17a4 4 0 004-4c0-4.1-4-7.5-9-7.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="14.5" cy="7" r="1"/>'),
 };
 

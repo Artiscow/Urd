@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.33.12.6 - The other families' capabilities, Minimal and Search field as the defaults, and no tooltip that repeats a name - 11 November 2026
+
+- The button's colours, the ribbon's stripes and the calendar's text fields stood as folds in every block's menu. They are capabilities, added and taken away like the shared ones (`menu/capabilities.js`), and the other families' groups stay folds, as ADR-0031 sorts them.
+- An admin with nothing stored added from the menu's head and opened the element menu on its Pinned rows. «Minimal» and «Search field» are the defaults (`menu/forms.js`, the floating admin design), with ADR-0031's decision 5 amended and the user guide following.
+- «The search field» is «Search field», in nb «Søkefelt».
+- A tooltip still showed on the empty room of a row of pictures (found in testing). It shows only on words, pictures and controls, and a part that only holds others counts as room (`lib/tip-scope.js`).
+- A tooltip that only said the name its item shows, as a design's tile does under its picture, showed anyway (found in testing). It is held back while the pointer stands on it and stays in the page for screen readers and the menu's search.
+
+The independent review before the commit found these, all fixed:
+
+1. A name cut off by an ellipsis, such as a long path in the Updates panel or a value in the CSV preview, counted as repeating its tooltip, so the full text could no longer be read. A cut-off name keeps its tooltip.
+2. A design other than the default, chosen before the new defaults, had stored nothing for the parts it shared with the old ones, so Side panel lost its Pinned rows and read as changed. Such a design gets its earlier parts written once as the admin loads (`earlierDefaultWrites` in `lib/admin-designs.js`), tested for every design.
+3. ADR-0016 still said Pinned stands first in every menu, and the user guide still put the areas after Pinned. Decision 3 is amended and the guide says the menu opens on its search field, in en-GB and nb.
+4. The amended copy of ADR-0031 held the new text of a consequence, and its status line named only decision 5. The copy is the text as it stood, and the status line names the consequence too.
+5. The backlog's milestone still called the menu's head the default and listed the image's filter as a capability. It names the head as the default until 11 November 2026, and the image's link and click.
+6. The admin designs' test kept the old defaults in its stand-in, and the capabilities' test used ribbon and calendar values the menus never write. Both use the real ones.
+
 ### 0.7.33.12.5 - Minimal and Icons in the headings, and tooltips only on what they name - 10 November 2026
 
 - «Extra settings style» had three of the five forms chosen on the canvas. «Minimal» names what each area can take as a quiet line at its foot, with the cards folding to one line at their name that shows the value (`summary` in `menu/capabilities.js`), and «Icons in the headings» draws each capability in its area's heading in a box of the admin's accent, dashed until used, a press adding it or bringing its card into view.

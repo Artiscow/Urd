@@ -54,6 +54,9 @@ const IN_USE = {
   'cal-filter': (b) => { b.props.showCategories = true; b.props.showSearch = true; b.props.showEarlier = true; },
   'cal-signup': (b) => { b.props.showSignup = true; },
   'cal-colors': (b) => { b.props.colors = { bg: '#000000' }; b.props.stripe = { color: '#111111' }; },
+  'cal-fields': (b) => { b.props.fieldStyle = { title: { size: 18, bold: true } }; },
+  'btn-colours': (b) => { Object.assign(b.props, { bg: 'text', color: '#ffffff', borderColor: 'accent', hoverBg: 'surface' }); },
+  'ribbon-stripes': (b) => { Object.assign(b.props, { above: 'marks', below: 'plain', main: 'marks', aboveColor: 'accent', thickness: 12, stripePlace: 'edge' }); },
 };
 
 test('every capability has a block in use to test, an area, a drawing and pins that name Pinned rows', () => {

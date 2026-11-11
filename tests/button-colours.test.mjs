@@ -54,8 +54,8 @@ test('each design falls back to its own colour from the theme, and an own fill u
   assert.match(css, /\.urd-button-primary\.urd-button-own-border \{\s*border: 1px solid var\(--urd-btn-border\);/);
   assert.match(css, /\.urd-button-secondary \{\s*background: var\(--urd-btn-bg, transparent\);\s*border: 1px solid var\(--urd-btn-border, var\(--urd-color-accent\)\);\s*color: var\(--urd-btn-text, var\(--urd-color-accent\)\);/);
   assert.match(css, /\.urd-button\.urd-button-own-hover:hover \{\s*background: var\(--urd-btn-hover\);\s*filter: none;/);
-  // The menu writes the four under Style, each empty while it follows the design.
+  // The menu writes the four under Style in their card, each empty while it follows the design.
   const menu = readFileSync(new URL('../editor/src/menu/families/Button.svelte', import.meta.url), 'utf8');
   assert.match(menu, /const COLOURS = \{ bg: undefined, color: undefined, borderColor: undefined, hoverBg: undefined \};/);
-  assert.match(menu, /<Fold id="btn-colours"[^\n]*group=\{groupOf\('btn-colours', COLOURS\)\}>/);
+  assert.match(menu, /<Capability id="btn-colours" group=\{groupOf\('btn-colours', COLOURS\)\}>/, 'a capability, a card while the button uses its colours or they were added');
 });

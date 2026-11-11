@@ -27,7 +27,15 @@ const { keepCapability, dropCapability } = await import('../editor/src/menu/capa
 const { default: CapabilityAdd } = await import('../editor/src/menu/CapabilityAdd.svelte');
 const { default: ElementMenu } = await import('../editor/src/menu/ElementMenu.svelte');
 const { default: FloatingMenu } = await import('../editor/src/menu/FloatingMenu.svelte');
-const { setQuickChoice, setCapAddPref } = await import('../editor/src/menu/state.svelte.js');
+const { setQuickChoice, setCapAddPref, setShortcutsPref, menu: menuState } = await import('../editor/src/menu/state.svelte.js');
+const { CAP_ADD_FORMS, SHORTCUTS_MODES } = await import('../editor/src/menu/forms.js');
+// With nothing stored the menu opens on its search field and adds a capability from the quiet line of names (Minimal); these tests draw Pinned and the head's «+», so they choose those two, as an owner would.
+assert.equal(menuState.shortcutsPref, 'search', 'the search field is the default');
+assert.equal(menuState.capAddPref, 'folded', 'Minimal is the default way to add');
+assert.equal(SHORTCUTS_MODES[0], 'search');
+assert.equal(CAP_ADD_FORMS[0], 'folded');
+setShortcutsPref('pinned');
+setCapAddPref('head');
 const { NO_CHOICE } = await import('../editor/src/lib/quick-row.js');
 const { folds } = await import('../editor/src/lib/folds.svelte.js');
 const { DESIGN_BLOCK_TYPES } = await engineImport('block-designs.js');
@@ -678,7 +686,7 @@ test('«Extra settings style» draws one way to add at a time: the head\'s «+»
   const named = (tree, cls) => find(tree, (n) => hasClass(n, cls));
   const offeredIn = (tree) => find(tree, (n) => n.attrs?.['data-cap-add']).map((n) => n.attrs['data-cap-add']);
   try {
-    // The head by default: its «+» and no area's.
+    // The head: its «+» and no area's.
     assert.equal(named(draw(), 'cap-add-head').length, 1);
     assert.equal(named(draw({ form: 'chips', area: 'style' }), 'cap-add-chip').length, 0, 'no chips while the head is chosen');
     // Chips: the area's own capabilities named at its foot, each added at a press, its line in its tooltip; the head draws none.

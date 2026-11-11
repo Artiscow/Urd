@@ -63,7 +63,7 @@ export const ADMIN_DESIGNS = [
     id: 'floating',
     labelKey: 'adminDesign.floating',
     parts: {
-      menu: 'wide', folds: 'left', toolbar: 'groups', toolbarLook: 'glass-accent', toolbarGear: 'on', toolbarPhone: 'on', toolbarSize: 'regular', toolbarDesign: 'small', designs: 'row', extra: 'shown', capAdd: 'head', capList: 'list', shortcuts: 'pinned',
+      menu: 'wide', folds: 'left', toolbar: 'groups', toolbarLook: 'glass-accent', toolbarGear: 'on', toolbarPhone: 'on', toolbarSize: 'regular', toolbarDesign: 'small', designs: 'row', extra: 'shown', capAdd: 'folded', capList: null, shortcuts: 'search',
       layout: 'top-tabs', sidebarFolds: null, panelTabMenus: null, tabMenus: 'groups', tabMenuStay: 'stay', place: 'dialog',
       addBlockMenu: 'side', layoutPicker: 'strip', linkEditor: 'dialog', pageSettings: 'dialog', collectionsLayout: 'drill', csvPreview: 'dialog',
     },
@@ -121,11 +121,12 @@ export function readParts(get) {
 /**
  * The design that stands and the parts that differ from it: the design whose weighed parts differ least from the values, the earlier design on a tie, so nothing stored reads as the default design with nothing changed.
  * @param {Record<string, string>} values Every part's value (readParts)
+ * @param {typeof ADMIN_DESIGNS} [designs] The designs to weigh against
  * @returns {{ design: string, changed: string[] }}
  */
-export function designState(values) {
+export function designState(values, designs = ADMIN_DESIGNS) {
   let best = null;
-  for (const design of ADMIN_DESIGNS) {
+  for (const design of designs) {
     const changed = PARTS.filter((part) => design.parts[part.id] != null && values[part.id] !== design.parts[part.id]).map((part) => part.id);
     if (!best || changed.length < best.changed.length) best = { design: design.id, changed };
   }
@@ -155,4 +156,23 @@ export function restoreWrites(values) {
     const value = part.options.includes(values[part.id]) ? values[part.id] : partDefault(part);
     return { key: part.key, value: value === partDefault(part) ? null : value };
   });
+}
+
+/** The defaults «Extra settings style» and «Shortcuts» had until 11 November 2026, when «Minimal» and the search field took their place: a part whose key holds nothing was read as these until then. */
+const EARLIER_DEFAULTS = { capAdd: 'head', shortcuts: 'pinned' };
+
+/**
+ * What keeps a design chosen before 11 November 2026 as it stood: the parts whose keys hold nothing are read as their earlier defaults, and where that makes a design other than the default, the earlier defaults are written, so the design reads as it did.
+ * With nothing stored, or with the default design, nothing is written and the new defaults stand; once written, a key holds a value and the reading is not made again.
+ * @param {(key: string) => string|null} get Reads a stored value (localStorage.getItem)
+ * @returns {Array<{ key: string, value: string }>}
+ */
+export function earlierDefaultWrites(get) {
+  const absent = PARTS.filter((part) => part.id in EARLIER_DEFAULTS && get(part.key) == null);
+  if (!absent.length) return [];
+  const values = readParts(get);
+  for (const part of absent) values[part.id] = EARLIER_DEFAULTS[part.id];
+  const earlier = ADMIN_DESIGNS.map((d) => (d.id === DEFAULT_DESIGN ? { ...d, parts: { ...d.parts, ...EARLIER_DEFAULTS } } : d));
+  if (designState(values, earlier).design === DEFAULT_DESIGN) return [];
+  return absent.map((part) => ({ key: part.key, value: EARLIER_DEFAULTS[part.id] }));
 }

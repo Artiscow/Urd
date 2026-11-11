@@ -1,6 +1,7 @@
 /**
- * Tooltips on what they name: a tooltip (the title attribute) that stands on a whole row, a label with its field or a fold's heading, shows only while the pointer is on something in it, its name's words, a field, a button, a chip or a drawing, and never on the row's empty room.
- * A name that stretches across its row counts where its words stand, not over the room its box takes beyond them.
+ * Tooltips on what they name: a tooltip (the title attribute) that stands on a whole row, a label with its field or a fold's heading, shows only while the pointer is on words where they stand, on a picture, a drawing or a preview, or on a control (a button, a field, a chip), and never on the row's empty room.
+ * A name that stretches across its row counts where its words stand, not over the room its box takes beyond them, and a part that only holds others (a grid of pictures, a column of fields) is room too.
+ * A tooltip that only says the words its item already shows (a design's tile named under its picture) never shows; it stays in the page, where a screen reader and the menu's search read it, and a name cut off by its room (an ellipsis) shows its tooltip, which holds the rest.
  * One listener on the admin's document serves every row: while a mouse stands on a row's room its title is blanked (the words kept in data-urd-tip, where the menu's search reads them), and it comes back as the pointer reaches the words or anything in it, leaves it, presses, or a key or the focus moves; a title the row rewrites meanwhile is the one that stays.
  * A control that is one thing (a button, a link, a field, a chip, a label drawn as a button), and a part dragged by its room (`data-tip-whole`), keeps its tooltip over all of itself; an empty title, which keeps a menu's own tooltip from a menu that opens on hover, is left as it is.
  */
@@ -9,15 +10,27 @@
 export const CONTROL = 'button, a[href], input, select, textarea, [role="button"], [role="switch"], [role="option"], [role="menuitem"], [role="tab"], [role="checkbox"], .ghost, .filepick, [data-tip-whole]';
 
 /**
- * Whether a row's tooltip shows for the pointer: anywhere on a control; on words, only where they stand; on the row's own room, only on its words; and on anything else in it (a swatch, a drawing), always.
- * @param {{control: boolean, room: boolean, words: boolean, onWords: boolean}} where
- *   `control`: the pointer is on a control or the row is one; `room`: it is on the row itself, not on anything in it; `words`: what it is on holds words of its own; `onWords`: it stands on those words.
+ * Whether a row's tooltip shows for the pointer: anywhere on a control, a picture, a drawing or a preview, on words only where they stand, and nowhere else.
+ * @param {{control: boolean, picture: boolean, words: boolean, onWords: boolean}} where
+ *   `control`: the pointer is on a control or the row is one; `picture`: it is on a picture, a drawing or a preview; `words`: what it is on holds words of its own; `onWords`: it stands on those words.
  */
-export function tipShows({ control, room, words, onWords }) {
-  if (control) return true;
-  if (room || words) return onWords;
-  return true;
+export function tipShows({ control, picture, words, onWords }) {
+  if (control || picture) return true;
+  return words && onWords;
 }
+
+const plain = (text) => (text ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+/** Whether a tooltip only says the words its item already shows, so it adds nothing to them. */
+export const echoes = (tip, shown) => plain(tip) !== '' && plain(tip) === plain(shown);
+
+/** Whether a part of the item, or the item, holds more than its room shows: words cut off by an ellipsis or a clamp. */
+const cutOff = (holder) => [holder, ...holder.querySelectorAll('*')]
+  .some((el) => el instanceof HTMLElement && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1));
+
+const PICTURE_TAGS = new Set(['svg', 'img', 'canvas', 'picture', 'video']);
+/** Whether an element is a picture, a drawing or a preview: an image or a drawing of its own, a part of a drawing, or a part named for one (a `-pic`, a `-thumb`, a swatch, a preview). */
+export const isPicture = (el) => PICTURE_TAGS.has(el.localName) || Boolean(el.closest('svg'))
+  || [...el.classList].some((name) => /(^|-)(pic|thumb|swatch|preview)$/.test(name));
 
 /** Whether an element holds words of its own: text that is its, not a child element's. */
 const hasWords = (el) => [...el.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
@@ -64,10 +77,10 @@ export function installTipScope(doc = document) {
     if (held && held !== holder) give();
     const shows = tipShows({
       control: holder.matches(CONTROL) || Boolean(target.closest(CONTROL)),
-      room: target === holder,
+      picture: isPicture(target),
       words: hasWords(target),
       onWords: onOwnWords(target, x, y),
-    });
+    }) && !(holder.textContent.length < tip.length * 2 + 40 && echoes(tip, holder.innerText) && !cutOff(holder));
     if (shows) {
       if (held === holder) give();
     } else take(holder);
