@@ -8,6 +8,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.35.1 - Saved drafts on a branch of their own: ADR-0032 and the drafts function - 11 November 2026
+
+- A draft lived only in the browser that made it, so no other device could go on with the work. Saved drafts get a branch of their own, `urd-drafts`, read and written through `/api/github/drafts` for an owner who may publish (`functions/api/github/drafts.js`, the rules in `functions/_lib/drafts.js`); every commit there begins with the host's skip marker, so the branch is never built, deployed or listed in History.
+- `commitTree` could only add to a branch that exists. With `orphan` it makes the branch from its first commit, and a second save that gets there first answers 409 (`functions/_lib/github.js`).
+- ADR-0032 records the four decisions taken 11 November 2026: one drafts branch, a page not live yet kept back going out hidden, a save meeting this browser's drafts part by part, and Save with no names beside the undo list's named points.
+- Five error codes for the function, `draftsBadPart`, `draftsRace`, `draftsFailed`, `draftsBranchRefused` and `draftsTooLarge`, have their words in all five admin dictionaries.
+
+The independent review before the commit found these, all fixed:
+
+1. A page whose id began with «site», «templates», «plugins», «redirects» or «collections» (a page «Sitemap») could never be saved. Only those ids themselves are refused, tested.
+2. A race found as the branch moved answered 409 without the head the editor reads again from. It carries the head as it stands, as the race found before the commit does, tested.
+3. Any refusal from GitHub in a repository whose name holds «rule» or «protect» read as a ruleset refusing the branch. GitHub's own words decide, without the path, tested.
+4. A part named twice in one save sent two entries for one file. It is refused, tested.
+5. A field error in the read of several parts read as a part not saved. Only a path the branch does not hold reads as absent; any other error fails the read.
+6. The limits allowed parts far beyond what a browser holds, enough to strain the function's memory. A part is at most 6 MB and a save 10 MB.
+7. A removal of everything trusted the names in the index as they stood. Each is checked as a part's name.
+8. The tests read the index at any branch, and left the removal of everything, a race found as the branch moved, and the large parts both ways untested. Each is tested.
+9. The comment on `commitTree` named its first two parameters twice, ADR-0032 named a description in ARCHITECTURE.md that was not written, the milestone's «Done when» still named open questions that were answered, and the Northern Sami words for a draft differed from the dictionary's. The comment is whole, ARCHITECTURE.md describes the branch and the function, the «Done when» names what is built, and the words are the dictionary's.
+
 ### 0.7.0.85 - The media tidy in two presses while changes wait, and the Media group only while there is something to tidy - 11 November 2026
 
 - «Tidy the media folder» stood greyed out while any change waited to be published, with the reason only in its tooltip, so it seemed broken (found in testing). While changes wait, its first press says so in the status line and turns it into «Publish 1 change and tidy», and its second publishes them and then tidies (`UpdatePanel.svelte`, `tidyMedia` in `state/publish.svelte.js`).

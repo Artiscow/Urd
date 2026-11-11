@@ -2,6 +2,12 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.35.1): the saved drafts' branch
+
+- [ ] On the deployed site, signed in, in the browser's console: `await (await fetch('/api/github/drafts')).json()` gives `{ head: null, index: { version: 1, parts: {} } }` before anything is saved
+- [ ] A test save from the console (a part `page-test-save` with the key `urd-draft-test-save`) makes the branch `urd-drafts` on GitHub with `index.json` and `parts/page-test-save.json`; its commit message begins with `[CF-Pages-Skip]`; Cloudflare lists no deployment for it; the live site and History are unchanged
+- [ ] The same save again with the old head as `expect` answers 409 «The saved drafts changed on another device»; a removal of everything (`all: true` with the new head) leaves the branch with an empty index
+
 ### Test batch (0.7.0.85): the media tidy in two presses, and the Media group only when needed
 
 - [ ] On a site with files at the root of `media/` and a change waiting to be published: Updates › Media › «Tidy the media folder» is pressable; the first press says in the status line that a change waits and turns the button into «Publish 1 change and tidy»; moving the mouse off takes it back and clears the line; a second press publishes the change, then moves the files in a publish of its own; signed out, the Updates panel opens without an error about the media files

@@ -181,6 +181,9 @@ Cloudflare Pages Functions - small serverless functions that ship with the repo 
 | `GET /api/github/latest` | HEAD + diff since the baseline SHA → conflict detection («Someone else has published») |
 | `GET /api/github/history` | Latest commits → basis for undoing a publish |
 | `POST /api/github/revert` | Forward revert: a new commit pointing at the previous tree - history is never deleted |
+| `GET/POST /api/github/drafts` | The saved drafts (ADR-0032) on their own branch, `urd-drafts`: the index, the parts' texts, and a save of several parts as one commit |
+
+**The saved drafts' branch (ADR-0032):** `urd-drafts` holds `index.json` (`{ version: 1, parts: { <name>: { savedAt, saver, hash, base, title?, later? } } }`, with `savedAt` and `saver` written by the function) and one file per part, `parts/<name>.json` (`{ v: 1, keys: { <localStorage key>: <the stored draft text> } }`). A part is `site`, `collections`, `templates`, `plugins`, `redirects`, `page-<id>` or `collection-<id>`, and holds only its own stored keys (`keyOfPart` in `functions/_lib/drafts.js`). A save names the head it last read (`expect`), and one that moved answers 409 `draftsRace` with the head as it stands; the first save makes the branch (`commitTree` with `orphan`). Every commit message begins with `[CF-Pages-Skip]`, so the host builds nothing from the branch; the function never writes the site's branch, and refuses where the site's branch is `urd-drafts` itself.
 
 Security layers (defence in depth):
 
