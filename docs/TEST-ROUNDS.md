@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.35.3.1): the Saved menu
+
+- [ ] Save a page on device A, then open the admin on device B: B shows the published page, Save carries an amber dot, and the status line says «1 draft saved on another device» with «Show»
+- [ ] «Show» (or a mouse resting on Save, ArrowDown on it, or Ctrl+S) opens the menu: «Save the drafts», «Publish now», then the page with its picture, «New», «Saved by …, …», «Open here» and a bin; after the menu closes the dot is gone
+- [ ] «Open here» brings A's version in; Ctrl+Z takes it out again
+- [ ] With B's own changes to the same page, «Open here» asks «Replace this browser's version?» first, and Cancel keeps B's
+- [ ] The bin asks for a second press («Press again to take the saved copy away»), then the row is gone, B's own draft untouched
+- [ ] A new page saved on A, opened on B: it opens together with A's saved site settings and stands in B's page list
+- [ ] With B open, save something new on A, switch away from B's tab for over a minute and back: the line and the dot tell of it
+- [ ] Publish on B with a saved draft from A not opened: A's draft is not published
+- [ ] Save a new page «Kaker» on A (the site settings and the page are both saved); on B open the site settings row alone: Kaker comes with it, with its content, never blank
+- [ ] On a touch screen with changes waiting, a tap on Save opens the menu; a mouse press or Enter saves
+- [ ] Hover Save and look at the menu for a moment, then press it to save: the menu does not open again after the save, and the dot stays where a saved draft is still new
+
 ### Test batch (0.7.35.2.2): the load with a panel open
 
 - [ ] Signed in on the deployed site, with the Site panel (or any panel) open when the admin was last closed: the admin opens with the panel, never stuck at «Loading», with and without a draft saved on another device (taken in where there is one)

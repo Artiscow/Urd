@@ -1,9 +1,9 @@
 /**
- * The saved drafts as the editor sees them (editor/src/lib/saved-model.js, ADR-0032): the part each stored key belongs to, held equal to the drafts function's rule, the meeting of a saved draft with this browser's on load, where each part stands, and the two counts held to the bands.
+ * The saved drafts as the editor sees them (editor/src/lib/saved-model.js, ADR-0032): the part each stored key belongs to, held equal to the drafts function's rule, the meeting on load that takes nothing in by itself, where each part this browser holds stands, the Saved menu's rows, and the two counts held to the bands.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { partOfKey, keysByPart, partName, partOfName, partCanon, meet, standing, counts, overwrites, publishedSaves } from '../editor/src/lib/saved-model.js';
+import { partOfKey, keysByPart, partName, partOfName, partCanon, meet, standing, counts, savedList, overwrites, publishedSaves } from '../editor/src/lib/saved-model.js';
 import { keyOfPart, isPartName } from '../template/functions/_lib/drafts.js';
 
 const KEYS = ['urd-draft-site', 'urd-draft-hjem', 'urd-draft-om-oss', 'urd-draft-sitemap', 'urd-draft-plugins', 'urd-draft-redirects',
@@ -37,29 +37,27 @@ test('a waiting part and its name go both ways', () => {
   assert.equal(partCanon({ b: '2', a: '1' }), partCanon({ a: '1', b: '2' }));
 });
 
-test('meeting on load: taken in where this browser holds nothing or holds it as last seen; this browser\'s kept where it went on', () => {
-  const saved = { site: { hash: 'S2' }, 'page-hjem': { hash: 'H2' }, 'page-om-oss': { hash: 'O1' }, plugins: { hash: 'P1' } };
-  const { takeIn, seen } = meet({
+test('meeting on load takes nothing in: a part held here as saved counts as seen, any other keeps what this browser last saw', () => {
+  const met = meet({
     local: { site: null, 'page-hjem': 'H1', 'page-om-oss': 'O1', plugins: 'P9' },
-    saved,
+    saved: { site: { hash: 'S2' }, 'page-hjem': { hash: 'H2' }, 'page-om-oss': { hash: 'O1' }, plugins: { hash: 'P1' } },
     seen: { 'page-hjem': 'H1', plugins: 'P1' },
   });
-  assert.deepEqual(takeIn.sort(), ['page-hjem', 'site'], 'nothing here (site), and as last seen (hjem: H1 seen, H2 saved since)');
-  assert.deepEqual(seen, { site: 'S2', 'page-hjem': 'H2', 'page-om-oss': 'O1', plugins: 'P1' }, 'plugins went on here from P1, which it last saw, and stays this browser\'s');
+  assert.equal('takeIn' in met, false, 'nothing comes in by itself');
+  assert.deepEqual(met.seen, { 'page-hjem': 'H1', 'page-om-oss': 'O1', plugins: 'P1' }, 'the site, never seen, stays unseen; Om oss is held as saved');
 });
 
-test('meeting on load: a part this browser saw as saved and took back to live stays live; one published or discarded elsewhere leaves this browser too', () => {
+test('meeting on load: a part published or discarded elsewhere leaves this browser where it stands here as it was seen', () => {
   const met = meet({
-    local: { site: null, 'page-kaker': 'K1', 'page-om-oss': 'O2' },
-    saved: { site: { hash: 'S1' } },
-    seen: { site: 'S1', 'page-kaker': 'K1', 'page-om-oss': 'O1' },
+    local: { 'page-kaker': 'K1', 'page-om-oss': 'O2' },
+    saved: {},
+    seen: { 'page-kaker': 'K1', 'page-om-oss': 'O1' },
   });
-  assert.deepEqual(met.takeIn, [], 'the site was seen as saved and went back to live here (an undo, a revert)');
-  assert.deepEqual(met.dropLocal, ['page-kaker'], 'Kaker left the index and stands here as it was seen: published or discarded elsewhere');
-  assert.deepEqual(met.seen, { site: 'S1' });
+  assert.deepEqual(met.dropLocal, ['page-kaker'], 'Kaker left the index and stands here as it was seen');
+  assert.deepEqual(met.seen, {});
 });
 
-test('where each part stands, with a part saved elsewhere set apart and a saved part this browser holds nothing of in its own band', () => {
+test('where each part this browser holds stands, a part saved elsewhere set apart; a saved part not held here stands in no band', () => {
   const hashes = { site: 'S1', 'page-hjem': 'H9', 'page-kaker': 'K1' };
   const rows = standing({
     parts: [{ kind: 'page', id: 'hjem', name: 'Hjem' }, { kind: 'site' }, { kind: 'page', id: 'kaker', name: 'Kaker' }],
@@ -71,12 +69,29 @@ test('where each part stands, with a part saved elsewhere set apart and a saved 
   assert.equal(by.site.band, 'saved');
   assert.equal(by['page-hjem'].band, 'browser');
   assert.deepEqual(by['page-hjem'].elsewhere, { savedAt: 't', saver: 'a' }, 'saved since this browser saw H1');
-  assert.equal(by['page-kaker'].band, 'browser');
   assert.equal(by['page-kaker'].elsewhere, null);
-  assert.deepEqual([by['page-gone'].band, by['page-gone'].draft, by['page-gone'].held, by['page-gone'].name], ['browser', false, false, 'Gone']);
-  assert.deepEqual(counts(rows), { save: 3, publish: 3 });
-  const held = standing({ parts: [], localHash: (name) => ({ 'page-new': 'N1', 'page-other': 'X9' })[name] ?? null, saved: { 'page-new': { hash: 'N1' }, 'page-other': { hash: 'X1' } }, seen: {} });
-  assert.deepEqual(held.map((r) => [r.part, r.band, r.held]), [['page-new', 'saved', true], ['page-other', 'browser', true]], 'a saved part held here though the waiting list does not name it is never taken for live');
+  assert.equal(by['page-gone'], undefined, 'a saved part not held here is the Saved menu\'s alone, so Publish never sends it');
+  assert.deepEqual(counts(rows), { save: 2, publish: 3 });
+});
+
+test('the Saved menu\'s rows: newest first, held as saved, held with changes, or not held, and new only where unseen and not yet shown', () => {
+  const list = savedList({
+    saved: {
+      'page-hjem': { hash: 'H1', savedAt: '2026-11-11T10:00:00Z', saver: 'a', title: 'Hjem' },
+      'page-om-oss': { hash: 'O2', savedAt: '2026-11-11T12:00:00Z', saver: 'b', title: 'Om oss' },
+      site: { hash: 'S2', savedAt: '2026-11-11T11:00:00Z', saver: 'b' },
+      'page-kaker': { hash: 'K2', savedAt: '2026-11-11T09:00:00Z', saver: 'b', title: 'Kaker' },
+    },
+    localHash: (name) => ({ 'page-hjem': 'H1', site: 'S1' })[name] ?? null,
+    seen: { 'page-hjem': 'H1', 'page-kaker': 'K1' },
+    noticed: { 'page-kaker': 'K2' },
+  });
+  assert.deepEqual(list.map((r) => r.part), ['page-om-oss', 'site', 'page-hjem', 'page-kaker']);
+  const by = Object.fromEntries(list.map((r) => [r.part, r]));
+  assert.deepEqual([by['page-hjem'].here, by['page-hjem'].fresh], ['same', false]);
+  assert.deepEqual([by.site.here, by.site.fresh], ['mine', true], 'saved elsewhere, this browser holds its own');
+  assert.deepEqual([by['page-om-oss'].here, by['page-om-oss'].fresh, by['page-om-oss'].name], ['none', true, 'Om oss']);
+  assert.deepEqual([by['page-kaker'].here, by['page-kaker'].fresh], ['none', false], 'shown in the menu already');
 });
 
 test('the counts never disagree with the bands', () => {

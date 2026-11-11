@@ -4629,9 +4629,16 @@
   }
 
   .save-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
+  }
+
+  /* A draft saved on another device that this browser has not seen: the amber dot on Save's corner */
+  .save-btn .save-dot {
+    top: -3px;
+    right: -3px;
   }
 
   .save-btn .save-count {
@@ -4655,6 +4662,29 @@
   .save-pop .publish-main:not(:disabled) {
     color: var(--urd-color-accent, #7c5cff);
     font-weight: 600;
+  }
+
+  /* The saved drafts under the acts: wide enough for a picture, a name and two buttons, scrolling in a box of their own */
+  .save-pop > .publish-rows {
+    width: min(21rem, 80vw);
+    max-height: 20rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .save-pop .publish-head {
+    padding: 4px 8px 2px;
+  }
+
+  /* A row's buttons keep their own width beside the picture and the words, not the menu's full width */
+  .tool-pop .saved-row .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    flex: none;
+    width: auto;
+  }
+
+  .tool-pop .saved-row .icon-btn.sm:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    width: 1.7rem;
+    justify-content: center;
   }
 
   /* ---- Foldetrinnene (the fold steps; tests/topbar-fold.test.mjs anchors

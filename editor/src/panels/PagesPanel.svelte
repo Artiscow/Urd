@@ -4,7 +4,7 @@
   import { ta } from '$engine/i18n.js';
   import { pageThumb } from '$engine/preset-thumb.js';
   import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
-  import { safeCssValue } from '$engine/theme.js';
+  import { thumbThemeStyle as themeStyleOf } from '../lib/thumb-theme.js';
   import { ICONS } from '../lib/icons.js';
   import { pageFills } from '../lib/fill-in.js';
   import PageSettingsStep from './pages/PageSettingsStep.svelte';
@@ -55,13 +55,7 @@
    *  grids: the thumbnails draw with var(--urd-color-*) and must show the
    *  SITE's palette, not the admin's (the admin never loads
    *  content/theme.css). Invalid values are dropped. */
-  const thumbThemeStyle = $derived.by(() => {
-    const c = siteDraft?.theme?.tokens?.color ?? {};
-    return ['bg', 'surface', 'text', 'accent']
-      .filter((k) => typeof c[k] === 'string' && safeCssValue(c[k]))
-      .map((k) => `--urd-color-${k}: ${c[k]};`)
-      .join(' ');
-  });
+  const thumbThemeStyle = $derived(themeStyleOf(siteDraft));
 </script>
 
 <div class="panel-body">

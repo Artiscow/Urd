@@ -6,6 +6,8 @@
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import UnpublishedRows from '../lib/UnpublishedRows.svelte';
+  import SavedRows from '../lib/SavedRows.svelte';
+  import { thumbThemeStyle } from '../lib/thumb-theme.js';
   import { timeAgo } from '../lib/time-ago.js';
   import SettingsGear from './SettingsGear.svelte';
   import PageSwitcher from './PageSwitcher.svelte';
@@ -37,16 +39,48 @@
     ed.toolMenu = null;
   }
 
-  /** Save's tooltip: what it does, or why it cannot. */
+  /** What saving does, or why it cannot: the tooltip of the menu's first act; Save itself opens its menu on a mouse's rest, so it keeps no tooltip. */
   const saveTip = $derived(ed.savedAvailable ? (ed.saveCount ? ta('tip.save') : ta('tip.save.nothing')) : ta('tip.save.unavailable'));
-  /** The menu Ctrl+S opens under Save: its first act that can act takes the focus. */
+  /** Save's name to a screen reader, with what it would save and what is new among the saved drafts. */
+  const saveLabel = $derived([
+    ta('ui.save'),
+    ed.saveCount ? ta(ed.saveCount === 1 ? 'save.waiting.one' : 'save.waiting', { n: ed.saveCount }) : '',
+    ed.savedFresh ? ta(ed.savedFresh === 1 ? 'saved.news.one' : 'saved.news', { n: ed.savedFresh }) : '',
+  ].filter(Boolean).join(', '));
+  /** The Saved menu: opened from a key, its first act that can act takes the focus. */
   let savePop = $state(null);
+  let keyedShown = 0;
   $effect(() => {
-    if (ed.toolMenu === 'save' && savePop) savePop.querySelector('button:not(:disabled)')?.focus();
+    const keyed = ed.saveMenuKeyed;
+    if (ed.toolMenu !== 'save' || !savePop || keyed === keyedShown) return;
+    keyedShown = keyed;
+    savePop.querySelector('button:not(:disabled)')?.focus();
   });
+  /** As the menu opens, the saved pages' pictures are read; as it closes after standing open a second or more, what it showed is no longer new. */
+  let saveShown = false;
+  let saveShownAt = 0;
+  $effect(() => {
+    const open = ed.toolMenu === 'save';
+    if (open && !saveShown) {
+      saveShownAt = Date.now();
+      ed.loadSavedPictures();
+    }
+    if (!open && saveShown && Date.now() - saveShownAt >= 1000) ed.markSavedNoticed();
+    saveShown = open;
+  });
+  const thumbStyle = $derived(thumbThemeStyle(ed.siteDraft));
   function saveNow() {
     ed.toolMenu = null;
     ed.saveDrafts();
+  }
+  /** A press on Save with a mouse or a key saves what waits here; a touch or a pen, where nothing opens on rest, or a press with nothing to save, opens its menu. */
+  function pressSave(event) {
+    const touch = event?.pointerType === 'touch' || event?.pointerType === 'pen';
+    if (ed.saveCount && !touch) {
+      clearTimeout(restTimers.save);
+      restOpened = null;
+      saveNow();
+    } else pressMenu('save');
   }
 
   /** A row of the menu's list: the menu closes and the owner is taken to the change. */
@@ -359,14 +393,22 @@
            would be empty, and it is the entry point to publishing at all. -->
       <a class="ghost" href="/api/github/login">{ta('ui.loginGitHub')}</a>
     {/if}
-    <!-- Save beside Publish (ADR-0032): it keeps what stands in this browser alone on the drafts branch, and carries the count of it; Ctrl+S opens a menu under it that asks to save or to publish -->
-    <span class="toolmenu save-wrap">
-      <button type="button" class="ghost topbar-tall save-btn" disabled={!ed.savedAvailable || !ed.saveCount || ed.savedBusy} title={saveTip}
-        aria-describedby={ed.savedAvailable && ed.saveCount ? 'save-waiting' : undefined} onclick={saveNow}>{@html ICONS.save}<span class="btn-label">{ta('ui.save')}</span>{#if ed.savedAvailable && ed.saveCount}<span class="publish-count save-count" aria-hidden="true">{ed.saveCount}</span><span class="sr-only" id="save-waiting">{ta(ed.saveCount === 1 ? 'save.waiting.one' : 'save.waiting', { n: ed.saveCount })}</span>{/if}</button>
+    <!-- Save beside Publish (ADR-0032): it keeps what stands in this browser alone on the drafts branch, and carries the count of it, and a dot while a saved draft is new here.
+         Its menu opens on a mouse's rest, ArrowDown or Ctrl+S: the acts first (Save the drafts, Publish now), then every saved draft with its picture, opened here by choice. -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <span class="toolmenu save-wrap" onpointerenter={(e) => menuRest('save', true, e)} onpointerleave={(e) => menuRest('save', false, e)}>
+      <button type="button" class="ghost topbar-tall save-btn" disabled={!ed.savedAvailable || ed.savedBusy} aria-label={saveLabel} aria-haspopup="true" aria-expanded={ed.toolMenu === 'save'}
+        onclick={pressSave} onkeydown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); ed.openSaveMenu(); } }}>{@html ICONS.save}<span class="btn-label">{ta('ui.save')}</span>{#if ed.saveCount}<span class="publish-count save-count" aria-hidden="true">{ed.saveCount}</span>{/if}{#if ed.savedFresh}<span class="update-dot legal-dot save-dot" aria-hidden="true"></span>{/if}</button>
       {#if ed.toolMenu === 'save'}
         <div class="tool-pop save-pop" transition:menuMotion role="group" aria-label={ta('saved.menu')} bind:this={savePop}>
           <button type="button" class="ghost publish-act publish-main" disabled={!ed.savedAvailable || !ed.saveCount || ed.savedBusy} title={saveTip} onclick={saveNow}>{@html ICONS.save}<span>{ta('saved.saveNow')}</span></button>
           <button type="button" class="ghost publish-act" disabled={!ed.dirty || !ed.auth?.allowed} title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={publishNow}>{@html ICONS.upload}<span>{ta('publish.now')}</span></button>
+          {#if ed.savedList.length}
+            <hr class="gridmenu-divider" />
+            <span class="mini-label publish-head">{ta('saved.band.saved')} · {ed.savedList.length}</span>
+            <div class="publish-rows"><SavedRows rows={ed.savedList} docOf={ed.savedDoc} whenOf={ed.whenSaved} themeStyle={thumbStyle}
+              onopen={(row) => { ed.toolMenu = null; ed.openSaved(row.part); }} onremove={(row) => ed.removeSaved(row.part)} /></div>
+          {/if}
         </div>
       {/if}
     </span>

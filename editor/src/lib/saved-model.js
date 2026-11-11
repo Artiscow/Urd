@@ -73,62 +73,39 @@ export function partCanon(keyHashes) {
 }
 
 /**
- * What a load takes in, part by part.
- * A saved part this browser has not seen, or holds as it last saw it saved, is taken in; one this browser holds otherwise stays this browser's, and so does one this browser saw as it is saved and has since taken back to live (an undo, a page deleted, a revert).
+ * What a load does with the saved drafts, part by part: nothing comes in by itself (ADR-0032 decision 3).
+ * A saved part this browser holds exactly as it is saved counts as seen; any other keeps what this browser last saw of it.
  * A part this browser saw saved that has left the index was published or discarded elsewhere: where this browser still holds it as it saw it, its copy here goes too.
  * @param {{local: Record<string, string|null>, saved: Record<string, {hash: string}>, seen: Record<string, string>}} state
  *   `local`: the hash here of each part saved or seen, null where this browser holds none of it; `seen`: the hash of each saved part as this browser last saw it
- * @returns {{takeIn: string[], dropLocal: string[], seen: Record<string, string>}} The parts to take in, the parts whose copy here goes, and what this browser has seen once they are
+ * @returns {{dropLocal: string[], seen: Record<string, string>}} The parts whose copy here goes, and what this browser has seen
  */
 export function meet({ local, saved, seen }) {
-  const takeIn = [];
   const next = {};
   for (const [name, entry] of Object.entries(saved ?? {})) {
     const here = local?.[name] ?? null;
-    const last = seen?.[name];
-    if (here === entry.hash) {
-      next[name] = entry.hash;
-    } else if (here === null && last === entry.hash) {
-      next[name] = last;
-    } else if (here === null || here === last) {
-      takeIn.push(name);
-      next[name] = entry.hash;
-    } else if (last) {
-      next[name] = last;
-    }
+    if (here === entry.hash) next[name] = entry.hash;
+    else if (seen?.[name]) next[name] = seen[name];
   }
   const dropLocal = Object.keys(seen ?? {}).filter((name) => !saved?.[name] && local?.[name] != null && local[name] === seen[name]);
-  return { takeIn, dropLocal, seen: next };
+  return { dropLocal, seen: next };
 }
 
 /**
- * Where each part stands, one row each: the parts this browser holds, in the order the waiting list gives, then the saved parts it holds nothing of.
- * A part stands «Saved» where this browser's copy is the saved one, and «In this browser» otherwise, where the saved part is set apart as saved elsewhere when it changed since this browser last saw it.
- * @param {{parts: Array<{kind: string, id?: string, name?: string}>, localHash: (name: string) => string|null, saved: Record<string, {hash: string, savedAt?: string, saver?: string, title?: string}>, seen: Record<string, string>}} state
- * @returns {Array<{kind: string, id?: string, name?: string, part: string, band: 'browser'|'saved', draft: boolean, held: boolean, elsewhere: {savedAt?: string, saver?: string}|null}>}
- *   `draft`: the part waits to be published here; `held`: this browser holds the part's stored texts (a saved part the waiting list does not name, such as a page this browser's site settings do not list, may still be held)
+ * Where each part this browser holds waiting stands, one row each, in the order the waiting list gives: «Saved» where this browser's copy is the saved one, «In this browser» otherwise, where the saved part is set apart as saved elsewhere when it changed since this browser last saw it.
+ * A saved part this browser does not hold stands only in the Saved menu (savedList), so Publish never sends it.
+ * @param {{parts: Array<{kind: string, id?: string, name?: string}>, localHash: (name: string) => string|null, saved: Record<string, {hash: string, savedAt?: string, saver?: string}>, seen: Record<string, string>}} state
+ * @returns {Array<{kind: string, id?: string, name?: string, part: string, band: 'browser'|'saved', draft: boolean, elsewhere: {savedAt?: string, saver?: string}|null}>}
  */
 export function standing({ parts, localHash, saved, seen }) {
-  const rows = [];
-  const named = new Set();
-  for (const part of parts ?? []) {
+  return (parts ?? []).map((part) => {
     const name = partName(part);
-    named.add(name);
     const entry = saved?.[name];
     const here = entry ? localHash(name) : null;
     const isSaved = Boolean(entry) && here === entry.hash;
     const elsewhere = entry && !isSaved && seen?.[name] !== entry.hash ? { savedAt: entry.savedAt, saver: entry.saver } : null;
-    rows.push({ ...part, part: name, band: isSaved ? 'saved' : 'browser', draft: true, held: true, elsewhere });
-  }
-  for (const [name, entry] of Object.entries(saved ?? {})) {
-    if (named.has(name)) continue;
-    const of = partOfName(name);
-    // A saved part the waiting list does not name: held here as saved, held otherwise (a save writes this browser's), or not held, its copy here the live one, which a save writes over the saved one.
-    const here = localHash(name);
-    const held = here !== null;
-    rows.push({ ...of, ...(of.id ? { name: entry.title || of.id } : {}), part: name, band: held && here === entry.hash ? 'saved' : 'browser', draft: false, held, elsewhere: null });
-  }
-  return rows;
+    return { ...part, part: name, band: isSaved ? 'saved' : 'browser', draft: true, elsewhere };
+  });
 }
 
 /**
@@ -137,6 +114,27 @@ export function standing({ parts, localHash, saved, seen }) {
  */
 export function counts(rows) {
   return { save: rows.filter((r) => r.band === 'browser').length, publish: rows.filter((r) => r.draft).length };
+}
+
+/**
+ * The Saved menu's rows, the newest saved first: each saved part with who saved it and when, whether this browser holds it as saved (`same`), holds its own changes to it (`mine`) or holds none of it (`none`), and whether it is new here.
+ * A part is new where it was saved since this browser last saw it, the owner has not been shown it, and this browser does not hold it as saved.
+ * @param {{saved: Record<string, {hash: string, savedAt?: string, saver?: string, title?: string}>, localHash: (name: string) => string|null, seen: Record<string, string>, noticed: Record<string, string>}} state
+ *   `noticed`: the hash of each saved part as the Saved menu last showed it
+ */
+export function savedList({ saved, localHash, seen, noticed }) {
+  return Object.entries(saved ?? {})
+    .map(([name, entry]) => {
+      const of = partOfName(name);
+      const here = localHash(name);
+      const state = here === entry.hash ? 'same' : here !== null ? 'mine' : 'none';
+      return {
+        ...of, ...(of.id ? { name: entry.title || of.id } : {}),
+        part: name, savedAt: entry.savedAt ?? '', saver: entry.saver ?? '', hash: entry.hash, here: state,
+        fresh: state !== 'same' && seen?.[name] !== entry.hash && noticed?.[name] !== entry.hash,
+      };
+    })
+    .sort((a, b) => (a.savedAt < b.savedAt ? 1 : a.savedAt > b.savedAt ? -1 : 0));
 }
 
 /**

@@ -206,6 +206,21 @@ test('History\'s «Not published yet» stands in bands where the drafts are save
   assert.doesNotMatch(plain, /unpub-band/, 'no bands where the drafts are not saved');
 });
 
+test('the Saved menu\'s rows: a page\'s picture, «New» where unseen, «Open here» or a check, and a bin on each', async () => {
+  const { default: SavedRows } = await import('../editor/src/lib/SavedRows.svelte');
+  const rows = [
+    { kind: 'page', id: 'om-oss', name: 'Om oss', part: 'page-om-oss', savedAt: '2026-11-11T12:00:00Z', saver: 'other', hash: 'h1', here: 'none', fresh: true },
+    { kind: 'site', part: 'site', savedAt: '2026-11-11T11:00:00Z', saver: 'owner', hash: 'h2', here: 'same', fresh: false },
+  ];
+  const page = { sections: [{ id: 's1', size: { minHeight: 400 }, blocks: [{ id: 'b1', type: 'text', frames: { desktop: { x: 10, y: 20, w: 50, h: 40 } } }] }] };
+  const { body } = render(SavedRows, { props: { rows, docOf: (name) => (name === 'page-om-oss' ? page : null), whenOf: () => 'just now', onopen() {}, onremove() {} } });
+  assert.match(body, /class="saved-pic[^"]*drawn[^"]*"[^>]*>[^]*?<svg/, 'the saved page drawn as a picture');
+  assert.equal((body.match(/class="saved-new/g) ?? []).length, 1, '«New» on the unseen one alone');
+  assert.equal((body.match(/class="ghost saved-open/g) ?? []).length, 1, '«Open here» where this browser does not hold it as saved');
+  assert.match(body, /class="saved-here/, 'a check where it is held as saved');
+  assert.equal((body.match(/icon-btn[^"]*danger/g) ?? []).length, 2, 'a bin on each row');
+});
+
 test('the Nav and Footer panels draw the background editor', () => {
   for (const name of ['Nav', 'Footer']) {
     const draft = structuredClone(site);

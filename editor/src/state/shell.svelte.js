@@ -260,6 +260,8 @@ async function init() {
   if (auth?.allowed) updaterState.loadUpdateCheck();
   // A panel remembered from the last visit opens with its data.
   loadPanelData();
+  // A draft saved on another device that this browser has not seen is told now, and as the tab comes back into view (ADR-0032).
+  savedState.watchSaves();
   // The setup wizard: first visit on a fresh clone and not dismissed
   // before. Triggered ONLY by the template's explicit signal (site.setup);
   // the wizard removes the field on completion, so it never shows again.
@@ -803,9 +805,11 @@ const FOLD_MQ = { view: 1079, device: 999, zoom: 919 };
 const FOLD_OFFSET = { 'page-tabs': 80 };
 
 let toolMenu = $state(null);
-/** Ctrl+S, in the admin or on the canvas: the menu under Save that asks whether to save the drafts or publish them. */
+/** Ctrl+S or ArrowDown on Save, in the admin or on the canvas, or the status line's «Show»: the menu under Save, with the acts first and then the saved drafts; `saveMenuKeyed` counts these openings, which give the focus to its first act. */
+let saveMenuKeyed = $state(0);
 function openSaveMenu() {
   toolMenu = 'save';
+  saveMenuKeyed += 1;
 }
 
 let toolMenuEl = $state(null);
@@ -1205,6 +1209,7 @@ export const shellState = {
   FOLD_MQ,
   get toolMenu() { return toolMenu; },
   openSaveMenu,
+  get saveMenuKeyed() { return saveMenuKeyed; },
   set toolMenu(v) { toolMenu = v; },
   get toolMenuEl() { return toolMenuEl; },
   set toolMenuEl(v) { toolMenuEl = v; },

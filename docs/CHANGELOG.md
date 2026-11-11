@@ -8,6 +8,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.35.3.1 - The Saved menu: saved drafts opened by choice, told by a dot and a line, with a picture of each page - 11 November 2026
+
+- A part saved on another device came into this browser by itself as the admin loaded, so a second device opened on the saved design instead of the published one, and nothing told where it came from (found in testing). Nothing saved comes in by itself: every saved draft stands in a Saved menu under Save, with a picture of a page, who saved it and when, «New» where this browser has not seen it, «Open here» and a bin (`lib/SavedRows.svelte`, `lib/saved-model.js` savedList, `state/saved.svelte.js`).
+- A saved draft this browser has not seen is told by an amber dot on Save and a line in the status bar with «Show», as the admin loads and as its tab comes back into view.
+- «Open here» takes a saved draft in as one undo step, asking first where this browser holds its own changes to it; a page this browser's site settings do not list opens with the saved site settings. ADR-0032's decision 3 is amended.
+- The pictures of the template grids and of the Saved menu share one helper for the site's colours (`lib/thumb-theme.js`).
+- Save took away a saved copy this browser had gone back to live from, and «Use the saved one» replaced this browser's version without a word. Only the menu's bin takes a saved copy away, and «Use the saved one» asks first, as «Open here» does.
+- Save opened nothing and carried a tooltip. A mouse resting on it, ArrowDown or Ctrl+S opens its menu, a mouse's press or a key saves what waits, and a touch opens the menu; it keeps no tooltip, as a button that opens on rest does not.
+
+The independent review before the commit found these, all fixed:
+
+1. Reading the pages for their pictures moved the head the index was read at, so a publish could take away a copy saved again on another device since. A read of parts leaves the head alone, and a save posts against the head it read.
+2. Opening the saved site settings alone could list a new page whose content this browser did not hold, which a publish would then send blank. The saved site settings bring the saved pages they list that are neither here nor live, and stop where such a page was not saved.
+3. On a touch screen, with changes waiting, a press on Save saved and the menu could not be reached. A touch or a pen opens the menu.
+4. A press on Save soon after the mouse reached it saved and then opened the menu a moment later. The press stops the rest's wait.
+5. Any close of the menu, a glimpse on the way to the press that saves among them, cleared the dot and every «New». What the menu showed counts as seen once it stood open a second or more.
+6. The menu's comment, ADR-0032's consequences and the entry left out what changed: Save no longer takes copies away, Save opens on rest, «Use the saved one» asks, and a part is opened, not taken in. Each is said.
+7. Each tab kept its own copy of what it had seen and been shown, and the menu's marks of parts long gone stayed. A tab reads them again as it comes back into view, and the marks of parts no longer saved are dropped as the admin loads.
+
 ### 0.7.35.2.2 - The editor loads with a panel open while the saved drafts are read - 11 November 2026
 
 - A signed-in owner whose admin opened with the Site panel stood at «Loading» for good (found in testing on a second computer): while the saved drafts were read, the site was set without its draft, and the panel read the draft that was not there. The site is set together with its draft once the saved drafts are met (`init` in `state/shell.svelte.js`), held by a test.
