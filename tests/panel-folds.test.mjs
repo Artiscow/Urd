@@ -74,7 +74,7 @@ test('panelFolds: the folds drawn in the case at hand, none for a panel without 
   assert.deepEqual(panelFolds('legal', { legal: { terms: { shown: true } } }).map((f) => f.id), ['who', 'privacy', 'terms']);
   assert.deepEqual(panelFolds('pages'), []);
   // A look's fold is pressed while «Designs» stands as the row, and unfolds to the pictures in place.
-  const design = (designs) => panelFolds('footer', { site: { footer: { show: true } }, designs }).find((f) => f.id === 'design');
+  const design = (designs) => panelFolds('footer', { site: { footer: { show: true } }, designs }).find((f) => f.id === 'presets');
   assert.equal(design('row').press, true);
   assert.equal(design('inline').press, false);
   assert.equal(design('inline').icon, undefined);
@@ -96,7 +96,7 @@ test('the groups: each group\'s folds stand together, its label is in the dictio
   const footer = foldGroups(panelFolds('footer', { site: { footer: { show: true } } }));
   assert.deepEqual(footer.map((g) => [g.label, g.folds.map((f) => f.id)]), [
     [null, ['pages']],
-    ['menuGroup.look', ['design', 'startpoint', 'appearance']],
+    ['menuGroup.look', ['presets', 'appearance']],
     ['menuGroup.content', ['brand', 'columns', 'shared', 'cta']],
     ['menuGroup.bottom', ['bottom']],
   ]);

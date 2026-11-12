@@ -45,6 +45,9 @@ export const folds = {
     const at = added.indexOf(key);
     if (at >= 0) added.splice(at, 1);
   },
-  /** Where among the rows the owner added a row stands, or -1 for a row not added from the list. */
-  addedAt: (surface, id, row) => added.indexOf(`${keyOf(surface, id)}:${row}`),
+  /** The names of the rows the owner added to the fold from its list, in the order added. */
+  addedIn(surface, id) {
+    const prefix = `${keyOf(surface, id)}:`;
+    return added.filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length));
+  },
 };

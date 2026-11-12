@@ -37,6 +37,7 @@
   const sectionDivider = $derived(ed.sectionDivider);
   const sectionGrid = $derived(ed.sectionGrid);
   const sectionHover = $derived(ed.sectionHover);
+  const sectionBlocksHover = $derived(ed.sectionBlocksHover);
   const sectionMinHeight = $derived(ed.sectionMinHeight);
   const sectionTheme = $derived(ed.sectionTheme);
   /** The section's content width as a choice and a px width (lib/content-width.js). */
@@ -110,19 +111,27 @@
     return shapes.map((shape) => ta(`opt.divider.${shape}`)).join(' · ') || ta('common.none');
   }
 
-  /** What the closed Motion group shows: the entrance and the effect under the pointer that the section has. */
+  /** What the closed Motion group shows: the entrance and the effects under the pointer that the section has, its own and the one it gives every element. */
   function motionValue() {
     const label = (options, type) => options.find(([id]) => id === type)?.[1];
     const entrance = isEntrance(sectionAnim) ? label(ENTRANCE_OPTIONS, sectionAnim.type) : null;
     const hoverType = sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '');
     const hover = hoverType ? label(HOVER_OPTIONS, hoverType) : null;
-    return [entrance, hover].filter(Boolean).join(' · ') || ta('common.none');
+    const blocksHover = sectionBlocksHover?.type ? label(HOVER_OPTIONS, sectionBlocksHover.type) : null;
+    return [entrance, hover, blocksHover].filter(Boolean).join(' · ') || ta('common.none');
   }
 
   function setSectionHover(type) {
     mutateSection('section-hover', (s) => {
       normalizeAnim(s);
       s.hover = type ? animObj(type) : null;
+    });
+  }
+
+  /** The pointer effect every element in the section plays, where it has none of its own. */
+  function setBlocksHover(type) {
+    mutateSection('section-blocks-hover', (s) => {
+      s.blocksHover = type ? animObj(type) : null;
     });
   }
 
@@ -163,7 +172,10 @@
           onchange={(v) => setSectionAnimStr('pattern', v)} />
       {/if}
     {/if}
-    <SelectRow label={ta('lbl.onHover')} title={ta('tip.props.sectionHover')} value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
+    <!-- Two effects under the pointer: every element in the section, each as the pointer is over it, and the section itself with its background -->
+    <SelectRow label={ta('lbl.blocksOnHover')} title={ta('tip.props.blocksHover')} value={sectionBlocksHover?.type ?? ''}
+      options={HOVER_OPTIONS} onchange={(v) => setBlocksHover(v || null)} />
+    <SelectRow label={ta('lbl.sectionOnHover')} title={ta('tip.props.sectionHover')} value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
       options={HOVER_OPTIONS} onchange={(v) => setSectionHover(v || null)} />
   </Fold>
 {/snippet}

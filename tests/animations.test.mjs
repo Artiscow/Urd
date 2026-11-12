@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { coreAnimations, staggerColumnDelays, staggerCenterDelays } = await engineImport('animations/core.js');
+const { coreAnimations, staggerColumnDelays, staggerCenterDelays, pointerEffectOf } = await engineImport('animations/core.js');
 const { lift } = await engineImport('migrate.js');
 
 test('the core animations follow the version+migrate contract', () => {
@@ -65,4 +65,18 @@ test('an unknown animation type gives a placeholder, never a crash', () => {
   const lifted = lift({ type: 'wobble', version: 1, props: {} }, undefined);
   assert.equal(lifted.ok, false);
   assert.equal(lifted.placeholder, 'unknown-type');
+});
+
+test('a block plays its own pointer effect, else the one its section gives every element, and decor takes none', () => {
+  const lift = { type: 'hover-lift', version: 1, props: {} };
+  const own = { type: 'glow', version: 1, props: {} };
+  const isPointer = (type) => coreAnimations[type]?.entrance === false;
+  const section = { blocksHover: lift };
+  assert.equal(pointerEffectOf({ hover: own }, section, isPointer), own, 'its own wins');
+  assert.equal(pointerEffectOf({}, section, isPointer), lift, 'the section gives it one');
+  assert.equal(pointerEffectOf({ decor: true }, section, isPointer), null, 'decor is ornament');
+  assert.equal(pointerEffectOf({ animation: lift }, section, isPointer), null, 'an older page keeps its effect in animation, which plays it');
+  assert.equal(pointerEffectOf({ animation: { type: 'fade-in', version: 1, props: {} } }, section, isPointer), lift, 'an entrance is no pointer effect');
+  assert.equal(pointerEffectOf({}, { hover: lift }, isPointer), null, 'the section\'s own effect is not its elements\'');
+  assert.equal(pointerEffectOf({}, null, isPointer), null);
 });

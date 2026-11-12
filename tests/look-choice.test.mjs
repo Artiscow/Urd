@@ -11,7 +11,8 @@ import { engineImport } from './_engine.mjs';
 register('./_svelte-loader.mjs', import.meta.url);
 
 const { looksInPlace, LOOKS_WHOLE, LOOKS_SHOWN } = await import('../editor/src/lib/look-choice.js');
-const { pictureList, blockDesigns, calendarDesignSource, footerDesignSource, FOOTER_DESIGN_IDS } = await import('../editor/src/lib/design-sources.js');
+const { pictureList, blockDesigns, calendarDesignSource, footerPresetSource } = await import('../editor/src/lib/design-sources.js');
+const { FOOTER_PRESETS } = await engineImport('footer-presets.js');
 const { BLOCK_DESIGNS } = await engineImport('block-designs.js');
 
 const list = (n) => Array.from({ length: n }, (_, i) => ({ id: `d${i}` }));
@@ -53,8 +54,8 @@ test('a run already drawn stays where it stands while the design in use is in it
 const pictureFile = (url) => new URL(`../template${url}`, import.meta.url);
 
 test('every design shown in place has its picture, in the picker\'s order', () => {
-  const footer = pictureList(footerDesignSource({}));
-  assert.deepEqual(footer.map((d) => d.id), FOOTER_DESIGN_IDS);
+  const footer = pictureList(footerPresetSource({}));
+  assert.deepEqual(footer.map((d) => d.id), FOOTER_PRESETS);
   const calendar = pictureList(calendarDesignSource({}));
   assert.ok(calendar.length > LOOKS_WHOLE, 'the calendar is the larger choice');
   const blocks = Object.keys(BLOCK_DESIGNS).flatMap((type) => pictureList(blockDesigns(type)));
@@ -69,16 +70,16 @@ test('the footer\'s preview is measured again as the page above it empties and a
   const picker = readFileSync(new URL('../editor/src/lib/DesignPicker.svelte', import.meta.url), 'utf8');
   assert.match(picker, /function watchPreview\(\) \{\s*watcher\?\.disconnect\(\);\s*watcher = null;\s*if \(source\.stays\) watched = null;/);
   assert.match(picker, /if \(block && block !== watched\) \{/, 'a new block is waited for');
-  assert.equal(footerDesignSource({}).stays, true);
+  assert.equal(footerPresetSource({}).stays, true);
   assert.equal(calendarDesignSource({}).stays, undefined, 'the calendar draws a new block at each choice');
   // The page above the footer is watched too: it empties after the choice is drawn, moving the footer up without changing its size.
   const watchedEls = [];
   const root = { id: 'urd-root' };
   const win = { document: { getElementById: (id) => (id === 'urd-root' ? root : null) } };
-  footerDesignSource({}).afterDraw(win, {}, (el) => watchedEls.push(el));
+  footerPresetSource({}).afterDraw(win, {}, (el) => watchedEls.push(el));
   assert.deepEqual(watchedEls, [root]);
   // The preview ends with the footer, which ends the page, and keeps no room for a scrollbar it never shows.
-  assert.equal(footerDesignSource({}).room, 0);
+  assert.equal(footerPresetSource({}).room, 0);
   assert.match(picker, /Math\.ceil\(bottom \+ \(source\.room \?\? 24\)\)/);
   assert.match(picker, /html \{ overflow: hidden !important; scrollbar-gutter: auto !important; \}/);
 });

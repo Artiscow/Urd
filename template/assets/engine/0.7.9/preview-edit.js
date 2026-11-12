@@ -15,7 +15,7 @@
  *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut: the editor keeps it and hands it to the next page the preview loads)
  *                  urd-edit from a text block carries `caret`: the characters into the text where the change began, kept with the undo step
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
- *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: the top-edge handle moves all blocks in the same undo step)
+ *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (arrow move in the mobile reading order)
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
@@ -43,7 +43,7 @@ import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js
 import { fontChoices } from './fonts.js';
 import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
-import { topDrag } from './section-size.js';
+import { seamDrag } from './section-size.js';
 import { snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis, gridLookOf, gridLine } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
@@ -582,7 +582,7 @@ document.addEventListener('contextmenu', (event) => {
     return;
   }
   const host = target.closest('.urd-section');
-  if (!host || target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card, .urd-ctx, input, textarea, [contenteditable]')) return;
+  if (!host || target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-hint-chip, .urd-hint-card, .urd-ctx, input, textarea, [contenteditable]')) return;
   event.preventDefault();
   openSectionContextMenu(host, event.clientX, event.clientY);
 });
@@ -949,8 +949,8 @@ function raiseSmallestUnder(x, y) {
 /**
  * Open a section's + New block menu, shared by double-click and slash: with
  * a point, the block lands there (_urdAt) and the menu sits at the pointer;
- * without one it opens from the chip position. The search field is reset
- * and focused.
+ * without one it opens at its place under the section toolbar. The search
+ * field is reset and focused.
  */
 function openBlockMenuAt(host, clientX = null, clientY = null) {
   const wrap = host.querySelector('.urd-add-block');
@@ -969,8 +969,7 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
     wrap.style.left = `${Math.round(clientX - rect.left)}px`;
     wrap.style.top = `${Math.round(clientY - rect.top)}px`;
     wrap.style.right = 'auto';
-    // At the pointer the menu appears alone: the chip button is hidden (the
-    // CSS on .urd-at-pointer), so no "+ New block" sits above the menu.
+    // At the pointer the menu stands above the section's chrome, whatever the pointer's hover (the CSS on .urd-at-pointer).
     wrap.classList.add('urd-at-pointer');
   } else {
     menu._urdAt = null;
@@ -982,7 +981,7 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
 }
 
 /**
- * Keeps an open block menu inside the screen (menuFit and shiftInto in place.js): it hangs down from its chip or the pointer, turns upwards when the room below is too small and there is more above, and is held to the room it has, where its list scrolls inside.
+ * Keeps an open block menu inside the screen (menuFit and shiftInto in place.js): it hangs down from its place, the pointer or the toolbar's «New block», turns upwards when the room below is too small and there is more above, and is held to the room it has, where its list scrolls inside.
  * It hangs to the left of its anchor, and to the right where that would pass the screen's left edge.
  * Run again whenever a fold inside the menu changes its height.
  * @param {HTMLElement} menu The .urd-add-block-menu element
@@ -1157,12 +1156,8 @@ export function enhanceSection(host, section, grid) {
     updateMultiToolbar();
   }
   addSectionToolbar(host, section, grid);
-  // Structural changes (section height) belong to the desktop view.
-  if (!isMobile()) {
-    addSectionHeightHandle(host, section, grid);
-    addSectionTopHandle(host, section, grid);
-    addBlockAdder(host, section, grid);
-  }
+  // Structural changes belong to the desktop view; a section's height is dragged on the seams between the sections (seamGrip).
+  if (!isMobile()) addBlockAdder(host, section, grid);
   // Persistent grid display (the grid menu in the editor is open) must
   // survive re-renders of the section.
   if (gridOverlaysOn) showGridOverlay(host, grid, restingGridLook()).classList.add('urd-grid-persistent');
@@ -1335,59 +1330,13 @@ function dragCursor() {
   };
 }
 
-function wireHeightDrag(target, host, section, grid, opts = {}) {
-  target.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    target.setPointerCapture(event.pointerId);
-    const startY = event.clientY;
-    // The clearance is kept out of the calculation: px is pure content
-    // height, the same number stored in size.minHeight.
-    const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
-    const cursor = dragCursor();
-    let px = startHeight;
-    let moved = false;
-
-    const onMove = (ev) => {
-      if (!moved && Math.abs(ev.clientY - startY) < 4) return;
-      moved = true;
-      cursor.move(ev.clientY);
-      px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
-      // Pixel-precise when snapping is off or Ctrl or Cmd is held.
-      const free = grid.snap === false || ev.ctrlKey || ev.metaKey;
-      px = free ? Math.round(px) : Math.round(px / grid.size) * grid.size;
-      setMinHeight(host, px);
-    };
-    const done = () => {
-      target.removeEventListener('pointermove', onMove);
-      target.removeEventListener('pointerup', onUp);
-      target.removeEventListener('pointercancel', done);
-      target.removeEventListener('lostpointercapture', done);
-      cursor.clear();
-    };
-    const onUp = () => {
-      done();
-      if (!moved) return;
-      opts.onDragged?.();
-      if (Math.abs(px - startHeight) < 2) return;
-      const minHeight = `${px}px`;
-      section.size = { ...section.size, minHeight };
-      post({ type: 'urd-section-size', sectionId: section.id, minHeight });
-    };
-    target.addEventListener('pointermove', onMove);
-    target.addEventListener('pointerup', onUp);
-    target.addEventListener('pointercancel', done);
-    target.addEventListener('lostpointercapture', done);
-  });
-}
-
 /**
  * "+ New block" in the section (shown on hover): a click opens a menu of all block kinds, in the groups and the order the Blocks panel shares (block-palette.js), and the choice is reported to the editor, which builds the block and puts it in this exact section.
  */
 
 /**
- * Closes a "+ New block" menu and resets the double-click state: the chip
- * button back in the corner, the menu's edge clamping removed.
+ * Closes a "+ New block" menu and resets where a double click or the toolbar
+ * put it: the menu back at its place under the toolbar, its edge clamping removed.
  */
 function resetBlockAdder(wrap) {
   wrap.classList.remove('urd-at-pointer');
@@ -1457,6 +1406,8 @@ function wireBlockMenuOutsideClose() {
   document.addEventListener('pointerdown', (event) => {
     for (const menu of document.querySelectorAll('.urd-add-block-menu.open')) {
       const wrap = menu.closest('.urd-add-block');
+      // The section toolbar's own «New block» opens and closes its section's menu itself; another section's closes this one.
+      if (event.target instanceof Element && event.target.closest('.urd-sec-add-block') && event.target.closest('.urd-section') === wrap?.closest('.urd-section')) continue;
       if (wrap && event.target instanceof Node && !wrap.contains(event.target)) resetBlockAdder(wrap);
     }
   }, true);
@@ -1473,16 +1424,12 @@ function addBlockAdder(host, section, grid) {
   const wrap = document.createElement('div');
   wrap.className = 'urd-add-block';
 
-  const openBtn = document.createElement('button');
-  openBtn.className = 'urd-add-block-open';
-  openBtn.textContent = ta('canvas.newBlock');
-
   const menu = document.createElement('div');
   menu.className = 'urd-add-block-menu';
   // The click point (section-relative: x in %, y in px) is set when the
   // menu opens via DOUBLE-CLICK on the section surface; the block then
-  // lands there. Opened from the button, the point is null and the editor
-  // centers the block.
+  // lands there. Opened from the section toolbar's «New block», the point is
+  // null and the editor centers the block.
   menu._urdAt = null;
 
   // The block search (flat hit list). Everything added to the menu is
@@ -1852,18 +1799,6 @@ function addBlockAdder(host, section, grid) {
     }
     if (!slim) showGroup(groups.get(shownGroup)?.tab.hidden === false ? shownGroup : PALETTE_GROUPS[0].id);
   };
-  openBtn.addEventListener('click', () => {
-    // From the button: reset any double-click placement of the menu.
-    const wasOpen = menu.classList.contains('open');
-    menu._urdAt = null;
-    resetBlockAdder(wrap);
-    if (!wasOpen) {
-      menu._urdPrepare();
-      menu.classList.add('open');
-      menu._urdSearchFocus?.();
-      fitBlockMenu(menu);
-    }
-  });
   // enhanceSection runs after EVERY re-render on the same host element: the listeners are added only once and look up the current menu at event time, otherwise one listener piles up per re-render.
   if (!host._urdAdderLeaveWired) {
     host._urdAdderLeaveWired = true;
@@ -1878,106 +1813,226 @@ function addBlockAdder(host, section, grid) {
       if (isMobile()) return;
       const target = event.target instanceof Element ? event.target : null;
       if (!target) return;
-      if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card')) return;
+      if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-hint-chip, .urd-hint-card')) return;
       openBlockMenuAt(host, event.clientX, event.clientY);
     });
   }
 
-  wrap.append(openBtn, menu);
+  wrap.append(menu);
   host.appendChild(wrap);
 }
 
-/** Drag handle at the section's bottom edge: adjusts size.minHeight. */
-function addSectionHeightHandle(host, section, grid) {
-  const handle = document.createElement('div');
-  handle.className = 'urd-section-resize';
-  handle.title = ta('canvas.sectionHeightDrag');
-  wireHeightDrag(handle, host, section, grid);
-  host.appendChild(handle);
+/**
+ * The grip on the seam between two sections (BACKLOG 535 and 539, the Section Seams canvas, look A): a pill on the line that only grows, the section above as it is dragged down and the section below at its top as it is dragged up, and a tab above and a tab below it that each shrink the section they stand in, stopping where that section's content ends unless Alt is held (seamDrag in section-size.js). The tabs stand while the pointer is on the grip.
+ * The first seam has only a section below and the last only one above, so they carry one tab. Ctrl or Cmd gives a free height, and Escape puts the seam back where the drag began.
+ * A section that changes at its top takes its blocks with it and the page scrolls by as much, so the content stands still and the dragged edge follows the pointer.
+ * The whole drag is one urd-section-size, for the section that changed; the arrow keys on a part move it one grid step (Shift: 1 px).
+ * @param {{host: HTMLElement, section: object, grid: object} | null} above
+ * @param {{host: HTMLElement, section: object, grid: object} | null} below
+ */
+function seamGrip(above, below) {
+  const grip = document.createElement('div');
+  grip.className = 'urd-seam-grip';
+  const part = (kind, className, icon, tip) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = className;
+    btn.title = ta(tip);
+    btn.setAttribute('aria-label', ta(tip));
+    btn.innerHTML = icon;
+    wireSeamDrag(btn, kind, above, below, grip);
+    return btn;
+  };
+  if (above) grip.append(part('shrinkAbove', 'urd-seam-tab urd-seam-up', SEAM_UP_SVG, 'canvas.seam.shrinkAbove'));
+  grip.append(part('grow', 'urd-seam-pill', GRIP_SVG, above && below ? 'canvas.seam.grow' : above ? 'canvas.seam.growAbove' : 'canvas.seam.growBelow'));
+  if (below) grip.append(part('shrinkBelow', 'urd-seam-tab urd-seam-down', SEAM_DOWN_SVG, 'canvas.seam.shrinkBelow'));
+  const readout = document.createElement('span');
+  readout.className = 'urd-seam-readout';
+  readout.hidden = true;
+  grip.append(readout);
+  return grip;
 }
 
-/**
- * Drag handle at the TOP EDGE of the section: adds/removes space at the
- * top. The section grows/shrinks at the top and all blocks are shifted
- * accordingly (topDrag in section-size.js), so the content stands
- * visually still - the scroll position is compensated by the growth.
- * Neighboring sections are never touched, and the whole drag is reported
- * as ONE urd-section-size with moves (one undo step in the editor). The
- * bottom-edge handle remains.
- */
-function addSectionTopHandle(host, section, grid) {
-  const handle = document.createElement('div');
-  handle.className = 'urd-section-resize-top';
-  handle.title = ta('canvas.sectionTopDrag');
-  handle.addEventListener('pointerdown', (event) => {
+/** Whether a block is docked to the screen (sticky.js), floating over every section and standing in none. */
+const dockedToScreen = (block) => block.sticky?.mode === 'screen';
+
+/** A section's state as a seam drag begins, read from the section as it is drawn now (the data and grid enhanceSection keeps on its element, since one section can be drawn again without the page): its height in content px, its blocks with their desktop y and their drawn top, where its content ends and starts, and its own inline height to restore.
+ *  The content is measured where each block stands in the section, its frame and the push pass's shift with its drawn height; a block docked to the screen is left out. Called with sticky.js and the push pass suspended, so every block stands at its place in the section. */
+function seamSide(side) {
+  if (!side) return null;
+  const section = side.host._urdSection ?? side.section;
+  const grid = side.host._urdGrid ?? side.grid;
+  const blocks = [...canvasOf(side.host).querySelectorAll(':scope > .urd-block')].map((el) => {
+    const block = section.blocks.find((b) => b.id === el.dataset.blockId);
+    return block?.frames?.desktop ? { el, block, y: block.frames.desktop.y, top: el.style.top } : null;
+  }).filter(Boolean);
+  const placed = blocks.filter((p) => !dockedToScreen(p.block));
+  const contentBottom = Math.round(Math.max(0, ...placed.map((p) => p.y + pushShiftOf(p.el) + p.el.offsetHeight)));
+  return {
+    host: side.host, section, grid,
+    heightPx: side.host.getBoundingClientRect().height - sectionClearance(side.host),
+    contentBottom, blocks, blockYs: placed.map((p) => p.y),
+    minHeight: side.host.style.minHeight, minHeightData: side.host.dataset.urdMinHeight,
+  };
+}
+
+/** The line where a shrink meets the content, drawn in the section it shrinks while the drag lasts. */
+function seamFloor(host) {
+  const line = document.createElement('div');
+  line.className = 'urd-seam-floor';
+  host.appendChild(line);
+  return line;
+}
+
+function wireSeamDrag(btn, part, above, below, grip) {
+  const readout = () => grip.querySelector('.urd-seam-readout');
+  /** A section's own inline height as the drag found it. */
+  const restore = (s) => {
+    s.host.style.minHeight = s.minHeight;
+    if (s.minHeightData === undefined) delete s.host.dataset.urdMinHeight;
+    else s.host.dataset.urdMinHeight = s.minHeightData;
+  };
+  /** Applies a result from the start: the section that changes takes it, the other stands as the drag found it, and only the section below's blocks move, as it changes at its top. */
+  const apply = (a, b, r, scrollY) => {
+    if (a) {
+      if (r.side === 'above') setMinHeight(a.host, r.heightPx);
+      else restore(a);
+    }
+    if (b) {
+      if (r.side === 'below') setMinHeight(b.host, r.heightPx);
+      else restore(b);
+      for (const p of b.blocks) p.el.style.top = r.side === 'below' && r.dy ? `${(Number.parseFloat(p.top) || p.y) + r.dy}px` : p.top;
+    }
+    // The section below changed at its top: the page scrolls by as much, so its content stands still.
+    window.scrollTo({ top: Math.max(0, scrollY + (r.side === 'below' ? r.dy : 0)), behavior: 'instant' });
+  };
+  /** What the grip says: the height of the section above, or the space at the top of the section below (its height where it holds no block of its own). */
+  const words = (r, b) => {
+    if (r.side === 'above' || (r.side === 'below' && !b.blockYs.length)) return ta('canvas.seam.height', { n: String(Math.round(r.heightPx)) });
+    if (r.side === 'below') return ta('canvas.seam.space', { n: String(Math.round(Math.min(...b.blockYs) + r.dy)) });
+    return '';
+  };
+  /** Writes what the drag ended on: the section's height, and for the section below its blocks' new y in the same undo step. */
+  const commit = (a, b, r) => {
+    const side = r.side === 'above' ? a : r.side === 'below' ? b : null;
+    if (!side || Math.abs(r.heightPx - side.heightPx) < 1) return;
+    const minHeight = `${Math.round(r.heightPx)}px`;
+    side.section.size = { ...side.section.size, minHeight };
+    if (r.side === 'below' && r.dy) {
+      for (const p of b.blocks) p.block.frames.desktop = { ...p.block.frames.desktop, y: p.y + r.dy };
+      post({ type: 'urd-section-size', sectionId: side.section.id, minHeight, moves: b.blocks.map((p) => ({ blockId: p.block.id, dy: r.dy })) });
+    } else {
+      post({ type: 'urd-section-size', sectionId: side.section.id, minHeight });
+    }
+  };
+  const model = (a, b, dyPointer, ev) => seamDrag({
+    part,
+    dyPointer,
+    above: a,
+    below: b && { heightPx: b.heightPx, blockYs: b.blockYs },
+    grid: (part === 'shrinkBelow' || (part === 'grow' && dyPointer < 0) ? b : a)?.grid ?? (a ?? b).grid ?? { size: 8 },
+    free: ev.ctrlKey || ev.metaKey,
+    past: ev.altKey,
+  });
+
+  btn.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
-    handle.setPointerCapture(event.pointerId);
+    btn.setPointerCapture(event.pointerId);
+    // The part takes the focus, so Escape reaches this page while the drag lasts.
+    btn.focus({ preventScroll: true });
+    // Every block stands at its place in the section while the drag lasts, as for a block's own drag.
+    suspendSticky();
+    suspendPush();
     const startY = event.clientY;
-    // Pure content height (without the nav clearance), as in the bottom-edge drag.
-    const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
-    const startScrollY = window.scrollY;
-    // The block elements and starting y are collected ONCE: no re-render
-    // happens during the drag (an element swap would drop the pointer
-    // capture).
-    const parts = [...canvasOf(host).querySelectorAll(':scope > .urd-block')].map((el) => {
-      const block = section.blocks.find((b) => b.id === el.dataset.blockId);
-      return block ? { el, block, y: block.frames.desktop.y } : null;
-    }).filter(Boolean);
+    const scrollY = window.scrollY;
+    const a = seamSide(above);
+    const b = seamSide(below);
     const cursor = dragCursor();
-    let result = null;
+    // The line the shrink stops at, in the section it shrinks.
+    const floor = part === 'shrinkAbove' && a ? seamFloor(a.host) : part === 'shrinkBelow' && b ? seamFloor(b.host) : null;
+    const floorAt = (r) => {
+      if (!floor) return;
+      const clear = sectionClearance((part === 'shrinkAbove' ? a : b).host);
+      if (part === 'shrinkBelow' && !b.blockYs.length) return;
+      const y = part === 'shrinkAbove' ? a.contentBottom : Math.min(...b.blockYs) + r.dy;
+      floor.style.top = `${clear + y}px`;
+      floor.classList.toggle('urd-seam-past', r.overlaps);
+    };
+    let result = { side: null, heightPx: 0, dy: 0, stopped: false, overlaps: false };
     let moved = false;
+    grip.classList.add('urd-seam-active');
+    btn.classList.add('urd-seam-on');
 
     const onMove = (ev) => {
       if (!moved && Math.abs(ev.clientY - startY) < 4) return;
       moved = true;
       cursor.move(ev.clientY);
-      result = topDrag({
-        dyPointer: ev.clientY - startY,
-        minHeightPx: startHeight,
-        blockYs: parts.map((p) => p.y),
-        grid,
-        free: ev.ctrlKey || ev.metaKey,
-      });
-      setMinHeight(host, result.minHeightPx);
-      for (const p of parts) p.el.style.top = `${p.y + result.dy}px`;
-      // The content must stand visually still: the document below the
-      // section top moves by result.dy, and the scroll follows. Absolute
-      // against the start value (never accumulated scrollBy: that drifts).
-      // Near the document top there is not enough scroll to compensate
-      // with, and the content visibly slides - an accepted edge case.
-      // Explicitly instant: the compensation must never inherit
-      // scroll-behavior: smooth.
-      window.scrollTo({ top: Math.max(0, startScrollY + result.dy), behavior: 'instant' });
+      result = model(a, b, ev.clientY - startY, ev);
+      apply(a, b, result, scrollY);
+      floorAt(result);
+      const shown = readout();
+      shown.hidden = !result.side;
+      shown.textContent = [words(result, b), result.overlaps ? ta('canvas.seam.overlaps') : result.stopped ? ta('canvas.seam.stopped') : ''].filter(Boolean).join(' · ');
     };
     const done = () => {
-      handle.removeEventListener('pointermove', onMove);
-      handle.removeEventListener('pointerup', onUp);
-      handle.removeEventListener('pointercancel', done);
-      handle.removeEventListener('lostpointercapture', done);
+      btn.removeEventListener('pointermove', onMove);
+      btn.removeEventListener('pointerup', onUp);
+      btn.removeEventListener('pointercancel', cancel);
+      btn.removeEventListener('lostpointercapture', onUp);
+      window.removeEventListener('keydown', onKey, true);
       cursor.clear();
+      floor?.remove();
+      readout().hidden = true;
+      grip.classList.remove('urd-seam-active');
+      btn.classList.remove('urd-seam-on');
+    };
+    const settle = () => {
+      resumeSticky();
+      resumePush();
     };
     const onUp = () => {
       done();
-      if (!moved || !result || result.dy === 0) return;
-      section.size = { ...section.size, minHeight: `${result.minHeightPx}px` };
-      for (const p of parts) {
-        p.block.frames.desktop = { ...p.block.frames.desktop, y: p.y + result.dy };
-      }
-      post({
-        type: 'urd-section-size',
-        sectionId: section.id,
-        minHeight: `${result.minHeightPx}px`,
-        moves: parts.map((p) => ({ blockId: p.block.id, dy: result.dy })),
-      });
+      if (moved) commit(a, b, result);
+      settle();
     };
-    handle.addEventListener('pointermove', onMove);
-    handle.addEventListener('pointerup', onUp);
-    handle.addEventListener('pointercancel', done);
-    handle.addEventListener('lostpointercapture', done);
+    // Escape, or a drag the browser takes away, puts the seam back where it began.
+    const cancel = () => {
+      done();
+      apply(a, b, { side: null, heightPx: 0, dy: 0 }, scrollY);
+      settle();
+    };
+    const onKey = (ev) => {
+      if (ev.key !== 'Escape') return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      cancel();
+    };
+    btn.addEventListener('pointermove', onMove);
+    btn.addEventListener('pointerup', onUp);
+    btn.addEventListener('pointercancel', cancel);
+    btn.addEventListener('lostpointercapture', onUp);
+    window.addEventListener('keydown', onKey, true);
   });
-  host.appendChild(handle);
+
+  // The arrow keys move the part one grid step, Shift one pixel, as one change each; they go no further, so a selected block stays where it is.
+  btn.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    event.stopPropagation();
+    suspendSticky();
+    suspendPush();
+    const a = seamSide(above);
+    const b = seamSide(below);
+    const step = event.shiftKey ? 1 : ((part === 'shrinkBelow' || (part === 'grow' && event.key === 'ArrowUp') ? b : a)?.grid?.size || 8);
+    const dy = event.key === 'ArrowDown' ? step : -step;
+    const r = model(a, b, dy, { ctrlKey: event.shiftKey, metaKey: false, altKey: event.altKey });
+    apply(a, b, r, window.scrollY);
+    commit(a, b, r);
+    resumeSticky();
+    resumePush();
+  });
 }
 
 /**
@@ -1994,16 +2049,19 @@ export function enhancePage(root, page, site) {
   // The mobile view is for adjustment and review, not building structure.
   if (isMobile()) return;
   const hosts = [...root.querySelectorAll(':scope > .urd-section')];
-  // The bar sits on the boundary between two sections: dragging it moves
-  // the boundary (= the height of the section ABOVE), just like the
-  // section line.
+  // The bar sits on the seam between two sections and holds the seam's grip (seamGrip) and the gallery of section templates.
   const above = (i) => (i > 0 ? {
     host: hosts[i - 1],
     section: page.sections[i - 1],
     grid: page.sections[i - 1]?.grid ?? site.grid,
   } : null);
-  hosts.forEach((el, i) => root.insertBefore(makeSectionAdder(i, above(i)), el));
-  root.appendChild(makeSectionAdder(hosts.length, above(hosts.length)));
+  const below = (i) => (i < hosts.length ? {
+    host: hosts[i],
+    section: page.sections[i],
+    grid: page.sections[i]?.grid ?? site.grid,
+  } : null);
+  hosts.forEach((el, i) => root.insertBefore(makeSectionAdder(i, above(i), below(i)), el));
+  root.appendChild(makeSectionAdder(hosts.length, above(hosts.length), null));
 }
 
 /**
@@ -2023,34 +2081,22 @@ function placePresetMenu(bar, menu) {
   menu.style.maxHeight = `${Math.max(160, Math.floor(Math.min(cap, room / scale)))}px`;
 }
 
-/** The "+ New section" bar; a click shows the preset choices from the
- *  registry, dragging moves the section boundary (when a section exists
- *  above). */
-function makeSectionAdder(index, above = null) {
+/** The "+ New section" bar on a seam: the seam's grip stands in the middle of the line (seamGrip), and its
+ *  chip shows the preset choices from the registry, pressed by the section toolbar's «New section» above
+ *  it (openSectionGalleryBelow) and standing on its own only on an empty page. */
+function makeSectionAdder(index, above = null, below = null) {
   const bar = document.createElement('div');
   bar.className = 'urd-add-section';
 
   const collapse = () => {
     bar.classList.remove('open');
-    bar.replaceChildren(openBtn);
+    bar.replaceChildren(...[openBtn, grip].filter(Boolean));
   };
 
   const openBtn = document.createElement('button');
+  openBtn.className = 'urd-add-section-chip';
   openBtn.textContent = ta('canvas.newSection');
-  if (above) {
-    openBtn.title = ta('canvas.newSectionDrag');
-    let dragged = false;
-    wireHeightDrag(openBtn, above.host, above.section, above.grid, {
-      onDragged: () => { dragged = true; },
-    });
-    // A completed drag must not also open the preset menu.
-    openBtn.addEventListener('click', (e) => {
-      if (dragged) {
-        dragged = false;
-        e.stopImmediatePropagation();
-      }
-    }, { capture: true });
-  }
+  const grip = above || below ? seamGrip(above, below) : null;
   openBtn.addEventListener('click', () => {
     bar.classList.add('open');
     bar.replaceChildren();
@@ -3439,8 +3485,57 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(del);
   }
   else if (!isMobile()) bar.appendChild(moreButton((x, y, from) => openSectionContextMenu(host, x, y, from)));
+  // New block and New section, together at the bar's right end: a block in this section, and a section below it.
+  if (!isMobile()) {
+    const adds = document.createElement('span');
+    adds.className = 'urd-sec-adds';
+    const block = document.createElement('button');
+    block.className = 'urd-sec-add-block';
+    block.innerHTML = ADD_BLOCK_SVG;
+    block.title = ta('canvas.addBlock');
+    block.setAttribute('aria-label', block.title);
+    block.addEventListener('click', () => toggleBlockMenuFrom(host, block));
+    const sec = document.createElement('button');
+    sec.className = 'urd-sec-add-section';
+    sec.innerHTML = ADD_SECTION_SVG;
+    sec.title = ta('canvas.addSection');
+    sec.setAttribute('aria-label', sec.title);
+    sec.addEventListener('click', () => openSectionGalleryBelow(host));
+    adds.append(block, sec);
+    bar.appendChild(adds);
+  }
 
   if (bar.childElementCount) host.appendChild(bar);
+}
+
+/** «New block» on the section toolbar: the block menu opens under the button, its block centred in the section as it is chosen; a second press closes it. */
+function toggleBlockMenuFrom(host, btn) {
+  const wrap = host.querySelector(':scope > .urd-add-block');
+  const menu = wrap?.querySelector('.urd-add-block-menu');
+  if (!wrap || !menu) return;
+  if (menu.classList.contains('open')) {
+    resetBlockAdder(wrap);
+    return;
+  }
+  const rect = host.getBoundingClientRect();
+  const at = btn.getBoundingClientRect();
+  menu._urdAt = null;
+  wrap.style.left = `${Math.round(at.right - rect.left)}px`;
+  wrap.style.top = `${Math.round(at.bottom - rect.top + 6)}px`;
+  wrap.style.right = 'auto';
+  wrap.classList.add('urd-at-pointer');
+  menu._urdPrepare?.();
+  menu.classList.add('open');
+  menu._urdSearchFocus?.();
+  fitBlockMenu(menu);
+}
+
+/** «New section» on the section toolbar: the seam under the section comes into view and opens its gallery, so the section chosen lands below this one. */
+function openSectionGalleryBelow(host) {
+  const bar = host.nextElementSibling;
+  if (!bar?.classList.contains('urd-add-section')) return;
+  bar.scrollIntoView({ block: 'center', behavior: 'instant' });
+  bar.querySelector(':scope > .urd-add-section-chip')?.click();
 }
 
 /**
@@ -3584,6 +3679,12 @@ const CHEVRON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
 const RESET_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v6h6"/><path d="M3.5 13a8.5 8.5 0 1 0 2-5.5L3 10"/></svg>';
 const ORDER_UP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4"/><path d="M5 11l7-7 7 7"/></svg>';
 const ORDER_DOWN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M5 13l7 7 7-7"/></svg>';
+/** The section toolbar's adds: a block in the section, and a section below it. */
+const ADD_BLOCK_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>';
+const ADD_SECTION_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="8" rx="1.5"/><path d="M12 14v7M8.5 17.5h7"/></svg>';
+/** The seam grip's tabs: the one above the line shrinks the section above, the one below the section below (seamGrip). */
+const SEAM_UP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>';
+const SEAM_DOWN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 const CHECK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg>';
 
 /**
@@ -4181,7 +4282,7 @@ document.addEventListener('pointerdown', (event) => {
   const target = eventTarget(event);
   const host = target?.closest('.urd-section');
   if (!host) return;
-  if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar, .urd-text-toolbar')) return;
+  if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar, .urd-text-toolbar')) return;
 
   // The marquee rectangle and hit detection are measured against the
   // content surface: the blocks' offsetLeft/offsetTop are relative to it

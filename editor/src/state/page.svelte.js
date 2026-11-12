@@ -82,11 +82,35 @@ let store = null;
 
 /**
  * Newly published pages that do not yet exist on the server: the draft is
- * kept as the source until the deploy finishes, but must not count as
- * "unpublished". Cleaned up automatically the first time the page is
- * loaded from the server.
+ * kept as the source until the deploy finishes, and counts as
+ * "unpublished" only where it was edited since it went. Cleaned up
+ * automatically the first time the page is loaded from the server.
  */
 const pendingPublished = new Set();
+
+/** What each page waiting for its deploy held as it went, as its stored draft text ('' for a page that went blank, with no draft stored): an edit since makes it a change waiting to be published, and «Discard drafts» brings it back to this. */
+const pendingSent = new Map();
+
+/** Marks a page as committed and waiting for its deploy, holding `text`, its draft as it went. */
+function markPending(id, text) {
+  pendingPublished.add(id);
+  pendingSent.set(id, text);
+}
+
+/** Whether a page waiting for its deploy was edited since it went: the open page by its store, another by its stored draft; a page that went blank, with no draft stored, once it holds one. */
+function pendingChanged(id) {
+  const sent = pendingSent.get(id);
+  if (sent === undefined) return false;
+  const open = id === pageId && store;
+  if (sent === '') return open ? store.hasDraft() : localStorage.getItem(`urd-draft-${id}`) !== null;
+  const now = open ? JSON.stringify(store.data) : localStorage.getItem(`urd-draft-${id}`);
+  return now !== null && now !== sent;
+}
+
+/** The draft a page waiting for its deploy held as it went, or null where it went blank or is not waiting. */
+function pendingSentText(id) {
+  return pendingSent.get(id) || null;
+}
 
 /**
  * The page files and site.json a publish committed, held until the deploy serves them (lib/held-publish.js): a page opened before then takes the committed file as its published state, and the preview is sent it, since the server still answers with the file from before the publish.
@@ -810,6 +834,9 @@ let sectionAnim = $state(null);
 
 let sectionHover = $state(null);
 
+/** Mirror of the pointer effect the active section gives every element in it (`blocksHover`) */
+let sectionBlocksHover = $state(null);
+
 /** Mirror of the active section's role set (section theme), '' = Default */
 let sectionTheme = $state('');
 
@@ -829,6 +856,7 @@ function syncSectionMirrors(section) {
   sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
   sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
   sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
+  sectionBlocksHover = section?.blocksHover ? JSON.parse(JSON.stringify(section.blocksHover)) : null;
   sectionTheme = section?.theme ?? '';
   sectionDivider = section?.divider ? JSON.parse(JSON.stringify(section.divider)) : {};
   sectionAnchor = section?.anchor ?? '';
@@ -1032,6 +1060,7 @@ async function selectPage(id, { keepHistory = false } = {}) {
       // The page is out on the server: any wait-for-deploy marker is done
       // (store.save() below cleans the draft if it is identical).
       pendingPublished.delete(id);
+      pendingSent.delete(id);
     } else {
       published = blankPage(entry);
     }
@@ -1251,6 +1280,9 @@ export const pageState = {
   get store() { return store; },
   set store(v) { store = v; },
   pendingPublished,
+  markPending,
+  pendingChanged,
+  pendingSentText,
   held,
   pageEntry,
   get selectedBlock() { return selectedBlock; },
@@ -1339,6 +1371,7 @@ export const pageState = {
   set sectionAnim(v) { sectionAnim = v; },
   get sectionHover() { return sectionHover; },
   set sectionHover(v) { sectionHover = v; },
+  get sectionBlocksHover() { return sectionBlocksHover; },
   get sectionTheme() { return sectionTheme; },
   set sectionTheme(v) { sectionTheme = v; },
   get sectionDivider() { return sectionDivider; },

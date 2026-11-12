@@ -14,7 +14,7 @@ export function onlyGroup(only) {
       if (child.matches('.emenu-head, .emenu-title')) return false;
       if (kind === 'fold') return child.matches(`[data-fold="${id}"]`) || Boolean(child.querySelector(`[data-fold="${id}"]`));
       if (kind === 'look') return child.matches(`[data-pin="${id}"]`);
-      if (kind === 'loose') return area === id && !child.matches('details.menu-group, .cap-card');
+      if (kind === 'loose') return area === id && !child.matches('details.menu-group, .cap-card, .cap-placed');
       return area === id;
     };
     const apply = () => {

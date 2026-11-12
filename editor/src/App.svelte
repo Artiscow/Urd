@@ -28,7 +28,7 @@
   import UpdatePanel from './panels/UpdatePanel.svelte';
   import DesignPicker from './lib/DesignPicker.svelte';
   import { calDesign, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
-  import { calendarDesignSource, blockDesignSource, blockDesigns, footerDesignSource, blockPhoneDesignSource, SAME_DESIGN } from './lib/design-sources.js';
+  import { calendarDesignSource, blockDesignSource, blockDesigns, footerPresetSource, blockPhoneDesignSource, SAME_DESIGN } from './lib/design-sources.js';
   import ColorPicker from './lib/ColorPicker.svelte';
   import FloatingMenu from './menu/FloatingMenu.svelte';
   import TopBar from './shell/TopBar.svelte';
@@ -249,12 +249,12 @@
         onclose={() => (ed.designPicker = null)} />
     {/if}
   {:else if ed.designPicker?.kind === 'footer'}
-    <!-- The footer's designs: the picked one is written to footer.design, the standard footer as none -->
-    <DesignPicker source={footerDesignSource({ site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null })}
+    <!-- The footer's presets: the picked one sets the footer's look and parts, its own content kept (footer-presets.js) -->
+    <DesignPicker source={footerPresetSource({ site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null })}
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
       plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
       place="footer"
-      onpick={(id) => { ed.footerMutate('footer-design', (f) => { if (id && id !== 'standard') f.design = id; else delete f.design; }); ed.designPicker = null; }}
+      onpick={(id) => { ed.applyFooterPreset(id); ed.designPicker = null; }}
       onclose={() => (ed.designPicker = null)} />
   {:else if ed.designPicker && ed.designPicker.kind !== 'block'}
     <DesignPicker source={calendarDesignSource({ mode: ed.designPicker.mode,

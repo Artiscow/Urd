@@ -99,6 +99,11 @@ export function readParts(container, skip = '') {
   const parts = [];
   for (const el of container.children) {
     if (skip && el.matches(skip)) continue;
+    // A card drawn at its area's foot (menu/MenuArea.svelte) stands in a wrapper of its own, which is no part.
+    if (el.matches('.cap-placed')) {
+      parts.push(...readParts(el));
+      continue;
+    }
     if (el.tagName === 'DETAILS') {
       const summary = el.querySelector(':scope > summary');
       const body = el.querySelector(':scope > .group-items') ?? el;

@@ -73,12 +73,12 @@ function siteWaits() {
 function updateDirty() {
   // Read without tracking, so an effect that saves never follows its own count.
   edits = untrack(() => edits) + 1;
-  // Drafts on ALL pages count, not just the current one - but not newly
-  // published pages that are just waiting for deploy. The open page counts by its store too, also before its draft is written.
+  // Drafts on ALL pages count, not just the current one; a newly published page waiting for its deploy counts only where it was edited since it went. The open page counts by its store too, also before its draft is written.
   const pages = [...(siteState.siteDraft?.pages ?? [])];
   if (pageState.pageId && !pages.some((p) => p.id === pageState.pageId)) pages.push({ id: pageState.pageId });
-  const pageDraft = (id) => !pageState.pendingPublished.has(id)
-    && (localStorage.getItem(`urd-draft-${id}`) !== null || (id === pageState.pageId && Boolean(pageState.store?.hasDraft())));
+  const pageDraft = (id) => (pageState.pendingPublished.has(id)
+    ? pageState.pendingChanged(id)
+    : localStorage.getItem(`urd-draft-${id}`) !== null || (id === pageState.pageId && Boolean(pageState.store?.hasDraft())));
   unpublished = unpublishedParts({
     pages,
     pageDraft,

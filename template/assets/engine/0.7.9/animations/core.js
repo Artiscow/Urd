@@ -39,6 +39,24 @@ export const coreAnimations = {
 const STAGGER_EFFECTS = ['fade-in', 'slide-up', 'zoom-in'];
 
 /**
+ * The pointer effect a block plays: its own, else the one its section gives
+ * every element in it (`blocksHover`, additive from 0.7.0.87), which a decor
+ * block never takes (decor is ornament, as the stagger leaves it out). A
+ * block with an effect of its own, in `hover` or in `animation` as older
+ * pages store it, keeps its own. Pure function (node-tested).
+ * @param {object} block
+ * @param {object|null|undefined} section
+ * @param {(type: string) => boolean} isPointer Whether an animation type is a pointer effect rather than an entrance
+ * @returns {object|null}
+ */
+export function pointerEffectOf(block, section, isPointer) {
+  if (block?.hover?.type) return block.hover;
+  if (block?.animation?.type && isPointer(block.animation.type)) return null;
+  if (block?.decor) return null;
+  return section?.blocksHover?.type ? section.blocksHover : null;
+}
+
+/**
  * Delays (ms) for column/row stagger: positions are clustered with a tolerance
  * (cards that are almost aligned count as the same column/row), and the wave moves
  * along by ascending position. Pure function (node-tested).
@@ -135,11 +153,13 @@ function applyStagger(host, props, ctx) {
   const step = Number.isFinite(props.step) ? Math.max(0, props.step) : STAGGER_STEP;
   const base = Number.isFinite(props.delay) ? Math.max(0, props.delay) : 0;
   host.classList.add('urd-anim-stagger');
-  // The card blocks: every .urd-block in the section that does not already have its
-  // own animation. Decor blocks are excluded (as in the mobile stacking): they are
-  // ornament and must not delay the content wave.
+  // The card blocks: every .urd-block in the section without an entrance of its
+  // own (render.js marks those `data-urd-entrance`); a pointer effect is no
+  // entrance, so a block that lifts on pointer still comes in with the wave.
+  // Decor blocks are excluded (as in the mobile stacking): they are ornament
+  // and must not delay the content wave.
   const targets = [...host.querySelectorAll('.urd-block')]
-    .filter((el) => !/\burd-anim-/.test(el.className) && !el.dataset.decor);
+    .filter((el) => !el.dataset.urdEntrance && !el.dataset.decor);
   if (!targets.length) return;
   const delays = props.pattern === 'columns'
     ? staggerColumnDelays(targets.map((el) => el.offsetLeft), step)

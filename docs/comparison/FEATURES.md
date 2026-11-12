@@ -237,7 +237,7 @@ The source marks, the ID scheme and the status words are explained in [README.md
 - **Scroll.** Shrink or hide on scroll; a transparent surface at the top that fills on scroll.
 - **Announcement bar** above the menu, fixed or rolling, which the visitor can dismiss.
 - **Size controls** ([ADR-0023](../adr/0023-navigation-bar-sizing.md)): thickness and text size, side padding, item spacing, alignment to the content width, the width of a floating menu, a column width for the side variant, a compact state with logo shrink, separate phone sizes, and border and shadow presets for the bar.
-- **The footer** has a brand (text, image or both), link columns, the site's links (registered once in the Site panel and drawn by the footer, the menu's tools and the links block), a baseline and a CTA (button or newsletter). It comes in 10 layouts, all in the template picker: 8 arrangements plus the chapters and split designs (`footer.design`).
+- **The footer** has a brand (text, image or both), link columns, the site's links (registered once in the Site panel and drawn by the footer, the menu's tools and the links block), a baseline and a CTA (button or newsletter). It comes in 10 presets, chosen in the design picker with the site's own footer in each: 8 arrangements plus the chapters and split designs (`footer.design`); a preset keeps the owner's content in the parts it shows (0.7.0.87).
 
 **Gaps.**
 - Mega menu: see [Notes](#notes).
@@ -2094,7 +2094,7 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | Entrance or appear | WS, FR, EL, OX, DV, SQ, CA, TI, RM, WH, HO, ST, FS, BD, CV, WF | On load or in view | Partial: fade in, slide up and zoom in with duration and delay, on sections and blocks; no direction, easing, replay or other effects | ER-H |
 | Scroll-linked (scrub, transform) | WS, FR, FS, EL, TI, WT, OX, WF, RM, SQ | Progress tied to scroll | Missing | ER-H |
 | Parallax | FR, FS, BR, DU, WN, ST, TI, OX, RM | Speed or background parallax | Partial: parallax with a strength on image and video background layers, off on the phone; none on blocks or other layers | ER-H |
-| Hover effects | WS, FR, FS, TI, RM, SQ, CV, BD, OX, EL, WF, SH | Hover trigger | Partial: one hover effect, a lift on pointer, on sections and blocks; no scale, glow, tilt or colour change | 0.7.9; v0.8 OL-1; v0.8 Reactions on elements |
+| Hover effects | WS, FR, FS, TI, RM, SQ, CV, BD, OX, EL, WF, SH | Hover trigger | Partial: one hover effect, a lift on pointer, on blocks, on a section, and on every element of a section (0.7.0.87); no scale, glow, tilt or colour change | 0.7.9; v0.8 OL-1; v0.8 Reactions on elements |
 | Click or press | WS, FR, FS, TI, RM, SQ, EL, BD, OX, WF | Click trigger | Partial: a click opens the lightbox on images and gallery pictures, and a link scrolls to a spot (0.7.27); no popup, toggle or press effect | ER-A; v0.8 Reactions on elements |
 | Loop | WS, FR, TI, RM, SQ | Continuous animation | Partial: the ribbon, the animated gradient and the image and gallery layer motions loop; no loop animation on an ordinary block | v0.8 Reactions on elements |
 | Mouse or cursor effects | EL, FS, FR, WS, SQ | Mouse track, 3D tilt, mouse parallax, WebGL | Planned: a style or a background layer that follows the pointer | v0.8 OL-1: the pointer as custom properties; WebGL not taken |

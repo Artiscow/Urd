@@ -17,7 +17,6 @@ const {
   footerLinkRow,
   footerCta,
   hasRichFooter,
-  FOOTER_DESIGNS,
 } = await engineImport('footer-model.js');
 
 // Deliberate Norwegian page ids, labels and texts throughout: footer content is user data.
@@ -179,16 +178,17 @@ test('footerCta: button requires a label, newsletter requires a heading, the mod
   assert.equal(footerCta({ footer: { cta: { kind: 'newsletter' } } }), null); // without a heading/label
 });
 
-test('the footer designs: each has its name and its description in nb, en-GB and tr, and its picture', async () => {
+test('the footer\'s presets: each has its name and its description in nb, en-GB and tr, and its picture', async () => {
   const dict = async (lang) => (await engineImport(`locales/admin/${lang}.js`)).default.strings;
   const dicts = await Promise.all(['nb', 'en-GB', 'tr'].map(dict));
   const { existsSync } = await import('node:fs');
-  for (const id of ['standard', ...FOOTER_DESIGNS]) {
+  const { FOOTER_PRESETS } = await engineImport('footer-presets.js');
+  for (const id of FOOTER_PRESETS) {
     for (const strings of dicts) {
-      assert.ok(strings[`footerDesign.${id}`], `footerDesign.${id}`);
-      assert.ok(strings[`design.footer.${id}`], `design.footer.${id}`);
+      assert.ok(strings[`footerTemplate.${id}`], `footerTemplate.${id}`);
+      assert.ok(strings[`design.footerPreset.${id}`], `design.footerPreset.${id}`);
     }
-    assert.ok(existsSync(new URL(`../template/admin/designs/footer-${id}.webp`, import.meta.url)), `footer-${id}.webp`);
+    assert.ok(existsSync(new URL(`../template/admin/designs/footer-preset-${id}.webp`, import.meta.url)), `footer-preset-${id}.webp`);
   }
 });
 

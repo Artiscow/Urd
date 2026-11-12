@@ -245,7 +245,7 @@ Open: elements shown only on the phone (E15), keyboard order on mobile (0.7.3.6)
 - «+ New section» opens the 39 presets (38 plus blank) as thumbnails with a category sidebar, and «My templates» sits in the same gallery.
 - «Change layout» in the section toolbar re-places the blocks of a section from layout thumbnails; the blocks are kept, and only placement changes.
 - There are 8 built-in page templates, 5 general and 3 for the shop (`page-presets.js`).
-- The footer has 10 layouts in its template picker, two of them the chapters and split designs.
+- The footer has 10 presets in the design picker, two of them the chapters and split designs; a preset keeps the owner's content in the parts it shows (0.7.0.87).
 
 Open: whole-site templates (design kits) are v0.8 (E17); grey wireframe presets are watched (FEATURES.md); a hover preview in the picker is partial (thumbnails only).
 
@@ -372,7 +372,7 @@ Urd covers most of the delivery patterns. The remaining gaps are the command pal
 | [Reuse with sync](#reuse-with-sync) | Presets, «Save as template» for sections, block groups and pages, global nav and footer, plugin blocks | Synced global blocks (E12) |
 | [States and interactions](#states-and-interactions) | Entrance, stagger, hover lift, parallax, animated gradient, reduced motion | Button states (E13) |
 | [Responsive delivery](#responsive-delivery) | Bound width, push pass, sizing model, synced mobile row grid, hide on mobile, mobile review, 4 devices, Clean view | Side by side (E14), phone-only elements (E15) |
-| [Section and template galleries](#section-and-template-galleries) | 39 presets with a category sidebar, «Change layout», 8 page templates, 10 footer layouts | Whole-site templates (E17) |
+| [Section and template galleries](#section-and-template-galleries) | 39 presets with a category sidebar, «Change layout», 8 page templates, 10 footer presets | Whole-site templates (E17) |
 | [AI and wizards as delivery](#ai-and-wizards-as-delivery) | Setup wizard; the MCP route decided | MCP server (E19) |
 | [Empty states and discoverability](#empty-states-and-discoverability) | «+ New section» empty state, help chips, tooltips | Richer empty states (E20) |
 | [Comments, notes and review](#comments-notes-and-review) | Drafts in the browser and saved on a branch of their own, the publish conflict warning, the History panel of publishes with «Undo the publish» | Comments (E22), visual diff (E23), content-only mode (E24), PR per draft (E25) |
@@ -399,7 +399,7 @@ Read from `template/assets/engine/0.7.4/preview-edit.js` and `editor/src/App.sve
 | Multi-select | Shift+click; drag on empty section surface for a marquee | The marquee stays within the section it started in |
 | Free placement during a drag or resize | Hold Ctrl/⌘ | Snapping and smart guides are off while Ctrl/⌘ is held; Shift holds a move to one axis (0.7.10, 14 October 2026) |
 | Rotate | 15° steps by default; Shift gives 1° | |
-| Section height | Drag the section boundary; Ctrl/⌘ gives a free height | The top edge too |
+| Section height | The grip on the seam between two sections: the pill grows the section above or below it, its tabs shrink one down to its content; Ctrl/⌘ gives a free height, Alt passes the content, Escape cancels | The tabs stand while the pointer is on the grip (0.7.0.87) |
 | Right-click menu | Right click on a block or a section's surface; the ContextMenu key or Shift+F10 | From the keyboard it opens on the selected block |
 | Copy and paste a style | Ctrl+Alt+C, Ctrl+Alt+V | The animation travels with the style |
 | To the front, to the back | Ctrl+Shift+Up, Ctrl+Shift+Down | Also in the right-click menu |

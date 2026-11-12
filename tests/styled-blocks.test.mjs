@@ -14,9 +14,7 @@ const { quoteBlock } = await engineImport('blocks/quote.js');
 const { shapeBlock } = await engineImport('blocks/shape.js');
 const { FOOTER_DESIGNS, footerDesign } = await engineImport('footer-model.js');
 const { footerThumb } = await engineImport('footer-thumb.js');
-
-// The footer's template picker stands in the Footer panel (0.7.26.3).
-const editor = readFileSync(new URL('../editor/src/panels/FooterPanel.svelte', import.meta.url), 'utf8');
+const { FOOTER_PRESETS, presetSample, applyPreset } = await engineImport('footer-presets.js');
 // The editor's design picker reads the variants from the blocks' design catalogue.
 const { BLOCK_DESIGNS, blockDesignOf } = await engineImport('block-designs.js');
 
@@ -58,15 +56,16 @@ test('footerDesign: the two designs, and the standard footer for anything else',
   assert.equal(footerDesign({}), '');
 });
 
-test('the schema and the template picker know the same designs', () => {
+test('the schema and the footer\'s presets know the same designs', () => {
   const schema = JSON.parse(readFileSync(new URL('../schema/site.schema.json', import.meta.url), 'utf8'));
   assert.deepEqual(schema.properties.footer.properties.design.enum, FOOTER_DESIGNS);
+  const ta = (key) => key;
   for (const design of FOOTER_DESIGNS) {
-    assert.ok(editor.includes(`{ id: '${design}', label: ta('footerTemplate.${design}')`), `${design} in the picker`);
-    assert.ok(editor.includes(`design: '${design}'`), `${design} in a template`);
+    assert.ok(FOOTER_PRESETS.includes(design), `${design} is a preset`);
+    assert.equal(presetSample(design, { ta }).design, design, `the ${design} preset sets its design`);
   }
-  // A template without a design clears the one a former template set.
-  assert.match(editor, /for \(const k of \[[^\]]*'design'[^\]]*\]\)/);
+  // A preset without a design clears the one a former preset set.
+  assert.equal(applyPreset({ version: 1, design: 'split' }, presetSample('minimal', { ta })).design, undefined);
 });
 
 test('footerThumb: the two designs draw their own cards', () => {

@@ -128,21 +128,19 @@ function handleGrow(msg) {
     return;
   }
   if (block.frames.desktop.h === msg.h) return;
-  // Autogrowth is a MEASUREMENT, not an edit: data blocks report their
-  // height on EVERY render, and the measurement varies with content,
-  // feed responses and window. The measurement is therefore recorded in
-  // BOTH the draft and the comparison baseline, so it never by itself
-  // constitutes "unpublished changes".
+  // A plugin copy's own height is a MEASUREMENT, not an edit (ADR-0024's
+  // compatibility surface): it varies with content, feed responses and
+  // window, and is reported on every render. It is therefore recorded in
+  // BOTH the draft in memory and the comparison baseline, so it never by
+  // itself constitutes "unpublished changes", and is not stored: the
+  // stored draft changes only with an edit, so a page held as it was
+  // saved on another device stays held as saved (ADR-0032).
   pageState.store.amendBaseline((base) => {
     const s = base.sections.find((x) => x.id === msg.sectionId);
     const b = s?.blocks.find((x) => x.id === msg.blockId);
     if (b?.frames?.desktop) b.frames.desktop.h = msg.h;
   });
-  if (pageState.store.hasDraft()) historyState.pushHistory(`edit:${msg.blockId}`);
   block.frames.desktop.h = msg.h;
-  // save() cleans the draft key when the measurement was the only difference.
-  pageState.store.save();
-  historyState.updateDirty();
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
 }
 
@@ -349,9 +347,9 @@ function handleSectionSize(msg) {
   if (!section) return;
   historyState.pushHistory('section-size');
   section.size = { ...section.size, minHeight: msg.minHeight };
-  // The top-edge handle: the section grew/shrank at the top, and all the
-  // blocks are shifted in the SAME undo step (the content stood visually
-  // still in the preview; the new y values are recorded here).
+  // The seam grip changed the section at its top: all its blocks are
+  // shifted in the SAME undo step (the content stood visually still in
+  // the preview; the new y values are recorded here).
   for (const move of msg.moves ?? []) {
     const block = section.blocks.find((b) => b.id === move.blockId);
     if (!block) continue;

@@ -2,6 +2,23 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.87): the seam grip, the footer's presets and the section toolbar
+
+- [ ] Point at a seam between two sections and rest on its pill: a tab comes forward above and below it; drag the pill down and the section above grows, drag it up and the section below grows at its top, its content standing still; the height stands on the grip as you drag
+- [ ] Drag the tab above upwards past the section's last element: it stops there, with a dashed line and «stops at the content»; hold Alt and it goes past, reading «over the next section»; drag the tab below downwards: the section below shrinks at its top and stops where its topmost element meets its edge
+- [ ] Press Escape during a drag: the seam goes back where it began and nothing is saved; Ctrl or Cmd drags off the grid's steps
+- [ ] On a page with a button docked to the screen (the About page's «Til toppen»), the tab above the last section stops at the section's own content, not at the bottom of the window
+- [ ] The first seam, under the overlaid menu: the pill and the line stand where the content starts, just under the menu, and the pointer reaches the pill without the grip hiding
+- [ ] Add a block to a section, then grow that section at its top from the seam above it: the new block moves with the others, and after a reload the layout stands as it was drawn
+- [ ] The section toolbar ends with «New block» and «New section» after a thin line: New block opens the block menu under it and a second press closes it; New section opens the gallery on the seam below, and the chosen section lands below this one; an empty page still shows «New section» in its middle
+- [ ] The toolbar's drawings stand in the middle of their buttons, every button the same height
+- [ ] Footer panel: one «Presets» fold opens the design picker with ten presets, each drawn with your own footer; pick «Newsletter»: your brand and columns stay and a sign-up field is added; pick «Minimal»: the parts it leaves out go, and one undo brings them back
+- [ ] Footer: switch the contact details off in «Links and contact», then pick «Contact»: the address, phone and email show again
+- [ ] A section's Motion: «Every element on pointer» lifts each element as the pointer comes over it, while «The section on pointer» lifts the section with its background; with Stagger as the entrance the elements still come in one by one
+- [ ] Publish a new page, then change it before the deploy is done: it stands in «Not published yet» with its tick; untick it and publish something else, and it is not sent; Discard drafts puts it back as it went out
+- [ ] In an element menu, add a setting from a fold's «Add a setting» and an extra from an area's add list: each stands at the foot, and Tab from it goes on to what stands under it on screen
+- [ ] The Nav panel's scroll setting offers «Always show» where it said «As usual»
+
 ### Test batch (0.7.35.6): the drafts in the guides
 
 - [ ] In Cloudflare, set the preview branches as the setup guide's «Saved drafts» says; after a save from Drafts, no deployment of `urd-drafts` stands in the project's Deployments

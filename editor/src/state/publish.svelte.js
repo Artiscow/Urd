@@ -205,15 +205,28 @@ function discardDrafts() {
 }
 
 function discard() {
-  // The other pages' drafts go too, so the step holds them, and an undo of the discard writes them back.
+  // The other pages' drafts go too, so the step holds them, and an undo of the discard writes them back; a page waiting for its deploy goes back to its draft as it went, which stays the source until the deploy serves it.
+  const pending = (id) => pageState.pendingPublished.has(id);
   const others = siteState.siteDraft.pages
-    .filter((p) => p.id !== pageState.pageId && !pageState.pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null)
+    .filter((p) => p.id !== pageState.pageId && localStorage.getItem(`urd-draft-${p.id}`) !== null && (!pending(p.id) || pageState.pendingChanged(p.id)))
     .map((p) => p.id);
   historyState.pushHistory('discard', { pages: others });
   // A tidy's moves go with the documents it rewrote.
   setMoves([]);
-  for (const id of others) localStorage.removeItem(`urd-draft-${id}`);
-  const freshPage = pageState.store.reset();
+  for (const id of others) {
+    const sent = pending(id) ? pageState.pendingSentText(id) : null;
+    if (sent) shellState.writeDraftKey(`urd-draft-${id}`, sent);
+    else localStorage.removeItem(`urd-draft-${id}`);
+  }
+  const sentHere = pending(pageState.pageId) ? pageState.pendingSentText(pageState.pageId) : null;
+  let freshPage;
+  if (sentHere) {
+    pageState.store.replace(JSON.parse(sentHere));
+    pageState.store.save();
+    freshPage = pageState.store.data;
+  } else {
+    freshPage = pageState.store.reset();
+  }
   siteState.siteStore.reset();
   if (pluginsState.pluginsStore) {
     pluginsState.pluginsStore.reset();
@@ -317,9 +330,9 @@ async function publish({ parts = null } = {}) {
 
   /** The pages whose file this publish sends. */
   const sentPages = new Set();
-  // Every page with a draft that goes, not just the open one; a page committed and waiting for its deploy is sent again.
+  // Every page with a draft that goes, not just the open one; a page committed and waiting for its deploy goes again only with an edit made since.
   for (const entry of siteState.siteDraft.pages) {
-    if (!want(`page-${entry.id}`) && !pageState.pendingPublished.has(entry.id)) continue;
+    if (!want(`page-${entry.id}`) || (pageState.pendingPublished.has(entry.id) && !pageState.pendingChanged(entry.id))) continue;
     const key = `urd-draft-${entry.id}`;
     // Not live: committed and waiting for its deploy, marked as gone out hidden before its file, or not on the live site at all.
     const marked = notLiveIds.has(entry.id) && !pageState.pendingPublished.has(entry.id);
@@ -635,7 +648,6 @@ async function publish({ parts = null } = {}) {
     // (the server serves old JSON until the deploy finishes) and remove
     // only the markers.
     for (const key of draftKeys) localStorage.removeItem(key);
-    for (const id of newPageIds) pageState.pendingPublished.add(id);
     // Published baseline = what went out: rebuild the baselines of the stores that went, so
     // "Discard draft" never rolls back past this publish; a store kept back keeps its own.
     if (siteOut) {
@@ -705,12 +717,20 @@ async function publish({ parts = null } = {}) {
     siteState.grid = { snap: true, ...siteState.siteDraft.grid };
     if (sentPages.has(pageState.pageId)) {
       const pageSnap = JSON.parse(JSON.stringify(pageState.store.data));
-      pageState.store = createDraftStore(`urd-draft-${pageState.pageId}`, () => pageSnap, shellState.draftSaveError);
-      if (pageState.pendingPublished.has(pageState.pageId)) {
-        // New page: the draft is the source until the deploy finishes - keep it.
-        shellState.writeDraftKey(`urd-draft-${pageState.pageId}`, JSON.stringify(pageSnap));
+      const key = `urd-draft-${pageState.pageId}`;
+      if (newPageIds.includes(pageState.pageId)) {
+        // New page: the draft is the source until the deploy finishes, kept against a blank page as the server still answers, so no save takes it away.
+        shellState.writeDraftKey(key, JSON.stringify(pageSnap));
+        const blank = pageState.blankPage(pageState.pageEntry());
+        pageState.store = createDraftStore(key, () => blank, shellState.draftSaveError);
+        // The page as it went stays in memory, also where a full storage kept the key from being written.
+        pageState.store.replace(pageSnap);
+      } else {
+        pageState.store = createDraftStore(key, () => pageSnap, shellState.draftSaveError);
       }
     }
+    // A new page waits for its deploy holding its draft as it went, so an edit since counts as a change.
+    for (const id of newPageIds) pageState.markPending(id, id === pageState.pageId ? JSON.stringify(pageState.store.data) : (localStorage.getItem(`urd-draft-${id}`) ?? ''));
     // A page whose file went is live; one not live yet left behind while the site settings went out stands hidden in them, and is marked not live until its file goes.
     const notLive = new Set([...notLiveIds].filter((id) => !sentPages.has(id) && siteState.siteDraft.pages.some((p) => p.id === id)));
     if (siteOut) for (const id of left.pages) notLive.add(id);

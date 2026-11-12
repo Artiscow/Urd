@@ -1,11 +1,11 @@
 <script>
-  /* The Footer panel: where it shows, its design and start points, its look and background, the brand, the columns with their links, the site's links and contact details, the call to action and the bottom row, each a fold of the row kit its tab's menu reaches (lib/panel-folds.js).
+  /* The Footer panel: where it shows, its presets, its look and background, the brand, the columns with their links, the site's links and contact details, the call to action and the bottom row, each a fold of the row kit its tab's menu reaches (lib/panel-folds.js).
      A fold says its value while closed, and a fold of settings carries its reset (lib/site-groups.js). The state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import Setting from '../lib/rows/Setting.svelte';
   import LookChoice from '../lib/rows/LookChoice.svelte';
-  import { pictureList, footerDesignSource } from '../lib/design-sources.js';
+  import { pictureList, footerPresetSource } from '../lib/design-sources.js';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import SliderRow from '../lib/rows/SliderRow.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
@@ -17,10 +17,7 @@
   import { siteGroup } from '../lib/site-groups.js';
   import { squareBeside } from '../lib/square-beside.js';
   import { ta } from '$engine/i18n.js';
-  import { footerDesign, hasRichFooter } from '$engine/footer-model.js';
-  import { glowLayer } from '$engine/backgrounds/glow.js';
-  import { grainLayer } from '$engine/backgrounds/grain.js';
-  import { footerThumb } from '$engine/footer-thumb.js';
+  import { hasRichFooter } from '$engine/footer-model.js';
   import { siteContact, contactParts, legalParts } from '$engine/contact-model.js';
   import { ICONS } from '../lib/icons.js';
   import BackgroundEditor from '../section/BackgroundEditor.svelte';
@@ -79,135 +76,6 @@
   function setFooterCopyright(value) {
     footerMutate('edit:footer-copyright', (f) => {
       if (value.trim()) f.copyright = value; else delete f.copyright;
-    });
-  }
-
-  /* Footer templates: ten research-based starting layouts, built from
-     the site's own pages and title. They fill the footer; everything can
-     be edited further. Each has a small thumb description for the visual
-     template picker (footerThumb). */
-  const FOOTER_TEMPLATES = [
-    { id: 'minimal', label: ta('footerTemplate.minimal'), thumb: { center: true, social: 2, baselineLinks: 1 } },
-    { id: 'centered', label: ta('footerTemplate.centered'), thumb: { center: true, row: true, social: 3 } },
-    { id: 'columns', label: ta('footerTemplate.columns'), thumb: { tag: true, cols: 3, social: 3, baselineLinks: 2 } },
-    { id: 'sitemap', label: ta('footerTemplate.sitemap'), thumb: { tag: true, fat: true, cols: 4, social: 4, baselineLinks: 3 } },
-    { id: 'newsletter', label: ta('footerTemplate.newsletter'), thumb: { tag: true, cta: true, cols: 2, social: 2, baselineLinks: 1 } },
-    { id: 'bigcta', label: ta('footerTemplate.bigcta'), thumb: { center: true, bigcta: true, baselineLinks: 2 } },
-    { id: 'contact', label: ta('footerTemplate.contact'), thumb: { tag: true, cols: 2, social: 2, baselineLinks: 1 } },
-    { id: 'mega', label: ta('footerTemplate.mega'), thumb: { tag: true, mega: true, cols: 2, social: 4, baselineLinks: 2 } },
-    { id: 'chapters', label: ta('footerTemplate.chapters'), thumb: { chapters: true, cols: 3, baselineLinks: 2 } },
-    { id: 'split', label: ta('footerTemplate.split'), thumb: { split: true, cols: 2, baselineLinks: 1 } },
-  ];
-
-  function footerTemplateConfig(name) {
-    // ALWAYS a neutral placeholder, NEVER the site title: the site title
-    // can contain anything (e.g. a version number on a test site), and
-    // sample text must never carry a version number. The owner types in
-    // their own name.
-    const title = ta('seed.orgName');
-    const pages = siteDraft.pages ?? [];
-    const pageLinks = (n) => pages.slice(0, n).map((p) => ({ label: p.title || p.id, page: p.id }));
-    const ext = (label, href) => ({ label, href });
-    // The site's privacy page, where the footer has one: the columns link it, and the bottom row leaves its placeholder out, since the footer draws the real link there.
-    const privacyId = pages.some((p) => p.id === siteDraft.footer?.privacyPage) ? siteDraft.footer.privacyPage : null;
-    const privacy = () => (privacyId ? { label: ta('seed.footer.privacy'), page: privacyId } : ext(ta('seed.footer.privacy'), '#'));
-    const bottomPrivacy = () => (privacyId ? [] : [ext(ta('seed.footer.privacy'), '#')]);
-    const copyright = `© ${title}`;
-    if (name === 'minimal') {
-      return { align: 'center', brand: { title },
-        copyright, baseline: bottomPrivacy() };
-    }
-    if (name === 'centered') {
-      return { align: 'center', brand: { title }, linkRow: pageLinks(5),
-        copyright: `${copyright} · ${ta('seed.footer.madeWith')}` };
-    }
-    if (name === 'columns') {
-      return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline1') },
-        columns: [
-          { title: ta('seed.footer.colPages'), links: pageLinks(4) },
-          { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.join'), '#'), ext(ta('seed.footer.press'), '#')] },
-          { title: ta('seed.footer.colResources'), links: [ext(ta('seed.footer.bylaws'), '#'), privacy(), ext(ta('seed.footer.contact'), '#')] },
-        ],
-        copyright,
-        baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#')] };
-    }
-    if (name === 'sitemap') {
-      return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline2') },
-        columns: [
-          { title: ta('seed.footer.colExplore'), links: [ext(ta('seed.footer.home'), '#'), ext(ta('seed.footer.events'), '#'), ext(ta('seed.footer.gallery'), '#'), ext(ta('seed.footer.blog'), '#')] },
-          { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.history'), '#'), ext(ta('seed.footer.press'), '#'), ext(ta('seed.footer.contact'), '#')] },
-          { title: ta('seed.footer.colSupport'), links: [ext(ta('seed.join'), '#'), ext(ta('seed.footer.faq'), '#'), ext(ta('seed.footer.help'), '#')] },
-          { title: ta('seed.footer.colLegal'), links: [privacy(), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.bylaws'), '#')] },
-        ],
-        copyright,
-        baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.cookies'), '#')] };
-    }
-    if (name === 'newsletter') {
-      return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline3') },
-        cta: { kind: 'newsletter', heading: ta('seed.footer.newsletterHeading'), label: ta('seed.footer.newsletterButton'), recipient: ta('seed.email'), success: ta('seed.footer.newsletterSuccess') },
-        columns: [
-          { title: ta('seed.footer.colPages'), links: pageLinks(4) },
-          { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), privacy()] },
-        ],
-        copyright, baseline: bottomPrivacy() };
-    }
-    if (name === 'bigcta') {
-      return { align: 'center',
-        cta: { kind: 'button', big: true, heading: ta('seed.footer.ctaHeading'), sub: ta('seed.footer.ctaSub'), label: ta('seed.join'), href: '#' },
-        linkRow: pageLinks(4), copyright,
-        baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#')] };
-    }
-    if (name === 'contact') {
-      // The contact column after the pages is the site's own contact details (the Legal panel), never sample text.
-      return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline4') },
-        columns: [
-          { title: ta('seed.footer.colPages'), links: pageLinks(4) },
-        ],
-        copyright, baseline: bottomPrivacy() };
-    }
-    if (name === 'chapters') {
-      // The link columns as numbered chapters under a rule each (footer.design).
-      return { align: 'left', design: 'chapters', brand: { title, tagline: ta('seed.footer.tagline2') },
-        columns: [
-          { title: ta('seed.footer.colExplore'), links: pageLinks(4) },
-          { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.history'), '#'), ext(ta('seed.footer.contact'), '#')] },
-          { title: ta('seed.footer.colSupport'), links: [ext(ta('seed.join'), '#'), ext(ta('seed.footer.faq'), '#'), ext(ta('seed.footer.help'), '#')] },
-        ],
-        copyright, baseline: [...bottomPrivacy(), ext(ta('seed.footer.terms'), '#')] };
-    }
-    if (name === 'split') {
-      // The brand with a call to action on a tinted half, the columns in the other half (footer.design).
-      return { align: 'left', design: 'split', brand: { title, tagline: ta('seed.footer.tagline1') },
-        cta: { kind: 'button', heading: ta('seed.footer.ctaHeading'), label: ta('seed.join'), href: '#' },
-        columns: [
-          { title: ta('seed.footer.colPages'), links: pageLinks(4) },
-          { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), privacy()] },
-        ],
-        copyright, baseline: bottomPrivacy() };
-    }
-    // mega: columns + background layers (glow + grain).
-    return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline5') },
-      columns: [
-        { title: ta('seed.footer.colExplore'), links: pageLinks(4) },
-        { title: ta('seed.footer.colFollow'), links: [ext(ta('seed.footer.newsletter'), '#'), ext(ta('seed.email'), `mailto:${ta('seed.email')}`)] },
-      ],
-      copyright,
-      baseline: [...bottomPrivacy(), ext(ta('seed.footer.madeWith'), '#')],
-      background: { version: 1, layers: [
-        { type: 'glow', version: glowLayer.version ?? 1, props: { ...glowLayer.defaults(), color: 'accent', x: 0.12, y: 0, radius: 0.6, opacity: 0.45 } },
-        { type: 'grain', version: grainLayer.version ?? 1, props: { ...grainLayer.defaults(), opacity: 0.08 } },
-      ] } };
-  }
-
-  /** Apply a footer layout: replaces the content fields and turns the footer on. */
-  function applyFooterTemplate(name) {
-    footerMutate('footer-template', (f) => {
-      const t = footerTemplateConfig(name);
-      f.show = true;
-      delete f.text; // "Simple text" is the legacy form; the templates use the rich footer.
-      for (const k of ['align', 'brand', 'columns', 'social', 'copyright', 'baseline', 'linkRow', 'cta', 'columnsAlign', 'background', 'design', 'contact', 'legal']) {
-        if (t[k] !== undefined) f[k] = t[k]; else delete f[k];
-      }
     });
   }
 
@@ -340,10 +208,8 @@
   const sharedValue = () => `${sharedParts().filter((key) => siteDraft.footer?.[key] !== false).length} / ${sharedParts().length}`;
   const bottomValue = () => siteDraft.footer?.copyright || `${(siteDraft.footer?.linkRow?.length ?? 0) + (siteDraft.footer?.baseline?.length ?? 0)}`;
   const F = 'footer';
-  /** The footer's design in use, the standard one where none is set. */
-  const footerNow = $derived(footerDesign(siteDraft) || 'standard');
 
-  /** The column whose card stands open, one at a time: the column itself, so the card goes with it as the columns move, and none stands open once an undo or a start point brings other columns. */
+  /** The column whose card stands open, one at a time: the column itself, so the card goes with it as the columns move, and none stands open once an undo or a preset brings other columns. */
   let openColumn = $state(null);
   const columnAt = (ci) => siteDraft.footer?.columns?.[ci];
 </script>
@@ -363,25 +229,12 @@
     {/if}
   </Fold>
 
-  <!-- The footer's look, chosen as Urd settings «Designs» asks, in the shared design picker or by its pictures in place; the content stays as it is -->
-  <Fold id="design" surface={F} title={ta('lbl.design')} value={ta(`footerDesign.${footerNow}`)}>
-    <LookChoice label={ta('lbl.design')} value={ta(`footerDesign.${footerNow}`)} picture={`/admin/designs/footer-${footerNow}.webp`} title={ta('tip.footer.design')} current={footerNow} heading={false}
-      designs={() => pictureList(footerDesignSource({}))}
-      onpick={(id) => footerMutate('footer-design', (f) => { if (id && id !== 'standard') f.design = id; else delete f.design; })}
+  <!-- The footer's presets, chosen as Urd settings «Designs» asks, in the shared design picker or by their pictures in place: each sets the footer's look and the parts it shows, keeping the footer's own content in each part it shows (footer-presets.js) -->
+  <Fold id="presets" surface={F} title={ta('group.footerPresets')} value="">
+    <LookChoice label={ta('group.footerPresets')} value="" title={ta('tip.footer.presets')} current={null} heading={false}
+      designs={() => pictureList(footerPresetSource({}))}
+      onpick={(id) => ed.applyFooterPreset(id)}
       onopen={() => (ed.designPicker = { kind: 'footer' })} />
-  </Fold>
-
-  <!-- A start point fills the footer with a whole layout of content and look -->
-  <Fold id="startpoint" surface={F} title={ta('group.startpoint')} value="">
-    <div class="footer-tpick">
-      {#each FOOTER_TEMPLATES as t (t.id)}
-        <button class="footer-tp" title={ta('tip.footer.template', { label: t.label })}
-          onclick={() => applyFooterTemplate(t.id)}>
-          <span class="footer-tp-thumb">{@html footerThumb(t.thumb)}</span>
-          <span class="footer-tp-name">{t.label}</span>
-        </button>
-      {/each}
-    </div>
   </Fold>
 
   <Fold id="appearance" surface={F} title={ta('group.appearance')} value={siteDraft.footer?.cta?.big === true ? '' : alignName(siteDraft.footer?.align ?? alignDefault())} group={lookGroup()}>

@@ -8,6 +8,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.87 - One grip on every seam between sections, the footer's presets in one picker, New block and New section on the section toolbar, and four more bugs - 12 November 2026
+
+- The line between two sections held two grips and a chip with different jobs a few pixels apart, so a drag often did what was not meant, and a section dragged smaller than its content left the content over the footer (BACKLOG). Each seam holds one grip, look A of the Section Seams canvas, chosen 12 November 2026: a pill that grows the section above as it is dragged down and the one below at its top as it is dragged up, and two tabs that shrink the section they stand in and stop at its content unless Alt is held, with the height on the grip and Escape to cancel (`seamDrag` in section-size.js, `seamGrip` in preview-edit.js).
+- In testing the tab stopped at the window's bottom on a page with a button docked to the screen, and the first seam's grip lay under the overlaid menu. A block docked to the screen counts for nothing in the content, and under an overlaid or floating menu the first seam stands where the content starts.
+- «New block» and «New section» stood as chips of their own at the section's corner and the line's end. Both stand together at the right end of the section toolbar, New section opening the gallery on the seam below the section; the seam's chip stays only on an empty page, and the toolbar's drawings stand in the middle of their buttons.
+- The footer offered «Design» and «Starting point», which read alike. One «Presets» fold opens the design picker with the ten layouts, each drawn with the site's own footer: a preset sets the look and the parts shown, and keeps the owner's content in each part it shows (`footer-presets.js`, tests/footer-presets.test.mjs, ten new pictures).
+- A section's «On pointer» lifted the section with its background, not its elements. It is two rows, «Every element on pointer» (the new section field `blocksHover`) and «The section on pointer», and the section's stagger no longer skips a block that only lifts on pointer.
+- A page just published and waiting for its deploy was sent again with any edit made since, with no row to untick. It waits, with its tick, only when edited since it went, and Discard drafts puts it back as it went (`pendingChanged` in state/page.svelte.js).
+- An extra added at the foot of an area or a fold stood there for the eye only, so Tab and a screen reader met it at its old place. The added cards and rows are drawn at the foot in the markup (menu/MenuArea.svelte, menu/AreaFoot.svelte, lib/rows/Fold.svelte).
+- An old plugin copy's own height was stored in the page's draft, so a page opened from a saved draft stood «In this browser». The measurement stays in memory; Urd's own blocks never did this, opened at three window sizes.
+- The menu's scroll option «As usual» reads «Always show».
+
+The independent review before the commit found these, all fixed but the last two:
+
+1. The seam grip read the sections as the last whole render drew them, so after a block was added a top drag moved every block but the new one in the saved data. It reads each section from its element as the drag starts.
+2. The arrow keys on a focused part of the grip also moved a selected block. They stop at the grip.
+3. Every move of a drag rewrote the section below's blocks, dropping the push pass's shift and the screen docking, and left the other section's inline height pinned. Only the section changed at its top moves its blocks, Escape restores the inline values, and sticky.js and the push pass wait during the drag.
+4. Opening a page that went out blank and waits for its deploy counted as an edit. Such a page counts once it holds a draft.
+5. A full storage at a publish could leave the open new page's store blank. The page stays in memory.
+6. An added card hidden by Pinned left an empty wrapper at the area's foot, and two sections' block menus could stand open at once. Neither happens.
+7. The Contact preset left the contact details off where the footer had them switched off. It shows them.
+8. The two pointer rows shared one undo key, so changing both quickly became one step. Each has its own.
+9. Nine comments described the removed grips and chips. They describe the seam grip and the toolbar.
+10. footer-thumb.js has no user left. Kept, since AGENTS.md lists it among the modules the editor bundles.
+11. A block cannot decline its section's every-element effect, and its own row reads «None» while it lifts. Written into the bug list.
+
 ### 0.7.35.6 - The guides, the setup guide, the roadmap and the comparison describe saved drafts and choosing what to publish - 12 November 2026
 
 - The user guides did not mention the Drafts window or the checkboxes. GUIDE-en-GB and GUIDE-nb now describe the checkbox on every change, the changes that go together, a new page held back going out hidden, and the Drafts window with its three tabs, Look, Keep both, Ctrl+S, the browser's name and Autosave.

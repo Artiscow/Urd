@@ -5,7 +5,8 @@
      A setting that can stand in the element menu's Pinned rows carries its `pin`: the pin stands at the row's end, and while the setting is pinned the row is drawn in Pinned at the top instead of here, so it stands once (0.7.30.3, menu/PinScope.svelte tells which are).
      A small window that holds this setting alone (`look:<pin>`, lib/only-group.js) has the reset in its head instead (menu/FloatingMenu.svelte).
      What belongs to the setting and shows with some of its values (`more`) stands under the setting's line, in the same row, so it comes and goes with it.
-     The way back is an undo step of its own (asOwnStep in state/history.svelte.js), never joined to the change before it. */
+     The way back is an undo step of its own (asOwnStep in state/history.svelte.js), never joined to the change before it.
+     A row of a fold that the owner added from the fold's «Add a setting» is drawn at the fold's foot in the order added, and draws nothing here (Fold.svelte `fold-rows`); its name, the one the fold's list knows it by, is read from the row once it is drawn. */
   import { getContext, setContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import Pin from '../../menu/Pin.svelte';
@@ -18,7 +19,25 @@
   const pinned = pinnedNow();
   /** `key` is the prop the row sets; `source` names where the value comes from when the block has none ('theme' or 'default'), which the reset's words follow; `pin` is the setting's id in the Pinned rows.
       A row outside a fold says itself whether it holds the block's own value (`own`) and how it goes back (`reset`). */
-  let { key = null, source = 'default', pin = null, own: ownValue = undefined, reset = undefined, children, more = undefined } = $props();
+  let { key = null, source = 'default', pin = null, own: ownValue = undefined, reset = undefined, children, more = undefined, atFoot = false } = $props();
+  const foldRows = getContext('fold-rows');
+  /** The row's name in its fold's list, read once the row is drawn among the fold's own rows; null for a row drawn elsewhere. */
+  let name = $state(null);
+  const toFoot = $derived(!atFoot && name !== null && foldRows.placedAt(name) >= 0);
+  $effect(() => {
+    if (!toFoot) return;
+    const held = name;
+    foldRows.place(held, {
+      get key() { return key; }, get source() { return source; }, get pin() { return pin; }, get own() { return ownValue; },
+      get reset() { return reset; }, get more() { return more; }, get children() { return children; },
+    });
+    return () => foldRows.unplace(held);
+  });
+  /** Reads the row's name where it stands among its fold's rows. */
+  function named(node) {
+    if (atFoot || name !== null || !foldRows || !node.parentElement?.classList.contains('group-items')) return;
+    name = foldRows.nameOf(node);
+  }
   const own = $derived(ownValue ?? (Boolean(key) && group?.own(key)));
   const away = $derived(pinned.has(pin));
   /* A switch or a colour in the row tells it so as it is drawn, before the reset is (SwitchRow.svelte, ColourRow.svelte); a row's controls are the same for as long as it stands.
@@ -47,8 +66,8 @@
   }
 </script>
 
-{#if !away}
-  <div class="setting" data-pin={pin ?? undefined} data-setting={key ?? pin ?? undefined} data-own={own ? '' : undefined} {@attach backOnAsk}>
+{#if !away && !toFoot}
+  <div class="setting" data-pin={pin ?? undefined} data-setting={key ?? pin ?? undefined} data-own={own ? '' : undefined} {@attach backOnAsk} {@attach named}>
     <div class="setting-body">
       {#if pin && pinned.pins()}
         <div class="pin-line">

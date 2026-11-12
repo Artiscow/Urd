@@ -15,7 +15,7 @@
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
 import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, drawnBlock, NARROW_PX } from './push-model.js';
-import { applyAnimation, applyCardAnimation } from './animations/core.js';
+import { applyAnimation, applyCardAnimation, pointerEffectOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
 import { refreshSticky } from './sticky.js';
@@ -1059,15 +1059,19 @@ function renderBlock(Urd, el, block, ctx, measured = null) {
       def.render(el, propsForWidth(block.type, lifted.props, narrow), ctx);
       if (phone) watchPhoneDesign(el, { def, type: block.type, props: lifted.props, block, ctx, narrow });
       // Entrance animation and pointer effect are independent fields and
-      // can be combined. Cardwise blocks (animPerCard) spread the fields
-      // onto their cards themselves via renderCardAnimations once the cards
-      // are fetched; the marker is set synchronously here: the section
-      // stagger picks its targets in the same task, before the cards and
-      // their classes exist.
+      // can be combined; the pointer effect is the block's own, else the one
+      // its section gives every element (pointerEffectOf). Cardwise blocks
+      // (animPerCard) spread the fields onto their cards themselves via
+      // renderCardAnimations once the cards are fetched; the marker is set
+      // synchronously here: the section stagger picks its targets in the
+      // same task, before the cards and their classes exist.
+      const hover = pointerEffectOf(block, ctx.section, (type) => Urd.animations.get(type)?.entrance === false);
+      // A block with an entrance of its own comes in by it, never with the section's stagger.
+      if (block.animation?.type && Urd.animations.get(block.animation.type)?.entrance) el.dataset.urdEntrance = '1';
       if (!def.animPerCard) {
         renderAnimation(Urd, el, block.animation, ctx);
-        renderAnimation(Urd, el, block.hover, ctx);
-      } else if (block.animation?.type || block.hover?.type) {
+        renderAnimation(Urd, el, hover, ctx);
+      } else if (block.animation?.type || hover?.type) {
         el.classList.add('urd-anim-cardwise');
       }
     } catch (err) {
@@ -1175,7 +1179,8 @@ function redrawForWidth(el) {
  */
 export function renderCardAnimations(el, cards, block, ctx) {
   if (!window.Urd) return;
-  for (const animation of [block?.animation, block?.hover]) {
+  const hover = pointerEffectOf(block, ctx?.section, (type) => window.Urd.animations.get(type)?.entrance === false);
+  for (const animation of [block?.animation, hover]) {
     renderAnimation(window.Urd, el, animation, ctx,
       (target, type, props, def, c) => applyCardAnimation(target, cards, type, props, def, c));
   }

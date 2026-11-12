@@ -11,6 +11,7 @@
      drawn where the menu asks for one, and the settings it writes through the
      editor handle. */
   import Setting from '../../lib/rows/Setting.svelte';
+  import AreaFoot from '../AreaFoot.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import SliderRow from '../../lib/rows/SliderRow.svelte';
   import NumberRow from '../../lib/rows/NumberRow.svelte';
@@ -414,7 +415,7 @@
   <Capability id="cal-notice">{@render calNotice()}</Capability>
   <!-- The design's words are rewritten by clicking them in the preview; this puts the defaults back and the removed lines too, keeping the announcement's own words -->
   {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
-    <button type="button" class="ghost action area-foot" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', calResetTexts(selectedBlock.props.texts))}>{ta('calendar.resetTexts')}</button>
+    <AreaFoot><button type="button" class="ghost action area-foot" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', calResetTexts(selectedBlock.props.texts))}>{ta('calendar.resetTexts')}</button></AreaFoot>
   {/if}
 {:else if area === 'style'}
   {@const calDef = calDesign(selectedBlock.props.design)}

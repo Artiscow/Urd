@@ -78,6 +78,7 @@ export const SHORTCUT_GROUPS = [
     { labelKey: 'shortcuts.ratio', tipKey: 'tip.shortcuts.ratio', ways: [['shift', 'drag']] },
     { labelKey: 'shortcuts.rotate', ways: [['shift', 'drag']] },
     { labelKey: 'shortcuts.sectionHeight', ways: [['ctrl', 'drag']] },
+    { labelKey: 'shortcuts.sectionPast', ways: [['alt', 'drag']] },
     { labelKey: 'shortcuts.dblBlock', ways: [['dblclick']] },
     { labelKey: 'shortcuts.dblImage', ways: [['dblclick']] },
   ] },

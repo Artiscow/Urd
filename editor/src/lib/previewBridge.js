@@ -31,7 +31,7 @@
  *                  { type: 'urd-duplicate-section', sectionId }
  *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut on the page: blocks or a section)
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last)
- *                  { type: 'urd-section-size', sectionId, minHeight, moves? } (moves from the top-edge handle: [{blockId, dy}] in the same undo step)
+ *                  { type: 'urd-section-size', sectionId, minHeight, moves? } (moves from the seam grip, for a section changed at its top: [{blockId, dy}] in the same undo step)
  *                  { type: 'urd-undo', redo }                 (Ctrl+Z inside the iframe)
  *                  { type: 'urd-select-section', sectionId }  (active section for the palette)
  *                  { type: 'urd-select-block', sectionId, blockId } (selected block, null = deselected)

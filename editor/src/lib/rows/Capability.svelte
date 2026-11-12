@@ -20,15 +20,23 @@
   const scope = getContext('menu-capabilities');
   const area = getContext('menu-area');
   const pinned = pinnedNow();
-  /** `id` names the capability in the catalogue; `group` holds the standards of the settings in it that ask by key (menu/groups.js). */
-  let { id, group = null, children = undefined } = $props();
+  /** `id` names the capability in the catalogue; `group` holds the standards of the settings in it that ask by key (menu/groups.js); `atFoot` marks the card its area draws at its foot. */
+  let { id, group = null, atFoot = false, children = undefined } = $props();
   const cap = capability(id);
   const block = $derived(ed.selectedBlock);
   const inUse = $derived(Boolean(block) && cap.inUse(block, ed));
   const kept = $derived(Boolean(block) && isAdded(block.blockId, id));
-  /** A card the owner added from the add list stands at the foot of its area, in the order added (app.css holds the add list under it); a copy that draws every capability keeps the catalogue's order. */
-  const placedAt = $derived(block && !scope?.forced(id) ? addedAt(block.blockId, id) : -1);
   const shown = $derived(carries(cap, block, ed) && !(cap.pins.length > 0 && pinned.all(...cap.pins)) && (inUse || kept || Boolean(scope?.forced(id))));
+  /** A card the owner added from the add list is drawn at the foot of its area, in the order added (MenuArea.svelte), and draws nothing where the family writes it; a copy that draws every capability keeps the catalogue's order, and a card not shown stands nowhere. */
+  const placedAt = $derived(block && !scope?.forced(id) ? addedAt(block.blockId, id) : -1);
+  /** A small window of one group (ElementMenu.svelte `only`) draws the card where it stands. */
+  const onlyPanel = getContext('menu-only');
+  const toFoot = $derived(!atFoot && placedAt >= 0 && shown && Boolean(area?.place) && !onlyPanel?.only);
+  $effect(() => {
+    if (!toFoot) return;
+    area.place(id, { get at() { return placedAt; }, get group() { return group; }, get children() { return children; } });
+    return () => area.unplace(id);
+  });
   /** The way back stands where the block uses the capability or took it; a copy that draws every capability does not offer it for one the block has not taken. */
   const takeable = $derived(inUse || kept);
   const removable = $derived(!cap.removable || cap.removable(block, ed));
@@ -49,7 +57,7 @@
     if (inUse && block) untrack(() => keepCapability(block.blockId, id));
   });
   $effect(() => {
-    if (!shown) return;
+    if (!shown || toFoot) return;
     area?.register(`cap:${id}`);
     return () => area?.unregister(`cap:${id}`);
   });
@@ -99,8 +107,8 @@
   }
 </script>
 
-{#if shown}
-  <div class="cap-card" class:fresh class:cap-single={Boolean(cap.single)} role="group" data-fold={id} data-cap={id} aria-label={title} style:order={placedAt >= 0 ? 1 + placedAt : null} bind:this={cardEl} transition:rowMotion>
+{#if shown && !toFoot}
+  <div class="cap-card" class:fresh class:cap-single={Boolean(cap.single)} role="group" data-fold={id} data-cap={id} aria-label={title} bind:this={cardEl} transition:rowMotion>
     <header class="cap-head">
       {#if folding}
         <!-- The name folds the card to its line and opens it again, saying its value while folded -->

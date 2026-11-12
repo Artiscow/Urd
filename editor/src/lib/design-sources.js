@@ -5,7 +5,7 @@
 import { ta, adminLang } from '$engine/i18n.js';
 import { CAL_VIEWS, calDesign, calDesignFamilies, calOptionDefs, calPhoneDesignDef, calPhoneFamilies, calCardDesignDef, calCardFamilies } from '$engine/calendar-designs.js';
 import { calendarThumb } from '$engine/calendar-thumb.js';
-import { FOOTER_DESIGNS, footerDesign, hasRichFooter } from '$engine/footer-model.js';
+import { FOOTER_PRESETS, presetSample, applyPreset } from '$engine/footer-presets.js';
 import { BLOCK_DESIGNS, blockDesignOf, blockDesignFamilies, designLabelKey, designAboutKey, designPicture, designPhonePicture, blockDesignSample, blockDesignEmpty, designPreviewFrame } from '$engine/block-designs.js';
 import { PHONE_DESIGNS } from '$engine/push-model.js';
 
@@ -174,7 +174,7 @@ export function blockDesigns(type, pluginBlocks = []) {
 
 /**
  * A choice's designs as the menus and the panels show their pictures in place (lib/rows/LookChoice.svelte), in the picker's order, each with its id, name, picture and description.
- * Read from a source the picker is given (calendarDesignSource, footerDesignSource), whose words are read from each design's definition (`def`), or from a block's designs (blockDesigns), whose words are read by id.
+ * Read from a source the picker is given (calendarDesignSource, footerPresetSource), whose words are read from each design's definition (`def`), or from a block's designs (blockDesigns), whose words are read by id.
  * @param {{ families: () => Array<{ designs: Array<{ id: string }> }>, name: Function, picture: (id: string) => string, about: Function, def?: (id: string) => object }} source
  */
 export function pictureList(source) {
@@ -312,59 +312,46 @@ export function blockPhoneDesignSource({ block, site = null, designs }) {
   };
 }
 
-/** The footer's designs as the picker lists them: the standard footer and the ones footer-model.js names. */
-export const FOOTER_DESIGN_IDS = ['standard', ...FOOTER_DESIGNS];
-
 /**
- * The footer's designs (footer-model.js): the site's own footer drawn in each design on an empty page, with a sample of brand and columns while the footer has no content of its own.
- * The picker keeps the footer in its preview for this source, measures it, and sends the site anew at every choice, since the design is the site's, not a block's.
+ * The footer's presets (footer-presets.js): the site's own footer drawn in each preset on an empty page, keeping its own content in each part the preset shows and the preset's sample where it has none, so the preview shows what a choice gives.
+ * A preset is an arrangement, not a look the footer keeps, so none stands marked as the one in use.
+ * The picker keeps the footer in its preview for this source, measures it, and sends the site anew at every choice, since the footer is the site's, not a block's.
  * @param {{site: object|null}} opts the site as a snapshot
  */
-export function footerDesignSource({ site = null }) {
-  const current = footerDesign(site ?? {}) || 'standard';
-  const name = (d) => ta(`footerDesign.${d.id}`);
+export function footerPresetSource({ site = null }) {
+  const name = (d) => ta(`footerTemplate.${d.id}`);
   return {
-    title: ta('picker.title', { block: ta('panel.footer') }),
-    label: ta('picker.title', { block: ta('panel.footer') }),
-    searchLabel: ta('picker.search'),
-    countText: (n) => ta('picker.count', { n }),
+    title: ta('picker.presetTitle', { block: ta('panel.footer') }),
+    label: ta('picker.presetTitle', { block: ta('panel.footer') }),
+    searchLabel: ta('picker.presetSearch'),
+    countText: (n) => ta('picker.presetCount', { n }),
     noneText: ta('picker.none'),
     currentText: ta('picker.current'),
-    aboutHead: ta('picker.aboutHead'),
+    aboutHead: ta('picker.presetAbout'),
     yoursHead: '',
-    useLabel: ta('picker.use'),
+    useLabel: ta('picker.presetUse'),
     previewTitle: (n) => ta('picker.preview', { name: n }),
-    current,
-    initial: current,
+    current: null,
+    initial: FOOTER_PRESETS[0],
     filters: null,
-    families: () => [{ family: 'footer', label: ta('panel.footer'), designs: FOOTER_DESIGN_IDS.map((id) => ({ id })) }],
+    families: () => [{ family: 'footer', label: ta('panel.footer'), designs: FOOTER_PRESETS.map((id) => ({ id })) }],
     name,
     searchText: name,
     def: (id) => ({ id }),
     sideTag: () => '',
-    picture: (id) => `/admin/designs/footer-${id}.webp`,
+    picture: (id) => `/admin/designs/footer-preset-${id}.webp`,
     thumb: () => '',
-    about: (d) => ta(`design.footer.${d.id}`),
+    about: (d) => ta(`design.footerPreset.${d.id}`),
     yours: () => [],
     previewWidth: 1040,
     viewport: 'desktop',
     blockId: 'design-picker-footer',
     /** The footer stands under the page, so the page is drawn empty; the footer is the site's, sent with the choice. */
     previewPage: (page) => ({ ...page, sections: [] }),
-    /** The site with the footer shown in the chosen design; a footer with nothing of its own borrows a brand and two columns of the site's pages. */
+    /** The site with the chosen preset applied to its footer, shown on every page. */
     previewSite(siteNow, id) {
-      const footer = { ...(siteNow?.footer ?? { version: 1 }), show: true };
-      if (!hasRichFooter({ ...siteNow, footer })) {
-        const pages = siteNow?.pages ?? [];
-        const links = (from, n) => pages.slice(from, from + n).map((p) => ({ label: p.title || p.id, page: p.id }));
-        Object.assign(footer, {
-          brand: { title: ta('seed.orgName') },
-          columns: [{ title: ta('seed.footer.colExplore'), links: links(0, 4) }, { title: ta('seed.footer.colPages'), links: links(4, 3) }],
-          copyright: `© ${ta('seed.orgName')}`,
-        });
-      }
+      const footer = applyPreset(siteNow?.footer, presetSample(id, { ta, pages: siteNow?.pages ?? [], privacyPage: siteNow?.footer?.privacyPage ?? null }));
       delete footer.hideOn;
-      if (id && id !== 'standard') footer.design = id; else delete footer.design;
       return { ...siteNow, footer };
     },
     siteVaries: true,

@@ -8,8 +8,8 @@
  * 4:5 from the top; then the card designs (the neutral card, every design's card, and the card designs designs lend, calCardCandidates), each
  * the card open over a plain list, under card-<id>.webp; then every other block's designs (block-designs.js), each drawn from its sample over the
  * block's defaults in the site's language, under block-<type>-<id>.webp, and the phone designs of the blocks that have them at a phone's width,
- * under block-<type>-<id>-phone.webp; and the footer's designs (footer-model.js), the site's own
- * footer drawn in each on an empty page, under footer-<id>.webp.
+ * under block-<type>-<id>-phone.webp; and the footer's presets (footer-presets.js), each preset's own sample
+ * drawn as the site's footer on an empty page, under footer-preset-<id>.webp.
  *
  * Run from the repo root with the local server up (python3 dev-server.py 8123) and a Chromium-family browser on the machine:
  *
@@ -314,20 +314,23 @@ try {
     console.log(`block-${type}-${id}-phone: ${box.w}x${box.h} block, picture written`);
   }
   if (chosenPhoneBlocks.length) await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: 1000, deviceScaleFactor: 1, mobile: false });
-  // The footer's designs (footer-model.js FOOTER_DESIGNS, and the standard footer): the site's own footer drawn in each on an empty page, under footer-<id>.webp.
-  const footerDesigns = ['standard', ...await cdp.evaluate(`(async () => {
+  // The footer's presets (footer-presets.js FOOTER_PRESETS): each preset's own sample as the site's footer on an empty page, its words in the site's language, under footer-preset-<id>.webp.
+  const footerPresets = await cdp.evaluate(`(async () => {
     const { engine } = await (await fetch('/urd.json')).json();
-    return (await import('/assets/engine/' + engine + '/footer-model.js')).FOOTER_DESIGNS;
-  })()`)];
-  const chosenFooters = ONLY.length ? footerDesigns.filter((id) => ONLY.includes(`footer-${id}`)) : footerDesigns;
+    return (await import('/assets/engine/' + engine + '/footer-presets.js')).FOOTER_PRESETS;
+  })()`);
+  const chosenFooters = ONLY.length ? footerPresets.filter((id) => ONLY.includes(`footer-preset-${id}`)) : footerPresets;
   for (const id of chosenFooters) {
     const box = await cdp.evaluate(`(async () => {
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const { engine } = await (await fetch('/urd.json')).json();
+      const { presetSample, applyPreset } = await import('/assets/engine/' + engine + '/footer-presets.js');
+      const { ta, initAdminLocale } = await import('/assets/engine/' + engine + '/i18n.js');
       const site = await (await fetch('/content/site.json')).json();
+      await initAdminLocale(site.site?.lang ?? 'nb');
       const id = ${JSON.stringify(id)};
-      site.footer = { ...(site.footer ?? { version: 1 }), show: true };
-      delete site.footer.hideOn;
-      if (id === 'standard') delete site.footer.design; else site.footer.design = id;
+      const privacyPage = site.footer?.privacyPage ?? null;
+      site.footer = applyPreset({ version: 1, privacyPage }, presetSample(id, { ta, pages: site.pages ?? [], privacyPage }));
       const page = await (await fetch('/content/pages/hjem.json')).json();
       page.sections = [];
       if (!document.getElementById('pic-style')) {
@@ -351,9 +354,9 @@ try {
     const clip = { x: box.x, y: box.y, width: box.w, height: Math.min(box.h, Math.round(box.w * 9 / 16)) };
     const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, captureBeyondViewport: true, clip: { ...clip, scale: Math.min(2, PIC_W / box.w) } });
     const data = shot.result?.data;
-    if (!data) throw new Error(`footer-${id}: no picture (${JSON.stringify(shot)})`);
-    writeFileSync(join(OUT, `footer-${id}.webp`), Buffer.from(data, 'base64'));
-    console.log(`footer-${id}: ${box.w}x${box.h} footer, picture written`);
+    if (!data) throw new Error(`footer-preset-${id}: no picture (${JSON.stringify(shot)})`);
+    writeFileSync(join(OUT, `footer-preset-${id}.webp`), Buffer.from(data, 'base64'));
+    console.log(`footer-preset-${id}: ${box.w}x${box.h} footer, picture written`);
   }
 } finally {
   cdp?.close();

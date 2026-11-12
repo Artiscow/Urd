@@ -22,6 +22,7 @@ import { activeTokens } from '$engine/theme.js';
 import { ta } from '$engine/i18n.js';
 import { slugify } from '$engine/imageTools.js';
 import { buildPagePreset } from '$engine/page-presets.js';
+import { presetSample, applyPreset } from '$engine/footer-presets.js';
 import { clonePageForInsert } from '$engine/templates-model.js';
 import { liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
@@ -763,6 +764,15 @@ function footerMutate(key, fn) {
   });
 }
 
+/** A preset of the footer (footer-presets.js), one undo step: its look and the parts it shows, the footer's own content kept in each part it shows. */
+function applyFooterPreset(id) {
+  footerMutate('footer-preset', (f) => {
+    const next = applyPreset($state.snapshot(f), presetSample(id, { ta, pages: siteDraft.pages ?? [], privacyPage: f.privacyPage ?? null }));
+    for (const key of Object.keys(f)) delete f[key];
+    Object.assign(f, next);
+  });
+}
+
 /* Rich footer (additive): brand, columns, social links, bottom line and
  * background. Mirrors the nav handlers, but through footerMutate. */
 
@@ -1025,6 +1035,7 @@ export const siteState = {
   SAFE_ICON_RE,
   clearLauncherImage,
   footerMutate,
+  applyFooterPreset,
   moveNavItemTo,
   moveNavChildTo,
   invertLightness,
