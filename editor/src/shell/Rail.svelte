@@ -69,8 +69,8 @@
            and system read as three levels. -->
       <span class="rail-group">{ta(ed.PANEL_GROUP_KEYS[gi])}</span>
       {#each group as name (name)}
-        {#if ed.sidebarFolds === 'flyout'}
-          <!-- «Folds in the sidebar» Beside the word: a word with folds opens them in a flyout beside it -->
+        {#if ed.sidebarFolds === 'flyout' || name === 'drafts'}
+          <!-- «Folds in the sidebar» Beside the word: a word with folds opens them in a flyout beside it; Drafts, which has no folds, opens its window -->
           <PanelTab {name} variant="word" />
         {:else}
           {@const rows = treeRows(name)}

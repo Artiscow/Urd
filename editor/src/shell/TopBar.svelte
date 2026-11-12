@@ -6,8 +6,6 @@
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
   import UnpublishedRows from '../lib/UnpublishedRows.svelte';
-  import SavedRows from '../lib/SavedRows.svelte';
-  import { thumbThemeStyle } from '../lib/thumb-theme.js';
   import { timeAgo } from '../lib/time-ago.js';
   import SettingsGear from './SettingsGear.svelte';
   import PageSwitcher from './PageSwitcher.svelte';
@@ -37,50 +35,6 @@
   async function discardFromMenu() {
     await ed.askDiscard();
     ed.toolMenu = null;
-  }
-
-  /** What saving does, or why it cannot: the tooltip of the menu's first act; Save itself opens its menu on a mouse's rest, so it keeps no tooltip. */
-  const saveTip = $derived(ed.savedAvailable ? (ed.saveCount ? ta('tip.save') : ta('tip.save.nothing')) : ta('tip.save.unavailable'));
-  /** Save's name to a screen reader, with what it would save and what is new among the saved drafts. */
-  const saveLabel = $derived([
-    ta('ui.save'),
-    ed.saveCount ? ta(ed.saveCount === 1 ? 'save.waiting.one' : 'save.waiting', { n: ed.saveCount }) : '',
-    ed.savedFresh ? ta(ed.savedFresh === 1 ? 'saved.news.one' : 'saved.news', { n: ed.savedFresh }) : '',
-  ].filter(Boolean).join(', '));
-  /** The Saved menu: opened from a key, its first act that can act takes the focus. */
-  let savePop = $state(null);
-  let keyedShown = 0;
-  $effect(() => {
-    const keyed = ed.saveMenuKeyed;
-    if (ed.toolMenu !== 'save' || !savePop || keyed === keyedShown) return;
-    keyedShown = keyed;
-    savePop.querySelector('button:not(:disabled)')?.focus();
-  });
-  /** As the menu opens, the saved pages' pictures are read; as it closes after standing open a second or more, what it showed is no longer new. */
-  let saveShown = false;
-  let saveShownAt = 0;
-  $effect(() => {
-    const open = ed.toolMenu === 'save';
-    if (open && !saveShown) {
-      saveShownAt = Date.now();
-      ed.loadSavedPictures();
-    }
-    if (!open && saveShown && Date.now() - saveShownAt >= 1000) ed.markSavedNoticed();
-    saveShown = open;
-  });
-  const thumbStyle = $derived(thumbThemeStyle(ed.siteDraft));
-  function saveNow() {
-    ed.toolMenu = null;
-    ed.saveDrafts();
-  }
-  /** A press on Save with a mouse or a key saves what waits here; a touch or a pen, where nothing opens on rest, or a press with nothing to save, opens its menu. */
-  function pressSave(event) {
-    const touch = event?.pointerType === 'touch' || event?.pointerType === 'pen';
-    if (ed.saveCount && !touch) {
-      clearTimeout(restTimers.save);
-      restOpened = null;
-      saveNow();
-    } else pressMenu('save');
   }
 
   /** A row of the menu's list: the menu closes and the owner is taken to the change. */
@@ -234,7 +188,7 @@
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <span class="toolmenu" onpointerenter={(e) => menuRest('site', true, e)} onpointerleave={(e) => menuRest('site', false, e)}>
               <button type="button" class="ghost topnav-btn" class:active={ed.toolMenu === 'site'} aria-expanded={ed.toolMenu === 'site'}
-                onclick={() => pressMenu('site')}>{ta('rail.siteMenu')}<span class="topnav-caret" aria-hidden="true">{@html ICONS.caret}</span>{#if ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{:else if ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}</button>
+                onclick={() => pressMenu('site')}>{ta('rail.siteMenu')}<span class="topnav-caret" aria-hidden="true">{@html ICONS.caret}</span>{#if ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{:else if ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{:else if ed.draftsFresh}<span class="update-dot legal-dot" role="img" aria-label={ta(ed.draftsFresh === 1 ? 'saved.news.one' : 'saved.news', { n: ed.draftsFresh })}></span>{/if}</button>
               {#if ed.toolMenu === 'site'}
                 <div class="tool-pop site-pop" transition:menuMotion>
                   {#each ed.PANEL_GROUPS.slice(1) as group, gi (gi)}
@@ -393,31 +347,12 @@
            would be empty, and it is the entry point to publishing at all. -->
       <a class="ghost" href="/api/github/login">{ta('ui.loginGitHub')}</a>
     {/if}
-    <!-- Save beside Publish (ADR-0032): it keeps what stands in this browser alone on the drafts branch, and carries the count of it, and a dot while a saved draft is new here.
-         Its menu opens on a mouse's rest, ArrowDown or Ctrl+S: the acts first (Save the drafts, Publish now), then every saved draft with its picture, opened here by choice. -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <span class="toolmenu save-wrap" onpointerenter={(e) => menuRest('save', true, e)} onpointerleave={(e) => menuRest('save', false, e)}>
-      <button type="button" class="ghost topbar-tall save-btn" disabled={!ed.savedAvailable || ed.savedBusy} aria-label={saveLabel} aria-haspopup="true" aria-expanded={ed.toolMenu === 'save'}
-        onclick={pressSave} onkeydown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); ed.openSaveMenu(); } }}>{@html ICONS.save}<span class="btn-label">{ta('ui.save')}</span>{#if ed.saveCount}<span class="publish-count save-count" aria-hidden="true">{ed.saveCount}</span>{/if}{#if ed.savedFresh}<span class="update-dot legal-dot save-dot" aria-hidden="true"></span>{/if}</button>
-      {#if ed.toolMenu === 'save'}
-        <div class="tool-pop save-pop" transition:menuMotion role="group" aria-label={ta('saved.menu')} bind:this={savePop}>
-          <button type="button" class="ghost publish-act publish-main" disabled={!ed.savedAvailable || !ed.saveCount || ed.savedBusy} title={saveTip} onclick={saveNow}>{@html ICONS.save}<span>{ta('saved.saveNow')}</span></button>
-          <button type="button" class="ghost publish-act" disabled={!ed.dirty || !ed.auth?.allowed} title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={publishNow}>{@html ICONS.upload}<span>{ta('publish.now')}</span></button>
-          {#if ed.savedList.length}
-            <hr class="gridmenu-divider" />
-            <span class="mini-label publish-head">{ta('saved.band.saved')} · {ed.savedList.length}</span>
-            <div class="publish-rows"><SavedRows rows={ed.savedList} docOf={ed.savedDoc} whenOf={ed.whenSaved} themeStyle={thumbStyle}
-              onopen={(row) => { ed.toolMenu = null; ed.openSaved(row.part); }} onremove={(row) => ed.removeSaved(row.part)} /></div>
-          {/if}
-        </div>
-      {/if}
-    </span>
     <!-- Publish with its menu: the button carries the count of what waits, and opens on a press or a mouse's rest as the bar's other menus do (no tooltip on a button that opens on rest).
          The menu holds the acts first (Publish now, the published site, Discard drafts), then what waits to be published as rows that lead to the change, and at its foot the last publish, which opens History. -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <span class="toolmenu publish-wrap" onpointerenter={(e) => menuRest('publish', true, e)} onpointerleave={(e) => menuRest('publish', false, e)}>
       <button type="button" class="primary publish-btn topbar-tall" aria-expanded={ed.toolMenu === 'publish'} aria-haspopup="true" aria-describedby={ed.dirty ? 'publish-waiting' : undefined}
-        onclick={() => pressMenu('publish')}>{ta('ui.publish')}{#if ed.dirty}<span class="publish-count" aria-hidden="true">{ed.unpublished.length}</span><span class="sr-only" id="publish-waiting">{ta(ed.unpublished.length === 1 ? 'publish.waiting.one' : 'publish.waiting', { n: ed.unpublished.length })}</span>{/if}{@html ICONS.caret}</button>
+        onclick={() => pressMenu('publish')}>{ta('ui.publish')}{#if ed.dirty}<span class="publish-count" aria-hidden="true"><span>{ed.unpublished.length}</span></span><span class="sr-only" id="publish-waiting">{ta(ed.unpublished.length === 1 ? 'publish.waiting.one' : 'publish.waiting', { n: ed.unpublished.length })}</span>{/if}{@html ICONS.caret}</button>
       {#if ed.toolMenu === 'publish'}
         <div class="tool-pop publish-pop" transition:menuMotion role="group" aria-label={ta('publish.menu')}>
           <button type="button" class="ghost publish-act publish-main" disabled={!ed.dirty || !ed.auth?.allowed}

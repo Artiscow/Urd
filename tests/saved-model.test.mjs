@@ -3,7 +3,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { partOfKey, keysByPart, partName, partOfName, partCanon, meet, standing, counts, savedList, overwrites, publishedSaves } from '../editor/src/lib/saved-model.js';
+import { partOfKey, keysByPart, partName, partOfName, partCanon, meet, standing, counts, savedList, overwrites, publishedSaves, tickedNames, firstTab } from '../editor/src/lib/saved-model.js';
 import { keyOfPart, isPartName } from '../template/functions/_lib/drafts.js';
 
 const KEYS = ['urd-draft-site', 'urd-draft-hjem', 'urd-draft-om-oss', 'urd-draft-sitemap', 'urd-draft-plugins', 'urd-draft-redirects',
@@ -74,11 +74,11 @@ test('where each part this browser holds stands, a part saved elsewhere set apar
   assert.deepEqual(counts(rows), { save: 2, publish: 3 });
 });
 
-test('the Saved menu\'s rows: newest first, held as saved, held with changes, or not held, and new only where unseen and not yet shown', () => {
+test('the Saved tab\'s rows: newest first, held as saved, held with changes, or not held, and new only where unseen and not yet shown', () => {
   const list = savedList({
     saved: {
       'page-hjem': { hash: 'H1', savedAt: '2026-11-11T10:00:00Z', saver: 'a', title: 'Hjem' },
-      'page-om-oss': { hash: 'O2', savedAt: '2026-11-11T12:00:00Z', saver: 'b', title: 'Om oss' },
+      'page-om-oss': { hash: 'O2', savedAt: '2026-11-11T12:00:00Z', saver: 'b', title: 'Om oss', note: 'New opening text', device: 'Laptop' },
       site: { hash: 'S2', savedAt: '2026-11-11T11:00:00Z', saver: 'b' },
       'page-kaker': { hash: 'K2', savedAt: '2026-11-11T09:00:00Z', saver: 'b', title: 'Kaker' },
     },
@@ -92,6 +92,28 @@ test('the Saved menu\'s rows: newest first, held as saved, held with changes, or
   assert.deepEqual([by.site.here, by.site.fresh], ['mine', true], 'saved elsewhere, this browser holds its own');
   assert.deepEqual([by['page-om-oss'].here, by['page-om-oss'].fresh, by['page-om-oss'].name], ['none', true, 'Om oss']);
   assert.deepEqual([by['page-kaker'].here, by['page-kaker'].fresh], ['none', false], 'shown in the menu already');
+  assert.deepEqual([by['page-om-oss'].note, by['page-om-oss'].device], ['New opening text', 'Laptop'], 'the note and the browser it was saved from');
+  assert.deepEqual([by.site.note, by.site.device], ['', ''], 'none written: empty');
+});
+
+test('a save of the ticked: this browser\'s parts not kept for later, and quietly none saved elsewhere since', () => {
+  const rows = [
+    { part: 'page-hjem', band: 'browser', elsewhere: null },
+    { part: 'page-kaker', band: 'browser', elsewhere: null },
+    { part: 'site', band: 'browser', elsewhere: { savedAt: 't', saver: 'b' } },
+    { part: 'page-om-oss', band: 'saved', elsewhere: null },
+  ];
+  assert.deepEqual(tickedNames(rows, []), ['page-hjem', 'page-kaker', 'site']);
+  assert.deepEqual(tickedNames(rows, ['page-kaker']), ['page-hjem', 'site'], 'unticked is kept for later');
+  assert.deepEqual(tickedNames(rows, new Set(['page-kaker']), { quiet: true }), ['page-hjem'], 'Ctrl+S and autosave leave a part saved elsewhere for the owner');
+  assert.deepEqual(tickedNames([], []), []);
+});
+
+test('the Drafts window opens at what is new, then at what waits here', () => {
+  assert.equal(firstTab({ fresh: 1, waiting: 2, saved: 3 }), 'saved');
+  assert.equal(firstTab({ fresh: 0, waiting: 2, saved: 3 }), 'browser');
+  assert.equal(firstTab({ fresh: 0, waiting: 0, saved: 3 }), 'saved');
+  assert.equal(firstTab({ fresh: 0, waiting: 0, saved: 0 }), 'live');
 });
 
 test('the counts never disagree with the bands', () => {

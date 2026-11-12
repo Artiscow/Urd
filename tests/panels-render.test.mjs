@@ -206,19 +206,24 @@ test('History\'s «Not published yet» stands in bands where the drafts are save
   assert.doesNotMatch(plain, /unpub-band/, 'no bands where the drafts are not saved');
 });
 
-test('the Saved menu\'s rows: a page\'s picture, «New» where unseen, «Open here» or a check, and a bin on each', async () => {
+test('the Saved tab\'s rows: a page\'s picture, «New» where unseen, where and by whom it was saved, the note, and open, «Open here» or a check with a bin', async () => {
   const { default: SavedRows } = await import('../editor/src/lib/SavedRows.svelte');
   const rows = [
-    { kind: 'page', id: 'om-oss', name: 'Om oss', part: 'page-om-oss', savedAt: '2026-11-11T12:00:00Z', saver: 'other', hash: 'h1', here: 'none', fresh: true },
-    { kind: 'site', part: 'site', savedAt: '2026-11-11T11:00:00Z', saver: 'owner', hash: 'h2', here: 'same', fresh: false },
+    { kind: 'page', id: 'om-oss', name: 'Om oss', part: 'page-om-oss', savedAt: '2026-11-11T12:00:00Z', saver: 'other', note: 'New opening text', device: 'Laptop', hash: 'h1', here: 'none', fresh: true },
+    { kind: 'site', part: 'site', savedAt: '2026-11-11T11:00:00Z', saver: 'owner', note: '', device: '', hash: 'h2', here: 'same', fresh: false },
   ];
   const page = { sections: [{ id: 's1', size: { minHeight: 400 }, blocks: [{ id: 'b1', type: 'text', frames: { desktop: { x: 10, y: 20, w: 50, h: 40 } } }] }] };
-  const { body } = render(SavedRows, { props: { rows, docOf: (name) => (name === 'page-om-oss' ? page : null), whenOf: () => 'just now', onopen() {}, onremove() {} } });
-  assert.match(body, /class="saved-pic[^"]*drawn[^"]*"[^>]*>[^]*?<svg/, 'the saved page drawn as a picture');
-  assert.equal((body.match(/class="saved-new/g) ?? []).length, 1, '«New» on the unseen one alone');
-  assert.equal((body.match(/class="ghost saved-open/g) ?? []).length, 1, '«Open here» where this browser does not hold it as saved');
-  assert.match(body, /class="saved-here/, 'a check where it is held as saved');
-  assert.equal((body.match(/icon-btn[^"]*danger/g) ?? []).length, 2, 'a bin on each row');
+  const props = { rows, docOf: (name) => (name === 'page-om-oss' ? page : null), whenOf: () => 'just now', onopen() {}, onremove() {} };
+  const closed = render(SavedRows, { props }).body;
+  assert.match(closed, /class="saved-pic[^"]*drawn[^"]*"[^>]*>[^]*?<svg/, 'the saved page drawn as a picture');
+  assert.equal((closed.match(/class="saved-new/g) ?? []).length, 1, '«New» on the unseen one alone');
+  assert.match(closed, /<small[^>]*>Laptop · other · just now<\/small>/, 'the browser it came from, who saved it and when');
+  assert.equal((closed.match(/class="saved-note[^"]*"[^>]*>New opening text</g) ?? []).length, 1, 'the note where one was written');
+  assert.doesNotMatch(closed, /class="saved-acts/, 'closed, the acts wait');
+  const open = (part) => render(SavedRows, { props: { ...props, opened: part } }).body;
+  assert.match(open('page-om-oss'), /class="ghost saved-open/, '«Open here» where this browser does not hold it as saved');
+  assert.match(open('site'), /class="saved-here/, 'a check where it is held as saved');
+  for (const part of ['page-om-oss', 'site']) assert.equal((open(part).match(/icon-btn[^"]*danger/g) ?? []).length, 1, 'a bin in the open row');
 });
 
 test('the Nav and Footer panels draw the background editor', () => {

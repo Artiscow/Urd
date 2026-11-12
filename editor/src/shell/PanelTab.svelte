@@ -5,7 +5,8 @@
      The arrow keys move through the rows, and Escape closes the menu and returns to the tab. Hover counts only for a mouse, so a tap on a touch screen opens the panel, where every fold stands.
      The Legal tab carries an amber dot on its name's corner while something the law asks for is missing, and the same dot on the rows that need looking at (lib/legal-model.js).
      The Collections tab's menu lists the site's collections, kept in step as they come and go, and ends in New collection. A mouse resting on a collection, or the right arrow key, opens a submenu of its entries beside it, ending in New entry; on an entry, a third menu of its common actions (its picture added or edited, the entry duplicated); the left arrow or Escape goes back a level.
-     A collection's row opens it in the panel, and an entry's row opens the entry. */
+     A collection's row opens it in the panel, and an entry's row opens the entry.
+     The Drafts tab opens the Drafts window rather than a panel (state/drafts.svelte.js), on a mouse's rest as a tab's menu opens or on a press, and carries its marks (DraftsMarks); it keeps no tooltip, as a button that opens on a rest does not. As a row of the Site menu it opens on a press alone, so a mouse passing down the menu never takes the menu away. */
   import { tabMenuOpen } from './tab-menu-open.svelte.js';
   import { getContext, tick } from 'svelte';
   import { menuMotion } from '../lib/motion.svelte.js';
@@ -16,6 +17,7 @@
   import { collectionActions } from '../panels/collections/actions.js';
   import { groupChip } from '../lib/legal-model.js';
   import { ICONS } from '../lib/icons.js';
+  import DraftsMarks from './DraftsMarks.svelte';
   const ed = getContext('urd-editor');
   let { name, variant = 'tab', menus = true } = $props();
   /** The menu stands beside its button (a row, an icon, a word) rather than under it (a tab). */
@@ -23,12 +25,19 @@
   const label = $derived(ed.PANEL_LABELS[name]);
   const updateDot = $derived(name === 'update' && ed.updateNotice === 'dot');
   const legalDot = $derived(name === 'legal' && ed.legal?.dot === true);
+  const drafts = $derived(name === 'drafts');
+  /** The Drafts tab's name to a screen reader, with what stands here alone and what is new among the saved. */
+  const draftsLabel = $derived(drafts ? [
+    label,
+    ed.draftsWaiting ? ta(ed.draftsWaiting === 1 ? 'save.waiting.one' : 'save.waiting', { n: ed.draftsWaiting }) : '',
+    ed.draftsFresh ? ta(ed.draftsFresh === 1 ? 'saved.news.one' : 'saved.news', { n: ed.draftsFresh }) : '',
+  ].filter(Boolean).join(', ') : undefined);
   /** The button's own look in each layout: a tab, a row of the Site menu, an icon of the rail, a word of the sidebar. */
   const buttonClass = $derived({ tab: 'panel-tab', row: 'ghost site-row', rail: 'rail-icon', word: 'side-word' }[variant] ?? 'panel-tab');
   /** An icon is named by its label, read out with the amber dot's meaning; the words and the tabs carry their names. */
-  const ariaLabel = $derived(variant === 'rail' ? (legalDot ? `${label}, ${ta('legal.dotLabel')}` : label) : undefined);
-  /** The tooltip: the update's, else an icon's name where no menu's head names it. */
-  const titleText = $derived(updateDot ? ta('tip.updateOut', { version: ed.updateTarget }) : variant === 'rail' && !hasMenu ? label : undefined);
+  const ariaLabel = $derived(drafts ? draftsLabel : variant === 'rail' ? (legalDot ? `${label}, ${ta('legal.dotLabel')}` : label) : undefined);
+  /** The tooltip: the update's, else an icon's name where no menu's head names it; none on Drafts, which opens its window on a rest, headed by its name. */
+  const titleText = $derived(updateDot ? ta('tip.updateOut', { version: ed.updateTarget }) : drafts ? undefined : variant === 'rail' && !hasMenu ? label : undefined);
 
   /** The folds the menu lists: those the panel draws now, and a menu only where there is a choice of two or more. */
   const folds = $derived(panelFolds(name, { site: ed.siteDraft, legal: ed.legal, designs: menu.designsPref }));
@@ -368,7 +377,9 @@
 
 <!-- The button's face in each layout: a tab's word with its arrow, an icon with its dots at the corner, a row's or a word's name with its arrow toward the menu beside it -->
 {#snippet face()}
-  {#if variant === 'rail'}
+  {#if drafts}
+    {#if variant === 'rail'}{@html ICONS.panel_drafts}<DraftsMarks corner />{:else}<span class={variant === 'tab' ? 'tab-menu-word' : 'tab-menu-name'}>{label}</span><DraftsMarks />{/if}
+  {:else if variant === 'rail'}
     {@html ICONS[`panel_${name}`]}{#if updateDot}<span class="update-dot" aria-hidden="true"></span>{/if}{#if legalDot}<span class="update-dot legal-dot" aria-hidden="true"></span>{/if}
   {:else if variant === 'tab'}
     <span class="tab-menu-word">{label}{@render dots()}</span>{#if hasMenu}<span class="tab-menu-caret" aria-hidden="true">{@html ICONS.caret}</span>{/if}{#if updateDot}<span class="update-dot update-dot-inline" aria-hidden="true"></span>{/if}
@@ -451,6 +462,10 @@
     {/if}
     {#if name === 'collections'}<input type="file" accept="image/*" hidden bind:this={fileInput} onchange={filePicked} />{/if}
   </span>
+{:else if drafts}
+  <button type="button" class={buttonClass} class:active={ed.draftsOpen} aria-expanded={ed.draftsOpen} aria-label={ariaLabel} data-drafts-tab data-beside={beside ? '' : undefined}
+    onpointerenter={variant === 'row' ? undefined : (e) => ed.restOnDraftsTab(true, e, e.currentTarget, beside)} onpointerleave={variant === 'row' ? undefined : (e) => ed.restOnDraftsTab(false, e)}
+    onclick={(e) => ed.toggleDrafts(e.currentTarget, beside)}>{@render face()}</button>
 {:else}
   <button type="button" class={buttonClass} class:active={ed.activePanel === name} aria-pressed={ed.activePanel === name} aria-label={ariaLabel} title={titleText}
     onclick={() => ed.togglePanel(name)}>{@render face()}</button>

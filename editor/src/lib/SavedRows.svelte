@@ -1,23 +1,17 @@
 <script>
-  /* The Saved menu's rows (ADR-0032): every saved draft, the newest first (lib/saved-model.js savedList), each with a picture of a page drawn as «My templates» are (preset-thumb.js pageThumb) or the part's sign, its name, who saved it and when, and «New» where this browser has not seen it.
-     «Open here» takes the saved draft into this browser (`onopen`); a draft this browser holds as saved shows a check instead. The bin takes the saved copy away (`onremove`) at its second press, as a removal does, bright red in between, and a mouse or the focus leaving the row disarms it. */
+  /* The Drafts window's Saved tab (ADR-0032): every saved draft, the newest first (lib/saved-model.js savedList), each with a picture of a page drawn as «My templates» are (preset-thumb.js pageThumb) or the part's sign, its name, «New» where this browser has not seen it, the browser it was saved from, who saved it and when, and the owner's note on the save in italics.
+     A press on a row opens it to its acts (`opened` names the part whose row stands open): «Open here» takes the saved draft into this browser (`onopen`), or a check says this browser holds it as saved; the bin takes the saved copy away (`onremove`) at its second press, as a removal does, bright red in between, and a mouse or the focus leaving the row disarms it. */
   import { ta } from '$engine/i18n.js';
   import { pageThumb } from '$engine/preset-thumb.js';
   import { ICONS } from './icons.js';
+  import { PART_KINDS } from './part-kinds.js';
+  import { rowMotion } from './motion.svelte.js';
   import IconButton from './rows/IconButton.svelte';
-  let { rows, docOf = () => null, whenOf = (iso) => iso, themeStyle = '', onopen, onremove } = $props();
+  let { rows, docOf = () => null, whenOf = (iso) => iso, themeStyle = '', onopen, onremove, opened = $bindable(null) } = $props();
 
-  /** The sign and the words of a part without a picture or a name of its own. */
-  const KINDS = {
-    page: { icon: ICONS.panel_pages },
-    site: { icon: ICONS.panel_site, name: 'unpublished.site' },
-    collections: { icon: ICONS.panel_collections, name: 'unpublished.collections' },
-    collection: { icon: ICONS.panel_collections },
-    templates: { icon: ICONS.panel_blocks, name: 'canvas.tabMyTemplates' },
-    plugins: { icon: ICONS.panel_plugins, name: 'panel.plugins' },
-    redirects: { icon: ICONS.redirect, name: 'ui.redirects' },
-  };
-  const nameOf = (row) => row.name ?? ta(KINDS[row.kind]?.name ?? 'unpublished.site');
+  const nameOf = (row) => row.name ?? ta(PART_KINDS[row.kind]?.name ?? 'unpublished.site');
+  /** Where and when a draft was saved: the browser's name where it has one, who saved it, and how long ago. */
+  const fromOf = (row) => [row.device, row.saver, whenOf(row.savedAt)].filter(Boolean).join(' · ');
 
   /** The row whose bin waits for its second press. */
   let armed = $state(null);
@@ -29,25 +23,35 @@
     armed = null;
     onremove(row);
   }
+  const uid = Math.random().toString(36).slice(2, 7);
 </script>
 
 <div class="saved-rows" role="list">
   {#each rows as row (row.part)}
     {@const doc = row.kind === 'page' ? docOf(row.part) : null}
+    {@const isOpen = opened === row.part}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="saved-row" role="listitem" onpointerleave={(e) => { if (e.pointerType === 'mouse' && armed === row.part) armed = null; }}
+    <div class="saved-item" class:open={isOpen} role="listitem" onpointerleave={(e) => { if (e.pointerType === 'mouse' && armed === row.part) armed = null; }}
       onfocusout={(e) => { if (armed === row.part && !e.currentTarget.contains(e.relatedTarget)) armed = null; }}>
-      <span class="saved-pic" class:drawn={Boolean(doc)} style={doc ? themeStyle : undefined} aria-hidden="true">{@html doc ? pageThumb(doc, { w: 34, h: 42, max: 4 }) : (KINDS[row.kind]?.icon ?? '')}</span>
-      <span class="saved-words">
-        <span class="saved-name">{nameOf(row)}{#if row.fresh}<span class="saved-new">{ta('saved.new')}</span>{/if}</span>
-        <small>{ta('saved.by', { who: row.saver, when: whenOf(row.savedAt) })}</small>
-      </span>
-      {#if row.here === 'same'}
-        <span class="saved-here" title={ta('tip.saved.here')}>{@html ICONS.check}</span>
-      {:else}
-        <button type="button" class="ghost saved-open" title={ta(row.here === 'mine' ? 'tip.saved.openMine' : 'tip.saved.open')} onclick={() => onopen(row)}>{ta('saved.open')}</button>
+      <button type="button" class="saved-row" aria-expanded={isOpen} aria-controls={`saved-acts-${uid}-${row.part}`} onclick={() => { opened = isOpen ? null : row.part; }}>
+        <span class="saved-pic" class:drawn={Boolean(doc)} style={doc ? themeStyle : undefined} aria-hidden="true">{@html doc ? pageThumb(doc, { w: 34, h: 42, max: 4 }) : (PART_KINDS[row.kind]?.icon ?? '')}</span>
+        <span class="saved-words">
+          <span class="saved-name">{nameOf(row)}{#if row.fresh}<span class="saved-new">{ta('saved.new')}</span>{/if}</span>
+          <small>{fromOf(row)}</small>
+          {#if row.note}<span class="saved-note">{row.note}</span>{/if}
+        </span>
+        <span class="saved-chev" aria-hidden="true">{@html ICONS.chevronDown}</span>
+      </button>
+      {#if isOpen}
+        <div class="saved-acts" id={`saved-acts-${uid}-${row.part}`} transition:rowMotion>
+          {#if row.here === 'same'}
+            <span class="saved-here">{@html ICONS.check}{ta('saved.heldHere')}</span>
+          {:else}
+            <button type="button" class="ghost saved-open" title={ta(row.here === 'mine' ? 'tip.saved.openMine' : 'tip.saved.open')} onclick={() => onopen(row)}>{ta('saved.open')}</button>
+          {/if}
+          <IconButton icon={ICONS.bin} size="sm" danger class={armed === row.part ? 'armed' : ''} label={armed === row.part ? ta('saved.removeArmed') : ta('saved.remove', { name: nameOf(row) })} onclick={() => pressBin(row)} />
+        </div>
       {/if}
-      <IconButton icon={ICONS.bin} size="sm" danger class={armed === row.part ? 'armed' : ''} label={armed === row.part ? ta('saved.removeArmed') : ta('saved.remove', { name: nameOf(row) })} onclick={() => pressBin(row)} />
     </div>
   {/each}
 </div>
@@ -58,14 +62,32 @@
     gap: 2px;
   }
 
-  .saved-row {
+  .saved-item {
+    border: 1px solid transparent;
+    border-radius: 9px;
+  }
+
+  /* An open row stands in a frame of its own, with its acts under it */
+  .saved-item.open {
+    border-color: rgb(255 255 255 / 12%);
+    background: rgb(255 255 255 / 3%);
+  }
+
+  .saved-row:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
+    width: 100%;
     min-width: 0;
-    min-height: 2.6rem;
-    padding: 0.2rem 0.4rem;
-    border-radius: 7px;
+    min-height: 2.8rem;
+    padding: 0.3rem 0.45rem;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
   }
 
   .saved-row:hover {
@@ -110,6 +132,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.85rem;
+    font-weight: 600;
   }
 
   .saved-words small {
@@ -118,6 +141,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* The owner's note on the save, in their own words */
+  .saved-note {
+    font-size: 0.78rem;
+    font-style: italic;
+    overflow-wrap: anywhere;
   }
 
   /* New here: a small chip in the amber of what this browser has not seen */
@@ -131,19 +161,44 @@
     font-weight: 600;
   }
 
-  .saved-open {
+  .saved-chev {
+    display: inline-flex;
     flex: none;
-    min-height: 1.7rem;
-    padding: 0 0.6rem;
-    font-size: 0.78rem;
+    opacity: 0.5;
+    transition: transform 0.2s ease;
+  }
+
+  .open .saved-chev {
+    transform: rotate(180deg);
+  }
+
+  .saved-acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    padding: 0 0.45rem 0.45rem;
+  }
+
+  .saved-open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    flex: none;
+    width: auto;
+    min-height: 1.8rem;
+    padding: 0 0.7rem;
+    font-size: 0.8rem;
   }
 
   .saved-here {
-    display: inline-grid;
-    place-items: center;
-    flex: none;
-    width: 1.7rem;
-    height: 1.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-right: auto;
+    font-size: 0.76rem;
     color: var(--urd-color-accent, #7c5cff);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .saved-chev { transition: none; }
   }
 </style>

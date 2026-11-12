@@ -17,6 +17,7 @@ import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
 import { shellState } from './shell.svelte.js';
+import { draftsState } from './drafts.svelte.js';
 import { pictureEditorState } from './picture-editor.svelte.js';
 import { paletteState } from './palette.svelte.js';
 import { siteState } from './site.svelte.js';
@@ -208,6 +209,7 @@ function onIframeLoad() {
   iframeEl?.contentDocument?.addEventListener('pointerdown', (event) => {
     if (pageState.blockMenu && !event.target?.closest?.('[data-opens-menu]')) pageState.blockMenu = null;
     if (shellState.toolMenu) shellState.toolMenu = null;
+    if (draftsState.draftsOpen && !draftsState.draftsPinned) draftsState.closeDrafts();
   }, true);
   bridge = createPreviewBridge(iframeEl, {
     onEdit: bridgeState.handleEdit,
@@ -240,7 +242,7 @@ function onIframeLoad() {
     onShortcuts: () => shellState.openShortcuts(),
     onToggleGrid: () => shellState.toggleGrid(),
     onPalette: () => paletteState.openPalette(),
-    onSaveKey: () => shellState.openSaveMenu(),
+    onSaveKey: () => draftsState.saveKey(),
     onCommands: (msg) => { paletteState.pluginCommands = msg.commands; },
     onMoveBlockSection: bridgeState.handleMoveBlockSection,
     onMobileReset: bridgeState.handleMobileReset,

@@ -25,7 +25,7 @@ register('./_svelte-loader.mjs', import.meta.url);
 const { render } = await import('svelte/server');
 
 test('every state module loads, and no module reads another\'s handle while they load', async () => {
-  const names = ['media', 'history', 'preview', 'shell', 'site', 'page', 'collections', 'templates', 'plugins', 'updater', 'blocks', 'bridge', 'publish', 'saved'];
+  const names = ['media', 'history', 'preview', 'shell', 'site', 'page', 'collections', 'templates', 'plugins', 'updater', 'blocks', 'bridge', 'publish', 'saved', 'drafts'];
   for (const name of names) {
     const mod = await import(`../editor/src/state/${name}.svelte.js`);
     const handle = mod[`${name}State`];
@@ -211,24 +211,103 @@ test('the Collections panel steps in, widens to two columns, or opens a table ov
   collectionsState.collectionsView = {};
 });
 
-test('Save stands beside Publish, greyed with the reason where there is nothing to save to, and Ctrl+S opens its menu', async () => {
+test('Drafts stands first in the System section of every layout, Save has left the top bar, and the tab opens the Drafts window or its pill', async () => {
   const { default: App } = await import('../editor/src/App.svelte');
   const { siteState } = await import('../editor/src/state/site.svelte.js');
   const { shellState } = await import('../editor/src/state/shell.svelte.js');
+  const { draftsState } = await import('../editor/src/state/drafts.svelte.js');
   const { liftSiteFile } = await import('$engine/migrate.js');
   const { readFileSync } = await import('node:fs');
   const site = liftSiteFile(JSON.parse(readFileSync(new URL('../template/content/site.json', import.meta.url), 'utf8')));
   siteState.site = site;
   siteState.siteDraft = structuredClone(site);
-  const body = render(App).body;
-  const save = body.match(/<button[^>]*class="[^"]*save-btn[^"]*"[^>]*>/)?.[0];
-  assert.ok(save, 'Save is drawn');
-  assert.match(save, /\sdisabled/, 'greyed while saving is not known to be possible');
-  assert.ok(body.indexOf('save-btn') < body.indexOf('publish-btn'), 'before Publish');
-  shellState.openSaveMenu();
-  const menu = render(App).body;
-  assert.match(menu, /class="tool-pop save-pop/, 'Ctrl+S opens the menu under Save');
+  assert.deepEqual(shellState.PANEL_GROUPS[2], ['drafts', 'history', 'update']);
+  assert.ok(!shellState.PANEL_IDS.includes('drafts'), 'Drafts is no panel the column holds');
+  shellState.activePanel = 'drafts';
+  assert.notEqual(shellState.activePanel, 'drafts', 'asking for it as a panel opens its window instead');
+  assert.equal(draftsState.draftsOpen, true);
+  draftsState.closeDrafts();
+  for (const layout of shellState.ADMIN_LAYOUTS) {
+    shellState.adminLayout = layout;
+    // The System group stands in sight: the panel's tabs show it with a System panel open, the page's tabs in the Site menu.
+    shellState.activePanel = layout === 'panel-tabs' ? 'history' : null;
+    shellState.toolMenu = layout === 'page-tabs' ? 'site' : null;
+    const body = render(App).body;
+    assert.equal([...body.matchAll(/data-drafts-tab/g)].length, 1, `${layout}: one Drafts tab`);
+    assert.doesNotMatch(body.match(/<button[^>]*data-drafts-tab[^>]*>/)[0], /\stitle=/, `${layout}: no tooltip on a tab that opens on a rest`);
+    assert.doesNotMatch(body, /save-btn|save-pop/, `${layout}: no Save in the top bar`);
+  }
   shellState.toolMenu = null;
+  shellState.activePanel = null;
+  shellState.adminLayout = 'top-tabs';
+  draftsState.openDrafts({ tab: 'browser' });
+  let body = render(App).body;
+  assert.match(body, /class="float-window drafts-window/, 'the window is drawn');
+  assert.match(body, /class="wip-tag[^"]*" title="drafts\.wipTip"[^>]*>drafts\.wip</, 'with W.I.P. on its head, and why in its tooltip');
+  assert.equal([...body.matchAll(/role="tab"/g)].length, 3, 'three tabs');
+  assert.doesNotMatch(body.match(/<button[^>]*dw-more-btn[^>]*>/)[0], /\stitle=/, 'no tooltip on the «⋯», which opens on a rest');
+  assert.match(body, /aria-label="drafts\.pill"/, 'the fold to a pill stands in the head as an icon');
+  assert.doesNotMatch(body, /aria-label="drafts\.backToTab"/, 'by its tab, no way back to stand there');
+  draftsState.moveDrafts({ left: 200, top: 300 });
+  assert.match(render(App).body, /aria-label="drafts\.backToTab"/, 'dragged, the way back by its tab');
+  draftsState.resetDraftsPlace();
+  assert.equal(draftsState.draftsPlace, null, 'and it lets the dragged place go');
+  assert.match(body, /aria-selected="true"[^>]*data-tab="browser"/, 'at the tab asked for');
+  draftsState.foldDraftsToPill();
+  body = render(App).body;
+  assert.doesNotMatch(body, /drafts-window/);
+  assert.match(body, /class="drafts-pill/, 'folded to its pill');
+  draftsState.openDrafts();
+  assert.equal(draftsState.draftsPill, false, 'the pill opens the window again');
+  draftsState.closeDrafts();
+});
+
+test('the Drafts window: a rest opens it and leaving closes it, a press keeps it, a rest leaves the pill folded, and a close forgets where the mouse was', async () => {
+  const { draftsState } = await import('../editor/src/state/drafts.svelte.js');
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const mouse = { pointerType: 'mouse' };
+  draftsState.closeDrafts();
+  draftsState.restOnDraftsTab(true, mouse);
+  await wait(220);
+  assert.equal(draftsState.draftsOpen, true, 'a rest on the tab opens it');
+  draftsState.restOnDraftsTab(false, mouse);
+  await wait(320);
+  assert.equal(draftsState.draftsOpen, false, 'leaving the tab closes a window the rest opened');
+  draftsState.restOnDraftsTab(true, { pointerType: 'touch' });
+  await wait(220);
+  assert.equal(draftsState.draftsOpen, false, 'a touch opens nothing by resting');
+  // A press keeps a window the rest opened.
+  draftsState.restOnDraftsTab(true, mouse);
+  await wait(220);
+  draftsState.toggleDrafts();
+  draftsState.restOnDraftsTab(false, mouse);
+  await wait(320);
+  assert.equal(draftsState.draftsOpen, true, 'pressed, it stays as the mouse leaves');
+  // Closed with the mouse on the window: the next rest's window still closes as the mouse leaves the tab.
+  draftsState.restOnDraftsWindow(true, mouse);
+  draftsState.closeDrafts();
+  draftsState.restOnDraftsTab(true, mouse);
+  await wait(220);
+  draftsState.restOnDraftsTab(false, mouse);
+  await wait(320);
+  assert.equal(draftsState.draftsOpen, false, 'the mouse on a window taken away is forgotten');
+  // Folded: a rest shows the window and leaves the pill; a press unfolds it.
+  draftsState.openDrafts();
+  draftsState.foldDraftsToPill();
+  draftsState.restOnDraftsTab(true, mouse);
+  await wait(220);
+  assert.equal(draftsState.draftsPill, true, 'a passing rest leaves the pill');
+  draftsState.restOnDraftsTab(false, mouse);
+  await wait(320);
+  assert.equal(draftsState.draftsOpen, false);
+  draftsState.toggleDrafts();
+  assert.equal(draftsState.draftsPill, false, 'a press unfolds it');
+  draftsState.closeDrafts();
+  // What is kept for later goes with a publish of everything.
+  draftsState.toggleLater('page-kaker');
+  assert.deepEqual(draftsState.draftsLater, ['page-kaker']);
+  draftsState.clearLater();
+  assert.deepEqual(draftsState.draftsLater, []);
 });
 
 test('the site is set together with its draft, after the saved drafts are met, so a panel drawn meanwhile never finds a site without its draft', async () => {

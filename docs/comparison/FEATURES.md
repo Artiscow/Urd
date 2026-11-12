@@ -1108,7 +1108,7 @@ The ADRs behind the «Where» column: [ADR-0009](../adr/0009-themed-ui-rule.md) 
 | Hidden or not-linked pages | SQ, SU | Public but not in the navigation | no | Has | - |
 | Enable or disable pages | SQ, SH | Take a page offline | no | Missing | v0.8 AR-5: section hide, extended to whole pages |
 | Set homepage | SQ | Choose the root page | no | Has: «Make front page» in the page's settings and the settings table moves it to / and the old front page to its own address, the nav's links following | Delivered 0.7.10.31 |
-| Draft pages and single-page publish | ZO, WP | Unpublished pages; publish one page at a time | no | Partial: edits are drafts in this browser until one publish of the whole site; a page can be hidden from visitors while it is worked on (0.7.23); no single-page publish | v0.8 AR-5; Watch: single-page publish |
+| Draft pages and single-page publish | ZO, WP | Unpublished pages; publish one page at a time | no | Partial: edits are drafts in this browser, saved to a drafts branch for another device (0.7.35.4.1), until one publish of the whole site; a page can be hidden from visitors while it is worked on (0.7.23); no single-page publish | 0.7.35.5 (publishing the ticked parts); v0.8 AR-5 |
 | Password-protected site or pages | FR, SQ, CA, FI, CV, SU, TI, ST, WF (Growth workspace), SH (private mode) | Shared password gate | yes | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
 | IP-restricted access | TI, SQ (SSO, Enterprise) | Allowlist by IP address, or sign-in through an identity provider (Okta, Entra ID, Google) | edge | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
 | Members-only pages | WX, SQ, DU, ST, TI, GH, WP | Login or plan-gated pages | yes | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
@@ -2187,7 +2187,7 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 |---|---|---|---|---|
 | Undo and redo | all with published shortcuts | ⌘Z / ⌘⇧Z | Has: undo and redo keys and buttons in the top bar, greyed when there is nothing to undo and naming the step in their tooltip, over the whole draft, 50 steps, a slider drag or a burst of one change as one step, empty steps passed, the selected block and the typing's caret put back, kept in the browser over a reload (0.7.10.32) | Delivered 0.7.10.32 |
 | History panel | EL, BR, FR, BD | Actions or revisions list | Has: the session's steps listed from the top bar's undo buttons, newest first, a click going back to one or forward to an undone one with the list left open (0.7.10.32, 0.7.24.1.1), «Redo everything» and «Discard drafts» at its foot (0.7.24.1.1); the History panel lists the 15 latest publishes | Delivered 0.7.10.32; the steps said and shown, named points, a page filter, the keyboard and the limit in BACKLOG («The undo history said and shown») |
-| Autosave | FR, WE | Auto-save; toggle (WE) | Has: drafts kept in the browser | - |
+| Autosave | FR, WE | Auto-save; toggle (WE) | Has: drafts kept in the browser as they are made, and «Autosave every 5 minutes», a switch per browser in the Drafts window, saving the ticked parts to the drafts branch (0.7.35.4.1) | Delivered 0.7.35.4.1 |
 | Snapshots or backups | WF, DU, WN, SH | Save snapshot; site backup | Has: git | - |
 | Version history or restore | FR, FS, WP, EL, BD, SH (beta) | Version history; rollback; revisions | Partial: the 15 latest publishes listed and the last one undone in admin; no restore of an older publish and no compare | v0.9 hardening; Watch, with the visual revision diff |
 | Visual revision diff | WP | Green and red changes | Missing | Watch |
@@ -2203,8 +2203,8 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 | Review or approval | WF, FR, SQ (Enterprise) | Request review; sign-off | Missing | After v1.0: PR per draft |
 | CMS draft publishing flow | WS, WE | Drafts with side-by-side compare | Partial: drafts across pages; no side-by-side compare | Watch, with the visual revision diff |
 | Publish or quick publish | WS, CA, FR, FS, WN, SH | Shortcut publish; unpublish | Partial: the Publish button for every draft; no publish key and no unpublish short of deleting the page | 0.7.10; v0.8 AR-5 |
-| Selective save | WP | Choose the entities to save | Missing | Watch |
-| Save draft | DV, WP | ⌘⇧S draft | Has: drafts across pages | - |
+| Selective save | WP | Choose the entities to save | Has: a tick per part in the Drafts window's This browser tab decides what a save writes, an unticked part kept for later (0.7.35.4.1) | Delivered 0.7.35.4.1 |
+| Save draft | DV, WP | ⌘⇧S draft | Has: drafts across pages, and Ctrl+S saves the ticked drafts to the drafts branch for another device without touching the live site (0.7.35.2, 0.7.35.4.1) | Delivered 0.7.35.4.1 |
 | Preview or share links | FR, WT, WP, SQ (Enterprise), SH | Branch preview; share links | Missing | After v1.0: PR per draft |
 | Password protection | CV | Website password | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
 | Private editing or under construction | JI | Edit in private | Missing | Watch |

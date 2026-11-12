@@ -43,6 +43,20 @@ test('a part to write: its keys are its own texts, within the size, with a sha f
   assert.equal(partProblem({ name: 'site', keys: { 'urd-draft-site': '{}' }, later: 'yes' }), 'later');
 });
 
+test("a save's note and the browser's name: words within their lengths", () => {
+  const site = { name: 'site', keys: { 'urd-draft-site': '{}' } };
+  assert.equal(partProblem({ ...site, note: 'New opening text', device: 'Office' }), null);
+  assert.equal(partProblem({ ...site, note: 'x'.repeat(200), device: 'x'.repeat(40) }), null);
+  assert.equal(partProblem({ ...site, note: 'x'.repeat(201) }), 'note');
+  assert.equal(partProblem({ ...site, note: 3 }), 'note');
+  assert.equal(partProblem({ ...site, device: 'x'.repeat(41) }), 'device');
+  assert.equal(partProblem({ ...site, device: ['Office'] }), 'device');
+  const next = mergeIndex(null, [{ name: 'site', hash: 'h1', note: 'New opening text', device: 'Office' }, { name: 'plugins', hash: 'p1', note: '', device: '' }], [], { login: 'owner', now: 't1' });
+  assert.equal(next.parts.site.note, 'New opening text');
+  assert.equal(next.parts.site.device, 'Office');
+  assert.ok(!('note' in next.parts.plugins) && !('device' in next.parts.plugins), 'an empty note and name are left out');
+});
+
 test('the index after a save: who and when from the server, the parts written and the parts removed', () => {
   const before = { version: 1, parts: { site: { savedAt: 't0', saver: 'a', hash: 'h0', base: null }, 'page-kaker': { savedAt: 't0', saver: 'a', hash: 'k0', base: null } } };
   const next = mergeIndex(before, [{ name: 'site', hash: 'h1', base: 'b'.repeat(40), title: 'Site settings', later: true, savedAt: 'forged', saver: 'forged' }], ['page-kaker'], { login: 'owner', now: 't1' });

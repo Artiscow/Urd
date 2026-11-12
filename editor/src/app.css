@@ -2131,9 +2131,9 @@
     pointer-events: none;
   }
 
-  /* Shared control height (2.2rem) and size in the panels: fields and
-     buttons must line up wherever they stand */
+  /* Shared control height (2.2rem) and size in the panels and the Drafts window: fields and buttons must line up wherever they stand */
   .panel-body input:not([type]):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
+  .drafts-window input:not([type]):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .panel-body input[type='text']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .panel-body input[type='tel']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .panel-body input[type='email']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
@@ -4547,7 +4547,7 @@
     gap: 0.45rem;
   }
 
-  /* The count in its round badge, centred on its digits: proportional figures, so a 1 stands in the middle as a 6 does, and, where the browser trims a line to its capitals (text-box), the digits' own height between equal paddings rather than the font's line */
+  /* The count in its round badge of one fixed height, centred on its digits: proportional figures, so a 1 stands in the middle as a 6 does */
   .publish-count {
     display: inline-grid;
     place-items: center;
@@ -4559,17 +4559,12 @@
     background: rgb(0 0 0 / 22%);
     font-size: 0.75rem;
     font-weight: 600;
+    line-height: 1;
   }
 
-  @supports (text-box: trim-both cap alphabetic) {
-    .publish-count {
-      display: inline-block;
-      height: auto;
-      padding: calc((1.25rem - 1cap) / 2) 0.35rem;
-      line-height: 1;
-      text-align: center;
-      text-box: trim-both cap alphabetic;
-    }
+  /* The number's own box trimmed to the digits' cap height where the browser can, so the circle, one fixed height, centres the figure itself rather than its line */
+  .publish-count > span {
+    text-box: trim-both cap alphabetic;
   }
 
   /* The menu ends inside the window: what waits scrolls in a box of its own, and the acts and the last publish keep their place */
@@ -4620,71 +4615,6 @@
 
   .publish-pop .publish-head {
     padding: 4px 8px 2px;
-  }
-
-  /* Save beside Publish (ADR-0032): its count of what stands in this browser alone in the amber of that band, and the menu Ctrl+S opens under its right edge */
-  .save-wrap {
-    position: relative;
-    display: inline-flex;
-  }
-
-  .save-btn {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-  }
-
-  /* A draft saved on another device that this browser has not seen: the amber dot on Save's corner */
-  .save-btn .save-dot {
-    top: -3px;
-    right: -3px;
-  }
-
-  .save-btn .save-count {
-    background: color-mix(in srgb, #e2b84a 18%, transparent);
-    color: #e2b84a;
-  }
-
-  .tool-pop.save-pop {
-    left: auto;
-    right: 0;
-    min-width: 13rem;
-  }
-
-  .save-pop .publish-act:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    min-height: 2.2rem;
-    padding-block: 0;
-    gap: 0.5rem;
-    white-space: nowrap;
-  }
-
-  .save-pop .publish-main:not(:disabled) {
-    color: var(--urd-color-accent, #7c5cff);
-    font-weight: 600;
-  }
-
-  /* The saved drafts under the acts: wide enough for a picture, a name and two buttons, scrolling in a box of their own */
-  .save-pop > .publish-rows {
-    width: min(21rem, 80vw);
-    max-height: 20rem;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .save-pop .publish-head {
-    padding: 4px 8px 2px;
-  }
-
-  /* A row's buttons keep their own width beside the picture and the words, not the menu's full width */
-  .tool-pop .saved-row .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    flex: none;
-    width: auto;
-  }
-
-  .tool-pop .saved-row .icon-btn.sm:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
-    width: 1.7rem;
-    justify-content: center;
   }
 
   /* ---- Foldetrinnene (the fold steps; tests/topbar-fold.test.mjs anchors

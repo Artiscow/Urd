@@ -1,9 +1,9 @@
 /**
  * The saved drafts (ADR-0032): the work kept on the drafts branch through /api/github/drafts, for another device, without touching the live site.
- * Nothing saved comes into this browser by itself: every saved draft stands in the Saved menu under Save, and is opened here by choice as one undo step (openSaved); a saved draft this browser has not seen is told by a dot on Save and a line in the status bar, as the admin loads and as its tab comes back into view.
+ * Nothing saved comes into this browser by itself: every saved draft stands in the Drafts window's Saved tab (state/drafts.svelte.js), and is opened here by choice as one undo step (openSaved); a saved draft this browser has not seen is told by a dot on the Drafts tab and a line in the status bar, as the admin loads and as its tab comes back into view.
  * As the editor loads, a part this browser holds exactly as it saw it saved, whose saved copy has left the branch (published or discarded elsewhere), leaves this browser too, before the stores are built (meetOnLoad, lib/saved-model.js meet).
- * Each part this browser holds stands in this browser alone, saved, or live; Save writes what stands in this browser alone, and asks before it writes over a part saved on another device since this browser last saw it.
- * What this browser last saw of each saved part is kept in `urd-saved-seen`, and what the Saved menu last showed in `urd-saved-noticed`, both admin keys.
+ * Each part this browser holds stands in this browser alone, saved, or live; a save writes the ticked parts that stand in this browser alone, with the owner's note and this browser's name, and asks before it writes over a part saved on another device since this browser last saw it.
+ * What this browser last saw of each saved part is kept in `urd-saved-seen`, and what the Saved tab last showed in `urd-saved-noticed`, both admin keys.
  */
 import { ta, taApiError, adminLang } from '$engine/i18n.js';
 import { contentHash } from '$engine/imageTools.js';
@@ -16,6 +16,7 @@ import { updaterState } from './updater.svelte.js';
 import { templatesState } from './templates.svelte.js';
 import { collectionsState } from './collections.svelte.js';
 import { siteState } from './site.svelte.js';
+import { draftsState } from './drafts.svelte.js';
 
 const SEEN_KEY = 'urd-saved-seen';
 const NOTICED_KEY = 'urd-saved-noticed';
@@ -24,8 +25,12 @@ const REREAD_EVERY = 60_000;
 const ENDPOINT = '/api/github/drafts';
 /** How long the load waits for the saved drafts in all before it goes on without them. */
 const LOAD_WAIT = 5000;
-/** The longest title the drafts function keeps. */
+/** The longest title, note and browser's name the drafts function keeps. */
 const TITLE_MAX = 200;
+const NOTE_MAX = 200;
+const DEVICE_MAX = 40;
+/** How long the Drafts tab says a save is done. */
+const JUST_SAVED = 3000;
 /** The answers that say saving cannot be done here: no sign-in, no access, no publishing layer, or one not set up. */
 const NOT_HERE = new Set([401, 403, 404, 503]);
 
@@ -36,13 +41,18 @@ let head = null;
 let index = $state.raw({ version: 1, parts: {} });
 /** The hash of each saved part as this browser last saw it. */
 let seen = $state.raw(readKept(SEEN_KEY));
-/** The hash of each saved part as the Saved menu last showed it, which ends its being new here. */
+/** The hash of each saved part as the Saved tab last showed it, which ends its being new here. */
 let noticed = $state.raw(readKept(NOTICED_KEY));
 let busy = $state(false);
-/** The saved pages' documents, by part, read as the Saved menu first opens, for their pictures: kept while their hash stands. */
+/** A save just done: the Drafts tab says so for a few seconds. */
+let justSaved = $state(false);
+let justTimer = 0;
+/** The saved pages' documents, by part, read as the Saved tab first opens, for their pictures: kept while their hash stands. */
 let docs = $state.raw({});
 /** The new parts the status line has already told of this session. */
 const told = new Set();
+/** Whether autosave has told this session of parts it could not write, so it says so once rather than every few minutes. */
+let toldNotStored = false;
 let lastRead = 0;
 
 function readKept(key) {
@@ -134,7 +144,7 @@ const rows = $derived.by(() => {
   return standing({ parts: historyState.unpublished, localHash: (name) => hashOf(name, byPart), saved: available ? index.parts : {}, seen });
 });
 const tally = $derived(counts(rows));
-/** The Saved menu's rows: every saved part, the newest first. */
+/** The Saved tab's rows: every saved part, the newest first. */
 const list = $derived.by(() => {
   void historyState.edits;
   if (!available) return [];
@@ -172,12 +182,12 @@ async function meetOnLoad() {
   }
 }
 
-/** The status line tells of the saved drafts this browser has not seen and has not been told of this session, with a way to the Saved menu. */
+/** The status line tells of the saved drafts this browser has not seen and has not been told of this session, with a way to the Drafts window's Saved tab. */
 function noticeNew() {
   const news = list.filter((r) => r.fresh && !told.has(`${r.part}:${r.hash}`));
   if (!news.length) return;
   for (const r of news) told.add(`${r.part}:${r.hash}`);
-  shellState.setStatus(ta(news.length === 1 ? 'saved.news.one' : 'saved.news', { n: news.length }), 'info', { label: ta('saved.show'), run: () => shellState.openSaveMenu() });
+  shellState.setStatus(ta(news.length === 1 ? 'saved.news.one' : 'saved.news', { n: news.length }), 'info', { label: ta('saved.show'), run: () => draftsState.openDrafts({ tab: 'saved' }) });
 }
 
 /** As the tab comes back into view, the index is read again, at most once a minute, and anything new is told. */
@@ -219,43 +229,53 @@ async function readAgain() {
 }
 
 /**
- * Save: writes what stands in this browser alone, and asks first where a part was saved elsewhere since; a saved copy is taken away only by the Saved menu's bin.
- * A part this browser cannot write (a draft held in memory where the storage is full, a page whose draft key is another part's) is left, and the status line says so.
+ * A save: writes the parts named (`names`, every part that stands in this browser alone where none are named) with the owner's `note` and this browser's name (`device`), and asks first where a part was saved elsewhere since; a saved copy is taken away only by the Saved tab's bin.
+ * With `quiet` (Ctrl+S, autosave) a part saved elsewhere since is left for the owner rather than asked about, and with `auto` (autosave) a save that goes well says nothing, the Drafts tab's mark standing for it.
+ * A part this browser cannot write (a draft held in memory where the storage is full, a page whose draft key is another part's) is left, and the status line says so, once a session for autosave.
+ * @param {{names?: string[]|null, note?: string, device?: string, quiet?: boolean, auto?: boolean}} [opts]
+ * @returns {Promise<boolean>} Whether anything was saved
  */
-async function save() {
-  if (busy || available === false) return;
+async function save({ names = null, note = '', device = '', quiet = false, auto = false } = {}) {
+  if (busy || available === false) return false;
   busy = true;
   try {
     for (let attempt = 0; attempt < 2; attempt++) {
-      if (!(await readAgain())) return;
+      if (!(await readAgain())) return false;
       // The head the index was read at, posted as it is even where the index is read again meanwhile.
       const expect = head;
       const byPart = keysByPart(storedKeys());
       const now = standing({ parts: historyState.unpublished, localHash: (name) => hashOf(name, byPart), saved: index.parts, seen });
-      const asked = now.filter((r) => r.band === 'browser');
-      const writes = asked.map((r) => ({
-        name: r.part, keys: textsOf(r.part, byPart), hash: hashOf(r.part, byPart), title: titleOf(r),
+      const asked = now.filter((r) => r.band === 'browser' && (!names || names.includes(r.part)));
+      const words = { ...(note ? { note: note.slice(0, NOTE_MAX) } : {}), ...(device ? { device: device.slice(0, DEVICE_MAX) } : {}) };
+      let writes = asked.map((r) => ({
+        name: r.part, keys: textsOf(r.part, byPart), hash: hashOf(r.part, byPart), title: titleOf(r), ...words,
         ...(updaterState.baseSha ? { base: updaterState.baseSha } : {}),
       })).filter((w) => Object.keys(w.keys).length && w.hash);
       const left = asked.length - writes.length;
-      if (!writes.length) {
-        if (left) shellState.setStatus(ta('saved.notStored'), 'error');
-        return;
-      }
+      const tellLeft = () => {
+        if (auto && toldNotStored) return;
+        if (auto) toldNotStored = true;
+        shellState.setStatus(ta('saved.notStored'), 'error');
+      };
       const over = overwrites(writes.map((w) => w.name), index.parts, seen);
-      if (over.length) {
+      if (quiet) writes = writes.filter((w) => !over.includes(w.name));
+      if (!writes.length) {
+        if (left) tellLeft();
+        return false;
+      }
+      if (over.length && !quiet) {
         const ok = await shellState.askConfirm({
           title: ta('saved.overTitle'),
           lines: over.map((name) => ta('saved.overLine', { name: titleOf(now.find((r) => r.part === name) ?? { part: name, ...partOfName(name) }), when: whenOf(index.parts[name].savedAt), who: index.parts[name].saver })),
           okLabel: ta('saved.overOk'),
         });
-        if (!ok) return;
+        if (!ok) return false;
       }
       const res = await post({ expect, writes });
       if (res.status === 409 && res.body?.code === 'draftsRace' && attempt === 0) continue;
       if (!res.ok || !indexOf(res.body)) {
         shellState.setStatus(taApiError(res.body) ?? ta('saved.failed'), 'error');
-        return;
+        return false;
       }
       head = res.body.head;
       index = indexOf(res.body);
@@ -263,10 +283,14 @@ async function save() {
       for (const w of writes) next[w.name] = w.hash;
       keepSeen(next);
       const n = writes.length;
-      if (left) shellState.setStatus(ta('saved.notStored'), 'error');
-      else shellState.setStatus(ta(n === 1 ? 'saved.done.one' : 'saved.done', { n }), 'ok');
-      return;
+      clearTimeout(justTimer);
+      justSaved = true;
+      justTimer = setTimeout(() => { justSaved = false; }, JUST_SAVED);
+      if (left) tellLeft();
+      else if (!auto) shellState.setStatus(ta(n === 1 ? 'saved.done.one' : 'saved.done', { n }), 'ok');
+      return true;
     }
+    return false;
   } finally {
     busy = false;
   }
@@ -377,7 +401,7 @@ async function openSaved(name) {
   historyState.updateDirty();
 }
 
-/** The bin in the Saved menu: the saved copy taken away from the branch, this browser's own draft left as it is. */
+/** The bin in the Saved tab: the saved copy taken away from the branch, this browser's own draft left as it is. */
 async function removeSaved(name) {
   if (!available) return;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -399,7 +423,7 @@ async function removeSaved(name) {
   }
 }
 
-/** The saved pages' documents for their pictures, read once as the Saved menu opens and kept while their hash stands. */
+/** The saved pages' documents for their pictures, read once as the Saved tab opens and kept while their hash stands. */
 async function loadPictures() {
   const wanted = list.filter((r) => r.kind === 'page' && docs[r.part]?.hash !== r.hash);
   if (!wanted.length) return;
@@ -415,7 +439,7 @@ async function loadPictures() {
   docs = next;
 }
 
-/** As the Saved menu closes, what it showed is no longer new here. */
+/** As the Saved tab is left, what it showed is no longer new here. */
 function markNoticed() {
   if (!list.length) return;
   const next = { ...noticed };
@@ -472,10 +496,12 @@ async function discardSaved() {
 export const savedState = {
   get savedAvailable() { return available; },
   get savedBusy() { return busy; },
+  /** A save just done, for the Drafts tab's mark. */
+  get savedJust() { return justSaved; },
   /** Every part with where it stands, for the Publish menu's and History's bands. */
   get savedRows() { return rows; },
   get saveCount() { return available ? tally.save : 0; },
-  /** The Saved menu's rows, and how many of them are new here. */
+  /** The Saved tab's rows, and how many of them are new here. */
   get savedList() { return list; },
   get savedFresh() { return fresh; },
   savedDoc: (name) => docs[name]?.doc ?? null,

@@ -7,7 +7,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { placeBesideBlock, clampPlace, wideFits, givesWay } from '../editor/src/lib/menu-place.js';
+import { placeBesideBlock, clampPlace, wideFits, givesWay, placeByTab } from '../editor/src/lib/menu-place.js';
 
 const VIEW = { w: 1600, h: 1000 };
 const SIZE = { w: 400, h: 600 };
@@ -85,4 +85,15 @@ test('givesWay: only a wide menu beside a block gives way, never a section\'s or
   assert.equal(givesWay(block, view, { ...opts, wide: false }), false, 'a menu not wide has nothing to give');
   assert.equal(givesWay(null, view, opts), false, 'without the canvas there is no block to keep clear');
   assert.equal(givesWay({ left: 320, top: 200, right: 420, bottom: 300 }, { w: 1500, h: 900 }, opts), false, 'with room beside the block it stays wide');
+});
+
+test('a window opened from a tab stands under a tab, beside an icon or a word, at the top right from nowhere, and inside the window', () => {
+  const view = { w: 1400, h: 900 };
+  const size = { w: 380, h: 420 };
+  const tab = { left: 600, top: 48, right: 680, bottom: 80 };
+  assert.deepEqual(placeByTab(tab, size, view), { left: 600, top: 86 });
+  const icon = { left: 6, top: 700, right: 46, bottom: 740 };
+  assert.deepEqual(placeByTab(icon, size, view, { beside: true }), { left: 52, top: 472 }, 'beside, lifted to stay inside');
+  assert.deepEqual(placeByTab(null, size, view), { left: 1004, top: 64 });
+  assert.deepEqual(placeByTab({ left: 1300, top: 48, right: 1380, bottom: 80 }, size, view), { left: 1012, top: 86 }, 'kept inside the right edge');
 });

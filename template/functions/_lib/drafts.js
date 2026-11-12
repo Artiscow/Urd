@@ -59,7 +59,7 @@ export function keyOfPart(name, key) {
 
 /**
  * Checks one part a save writes: its name, its keys (each the part's own, each a text), and its size.
- * @param {{name: unknown, keys: unknown, hash?: unknown, base?: unknown, title?: unknown, later?: unknown}} write
+ * @param {{name: unknown, keys: unknown, hash?: unknown, base?: unknown, title?: unknown, later?: unknown, note?: unknown, device?: unknown}} write
  * @returns {string|null} null when it may be written, else why not
  */
 export function partProblem(write) {
@@ -78,6 +78,8 @@ export function partProblem(write) {
   if (write.base != null && (typeof write.base !== 'string' || !/^[0-9a-f]{40}$/.test(write.base))) return 'base';
   if (write.title !== undefined && (typeof write.title !== 'string' || write.title.length > 200)) return 'title';
   if (write.later !== undefined && typeof write.later !== 'boolean') return 'later';
+  if (write.note !== undefined && (typeof write.note !== 'string' || write.note.length > 200)) return 'note';
+  if (write.device !== undefined && (typeof write.device !== 'string' || write.device.length > 40)) return 'device';
   return null;
 }
 
@@ -88,9 +90,9 @@ export const partText = (keys) => JSON.stringify({ v: 1, keys });
 export const emptyIndex = () => ({ version: 1, parts: {} });
 
 /**
- * The index after a save: each written part with when and by whom it was saved (the server's own, never the request's), its hash, the live base it was made from, its title and whether it is kept for later; each removed part gone.
+ * The index after a save: each written part with when and by whom it was saved (the server's own, never the request's), its hash, the live base it was made from, its title, whether it is kept for later, the owner's note on the save and the name of the browser it was saved from; each removed part gone.
  * @param {{version?: number, parts?: Record<string, object>}|null} index
- * @param {Array<{name: string, hash?: string, base?: string|null, title?: string, later?: boolean}>} writes
+ * @param {Array<{name: string, hash?: string, base?: string|null, title?: string, later?: boolean, note?: string, device?: string}>} writes
  * @param {string[]} removes
  * @param {{login: string, now: string}} by
  */
@@ -105,6 +107,8 @@ export function mergeIndex(index, writes, removes, { login, now }) {
       base: write.base ?? null,
       ...(write.title ? { title: write.title } : {}),
       ...(write.later ? { later: true } : {}),
+      ...(write.note ? { note: write.note } : {}),
+      ...(write.device ? { device: write.device } : {}),
     };
   }
   return { version: 1, parts };

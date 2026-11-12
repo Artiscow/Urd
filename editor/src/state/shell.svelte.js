@@ -22,6 +22,7 @@ import { TAB_MENU_STYLES, tabMenuStyleOf } from '../lib/panel-folds.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { savedState } from './saved.svelte.js';
+import { draftsState } from './drafts.svelte.js';
 import { pageState } from './page.svelte.js';
 import { paletteState } from './palette.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
@@ -180,10 +181,10 @@ function onKeydown(e) {
   // A dialog over the editor (the link editor, the design picker) keeps its keys: the page behind it is not changed.
   if (e.target instanceof Element && e.target.closest('dialog')) return;
   const key = e.key.toLowerCase();
-  // Ctrl+S anywhere in the admin asks whether to save the drafts or publish them, in place of the browser's saving of the page.
+  // Ctrl+S anywhere in the admin saves the ticked drafts (state/drafts.svelte.js), in place of the browser's saving of the page.
   if (key === 's' && !e.altKey && !e.shiftKey) {
     e.preventDefault();
-    openSaveMenu();
+    draftsState.saveKey();
     return;
   }
   // Ctrl+K outside a text opens the command palette, and Ctrl+Shift+P everywhere a browser keeps Ctrl+K for itself; in a text Ctrl+K stays the link key (the text toolbar's).
@@ -421,15 +422,21 @@ function unfoldPanel() {
   }
 }
 
-/** The panels grouped by workflow: build the page, style the site,
- *  tools. Shown with dividers in the panel picker. The ids are stable
- *  English identifiers (never display text); PANEL_LABELS owns what the
- *  user sees. */
+/** The panels grouped by workflow: build the page, style the site, tools.
+ *  Shown with dividers in the panel picker.
+ *  The ids are stable English identifiers (never display text); PANEL_LABELS owns what the user sees.
+ *  Drafts stands first in the System group as a tab of its own, which opens the Drafts window (state/drafts.svelte.js) rather than a panel. */
 const PANEL_GROUPS = [
   ['pages', 'blocks', 'properties', 'grid'],
   ['site', 'legal', 'theme', 'nav', 'footer', 'collections', 'plugins'],
-  ['history', 'update'],
+  ['drafts', 'history', 'update'],
 ];
+
+/** The tabs that open a window of their own, never the panel column. */
+const WINDOW_TABS = ['drafts'];
+
+/** The panels the column can hold. */
+const PANEL_IDS = PANEL_GROUPS.flat().filter((id) => !WINDOW_TABS.includes(id));
 
 /** Uppercase label above each group in the rail, in the same order. */
 const PANEL_GROUP_KEYS = ['rail.thisPage', 'rail.site', 'rail.system'];
@@ -439,7 +446,7 @@ const PANEL_LABELS = $derived({ ...Object.fromEntries(PANEL_GROUPS.flat().map((i
 
 // The panel and the fold the admin starts with; a remembered id from an older version may name a panel that is gone.
 {
-  const panels = PANEL_GROUPS.flat();
+  const panels = PANEL_IDS;
   const start = startPanels({ pref: panelsPref, layout: adminLayout, panels, stored: localStorage.getItem(PANEL_OPEN_KEY), storedFolded: localStorage.getItem(PANEL_FOLDED_KEY) === '1', start: panelsStart });
   activePanel = start.panel;
   panelFolded = start.folded;
@@ -451,7 +458,7 @@ const PANELS_PREF_LABELS = { remember: 'settings.panelsRemember', reset: 'settin
 
 const PANELS_PREF_OPTIONS = $derived(panelsPrefsFor(adminLayout).map((id) => [id, ta(PANELS_PREF_LABELS[id])]));
 
-const PANELS_START_OPTIONS = $derived(PANEL_GROUPS.flat().map((id) => [id, PANEL_LABELS[id]]));
+const PANELS_START_OPTIONS = $derived(PANEL_IDS.map((id) => [id, PANEL_LABELS[id]]));
 
 /* The panel intros (the prose rule, ADR-0016): the explanation lives as
    a tooltip on the panel title, never as a paragraph in the panel.
@@ -526,6 +533,10 @@ function setAdminLang(v) {
 }
 
 function togglePanel(name) {
+  if (WINDOW_TABS.includes(name)) {
+    draftsState.toggleDrafts();
+    return;
+  }
   activePanel = activePanel === name ? null : name;
   toolMenu = null;
   panelFolded = false;
@@ -805,12 +816,6 @@ const FOLD_MQ = { view: 1079, device: 999, zoom: 919 };
 const FOLD_OFFSET = { 'page-tabs': 80 };
 
 let toolMenu = $state(null);
-/** Ctrl+S or ArrowDown on Save, in the admin or on the canvas, or the status line's «Show»: the menu under Save, with the acts first and then the saved drafts; `saveMenuKeyed` counts these openings, which give the focus to its first act. */
-let saveMenuKeyed = $state(0);
-function openSaveMenu() {
-  toolMenu = 'save';
-  saveMenuKeyed += 1;
-}
 
 let toolMenuEl = $state(null);
 
@@ -1028,13 +1033,13 @@ export function effects() {
 
   /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu, the devices' sizes, the page switcher and the steps belong to no cluster. */
   $effect(() => {
-    if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps', 'publish', 'save'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
+    if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps', 'publish'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. A question asked from a menu (the steps' «Discard drafts») is part of it: pressing in the question or answering it with Escape leaves the menu open. */
   $effect(() => {
     if (!toolMenu) return;
-    const onDown = (e) => { if (!toolMenuEl?.contains(e.target) && !e.target?.closest?.('.confirm-dialog, .publish-wrap, .save-wrap')) toolMenu = null; };
+    const onDown = (e) => { if (!toolMenuEl?.contains(e.target) && !e.target?.closest?.('.confirm-dialog, .publish-wrap')) toolMenu = null; };
     const onKey = (e) => { if (e.key === 'Escape' && !confirmBox) toolMenu = null; };
     // Focus moving into the preview (a jump between steps selects a block there) is no press outside: a press in the preview closes the menu from there (preview.svelte.js).
     const onBlur = () => { if (document.activeElement?.tagName !== 'IFRAME') toolMenu = null; };
@@ -1121,8 +1126,16 @@ export const shellState = {
   get PANELS_PREF_OPTIONS() { return PANELS_PREF_OPTIONS; },
   get PANELS_START_OPTIONS() { return PANELS_START_OPTIONS; },
   get activePanel() { return activePanel; },
-  set activePanel(v) { activePanel = v; if (v) panelFolded = false; },
+  set activePanel(v) {
+    if (WINDOW_TABS.includes(v)) {
+      draftsState.openDrafts();
+      return;
+    }
+    activePanel = v;
+    if (v) panelFolded = false;
+  },
   PANEL_GROUPS,
+  PANEL_IDS,
   PANEL_GROUP_KEYS,
   get PANEL_LABELS() { return PANEL_LABELS; },
   PANEL_INTROS,
@@ -1208,8 +1221,6 @@ export const shellState = {
   get SETTINGS_PICTURES_OPTIONS() { return SETTINGS_PICTURES_OPTIONS; },
   FOLD_MQ,
   get toolMenu() { return toolMenu; },
-  openSaveMenu,
-  get saveMenuKeyed() { return saveMenuKeyed; },
   set toolMenu(v) { toolMenu = v; },
   get toolMenuEl() { return toolMenuEl; },
   set toolMenuEl(v) { toolMenuEl = v; },

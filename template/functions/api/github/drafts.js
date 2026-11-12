@@ -3,7 +3,7 @@
  *
  * GET                 { head, index }: the branch's head and its index, or head null and an empty index where nothing is saved yet.
  * GET ?parts=a,b      { head, parts: { a: text|null } }: the parts' file texts at the head, in one GraphQL call (a text GitHub cuts short is read as a blob).
- * POST { expect, writes: [{ name, keys, hash?, base?, title?, later? }], removes: [name], all? }
+ * POST { expect, writes: [{ name, keys, hash?, base?, title?, later?, note?, device? }], removes: [name], all? }
  *                     { head, index }: one commit on the branch with the index, each written part and each removed one (`all` removes every part).
  *                     `expect` is the head the editor last read (null for none); a head that moved since gives 409 `draftsRace` with the head as it stands.
  *

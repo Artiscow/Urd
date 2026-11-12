@@ -189,13 +189,50 @@ function barButton(content, title, run, className = '', cap = '') {
   return btn;
 }
 
-/** The ⋮ of the shorter bars: the right-click menu of the block or the section, opened under it. */
+/**
+ * The ⋮ of the shorter bars: the right-click menu of the block or the section, opened under it.
+ * A mouse resting on it, with no button held, opens the menu without taking the focus or changing the selection, and the menu closes a moment after the mouse leaves the ⋮ and the menu, or at Escape (showContextMenu); a press opens it with the block or the section selected and the focus on its first item, keeps a menu the rest opened the same way, and closes one it opened.
+ * It carries no tooltip, since it opens on a rest; its name stands in its aria-label.
+ */
 function moreButton(open) {
   const btn = barButton(MORE_SVG, ta('canvas.bar.more'), () => {
+    clearTimeout(restTimer);
+    if (contextMenu?.from?.button === btn) {
+      if (contextMenu.from.rest) {
+        const { menu } = contextMenu;
+        contextMenu.from.rest = false;
+        contextMenu.from.select?.();
+        menu.querySelector('[role="menuitem"]')?.focus();
+      } else closeContextMenu();
+      return;
+    }
     const r = btn.getBoundingClientRect();
-    open(r.left, r.bottom + 4);
+    open(r.left, r.bottom + 4, { button: btn, rest: false });
   }, 'urd-edit-more', ta('canvas.cap.more'));
+  btn.removeAttribute('title');
   btn.setAttribute('aria-haspopup', 'menu');
+  let restTimer = 0;
+  btn.addEventListener('pointerenter', (event) => {
+    if (event.pointerType !== 'mouse' || event.buttons) return;
+    if (contextMenu?.from?.button === btn) {
+      contextMenu.hover.button = true;
+      contextMenu.stay();
+      return;
+    }
+    clearTimeout(restTimer);
+    restTimer = setTimeout(() => {
+      if (!btn.isConnected || contextMenu?.from?.button === btn) return;
+      const r = btn.getBoundingClientRect();
+      open(r.left, r.bottom + 4, { button: btn, rest: true });
+    }, 180);
+  });
+  btn.addEventListener('pointerleave', (event) => {
+    if (event.pointerType !== 'mouse') return;
+    clearTimeout(restTimer);
+    if (contextMenu?.from?.button !== btn) return;
+    contextMenu.hover.button = false;
+    contextMenu.leaveSoon();
+  });
   return btn;
 }
 
@@ -291,8 +328,9 @@ function closeContextMenu(returnFocus = true) {
 /**
  * Shows a menu at (x, y) for `el`, filled by `build(item, sep)`. An item
  * with `arm` asks for a second press, the way the section bar's deletion does (armedButton).
+ * `from` is the bar's ⋮ that opened it, if one did (moreButton): a press on it is no press outside, and with `rest`, opened by a mouse resting on the ⋮, the menu leaves the focus where it is and closes a moment after the mouse leaves the ⋮ and the menu.
  */
-function showContextMenu(el, x, y, label, build) {
+function showContextMenu(el, x, y, label, build, from = null) {
   closeContextMenu(false);
   const menu = document.createElement('div');
   menu.className = 'urd-ctx';
@@ -354,20 +392,50 @@ function showContextMenu(el, x, y, label, build) {
   // A press outside, a scroll of the page, a window the owner leaves or
   // resizes: all close the menu. The listeners are set after the frame the
   // menu opens in, since opening it can redraw the section under the pointer.
-  const outside = (event) => { if (!menu.contains(event.target)) closeContextMenu(false); };
+  const outside = (event) => { if (!menu.contains(event.target) && !from?.button.contains(event.target)) closeContextMenu(false); };
+  // A menu a rest opened holds no focus, so Escape anywhere on the page closes it, before the page's own keys see the press.
+  const onEscape = (event) => {
+    if (event.key !== 'Escape' || !contextMenu?.from?.rest || contextMenu.menu !== menu) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeContextMenu(false);
+  };
+  // Opened by a rest: the mouse on the ⋮ or on the menu keeps it, and a moment after it has left both, the menu closes.
+  const hover = { button: Boolean(from?.rest), menu: false };
+  let leaveTimer = 0;
+  const stay = () => clearTimeout(leaveTimer);
+  const leaveSoon = () => {
+    clearTimeout(leaveTimer);
+    leaveTimer = setTimeout(() => {
+      if (contextMenu?.menu === menu && contextMenu.from?.rest && !hover.button && !hover.menu) closeContextMenu(false);
+    }, 280);
+  };
+  menu.addEventListener('pointerenter', (event) => {
+    if (event.pointerType !== 'mouse') return;
+    hover.menu = true;
+    stay();
+  });
+  menu.addEventListener('pointerleave', (event) => {
+    if (event.pointerType !== 'mouse') return;
+    hover.menu = false;
+    leaveSoon();
+  });
   const onScroll = () => closeContextMenu(false);
   let wired = false;
   const frame = requestAnimationFrame(() => {
     wired = true;
     document.addEventListener('pointerdown', outside, true);
+    document.addEventListener('keydown', onEscape, true);
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('blur', onScroll);
     window.addEventListener('resize', onScroll);
   });
   const cleanup = () => {
     cancelAnimationFrame(frame);
+    clearTimeout(leaveTimer);
     if (!wired) return;
     document.removeEventListener('pointerdown', outside, true);
+    document.removeEventListener('keydown', onEscape, true);
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('blur', onScroll);
     window.removeEventListener('resize', onScroll);
@@ -379,16 +447,19 @@ function showContextMenu(el, x, y, label, build) {
   const { width: w, height: h } = menu.getBoundingClientRect();
   menu.style.left = `${Math.max(4, Math.min(x, window.innerWidth - w - 4))}px`;
   menu.style.top = `${Math.max(4, Math.min(y, window.innerHeight - h - 4))}px`;
-  contextMenu = { el, menu, cleanup };
-  focusAt(0);
+  contextMenu = { el, menu, cleanup, from, hover, stay, leaveSoon };
+  if (!from?.rest) focusAt(0);
 }
 
-/** The block's menu: «Settings» first, then the block's actions. */
-function openContextMenu(el, x, y) {
+/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. */
+function openContextMenu(el, x, y, from = null) {
   const ctx = el._urdCtx;
   if (!ctx || isMobile() || document.body.classList.contains('urd-chrome-off')) return;
   const { host, section, block } = ctx;
-  selectBlock(el);
+  // A menu a rest opened leaves the selection as it stands, until a press on the ⋮ keeps it (moreButton).
+  const select = () => selectBlock(el);
+  if (from?.rest) from.select = select;
+  else select();
   showContextMenu(el, x, y, ta('canvas.ctx.label'), (item, sep) => {
     item(ta('canvas.ctx.settings'), 'Enter', () => openBlockSettings(el, section, block)).classList.add('urd-ctx-first');
     sep();
@@ -411,7 +482,7 @@ function openContextMenu(el, x, y) {
       post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
       selectBlock(null);
     }, { danger: true });
-  });
+  }, from);
 }
 
 /** The Nav panel's folds by their `data-fold`, with their titles, in the panel's order. */
@@ -447,12 +518,16 @@ function openNavContextMenu(nav, target, x, y) {
 }
 
 /** The section's menu, on its empty surface: a new block at the point, the clipboard, the section's settings and its own actions. */
-function openSectionContextMenu(host, x, y) {
+function openSectionContextMenu(host, x, y, from = null) {
   if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
   const section = host._urdSection;
   if (!section) return;
-  selectBlock(null);
-  markActiveVisual(host);
+  const select = () => {
+    selectBlock(null);
+    markActiveVisual(host);
+  };
+  if (from?.rest) from.select = select;
+  else select();
   // The «+ New section» bar below this section opens the preset choices.
   const adderBelow = () => {
     let n = host.nextElementSibling;
@@ -478,7 +553,7 @@ function openSectionContextMenu(host, x, y) {
     item(ta('canvas.ctx.saveSection'), '', () => post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) }));
     sep();
     item(ta('canvas.ctx.deleteSection'), '', () => deleteSection(section.id), { danger: true, arm: ta('canvas.ctx.pressAgain') });
-  });
+  }, from);
 }
 
 /* A right click opens the menu at the pointer: on a block the block's, on a
@@ -3363,7 +3438,7 @@ function addSectionToolbar(host, section, grid) {
     del.classList.add('urd-sec-delete');
     bar.appendChild(del);
   }
-  else if (!isMobile()) bar.appendChild(moreButton((x, y) => openSectionContextMenu(host, x, y)));
+  else if (!isMobile()) bar.appendChild(moreButton((x, y, from) => openSectionContextMenu(host, x, y, from)));
 
   if (bar.childElementCount) host.appendChild(bar);
 }
@@ -3870,7 +3945,7 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // Ctrl/⌘+S asks the editor for its menu that saves the drafts or publishes them, in place of the browser's saving of the page; a dialog on the page keeps the key.
+  // Ctrl/⌘+S asks the editor to save the ticked drafts, in place of the browser's saving of the page; a dialog on the page keeps the key.
   if (ctrl && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's' && !(target instanceof Element && target.closest('dialog, [role="dialog"]'))) {
     event.preventDefault();
     post({ type: 'urd-save-key' });
@@ -4829,7 +4904,7 @@ function enhanceBlock(el, block, section, grid, host) {
     if (barPhone()) barBody.appendChild(phoneButton());
     // The gear stands on the short bar, and on the bar of tools where nothing else opens the settings (not after the word «Settings», not where every group is a tool), or wherever «Settings gear on the bar» asks for it.
     if (form === 'short' || (form === 'panels' && !leadIsSettings) || barGear()) barBody.appendChild(menuButton(el, section, block));
-    barBody.appendChild(moreButton((x, y) => openContextMenu(el, x, y)));
+    barBody.appendChild(moreButton((x, y, from) => openContextMenu(el, x, y, from)));
   }
   // The block's help chip, drawn before its bar, is the bar's last tool, as one drawn after it is (attachHint in hint.js).
   const hintChip = el.querySelector(':scope > .urd-hint-chip');

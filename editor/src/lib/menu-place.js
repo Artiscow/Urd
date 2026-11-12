@@ -72,3 +72,16 @@ export function placeBesideBlock(block, size, view, { min = 8, gap = 12, margin 
   const best = candidates.find((c) => c.covers === 0) ?? candidates.reduce((a, b) => (b.covers < a.covers ? b : a));
   return { left: best.left, top: best.top, side: best.side };
 }
+
+/**
+ * Where a window opened from a tab stands (the Drafts window): under a tab (`beside` false), beside a rail's icon, a sidebar's word or a menu's row, and at the window's top right where it opened from no tab; kept inside the window.
+ * @param {{left: number, top: number, right: number, bottom: number}|null} anchor The tab's box
+ * @param {{w: number, h: number}} size
+ * @param {{w: number, h: number}} view
+ * @param {{beside?: boolean, gap?: number}} [opts]
+ */
+export function placeByTab(anchor, size, view, { beside = false, gap = 6 } = {}) {
+  if (!anchor) return clampPlace({ left: view.w - size.w - 16, top: 64 }, size, view);
+  const place = beside ? { left: anchor.right + gap, top: anchor.top } : { left: anchor.left, top: anchor.bottom + gap };
+  return clampPlace(place, size, view);
+}

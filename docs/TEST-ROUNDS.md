@@ -2,6 +2,29 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.35.4.1): Drafts in the System section
+
+- [ ] Every layout (the strip, the icon rail, the sidebar, the panel's tabs, the page's tabs in the Site menu): Drafts stands first in System, before History, with no tooltip; Save is gone from the top bar and Publish stays
+- [ ] A mouse resting on Drafts opens the window under the tab (beside it on the rail and in the sidebar); moving into the window keeps it, leaving both closes it a moment later; a press on the tab keeps it open
+- [ ] Unpinned, a press outside the window or Escape closes it; pinned, it stays while editing and comes back after a reload in the same place
+- [ ] Drag the window by its head: «Move back to the drafts tab» appears, and a press brings it back by the tab and goes away; a reload keeps the place it stood in
+- [ ] The fold icon in the head folds it to a pill in the canvas's corner with the counts and the dot; a press on the pill opens it where it stood
+- [ ] The «⋯» opens on a rest, with no tooltip: «This browser» with a name field and «Autosave every 5 minutes»; type a name and press Enter, and Escape in the field puts the old name back
+- [ ] On the deployed site, change a page: the Drafts tab carries an amber 1, and This browser lists the page, ticked
+- [ ] «Save ticked…» opens a note field; write a note and press Enter: the tab says «saved» for a moment and the count goes
+- [ ] On the other device: the tab carries the dot, the status line's «Show» opens the Saved tab, and the row shows the first device's name, who saved it, when, and the note in italics; a press on the row opens «Open here» and the bin
+- [ ] Untick a page and save: only the ticked parts are saved, and the unticked one says «for later»
+- [ ] Ctrl+S in the admin and on the canvas saves what is ticked without opening anything; with nothing to save, the status line says so
+- [ ] Turn on Autosave and leave a change for five minutes: it is saved without a word, the tab saying «saved» for a moment
+- [ ] On the canvas, a mouse resting on a block's or a section's ⋮ opens its menu without a tooltip and without taking the focus; leaving it closes the menu, a press keeps it open with the focus on its first item, and a second press closes it
+- [ ] Publish's count stands centred in a round badge
+- [ ] With a block selected, a mouse resting on another block's or the section's ⋮ opens its menu and keeps the block selected; Escape closes that menu, and a press on the ⋮ selects as before
+- [ ] In «The page's tabs», the Drafts row of the Site menu opens the window on a press only; resting on it while moving down the menu leaves the menu open
+- [ ] Keyboard: Enter on the Drafts tab puts the focus on the window's open tab, the arrow keys move between the tabs, and Escape closes the window and gives the focus back to the Drafts tab
+- [ ] With the Publish menu open over the Drafts window, one Escape closes the Publish menu alone
+- [ ] Ctrl+S while writing a note saves with the note
+- [ ] Untick every part and press Ctrl+S: the status line says every change is kept for later
+
 ### Test batch (0.7.35.3.1): the Saved menu
 
 - [ ] Save a page on device A, then open the admin on device B: B shows the published page, Save carries an amber dot, and the status line says «1 draft saved on another device» with «Show»

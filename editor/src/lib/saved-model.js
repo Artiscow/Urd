@@ -117,10 +117,10 @@ export function counts(rows) {
 }
 
 /**
- * The Saved menu's rows, the newest saved first: each saved part with who saved it and when, whether this browser holds it as saved (`same`), holds its own changes to it (`mine`) or holds none of it (`none`), and whether it is new here.
+ * The Saved tab's rows, the newest saved first: each saved part with who saved it, from which browser and when, the owner's note on the save, whether this browser holds it as saved (`same`), holds its own changes to it (`mine`) or holds none of it (`none`), and whether it is new here.
  * A part is new where it was saved since this browser last saw it, the owner has not been shown it, and this browser does not hold it as saved.
- * @param {{saved: Record<string, {hash: string, savedAt?: string, saver?: string, title?: string}>, localHash: (name: string) => string|null, seen: Record<string, string>, noticed: Record<string, string>}} state
- *   `noticed`: the hash of each saved part as the Saved menu last showed it
+ * @param {{saved: Record<string, {hash: string, savedAt?: string, saver?: string, title?: string, note?: string, device?: string}>, localHash: (name: string) => string|null, seen: Record<string, string>, noticed: Record<string, string>}} state
+ *   `noticed`: the hash of each saved part as the Saved tab last showed it
  */
 export function savedList({ saved, localHash, seen, noticed }) {
   return Object.entries(saved ?? {})
@@ -130,7 +130,7 @@ export function savedList({ saved, localHash, seen, noticed }) {
       const state = here === entry.hash ? 'same' : here !== null ? 'mine' : 'none';
       return {
         ...of, ...(of.id ? { name: entry.title || of.id } : {}),
-        part: name, savedAt: entry.savedAt ?? '', saver: entry.saver ?? '', hash: entry.hash, here: state,
+        part: name, savedAt: entry.savedAt ?? '', saver: entry.saver ?? '', note: entry.note ?? '', device: entry.device ?? '', hash: entry.hash, here: state,
         fresh: state !== 'same' && seen?.[name] !== entry.hash && noticed?.[name] !== entry.hash,
       };
     })
@@ -154,4 +154,28 @@ export function overwrites(names, saved, seen) {
  */
 export function publishedSaves(rows, saved) {
   return rows.filter((r) => r.draft && saved?.[r.part] && !r.elsewhere).map((r) => r.part);
+}
+
+/**
+ * The parts a save of the ticked writes: those that stand in this browser alone and are not kept for later.
+ * With `quiet` (Ctrl+S and autosave), a part saved elsewhere since this browser last saw it is left for the owner to look at, rather than asked about.
+ * @param {ReturnType<typeof standing>} rows
+ * @param {Iterable<string>} later The parts kept for later (unticked)
+ * @param {{quiet?: boolean}} [opts]
+ * @returns {string[]}
+ */
+export function tickedNames(rows, later, { quiet = false } = {}) {
+  const kept = new Set(later);
+  return rows.filter((r) => r.band === 'browser' && !kept.has(r.part) && !(quiet && r.elsewhere)).map((r) => r.part);
+}
+
+/**
+ * The tab the Drafts window opens at: the saved drafts where one is new here, this browser's where something stands in it alone, the saved where there are any, and the live state otherwise.
+ * @param {{fresh: number, waiting: number, saved: number}} counts
+ * @returns {'browser'|'saved'|'live'}
+ */
+export function firstTab({ fresh, waiting, saved }) {
+  if (fresh) return 'saved';
+  if (waiting) return 'browser';
+  return saved ? 'saved' : 'live';
 }

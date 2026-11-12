@@ -136,7 +136,9 @@ test('the top bar\'s buttons and groups stand one height, and the tool groups\' 
 });
 
 test('the Publish count is centred on its digits, and the Publish menu ends inside the window with what waits scrolling in a box of its own', () => {
-  assert.match(NO_COMMENTS, /@supports \(text-box: trim-both cap alphabetic\) \{\s*\.publish-count \{[^}]*padding: calc\(\(1\.25rem - 1cap\) \/ 2\) 0\.35rem;[^}]*text-box: trim-both cap alphabetic;/);
+  assert.match(NO_COMMENTS, /\.publish-count \{\s*display: inline-grid;\s*place-items: center;\s*min-width: 1\.25rem;\s*height: 1\.25rem;/, 'a circle of one fixed height, whatever the font');
+  assert.match(NO_COMMENTS, /\.publish-count > span \{\s*text-box: trim-both cap alphabetic;\s*\}/, 'the number centred on its digits');
+  assert.match(readFileSync(new URL('../editor/src/shell/TopBar.svelte', import.meta.url), 'utf-8'), /<span class="publish-count" aria-hidden="true"><span>\{ed\.unpublished\.length\}<\/span><\/span>/);
   assert.doesNotMatch(NO_COMMENTS.slice(NO_COMMENTS.indexOf('.publish-count {'), NO_COMMENTS.indexOf('}', NO_COMMENTS.indexOf('.publish-count {'))), /tabular-nums/, 'a 1 stands in the middle as a 6 does');
   assert.match(NO_COMMENTS, /\.tool-pop\.publish-pop \{[^}]*max-height: min\(40rem, calc\(100vh - 5rem\)\);/);
   assert.match(NO_COMMENTS, /\.publish-pop > \.publish-rows \{\s*flex: 1 1 auto;\s*min-height: 4rem;\s*overflow-y: auto;/);
