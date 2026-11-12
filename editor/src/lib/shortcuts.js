@@ -59,6 +59,10 @@ export const SHORTCUT_GROUPS = [
     { labelKey: 'shortcuts.pasteStyle', ways: [['ctrl', 'alt', 'V']] },
     { labelKey: 'shortcuts.contextMenu', ways: [['shift', 'F10'], ['menu']] },
   ] },
+  { id: 'phone', labelKey: 'shortcuts.group.phone', tipKey: 'tip.shortcuts.phone', rows: [
+    { labelKey: 'shortcuts.phoneOrder', ways: [['alt', 'up'], ['alt', 'down']] },
+    { labelKey: 'shortcuts.phoneNudge', ways: [['arrows']] },
+  ] },
   { id: 'sections', labelKey: 'shortcuts.group.sections', tipKey: 'tip.shortcuts.sections', rows: [
     { labelKey: 'shortcuts.copySection', ways: [['ctrl', 'C']] },
     { labelKey: 'shortcuts.cutSection', ways: [['ctrl', 'X']] },

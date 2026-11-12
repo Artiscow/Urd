@@ -19,7 +19,7 @@
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (drag/resize)
  *                  { type: 'urd-grow', sectionId, blockId, h, fit?, seq? }  (a plugin copy's own height, or the answer to urd-fit-block: ONLY h, never x/y)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
- *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder } (arrow moves in the mobile reading order)
+ *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder, coalesce? } (moves in the mobile reading order; coalesce from the keys)
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)

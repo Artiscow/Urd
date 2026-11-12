@@ -3615,7 +3615,7 @@ function co(e, { typed: t = !1 } = {}) {
 		icon: t,
 		onPage: n
 	});
-	return t ? r("typed", "text", !0) : n === "discard" ? r("discard", "restore", !1) : n === "use-saved" ? r("useSaved", "save", !1) : n.startsWith("page-meta:") || n === "edit:page-noindex" ? r("pageSettings", "gear", !0) : n === "pages" ? r("pages", "panel_pages", !1) : n === "nav" || n.startsWith("nav-") || n.startsWith("edit:nav-") ? r("nav", "panel_nav", !1) : n === "footer" || n.startsWith("footer-") ? r("footer", "panel_footer", !1) : n === "theme" || n.startsWith("edit:theme-") ? r("theme", "panel_theme", !1) : n === "legal" || n.startsWith("edit:legal-") ? r("legal", "panel_legal", !1) : n === "site" || n === "setup" || n === "site-shortcuts" || n === "grid:site" || n.startsWith("edit:site-") ? r("site", "panel_site", !1) : n === "collections" ? r("collections", "panel_collections", !1) : n === "templates" ? r("templates", "bookmark", !1) : n === "plugins" ? r("plugins", "panel_plugins", !1) : n === "redirects" ? r("redirects", "redirect", !1) : n.startsWith("edit:picture:") ? r("picture", "image", !0) : n === "add-section" ? r("addSection", "plus", !0) : n === "delete-section" ? r("deleteSection", "cross", !0) : n === "move-section" ? r("moveSection", "up", !0) : n === "duplicate-section" ? r("duplicateSection", "copy", !0) : n === "section-size" || n === "layout" || n.startsWith("grid:") || n.startsWith("sticky-group:") ? r("section", "gridToggle", !0) : n === "add-block" || n === "add-blocks" || n.endsWith("-item") || n === "form-field" || n === "gallery-add" ? r("addBlock", "plus", !0) : n === "delete-block" || n === "gallery-remove" ? r("deleteBlock", "cross", !0) : n === "move-block" || n === "gallery-move" || /^edit:(z-|multi-|place-|align-|nudge)/.test(n) ? r("moveBlock", "fit", !0) : n === "mobile-reset" || n === "mobile-order" || n === "review-done" || n === "hide-mobile" ? r("phone", "phone", !0) : r("block", "pencil", !0);
+	return t ? r("typed", "text", !0) : n === "discard" ? r("discard", "restore", !1) : n === "use-saved" ? r("useSaved", "save", !1) : n.startsWith("page-meta:") || n === "edit:page-noindex" ? r("pageSettings", "gear", !0) : n === "pages" ? r("pages", "panel_pages", !1) : n === "nav" || n.startsWith("nav-") || n.startsWith("edit:nav-") ? r("nav", "panel_nav", !1) : n === "footer" || n.startsWith("footer-") ? r("footer", "panel_footer", !1) : n === "theme" || n.startsWith("edit:theme-") ? r("theme", "panel_theme", !1) : n === "legal" || n.startsWith("edit:legal-") ? r("legal", "panel_legal", !1) : n === "site" || n === "setup" || n === "site-shortcuts" || n === "grid:site" || n.startsWith("edit:site-") ? r("site", "panel_site", !1) : n === "collections" ? r("collections", "panel_collections", !1) : n === "templates" ? r("templates", "bookmark", !1) : n === "plugins" ? r("plugins", "panel_plugins", !1) : n === "redirects" ? r("redirects", "redirect", !1) : n.startsWith("edit:picture:") ? r("picture", "image", !0) : n === "add-section" ? r("addSection", "plus", !0) : n === "delete-section" ? r("deleteSection", "cross", !0) : n === "move-section" ? r("moveSection", "up", !0) : n === "duplicate-section" ? r("duplicateSection", "copy", !0) : n === "section-size" || n === "layout" || n.startsWith("grid:") || n.startsWith("sticky-group:") ? r("section", "gridToggle", !0) : n === "add-block" || n === "add-blocks" || n.endsWith("-item") || n === "form-field" || n === "gallery-add" ? r("addBlock", "plus", !0) : n === "delete-block" || n === "gallery-remove" ? r("deleteBlock", "cross", !0) : n === "move-block" || n === "gallery-move" || /^edit:(z-|multi-|place-|align-|nudge)/.test(n) ? r("moveBlock", "fit", !0) : n === "mobile-reset" || n === "mobile-order" || n.startsWith("edit:mobile-order-") || n === "review-done" || n === "hide-mobile" ? r("phone", "phone", !0) : r("block", "pencil", !0);
 }
 function lo(e, t) {
 	let n = 0;
@@ -13829,6 +13829,18 @@ var Gg = {
 		]
 	},
 	{
+		id: "phone",
+		labelKey: "shortcuts.group.phone",
+		tipKey: "tip.shortcuts.phone",
+		rows: [{
+			labelKey: "shortcuts.phoneOrder",
+			ways: [["alt", "up"], ["alt", "down"]]
+		}, {
+			labelKey: "shortcuts.phoneNudge",
+			ways: [["arrows"]]
+		}]
+	},
+	{
 		id: "sections",
 		labelKey: "shortcuts.group.sections",
 		tipKey: "tip.shortcuts.sections",
@@ -18908,8 +18920,8 @@ function _T(e) {
 	let t = X.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
 	if (!n) return;
 	Bz.pushHistory(e.coalesce ? `edit:${e.groupKey ?? e.blockId}` : "move-block");
-	let r = e.frameKey === "mobile" ? "mobile" : "desktop", i = n.frames.desktop?.w;
-	n.frames[r] = e.frame, r === "desktop" && X.markDesktopChange(t, "desktop-changed-after-mobile"), X.store.save(), Bz.updateDirty(), X.selectedBlock?.blockId === e.blockId && X.syncSelectedBlock(), r === "desktop" && e.frame?.w !== i ? X.fitBlockSoon(t.id, n) : r === "mobile" && X.phoneFitSoon(t.id, n);
+	let r = e.frameKey === "mobile" ? "mobile" : "desktop", i = n.frames.desktop?.w, a = n.frames.mobile?.w;
+	n.frames[r] = e.frame, r === "desktop" && X.markDesktopChange(t, "desktop-changed-after-mobile"), X.store.save(), Bz.updateDirty(), X.selectedBlock?.blockId === e.blockId && X.syncSelectedBlock(), r === "desktop" && e.frame?.w !== i ? X.fitBlockSoon(t.id, n) : r === "mobile" && e.frame?.w !== a && X.phoneFitSoon(t.id, n);
 }
 function vT(e) {
 	let t = X.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
@@ -18951,7 +18963,7 @@ function bT(e) {
 }
 function xT(e) {
 	let t = X.store.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
-	n && typeof e.mobileOrder == "number" && (Bz.pushHistory("mobile-order"), n.mobileOrder = e.mobileOrder, X.store.save(), Bz.updateDirty(), IA.bridge?.sendSection(X.pageId, t));
+	n && typeof e.mobileOrder == "number" && (Bz.pushHistory(e.coalesce ? `edit:mobile-order-${n.id}` : "mobile-order"), n.mobileOrder = e.mobileOrder, X.store.save(), Bz.updateDirty(), IA.bridge?.sendSection(X.pageId, t));
 }
 function ST(e) {
 	let t = X.store.data.sections.find((t) => t.id === e.sectionId);

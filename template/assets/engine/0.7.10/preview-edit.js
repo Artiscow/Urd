@@ -17,7 +17,7 @@
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
- *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (arrow move in the mobile reading order)
+ *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder, coalesce? }  (a move in the mobile reading order; coalesce from the keys, a burst one undo step)
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
@@ -4002,7 +4002,8 @@ document.addEventListener('click', (event) => {
 // Shift = 1 px), Delete deletes, Esc deselects, Ctrl+C, Ctrl+X and Ctrl+V
 // copy, cut and paste with the layout preserved (a selected section with no
 // block is copied whole), Ctrl+D duplicates. Never when focus
-// sits in text/fields, and moving applies to the desktop view.
+// sits in text/fields. In the phone view the arrows go to phoneArrow.
+// A dialog on the page keeps its own arrows, and the clean view moves nothing.
 window.addEventListener('keydown', (event) => {
   const target = event.target;
   if (target instanceof HTMLElement
@@ -4172,7 +4173,12 @@ window.addEventListener('keydown', (event) => {
 
   const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
   const dir = dirs[event.key];
-  if (!dir || isMobile()) return;
+  if (!dir) return;
+  if ((target instanceof Element && target.closest('dialog, [role="dialog"]')) || document.body.classList.contains('urd-chrome-off')) return;
+  if (isMobile()) {
+    phoneArrow(event, ctx, el, dir);
+    return;
+  }
   event.preventDefault();
 
   const stepPx = event.shiftKey ? 1 : ctx.grid.size;
@@ -4221,6 +4227,42 @@ window.addEventListener('keydown', (event) => {
   postSettled(ctx.section, settle, [ctx.block.id], ctx.block.id);
   post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
+
+/**
+ * The arrows in the phone view: Alt with Up or Down moves a block that flows in the row grid one step in the reading order, as the bar's buttons do; the arrows move a block placed by hand in the row grid, Up and Down one row and Left and Right one per cent of the width.
+ * A burst of presses is one undo step.
+ * @param {KeyboardEvent} event
+ * @param {{ section: object, block: object }} ctx
+ * @param {HTMLElement} el The block's element
+ * @param {number[]} dir The arrow's step, [x, y]
+ */
+function phoneArrow(event, ctx, el, dir) {
+  // A set is a desktop tool: one carried into the phone view moves nothing here.
+  if (multiIds.size > 1) return;
+  const { section, block } = ctx;
+  const placed = block.frames.mobile;
+  if (!Number.isFinite(placed?.row)) {
+    if (!event.altKey) return;
+    // Alt with any arrow belongs to the selected block, so the browser's own Back and Forward do not fire.
+    event.preventDefault();
+    if (!dir[1]) return;
+    const order = reorderMobileKey(section.blocks, block.id, dir[1]);
+    if (order === null) return;
+    block.mobileOrder = order;
+    post({ type: 'urd-mobile-order', sectionId: section.id, blockId: block.id, mobileOrder: order, coalesce: true });
+    return;
+  }
+  event.preventDefault();
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const w = placed.w ?? block.frames.desktop.w;
+  const placement = { ...placed };
+  if (dir[1]) placement.row = Math.max(1, placed.row + dir[1]);
+  if (dir[0]) placement.x = clamp(r2((placed.x ?? block.frames.desktop.x) + dir[0]), 0, r2(100 - w));
+  if (placement.row === placed.row && placement.x === placed.x) return;
+  block.frames.mobile = placement;
+  Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { autoGrow: autoGrows(block, window.Urd.blocks.get(block.type)) }));
+  post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile', coalesce: true, groupKey: `nudge-mobile-${block.id}` });
+}
 
 // Active section: the editor's palette puts new blocks in the last
 // clicked section, marked with an accent line at the left edge.

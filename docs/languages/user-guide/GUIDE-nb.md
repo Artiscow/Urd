@@ -161,7 +161,8 @@ Gridet er kun et hjelpemiddel ved redigering: å endre det flytter aldri noe inn
 Besøkende på telefon får automatisk innholdet i én kolonne, i naturlig leserekkefølge. Du trenger vanligvis ikke gjøre noe.
 
 - **Telefonikonet i topplinjen** viser siden slik den blir på telefon.
-- Vil du finjustere, dra i blokkene i telefonvisningen: seksjonen går da over til **manuelt telefonoppsett**, der du plasserer alt selv. ↺ på seksjonen tar den tilbake til automatikken.
+- Vil du finjustere, dra en blokk i telefonvisningen: den er da plassert for hånd på telefonen, mens de andre fortsetter å flyte i leserekkefølgen. ↺ på blokken tar den tilbake i flyten, og ↺ på seksjonen tar alle blokkene tilbake.
+- **Rekkefølgen på telefonen**: linjen til en blokk som flyter har knapper i telefonvisningen som flytter den tidligere eller senere i leserekkefølgen, og Alt med pil opp eller ned gjør det samme. En blokk plassert for hånd flyttes med piltastene, en rad opp eller ned og litt til siden.
 - **Telefontilsyn**: endrer du noe på desktop i en seksjon som er håndjustert for telefon, markeres seksjonen gult og topplinjen sier ifra («1 seksjon trenger telefontilsyn»). Det betyr bare: ta en titt i telefonvisningen og se at alt fortsatt ser bra ut, og kvitter med ✓.
 
 ## Sider, meny og tema

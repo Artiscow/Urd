@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.6 - Keys in the phone view: Alt and the arrows move a block in the phone order, and the arrows move a block placed by hand - 13 November 2026
+
+- The phone order moved only by the buttons on a block's bar and by a drag, and a block placed by hand on the phone only by a drag (BACKLOG 0.7.3.6). Alt with the up or down arrow moves a flowing block one step in the reading order, and the arrows move a placed block a row up or down and one per cent sideways, a burst one undo step (`phoneArrow` in preview-edit.js).
+- The order buttons' tooltips name the keys, and the keyboard shortcut sheet has a group «Phone view» with both, in nb, en-GB and tr.
+- The 0.7.3 milestone's open items stand as the steps 0.7.3.6 to 0.7.3.11 with the decisions of 13 November 2026 written in (BACKLOG), and the user guides in en-GB, nb and tr describe a drag on the phone as placing that block alone, as the row grid has done since 0.7.3, and the keys.
+
+The independent review before the commit found these, all fixed but the last:
+
+1. The arrows acted from inside a dialog on the page, so a basket's drawer opened over a placed block moved the block instead of scrolling. The arrows leave a dialog alone, in the desktop view too.
+2. The arrows moved blocks in the clean view, which shows the page as a visitor sees it. They move nothing there.
+3. A set selected on the desktop and carried into the phone view moved only its main block. The keys move nothing while a set stands.
+4. Alt with the left or right arrow on a flowing block let the browser go back or forward. Alt with any arrow belongs to the selected block.
+5. The shortcut sheet put the phone keys under a group whose tooltip says «In the desktop view». They have a group of their own.
+6. A key move of a placed block was named a phone change in History, while its drag is named a move, and every key move asked for a new height on the phone. It is named a move, and only a new width asks for a height.
+7. Two comparison rows, a comment on the message contract and the key handler's comment still said the phone order had no keys. They say what is built.
+8. The nynorsk and Northern Sami guides still describe the section-wide phone layout. Left for their translation round.
+
 ### 0.7.0.89 - Bug Fixes: the Urd settings in a clearer order, with plain names, short tooltips and the setting in view marked - 12 November 2026
 
 - The Urd settings window's content was not reviewed (BACKLOG). It was reviewed for where each setting stands, its order, its pictures and its name on the Urd Settings Review page, and built as proposed, chosen 12 November 2026: the group «Admin layout» with Presets first, the element menu's settings in the menu's own order, a section «Where things open», and «Design button on the bar» under Toolbar beside Toolbar size (lib/settings-model.js).

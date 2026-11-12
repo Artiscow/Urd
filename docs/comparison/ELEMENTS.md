@@ -118,7 +118,7 @@ On the canvas, text is edited by clicking and writing. A floating text toolbar a
 - blocks change z-order with «To the front» and «To the back» in the block toolbar, in the right-click menu and in the element menu, Ctrl+Shift+Up and Down, and the layer number in Placement;
 - the Pages panel switches page without reloading the editor.
 
-A smaller block that lies over a larger one cannot be selected today, because hover picks the larger one first (a BACKLOG 0.7.10 finding). The layers panel answers that (E6). The phone order has up and down buttons (0.7.3); keys for it are 0.7.3.6.
+A smaller block that lies over a larger one cannot be selected today, because hover picks the larger one first (a BACKLOG 0.7.10 finding). The layers panel answers that (E6). The phone order has up and down buttons (0.7.3) and Alt with the arrows (Delivered 0.7.3.6).
 
 ### Global design
 
@@ -226,7 +226,7 @@ Timelines, cursor effects and shaders are not taken ([FEATURES.md](FEATURES.md))
 - **Mobile:** a synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)) and hide on mobile. Mobile review flags each section whose desktop changed after its mobile layout was tuned, until the site owner marks it reviewed.
 - **Preview:** four devices (Screen, laptop 1280, tablet 810, phone 390) and «Clean view», which shows the page as a visitor sees it.
 
-Open: elements shown only on the phone (E15), keyboard order on mobile (0.7.3.6), desktop and phone side by side (E14), and real phone sizes in the preview (0.7.10). Custom breakpoints (ADR-0019) and a responsive AI fix (E16) are not taken.
+Open: elements shown only on the phone (E15), desktop and phone side by side (E14), and real phone sizes in the preview (0.7.10). Custom breakpoints (ADR-0019) and a responsive AI fix (E16) are not taken.
 
 ### Section and template galleries
 

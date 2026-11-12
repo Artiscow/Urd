@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.6): keys in the phone view
+
+- [ ] In the phone view, select a block that flows (no pin mark): Alt with the down arrow moves it one step later in the reading order, Alt with the up arrow back; a burst of presses is one step in History, and one Ctrl+Z takes it all back
+- [ ] Drag a block in the phone view so it is placed by hand, select it: the arrows move it a row up or down and a little sideways, never past the left or right edge, and the move is kept after a reload
+- [ ] The order buttons on a flowing block's bar name the keys in their tooltips, and the keyboard shortcut sheet (?) lists both in nb, en-GB and tr
+- [ ] On the desktop the arrows still move a block by the grid step, and Alt with an arrow does what it did before
+
 ### Test batch (0.7.0.89): the Urd settings window's order, names, pictures and tooltips
 
 - [ ] Urd settings: the list on the left reads Admin layout (Presets, The element menu, The panels, Where things open, The canvas), Local settings (Look and language, Editing, On a fresh load) and This site

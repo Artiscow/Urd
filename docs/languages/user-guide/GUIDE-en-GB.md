@@ -163,7 +163,8 @@ The grid is only an aid while editing: changing it never moves any content, and 
 Visitors on phones automatically get the content in one column, in natural reading order. You usually do not have to do anything.
 
 - **The phone icon in the top bar** shows the page as it looks on a phone.
-- If you want to fine-tune, drag the blocks in the phone view: the section then switches to **manual phone layout**, where you place everything yourself. ↺ on the section takes it back to the automatic layout.
+- If you want to fine-tune, drag a block in the phone view: it is then placed by hand on the phone, while the others keep flowing in reading order. ↺ on the block takes it back into the flow, and ↺ on the section takes every block back.
+- **The order on the phone**: a flowing block's bar in the phone view has buttons that move it earlier or later in the reading order, and Alt with the up or down arrow does the same. A block placed by hand moves with the arrow keys, a row up or down and a little sideways.
 - **Phone review**: if you change something on desktop in a section that is hand-tuned for phones, the section is marked yellow and the top bar says so («1 section needs a phone review»). That only means: take a look in the phone view and check that everything still looks good, and confirm with ✓.
 
 ## Pages, menu and theme

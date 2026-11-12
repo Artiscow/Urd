@@ -99,6 +99,7 @@ function handleMove(msg) {
   historyState.pushHistory(msg.coalesce ? `edit:${msg.groupKey ?? msg.blockId}` : 'move-block');
   const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
   const width = block.frames.desktop?.w;
+  const phoneWidth = block.frames.mobile?.w;
   block.frames[key] = msg.frame;
   if (key === 'desktop') pageState.markDesktopChange(section, 'desktop-changed-after-mobile');
   pageState.store.save();
@@ -108,7 +109,7 @@ function handleMove(msg) {
   // is fitted to the height the content takes there (ADR-0025).
   if (key === 'desktop' && msg.frame?.w !== width) pageState.fitBlockSoon(section.id, block);
   // A block pinned to a new width in the row grid takes a new height on the phone.
-  else if (key === 'mobile') pageState.phoneFitSoon(section.id, block);
+  else if (key === 'mobile' && msg.frame?.w !== phoneWidth) pageState.phoneFitSoon(section.id, block);
 }
 
 /** A height the preview reports for a block (urd-grow): from a plugin copy
@@ -191,13 +192,13 @@ function handleMobileReset(msg) {
   previewState.bridge?.sendSection(pageState.pageId, section);
 }
 
-/** Arrow move in the mobile reading order: record the new mobileOrder
- *  key and rerender the section, so the auto placement reshuffles. */
+/** A move in the mobile reading order: the new mobileOrder key is recorded and the section drawn again, so the auto placement reshuffles.
+ *  A burst from the keys is one undo step. */
 function handleMobileOrder(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
   if (!block || typeof msg.mobileOrder !== 'number') return;
-  historyState.pushHistory('mobile-order');
+  historyState.pushHistory(msg.coalesce ? `edit:mobile-order-${block.id}` : 'mobile-order');
   block.mobileOrder = msg.mobileOrder;
   pageState.store.save();
   historyState.updateDirty();

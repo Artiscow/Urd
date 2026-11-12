@@ -45,6 +45,9 @@ test('stepKind: each kind of change named in words with an icon, a page change m
   assert.equal(stepKind('edit:site-title').labelKey, 'history.step.site');
   assert.deepEqual(stepKind('legal'), { labelKey: 'history.step.legal', icon: 'panel_legal', onPage: false });
   assert.equal(stepKind('edit:legal-contact-email').labelKey, 'history.step.legal');
+  // The phone view's keys: a burst in the phone order is a phone step, as the buttons' are, and a placed block's moves a move, as its drag is.
+  assert.equal(stepKind('edit:mobile-order-blk-1').labelKey, stepKind('mobile-order').labelKey);
+  assert.equal(stepKind('edit:nudge-mobile-blk-1').labelKey, stepKind('move-block').labelKey);
   assert.equal(stepKind('page-meta:kaker:searchTitle').labelKey, 'history.step.pageSettings');
   assert.equal(stepKind('move-block').labelKey, 'history.step.moveBlock');
   assert.equal(stepKind('edit:multi-arrow').labelKey, 'history.step.moveBlock');

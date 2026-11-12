@@ -1945,7 +1945,7 @@ The enumeration's master table has 340 rows in 14 areas; two of them only point 
 | Navigator, layers or list view | WF, WS, WE, WH, SQ, WP, EL, BR, OX, DV, FS, WT, FR, SH | Tree panel of the page | Planned | 0.7.9 layers panel |
 | Rename layers | WS, WP, BR, OX, WT, SH | Double-click or ⌘E; custom names | Planned | 0.7.9 layers panel |
 | Drag reorder in the tree | WS, WP, DV, SQ, WE, SH | Drag in the panel | Planned | 0.7.9 layers panel |
-| Reorder by keyboard | WF, WP, WT, TI, SQ | `[` and `]`; Ctrl+Shift+Alt+T/Y; Ctrl+arrows | Partial: sections up and down; on the phone, up and down buttons in the block toolbar (0.7.3); no keys | 0.7.3.6: keys for the phone order |
+| Reorder by keyboard | WF, WP, WT, TI, SQ | `[` and `]`; Ctrl+Shift+Alt+T/Y; Ctrl+arrows | Partial: sections up and down; a block to the front or the back with Ctrl+Shift and the arrows; on the phone, up and down buttons in the block toolbar (0.7.3) and Alt with the arrows (Delivered 0.7.3.6); no key for one layer step | 0.7.9: the layers panel |
 | Move out of or into a parent by keyboard | WF, WT | ⌘⇧↑/↓; Ctrl+←/→ | n/a | - |
 | Collapse or expand the tree | WP, WT, WF, SH | Arrows; Alt+L; ⌥-click; collapsed by default | n/a | - |
 | Selection breadcrumbs | WP, DV | Block breadcrumbs; jump to the parent | n/a | - |
@@ -2079,7 +2079,7 @@ Urd has two layouts by decision ([ADR-0019](../adr/0019-synced-mobile-model.md))
 | Single-column mobile conversion | RM, CA | Single column; cropped or expanded views | Has: the synced row grid | - |
 | Responsive AI fix | WS, WH, FR, FS | One-click responsive; Fix layout; agent | Missing | Not taken |
 | Min/max sizes | FR, WS, WP | Constraints per element | Partial: the shrink floor, and smallest and largest text bounds under «Size» (0.7.21.5); no min or max width or height | Not taken: the dragged width is the block's size (ADR-0025), and the text bounds keep it readable |
-| Mobile reorder | SQ, HO, WH | Alt+arrows; manual sort | Partial: up and down buttons and a drag in the row grid on the phone (0.7.3); no keys | 0.7.3.6: keys for the phone order |
+| Mobile reorder | SQ, HO, WH | Alt+arrows; manual sort | Has: up and down buttons, a drag and Alt with the arrows in the row grid on the phone, and the arrows for a block placed by hand (0.7.3, Delivered 0.7.3.6) | - |
 | Per-breakpoint variable values | OX | Variable value per breakpoint | n/a | - |
 | Responsive offcanvas | BR | Direction per breakpoint | n/a | - |
 | Masonry or bento | FR | Layout presets | Partial: masonry as the gallery's mosaic view; no bento | 0.7.9 bento preset |
