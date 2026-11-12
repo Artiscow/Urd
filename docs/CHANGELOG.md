@@ -8,6 +8,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.86 - Extras stand where they are added, sections that start empty become extras, the width drag follows the pointer, and five more bugs - 12 November 2026
+
+- An extra added from an area's «+» list, or a setting added from a section's «Add a setting», appeared at its fixed place in the menu (found in testing). It stands at the foot of its area or section, in the order added (`menu/capabilities.svelte.js`, `lib/folds.svelte.js`).
+- The calendar's Buttons, its Announcement and an uploaded film's Playback stood as sections with nothing on in them (found in testing). They are extras of the add list, each a card of its settings with its way back (`menu/capabilities.js`); a film from YouTube or Vimeo keeps Playback as a section, since it asks first from the start.
+- The canvas's width edge lagged half a step behind the pointer, the canvas standing centred as it grew (found in testing). The width is set from where the pointer is, so the edge stays under it (`shell/PreviewStage.svelte`).
+- The calendar design picker's preview stood empty where the calendar's feed could not be fetched (found in testing). It draws the sample events there (`sampleOnFail` in the engine's `blocks/calendar.js`).
+- The year wheel's «Choose a month to see» line is gone (asked for in the bug list).
+- A page whose id was a part's draft key («site», «templates», «collections», «maler», or beginning «collection-», «template-» and the like) overwrote that part's draft. A new page or a page's copy never takes such an id (`pageIdTaken` in `lib/saved-model.js`); an address changed later keeps the page's id, so it stays free.
+- The media tidy moved the files while the collections could not be read, leaving them pointing at the old places. It waits until every collection has been read, and says why.
+- An undo after a media tidy could bring back the old file paths over the moved files. A tidy is not undone: the undo list starts anew as it writes (decided 12 November 2026, `startAnew` in `state/history.svelte.js`).
+
+The independent review before the commit found these, all fixed but the last:
+
+1. Taking the year wheel's prompt out of base.css left the empty month's selector joined to the heat map's rule, so a year wheel's month with no events drew as a framed box on published sites. The empty month has its own rule again, and the shells carry the new hash.
+2. The draft-key names were reserved in the publishing guard as addresses, which would have stopped every publish of a site with such a page, and left its page copy out of the next update. The guard keeps the folder names alone, and the editor holds the draft keys to a new page's id, where the clash is.
+3. The reserved draft keys left out the older Norwegian ones («maler», «samlinger», «mal-», «samling-»), whose stores still read them. The editor reads the one list the saved drafts use.
+4. A page's copy took its number without the check, so a copy of «collection» was «collection-2». A copy passes over the reserved ids, and a page whose every numbered copy would be reserved is copied as «page-collection-2».
+5. The Announcement card drew nothing while the announcement was off, so the search and an undone add left an empty card. Its switch stands first in the card again, its settings under it.
+6. The bar's tools for the announcement and the playback stood only while they were on, and Buttons lost its tool, against ADR-0031's rule that a tool opens its capability whether in use or not. They stand as before, Buttons' under the card's name.
+7. The width drag still lagged from the fitted canvas, and jumped where the handle was taken. It reads the canvas and its scale at every move, and keeps where the handle was taken.
+8. The tidy waited only for collections that could not be read, not for those still being read. It waits until every collection has been read.
+9. Buttons stood for a programme address the design does not draw, the film's playback card did not mark its rows' own values, and the calendar's «Reset texts» fell above the cards added. Each is put right.
+10. `startAnew` stood between `pushHistory` and its doc comment, and its test passed on an empty history. It stands on its own, and the test reads what it empties.
+11. The extras added at the foot stand there for the eye only, so the Tab key and a screen reader still meet them at their place in the markup. Kept in the bug list.
+
 ### 0.7.35.4.2 - Look at a saved draft in the canvas, see what changed, keep both, or open it in a tab of its own - 12 November 2026
 
 - A saved draft could only be opened here or not, with no way to see what it held first. A saved page's row lists what changed against this browser's version, by the ids of its sections and blocks, each line looking at the saved version where it changed (`lib/page-diff.js`).

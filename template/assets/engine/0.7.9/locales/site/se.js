@@ -92,7 +92,6 @@ export default {
     'calendar.todayCount.one': '{n} odne',
     'calendar.todayCount.other': '{n} odne',
     'calendar.wheel': 'Jahkejuvla',
-    'calendar.pickMonth': 'Vállje mánu juvllas vai oainnát dan lágidemiid',
     'calendar.wholeYear': 'Oppa jahki',
     'calendar.fewer': 'Unnit',
     'calendar.moreLegend': 'Eambbo',

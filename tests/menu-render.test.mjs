@@ -176,16 +176,15 @@ test('«Extra settings» stands in a fold\'s foot in the full menu, under the ro
   assert.match(fold, /function hoverIn\(event\) \{\s*if \(event\.pointerType !== 'mouse'\) return;/);
 });
 
-test('a group that only switches something on stands as its switch alone until it is on', async () => {
+test('the announcement is an extra: offered while it is off, a card of its settings while it is on', async () => {
   const noticeDesign = (await engineImport('calendar-designs.js')).CAL_DESIGNS.find((d) => d.notice).id;
-  for (const [show, bare] of [[false, true], [true, false]]) {
+  for (const show of [false, true]) {
     setQuickChoice('calendar', { pinned: [], removed: PIN_IDS });
-    const context = new Map([['urd-editor', handleFor(block('calendar', { sources: [], design: noticeDesign, notice: { show } }, {}))]]);
+    const context = new Map([['urd-editor', handleFor(block('calendar', { sources: [], showSubscribe: false, design: noticeDesign, notice: { show } }, {}))]]);
     const tree = parseHtml(render(ElementMenu, { props: { wide: true, query: '' }, context }).body);
     setQuickChoice('calendar', NO_CHOICE);
-    const fold = find(tree, (n) => n.attrs['data-fold'] === 'cal-notice')[0];
-    assert.ok(fold, 'the announcement is drawn');
-    assert.equal(hasClass(fold, 'bare'), bare, show ? 'on: a group of what it holds' : 'off: its switch alone');
+    const card = find(tree, (n) => n.attrs['data-cap'] === 'cal-notice')[0];
+    assert.equal(Boolean(card), show, show ? 'on: a card of its settings' : 'off: no card, the add list offers it');
   }
 });
 
@@ -479,13 +478,13 @@ test('the image\'s and the calendar\'s own capabilities stand as cards while the
   };
   assert.deepEqual(cards('image', { src: 'x' }), [], 'a picture with no link and no lightbox');
   assert.deepEqual(cards('image', { src: 'x', lightbox: true }), ['img-link']);
-  assert.deepEqual(cards('calendar', { sources: [] }), [], 'a new calendar');
+  assert.deepEqual(cards('calendar', { sources: [], showSubscribe: false }), [], 'a new calendar, made with the subscribe button off');
   assert.deepEqual(cards('calendar', { sources: [], view: 'list', switcher: true, clock: '12', showSearch: true, showSignup: true, stripe: { color: '#111111' } }),
-    ['cal-colors', 'cal-filter', 'cal-signup', 'cal-switcher', 'cal-time']);
+    ['cal-buttons', 'cal-colors', 'cal-filter', 'cal-signup', 'cal-switcher', 'cal-time']);
   // The groups they left neither count nor reset them.
   const calendar = readFileSync(new URL('../editor/src/menu/families/Calendar.svelte', import.meta.url), 'utf8');
   const groups = calendar.slice(calendar.indexOf('function calMenu()'), calendar.indexOf('</script>', calendar.indexOf('function calMenu()')));
-  for (const key of ['switcher', 'switcherViews', 'clock', 'weekStart', 'showCategories', 'showSearch', 'showEarlier', 'showSignup', 'colors', 'stripe']) {
+  for (const key of ['switcher', 'switcherViews', 'clock', 'weekStart', 'showCategories', 'showSearch', 'showEarlier', 'showSignup', 'showSubscribe', 'showRecurring', 'showAdd', 'programHref', 'notice', 'colors', 'stripe']) {
     assert.doesNotMatch(groups, new RegExp(`p\\.${key}\\b|[{,]\\s*${key}:`), `the groups leave ${key} to its card`);
   }
 });

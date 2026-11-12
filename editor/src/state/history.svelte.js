@@ -275,6 +275,15 @@ function readDraft(id) {
   }
 }
 
+/** A change that is not undone (the media tidy, state/publish.svelte.js): every step before it and after it is let go, so no undo brings back what it changed. */
+function startAnew() {
+  history.length = 0;
+  redoStack.length = 0;
+  redoAside = null;
+  lastHistoryKey = null;
+  stepsChanged();
+}
+
 /**
  * Records the state before a change, as a step undo goes back to; a change that joins the step before it (joinsLast) records nothing.
  * A step whose change turned out to change nothing gives way to the next, and the redo steps it set aside come back.
@@ -520,6 +529,7 @@ export const historyState = {
   loadKept,
   snapshot,
   pushHistory,
+  startAnew,
   asOwnStep,
   ownStepNext,
   restore,

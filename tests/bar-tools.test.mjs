@@ -74,9 +74,13 @@ test('every group on a block\'s bar is a fold its family draws, under the same t
 
 test('a group the menu draws in some states only is a tool in those states only', () => {
   for (const [type, tools] of Object.entries(BAR_GROUPS)) {
-    for (const [id, cond] of conditionalFolds(family(type))) {
+    const source = family(type);
+    const cards = new Set([...source.matchAll(/<Capability id="([^"]+)"/g)].map((m) => m[1]));
+    for (const [id, cond] of conditionalFolds(source)) {
       // A family shared by several types draws a type's own groups for that type alone, which its bar already is.
       if (cond === `selectedBlock.type === '${type}'`) continue;
+      // A group that is a fold in some states and a capability's card in the others (an embed's playback, an uploaded film's) has something for its tool to open in every state (ADR-0031).
+      if (cards.has(id)) continue;
       assert.ok(tools.find((t) => t.only === `fold:${id}`)?.when, `${type}: «${id}» is drawn only when ${cond}, but its tool stands always`);
     }
   }
@@ -138,7 +142,7 @@ test('a block\'s bar ends in its motion and its placement, with its design first
   const withNotice = CAL_DESIGNS.find((d) => d.notice);
   const without = CAL_DESIGNS.find((d) => !d.notice);
   assert.ok(withNotice && without, 'the designs hold both kinds');
-  assert.ok(ids('calendar', { design: withNotice.id }).includes('fold:cal-notice'));
+  assert.ok(ids('calendar', { design: withNotice.id }).includes('fold:cal-notice'), 'the announcement\'s tool opens it whether it is on or not (ADR-0031)');
   assert.ok(!ids('calendar', { design: without.id }).includes('fold:cal-notice'));
 });
 

@@ -56,6 +56,7 @@
     const settingRows = () => [...node.children].filter((el) => el.classList.contains('setting'));
     if (!menued) {
       for (const el of node.querySelectorAll(`:scope > [${HIDDEN}]`)) el.removeAttribute(HIDDEN);
+      for (const el of settingRows()) el.style.removeProperty('order');
       extraRowsNow = { hidden: [], shown: [] };
       return;
     }
@@ -66,9 +67,14 @@
       settingRows().forEach((el, i) => {
         const name = nameOf(el);
         if (el.matches('[data-own]') || el.querySelector('[data-own]')) folds.show(surface, id, name);
-        const keep = i === 0 || folds.isShown(surface, id, name);
+        const stands = i === 0;
+        const keep = stands || folds.isShown(surface, id, name);
         el.toggleAttribute(HIDDEN, !keep);
-        if (i > 0) (keep ? shown : hidden).push([name, wordsOf(el)]);
+        // A row the owner added from the list stands at the foot of the fold, in the order added; the fold's foot stays under them (app.css).
+        const at = stands ? -1 : folds.addedAt(surface, id, name);
+        if (at >= 0) el.style.order = String(1 + at);
+        else el.style.removeProperty('order');
+        if (!stands) (keep ? shown : hidden).push([name, wordsOf(el)]);
       });
       extraRowsNow = { hidden, shown };
     });
@@ -131,9 +137,9 @@
     }
   }
 
-  /** A row added from the list: shown for the session, the list closed, and the focus on the row's own control. */
+  /** A row added from the list: shown for the session at the foot of the fold, the list closed, and the focus on the row's own control. */
   async function reveal(name) {
-    folds.show(surface, id, name);
+    folds.show(surface, id, name, { added: true });
     extraOpen = false;
     revealed += 1;
     await tick();

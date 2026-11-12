@@ -106,7 +106,8 @@ export function calendarDesignSource({ mode = 'set', current = null, design = 'p
       const def = calDesign(lent ? design : id);
       return onePage(page, {
         id: 'design-picker-cal', type: 'calendar', version: 1, decor: false, hideMobile: false, animation: null,
-        props: { sources: mode !== 'add' && Array.isArray(props.sources) ? props.sources : [], limit: 4, view: def.view ?? 'list', ...(def.id === 'plain' ? {} : { design: def.id }), ...(def.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}), ...(phone ? { phoneView: id } : {}), ...(card ? { card: id } : {}) },
+        // A calendar whose feed cannot be fetched draws the sample events here, so its designs can still be seen.
+        props: { sources: mode !== 'add' && Array.isArray(props.sources) ? props.sources : [], sampleOnFail: true, limit: 4, view: def.view ?? 'list', ...(def.id === 'plain' ? {} : { design: def.id }), ...(def.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}), ...(phone ? { phoneView: id } : {}), ...(card ? { card: id } : {}) },
         frames: { desktop: { x: 3, y: 24, w: 94, h: 600 }, mobile: null },
       });
     },

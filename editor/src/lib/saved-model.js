@@ -9,6 +9,12 @@ const PAGE_KEY = /^urd-draft-([a-z0-9][a-z0-9-]{0,79})$/;
 const NOT_A_PAGE = /^(?:site|templates|plugins|redirects|media-moves|collections|maler|samlinger)$|^(?:collection-|template-|samling-|mal-)/;
 
 /**
+ * Whether a page id would store its draft under another part's key (`urd-draft-<id>`), which the two would overwrite; a new page or a copy never takes such an id.
+ * @param {string} id
+ */
+export const pageIdTaken = (id) => NOT_A_PAGE.test(String(id ?? ''));
+
+/**
  * The part a stored draft key belongs to; null for a key no part holds (the tidy's moves, the mark of a deleted legacy collections' index, a key from before a rename).
  * @param {string} key
  * @returns {string|null}

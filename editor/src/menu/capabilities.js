@@ -84,6 +84,13 @@ CAPABILITIES.push(
     },
   },
   {
+    id: 'video-play', area: 'content', icon: 'play', pins: [], types: ['video'],
+    // An uploaded film's loop, muting and self-start, all off at the start; an embed's playback is a section of its own, since it asks first from the start.
+    available: (block) => block.props?.source === 'file',
+    inUse: (block) => block.props?.loop === true || block.props?.muted === true || block.props?.autoplay === true,
+    clear: (ed) => ed.setBlockProps('video-play', { loop: false, muted: false, autoplay: false }),
+  },
+  {
     id: 'cal-switcher', area: 'content', icon: 'views', pins: [], types: ['calendar'],
     // Only the views that list what is coming can turn to the week or the month.
     available: (block) => CAL_SWITCH_VIEWS.includes(calView(block.props ?? {})),
@@ -96,6 +103,22 @@ CAPABILITIES.push(
     // The first day of the week counts where the card shows it: the views that draw weeks, the bento design and a calendar with the view switcher.
     inUse: (block) => block.props?.clock === '12' || (['mon', 'sun'].includes(block.props?.weekStart) && calShowsWeek(block.props ?? {})),
     clear: (ed) => ed.setBlockProps('cal-time', { clock: undefined, weekStart: undefined }),
+  },
+  {
+    id: 'cal-buttons', area: 'content', icon: 'buttons', pins: [], types: ['calendar'],
+    // The subscribe button stands until it is turned off, so a calendar that has not turned it off uses the buttons.
+    // The programme's address counts where the design draws it, as the card does.
+    inUse: (block) => block.props?.showSubscribe !== false || block.props?.showRecurring === true || block.props?.showAdd === false
+      || (Boolean(calDesign(block.props?.design).program) && Boolean(block.props?.programHref)),
+    clear: (ed) => ed.setBlockProps('cal-buttons', { showSubscribe: false, showRecurring: undefined, showAdd: undefined, programHref: undefined }),
+  },
+  {
+    id: 'cal-notice', area: 'content', icon: 'notice', pins: [], types: ['calendar'],
+    // The designs that draw an announcement offer it; adding it turns it on, and the way back hides it and keeps its words.
+    available: (block) => Boolean(calDesign(block.props?.design).notice),
+    inUse: (block) => block.props?.notice?.show === true,
+    add: (ed, block) => ed.setBlockProp('notice', { ...(block.props?.notice ?? {}), show: true }),
+    clear: (ed, block) => ed.setBlockProp('notice', { ...(block.props?.notice ?? {}), show: false }),
   },
   {
     id: 'cal-filter', area: 'content', icon: 'filter', pins: [], types: ['calendar'],

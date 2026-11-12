@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.86): a round of bugs
+
+- [ ] A calendar in the year wheel design: no «Choose a month to see» line beside the wheel
+- [ ] Name a new page «Collections», «Site», «Maler» or «Template-hero»: refused as a reserved name; duplicate a page called «Collection»: the copy is «page-collection-2»; changing an existing page's address to «collections» is still allowed
+- [ ] The media tidy while the collections cannot be read (a broken collections index), or before they have been read: it says it waits, and no file moves
+- [ ] Run the media tidy, then Ctrl+Z: nothing from before the tidy comes back, and the undo button stands greyed
+- [ ] Add two extras from an area's «+» list (a calendar's View switcher, then Time and week): both stand at the foot of the area, in the order added, with the «+» list under them
+- [ ] In a section with «Add a setting», add two settings: they stand at the foot of the section, in the order added
+- [ ] A calendar with its buttons off: no Buttons section; «Buttons» in the Content «+» list adds a card with its three switches, and the card's way back turns them off
+- [ ] A calendar design that draws an announcement: «Announcement» in the «+» list turns it on, its switch first in the card with its settings under it; the way back hides it and keeps its words; the search finds it and can switch it on
+- [ ] An uploaded film: «Playback» in the «+» list adds loop, mute and autoplay; a YouTube film keeps its Playback section with «Ask first»
+- [ ] Drag the canvas's right edge narrower and wider: the edge stays under the pointer
+- [ ] A calendar whose feed cannot be fetched (on the local server): its design picker's preview shows the sample events in each design, the phone designs and the cards
+
 ### Test batch (0.7.35.4.2): Look, what changed, Keep both and New tab
 
 - [ ] Save a page on device A with an edited text; on device B open Drafts, Saved, and press its row: what changed lists the text change by the block's words, and a press on the line draws A's version in the canvas at that place

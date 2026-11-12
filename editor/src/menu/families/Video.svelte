@@ -7,6 +7,7 @@
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import SelectRow from '../../lib/rows/SelectRow.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
+  import Capability from '../../lib/rows/Capability.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
@@ -112,12 +113,16 @@
     {/if}
   {/snippet}
   {@const playDefaults = vsource === 'embed' ? { askFirst: true, playOnPress: true } : { loop: false, muted: false, autoplay: false }}
-  {@const playOn = (vsource === 'embed'
-    ? [askFirst, askFirst && selectedBlock.props.playOnPress !== false]
-    : [selectedBlock.props.loop === true, selectedBlock.props.muted === true, selectedBlock.props.autoplay === true]).filter(Boolean).length}
+  {@const playOn = [askFirst, askFirst && selectedBlock.props.playOnPress !== false].filter(Boolean).length}
   <Fold id="video-what" title={ta('blocks.video')} value={vsource === 'embed' ? selectedBlock.props.url || ta('common.none') : selectedBlock.props.title || ta('blocks.video')}>{@render videoWhat()}</Fold>
-  <Fold id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')}
-    rows={vsource === 'embed' && !askFirst ? 1 : 2} group={groupOf('video-play', playDefaults)}>{@render videoPlay()}</Fold>
+  {#if vsource === 'embed'}
+    <!-- An embed asks first from the start, so its playback stands as a section -->
+    <Fold id="video-play" title={ta('group.playback')} value={playOn ? ta('menu.onCount', { n: playOn }) : ta('common.off')}
+      rows={askFirst ? 2 : 1} group={groupOf('video-play', playDefaults)}>{@render videoPlay()}</Fold>
+  {:else}
+    <!-- An uploaded film's playback starts off: an extra, added from the list or standing while a switch is on -->
+    <Capability id="video-play" group={groupOf('video-play', playDefaults)}>{@render videoPlay()}</Capability>
+  {/if}
 {:else if area === 'style'}
   <Setting own={aspectValue !== 'free'} reset={() => setAspect('free')}>
     <SelectRow label={ta('lbl.videoAspect')} title={ta('tip.video.aspect')} value={aspectValue} options={aspectOptions} onchange={setAspect} />

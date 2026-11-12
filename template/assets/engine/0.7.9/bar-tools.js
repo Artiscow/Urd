@@ -80,10 +80,10 @@ export const BAR_GROUPS = {
   calendar: [
     fold('cal-sources', 'calendar.sources', 'content', 'calendar'),
     fold('cal-view', 'calendar.group.view', 'content', 'list'),
-    fold('cal-buttons', 'calendar.group.buttons', 'content', 'box'),
     fold('cal-empty', 'calendar.group.empty', 'content', 'empty'),
     // The announcement belongs to the designs that draw one, the design's settings to those with an option shown now, as menu/families/Calendar.svelte draws them.
-    fold('cal-notice', 'calendar.group.notice', 'content', 'notice', (b) => Boolean(calDesign(b.props?.design).notice)),
+    fold('cal-buttons', 'cap.cal-buttons', 'content', 'box'),
+    fold('cal-notice', 'cap.cal-notice', 'content', 'notice', (b) => Boolean(calDesign(b.props?.design).notice)),
     loose('style', STYLE, 'brush'),
     fold('cal-opts', 'calendar.section.options', 'style', 'options', (b) => calOptionDefs(b.props?.design).some((def) => calOptionShown(def, calOptions(b.props)))),
     fold('cal-colors', 'calendar.colors', 'style', 'palette'),

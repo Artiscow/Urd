@@ -7,15 +7,22 @@
 import { cloneSectionForInsert } from '$engine/templates-model.js';
 import { claimAnchors } from '$engine/anchor-model.js';
 
-/** The slug of a page's copy: the original's with the first free running number from 2 (`om-oss-2`, then `om-oss-3`); a copy's own number is replaced, so the copy of `om-oss-2` is `om-oss-3`, while `top-10` with no `top` beside it keeps its name whole. */
-export function copySlug(id, pages) {
+/**
+ * The slug of a page's copy: the original's with the first free running number from 2 (`om-oss-2`, then `om-oss-3`); a copy's own number is replaced, so the copy of `om-oss-2` is `om-oss-3`, while `top-10` with no `top` beside it keeps its name whole.
+ * A slug `reserved` turns down is passed over; where every numbered copy would be (a page named «collection», whose copies would begin as a collection's draft does), the copy is named `page-<name>-<n>`.
+ * @param {string} id
+ * @param {Array<{id: string, path?: string}>} pages
+ * @param {(slug: string) => boolean} [reserved]
+ */
+export function copySlug(id, pages, reserved = () => false) {
   const taken = new Set((pages ?? []).flatMap((p) => [p.id, typeof p.path === 'string' ? p.path.replace(/^\//, '') : null]).filter(Boolean));
   const whole = String(id ?? '') || 'page';
   const stem = whole.replace(/-\d+$/, '');
-  const base = stem !== whole && taken.has(stem) ? stem : whole;
+  let base = stem !== whole && taken.has(stem) ? stem : whole;
+  if (reserved(`${base}-2`) && reserved(`${base}-3`)) base = `page-${base}`;
   for (let n = 2; ; n += 1) {
     const slug = `${base}-${n}`;
-    if (!taken.has(slug)) return slug;
+    if (!taken.has(slug) && !reserved(slug)) return slug;
   }
 }
 

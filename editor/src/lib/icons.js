@@ -2,6 +2,9 @@
 /** The drawings of the capabilities (menu/capabilities.js), on their cards and in the add list; the box, the link, the motion, the filter and the palette as the block's bar draws them. */
 const capSvg = (inner) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
 export const CAP_ICONS = {
+  play: capSvg('<path d="M7 4l13 8-13 8z"/>'),
+  notice: capSvg('<path d="M3 10v4h3l8 5V5l-8 5z"/><path d="M18 9a4 4 0 010 6"/>'),
+  buttons: capSvg('<rect x="3" y="8" width="18" height="8" rx="4"/><path d="M8 12h8"/>'),
   motion: capSvg('<path d="M3 7h7M3 12h11M3 17h7"/><path d="M16 8l4 4-4 4"/>'),
   box: capSvg('<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/>'),
   phone: capSvg('<rect x="8" y="3" width="8" height="18" rx="2"/><path d="M11 17.5h2"/><path d="M4 4l16 16"/>'),

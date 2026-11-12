@@ -353,7 +353,6 @@ export default {
     'calendar.todayCount.one': 'Bugün {n}',
     'calendar.todayCount.other': 'Bugün {n}',
     'calendar.wheel': 'Yıl çarkı',
-    'calendar.pickMonth': 'Etkinliklerini görmek için çarkta bir ay seç',
     'calendar.wholeYear': 'Tüm yıl',
     'calendar.fewer': 'Daha az',
     'calendar.moreLegend': 'Daha çok',

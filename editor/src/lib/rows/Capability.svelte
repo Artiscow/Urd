@@ -12,7 +12,7 @@
   import { pinnedNow } from '../../menu/pinned.js';
   import Pin from '../../menu/Pin.svelte';
   import { capability, carries } from '../../menu/capabilities.js';
-  import { isAdded, keepCapability, dropCapability, isFresh, capabilities } from '../../menu/capabilities.svelte.js';
+  import { isAdded, keepCapability, dropCapability, isFresh, capabilities, addedAt } from '../../menu/capabilities.svelte.js';
   import { menu } from '../../menu/state.svelte.js';
   import { folds } from '../folds.svelte.js';
   import { followOpen } from '../follow-open.js';
@@ -26,6 +26,8 @@
   const block = $derived(ed.selectedBlock);
   const inUse = $derived(Boolean(block) && cap.inUse(block, ed));
   const kept = $derived(Boolean(block) && isAdded(block.blockId, id));
+  /** A card the owner added from the add list stands at the foot of its area, in the order added (app.css holds the add list under it); a copy that draws every capability keeps the catalogue's order. */
+  const placedAt = $derived(block && !scope?.forced(id) ? addedAt(block.blockId, id) : -1);
   const shown = $derived(carries(cap, block, ed) && !(cap.pins.length > 0 && pinned.all(...cap.pins)) && (inUse || kept || Boolean(scope?.forced(id))));
   /** The way back stands where the block uses the capability or took it; a copy that draws every capability does not offer it for one the block has not taken. */
   const takeable = $derived(inUse || kept);
@@ -98,7 +100,7 @@
 </script>
 
 {#if shown}
-  <div class="cap-card" class:fresh class:cap-single={Boolean(cap.single)} role="group" data-fold={id} data-cap={id} aria-label={title} bind:this={cardEl} transition:rowMotion>
+  <div class="cap-card" class:fresh class:cap-single={Boolean(cap.single)} role="group" data-fold={id} data-cap={id} aria-label={title} style:order={placedAt >= 0 ? 1 + placedAt : null} bind:this={cardEl} transition:rowMotion>
     <header class="cap-head">
       {#if folding}
         <!-- The name folds the card to its line and opens it again, saying its value while folded -->

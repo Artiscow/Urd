@@ -1119,6 +1119,11 @@
     opacity: 0.7;
   }
 
+  /* The rows added from «Add a setting» stand at the fold's foot in the order added (lib/rows/Fold.svelte); the foot itself stays last */
+  .menu-group .group-items > .menu-group-foot {
+    order: 10000;
+  }
+
   .menu-group .group-items > [data-extra-hidden] {
     display: none;
   }
@@ -1353,6 +1358,16 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
+  }
+
+  /* The cards added from the add list stand at the foot of their area in the order added (lib/rows/Capability.svelte); the add list stays under them */
+  .emenu-area > :is(.cap-adds, .cap-add-line, .cap-names) {
+    order: 10000;
+  }
+
+  /* An area's own closing control (the calendar's «Reset texts») stays under the cards added */
+  .emenu-area > .area-foot {
+    order: 9000;
   }
 
   .emenu-area .cap-add-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {

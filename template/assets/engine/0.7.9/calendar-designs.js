@@ -39,7 +39,6 @@ export const CAL_TEXTS = {
   thisMonth: 'calendar.thisMonth',
   todayBtn: 'calendar.todayBtn',
   wheel: 'calendar.wheel',
-  pickMonth: 'calendar.pickMonth',
   wholeYear: 'calendar.wholeYear',
   fewer: 'calendar.fewer',
   more: 'calendar.moreLegend',
@@ -609,7 +608,7 @@ export const CAL_DESIGNS = [
     module: 'time',
     stripe: false,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('ring', 'wheel'), slot('past', 'wheel'), slot('dot', 'wheel'), slot('dotOff', 'wheel')],
-    texts: ['wheel', 'pickMonth', 'count', 'monthNone', ...COMMON_TEXTS],
+    texts: ['wheel', 'count', 'monthNone', ...COMMON_TEXTS],
   },
   {
     id: 'heatmap',

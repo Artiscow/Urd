@@ -308,3 +308,9 @@ test('_redirects: publishing may write it, holding redirects only, none from Urd
   assert.equal(isAllowedRedirects('/a /b 301\n'.repeat(60_000)), false, 'past the size cap');
 });
 
+
+test('the editor refuses the same folder names for a page as the guard', async () => {
+  const { readFileSync } = await import('node:fs');
+  const list = (file) => readFileSync(new URL(file, import.meta.url), 'utf8').match(/const RESERVED_SLUGS = (\[[^\]]*\])/)[1];
+  assert.equal(list('../editor/src/state/site.svelte.js'), list('../template/functions/_lib/guard.js'));
+});

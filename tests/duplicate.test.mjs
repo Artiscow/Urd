@@ -43,3 +43,10 @@ test('duplicatedSection: the copy below the original with fresh ids, its anchor 
   assert.equal(JSON.stringify(page), before, 'the page given is not changed');
   assert.equal(duplicatedSection(page, 'sec-x', makeId), null);
 });
+
+test('a copy passes over the slugs it may not take, and names a page whose every numbered copy is reserved apart', () => {
+  const reserved = (slug) => /^(?:collection-|template-)/.test(slug) || slug === 'om-oss-2';
+  assert.equal(copySlug('om-oss', [{ id: 'om-oss', path: '/om-oss' }], reserved), 'om-oss-3');
+  assert.equal(copySlug('collection', [{ id: 'collection', path: '/collection' }], reserved), 'page-collection-2');
+  assert.equal(copySlug('om-oss', [{ id: 'om-oss', path: '/om-oss' }]), 'om-oss-2', 'with nothing reserved, as before');
+});

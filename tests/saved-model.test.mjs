@@ -3,7 +3,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { partOfKey, keysByPart, partName, partOfName, partCanon, meet, standing, counts, savedList, overwrites, publishedSaves, tickedNames, firstTab } from '../editor/src/lib/saved-model.js';
+import { partOfKey, keysByPart, partName, partOfName, partCanon, meet, standing, counts, savedList, overwrites, publishedSaves, tickedNames, firstTab, pageIdTaken } from '../editor/src/lib/saved-model.js';
 import { keyOfPart, isPartName } from '../template/functions/_lib/drafts.js';
 
 const KEYS = ['urd-draft-site', 'urd-draft-hjem', 'urd-draft-om-oss', 'urd-draft-sitemap', 'urd-draft-plugins', 'urd-draft-redirects',
@@ -141,4 +141,12 @@ test('a save asks before writing over a part saved elsewhere since; a publish ma
     { part: 'page-gone', draft: false, elsewhere: null },
   ];
   assert.deepEqual(publishedSaves(rows, { ...saved, 'page-gone': { hash: 'G' } }), ['page-hjem']);
+});
+
+test('a new page never takes an id whose draft is another part\'s, the old Norwegian names among them', () => {
+  for (const id of ['site', 'templates', 'plugins', 'redirects', 'collections', 'media-moves', 'maler', 'samlinger', 'collection-kaker', 'template-hero', 'samling-x', 'mal-y']) {
+    assert.equal(pageIdTaken(id), true, id);
+    assert.equal(partOfKey(`urd-draft-${id}`)?.startsWith('page-') ?? false, false, `${id}: its draft key is no page's`);
+  }
+  for (const id of ['hjem', 'om-oss', 'collectionsx', 'kalender', 'page-collection-2']) assert.equal(pageIdTaken(id), false, id);
 });

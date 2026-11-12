@@ -6,22 +6,29 @@
   import LookBanner from './LookBanner.svelte';
   const ed = getContext('urd-editor');
   let dragging = $state(false);
-  let startX = 0;
-  let startW = 0;
-  /** The scale as the drag began: the fit scale follows the width, so a move is measured against the scale it started at, which keeps the drag linear. */
-  let startScale = 1;
+  /** Where on the handle the pointer took hold, from the canvas's right edge, so the first move does not jump. */
+  let grab = 0;
+  let stageEl = $state(null);
   const breakpoint = $derived(ed.siteDraft?.breakpoints?.mobile ?? 640);
   function onDown(e) {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragging = true;
-    startX = e.clientX;
-    startW = ed.device.width;
-    startScale = ed.scale || 1;
+    grab = stageEl.getBoundingClientRect().right - e.clientX;
   }
+  /**
+   * The width that puts the canvas's right edge under the pointer, worked out at every move from where the canvas stands and the scale it has then: from its middle while it stands centred in its frame, whose right edge moves half as far as the width grows, else from its left edge.
+   * A fit scale follows the width, so the next move reads the scale the last one gave, and the edge settles under the pointer.
+   */
   function onMove(e) {
     if (!dragging) return;
-    ed.setFreeWidth(startW + (e.clientX - startX) / startScale, 8 / startScale);
+    const stage = stageEl.getBoundingClientRect();
+    const frame = ed.frameWrapEl?.getBoundingClientRect();
+    const scale = ed.scale || 1;
+    const edge = e.clientX + grab;
+    const centred = Boolean(frame) && stage.width < frame.width - 1;
+    const shown = centred ? 2 * (edge - (stage.left + stage.width / 2)) : edge - stage.left;
+    ed.setFreeWidth(shown / scale, 8 / scale);
   }
   function onUp(e) {
     if (!dragging) return;
@@ -40,7 +47,7 @@
   <LookBanner />
   <!-- .stage has the SCALED size, so scrolling/centering gets a real
        box (a transformed iframe alone does not expand its parent's scroll). -->
-  <div class="stage" class:dragging style="width:{ed.stageW}px; height:{ed.stageH}px">
+  <div class="stage" class:dragging style="width:{ed.stageW}px; height:{ed.stageH}px" bind:this={stageEl}>
     <iframe
       bind:this={ed.iframeEl}
       title={ta('ui.previewTitle')}

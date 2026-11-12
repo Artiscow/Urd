@@ -87,6 +87,11 @@ async function loadMediaFiles() {
 /** The tidy: the plan from the documents as they stand and the listing, the changed documents written into the drafts, and the moves given to a publish. With changes waiting it runs only where `withChanges` asks for them to be published first (the panel's second press), and only once that publish has gone through, so its own publish carries the moves and the paths it rewrites alone. The button stands busy from the press to the publish's answer. */
 async function tidyMedia({ withChanges = false } = {}) {
   if ((historyState.dirty && !withChanges) || mediaBusy) return;
+  // The collections' links to the files are rewritten with the move; until every collection has been read, the files stay where they are.
+  if (!collectionsState.collectionsReady) {
+    shellState.setStatus(ta('media.tidyCollections'), 'error');
+    return;
+  }
   mediaBusy = true;
   try {
     if (historyState.dirty) {
@@ -123,7 +128,8 @@ async function tidyMedia({ withChanges = false } = {}) {
       shellState.setStatus(ta('media.tidyNothing'));
       return;
     }
-    // The changed documents into the drafts, which the publish below picks up.
+    // The changed documents into the drafts, which the publish below picks up. A tidy is not undone: the undo list starts anew, since every step before it holds the paths it changes.
+    historyState.startAnew();
     if (plan.site) {
       siteState.siteStore.replace(plan.site);
       siteState.siteStore.save();

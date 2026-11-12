@@ -38,7 +38,8 @@ function standIn(block, extra = {}) {
     ...extra,
   };
 }
-const fresh = (type = 'text') => ({ blockId: 'b1', sectionId: 's1', type, props: {}, decor: false, hideMobile: false, animation: null, hover: null, sticky: null });
+/** A block as a new one is made: a new calendar has its subscribe button off (blocks/calendar.js defaults). */
+const fresh = (type = 'text') => ({ blockId: 'b1', sectionId: 's1', type, props: type === 'calendar' ? { showSubscribe: false } : {}, decor: false, hideMobile: false, animation: null, hover: null, sticky: null });
 
 /** A block using each capability, as the owner leaves it. */
 const IN_USE = {
@@ -51,6 +52,9 @@ const IN_USE = {
   'img-link': (b) => { b.props.href = 'https://example.com'; b.props.newTab = true; },
   'cal-switcher': (b) => { b.props.switcher = true; b.props.switcherViews = { week: 'weekRows' }; },
   'cal-time': (b) => { b.props.clock = '12'; b.props.weekStart = 'mon'; },
+  'cal-buttons': (b) => { b.props.showRecurring = true; },
+  'cal-notice': (b) => { b.props.design = 'noticeboard'; b.props.notice = { show: true, noticeTitle: 'Ny dato' }; },
+  'video-play': (b) => { b.props.source = 'file'; b.props.loop = true; b.props.muted = true; },
   'cal-filter': (b) => { b.props.showCategories = true; b.props.showSearch = true; b.props.showEarlier = true; },
   'cal-signup': (b) => { b.props.showSignup = true; },
   'cal-colors': (b) => { b.props.colors = { bg: '#000000' }; b.props.stripe = { color: '#111111' }; },

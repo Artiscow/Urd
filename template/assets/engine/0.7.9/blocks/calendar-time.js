@@ -616,9 +616,7 @@ export function yearWheel(host, occs, props, ics, ui) {
   const side = ui.el('div', 'urd-cal-wheel-side');
   const sideLabel = ui.el('span', 'urd-cal-wheel-label');
   const list = ui.el('div', 'urd-cal-wheel-list');
-  const hint = ui.el('span', 'urd-cal-wheel-hint');
-  hint.appendChild(ui.tx('pickMonth'));
-  side.append(sideLabel, list, hint);
+  side.append(sideLabel, list);
   const paintList = () => {
     sideLabel.textContent = dates().months[picked];
     list.replaceChildren();

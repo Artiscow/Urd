@@ -354,7 +354,6 @@ export default {
     'calendar.todayCount.one': '{n} today',
     'calendar.todayCount.other': '{n} today',
     'calendar.wheel': 'Year wheel',
-    'calendar.pickMonth': 'Pick a month on the wheel to see its events',
     'calendar.wholeYear': 'The whole year',
     'calendar.fewer': 'Fewer',
     'calendar.moreLegend': 'More',

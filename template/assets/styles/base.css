@@ -5321,8 +5321,7 @@ textarea.urd-form-input {
   border-radius: var(--urd-radius-sm);
 }
 
-.urd-cal-wheel-none,
-.urd-cal-wheel-hint {
+.urd-cal-wheel-none {
   margin: 0;
   font-size: 0.78em;
   opacity: 0.7;

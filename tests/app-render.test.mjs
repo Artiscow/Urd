@@ -310,6 +310,23 @@ test('the Drafts window: a rest opens it and leaving closes it, a press keeps it
   assert.deepEqual(draftsState.draftsLater, []);
 });
 
+test('a change that is not undone, the media tidy, lets every step go, so no undo brings back the paths it changed', async () => {
+  const { historyState } = await import('../editor/src/state/history.svelte.js');
+  const { readFileSync } = await import('node:fs');
+  const history = readFileSync(new URL('../editor/src/state/history.svelte.js', import.meta.url), 'utf8');
+  const body = history.slice(history.indexOf('function startAnew()'), history.indexOf('\n}\n', history.indexOf('function startAnew()')));
+  assert.match(body, /history\.length = 0;/, 'the undo steps go');
+  assert.match(body, /redoStack\.length = 0;/, 'and the redo steps');
+  assert.match(body, /stepsChanged\(\);/, 'and the buttons and the kept history follow');
+  historyState.startAnew();
+  assert.equal(historyState.steps.undo.length, 0);
+  assert.equal(historyState.steps.redo.length, 0);
+  const publish = readFileSync(new URL('../editor/src/state/publish.svelte.js', import.meta.url), 'utf8');
+  const tidy = publish.slice(publish.indexOf('async function tidyMedia'), publish.indexOf('async function askDiscard'));
+  assert.ok(tidy.indexOf('historyState.startAnew()') > 0 && tidy.indexOf('historyState.startAnew()') < tidy.indexOf('setMoves(plan.moves)'), 'the tidy starts the history anew before its moves are set');
+  assert.ok(!tidy.includes('pushHistory'), 'and is no step of its own');
+});
+
 test('the site is set together with its draft, after the saved drafts are met, so a panel drawn meanwhile never finds a site without its draft', async () => {
   const { readFileSync } = await import('node:fs');
   const init = readFileSync(new URL('../editor/src/state/shell.svelte.js', import.meta.url), 'utf8').split('async function init()')[1];

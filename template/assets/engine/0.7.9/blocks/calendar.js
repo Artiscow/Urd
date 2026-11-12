@@ -1918,7 +1918,12 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   };
 
   // A feed that cannot be fetched leaves the preview's calendar empty: its note says why and offers the sample events for the session, so the design and the colours can be set on them.
+  // The design picker's preview (`sampleOnFail`, set by the editor on the calendar it draws there and never stored) shows the sample events at once, so every design stands to be seen.
   const failed = (error) => {
+    if (ctx.preview && props.sampleOnFail === true) {
+      draw(demoOccurrences(), null);
+      return;
+    }
     const key = el.dataset.blockId ?? '';
     const shown = EXAMPLES_SHOWN.has(key);
     const note = el2('p', 'urd-cal-note urd-cal-note-act', ta(shown ? 'calendar.exampleNote' : 'calendar.feedFailed', { error }));

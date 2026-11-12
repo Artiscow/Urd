@@ -15,6 +15,7 @@ import { patternLayer } from '$engine/backgrounds/pattern.js';
 import { grainLayer } from '$engine/backgrounds/grain.js';
 import { bindingWidth } from '../lib/content-width.js';
 import { copySlug } from '../lib/duplicate.js';
+import { pageIdTaken } from '../lib/saved-model.js';
 import { frontPageSwap, refusedPageFields as listRefused } from '../lib/page-settings.js';
 import { TITLE_FORMATS, titleFormatOf } from '$engine/seo.js';
 import { activeTokens } from '$engine/theme.js';
@@ -170,6 +171,11 @@ function pageSlugError(slug, ignoreId = null) {
   return null;
 }
 
+/** A new page's slug, which is its id for good: refused as any address is, and where its draft would be stored under another part's key (lib/saved-model.js pageIdTaken). An address changed later keeps the id, so only a new page is held to this. */
+function newPageError(slug) {
+  return pageSlugError(slug) ?? (pageIdTaken(slug) ? ta('error.reservedName', { slug }) : null);
+}
+
 /** A page being made: a second press while the first waits for its words does nothing. */
 let addingPage = false;
 
@@ -189,12 +195,12 @@ async function makePage() {
   const template = newPageTemplate;
   // No fallback word: a name without a letter or a digit is turned down.
   const slug = slugify(title, '');
-  const err = pageSlugError(slug);
+  const err = newPageError(slug);
   if (err) return err;
   // The terms of sale are written in the site's language with the site's facts (lib/site-seed.js), read before the page is made; the name is checked again after the wait.
   const seed = template === 'preset:terms' ? await termsSeed(siteDraft) : undefined;
   if (seed) {
-    const again = pageSlugError(slug);
+    const again = newPageError(slug);
     if (again) return again;
   }
   // Starter packs are built fresh (create() yields new ids and
@@ -249,7 +255,7 @@ async function duplicatePage(entry, { source = null, title = null } = {}) {
   const from = source ?? (entry.id === pageState.pageId
     ? JSON.parse(JSON.stringify(pageState.store.data))
     : await pageState.readPageDraft(entry));
-  const slug = copySlug(entry.id, siteDraft.pages);
+  const slug = copySlug(entry.id, siteDraft.pages, (candidate) => RESERVED_SLUGS.includes(candidate) || pageIdTaken(candidate));
   const name = title ?? ta('page.copyTitle', { title: entry.title });
   const fresh = clonePageForInsert(from, makeId, { id: slug, title: name });
   siteMutate('pages', () => {

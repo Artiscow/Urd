@@ -172,22 +172,16 @@
     const view = calView(p);
     const limit0 = calLimitStart(p);
     const count0 = view === 'next' ? 3 : undefined;
-    // The view switcher, the time and week, the filter and search, the sign-up and the colours are capabilities of their own, with their own ways back (menu/capabilities.js).
+    // The view switcher, the time and week, the buttons, the filter and search, the sign-up, the announcement and the colours are capabilities of their own, with their own ways back (menu/capabilities.js).
     const viewChanged = p.toolsSize != null || p.description != null || p.showMore === false || (p.limit ?? 6) !== limit0 || p.nextCount !== count0 || p.laterCount !== count0 || p.showCancelled === false || p.structuredData === false;
-    const on = [p.showSubscribe !== false, p.showRecurring === true].filter(Boolean).length;
-    const buttonsChanged = on > 0 || p.showAdd === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
     const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length;
     return {
       sources: String((p.sources ?? []).filter((src) => { const c = calSource(src); return c.ref ? Boolean(siteCalendarById(c.ref)) : c.url.trim(); }).length),
       view: ta(CAL_VIEW_KEYS[calView(p)]),
       viewReset: viewChanged ? reset('cal-view', { toolsSize: undefined, description: undefined, showMore: undefined, limit: limit0, nextCount: count0, laterCount: count0, showCancelled: undefined, structuredData: undefined }) : null,
-      buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
-      buttonsReset: buttonsChanged ? reset('cal-buttons', { showSubscribe: false, showRecurring: undefined, showAdd: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
       emptyReset: emptyChanged ? reset('cal-empty', { emptyText: undefined, emptyIcon: undefined }) : null,
-      notice: p.notice?.show === true ? ta('common.on') : ta('common.off'),
-      noticeReset: p.notice ? reset('cal-notice', { notice: undefined }) : null,
       opts: optCount ? ta('menu.changed', { n: optCount }) : ta('menu.standard'),
       optsReset: optCount ? reset('cal-opts', { options: undefined }) : null,
     };
@@ -378,10 +372,8 @@
   </Setting>
   {/snippet}
   {#snippet calNotice()}
-  <!-- The announcement note, on the designs that have one: a switch and the link it leads to -->
-  {#if calDesign(selectedBlock.props.design).notice}
-    <!-- The announcement and what belongs to it, one setting row; its way back hides it and keeps its words -->
-    <Setting own={selectedBlock.props.notice?.show === true} reset={() => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), show: false })}>
+  <!-- The announcement: its switch, and while it is on what belongs to it, one setting row; its way back hides it and keeps its words -->
+  <Setting own={selectedBlock.props.notice?.show === true} reset={() => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), show: false })}>
     <SwitchRow label={ta('calendar.showNotice')} title={ta('tip.calendar.showNotice')} checked={selectedBlock.props.notice?.show === true} onchange={(on) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), show: on })} />
     {#if selectedBlock.props.notice?.show === true}
       <!-- A design that can draw the announcement as an alert band offers the choice -->
@@ -407,25 +399,22 @@
           setLinkOn(b.props.notice, link);
         })} />
     {/if}
-    </Setting>
-  {/if}
+  </Setting>
   {/snippet}
   <Fold id="cal-sources" title={ta('calendar.sources')} value={cm.sources}>{@render calSources()}</Fold>
   <Fold id="cal-view" title={ta('calendar.group.view')} value={cm.view} reset={cm.viewReset}>{@render calViewGroup()}</Fold>
   <!-- What the calendar can show beside its events, each a capability (ADR-0031): a card while the block uses it or was given it this session -->
   <Capability id="cal-switcher">{@render calSwitcher()}</Capability>
   <Capability id="cal-time">{@render calTime()}</Capability>
-  <Fold id="cal-buttons" title={ta('calendar.group.buttons')} value={cm.buttons} reset={cm.buttonsReset}>{@render calButtons()}</Fold>
+  <Capability id="cal-buttons">{@render calButtons()}</Capability>
   <Capability id="cal-filter">{@render calFilter()}</Capability>
   <Capability id="cal-signup" />
   <Fold id="cal-empty" title={ta('calendar.group.empty')} value={cm.empty} reset={cm.emptyReset}>{@render calEmpty()}</Fold>
-  {#if calDesign(selectedBlock.props.design).notice}
-    <!-- The announcement is its switch alone until it is on, and a group of what it then holds -->
-    <Fold id="cal-notice" title={ta('calendar.group.notice')} value={cm.notice} reset={cm.noticeReset} rows={selectedBlock.props.notice?.show === true ? undefined : 1}>{@render calNotice()}</Fold>
-  {/if}
+  <!-- The announcement, on the designs that draw one: added from the list, which turns it on, its way back hiding it and keeping its words -->
+  <Capability id="cal-notice">{@render calNotice()}</Capability>
   <!-- The design's words are rewritten by clicking them in the preview; this puts the defaults back and the removed lines too, keeping the announcement's own words -->
   {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
-    <button type="button" class="ghost action" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', calResetTexts(selectedBlock.props.texts))}>{ta('calendar.resetTexts')}</button>
+    <button type="button" class="ghost action area-foot" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', calResetTexts(selectedBlock.props.texts))}>{ta('calendar.resetTexts')}</button>
   {/if}
 {:else if area === 'style'}
   {@const calDef = calDesign(selectedBlock.props.design)}
