@@ -714,9 +714,9 @@ The source marks, the ID scheme and the status words are explained in [README.md
 
 **Urd today.**
 - **Who can edit:** GitHub users with write access to the repo who are also listed in `ALLOWED_LOGINS`, which every publishing endpoint checks; one publish is one commit through GitHub OAuth and Pages Functions ([ADR-0003](../adr/0003-publishing-via-github-oauth-and-pages-functions.md)).
-- **Drafts and history.** Drafts span pages and are kept in the browser. A conflict warning protects them, and the publish history has «undo the last publish».
+- **Drafts and history.** Drafts span pages and are kept in the browser, and are saved to a branch of their own for another device ([ADR-0032](../adr/0032-saved-drafts-on-a-branch-of-their-own.md)). Publish sends the changes ticked, so one page goes while another waits. A conflict warning protects them, and the publish history has «undo the last publish».
 - **Git** is the audit log, the backup and the export. Updates arrive through the updater ([ADR-0014](../adr/0014-updater-model.md)).
-- **Not there:** roles in the UI, comments, branches or staging beyond the admin preview, and scheduled publishing.
+- **Not there:** roles in the UI, comments, a branch per draft or staging beyond the admin preview and a saved draft looked at in the canvas, and scheduled publishing.
 
 **Gaps.**
 - **C95** Board handover.
@@ -1761,8 +1761,8 @@ The consent and privacy-page items belong to 0.7.24 Privacy defaults, where a co
 | Email forwarding on the domain | SQ (100 aliases), SH | Addresses on the site's domain forwarded to existing inboxes | yes | n/a: set at the domain's DNS host; Cloudflare Email Routing is free | Docs: role addresses through Cloudflare Email Routing (v0.9 board handover) |
 | Global CDN | FR (20 / 300+ locations), WX, WP, GH, SH (300 points of presence), TI | Edge caching | edge | Has | - |
 | Bandwidth and storage quotas | FR, WF, ST, ZO, WX, WP, SQ (unlimited) | Plan limits | - | Has: media limits; Cloudflare free tier | Docs |
-| Staging environment | FR (Pro), WP (Business+), WF, DU (safe testing) | Pre-production | yes | Partial: the admin preview | After v1.0: PR per draft with preview URLs |
-| Branching | FR, WF (Enterprise or Team), WX (API) | Parallel edits | yes | Missing: a draft lives in one browser and is published straight to the main branch | After v1.0: PR per draft with preview URLs |
+| Staging environment | FR (Pro), WP (Business+), WF, DU (safe testing) | Pre-production | yes | Partial: the admin preview, and a saved draft looked at in the canvas or in a tab of its own (0.7.35.4.2); no pre-production address | After v1.0: PR per draft with preview URLs |
+| Branching | FR, WF (Enterprise or Team), WX (API) | Parallel edits | yes | Partial: the drafts saved on one branch of their own for another device (0.7.35.4.1); one saved state, no parallel named drafts, and a publish is no merge | After v1.0: PR per draft with preview URLs |
 | Version history and revert | FR, WX, WP | Roll back | yes | Partial: the publish history lists the 15 latest publishes and undoes the last one; no restore of an older publish or of one page | v0.9 restore an earlier publish |
 | Manual publishing control | SU (Pro), ZO | Publish when ready | no | Has: the publish button | - |
 | Site duplication | WX, SQ | Copy a whole site | yes | Has: «Use this template» | - |
@@ -2199,9 +2199,9 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 | Editor roles or permissions | WF, FR, WS, WT, BR, WN, SH | Role-scoped UI; share-link levels | Partial: access is a list of GitHub logins (`ALLOWED_LOGINS`), and every editor can do everything; no roles | v0.9 board handover; v0.9 content-only editing mode |
 | Content-only edit mode | WF, WT, FR | Edit mode; Content mode; on-page editing | Missing | v0.9 content-only editing mode, to be weighed |
 | Page-level permissions | WS | Restrict pages | Missing | Not taken |
-| Branching or staging | WF, FR, SH | Branch, stage, merge; staging URLs | Missing | After v1.0: PR per draft |
+| Branching or staging | WF, FR, SH | Branch, stage, merge; staging URLs | Partial: one branch for the saved drafts, each looked at in the canvas before it is opened (0.7.35.4); no branch per draft, no merge and no staging address | After v1.0: PR per draft |
 | Review or approval | WF, FR, SQ (Enterprise) | Request review; sign-off | Missing | After v1.0: PR per draft |
-| CMS draft publishing flow | WS, WE | Drafts with side-by-side compare | Partial: drafts across pages; no side-by-side compare | Watch, with the visual revision diff |
+| CMS draft publishing flow | WS, WE | Drafts with side-by-side compare | Partial: drafts across pages, saved for another device; a saved page lists what changed, and «Look at both» switches the canvas between the saved version and this browser's (0.7.35.4.2); no side-by-side view | Watch, with the visual revision diff |
 | Publish or quick publish | WS, CA, FR, FS, WN, SH | Shortcut publish; unpublish | Partial: the Publish button for every draft; no publish key and no unpublish short of deleting the page | 0.7.10; v0.8 AR-5 |
 | Selective save | WP | Choose the entities to save | Has: a tick per part in the Drafts window's This browser tab decides what a save writes, an unticked part kept for later (0.7.35.4.1) | Delivered 0.7.35.4.1 |
 | Save draft | DV, WP | ⌘⇧S draft | Has: drafts across pages, and Ctrl+S saves the ticked drafts to the drafts branch for another device without touching the live site (0.7.35.2, 0.7.35.4.1) | Delivered 0.7.35.4.1 |

@@ -1286,7 +1286,7 @@ Sources for the table: [Lighthouse: passive listeners](https://developer.chrome.
 
 ## Part 5. Publishing and deploy
 
-How the git-backed builders publish, and what fits Urd's model: the site owner publishes from `/admin`, which commits through GitHub OAuth and Pages Functions ([ADR-0003](../adr/0003-publishing-via-github-oauth-and-pages-functions.md)); drafts across pages are kept in the browser, a conflict warning guards against a newer published version, and the publish history can undo the last publish.
+How the git-backed builders publish, and what fits Urd's model: the site owner publishes from `/admin`, which commits through GitHub OAuth and Pages Functions ([ADR-0003](../adr/0003-publishing-via-github-oauth-and-pages-functions.md)); drafts across pages are kept in the browser and saved for another device on a branch of their own whose commits the host skips ([ADR-0032](../adr/0032-saved-drafts-on-a-branch-of-their-own.md)), a publish sends the parts ticked, a conflict warning guards against a newer published version, and the publish history can undo the last publish.
 
 ### PR per draft (Decap)
 

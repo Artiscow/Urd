@@ -25,6 +25,7 @@ Ny side starter fra malrepoet [urd-template](https://github.com/Artiscow/urd-tem
    - **Build output directory:** `/`
    - **Root directory:** `template` (i et rent klonet mal-repo der innholdet ligger i rot: la stå tomt)
 4. Deploy. Siden er nå live på `<prosjekt>.pages.dev`, og `functions/`-mappen plukkes opp automatisk.
+5. Anbefalt: hold grenen med de lagrede utkastene utenfor forhåndsvisningsbyggene (se [Lagrede utkast](#lagrede-utkast)).
 
 ## 2. Lag en GitHub OAuth-app
 
@@ -181,11 +182,22 @@ PayPals egen side tar kjøperens PayPal-konto, eller kort uten konto der PayPal 
 4. Valgfritt, til bestillingsvarslene butikken i v1.1 sender: på appens side legger du til en webhook med adressen `https://<nettsted>/api/pay/paypal/webhook` og hendelsen `PAYMENT.CAPTURE.COMPLETED`, og kopierer webhookens ID inn i Cloudflare som Type: Text `PAYPAL_WEBHOOK_ID`. Endepunktet lagrer ingenting ennå; for hver levering spør det PayPal om PayPal signerte den for den webhooken, og avviser resten. Sandkassen og den levende appen har hver sin webhook-ID.
 5. For å gå live trenger du en verifisert PayPal Business- (eller Premier-)konto. Bytt **Apps & Credentials** til **Live**, hent den levende appens **Client ID** og **Secret** (PayPal kan gå gjennom appen først, innen 24 til 72 timer), legg dem inn i de to hemmelighetene, fjern `PAYPAL_API_BASE` så det levende API-et `https://api-m.paypal.com` brukes, og legg til webhooken på nytt for den levende appen hvis du bruker den.
 
+## Lagrede utkast
+
+Utkast-vinduet i admin lagrer utkast på GitHub for en annen enhet, i en egen gren, `urd-drafts`, som den første lagringen lager. Ingenting må settes opp for det, men tre ting er greie å vite:
+
+- **Merket.** Hver lagring er en commit der meldingen begynner med `[CF-Pages-Skip]`, så Cloudflare bygger ingenting fra grenen: en lagring når aldri det publiserte nettstedet, bruker aldri et av prosjektets bygg og står aldri i Historikk.
+- **Forhåndsvisningsgrener.** Et Cloudflare Pages-prosjekt bygger en forhåndsvisning av hver gren som standard. Som en sikring ved siden av merket holder du `urd-drafts` utenfor: prosjektet → **Settings** → **Builds & deployments** → **Preview branch control** (i nyere dashbord **Build** → **Branch control**), og så **None**, eller **Custom branches** med `*` under Include og `urd-drafts` under Exclude.
+- **Et regelsett.** Et GitHub-regelsett (ruleset) eller en grenbeskyttelse som dekker alle grener (en som begrenser å lage grener eller krever en pull request, for eksempel) stopper også lagringene, og Utkast sier «GitHub nektet grenen de lagrede utkastene ligger på (urd-drafts); se oppsettsguiden». Hold grenen utenfor: repoet → **Settings** → **Rules** → **Rulesets** → regelsettet → **Target branches** → **Add target** → **Exclude by pattern** → `urd-drafts`. En klassisk beskyttelsesregel under **Settings** → **Branches** med mønsteret `*` snevres inn til `main`.
+
+I et offentlig repo kan alle lese de lagrede utkastene og notatene på dem, slik de kan lese resten av repoet. `GITHUB_BRANCH` er aldri `urd-drafts`; lagringene nekter den.
+
 ## Sikkerhetsmodellen (kort)
 
 - OAuth-tokenet byttes server-side og lagres i en httpOnly-cookie; det når aldri nettleser-JS.
 - `ALLOWED_LOGINS` håndheves i alle muterende endepunkter, ikke bare i UI-et.
 - Publisering kan kun skrive `content/**`, `media/**` og `plugins/plugins.json`. Kode (`functions/`, `admin/`, `assets/engine/`, `assets/urd/`), workflows og sikkerhetsfiler er blokkert på serversiden, så en kapret redaktørsesjon ikke kan plante noe.
+- Lagring av utkast skriver bare grenen `urd-drafts`, aldri nettstedets gren, og hver lagret del har bare sine egne utkasttekster.
 - Se [ADR-0003](../../adr/0003-publishing-via-github-oauth-and-pages-functions.md) for hele begrunnelsen.
 
 ## Lokal testing av publiseringslaget (Urd-utviklere)
@@ -216,3 +228,4 @@ Da kjører både siden, admin og functions på `http://localhost:8788`. Full OAu
 | «Betal med PayPal» svarer at PayPal ikke tar valutaen | Butikkvalutaen er en PayPal ikke tar (ISK), eller en pris har desimaler i HUF, JPY eller TWD, som PayPal bare tar i hele enheter |
 | Vipps-betalingen feiler før appen åpner seg | `VIPPS_API_BASE` peker på testmiljøet med produksjonsnøkler, eller omvendt; nøklene og basen hører til samme miljø |
 | Commiten er riktig, men ingen deploy dukker opp | Git-webhooken glapp hos hosten (skjer av og til). Sett opp `DEPLOY_HOOK_URL` (variabel 9), så trigger publiseringen deployen selv |
+| «GitHub nektet grenen de lagrede utkastene ligger på (urd-drafts)» i Utkast | Et regelsett eller en grenbeskyttelse dekker alle grener; hold `urd-drafts` utenfor (se [Lagrede utkast](#lagrede-utkast)) |

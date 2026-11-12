@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.35.6): the drafts in the guides
+
+- [ ] In Cloudflare, set the preview branches as the setup guide's «Saved drafts» says; after a save from Drafts, no deployment of `urd-drafts` stands in the project's Deployments
+- [ ] Read the user guide's «Drafts and publishing» (English or bokmål) beside the admin: every name it quotes stands in the admin as written, and each act does what it says
+
 ### Test batch (0.7.35.5): choose what to publish
 
 - [ ] Change two pages; in the Publish menu untick one: the button's count drops by one, the row reads «for later», «Publish now» says «1 kept for later»; after publishing, the live site has the ticked page's change only, and the unticked page still waits with its draft and its steps

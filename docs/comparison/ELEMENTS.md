@@ -326,6 +326,7 @@ Missing: preset suggestions in an empty section or on an empty page (E20), a «w
 
 **Urd today.**
 - Drafts across pages are kept in the browser, with undo and redo on Ctrl+Z and Ctrl+Shift+Z or Ctrl+Y.
+- Drafts are saved to a branch of their own for another device and looked at in the canvas there, beside that browser's own version (0.7.35.4), and Publish sends the changes ticked (0.7.35.5).
 - Publishing warns «Someone else has published» when files the draft would overwrite changed since the page was loaded.
 - The History panel lists recent publishes, and «Undo the publish» makes a new commit that restores the state before the last one; nothing is deleted.
 
@@ -374,7 +375,7 @@ Urd covers most of the delivery patterns. The remaining gaps are the command pal
 | [Section and template galleries](#section-and-template-galleries) | 39 presets with a category sidebar, «Change layout», 8 page templates, 10 footer layouts | Whole-site templates (E17) |
 | [AI and wizards as delivery](#ai-and-wizards-as-delivery) | Setup wizard; the MCP route decided | MCP server (E19) |
 | [Empty states and discoverability](#empty-states-and-discoverability) | «+ New section» empty state, help chips, tooltips | Richer empty states (E20) |
-| [Comments, notes and review](#comments-notes-and-review) | Drafts in the browser, the publish conflict warning, the History panel of publishes with «Undo the publish» | Comments (E22), visual diff (E23), content-only mode (E24), PR per draft (E25) |
+| [Comments, notes and review](#comments-notes-and-review) | Drafts in the browser and saved on a branch of their own, the publish conflict warning, the History panel of publishes with «Undo the publish» | Comments (E22), visual diff (E23), content-only mode (E24), PR per draft (E25) |
 | [Editing the live page](#editing-the-live-page) | The real page in the editor (ADR-0001) | Nothing beyond E24 and E25 |
 | [Quality panels](#quality-panels) | Accessible output | Audit panel (E26), contrast and decorative (E27), alt-text list (E28) |
 
@@ -558,7 +559,7 @@ The conventions below recur across the 19 sets. A site owner who has used one bu
 | A shortcut list on Shift+/ or ? | Webflow Shift+/, Wix Harmony Shift+/ (help), Wix Editor ?, Divi ?, Breakdance ⌘⇧/, Elementor Ctrl+?, Figma Ctrl+Shift+?; Wix Studio and Shopify Ctrl+/, Webstudio ⌘/, WordPress Shift+Alt+H | «?» (E21) |
 | Ctrl/⌘ +, - and 0 zoom | Wix Studio, Wix Harmony, Divi, Readymag, Figma Sites | A zoom control in the preview, with Fit; no keys |
 | Number keys or Ctrl+J switch the device view | Webflow 1-4, Carrd Alt+1-3, Tilda ⌘1-5, Webstudio, Wix Ctrl+J | None |
-| Ctrl/⌘+S saves or publishes | Wix, WordPress, Elementor, Bricks, Breakdance, Divi, Tilda, Carrd, Duda, Shopify | None: drafts save themselves in the browser, and publishing is a button |
+| Ctrl/⌘+S saves or publishes | Wix, WordPress, Elementor, Bricks, Breakdance, Divi, Tilda, Carrd, Duda, Shopify | Ctrl+S saves the ticked drafts to the drafts branch for another device (0.7.35.4.1); drafts save themselves in the browser, and publishing is a button |
 | Region keys: F6 or Ctrl+`, Alt+F10 into the toolbar | WordPress, Figma Sites (F6), Bricks (⌥T) | None (E9) |
 | Single letters without a modifier open panels | Webflow (A, P, Z, J, S, D, H), Webstudio, Tilda (G), Squarespace (G), Divi (O and P, and R, S or C with a number), Breakdance (F) | «/», and 1, 2 and 3 for the element menu's areas |
 

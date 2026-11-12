@@ -27,6 +27,7 @@ A new site starts from the template repository [urd-template](https://github.com
    - **Build output directory:** `/`
    - **Root directory:** `template` (in a clean cloned template repo where the content is at the root: leave empty)
 4. Deploy. The site is now live at `<project>.pages.dev`, and the `functions/` folder is picked up automatically.
+5. Recommended: leave the saved drafts' branch out of the preview builds (see [Saved drafts](#saved-drafts)).
 
 ## 2. Create a GitHub OAuth app
 
@@ -183,11 +184,22 @@ PayPal's own page takes the buyer's PayPal account, or a card without an account
 4. Optional, for the order notices the shop of v1.1 sends: on the app's page, add a webhook with the address `https://<site>/api/pay/paypal/webhook` and the event `PAYMENT.CAPTURE.COMPLETED`, and copy the webhook's ID into Cloudflare as Type: Text `PAYPAL_WEBHOOK_ID`. The endpoint stores nothing yet; for each delivery it asks PayPal whether PayPal signed it for that webhook, and refuses the rest. The sandbox and the live app have separate webhook IDs.
 5. Going live needs a verified PayPal Business (or Premier) account. Switch **Apps & Credentials** to **Live**, take the live app's **Client ID** and **Secret** (PayPal may review the app first, within 24 to 72 hours), put them in the two secrets, remove `PAYPAL_API_BASE` so the live API `https://api-m.paypal.com` is used, and add the webhook again for the live app if you use it.
 
+## Saved drafts
+
+The admin's Drafts window saves drafts to GitHub for another device, on a branch of their own, `urd-drafts`, which the first save makes. Nothing has to be set up for it, but three things are good to know:
+
+- **The marker.** Every save is a commit whose message begins with `[CF-Pages-Skip]`, so Cloudflare builds nothing from the branch: a save never reaches the live site, never uses one of the project's builds, and never stands in History.
+- **Preview branches.** A Cloudflare Pages project builds a preview of every branch by default. As a safeguard beside the marker, leave `urd-drafts` out: the project → **Settings** → **Builds & deployments** → **Preview branch control** (in newer dashboards **Build** → **Branch control**), then **None**, or **Custom branches** with `*` under Include and `urd-drafts` under Exclude.
+- **A ruleset.** A GitHub ruleset or branch protection rule that covers every branch (one that restricts creating branches or requires a pull request, say) also stops the saves, and Drafts says «GitHub refused the branch the saved drafts live on (urd-drafts); see the setup guide». Leave the branch out: the repo → **Settings** → **Rules** → **Rulesets** → the ruleset → **Target branches** → **Add target** → **Exclude by pattern** → `urd-drafts`. A classic protection rule under **Settings** → **Branches** whose pattern is `*` is narrowed to `main`.
+
+On a public repo anyone can read the saved drafts and the notes on them, as they can read the rest of the repo. `GITHUB_BRANCH` is never `urd-drafts`; the saves refuse it.
+
 ## The security model (in brief)
 
 - The OAuth token is exchanged server-side and stored in an httpOnly cookie; it never reaches browser JS.
 - `ALLOWED_LOGINS` is enforced in all mutating endpoints, not only in the UI.
 - Publishing can only write `content/**`, `media/**` and `plugins/plugins.json`. Code (`functions/`, `admin/`, `assets/engine/`), workflows and security files are blocked server-side, so a hijacked editor session cannot plant anything.
+- Saving drafts writes only the `urd-drafts` branch, never the site's branch, and each saved part holds only its own draft texts.
 - See [ADR-0003](../../adr/0003-publishing-via-github-oauth-and-pages-functions.md) for the full reasoning (in Norwegian).
 
 ## Local testing of the publishing layer (Urd developers)
@@ -218,3 +230,4 @@ Then the site, admin and functions all run on `http://localhost:8788`. Full OAut
 | «Pay with PayPal» answers that PayPal does not take the currency | The shop currency is one PayPal lacks (ISK), or a price has øre or cents in HUF, JPY or TWD, which PayPal takes in whole units only |
 | The Vipps payment fails before the app opens | `VIPPS_API_BASE` points at the test environment with production keys, or the other way round; the keys and the base belong to the same environment |
 | The commit is correct, but no deploy appears | The git webhook was missed by the host (happens now and then). Set up `DEPLOY_HOOK_URL` (variable 9), and publishing triggers the deploy itself |
+| «GitHub refused the branch the saved drafts live on (urd-drafts)» in Drafts | A ruleset or branch protection rule covers every branch; leave `urd-drafts` out of it (see [Saved drafts](#saved-drafts)) |
