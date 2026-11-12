@@ -136,7 +136,7 @@ function readBlock(sectionId, blockId) {
 
 function syncSelectedBlock() {
   if (!selectedBlock) return;
-  const { block } = readBlock(selectedBlock.sectionId, selectedBlock.blockId);
+  const { section, block } = readBlock(selectedBlock.sectionId, selectedBlock.blockId);
   if (!block) {
     selectedBlock = null;
     return;
@@ -159,7 +159,9 @@ function syncSelectedBlock() {
     // The phone placement: the row the block is pinned to, or null while it flows in the reading order (ADR-0019).
     mobileRow: Number.isFinite(block.frames.mobile?.row) ? block.frames.mobile.row : null,
     animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
-    hover: block.hover ? JSON.parse(JSON.stringify(block.hover)) : null,
+    hover: block.hover === false ? false : block.hover ? JSON.parse(JSON.stringify(block.hover)) : null,
+    // The type of the pointer effect the section gives the block while it has none of its own, its `blocksHover` ('' = none; a decor block takes none, pointerEffectOf in animations/core.js).
+    blocksHoverType: !block.decor && section?.blocksHover?.type ? section.blocksHover.type : '',
     sticky: block.sticky ? JSON.parse(JSON.stringify(block.sticky)) : null,
   };
 }
@@ -893,6 +895,7 @@ function mutateSection(key, fn) {
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageId, section);
   syncSectionMirrors(section);
+  if (selectedBlock?.sectionId === section.id) syncSelectedBlock();
 }
 
 /** The video block's own film (source 'file'). */
@@ -952,11 +955,19 @@ function setBlockAnimation(type) {
   if (selectedBlock) previewState.bridge?.sendDemoAnim(selectedBlock.sectionId, selectedBlock.blockId);
 }
 
+/** The block's pointer effect: a type, 'none' for no effect at all where its section gives one (`hover: false`), or null for none of its own. */
 function setBlockHover(type) {
   mutateBlock(`edit:hover-${selectedBlock.blockId}`, (b) => {
     normalizeAnim(b);
-    b.hover = type ? animObj(type) : null;
+    b.hover = type === 'none' ? false : type ? animObj(type) : null;
   });
+}
+
+/** The «On pointer» choices for a block: while its section gives every element an effect, the first follows the section and «None» declines it. */
+function blockHoverOptions(block) {
+  if (!block?.blocksHoverType) return HOVER_OPTIONS;
+  const effect = HOVER_OPTIONS.find(([id]) => id === block.blocksHoverType)?.[1] ?? block.blocksHoverType;
+  return [['', ta('opt.blockHover.section', { effect })], ['none', ta('common.none')], ...HOVER_OPTIONS.filter(([id]) => id)];
 }
 
 function setBlockAnimProp(name, value) {
@@ -1393,6 +1404,7 @@ export const pageState = {
   normalizeAnim,
   setBlockAnimation,
   setBlockHover,
+  blockHoverOptions,
   setBlockAnimProp,
   setSectionHeight,
   targetSection,

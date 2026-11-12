@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { engineImport } from './_engine.mjs';
 register('./_svelte-loader.mjs', import.meta.url);
 
-const { CAPABILITIES, capability, carries, capabilityOfPin } = await import('../editor/src/menu/capabilities.js');
+const { CAPABILITIES, capability, carries, capabilityOfPin, hoverOf } = await import('../editor/src/menu/capabilities.js');
 const ELEMENT_MENU = readFileSync(new URL('../editor/src/menu/ElementMenu.svelte', import.meta.url), 'utf8');
 const DICTS = Object.fromEntries(await Promise.all(['nb', 'en-GB', 'tr'].map(async (lang) => [lang, (await engineImport(`locales/admin/${lang}.js`)).default.strings])));
 
@@ -176,6 +176,20 @@ test('the name for links goes only while no link reaches the block by it', () =>
   assert.equal(cap.removable(block, standIn(block, { store: { data: page('#priser') } })), false, 'a link by the name keeps it');
   assert.equal(cap.removable(block, standIn(block, { store: { data: page('#b1') } })), true, 'a link by the block\'s id lands without the name');
   assert.equal(cap.removable(block, standIn(block, { store: { data: page('https://example.com') } })), true);
+});
+
+test('a block\'s «None» on pointer declines its section\'s effect, and keeps its motion card while it does', () => {
+  const ed = { isEntrance: (a) => a?.type === 'fade-in', blockHoverOptions: (b) => (b.blocksHoverType ? [['', 'As the section'], ['none', 'None'], ['lift', 'Lift']] : [['', 'None'], ['lift', 'Lift']]) };
+  const motion = capability('motion');
+  const block = (fields) => ({ type: 'text', props: {}, ...fields });
+  assert.equal(hoverOf(block({ hover: false, blocksHoverType: 'lift' }), ed), 'none', 'a decline where the section gives an effect');
+  assert.equal(hoverOf(block({ hover: false, blocksHoverType: '' }), ed), '', 'a decline where the section gives none is no choice of its own');
+  assert.equal(hoverOf(block({ hover: { type: 'lift' }, blocksHoverType: 'lift' }), ed), 'lift', 'its own effect');
+  assert.equal(hoverOf(block({ animation: { type: 'lift' } }), ed), 'lift', 'an older block\'s effect kept in its animation');
+  assert.equal(hoverOf(block({ blocksHoverType: 'lift' }), ed), '', 'following the section is no choice of its own');
+  assert.ok(motion.inUse(block({ hover: false, blocksHoverType: 'lift' }), ed), 'the card stays while the block declines');
+  assert.equal(motion.summary(block({ hover: false, blocksHoverType: 'lift' }), ed), 'None');
+  assert.ok(!motion.inUse(block({ blocksHoverType: 'lift' }), ed), 'a block that follows its section has no card of its own');
 });
 
 test('every capability is named and described in nb, en-GB and tr, with the words to add and take away', () => {

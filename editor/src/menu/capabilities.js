@@ -11,8 +11,9 @@ import { spotLinks } from '$engine/anchor-model.js';
 import { calDesign, calView, CAL_SWITCH_VIEWS } from '$engine/calendar-designs.js';
 import { linkOf } from '../lib/link-edit.js';
 
-/** The effect a block shows under the pointer: its own, or one an older block keeps as its animation. */
-const hoverOf = (block, ed) => block.hover?.type ?? (block.animation && !ed.isEntrance(block.animation) ? block.animation.type : '');
+/** The block's own choice under the pointer: its effect, one an older block keeps as its animation, or 'none' where it declines the effect its section gives every element ('' = none of its own). */
+export const hoverOf = (block, ed) => (block.hover === false ? (block.blocksHoverType ? 'none' : '')
+  : block.hover?.type ?? (block.animation && !ed.isEntrance(block.animation) ? block.animation.type : ''));
 /** Whether a block's type starts with a block-level flag on (state/blocks.svelte.js blockStarts): the shapes and the icon start as decor hidden on phones. */
 const starts = (ed, block, flag) => Boolean(ed.blockStarts(block.type, flag));
 
@@ -28,7 +29,7 @@ export const CAPABILITIES = [
     inUse: (block, ed) => ed.isEntrance(block.animation) || Boolean(hoverOf(block, ed)),
     summary: (block, ed) => (ed.isEntrance(block.animation)
       ? ed.blockEntranceOptions?.().find(([type]) => type === block.animation.type)?.[1]
-      : ed.hoverOptions?.().find(([type]) => type && type === hoverOf(block, ed))?.[1]) ?? '',
+      : ed.blockHoverOptions?.(block).find(([type]) => type && type === hoverOf(block, ed))?.[1]) ?? '',
     clear: (ed) => {
       ed.setBlockAnimation(null);
       ed.setBlockHover(null);

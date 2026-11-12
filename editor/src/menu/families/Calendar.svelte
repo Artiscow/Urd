@@ -19,6 +19,7 @@
   import ListEditor from '../../lib/rows/ListEditor.svelte';
   import PictureRow from '../../lib/rows/PictureRow.svelte';
   import LookChoice from '../../lib/rows/LookChoice.svelte';
+  import LookRows from '../../lib/rows/LookRows.svelte';
   import CalShowMore from './CalShowMore.svelte';
   import { pictureList, calendarDesignSource } from '../../lib/design-sources.js';
   import { getContext } from 'svelte';
@@ -419,19 +420,24 @@
   {/if}
 {:else if area === 'style'}
   {@const calDef = calDesign(selectedBlock.props.design)}
-  <!-- The design, first in Style as every block's design: a row naming it that opens the picker over the whole menu, or its pictures in place, as «Designs» asks -->
-  <Setting pin="design" own={calDef.id !== 'plain'} reset={() => ed.setCalendarDesign('plain')}>
-    <LookChoice label={ta('calendar.design')} value={ta(calDef.labelKey)} title={ta('tip.calendar.design')} current={calDef.id}
-      designs={() => pictureList(calendarDesignSource({}))} onpick={(id) => ed.setCalendarDesign(id)} onopen={ed.openDesignPicker} />
-  </Setting>
-  <!-- The phone design: what the calendar draws on a phone, the design's own default until the owner picks another -->
-  <Setting pin="phoneView" own={selectedBlock.props.phoneView != null || selectedBlock.props.phoneDesign != null} reset={() => setBlockProps('phoneView', { phoneView: undefined, phoneDesign: undefined })}>
-    <PictureRow label={ta('calendar.phoneView')} value={ta(calPhoneDesignDef(calPhoneView(selectedBlock.props), selectedBlock.props).labelKey)} title={ta('tip.calendar.phoneView')} onclick={ed.openPhonePicker} />
-  </Setting>
-  <!-- The card design: how the card that opens at a press looks, the design's own default until the owner picks another -->
-  <Setting pin="card" own={selectedBlock.props.card != null} reset={() => setBlockProp('card', undefined)}>
-    <PictureRow label={ta('calendar.card')} value={ta(calCardDesignDef(calCardDesign(selectedBlock.props)).labelKey)} title={ta('tip.calendar.card')} onclick={ed.openCardPicker} />
-  </Setting>
+  <!-- The calendar's three looks, side by side as the buttons that open their pickers, first in Style as every block's design -->
+  <LookRows pins={['design', 'phoneView', 'card']}>
+    <!-- The design: a button naming it that opens the picker over the whole menu, or its pictures in place, as «Designs» asks -->
+    <Setting pin="design" own={calDef.id !== 'plain'} reset={() => ed.setCalendarDesign('plain')}>
+      <LookChoice label={ta('calendar.design')} value={ta(calDef.labelKey)} picture={calendarDesignSource({}).picture(calDef.id)} title={ta('tip.calendar.design')} current={calDef.id}
+        designs={() => pictureList(calendarDesignSource({}))} onpick={(id) => ed.setCalendarDesign(id)} onopen={ed.openDesignPicker} />
+    </Setting>
+    <!-- The phone design: what the calendar draws on a phone, the design's own default until the owner picks another -->
+    <Setting pin="phoneView" own={selectedBlock.props.phoneView != null || selectedBlock.props.phoneDesign != null} reset={() => setBlockProps('phoneView', { phoneView: undefined, phoneDesign: undefined })}>
+      <PictureRow label={ta('calendar.phoneView')} value={ta(calPhoneDesignDef(calPhoneView(selectedBlock.props), selectedBlock.props).labelKey)}
+        picture={calendarDesignSource({ mode: 'phone' }).picture(calPhoneView(selectedBlock.props))} title={ta('tip.calendar.phoneView')} onclick={ed.openPhonePicker} />
+    </Setting>
+    <!-- The card design: how the card that opens at a press looks, the design's own default until the owner picks another -->
+    <Setting pin="card" own={selectedBlock.props.card != null} reset={() => setBlockProp('card', undefined)}>
+      <PictureRow label={ta('calendar.card')} value={ta(calCardDesignDef(calCardDesign(selectedBlock.props)).labelKey)}
+        picture={calendarDesignSource({ mode: 'card' }).picture(calCardDesign(selectedBlock.props))} title={ta('tip.calendar.card')} onclick={ed.openCardPicker} />
+    </Setting>
+  </LookRows>
   {@const cm = calMenu()}
   {#snippet calOpts()}
   <!-- The design's own settings, directly under the design they belong to -->

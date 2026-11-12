@@ -170,10 +170,11 @@ const CAP_ADD_PICS = {
   icons: menuBox() + line(17, 5.5, 10, 2) + dashed(32, 4.5, 4, 4, 0.8) + dashed(37.5, 4.5, 4, 4, 0.8) + acc(43, 4.5, 4, 4, 0.8) + groupLines(11, 5),
 };
 
-/** How a look is chosen: a menu whose design is a row with its small picture and its name, or a heading over the designs' pictures, the chosen one ringed, each over the groups below. */
+/** How a look is chosen: a menu whose looks are buttons side by side, each with its small picture, the setting's name and the design's under it, or a heading over the designs' pictures, the chosen one ringed, each over the groups below. */
 const lookTile = (x, y, on = false) => `<rect x="${x}" y="${y}" width="8.5" height="6" rx="1" fill="currentColor" opacity="${on ? 0.42 : 0.28}"${on ? ` stroke="${ACCENT}" stroke-width="0.9"` : ''}/>`;
+const lookButton = (x, y) => dim(x, y, 14.5, 7, 0.22) + acc(x + 1, y + 1.5, 4.5, 4, 0.8) + line(x + 6.5, y + 1.7, 6, 1.4) + dim(x + 6.5, y + 4.2, 4.5, 1, 0.3);
 const DESIGN_CHOICE_PICS = {
-  row: menuBox() + dim(17, 6, 30, 7, 0.22) + acc(18.5, 7.5, 6, 4, 0.8) + line(27, 8.5, 9, 2) + line(39, 8.5, 6, 2) + groupsBelow(16),
+  row: menuBox() + lookButton(17, 6) + lookButton(32.5, 6) + groupsBelow(16),
   inline: menuBox() + line(17, 5, 8, 1.5) + lookTile(17, 8, true) + lookTile(27.75, 8) + lookTile(38.5, 8) + lookTile(17, 15.5) + lookTile(27.75, 15.5) + lookTile(38.5, 15.5) + groupsBelow(24),
 };
 

@@ -9,6 +9,7 @@
   import Choice from '../lib/Choice.svelte';
   import Setting from '../lib/rows/Setting.svelte';
   import LookChoice from '../lib/rows/LookChoice.svelte';
+  import LookRows from '../lib/rows/LookRows.svelte';
   import NumberRow from '../lib/rows/NumberRow.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import ColourRow from '../lib/rows/ColourRow.svelte';
@@ -25,7 +26,7 @@
   import { calDesign, calView, calPhoneView, calPhoneDesignDef, calCardDesign, calCardDesignDef, calLimitStart } from '$engine/calendar-designs.js';
   import { paymentsOf } from '$engine/shop.js';
   import { GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
-  import { blockDesigns, phoneDesignName, pictureList, calendarDesignSource } from '../lib/design-sources.js';
+  import { blockDesigns, phoneDesignName, phoneDesignOf, pictureList, calendarDesignSource, SAME_DESIGN } from '../lib/design-sources.js';
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize, sizeRange } from '$engine/push-model.js';
   import { ribbonMotions, colorTokens } from './options.js';
@@ -101,12 +102,12 @@
     const b = selectedBlock;
     const items = [];
     if (b.type === 'calendar') {
-      items.push({ id: 'design', label: ta('calendar.design'), tip: ta('tip.calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), run: ed.openDesignPicker,
+      items.push({ id: 'design', label: ta('calendar.design'), tip: ta('tip.calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), picture: calendarDesignSource({}).picture(calDesign(b.props.design).id), run: ed.openDesignPicker,
         current: calDesign(b.props.design).id, designs: () => pictureList(calendarDesignSource({})), pick: (id) => ed.setCalendarDesign(id),
         own: calDesign(b.props.design).id !== 'plain', reset: () => ed.setCalendarDesign('plain') });
-      items.push({ id: 'phoneView', label: ta('calendar.phoneView'), tip: ta('tip.calendar.phoneView'), kind: 'open', value: ta(calPhoneDesignDef(calPhoneView(b.props), b.props).labelKey), run: ed.openPhonePicker,
+      items.push({ id: 'phoneView', label: ta('calendar.phoneView'), tip: ta('tip.calendar.phoneView'), kind: 'open', value: ta(calPhoneDesignDef(calPhoneView(b.props), b.props).labelKey), picture: calendarDesignSource({ mode: 'phone' }).picture(calPhoneView(b.props)), run: ed.openPhonePicker,
         own: b.props.phoneView != null || b.props.phoneDesign != null, reset: () => ed.setBlockProps('phoneView', { phoneView: undefined, phoneDesign: undefined }) });
-      items.push({ id: 'card', label: ta('calendar.card'), tip: ta('tip.calendar.card'), kind: 'open', value: ta(calCardDesignDef(calCardDesign(b.props)).labelKey), run: ed.openCardPicker,
+      items.push({ id: 'card', label: ta('calendar.card'), tip: ta('tip.calendar.card'), kind: 'open', value: ta(calCardDesignDef(calCardDesign(b.props)).labelKey), picture: calendarDesignSource({ mode: 'card' }).picture(calCardDesign(b.props)), run: ed.openCardPicker,
         own: b.props.card != null, reset: () => setBlockProp('card', undefined) });
       if (['list', 'cards', 'agenda'].includes(calView(b.props))) {
         const limit0 = calLimitStart(b.props);
@@ -133,7 +134,8 @@
       current: designs.read(p), designs: () => pictureList(designs), pick: (id) => setBlockProp(designs.prop, id),
       own: designs.read(p) !== designs.read({}), reset: () => setBlockProp(designs.prop, undefined) });
     // A block with a phone design can pin its row too, which opens the phone design picker.
-    if (designs?.phone) items.push({ id: 'phoneDesign', label: ta('lbl.phoneDesign'), tip: ta('tip.picker.phoneDesign'), kind: 'open', value: phoneDesignName(designs, p), run: ed.openBlockPhonePicker,
+    if (designs?.phone) items.push({ id: 'phoneDesign', label: ta('lbl.phoneDesign'), tip: ta('tip.picker.phoneDesign'), kind: 'open', value: phoneDesignName(designs, p),
+      picture: (phoneDesignOf(designs, p) === SAME_DESIGN ? designs.picture?.(designs.read(p)) : designs.phonePicture?.(phoneDesignOf(designs, p))) ?? '', run: ed.openBlockPhonePicker,
       own: p.phoneDesign !== undefined, reset: () => setBlockProp('phoneDesign', undefined) });
     if (b.type === 'text') {
       items.push({ id: 'align', label: ta('lbl.align'), tip: ta('tip.text.align'), kind: 'choice', value: p.align ?? 'left',
@@ -295,9 +297,11 @@
 {/snippet}
 {#snippet menuStyle()}
   {#if designs}
-    <!-- A design other than the block's first is its own, with the way back to the first; a phone design chosen is its own too -->
-    <Setting pin="design" own={designs.read(selectedBlock.props) !== designs.read({})} reset={() => setBlockProp(designs.prop, undefined)}><DesignRow /></Setting>
-    {#if designs.phone}<Setting pin="phoneDesign" own={selectedBlock.props.phoneDesign !== undefined} reset={() => setBlockProp('phoneDesign', undefined)}><DesignRow phone /></Setting>{/if}
+    <!-- The block's looks, side by side as the buttons that open their pickers: a design other than the block's first is its own, with the way back to the first; a phone design chosen is its own too -->
+    <LookRows pins={designs.phone ? ['design', 'phoneDesign'] : ['design']}>
+      <Setting pin="design" own={designs.read(selectedBlock.props) !== designs.read({})} reset={() => setBlockProp(designs.prop, undefined)}><DesignRow /></Setting>
+      {#if designs.phone}<Setting pin="phoneDesign" own={selectedBlock.props.phoneDesign !== undefined} reset={() => setBlockProp('phoneDesign', undefined)}><DesignRow phone /></Setting>{/if}
+    </LookRows>
   {/if}
   <Family area="style" />
   <MotionFold />

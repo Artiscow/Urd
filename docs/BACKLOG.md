@@ -564,8 +564,8 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
  - [ ] Colour picker is a bit shabby - needs design reevaluation 
  - [ ] New collections panel/menu for new product and overview - A 'floating' menu like other settings 
  - [ ] A review of the design of admin settings 
- - [ ] Calendar Design, phone design and pop-up design buttons need designs that makes them look like buttons, not like all the other foldable menus
- - [ ] A block cannot decline its section's every-element pointer effect (found in the review of 0.7.0.87, 12 November 2026): «None» in the block's own «On pointer» means no effect of its own, so the section's `blocksHover` applies, and the row reads «None» while the block lifts.
+ - [x] Calendar Design, phone design and pop-up design buttons need designs that makes them look like buttons, not like all the other foldable menus FIXED 0.7.0.88 (12 November 2026): every look that opens the design picker is a compact button with its picture, two to a line and all of one size, its reset a round badge on the corner; looks G and J1 of the Design Row Looks page, chosen 12 November 2026 (https://claude.ai/code/artifact/402e3db1-d893-419f-8a69-ea1fce2c5e21, a private claude.ai artifact)
+ - [x] A block cannot decline its section's every-element pointer effect (found in the review of 0.7.0.87, 12 November 2026): «None» in the block's own «On pointer» means no effect of its own, so the section's `blocksHover` applies, and the row reads «None» while the block lifts. FIXED 0.7.0.88 (12 November 2026): the row's first choice follows the section by name, and «None» declines it (`hover: false`)
 
 ## Suggestions, Ideas and Wishes
 

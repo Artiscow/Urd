@@ -857,6 +857,7 @@
   }
 
   .emenu-col {
+    --look-ground: color-mix(in srgb, #000 18%, var(--urd-color-surface, #151a23));
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -882,6 +883,7 @@
   }
 
   .emenu-two .emenu-col {
+    --look-ground: var(--urd-color-surface, #151a23);
     gap: 0.5rem;
     padding: 0;
     background: none;
@@ -978,6 +980,7 @@
   }
 
   .emenu-pinned-rows.tiles .emenu-pinned-item {
+    --look-ground: color-mix(in srgb, #fff 4%, var(--urd-color-surface, #151a23));
     min-width: 0;
     padding: 0.5rem;
     background: rgb(255 255 255 / 4%);
@@ -1783,6 +1786,81 @@
     transform: translateY(-50%);
   }
 
+  /* The buttons that open the design picker stand side by side, two to a line, each as wide and as tall as the others; the designs' pictures in place («Designs») take the whole line.
+     The columns stand further apart than the lines, so a reset on a button's corner stays clear of the button beside it; a column too narrow for two buttons (the docked panel) holds one to a line. */
+  .look-rows {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.75rem), 1fr));
+    gap: 0.4rem 0.8rem;
+  }
+
+  .look-rows:not(:has(.look-choice)) {
+    grid-auto-rows: 1fr;
+  }
+
+  .look-rows > .setting {
+    align-items: stretch;
+    min-width: 0;
+  }
+
+  .look-rows > .setting:has(.look-choice) {
+    grid-column: 1 / -1;
+  }
+
+  .look-rows > .setting > .setting-body > :is(.row-picture, .pin-line):first-child {
+    height: 100%;
+  }
+
+  .look-rows > .setting > .setting-body > .pin-line:first-child {
+    align-items: stretch;
+  }
+
+  /* In the search's copy, a grid whose every button the query leaves out takes no room */
+  .look-rows:not(:has(> :not(.menu-miss))) {
+    display: none;
+  }
+
+  /* The reset of a setting whose control is a design's button: a round badge on the button's top-right corner, a little out over its edge, ringed in the colour it stands on (`--look-ground`, the menu's own unless a Pinned tile sets its own) so it reads as cut out of the edge; the button's words and its pin keep clear of it */
+  .setting:has(> .setting-body > .row-picture:first-child, > .setting-body > .pin-line:first-child > .row-picture:first-child) {
+    position: relative;
+  }
+
+  .setting:has(> .setting-body > .row-picture:first-child, > .setting-body > .pin-line:first-child > .row-picture:first-child) > .setting-reset:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    position: absolute;
+    top: -0.125rem;
+    right: -0.4rem;
+    z-index: 1;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    border-radius: 50%;
+    opacity: 1;
+    color: var(--urd-color-text, #e8eaf0);
+    background: color-mix(in srgb, var(--urd-color-text, #e8eaf0) 16%, var(--look-ground, var(--urd-color-surface, #151a23)));
+    box-shadow: 0 0 0 3px var(--look-ground, var(--urd-color-surface, #151a23));
+  }
+
+  .setting:has(> .setting-body > .row-picture:first-child, > .setting-body > .pin-line:first-child > .row-picture:first-child) > .setting-reset:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    background: color-mix(in srgb, var(--urd-color-text, #e8eaf0) 28%, var(--look-ground, var(--urd-color-surface, #151a23)));
+  }
+
+  .setting:has(> .setting-reset) > .setting-body > .row-picture:first-child {
+    padding-right: 1.25rem;
+  }
+
+  .setting:has(> .setting-reset) > .setting-body > .pin-line:first-child > .row-picture:has(+ .menu-pin) {
+    padding-right: calc(1.3rem + 26px);
+  }
+
+  .setting:has(> .setting-reset) > .setting-body > .pin-line:first-child > .row-picture + .menu-pin {
+    right: 1.3rem;
+  }
+
+  .setting:has(> .setting-body > .row-picture:first-child, > .setting-body > .pin-line:first-child > .row-picture:first-child) > .setting-reset svg {
+    width: 12px;
+    height: 12px;
+  }
+
   /* A payment instruction's row in the checkout menu: the name beside the text, in a row of the list editor */
   .pay-instruction {
     display: grid;
@@ -1802,21 +1880,25 @@
     opacity: 1;
   }
 
-  /* A row that opens something over the menu: looks like a closed group */
+  /* A button that opens the design picker (PictureRow.svelte): filled as the admin's buttons are, so it never reads as a closed group, its picture at the start and the words beside it */
   .menu-row {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    justify-content: flex-start;
+    gap: 0.5rem;
     width: 100%;
-    padding: 0.45rem 0.7rem;
+    padding: 0.4rem 0.7rem;
     font: inherit;
     font-weight: 600;
     color: inherit;
     text-align: left;
     cursor: pointer;
-    background: transparent;
     border: 1px solid rgb(255 255 255 / 20%);
     border-radius: 6px;
+  }
+
+  .menu-row:has(> .row-picture-img) {
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
   }
 
   .menu-row:hover {
@@ -1918,22 +2000,22 @@
     gap: calc(0.6rem + var(--reset-room));
   }
 
-  /* A setting whose words and control share a line that is not a switch's (a number, a colour, a short choice, a picker's row) has its reset at the end of that line, centred on it, and what stands under the line keeps the row's full width */
-  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked), .row-picture):first-child, > .setting-body > .pin-line:first-child > :is(.ctl-row, .row-picture):first-child) {
+  /* A setting whose words and control share a line that is not a switch's (a number, a colour, a short choice) has its reset at the end of that line, centred on it, and what stands under the line keeps the row's full width */
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked)):first-child, > .setting-body > .pin-line:first-child > .ctl-row:first-child) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.4rem;
   }
 
-  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked), .row-picture):first-child, > .setting-body > .pin-line:first-child > :is(.ctl-row, .row-picture):first-child) > .setting-body {
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked)):first-child, > .setting-body > .pin-line:first-child > .ctl-row:first-child) > .setting-body {
     display: contents;
   }
 
-  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked), .row-picture):first-child, > .setting-body > .pin-line:first-child > :is(.ctl-row, .row-picture):first-child) > .setting-body > :not(:first-child) {
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked)):first-child, > .setting-body > .pin-line:first-child > .ctl-row:first-child) > .setting-body > :not(:first-child) {
     grid-column: 1 / -1;
   }
 
-  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked), .row-picture):first-child, > .setting-body > .pin-line:first-child > :is(.ctl-row, .row-picture):first-child) > .setting-reset {
+  .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked)):first-child, > .setting-body > .pin-line:first-child > .ctl-row:first-child) > .setting-reset {
     grid-row: 1;
     grid-column: 2;
     align-self: center;

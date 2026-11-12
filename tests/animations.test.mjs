@@ -75,6 +75,7 @@ test('a block plays its own pointer effect, else the one its section gives every
   assert.equal(pointerEffectOf({ hover: own }, section, isPointer), own, 'its own wins');
   assert.equal(pointerEffectOf({}, section, isPointer), lift, 'the section gives it one');
   assert.equal(pointerEffectOf({ decor: true }, section, isPointer), null, 'decor is ornament');
+  assert.equal(pointerEffectOf({ hover: false }, section, isPointer), null, 'a block declines the section\'s effect');
   assert.equal(pointerEffectOf({ animation: lift }, section, isPointer), null, 'an older page keeps its effect in animation, which plays it');
   assert.equal(pointerEffectOf({ animation: { type: 'fade-in', version: 1, props: {} } }, section, isPointer), lift, 'an entrance is no pointer effect');
   assert.equal(pointerEffectOf({}, { hover: lift }, isPointer), null, 'the section\'s own effect is not its elements\'');

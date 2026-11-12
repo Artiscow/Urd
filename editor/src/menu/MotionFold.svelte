@@ -7,13 +7,14 @@
   import Setting from '../lib/rows/Setting.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import NumberRow from '../lib/rows/NumberRow.svelte';
+  import { hoverOf } from './capabilities.js';
   import { ta } from '$engine/i18n.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, hoverOptions } = ed;
+  const { setBlockAnimation, setBlockHover, setBlockAnimProp, isEntrance, blockEntranceOptions, blockHoverOptions } = ed;
 
-  /** The effect under the pointer: the block's own, or one an older block keeps as its animation. */
-  const hoverNow = $derived(selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''));
+  /** The block's own choice under the pointer (capabilities.js hoverOf); '' follows its section, or is none where the section gives none. */
+  const hoverNow = $derived(hoverOf(selectedBlock, ed));
 </script>
 
 <Capability id="motion">
@@ -29,6 +30,6 @@
   </Setting>
   <Setting own={Boolean(hoverNow)} reset={() => setBlockHover(null)}>
     <SelectRow label={ta('lbl.onHover')} title={ta('tip.props.blockHover')} value={hoverNow}
-      options={hoverOptions()} onchange={(v) => setBlockHover(v || null)} />
+      options={blockHoverOptions(selectedBlock)} onchange={(v) => setBlockHover(v || null)} />
   </Setting>
 </Capability>

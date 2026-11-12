@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.88): the design buttons and a block's own «None» on pointer
+
+- [ ] In a section whose Motion has «Every element on pointer», select a block: its «On pointer» offers «As the section: Lift on pointer», «None» and «Lift on pointer»; with «None» the block stays still under the pointer on the published page while the others lift, and its motion card stays with the reset back to the section's
+- [ ] The Shop page's «Shop» section: the heading stays still under the pointer and the cart lifts
+- [ ] The calendar's Style: Design, Design on a phone and Pop-up stand as three buttons of one size, two to a line, each with its picture, and a press opens its picker
+- [ ] Give the calendar a design other than Plain: a round reset stands on the Design button's top-right corner, a little out over the edge and clear of the button beside it, and a press puts Plain back
+- [ ] A gallery or a privacy block has Design and its phone design side by side; a button block has Design alone in the left half
+- [ ] With «Design button on the bar» on «Small window», the bar's design button shows the design pictures alone, the reset in the window's head; press the bar's Style tool next, and the Style window shows all three design buttons
+- [ ] «Shortcuts» on «Pinned settings» and on «Tiles»: a pinned Design with its own design shows its pin left of the corner reset, and in Tiles the reset's ring matches the tile
+- [ ] Urd settings «Designs» on «Small menu»: the design pictures stand in place and still take the whole line in Style
+- [ ] The Footer panel's Presets reads as a button, and opens the design picker
+
 ### Test batch (0.7.0.87): the seam grip, the footer's presets and the section toolbar
 
 - [ ] Point at a seam between two sections and rest on its pill: a tab comes forward above and below it; drag the pill down and the section above grows, drag it up and the section below grows at its top, its content standing still; the height stands on the grip as you drag

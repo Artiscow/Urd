@@ -87,7 +87,7 @@
   Object.assign(ed, {
     blockLabel: (type) => blocksState.BLOCK_LABELS[type] ?? type,
     blockEntranceOptions: () => pageState.BLOCK_ENTRANCE_OPTIONS,
-    hoverOptions: () => pageState.HOVER_OPTIONS,
+    blockHoverOptions: (block) => pageState.blockHoverOptions(block),
     openPanel: (panel, opts = {}) => {
       if (opts.calendars) siteState.siteCalendarsOpen = true;
       // A panel at one of its folds (lib/panel-folds.js): unfolded, brought into view and its heading lit.

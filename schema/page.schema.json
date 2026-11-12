@@ -114,7 +114,7 @@
           ]
         },
         "blocksHover": {
-          "description": "Optional pointer effect for every element in the section, each while the pointer is over it (additive field from 0.7.0.87); a block with a pointer effect of its own keeps that one, and a decor block takes none",
+          "description": "Optional pointer effect for every element in the section, each while the pointer is over it (additive field from 0.7.0.87); a block with a pointer effect of its own keeps that one, a block with hover false declines it, and a decor block takes none",
           "oneOf": [
             { "type": "null" },
             { "$ref": "#/$defs/typedProps" }
@@ -224,9 +224,10 @@
           ]
         },
         "hover": {
-          "description": "Optional pointer effect (additive field from v0.6) - independent of animation, they can be combined",
+          "description": "Optional pointer effect (additive field from v0.6) - independent of animation, they can be combined. false (additive from 0.7.0.88) = no effect at all, not even the one the section's blocksHover gives every element; null or absent = none of its own",
           "oneOf": [
             { "type": "null" },
+            { "const": false },
             { "$ref": "#/$defs/typedProps" }
           ]
         },

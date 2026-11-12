@@ -8,6 +8,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.88 - Bug Fixes: design buttons with pictures, side by side, and one block can be left out of its section's hover lift - 12 November 2026
+
+- A block in a section whose every element lifts on pointer could not decline it: its «None» meant no effect of its own, so it lifted while the row read «None» (BACKLOG). `hover: false` is a block's «None» there (additive, SCHEMA.md), and the row's first choice names the section's effect, «As the section: Lift on pointer» (`pointerEffectOf` in animations/core.js, `blockHoverOptions` in state/page.svelte.js); the Shop page's heading declines its section's lift.
+- The calendar's Design, phone design and pop-up rows looked like the folds above them (BACKLOG). Every look that opens the design picker is a filled button with its picture, the setting's name and the design chosen, two to a line and all of one size (lib/rows/LookRows.svelte, looks G and J1 of the Design Row Looks page, chosen 12 November 2026); the calendar's three show their pictures, in Style and in Pinned.
+- A look's reset is a round badge on its button's top-right corner, a little out over the edge and ringed in the colour it stands on; the columns stand further apart than the lines so it stays clear of the button beside it, and a shown pin moves left of it. ADR-0016 is amended, and the guides and the picture of Urd settings' «Designs» show the buttons.
+
+The independent review before the commit found these, all fixed but the last:
+
+1. After the bar's design window, the block's next small window kept the other looks hidden, so its Style showed Design alone. Every other window shows the grid whole (lib/only-group.js).
+2. In the docked panel two buttons to a line left a few letters for the words. A column too narrow for two holds one to a line.
+3. With the pins shown, a button whose name wrapped stood taller than the one beside it. The buttons stretch to their line's height.
+4. In a search in the narrow and docked forms the badge's ring kept the menu's colour on the area's darker ground. The ring takes the area's ground.
+5. The badge was smaller than the 24 px a target lying over another needs (WCAG 2.5.8). It is the kit's 24 px.
+6. The user guides placed the phone design under Design and did not tell of a block's «None». Both do, in en-GB and nb.
+7. A picture that failed to load kept the button's next picture hidden. A new picture is drawn anew.
+8. The search read the grid as one part, so a query matching one look showed them all. Each look is a part of its own.
+9. The selected block's field for its section's effect was named like the section's own `hover` mirror. It is `blocksHoverType`.
+10. The tooltip of «Every element on pointer» did not say that a block's «None» declines it. It does, in nb, en-GB and tr.
+11. `hoverOf` had no test. tests/capabilities.test.mjs holds it and the motion card of a block that declines.
+12. A block with `hover: false` and an older effect kept in `animation` would still play the older one. The editor never writes that pair, so it is left.
+
 ## [0.7.10] - 2026-11-12
 
 ### 0.7.0.85-87p - Release 0.7.10: saved drafts on a branch of their own, the Drafts window, choosing what to publish, and the seam grip - 12 November 2026

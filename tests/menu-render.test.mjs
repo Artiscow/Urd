@@ -99,7 +99,7 @@ function handleFor(selectedBlock, viewMode = 'desktop') {
     bridge: null,
     blockLabel: (t) => t,
     blockEntranceOptions: () => [['', 'None'], ['fade-in', 'Fade']],
-    hoverOptions: () => [['', 'None'], ['lift', 'Lift']],
+    blockHoverOptions: () => [['', 'None'], ['lift', 'Lift']],
     isEntrance: (a) => a?.type === 'fade-in',
     themeSwatches: () => [['accent', '#7c5cff']],
     blockStarts: (type, flag) => ['shape', 'icon'].includes(type) && ['decor', 'hideMobile'].includes(flag),
@@ -425,8 +425,10 @@ test('a block with designs has its design row first in Style, or in Pinned while
           continue;
         }
         if (inPinned) assert.ok(!pinsIn({ children: style }).includes('design'), `${type}: the design stands in Pinned, not again in Style`);
-        else assert.equal(style[0]?.attrs['data-pin'], 'design', `${type} ${wide ? 'wide' : 'narrow'}: the design row first in Style`);
-        assert.ok(inPinned || find({ children: [style[0]] }, (n) => hasClass(n, 'row-picture')).length === 1, `${type}: the design row is a picture row`);
+        // The looks stand first in Style, side by side in their grid, the design first among them
+        const first = style[0] && hasClass(style[0], 'look-rows') ? style[0].children.find((n) => n.attrs?.['data-pin']) : style[0];
+        if (!inPinned) assert.equal(first?.attrs['data-pin'], 'design', `${type} ${wide ? 'wide' : 'narrow'}: the design row first in Style`);
+        assert.ok(inPinned || find({ children: [first] }, (n) => hasClass(n, 'row-picture')).length === 1, `${type}: the design row is a picture row`);
       }
     }
     setQuickChoice(type, NO_CHOICE);

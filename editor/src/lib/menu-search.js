@@ -99,8 +99,8 @@ export function readParts(container, skip = '') {
   const parts = [];
   for (const el of container.children) {
     if (skip && el.matches(skip)) continue;
-    // A card drawn at its area's foot (menu/MenuArea.svelte) stands in a wrapper of its own, which is no part.
-    if (el.matches('.cap-placed')) {
+    // A card drawn at its area's foot (menu/MenuArea.svelte) stands in a wrapper of its own, which is no part, and so do the looks' buttons in their grid (lib/rows/LookRows.svelte).
+    if (el.matches('.cap-placed, .look-rows')) {
       parts.push(...readParts(el));
       continue;
     }

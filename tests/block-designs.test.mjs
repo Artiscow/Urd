@@ -62,7 +62,7 @@ test('every design has its picture', () => {
 test('every block with designs opens the picker from the design row the menu draws first in Style, and no family draws one of its own', () => {
   // The row itself, per block type and width, is checked in tests/menu-render.test.mjs.
   const menu = readFileSync(new URL('../editor/src/menu/ElementMenu.svelte', import.meta.url), 'utf8');
-  assert.match(menu, /\{#snippet menuStyle\(\)\}\s*\{#if designs\}\s*(?:<!--[^>]*-->\s*)?<Setting pin="design"[\s\S]*?><DesignRow \/><\/Setting>/);
+  assert.match(menu, /\{#snippet menuStyle\(\)\}\s*\{#if designs\}\s*(?:<!--[^>]*-->\s*)?<LookRows pins=\{[^}]*\}>\s*<Setting pin="design"[\s\S]*?><DesignRow \/><\/Setting>/);
   for (const type of DESIGN_BLOCK_TYPES) {
     const file = new URL(`${type[0].toUpperCase()}${type.slice(1)}.svelte`, FAMILIES);
     assert.doesNotMatch(readFileSync(file, 'utf8'), /<DesignRow\b/, type);

@@ -43,7 +43,9 @@ const STAGGER_EFFECTS = ['fade-in', 'slide-up', 'zoom-in'];
  * every element in it (`blocksHover`, additive from 0.7.0.87), which a decor
  * block never takes (decor is ornament, as the stagger leaves it out). A
  * block with an effect of its own, in `hover` or in `animation` as older
- * pages store it, keeps its own. Pure function (node-tested).
+ * pages store it, keeps its own. `hover: false` (additive from 0.7.0.88) is
+ * a block's «None» where its section gives one: no effect at all, not even
+ * the section's. Pure function (node-tested).
  * @param {object} block
  * @param {object|null|undefined} section
  * @param {(type: string) => boolean} isPointer Whether an animation type is a pointer effect rather than an entrance
@@ -51,6 +53,7 @@ const STAGGER_EFFECTS = ['fade-in', 'slide-up', 'zoom-in'];
  */
 export function pointerEffectOf(block, section, isPointer) {
   if (block?.hover?.type) return block.hover;
+  if (block?.hover === false) return null;
   if (block?.animation?.type && isPointer(block.animation.type)) return null;
   if (block?.decor) return null;
   return section?.blocksHover?.type ? section.blocksHover : null;

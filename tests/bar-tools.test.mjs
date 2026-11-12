@@ -115,11 +115,14 @@ test('the design button opens the small window or the picker as «Design button 
   assert.match(open, /!phone && barChoice\(BAR_CHOICES\.design\) === 'small'/);
   assert.match(open, /openBlockTool\(el, section, block, 'look:design'/);
   assert.match(open, /type: 'urd-block-design'/);
-  // lib/only-group.js keeps `look:design` among the Style area's own children: the design row stands first in the area, in no group.
+  // lib/only-group.js keeps `look:design` among the Style area's own children: the design row stands first in the area, in no group, first in the looks' grid (lib/rows/LookRows.svelte).
+  const looksFirst = /^<LookRows pins=\{[^}]*\}>\s*(?:<!--[\s\S]*?-->\s*)?<Setting pin="design"[\s>]/;
   const menuStyle = firstAfter(read('../editor/src/menu/ElementMenu.svelte'), '{#snippet menuStyle()}');
   assert.ok(menuStyle.startsWith('{#if designs}'), 'the Style area opens on the block\'s designs');
-  assert.match(firstAfter(menuStyle, '{#if designs}'), /^<Setting pin="design"[\s>]/, 'the design row stands first in the Style area');
-  assert.match(firstAfter(read('../editor/src/menu/families/Calendar.svelte'), "{:else if area === 'style'}"), /^<Setting pin="design"[\s>]/, 'the calendar\'s design row stands first in its Style area');
+  assert.match(firstAfter(menuStyle, '{#if designs}'), looksFirst, 'the design row stands first in the Style area');
+  assert.match(firstAfter(read('../editor/src/menu/families/Calendar.svelte'), "{:else if area === 'style'}"), looksFirst, 'the calendar\'s design row stands first in its Style area');
+  const only = read('../editor/src/lib/only-group.js');
+  assert.match(only, /child\.matches\('\.look-rows'\) && Boolean\(child\.querySelector\(`:scope > \[data-pin="\$\{id\}"\]`\)\)/, 'the small window keeps the looks\' grid that holds the design');
 });
 
 test('every group on a section\'s bar is a fold of the section\'s menu, and every fold is a tool', () => {
