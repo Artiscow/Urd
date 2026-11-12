@@ -206,6 +206,29 @@ test('History\'s «Not published yet» stands in bands where the drafts are save
   assert.doesNotMatch(plain, /unpub-band/, 'no bands where the drafts are not saved');
 });
 
+test('History\'s rows carry the publish ticks: a part kept for later unticked and dimmed, one that goes with another ticked, fixed and naming it', () => {
+  const rows = [
+    { kind: 'page', id: 'kaker', name: 'Kaker', part: 'page-kaker', band: 'browser', draft: true, elsewhere: null },
+    { kind: 'page', id: 'hjem', name: 'Hjem', part: 'page-hjem', band: 'browser', draft: true, elsewhere: null },
+    { kind: 'site', part: 'site', band: 'browser', draft: true, elsewhere: null },
+  ];
+  const body = draw(panels.History, 'history', structuredClone(site), {
+    dirty: true, unpublished: rows, savedRows: rows, savedAvailable: false, historyList: [], steps: { undo: [], redo: [] },
+    draftsLater: ['page-hjem', 'site'], publishForced: new Map([['site', 'page-kaker']]), toggleLater: noop,
+  });
+  const item = (name) => body.match(new RegExp(`<div class="unpub-item[^"]*"[^>]*>(?:(?!unpub-item)[\\s\\S])*?>${name}<[\\s\\S]*?</button>`))?.[0] ?? '';
+  assert.match(item('Kaker'), /<input type="checkbox" class="tick-box unpub-tick[^"]*"[^>]*checked/, 'a ticked part');
+  assert.doesNotMatch(item('Kaker'), /disabled/, 'which the owner can untick');
+  assert.match(item('Hjem'), /class="unpub-item[^"]*\blater\b/, 'kept for later: dimmed');
+  assert.doesNotMatch(item('Hjem'), /checked/, 'kept for later: unticked');
+  assert.match(item('Hjem'), /class="unpub-kind[^"]*">drafts\.later</, 'and saying so');
+  const fixed = body.match(/<input type="checkbox" class="tick-box unpub-tick[^"]*"[^>]*disabled[^>]*>(?:(?!unpub-item)[\s\S])*?<\/button>/)?.[0] ?? '';
+  assert.match(fixed, /checked/, 'the site settings, going with the new page: ticked and fixed');
+  assert.match(fixed, /class="unpub-kind[^"]*">publish\.forced</, 'naming the part it goes with');
+  const plain = draw(panels.History, 'history', structuredClone(site), { dirty: true, unpublished: rows, savedRows: rows, savedAvailable: false, historyList: [], steps: { undo: [], redo: [] } });
+  assert.doesNotMatch(plain, /unpub-tick/, 'no ticks without a way to set them');
+});
+
 test('the Saved tab\'s rows: a page\'s picture, «New» where unseen, where and by whom it was saved, the note, and open, «Open here» or a check with a bin', async () => {
   const { default: SavedRows } = await import('../editor/src/lib/SavedRows.svelte');
   const rows = [

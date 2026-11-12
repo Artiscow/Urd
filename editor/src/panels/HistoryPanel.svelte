@@ -117,8 +117,9 @@
   <!-- What a publish will write, above what has been published: the same rows as the Publish menu's, each leading to its change, and the discard as red words at the foot -->
   {#if ed.savedRows.length}
     <Fold id="unpublished" surface="history" title={ta('history.unpublished')} tip={ta('tip.history.unpublished')} value={String(ed.savedRows.length)} defaultOpen>
-      <UnpublishedRows parts={ed.savedRows} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={(part) => ed.goToUnpublished(part)}
-        bands={ed.savedAvailable} onuse={(part) => ed.useSaved(part.part)} whenSaved={ed.whenSaved} />
+      <UnpublishedRows parts={ed.savedRows} steps={ed.steps.undo} publishedAt={ed.publishedAtOf} onpick={(part) => ed.goToUnpublished(part)}
+        bands={ed.savedAvailable} onuse={(part) => ed.useSaved(part.part)} whenSaved={ed.whenSaved}
+        later={ed.draftsLater} forced={ed.publishForced} ontick={ed.toggleLater} />
       <button type="button" class="ghost action discard-drafts" title={ta('tip.discard')} onclick={() => ed.askDiscard()}>{@html ICONS.restore}{ta('ui.discard')}</button>
     </Fold>
     <SubHeading text={ta('history.published')} />

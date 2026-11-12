@@ -8,6 +8,9 @@ import { joinsLast, emptyTail, walkSteps, stepTyped, stepPage, keptHolds, HISTOR
 import { readKept, writeKept } from '../lib/history-store.js';
 import { indexPending } from '../lib/collection-index.js';
 import { unpublishedParts } from '../lib/unpublished.js';
+import { outSite } from '../lib/publish-pick.js';
+import { readNotLive, stillNotLive } from '../lib/not-live.js';
+import { partName } from '../lib/saved-model.js';
 import { ta } from '$engine/i18n.js';
 import { contentHash } from '$engine/imageTools.js';
 import { collectionsState } from './collections.svelte.js';
@@ -22,14 +25,49 @@ import { redirectsState } from './redirects.svelte.js';
 let dirty = $state(false);
 /** What waits to be published, one part per thing a publish would write (lib/unpublished.js); the dirty flag is whether it holds any. */
 let unpublished = $state.raw([]);
-/** When the last publish from this browser was made, kept over a reload, so a part's row shows only the steps since. */
+/** When the last publish of everything from this browser was made, kept over a reload, so a part's row shows only the steps since. */
 let publishedAt = $state(Number(localStorage.getItem('urd-published-at')) || 0);
+/** When a part last went out in a publish of some parts, by its name (lib/saved-model.js partName), kept over a reload. */
+let publishedParts = $state.raw(readPublishedParts());
+
+function readPublishedParts() {
+  try {
+    const kept = JSON.parse(localStorage.getItem('urd-published-at-parts') ?? 'null');
+    return kept && typeof kept === 'object' ? kept : {};
+  } catch {
+    return {};
+  }
+}
 /** Counts the changes saved this session, so a view that reads the page's own data (which is not reactive) follows every change. */
 let edits = $state(0);
 
-function markPublished() {
-  publishedAt = Date.now();
-  localStorage.setItem('urd-published-at', String(publishedAt));
+/** A publish went out: of everything, or of the parts named, so a part kept back still lists the steps made on it before. */
+function markPublished(parts = null) {
+  const now = Date.now();
+  if (!parts) {
+    publishedAt = now;
+    publishedParts = {};
+    localStorage.setItem('urd-published-at', String(publishedAt));
+    localStorage.removeItem('urd-published-at-parts');
+    return;
+  }
+  // The times of the parts still waiting are kept, the rest pruned, so a part gone (a deleted page) leaves no time behind.
+  const waiting = new Set(unpublished.map(partName));
+  publishedParts = { ...Object.fromEntries(Object.entries(publishedParts).filter(([name]) => waiting.has(name))), ...Object.fromEntries([...parts].map((name) => [name, now])) };
+  try {
+    localStorage.setItem('urd-published-at-parts', JSON.stringify(publishedParts));
+  } catch { /* the storage is full: the times hold for this session */ }
+}
+
+/** When a part last went out, for the steps its row lists. */
+const publishedAtOf = (name) => Math.max(publishedAt, publishedParts[name] ?? 0);
+
+/** Whether the site settings wait: a draft that differs from the live settings other than in the entries of pages not live yet that went out hidden (lib/not-live.js), which go out shown with their page. */
+function siteWaits() {
+  if (!siteState.siteStore?.hasDraft()) return false;
+  const kept = stillNotLive(readNotLive(), siteState.site?.pages ?? []);
+  if (!kept.size) return true;
+  return JSON.stringify(outSite(siteState.siteDraft, kept)) !== JSON.stringify(siteState.site);
 }
 
 function updateDirty() {
@@ -44,7 +82,7 @@ function updateDirty() {
   unpublished = unpublishedParts({
     pages,
     pageDraft,
-    site: Boolean(siteState.siteStore?.hasDraft()),
+    site: siteWaits(),
     collectionsIndex: indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds),
     collections: Object.entries(collectionsState.collectionStores)
       // A collection's name is read without tracking, so an effect that saves never follows the view it refreshes.
@@ -511,6 +549,7 @@ export const historyState = {
   get unpublished() { return unpublished; },
   goToUnpublished,
   get publishedAt() { return publishedAt; },
+  publishedAtOf,
   markPublished,
   get edits() { return edits; },
   updateDirty,

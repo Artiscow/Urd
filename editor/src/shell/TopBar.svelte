@@ -25,10 +25,19 @@
     if (ed.toolMenu === 'publish' && ed.historyList === null) ed.loadHistory();
   });
 
-  /** «Publish now» in the menu: the menu closes and the publish runs. */
+  /** What the Publish button's count says to a screen reader: what waits, or, where parts are kept for later, what is ticked to go. */
+  const goingWords = $derived.by(() => {
+    const n = ed.publishKept.length ? ed.publishGoing.size : ed.unpublished.length;
+    if (ed.publishKept.length) return ta(n === 1 ? 'publish.going.one' : 'publish.going', { n });
+    return ta(n === 1 ? 'publish.waiting.one' : 'publish.waiting', { n });
+  });
+  /** Under «Publish now», where parts are kept for later: how many. */
+  const keptWords = $derived(ta(ed.publishKept.length === 1 ? 'publish.kept.one' : 'publish.kept', { n: ed.publishKept.length }));
+
+  /** «Publish now» in the menu: the menu closes and the ticked parts are published. */
   function publishNow() {
     ed.toolMenu = null;
-    ed.publish();
+    ed.publishTicked();
   }
 
   /** «Discard drafts» in the menu: the question is asked (publishState.askDiscard), and the menu closes with the answer. */
@@ -353,11 +362,11 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <span class="toolmenu publish-wrap" onpointerenter={(e) => menuRest('publish', true, e)} onpointerleave={(e) => menuRest('publish', false, e)}>
       <button type="button" class="primary publish-btn topbar-tall" aria-expanded={ed.toolMenu === 'publish'} aria-haspopup="true" aria-describedby={ed.dirty ? 'publish-waiting' : undefined}
-        onclick={() => pressMenu('publish')}>{ta('ui.publish')}{#if ed.dirty}<span class="publish-count" aria-hidden="true"><span>{ed.unpublished.length}</span></span><span class="sr-only" id="publish-waiting">{ta(ed.unpublished.length === 1 ? 'publish.waiting.one' : 'publish.waiting', { n: ed.unpublished.length })}</span>{/if}{@html ICONS.caret}</button>
+        onclick={() => pressMenu('publish')}>{ta('ui.publish')}{#if ed.publishGoing.size}<span class="publish-count" aria-hidden="true"><span>{ed.publishGoing.size}</span></span>{/if}{#if ed.dirty}<span class="sr-only" id="publish-waiting">{goingWords}</span>{/if}{@html ICONS.caret}</button>
       {#if ed.toolMenu === 'publish'}
         <div class="tool-pop publish-pop" transition:menuMotion role="group" aria-label={ta('publish.menu')}>
-          <button type="button" class="ghost publish-act publish-main" disabled={!ed.dirty || !ed.auth?.allowed}
-            title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={publishNow}>{@html ICONS.upload}<span>{ta('publish.now')}</span></button>
+          <button type="button" class="ghost publish-act publish-main" disabled={!ed.publishGoing.size || !ed.auth?.allowed}
+            title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={publishNow}>{@html ICONS.upload}<span>{ta('publish.now')}</span>{#if ed.publishKept.length}<small class="publish-kept">{keptWords}</small>{/if}</button>
           <a class="ghost publish-act" href={ed.pageEntry()?.path ?? '/'} target="_blank" rel="noopener" onclick={() => (ed.toolMenu = null)}>{@html ICONS.external}<span>{ta('publish.viewLive')}</span></a>
           <button type="button" class="ghost publish-act publish-red" disabled={!ed.dirty || Boolean(ed.looking)} onclick={discardFromMenu}>{@html ICONS.restore}<span>{ta('ui.discard')}</span></button>
           {#if ed.savedRows.length}
@@ -365,8 +374,9 @@
             <!-- With the bands each band counts its own rows; without them the head counts what waits -->
             <span class="mini-label publish-head">{ta('history.unpublished')}{#if !ed.savedAvailable} · {ed.savedRows.length}{/if}</span>
             <!-- What waits scrolls in its own box, so the acts above it and the last publish under it stay in sight -->
-            <div class="publish-rows"><UnpublishedRows parts={ed.savedRows} steps={ed.steps.undo} publishedAt={ed.publishedAt} onpick={goTo}
-              bands={ed.savedAvailable} onuse={(part) => { ed.toolMenu = null; ed.useSaved(part.part); }} whenSaved={ed.whenSaved} /></div>
+            <div class="publish-rows"><UnpublishedRows parts={ed.savedRows} steps={ed.steps.undo} publishedAt={ed.publishedAtOf} onpick={goTo}
+              bands={ed.savedAvailable} onuse={(part) => { ed.toolMenu = null; ed.useSaved(part.part); }} whenSaved={ed.whenSaved}
+              later={ed.draftsLater} forced={ed.publishForced} ontick={ed.toggleLater} /></div>
           {/if}
           <hr class="gridmenu-divider" />
           <button type="button" class="ghost publish-act publish-foot" onclick={() => { ed.toolMenu = null; ed.openPanel('history'); }}>

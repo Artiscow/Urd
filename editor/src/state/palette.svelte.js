@@ -58,7 +58,7 @@ function buildCommands() {
   const add = (id, group, label, run, hint) => list.push({ id, group, label, run, ...(hint ? { hint } : {}) });
 
   // The actions of the top bar.
-  if (historyState.dirty) add('publish', 'actions', ta('ui.publish'), () => publishState.publish());
+  if (publishState.publishGoing.size) add('publish', 'actions', ta('ui.publish'), () => publishState.publishTicked());
   add('undo', 'actions', ta('shortcuts.undo'), () => historyState.undo());
   add('redo', 'actions', ta('shortcuts.redo'), () => historyState.redo());
   add('clean', 'actions', ta('ui.cleanView'), () => previewState.toggleChrome());

@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.35.5): choose what to publish
+
+- [ ] Change two pages; in the Publish menu untick one: the button's count drops by one, the row reads «for later», «Publish now» says «1 kept for later»; after publishing, the live site has the ticked page's change only, and the unticked page still waits with its draft and its steps
+- [ ] The same ticks stand in History's «Not published yet» and in the Drafts window, and a tick set in one shows in the others
+- [ ] Add a new page, untick it and publish the site settings: the live site's menu, sitemap and the page's address leave it out; the editor still shows the page; tick it and publish: the page is live and shown
+- [ ] Add a new page and untick Site settings: the Site settings row stands ticked and fixed, reading «Goes out with <the page>», and the publish sends both
+- [ ] Change the redirects and untick Site settings, or the other way round: the two go together, the row fixed with its reason
+- [ ] With saving available, keep a page back and publish the rest: the kept page stands under Saved on another device after a reload, and Drafts' count on this device is unchanged
+- [ ] Run the media tidy with a part unticked: every row stands ticked and fixed, reading «Goes out with the tidied media files», and the tidy's publish sends everything
+- [ ] «Publish ticked» at the foot of the Drafts window's This browser tab publishes what is ticked there; Ctrl+K «Publish» does the same
+- [ ] After a publish of the ticked parts, the kept parts stay unticked; after a publish of everything, a part edited again stands ticked
+- [ ] Keep a new page back while the site settings go out, then Discard drafts: the page stands hidden in the Pages panel with no content; a publish of everything leaves it hidden with no file, and deleting it takes its entry away
+
 ### Test batch (0.7.0.86): a round of bugs
 
 - [ ] A calendar in the year wheel design: no «Choose a month to see» line beside the wheel

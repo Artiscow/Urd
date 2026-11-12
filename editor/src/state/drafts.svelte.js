@@ -2,7 +2,7 @@
  * The Drafts window (ADR-0032): the System section's Drafts tab opens it over the canvas, beside the work, with three tabs for where each change stands (this browser, saved, live).
  * A mouse resting on the tab opens it, and it closes a moment after the mouse has left the tab and the window, unless a press on the tab or in the window, the pin or the focus inside it keeps it; a press on the tab opens it as well.
  * It is dragged by its head to any place; where it stands, by its tab or where it was dragged, is kept for the browser tab's session in `urd-drafts-place` (sessionStorage), so a reload brings it back there. Pinned, it stays open while the owner edits, and at the next load; folded, it is a pill in the canvas's corner.
- * In This browser each part has a tick, and an unticked part is kept for later: a save writes the ticked ones, with the owner's note and this browser's name.
+ * In This browser each part has a tick, and an unticked part is kept for later: a save writes the ticked ones, with the owner's note and this browser's name, and a publish sends them (state/publish.svelte.js).
  * Ctrl+S saves the ticked parts without opening anything, and «Autosave» does so every five minutes while it is on; neither writes over a part saved elsewhere since, which waits for the owner.
  * What is kept per browser, all admin keys: `urd-drafts-pinned`, `urd-drafts-pill`, `urd-drafts-later` (the unticked parts), `urd-browser-name` and `urd-drafts-autosave`.
  */
@@ -233,6 +233,12 @@ function clearLater() {
   keep(LATER_KEY, null);
 }
 
+/** After a publish of the ticked parts: only the parts still waiting stay kept for later, so a part that went with another stands ticked when it is edited again. */
+function keepLaterOf(names) {
+  later = later.filter((n) => names.includes(n));
+  keep(LATER_KEY, later.length ? JSON.stringify(later) : null);
+}
+
 /** Every part ticked, or every part kept for later where all are ticked. */
 function tickAll(names) {
   const all = names.every((n) => !later.includes(n));
@@ -324,6 +330,7 @@ export const draftsState = {
   toggleLater,
   tickAll,
   clearLater,
+  keepLaterOf,
   setBrowserName,
   setAutoSave,
   saveTicked,

@@ -16,6 +16,9 @@ import {
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { savedState } from './saved.svelte.js';
+import { partName } from '../lib/saved-model.js';
+import { pickParts, outSite, keptNotLive } from '../lib/publish-pick.js';
+import { readNotLive, stillNotLive, writeNotLive } from '../lib/not-live.js';
 import { draftsState } from './drafts.svelte.js';
 import { pageState } from './page.svelte.js';
 import { pluginsState } from './plugins.svelte.js';
@@ -41,7 +44,7 @@ let mediaBusy = $state(false);
 /** The moves the next publish carries (the commit's `from` entries), kept with the drafts until that publish is in or the drafts are discarded, so a reload between the tidy and its publish never leaves the rewritten documents without their moves. */
 const MOVES_KEY = 'urd-draft-media-moves';
 
-let pendingMoves = readMoves();
+let pendingMoves = $state.raw(readMoves());
 
 function readMoves() {
   try {
@@ -251,7 +254,38 @@ function discard() {
   }
 }
 
-async function publish() {
+/**
+ * The pages and collections whose own file is not live yet: a page the published site does not list, or lists only as left behind hidden (lib/not-live.js), and a new collection; a page committed and waiting for its deploy is live.
+ * @returns {{pages: string[], collections: string[]}}
+ */
+function notLiveNow() {
+  const kept = stillNotLive(readNotLive(), siteState.site?.pages ?? []);
+  return {
+    pages: (siteState.siteDraft?.pages ?? []).map((p) => p.id)
+      .filter((id) => !pageState.pendingPublished.has(id) && (kept.has(id) || !siteState.site?.pages?.some((p) => p.id === id))),
+    collections: collectionsState.collectionIds.filter((id) => !collectionsState.publishedCollections[id]),
+  };
+}
+
+/** What Publish sends: the parts ticked with the parts they cannot go without, why a part unticked goes anyway, and the parts kept for later (lib/publish-pick.js); the media tidy's moves waiting take every part. */
+const pick = $derived(pickParts({
+  waiting: historyState.unpublished.map(partName),
+  later: draftsState.draftsLater,
+  notLive: notLiveNow(),
+  movesPending: pendingMoves.length > 0,
+}));
+
+/** Publish as the top bar, the palette and the Drafts window offer it: the parts ticked, or every part where none is kept for later. */
+function publishTicked() {
+  if (!pick.kept.length) return publish();
+  if (pick.going.size) return publish({ parts: pick.going });
+}
+
+/**
+ * Publishes the parts waiting, every one of them or those named in `parts` (lib/publish-pick.js pickParts, with their ties): the files of the parts that go, the site settings with a page not live yet that stays behind marked hidden, the collections' list without a new collection that stays behind; the parts left behind keep their drafts, and those that stand in this browser alone are saved to the drafts branch.
+ * @param {{parts?: Set<string>|null}} [opts]
+ */
+async function publish({ parts = null } = {}) {
   if (updaterState.revertedSinceLoad) {
     shellState.setStatus(ta('status.revertReloadBeforePublish'), 'error');
     return;
@@ -265,8 +299,13 @@ async function publish() {
     return;
   }
   shellState.setStatus(ta('status.publishing'));
-  // The saved copies this publish makes stale, read while the drafts still stand.
-  const staleSaves = savedState.staleOnPublish();
+  // What goes: a part named, or every part; the pages and collections not live yet that stay behind, and the parts that wait still.
+  const want = (name) => !parts || parts.has(name);
+  const left = parts ? keptNotLive(parts, notLiveNow()) : { pages: [], collections: [] };
+  const notLiveIds = stillNotLive(readNotLive(), siteState.site.pages);
+  const keptParts = parts ? historyState.unpublished.map(partName).filter((name) => !parts.has(name)) : [];
+  // The saved copies this publish makes stale, read while the drafts still stand: those of the parts that go.
+  const staleSaves = savedState.staleOnPublish().filter((name) => want(name));
   const files = [];
   const publishedTitles = [];
   const draftKeys = [];
@@ -276,10 +315,15 @@ async function publish() {
   // The committed files the editor reads in place of the server's until the deploy serves them.
   const committed = [];
 
-  // ALL pages with drafts are published, not just the current one.
+  /** The pages whose file this publish sends. */
+  const sentPages = new Set();
+  // Every page with a draft that goes, not just the open one; a page committed and waiting for its deploy is sent again.
   for (const entry of siteState.siteDraft.pages) {
+    if (!want(`page-${entry.id}`) && !pageState.pendingPublished.has(entry.id)) continue;
     const key = `urd-draft-${entry.id}`;
-    const isNew = pageState.pendingPublished.has(entry.id) || !siteState.site.pages.some((p) => p.id === entry.id);
+    // Not live: committed and waiting for its deploy, marked as gone out hidden before its file, or not on the live site at all.
+    const marked = notLiveIds.has(entry.id) && !pageState.pendingPublished.has(entry.id);
+    const isNew = pageState.pendingPublished.has(entry.id) || marked || !siteState.site.pages.some((p) => p.id === entry.id);
     let page = null;
     if (entry.id === pageState.pageId && (pageState.store.hasDraft() || isNew)) {
       page = pageState.store.data;
@@ -290,6 +334,11 @@ async function publish() {
           page = liftPageFile(JSON.parse(raw), siteState.siteStore.data);
         } catch { /* a corrupt draft is skipped */ }
       }
+    }
+    // A page marked as gone out hidden, whose draft this browser no longer holds (published from another browser, or discarded), cannot go: its entry stays hidden, and its mark stands.
+    if (!page && marked) {
+      if (!left.pages.includes(entry.id)) left.pages.push(entry.id);
+      continue;
     }
     // A new page must NEVER be published without a page file (visitors
     // would get a dead address): if the draft is missing, a blank page
@@ -303,6 +352,7 @@ async function publish() {
     // Unpublished images become their own files in media/ in the same commit.
     files.push(...materializeImages(out));
     files.push({ path: entry.file, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
+    sentPages.add(entry.id);
     publishedTitles.push(entry.title);
     const open = entry.hidden ? null : pageFills(out);
     if (open && open.own + open.contact) unfilled.push({ title: entry.title, ...open });
@@ -316,10 +366,13 @@ async function publish() {
     }
   }
 
-  if (siteState.siteStore.hasDraft()) {
+  // The site settings as they go out: the draft, with each page not live yet that stays behind marked hidden; they go with a page whose entry went out hidden before its file, to show it.
+  const siteGoes = want('site') || [...sentPages].some((id) => notLiveIds.has(id));
+  let siteOut = null;
+  if (siteGoes && siteState.siteStore.hasDraft()) {
     // Clone here too: logo uploads are materialized without touching the
     // draft in memory until the commit is safely in.
-    const siteOut = JSON.parse(JSON.stringify(siteState.siteDraft));
+    siteOut = outSite(JSON.parse(JSON.stringify(siteState.siteDraft)), left.pages);
     files.push(...materializeSiteImages(siteOut));
     files.push({ path: 'content/site.json', content: JSON.stringify(siteOut, null, 2) + '\n', encoding: 'utf-8' });
     committed.push(['content/site.json', siteOut]);
@@ -330,21 +383,27 @@ async function publish() {
     draftKeys.push('urd-draft-site');
     // Name WHAT in the site setup changed (for the history).
     const eq = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-    if (!eq(siteState.site.theme, siteState.siteDraft.theme)) publishedTitles.push(ta('publish.part.theme'));
-    if (!eq(siteState.site.nav, siteState.siteDraft.nav)) publishedTitles.push(ta('publish.part.nav'));
-    if (!eq(siteState.site.footer, siteState.siteDraft.footer)) publishedTitles.push(ta('publish.part.footer'));
-    if (!eq(siteState.site.pages, siteState.siteDraft.pages)) publishedTitles.push(ta('publish.part.pages'));
-    if (!eq(siteState.site.grid, siteState.siteDraft.grid)) publishedTitles.push(ta('publish.part.grid'));
-    if ((siteState.site.site.icon ?? null) !== (siteState.siteDraft.site.icon ?? null)) publishedTitles.push(ta('publish.part.icon'));
+    if (!eq(siteState.site.theme, siteOut.theme)) publishedTitles.push(ta('publish.part.theme'));
+    if (!eq(siteState.site.nav, siteOut.nav)) publishedTitles.push(ta('publish.part.nav'));
+    if (!eq(siteState.site.footer, siteOut.footer)) publishedTitles.push(ta('publish.part.footer'));
+    if (!eq(siteState.site.pages, siteOut.pages)) publishedTitles.push(ta('publish.part.pages'));
+    if (!eq(siteState.site.grid, siteOut.grid)) publishedTitles.push(ta('publish.part.grid'));
+    if ((siteState.site.site.icon ?? null) !== (siteOut.site.icon ?? null)) publishedTitles.push(ta('publish.part.icon'));
     const { icon: a, ...restA } = siteState.site.site;
-    const { icon: b, ...restB } = siteState.siteDraft.site;
+    const { icon: b, ...restB } = siteOut.site;
     if (!eq(restA, restB)) publishedTitles.push(ta('publish.part.siteInfo'));
   }
 
+  // The site the commit stands on: the settings as they go out, else as the draft holds them, else, where they stay behind, as they are live; the page copies, the sitemap, the deletes, the feeds' links and the redirects' checks follow it.
+  const siteGoing = siteOut ?? (siteGoes ? siteState.siteDraft : siteState.site);
+
   // Collections: changed files, the index file and deletions (diff against the published index); a legacy index file with nothing of its own is deleted with any publish.
   // While the index could not be read, nothing of the collections is written or deleted, since the editor does not know what is published.
-  const changedCollections = collectionsState.collectionsUnavailable ? [] : Object.entries(collectionsState.collectionStores).filter(([, st]) => st.hasDraft());
-  if (!collectionsState.collectionsUnavailable && (changedCollections.length || indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds) || collectionsState.legacyIndexIds !== null)) {
+  const changedCollections = collectionsState.collectionsUnavailable ? [] : Object.entries(collectionsState.collectionStores).filter(([id, st]) => st.hasDraft() && want(`collection-${id}`));
+  // The collections' list, its deletes and the legacy index go with the list's own part.
+  const indexGoes = want('collections');
+  let indexOut = null;
+  if (!collectionsState.collectionsUnavailable && (changedCollections.length || (indexGoes && (indexPending(collectionsState.collectionsIndexStore?.hasDraft() ?? false, collectionsState.legacyIndexIds) || collectionsState.legacyIndexIds !== null)))) {
     for (const [id, st] of changedCollections) {
       const out = JSON.parse(JSON.stringify(st.data));
       for (const entry of out.entries) materializeEntryImages(entry, files);
@@ -362,7 +421,7 @@ async function publish() {
             // An entry's link as the page draws it (resolveLink): a page, a spot on it or an address; one that goes nowhere gives the feed's own link.
             items: out.entries.map((e) => {
               // A spot without a page belongs to the page the block stands on, which a feed does not know: such an entry links the feed's own address.
-              const link = e.page || e.href ? resolveLink(e, siteState.siteDraft.pages ?? []) : null;
+              const link = e.page || e.href ? resolveLink(e, siteGoing.pages ?? []) : null;
               return { id: e.id, title: collectionsState.plainTitle(e.title), text: collectionsState.plainTitle(e.text), date: e.date, href: link && !link.missing ? link.href : undefined };
             }),
           }),
@@ -380,26 +439,30 @@ async function publish() {
       published: (await fetchIndex(INDEX_PATH))?.samlinger ?? null,
       legacy: collectionsState.legacyIndexIds,
     });
-    if (plan.writeIndex) {
-      files.push({ path: INDEX_PATH, content: JSON.stringify(collectionsState.collectionsIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
+    if (indexGoes && plan.writeIndex) {
+      // The list as it goes out: without a new collection that stays behind.
+      indexOut = JSON.parse(JSON.stringify(collectionsState.collectionsIndexStore.data));
+      indexOut.samlinger = (indexOut.samlinger ?? []).filter((id) => !left.collections.includes(id));
+      files.push({ path: INDEX_PATH, content: JSON.stringify(indexOut, null, 2) + '\n', encoding: 'utf-8' });
       draftKeys.push(INDEX_DRAFT_KEY);
     }
     // Collections removed from the index are deleted from the repo with their feeds; one also created in the same publish keeps the create.
     const created = new Set(files.map((f) => f.path));
-    for (const id of plan.deleteIds) {
+    for (const id of indexGoes ? plan.deleteIds : []) {
       for (const path of [`content/samlinger/${id}.json`, `content/samlinger/${id}.xml`]) {
         if (!created.has(path)) files.push({ path, delete: true });
       }
     }
-    if (plan.deleteLegacy) files.push({ path: LEGACY_INDEX_PATH, delete: true });
-    if (changedCollections.length || plan.writeIndex || plan.deleteIds.length) publishedTitles.push(ta('publish.part.collections'));
+    if (indexGoes && plan.deleteLegacy) files.push({ path: LEGACY_INDEX_PATH, delete: true });
+    if (changedCollections.length || indexOut || (indexGoes && plan.deleteIds.length)) publishedTitles.push(ta('publish.part.collections'));
   }
 
   // Template changes are published as content/maler/ files + index, the
   // same pattern as collections; images in the template are materialized
   // to media/.
-  const changedTemplates = Object.entries(templatesState.templateStores).filter(([, st]) => st.hasDraft());
-  if (changedTemplates.length || templatesState.templatesIndexStore?.hasDraft()) {
+  const templatesGo = want('templates');
+  const changedTemplates = templatesGo ? Object.entries(templatesState.templateStores).filter(([, st]) => st.hasDraft()) : [];
+  if (templatesGo && (changedTemplates.length || templatesState.templatesIndexStore?.hasDraft())) {
     for (const [id, st] of changedTemplates) {
       const out = JSON.parse(JSON.stringify(st.data));
       if (out.section) materializeSection(out.section, files);
@@ -427,7 +490,7 @@ async function publish() {
   }
 
   // Plugin changes (enabled/disabled/added) are published as plugins.json, and a removed plugin's folder is deleted in the same commit.
-  if (pluginsState.pluginsStore?.hasDraft()) {
+  if (want('plugins') && pluginsState.pluginsStore?.hasDraft()) {
     const { remove = [], ...index } = $state.snapshot(pluginsState.pluginsStore.data);
     files.push({ path: 'plugins/plugins.json', content: JSON.stringify(index, null, 2) + '\n', encoding: 'utf-8' });
     // A folder name the guard would refuse is left out, so it never stops the rest of the publish.
@@ -438,7 +501,7 @@ async function publish() {
 
   // The redirects (ADR-0015): the list, and the host's file written from it. A `_redirects` in the repository that has not been looked at yet is read first, so one written by hand joins the list instead of being written over; where it cannot be read, the list waits as a draft and the owner is told.
   let redirectsWait = false;
-  if (redirectsState.redirectsStore?.hasDraft()) {
+  if (want('redirects') && redirectsState.redirectsStore?.hasDraft()) {
     if (await redirectsState.ensureHostFileKnown()) {
       const list = { version: 1, rules: $state.snapshot(redirectsState.redirectsDraft.rules) };
       files.push({ path: 'content/redirects.json', content: JSON.stringify(list, null, 2) + '\n', encoding: 'utf-8' });
@@ -456,7 +519,7 @@ async function publish() {
   // copies yield identical blobs and thus no diff in the commit.
   try {
     const html = await (await fetch('/index.html')).text();
-    for (const p of siteState.siteDraft.pages) {
+    for (const p of siteGoing.pages) {
       // A hidden page has no address of its own on the published site (its redirect or «not found» answers there).
       if (p.path !== '/' && !p.hidden) {
         files.push({ path: `${p.path.slice(1)}/index.html`, content: html, encoding: 'utf-8' });
@@ -468,7 +531,7 @@ async function publish() {
   // regenerated on every publish from the origin the admin runs on -
   // unchanged content yields identical blobs and no diff, like the
   // index copies.
-  files.push({ path: 'sitemap.xml', content: buildSitemapXml(siteState.siteDraft.pages, location.origin), encoding: 'utf-8' });
+  files.push({ path: 'sitemap.xml', content: buildSitemapXml(siteGoing.pages, location.origin), encoding: 'utf-8' });
   files.push({ path: 'robots.txt', content: buildRobotsTxt(location.origin), encoding: 'utf-8' });
 
   // Deleted and moved pages: diff against the published site.json. The
@@ -477,12 +540,13 @@ async function publish() {
   // be deleted: the last entry with the same path wins in the Git tree,
   // so such a deletion would remove the new copy.
   // The media files the tidy moves (lib/media-tidy.js), each from its root path to its folder; the bytes stay in the repository.
+  // They wait only with every part going (lib/publish-pick.js), since the drafts already name the files where they move to.
   for (const move of pendingMoves) files.push({ path: move.to, from: move.from });
 
   const created = new Set(files.map((f) => f.path));
   const del = (path) => { if (!created.has(path)) files.push({ path, delete: true }); };
   for (const p of siteState.site.pages) {
-    const still = siteState.siteDraft.pages.find((q) => q.id === p.id);
+    const still = siteGoing.pages.find((q) => q.id === p.id);
     if (!still) {
       del(p.file);
       if (p.path !== '/') del(`${p.path.slice(1)}/index.html`);
@@ -495,7 +559,8 @@ async function publish() {
 
   // The warnings before the commit, asked as one question with a section each: a page name or address typed but turned down (it never reached the draft, so the page goes out with what stands), a page with parts of its template still to fill in, and someone else's publish since we loaded touching the same files. The editor must actively choose to publish anyway.
   const warnings = [];
-  const refused = siteState.refusedPageFields();
+  // A page name or address turned down belongs to the site settings, and is told where they go.
+  const refused = siteGoes ? siteState.refusedPageFields() : [];
   if (refused.length) {
     warnings.push({
       heading: ta('confirm.pageFields.title'),
@@ -503,7 +568,7 @@ async function publish() {
     });
   }
   // Rules that cannot do what they say: one that hides a shown page, a circle, or one left out of the file as unsound.
-  const ruleIssues = redirectIssues(redirectsState.redirectRules, siteState.siteDraft.pages);
+  const ruleIssues = redirectIssues(redirectsState.redirectRules, siteGoing.pages);
   const badRules = redirectsState.redirectRules.map((rule, i) => ({ rule, issue: ruleIssues[i] })).filter((r) => r.issue?.level === 'error');
   // Lines of a `_redirects` written by hand that the list cannot hold go as publishing first writes the file.
   const unkept = files.some((f) => f.path === '_redirects') ? redirectsState.unkeptLines : 0;
@@ -564,21 +629,27 @@ async function publish() {
     else updaterState.refreshBaseSha();
     setMoves([]);
     // Mirror the materialization into memory now that the commit is
-    // safely in (the same deterministic paths the clones got).
-    materializeImages(pageState.store.data);
-    materializeSiteImages(siteState.siteDraft);
+    // safely in (the same deterministic paths the clones got), for the parts that went.
+    if (sentPages.has(pageState.pageId)) materializeImages(pageState.store.data);
     // The drafts ARE now the published state; keep the data in memory
     // (the server serves old JSON until the deploy finishes) and remove
     // only the markers.
     for (const key of draftKeys) localStorage.removeItem(key);
     for (const id of newPageIds) pageState.pendingPublished.add(id);
-    // Published baseline = the draft: rebuild the store baselines, so
-    // "Discard draft" never rolls back past this publish.
-    siteState.site = JSON.parse(JSON.stringify(siteState.siteDraft));
-    siteState.siteStore = createDraftStore('urd-draft-site', () => siteState.site, shellState.draftSaveError);
-    siteState.linkSiteDraft();
+    // Published baseline = what went out: rebuild the baselines of the stores that went, so
+    // "Discard draft" never rolls back past this publish; a store kept back keeps its own.
+    if (siteOut) {
+      materializeSiteImages(siteState.siteDraft);
+      // The draft keeps a page left behind shown, and stands as a draft where it differs from the settings as they went out.
+      const draft = JSON.parse(JSON.stringify(siteState.siteDraft));
+      siteState.site = siteOut;
+      siteState.siteStore = createDraftStore('urd-draft-site', () => siteState.site, shellState.draftSaveError);
+      siteState.siteStore.replace(draft);
+      siteState.siteStore.save();
+      siteState.linkSiteDraft();
+    }
     if (files.some((f) => f.path === 'content/redirects.json')) redirectsState.adoptPublished();
-    if (pluginsState.pluginsStore) {
+    if (pluginsState.pluginsStore && want('plugins')) {
       // The published index: the removals are done, and are not carried into the next draft.
       const { remove: _done, ...publishedPlugins } = JSON.parse(JSON.stringify(pluginsState.pluginsStore.data));
       pluginsState.pluginsStore = createDraftStore('urd-draft-plugins', () => publishedPlugins, shellState.draftSaveError);
@@ -586,25 +657,34 @@ async function publish() {
     }
     if (collectionsState.collectionsIndexStore) {
       // Mirror the materialization into memory (the same deterministic paths the clones got).
-      for (const st of Object.values(collectionsState.collectionStores)) {
+      for (const [, st] of changedCollections) {
         for (const entry of st.data.entries) materializeEntryImages(entry, []);
       }
-      const publishedIndex = JSON.parse(JSON.stringify(collectionsState.collectionsIndexStore.data));
-      collectionsState.collectionsIndexStore = createDraftStore(INDEX_DRAFT_KEY, () => publishedIndex, shellState.draftSaveError);
+      if (indexGoes) {
+        // The list as it went out; the draft keeps a collection left behind.
+        const draftIndex = JSON.parse(JSON.stringify(collectionsState.collectionsIndexStore.data));
+        const publishedIndex = indexOut ?? draftIndex;
+        collectionsState.collectionsIndexStore = createDraftStore(INDEX_DRAFT_KEY, () => publishedIndex, shellState.draftSaveError);
+        collectionsState.collectionsIndexStore.replace(draftIndex);
+        collectionsState.collectionsIndexStore.save();
+      }
       if (files.some((f) => f.path === LEGACY_INDEX_PATH)) {
         collectionsState.legacyIndexIds = null;
         try { localStorage.setItem(LEGACY_DELETED_KEY, '1'); } catch { /* without the marker, a reload before the deploy merges the legacy index again */ }
       }
-      collectionsState.publishedCollections = {};
-      for (const id of collectionsState.collectionIds) {
+      // The collections that went are published as they stand; with the list, one taken off it is gone.
+      const published = Object.fromEntries(Object.entries(collectionsState.publishedCollections)
+        .filter(([id]) => !indexGoes || collectionsState.collectionIds.includes(id)));
+      for (const id of parts ? changedCollections.map(([id]) => id) : collectionsState.collectionIds) {
         if (!collectionsState.collectionStores[id]) continue;
         const publishedCollection = JSON.parse(JSON.stringify(collectionsState.collectionStores[id].data));
-        collectionsState.publishedCollections[id] = publishedCollection;
+        published[id] = publishedCollection;
         collectionsState.collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => publishedCollection, shellState.draftSaveError, `urd-draft-samling-${id}`);
       }
+      collectionsState.publishedCollections = published;
       collectionsState.syncCollectionsView();
     }
-    if (templatesState.templatesIndexStore) {
+    if (templatesState.templatesIndexStore && templatesGo) {
       // Mirror the materialization into memory (the same deterministic paths the clones got).
       for (const st of Object.values(templatesState.templateStores)) {
         if (st.data?.section) materializeSection(st.data.section, []);
@@ -623,17 +703,28 @@ async function publish() {
       templatesState.pushTemplatesToPreview();
     }
     siteState.grid = { snap: true, ...siteState.siteDraft.grid };
-    const pageSnap = JSON.parse(JSON.stringify(pageState.store.data));
-    pageState.store = createDraftStore(`urd-draft-${pageState.pageId}`, () => pageSnap, shellState.draftSaveError);
-    if (pageState.pendingPublished.has(pageState.pageId)) {
-      // New page: the draft is the source until the deploy finishes - keep it.
-      shellState.writeDraftKey(`urd-draft-${pageState.pageId}`, JSON.stringify(pageSnap));
+    if (sentPages.has(pageState.pageId)) {
+      const pageSnap = JSON.parse(JSON.stringify(pageState.store.data));
+      pageState.store = createDraftStore(`urd-draft-${pageState.pageId}`, () => pageSnap, shellState.draftSaveError);
+      if (pageState.pendingPublished.has(pageState.pageId)) {
+        // New page: the draft is the source until the deploy finishes - keep it.
+        shellState.writeDraftKey(`urd-draft-${pageState.pageId}`, JSON.stringify(pageSnap));
+      }
     }
-    historyState.markPublished();
+    // A page whose file went is live; one not live yet left behind while the site settings went out stands hidden in them, and is marked not live until its file goes.
+    const notLive = new Set([...notLiveIds].filter((id) => !sentPages.has(id) && siteState.siteDraft.pages.some((p) => p.id === id)));
+    if (siteOut) for (const id of left.pages) notLive.add(id);
+    writeNotLive(notLive);
+    historyState.markPublished(parts ? [...parts, ...(siteOut ? ['site'] : [])] : null);
     historyState.updateDirty();
-    void savedState.afterPublish(staleSaves);
-    // Every draft went out, the parts kept for later among them.
-    draftsState.clearLater();
+    void (async () => {
+      await savedState.afterPublish(staleSaves);
+      // The parts left behind that stand in this browser alone are saved, so they wait on the drafts branch as the rest goes live.
+      if (keptParts.length && savedState.savedAvailable) await savedState.saveDrafts({ names: keptParts, device: draftsState.browserName, quiet: true, auto: true });
+    })();
+    // After every draft went out, nothing is kept for later; after the ticked ones, those still waiting stay unticked.
+    if (parts) draftsState.keepLaterOf(keptParts);
+    else draftsState.clearLater();
     const wave = pageState.held.hold(committed);
     // The wait keeps the message up (info never auto-clears) until the
     // site serves the commit or the wait gives up.
@@ -675,6 +766,11 @@ export const publishState = {
   discardDrafts,
   discard,
   publish,
+  publishTicked,
+  /** The parts Publish sends, by name, with the reason a part unticked goes anyway, and the parts kept for later. */
+  get publishGoing() { return pick.going; },
+  get publishForced() { return pick.forced; },
+  get publishKept() { return pick.kept; },
   get mediaRootCount() { return mediaRootCount; },
   get mediaBusy() { return mediaBusy; },
   loadMediaFiles,

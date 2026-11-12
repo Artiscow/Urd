@@ -34,6 +34,7 @@ import { shellState } from './shell.svelte.js';
 import { templatesState } from './templates.svelte.js';
 import { redirectsState } from './redirects.svelte.js';
 import { pageMoved, withRule, withoutFrom } from '../lib/redirects-model.js';
+import { readNotLive, stillNotLive } from '../lib/not-live.js';
 
 /** The background layer types in the order they are offered in the panel. */
 const BG_TYPES = [
@@ -450,8 +451,9 @@ function setPageSlug(entry, rawSlug) {
   return null;
 }
 
-/** The address a page has on the published site, or null for a page the published site does not have; a page hidden there has one too, answering with its redirect. */
+/** The address a page has on the published site, or null for a page the published site does not have, or lists hidden without its file (lib/not-live.js); a page hidden there has one too, answering with its redirect. */
 function publishedPathOf(id) {
+  if (stillNotLive(readNotLive(), site?.pages ?? []).has(id)) return null;
   return site?.pages?.find((p) => p.id === id)?.path ?? null;
 }
 

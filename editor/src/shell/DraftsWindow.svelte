@@ -2,7 +2,7 @@
   /* The Drafts window (ADR-0032, state/drafts.svelte.js): opened from the Drafts tab in the System section, it stands over the canvas beside the work (lib/FloatWindow.svelte), dragged by its head.
      Its head names it, with the striped «W.I.P.» tag while Drafts is being finished, «Move back to the drafts tab» while it stands where it was dragged, a «⋯» menu (this browser's name, «Autosave»), which opens on a mouse's rest and so keeps no tooltip, the fold to a pill, the pin that keeps it open while the owner edits, and Close.
      Three tabs say where each change stands, the one with something new opening first:
-     This browser: each part that stands here alone, ticked to be saved or unticked to be kept for later; a row leads to the change, and a part saved on another device since says so under it. «Save ticked…» opens a one-line note in place, which travels with the save; Enter saves.
+     This browser: each part that stands here alone, ticked to be saved and published or unticked to be kept for later; a row leads to the change, and a part saved on another device since says so under it. «Save ticked…» opens a one-line note in place, which travels with the save; Enter saves. «Publish ticked» publishes the ticked parts with the parts they cannot go without (lib/publish-pick.js), and an unticked part that goes with one says so in its line.
      Saved: every saved draft (lib/SavedRows.svelte), with what changed, looked at in the canvas (previewState.startLook), on the phone or in a tab of its own, kept beside this browser's version, or opened here by choice.
      Live: the last publishes, with the way to History.
      Unpinned, a press outside it (its tab and the questions it asks excepted) or Escape closes it; opened by a rest on its tab, it closes as the mouse leaves (state/drafts.svelte.js), unless a press in it keeps it. Folded, it is a pill in the canvas's corner with the counts and the dot, which opens it again where it stood. */
@@ -65,10 +65,14 @@
 
   /** A part's line: when it was last changed, and that it is kept for later where unticked. */
   function lineOf(part) {
-    const steps = stepsForPart(part, ed.steps.undo, ed.publishedAt);
+    const steps = stepsForPart(part, ed.steps.undo, ed.publishedAtOf(part.part));
     const kind = PART_KINDS[part.kind]?.word;
     const words = [steps.length ? ta('drafts.changed', { when: ago(steps[0].at) }) : kind ? ta(kind) : ''];
     if (!ticked(part)) words.push(ta('drafts.later'));
+    // Unticked, a part that goes with another names the part it goes out with on «Publish ticked».
+    const by = ed.publishForced.get(part.part);
+    const with_ = by && ed.savedRows.find((r) => r.part === by);
+    if (by) words.push(by === 'moves' ? ta('publish.forced.moves') : ta('publish.forced', { name: with_ ? nameOf(with_) : by }));
     return words.filter(Boolean).join(' · ');
   }
 
@@ -348,6 +352,7 @@
         {:else}
           <div class="dw-acts">
             <button type="button" class="ghost dw-save" title={ta('tip.save')} disabled={!ed.draftsTicked.length || ed.savedBusy || !ed.savedAvailable} onclick={openNote}>{@html ICONS.save}<span>{ta('drafts.saveTicked')}</span></button>
+            <button type="button" class="ghost dw-publish" disabled={!ed.publishGoing.size || !ed.auth?.allowed} title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={() => ed.publishTicked()}>{@html ICONS.upload}<span>{ta('drafts.publishTicked')}</span></button>
           </div>
         {/if}
       </div>
@@ -662,6 +667,7 @@
   }
 
   .dw-save,
+  .dw-publish,
   .dw-history {
     display: inline-flex;
     align-items: center;

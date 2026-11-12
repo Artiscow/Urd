@@ -25,3 +25,7 @@ Every commit to the site's branch is deployed (the repo is the website, [ADR-000
 - Publishing takes a set of parts instead of all of them, and builds the site file it publishes from the draft with the kept-back pages that are not live marked hidden.
 - A site with no publishing layer (the local server) has nothing to save to, and Drafts says so, as Publish does.
 - A save's note and the browser's name stand in the branch's index, readable as the rest of the repo is; the note is the owner's own words, and nothing asks for it.
+
+## Addenda
+
+- 12 November 2026: a publish of the ticked parts saves the parts kept back that stand in this browser alone, quietly, so they are there on another device as the rest goes live; as autosave, it never writes over a part saved elsewhere since. The ticks stand on the rows of the Publish menu and History as well as in the Drafts window, and decide a publish as they decide a save.

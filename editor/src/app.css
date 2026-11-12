@@ -4634,6 +4634,16 @@
     font-weight: 600;
   }
 
+  /* Where parts are kept for later, how many, after the act's word at the row's end */
+  .publish-pop .publish-kept {
+    margin-left: auto;
+    padding-left: 0.6rem;
+    color: var(--urd-color-text, #e7e9ee);
+    font-size: 0.74rem;
+    font-weight: 400;
+    opacity: 0.6;
+  }
+
   .publish-pop .publish-red:not(:disabled) {
     color: #f2b8b3;
   }

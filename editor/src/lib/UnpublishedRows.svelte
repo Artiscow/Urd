@@ -2,13 +2,15 @@
   /* What waits to be published, as rows that lead to the change (lib/unpublished.js): a sign for the kind, the part's name, what it is, and a chevron that opens the row.
      Open, a row lists the steps made on the part since the last publish, newest first, from the undo history (stepsForPart), each with its words and how long ago; a part with no step of its own kept (made inside another step, or before the kept steps) says so.
      Drawn in the Publish menu and in History's «Not published yet», from the same parts, so the two never disagree; `onpick(part)` takes the owner to the change.
-     With `bands`, where the drafts can be saved (ADR-0032), the rows stand under «In this browser» and «Saved» by where each part stands (lib/saved-model.js standing), and a part saved on another device since this browser last saw it says so under its row, with `onuse(part)` taking the saved one. */
+     With `bands`, where the drafts can be saved (ADR-0032), the rows stand under «In this browser» and «Saved» by where each part stands (lib/saved-model.js standing), and a part saved on another device since this browser last saw it says so under its row, with `onuse(part)` taking the saved one.
+     With `ontick(name)`, each row has the tick the Drafts window's rows have (`later`, the parts unticked): ticked, the part goes with the next publish; unticked, it is kept for later, and says so; one unticked that goes anyway with another (`forced`, lib/publish-pick.js) stands ticked and fixed, and names the part it goes with. */
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from './icons.js';
   import { stepsForPart } from './unpublished.js';
+  import { partName } from './saved-model.js';
   import { timeAgo } from './time-ago.js';
   import { rowMotion } from './motion.svelte.js';
-  let { parts, steps = [], publishedAt = 0, onpick, bands = false, onuse = null, whenSaved = (iso) => iso } = $props();
+  let { parts, steps = [], publishedAt = 0, onpick, bands = false, onuse = null, whenSaved = (iso) => iso, later = [], forced = new Map(), ontick = null } = $props();
   /** The rows in their bands, or one band of them all where the drafts are not saved. */
   const groups = $derived(bands
     ? [['browser', 'saved.band.browser'], ['saved', 'saved.band.saved']].map(([band, word]) => ({ band, word, rows: parts.filter((p) => p.band === band) })).filter((g) => g.rows.length)
@@ -31,6 +33,29 @@
   const wordOf = (part) => (KINDS[part.kind].word ? ta(KINDS[part.kind].word) : '');
   const ago = (at) => timeAgo(at, adminLang()) || ta('history.now');
 
+  /** Whether a part goes with the next publish: ticked, or going anyway with another. */
+  const goes = (name) => !later.includes(name) || forced.has(name);
+
+  /** A tick pressed: the part kept for later or ticked, and the box drawn as the part stands, since one unticked that goes anyway with another stays ticked. */
+  function pressTick(event, name) {
+    ontick(name);
+    event.currentTarget.checked = goes(name);
+  }
+
+  /** What a row says beside its name: the part it goes out with where it goes anyway, that it is kept for later where unticked, else its kind. */
+  function stateOf(part) {
+    if (ontick && later.includes(part.part)) {
+      const by = forced.get(part.part);
+      if (by === 'moves') return ta('publish.forced.moves');
+      if (by) {
+        const with_ = parts.find((p) => p.part === by);
+        return ta('publish.forced', { name: with_ ? nameOf(with_) : by });
+      }
+      return ta('drafts.later');
+    }
+    return wordOf(part);
+  }
+
   /** The rows that stand open, by the part's key. */
   let open = $state(new Set());
   function toggle(part) {
@@ -46,17 +71,23 @@
 <div class="unpub-rows" role="list">
   {#each group.rows as part (keyOf(part))}
     {@const isOpen = open.has(keyOf(part))}
-    <div class="unpub-item" role="listitem">
+    {@const kept = Boolean(ontick) && later.includes(part.part) && !forced.has(part.part)}
+    {@const fixed = Boolean(ontick) && later.includes(part.part) && forced.has(part.part)}
+    {@const state = stateOf(part)}
+    <div class="unpub-item" class:later={kept} role="listitem">
       <div class="unpub-row">
+        {#if ontick}
+          <input type="checkbox" class="tick-box unpub-tick" checked={goes(part.part)} disabled={fixed} aria-label={nameOf(part)} title={fixed ? undefined : ta('tip.drafts.tick')} onchange={(e) => pressTick(e, part.part)} />
+        {/if}
         <button type="button" class="unpub-go" title={ta('tip.unpublished.go', { name: nameOf(part) })} onclick={() => onpick(part)}>
           <span class="unpub-sign">{@html KINDS[part.kind].icon}</span>
           <span class="unpub-name">{nameOf(part)}</span>
-          {#if wordOf(part)}<span class="unpub-kind">{wordOf(part)}</span>{/if}
+          {#if state}<span class="unpub-kind">{state}</span>{/if}
         </button>
         <button type="button" class="unpub-chev" class:open={isOpen} aria-expanded={isOpen} aria-controls={`unpub-steps-${uid}-${keyOf(part)}`} aria-label={ta('tip.unpublished.steps', { name: nameOf(part) })} title={ta('tip.unpublished.steps', { name: nameOf(part) })} onclick={() => toggle(part)}>{@html ICONS.chevronDown}</button>
       </div>
       {#if isOpen}
-        {@const list = stepsForPart(part, steps, publishedAt)}
+        {@const list = stepsForPart(part, steps, typeof publishedAt === 'function' ? publishedAt(partName(part)) : publishedAt)}
         <div class="unpub-steps" id={`unpub-steps-${uid}-${keyOf(part)}`} transition:rowMotion>
           {#each list as step, i (`${step.at}:${i}`)}
             <div class="unpub-step"><span class="unpub-step-ico">{@html ICONS[step.icon] ?? ICONS.pencil}</span><span class="unpub-step-words">{ta(step.labelKey)}</span><small>{ago(step.at)}</small></div>
@@ -192,9 +223,31 @@
     white-space: nowrap;
   }
 
+  /* The kind, or the row's state where it is ticked: as much as the row leaves room for */
   .unpub-kind {
-    flex: none;
+    flex: 0 1 auto;
+    max-width: 60%;
+    overflow: hidden;
     font-size: 0.74rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.6;
+  }
+
+  /* The tick before the row, as the Drafts window's rows have it; a part kept for later stands dimmed */
+  .unpub-tick:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    flex: none;
+    align-self: center;
+    margin: 0 0.1rem 0 0.35rem;
+  }
+
+  /* A part that goes anyway with another: its tick stands fixed, dimmed */
+  .unpub-tick:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .later .unpub-go {
     opacity: 0.6;
   }
 
