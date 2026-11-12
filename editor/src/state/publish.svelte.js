@@ -164,6 +164,8 @@ async function tidyMedia({ withChanges = false } = {}) {
  * @returns {Promise<boolean>} whether the drafts were discarded
  */
 async function askDiscard() {
+  // A look at a saved draft ends before the drafts can be discarded.
+  if (previewState.looking) return false;
   const saved = savedState.savedCount;
   const lines = [ta('confirm.discardDraftsLine'), ...(saved ? [ta(saved === 1 ? 'confirm.discardSavedLine.one' : 'confirm.discardSavedLine', { n: saved })] : [])];
   const ok = await shellState.askConfirm({ title: ta('confirm.discardDrafts'), lines, okLabel: ta('ui.discard'), danger: true });

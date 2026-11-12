@@ -241,22 +241,25 @@ async function savePageAsTemplate(entry) {
   await templatesState.saveTemplate('page', data);
 }
 
-/** The page settings' «Duplicate the page»: the page as it stands, under a copy's title and the next free slug, opened as a draft; the copy stays out of the menu until the Nav panel adds it. */
-async function duplicatePage(entry) {
-  const source = entry.id === pageState.pageId
+/**
+ * A copy of a page as a new draft page under the next free slug, opened as a draft, in one undo step that takes the copy's draft with it; the copy stays out of the menu until the Nav panel adds it.
+ * The page settings' «Duplicate the page» copies the page as this browser holds it, named «Copy of …»; «Keep both» in the Drafts window gives the saved version and a name of its own (`source`, `title`).
+ */
+async function duplicatePage(entry, { source = null, title = null } = {}) {
+  const from = source ?? (entry.id === pageState.pageId
     ? JSON.parse(JSON.stringify(pageState.store.data))
-    : await pageState.readPageDraft(entry);
+    : await pageState.readPageDraft(entry));
   const slug = copySlug(entry.id, siteDraft.pages);
-  const title = ta('page.copyTitle', { title: entry.title });
-  const fresh = clonePageForInsert(source, makeId, { id: slug, title });
+  const name = title ?? ta('page.copyTitle', { title: entry.title });
+  const fresh = clonePageForInsert(from, makeId, { id: slug, title: name });
   siteMutate('pages', () => {
-    siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
-  });
+    siteDraft.pages.push({ id: slug, title: name, path: `/${slug}`, file: `content/pages/${slug}.json` });
+  }, { pages: [slug] });
   shellState.writeDraftKey(`urd-draft-${slug}`, JSON.stringify(fresh));
   historyState.updateDirty();
   // The page switch clears the status line, so the word about the copy comes after it.
   await pageState.selectPage(slug);
-  shellState.setStatus(ta('status.pageDuplicated', { title }));
+  shellState.setStatus(ta('status.pageDuplicated', { title: name }));
 }
 
 /** A page's new name; turned down, the reason for its field to show, otherwise null. */

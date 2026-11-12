@@ -94,6 +94,10 @@ test('the Saved tab\'s rows: newest first, held as saved, held with changes, or 
   assert.deepEqual([by['page-kaker'].here, by['page-kaker'].fresh], ['none', false], 'shown in the menu already');
   assert.deepEqual([by['page-om-oss'].note, by['page-om-oss'].device], ['New opening text', 'Laptop'], 'the note and the browser it was saved from');
   assert.deepEqual([by.site.note, by.site.device], ['', ''], 'none written: empty');
+  const behind = savedList({ saved: { 'page-hjem': { hash: 'H2', savedAt: 't' } }, localHash: () => 'H1', seen: { 'page-hjem': 'H1' }, noticed: {} });
+  assert.equal(behind[0].here, 'behind', 'held as it was last seen saved, unchanged since: behind, not changed here too');
+  const changed = savedList({ saved: { 'page-hjem': { hash: 'H2', savedAt: 't' } }, localHash: () => 'H3', seen: { 'page-hjem': 'H1' }, noticed: {} });
+  assert.equal(changed[0].here, 'mine', 'changed here since it was seen saved');
 });
 
 test('a save of the ticked: this browser\'s parts not kept for later, and quietly none saved elsewhere since', () => {

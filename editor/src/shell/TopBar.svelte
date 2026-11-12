@@ -335,6 +335,7 @@
     {#if gearHere}<SettingsGear />{/if}
     <button
       class="ghost topbar-tall"
+      disabled={Boolean(ed.looking)}
       onclick={ed.toggleChrome}
       title={ed.chromeVisible ? ta('tip.chromeHide') : ta('tip.chromeShow')}
     >{#if ed.chromeVisible}{@html ICONS.eye} <span class="btn-label">{ta('ui.cleanView')}</span>{:else}{@html ICONS.pencil} <span class="btn-label">{ta('ui.edit')}</span>{/if}</button>
@@ -358,7 +359,7 @@
           <button type="button" class="ghost publish-act publish-main" disabled={!ed.dirty || !ed.auth?.allowed}
             title={ed.auth?.allowed ? undefined : ta('tip.history.needsAccess')} onclick={publishNow}>{@html ICONS.upload}<span>{ta('publish.now')}</span></button>
           <a class="ghost publish-act" href={ed.pageEntry()?.path ?? '/'} target="_blank" rel="noopener" onclick={() => (ed.toolMenu = null)}>{@html ICONS.external}<span>{ta('publish.viewLive')}</span></a>
-          <button type="button" class="ghost publish-act publish-red" disabled={!ed.dirty} onclick={discardFromMenu}>{@html ICONS.restore}<span>{ta('ui.discard')}</span></button>
+          <button type="button" class="ghost publish-act publish-red" disabled={!ed.dirty || Boolean(ed.looking)} onclick={discardFromMenu}>{@html ICONS.restore}<span>{ta('ui.discard')}</span></button>
           {#if ed.savedRows.length}
             <hr class="gridmenu-divider" />
             <!-- With the bands each band counts its own rows; without them the head counts what waits -->

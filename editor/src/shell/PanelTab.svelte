@@ -378,7 +378,7 @@
 <!-- The button's face in each layout: a tab's word with its arrow, an icon with its dots at the corner, a row's or a word's name with its arrow toward the menu beside it -->
 {#snippet face()}
   {#if drafts}
-    {#if variant === 'rail'}{@html ICONS.panel_drafts}<DraftsMarks corner />{:else}<span class={variant === 'tab' ? 'tab-menu-word' : 'tab-menu-name'}>{label}</span><DraftsMarks />{/if}
+    {#if variant === 'rail'}{@html ICONS.panel_drafts}<DraftsMarks corner />{:else if variant === 'tab'}<span class="tab-menu-word">{label}<DraftsMarks /></span>{:else}<span class="tab-menu-name">{label}</span><DraftsMarks />{/if}
   {:else if variant === 'rail'}
     {@html ICONS[`panel_${name}`]}{#if updateDot}<span class="update-dot" aria-hidden="true"></span>{/if}{#if legalDot}<span class="update-dot legal-dot" aria-hidden="true"></span>{/if}
   {:else if variant === 'tab'}

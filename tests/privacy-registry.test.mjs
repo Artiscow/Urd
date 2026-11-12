@@ -20,7 +20,7 @@ const OWNER_STORAGE = {
   'color-picker.js': 'the editor\'s recent and saved colours',
   'glyphs.js': 'the editor\'s recent glyphs',
   'i18n.js': 'the admin\'s language',
-  'urd.js': 'the draft view reads the owner\'s own drafts',
+  'urd.js': 'the draft view reads the owner\'s own drafts, and keeps a saved draft the owner handed its tab',
 };
 
 /** The engine's modules, as paths under the engine directory; the dictionaries are words, not code. */

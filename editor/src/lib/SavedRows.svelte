@@ -1,13 +1,31 @@
 <script>
   /* The Drafts window's Saved tab (ADR-0032): every saved draft, the newest first (lib/saved-model.js savedList), each with a picture of a page drawn as «My templates» are (preset-thumb.js pageThumb) or the part's sign, its name, «New» where this browser has not seen it, the browser it was saved from, who saved it and when, and the owner's note on the save in italics.
-     A press on a row opens it to its acts (`opened` names the part whose row stands open): «Open here» takes the saved draft into this browser (`onopen`), or a check says this browser holds it as saved; the bin takes the saved copy away (`onremove`) at its second press, as a removal does, bright red in between, and a mouse or the focus leaving the row disarms it. */
+     A press on a row opens it (`opened` names the part whose row stands open). A page's row lists what changed against this browser's version (`changesOf`, lib/page-diff.js, worded by `lineText`), each line looking at the saved version in the canvas at its place (`online`).
+     Then its acts: «Look» and «Look on the phone» draw the saved version of a page or the site settings in the canvas (`onlook`), «New tab» opens a page's in a tab of its own (`ontab`), and «Open here» takes the saved draft into this browser (`onopen`), or a check says this browser holds it as saved.
+     Where this browser has changed the part too (not where it only holds an older saved copy, unchanged since), a box says so with «Look at both» (`onlook` with both), «Keep both» for a page (`onkeep`) and «Use …'s» in Open here's place.
+     The bin takes the saved copy away (`onremove`) at its second press, as a removal does, bright red in between, and a mouse or the focus leaving the row disarms it. */
+  import { untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { pageThumb } from '$engine/preset-thumb.js';
   import { ICONS } from './icons.js';
   import { PART_KINDS } from './part-kinds.js';
   import { rowMotion } from './motion.svelte.js';
   import IconButton from './rows/IconButton.svelte';
-  let { rows, docOf = () => null, whenOf = (iso) => iso, themeStyle = '', onopen, onremove, opened = $bindable(null) } = $props();
+  let { rows, docOf = () => null, whenOf = (iso) => iso, themeStyle = '', onopen, onremove, onlook = null, ontab = null, onkeep = null, online = null, changesOf = null, lineText = (line) => line.kind, opened = $bindable(null) } = $props();
+  /** The most lines of what changed a row lists; the rest are counted. */
+  const LINES = 6;
+  /** What changed in the open row, read as it opens, not again at every edit: null while it is read. */
+  let changes = $state(null);
+  $effect(() => {
+    const part = opened;
+    changes = null;
+    if (!part || !changesOf || !untrack(() => rows.some((r) => r.part === part && r.kind === 'page'))) return;
+    let gone = false;
+    changesOf(part).then((found) => { if (!gone) changes = found; });
+    return () => { gone = true; };
+  });
+  /** Looked at in the canvas: a page, or the site settings. */
+  const lookable = (row) => Boolean(onlook) && (row.kind === 'page' || row.kind === 'site');
 
   const nameOf = (row) => row.name ?? ta(PART_KINDS[row.kind]?.name ?? 'unpublished.site');
   /** Where and when a draft was saved: the browser's name where it has one, who saved it, and how long ago. */
@@ -43,13 +61,46 @@
         <span class="saved-chev" aria-hidden="true">{@html ICONS.chevronDown}</span>
       </button>
       {#if isOpen}
-        <div class="saved-acts" id={`saved-acts-${uid}-${row.part}`} transition:rowMotion>
-          {#if row.here === 'same'}
-            <span class="saved-here">{@html ICONS.check}{ta('saved.heldHere')}</span>
-          {:else}
-            <button type="button" class="ghost saved-open" title={ta(row.here === 'mine' ? 'tip.saved.openMine' : 'tip.saved.open')} onclick={() => onopen(row)}>{ta('saved.open')}</button>
+        <div class="saved-open-body" id={`saved-acts-${uid}-${row.part}`} transition:rowMotion>
+          {#if row.kind === 'page' && changes}
+            <!-- What changed: each line looks at the saved version where it changed -->
+            <div class="saved-diff">
+              {#if changes.fresh}
+                <span class="saved-diff-line plain"><i aria-hidden="true"></i>{ta('drafts.newPage')}</span>
+              {:else if !changes.lines.length}
+                <span class="saved-diff-line plain"><i aria-hidden="true"></i>{ta('drafts.noChanges')}</span>
+              {:else}
+                {#each changes.lines.slice(0, LINES) as line, i (i)}
+                  <button type="button" class="saved-diff-line" disabled={!online} onclick={() => online?.(row, line)}><i aria-hidden="true"></i><span>{lineText(line)}</span></button>
+                {/each}
+                {#if changes.lines.length > LINES}<span class="saved-diff-line plain more">{ta('drafts.moreChanges', { n: changes.lines.length - LINES })}</span>{/if}
+              {/if}
+            </div>
           {/if}
-          <IconButton icon={ICONS.bin} size="sm" danger class={armed === row.part ? 'armed' : ''} label={armed === row.part ? ta('saved.removeArmed') : ta('saved.remove', { name: nameOf(row) })} onclick={() => pressBin(row)} />
+          {#if row.here === 'mine'}
+            <!-- Changed here too: both looked at, both kept, or the saved one taken -->
+            <div class="saved-both">
+              <span>{ta('drafts.changedHere', { name: nameOf(row) })}</span>
+              <span class="saved-acts">
+                {#if lookable(row)}<button type="button" class="ghost saved-act" onclick={() => onlook(row, { both: true })}>{ta('drafts.lookBoth')}</button>{/if}
+                {#if onkeep && row.kind === 'page'}<button type="button" class="ghost saved-act" onclick={() => onkeep(row)}>{ta('drafts.keepBoth')}</button>{/if}
+                <button type="button" class="ghost saved-act" title={ta('tip.saved.openMine')} onclick={() => onopen(row)}>{row.device ? ta('drafts.useFrom', { from: row.device }) : ta('saved.use')}</button>
+              </span>
+            </div>
+          {/if}
+          <div class="saved-acts">
+            {#if lookable(row)}
+              <button type="button" class="ghost saved-act" onclick={() => onlook(row, {})}>{ta('drafts.look')}</button>
+              <button type="button" class="ghost saved-act" onclick={() => onlook(row, { phone: true })}>{ta('drafts.lookPhone')}</button>
+            {/if}
+            {#if ontab && row.kind === 'page'}<button type="button" class="ghost saved-act" onclick={() => ontab(row)}>{ta('drafts.newTab')}</button>{/if}
+            {#if row.here === 'same'}
+              <span class="saved-here">{@html ICONS.check}{ta('saved.heldHere')}</span>
+            {:else if row.here === 'none' || row.here === 'behind'}
+              <button type="button" class="ghost saved-open" title={ta('tip.saved.open')} onclick={() => onopen(row)}>{ta('saved.open')}</button>
+            {/if}
+            <IconButton icon={ICONS.bin} size="sm" danger class={armed === row.part ? 'armed' : ''} label={armed === row.part ? ta('saved.removeArmed') : ta('saved.remove', { name: nameOf(row) })} onclick={() => pressBin(row)} />
+          </div>
         </div>
       {/if}
     </div>
@@ -172,15 +223,76 @@
     transform: rotate(180deg);
   }
 
+  .saved-open-body {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0 0.45rem 0.45rem;
+  }
+
   .saved-acts {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
     gap: 0.35rem;
-    padding: 0 0.45rem 0.45rem;
   }
 
+  /* What changed: a short list, each line leading to its place in the canvas */
+  .saved-diff {
+    display: grid;
+    gap: 1px;
+  }
+
+  .saved-diff-line:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    min-height: 1.6rem;
+    padding: 0.15rem 0.4rem;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 0.78rem;
+    text-align: left;
+    opacity: 0.85;
+    cursor: pointer;
+  }
+
+  .saved-diff-line:hover:not(:disabled) {
+    background: rgb(255 255 255 / 6%);
+    opacity: 1;
+  }
+
+  .saved-diff-line.plain {
+    cursor: default;
+  }
+
+  .saved-diff-line.more {
+    opacity: 0.6;
+  }
+
+  .saved-diff-line i {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    background: #e2b84a;
+  }
+
+  /* Changed here too: a dashed box in the amber of what this browser holds */
+  .saved-both {
+    display: grid;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    border: 1px dashed color-mix(in srgb, #e2b84a 55%, transparent);
+    border-radius: 8px;
+    font-size: 0.8rem;
+  }
+
+  .saved-act:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
   .saved-open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
     flex: none;
     width: auto;
@@ -193,7 +305,6 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    margin-right: auto;
     font-size: 0.76rem;
     color: var(--urd-color-accent, #7c5cff);
   }

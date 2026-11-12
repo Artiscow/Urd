@@ -31,7 +31,8 @@ let pluginCommands = $state([]);
  * Opens the palette. It stays shut while a confirmation or the image editor is open, and it closes the light menus first, as the shortcut sheet does.
  */
 function openPalette() {
-  if (shellState.confirmBox || pictureEditorState.picture) return;
+  // A look at a saved draft pauses what the palette changes (state/preview.svelte.js).
+  if (shellState.confirmBox || pictureEditorState.picture || previewState.looking) return;
   shellState.settingsOpen = false;
   shellState.toolMenu = null;
   shellState.shortcutsOpen = false;

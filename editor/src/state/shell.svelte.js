@@ -160,6 +160,17 @@ function onKeydown(e) {
     pageState.blockMenu = null;
     return;
   }
+  // Escape ends a look at a saved draft, and while one stands the keys that would change the draft rest (state/preview.svelte.js).
+  if (previewState.looking && !(e.target instanceof Element && e.target.closest('dialog'))) {
+    if (e.key === 'Escape') {
+      previewState.endLook();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && ['z', 'y', 'd', 'v', 'x'].includes(e.key.toLowerCase()) && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+      e.preventDefault();
+      return;
+    }
+  }
   // «?» opens the shortcut sheet wherever in the panels it is not typed: a toggle, a slider or a colour keeps the focus after a choice and takes no text, so it lets the key through, and a dialog over the editor keeps it.
   const focus = e.target;
   const typed = focus instanceof HTMLElement

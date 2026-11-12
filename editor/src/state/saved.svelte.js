@@ -17,6 +17,9 @@ import { templatesState } from './templates.svelte.js';
 import { collectionsState } from './collections.svelte.js';
 import { siteState } from './site.svelte.js';
 import { draftsState } from './drafts.svelte.js';
+import { previewState } from './preview.svelte.js';
+import { liftPageFile, liftSiteFile } from '$engine/migrate.js';
+import { pageDiff } from '../lib/page-diff.js';
 
 const SEEN_KEY = 'urd-saved-seen';
 const NOTICED_KEY = 'urd-saved-noticed';
@@ -31,6 +34,8 @@ const NOTE_MAX = 200;
 const DEVICE_MAX = 40;
 /** How long the Drafts tab says a save is done. */
 const JUST_SAVED = 3000;
+/** How long a saved draft handed over to a new tab waits for the tab to take it. */
+const HAND_OVER_KEPT = 60_000;
 /** The answers that say saving cannot be done here: no sign-in, no access, no publishing layer, or one not set up. */
 const NOT_HERE = new Set([401, 403, 404, 503]);
 
@@ -439,6 +444,139 @@ async function loadPictures() {
   docs = next;
 }
 
+/** A saved page's document and, where this browser's site settings do not list the page, the saved site settings that do; null where it cannot be read. */
+async function savedPage(name) {
+  const of = partOfName(name);
+  const names = [name];
+  const here = siteState.siteDraft?.pages.some((p) => p.id === of.id);
+  if (of.kind === 'page' && !here && index.parts.site) names.push('site');
+  const cached = of.kind === 'page' && docs[name]?.hash === index.parts[name]?.hash ? docs[name].doc : null;
+  const read = cached && names.length === 1 ? { ok: true, keys: {} } : await readParts(names);
+  if (!read.ok) return null;
+  try {
+    const site = read.keys.site?.['urd-draft-site'] ? liftSiteFile(JSON.parse(read.keys.site['urd-draft-site'])) : null;
+    if (of.kind === 'site') return site ? { page: null, site, here: true } : null;
+    const text = read.keys[name]?.[`urd-draft-${of.id}`];
+    const doc = cached ?? (text ? JSON.parse(text) : null);
+    return doc ? { page: liftPageFile(structuredClone(doc), siteState.siteStore.data), site, here } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Who saved a part, from which browser, and when, for the look's banner. */
+function savedFrom(name) {
+  const entry = index.parts[name] ?? {};
+  return { from: [entry.device, entry.saver].filter(Boolean).join(' · '), when: entry.savedAt ? whenOf(entry.savedAt) : '' };
+}
+
+/** This browser's version of a saved page, lifted as the saved one is; null for a page this browser does not have. */
+async function minePage(of) {
+  const entry = siteState.siteDraft?.pages.find((p) => p.id === of.id);
+  if (!entry) return null;
+  const doc = of.id === pageState.pageId ? $state.snapshot(pageState.store.data) : await pageState.readPageDraft(entry);
+  return liftPageFile(structuredClone(doc), siteState.siteStore.data);
+}
+
+/** Counts the looks asked for, so only the last one asked starts. */
+let lookAsked = 0;
+
+/**
+ * «Look»: the saved version of a page or of the site settings in the canvas, with editing paused (previewState.startLook); on the phone with `phone`, and beside this browser's version of the same page with `both`.
+ * A look whose saved version comes in after another look has started, or a look has ended, starts nothing.
+ * @param {string} name
+ * @param {{phone?: boolean, both?: boolean}} [opts]
+ */
+async function lookAt(name, { phone = false, both = false } = {}) {
+  const asked = ++lookAsked;
+  const turns = previewState.lookTurns;
+  const of = partOfName(name);
+  const saved = await savedPage(name);
+  const mine = both && of.kind === 'page' && of.id !== pageState.pageId ? await minePage(of) : null;
+  if (asked !== lookAsked || turns !== previewState.lookTurns) return;
+  if (!saved) {
+    shellState.setStatus(ta('saved.readFailed'), 'error');
+    return;
+  }
+  const title = index.parts[name]?.title || siteState.siteDraft?.pages.find((p) => p.id === of.id)?.title || titleOf({ part: name, ...of, name: of.id });
+  previewState.startLook({ part: name, name: title, ...savedFrom(name), page: saved.page, site: saved.site, mine, phone, both });
+}
+
+/**
+ * What changed in a saved page against the version this browser holds (lib/page-diff.js), or null for a part that is not a page or cannot be read; a page this browser does not have reads as new.
+ * @param {string} name
+ */
+async function changesOf(name) {
+  const of = partOfName(name);
+  if (of.kind !== 'page') return null;
+  const saved = await savedPage(name);
+  if (!saved?.page) return null;
+  const mine = await minePage(of);
+  if (!mine) return { fresh: true, lines: [] };
+  return { fresh: false, lines: pageDiff(saved.page, mine) };
+}
+
+/** «Keep both»: the saved version of a page this browser has changed too, as a page of its own beside this browser's, named for where it was saved, in one undo step. */
+async function keepBoth(name) {
+  const of = partOfName(name);
+  const entry = siteState.siteDraft?.pages.find((p) => p.id === of.id);
+  const saved = entry ? await savedPage(name) : null;
+  if (!saved?.page) {
+    shellState.setStatus(ta('saved.readFailed'), 'error');
+    return;
+  }
+  if (previewState.looking) previewState.endLook();
+  const from = index.parts[name]?.device || index.parts[name]?.saver || '';
+  await siteState.duplicatePage(entry, { source: saved.page, title: from ? ta('drafts.keepBothTitle', { title: entry.title, from }) : ta('page.copyTitle', { title: entry.title }) });
+}
+
+/**
+ * «New tab»: the saved version drawn as a visitor's page in a tab of its own (the draft view, `?draft=look`, engine drafts.js receiveLook).
+ * The tab opens at once, within the press, so no browser holds it back; the saved texts are then handed over under a one-time key `urd-look-<id>`, which the tab takes away as it loads, and those of an earlier New tab that never loaded go first.
+ * @param {string} name
+ */
+function openInTab(name) {
+  const tab = window.open('about:blank', '_blank');
+  if (!tab) return;
+  tab.opener = null;
+  void handOver(name, tab);
+}
+
+async function handOver(name, tab) {
+  const of = partOfName(name);
+  const read = await readParts(of.kind === 'page' && !siteState.siteDraft?.pages.some((p) => p.id === of.id) && index.parts.site ? [name, 'site'] : [name]);
+  if (!read.ok || !read.keys[name]) {
+    tab.close();
+    shellState.setStatus(taApiError(read.body) ?? ta('saved.readFailed'), 'error');
+    return;
+  }
+  const texts = Object.assign({}, ...Object.values(read.keys));
+  let site = siteState.siteDraft;
+  try {
+    if (texts['urd-draft-site']) site = JSON.parse(texts['urd-draft-site']);
+  } catch { /* the site settings this browser holds name the page's address */ }
+  const path = of.kind === 'page' ? site?.pages?.find((p) => p.id === of.id)?.path : pageState.pageEntry()?.path;
+  const id = [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(36).padStart(2, '0')).join('').slice(0, 12);
+  try {
+    // A hand-over a tab never took (closed before it loaded) goes after a minute; a newer one waits for its own tab.
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith('urd-look-')) continue;
+      let at = 0;
+      try {
+        at = JSON.parse(localStorage.getItem(key))?.at ?? 0;
+      } catch { /* a hand-over that cannot be read goes */ }
+      if (Date.now() - at > HAND_OVER_KEPT) localStorage.removeItem(key);
+    }
+    localStorage.setItem(`urd-look-${id}`, JSON.stringify({ at: Date.now(), texts }));
+  } catch {
+    tab.close();
+    shellState.setStatus(ta('drafts.tabFailed'), 'error');
+    return;
+  }
+  tab.location.href = `${path ?? '/'}?draft=look&look=${id}`;
+}
+
 /** As the Saved tab is left, what it showed is no longer new here. */
 function markNoticed() {
   if (!list.length) return;
@@ -512,6 +650,10 @@ export const savedState = {
   useSaved: openSaved,
   openSaved,
   removeSaved,
+  lookAt,
+  changesOf,
+  keepBoth,
+  openSavedInTab: openInTab,
   loadSavedPictures: loadPictures,
   markSavedNoticed: markNoticed,
   watchSaves,

@@ -26,11 +26,11 @@
   /** The search over the open collection's entries (state/collections.svelte.js), shared with the heading's menu in the two columns. */
   const query = $derived(ed.panelQuery);
 
-  /** The chevrons stand a unit toward their open side, so they read as centred in their square: a «<» drawn on its exact centre looks left-heavy. */
-  const BACK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 6l-6 6 6 6"/></svg>';
+  /** The chevrons stand a unit toward their point, so they read as centred in their square: the eye centres the triangle the two arms outline, whose middle lies a third of the way in from the open side. */
+  const BACK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6l-6 6 6 6"/></svg>';
   /** The steps to the entry before and after, as chevrons: the up and down arrows move an entry. */
-  const PREV_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 6l-6 6 6 6"/></svg>';
-  const NEXT_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6l6 6-6 6"/></svg>';
+  const PREV_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6l-6 6 6 6"/></svg>';
+  const NEXT_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6l6 6-6 6"/></svg>';
 
   /** The open collection and the chosen entry, each only while it still exists (a deletion or an undo may take it away). */
   const view = $derived(ed.panelCollection && ed.collectionIds.includes(ed.panelCollection) ? ed.collectionsView[ed.panelCollection] : null);

@@ -44,7 +44,7 @@
   let restOpened = false;
   $effect(() => () => clearTimeout(restTimer));
   function rest(on, event) {
-    if (event.pointerType !== 'mouse') return;
+    if (event.pointerType !== 'mouse' || ed.looking) return;
     // The list keeps itself open while the focus is in it; the focus left on undo or redo beside it does not.
     const pop = event.currentTarget.closest('.undo-group')?.querySelector('.steps-pop');
     clearTimeout(restTimer);
@@ -74,9 +74,9 @@
 </script>
 
 <span class="toolmenu undo-group" role="group" aria-label={ta('history.title')}>
-  <button type="button" class="ghost undo-btn" disabled={!steps.undo.length} title={undoTip} aria-label={undoTip} onclick={() => ed.undo()}>{@html ICONS.undo}</button>
-  <button type="button" class="ghost undo-btn" disabled={!steps.redo.length} title={redoTip} aria-label={redoTip} onclick={() => ed.redo()}>{@html ICONS.redo}</button>
-  <button type="button" class="ghost undo-caret" class:open disabled={!steps.undo.length && !steps.redo.length} aria-label={ta('tip.steps')} aria-expanded={open}
+  <button type="button" class="ghost undo-btn" disabled={!steps.undo.length || Boolean(ed.looking)} title={undoTip} aria-label={undoTip} onclick={() => ed.undo()}>{@html ICONS.undo}</button>
+  <button type="button" class="ghost undo-btn" disabled={!steps.redo.length || Boolean(ed.looking)} title={redoTip} aria-label={redoTip} onclick={() => ed.redo()}>{@html ICONS.redo}</button>
+  <button type="button" class="ghost undo-caret" class:open disabled={(!steps.undo.length && !steps.redo.length) || Boolean(ed.looking)} aria-label={ta('tip.steps')} aria-expanded={open}
     onclick={press} onpointerenter={(e) => rest(true, e)} onpointerleave={(e) => rest(false, e)}>{@html ICONS.caret}</button>
   {#if open}
     <div class="tool-pop steps-pop" transition:menuMotion role="dialog" tabindex="-1" aria-label={ta('history.title')} onpointerenter={(e) => rest(true, e)} onpointerleave={(e) => rest(false, e)}>

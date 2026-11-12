@@ -273,6 +273,8 @@ function onIframeLoad() {
       siteState.siteDraft.nav.style.width = msg.width;
     }),
   });
+  // The bridge is built anew for every load of the canvas: a look that stands holds the draft's sends and the page's edits from the first message, and onReady draws it again.
+  bridge.setLooking(Boolean(look));
 }
 
 /** The fragment of a link in the preview that named a spot on another page, jumped to once that page has loaded (onReady). */
@@ -308,6 +310,9 @@ async function onReady() {
   // A link from another page to a spot on this one: the jump follows the draft, so it lands in the page as edited.
   if (pendingAnchor) bridge?.sendScrollAnchor(pendingAnchor);
   pendingAnchor = '';
+  // A canvas loaded again while a saved draft is looked at shows it again; another page ends the look.
+  if (look && look.pageId !== pageState.pageId) endLook();
+  else if (look) sendLooked();
 }
 
 /** Internal link clicked in the preview: switch page properly, and jump to the spot the link's fragment names. */
@@ -354,7 +359,68 @@ function reloadPreview() {
 /** The panel's place in the list while Clean view has it hidden. */
 let panelScroll = 0;
 
+/**
+ * Looking at a saved draft in the canvas (the Drafts window, ADR-0032): the saved version drawn in this browser's place, with editing paused until «Back to mine» (endLook).
+ * The page's handles are off, its edits dropped and the draft's own sends held by the bridge (lib/previewBridge.js setLooking), the element menu closed and the measures asked for before dropped, so nothing of the saved version is written into this browser's draft; the page switching ends it.
+ * `look`: what is looked at (`part`, its `name`, where and when it was saved, `from` and `when`), the saved `page` and the saved `site` where they are sent, this browser's version of the page (`mine`, null where it is the open page's), the device the canvas showed before (`device`), and, with `both`, which of the two the canvas shows (`showing`: 'saved' or 'mine').
+ */
+let look = $state.raw(null);
+/** Counts the looks started and ended, so a look whose saved version is still being read starts only where nothing has happened meanwhile. */
+let lookTurns = 0;
+
+/** The version the look shows, sent to the canvas with its handles off, each time with the site settings it stands in, so a saved site from one look never stays for the next; a bridge made anew for a reloaded canvas is told to hold the draft again. */
+function sendLooked() {
+  if (!look || !bridge) return;
+  bridge.setLooking(true);
+  const site = $state.snapshot(siteState.siteDraft);
+  if (look.showing === 'mine') bridge.sendLook(pageState.pageId, look.mine ?? $state.snapshot(pageState.store.data), site);
+  else bridge.sendLook(pageState.pageId, look.page, look.site ?? site);
+  bridge.sendChrome(false);
+}
+
+/**
+ * Starts looking at a saved draft, on the phone where asked; the element menu and the top bar's menus close, and the device the canvas showed comes back as the look ends.
+ * @param {{part: string, name: string, from?: string, when?: string, page?: object|null, site?: object|null, mine?: object|null, both?: boolean, phone?: boolean}} what
+ */
+function startLook({ part, name, from = '', when = '', page = null, site = null, mine = null, both = false, phone = false }) {
+  if (!bridge || (!page && !site)) return;
+  pageState.blockMenu = null;
+  shellState.toolMenu = null;
+  pageState.dropFits();
+  lookTurns += 1;
+  look = { part, name, from, when, page, site, mine, both, showing: 'saved', pageId: pageState.pageId, device: look?.device ?? deviceId };
+  if (phone) {
+    deviceId = 'mobile';
+    freeWidth = null;
+  }
+  sendLooked();
+}
+
+/** «Look at both»: the saved version or this browser's in the canvas. */
+function showLooked(showing) {
+  if (!look || look.showing === showing) return;
+  look = { ...look, showing };
+  sendLooked();
+}
+
+/** «Back to mine»: this browser's version in the canvas again, with its handles as the Clean view has them. */
+function endLook() {
+  if (!look) return;
+  if (deviceId !== look.device) {
+    deviceId = look.device;
+    freeWidth = null;
+  }
+  look = null;
+  lookTurns += 1;
+  bridge?.setLooking(false);
+  siteState.pushSiteToPreview();
+  bridge?.sendPage(pageState.pageId, pageState.store.data);
+  bridge?.sendChrome(chromeVisible);
+}
+
 async function toggleChrome() {
+  // A look keeps the canvas's handles off and the admin as it stands, until it ends.
+  if (look) return;
   // display: none keeps the folds' open state but drops the scroll
   // position, so it is read on the way out and put back on the way in.
   if (chromeVisible) panelScroll = shellState.panelEl?.scrollTop ?? 0;
@@ -442,6 +508,13 @@ export const previewState = {
   get iframeEl() { return iframeEl; },
   set iframeEl(v) { iframeEl = v; },
   get chromeVisible() { return chromeVisible; },
+  /** The saved draft looked at in the canvas, or null. */
+  get looking() { return look; },
+  /** Counts the looks started and ended. */
+  get lookTurns() { return lookTurns; },
+  startLook,
+  showLooked,
+  endLook,
   set chromeVisible(v) { chromeVisible = v; },
   get ownWidth() { return ownWidth; },
   set ownWidth(v) { ownWidth = v; },

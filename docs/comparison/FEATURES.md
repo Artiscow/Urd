@@ -2205,7 +2205,7 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 | Publish or quick publish | WS, CA, FR, FS, WN, SH | Shortcut publish; unpublish | Partial: the Publish button for every draft; no publish key and no unpublish short of deleting the page | 0.7.10; v0.8 AR-5 |
 | Selective save | WP | Choose the entities to save | Has: a tick per part in the Drafts window's This browser tab decides what a save writes, an unticked part kept for later (0.7.35.4.1) | Delivered 0.7.35.4.1 |
 | Save draft | DV, WP | ⌘⇧S draft | Has: drafts across pages, and Ctrl+S saves the ticked drafts to the drafts branch for another device without touching the live site (0.7.35.2, 0.7.35.4.1) | Delivered 0.7.35.4.1 |
-| Preview or share links | FR, WT, WP, SQ (Enterprise), SH | Branch preview; share links | Missing | After v1.0: PR per draft |
+| Preview or share links | FR, WT, WP, SQ (Enterprise), SH | Branch preview; share links | Partial: a draft saved on the drafts branch is looked at in the canvas, on the phone, beside this browser's version or in a tab of its own, with what changed listed (0.7.35.4.2); no link to share a draft | After v1.0: share links, PR per draft |
 | Password protection | CV | Website password | Missing | Not taken: Cloudflare Access, a recipe in the v0.9 documentation round |
 | Private editing or under construction | JI | Edit in private | Missing | Watch |
 | Shortcut cheat-sheet panel | WF, FR, WS, WH, WP, EL, BD, DV, WT, SH, FS, TI, RM, WE | In-app list | Has | - |

@@ -152,7 +152,7 @@
       {:else if ed.activePanel || ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}
         <!-- The two-column collections editor widens the panel while a collection is open in it -->
         <!-- The panel opens where it was left: each panel, each block's and section's docked menu, and each collection in the Collections panel (lib/scroll-place.js) -->
-        <aside class="panel" class:hidden={!ed.chromeVisible} bind:this={ed.panelEl} {@attach keepScroll(panelPlace)}
+        <aside class="panel" class:hidden={!ed.chromeVisible} inert={Boolean(ed.looking)} bind:this={ed.panelEl} {@attach keepScroll(panelPlace)}
           class:panel-wide={ed.activePanel === 'collections' && ed.collectionsLayout === 'columns' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection)}
           class:panel-still={collectionHeading}>
           {#if ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs'}<PanelNav />{/if}

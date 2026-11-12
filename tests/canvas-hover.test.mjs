@@ -26,7 +26,7 @@ test('the undo and redo caret opens the steps on a mouse\'s rest, keeps a list a
   assert.doesNotMatch(caret, /\btitle=/, 'a menu that opens on hover has no tooltip');
   assert.match(caret, /aria-label=\{ta\('tip\.steps'\)\}/, 'the caret is named for a screen reader');
   assert.match(caret, /onpointerenter=\{\(e\) => rest\(true, e\)\} onpointerleave=\{\(e\) => rest\(false, e\)\}/);
-  assert.match(undo, /function rest\(on, event\) \{\s*if \(event\.pointerType !== 'mouse'\) return;/, 'a touch is no hover');
+  assert.match(undo, /function rest\(on, event\) \{\s*if \(event\.pointerType !== 'mouse' \|\| ed\.looking\) return;/, 'a touch is no hover, and no list opens while a saved draft is looked at');
   assert.match(undo, /\} else if \(!on && open && restOpened && !pop\?\.contains\(document\.activeElement\)\) \{/, 'only a list a rest opened closes as the mouse leaves, unless the focus is in the list itself');
   assert.match(undo, /const pop = event\.currentTarget\.closest\('\.undo-group'\)\?\.querySelector\('\.steps-pop'\);/, 'the focus left on undo or redo does not hold the list open');
   assert.match(undo, /class="tool-pop steps-pop"[^>]*onpointerenter=\{\(e\) => rest\(true, e\)\} onpointerleave=\{\(e\) => rest\(false, e\)\}/, 'the list keeps itself open under the mouse');

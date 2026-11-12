@@ -88,16 +88,22 @@
  *                  { type: 'urd-text-style', blockId, style } (a font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's)
  */
 
+/** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. */
+const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid']);
+
 /**
  * @param {HTMLIFrameElement} iframe The iframe showing the page with ?preview=1
  * @param {{onEdit?: Function, onMove?: Function, onDelete?: Function, onAddSection?: Function, onMoveSection?: Function, onDeleteSection?: Function}} [handlers]
  * @returns {{sendSection(pageId: string, section: object): void, sendPage(pageId: string, page: object): void, sendSite(site: object): void, destroy(): void}}
  */
 export function createPreviewBridge(iframe, handlers = {}) {
+  /** While a saved draft is looked at in the canvas (setLooking): the draft's own sends wait, and the page's edits are dropped, so the saved version and this browser's never mix. */
+  let looking = false;
   const listener = (event) => {
     // The bridge's own iframe alone: another preview iframe (the design picker's) has a bridge of its own.
     if (event.origin !== location.origin || event.source !== iframe.contentWindow) return;
     const msg = event.data;
+    if (looking && !LOOK_PASSES.has(msg?.type)) return;
     if (msg?.type === 'urd-edit') handlers.onEdit?.(msg);
     if (msg?.type === 'urd-picture-edit') handlers.onPictureEdit?.(msg);
     if (msg?.type === 'urd-move') handlers.onMove?.(msg);
@@ -151,16 +157,29 @@ export function createPreviewBridge(iframe, handlers = {}) {
   window.addEventListener('message', listener);
 
   const post = (msg) => iframe.contentWindow?.postMessage(msg, location.origin);
+  /** A send of the draft, held while a saved draft is looked at. */
+  const draftPost = (msg) => {
+    if (!looking) post(msg);
+  };
 
   return {
+    /** Looking at a saved draft in the canvas, or back to this browser's: the caller sends the draft again as the look ends. */
+    setLooking(on) {
+      looking = on;
+    },
+    /** The version looked at, in the canvas while the draft's own sends wait: a page, and the site settings it stands in where they are the saved ones. */
+    sendLook(pageId, page, site = null) {
+      if (site) post({ type: 'urd-site', site });
+      if (page) post({ type: 'urd-preview-full', pageId, page });
+    },
     sendSection(pageId, section) {
-      post({ type: 'urd-preview', pageId, section });
+      draftPost({ type: 'urd-preview', pageId, section });
     },
     sendPage(pageId, page) {
-      post({ type: 'urd-preview-full', pageId, page });
+      draftPost({ type: 'urd-preview-full', pageId, page });
     },
     sendSite(site) {
-      post({ type: 'urd-site', site });
+      draftPost({ type: 'urd-site', site });
     },
     sendChrome(visible) {
       post({ type: 'urd-chrome', visible });
@@ -181,7 +200,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     /** The Blocks panel's My templates: insert the block-group template into the active section. */
     sendInsertTemplate(id) {
-      post({ type: 'urd-insert-template', id });
+      draftPost({ type: 'urd-insert-template', id });
     },
     sendViewport(mode) {
       post({ type: 'urd-viewport', mode });
@@ -201,11 +220,11 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     /** The caret put back in a block's text after an undo of typing, that many characters in. */
     sendCaret(blockId, offset) {
-      post({ type: 'urd-caret', blockId, offset });
+      draftPost({ type: 'urd-caret', blockId, offset });
     },
     /** A section the editor selected itself (new, duplicated or pasted), so the page marks the same one. */
     sendActiveSection(sectionId) {
-      post({ type: 'urd-active-section', sectionId });
+      draftPost({ type: 'urd-active-section', sectionId });
     },
     /** The last copy or cut, for the page the preview just loaded (a plain object, never a $state proxy). */
     sendClipboard(clipboard) {
@@ -213,7 +232,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     /** Ctrl+D with focus in the admin panels: duplicate the selected block in the preview. */
     sendDuplicate() {
-      post({ type: 'urd-duplicate' });
+      draftPost({ type: 'urd-duplicate' });
     },
     sendShowGrid(visible) {
       post({ type: 'urd-show-grid', visible });
@@ -230,18 +249,18 @@ export function createPreviewBridge(iframe, handlers = {}) {
       post({ type: 'urd-admin-theme', colors });
     },
     sendSelect(blockId) {
-      post({ type: 'urd-select', blockId });
+      draftPost({ type: 'urd-select', blockId });
     },
     /** Ask the preview for the height a block's content needs; it answers with urd-grow. */
     sendFitBlock(sectionId, blockId, seq = 0) {
-      post({ type: 'urd-fit-block', sectionId, blockId, seq });
+      draftPost({ type: 'urd-fit-block', sectionId, blockId, seq });
     },
     /** Frames fitted to their content (block id to desktop frame) and the section's new height, put in place without drawing the section again. */
     sendFrames(sectionId, frames) {
-      post({ type: 'urd-frames', sectionId, frames });
+      draftPost({ type: 'urd-frames', sectionId, frames });
     },
     sendPlaceBlock(block) {
-      post({ type: 'urd-place-block', block });
+      draftPost({ type: 'urd-place-block', block });
     },
     sendAttention(sectionId, needed) {
       post({ type: 'urd-attention', sectionId, needed });
@@ -256,7 +275,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     /** The link editor's answer for the text being edited (a plain object, never a $state proxy). */
     sendLinkApply(link) {
-      post({ type: 'urd-link-apply', link });
+      draftPost({ type: 'urd-link-apply', link });
     },
     /** Play an entrance animation as a demo (blockId null = the section). */
     sendDemoAnim(sectionId, blockId = null) {
@@ -269,11 +288,11 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Open an image block's editor in the preview, from its menu. */
     /** A font or a size for the whole text of a block, from its menu. */
     sendTextStyle(blockId, style) {
-      post({ type: 'urd-text-style', blockId, style });
+      draftPost({ type: 'urd-text-style', blockId, style });
     },
     /** Open a plugin block's settings (the config panel) in the preview. */
     sendOpenConfig(blockId) {
-      post({ type: 'urd-open-block-config', blockId });
+      draftPost({ type: 'urd-open-block-config', blockId });
     },
     destroy() {
       window.removeEventListener('message', listener);

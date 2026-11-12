@@ -3,6 +3,7 @@
      The bar at the canvas's right edge is dragged to set any width (ed.setFreeWidth): the width follows the pointer in canvas px with its number beside it and snaps to the devices' widths and the site's phone breakpoint, which a dashed mark shows on the canvas while the drag runs; the arrow keys step it. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import LookBanner from './LookBanner.svelte';
   const ed = getContext('urd-editor');
   let dragging = $state(false);
   let startX = 0;
@@ -34,7 +35,9 @@
   }
 </script>
 
-<div class="frame-wrap" class:mobile={ed.viewMode === 'mobile'} class:pan={ed.canPan} class:fold={ed.targetH > 0} bind:this={ed.frameWrapEl}>
+<div class="frame-wrap" class:mobile={ed.viewMode === 'mobile'} class:pan={ed.canPan} class:fold={ed.targetH > 0} class:looking={Boolean(ed.looking)} bind:this={ed.frameWrapEl}>
+  <!-- A saved draft looked at: its banner over the canvas, the canvas framed in amber -->
+  <LookBanner />
   <!-- .stage has the SCALED size, so scrolling/centering gets a real
        box (a transformed iframe alone does not expand its parent's scroll). -->
   <div class="stage" class:dragging style="width:{ed.stageW}px; height:{ed.stageH}px">
@@ -45,7 +48,7 @@
       onload={ed.onIframeLoad}
       style="width:{ed.targetW}px; height:{ed.iframeH}px; transform:scale({ed.scale}); transform-origin:top left"
     ></iframe>
-    {#if ed.chromeVisible}
+    {#if ed.chromeVisible && !ed.looking}
       <button type="button" class="stage-handle" title={ta('tip.dragWidth')} aria-label={ta('tip.dragWidth')}
         onpointerdown={onDown} onpointermove={onMove} onpointerup={onUp} onpointercancel={onUp} onkeydown={onKey}></button>
       {#if dragging}

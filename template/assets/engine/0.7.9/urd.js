@@ -380,11 +380,14 @@ function resolvePage(site, preview = false) {
   return pages.find((p) => p.path === path) ?? site.pages[0];
 }
 
-/** The draft view's drafts (drafts.js, loaded for it alone); a browser whose storage is closed has none. */
-async function loadDrafts() {
+/** The draft view's drafts (drafts.js, loaded for it alone); with `look`, a saved draft the editor handed this tab (receiveLook) stands over this browser's own; a browser whose storage is closed has none. */
+async function loadDrafts(look = false, lookId = null) {
   try {
-    const { readDrafts } = await import('./drafts.js');
-    return readDrafts(localStorage);
+    const { readDrafts, overlayDrafts, receiveLook } = await import('./drafts.js');
+    const own = readDrafts(localStorage);
+    if (!look) return own;
+    receiveLook(lookId, localStorage, sessionStorage);
+    return overlayDrafts(readDrafts(sessionStorage), own);
   } catch {
     return null;
   }
@@ -801,8 +804,9 @@ export async function boot(opts) {
   served.site = { text: siteText, etag: siteRes.headers.get('etag') };
   const params = new URLSearchParams(location.search);
   const preview = params.get('preview') === '1';
-  // The draft view (?draft=1, drafts.js): the drafts this browser's editor keeps, drawn as a visitor's page.
-  const drafts = !preview && params.get('draft') === '1' ? await loadDrafts() : null;
+  // The draft view (?draft=1, drafts.js): the drafts this browser's editor keeps, drawn as a visitor's page; ?draft=look draws a saved draft the Drafts window opened in a tab of its own.
+  const draftMode = preview ? null : params.get('draft');
+  const drafts = draftMode === '1' || draftMode === 'look' ? await loadDrafts(draftMode === 'look', params.get('look')) : null;
   const rawSite = drafts?.site ?? JSON.parse(siteText);
   const site = liftSiteFile(rawSite);
   // The engine tolerates a truncated site.json: missing parts get empty defaults instead of a crash (the page never dies from bad data).

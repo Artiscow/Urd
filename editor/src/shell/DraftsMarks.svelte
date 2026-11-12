@@ -1,5 +1,5 @@
 <script>
-  /* The Drafts tab's marks, the same in every layout (PanelTab, Rail): «saving» while a save runs, «saved» with a check for a few seconds after, and otherwise the amber count of the parts that stand in this browser alone; the amber dot while a saved draft is new here. On the rail's icon (`corner`) they sit at its corner, the count as a small badge. */
+  /* The Drafts tab's marks, the same in every layout (PanelTab, Rail): «saving» while a save runs, «saved» with a check for a few seconds after, and otherwise the amber count of the parts that stand in this browser alone; the amber dot while a saved draft is new here. On a tab they stand in the line of its word, the count's circle centred on the word's capitals; on a menu's row or a sidebar's word after the name, at the row's edge as the other rows' marks stand; on the rail's icon (`corner`) at its corner, the count as a small badge. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -12,26 +12,32 @@
 {:else if ed.savedJust}
   <span class="drafts-state done" class:corner aria-hidden="true">{@html ICONS.check}{#if !corner}{ta('drafts.justSaved')}{/if}</span>
 {:else if ed.draftsWaiting}
-  <span class="drafts-count" class:corner aria-hidden="true">{ed.draftsWaiting}</span>
+  <span class="drafts-count" class:corner aria-hidden="true"><span>{ed.draftsWaiting}</span></span>
 {/if}
 {#if ed.draftsFresh}<span class="update-dot legal-dot" class:update-dot-inline={!corner} aria-hidden="true"></span>{/if}
 
 <style>
-  /* The count of what stands in this browser alone, in the amber of the This browser tab */
+  /* The count of what stands in this browser alone, in the amber of the This browser tab: a circle of one fixed height in the word's own font size, so `cap` is the word's capital height.
+     The number, at 0.8 of it and trimmed to its digits where the browser can (text-box), stands centred in the circle, and the circle's baseline is the number's; raised by half the difference of the two capital heights (0.1cap), the circle centres on the word's capitals in any font. Without the cap unit it sits on the word's baseline. */
   .drafts-count {
     display: inline-grid;
     place-items: center;
     min-width: 1.05rem;
     height: 1.05rem;
-    margin-left: 0.35rem;
+    margin-left: 0.3rem;
     padding: 0 0.3rem;
+    box-sizing: border-box;
     border-radius: 999px;
     background: color-mix(in srgb, #e2b84a 22%, transparent);
     color: #e2b84a;
-    font-size: 0.68rem;
     font-weight: 700;
-    font-variant-numeric: tabular-nums;
     line-height: 1;
+    vertical-align: 0.1cap;
+  }
+
+  .drafts-count > span {
+    font-size: 0.8em;
+    text-box: trim-both cap alphabetic;
   }
 
   .drafts-state {
@@ -68,7 +74,8 @@
     padding: 0 0.2rem;
     background: #e2b84a;
     color: #1a1500;
-    font-size: 0.58rem;
+    font-size: 0.72rem;
+    vertical-align: baseline;
   }
 
   .drafts-spin {

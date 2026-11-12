@@ -3,7 +3,7 @@
      Its head names it, with the striped «W.I.P.» tag while Drafts is being finished, «Move back to the drafts tab» while it stands where it was dragged, a «⋯» menu (this browser's name, «Autosave»), which opens on a mouse's rest and so keeps no tooltip, the fold to a pill, the pin that keeps it open while the owner edits, and Close.
      Three tabs say where each change stands, the one with something new opening first:
      This browser: each part that stands here alone, ticked to be saved or unticked to be kept for later; a row leads to the change, and a part saved on another device since says so under it. «Save ticked…» opens a one-line note in place, which travels with the save; Enter saves.
-     Saved: every saved draft (lib/SavedRows.svelte), opened here by choice.
+     Saved: every saved draft (lib/SavedRows.svelte), with what changed, looked at in the canvas (previewState.startLook), on the phone or in a tab of its own, kept beside this browser's version, or opened here by choice.
      Live: the last publishes, with the way to History.
      Unpinned, a press outside it (its tab and the questions it asks excepted) or Escape closes it; opened by a rest on its tab, it closes as the mouse leaves (state/drafts.svelte.js), unless a press in it keeps it. Folded, it is a pill in the canvas's corner with the counts and the dot, which opens it again where it stood. */
   import { getContext, tick } from 'svelte';
@@ -165,6 +165,25 @@
     nameText = ed.browserName;
   }
 
+  /** A line of what changed in words: the block or section by its own words, else by its kind or place. */
+  function lineText(line) {
+    const name = line.words || (line.type ? ed.blockLabel(line.type) : ta('diff.section', { n: (line.index ?? 0) + 1 }));
+    return ta(`diff.${line.kind}`, { name });
+  }
+
+  /** A line of what changed: the saved version looked at in the canvas, scrolled to where it changed once it is drawn; a part taken away has no place in the saved version, so the look stays where it is. */
+  async function lookAtLine(row, line) {
+    if (ed.looking?.part !== row.part) await ed.lookAt(row.part, {});
+    if (ed.looking?.part !== row.part || line.kind.endsWith('Removed')) return;
+    setTimeout(() => ed.bridge?.sendScrollSection(line.sectionId), 120);
+  }
+
+  /** «Open here» and «Use …'s»: a look at the saved version ends first, so the canvas follows the opening. */
+  function openRow(row) {
+    if (ed.looking) ed.endLook();
+    void ed.openSaved(row.part);
+  }
+
   function openHistory() {
     if (!ed.draftsPinned) ed.closeDrafts();
     ed.openPanel('history');
@@ -182,7 +201,7 @@
       ed.closeDrafts();
     };
     const onKey = (e) => {
-      if (e.key !== 'Escape' || e.defaultPrevented || ed.confirmBox || (e.target instanceof Element && e.target.closest('dialog'))) return;
+      if (e.key !== 'Escape' || e.defaultPrevented || ed.confirmBox || ed.looking || (e.target instanceof Element && e.target.closest('dialog'))) return;
       const inside = e.target instanceof Element && e.target.closest('.drafts-window, [data-drafts-tab]');
       if (!inside && (ed.toolMenu || ed.blockMenu)) return;
       if (moreOpen) {
@@ -294,7 +313,9 @@
       {:else if ed.draftsTab === 'saved'}
         {#if ed.savedList.length}
           <SavedRows rows={ed.savedList} docOf={ed.savedDoc} whenOf={ed.whenSaved} themeStyle={thumbStyle}
-            onopen={(row) => ed.openSaved(row.part)} onremove={(row) => ed.removeSaved(row.part)} />
+            onopen={openRow} onremove={(row) => ed.removeSaved(row.part)}
+            onlook={(row, opts) => ed.lookAt(row.part, opts)} ontab={(row) => ed.openSavedInTab(row.part)} onkeep={(row) => ed.keepBoth(row.part)}
+            changesOf={ed.changesOf} {lineText} online={lookAtLine} />
         {:else}
           <EmptyState text={ta('drafts.savedEmpty')} />
         {/if}

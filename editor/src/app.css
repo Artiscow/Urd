@@ -4293,6 +4293,21 @@
 
 
 
+  /* A saved draft looked at in the canvas (shell/LookBanner.svelte): the canvas framed in the amber of a draft not this browser's */
+  .frame-wrap.looking {
+    position: relative;
+  }
+
+  /* The frame stands inside the canvas, over the page's edges, so the frame around the canvas never clips it */
+  .frame-wrap.looking .stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border: 3px solid #e2b84a;
+    pointer-events: none;
+  }
+
   .frame-wrap {
     flex: 1;
     min-height: 0;

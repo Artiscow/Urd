@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.35.4.2): Look, what changed, Keep both and New tab
+
+- [ ] Save a page on device A with an edited text; on device B open Drafts, Saved, and press its row: what changed lists the text change by the block's words, and a press on the line draws A's version in the canvas at that place
+- [ ] «Look»: A's version in the canvas framed in amber, the banner at the top left names the page, A's browser, who saved it and when; the canvas's handles are gone, the panel column does not take presses, and undo and redo are greyed
+- [ ] While looking, Ctrl+Z, Ctrl+D and Delete change nothing; «Back to mine» (or Escape) brings B's own version back with its handles, unchanged
+- [ ] «Look on the phone» opens the look at phone width; the banner's Screen and Phone switch between them
+- [ ] Change the same page on B too: the row says «… was changed here too»; «Look at both» adds Saved and Mine to the banner and switches between the two; «Keep both» adds A's version as a page of its own, «Hjem (A's name)», and one undo takes it away again
+- [ ] «Use …'s» asks before taking A's version in place of B's own; «Open here» in the banner ends the look and opens it
+- [ ] «New tab» opens A's version as a visitor sees it in a tab of its own; a reload of that tab still shows it
+- [ ] Look at the saved site settings (a theme or menu change saved on A): the canvas shows them on B's page, and «Back to mine» brings B's back
+- [ ] The Drafts tab's count stands close to its word and level with its capitals, in the strip, the panel's tabs and the sidebar
+- [ ] The Collections panel's back, previous and next arrows read as centred in their buttons, and the CSV import's back arrow too
+- [ ] While looking: Ctrl+K opens no palette, Clean view and Discard drafts are greyed, and the steps list does not open; on another page than the open one, «Look at both» shows that page's own version as Mine
+
 ### Test batch (0.7.35.4.1): Drafts in the System section
 
 - [ ] Every layout (the strip, the icon rail, the sidebar, the panel's tabs, the page's tabs in the Site menu): Drafts stands first in System, before History, with no tooltip; Save is gone from the top bar and Publish stays

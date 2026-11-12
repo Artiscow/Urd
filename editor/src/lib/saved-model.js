@@ -117,7 +117,7 @@ export function counts(rows) {
 }
 
 /**
- * The Saved tab's rows, the newest saved first: each saved part with who saved it, from which browser and when, the owner's note on the save, whether this browser holds it as saved (`same`), holds its own changes to it (`mine`) or holds none of it (`none`), and whether it is new here.
+ * The Saved tab's rows, the newest saved first: each saved part with who saved it, from which browser and when, the owner's note on the save, whether this browser holds it as saved (`same`), holds it as it last saw it saved, unchanged since while the saved one went on (`behind`), holds its own changes to it (`mine`) or holds none of it (`none`), and whether it is new here.
  * A part is new where it was saved since this browser last saw it, the owner has not been shown it, and this browser does not hold it as saved.
  * @param {{saved: Record<string, {hash: string, savedAt?: string, saver?: string, title?: string, note?: string, device?: string}>, localHash: (name: string) => string|null, seen: Record<string, string>, noticed: Record<string, string>}} state
  *   `noticed`: the hash of each saved part as the Saved tab last showed it
@@ -127,7 +127,7 @@ export function savedList({ saved, localHash, seen, noticed }) {
     .map(([name, entry]) => {
       const of = partOfName(name);
       const here = localHash(name);
-      const state = here === entry.hash ? 'same' : here !== null ? 'mine' : 'none';
+      const state = here === entry.hash ? 'same' : here === null ? 'none' : here === seen?.[name] ? 'behind' : 'mine';
       return {
         ...of, ...(of.id ? { name: entry.title || of.id } : {}),
         part: name, savedAt: entry.savedAt ?? '', saver: entry.saver ?? '', note: entry.note ?? '', device: entry.device ?? '', hash: entry.hash, here: state,

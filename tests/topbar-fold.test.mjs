@@ -127,7 +127,7 @@ test('the top bar\'s buttons and groups stand one height, and the tool groups\' 
   assert.match(NO_COMMENTS, /\.topbar \.topbar-tall:not\([^{]*\{\s*box-sizing: border-box;\s*height: 32px;/);
   const topbar = readFileSync(new URL('../editor/src/shell/TopBar.svelte', import.meta.url), 'utf-8');
   assert.match(topbar, /class="primary publish-btn topbar-tall"/, 'Publish');
-  assert.match(topbar, /class="ghost topbar-tall"\s*onclick=\{ed\.toggleChrome\}/, 'Clean view');
+  assert.match(topbar, /class="ghost topbar-tall"\s*disabled=\{Boolean\(ed\.looking\)\}\s*onclick=\{ed\.toggleChrome\}/, 'Clean view, resting while a saved draft is looked at');
   assert.match(readFileSync(new URL('../editor/src/shell/PageSwitcher.svelte', import.meta.url), 'utf-8'), /class="ghost page-btn topbar-tall"/, 'the page\'s name');
   // Undo and redo as tall as a tool group's buttons, in a frame like theirs.
   const undo = readFileSync(new URL('../editor/src/shell/UndoButtons.svelte', import.meta.url), 'utf-8');
