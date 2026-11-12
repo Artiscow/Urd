@@ -2296,7 +2296,7 @@ export default {
     'diff.settingsChanged': '{name}: ayarlar değişti',
     'drafts.tickAll': 'Tümünü işaretle',
     'drafts.untickAll': 'Tüm işaretleri kaldır',
-    'tip.drafts.tick': 'İşaretli: sonraki kayıt ve yayımlamayla gider. İşaretsiz: sonraya bırakılır',
+    'tip.drafts.tick': 'İşaretli: sonraki kayıt ve yayımlamayla gider. İşaretsiz: sonraya bırakılır ve işaretliler yayımlanırken diğer cihazlarınız için kaydedilir',
     'drafts.later': 'sonraya',
     'drafts.changed': '{when} değişti',
     'drafts.saveTicked': 'İşaretlileri kaydet…',

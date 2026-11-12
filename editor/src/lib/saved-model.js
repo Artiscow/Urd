@@ -99,7 +99,7 @@ export function meet({ local, saved, seen }) {
 
 /**
  * Where each part this browser holds waiting stands, one row each, in the order the waiting list gives: «Saved» where this browser's copy is the saved one, «In this browser» otherwise, where the saved part is set apart as saved elsewhere when it changed since this browser last saw it.
- * A saved part this browser does not hold stands only in the Saved menu (savedList), so Publish never sends it.
+ * A saved part this browser does not hold stands only in the Drafts window's Saved tab (savedList), so Publish never sends it.
  * @param {{parts: Array<{kind: string, id?: string, name?: string}>, localHash: (name: string) => string|null, saved: Record<string, {hash: string, savedAt?: string, saver?: string}>, seen: Record<string, string>}} state
  * @returns {Array<{kind: string, id?: string, name?: string, part: string, band: 'browser'|'saved', draft: boolean, elsewhere: {savedAt?: string, saver?: string}|null}>}
  */
@@ -115,11 +115,11 @@ export function standing({ parts, localHash, saved, seen }) {
 }
 
 /**
- * The two counts: Save's, what stands in this browser alone, and Publish's, every part with a draft here.
+ * The Drafts tab's count: what stands in this browser alone. Publish counts the parts ticked to go (lib/publish-pick.js).
  * @param {ReturnType<typeof standing>} rows
  */
 export function counts(rows) {
-  return { save: rows.filter((r) => r.band === 'browser').length, publish: rows.filter((r) => r.draft).length };
+  return { save: rows.filter((r) => r.band === 'browser').length };
 }
 
 /**

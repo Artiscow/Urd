@@ -8,6 +8,7 @@
   import { ICONS } from './icons.js';
   import { stepsForPart } from './unpublished.js';
   import { partName } from './saved-model.js';
+  import { PART_KINDS } from './part-kinds.js';
   import { timeAgo } from './time-ago.js';
   import { rowMotion } from './motion.svelte.js';
   let { parts, steps = [], publishedAt = 0, onpick, bands = false, onuse = null, whenSaved = (iso) => iso, later = [], forced = new Map(), ontick = null } = $props();
@@ -16,16 +17,8 @@
     ? [['browser', 'saved.band.browser'], ['saved', 'saved.band.saved']].map(([band, word]) => ({ band, word, rows: parts.filter((p) => p.band === band) })).filter((g) => g.rows.length)
     : [{ band: null, word: null, rows: parts }]);
 
-  /** The sign and the words of a part without a name of its own. */
-  const KINDS = {
-    page: { icon: ICONS.panel_pages, word: 'unpublished.page' },
-    site: { icon: ICONS.panel_site, name: 'unpublished.site' },
-    collections: { icon: ICONS.panel_collections, name: 'unpublished.collections' },
-    collection: { icon: ICONS.panel_collections, word: 'unpublished.collection' },
-    templates: { icon: ICONS.panel_blocks, name: 'canvas.tabMyTemplates' },
-    plugins: { icon: ICONS.panel_plugins, name: 'panel.plugins' },
-    redirects: { icon: ICONS.redirect, name: 'ui.redirects' },
-  };
+  /** The sign and the words of a part without a name of its own (lib/part-kinds.js). */
+  const KINDS = PART_KINDS;
   const keyOf = (part) => `${part.kind}:${part.id ?? ''}`;
   /** Tells this list's step ids from the other list's, since the rows stand in the menu and in History at once. */
   const uid = Math.random().toString(36).slice(2, 7);

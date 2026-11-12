@@ -2296,7 +2296,7 @@ export default {
     'diff.settingsChanged': '{name}: settings changed',
     'drafts.tickAll': 'Tick all',
     'drafts.untickAll': 'Untick all',
-    'tip.drafts.tick': 'Ticked: goes with the next save and the next publish. Unticked: kept for later',
+    'tip.drafts.tick': 'Ticked: goes with the next save and the next publish. Unticked: kept for later, and saved for your other devices as the ticked ones publish',
     'drafts.later': 'for later',
     'drafts.changed': 'Changed {when}',
     'drafts.saveTicked': 'Save ticked…',

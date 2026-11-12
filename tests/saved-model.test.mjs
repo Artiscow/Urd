@@ -1,5 +1,5 @@
 /**
- * The saved drafts as the editor sees them (editor/src/lib/saved-model.js, ADR-0032): the part each stored key belongs to, held equal to the drafts function's rule, the meeting on load that takes nothing in by itself, where each part this browser holds stands, the Saved menu's rows, and the two counts held to the bands.
+ * The saved drafts as the editor sees them (editor/src/lib/saved-model.js, ADR-0032): the part each stored key belongs to, held equal to the drafts function's rule, the meeting on load that takes nothing in by itself, where each part this browser holds stands, the Saved tab's rows, and the two counts held to the bands.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -70,8 +70,8 @@ test('where each part this browser holds stands, a part saved elsewhere set apar
   assert.equal(by['page-hjem'].band, 'browser');
   assert.deepEqual(by['page-hjem'].elsewhere, { savedAt: 't', saver: 'a' }, 'saved since this browser saw H1');
   assert.equal(by['page-kaker'].elsewhere, null);
-  assert.equal(by['page-gone'], undefined, 'a saved part not held here is the Saved menu\'s alone, so Publish never sends it');
-  assert.deepEqual(counts(rows), { save: 2, publish: 3 });
+  assert.equal(by['page-gone'], undefined, 'a saved part not held here is the Saved tab\'s alone, so Publish never sends it');
+  assert.deepEqual(counts(rows), { save: 2 });
 });
 
 test('the Saved tab\'s rows: newest first, held as saved, held with changes, or not held, and new only where unseen and not yet shown', () => {
@@ -120,15 +120,13 @@ test('the Drafts window opens at what is new, then at what waits here', () => {
   assert.equal(firstTab({ fresh: 0, waiting: 0, saved: 0 }), 'live');
 });
 
-test('the counts never disagree with the bands', () => {
+test('the Drafts tab\'s count never disagrees with the In this browser band', () => {
   for (const rows of [
     [],
     [{ band: 'browser', draft: true }, { band: 'saved', draft: true }],
     [{ band: 'browser', draft: false }, { band: 'browser', draft: true }, { band: 'saved', draft: true }, { band: 'saved', draft: true }],
   ]) {
-    const { save, publish } = counts(rows);
-    assert.equal(save, rows.filter((r) => r.band === 'browser').length);
-    assert.equal(publish, rows.filter((r) => r.band === 'saved').length + rows.filter((r) => r.band === 'browser' && r.draft).length);
+    assert.deepEqual(counts(rows), { save: rows.filter((r) => r.band === 'browser').length });
   }
 });
 

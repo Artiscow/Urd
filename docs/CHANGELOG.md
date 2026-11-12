@@ -8,6 +8,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+## [0.7.10] - 2026-11-12
+
+### 0.7.0.85-87p - Release 0.7.10: saved drafts on a branch of their own, the Drafts window, choosing what to publish, and the seam grip - 12 November 2026
+
+- RELEASE: the engine bumped 0.7.9 to 0.7.10 after the ritual (urd.json, the engine folder renamed, the five assets/urd/ shells and their five locale shells, the eight HTML shells with byte-identical slug copies, the admin shell, editor/package.json and its lock, the roadmaps' release range, a rebuilt bundle); check-release green in full mode.
+- The commits of the span were pushed one by one as they were made, so the preparation covers what was already on the remote.
+
+The independent review of the whole span found these, all fixed:
+
+1. The media tidy published every draft whatever the ticks said, so a page kept for later went live and shown with the tidy. Both of its publishes go as Publish sends: the ticked parts first, then every part with the tidy's moves by the documented tie (`tidyMedia` in state/publish.svelte.js).
+2. SCHEMA.md still described eight footer layouts in a template picker. It names the ten presets in the design picker.
+3. Two comments and two test titles named the Saved menu that 0.7.35.4.1 replaced. They name the Drafts window's Saved tab.
+4. `counts` in lib/saved-model.js carried a Publish count nothing read, held by a test, while Publish counts the ticked parts. Save's count alone, tested so.
+5. The tick's tooltip and the drafts module's doc said an unticked part is kept for later alone, while a publish saves it quietly for the other devices. Both say so, in nb, en-GB and tr.
+6. lib/UnpublishedRows.svelte kept its own copy of the part kinds' table. It reads lib/part-kinds.js.
+7. The System group's button drew the Drafts dot in the update's colour. It is amber, as the other Drafts dots.
+8. The drafts function's list of page ids that are another part's lacked the legacy «maler» and «samlinger» the editor refuses. Added.
+9. The grip's arrow keys lost the focus as the page was drawn anew with the change. The same part takes it again.
+10. A second race in a row on a save showed words promising a re-read that did not come. The head as it stands is kept for the next save, and the save says it failed.
+11. The calendar's Reset texts carried a class without a rule, and a save with nothing to write while no branch existed made the branch with an empty index. The class is gone, and such a save makes no branch.
+12. ARCHITECTURE.md's list of the Drafts window's keys lacked `urd-saved-seen` and `urd-saved-noticed`. Listed.
+13. footer-thumb.js is imported by its test alone while AGENTS.md listed it among the modules the editor bundles. It is off the list.
+
 ### 0.7.0.87 - One grip on every seam between sections, the footer's presets in one picker, New block and New section on the section toolbar, and four more bugs - 12 November 2026
 
 - The line between two sections held two grips and a chip with different jobs a few pixels apart, so a drag often did what was not meant, and a section dragged smaller than its content left the content over the footer (BACKLOG). Each seam holds one grip, look A of the Section Seams canvas, chosen 12 November 2026: a pill that grows the section above as it is dragged down and the one below at its top as it is dragged up, and two tabs that shrink the section they stand in and stop at its content unless Alt is held, with the height on the grip and Escape to cancel (`seamDrag` in section-size.js, `seamGrip` in preview-edit.js).
@@ -31,7 +54,7 @@ The independent review before the commit found these, all fixed but the last two
 7. The Contact preset left the contact details off where the footer had them switched off. It shows them.
 8. The two pointer rows shared one undo key, so changing both quickly became one step. Each has its own.
 9. Nine comments described the removed grips and chips. They describe the seam grip and the toolbar.
-10. footer-thumb.js has no user left. Kept, since AGENTS.md lists it among the modules the editor bundles.
+10. footer-thumb.js is imported by its test alone. Kept, since AGENTS.md lists it among the modules the editor bundles.
 11. A block cannot decline its section's every-element effect, and its own row reads «None» while it lifts. Written into the bug list.
 
 ### 0.7.35.6 - The guides, the setup guide, the roadmap and the comparison describe saved drafts and choosing what to publish - 12 November 2026

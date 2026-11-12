@@ -1826,21 +1826,23 @@ function addBlockAdder(host, section, grid) {
  * The grip on the seam between two sections (BACKLOG 535 and 539, the Section Seams canvas, look A): a pill on the line that only grows, the section above as it is dragged down and the section below at its top as it is dragged up, and a tab above and a tab below it that each shrink the section they stand in, stopping where that section's content ends unless Alt is held (seamDrag in section-size.js). The tabs stand while the pointer is on the grip.
  * The first seam has only a section below and the last only one above, so they carry one tab. Ctrl or Cmd gives a free height, and Escape puts the seam back where the drag began.
  * A section that changes at its top takes its blocks with it and the page scrolls by as much, so the content stands still and the dragged edge follows the pointer.
- * The whole drag is one urd-section-size, for the section that changed; the arrow keys on a part move it one grid step (Shift: 1 px).
+ * The whole drag is one urd-section-size, for the section that changed; the arrow keys on a part move it one grid step (Shift: 1 px), and the part keeps the focus through the page's redraw, found again by its seam's place (`index`) and its kind.
+ * @param {number} index Where the seam stands among the page's seams
  * @param {{host: HTMLElement, section: object, grid: object} | null} above
  * @param {{host: HTMLElement, section: object, grid: object} | null} below
  */
-function seamGrip(above, below) {
+function seamGrip(index, above, below) {
   const grip = document.createElement('div');
   grip.className = 'urd-seam-grip';
   const part = (kind, className, icon, tip) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = className;
+    btn.dataset.seam = kind;
     btn.title = ta(tip);
     btn.setAttribute('aria-label', ta(tip));
     btn.innerHTML = icon;
-    wireSeamDrag(btn, kind, above, below, grip);
+    wireSeamDrag(btn, kind, above, below, grip, index);
     return btn;
   };
   if (above) grip.append(part('shrinkAbove', 'urd-seam-tab urd-seam-up', SEAM_UP_SVG, 'canvas.seam.shrinkAbove'));
@@ -1884,7 +1886,7 @@ function seamFloor(host) {
   return line;
 }
 
-function wireSeamDrag(btn, part, above, below, grip) {
+function wireSeamDrag(btn, part, above, below, grip, index) {
   const readout = () => grip.querySelector('.urd-seam-readout');
   /** A section's own inline height as the drag found it. */
   const restore = (s) => {
@@ -2032,6 +2034,8 @@ function wireSeamDrag(btn, part, above, below, grip) {
     commit(a, b, r);
     resumeSticky();
     resumePush();
+    // The page is drawn anew as the change comes back, with new seams: the same part takes the focus again once it stands.
+    setTimeout(() => document.querySelectorAll('.urd-add-section')[index]?.querySelector(`[data-seam="${part}"]`)?.focus({ preventScroll: true }), 150);
   });
 }
 
@@ -2096,7 +2100,7 @@ function makeSectionAdder(index, above = null, below = null) {
   const openBtn = document.createElement('button');
   openBtn.className = 'urd-add-section-chip';
   openBtn.textContent = ta('canvas.newSection');
-  const grip = above || below ? seamGrip(above, below) : null;
+  const grip = above || below ? seamGrip(index, above, below) : null;
   openBtn.addEventListener('click', () => {
     bar.classList.add('open');
     bar.replaceChildren();

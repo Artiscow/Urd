@@ -1,5 +1,5 @@
 /**
- * The site's own colours for the pictures drawn with var(--urd-color-*) (preset-thumb.js): the template grids and the Saved menu show the site's palette, not the admin's, since the admin never loads content/theme.css. Invalid values are dropped.
+ * The site's own colours for the pictures drawn with var(--urd-color-*) (preset-thumb.js): the template grids and the Drafts window's Saved tab show the site's palette, not the admin's, since the admin never loads content/theme.css. Invalid values are dropped.
  */
 import { safeCssValue } from '$engine/theme.js';
 

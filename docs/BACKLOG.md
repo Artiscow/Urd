@@ -526,17 +526,10 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
   Done when: a block synced on three pages changes on all three after one edit, a use with an overridden field keeps its own value, and a detached use stops following; a synced section serves as the footer on every page; and the uses list names the three pages and leads to each.
 
 ## Bugs, (bad) functions and stuff that needs fixing
- - [x] Section "on pointer" settings affect the background instead of every block in the section - this should be two settings; every element in the section, and; the section background FIXED 0.7.0.87 (12 November 2026): two rows, «Every element on pointer» and «The section on pointer»
- - [x] Footer design and layout is split into two: "Design" and "Starting Point". It is very unclear what the difference is. Let's have one of them, not both. FIXED 0.7.0.87 (12 November 2026): one «Presets» fold, chosen 12 November 2026, that keeps the footer's own content
  - [ ] Colour picker is a bit shabby - needs design reevaluation 
  - [ ] New collections panel/menu for new product and overview - A 'floating' menu like other settings 
  - [ ] A review of the design of admin settings 
  - [ ] Calendar Design, phone design and pop-up design buttons need designs that makes them look like buttons, not like all the other foldable menus
- - [x] The drag sections line between sections needs rework - it is difficult to drag it in the way one want, be it widening a section, widening and shortening, shortening etc FIXED 0.7.0.87 (12 November 2026): one grip per seam, the Section Seams canvas's look A, chosen 12 November 2026 (https://claude.ai/code/artifact/2ece6263-c59e-4770-8f7d-d30008f0bae3, a private claude.ai artifact)
- - [x] A page opened in another window size stands «In this browser» (found in the review of 0.7.35.2, 11 November 2026): the measured heights of its data blocks are written into its draft, so a page taken in from another device changes without an edit, Save counts it, and a later save from the other device is offered rather than taken in. FIXED 0.7.0.87 (12 November 2026): not met with Urd's own blocks; an old plugin copy's measured height stays in memory
- - [x] A page just published, waiting for its deploy, is sent again by the next publish with any edit made since, with no row to untick (found in the review of 0.7.35.5, 12 November 2026): the wait-for-deploy marker keeps the page out of «Not published yet» until it is opened again, so the ticks cannot keep it back. FIXED 0.7.0.87 (12 November 2026)
- - [x] The extras added at the foot of an area, and the settings added at the foot of a section, stand there for the eye only (found in the review of 0.7.0.86, 12 November 2026): the Tab key and a screen reader still meet them at their place in the menu's markup, so Tab from an added row jumps back up. The added cards and rows should move in the markup, not only on screen. FIXED 0.7.0.87 (12 November 2026)
- - [x] A section with elements inside it that is made smaller will push the elements down (or, in actuality, the elements stay still as the section just moves) pushing them into and past the footer, leaving a large black voide at the bottom of the page - need to figure out if this should be counted as a bug or just user error FIXED 0.7.0.87 (12 November 2026): counted a bug; a shrink stops at the content unless Alt is held
  - [ ] A block cannot decline its section's every-element pointer effect (found in the review of 0.7.0.87, 12 November 2026): «None» in the block's own «On pointer» means no effect of its own, so the section's `blocksHover` applies, and the row reads «None» while the block lifts.
 
 ## Suggestions, Ideas and Wishes
@@ -558,6 +551,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [ ] A complete "Strip under the top bar" preset
 - [ ] More collection designs
 - [ ] New function: Force update - pulls the latest update again and let's the user replace or add the files
+- [ ] Function: hold left click anywhere to open a wheel of settings. Can be used just for blocks and sections, but also for a whole replacement for most or all other UI
 
 ## URGENT
 

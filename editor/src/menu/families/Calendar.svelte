@@ -415,7 +415,7 @@
   <Capability id="cal-notice">{@render calNotice()}</Capability>
   <!-- The design's words are rewritten by clicking them in the preview; this puts the defaults back and the removed lines too, keeping the announcement's own words -->
   {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
-    <AreaFoot><button type="button" class="ghost action area-foot" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', calResetTexts(selectedBlock.props.texts))}>{ta('calendar.resetTexts')}</button></AreaFoot>
+    <AreaFoot><button type="button" class="ghost action" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', calResetTexts(selectedBlock.props.texts))}>{ta('calendar.resetTexts')}</button></AreaFoot>
   {/if}
 {:else if area === 'style'}
   {@const calDef = calDesign(selectedBlock.props.design)}

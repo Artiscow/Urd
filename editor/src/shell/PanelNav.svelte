@@ -22,7 +22,7 @@
       <Choice fill label={ta('rail.panels')} value={shownGroup} options={ed.PANEL_GROUP_KEYS.map((key, gi) => [gi, ta(key)])}
         onchange={(gi) => { pickedGroup = gi; if (ed.activePanel && groupOf(ed.activePanel) !== gi) ed.activePanel = null; }}>
         <!-- The update's and Drafts' dot stands on the System group's button, and Legal's on the Site group's, while their tabs are out of sight -->
-        {#snippet mark(gi)}{#if gi === 2 && shownGroup !== 2 && (ed.updateNotice === 'dot' || ed.draftsFresh)}<span class="update-dot" aria-hidden="true"></span>{/if}{#if gi === 1 && shownGroup !== 1 && ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}{/snippet}
+        {#snippet mark(gi)}{#if gi === 2 && shownGroup !== 2 && ed.updateNotice === 'dot'}<span class="update-dot" aria-hidden="true"></span>{:else if gi === 2 && shownGroup !== 2 && ed.draftsFresh}<span class="update-dot legal-dot" aria-hidden="true"></span>{/if}{#if gi === 1 && shownGroup !== 1 && ed.legal?.dot}<span class="update-dot legal-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}{/snippet}
       </Choice>
       {@render fold()}
     </div>

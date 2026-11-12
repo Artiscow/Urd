@@ -97,10 +97,11 @@ async function tidyMedia({ withChanges = false } = {}) {
   }
   mediaBusy = true;
   try {
-    if (historyState.dirty) {
-      await publish();
+    if (pick.going.size) {
+      // What waits goes first, as Publish sends it: the ticked parts, the kept ones staying back.
+      await publishTicked();
       // A publish that did not go through has said why, and the tidy waits.
-      if (historyState.dirty) return;
+      if (pick.going.size) return;
     }
     await loadMediaFiles();
     if (!mediaFiles) return;
@@ -158,7 +159,8 @@ async function tidyMedia({ withChanges = false } = {}) {
     if (plan.templates.length) templatesState.pushTemplatesToPreview();
     historyState.updateDirty();
     setMoves(plan.moves);
-    await publish();
+    // The moves waiting take every part with them (lib/publish-pick.js), kept ones included.
+    await publishTicked();
     if (!pendingMoves.length) {
       shellState.setStatus(plan.remaining ? ta('media.tidyMore', { n: String(plan.moves.length), left: String(plan.remaining) }) : ta('media.tidyDone', { n: String(plan.moves.length) }), 'ok');
       mediaFiles = mediaFiles.map((f) => plan.moves.find((m) => m.from === f.path) ? { ...f, path: plan.moves.find((m) => m.from === f.path).to } : f);

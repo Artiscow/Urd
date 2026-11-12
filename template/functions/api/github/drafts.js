@@ -145,7 +145,7 @@ export async function onRequestPost({ request, env }) {
     const written = new Set(writes.map((w) => w.name));
     // Only parts the index lists are removed, so every deletion names a file the branch holds.
     const gone = (all ? Object.keys(index.parts ?? {}) : removes).filter((name) => isPartName(name) && index.parts?.[name] && !written.has(name));
-    if (!writes.length && !gone.length && head) return json({ head, index });
+    if (!writes.length && !gone.length) return json({ head, index });
 
     const next = mergeIndex(index, writes, gone, { login: user.login, now: new Date().toISOString() });
     const entries = [{ path: INDEX_PATH, content: JSON.stringify(next, null, 2) }];

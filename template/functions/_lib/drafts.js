@@ -30,7 +30,7 @@ const ID = '[a-z0-9][a-z0-9-]{0,79}';
 const PART = new RegExp(`^(?:site|collections|templates|plugins|redirects|page-${ID}|collection-${ID})$`);
 
 /** Page ids whose draft key would be another part's: such a page cannot be saved as a page. */
-const PAGE_ID_TAKEN = /^(?:(?:site|templates|plugins|redirects|media-moves|collections)$|collection-|template-|samling-|mal-)/;
+const PAGE_ID_TAKEN = /^(?:(?:site|templates|plugins|redirects|media-moves|collections|maler|samlinger)$|collection-|template-|samling-|mal-)/;
 
 /** Whether a name is a part's. */
 export function isPartName(name) {

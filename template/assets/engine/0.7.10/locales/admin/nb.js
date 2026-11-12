@@ -2299,7 +2299,7 @@ export default {
     'diff.settingsChanged': '{name}: innstillingene er endret',
     'drafts.tickAll': 'Kryss av alle',
     'drafts.untickAll': 'Fjern alle kryss',
-    'tip.drafts.tick': 'Avkrysset: blir med neste lagring og neste publisering. Uten kryss: venter til senere',
+    'tip.drafts.tick': 'Avkrysset: blir med neste lagring og neste publisering. Uten kryss: venter til senere, og lagres for de andre enhetene dine når de avkryssede publiseres',
     'drafts.later': 'til senere',
     'drafts.changed': 'Endret {when}',
     'drafts.saveTicked': 'Lagre avkryssede…',

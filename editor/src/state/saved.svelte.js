@@ -278,6 +278,12 @@ async function save({ names = null, note = '', device = '', quiet = false, auto 
       }
       const res = await post({ expect, writes });
       if (res.status === 409 && res.body?.code === 'draftsRace' && attempt === 0) continue;
+      if (res.status === 409 && res.body?.code === 'draftsRace') {
+        // A second race in a row: the head as it stands is kept, and the next save reads from it.
+        if (res.body.head) head = res.body.head;
+        shellState.setStatus(ta('saved.failed'), 'error');
+        return false;
+      }
       if (!res.ok || !indexOf(res.body)) {
         shellState.setStatus(taApiError(res.body) ?? ta('saved.failed'), 'error');
         return false;
