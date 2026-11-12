@@ -1,5 +1,5 @@
 <script>
-  /* A waiting CSV import as a table over the page, cell by cell («Table, every cell» under Import preview, and «Show every cell» from the dialog and the panel's step): a row per row of the file in its own order, its status, and the kind's columns the file holds (lib/csv-preview.js cellOf).
+  /* A waiting CSV import as a table over the page, cell by cell («Table over the page» under «CSV import preview», and «Show every cell» from the dialog and the panel's step): a row per row of the file in its own order, its status, and the kind's columns the file holds (lib/csv-preview.js cellOf).
      A changed cell shows the value it had struck above the new one, a refused row shows the file's own cells with the one that did not read ringed and the reason in its status, and the entries the file does not name stand last.
      The bar holds the chips that narrow the rows, the way back to the summary where the table was opened from one, and the choices with Cancel and Import (ImportChoices.svelte); Escape goes back to the summary, or cancels where the table is the chosen preview. */
   import { getContext } from 'svelte';

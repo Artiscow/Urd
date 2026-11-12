@@ -1,5 +1,5 @@
 <script>
-  /* A waiting CSV import as a dialog over the admin (the default «Import preview»): the file and the collection it goes into, the list of what it will do (ImportSummary.svelte), «Show every cell» to the table (ImportTable.svelte), and the choices with Cancel and Import (ImportChoices.svelte).
+  /* A waiting CSV import as a dialog over the admin (the default «CSV import preview»): the file and the collection it goes into, the list of what it will do (ImportSummary.svelte), «Show every cell» to the table (ImportTable.svelte), and the choices with Cancel and Import (ImportChoices.svelte).
      A native modal dialog (ADR-0011): Escape and a press on the backdrop cancel the import, and nothing is stored until Import. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';

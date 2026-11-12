@@ -1,5 +1,5 @@
 /**
- * How a look is chosen in place (Urd settings «Designs», lib/rows/LookChoice.svelte): a choice of a few designs stands whole, a larger one as a run around the design in use beside a tile that opens the picker (lib/look-choice.js);
+ * How a look is chosen in place (Urd settings «Choosing a design», lib/rows/LookChoice.svelte): a choice of a few designs stands whole, a larger one as a run around the design in use beside a tile that opens the picker (lib/look-choice.js);
  * and every design a menu or a panel shows in place has its picture among the admin's design pictures (pictureList in design-sources.js).
  */
 import { test } from 'node:test';

@@ -1,7 +1,7 @@
 <script>
-  /* How a look is chosen, in the row kit (0.7.33.8), as Urd settings «Designs» asks (menu.designsPref): a picture row naming the design in use that opens the design picker (PictureRow.svelte), or the designs' pictures in place under a small heading, the one in use ringed, a press choosing one at once.
+  /* How a look is chosen, in the row kit (0.7.33.8), as Urd settings «Choosing a design» asks (menu.designsPref): a picture row naming the design in use that opens the design picker (PictureRow.svelte), or the designs' pictures in place under a small heading, the one in use ringed, a press choosing one at once.
      A choice of a few designs shows them all; a larger one a run around the one in use (lib/look-choice.js); the last tile opens the design picker with its live previews, named «All designs» beside a run and «Full window» where every design stands.
-     In the design's own small panel (the bar's design button in its small window, `look:design` in lib/only-group.js) the pictures stand whatever «Designs» says, every design of the choice, scrolling in a box with the one in use brought into view.
+     In the design's own small panel (the bar's design button in its small window, `look:design` in lib/only-group.js) the pictures stand whatever «Choosing a design» says, every design of the choice, scrolling in a box with the one in use brought into view.
      `designs` lists the choice's designs (pictureList in design-sources.js) and is read only for the pictures; without it, or without `onpick`, the row stands in either mode.
      `heading` leaves the small heading out where the fold around the pictures already bears the name. */
   import { getContext } from 'svelte';

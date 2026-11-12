@@ -1,7 +1,7 @@
 <script>
   /* The card style of a block (boxStyle, additive): the colour, the shadow,
      the border and the glass, for the text box and the FAQ cards.
-     Each is a setting row that tells whether the block holds a value of its own, with the way back to the standard: the theme's colour and border, no shadow and no glass (lib/rows/Setting.svelte); the shadow's colour and the border's colour and thickness stand in the row they belong to, so they come and go with it («Extra settings», Pinned). */
+     Each is a setting row that tells whether the block holds a value of its own, with the way back to the standard: the theme's colour and border, no shadow and no glass (lib/rows/Setting.svelte); the shadow's colour and the border's colour and thickness stand in the row they belong to, so they come and go with it («Settings in a group», Pinned). */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import Setting from '../lib/rows/Setting.svelte';

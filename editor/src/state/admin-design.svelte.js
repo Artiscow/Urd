@@ -11,6 +11,8 @@ import { searchLangs } from '../lib/search-langs.svelte.js';
 import { menu, setMenuFormPref, setFoldsPref, setExtraPref, setShortcutsPref, setDesignsPref, setCapListPref, setCapAddPref } from '../menu/state.svelte.js';
 
 const ROWS = Object.fromEntries(SETTINGS_GROUPS.flatMap((g) => g.settings).map((s) => [s.id, s]));
+/** The rows in the order the Urd settings window lists them. */
+const ROW_ORDER = Object.keys(ROWS);
 
 const stored = (key) => {
   try {
@@ -121,6 +123,16 @@ export function settingsContext(ed) {
   // The designs are derived once for every change of a part, however many rows read them.
   const designs = $derived.by(() => designsFor(c));
   return c;
+}
+
+/** Parts in the order the Urd settings window lists their rows, a part with no row last. */
+export function inWindowOrder(partIds) {
+  const at = (id) => {
+    const part = PARTS.find((p) => p.id === id);
+    const i = part?.setting ? ROW_ORDER.indexOf(part.setting) : -1;
+    return i < 0 ? Infinity : i;
+  };
+  return [...partIds].sort((a, b) => at(a) - at(b));
 }
 
 /** A part's name: its row's in the Urd settings, or its own while it has no row. */

@@ -972,7 +972,7 @@
     display: none;
   }
 
-  /* The shortcuts «Tiles»: the Pinned rows as boxes two to a row */
+  /* «Top of the menu» on «Pinned as tiles»: the Pinned rows as boxes two to a row */
   .emenu-pinned-rows.tiles {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1341,7 +1341,7 @@
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* The ways to add at an area's foot (Urd settings «Extra settings style»): the area's capabilities named as dashed chips under a small heading, or one dashed line that opens their list, a little apart from the groups above; dim until the pointer or the keys reach them */
+  /* The ways to add at an area's foot (Urd settings «Adding extras»): the area's capabilities named as dashed chips under a small heading, or one dashed line that opens their list, a little apart from the groups above; dim until the pointer or the keys reach them */
   .cap-adds {
     display: grid;
     gap: 0.35rem;
@@ -1400,7 +1400,7 @@
     color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* Minimal (folded cards): what an area can take as one quiet line of names at its foot, lit in the accent under the pointer or the keys */
+  /* A line of names (folded cards): what an area can take as one quiet line of names at its foot, lit in the accent under the pointer or the keys */
   .cap-names {
     display: flex;
     flex-wrap: wrap;
@@ -1786,7 +1786,7 @@
     transform: translateY(-50%);
   }
 
-  /* The buttons that open the design picker stand side by side, two to a line, each as wide and as tall as the others; the designs' pictures in place («Designs») take the whole line.
+  /* The buttons that open the design picker stand side by side, two to a line, each as wide and as tall as the others; the designs' pictures in place («Choosing a design») take the whole line.
      The columns stand further apart than the lines, so a reset on a button's corner stays clear of the button beside it; a column too narrow for two buttons (the docked panel) holds one to a line. */
   .look-rows {
     display: grid;
@@ -5004,7 +5004,7 @@
     overflow-y: auto;
   }
   .tab-menu-group { display: flex; flex-direction: column; }
-  /* «Tab menus» Grouped: a little space between the groups, and each group's small label */
+  /* «Panel menus» Grouped: a little space between the groups, and each group's small label */
   .tab-menu-group + .tab-menu-group { margin-top: 7px; }
   .tab-menu-label {
     padding: 6px 9px 3px;
@@ -5027,7 +5027,7 @@
     text-align: left;
     white-space: nowrap;
   }
-  /* «Tab menus» Lines: a hairline between the rows, inset as the highlight is, quiet beside the row under the mouse or the keys */
+  /* «Panel menus» Lines between: a hairline between the rows, inset as the highlight is, quiet beside the row under the mouse or the keys */
   .tab-menu-row { position: relative; }
   .tab-menu-list.lines .tab-menu-row + .tab-menu-row::before {
     content: '';

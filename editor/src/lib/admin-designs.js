@@ -15,7 +15,7 @@ import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, 
 export const ADMIN_LAYOUTS = ['top-tabs', 'rail', 'sidebar', 'panel-tabs', 'page-tabs'];
 
 /**
- * The parts, in the order the settings window lists them.
+ * The parts; the Urd settings window lists them in the order of their rows (inWindowOrder in state/admin-design.svelte.js).
  * `key` is where the part is stored, `options` its values with the default first, `setting` the row of the Urd settings that sets it today (lib/settings-model.js, marked `part`), and `labelKey`/`optionKey` the words a new part is drawn with.
  * A part with no row yet (`setting: null`) names the step that builds what it chooses (`builds`).
  * @type {Array<{ id: string, key: string, options: string[], setting: string|null, builds?: string, labelKey?: string, optionKey?: string }>}
@@ -158,7 +158,7 @@ export function restoreWrites(values) {
   });
 }
 
-/** The defaults «Extra settings style» and «Shortcuts» had until 11 November 2026, when «Minimal» and the search field took their place: a part whose key holds nothing was read as these until then. */
+/** The defaults «Adding extras» and «Top of the menu» had until 11 November 2026, when «A line of names» and the search field took their place: a part whose key holds nothing was read as these until then. */
 const EARLIER_DEFAULTS = { capAdd: 'head', shortcuts: 'pinned' };
 
 /** The key that marks the earlier defaults as read, so they are read once: after it, a key that holds nothing is the new default. */

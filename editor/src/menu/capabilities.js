@@ -3,7 +3,7 @@
  * Pure: each entry tells, through the editor handle (`ed`) and the selected block it is given, whether the block can carry it, whether it is in use, what adding it sets, and how it is taken back.
  * `area` is the menu's area the card stands in, `icon` its drawing (CAP_ICONS in lib/icons.js), `pins` the Pinned rows that hold its settings, `types` the block types that carry it (every type where absent).
  * A capability that is one switch has `single`: what the switch holds and how it is set, drawn as a card of one line with an On/Off chip (lib/rows/Capability.svelte); adding it switches it on, which on a block that starts with it on (a shape hidden on phones) leaves it as it is and keeps the card.
- * `summary` names what a card folded to one line shows (Urd settings «Extra settings style» as folded cards), where one word says it; a card without one shows that it is on.
+ * `summary` names what a card folded to one line shows (Urd settings «Adding extras» as folded cards), where one word says it; a card without one shows that it is on.
  * The words are `cap.<id>` (its title) and `cap.about.<id>` (one line on what it does) in the admin dictionaries.
  * The shared capabilities stand first, then each block type's own; a block's own capability whose card a tool of the block's bar opens carries the id of the fold it was (bar-tools.js), so the tool finds it.
  */

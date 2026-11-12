@@ -7,6 +7,12 @@
 import { panelsPrefIn } from './panels-start.js';
 import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS, CAP_LISTS, CAP_ADD_FORMS, CAP_ADD_LISTS } from '../menu/forms.js';
 
+/** The element menu's forms as the settings show them: the three beside the block, then the two docked. */
+const MENU_FORM_ORDER = ['wide', 'narrow', 'tabs', 'docked', 'docked-tabs'].filter((id) => MENU_FORMS.includes(id));
+
+/** The bar's looks as the settings show them, by kind: glass, dark, white, the filled and large ones, the ones set apart by area, and the captions. */
+const TOOLBAR_LOOK_ORDER = ['glass-accent', 'glass', 'glass-capsule', 'strip', 'capsule', 'white', 'squares', 'large', 'large-capsule', 'soft', 'areas', 'capsule-areas', 'captions'].filter((id) => TOOLBAR_LOOKS.includes(id));
+
 /** Where the settings open: a dialog with the groups as sections down its left, a panel in the panel column, or a sheet with the look choices at the left and the rest as rows at the right. */
 export const SETTINGS_PLACES = ['dialog', 'panel', 'sheet'];
 
@@ -21,10 +27,10 @@ export function settingsPictures(raw) {
 }
 
 /**
- * The window's three groups, in the order the list shows them: the admin design with its parts (ADR-0030), the settings kept in this browser that no design sets, and the site's own, shared by everyone who edits it.
+ * The window's three groups, in the order the list shows them: the admin layout, its presets first and the parts they set under them (ADR-0030), the settings kept in this browser that no preset sets, and the site's own, shared by everyone who edits it.
  */
 export const SETTINGS_BANDS = [
-  { id: 'design', labelKey: 'adminDesign.row', tipKey: 'tip.settings.band.design' },
+  { id: 'design', labelKey: 'settings.band.design', tipKey: 'tip.settings.band.design' },
   { id: 'local', labelKey: 'settings.band.local', tipKey: 'tip.settings.band.local' },
   { id: 'site', labelKey: 'settings.group.site', tipKey: 'tip.settings.shared', shared: true },
 ];
@@ -63,18 +69,18 @@ export const SETTINGS_GROUPS = [
     labelKey: 'settings.group.menu',
     tipKey: 'tip.settings.group.menu',
     settings: [
+      // Where the menu opens, the beside-the-block forms first and the docked ones after them.
       { id: 'menuWidth', part: true, labelKey: 'settings.menuWidth', tipKey: 'tip.settings.menuWidth', kind: 'choice', look: 'menuWidth',
-        options: (c) => MENU_FORMS.map((id) => [id, c.ta(`opt.menuForm.${id}`)]),
+        options: (c) => MENU_FORM_ORDER.map((id) => [id, c.ta(`opt.menuForm.${id}`)]),
         get: (c) => c.menu.formPref, set: (c, v) => c.setMenuFormPref(v) },
+      // The chips jump between areas that stand under each other, so a form with tabs offers them only while they are chosen.
+      { id: 'shortcuts', part: true, labelKey: 'adminPart.shortcuts', tipKey: 'tip.adminPart.shortcuts', kind: 'choice', look: 'shortcuts',
+        options: (c) => SHORTCUTS_MODES.filter((id) => id !== 'chips' || !['tabs', 'docked-tabs'].includes(c.menu.formPref) || c.menu.shortcutsPref === 'chips')
+          .map((id) => [id, c.ta(`opt.shortcuts.${id}`)]),
+        get: (c) => c.menu.shortcutsPref, set: (c, v) => c.setShortcutsPref(v) },
       { id: 'folds', part: true, labelKey: 'adminPart.folds', tipKey: 'tip.adminPart.folds', kind: 'seg',
         options: (c) => FOLDS_MODES.map((id) => [id, c.ta(`opt.folds.${id}`)]),
         get: (c) => c.menu.foldsPref, set: (c, v) => c.setFoldsPref(v) },
-      { id: 'designs', part: true, labelKey: 'adminPart.designs', tipKey: 'tip.adminPart.designs', kind: 'choice', look: 'designs',
-        options: (c) => DESIGN_CHOICES.map((id) => [id, c.ta(`opt.designChoice.${id}`)]),
-        get: (c) => c.menu.designsPref, set: (c, v) => c.setDesignsPref(v) },
-      // What the design button on a block's bar opens, on every form of the bar: the small window by default or the full one, set under how a look is chosen; the full window stands first, as the row above names it.
-      { id: 'toolbarDesign', part: true, parent: 'designs', labelKey: 'adminPart.toolbarDesign', tipKey: 'tip.adminPart.toolbarDesign', kind: 'seg',
-        options: (c) => ['full', 'small'].filter((id) => TOOLBAR_DESIGNS.includes(id)).map((id) => [id, c.ta(`opt.toolbarDesign.${id}`)]), get: (c) => c.ed.toolbarDesignPref, set: (c, v) => c.ed.setToolbarDesign(v) },
       { id: 'extra', part: true, labelKey: 'adminPart.extra', tipKey: 'tip.adminPart.extra', kind: 'seg',
         options: (c) => EXTRA_MODES.map((id) => [id, c.ta(`opt.extraSettings.${id}`)]),
         get: (c) => c.menu.extraPref, set: (c, v) => c.setExtraPref(v) },
@@ -86,11 +92,9 @@ export const SETTINGS_GROUPS = [
         when: (c) => CAP_ADD_LISTS.includes(c.menu.capAddPref),
         options: (c) => CAP_LISTS.map((id) => [id, c.ta(`opt.capList.${id}`)]),
         get: (c) => c.menu.capListPref, set: (c, v) => c.setCapListPref(v) },
-      // The chips jump between areas that stand under each other, so a form with tabs offers them only while they are chosen.
-      { id: 'shortcuts', part: true, labelKey: 'adminPart.shortcuts', tipKey: 'tip.adminPart.shortcuts', kind: 'choice', look: 'shortcuts',
-        options: (c) => SHORTCUTS_MODES.filter((id) => id !== 'chips' || !['tabs', 'docked-tabs'].includes(c.menu.formPref) || c.menu.shortcutsPref === 'chips')
-          .map((id) => [id, c.ta(`opt.shortcuts.${id}`)]),
-        get: (c) => c.menu.shortcutsPref, set: (c, v) => c.setShortcutsPref(v) },
+      { id: 'designs', part: true, labelKey: 'adminPart.designs', tipKey: 'tip.adminPart.designs', kind: 'choice', look: 'designs',
+        options: (c) => DESIGN_CHOICES.map((id) => [id, c.ta(`opt.designChoice.${id}`)]),
+        get: (c) => c.menu.designsPref, set: (c, v) => c.setDesignsPref(v) },
     ],
   },
   {
@@ -118,6 +122,14 @@ export const SETTINGS_GROUPS = [
         when: menusShown,
         options: (c) => [['close', c.ta('opt.tabMenuStay.close')], ['stay', c.ta('opt.tabMenuStay.stay')]],
         get: (c) => c.ed.tabMenuStay, set: (c, v) => c.ed.setTabMenuStay(v) },
+    ],
+  },
+  {
+    id: 'open',
+    band: 'design',
+    labelKey: 'settings.group.open',
+    tipKey: 'tip.settings.group.open',
+    settings: [
       { id: 'linkEditor', part: true, labelKey: 'settings.linkEditor', tipKey: 'tip.settings.linkEditor', kind: 'choice', look: 'linkEditor',
         options: (c) => [['dialog', c.ta('opt.linkEditor.dialog')], ['popover', c.ta('opt.linkEditor.popover')]],
         get: (c) => c.ed.linkEditorPref, set: (c, v) => c.ed.setLinkEditor(v) },
@@ -139,11 +151,16 @@ export const SETTINGS_GROUPS = [
     settings: [
       { id: 'toolbar', part: true, labelKey: 'adminPart.toolbar', tipKey: 'tip.adminPart.toolbar', kind: 'choice', look: 'toolbar',
         options: (c) => TOOLBAR_FORMS.map((id) => [id, c.ta(`opt.toolbar.${id}`)]), get: (c) => c.ed.toolbarPref, set: (c, v) => c.ed.setToolbar(v) },
-      // The looks that set the tools apart by area are offered with the forms whose tools belong to areas, or while chosen.
+      // The looks that set the tools apart by area are offered with the forms whose tools belong to areas, or while chosen; they stand by kind (TOOLBAR_LOOK_ORDER).
       { id: 'toolbarLook', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarLook', tipKey: 'tip.adminPart.toolbarLook', kind: 'choice', look: 'toolbarLook',
-        options: (c) => TOOLBAR_LOOKS.filter((id) => !AREA_LOOKS.includes(id) || TOOL_FORMS.includes(c.ed.toolbarPref) || c.ed.toolbarLookPref === id)
+        options: (c) => TOOLBAR_LOOK_ORDER.filter((id) => !AREA_LOOKS.includes(id) || TOOL_FORMS.includes(c.ed.toolbarPref) || c.ed.toolbarLookPref === id)
           .map((id) => [id, c.ta(`opt.toolbarLook.${id}`)]),
         get: (c) => c.ed.toolbarLookPref, set: (c, v) => c.ed.setToolbarLook(v) },
+      { id: 'toolbarSize', part: true, parent: 'toolbar', labelKey: 'settings.toolbarSize', tipKey: 'tip.settings.toolbarSize', kind: 'seg',
+        options: (c) => ['small', 'regular', 'medium', 'large'].filter((id) => TOOLBAR_SIZES.includes(id)).map((id) => [id, c.ta(`opt.toolbarSize.${id}`)]), get: (c) => c.ed.toolbarSizePref, set: (c, v) => c.ed.setToolbarSize(v) },
+      // What the design button on a block's bar opens, on every form of the bar: the small window by default or the full one, the full one first.
+      { id: 'toolbarDesign', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarDesign', tipKey: 'tip.adminPart.toolbarDesign', kind: 'seg',
+        options: (c) => ['full', 'small'].filter((id) => TOOLBAR_DESIGNS.includes(id)).map((id) => [id, c.ta(`opt.toolbarDesign.${id}`)]), get: (c) => c.ed.toolbarDesignPref, set: (c, v) => c.ed.setToolbarDesign(v) },
       // The gear on a bar whose tools open the settings themselves; the other forms always have it.
       { id: 'toolbarGear', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarGear', tipKey: 'tip.adminPart.toolbarGear', kind: 'seg',
         when: (c) => TOOL_FORMS.includes(c.ed.toolbarPref),
@@ -152,8 +169,6 @@ export const SETTINGS_GROUPS = [
       { id: 'toolbarPhone', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarPhone', tipKey: 'tip.adminPart.toolbarPhone', kind: 'seg',
         when: (c) => c.ed.toolbarPref !== 'full',
         options: (c) => [['on', c.ta('opt.showHide.show')], ['off', c.ta('opt.showHide.hide')]], get: (c) => c.ed.toolbarPhonePref, set: (c, v) => c.ed.setToolbarPhone(v) },
-      { id: 'toolbarSize', part: true, parent: 'toolbar', labelKey: 'settings.toolbarSize', tipKey: 'tip.settings.toolbarSize', kind: 'seg',
-        options: (c) => ['small', 'regular', 'medium', 'large'].filter((id) => TOOLBAR_SIZES.includes(id)).map((id) => [id, c.ta(`opt.toolbarSize.${id}`)]), get: (c) => c.ed.toolbarSizePref, set: (c, v) => c.ed.setToolbarSize(v) },
       { id: 'addBlockMenu', part: true, labelKey: 'settings.addBlockMenu', tipKey: 'tip.settings.addBlockMenu', kind: 'choice', look: 'addBlock',
         options: (c) => [['side', c.ta('settings.addBlockMenuSide')], ['slim', c.ta('settings.addBlockMenuSlim')]],
         get: (c) => c.ed.addBlockMenuPref, set: (c, v) => c.ed.setAddBlockMenu(v) },

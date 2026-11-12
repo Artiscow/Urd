@@ -21,7 +21,7 @@ const { PARTS, ADMIN_DESIGNS, DEFAULT_DESIGN, DESIGN_ROW_KEY, DESIGN_CHANGED_KEY
 const { CAP_ADD_FORMS, SHORTCUTS_MODES } = await import('../editor/src/menu/forms.js');
 const { SETTINGS_GROUPS } = await import('../editor/src/lib/settings-model.js');
 const { settingPicture } = await import('../editor/src/lib/settings-pictures.js');
-const { applyDesign, undoDesign, canUndo, partBack, partNote, partValues } = await import('../editor/src/state/admin-design.svelte.js');
+const { applyDesign, undoDesign, canUndo, partBack, partNote, partValues, inWindowOrder } = await import('../editor/src/state/admin-design.svelte.js');
 
 /** A browser's storage as a map, read and written as the state does. */
 const storage = (entries = {}) => {
@@ -220,7 +220,7 @@ test('a part changed by hand names the design\'s value on its row, and goes back
   assert.equal(c.ed.linkEditorPref, 'dialog');
 });
 
-test('a design chosen before «Minimal» and the search field became the defaults keeps the parts it had, read once', () => {
+test('a design chosen before «A line of names» and the search field became the defaults keeps the parts it had, read once', () => {
   const EARLIER = { capAdd: 'head', shortcuts: 'pinned' };
   const MARK = { key: EARLIER_READ_KEY, value: '1' };
   /** What choosing a design stored while «From the menu's head» and the Pinned rows were the defaults: nothing for a part at its default then. */
@@ -260,4 +260,12 @@ test('a design chosen before «Minimal» and the search field became the default
   }
   const side = ADMIN_DESIGNS.find((d) => d.parts.shortcuts === 'pinned' && d.id !== DEFAULT_DESIGN);
   assert.equal(earlierDefaultWrites(getOf(writtenThen(side.id))).length, 3, 'a design with the head and the Pinned rows gets both back, and the mark');
+});
+
+test('the parts a preset no longer matches are named in the order the settings window lists their rows', () => {
+  const rows = SETTINGS_GROUPS.flatMap((g) => g.settings).map((s) => s.id);
+  const ids = PARTS.map((p) => p.id).filter((id) => PARTS.find((p) => p.id === id).setting);
+  const ordered = inWindowOrder([...ids].reverse());
+  assert.deepEqual(ordered.map((id) => PARTS.find((p) => p.id === id).setting), rows.filter((r) => ordered.some((id) => PARTS.find((p) => p.id === id).setting === r)));
+  assert.deepEqual(inWindowOrder(['toolbarSize', 'designs', 'menu', 'extra']), ['menu', 'extra', 'designs', 'toolbarSize']);
 });

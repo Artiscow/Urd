@@ -67,10 +67,10 @@ const LAYOUT_PICKERS = {
   menu: dim(1, 1, 62, 38, 0.06) + dim(14, 4, 36, 32, 0.16) + acc(17, 8, 9, 6) + line(28, 8, 9, 6, 6) + line(39, 8, 8, 6, 6) + line(17, 17, 9, 6, 6) + line(28, 17, 9, 6, 6) + line(39, 17, 8, 6, 6) + line(17, 26, 9, 6, 6) + line(28, 26, 9, 6, 6),
 };
 
-/** The element menu's forms: beside the block in two columns or one, docked in the panel column in one column or with tabs, and beside the block with tabs. */
+/** The element menu's forms: beside the block in two columns, in one or with tabs, each drawn with the block it stands beside, and docked in the panel column in one column or with tabs. */
 const MENU_WIDTHS = {
-  wide: dim(1, 1, 62, 38, 0.06) + dim(4, 4, 56, 32, 0.14) + acc(7, 7, 22, 2) + line(7, 12, 22, 2) + line(7, 17, 17, 2) + line(7, 22, 22, 2) + line(7, 27, 14, 2) + line(35, 7, 22, 2) + line(35, 12, 18, 2) + line(35, 17, 22, 2) + line(35, 22, 15, 2),
-  narrow: dim(1, 1, 62, 38, 0.06) + dim(20, 4, 24, 32, 0.14) + acc(23, 7, 6, 3) + line(30, 7, 5, 3, 3) + line(36, 7, 5, 3, 3) + line(23, 14, 18, 2) + line(23, 19, 15, 2) + line(23, 24, 18, 2) + line(23, 29, 12, 2),
+  wide: dim(1, 1, 62, 38, 0.06) + block(4, 14, 10, 10) + dim(17, 4, 43, 32, 0.14) + acc(20, 7, 16, 2) + line(20, 12, 16, 2) + line(20, 17, 12, 2) + line(20, 22, 16, 2) + line(20, 27, 10, 2) + line(40, 7, 16, 2) + line(40, 12, 13, 2) + line(40, 17, 16, 2) + line(40, 22, 11, 2),
+  narrow: dim(1, 1, 62, 38, 0.06) + block(6, 14, 12, 10) + dim(22, 4, 24, 32, 0.14) + acc(25, 7, 6, 3) + line(32, 7, 5, 3) + line(38, 7, 5, 3) + line(25, 14, 18, 2) + line(25, 19, 15, 2) + line(25, 24, 18, 2) + line(25, 29, 12, 2),
   docked: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 22, H - 8, 0.2) + acc(11, 10, 12, 2) + line(11, 15, 17, 2) + line(11, 20, 14, 2) + line(11, 25, 17, 2) + line(11, 30, 12, 2) + stage(31) + block(38, 16, 18, 11),
   'docked-tabs': topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 22, H - 8, 0.2) + line(11, 9, 17, 3, 1) + acc(11, 15, 5, 2.5) + line(17, 15, 5, 2.5) + line(23, 15, 5, 2.5) + line(11, 21, 17, 2) + line(11, 26, 14, 2) + line(11, 31, 17, 2) + stage(31) + block(38, 16, 18, 11),
   tabs: dim(1, 1, 62, 38, 0.06) + block(6, 14, 12, 10) + dim(22, 4, 36, 32, 0.14) + acc(25, 8, 7, 2.5) + line(33, 8, 7, 2.5) + line(41, 8, 7, 2.5) + line(25, 15, 28, 2) + line(25, 20, 22, 2) + line(25, 25, 28, 2) + line(25, 30, 18, 2),
@@ -180,7 +180,7 @@ const DESIGN_CHOICE_PICS = {
 
 /**
  * The bar over a selected block («Toolbar» and «Toolbar look»), drawn as the canvas draws it: a text block selected on a page, its bar above it, each tool its own small drawing (TOOL_ICONS, the same figures as the canvas's own), the main act a word drawn as a short line on its button.
- * The forms show their own tools: every group a tool (Full bar); every action ending in the red cross (Quick); a word with Motion and Placement (Essentials) and the short bar (Minimal), each with what ⋮ opens beside it.
+ * The forms show their own tools: every group a tool (Every group); every action ending in the red cross (Every action); a word with Motion and Placement (Essentials) and the short bar (Minimal), each with what ⋮ opens beside it.
  * The looks show the same bar of a text block, so only the look changes; the two area looks show an image block's tools, whose groups stand in three areas.
  */
 const TOOL_ICONS = {

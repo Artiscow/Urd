@@ -1,7 +1,7 @@
 <script>
   /**
-   * Urd's own settings over the admin, in the form «Settings window» asks for: the dialog with the sections down the left in their three groups (the admin design, Local settings, This site), a search above them and every section's rows at the right, in one scroll a section button jumps in and the list follows;
-   * each section's entry folds out to its settings, which jump to their rows: on a rest of the mouse for as long as it stays, and held open by a press until it or another entry is pressed, while a rest on another still opens that one beside it;
+   * Urd's own settings over the admin, in the form «Settings window» asks for: the dialog with the sections down the left in their three groups (Admin layout, Local settings, This site), a search above them and every section's rows at the right, in one scroll a section button jumps in and the list follows;
+   * each section's entry folds out to its settings, which jump to their rows, the setting in view marked: on a rest of the mouse for as long as it stays, and held open by a press until it or another entry is pressed, while a rest on another still opens that one beside it; scrolled by hand, the entry held open follows the section in view;
    * or the sheet, with the look choices at the left and the rest as rows at the right. Both end in the way to the shortcut sheet and the version.
    * It opens where it was left while the tab is open: each scroll at the row it stood at, and the entry the list held open (keep-place.js).
    * A native modal dialog (ADR-0011) like the shortcut sheet: Escape is its own cancel, and a press outside the card closes it.
@@ -32,7 +32,7 @@
   const navBands = $derived(inBands(navGroups));
   /** The section marked in the list: the one in view, or the first one a search leaves when it hides that one. */
   const marked = $derived(navGroups.some((g) => g.id === current) ? current : navGroups[0]?.id);
-  const GROUP_ICONS = { design: 'designs', menu: 'panel_properties', panels: 'foldLeft', canvas: 'panel_grid', look: 'panel_theme', editing: 'pencil', window: 'device_desktop', site: 'panel_site' };
+  const GROUP_ICONS = { design: 'designs', menu: 'panel_properties', panels: 'foldLeft', open: 'external', canvas: 'panel_grid', look: 'panel_theme', editing: 'pencil', window: 'device_desktop', site: 'panel_site' };
 
   const close = () => dialogEl?.close();
 
@@ -61,6 +61,8 @@
     }
     current = id;
     held = id;
+    byHand = false;
+    jumpedRow = null;
     contentEl?.querySelector(`#st-sec-${id}`)?.scrollIntoView({ block: 'start', behavior: ed.reducedMotion ? 'auto' : 'smooth' });
   }
 
@@ -69,7 +71,11 @@
   function jumpTo(groupId, settingId) {
     current = groupId;
     held = groupId;
+    byHand = false;
     const row = contentEl?.querySelector(`#st-sec-n-${settingId}`)?.closest('.st-row');
+    jumpedRow = row ?? null;
+    jumpedSeen = false;
+    currentRow = settingId;
     if (!row) {
       contentEl?.querySelector(`#st-sec-${groupId}`)?.scrollIntoView({ block: 'start', behavior: ed.reducedMotion ? 'auto' : 'smooth' });
       return;
@@ -104,20 +110,53 @@
   /** Whether an entry lists its settings: not a section whose one setting bears its own name (the presets). */
   const listsSettings = (group) => !(group.settings.length === 1 && group.settings[0].labelKey === group.labelKey);
 
-  /** The section in view: the last one whose top has passed the content's top, and the last section of all once the content is scrolled to its end, since a short last section never reaches the top. */
+  /** Whether the content is scrolled by hand (the wheel, a finger, the keys or the scrollbar), so the entry held open follows the section in view; a jump from the list scrolls by itself and leaves the entries as it set them. */
+  let byHand = false;
+  const scrollingByHand = () => { byHand = true; };
+
+  /** The setting in view, marked under its section's entry: the row a press on its entry brings into view, from the press while the content scrolls to it and for as long as it then stays wholly in view, else the last row whose top has passed the content's top, or the section's first while none has. */
+  let currentRow = $state(null);
+  let jumpedRow = null;
+  /** Whether the row a press brought into view has stood wholly in view since. */
+  let jumpedSeen = false;
+
+  /** The section in view: the section of a row a press brought into view while it holds its mark, else the last section whose top has passed the content's top, the first while none has, and the last section of all once the content is scrolled to its end, since a short last section never reaches the top. */
   function track() {
     if (!contentEl) return;
     const sections = [...contentEl.querySelectorAll('.st-section')];
     if (!sections.length) return;
+    const box = contentEl.getBoundingClientRect();
+    const jumped = jumpedRow?.isConnected ? jumpedRow.getBoundingClientRect() : null;
+    const whole = Boolean(jumped) && jumped.top >= box.top && jumped.bottom <= box.bottom;
+    if (whole) jumpedSeen = true;
+    if (jumped && (whole || (!jumpedSeen && !byHand))) {
+      current = jumpedRow.closest('.st-section').id.replace('st-sec-', '');
+      return;
+    }
+    jumpedRow = null;
     const atEnd = contentEl.scrollTop + contentEl.clientHeight >= contentEl.scrollHeight - 2;
-    const top = contentEl.getBoundingClientRect().top;
-    let seen = null;
+    let seen = sections[0];
     for (const el of sections) {
-      if (el.getBoundingClientRect().top - top <= 24) seen = el;
+      if (el.getBoundingClientRect().top - box.top <= 24) seen = el;
     }
     const el = atEnd ? sections[sections.length - 1] : seen;
-    if (el) current = el.id.replace('st-sec-', '');
+    const id = el.id.replace('st-sec-', '');
+    if (byHand && held && held === current && id !== current) held = id;
+    current = id;
+    const rows = [...el.querySelectorAll('.st-row')];
+    let row = rows[0] ?? null;
+    for (const r of rows) {
+      if (r.getBoundingClientRect().top - box.top <= 24) row = r;
+    }
+    currentRow = row?.dataset.stRow ?? null;
   }
+  // The marks stand as the window opens, at the place it opens at, and again after a search changes the rows.
+  $effect(() => {
+    void query;
+    if (!contentEl) return;
+    const frame = requestAnimationFrame(track);
+    return () => cancelAnimationFrame(frame);
+  });
 
   function openKeys() {
     toKeys = true;
@@ -174,7 +213,8 @@
                   <div class="st-nav-sub" class:open id={`st-nav-sub-${group.id}`} inert={!open}>
                     <div class="st-nav-sub-items">
                       {#each group.settings as s (s.id)}
-                        <button type="button" class="st-nav-subitem" class:child={!!s.parent} onclick={() => jumpTo(group.id, s.id)}>{ta(s.labelKey)}</button>
+                        <button type="button" class="st-nav-subitem" class:child={!!s.parent} aria-current={marked === group.id && currentRow === s.id ? 'true' : undefined}
+                          onclick={() => jumpTo(group.id, s.id)}>{ta(s.labelKey)}</button>
                       {/each}
                     </div>
                   </div>
@@ -187,7 +227,10 @@
         {@render keys()}
         <span class="st-version">{ta('settings.version', { version: ed.pluginEngine })}</span>
       </nav>
-      <div class="st-content" bind:this={contentEl} onscroll={track} {@attach keepPlace('dialog', query)}>
+      <!-- The wheel, a finger, the keys and the scrollbar only tell that the content is scrolled by hand; the content is no control of its own -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div class="st-content" bind:this={contentEl} onscroll={track} onwheel={scrollingByHand} ontouchstart={scrollingByHand} onkeydown={scrollingByHand} onpointerdown={scrollingByHand}
+        {@attach keepPlace('dialog', query)}>
         <button type="button" class="st-close" aria-label={ta('ui.close')} title={ta('ui.close')} onclick={close}>{@html ICONS.cross}</button>
         <SettingsBody place="dialog" {query} />
       </div>
@@ -334,9 +377,16 @@
     padding-left: 1.2rem;
   }
 
+
   .st-nav-subitem:hover,
   .st-nav-subitem:focus-visible {
     background: rgb(255 255 255 / 6%);
+    opacity: 1;
+  }
+
+  /* The setting in view, as its section's entry is marked: on a faint accent surface, under the pointer as well */
+  .st-nav-subitem[aria-current='true'] {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
     opacity: 1;
   }
 

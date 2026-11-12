@@ -1,7 +1,7 @@
 <script>
   /* A panel's button with its menu of folds, in every layout that reaches a panel this way (`variant`): a tab in the strip under the top bar and in the panel's own tabs (PanelStrip, PanelNav), a row of the top bar's Site menu in «The page's tabs» (TopBar), an icon of the rail and a word of the sidebar in its flyout form (Rail). One button, which opens the panel on a click.
      A panel with folds (lib/panel-folds.js) has a menu of the folds: a mouse resting on the button, or the down arrow key on a tab and the right arrow key on the others, opens it, and a row opens the panel with that fold alone unfolded, or presses the fold's one button where that is all it holds. The menu stands in the top layer, under a tab and beside the others, so a narrow panel never clips it, and it slides in and out. Beside a rail's icon it is headed by the panel's name, which stands in place of the icon's tooltip and opens the panel.
-     The rows are set apart as the Urd settings' «Tab menus» chooses: in short groups under small labels (the default), with a hairline between them, or as a plain list. A row that presses a button carries that button's mark.
+     The rows are set apart as the Urd settings' «Panel menus» chooses: in short groups under small labels (the default), with a hairline between them, or as a plain list. A row that presses a button carries that button's mark.
      The arrow keys move through the rows, and Escape closes the menu and returns to the tab. Hover counts only for a mouse, so a tap on a touch screen opens the panel, where every fold stands.
      The Legal tab carries an amber dot on its name's corner while something the law asks for is missing, and the same dot on the rows that need looking at (lib/legal-model.js).
      The Collections tab's menu lists the site's collections, kept in step as they come and go, and ends in New collection. A mouse resting on a collection, or the right arrow key, opens a submenu of its entries beside it, ending in New entry; on an entry, a third menu of its common actions (its picture added or edited, the entry duplicated); the left arrow or Escape goes back a level.
@@ -45,7 +45,7 @@
   const collections = $derived(name === 'collections' ? collectionMenuRows(ed.collectionIds, ed.collectionsView, sortEntries) : []);
   const hasMenu = $derived(menus && (name === 'collections' ? !ed.collectionsUnavailable : folds.length > 1));
   const menuId = $derived(`panel-tab-menu-${name}`);
-  /** The rows as the «Tab menus» setting sets them apart: in their groups under small labels, or as one run with or without lines. */
+  /** The rows as the «Panel menus» setting sets them apart: in their groups under small labels, or as one run with or without lines. */
   const groups = $derived(ed.tabMenus === 'groups' ? foldGroups(folds) : [{ label: null, folds }]);
 
   let open = $state(false);

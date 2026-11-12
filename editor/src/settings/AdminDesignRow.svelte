@@ -4,7 +4,7 @@
   import { ta, adminLang } from '$engine/i18n.js';
   import { ADMIN_DESIGNS } from '../lib/admin-designs.js';
   import { ICONS } from '../lib/icons.js';
-  import { applyDesign, canUndo, undoDesign, partLabel } from '../state/admin-design.svelte.js';
+  import { applyDesign, canUndo, undoDesign, partLabel, inWindowOrder } from '../state/admin-design.svelte.js';
 
   let { c } = $props();
   const designs = $derived(c.designs);
@@ -13,9 +13,9 @@
   const name = $derived(ta(ADMIN_DESIGNS.find((d) => d.id === standing)?.labelKey ?? ''));
   const undoable = $derived(canUndo(designs.values));
 
-  /** The parts that differ, joined as the admin language joins a list. */
+  /** The parts that differ, in the window's order, joined as the admin language joins a list. */
   function joined(ids) {
-    const names = ids.map(partLabel);
+    const names = inWindowOrder(ids).map(partLabel);
     try {
       return new Intl.ListFormat(adminLang(), { type: 'conjunction' }).format(names);
     } catch {

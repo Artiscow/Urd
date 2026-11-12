@@ -229,7 +229,7 @@
     {/if}
   </Fold>
 
-  <!-- The footer's presets, chosen as Urd settings «Designs» asks, in the shared design picker or by their pictures in place: each sets the footer's look and the parts it shows, keeping the footer's own content in each part it shows (footer-presets.js) -->
+  <!-- The footer's presets, chosen as Urd settings «Choosing a design» asks, in the shared design picker or by their pictures in place: each sets the footer's look and the parts it shows, keeping the footer's own content in each part it shows (footer-presets.js) -->
   <Fold id="presets" surface={F} title={ta('group.footerPresets')} value="">
     <LookChoice label={ta('group.footerPresets')} value="" title={ta('tip.footer.presets')} current={null} heading={false}
       designs={() => pictureList(footerPresetSource({}))}

@@ -8,6 +8,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.89 - Bug Fixes: the Urd settings in a clearer order, with plain names, short tooltips and the setting in view marked - 12 November 2026
+
+- The Urd settings window's content was not reviewed (BACKLOG). It was reviewed for where each setting stands, its order, its pictures and its name on the Urd Settings Review page, and built as proposed, chosen 12 November 2026: the group «Admin layout» with Presets first, the element menu's settings in the menu's own order, a section «Where things open», and «Design button on the bar» under Toolbar beside Toolbar size (lib/settings-model.js).
+- Names collided: «Designs» and «Design button on the bar» both offered «Full window», and «Extra settings» and «Extra settings style» read as one. Twelve settings and their options are renamed in nb, en-GB and tr, among them «Choosing a design», «Settings in a group», «Adding extras», «Top of the menu», «Panel menus» and «Change layout», and «Panels on a fresh load» is «Open panel» under «On a fresh load».
+- Two pictures of «Where the menu opens» drew the menu without the block it stands beside. They draw the block, the three forms beside the block stand before the two docked, and the toolbar's thirteen looks stand by kind (lib/settings-pictures.js).
+- In testing, the tooltips described every option of their setting. Each says in one line what its setting is for.
+- In testing, the list on the left marked the section alone. It marks the setting in view under its entry, and the entry held open follows the content as it is scrolled by hand (settings/SettingsDialog.svelte).
+- The guides in en-GB, nb and tr, ARCHITECTURE.md, the comparison, code comments and test names use the new names, and ADR-0016 and ADR-0031 are amended.
+
+The independent review before the commit found these, all fixed:
+
+1. A setting pressed in the list lost its mark as soon as the smooth scroll to it began, the row not yet in view. It holds its mark through the scroll and while its row stays in view.
+2. A press on a section's first setting marked the section above, so no setting was marked under the open entry. The pressed row's section is the one marked.
+3. With «Admin layout» over Presets, no section counted as in view at the very top, and a jump there left the section before marked. The first section stands marked until another passes the top.
+4. The pointer over the marked setting took its mark away. The mark stands under the pointer, as the section's does.
+5. The guides and the dialog's comment said an open entry stays until clicked. They say it follows a scroll by hand.
+6. The guides in en-GB, nb and tr named the import's preview and its table by the old words. They say «CSV import preview» and «Table over the page».
+7. The comparison and ARCHITECTURE.md kept «Extra settings: Added from a menu» and «named Presets there», and six code comments kept Minimal, Tiles and Import preview. All use the new names.
+8. Two test items named the wrong settings' options and a part whose name stayed. They name the right ones.
+9. In Turkish «Sheet» read «Sayfa», a site's page, and the default way to add «Bir satır ad». They read «Yaprak» and «Ad satırı», and the bokmål tooltip says «listen» as the window does.
+10. The Presets row's «Changed:» line named the parts in the order they are stored. It names them in the window's order (`inWindowOrder` in state/admin-design.svelte.js, tested).
+11. «Pictures in the menu» also chose how the footer's presets show in their panel. It reads «Pictures in place».
+12. A search that scrolled nothing left the marks of the rows before it. The marks are read again after a search.
+
 ### 0.7.0.88 - Bug Fixes: design buttons with pictures, side by side, and one block can be left out of its section's hover lift - 12 November 2026
 
 - A block in a section whose every element lifts on pointer could not decline it: its «None» meant no effect of its own, so it lifted while the row read «None» (BACKLOG). `hover: false` is a block's «None» there (additive, SCHEMA.md), and the row's first choice names the section's effect, «As the section: Lift on pointer» (`pointerEffectOf` in animations/core.js, `blockHoverOptions` in state/page.svelte.js); the Shop page's heading declines its section's lift.

@@ -236,7 +236,7 @@ async function revealInMenu(only) {
   }
   if (kind === 'fold') {
     folds.set('menu', id, true);
-    // A capability's card opens too where the cards fold (Urd settings «Extra settings style» as Minimal).
+    // A capability's card opens too where the cards fold (Urd settings «Adding extras» as «A line of names»).
     if (capability(id)) folds.set('cap-folded', id, false);
     if (capability(id) && selectedBlock) keepCapability(selectedBlock.blockId, id);
   }
@@ -302,7 +302,7 @@ async function openFullMenu() {
   revealInMenu(only);
 }
 
-/** The docked forms of the menu («Element menu»): the gear opens the Settings panel in the panel column, and no menu floats. */
+/** The docked forms of the menu («Where the menu opens»): the gear opens the Settings panel in the panel column, and no menu floats. */
 function openDockedMenu() {
   blockMenu = null;
   shellState.activePanel = 'properties';

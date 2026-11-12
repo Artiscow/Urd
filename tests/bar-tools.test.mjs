@@ -200,7 +200,7 @@ test('the editor opens exactly what the bar asks for', () => {
     assert.ok(isBarOnly(tool.only), tool.only);
     assert.equal(onlyOf(tool.only), tool.only);
   }
-  // The design button opens the block's design alone where «Designs» puts the pictures in place.
+  // The design button opens the block's design alone where «Choosing a design» puts the pictures in place.
   assert.ok(isBarOnly('look:design'));
   assert.equal(onlyOf('look:design'), 'look:design');
   assert.equal(onlyOf('look:other'), null);

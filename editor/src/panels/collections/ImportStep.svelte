@@ -1,5 +1,5 @@
 <script>
-  /* A waiting CSV import as a step in the Collections panel («In the panel» under Import preview): the way back cancels it, the file and its rows under the collection's name, the list of what it will do (ImportSummary.svelte, compact), «Show every cell» to the table (ImportTable.svelte), and the choices with Cancel and Import at the foot (ImportChoices.svelte).
+  /* A waiting CSV import as a step in the Collections panel («In the panel» under «CSV import preview»): the way back cancels it, the file and its rows under the collection's name, the list of what it will do (ImportSummary.svelte, compact), «Show every cell» to the table (ImportTable.svelte), and the choices with Cancel and Import at the foot (ImportChoices.svelte).
      Escape inside the step cancels the import, and nothing is stored until Import. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';

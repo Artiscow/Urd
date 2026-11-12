@@ -1,5 +1,5 @@
 <script>
-  /* The selected block's design, as Urd settings «Designs» asks: the row that names it, with its picture, and opens the design picker over the whole menu, or the designs' pictures in place (lib/rows/LookChoice.svelte); the designs are a core block's (block-designs.js) or a plugin block's (blockDesigns).
+  /* The selected block's design, as Urd settings «Choosing a design» asks: the row that names it, with its picture, and opens the design picker over the whole menu, or the designs' pictures in place (lib/rows/LookChoice.svelte); the designs are a core block's (block-designs.js) or a plugin block's (blockDesigns).
      With `phone` it is always the row, naming and opening the block's phone design instead: the design it draws while narrow (PHONE_DESIGNS in push-model.js).
      The menu sets it first in Style on a setting row that carries its pin (ElementMenu.svelte). */
   import { getContext } from 'svelte';

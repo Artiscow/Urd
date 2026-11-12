@@ -1,6 +1,6 @@
 <script>
   /* The Settings panel (the Properties panel's id): the selected block's element menu, or the selected section's settings (section/SectionMenu.svelte), narrow, each with the search over it.
-     The docked forms of «Element menu» open the block's settings here from the gear on its bar; «Docked, with tabs» names the block on a card and shows one area at a time. */
+     The docked forms of «Where the menu opens» open the block's settings here from the gear on its bar; «Docked, with tabs» names the block on a card and shows one area at a time. */
   import { getContext } from 'svelte';
   import { menu } from '../menu/state.svelte.js';
   import ElementMenu from '../menu/ElementMenu.svelte';

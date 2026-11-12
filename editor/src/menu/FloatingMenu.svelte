@@ -1,6 +1,6 @@
 <script>
   /* The floating menu: a block's settings next to the block, from the gear on its bar, or a section's beside the section (`pos.section`, section/SectionMenu.svelte).
-     The same menus as the Settings panel draws, so the two never diverge; the Urd settings' «Element menu» chooses the form a menu opens in (menu/state.svelte.js menuLayout), and «Shortcuts» set to the search puts the field over the menu's body instead of in its head.
+     The same menus as the Settings panel draws, so the two never diverge; the Urd settings' «Where the menu opens» chooses the form a menu opens in (menu/state.svelte.js menuLayout), and «Top of the menu» set to the search puts the field over the menu's body instead of in its head.
      A tool of the bar opens it small, with one group alone (`pos.only`, lib/only-group.js) under the tool's drawing and name (`pos.icon`, `pos.title`), with no search and no width to switch.
      The small window's head holds the group's way back while the group holds a value of its own, offered by the group itself (Fold.svelte, Setting.svelte, lib/rows/Capability.svelte), and the way to the full menu, open at the same group. */
   import { menuMotion } from '../lib/motion.svelte.js';

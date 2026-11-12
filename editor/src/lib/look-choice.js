@@ -1,5 +1,5 @@
 /**
- * Which designs stand in place in a menu or a panel when Urd settings «Designs» puts their pictures there (lib/rows/LookChoice.svelte).
+ * Which designs stand in place in a menu or a panel when Urd settings «Choosing a design» puts their pictures there (lib/rows/LookChoice.svelte).
  * A choice of a few designs shows them all; a larger one shows a run of designs around the one in use, in the picker's order, beside a tile that opens the picker with every design.
  * Pure, node-tested (tests/look-choice.test.mjs).
  */

@@ -1,6 +1,6 @@
 <script>
   /* One setting's row in a group (0.7.20.7, proposal M on the Design canvas): the control, with a reset beside it while the setting holds the block's own value; a value it falls back to is what the control shows, with no words of its own about where it comes from.
-     A row whose control is a switch (SwitchRow) has no reset: the switch is its own way back. A row whose only control is a colour (ColourRow) has none beside it either: the bin on the colour's corner takes the colour away and is its way back. The row still says it holds a value of its own (`data-own`), where «Extra settings» reads it (Fold.svelte).
+     A row whose control is a switch (SwitchRow) has no reset: the switch is its own way back. A row whose only control is a colour (ColourRow) has none beside it either: the bin on the colour's corner takes the colour away and is its way back. The row still says it holds a value of its own (`data-own`), where «Settings in a group» reads it (Fold.svelte).
      The group's defaults come through the fold's context (Fold.svelte), so a row needs only its key.
      A setting that can stand in the element menu's Pinned rows carries its `pin`: the pin stands at the row's end, and while the setting is pinned the row is drawn in Pinned at the top instead of here, so it stands once (0.7.30.3, menu/PinScope.svelte tells which are).
      A small window that holds this setting alone (`look:<pin>`, lib/only-group.js) has the reset in its head instead (menu/FloatingMenu.svelte).

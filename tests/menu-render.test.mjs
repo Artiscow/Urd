@@ -160,7 +160,7 @@ test('a small window names its tool with the bar\'s drawing and holds the way to
   assert.ok(!row.children.some((c) => hasClass(c, 'setting-reset')), 'its way back stands in the head, not over the pictures');
 });
 
-test('«Extra settings» stands in a fold\'s foot in the full menu, under the rows, and a small window shows the whole group', () => {
+test('«Settings in a group» stands in a fold\'s foot in the full menu, under the rows, and a small window shows the whole group', () => {
   const fold = readFileSync(new URL('../editor/src/lib/rows/Fold.svelte', import.meta.url), 'utf8');
   assert.match(fold, /const menued = \$derived\([^\n]*&& !small\);/, 'a small window hides none of its group');
   const markup = fold.slice(fold.indexOf('<div class="group-items"'));
@@ -679,7 +679,7 @@ test('a capability\'s card stands while the block uses it or took it, in the sea
   assert.equal(panel.card('decor'), null, 'a small panel draws no other capability');
 });
 
-test('«Extra settings style» draws one way to add at a time: the head\'s «+», chips at an area\'s foot, or an area\'s add button, each with the area\'s own', () => {
+test('«Adding extras» draws one way to add at a time: the head\'s «+», chips at an area\'s foot, or an area\'s add button, each with the area\'s own', () => {
   const draw = (props = {}) => {
     const context = new Map([['urd-editor', handleFor(block('text', {}))]]);
     return parseHtml(render(CapabilityAdd, { context, props }).body);

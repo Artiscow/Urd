@@ -6,9 +6,9 @@
      Where the family tells how many settings the fold holds now (`rows`), a fold of none is not drawn and a fold of one is drawn bare, its setting alone with its own reset: a group of one setting is no group.
      A bare fold keeps its markup, so the setting stays where it is when a second one joins; the fold then stands open, with the setting just changed in sight.
      In a panel the fold carries its id as `data-fold`, where the tab's menu finds it (lib/panel-folds.js), and `surface` is the panel's name; `ontoggle(open)` hears it open and close, and `tip` explains on its heading what it holds; `value` is words, or a snippet for a value drawn as a mark (the Legal panel's chips).
-     The element menu's folds follow the Urd settings' «Folds» and «Extra settings» (menu/state.svelte.js); the folds of a panel and of the search's copy of the menu, which stand in no area, do not.
+     The element menu's folds follow the Urd settings' «Folds» and «Settings in a group» (menu/state.svelte.js); the folds of a panel and of the search's copy of the menu, which stand in no area, do not.
      «One at a time» gives the folds of one area a name of their own (MenuArea.svelte), so the browser closes the others as one opens (`details name`, ADR-0011); «All open» opens every fold on its first showing after each choice of it.
-     «Extra settings» as a menu hides the fold's setting rows (Setting.svelte) but the first and those with a value of their own, and lists the rest by their words behind a chip in the fold's foot, beside its reset, where the list opens in place under the rows; a row once shown, or once holding a value of its own, stays shown for the session (lib/folds.svelte.js), until the same list takes it away again, its value back to the standard. A row that is no setting row is always shown.
+     «Settings in a group» on «Added as needed» hides the fold's setting rows (Setting.svelte) but the first and those with a value of their own, and lists the rest by their words behind a chip in the fold's foot, beside its reset, where the list opens in place under the rows; a row once shown, or once holding a value of its own, stays shown for the session (lib/folds.svelte.js), until the same list takes it away again, its value back to the standard. A row that is no setting row is always shown.
      A row added from the list is drawn at the foot of the fold's rows, in the order added, and draws nothing where the family writes it (Setting.svelte `fold-rows`): the order on screen is the order of the markup, so the Tab key and a screen reader meet it as the eye does.
      A small window of one group (`fold:<id>`, lib/only-group.js) shows every row of it, and holds the fold's reset in its head (menu/FloatingMenu.svelte). */
   import { getContext, setContext, tick, untrack } from 'svelte';
@@ -38,7 +38,7 @@
   const small = $derived(Boolean(onlyPanel?.only || head?.only));
   const exclusive = $derived(inMenu && folded && menu.foldsPref === 'one' && !small ? area.group : undefined);
 
-  /* «Extra settings» as a menu, in the full menu only. */
+  /* «Settings in a group» on «Added as needed», in the full menu only. */
   const menued = $derived(inMenu && folded && menu.extraPref === 'menu' && !small);
   /** The fold's setting rows but its first, which always stands: those hidden, to add, and those shown, to take away. */
   let extraRowsNow = $state({ hidden: [], shown: [] });

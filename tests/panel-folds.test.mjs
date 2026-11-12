@@ -54,7 +54,7 @@ function foldBody(text, id) {
 
 /** A fold that holds one button and nothing else: inside a plain fold's items, or alone in the kit's Fold. */
 const ONE_BUTTON = /^(?:<div class="group-items">\s*<button\b[^>]*>[^<]*<\/button>\s*<\/div>|<button\b[^>]*>[^<]*<\/button>)$/;
-/** A look alone in the kit's Fold: one button while «Designs» stands as the row (lib/rows/LookChoice.svelte). */
+/** A look alone in the kit's Fold: one button while «Choosing a design» stands as the row (lib/rows/LookChoice.svelte). */
 const ONE_LOOK = /^<LookChoice\b[\s\S]*?\/>$/;
 
 test('a fold that holds one button is pressed from the menu, and only such a fold', () => {
@@ -73,7 +73,7 @@ test('panelFolds: the folds drawn in the case at hand, none for a panel without 
   assert.deepEqual(panelFolds('legal', { legal: { terms: { shown: false } } }).map((f) => f.id), ['who', 'privacy']);
   assert.deepEqual(panelFolds('legal', { legal: { terms: { shown: true } } }).map((f) => f.id), ['who', 'privacy', 'terms']);
   assert.deepEqual(panelFolds('pages'), []);
-  // A look's fold is pressed while «Designs» stands as the row, and unfolds to the pictures in place.
+  // A look's fold is pressed while «Choosing a design» stands as the row, and unfolds to the pictures in place.
   const design = (designs) => panelFolds('footer', { site: { footer: { show: true } }, designs }).find((f) => f.id === 'presets');
   assert.equal(design('row').press, true);
   assert.equal(design('inline').press, false);

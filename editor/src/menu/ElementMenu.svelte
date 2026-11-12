@@ -3,7 +3,7 @@
      Before them stands Pinned: the settings used most, a block type's own first and then the two every block has (how it fits a narrower screen, and whether it shows on a phone).
      A pinned setting stands there instead of in its area, so no setting is drawn twice (PinScope.svelte), and an area left with nothing in it is not drawn.
      Wide, Pinned and the areas share two columns, each whole, cut where they come out most even (`balanceAreas`); narrow, they stand under each other with a heading each; with tabs, one area stands at a time behind Content, Style and Placement (`layout`, menu/state.svelte.js menuLayout).
-     What stands first follows the Urd settings' «Shortcuts»: the Pinned rows, the same rows as tiles, nothing but the search (drawn by the menu's frame), or chips that jump to each area.
+     What stands first follows the Urd settings' «Top of the menu»: the Pinned rows, the same rows as tiles, nothing but the search (drawn by the menu's frame), or chips that jump to each area.
      A block with designs has its design, and its phone design, as the first rows of Style, and every block its motion as the last group there. */
   import { getContext, setContext } from 'svelte';
   import Choice from '../lib/Choice.svelte';
@@ -76,7 +76,7 @@
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
   /** `layout` is 'wide', 'narrow' or 'tabs'; `only` draws one group alone, for a tool of the bar (lib/only-group.js): a group, an area's loose rows or an area. */
   let { layout = 'narrow', query = '', only = null } = $props();
-  // What a small panel keeps (lib/only-group.js), for the rows that draw otherwise there: the design's pictures stand in its own panel whatever «Designs» says (lib/rows/LookChoice.svelte).
+  // What a small panel keeps (lib/only-group.js), for the rows that draw otherwise there: the design's pictures stand in its own panel whatever «Choosing a design» says (lib/rows/LookChoice.svelte).
   setContext('menu-only', { get only() { return only; } });
   const wide = $derived(layout === 'wide');
   const shortcuts = $derived(menu.shortcutsPref);
@@ -93,7 +93,7 @@
   });
   const pinnedIds = $derived(new Set(pinnedItems.map((item) => item.id)));
   const NONE_PINNED = new Set();
-  /** The settings that leave their areas: those in Pinned while Pinned is drawn, none while «Shortcuts» puts the search or the chips first. */
+  /** The settings that leave their areas: those in Pinned while Pinned is drawn, none while «Top of the menu» puts the search or the chips first. */
   const areaAway = $derived(pinnedShown ? pinnedIds : NONE_PINNED);
   /** The selected block's designs, drawn as the first rows of Style; the calendar draws its own three in its family. */
   const designs = $derived(selectedBlock.type === 'calendar' ? null : blockDesigns(selectedBlock.type, ed.pluginBlocks));
@@ -234,7 +234,7 @@
   }
 
   /** The areas with nothing in them for this block, read from what is drawn (an area's heading alone), so their tabs are left out; the view moves off an empty area, also when a key chose one.
-      Read again for another block, when a setting is pinned or taken out of Pinned, when the tab changes, and when «Extra settings style» moves the way to add into the areas or out of them. */
+      Read again for another block, when a setting is pinned or taken out of Pinned, when the tab changes, and when «Adding extras» moves the way to add into the areas or out of them. */
   let emptyAreas = $state(new Set());
   function tabsIn(node) {
     const measuredFor = blockId;
@@ -326,7 +326,7 @@
           <div class="emenu-pinned-item">
             <Setting pin={item.id} own={item.own} reset={item.reset}>
               {#if item.kind === 'open'}
-                <!-- A look is chosen as «Designs» asks, and as a row among the tiles, which stand two to a line -->
+                <!-- A look is chosen as «Choosing a design» asks, and as a row among the tiles, which stand two to a line -->
                 <LookChoice label={item.label} title={item.tip} value={item.value} picture={item.picture ?? ''} current={item.current ?? null}
                   designs={shortcuts === 'tiles' ? null : (item.designs ?? null)} onpick={item.pick ?? null} onopen={item.run} />
               {:else if item.kind === 'number' && item.zero}

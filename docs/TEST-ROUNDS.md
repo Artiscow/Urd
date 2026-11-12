@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.89): the Urd settings window's order, names, pictures and tooltips
+
+- [ ] Urd settings: the list on the left reads Admin layout (Presets, The element menu, The panels, Where things open, The canvas), Local settings (Look and language, Editing, On a fresh load) and This site
+- [ ] The element menu: Where the menu opens, Top of the menu, Folds, Settings in a group, Adding extras with The add list under it, and Choosing a design, each changing what its name says in the element menu
+- [ ] Where the menu opens: the three «Beside the block» pictures draw the block beside the menu, and stand before the two docked forms
+- [ ] The canvas: Toolbar's looks stand by kind, then Toolbar size, Design button on the bar, Settings gear on the bar and Phone button on the bar; «Design button on the bar» still sets what the bar's design button opens
+- [ ] Where things open: Link editor, Page settings, Collections editor, CSV import preview and Settings window; Page settings and CSV import preview both offer Dialog, In the panel and Table over the page, and Settings window Dialog, In the panel and Sheet
+- [ ] Change «Settings in a group»: the Presets row's «Changed:» line names it so, in the window's order with the other changed parts, and «Back to Floating menu» sets it back
+- [ ] Rest on a setting's name: its tooltip says in one line what it is for, and each option's tile keeps its own tooltip
+- [ ] Open a section's entry in the list on the left: the setting at the top of the view is marked; scroll with the wheel and the mark moves, and into the next section the open entry follows; press a setting in the list, also the first of a section, and it is marked through the scroll to it and while its row is in view
+- [ ] Fold the open entry and scroll: no entry opens by itself
+- [ ] In bokmål and Turkish the same names stand («Valg av design», «Øverst i menyen», «Tasarım seçimi», …), and the user guide in each names them so
+
 ### Test batch (0.7.0.88): the design buttons and a block's own «None» on pointer
 
 - [ ] In a section whose Motion has «Every element on pointer», select a block: its «On pointer» offers «As the section: Lift on pointer», «None» and «Lift on pointer»; with «None» the block stays still under the pointer on the published page while the others lift, and its motion card stays with the reset back to the section's

@@ -3,7 +3,7 @@
      Its head names it, with the way back, which takes every setting in it to the standard in one undo step and the capability back to the add list; its settings stand under the head as a group's rows, reading the group's standards where they ask by key (`group`).
      A capability that is one switch (`single` in the catalogue) is a card of one line: its drawing, its name, an On/Off chip for the switch, its pin where Pinned can hold it, and the way back.
      The card carries its id as a fold does, so a tool of the block's bar opens it in a small panel (lib/only-group.js).
-     Where Urd settings «Extra settings style» asks for folded cards, its name is a button that folds it to one line saying its value (the catalogue's `summary`, else that it is on) and opens it again, kept for the session; a copy that draws every capability (the search, a small panel) never folds, so its settings are always there. */
+     Where Urd settings «Adding extras» asks for folded cards, its name is a button that folds it to one line saying its value (the catalogue's `summary`, else that it is on) and opens it again, kept for the session; a copy that draws every capability (the search, a small panel) never folds, so its settings are always there. */
   import { getContext, setContext, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS, CAP_ICONS } from '../icons.js';
@@ -94,7 +94,7 @@
   async function takeAway() {
     if (!removable) return;
     const taken = block;
-    // Where it is added from, in the copy of the menu the card stands in (the floating menu or the Settings panel), in the form «Extra settings style» chooses: its own chip, else its area's add button, else the head's «+».
+    // Where it is added from, in the copy of the menu the card stands in (the floating menu or the Settings panel), in the form «Adding extras» chooses: its own chip, else its area's add button, else the head's «+».
     const home = cardEl?.closest('.block-menu, aside.panel') ?? document;
     const area = cardEl?.closest('.emenu-area')?.dataset.area;
     historyState.asOwnStep(() => cap.clear(ed, taken));

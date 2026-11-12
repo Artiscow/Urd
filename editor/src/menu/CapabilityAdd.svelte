@@ -1,5 +1,5 @@
 <script>
-  /* The way to add a capability to the selected block (ADR-0031, menu/capabilities.js), in the form Urd settings «Extra settings style» chooses (`menu.capAddPref`); each form is drawn where it stands and only while it is the one chosen.
+  /* The way to add a capability to the selected block (ADR-0031, menu/capabilities.js), in the form Urd settings «Adding extras» chooses (`menu.capAddPref`); each form is drawn where it stands and only while it is the one chosen.
      `head` is the «+» in the menu's head (B5), which lists every capability the block can take, under its area's name, each with its drawing and one line on what it does.
      `button` is one dashed «+ Add to Style» at the foot of an area (`area`, B2), which opens the same list of that area's capabilities; `chips` names that area's capabilities as dashed chips at its foot (B1), each added at a press, its line in its tooltip.
      `folded` names them as one quiet line of «+ Name» at the area's foot (B3), with the cards folding (lib/rows/Capability.svelte); `icons` draws each of the area's capabilities in the area's heading (B4), in a box of the admin's accent, dashed while the block does not use it and lit while it does: a press on a dashed one adds it, on a lit one brings its card into view.

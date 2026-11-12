@@ -7,7 +7,7 @@ import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, 
 import { earlierDefaultWrites } from '../lib/admin-designs.js';
 
 /**
- * The form a menu opens in (Urd settings «Element menu»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
+ * The form a menu opens in (Urd settings «Where the menu opens»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
  * The button in the menu's head switches between wide and the chosen form for the session.
  */
 const MENU_FORM_KEY = 'urd-admin-menu-width';
@@ -16,24 +16,24 @@ const menuFormOf = (v) => (MENU_FORMS.includes(v) ? v : 'wide');
 /** How folds behave («Folds»): as the owner left them, one open at a time in an area, or all open. */
 const FOLDS_KEY = 'urd-folds';
 
-/** Whether every setting in a fold is shown, or the first and the changed ones with the rest added from a menu («Extra settings»). */
+/** Whether every setting in a fold is shown, or the first and the changed ones with the rest added from a menu («Settings in a group»). */
 const EXTRA_KEY = 'urd-extra-settings';
 
-/** How a look is chosen («Designs»): a row that opens the design picker, or the designs' pictures in place (lib/rows/LookChoice.svelte). */
+/** How a look is chosen («Choosing a design»): a row that opens the design picker, or the designs' pictures in place (lib/rows/LookChoice.svelte). */
 const DESIGN_CHOICE_KEY = 'urd-design-choice';
 
-/** What stands first in the menu («Shortcuts»): the search field alone, the Pinned rows, the same rows as tiles, or chips that jump to each area. */
+/** What stands first in the menu («Top of the menu»): the search field alone, the Pinned rows, the same rows as tiles, or chips that jump to each area. */
 const SHORTCUTS_KEY = 'urd-menu-shortcuts';
 
 /** How the «+» list shows what a block can take («The add list»): a list, or tiles in two columns. */
 const CAP_LIST_KEY = 'urd-cap-list';
 
-/** The way to add a capability («Extra settings style»): a quiet line of names at the foot of each area with the cards folding («Minimal»), the «+» in the menu's head, chips or an add button at the foot of each area, or icons in each area's heading. */
+/** The way to add a capability («Adding extras»): a quiet line of names at the foot of each area with the cards folding («A line of names»), the «+» in the menu's head, chips or an add button at the foot of each area, or icons in each area's heading. */
 const CAP_ADD_KEY = 'urd-add-capability';
 
 const stored = (key, list) => (list.includes(localStorage.getItem(key)) ? localStorage.getItem(key) : list[0]);
 
-/** A design chosen before «Minimal» and the search field became the defaults keeps the parts it had, read once in the browser (lib/admin-designs.js earlierDefaultWrites). */
+/** A design chosen before «A line of names» and the search field became the defaults keeps the parts it had, read once in the browser (lib/admin-designs.js earlierDefaultWrites). */
 try {
   for (const { key, value } of earlierDefaultWrites((key) => localStorage.getItem(key))) localStorage.setItem(key, value);
 } catch {

@@ -422,7 +422,7 @@
   {@const calDef = calDesign(selectedBlock.props.design)}
   <!-- The calendar's three looks, side by side as the buttons that open their pickers, first in Style as every block's design -->
   <LookRows pins={['design', 'phoneView', 'card']}>
-    <!-- The design: a button naming it that opens the picker over the whole menu, or its pictures in place, as «Designs» asks -->
+    <!-- The design: a button naming it that opens the picker over the whole menu, or its pictures in place, as «Choosing a design» asks -->
     <Setting pin="design" own={calDef.id !== 'plain'} reset={() => ed.setCalendarDesign('plain')}>
       <LookChoice label={ta('calendar.design')} value={ta(calDef.labelKey)} picture={calendarDesignSource({}).picture(calDef.id)} title={ta('tip.calendar.design')} current={calDef.id}
         designs={() => pictureList(calendarDesignSource({}))} onpick={(id) => ed.setCalendarDesign(id)} onopen={ed.openDesignPicker} />

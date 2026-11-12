@@ -1,5 +1,5 @@
 /**
- * What the admin shows when it is loaded again («Panels on a fresh load» in the Urd settings): the panel last open, and in the tab layouts whether its column was folded; no panel; always the same panel; or, in the tab layouts, the column folded to its handle.
+ * What the admin shows when it is loaded again («Open panel» in the Urd settings): the panel last open, and in the tab layouts whether its column was folded; no panel; always the same panel; or, in the tab layouts, the column folded to its handle.
  * Pure, node-tested (tests/panels-start.test.mjs).
  */
 

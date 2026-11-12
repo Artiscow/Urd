@@ -105,8 +105,8 @@ test('the search keeps the settings a word of the query names, and the sheet spl
   // The admin design is found by a design's name.
   assert.deepEqual(visibleGroups('small panels', null, c).map((g) => g.id), ['design']);
   const all = visibleGroups('', null, c);
-  assert.deepEqual(all.map((g) => g.id), ['design', 'menu', 'panels', 'canvas', 'look', 'editing', 'window', 'site']);
-  // A setting under another (`parent`) stands with it, so «After a pick» goes with «Tab menus» into the look and brings it into the rest.
+  assert.deepEqual(all.map((g) => g.id), ['design', 'menu', 'panels', 'open', 'canvas', 'look', 'editing', 'window', 'site']);
+  // A setting under another (`parent`) stands with it, so «After a pick» goes with «Panel menus» into the look and brings it into the rest.
   const look = visibleGroups('', 'look', c).flatMap((g) => g.settings);
   assert.ok(look.every((s) => s.look || look.some((p) => p.id === s.parent)));
   assert.ok(look.some((s) => s.design), 'the admin design stands with the looks');
@@ -138,7 +138,7 @@ test('the sections stand in three groups: the admin design with every part, Loca
   assert.deepEqual(SETTINGS_BANDS.map((b) => b.id), ['design', 'local', 'site']);
   for (const group of SETTINGS_GROUPS) assert.ok(SETTINGS_BANDS.some((b) => b.id === group.band), `${group.id} stands in a group`);
   const bands = inBands(visibleGroups('', null, c));
-  assert.deepEqual(bands.map((b) => [b.id, b.groups.map((g) => g.id)]), [['design', ['design', 'menu', 'panels', 'canvas']], ['local', ['look', 'editing', 'window']], ['site', ['site']]]);
+  assert.deepEqual(bands.map((b) => [b.id, b.groups.map((g) => g.id)]), [['design', ['design', 'menu', 'panels', 'open', 'canvas']], ['local', ['look', 'editing', 'window']], ['site', ['site']]]);
   const settings = (band) => SETTINGS_GROUPS.filter((g) => g.band === band).flatMap((g) => g.settings);
   assert.ok(settings('design')[0].design, 'the admin design stands first');
   assert.ok(settings('design').slice(1).every((s) => s.part), 'every row under the admin design is one of its parts');

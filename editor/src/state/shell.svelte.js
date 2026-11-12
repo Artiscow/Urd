@@ -361,7 +361,7 @@ function applySetup() {
 }
 
 /** Active panel in the left panel picker (null = closed) */
-/* What the admin shows when it is loaded again («Panels on a fresh load», lib/panels-start.js): the panel last open and its fold, no panel, always the same panel, or the folded column.
+/* What the admin shows when it is loaded again («Open panel», lib/panels-start.js): the panel last open and its fold, no panel, always the same panel, or the folded column.
    Personal workspace preferences in localStorage (like theme and language), with only the non-default stored.
    Clean view keeps the folds on its own (the rail and the panel are hidden, not unmounted); this is about a fresh load of the admin. */
 const PANELS_PREF_KEY = 'urd-admin-panels';
@@ -464,7 +464,7 @@ const PANEL_LABELS = $derived({ ...Object.fromEntries(PANEL_GROUPS.flat().map((i
   if (!panels.includes(panelsStart)) panelsStart = PANELS_START_DEFAULT;
 }
 
-/** «Panels on a fresh load»: the folded column only in the layouts that keep the column. */
+/** «Open panel»: the folded column only in the layouts that keep the column. */
 const PANELS_PREF_LABELS = { remember: 'settings.panelsRemember', reset: 'settings.panelsReset', fixed: 'settings.panelsFixed', folded: 'settings.panelsFolded' };
 
 const PANELS_PREF_OPTIONS = $derived(panelsPrefsFor(adminLayout).map((id) => [id, ta(PANELS_PREF_LABELS[id])]));
@@ -585,7 +585,7 @@ let guidesOn = $state(localStorage.getItem('urd-guides') === '1');
 let settingsOpen = $state(false);
 
 /**
- * Where the Urd settings open («Settings window», lib/settings-model.js): the dialog with sections (the default), the panel in the panel column, or the sheet with the look at the left; and whether a look choice is shown as pictures or as words («Look choices»).
+ * Where the Urd settings open («Settings window», lib/settings-model.js): the dialog with sections (the default), the panel in the panel column, or the sheet with the look at the left; and whether a look choice is shown as pictures or as words («Pictures in these settings»).
  * Personal workspace preferences in localStorage, like the theme; the defaults are not stored.
  * A change of place while the settings are open moves them: the dialog closes and the panel opens, or the other way round.
  */
@@ -654,7 +654,7 @@ function setDragMark(v) {
 
 const DRAG_MARK_OPTIONS = $derived(DRAG_MARKS.map((id) => [id, ta(`opt.dragMark.${id}`)]));
 
-/** How the tabs' menus set their rows apart (Urd settings «Tab menus», lib/panel-folds.js): the groups by default, remembered per browser. */
+/** How the tabs' menus set their rows apart (Urd settings «Panel menus», lib/panel-folds.js): the groups by default, remembered per browser. */
 const TAB_MENUS_KEY = 'urd-tab-menus';
 let tabMenus = $state(tabMenuStyleOf(localStorage.getItem(TAB_MENUS_KEY)));
 
@@ -713,7 +713,7 @@ function setPageSettingsPref(v) {
 
 const PAGE_SETTINGS_OPTIONS = $derived(PAGE_SETTINGS_LAYOUTS.map((id) => [id, ta(`opt.pageSettings.${id}`)]));
 
-/** Where a collection's CSV import shows what it will do («Import preview», lib/collection-layout.js): a dialog (the default, not stored), a step in the panel, or a table over the page; kept per browser. */
+/** Where a collection's CSV import shows what it will do («CSV import preview», lib/collection-layout.js): a dialog (the default, not stored), a step in the panel, or a table over the page; kept per browser. */
 const CSV_PREVIEW_KEY = 'urd-csv-preview';
 
 let csvPreviewPref = $state(csvPreviewOf(localStorage.getItem(CSV_PREVIEW_KEY)));

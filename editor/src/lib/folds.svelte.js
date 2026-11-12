@@ -1,7 +1,7 @@
 /**
  * Which folds stand open, in every surface of the admin (the row kit, 0.7.30.2): one store, keyed by the surface and the fold's id, so a fold stays as it was left when the surface is drawn again (another block selected, a panel reopened).
  * The element menu's surface is 'menu'; a panel's is its name.
- * It also keeps, for the session, which rows a fold's «Add a setting» has shown («Extra settings» as a menu, lib/rows/Fold.svelte), by the fold and the row's own name, and the order the owner added them in, so they stand at the foot of their fold in that order.
+ * It also keeps, for the session, which rows a fold's «Add a setting» has shown («Settings in a group» on «Added as needed», lib/rows/Fold.svelte), by the fold and the row's own name, and the order the owner added them in, so they stand at the foot of their fold in that order.
  */
 import { SvelteSet } from 'svelte/reactivity';
 
