@@ -24,7 +24,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone, setBlockPhonePlace } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** Sets the pinning's own settings; a setting given as undefined goes back to the standard and is removed. */
@@ -69,6 +69,20 @@
     }
     const place = blockSection ? phonePlaceKeeping(blockSection.blocks, phoneSetup, selectedBlock.blockId, side) : null;
     if (place) setBlockPhonePlace(place);
+  }
+
+  /** Where in the phone's width a block in cells stands: at the left edge, in the middle or at the right edge, or '' where its cells stand elsewhere in the eight. */
+  function phoneSideOf(cells) {
+    if (!cells) return '';
+    if (cells.col === 1) return 'left';
+    if (cells.col + cells.cols - 1 === 8) return 'right';
+    return cells.col === (8 - cells.cols) / 2 + 1 ? 'middle' : '';
+  }
+  /** The cells for a width and a side: the full row writes none. */
+  function phoneCellsFor(cols, side) {
+    if (cols >= 8) return null;
+    const col = side === 'right' ? 9 - cols : side === 'middle' ? (8 - cols) / 2 + 1 : 1;
+    return { col, cols };
   }
 
   /** The "let go" options for sticky: only the sections AFTER the block's
@@ -182,6 +196,19 @@
         onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
     {/if}
   </div>
+  <!-- Its width on the phone: the whole row, or cells beside the blocks before it in the phone's order (migrate.js phoneCells), with where in the row it stands under it; a block in a stack sets its whole stack. A block placed on rows of its own takes its width from its handles -->
+  {#if !selectedBlock.hideMobile && selectedBlock.mobileRow === null}
+    <Setting own={Boolean(selectedBlock.phoneCells)} reset={() => setBlockPhoneCells(null)}>
+      <Choice label={ta('lbl.phoneWidth')} title={ta('tip.phoneWidth')} value={String(selectedBlock.phoneCells?.cols ?? 8)}
+        options={[8, 6, 4, 2].map((n) => [String(n), ta(`opt.phoneWidth.${n}`)])}
+        onchange={(v) => setBlockPhoneCells(phoneCellsFor(Number(v), phoneSideOf(selectedBlock.phoneCells) || 'left'))} />
+      {#if selectedBlock.phoneCells}
+        <Choice label={ta('lbl.phoneSide')} title={ta('tip.phoneSide')} value={phoneSideOf(selectedBlock.phoneCells)}
+          options={[['left', ta('opt.phoneSide.left')], ['middle', ta('opt.phoneSide.middle')], ['right', ta('opt.phoneSide.right')]]}
+          onchange={(v) => setBlockPhoneCells(phoneCellsFor(selectedBlock.phoneCells.cols, v))} />
+      {/if}
+    </Setting>
+  {/if}
   <!-- Its place in the phone's order: as the section's rule puts it, or directly before or after a block it names; a block hidden on phones, a block placed by hand, the only flowing block, a block inside a stack, and every block of a custom order have none -->
   {#if !selectedBlock.hideMobile && selectedBlock.mobileRow === null && phonePlaceCounts && phoneNeighbours.length}
     <Setting own={Boolean(phoneSide)} reset={() => setBlockPhonePlace(null)}>

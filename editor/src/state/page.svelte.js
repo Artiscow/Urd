@@ -15,11 +15,11 @@ import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_T
 import { layerChanges } from '$engine/layer-order.js';
 import { wholeStyleHtml } from '$engine/text-whole.js';
 import { phoneOrderOf, phoneSetupOf, stackOrder } from '$engine/phone-order.js';
-import { flowing } from '$engine/phone-moves.js';
+import { flowing, phoneStackOf } from '$engine/phone-moves.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign, calLimitStart } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
-import { PAGE_SCHEMA_VERSION, liftPageFile } from '$engine/migrate.js';
+import { PAGE_SCHEMA_VERSION, liftPageFile, phoneCells } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { anchorError, takenAnchors } from '$engine/anchor-model.js';
 import { setLinkOn } from '../lib/link-edit.js';
@@ -153,6 +153,8 @@ function syncSelectedBlock() {
     hideDesktop: Boolean(block.hideDesktop),
     // The block's exception in the phone order (phone-order.js), or null where it follows the section's rule.
     phonePlace: typeof block.phonePlace?.before === 'string' ? { before: block.phonePlace.before } : typeof block.phonePlace?.after === 'string' ? { after: block.phonePlace.after } : null,
+    // The cells the block stands in on the phone (migrate.js phoneCells), or null across the full row.
+    phoneCells: phoneCells(block.frames?.mobile),
     entranceMobile: block.entranceMobile !== false,
     anchor: typeof block.anchor === 'string' ? block.anchor : '',
     fit: block.fit === 'shrink' || block.fit === 'both' ? block.fit : undefined,
@@ -1133,6 +1135,35 @@ function changeSectionPhone(sectionId, change, key = 'phone-order') {
   return true;
 }
 
+/**
+ * The selected block's cells on the phone (`frames.mobile.col` and `cols`), or null for the full row; a block in the owner's stack sets its whole stack, as the stack shares one cell.
+ * The cells take the place of a width and a left edge set by hand (`x`, `w`); a block placed on rows of its own is left as it is, and a placement left with nothing in it goes back to following the desktop.
+ * @param {{col: number, cols: number}|null} cells
+ */
+function setBlockPhoneCells(cells) {
+  const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+  if (!block) return;
+  const stack = phoneStackOf(section.blocks, phoneSetupOf(section), block.id);
+  // A block placed on rows of its own keeps the width its handles gave it.
+  const blocks = (stack ? section.blocks.filter((b) => stack.includes(b.id)) : [block]).filter((b) => !Number.isFinite(b.frames.mobile?.row));
+  if (!blocks.length) return;
+  historyState.pushHistory(`edit:phone-cells-${block.id}`);
+  for (const one of blocks) {
+    const place = { ...(one.frames.mobile ?? {}) };
+    delete place.x;
+    delete place.w;
+    delete place.col;
+    delete place.cols;
+    if (cells && cells.cols < 8) Object.assign(place, { col: cells.col, cols: cells.cols });
+    one.frames.mobile = Object.keys(place).length ? place : null;
+  }
+  store.save();
+  historyState.updateDirty();
+  shellState.updateAttention();
+  previewState.bridge?.sendSection(pageId, section);
+  syncSelectedBlock();
+}
+
 /** The selected block's exception in the phone order (`phonePlace`): directly before or after another block, or null to follow the section's rule. A phone change, outside the review flag. */
 function setBlockPhonePlace(place) {
   const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
@@ -1520,6 +1551,7 @@ export const pageState = {
   setBlockEntranceMobile,
   setStickyPhone,
   setBlockPhonePlace,
+  setBlockPhoneCells,
   setBlockAnchor,
   setSectionAnchor,
   anchorsTaken,

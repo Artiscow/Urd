@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.14.1): the phone in cells, and «Width on the phone»
+
+- [ ] The published About page at 390 px: each small story stands with its picture on the left half and its text on the right, their outer edges in line with the big story above them
+- [ ] The same page and the home page are otherwise unchanged on the phone: a block without a width of its own stands across the row as before
+- [ ] A block's Placement, in both views: «Width on the phone» offers Full, ¾, ½ and ¼, and «Alignment» Left, Centre and Right stands under it while the block is narrower than the row
+- [ ] Two blocks one after another, ½ Left then ½ Right, stand side by side in the phone view and on the published page; a block after them at Full stands below both
+- [ ] Three blocks one after another at ½ Left, then a picture at ½ Right: the three stand under each other in the left half, and the picture beside them from the top of the first
+- [ ] A picture at ½ keeps its shape, its height following its width
+- [ ] A text at ¼ stands across the whole row, as it is too narrow to read; at ½ it stays half on a 390 px phone
+- [ ] A block in a stack: setting its width sets the whole stack, and the stack stays together in its cell
+- [ ] The Phone tab marks a block's width on its row (¼, ½, ¾)
+- [ ] ↺ on a block's bar in the phone view takes it back to the full row, and an undo brings its width back
+
 ### Test batch (0.7.3.13): the Phone tab, its order list with stacks and a custom order, and the menus in the phone view
 
 - [ ] «Phone» stands after Grid in the page's panels, in every panel layout; opening it shows the phone view and the section at work, else the topmost one mostly in view

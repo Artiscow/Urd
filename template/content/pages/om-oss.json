@@ -9,9 +9,7 @@
       "id": "sec-82c3367e",
       "version": 1,
       "phoneStacks": [
-        ["blk-7d311b04", "blk-fc4bf960", "blk-77137574"],
-        ["blk-44969ed3", "blk-757e529c"],
-        ["blk-4de09ed0", "blk-5a216511"]
+        ["blk-7d311b04", "blk-fc4bf960", "blk-77137574"]
       ],
       "preset": "lead-story",
       "size": {
@@ -138,7 +136,7 @@
               "z": 1,
               "rot": 0
             },
-            "mobile": null
+            "mobile": { "col": 1, "cols": 4 }
           },
           "mobileOrder": 40.13
         },
@@ -161,7 +159,7 @@
               "z": 1,
               "rot": 0
             },
-            "mobile": null
+            "mobile": { "col": 5, "cols": 4 }
           },
           "mobileOrder": 40.14
         },
@@ -186,7 +184,7 @@
               "z": 1,
               "rot": 0
             },
-            "mobile": null
+            "mobile": { "col": 1, "cols": 4 }
           },
           "mobileOrder": 40.15
         },
@@ -209,7 +207,7 @@
               "z": 1,
               "rot": 0
             },
-            "mobile": null
+            "mobile": { "col": 5, "cols": 4 }
           },
           "mobileOrder": 40.160000000000004
         }

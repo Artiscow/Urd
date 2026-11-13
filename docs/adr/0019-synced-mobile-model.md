@@ -1,6 +1,6 @@
 # ADR-0019: Synced mobile model per block (the row grid)
 
-Date: 13 August 2026. Status: accepted (v0.7, milestone 0.7.3 the mobile reassessment). The grid's CSS and the editor's messages are described in [ARCHITECTURE.md](../ARCHITECTURE.md); the placement fields and the migration are in [SCHEMA.md](../SCHEMA.md).
+Date: 13 August 2026. Status: accepted (v0.7, milestone 0.7.3 the mobile reassessment); amended 13 November 2026 (decision 2: the row grid's eight cell columns and blocks that flow in them; the rejected alternative of 8 column tracks; deletion in the phone view's menus), earlier text in [amended/](amended/0019-synced-mobile-model-until-2026-11-13.md). The grid's CSS and the editor's messages are described in [ARCHITECTURE.md](../ARCHITECTURE.md); the placement fields and the migration are in [SCHEMA.md](../SCHEMA.md).
 
 ## Context
 
@@ -12,10 +12,11 @@ The field study (13 August 2026) is unambiguous. Squarespace Fluid Engine, Wix, 
 
 ## Decision
 
-1. **The mobile override is per block, and the marker is the presence of `frames.mobile`.** The field is a PARTIAL placement `{x?, w?, row?, rows?, z?, rot?}`: `null` means the block follows desktop fully, an object without `row` overrides only the fields that are present (the block still flows), and an object with `row` pins the block. The section modes are retired: `responsive.mobile.mode: "manual"` is read by the migration but never written again.
+1. **The mobile override is per block, and the marker is the presence of `frames.mobile`.** The field is a PARTIAL placement `{x?, w?, col?, cols?, row?, rows?, z?, rot?}`: `null` means the block follows desktop fully, an object without `row` overrides only the fields that are present (the block still flows), and an object with `row` pins the block. The section modes are retired: `responsive.mobile.mode: "manual"` is read by the migration but never written again.
 
-2. **One mobile render path for all sections: the row grid.** The canvas gets an inner grid surface: one column, and rows of 8 px that grow with the content. The constant `MOBILE_ROW = 8` is a model constant, never tied to `grid.size` (which is a snapping tool for desktop).
-
+2. **One mobile render path for all sections: the row grid.** The canvas gets an inner grid surface: eight cell columns between two outer tracks of 5 %, and rows of 8 px that grow with the content. The constant `MOBILE_ROW = 8` is a model constant, never tied to `grid.size` (which is a snapping tool for desktop), and so is the number of cell columns.
+   - A block without cells spans the whole row, 90 % wide and centred, as the grid of one column drew it; the outer tracks make the cells span exactly those 90 %, so a block in cells lines up with one across the row.
+   - A block in cells (`col` and `cols` in its placement, additive) stands in those columns. Flowing, it keeps its place in the reading order: the sparse auto-placement puts it beside the cell before it where its columns lie to the right, and on a line of its own otherwise. Flowing blocks one after another in the same cells stand in one cell, under each other, so a column of blocks and a picture beside it share a line. Pinned, it stands in its columns on its rows.
    - Flow blocks are auto-placed in stack order (sparse, never dense: dense would have backfilled gaps and broken the reading order), spanning the rows their desktop height needs; text and auto-growing blocks take their natural height.
    - Pinned blocks sit on explicit rows with their own width and left offset, plus `z`/`rot`.
    - The rows grow when the content is taller than the span. A row position is thus a position in the COMPOSITION, not a frozen pixel distance: if the content above grows, the block follows. That is the sync.
@@ -36,14 +37,14 @@ The field study (13 August 2026) is unambiguous. Squarespace Fluid Engine, Wix, 
 - **The Framer model (declarative variants per breakpoint).** The July 2026 comparison (LAERDOMMER 5.11, now in [CODE.md](../comparison/CODE.md#part-6-what-to-take)) ranked it last of eleven lessons: «Effort: high (touches the responsive model)». It solves style-per-breakpoint, not layout sync, which is Urd's actual problem.
 - **Full materialisation with re-derivation in the editor.** The Squarespace model expressed as data: all blocks keep concrete frames, and the editor recomputes the untouched ones on desktop changes. Rejected because the re-derivation requires a hidden flow measuring pass with three bad timings (on every desktop change is expensive, on opening mobile gives stale publishing if the view is never opened, on publishing puts DOM work into the publishing flow), and because measured px heights freeze content that varies (collection/faq for visitors).
 - **Mixed flow and absolute in the same section.** Absolute blocks do not reserve space in the flow, so overlap is unavoidable when text grows. The row grid is the repair of this: pinned blocks DO get space reservation via row tracks.
-- **A pure Fluid Engine copy with 8 column tracks.** Column tracks give nothing the rows do not: the width does not have the content-growth problem, and `x`/`w` in percentages already flow. The cost would have been coarser horizontal quantisation and recalculation of all stored widths.
+- **A pure Fluid Engine copy with every block on 8 column tracks.** Taken in part: blocks that flow side by side, in the reading order and without rows of their own, need column tracks, since the rows alone stack every flowing block across the row. Rejected is putting EVERY block on them: a block placed by hand keeps its `x`/`w` in percent across the whole row, so no stored width is recalculated, and a block without cells keeps its full row.
 - **Tablet breakpoint.** Deliberately deferred (VEIKART); not reopened by this ADR.
 
 ## Consequences
 
 - **Old manual sections change appearance on migration.** The row quantisation moves blocks up to 8 px vertically, and decor blocks that were visible in manual sections become hidden (that was the documented intent; the visibility was the materialisation bug). The pre-v1 clause covers the shift.
 - **`section.responsive.mobile.mode` becomes dead weight in the schema** until a later clean-up after v1; the field stays readable so old files load correctly.
-- **Deletion is structural work and belongs to desktop** (as at Wix): mobile view offers no way to delete a block.
+- **Deletion is structural work and is done deliberately**: the phone view's bars hold no delete button and its keys do not delete, while a block's and a section's menus (the right-click menu and ⋮) stand in the phone view as on the desktop, deletion included, since every setting stands in every view.
 
 [ADR-0001]: 0001-hybrid-editor-model.md
 [ADR-0005]: 0005-versioning-and-migration.md

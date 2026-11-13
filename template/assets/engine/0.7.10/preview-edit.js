@@ -29,7 +29,7 @@
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS } from './push-model.js';
-import { MOBILE_ROW } from './migrate.js';
+import { MOBILE_ROW, PHONE_COLUMNS, phoneCells } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
 import { blocksClipboard, sectionClipboard, readClipboard, pastedSection } from './clipboard-model.js';
@@ -4283,15 +4283,18 @@ function phoneArrow(event, ctx, el, dir) {
   const r2 = (v) => Math.round(v * 100) / 100;
   const w = placed.w ?? block.frames.desktop.w;
   const placement = { ...placed };
+  const cells = phoneCells(placed);
   if (dir[1]) placement.row = Math.max(1, placed.row + dir[1]);
-  if (dir[0]) placement.x = clamp(r2((placed.x ?? block.frames.desktop.x) + dir[0]), 0, r2(100 - w));
-  if (placement.row === placed.row && placement.x === placed.x) return;
+  // In cells, Left and Right move the block a column; else one per cent of the width.
+  if (dir[0] && cells) placement.col = clamp(cells.col + dir[0], 1, PHONE_COLUMNS - cells.cols + 1);
+  else if (dir[0]) placement.x = clamp(r2((placed.x ?? block.frames.desktop.x) + dir[0]), 0, r2(100 - w));
+  if (placement.row === placed.row && placement.x === placed.x && placement.col === placed.col) return;
   block.frames.mobile = placement;
   const css = mobilePlacementToCss(placement, block.frames.desktop, { autoGrow: autoGrows(block, window.Urd.blocks.get(block.type)) });
   // A block pinned on the phone stands over the grid, its slot in its place (render.js stickOnPhone): the slot takes the rows, and the block follows it.
   const slot = el._urdStickSlot;
   if (slot?.isConnected) {
-    Object.assign(slot.style, { gridRow: css.gridRow, width: css.width, marginLeft: css.marginLeft });
+    Object.assign(slot.style, { gridRow: css.gridRow, gridColumn: css.gridColumn ?? '', width: css.width, marginLeft: css.marginLeft, marginRight: css.marginRight ?? '' });
     Object.assign(el.style, { width: css.width, marginLeft: css.marginLeft });
     placeStuck(el);
   } else {
@@ -5283,11 +5286,19 @@ function enhanceBlock(el, block, section, grid, host) {
       started = true;
       // A block pinned on the phone comes back from over the grid (render.js stickOnPhone), and its slot leaves, so the grid shows the layout it is placed into.
       // Moving the block lets go of the pointer its handle held, so the handle takes it again.
-      if (el._urdStickSlot) {
+      // A block standing in a cell with others (render.js, phoneCellCss) comes out of the cell the same way, and the section is drawn again as it lands.
+      const cell = el.parentElement?.classList.contains('urd-cell') ? el.parentElement : null;
+      // A block pinned in cells leaves its columns, so it moves over the whole row, and the section is drawn again as it lands.
+      if (el.style.gridColumn) {
         restick = true;
-        el._urdStickSlot.remove();
+        Object.assign(el.style, { gridColumn: '', marginLeft: '', marginRight: '' });
+      }
+      if (el._urdStickSlot || cell) {
+        restick = true;
+        el._urdStickSlot?.remove();
         el._urdStickSlot = null;
         flowEl.appendChild(el);
+        if (cell && !cell.children.length) cell.remove();
         try {
           handle.setPointerCapture(event.pointerId);
         } catch { /* the pointer is gone: the drag ends as it would */ }

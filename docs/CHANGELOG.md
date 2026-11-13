@@ -8,6 +8,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.14.1 - The phone in cells: blocks side by side on the phone, and «Width on the phone» - 13 November 2026
+
+- On the phone every block stood across the row unless pinned to rows of its own (BACKLOG 0.7.3.14). The row grid has eight cell columns between two outer tracks of 5 %, and «Width on the phone» with «Alignment» in a block's Placement puts a block in them (`frames.mobile.col` and `cols`, additive), beside the block before it in the reading order; a block without cells stands as before.
+- Blocks one after another in the same cells stand in one cell under each other, so a column of blocks shares a line with a picture beside it. A picture keeps its desktop shape in a cell, a cell holding words narrower than about 140 px stands across the row (the floor in base.css), and a stack stands in its first block's cells.
+- ADR-0019 is amended: the row grid's cell columns, the rejected alternative of every block on 8 column tracks, and deletion in the phone view's menus as 0.7.3.13 built it; the earlier text is in docs/adr/amended/.
+- The About page's small stories stand picture beside text on the phone; SCHEMA.md, ARCHITECTURE.md, the guides and the comparison describe the cells, and the Phone tab marks a block's width.
+
+The independent review before the commit found these, all fixed:
+
+1. Dragging a block pinned in cells in the phone view drew it off its place while dragging and after the drop. The drag takes it out of its columns as it starts, and the section is drawn again as it lands.
+2. «Width on the phone» on a block pinned to rows of its own threw away the width its handles gave it, and «Full» drew it at its desktop width. The setting stands for flowing blocks only.
+3. The arrow keys on a block pinned in cells wrote a field that moved nothing. Left and Right move it a column.
+4. A block joining a stack, or ↺ on one of its blocks, could leave the stack's blocks in different cells. A stack stands in its first block's cells, whatever the others hold.
+5. The words floor reached only cells of flowing blocks, and its mark was never taken away. A text pinned in cells or pinned while the page scrolls falls back too, and the mark follows the design a block draws.
+6. Comments and SCHEMA.md named the cells' functions in the wrong module, and the ADR's placement list lacked the cells. Corrected.
+
 ### 0.7.3.13 - The Phone tab: the phone order as a list with stacks and a custom order; Bug Fixes: menus in the phone view, and the phone order's rule always shown - 13 November 2026
 
 - What a section sets for the phone stood scattered over its menu and its blocks' menus (BACKLOG 0.7.3.13). «Phone» after Grid gathers it for the section at work: its space, its rule and «Custom order» (shared with the section's menu in PhoneSectionRows.svelte), its blocks in their phone order, and the blocks pinned to rows or hidden on phones, each with its way back.

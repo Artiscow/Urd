@@ -64,6 +64,21 @@ export const PAGE_SCHEMA_VERSION = 8;
  */
 export const MOBILE_ROW = 8;
 
+/** The cell columns of the phone's row grid (ADR-0019): eight between the row's outer edges, which stand where a block across the full row stands (base.css .urd-flow). */
+export const PHONE_COLUMNS = 8;
+
+/**
+ * A phone placement's cells, where it holds them: its first column and how many it spans, inside the eight; null for a block across the full row.
+ * @param {{col?: number, cols?: number}|null} placement
+ * @returns {{col: number, cols: number}|null}
+ */
+export function phoneCells(placement) {
+  const col = placement?.col;
+  const cols = placement?.cols;
+  if (!Number.isInteger(col) || !Number.isInteger(cols) || col < 1 || cols < 1 || col + cols - 1 > PHONE_COLUMNS) return null;
+  return cols === PHONE_COLUMNS ? null : { col, cols };
+}
+
 /** Vertical spacing between flow blocks in the mobile row grid, in px: the standard, which the site's `layout.mobileGap` and a section's `size.mobileGap` replace. */
 export const MOBILE_GAP = 16;
 

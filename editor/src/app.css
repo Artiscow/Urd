@@ -3676,6 +3676,17 @@
     white-space: nowrap;
   }
 
+  /* A block's width on the phone where it stands in cells, as «Width on the phone» names it */
+  .pp-cells {
+    flex: none;
+    padding: 0.05rem 0.35rem;
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+  }
+
   .pp-flag {
     display: inline-grid;
     flex: none;

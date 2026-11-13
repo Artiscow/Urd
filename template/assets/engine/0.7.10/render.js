@@ -12,14 +12,14 @@
  *    Blocks with row in frames.mobile are pinned to explicit row tracks.
  *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
-import { lift, MOBILE_ROW, MOBILE_GAP, mobileGapOf } from './migrate.js';
+import { lift, MOBILE_ROW, MOBILE_GAP, mobileGapOf, PHONE_COLUMNS, phoneCells } from './migrate.js';
 import { pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
 import { refreshSticky } from './sticky.js';
 import { pinsOnPhone, stuckBox, stickyLeads } from './sticky-model.js';
-import { stackOrder, phoneSetupOf } from './phone-order.js';
+import { stackOrder, phoneSetupOf, phoneParts } from './phone-order.js';
 import { t } from './i18n.js';
 import { isAnchorName } from './nav-model.js';
 
@@ -404,6 +404,9 @@ function watchStuck(target) {
   stickWatch.observe(target);
 }
 
+/** The parts of a block's place in the row grid its slot takes over while the block is pinned on the phone (stickOnPhone). */
+const SLOT_PLACE = ['gridRow', 'gridColumn', 'width', 'marginLeft', 'marginRight', 'justifySelf'];
+
 /**
  * Brings the blocks pinned on the phone in a holder to their slots: each slot as tall as its block, the holder over the group's slots, and each block where its slot stands (stuckBox in sticky-model.js).
  * Exported for the editing layer, which moves a slot by the keys.
@@ -424,7 +427,12 @@ export function placeStuck(holder) {
   const placed = stuckBox(els.map((el) => ({ top: el._urdStickSlot.offsetTop, h: el.offsetHeight })));
   box.style.marginTop = `${placed.top}px`;
   box.style.height = `${placed.height}px`;
-  els.forEach((el, i) => { el.style.top = `${placed.tops[i]}px`; });
+  els.forEach((el, i) => {
+    el.style.top = `${placed.tops[i]}px`;
+    // A block in cells stands over its slot's own columns, measured from the grid's edge.
+    const slot = el._urdStickSlot;
+    if (slot.style.gridColumn) Object.assign(el.style, { left: `${slot.offsetLeft}px`, right: 'auto', width: `${slot.offsetWidth}px`, marginLeft: '0px', marginRight: '0px' });
+  });
   // A release at a later section: the layer reaches down to that section's foot, watched with the page's sections as they change size, since a section between moves it too.
   const layer = box.parentElement;
   const flow = layer?.parentElement;
@@ -817,6 +825,32 @@ export function autoGrows(block, def) {
   return typeof def?.autoGrow === 'function' ? Boolean(def.autoGrow(block.props ?? {})) : Boolean(def?.autoGrow);
 }
 
+/** A cell holds words, and so stands across the row where too narrow (the floor in base.css), while any of its blocks draws words (`data-urd-words`). */
+function syncCellWords(cell) {
+  cell.classList.toggle('urd-cell-words', [...cell.children].some((child) => child.dataset.urdWords === '1'));
+}
+
+/** The phone's cells (migrate.js), read here with the rest of the row grid. */
+export { PHONE_COLUMNS, phoneCells };
+
+/**
+ * The place in the row grid of what stands in cells: a cell of flowing blocks (render.js wraps the blocks one after another in the same cells in one, so they stand under each other and the next block in other cells shares their line), or a block pinned in cells.
+ * Its grid columns, and its inner edges half the space between blocks in, so two cells side by side stand that space apart while the outer edges line up with a block across the full row.
+ * The grid's first line is the row's outer edge (base.css), so cell column c starts at line c + 1.
+ * @param {{col: number, cols: number}} cells
+ * @returns {object} Style map
+ */
+export function phoneCellCss({ col, cols }) {
+  const half = 'calc(var(--urd-mobile-gap, 16px) / 2)';
+  return {
+    gridColumn: `${col + 1} / span ${cols}`,
+    width: 'auto',
+    justifySelf: 'stretch',
+    marginLeft: col > 1 ? half : '0px',
+    marginRight: col + cols - 1 < PHONE_COLUMNS ? half : '0px',
+  };
+}
+
 /**
  * Translates a mobile placement to CSS for the row grid (ADR-0019).
  * Pure function (no DOM), tested in tests/render.test.mjs.
@@ -827,10 +861,15 @@ export function autoGrows(block, def) {
  * to explicit row tracks. The rows are minmax(MOBILE_ROW, auto) and grow
  * with the content, so a row position is a position in the composition, not
  * a frozen pixel distance.
+ * A placement with cells (`col` and `cols`, phoneCells) stands in those of
+ * the eight cell columns: pinned, as a grid item of its own (phoneCellCss);
+ * flowing, in its cell's whole width, the cell placed by render.js. A block
+ * whose size is its frame keeps its desktop shape there, its height
+ * following its width.
  *
- * @param {{x?: number, w?: number, row?: number, rows?: number, z?: number, rot?: number}|null} placement
+ * @param {{x?: number, w?: number, row?: number, rows?: number, col?: number, cols?: number, z?: number, rot?: number}|null} placement
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} desktop The block's desktop frame
- * @param {{autoGrow?: boolean, gap?: number}} [opts] autoGrow: text and data blocks with natural height; gap: the space under a flowing block in px (mobileGapOf), MOBILE_GAP without it
+ * @param {{autoGrow?: boolean, gap?: number, byWidth?: boolean, designWidth?: number}} [opts] autoGrow: text and data blocks with natural height; gap: the space under a flowing block in px (mobileGapOf), MOBILE_GAP without it; byWidth: a block whose size is its frame (FIT_BY_WIDTH), with designWidth the width its desktop frame's percent is of
  * @returns {object} Style map for Object.assign(el.style, ...)
  */
 export function mobilePlacementToCss(placement, desktop, opts = {}) {
@@ -842,6 +881,7 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
   const z = placement?.z ?? desktop.z;
   if (z != null) css.zIndex = String(z);
 
+  const cells = phoneCells(placement);
   if (Number.isFinite(placement?.row)) {
     // Pinned: explicit row tracks. Without rows the span is derived from
     // the desktop height. Height is not set: the element stretches to its
@@ -850,6 +890,7 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
       ? placement.rows
       : Math.max(1, Math.ceil(desktop.h / MOBILE_ROW));
     css.gridRow = `${placement.row} / span ${rows}`;
+    if (cells) return Object.assign(css, phoneCellCss(cells));
     css.width = `${placement.w ?? desktop.w}%`;
     css.marginLeft = `${placement.x ?? desktop.x}%`;
     css.justifySelf = 'start';
@@ -857,13 +898,25 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
   }
 
   // Flowing: auto-placed. Partial overrides apply only to the fields
-  // actually present in the placement.
-  if (placement?.w != null) css.width = `${placement.w}%`;
-  if (placement?.x != null) {
-    css.marginLeft = `${placement.x}%`;
-    css.justifySelf = 'start';
+  // actually present in the placement. A block in cells stands in its cell's whole width (phoneCellCss places the cell).
+  if (cells) {
+    css.width = '100%';
+  } else {
+    if (placement?.w != null) css.width = `${placement.w}%`;
+    if (placement?.x != null) {
+      css.marginLeft = `${placement.x}%`;
+      css.justifySelf = 'start';
+    }
   }
-  if (!opts.autoGrow) {
+  // A block whose size is its frame, in cells narrower than the row: its desktop shape, the height following the cells' width and the row growing to it.
+  const shape = cells && opts.byWidth && opts.designWidth > 0 && desktop.w > 0 && desktop.h > 0
+    ? (desktop.w / 100) * opts.designWidth / desktop.h : 0;
+  if (shape) {
+    css.aspectRatio = String(Math.round(shape * 1000) / 1000);
+  } else if (cells && !opts.autoGrow) {
+    // In a cell the block is no grid item: its desktop height, the cell growing to its blocks.
+    css.height = `${desktop.h}px`;
+  } else if (!opts.autoGrow) {
     // Fixed height from desktop, the span holding the block and the gap under it (margin-bottom, `--urd-mobile-gap` in base.css).
     // The span holds the standard gap at most: a larger gap grows the row tracks, as a text block's margin does, so a block placed by hand below keeps its distance and no flowing block jumps past it.
     const gap = Math.min(Number.isFinite(opts.gap) ? opts.gap : MOBILE_GAP, MOBILE_GAP);
@@ -1012,7 +1065,13 @@ export function renderSection(section, site, host, opts = {}) {
     // The blocks pinned on the phone while the page scrolls, by their pinning group (each alone without one), the group's first block in the section's order speaking for it as on the desktop (stickyLeads).
     const leads = stickyLeads(section.blocks);
     const stuck = new Map();
-    for (const block of stackOrder(section.blocks, phoneSetupOf(section))) {
+    /** The cell the flowing blocks one after another in the same cells stand in, under each other, as one grid item (phoneCellCss). */
+    let cell = null;
+    // A stack stands in its first block's cells, whatever cells its other blocks hold, so it stays one.
+    const parts = phoneParts(section.blocks, phoneSetupOf(section));
+    const byId = new Map(section.blocks.map((b) => [b.id, b]));
+    const stackHead = new Map(parts.stacks.flatMap((ids) => ids.map((id) => [id, byId.get(ids[0])])));
+    for (const block of parts.order) {
       const el = document.createElement('div');
       const pinned = Number.isFinite(block.frames.mobile?.row);
       el.className = pinned ? 'urd-block urd-block-pinned' : 'urd-block urd-block-flow';
@@ -1020,16 +1079,50 @@ export function renderSection(section, site, host, opts = {}) {
       // The decor mark is read by the stagger animation (decor is ornament
       // and must not delay the content wave).
       if (block.decor) el.dataset.decor = '1';
+      const key = block.sticky?.group || `solo-${block.id}`;
+      const sticks = Boolean(block.sticky) && pinsOnPhone(leads.get(key));
+      // A flowing block in cells stands in a cell with the blocks before it in the same cells, or opens one; a block pinned on the phone while the page scrolls is a grid item of its own, through its slot.
+      const own = phoneCells(block.frames.mobile);
+      const head = stackHead.get(block.id);
+      const cells = pinned ? null : head && head !== block && !Number.isFinite(head.frames.mobile?.row) ? phoneCells(head.frames.mobile) : own;
+      if (cells && !sticks) {
+        const name = `${cells.col}/${cells.cols}`;
+        if (cell?.dataset.cells !== name) {
+          cell = document.createElement('div');
+          cell.className = 'urd-cell';
+          cell.dataset.cells = name;
+          cell.dataset.cols = String(cells.cols);
+          Object.assign(cell.style, phoneCellCss(cells));
+          flow.appendChild(cell);
+        }
+      } else {
+        cell = null;
+      }
+      const into = cell ?? flow;
       // Auto-growing blocks (text, and def.autoGrow: faq/gallery/collection
       // and plugin blocks with content of their own) get natural height: a
       // fixed desktop height would clip taller mobile content.
-      Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow: autoGrows(block, Urd.blocks.get(block.type)), gap }));
+      // A block in cells keeps its desktop shape there where its size is its frame, and a cell holding words narrower than they read well stands across the row (the floor in base.css).
+      const placing = { gap, byWidth: FIT_BY_WIDTH.has(block.type), designWidth: canvas._urdDesignW };
+      const placement = pinned || cells === own ? block.frames.mobile : { ...block.frames.mobile, ...(cells ?? { col: 1, cols: PHONE_COLUMNS }) };
+      el._urdPhonePlace = placement;
+      const place = (autoGrow) => {
+        Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { ...placing, autoGrow }));
+        if (cells && sticks) Object.assign(el.style, phoneCellCss(cells));
+      };
+      place(autoGrows(block, Urd.blocks.get(block.type)));
       // A block with a phone design stands in the flow before it is drawn, so its own width says whether it draws that design (renderBlock), and its layout follows the design it draws.
       const phone = hasPhoneDesign(block.type, block.props);
-      if (phone) flow.appendChild(el);
+      if (phone) into.appendChild(el);
       const narrow = phone && isNarrowBlock(el, block, ctx);
       const drawn = drawnBlock(block, narrow);
-      if (drawn !== block) Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow: autoGrows(drawn, Urd.blocks.get(block.type)), gap }));
+      if (drawn !== block) place(autoGrows(drawn, Urd.blocks.get(block.type)));
+      // Words in cells: the cell, the block pinned in cells, or the slot of a block pinned while the page scrolls, stands across the row where too narrow (the floor in base.css).
+      if (autoGrows(drawn, Urd.blocks.get(block.type))) el.dataset.urdWords = '1';
+      if (pinned && own) el.dataset.cols = String(own.cols);
+      if (cell) syncCellWords(cell);
+      else if (pinned && own) el.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');
+
       // A block with columns or cards lays itself out by its own width (base.css),
       // and a block with its own height places its content in the box.
       if (followsWidth(drawn)) el.dataset.urdWidth = 'own';
@@ -1053,13 +1146,17 @@ export function renderSection(section, site, host, opts = {}) {
         el.dataset.stickyGroup = block.sticky.group ?? '';
       }
       renderBlock(Urd, el, block, ctx, narrow);
-      const key = block.sticky?.group || `solo-${block.id}`;
-      if (block.sticky && pinsOnPhone(leads.get(key))) {
+      if (sticks) {
         // Pinned on the phone: a slot of its size keeps its place in the row grid, and the block stands in its group's holder over the grid (stickOnPhone).
         const slot = document.createElement('div');
         slot.className = pinned ? 'urd-stick-slot' : 'urd-stick-slot urd-stick-slot-flow';
-        for (const prop of ['gridRow', 'width', 'marginLeft', 'justifySelf']) if (el.style[prop]) slot.style[prop] = el.style[prop];
+        for (const prop of SLOT_PLACE) if (el.style[prop]) slot.style[prop] = el.style[prop];
+        if (cells) {
+          slot.dataset.cols = String(cells.cols);
+          slot.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');
+        }
         el.style.gridRow = '';
+        el.style.gridColumn = '';
         el.style.justifySelf = '';
         // A block placed by hand stretches to its rows in the grid, which grow with its content; in the holder it takes their height itself, and more where its content needs it (placeStuck).
         if (pinned && !el.style.height) {
@@ -1072,7 +1169,7 @@ export function renderSection(section, site, host, opts = {}) {
         if (!stuck.has(key)) stuck.set(key, { lead: leads.get(key), members: [] });
         stuck.get(key).members.push({ el, block, narrow });
       } else {
-        flow.appendChild(el);
+        into.appendChild(el);
         // A block drawing a phone design of its own has no design width to keep its lines from.
         zoomOnPhone(el, block, narrow ? 0 : canvas._urdDesignW);
       }
@@ -1269,12 +1366,26 @@ function redrawForWidth(el) {
   }
   const drawn = drawnBlock(state.block, narrow);
   if (state.ctx.viewport === 'mobile') {
-    const css = mobilePlacementToCss(state.block.frames.mobile, state.block.frames.desktop, { autoGrow: autoGrows(drawn, state.def), gap: mobileGapOf(state.ctx.section, state.ctx.site) });
+    const canvas = el.closest('.urd-canvas');
+    // The place the row grid gave the block: a stack's other blocks stand in its first block's cells.
+    const placement = el._urdPhonePlace ?? state.block.frames.mobile;
+    const css = mobilePlacementToCss(placement, state.block.frames.desktop, {
+      autoGrow: autoGrows(drawn, state.def), gap: mobileGapOf(state.ctx.section, state.ctx.site),
+      byWidth: FIT_BY_WIDTH.has(state.block.type), designWidth: canvas?._urdDesignW,
+    });
+    // A block in cells: a grid item of its own while it pins on the phone, else its cell is, and the cell's words floor follows the design it draws.
+    const cells = Number.isFinite(placement?.row) ? null : phoneCells(placement);
+    const cell = el.parentElement?.classList.contains('urd-cell') ? el.parentElement : null;
+    if (cells && !cell) Object.assign(css, phoneCellCss(cells));
+    if (autoGrows(drawn, state.def)) el.dataset.urdWords = '1'; else delete el.dataset.urdWords;
+    if (cell) syncCellWords(cell);
+    else if (el._urdStickSlot?.dataset.cols) el._urdStickSlot.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');
+    else if (el.dataset.cols) el.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');
     // A block pinned on the phone gives its place in the grid to its slot (stickOnPhone).
     const slot = el._urdStickSlot;
     if (slot?.isConnected) {
-      const { gridRow, justifySelf, ...own } = css;
-      Object.assign(slot.style, { gridRow: gridRow ?? '', justifySelf: justifySelf ?? '', width: css.width ?? '', marginLeft: css.marginLeft ?? '' });
+      const { gridRow, gridColumn, justifySelf, ...own } = css;
+      Object.assign(slot.style, { gridRow: gridRow ?? '', gridColumn: gridColumn ?? '', justifySelf: justifySelf ?? '', width: css.width ?? '', marginLeft: css.marginLeft ?? '', marginRight: css.marginRight ?? '' });
       Object.assign(el.style, own);
     } else {
       Object.assign(el.style, css);

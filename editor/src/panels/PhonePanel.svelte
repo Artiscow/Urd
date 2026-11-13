@@ -10,6 +10,7 @@
   import { blockWords, sectionWords } from '$engine/anchor-model.js';
   import { phoneSetupOf, stackOrder } from '$engine/phone-order.js';
   import { phoneTree, phoneLand, hasPhonePlace, flowing } from '$engine/phone-moves.js';
+  import { phoneCells } from '$engine/migrate.js';
   import { navDropAt, navDropOrNull, canonicalDrop } from '../lib/nav-drop.js';
   import { RowDrag, slotOut } from '../lib/rows/row-drag.svelte.js';
   import { phoneMark } from '../lib/phone-marks.js';
@@ -57,6 +58,12 @@
   function nameOf(block) {
     const words = blockWords(block);
     return words ? `${ed.blockLabel(block.type)}: ${words}` : ed.blockLabel(block.type);
+  }
+  /** A block's width on the phone where it stands in cells (migrate.js phoneCells), as «Width on the phone» names it, else null. */
+  function cellsMark(block) {
+    const cells = phoneCells(block?.frames?.mobile);
+    if (!cells) return null;
+    return [2, 4, 6].includes(cells.cols) ? ta(`opt.phoneWidth.${cells.cols}`) : `${cells.cols}/8`;
   }
   /** A stack's name: its first block with words, else its first block's kind. */
   function stackName(ids) {
@@ -230,6 +237,7 @@
     {#if r.node}
       <span class="pp-mark pp-stack-icon" title={r.node.kind === 'column' ? ta('tip.phone.column') : undefined}>{@html ICONS.stack}</span>
       <span class="pp-name">{stackName(r.ids)}<span class="sr-only">, {ta('phone.blocks', { n: r.ids.length })}</span></span>
+      {#if cellsMark(byId.get(r.ids[0]))}<span class="pp-cells" title={ta('lbl.phoneWidth')}>{cellsMark(byId.get(r.ids[0]))}</span>{/if}
       {#if !setup.list && hasPhonePlace(byId.get(r.ids[0]), section.blocks, setup)}
         <button type="button" class="pp-chip pp-chip-own" title={ta('tip.phone.placed')} onclick={() => backToRule(r.ids[0])}>{ta('phone.placed')}{@html ICONS.reset}</button>
       {/if}
@@ -240,6 +248,7 @@
       {@render mark(block)}
       <span class="pp-num">{numbers.get(r.id)}</span>
       <span class="pp-name">{nameOf(block)}</span>
+      {#if r.level === 0 && cellsMark(block)}<span class="pp-cells" title={ta('lbl.phoneWidth')}>{cellsMark(block)}</span>{/if}
       {#if block.hideDesktop}<span class="pp-flag" role="img" title={ta('cap.phoneOnly')} aria-label={ta('cap.phoneOnly')}>{@html CAP_ICONS.phoneOnly}</span>{/if}
       <!-- A block alone, or a block of a column the rule reads whole, can hold a place of its own; a block of the owner's stack reads where its stack does -->
       {#if (r.level === 0 || r.kind === 'column') && !setup.list && hasPhonePlace(block, section.blocks, setup)}

@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { frameToCss, mobilePlacementToCss, autoGrows, anchorTargets, EDITOR_ONLY } = await engineImport('render.js');
+const { frameToCss, mobilePlacementToCss, phoneCells, phoneCellCss, PHONE_COLUMNS, autoGrows, anchorTargets, EDITOR_ONLY } = await engineImport('render.js');
 const { galleryBlock } = await engineImport('blocks/gallery.js');
 const { MOBILE_ROW, MOBILE_GAP } = await engineImport('migrate.js');
 
@@ -85,6 +85,52 @@ test('mobilePlacementToCss: z and rot are inherited from desktop when the placem
   const css = mobilePlacementToCss(null, { ...desktop, z: 7, rot: 12 }, { autoGrow: true });
   assert.equal(css.transform, 'rotate(12deg)');
   assert.equal(css.zIndex, '7');
+});
+
+test('phoneCells: a placement\'s cells inside the eight, and none for the full row or cells that do not fit', () => {
+  assert.equal(PHONE_COLUMNS, 8);
+  assert.deepEqual(phoneCells({ col: 5, cols: 4 }), { col: 5, cols: 4 });
+  assert.equal(phoneCells({ col: 1, cols: 8 }), null, 'the full row');
+  assert.equal(phoneCells({ col: 6, cols: 4 }), null, 'past the eighth column');
+  assert.equal(phoneCells({ col: 0, cols: 2 }), null);
+  assert.equal(phoneCells({ col: 2.5, cols: 2 }), null);
+  assert.equal(phoneCells({ x: 5, w: 50 }), null);
+  assert.equal(phoneCells(null), null);
+});
+
+test('phoneCellCss: the cell columns from the row\'s outer line, the inner edges half the space between blocks in', () => {
+  const left = phoneCellCss({ col: 1, cols: 4 });
+  assert.equal(left.gridColumn, '2 / span 4');
+  assert.equal(left.marginLeft, '0px', 'the outer edge lines up with a block across the row');
+  assert.equal(left.marginRight, 'calc(var(--urd-mobile-gap, 16px) / 2)');
+  const right = phoneCellCss({ col: 5, cols: 4 });
+  assert.equal(right.gridColumn, '6 / span 4');
+  assert.equal(right.marginLeft, 'calc(var(--urd-mobile-gap, 16px) / 2)');
+  assert.equal(right.marginRight, '0px');
+  assert.equal(right.justifySelf, 'stretch');
+});
+
+test('mobilePlacementToCss: a flowing block in cells fills its cell, a picture keeping its desktop shape', () => {
+  const text = mobilePlacementToCss({ col: 1, cols: 4 }, desktop, { autoGrow: true });
+  assert.equal(text.width, '100%');
+  assert.equal(text.gridColumn, undefined, 'the cell is the grid item');
+  assert.equal(text.height, undefined);
+  const box = mobilePlacementToCss({ col: 1, cols: 4 }, desktop, {});
+  assert.equal(box.height, '120px');
+  assert.equal(box.gridRow, undefined);
+  // 40 % of 1200 px over 120 px.
+  const picture = mobilePlacementToCss({ col: 5, cols: 4 }, desktop, { byWidth: true, designWidth: 1200 });
+  assert.equal(picture.aspectRatio, '4');
+  assert.equal(picture.height, undefined);
+  assert.equal(mobilePlacementToCss({ col: 5, cols: 4 }, desktop, { byWidth: true }).height, '120px', 'without a design width it keeps its height');
+});
+
+test('mobilePlacementToCss: a block pinned in cells is a grid item of its own on its rows, and a block without cells is as before', () => {
+  const pinned = mobilePlacementToCss({ row: 3, rows: 6, col: 3, cols: 2 }, desktop, {});
+  assert.equal(pinned.gridRow, '3 / span 6');
+  assert.equal(pinned.gridColumn, '4 / span 2');
+  assert.equal(pinned.width, 'auto');
+  assert.deepEqual(mobilePlacementToCss({ col: 1, cols: 8 }, desktop, {}), mobilePlacementToCss(null, desktop, {}), 'the full row is no cells');
 });
 
 test('the editor-only parts the push and the fit leave out are the ones base.css hides under .urd-fit-measure', async () => {
