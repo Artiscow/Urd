@@ -200,7 +200,8 @@
             { "const": "full" }
           ]
         },
-        "gutter": { "type": "integer", "minimum": 0, "maximum": 20, "description": "Minimum side margin between the content surface and the viewport edge, in PERCENT OF THE VIEWPORT WIDTH (vw). Was px until schemaVersion 2. Applies only above the mobile breakpoint, and only has effect where contentWidth does not bind yet." }
+        "gutter": { "type": "integer", "minimum": 0, "maximum": 20, "description": "Minimum side margin between the content surface and the viewport edge, in PERCENT OF THE VIEWPORT WIDTH (vw). Was px until schemaVersion 2. Applies only above the mobile breakpoint, and only has effect where contentWidth does not bind yet." },
+        "mobileGap": { "type": "integer", "minimum": 0, "maximum": 96, "description": "The space between the blocks that flow in a section's row grid on the phone, in px, for every section without its own size.mobileGap (additive from 0.7.3.7, ADR-0019). Absence = 16." }
       }
     },
     "grid": { "$ref": "#/$defs/grid" },

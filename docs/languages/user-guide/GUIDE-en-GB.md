@@ -165,6 +165,7 @@ Visitors on phones automatically get the content in one column, in natural readi
 - **The phone icon in the top bar** shows the page as it looks on a phone.
 - If you want to fine-tune, drag a block in the phone view: it is then placed by hand on the phone, while the others keep flowing in reading order. ↺ on the block takes it back into the flow, and ↺ on the section takes every block back.
 - **The order on the phone**: a flowing block's bar in the phone view has buttons that move it earlier or later in the reading order, and Alt with the up or down arrow does the same. A block placed by hand moves with the arrow keys, a row up or down and a little sideways.
+- **Space between blocks on the phone**: the Site panel's «Content width» sets it for every section (16 px as standard), and a section sets its own in its menu, under «Size and grid», in the phone view.
 - **Phone review**: if you change something on desktop in a section that is hand-tuned for phones, the section is marked yellow and the top bar says so («1 section needs a phone review»). That only means: take a look in the phone view and check that everything still looks good, and confirm with ✓.
 
 ## Pages, menu and theme

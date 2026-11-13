@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW } = await engineImport('migrate.js');
+const { lift, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf } = await engineImport('migrate.js');
 const { mapBlock } = await engineImport('blocks/map.js');
 
 const textV3 = {
@@ -521,4 +521,12 @@ test('page v7 -> v8: a text block in a document design becomes the terms block, 
   // A template's blocks, inserted outside the page lift, are lifted the same way.
   const blocks = [{ type: 'text', props: { design: 'long' } }, { type: 'text', props: {} }, { type: 'image', props: { design: 'long' } }];
   assert.deepEqual(liftTermsBlocks(blocks).map((b) => b.type), ['terms', 'text', 'image']);
+});
+
+test('the space between flowing blocks on the phone: the section\'s own, else the site\'s, else the standard, within its bounds', () => {
+  assert.equal(mobileGapOf({}, {}), MOBILE_GAP);
+  assert.equal(mobileGapOf({}, { layout: { mobileGap: 24 } }), 24);
+  assert.equal(mobileGapOf({ size: { mobileGap: 0 } }, { layout: { mobileGap: 24 } }), 0, 'a section\'s own zero stands');
+  assert.equal(mobileGapOf({ size: { mobileGap: 400 } }, null), MOBILE_GAP_MAX);
+  assert.equal(mobileGapOf({ size: { mobileGap: -8 } }, null), 0);
 });

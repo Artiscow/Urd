@@ -219,7 +219,8 @@
       "version": 1,
       "preset": "faq",
       "size": {
-        "minHeight": "576px"
+        "minHeight": "576px",
+        "mobileGap": 32
       },
       "grid": null,
       "background": {

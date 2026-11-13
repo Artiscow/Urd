@@ -13,7 +13,7 @@
  *    hideMobile blocks are omitted, text and auto-growing blocks get
  *    natural height, and the section height follows from the grid.
  */
-import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
+import { lift, MOBILE_ROW, MOBILE_GAP, mobileGapOf } from './migrate.js';
 import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
@@ -741,7 +741,7 @@ export function autoGrows(block, def) {
  *
  * @param {{x?: number, w?: number, row?: number, rows?: number, z?: number, rot?: number}|null} placement
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} desktop The block's desktop frame
- * @param {{autoGrow?: boolean}} [opts] autoGrow: text and data blocks with natural height
+ * @param {{autoGrow?: boolean, gap?: number}} [opts] autoGrow: text and data blocks with natural height; gap: the space under a flowing block in px (mobileGapOf), MOBILE_GAP without it
  * @returns {object} Style map for Object.assign(el.style, ...)
  */
 export function mobilePlacementToCss(placement, desktop, opts = {}) {
@@ -775,11 +775,11 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
     css.justifySelf = 'start';
   }
   if (!opts.autoGrow) {
-    // Fixed height from desktop; the span accommodates margin-bottom
-    // (MOBILE_GAP from base.css), so the row tracks stay MOBILE_ROW px and
-    // are never inflated.
+    // Fixed height from desktop, the span holding the block and the gap under it (margin-bottom, `--urd-mobile-gap` in base.css).
+    // The span holds the standard gap at most: a larger gap grows the row tracks, as a text block's margin does, so a block placed by hand below keeps its distance and no flowing block jumps past it.
+    const gap = Math.min(Number.isFinite(opts.gap) ? opts.gap : MOBILE_GAP, MOBILE_GAP);
     css.height = `${desktop.h}px`;
-    css.gridRow = `auto / span ${Math.max(1, Math.ceil((desktop.h + MOBILE_GAP) / MOBILE_ROW))}`;
+    css.gridRow = `auto / span ${Math.max(1, Math.ceil((desktop.h + gap) / MOBILE_ROW))}`;
   }
   return css;
 }
@@ -915,6 +915,9 @@ export function renderSection(section, site, host, opts = {}) {
     // row tracks, and the minmax rows let the content grow without JS.
     const flow = document.createElement('div');
     flow.className = 'urd-flow';
+    // The space between the flowing blocks: the section's own, the site's, or the standard.
+    const gap = mobileGapOf(section, site);
+    flow.style.setProperty('--urd-mobile-gap', `${gap}px`);
     // On the page before its blocks are drawn, so a spot's id is checked against the section's own blocks too.
     canvas.appendChild(flow);
     for (const block of stackOrder(section.blocks)) {
@@ -928,13 +931,13 @@ export function renderSection(section, site, host, opts = {}) {
       // Auto-growing blocks (text, and def.autoGrow: faq/gallery/collection
       // and plugin blocks with content of their own) get natural height: a
       // fixed desktop height would clip taller mobile content.
-      Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow: autoGrows(block, Urd.blocks.get(block.type)) }));
+      Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow: autoGrows(block, Urd.blocks.get(block.type)), gap }));
       // A block with a phone design stands in the flow before it is drawn, so its own width says whether it draws that design (renderBlock), and its layout follows the design it draws.
       const phone = hasPhoneDesign(block.type, block.props);
       if (phone) flow.appendChild(el);
       const narrow = phone && isNarrowBlock(el, block, ctx);
       const drawn = drawnBlock(block, narrow);
-      if (drawn !== block) Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow: autoGrows(drawn, Urd.blocks.get(block.type)) }));
+      if (drawn !== block) Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow: autoGrows(drawn, Urd.blocks.get(block.type)), gap }));
       // A block with columns or cards lays itself out by its own width (base.css),
       // and a block with its own height places its content in the box.
       if (followsWidth(drawn)) el.dataset.urdWidth = 'own';
@@ -1145,7 +1148,7 @@ function redrawForWidth(el) {
   }
   const drawn = drawnBlock(state.block, narrow);
   if (state.ctx.viewport === 'mobile') {
-    Object.assign(el.style, mobilePlacementToCss(state.block.frames.mobile, state.block.frames.desktop, { autoGrow: autoGrows(drawn, state.def) }));
+    Object.assign(el.style, mobilePlacementToCss(state.block.frames.mobile, state.block.frames.desktop, { autoGrow: autoGrows(drawn, state.def), gap: mobileGapOf(state.ctx.section, state.ctx.site) }));
   } else if (followsContent(drawn)) {
     el.dataset.urdHeight = 'content';
   } else {

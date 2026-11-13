@@ -3,6 +3,7 @@
      A fold of settings says its value while closed and carries its reset (lib/site-groups.js); a fold of a list says how many it holds; the media's tidy stands in the Updates panel. The state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
   import { WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, WIDTH_DEFAULT, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP, GUTTER_DEFAULT, WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS, clampWidth, clampGutter, contentBand, presetOf } from '../lib/content-width.js';
+  import { MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf } from '$engine/migrate.js';
   import Choice from '../lib/Choice.svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import Setting from '../lib/rows/Setting.svelte';
@@ -91,6 +92,9 @@
 
   const setContentGutter = (g) => setLayout({ gutter: clampGutter(g) }, 'edit:site-gutter');
 
+  /** The space between a section's blocks on the phone, for every section without its own; the standard is stored as no field. */
+  const setMobileGap = (v) => setLayout({ mobileGap: v === MOBILE_GAP ? undefined : v }, 'edit:site-mobile-gap');
+
   function setSiteLang(v) {
     siteMutate('site', () => { siteDraft.site.lang = v; });
   }
@@ -170,7 +174,7 @@
   const widthGroup = () => siteGroup(() => siteDraft.layout, (name, change) => siteMutate(name, () => {
     change();
     if (siteDraft.layout && !Object.keys(siteDraft.layout).length) delete siteDraft.layout;
-  }), 'site-width', { contentWidth: WIDTH_DEFAULT, gutter: GUTTER_DEFAULT });
+  }), 'site-width', { contentWidth: WIDTH_DEFAULT, gutter: GUTTER_DEFAULT, mobileGap: MOBILE_GAP });
   const shopGroup = () => siteGroup(() => siteDraft.site.commerce, (name, change) => {
     siteMutate(name, () => {
       change();
@@ -181,7 +185,8 @@
 
   /** The words for the closed folds. */
   const langName = () => siteLangOptions().find(([code]) => code === siteLangValue())?.[1] ?? siteLangValue();
-  const widthValue = () => `${layoutWidth === 'full' ? ta('lbl.width.full') : `${layoutWidth} px`} · ${layoutGutter} vw`;
+  const widthValue = () => [`${layoutWidth === 'full' ? ta('lbl.width.full') : `${layoutWidth} px`}`, `${layoutGutter} vw`,
+    mobileGapOf(null, siteDraft) !== MOBILE_GAP ? ta('lbl.mobileGapValue', { n: mobileGapOf(null, siteDraft) }) : ''].filter(Boolean).join(' · ');
 
   /** A calendar's card: its colour, its name and its address. */
   const calendarCard = (cal) => ({ name: cal.name || cal.url || ta('ui.addSiteCalendar'), detail: cal.url || ta('calendar.sourceUrl'), swatch: swatchCss(cal.color) });
@@ -295,6 +300,11 @@
         onchange={(id) => setContentGutter(GUTTER_PRESETS.find((p) => p.id === id).gutter)} />
       <SliderRow label={ta('lbl.gutterVw')} title={ta('tip.site.gutterVw')} value={layoutGutter} min={GUTTER_MIN} max={GUTTER_MAX} step={GUTTER_STEP}
         shown={`${layoutGutter} vw`} oninput={(v) => setContentGutter(v)} />
+    </Setting>
+    <!-- The space between the blocks on the phone, for every section that has none of its own -->
+    <Setting key="mobileGap">
+      <SliderRow label={ta('lbl.mobileGap')} title={ta('tip.site.mobileGap')} value={mobileGapOf(null, siteDraft)} min={0} max={MOBILE_GAP_MAX} step={4}
+        shown={`${mobileGapOf(null, siteDraft)} px`} oninput={(v) => setMobileGap(v)} />
     </Setting>
   </Fold>
 

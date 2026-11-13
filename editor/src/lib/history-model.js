@@ -55,7 +55,7 @@ export function stepKind(key, { typed = false } = {}) {
   if (k === 'footer' || k.startsWith('footer-')) return kind('footer', 'panel_footer', false);
   if (k === 'theme' || k.startsWith('edit:theme-')) return kind('theme', 'panel_theme', false);
   if (k === 'legal' || k.startsWith('edit:legal-')) return kind('legal', 'panel_legal', false);
-  if (k === 'site' || k === 'setup' || k === 'site-shortcuts' || k === 'grid:site' || k.startsWith('edit:site-')) return kind('site', 'panel_site', false);
+  if (k === 'site' || k === 'setup' || k.startsWith('site-') || k === 'grid:site' || k.startsWith('edit:site-')) return kind('site', 'panel_site', false);
   if (k === 'collections') return kind('collections', 'panel_collections', false);
   if (k === 'templates') return kind('templates', 'bookmark', false);
   if (k === 'plugins') return kind('plugins', 'panel_plugins', false);
@@ -65,7 +65,7 @@ export function stepKind(key, { typed = false } = {}) {
   if (k === 'delete-section') return kind('deleteSection', 'cross', true);
   if (k === 'move-section') return kind('moveSection', 'up', true);
   if (k === 'duplicate-section') return kind('duplicateSection', 'copy', true);
-  if (k === 'section-size' || k === 'layout' || k.startsWith('grid:') || k.startsWith('sticky-group:')) return kind('section', 'gridToggle', true);
+  if (k === 'section-size' || k === 'layout' || k.startsWith('grid:') || k.startsWith('sticky-group:') || k.startsWith('edit:section-')) return kind('section', 'gridToggle', true);
   if (k === 'add-block' || k === 'add-blocks' || k.endsWith('-item') || k === 'form-field' || k === 'gallery-add') return kind('addBlock', 'plus', true);
   if (k === 'delete-block' || k === 'gallery-remove') return kind('deleteBlock', 'cross', true);
   if (k === 'move-block' || k === 'gallery-move' || /^edit:(z-|multi-|place-|align-|nudge)/.test(k)) return kind('moveBlock', 'fit', true);

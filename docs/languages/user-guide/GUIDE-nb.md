@@ -163,6 +163,7 @@ Besøkende på telefon får automatisk innholdet i én kolonne, i naturlig leser
 - **Telefonikonet i topplinjen** viser siden slik den blir på telefon.
 - Vil du finjustere, dra en blokk i telefonvisningen: den er da plassert for hånd på telefonen, mens de andre fortsetter å flyte i leserekkefølgen. ↺ på blokken tar den tilbake i flyten, og ↺ på seksjonen tar alle blokkene tilbake.
 - **Rekkefølgen på telefonen**: linjen til en blokk som flyter har knapper i telefonvisningen som flytter den tidligere eller senere i leserekkefølgen, og Alt med pil opp eller ned gjør det samme. En blokk plassert for hånd flyttes med piltastene, en rad opp eller ned og litt til siden.
+- **Avstand mellom blokkene på telefon**: «Innholdsbredde» i Nettsted-panelet setter den for alle seksjoner (16 px som standard), og en seksjon setter sin egen i menyen sin, under «Størrelse og rutenett», i telefonvisningen.
 - **Telefontilsyn**: endrer du noe på desktop i en seksjon som er håndjustert for telefon, markeres seksjonen gult og topplinjen sier ifra («1 seksjon trenger telefontilsyn»). Det betyr bare: ta en titt i telefonvisningen og se at alt fortsatt ser bra ut, og kvitter med ✓.
 
 ## Sider, meny og tema

@@ -45,7 +45,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
   - [x] 0.7.3.5 rekkefølge DELIVERED 0.7.3 (13 August 2026)
   - [x] 0.7.3.6 Keys in the phone view, DELIVERED 0.7.3.6 (13 November 2026): finpuss (piltast-flytting av pinnede vurderes der); and keys for the phone order of the flowing blocks, beside the up and down buttons of 0.7.3.5 (20 October 2026). Built as Alt+Up and Alt+Down for a flowing block's place in the reading order and the arrows for a block placed by hand, a row up or down and one per cent sideways, a burst one undo step (the comparison's «Mobile reorder»: SQ, HO and WH use Alt and the arrows).
     Done when: on the phone a flowing block moves up and down in the reading order with the keyboard, and a pinned block moves with the arrow keys, or the choice not to is written here.
-  - [ ] 0.7.3.7 Space between blocks on the phone (moved from Suggestions 29 September 2026): radnettets minmax(8px, auto)-rader eier avstanden, så innstillingen hører til modellen. Decided 13 November 2026: set per section, with a site default, as builders set a row gap per container (Stackable, Spectra); the gap is a fixed 16 px today. Originalen: «Mulighet til å legge til luft i mobilvisning - nå er alt kompakt uten noe mellomrom»
+  - [x] 0.7.3.7 Space between blocks on the phone, DELIVERED 0.7.3.7 (13 November 2026) (moved from Suggestions 29 September 2026): radnettets minmax(8px, auto)-rader eier avstanden, så innstillingen hører til modellen. Decided 13 November 2026: set per section, with a site default, as builders set a row gap per container (Stackable, Spectra); the gap was a fixed 16 px. Originalen: «Mulighet til å legge til luft i mobilvisning - nå er alt kompakt uten noe mellomrom»
     Done when: the space between blocks on the phone can be set, and the published page at phone width shows it.
   - [ ] 0.7.3.8 Only on phones, and no entrance on phones: Elements shown only on the phone and hidden on the desktop, the counterpart to `hideMobile` (Wix Harmony, Strikingly and Squarespace have it; comparison of 11 October 2026, [comparison/FEATURES.md](comparison/FEATURES.md#part-2-the-function-catalogue)). From the audit of 22 October 2026: an entrance animation switched off on the phone per block.
     Done when: a block marked phone-only is absent from the published desktop page and present in the row grid, and the editor shows it only in the phone view; and a block with its entrance switched off on the phone appears without the animation at phone width while it keeps it on the desktop.
@@ -562,9 +562,12 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 ## Bugs, (bad) functions and stuff that needs fixing
  - [ ] Colour picker is a bit shabby - needs design reevaluation 
  - [ ] New collections panel/menu for new product and overview - A 'floating' menu like other settings 
+ - [ ] "Settings" panel name needs a new name - it has to show that it is settings for the chosen section or element
+
 
 ## Suggestions, Ideas and Wishes
-
+ - [ ] Evaluate gathering all phone settings into one panel and/or section
+ 
 ## URGENT
 
 ## Known Limitations (documented, no fix planned)

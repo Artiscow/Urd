@@ -9,11 +9,13 @@
   import { sectionWords } from '$engine/anchor-model.js';
   import { matchWords } from '$engine/palette-search.js';
   import { matchAny } from '$engine/search-langs.js';
+  import { MOBILE_GAP_MAX, mobileGapOf } from '$engine/migrate.js';
   import BackgroundEditor from './BackgroundEditor.svelte';
   import AnchorField from '../lib/AnchorField.svelte';
   import Choice from '../lib/Choice.svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import SliderRow from '../lib/rows/SliderRow.svelte';
+  import Setting from '../lib/rows/Setting.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import ColourRow from '../lib/rows/ColourRow.svelte';
@@ -42,6 +44,8 @@
   const sectionTheme = $derived(ed.sectionTheme);
   /** The section's content width as a choice and a px width (lib/content-width.js). */
   const sectionWidth = $derived(sectionWidthOf(ed.sectionMaxWidth, ed.layoutWidth));
+  /** The space between the section's blocks on the phone: its own, else the site's, else the standard. */
+  const phoneGap = $derived(mobileGapOf({ size: { mobileGap: ed.sectionMobileGap ?? undefined } }, ed.siteDraft));
   const sectionWidthWord = $derived(sectionWidth.mode === 'full' ? ta('opt.sectionWidth.full') : sectionWidth.shown);
   /** On a full-width site «Full width» is the site's own width, so it is offered only to a section that has it stored. */
   const sectionWidthOptions = $derived([
@@ -221,7 +225,7 @@
 {/snippet}
 
 {#snippet sectionPlacement()}
-  <Fold id="sec-size" title={ta('group.sectionSize')} value={[sectionWidthWord, sectionMinHeight || ta('common.auto'), sectionGrid ? `${ta('group.grid')} ${sectionGrid.size} px` : ''].filter(Boolean).join(' · ')}>
+  <Fold id="sec-size" title={ta('group.sectionSize')} value={[sectionWidthWord, sectionMinHeight || ta('common.auto'), sectionGrid ? `${ta('group.grid')} ${sectionGrid.size} px` : '', ed.viewMode === 'mobile' && ed.sectionMobileGap !== null ? ta('lbl.mobileGapValue', { n: phoneGap }) : ''].filter(Boolean).join(' · ')}>
     <!-- The content width binds on the desktop only: on a phone the content fills the screen whatever is set -->
     {#if ed.viewMode === 'desktop'}
       <Choice label={ta('lbl.contentWidth')} title={ta('tip.props.sectionWidth')} value={sectionWidth.mode}
@@ -231,6 +235,13 @@
         <SliderRow label={ta('lbl.widthFree')} title={ta('tip.props.sectionWidthPx')} value={sectionWidth.px} min={SECTION_WIDTH_MIN} max={SECTION_WIDTH_MAX} step={SECTION_WIDTH_STEP}
           shown={sectionWidth.shown} oninput={(v) => ed.setSectionWidth(sectionWidthValue('own', v))} />
       {/if}
+    {/if}
+    <!-- The space between the blocks on the phone, its own with the way back to the site's -->
+    {#if ed.viewMode === 'mobile'}
+      <Setting own={ed.sectionMobileGap !== null} reset={() => ed.setSectionMobileGap(null)}>
+        <SliderRow label={ta('lbl.mobileGap')} title={ta('tip.props.mobileGap')} value={phoneGap} min={0} max={MOBILE_GAP_MAX} step={4}
+          shown={`${phoneGap} px`} oninput={(v) => ed.setSectionMobileGap(v)} />
+      </Setting>
     {/if}
     <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
       <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}

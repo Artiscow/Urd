@@ -851,10 +851,14 @@ let sectionAnchor = $state('');
 /** Mirror of the active section's own content width (`size.maxWidth`, '' = the site's) */
 let sectionMaxWidth = $state('');
 
+/** Mirror of the active section's own space between its blocks on the phone (`size.mobileGap` in px, null = the site's) */
+let sectionMobileGap = $state(null);
+
 function syncSectionMirrors(section) {
   sectionGrid = section?.grid ? { ...section.grid } : null;
   sectionMinHeight = section?.size?.minHeight ?? '';
   sectionMaxWidth = section?.size?.maxWidth ?? '';
+  sectionMobileGap = Number.isFinite(section?.size?.mobileGap) ? section.size.mobileGap : null;
   sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
   sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
   sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
@@ -998,6 +1002,15 @@ function setSectionWidth(value) {
   mutateSection(`edit:section-width:${activeSectionId}`, (s) => {
     const size = { ...(s.size ?? {}) };
     if (value) size.maxWidth = value; else delete size.maxWidth;
+    s.size = size;
+  });
+}
+
+/** The space between the section's blocks on the phone (`size.mobileGap`, ADR-0019): px, or null for the site's. A slider's drag is one undo step. */
+function setSectionMobileGap(value) {
+  mutateSection(`edit:section-mobile-gap:${activeSectionId}`, (s) => {
+    const size = { ...(s.size ?? {}) };
+    if (Number.isFinite(value)) size.mobileGap = value; else delete size.mobileGap;
     s.size = size;
   });
 }
@@ -1376,6 +1389,8 @@ export const pageState = {
   get sectionMaxWidth() { return sectionMaxWidth; },
   set sectionMaxWidth(v) { sectionMaxWidth = v; },
   setSectionWidth,
+  get sectionMobileGap() { return sectionMobileGap; },
+  setSectionMobileGap,
   get sectionBg() { return sectionBg; },
   set sectionBg(v) { sectionBg = v; },
   get sectionAnim() { return sectionAnim; },

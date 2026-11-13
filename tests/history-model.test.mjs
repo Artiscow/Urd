@@ -48,6 +48,10 @@ test('stepKind: each kind of change named in words with an icon, a page change m
   // The phone view's keys: a burst in the phone order is a phone step, as the buttons' are, and a placed block's moves a move, as its drag is.
   assert.equal(stepKind('edit:mobile-order-blk-1').labelKey, stepKind('mobile-order').labelKey);
   assert.equal(stepKind('edit:nudge-mobile-blk-1').labelKey, stepKind('move-block').labelKey);
+  // A section's own settings are a section change, and the Site panel's group resets a site change.
+  assert.equal(stepKind('edit:section-mobile-gap:sec-1').labelKey, 'history.step.section');
+  assert.equal(stepKind('site-width').labelKey, 'history.step.site');
+  assert.equal(stepKind('site-width:mobileGap:own-step-3').onPage, false);
   assert.equal(stepKind('page-meta:kaker:searchTitle').labelKey, 'history.step.pageSettings');
   assert.equal(stepKind('move-block').labelKey, 'history.step.moveBlock');
   assert.equal(stepKind('edit:multi-arrow').labelKey, 'history.step.moveBlock');

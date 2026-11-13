@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.7): space between blocks on the phone
+
+- [ ] Site panel, «Content width»: «Space between blocks on the phone» stands at 16 px; set it to 40 and the flowing blocks of every section without its own stand 40 px apart in the phone view and on the published page at phone width, and the closed fold names the phone's gap
+- [ ] Phone view, a section's menu, «Size and grid»: the same row stands first and shows the site's value; set the section's own and only that section changes, the fold's line shows it, and the reset arrow takes it back to the site's
+- [ ] In the desktop view the section's «Size and grid» shows no such row, and the desktop page is unchanged
+- [ ] The About page's second section stands 32 px apart on the phone, its own, while the first follows the site
+- [ ] A block placed by hand on the phone under a picture keeps its distance from it when the site's space goes from 16 to 40, and no flowing block jumps past it
+
 ### Test batch (0.7.3.6): keys in the phone view
 
 - [ ] In the phone view, select a block that flows (no pin mark): Alt with the down arrow moves it one step later in the reading order, Alt with the up arrow back; a burst of presses is one step in History, and one Ctrl+Z takes it all back

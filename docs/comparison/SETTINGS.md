@@ -392,7 +392,7 @@ A section carries a name beside its stable id (0.7.27); hiding a section is v0.8
 
 ### Columns
 
-Urd has no columns element (ELEMENTS.md #3: n/a): blocks are placed freely on the section's grid, and the phone's row grid stacks them ([ADR-0019](../adr/0019-synced-mobile-model.md)). What the projects offer, and what covers it in Urd: the number of columns and a layout preset (WP, EL, BI, KB, SP, ST), «Change layout» with «Two columns» and the split layouts; a width per column (WP, EL, BI, KB, SP, ST), the dragged «Width %»; the gap (EL, BI, KB, SP, ST), the placement itself; stacking on phones and its order (WP, BI, KB, SP, ST), the row grid and the phone order; vertical alignment (WP, EL, KB, SP), aligning a multi-selection; and a link per column (BI, KB), v0.8 ER-G (a group of blocks as one link).
+Urd has no columns element (ELEMENTS.md #3: n/a): blocks are placed freely on the section's grid, and the phone's row grid stacks them ([ADR-0019](../adr/0019-synced-mobile-model.md)). What the projects offer, and what covers it in Urd: the number of columns and a layout preset (WP, EL, BI, KB, SP, ST), «Change layout» with «Two columns» and the split layouts; a width per column (WP, EL, BI, KB, SP, ST), the dragged «Width %»; the gap (EL, BI, KB, SP, ST), the placement itself, and on phones «Space between blocks on the phone» per section with a site default (Delivered 0.7.3.7); stacking on phones and its order (WP, BI, KB, SP, ST), the row grid and the phone order; vertical alignment (WP, EL, KB, SP), aligning a multi-selection; and a link per column (BI, KB), v0.8 ER-G (a group of blocks as one link).
 
 ### Spacer or divider
 

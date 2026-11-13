@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.7 - Space between blocks on the phone: a site default and a section's own - 13 November 2026
+
+- The blocks that flow on the phone stood a fixed 16 px apart (BACKLOG 0.7.3.7). «Space between blocks on the phone» sets it for every section in the Site panel's «Content width», and a section sets its own in its menu's «Size and grid» in the phone view, both from 0 to 96 px (`layout.mobileGap` and `size.mobileGap`, additive, `mobileGapOf` in migrate.js); the About page's second section stands 32 px apart as the example.
+- The guides in en-GB, nb and tr say where both are set.
+
+The independent review before the commit found these, all fixed:
+
+1. A larger gap lengthened each picture's row span, so a flowing block could collide with a block placed by hand under it and jump below it, leaving empty rows, on every page at once from the Site panel. The span holds the standard 16 px at most and a larger gap grows the rows, as a text block's margin does, so a placed block keeps its distance and the order stands.
+2. History named a section's own setting «Changed a block», and the Site panel's resets a change of the open page. A section's settings are a section change and the Site panel's resets a site change.
+3. ARCHITECTURE.md still gave the span as `desktop.h + 16`. It describes the gap and its rule, and SCHEMA.md says the space stands under each flowing block, the last included.
+4. The closed folds showed the gap as a bare number, the site's not at all. Both name it «Phone gap».
+5. A test item said every section follows the site, and another that a placed block keeps its place. They name the sections without their own, and the distance to the block above.
+
 ### 0.7.3.6 - Keys in the phone view: Alt and the arrows move a block in the phone order, and the arrows move a block placed by hand - 13 November 2026
 
 - The phone order moved only by the buttons on a block's bar and by a drag, and a block placed by hand on the phone only by a drag (BACKLOG 0.7.3.6). Alt with the up or down arrow moves a flowing block one step in the reading order, and the arrows move a placed block a row up or down and one per cent sideways, a burst one undo step (`phoneArrow` in preview-edit.js).

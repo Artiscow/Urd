@@ -308,13 +308,10 @@ html {
   pointer-events: none;
 }
 
-/* The mobile row grid (ADR-0019): one column of 8 px rows that grow with
-   the content (minmax). Untouched blocks are auto-placed in reading order
-   (sparse: they always jump BELOW pinned bands, never into gaps above),
-   pinned blocks get explicit row tracks from render.js. No gap:
-   the row tracks are the coordinate system, so the air between flow blocks lives in
-   margin-bottom and is covered by the row span. The row height 8 mirrors MOBILE_ROW in
-   migrate.js. */
+/* The mobile row grid (ADR-0019): one column of 8 px rows that grow with the content (minmax).
+   Untouched blocks are auto-placed in reading order (sparse: they always jump BELOW pinned bands, never into gaps above), and pinned blocks get explicit row tracks from render.js.
+   No gap: the row tracks are the coordinate system, so the air under each flow block lives in its margin-bottom, `--urd-mobile-gap` from render.js (the section's own, the site's or 16 px), and the row span holds it.
+   The row height 8 mirrors MOBILE_ROW in migrate.js. */
 .urd-flow {
   position: relative;
   display: grid;
@@ -333,7 +330,7 @@ html {
   position: relative;
   width: 90%;
   justify-self: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--urd-mobile-gap, 16px);
 }
 
 /* Pinned block: row track and width are set by render.js. No margin: a margin

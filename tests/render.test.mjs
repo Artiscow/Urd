@@ -197,3 +197,7 @@ test('anchorTargets: a section name at its top, each block with its name, and on
   assert.deepEqual(anchorTargets({ id: 'sec-3' }, 'desktop'), { section: [], blocks: new Map() });
 });
 
+test('the row span of a flowing block holds the gap under it, at most the standard: a larger gap grows the rows instead', () => {
+  assert.equal(mobilePlacementToCss(null, { x: 0, y: 0, w: 100, h: 120 }, { gap: 8 }).gridRow, `auto / span ${Math.ceil((120 + 8) / MOBILE_ROW)}`);
+  assert.equal(mobilePlacementToCss(null, { x: 0, y: 0, w: 100, h: 120 }, { gap: 40 }).gridRow, `auto / span ${Math.ceil((120 + MOBILE_GAP) / MOBILE_ROW)}`);
+});

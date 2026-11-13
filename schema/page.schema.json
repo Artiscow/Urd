@@ -77,7 +77,8 @@
           "additionalProperties": false,
           "properties": {
             "minHeight": { "type": "string", "description": "CSS length, e.g. '85vh'" },
-            "maxWidth": { "type": "string", "description": "Overrides the site's content width for this section (adopted in v0.7, ADR-0018): CSS length, or 'full' for content unbound by the design width, inside the site's side margin. Absence = inherit site.layout.contentWidth." }
+            "maxWidth": { "type": "string", "description": "Overrides the site's content width for this section (adopted in v0.7, ADR-0018): CSS length, or 'full' for content unbound by the design width, inside the site's side margin. Absence = inherit site.layout.contentWidth." },
+            "mobileGap": { "type": "integer", "minimum": 0, "maximum": 96, "description": "The space between the blocks that flow in this section's row grid on the phone, in px (additive from 0.7.3.7, ADR-0019). Absence = the site's layout.mobileGap, else 16." }
           }
         },
         "grid": {

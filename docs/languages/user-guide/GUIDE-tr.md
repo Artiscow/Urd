@@ -132,6 +132,7 @@ Mobildeki ziyaretçiler içeriği otomatik olarak tek sütunda, doğal okuma sı
 - **Üst çubuktaki telefon simgesi** sayfayı mobilde nasıl göründüğüyle gösterir.
 - İnce ayar yapmak istersen mobil görünümde bir bloğu sürükle: o blok telefonda elle yerleştirilir, diğerleri okuma sırasında akmaya devam eder. Bloktaki ↺ onu akışa geri alır, bölümdeki ↺ ise bütün blokları geri alır.
 - **Telefondaki sıra**: akan bir bloğun çubuğunda, mobil görünümde onu okuma sırasında öne ya da geriye taşıyan düğmeler vardır; Alt ile yukarı ya da aşağı ok da aynısını yapar. Elle yerleştirilmiş bir blok ok tuşlarıyla taşınır: bir satır yukarı ya da aşağı, biraz da yana.
+- **Telefonda bloklar arası boşluk**: Site panelinin «İçerik genişliği» bölümü bunu tüm bölümler için ayarlar (standart 16 px), bir bölüm ise telefon görünümünde kendi menüsünde, «Boyut ve ızgara» altında kendi boşluğunu ayarlar.
 - **Mobil gözden geçirme**: mobil için elle ayarlanmış bir bölümde masaüstünde bir şey değiştirirsen bölüm sarı işaretlenir ve üst çubuk haber verir («1 bölüm mobil gözden geçirme istiyor»). Bu yalnızca şu demektir: mobil görünüme bir bak, her şeyin hâlâ iyi göründüğünü doğrula ve ✓ ile onayla.
 
 ## Sayfalar, menü ve tema

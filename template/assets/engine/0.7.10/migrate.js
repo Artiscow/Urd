@@ -64,8 +64,25 @@ export const PAGE_SCHEMA_VERSION = 8;
  */
 export const MOBILE_ROW = 8;
 
-/** Vertical spacing between flow blocks in the mobile row grid, in px. */
+/** Vertical spacing between flow blocks in the mobile row grid, in px: the standard, which the site's `layout.mobileGap` and a section's `size.mobileGap` replace. */
 export const MOBILE_GAP = 16;
+
+/** The largest spacing between flow blocks in the mobile row grid that a site or a section can set, in px. */
+export const MOBILE_GAP_MAX = 96;
+
+/**
+ * The space between the blocks that flow in a section's row grid on the phone, in px: the section's own (`size.mobileGap`), else the site's (`layout.mobileGap`), else MOBILE_GAP, within 0 to MOBILE_GAP_MAX.
+ * Pure function, tested.
+ * @param {{size?: {mobileGap?: number}}|undefined} section
+ * @param {{layout?: {mobileGap?: number}}|undefined} site
+ * @returns {number}
+ */
+export function mobileGapOf(section, site) {
+  const own = section?.size?.mobileGap;
+  const shared = site?.layout?.mobileGap;
+  const gap = Number.isFinite(own) ? own : Number.isFinite(shared) ? shared : MOBILE_GAP;
+  return Math.max(0, Math.min(MOBILE_GAP_MAX, Math.round(gap)));
+}
 
 /** Current version of the site.json format. */
 export const SITE_SCHEMA_VERSION = 6;
