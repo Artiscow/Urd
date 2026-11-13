@@ -60,6 +60,21 @@ export function pointerEffectOf(block, section, isPointer) {
 }
 
 /**
+ * The animation a block plays on this screen from its `animation` field: its own, except an entrance switched off on the phone (`entranceMobile: false`, additive from 0.7.3.8), which leaves the block standing in its end state at phone width.
+ * A pointer effect an older page keeps in `animation` is no entrance and stays. Pure function (node-tested).
+ * @param {object} block
+ * @param {'desktop'|'mobile'|undefined} viewport
+ * @param {(type: string) => boolean} isPointer Whether an animation type is a pointer effect rather than an entrance
+ * @returns {object|null}
+ */
+export function entranceOf(block, viewport, isPointer) {
+  const animation = block?.animation;
+  if (!animation?.type) return null;
+  if (viewport === 'mobile' && block.entranceMobile === false && !isPointer(animation.type)) return null;
+  return animation;
+}
+
+/**
  * Delays (ms) for column/row stagger: positions are clustered with a tolerance
  * (cards that are almost aligned count as the same column/row), and the wave moves
  * along by ascending position. Pure function (node-tested).

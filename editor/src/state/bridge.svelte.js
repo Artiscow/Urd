@@ -216,7 +216,6 @@ function handleReviewDone(msg) {
   shellState.updateAttention();
 }
 
-/** Block flags from the preview: decor (the entrance wave) and/or hideMobile. */
 /** A pasted style's block-level fields (block-style.js): animation, hover, size, height and fit, written as one undo step; null clears a field. */
 const STYLE_FIELDS = ['animation', 'hover', 'size', 'sizeMin', 'sizeMax', 'height', 'fit', 'fitMin'];
 function handleBlockStyle(msg) {
@@ -235,6 +234,7 @@ function handleBlockStyle(msg) {
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
 }
 
+/** Block flags from the preview: decor (the entrance wave), hideMobile, and hideDesktop taken away from the desktop section bar's list. */
 function handleBlockFlag(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
@@ -242,11 +242,12 @@ function handleBlockFlag(msg) {
   historyState.pushHistory('block-flag');
   if (typeof msg.decor === 'boolean') block.decor = msg.decor;
   if (typeof msg.hideMobile === 'boolean') block.hideMobile = msg.hideMobile;
+  if (msg.hideDesktop === false) delete block.hideDesktop;
   pageState.store.save();
   historyState.updateDirty();
-  // hideMobile changes the mobile render; in mobile view the section
+  // hideMobile changes the mobile render and hideDesktop the desktop's; in that view the section
   // must be redrawn for the block to actually appear or disappear.
-  if (typeof msg.hideMobile === 'boolean' && previewState.viewMode === 'mobile') {
+  if ((typeof msg.hideMobile === 'boolean' && previewState.viewMode === 'mobile') || (msg.hideDesktop === false && previewState.viewMode === 'desktop')) {
     previewState.bridge?.sendSection(pageState.pageId, section);
   }
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();

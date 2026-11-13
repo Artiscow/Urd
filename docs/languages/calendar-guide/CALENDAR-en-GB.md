@@ -68,7 +68,7 @@ The setup guide lists the variable with the others: [Publishing setup](../setup-
 2. Select the block. In its menu, under **Sources**, paste the iCal address in the row; **Add calendar** gives a row for one more.
 3. Choose the design under **Design**, and how many events are shown.
 
-Until a source is pasted, the block shows sample events in the editor, so you can see the design. Visitors never see the sample events. A calendar that cannot fetch its feed says why in the note under it, and the note offers «Show example events», so you can still choose the design and the colours; on your own computer, where the site runs without its server functions, the feed is never fetched.
+Until a source is pasted, the block shows sample events in the editor, so you can see the design. Visitors never see the sample events. The calendar's bar has a button with a calendar on it that shows or hides the example events at any time, so you can choose the design and the colours on them. A calendar that cannot fetch its feed stands empty in the editor, and the button's tooltip says why; on your own computer, where the site runs without its server functions, the feed is never fetched.
 
 **Several calendars** can stand in one block. They are shown as one calendar, and an event that stands in two of them is shown once. Give each a **Name** and a colour: the name becomes the events' category, and the colour marks them.
 

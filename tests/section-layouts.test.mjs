@@ -26,6 +26,8 @@ const heroish = () => [
 
 test('movableBlocks: decor and shapes are kept out', () => {
   assert.deepEqual(movableBlocks(heroish()).map((b) => b.id), ['tekst', 'knapp', 'bilde']);
+  // A block shown on phones only is not on the desktop, so «Change layout» leaves it where it is.
+  assert.deepEqual(movableBlocks([...heroish(), block('telefon', 'text', { x: 8, y: 300, w: 40, h: 30 }, { hideDesktop: true })]).map((b) => b.id), ['tekst', 'knapp', 'bilde']);
 });
 
 test('readingOrder: (y, x), stable on id', () => {

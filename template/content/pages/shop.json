@@ -229,7 +229,8 @@
             "type": "hover-lift",
             "version": 1,
             "props": {}
-          }
+          },
+          "entranceMobile": false
         },
         {
           "id": "blk-40bc0fa0",

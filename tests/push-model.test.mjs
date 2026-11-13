@@ -298,6 +298,18 @@ test('fitMovesAll: two stale blocks settled at once move as the push pass draws 
   assert.equal(moves.get('c'), 240 + 90);
 });
 
+test('fitMovesAll: a block shown on phones only takes no room on the desktop, moves with the blocks above it and pushes none', () => {
+  const blocks = [blk('a', 0, 100), { ...blk('p', 120, 300), hideDesktop: true }, blk('c', 140, 40)];
+  const moves = fitMovesAll(blocks, new Map([['a', 160]]));
+  assert.equal(moves.get('p'), 120 + 60, 'it keeps its place in the phone order');
+  assert.equal(moves.get('c'), 140 + 60, 'the block under it moves by the growth alone, not past its 300 px');
+  // Its own move passes on to nothing: a block beside the growth, under the phone-only block alone, stays.
+  const wide = [{ id: 'a', frames: { desktop: { x: 0, w: 40, y: 0, h: 100 } } }, { id: 'p', hideDesktop: true, frames: { desktop: { x: 0, w: 100, y: 120, h: 40 } } }, { id: 'c', frames: { desktop: { x: 60, w: 40, y: 140, h: 40 } } }];
+  const beside = fitMovesAll(wide, new Map([['a', 160]]));
+  assert.equal(beside.get('p'), 180, 'the phone-only block under the growth moves with it');
+  assert.equal(beside.has('c'), false, 'the block beside the growth stays');
+});
+
 test('fitMovesAll: a block drawn wider than its frame moves as the pass draws it, by the width given', () => {
   // A text at 50 to 90 % grows; under it a picture whose frame runs 0 to 40 %, drawn 0 to 70 % by its width floor on a narrow canvas.
   const blocks = [{ id: 'text', frames: { desktop: { x: 50, y: 0, w: 40, h: 100 } } }, { id: 'pic', frames: { desktop: { x: 0, y: 110, w: 40, h: 40 } } }];

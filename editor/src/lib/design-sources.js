@@ -224,7 +224,7 @@ export function blockDesignSource({ block, site = null, designs, sectionWidth })
       // The design itself, whatever the block draws while narrow: a phone design never stands in for the one being chosen.
       delete props.phoneDesign;
       return onePage(page, {
-        ...block, id: 'design-picker-block', hideMobile: false, animation: null, sticky: null,
+        ...block, id: 'design-picker-block', hideMobile: false, hideDesktop: false, animation: null, sticky: null,
         props: { ...props, [designs.prop]: id },
         frames: { desktop: { x: fit.x, y: 24, w: fit.w, h: own.h ?? designs.frame.h, z: 1, rot: 0 }, mobile: null },
       });
@@ -298,7 +298,7 @@ export function blockPhoneDesignSource({ block, site = null, designs }) {
       if (id === SAME_DESIGN) delete props.phoneDesign;
       else props.phoneDesign = id;
       return onePage(page, {
-        ...block, id: 'design-picker-block', hideMobile: false, animation: null, sticky: null,
+        ...block, id: 'design-picker-block', hideMobile: false, hideDesktop: false, animation: null, sticky: null,
         props,
         frames: { desktop: { ...(block.frames?.desktop ?? { x: 5, y: 24, w: 90, h: designs.frame.h }), y: 24, z: 1, rot: 0 }, mobile: null },
       });

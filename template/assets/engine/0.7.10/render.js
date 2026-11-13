@@ -15,7 +15,7 @@
  */
 import { lift, MOBILE_ROW, MOBILE_GAP, mobileGapOf } from './migrate.js';
 import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, drawnBlock, NARROW_PX } from './push-model.js';
-import { applyAnimation, applyCardAnimation, pointerEffectOf } from './animations/core.js';
+import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
 import { refreshSticky } from './sticky.js';
@@ -370,7 +370,7 @@ function applyZoom(child, zoom) {
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
-const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-cal-note, .urd-block-ruler, dialog';
+const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-block-ruler, dialog';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -515,7 +515,7 @@ export function hugHeight(el) {
 export function syncSectionHeight(host) {
   const section = host?._urdPushSection;
   if (!section) return;
-  const bottom = Math.max(0, ...section.blocks.map((b) => b.frames?.desktop).filter(Boolean).map((f) => f.y + f.h));
+  const bottom = Math.max(0, ...section.blocks.filter((b) => !b.hideDesktop).map((b) => b.frames?.desktop).filter(Boolean).map((f) => f.y + f.h));
   host.dataset.urdMinHeight = sectionMinHeight(section, bottom);
 }
 
@@ -807,7 +807,7 @@ export function renderPage(page, site, root, opts = {}) {
 }
 
 /**
- * The spots of a section a link can land on, beyond the section's own id: the section's name, each drawn block's name, and on a phone the ids and names of the blocks hidden there, which land on the section's top instead.
+ * The spots of a section a link can land on, beyond the section's own id: the section's name, each drawn block's name, and the ids and names of the blocks hidden on the screen (on a phone those hidden there, on the desktop those shown on phones only), which land on the section's top instead.
  * Each spot names the section or block it stands for (`of`).
  * Names that do not follow the naming rule are left out.
  * @param {object} section
@@ -820,7 +820,7 @@ export function anchorTargets(section, viewport) {
   for (const block of section.blocks ?? []) {
     if (typeof block.id !== 'string' || !block.id) continue;
     const names = isAnchorName(block.anchor) ? [{ id: block.anchor, of: block.id }] : [];
-    if (viewport === 'mobile' && block.hideMobile) top.push({ id: block.id, of: block.id }, ...names);
+    if (viewport === 'mobile' ? block.hideMobile : block.hideDesktop) top.push({ id: block.id, of: block.id }, ...names);
     else blocks.set(block.id, names);
   }
   return { section: top, blocks };
@@ -977,6 +977,8 @@ export function renderSection(section, site, host, opts = {}) {
         console.warn(`Urd: block '${block.id ?? block.type}' is missing frames.desktop - skipped`);
         continue;
       }
+      // A block shown on phones only is not drawn here; its frame keeps its place in the phone's reading order.
+      if (block.hideDesktop) continue;
       const el = document.createElement('div');
       el.className = 'urd-block';
       el.dataset.blockId = block.id;
@@ -1068,13 +1070,16 @@ function renderBlock(Urd, el, block, ctx, measured = null) {
       // renderCardAnimations once the cards are fetched; the marker is set
       // synchronously here: the section stagger picks its targets in the
       // same task, before the cards and their classes exist.
-      const hover = pointerEffectOf(block, ctx.section, (type) => Urd.animations.get(type)?.entrance === false);
-      // A block with an entrance of its own comes in by it, never with the section's stagger.
+      const isPointer = (type) => Urd.animations.get(type)?.entrance === false;
+      const hover = pointerEffectOf(block, ctx.section, isPointer);
+      // The entrance on this screen: none on a phone where the block switches it off there (entranceOf).
+      const entrance = entranceOf(block, ctx.viewport, isPointer);
+      // A block with an entrance of its own comes in by it, never with the section's stagger, and stands at once where its entrance is off.
       if (block.animation?.type && Urd.animations.get(block.animation.type)?.entrance) el.dataset.urdEntrance = '1';
       if (!def.animPerCard) {
-        renderAnimation(Urd, el, block.animation, ctx);
+        renderAnimation(Urd, el, entrance, ctx);
         renderAnimation(Urd, el, hover, ctx);
-      } else if (block.animation?.type || hover?.type) {
+      } else if (entrance?.type || hover?.type) {
         el.classList.add('urd-anim-cardwise');
       }
     } catch (err) {
@@ -1182,8 +1187,9 @@ function redrawForWidth(el) {
  */
 export function renderCardAnimations(el, cards, block, ctx) {
   if (!window.Urd) return;
-  const hover = pointerEffectOf(block, ctx?.section, (type) => window.Urd.animations.get(type)?.entrance === false);
-  for (const animation of [block?.animation, hover]) {
+  const isPointer = (type) => window.Urd.animations.get(type)?.entrance === false;
+  const hover = pointerEffectOf(block, ctx?.section, isPointer);
+  for (const animation of [entranceOf(block, ctx?.viewport, isPointer), hover]) {
     renderAnimation(window.Urd, el, animation, ctx,
       (target, type, props, def, c) => applyCardAnimation(target, cards, type, props, def, c));
   }

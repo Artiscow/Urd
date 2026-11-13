@@ -13,6 +13,7 @@ import { placeBesideBlock, clampPlace, givesWay } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
+import { wholeStyleHtml } from '$engine/text-whole.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign, calLimitStart } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
@@ -147,6 +148,8 @@ function syncSelectedBlock() {
     type: block.type,
     decor: Boolean(block.decor),
     hideMobile: Boolean(block.hideMobile),
+    hideDesktop: Boolean(block.hideDesktop),
+    entranceMobile: block.entranceMobile !== false,
     anchor: typeof block.anchor === 'string' ? block.anchor : '',
     fit: block.fit === 'shrink' || block.fit === 'both' ? block.fit : undefined,
     fitMin: typeof block.fitMin === 'number' ? block.fitMin : undefined,
@@ -493,6 +496,12 @@ function openImageEditor() {
 
 /** A font or a size for the whole text of the block, applied by the preview's text toolbar (`{fontFamily}` or `{fontSize}`, null takes the theme's). */
 function setTextStyle(style) {
+  // The phone view draws the text without writing in place (blocks/text.js), so the style is written into the block's words here, an undo step of its own.
+  if (previewState.viewMode === 'mobile') {
+    const key = `edit:${selectedBlock.blockId}`;
+    historyState.asOwnStep(() => mutateBlock(key, (b) => { b.props.html = wholeStyleHtml(b.props.html ?? '', style); }));
+    return;
+  }
   // The preview writes the style into the text and hands it back as the text's edit, an undo step of its own.
   historyState.ownStepNext(`edit:${selectedBlock.blockId}`);
   previewState.bridge?.sendTextStyle(selectedBlock.blockId, style);
@@ -813,6 +822,35 @@ function setBlockHideMobile(on) {
   if (!block) return;
   historyState.pushHistory('hide-mobile');
   block.hideMobile = on;
+  // Hidden on phones and shown on phones only cannot both hold.
+  if (on) delete block.hideDesktop;
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  syncSelectedBlock();
+}
+
+/** Shown on phones only (`hideDesktop`): a phone choice, so it bypasses mutateBlock and the review flag as hiding on phones does; it lifts a hiding on phones. */
+function setBlockHideDesktop(on) {
+  const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+  if (!block) return;
+  historyState.pushHistory('hide-desktop');
+  if (on) {
+    block.hideDesktop = true;
+    delete block.hideMobile;
+  } else delete block.hideDesktop;
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  syncSelectedBlock();
+}
+
+/** Whether the block's entrance plays on phones (`entranceMobile`, stored only as false): a phone choice, outside the review flag. */
+function setBlockEntranceMobile(on) {
+  const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+  if (!block) return;
+  historyState.pushHistory(`edit:entrance-mobile-${block.id}`);
+  if (on) delete block.entranceMobile; else block.entranceMobile = false;
   store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageId, section);
@@ -1065,6 +1103,14 @@ function blankPage(entry) {
 
 async function selectPage(id, { keepHistory = false } = {}) {
   pageId = id;
+  // The page stands in the address, so a reload of the tab opens it again.
+  try {
+    const address = new URL(location.href);
+    if (address.searchParams.get('page') !== id) {
+      address.searchParams.set('page', id);
+      history.replaceState(history.state, '', address);
+    }
+  } catch { /* an address that cannot be written leaves the reload on the page the address names */ }
   pageLoading = (async () => {
     const entry = pageEntry();
     // New pages do not exist on the server yet: 404, or an SPA fallback
@@ -1376,6 +1422,8 @@ export const pageState = {
   setBoxStyle,
   setBlockDecor,
   setBlockHideMobile,
+  setBlockHideDesktop,
+  setBlockEntranceMobile,
   setBlockAnchor,
   setSectionAnchor,
   anchorsTaken,

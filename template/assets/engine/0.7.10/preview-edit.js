@@ -19,7 +19,7 @@
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder, coalesce? }  (a move in the mobile reading order; coalesce from the keys, a burst one undo step)
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
- *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
+ *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
  *                  { type: 'urd-section-menu', sectionId, rect }  (open the section's settings in the editor's floating menu: the gear on its bar and «Settings» in its right-click menu)
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
@@ -37,11 +37,13 @@ import { loadSearchLanguages, searchLanguagesReady, searchItemsAny } from './sea
 import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
+import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
 import { fontChoices } from './fonts.js';
 import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
+import { TEXT_BLOCKS, unwrap, stripDescendantProp, applyWholeStyle } from './text-whole.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
 import { seamDrag } from './section-size.js';
 import { snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis, gridLookOf, gridLine } from './snap-model.js';
@@ -171,6 +173,9 @@ function toolPlacer(barBody, look) {
     clusters.get(area).appendChild(btn);
   };
 }
+
+/** The calendar's example events: a calendar with three events in it. */
+const EXAMPLES_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="8" cy="15" r="0.9" fill="currentColor"/><circle cx="12" cy="15" r="0.9" fill="currentColor"/><circle cx="16" cy="15" r="0.9" fill="currentColor"/></svg>';
 
 const MORE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
 
@@ -2472,12 +2477,6 @@ function initTextToolbar() {
   // survives. ---
   const SENTINEL = 'urd-marker';
 
-  const unwrap = (el) => {
-    const parent = el.parentNode;
-    if (!parent) return;
-    while (el.firstChild) parent.insertBefore(el.firstChild, el);
-    parent.removeChild(el);
-  };
   // The markers: font[face] (the default without styleWithCSS) OR a span
   // with font-family set to the sentinel (some browsers, e.g. Firefox).
   const collectMarkers = () => {
@@ -2486,16 +2485,6 @@ function initTextToolbar() {
       if (el.style.fontFamily.replace(/["']/g, '') === SENTINEL) out.push(el);
     }
     return out;
-  };
-  // Remove the same prop from descendants (so the outermost span wins),
-  // and clean up empty spans.
-  const stripDescendantProp = (root, prop) => {
-    for (const el of [...root.querySelectorAll('[style]')]) {
-      if (!el.style[prop]) continue;
-      el.style[prop] = '';
-      if (el.getAttribute('style') === '') el.removeAttribute('style');
-      if (el.tagName === 'SPAN' && !el.attributes.length) unwrap(el);
-    }
   };
   const reselect = (nodes) => {
     const valid = nodes.filter((n) => n && n.isConnected);
@@ -2603,7 +2592,7 @@ function initTextToolbar() {
 
   // Block-level operations (line height, indent): affect the paragraphs in
   // the selection, not individual words.
-  const BLOCK_SEL = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,div';
+  const BLOCK_SEL = TEXT_BLOCKS;
   const blocksInRange = () => {
     const sel = document.getSelection();
     if (!sel || !sel.rangeCount || !activeText) return [];
@@ -3266,31 +3255,14 @@ function initTextToolbar() {
     }
     if (target) reposition();
   });
-  // A font or a size for the whole text, from the block's menu (urd-text-style): written on every leaf paragraph and list item of the field, and taken off the runs inside, so the whole text reads alike; null takes the theme's value back.
+  // A font or a size for the whole text, from the block's menu (urd-text-style): written on every leaf paragraph and list item of the field, and taken off the runs inside, so the whole text reads alike (text-whole.js); null takes the theme's value back.
   document.addEventListener('urd-text-style', (event) => {
     const field = event.target instanceof HTMLElement ? event.target.closest('.urd-text[contenteditable="true"]') : null;
     const style = event.detail;
     if (!field || !style || typeof style !== 'object') return;
     activeText = field;
     activeBlockId = field.closest('.urd-block')?.dataset.blockId ?? null;
-    // Bare words and runs at the field's top level get a paragraph around them first; a list or a paragraph is left as it stands.
-    const loose = [...field.childNodes].filter((n) => (n.nodeType === 3 ? n.textContent.trim() !== '' : n.nodeType === 1 && !n.matches(BLOCK_SEL) && !n.querySelector(BLOCK_SEL)));
-    if (loose.length) {
-      const p = document.createElement('p');
-      field.insertBefore(p, loose[0]);
-      p.append(...loose);
-    }
-    const all = [...field.querySelectorAll(BLOCK_SEL)];
-    const paragraphs = all.filter((el) => !all.some((o) => o !== el && el.contains(o)));
-    for (const prop of ['fontFamily', 'fontSize']) {
-      if (!(prop in style)) continue;
-      const value = typeof style[prop] === 'string' ? style[prop] : '';
-      for (const el of paragraphs) {
-        el.style[prop] = value;
-        if (el.getAttribute('style') === '') el.removeAttribute('style');
-        stripDescendantProp(el, prop);
-      }
-    }
+    applyWholeStyle(field, style);
     field.dispatchEvent(new Event('input', { bubbles: true }));
     reposition();
   });
@@ -3339,7 +3311,7 @@ function initTextToolbar() {
 
 /** The section's height brought to its blocks, one grid step under the lowest, from its bar or its right-click menu. */
 function fitSectionHeight(host, section, grid) {
-  const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
+  const maxBottom = Math.max(0, ...section.blocks.filter((b) => !b.hideDesktop).map((b) => b.frames.desktop.y + b.frames.desktop.h));
   const px = Math.max(grid.size * 3, maxBottom + grid.size);
   const minHeight = `${px}px`;
   section.size = { ...section.size, minHeight };
@@ -3397,20 +3369,10 @@ function addSectionToolbar(host, section, grid) {
     // Hidden blocks are otherwise invisible in the mobile view: the chip
     // makes them rediscoverable, with an eye button per block that shows
     // it again.
-    const hidden = section.blocks.filter((b) => b.hideMobile);
-    if (hidden.length) {
-      const chip = document.createElement('button');
-      chip.className = 'urd-hidden-chip';
-      chip.textContent = ta('canvas.hiddenCount', { n: hidden.length });
-      chip.title = ta('canvas.hiddenList');
-      chip.addEventListener('click', () => {
-        const open = host.querySelector(':scope > .urd-hidden-list');
-        if (open) { open.remove(); return; }
-        host.appendChild(buildHiddenList(section, hidden));
-      });
-      bar.appendChild(chip);
-    }
+    hiddenChip(host, bar, section, 'hideMobile');
   } else {
+    // The blocks shown on phones only, likewise, so the desktop finds them again.
+    hiddenChip(host, bar, section, 'hideDesktop');
     // Extensible presets: a "+ card/row/person" button that adds the NEXT item to the section.
     // The factory (def.item) lives in the preset definition; the section remains a generic container.
     const def = section.preset ? window.Urd.sections.get(section.preset) : null;
@@ -3509,7 +3471,8 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(adds);
   }
 
-  if (bar.childElementCount) host.appendChild(bar);
+  // Before the canvas, so it stands at the section's top on the phone as well, where the canvas is in flow.
+  if (bar.childElementCount) host.insertBefore(bar, host.querySelector(':scope > .urd-canvas'));
 }
 
 /** «New block» on the section toolbar: the block menu opens under the button, its block centred in the section as it is chosen; a second press closes it. */
@@ -3636,10 +3599,32 @@ function buildAttentionCard(host, section, attention) {
 }
 
 /**
- * The list of blocks hidden on mobile (the chip in the section toolbar):
- * a type label + an eye button that shows the block again.
+ * The chip on a section's bar for the blocks the view does not draw: those hidden on phones in the phone view (`hideMobile`), those shown on phones only on the desktop (`hideDesktop`); a press lists them.
+ * @param {HTMLElement} host The section
+ * @param {HTMLElement} bar Its bar
+ * @param {object} section
+ * @param {'hideMobile'|'hideDesktop'} flag
  */
-function buildHiddenList(section, hidden) {
+function hiddenChip(host, bar, section, flag) {
+  const hidden = section.blocks.filter((b) => b[flag]);
+  if (!hidden.length) return;
+  const chip = document.createElement('button');
+  chip.className = 'urd-hidden-chip';
+  chip.textContent = ta(flag === 'hideMobile' ? 'canvas.hiddenCount' : 'canvas.phoneOnlyCount', { n: hidden.length });
+  chip.title = ta(flag === 'hideMobile' ? 'canvas.hiddenList' : 'canvas.phoneOnlyList');
+  chip.addEventListener('click', () => {
+    const open = host.querySelector(':scope > .urd-hidden-list');
+    if (open) { open.remove(); return; }
+    host.appendChild(buildHiddenList(section, hidden, flag));
+  });
+  bar.appendChild(chip);
+}
+
+/**
+ * The list of the blocks a view does not draw (hiddenChip):
+ * a type label + an eye button that shows the block in this view again.
+ */
+function buildHiddenList(section, hidden, flag = 'hideMobile') {
   const EYE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>';
   const list = document.createElement('div');
   list.className = 'urd-hidden-list';
@@ -3651,10 +3636,10 @@ function buildHiddenList(section, hidden) {
     row.appendChild(name);
     const show = document.createElement('button');
     show.innerHTML = EYE_SVG;
-    show.title = ta('canvas.showBlock');
+    show.title = ta(flag === 'hideMobile' ? 'canvas.showBlock' : 'canvas.showOnDesktop');
     show.addEventListener('click', () => {
-      block.hideMobile = false;
-      post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, hideMobile: false });
+      block[flag] = false;
+      post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, [flag]: false });
     });
     row.appendChild(show);
     list.appendChild(row);
@@ -4875,6 +4860,28 @@ function enhanceBlock(el, block, section, grid, host) {
     });
   }
 
+  /** A calendar's example events on and off (blocks/calendar.js): pressed while they stand in for its own; the tooltip tells why it has none of its own where its feed failed, read again each time the calendar is drawn, since the feed answers after the bar is. */
+  const exampleButton = () => {
+    const btn = barButton(EXAMPLES_SVG, '', () => {
+      toggleCalendarExamples(block.id);
+      sync();
+    }, 'urd-edit-examples', ta('canvas.cap.examples'));
+    const sync = () => {
+      const state = calendarExamples(block.id);
+      const on = Boolean(state?.examples);
+      const title = [ta(on ? 'calendar.hideExample' : 'calendar.showExample'), state?.reason].filter(Boolean).join('\n');
+      btn.title = title;
+      btn.setAttribute('aria-label', title);
+      btn.setAttribute('aria-pressed', String(on));
+    };
+    sync();
+    const onShown = () => {
+      if (btn.isConnected) sync();
+      else el.removeEventListener('urd-cal-shown', onShown);
+    };
+    el.addEventListener('urd-cal-shown', onShown);
+    return btn;
+  };
   const moveHandle = document.createElement('button');
   moveHandle.className = 'urd-edit-move';
   moveHandle.innerHTML = GRIP_SVG;
@@ -4924,6 +4931,7 @@ function enhanceBlock(el, block, section, grid, host) {
   // In the phone view the block's design on a phone and its menu are one press away too: the design button opens the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS), its design otherwise, and the gear its menu.
   if (mobile) {
     if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, block.type === 'calendar' || Boolean(PHONE_DESIGNS[block.type])));
+    if (block.type === 'calendar') barBody.appendChild(exampleButton());
     // With small panels the gear is the word for the settings, as the desktop bar's first word is for a block without its own editor.
     if (TOOL_FORMS.includes(barForm())) barBody.appendChild(barButton(ta('canvas.ctx.settings'), ta('canvas.blockMenu'), () => openBlockSettings(el, section, block), 'urd-edit-lead'));
     else barBody.appendChild(menuButton(el, section, block));
@@ -4989,6 +4997,7 @@ function enhanceBlock(el, block, section, grid, host) {
 
     const DUP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
     if (block.type === 'image' || coverEditable) barBody.appendChild(imageButton());
+    if (block.type === 'calendar') barBody.appendChild(exampleButton());
 
     const dupBtn = document.createElement('button');
     dupBtn.innerHTML = DUP_SVG;
@@ -5036,6 +5045,7 @@ function enhanceBlock(el, block, section, grid, host) {
     }
     const place = toolPlacer(barBody, barLook(form));
     if (form === 'short' && picture) barBody.appendChild(imageButton());
+    if (block.type === 'calendar') place(exampleButton(), 'content');
     if (form === 'groups') {
       for (const tool of barTools(block.type, { designs: hasDesigns(block), block })) {
         const label = ta(tool.labelKey);

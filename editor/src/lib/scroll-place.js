@@ -1,10 +1,33 @@
 /**
- * Where the admin's large scrolling windows were left (each side panel, each block's and section's element menu, the design picker for each kind of design, and the Collections table for each collection), kept in memory while the admin stands: a reload or a closed tab starts every window at its top.
- * The Urd settings keep their own place for the tab's life (settings/keep-place.js).
+ * Where the admin's large scrolling windows were left (each side panel, each block's and section's element menu, the design picker for each kind of design, and the Collections table for each collection), kept for the tab's life (sessionStorage), so a reload opens each where it was; a new tab starts every window at its top.
+ * The Urd settings keep their own place the same way (settings/keep-place.js).
  */
 
+const KEY = 'urd-admin-places';
+
+/** The places kept before a reload, each a window's key and its place; none without storage. */
+function keptPlaces() {
+  try {
+    const kept = JSON.parse(sessionStorage.getItem(KEY) ?? '[]');
+    return Array.isArray(kept) ? kept.filter((entry) => Array.isArray(entry) && typeof entry[0] === 'string' && Number.isFinite(entry[1]) && entry[1] > 0) : [];
+  } catch {
+    return [];
+  }
+}
+
 /** The place per window, in px from its top. */
-const places = new Map();
+const places = new Map(keptPlaces());
+
+// The places are written as the admin is left (a reload or a closed tab), not at every scroll.
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('pagehide', () => {
+    try {
+      sessionStorage.setItem(KEY, JSON.stringify([...places]));
+    } catch {
+      /* The storage is blocked or full: the windows start at their top. */
+    }
+  });
+}
 
 /** What ends the way back before it is done: the owner's own wheel, press or key. */
 const OWNER = ['wheel', 'pointerdown', 'keydown', 'touchstart'];

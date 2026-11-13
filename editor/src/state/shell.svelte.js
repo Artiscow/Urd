@@ -256,7 +256,9 @@ async function init() {
   siteState.siteStore.save();
   siteState.linkSiteDraft();
   siteState.grid = { snap: true, ...siteState.siteDraft.grid };
-  await pageState.selectPage(new URLSearchParams(location.search).get('page') ?? siteState.siteDraft.pages[0].id);
+  // The page the address names (selectPage writes it there, so a reload opens it again), or the first page where it names none of the site's.
+  const named = new URLSearchParams(location.search).get('page');
+  await pageState.selectPage(siteState.siteDraft.pages.some((p) => p.id === named) ? named : siteState.siteDraft.pages[0].id);
   await pluginsState.initPlugins();
   await collectionsState.initCollections();
   await templatesState.initTemplates();

@@ -14,9 +14,9 @@ const r2 = (v) => Math.round(v * 100) / 100;
  *  movable type (image, video, gallery, icon, collection, plugin blocks) is media. */
 const TEXT_TYPES = new Set(['text', 'terms', 'button', 'faq', 'timeline', 'quote', 'stats', 'table']);
 
-/** The blocks a layout may move: never decor, never shapes. */
+/** The blocks a layout may move: never decor, never shapes, never a block shown on phones only. */
 export function movableBlocks(blocks) {
-  return (Array.isArray(blocks) ? blocks : []).filter((b) => !b.decor && b.type !== 'shape' && b.frames?.desktop);
+  return (Array.isArray(blocks) ? blocks : []).filter((b) => !b.decor && !b.hideDesktop && b.type !== 'shape' && b.frames?.desktop);
 }
 
 /** Reading order: topmost first, then leftmost; stable on id when equal. */

@@ -43,9 +43,15 @@ export const CAPABILITIES = [
     clear: (ed, block) => ed.setBlockHideMobile(starts(ed, block, 'hideMobile')),
   },
   {
+    // Shown on phones only; on the desktop canvas the section's bar lists it.
+    id: 'phoneOnly', area: 'placement', icon: 'phoneOnly', pins: [],
+    single: { value: (block) => Boolean(block.hideDesktop), set: (ed, on) => ed.setBlockHideDesktop(on) },
+    inUse: (block) => Boolean(block.hideDesktop),
+    add: (ed, block) => { if (!block.hideDesktop) ed.setBlockHideDesktop(true); },
+    clear: (ed) => ed.setBlockHideDesktop(false),
+  },
+  {
     id: 'sticky', area: 'placement', icon: 'stick', pins: [],
-    // A block pins while scrolling on the desktop only, so the setting stands in its view alone.
-    available: (block, ed) => ed.viewMode === 'desktop',
     inUse: (block) => Boolean(block.sticky),
     add: (ed, block) => ed.mutateBlock(`edit:${block.blockId}`, (b) => { b.sticky = { offset: 16, until: null }; }),
     clear: (ed, block) => ed.mutateBlock(`edit:${block.blockId}`, (b) => { b.sticky = null; }),

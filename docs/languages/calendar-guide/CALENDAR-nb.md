@@ -68,7 +68,7 @@ Oppsettsveiledningen har variabelen sammen med de andre: [Oppsett av publisering
 2. Velg blokken. I menyen dens, under **Kilder**, limer du inn iCal-adressen i raden; **Legg til kalender** gir en rad til.
 3. Velg design under **Design**, og hvor mange arrangementer som vises.
 
-Før en kilde er limt inn, viser blokken eksempelarrangementer i editoren, så du kan se designet. Besøkende ser aldri eksempelarrangementene. En kalender som ikke får hentet feeden, sier hvorfor i notisen under seg, og notisen tilbyr «Vis eksempelhendelser», så du likevel kan velge design og farger; på din egen datamaskin, der nettstedet kjører uten serverfunksjonene sine, hentes feeden aldri.
+Før en kilde er limt inn, viser blokken eksempelarrangementer i editoren, så du kan se designet. Besøkende ser aldri eksempelarrangementene. Kalenderens verktøylinje har en knapp med en kalender på som viser eller skjuler eksempelhendelsene når som helst, så du kan velge design og farger på dem. En kalender som ikke får hentet feeden, står tom i editoren, og knappens verktøytips sier hvorfor; på din egen datamaskin, der nettstedet kjører uten serverfunksjonene sine, hentes feeden aldri.
 
 **Flere kalendere** kan stå i én blokk. De vises som én kalender, og et arrangement som står i to av dem vises én gang. Gi hver et **Navn** og en farge: navnet blir arrangementenes kategori, og fargen merker dem.
 

@@ -1083,7 +1083,6 @@ export default {
     'preset.contact-form.hint': 'Oktavuohtaskovvi mii sádde e-poastta bokte (dahje iežas čuoggái)',
     'seed.contactForm.intro': '<h2>Váldde oktavuođa</h2><p>Sádde midjiide dieđu, de mii vástidit nu johtilit go sáhttit.</p>',
     'blocks.calendar': 'Kaleandar',
-    'calendar.demoNote': 'Ovdamearkadáhtat: liibme kaleandara iCal-čujuhusa dahje Google-kaleandar-id Iešvuođain.',
     'calendar.noticeTitleHint': 'Čále dieđáhusa bajilčállaga dása',
     'calendar.noticeTextHint': 'Coahkkal teavstta ovdačájeheamis ja čále dieđáhusa.',
     'calendar.feedFailed': 'Ii ožžon vižžot feeda: {error}',

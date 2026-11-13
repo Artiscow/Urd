@@ -20,7 +20,6 @@
   import { blockWords } from '$engine/anchor-model.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const viewMode = $derived(ed.viewMode);
   const sections = $derived(ed.sections);
   const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
@@ -113,36 +112,34 @@
   </Capability>
 {/snippet}
 {#snippet menuFrame()}
-      {#if viewMode === 'desktop'}
-        <div class="frame-grid">
-          <label title={ta('tip.frame.x')}>{ta('frame.x')}<input type="number" step="0.5" value={selectedBlock.frame.x}
-            onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
-          <label title={ta('tip.frame.y')}>{ta('frame.y')}<input type="number" step="1" value={selectedBlock.frame.y}
-            onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
-          <label title={ta('tip.frame.w')}>{ta('frame.w')}<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
-            onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
-          <label title={ta('tip.frame.h')}>{ta('frame.h')}<input type="number" step="1" min="1" value={selectedBlock.frame.h}
-            onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
-          <label title={ta('tip.frameZ')}>
-            {ta('frame.z')}<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
-            onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
-          <label title={ta('tip.frame.rot')}>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
-            onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
-        </div>
-      {:else}
-        <!-- The phone: a block flows in the reading order as on desktop, or holds its own place in the row grid (ADR-0019) -->
-        {@const held = selectedBlock.mobileRow !== null}
-        <div class="setting">
-          <div class="setting-body">
-            <span class="mini-label">{ta('lbl.phonePlacement')}</span>
-            <span class="setting-source">{held ? ta('menu.phoneRow', { n: selectedBlock.mobileRow + 1 }) : ta('menu.followsDesktop', { v: ta('menu.phoneFlow') })}</span>
-          </div>
-          {#if held}
-            <IconButton size="sm" quiet class="setting-reset" icon={RESET_ICON} label={ta('menu.resetPhone')}
-              onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
-          {/if}
-        </div>
-      {/if}
+  <span class="mini-label">{ta('lbl.desktopPlacement')}</span>
+  <div class="frame-grid">
+    <label title={ta('tip.frame.x')}>{ta('frame.x')}<input type="number" step="0.5" value={selectedBlock.frame.x}
+      onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
+    <label title={ta('tip.frame.y')}>{ta('frame.y')}<input type="number" step="1" value={selectedBlock.frame.y}
+      onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
+    <label title={ta('tip.frame.w')}>{ta('frame.w')}<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
+      onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
+    <label title={ta('tip.frame.h')}>{ta('frame.h')}<input type="number" step="1" min="1" value={selectedBlock.frame.h}
+      onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
+    <label title={ta('tip.frameZ')}>
+      {ta('frame.z')}<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
+      onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
+    <label title={ta('tip.frame.rot')}>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
+      onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
+  </div>
+  <!-- The phone: a block flows in the reading order as on desktop, or holds its own place in the row grid (ADR-0019) -->
+  {@const held = selectedBlock.mobileRow !== null}
+  <div class="setting">
+    <div class="setting-body">
+      <span class="mini-label">{ta('lbl.phonePlacement')}</span>
+      <span class="setting-source">{held ? ta('menu.phoneRow', { n: selectedBlock.mobileRow + 1 }) : ta('menu.followsDesktop', { v: ta('menu.phoneFlow') })}</span>
+    </div>
+    {#if held}
+      <IconButton size="sm" quiet class="setting-reset" icon={RESET_ICON} label={ta('menu.resetPhone')}
+        onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
+    {/if}
+  </div>
 {/snippet}
 
 <!-- The height, the size and the narrow-screen fit stand open; the frame is a group, and the capabilities' cards follow it -->
@@ -177,11 +174,12 @@
     <span class="field-note" title={ta('menu.anchorHiddenMobile')}><i class="note-dot"></i>{ta('lbl.hideMobile')}</span>
   {/if}
 {/snippet}
-<!-- The frame's numbers on the desktop, a group of its own; on a phone the one line of the phone's placement -->
-<Fold id="frame" rows={viewMode === 'desktop' ? undefined : 1} title={ta('group.placement')} value={viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : ''}>{@render menuFrame()}</Fold>
+<!-- The frame's numbers on the desktop and the line of the phone's placement, a group of their own -->
+<Fold id="frame" title={ta('group.placement')} value={`${selectedBlock.frame.w} % × ${selectedBlock.frame.h}`}>{@render menuFrame()}</Fold>
 <!-- The capabilities of Placement, after its core rows -->
 <!-- Hiding on phones and showing at once are one switch each, a card of one line with its chip (menu/capabilities.js `single`) -->
 <Capability id="phone" />
+<Capability id="phoneOnly" />
 {@render menuSticky()}
 <Capability id="link-target">{@render menuTarget()}</Capability>
 <Capability id="decor" />

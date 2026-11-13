@@ -228,7 +228,7 @@
   }
 
   /* The tick before the row, as the Drafts window's rows have it; a part kept for later stands dimmed */
-  .unpub-tick:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .unpub-tick:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     flex: none;
     align-self: center;
     margin: 0 0.1rem 0 0.35rem;

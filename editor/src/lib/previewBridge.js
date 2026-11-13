@@ -21,7 +21,7 @@
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder, coalesce? } (moves in the mobile reading order; coalesce from the keys)
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
- *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
+ *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-delete', sectionId, blockId | blockIds } (blockIds from a multi-selection: the whole selection in one undo step)
@@ -76,6 +76,7 @@
  *                  { type: 'urd-zoom', scale }                (the canvas zoom; the handles counter-scale so they keep their admin size)
  *                  { type: 'urd-scroll-section', sectionId }  (scroll the preview to the section; the review marker in the top bar)
  *                  { type: 'urd-scroll-anchor', hash }        (jump to the spot a link's fragment names, once its page stands)
+ *                  { type: 'urd-scroll-to', sectionId, offset } (back to where the canvas was scrolled before a reload, lib/reload-place.js)
  *                  { type: 'urd-link-apply', link }           (the link editor's answer for the text being edited: the link shape, or null to take the link away)
  *                  { type: 'urd-close-menus' }                (a click in the admin panels closes open menus in the preview)
  *                  { type: 'urd-place-block', block }         (the palette: the engine finds a placement mid-viewport and reports back)
@@ -268,6 +269,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Scroll the preview to a section (the review marker in the top bar). */
     sendScrollSection(sectionId) {
       post({ type: 'urd-scroll-section', sectionId });
+    },
+    /** Scroll the preview back to a place: the section at its top and how far past that section's top (a reload, lib/reload-place.js). */
+    sendScrollTo(sectionId, offset) {
+      post({ type: 'urd-scroll-to', sectionId, offset });
     },
     /** Jump the preview to the spot a link's fragment names, as the published page does on arrival. */
     sendScrollAnchor(hash) {

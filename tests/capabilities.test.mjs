@@ -24,6 +24,7 @@ function standIn(block, extra = {}) {
     setBlockAnimation: (type) => { block.animation = type ? { type, props: {} } : null; },
     setBlockHover: (type) => { block.hover = type ? { type } : null; },
     setBlockHideMobile: (on) => { block.hideMobile = on; },
+    setBlockHideDesktop: (on) => { if (on) { block.hideDesktop = true; delete block.hideMobile; } else delete block.hideDesktop; },
     setBlockDecor: (on) => { block.decor = on; },
     setBlockAnchor: (name) => { if (name) block.anchor = name; else delete block.anchor; },
     setBlockLink: (link) => {
@@ -46,6 +47,7 @@ const IN_USE = {
   'text-box': (b) => { b.props.box = true; b.props.boxStyle = { shadow: 'soft' }; },
   motion: (b) => { b.animation = { type: 'fade-in', props: {} }; b.hover = { type: 'lift' }; },
   phone: (b) => { b.hideMobile = true; },
+  phoneOnly: (b) => { b.hideDesktop = true; },
   sticky: (b) => { b.sticky = { offset: 16, until: null }; },
   'link-target': (b) => { b.anchor = 'priser'; },
   decor: (b) => { b.decor = true; },
@@ -115,12 +117,11 @@ test('a one-switch capability\'s switch sets what it holds', () => {
   }
 });
 
-test('a capability stands only on the blocks and in the views that carry it', () => {
+test('a capability stands only on the blocks that carry it', () => {
   const ed = standIn(fresh());
   assert.equal(carries(capability('text-box'), fresh('text'), ed), true);
   assert.equal(carries(capability('text-box'), fresh('image'), ed), false, 'the box is the text block\'s');
   assert.equal(carries(capability('sticky'), fresh(), ed), true);
-  assert.equal(carries(capability('sticky'), fresh(), { ...ed, viewMode: 'mobile' }), false, 'pinning while scrolling is the desktop\'s');
   // A block's own capabilities stand on its type alone, and the view switcher on the views that list what is coming.
   assert.equal(carries(capability('img-link'), fresh('image'), ed), true);
   assert.equal(carries(capability('img-link'), fresh('calendar'), ed), false);
@@ -128,6 +129,14 @@ test('a capability stands only on the blocks and in the views that carry it', ()
   assert.equal(carries(capability('cal-switcher'), calendar({ view: 'list' }), ed), true);
   assert.equal(carries(capability('cal-switcher'), calendar({ view: 'month' }), ed), false, 'a month has no switcher');
   assert.equal(carries(capability('cal-colors'), calendar({}), ed), true);
+});
+
+test('every capability stands in the desktop view and the phone view alike', () => {
+  for (const cap of CAPABILITIES) {
+    const block = fresh(cap.types?.[0] ?? 'text');
+    const ed = standIn(block);
+    assert.equal(carries(cap, block, { ...ed, viewMode: 'mobile' }), carries(cap, block, ed), cap.id);
+  }
 });
 
 test('an image\'s link and click is in use with a link or with the lightbox alone, and its way back takes both away', () => {

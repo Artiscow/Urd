@@ -195,6 +195,10 @@ test('anchorTargets: a section name at its top, each block with its name, and on
   assert.equal(phone.blocks.has('blk-c'), false);
   assert.deepEqual(anchorTargets({ id: 'sec-2', anchor: 'sec-2x', blocks: [] }, 'desktop').section, [], 'a reserved prefix is not a name');
   assert.deepEqual(anchorTargets({ id: 'sec-3' }, 'desktop'), { section: [], blocks: new Map() });
+  // A block shown on phones only lands on its section's top on the desktop, and stands on its own on a phone.
+  const phoneOnly = { id: 'sec-4', blocks: [{ id: 'blk-p', anchor: 'ring', hideDesktop: true }] };
+  assert.deepEqual(anchorTargets(phoneOnly, 'desktop').section, [{ id: 'blk-p', of: 'blk-p' }, { id: 'ring', of: 'blk-p' }]);
+  assert.deepEqual([...anchorTargets(phoneOnly, 'mobile').blocks], [['blk-p', [{ id: 'ring', of: 'blk-p' }]]]);
 });
 
 test('the row span of a flowing block holds the gap under it, at most the standard: a larger gap grows the rows instead', () => {

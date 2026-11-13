@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { coreAnimations, staggerColumnDelays, staggerCenterDelays, pointerEffectOf } = await engineImport('animations/core.js');
+const { coreAnimations, staggerColumnDelays, staggerCenterDelays, pointerEffectOf, entranceOf } = await engineImport('animations/core.js');
 const { lift } = await engineImport('migrate.js');
 
 test('the core animations follow the version+migrate contract', () => {
@@ -80,4 +80,15 @@ test('a block plays its own pointer effect, else the one its section gives every
   assert.equal(pointerEffectOf({ animation: { type: 'fade-in', version: 1, props: {} } }, section, isPointer), lift, 'an entrance is no pointer effect');
   assert.equal(pointerEffectOf({}, { hover: lift }, isPointer), null, 'the section\'s own effect is not its elements\'');
   assert.equal(pointerEffectOf({}, null, isPointer), null);
+});
+
+test('an entrance switched off on the phone does not play there, and plays on the desktop', () => {
+  const isPointer = (type) => coreAnimations[type]?.entrance === false;
+  const slide = { type: 'slide-up', version: 1, props: {} };
+  const lift = { type: 'hover-lift', version: 1, props: {} };
+  assert.equal(entranceOf({ animation: slide, entranceMobile: false }, 'mobile', isPointer), null);
+  assert.equal(entranceOf({ animation: slide, entranceMobile: false }, 'desktop', isPointer), slide);
+  assert.equal(entranceOf({ animation: slide }, 'mobile', isPointer), slide);
+  assert.equal(entranceOf({ animation: lift, entranceMobile: false }, 'mobile', isPointer), lift, 'an older page\'s pointer effect kept in animation stays');
+  assert.equal(entranceOf({}, 'mobile', isPointer), null);
 });

@@ -481,7 +481,7 @@
     border-bottom: 1px solid rgb(255 255 255 / 10%);
   }
 
-  .dw-tab:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .dw-tab:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -541,7 +541,7 @@
     opacity: 0.75;
   }
 
-  .dw-link:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .dw-link:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     padding: 0.1rem 0.3rem;
     border: 0;
     background: none;
@@ -572,7 +572,7 @@
     flex: none;
   }
 
-  .dw-go:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .dw-go:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     display: flex;
     flex: 1 1 auto;
     align-items: center;
@@ -688,7 +688,7 @@
   }
 
   /* Folded: a pill in the canvas's corner */
-  .drafts-pill:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .drafts-pill:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     position: fixed;
     right: 16px;
     bottom: 16px;

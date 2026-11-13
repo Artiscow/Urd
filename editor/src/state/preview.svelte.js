@@ -24,6 +24,7 @@ import { siteState } from './site.svelte.js';
 import { templatesState } from './templates.svelte.js';
 import { linkState } from './link.svelte.js';
 import { emailLike } from '../lib/link-edit.js';
+import { stoodOf, readStood, keepStood, canvasTop } from '../lib/reload-place.js';
 
 let iframeEl = $state(null);
 
@@ -113,7 +114,14 @@ function deviceTip(d) {
   return ta(key, { w: d.width, h: d.height ?? 0, c });
 }
 
-let deviceId = $state('desktop');
+/** Where the admin stood before a reload of the tab (lib/reload-place.js): its device is taken at once, and its selection and the canvas's scroll once the canvas first stands (onReady). */
+let stood = stoodOf(readStood(), ['desktop', 'mobile']);
+
+let deviceId = $state(stood.device ?? 'desktop');
+
+/** Where the canvas is scrolled on its page, measured a moment after each scroll, and kept as the admin is left. */
+let canvasPlace = null;
+let canvasPlaceTimer = 0;
 
 let device = $derived(freeWidth
   ? { id: 'free', width: freeWidth, height: null, viewport: 'desktop' }
@@ -206,6 +214,13 @@ function onIframeLoad() {
   // leaves the menu to the message that follows it, which opens the tool's
   // group inside the menu standing open, closes it at a second press, or
   // opens another (onBlockMenu and onSectionMenu in page.svelte.js).
+  iframeEl?.contentWindow?.addEventListener('scroll', () => {
+    clearTimeout(canvasPlaceTimer);
+    canvasPlaceTimer = setTimeout(() => {
+      const top = canvasTop(iframeEl?.contentDocument);
+      canvasPlace = top ? { page: pageState.pageId, ...top } : null;
+    }, 150);
+  }, { passive: true });
   iframeEl?.contentDocument?.addEventListener('pointerdown', (event) => {
     if (pageState.blockMenu && !event.target?.closest?.('[data-opens-menu]')) pageState.blockMenu = null;
     if (shellState.toolMenu) shellState.toolMenu = null;
@@ -313,6 +328,17 @@ async function onReady() {
   // A canvas loaded again while a saved draft is looked at shows it again; another page ends the look.
   if (look && look.pageId !== pageState.pageId) endLook();
   else if (look) sendLooked();
+  // The first canvas after a reload comes back to where the admin stood on its page: the section or the block selected, then the scroll.
+  const back = stood;
+  stood = null;
+  if (back?.page === pageState.pageId) {
+    if (back.blockId) bridge?.sendSelect(back.blockId);
+    else if (back.sectionId) {
+      pageState.activeSectionId = back.sectionId;
+      bridge?.sendActiveSection(back.sectionId);
+    }
+    if (back.top) bridge?.sendScrollTo(back.top.sectionId, back.top.offset);
+  }
 }
 
 /** Internal link clicked in the preview: switch page properly, and jump to the spot the link's fragment names. */
@@ -437,6 +463,19 @@ async function toggleChrome() {
 
 /** The effects of this module, run once by the shell at its start. */
 export function effects() {
+
+  // Where the admin stands is kept as it is left, so a reload of the tab comes back to it (lib/reload-place.js).
+  $effect(() => {
+    const keep = () => keepStood({
+      page: pageState.pageId,
+      device: deviceId,
+      sectionId: pageState.activeSectionId ?? null,
+      blockId: pageState.selectedBlock?.blockId ?? null,
+      top: canvasPlace?.page === pageState.pageId ? { sectionId: canvasPlace.sectionId, offset: canvasPlace.offset } : null,
+    });
+    window.addEventListener('pagehide', keep);
+    return () => window.removeEventListener('pagehide', keep);
+  });
 
   // A click anywhere in the admin (panels, top bar) closes open menus in
   // the preview; the iframe's own outside-click listeners never see these clicks.

@@ -1,5 +1,5 @@
 /**
- * Where the admin's large windows were left (editor/src/lib/scroll-place.js): each panel, each block's and section's element menu, each kind of design picker and each collection's table opens where it was left, in memory until a reload.
+ * Where the admin's large windows were left (editor/src/lib/scroll-place.js): each panel, each block's and section's element menu, each kind of design picker and each collection's table opens where it was left, kept for the tab's life so a reload comes back to it.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -127,4 +127,22 @@ test('the four windows keep their place by what they show', () => {
   assert.match(src('panels/pages/PageSettingsDialog.svelte'), /class="ps-body panel-body" \{@attach keepScroll\(id \? `page-settings:dialog:\$\{id\}` : null\)\}/, 'the dialog');
   assert.match(src('panels/pages/PageSettingsTable.svelte'), /class="pt-drawer panel-body"[^\n]*\{@attach keepScroll\(id \? `page-settings:table:\$\{id\}` : null\)\}/, 'the table\'s drawer');
   assert.match(app, /ed\.activePanel === 'pages' && ed\.pageSettingsPref === 'step' && ed\.pageSettingsFor \? `page-settings:step:\$\{ed\.pageSettingsFor\}`/, 'the step in the Pages panel');
+});
+
+test('the places kept before a reload are read back, each a window\'s key with a place below its top', async () => {
+  const kept = JSON.stringify([['panel:theme', 240], ['panel:site', 'far'], ['panel:nav', 0], 'odd']);
+  globalThis.sessionStorage = { getItem: () => kept, setItem() {} };
+  try {
+    const { keepScroll: afterReload } = await import(new URL('../editor/src/lib/scroll-place.js?reloaded', import.meta.url).href);
+    const theme = windowOf();
+    afterReload('panel:theme')(theme);
+    assert.equal(theme.scrollTop, 240, 'the kept place comes back');
+    for (const key of ['panel:site', 'panel:nav']) {
+      const other = windowOf();
+      afterReload(key)(other);
+      assert.equal(other.scrollTop, 0, `${key}: a place that does not hold leaves the window at its top`);
+    }
+  } finally {
+    delete globalThis.sessionStorage;
+  }
 });

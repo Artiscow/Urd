@@ -746,7 +746,7 @@ test('the menu\'s head offers what the block can take, and nothing when the bloc
   assert.ok(plus[0].attrs['aria-label'], 'the «+» is named for a screen reader');
   const add = readFileSync(new URL('../editor/src/menu/CapabilityAdd.svelte', import.meta.url), 'utf8');
   for (const fn of ['hoverIn', 'hoverOut']) assert.match(add, new RegExp(`function ${fn}\\(event\\) \\{\\s*if \\(event\\.pointerType !== 'mouse'\\) return;`), fn);
-  const full = offers('text', { box: true }, { animation: { type: 'fade-in', props: {} }, sticky: { offset: 16, until: null }, anchor: 'priser', decor: true, hideMobile: true });
+  const full = offers('text', { box: true }, { animation: { type: 'fade-in', props: {} }, sticky: { offset: 16, until: null }, anchor: 'priser', decor: true, hideMobile: true, hideDesktop: true });
   assert.equal(find(full, (n) => hasClass(n, 'cap-add-head')).length, 0, 'a block that uses every capability is offered none');
   // Delete in the head draws a bin, never the cross that closes things.
   assert.match(readFileSync(new URL('../editor/src/menu/BlockActions.svelte', import.meta.url), 'utf8'), /<IconButton icon=\{ICONS\.bin\} danger label=\{ta\('canvas\.ctx\.delete'\)\}/);

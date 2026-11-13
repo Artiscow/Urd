@@ -641,14 +641,16 @@ test('calProgramHref and calNoticeHref: the shared safe-URL gate, and the notice
 });
 
 
-test('a calendar whose feed cannot be fetched offers the sample events in the preview, for the session, and says when the route itself is missing', () => {
+test('a calendar in the editor shows the example events by its bar\'s choice for the session, else while it has no sources, with no note under it, and says when the route itself is missing', () => {
   const src = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
   assert.match(src, /if \(!body && res\.status === 404\) throw new Error\(ta\('calendar\.noRoute'\)\);/, 'a 404 without the route\'s JSON is the route missing, as on a local server');
-  const failed = src.slice(src.indexOf('const failed = (error) => {'), src.indexOf('\n  };\n', src.indexOf('const failed = (error) => {')));
-  assert.match(failed, /const shown = EXAMPLES_SHOWN\.has\(key\);/);
-  assert.match(failed, /draw\(shown \? demoOccurrences\(\) : \[\], note\);/, 'the sample events or the empty calendar, with the note and its button');
-  assert.match(src, /if \(ctx\.preview\) failed\(errors\[0\]\);\s*else draw\(\[\], null\);/, 'visitors get the quiet empty state');
-  assert.match(src, /if \(ctx\.preview\) failed\(error\?\.message \?\? String\(error\)\);\s*else draw\(\[\], null\);/, 'a feed that cannot be read, too');
+  assert.match(src, /const examples = ctx\.preview && \(EXAMPLES\.get\(key\) \?\? sample\);/, 'the choice made on the bar, else the default, and never on the published page');
+  assert.match(src, /const settle = \(occurrences, reason = null, sample = !sources\.length\) => \{/, 'a calendar without sources shows the examples until the bar says otherwise');
+  assert.match(src, /const failed = \(error\) => settle\(\[\], \(\) => ta\('calendar\.feedFailed', \{ error \}\), props\.sampleOnFail === true\);/, 'a failed feed leaves the calendar empty, its reason kept for the button, and the design picker shows the examples at once');
+  assert.doesNotMatch(src, /urd-cal-note/, 'no note stands under a calendar');
+  const bar = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  assert.equal([...bar.matchAll(/if \(block\.type === 'calendar'\) (?:barBody\.appendChild|place)\(exampleButton\(\)/g)].length, 3, 'the button stands on the phone view\'s bar, the full bar and the shorter bars');
   const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
-  assert.match(css, /\.urd-cal-note-btn \{\s*pointer-events: auto;/, 'the button takes the pointer the note leaves');
+  assert.doesNotMatch(css, /urd-cal-note/);
+  assert.match(css, /\.urd-edit-examples\[aria-pressed="true"\] \{/, 'the button is drawn pressed while the examples show');
 });

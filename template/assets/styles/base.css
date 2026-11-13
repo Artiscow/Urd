@@ -93,12 +93,11 @@ body:not(.urd-mobile) .urd-section {
 }
 
 .urd-canvas {
-  /* ABSOLUTE, not in flow: the section toolbar in the editor is sticky and
-     therefore an in-flow element, and the section's ONLY one. With the canvas in
-     flow, the section would grow by the toolbar height every time the pointer hit
-     it, and shrink again when it left. Absolute placement keeps the
-     invariant. Safe for pinned blocks: only transform, filter and
-     containment create a containing block for fixed, not position.
+  /* ABSOLUTE, not in flow: the section's height is its design height (the inline
+     min-height), and the section toolbar in the editor, sticky and therefore in flow,
+     takes no room in it either (see .urd-section-toolbar). Safe for pinned blocks:
+     only transform, filter and containment create a containing block for fixed,
+     not position.
      The nav clearance is the section's padding (see .urd-section); the
      canvas starts below it. */
   position: absolute;
@@ -5552,7 +5551,6 @@ textarea.urd-form-input {
   }
 
   .urd-cal > :not(.urd-cal-print),
-  .urd-cal-note,
   .urd-cal-shade,
   .urd-cal-dialog {
     display: none !important;
@@ -10773,43 +10771,6 @@ textarea.urd-form-input {
     border-top: 1px solid var(--urd-cal-s-line, #d9cfae);
     border-left: 0;
   }
-}
-
-/* The preview's notes under the calendar (demo data, a failed feed) hang
-   below the block instead of inside it: a note that took height would make
-   the block push its neighbours in the preview and not on the published
-   page, where no note exists. */
-.urd-cal-note {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin: 0.25rem 0 0;
-  font-size: 0.75em;
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-/* On the phone the row grid flows the blocks, so the note stands in the flow and takes its own room under the calendar. */
-body.urd-mobile .urd-cal-note {
-  position: static;
-}
-
-/* A note with an act (a feed that cannot be fetched offers the sample events): the act takes the pointer, the note stays clear */
-.urd-cal-note-act {
-  opacity: 0.8;
-}
-
-.urd-cal-note-btn {
-  pointer-events: auto;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-weight: 600;
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 .urd-preview .urd-audio-empty {
@@ -18706,6 +18667,12 @@ body.urd-mobile .urd-add-section {
   color: #1a1508;
 }
 
+/* The calendar's example events on the block toolbar, pressed while they stand in for its own events (preview-edit.js exampleButton) */
+.urd-preview .urd-edit-toolbar .urd-edit-examples[aria-pressed="true"] {
+  background: var(--urd-admin-accent, #5f6a75);
+  color: var(--urd-admin-accent-text, #fff);
+}
+
 /* The review card in mobile view: what happened, when, and the reviewed
    button. Counter-scaled like the rest of the editing layer (urd-zoom). */
 .urd-preview .urd-attention-card {
@@ -18769,8 +18736,8 @@ body.urd-mobile .urd-add-section {
   height: calc(11px * var(--urd-chrome-scale, 1));
 }
 
-/* The hidden-on-mobile list: a floating panel below the section toolbar, with
-   one row per hidden block and the eye button that brings it back. */
+/* The list of a section's blocks hidden in the view (hidden on phones in the phone view, shown on phones only on the desktop): a floating panel below the section toolbar, with
+   one row per block and the eye button that brings it back. */
 .urd-preview .urd-hidden-list {
   position: absolute;
   top: calc(var(--urd-section-clear, 0px) + 46px * var(--urd-chrome-scale, 1));
@@ -20238,16 +20205,22 @@ body.urd-mobile .urd-add-section {
   transform-origin: top right;
   /* Sticky inside the section (not absolute): in sections taller than the viewport the
      toolbar follows along, so the "+ card" button can always be reached when adding
-     repeatedly. The toolbar is the section's only in-flow element, so it always starts
-     at the top. The sticky offset reads the unshrunk menu height (--urd-nav-h-base from
-     nav.js), so the bar parks right below the menu instead of at a guessed fixed offset,
-     and stands still while the scroll shrink runs. */
+     repeatedly. It stands before the canvas (preview-edit.js addSectionToolbar), so it
+     starts at the section's top in both views. The sticky offset reads the unshrunk menu
+     height (--urd-nav-h-base from nav.js), so the bar parks right below the menu instead
+     of at a guessed fixed offset, and stands still while the scroll shrink runs. It takes
+     no room in the section: the negative bottom margin gives its height back, so the
+     section keeps its height when the bar shows, on the phone, where the canvas is in
+     flow below it, as on the desktop. */
   position: sticky;
   top: calc(var(--urd-nav-h-base, var(--urd-nav-h, 56px)) + 8px * var(--urd-chrome-scale, 1));
   display: none;
   gap: 2px;
+  box-sizing: border-box;
   width: fit-content;
+  height: 32px;
   margin-left: auto;
+  margin-bottom: -32px;
   padding: 8px 8px 0 0;
   z-index: 100001;
 }

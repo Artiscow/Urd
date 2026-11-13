@@ -22,5 +22,5 @@
     <DocLook type="terms" {design} />
   {/snippet}
   <Fold id="terms-design" title={ta('group.appearance')} value={groupChanged(LOOK) ? ta('menu.changed', { n: groupChanged(LOOK) }) : ta('menu.standard')} group={groupOf('terms-design', LOOK)} defaultOpen>{@render look()}</Fold>
-  <Fold id="terms-type" title={ta('group.typography')} value="" rows={ed.viewMode === 'desktop' ? 2 : 0}><WholeText /></Fold>
+  <Fold id="terms-type" title={ta('group.typography')} value="" rows={2}><WholeText /></Fold>
 {/if}

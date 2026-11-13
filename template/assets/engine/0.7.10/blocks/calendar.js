@@ -105,8 +105,25 @@ const DEMO_IMAGE = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://
 /** The sample calendars' colours, one per calendar, so the sample shows how coloured calendars look. */
 const DEMO_COLORS = { demoCat1: '#2f80ed', demoCat2: '#e0632c', demoCat3: '#2e9e5b' };
 
-/** The calendars whose feed could not be fetched that show the sample events instead, by block id, for the editing session. */
-const EXAMPLES_SHOWN = new Set();
+/** The calendars in the editor whose bar chose the example events on or off, by block id, for the editing session; a calendar not listed shows them while it has no sources. */
+const EXAMPLES = new Map();
+
+/** What each calendar in the editor shows, by block id, as last drawn: its box, whether the example events stand in for its own, why it has none of its own where a feed failed (read in the admin's language when asked), and its way to be drawn again. */
+const SHOWN = new Map();
+
+/** What a calendar in the editor shows, for its bar's button (preview-edit.js): whether the example events stand in for its own, and why its feed gave none where one failed; null until it is drawn. */
+export function calendarExamples(blockId) {
+  const state = SHOWN.get(blockId);
+  return state ? { examples: state.examples, reason: state.reason?.() ?? null } : null;
+}
+
+/** The example events on or off for a calendar in the editor, for the session, and the calendar drawn again with them. */
+export function toggleCalendarExamples(blockId) {
+  const state = SHOWN.get(blockId);
+  if (!state) return;
+  EXAMPLES.set(blockId, !state.examples);
+  state.redraw();
+}
 
 function demoOccurrences() {
   const day = 24 * 3600 * 1000;
@@ -1668,6 +1685,7 @@ if (typeof location !== 'undefined' && new URLSearchParams(location.search).has(
 
 function renderCalendar(el, props, ctx) {
   closeOrphanCards();
+  SHOWN.delete(el.dataset.blockId ?? '');
   const host = el2('div', 'urd-cal');
   el.appendChild(host);
   // The ruler the calendar reads its own width from (drawCalendar).
@@ -1711,7 +1729,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   let shown = null;
   const search = props.showSearch === true ? searchField((words) => {
     query = words;
-    if (shown) draw(shown.occurrences, shown.note);
+    if (shown) draw(shown);
     return ui.total;
   }) : null;
   // The view switcher's mode: the block's own design until the visitor picks the week or the month.
@@ -1772,7 +1790,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
         const narrow = isNarrow();
         if (!host.isConnected || narrow === ui.phone) return;
         setNarrow(narrow);
-        if (shown) draw(shown.occurrences, shown.note);
+        if (shown) draw(shown);
       });
     });
     watch.observe(ruler);
@@ -1784,8 +1802,8 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     else if (typeof value === 'string') host.classList.add(`urd-cal-o-${key}-${value}`);
   }
 
-  const draw = (occurrences, note) => {
-    shown = { occurrences, note };
+  const draw = (occurrences) => {
+    shown = occurrences;
     for (const occ of occurrences) if (occ.geo && occ.location) ui.places.set(occ.location, occ.geo);
     host.removeAttribute('aria-busy');
     // A press on the view switcher or a category redraws the calendar: the focus goes back to the button that was pressed.
@@ -1828,7 +1846,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     if (switcher) {
       tools.appendChild(switchRow(mode, (picked) => {
         mode = picked;
-        draw(occurrences, note);
+        draw(occurrences);
       }, ui));
     }
     if (search) tools.appendChild(search);
@@ -1837,7 +1855,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     const shownDesign = own ? design : cd.calDesign(cd.calSwitcherViews(props)[mode]);
     const chips = props.showCategories !== true || shownDesign.ownFilter ? null : categoryRow(occurrences, activeCategory, (category) => {
       activeCategory = category;
-      draw(occurrences, note);
+      draw(occurrences);
     }, ui);
     if (chips) host.appendChild(chips);
     // The whole filtered list, for a design that draws more than the rows (the bento's month dots).
@@ -1849,7 +1867,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
       active: activeCategory,
       pick: (category) => {
         activeCategory = category;
-        draw(occurrences, note);
+        draw(occurrences);
       },
     };
     // On a phone the block is marked for its phone design, when that is not the design itself.
@@ -1912,40 +1930,28 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     // Search engines get the same events as structured data, on the published page and from a real feed only.
     if (!ctx.preview && sources.length) writeEventData(el, props.structuredData === false ? [] : listed, ics, ctx, ui.meetingHosts);
     if (focused) [...host.querySelectorAll('[data-cal-key]')].find((node) => node.dataset.calKey === focused)?.focus({ preventScroll: true });
-    // The note is editing chrome on the block, not content: it hangs below the block (base.css) and the push pass skips it, so it never makes the block taller in the preview than on the published page.
-    el.querySelector(':scope > .urd-cal-note')?.remove();
-    if (note) el.appendChild(note instanceof Node ? note : el2('p', 'urd-cal-note', note));
   };
 
-  // A feed that cannot be fetched leaves the preview's calendar empty: its note says why and offers the sample events for the session, so the design and the colours can be set on them.
-  // The design picker's preview (`sampleOnFail`, set by the editor on the calendar it draws there and never stored) shows the sample events at once, so every design stands to be seen.
-  const failed = (error) => {
-    if (ctx.preview && props.sampleOnFail === true) {
-      draw(demoOccurrences(), null);
-      return;
-    }
-    const key = el.dataset.blockId ?? '';
-    const shown = EXAMPLES_SHOWN.has(key);
-    const note = el2('p', 'urd-cal-note urd-cal-note-act', ta(shown ? 'calendar.exampleNote' : 'calendar.feedFailed', { error }));
-    const toggle = el2('button', 'urd-cal-note-btn', ta(shown ? 'calendar.hideExample' : 'calendar.showExample'));
-    toggle.type = 'button';
-    toggle.addEventListener('click', (event) => {
-      event.stopPropagation();
-      if (shown) EXAMPLES_SHOWN.delete(key);
-      else EXAMPLES_SHOWN.add(key);
-      if (host.isConnected) failed(error);
-    });
-    note.append(' ', toggle);
-    draw(shown ? demoOccurrences() : [], note);
+  // In the editor the example events can stand in for the calendar's own (its bar's button, preview-edit.js): by the choice made for the session, else while it has no sources, so a new calendar shows its design at once.
+  // A feed that cannot be fetched leaves the calendar empty, with the reason kept for the button's tooltip; the design picker's preview (`sampleOnFail`, set by the editor on the calendar it draws there and never stored) shows the examples at once, so every design stands to be seen.
+  // Visitors see the calendar's own events, or its quiet empty state.
+  const key = el.dataset.blockId ?? '';
+  const settle = (occurrences, reason = null, sample = !sources.length) => {
+    const examples = ctx.preview && (EXAMPLES.get(key) ?? sample);
+    draw(examples ? demoOccurrences() : occurrences);
+    if (!ctx.preview) return;
+    // A calendar gone from the page (deleted, or drawn anew) leaves the list.
+    for (const [id, state] of SHOWN) if (!state.host.isConnected) SHOWN.delete(id);
+    SHOWN.set(key, { host, examples, reason, redraw: () => { if (host.isConnected) settle(occurrences, reason, sample); } });
+    // The bar's button reads what the calendar now shows (preview-edit.js exampleButton).
+    el.dispatchEvent(new CustomEvent('urd-cal-shown'));
   };
+  const failed = (error) => settle([], () => ta('calendar.feedFailed', { error }), props.sampleOnFail === true);
 
   if (!sources.length) {
-    // Demo data exists only in the preview, where the block follows it as it follows a feed, so the owner sees the whole design; visitors see the empty state, as for a calendar with nothing coming up.
-    // A block whose only sources point at calendars no longer in the registry says so in its note.
-    if (ctx.preview) adminLocaleReady.then(() => {
-      if (host.isConnected) draw(demoOccurrences(), ta((props.sources ?? []).some((source) => source && typeof source === 'object' && 'calendar' in source) ? 'calendar.unknownCalendar' : 'calendar.demoNote'));
-    });
-    else draw([], null);
+    // A block whose only sources point at calendars no longer in the registry says so in the button's tooltip.
+    const unknown = (props.sources ?? []).some((source) => source && typeof source === 'object' && 'calendar' in source);
+    settle([], unknown ? () => ta('calendar.unknownCalendar') : null);
     return;
   }
 
@@ -1963,19 +1969,16 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     if (!host.isConnected) return;
     feedZone = fz;
     if (!occurrences.length && errors.length) {
-      // Visitors get a quiet empty state; the preview gets the error and the sample events to offer.
-      if (ctx.preview) failed(errors[0]);
-      else draw([], null);
+      failed(errors[0]);
       return;
     }
-    draw(occurrences, ctx.preview && errors.length ? ta('calendar.sourceFailed', { error: errors[0] }) : null);
+    settle(occurrences, errors.length ? () => ta('calendar.sourceFailed', { error: errors[0] }) : null);
     try { sessionStorage.setItem(heightKey(el, ctx), String(Math.round(host.offsetHeight))); } catch { /* a full store is fine */ }
   }).catch((error) => {
-    // A feed the block could not make sense of: visitors get the quiet empty state, the preview the reason.
+    // A feed the block could not make sense of: visitors get the quiet empty state, the editor the reason.
     console.warn('Urd: the calendar feed could not be read', error);
     if (!host.isConnected) return;
-    if (ctx.preview) failed(error?.message ?? String(error));
-    else draw([], null);
+    failed(error?.message ?? String(error));
   });
 }
 

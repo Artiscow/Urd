@@ -185,8 +185,9 @@ let jumpControl = null;
  * The element is looked up again on every correction, since a render replaces it.
  * @param {string} id
  * @param {number} ms
+ * @param {number} [offset] How far past the element's top the window stands, in px
  */
-function followJump(id, ms) {
+function followJump(id, ms, offset = 0) {
   jumpControl?.abort();
   const control = new AbortController();
   jumpControl = control;
@@ -200,7 +201,7 @@ function followJump(id, ms) {
     waiting = false;
     const el = document.getElementById(id);
     if (!el) return;
-    const top = spotTop(el);
+    const top = spotTop(el) + offset;
     if (Math.abs(top - window.scrollY) <= 2) return;
     const y = window.scrollY;
     window.scrollTo({ top, behavior: 'instant' });
@@ -239,15 +240,16 @@ function followJump(id, ms) {
 }
 
 /**
- * Brings the element with this id to the top of the window at once, below a menu that stays on screen (the scroll-padding in base.css), and follows the jump while the page that has just been drawn settles.
+ * Brings the element with this id to the top of the window at once, below a menu that stays on screen (the scroll-padding in base.css), or `offset` px past it, and follows the jump while the page that has just been drawn settles.
  * @param {string|null} id
+ * @param {number} [offset]
  * @returns {boolean} Whether the element was there
  */
-function jumpTo(id) {
+function jumpTo(id, offset = 0) {
   const el = id ? document.getElementById(id) : null;
   if (!el) return false;
-  followJump(id, 4000);
-  window.scrollTo({ top: spotTop(el), behavior: 'instant' });
+  followJump(id, 4000, offset);
+  window.scrollTo({ top: spotTop(el) + offset, behavior: 'instant' });
   return true;
 }
 
@@ -614,6 +616,9 @@ function enablePreview(state, opts) {
       // The attention badge in the top bar: scroll to the section that needs review, so the badge points at a place and not just a mode.
       // The badge also switches the view to the phone, whose layout settles over the next frames (blocks measure their heights), so the jump settles.
       jumpTo(msg.sectionId);
+    } else if (msg?.type === 'urd-scroll-to' && typeof msg.sectionId === 'string') {
+      // A reload of the editor: the canvas comes back to where it was scrolled, as the section at its top and how far past that section's top (the editor's lib/reload-place.js).
+      jumpTo(msg.sectionId, Math.max(0, Number(msg.offset) || 0));
     } else if (msg?.type === 'urd-link-apply') {
       // The link editor's answer for the text being edited: written on the selection the text toolbar kept.
       window.UrdPreviewEdit?.applyTextLink(msg.link ?? null, state.site.pages ?? []);

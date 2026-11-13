@@ -124,7 +124,7 @@
     background: rgb(255 255 255 / 3%);
   }
 
-  .saved-row:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .saved-row:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     display: flex;
     align-items: center;
     gap: 0.55rem;
@@ -243,7 +243,7 @@
     gap: 1px;
   }
 
-  .saved-diff-line:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .saved-diff-line:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     display: flex;
     align-items: center;
     gap: 0.45rem;
@@ -292,8 +292,8 @@
     font-size: 0.8rem;
   }
 
-  .saved-act:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)),
-  .saved-open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .saved-act:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
+  .saved-open:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     flex: none;
     width: auto;
     min-height: 1.8rem;

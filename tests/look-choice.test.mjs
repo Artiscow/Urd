@@ -11,7 +11,7 @@ import { engineImport } from './_engine.mjs';
 register('./_svelte-loader.mjs', import.meta.url);
 
 const { looksInPlace, LOOKS_WHOLE, LOOKS_SHOWN } = await import('../editor/src/lib/look-choice.js');
-const { pictureList, blockDesigns, calendarDesignSource, footerPresetSource } = await import('../editor/src/lib/design-sources.js');
+const { pictureList, blockDesigns, blockDesignSource, blockPhoneDesignSource, calendarDesignSource, footerPresetSource } = await import('../editor/src/lib/design-sources.js');
 const { FOOTER_PRESETS } = await engineImport('footer-presets.js');
 const { BLOCK_DESIGNS } = await engineImport('block-designs.js');
 
@@ -82,4 +82,15 @@ test('the footer\'s preview is measured again as the page above it empties and a
   assert.equal(footerPresetSource({}).room, 0);
   assert.match(picker, /Math\.ceil\(bottom \+ \(source\.room \?\? 24\)\)/);
   assert.match(picker, /html \{ overflow: hidden !important; scrollbar-gutter: auto !important; \}/);
+});
+
+test('the design picker draws a block shown on phones only, or hidden on them, in its preview', () => {
+  const type = Object.keys(BLOCK_DESIGNS)[0];
+  const designs = blockDesigns(type);
+  const block = { id: 'b1', type, version: 1, hideDesktop: true, hideMobile: true, props: {}, frames: { desktop: { x: 10, y: 0, w: 80, h: 300 } } };
+  for (const source of [blockDesignSource({ block, designs }), blockPhoneDesignSource({ block, designs })]) {
+    const drawn = source.previewPage(designs.read(block.props), {}, null).sections[0].blocks[0];
+    assert.equal(drawn.hideDesktop, false, 'the desktop preview draws it');
+    assert.equal(drawn.hideMobile, false, 'the phone preview draws it');
+  }
 });

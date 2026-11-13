@@ -19,7 +19,7 @@
 
 <!-- The words are written on the page, where the text is editable: the text block has no Content of its own here -->
 {#if area === 'style'}
-  <!-- How the whole text stands: its alignment, and in the desktop view its font and size (the toolbar's own apply to a selection) -->
+  <!-- How the whole text stands: its alignment, its font and its size (the toolbar's own apply to a selection) -->
   {#snippet textType()}
     <Setting pin="align" own={(selectedBlock.props.align ?? 'left') !== 'left'} reset={() => setBlockProp('align', 'left')}>
       <Choice stack label={ta('lbl.align')} title={ta('tip.text.align')} value={selectedBlock.props.align ?? 'left'}

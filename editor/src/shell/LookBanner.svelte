@@ -75,7 +75,7 @@
     width: 9.5rem;
   }
 
-  .look-act:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *)) {
+  .look-act:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     flex: none;
     min-height: 1.9rem;
     padding: 0 0.7rem;

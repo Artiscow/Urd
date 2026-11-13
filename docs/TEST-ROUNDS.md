@@ -2,6 +2,27 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.8): only on phones, no animation on phones, every setting in both views, the play button, calendars without notes, and a reload that keeps your place
+
+- [ ] Contact page: the line «Trykk på telefonnummeret for å ringe oss.» is absent on the desktop canvas and on the published page at a desktop width, and stands in the phone view and on the published page at phone width
+- [ ] On the desktop canvas the Contact section's bar says «1 on phones only»; its list names the block, and the eye on it shows the block on the desktop too, one undo taking it back
+- [ ] A block's menu, Placement: «Only on phones» can be added in the desktop view and in the phone view; switching it on switches «Hide on phones» off, and the other way round
+- [ ] A section with a phone-only block on the desktop: the blocks below it keep their places, and «Fit height» measures the section without it
+- [ ] Shop page, the product block: its cards come in with their animation at a desktop width and stand still from the start at phone width; «Animation in on phones» stands under the delay in both views, and switching it back on brings the animation to the phone
+- [ ] «Play the animation» under a block's «Animation in» and under a section's plays the entrance once on the canvas; in the phone view the block's button is greyed while «Animation in on phones» is off
+- [ ] Duration and Delay under «Animation in», and every number field with arrows in the panels: the number stands in the middle of the field with one border, and both arrows show whole
+- [ ] Hover each section on the canvas, in the desktop view and the phone view: no section grows, and in the phone view the section's bar stands at its top right
+- [ ] Phone view, a block's menu: Placement shows «Place on the desktop» with its numbers and «Place on the phone» with its line, as the desktop view does, and the menu's head has the layer buttons
+- [ ] Desktop view, a section's menu, «Size and grid»: «Space between blocks on the phone» stands there too, and the phone view shows «Content width on large screens»; the 0.7.3.7 item that says the desktop shows no such row no longer holds
+- [ ] Phone view, a block's «Pin while scrolling»: the card can be added, and its mode «While scrolling, on the desktop» says where it pins
+- [ ] Phone view, a text block: «Font for the whole text» and «Size for the whole text» change the whole text, the phone shows it at once, the desktop view has it too, and one undo takes it back
+- [ ] No calendar shows a line of text under it in the editor, in either view
+- [ ] A calendar's bar, in every toolbar form and in the phone view: the button with a calendar on it shows the example events and is drawn pressed, a second press hides them; on the local server its tooltip says why the feed could not be fetched
+- [ ] A new calendar with no sources shows the example events at once; the button hides them and the calendar shows its empty state, as a visitor sees it; the published page never shows examples
+- [ ] Switch to another page from the top bar: the address reads `?page=` with that page; reload the tab and the same page opens
+- [ ] In the phone view, select a block with the Settings panel open, scroll the canvas and the panel, and reload: the phone view, the selected block, the Settings panel on it and both scrolls come back; a section selected comes back the same way
+- [ ] Open the admin in a new tab: it starts on the page its address names, in the desktop view, with nothing selected and every panel at its top; the 0.7.0.x item that says every window opens at its top after a reload no longer holds
+
 ### Test batch (0.7.3.7): space between blocks on the phone
 
 - [ ] Site panel, «Content width»: «Space between blocks on the phone» stands at 16 px; set it to 40 and the flowing blocks of every section without its own stand 40 px apart in the phone view and on the published page at phone width, and the closed fold names the phone's gap

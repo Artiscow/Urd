@@ -424,9 +424,15 @@ export function fitMoves(blocks, id, h) {
  */
 export function fitMovesAll(blocks, fits, widths) {
   const items = [];
+  const phoneOnly = [];
   for (const block of blocks ?? []) {
     const frame = block?.frames?.desktop;
     if (!frame || !Number.isFinite(frame.y) || !Number.isFinite(frame.h)) continue;
+    // A block shown on phones only takes no room on the desktop: it is pushed apart from the rest below.
+    if (block.hideDesktop) {
+      phoneOnly.push({ id: block.id, x: frame.x ?? 0, w: widths?.get(block.id) ?? frame.w, y: frame.y, h: 0, grow: 0 });
+      continue;
+    }
     const h = fits?.get(block.id);
     const grow = Number.isFinite(h) ? Math.max(0, h - frame.h) : 0;
     items.push({ id: block.id, x: frame.x ?? 0, w: widths?.get(block.id) ?? frame.w, y: frame.y, h: frame.h, grow });
@@ -436,6 +442,11 @@ export function fitMovesAll(blocks, fits, widths) {
   const { shifts } = pushLayout(items);
   for (const it of items) {
     const shift = shifts.get(it.id) ?? 0;
+    if (shift) moves.set(it.id, it.y + shift);
+  }
+  // Each block shown on phones only moves as the blocks above it push it, so it keeps its place in the phone's reading order, and its own move pushes none of them.
+  for (const it of phoneOnly) {
+    const shift = pushLayout([...items, it]).shifts.get(it.id) ?? 0;
     if (shift) moves.set(it.id, it.y + shift);
   }
   return moves;

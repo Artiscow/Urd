@@ -305,14 +305,17 @@ test('the Properties panel renders a section with every setting on, and a select
   assert.match(body, /card-list-item/, 'the background layers are drawn');
   assert.match(body, /900 px/, 'the section\'s own width stands in its group and beside its slider');
   assert.match(body, /type="range" min="320" max="1920" step="10" value="900"/, 'the own width has its slider');
-  // On a full-width site «Full width» is the site's own, and is not offered; in the phone view the content width has no effect, and is not shown.
+  // On a full-width site «Full width» is the site's own, and is not offered; the content width stands in the phone view as well, since every setting shows in both views.
   const fullSite = structuredClone(site);
   fullSite.layout = { ...(fullSite.layout ?? {}), contentWidth: 'full' };
   const onFull = draw(panels.Properties, 'properties', fullSite, { ...section, sectionMaxWidth: '' });
   assert.match(onFull, />opt\.sectionWidth\.own</);
   assert.doesNotMatch(onFull, />opt\.sectionWidth\.full</);
   assert.match(draw(panels.Properties, 'properties', structuredClone(site), section), />opt\.sectionWidth\.full</);
-  assert.doesNotMatch(draw(panels.Properties, 'properties', structuredClone(site), { ...section, viewMode: 'mobile' }), />opt\.sectionWidth\.own</);
+  const onPhone = draw(panels.Properties, 'properties', structuredClone(site), { ...section, viewMode: 'mobile' });
+  assert.match(onPhone, />opt\.sectionWidth\.own</, 'the content width shows in the phone view');
+  assert.match(onPhone, />lbl\.mobileGap</, 'the space between blocks on the phone shows in the phone view');
+  assert.match(body, />lbl\.mobileGap</, 'the space between blocks on the phone shows in the desktop view');
   body = draw(panels.Properties, 'properties', structuredClone(site), { selectedBlock: textBlock });
   assert.match(body, /emenu-area/, 'the element menu is drawn for the selected block');
   assert.equal([...body.matchAll(/<section class="emenu-col emenu-area"[^>]*><header class="emenu-head">/g)].length, 3, 'the three areas stand under each other with a heading each');

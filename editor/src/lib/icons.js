@@ -8,6 +8,7 @@ export const CAP_ICONS = {
   motion: capSvg('<path d="M3 7h7M3 12h11M3 17h7"/><path d="M16 8l4 4-4 4"/>'),
   box: capSvg('<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/>'),
   phone: capSvg('<rect x="8" y="3" width="8" height="18" rx="2"/><path d="M11 17.5h2"/><path d="M4 4l16 16"/>'),
+  phoneOnly: capSvg('<rect x="8" y="3" width="8" height="18" rx="2"/><path d="M11 17.5h2"/><path d="M10.5 9.5l1.5 1.5 3-3"/>'),
   stick: capSvg('<path d="M5 4h14"/><path d="M12 20V9"/><path d="M8 13l4-4 4 4"/>'),
   link: capSvg('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
   decor: capSvg('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>'),

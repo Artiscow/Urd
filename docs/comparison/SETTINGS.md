@@ -53,7 +53,7 @@ The settings an element takes whatever it is, one row per capability.
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | An anchor or HTML id | Some (98/116) | All | All | Some (21/26) | None | All (attribute) | All (attribute) | Some (40/62) | Some (51/67) | All | Some (v1 blocks) | All (0.7.27) |
 | A CSS class | Some (109/116) | All | All | All | None | All | n/r | Some (59/62) | Some (60/67) | All | Some (9/14) | None |
-| Visibility per device | Some (103/116) | All | All (style) | All (style) | None | All (style) | n/r | All | All | All | Some (9/14) | All blocks, phone only |
+| Visibility per device | Some (103/116) | All | All (style) | All (style) | None | All (style) | n/r | All | All | All | Some (9/14) | All blocks, hidden on phones or shown only there |
 | Spacing (margin, padding) | Some (95/116) | All | All | All | Some (demo) | All (style) | n/r | Some (33/62) | Some (42/67) | All | Some (v2 styles) | n/a |
 | Border and radius | Some (88/116) | All | All | All | None | All (style) | n/r | Some (24/62) | Some (36/67) | All | Some (v2 styles) | Some |
 | Shadow | Some (64/116) | All | All | All | None | All (style) | n/r | Some (13/62) | Some (15/67) | All | Some (v2 styles) | Some |
@@ -74,7 +74,7 @@ The WordPress libraries and Elementor give an element its cross-cutting settings
 - **A CSS class:** Not taken: the class-based cascade is not adopted (FEATURES.md «Custom classes»).
 - **Custom CSS:** v0.8 OL-4, a scoped style per look; site-wide custom CSS stays not taken.
 - **Lock and rename:** 0.7.9, the layers panel, with a name per block and a lock field.
-- **Visibility:** elements shown only on the phone in 0.7.3; hiding on a tablet Not taken: Urd has two layouts ([ADR-0019](../adr/0019-synced-mobile-model.md)); a hidden section, and a hidden block beside it, in v0.8 AR-5.
+- **Visibility:** elements shown only on the phone (Delivered 0.7.3.8); hiding on a tablet Not taken: Urd has two layouts ([ADR-0019](../adr/0019-synced-mobile-model.md)); a hidden section, and a hidden block beside it, in v0.8 AR-5.
 - **Pinning on the phone:** 0.7.3, as a choice per block in the row grid.
 - **Border, shadow and background on more blocks:** 0.7.9, the box styles of the design gallery and the component tokens.
 - **Typography:** a font weight and letter case in 0.7.9.

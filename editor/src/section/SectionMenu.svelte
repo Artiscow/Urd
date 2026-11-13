@@ -161,6 +161,8 @@
     <SelectRow label={ta('lbl.animIn')} title={ta('tip.props.sectionAnim')} value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
       options={ENTRANCE_OPTIONS} onchange={(v) => setSectionAnimation(v || null)} />
     {#if isEntrance(sectionAnim)}
+      <!-- Plays the entrance once on the canvas -->
+      <button type="button" class="ghost action" onclick={() => ed.bridge?.sendDemoAnim(activeSectionId)}>{ta('ui.playEntrance')}</button>
       <NumberRow label={ta('lbl.durationMs')} title={ta('tip.anim.duration')} value={sectionAnim.props.duration} min={100} max={4000} step={100}
         onchange={(v) => setSectionAnimProp('duration', v)} />
       <NumberRow label={ta('lbl.delayMs')} title={ta('tip.anim.delay')} value={sectionAnim.props.delay ?? 0} min={0} max={4000} step={100}
@@ -225,24 +227,20 @@
 {/snippet}
 
 {#snippet sectionPlacement()}
-  <Fold id="sec-size" title={ta('group.sectionSize')} value={[sectionWidthWord, sectionMinHeight || ta('common.auto'), sectionGrid ? `${ta('group.grid')} ${sectionGrid.size} px` : '', ed.viewMode === 'mobile' && ed.sectionMobileGap !== null ? ta('lbl.mobileGapValue', { n: phoneGap }) : ''].filter(Boolean).join(' · ')}>
-    <!-- The content width binds on the desktop only: on a phone the content fills the screen whatever is set -->
-    {#if ed.viewMode === 'desktop'}
-      <Choice label={ta('lbl.contentWidth')} title={ta('tip.props.sectionWidth')} value={sectionWidth.mode}
-        options={sectionWidthOptions}
-        onchange={(mode) => { if (mode !== sectionWidth.mode) ed.setSectionWidth(sectionWidthValue(mode, sectionWidth.px)); }} />
-      {#if sectionWidth.mode === 'own'}
-        <SliderRow label={ta('lbl.widthFree')} title={ta('tip.props.sectionWidthPx')} value={sectionWidth.px} min={SECTION_WIDTH_MIN} max={SECTION_WIDTH_MAX} step={SECTION_WIDTH_STEP}
-          shown={sectionWidth.shown} oninput={(v) => ed.setSectionWidth(sectionWidthValue('own', v))} />
-      {/if}
+  <Fold id="sec-size" title={ta('group.sectionSize')} value={[sectionWidthWord, sectionMinHeight || ta('common.auto'), sectionGrid ? `${ta('group.grid')} ${sectionGrid.size} px` : '', ed.sectionMobileGap !== null ? ta('lbl.mobileGapValue', { n: phoneGap }) : ''].filter(Boolean).join(' · ')}>
+    <!-- The content width binds on the desktop: on a phone the content fills the screen whatever is set -->
+    <Choice label={ta('lbl.sectionContentWidth')} title={ta('tip.props.sectionWidth')} value={sectionWidth.mode}
+      options={sectionWidthOptions}
+      onchange={(mode) => { if (mode !== sectionWidth.mode) ed.setSectionWidth(sectionWidthValue(mode, sectionWidth.px)); }} />
+    {#if sectionWidth.mode === 'own'}
+      <SliderRow label={ta('lbl.widthFree')} title={ta('tip.props.sectionWidthPx')} value={sectionWidth.px} min={SECTION_WIDTH_MIN} max={SECTION_WIDTH_MAX} step={SECTION_WIDTH_STEP}
+        shown={sectionWidth.shown} oninput={(v) => ed.setSectionWidth(sectionWidthValue('own', v))} />
     {/if}
     <!-- The space between the blocks on the phone, its own with the way back to the site's -->
-    {#if ed.viewMode === 'mobile'}
-      <Setting own={ed.sectionMobileGap !== null} reset={() => ed.setSectionMobileGap(null)}>
-        <SliderRow label={ta('lbl.mobileGap')} title={ta('tip.props.mobileGap')} value={phoneGap} min={0} max={MOBILE_GAP_MAX} step={4}
-          shown={`${phoneGap} px`} oninput={(v) => ed.setSectionMobileGap(v)} />
-      </Setting>
-    {/if}
+    <Setting own={ed.sectionMobileGap !== null} reset={() => ed.setSectionMobileGap(null)}>
+      <SliderRow label={ta('lbl.mobileGap')} title={ta('tip.props.mobileGap')} value={phoneGap} min={0} max={MOBILE_GAP_MAX} step={4}
+        shown={`${phoneGap} px`} oninput={(v) => ed.setSectionMobileGap(v)} />
+    </Setting>
     <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
       <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
         onchange={(e) => setSectionHeight(e.target.value)} /></label>
