@@ -665,6 +665,9 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-select' && msg.blockId) {
       // The editor built a block itself (the + New block menu), or one was picked in its lists (the Phone panel's order, `picked`): select it.
       window.UrdPreviewEdit?.selectById(msg.blockId, msg.picked === true);
+    } else if (msg?.type === 'urd-deselect') {
+      // A press on the editor's stage around the canvas: nothing stays selected.
+      window.UrdPreviewEdit?.deselectAll?.();
     } else if (msg?.type === 'urd-light' && Array.isArray(msg.ids)) {
       // A row under the pointer in the editor's lists (the Phone panel's order) lights its block, or its stack's blocks.
       window.UrdPreviewEdit?.lightBlocks?.(msg.ids);

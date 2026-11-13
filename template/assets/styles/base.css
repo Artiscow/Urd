@@ -16043,6 +16043,67 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   pointer-events: none;
 }
 
+/* The phone's eight cell columns, drawn faintly over the row grid while a flowing block is dragged or sized on the phone (preview-edit.js flowDrag, cellResize): the 90 % between the two outer tracks of 5 %, cut in eighths */
+.urd-preview .urd-phone-cells {
+  position: absolute;
+  inset: 0 5%;
+  z-index: 99999;
+  pointer-events: none;
+  background: repeating-linear-gradient(90deg,
+    color-mix(in srgb, #ff2d87 5%, transparent) 0 calc(12.5% - 1px),
+    color-mix(in srgb, #ff2d87 45%, transparent) calc(12.5% - 1px) 12.5%);
+  border-inline: 1px solid color-mix(in srgb, #ff2d87 45%, transparent);
+}
+
+/* Where the dragged block lands on the phone: a line across the row before or after a block, the cells it will stand in, or the block it is stacked with, in the guides' magenta; while a width is dragged, the cells it will take with their share */
+.urd-preview .urd-phone-land {
+  position: absolute;
+  z-index: 100000;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* The mark stands only while there is a landing place to show */
+.urd-preview .urd-phone-land[hidden] {
+  display: none;
+}
+
+/* The place a block dragged on the phone left, held at its size so the grid keeps its layout: a faint dashed frame in the guides' magenta */
+.urd-preview .urd-phone-hold {
+  box-sizing: border-box;
+  outline: calc(1px * var(--urd-chrome-scale, 1)) dashed color-mix(in srgb, #ff2d87 60%, transparent);
+  outline-offset: calc(-1px * var(--urd-chrome-scale, 1));
+  pointer-events: none;
+}
+
+/* The share a dragged width takes, on a magenta tag over the block's own content */
+.urd-preview .urd-phone-land > span {
+  padding: calc(2px * var(--urd-chrome-scale, 1)) calc(7px * var(--urd-chrome-scale, 1));
+  border-radius: calc(4px * var(--urd-chrome-scale, 1));
+  background: #ff2d87;
+  color: #fff;
+  font: 600 calc(12px * var(--urd-chrome-scale, 1)) / 1.2 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.urd-preview .urd-phone-land[data-kind="line"] {
+  background: #ff2d87;
+  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 70%, transparent);
+}
+
+.urd-preview .urd-phone-land[data-kind="cell"] {
+  background: color-mix(in srgb, #ff2d87 22%, transparent);
+  outline: calc(2px * var(--urd-chrome-scale, 1)) solid #ff2d87;
+  outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
+}
+
+.urd-preview .urd-phone-land[data-kind="into"] {
+  outline: calc(2px * var(--urd-chrome-scale, 1)) dashed #ff2d87;
+  outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
+}
+
 /* Equal gaps: a band over each gap that becomes equal, with its size in px,
    in the same magenta as the lines */
 .urd-preview .urd-smart-gap {

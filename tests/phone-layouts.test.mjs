@@ -79,9 +79,11 @@ test('phoneLayoutSketch: a preset drawn small, a run of units in the same cells 
 });
 
 test('phoneLayoutChange: a pair that cannot be read the other way round stands side by side as it reads, and a press that changes nothing is none', () => {
-  // p1 stands before t1 by an exception of its own, so the first pair cannot read its words first.
+  // p1 stands before t1 by an exception of its own: the first pair reads its words first all the same, p1 letting go of t1 as t1 lands before it (settle).
   const placed = stories().map((b) => (b.id === 'p1' ? { ...b, phonePlace: { before: 't1' } } : b));
-  assert.deepEqual(applied(placed, 'top', phoneLayoutChange(placed, 'top', 'alternate')), ['p1@1/4', 't1@5/4', 'p2@1/4', 't2@5/4']);
+  const change = phoneLayoutChange(placed, 'top', 'alternate');
+  assert.equal(change.places.p1, null);
+  assert.deepEqual(applied(placed, 'top', change), ['t1@1/4', 'p1@5/4', 'p2@1/4', 't2@5/4']);
   // A caption placed after the second picture keeps the pair apart: the pair stands as it reads, each across the row.
   const caption = [...stories(), blk('cap', 'text', 400, 0, { phonePlace: { after: 'p2' } })];
   const flipped = applied(caption, 'top', phoneLayoutChange(caption, 'top', 'alternate'));

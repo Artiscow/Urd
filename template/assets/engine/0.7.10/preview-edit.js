@@ -42,7 +42,7 @@ import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
-import { phoneStep, hasPhonePlace } from './phone-moves.js';
+import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf } from './phone-moves.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
@@ -3786,6 +3786,19 @@ function rowAtOffset(tracks, y) {
   return tracks.length + 1 + Math.max(0, Math.floor((y - sum) / MOBILE_ROW));
 }
 
+/**
+ * The row (1-based) whose top edge lies nearest a y offset from the row grid's content top: where a block dragged on the rows lands, before a grown row while its top is over that row's upper half and after it over its lower half, the room under a block being its row's.
+ * Past the last track the grid continues in MOBILE_ROW steps.
+ */
+function rowNearOffset(tracks, y) {
+  let top = 0;
+  for (let i = 0; i < tracks.length; i++) {
+    if (y < top + tracks[i] / 2) return i + 1;
+    top += tracks[i];
+  }
+  return tracks.length + 1 + Math.max(0, Math.round((y - top) / MOBILE_ROW));
+}
+
 function post(msg) {
   window.parent?.postMessage(msg, location.origin);
 }
@@ -4881,6 +4894,12 @@ export function lightBlocks(ids) {
   }
 }
 
+/** Nothing selected (the urd-deselect message: a press on the editor's stage around the canvas): no block, no set of blocks and no section at work. */
+export function deselectAll() {
+  selectBlock(null);
+  markActiveVisual(null);
+}
+
 /** Duplicate the selected block (the bridge: Ctrl+D with focus in the admin panels). */
 export function duplicateSelected() {
   if (isMobile() || !selectedBlockId) return;
@@ -5033,13 +5052,16 @@ function enhanceBlock(el, block, section, grid, host) {
   const moveHandle = document.createElement('button');
   moveHandle.className = 'urd-edit-move';
   moveHandle.innerHTML = GRIP_SVG;
-  moveHandle.title = ta('canvas.dragMove');
+  // A block that flows on the phone is dragged into the phone's order and cells (flowDrag), and says so.
+  const flowsOnPhone = mobile && !Number.isFinite(block.frames.mobile?.row);
+  moveHandle.title = ta(flowsOnPhone ? 'canvas.dragPhone' : 'canvas.dragMove');
   moveHandle.dataset.cap = ta('canvas.cap.move');
   barBody.appendChild(moveHandle);
+  const MOBILE_PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
 
   // Flowing mobile block: arrows that move it in the reading order (stepPhone: its exception, its stack or the custom order).
   // Pinned blocks do not take part in the flow and get ↺ instead.
-  if (mobile && !Number.isFinite(block.frames.mobile?.row)) {
+  if (flowsOnPhone) {
     for (const [svg, dir, key] of [[ORDER_UP_SVG, -1, 'canvas.orderUp'], [ORDER_DOWN_SVG, 1, 'canvas.orderDown']]) {
       const btn = document.createElement('button');
       btn.innerHTML = svg;
@@ -5048,12 +5070,18 @@ function enhanceBlock(el, block, section, grid, host) {
       btn.addEventListener('click', () => stepPhone(section, block, dir, false));
       barBody.appendChild(btn);
     }
+    // Pinned to rows of its own where it stands now: then it moves on its rows and no longer flows (ADR-0019), and ↺ takes it back.
+    const pinBtn = document.createElement('button');
+    pinBtn.innerHTML = MOBILE_PIN_SVG;
+    pinBtn.title = ta('canvas.pinOnPhone');
+    pinBtn.dataset.cap = ta('canvas.cap.pin');
+    pinBtn.addEventListener('click', () => pinOnPhone());
+    barBody.appendChild(pinBtn);
   }
 
   // Overridden mobile block: a pin badge showing the state, and a ↺ that
   // resets ONLY this block's override (back in sync with desktop).
   if (mobile && block.frames.mobile) {
-    const MOBILE_PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
     const pin = document.createElement('div');
     pin.className = 'urd-mobile-pin';
     pin.innerHTML = MOBILE_PIN_SVG;
@@ -5218,7 +5246,8 @@ function enhanceBlock(el, block, section, grid, host) {
   // The handle of a block that follows its content changes its width only
   // (ADR-0025), and says so; on a block whose size is its frame it says that
   // Shift keeps the ratio.
-  resizeHandle.title = followsContent(block) ? ta('canvas.dragResizeWidth')
+  resizeHandle.title = flowsOnPhone ? ta('canvas.dragPhoneWidth')
+    : followsContent(block) ? ta('canvas.dragResizeWidth')
     : FIT_BY_WIDTH.has(block.type) ? ta('canvas.dragResizeRatio') : ta('canvas.dragResize');
   el.appendChild(resizeHandle);
   // The other edges and corners take the same drag with the opposite edge held still, on the desktop frame.
@@ -5305,6 +5334,266 @@ function enhanceBlock(el, block, section, grid, host) {
     });
   }
 
+  /** The other units on the phone (phone-moves.js phoneTree: a block alone, or a stack's or a column's blocks), each with its box in the row grid as drawn, without the dragged block: where a drag can land. */
+  function unitBoxes(flowEl) {
+    const out = [];
+    for (const node of phoneTree(section.blocks, phoneSetupOf(section))) {
+      const ids = (node.children ? node.children.map((c) => c.id) : [node.id]).filter((id) => id !== block.id);
+      const box = boxOnPhone(flowEl, ids);
+      if (box) out.push({ id: ids[0], ...box });
+    }
+    return out;
+  }
+
+  /** The box that blocks stand in on the phone together, from the row grid's corner: each block's own, or its slot's where it is pinned; null where none of them is drawn. */
+  function boxOnPhone(flowEl, ids) {
+    const fr = flowEl.getBoundingClientRect();
+    const rects = ids.map((id) => {
+      const b = host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`);
+      return (b?._urdStickSlot?.isConnected ? b._urdStickSlot : b)?.getBoundingClientRect() ?? null;
+    }).filter((r) => r && r.height > 0);
+    if (!rects.length) return null;
+    return {
+      left: Math.min(...rects.map((r) => r.left)) - fr.left,
+      top: Math.min(...rects.map((r) => r.top)) - fr.top,
+      right: Math.max(...rects.map((r) => r.right)) - fr.left,
+      bottom: Math.max(...rects.map((r) => r.bottom)) - fr.top,
+    };
+  }
+
+  /** The phone's eight cell columns drawn over the row grid while a block is dragged or sized there, and the mark of where it lands. */
+  function phoneDragMarks(flowEl) {
+    const cells = document.createElement('div');
+    cells.className = 'urd-phone-cells';
+    cells.setAttribute('aria-hidden', 'true');
+    const land = document.createElement('div');
+    land.className = 'urd-phone-land';
+    land.hidden = true;
+    land.setAttribute('aria-hidden', 'true');
+    flowEl.append(cells, land);
+    return { cells, land, remove: () => { cells.remove(); land.remove(); } };
+  }
+
+  /**
+   * The block out of the row grid into free positioning at its place on the screen, a hold of its size left where it stood (its slot, where it is pinned while the page scrolls), so the grid keeps its layout while the block is dragged and the place it left reads as its own.
+   * @returns {{at: {left: number, top: number, w: number, h: number}, hold: HTMLElement}}
+   */
+  function liftOnPhone(flowEl, handle, event) {
+    const slot = el._urdStickSlot?.isConnected ? el._urdStickSlot : null;
+    const from = (slot ?? el).getBoundingClientRect();
+    let hold = slot;
+    if (!hold) {
+      const cs = getComputedStyle(el);
+      hold = document.createElement('div');
+      hold.className = 'urd-phone-hold';
+      hold.setAttribute('aria-hidden', 'true');
+      Object.assign(hold.style, {
+        gridColumnStart: cs.gridColumnStart,
+        gridColumnEnd: cs.gridColumnEnd,
+        gridRowStart: cs.gridRowStart,
+        gridRowEnd: cs.gridRowEnd,
+        justifySelf: cs.justifySelf,
+        width: `${from.width}px`,
+        height: `${from.height}px`,
+        marginTop: cs.marginTop,
+        marginRight: cs.marginRight,
+        marginBottom: cs.marginBottom,
+        marginLeft: cs.marginLeft,
+      });
+      el.replaceWith(hold);
+    }
+    flowEl.appendChild(el);
+    try {
+      handle.setPointerCapture(event.pointerId);
+    } catch { /* the pointer is gone: the drag ends as it would */ }
+    const fr = flowEl.getBoundingClientRect();
+    const at = { left: from.left - fr.left, top: from.top - fr.top, w: from.width, h: from.height };
+    Object.assign(el.style, { position: 'absolute', left: `${at.left}px`, top: `${at.top}px`, width: `${at.w}px`, height: `${at.h}px`, gridColumn: '', marginLeft: '0px', marginRight: '0px', zIndex: '100001', opacity: '0.85' });
+    return { at, hold };
+  }
+
+  /**
+   * A flowing block dragged on the phone canvas (0.7.3.15): it follows the pointer over the section, the eight cell columns shown, and lands where phoneDropAt reads the pointer over the other units: before or after one, or the line of units it stands in, across the row, beside one sharing its cells, or into one as a stack (phoneDropChange), the change posted as one undo step; over its own place it lands nowhere.
+   * The landing place is marked as the drag goes: a line before or after a line of units, the cells it will stand in, or the unit it joins.
+   */
+  function flowDrag(handle, event, opts = {}) {
+    const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
+    if (!flowEl) return;
+    const start = { x: event.clientX, y: event.clientY };
+    const threshold = opts.surface ? 4 : 0;
+    let started = false;
+    let at = null;
+    let marks = null;
+    let boxes = [];
+    let own = null;
+    let drop = null;
+    const begin = () => {
+      started = true;
+      const lifted = liftOnPhone(flowEl, handle, event);
+      at = lifted.at;
+      marks = phoneDragMarks(flowEl);
+      boxes = unitBoxes(flowEl);
+      const fr = flowEl.getBoundingClientRect();
+      const r = lifted.hold.getBoundingClientRect();
+      own = { left: r.left - fr.left, top: r.top - fr.top, right: r.right - fr.left, bottom: r.bottom - fr.top };
+    };
+    if (threshold === 0) begin();
+    const showLand = () => {
+      const box = drop && boxes.find((b) => b.id === drop.of);
+      marks.land.hidden = !box;
+      if (!box) return;
+      const fw = flowEl.clientWidth;
+      const mid = (box.left + box.right) / 2;
+      const place = drop.pos === 'before' ? { kind: 'line', left: fw * 0.05, top: drop.at - 4, width: fw * 0.9, height: 3 }
+        : drop.pos === 'after' ? { kind: 'line', left: fw * 0.05, top: drop.at + 1, width: fw * 0.9, height: 3 }
+        : drop.pos === 'left' ? { kind: 'cell', left: box.left, top: box.top, width: mid - box.left, height: box.bottom - box.top }
+        : drop.pos === 'right' ? { kind: 'cell', left: mid, top: box.top, width: box.right - mid, height: box.bottom - box.top }
+        : { kind: 'into', left: box.left, top: box.top, width: box.right - box.left, height: box.bottom - box.top };
+      marks.land.dataset.kind = place.kind;
+      Object.assign(marks.land.style, { left: `${place.left}px`, top: `${place.top}px`, width: `${place.width}px`, height: `${place.height}px` });
+    };
+    const onMove = (ev) => {
+      if (!started) {
+        if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) < threshold) return;
+        begin();
+      }
+      el.style.left = `${clamp(at.left + ev.clientX - start.x, 0, Math.max(0, flowEl.clientWidth - at.w))}px`;
+      el.style.top = `${Math.max(0, at.top + ev.clientY - start.y)}px`;
+      const fr = flowEl.getBoundingClientRect();
+      drop = phoneDropAt(boxes, ev.clientX - fr.left, ev.clientY - fr.top, own);
+      showLand();
+    };
+    const finish = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      handle.removeEventListener('pointercancel', cancel);
+      document.removeEventListener('keydown', onEscape, true);
+      marks?.remove();
+    };
+    // A cancelled drag, or Escape in the middle of it, posts nothing: the section is drawn again as it stands.
+    const cancel = () => {
+      finish();
+      if (started) post({ type: 'urd-redraw-section', sectionId: section.id });
+    };
+    const onEscape = (ev) => {
+      if (ev.key !== 'Escape') return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      cancel();
+    };
+    const onUp = () => {
+      finish();
+      if (!started) return;
+      const change = phoneDropChange(section.blocks, phoneSetupOf(section), block.id, drop);
+      if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change });
+      else post({ type: 'urd-redraw-section', sectionId: section.id });
+    };
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', cancel);
+    document.addEventListener('keydown', onEscape, true);
+  }
+
+  /**
+   * The corner handle of a flowing block on the phone: its width in the cells, from its first column to the one under the pointer, its right edge snapping to the row's quarters, or to any of the eight columns with Alt; a block in a stack sizes its whole stack, which shares one cell.
+   */
+  function cellResize(handle, event) {
+    const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
+    if (!flowEl) return;
+    const own = phoneCells(block.frames.mobile);
+    const stack = phoneStackOf(section.blocks, phoneSetupOf(section), block.id);
+    const head = stack ? section.blocks.find((b) => b.id === stack[0]) : null;
+    const cells = (head ? phoneCells(head.frames.mobile) : own) ?? { col: 1, cols: PHONE_COLUMNS };
+    const marks = phoneDragMarks(flowEl);
+    const ids = stack ?? [block.id];
+    const box = boxOnPhone(flowEl, ids) ?? { top: 0, bottom: 0 };
+    const label = document.createElement('span');
+    marks.land.appendChild(label);
+    let cols = cells.cols;
+    const show = () => {
+      const fw = flowEl.clientWidth;
+      const colW = (fw * 0.9) / PHONE_COLUMNS;
+      marks.land.hidden = false;
+      marks.land.dataset.kind = 'cell';
+      label.textContent = [2, 4, 6, PHONE_COLUMNS].includes(cols) ? ta(`opt.phoneWidth.${cols}`) : `${cols}/${PHONE_COLUMNS}`;
+      Object.assign(marks.land.style, { left: `${fw * 0.05 + (cells.col - 1) * colW}px`, top: `${box.top}px`, width: `${cols * colW}px`, height: `${box.bottom - box.top}px` });
+    };
+    try {
+      handle.setPointerCapture(event.pointerId);
+    } catch { /* the pointer is gone */ }
+    show();
+    const onMove = (ev) => {
+      const fr = flowEl.getBoundingClientRect();
+      const colW = (fr.width * 0.9) / PHONE_COLUMNS;
+      const room = PHONE_COLUMNS - cells.col + 1;
+      // The right edge in columns from the row's left: on the quarters' lines, or on any column's with Alt.
+      const edge = (ev.clientX - (fr.left + fr.width * 0.05)) / colW;
+      const snapped = ev.altKey ? Math.round(edge) : Math.round(edge / 2) * 2;
+      cols = clamp(snapped - (cells.col - 1), 1, room);
+      show();
+    };
+    const finish = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      handle.removeEventListener('pointercancel', finish);
+      document.removeEventListener('keydown', onEscape, true);
+      marks.remove();
+    };
+    // Escape in the middle of it keeps the width as it was.
+    const onEscape = (ev) => {
+      if (ev.key !== 'Escape') return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      finish();
+    };
+    const onUp = () => {
+      finish();
+      if (cols === cells.cols) return;
+      const next = cols >= PHONE_COLUMNS ? null : { col: cells.col, cols };
+      post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change: { places: {}, cells: Object.fromEntries(ids.map((id) => [id, next])) } });
+    };
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', finish);
+    document.addEventListener('keydown', onEscape, true);
+  }
+
+  /**
+   * The block pinned to rows of its own on the phone where it stands now, as a drag on its rows would pin it: from its row in the grid's tracks, in its cells where it stands in some (ADR-0019 decision 2), else at its width and left edge in percent.
+   * A block that follows its words spans the tracks that hold it, its own line among them; any other spans its height in rows, since a pinned block is as tall as its rows.
+   */
+  function pinOnPhone() {
+    const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
+    if (!flowEl) return;
+    const canvas = canvasOf(host);
+    const fr = flowEl.getBoundingClientRect();
+    const rect = (el._urdStickSlot?.isConnected ? el._urdStickSlot : el).getBoundingClientRect();
+    const padTop = parseFloat(getComputedStyle(flowEl).paddingTop) || 0;
+    const tracks = getComputedStyle(flowEl).gridTemplateRows.split(' ').map(parseFloat).filter(Number.isFinite);
+    const r2 = (v) => Math.round(v * 100) / 100;
+    const old = block.frames.mobile;
+    const cells = phoneCells(old);
+    // Its row is the track it stands in, read a pixel inside its top edge, which lies on that track's start.
+    const row = rowAtOffset(tracks, rect.top - fr.top - padTop + 1);
+    let rows = Math.max(1, Math.round(rect.height / MOBILE_ROW));
+    if (autoGrows(block, window.Urd.blocks.get(block.type))) {
+      let held = 0;
+      rows = 0;
+      for (let i = row - 1; held < rect.height - 1 && i < tracks.length; i += 1, rows += 1) held += tracks[i];
+      if (held < rect.height - 1) rows += Math.ceil((rect.height - held) / MOBILE_ROW);
+      rows = Math.max(1, rows);
+    }
+    const w = r2((rect.width / canvas.clientWidth) * 100);
+    const placement = cells
+      ? { col: cells.col, cols: cells.cols, row, rows }
+      : { x: clamp(r2(((rect.left - fr.left) / canvas.clientWidth) * 100), 0, r2(100 - w)), w, row, rows };
+    if (Number.isFinite(old?.z)) placement.z = old.z;
+    if (old?.rot) placement.rot = old.rot;
+    post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile' });
+    // A move is written without drawing the section again, so the section is sent again from the draft: the block then stands pinned, and drags on its rows.
+    post({ type: 'urd-redraw-section', sectionId: section.id });
+  }
+
   /**
    * Mobile drag: pins ONE block to the row grid (ADR-0019). During the
    * drag the element is positioned absolutely in the flow surface, so the
@@ -5386,7 +5675,7 @@ function enhanceBlock(el, block, section, grid, host) {
         rowTracks = getComputedStyle(flowEl).gridTemplateRows.split(' ').map(parseFloat).filter(Number.isFinite);
         rowLine = document.createElement('div');
         rowLine.className = 'urd-row-line';
-        rowLine.style.top = `${rowLineTop(rowAtOffset(rowTracks, orig.top - padTop))}px`;
+        rowLine.style.top = `${rowLineTop(rowNearOffset(rowTracks, orig.top - padTop))}px`;
         flowEl.appendChild(rowLine);
       }
       if (kind === 'resize') {
@@ -5419,7 +5708,7 @@ function enhanceBlock(el, block, section, grid, host) {
         };
         el.style.left = `${current.left}px`;
         el.style.top = `${current.top}px`;
-        if (rowLine) rowLine.style.top = `${rowLineTop(rowAtOffset(rowTracks, current.top - padTop))}px`;
+        if (rowLine) rowLine.style.top = `${rowLineTop(rowNearOffset(rowTracks, current.top - padTop))}px`;
       } else {
         const w = clamp(orig.w + dx, 24, canvas.clientWidth - orig.left);
         current = {
@@ -5464,7 +5753,7 @@ function enhanceBlock(el, block, section, grid, host) {
       const placement = {
         x: clamp(r2((current.left / canvas.clientWidth) * 100), 0, r2(100 - wPct)),
         w: wPct,
-        row: rowAtOffset(tracks, current.top - padTop),
+        row: rowNearOffset(tracks, current.top - padTop),
         rows: Math.max(1, Math.round(rect.height / MOBILE_ROW)),
       };
       if (Number.isFinite(old?.z)) placement.z = old.z;
@@ -5531,11 +5820,6 @@ function enhanceBlock(el, block, section, grid, host) {
         // reference plugin names included: plugin copies in user repos
         // keep them forever (see the compatibility surface in SCHEMA.md).
         if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-cart-button), input, select, textarea, dialog, .urd-collection-editable, .urd-collection-image-edit, .urd-faq-q, .urd-cal-config, .urd-form-config, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
-        // Flowing mobile block: the first pinning must be a deliberate
-        // choice (dragging ⠿), not a click on the block. A screen-docked
-        // block is exempt: there the drag moves the docking, not the row
-        // grid.
-        if (mobile && !Number.isFinite(block.frames.mobile?.row) && !el.classList.contains('urd-sticky-fixed')) return;
         event.preventDefault();
       } else {
         event.preventDefault();
@@ -5608,10 +5892,11 @@ function enhanceBlock(el, block, section, grid, host) {
         return;
       }
 
-      // Mobile has its own drag mechanics: the drag pins ONE block to the
-      // row grid, the rest keep flowing (ADR-0019).
+      // Mobile has its own drag mechanics (ADR-0019): a flowing block is dragged into the phone's order and cells, its corner handle setting its width in the cells; a block pinned to rows of its own moves on its rows.
       if (mobile) {
-        mobileDrag(handle, event, kind, opts);
+        if (Number.isFinite(block.frames.mobile?.row)) mobileDrag(handle, event, kind, opts);
+        else if (kind === 'move') flowDrag(handle, event, opts);
+        else cellResize(handle, event);
         return;
       }
       const frameKey = 'desktop';

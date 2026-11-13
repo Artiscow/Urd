@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.15): dragging on the phone canvas, deselecting beside it, and moving past a placed block
+
+- [ ] In the phone view, drag a flowing block by its surface between two others: a magenta line shows where it lands, it reads there on the phone, and Ctrl+Z puts it back in one step
+- [ ] Drag a block onto the left or right third of another: the landing half is lit, and the two stand side by side in halves of that block's width
+- [ ] Drag a block onto the middle of another: a dashed outline marks it, and the two become a stack («Stack» in the Phone panel)
+- [ ] While dragging, the phone's eight columns show faintly and the block's own place a dashed frame; Esc lets go and nothing moves, and so does a short drag let go over its own place
+- [ ] Drop a block above or below one of two blocks standing side by side: it lands before or after both, never between them, where the line showed it
+- [ ] The corner handle of a flowing block drags its width in quarters with a tag (¼, ½, ¾, Full) and in eighths with Alt; a block in a stack sizes its whole stack, and the width holds after a reload
+- [ ] The pin on a flowing block's phone bar pins it where it stands, nothing else moving, a block in a half keeping its half with its neighbour beside it; it then drags on its rows, and ↺ takes it back into the flow
+- [ ] A pinned block dragged just under another lands below it, and over the upper half of one above it lands above it, as the line shows while it goes
+- [ ] A press on the dark room beside the phone, or around a narrowed desktop canvas, deselects the block or section and the Settings panel shows its empty state; with the Phone panel open the panel keeps its section
+- [ ] On Om oss, with «Hvordan kontakter jeg dere?» placed after «Flere spørsmål?», drag «Flere spørsmål?» under it, or press its down arrow: it moves there, and «Hvordan kontakter» loses «Placed»
+- [ ] After these moves, publish: the page at phone width reads as the canvas did
+
 ### Test batch (0.7.3.14.2): phone layout presets, and the list lit from the canvas
 
 - [ ] The published Kaker page at 390 px: the cards stand two to a line, each card's title over its text

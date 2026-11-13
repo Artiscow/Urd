@@ -1,5 +1,6 @@
 <script>
   /* The preview stage: the iframe with the real page, scaled to the device and the zoom, inside the frame that pans when the page is larger than it. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle.
+     A press on the stage around the canvas deselects what is selected on it (ed.clearSelection).
      The bar at the canvas's right edge is dragged to set any width (ed.setFreeWidth): the width follows the pointer in canvas px with its number beside it and snaps to the devices' widths and the site's phone breakpoint, which a dashed mark shows on the canvas while the drag runs; the arrow keys step it. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -35,6 +36,14 @@
     dragging = false;
     e.currentTarget.releasePointerCapture(e.pointerId);
   }
+  /** A press on the stage around the canvas, outside the page and its own scrollbars, lets go of whatever is selected on it. */
+  function onStagePress(e) {
+    const wrap = e.currentTarget;
+    if (e.button !== 0 || (e.target !== wrap && e.target !== stageEl)) return;
+    const box = wrap.getBoundingClientRect();
+    if (e.clientX >= box.left + wrap.clientLeft + wrap.clientWidth || e.clientY >= box.top + wrap.clientTop + wrap.clientHeight) return;
+    ed.clearSelection();
+  }
   function onKey(e) {
     const step = e.shiftKey ? 50 : 10;
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); ed.setFreeWidth(ed.device.width + step); }
@@ -42,7 +51,9 @@
   }
 </script>
 
-<div class="frame-wrap" class:mobile={ed.viewMode === 'mobile'} class:pan={ed.canPan} class:fold={ed.targetH > 0} class:looking={Boolean(ed.looking)} bind:this={ed.frameWrapEl}>
+<!-- The stage's press is the pointer's way to deselect; the keyboard's is Esc on the canvas. -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="frame-wrap" class:mobile={ed.viewMode === 'mobile'} class:pan={ed.canPan} class:fold={ed.targetH > 0} class:looking={Boolean(ed.looking)} bind:this={ed.frameWrapEl} onpointerdown={onStagePress}>
   <!-- A saved draft looked at: its banner over the canvas, the canvas framed in amber -->
   <LookBanner />
   <!-- .stage has the SCALED size, so scrolling/centering gets a real

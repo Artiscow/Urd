@@ -197,6 +197,18 @@ function onSelectBlock(msg) {
   // click never does.
 }
 
+/** A press on the stage around the canvas: neither a block nor a section stays selected, the floating menu closes, and the canvas lets go of its selection.
+ *  The Phone panel always shows a section: while it is open its section stays at work, and marked on the canvas. */
+function clearSelection() {
+  blockMenu = null;
+  selectedBlock = null;
+  const kept = shellState.activePanel === 'phone' ? activeSectionId : null;
+  activeSectionId = kept;
+  syncSectionMirrors(kept ? store?.data.sections.find((s) => s.id === kept) : null);
+  previewState.bridge?.sendDeselect();
+  if (kept) previewState.bridge?.sendActiveSection(kept);
+}
+
 /** The floating menu (the gear on a block's or a section's bar): position in editor coordinates, null = closed.
  *  `section: true` holds a section's settings, else the selected block's; the content is the same as in the Settings panel. */
 let blockMenu = $state(null);
@@ -1508,6 +1520,7 @@ export const pageState = {
   readBlock,
   syncSelectedBlock,
   onSelectBlock,
+  clearSelection,
   get blockMenu() { return blockMenu; },
   set blockMenu(v) { blockMenu = v; },
   moveBlockMenu,

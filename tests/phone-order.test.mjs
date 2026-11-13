@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -151,6 +151,22 @@ test('phoneStep: a block placed against the one that moves goes with it, and the
   const before = [blk('a', 0, 0), blk('x', 20, 0), blk('y', 40, 0, { phonePlace: { before: 'x' } }), blk('b', 60, 0)];
   assert.deepEqual(ids(stackOrder(before)), ['a', 'y', 'x', 'b']);
   assert.deepEqual(stepped(before, 'top', 'x', -1), ['y', 'x', 'a', 'b']);
+});
+
+test('settle: a block placed against the moved one lets go of it where the move puts it on the other side, by a drop, a row of the list or the arrows', () => {
+  // y stands after x by its exception: x moved past y, the last, stands after y, and y loses its exception.
+  const blocks = [blk('a', 0, 0), blk('y', 20, 0, { phonePlace: { after: 'x' } }), blk('x', 40, 0)];
+  assert.deepEqual(ids(stackOrder(blocks)), ['a', 'x', 'y']);
+  const drop = phoneDropChange(blocks, 'top', 'x', { pos: 'after', of: 'y' });
+  assert.deepEqual(drop.places, { y: null });
+  assert.deepEqual(after(blocks, 'top', drop), ['a', 'y', 'x']);
+  assert.deepEqual(after(blocks, 'top', phoneLand(blocks, 'top', '1', { key: '2', pos: 'after' })), ['a', 'y', 'x']);
+  assert.deepEqual(stepped(blocks, 'top', 'x', 1), ['a', 'y', 'x'], 'the arrow steps past the block that follows it where nothing else stands beyond');
+  // With a block beyond, the arrow takes the follower along.
+  assert.deepEqual(stepped([...blocks, blk('b', 60, 0)], 'top', 'x', 1), ['a', 'b', 'x', 'y']);
+  // y stands before x: x moved up past it.
+  const ahead = [blk('y', 0, 0, { phonePlace: { before: 'x' } }), blk('x', 20, 0), blk('b', 40, 0)];
+  assert.deepEqual(stepped(ahead, 'top', 'x', -1), ['x', 'y', 'b']);
 });
 
 test('phoneStep: follows the section\'s rule, and blocks placed by hand take no part', () => {
@@ -341,4 +357,57 @@ test('phoneStep: a stack\'s later block has no exception that counts, so nothing
   const setup = { rule: 'top', list: null, stacks: [['b', 'c']] };
   assert.deepEqual(ids(stackOrder(blocks, setup)), ['a', 'x', 'b', 'c', 'd']);
   assert.deepEqual(stepped(blocks, setup, 'x', 1), ['a', 'b', 'c', 'x', 'd']);
+});
+
+test('phoneDropAt: over a unit its top and bottom quarters land before and after it, its thirds beside it or into it; off every unit the nearest', () => {
+  const boxes = [{ id: 'a', left: 0, top: 0, right: 300, bottom: 100 }, { id: 'b', left: 0, top: 120, right: 300, bottom: 220 }];
+  assert.deepEqual(phoneDropAt(boxes, 150, 10), { pos: 'before', of: 'a', at: 0 });
+  assert.deepEqual(phoneDropAt(boxes, 150, 95), { pos: 'after', of: 'a', at: 100 });
+  assert.deepEqual(phoneDropAt(boxes, 40, 50), { pos: 'left', of: 'a' });
+  assert.deepEqual(phoneDropAt(boxes, 260, 50), { pos: 'right', of: 'a' });
+  assert.deepEqual(phoneDropAt(boxes, 150, 50), { pos: 'into', of: 'a' });
+  assert.deepEqual(phoneDropAt(boxes, 150, 110), { pos: 'after', of: 'a', at: 100 }, 'the gap: the nearest unit, below it');
+  assert.deepEqual(phoneDropAt(boxes, 150, 400), { pos: 'after', of: 'b', at: 220 });
+  assert.deepEqual(phoneDropAt(boxes, 150, -20), { pos: 'before', of: 'a', at: 0 });
+  assert.equal(phoneDropAt([], 0, 0), null);
+});
+
+test('phoneDropAt: before or after a line of units side by side is before its first or after its last, and the block\'s own place lands nowhere', () => {
+  // l and r share a line, l the taller; c stands under them.
+  const boxes = [{ id: 'l', left: 0, top: 0, right: 140, bottom: 200 }, { id: 'r', left: 160, top: 0, right: 300, bottom: 80 }, { id: 'c', left: 0, top: 220, right: 300, bottom: 300 }];
+  assert.deepEqual(phoneDropAt(boxes, 70, 190), { pos: 'after', of: 'r', at: 200 }, 'below l: after the whole line');
+  assert.deepEqual(phoneDropAt(boxes, 230, 5), { pos: 'before', of: 'l', at: 0 }, 'above r: before the whole line');
+  assert.deepEqual(phoneDropAt(boxes, 70, 208), { pos: 'after', of: 'r', at: 200 }, 'the gap under the line, nearer l');
+  assert.deepEqual(phoneDropAt(boxes, 150, 230), { pos: 'before', of: 'c', at: 220 });
+  // The dragged block stood under r: over its place, or nearer to it than to every unit, nothing moves.
+  const own = { left: 160, top: 100, right: 300, bottom: 180 };
+  assert.equal(phoneDropAt(boxes, 230, 140, own), null);
+  assert.equal(phoneDropAt(boxes, 230, 94, own), null, 'the gap between r and its own place, nearer its own place');
+  assert.deepEqual(phoneDropAt(boxes, 230, 70, own), { pos: 'after', of: 'r', at: 200 });
+});
+
+test('phoneDropChange: a drop moves the block in the order and gives it its cells: across the row, beside a unit in halves, or into it as a stack', () => {
+  const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)];
+  const cellsAfter = (change) => {
+    const next = applied(blocks, 'top', change);
+    return stackOrder(next.blocks, next.setup).map((b) => `${b.id}${change.cells[b.id] ? `@${change.cells[b.id].col}/${change.cells[b.id].cols}` : ''}`);
+  };
+  // d beside a on the right: after a in the order, a in the left half and d in the right.
+  const right = phoneDropChange(blocks, 'top', 'd', { pos: 'right', of: 'a' });
+  assert.deepEqual(cellsAfter(right), ['a@1/4', 'd@5/4', 'b', 'c']);
+  // d beside b on the left: before b, d on the left.
+  assert.deepEqual(cellsAfter(phoneDropChange(blocks, 'top', 'd', { pos: 'left', of: 'b' })), ['a', 'd@1/4', 'b@5/4', 'c']);
+  // d before b across the row.
+  const before = phoneDropChange(blocks, 'top', 'd', { pos: 'before', of: 'b' });
+  assert.deepEqual(cellsAfter(before), ['a', 'd', 'b', 'c']);
+  assert.equal(before.cells.d, null);
+  // d into a: a stack of the two.
+  const into = phoneDropChange(blocks, 'top', 'd', { pos: 'into', of: 'a' });
+  assert.deepEqual(into.stacks, [['a', 'd']]);
+  // Where it already stands, nothing changes.
+  assert.equal(phoneDropChange(blocks, 'top', 'b', { pos: 'after', of: 'a' }), null);
+  // Beside a block already in a half: the half is shared, a quarter each.
+  const halved = blocks.map((b) => (b.id === 'a' ? { ...b, frames: { ...b.frames, mobile: { col: 5, cols: 4 } } } : b));
+  const quarter = phoneDropChange(halved, 'top', 'd', { pos: 'right', of: 'a' });
+  assert.deepEqual(quarter.cells, { d: { col: 7, cols: 2 }, a: { col: 5, cols: 2 } });
 });

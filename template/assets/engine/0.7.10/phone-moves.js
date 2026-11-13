@@ -4,6 +4,7 @@
  * A move is a new order of that tree, settled into the section's data (settle): the stacks as they stand, and either the custom order as listed, or the exception that puts the moved block or stack there, the other blocks keeping their order.
  */
 import { phoneParts } from './phone-order.js';
+import { phoneCells } from './migrate.js';
 
 /** Whether a block flows in the row grid, rather than standing on rows placed by hand. */
 export const flowing = (block) => !Number.isFinite(block.frames?.mobile?.row);
@@ -88,7 +89,7 @@ const trialIds = (blocks, setup) => phoneParts(blocks, setup).order.filter(flowi
 /**
  * A new order of the tree settled into the section's data: the stacks as they stand, and the custom order as listed, or the exceptions that bring the moved unit to its place.
  * A stack of two blocks or more is the owner's own, written as one, unless it is a column of the rule left as it stood; it keeps the blocks of it the phone does not show in the list (hidden on phones or placed by hand), and a stack the list shows none of stands as it was. A block taken into a stack leaves its exception, and a stack's first block carries the stack's.
- * Without a custom order the exception is sought among the other units, the nearest first: one that gives the order exactly, else one that keeps every other block's order with the moved unit among them where it was put, the blocks placed against it following it. What is left of a stack the moved block left keeps its place, by an exception of its own where it needs one.
+ * Without a custom order the exception is sought among the other units, the nearest first: one that gives the order exactly, else one that keeps every other block's order with the moved unit among them where it was put, the blocks placed against it following it, and a block placed against it that the moved unit lands right beside, on the other side of the block it names, losing its exception. What is left of a stack the moved block left keeps its place, by an exception of its own where it needs one.
  * @param {object[]} blocks The section's blocks
  * @param {string|{rule: string, list: string[]|null, stacks: string[][]}} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {Array<{id: string, kind?: string, children?: Array<{id: string}>}>} tree The order as it stands (phoneTree)
@@ -152,11 +153,28 @@ export function settle(blocks, rawSetup, tree, want, moved) {
     change.list = flat;
     return done(change, flat);
   }
+  const mover = want.find((unit) => unit.some((id) => moved.includes(id)));
+  // A block placed against the moved unit, or against a block that follows it, lets go of it where the moved unit lands right beside it on the other side of the block it names: the move takes the unit past it.
+  // The followers further off are left where they stood in the new order, and follow the unit.
+  if (mover) {
+    const pos = new Map(flat.map((id, i) => [id, i]));
+    const current = new Map(withPlaces(blocks, places).map((b) => [b.id, b]));
+    const followers = followersOf([...current.values()], mover, stacks);
+    const at = want.indexOf(mover);
+    const beside = [];
+    for (let k = at - 1; k >= 0 && want[k].some((id) => followers.has(id)); k -= 1) beside.push(...want[k]);
+    for (let k = at + 1; k < want.length && want[k].some((id) => followers.has(id)); k += 1) beside.push(...want[k]);
+    for (const id of beside.filter((b) => followers.has(b))) {
+      const place = current.get(id)?.phonePlace;
+      const anchor = anchorOf(current.get(id));
+      if (!pos.has(id) || !pos.has(anchor)) continue;
+      if (typeof place.after === 'string' ? pos.get(id) < pos.get(anchor) : pos.get(id) > pos.get(anchor)) places[id] = null;
+    }
+  }
   const next = { ...setup, stacks };
   const placed = withPlaces(blocks, places);
   const first = trialIds(placed, next);
   if (same(first, flat)) return done(change, first);
-  const mover = want.find((unit) => unit.some((id) => moved.includes(id)));
   if (!mover) return null;
   const head = mover[0];
   const followers = followersOf(placed, mover, stacks);
@@ -239,7 +257,7 @@ export function phoneLand(blocks, rawSetup, key, drop) {
 }
 
 /**
- * A block moved one place in the phone's order, as the arrows on its bar and Alt with the arrow keys move it: within its stack where it stands in one of the owner's, else past the next block or stack; the blocks placed against it go with it and are passed over, and a column of the rule counts its blocks one by one.
+ * A block moved one place in the phone's order, as the arrows on its bar and Alt with the arrow keys move it: within its stack where it stands in one of the owner's, else past the next block or stack; the blocks placed against it go with it and are passed over, unless nothing else stands beyond them, and a column of the rule counts its blocks one by one.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string} blockId
@@ -264,6 +282,8 @@ export function phoneStep(blocks, rawSetup, blockId, dir) {
   const at = units.indexOf(unit);
   let next = at + step;
   while (units[next] && units[next].some((id) => followers.has(id))) next += step;
+  // Where only blocks that follow it stand beyond it, it steps past the nearest of them, which lets go of it (settle).
+  if (!units[next] && units[at + step]) next = at + step;
   if (!units[next]) return null;
   const rest = units.filter((u) => u !== unit);
   const to = rest.indexOf(units[next]) + (step > 0 ? 1 : 0);
@@ -320,3 +340,103 @@ export function hasPhonePlace(block, blocks, setup = 'top') {
 export function phoneStackOf(blocks, setup, blockId) {
   return phoneParts(blocks, setup).stacks.find((stack) => stack.includes(blockId)) ?? null;
 }
+
+/**
+ * Where a block dragged on the phone canvas lands, from the pointer over the other units' boxes (a block alone, or a stack's or a cell's blocks together), in the phone's order.
+ * Over a unit, its top quarter lands before it and its bottom quarter after it; between those, its left third beside it on the left, its right third beside it on the right, and its middle into it, as a stack. Off every unit, the nearest one: before it where the pointer is above it, else after it.
+ * Before or after a unit that shares its line with others, units standing beside each other, is before the line's first or after its last, so a block across the row never splits a line; `at` is the line's top or bottom edge.
+ * Over the dragged block's own place, or nearer to it than to every unit, the block lands nowhere.
+ * @param {Array<{id: string, left: number, top: number, right: number, bottom: number}>} boxes The units' boxes, by their first block's id
+ * @param {number} x
+ * @param {number} y
+ * @param {{left: number, top: number, right: number, bottom: number}|null} [own] The dragged block's own place
+ * @returns {{pos: 'before'|'after'|'left'|'right'|'into', of: string, at?: number}|null}
+ */
+export function phoneDropAt(boxes, x, y, own = null) {
+  const within = (b) => x >= b.left && x <= b.right && y >= b.top && y <= b.bottom;
+  const away = (b) => Math.hypot(x < b.left ? b.left - x : x > b.right ? x - b.right : 0, y < b.top ? b.top - y : y > b.bottom ? y - b.bottom : 0);
+  if (!boxes.length || (own && within(own))) return null;
+  const hit = boxes.find(within);
+  let target = hit;
+  let pos;
+  if (hit) {
+    const fy = (y - hit.top) / Math.max(1, hit.bottom - hit.top);
+    const fx = (x - hit.left) / Math.max(1, hit.right - hit.left);
+    pos = fy < 0.25 ? 'before' : fy > 0.75 ? 'after' : fx < 1 / 3 ? 'left' : fx > 2 / 3 ? 'right' : 'into';
+    if (pos !== 'before' && pos !== 'after') return { pos, of: hit.id };
+  } else {
+    target = boxes.reduce((best, b) => (away(b) < away(best) ? b : best));
+    if (own && away(own) < away(target)) return null;
+    pos = y < target.top ? 'before' : 'after';
+  }
+  // The line: the units whose heights overlap the target's, and those overlapping them in turn.
+  const line = new Set([target]);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const b of boxes) {
+      if (!line.has(b) && [...line].some((l) => b.top < l.bottom && b.bottom > l.top)) {
+        line.add(b);
+        grew = true;
+      }
+    }
+  }
+  const ends = boxes.filter((b) => line.has(b));
+  return pos === 'before'
+    ? { pos, of: ends[0].id, at: Math.min(...ends.map((b) => b.top)) }
+    : { pos, of: ends[ends.length - 1].id, at: Math.max(...ends.map((b) => b.bottom)) };
+}
+
+/**
+ * The change a drop on the phone canvas makes (phoneDropAt): the dragged block moved in the order, and its cells.
+ * Before or after a unit it stands across the row; beside one it shares the unit's cells with it, half each, the unit keeping the other half; into one it joins it as a stack, in the unit's cells.
+ * @param {object[]} blocks The section's blocks
+ * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
+ * @param {string} blockId The dragged block
+ * @param {{pos: 'before'|'after'|'left'|'right'|'into', of: string}} drop
+ * @returns {{places: Record<string, object|null>, stacks?: string[][], list?: string[], cells: Record<string, {col: number, cols: number}|null>}|null} The change, or null where the drop changes nothing or its order cannot be had
+ */
+export function phoneDropChange(blocks, rawSetup, blockId, drop) {
+  const setup = setupFrom(rawSetup);
+  const tree = phoneTree(blocks, setup);
+  const units = unitsOf(tree);
+  const byId = new Map(blocks.map((b) => [b.id, b]));
+  if (!drop || !units.some((u) => u.includes(blockId))) return null;
+  const rest = units.map((u) => u.filter((id) => id !== blockId)).filter((u) => u.length);
+  const host = rest.find((u) => u.includes(drop.of));
+  if (!host) return null;
+  /** A unit's cells as the row grid draws them: its first block's, else the full row. */
+  const cellsOf = (unit) => phoneCellsOf(byId.get(unit[0])) ?? { col: 1, cols: 8 };
+  const cells = { [blockId]: null };
+  let pos = drop.pos;
+  if (pos === 'left' || pos === 'right') {
+    const { col, cols } = cellsOf(host);
+    if (cols < 2) {
+      pos = pos === 'left' ? 'before' : 'after';
+    } else {
+      const first = Math.floor(cols / 2);
+      const own = pos === 'left' ? { col, cols: first } : { col: col + first, cols: cols - first };
+      const theirs = pos === 'left' ? { col: col + first, cols: cols - first } : { col, cols: first };
+      cells[blockId] = own;
+      for (const id of host) cells[id] = theirs;
+    }
+  }
+  if (pos === 'into') {
+    const shared = cellsOf(host);
+    cells[blockId] = shared.cols < 8 ? shared : null;
+  }
+  const at = rest.indexOf(host);
+  const want = pos === 'into' ? rest.map((u) => (u === host ? [...u, blockId] : u))
+    : [...rest.slice(0, at + (pos === 'after' || pos === 'right' ? 1 : 0)), [blockId], ...rest.slice(at + (pos === 'after' || pos === 'right' ? 1 : 0))];
+  // The order the drop asks for: settled, or as it stands where the drop keeps it.
+  const order = settle(blocks, setup, tree, want, [blockId]) ?? (same(want.flat(), units.flat()) ? { places: {} } : null);
+  if (!order) return null;
+  const change = { ...order, cells };
+  const unchanged = Object.entries(cells).every(([id, cell]) => {
+    const now = phoneCellsOf(byId.get(id));
+    return cell ? now?.col === cell.col && now?.cols === cell.cols : !now;
+  });
+  return unchanged && !Object.keys(order.places ?? {}).length && !order.stacks && !order.list ? null : change;
+}
+
+/** A flowing block's cells (migrate.js phoneCells), or null. */
+const phoneCellsOf = (block) => (block && flowing(block) ? phoneCells(block.frames?.mobile) : null);
