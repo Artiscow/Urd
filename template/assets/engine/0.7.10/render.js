@@ -19,6 +19,7 @@ import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from 
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
 import { refreshSticky } from './sticky.js';
+import { pinsOnPhone, stuckBox, stickyLeads } from './sticky-model.js';
 import { t } from './i18n.js';
 import { isAnchorName } from './nav-model.js';
 
@@ -367,6 +368,92 @@ function applyZoom(child, zoom) {
   const z = Math.round(zoom * 1000) / 1000;
   child.style.zoom = z === 1 ? '' : String(z);
 }
+
+/**
+ * Pins a group of blocks on the phone while the page scrolls (`sticky.phone`, 0.7.3.10).
+ * A grid item may stick only inside its own grid area, which in the row grid is the block's own rows, so the blocks stand in a holder over the whole grid instead: a layer as large as the grid, where the holder sticks below the menu (`--urd-scroll-clear`) at the group's offset and lets go where the section ends, natively.
+ * With a release at a later section (`until`) the layer reaches down to that section's foot, over the sections between, so the holder lets go once it has passed.
+ * Each block keeps a slot of its size in the grid, so the blocks around it keep their places, and stands in the holder where its slot stands in the grid (placeStuck), measured again as the blocks or the grid change size.
+ * @param {HTMLElement} flow The section's row grid
+ * @param {{offset: number, until?: string|null}} lead The group's first block's `sticky`
+ * @param {HTMLElement[]} els The blocks, in reading order, each with its slot in the grid
+ */
+function stickOnPhone(flow, lead, els) {
+  const layer = document.createElement('div');
+  layer.className = 'urd-stick-layer';
+  const holder = document.createElement('div');
+  holder.className = 'urd-stick';
+  holder.style.setProperty('--urd-stick-offset', `${Math.max(0, lead.offset)}px`);
+  holder._urdUntil = typeof lead.until === 'string' && lead.until ? lead.until : null;
+  holder.append(...els);
+  layer.appendChild(holder);
+  // Before the first block's slot, so the blocks keep their place in the reading order; the layer takes no place in the grid.
+  flow.insertBefore(layer, els[0]._urdStickSlot ?? null);
+  holder._urdStuck = els;
+  placeStuck(holder);
+  watchStuck(flow);
+  for (const el of els) watchStuck(el);
+}
+
+/** The elements the pinning watch observes, each observed once. */
+const stickWatched = new WeakSet();
+
+function watchStuck(target) {
+  if (!stickWatch || stickWatched.has(target)) return;
+  stickWatched.add(target);
+  stickWatch.observe(target);
+}
+
+/**
+ * Brings the blocks pinned on the phone in a holder to their slots: each slot as tall as its block, the holder over the group's slots, and each block where its slot stands (stuckBox in sticky-model.js).
+ * Exported for the editing layer, which moves a slot by the keys.
+ * @param {HTMLElement} holder The holder (`.urd-stick`), or a block in it
+ */
+export function placeStuck(holder) {
+  const box = holder?.closest?.('.urd-stick');
+  const els = box?._urdStuck?.filter((el) => el.parentElement === box && el._urdStickSlot?.isConnected);
+  if (!els?.length) return;
+  for (const el of els) {
+    // A block of fixed rows grows past them where its content needs it, as its rows grow in the grid.
+    if (el._urdStickBase) {
+      el.style.height = `${el._urdStickBase}px`;
+      if (el.scrollHeight > el._urdStickBase) el.style.height = `${el.scrollHeight}px`;
+    }
+    el._urdStickSlot.style.height = `${el.offsetHeight}px`;
+  }
+  const placed = stuckBox(els.map((el) => ({ top: el._urdStickSlot.offsetTop, h: el.offsetHeight })));
+  box.style.marginTop = `${placed.top}px`;
+  box.style.height = `${placed.height}px`;
+  els.forEach((el, i) => { el.style.top = `${placed.tops[i]}px`; });
+  // A release at a later section: the layer reaches down to that section's foot, watched with the page's sections as they change size, since a section between moves it too.
+  const layer = box.parentElement;
+  const flow = layer?.parentElement;
+  const until = box._urdUntil ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(box._urdUntil)}"]`) : null;
+  const reach = until && flow ? Math.round(until.getBoundingClientRect().bottom - flow.getBoundingClientRect().bottom) : 0;
+  layer.style.bottom = reach > 0 ? `${-reach}px` : '';
+  if (until) {
+    watchStuck(until);
+    if (until.parentElement) watchStuck(until.parentElement);
+  }
+}
+
+/* The row grids holding blocks pinned on the phone, those blocks, and the sections they are released at with the page that holds the sections: a change of a block's size or of the grid's moves the slots, and a section's the foot the layer reaches, so each holder is placed again in the next frame. */
+const stickWatch = typeof ResizeObserver === 'function' ? new ResizeObserver((entries) => {
+  const holders = new Set();
+  for (const entry of entries) {
+    const target = entry.target;
+    if (!target.isConnected) {
+      stickWatch.unobserve(target);
+      stickWatched.delete(target);
+      continue;
+    }
+    const found = target.classList.contains('urd-flow') ? target.querySelectorAll(':scope > .urd-stick-layer > .urd-stick')
+      : target.closest('.urd-stick') ? [target.closest('.urd-stick')] : document.querySelectorAll('.urd-stick');
+    for (const holder of found) if (holder) holders.add(holder);
+  }
+  if (!holders.size) return;
+  requestAnimationFrame(() => holders.forEach((holder) => placeStuck(holder)));
+}) : null;
 
 /**
  * A block's zoom on the phone: its drawn scale (ADR-0025 decision 6), and for a block that shrinks there (shrinksOnPhone in push-model.js) the share that keeps the lines it has at the design width (phoneFitZoom), read again as its width changes (a phone turned, the editor's phone made wider).
@@ -970,6 +1057,9 @@ export function renderSection(section, site, host, opts = {}) {
     flow.style.setProperty('--urd-mobile-gap', `${gap}px`);
     // On the page before its blocks are drawn, so a spot's id is checked against the section's own blocks too.
     canvas.appendChild(flow);
+    // The blocks pinned on the phone while the page scrolls, by their pinning group (each alone without one), the group's first block in the section's order speaking for it as on the desktop (stickyLeads).
+    const leads = stickyLeads(section.blocks);
+    const stuck = new Map();
     for (const block of stackOrder(section.blocks)) {
       const el = document.createElement('div');
       const pinned = Number.isFinite(block.frames.mobile?.row);
@@ -1001,8 +1091,8 @@ export function renderSection(section, site, host, opts = {}) {
       const loadingH = mobileLoadingHeight(block);
       if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / drawnScale(block))}px`);
       // Screen docking applies on mobile too: sticky.js docks the block
-      // against its own measured size. Scroll pinning is desktop-only
-      // (the row grid is document flow), so that mode is not marked here.
+      // against its own measured size. Pinning while scrolling is the
+      // row grid's own on the phone (stickOnPhone), so it is not marked here.
       if (block.sticky && typeof block.sticky.offset === 'number' && block.sticky.mode === 'screen') {
         el.classList.add('urd-sticky-able');
         el.dataset.stickyOffset = String(block.sticky.offset);
@@ -1011,10 +1101,35 @@ export function renderSection(section, site, host, opts = {}) {
         el.dataset.stickyGroup = block.sticky.group ?? '';
       }
       renderBlock(Urd, el, block, ctx, narrow);
-      flow.appendChild(el);
-      // A block drawing a phone design of its own has no design width to keep its lines from.
-      zoomOnPhone(el, block, narrow ? 0 : canvas._urdDesignW);
+      const key = block.sticky?.group || `solo-${block.id}`;
+      if (block.sticky && pinsOnPhone(leads.get(key))) {
+        // Pinned on the phone: a slot of its size keeps its place in the row grid, and the block stands in its group's holder over the grid (stickOnPhone).
+        const slot = document.createElement('div');
+        slot.className = pinned ? 'urd-stick-slot' : 'urd-stick-slot urd-stick-slot-flow';
+        for (const prop of ['gridRow', 'width', 'marginLeft', 'justifySelf']) if (el.style[prop]) slot.style[prop] = el.style[prop];
+        el.style.gridRow = '';
+        el.style.justifySelf = '';
+        // A block placed by hand stretches to its rows in the grid, which grow with its content; in the holder it takes their height itself, and more where its content needs it (placeStuck).
+        if (pinned && !el.style.height) {
+          const rows = Number.isFinite(block.frames.mobile.rows) ? block.frames.mobile.rows : Math.max(1, Math.ceil(block.frames.desktop.h / MOBILE_ROW));
+          if (autoGrows(block, Urd.blocks.get(block.type))) el.style.minHeight = `${rows * MOBILE_ROW}px`;
+          else el._urdStickBase = rows * MOBILE_ROW;
+        }
+        flow.appendChild(slot);
+        el._urdStickSlot = slot;
+        if (!stuck.has(key)) stuck.set(key, { lead: leads.get(key), members: [] });
+        stuck.get(key).members.push({ el, block, narrow });
+      } else {
+        flow.appendChild(el);
+        // A block drawing a phone design of its own has no design width to keep its lines from.
+        zoomOnPhone(el, block, narrow ? 0 : canvas._urdDesignW);
+      }
       if (typeof block.id === 'string' && block.id) placeBlockSpots(el, block, spots.blocks.get(block.id));
+    }
+    for (const { lead, members } of stuck.values()) {
+      if (!members.length) continue;
+      stickOnPhone(flow, lead, members.map((m) => m.el));
+      for (const m of members) zoomOnPhone(m.el, m.block, m.narrow ? 0 : canvas._urdDesignW);
     }
     host.style.minHeight = 'auto';
   } else {
@@ -1202,7 +1317,16 @@ function redrawForWidth(el) {
   }
   const drawn = drawnBlock(state.block, narrow);
   if (state.ctx.viewport === 'mobile') {
-    Object.assign(el.style, mobilePlacementToCss(state.block.frames.mobile, state.block.frames.desktop, { autoGrow: autoGrows(drawn, state.def), gap: mobileGapOf(state.ctx.section, state.ctx.site) }));
+    const css = mobilePlacementToCss(state.block.frames.mobile, state.block.frames.desktop, { autoGrow: autoGrows(drawn, state.def), gap: mobileGapOf(state.ctx.section, state.ctx.site) });
+    // A block pinned on the phone gives its place in the grid to its slot (stickOnPhone).
+    const slot = el._urdStickSlot;
+    if (slot?.isConnected) {
+      const { gridRow, justifySelf, ...own } = css;
+      Object.assign(slot.style, { gridRow: gridRow ?? '', justifySelf: justifySelf ?? '', width: css.width ?? '', marginLeft: css.marginLeft ?? '' });
+      Object.assign(el.style, own);
+    } else {
+      Object.assign(el.style, css);
+    }
   } else if (followsContent(drawn)) {
     el.dataset.urdHeight = 'content';
   } else {
@@ -1220,6 +1344,7 @@ function redrawForWidth(el) {
   }
   if (state.ctx.viewport === 'mobile') {
     zoomOnPhone(el, state.block, narrow ? 0 : el.closest('.urd-canvas')?._urdDesignW ?? 0);
+    if (el._urdStickSlot) placeStuck(el);
   } else {
     const sized = drawnScale(state.block) !== 1 ? contentChild(el) : null;
     if (sized) applyZoom(sized, drawnScale(state.block));

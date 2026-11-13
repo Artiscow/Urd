@@ -339,6 +339,40 @@ html {
   margin: 0;
 }
 
+/* Blocks pinned on the phone while the page scrolls (render.js stickOnPhone, sticky.phone): a slot of each block's size keeps its place in the row grid, and the blocks stand in a holder in a layer as large as the grid, or reaching down to the section they are released at, where the holder sticks below the menu at the group's offset and lets go at the layer's foot.
+   The layer stands at the desktop pinning's level (FIXED_Z in sticky.js), above the content of the sections it passes and below the menu.
+   The layer and the holder take no pointer; the blocks in them do. */
+.urd-stick-slot {
+  pointer-events: none;
+}
+
+.urd-stick-slot-flow {
+  width: 90%;
+  justify-self: center;
+  margin-bottom: var(--urd-mobile-gap, 16px);
+}
+
+.urd-stick-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+  pointer-events: none;
+}
+
+.urd-stick {
+  position: sticky;
+  top: calc(var(--urd-scroll-clear, 0px) + var(--urd-stick-offset, 16px));
+}
+
+/* Each block where its slot stands (render.js placeStuck): its width and its share from the left as in the grid, a block that flows centred */
+.urd-stick > .urd-block {
+  position: absolute;
+  right: 0;
+  left: 0;
+  margin: 0 auto;
+  pointer-events: auto;
+}
+
 /* Content inside text blocks: lists, quotes and links from
    the formatting bar (the global reset otherwise zeroes list indentation) */
 

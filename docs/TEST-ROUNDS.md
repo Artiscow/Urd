@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.10): pinning on the phone
+
+- [ ] The published About page at phone width: the intro text and its button stay together below the menu while their section scrolls past, and let go at its bottom; at rest they stand where they did, and the blocks around them keep their places
+- [ ] The same page on the desktop is unchanged, and so is a page with no pinning on phones
+- [ ] A block's pinning card, in both views: «On phones too» stands under «Pinning» while it reads «While scrolling», and not with «To the screen»; switching it off makes the block scroll with the page on the phone, and one undo takes it back
+- [ ] A pinned group: switching «On phones too» on any block of the group switches the whole group
+- [ ] «Release» offers «Bottom of own section» and «Bottom of section 2»; with «Bottom of section 2» the block stays pinned on the phone through the next section and lets go at its bottom, as on the desktop; the 0.7.3.8 item about «While scrolling, on the desktop» no longer holds
+- [ ] While pinned on the phone the block stands above the sections it passes and below the menu, and it can be selected, edited and given a new place by a drag in the phone view, after which it pins from there
+- [ ] A block docked «To the screen» docks on the phone as before
+
 ### Test batch (0.7.3.9): «Shrink» keeps its lines on the phone
 
 - [ ] The published home page at 390 px: the text «Urd is still under construction…» breaks its lines where it does at a desktop width, drawn smaller

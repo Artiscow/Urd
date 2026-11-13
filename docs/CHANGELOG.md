@@ -8,6 +8,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.10 - Blocks can pin while scrolling on the phone too - 13 November 2026
+
+- A block pinned while scrolling scrolled with the page on the phone (BACKLOG 0.7.3.10). «On phones too» in the pinning card (`sticky.phone`, additive) pins it there below the menu, released at the bottom of its own section or of a later one as on the desktop, with a pinned group pinning as one; the About page's intro group pins on phones.
+- A grid item may stick only inside its own grid area, which in the row grid is the block's own rows. The block stands in a holder with native `position: sticky` in a layer over the grid, a slot of its size keeping its place in the grid (`stickOnPhone` and `placeStuck` in render.js, `pinsOnPhone`, `stuckBox` and `stickyLeads` in sticky-model.js, base.css); a drag or the keys in the phone view move it as before.
+- The release options read «Bottom of own section» and «Bottom of section 2», since «At section 2» read as letting go where section 2 begins, and «Release» names no screen, in nb, en-GB and tr, with nn and the Swedish pack following.
+- SCHEMA.md, ARCHITECTURE.md, CODE.md, the guides in en-GB, nb and tr and the comparison describe it, and mark pinning Has (Delivered 0.7.3.10).
+
+The independent review before the commit found these, all fixed:
+
+1. A drag in the phone view measured a pinned block where it stood pinned rather than at its slot, so a press on its grip after scrolling placed it far down the section. The drag starts from the slot, as the desktop's starts from the block's own place.
+2. A section between the pinned block and the section it is released at could change height without the layer's foot following it. The page that holds the sections is watched too.
+3. The layer's release section was observed again at every placement, which by the ResizeObserver specification starts a new notification each time. Each element is observed once.
+4. The pinned blocks stood last in their section for a screen reader, the keyboard and find-in-page. The layer stands before the first block's slot, in the reading order.
+5. A block placed by hand at fixed rows kept their height in the holder while its content grew past them. It grows with its content, as its rows do in the grid.
+6. The phone took the group's first block in the reading order, which can differ from the desktop's, and blocks pinned together could keep different phone choices. The group's first block in the section's own order speaks for it on both, and pinning blocks together gives them one choice.
+7. A cancelled drag of a pinned block left it out of its holder, and a phone design's redraw gave the block grid rows its slot did not get. The section is drawn again after a cancel, and the slot takes the rows.
+8. Three comments in render.js and sticky.js still said the phone has no pinning, the stylesheet's comment wrapped mid-sentence, and the nynorsk and Swedish release tooltips kept the old wording. They are corrected.
+9. Nothing tested the phone's history kinds or the group's lead. Tests hold both.
+
 ### 0.7.3.9 - «Shrink» keeps a block's lines on the phone - 13 November 2026
 
 - A block set to «Shrink» kept its lines on a narrower desktop window but wrapped like any other on the phone (BACKLOG 0.7.3.9). On the phone its content is drawn at its width there over its width at the design width, down to its smallest scale, so it keeps the lines it has at the design width, and the zoom follows the width as it changes (`shrinksOnPhone` and `phoneFitZoom` in push-model.js, `zoomOnPhone` in render.js); «Both» wraps there, since it fits a design height the row grid has not.

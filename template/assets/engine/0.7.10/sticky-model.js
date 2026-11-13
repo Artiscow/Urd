@@ -113,3 +113,40 @@ export function stickyState(scrollY, m) {
   // The release limit is passed: the block is left behind at the limit.
   return { mode: 'parked', y: parkY };
 }
+
+/**
+ * Whether a block pins on the phone (`sticky.phone`, additive from 0.7.3.10): pinned while the page scrolls, and chosen for the phone too, where it stays in view below the menu while its own section scrolls past.
+ * A block docked to the screen docks on every screen without it.
+ * @param {object|null|undefined} sticky The block's `sticky`
+ * @returns {boolean}
+ */
+export function pinsOnPhone(sticky) {
+  return Boolean(sticky) && sticky.phone === true && (sticky.mode ?? 'scroll') === 'scroll' && typeof sticky.offset === 'number';
+}
+
+/**
+ * The holder of a group pinned on the phone (render.js placeStuck): it spans the group's slots in the row grid, from the highest top to the lowest foot, and each block stands at its slot's distance below the holder's top, so the group keeps its placement as it does on the desktop (groupBox).
+ * @param {Array<{top: number, h: number}>} slots The slots' tops in the row grid and the blocks' heights, in reading order
+ * @returns {{top: number, height: number, tops: number[]}}
+ */
+export function stuckBox(slots) {
+  if (!slots.length) return { top: 0, height: 0, tops: [] };
+  const top = Math.min(...slots.map((slot) => slot.top));
+  const bottom = Math.max(...slots.map((slot) => slot.top + slot.h));
+  return { top: Math.round(top), height: Math.round(bottom - top), tops: slots.map((slot) => Math.round(slot.top - top)) };
+}
+
+/**
+ * The `sticky` that speaks for each pinning group on the phone: the group's first block in the section's own order, as on the desktop, among the blocks the phone shows; a block without a group speaks for itself.
+ * @param {Array<{id: string, sticky?: object|null, hideMobile?: boolean}>} blocks The section's blocks, in the section's order
+ * @returns {Map<string, object>} The lead's `sticky` by group key (`sticky.group`, or `solo-<id>`)
+ */
+export function stickyLeads(blocks) {
+  const leads = new Map();
+  for (const block of blocks ?? []) {
+    if (!block?.sticky || block.hideMobile) continue;
+    const key = block.sticky.group || `solo-${block.id}`;
+    if (!leads.has(key)) leads.set(key, block.sticky);
+  }
+  return leads;
+}

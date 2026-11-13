@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { stickyState, groupBox, dockPosition, nearestDock } = await engineImport('sticky-model.js');
+const { stickyState, groupBox, dockPosition, nearestDock, pinsOnPhone, stuckBox, stickyLeads } = await engineImport('sticky-model.js');
 
 // Default setup: section from 1000, block 200 into the section, 100 tall,
 // own section bottom at 2000, pinned 16 px from the viewport top.
@@ -147,3 +147,39 @@ test('nearestDock: the keys match the dockPosition axes', () => {
   const pos = dockPosition(dock, 24, { w: 100, h: 50 }, view);
   assert.deepEqual(pos, { left: 776, top: 24 });
 });
+
+test('pinsOnPhone: pinned while scrolling and chosen for the phone; docking to the screen needs no choice', () => {
+  assert.equal(pinsOnPhone({ offset: 16, until: null, phone: true }), true);
+  assert.equal(pinsOnPhone({ offset: 16, until: null, mode: 'scroll', phone: true }), true);
+  assert.equal(pinsOnPhone({ offset: 16, until: null }), false, 'without the choice the block scrolls with the page on the phone');
+  assert.equal(pinsOnPhone({ offset: 24, mode: 'screen', phone: true }), false, 'a docked block docks on every screen');
+  assert.equal(pinsOnPhone({ phone: true }), false, 'no offset, no pinning');
+  assert.equal(pinsOnPhone(null), false);
+});
+
+test('stuckBox: the holder spans the group\'s slots, and each block stands at its slot\'s distance below the holder\'s top', () => {
+  assert.deepEqual(stuckBox([{ top: 24, h: 100 }]), { top: 24, height: 100, tops: [0] });
+  // Two blocks of a group with a flowing block between their slots: the holder spans both, the second at its distance.
+  assert.deepEqual(stuckBox([{ top: 24, h: 100 }, { top: 300, h: 40 }]), { top: 24, height: 316, tops: [0, 276] });
+  // Slots placed by hand side by side on the same rows: both stand at the holder's top.
+  assert.deepEqual(stuckBox([{ top: 24, h: 100 }, { top: 24, h: 40 }]), { top: 24, height: 100, tops: [0, 0] });
+  assert.deepEqual(stuckBox([]), { top: 0, height: 0, tops: [] });
+});
+
+test('stickyLeads: the group\'s first block in the section\'s order speaks for it, as on the desktop, among the blocks the phone shows', () => {
+  const blocks = [
+    { id: 'a', sticky: { offset: 16, group: 'g', phone: true } },
+    { id: 'b', sticky: { offset: 40, group: 'g' } },
+    { id: 'c', sticky: { offset: 8 } },
+    { id: 'd' },
+    { id: 'e', hideMobile: true, sticky: { offset: 0, group: 'h' } },
+    { id: 'f', sticky: { offset: 24, group: 'h', phone: true } },
+  ];
+  const leads = stickyLeads(blocks);
+  assert.equal(leads.get('g'), blocks[0].sticky, 'the first in the section, wherever the phone places it');
+  assert.equal(leads.get('solo-c'), blocks[2].sticky, 'a block without a group speaks for itself');
+  assert.equal(leads.has('solo-d'), false, 'a block without pinning has none');
+  assert.equal(leads.get('h'), blocks[5].sticky, 'a block hidden on phones does not speak for its group there');
+  assert.equal(stickyLeads(null).size, 0);
+});
+

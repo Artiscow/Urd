@@ -21,7 +21,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** Sets the pinning's own settings; a setting given as undefined goes back to the standard and is removed. */
@@ -83,6 +83,10 @@
               options={[['scroll', ta('opt.sticky.modeScroll')], ['screen', ta('opt.sticky.modeScreen')]]}
               onchange={(v) => setSticky({ mode: v })} /></label>
         </Setting>
+        <!-- Pinning while scrolling on the phone too, directly under the choice it belongs to; a block docked to the screen docks on every screen -->
+        {#if (selectedBlock.sticky.mode ?? 'scroll') === 'scroll'}
+          <SwitchRow label={ta('lbl.stickyPhone')} title={ta('tip.stickyPhone')} checked={selectedBlock.sticky.phone === true} onchange={(on) => setStickyPhone(on)} />
+        {/if}
         <!-- The offset applies only to the edges the block is docked to, so with both axes centred it has no effect and is hidden. -->
         {#if selectedBlock.sticky.mode !== 'screen' || (selectedBlock.sticky.dock ?? 'bottom-right') !== 'middle-center'}
           <Setting own={(selectedBlock.sticky.offset ?? 16) !== 16} reset={() => setSticky({ offset: 16 })}>

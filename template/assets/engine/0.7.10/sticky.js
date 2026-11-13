@@ -16,7 +16,8 @@
  * editing (both write left/top/width on the block) is resolved by the drag
  * suspending the pinning: preview-edit calls suspendSticky on drag start
  * and resumeSticky on release, so the block is always edited where it
- * actually belongs. The mobile view is document flow and never has pinning.
+ * actually belongs. On the phone, pinning while scrolling is native sticky
+ * positioning in the row grid (render.js stickOnPhone), outside this module.
  *
  * Pinning is positioning without transitions, so prefers-reduced-motion
  * needs no special handling.
@@ -150,8 +151,8 @@ function applySticky() {
   const els = document.querySelectorAll('.urd-sticky-able');
   if (!els.length) return;
   const body = document.body;
-  // Mobile is document flow: scroll pinning does not apply there, but
-  // screen docking does (render.js only marks screen mode on mobile).
+  // On the phone, pinning while scrolling is render.js's (stickOnPhone), and
+  // only screen docking is this module's (render.js marks screen mode alone).
   const mobile = body.classList.contains('urd-mobile');
   const scrollY = window.scrollY;
   // A sticky menu sits above the pinned block (the nav has a higher z-index,

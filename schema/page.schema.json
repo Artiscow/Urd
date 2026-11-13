@@ -181,7 +181,7 @@
         "anchor": { "$ref": "#/$defs/anchorName", "description": "The block's name for links, drawn as a marker at the block's top that moves with it; the block's id is a target too. On a phone a block hidden there (hideMobile), and on the desktop a block shown on phones only (hideDesktop), lands on its section's top. A pasted or duplicated block arrives without it" },
         "mobileOrder": { "type": "number", "description": "Overrides the sort key in the mobile reading order (interpreted on the same scale as desktop y). Additive field from v0.5: the section templates use it to keep cards together." },
         "sticky": {
-          "description": "Pin on scroll (additive field from v0.6, desktop only): the block is pinned at the top of the viewport and released when its own section (until: null) or a later section (until: section id) has been passed. With mode 'screen' the block instead docks to a fixed point in the viewport for the whole page",
+          "description": "Pin on scroll (additive field from v0.6; on the phone with phone: true from 0.7.3.10): the block is pinned at the top of the viewport and released when its own section (until: null) or a later section (until: section id) has been passed. With mode 'screen' the block instead docks to a fixed point in the viewport for the whole page",
           "oneOf": [
             { "type": "null" },
             {
@@ -195,6 +195,10 @@
                     { "type": "null" },
                     { "$ref": "#/$defs/id" }
                   ]
+                },
+                "phone": {
+                  "type": "boolean",
+                  "description": "Additive field from 0.7.3.10: true pins the block while scrolling on the phone too, where it stays in view below the menu and is released as on the desktop (until). With mode 'scroll' only; a group follows its first block in the phone's reading order"
                 },
                 "mode": {
                   "type": "string",

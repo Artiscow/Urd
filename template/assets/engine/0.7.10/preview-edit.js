@@ -27,7 +27,7 @@
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  */
-import { applyFrameCss, mobilePlacementToCss, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth } from './render.js';
+import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
@@ -4245,7 +4245,16 @@ function phoneArrow(event, ctx, el, dir) {
   if (dir[0]) placement.x = clamp(r2((placed.x ?? block.frames.desktop.x) + dir[0]), 0, r2(100 - w));
   if (placement.row === placed.row && placement.x === placed.x) return;
   block.frames.mobile = placement;
-  Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { autoGrow: autoGrows(block, window.Urd.blocks.get(block.type)) }));
+  const css = mobilePlacementToCss(placement, block.frames.desktop, { autoGrow: autoGrows(block, window.Urd.blocks.get(block.type)) });
+  // A block pinned on the phone stands over the grid, its slot in its place (render.js stickOnPhone): the slot takes the rows, and the block follows it.
+  const slot = el._urdStickSlot;
+  if (slot?.isConnected) {
+    Object.assign(slot.style, { gridRow: css.gridRow, width: css.width, marginLeft: css.marginLeft });
+    Object.assign(el.style, { width: css.width, marginLeft: css.marginLeft });
+    placeStuck(el);
+  } else {
+    Object.assign(el.style, css);
+  }
   post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile', coalesce: true, groupKey: `nudge-mobile-${block.id}` });
 }
 
@@ -5176,7 +5185,8 @@ function enhanceBlock(el, block, section, grid, host) {
     if (!flowEl) return;
     const flowRect = flowEl.getBoundingClientRect();
     const padTop = parseFloat(getComputedStyle(flowEl).paddingTop) || 0;
-    const startRect = el.getBoundingClientRect();
+    // A block pinned on the phone is measured at its slot, its own place in the grid, wherever it stands pinned.
+    const startRect = (el._urdStickSlot?.isConnected ? el._urdStickSlot : el).getBoundingClientRect();
 
     const start = { x: event.clientX, y: event.clientY };
     const orig = {
@@ -5197,6 +5207,8 @@ function enhanceBlock(el, block, section, grid, host) {
     const ratio = kind === 'resize' && FIT_BY_WIDTH.has(block.type) && orig.w > 0 ? orig.h / orig.w : 0;
     let stop = null;
     let readout = null;
+    /** Whether the block was pinned on the phone, so it is drawn back over the grid from its new place once the drag ends. */
+    let restick = false;
     /** The line across the flow at the row the block will be pinned into, drawn while it is moved; the tracks are read once the block is out of the grid. */
     let rowLine = null;
     let rowTracks = [];
@@ -5208,6 +5220,17 @@ function enhanceBlock(el, block, section, grid, host) {
 
     const begin = () => {
       started = true;
+      // A block pinned on the phone comes back from over the grid (render.js stickOnPhone), and its slot leaves, so the grid shows the layout it is placed into.
+      // Moving the block lets go of the pointer its handle held, so the handle takes it again.
+      if (el._urdStickSlot) {
+        restick = true;
+        el._urdStickSlot.remove();
+        el._urdStickSlot = null;
+        flowEl.appendChild(el);
+        try {
+          handle.setPointerCapture(event.pointerId);
+        } catch { /* the pointer is gone: the drag ends as it would */ }
+      }
       // Out of the grid and into free positioning; the grid reflows.
       el.style.position = 'absolute';
       el.style.left = `${orig.left}px`;
@@ -5271,10 +5294,15 @@ function enhanceBlock(el, block, section, grid, host) {
     const finish = () => {
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onUp);
-      handle.removeEventListener('pointercancel', finish);
+      handle.removeEventListener('pointercancel', cancel);
       stop?.remove();
       readout?.remove();
       rowLine?.remove();
+    };
+    // A cancelled drag of a block pinned on the phone draws the section again, which puts the block back over the grid and its slot in its place.
+    const cancel = () => {
+      finish();
+      if (restick) post({ type: 'urd-redraw-section', sectionId: section.id });
     };
 
     const onUp = () => {
@@ -5314,11 +5342,12 @@ function enhanceBlock(el, block, section, grid, host) {
       Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { autoGrow }));
 
       post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile' });
+      if (restick) post({ type: 'urd-redraw-section', sectionId: section.id });
     };
 
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
-    handle.addEventListener('pointercancel', finish);
+    handle.addEventListener('pointercancel', cancel);
   }
 
   /**

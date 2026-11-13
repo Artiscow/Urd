@@ -69,7 +69,7 @@ export function stepKind(key, { typed = false } = {}) {
   if (k === 'add-block' || k === 'add-blocks' || k.endsWith('-item') || k === 'form-field' || k === 'gallery-add') return kind('addBlock', 'plus', true);
   if (k === 'delete-block' || k === 'gallery-remove') return kind('deleteBlock', 'cross', true);
   if (k === 'move-block' || k === 'gallery-move' || /^edit:(z-|multi-|place-|align-|nudge)/.test(k)) return kind('moveBlock', 'fit', true);
-  if (k === 'mobile-reset' || k === 'mobile-order' || k.startsWith('edit:mobile-order-') || k === 'review-done' || k === 'hide-mobile' || k === 'hide-desktop' || k.startsWith('edit:entrance-mobile-')) return kind('phone', 'phone', true);
+  if (k === 'mobile-reset' || k === 'mobile-order' || k.startsWith('edit:mobile-order-') || k === 'review-done' || k === 'hide-mobile' || k === 'hide-desktop' || k.startsWith('edit:entrance-mobile-') || k.startsWith('edit:sticky-phone-')) return kind('phone', 'phone', true);
   return kind('block', 'pencil', true);
 }
 

@@ -2106,7 +2106,7 @@ Motion that needs a library, the GPU or more complexity than the audience can us
 | Stagger | WF, WT, OX | Cascaded children | Has: stagger for card groups | - |
 | Marquee or ticker | FR, FS | Infinite scroll strip | Has: ribbon | - |
 | Lightbox | FS, WP, SQ | Overlay or gallery lightbox | Partial: a native dialog lightbox on images and the gallery with arrows, Esc and captions; no swipe, zoom, counter, thumbnails or video | ER-B; v0.9 touch friendliness |
-| Sticky | FR, FS, EL, OX, SQ | Pin within the scroll | Partial: pinning within the scroll or to the screen at nine docks, with offset, release and groups, on the desktop; no pinning on the phone | 0.7.3 |
+| Sticky | FR, FS, EL, OX, SQ | Pin within the scroll | Has: pinning within the scroll or to the screen at nine docks, with offset, release and groups, on the desktop, and while scrolling on the phone with the same release, as a choice per block (Delivered 0.7.3.10) | - |
 | Shrinking header | DU | The header changes on scroll | Has: scroll shrink in the nav | - |
 | Lottie | DV | Lottie module | Missing | v0.8 Animation files |
 | Reduced motion | FR, WT | Setting or media condition | Partial: entrances, backgrounds, the ribbon and the slideshow honour the media query; animated images ignore it, and no site-wide setting or pause | 0.7.11; 0.7.9: the motion intensity setting |

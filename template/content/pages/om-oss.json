@@ -78,7 +78,8 @@
           "sticky": {
             "offset": 16,
             "until": null,
-            "group": "stk-intro"
+            "group": "stk-intro",
+            "phone": true
           }
         },
         {
@@ -107,7 +108,8 @@
           "sticky": {
             "offset": 16,
             "until": null,
-            "group": "stk-intro"
+            "group": "stk-intro",
+            "phone": true
           }
         },
         {

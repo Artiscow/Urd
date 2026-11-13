@@ -38,11 +38,17 @@ function handleStickyGroup(msg) {
   if (!section || !ids.length) return;
   historyState.pushHistory(`sticky-group:${msg.sectionId}`);
   const group = msg.on ? makeId('stk') : null;
+  // Pinning on the phone too is the group's one choice, kept when any of its blocks had it.
+  const phone = section.blocks.some((block) => ids.includes(block.id) && block.sticky?.phone === true);
   for (const block of section.blocks) {
     if (!ids.includes(block.id)) continue;
     // Off: the pinning is removed entirely. On: existing offset/limit is
     // kept so a block that was already pinned does not lose its settings.
     block.sticky = group ? { offset: 16, until: null, ...block.sticky, group } : null;
+    if (block.sticky) {
+      if (phone) block.sticky.phone = true;
+      else delete block.sticky.phone;
+    }
   }
   pageState.markDesktopChange(section, 'block-edited');
   pageState.store.save();

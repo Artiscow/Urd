@@ -857,6 +857,22 @@ function setBlockEntranceMobile(on) {
   syncSelectedBlock();
 }
 
+/** Pinning on the phone too (`sticky.phone`): a phone choice, outside the review flag, written on every block of the selected block's pinning group, whose first block speaks for it; off takes the field away. */
+function setStickyPhone(on) {
+  const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+  if (!block?.sticky) return;
+  historyState.pushHistory(`edit:sticky-phone-${block.id}`);
+  const group = block.sticky.group;
+  for (const other of group ? section.blocks.filter((b) => b.sticky?.group === group) : [block]) {
+    if (on) other.sticky = { ...other.sticky, phone: true };
+    else delete other.sticky.phone;
+  }
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  syncSelectedBlock();
+}
+
 /** The most recently clicked section in the preview: the palette adds
  *  new blocks here, and the grid menu can give it its own grid. */
 let activeSectionId = $state(null);
@@ -1424,6 +1440,7 @@ export const pageState = {
   setBlockHideMobile,
   setBlockHideDesktop,
   setBlockEntranceMobile,
+  setStickyPhone,
   setBlockAnchor,
   setSectionAnchor,
   anchorsTaken,

@@ -75,7 +75,7 @@ The WordPress libraries and Elementor give an element its cross-cutting settings
 - **Custom CSS:** v0.8 OL-4, a scoped style per look; site-wide custom CSS stays not taken.
 - **Lock and rename:** 0.7.9, the layers panel, with a name per block and a lock field.
 - **Visibility:** elements shown only on the phone (Delivered 0.7.3.8); hiding on a tablet Not taken: Urd has two layouts ([ADR-0019](../adr/0019-synced-mobile-model.md)); a hidden section, and a hidden block beside it, in v0.8 AR-5.
-- **Pinning on the phone:** 0.7.3, as a choice per block in the row grid.
+- **Pinning on the phone:** as a choice per block in the row grid, with the desktop's release (Delivered 0.7.3.10).
 - **Border, shadow and background on more blocks:** 0.7.9, the box styles of the design gallery and the component tokens.
 - **Typography:** a font weight and letter case in 0.7.9.
 - **A link on the whole element:** v0.8 ER-G, any block or group of blocks as a link.
