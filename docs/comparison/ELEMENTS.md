@@ -227,7 +227,7 @@ Timelines, cursor effects and shaders are not taken ([FEATURES.md](FEATURES.md))
 - **Mobile:** a synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)) and hide on mobile. Mobile review flags each section whose desktop changed after its mobile layout was tuned, until the site owner marks it reviewed.
 - **Preview:** four devices (Screen, laptop 1280, tablet 810, phone 390) and «Clean view», which shows the page as a visitor sees it.
 
-Open: desktop and phone side by side (E14), and real phone sizes in the preview (0.7.10); elements shown only on the phone (E15) are Delivered 0.7.3.8. The phone order and the phone in cells are BACKLOG 0.7.3.12 to 0.7.3.14: a section rule (Top, Left or Right first) with an exception per block, the order as a list with stacks, and eight columns on the phone with presets that suggest a layout. Custom breakpoints (ADR-0019) and a responsive AI fix (E16) are not taken.
+Open: desktop and phone side by side (E14), and real phone sizes in the preview (0.7.10); elements shown only on the phone (E15) are Delivered 0.7.3.8. A section's rule for its phone order (Top, Left or Right first) with an exception per block is Delivered 0.7.3.12; the order as a list with stacks and eight columns on the phone with presets that suggest a layout are BACKLOG 0.7.3.13 and 0.7.3.14. Custom breakpoints (ADR-0019) and a responsive AI fix (E16) are not taken.
 
 ### Section and template galleries
 

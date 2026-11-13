@@ -197,3 +197,16 @@ test('a template\'s text links to its own spots follow the new ids, and a text l
   assert.ok(out.blocks[1].props.html.includes(`href="#${fresh}" data-urd-target="${fresh}"`));
   assert.ok(out.blocks[1].props.html.includes('data-urd-page="kaker" data-urd-target="blk-a"'), 'a link to a spot on another page stays');
 });
+
+test('a copy\'s place in the phone order follows the block it names to its copy, and one naming a block left out is dropped', () => {
+  const original = section();
+  original.blocks[1].phonePlace = { after: 'blk-a' };
+  const out = cloneSectionForInsert(original, makeId);
+  assert.deepEqual(out.blocks[1].phonePlace, { after: out.blocks[0].id }, 'a section copy keeps its own order');
+  const page = { meta: { id: 'a', title: 'A' }, sections: [original] };
+  const pageCopy = clonePageForInsert(page, makeId, { id: 'b', title: 'B' });
+  assert.deepEqual(pageCopy.sections[0].blocks[1].phonePlace, { after: pageCopy.sections[0].blocks[0].id });
+  const { blocks } = cloneBlocksForInsert([original.blocks[1]], makeId);
+  assert.equal('phonePlace' in blocks[0], false, 'the block it names was not copied');
+  assert.deepEqual(original.blocks[1].phonePlace, { after: 'blk-a' }, 'the original is untouched');
+});

@@ -14,6 +14,7 @@ import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
 import { wholeStyleHtml } from '$engine/text-whole.js';
+import { phoneOrderOf } from '$engine/phone-order.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign, calLimitStart } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
@@ -149,6 +150,8 @@ function syncSelectedBlock() {
     decor: Boolean(block.decor),
     hideMobile: Boolean(block.hideMobile),
     hideDesktop: Boolean(block.hideDesktop),
+    // The block's exception in the phone order (phone-order.js), or null where it follows the section's rule.
+    phonePlace: typeof block.phonePlace?.before === 'string' ? { before: block.phonePlace.before } : typeof block.phonePlace?.after === 'string' ? { after: block.phonePlace.after } : null,
     entranceMobile: block.entranceMobile !== false,
     anchor: typeof block.anchor === 'string' ? block.anchor : '',
     fit: block.fit === 'shrink' || block.fit === 'both' ? block.fit : undefined,
@@ -908,11 +911,15 @@ let sectionMaxWidth = $state('');
 /** Mirror of the active section's own space between its blocks on the phone (`size.mobileGap` in px, null = the site's) */
 let sectionMobileGap = $state(null);
 
+/** Mirror of the active section's rule for its order on the phone (`phoneOrder`, phone-order.js) */
+let sectionPhoneOrder = $state('top');
+
 function syncSectionMirrors(section) {
   sectionGrid = section?.grid ? { ...section.grid } : null;
   sectionMinHeight = section?.size?.minHeight ?? '';
   sectionMaxWidth = section?.size?.maxWidth ?? '';
   sectionMobileGap = Number.isFinite(section?.size?.mobileGap) ? section.size.mobileGap : null;
+  sectionPhoneOrder = phoneOrderOf(section);
   sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
   sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
   sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
@@ -1067,6 +1074,27 @@ function setSectionMobileGap(value) {
     if (Number.isFinite(value)) size.mobileGap = value; else delete size.mobileGap;
     s.size = size;
   });
+}
+
+/** The section's rule for its order on the phone (`phoneOrder`): Top first, the standard, takes the field away. A phone change, outside the review flag. */
+function setSectionPhoneOrder(rule) {
+  mutateSection(`edit:phone-order:${activeSectionId}`, (s) => {
+    if (rule === 'left' || rule === 'right') s.phoneOrder = rule; else delete s.phoneOrder;
+  });
+}
+
+/** The selected block's exception in the phone order (`phonePlace`): directly before or after another block, or null to follow the section's rule. A phone change, outside the review flag. */
+function setBlockPhonePlace(place) {
+  const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+  if (!block) return;
+  historyState.pushHistory(`edit:phone-place-${block.id}`);
+  if (typeof place?.before === 'string') block.phonePlace = { before: place.before };
+  else if (typeof place?.after === 'string') block.phonePlace = { after: place.after };
+  else delete block.phonePlace;
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  syncSelectedBlock();
 }
 
 function targetSection() {
@@ -1441,6 +1469,7 @@ export const pageState = {
   setBlockHideDesktop,
   setBlockEntranceMobile,
   setStickyPhone,
+  setBlockPhonePlace,
   setBlockAnchor,
   setSectionAnchor,
   anchorsTaken,
@@ -1455,7 +1484,9 @@ export const pageState = {
   set sectionMaxWidth(v) { sectionMaxWidth = v; },
   setSectionWidth,
   get sectionMobileGap() { return sectionMobileGap; },
+  get sectionPhoneOrder() { return sectionPhoneOrder; },
   setSectionMobileGap,
+  setSectionPhoneOrder,
   get sectionBg() { return sectionBg; },
   set sectionBg(v) { sectionBg = v; },
   get sectionAnim() { return sectionAnim; },

@@ -198,17 +198,19 @@ function handleMobileReset(msg) {
   previewState.bridge?.sendSection(pageState.pageId, section);
 }
 
-/** A move in the mobile reading order: the new mobileOrder key is recorded and the section drawn again, so the auto placement reshuffles.
- *  A burst from the keys is one undo step. */
-function handleMobileOrder(msg) {
+/** A move in the phone's reading order from the preview (the bar's arrows, Alt with the arrow keys): the block's exception, before or after a block of its section; a burst of keys one undo step. */
+function handlePhonePlace(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
-  if (!block || typeof msg.mobileOrder !== 'number') return;
-  historyState.pushHistory(msg.coalesce ? `edit:mobile-order-${block.id}` : 'mobile-order');
-  block.mobileOrder = msg.mobileOrder;
+  const place = msg.phonePlace;
+  const side = typeof place?.before === 'string' ? 'before' : typeof place?.after === 'string' ? 'after' : null;
+  if (!block || !side || !section.blocks.some((b) => b.id === place[side] && b.id !== block.id)) return;
+  historyState.pushHistory(msg.coalesce ? `edit:phone-place-${block.id}` : 'phone-place');
+  block.phonePlace = { [side]: place[side] };
   pageState.store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageState.pageId, section);
+  if (pageState.selectedBlock?.blockId === block.id) pageState.syncSelectedBlock();
 }
 
 /** ✓ in mobile view: the mobile layout has been reviewed. */
@@ -427,7 +429,7 @@ export const bridgeState = {
   handleGrow,
   applyFit,
   handleMobileReset,
-  handleMobileOrder,
+  handlePhonePlace,
   handleReviewDone,
   handleBlockFlag,
   handleBlockStyle,

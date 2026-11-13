@@ -1,11 +1,11 @@
 /**
- * Tests of the pure layout functions in render.js: frameToCss (desktop), stackOrder (the mobile reading order) and mobilePlacementToCss (the mobile row grid, ADR-0019).
+ * Tests of the pure layout functions in render.js: frameToCss (desktop) and mobilePlacementToCss (the mobile row grid, ADR-0019); the phone's reading order is tested in phone-order.test.mjs.
  * Frames are in physical units: x/w in percent of the content band, y/h in px.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { frameToCss, stackOrder, mobilePlacementToCss, autoGrows, reorderMobileKey, anchorTargets, EDITOR_ONLY } = await engineImport('render.js');
+const { frameToCss, mobilePlacementToCss, autoGrows, anchorTargets, EDITOR_ONLY } = await engineImport('render.js');
 const { galleryBlock } = await engineImport('blocks/gallery.js');
 const { MOBILE_ROW, MOBILE_GAP } = await engineImport('migrate.js');
 
@@ -34,39 +34,6 @@ test('rotation gives a transform, no rotation gives none', () => {
 
 test('missing z gives zIndex 1', () => {
   assert.equal(frameToCss({ x: 0, y: 0, w: 10, h: 10 }).zIndex, '1');
-});
-
-const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: 10, h: 10 }, mobile: extra.mobile ?? null } });
-
-test('stackOrder: reading order by desktop y, then x', () => {
-  const order = stackOrder([blk('c', 100, 0), blk('a', 10, 50), blk('b', 10, 5)]);
-  assert.deepEqual(order.map((b) => b.id), ['b', 'a', 'c']);
-});
-
-test('stackOrder: hideMobile blocks are left out', () => {
-  const order = stackOrder([blk('pynt', 0, 0, { hideMobile: true }), blk('tekst', 10, 0)]);
-  assert.deepEqual(order.map((b) => b.id), ['tekst']);
-});
-
-test('stackOrder: decor does not filter (only animation meaning remains)', () => {
-  const order = stackOrder([blk('pynt', 0, 0, { decor: true }), blk('tekst', 10, 0)]);
-  assert.deepEqual(order.map((b) => b.id), ['pynt', 'tekst']);
-});
-
-test('stackOrder: mobileOrder overrides the sort key', () => {
-  const order = stackOrder([blk('sist', 0, 0, { mobileOrder: 500 }), blk('først', 100, 0)]);
-  assert.deepEqual(order.map((b) => b.id), ['først', 'sist']);
-});
-
-test('stackOrder: pinned blocks stay in the reading order', () => {
-  const order = stackOrder([blk('pinnet', 10, 0, { mobile: { x: 5, w: 50, row: 3, rows: 4 } }), blk('flyt', 50, 0)]);
-  assert.deepEqual(order.map((b) => b.id), ['pinnet', 'flyt']);
-});
-
-test('stackOrder: does not mutate the original order', () => {
-  const blocks = [blk('b', 20, 0), blk('a', 10, 0)];
-  stackOrder(blocks);
-  assert.deepEqual(blocks.map((b) => b.id), ['b', 'a']);
 });
 
 const desktop = { x: 20, y: 100, w: 40, h: 120, z: 2, rot: 0 };
@@ -118,40 +85,6 @@ test('mobilePlacementToCss: z and rot are inherited from desktop when the placem
   const css = mobilePlacementToCss(null, { ...desktop, z: 7, rot: 12 }, { autoGrow: true });
   assert.equal(css.transform, 'rotate(12deg)');
   assert.equal(css.zIndex, '7');
-});
-
-test('reorderMobileKey: down gives the midpoint between the next two', () => {
-  const blocks = [blk('a', 10, 0), blk('b', 50, 0), blk('c', 90, 0)];
-  assert.equal(reorderMobileKey(blocks, 'a', 1), 70);
-});
-
-test('reorderMobileKey: up past the first puts the key in front', () => {
-  const blocks = [blk('a', 10, 0), blk('b', 50, 0)];
-  assert.equal(reorderMobileKey(blocks, 'b', -1), 10 - 16);
-});
-
-test('reorderMobileKey: the ends give null', () => {
-  const blocks = [blk('a', 10, 0), blk('b', 50, 0)];
-  assert.equal(reorderMobileKey(blocks, 'a', -1), null);
-  assert.equal(reorderMobileKey(blocks, 'b', 1), null);
-});
-
-test('reorderMobileKey: pinned blocks take no part in the flow', () => {
-  const blocks = [blk('a', 10, 0), blk('pin', 50, 0, { mobile: { row: 3, rows: 4 } }), blk('b', 90, 0)];
-  // a skips the pinned block: the midpoint is computed against b and the end.
-  assert.equal(reorderMobileKey(blocks, 'a', 1), 90 + 16);
-  assert.equal(reorderMobileKey(blocks, 'pin', 1), null);
-});
-
-test('reorderMobileKey: equal neighbour keys give a notch past, never standstill', () => {
-  const blocks = [blk('a', 50, 0), blk('b', 50, 10), blk('c', 50, 20)];
-  const key = reorderMobileKey(blocks, 'a', 1);
-  assert.ok(key > 50, `the key (${key}) must pass the neighbour's 50`);
-});
-
-test('reorderMobileKey: an existing mobileOrder is used as the key', () => {
-  const blocks = [blk('a', 100, 0, { mobileOrder: 8 }), blk('b', 10, 0, { mobileOrder: 20 }), blk('c', 90, 0, { mobileOrder: 30 })];
-  assert.equal(reorderMobileKey(blocks, 'a', 1), 25);
 });
 
 test('the editor-only parts the push and the fit leave out are the ones base.css hides under .urd-fit-measure', async () => {

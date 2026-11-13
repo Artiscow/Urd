@@ -261,7 +261,7 @@ function onIframeLoad() {
     onCommands: (msg) => { paletteState.pluginCommands = msg.commands; },
     onMoveBlockSection: bridgeState.handleMoveBlockSection,
     onMobileReset: bridgeState.handleMobileReset,
-    onMobileOrder: bridgeState.handleMobileOrder,
+    onPhonePlace: bridgeState.handlePhonePlace,
     onReviewDone: bridgeState.handleReviewDone,
     onBlockFlag: bridgeState.handleBlockFlag,
     onBlockStyle: bridgeState.handleBlockStyle,

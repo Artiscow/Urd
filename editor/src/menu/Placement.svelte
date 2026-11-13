@@ -10,6 +10,7 @@
   import SliderRow from '../lib/rows/SliderRow.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
   import Choice from '../lib/Choice.svelte';
+  import SelectRow from '../lib/rows/SelectRow.svelte';
   import IconButton from '../lib/rows/IconButton.svelte';
   import FitMin from './FitMin.svelte';
   import SizeBounds from './SizeBounds.svelte';
@@ -18,10 +19,11 @@
   import { DOCK_OPTIONS } from './options.js';
   import AnchorField from '../lib/AnchorField.svelte';
   import { blockWords } from '$engine/anchor-model.js';
+  import { stackOrder, phoneOrderOf, phonePlaceKeeping, hasPhonePlace } from '$engine/phone-order.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone, setBlockPhonePlace } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** Sets the pinning's own settings; a setting given as undefined goes back to the standard and is removed. */
@@ -31,6 +33,31 @@
       for (const key of Object.keys(next)) if (next[key] === undefined) delete next[key];
       b.sticky = next;
     });
+  }
+
+  /** The selected block's section, as the page stores it. */
+  const blockSection = $derived(sections.find((s) => s.id === selectedBlock?.sectionId) ?? null);
+  /** The section's flowing blocks in the phone's order (phone-order.js): a block placed by hand stands on rows of its own. */
+  const phoneFlow = $derived(blockSection ? stackOrder(blockSection.blocks, phoneOrderOf(blockSection)).filter((b) => !Number.isFinite(b.frames.mobile?.row)) : []);
+  /** The block's exception in the phone order, where it holds: '' where it follows the section's rule. */
+  const phoneSide = $derived.by(() => {
+    const block = blockSection?.blocks.find((b) => b.id === selectedBlock.blockId);
+    if (!block || !hasPhonePlace(block, blockSection.blocks)) return '';
+    return typeof block.phonePlace.before === 'string' ? 'before' : 'after';
+  });
+  /** The other flowing blocks it can stand before or after, in the phone's order, each named by its kind and its first words. */
+  const phoneNeighbours = $derived(phoneFlow.filter((b) => b.id !== selectedBlock.blockId).map((b) => {
+    const words = blockWords(b);
+    return [b.id, words ? `${ed.blockLabel(b.type)}: ${words}` : ed.blockLabel(b.type)];
+  }));
+  /** Before or after: next to the block beside it, so nothing moves where that can be (phonePlaceKeeping), until another block is picked. */
+  function pickPhoneSide(side) {
+    if (!side) {
+      setBlockPhonePlace(null);
+      return;
+    }
+    const place = blockSection ? phonePlaceKeeping(blockSection.blocks, phoneOrderOf(blockSection), selectedBlock.blockId, side) : null;
+    if (place) setBlockPhonePlace(place);
   }
 
   /** The "let go" options for sticky: only the sections AFTER the block's
@@ -144,6 +171,18 @@
         onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
     {/if}
   </div>
+  <!-- Its place in the phone's order: as the section's rule puts it, or directly before or after a block it names; a block hidden on phones, a block placed by hand, or the only flowing block has none -->
+  {#if !selectedBlock.hideMobile && selectedBlock.mobileRow === null && phoneNeighbours.length}
+    <Setting own={Boolean(phoneSide)} reset={() => setBlockPhonePlace(null)}>
+      <Choice stack label={ta('lbl.phoneOrder')} title={ta('tip.phonePlace')} value={phoneSide}
+        options={[['', ta('opt.phonePlace.rule')], ['before', ta('opt.phonePlace.before')], ['after', ta('opt.phonePlace.after')]]}
+        onchange={(v) => pickPhoneSide(v)} />
+      {#if phoneSide}
+        <SelectRow label={ta('lbl.phonePlaceOf')} value={selectedBlock.phonePlace[phoneSide]} options={phoneNeighbours}
+          onchange={(id) => setBlockPhonePlace({ [phoneSide]: id })} />
+      {/if}
+    </Setting>
+  {/if}
 {/snippet}
 
 <!-- The height, the size and the narrow-screen fit stand open; the frame is a group, and the capabilities' cards follow it -->

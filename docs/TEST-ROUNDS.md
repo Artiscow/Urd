@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.12): the phone order's section rule and a block's place
+
+- [ ] The published home page at phone width: the first section reads its heading, text and button before the calendar beside them («Left first»)
+- [ ] A section's menu, «Size and grid», in both views: «Order on the phone» shows «Top first», «Left first» and «Right first», each drawn as the section's own blocks in its order; a press changes the phone at once, and «Top first» takes the section back to the order by the desktop's top
+- [ ] A section of three cards built from separate blocks (an icon over a text each): «Left first» keeps each card whole on the phone, and «Right first» reads the cards from the right
+- [ ] In the phone view, the section under the pointer shows each block's place as a number in its top right corner, hidden in Clean view; a block with a place of its own shows an amber number
+- [ ] A block's Placement, in both views: «Order on the phone» offers «Follows the section», «Before» and «After»; «Before» or «After» starts next to the block beside it, so nothing moves, and picking another block in the list moves it there on the phone; the reset takes it back to the section's order
+- [ ] The published contact page at phone width: the button stands after the line «Trykk på telefonnummeret for å ringe oss.»
+- [ ] The arrows on a flowing block's bar in the phone view, and Alt with the up or down arrow, move it one place each time, and a burst of keys is one step in History
+- [ ] A block placed after another stays after it when the section's rule changes, and when a block is added to the section
+
 ### Test batch (0.7.3.10): pinning on the phone
 
 - [ ] The published About page at phone width: the intro text and its button stay together below the menu while their section scrolls past, and let go at its bottom; at rest they stand where they did, and the blocks around them keep their places

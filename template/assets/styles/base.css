@@ -18695,6 +18695,36 @@ body.urd-mobile .urd-add-section {
    over the mobile layout. The flag is told by the top bar's badge and the
    review card in the mobile view; the section itself is never outlined. */
 
+/* The phone view's numbers (preview-edit.js enhanceSection): each block's place in the reading order, on the block's top right corner, shown on the section under the pointer and on the section at work; a block placed by its own exception in amber */
+.urd-preview .urd-phone-num {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 100000;
+  display: none;
+  box-sizing: border-box;
+  min-width: calc(18px * var(--urd-chrome-scale, 1));
+  height: calc(18px * var(--urd-chrome-scale, 1));
+  padding: 0 calc(4px * var(--urd-chrome-scale, 1));
+  border-radius: 999px;
+  background: var(--urd-admin-accent, #2cc7a8);
+  color: var(--urd-admin-accent-text, #052620);
+  font: 600 calc(10px * var(--urd-chrome-scale, 1)) / calc(18px * var(--urd-chrome-scale, 1)) system-ui, sans-serif;
+  text-align: center;
+  transform: translate(35%, -35%) rotate(calc(-1 * var(--urd-block-rot, 0deg)));
+  pointer-events: none;
+}
+
+.urd-preview .urd-section:hover .urd-phone-num,
+.urd-preview .urd-section-active .urd-phone-num {
+  display: block;
+}
+
+.urd-preview .urd-phone-num-own {
+  background: #e2b84a;
+  color: #1a1508;
+}
+
 /* Decor toggle on the block toolbar */
 .urd-preview .urd-edit-toolbar .urd-edit-decor.on {
   background: #e2b84a;
@@ -20336,6 +20366,7 @@ body.urd-mobile .urd-add-section {
 .urd-preview.urd-chrome-off .urd-edit-stop,
 .urd-preview.urd-chrome-off .urd-video-shield,
 .urd-preview.urd-chrome-off .urd-section-toolbar,
+.urd-preview.urd-chrome-off .urd-phone-num,
 .urd-preview.urd-chrome-off .urd-seam-floor,
 .urd-preview.urd-chrome-off .urd-smart-guide,
 .urd-preview.urd-chrome-off .urd-smart-gap,

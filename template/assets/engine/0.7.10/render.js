@@ -7,11 +7,10 @@
  *
  * Two viewports (opts.viewport):
  *  - 'desktop': absolute positioning from frames.desktop.
- *  - 'mobile': the row grid (ADR-0019), one path for all sections. Blocks
- *    without frames.mobile are auto-placed in reading order (stackOrder);
- *    blocks with row in frames.mobile are pinned to explicit row tracks.
- *    hideMobile blocks are omitted, text and auto-growing blocks get
- *    natural height, and the section height follows from the grid.
+ *  - 'mobile': the row grid (ADR-0019), one path for all sections.
+ *    Blocks without frames.mobile are auto-placed in reading order (stackOrder in phone-order.js, by the section's rule and its blocks' exceptions).
+ *    Blocks with row in frames.mobile are pinned to explicit row tracks.
+ *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP, mobileGapOf } from './migrate.js';
 import { pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, drawnBlock, NARROW_PX } from './push-model.js';
@@ -20,6 +19,7 @@ import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
 import { refreshSticky } from './sticky.js';
 import { pinsOnPhone, stuckBox, stickyLeads } from './sticky-model.js';
+import { stackOrder, phoneOrderOf } from './phone-order.js';
 import { t } from './i18n.js';
 import { isAnchorName } from './nav-model.js';
 
@@ -507,7 +507,7 @@ const phoneFitWatch = typeof ResizeObserver === 'function' ? new ResizeObserver(
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
-const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-block-ruler, dialog';
+const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -807,54 +807,6 @@ export function frameToCss(frame, floorPx = 0) {
 }
 
 /**
- * The reading order in the mobile row grid: sorted by desktop y, then x;
- * blocks with hideMobile are omitted. Pinned blocks (frames.mobile with row)
- * are INCLUDED, in the same reading order: auto-placement skips them, but
- * the DOM order carries the read-aloud order. Pure function, tested.
- *
- * @param {Array<object>} blocks The section's blocks
- * @returns {Array<object>} The blocks to render on mobile, in order
- */
-export function stackOrder(blocks) {
-  // mobileOrder (additive field) overrides the sort key and is read on the same scale as desktop y.
-  // Presets use it to keep cards together (icon + box) instead of the y sort splitting the cards into bands; blocks without the field sort by desktop y.
-  const key = (block) => block.mobileOrder ?? block.frames.desktop.y;
-  return blocks
-    .filter((block) => !block.hideMobile && block.frames?.desktop)
-    .slice()
-    .sort((a, b) => (key(a) - key(b)) || (a.frames.desktop.x - b.frames.desktop.x));
-}
-
-/**
- * New mobileOrder key for moving a block one step up or down in the
- * mobile reading order. Pure function, tested.
- *
- * The key is placed BETWEEN the neighbours' keys (midpoint), so no other
- * blocks need new keys. Only flowing blocks participate: pinned ones have
- * an explicit row and sit outside the flow order. Returns null when the
- * block already sits at the end (or does not flow).
- *
- * @param {Array<object>} blocks The section's blocks
- * @param {string} blockId The block to move
- * @param {number} dir -1 = earlier, 1 = later
- * @returns {number|null} New mobileOrder, or null when moving is impossible
- */
-export function reorderMobileKey(blocks, blockId, dir) {
-  const flow = stackOrder(blocks).filter((b) => !Number.isFinite(b.frames.mobile?.row));
-  const i = flow.findIndex((b) => b.id === blockId);
-  const j = i + dir;
-  if (i < 0 || j < 0 || j >= flow.length) return null;
-  const key = (b) => b.mobileOrder ?? b.frames.desktop.y;
-  const target = key(flow[j]);
-  const beyond = flow[j + dir] ? key(flow[j + dir]) : null;
-  const next = beyond === null ? target + dir * 16 : (target + beyond) / 2;
-  // Equal neighbour keys give a midpoint that moves nothing (the order is
-  // then decided by the x tiebreak); place the key a notch past instead.
-  const nudged = next === target ? target + dir * 0.01 : next;
-  return Math.round(nudged * 100) / 100;
-}
-
-/**
  * Whether a block's height on the phone follows its content in the row grid: text and the terms of sale always, and a type that says so with `autoGrow` on its definition, either a flag or a function of the block's props (a gallery grows in its grid views and keeps its frame's height as a ribbon).
  * @param {{type?: string, props?: object}} block
  * @param {{autoGrow?: boolean|((props: object) => boolean)}|undefined} def
@@ -1060,7 +1012,7 @@ export function renderSection(section, site, host, opts = {}) {
     // The blocks pinned on the phone while the page scrolls, by their pinning group (each alone without one), the group's first block in the section's order speaking for it as on the desktop (stickyLeads).
     const leads = stickyLeads(section.blocks);
     const stuck = new Map();
-    for (const block of stackOrder(section.blocks)) {
+    for (const block of stackOrder(section.blocks, phoneOrderOf(section))) {
       const el = document.createElement('div');
       const pinned = Number.isFinite(block.frames.mobile?.row);
       el.className = pinned ? 'urd-block urd-block-pinned' : 'urd-block urd-block-flow';

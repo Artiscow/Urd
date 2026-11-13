@@ -73,6 +73,21 @@ function followCopiedSpots(blocks, ids) {
 }
 
 /**
+ * A copied block's place in the phone order (`phonePlace`) follows the block it names to that block's new id; one naming a block left out of the copy is dropped, so the copy follows its section's rule.
+ * @param {object[]} blocks The copied blocks, with their new ids
+ * @param {Map<string, string>} ids Old id to new id
+ */
+function followCopiedPlaces(blocks, ids) {
+  for (const block of blocks) {
+    const place = block.phonePlace;
+    const side = typeof place?.before === 'string' ? 'before' : typeof place?.after === 'string' ? 'after' : null;
+    if (!place) continue;
+    if (side && ids.has(place[side])) block.phonePlace = { [side]: ids.get(place[side]) };
+    else delete block.phonePlace;
+  }
+}
+
+/**
  * Prepares a section template for insertion: deep clone with a new section id
  * and new block ids.
  * Geometry and props are left alone, apart from a link to one of the template's own spots, which follows the spot's new id.
@@ -88,6 +103,7 @@ export function cloneSectionForInsert(section, makeId) {
     liftBlockMobile(block);
   }
   followCopiedSpots(out.blocks ?? [], ids);
+  followCopiedPlaces(out.blocks ?? [], ids);
   // Templates saved before v3 carry the old Norwegian contract tokens (ADR-0021); renamed here since payloads bypass the page lift.
   // A map saved before page v5 carries its height as a setting, lifted into the frame, a calendar saved before page v6 its own size, lifted to the block, a gallery band saved before page v7 its height, lifted into the frame, and a text in a document design saved before page v8 becomes the terms block.
   liftContractTokens(out);
@@ -119,6 +135,7 @@ export function clonePageForInsert(page, makeId, { id, title }) {
     liftGalleryBands(section);
   }
   followCopiedSpots((out.sections ?? []).flatMap((section) => section.blocks ?? []), ids);
+  followCopiedPlaces((out.sections ?? []).flatMap((section) => section.blocks ?? []), ids);
   return out;
 }
 
@@ -142,6 +159,7 @@ export function cloneBlocksForInsert(blocks, makeId, { anchor = null } = {}) {
     liftBlockMobile(block);
   }
   followCopiedSpots(out, ids);
+  followCopiedPlaces(out, ids);
   liftContractTokens(out);
   liftMapHeights({ blocks: out });
   liftCalendarScale({ blocks: out });

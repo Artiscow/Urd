@@ -68,6 +68,7 @@
           "type": ["string", "null"],
           "description": "The preset the section was created from - provenance only, controls nothing"
         },
+        "phoneOrder": { "enum": ["top", "left", "right"], "default": "top", "description": "How the section's blocks are read on the phone (additive field from 0.7.3.12, phone-order.js): top first by their desktop top (or mobileOrder), or, where blocks stand beside each other on the desktop, column by column with the left or the right column first. Omitted = top" },
         "theme": {
           "type": "string",
           "description": "Ready-made section theme (role set, additive from v0.6): 'surface'/'accent'/'inverse' and others override the theme's color tokens on the section; absence = Standard (no override). Unknown roles are ignored. Norwegian role values from before v3 are lifted by the page migration (ADR-0021)."
@@ -180,6 +181,13 @@
         "entranceMobile": { "type": "boolean", "default": true, "description": "Whether the block's entrance animation plays on phones (additive field from 0.7.3.8): false leaves the block in its end state at phone width while the desktop keeps the entrance. Stored only as false." },
         "anchor": { "$ref": "#/$defs/anchorName", "description": "The block's name for links, drawn as a marker at the block's top that moves with it; the block's id is a target too. On a phone a block hidden there (hideMobile), and on the desktop a block shown on phones only (hideDesktop), lands on its section's top. A pasted or duplicated block arrives without it" },
         "mobileOrder": { "type": "number", "description": "Overrides the sort key in the mobile reading order (interpreted on the same scale as desktop y). Additive field from v0.5: the section templates use it to keep cards together." },
+        "phonePlace": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "before": { "$ref": "#/$defs/id" }, "after": { "$ref": "#/$defs/id" } },
+          "oneOf": [{ "required": ["before"] }, { "required": ["after"] }],
+          "description": "The block's exception in the phone's reading order (additive field from 0.7.3.12, phone-order.js): directly before or after the block with this id, wherever the section's rule puts that one. A block that is gone, hidden on phones, or forms a ring with others leaves the rule's place standing"
+        },
         "sticky": {
           "description": "Pin on scroll (additive field from v0.6; on the phone with phone: true from 0.7.3.10): the block is pinned at the top of the viewport and released when its own section (until: null) or a later section (until: section id) has been passed. With mode 'screen' the block instead docks to a fixed point in the viewport for the whole page",
           "oneOf": [

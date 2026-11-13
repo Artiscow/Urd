@@ -304,7 +304,7 @@ const freeSlot = (sec, per, x0, dx, y0, dy, w, h, yOff = 0) => {
   return { x: x0, y: maxBottom(sec) + 16, n: 0 };
 };
 
-/* Mobile stacking key: keeps a card's blocks together in the auto stacking (see stackOrder in render.js).
+/* Mobile stacking key: keeps a card's blocks together in the auto stacking (see stackOrder in phone-order.js).
    The key is read on the same scale as desktop y: column 0 sorts first, and the elements within the card keep their relative order. */
 const cardOrder = (baseY, col, idx) => baseY + col * 0.1 + idx * 0.01;
 

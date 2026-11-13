@@ -17,7 +17,7 @@
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
- *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder, coalesce? }  (a move in the mobile reading order; coalesce from the keys, a burst one undo step)
+ *                  { type: 'urd-phone-place', sectionId, blockId, phonePlace, coalesce? }  (a move in the phone's reading order, as the block's exception; coalesce from the keys, a burst one undo step)
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
@@ -27,7 +27,7 @@
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  */
-import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth } from './render.js';
+import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
@@ -38,6 +38,7 @@ import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
+import { stackOrder, phoneOrderOf, phonePlaceStep, hasPhonePlace } from './phone-order.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
@@ -1145,6 +1146,19 @@ export function enhanceSection(host, section, grid) {
   for (const el of host.querySelectorAll('.urd-block')) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
+  }
+  // In the phone view each block wears its place in the reading order, a block placed by its own exception in amber (phone-order.js).
+  if (isMobile()) {
+    stackOrder(section.blocks, phoneOrderOf(section)).forEach((block, i) => {
+      const el = host.querySelector(`.urd-block[data-block-id="${CSS.escape(block.id)}"]`);
+      if (!el) return;
+      el.querySelector(':scope > .urd-phone-num')?.remove();
+      const num = document.createElement('span');
+      num.className = hasPhonePlace(block, section.blocks) ? 'urd-phone-num urd-phone-num-own' : 'urd-phone-num';
+      num.textContent = String(i + 1);
+      num.setAttribute('aria-hidden', 'true');
+      el.appendChild(num);
+    });
   }
   // The active section and the selection must survive re-renders (e.g.
   // changes from the Properties panel, which re-renders the whole section).
@@ -4231,10 +4245,10 @@ function phoneArrow(event, ctx, el, dir) {
     // Alt with any arrow belongs to the selected block, so the browser's own Back and Forward do not fire.
     event.preventDefault();
     if (!dir[1]) return;
-    const order = reorderMobileKey(section.blocks, block.id, dir[1]);
-    if (order === null) return;
-    block.mobileOrder = order;
-    post({ type: 'urd-mobile-order', sectionId: section.id, blockId: block.id, mobileOrder: order, coalesce: true });
+    const place = phonePlaceStep(section.blocks, phoneOrderOf(section), block.id, dir[1]);
+    if (!place) return;
+    block.phonePlace = place;
+    post({ type: 'urd-phone-place', sectionId: section.id, blockId: block.id, phonePlace: place, coalesce: true });
     return;
   }
   event.preventDefault();
@@ -4677,14 +4691,22 @@ function pasteClipboard(source = clipboard) {
   const r2 = (v) => Math.round(v * 100) / 100;
   const frames = source.blocks.map((b) => b.frames.desktop);
   const { dx, dy } = groupDelta(frames, 2, 16);
+  const ids = new Map();
   const blocks = source.blocks.map((b) => {
     const copy = JSON.parse(JSON.stringify(b));
     copy.id = makeId('blk');
+    ids.set(b.id, copy.id);
     // A name belongs to one spot on the page, so the copy arrives without it.
     delete copy.anchor;
     copy.frames.desktop = { ...copy.frames.desktop, x: r2(copy.frames.desktop.x + dx), y: copy.frames.desktop.y + dy };
     return copy;
   });
+  // A copy's place in the phone order follows a block copied with it; one naming another block stays in its own section and is dropped in another.
+  for (const copy of blocks) {
+    const side = typeof copy.phonePlace?.before === 'string' ? 'before' : typeof copy.phonePlace?.after === 'string' ? 'after' : null;
+    if (side && ids.has(copy.phonePlace[side])) copy.phonePlace = { [side]: ids.get(copy.phonePlace[side]) };
+    else if (copy.phonePlace && (!side || source.sectionId !== sectionId)) delete copy.phonePlace;
+  }
   const minBottom = Math.max(...blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
   post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
   // The next paste continues from the pasted content (no stacking on top of each other).
@@ -4898,9 +4920,8 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.dataset.cap = ta('canvas.cap.move');
   barBody.appendChild(moveHandle);
 
-  // Flowing mobile block: arrows that move it in the reading order
-  // (writes mobileOrder). Pinned blocks do not take part in the flow and
-  // get ↺ instead.
+  // Flowing mobile block: arrows that move it in the reading order (writes its exception, phonePlace).
+  // Pinned blocks do not take part in the flow and get ↺ instead.
   if (mobile && !Number.isFinite(block.frames.mobile?.row)) {
     for (const [svg, dir, key] of [[ORDER_UP_SVG, -1, 'canvas.orderUp'], [ORDER_DOWN_SVG, 1, 'canvas.orderDown']]) {
       const btn = document.createElement('button');
@@ -4908,10 +4929,10 @@ function enhanceBlock(el, block, section, grid, host) {
       btn.title = ta(key);
       btn.dataset.cap = ta(dir < 0 ? 'canvas.cap.earlier' : 'canvas.cap.later');
       btn.addEventListener('click', () => {
-        const order = reorderMobileKey(section.blocks, block.id, dir);
-        if (order === null) return;
-        block.mobileOrder = order;
-        post({ type: 'urd-mobile-order', sectionId: section.id, blockId: block.id, mobileOrder: order });
+        const place = phonePlaceStep(section.blocks, phoneOrderOf(section), block.id, dir);
+        if (!place) return;
+        block.phonePlace = place;
+        post({ type: 'urd-phone-place', sectionId: section.id, blockId: block.id, phonePlace: place });
       });
       barBody.appendChild(btn);
     }

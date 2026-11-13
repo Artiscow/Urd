@@ -3479,6 +3479,73 @@
     text-overflow: ellipsis;
   }
 
+  /* A section's order on the phone (SectionMenu.svelte): each rule a card of the section's own blocks in its order, a picture as a tall block, a heading as a thick line, text as a thin one and a button as a short pill */
+  .po-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    margin-top: 0.3rem;
+  }
+
+  .po-card:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.4rem 0.35rem 0.3rem;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .po-card.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    border-color: var(--urd-color-accent, #7c5cff);
+    box-shadow: inset 0 0 0 1px var(--urd-color-accent, #7c5cff);
+  }
+
+  .po-strip {
+    display: grid;
+    gap: 2px;
+    justify-items: start;
+  }
+
+  .po-strip i {
+    display: block;
+    width: 100%;
+    height: 3px;
+    border-radius: 1.5px;
+    background: color-mix(in srgb, currentColor 38%, transparent);
+  }
+
+  .po-strip .po-head {
+    width: 70%;
+    height: 4px;
+    background: color-mix(in srgb, currentColor 85%, transparent);
+  }
+
+  .po-strip .po-pic {
+    height: 11px;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 70%, transparent);
+  }
+
+  .po-strip .po-btn {
+    width: 40%;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--urd-color-accent, #7c5cff);
+  }
+
+  .po-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .token-input {
     width: 5rem;
     text-align: right;

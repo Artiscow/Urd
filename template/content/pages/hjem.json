@@ -12,6 +12,7 @@
     {
       "id": "sec-46b91629",
       "version": 1,
+      "phoneOrder": "left",
       "preset": "hero",
       "size": {
         "minHeight": "1264px"
