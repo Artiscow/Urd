@@ -338,6 +338,32 @@ export function fitFloorPx(block, designWidth) {
 }
 
 /**
+ * Whether a block shrinks on a phone (0.7.3.9): one set to «shrink», but not the types that shrink by their frame (FIT_BY_WIDTH) and not the calendar, which draws its phone view there (calPhoneView in calendar-designs.js).
+ * «Both» wraps on the phone, since it fits a design height the row grid has not.
+ * @param {{type?: string, fit?: string}} block
+ * @returns {boolean}
+ */
+export function shrinksOnPhone(block) {
+  return block?.fit === 'shrink' && !FIT_BY_WIDTH.has(block.type) && block.type !== 'calendar';
+}
+
+/**
+ * The share a block that shrinks on a phone is drawn at there (shrinksOnPhone), which its drawn scale multiplies: its width in the row grid over its width at the design width, so its content keeps the lines it has there, never above 1 and never under its floor (fitMin).
+ * 1 for every other block, and where nothing has a design width (a full-width site or section).
+ * @param {{type?: string, fit?: string, fitMin?: number, frames?: {desktop?: {w?: number}}}} block
+ * @param {number} width The block's width on the phone, in px
+ * @param {number} designWidth The width in px the section's canvas has at the design width (render.js `_urdDesignW`)
+ * @returns {number}
+ */
+export function phoneFitZoom(block, width, designWidth) {
+  if (!shrinksOnPhone(block)) return 1;
+  const w = Number(block.frames?.desktop?.w);
+  if (!(width > 0) || typeof designWidth !== 'number' || !(designWidth > 0) || !Number.isFinite(w) || w <= 0) return 1;
+  const ratio = width / ((w / 100) * designWidth);
+  return Math.round(Math.max(clampFitMin(block.fitMin), Math.min(1, ratio)) * 1000) / 1000;
+}
+
+/**
  * How much of the width two blocks must share, in percent of the section, for one to push the other: frames that only touch, or overlap by a rounding, stand side by side.
  */
 export const PUSH_ACROSS_MIN = 0.1;

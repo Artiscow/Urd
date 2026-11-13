@@ -641,7 +641,7 @@ export default {
     'lbl.textBoxToggle': 'Textruta (kort med bakgrund)',
     'lbl.fit': 'Vid smalare skärm',
     'lbl.imageFit': 'Anpassning',
-    'tip.fit': 'Vad blocket gör när fönstret är smalare än innehållsbredden. Innehållsblock: Bryt innehållet låter det gå över flera rader och trycker blocken nedanför nedåt; Krymp innehållet gör det precis så mycket mindre som behövs, ner till minsta skala, och bryter först under det. Bild, video, form och ikon: Följ bredden låter ramen krympa med arbetsytan; Behåll en minsta storlek stoppar den vid minsta skala av designbredden. Gäller inte mobilvyn.',
+    'tip.fit': 'Vad blocket gör när fönstret är smalare än innehållsbredden. Innehållsblock: Bryt innehållet låter det gå över flera rader och trycker blocken nedanför nedåt; Krymp innehållet gör det precis så mycket mindre som behövs, ner till minsta skala, och bryter först under det. Bild, video, form och ikon: Följ bredden låter ramen krympa med arbetsytan; Behåll en minsta storlek stoppar den vid minsta skala av designbredden. På en telefon behåller Krymp innehållet raderna det har vid innehållsbredden, och resten följer telefonens bredd.',
     'lbl.fitMin': 'Minsta skala',
     'tip.fitMin': 'Hur litet elementet får bli, i procent av storleken det har på innehållsbredden.',
     'lbl.textColor': 'Textfärg',

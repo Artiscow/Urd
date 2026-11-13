@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.9): «Shrink» keeps its lines on the phone
+
+- [ ] The published home page at 390 px: the text «Urd is still under construction…» breaks its lines where it does at a desktop width, drawn smaller
+- [ ] The same at 320 px or narrower: the lines stay until the text reaches its smallest scale (60 % by default), and only then wrap
+- [ ] Turn the phone, or drag the editor's phone wider: the text grows or shrinks with the width and keeps its lines
+- [ ] The editor's phone view draws the text as the published page does at that width
+- [ ] Set the block's «On narrower screens» to «Both», then «Wrap»: on the phone it wraps in both
+- [ ] The About page's picture set to «Shrink» follows the phone's width as before
+- [ ] A calendar set to «Shrink» shows its «Design on a phone» on a phone, not its desktop design drawn smaller
+- [ ] A collection or product block set to «Shrink» stands at its reserved height on a phone while it loads, with no jump as its entries arrive
+- [ ] On the desktop a narrower window shrinks the text as before, and the page at full width is unchanged
+- [ ] The tooltip of «On narrower screens» in nb, en-GB and tr ends with what happens on a phone
+
 ### Test batch (0.7.3.8): only on phones, no animation on phones, every setting in both views, the play button, calendars without notes, and a reload that keeps your place
 
 - [ ] Contact page: the line «Trykk på telefonnummeret for å ringe oss.» is absent on the desktop canvas and on the published page at a desktop width, and stands in the phone view and on the published page at phone width

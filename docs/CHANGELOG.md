@@ -8,6 +8,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.9 - «Shrink» keeps a block's lines on the phone - 13 November 2026
+
+- A block set to «Shrink» kept its lines on a narrower desktop window but wrapped like any other on the phone (BACKLOG 0.7.3.9). On the phone its content is drawn at its width there over its width at the design width, down to its smallest scale, so it keeps the lines it has at the design width, and the zoom follows the width as it changes (`shrinksOnPhone` and `phoneFitZoom` in push-model.js, `zoomOnPhone` in render.js); «Both» wraps there, since it fits a design height the row grid has not.
+- The tooltip of «On narrower screens» in nb, en-GB, tr and the Swedish pack, the schema, SCHEMA.md, ARCHITECTURE.md, ADR-0024 decision 6 (amended), the guides in en-GB, nb and tr and the comparison say what happens on the phone.
+
+The independent review before the commit found these, all fixed:
+
+1. A block that fetches its content and shrinks on the phone held a loading reserve its zoom drew too short, so it jumped as its entries arrived. The reserve is written again at the block's zoom.
+2. A calendar set to «Shrink» measured its width through the zoom and drew its desktop design smaller instead of its «Design on a phone». The calendar never shrinks on the phone.
+3. ADR-0024 still said the shrink is desktop only. Decision 6 is rewritten with the phone, the earlier text kept in amended/.
+4. The rule's comment said it multiplies the drawn scale, and the observer's comment that the zoom runs inside its notification. They say what the code does.
+
 ### 0.7.3.8 - Blocks only on phones and no entrance animation on phones; Bug Fixes: every setting in both views, a play button, calendars without notes, and a reload that keeps your place - 13 November 2026
 
 - A block could be hidden on phones but not shown on phones alone (BACKLOG 0.7.3.8). «Only on phones» (`hideDesktop`, additive) leaves a block out of the desktop page, its push and its section's height, a link to its name landing on its section's top there, and the desktop section bar counts such blocks with an eye on each to show it again; the Contact page has a phone-only line.

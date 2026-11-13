@@ -14,7 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP, mobileGapOf } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, drawnBlock, NARROW_PX } from './push-model.js';
+import { pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -367,6 +367,56 @@ function applyZoom(child, zoom) {
   const z = Math.round(zoom * 1000) / 1000;
   child.style.zoom = z === 1 ? '' : String(z);
 }
+
+/**
+ * A block's zoom on the phone: its drawn scale (ADR-0025 decision 6), and for a block that shrinks there (shrinksOnPhone in push-model.js) the share that keeps the lines it has at the design width (phoneFitZoom), read again as its width changes (a phone turned, the editor's phone made wider).
+ * @param {HTMLElement} el The block element, standing in the row grid
+ * @param {object} block
+ * @param {number} designW The section's design width in px, 0 where the block has none to follow
+ */
+function zoomOnPhone(el, block, designW) {
+  const child = contentChild(el);
+  if (!child) return;
+  if (!shrinksOnPhone(block) || !(designW > 0)) {
+    el._urdPhoneFit = null;
+    const size = drawnScale(block);
+    if (size !== 1) applyZoom(child, size);
+    return;
+  }
+  el._urdPhoneFit = { block, designW, width: 0 };
+  fitOnPhone(el);
+  phoneFitWatch?.observe(el);
+}
+
+/** Zooms a phone block set to shrink to its width, when its width has changed since it was last zoomed. */
+function fitOnPhone(el) {
+  const fit = el._urdPhoneFit;
+  const child = fit ? contentChild(el) : null;
+  const width = el.clientWidth;
+  if (!child || !(width > 0) || width === fit.width) return;
+  fit.width = width;
+  const zoom = phoneFitZoom(fit.block, width, fit.designW) * drawnScale(fit.block);
+  applyZoom(child, zoom);
+  // The loading reserve stands inside the zoomed content, so it is written in the content's own px.
+  const loadingH = mobileLoadingHeight(fit.block);
+  if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / zoom)}px`);
+}
+
+/* The phone blocks that shrink, each zoomed again in the next frame as its width changes; one observer for every block, and the zoom waits for the frame since it changes the block's height, which a zoom inside the notification would report back to it. */
+const phoneFitWatch = typeof ResizeObserver === 'function' ? new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    const el = entry.target;
+    if (!el.isConnected) {
+      phoneFitWatch.unobserve(el);
+      continue;
+    }
+    if (el._urdPhoneFitFrame) continue;
+    el._urdPhoneFitFrame = requestAnimationFrame(() => {
+      el._urdPhoneFitFrame = 0;
+      fitOnPhone(el);
+    });
+  }
+}) : null;
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
@@ -946,7 +996,8 @@ export function renderSection(section, site, host, opts = {}) {
       // A block that fetches its content stands at the height the editor
       // measured at the phone width while it loads (0.7.21.7, base.css).
       // The reserve stands inside the content, which the block's drawn
-      // scale zooms, so it is written in the content's own px.
+      // scale zooms, so it is written in the content's own px; a block
+      // that shrinks on the phone writes it again at its zoom (fitOnPhone).
       const loadingH = mobileLoadingHeight(block);
       if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / drawnScale(block))}px`);
       // Screen docking applies on mobile too: sticky.js docks the block
@@ -960,11 +1011,9 @@ export function renderSection(section, site, host, opts = {}) {
         el.dataset.stickyGroup = block.sticky.group ?? '';
       }
       renderBlock(Urd, el, block, ctx, narrow);
-      // The block's drawn scale applies on the phone too (ADR-0025
-      // decision 6); the shrink does not, since the row grid wraps.
-      const sized = drawnScale(block) !== 1 ? contentChild(el) : null;
-      if (sized) applyZoom(sized, drawnScale(block));
       flow.appendChild(el);
+      // A block drawing a phone design of its own has no design width to keep its lines from.
+      zoomOnPhone(el, block, narrow ? 0 : canvas._urdDesignW);
       if (typeof block.id === 'string' && block.id) placeBlockSpots(el, block, spots.blocks.get(block.id));
     }
     host.style.minHeight = 'auto';
@@ -1169,8 +1218,12 @@ function redrawForWidth(el) {
     console.warn(`Urd: block '${state.type}' failed to render`, err);
     renderPlaceholder(el, state.type);
   }
-  const sized = drawnScale(state.block) !== 1 ? contentChild(el) : null;
-  if (sized) applyZoom(sized, drawnScale(state.block));
+  if (state.ctx.viewport === 'mobile') {
+    zoomOnPhone(el, state.block, narrow ? 0 : el.closest('.urd-canvas')?._urdDesignW ?? 0);
+  } else {
+    const sized = drawnScale(state.block) !== 1 ? contentChild(el) : null;
+    if (sized) applyZoom(sized, drawnScale(state.block));
+  }
   const host = el.closest('.urd-section');
   for (const child of el.children) if (!child.matches(BLOCK_CHROME)) host?._urdPushRo?.observe(child);
   if (host?._urdPushSection) schedulePush(host);

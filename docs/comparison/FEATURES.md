@@ -2074,7 +2074,7 @@ Urd has two layouts by decision ([ADR-0019](../adr/0019-synced-mobile-model.md))
 | Cascade direction | WF, WS, WH, FR, FS, WT | Desktop-down; WF larger cascade up; WT min- or max-width choice | Missing | Not taken: two breakpoints by decision (ADR-0019) |
 | Non-width media conditions | WT | Colour scheme, motion, orientation, pointer | Missing | Not taken: two breakpoints by decision (ADR-0019) |
 | Auto layout or stacks | FR, FS, TI, WS, SQ, DU | Content-driven layout | Missing | Not taken: two breakpoints by decision (ADR-0019) |
-| Scale-proportionally behaviours | WS, TI | Scale, Fixed; auto-scaling | Partial: «Shrink the content» zooms a block in proportion below the design width, and «Size» at any width (0.7.21.5); the shrink does not work on the phone | 0.7.3 (shrink on the phone); Not taken: a page-wide zoom (ADR-0024 decision 5) |
+| Scale-proportionally behaviours | WS, TI | Scale, Fixed; auto-scaling | Partial: «Shrink the content» zooms a block in proportion below the design width, on the phone too (Delivered 0.7.3.9), and «Size» at any width (0.7.21.5); no auto-scaling of a whole page | Not taken: a page-wide zoom (ADR-0024 decision 5) |
 | Mobile-only elements | WH, ST, SQ | Add in the mobile view; mobile overrides | Partial: «Only on phones» on any block, set in either view, the desktop section bar listing such blocks (Delivered 0.7.3.8); a new block is still added in the desktop view | - |
 | Single-column mobile conversion | RM, CA | Single column; cropped or expanded views | Has: the synced row grid | - |
 | Responsive AI fix | WS, WH, FR, FS | One-click responsive; Fix layout; agent | Missing | Not taken |

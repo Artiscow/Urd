@@ -1522,7 +1522,7 @@ export default {
     'lbl.textAlign': 'Metin hizalama',
     'lbl.textBoxToggle': 'Metin kutusu (arka planlı kart)',
     'lbl.fit': 'Daha dar ekranlarda',
-    'tip.fit': 'Pencere içerik genişliğinden dar olduğunda blok ne yapar. İçerik blokları: İçeriği sar, metnin daha fazla satıra yayılmasına izin verir ve alttaki blokları aşağı iter; İçeriği küçült, içeriğin tamamını tuvalle birlikte küçültür, böylece satırlar olduğu gibi kalır, en küçük ölçeğe kadar; Küçült ve sar, yalnızca yüksekliğin gerektirdiği kadar küçültür ve metnin sarılmasına izin verir. Görsel, video, şekil ve simge: Genişliği izle, çerçevenin tuvalle küçülmesine izin verir; En küçük bir boyut koru, onu tasarım genişliğinin en küçük ölçeğinde durdurur. Telefon görünümünde uygulanmaz.',
+    'tip.fit': 'Pencere içerik genişliğinden dar olduğunda blok ne yapar. İçerik blokları: İçeriği sar, metnin daha fazla satıra yayılmasına izin verir ve alttaki blokları aşağı iter; İçeriği küçült, içeriğin tamamını tuvalle birlikte küçültür, böylece satırlar olduğu gibi kalır, en küçük ölçeğe kadar; Küçült ve sar, yalnızca yüksekliğin gerektirdiği kadar küçültür ve metnin sarılmasına izin verir. Görsel, video, şekil ve simge: Genişliği izle, çerçevenin tuvalle küçülmesine izin verir; En küçük bir boyut koru, onu tasarım genişliğinin en küçük ölçeğinde durdurur. Telefonda İçeriği küçült, içerik genişliğindeki satırlarını korur; geri kalanlar telefonun genişliğini izler.',
     'lbl.fitMin': 'En küçük ölçek',
     'tip.fitMin': 'Öğenin, içerik genişliğindeki boyutunun yüzdesi olarak ne kadar küçülebileceği.',
     'lbl.scale': 'Boyut',

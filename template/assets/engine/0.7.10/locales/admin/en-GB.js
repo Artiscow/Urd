@@ -1522,7 +1522,7 @@ export default {
     'lbl.textAlign': 'Text alignment',
     'lbl.textBoxToggle': 'Text box (card with background)',
     'lbl.fit': 'On narrower screens',
-    'tip.fit': 'What the block does when the window is narrower than the content width. Content blocks: Wrap the content lets the text run over more lines and pushes the blocks below down; Shrink the content makes the whole content smaller in step with the canvas, so the lines stay as they are, down to the smallest scale; Shrink and wrap makes it only as much smaller as the height needs and lets the text wrap. Image, video, shape and icon: Follow the width lets the frame shrink with the canvas; Keep a smallest size stops it at the smallest scale of the design width. Does not apply to the phone view.',
+    'tip.fit': 'What the block does when the window is narrower than the content width. Content blocks: Wrap the content lets the text run over more lines and pushes the blocks below down; Shrink the content makes the whole content smaller in step with the canvas, so the lines stay as they are, down to the smallest scale; Shrink and wrap makes it only as much smaller as the height needs and lets the text wrap. Image, video, shape and icon: Follow the width lets the frame shrink with the canvas; Keep a smallest size stops it at the smallest scale of the design width. On a phone, Shrink the content keeps the lines it has at the content width, and the rest follow the phone\'s width.',
     'lbl.fitMin': 'Smallest scale',
     'tip.fitMin': 'How small the element may become, as a percentage of its size at the content width.',
     'lbl.scale': 'Size',

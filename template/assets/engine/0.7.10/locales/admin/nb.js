@@ -1525,7 +1525,7 @@ export default {
     'lbl.textAlign': 'Tekstjustering',
     'lbl.textBoxToggle': 'Tekstboks (kort med bakgrunn)',
     'lbl.fit': 'Ved smalere skjerm',
-    'tip.fit': 'Hva blokken gjør når vinduet er smalere enn innholdsbredden. Innholdsblokker: Bryt innholdet lar teksten gå over flere linjer og dytter blokkene under nedover; Krymp innholdet gjør hele innholdet mindre i takt med lerretet, så linjene blir som de er, ned til minste skala; Krymp og bryt gjør det bare så mye mindre som høyden krever og lar teksten brekke om. Bilde, video, form og ikon: Følg bredden lar rammen krympe med lerretet; Behold en minste størrelse stopper den ved minste skala av designbredden. Gjelder ikke telefonvisningen.',
+    'tip.fit': 'Hva blokken gjør når vinduet er smalere enn innholdsbredden. Innholdsblokker: Bryt innholdet lar teksten gå over flere linjer og dytter blokkene under nedover; Krymp innholdet gjør hele innholdet mindre i takt med lerretet, så linjene blir som de er, ned til minste skala; Krymp og bryt gjør det bare så mye mindre som høyden krever og lar teksten brekke om. Bilde, video, form og ikon: Følg bredden lar rammen krympe med lerretet; Behold en minste størrelse stopper den ved minste skala av designbredden. På telefon beholder Krymp innholdet linjene det har ved innholdsbredden, og resten følger telefonens bredde.',
     'lbl.fitMin': 'Minste skala',
     'tip.fitMin': 'Hvor lite elementet får bli, i prosent av størrelsen det har på innholdsbredden.',
     'lbl.scale': 'Størrelse',

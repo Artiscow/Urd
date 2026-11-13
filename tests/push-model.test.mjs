@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -372,3 +372,30 @@ test('a phone design: drawn in its design\'s place while the block is narrow, an
   assert.equal(drawnBlock(terms, true).props.design, 'questions', 'the layout rules read the design drawn');
   assert.equal(followsContent(drawnBlock(terms, true)), true, 'terms drawn as questions follow their closed rows');
 });
+
+test('phoneFitZoom: a block set to shrink keeps on the phone the lines it has at the design width, down to its floor', () => {
+  // A text half the width of a 1200 px design is 600 px wide there; on a phone 351 px wide it is drawn at 351 / 600.
+  const text = (extra = {}) => ({ type: 'text', fit: 'shrink', fitMin: 0.3, frames: { desktop: { w: 50 } }, ...extra });
+  assert.equal(phoneFitZoom(text(), 351, 1200), 0.585);
+  assert.equal(phoneFitZoom(text({ fitMin: 0.8 }), 351, 1200), 0.8, 'never under the floor');
+  assert.equal(phoneFitZoom(text(), 700, 1200), 1, 'never above full size');
+  assert.equal(phoneFitZoom(text({ fitMin: undefined }), 300, 1200), 0.6, 'the standard floor');
+  assert.equal(phoneFitZoom(text({ fit: 'both' }), 351, 1200), 1, '«both» fits a design height the phone has not, so it wraps there');
+  assert.equal(phoneFitZoom(text({ fit: undefined }), 351, 1200), 1, 'a block that wraps');
+  assert.equal(phoneFitZoom({ ...text(), type: 'image' }, 351, 1200), 1, 'the types that shrink by their frame');
+  assert.equal(phoneFitZoom(text(), 351, 0), 1, 'no design width to follow');
+  assert.equal(phoneFitZoom(text({ frames: {} }), 351, 1200), 1, 'no desktop frame');
+  assert.equal(phoneFitZoom(text(), 0, 1200), 1, 'not laid out yet');
+  assert.equal(phoneFitZoom({ ...text(), type: 'calendar' }, 351, 1200), 1, 'the calendar draws its phone view');
+});
+
+test('shrinksOnPhone: «shrink» on a block whose content can wrap, but not on the frame-sized types or the calendar, and never «both»', () => {
+  assert.equal(shrinksOnPhone({ type: 'text', fit: 'shrink' }), true);
+  assert.equal(shrinksOnPhone({ type: 'collection', fit: 'shrink' }), true);
+  for (const type of FIT_BY_WIDTH) assert.equal(shrinksOnPhone({ type, fit: 'shrink' }), false, type);
+  assert.equal(shrinksOnPhone({ type: 'calendar', fit: 'shrink' }), false, 'its phone view stands in its place on a phone');
+  assert.equal(shrinksOnPhone({ type: 'text', fit: 'both' }), false);
+  assert.equal(shrinksOnPhone({ type: 'text' }), false);
+  assert.equal(shrinksOnPhone(null), false);
+});
+
