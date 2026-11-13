@@ -3537,13 +3537,59 @@
     background: var(--urd-color-accent, #7c5cff);
   }
 
+  /* A phone layout preset drawn small (section/PhoneSectionRows.svelte): the eight cell columns, each cell with its blocks' marks as the rule's cards draw them */
+  .pl-sketch {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    align-content: start;
+    gap: 2px;
+    min-height: 2.6rem;
+  }
+
+  .pl-sketch > span {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+  }
+
+  .pl-sketch i {
+    display: block;
+    height: 3px;
+    border-radius: 1.5px;
+    background: color-mix(in srgb, currentColor 38%, transparent);
+  }
+
+  .pl-sketch .po-head {
+    width: 70%;
+    height: 4px;
+    background: color-mix(in srgb, currentColor 85%, transparent);
+  }
+
+  .pl-sketch .po-pic {
+    height: 11px;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 70%, transparent);
+  }
+
+  .pl-sketch .po-btn {
+    width: 45%;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--urd-color-accent, #7c5cff);
+  }
+
+  .po-card:disabled:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* A card's name in full, over two lines where it needs them */
   .po-name {
     font-size: 0.72rem;
     font-weight: 600;
+    line-height: 1.2;
     text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-wrap: balance;
+    overflow-wrap: break-word;
   }
 
   /* The Phone panel's list (panels/PhonePanel.svelte): one line per block in its phone order, a stack's head over its blocks set in a step, the stack drawn as one tinted card */
@@ -3572,6 +3618,12 @@
 
   .pp-row:hover {
     background: color-mix(in srgb, var(--urd-color-accent) 10%, transparent);
+  }
+
+  /* The row of the block under the mouse on the canvas */
+  .pp-row.pp-hovered {
+    background: color-mix(in srgb, var(--urd-color-accent) 18%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--urd-color-accent) 55%, transparent);
   }
 
   .pp-row:focus-visible {

@@ -20083,18 +20083,70 @@ body.urd-mobile .urd-add-section {
   border-radius: 5px;
 }
 
+/* A phone layout preset drawn small (preview-edit.js buildPhoneLayoutCards): the phone's eight cell columns, each cell with its blocks' marks, a picture as a tall block, a heading as a thick line, text as a thin one and a button as a short pill */
+.urd-preview .urd-layout-thumb.urd-phone-sketch {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  align-content: start;
+  gap: 3px;
+  aspect-ratio: 3 / 4;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+.urd-preview .urd-phone-sketch > span {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+}
+
+.urd-preview .urd-phone-sketch i {
+  display: block;
+  height: 3px;
+  border-radius: 1.5px;
+  background: color-mix(in srgb, var(--urd-color-text) 38%, transparent);
+}
+
+.urd-preview .urd-phone-sketch .urd-sketch-head {
+  width: 70%;
+  height: 4px;
+  background: color-mix(in srgb, var(--urd-color-text) 80%, transparent);
+}
+
+.urd-preview .urd-phone-sketch .urd-sketch-pic {
+  height: 14px;
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 70%, transparent);
+}
+
+.urd-preview .urd-phone-sketch .urd-sketch-btn {
+  width: 45%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--urd-admin-accent, #5f6a75);
+}
+
+/* A preset that does not fit the section stands greyed */
+.urd-preview .urd-layout-card:disabled,
+.urd-preview .urd-layout-card:disabled:hover {
+  border-color: color-mix(in srgb, var(--urd-color-text) 14%, transparent);
+  background: transparent;
+  opacity: 0.4;
+  cursor: default;
+}
+
 .urd-preview .urd-layout-thumb svg {
   display: block;
   width: 100%;
   height: 100%;
 }
 
+/* A layout's name in full, over two lines where it needs them */
 .urd-preview .urd-layout-name {
   font-size: 10.5px;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
+  text-wrap: balance;
+  overflow-wrap: break-word;
 }
 
 /* Block search in the + New block menu: a field at the top.

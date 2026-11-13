@@ -40,7 +40,7 @@ test('stepKind: each kind of change named in words with an icon, a page change m
   assert.deepEqual(stepKind('edit:blk-1', { typed: true }), { labelKey: 'history.step.typed', icon: 'text', onPage: true });
   assert.equal(stepKind('edit:blk-1').labelKey, 'history.step.block');
   // The phone's own choices are phone changes: hiding, showing only there, its entrance and its pinning.
-  for (const key of ['hide-mobile', 'hide-desktop', 'edit:entrance-mobile-blk-1', 'edit:sticky-phone-blk-1', 'phone-place', 'edit:phone-place-blk-1', 'edit:phone-order:sec-1', 'phone-order', 'phone-custom', 'edit:phone-step-blk-1', 'edit:phone-cells-blk-1', 'mobile-order']) assert.equal(stepKind(key).labelKey, 'history.step.phone', key);
+  for (const key of ['hide-mobile', 'hide-desktop', 'edit:entrance-mobile-blk-1', 'edit:sticky-phone-blk-1', 'phone-place', 'edit:phone-place-blk-1', 'edit:phone-order:sec-1', 'phone-order', 'phone-custom', 'edit:phone-step-blk-1', 'edit:phone-cells-blk-1', 'phone-layout', 'mobile-order']) assert.equal(stepKind(key).labelKey, 'history.step.phone', key);
   assert.equal(stepKind('nav').labelKey, 'history.step.nav');
   assert.equal(stepKind('edit:nav-style-padY').labelKey, 'history.step.nav');
   assert.equal(stepKind('theme').onPage, false);

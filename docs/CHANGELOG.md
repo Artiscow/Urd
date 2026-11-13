@@ -8,6 +8,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.14.2 - Phone layout presets: a starting point for the phone's cells, and the list lit from the canvas - 13 November 2026
+
+- The phone's cells could only be filled block by block (BACKLOG 0.7.3.14). «Phone layout» on the phone view's section bar, and the same cards in the section's phone settings, offer «Two to a line», «Pairs», «Alternate sides», «One wide then two», «Big and two» and «One column», each drawn with the section's own blocks, those that fit first and the others greyed; a press fills the cells as a starting point, one undo step (the editor-only phone-layouts.js, `urd-phone-layout`).
+- «Alternate sides» reads every other picture first, through the order's own exceptions or custom order, since a block later in the order never stands left of an earlier one on its line.
+- The design pass: «Big and two» is built; «Staggered» and a preset per band are not, and the owner's own preset stands in Suggestions (BACKLOG 0.7.3.14).
+- The Phone tab's list did not show which row the canvas's block is (test finding). A block under the mouse on the canvas lights its row (`urd-hover-block`).
+- Bug Fix: the names on the layout cards were cut off with an ellipsis (test finding). They wrap, on the canvas strips (the desktop's «Change layout» too) and in the panel.
+- The Kaker page's cards read «Left first», two to a line on the phone; ARCHITECTURE.md, the guides and the comparison describe the presets.
+
+The independent review before the commit found these:
+
+1. «Alternate sides» swapped a pair's cells even where its order could not be swapped (a picture placed before its text by hand, a caption placed after a picture), leaving a picture alone on the right. The cells are given by where each pair stands after the moves; tested.
+2. A preset took away a width set by hand on the blocks it leaves across the row. A preset's full row clears the cells only.
+3. The order «Alternate sides» writes stays after another preset, which neither the tooltip nor the guides said. They say it now.
+4. A card's small picture could draw a block in the wrong cells, and «One column» could stand as fitting where only blocks hidden on phones held cells. The picture draws each block's own cells, and «One column» counts the blocks the phone shows; tested.
+5. A press that changed nothing wrote an undo step. It writes none; tested.
+6. The phone view's content dropped a few pixels while the strip stood open, the rows of blocks pinned to rows or hidden on phones were not lit from the canvas, and the block under the mouse outlived a change of page. Fixed.
+7. Presets that do not fit stand greyed, where the item said only those that fit are offered and the panel rule hides a choice with no effect. Closed without a code change: decided 13 November 2026 that no setting is hidden for what the section's blocks happen to be, recorded in BACKLOG.
+
 ### 0.7.3.14.1 - The phone in cells: blocks side by side on the phone, and «Width on the phone» - 13 November 2026
 
 - On the phone every block stood across the row unless pinned to rows of its own (BACKLOG 0.7.3.14). The row grid has eight cell columns between two outer tracks of 5 %, and «Width on the phone» with «Alignment» in a block's Placement puts a block in them (`frames.mobile.col` and `cols`, additive), beside the block before it in the reading order; a block without cells stands as before.

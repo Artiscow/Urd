@@ -3,7 +3,7 @@
      The section is the one at work on the canvas; where none is, as the panel opens or another page loads, the topmost one mostly in view, else the first. Another is picked at the top, which brings it into view.
      Under the section's own rows (PhoneSectionRows) stand its blocks in the order they read on the phone: a block alone, or a stack of blocks that read as one, the owner's own or a column the rule reads whole (phone-moves.js phoneTree).
      The rows move by the row kit's drag in its tree form, one level deep (lib/nav-drop.js): before or after a row, into a stack, or onto a block alone, which makes a stack of the two; a stack's block leads out of it from the room left of it, and the room under the last row lands a row last. Alt and the arrow keys move the row the focus is in, as the drag would. A row under the pointer lights its blocks on the canvas, and a press selects its block there.
-     A block placed by its own exception carries a chip that gives it back to the section's order, and the owner's stack one that takes it apart.
+     A block placed by its own exception carries a chip that gives it back to the section's order, and the owner's stack one that takes it apart. A block under the mouse on the canvas lights its row, and a stack's.
      Under the order stand the blocks pinned to rows of their own, each with its way back into the order, and the blocks hidden on phones, each with its way back. */
   import { getContext, onMount, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -13,7 +13,7 @@
   import { phoneCells } from '$engine/migrate.js';
   import { navDropAt, navDropOrNull, canonicalDrop } from '../lib/nav-drop.js';
   import { RowDrag, slotOut } from '../lib/rows/row-drag.svelte.js';
-  import { phoneMark } from '../lib/phone-marks.js';
+  import { phoneMark } from '$engine/phone-layouts.js';
   import { ICONS, CAP_ICONS } from '../lib/icons.js';
   import PhoneSectionRows from '../section/PhoneSectionRows.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
@@ -229,7 +229,7 @@
 {#snippet row(r)}
   {@const block = r.id ? byId.get(r.id) : null}
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions, a11y_click_events_have_key_events -->
-  <div class="pp-row" class:pp-stack-head={Boolean(r.node)} class:pp-member={r.level === 1} class:pp-member-last={r.last}
+  <div class="pp-row" class:pp-stack-head={Boolean(r.node)} class:pp-member={r.level === 1} class:pp-member-last={r.last} class:pp-hovered={r.ids.includes(ed.hoveredBlockId)}
     role="listitem" tabindex="0" data-drag-id={r.key} data-row-level={r.level} aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
     class:drop-target={drag.drop?.id === r.key && drag.drop.pos === 'into'}
     {@attach drag.handle(r.key)} onkeydown={(e) => moveKeys(e, r)} onclick={(e) => pick(e, r)} onpointerenter={(e) => light(e, r)}>
@@ -288,7 +288,7 @@
       <div class="pp-list" role="list" aria-label={ta('lbl.phonePinned')} onpointerleave={() => ed.bridge?.sendLight([])}>
         {#each pinned as block (block.id)}
           <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-          <div class="pp-row pp-still" role="listitem" onclick={(e) => pick(e, { ids: [block.id] })} onpointerenter={(e) => light(e, { ids: [block.id] })}>
+          <div class="pp-row pp-still" class:pp-hovered={block.id === ed.hoveredBlockId} role="listitem" onclick={(e) => pick(e, { ids: [block.id] })} onpointerenter={(e) => light(e, { ids: [block.id] })}>
             {@render mark(block)}
             <span class="pp-num">{numbers.get(block.id)}</span>
             <span class="pp-name">{nameOf(block)}</span>
@@ -303,7 +303,7 @@
       <div class="pp-list" role="list" aria-label={ta('lbl.phoneHidden')}>
         {#each hidden as block (block.id)}
           <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-          <div class="pp-row pp-still" role="listitem" onclick={(e) => pick(e, { ids: [block.id] })}>
+          <div class="pp-row pp-still" class:pp-hovered={block.id === ed.hoveredBlockId} role="listitem" onclick={(e) => pick(e, { ids: [block.id] })}>
             {@render mark(block)}
             <span class="pp-name">{nameOf(block)}</span>
             <IconButton size="sm" quiet icon={ICONS.eye} label={ta('tip.phone.show')} onclick={() => ed.handleBlockFlag({ sectionId: section.id, blockId: block.id, hideMobile: false })} />

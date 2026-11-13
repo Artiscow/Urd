@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.14.2): phone layout presets, and the list lit from the canvas
+
+- [ ] The published Kaker page at 390 px: the cards stand two to a line, each card's title over its text
+- [ ] In the phone view, «Phone layout» on a section's bar opens a strip of cards at the section's top, over its content, each drawn with the section's own blocks; the ones that fit come first, the others stand greyed
+- [ ] The same cards stand under «Order on the phone» in the Phone tab and in a section's menu, in both views
+- [ ] On the About page's first section: «Pairs» puts each small story's picture beside its text; «Alternate sides» puts the second story's picture on the left; «Two to a line», «One wide then two» and «One column» fill the cells as their pictures show
+- [ ] «Big and two» is offered where the section's first block is a picture, and puts the next two blocks under each other beside it
+- [ ] Each preset is one step in History, and an undo takes it back whole; a block can be changed afterwards with «Width on the phone»
+- [ ] A preset with «Custom order» on keeps the custom order, «Alternate sides» writing its own order into it
+- [ ] The names on every card show in full, over two lines where they need them, on the canvas strips (the desktop's «Change layout» too) and in the panel
+- [ ] With the mouse on a block in the canvas, its row in the Phone tab's list is lit, and its stack's row; the light goes as the mouse leaves the blocks
+- [ ] The desktop's «Change layout» opens, applies and closes as before
+
 ### Test batch (0.7.3.14.1): the phone in cells, and «Width on the phone»
 
 - [ ] The published About page at 390 px: each small story stands with its picture on the left half and its text on the right, their outer edges in line with the big story above them

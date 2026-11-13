@@ -203,6 +203,11 @@ function handlePhoneOrder(msg) {
   pageState.changeSectionPhone(msg.sectionId, msg.change, msg.coalesce ? `edit:phone-step-${msg.blockId}` : 'phone-order');
 }
 
+/** A preset of the phone view's «Phone layout» strip (phone-layouts.js): its cells, and the order it reads, one undo step. */
+function handlePhoneLayout(msg) {
+  pageState.changeSectionPhone(msg.sectionId, msg.change, 'phone-layout');
+}
+
 /** ✓ in mobile view: the mobile layout has been reviewed. */
 function handleReviewDone(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
@@ -420,6 +425,7 @@ export const bridgeState = {
   applyFit,
   handleMobileReset,
   handlePhoneOrder,
+  handlePhoneLayout,
   handleReviewDone,
   handleBlockFlag,
   handleBlockStyle,

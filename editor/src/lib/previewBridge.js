@@ -20,6 +20,8 @@
  *                  { type: 'urd-grow', sectionId, blockId, h, fit?, seq? }  (a plugin copy's own height, or the answer to urd-fit-block: ONLY h, never x/y)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
  *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? } (a block moved one place in the phone's reading order: the change phone-moves.js settled it into; coalesce from the keys)
+ *                  { type: 'urd-phone-layout', sectionId, change } (a preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js)
+ *                  { type: 'urd-hover-block', blockId } (the block under the mouse on the canvas, null for none)
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
@@ -121,6 +123,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-undo') handlers.onUndo?.(msg);
     if (msg?.type === 'urd-select-section') handlers.onSelectSection?.(msg);
     if (msg?.type === 'urd-select-block') handlers.onSelectBlock?.(msg);
+    if (msg?.type === 'urd-hover-block') handlers.onHoverBlock?.(msg);
     if (msg?.type === 'urd-menu-area') handlers.onMenuArea?.(msg);
     if (msg?.type === 'urd-block-menu') handlers.onBlockMenu?.(msg);
     if (msg?.type === 'urd-section-menu') handlers.onSectionMenu?.(msg);
@@ -142,6 +145,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-move-block-section') handlers.onMoveBlockSection?.(msg);
     if (msg?.type === 'urd-mobile-reset') handlers.onMobileReset?.(msg);
     if (msg?.type === 'urd-phone-order') handlers.onPhoneOrder?.(msg);
+    if (msg?.type === 'urd-phone-layout') handlers.onPhoneLayout?.(msg);
     if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
     if (msg?.type === 'urd-block-style') handlers.onBlockStyle?.(msg);

@@ -18,6 +18,8 @@
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
  *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks or the custom order; coalesce from the keys, a burst one undo step)
+ *                  { type: 'urd-phone-layout', sectionId, change }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js)
+ *                  { type: 'urd-hover-block', blockId }  (the block under the mouse, null for none: its row in the Phone panel's list is lit)
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
@@ -35,6 +37,7 @@ import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.j
 import { blocksClipboard, sectionClipboard, readClipboard, pastedSection } from './clipboard-model.js';
 import { loadSearchLanguages, searchLanguagesReady, searchItemsAny } from './search-langs.js';
 import { applicableLayouts, layoutFrames } from './section-layouts.js';
+import { phoneLayouts, phoneLayoutChange, phoneLayoutSketch } from './phone-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
@@ -578,6 +581,21 @@ function openSectionContextMenu(host, x, y, from = null) {
    what had the focus is read on the way down. */
 let activeBeforePress = null;
 document.addEventListener('pointerdown', () => { activeBeforePress = document.activeElement; }, true);
+
+/* The block under the mouse, told to the editor as it changes (urd-hover-block), so its row in the Phone panel's list is lit; null as the mouse leaves the blocks or the canvas. */
+let hoverBlockId = null;
+const tellHover = (id) => {
+  if (id === hoverBlockId) return;
+  hoverBlockId = id;
+  post({ type: 'urd-hover-block', blockId: id });
+};
+document.addEventListener('pointerover', (event) => {
+  if (event.pointerType !== 'mouse') return;
+  tellHover(eventTarget(event)?.closest('.urd-block[data-block-id]')?.dataset.blockId ?? null);
+});
+document.documentElement.addEventListener('pointerleave', (event) => {
+  if (event.pointerType === 'mouse') tellHover(null);
+});
 document.addEventListener('contextmenu', (event) => {
   const target = eventTarget(event);
   if (!target || document.body.classList.contains('urd-chrome-off')) return;
@@ -858,15 +876,59 @@ function buildLayoutCards(section, grid, done) {
   return cards;
 }
 
+/** The phone layout presets' names (phone-layouts.js). */
+const PHONE_LAYOUT_LABEL_KEYS = {
+  'two-per-line': 'canvas.phoneLayout.twoPerLine',
+  pairs: 'canvas.phoneLayout.pairs',
+  alternate: 'canvas.phoneLayout.alternate',
+  'wide-two': 'canvas.phoneLayout.wideTwo',
+  'big-two': 'canvas.phoneLayout.bigTwo',
+  'one-column': 'canvas.phoneLayout.oneColumn',
+};
+
+/** One card per phone layout preset (phone-layouts.js), the ones that fit the section first: each drawn small with the section's own blocks in the eight cell columns; one that does not fit stands greyed. A press posts urd-phone-layout (ONE undo step in the editor) and calls done(). */
+function buildPhoneLayoutCards(section, done) {
+  return phoneLayouts(section.blocks, phoneSetupOf(section)).map(({ id, fits }) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'urd-layout-card';
+    const thumb = document.createElement('span');
+    thumb.className = 'urd-layout-thumb urd-phone-sketch';
+    thumb.setAttribute('aria-hidden', 'true');
+    for (const cell of phoneLayoutSketch(section, id)) {
+      const part = document.createElement('span');
+      part.style.gridColumn = `${cell.col} / span ${cell.cols}`;
+      for (const mark of cell.marks) {
+        const line = document.createElement('i');
+        line.className = `urd-sketch-${mark}`;
+        part.appendChild(line);
+      }
+      thumb.appendChild(part);
+    }
+    const name = document.createElement('span');
+    name.className = 'urd-layout-name';
+    name.textContent = ta(PHONE_LAYOUT_LABEL_KEYS[id] ?? id);
+    card.append(thumb, name);
+    card.disabled = !fits;
+    card.addEventListener('click', () => {
+      const change = phoneLayoutChange(section.blocks, phoneSetupOf(section), id);
+      if (change) post({ type: 'urd-phone-layout', sectionId: section.id, change });
+      done();
+    });
+    return card;
+  });
+}
+
 /**
  * The "Change layout" picker: a strip above the section (default) or a
  * gallery menu, following the personal preference in the Urd settings
  * (urd-layout-picker in shared localStorage; read on every open, so
  * switching works without a reload). Both stick to the screen within the
  * section and close on another button click, a choice, an outside click
- * and Escape.
+ * and Escape. The cards are the desktop's layouts (buildLayoutCards) or the
+ * phone's presets (buildPhoneLayoutCards), given as `cardsFor(done)`.
  */
-function toggleLayoutPicker(host, section, grid) {
+function toggleLayoutPicker(host, cardsFor, titleKey = 'canvas.layoutTitle') {
   const existing = host.querySelector('.urd-layout-strip, .urd-layout-menu');
   document.querySelectorAll('.urd-layout-strip, .urd-layout-menu').forEach((el) => el.remove());
   if (existing) return;
@@ -889,13 +951,13 @@ function toggleLayoutPicker(host, section, grid) {
     picker.remove();
   }
 
-  const cards = buildLayoutCards(section, grid, cleanup);
+  const cards = cardsFor(cleanup);
   if (asMenu) {
     picker.className = 'urd-layout-menu';
     const head = document.createElement('div');
     head.className = 'urd-preset-head';
     const title = document.createElement('span');
-    title.textContent = ta('canvas.layoutTitle');
+    title.textContent = ta(titleKey);
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'urd-layout-close';
@@ -914,7 +976,9 @@ function toggleLayoutPicker(host, section, grid) {
   // The section toolbar's own height, which the picker's offsets clear at any scale (base.css).
   const toolbar = host.querySelector(':scope > .urd-section-toolbar');
   if (toolbar?.offsetHeight) picker.style.setProperty('--urd-picker-clear', `${toolbar.offsetHeight}px`);
-  host.appendChild(picker);
+  // Before the canvas, so it sticks from the section's top: in the phone view the canvas stands in the flow, and the picker lies over it rather than pushing it down.
+  host.insertBefore(picker, host.querySelector(':scope > .urd-canvas'));
+  if (isMobile()) picker.style.marginBottom = `${-(picker.offsetHeight + (parseFloat(getComputedStyle(picker).marginTop) || 0))}px`;
   setTimeout(() => {
     document.addEventListener('pointerdown', outside, true);
     document.addEventListener('keydown', onKey, true);
@@ -3390,6 +3454,13 @@ function addSectionToolbar(host, section, grid) {
       reset.addEventListener('click', () => post({ type: 'urd-mobile-reset', sectionId: section.id }));
       bar.appendChild(reset);
     }
+    // «Phone layout»: the presets that fill the phone's cells with the section's blocks, in the picker «Change layout» opens on the desktop.
+    const phoneLayoutBtn = document.createElement('button');
+    phoneLayoutBtn.className = 'urd-layout-btn';
+    phoneLayoutBtn.title = ta('canvas.phoneLayout');
+    phoneLayoutBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M6 9h12M12 9v8M6 17h12"/></svg>';
+    phoneLayoutBtn.addEventListener('click', () => toggleLayoutPicker(host, (done) => buildPhoneLayoutCards(section, done), 'canvas.phoneLayoutTitle'));
+    bar.appendChild(phoneLayoutBtn);
     // Hidden blocks are otherwise invisible in the mobile view: the chip
     // makes them rediscoverable, with an eye button per block that shows
     // it again.
@@ -3432,7 +3503,7 @@ function addSectionToolbar(host, section, grid) {
       layoutBtn.className = 'urd-layout-btn';
       layoutBtn.title = ta('canvas.changeLayout');
       layoutBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="8" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
-      layoutBtn.addEventListener('click', () => toggleLayoutPicker(host, section, grid));
+      layoutBtn.addEventListener('click', () => toggleLayoutPicker(host, (done) => buildLayoutCards(section, grid, done)));
       bar.appendChild(layoutBtn);
     }
     if (form === 'panels') bar.appendChild(opensMenu(barButton(BAR_ICONS.motion, ta('group.motion'), () => openSectionTool(host, section, 'motion', '', 'motion'))));

@@ -887,6 +887,13 @@ function setStickyPhone(on) {
  *  new blocks here, and the grid menu can give it its own grid. */
 let activeSectionId = $state(null);
 
+/** The block under the mouse on the canvas (urd-hover-block), or null: the Phone panel lights its row. */
+let hoveredBlockId = $state(null);
+
+function onHoverBlock(msg) {
+  hoveredBlockId = typeof msg.blockId === 'string' ? msg.blockId : null;
+}
+
 /** Mirror of the active section's grid override (null = inherits) */
 let sectionGrid = $state(null);
 
@@ -1103,10 +1110,10 @@ function setSectionPhoneCustom(on) {
 }
 
 /**
- * A change to a section's phone order (phone-moves.js: a move in the Phone panel's list, or the arrows on the canvas): the blocks' exceptions, the stacks and the custom order, written as one undo step under `key`.
+ * A change to a section's phone order and cells (phone-moves.js: a move in the Phone panel's list, or the arrows on the canvas; phone-layouts.js: a preset): the blocks' exceptions, the stacks, the custom order and the cells, written as one undo step under `key`.
  * Only ids the section holds are written, and a stack of fewer than two blocks is left out.
  * @param {string} sectionId
- * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[]}} change
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], cells?: Record<string, {col: number, cols: number}|null>}} change
  * @param {string} [key] The history key: a burst of keys joins under one
  * @returns {boolean} Whether the section took the change
  */
@@ -1127,6 +1134,21 @@ function changeSectionPhone(sectionId, change, key = 'phone-order') {
     if (stacks.length) section.phoneStacks = stacks; else delete section.phoneStacks;
   }
   if (Array.isArray(change.list)) section.phoneList = [...new Set(change.list)].filter((id) => ids.has(id));
+  // A preset's cells (phone-layouts.js): each flowing block's columns, taking the place of a width and a left edge set by hand; null for the full row, where a width set by hand stays.
+  for (const [id, cells] of Object.entries(change.cells ?? {})) {
+    const block = section.blocks.find((b) => b.id === id);
+    if (!block || Number.isFinite(block.frames.mobile?.row)) continue;
+    const place = { ...(block.frames.mobile ?? {}) };
+    delete place.col;
+    delete place.cols;
+    if (Number.isInteger(cells?.col) && Number.isInteger(cells?.cols) && cells.cols < 8 && cells.col >= 1 && cells.col + cells.cols - 1 <= 8) {
+      delete place.x;
+      delete place.w;
+      Object.assign(place, { col: cells.col, cols: cells.cols });
+    }
+    block.frames.mobile = Object.keys(place).length ? place : null;
+  }
+  if (change.cells) shellState.updateAttention();
   store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageId, section);
@@ -1277,6 +1299,7 @@ async function selectPage(id, { keepHistory = false } = {}) {
     // its own step.
     if (!keepHistory) historyState.lastHistoryKey = null;
     activeSectionId = null;
+    hoveredBlockId = null;
     sectionGrid = null;
     historyState.updateDirty();
     shellState.updateAttention();
@@ -1557,6 +1580,8 @@ export const pageState = {
   anchorsTaken,
   get sectionAnchor() { return sectionAnchor; },
   get activeSectionId() { return activeSectionId; },
+  get hoveredBlockId() { return hoveredBlockId; },
+  onHoverBlock,
   set activeSectionId(v) { activeSectionId = v; },
   get sectionGrid() { return sectionGrid; },
   set sectionGrid(v) { sectionGrid = v; },
