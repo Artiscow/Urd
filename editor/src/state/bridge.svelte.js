@@ -198,19 +198,9 @@ function handleMobileReset(msg) {
   previewState.bridge?.sendSection(pageState.pageId, section);
 }
 
-/** A move in the phone's reading order from the preview (the bar's arrows, Alt with the arrow keys): the block's exception, before or after a block of its section; a burst of keys one undo step. */
-function handlePhonePlace(msg) {
-  const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
-  const block = section?.blocks.find((b) => b.id === msg.blockId);
-  const place = msg.phonePlace;
-  const side = typeof place?.before === 'string' ? 'before' : typeof place?.after === 'string' ? 'after' : null;
-  if (!block || !side || !section.blocks.some((b) => b.id === place[side] && b.id !== block.id)) return;
-  historyState.pushHistory(msg.coalesce ? `edit:phone-place-${block.id}` : 'phone-place');
-  block.phonePlace = { [side]: place[side] };
-  pageState.store.save();
-  historyState.updateDirty();
-  previewState.bridge?.sendSection(pageState.pageId, section);
-  if (pageState.selectedBlock?.blockId === block.id) pageState.syncSelectedBlock();
+/** A move in the phone's reading order from the preview (the bar's arrows, Alt with the arrow keys): the change phone-moves.js settled it into, one undo step; a burst of keys one step. */
+function handlePhoneOrder(msg) {
+  pageState.changeSectionPhone(msg.sectionId, msg.change, msg.coalesce ? `edit:phone-step-${msg.blockId}` : 'phone-order');
 }
 
 /** ✓ in mobile view: the mobile layout has been reviewed. */
@@ -429,7 +419,7 @@ export const bridgeState = {
   handleGrow,
   applyFit,
   handleMobileReset,
-  handlePhonePlace,
+  handlePhoneOrder,
   handleReviewDone,
   handleBlockFlag,
   handleBlockStyle,

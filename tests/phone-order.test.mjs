@@ -1,11 +1,13 @@
 /**
- * The phone's reading order (template/assets/engine/<version>/phone-order.js): the section's rule, Top, Left or Right first, and each block's exception before or after another block.
+ * The phone's reading order (template/assets/engine/<version>/phone-order.js): the section's rule, Top, Left or Right first, each block's exception before or after another block, its stacks and its custom order.
+ * And the owner's moves in it (phone-moves.js): the tree of blocks and stacks, the list's drag and the arrows.
  * Frames are in physical units: x/w in percent of the content band, y/h in px.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { stackOrder, phoneOrderOf, phonePlaceStep, phonePlaceKeeping, hasPhonePlace, PHONE_ORDERS } = await engineImport('phone-order.js');
+const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -104,23 +106,40 @@ test('stackOrder: an exception naming a block that is gone, hidden on phones or 
   assert.deepEqual(ids(stackOrder(ring)), ['a', 'b', 'c', 'd']);
 });
 
-/** The order after a block takes the step's exception. */
-const stepped = (blocks, rule, id, dir) => {
-  const place = phonePlaceStep(blocks, rule, id, dir);
-  return place && ids(stackOrder(blocks.map((b) => (b.id === id ? { ...b, phonePlace: place } : b)), rule));
+/** A section's blocks and setup with a move's change written in, as the editor writes it. */
+function applied(blocks, setup, change) {
+  const next = blocks.map((b) => {
+    if (!(b.id in change.places)) return b;
+    const copy = { ...b };
+    if (change.places[b.id]) copy.phonePlace = change.places[b.id]; else delete copy.phonePlace;
+    return copy;
+  });
+  const rule = typeof setup === 'string' ? setup : setup.rule;
+  const base = typeof setup === 'string' ? { rule, list: null, stacks: [] } : setup;
+  return { blocks: next, setup: { ...base, ...(change.stacks ? { stacks: change.stacks } : {}), ...(change.list ? { list: change.list } : {}) } };
+}
+
+/** The order after a move's change. */
+const after = (blocks, setup, change) => {
+  if (!change) return null;
+  const next = applied(blocks, setup, change);
+  return ids(stackOrder(next.blocks, next.setup));
 };
 
-test('phonePlaceStep: each press moves the block exactly one place, before the block before it or after the block after it', () => {
+/** The order after a block steps one place. */
+const stepped = (blocks, setup, id, dir) => after(blocks, setup, phoneStep(blocks, setup, id, dir));
+
+test('phoneStep: each press moves the block exactly one place, before the block it passes up or after the one it passes down', () => {
   const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)];
-  assert.deepEqual(phonePlaceStep(blocks, 'top', 'c', -1), { before: 'b' });
-  assert.deepEqual(phonePlaceStep(blocks, 'top', 'a', 1), { after: 'b' });
+  assert.deepEqual(phoneStep(blocks, 'top', 'c', -1).places, { c: { before: 'b' } });
+  assert.deepEqual(phoneStep(blocks, 'top', 'a', 1).places, { a: { after: 'b' } });
   assert.deepEqual(stepped(blocks, 'top', 'a', 1), ['b', 'a', 'c', 'd']);
   assert.deepEqual(stepped(blocks, 'top', 'c', -1), ['a', 'c', 'b', 'd']);
-  assert.equal(phonePlaceStep(blocks, 'top', 'a', -1), null, 'the first cannot go earlier');
-  assert.equal(phonePlaceStep(blocks, 'top', 'd', 1), null, 'the last cannot go later');
+  assert.equal(phoneStep(blocks, 'top', 'a', -1), null, 'the first cannot go earlier');
+  assert.equal(phoneStep(blocks, 'top', 'd', 1), null, 'the last cannot go later');
 });
 
-test('phonePlaceStep: a block placed against the one that moves goes with it, and the others keep their order', () => {
+test('phoneStep: a block placed against the one that moves goes with it, and the others keep their order', () => {
   // y follows x: x and y move down past b together.
   const follower = [blk('a', 0, 0), blk('x', 20, 0), blk('y', 40, 0, { phonePlace: { after: 'x' } }), blk('b', 60, 0), blk('c', 80, 0)];
   assert.deepEqual(stepped(follower, 'top', 'x', 1), ['a', 'b', 'x', 'y', 'c']);
@@ -134,11 +153,11 @@ test('phonePlaceStep: a block placed against the one that moves goes with it, an
   assert.deepEqual(stepped(before, 'top', 'x', -1), ['y', 'x', 'a', 'b']);
 });
 
-test('phonePlaceStep: follows the section\'s rule, and blocks placed by hand take no part', () => {
+test('phoneStep: follows the section\'s rule, and blocks placed by hand take no part', () => {
   assert.deepEqual(stepped(section(), 'left', 'button', 1), ['heading', 'text', 'calendar', 'button', 'ribbon']);
   const blocks = [blk('a', 0, 0), blk('pin', 20, 0, { mobile: { row: 3, rows: 4 } }), blk('b', 40, 0)];
-  assert.deepEqual(phonePlaceStep(blocks, 'top', 'a', 1), { after: 'b' }, 'the pinned block is passed over');
-  assert.equal(phonePlaceStep(blocks, 'top', 'pin', 1), null);
+  assert.deepEqual(phoneStep(blocks, 'top', 'a', 1).places, { a: { after: 'b' } }, 'the pinned block is passed over');
+  assert.equal(phoneStep(blocks, 'top', 'pin', 1), null);
 });
 
 test('phonePlaceKeeping: before or after the block beside it, so nothing moves, and the nearest that keeps the others\' order where none can', () => {
@@ -176,4 +195,150 @@ test('phoneOrderOf and hasPhonePlace: the rule a section has, and whether an exc
   assert.equal(hasPhonePlace(blocks[2], blocks), false, 'a block that is gone');
   const ring = [blk('a', 0, 0, { phonePlace: { after: 'b' } }), blk('b', 20, 0, { phonePlace: { after: 'a' } })];
   assert.equal(hasPhonePlace(ring[0], ring), false, 'a ring holds no exception');
+});
+
+/** Three blocks and a card of three under them. */
+const cardSection = () => [
+  blk('title', 0, 0, { w: 100, h: 40 }),
+  blk('pic', 60, 0, { w: 45, h: 200 }),
+  blk('icon', 60, 55, { w: 45, h: 30 }),
+  blk('head', 100, 55, { w: 45, h: 30 }),
+  blk('line', 140, 55, { w: 45, h: 60 }),
+  blk('foot', 300, 0, { w: 100, h: 40 }),
+];
+
+test('phoneSetupOf: a section\'s rule, custom order and stacks, the stacks of two blocks or more', () => {
+  assert.deepEqual(phoneSetupOf({ phoneOrder: 'right', phoneList: ['a', 3, 'b'], phoneStacks: [['a', 'b'], ['c'], 'x'] }), { rule: 'right', list: ['a', 'b'], stacks: [['a', 'b']] });
+  assert.deepEqual(phoneSetupOf({}), { rule: 'top', list: null, stacks: [] });
+});
+
+test('stackOrder: a stack reads as one where the first of it stands, its first block\'s exception moving it whole', () => {
+  const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)];
+  assert.deepEqual(ids(stackOrder(blocks, { rule: 'top', stacks: [['d', 'b']] })), ['a', 'd', 'b', 'c'], 'at b, the first in the rule\'s order, in the stack\'s order');
+  const placed = blocks.map((b) => (b.id === 'd' ? { ...b, phonePlace: { after: 'c' } } : b));
+  assert.deepEqual(ids(stackOrder(placed, { rule: 'top', stacks: [['d', 'b']] })), ['a', 'c', 'd', 'b']);
+  const member = blocks.map((b) => (b.id === 'b' ? { ...b, phonePlace: { before: 'a' } } : b));
+  assert.deepEqual(ids(stackOrder(member, { rule: 'top', stacks: [['d', 'b']] })), ['a', 'd', 'b', 'c'], 'a member\'s own exception counts for nothing');
+  const against = blocks.map((b) => (b.id === 'a' ? { ...b, phonePlace: { after: 'b' } } : b));
+  assert.deepEqual(ids(stackOrder(against, { rule: 'top', stacks: [['d', 'b']] })), ['d', 'b', 'a', 'c'], 'an exception against a member is against the stack');
+  assert.deepEqual(ids(stackOrder(blocks, { rule: 'top', stacks: [['a', 'b'], ['b', 'c'], ['x', 'd']] })), ['a', 'b', 'c', 'd'], 'a block in two stacks belongs to the first; a stack of one holds nothing');
+});
+
+test('stackOrder: a custom order holds as listed, and a block missing from it joins after the block before it', () => {
+  const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)];
+  assert.deepEqual(ids(stackOrder(blocks, { rule: 'top', list: ['c', 'a', 'd', 'b'] })), ['c', 'a', 'd', 'b']);
+  const moved = blocks.map((b) => (b.id === 'c' ? { ...b, frames: { ...b.frames, desktop: { ...b.frames.desktop, y: 200 } } } : b));
+  assert.deepEqual(ids(stackOrder(moved, { rule: 'top', list: ['c', 'a', 'd', 'b'] })), ['c', 'a', 'd', 'b'], 'a block moved on the desktop keeps its place');
+  const added = [...blocks, blk('new', 30, 0)];
+  assert.deepEqual(ids(stackOrder(added, { rule: 'top', list: ['c', 'a', 'd', 'b', 'gone'] })), ['c', 'a', 'd', 'b', 'new'], 'after b, the block before it in the rule\'s order');
+  const placed = blocks.map((b) => (b.id === 'a' ? { ...b, phonePlace: { after: 'd' } } : b));
+  assert.equal(hasPhonePlace(placed[0], placed, { rule: 'top', list: ['a', 'b', 'c', 'd'] }), false, 'no exception counts in a custom order');
+});
+
+test('phoneTree: the flowing blocks as rows, the owner\'s stacks and the rule\'s columns as stacks', () => {
+  assert.deepEqual(phoneTree(cardSection(), 'left'), [
+    { id: 'title' }, { id: 'pic' },
+    { id: 'stack:icon', kind: 'column', children: [{ id: 'icon' }, { id: 'head' }, { id: 'line' }] },
+    { id: 'foot' },
+  ]);
+  assert.deepEqual(phoneTree(cardSection(), 'top').map((n) => n.id), ['title', 'pic', 'icon', 'head', 'line', 'foot'], 'Top first finds no columns');
+  assert.deepEqual(phoneTree(cardSection(), { rule: 'top', stacks: [['foot', 'title']] })[0], { id: 'stack:foot', kind: 'stack', children: [{ id: 'foot' }, { id: 'title' }] });
+});
+
+test('phoneLand: a row dragged between others takes the exception that puts it there', () => {
+  const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)];
+  const change = phoneLand(blocks, 'top', '3', { key: '1', pos: 'before' });
+  assert.deepEqual(after(blocks, 'top', change), ['a', 'd', 'b', 'c']);
+  assert.equal(change.stacks, undefined, 'no stack changes');
+  assert.equal(phoneLand(blocks, 'top', '9', { key: '1', pos: 'before' }), null);
+});
+
+test('phoneLand: a column of the rule dragged whole becomes the owner\'s stack and moves as one', () => {
+  const change = phoneLand(cardSection(), 'left', '2', { key: '0', pos: 'after' });
+  assert.deepEqual(change.stacks, [['icon', 'head', 'line']]);
+  assert.deepEqual(after(cardSection(), 'left', change), ['title', 'icon', 'head', 'line', 'pic', 'foot']);
+  // A block dragged onto another makes a stack of the two; one dragged out of a stack leaves it.
+  const into = phoneLand(cardSection(), 'top', '5', { key: '0', pos: 'into' });
+  assert.deepEqual(into.stacks, [['title', 'foot']]);
+  assert.deepEqual(after(cardSection(), 'top', into), ['title', 'foot', 'pic', 'icon', 'head', 'line']);
+  const stacked = applied(cardSection(), 'top', into);
+  const out = phoneLand(stacked.blocks, stacked.setup, '0.1', { key: '4', pos: 'after' });
+  assert.deepEqual(out.stacks, []);
+  assert.deepEqual(after(stacked.blocks, stacked.setup, out), ['title', 'pic', 'icon', 'head', 'line', 'foot']);
+  // A stack's first block dropped right after its own stack leaves it.
+  const own = phoneLand(cardSection(), { rule: 'top', stacks: [['pic', 'icon', 'head']] }, '1.0', { key: '1', pos: 'after' });
+  assert.deepEqual(own.stacks, [['icon', 'head']]);
+  assert.deepEqual(after(cardSection(), { rule: 'top', list: null, stacks: [['pic', 'icon', 'head']] }, own), ['title', 'icon', 'head', 'pic', 'line', 'foot']);
+  const between = phoneLand(stacked.blocks, stacked.setup, '0.1', { key: '3', pos: 'before' });
+  assert.deepEqual(after(stacked.blocks, stacked.setup, between), ['title', 'pic', 'icon', 'foot', 'head', 'line']);
+});
+
+test('phoneLand: a block taken into a stack leaves its exception, and a new first block carries the stack\'s', () => {
+  const blocks = [blk('a', 0, 0), blk('b', 20, 0, { phonePlace: { after: 'd' } }), blk('c', 40, 0), blk('d', 60, 0)];
+  // The order is a, c, d, b; b dragged onto c makes the stack c, b, standing where b, the first of it in the rule's order, stands.
+  const into = phoneLand(blocks, 'top', '3', { key: '1', pos: 'into' });
+  assert.deepEqual(into.stacks, [['c', 'b']]);
+  assert.deepEqual(into.places, { b: null });
+  assert.deepEqual(after(blocks, 'top', into), ['a', 'c', 'b', 'd']);
+  // The stack a, c placed after d reads b, d, a, c; c dragged before a takes the stack's place with it.
+  const placed = [blk('a', 0, 0, { phonePlace: { after: 'd' } }), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)];
+  const setup = { rule: 'top', list: null, stacks: [['a', 'c']] };
+  assert.deepEqual(ids(stackOrder(placed, setup)), ['b', 'd', 'a', 'c']);
+  const first = phoneLand(placed, setup, '2.1', { key: '2.0', pos: 'before' });
+  assert.deepEqual(first.stacks, [['c', 'a']]);
+  assert.deepEqual(first.places, { a: null, c: { after: 'd' } });
+  assert.deepEqual(after(placed, setup, first), ['b', 'd', 'c', 'a']);
+});
+
+test('phoneLand and phoneStep in a custom order write the list, and the arrows move a stacked block within its stack', () => {
+  const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)];
+  const setup = { rule: 'top', list: ['a', 'b', 'c', 'd'], stacks: [] };
+  const land = phoneLand(blocks, setup, '0', { key: '3', pos: 'after' });
+  assert.deepEqual(land.list, ['b', 'c', 'd', 'a']);
+  assert.deepEqual(land.places, {});
+  assert.deepEqual(phoneStep(blocks, setup, 'c', -1).list, ['a', 'c', 'b', 'd']);
+  const stacked = { rule: 'top', list: null, stacks: [['b', 'c']] };
+  assert.deepEqual(phoneStep(blocks, stacked, 'c', -1).stacks, [['c', 'b']]);
+  assert.equal(phoneStep(blocks, stacked, 'c', 1), null, 'the last in its stack');
+  assert.deepEqual(stepped(blocks, stacked, 'b', 1), ['a', 'c', 'b', 'd'], 'the first in its stack steps within it');
+  assert.deepEqual(stepped(blocks, stacked, 'a', 1), ['b', 'c', 'a', 'd'], 'a block steps past a whole stack');
+  assert.deepEqual(phoneStackOf(blocks, stacked, 'c'), ['b', 'c']);
+  assert.equal(phoneStackOf(blocks, stacked, 'a'), null);
+});
+
+test('settle: what is left of a stack the moved block left keeps its place', () => {
+  const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)];
+  const setup = { rule: 'top', list: null, stacks: [['a', 'c']] };
+  assert.deepEqual(ids(stackOrder(blocks, setup)), ['a', 'c', 'b', 'd']);
+  // The first block taken out before its own stack: the order stays, and the stack is gone.
+  const out = phoneLand(blocks, setup, '0.0', { key: '0', pos: 'before' });
+  assert.deepEqual(out.stacks, []);
+  assert.deepEqual(after(blocks, setup, out), ['a', 'c', 'b', 'd']);
+  // The first block taken out to the end: c keeps the stack's place.
+  assert.deepEqual(after(blocks, setup, phoneLand(blocks, setup, '0.0', { key: '2', pos: 'after' })), ['c', 'b', 'd', 'a']);
+  // A stack standing where its later block stands: the block that stays holds the place when the other leaves.
+  const moved = { rule: 'top', list: null, stacks: [['d', 'b']] };
+  assert.deepEqual(ids(stackOrder(blocks, moved)), ['a', 'd', 'b', 'c']);
+  assert.deepEqual(after(blocks, moved, phoneLand(blocks, moved, '1.1', { key: '2', pos: 'after' })), ['a', 'd', 'c', 'b']);
+});
+
+test('settle: a stack keeps its blocks hidden on phones through a move, and a move that changes nothing writes nothing', () => {
+  const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 30, 0, { hideMobile: true }), blk('d', 40, 0), blk('e', 60, 0)];
+  const setup = { rule: 'top', list: null, stacks: [['b', 'c', 'd']] };
+  const step = phoneStep(blocks, setup, 'e', -1);
+  assert.equal(step.stacks, undefined, 'the stack stands as it was');
+  assert.deepEqual(after(blocks, setup, step), ['a', 'e', 'b', 'd']);
+  const outOf = phoneLand(blocks, setup, '1.0', { key: '2', pos: 'after' });
+  assert.deepEqual(outOf.stacks, [['c', 'd']], 'the hidden block stays with the block that stayed');
+  // f and g are placed before a and go where a goes: a dragged before f cannot get there, and nothing is written.
+  const following = [blk('a', 0, 0), blk('b', 10, 0), blk('f', 20, 0, { phonePlace: { before: 'a' } }), blk('g', 30, 0, { phonePlace: { before: 'a' } })];
+  assert.deepEqual(ids(stackOrder(following)), ['f', 'g', 'a', 'b']);
+  assert.equal(phoneLand(following, 'top', '2', { key: '0', pos: 'before' }), null);
+});
+
+test('phoneStep: a stack\'s later block has no exception that counts, so nothing follows through it', () => {
+  const blocks = [blk('a', 0, 0), blk('x', 10, 0), blk('b', 20, 0), blk('c', 30, 0, { phonePlace: { after: 'x' } }), blk('d', 40, 0)];
+  const setup = { rule: 'top', list: null, stacks: [['b', 'c']] };
+  assert.deepEqual(ids(stackOrder(blocks, setup)), ['a', 'x', 'b', 'c', 'd']);
+  assert.deepEqual(stepped(blocks, setup, 'x', 1), ['a', 'b', 'c', 'x', 'd']);
 });

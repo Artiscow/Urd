@@ -48,6 +48,9 @@ test('the thirds of a row: before at the top, into in the middle, after at the b
   assert.deepEqual(navDropAt(items, '3', '2.0.0.0', 100, 0.5, DEPTH), { key: '2.0.0.0', pos: 'after' });
   // The grip column of a row under the bar lands one level up, after the parent.
   assert.deepEqual(navDropAt(items, '3', '2.0.0', 10, 0.5, DEPTH), { key: '2.0', pos: 'after' });
+  // A list dragged by its grips leads out only from the room left of the row: over the grip the row's own thirds decide.
+  assert.deepEqual(navDropAt(items, '2.0.0', '2.1', 10, 0.9, DEPTH, 0), { key: '2.1', pos: 'after' });
+  assert.deepEqual(navDropAt(items, '2.0.0', '2.1', -6, 0.9, DEPTH, 0), { key: '2', pos: 'after' });
   // Over itself nothing lands.
   assert.equal(navDropAt(items, '3', '3', 100, 0.5, DEPTH), null);
 });

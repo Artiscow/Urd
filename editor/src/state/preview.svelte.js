@@ -261,7 +261,7 @@ function onIframeLoad() {
     onCommands: (msg) => { paletteState.pluginCommands = msg.commands; },
     onMoveBlockSection: bridgeState.handleMoveBlockSection,
     onMobileReset: bridgeState.handleMobileReset,
-    onPhonePlace: bridgeState.handlePhonePlace,
+    onPhoneOrder: bridgeState.handlePhoneOrder,
     onReviewDone: bridgeState.handleReviewDone,
     onBlockFlag: bridgeState.handleBlockFlag,
     onBlockStyle: bridgeState.handleBlockStyle,
@@ -338,6 +338,9 @@ async function onReady() {
       bridge?.sendActiveSection(back.sectionId);
     }
     if (back.top) bridge?.sendScrollTo(back.top.sectionId, back.top.offset);
+  } else if (pageState.activeSectionId) {
+    // A section chosen while the canvas loaded (the Phone panel's, as another page opens) is marked once the canvas stands.
+    bridge?.sendActiveSection(pageState.activeSectionId);
   }
 }
 

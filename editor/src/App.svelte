@@ -19,6 +19,7 @@
   import ThemePanel from './panels/ThemePanel.svelte';
   import BlocksPanel from './panels/BlocksPanel.svelte';
   import GridPanel from './panels/GridPanel.svelte';
+  import PhonePanel from './panels/PhonePanel.svelte';
   import PropertiesPanel from './panels/PropertiesPanel.svelte';
   import FooterPanel from './panels/FooterPanel.svelte';
   import LegalPanel from './panels/LegalPanel.svelte';
@@ -195,6 +196,8 @@
             <BlocksPanel />
           {:else if ed.activePanel === 'grid'}
             <GridPanel />
+          {:else if ed.activePanel === 'phone'}
+            <PhonePanel />
           {:else if ed.activePanel === 'properties'}
             <PropertiesPanel />
           {:else if ed.activePanel === 'footer'}

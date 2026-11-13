@@ -19,7 +19,7 @@
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (drag/resize)
  *                  { type: 'urd-grow', sectionId, blockId, h, fit?, seq? }  (a plugin copy's own height, or the answer to urd-fit-block: ONLY h, never x/y)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
- *                  { type: 'urd-phone-place', sectionId, blockId, phonePlace, coalesce? } (a move in the phone's reading order, as the block's exception; coalesce from the keys)
+ *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? } (a block moved one place in the phone's reading order: the change phone-moves.js settled it into; coalesce from the keys)
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
@@ -69,7 +69,8 @@
  *                  { type: 'urd-show-guides', visible }       (guides: center/content width in every section)
  *                  { type: 'urd-spellcheck', on }             (the browser's spell check on the texts)
  *                  { type: 'urd-announce-reset' }             (the Announcement panel: forget the dismissal, so the strip returns)
- *                  { type: 'urd-select', blockId }            (select a block the editor just built, e.g. + New block)
+ *                  { type: 'urd-select', blockId, picked? }   (select a block the editor just built, e.g. + New block; `picked` in the editor's lists, brought into view with the focus left in the list)
+ *                  { type: 'urd-light', ids }                 (light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away)
  *                  { type: 'urd-admin-theme', colors }        (the admin color theme {bg, surface, accent, text}: the editor menus in the preview follow admin, not the site)
  *                  { type: 'urd-templates', templates }               (the template drafts: a list of {id, name, kind, section?, blocks?, page?}; the My templates tab reads them)
  *                  { type: 'urd-insert-template', id }        (the Blocks panel's My templates: insert a block-group template into the active section)
@@ -140,7 +141,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-commands') handlers.onCommands?.(msg);
     if (msg?.type === 'urd-move-block-section') handlers.onMoveBlockSection?.(msg);
     if (msg?.type === 'urd-mobile-reset') handlers.onMobileReset?.(msg);
-    if (msg?.type === 'urd-phone-place') handlers.onPhonePlace?.(msg);
+    if (msg?.type === 'urd-phone-order') handlers.onPhoneOrder?.(msg);
     if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
     if (msg?.type === 'urd-block-style') handlers.onBlockStyle?.(msg);
@@ -249,8 +250,13 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendAdminTheme(colors) {
       post({ type: 'urd-admin-theme', colors });
     },
-    sendSelect(blockId) {
-      draftPost({ type: 'urd-select', blockId });
+    /** Select a block on the canvas: one the editor just built, or one `picked` in its lists, brought into view with the focus left in the list. */
+    sendSelect(blockId, picked = false) {
+      draftPost({ type: 'urd-select', blockId, picked });
+    },
+    /** Light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away. */
+    sendLight(ids) {
+      post({ type: 'urd-light', ids });
     },
     /** Ask the preview for the height a block's content needs; it answers with urd-grow. */
     sendFitBlock(sectionId, blockId, seq = 0) {

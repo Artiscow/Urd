@@ -663,8 +663,11 @@ function enablePreview(state, opts) {
       // Ctrl+D with focus in the admin panels: duplicate the selected block in the preview.
       window.UrdPreviewEdit?.duplicateSelected();
     } else if (msg?.type === 'urd-select' && msg.blockId) {
-      // The editor built a block itself (the + New block menu): select it.
-      window.UrdPreviewEdit?.selectById(msg.blockId);
+      // The editor built a block itself (the + New block menu), or one was picked in its lists (the Phone panel's order, `picked`): select it.
+      window.UrdPreviewEdit?.selectById(msg.blockId, msg.picked === true);
+    } else if (msg?.type === 'urd-light' && Array.isArray(msg.ids)) {
+      // A row under the pointer in the editor's lists (the Phone panel's order) lights its block, or its stack's blocks.
+      window.UrdPreviewEdit?.lightBlocks?.(msg.ids);
     } else if (msg?.type === 'urd-plugins') {
       // The editor's plugin draft: load the enabled plugins (the files are
       // already in the repo) and rerender, so plugins work in the preview

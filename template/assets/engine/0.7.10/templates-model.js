@@ -88,6 +88,23 @@ function followCopiedPlaces(blocks, ids) {
 }
 
 /**
+ * A copied section's custom order on the phone (`phoneList`) and its stacks (`phoneStacks`) follow its blocks to their new ids; a block left out of the copy leaves them, and a stack of fewer than two blocks is dropped.
+ * @param {object} section The copied section
+ * @param {Map<string, string>} ids Old id to new id
+ */
+function followCopiedOrder(section, ids) {
+  const follow = (list) => (Array.isArray(list) ? list.filter((id) => ids.has(id)).map((id) => ids.get(id)) : []);
+  if (section.phoneList !== undefined) {
+    const list = follow(section.phoneList);
+    if (list.length) section.phoneList = list; else delete section.phoneList;
+  }
+  if (section.phoneStacks !== undefined) {
+    const stacks = (Array.isArray(section.phoneStacks) ? section.phoneStacks : []).map(follow).filter((stack) => stack.length > 1);
+    if (stacks.length) section.phoneStacks = stacks; else delete section.phoneStacks;
+  }
+}
+
+/**
  * Prepares a section template for insertion: deep clone with a new section id
  * and new block ids.
  * Geometry and props are left alone, apart from a link to one of the template's own spots, which follows the spot's new id.
@@ -104,6 +121,7 @@ export function cloneSectionForInsert(section, makeId) {
   }
   followCopiedSpots(out.blocks ?? [], ids);
   followCopiedPlaces(out.blocks ?? [], ids);
+  followCopiedOrder(out, ids);
   // Templates saved before v3 carry the old Norwegian contract tokens (ADR-0021); renamed here since payloads bypass the page lift.
   // A map saved before page v5 carries its height as a setting, lifted into the frame, a calendar saved before page v6 its own size, lifted to the block, a gallery band saved before page v7 its height, lifted into the frame, and a text in a document design saved before page v8 becomes the terms block.
   liftContractTokens(out);
@@ -136,6 +154,7 @@ export function clonePageForInsert(page, makeId, { id, title }) {
   }
   followCopiedSpots((out.sections ?? []).flatMap((section) => section.blocks ?? []), ids);
   followCopiedPlaces((out.sections ?? []).flatMap((section) => section.blocks ?? []), ids);
+  for (const section of out.sections ?? []) followCopiedOrder(section, ids);
   return out;
 }
 

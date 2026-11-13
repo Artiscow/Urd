@@ -18725,6 +18725,12 @@ body.urd-mobile .urd-add-section {
   color: #1a1508;
 }
 
+/* A block lit from a row under the pointer in the editor's lists (preview-edit.js lightBlocks): the Phone panel's order, a stack lighting all of its blocks */
+.urd-preview .urd-block.urd-lit {
+  outline: calc(2px * var(--urd-chrome-scale, 1)) dashed var(--urd-admin-accent, #2cc7a8);
+  outline-offset: -1px;
+}
+
 /* Decor toggle on the block toolbar */
 .urd-preview .urd-edit-toolbar .urd-edit-decor.on {
   background: #e2b84a;

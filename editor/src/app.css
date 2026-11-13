@@ -3479,7 +3479,7 @@
     text-overflow: ellipsis;
   }
 
-  /* A section's order on the phone (SectionMenu.svelte): each rule a card of the section's own blocks in its order, a picture as a tall block, a heading as a thick line, text as a thin one and a button as a short pill */
+  /* A section's order on the phone (section/PhoneSectionRows.svelte): each rule a card of the section's own blocks in its order, a picture as a tall block, a heading as a thick line, text as a thin one and a button as a short pill */
   .po-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3544,6 +3544,175 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  /* The Phone panel's list (panels/PhonePanel.svelte): one line per block in its phone order, a stack's head over its blocks set in a step, the stack drawn as one tinted card */
+  .pp-list {
+    display: grid;
+    gap: 3px;
+  }
+
+  /* The order's list holds the room under its last row, where a dragged row lands last */
+  .pp-order {
+    padding-bottom: 1rem;
+  }
+
+  .pp-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    min-height: 2.1rem;
+    padding: 0 0.4rem 0 0.25rem;
+    border-radius: 7px;
+    background: color-mix(in srgb, currentColor 3%, transparent);
+    font-size: 0.82rem;
+    cursor: grab;
+  }
+
+  .pp-row:hover {
+    background: color-mix(in srgb, var(--urd-color-accent) 10%, transparent);
+  }
+
+  .pp-row:focus-visible {
+    outline: 2px solid var(--urd-color-accent);
+    outline-offset: -2px;
+  }
+
+  .pp-row.pp-still {
+    cursor: pointer;
+  }
+
+  .pp-row.pp-still .pp-name {
+    flex: 1;
+  }
+
+  .pp-stack-head {
+    border-radius: 7px 7px 0 0;
+    background: color-mix(in srgb, var(--urd-color-accent) 8%, transparent);
+    font-weight: 600;
+  }
+
+  .pp-member {
+    margin-left: 1.3rem;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--urd-color-accent) 5%, transparent);
+  }
+
+  .pp-member-last {
+    border-radius: 0 0 7px 7px;
+  }
+
+  .pp-row.drop-target {
+    background: color-mix(in srgb, var(--urd-color-accent) 18%, transparent);
+    outline: 1px dashed var(--urd-color-accent);
+    outline-offset: -1px;
+  }
+
+  .pp-grip {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 0.8rem;
+    opacity: 0.45;
+  }
+
+  /* A block's small picture: its mark as the rule's cards draw it, in a frame of a phone's line */
+  .pp-mark {
+    display: grid;
+    flex: none;
+    align-content: center;
+    width: 1.6rem;
+    height: 1.2rem;
+    padding: 0 0.2rem;
+    border-radius: 4px;
+    background: color-mix(in srgb, currentColor 7%, transparent);
+  }
+
+  .pp-mark i {
+    display: block;
+    height: 3px;
+    border-radius: 1.5px;
+    background: color-mix(in srgb, currentColor 45%, transparent);
+  }
+
+  .pp-mark .po-head {
+    height: 4px;
+    background: color-mix(in srgb, currentColor 85%, transparent);
+  }
+
+  .pp-mark .po-pic {
+    height: 0.8rem;
+    background: color-mix(in srgb, var(--urd-color-accent) 70%, transparent);
+  }
+
+  .pp-mark .po-btn {
+    width: 60%;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--urd-color-accent);
+  }
+
+  .pp-stack-icon {
+    place-items: center;
+    padding: 0;
+    background: none;
+  }
+
+  .pp-num {
+    flex: none;
+    min-width: 1.1rem;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    opacity: 0.6;
+  }
+
+  .pp-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pp-flag {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    opacity: 0.7;
+  }
+
+  /* A chip that gives the row back to the section's order: a place of the block's own in amber, the owner's stack in the accent */
+  .pp-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 0;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--urd-color-accent) 55%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--urd-color-accent) 14%, transparent);
+    color: inherit;
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .pp-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)):hover {
+    background: color-mix(in srgb, var(--urd-color-accent) 26%, transparent);
+  }
+
+  .pp-chip.pp-chip-own:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    border-color: #e2b84a;
+    background: color-mix(in srgb, #e2b84a 22%, transparent);
+  }
+
+  .pp-chip svg {
+    width: 10px;
+    height: 10px;
   }
 
   .token-input {

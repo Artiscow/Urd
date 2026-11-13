@@ -17,7 +17,7 @@
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
- *                  { type: 'urd-phone-place', sectionId, blockId, phonePlace, coalesce? }  (a move in the phone's reading order, as the block's exception; coalesce from the keys, a burst one undo step)
+ *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks or the custom order; coalesce from the keys, a burst one undo step)
  *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
@@ -38,7 +38,8 @@ import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
-import { stackOrder, phoneOrderOf, phonePlaceStep, hasPhonePlace } from './phone-order.js';
+import { stackOrder, phoneSetupOf } from './phone-order.js';
+import { phoneStep, hasPhonePlace } from './phone-moves.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
@@ -457,11 +458,18 @@ function showContextMenu(el, x, y, label, build, from = null) {
   if (!from?.rest) focusAt(0);
 }
 
-/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. */
+/**
+ * A menu item's keys where they act: the canvas's keys for the blocks and the sections are the desktop view's, so in the phone view an item stands without them.
+ * @param {string} key
+ */
+const keysHere = (key) => (isMobile() ? '' : key);
+
+/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. The phone view has the same menu, its layer order greyed, since that orders the blocks on the desktop alone. */
 function openContextMenu(el, x, y, from = null) {
   const ctx = el._urdCtx;
-  if (!ctx || isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+  if (!ctx || document.body.classList.contains('urd-chrome-off')) return;
   const { host, section, block } = ctx;
+  const phone = isMobile();
   // A menu a rest opened leaves the selection as it stands, until a press on the ⋮ keeps it (moreButton).
   const select = () => selectBlock(el);
   if (from?.rest) from.select = select;
@@ -469,22 +477,22 @@ function openContextMenu(el, x, y, from = null) {
   showContextMenu(el, x, y, ta('canvas.ctx.label'), (item, sep) => {
     item(ta('canvas.ctx.settings'), 'Enter', () => openBlockSettings(el, section, block)).classList.add('urd-ctx-first');
     sep();
-    item(ta('canvas.ctx.cut'), 'Ctrl+X', () => copyBlocks(section, [block.id], true));
-    item(ta('canvas.ctx.copy'), 'Ctrl+C', () => copyBlocks(section, [block.id]));
-    item(ta('canvas.ctx.duplicate'), 'Ctrl+D', () => duplicateBlock(section, block));
+    item(ta('canvas.ctx.cut'), keysHere('Ctrl+X'), () => copyBlocks(section, [block.id], true));
+    item(ta('canvas.ctx.copy'), keysHere('Ctrl+C'), () => copyBlocks(section, [block.id]));
+    item(ta('canvas.ctx.duplicate'), keysHere('Ctrl+D'), () => duplicateBlock(section, block));
     sep();
-    item(ta('canvas.ctx.copyStyle'), 'Ctrl+Alt+C', () => copyBlockStyle(block));
-    item(ta('canvas.ctx.pasteStyle'), 'Ctrl+Alt+V', () => pasteBlockStyle(section, block), { disabled: !styleClipboard });
+    item(ta('canvas.ctx.copyStyle'), keysHere('Ctrl+Alt+C'), () => copyBlockStyle(block));
+    item(ta('canvas.ctx.pasteStyle'), keysHere('Ctrl+Alt+V'), () => pasteBlockStyle(section, block), { disabled: !styleClipboard });
     sep();
-    item(ta('canvas.ctx.toFront'), 'Ctrl+Shift+↑', () => bumpBlockZ(host, section, block, el, 1));
-    item(ta('canvas.ctx.toBack'), 'Ctrl+Shift+↓', () => bumpBlockZ(host, section, block, el, -1));
+    item(ta('canvas.ctx.toFront'), keysHere('Ctrl+Shift+↑'), () => bumpBlockZ(host, section, block, el, 1), { disabled: phone });
+    item(ta('canvas.ctx.toBack'), keysHere('Ctrl+Shift+↓'), () => bumpBlockZ(host, section, block, el, -1), { disabled: phone });
     item(ta(block.hideMobile ? 'canvas.ctx.showMobile' : 'canvas.ctx.hideMobile'), '', () => {
       block.hideMobile = !block.hideMobile;
       post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, hideMobile: block.hideMobile });
     });
     item(ta('canvas.ctx.saveTemplate'), '', () => post({ type: 'urd-save-template', kind: 'blocks', blocks: [JSON.parse(JSON.stringify(block))] }));
     sep();
-    item(ta('canvas.ctx.delete'), 'Delete', () => {
+    item(ta('canvas.ctx.delete'), keysHere('Delete'), () => {
       post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
       selectBlock(null);
     }, { danger: true });
@@ -512,7 +520,7 @@ function navPartAt(target) {
 
 /** The site's menu's own menu: the settings of the part under the pointer, and each of the Nav panel's folds, opened there. */
 function openNavContextMenu(nav, target, x, y) {
-  if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+  if (document.body.classList.contains('urd-chrome-off')) return;
   selectBlock(null);
   const here = navPartAt(target);
   const open = (fold, part = null) => post({ type: 'urd-open-panel', panel: 'nav', fold, part });
@@ -523,11 +531,12 @@ function openNavContextMenu(nav, target, x, y) {
   });
 }
 
-/** The section's menu, on its empty surface: a new block at the point, the clipboard, the section's settings and its own actions. */
+/** The section's menu, on its empty surface: a new block at the point, the clipboard, the section's settings and its own actions. The phone view has the same menu, greyed where an item places on the desktop alone: a new block or pasted blocks at the point, a new section from the adder the phone view does not draw, and the height fitted to the desktop's blocks. */
 function openSectionContextMenu(host, x, y, from = null) {
-  if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+  if (document.body.classList.contains('urd-chrome-off')) return;
   const section = host._urdSection;
   if (!section) return;
+  const phone = isMobile();
   const select = () => {
     selectBlock(null);
     markActiveVisual(host);
@@ -541,20 +550,20 @@ function openSectionContextMenu(host, x, y, from = null) {
     return n?.querySelector('button') ?? null;
   };
   showContextMenu(host, x, y, ta('canvas.ctx.sectionLabel'), (item, sep) => {
-    item(ta('canvas.ctx.newBlockHere'), '/', () => openBlockMenuAt(host, x, y)).classList.add('urd-ctx-first');
+    item(ta('canvas.ctx.newBlockHere'), keysHere('/'), () => openBlockMenuAt(host, x, y), { disabled: phone }).classList.add('urd-ctx-first');
     // One clipboard: blocks paste at this section, a section lands below it.
-    if (clipboard?.kind === 'section') item(ta('canvas.ctx.pasteSection'), 'Ctrl+V', () => pasteSection(host));
-    else item(ta('canvas.ctx.paste'), 'Ctrl+V', () => pasteClipboard(), { disabled: !clipboard?.blocks?.length });
+    if (clipboard?.kind === 'section') item(ta('canvas.ctx.pasteSection'), keysHere('Ctrl+V'), () => pasteSection(host));
+    else item(ta('canvas.ctx.paste'), keysHere('Ctrl+V'), () => pasteClipboard(), { disabled: phone || !clipboard?.blocks?.length });
     sep();
     // The section's settings, in the floating menu as the gear on its bar opens them.
     item(ta('canvas.ctx.sectionSettings'), '', () => openSectionSettings(host, section));
-    item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: !adderBelow() });
+    item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: phone || !adderBelow() });
     item(ta('canvas.ctx.sectionUp'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     item(ta('canvas.ctx.sectionDown'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
-    if (host._urdGrid) item(ta('canvas.fitHeight'), '', () => fitSectionHeight(host, section, host._urdGrid));
+    if (host._urdGrid || phone) item(ta('canvas.fitHeight'), '', () => fitSectionHeight(host, section, host._urdGrid), { disabled: phone });
     sep();
-    item(ta('canvas.ctx.cutSection'), 'Ctrl+X', () => copySection(host, true));
-    item(ta('canvas.ctx.copySection'), 'Ctrl+C', () => copySection(host));
+    item(ta('canvas.ctx.cutSection'), keysHere('Ctrl+X'), () => copySection(host, true));
+    item(ta('canvas.ctx.copySection'), keysHere('Ctrl+C'), () => copySection(host));
     item(ta('canvas.ctx.duplicateSection'), '', () => post({ type: 'urd-duplicate-section', sectionId: section.id }));
     item(ta('canvas.ctx.saveSection'), '', () => post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) }));
     sep();
@@ -571,7 +580,7 @@ let activeBeforePress = null;
 document.addEventListener('pointerdown', () => { activeBeforePress = document.activeElement; }, true);
 document.addEventListener('contextmenu', (event) => {
   const target = eventTarget(event);
-  if (!target || isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+  if (!target || document.body.classList.contains('urd-chrome-off')) return;
   const el = target.closest('.urd-block.urd-editable');
   if (el) {
     const text = target.closest(EDITABLE_TEXT);
@@ -1149,12 +1158,13 @@ export function enhanceSection(host, section, grid) {
   }
   // In the phone view each block wears its place in the reading order, a block placed by its own exception in amber (phone-order.js).
   if (isMobile()) {
-    stackOrder(section.blocks, phoneOrderOf(section)).forEach((block, i) => {
+    const setup = phoneSetupOf(section);
+    stackOrder(section.blocks, setup).forEach((block, i) => {
       const el = host.querySelector(`.urd-block[data-block-id="${CSS.escape(block.id)}"]`);
       if (!el) return;
       el.querySelector(':scope > .urd-phone-num')?.remove();
       const num = document.createElement('span');
-      num.className = hasPhonePlace(block, section.blocks) ? 'urd-phone-num urd-phone-num-own' : 'urd-phone-num';
+      num.className = hasPhonePlace(block, section.blocks, setup) ? 'urd-phone-num urd-phone-num-own' : 'urd-phone-num';
       num.textContent = String(i + 1);
       num.setAttribute('aria-hidden', 'true');
       el.appendChild(num);
@@ -3464,7 +3474,7 @@ function addSectionToolbar(host, section, grid) {
     del.classList.add('urd-sec-delete');
     bar.appendChild(del);
   }
-  else if (!isMobile()) bar.appendChild(moreButton((x, y, from) => openSectionContextMenu(host, x, y, from)));
+  else bar.appendChild(moreButton((x, y, from) => openSectionContextMenu(host, x, y, from)));
   // New block and New section, together at the bar's right end: a block in this section, and a section below it.
   if (!isMobile()) {
     const adds = document.createElement('span');
@@ -3925,8 +3935,9 @@ function selectBlock(el, opts = {}) {
   // block (the arrows, Delete, 1, 2 and 3, Shift+F10) work right after the
   // click: the press that selects prevents its default, which would
   // otherwise have moved the focus into the frame. Text with the caret
-  // keeps it.
-  if (el && !el.contains(document.activeElement)) {
+  // keeps it, and a block picked in the editor's own lists leaves the focus
+  // in the list (opts.keepFocus).
+  if (el && !opts.keepFocus && !el.contains(document.activeElement)) {
     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
     el.focus({ preventScroll: true });
   }
@@ -4088,10 +4099,10 @@ window.addEventListener('keydown', (event) => {
       else copySection(chosen, cut);
       return;
     }
-    // The section's menu from the keyboard, on the active section.
+    // The section's menu from the keyboard, on the active section, in either view.
     if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
       const active = document.querySelector('.urd-section-active');
-      if (!active || isMobile()) return;
+      if (!active) return;
       event.preventDefault();
       const r = active.getBoundingClientRect();
       openSectionContextMenu(active, r.left + 16, Math.max(16, r.top + 16));
@@ -4116,9 +4127,8 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // The right-click menu from the keyboard: the context-menu key, or Shift+F10.
+  // The right-click menu from the keyboard: the context-menu key, or Shift+F10, in either view.
   if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
-    if (isMobile()) return;
     event.preventDefault();
     const r = el.getBoundingClientRect();
     openContextMenu(el, r.left + 8, r.top + 8);
@@ -4228,6 +4238,27 @@ window.addEventListener('keydown', (event) => {
 });
 
 /**
+ * A flowing block moved one place in the phone's reading order (phone-moves.js phoneStep): the change is written into the section here, so a burst of presses reckons from where the last one left it, and posted to the editor.
+ * @param {object} section
+ * @param {object} block
+ * @param {number} dir -1 earlier, 1 later
+ * @param {boolean} coalesce From the keys: a burst is one undo step
+ */
+function stepPhone(section, block, dir, coalesce) {
+  const change = phoneStep(section.blocks, phoneSetupOf(section), block.id, dir);
+  if (!change) return;
+  for (const [id, place] of Object.entries(change.places)) {
+    const other = section.blocks.find((b) => b.id === id);
+    if (!other) continue;
+    if (place) other.phonePlace = place; else delete other.phonePlace;
+  }
+  if (change.stacks?.length) section.phoneStacks = change.stacks;
+  else if (change.stacks) delete section.phoneStacks;
+  if (change.list) section.phoneList = change.list;
+  post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change, coalesce });
+}
+
+/**
  * The arrows in the phone view: Alt with Up or Down moves a block that flows in the row grid one step in the reading order, as the bar's buttons do; the arrows move a block placed by hand in the row grid, Up and Down one row and Left and Right one per cent of the width.
  * A burst of presses is one undo step.
  * @param {KeyboardEvent} event
@@ -4245,10 +4276,7 @@ function phoneArrow(event, ctx, el, dir) {
     // Alt with any arrow belongs to the selected block, so the browser's own Back and Forward do not fire.
     event.preventDefault();
     if (!dir[1]) return;
-    const place = phonePlaceStep(section.blocks, phoneOrderOf(section), block.id, dir[1]);
-    if (!place) return;
-    block.phonePlace = place;
-    post({ type: 'urd-phone-place', sectionId: section.id, blockId: block.id, phonePlace: place, coalesce: true });
+    stepPhone(section, block, dir[1], true);
     return;
   }
   event.preventDefault();
@@ -4758,10 +4786,25 @@ function duplicateSelection(ctx) {
  * Select a block by id (the bridge: the editor just built the block
  * itself, e.g. from the + New block menu, and the preview does not know
  * the id until the section is re-rendered). Called AFTER the re-render.
+ * A block `picked` in the editor's own lists (the Phone panel's order) is
+ * brought into view, and the focus stays in the list.
  */
-export function selectById(blockId) {
+export function selectById(blockId, picked = false) {
   const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`);
-  if (el) selectBlock(el);
+  if (!el) return;
+  selectBlock(el, { keepFocus: picked });
+  if (picked) el.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+}
+
+/**
+ * The blocks a row under the pointer in the editor's lists stands for, lit on the canvas (the urd-light message: the Phone panel's order, a stack lighting all of its blocks); an empty list takes the light away.
+ * @param {string[]} ids
+ */
+export function lightBlocks(ids) {
+  document.querySelectorAll('.urd-block.urd-lit').forEach((el) => el.classList.remove('urd-lit'));
+  for (const id of ids) {
+    if (typeof id === 'string') document.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.classList.add('urd-lit');
+  }
 }
 
 /** Duplicate the selected block (the bridge: Ctrl+D with focus in the admin panels). */
@@ -4920,7 +4963,7 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.dataset.cap = ta('canvas.cap.move');
   barBody.appendChild(moveHandle);
 
-  // Flowing mobile block: arrows that move it in the reading order (writes its exception, phonePlace).
+  // Flowing mobile block: arrows that move it in the reading order (stepPhone: its exception, its stack or the custom order).
   // Pinned blocks do not take part in the flow and get ↺ instead.
   if (mobile && !Number.isFinite(block.frames.mobile?.row)) {
     for (const [svg, dir, key] of [[ORDER_UP_SVG, -1, 'canvas.orderUp'], [ORDER_DOWN_SVG, 1, 'canvas.orderDown']]) {
@@ -4928,12 +4971,7 @@ function enhanceBlock(el, block, section, grid, host) {
       btn.innerHTML = svg;
       btn.title = ta(key);
       btn.dataset.cap = ta(dir < 0 ? 'canvas.cap.earlier' : 'canvas.cap.later');
-      btn.addEventListener('click', () => {
-        const place = phonePlaceStep(section.blocks, phoneOrderOf(section), block.id, dir);
-        if (!place) return;
-        block.phonePlace = place;
-        post({ type: 'urd-phone-place', sectionId: section.id, blockId: block.id, phonePlace: place });
-      });
+      btn.addEventListener('click', () => stepPhone(section, block, dir, false));
       barBody.appendChild(btn);
     }
   }
@@ -4965,6 +5003,8 @@ function enhanceBlock(el, block, section, grid, host) {
     // With small panels the gear is the word for the settings, as the desktop bar's first word is for a block without its own editor.
     if (TOOL_FORMS.includes(barForm())) barBody.appendChild(barButton(ta('canvas.ctx.settings'), ta('canvas.blockMenu'), () => openBlockSettings(el, section, block), 'urd-edit-lead'));
     else barBody.appendChild(menuButton(el, section, block));
+    // The right-click menu under ⋮, as on the desktop's shorter bars: the way to it by touch.
+    barBody.appendChild(moreButton((x, y, from) => openContextMenu(el, x, y, from)));
   }
 
   const form = barForm();

@@ -440,7 +440,7 @@ function unfoldPanel() {
  *  The ids are stable English identifiers (never display text); PANEL_LABELS owns what the user sees.
  *  Drafts stands first in the System group as a tab of its own, which opens the Drafts window (state/drafts.svelte.js) rather than a panel. */
 const PANEL_GROUPS = [
-  ['pages', 'blocks', 'properties', 'grid'],
+  ['pages', 'blocks', 'properties', 'grid', 'phone'],
   ['site', 'legal', 'theme', 'nav', 'footer', 'collections', 'plugins'],
   ['drafts', 'history', 'update'],
 ];
@@ -481,6 +481,7 @@ const PANEL_INTROS = {
   pages: ['hint.pages.drafts'],
   blocks: ['hint.blocks.intro'],
   grid: ['hint.grid.intro', 'hint.grid.section'],
+  phone: ['hint.phone.intro'],
   collections: ['hint.collections.intro'],
   plugins: ['hint.plugins.intro'],
   history: ['hint.history.intro'],

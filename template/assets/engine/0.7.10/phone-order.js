@@ -2,6 +2,8 @@
  * The order of a section's blocks on the phone, in the row grid (ADR-0019): pure, node-tested (tests/phone-order.test.mjs).
  * The section's rule (`phoneOrder`) reads its blocks top first, by their top on the desktop (or the key `mobileOrder` a preset gives them), or column by column where blocks stand beside each other on the desktop, the left or the right column first.
  * A block's exception (`phonePlace`) puts it directly before or after another block, wherever the rule puts that one.
+ * A stack (`phoneStacks`) holds blocks that read as one, standing where the first of them in the rule's order stands, its first block's exception moving it whole; a custom order (`phoneList`) holds the order as listed, a block missing from it joining where the rule and the exceptions put it.
+ * The editor's moves (the list, the arrows) are reckoned in phone-moves.js.
  */
 
 /** The section's rules, the first the standard. */
@@ -21,18 +23,30 @@ const byKey = (a, b) => (sortKey(a) - sortKey(b)) || (a.frames.desktop.x - b.fra
 /** The most a band may stand below the one above it, in px, for the two to read as one grid: a card's parts stand closer than its rows of cards do. */
 export const PHONE_JOIN_GAP = 24;
 
-/** Whether a block flows in the row grid, rather than standing on rows placed by hand. */
-const flowing = (block) => !Number.isFinite(block.frames.mobile?.row);
+/** A list of block ids, or null where the value is none. */
+const idList = (value) => (Array.isArray(value) ? value.filter((id) => typeof id === 'string') : null);
 
-/** The block a block's exception names, or null. */
-const anchorOf = (block) => (typeof block.phonePlace?.before === 'string' ? block.phonePlace.before : typeof block.phonePlace?.after === 'string' ? block.phonePlace.after : null);
+/**
+ * A section's phone order whole: its rule, its custom order (null where it has none) and its stacks.
+ * @param {object} section
+ * @returns {{rule: string, list: string[]|null, stacks: string[][]}}
+ */
+export function phoneSetupOf(section) {
+  const stacks = Array.isArray(section?.phoneStacks) ? section.phoneStacks.map(idList).filter((ids) => ids && ids.length > 1) : [];
+  return { rule: phoneOrderOf(section), list: idList(section?.phoneList), stacks };
+}
+
+/** The setup from a rule alone or a whole setup. */
+const setupFrom = (setup) => (setup && typeof setup === 'object'
+  ? { rule: PHONE_ORDERS.includes(setup.rule) ? setup.rule : 'top', list: setup.list ?? null, stacks: setup.stacks ?? [] }
+  : { rule: PHONE_ORDERS.includes(setup) ? setup : 'top', list: null, stacks: [] });
 
 /**
  * The blocks read column by column: a band holds the blocks whose heights overlap on the desktop, one after another; a column inside a band the blocks whose widths overlap there.
  * Bands close below each other (PHONE_JOIN_GAP) with columns that line up, one to one, stand as one grid, so a card of an icon over a text is one column even where the two do not overlap in height, while two rows of cards, or a zig-zag of text and picture, stay rows.
  * @param {object[]} blocks
  * @param {'left'|'right'} side Which column is read first
- * @returns {object[]}
+ * @returns {{order: object[], columns: string[][]}} The order, and the columns of two blocks or more in grids of two columns or more, by their ids
  */
 function byColumns(blocks, side) {
   const top = (b) => b.frames.desktop.y;
@@ -82,12 +96,17 @@ function byColumns(blocks, side) {
     last = columns;
     lastBottom = band.bottom;
   }
-  const out = [];
+  const order = [];
+  const stacked = [];
   for (const grid of grids) {
     const columns = side === 'right' ? grid.slice().reverse() : grid;
-    for (const col of columns) out.push(...col.blocks.sort(byKey));
+    for (const col of columns) {
+      col.blocks.sort(byKey);
+      order.push(...col.blocks);
+      if (grid.length > 1 && col.blocks.length > 1) stacked.push(col.blocks.map((b) => b.id));
+    }
   }
-  return out;
+  return { order, columns: stacked };
 }
 
 /**
@@ -150,125 +169,83 @@ function withExceptions(base) {
 }
 
 /**
- * The reading order in the row grid: the blocks the phone shows (not hidden there), by the section's rule, with each block's exception.
- * Blocks placed by hand (frames.mobile with a row) are included, in the same order: auto-placement skips them, but the DOM order carries the read-aloud order.
- * @param {object[]} blocks The section's blocks
- * @param {string} [rule] The section's rule (phoneOrderOf)
- * @returns {object[]}
- */
-export function stackOrder(blocks, rule = 'top') {
-  return withExceptions(ruleOrder(blocks, rule)).list;
-}
-
-/**
- * The blocks the phone shows in the rule's order, before the exceptions.
+ * The blocks the phone shows in the rule's order, before the exceptions, and the rule's columns.
  * A block shown on phones only stands nowhere on the desktop, so it shapes no column: it joins the columns' order before the first block whose key is its own or greater.
  */
 function ruleOrder(blocks, rule) {
   const shown = (blocks ?? []).filter((block) => !block.hideMobile && block.frames?.desktop);
-  if (rule !== 'left' && rule !== 'right') return shown.slice().sort(byKey);
-  const base = byColumns(shown.filter((block) => !block.hideDesktop), rule);
+  if (rule !== 'left' && rule !== 'right') return { order: shown.slice().sort(byKey), columns: [] };
+  const { order, columns } = byColumns(shown.filter((block) => !block.hideDesktop), rule);
   for (const block of shown.filter((b) => b.hideDesktop).sort(byKey)) {
-    const at = base.findIndex((b) => sortKey(b) >= sortKey(block));
-    base.splice(at < 0 ? base.length : at, 0, block);
+    const at = order.findIndex((b) => sortKey(b) >= sortKey(block));
+    order.splice(at < 0 ? order.length : at, 0, block);
   }
-  return base;
+  return { order, columns };
 }
 
 /**
- * The blocks whose exception leads to this block, directly or through another such block: they move with it.
- * @param {object[]} blocks
- * @param {string} blockId
- * @returns {Set<string>}
+ * The custom order: the listed units as listed, and each unit the list misses after the nearest unit before it in the order the rule and the exceptions give.
+ * @param {object[]} units In the rule's order with the exceptions
+ * @param {string[]} ids The list, by unit
  */
-function followersOf(blocks, blockId) {
-  const followers = new Set();
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const block of blocks) {
-      const of = anchorOf(block);
-      if (block.id !== blockId && !followers.has(block.id) && (of === blockId || followers.has(of))) {
-        followers.add(block.id);
-        grew = true;
-      }
-    }
-  }
-  return followers;
+function listed(units, ids) {
+  const byId = new Map(units.map((u) => [u.id, u]));
+  const out = [];
+  for (const id of ids) if (byId.has(id) && !out.includes(byId.get(id))) out.push(byId.get(id));
+  units.forEach((unit, i) => {
+    if (out.includes(unit)) return;
+    const before = units.slice(0, i).reverse().find((u) => out.includes(u));
+    out.splice(before ? out.indexOf(before) + 1 : 0, 0, unit);
+  });
+  return out;
 }
 
 /**
- * The flowing blocks' ids in the order a trial exception for one block gives.
- * @param {object[]} blocks
- * @param {string} rule
- * @param {string} blockId
- * @param {object|null} place The trial exception
- */
-function trialOrder(blocks, rule, blockId, place) {
-  return stackOrder(blocks.map((b) => (b.id === blockId ? { ...b, phonePlace: place } : b)), rule).filter(flowing).map((b) => b.id);
-}
-
-/**
- * The exception that moves a flowing block exactly one place past the other blocks in the phone's order, earlier or later; the blocks placed against it move with it, and every other block keeps its order.
- * The nearest block that gives that is chosen, before the block before it or after the block after it where those give it; null at the ends, or where no exception gives it.
- * Only flowing blocks take part: a block placed by hand has a row of its own.
+ * The phone order and what it is made of: the rule's order, the stacks as units, the exceptions, and the custom order.
+ * Blocks placed by hand (frames.mobile with a row) are included, in the same order: auto-placement skips them, but the DOM order carries the read-aloud order.
  * @param {object[]} blocks The section's blocks
- * @param {string} rule The section's rule
- * @param {string} blockId
- * @param {number} dir -1 earlier, 1 later
- * @returns {{before: string}|{after: string}|null} The block's new `phonePlace`
+ * @param {string|{rule: string, list?: string[]|null, stacks?: string[][]}} [setup] The section's rule, or its setup (phoneSetupOf)
+ * @returns {{order: object[], placed: Set<string>, stacks: string[][], columns: string[][]}} The order; the blocks whose exception holds in it (a stack's first block for the stack); the stacks as they hold, each of two blocks or more; and the rule's columns
  */
-export function phonePlaceStep(blocks, rule, blockId, dir) {
-  const now = stackOrder(blocks, rule).filter(flowing).map((b) => b.id);
-  const at = now.indexOf(blockId);
-  if (at < 0) return null;
-  const followers = followersOf(blocks, blockId);
-  const others = (ids) => ids.filter((id) => id !== blockId && !followers.has(id));
-  const rank = (ids) => others(ids.slice(0, ids.indexOf(blockId))).length;
-  const kept = others(now).join(' ');
-  const goal = rank(now) + Math.sign(dir);
-  const nearest = others(now).sort((a, b) => Math.abs(now.indexOf(a) - at) - Math.abs(now.indexOf(b) - at));
-  for (const of of nearest) {
-    for (const side of dir < 0 ? ['before', 'after'] : ['after', 'before']) {
-      const place = { [side]: of };
-      const order = trialOrder(blocks, rule, blockId, place);
-      if (others(order).join(' ') === kept && rank(order) === goal) return place;
-    }
+export function phoneParts(blocks, setup = 'top') {
+  const { rule, list, stacks } = setupFrom(setup);
+  const { order: base, columns } = ruleOrder(blocks, rule);
+  const byId = new Map(base.map((b) => [b.id, b]));
+  /** Each stacked block's stack, by the stack's first block; a block in two stacks belongs to the first. */
+  const unitOf = new Map();
+  const held = [];
+  for (const ids of stacks) {
+    const members = [...new Set(ids)].filter((id) => byId.has(id) && !unitOf.has(id));
+    if (members.length < 2) continue;
+    for (const id of members) unitOf.set(id, members[0]);
+    held.push(members);
   }
-  return null;
+  const unitId = (id) => unitOf.get(id) ?? id;
+  const membersOf = new Map(held.map((ids) => [ids[0], ids.map((id) => byId.get(id))]));
+  /** An exception against a stacked block is against its stack. */
+  const mapped = (place) => {
+    const side = typeof place?.before === 'string' ? 'before' : typeof place?.after === 'string' ? 'after' : null;
+    return side ? { [side]: unitId(place[side]) } : null;
+  };
+  const units = [];
+  const seen = new Set();
+  for (const block of base) {
+    const id = unitId(block.id);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    units.push({ id, phonePlace: mapped(byId.get(id).phonePlace), members: membersOf.get(id) ?? [block] });
+  }
+  const done = withExceptions(units);
+  const ordered = list ? listed(done.list, list.map(unitId)) : done.list;
+  return { order: ordered.flatMap((u) => u.members), placed: list ? new Set() : done.placed, stacks: held, columns };
 }
 
 /**
- * The exception on one side that keeps a flowing block where it stands: the nearest block it can stand before (or after) without anything moving, else the nearest that keeps every other block's order; null where none can.
- * @param {object[]} blocks
- * @param {string} rule
- * @param {string} blockId
- * @param {'before'|'after'} side
- * @returns {{before: string}|{after: string}|null}
- */
-export function phonePlaceKeeping(blocks, rule, blockId, side) {
-  const now = stackOrder(blocks, rule).filter(flowing).map((b) => b.id);
-  const at = now.indexOf(blockId);
-  if (at < 0) return null;
-  const followers = followersOf(blocks, blockId);
-  const others = (ids) => ids.filter((id) => id !== blockId && !followers.has(id));
-  const kept = others(now).join(' ');
-  let fallback = null;
-  for (const of of others(now).sort((a, b) => Math.abs(now.indexOf(a) - at) - Math.abs(now.indexOf(b) - at))) {
-    const place = { [side]: of };
-    const order = trialOrder(blocks, rule, blockId, place);
-    if (order.join(' ') === now.join(' ')) return place;
-    if (!fallback && others(order).join(' ') === kept) fallback = place;
-  }
-  return fallback;
-}
-
-/**
- * Whether a block's exception holds in its section: it names another block the phone shows, and is no part of a ring.
- * @param {object} block
+ * The reading order in the row grid: the blocks the phone shows (not hidden there), by the section's rule, its stacks, each block's exception and its custom order.
  * @param {object[]} blocks The section's blocks
- * @returns {boolean}
+ * @param {string|object} [setup] The section's rule, or its setup (phoneSetupOf)
+ * @returns {object[]}
  */
-export function hasPhonePlace(block, blocks) {
-  return Boolean(block?.id) && withExceptions(ruleOrder(blocks, 'top')).placed.has(block.id);
+export function stackOrder(blocks, setup = 'top') {
+  return phoneParts(blocks, setup).order;
 }

@@ -14,7 +14,8 @@ import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
 import { wholeStyleHtml } from '$engine/text-whole.js';
-import { phoneOrderOf } from '$engine/phone-order.js';
+import { phoneOrderOf, phoneSetupOf, stackOrder } from '$engine/phone-order.js';
+import { flowing } from '$engine/phone-moves.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign, calLimitStart } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
@@ -183,8 +184,12 @@ function onSelectBlock(msg) {
   selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
   // The block's section becomes the palette target (block gestures do not
   // post urd-select-section, so Properties is not torn from the block to
-  // the section).
-  if (msg.sectionId) activeSectionId = msg.sectionId;
+  // the section), and the section's mirrors follow it, as the Phone panel
+  // shows that section's settings.
+  if (msg.sectionId && msg.sectionId !== activeSectionId) {
+    activeSectionId = msg.sectionId;
+    syncSectionMirrors(store?.data.sections.find((s) => s.id === msg.sectionId));
+  }
   syncSelectedBlock();
   // Only a NEW SECTION opens the Properties panel automatically; a block
   // click never does.
@@ -914,12 +919,16 @@ let sectionMobileGap = $state(null);
 /** Mirror of the active section's rule for its order on the phone (`phoneOrder`, phone-order.js) */
 let sectionPhoneOrder = $state('top');
 
+/** Mirror of whether the active section holds a custom order on the phone (`phoneList`) */
+let sectionPhoneCustom = $state(false);
+
 function syncSectionMirrors(section) {
   sectionGrid = section?.grid ? { ...section.grid } : null;
   sectionMinHeight = section?.size?.minHeight ?? '';
   sectionMaxWidth = section?.size?.maxWidth ?? '';
   sectionMobileGap = Number.isFinite(section?.size?.mobileGap) ? section.size.mobileGap : null;
   sectionPhoneOrder = phoneOrderOf(section);
+  sectionPhoneCustom = Array.isArray(section?.phoneList);
   sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
   sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
   sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
@@ -1081,6 +1090,47 @@ function setSectionPhoneOrder(rule) {
   mutateSection(`edit:phone-order:${activeSectionId}`, (s) => {
     if (rule === 'left' || rule === 'right') s.phoneOrder = rule; else delete s.phoneOrder;
   });
+}
+
+/** «Custom order» on the phone: on, the order as it reads now is held as the section's list (`phoneList`); off, the list goes and the section's rule orders the blocks again, with the exceptions and stacks they had. */
+function setSectionPhoneCustom(on) {
+  mutateSection('phone-custom', (s) => {
+    if (on) s.phoneList = stackOrder(s.blocks, phoneSetupOf(s)).filter(flowing).map((b) => b.id);
+    else delete s.phoneList;
+  });
+}
+
+/**
+ * A change to a section's phone order (phone-moves.js: a move in the Phone panel's list, or the arrows on the canvas): the blocks' exceptions, the stacks and the custom order, written as one undo step under `key`.
+ * Only ids the section holds are written, and a stack of fewer than two blocks is left out.
+ * @param {string} sectionId
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[]}} change
+ * @param {string} [key] The history key: a burst of keys joins under one
+ * @returns {boolean} Whether the section took the change
+ */
+function changeSectionPhone(sectionId, change, key = 'phone-order') {
+  const section = store?.data.sections.find((s) => s.id === sectionId);
+  if (!section || !change || typeof change !== 'object') return false;
+  const ids = new Set(section.blocks.map((b) => b.id));
+  historyState.pushHistory(key);
+  for (const [id, place] of Object.entries(change.places ?? {})) {
+    const block = section.blocks.find((b) => b.id === id);
+    if (!block) continue;
+    const side = typeof place?.before === 'string' ? 'before' : typeof place?.after === 'string' ? 'after' : null;
+    if (side && place[side] !== id && ids.has(place[side])) block.phonePlace = { [side]: place[side] };
+    else delete block.phonePlace;
+  }
+  if (Array.isArray(change.stacks)) {
+    const stacks = change.stacks.map((stack) => (Array.isArray(stack) ? [...new Set(stack)].filter((id) => ids.has(id)) : [])).filter((stack) => stack.length > 1);
+    if (stacks.length) section.phoneStacks = stacks; else delete section.phoneStacks;
+  }
+  if (Array.isArray(change.list)) section.phoneList = [...new Set(change.list)].filter((id) => ids.has(id));
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  if (section.id === activeSectionId) syncSectionMirrors(section);
+  if (selectedBlock?.sectionId === section.id) syncSelectedBlock();
+  return true;
 }
 
 /** The selected block's exception in the phone order (`phonePlace`): directly before or after another block, or null to follow the section's rule. A phone change, outside the review flag. */
@@ -1485,6 +1535,9 @@ export const pageState = {
   setSectionWidth,
   get sectionMobileGap() { return sectionMobileGap; },
   get sectionPhoneOrder() { return sectionPhoneOrder; },
+  get sectionPhoneCustom() { return sectionPhoneCustom; },
+  setSectionPhoneCustom,
+  changeSectionPhone,
   setSectionMobileGap,
   setSectionPhoneOrder,
   get sectionBg() { return sectionBg; },

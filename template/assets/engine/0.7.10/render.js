@@ -8,7 +8,7 @@
  * Two viewports (opts.viewport):
  *  - 'desktop': absolute positioning from frames.desktop.
  *  - 'mobile': the row grid (ADR-0019), one path for all sections.
- *    Blocks without frames.mobile are auto-placed in reading order (stackOrder in phone-order.js, by the section's rule and its blocks' exceptions).
+ *    Blocks without frames.mobile are auto-placed in reading order (stackOrder in phone-order.js, by the section's rule, its stacks, its blocks' exceptions and its custom order).
  *    Blocks with row in frames.mobile are pinned to explicit row tracks.
  *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
@@ -19,7 +19,7 @@ import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
 import { refreshSticky } from './sticky.js';
 import { pinsOnPhone, stuckBox, stickyLeads } from './sticky-model.js';
-import { stackOrder, phoneOrderOf } from './phone-order.js';
+import { stackOrder, phoneSetupOf } from './phone-order.js';
 import { t } from './i18n.js';
 import { isAnchorName } from './nav-model.js';
 
@@ -1012,7 +1012,7 @@ export function renderSection(section, site, host, opts = {}) {
     // The blocks pinned on the phone while the page scrolls, by their pinning group (each alone without one), the group's first block in the section's order speaking for it as on the desktop (stickyLeads).
     const leads = stickyLeads(section.blocks);
     const stuck = new Map();
-    for (const block of stackOrder(section.blocks, phoneOrderOf(section))) {
+    for (const block of stackOrder(section.blocks, phoneSetupOf(section))) {
       const el = document.createElement('div');
       const pinned = Number.isFinite(block.frames.mobile?.row);
       el.className = pinned ? 'urd-block urd-block-pinned' : 'urd-block urd-block-flow';

@@ -69,6 +69,16 @@
           "description": "The preset the section was created from - provenance only, controls nothing"
         },
         "phoneOrder": { "enum": ["top", "left", "right"], "default": "top", "description": "How the section's blocks are read on the phone (additive field from 0.7.3.12, phone-order.js): top first by their desktop top (or mobileOrder), or, where blocks stand beside each other on the desktop, column by column with the left or the right column first. Omitted = top" },
+        "phoneList": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The section's custom order on the phone (additive field from 0.7.3.13, phone-order.js): its blocks' ids in the order they read, held whatever happens on the desktop; a block missing from it joins after the block before it in the rule's order, and an id the section does not hold is passed over. Omitted = the rule, the stacks and the exceptions order the blocks"
+        },
+        "phoneStacks": {
+          "type": "array",
+          "items": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+          "description": "Blocks that read as one on the phone (additive field from 0.7.3.13, phone-order.js): each a list of block ids in their order, standing where the first of them in the rule's order stands, the first block's phonePlace moving the stack whole; a block in two stacks belongs to the first. Omitted = none"
+        },
         "theme": {
           "type": "string",
           "description": "Ready-made section theme (role set, additive from v0.6): 'surface'/'accent'/'inverse' and others override the theme's color tokens on the section; absence = Standard (no override). Unknown roles are ignored. Norwegian role values from before v3 are lifted by the page migration (ADR-0021)."

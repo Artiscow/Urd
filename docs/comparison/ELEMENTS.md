@@ -118,7 +118,7 @@ On the canvas, text is edited by clicking and writing. A floating text toolbar a
 - blocks change z-order with «To the front» and «To the back» in the block toolbar, in the right-click menu and in the element menu, Ctrl+Shift+Up and Down, and the layer number in Placement;
 - the Pages panel switches page without reloading the editor.
 
-A smaller block that lies over a larger one cannot be selected today, because hover picks the larger one first (a BACKLOG 0.7.10 finding). The layers panel answers that (E6). The phone order has up and down buttons (0.7.3) and Alt with the arrows (Delivered 0.7.3.6).
+A smaller block that lies over a larger one cannot be selected today, because hover picks the larger one first (a BACKLOG 0.7.10 finding). The layers panel answers that (E6). The phone order has up and down buttons (0.7.3), Alt with the arrows (Delivered 0.7.3.6) and a list in the Phone panel (Delivered 0.7.3.13), built so the layers panel can take it up.
 
 ### Global design
 
@@ -227,7 +227,7 @@ Timelines, cursor effects and shaders are not taken ([FEATURES.md](FEATURES.md))
 - **Mobile:** a synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)) and hide on mobile. Mobile review flags each section whose desktop changed after its mobile layout was tuned, until the site owner marks it reviewed.
 - **Preview:** four devices (Screen, laptop 1280, tablet 810, phone 390) and «Clean view», which shows the page as a visitor sees it.
 
-Open: desktop and phone side by side (E14), and real phone sizes in the preview (0.7.10); elements shown only on the phone (E15) are Delivered 0.7.3.8. A section's rule for its phone order (Top, Left or Right first) with an exception per block is Delivered 0.7.3.12; the order as a list with stacks and eight columns on the phone with presets that suggest a layout are BACKLOG 0.7.3.13 and 0.7.3.14. Custom breakpoints (ADR-0019) and a responsive AI fix (E16) are not taken.
+Open: desktop and phone side by side (E14), and real phone sizes in the preview (0.7.10); elements shown only on the phone (E15) are Delivered 0.7.3.8. A section's rule for its phone order (Top, Left or Right first) with an exception per block is Delivered 0.7.3.12, and the order as a list in the Phone panel, with stacks and a custom order, is Delivered 0.7.3.13; eight columns on the phone with presets that suggest a layout are BACKLOG 0.7.3.14. Custom breakpoints (ADR-0019) and a responsive AI fix (E16) are not taken.
 
 ### Section and template galleries
 

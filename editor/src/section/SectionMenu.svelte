@@ -9,14 +9,13 @@
   import { sectionWords } from '$engine/anchor-model.js';
   import { matchWords } from '$engine/palette-search.js';
   import { matchAny } from '$engine/search-langs.js';
-  import { MOBILE_GAP_MAX, mobileGapOf } from '$engine/migrate.js';
-  import { PHONE_ORDERS, stackOrder } from '$engine/phone-order.js';
+  import { mobileGapOf } from '$engine/migrate.js';
   import BackgroundEditor from './BackgroundEditor.svelte';
+  import PhoneSectionRows from './PhoneSectionRows.svelte';
   import AnchorField from '../lib/AnchorField.svelte';
   import Choice from '../lib/Choice.svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import SliderRow from '../lib/rows/SliderRow.svelte';
-  import Setting from '../lib/rows/Setting.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import ColourRow from '../lib/rows/ColourRow.svelte';
@@ -56,18 +55,6 @@
   ]);
   /** Where the section stands among the page's sections, for its moves up and down. */
   const sectionIndex = $derived(ed.sections.findIndex((s) => s.id === activeSectionId));
-  /** A block's mark in the pictures of the phone order: a picture, a heading, a button, or text. */
-  const stripKind = (block) => (['image', 'gallery', 'video', 'map', 'calendar', 'collection', 'product'].includes(block.type) ? 'pic'
-    : block.type === 'button' ? 'btn' : /^\s*<h[1-6]/i.test(String(block.props?.html ?? '')) ? 'head' : 'text');
-  /** Each rule of the phone order drawn as the section's own blocks in that order (phone-order.js), the first eight, and whether the rules order the section differently at all. */
-  const phoneRules = $derived.by(() => {
-    const blocks = ed.sections.find((s) => s.id === activeSectionId)?.blocks ?? [];
-    const orders = PHONE_ORDERS.map((rule) => [rule, stackOrder(blocks, rule)]);
-    return {
-      strips: orders.map(([rule, order]) => [rule, order.slice(0, 8).map(stripKind)]),
-      differ: new Set(orders.map(([, order]) => order.map((b) => b.id).join(' '))).size > 1,
-    };
-  });
   const { ENTRANCE_OPTIONS, HOVER_OPTIONS, animObj, isEntrance, mutateSection, normalizeAnim, readableOn, setSectionGrid, setSectionHeight, themeHex, themeSwatches, toggleSectionGrid } = ed;
 
   /** Ready-made section theme (role set): presentation, no mobile invalidation. */
@@ -249,27 +236,8 @@
       <SliderRow label={ta('lbl.widthFree')} title={ta('tip.props.sectionWidthPx')} value={sectionWidth.px} min={SECTION_WIDTH_MIN} max={SECTION_WIDTH_MAX} step={SECTION_WIDTH_STEP}
         shown={sectionWidth.shown} oninput={(v) => ed.setSectionWidth(sectionWidthValue('own', v))} />
     {/if}
-    <!-- The space between the blocks on the phone, its own with the way back to the site's -->
-    <Setting own={ed.sectionMobileGap !== null} reset={() => ed.setSectionMobileGap(null)}>
-      <SliderRow label={ta('lbl.mobileGap')} title={ta('tip.props.mobileGap')} value={phoneGap} min={0} max={MOBILE_GAP_MAX} step={4}
-        shown={`${phoneGap} px`} oninput={(v) => ed.setSectionMobileGap(v)} />
-    </Setting>
-    <!-- The order on the phone: each rule drawn as the section's own blocks in its order; where no blocks stand beside each other, the rules read alike and it stands only while the section has a rule of its own -->
-    {#if phoneRules.differ || ed.sectionPhoneOrder !== 'top'}
-    <Setting own={ed.sectionPhoneOrder !== 'top'} reset={() => ed.setSectionPhoneOrder('top')}>
-      <div class="field-stack" title={ta('tip.phoneOrder')}>{ta('lbl.phoneOrder')}
-        <div class="po-grid" role="radiogroup" aria-label={ta('lbl.phoneOrder')}>
-          {#each phoneRules.strips as [rule, marks] (rule)}
-            <button type="button" class="po-card" class:on={ed.sectionPhoneOrder === rule} role="radio" aria-checked={ed.sectionPhoneOrder === rule}
-              onclick={() => ed.setSectionPhoneOrder(rule)}>
-              <span class="po-strip" aria-hidden="true">{#each marks as mark, i (i)}<i class="po-{mark}"></i>{/each}</span>
-              <span class="po-name">{ta(`opt.phoneOrder.${rule}`)}</span>
-            </button>
-          {/each}
-        </div>
-      </div>
-    </Setting>
-    {/if}
+    <!-- The section's own settings for the phone: the space between its blocks, its rule for their order, and its custom order (PhoneSectionRows, as the Phone panel draws them) -->
+    <PhoneSectionRows />
     <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
       <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
         onchange={(e) => setSectionHeight(e.target.value)} /></label>

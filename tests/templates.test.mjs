@@ -210,3 +210,20 @@ test('a copy\'s place in the phone order follows the block it names to its copy,
   assert.equal('phonePlace' in blocks[0], false, 'the block it names was not copied');
   assert.deepEqual(original.blocks[1].phonePlace, { after: 'blk-a' }, 'the original is untouched');
 });
+
+test('a copied section\'s custom order and stacks on the phone follow its blocks, and a block left out leaves them', () => {
+  const original = section();
+  const [a, b] = original.blocks.map((blk) => blk.id);
+  original.phoneList = [b, a, 'blk-gone'];
+  original.phoneStacks = [[a, b], [b, 'blk-gone']];
+  const out = cloneSectionForInsert(original, makeId);
+  const [na, nb] = out.blocks.map((blk) => blk.id);
+  assert.deepEqual(out.phoneList, [nb, na]);
+  assert.deepEqual(out.phoneStacks, [[na, nb]], 'a stack left with one block is dropped');
+  const pageCopy = clonePageForInsert({ meta: { id: 'a', title: 'A' }, sections: [original] }, makeId, { id: 'b', title: 'B' });
+  assert.deepEqual(pageCopy.sections[0].phoneList, pageCopy.sections[0].blocks.slice(0, 2).map((blk) => blk.id).reverse());
+  const lone = cloneSectionForInsert({ ...original, phoneList: ['blk-gone'], phoneStacks: [['blk-gone', 'blk-x']] }, makeId);
+  assert.equal('phoneList' in lone, false);
+  assert.equal('phoneStacks' in lone, false);
+  assert.deepEqual(original.phoneList, [b, a, 'blk-gone'], 'the original is untouched');
+});

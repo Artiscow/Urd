@@ -2,6 +2,25 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.13): the Phone tab, its order list with stacks and a custom order, and the menus in the phone view
+
+- [ ] «Phone» stands after Grid in the page's panels, in every panel layout; opening it shows the phone view and the section at work, else the topmost one mostly in view
+- [ ] The tab's «Section» lists the open page's sections and brings the one picked into view; loading another page with the tab open shows that page's first section, never «no sections»
+- [ ] «Space between blocks on the phone», «Order on the phone» and «Custom order» stand in the tab for every section, also one whose blocks stand in one column, and the same in a section's menu under «Size and grid»
+- [ ] The list shows the section's blocks in their phone order with the numbers the canvas shows; a row under the pointer lights its block on the canvas (a stack all its blocks), and a press or Enter selects it there and brings it into view while the focus stays in the list
+- [ ] A row dragged between two others moves its block on the phone at once and wears «Placed»; «Placed» gives it back to the section's order
+- [ ] A row dropped on a block alone makes a stack of the two; a stack dragged by its head moves whole; inside a stack, a block dropped below the next one swaps with it, also when it is held by its grip
+- [ ] A stack's block dropped in the room left of the stack's rows, or below the last row, leaves the stack; «Stack» on a stack's head takes it apart
+- [ ] With «Left first», blocks that read as one column beside another show as a stack; dragging it makes it a stack of your own
+- [ ] Alt with the up or down arrow moves the row the focus is in, a stack's first or last block stepping out of its stack, and each move is one step in History
+- [ ] «Custom order» on: the order stays as listed when a block is moved on the desktop, and a new block joins where the section's order puts it; off: the order follows the section's rule again
+- [ ] The published About page at phone width: each story reads whole, its picture, text and button together, and the FAQ's «Til toppen» comes last in the reading order
+- [ ] Under the list, blocks pinned to rows each have ↺ back into the order, and blocks hidden on phones each have the eye that shows them again
+- [ ] In the phone view the arrows on a block's bar and Alt with the arrow keys move a stack's block within its stack, move a block past a whole stack, and keep a custom order
+- [ ] Duplicating a section or a page, or inserting a saved section, keeps its stacks and custom order on the copy
+- [ ] In the phone view a right click on a block, on a section's empty surface and on the site's menu opens the same menu as on the desktop, Shift+F10 too; layer order, «New block here», pasting blocks, «New section below» and «Fit the height to the content» are greyed, and no keys are shown beside the items
+- [ ] The phone view's bars have ⋮ for the block's and the section's menu, by touch too
+
 ### Test batch (0.7.3.12): the phone order's section rule and a block's place
 
 - [ ] The published home page at phone width: the first section reads its heading, text and button before the calendar beside them («Left first»)

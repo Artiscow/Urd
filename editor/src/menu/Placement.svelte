@@ -19,7 +19,8 @@
   import { DOCK_OPTIONS } from './options.js';
   import AnchorField from '../lib/AnchorField.svelte';
   import { blockWords } from '$engine/anchor-model.js';
-  import { stackOrder, phoneOrderOf, phonePlaceKeeping, hasPhonePlace } from '$engine/phone-order.js';
+  import { stackOrder, phoneSetupOf } from '$engine/phone-order.js';
+  import { phonePlaceKeeping, hasPhonePlace, phoneStackOf, flowing } from '$engine/phone-moves.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
@@ -35,18 +36,28 @@
     });
   }
 
-  /** The selected block's section, as the page stores it. */
-  const blockSection = $derived(sections.find((s) => s.id === selectedBlock?.sectionId) ?? null);
-  /** The section's flowing blocks in the phone's order (phone-order.js): a block placed by hand stands on rows of its own. */
-  const phoneFlow = $derived(blockSection ? stackOrder(blockSection.blocks, phoneOrderOf(blockSection)).filter((b) => !Number.isFinite(b.frames.mobile?.row)) : []);
+  /** The selected block's section, read again after every change and every undo, since the page's data is no state of its own: a new copy each time, so its phone order (phone-order.js) follows. */
+  const blockSection = $derived.by(() => {
+    void ed.edits;
+    void ed.restores;
+    const found = ed.sections.find((s) => s.id === selectedBlock?.sectionId);
+    return found ? { ...found, blocks: found.blocks.slice() } : null;
+  });
+  const phoneSetup = $derived(blockSection ? phoneSetupOf(blockSection) : null);
+  /** The section's flowing blocks in the phone's order: a block placed by hand stands on rows of its own. */
+  const phoneFlow = $derived(blockSection ? stackOrder(blockSection.blocks, phoneSetup).filter(flowing) : []);
+  /** The stack of the owner's the block stands in (phone-moves.js), or null. */
+  const phoneStack = $derived(blockSection ? phoneStackOf(blockSection.blocks, phoneSetup, selectedBlock.blockId) : null);
+  /** Whether a place of the block's own counts: not in a custom order, nor for a block inside a stack, which reads where its stack's first block puts it. */
+  const phonePlaceCounts = $derived(Boolean(phoneSetup) && !phoneSetup.list && (!phoneStack || phoneStack[0] === selectedBlock.blockId));
   /** The block's exception in the phone order, where it holds: '' where it follows the section's rule. */
   const phoneSide = $derived.by(() => {
     const block = blockSection?.blocks.find((b) => b.id === selectedBlock.blockId);
-    if (!block || !hasPhonePlace(block, blockSection.blocks)) return '';
+    if (!block || !hasPhonePlace(block, blockSection.blocks, phoneSetup)) return '';
     return typeof block.phonePlace.before === 'string' ? 'before' : 'after';
   });
-  /** The other flowing blocks it can stand before or after, in the phone's order, each named by its kind and its first words. */
-  const phoneNeighbours = $derived(phoneFlow.filter((b) => b.id !== selectedBlock.blockId).map((b) => {
+  /** The other flowing blocks it can stand before or after, in the phone's order, each named by its kind and its first words; its own stack's are left out. */
+  const phoneNeighbours = $derived(phoneFlow.filter((b) => b.id !== selectedBlock.blockId && !phoneStack?.includes(b.id)).map((b) => {
     const words = blockWords(b);
     return [b.id, words ? `${ed.blockLabel(b.type)}: ${words}` : ed.blockLabel(b.type)];
   }));
@@ -56,7 +67,7 @@
       setBlockPhonePlace(null);
       return;
     }
-    const place = blockSection ? phonePlaceKeeping(blockSection.blocks, phoneOrderOf(blockSection), selectedBlock.blockId, side) : null;
+    const place = blockSection ? phonePlaceKeeping(blockSection.blocks, phoneSetup, selectedBlock.blockId, side) : null;
     if (place) setBlockPhonePlace(place);
   }
 
@@ -171,8 +182,8 @@
         onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
     {/if}
   </div>
-  <!-- Its place in the phone's order: as the section's rule puts it, or directly before or after a block it names; a block hidden on phones, a block placed by hand, or the only flowing block has none -->
-  {#if !selectedBlock.hideMobile && selectedBlock.mobileRow === null && phoneNeighbours.length}
+  <!-- Its place in the phone's order: as the section's rule puts it, or directly before or after a block it names; a block hidden on phones, a block placed by hand, the only flowing block, a block inside a stack, and every block of a custom order have none -->
+  {#if !selectedBlock.hideMobile && selectedBlock.mobileRow === null && phonePlaceCounts && phoneNeighbours.length}
     <Setting own={Boolean(phoneSide)} reset={() => setBlockPhonePlace(null)}>
       <Choice stack label={ta('lbl.phoneOrder')} title={ta('tip.phonePlace')} value={phoneSide}
         options={[['', ta('opt.phonePlace.rule')], ['before', ta('opt.phonePlace.before')], ['after', ta('opt.phonePlace.after')]]}
