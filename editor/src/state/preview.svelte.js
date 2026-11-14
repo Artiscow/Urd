@@ -100,6 +100,29 @@ let freeWidth = $state(null);
 /** The widths a dragged edge snaps to: the devices', the screen and phone sizes' and the site's phone breakpoint. */
 const dragStops = $derived([...devices.map((d) => d.width), ...SCREEN_SIZES.map((s) => s.width), ...PHONE_SIZES.map((p) => p.width), siteState.siteDraft?.breakpoints?.mobile ?? 640]);
 
+/** The sections that need a phone review in the phone view, with where each stands in the canvas, as the preview reports them (urd-attention-cards); drawn beside the phone by AttentionCards.svelte. */
+let attentionCards = $state([]);
+
+/** «Reviewed» on a section's review card: the flag goes from the draft (handleReviewDone, one undo step), and from the section's mark in the preview. */
+function reviewSection(sectionId) {
+  bridgeState.handleReviewDone({ sectionId });
+  bridge?.sendAttention(sectionId, false);
+}
+
+/** The notice that says why a drag or a handle greys its block (ADR-0034), kept so it is taken away only while it is still the one shown. */
+let tooNarrowNotice = '';
+
+/** A drag or a handle in the preview greys its block as too narrow for its words (urd-too-narrow): the notice line says which «Force readable text» stops it, and goes once the block is no longer greyed. */
+function showTooNarrow(msg) {
+  if (msg?.screen === 'phone' || msg?.screen === 'desktop') {
+    tooNarrowNotice = ta(`status.tooNarrow.${msg.screen}`);
+    shellState.setStatus(tooNarrowNotice);
+  } else if (tooNarrowNotice && shellState.status === tooNarrowNotice) {
+    shellState.setStatus('');
+    tooNarrowNotice = '';
+  }
+}
+
 /** Sets the dragged width, snapped to the stops within the tolerance given in canvas px. */
 function setFreeWidth(width, tolerance = 0) {
   freeWidth = snapWidth(width, dragStops, tolerance);
@@ -265,8 +288,9 @@ function onIframeLoad() {
     onMoveBlockSection: bridgeState.handleMoveBlockSection,
     onMobileReset: bridgeState.handleMobileReset,
     onPhoneOrder: bridgeState.handlePhoneOrder,
+    onTooNarrow: showTooNarrow,
+    onAttentionCards: (msg) => { attentionCards = Array.isArray(msg.cards) ? msg.cards : []; },
     onPhoneLayout: bridgeState.handlePhoneLayout,
-    onReviewDone: bridgeState.handleReviewDone,
     onBlockFlag: bridgeState.handleBlockFlag,
     onBlockStyle: bridgeState.handleBlockStyle,
     onCollectionEdit: collectionsState.handleCollectionEdit,
@@ -301,8 +325,9 @@ let pendingAnchor = '';
 
 /** The engine in the iframe is listening now: send the draft and the current editor state. */
 async function onReady() {
-  // A canvas drawn anew holds no text being written.
+  // A canvas drawn anew holds no text being written, and reports its review cards again.
   textBarState.reset();
+  attentionCards = [];
   await pageState.pageLoading;
   await pluginsState.pluginsReady;
   // The plugin draft's enabled list and the view choice: the preview
@@ -553,6 +578,8 @@ export function effects() {
 
 /** What the other parts read and write through, and the effects the shell runs once. */
 export const previewState = {
+  get attentionCards() { return attentionCards; },
+  reviewSection,
   get iframeEl() { return iframeEl; },
   set iframeEl(v) { iframeEl = v; },
   get chromeVisible() { return chromeVisible; },

@@ -58,7 +58,7 @@
     </div>
   </div>
 </Setting>
-<SwitchRow label={ta('lbl.phoneCustom')} title={ta('tip.phoneCustom')} checked={ed.sectionPhoneCustom} onchange={(on) => ed.setSectionPhoneCustom(on)} />
+<SwitchRow label={ta('lbl.phoneFollows')} title={ta('tip.phoneFollows')} checked={ed.sectionPhoneFollows} onchange={(on) => ed.setSectionPhoneFollows(on)} />
 <!-- The presets: a press fills the cells, a starting point changed freely afterwards; one that does not fit stands greyed -->
 <div class="field-stack" title={ta('tip.phoneLayout')}>{ta('lbl.phoneLayout')}
   <div class="po-grid">

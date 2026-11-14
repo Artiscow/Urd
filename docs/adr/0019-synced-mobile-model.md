@@ -50,6 +50,7 @@ The field study (13 August 2026) is unambiguous. Squarespace Fluid Engine, Wix, 
 ## Addenda
 
 - 13 November 2026: a block's words can be the phone's own beside its placement, per block and for the props that hold words, in [ADR-0033](0033-words-of-its-own-on-the-phone.md). It changes no decision here; a block with the phone's words counts as overridden for the review of decision 5, as a block placed by hand does.
+- 14 November 2026: the review card of decision 5 is drawn by the editor beside the phone, level with its section, rather than on the page in the canvas (0.7.3.21). It changes no decision here: the section still shows its card, with the reason, the time and «Reviewed».
 
 [ADR-0001]: 0001-hybrid-editor-model.md
 [ADR-0005]: 0005-versioning-and-migration.md

@@ -88,15 +88,16 @@ function followCopiedPlaces(blocks, ids) {
 }
 
 /**
- * A copied section's custom order on the phone (`phoneList`) and its stacks (`phoneStacks`) follow its blocks to their new ids; a block left out of the copy leaves them, and a stack of fewer than two blocks is dropped.
+ * A copied section's custom order on the phone (`phoneList`), its stacks (`phoneStacks`) and the blocks taken out of the rule's columns (`phoneLoose`) follow its blocks to their new ids; a block left out of the copy leaves them, and a stack of fewer than two blocks is dropped.
  * @param {object} section The copied section
  * @param {Map<string, string>} ids Old id to new id
  */
 function followCopiedOrder(section, ids) {
   const follow = (list) => (Array.isArray(list) ? list.filter((id) => ids.has(id)).map((id) => ids.get(id)) : []);
-  if (section.phoneList !== undefined) {
-    const list = follow(section.phoneList);
-    if (list.length) section.phoneList = list; else delete section.phoneList;
+  for (const key of ['phoneList', 'phoneLoose']) {
+    if (section[key] === undefined) continue;
+    const list = follow(section[key]);
+    if (list.length) section[key] = list; else delete section[key];
   }
   if (section.phoneStacks !== undefined) {
     const stacks = (Array.isArray(section.phoneStacks) ? section.phoneStacks : []).map(follow).filter((stack) => stack.length > 1);

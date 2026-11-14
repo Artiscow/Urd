@@ -253,6 +253,11 @@ html {
   display: grid;
 }
 
+/* A block with a height of its own on the phone (frames.mobile.height, render.js data-urd-phone-h) stands at least that tall, and its content fills the box, so a text's card is as tall as the block: the same grid of one row. */
+.urd-block[data-urd-phone-h] {
+  display: grid;
+}
+
 .urd-block[data-urd-align="middle"] {
   align-content: center;
 }
@@ -15804,31 +15809,19 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   background: color-mix(in srgb, #ff2d87 12%, transparent);
 }
 
-/* A block a drop or a handle would squeeze under «Force readable text» (ADR-0034, preview-edit.js showTooNarrow): greyed under a wash, with a round mark drawing a T, for as long as the pointer asks for it */
+/* The block a drag or a handle would squeeze under «Force readable text» (ADR-0034, preview-edit.js showTooNarrow): greyed and faded for as long as the pointer asks for it, the editor's notice line saying why; faded by the filter, so it adds to the lifted block's own opacity */
 .urd-preview .urd-block.urd-readable-blocked {
-  filter: grayscale(1);
+  filter: grayscale(1) opacity(0.55);
 }
 
-.urd-preview .urd-readable-mark {
+/* A stack the dragged block joins, outlined round its blocks and the landing while the drag shows it (preview-edit.js phonePreview), in the amber the Phone Drop Map draws stacks in */
+.urd-preview .urd-phone-stackmark {
   position: absolute;
-  inset: 0;
-  z-index: 100002;
-  display: grid;
-  place-items: center;
-  border-radius: inherit;
-  background: color-mix(in srgb, #4a515c 55%, transparent);
+  z-index: 99998;
+  outline: calc(2px * var(--urd-chrome-scale, 1)) dashed #e2b84a;
+  outline-offset: calc(4px * var(--urd-chrome-scale, 1));
+  border-radius: 8px;
   pointer-events: none;
-}
-
-.urd-preview .urd-readable-mark > svg {
-  box-sizing: content-box;
-  width: calc(12px * var(--urd-chrome-scale, 1));
-  height: calc(12px * var(--urd-chrome-scale, 1));
-  padding: calc(6px * var(--urd-chrome-scale, 1));
-  border-radius: 50%;
-  background: #4a515c;
-  color: #fff;
-  box-shadow: 0 0 0 calc(2px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #fff 75%, transparent);
 }
 
 /* A block lifted with the keys on the phone: shown where it will land, in the landing's outline */
@@ -18629,44 +18622,6 @@ body.urd-mobile .urd-add-section {
 .urd-preview .urd-edit-toolbar .urd-edit-examples[aria-pressed="true"] {
   background: var(--urd-admin-accent, #5f6a75);
   color: var(--urd-admin-accent-text, #fff);
-}
-
-/* The review card in mobile view: what happened, when, and the reviewed
-   button. Counter-scaled like the rest of the editing layer (urd-zoom). */
-.urd-preview .urd-attention-card {
-  position: absolute;
-  top: calc(var(--urd-section-clear, 0px) + 8px * var(--urd-chrome-scale, 1));
-  left: 50%;
-  transform: translateX(-50%) scale(var(--urd-chrome-scale, 1));
-  transform-origin: top center;
-  z-index: 100000;
-  display: grid;
-  gap: 4px;
-  justify-items: start;
-  max-width: 320px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, #e2b84a 55%, transparent);
-  background: color-mix(in srgb, var(--urd-admin-surface, #151a23) 92%, #e2b84a);
-  color: var(--urd-admin-text, #e6e8ea);
-  font: 500 12.5px system-ui, sans-serif;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 35%);
-}
-
-.urd-preview .urd-attention-since {
-  font-size: 11px;
-  opacity: 0.65;
-}
-
-.urd-preview .urd-attention-card button {
-  margin-top: 2px;
-  border: 0;
-  border-radius: 999px;
-  padding: 4px 12px;
-  background: #e2b84a;
-  color: #1a1508;
-  font: 600 12px system-ui, sans-serif;
-  cursor: pointer;
 }
 
 /* The pin marker on an overridden mobile block: shows that the block is detached

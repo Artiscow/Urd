@@ -33,6 +33,7 @@
   import ColorPicker from './lib/ColorPicker.svelte';
   import FloatingMenu from './menu/FloatingMenu.svelte';
   import TextToolbar from './lib/TextToolbar.svelte';
+  import AttentionCards from './lib/AttentionCards.svelte';
   import TopBar from './shell/TopBar.svelte';
   import Rail from './shell/Rail.svelte';
   import CollectionHeading from './panels/collections/CollectionHeading.svelte';
@@ -324,6 +325,7 @@
 {/if}
 <!-- The text bar: the tools of a text written on the canvas, over the stage -->
 <TextToolbar />
+<AttentionCards />
 
 {#if ed.site && ed.chromeVisible}
   <!-- The Drafts window over the canvas, or its pill, opened from the Drafts tab (state/drafts.svelte.js) -->

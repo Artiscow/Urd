@@ -13,6 +13,7 @@
       "id": "sec-46b91629",
       "version": 1,
       "phoneOrder": "left",
+      "phoneLoose": ["blk-1f8cc2e3"],
       "preset": "hero",
       "size": {
         "minHeight": "1264px"

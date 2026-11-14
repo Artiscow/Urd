@@ -3,6 +3,7 @@
  * The section's rule (`phoneOrder`) reads its blocks top first, by their top on the desktop (or the key `mobileOrder` a preset gives them), or column by column where blocks stand beside each other on the desktop, the left or the right column first.
  * A block's exception (`phonePlace`) puts it directly before or after another block, wherever the rule puts that one.
  * A stack (`phoneStacks`) holds blocks that read as one, standing where the first of them in the rule's order stands, its first block's exception moving it whole; a custom order (`phoneList`) holds the order as listed, a block missing from it joining where the rule and the exceptions put it.
+ * A block the owner took out of the rule's columns (`phoneLoose`) reads where the rule puts it, on its own: the column it stands in on the desktop no longer holds it.
  * The editor's moves (the list, the arrows) are reckoned in phone-moves.js.
  */
 
@@ -27,19 +28,19 @@ export const PHONE_JOIN_GAP = 24;
 const idList = (value) => (Array.isArray(value) ? value.filter((id) => typeof id === 'string') : null);
 
 /**
- * A section's phone order whole: its rule, its custom order (null where it has none) and its stacks.
+ * A section's phone order whole: its rule, its custom order (null where it has none), its stacks, and the blocks taken out of the rule's columns.
  * @param {object} section
- * @returns {{rule: string, list: string[]|null, stacks: string[][]}}
+ * @returns {{rule: string, list: string[]|null, stacks: string[][], loose: string[]}}
  */
 export function phoneSetupOf(section) {
   const stacks = Array.isArray(section?.phoneStacks) ? section.phoneStacks.map(idList).filter((ids) => ids && ids.length > 1) : [];
-  return { rule: phoneOrderOf(section), list: idList(section?.phoneList), stacks };
+  return { rule: phoneOrderOf(section), list: idList(section?.phoneList), stacks, loose: idList(section?.phoneLoose) ?? [] };
 }
 
 /** The setup from a rule alone or a whole setup. */
 const setupFrom = (setup) => (setup && typeof setup === 'object'
-  ? { rule: PHONE_ORDERS.includes(setup.rule) ? setup.rule : 'top', list: setup.list ?? null, stacks: setup.stacks ?? [] }
-  : { rule: PHONE_ORDERS.includes(setup) ? setup : 'top', list: null, stacks: [] });
+  ? { rule: PHONE_ORDERS.includes(setup.rule) ? setup.rule : 'top', list: setup.list ?? null, stacks: setup.stacks ?? [], loose: setup.loose ?? [] }
+  : { rule: PHONE_ORDERS.includes(setup) ? setup : 'top', list: null, stacks: [], loose: [] });
 
 /**
  * The blocks read column by column: a band holds the blocks whose heights overlap on the desktop, one after another; a column inside a band the blocks whose widths overlap there.
@@ -204,12 +205,14 @@ function listed(units, ids) {
  * The phone order and what it is made of: the rule's order, the stacks as units, the exceptions, and the custom order.
  * Blocks placed by hand (frames.mobile with a row) are included, in the same order: auto-placement skips them, but the DOM order carries the read-aloud order.
  * @param {object[]} blocks The section's blocks
- * @param {string|{rule: string, list?: string[]|null, stacks?: string[][]}} [setup] The section's rule, or its setup (phoneSetupOf)
- * @returns {{order: object[], placed: Set<string>, stacks: string[][], columns: string[][]}} The order; the blocks whose exception holds in it (a stack's first block for the stack); the stacks as they hold, each of two blocks or more; and the rule's columns
+ * @param {string|{rule: string, list?: string[]|null, stacks?: string[][], loose?: string[]}} [setup] The section's rule, or its setup (phoneSetupOf)
+ * @returns {{order: object[], placed: Set<string>, stacks: string[][], columns: string[][]}} The order; the blocks whose exception holds in it (a stack's first block for the stack); the stacks as they hold, each of two blocks or more; and the rule's columns, without the blocks taken out of them
  */
 export function phoneParts(blocks, setup = 'top') {
-  const { rule, list, stacks } = setupFrom(setup);
-  const { order: base, columns } = ruleOrder(blocks, rule);
+  const { rule, list, stacks, loose } = setupFrom(setup);
+  const out = new Set(loose);
+  const { order: base, columns: ruled } = ruleOrder(blocks, rule);
+  const columns = ruled.map((column) => column.filter((id) => !out.has(id))).filter((column) => column.length > 1);
   const byId = new Map(base.map((b) => [b.id, b]));
   /** Each stacked block's stack, by the stack's first block; a block in two stacks belongs to the first. */
   const unitOf = new Map();

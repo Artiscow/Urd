@@ -980,8 +980,8 @@ let sectionMobileGap = $state(null);
 /** Mirror of the active section's rule for its order on the phone (`phoneOrder`, phone-order.js) */
 let sectionPhoneOrder = $state('top');
 
-/** Mirror of whether the active section holds a custom order on the phone (`phoneList`) */
-let sectionPhoneCustom = $state(false);
+/** Mirror of whether the active section's order on the phone follows the desktop: true unless the section holds its own list (`phoneList`) */
+let sectionPhoneFollows = $state(true);
 
 /** Mirror of the active section's «Force readable text» for each screen (`size.readablePhone`, `size.readableDesktop`, ADR-0034): on unless the section turns it off */
 let sectionReadable = $state({ phone: true, desktop: true });
@@ -992,7 +992,7 @@ function syncSectionMirrors(section) {
   sectionMaxWidth = section?.size?.maxWidth ?? '';
   sectionMobileGap = Number.isFinite(section?.size?.mobileGap) ? section.size.mobileGap : null;
   sectionPhoneOrder = phoneOrderOf(section);
-  sectionPhoneCustom = Array.isArray(section?.phoneList);
+  sectionPhoneFollows = !Array.isArray(section?.phoneList);
   sectionReadable = { phone: forcesReadable(section, 'mobile'), desktop: forcesReadable(section, 'desktop') };
   sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
   sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
@@ -1171,11 +1171,11 @@ function setSectionPhoneOrder(rule) {
   });
 }
 
-/** «Custom order» on the phone: on, the order as it reads now is held as the section's list (`phoneList`); off, the list goes and the section's rule orders the blocks again, with the exceptions and stacks they had. */
-function setSectionPhoneCustom(on) {
-  mutateSection('phone-custom', (s) => {
-    if (on) s.phoneList = stackOrder(s.blocks, phoneSetupOf(s)).filter(flowing).map((b) => b.id);
-    else delete s.phoneList;
+/** «Follow the desktop» on the phone: off, the order as it reads now is held as the section's list (`phoneList`); on, the list goes and the section's rule orders the blocks again, with the exceptions and stacks they had. */
+function setSectionPhoneFollows(on) {
+  mutateSection('phone-follows', (s) => {
+    if (on) delete s.phoneList;
+    else s.phoneList = stackOrder(s.blocks, phoneSetupOf(s)).filter(flowing).map((b) => b.id);
   });
 }
 
@@ -1183,7 +1183,7 @@ function setSectionPhoneCustom(on) {
  * A change to a section's phone order, cells and heights (phone-moves.js: a move in the Phone panel's list, a drag, the arrows or the handles on the canvas; phone-layouts.js: a preset): the blocks' exceptions, the stacks, the custom order, the cells and the blocks' own heights on the phone, written as one undo step under `key`.
  * Only ids the section holds are written, and a stack of fewer than two blocks is left out.
  * @param {string} sectionId
- * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>}} change
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>}} change
  * @param {string} [key] The history key: a burst of keys joins under one
  * @returns {boolean} Whether the section took the change
  */
@@ -1204,6 +1204,11 @@ function changeSectionPhone(sectionId, change, key = 'phone-order') {
     if (stacks.length) section.phoneStacks = stacks; else delete section.phoneStacks;
   }
   if (Array.isArray(change.list)) section.phoneList = [...new Set(change.list)].filter((id) => ids.has(id));
+  // The blocks taken out of the rule's columns (a drag out of a column, «Ungroup»).
+  if (Array.isArray(change.loose)) {
+    const loose = [...new Set(change.loose)].filter((id) => ids.has(id));
+    if (loose.length) section.phoneLoose = loose; else delete section.phoneLoose;
+  }
   // A preset's cells (phone-layouts.js): each flowing block's columns, taking the place of a width and a left edge set by hand; null for the full row, where a width set by hand stays.
   for (const [id, cells] of Object.entries(change.cells ?? {})) {
     const block = section.blocks.find((b) => b.id === id);
@@ -1696,10 +1701,10 @@ export const pageState = {
   setSectionWidth,
   get sectionMobileGap() { return sectionMobileGap; },
   get sectionPhoneOrder() { return sectionPhoneOrder; },
-  get sectionPhoneCustom() { return sectionPhoneCustom; },
+  get sectionPhoneFollows() { return sectionPhoneFollows; },
   get sectionReadable() { return sectionReadable; },
   setSectionReadable,
-  setSectionPhoneCustom,
+  setSectionPhoneFollows,
   changeSectionPhone,
   setSectionMobileGap,
   setSectionPhoneOrder,

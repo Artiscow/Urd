@@ -69,6 +69,11 @@
           "description": "The preset the section was created from - provenance only, controls nothing"
         },
         "phoneOrder": { "enum": ["top", "left", "right"], "default": "top", "description": "How the section's blocks are read on the phone (additive field from 0.7.3.12, phone-order.js): top first by their desktop top (or mobileOrder), or, where blocks stand beside each other on the desktop, column by column with the left or the right column first. Omitted = top" },
+        "phoneLoose": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The blocks the owner took out of the columns the rule reads whole on the phone (additive field from 0.7.3.21, phone-order.js): each reads on its own where the rule puts it, the column it stands in on the desktop no longer holding it. Omitted = every column of the rule holds its blocks"
+        },
         "phoneList": {
           "type": "array",
           "items": { "type": "string" },

@@ -2,6 +2,28 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.21): dropping in the phone view, row by row, and «Ungroup»
+
+- [ ] In the phone view, drop a block on the left or right third of a block with free room beside it on its line: the two share the line, half each, the dragged block on the side you dropped it
+- [ ] Drop a picture on the side of a half that shares its line with another half: the two share that half as quarters, and nothing else on the line moves; a text does the same with the phone's «Force readable text» off
+- [ ] Drop a block on the top or bottom of a block across the whole row: the two move as one stack, an amber dashed frame showing the stack while you hover
+- [ ] Drop a block in the gap between two blocks: it stands on a line of its own at its own width, where you let go, its edge on the quarters (on any column with Alt)
+- [ ] Drag a half into the empty half beside another block: it stands there at its width; drag a half sideways along its own line: it moves there
+- [ ] Hover just above or just below the dashed landing box: the result shown stays the same
+- [ ] Select a block and press Alt with an arrow: Up and Down walk before and after the blocks across the row and above and below the blocks in cells, Left and Right beside the block there; Enter lands it as the drag would
+- [ ] After a reload, and on a 390 px published page, each drop stands as the phone view showed it
+- [ ] With the phone's «Force readable text» on, drag a text onto the side of a half: the text you drag greys, the section shows no result, and the notice line at the foot of the editor says why; letting go moves nothing and the notice goes
+- [ ] A section flagged for the phone review shows its card beside the phone, level with the section, not on the page; it follows the section as you scroll, and «Reviewed» takes it away
+- [ ] Give a picture a height of its own on the phone with its bottom edge: the picture fills the taller box
+- [ ] Om oss, first section, «Left first»: in the Phone panel, drag a block of a group out, right under the group: it stands on its own there, also after a reload; drag it back onto the group and it joins again
+- [ ] The same drag out of a group with «Follow the desktop» off
+- [ ] Take the middle block out of a group of three with «Take out of the group»: the two left stay a group without the «Stack» mark; drag the block back onto the group and the three stand as before
+- [ ] In the phone view, drag a block of a group on the canvas into a gap away from its group: in the Phone panel it stands on its own
+- [ ] Hjem, first section: the Phone panel shows the two texts as a group and the button on its own; duplicate the section, and the copy shows the same
+- [ ] Right-click a row inside a group in the Phone panel: a menu with «Take out of the group» and «Ungroup» opens at the pointer; on a row in no group both are greyed; Escape closes it, and each action is one undo step
+- [ ] Right-click a block of a group on the canvas: the block's menu has «Take out of its group on phones» and «Ungroup on phones», acting as the panel's do, in the phone view and the desktop view; greyed for a block in no group
+- [ ] The Phone panel and a section's «Size and grid» show «Follow the desktop», on; turned off, the order stays as it stands and a move on the desktop no longer reorders the phone; turned on again, the phone follows the desktop. A section that had «Custom order» on shows it off
+
 ### Test batch (0.7.3.20): «Force readable text» on the phone and the desktop, and long words
 
 - [ ] A section's «Size and grid» shows «Force readable text on the desktop» and «Force readable text on the phone», both on, in both views; the Phone panel shows the phone's; each switch is one undo step and has a reset when off

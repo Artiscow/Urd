@@ -4,16 +4,19 @@
      Under the section's own rows (PhoneSectionRows) stand its blocks in the order they read on the phone: a block alone, or a stack of blocks that read as one, the owner's own or a column the rule reads whole (phone-moves.js phoneTree).
      The rows move by the row kit's drag in its tree form, one level deep (lib/nav-drop.js): before or after a row, into a stack, or onto a block alone, which makes a stack of the two; a stack's block leads out of it from the room left of it, and the room under the last row lands a row last. Alt and the arrow keys move the row the focus is in, as the drag would. A row under the pointer lights its blocks on the canvas, and a press selects its block there.
      A block placed by its own exception carries a chip that gives it back to the section's order, and the owner's stack one that takes it apart. A block under the mouse on the canvas lights its row, and a stack's.
+     A right click on a row, or the menu key, opens the row's menu: a block taken out of its group, or the group undone (phone-moves.js phoneUngroup), greyed where the row stands in no group.
      Under the order stand the blocks pinned to rows of their own, each with its way back into the order, and the blocks hidden on phones, each with its way back. */
   import { getContext, onMount, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { blockWords, sectionWords } from '$engine/anchor-model.js';
   import { phoneSetupOf, stackOrder } from '$engine/phone-order.js';
-  import { phoneTree, phoneLand, hasPhonePlace, flowing } from '$engine/phone-moves.js';
+  import { phoneTree, phoneLand, phoneUngroup, hasPhonePlace, flowing } from '$engine/phone-moves.js';
   import { phoneCells } from '$engine/migrate.js';
   import { phoneWordsOf } from '$engine/push-model.js';
   import { navDropAt, navDropOrNull, canonicalDrop } from '../lib/nav-drop.js';
   import { RowDrag, slotOut } from '../lib/rows/row-drag.svelte.js';
+  import { dismiss } from '../lib/dismiss.js';
+  import { menuMotion } from '../lib/motion.svelte.js';
   import { phoneMark } from '$engine/phone-layouts.js';
   import { ICONS, CAP_ICONS } from '../lib/icons.js';
   import PhoneSectionRows from '../section/PhoneSectionRows.svelte';
@@ -217,6 +220,48 @@
     ed.bridge?.sendSelect(row.ids[0], true);
   }
 
+  /** The row's menu while it stands open: the row, where it opened, and the row that opened it, which the focus goes back to. */
+  let rowMenu = $state(null);
+
+  /** A right click on a row, or the menu key with the row in focus: the row's menu at the pointer, or under the row's start from the keys. */
+  function openRowMenu(e, r) {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const keyed = e.clientX === 0 && e.clientY === 0;
+    rowMenu = { row: r, x: keyed ? rect.left + 24 : e.clientX, y: keyed ? rect.bottom : e.clientY, opener: e.currentTarget };
+  }
+
+  /** The row's menu placed at its point, kept inside the window, the focus on its first item that acts, else on the menu, so Escape closes it. */
+  function placeRowMenu(node) {
+    if (!rowMenu) return;
+    const { width, height } = node.getBoundingClientRect();
+    node.style.left = `${Math.max(8, Math.min(rowMenu.x, window.innerWidth - width - 8))}px`;
+    node.style.top = `${Math.max(8, Math.min(rowMenu.y, window.innerHeight - height - 8))}px`;
+    (node.querySelector('button:not(:disabled)') ?? node).focus();
+  }
+
+  /** Up and Down move the focus among the menu's items that act, round from the last to the first. */
+  function rowMenuKeys(e) {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const items = [...e.currentTarget.querySelectorAll('button:not(:disabled)')];
+    if (!items.length) return;
+    const at = items.indexOf(document.activeElement);
+    items[(at + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+  }
+
+  /** The row's block taken out of its group, or its whole group undone, as one undo step; the focus goes back to the block's row. */
+  async function ungroup(whole) {
+    const r = rowMenu?.row;
+    rowMenu = null;
+    if (!r || !section) return;
+    const change = phoneUngroup(section.blocks, setup, r.ids[0], whole);
+    if (change) ed.changeSectionPhone(section.id, change, 'phone-order');
+    await tick();
+    const key = rows.find((row) => row.id === r.ids[0])?.key;
+    if (key) document.querySelector(`.pp-order > [data-drag-id="${CSS.escape(key)}"]`)?.focus();
+  }
+
   /** The blocks a row stands for lit on the canvas while the mouse is on it. */
   function light(e, row) {
     if (e.pointerType === 'mouse') ed.bridge?.sendLight(row.ids);
@@ -245,7 +290,7 @@
   <div class="pp-row" class:pp-stack-head={Boolean(r.node)} class:pp-member={r.level === 1} class:pp-member-last={r.last} class:pp-hovered={r.ids.includes(ed.hoveredBlockId)}
     role="listitem" tabindex="0" data-drag-id={r.key} data-row-level={r.level} aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
     class:drop-target={drag.drop?.id === r.key && drag.drop.pos === 'into'}
-    {@attach drag.handle(r.key)} onkeydown={(e) => moveKeys(e, r)} onclick={(e) => pick(e, r)} onpointerenter={(e) => light(e, r)}>
+    {@attach drag.handle(r.key)} onkeydown={(e) => moveKeys(e, r)} onclick={(e) => pick(e, r)} onpointerenter={(e) => light(e, r)} oncontextmenu={(e) => openRowMenu(e, r)}>
     <span class="pp-grip" aria-hidden="true">{@html GRIP}</span>
     {#if r.node}
       <span class="pp-mark pp-stack-icon" title={r.node.kind === 'column' ? ta('tip.phone.column') : undefined}>{@html ICONS.stack}</span>
@@ -303,6 +348,15 @@
       <EmptyState text={ta('phone.noBlocks')} />
     {/if}
 
+    {#if rowMenu}
+      {@const grouped = rowMenu.row.node || rowMenu.row.level === 1}
+      <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+      <div class="pp-menu" role="group" tabindex="-1" aria-label={ta('phone.rowMenu')} use:dismiss={{ close: () => { rowMenu = null; }, opener: rowMenu.opener }} transition:menuMotion {@attach placeRowMenu} onkeydown={rowMenuKeys}>
+        <button type="button" disabled={rowMenu.row.level !== 1} onclick={() => ungroup(false)}>{ta('phone.takeOut')}</button>
+        <button type="button" disabled={!grouped} onclick={() => ungroup(true)}>{ta('phone.ungroup')}</button>
+      </div>
+    {/if}
+
     {#if pinned.length}
       <SubHeading text={ta('lbl.phonePinned')} />
       <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -334,3 +388,52 @@
     {/if}
   {/if}
 </div>
+
+<style>
+  /* The row's menu at the pointer, over the panel, on the surface of the admin's other menus */
+  .pp-menu {
+    position: fixed;
+    z-index: 100003;
+    display: grid;
+    gap: 2px;
+    width: max-content;
+    max-width: min(17rem, 80vw);
+    padding: 6px;
+    font-size: 0.85rem;
+    color: var(--urd-color-text, #e8eaf0);
+    background: var(--urd-color-bg, #0f1218);
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 10px;
+    box-shadow: 0 14px 40px rgb(0 0 0 / 55%);
+  }
+
+  .pp-menu:focus {
+    outline: none;
+  }
+
+  .pp-menu > button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 2rem;
+    padding: 0.4rem 0.6rem;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+  }
+
+  .pp-menu > button:hover:not(:disabled),
+  .pp-menu > button:focus-visible {
+    background: rgb(255 255 255 / 8%);
+    outline: none;
+  }
+
+  .pp-menu > button:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+</style>

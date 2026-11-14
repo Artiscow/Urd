@@ -17,10 +17,11 @@
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
- *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks or the custom order; coalesce from the keys, a burst one undo step)
+ *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks, the custom order or blocks taken out of the rule's columns; also a block taken out of its group, or the group undone, from the block's menu; coalesce from the keys, a burst one undo step)
  *                  { type: 'urd-phone-layout', sectionId, change }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js)
  *                  { type: 'urd-hover-block', blockId }  (the block under the mouse, null for none: its row in the Phone panel's list is lit)
- *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
+ *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] }  (the sections that need a phone review in the phone view, where each stands in the canvas, for the editor to draw their cards beside the phone; sent when they change)
+ *                  { type: 'urd-too-narrow', screen }  (a drag, the key carry or a handle greys its block as too narrow for its words, ADR-0034: 'phone' or 'desktop' while it is greyed, null once it is not)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
  *                  { type: 'urd-section-menu', sectionId, rect }  (open the section's settings in the editor's floating menu: the gear on its bar and «Settings» in its right-click menu)
@@ -42,7 +43,7 @@ import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
-import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow } from './phone-moves.js';
+import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup } from './phone-moves.js';
 import { closeColorPicker } from './color-picker.js';
 import { closeDropdowns } from './dropdown.js';
 import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
@@ -466,7 +467,7 @@ function showContextMenu(el, x, y, label, build, from = null) {
  */
 const keysHere = (key) => (isMobile() ? '' : key);
 
-/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. The phone view has the same menu, its layer order greyed, since that orders the blocks on the desktop alone. */
+/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. The phone view has the same menu, its layer order greyed, since that orders the blocks on the desktop alone. A block in a group of the phone's order (phoneTree) is taken out of it, or the group undone, from either view; the two are greyed for a block in no group. */
 function openContextMenu(el, x, y, from = null) {
   const ctx = el._urdCtx;
   if (!ctx || document.body.classList.contains('urd-chrome-off')) return;
@@ -492,6 +493,13 @@ function openContextMenu(el, x, y, from = null) {
       block.hideMobile = !block.hideMobile;
       post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, hideMobile: block.hideMobile });
     });
+    const grouped = phoneTree(section.blocks, phoneSetupOf(section)).some((node) => node.children?.some((c) => c.id === block.id));
+    const ungroup = (whole) => {
+      const change = phoneUngroup(section.blocks, phoneSetupOf(section), block.id, whole);
+      if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change });
+    };
+    item(ta('canvas.ctx.takeOutPhone'), '', () => ungroup(false), { disabled: !grouped });
+    item(ta('canvas.ctx.ungroupPhone'), '', () => ungroup(true), { disabled: !grouped });
     item(ta('canvas.ctx.saveTemplate'), '', () => post({ type: 'urd-save-template', kind: 'blocks', blocks: [JSON.parse(JSON.stringify(block))] }));
     sep();
     item(ta('canvas.ctx.delete'), keysHere('Delete'), () => {
@@ -795,34 +803,31 @@ const isMobile = () => document.body.classList.contains('urd-mobile');
 /** How far the pointer pulls a block that follows its content up or down before the mark at its edge shows (ADR-0025). */
 const STOP_MARK_PX = 6;
 
+/** How far above and below the box where a dragged block will land on the phone the result shown holds, in px: the gaps the preview opens beside it. */
+const LANDING_NEAR_PX = 24;
+
 /** The narrowest a text block can be dragged on the desktop while its section forces readable text (ADR-0034), in px. */
 const READABLE_MIN_PX = 140;
 
-/** The mark on a block a drop or a handle would squeeze under «Force readable text»: a T in a round badge. */
-const READABLE_SVG = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M3 3h10M8 3v11"/></svg>';
-
-/** The blocks greyed as too narrow for their words just now. */
+/** The blocks greyed as too narrow for their words just now, and the screen whose «Force readable text» greys them. */
 let squeezed = [];
+let squeezedOn = null;
 
 /**
- * Greys the blocks a drop or a handle would make narrower than «Force readable text» lets their words be (ADR-0034), each with a small round mark drawing a T, and takes the look off the ones no longer among them; none takes it off all.
+ * Greys the block a drag or a handle would make narrower than «Force readable text» lets its words be (ADR-0034), the block being dragged, and takes the look off the ones no longer among them; none takes it off all.
+ * The editor is told as the look comes and goes, and says why in its notice line (urd-too-narrow).
  * @param {HTMLElement[]} els
+ * @param {'phone'|'desktop'} [screen]
  */
-function showTooNarrow(els) {
-  for (const old of squeezed) {
-    if (els.includes(old)) continue;
-    old.classList.remove('urd-readable-blocked');
-    old.querySelector(':scope > .urd-readable-mark')?.remove();
-  }
-  for (const el of els) {
-    if (squeezed.includes(el)) continue;
-    el.classList.add('urd-readable-blocked');
-    const mark = document.createElement('span');
-    mark.className = 'urd-readable-mark';
-    mark.innerHTML = READABLE_SVG;
-    el.appendChild(mark);
-  }
+function showTooNarrow(els, screen = 'phone') {
+  for (const old of squeezed) if (!els.includes(old)) old.classList.remove('urd-readable-blocked');
+  for (const el of els) el.classList.add('urd-readable-blocked');
   squeezed = els;
+  const on = els.length ? screen : null;
+  if (on !== squeezedOn) {
+    squeezedOn = on;
+    post({ type: 'urd-too-narrow', screen: on });
+  }
 }
 
 /**
@@ -3189,13 +3194,9 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(tag);
   }
 
+  // The sections that need a phone review are reported to the editor, which draws their cards beside the phone (reportAttention).
+  scheduleAttention();
   if (isMobile()) {
-    const attention = section.responsive?.mobile?.attention;
-    if (attention?.needed) {
-      // The attention card: WHAT happened (translated reason) and WHEN
-      // (relative time), with the reviewed button beside it.
-      host.appendChild(buildAttentionCard(host, section, attention));
-    }
     // Reset is shown only when the section actually has mobile overrides.
     if (section.blocks.some((b) => b.frames?.mobile)) {
       const reset = document.createElement('button');
@@ -3389,59 +3390,36 @@ function openSectionSettings(host, section) {
   post({ type: 'urd-section-menu', sectionId: section.id, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
 }
 
-/** Relative time for the attention card, in the admin language ("2 hours ago"). */
-function relativeTime(iso) {
-  const then = Date.parse(iso);
-  if (!Number.isFinite(then)) return '';
-  try {
-    const rtf = new Intl.RelativeTimeFormat(adminLang(), { numeric: 'auto' });
-    const mins = Math.round((Date.now() - then) / 60000);
-    if (Math.abs(mins) < 60) return rtf.format(-mins, 'minute');
-    const hours = Math.round(mins / 60);
-    if (Math.abs(hours) < 24) return rtf.format(-hours, 'hour');
-    return rtf.format(-Math.round(hours / 24), 'day');
-  } catch {
-    return '';
-  }
+/** The cards last reported, so the editor hears of them only when they change. */
+let attentionSent = '';
+let attentionFrame = 0;
+
+/** Reports the sections that need a phone review once in the next frame, however many sections are drawn in it. */
+function scheduleAttention() {
+  if (attentionFrame) return;
+  attentionFrame = requestAnimationFrame(() => {
+    attentionFrame = 0;
+    reportAttention();
+  });
 }
 
 /**
- * The attention card in the mobile view: what happened on desktop
- * (translated attention.reason), when (relative time from
- * attention.since), and the reviewed button. reason tokens without a
- * translation (e.g. from a newer engine) fall back to the generic text.
+ * The sections that need a phone review in the phone view (`urd-attention`, ADR-0019 decision 5), with where each stands in the canvas, for the editor to draw their cards beside the phone (urd-attention-cards); none in the desktop view, and none scrolled out of sight.
+ * The editor reads what happened and when from its own draft, and its «Reviewed» takes the mark away (urd-attention).
  */
-function buildAttentionCard(host, section, attention) {
-  const card = document.createElement('div');
-  card.className = 'urd-attention-card';
-
-  const text = document.createElement('div');
-  const key = `canvas.attention.${attention.reason}`;
-  const label = ta(key);
-  text.textContent = label === key ? ta('canvas.attention.fallback') : label;
-  card.appendChild(text);
-
-  const when = relativeTime(attention.since);
-  if (when) {
-    const time = document.createElement('div');
-    time.className = 'urd-attention-since';
-    time.textContent = when;
-    card.appendChild(time);
-  }
-
-  const ok = document.createElement('button');
-  ok.innerHTML = CHECK_SVG;
-  ok.append(` ${ta('canvas.mobileReviewedShort')}`);
-  ok.title = ta('canvas.mobileReviewed');
-  ok.addEventListener('click', () => {
-    section.responsive.mobile.attention = null;
-    host.classList.remove('urd-attention');
-    card.remove();
-    post({ type: 'urd-review-done', sectionId: section.id });
-  });
-  card.appendChild(ok);
-  return card;
+export function reportAttention() {
+  const cards = isMobile() ? [...document.querySelectorAll('[data-section-id].urd-attention')].map((host) => {
+    const r = host.getBoundingClientRect();
+    return { sectionId: host.dataset.sectionId, rect: { left: Math.round(r.left), top: Math.round(r.top), right: Math.round(r.right), bottom: Math.round(r.bottom) } };
+  }).filter((card) => card.rect.bottom > 0 && card.rect.top < window.innerHeight) : [];
+  const sent = JSON.stringify(cards);
+  if (sent === attentionSent) return;
+  attentionSent = sent;
+  post({ type: 'urd-attention-cards', cards });
 }
+
+window.addEventListener('scroll', scheduleAttention, { passive: true, capture: true });
+window.addEventListener('resize', scheduleAttention);
 
 /**
  * The chip on a section's bar for the blocks the view does not draw: those hidden on phones in the phone view (`hideMobile`), those shown on phones only on the desktop (`hideDesktop`); a press lists them.
@@ -3519,7 +3497,6 @@ const ADD_SECTION_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="n
 /** The seam grip's tabs: the one above the line shrinks the section above, the one below the section below (seamGrip). */
 const SEAM_UP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>';
 const SEAM_DOWN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
-const CHECK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg>';
 
 /**
  * The row index (1-based) at a y offset from the row grid's content top.
@@ -5217,6 +5194,8 @@ function enhanceBlock(el, block, section, grid, host) {
     let flowMin = null;
     let shownKey = '';
     let landing = null;
+    /** The outline round a stack the block joins. */
+    let stackMark = null;
     /** A block's place in its flow as laid out, its moves by transform left out. */
     const laidOut = (node) => {
       let x = 0;
@@ -5243,6 +5222,8 @@ function enhanceBlock(el, block, section, grid, host) {
       if (flowMin !== null) Object.assign(flowEl.style, flowMin);
       landing?.remove();
       landing = null;
+      stackMark?.remove();
+      stackMark = null;
       hold?.classList.remove('urd-phone-hold-quiet');
     };
     const show = (change) => {
@@ -5303,6 +5284,23 @@ function enhanceBlock(el, block, section, grid, host) {
         }
         Object.assign(landing.style, { left: `${mine.left}px`, top: `${mine.top}px`, width: `${mine.width}px`, height: `${mine.height}px` });
         hold?.classList.add('urd-phone-hold-quiet');
+        // A stack the block joins is outlined round its blocks and the landing, since a stack across the row looks as blocks one after another.
+        const stackIds = (change.stacks ?? []).find((ids) => ids.includes(block.id));
+        const parts = stackIds ? [mine, ...stackIds.filter((id) => id !== block.id).map((id) => placed.get(id)).filter(Boolean)] : [];
+        if (parts.length > 1) {
+          if (!stackMark) {
+            stackMark = document.createElement('div');
+            stackMark.className = 'urd-phone-stackmark';
+            stackMark.setAttribute('aria-hidden', 'true');
+            flowEl.appendChild(stackMark);
+          }
+          const left = Math.min(...parts.map((r) => r.left));
+          const top = Math.min(...parts.map((r) => r.top));
+          Object.assign(stackMark.style, { left: `${left}px`, top: `${top}px`, width: `${Math.max(...parts.map((r) => r.left + r.width)) - left}px`, height: `${Math.max(...parts.map((r) => r.top + r.height)) - top}px` });
+        } else {
+          stackMark?.remove();
+          stackMark = null;
+        }
       } finally {
         wrap.remove();
       }
@@ -5316,17 +5314,14 @@ function enhanceBlock(el, block, section, grid, host) {
       end: () => {
         landing?.remove();
         landing = null;
+        stackMark?.remove();
+        stackMark = null;
         // The blocks take their own transitions back once they have glided home, so a hover's own transition is theirs again.
         setTimeout(() => {
           for (const [node, was] of moved) node.style.transition = was.transition;
         }, motion ? 200 : 0);
       },
     };
-  }
-
-  /** A block on the section's canvas, by its id. */
-  function sectionBlock(id) {
-    return host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`);
   }
 
   /** Whether a phone change would draw words narrower than the section's «Force readable text» lets them be (ADR-0034, phoneTooNarrow). */
@@ -5356,9 +5351,9 @@ function enhanceBlock(el, block, section, grid, host) {
     const show = () => {
       const drop = side ? { pos: side, of: drops[at].of } : drops[at];
       change = changeAt(drop);
-      // A place that would squeeze words under «Force readable text» greys the block there and lands nothing (ADR-0034).
+      // A place that would squeeze words under «Force readable text» greys the lifted block and lands nothing (ADR-0034).
       const blocked = Boolean(change) && squeezes(change);
-      showTooNarrow(blocked ? [sectionBlock(drop.member ?? drop.of)].filter(Boolean) : []);
+      showTooNarrow(blocked ? [el] : []);
       if (blocked) change = null;
       view.show(change);
     };
@@ -5480,20 +5475,24 @@ function enhanceBlock(el, block, section, grid, host) {
       el.style.left = `${clamp(at.left + ev.clientX - start.x, 0, Math.max(0, flowEl.clientWidth - at.w))}px`;
       el.style.top = `${Math.max(0, at.top + ev.clientY - start.y)}px`;
       const fr = flowEl.getBoundingClientRect();
-      // The drop is read on the units where the preview shows them, so what is seen is what is aimed at; over the box where the block will land, the result stands as it is. A gap is read on the units as the drag began, since the preview opens gaps of its own as the blocks make room, and a reading in one of those would move the blocks again.
+      // The drop is read on the units where the preview shows them, so what is seen is what is aimed at; over the box where the block will land, and the gaps the preview opens right above and below it, the result stands as it is. Any other gap is read on the units as the drag began, since the preview opens gaps of its own as the blocks make room, and a reading in one of those would move the blocks again.
       const x = ev.clientX - fr.left;
       const y = ev.clientY - fr.top;
       const within = (b) => b && x >= b.left && x <= b.right && y >= b.top && y <= b.bottom;
       const placed = view?.placed() ?? null;
       const units = placed ? unitBoxes(flowEl, placed) : boxes;
-      if (within(view?.mine())) drop = null;
+      const mine = view?.mine() ?? null;
+      const near = mine && { ...mine, top: mine.top - LANDING_NEAR_PX, bottom: mine.bottom + LANDING_NEAR_PX };
+      if (within(near) && !units.some(within)) drop = null;
       else {
         drop = units.some(within) ? phoneDropAt(units, x, y, null) : phoneDropAt(boxes, x, y, own);
+        // Where the pointer stands across the row, in columns from its left edge, for a block placed at it (phoneDropChange), and whether Alt asks for any column.
+        if (drop) Object.assign(drop, { x: (x - fr.width * 0.05) / ((fr.width * 0.9) / PHONE_COLUMNS), fine: ev.altKey });
         // Back over its own place, or nearer to it than to any block, the section stands as it is and a release moves nothing.
         change = drop ? phoneDropChange(section.blocks, phoneSetupOf(section), block.id, drop) : null;
-        // A drop that would squeeze words under «Force readable text» (ADR-0034) greys the block aimed at, shows no result and moves nothing.
+        // A drop that would squeeze words under «Force readable text» (ADR-0034) greys the dragged block, shows no result and moves nothing.
         const blocked = Boolean(change) && squeezes(change);
-        showTooNarrow(blocked ? [sectionBlock(drop.member ?? drop.of)].filter(Boolean) : []);
+        showTooNarrow(blocked ? [el] : []);
         if (blocked) {
           change = null;
           drop = null;
@@ -6354,7 +6353,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // A text stops where its lines would get narrower than they read well while its section forces readable text (ADR-0034), and greys while it is pushed past; one already narrower stops where it stands.
         const wFloor = readableText ? Math.max(r2(colStep), Math.min(r2(READABLE_MIN_PX * pctPerPx), orig.w)) : r2(colStep);
         const wanted = snapPct(orig.w + edge.x * dx);
-        if (readableText) showTooNarrow(edge.x !== 0 && wanted < wFloor ? [el] : []);
+        if (readableText) showTooNarrow(edge.x !== 0 && wanted < wFloor ? [el] : [], 'desktop');
         const w = edge.x === 0 || (hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX) ? orig.w : clamp(wanted, wFloor, wMax);
         // The top edge of a block drawn at least as tall as its words stops at the words, as the drawn box does, so the block never walks down.
         const hMin = edge.y < 0 && autoGrows(block, window.Urd.blocks.get(block.type)) ? Math.max(4, Math.round(contentHeight(el))) : 4;

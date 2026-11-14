@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -224,8 +224,8 @@ const cardSection = () => [
 ];
 
 test('phoneSetupOf: a section\'s rule, custom order and stacks, the stacks of two blocks or more', () => {
-  assert.deepEqual(phoneSetupOf({ phoneOrder: 'right', phoneList: ['a', 3, 'b'], phoneStacks: [['a', 'b'], ['c'], 'x'] }), { rule: 'right', list: ['a', 'b'], stacks: [['a', 'b']] });
-  assert.deepEqual(phoneSetupOf({}), { rule: 'top', list: null, stacks: [] });
+  assert.deepEqual(phoneSetupOf({ phoneOrder: 'right', phoneList: ['a', 3, 'b'], phoneStacks: [['a', 'b'], ['c'], 'x'] }), { rule: 'right', list: ['a', 'b'], stacks: [['a', 'b']], loose: [] });
+  assert.deepEqual(phoneSetupOf({}), { rule: 'top', list: null, stacks: [], loose: [] });
 });
 
 test('stackOrder: a stack reads as one where the first of it stands, its first block\'s exception moving it whole', () => {
@@ -405,10 +405,10 @@ test('phoneDropChange: above or below a unit, the block joins it in its column a
   assert.deepEqual(onTop.cells, { d: { col: 5, cols: 4 } });
   const below = phoneDropChange(blocks, 'top', 'd', { pos: 'below', of: 'a' });
   assert.deepEqual(below.stacks, [['a', 'd']]);
-  // Above or below a block alone across the row: before or after it, no stack.
+  // Above a block alone across the row: a stack of the two across the row (the Phone Drop Map, row 1c).
   const above = phoneDropChange(blocks, 'top', 'd', { pos: 'above', of: 'b' });
-  assert.equal(above.stacks, undefined);
-  assert.deepEqual(after(blocks, 'top', above), ['a', 'd', 'b']);
+  assert.deepEqual(above.stacks, [['d', 'b']]);
+  assert.equal(above.cells.d, null);
   // Between two blocks of a stack: below the first, above the second.
   const stacked = { rule: 'top', list: null, stacks: [['a', 'b']] };
   assert.deepEqual(phoneDropChange(blocks, stacked, 'd', { pos: 'below', of: 'a', member: 'a' }).stacks, [['a', 'd', 'b']]);
@@ -439,12 +439,12 @@ test('phoneDropChange: a drop moves the block in the order and gives it its cell
   const halved = blocks.map((b) => (b.id === 'a' ? { ...b, frames: { ...b.frames, mobile: { col: 5, cols: 4 } } } : b));
   assert.deepEqual(phoneDropChange(halved, 'top', 'd', { pos: 'right', of: 'a' }).cells, { d: { col: 5, cols: 4 }, a: { col: 1, cols: 4 } });
   assert.deepEqual(phoneDropChange(halved, 'top', 'd', { pos: 'left', of: 'a' }).cells, { d: { col: 1, cols: 4 }, a: { col: 5, cols: 4 } });
-  // A line with no room for two halves: a drop never makes narrower columns, so the block joins the unit's column, last on its right and first on its left.
+  // A full line: the two share the unit's own columns, half each, nothing else on the line moving (rows 2a and 2b).
   const full = blocks.map((b) => (b.id === 'a' ? { ...b, frames: { ...b.frames, mobile: { col: 1, cols: 4 } } } : b.id === 'b' ? { ...b, frames: { ...b.frames, mobile: { col: 5, cols: 4 } } } : b));
   const onRight = phoneDropChange(full, 'top', 'd', { pos: 'right', of: 'b' });
-  assert.deepEqual(onRight.stacks, [['b', 'd']]);
-  assert.deepEqual(onRight.cells, { d: { col: 5, cols: 4 } });
-  assert.deepEqual(phoneDropChange(full, 'top', 'd', { pos: 'left', of: 'b' }).stacks, [['d', 'b']]);
+  assert.equal(onRight.stacks, undefined);
+  assert.deepEqual(onRight.cells, { d: { col: 7, cols: 2 }, b: { col: 5, cols: 2 } });
+  assert.deepEqual(phoneDropChange(full, 'top', 'd', { pos: 'left', of: 'b' }).cells, { d: { col: 5, cols: 2 }, b: { col: 7, cols: 2 } });
   // A wide block with a little room beside it shares the row in halves all the same.
   const six = blocks.map((b) => (b.id === 'a' ? { ...b, frames: { ...b.frames, mobile: { col: 1, cols: 6 } } } : b));
   assert.deepEqual(phoneDropChange(six, 'top', 'd', { pos: 'right', of: 'a' }).cells, { d: { col: 5, cols: 4 }, a: { col: 1, cols: 4 } });
@@ -487,11 +487,11 @@ test('phoneChangeApplied: a block\'s own height on the phone written beside its 
   assert.equal(plain.blocks[0].frames.mobile, null, 'a placement left with nothing goes back to following the desktop');
 });
 
-test('phoneKeyDrops: above and below every other unit in order, starting where the block stands, and each step a different outcome', () => {
+test('phoneKeyDrops: before and after a unit across the row, above and below one in cells, starting where the block stands', () => {
   const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0, { mobile: { col: 5, cols: 4 } })];
   const { drops, home } = phoneKeyDrops(blocks, 'top', 'b');
-  assert.deepEqual(drops.map((d) => `${d.pos} ${d.of}`), ['above a', 'below a', 'above c', 'below c']);
-  assert.equal(home, 1, 'below a is where b stands');
+  assert.deepEqual(drops.map((d) => `${d.pos} ${d.of}`), ['before a', 'after a', 'above c', 'below c']);
+  assert.equal(home, 1, 'after a is where b stands');
   assert.deepEqual(after(blocks, 'top', phoneDropChange(blocks, 'top', 'b', drops[0])), ['b', 'a', 'c']);
   assert.deepEqual(phoneDropChange(blocks, 'top', 'b', drops[2]).stacks, [['b', 'c']], 'above a block in cells joins its column');
 });
@@ -524,4 +524,225 @@ test('phoneTooNarrow: the blocks with words a change would draw in fewer columns
   assert.deepEqual(phoneTooNarrow(blocks, null, words, 4), []);
   assert.deepEqual(phoneTooNarrow(blocks, { cells: { pin: { col: 1, cols: 2 } } }, words, 4), [], 'a block pinned to rows keeps its own cells');
   assert.deepEqual(phoneTooNarrow(blocks, { cells: { t: { col: 1, cols: 2 } } }, words, 1), [], 'with the floor off, any width');
+});
+
+// The Phone Drop Map (14 November 2026): every drop of rows 1a to 4f gives the table's expected result.
+// A layout is written as the table draws it: lines split by «|», units in a line by spaces, a unit its block or its stack in brackets with its columns («A:1-4», «[K,N]:5-8»), a unit across the row bare.
+
+/** The section a layout's blocks make, in reading order, with its stacks: each entry «id» or «id:from-to», a stack as an array. */
+function mapSection(entries) {
+  const blocks = [];
+  const stacks = [];
+  let y = 0;
+  const add = (spec) => {
+    const [id, range] = spec.split(':');
+    const cells = range ? (([a, b]) => ({ col: a, cols: b - a + 1 }))(range.split('-').map(Number)) : null;
+    blocks.push(blk(id, (y += 20), 0, cells ? { mobile: cells } : {}));
+    return id;
+  };
+  for (const entry of entries) {
+    if (Array.isArray(entry)) stacks.push(entry.map(add));
+    else add(entry);
+  }
+  return { id: 's', blocks, ...(stacks.length ? { phoneStacks: stacks } : {}) };
+}
+
+/** A section's layout as the table draws it: its units in the phone's order, placed on lines as the row grid's sparse placement does. */
+function mapLayout(section) {
+  const byId = new Map(section.blocks.map((b) => [b.id, b]));
+  const lines = [];
+  let line = [];
+  let end = 0;
+  for (const node of phoneTree(section.blocks, phoneSetupOf(section))) {
+    const ids = node.children ? node.children.map((c) => c.id) : [node.id];
+    const cells = byId.get(ids[0]).frames.mobile && Number.isInteger(byId.get(ids[0]).frames.mobile.col) ? byId.get(ids[0]).frames.mobile : null;
+    const from = cells ? cells.col : 1;
+    const to = cells ? cells.col + cells.cols - 1 : 8;
+    if (line.length && from <= end) {
+      lines.push(line);
+      line = [];
+    }
+    const name = ids.length > 1 ? `[${ids.join(',')}]` : ids[0];
+    line.push(cells ? `${name}:${from}-${to}` : name);
+    end = to;
+  }
+  if (line.length) lines.push(line);
+  return lines.map((l) => l.join(' ')).join(' | ');
+}
+
+/** The layout a drop leaves, or «none» where it changes nothing. */
+function mapDrop(entries, blockId, drop) {
+  const section = mapSection(entries);
+  const change = phoneDropChange(section.blocks, phoneSetupOf(section), blockId, drop);
+  return change ? mapLayout(phoneChangeApplied(section, change)) : 'none';
+}
+
+const MAP_ROWS = [
+  // 1. Every block across the row.
+  ['1a', ['D', 'X', 'Y'], 'D', { pos: 'left', of: 'Y' }, 'X | D:1-4 Y:5-8'],
+  ['1b', ['D', 'X', 'Y'], 'D', { pos: 'right', of: 'Y' }, 'X | Y:1-4 D:5-8'],
+  ['1c', ['D', 'X', 'Y'], 'D', { pos: 'above', of: 'Y', member: 'Y' }, 'X | [D,Y]'],
+  ['1d', ['D', 'X', 'Y'], 'D', { pos: 'below', of: 'Y', member: 'Y' }, 'X | [Y,D]'],
+  ['1e', ['D', 'X', 'Y'], 'D', { pos: 'before', of: 'Y' }, 'X | D | Y'],
+  ['1f', ['D', 'X', 'Y'], 'D', { pos: 'after', of: 'Y' }, 'X | Y | D'],
+  ['1g', ['D', 'X', 'Y'], 'D', { pos: 'before', of: 'X' }, 'none'],
+  // 2. Two halves on a line.
+  ['2a', ['D', 'A:1-4', 'B:5-8', 'X'], 'D', { pos: 'left', of: 'B' }, 'A:1-4 D:5-6 B:7-8 | X'],
+  ['2b', ['D', 'A:1-4', 'B:5-8', 'X'], 'D', { pos: 'right', of: 'B' }, 'A:1-4 B:5-6 D:7-8 | X'],
+  ['2c', ['D', 'A:1-4', 'B:5-8', 'X'], 'D', { pos: 'above', of: 'B', member: 'B' }, 'A:1-4 [D,B]:5-8 | X'],
+  ['2d', ['D', 'A:1-4', 'B:5-8', 'X'], 'D', { pos: 'below', of: 'B', member: 'B' }, 'A:1-4 [B,D]:5-8 | X'],
+  ['2e', ['D', 'A:1-4', 'B:5-8', 'X'], 'D', { pos: 'left', of: 'A' }, 'D:1-2 A:3-4 B:5-8 | X'],
+  ['2f', ['D', 'A:1-4', 'B:5-8', 'X'], 'D', { pos: 'right', of: 'A' }, 'A:1-2 D:3-4 B:5-8 | X'],
+  ['2i', ['D', 'A:1-4', 'B:5-8', 'X'], 'D', { pos: 'after', of: 'B' }, 'A:1-4 B:5-8 | D | X'],
+  ['2j', ['D', 'A:1-4', 'B:5-8', 'X'], 'B', { pos: 'left', of: 'A' }, 'D | B:1-4 A:5-8 | X'],
+  // 3. A half alone, the other half empty; P a quarter-wide picture.
+  ['3a', ['D', 'A:1-4', 'X'], 'D', { pos: 'right', of: 'A', free: true }, 'A:1-4 D:5-8 | X'],
+  ['3b', ['D', 'A:1-4', 'X'], 'D', { pos: 'right', of: 'A' }, 'A:1-4 D:5-8 | X'],
+  ['3c', ['D', 'A:1-4', 'X'], 'D', { pos: 'left', of: 'A' }, 'D:1-4 A:5-8 | X'],
+  ['3d', ['D', 'A:1-4', 'X'], 'D', { pos: 'above', of: 'A', member: 'A' }, '[D,A]:1-4 | X'],
+  ['3e', ['D', 'A:1-4', 'X'], 'A', { pos: 'here', x: 6 }, 'D | A:5-8 | X'],
+  ['3f', ['D', 'A:1-4', 'X'], 'A', { pos: 'before', of: 'D', x: 2 }, 'A:1-4 | D | X'],
+  ['3g', ['P:1-2', 'A:1-4', 'X'], 'P', { pos: 'right', of: 'A', free: true, x: 7.5 }, 'A:1-4 P:7-8 | X'],
+  ['3h', ['P:1-2', 'A:1-4', 'X'], 'P', { pos: 'here', x: 5 }, 'P:5-6 | A:1-4 | X'],
+  // 4. A stack in a half beside a half.
+  ['4a', ['D', 'A:1-4', ['K:5-8', 'N:5-8'], 'X'], 'D', { pos: 'left', of: 'K' }, 'A:1-4 D:5-6 [K,N]:7-8 | X'],
+  ['4b', ['D', 'A:1-4', ['K:5-8', 'N:5-8'], 'X'], 'D', { pos: 'above', of: 'K', member: 'K' }, 'A:1-4 [D,K,N]:5-8 | X'],
+  ['4c', ['D', 'A:1-4', ['K:5-8', 'N:5-8'], 'X'], 'D', { pos: 'below', of: 'K', member: 'K' }, 'A:1-4 [K,D,N]:5-8 | X'],
+  ['4d', ['D', 'A:1-4', ['K:5-8', 'N:5-8'], 'X'], 'D', { pos: 'below', of: 'K', member: 'N' }, 'A:1-4 [K,N,D]:5-8 | X'],
+  ['4e', ['D', 'A:1-4', ['K:5-8', 'N:5-8'], 'X'], 'D', { pos: 'right', of: 'K' }, 'A:1-4 [K,N]:5-6 D:7-8 | X'],
+  ['4f', ['D', 'A:1-4', ['K:5-8', 'N:5-8'], 'X'], 'N', { pos: 'right', of: 'A' }, 'D | A:1-2 N:3-4 K:5-8 | X'],
+];
+
+for (const [code, entries, blockId, drop, expected] of MAP_ROWS) {
+  test(`the Phone Drop Map, row ${code}: ${blockId} dropped ${drop.pos}${drop.of ? ` ${drop.of}` : ''} gives «${expected}»`, () => {
+    assert.equal(mapDrop(entries, blockId, drop), expected);
+  });
+}
+
+test('the Phone Drop Map, rows 2g and 2h: quarters for blocks without words, the target greyed where a text would be squeezed under «Force readable text»', () => {
+  const section = mapSection(['D', 'A:1-4', 'B:5-8', 'X']);
+  const change = phoneDropChange(section.blocks, phoneSetupOf(section), 'D', { pos: 'left', of: 'B' });
+  assert.deepEqual(phoneTooNarrow(section.blocks, change, [], 4), [], '2g: two pictures share B\'s half as quarters');
+  assert.deepEqual(phoneTooNarrow(section.blocks, change, ['B'], 4), ['B'], '2h: B has words, so the drop is greyed');
+  assert.deepEqual(phoneTooNarrow(section.blocks, change, ['B', 'D'], 1), [], 'with the phone\'s setting off, any width');
+});
+
+test('placeAt: centred on the pointer, its start on the quarters\' lines or any column with Alt, kept in the room', () => {
+  assert.equal(placeAt(6, 4, 1, 8), 5);
+  assert.equal(placeAt(5.4, 2, 1, 8), 5);
+  assert.equal(placeAt(5.4, 2, 1, 8, true), 5);
+  assert.equal(placeAt(4.4, 2, 1, 8, true), 4, 'any column with Alt');
+  assert.equal(placeAt(0, 4, 1, 8), 1);
+  assert.equal(placeAt(8, 4, 1, 8), 5, 'kept in the row');
+  assert.equal(placeAt(7.5, 2, 5, 8), 7);
+  assert.equal(placeAt(1, 2, 5, 8), 5, 'kept in the room');
+});
+
+/** A desktop the rule «Left first» reads as one column of a over b on the left, and c down the right side. */
+const columned = () => [
+  { id: 'a', frames: { desktop: { x: 0, y: 0, w: 40, h: 40 }, mobile: null } },
+  { id: 'b', frames: { desktop: { x: 0, y: 50, w: 40, h: 40 }, mobile: null } },
+  { id: 'c', frames: { desktop: { x: 60, y: 0, w: 40, h: 90 }, mobile: null } },
+];
+const shape = (tree) => tree.map((n) => (n.children ? `${n.kind}[${n.children.map((c) => c.id).join(',')}]` : n.id)).join(' ');
+
+test('phoneLoose: a block taken out of the rule\'s columns reads on its own, the order the same', () => {
+  const blocks = columned();
+  assert.equal(shape(phoneTree(blocks, { rule: 'left', list: null, stacks: [] })), 'column[a,b] c');
+  assert.equal(shape(phoneTree(blocks, { rule: 'left', list: null, stacks: [], loose: ['b'] })), 'a b c');
+  assert.deepEqual(phoneSetupOf({ phoneOrder: 'left', phoneLoose: ['b', 3] }).loose, ['b']);
+});
+
+test('phoneLand: a block dragged out of a column, right beside it, stands on its own there', () => {
+  const blocks = columned();
+  const setup = { rule: 'left', list: null, stacks: [] };
+  const change = phoneLand(blocks, setup, '0.1', { key: '0', pos: 'after' });
+  assert.deepEqual(change.loose, ['b']);
+  const next = phoneChangeApplied({ id: 's', blocks }, change);
+  assert.deepEqual(next.phoneLoose, ['b']);
+  assert.equal(shape(phoneTree(next.blocks, phoneSetupOf({ ...next, phoneOrder: 'left' }))), 'a b c');
+  // Dragged back into the group, it is in it again.
+  const loose = { ...setup, loose: ['b'] };
+  const back = phoneLand(blocks, loose, '1', { key: '0', pos: 'into' });
+  assert.deepEqual(back.loose, []);
+});
+
+test('phoneUngroup: a column\'s blocks taken out of the rule\'s columns, the owner\'s stack let go of, or one block taken out after its group', () => {
+  const blocks = columned();
+  const setup = { rule: 'left', list: null, stacks: [] };
+  assert.deepEqual(phoneUngroup(blocks, setup, 'a', true), { places: {}, loose: ['a', 'b'] });
+  assert.deepEqual(phoneUngroup(blocks, setup, 'b', false).loose, ['b']);
+  const stacked = { rule: 'top', list: null, stacks: [['a', 'c']] };
+  assert.deepEqual(phoneUngroup(blocks, stacked, 'c', true), { places: {}, stacks: [] });
+  assert.equal(phoneUngroup(blocks, setup, 'c', true), null, 'a block in no group');
+  const out = phoneUngroup([...blocks, { id: 'd', frames: { desktop: { x: 0, y: 200, w: 10, h: 10 }, mobile: null } }], { rule: 'top', list: null, stacks: [['a', 'c', 'd']] }, 'c', false);
+  assert.deepEqual(out.stacks, [['a', 'd']], 'the stack keeps the rest');
+});
+
+test('phoneUngroup and phoneLand: the owner\'s stack over a column of the rule lets its blocks go from the column too, so it never gathers them again', () => {
+  const blocks = columned();
+  const setup = { rule: 'left', list: null, stacks: [['a', 'b']] };
+  assert.equal(shape(phoneTree(blocks, setup)), 'stack[a,b] c');
+  const whole = phoneUngroup(blocks, setup, 'a', true);
+  assert.deepEqual(whole, { places: {}, stacks: [], loose: ['a', 'b'] });
+  assert.equal(shape(phoneTree(blocks, { ...setup, stacks: whole.stacks, loose: whole.loose })), 'a b c');
+  const one = phoneUngroup(blocks, setup, 'a', false);
+  assert.deepEqual(one.loose, ['a']);
+  const next = phoneChangeApplied({ id: 's', phoneOrder: 'left', phoneStacks: [['a', 'b']], blocks }, one);
+  assert.equal(shape(phoneTree(next.blocks, phoneSetupOf(next))), 'b a c', 'a stands on its own after what is left');
+});
+
+/** A desktop the rule «Left first» reads as one column of a, b and d on the left, and c down the right side. */
+const threeColumn = () => [
+  { id: 'a', frames: { desktop: { x: 0, y: 0, w: 40, h: 40 }, mobile: null } },
+  { id: 'b', frames: { desktop: { x: 0, y: 50, w: 40, h: 40 }, mobile: null } },
+  { id: 'd', frames: { desktop: { x: 0, y: 100, w: 40, h: 40 }, mobile: null } },
+  { id: 'c', frames: { desktop: { x: 60, y: 0, w: 40, h: 140 }, mobile: null } },
+];
+const landed = (blocks, setup, change) => {
+  const next = phoneChangeApplied({ id: 's', phoneOrder: setup.rule, phoneStacks: setup.stacks, phoneLoose: setup.loose, blocks }, change);
+  return { next, tree: shape(phoneTree(next.blocks, phoneSetupOf(next))) };
+};
+
+test('phoneUngroup: a middle block taken out of a column of the rule leaves the rest a column of the rule, not a stack of the owner\'s', () => {
+  const blocks = threeColumn();
+  const setup = { rule: 'left', list: null, stacks: [], loose: [] };
+  assert.equal(shape(phoneTree(blocks, setup)), 'column[a,b,d] c');
+  const change = phoneUngroup(blocks, setup, 'b', false);
+  assert.deepEqual(change.loose, ['b']);
+  assert.equal(change.stacks, undefined, 'no stack written');
+  assert.equal(landed(blocks, setup, change).tree, 'column[a,d] b c');
+});
+
+test('phoneLand: a block taken out of its column, dropped into the column again, stands in it in the rule\'s order', () => {
+  const blocks = threeColumn();
+  const setup = { rule: 'left', list: null, stacks: [], loose: [] };
+  const out = landed(blocks, setup, phoneUngroup(blocks, setup, 'b', false));
+  const outSetup = phoneSetupOf(out.next);
+  const back = phoneLand(out.next.blocks, outSetup, '1', { key: '0', pos: 'into' });
+  assert.deepEqual(back.loose, []);
+  assert.equal(back.stacks, undefined, 'no stack written');
+  assert.equal(landed(out.next.blocks, outSetup, back).tree, 'column[a,b,d] c');
+});
+
+test('phoneLand: a block taken out of its column, dropped among the column\'s blocks, leaves the list of blocks taken out', () => {
+  const blocks = threeColumn();
+  const setup = { rule: 'left', list: null, stacks: [], loose: ['d'] };
+  assert.equal(shape(phoneTree(blocks, setup)), 'column[a,b] d c');
+  const change = phoneLand(blocks, setup, '1', { key: '0.1', pos: 'before' });
+  assert.deepEqual(change.loose, []);
+});
+
+test('phoneDropChange: a block of a column of the rule dropped apart from it on the canvas is taken out of the column', () => {
+  const blocks = columned();
+  const setup = { rule: 'left', list: null, stacks: [], loose: [] };
+  const change = phoneDropChange(blocks, setup, 'b', { pos: 'after', of: 'c' });
+  assert.deepEqual(change.loose, ['b']);
+  assert.equal(landed(blocks, setup, change).tree, 'a c b');
+  // Right after its column, where the order stays as it is, it still leaves the group.
+  const beside = phoneDropChange(blocks, setup, 'b', { pos: 'before', of: 'c' });
+  assert.deepEqual(beside.loose, ['b']);
+  assert.equal(landed(blocks, setup, beside).tree, 'a b c');
+  // Stacked under a block of its own column, it stays with it.
+  assert.equal(phoneDropChange(blocks, setup, 'b', { pos: 'above', of: 'a' })?.loose, undefined);
 });

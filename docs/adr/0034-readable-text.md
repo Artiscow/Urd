@@ -1,7 +1,7 @@
 # ADR-0034: Readable text
 
 Date: 14 November 2026
-Status: Accepted. Makes the phone's floor for words (0.7.3.14.1, the row grid of [ADR-0019](0019-synced-mobile-model.md)) a setting, and gives the desktop a measure for a text's lines. Chosen in the design pass of BACKLOG 0.7.3.20 on 14 November 2026.
+Status: Accepted. Makes the phone's floor for words (0.7.3.14.1, the row grid of [ADR-0019](0019-synced-mobile-model.md)) a setting, and gives the desktop a measure for a text's lines. Chosen in the design pass of BACKLOG 0.7.3.20 on 14 November 2026; decision 5 amended 14 November 2026 (the dragged block greys and the editor's notice line says why, in the place of a mark on the block aimed at), earlier text in [amended/](amended/0034-readable-text-until-2026-11-14.md).
 
 ## Context
 
@@ -17,7 +17,7 @@ What the field does: the editorial grid keeps text at a readable measure of abou
 2. **On the phone it is the floor for words.** A cell holding words narrower than about 140 px at the window's width stands across the row (base.css), the width handle stops at the narrowest width words read well in, and a drop that would squeeze a block with words is not allowed. Off, words take any width in the phone's cells, the floor not drawn for visitors either. Blocks without words (pictures, icons, buttons) take any width either way.
 3. **On the desktop it is a measure.** A text block's lines wrap at 75 characters of its own font in its plain design (the document designs and the terms of sale keep their own layout), set on each paragraph so the box and a text box's card keep their frame, each paragraph standing by the text's alignment or its own; its width handle stops at 140 px, or where a narrower text already stands. Characters, not px, since the measure is a count of letters whatever the size. Off, the lines run the box's width.
 4. **Long words are kept whole, or hyphenated.** A word too long for its line is kept whole, standing past its box, the standard, or split with a hyphen where the page's language allows and broken where it still does not fit. The site sets it in the theme (`theme.words`), and a text block can have its own (`props.words`). The editor draws it as the published page does: a text being typed in would otherwise let the browser break any word anywhere, without a hyphen.
-5. **What is not allowed says so by its look.** While a drop or a handle would make a block with words narrower than the setting allows, the block greys with a small round mark drawing a «T»; the section shows no result, and a release moves nothing. The mark carries no tooltip: the setting's own tooltip says what it does.
+5. **What is not allowed says so by its look, and the editor says why.** While a drag or a handle would make a block with words narrower than the setting allows, the block being dragged greys; the section shows no result, a release moves nothing, and the editor's notice line names the setting that stops it, for as long as the block is greyed.
 
 ## Alternatives rejected
 

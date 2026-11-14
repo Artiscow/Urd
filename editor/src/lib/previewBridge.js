@@ -19,11 +19,12 @@
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (drag/resize)
  *                  { type: 'urd-grow', sectionId, blockId, h, fit?, seq? }  (a plugin copy's own height, or the answer to urd-fit-block: ONLY h, never x/y)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
- *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? } (a block moved one place in the phone's reading order: the change phone-moves.js settled it into; coalesce from the keys)
+ *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? } (a block moved one place in the phone's reading order, or taken out of its group from the block's menu: the change phone-moves.js settled it into; coalesce from the keys)
+ *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] } (the sections that need a phone review in the phone view, where each stands in the canvas, for their cards beside the phone)
+ *                  { type: 'urd-too-narrow', screen } (a drag or a handle greys its block as too narrow for its words under the section's «Force readable text», ADR-0034: 'phone' or 'desktop' while it does, null once it does not)
  *                  { type: 'urd-phone-layout', sectionId, change } (a preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js)
  *                  { type: 'urd-hover-block', blockId } (the block under the mouse on the canvas, null for none)
  *                  { type: 'urd-text-state', blockId, rect, state } (the text being written: its block's box in the canvas and what its selection holds; blockId null when none is, lib/TextToolbar.svelte)
- *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
@@ -96,8 +97,8 @@
  *                  { type: 'urd-text-style', blockId, style } (a font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's)
  */
 
-/** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. */
-const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid']);
+/** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. The review cards' places pass so the editor holds what the page last sent; it draws no card while a draft is looked at. */
+const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards']);
 
 /**
  * @param {HTMLIFrameElement} iframe The iframe showing the page with ?preview=1
@@ -150,8 +151,9 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-move-block-section') handlers.onMoveBlockSection?.(msg);
     if (msg?.type === 'urd-mobile-reset') handlers.onMobileReset?.(msg);
     if (msg?.type === 'urd-phone-order') handlers.onPhoneOrder?.(msg);
+    if (msg?.type === 'urd-too-narrow') handlers.onTooNarrow?.(msg);
+    if (msg?.type === 'urd-attention-cards') handlers.onAttentionCards?.(msg);
     if (msg?.type === 'urd-phone-layout') handlers.onPhoneLayout?.(msg);
-    if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
     if (msg?.type === 'urd-block-style') handlers.onBlockStyle?.(msg);
     if (msg?.type === 'urd-collection-edit') handlers.onCollectionEdit?.(msg);

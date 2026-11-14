@@ -612,6 +612,7 @@ function enablePreview(state, opts) {
       // The editor detected desktop drift in an overridden section: mark it live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
         ?.classList.toggle('urd-attention', msg.needed !== false);
+      window.UrdPreviewEdit?.reportAttention?.();
     } else if (msg?.type === 'urd-scroll-section' && msg.sectionId) {
       // The attention badge in the top bar: scroll to the section that needs review, so the badge points at a place and not just a mode.
       // The badge also switches the view to the phone, whose layout settles over the next frames (blocks measure their heights), so the jump settles.
