@@ -9,7 +9,7 @@ import { boxStyleCss } from '../box-style.js';
 
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
-import { typedFrames, PHONE_WORDS } from '../push-model.js';
+import { typedFrames, PHONE_WORDS, forcesReadable } from '../push-model.js';
 import { drawnWidth } from '../render.js';
 import { textDesign, termsDesign, applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
 
@@ -43,10 +43,22 @@ export const textBlock = {
     // (the theme's surface color, border, radius). Optional field; older data
     // lacks it and renders without the card.
     content.className = props.box ? 'urd-text urd-text-box' : 'urd-text';
+    // The block's own words, which «Long words» reaches (ADR-0034, base.css).
+    content.dataset.urdText = '';
     content.style.cssText = 'width:100%;min-height:100%;';
     // Optional card style (additive; empty = the base style in .urd-text-box).
     if (props.box) Object.assign(content.style, boxStyleCss(props.boxStyle));
     content.style.textAlign = props.align;
+    // Its own long words, else the theme's (ADR-0034, base.css .urd-text): hyphenated, or kept whole.
+    if (props.words === 'whole' || props.words === 'hyphenate') {
+      content.style.setProperty('--urd-text-hyphens', props.words === 'whole' ? 'manual' : 'auto');
+      content.style.setProperty('--urd-text-wrap', props.words === 'whole' ? 'normal' : 'break-word');
+    }
+    // «Force readable text» on the desktop (ADR-0034): the lines of a plain text wrap at a measure, each paragraph by the text's alignment or its own (base.css); the document designs keep their own layout.
+    if (design === 'plain' && ctx.viewport !== 'mobile' && forcesReadable(ctx.section, 'desktop')) {
+      content.dataset.urdMeasure = '';
+      content.dataset.urdAlign = props.align === 'center' || props.align === 'right' ? props.align : 'left';
+    }
     // Optional font and size per text block (additive; empty = inherited from the theme).
     if (props.font) content.style.fontFamily = props.font;
     if (props.size) content.style.fontSize = `${props.size}px`;

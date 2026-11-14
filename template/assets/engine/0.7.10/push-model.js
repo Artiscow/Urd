@@ -154,6 +154,16 @@ export function drawnBlock(block, narrow) {
 }
 
 /**
+ * Whether a section forces readable text on a screen (ADR-0034, «Force readable text»): on the phone a block with words is never drawn narrower than its words read well (the floor in base.css), and on the desktop a text's lines wrap at a measure. On unless the section's `size.readablePhone` or `size.readableDesktop` is false.
+ * @param {object|null|undefined} section
+ * @param {'desktop'|'mobile'} viewport
+ * @returns {boolean}
+ */
+export function forcesReadable(section, viewport) {
+  return section?.size?.[viewport === 'mobile' ? 'readablePhone' : 'readableDesktop'] !== false;
+}
+
+/**
  * The props that hold a block's words, by its type: the words the phone can have of its own (`phoneProps`, additive, ADR-0033), written in the phone view and drawn at phone width in the desktop's place.
  * A list of words (questions, events, rows) is not among them: its items would have to be matched one by one, and one added on the desktop would not reach the phone's copy.
  */

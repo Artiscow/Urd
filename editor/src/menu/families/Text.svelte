@@ -27,6 +27,12 @@
         onchange={(v) => setBlockProp('align', v)} />
     </Setting>
     <WholeText />
+    <!-- Long words: the theme's, hyphenated, or kept whole (ADR-0034) -->
+    <Setting source="theme" own={Boolean(selectedBlock.props.words)} reset={() => setBlockProp('words', null)}>
+      <Choice stack label={ta('lbl.longWords')} title={ta('tip.text.longWords')} value={selectedBlock.props.words ?? ''}
+        options={[['', ta('opt.longWords.theme')], ['whole', ta('opt.longWords.whole')], ['hyphenate', ta('opt.longWords.hyphenate')]]}
+        onchange={(v) => setBlockProp('words', v || null)} />
+    </Setting>
   {/snippet}
   {#snippet textBox()}
     <Setting key="box" pin="textBox">

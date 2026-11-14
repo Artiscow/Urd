@@ -30,7 +30,7 @@
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
-import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf } from './push-model.js';
+import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable } from './push-model.js';
 import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -42,7 +42,7 @@ import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
-import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap } from './phone-moves.js';
+import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow } from './phone-moves.js';
 import { closeColorPicker } from './color-picker.js';
 import { closeDropdowns } from './dropdown.js';
 import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
@@ -64,6 +64,7 @@ import { pathTo, nodeAt } from './caret-path.js';
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
 import { ta, adminLang } from './i18n.js';
 import { barTools, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, BAR_ICONS } from './bar-tools.js';
+import { textDesign } from './doc-look.js';
 
 /**
  * The event's target as an Element. The editing chrome draws its icons as
@@ -793,6 +794,36 @@ const isMobile = () => document.body.classList.contains('urd-mobile');
 
 /** How far the pointer pulls a block that follows its content up or down before the mark at its edge shows (ADR-0025). */
 const STOP_MARK_PX = 6;
+
+/** The narrowest a text block can be dragged on the desktop while its section forces readable text (ADR-0034), in px. */
+const READABLE_MIN_PX = 140;
+
+/** The mark on a block a drop or a handle would squeeze under «Force readable text»: a T in a round badge. */
+const READABLE_SVG = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M3 3h10M8 3v11"/></svg>';
+
+/** The blocks greyed as too narrow for their words just now. */
+let squeezed = [];
+
+/**
+ * Greys the blocks a drop or a handle would make narrower than «Force readable text» lets their words be (ADR-0034), each with a small round mark drawing a T, and takes the look off the ones no longer among them; none takes it off all.
+ * @param {HTMLElement[]} els
+ */
+function showTooNarrow(els) {
+  for (const old of squeezed) {
+    if (els.includes(old)) continue;
+    old.classList.remove('urd-readable-blocked');
+    old.querySelector(':scope > .urd-readable-mark')?.remove();
+  }
+  for (const el of els) {
+    if (squeezed.includes(el)) continue;
+    el.classList.add('urd-readable-blocked');
+    const mark = document.createElement('span');
+    mark.className = 'urd-readable-mark';
+    mark.innerHTML = READABLE_SVG;
+    el.appendChild(mark);
+  }
+  squeezed = els;
+}
 
 /**
  * The size readout beside the resize handle while a block is dragged: the
@@ -5293,6 +5324,18 @@ function enhanceBlock(el, block, section, grid, host) {
     };
   }
 
+  /** A block on the section's canvas, by its id. */
+  function sectionBlock(id) {
+    return host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`);
+  }
+
+  /** Whether a phone change would draw words narrower than the section's «Force readable text» lets them be (ADR-0034, phoneTooNarrow). */
+  function squeezes(change) {
+    if (!forcesReadable(section, 'mobile')) return false;
+    const words = [...host.querySelectorAll('.urd-block[data-urd-words="1"]')].map((b) => b.dataset.blockId);
+    return phoneTooNarrow(section.blocks, change, words, leastWordsCols(window.innerWidth)).length > 0;
+  }
+
   /**
    * A flowing block lifted with the keys on the phone (Alt with an arrow): the arrows walk where it will land through the places phoneKeyDrops lists, Up and Down along the order, Left and Right beside the place's unit, and the block glides to each place in the landing's dashed outline while the others make room (phonePreview). Enter lands it as a release does, and Escape, a press anywhere or the selection leaving the block puts everything back.
    */
@@ -5313,12 +5356,17 @@ function enhanceBlock(el, block, section, grid, host) {
     const show = () => {
       const drop = side ? { pos: side, of: drops[at].of } : drops[at];
       change = changeAt(drop);
+      // A place that would squeeze words under «Force readable text» greys the block there and lands nothing (ADR-0034).
+      const blocked = Boolean(change) && squeezes(change);
+      showTooNarrow(blocked ? [sectionBlock(drop.member ?? drop.of)].filter(Boolean) : []);
+      if (blocked) change = null;
       view.show(change);
     };
     const end = () => {
       view.end();
       marks.remove();
       el.classList.remove('urd-phone-carried');
+      showTooNarrow([]);
       document.removeEventListener('pointerdown', cancel, true);
       delete el._urdCarry;
     };
@@ -5443,6 +5491,13 @@ function enhanceBlock(el, block, section, grid, host) {
         drop = units.some(within) ? phoneDropAt(units, x, y, null) : phoneDropAt(boxes, x, y, own);
         // Back over its own place, or nearer to it than to any block, the section stands as it is and a release moves nothing.
         change = drop ? phoneDropChange(section.blocks, phoneSetupOf(section), block.id, drop) : null;
+        // A drop that would squeeze words under «Force readable text» (ADR-0034) greys the block aimed at, shows no result and moves nothing.
+        const blocked = Boolean(change) && squeezes(change);
+        showTooNarrow(blocked ? [sectionBlock(drop.member ?? drop.of)].filter(Boolean) : []);
+        if (blocked) {
+          change = null;
+          drop = null;
+        }
         view?.show(change);
       }
       showLand();
@@ -5453,6 +5508,7 @@ function enhanceBlock(el, block, section, grid, host) {
       handle.removeEventListener('pointercancel', cancel);
       document.removeEventListener('keydown', onEscape, true);
       marks?.remove();
+      showTooNarrow([]);
       view?.end();
       el.classList.remove('urd-hold-drag');
     };
@@ -5527,7 +5583,9 @@ function enhanceBlock(el, block, section, grid, host) {
     const box = boxOnPhone(flowEl, ids) ?? { top: 0, bottom: 0 };
     // A cell holding words goes no narrower than the words floor lets it stand at this width (base.css), so the handle never shows a width the floor would not draw.
     const words = ids.some((id) => host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.dataset.urdWords === '1');
-    const least = words ? leastWordsCols(window.innerWidth) : 1;
+    const least = words && forcesReadable(section, 'mobile') ? leastWordsCols(window.innerWidth) : 1;
+    /** The blocks the width sizes, greyed while the pointer pushes them past the floor. */
+    const sized = ids.map((id) => host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)).filter(Boolean);
     // The block's own box and the height its words need where it has words, read as the drag begins.
     const start = { x: event.clientX, y: event.clientY };
     const flowAt = flowEl.getBoundingClientRect();
@@ -5601,9 +5659,11 @@ function enhanceBlock(el, block, section, grid, host) {
       if (edge.x > 0) {
         const room = PHONE_COLUMNS - cells.col + 1;
         cols = clamp(line - (cells.col - 1), Math.min(least, room), room);
+        showTooNarrow(least > 1 && line - (cells.col - 1) < least ? sized : []);
       } else if (edge.x < 0) {
         col = clamp(line + 1, 1, end - Math.min(least, end) + 1);
         cols = end - col + 1;
+        showTooNarrow(least > 1 && end - line < least ? sized : []);
       }
       const dy = ev.clientY - start.y;
       const shown = view.placed()?.get(block.id);
@@ -5633,6 +5693,7 @@ function enhanceBlock(el, block, section, grid, host) {
       document.removeEventListener('keydown', onEscape, true);
       marks.remove();
       stopMark?.remove();
+      showTooNarrow([]);
       view.end();
     };
     // Escape in the middle of it, or a cancelled pointer, keeps the size as it was.
@@ -6082,6 +6143,7 @@ function enhanceBlock(el, block, section, grid, host) {
       // gives free placement (0.1% / 1 px precision).
       const pctPerPx = 100 / canvas.clientWidth;
       const colStep = grid.size * pctPerPx;
+      const readableText = kind === 'resize' && block.type === 'text' && textDesign(block.props?.design) === 'plain' && forcesReadable(section, 'desktop');
       const r2 = (v) => Math.round(v * 100) / 100;
       const yMin = yFloor(host);
       // The grid: on this section, and under a move on every other section
@@ -6289,7 +6351,11 @@ function enhanceBlock(el, block, section, grid, host) {
         }
         // The width grows with a pull outward on the edge dragged, up to the section's far edge on the right and the block's own right edge on the left, so the origin never crosses zero.
         const wMax = edge.x < 0 ? r2(orig.x + orig.w) : r2(100 - orig.x);
-        const w = edge.x === 0 || (hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX) ? orig.w : clamp(snapPct(orig.w + edge.x * dx), r2(colStep), wMax);
+        // A text stops where its lines would get narrower than they read well while its section forces readable text (ADR-0034), and greys while it is pushed past; one already narrower stops where it stands.
+        const wFloor = readableText ? Math.max(r2(colStep), Math.min(r2(READABLE_MIN_PX * pctPerPx), orig.w)) : r2(colStep);
+        const wanted = snapPct(orig.w + edge.x * dx);
+        if (readableText) showTooNarrow(edge.x !== 0 && wanted < wFloor ? [el] : []);
+        const w = edge.x === 0 || (hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX) ? orig.w : clamp(wanted, wFloor, wMax);
         // The top edge of a block drawn at least as tall as its words stops at the words, as the drawn box does, so the block never walks down.
         const hMin = edge.y < 0 && autoGrows(block, window.Urd.blocks.get(block.type)) ? Math.max(4, Math.round(contentHeight(el))) : 4;
         const hFrom = (hv) => Math.max(hMin, hv);
@@ -6384,6 +6450,7 @@ function enhanceBlock(el, block, section, grid, host) {
         markedTarget?.classList.remove('urd-drop-target');
         stop?.remove();
         readout?.remove();
+        showTooNarrow([]);
         settle?.undo();
         dropSticky();
       };
@@ -6411,6 +6478,7 @@ function enhanceBlock(el, block, section, grid, host) {
         markedTarget?.classList.remove('urd-drop-target');
         stop?.remove();
         readout?.remove();
+        showTooNarrow([]);
         // A fit can land while a block that follows its content is dragged
         // (urd-frames writes into the same block): its height is the fit's,
         // never the one the drag began with.

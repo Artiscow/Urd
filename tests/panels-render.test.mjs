@@ -78,6 +78,8 @@ function handleFor(panel, siteDraft, extra = {}) {
     navBgCtx: { mutate: noop, keyPrefix: 'navbg', keyId: 'nav' },
     footerBgCtx: { mutate: noop, keyPrefix: 'footerbg', keyId: 'footer' },
     sectionBgCtx: { mutate: noop, keyPrefix: 'bg', keyId: 'sec-1' },
+    sectionReadable: { phone: true, desktop: true },
+    setSectionReadable: noop,
     BG_TYPES,
     BG_DEFS,
     secBox: { w: 1200, h: 600 },

@@ -17,6 +17,7 @@
   import Fold from '../lib/rows/Fold.svelte';
   import SliderRow from '../lib/rows/SliderRow.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
+  import Setting from '../lib/rows/Setting.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import ColourRow from '../lib/rows/ColourRow.svelte';
   import NumberRow from '../lib/rows/NumberRow.svelte';
@@ -236,7 +237,11 @@
       <SliderRow label={ta('lbl.widthFree')} title={ta('tip.props.sectionWidthPx')} value={sectionWidth.px} min={SECTION_WIDTH_MIN} max={SECTION_WIDTH_MAX} step={SECTION_WIDTH_STEP}
         shown={sectionWidth.shown} oninput={(v) => ed.setSectionWidth(sectionWidthValue('own', v))} />
     {/if}
-    <!-- The section's own settings for the phone: the space between its blocks, its rule for their order, and its custom order (PhoneSectionRows, as the Phone panel draws them) -->
+    <!-- «Force readable text» on the desktop (ADR-0034): a text's lines wrap at a measure, and its width stops before its lines get too narrow -->
+    <Setting own={!ed.sectionReadable.desktop} reset={() => ed.setSectionReadable('desktop', true)}>
+      <SwitchRow label={ta('lbl.readableDesktop')} title={ta('tip.readableDesktop')} checked={ed.sectionReadable.desktop} onchange={(on) => ed.setSectionReadable('desktop', on)} />
+    </Setting>
+    <!-- The section's own settings for the phone: the space between its blocks, «Force readable text» on the phone, its rule for their order, and its custom order (PhoneSectionRows, as the Phone panel draws them) -->
     <PhoneSectionRows />
     <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
       <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}

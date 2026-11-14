@@ -10,6 +10,7 @@ const {
   resolveThemeMode, activeTokens,
   sectionThemeVars, SECTION_THEMES, relativeLuminance, contrastRatio, inkOn,
   buildThemeCss, safeCssValue,
+  wordsVars,
 } = await engineImport('theme.js');
 
 test('resolveThemeMode: stored choice wins over the OS preference', () => {
@@ -213,4 +214,14 @@ test('inkOn: dark text on a light colour, light on a dark one, the theme pair on
     const other = ink === '#ffffff' ? '#14161c' : '#ffffff';
     assert.ok(contrastRatio(ink, colour) >= contrastRatio(other, colour), colour);
   }
+});
+
+test('wordsVars and buildThemeCss: long words kept whole as the standard, hyphenated from the theme\'s own words, both written outright', () => {
+  const whole = { '--urd-text-hyphens': 'manual', '--urd-text-wrap': 'normal' };
+  assert.deepEqual(wordsVars({}), whole);
+  assert.deepEqual(wordsVars({ words: 'whole' }), whole);
+  assert.deepEqual(wordsVars({ words: 'hyphenate' }), { '--urd-text-hyphens': 'auto', '--urd-text-wrap': 'break-word' });
+  const tokens = { color: { bg: '#ffffff', text: '#111111' }, font: { body: 'Georgia, serif' } };
+  assert.ok(buildThemeCss({ tokens, words: 'hyphenate' }).includes('--urd-text-hyphens: auto;'));
+  assert.ok(buildThemeCss({ tokens }).includes('--urd-text-hyphens: manual;'), 'the standard is written too, so a draft wins over a published theme.css');
 });

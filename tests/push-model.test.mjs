@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { PHONE_WORDS, phoneWordsOf, phoneWordsChange, propsForViewport, PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { forcesReadable, PHONE_WORDS, phoneWordsOf, phoneWordsChange, propsForViewport, PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -422,4 +422,13 @@ test('phoneWordsChange: the typed words that differ from the desktop\'s, none wh
   assert.equal(phoneWordsChange('text', props, { html: '<p>Phone</p>' }, { ...props, html: '<p>Desktop</p>' }), null, 'typed back to the desktop\'s words');
   assert.equal(phoneWordsChange('text', props, null, { ...props, align: 'right' }), null, 'a prop that holds no words is never the phone\'s');
   assert.equal(phoneWordsChange('image', { src: 'a' }, null, { src: 'b' }), null);
+});
+
+test('forcesReadable: «Force readable text» is on for each screen unless the section turns it off for that screen', () => {
+  assert.equal(forcesReadable(null, 'mobile'), true);
+  assert.equal(forcesReadable({ size: {} }, 'desktop'), true);
+  assert.equal(forcesReadable({ size: { readablePhone: false } }, 'mobile'), false);
+  assert.equal(forcesReadable({ size: { readablePhone: false } }, 'desktop'), true);
+  assert.equal(forcesReadable({ size: { readableDesktop: false } }, 'desktop'), false);
+  assert.equal(forcesReadable({ size: { readableDesktop: true } }, 'desktop'), true);
 });

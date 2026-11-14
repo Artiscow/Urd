@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -513,4 +513,15 @@ test('phoneHeightSnap: the row grid\'s steps, or the bottom of a block beside it
   assert.deepEqual(phoneHeightSnap(3, 40, []), { height: 8, same: false }, 'never under one step');
   assert.deepEqual(phoneHeightSnap(90, 40, [{ top: 40, bottom: 142 }]), { height: 88, same: false }, 'out of reach');
   assert.deepEqual(phoneHeightSnap(99, 40, [{ top: 40, bottom: 142 }, { top: 30, bottom: 138 }]), { height: 98, same: true }, 'the nearest bottom in reach');
+});
+
+test('phoneTooNarrow: the blocks with words a change would draw in fewer columns than they read well in, by the cells it gives them', () => {
+  const blocks = [blk('t', 0, 0, { mobile: { col: 1, cols: 4 } }), blk('u', 20, 0), blk('p', 40, 0, { mobile: { col: 5, cols: 2 } }), blk('pin', 60, 0, { mobile: { row: 2, rows: 3, col: 1, cols: 2 } })];
+  const words = ['t', 'u', 'pin'];
+  assert.deepEqual(phoneTooNarrow(blocks, { cells: { t: { col: 1, cols: 2 }, p: { col: 3, cols: 2 } } }, words, 4), ['t'], 'a picture may be a quarter');
+  assert.deepEqual(phoneTooNarrow(blocks, { cells: { u: { col: 5, cols: 4 } } }, words, 4), [], 'halves read well at 4');
+  assert.deepEqual(phoneTooNarrow(blocks, { cells: { u: null } }, words, 5), [], 'a block the change gives no cells is not counted against it');
+  assert.deepEqual(phoneTooNarrow(blocks, null, words, 4), []);
+  assert.deepEqual(phoneTooNarrow(blocks, { cells: { pin: { col: 1, cols: 2 } } }, words, 4), [], 'a block pinned to rows keeps its own cells');
+  assert.deepEqual(phoneTooNarrow(blocks, { cells: { t: { col: 1, cols: 2 } } }, words, 1), [], 'with the floor off, any width');
 });

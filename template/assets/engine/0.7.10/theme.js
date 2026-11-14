@@ -55,6 +55,18 @@ function readStoredMode() {
   try { return localStorage.getItem(MODE_KEY); } catch { return null; }
 }
 
+/**
+ * The theme's «Long words» (`theme.words`, ADR-0034) as the CSS variables a text block's words read (base.css): kept whole, the standard, or hyphenated at the page's language and broken where a word still does not fit.
+ * Both ways are written outright, so the draft's choice in the editor's theme style wins over a theme.css published with the other.
+ * @param {{words?: string}|null|undefined} theme
+ * @returns {Record<string, string>}
+ */
+export function wordsVars(theme) {
+  return theme?.words === 'hyphenate'
+    ? { '--urd-text-hyphens': 'auto', '--urd-text-wrap': 'break-word' }
+    : { '--urd-text-hyphens': 'manual', '--urd-text-wrap': 'normal' };
+}
+
 function applyTokens(tokens, root) {
   for (const [group, values] of Object.entries(tokens)) {
     for (const [name, value] of Object.entries(values)) {
@@ -141,6 +153,7 @@ export function buildThemeCss(theme) {
     fallback.push(`  --urd-color-accent-text: ${main.color.bg};`);
     fallback.push(`  --urd-base-accent-text: ${main.color.bg};`);
   }
+  for (const [name, value] of Object.entries(wordsVars(theme))) fallback.push(`  ${name}: ${value};`);
   let css = `:root {\n  color-scheme: ${hasDual ? 'light dark' : mainScheme};\n${fallback.join('\n')}\n}\n`;
   if (wantsContrast) {
     css += '@supports (color: contrast-color(#000)) {\n  :root {\n'
@@ -203,8 +216,11 @@ export function applyTheme(theme, root = document.documentElement) {
     if (stored === 'light' || stored === 'dark') root.setAttribute('data-urd-theme', stored);
     else root.removeAttribute('data-urd-theme');
   } else {
-    // Fallback (no light-dark()): JS sets the tokens inline for the resolved mode.
+    // Fallback (no light-dark()): JS sets the tokens inline for the resolved mode, and the long words' variables.
     applyTokens(activeTokens(theme, activeMode), root);
+    root.style.removeProperty('--urd-text-hyphens');
+    root.style.removeProperty('--urd-text-wrap');
+    for (const [name, value] of Object.entries(wordsVars(theme))) root.style.setProperty(name, value);
   }
 }
 

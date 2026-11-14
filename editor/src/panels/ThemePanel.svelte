@@ -8,6 +8,7 @@
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import SliderRow from '../lib/rows/SliderRow.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
+  import Setting from '../lib/rows/Setting.svelte';
   import { ta } from '$engine/i18n.js';
   import { FONT_STACKS, fontChoices } from '$engine/fonts.js';
   const ed = getContext('urd-editor');
@@ -61,6 +62,14 @@
 
   function setFontToken(name, value) {
     siteMutate('theme', () => { siteDraft.theme.tokens.font[name] = value; });
+  }
+
+  /** The site's long words (`theme.words`): kept whole, the standard, which takes the field away, or hyphenated. */
+  function setWords(value) {
+    siteMutate('theme', () => {
+      if (value === 'hyphenate') siteDraft.theme.words = 'hyphenate';
+      else delete siteDraft.theme.words;
+    });
   }
 
   function setRadiusToken(name, value) {
@@ -189,6 +198,12 @@
       onchange={(v) => setFontToken('heading', v)} />
     <SelectRow label={ta('lbl.bodyText')} title={ta('tip.theme.bodyFont')} value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
       onchange={(v) => setFontToken('body', v)} />
+    <!-- Long words in the site's texts: kept whole, the standard, or hyphenated (ADR-0034); a text block can have its own -->
+    <Setting own={siteDraft.theme.words === 'hyphenate'} reset={() => setWords('whole')}>
+      <Choice label={ta('lbl.longWords')} title={ta('tip.theme.longWords')} value={siteDraft.theme.words === 'hyphenate' ? 'hyphenate' : 'whole'}
+        options={[['whole', ta('opt.longWords.whole')], ['hyphenate', ta('opt.longWords.hyphenate')]]}
+        onchange={(v) => setWords(v)} />
+    </Setting>
     <div class="sample typo-sample">
       <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">{ta('preview.heading')}</div>
       <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">{ta('preview.bodySample')}</div>

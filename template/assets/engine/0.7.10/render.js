@@ -13,7 +13,7 @@
  *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
 import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
+import { forcesReadable, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -515,7 +515,7 @@ const phoneFitWatch = typeof ResizeObserver === 'function' ? new ResizeObserver(
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
-const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
+const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words, .urd-readable-mark, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -1072,6 +1072,8 @@ export function renderSection(section, site, host, opts = {}) {
     // The space between the flowing blocks: the section's own, the site's, or the standard.
     const gap = mobileGapOf(section, site);
     flow.style.setProperty('--urd-mobile-gap', `${gap}px`);
+    // «Force readable text» off on the phone (ADR-0034): the floor for words in narrow cells is not drawn (base.css).
+    if (!forcesReadable(section, 'mobile')) flow.dataset.urdFreeWords = '';
     // On the page before its blocks are drawn, so a spot's id is checked against the section's own blocks too.
     canvas.appendChild(flow);
     // The blocks pinned on the phone while the page scrolls, by their pinning group (each alone without one), the group's first block in the section's order speaking for it as on the desktop (stickyLeads).

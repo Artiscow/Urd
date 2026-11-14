@@ -219,6 +219,10 @@
             "additionalProperties": { "type": "string" }
           }
         },
+        "words": {
+          "enum": ["hyphenate", "whole"],
+          "description": "«Long words» in the site's texts (additive from 0.7.3.20, ADR-0034): kept whole, or hyphenated at the page's language and broken where a word still does not fit. Omitted = whole. A text block's props.words overrides it."
+        },
         "scheme": {
           "enum": ["light", "dark"],
           "default": "light",

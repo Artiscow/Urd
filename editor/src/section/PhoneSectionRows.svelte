@@ -1,5 +1,5 @@
 <script>
-  /* The section's own settings for the phone, in the section menu's «Size and grid» and the Phone panel alike: the space between its blocks, its rule for their order, its custom order, and the presets that suggest its layout in the phone's cells.
+  /* The section's own settings for the phone, in the section menu's «Size and grid» and the Phone panel alike: the space between its blocks, «Force readable text» on the phone, its rule for their order, its custom order, and the presets that suggest its layout in the phone's cells.
      Each rule is drawn as the section's own blocks in its order (phone-order.js), with its stacks and exceptions; the rule and the custom order stand for every section, whatever its blocks, and while a custom order holds, the rule places a block the list does not hold yet. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -40,6 +40,10 @@
 <Setting own={ed.sectionMobileGap !== null} reset={() => ed.setSectionMobileGap(null)}>
   <SliderRow label={ta('lbl.mobileGap')} title={ta('tip.props.mobileGap')} value={phoneGap} min={0} max={MOBILE_GAP_MAX} step={4}
     shown={`${phoneGap} px`} oninput={(v) => ed.setSectionMobileGap(v)} />
+</Setting>
+<!-- «Force readable text» on the phone (ADR-0034): a block with words never narrower than its words read well, and a drop or a handle that would squeeze it greyed -->
+<Setting own={!ed.sectionReadable.phone} reset={() => ed.setSectionReadable('phone', true)}>
+  <SwitchRow label={ta('lbl.readablePhone')} title={ta('tip.readablePhone')} checked={ed.sectionReadable.phone} onchange={(on) => ed.setSectionReadable('phone', on)} />
 </Setting>
 <Setting own={ed.sectionPhoneOrder !== 'top'} reset={() => ed.setSectionPhoneOrder('top')}>
   <div class="field-stack" title={ta('tip.phoneOrder')}>{ta('lbl.phoneOrder')}

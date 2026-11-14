@@ -11,7 +11,7 @@ import { onlyOf } from '../lib/only-group.js';
 import { BAR_ICONS } from '$engine/bar-tools.js';
 import { placeBesideBlock, clampPlace, givesWay } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
-import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf } from '$engine/push-model.js';
+import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
 import { wholeStyleHtml } from '$engine/text-whole.js';
 import { phoneOrderOf, phoneSetupOf, stackOrder } from '$engine/phone-order.js';
@@ -983,6 +983,9 @@ let sectionPhoneOrder = $state('top');
 /** Mirror of whether the active section holds a custom order on the phone (`phoneList`) */
 let sectionPhoneCustom = $state(false);
 
+/** Mirror of the active section's «Force readable text» for each screen (`size.readablePhone`, `size.readableDesktop`, ADR-0034): on unless the section turns it off */
+let sectionReadable = $state({ phone: true, desktop: true });
+
 function syncSectionMirrors(section) {
   sectionGrid = section?.grid ? { ...section.grid } : null;
   sectionMinHeight = section?.size?.minHeight ?? '';
@@ -990,6 +993,7 @@ function syncSectionMirrors(section) {
   sectionMobileGap = Number.isFinite(section?.size?.mobileGap) ? section.size.mobileGap : null;
   sectionPhoneOrder = phoneOrderOf(section);
   sectionPhoneCustom = Array.isArray(section?.phoneList);
+  sectionReadable = { phone: forcesReadable(section, 'mobile'), desktop: forcesReadable(section, 'desktop') };
   sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
   sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
   sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
@@ -1142,6 +1146,20 @@ function setSectionMobileGap(value) {
   mutateSection(`edit:section-mobile-gap:${activeSectionId}`, (s) => {
     const size = { ...(s.size ?? {}) };
     if (Number.isFinite(value)) size.mobileGap = value; else delete size.mobileGap;
+    s.size = size;
+  });
+}
+
+/**
+ * The section's «Force readable text» on one screen (ADR-0034): on, the standard, takes the field away, and off is stored as false.
+ * @param {'phone'|'desktop'} screen
+ * @param {boolean} on
+ */
+function setSectionReadable(screen, on) {
+  const key = screen === 'phone' ? 'readablePhone' : 'readableDesktop';
+  mutateSection(`section-readable-${screen}:${activeSectionId}`, (s) => {
+    const size = { ...(s.size ?? {}) };
+    if (on) delete size[key]; else size[key] = false;
     s.size = size;
   });
 }
@@ -1679,6 +1697,8 @@ export const pageState = {
   get sectionMobileGap() { return sectionMobileGap; },
   get sectionPhoneOrder() { return sectionPhoneOrder; },
   get sectionPhoneCustom() { return sectionPhoneCustom; },
+  get sectionReadable() { return sectionReadable; },
+  setSectionReadable,
   setSectionPhoneCustom,
   changeSectionPhone,
   setSectionMobileGap,

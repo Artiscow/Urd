@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.20): «Force readable text» on the phone and the desktop, and long words
+
+- [ ] A section's «Size and grid» shows «Force readable text on the desktop» and «Force readable text on the phone», both on, in both views; the Phone panel shows the phone's; each switch is one undo step and has a reset when off
+- [ ] In the phone view with the phone's setting on, drag a text's width edge towards a quarter: it stops at ½, and while you push past, the text greys with a small round «T» mark; let go and the mark goes
+- [ ] Drag a text into an empty quarter beside a block, or with Alt and the arrows onto a place that would make it a quarter: the block aimed at greys with the mark, the section shows no result, and letting go or pressing Enter moves nothing
+- [ ] Turn the phone's setting off: the same edge takes the text to ¼, and the text stands a quarter wide in the phone view and on a 390 px published page
+- [ ] With the desktop's setting on, a text across a wide box wraps at about 75 characters on the published page at 1200 px; a centred text's lines stand centred, a right-aligned text's to the right; a text box's card keeps its full frame
+- [ ] On the desktop, drag a text's width edge far in: it stops at 140 px, greyed with the mark while pushed past; turn the desktop's setting off and its lines run the whole box
+- [ ] Om oss's big story keeps its full-width lines (its section has the desktop's setting off), and the questions' texts wrap at the measure
+- [ ] Theme panel, Typography: «Long words» shows Keep whole as the standard; in a narrow box a long word stands whole past its edge, in the editor as on the published page
+- [ ] Set «Long words» to Hyphenate: a long word is split with a hyphen at Norwegian syllables, in the editor and on the published page; a text block's own «Long words» in its Style overrides the theme's, and «As the theme» follows it again
+- [ ] Om oss's questions heading has its own Hyphenate in its Style
+
 ### Test batch (0.7.3.18): resize handles in the phone view, the width from either side and a height for phones
 
 - [ ] In the phone view, hover a block: it has handles on all four edges and all four corners, a text as well as a picture

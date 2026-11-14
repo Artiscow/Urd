@@ -93,6 +93,7 @@ So a page-layout pattern becomes a section preset of placed blocks on the deskto
   - The canvas binds content to the design width, with section backgrounds at full width (ADR-0018).
   - The ribbon block can already reach the window's edges: `width: 'page'` measures the section rather than using `100vw` (code: `blocks/ribbon.js`).
   - There is no shared per-block width choice. See D2.
+  - A text's lines wrap at 75 characters on the desktop while its section's «Force readable text» is on, the standard (ADR-0034, Delivered 0.7.3.20).
 
 ### Asymmetric and overlapping layouts
 - **What.** Pictures and text that overlap or sit off the grid on purpose.

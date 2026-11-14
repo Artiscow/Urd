@@ -13,7 +13,8 @@
       ],
       "preset": "lead-story",
       "size": {
-        "minHeight": "976px"
+        "minHeight": "976px",
+        "readableDesktop": false
       },
       "grid": null,
       "background": {
@@ -250,6 +251,7 @@
           "type": "text",
           "version": 1,
           "props": {
+            "words": "hyphenate",
             "html": "<h2>Ofte stilte spørsmål</h2>",
             "align": "center",
             "box": false

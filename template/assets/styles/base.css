@@ -333,8 +333,8 @@ html {
 }
 
 /* A cell holding words too narrow to read well stands across the row as a block without cells does: narrower than about 140 px, reckoned as its cells' share of the row's 90 % at the window's width less half the standard space between blocks (render.js marks it urd-cell-words with its span: a cell of flowing blocks, a block pinned in cells, or the slot of a block pinned while the page scrolls).
-   Important, since its cells stand in its own style. */
-.urd-flow > .urd-cell-words[data-cols="1"] {
+   Important, since its cells stand in its own style. A section with «Force readable text» off on the phone (render.js data-urd-free-words, ADR-0034) has no floor. */
+.urd-flow:not([data-urd-free-words]) > .urd-cell-words[data-cols="1"] {
   grid-column: 1 / -1 !important;
   justify-self: center !important;
   width: 90% !important;
@@ -343,7 +343,7 @@ html {
 }
 
 @media (max-width: 657px) {
-  .urd-flow > .urd-cell-words[data-cols="2"] {
+  .urd-flow:not([data-urd-free-words]) > .urd-cell-words[data-cols="2"] {
     grid-column: 1 / -1 !important;
     justify-self: center !important;
     width: 90% !important;
@@ -353,7 +353,7 @@ html {
 }
 
 @media (max-width: 438px) {
-  .urd-flow > .urd-cell-words[data-cols="3"] {
+  .urd-flow:not([data-urd-free-words]) > .urd-cell-words[data-cols="3"] {
     grid-column: 1 / -1 !important;
     justify-self: center !important;
     width: 90% !important;
@@ -363,7 +363,7 @@ html {
 }
 
 @media (max-width: 328px) {
-  .urd-flow > .urd-cell-words[data-cols="4"] {
+  .urd-flow:not([data-urd-free-words]) > .urd-cell-words[data-cols="4"] {
     grid-column: 1 / -1 !important;
     justify-self: center !important;
     width: 90% !important;
@@ -443,6 +443,13 @@ html {
   color: var(--urd-color-accent);
 }
 
+/* Long words in a text block's words (ADR-0034, blocks/text.js data-urd-text): kept whole, the standard, or hyphenated at the page's language and broken where a word still does not fit, as the theme's «Long words» says (theme.js wordsVars) or the block's own.
+   The rule holds in the editor as on the published page, in the place of the browser's own breaking for a text being typed in. */
+.urd-text[data-urd-text] {
+  hyphens: var(--urd-text-hyphens, manual);
+  overflow-wrap: var(--urd-text-wrap, normal);
+}
+
 /* Text box: a text block with its content in a card (props.box on the text block).
    Follows the theme's surface color and radius. */
 .urd-text-box {
@@ -508,6 +515,32 @@ html {
 
 .urd-faq-a > .urd-text {
   padding-top: 0.5rem;
+}
+
+/* «Force readable text» on the desktop (ADR-0034, blocks/text.js data-urd-measure): a text's lines wrap at 75 characters of its own font, each paragraph standing by the text's alignment, so the box and a text box's card keep their frame. */
+.urd-text[data-urd-measure] > * {
+  max-inline-size: 75ch;
+}
+
+.urd-text[data-urd-measure][data-urd-align="center"] > * {
+  margin-inline: auto;
+}
+
+.urd-text[data-urd-measure][data-urd-align="right"] > * {
+  margin-inline-start: auto;
+}
+
+/* A paragraph aligned by itself (the text bar writes its alignment on it) stands by its own alignment within the box */
+.urd-text[data-urd-measure] > :is([style*="text-align: center"], [align="center"]) {
+  margin-inline: auto;
+}
+
+.urd-text[data-urd-measure] > :is([style*="text-align: right"], [align="right"]) {
+  margin-inline: auto 0;
+}
+
+.urd-text[data-urd-measure] > :is([style*="text-align: left"], [style*="text-align: justify"], [align="left"], [align="justify"]) {
+  margin-inline: 0 auto;
 }
 
 /* The list variant (faq.variant): bare rows with a rule between them, not cards. */
@@ -15769,6 +15802,33 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   border: calc(2px * var(--urd-chrome-scale, 1)) dashed #ff2d87;
   border-radius: 6px;
   background: color-mix(in srgb, #ff2d87 12%, transparent);
+}
+
+/* A block a drop or a handle would squeeze under «Force readable text» (ADR-0034, preview-edit.js showTooNarrow): greyed under a wash, with a round mark drawing a T, for as long as the pointer asks for it */
+.urd-preview .urd-block.urd-readable-blocked {
+  filter: grayscale(1);
+}
+
+.urd-preview .urd-readable-mark {
+  position: absolute;
+  inset: 0;
+  z-index: 100002;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: color-mix(in srgb, #4a515c 55%, transparent);
+  pointer-events: none;
+}
+
+.urd-preview .urd-readable-mark > svg {
+  box-sizing: content-box;
+  width: calc(12px * var(--urd-chrome-scale, 1));
+  height: calc(12px * var(--urd-chrome-scale, 1));
+  padding: calc(6px * var(--urd-chrome-scale, 1));
+  border-radius: 50%;
+  background: #4a515c;
+  color: #fff;
+  box-shadow: 0 0 0 calc(2px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #fff 75%, transparent);
 }
 
 /* A block lifted with the keys on the phone: shown where it will land, in the landing's outline */

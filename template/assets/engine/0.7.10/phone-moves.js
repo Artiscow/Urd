@@ -523,6 +523,24 @@ export function phoneChangeApplied(section, change) {
 }
 
 /**
+ * The blocks with words a phone change would draw in fewer of the phone's columns than they read well in (ADR-0034, «Force readable text»): those the change gives cells, a block across the row never among them, so a block already narrow elsewhere does not count against the change; a block pinned to rows keeps its own cells and is never counted.
+ * @param {object[]} blocks The section's blocks
+ * @param {{cells?: Record<string, {col: number, cols: number}|null>}|null} change
+ * @param {Iterable<string>} wordIds The blocks that hold words
+ * @param {number} least The fewest columns words read well in (leastWordsCols)
+ * @returns {string[]}
+ */
+export function phoneTooNarrow(blocks, change, wordIds, least) {
+  if (!change) return [];
+  const words = new Set(wordIds);
+  return blocks.filter((block) => {
+    if (!words.has(block.id) || Number.isFinite(block.frames?.mobile?.row) || !change.cells || !(block.id in change.cells)) return false;
+    const cells = change.cells[block.id];
+    return Boolean(cells) && cells.cols < least;
+  }).map((block) => block.id);
+}
+
+/**
  * A height dragged on the phone, snapped to the row grid's steps, or to the height that lines its bottom up with a block or stack beside it on its line («Same height»).
  * @param {number} raw The height the pointer asks for, in px
  * @param {number} top The block's top in the flow, in px

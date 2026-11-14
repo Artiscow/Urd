@@ -89,7 +89,9 @@
           "properties": {
             "minHeight": { "type": "string", "description": "CSS length, e.g. '85vh'" },
             "maxWidth": { "type": "string", "description": "Overrides the site's content width for this section (adopted in v0.7, ADR-0018): CSS length, or 'full' for content unbound by the design width, inside the site's side margin. Absence = inherit site.layout.contentWidth." },
-            "mobileGap": { "type": "integer", "minimum": 0, "maximum": 96, "description": "The space between the blocks that flow in this section's row grid on the phone, in px (additive from 0.7.3.7, ADR-0019). Absence = the site's layout.mobileGap, else 16." }
+            "mobileGap": { "type": "integer", "minimum": 0, "maximum": 96, "description": "The space between the blocks that flow in this section's row grid on the phone, in px (additive from 0.7.3.7, ADR-0019). Absence = the site's layout.mobileGap, else 16." },
+            "readablePhone": { "type": "boolean", "description": "«Force readable text» on the phone (additive from 0.7.3.20, ADR-0034): false lets a block with words take any width in the phone's cells. Absence = on: a cell with words too narrow to read well stands across the row." },
+            "readableDesktop": { "type": "boolean", "description": "«Force readable text» on the desktop (additive from 0.7.3.20, ADR-0034): false lets a text's lines run the box's width. Absence = on: a text's lines wrap at 75 characters." }
           }
         },
         "grid": {
