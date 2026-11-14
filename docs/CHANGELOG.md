@@ -8,6 +8,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.22.2 - The pin mark on pinned blocks only - 14 November 2026
+
+- The yellow pin mark stood on every block placed for the phone, blocks only standing in the phone's columns included, so it did not say which blocks were pinned (test finding, BACKLOG 0.7.3.22). It stands on a pinned block only, and a text's words mark stands beside it only there (preview-edit.js); a block placed in columns keeps its ↺ on the bar.
+- The guides say that only a pinned block carries the pin; base.css's note on the mark is updated, and the HTML shells carry its new stamp.
+
+The independent review before the commit found these:
+
+1. base.css still named the pin mark among the editing layer's parts a flowing block anchors, which a flowing block no longer carries, and the mark's new note broke a sentence across lines. Both notes are corrected, and the shells carry the stylesheet's new stamp.
+2. The English guide's sentence after the new one read «around it then» about the mark rather than the pinned block. It names the pinned block.
+
 ### 0.7.3.22 - The phone review only where something fell behind, a phone check before publishing, and pin and unpin on the phone; Bug Fixes: a review mark lost when the view switched - 14 November 2026
 
 - The phone review card («A block was … on the desktop») came at nearly every edit in a section with anything set for the phone, the phone view's own edits included, and named no block (test finding, BACKLOG 0.7.3.22). It comes only when the desktop changes around a block pinned on the phone, or under a text's own words there, and names the block (`attention.blockId`, additive); ADR-0019 decision 5 is amended.

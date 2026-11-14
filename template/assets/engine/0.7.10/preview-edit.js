@@ -4864,33 +4864,32 @@ function enhanceBlock(el, block, section, grid, host) {
   // The pin as the block's menu and the Phone panel reach it (pinOnPhoneAt): only a block that flows in the phone view, which measures where it stands.
   el._urdPinOnPhone = flowsOnPhone ? pinOnPhone : null;
 
-  // Overridden mobile block: a pin badge showing the state, and on a block placed for the phone that still flows a ↺ that resets ONLY this block's override (back in sync with desktop).
-  if (mobile && block.frames.mobile) {
+  // A block pinned on the phone carries the pin mark; a block placed for the phone that still flows (its cells, its height) carries none, and a ↺ on its bar resets ONLY this block's override (back in sync with desktop).
+  if (mobile && !flowsOnPhone) {
     const pin = document.createElement('div');
     pin.className = 'urd-mobile-pin';
     pin.innerHTML = MOBILE_PIN_SVG;
     pin.title = ta('canvas.mobilePinned');
     el.appendChild(pin);
-
-    if (flowsOnPhone) {
-      const resetBtn = document.createElement('button');
-      resetBtn.innerHTML = RESET_SVG;
-      resetBtn.title = ta('canvas.mobileResetBlock');
-      resetBtn.dataset.cap = ta('canvas.cap.reset');
-      resetBtn.addEventListener('click', () => {
-        post({ type: 'urd-mobile-reset', sectionId: section.id, blockId: block.id });
-      });
-      barBody.appendChild(resetBtn);
-    }
+  }
+  if (flowsOnPhone && block.frames.mobile) {
+    const resetBtn = document.createElement('button');
+    resetBtn.innerHTML = RESET_SVG;
+    resetBtn.title = ta('canvas.mobileResetBlock');
+    resetBtn.dataset.cap = ta('canvas.cap.reset');
+    resetBtn.addEventListener('click', () => {
+      post({ type: 'urd-mobile-reset', sectionId: section.id, blockId: block.id });
+    });
+    barBody.appendChild(resetBtn);
   }
 
-  // A block with words of its own on the phone (ADR-0033): a mark in the phone view, beside the pin of a block placed by hand, standing from the first word typed there, since the typing draws nothing again.
+  // A block with words of its own on the phone (ADR-0033): a mark in the phone view, beside the pin of a block pinned there, standing from the first word typed there, since the typing draws nothing again.
   if (mobile && PHONE_WORDS[block.type]) {
     const markWords = () => {
       if (el.querySelector(':scope > .urd-phone-words')) return;
       const words = document.createElement('div');
       words.className = 'urd-phone-words';
-      words.classList.toggle('urd-phone-words-beside', Boolean(block.frames.mobile));
+      words.classList.toggle('urd-phone-words-beside', !flowsOnPhone);
       words.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9"/></svg>';
       words.title = ta('canvas.phoneWords');
       el.appendChild(words);

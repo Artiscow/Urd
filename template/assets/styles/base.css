@@ -381,7 +381,7 @@ html {
    overrides width and margin for partial placements. position: relative
    (with no offsets) takes part in the grid as static, and at the same time anchors
    the editing layer's absolute children (toolbar, resize handles,
-   pin marker) to the BLOCK rather than to the flow surface. */
+   words mark) to the BLOCK rather than to the flow surface. */
 .urd-block-flow {
   position: relative;
   width: 90%;
@@ -18624,8 +18624,8 @@ body.urd-mobile .urd-add-section {
   color: var(--urd-admin-accent-text, #fff);
 }
 
-/* The pin marker on an overridden mobile block: shows that the block is detached
-   from the desktop layout. The same shape as the sticky pin, yellow like the review flag. */
+/* The pin marker on a block pinned on the phone: it keeps its own spot while the other blocks flow around it.
+   The same shape as the sticky pin, yellow like the review flag. */
 .urd-preview .urd-mobile-pin {
   /* Upright on a rotated block, like the handles above. */
   transform: rotate(calc(-1 * var(--urd-block-rot, 0deg)));

@@ -2,6 +2,12 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.22.2): the pin mark on pinned blocks only
+
+- [ ] In the phone view, a section with blocks side by side (Om oss's first section): none of them carries a yellow pin, and each placed in columns still has ↺ on its bar
+- [ ] Pin a block with the pin right after ⠿: a yellow pin appears in its corner; unpin it with the crossed pin and the yellow pin goes
+- [ ] Pin a text with words of its own on the phone: the lines mark stands beside the pin; unpin it and the lines mark stands in the corner alone
+
 ### Test batch (0.7.3.22): the phone review, the phone check before publishing, and pinning
 
 Locally, publishing is reached with Ctrl+K, Publish (the «Publish now» button needs a sign-in); there press «Cancel» or «Look on the phone», never «Publish anyway».
