@@ -173,7 +173,8 @@
                       "properties": {
                         "needed": { "type": "boolean" },
                         "reason": { "type": "string" },
-                        "since": { "type": "string", "format": "date-time" }
+                        "since": { "type": "string", "format": "date-time" },
+                        "blockId": { "type": "string", "description": "The block the review is about, where it is one block's: the block whose desktop words changed under the phone's own (reason words-changed)" }
                       }
                     }
                   ]

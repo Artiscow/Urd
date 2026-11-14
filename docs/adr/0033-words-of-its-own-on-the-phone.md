@@ -1,7 +1,7 @@
 # ADR-0033: Words of its own on the phone
 
 Date: 13 November 2026
-Status: Accepted. Extends the synced mobile model ([ADR-0019](0019-synced-mobile-model.md)), whose per-block override held the placement only, with the words a block says on the phone. Chosen in the design pass of BACKLOG 0.7.3.16 on 13 November 2026.
+Status: Accepted. Extends the synced mobile model ([ADR-0019](0019-synced-mobile-model.md)), whose per-block override held the placement only, with the words a block says on the phone. Chosen in the design pass of BACKLOG 0.7.3.16 on 13 November 2026; decision 5 amended 14 November 2026 (the review names the block whose desktop words changed, with ADR-0019 decision 5 narrowed), earlier text in [amended/](amended/0033-words-of-its-own-on-the-phone-until-2026-11-14.md).
 
 ## Context
 
@@ -17,7 +17,7 @@ A published page draws one DOM for the width it is opened at: it chooses the des
 2. **Writing in the phone view writes the phone's words.** The typing says it is the phone's, and the editor keeps only the typed words that differ from the desktop's; words typed back to the desktop's are the desktop's again. The desktop's props and frame are never written from the phone view. A text's style is the design's and reaches both texts.
 3. **The phone draws its words in the desktop's place, in the editor and on the published page alike.** The words are merged in where a block is drawn, in the phone's viewport only, so the page holds one copy of its words at any width ([ADR-0001](0001-hybrid-editor-model.md), the preview is production).
 4. **The phone's words are marked and have their own way back.** A block with them carries a mark in the phone view, «Words on the phone» in its Placement says whether they are the desktop's or its own, and the Phone panel's row has a round mark; each way back gives the block the desktop's words in one undo step. The resets of the phone's placement keep them, since they are content the owner wrote, as hiding a block on phones is intent.
-5. **A block with the phone's words counts as overridden for the mobile review** (ADR-0019 decision 5): an edit of its desktop words flags its section, so the owner sees that the phone's copy may need the same change.
+5. **An edit of a block's desktop words under the phone's own flags its section for the mobile review** (ADR-0019 decision 5), naming the block, so the owner sees that the phone's copy may need the same change.
 
 ## Alternatives rejected
 
@@ -30,4 +30,4 @@ A published page draws one DOM for the width it is opened at: it chooses the des
 - The data contract gains `phoneProps` on a block (docs/SCHEMA.md); older data lacks it and is drawn as before, so it needs no migration ([ADR-0005](0005-versioning-and-migration.md)). A block migration that reshapes a word prop reaches `phoneProps` in the same step.
 - A page's words can differ by width, so a page opened at phone width says what the owner wrote for the phone; the desktop's words are what a reader without the page's script, or a page baked at the desktop width, reads.
 - The text editor's tools (the text toolbar, links, the caret after an undo) work in the phone view, since the text is written in place there.
-- The mobile review flags more sections than before: those whose blocks have the phone's words, as well as those with blocks placed by hand.
+- The mobile review flags a section whose block's desktop words change under the phone's own, beside a section whose block pinned on the phone the desktop changed around.

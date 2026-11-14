@@ -134,15 +134,30 @@ function updateAttention() {
     .filter((s) => s.responsive?.mobile?.attention?.needed).length ?? 0;
 }
 
+/** The phone view at a phone's size: a Phone standing at a tablet size or an own width above the breakpoint takes the phone preset first. */
+function toPhoneView() {
+  if (previewState.devices.find((d) => d.id === 'mobile')?.viewport !== 'mobile') previewState.setPhonePref({ size: 'phone' });
+  previewState.deviceId = 'mobile';
+}
+
 /** The review badge: switch to mobile view and scroll to the first
  *  section that needs review. The scroll is sent after the viewport
  *  effect has flushed (postMessage is FIFO, so the order is guaranteed). */
 function jumpToAttention() {
   const target = pageState.store?.data.sections.find((s) => s.responsive?.mobile?.attention?.needed);
-  // The review is of the phone layout: a Phone standing at a tablet size or an own width above the breakpoint takes the phone preset first.
-  if (previewState.devices.find((d) => d.id === 'mobile')?.viewport !== 'mobile') previewState.setPhonePref({ size: 'phone' });
-  previewState.deviceId = 'mobile';
+  toPhoneView();
   if (target) setTimeout(() => previewState.bridge?.sendScrollSection(target.id), 0);
+}
+
+/** «Look on the phone» from the phone check before publishing: the phone view on the page, at its first section not looked at there since its layout changed; another page is opened after, and scrolled once its canvas is ready, the sections of the page left in the phone view meanwhile counting for nothing (phoneSeen waits for the page's store). */
+async function lookOnPhone(id, sectionId) {
+  toPhoneView();
+  if (id === pageState.pageId) {
+    setTimeout(() => previewState.bridge?.sendScrollSection(sectionId), 0);
+    return;
+  }
+  previewState.scrollOnReady(sectionId);
+  await pageState.selectPage(id);
 }
 
 // A click anywhere in the admin outside the block menu closes it (clicks
@@ -1109,6 +1124,7 @@ export const shellState = {
   set attentionCount(v) { attentionCount = v; },
   updateAttention,
   jumpToAttention,
+  lookOnPhone,
   onPointerdownWindow,
   onKeydown,
   init,

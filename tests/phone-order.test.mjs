@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -745,4 +745,11 @@ test('phoneDropChange: a block of a column of the rule dropped apart from it on 
   assert.equal(landed(blocks, setup, beside).tree, 'a b c');
   // Stacked under a block of its own column, it stays with it.
   assert.equal(phoneDropChange(blocks, setup, 'b', { pos: 'above', of: 'a' })?.loose, undefined);
+});
+
+test('unpinning keeps the cells and the turn, and drops the rows with what a pin gives', () => {
+  assert.deepEqual(unpinned({ col: 5, cols: 4, row: 3, rows: 12, z: 2 }), { col: 5, cols: 4 });
+  assert.deepEqual(unpinned({ x: 10, w: 60, row: 3, rows: 12, rot: 4 }), { rot: 4 });
+  assert.equal(unpinned({ x: 10, w: 60, row: 3, rows: 12 }), null);
+  assert.equal(unpinned(null), null);
 });

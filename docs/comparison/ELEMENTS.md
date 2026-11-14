@@ -224,7 +224,7 @@ Timelines, cursor effects and shaders are not taken ([FEATURES.md](FEATURES.md))
   - a bound content width (default 1440) with full-width section backgrounds ([ADR-0018](../adr/0018-bound-content-width.md));
   - free placement on a snap grid, and a push pass that moves the blocks below a block whose content grows ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md));
   - per block, a height that follows the content or is the block's own, three fit choices below the design width (wrap, shrink in proportion, shrink and wrap) and «Size» with bounds on its text ([ADR-0025](../adr/0025-the-sizing-model.md)).
-- **Mobile:** a synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)), among them a block's own width and height on the phone, set by every edge and corner in the phone view (0.7.3.18), and hide on mobile. In this map SQ and WH also resize blocks for the phone alone in their mobile view (counted 14 November 2026). Mobile review flags each section whose desktop changed after its mobile layout was tuned, until the site owner marks it reviewed.
+- **Mobile:** a synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)), among them a block's own width and height on the phone, set by every edge and corner in the phone view (0.7.3.18), and hide on mobile. In this map SQ and WH also resize blocks for the phone alone in their mobile view (counted 14 November 2026). Mobile review flags a section when the desktop changes around a block pinned on the phone, or under a text's own words there, naming the block, until the site owner marks it reviewed; every other layout change on the desktop is listed before publishing until the section has been looked at in the phone view (0.7.3.22).
 - **Preview:** four devices (Screen, laptop 1280, tablet 810, phone 390) and «Clean view», which shows the page as a visitor sees it.
 
 Open: desktop and phone side by side (E14), and real phone sizes in the preview (0.7.10); elements shown only on the phone (E15) are Delivered 0.7.3.8. A section's rule for its phone order (Top, Left or Right first) with an exception per block is Delivered 0.7.3.12, and the order as a list in the Phone panel, with stacks and a custom order, is Delivered 0.7.3.13; eight cell columns on the phone, with blocks side by side in the reading order, are Delivered 0.7.3.14.1, presets that suggest a layout Delivered 0.7.3.14.2, and a drag on the phone canvas into the order and the cells Delivered 0.7.3.15; a text's words of its own on the phone, which no builder here offers, Delivered 0.7.3.16.1 (ADR-0033). Custom breakpoints (ADR-0019) and a responsive AI fix (E16) are not taken.
@@ -304,7 +304,7 @@ ADR-0017 records that Sanity, Contentful, Storyblok, Strapi and Payload all ship
 **Urd today.**
 - «+ New section» is the empty state, and «+ New block» sits in every section.
 - Everything with special behaviour has a «?» help chip ([ADR-0008](../adr/0008-help-chip-rule.md)), and settings are explained in «?» tooltips.
-- The setup wizard runs on a fresh clone, and mobile review flags sections that need a look.
+- The setup wizard runs on a fresh clone, mobile review flags sections where a pinned block or the phone's own words fell behind the desktop, and publishing lists the sections whose layout changed since they were last seen in the phone view (0.7.3.22).
 - «?» on the page or in the panels opens a sheet of every key the editor answers to, grouped by where it works; the Urd settings and the setup wizard open it too (E21).
 
 Missing: preset suggestions in an empty section or on an empty page (E20), a «which layout tool?» chip (E5), and an element manager that hides unused block types (E4).
@@ -372,7 +372,7 @@ Urd covers most of the delivery patterns. The remaining gaps are the command pal
 | [Global design](#global-design) | Theme tokens, light and dark, theme suggestions, section themes, «Text on accent» Auto | Font packs and palette themes (E10), style book and modes (E11) |
 | [Reuse with sync](#reuse-with-sync) | Presets, «Save as template» for sections, block groups and pages, global nav and footer, plugin blocks | Synced global blocks (E12) |
 | [States and interactions](#states-and-interactions) | Entrance, stagger, hover lift, parallax, animated gradient, reduced motion | Button states (E13) |
-| [Responsive delivery](#responsive-delivery) | Bound width, push pass, sizing model, synced mobile row grid, hide on mobile, phone-only elements, mobile review, 4 devices, Clean view | Side by side (E14) |
+| [Responsive delivery](#responsive-delivery) | Bound width, push pass, sizing model, synced mobile row grid, hide on mobile, phone-only elements, mobile review, a phone check before publishing, 4 devices, Clean view | Side by side (E14) |
 | [Section and template galleries](#section-and-template-galleries) | 39 presets with a category sidebar, «Change layout», 8 page templates, 10 footer presets | Whole-site templates (E17) |
 | [AI and wizards as delivery](#ai-and-wizards-as-delivery) | Setup wizard; the MCP route decided | MCP server (E19) |
 | [Empty states and discoverability](#empty-states-and-discoverability) | «+ New section» empty state, help chips, tooltips | Richer empty states (E20) |

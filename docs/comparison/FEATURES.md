@@ -130,7 +130,7 @@ The source marks, the ID scheme and the status words are explained in [README.md
   - Content is bound to a content width, 1440 px by default ([ADR-0018](../adr/0018-bound-content-width.md)).
   - A block whose content grows pushes the blocks below ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)).
   - Each block has a height that follows its content or is its own; below the design width it wraps, shrinks in proportion, or shrinks and wraps; and «Size» scales it with bounds on its text ([ADR-0025](../adr/0025-the-sizing-model.md)).
-- **Mobile.** A synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)), hide on mobile, and a mobile review for sections with overrides, Urd's counterpart to Wix Studio's responsive scanner.
+- **Mobile.** A synced row grid with per-block overrides ([ADR-0019](../adr/0019-synced-mobile-model.md)), hide on mobile, a mobile review where a pinned block or the phone's own words fell behind the desktop, and a phone check before publishing that lists the sections whose layout changed since they were last seen in the phone view (Delivered 0.7.3.22), Urd's counterpart to Wix Studio's responsive scanner.
 - **Preview.** Two devices, the Screen (the window, four common sizes, five ratios or an own size) and the Phone (five sizes, the width alone, five ratios or an own size), any width dragged at the edge, and Clean view.
 - **The editor.**
   - 12 panels, and an element menu in Content, Style and Placement areas ([ADR-0016](../adr/0016-panel-language.md)).
@@ -2085,7 +2085,7 @@ Urd has two layouts by decision ([ADR-0019](../adr/0019-synced-mobile-model.md))
 | Per-breakpoint variable values | OX | Variable value per breakpoint | n/a | - |
 | Responsive offcanvas | BR | Direction per breakpoint | n/a | - |
 | Masonry or bento | FR | Layout presets | Partial: masonry as the gallery's mosaic view; no bento | 0.7.9 bento preset |
-| Separate mobile editing | HO, WE, WH, CA, SQ | Independent mobile layout | Has: mobile overrides and mobile review; beyond the field, a text's words of its own on the phone, written in the phone view (Delivered 0.7.3.16.1, ADR-0033) | - |
+| Separate mobile editing | HO, WE, WH, CA, SQ | Independent mobile layout | Has: mobile overrides, mobile review and a phone check before publishing (Delivered 0.7.3.22); beyond the field, a text's words of its own on the phone, written in the phone view (Delivered 0.7.3.16.1, ADR-0033) | - |
 
 #### 8. Interactions and motion
 

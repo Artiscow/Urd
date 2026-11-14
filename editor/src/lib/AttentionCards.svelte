@@ -1,8 +1,9 @@
 <script>
-  /* The phone review's cards (ADR-0019 decision 5): for each section that needs a review in the phone view, what happened on the desktop and when, with «Reviewed», drawn over the stage beside the phone, level with its section, so they cover none of the page.
+  /* The phone review's cards (ADR-0019 decision 5): for each section that needs a review in the phone view, what fell behind the desktop and when, naming the block, with «Reviewed», drawn over the stage beside the phone, level with its section, so they cover none of the page.
      The preview reports where the sections stand (preview-edit.js reportAttention); what happened is read from the draft. Where the stage has no room beside the canvas, a card stands above its section (placeTextBar). */
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
+  import { blockWords } from '$engine/anchor-model.js';
   import { placeTextBar } from './menu-place.js';
   import { ICONS } from './icons.js';
   import { menuMotion } from './motion.svelte.js';
@@ -30,9 +31,36 @@
     }
   }
 
-  /** What happened, from the section's flag: its reason in words, a reason without a translation (from a newer engine) read as the general one. */
-  function reasonText(reason) {
-    const key = `canvas.attention.${reason}`;
+  /** A block's name on the card: its own words, else its kind. */
+  const blockName = (block) => ta('canvas.attention.name', { name: blockWords(block) || ed.blockLabel(block.type) });
+
+  /** Names in a list in the admin's language («A», «B» and «C»). */
+  function nameList(names) {
+    try {
+      return new Intl.ListFormat(adminLang(), { type: 'conjunction' }).format(names);
+    } catch {
+      return names.join(', ');
+    }
+  }
+
+  /** The blocks the flag is about: the block whose desktop words changed under the phone's own, or the blocks pinned on the phone that the desktop changed around. */
+  function fellBehind(attention, section) {
+    const blocks = section?.blocks ?? [];
+    if (attention.reason === 'words-changed') return blocks.filter((b) => b.id === attention.blockId);
+    if (attention.reason === 'pinned-behind') return blocks.filter((b) => Number.isFinite(b.frames?.mobile?.row));
+    return [];
+  }
+
+  /** What happened, from the section's flag: what fell behind, naming the blocks; the general words where none is left to name; a flag of another reason in its own words, and one without a translation (from a newer engine) in the general words. */
+  function reasonText(attention, section) {
+    if (attention.reason === 'words-changed' || attention.reason === 'pinned-behind') {
+      const names = fellBehind(attention, section).map(blockName);
+      if (!names.length) return ta('canvas.attention.fallback');
+      // Several pinned blocks are named in the words for more than one.
+      const many = attention.reason === 'pinned-behind' && names.length > 1;
+      return ta(`canvas.attention.${attention.reason}${many ? '-many' : ''}`, { name: nameList(names) });
+    }
+    const key = `canvas.attention.${attention.reason}`;
     const label = ta(key);
     return label === key ? ta('canvas.attention.fallback') : label;
   }
@@ -52,7 +80,8 @@
     const out = [];
     let below = -Infinity;
     for (const card of ed.attentionCards) {
-      const attention = ed.sections.find((x) => x.id === card.sectionId)?.responsive?.mobile?.attention;
+      const flagged = ed.sections.find((x) => x.id === card.sectionId);
+      const attention = flagged?.responsive?.mobile?.attention;
       if (!attention?.needed) continue;
       const r = card.rect;
       const section = { left: ir.left + s * r.left, top: ir.top + s * Math.max(r.top, 0), right: ir.left + s * r.right, bottom: ir.top + s * r.bottom };
@@ -60,7 +89,7 @@
       const place = placeTextBar(section, { w: 260, h }, canvas, stage);
       const top = Math.max(place.top, below + 8);
       below = top + h;
-      out.push({ id: card.sectionId, left: place.left, top, text: reasonText(attention.reason), when: relativeTime(attention.since) });
+      out.push({ id: card.sectionId, left: place.left, top, text: reasonText(attention, flagged), when: relativeTime(attention.since) });
     }
     return out;
   });

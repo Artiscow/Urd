@@ -290,6 +290,8 @@ function onIframeLoad() {
     onPhoneOrder: bridgeState.handlePhoneOrder,
     onTooNarrow: showTooNarrow,
     onAttentionCards: (msg) => { attentionCards = Array.isArray(msg.cards) ? msg.cards : []; },
+    onPhoneSeen: (msg) => pageState.phoneSeen(msg.sectionIds),
+    onPhoneUnpin: bridgeState.handlePhoneUnpin,
     onPhoneLayout: bridgeState.handlePhoneLayout,
     onBlockFlag: bridgeState.handleBlockFlag,
     onBlockStyle: bridgeState.handleBlockStyle,
@@ -322,6 +324,14 @@ function onIframeLoad() {
 
 /** The fragment of a link in the preview that named a spot on another page, jumped to once that page has loaded (onReady). */
 let pendingAnchor = '';
+
+/** A section of another page to scroll to once that page has loaded (onReady): the phone check's «Look on the phone». */
+let pendingSection = '';
+
+/** Scrolls to the section once the page being opened has loaded. */
+function scrollOnReady(sectionId) {
+  pendingSection = sectionId;
+}
 
 /** The engine in the iframe is listening now: send the draft and the current editor state. */
 async function onReady() {
@@ -356,6 +366,8 @@ async function onReady() {
   // A link from another page to a spot on this one: the jump follows the draft, so it lands in the page as edited.
   if (pendingAnchor) bridge?.sendScrollAnchor(pendingAnchor);
   pendingAnchor = '';
+  if (pendingSection) bridge?.sendScrollSection(pendingSection);
+  pendingSection = '';
   // A canvas loaded again while a saved draft is looked at shows it again; another page ends the look.
   if (look && look.pageId !== pageState.pageId) endLook();
   else if (look) sendLooked();
@@ -650,6 +662,7 @@ export const previewState = {
   onIframeLoad,
   onReady,
   onNavigate,
+  scrollOnReady,
   reloadPreview,
   get panelScroll() { return panelScroll; },
   set panelScroll(v) { panelScroll = v; },

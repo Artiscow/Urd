@@ -21,6 +21,8 @@
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
  *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? } (a block moved one place in the phone's reading order, or taken out of its group from the block's menu: the change phone-moves.js settled it into; coalesce from the keys)
  *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] } (the sections that need a phone review in the phone view, where each stands in the canvas, for their cards beside the phone)
+ *                  { type: 'urd-phone-unpin', sectionId, blockId } (a block pinned on the phone unpinned, back into the phone's order with its cells kept)
+ *                  { type: 'urd-phone-seen', sectionIds } (the sections standing in the phone view's window, looked at on the phone as they stand now: the phone check before publishing, lib/phone-check.js)
  *                  { type: 'urd-too-narrow', screen } (a drag or a handle greys its block as too narrow for its words under the section's «Force readable text», ADR-0034: 'phone' or 'desktop' while it does, null once it does not)
  *                  { type: 'urd-phone-layout', sectionId, change } (a preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js)
  *                  { type: 'urd-hover-block', blockId } (the block under the mouse on the canvas, null for none)
@@ -75,6 +77,7 @@
  *                  { type: 'urd-announce-reset' }             (the Announcement panel: forget the dismissal, so the strip returns)
  *                  { type: 'urd-select', blockId, picked? }   (select a block the editor just built, e.g. + New block; `picked` in the editor's lists, brought into view with the focus left in the list)
  *                  { type: 'urd-light', ids }                 (light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away)
+ *                  { type: 'urd-phone-pin', blockId }         (pin the block on the phone where it stands now: the Phone panel's row menu)
  *                  { type: 'urd-deselect' }                   (a press on the stage around the canvas: no block, set or section stays selected)
  *                  { type: 'urd-text-cmd', cmd, value, focus } (a command of the text bar on the text being written; focus hands the focus back to the text)
  *                  { type: 'urd-text-end' }                   (the writing of the text ended from the editor: a press outside the text bar)
@@ -88,7 +91,7 @@
  *                  { type: 'urd-link-apply', link }           (the link editor's answer for the text being edited: the link shape, or null to take the link away)
  *                  { type: 'urd-close-menus' }                (a click in the admin panels closes open menus in the preview)
  *                  { type: 'urd-place-block', block }         (the palette: the engine finds a placement mid-viewport and reports back)
- *                  { type: 'urd-attention', sectionId, needed } (desktop drift in an overridden section: mark it live)
+ *                  { type: 'urd-attention', sectionId, needed } (a section flagged for the phone's review, or cleared with needed: false: its mark, kept in the page the preview holds)
  *                  { type: 'urd-demo-anim', sectionId, blockId } (play the changed animation once; blockId null = the section)
  *                  { type: 'urd-demo-motion' } (let the ribbons roll for a few seconds while editing)
  *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
@@ -153,6 +156,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-phone-order') handlers.onPhoneOrder?.(msg);
     if (msg?.type === 'urd-too-narrow') handlers.onTooNarrow?.(msg);
     if (msg?.type === 'urd-attention-cards') handlers.onAttentionCards?.(msg);
+    if (msg?.type === 'urd-phone-seen') handlers.onPhoneSeen?.(msg);
+    if (msg?.type === 'urd-phone-unpin') handlers.onPhoneUnpin?.(msg);
     if (msg?.type === 'urd-phone-layout') handlers.onPhoneLayout?.(msg);
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
     if (msg?.type === 'urd-block-style') handlers.onBlockStyle?.(msg);
@@ -268,6 +273,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away. */
     sendLight(ids) {
       post({ type: 'urd-light', ids });
+    },
+    /** Pins the block on the phone where it stands now (the Phone panel's row menu). */
+    sendPhonePin(blockId) {
+      post({ type: 'urd-phone-pin', blockId });
     },
     /** Nothing selected on the canvas: no block, no set of blocks and no section at work. */
     sendDeselect() {

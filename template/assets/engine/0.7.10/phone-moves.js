@@ -9,6 +9,18 @@ import { phoneCells, PHONE_COLUMNS } from './migrate.js';
 /** Whether a block flows in the row grid, rather than standing on rows placed by hand. */
 export const flowing = (block) => !Number.isFinite(block.frames?.mobile?.row);
 
+/**
+ * A block's phone placement unpinned: back into the phone's order, keeping its cells and its turn (ADR-0019); its rows go, and with them the left edge and width in percent and the stacking a pin gives.
+ * Null where nothing of its own is left, so the block follows the desktop again.
+ * @param {object|null|undefined} placement The block's `frames.mobile`
+ * @returns {object|null}
+ */
+export function unpinned(placement) {
+  if (!placement) return null;
+  const { row: _row, rows: _rows, x: _x, w: _w, z: _z, ...kept } = placement;
+  return Object.keys(kept).length ? kept : null;
+}
+
 /** The block a block's exception names, or null. */
 const anchorOf = (block) => (typeof block.phonePlace?.before === 'string' ? block.phonePlace.before : typeof block.phonePlace?.after === 'string' ? block.phonePlace.after : null);
 

@@ -228,7 +228,7 @@ function insertBlock(sectionId, block) {
   // A name the page already uses arrives as name-2 (a template's block).
   claimAnchors([block], pageState.store.data);
   section.blocks.push(block);
-  pageState.markDesktopChange(section, 'block-added');
+  pageState.markPinnedBehind(section);
   pageState.store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageState.pageId, section);
@@ -258,7 +258,7 @@ function insertBlocks(sectionId, blocks, minBottom, moves) {
   if (minBottom && current.endsWith('px') && Number.parseFloat(current) < minBottom) {
     section.size = { ...section.size, minHeight: `${minBottom}px` };
   }
-  pageState.markDesktopChange(section, 'block-added');
+  pageState.markPinnedBehind(section);
   pageState.store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageState.pageId, section);

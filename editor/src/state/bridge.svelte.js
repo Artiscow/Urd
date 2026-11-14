@@ -10,6 +10,7 @@ import { pasteIndex } from '$engine/clipboard-model.js';
 import { ta } from '$engine/i18n.js';
 import { fitMoves, shapeHeight, followsContent, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, phoneWordsChange } from '$engine/push-model.js';
 import { wholeStyleHtml } from '$engine/text-whole.js';
+import { flowing, unpinned } from '$engine/phone-moves.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
@@ -51,7 +52,6 @@ function handleStickyGroup(msg) {
       else delete block.sticky.phone;
     }
   }
-  pageState.markDesktopChange(section, 'block-edited');
   pageState.store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageState.pageId, section);
@@ -86,9 +86,9 @@ function handleEdit(msg) {
   // A font or size for the whole text, asked for in the desktop view, reaches the phone's words in the same step (ADR-0033), and is no change of words to review.
   const whole = pageState.takeWholeStyle(msg.blockId);
   if (whole && typeof block.phoneProps?.html === 'string') block.phoneProps = { ...block.phoneProps, html: wholeStyleHtml(block.phoneProps.html, whole) };
-  // The desktop's words changed under words of the phone's own: the section is flagged for the phone's review.
+  // The desktop's words changed under words of the phone's own: the section is flagged for the phone's review, naming the block.
   else if (Object.keys(phoneWordsOf(block.type, block.phoneProps)).length && (PHONE_WORDS[block.type] ?? []).some((key) => msg.props?.[key] !== block.props?.[key])) {
-    pageState.markDesktopChange(section, 'block-edited');
+    pageState.markWordsBehind(section, block.id);
   }
   // An edit on the canvas never changes a block's design: a block drawn in its phone design (PHONE_DESIGNS) hands its words back with that design in its props, and the stored design stays.
   const props = { ...msg.props };
@@ -130,8 +130,11 @@ function handleMove(msg) {
   const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
   const width = block.frames.desktop?.w;
   const phoneWidth = block.frames.mobile?.w;
+  const before = key === 'desktop' ? pageState.pinnedKey(section) : null;
   block.frames[key] = msg.frame;
-  if (key === 'desktop') pageState.markDesktopChange(section, 'desktop-changed-after-mobile');
+  // A desktop move that reshaped the phone around a pinned block flags it for the phone's review; a move on the phone is seen as it is made (the phone check).
+  if (key === 'desktop') pageState.markPinnedMoved(section, before);
+  else pageState.phoneSeen([section.id]);
   pageState.store.save();
   historyState.updateDirty();
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
@@ -193,11 +196,24 @@ function applyFit(section, block, h) {
     other.frames.desktop = { ...other.frames.desktop, y };
     frames[id] = other.frames.desktop;
   }
-  pageState.markDesktopChange(section, 'block-edited');
   pageState.store.save();
   historyState.updateDirty();
   if (pageState.selectedBlock?.blockId === block.id) pageState.syncSelectedBlock();
   previewState.bridge?.sendFrames(section.id, $state.snapshot(frames));
+}
+
+/** A block pinned on the phone unpinned (its bar's crossed pin, its menu, the Phone panel): back into the phone's order, its cells and turn kept (phone-moves.js unpinned); a section left with nothing that can fall behind loses its review flag. */
+function handlePhoneUnpin(msg) {
+  const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
+  const block = section?.blocks.find((b) => b.id === msg.blockId);
+  if (!block || flowing(block)) return;
+  historyState.pushHistory('phone-unpin');
+  block.frames.mobile = unpinned(block.frames.mobile);
+  pageState.clearReviewWithoutOverrides(section);
+  pageState.store.save();
+  historyState.updateDirty();
+  if (pageState.selectedBlock?.blockId === block.id) pageState.syncSelectedBlock();
+  previewState.bridge?.sendSection(pageState.pageId, section);
 }
 
 /** ↺ in mobile view: reset mobile overrides, the whole section or one
@@ -382,7 +398,6 @@ function handleSectionSize(msg) {
     block.frames.desktop = { ...block.frames.desktop, y: block.frames.desktop.y + move.dy };
   }
   if (msg.moves?.length) {
-    pageState.markDesktopChange(section, 'section-height');
     if (pageState.selectedBlock?.sectionId === msg.sectionId) pageState.syncSelectedBlock();
   }
   if (msg.sectionId === pageState.activeSectionId) pageState.sectionMinHeight = msg.minHeight;
@@ -404,8 +419,9 @@ function handleMoveBlockSection(msg) {
   // The mobile layout is re-derived in the new section.
   block.frames.mobile = null;
   to.blocks.push(block);
-  pageState.markDesktopChange(from, 'block-moved');
-  pageState.markDesktopChange(to, 'block-moved');
+  pageState.markPinnedBehind(from);
+  pageState.markPinnedBehind(to);
+  pageState.clearReviewWithoutOverrides(from);
   pageState.store.save();
   historyState.updateDirty();
   shellState.updateAttention();
@@ -429,7 +445,9 @@ function handleDelete(msg) {
   historyState.pushHistory('delete-block');
   section.blocks = section.blocks.filter((b) => !ids.includes(b.id));
   if (ids.includes(pageState.selectedBlock?.blockId)) pageState.selectedBlock = null;
-  pageState.markDesktopChange(section, 'block-deleted');
+  pageState.markPinnedBehind(section);
+  // A deleted block may have been the last that could fall behind: the flag goes with it.
+  pageState.clearReviewWithoutOverrides(section);
   pageState.store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageState.pageId, section);
@@ -445,6 +463,7 @@ export const bridgeState = {
   handleGrow,
   applyFit,
   handleMobileReset,
+  handlePhoneUnpin,
   handlePhoneOrder,
   handlePhoneLayout,
   handleReviewDone,

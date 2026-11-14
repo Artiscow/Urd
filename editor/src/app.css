@@ -4006,6 +4006,12 @@
     border-top: 1px solid rgb(255 255 255 / 10%);
   }
 
+  /* A warning's own way to act on it, under its lines */
+  .confirm-section .confirm-act {
+    justify-self: start;
+    font-size: 0.82rem;
+  }
+
   .setup-overlay {
     position: fixed;
     inset: 0;

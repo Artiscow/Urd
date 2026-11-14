@@ -229,6 +229,8 @@ function discard() {
   } else {
     freshPage = pageState.store.reset();
   }
+  // The open page stands as it went out, which counts as checked on the phone (lib/phone-check.js); the other pages take theirs again when opened without a draft.
+  pageState.phoneChecked(pageState.pageId, freshPage.sections);
   siteState.siteStore.reset();
   if (pluginsState.pluginsStore) {
     pluginsState.pluginsStore.reset();
@@ -327,6 +329,9 @@ async function publish({ parts = null } = {}) {
   const newPageIds = [];
   // The pages going out with parts of a template still to fill in (lib/fill-in.js), for the warnings below.
   const unfilled = [];
+  // The pages going out with sections whose layout changed since they were last looked at in the phone view (lib/phone-check.js), and the sections as they go, which count as checked once they are out.
+  const unchecked = [];
+  const goneOut = [];
   // The committed files the editor reads in place of the server's until the deploy serves them.
   const committed = [];
 
@@ -369,6 +374,9 @@ async function publish({ parts = null } = {}) {
     files.push({ path: entry.file, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
     sentPages.add(entry.id);
     publishedTitles.push(entry.title);
+    const notOnPhone = pageState.phoneUnchecked(entry.id, out.sections);
+    if (notOnPhone.length) unchecked.push({ id: entry.id, title: entry.title, sections: notOnPhone });
+    goneOut.push([entry.id, out.sections]);
     const open = entry.hidden ? null : pageFills(out);
     if (open && open.own + open.contact) unfilled.push({ title: entry.title, ...open });
     // New pages do not exist on the server until the deploy finishes:
@@ -608,13 +616,29 @@ async function publish({ parts = null } = {}) {
       ]),
     });
   }
+  // Sections whose layout changed on the desktop and that have not stood in the phone view since: a reminder to look at them there, with the way to the first.
+  let lookedOnPhone = false;
+  if (unchecked.length) {
+    warnings.push({
+      heading: ta('confirm.phone.title'),
+      lines: unchecked.map((page) => ta('confirm.phone.line', { page: page.title, count: page.sections.length })),
+      action: {
+        label: ta('confirm.phone.look'),
+        run: () => {
+          lookedOnPhone = true;
+          void shellState.lookOnPhone(unchecked[0].id, unchecked[0].sections[0]);
+        },
+      },
+    });
+  }
   const conflict = await updaterState.checkConflict(files);
   if (conflict.warning) warnings.push(conflict.warning);
   if (warnings.length) {
     const ok = await shellState.askConfirm({ title: ta('confirm.beforePublish'), sections: warnings, okLabel: ta('confirm.publishAnyway') });
     if (!ok) {
-      // The advice to reload belongs to someone else's publish; a page field alone is fixed where it stands.
-      shellState.setStatus(ta(conflict.warning ? 'status.publishAborted' : 'status.publishCancelled'), 'error');
+      // The advice to reload belongs to someone else's publish; a page field alone is fixed where it stands; a look on the phone is no cancelled publish to report.
+      if (!lookedOnPhone) shellState.setStatus(ta(conflict.warning ? 'status.publishAborted' : 'status.publishCancelled'), 'error');
+      else shellState.status = '';
       return;
     }
   }
@@ -650,6 +674,8 @@ async function publish({ parts = null } = {}) {
     // (the server serves old JSON until the deploy finishes) and remove
     // only the markers.
     for (const key of draftKeys) localStorage.removeItem(key);
+    // The pages that went count as checked on the phone as they went (lib/phone-check.js).
+    for (const [id, sections] of goneOut) pageState.phoneChecked(id, sections);
     // Published baseline = what went out: rebuild the baselines of the stores that went, so
     // "Discard draft" never rolls back past this publish; a store kept back keeps its own.
     if (siteOut) {

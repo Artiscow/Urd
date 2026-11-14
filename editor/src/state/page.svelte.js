@@ -25,6 +25,7 @@ import { anchorError, takenAnchors } from '$engine/anchor-model.js';
 import { setLinkOn } from '../lib/link-edit.js';
 import { readCart, writeCart, cartAdd, itemKey } from '$engine/shop.js';
 import { createDraftStore } from '../lib/draftStore.js';
+import { layoutKey, layoutKeys, uncheckedSections, seeSections } from '../lib/phone-check.js';
 import { createHeld } from '../lib/held-publish.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
@@ -37,12 +38,8 @@ import { siteState } from './site.svelte.js';
 
 let pageId = $state(null);
 
-/**
- * Desktop structure change in a manually mobile-adapted section:
- * flag the section for mobile review (rules in docs/SCHEMA.md#mobile-review).
- */
 /** "Switch layout": the variant's frames + minHeight are recorded as ONE
- *  undo step; mobile review is flagged as for other desktop changes. */
+ *  undo step; a block pinned on the phone is flagged for the phone's review as for the desktop's other moves. */
 function handleApplyLayout(msg) {
   const section = store.data.sections.find((x) => x.id === msg.sectionId);
   if (!section) return;
@@ -52,7 +49,7 @@ function handleApplyLayout(msg) {
     if (block) block.frames.desktop = { ...block.frames.desktop, ...move.frame };
   }
   section.size = { ...section.size, minHeight: msg.minHeight };
-  markDesktopChange(section, 'layout-changed');
+  markPinnedBehind(section);
   if (msg.sectionId === activeSectionId) sectionMinHeight = msg.minHeight;
   if (selectedBlock?.sectionId === msg.sectionId) syncSelectedBlock();
   store.save();
@@ -60,33 +57,102 @@ function handleApplyLayout(msg) {
   previewState.bridge?.sendSection(pageId, section);
 }
 
-/** Does the section have at least one block with a mobile override: a placement on the phone (ADR-0019), or words of the phone's own (ADR-0033)? */
-function hasMobileOverrides(section) {
-  return section?.blocks?.some((b) => b.frames?.mobile || Object.keys(phoneWordsOf(b.type, b.phoneProps)).length) ?? false;
+/** A block pinned to rows of its own on the phone (ADR-0019): it stays on its rows whatever the desktop does around it. */
+const pinnedOnPhone = (block) => Number.isFinite(block.frames?.mobile?.row);
+
+/** Can the section fall behind the desktop on the phone: does it hold a block pinned to rows of its own, or a block with words of the phone's own (ADR-0033)? */
+function canFallBehind(section) {
+  return section?.blocks?.some((b) => pinnedOnPhone(b) || Object.keys(phoneWordsOf(b.type, b.phoneProps)).length) ?? false;
 }
 
-function markDesktopChange(section, reason) {
-  // Only sections with overrides can drift from desktop; the rest are
-  // re-derived on every render and never need review.
-  if (!section || !hasMobileOverrides(section)) return;
+/** Flags the section for the phone's review (ADR-0019 decision 5), with what fell behind and, where it is one block's, that block; a section already flagged keeps its first reason. */
+function flagReview(section, reason, blockId = null) {
   if (section.responsive?.mobile?.attention?.needed) return;
   section.responsive = {
     ...(section.responsive ?? {}),
     mobile: {
       ...(section.responsive?.mobile ?? { mode: 'auto' }),
-      attention: { needed: true, reason, since: new Date().toISOString() },
+      attention: { needed: true, reason, since: new Date().toISOString(), ...(blockId ? { blockId } : {}) },
     },
   };
   shellState.updateAttention();
   previewState.bridge?.sendAttention(section.id, true);
 }
 
-/** A section whose last override went (the phone's words given back, its placements reset) has nothing left that can drift from the desktop: its review flag goes too. */
+/** The desktop's blocks moved, came or went around a block pinned on the phone, which stays on its rows: the section is flagged for the phone's review. A change made in the phone view is seen as it is made, and flags nothing. */
+function markPinnedBehind(section) {
+  if (!section || previewState.viewMode === 'mobile' || !section.blocks?.some(pinnedOnPhone)) return;
+  flagReview(section, 'pinned-behind');
+}
+
+/** The section's phone layout before a change that may or may not reshape it (lib/phone-check.js), where a pinned block could fall behind it: null in the phone view and in a section with no block pinned. */
+function pinnedKey(section) {
+  return previewState.viewMode !== 'mobile' && section?.blocks?.some(pinnedOnPhone) ? layoutKey(section) : null;
+}
+
+/** The change reshaped the phone around a pinned block, as `before` (pinnedKey) and the section now tell: the section is flagged for the phone's review; a change that left the phone as it was (a layer order, a setting) flags nothing. */
+function markPinnedMoved(section, before) {
+  if (before !== null && layoutKey(section) !== before) markPinnedBehind(section);
+}
+
+/** The desktop's words of a block changed under words of the phone's own (ADR-0033): the section is flagged for the phone's review, naming the block. */
+function markWordsBehind(section, blockId) {
+  if (section) flagReview(section, 'words-changed', blockId);
+}
+
+/** A section where nothing can fall behind any more (its pinned blocks back in the flow, the phone's words given back) has nothing left to review: its flag goes too. */
 function clearReviewWithoutOverrides(section) {
-  if (!section?.responsive?.mobile?.attention || hasMobileOverrides(section)) return;
+  if (!section?.responsive?.mobile?.attention || canFallBehind(section)) return;
   section.responsive.mobile.attention = null;
   shellState.updateAttention();
   previewState.bridge?.sendAttention(section.id, false);
+}
+
+/** Where the phone check's baselines are kept in this browser: per page, each section's layout as last seen in the phone view (lib/phone-check.js). */
+const PHONE_CHECK_KEY = 'urd-phone-check';
+
+/** Every page's baseline, read from storage once and kept in memory; none without storage. */
+let bases = null;
+function phoneBases() {
+  if (bases) return bases;
+  try {
+    const kept = JSON.parse(localStorage.getItem(PHONE_CHECK_KEY) ?? '{}');
+    bases = kept && typeof kept === 'object' && !Array.isArray(kept) ? kept : {};
+  } catch {
+    bases = {};
+  }
+  return bases;
+}
+
+/** Keeps a page's baseline, and lets go of those of pages the site no longer has. */
+function keepPhoneBase(id, base) {
+  const pages = new Set((siteState.siteDraft?.pages ?? []).map((p) => p.id));
+  bases = Object.fromEntries(Object.entries({ ...phoneBases(), [id]: base }).filter(([page]) => page === id || !pages.size || pages.has(page)));
+  try {
+    localStorage.setItem(PHONE_CHECK_KEY, JSON.stringify(bases));
+  } catch { /* without storage the phone check holds for this tab only */ }
+}
+
+/** The page the open store holds, which is the open page once it has loaded; the phone view's reports wait for it. */
+let storePage = null;
+
+/** The open page's sections the phone view showed (urd-phone-seen), or a section changed in the phone view: they count as looked at on the phone as they stand now. */
+function phoneSeen(ids) {
+  if (!store || !pageId || storePage !== pageId || previewState.viewMode !== 'mobile' || previewState.looking || !Array.isArray(ids)) return;
+  const base = phoneBases()[pageId];
+  if (!base) return;
+  const next = seeSections(base, store.data.sections, ids);
+  if (next !== base) keepPhoneBase(pageId, next);
+}
+
+/** A page's sections not looked at in the phone view since their layout changed on the desktop, by id in the page's order. */
+function phoneUnchecked(id, sections) {
+  return uncheckedSections(sections, phoneBases()[id]);
+}
+
+/** A page as published counts as checked: its baseline is taken from it. */
+function phoneChecked(id, sections) {
+  keepPhoneBase(id, layoutKeys(sections));
 }
 
 let store = null;
@@ -474,8 +540,9 @@ function mutateBlock(key, fn) {
   if (!block) return;
   // key null = the caller has already pushed history (multiple steps in ONE undo step).
   if (key) historyState.pushHistory(key);
+  const before = pinnedKey(section);
   fn(block, section);
-  markDesktopChange(section, 'block-edited');
+  markPinnedMoved(section, before);
   store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageId, section);
@@ -488,8 +555,9 @@ function mutateBlockAt(sectionId, blockId, key, fn) {
   const { section, block } = readBlock(sectionId, blockId);
   if (!block) return;
   if (key) historyState.pushHistory(key);
+  const before = pinnedKey(section);
   fn(block, section);
-  markDesktopChange(section, 'block-edited');
+  markPinnedMoved(section, before);
   store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageId, section);
@@ -1397,6 +1465,9 @@ async function selectPage(id, { keepHistory = false } = {}) {
     }
     store.replace(liftPageFile(store.data, siteState.siteStore.data));
     store.save();
+    // The phone check's baseline, where this browser has none for the page or holds no change of it: the page as published (lib/phone-check.js).
+    if (!phoneBases()[id] || !store.hasDraft()) phoneChecked(id, published.sections);
+    storePage = id;
     // The undo history survives page switches: snapshots carry pageId,
     // and restore switches back to the right page. Without keepHistory
     // only the coalesce key is cleared, so the next change always gets
@@ -1597,9 +1668,14 @@ export const pageState = {
   get pageId() { return pageId; },
   set pageId(v) { pageId = v; },
   handleApplyLayout,
-  hasMobileOverrides,
-  markDesktopChange,
+  markPinnedBehind,
+  pinnedKey,
+  markPinnedMoved,
+  markWordsBehind,
   clearReviewWithoutOverrides,
+  phoneSeen,
+  phoneUnchecked,
+  phoneChecked,
   get store() { return store; },
   set store(v) { store = v; },
   pendingPublished,

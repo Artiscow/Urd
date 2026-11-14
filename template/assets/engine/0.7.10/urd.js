@@ -609,9 +609,15 @@ function enablePreview(state, opts) {
         if (msg.style && typeof msg.style === 'object') field.dispatchEvent(new CustomEvent('urd-text-style', { detail: msg.style, bubbles: true }));
       }
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
-      // The editor detected desktop drift in an overridden section: mark it live.
+      // The editor flagged a section for the phone's review, or cleared it: marked live, and kept in the page the preview holds, so the section drawn again (a switch of view) keeps its mark.
+      const needed = msg.needed !== false;
+      const held = state.page?.sections?.find((s) => s.id === msg.sectionId);
+      if (held) {
+        const mobile = held.responsive?.mobile ?? { mode: 'auto' };
+        held.responsive = { ...(held.responsive ?? {}), mobile: { ...mobile, attention: needed ? { ...(mobile.attention ?? {}), needed: true } : null } };
+      }
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
-        ?.classList.toggle('urd-attention', msg.needed !== false);
+        ?.classList.toggle('urd-attention', needed);
       window.UrdPreviewEdit?.reportAttention?.();
     } else if (msg?.type === 'urd-scroll-section' && msg.sectionId) {
       // The attention badge in the top bar: scroll to the section that needs review, so the badge points at a place and not just a mode.
@@ -675,6 +681,9 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-deselect') {
       // A press on the editor's stage around the canvas: nothing stays selected.
       window.UrdPreviewEdit?.deselectAll?.();
+    } else if (msg?.type === 'urd-phone-pin' && typeof msg.blockId === 'string') {
+      // The Phone panel's row menu: the block pinned on the phone where it stands now.
+      window.UrdPreviewEdit?.pinOnPhoneAt?.(msg.blockId);
     } else if (msg?.type === 'urd-light' && Array.isArray(msg.ids)) {
       // A row under the pointer in the editor's lists (the Phone panel's order) lights its block, or its stack's blocks.
       window.UrdPreviewEdit?.lightBlocks?.(msg.ids);

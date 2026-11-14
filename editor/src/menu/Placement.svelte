@@ -16,6 +16,7 @@
   import FitMin from './FitMin.svelte';
   import SizeBounds from './SizeBounds.svelte';
   import { ta } from '$engine/i18n.js';
+  import { ICONS } from '../lib/icons.js';
   import { FIT_BY_WIDTH, FOLLOWS_CONTENT, SIZE, SIZE_BY_FRAME, blockSize, sizeRange } from '$engine/push-model.js';
   import { DOCK_OPTIONS } from './options.js';
   import AnchorField from '../lib/AnchorField.svelte';
@@ -25,7 +26,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells, setBlockPhoneHeight, resetPhoneWords } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells, setBlockPhoneHeight, resetPhoneWords, handlePhoneUnpin } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** Sets the pinning's own settings; a setting given as undefined goes back to the standard and is removed. */
@@ -185,7 +186,7 @@
     <label title={ta('tip.frame.rot')}>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
       onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
   </div>
-  <!-- The phone: a block flows in the reading order as on desktop, or holds its own place in the row grid (ADR-0019) -->
+  <!-- The phone: a block flows in the reading order as on desktop, or is pinned to its own place in the row grid (ADR-0019), which the crossed pin unpins -->
   {@const held = selectedBlock.mobileRow !== null}
   <div class="setting">
     <div class="setting-body">
@@ -193,8 +194,8 @@
       <span class="setting-source">{held ? ta('menu.phoneRow', { n: selectedBlock.mobileRow + 1 }) : ta('menu.followsDesktop', { v: ta('menu.phoneFlow') })}</span>
     </div>
     {#if held}
-      <IconButton size="sm" quiet class="setting-reset" icon={RESET_ICON} label={ta('menu.resetPhone')}
-        onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
+      <IconButton size="sm" quiet class="setting-reset" icon={ICONS.unpin} label={ta('phone.unpin')}
+        onclick={() => handlePhoneUnpin({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
     {/if}
   </div>
   <!-- Its words on the phone: the desktop's, or its own, written in the phone view (ADR-0033), with the way back to the desktop's -->

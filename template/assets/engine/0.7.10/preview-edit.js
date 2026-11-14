@@ -21,6 +21,8 @@
  *                  { type: 'urd-phone-layout', sectionId, change }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js)
  *                  { type: 'urd-hover-block', blockId }  (the block under the mouse, null for none: its row in the Phone panel's list is lit)
  *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] }  (the sections that need a phone review in the phone view, where each stands in the canvas, for the editor to draw their cards beside the phone; sent when they change)
+ *                  { type: 'urd-phone-unpin', sectionId, blockId }  (a block pinned on the phone unpinned, from its bar or its menu: back into the phone's order, its cells kept, phone-moves.js unpinned)
+ *                  { type: 'urd-phone-seen', sectionIds }  (the sections standing in the phone view's window, at least half of them or half the window, for the editor's phone check before publishing; sent as a section is drawn, and as a scroll changes the sections in sight)
  *                  { type: 'urd-too-narrow', screen }  (a drag, the key carry or a handle greys its block as too narrow for its words, ADR-0034: 'phone' or 'desktop' while it is greyed, null once it is not)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
@@ -467,7 +469,7 @@ function showContextMenu(el, x, y, label, build, from = null) {
  */
 const keysHere = (key) => (isMobile() ? '' : key);
 
-/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. The phone view has the same menu, its layer order greyed, since that orders the blocks on the desktop alone. A block in a group of the phone's order (phoneTree) is taken out of it, or the group undone, from either view; the two are greyed for a block in no group. */
+/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. The phone view has the same menu, its layer order greyed, since that orders the blocks on the desktop alone. A block in a group of the phone's order (phoneTree) is taken out of it, or the group undone, from either view; the two are greyed for a block in no group. A block is pinned on the phone in the phone view, where it stands, and unpinned from either view. */
 function openContextMenu(el, x, y, from = null) {
   const ctx = el._urdCtx;
   if (!ctx || document.body.classList.contains('urd-chrome-off')) return;
@@ -500,6 +502,9 @@ function openContextMenu(el, x, y, from = null) {
     };
     item(ta('canvas.ctx.takeOutPhone'), '', () => ungroup(false), { disabled: !grouped });
     item(ta('canvas.ctx.ungroupPhone'), '', () => ungroup(true), { disabled: !grouped });
+    // Pinned on the phone where it stands, which only the phone view measures, or unpinned from either view.
+    if (Number.isFinite(block.frames?.mobile?.row)) item(ta('canvas.ctx.unpinPhone'), '', () => post({ type: 'urd-phone-unpin', sectionId: section.id, blockId: block.id }));
+    else item(ta('canvas.ctx.pinPhone'), '', () => el._urdPinOnPhone?.(), { disabled: !phone || block.hideMobile || !el._urdPinOnPhone });
     item(ta('canvas.ctx.saveTemplate'), '', () => post({ type: 'urd-save-template', kind: 'blocks', blocks: [JSON.parse(JSON.stringify(block))] }));
     sep();
     item(ta('canvas.ctx.delete'), keysHere('Delete'), () => {
@@ -3194,7 +3199,8 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(tag);
   }
 
-  // The sections that need a phone review are reported to the editor, which draws their cards beside the phone (reportAttention).
+  // The sections that need a phone review are reported to the editor, which draws their cards beside the phone (reportAttention), and the sections in sight as seen again, since one drawn anew may have changed (reportSeen).
+  seenSent = '';
   scheduleAttention();
   if (isMobile()) {
     // Reset is shown only when the section actually has mobile overrides.
@@ -3394,13 +3400,35 @@ function openSectionSettings(host, section) {
 let attentionSent = '';
 let attentionFrame = 0;
 
-/** Reports the sections that need a phone review once in the next frame, however many sections are drawn in it. */
+/** Reports what the phone view shows once in the next frame, however many sections are drawn in it: the sections that need a phone review, and those seen. */
 function scheduleAttention() {
   if (attentionFrame) return;
   attentionFrame = requestAnimationFrame(() => {
     attentionFrame = 0;
     reportAttention();
+    reportSeen();
   });
+}
+
+/** The sections last reported as seen, so a scroll that shows the same ones sends nothing; emptied when a section is drawn. */
+let seenSent = '';
+
+/**
+ * The sections standing in the phone view's window, at least half of a section or half the window (`urd-phone-seen`), for the editor's phone check before publishing (lib/phone-check.js), which takes them as looked at on the phone as they stand now.
+ * Sent when the sections in sight change and when a section is drawn, since one drawn anew in sight is seen again; none in the desktop view.
+ */
+function reportSeen() {
+  if (!isMobile()) return;
+  const h = window.innerHeight;
+  const seen = [...document.querySelectorAll('.urd-section[data-section-id]')].filter((host) => {
+    const r = host.getBoundingClientRect();
+    const shown = Math.min(r.bottom, h) - Math.max(r.top, 0);
+    return shown > 0 && shown >= Math.min(r.height, h) / 2;
+  }).map((host) => host.dataset.sectionId);
+  const sent = seen.join(' ');
+  if (!seen.length || sent === seenSent) return;
+  seenSent = sent;
+  post({ type: 'urd-phone-seen', sectionIds: seen });
 }
 
 /**
@@ -4633,6 +4661,14 @@ export function lightBlocks(ids) {
   }
 }
 
+/**
+ * Pins a block on the phone where it stands now (the urd-phone-pin message: the Phone panel's row menu), as its bar's pin does; nothing for a block that does not flow in the phone view.
+ * @param {string} blockId
+ */
+export function pinOnPhoneAt(blockId) {
+  if (typeof blockId === 'string') document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`)?._urdPinOnPhone?.();
+}
+
 /** Nothing selected (the urd-deselect message: a press on the editor's stage around the canvas): no block, no set of blocks and no section at work. */
 export function deselectAll() {
   selectBlock(null);
@@ -4797,9 +4833,24 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.dataset.cap = ta('canvas.cap.move');
   barBody.appendChild(moveHandle);
   const MOBILE_PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
+  // The pin crossed out: unpin.
+  const MOBILE_UNPIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M3 3l18 18"/></svg>';
 
-  // Flowing mobile block: arrows that move it in the reading order (stepPhone: its exception, its stack or the custom order).
-  // Pinned blocks do not take part in the flow and get ↺ instead.
+  // In the phone view the pin stands first after ⠿, in the same place on every block: on a block that flows, the pin, which pins it where it stands now (it then keeps that spot and leaves the phone's order, ADR-0019); on a pinned block, the crossed pin, which unpins it back into the phone's order with its cells kept (urd-phone-unpin).
+  if (mobile) {
+    const pinned = !flowsOnPhone;
+    const pinBtn = document.createElement('button');
+    pinBtn.innerHTML = pinned ? MOBILE_UNPIN_SVG : MOBILE_PIN_SVG;
+    pinBtn.title = ta(pinned ? 'canvas.unpinOnPhone' : 'canvas.pinOnPhone');
+    pinBtn.dataset.cap = ta(pinned ? 'canvas.cap.unpin' : 'canvas.cap.pin');
+    pinBtn.addEventListener('click', () => {
+      if (pinned) post({ type: 'urd-phone-unpin', sectionId: section.id, blockId: block.id });
+      else pinOnPhone();
+    });
+    barBody.appendChild(pinBtn);
+  }
+
+  // Flowing mobile block: arrows that move it in the reading order (stepPhone: its exception, its stack or the custom order). Pinned blocks do not take part in the flow.
   if (flowsOnPhone) {
     for (const [svg, dir, key] of [[ORDER_UP_SVG, -1, 'canvas.orderUp'], [ORDER_DOWN_SVG, 1, 'canvas.orderDown']]) {
       const btn = document.createElement('button');
@@ -4809,17 +4860,11 @@ function enhanceBlock(el, block, section, grid, host) {
       btn.addEventListener('click', () => stepPhone(section, block, dir, false));
       barBody.appendChild(btn);
     }
-    // Pinned to rows of its own where it stands now: then it moves on its rows and no longer flows (ADR-0019), and ↺ takes it back.
-    const pinBtn = document.createElement('button');
-    pinBtn.innerHTML = MOBILE_PIN_SVG;
-    pinBtn.title = ta('canvas.pinOnPhone');
-    pinBtn.dataset.cap = ta('canvas.cap.pin');
-    pinBtn.addEventListener('click', () => pinOnPhone());
-    barBody.appendChild(pinBtn);
   }
+  // The pin as the block's menu and the Phone panel reach it (pinOnPhoneAt): only a block that flows in the phone view, which measures where it stands.
+  el._urdPinOnPhone = flowsOnPhone ? pinOnPhone : null;
 
-  // Overridden mobile block: a pin badge showing the state, and a ↺ that
-  // resets ONLY this block's override (back in sync with desktop).
+  // Overridden mobile block: a pin badge showing the state, and on a block placed for the phone that still flows a ↺ that resets ONLY this block's override (back in sync with desktop).
   if (mobile && block.frames.mobile) {
     const pin = document.createElement('div');
     pin.className = 'urd-mobile-pin';
@@ -4827,14 +4872,16 @@ function enhanceBlock(el, block, section, grid, host) {
     pin.title = ta('canvas.mobilePinned');
     el.appendChild(pin);
 
-    const resetBtn = document.createElement('button');
-    resetBtn.innerHTML = RESET_SVG;
-    resetBtn.title = ta('canvas.mobileResetBlock');
-    resetBtn.dataset.cap = ta('canvas.cap.reset');
-    resetBtn.addEventListener('click', () => {
-      post({ type: 'urd-mobile-reset', sectionId: section.id, blockId: block.id });
-    });
-    barBody.appendChild(resetBtn);
+    if (flowsOnPhone) {
+      const resetBtn = document.createElement('button');
+      resetBtn.innerHTML = RESET_SVG;
+      resetBtn.title = ta('canvas.mobileResetBlock');
+      resetBtn.dataset.cap = ta('canvas.cap.reset');
+      resetBtn.addEventListener('click', () => {
+        post({ type: 'urd-mobile-reset', sectionId: section.id, blockId: block.id });
+      });
+      barBody.appendChild(resetBtn);
+    }
   }
 
   // A block with words of its own on the phone (ADR-0033): a mark in the phone view, beside the pin of a block placed by hand, standing from the first word typed there, since the typing draws nothing again.

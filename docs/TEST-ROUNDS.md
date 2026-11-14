@@ -2,6 +2,35 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.22): the phone review, the phone check before publishing, and pinning
+
+Locally, publishing is reached with Ctrl+K, Publish (the «Publish now» button needs a sign-in); there press «Cancel» or «Look on the phone», never «Publish anyway».
+
+- [ ] In a section whose blocks stand side by side in the phone view, change a block's setting, move or resize a block on the desktop, and drag the section's seam grip: no yellow mark and no «needs a phone review» badge
+- [ ] Change a block's setting in the phone view: no yellow mark
+- [ ] Pin a block in the phone view, then move, add or delete another block in its section on the desktop: the badge appears, it opens the phone view at the section, and the card beside the phone names the pinned block; «Reviewed» clears it
+- [ ] The same move or a delete made in the phone view raises no card
+- [ ] Give a text words of its own in the phone view, then change its words on the desktop: the card says the words of «…» changed on the desktop and the phone keeps its own; a font or size for the whole text from the desktop's text bar raises no card
+- [ ] With a section flagged, switch between the desktop and phone views a few times: the yellow mark and the card stay
+- [ ] Move a block past another, resize a picture, add or remove a block on the desktop without opening the phone view, then publish: «Before you publish» shows «Not looked at on the phone» naming the page with a count, and «Look on the phone»
+- [ ] Press «Look on the phone»: the dialog closes, the phone view opens at that section, and the status line does not say the publish was cancelled; publish again and the phone line is gone
+- [ ] Change a block on page A, open page B and publish: «Look on the phone» opens page A in the phone view at the changed section
+- [ ] Change only words or settings on the desktop, drag a seam grip, or undo a move: publishing lists no phone line
+- [ ] Reload the editor after a layout change on the desktop: publishing still lists it
+- [ ] Type on the desktop until a text grows and pushes the blocks below it down: publishing lists no phone line
+- [ ] In the desktop view, hide a block on phones from its right click, or change the section's «Order on the phone»: publishing lists the section
+- [ ] In a section with a pinned block, change a neighbour's width or height in its Placement on the desktop: the card appears; «Front» or «Back» on the desktop raises none
+- [ ] Delete the pinned block of a flagged section, or drag it to another section: the card and the badge go
+- [ ] Discard the drafts after looking at a changed section in the phone view, then change a word and publish: no phone line
+- [ ] A section flagged before this version keeps its old words on the card, and «Reviewed» clears it
+- [ ] Hover the pin on a block's bar in the phone view: the tooltip says the block keeps this spot while the others flow around it; the pin stands right after ⠿ on every block, before the up and down arrows
+- [ ] Pin a block: the crossed pin takes the pin's place on its bar, and pressing it puts the block back in the phone's order, with its width in the columns kept where it stood in columns
+- [ ] Right-click a block in the phone view: «Pin here on phones» pins it, and on a pinned block «Unpin on phones» unpins it; in the desktop view «Pin here on phones» is greyed and «Unpin on phones» works
+- [ ] In the Phone panel, right-click a block's row in the phone view: «Pin where it stands» pins it; a row under «Pinned to rows» has the crossed pin, and its right click offers «Unpin»
+- [ ] Open a pinned block's menu: «Place on the phone» says its row, with the crossed pin that unpins it
+- [ ] Undo after unpinning: the block is pinned again where it was, the step named as a change to the phone view
+- [ ] Switch the admin to Norsk and Türkçe: the card, the dialog's phone section and its button, the badge's tooltip, the pin's and the crossed pin's tooltips and the menu items read in that language
+
 ### Test batch (0.7.3.21): dropping in the phone view, row by row, and «Ungroup»
 
 - [ ] In the phone view, drop a block on the left or right third of a block with free room beside it on its line: the two share the line, half each, the dragged block on the side you dropped it

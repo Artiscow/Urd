@@ -303,27 +303,30 @@ The calendar's programme link (`props.programHref`, typed) and the site's own li
 
 ## Mobile review
 
-Pinned blocks no longer follow desktop and can drift when desktop changes. Urd makes this an explicit, traceable state flag instead of a silent error:
+The phone keeps two things the desktop no longer drives: a block pinned to rows of its own, which stays on its rows while the desktop's blocks move around it, and a block's words of the phone's own, which stay as they are when the desktop's words change. Urd makes either an explicit, traceable state flag instead of a silent error:
 
 ```json
 "responsive": {
   "mobile": {
     "mode": "auto",
-    "attention": { "needed": true, "reason": "desktop-changed-after-mobile", "since": "2026-08-13T14:02:00Z" }
+    "attention": { "needed": true, "reason": "words-changed", "since": "2026-11-14T14:02:00Z", "blockId": "blk-1f8cc2e3" }
   }
 }
 ```
 
-Rules (schemaVersion 2, ADR-0019):
+Rules (schemaVersion 2, ADR-0019 decision 5):
 
-1. Overrides live PER BLOCK in `frames.mobile`, and the phone's own words in `phoneProps` (see above). A section without overrides is derived completely afresh at every render; nothing can drift, and `attention` is always `null`.
-2. In a section WITH overrides, any desktop change (frame change, block added/deleted, reorganisation) sets `attention.needed: true` with a machine-readable `reason` (English tokens: `layout-changed`, `block-edited`, `desktop-changed-after-mobile`, `section-height`, `block-moved`, `block-deleted`, `block-added`).
-3. The flag is reset by the user confirming «Mark as reviewed» in the mobile view, or by the section's last override going (its placements reset by `urd-mobile-reset`, or its blocks' own words on the phone given back).
-4. The flag is **data** - it survives sessions, is shared between editors and is set correctly even if someone hand-edits the JSON.
-5. The visitor engine ignores the flag completely; the page always renders something sensible. The flag is editorial metadata.
-6. `mode` is LEGACY from schemaVersion 2: `"manual"` is read by the migration (which converts the old materialised frames) and is never written again. The field is kept readable so old files load correctly.
+1. Overrides live PER BLOCK in `frames.mobile`, and the phone's own words in `phoneProps` (see above). Of them, only a pinned block (`frames.mobile.row`) and the phone's own words can fall behind the desktop; cells, a phone height and the order follow it by rule. A section with neither is never flagged.
+2. The flag is set with a machine-readable `reason` (English tokens): `pinned-behind` when a change outside the phone view reshapes the phone in a section with a pinned block (blocks added, deleted, moved in or out, the layout switched, or a move, size or setting that changes the section's phone layout, lib/phone-check.js); `words-changed` when a block's desktop words change under words of the phone's own, with `blockId` (optional, additive) naming that block. A change made in the phone view sets no flag. A section already flagged keeps its first reason.
+3. Flags written by earlier versions carry the reasons `layout-changed`, `block-edited`, `desktop-changed-after-mobile`, `section-height`, `block-moved`, `block-deleted` and `block-added`, which stay readable and are shown in their own words.
+4. The flag is reset by the user confirming «Mark as reviewed» in the mobile view, or by the section having nothing left that can fall behind (its pinned blocks unpinned by `urd-phone-unpin` or reset by `urd-mobile-reset`, its last pinned block or block with the phone's words deleted or moved out, or its blocks' own words on the phone given back).
+5. The flag is **data** - it survives sessions, is shared between editors and is set correctly even if someone hand-edits the JSON.
+6. The visitor engine ignores the flag completely; the page always renders something sensible. The flag is editorial metadata.
+7. `mode` is LEGACY from schemaVersion 2: `"manual"` is read by the migration (which converts the old materialised frames) and is never written again. The field is kept readable so old files load correctly.
 
-Admin shows a badge per section and a global counter: «2 sections need mobile review».
+Admin shows a card per flagged section beside the phone, naming the blocks, and a global counter: «2 sections need mobile review».
+
+Every other desktop change that shapes the phone is left to the phone check before publishing, which is not page data: the editor keeps per page, in its own browser (`localStorage`, `urd-phone-check`), each section's phone layout as it last stood in the phone view (the reading order, each block's settings for the phone, the desktop size where the phone takes it, and the section's phone settings), and publishing lists the sections whose phone layout changed since (editor/src/lib/phone-check.js, [ARCHITECTURE.md](ARCHITECTURE.md)).
 
 ## The migration contract
 

@@ -42,6 +42,10 @@
           {#each section.lines as line, j (j)}
             <p class="dialog-line">{line}</p>
           {/each}
+          {#if section.action}
+            <!-- A way to act on what the warning says, in place of publishing: the dialog closes as cancelled, and the action runs -->
+            <button type="button" class="ghost confirm-act" onclick={() => { ed.answerConfirm(false); section.action.run(); }}>{section.action.label}</button>
+          {/if}
         </section>
       {/each}
       {#if box.destination}

@@ -4,8 +4,8 @@
      Under the section's own rows (PhoneSectionRows) stand its blocks in the order they read on the phone: a block alone, or a stack of blocks that read as one, the owner's own or a column the rule reads whole (phone-moves.js phoneTree).
      The rows move by the row kit's drag in its tree form, one level deep (lib/nav-drop.js): before or after a row, into a stack, or onto a block alone, which makes a stack of the two; a stack's block leads out of it from the room left of it, and the room under the last row lands a row last. Alt and the arrow keys move the row the focus is in, as the drag would. A row under the pointer lights its blocks on the canvas, and a press selects its block there.
      A block placed by its own exception carries a chip that gives it back to the section's order, and the owner's stack one that takes it apart. A block under the mouse on the canvas lights its row, and a stack's.
-     A right click on a row, or the menu key, opens the row's menu: a block taken out of its group, or the group undone (phone-moves.js phoneUngroup), greyed where the row stands in no group.
-     Under the order stand the blocks pinned to rows of their own, each with its way back into the order, and the blocks hidden on phones, each with its way back. */
+     A right click on a row, or the menu key, opens the row's menu: a block taken out of its group, or the group undone (phone-moves.js phoneUngroup), greyed where the row stands in no group; and the block pinned where it stands, which the phone view alone measures.
+     Under the order stand the blocks pinned to rows of their own, each with the crossed pin that unpins it back into the order (phone-moves.js unpinned), also from its right click, and the blocks hidden on phones, each with its way back. */
   import { getContext, onMount, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { blockWords, sectionWords } from '$engine/anchor-model.js';
@@ -262,6 +262,24 @@
     if (key) document.querySelector(`.pp-order > [data-drag-id="${CSS.escape(key)}"]`)?.focus();
   }
 
+  /** The row's block pinned on the phone where it stands now, which the phone view measures (preview-edit.js pinOnPhoneAt). */
+  function pinRow() {
+    const r = rowMenu?.row;
+    rowMenu = null;
+    if (r?.id) ed.bridge?.sendPhonePin(r.id);
+  }
+
+  /** The pinned row's block unpinned, back into the phone's order with its cells kept; the focus goes to its row there. */
+  async function unpinRow() {
+    const r = rowMenu?.row;
+    rowMenu = null;
+    if (!r?.id || !section) return;
+    ed.handlePhoneUnpin({ sectionId: section.id, blockId: r.id });
+    await tick();
+    const key = rows.find((row) => row.id === r.id)?.key;
+    if (key) document.querySelector(`.pp-order > [data-drag-id="${CSS.escape(key)}"]`)?.focus();
+  }
+
   /** The blocks a row stands for lit on the canvas while the mouse is on it. */
   function light(e, row) {
     if (e.pointerType === 'mouse') ed.bridge?.sendLight(row.ids);
@@ -350,10 +368,17 @@
 
     {#if rowMenu}
       {@const grouped = rowMenu.row.node || rowMenu.row.level === 1}
+      {@const one = rowMenu.row.id ? byId.get(rowMenu.row.id) : null}
       <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
       <div class="pp-menu" role="group" tabindex="-1" aria-label={ta('phone.rowMenu')} use:dismiss={{ close: () => { rowMenu = null; }, opener: rowMenu.opener }} transition:menuMotion {@attach placeRowMenu} onkeydown={rowMenuKeys}>
         <button type="button" disabled={rowMenu.row.level !== 1} onclick={() => ungroup(false)}>{ta('phone.takeOut')}</button>
         <button type="button" disabled={!grouped} onclick={() => ungroup(true)}>{ta('phone.ungroup')}</button>
+        {#if rowMenu.row.pinned}
+          <button type="button" onclick={unpinRow}>{ta('phone.unpin')}</button>
+        {:else}
+          <!-- Pinned where it stands, which only the phone view measures -->
+          <button type="button" disabled={!one || one.hideMobile || ed.viewMode !== 'mobile'} onclick={pinRow}>{ta('phone.pin')}</button>
+        {/if}
       </div>
     {/if}
 
@@ -363,11 +388,12 @@
       <div class="pp-list" role="list" aria-label={ta('lbl.phonePinned')} onpointerleave={() => ed.bridge?.sendLight([])}>
         {#each pinned as block (block.id)}
           <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-          <div class="pp-row pp-still" class:pp-hovered={block.id === ed.hoveredBlockId} role="listitem" onclick={(e) => pick(e, { ids: [block.id] })} onpointerenter={(e) => light(e, { ids: [block.id] })}>
+          <div class="pp-row pp-still" class:pp-hovered={block.id === ed.hoveredBlockId} role="listitem" onclick={(e) => pick(e, { ids: [block.id] })} onpointerenter={(e) => light(e, { ids: [block.id] })}
+            oncontextmenu={(e) => openRowMenu(e, { id: block.id, ids: [block.id], level: 0, pinned: true })}>
             {@render mark(block)}
             <span class="pp-num">{numbers.get(block.id)}</span>
             <span class="pp-name">{nameOf(block)}</span>
-            <IconButton size="sm" quiet icon={ICONS.reset} label={ta('menu.resetPhone')} onclick={() => ed.handleMobileReset({ sectionId: section.id, blockId: block.id })} />
+            <IconButton size="sm" quiet icon={ICONS.unpin} label={ta('phone.unpin')} onclick={() => ed.handlePhoneUnpin({ sectionId: section.id, blockId: block.id })} />
           </div>
         {/each}
       </div>
