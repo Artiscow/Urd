@@ -297,12 +297,13 @@
     "mobilePlacement": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Partial row-grid placement (ADR-0019). The rows are minmax(8px, auto) and grow with the content, so row/rows are positions in the composition, not frozen pixel distances. Without row the block still flows, and only x/w, or the cells col/cols, override.",
+      "description": "Partial row-grid placement (ADR-0019). The rows are minmax(8px, auto) and grow with the content, so row/rows are positions in the composition, not frozen pixel distances. Without row the block still flows, and only x/w, the cells col/cols, and the height override.",
       "properties": {
         "x": { "type": "number", "minimum": 0, "maximum": 100, "description": "Left edge in % of the content surface" },
         "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Width in % of the content surface" },
         "col": { "type": "integer", "minimum": 1, "maximum": 8, "description": "First of the phone's eight cell columns the block stands in (additive field from 0.7.3.14); with cols, and taking the place of x/w" },
         "cols": { "type": "integer", "minimum": 1, "maximum": 8, "description": "How many cell columns the block spans from col (additive field from 0.7.3.14); col + cols - 1 at most 8, and 8 is the full row" },
+        "height": { "type": "number", "exclusiveMinimum": 0, "description": "A flowing block's own height on the phone in px (additive field from 0.7.3.18), in the desktop height's place: a block with words stands at least that tall and grows past it with its words, any other block stands that tall. Not h, which the v1 full frame holds" },
         "row": { "type": "integer", "minimum": 1, "description": "Start row (1-based) in the row grid; presence = pinned" },
         "rows": { "type": "integer", "minimum": 1, "description": "Row span; absence = derived from the desktop height" },
         "z": { "type": "integer", "default": 1, "description": "Layer order" },

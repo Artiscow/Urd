@@ -2,6 +2,23 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.18): resize handles in the phone view, the width from either side and a height for phones
+
+- [ ] In the phone view, hover a block: it has handles on all four edges and all four corners, a text as well as a picture
+- [ ] Drag the right edge of a block across the row to the middle: it stands as the left half; drag its left edge to the middle instead: it stands as the right half
+- [ ] A half alone in the right half: drag its left edge to the second quarter line, and it takes ¾ on the right
+- [ ] A text's edge or corner stops at ½ on the phone, its tag saying ½; a picture's goes to ¼, and to any eighth with Alt
+- [ ] A block in a stack sizes the whole stack's width
+- [ ] Drag a picture's bottom edge down: it stands taller on the phone with a tag in px, the blocks below move down, and it stays so after a reload and on a 390 px published page; the desktop page is the same before and after
+- [ ] A picture in cells given a height of its own fills its box around its focus point instead of keeping its shape; so does a picture or a film with a shape (16:9 and the like), with no space under it, and its edge goes down to ¼
+- [ ] Drag a text's bottom edge down: it gets room under its words; drag it up past its last line: it stops at its words, a magenta bar says «The height follows the content», and it follows its words again
+- [ ] Pull a text beside a picture down near the picture's bottom: it snaps there with a «Same height» tag
+- [ ] A corner dragged in and down sets the width and the height at once; dragged sideways with a little wobble, it sets the width only
+- [ ] While dragging, the section shows the result, Esc puts everything back, and a release is one undo step
+- [ ] A block pinned to rows has the same edges: the left edge moves its left side, the top edge its top, and a text pinned to rows never goes under its words
+- [ ] Placement shows «Height on the phone» under «Width on the phone» in both views: Auto, or «Its own» with a height in px; the reset and ↺ on the block take it away
+- [ ] Om oss's second small story has a phone height of its own (96 px) and shows it in Placement
+
 ### Test batch (0.7.3.16.1): words of its own on the phone, the text bar beside the canvas, and dragging on the phone with a preview and the keys
 
 - [ ] In the phone view, click in a text on Om oss and change a word: the desktop view keeps the old word, the phone view shows the new one, and a phone-wide published page reads the new one

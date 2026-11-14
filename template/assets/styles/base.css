@@ -12471,6 +12471,22 @@ a.urd-collection-title:hover {
   height: auto;
 }
 
+/* A picture or a film with a shape given a height of its own on the phone (frames.mobile.height, render.js) fills that box around its focus point instead of keeping its shape */
+.urd-block[data-urd-phone-h] > .urd-image-frame.urd-image-shaped,
+.urd-block[data-urd-phone-h] > a > .urd-image-frame.urd-image-shaped {
+  height: 100%;
+  aspect-ratio: auto !important;
+}
+
+.urd-block[data-urd-phone-h] .urd-image-frame.urd-image-own:not(.urd-pic-turned) img {
+  height: 100%;
+}
+
+.urd-block[data-urd-phone-h] > .urd-video-ratio {
+  height: 100%;
+  aspect-ratio: auto;
+}
+
 /* The picture's own shape: the picture gives the frame its height (a turned one gives it its ratio, picture.js) */
 .urd-image-frame.urd-image-own:not(.urd-pic-turned) img {
   height: auto;
@@ -19182,12 +19198,10 @@ body.urd-mobile .urd-add-section {
 .urd-preview .urd-edit-resize[data-edge="nw"] { transform-origin: top left; }
 .urd-preview .urd-edit-resize[data-edge="sw"] { transform-origin: bottom left; }
 
-/* A block whose height follows its content (ADR-0025): its handle changes the
-   width only on the desktop, and a pull up or down stops at the content's edge,
-   where a bar says why for as long as the pointer is held. The bar takes the
-   smart guides' fixed magenta, for the same reason: it is drag feedback and
-   must stand apart from the page's colours and the grid. */
-.urd-preview .urd-block[data-urd-height="content"] > .urd-edit-resize {
+/* A block whose height follows its content (ADR-0025): on the desktop its handle changes the width only, and a pull up or down stops at the content's edge, where a bar says why for as long as the pointer is held.
+   On the phone its handles set its height as well (0.7.3.18), so they keep their own cursors.
+   The bar takes the smart guides' fixed magenta, for the same reason: it is drag feedback and must stand apart from the page's colours and the grid. */
+.urd-preview:not(.urd-mobile) .urd-block[data-urd-height="content"] > .urd-edit-resize {
   cursor: ew-resize;
 }
 

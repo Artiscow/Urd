@@ -210,7 +210,7 @@
               "z": 1,
               "rot": 0
             },
-            "mobile": { "col": 5, "cols": 4 }
+            "mobile": { "col": 5, "cols": 4, "height": 96 }
           },
           "mobileOrder": 40.160000000000004
         }

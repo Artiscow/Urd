@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { frameToCss, mobilePlacementToCss, phoneCells, phoneCellCss, PHONE_COLUMNS, autoGrows, anchorTargets, EDITOR_ONLY } = await engineImport('render.js');
+const { frameToCss, mobilePlacementToCss, phoneCells, phoneHeight, phoneCellCss, PHONE_COLUMNS, autoGrows, anchorTargets, EDITOR_ONLY } = await engineImport('render.js');
 const { galleryBlock } = await engineImport('blocks/gallery.js');
 const { MOBILE_ROW, MOBILE_GAP } = await engineImport('migrate.js');
 
@@ -123,6 +123,29 @@ test('mobilePlacementToCss: a flowing block in cells fills its cell, a picture k
   assert.equal(picture.aspectRatio, '4');
   assert.equal(picture.height, undefined);
   assert.equal(mobilePlacementToCss({ col: 5, cols: 4 }, desktop, { byWidth: true }).height, '120px', 'without a design width it keeps its height');
+});
+
+test('mobilePlacementToCss: a block\'s own height on the phone stands in the desktop height\'s place, as a least height for words and the whole height for anything else', () => {
+  const box = mobilePlacementToCss({ height: 200 }, desktop, {});
+  assert.equal(box.height, '200px');
+  assert.equal(box.gridRow, `auto / span ${Math.ceil((200 + MOBILE_GAP) / MOBILE_ROW)}`, 'the span follows the own height');
+  const words = mobilePlacementToCss({ height: 200 }, desktop, { autoGrow: true });
+  assert.equal(words.minHeight, '200px', 'words grow the box past it');
+  assert.equal(words.height, undefined);
+  assert.equal(mobilePlacementToCss({ col: 5, cols: 4, height: 90 }, desktop, { autoGrow: true }).minHeight, '90px', 'in cells too');
+  assert.equal(mobilePlacementToCss({ col: 1, cols: 4, height: 90 }, desktop, {}).height, '90px');
+  const picture = mobilePlacementToCss({ col: 5, cols: 4, height: 90 }, desktop, { byWidth: true, designWidth: 1200 });
+  assert.equal(picture.aspectRatio, undefined, 'a picture gives its shape up for a height set by hand');
+  assert.equal(picture.height, '90px');
+  const shaped = mobilePlacementToCss({ height: 180 }, desktop, { autoGrow: true, byWidth: true });
+  assert.equal(shaped.height, '180px', 'a picture or a film with a shape takes its own height whole, and fills it');
+  assert.equal(shaped.minHeight, undefined);
+  const pinned = mobilePlacementToCss({ row: 2, rows: 5, height: 300 }, desktop, {});
+  assert.equal(pinned.height, undefined, 'a pinned block\'s height is its rows');
+  assert.equal(pinned.gridRow, '2 / span 5');
+  assert.equal(phoneHeight({ height: -4 }), null);
+  assert.equal(phoneHeight({ row: 1, height: 40 }), null);
+  assert.equal(phoneHeight({ height: 40 }), 40);
 });
 
 test('mobilePlacementToCss: a block pinned in cells is a grid item of its own on its rows, and a block without cells is as before', () => {

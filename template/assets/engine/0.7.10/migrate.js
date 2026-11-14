@@ -99,6 +99,17 @@ export function phoneCells(placement) {
   return cols === PHONE_COLUMNS ? null : { col, cols };
 }
 
+/**
+ * A flowing block's own height on the phone (`height`, ADR-0019), in px, in the desktop height's place; null where it has none, and for a block pinned to rows, whose height is its rows.
+ * @param {{height?: number, row?: number}|null} placement
+ * @returns {number|null}
+ */
+export function phoneHeight(placement) {
+  const height = placement?.height;
+  if (Number.isFinite(placement?.row) || !Number.isFinite(height) || height <= 0) return null;
+  return height;
+}
+
 /** Vertical spacing between flow blocks in the mobile row grid, in px: the standard, which the site's `layout.mobileGap` and a section's `size.mobileGap` replace. */
 export const MOBILE_GAP = 16;
 

@@ -474,10 +474,10 @@ export function phoneDropChange(blocks, rawSetup, blockId, drop) {
 }
 
 /**
- * A section with a phone change written in, as the editor writes it (changeSectionPhone): the places, the stacks, the custom order and the cells; the section given is left as it is.
- * The cells take the place of a width and a left edge set by hand, and a block pinned to rows of its own keeps its place.
+ * A section with a phone change written in, as the editor writes it (changeSectionPhone): the places, the stacks, the custom order, the cells and the heights; the section given is left as it is.
+ * The cells take the place of a width and a left edge set by hand, a height is the block's own on the phone (null takes it away), and a block pinned to rows of its own keeps its place.
  * @param {object} section
- * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], cells?: Record<string, {col: number, cols: number}|null>}} change
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>}} change
  * @returns {object}
  */
 export function phoneChangeApplied(section, change) {
@@ -504,6 +504,13 @@ export function phoneChangeApplied(section, change) {
       }
       own().frames.mobile = Object.keys(place).length ? place : null;
     }
+    if (change?.heights && b.id in change.heights && !Number.isFinite(b.frames?.mobile?.row)) {
+      const height = change.heights[b.id];
+      const place = { ...(next.frames?.mobile ?? {}) };
+      delete place.height;
+      if (Number.isFinite(height) && height > 0) place.height = Math.round(height);
+      own().frames.mobile = Object.keys(place).length ? place : null;
+    }
     return next;
   });
   const next = { ...section, blocks };
@@ -513,6 +520,25 @@ export function phoneChangeApplied(section, change) {
   }
   if (Array.isArray(change?.list)) next.phoneList = [...new Set(change.list)].filter((id) => ids.has(id));
   return next;
+}
+
+/**
+ * A height dragged on the phone, snapped to the row grid's steps, or to the height that lines its bottom up with a block or stack beside it on its line («Same height»).
+ * @param {number} raw The height the pointer asks for, in px
+ * @param {number} top The block's top in the flow, in px
+ * @param {{top: number, bottom: number}[]} beside The boxes of the blocks and stacks on its line, in the flow's px
+ * @param {number} [step] The row grid's step (MOBILE_ROW)
+ * @param {number} [reach] How near the bottoms snap, in px
+ * @returns {{height: number, same: boolean}}
+ */
+export function phoneHeightSnap(raw, top, beside, step = 8, reach = 6) {
+  let best = null;
+  for (const box of beside ?? []) {
+    const height = box.bottom - top;
+    if (height > 0 && Math.abs(height - raw) <= reach && (best === null || Math.abs(height - raw) < Math.abs(best - raw))) best = height;
+  }
+  if (best !== null) return { height: Math.round(best), same: true };
+  return { height: Math.max(step, Math.round(raw / step) * step), same: false };
 }
 
 /**

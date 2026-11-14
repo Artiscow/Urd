@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -476,6 +476,17 @@ test('phoneChangeApplied: the section as the change leaves it, the places, stack
   assert.deepEqual(ids(stackOrder(next.blocks, phoneSetupOf(next))), ['a', 'c', 'b', 'p'], 'the stack reads in its own order, where its first block stands in the list');
 });
 
+test('phoneChangeApplied: a block\'s own height on the phone written beside its cells, null taking it away, a pinned block keeping its rows', () => {
+  const section = { id: 's', blocks: [blk('a', 0, 0, { mobile: { col: 1, cols: 4, height: 80 } }), blk('b', 20, 0), blk('p', 60, 0, { mobile: { row: 3, rows: 2 } })] };
+  const next = phoneChangeApplied(section, { places: {}, cells: { b: { col: 5, cols: 4 } }, heights: { a: null, b: 151.6, p: 90 } });
+  const by = Object.fromEntries(next.blocks.map((b) => [b.id, b]));
+  assert.deepEqual(by.a.frames.mobile, { col: 1, cols: 4 });
+  assert.deepEqual(by.b.frames.mobile, { col: 5, cols: 4, height: 152 });
+  assert.deepEqual(by.p.frames.mobile, { row: 3, rows: 2 });
+  const plain = phoneChangeApplied({ id: 's', blocks: [blk('c', 0, 0, { mobile: { height: 40 } })] }, { heights: { c: null } });
+  assert.equal(plain.blocks[0].frames.mobile, null, 'a placement left with nothing goes back to following the desktop');
+});
+
 test('phoneKeyDrops: above and below every other unit in order, starting where the block stands, and each step a different outcome', () => {
   const blocks = [blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0, { mobile: { col: 5, cols: 4 } })];
   const { drops, home } = phoneKeyDrops(blocks, 'top', 'b');
@@ -495,4 +506,11 @@ test('leastWordsCols: the words floor in base.css, a quarter from 658 px at any 
   assert.equal(leastWordsCols(329), 4);
   assert.equal(leastWordsCols(328), 5);
   assert.equal(leastWordsCols(100), 5, 'cells of five columns and more are never drawn across the row');
+});
+
+test('phoneHeightSnap: the row grid\'s steps, or the bottom of a block beside it within reach («Same height»)', () => {
+  assert.deepEqual(phoneHeightSnap(101, 40, []), { height: 104, same: false });
+  assert.deepEqual(phoneHeightSnap(3, 40, []), { height: 8, same: false }, 'never under one step');
+  assert.deepEqual(phoneHeightSnap(90, 40, [{ top: 40, bottom: 142 }]), { height: 88, same: false }, 'out of reach');
+  assert.deepEqual(phoneHeightSnap(99, 40, [{ top: 40, bottom: 142 }, { top: 30, bottom: 138 }]), { height: 98, same: true }, 'the nearest bottom in reach');
 });

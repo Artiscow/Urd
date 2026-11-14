@@ -12,7 +12,7 @@
  *    Blocks with row in frames.mobile are pinned to explicit row tracks.
  *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
-import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, PHONE_COLUMNS, phoneCells } from './migrate.js';
+import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
 import { pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
@@ -553,9 +553,12 @@ function childrenHeight(el) {
  */
 export function naturalHeight(el) {
   const height = el.style.height;
+  const minHeight = el.style.minHeight;
   el.style.height = 'auto';
+  el.style.minHeight = '';
   const needed = Math.max(el.offsetHeight, childrenHeight(el));
   el.style.height = height;
+  el.style.minHeight = minHeight;
   return Math.round(needed);
 }
 
@@ -830,8 +833,8 @@ function syncCellWords(cell) {
   cell.classList.toggle('urd-cell-words', [...cell.children].some((child) => child.dataset.urdWords === '1'));
 }
 
-/** The phone's cells (migrate.js), read here with the rest of the row grid. */
-export { PHONE_COLUMNS, phoneCells };
+/** The phone's cells and a block's own height there (migrate.js), read here with the rest of the row grid. */
+export { PHONE_COLUMNS, phoneCells, phoneHeight };
 
 /**
  * The place in the row grid of what stands in cells: a cell of flowing blocks (render.js wraps the blocks one after another in the same cells in one, so they stand under each other and the next block in other cells shares their line), or a block pinned in cells.
@@ -866,8 +869,11 @@ export function phoneCellCss({ col, cols }) {
  * flowing, in its cell's whole width, the cell placed by render.js. A block
  * whose size is its frame keeps its desktop shape there, its height
  * following its width.
+ * A flowing block's own height on the phone (`height`) takes the desktop
+ * height's place: a least height for a block that grows with its content,
+ * and the whole height for any other, a picture or a film then filling it.
  *
- * @param {{x?: number, w?: number, row?: number, rows?: number, col?: number, cols?: number, z?: number, rot?: number}|null} placement
+ * @param {{x?: number, w?: number, row?: number, rows?: number, col?: number, cols?: number, height?: number, z?: number, rot?: number}|null} placement
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} desktop The block's desktop frame
  * @param {{autoGrow?: boolean, gap?: number, byWidth?: boolean, designWidth?: number}} [opts] autoGrow: text and data blocks with natural height; gap: the space under a flowing block in px (mobileGapOf), MOBILE_GAP without it; byWidth: a block whose size is its frame (FIT_BY_WIDTH), with designWidth the width its desktop frame's percent is of
  * @returns {object} Style map for Object.assign(el.style, ...)
@@ -908,20 +914,26 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
       css.justifySelf = 'start';
     }
   }
-  // A block whose size is its frame, in cells narrower than the row: its desktop shape, the height following the cells' width and the row growing to it.
-  const shape = cells && opts.byWidth && opts.designWidth > 0 && desktop.w > 0 && desktop.h > 0
+  // The block's own height on the phone (`height`) stands in the desktop height's place: a block that grows with its content stands at least that tall, any other that tall.
+  const own = phoneHeight(placement);
+  // A block whose size is its frame, in cells narrower than the row: its desktop shape, the height following the cells' width and the row growing to it, until it has a height of its own, which the picture then fills.
+  const shape = !own && cells && opts.byWidth && opts.designWidth > 0 && desktop.w > 0 && desktop.h > 0
     ? (desktop.w / 100) * opts.designWidth / desktop.h : 0;
   if (shape) {
     css.aspectRatio = String(Math.round(shape * 1000) / 1000);
-  } else if (cells && !opts.autoGrow) {
-    // In a cell the block is no grid item: its desktop height, the cell growing to its blocks.
-    css.height = `${desktop.h}px`;
-  } else if (!opts.autoGrow) {
-    // Fixed height from desktop, the span holding the block and the gap under it (margin-bottom, `--urd-mobile-gap` in base.css).
+  } else if (opts.autoGrow && !(own && opts.byWidth)) {
+    // Its content's height, or at least its own height on the phone, the content growing it past; a picture or a film with a shape takes its own height whole, and fills it.
+    if (own) css.minHeight = `${own}px`;
+  } else if (cells) {
+    // In a cell the block is no grid item: its height, the cell growing to its blocks.
+    css.height = `${own ?? desktop.h}px`;
+  } else {
+    // A fixed height, the span holding the block and the gap under it (margin-bottom, `--urd-mobile-gap` in base.css).
     // The span holds the standard gap at most: a larger gap grows the row tracks, as a text block's margin does, so a block placed by hand below keeps its distance and no flowing block jumps past it.
     const gap = Math.min(Number.isFinite(opts.gap) ? opts.gap : MOBILE_GAP, MOBILE_GAP);
-    css.height = `${desktop.h}px`;
-    css.gridRow = `auto / span ${Math.max(1, Math.ceil((desktop.h + gap) / MOBILE_ROW))}`;
+    const height = own ?? desktop.h;
+    css.height = `${height}px`;
+    css.gridRow = `auto / span ${Math.max(1, Math.ceil((height + gap) / MOBILE_ROW))}`;
   }
   return css;
 }
@@ -1106,6 +1118,8 @@ export function renderSection(section, site, host, opts = {}) {
       const placing = { gap, byWidth: FIT_BY_WIDTH.has(block.type), designWidth: canvas._urdDesignW };
       const placement = pinned || cells === own ? block.frames.mobile : { ...block.frames.mobile, ...(cells ?? { col: 1, cols: PHONE_COLUMNS }) };
       el._urdPhonePlace = placement;
+      // A height of its own on the phone: a picture or a film with a shape fills it rather than keeping its shape (base.css).
+      if (phoneHeight(placement)) el.dataset.urdPhoneH = '1';
       const place = (autoGrow) => {
         Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { ...placing, autoGrow }));
         if (cells && sticks) Object.assign(el.style, phoneCellCss(cells));
@@ -1118,7 +1132,7 @@ export function renderSection(section, site, host, opts = {}) {
       const drawn = drawnBlock(block, narrow);
       if (drawn !== block) place(autoGrows(drawn, Urd.blocks.get(block.type)));
       // Words in cells: the cell, the block pinned in cells, or the slot of a block pinned while the page scrolls, stands across the row where too narrow (the floor in base.css).
-      if (autoGrows(drawn, Urd.blocks.get(block.type))) el.dataset.urdWords = '1';
+      if (autoGrows(drawn, Urd.blocks.get(block.type)) && !FIT_BY_WIDTH.has(block.type)) el.dataset.urdWords = '1';
       if (pinned && own) el.dataset.cols = String(own.cols);
       if (cell) syncCellWords(cell);
       else if (pinned && own) el.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');
@@ -1382,7 +1396,7 @@ function redrawForWidth(el) {
     const cells = Number.isFinite(placement?.row) ? null : phoneCells(placement);
     const cell = el.parentElement?.classList.contains('urd-cell') ? el.parentElement : null;
     if (cells && !cell) Object.assign(css, phoneCellCss(cells));
-    if (autoGrows(drawn, state.def)) el.dataset.urdWords = '1'; else delete el.dataset.urdWords;
+    if (autoGrows(drawn, state.def) && !FIT_BY_WIDTH.has(state.block.type)) el.dataset.urdWords = '1'; else delete el.dataset.urdWords;
     if (cell) syncCellWords(cell);
     else if (el._urdStickSlot?.dataset.cols) el._urdStickSlot.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');
     else if (el.dataset.cols) el.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');

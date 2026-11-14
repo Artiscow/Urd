@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift, liftPhoneWords, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf } = await engineImport('migrate.js');
+const { lift, liftPhoneWords, liftMobileFrame, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf } = await engineImport('migrate.js');
 const { mapBlock } = await engineImport('blocks/map.js');
 
 const textV3 = {
@@ -540,4 +540,9 @@ test('liftPhoneWords: a migration that reshapes a word prop reaches the phone\'s
   assert.deepEqual(liftPhoneWords({ ...block, phoneProps: undefined }, def, lifted.props), {});
   assert.deepEqual(liftPhoneWords(block, undefined, block.props), {}, 'an unknown type keeps no words to draw');
   assert.equal(block.phoneProps.html, '<p>Phone</p>', 'the stored words are left as they are');
+});
+
+test('liftMobileFrame: a placement with a height of its own on the phone is today\'s shape and is left as it is', () => {
+  const placement = { col: 5, cols: 4, height: 96 };
+  assert.equal(liftMobileFrame(placement, { x: 0, y: 0, w: 50, h: 120 }), placement);
 });

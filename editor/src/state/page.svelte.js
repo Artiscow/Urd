@@ -19,7 +19,7 @@ import { flowing, phoneStackOf } from '$engine/phone-moves.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign, calLimitStart } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
-import { PAGE_SCHEMA_VERSION, liftPageFile, phoneCells } from '$engine/migrate.js';
+import { PAGE_SCHEMA_VERSION, liftPageFile, phoneCells, phoneHeight } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { anchorError, takenAnchors } from '$engine/anchor-model.js';
 import { setLinkOn } from '../lib/link-edit.js';
@@ -163,6 +163,7 @@ function syncSelectedBlock() {
     phonePlace: typeof block.phonePlace?.before === 'string' ? { before: block.phonePlace.before } : typeof block.phonePlace?.after === 'string' ? { after: block.phonePlace.after } : null,
     // The cells the block stands in on the phone (migrate.js phoneCells), or null across the full row.
     phoneCells: phoneCells(block.frames?.mobile),
+    phoneHeight: phoneHeight(block.frames?.mobile),
     // Whether the block's type can have words of the phone's own, and whether it has some (ADR-0033).
     phoneWordsAble: Boolean(PHONE_WORDS[block.type]),
     phoneWords: Object.keys(phoneWordsOf(block.type, block.phoneProps)).length > 0,
@@ -1161,10 +1162,10 @@ function setSectionPhoneCustom(on) {
 }
 
 /**
- * A change to a section's phone order and cells (phone-moves.js: a move in the Phone panel's list, or the arrows on the canvas; phone-layouts.js: a preset): the blocks' exceptions, the stacks, the custom order and the cells, written as one undo step under `key`.
+ * A change to a section's phone order, cells and heights (phone-moves.js: a move in the Phone panel's list, a drag, the arrows or the handles on the canvas; phone-layouts.js: a preset): the blocks' exceptions, the stacks, the custom order, the cells and the blocks' own heights on the phone, written as one undo step under `key`.
  * Only ids the section holds are written, and a stack of fewer than two blocks is left out.
  * @param {string} sectionId
- * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], cells?: Record<string, {col: number, cols: number}|null>}} change
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>}} change
  * @param {string} [key] The history key: a burst of keys joins under one
  * @returns {boolean} Whether the section took the change
  */
@@ -1199,7 +1200,16 @@ function changeSectionPhone(sectionId, change, key = 'phone-order') {
     }
     block.frames.mobile = Object.keys(place).length ? place : null;
   }
-  if (change.cells) shellState.updateAttention();
+  // A block's own height on the phone (its handles in the phone view), or null to take it away; a block pinned to rows keeps its rows.
+  for (const [id, height] of Object.entries(change.heights ?? {})) {
+    const block = section.blocks.find((b) => b.id === id);
+    if (!block || Number.isFinite(block.frames.mobile?.row)) continue;
+    const place = { ...(block.frames.mobile ?? {}) };
+    delete place.height;
+    if (Number.isFinite(height) && height > 0) place.height = Math.round(height);
+    block.frames.mobile = Object.keys(place).length ? place : null;
+  }
+  if (change.cells || change.heights) shellState.updateAttention();
   store.save();
   historyState.updateDirty();
   previewState.bridge?.sendSection(pageId, section);
@@ -1230,6 +1240,26 @@ function setBlockPhoneCells(cells) {
     if (cells && cells.cols < 8) Object.assign(place, { col: cells.col, cols: cells.cols });
     one.frames.mobile = Object.keys(place).length ? place : null;
   }
+  store.save();
+  historyState.updateDirty();
+  shellState.updateAttention();
+  previewState.bridge?.sendSection(pageId, section);
+  syncSelectedBlock();
+}
+
+/**
+ * The selected block's own height on the phone (`frames.mobile.height`, px), or null to follow its words or its desktop height again (ADR-0019).
+ * A block placed on rows of its own keeps its rows, and a placement left with nothing in it goes back to following the desktop.
+ * @param {number|null} height
+ */
+function setBlockPhoneHeight(height) {
+  const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+  if (!block || Number.isFinite(block.frames.mobile?.row)) return;
+  historyState.pushHistory(`edit:phone-height-${block.id}`);
+  const place = { ...(block.frames.mobile ?? {}) };
+  delete place.height;
+  if (Number.isFinite(height) && height > 0) place.height = Math.round(height);
+  block.frames.mobile = Object.keys(place).length ? place : null;
   store.save();
   historyState.updateDirty();
   shellState.updateAttention();
@@ -1630,6 +1660,7 @@ export const pageState = {
   setStickyPhone,
   setBlockPhonePlace,
   setBlockPhoneCells,
+  setBlockPhoneHeight,
   setBlockAnchor,
   setSectionAnchor,
   anchorsTaken,

@@ -31,7 +31,7 @@
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf } from './push-model.js';
-import { MOBILE_ROW, PHONE_COLUMNS, phoneCells } from './migrate.js';
+import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
 import { blocksClipboard, sectionClipboard, readClipboard, pastedSection } from './clipboard-model.js';
@@ -42,7 +42,7 @@ import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
-import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols } from './phone-moves.js';
+import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap } from './phone-moves.js';
 import { closeColorPicker } from './color-picker.js';
 import { closeDropdowns } from './dropdown.js';
 import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
@@ -4992,21 +4992,24 @@ function enhanceBlock(el, block, section, grid, host) {
   // The handle of a block that follows its content changes its width only
   // (ADR-0025), and says so; on a block whose size is its frame it says that
   // Shift keeps the ratio.
-  resizeHandle.title = flowsOnPhone ? ta('canvas.dragPhoneWidth')
+  resizeHandle.title = flowsOnPhone ? ta('canvas.dragPhoneSize')
+    : mobile ? ta(FIT_BY_WIDTH.has(block.type) ? 'canvas.dragResizeRatio' : 'canvas.dragResize')
     : followsContent(block) ? ta('canvas.dragResizeWidth')
     : FIT_BY_WIDTH.has(block.type) ? ta('canvas.dragResizeRatio') : ta('canvas.dragResize');
   el.appendChild(resizeHandle);
   // The other edges and corners take the same drag with the opposite edge held still, on the desktop frame.
-  // A block that follows its content gets the left and right edges only, since its height is the content's.
+  // On the desktop a block that follows its content gets the left and right edges only, since its height is the content's; on the phone every block has all of them, its width and height there its own, words never cut off (0.7.3.18).
   const edgeHandles = [];
-  if (!mobile) {
-    const edges = followsContent(block) ? ['e', 'w'] : ['n', 's', 'e', 'w', 'ne', 'sw', 'nw'];
+  {
+    const edges = mobile || !followsContent(block) ? ['n', 's', 'e', 'w', 'ne', 'sw', 'nw'] : ['e', 'w'];
     for (const edge of edges) {
       const h = document.createElement('div');
       h.className = 'urd-edit-resize';
       h.dataset.edge = edge;
-      // An edge handle moves one axis, so it says nothing of the ratio Shift keeps on a corner.
-      h.title = followsContent(block) || edge.length === 2 ? resizeHandle.title : ta('canvas.dragResize');
+      // An edge handle moves one axis, so it says nothing of the ratio Shift keeps on a corner; on the phone each says what it sets there.
+      h.title = flowsOnPhone ? ta(edge.length === 2 ? 'canvas.dragPhoneSize' : edge === 'e' || edge === 'w' ? 'canvas.dragPhoneWidth' : 'canvas.dragPhoneHeight')
+        : mobile ? (edge.length === 2 ? resizeHandle.title : ta('canvas.dragResize'))
+        : followsContent(block) || edge.length === 2 ? resizeHandle.title : ta('canvas.dragResize');
       el.appendChild(h);
       edgeHandles.push(h);
     }
@@ -5171,7 +5174,7 @@ function enhanceBlock(el, block, section, grid, host) {
   /**
    * The section shown as a drop on the phone would leave it, while the dragged block is held over a place (flowDrag): the section drawn out of sight with the change written in (phoneChangeApplied), each block's place there measured, and the shown blocks gliding to those places by transform, the dragged block's place a dashed box; the place the block left keeps its room unmarked.
    * A change of none puts every block back where it stood; the end takes the box away, the section then drawn again from the draft.
-   * A block sized in place (`lifted` false, its corner handle) glides to its own new size and place with the others, and has no dashed box.
+   * A block sized in place (`lifted` false, its handles) glides to its own new size and place with the others, and has no dashed box.
    * @returns {{show: (change: object|null) => void, placed: () => Map<string, object>|null, mine: () => object|null, end: () => void}}
    */
   function phonePreview(flowEl, hold, { lifted = true } = {}) {
@@ -5203,6 +5206,8 @@ function enhanceBlock(el, block, section, grid, host) {
         node.style.transition = ease;
         node.style.transform = was.transform;
         node.style.width = was.width;
+        node.style.height = was.height;
+        node.style.minHeight = was.minHeight;
       }
       if (flowMin !== null) Object.assign(flowEl.style, flowMin);
       landing?.remove();
@@ -5243,9 +5248,12 @@ function enhanceBlock(el, block, section, grid, host) {
           const t = target(node.dataset.blockId);
           if (!t) continue;
           placed.set(node.dataset.blockId, t);
-          if (!moved.has(node)) moved.set(node, { transform: node.style.transform, width: node.style.width, transition: node.style.transition });
+          if (!moved.has(node)) moved.set(node, { transform: node.style.transform, width: node.style.width, height: node.style.height, minHeight: node.style.minHeight, transition: node.style.transition });
           node.style.transition = ease;
           node.style.width = `${t.width}px`;
+          // A block whose height the change sets stands at it, its own least height let go for the while; it is measured at its own height first, so a change that keeps the height shown keeps it.
+          Object.assign(node.style, { height: moved.get(node).height, minHeight: moved.get(node).minHeight });
+          if (Math.abs(t.height - node.offsetHeight) > 1) Object.assign(node.style, { height: `${t.height}px`, minHeight: '0px' });
           plan.push([node, t]);
         }
         for (const [node, t] of plan) {
@@ -5499,34 +5507,86 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * The corner handle of a flowing block on the phone: its width in the cells, from its first column to the one under the pointer, its right edge snapping to the row's quarters, or to any of the eight columns with Alt; a block in a stack sizes its whole stack, which shares one cell.
+   * A flowing block's handles on the phone (ADR-0019), by the edge they are dragged by; the desktop keeps its own size.
+   * The left and right edges set its width in the cells with the other edge held still, snapping to the row's quarters or to any of the eight columns with Alt; a block in a stack sizes its whole stack, which shares one cell, and a cell holding words goes no narrower than the words floor lets it stand.
+   * The top and bottom edges set its own height on the phone in the row grid's steps, snapping to the bottom of a block or stack beside it on its line («Same height»), and a corner sets both, the height once the pointer has moved a step up or down. A block with words stops at its words' height, where it follows them again.
+   * @param {HTMLElement} handle
+   * @param {PointerEvent} event
+   * @param {{x: number, y: number}} [edge] The edge dragged, -1, 0 or 1 across and down; the bottom-right corner by default
    */
-  function cellResize(handle, event) {
+  function cellResize(handle, event, edge = { x: 1, y: 1 }) {
     const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
     if (!flowEl) return;
     const own = phoneCells(block.frames.mobile);
     const stack = phoneStackOf(section.blocks, phoneSetupOf(section), block.id);
     const head = stack ? section.blocks.find((b) => b.id === stack[0]) : null;
     const cells = (head ? phoneCells(head.frames.mobile) : own) ?? { col: 1, cols: PHONE_COLUMNS };
+    const end = cells.col + cells.cols - 1;
     const marks = phoneDragMarks(flowEl);
     const ids = stack ?? [block.id];
     const box = boxOnPhone(flowEl, ids) ?? { top: 0, bottom: 0 };
     // A cell holding words goes no narrower than the words floor lets it stand at this width (base.css), so the handle never shows a width the floor would not draw.
     const words = ids.some((id) => host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.dataset.urdWords === '1');
     const least = words ? leastWordsCols(window.innerWidth) : 1;
+    // The block's own box and the height its words need where it has words, read as the drag begins.
+    const start = { x: event.clientX, y: event.clientY };
+    const flowAt = flowEl.getBoundingClientRect();
+    // A block pinned while the page scrolls is measured at its slot, its place in the grid.
+    const blockAt = (el._urdStickSlot?.isConnected ? el._urdStickSlot : el).getBoundingClientRect();
+    const startH = blockAt.height;
+    const grows = el.dataset.urdWords === '1';
+    const wordsH = grows ? Math.round(contentHeight(el)) : 0;
+    const before = phoneHeight(block.frames.mobile);
+    /** The block's top in the flow and the blocks and stacks beside it on its line, where the preview shows them once a width has moved it, else where it stands. */
+    let top = blockAt.top - flowAt.top;
+    const besideOf = (placed) => unitBoxes(flowEl, placed).filter((unit) => !ids.includes(unit.id) && unit.top < top + startH && unit.bottom > top);
+    let beside = besideOf(null);
     const label = document.createElement('span');
     marks.land.appendChild(label);
+    let col = cells.col;
     let cols = cells.cols;
-    // The section shows the width as it goes: the block and the blocks around it glide to where the width puts them.
+    /** The height the drag gives: undefined while it has not touched the height, null where the block follows its words again. */
+    let height;
+    let same = false;
+    // Pulled under its words, a block with words shows the desktop's stop for as long as the pointer pulls on.
+    let stopMark = null;
+    if (grows && edge.y) {
+      stopMark = document.createElement('div');
+      stopMark.className = 'urd-edit-stop';
+      stopMark.hidden = true;
+      const why = document.createElement('span');
+      why.textContent = ta('canvas.followsContent');
+      stopMark.appendChild(why);
+      el.appendChild(stopMark);
+    }
+    // The section shows the size as it goes: the block and the blocks around it glide to where it puts them.
     const view = phonePreview(flowEl, null, { lifted: false });
-    const widthChange = () => (cols === cells.cols ? null : { places: {}, cells: Object.fromEntries(ids.map((id) => [id, cols >= PHONE_COLUMNS ? null : { col: cells.col, cols }])) });
+    const sizeChange = () => {
+      const widthMoved = col !== cells.col || cols !== cells.cols;
+      const heightMoved = height !== undefined && height !== before;
+      if (!widthMoved && !heightMoved) return null;
+      return {
+        places: {},
+        ...(widthMoved ? { cells: Object.fromEntries(ids.map((id) => [id, cols >= PHONE_COLUMNS ? null : { col, cols }])) } : {}),
+        ...(heightMoved ? { heights: { [block.id]: height } } : {}),
+      };
+    };
     const show = () => {
       const fw = flowEl.clientWidth;
       const colW = (fw * 0.9) / PHONE_COLUMNS;
+      const parts = [];
+      if (edge.x) parts.push([2, 4, 6, PHONE_COLUMNS].includes(cols) ? ta(`opt.phoneWidth.${cols}`) : `${cols}/${PHONE_COLUMNS}`);
+      // A block that follows its words again says so on the tag, unless the stop under it says it already.
+      if (height === null && (!stopMark || stopMark.hidden)) parts.push(ta('canvas.followsContent'));
+      else if (height) parts.push(same ? ta('canvas.sameHeight') : `${Math.round(height)} px`);
+      label.textContent = parts.join(' · ');
+      label.hidden = !parts.length;
       marks.land.hidden = false;
       marks.land.dataset.kind = 'cell';
-      label.textContent = [2, 4, 6, PHONE_COLUMNS].includes(cols) ? ta(`opt.phoneWidth.${cols}`) : `${cols}/${PHONE_COLUMNS}`;
-      Object.assign(marks.land.style, { left: `${fw * 0.05 + (cells.col - 1) * colW}px`, top: `${box.top}px`, width: `${cols * colW}px`, height: `${box.bottom - box.top}px` });
+      // A width alone marks the cell the whole stack shares; a height marks the block's own box.
+      const shown = height === undefined ? null : height ?? wordsH;
+      const marked = shown === null ? box : { top, bottom: top + shown };
+      Object.assign(marks.land.style, { left: `${fw * 0.05 + (col - 1) * colW}px`, top: `${marked.top}px`, width: `${cols * colW}px`, height: `${marked.bottom - marked.top}px` });
     };
     try {
       handle.setPointerCapture(event.pointerId);
@@ -5535,13 +5595,36 @@ function enhanceBlock(el, block, section, grid, host) {
     const onMove = (ev) => {
       const fr = flowEl.getBoundingClientRect();
       const colW = (fr.width * 0.9) / PHONE_COLUMNS;
-      const room = PHONE_COLUMNS - cells.col + 1;
-      // The right edge in columns from the row's left: on the quarters' lines, or on any column's with Alt.
-      const edge = (ev.clientX - (fr.left + fr.width * 0.05)) / colW;
-      const snapped = ev.altKey ? Math.round(edge) : Math.round(edge / 2) * 2;
-      cols = clamp(snapped - (cells.col - 1), Math.min(least, room), room);
+      // The edge dragged, in columns from the row's left: on the quarters' lines, or on any column's with Alt.
+      const at = (ev.clientX - (fr.left + fr.width * 0.05)) / colW;
+      const line = ev.altKey ? Math.round(at) : Math.round(at / 2) * 2;
+      if (edge.x > 0) {
+        const room = PHONE_COLUMNS - cells.col + 1;
+        cols = clamp(line - (cells.col - 1), Math.min(least, room), room);
+      } else if (edge.x < 0) {
+        col = clamp(line + 1, 1, end - Math.min(least, end) + 1);
+        cols = end - col + 1;
+      }
+      const dy = ev.clientY - start.y;
+      const shown = view.placed()?.get(block.id);
+      if (shown && Math.abs(shown.top - top) > 1) {
+        top = shown.top;
+        beside = besideOf(view.placed());
+      }
+      if (edge.y && (height !== undefined || !edge.x || Math.abs(dy) >= MOBILE_ROW)) {
+        const pulled = startH + edge.y * dy;
+        const snap = phoneHeightSnap(pulled, top, beside, MOBILE_ROW);
+        if (grows && snap.height <= wordsH + 1) {
+          height = null;
+          same = false;
+        } else {
+          height = Math.max(grows ? wordsH : MOBILE_ROW * 3, snap.height);
+          same = snap.same;
+        }
+        if (stopMark) stopMark.hidden = !(pulled < wordsH - STOP_MARK_PX);
+      }
       show();
-      view.show(widthChange());
+      view.show(sizeChange());
     };
     const finish = () => {
       handle.removeEventListener('pointermove', onMove);
@@ -5549,9 +5632,10 @@ function enhanceBlock(el, block, section, grid, host) {
       handle.removeEventListener('pointercancel', cancel);
       document.removeEventListener('keydown', onEscape, true);
       marks.remove();
+      stopMark?.remove();
       view.end();
     };
-    // Escape in the middle of it, or a cancelled pointer, keeps the width as it was.
+    // Escape in the middle of it, or a cancelled pointer, keeps the size as it was.
     const cancel = () => {
       view.show(null);
       finish();
@@ -5563,7 +5647,7 @@ function enhanceBlock(el, block, section, grid, host) {
       cancel();
     };
     const onUp = () => {
-      const change = widthChange();
+      const change = sizeChange();
       if (!change) view.show(null);
       finish();
       if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change });
@@ -5639,10 +5723,11 @@ function enhanceBlock(el, block, section, grid, host) {
     // A surface drag only starts after a small threshold, so clicks remain clicks.
     const threshold = opts.surface ? 4 : 0;
     let started = false;
-    // A block that follows its content keeps its height in the row grid too
-    // (ADR-0025): the handle changes the width, and a pull up or down is
-    // stopped at the content's edge with the same mark as on the desktop.
+    // Every edge and corner sizes the block on its rows with the opposite edge held still (0.7.3.18).
+    // A block that follows its content stands at least as tall as its content needs (ADR-0025): a pull under it is stopped at the content's edge with the same mark as on the desktop, and a pull past it gives it rows of its own.
+    const edge = kind === 'resize' ? (opts.edge ?? { x: 1, y: 1 }) : { x: 0, y: 0 };
     const hug = kind === 'resize' && followsContent(block);
+    const contentH = hug ? Math.round(contentHeight(el)) : 0;
     // Shift keeps the ratio of a block whose size is its frame (FIT_BY_WIDTH).
     const ratio = kind === 'resize' && FIT_BY_WIDTH.has(block.type) && orig.w > 0 ? orig.h / orig.w : 0;
     let stop = null;
@@ -5684,7 +5769,10 @@ function enhanceBlock(el, block, section, grid, host) {
       el.style.left = `${orig.left}px`;
       el.style.top = `${orig.top}px`;
       el.style.width = `${orig.w}px`;
-      if (kind === 'resize' && !hug) el.style.height = `${orig.h}px`;
+      if (kind === 'resize') {
+        if (hug) el.style.minHeight = `${orig.h}px`;
+        else el.style.height = `${orig.h}px`;
+      }
       el.style.marginLeft = '0';
       el.style.zIndex = '100001';
       if (kind === 'move') {
@@ -5726,16 +5814,20 @@ function enhanceBlock(el, block, section, grid, host) {
         el.style.top = `${current.top}px`;
         if (rowLine) rowLine.style.top = `${rowLineTop(rowNearOffset(rowTracks, current.top - padTop))}px`;
       } else {
-        const w = clamp(orig.w + dx, 24, canvas.clientWidth - orig.left);
-        current = {
-          ...orig,
-          w,
-          h: hug ? orig.h : ratio && ev.shiftKey ? Math.max(MOBILE_ROW, Math.round(w * ratio)) : Math.max(MOBILE_ROW, orig.h + dy),
-        };
-        el.style.width = `${current.w}px`;
-        if (!hug) el.style.height = `${current.h}px`;
-        else stop.hidden = Math.abs(dy) < STOP_MARK_PX;
-        readout.show((current.w / canvas.clientWidth) * 100, hug ? el.getBoundingClientRect().height : current.h);
+        const w = edge.x === 0 ? orig.w : clamp(orig.w + edge.x * dx, 24, edge.x < 0 ? orig.left + orig.w : canvas.clientWidth - orig.left);
+        const left = edge.x < 0 ? orig.left + orig.w - w : orig.left;
+        const pulled = edge.y === 0 ? orig.h : ratio && ev.shiftKey && edge.x ? Math.round(w * ratio) : orig.h + edge.y * dy;
+        const h = Math.max(MOBILE_ROW, hug ? Math.max(contentH, pulled) : pulled);
+        const top = edge.y < 0 ? Math.max(0, orig.top + orig.h - h) : orig.top;
+        current = { ...orig, left, top, w, h };
+        Object.assign(el.style, { left: `${left}px`, top: `${top}px`, width: `${w}px` });
+        if (hug) {
+          el.style.minHeight = h > contentH ? `${h}px` : '';
+          stop.hidden = !(edge.y && pulled < contentH - STOP_MARK_PX);
+        } else {
+          el.style.height = `${h}px`;
+        }
+        readout.show((w / canvas.clientWidth) * 100, hug ? el.getBoundingClientRect().height : h);
       }
     };
 
@@ -5747,10 +5839,10 @@ function enhanceBlock(el, block, section, grid, host) {
       readout?.remove();
       rowLine?.remove();
     };
-    // A cancelled drag of a block pinned on the phone draws the section again, which puts the block back over the grid and its slot in its place.
+    // A cancelled drag of a block on its rows draws the section again, which puts the block back in its place, over the grid with its slot where it is pinned while the page scrolls.
     const cancel = () => {
       finish();
-      if (restick) post({ type: 'urd-redraw-section', sectionId: section.id });
+      if (restick || started) post({ type: 'urd-redraw-section', sectionId: section.id });
     };
 
     const onUp = () => {
@@ -5782,6 +5874,7 @@ function enhanceBlock(el, block, section, grid, host) {
       el.style.top = '';
       el.style.width = '';
       el.style.height = '';
+      el.style.minHeight = '';
       el.style.marginLeft = '';
       el.style.zIndex = '';
       el.classList.remove('urd-block-flow');
@@ -5912,11 +6005,11 @@ function enhanceBlock(el, block, section, grid, host) {
         return;
       }
 
-      // Mobile has its own drag mechanics (ADR-0019): a flowing block is dragged into the phone's order and cells, its corner handle setting its width in the cells; a block pinned to rows of its own moves on its rows.
+      // Mobile has its own drag mechanics (ADR-0019): a flowing block is dragged into the phone's order and cells, its handles setting its width in the cells and its height there; a block pinned to rows of its own moves and is sized on its rows.
       if (mobile) {
         if (Number.isFinite(block.frames.mobile?.row)) mobileDrag(handle, event, kind, opts);
         else if (kind === 'move') flowDrag(handle, event, opts);
-        else cellResize(handle, event);
+        else cellResize(handle, event, opts.edge);
         return;
       }
       const frameKey = 'desktop';

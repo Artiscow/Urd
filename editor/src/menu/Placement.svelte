@@ -12,6 +12,7 @@
   import Choice from '../lib/Choice.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import IconButton from '../lib/rows/IconButton.svelte';
+  import NumberRow from '../lib/rows/NumberRow.svelte';
   import FitMin from './FitMin.svelte';
   import SizeBounds from './SizeBounds.svelte';
   import { ta } from '$engine/i18n.js';
@@ -24,7 +25,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells, resetPhoneWords } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells, setBlockPhoneHeight, resetPhoneWords } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** Sets the pinning's own settings; a setting given as undefined goes back to the standard and is removed. */
@@ -219,6 +220,16 @@
         <Choice label={ta('lbl.phoneSide')} title={ta('tip.phoneSide')} value={phoneSideOf(selectedBlock.phoneCells)}
           options={[['left', ta('opt.phoneSide.left')], ['middle', ta('opt.phoneSide.middle')], ['right', ta('opt.phoneSide.right')]]}
           onchange={(v) => setBlockPhoneCells(phoneCellsFor(selectedBlock.phoneCells.cols, v))} />
+      {/if}
+    </Setting>
+    <!-- Its own height on the phone: its words' or its desktop height, or one of its own that words still grow past; the handles in the phone view set the same -->
+    <Setting own={selectedBlock.phoneHeight !== null} reset={() => setBlockPhoneHeight(null)}>
+      <Choice label={ta('lbl.phoneHeight')} title={ta('tip.phoneHeight')} value={selectedBlock.phoneHeight === null ? 'auto' : 'own'}
+        options={[['auto', ta('opt.phoneHeight.auto')], ['own', ta('opt.phoneHeight.own')]]}
+        onchange={(v) => setBlockPhoneHeight(v === 'own' ? Math.max(24, Math.round((selectedBlock.frame?.h ?? 120) / 8) * 8) : null)} />
+      {#if selectedBlock.phoneHeight !== null}
+        <NumberRow label={ta('lbl.height')} value={selectedBlock.phoneHeight} min={24} max={2000} step={8} unit="px"
+          onchange={(v) => setBlockPhoneHeight(v)} />
       {/if}
     </Setting>
   {/if}
