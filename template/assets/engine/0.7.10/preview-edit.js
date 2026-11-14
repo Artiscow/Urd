@@ -29,8 +29,8 @@
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  */
-import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth } from './render.js';
-import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS } from './push-model.js';
+import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
+import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf } from './push-model.js';
 import { MOBILE_ROW, PHONE_COLUMNS, phoneCells } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -42,12 +42,10 @@ import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
-import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf } from './phone-moves.js';
-import { openColorPicker, closeColorPicker } from './color-picker.js';
-import { createDropdown, closeDropdowns } from './dropdown.js';
-import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
-import { fontChoices } from './fonts.js';
-import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
+import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols } from './phone-moves.js';
+import { closeColorPicker } from './color-picker.js';
+import { closeDropdowns } from './dropdown.js';
+import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { TEXT_BLOCKS, unwrap, stripDescendantProp, applyWholeStyle } from './text-whole.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
 import { seamDrag } from './section-size.js';
@@ -2140,7 +2138,11 @@ function wireSeamDrag(btn, part, above, below, grip, index) {
  * @param {object} page Page data (for the section count)
  * @param {object} site site.json (the grid for dragging on the section boundary)
  */
+/** The site the page was last drawn with, for a section drawn out of sight while a block is dragged on the phone (flowDrag's preview). */
+let siteNow = null;
+
 export function enhancePage(root, page, site) {
+  siteNow = site;
   initTextToolbar();
   root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
   // The mobile view is for adjustment and review, not building structure.
@@ -2491,31 +2493,41 @@ function makeSectionAdder(index, above = null, below = null) {
 }
 
 /**
- * The formatting toolbar for text fields (Squarespace-style): shown above
- * the BLOCK while a text field is being edited, with heading level,
- * bold/italic/underline, colors, link, alignment, lists, quote and clear
- * formatting. The commands go via contenteditable (execCommand), which
- * fires the input event in text.js - saving reuses the whole draft flow.
- * (Font and base size per field live in the Properties panel.)
+ * The tools of a text field written in place: the editor draws their bar over the canvas (editor/src/lib/TextToolbar.svelte), beside the phone or above the block, free of the canvas's edges, and the editing stays here, on the text and its selection.
+ * While a text field is being written, its block's place and the selection's state (the level, the font, the size, the marks pressed) go to the editor as urd-text-state, and the bar's commands come back as urd-text-cmd (textCommand): each is applied on the selection kept here, through contenteditable (execCommand) or the text's own markup, and the input event it fires saves it in the draft through text.js, as typing does.
+ * A command leaves the focus where it is, so a picker in the editor stays open while its colour is tried live; the editor asks for the focus back where the owner goes on typing.
  */
 let textToolbarReady = false;
+/** The text tools' command, set once they are ready (urd-text-cmd). */
+let textCommandRun = null;
+/** The end of the writing of a text, set once the tools are ready (urd-text-end: a press in the editor outside its text bar). */
+let textEditEnd = null;
+
+/**
+ * A command of the editor's text bar on the text being written (urd-text-cmd).
+ * @param {string} cmd
+ * @param {*} [value]
+ * @param {boolean} [focus] The text takes the focus back, for the owner to go on typing
+ */
+export function textCommand(cmd, value, focus = false) {
+  textCommandRun?.(cmd, value, focus);
+}
+
+/** The writing of the text being written ended from the editor (urd-text-end). */
+export function endTextEditing() {
+  textEditEnd?.();
+}
+
+/** The commands whose state the selection holds as pressed or not (document.queryCommandState). */
+const TEXT_MARKS = ['bold', 'italic', 'underline', 'strikeThrough', 'superscript', 'subscript', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull', 'insertUnorderedList', 'insertOrderedList'];
 
 function initTextToolbar() {
   if (textToolbarReady) return;
   textToolbarReady = true;
 
-  const bar = document.createElement('div');
-  bar.className = 'urd-text-toolbar';
-  // Clicks in the toolbar must not move focus out of the text field.
-  // Exception: select and input MUST receive mousedown, otherwise the level picker will not open and the size field cannot be clicked; their focus switching is handled explicitly.
-  bar.addEventListener('mousedown', (event) => {
-    if (event.target instanceof Element && event.target.closest('select, input')) return;
-    event.preventDefault();
-  });
-
   const exec = (name, value = null) => document.execCommand(name, false, value);
 
-  // The color picker and the link editor move focus/selection: the selection is saved beforehand and restored on use.
+  // The selection in the text being written, kept as it changes: the editor's bar takes the focus or the pointer, and its commands are applied where the selection stood.
   let savedRange = null;
   const saveSelection = () => {
     const sel = document.getSelection();
@@ -2527,35 +2539,6 @@ function initTextToolbar() {
     sel.removeAllRanges();
     sel.addRange(savedRange);
   };
-
-  /** Groups that wrap AS A WHOLE, so no lone button ends up on its own line. */
-  let group = null;
-  const startGroup = (host) => {
-    group = document.createElement('span');
-    group.className = 'urd-tt-group';
-    host.appendChild(group);
-  };
-  // Buttons with an execCommand state (bold, alignment, lists ...) are
-  // marked active when the caret sits in the format. cmd = the
-  // queryCommandState name.
-  const stateButtons = [];
-  const btn = (html, title, run, cmd) => {
-    const b = document.createElement('button');
-    b.innerHTML = html;
-    b.title = title;
-    b.addEventListener('click', () => { run(); reposition(); });
-    group.appendChild(b);
-    if (cmd) stateButtons.push([b, cmd]);
-    return b;
-  };
-
-  // Two FIXED rows (Office/Word style): row 1 = structure + size, row 2 = character formatting + paragraph.
-  // The expandable subrows (colors, spacing, glyphs) go below both.
-  const row1 = document.createElement('div');
-  row1.className = 'urd-tt-row';
-  const row2 = document.createElement('div');
-  row2.className = 'urd-tt-row';
-  bar.append(row1, row2);
 
   // --- Sentinel normalization: one technique for all inline styles on the
   // SELECTION (size, font, letter spacing). execCommand('fontName') does
@@ -2717,124 +2700,14 @@ function initTextToolbar() {
     }
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
-
-  // ---------------- ROW 1: structure and size ----------------
-  // Heading level: a themed dropdown (ADR-0009: never a native select in
-  // editing UI). The dropdown does not steal focus, so the selection
-  // remains.
-  startGroup(row1);
-  const level = createDropdown({
-    value: 'p',
-    title: ta('tt.level'),
-    options: [['p', ta('tt.paragraph')], ['h1', ta('tt.headingN', { n: 1 })], ['h2', ta('tt.headingN', { n: 2 })], ['h3', ta('tt.headingN', { n: 3 })]],
-    onchange: (value) => exec('formatBlock', value),
-  });
-  group.appendChild(level.el);
-
-  // Font for the SELECTION (not the whole field; the field's font lives in
-  // Properties). "Inherit from theme" removes font-family from the
-  // selection.
-  const fontDd = createDropdown({
-    value: '',
-    title: ta('tt.fontTitle'),
-    options: fontChoices(ta, [['', ta('tt.inheritFont')]]),
-    onchange: (v) => { applyInlineStyle('fontFamily', v || null); reposition(); },
-  });
-  group.appendChild(fontDd.el);
-
-  // Size for the SELECTION: a number field with minus/plus (±1px).
-  // The field steals focus, so the selection is saved/restored (as the link editor does).
-  const MINUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 6h7"/></svg>';
-  const PLUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2.5v7M2.5 6h7"/></svg>';
-
-  startGroup(row1);
-  btn(MINUS_SVG, ta('tt.sizeMinus'), () => applySizeStep((cur) => stepSize(cur, -1)));
-  const sizeInput = document.createElement('input');
-  sizeInput.type = 'number';
-  sizeInput.className = 'urd-tt-num urd-tt-size';
-  sizeInput.min = String(SIZE_MIN);
-  sizeInput.max = String(SIZE_MAX);
-  sizeInput.step = '1';
-  sizeInput.title = ta('tt.sizeTitle');
-  const applySizeFromField = () => {
-    restoreSelection();
-    const raw = sizeInput.value.trim();
-    if (raw === '') { applyInlineStyle('fontSize', null); return; }
-    const px = clampSize(Number(raw));
-    if (px == null) return;
-    sizeInput.value = String(px);
-    applyInlineStyle('fontSize', `${px}px`);
-  };
-  // Save the selection BEFORE focus moves to the field (at pointerdown it
-  // is still in the text; by focus it may be gone).
-  sizeInput.addEventListener('pointerdown', saveSelection);
-  sizeInput.addEventListener('change', () => { applySizeFromField(); reposition(); });
-  sizeInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') { event.preventDefault(); applySizeFromField(); activeText?.focus(); reposition(); }
-  });
-  group.appendChild(sizeInput);
-  btn(PLUS_SVG, ta('tt.sizePlus'), () => applySizeStep((cur) => stepSize(cur, 1)));
-
-  // ---------------- ROW 2: character formatting and paragraph ----------------
-  startGroup(row2);
-  // The three are kept for their keys (Ctrl+B, Ctrl+I and Ctrl+U below), which press them.
-  const formatButtons = {
-    b: btn(`<b>${ta('format.boldLetter')}</b>`, ta('tt.bold'), () => exec('bold'), 'bold'),
-    i: btn(`<i>${ta('format.italicLetter')}</i>`, ta('tt.italic'), () => exec('italic'), 'italic'),
-    u: btn(`<u>${ta('format.underlineLetter')}</u>`, ta('tt.underline'), () => exec('underline'), 'underline'),
-  };
-  btn(`<s>${ta('format.strikeLetter')}</s>`, ta('tt.strike'), () => exec('strikeThrough'), 'strikeThrough');
-  btn('<span class="urd-tt-supsub">A<sup>2</sup></span>', ta('tt.superscript'), () => exec('superscript'), 'superscript');
-  btn('<span class="urd-tt-supsub">A<sub>2</sub></span>', ta('tt.subscript'), () => exec('subscript'), 'subscript');
-
-  // Colors: collected in a dropdown row (the palette icon is the dropdown
-  // button), keeping the main toolbar narrow. The row itself is built
-  // further down (colorRow).
-  startGroup(row2);
-  const PALETTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="9" r="1" fill="currentColor"/><circle cx="15.5" cy="9" r="1" fill="currentColor"/><circle cx="8.5" cy="15" r="1" fill="currentColor"/><path d="M21 12a9 9 0 0 1-9 9c2.5-2 1-4.5 3-5.5s6 .5 6-3.5z"/></svg>';
-  btn(PALETTE_SVG, ta('tt.colors'), () => toggleColorRow());
-
-  const alignIcon = (kind) =>
-    `<span class="urd-ticon urd-ticon-${kind}"><i></i><i></i><i></i></span>`;
-  startGroup(row2);
-  btn(alignIcon('left'), ta('tt.alignLeft'), () => exec('justifyLeft'), 'justifyLeft');
-  btn(alignIcon('center'), ta('tt.alignCenter'), () => exec('justifyCenter'), 'justifyCenter');
-  btn(alignIcon('right'), ta('tt.alignRight'), () => exec('justifyRight'), 'justifyRight');
-  btn(alignIcon('justify'), ta('tt.alignJustify'), () => exec('justifyFull'), 'justifyFull');
-  // Line and letter spacing: their own dropdown row behind the spacing button.
-  const SPACING_SVG = '<svg width="16" height="14" viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5v9M1.2 4.2 3 2.4l1.8 1.8M1.2 9.8 3 11.6l1.8-1.8M7.5 3.5h7.5M7.5 7h7.5M7.5 10.5h7.5"/></svg>';
-  btn(SPACING_SVG, ta('tt.spacing'), () => toggleSpacingRow());
-
-  startGroup(row2);
-  btn('<span class="urd-licon"><i></i><i></i><i></i></span>', ta('tt.ul'),
-    () => exec('insertUnorderedList'), 'insertUnorderedList');
-  btn('<span class="urd-licon urd-licon-ol"><i>1</i><i>2</i><i>3</i></span>', ta('tt.ol'),
-    () => exec('insertOrderedList'), 'insertOrderedList');
-  const OUTDENT_SVG = '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 2h12M6.5 6.5h7M1.5 11h12M4.3 4.5 2 6.5l2.3 2"/></svg>';
-  const INDENT_SVG = '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 2h12M6.5 6.5h7M1.5 11h12M2 4.5l2.3 2L2 8.5"/></svg>';
-  btn(OUTDENT_SVG, ta('tt.outdent'), () => applyIndent(-1));
-  btn(INDENT_SVG, ta('tt.indent'), () => applyIndent(1));
-
-  startGroup(row2);
-  const QUOTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5C3.8 5 2 6.8 2 9s1.8 4 4 4c.3 0 .5 0 .8-.1C6.2 14.8 5 16.4 3.4 17.4l1.2 1.8C8 17 10 13.7 10 10.2 10 7.2 8.3 5 6 5z"/><path d="M17 5c-2.2 0-4 1.8-4 4s1.8 4 4 4c.3 0 .5 0 .8-.1-.6 1.9-1.8 3.5-3.4 4.5l1.2 1.8C19 17 21 13.7 21 10.2 21 7.2 19.3 5 17 5z"/></svg>';
-  // Quote is a toggle: if the caret sits in a quote, it becomes a paragraph again.
-  const quoteBtn = btn(QUOTE_SVG, ta('tt.quote'), () => {
+  // Quote is a toggle: where the caret stands in a quote, it becomes a paragraph again.
+  const toggleQuote = () => {
     let inQuote = false;
     try { inQuote = (document.queryCommandValue('formatBlock') || '').toLowerCase() === 'blockquote'; } catch { /* noop */ }
     exec('formatBlock', inQuote ? 'p' : 'blockquote');
-  });
-  // The glyph menu: the same selection as the icon block's glyph picker
-  // (shared module in glyphs.js), inserted at the caret. The button is a
-  // drawn smiley (never emoji in editor chrome); the glyphs themselves are
-  // content.
-  const GLYPH_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9.5" x2="9" y2="9.5"/><line x1="15" y1="9.5" x2="15" y2="9.5"/><path d="M8.5 14.5c.8 1.2 2 2 3.5 2s2.7-.8 3.5-2"/></svg>';
-  btn(GLYPH_SVG, ta('tt.glyphs'), () => toggleGlyphRow());
-
-  startGroup(row2);
-  const LINK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>';
-  const CLEAR_SVG = '<svg width="16" height="14" viewBox="0 0 26 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5h12"/><path d="M11 5L8 19"/><path d="M18 15l6 6"/><path d="M24 15l-6 6"/></svg>';
-  btn(LINK_SVG, ta('tt.link'), () => editLink());
-  btn(CLEAR_SVG, ta('tt.clearFormat'), () => {
+  };
+  // Clear formatting: the marks, the links and the paragraphs' own spacing and indent, all the words left as plain paragraphs.
+  const clearFormatting = () => {
     exec('removeFormat');
     exec('unlink');
     exec('formatBlock', 'p');
@@ -2844,13 +2717,14 @@ function initTextToolbar() {
       el.style.marginLeft = '';
       if (el.getAttribute('style') === '') el.removeAttribute('style');
     }
-  });
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   // A link: the editor's link editor opens over the admin (urd-link-edit), and its answer comes back as urd-link-apply (applyTextLink), which writes it on the selection kept here.
   // A link to a page or a spot on it keeps the page and the spot beside its address (data-urd-page, data-urd-target), which the text's render reads again, so the link follows a change of the page's address.
   /** The link being edited, or null for a new one on the selection. */
   let editedLink = null;
-  /** The text and its block a link was asked for: the focus goes to the editor's link editor meanwhile, which takes the text from the toolbar, so its answer is written where it was asked for.
+  /** The text and its block a link was asked for: the focus goes to the editor's link editor meanwhile, so its answer is written where it was asked for.
       The text's place among its block's texts and the words chosen as paths into it (caret-path.js) find both again on a text drawn anew meanwhile. */
   let linkField = null;
   let linkBlockId = null;
@@ -2859,9 +2733,6 @@ function initTextToolbar() {
   function editLink() {
     // Words that stand inside a link or a button already (the calendar's words) take no link of their own.
     if (!activeText || activeText.closest('a, button')) return;
-    colorRow.classList.remove('visible');
-    glyphRow.classList.remove('visible');
-    spacingRow.classList.remove('visible');
     saveSelection();
     const sel = document.getSelection();
     const node = sel?.anchorNode instanceof Element ? sel.anchorNode : sel?.anchorNode?.parentElement;
@@ -2922,7 +2793,7 @@ function initTextToolbar() {
   };
 
   textLinkApply = (link, pages) => {
-    // The text the link was asked for; the toolbar takes it back with the focus.
+    // The text the link was asked for, which takes the focus back.
     const field = linkTarget();
     linkField = null;
     if (!field) {
@@ -2956,31 +2827,9 @@ function initTextToolbar() {
     editedLink = null;
     // The change is posted as typing is.
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
-    reposition();
+    saveSelection();
+    report();
   };
-
-  // Ctrl+B, Ctrl+I and Ctrl+U (⌘ on a Mac) press the toolbar's own bold, italic and underline, so the keys and the buttons make the same text.
-  document.addEventListener('keydown', (event) => {
-    if (!activeText || !(event.target instanceof Node) || !activeText.contains(event.target)) return;
-    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
-    const button = formatButtons[event.key.toLowerCase()];
-    if (!button) return;
-    event.preventDefault();
-    button.click();
-  });
-
-  // Ctrl+K (⌘K) opens the link editor on the selection, and Ctrl+Shift+K takes the link away.
-  document.addEventListener('keydown', (event) => {
-    if (!activeText || !(event.target instanceof Node) || !activeText.contains(event.target)) return;
-    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 'k') return;
-    event.preventDefault();
-    if (!event.shiftKey) {
-      editLink();
-      return;
-    }
-    exec('unlink');
-    activeText.dispatchEvent(new Event('input', { bubbles: true }));
-  });
 
   // The theme color commands: execCommand can only write a FIXED color;
   // afterwards it is swapped for var(--urd-color-<token>) in the field, so
@@ -3026,280 +2875,104 @@ function initTextToolbar() {
     // The swap happens outside execCommand: dispatch input ourselves, so the draft is saved.
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
-
-  // The color row (the dropdown behind the palette icon): theme colors and
-  // custom text color, then highlighting with accent/custom color and
-  // remove highlight.
-  const colorRow = document.createElement('div');
-  colorRow.className = 'urd-tt-colorrow';
-  bar.appendChild(colorRow);
-  const colorBtn = (html, title, run) => {
-    const b = document.createElement('button');
-    b.innerHTML = html;
-    b.title = title;
-    b.addEventListener('click', () => { run(); reposition(); });
-    colorRow.appendChild(b);
-    return b;
-  };
-  // The color menu does NOT close on choice (so several colors can be
-  // tried); it only closes when the whole toolbar disappears, another
-  // subrow opens, or the palette icon is pressed again (toggleColorRow).
-  //
-  // The shared color picker reports onpick LIVE on every choice. Each
-  // execCommand changes the DOM, so a fixed stored Range becomes invalid.
-  // The selection is therefore renewed after EVERY application
-  // (saveSelection), so the next live call hits the same text.
-  const pickInto = (apply) => (hex) => {
-    restoreSelection();
-    apply(hex);
-    saveSelection();
-  };
-  for (const token of ['text', 'accent']) {
-    const b = colorBtn('', token === 'text' ? ta('tt.textColorTheme') : ta('tt.accentColorTheme'), () => {
-      exec('foreColor', tokenColor(token));
-      themeify(token, 'color');
-    });
-    b.className = 'urd-text-swatch';
-    b.style.background = `var(--urd-color-${token})`;
-  }
-  colorBtn('<span class="urd-tt-acolor">A</span>', ta('tt.customTextColor'), () => {
-    saveSelection();
-    openColorPicker(bar, {
-      value: '#ffffff',
-      onpick: pickInto((hex) => exec('foreColor', hex)),
-    });
-  });
-  const colorSep = document.createElement('span');
-  colorSep.className = 'urd-tt-sep';
-  colorRow.appendChild(colorSep);
-  colorBtn('<span class="urd-tt-hl">A</span>', ta('tt.hlAccent'), () => {
-    exec('hiliteColor', tokenColor('accent'));
-    themeify('accent', 'backgroundColor');
-  });
-  colorBtn('<span class="urd-tt-hl urd-tt-hl-free">A</span>', ta('tt.hlCustom'), () => {
-    saveSelection();
-    openColorPicker(bar, {
-      onpick: pickInto((hex) => exec('hiliteColor', hex)),
-    });
-  });
-  colorBtn('<span class="urd-tt-hl urd-tt-hl-none">A</span>', ta('tt.hlNone'), () => {
-    exec('hiliteColor', 'transparent');
-  });
-
-  function toggleColorRow() {
-    glyphRow.classList.remove('visible');
-    spacingRow.classList.remove('visible');
-    colorRow.classList.toggle('visible');
-  }
-
-  // The glyph row (behind the smiley button): "Recent" + the categories
-  // from the shared glyph module, in a scrollable grid. The glyph is
-  // inserted at the caret via insertText, which fires the input event in
-  // text.js - saving reuses the draft flow. The row is built only when it
-  // opens (several hundred buttons); the recent list is shared with the
-  // admin picker via the same localStorage key.
-  const glyphRow = document.createElement('div');
-  glyphRow.className = 'urd-tt-glyphrow';
-  bar.appendChild(glyphRow);
-  let glyphRowBuilt = false;
-
-  const glyphHeading = (name) => {
-    const h = document.createElement('div');
-    h.className = 'urd-tt-glyphhead';
-    h.textContent = name;
-    return h;
-  };
-  const glyphGrid = () => {
-    const g = document.createElement('div');
-    g.className = 'urd-tt-glyphgrid';
-    return g;
-  };
-  const glyphCell = (host, glyph) => {
-    const b = document.createElement('button');
-    b.textContent = glyph;
-    b.title = ta('tt.insert');
-    b.addEventListener('click', () => {
-      exec('insertText', glyph);
-      saveRecentGlyph(glyph);
-      renderRecentGlyphs();
-      reposition();
-    });
-    host.appendChild(b);
-  };
-
-  const recentGlyphs = document.createElement('div');
-  const renderRecentGlyphs = () => {
-    recentGlyphs.replaceChildren();
-    const recent = readRecentGlyphs();
-    if (!recent.length) return;
-    recentGlyphs.appendChild(glyphHeading(ta('common.recent')));
-    const grid = glyphGrid();
-    recent.forEach((glyph) => glyphCell(grid, glyph));
-    recentGlyphs.appendChild(grid);
-  };
-
-  function toggleGlyphRow() {
-    colorRow.classList.remove('visible');
-    spacingRow.classList.remove('visible');
-    if (glyphRow.classList.contains('visible')) {
-      glyphRow.classList.remove('visible');
+  /** A colour on the selection: a theme colour by its name, which the words keep as the theme's (themeify), or a colour of its own as #rrggbb; the highlight's empty colour takes the highlight away. */
+  const setColour = (styleProp, value) => {
+    const cmd = styleProp === 'color' ? 'foreColor' : 'hiliteColor';
+    if (!value) {
+      if (cmd === 'hiliteColor') exec(cmd, 'transparent');
       return;
     }
-    if (!glyphRowBuilt) {
-      glyphRowBuilt = true;
-      glyphRow.appendChild(recentGlyphs);
-      for (const [name, glyphs] of GLYPH_CATEGORIES) {
-        glyphRow.appendChild(glyphHeading(ta(name)));
-        const grid = glyphGrid();
-        glyphs.split(' ').forEach((glyph) => glyphCell(grid, glyph));
-        glyphRow.appendChild(grid);
-      }
+    if (/^#[0-9a-f]{3,8}$/i.test(value)) {
+      exec(cmd, value);
+      return;
     }
-    renderRecentGlyphs();
-    glyphRow.classList.add('visible');
-    reposition();
-  }
-
-  // The spacing row (behind the spacing button): the line-height presets
-  // and letter spacing for the SELECTION. Line height applies to the
-  // paragraphs in the selection, letter spacing to the characters.
-  // Everything is additive inline; "Inherit" removes the override.
-  const spacingRow = document.createElement('div');
-  spacingRow.className = 'urd-tt-spacerow';
-  bar.appendChild(spacingRow);
-
-  const spacingLabel = (text) => {
-    const s = document.createElement('span');
-    s.className = 'urd-tt-typolabel';
-    s.textContent = text;
-    return s;
+    if (!/^[a-z][a-z0-9-]*$/i.test(value)) return;
+    exec(cmd, tokenColor(value));
+    themeify(value, styleProp);
   };
-  spacingRow.appendChild(spacingLabel(ta('tt.lineHeight')));
-  // The numeric labels follow the admin locale's decimal separator.
-  const lhFormat = new Intl.NumberFormat(adminLang(), { minimumFractionDigits: 1, maximumFractionDigits: 2 });
-  for (const [value] of LINE_HEIGHTS) {
-    const b = document.createElement('button');
-    b.className = 'urd-tt-lh';
-    const label = value ? lhFormat.format(Number(value)) : ta('common.inherit');
-    b.textContent = label;
-    b.title = value ? ta('tt.lineHeightN', { label }) : ta('tt.inheritLh');
-    b.addEventListener('click', () => { setLineHeight(value); reposition(); });
-    spacingRow.appendChild(b);
-  }
-  const spacingSep = document.createElement('span');
-  spacingSep.className = 'urd-tt-sep';
-  spacingRow.appendChild(spacingSep);
-  spacingRow.appendChild(spacingLabel(ta('tt.letterSpacing')));
-  const lsInput = document.createElement('input');
-  lsInput.type = 'number';
-  lsInput.className = 'urd-tt-num';
-  lsInput.min = '-2';
-  lsInput.max = '10';
-  lsInput.step = '0.1';
-  lsInput.placeholder = ta('common.inherit');
-  lsInput.title = ta('tt.letterSpacingTitle');
-  const applyLetterSpacing = () => {
-    restoreSelection();
-    const raw = lsInput.value.trim();
-    applyInlineStyle('letterSpacing', raw === '' ? null : `${Number(raw)}px`);
+
+  /** The editor's bar's commands, by name: each on the selection kept here. */
+  const COMMANDS = {
+    level: (value) => { if (['p', 'h1', 'h2', 'h3'].includes(value)) exec('formatBlock', value); },
+    font: (value) => applyInlineStyle('fontFamily', value || null),
+    size: (value) => {
+      if (value === '' || value == null) { applyInlineStyle('fontSize', null); return; }
+      const px = clampSize(Number(value));
+      if (px != null) applyInlineStyle('fontSize', `${px}px`);
+    },
+    sizeStep: (value) => applySizeStep((cur) => stepSize(cur, Math.sign(Number(value)) || 1)),
+    mark: (value) => { if (TEXT_MARKS.includes(value)) exec(value); },
+    indent: (value) => applyIndent(Math.sign(Number(value)) || 1),
+    quote: () => toggleQuote(),
+    colour: (value) => setColour('color', value),
+    highlight: (value) => setColour('backgroundColor', value),
+    lineHeight: (value) => setLineHeight(LINE_HEIGHTS.some(([v]) => v === value) ? value : ''),
+    letterSpacing: (value) => applyInlineStyle('letterSpacing', value === '' || value == null || !Number.isFinite(Number(value)) ? null : `${Number(value)}px`),
+    glyph: (value) => { if (typeof value === 'string' && value) exec('insertText', value); },
+    link: () => editLink(),
+    unlink: () => { exec('unlink'); activeText.dispatchEvent(new Event('input', { bubbles: true })); },
+    clear: () => clearFormatting(),
   };
-  lsInput.addEventListener('pointerdown', saveSelection);
-  lsInput.addEventListener('change', () => { applyLetterSpacing(); reposition(); });
-  lsInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') { event.preventDefault(); applyLetterSpacing(); activeText?.focus(); reposition(); }
-  });
-  spacingRow.appendChild(lsInput);
 
-  function toggleSpacingRow() {
-    colorRow.classList.remove('visible');
-    glyphRow.classList.remove('visible');
-    spacingRow.classList.toggle('visible');
-  }
-
-  document.body.appendChild(bar);
-
-  // The toolbar is shown while a text field has focus, anchored at the
-  // SELECTION (the block rect as fallback), clamped below the page's
-  // sticky menu.
-  let activeText = null;
-  // The block id of the active field: prop changes (the typography row,
-  // the Properties panel) re-render the section and swap out the element,
-  // so the toolbar finds it again via the id. Cleared on deliberate close,
-  // otherwise the toolbar would never let go.
-  let activeBlockId = null;
-
-  const reposition = () => {
+  textCommandRun = (cmd, value, focus) => {
     if (activeBlockId && (!activeText || !activeText.isConnected)) {
       activeText = document.querySelector(`.urd-block[data-block-id="${activeBlockId}"] .urd-text[contenteditable="true"]`);
     }
-    if (!activeText || !activeText.isConnected) {
-      bar.classList.remove('visible');
-      colorRow.classList.remove('visible');
-      glyphRow.classList.remove('visible');
-      spacingRow.classList.remove('visible');
-      return;
-    }
-    // The toolbar is always anchored at the TOP of the text field (the
-    // block), not at the caret, so it stays put while typing. An invalid
-    // rect (the block not laid out yet) must not move the toolbar.
-    const block = activeText.closest('.urd-block') ?? activeText;
-    const anchor = block.getBoundingClientRect();
-    if (!anchor || (!anchor.width && !anchor.height)) return;
-    bar.classList.add('visible');
-    const navHeight = document.getElementById('urd-nav')?.offsetHeight ?? 0;
-    // The bar's drawn size (it is counter-scaled with the preview zoom), so
-    // the gap is the same at every zoom.
-    const barRect = bar.getBoundingClientRect();
-    const left = Math.max(8, Math.min(anchor.left, window.innerWidth - barRect.width - 8));
-    // Above the block's own toolbar when that sits above the block, so the
-    // two bars stack instead of covering each other; a toolbar flipped
-    // under the block takes no room here.
-    const chrome = block.querySelector(':scope > .urd-edit-toolbar');
-    const chromeH = chrome && !chrome.classList.contains('urd-toolbar-under') ? chrome.getBoundingClientRect().height : 0;
-    let top = anchor.top - barRect.height - chromeH - 10;
-    // Above the block; but never under the sticky menu (then it is clamped
-    // right below the menu, still near the top of the field).
-    if (top < navHeight + 8) top = navHeight + 8;
-    bar.style.left = `${left}px`;
-    bar.style.top = `${top}px`;
-    // The level picker and quote button mirror the caret's position.
-    try {
-      const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
-      level.set(['h1', 'h2', 'h3'].includes(value) ? value : 'p');
-      quoteBtn.classList.toggle('active', value === 'blockquote');
-    } catch { /* some browsers refuse before the first command */ }
-    // The format buttons (bold, italic, alignment, lists,
-    // superscript/subscript) are marked active when the caret sits in the
-    // format.
-    for (const [b, cmd] of stateButtons) {
-      let on = false;
-      try { on = document.queryCommandState(cmd); } catch { /* noop */ }
-      b.classList.toggle('active', on);
-    }
-    syncTypoControls();
+    const run = COMMANDS[cmd];
+    if (!activeText || !run) return;
+    // The selection as it stood is held through the focus, whose own focusin saves the caret wherever the browser put it.
+    const kept = savedRange;
+    if (focus) activeText.focus({ preventScroll: true });
+    savedRange = kept;
+    restoreSelection();
+    run(value);
+    saveSelection();
+    report();
   };
 
-  // The size field and font dropdown mirror the selection. Run from
-  // reposition (selectionchange), never while the user is typing in the
-  // field itself.
-  let lastFontSet = '';
+  // Ctrl+B, Ctrl+I and Ctrl+U (⌘ on a Mac) are the bar's bold, italic and underline, so the keys and the bar make the same text.
+  const MARK_KEYS = { b: 'bold', i: 'italic', u: 'underline' };
+  document.addEventListener('keydown', (event) => {
+    if (!activeText || !(event.target instanceof Node) || !activeText.contains(event.target)) return;
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
+    const mark = MARK_KEYS[event.key.toLowerCase()];
+    if (!mark) return;
+    event.preventDefault();
+    exec(mark);
+    report();
+  });
+
+  // Ctrl+K (⌘K) opens the link editor on the selection, and Ctrl+Shift+K takes the link away.
+  document.addEventListener('keydown', (event) => {
+    if (!activeText || !(event.target instanceof Node) || !activeText.contains(event.target)) return;
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 'k') return;
+    event.preventDefault();
+    if (!event.shiftKey) {
+      editLink();
+      return;
+    }
+    exec('unlink');
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  // The text being written, and its block's id: a change of its props (the text style, the Properties panel) draws the section again and swaps the element, so it is found again by the id. Cleared on a deliberate end, so the tools let go.
+  let activeText = null;
+  let activeBlockId = null;
+
+  /** The size the selection holds: the one where the caret stands, or the one every selected run shares; null for none or a mix. */
   const styledAncestor = (node) => {
-    let el = node?.nodeType === 3 ? node.parentElement : node;
+    const el = node?.nodeType === 3 ? node.parentElement : node;
     return el instanceof HTMLElement && activeText.contains(el) ? el : null;
   };
   const selectionSize = () => {
     const sel = document.getSelection();
     if (!sel || !sel.rangeCount) return null;
     const range = sel.getRangeAt(0);
-    // Collapsed caret: the size where the caret sits.
     if (range.collapsed) {
       const el = styledAncestor(range.startContainer);
       return el ? Math.round(parseFloat(getComputedStyle(el).fontSize)) : null;
     }
-    // Otherwise: measure the actual size of every SELECTED text run. We
-    // walk the text nodes, not the selection endpoints, because those can
-    // point at a container (after reselect with setStartBefore) and yield
-    // the field's base size.
+    // Every SELECTED text run is measured, not the selection's ends, which can point at a container after a reselect and read the field's base size.
     const sizes = new Set();
     const walker = document.createTreeWalker(activeText, NodeFilter.SHOW_TEXT);
     let n;
@@ -3308,8 +2981,7 @@ function initTextToolbar() {
         sizes.add(Math.round(parseFloat(getComputedStyle(n.parentElement).fontSize)));
       }
     }
-    if (sizes.size === 0) return null;
-    return sizes.size === 1 ? [...sizes][0] : null; // mixed -> empty
+    return sizes.size === 1 ? [...sizes][0] : null;
   };
   const selectionFamily = () => {
     let el = styledAncestor(document.getSelection()?.anchorNode);
@@ -3320,28 +2992,76 @@ function initTextToolbar() {
     }
     return '';
   };
-  const syncTypoControls = () => {
-    if (document.activeElement !== sizeInput) {
-      const px = selectionSize();
-      const shown = px == null ? '' : String(px);
-      if (sizeInput.value !== shown) sizeInput.value = shown;
+  /** The state the bar shows: the level and the quote where the caret stands, the marks pressed, the size and the font the selection holds, and whether the words can take a link. */
+  const textState = () => {
+    let level = 'p';
+    let quote = false;
+    try {
+      const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
+      level = ['h1', 'h2', 'h3'].includes(value) ? value : 'p';
+      quote = value === 'blockquote';
+    } catch { /* some browsers refuse before the first command */ }
+    const marks = {};
+    for (const cmd of TEXT_MARKS) {
+      try { marks[cmd] = document.queryCommandState(cmd); } catch { marks[cmd] = false; }
     }
-    const wantFont = matchFontStack(selectionFamily()) || '';
-    if (wantFont !== lastFontSet) { fontDd.set(wantFont); lastFontSet = wantFont; }
+    return { level, quote, marks, size: selectionSize(), font: matchFontStack(selectionFamily()) || '', linkable: !activeText.closest('a, button') };
   };
+
+  /** Whether the editor's bar stands for a text now, so its end is told once. */
+  let reported = false;
+  let reportFrame = 0;
+  /**
+   * Tells the editor where the text being written stands and what its selection holds (urd-text-state), once a frame: its block's box in the canvas, above the block's own bar where that stands over it, so the editor's bar can stand clear of both; an empty message when no text is being written.
+   */
+  function report() {
+    if (reportFrame) return;
+    reportFrame = requestAnimationFrame(() => {
+      reportFrame = 0;
+      if (activeBlockId && (!activeText || !activeText.isConnected)) {
+        activeText = document.querySelector(`.urd-block[data-block-id="${activeBlockId}"] .urd-text[contenteditable="true"]`);
+      }
+      const block = activeText?.isConnected ? activeText.closest('.urd-block') ?? activeText : null;
+      const box = block?.getBoundingClientRect();
+      if (!block || !box || (!box.width && !box.height) || document.body.classList.contains('urd-chrome-off')) {
+        if (reported) post({ type: 'urd-text-state', blockId: null });
+        reported = false;
+        return;
+      }
+      const chrome = block.querySelector(':scope > .urd-edit-toolbar');
+      const chromeTop = chrome && !chrome.classList.contains('urd-toolbar-under') ? chrome.getBoundingClientRect().top : box.top;
+      reported = true;
+      post({
+        type: 'urd-text-state',
+        blockId: activeBlockId,
+        rect: { left: box.left, top: Math.min(box.top, chromeTop), right: box.right, bottom: box.bottom },
+        state: textState(),
+      });
+    });
+  }
+
+  /** The text's writing ended: it lets go of the focus and the tools of their text. */
+  const endWriting = () => {
+    if (!activeText) return;
+    activeText.blur();
+    activeText = null;
+    activeBlockId = null;
+    savedRange = null;
+    report();
+  };
+  textEditEnd = endWriting;
 
   document.addEventListener('focusin', (event) => {
     const target = event.target instanceof HTMLElement
       ? event.target.closest('.urd-text[contenteditable="true"]')
       : null;
-    if (target && target !== activeText) {
+    if (!target) return;
+    if (target !== activeText) {
       activeText = target;
       activeBlockId = target.closest('.urd-block')?.dataset.blockId ?? null;
-      colorRow.classList.remove('visible');
-      glyphRow.classList.remove('visible');
-      spacingRow.classList.remove('visible');
     }
-    if (target) reposition();
+    saveSelection();
+    report();
   });
   // A font or a size for the whole text, from the block's menu (urd-text-style): written on every leaf paragraph and list item of the field, and taken off the runs inside, so the whole text reads alike (text-whole.js); null takes the theme's value back.
   document.addEventListener('urd-text-style', (event) => {
@@ -3352,49 +3072,48 @@ function initTextToolbar() {
     activeBlockId = field.closest('.urd-block')?.dataset.blockId ?? null;
     applyWholeStyle(field, style);
     field.dispatchEvent(new Event('input', { bubbles: true }));
-    reposition();
+    report();
   });
   document.addEventListener('focusout', () => {
-    // Wait a beat: focus may be on its way to the toolbar itself or the color picker's sliders and fields (a separate card).
+    // Wait a beat: the focus may be on its way to the colour picker's fields. Focus gone out of the canvas's document (the editor's text bar and its fields) keeps the writing, which the editor ends itself (urd-text-end).
     requestAnimationFrame(() => {
+      if (!document.hasFocus()) return;
       const el = document.activeElement;
-      if (el instanceof HTMLElement && (bar.contains(el) || el.closest('.urd-text[contenteditable="true"], .urd-cp'))) return;
+      if (el instanceof HTMLElement && el.closest('.urd-text[contenteditable="true"], .urd-cp')) return;
       // Was the field SWAPPED OUT by a re-render (typography/panel
-      // change), not abandoned by the user? Then reposition reconnects
-      // via the block id instead of closing the toolbar.
+      // change), not abandoned by the user? Then report reconnects
+      // via the block id instead of ending the writing.
       if (activeText && !activeText.isConnected && activeBlockId) {
-        reposition();
+        report();
         return;
       }
       activeText = null;
       activeBlockId = null;
-      reposition();
+      report();
     });
   });
-  // A click anywhere outside the field closes the toolbar. The surface
+  // A press anywhere in the canvas outside the field ends the writing. The surface
   // drag in preview swallows mousedown (preventDefault), so the text field
-  // never loses focus by itself; it is therefore closed explicitly here.
-  // Clicks in the toolbar, the color picker, the image editor or another
-  // text field must NOT close it (they handle themselves).
+  // never loses focus by itself; it is therefore ended explicitly here.
+  // Presses in the color picker, the image editor or another
+  // text field must NOT end it (they handle themselves).
   document.addEventListener('pointerdown', (event) => {
     if (!activeText) return;
     const target = event.target instanceof Element ? event.target : null;
-    if (!target) return;
-    if (bar.contains(target) || activeText.contains(target)) return;
+    if (!target || activeText.contains(target)) return;
     if (target.closest('.urd-text[contenteditable="true"], .urd-cp, .urd-imged, .urd-dd-menu')) return;
-    activeText.blur();
-    activeText = null;
-    activeBlockId = null;
-    reposition();
+    endWriting();
   }, true);
   document.addEventListener('selectionchange', () => {
-    // Only when the selection actually sits in the active field; otherwise
-    // clicks elsewhere would reposition the toolbar out of context.
+    // Only when the selection actually sits in the active field: it is kept for the bar's commands, and the bar shows what it holds.
     const sel = document.getSelection();
-    if (activeText && sel?.anchorNode && activeText.contains(sel.anchorNode)) reposition();
+    if (activeText && sel?.anchorNode && activeText.contains(sel.anchorNode)) {
+      saveSelection();
+      report();
+    }
   });
-  window.addEventListener('scroll', () => { if (activeText) reposition(); }, { passive: true, capture: true });
-  window.addEventListener('resize', () => { if (activeText) reposition(); });
+  window.addEventListener('scroll', () => { if (activeText) report(); }, { passive: true, capture: true });
+  window.addEventListener('resize', () => { if (activeText) report(); });
 }
 
 /** The section's height brought to its blocks, one grid step under the lowest, from its bar or its right-click menu. */
@@ -3786,6 +3505,9 @@ function rowAtOffset(tracks, y) {
   return tracks.length + 1 + Math.max(0, Math.floor((y - sum) / MOBILE_ROW));
 }
 
+/** How long a press stands still on the selected block's words on the phone before it chooses words as it moves, instead of dragging the block (moveToDrag). */
+const HOLD_TO_SELECT_MS = 400;
+
 /**
  * The row (1-based) whose top edge lies nearest a y offset from the row grid's content top: where a block dragged on the rows lands, before a grown row while its top is over that row's upper half and after it over its lower half, the room under a block being its row's.
  * Past the last track the grid continues in MOBILE_ROW steps.
@@ -4008,6 +3730,10 @@ function toggleMulti(el) {
 function selectBlock(el, opts = {}) {
   if (!opts.keepMulti) clearMulti();
   const previous = selectedBlockId;
+  // A block lifted with the keys on the phone goes back when the selection leaves it.
+  document.querySelectorAll('.urd-block.urd-selected').forEach((b) => {
+    if (b !== el) b._urdCarry?.cancel();
+  });
   selectedBlockId = el?.dataset.blockId ?? null;
   document.querySelectorAll('.urd-block.urd-selected').forEach((b) => {
     if (b !== el) b.classList.remove('urd-selected');
@@ -4194,12 +3920,18 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  const el = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`);
+  // A block lifted with the keys on the phone lands on Enter and goes back on Escape.
+  if (el?._urdCarry && (event.key === 'Enter' || event.key === 'Escape')) {
+    event.preventDefault();
+    if (event.key === 'Enter') el._urdCarry.land(); else el._urdCarry.cancel();
+    return;
+  }
   if (event.key === 'Escape') {
     selectBlock(null);
     return;
   }
 
-  const el = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`);
   const ctx = el?._urdCtx;
   if (!ctx) return;
 
@@ -4356,11 +4088,10 @@ function phoneArrow(event, ctx, el, dir) {
   const { section, block } = ctx;
   const placed = block.frames.mobile;
   if (!Number.isFinite(placed?.row)) {
-    if (!event.altKey) return;
-    // Alt with any arrow belongs to the selected block, so the browser's own Back and Forward do not fire.
+    // Alt with an arrow lifts a flowing block (phoneCarry), and the arrows then walk where it will land; a lifted block takes the arrows alone.
+    if (!el._urdCarry && !event.altKey) return;
     event.preventDefault();
-    if (!dir[1]) return;
-    stepPhone(section, block, dir[1], true);
+    (el._urdCarry ?? el._urdLift?.())?.step(dir);
     return;
   }
   event.preventDefault();
@@ -4451,7 +4182,7 @@ document.addEventListener('pointerdown', (event) => {
   const target = eventTarget(event);
   const host = target?.closest('.urd-section');
   if (!host) return;
-  if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar, .urd-text-toolbar')) return;
+  if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar')) return;
 
   // The marquee rectangle and hit detection are measured against the
   // content surface: the blocks' offsetLeft/offsetTop are relative to it
@@ -5098,6 +4829,21 @@ function enhanceBlock(el, block, section, grid, host) {
     barBody.appendChild(resetBtn);
   }
 
+  // A block with words of its own on the phone (ADR-0033): a mark in the phone view, beside the pin of a block placed by hand, standing from the first word typed there, since the typing draws nothing again.
+  if (mobile && PHONE_WORDS[block.type]) {
+    const markWords = () => {
+      if (el.querySelector(':scope > .urd-phone-words')) return;
+      const words = document.createElement('div');
+      words.className = 'urd-phone-words';
+      words.classList.toggle('urd-phone-words-beside', Boolean(block.frames.mobile));
+      words.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9"/></svg>';
+      words.title = ta('canvas.phoneWords');
+      el.appendChild(words);
+    };
+    if (Object.keys(phoneWordsOf(block.type, block.phoneProps)).length) markWords();
+    el.addEventListener('input', markWords);
+  }
+
   // In the phone view the block's design on a phone and its menu are one press away too: the design button opens the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS), its design otherwise, and the gear its menu.
   if (mobile) {
     if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, block.type === 'calendar' || Boolean(PHONE_DESIGNS[block.type])));
@@ -5335,12 +5081,22 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /** The other units on the phone (phone-moves.js phoneTree: a block alone, or a stack's or a column's blocks), each with its box in the row grid as drawn, without the dragged block: where a drag can land. */
-  function unitBoxes(flowEl) {
+  function unitBoxes(flowEl, placed = null) {
     const out = [];
+    /** A block's box: where the preview shows it, else where it stands. */
+    const boxOf = (ids) => {
+      if (!placed) return boxOnPhone(flowEl, ids);
+      const rects = ids.map((id) => placed.get(id)).filter(Boolean);
+      if (!rects.length) return boxOnPhone(flowEl, ids);
+      return { left: Math.min(...rects.map((r) => r.left)), top: Math.min(...rects.map((r) => r.top)), right: Math.max(...rects.map((r) => r.left + r.width)), bottom: Math.max(...rects.map((r) => r.top + r.height)) };
+    };
     for (const node of phoneTree(section.blocks, phoneSetupOf(section))) {
       const ids = (node.children ? node.children.map((c) => c.id) : [node.id]).filter((id) => id !== block.id);
-      const box = boxOnPhone(flowEl, ids);
-      if (box) out.push({ id: ids[0], ...box });
+      const box = boxOf(ids);
+      if (!box) continue;
+      // A unit of several blocks carries each one's height, so a drop above or below lands on the block under the pointer.
+      const members = ids.length > 1 ? ids.map((id) => ({ id, ...boxOf([id]) })).filter((m) => Number.isFinite(m.top)) : null;
+      out.push({ id: ids[0], ...box, ...(members ? { members } : {}) });
     }
     return out;
   }
@@ -5413,8 +5169,190 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * A flowing block dragged on the phone canvas (0.7.3.15): it follows the pointer over the section, the eight cell columns shown, and lands where phoneDropAt reads the pointer over the other units: before or after one, or the line of units it stands in, across the row, beside one sharing its cells, or into one as a stack (phoneDropChange), the change posted as one undo step; over its own place it lands nowhere.
-   * The landing place is marked as the drag goes: a line before or after a line of units, the cells it will stand in, or the unit it joins.
+   * The section shown as a drop on the phone would leave it, while the dragged block is held over a place (flowDrag): the section drawn out of sight with the change written in (phoneChangeApplied), each block's place there measured, and the shown blocks gliding to those places by transform, the dragged block's place a dashed box; the place the block left keeps its room unmarked.
+   * A change of none puts every block back where it stood; the end takes the box away, the section then drawn again from the draft.
+   * A block sized in place (`lifted` false, its corner handle) glides to its own new size and place with the others, and has no dashed box.
+   * @returns {{show: (change: object|null) => void, placed: () => Map<string, object>|null, mine: () => object|null, end: () => void}}
+   */
+  function phonePreview(flowEl, hold, { lifted = true } = {}) {
+    const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // The blocks glide to their places; a width is taken at once, so a block's place is measured at the width it will have.
+    const ease = motion ? 'transform 180ms ease' : 'none';
+    /** The blocks moved, each with the inline style it had, and the flow's own least height. */
+    const moved = new Map();
+    let flowMin = null;
+    let shownKey = '';
+    let landing = null;
+    /** A block's place in its flow as laid out, its moves by transform left out. */
+    const laidOut = (node) => {
+      let x = 0;
+      let y = 0;
+      for (let n = node; n && n !== flowEl; n = n.offsetParent) {
+        x += n.offsetLeft;
+        y += n.offsetTop;
+      }
+      return { x, y };
+    };
+    /** Where the preview shows each block, by id, in the flow's px; null while the section stands as it is. */
+    let placed = null;
+    let mine = null;
+    const back = () => {
+      placed = null;
+      mine = null;
+      for (const [node, was] of moved) {
+        node.style.transition = ease;
+        node.style.transform = was.transform;
+        node.style.width = was.width;
+      }
+      if (flowMin !== null) Object.assign(flowEl.style, flowMin);
+      landing?.remove();
+      landing = null;
+      hold?.classList.remove('urd-phone-hold-quiet');
+    };
+    const show = (change) => {
+      const key = change ? JSON.stringify(change) : '';
+      if (key === shownKey) return;
+      shownKey = key;
+      if (!change || !siteNow) {
+        back();
+        return;
+      }
+      const wrap = document.createElement('div');
+      wrap.setAttribute('aria-hidden', 'true');
+      wrap.inert = true;
+      Object.assign(wrap.style, { position: 'absolute', left: `${host.offsetLeft}px`, top: `${host.offsetTop}px`, width: `${host.offsetWidth}px`, visibility: 'hidden', pointerEvents: 'none' });
+      const ghost = document.createElement('section');
+      wrap.appendChild(ghost);
+      host.after(wrap);
+      try {
+        renderSection(phoneChangeApplied(section, change), siteNow, ghost, { viewport: 'mobile', measure: true });
+        const gFlow = ghost.querySelector('.urd-flow');
+        if (!gFlow) return;
+        const gf = gFlow.getBoundingClientRect();
+        const target = (id) => {
+          const r = gFlow.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.getBoundingClientRect();
+          return r && (r.width || r.height) ? { left: r.left - gf.left, top: r.top - gf.top, width: r.width, height: r.height } : null;
+        };
+        // Every block takes its width first, then each is measured where the grid lays it out at those widths, its rows at their own heights, then moved there.
+        if (flowMin === null) flowMin = { minHeight: flowEl.style.minHeight, alignContent: flowEl.style.alignContent };
+        flowEl.style.alignContent = 'start';
+        const plan = [];
+        placed = new Map();
+        for (const node of flowEl.querySelectorAll('.urd-block')) {
+          if ((lifted && node === el) || !node.offsetParent) continue;
+          const t = target(node.dataset.blockId);
+          if (!t) continue;
+          placed.set(node.dataset.blockId, t);
+          if (!moved.has(node)) moved.set(node, { transform: node.style.transform, width: node.style.width, transition: node.style.transition });
+          node.style.transition = ease;
+          node.style.width = `${t.width}px`;
+          plan.push([node, t]);
+        }
+        for (const [node, t] of plan) {
+          const base = laidOut(node);
+          node.style.transform = `translate(${t.left - base.x}px, ${t.top - base.y}px) ${moved.get(node).transform}`.trim();
+        }
+        // The section keeps room for the layout shown, its rows at their own heights rather than stretched to that room.
+        flowEl.style.minHeight = `${Math.max(gFlow.offsetHeight, flowEl.offsetHeight)}px`;
+        mine = lifted ? target(block.id) : null;
+        if (!mine) return;
+        if (!landing) {
+          landing = document.createElement('div');
+          landing.className = 'urd-phone-landing';
+          landing.setAttribute('aria-hidden', 'true');
+          flowEl.appendChild(landing);
+        }
+        Object.assign(landing.style, { left: `${mine.left}px`, top: `${mine.top}px`, width: `${mine.width}px`, height: `${mine.height}px` });
+        hold?.classList.add('urd-phone-hold-quiet');
+      } finally {
+        wrap.remove();
+      }
+    };
+    return {
+      show,
+      /** Where the preview shows the blocks, or null while the section stands as it is. */
+      placed: () => placed,
+      /** Where the preview shows the dragged block, in the flow's px, or null. */
+      mine: () => (mine ? { left: mine.left, top: mine.top, right: mine.left + mine.width, bottom: mine.top + mine.height } : null),
+      end: () => {
+        landing?.remove();
+        landing = null;
+        // The blocks take their own transitions back once they have glided home, so a hover's own transition is theirs again.
+        setTimeout(() => {
+          for (const [node, was] of moved) node.style.transition = was.transition;
+        }, motion ? 200 : 0);
+      },
+    };
+  }
+
+  /**
+   * A flowing block lifted with the keys on the phone (Alt with an arrow): the arrows walk where it will land through the places phoneKeyDrops lists, Up and Down along the order, Left and Right beside the place's unit, and the block glides to each place in the landing's dashed outline while the others make room (phonePreview). Enter lands it as a release does, and Escape, a press anywhere or the selection leaving the block puts everything back.
+   */
+  function phoneCarry() {
+    const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
+    if (!flowEl || el._urdCarry) return el._urdCarry ?? null;
+    const setup = phoneSetupOf(section);
+    const { drops, home } = phoneKeyDrops(section.blocks, setup, block.id);
+    if (!drops.length) return null;
+    const marks = phoneDragMarks(flowEl);
+    marks.land.remove();
+    const view = phonePreview(flowEl, null, { lifted: false });
+    el.classList.add('urd-phone-carried');
+    let at = home;
+    let side = null;
+    let change = null;
+    const changeAt = (drop) => phoneDropChange(section.blocks, setup, block.id, drop);
+    const show = () => {
+      const drop = side ? { pos: side, of: drops[at].of } : drops[at];
+      change = changeAt(drop);
+      view.show(change);
+    };
+    const end = () => {
+      view.end();
+      marks.remove();
+      el.classList.remove('urd-phone-carried');
+      document.removeEventListener('pointerdown', cancel, true);
+      delete el._urdCarry;
+    };
+    const cancel = () => {
+      view.show(null);
+      end();
+    };
+    const carry = {
+      /** One step: Up and Down to the next place along the order whose outcome differs, Left and Right beside the place's unit. */
+      step(dir) {
+        if (dir[0]) {
+          side = side === (dir[0] < 0 ? 'left' : 'right') ? null : dir[0] < 0 ? 'left' : 'right';
+          show();
+          return;
+        }
+        side = null;
+        const was = change ? JSON.stringify(change) : '';
+        let next = at;
+        do {
+          next += dir[1];
+          if (next < 0 || next >= drops.length) return;
+        } while ((changeAt(drops[next]) ? JSON.stringify(changeAt(drops[next])) : '') === was);
+        at = next;
+        show();
+      },
+      land() {
+        const done = change;
+        end();
+        if (done) post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change: done });
+        else post({ type: 'urd-redraw-section', sectionId: section.id });
+      },
+      cancel,
+    };
+    el._urdCarry = carry;
+    document.addEventListener('pointerdown', cancel, true);
+    return carry;
+  }
+  el._urdLift = phoneCarry;
+
+  /**
+   * A flowing block dragged on the phone canvas (0.7.3.15): it follows the pointer over the section, the eight cell columns shown, the section showing as it goes where the block would land (the preview, the other blocks gliding to their places), and lands where phoneDropAt reads the pointer over the other units: before or after one, or the line of units it stands in, across the row, beside one in the columns free there, or above or below one in its column as a stack (phoneDropChange), the change posted as one undo step; over its own place it lands nowhere.
+   * The landing place is marked as the drag goes: a line before or after a line of units, the columns it will take beside a unit, or the half of a block it goes above or below in that block's column.
    */
   function flowDrag(handle, event, opts = {}) {
     const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
@@ -5425,30 +5363,56 @@ function enhanceBlock(el, block, section, grid, host) {
     let at = null;
     let marks = null;
     let boxes = [];
-    let own = null;
+    let hold = null;
     let drop = null;
+    /** The section as the drop would leave it, shown while the block is held over a place, and the change it shows. */
+    let view = null;
+    let change = null;
+    /** The block's own place as the drag began, in the flow's px. */
+    let own = null;
     const begin = () => {
       started = true;
       const lifted = liftOnPhone(flowEl, handle, event);
       at = lifted.at;
+      hold = lifted.hold;
       marks = phoneDragMarks(flowEl);
       boxes = unitBoxes(flowEl);
       const fr = flowEl.getBoundingClientRect();
-      const r = lifted.hold.getBoundingClientRect();
+      const r = hold.getBoundingClientRect();
       own = { left: r.left - fr.left, top: r.top - fr.top, right: r.right - fr.left, bottom: r.bottom - fr.top };
+      view = phonePreview(flowEl, hold);
     };
     if (threshold === 0) begin();
     const showLand = () => {
+      // While the section shows the drop's outcome, its dashed box says where the block lands.
+      if (change) {
+        marks.land.hidden = true;
+        return;
+      }
       const box = drop && boxes.find((b) => b.id === drop.of);
-      marks.land.hidden = !box;
-      if (!box) return;
+      // Beside a unit the mark stands on the columns the block will take there (phoneDropChange), level with the unit; a drop that changes nothing has none.
+      const beside = box && (drop.pos === 'left' || drop.pos === 'right')
+        ? phoneDropChange(section.blocks, phoneSetupOf(section), block.id, drop)?.cells?.[block.id] ?? null
+        : null;
+      marks.land.hidden = !box || ((drop.pos === 'left' || drop.pos === 'right') && !beside);
+      if (marks.land.hidden) return;
       const fw = flowEl.clientWidth;
-      const mid = (box.left + box.right) / 2;
+      const colW = (fw * 0.9) / PHONE_COLUMNS;
       const place = drop.pos === 'before' ? { kind: 'line', left: fw * 0.05, top: drop.at - 4, width: fw * 0.9, height: 3 }
         : drop.pos === 'after' ? { kind: 'line', left: fw * 0.05, top: drop.at + 1, width: fw * 0.9, height: 3 }
-        : drop.pos === 'left' ? { kind: 'cell', left: box.left, top: box.top, width: mid - box.left, height: box.bottom - box.top }
-        : drop.pos === 'right' ? { kind: 'cell', left: mid, top: box.top, width: box.right - mid, height: box.bottom - box.top }
-        : { kind: 'into', left: box.left, top: box.top, width: box.right - box.left, height: box.bottom - box.top };
+        : beside ? { kind: 'cell', left: fw * 0.05 + (beside.col - 1) * colW, top: box.top, width: beside.cols * colW, height: box.bottom - box.top }
+        : (() => {
+          // Above or below a block alone across the row: the line before or after it, its column being the row.
+          if (!box.members && box.right - box.left >= fw * 0.85) {
+            return { kind: 'line', left: fw * 0.05, top: drop.pos === 'above' ? box.top - 4 : box.bottom + 1, width: fw * 0.9, height: 3 };
+          }
+          // Above or below: the half of the block under the pointer that the dragged block takes, in the unit's columns.
+          const span = box.members?.find((m) => m.id === drop.member) ?? box;
+          const mid = (span.top + span.bottom) / 2;
+          return drop.pos === 'above'
+            ? { kind: 'cell', left: box.left, top: span.top, width: box.right - box.left, height: mid - span.top }
+            : { kind: 'cell', left: box.left, top: mid, width: box.right - box.left, height: span.bottom - mid };
+        })();
       marks.land.dataset.kind = place.kind;
       Object.assign(marks.land.style, { left: `${place.left}px`, top: `${place.top}px`, width: `${place.width}px`, height: `${place.height}px` });
     };
@@ -5460,7 +5424,19 @@ function enhanceBlock(el, block, section, grid, host) {
       el.style.left = `${clamp(at.left + ev.clientX - start.x, 0, Math.max(0, flowEl.clientWidth - at.w))}px`;
       el.style.top = `${Math.max(0, at.top + ev.clientY - start.y)}px`;
       const fr = flowEl.getBoundingClientRect();
-      drop = phoneDropAt(boxes, ev.clientX - fr.left, ev.clientY - fr.top, own);
+      // The drop is read on the units where the preview shows them, so what is seen is what is aimed at; over the box where the block will land, the result stands as it is. A gap is read on the units as the drag began, since the preview opens gaps of its own as the blocks make room, and a reading in one of those would move the blocks again.
+      const x = ev.clientX - fr.left;
+      const y = ev.clientY - fr.top;
+      const within = (b) => b && x >= b.left && x <= b.right && y >= b.top && y <= b.bottom;
+      const placed = view?.placed() ?? null;
+      const units = placed ? unitBoxes(flowEl, placed) : boxes;
+      if (within(view?.mine())) drop = null;
+      else {
+        drop = units.some(within) ? phoneDropAt(units, x, y, null) : phoneDropAt(boxes, x, y, own);
+        // Back over its own place, or nearer to it than to any block, the section stands as it is and a release moves nothing.
+        change = drop ? phoneDropChange(section.blocks, phoneSetupOf(section), block.id, drop) : null;
+        view?.show(change);
+      }
       showLand();
     };
     const finish = () => {
@@ -5469,6 +5445,8 @@ function enhanceBlock(el, block, section, grid, host) {
       handle.removeEventListener('pointercancel', cancel);
       document.removeEventListener('keydown', onEscape, true);
       marks?.remove();
+      view?.end();
+      el.classList.remove('urd-hold-drag');
     };
     // A cancelled drag, or Escape in the middle of it, posts nothing: the section is drawn again as it stands.
     const cancel = () => {
@@ -5481,10 +5459,10 @@ function enhanceBlock(el, block, section, grid, host) {
       ev.stopPropagation();
       cancel();
     };
+    // The release lands the block as the section shows it.
     const onUp = () => {
       finish();
       if (!started) return;
-      const change = phoneDropChange(section.blocks, phoneSetupOf(section), block.id, drop);
       if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change });
       else post({ type: 'urd-redraw-section', sectionId: section.id });
     };
@@ -5492,6 +5470,32 @@ function enhanceBlock(el, block, section, grid, host) {
     handle.addEventListener('pointerup', onUp);
     handle.addEventListener('pointercancel', cancel);
     document.addEventListener('keydown', onEscape, true);
+  }
+
+  /**
+   * A press on the words of the selected block on the phone that moves drags it into the phone's order and cells (flowDrag), as a press on any other block does: the words let go of the selection the press began, and choose none while the block is dragged.
+   * A click puts the caret, as the text's own; a press held still first (HOLD_TO_SELECT_MS) chooses words as it moves, as a long press does on a phone.
+   */
+  function moveToDrag(down) {
+    const start = { x: down.clientX, y: down.clientY };
+    const stop = () => {
+      clearTimeout(timer);
+      el.removeEventListener('pointermove', moved);
+      el.removeEventListener('pointerup', stop);
+      el.removeEventListener('pointercancel', stop);
+    };
+    const moved = (ev) => {
+      if (Math.hypot(ev.clientX - start.x, ev.clientY - start.y) <= 4) return;
+      stop();
+      el.classList.add('urd-hold-drag');
+      document.getSelection()?.removeAllRanges();
+      if (document.activeElement instanceof HTMLElement && el.contains(document.activeElement)) document.activeElement.blur();
+      flowDrag(el, down);
+    };
+    const timer = setTimeout(stop, HOLD_TO_SELECT_MS);
+    el.addEventListener('pointermove', moved);
+    el.addEventListener('pointerup', stop);
+    el.addEventListener('pointercancel', stop);
   }
 
   /**
@@ -5507,9 +5511,15 @@ function enhanceBlock(el, block, section, grid, host) {
     const marks = phoneDragMarks(flowEl);
     const ids = stack ?? [block.id];
     const box = boxOnPhone(flowEl, ids) ?? { top: 0, bottom: 0 };
+    // A cell holding words goes no narrower than the words floor lets it stand at this width (base.css), so the handle never shows a width the floor would not draw.
+    const words = ids.some((id) => host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.dataset.urdWords === '1');
+    const least = words ? leastWordsCols(window.innerWidth) : 1;
     const label = document.createElement('span');
     marks.land.appendChild(label);
     let cols = cells.cols;
+    // The section shows the width as it goes: the block and the blocks around it glide to where the width puts them.
+    const view = phonePreview(flowEl, null, { lifted: false });
+    const widthChange = () => (cols === cells.cols ? null : { places: {}, cells: Object.fromEntries(ids.map((id) => [id, cols >= PHONE_COLUMNS ? null : { col: cells.col, cols }])) });
     const show = () => {
       const fw = flowEl.clientWidth;
       const colW = (fw * 0.9) / PHONE_COLUMNS;
@@ -5529,32 +5539,38 @@ function enhanceBlock(el, block, section, grid, host) {
       // The right edge in columns from the row's left: on the quarters' lines, or on any column's with Alt.
       const edge = (ev.clientX - (fr.left + fr.width * 0.05)) / colW;
       const snapped = ev.altKey ? Math.round(edge) : Math.round(edge / 2) * 2;
-      cols = clamp(snapped - (cells.col - 1), 1, room);
+      cols = clamp(snapped - (cells.col - 1), Math.min(least, room), room);
       show();
+      view.show(widthChange());
     };
     const finish = () => {
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onUp);
-      handle.removeEventListener('pointercancel', finish);
+      handle.removeEventListener('pointercancel', cancel);
       document.removeEventListener('keydown', onEscape, true);
       marks.remove();
+      view.end();
     };
-    // Escape in the middle of it keeps the width as it was.
+    // Escape in the middle of it, or a cancelled pointer, keeps the width as it was.
+    const cancel = () => {
+      view.show(null);
+      finish();
+    };
     const onEscape = (ev) => {
       if (ev.key !== 'Escape') return;
       ev.preventDefault();
       ev.stopPropagation();
-      finish();
+      cancel();
     };
     const onUp = () => {
+      const change = widthChange();
+      if (!change) view.show(null);
       finish();
-      if (cols === cells.cols) return;
-      const next = cols >= PHONE_COLUMNS ? null : { col: cells.col, cols };
-      post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change: { places: {}, cells: Object.fromEntries(ids.map((id) => [id, next])) } });
+      if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change });
     };
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
-    handle.addEventListener('pointercancel', finish);
+    handle.addEventListener('pointercancel', cancel);
     document.addEventListener('keydown', onEscape, true);
   }
 
@@ -5799,7 +5815,11 @@ function enhanceBlock(el, block, section, grid, host) {
         // another click edits. Every block's own editable text counts: the
         // rich text block's, and the plain-text cells, numbers, quotes and
         // events the other blocks mark with plaintext-only.
-        if (target?.closest(EDITABLE_TEXT) && selectedBlockId === block.id && multiIds.size <= 1) return;
+        // On the phone a press that moves on those words drags a flowing block all the same (moveToDrag), and the text keeps its click, and its words are chosen by a press held still first.
+        if (target?.closest(EDITABLE_TEXT) && selectedBlockId === block.id && multiIds.size <= 1) {
+          if (mobile && !Number.isFinite(block.frames.mobile?.row) && event.button === 0) moveToDrag(event);
+          return;
+        }
         // The cart button follows the text block's two-step model: selected
         // block = native click (the drawer opens), unselected block =
         // surface drag and selection.

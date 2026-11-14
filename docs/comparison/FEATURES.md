@@ -2085,7 +2085,7 @@ Urd has two layouts by decision ([ADR-0019](../adr/0019-synced-mobile-model.md))
 | Per-breakpoint variable values | OX | Variable value per breakpoint | n/a | - |
 | Responsive offcanvas | BR | Direction per breakpoint | n/a | - |
 | Masonry or bento | FR | Layout presets | Partial: masonry as the gallery's mosaic view; no bento | 0.7.9 bento preset |
-| Separate mobile editing | HO, WE, WH, CA, SQ | Independent mobile layout | Has: mobile overrides and mobile review | - |
+| Separate mobile editing | HO, WE, WH, CA, SQ | Independent mobile layout | Has: mobile overrides and mobile review; beyond the field, a text's words of its own on the phone, written in the phone view (Delivered 0.7.3.16.1, ADR-0033) | - |
 
 #### 8. Interactions and motion
 

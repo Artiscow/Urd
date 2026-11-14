@@ -2,6 +2,34 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.16.1): words of its own on the phone, the text bar beside the canvas, and dragging on the phone with a preview and the keys
+
+- [ ] In the phone view, click in a text on Om oss and change a word: the desktop view keeps the old word, the phone view shows the new one, and a phone-wide published page reads the new one
+- [ ] That text shows the mark «Edited for the phone» in the phone view, with a short tooltip; «Words on the phone» in its Placement says it has its own, in both views, and its row in the Phone panel has a round mark
+- [ ] Each way back (the round mark's ↺ in the Phone panel, on hover or focus, and «Words on the phone» in Placement) gives the block the desktop's words in one undo step; typing the phone's words back to the desktop's removes the mark
+- [ ] Changing the desktop words of a block with words of its own flags its section yellow for the phone review
+- [ ] A text's style changes its desktop words and its phone words alike
+- [ ] The Phone panel's rows show round marks for «Placed» and for words of its own, never chips, and every name shows in full
+- [ ] In the phone view a click in a text opens the text bar beside the phone, level with the text, covering none of the page, and it follows when the canvas scrolls
+- [ ] Every tool on the bar works on the selected words, each one undo step: level, font, size, bold, italic, underline, strikethrough, superscript, subscript, colour, highlight, alignment, lists, indent, quote, glyphs, link and clear formatting; its dropdowns show their values in full
+- [ ] Ctrl+B, I, U and K work while typing
+- [ ] In the desktop view the bar stands above the block and may reach past the canvas's edges; a press elsewhere closes it
+- [ ] On a selected text in the phone view, press and move drags the block; press, hold still a moment, then move selects words
+- [ ] Dragging over a block: its outer thirds put the dragged block beside it, its middle third above or below it; the other blocks glide to where they will stand, a dashed box shows where it lands, and it lands exactly as shown
+- [ ] Dropped beside a half that shares its line, the block joins that half as a stack, first on the left and last on the right; dropped in the empty room beside a half, it takes the free columns there
+- [ ] Dragging a block past its neighbour's far side on a line makes the two change sides
+- [ ] On Om oss's questions with «Når er dere åpne?» in the left half and «Hvordan kontakter jeg dere?» over «Hvordan blir jeg medlem?» in the right half, «Custom order» on: drops on the top, bottom and sides of each land as shown, with no flicker between two results
+- [ ] Alt with an arrow lifts the selected flowing block in a dashed magenta outline; Up and Down walk it through its places, Left and Right put it beside the block there, and the others make room; Enter lands it in one undo step, and Esc or a press elsewhere puts everything back
+- [ ] The corner handle of a text stops at half on the phone, its tag saying ½; a picture's goes down to ¼
+- [ ] A text set to ¼ with «Width on the phone» stands across the row in the phone view and on the published page, also after an undo and a redraw
+- [ ] Click into the text bar's size field: it keeps the size it shows and the bar stays open; type a size and press Enter, and the selected words take it
+- [ ] The text bar and its colour, spacing and glyph rows slide open and closed; with reduced motion they open and close at once
+- [ ] In the desktop view, a font or size for a whole text (the block's menu) reaches the same text's phone words too, in one undo step, and the section is not flagged for review by it
+- [ ] Give a block's phone words back in a section flagged for the phone review where nothing else is set for the phone: the flag goes
+- [ ] A terms of sale block cannot be typed in in the phone view, and typing in it on the desktop works as before
+- [ ] The shortcut sheet («?») lists Alt with the arrows, Enter and Esc under the phone; the phone bar's order arrows say nothing of Alt
+- [ ] Drag a block in the phone view, show it at another place, then take it back over its own place and let go: nothing moves
+
 ### Test batch (0.7.3.15): dragging on the phone canvas, deselecting beside it, and moving past a placed block
 
 - [ ] In the phone view, drag a flowing block by its surface between two others: a magenta line shows where it lands, it reads there on the phone, and Ctrl+Z puts it back in one step

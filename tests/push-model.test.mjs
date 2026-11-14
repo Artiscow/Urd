@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { PHONE_WORDS, phoneWordsOf, phoneWordsChange, propsForViewport, PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -399,3 +399,27 @@ test('shrinksOnPhone: «shrink» on a block whose content can wrap, but not on t
   assert.equal(shrinksOnPhone(null), false);
 });
 
+test('PHONE_WORDS: the text block holds its words for the phone in html, and no list of words is among them', () => {
+  assert.deepEqual(PHONE_WORDS, { text: ['html'] });
+  for (const type of ['faq', 'timeline', 'table', 'ribbon', 'calendar']) assert.equal(PHONE_WORDS[type], undefined, type);
+});
+
+test('phoneWordsOf and propsForViewport: the phone draws its own words in the desktop\'s place, the desktop its props, and a key that holds no words is not drawn', () => {
+  const block = { type: 'text', props: { html: '<p>Desktop</p>', align: 'left' }, phoneProps: { html: '<p>Phone</p>', align: 'right' } };
+  assert.deepEqual(phoneWordsOf('text', block.phoneProps), { html: '<p>Phone</p>' });
+  assert.deepEqual(phoneWordsOf('image', { html: 'x' }), {});
+  assert.deepEqual(phoneWordsOf('text', null), {});
+  assert.deepEqual(propsForViewport(block, block.props, 'mobile'), { html: '<p>Phone</p>', align: 'left' });
+  assert.equal(propsForViewport(block, block.props, 'desktop'), block.props);
+  const plain = { type: 'text', props: { html: '<p>Same</p>' } };
+  assert.equal(propsForViewport(plain, plain.props, 'mobile'), plain.props, 'a block without phone words draws its props as they are');
+});
+
+test('phoneWordsChange: the typed words that differ from the desktop\'s, none where they are the same again', () => {
+  const props = { html: '<p>Desktop</p>', align: 'left' };
+  assert.deepEqual(phoneWordsChange('text', props, null, { ...props, html: '<p>Phone</p>' }), { html: '<p>Phone</p>' });
+  assert.deepEqual(phoneWordsChange('text', props, { html: '<p>Phone</p>' }, { ...props, html: '<p>Phone, more</p>' }), { html: '<p>Phone, more</p>' });
+  assert.equal(phoneWordsChange('text', props, { html: '<p>Phone</p>' }, { ...props, html: '<p>Desktop</p>' }), null, 'typed back to the desktop\'s words');
+  assert.equal(phoneWordsChange('text', props, null, { ...props, align: 'right' }), null, 'a prop that holds no words is never the phone\'s');
+  assert.equal(phoneWordsChange('image', { src: 'a' }, null, { src: 'b' }), null);
+});

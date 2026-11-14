@@ -8,7 +8,8 @@ import { claimAnchors } from '$engine/anchor-model.js';
 import { duplicatedSection } from '../lib/duplicate.js';
 import { pasteIndex } from '$engine/clipboard-model.js';
 import { ta } from '$engine/i18n.js';
-import { fitMoves, shapeHeight, followsContent, PHONE_DESIGNS } from '$engine/push-model.js';
+import { fitMoves, shapeHeight, followsContent, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, phoneWordsChange } from '$engine/push-model.js';
+import { wholeStyleHtml } from '$engine/text-whole.js';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
@@ -65,7 +66,30 @@ function handleEdit(msg) {
   const block = section?.blocks.find((b) => b.id === msg.blockId);
   if (!block) return;
   // The caret where the typing began goes with the step, for the undo to put back.
-  historyState.pushHistory(`edit:${msg.blockId}`, { caret: Number.isFinite(msg.caret) ? { blockId: msg.blockId, offset: msg.caret } : null });
+  const caret = Number.isFinite(msg.caret) ? { blockId: msg.blockId, offset: msg.caret } : null;
+  // Words written in the phone view are the phone's own (ADR-0033): they go into phoneProps, those equal to the desktop's left out, and the desktop's props and frame stay as they are.
+  if (msg.phone) {
+    historyState.pushHistory(`edit:phone-words-${msg.blockId}`, { caret });
+    const words = phoneWordsChange(block.type, block.props, block.phoneProps, msg.props ?? {});
+    if (words) block.phoneProps = words;
+    else {
+      delete block.phoneProps;
+      pageState.clearReviewWithoutOverrides(section);
+    }
+    pageState.store.save();
+    historyState.updateDirty();
+    if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
+    shellState.status = '';
+    return;
+  }
+  historyState.pushHistory(`edit:${msg.blockId}`, { caret });
+  // A font or size for the whole text, asked for in the desktop view, reaches the phone's words in the same step (ADR-0033), and is no change of words to review.
+  const whole = pageState.takeWholeStyle(msg.blockId);
+  if (whole && typeof block.phoneProps?.html === 'string') block.phoneProps = { ...block.phoneProps, html: wholeStyleHtml(block.phoneProps.html, whole) };
+  // The desktop's words changed under words of the phone's own: the section is flagged for the phone's review.
+  else if (Object.keys(phoneWordsOf(block.type, block.phoneProps)).length && (PHONE_WORDS[block.type] ?? []).some((key) => msg.props?.[key] !== block.props?.[key])) {
+    pageState.markDesktopChange(section, 'block-edited');
+  }
   // An edit on the canvas never changes a block's design: a block drawn in its phone design (PHONE_DESIGNS) hands its words back with that design in its props, and the stored design stays.
   const props = { ...msg.props };
   const designProp = PHONE_DESIGNS[block.type];
@@ -189,12 +213,9 @@ function handleMobileReset(msg) {
     for (const block of section.blocks) block.frames.mobile = null;
   }
   // Without overrides there is nothing left that can drift from desktop.
-  if (!pageState.hasMobileOverrides(section) && section.responsive?.mobile) {
-    section.responsive.mobile.attention = null;
-  }
+  pageState.clearReviewWithoutOverrides(section);
   pageState.store.save();
   historyState.updateDirty();
-  shellState.updateAttention();
   previewState.bridge?.sendSection(pageState.pageId, section);
 }
 

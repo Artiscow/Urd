@@ -25,6 +25,7 @@ import { templatesState } from './templates.svelte.js';
 import { linkState } from './link.svelte.js';
 import { emailLike } from '../lib/link-edit.js';
 import { stoodOf, readStood, keepStood, canvasTop } from '../lib/reload-place.js';
+import { textBarState } from './text-bar.svelte.js';
 
 let iframeEl = $state(null);
 
@@ -244,6 +245,7 @@ function onIframeLoad() {
     onSelectSection: pageState.onSelectSection,
     onSelectBlock: pageState.onSelectBlock,
     onHoverBlock: pageState.onHoverBlock,
+    onTextState: textBarState.onTextState,
     onBlockMenu: pageState.onBlockMenu,
     onSectionMenu: pageState.onSectionMenu,
     onBlockDesign: pageState.onBlockDesign,
@@ -299,6 +301,8 @@ let pendingAnchor = '';
 
 /** The engine in the iframe is listening now: send the draft and the current editor state. */
 async function onReady() {
+  // A canvas drawn anew holds no text being written.
+  textBarState.reset();
   await pageState.pageLoading;
   await pluginsState.pluginsReady;
   // The plugin draft's enabled list and the view choice: the preview

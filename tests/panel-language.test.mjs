@@ -142,8 +142,8 @@ test('each widget allowed its own inner controls still has them', () => {
   }
 });
 
-/** Words that name a removal on a button that removes nothing itself: the fold foot's chip that opens the list of added settings, the hint a greyed submenu row gives, and «Discard drafts», which goes back to the published version. */
-const NOT_A_DELETION = new Set(['menu.removeSetting', 'tip.collections.deleteSelectedNone', 'tip.discard']);
+/** Words that name a removal on a button that removes nothing itself: the fold foot's chip that opens the list of added settings, the hint a greyed submenu row gives, «Discard drafts», which goes back to the published version, and the text bar's «Remove highlighting», a mark taken off the words as bold is. */
+const NOT_A_DELETION = new Set(['menu.removeSetting', 'tip.collections.deleteSelectedNone', 'tip.discard', 'tt.hlNone']);
 /** The admin's English words, so a button is read by what it says, a text that begins with Remove or Delete, as well as by its key's name. */
 const EN_WORDS = (await engineImport('locales/admin/en-GB.js')).default.strings;
 

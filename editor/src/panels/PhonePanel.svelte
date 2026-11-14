@@ -11,6 +11,7 @@
   import { phoneSetupOf, stackOrder } from '$engine/phone-order.js';
   import { phoneTree, phoneLand, hasPhonePlace, flowing } from '$engine/phone-moves.js';
   import { phoneCells } from '$engine/migrate.js';
+  import { phoneWordsOf } from '$engine/push-model.js';
   import { navDropAt, navDropOrNull, canonicalDrop } from '../lib/nav-drop.js';
   import { RowDrag, slotOut } from '../lib/rows/row-drag.svelte.js';
   import { phoneMark } from '$engine/phone-layouts.js';
@@ -21,6 +22,10 @@
   import IconButton from '../lib/rows/IconButton.svelte';
   import EmptyState from '../lib/rows/EmptyState.svelte';
   const ed = getContext('urd-editor');
+
+  /** The canvas's marks (preview-edit.js): a place of the block's own, a pin, and words of its own on the phone, lines of text. */
+  const PLACED_MARK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
+  const WORDS_MARK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h9"/></svg>';
 
   /** The levels the list holds: a stack's blocks, never a stack inside a stack. */
   const DEPTH = 1;
@@ -223,6 +228,14 @@
 <!-- The slot where a dragged row lands, set in to the level it would stand at -->
 {#snippet slot(level)}<div class="row-drag-slot" style:margin-left="{level * 1.3}rem" {@attach drag.slot} out:slotOut></div>{/snippet}
 
+<!-- A way the row differs from what the section and the desktop give it, as the canvas marks it: a round mark that turns into the way back under the pointer or the keyboard's focus (at once on a screen without a pointer that hovers), and takes the difference back at a press; its name is its tooltip, which says both -->
+{#snippet way(kind, tip, icon, onclick)}
+  <button type="button" class="pp-way pp-way-{kind}" title={ta(tip)} aria-label={ta(tip)} {onclick}>
+    <span class="pp-way-is" aria-hidden="true">{@html icon}</span>
+    <span class="pp-way-back" aria-hidden="true">{@html ICONS.reset}</span>
+  </button>
+{/snippet}
+
 <!-- A block's small picture: a mark of its kind -->
 {#snippet mark(block)}<span class="pp-mark" aria-hidden="true"><i class="po-{phoneMark(block)}"></i></span>{/snippet}
 
@@ -238,22 +251,30 @@
       <span class="pp-mark pp-stack-icon" title={r.node.kind === 'column' ? ta('tip.phone.column') : undefined}>{@html ICONS.stack}</span>
       <span class="pp-name">{stackName(r.ids)}<span class="sr-only">, {ta('phone.blocks', { n: r.ids.length })}</span></span>
       {#if cellsMark(byId.get(r.ids[0]))}<span class="pp-cells" title={ta('lbl.phoneWidth')}>{cellsMark(byId.get(r.ids[0]))}</span>{/if}
-      {#if !setup.list && hasPhonePlace(byId.get(r.ids[0]), section.blocks, setup)}
-        <button type="button" class="pp-chip pp-chip-own" title={ta('tip.phone.placed')} onclick={() => backToRule(r.ids[0])}>{ta('phone.placed')}{@html ICONS.reset}</button>
-      {/if}
-      {#if r.node.kind === 'stack'}
-        <button type="button" class="pp-chip" title={ta('tip.phone.stack')} onclick={() => takeApart(r.ids)}>{ta('phone.stack')}{@html ICONS.reset}</button>
-      {/if}
+      <span class="pp-ways">
+        {#if !setup.list && hasPhonePlace(byId.get(r.ids[0]), section.blocks, setup)}
+          {@render way('own', 'tip.phone.placed', PLACED_MARK, () => backToRule(r.ids[0]))}
+        {/if}
+        {#if r.node.kind === 'stack'}
+          {@render way('stack', 'tip.phone.stack', ICONS.stack, () => takeApart(r.ids))}
+        {/if}
+      </span>
     {:else if block}
       {@render mark(block)}
       <span class="pp-num">{numbers.get(r.id)}</span>
       <span class="pp-name">{nameOf(block)}</span>
       {#if r.level === 0 && cellsMark(block)}<span class="pp-cells" title={ta('lbl.phoneWidth')}>{cellsMark(block)}</span>{/if}
       {#if block.hideDesktop}<span class="pp-flag" role="img" title={ta('cap.phoneOnly')} aria-label={ta('cap.phoneOnly')}>{@html CAP_ICONS.phoneOnly}</span>{/if}
-      <!-- A block alone, or a block of a column the rule reads whole, can hold a place of its own; a block of the owner's stack reads where its stack does -->
-      {#if (r.level === 0 || r.kind === 'column') && !setup.list && hasPhonePlace(block, section.blocks, setup)}
-        <button type="button" class="pp-chip pp-chip-own" title={ta('tip.phone.placed')} onclick={() => backToRule(r.id)}>{ta('phone.placed')}{@html ICONS.reset}</button>
-      {/if}
+      <span class="pp-ways">
+        <!-- A block alone, or a block of a column the rule reads whole, can hold a place of its own; a block of the owner's stack reads where its stack does -->
+        {#if (r.level === 0 || r.kind === 'column') && !setup.list && hasPhonePlace(block, section.blocks, setup)}
+          {@render way('own', 'tip.phone.placed', PLACED_MARK, () => backToRule(r.id))}
+        {/if}
+        <!-- Words of its own on the phone (ADR-0033), with the way back to the desktop's -->
+        {#if Object.keys(phoneWordsOf(block.type, block.phoneProps)).length}
+          {@render way('own', 'tip.phone.ownWords', WORDS_MARK, () => ed.resetPhoneWords(section.id, block.id))}
+        {/if}
+      </span>
     {/if}
   </div>
 {/snippet}

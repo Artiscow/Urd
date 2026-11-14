@@ -11,7 +11,7 @@ import { onlyOf } from '../lib/only-group.js';
 import { BAR_ICONS } from '$engine/bar-tools.js';
 import { placeBesideBlock, clampPlace, givesWay } from '../lib/menu-place.js';
 import { ta } from '$engine/i18n.js';
-import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS } from '$engine/push-model.js';
+import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
 import { wholeStyleHtml } from '$engine/text-whole.js';
 import { phoneOrderOf, phoneSetupOf, stackOrder } from '$engine/phone-order.js';
@@ -60,9 +60,9 @@ function handleApplyLayout(msg) {
   previewState.bridge?.sendSection(pageId, section);
 }
 
-/** Does the section have at least one block with a mobile override (ADR-0019)? */
+/** Does the section have at least one block with a mobile override: a placement on the phone (ADR-0019), or words of the phone's own (ADR-0033)? */
 function hasMobileOverrides(section) {
-  return section?.blocks?.some((b) => b.frames?.mobile) ?? false;
+  return section?.blocks?.some((b) => b.frames?.mobile || Object.keys(phoneWordsOf(b.type, b.phoneProps)).length) ?? false;
 }
 
 function markDesktopChange(section, reason) {
@@ -79,6 +79,14 @@ function markDesktopChange(section, reason) {
   };
   shellState.updateAttention();
   previewState.bridge?.sendAttention(section.id, true);
+}
+
+/** A section whose last override went (the phone's words given back, its placements reset) has nothing left that can drift from the desktop: its review flag goes too. */
+function clearReviewWithoutOverrides(section) {
+  if (!section?.responsive?.mobile?.attention || hasMobileOverrides(section)) return;
+  section.responsive.mobile.attention = null;
+  shellState.updateAttention();
+  previewState.bridge?.sendAttention(section.id, false);
 }
 
 let store = null;
@@ -155,6 +163,9 @@ function syncSelectedBlock() {
     phonePlace: typeof block.phonePlace?.before === 'string' ? { before: block.phonePlace.before } : typeof block.phonePlace?.after === 'string' ? { after: block.phonePlace.after } : null,
     // The cells the block stands in on the phone (migrate.js phoneCells), or null across the full row.
     phoneCells: phoneCells(block.frames?.mobile),
+    // Whether the block's type can have words of the phone's own, and whether it has some (ADR-0033).
+    phoneWordsAble: Boolean(PHONE_WORDS[block.type]),
+    phoneWords: Object.keys(phoneWordsOf(block.type, block.phoneProps)).length > 0,
     entranceMobile: block.entranceMobile !== false,
     anchor: typeof block.anchor === 'string' ? block.anchor : '',
     fit: block.fit === 'shrink' || block.fit === 'both' ? block.fit : undefined,
@@ -207,6 +218,20 @@ function clearSelection() {
   syncSectionMirrors(kept ? store?.data.sections.find((s) => s.id === kept) : null);
   previewState.bridge?.sendDeselect();
   if (kept) previewState.bridge?.sendActiveSection(kept);
+}
+
+/** A block back to the desktop's words on the phone (ADR-0033): its words of the phone's own taken away, one undo step. */
+function resetPhoneWords(sectionId, blockId) {
+  const section = store?.data.sections.find((s) => s.id === sectionId);
+  const block = section?.blocks.find((b) => b.id === blockId);
+  if (!block?.phoneProps) return;
+  historyState.pushHistory(`edit:phone-words-reset-${blockId}`);
+  delete block.phoneProps;
+  clearReviewWithoutOverrides(section);
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  if (selectedBlock?.blockId === blockId) syncSelectedBlock();
 }
 
 /** The floating menu (the gear on a block's or a section's bar): position in editor coordinates, null = closed.
@@ -518,15 +543,29 @@ function openImageEditor() {
 
 /** A font or a size for the whole text of the block, applied by the preview's text toolbar (`{fontFamily}` or `{fontSize}`, null takes the theme's). */
 function setTextStyle(style) {
-  // The phone view draws the text without writing in place (blocks/text.js), so the style is written into the block's words here, an undo step of its own.
+  // A text's style is the design's, the same on the phone: in the phone view, where what is written in place is the phone's own words, it is written here into the desktop's words and the phone's alike, an undo step of its own.
   if (previewState.viewMode === 'mobile') {
     const key = `edit:${selectedBlock.blockId}`;
-    historyState.asOwnStep(() => mutateBlock(key, (b) => { b.props.html = wholeStyleHtml(b.props.html ?? '', style); }));
+    historyState.asOwnStep(() => mutateBlock(key, (b) => {
+      b.props.html = wholeStyleHtml(b.props.html ?? '', style);
+      if (typeof b.phoneProps?.html === 'string') b.phoneProps.html = wholeStyleHtml(b.phoneProps.html, style);
+    }));
     return;
   }
-  // The preview writes the style into the text and hands it back as the text's edit, an undo step of its own.
+  // The preview writes the style into the text and hands it back as the text's edit, an undo step of its own, which writes it into the phone's words too (takeWholeStyle).
   historyState.ownStepNext(`edit:${selectedBlock.blockId}`);
+  wholeStyleNext.set(selectedBlock.blockId, style);
   previewState.bridge?.sendTextStyle(selectedBlock.blockId, style);
+}
+
+/** The whole text's font or size the desktop view asked the preview for, by block, until the preview's edit comes back with it (handleEdit). */
+const wholeStyleNext = new Map();
+
+/** The whole text's style asked for on a block, taken once: handleEdit writes it into the phone's words in the same step, since a text's style reaches both texts (ADR-0033). */
+function takeWholeStyle(blockId) {
+  const style = wholeStyleNext.get(blockId) ?? null;
+  wholeStyleNext.delete(blockId);
+  return style;
 }
 
 /** A block whose height follows its content (ADR-0025) has its frame fitted
@@ -1507,6 +1546,7 @@ export const pageState = {
   handleApplyLayout,
   hasMobileOverrides,
   markDesktopChange,
+  clearReviewWithoutOverrides,
   get store() { return store; },
   set store(v) { store = v; },
   pendingPublished,
@@ -1521,6 +1561,7 @@ export const pageState = {
   syncSelectedBlock,
   onSelectBlock,
   clearSelection,
+  resetPhoneWords,
   get blockMenu() { return blockMenu; },
   set blockMenu(v) { blockMenu = v; },
   moveBlockMenu,
@@ -1551,6 +1592,7 @@ export const pageState = {
   RIBBON_MOTIONS,
   openImageEditor,
   setTextStyle,
+  takeWholeStyle,
   fitTimers,
   fitSeq,
   get fitCount() { return fitCount; },

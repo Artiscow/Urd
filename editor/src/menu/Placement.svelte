@@ -24,7 +24,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, handleMobileReset, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells, resetPhoneWords } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** Sets the pinning's own settings; a setting given as undefined goes back to the standard and is removed. */
@@ -196,6 +196,19 @@
         onclick={() => handleMobileReset({ sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId })} />
     {/if}
   </div>
+  <!-- Its words on the phone: the desktop's, or its own, written in the phone view (ADR-0033), with the way back to the desktop's -->
+  {#if selectedBlock.phoneWordsAble}
+    <div class="setting" title={ta('tip.phoneWords')}>
+      <div class="setting-body">
+        <span class="mini-label">{ta('lbl.phoneWords')}</span>
+        <span class="setting-source">{ta(selectedBlock.phoneWords ? 'opt.phoneWords.own' : 'opt.phoneWords.desktop')}</span>
+      </div>
+      {#if selectedBlock.phoneWords}
+        <IconButton size="sm" quiet class="setting-reset" icon={RESET_ICON} label={ta('tip.phoneWordsReset')}
+          onclick={() => resetPhoneWords(selectedBlock.sectionId, selectedBlock.blockId)} />
+      {/if}
+    </div>
+  {/if}
   <!-- Its width on the phone: the whole row, or cells beside the blocks before it in the phone's order (migrate.js phoneCells), with where in the row it stands under it; a block in a stack sets its whole stack. A block placed on rows of its own takes its width from its handles -->
   {#if !selectedBlock.hideMobile && selectedBlock.mobileRow === null}
     <Setting own={Boolean(selectedBlock.phoneCells)} reset={() => setBlockPhoneCells(null)}>

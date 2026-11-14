@@ -665,6 +665,12 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-select' && msg.blockId) {
       // The editor built a block itself (the + New block menu), or one was picked in its lists (the Phone panel's order, `picked`): select it.
       window.UrdPreviewEdit?.selectById(msg.blockId, msg.picked === true);
+    } else if (msg?.type === 'urd-text-cmd' && typeof msg.cmd === 'string') {
+      // A command of the editor's text bar on the text being written.
+      window.UrdPreviewEdit?.textCommand?.(msg.cmd, msg.value, msg.focus === true);
+    } else if (msg?.type === 'urd-text-end') {
+      // A press in the editor outside its text bar: the writing ends.
+      window.UrdPreviewEdit?.endTextEditing?.();
     } else if (msg?.type === 'urd-deselect') {
       // A press on the editor's stage around the canvas: nothing stays selected.
       window.UrdPreviewEdit?.deselectAll?.();

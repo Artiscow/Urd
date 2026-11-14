@@ -12,8 +12,8 @@
  *    Blocks with row in frames.mobile are pinned to explicit row tracks.
  *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
-import { lift, MOBILE_ROW, MOBILE_GAP, mobileGapOf, PHONE_COLUMNS, phoneCells } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, drawnBlock, NARROW_PX } from './push-model.js';
+import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, PHONE_COLUMNS, phoneCells } from './migrate.js';
+import { pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -515,7 +515,7 @@ const phoneFitWatch = typeof ResizeObserver === 'function' ? new ResizeObserver(
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
-const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
+const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -995,13 +995,13 @@ function placeBlockSpots(el, block, names = []) {
  * @param {object} section Section data
  * @param {object} site site.json
  * @param {HTMLElement} host The section element (cleared and rebuilt)
- * @param {{preview?: boolean, viewport?: 'desktop'|'mobile'}} [opts]
+ * @param {{preview?: boolean, viewport?: 'desktop'|'mobile', measure?: boolean}} [opts] `measure`: a copy drawn out of sight only to be measured (the phone drag's preview in preview-edit.js), drawn as the preview draws its blocks, without the editing layer and without animations, so its blocks stand in their end state.
  */
 export function renderSection(section, site, host, opts = {}) {
   const Urd = window.Urd;
   const grid = section.grid ?? site.grid;
   const viewport = opts.viewport ?? 'desktop';
-  const ctx = { site, section, grid, viewport, preview: Boolean(opts.preview) };
+  const ctx = { site, section, grid, viewport, preview: Boolean(opts.preview || opts.measure), measure: Boolean(opts.measure) };
 
   host.className = 'urd-section';
   host.dataset.sectionId = section.id;
@@ -1170,6 +1170,8 @@ export function renderSection(section, site, host, opts = {}) {
         stuck.get(key).members.push({ el, block, narrow });
       } else {
         into.appendChild(el);
+        // The cell holds the block now, and so knows whether it holds words.
+        if (cell) syncCellWords(cell);
         // A block drawing a phone design of its own has no design width to keep its lines from.
         zoomOnPhone(el, block, narrow ? 0 : canvas._urdDesignW);
       }
@@ -1260,7 +1262,7 @@ export function renderSection(section, site, host, opts = {}) {
 
   // In preview mode the editing layer (drag/resize/delete) is attached
   // after every render. Set by urd.js; never present for visitors.
-  if (ctx.preview) window.UrdPreviewEdit?.enhanceSection(host, section, grid);
+  if (ctx.preview && !ctx.measure) window.UrdPreviewEdit?.enhanceSection(host, section, grid);
   // Sticky blocks are remeasured (incremental rerender of a single section).
   refreshSticky();
 }
@@ -1272,10 +1274,13 @@ function renderBlock(Urd, el, block, ctx, measured = null) {
   if (lifted.ok) {
     try {
       // A block with a phone design draws it while it is narrow (measured by the section's layout, which places the block first), and is drawn again when it crosses the line (watchPhoneDesign).
-      const phone = hasPhoneDesign(block.type, lifted.props);
+      // On the phone the block reads its own words where it has some (phoneProps, ADR-0033), in the desktop's place, lifted by its migrations as its props are.
+      const phoneProps = ctx.viewport === 'mobile' ? liftPhoneWords(block, def, lifted.props) : null;
+      const props = propsForViewport({ ...block, phoneProps }, lifted.props, ctx.viewport);
+      const phone = hasPhoneDesign(block.type, props);
       const narrow = phone && (measured ?? isNarrowBlock(el, block, ctx));
-      def.render(el, propsForWidth(block.type, lifted.props, narrow), ctx);
-      if (phone) watchPhoneDesign(el, { def, type: block.type, props: lifted.props, block, ctx, narrow });
+      def.render(el, propsForWidth(block.type, props, narrow), ctx);
+      if (phone) watchPhoneDesign(el, { def, type: block.type, props, block, ctx, narrow });
       // Entrance animation and pointer effect are independent fields and
       // can be combined; the pointer effect is the block's own, else the one
       // its section gives every element (pointerEffectOf). Cardwise blocks
@@ -1443,7 +1448,7 @@ export function renderCardAnimations(el, cards, block, ctx) {
  * guarding here.
  */
 function renderAnimation(Urd, el, animation, ctx, apply = applyAnimation) {
-  if (!animation?.type) return;
+  if (!animation?.type || ctx?.measure) return;
   const def = Urd.animations.get(animation.type);
   const lifted = lift(animation, def);
   if (!lifted.ok) return;

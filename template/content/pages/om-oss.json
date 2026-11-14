@@ -65,6 +65,9 @@
             "align": "left",
             "box": false
           },
+          "phoneProps": {
+            "html": "<h2>TRØNDER LØS I TRONDHEIM</h2><p>\"Uhørt\", sier General Major Kolonell Krumpfurt.</p>"
+          },
           "animation": null,
           "frames": {
             "desktop": {

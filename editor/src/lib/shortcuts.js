@@ -60,7 +60,9 @@ export const SHORTCUT_GROUPS = [
     { labelKey: 'shortcuts.contextMenu', ways: [['shift', 'F10'], ['menu']] },
   ] },
   { id: 'phone', labelKey: 'shortcuts.group.phone', tipKey: 'tip.shortcuts.phone', rows: [
-    { labelKey: 'shortcuts.phoneOrder', ways: [['alt', 'up'], ['alt', 'down']] },
+    { labelKey: 'shortcuts.phoneOrder', ways: [['alt', 'arrows']] },
+    { labelKey: 'shortcuts.phoneLand', ways: [['enter']] },
+    { labelKey: 'shortcuts.phoneBack', ways: [['esc']] },
     { labelKey: 'shortcuts.phoneNudge', ways: [['arrows']] },
   ] },
   { id: 'sections', labelKey: 'shortcuts.group.sections', tipKey: 'tip.shortcuts.sections', rows: [

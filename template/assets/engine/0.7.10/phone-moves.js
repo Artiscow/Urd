@@ -4,7 +4,7 @@
  * A move is a new order of that tree, settled into the section's data (settle): the stacks as they stand, and either the custom order as listed, or the exception that puts the moved block or stack there, the other blocks keeping their order.
  */
 import { phoneParts } from './phone-order.js';
-import { phoneCells } from './migrate.js';
+import { phoneCells, PHONE_COLUMNS } from './migrate.js';
 
 /** Whether a block flows in the row grid, rather than standing on rows placed by hand. */
 export const flowing = (block) => !Number.isFinite(block.frames?.mobile?.row);
@@ -343,14 +343,15 @@ export function phoneStackOf(blocks, setup, blockId) {
 
 /**
  * Where a block dragged on the phone canvas lands, from the pointer over the other units' boxes (a block alone, or a stack's or a cell's blocks together), in the phone's order.
- * Over a unit, its top quarter lands before it and its bottom quarter after it; between those, its left third beside it on the left, its right third beside it on the right, and its middle into it, as a stack. Off every unit, the nearest one: before it where the pointer is above it, else after it.
+ * Over a unit, its left third lands beside it on the left and its right third on the right, sharing its width; its middle third lands above it in its column where the pointer is in the upper half, below it in the lower. In a unit of several blocks (a stack, a column) the halves are read on the block under the pointer, which `member` names.
+ * Off every unit but level with some (the room their line leaves), beside the nearest of them in that room (`free`); off every line, the nearest unit: before it where the pointer is above it, else after it.
  * Before or after a unit that shares its line with others, units standing beside each other, is before the line's first or after its last, so a block across the row never splits a line; `at` is the line's top or bottom edge.
  * Over the dragged block's own place, or nearer to it than to every unit, the block lands nowhere.
- * @param {Array<{id: string, left: number, top: number, right: number, bottom: number}>} boxes The units' boxes, by their first block's id
+ * @param {Array<{id: string, left: number, top: number, right: number, bottom: number, members?: Array<{id: string, top: number, bottom: number}>}>} boxes The units' boxes, by their first block's id, a unit of several blocks with each block's height in it
  * @param {number} x
  * @param {number} y
  * @param {{left: number, top: number, right: number, bottom: number}|null} [own] The dragged block's own place
- * @returns {{pos: 'before'|'after'|'left'|'right'|'into', of: string, at?: number}|null}
+ * @returns {{pos: 'before'|'after'|'left'|'right'|'above'|'below', of: string, member?: string, free?: boolean, at?: number}|null}
  */
 export function phoneDropAt(boxes, x, y, own = null) {
   const within = (b) => x >= b.left && x <= b.right && y >= b.top && y <= b.bottom;
@@ -360,12 +361,24 @@ export function phoneDropAt(boxes, x, y, own = null) {
   let target = hit;
   let pos;
   if (hit) {
-    const fy = (y - hit.top) / Math.max(1, hit.bottom - hit.top);
+    // The block under the pointer, in a unit of several: its height is the one read.
+    const member = hit.members?.find((m) => y >= m.top && y <= m.bottom)
+      ?? hit.members?.reduce((best, m) => (Math.abs(y - (m.top + m.bottom) / 2) < Math.abs(y - (best.top + best.bottom) / 2) ? m : best));
+    const span = member ?? hit;
+    const fy = (y - span.top) / Math.max(1, span.bottom - span.top);
     const fx = (x - hit.left) / Math.max(1, hit.right - hit.left);
-    pos = fy < 0.25 ? 'before' : fy > 0.75 ? 'after' : fx < 1 / 3 ? 'left' : fx > 2 / 3 ? 'right' : 'into';
-    if (pos !== 'before' && pos !== 'after') return { pos, of: hit.id };
+    // The outer thirds stand beside it; the middle third above or below the block under the pointer.
+    if (fx < 1 / 3) return { pos: 'left', of: hit.id };
+    if (fx > 2 / 3) return { pos: 'right', of: hit.id };
+    return { pos: fy < 0.5 ? 'above' : 'below', of: hit.id, ...(member ? { member: member.id } : {}) };
   } else {
-    target = boxes.reduce((best, b) => (away(b) < away(best) ? b : best));
+    // Off every unit but level with some, on their line: beside the nearest of them, in the room the line leaves, unless the block's own place stands beside it on that line, nearer.
+    const level = boxes.filter((b) => y >= b.top && y <= b.bottom);
+    target = (level.length ? level : boxes).reduce((best, b) => (away(b) < away(best) ? b : best));
+    if (level.length) {
+      if (own && own.top < target.bottom && own.bottom > target.top && away(own) < away(target)) return null;
+      return { pos: x < target.left ? 'left' : 'right', of: target.id, free: true };
+    }
     if (own && away(own) < away(target)) return null;
     pos = y < target.top ? 'before' : 'after';
   }
@@ -388,11 +401,11 @@ export function phoneDropAt(boxes, x, y, own = null) {
 
 /**
  * The change a drop on the phone canvas makes (phoneDropAt): the dragged block moved in the order, and its cells.
- * Before or after a unit it stands across the row; beside one it shares the unit's cells with it, half each, the unit keeping the other half; into one it joins it as a stack, in the unit's cells.
+ * Before or after a unit it stands across the row. Beside one, where the unit's columns and the free ones beside them make the whole row, the two share the row half each, the block on the side it was dropped; where they do not, a drop never makes narrower columns, and the block joins the unit's column as a stack instead, first on its left and last on its right. Dropped in the room beside it (`free`), it takes the columns free on that side, two or more, and the unit keeps its own. Above or below one it joins it as a stack in the unit's cells, before or after the block `member` names, else first or last; above or below a block alone across the row it stands before or after it, its column being the row (`into` is a stack all the same, below).
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string} blockId The dragged block
- * @param {{pos: 'before'|'after'|'left'|'right'|'into', of: string}} drop
+ * @param {{pos: 'before'|'after'|'left'|'right'|'above'|'below'|'into', of: string, member?: string, free?: boolean}} drop
  * @returns {{places: Record<string, object|null>, stacks?: string[][], list?: string[], cells: Record<string, {col: number, cols: number}|null>}|null} The change, or null where the drop changes nothing or its order cannot be had
  */
 export function phoneDropChange(blocks, rawSetup, blockId, drop) {
@@ -401,31 +414,53 @@ export function phoneDropChange(blocks, rawSetup, blockId, drop) {
   const units = unitsOf(tree);
   const byId = new Map(blocks.map((b) => [b.id, b]));
   if (!drop || !units.some((u) => u.includes(blockId))) return null;
+  drop = { ...drop };
   const rest = units.map((u) => u.filter((id) => id !== blockId)).filter((u) => u.length);
   const host = rest.find((u) => u.includes(drop.of));
   if (!host) return null;
   /** A unit's cells as the row grid draws them: its first block's, else the full row. */
   const cellsOf = (unit) => phoneCellsOf(byId.get(unit[0])) ?? { col: 1, cols: 8 };
   const cells = { [blockId]: null };
+  const at = rest.indexOf(host);
   let pos = drop.pos;
   if (pos === 'left' || pos === 'right') {
     const { col, cols } = cellsOf(host);
-    if (cols < 2) {
-      pos = pos === 'left' ? 'before' : 'after';
+    const end = col + cols - 1;
+    // The columns free on that side of the unit, on its line: from the unit before it where that one shares the line (it ends left of it), else from the row's edge; the same to the right, to the unit after it.
+    const prev = rest[at - 1] ? cellsOf(rest[at - 1]) : null;
+    const next = rest[at + 1] ? cellsOf(rest[at + 1]) : null;
+    const from = prev && prev.col + prev.cols - 1 < col ? prev.col + prev.cols : 1;
+    const to = next && next.col > end ? next.col - 1 : 8;
+    const free = pos === 'left' ? { col: from, cols: col - from } : { col: end + 1, cols: to - end };
+    const span = to - from + 1;
+    if (drop.free && free.cols >= 2) {
+      cells[blockId] = free;
+    } else if (span >= PHONE_COLUMNS) {
+      // The two share the row, half each, the block on the side it was dropped: the unit's columns and the free ones beside them make the whole row.
+      const half = PHONE_COLUMNS / 2;
+      cells[blockId] = pos === 'left' ? { col: 1, cols: half } : { col: half + 1, cols: half };
+      for (const id of host) cells[id] = pos === 'left' ? { col: half + 1, cols: half } : { col: 1, cols: half };
     } else {
-      const first = Math.floor(cols / 2);
-      const own = pos === 'left' ? { col, cols: first } : { col: col + first, cols: cols - first };
-      const theirs = pos === 'left' ? { col: col + first, cols: cols - first } : { col, cols: first };
-      cells[blockId] = own;
-      for (const id of host) cells[id] = theirs;
+      // No room for two halves on the line: a drop never makes narrower columns, so the block joins the unit's column instead, first on its left, last on its right (decided 13 November 2026).
+      pos = pos === 'left' ? 'above' : 'below';
+      delete drop.member;
     }
   }
-  if (pos === 'into') {
+  // Above or below a block alone across the row: before or after it, since its column is the whole row.
+  if ((pos === 'above' || pos === 'below') && host.length === 1 && cellsOf(host).cols >= PHONE_COLUMNS) pos = pos === 'above' ? 'before' : 'after';
+  if (pos === 'into') pos = 'below';
+  const stacked = pos === 'above' || pos === 'below';
+  if (stacked) {
     const shared = cellsOf(host);
     cells[blockId] = shared.cols < 8 ? shared : null;
   }
-  const at = rest.indexOf(host);
-  const want = pos === 'into' ? rest.map((u) => (u === host ? [...u, blockId] : u))
+  /** The host with the dragged block in it, above or below the block named, else first or last. */
+  const joined = () => {
+    const k = drop.member && host.includes(drop.member) ? host.indexOf(drop.member) : pos === 'above' ? 0 : host.length - 1;
+    const i = pos === 'above' ? k : k + 1;
+    return [...host.slice(0, i), blockId, ...host.slice(i)];
+  };
+  const want = stacked ? rest.map((u) => (u === host ? joined() : u))
     : [...rest.slice(0, at + (pos === 'after' || pos === 'right' ? 1 : 0)), [blockId], ...rest.slice(at + (pos === 'after' || pos === 'right' ? 1 : 0))];
   // The order the drop asks for: settled, or as it stands where the drop keeps it.
   const order = settle(blocks, setup, tree, want, [blockId]) ?? (same(want.flat(), units.flat()) ? { places: {} } : null);
@@ -436,6 +471,83 @@ export function phoneDropChange(blocks, rawSetup, blockId, drop) {
     return cell ? now?.col === cell.col && now?.cols === cell.cols : !now;
   });
   return unchanged && !Object.keys(order.places ?? {}).length && !order.stacks && !order.list ? null : change;
+}
+
+/**
+ * A section with a phone change written in, as the editor writes it (changeSectionPhone): the places, the stacks, the custom order and the cells; the section given is left as it is.
+ * The cells take the place of a width and a left edge set by hand, and a block pinned to rows of its own keeps its place.
+ * @param {object} section
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], cells?: Record<string, {col: number, cols: number}|null>}} change
+ * @returns {object}
+ */
+export function phoneChangeApplied(section, change) {
+  const ids = new Set((section?.blocks ?? []).map((b) => b.id));
+  const blocks = (section?.blocks ?? []).map((b) => {
+    let next = b;
+    const own = () => (next === b ? (next = { ...b, frames: { ...b.frames } }) : next);
+    if (change?.places && b.id in change.places) {
+      const place = change.places[b.id];
+      const side = typeof place?.before === 'string' ? 'before' : typeof place?.after === 'string' ? 'after' : null;
+      own();
+      if (side && place[side] !== b.id && ids.has(place[side])) next.phonePlace = { [side]: place[side] };
+      else delete next.phonePlace;
+    }
+    if (change?.cells && b.id in change.cells && !Number.isFinite(b.frames?.mobile?.row)) {
+      const cells = change.cells[b.id];
+      const place = { ...(b.frames?.mobile ?? {}) };
+      delete place.col;
+      delete place.cols;
+      if (Number.isInteger(cells?.col) && Number.isInteger(cells?.cols) && cells.cols < PHONE_COLUMNS && cells.col >= 1 && cells.col + cells.cols - 1 <= PHONE_COLUMNS) {
+        delete place.x;
+        delete place.w;
+        Object.assign(place, { col: cells.col, cols: cells.cols });
+      }
+      own().frames.mobile = Object.keys(place).length ? place : null;
+    }
+    return next;
+  });
+  const next = { ...section, blocks };
+  if (Array.isArray(change?.stacks)) {
+    const stacks = change.stacks.map((stack) => (Array.isArray(stack) ? [...new Set(stack)].filter((id) => ids.has(id)) : [])).filter((stack) => stack.length > 1);
+    if (stacks.length) next.phoneStacks = stacks; else delete next.phoneStacks;
+  }
+  if (Array.isArray(change?.list)) next.phoneList = [...new Set(change.list)].filter((id) => ids.has(id));
+  return next;
+}
+
+/**
+ * The fewest of the phone's columns a cell holding words can take at a window's width without the words floor in base.css drawing it across the row.
+ * The floor's own lines: a cell of one column always stands across the row, of two up to a 657 px window, of three up to 438 px and of four up to 328 px; wider cells never do.
+ * @param {number} width The window's width in px
+ * @returns {number} 2 to 5
+ */
+export function leastWordsCols(width) {
+  if (width > 657) return 2;
+  if (width > 438) return 3;
+  if (width > 328) return 4;
+  return 5;
+}
+
+/**
+ * The places a block walks through with the arrow keys on the phone canvas (preview-edit.js), each a drop as phoneDropAt would read it: for every other unit in the phone's order, above it and below it, which on a block alone across the row read before and after it. Left and Right from a place are the drops beside that place's unit.
+ * `home` is the first place where the block already stands, where the walk begins.
+ * @param {object[]} blocks
+ * @param {string|object} rawSetup
+ * @param {string} blockId
+ * @returns {{drops: Array<{pos: 'above'|'below', of: string, member: string}>, home: number}}
+ */
+export function phoneKeyDrops(blocks, rawSetup, blockId) {
+  const setup = setupFrom(rawSetup);
+  const drops = [];
+  for (const unit of unitsOf(phoneTree(blocks, setup))) {
+    const others = unit.filter((id) => id !== blockId);
+    if (!others.length) continue;
+    const of = others[0];
+    drops.push({ pos: 'above', of, member: of }, { pos: 'below', of, member: others[others.length - 1] });
+  }
+  let home = drops.findIndex((drop) => phoneDropChange(blocks, setup, blockId, drop) === null);
+  if (home < 0) home = 0;
+  return { drops, home };
 }
 
 /** A flowing block's cells (migrate.js phoneCells), or null. */

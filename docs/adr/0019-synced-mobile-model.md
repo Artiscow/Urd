@@ -46,6 +46,10 @@ The field study (13 August 2026) is unambiguous. Squarespace Fluid Engine, Wix, 
 - **`section.responsive.mobile.mode` becomes dead weight in the schema** until a later clean-up after v1; the field stays readable so old files load correctly.
 - **Deletion is structural work and is done deliberately**: the phone view's bars hold no delete button and its keys do not delete, while a block's and a section's menus (the right-click menu and ⋮) stand in the phone view as on the desktop, deletion included, since every setting stands in every view.
 
+## Addenda
+
+- 13 November 2026: a block's words can be the phone's own beside its placement, per block and for the props that hold words, in [ADR-0033](0033-words-of-its-own-on-the-phone.md). It changes no decision here; a block with the phone's words counts as overridden for the review of decision 5, as a block placed by hand does.
+
 [ADR-0001]: 0001-hybrid-editor-model.md
 [ADR-0005]: 0005-versioning-and-migration.md
 [ADR-0018]: 0018-bound-content-width.md

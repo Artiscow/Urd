@@ -74,6 +74,29 @@ export function placeBesideBlock(block, size, view, { min = 8, gap = 12, margin 
 }
 
 /**
+ * Where the text bar stands while a text on the canvas is written (lib/TextToolbar.svelte, 0.7.3.19): beside the canvas, in the stage's room on the side with more of it (the left on a tie), level with the block, where that room holds the bar; else above the block, or below it where there is no room above; always inside the stage.
+ * @param {{left: number, top: number, right: number, bottom: number}} block The text's block in window px, its own bar above it included
+ * @param {{w: number, h: number}} size The bar's box
+ * @param {{left: number, right: number}} canvas The canvas as drawn in the stage
+ * @param {{left: number, top: number, right: number, bottom: number}} stage The stage around the canvas
+ * @param {{gap?: number, margin?: number}} [opts]
+ * @returns {{left: number, top: number, side: 'left'|'right'|'above'|'below'}}
+ */
+export function placeTextBar(block, size, canvas, stage, { gap = 12, margin = 8 } = {}) {
+  const clampY = (y) => Math.max(stage.top + margin, Math.min(y, stage.bottom - size.h - margin));
+  const clampX = (x) => Math.max(stage.left + margin, Math.min(x, stage.right - size.w - margin));
+  const roomLeft = canvas.left - stage.left - margin;
+  const roomRight = stage.right - canvas.right - margin;
+  if (Math.max(roomLeft, roomRight) >= size.w + gap) {
+    const right = roomRight > roomLeft;
+    return { left: right ? canvas.right + gap : canvas.left - gap - size.w, top: clampY(block.top), side: right ? 'right' : 'left' };
+  }
+  const above = block.top - gap - size.h;
+  if (above >= stage.top + margin) return { left: clampX(block.left), top: above, side: 'above' };
+  return { left: clampX(block.left), top: clampY(block.bottom + gap), side: 'below' };
+}
+
+/**
  * Where a window opened from a tab stands (the Drafts window): under a tab (`beside` false), beside a rail's icon, a sidebar's word or a menu's row, and at the window's top right where it opened from no tab; kept inside the window.
  * @param {{left: number, top: number, right: number, bottom: number}|null} anchor The tab's box
  * @param {{w: number, h: number}} size

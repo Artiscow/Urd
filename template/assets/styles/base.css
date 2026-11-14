@@ -11835,334 +11835,6 @@ textarea.urd-form-input {
   color: inherit;
 }
 
-/* The formatting bar for text fields (preview mode only): shown above
-   the block for as long as the field is being edited. Two fixed rows (Office style)
-   stack in a column; the expandable sub-rows sit below them. */
-.urd-text-toolbar {
-  /* Counter-scaling (urd-zoom): the anchor is set by JS in viewport
-     coordinates, so the origin has to be that corner. */
-  transform: scale(var(--urd-chrome-scale, 1));
-  transform-origin: top left;
-  position: fixed;
-  z-index: 100002;
-  display: none;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  max-width: min(760px, calc(100vw - 16px));
-  padding: 4px 6px;
-  background: var(--urd-admin-surface, #151a23);
-  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
-}
-
-/* Each fixed row: button groups that wrap when space is tight. */
-.urd-tt-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.urd-tt-row + .urd-tt-row {
-  border-top: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 10%, transparent);
-  padding-top: 4px;
-  margin-top: 4px;
-}
-
-/* Groups wrap AS A UNIT (never a lone button on its own line), with a divider between */
-.urd-tt-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.urd-tt-group + .urd-tt-group {
-  border-left: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent);
-  padding-left: 6px;
-  margin-left: 2px;
-}
-
-/* The size field: a narrow, centered number between minus and plus. The built-in
-   up/down arrows are hidden (− / + do the job); the field can still be typed in. */
-.urd-tt-size {
-  width: 3.2em;
-  text-align: center;
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-.urd-tt-size::-webkit-outer-spin-button,
-.urd-tt-size::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* The superscript/subscript buttons: an A with a small 2. */
-.urd-tt-supsub {
-  font: 600 12px/1 system-ui, sans-serif;
-}
-
-.urd-text-toolbar sup {
-  font-size: 8px;
-}
-
-/* Active format button: the caret sits inside that format (bold, alignment, lists ...).
-   The admin's accent, lightened a quarter toward its text, rings it at 3:1 or more against the bar and the fill in every admin theme. */
-.urd-text-toolbar button.active {
-  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 18%, transparent);
-  color: var(--urd-admin-text, #e8eaf0);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 75%, var(--urd-admin-text, #e8eaf0));
-}
-
-.urd-text-toolbar button.active:hover {
-  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 26%, transparent);
-}
-
-/* The line-height buttons in the spacing row. */
-.urd-text-toolbar .urd-tt-lh {
-  min-width: 0;
-  padding: 0 6px;
-  font: 12px/1 system-ui, sans-serif;
-}
-
-/* The color row (the dropdown behind the palette icon): its own sub-row in the bar */
-.urd-tt-colorrow {
-  display: none;
-  gap: 2px;
-  align-items: center;
-  padding-top: 4px;
-  margin-top: 2px;
-  border-top: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 14%, transparent);
-}
-
-.urd-tt-colorrow.visible {
-  display: flex;
-}
-
-/* The spacing row (behind the spacing button): line-height presets + letter spacing */
-.urd-tt-spacerow {
-  display: none;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  align-items: center;
-  padding-top: 4px;
-  margin-top: 2px;
-  border-top: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 14%, transparent);
-}
-
-.urd-tt-spacerow.visible {
-  display: flex;
-}
-
-.urd-tt-typolabel {
-  font: 600 10px/1.2 system-ui, sans-serif;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 60%, transparent);
-}
-
-/* The number fields (size, letter spacing); an empty field means inherit from the theme */
-.urd-tt-num {
-  width: 4em;
-  font: 12px/1.3 system-ui, sans-serif;
-  color: var(--urd-admin-text, #e8eaf0);
-  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 20%, transparent);
-  border-radius: 5px;
-  padding: 3px 4px;
-}
-
-/* The glyph row (the dropdown behind the smiley button): a scrollable grid of
-   characters and emoji, the same selection as the icon block's glyph picker */
-.urd-tt-glyphrow {
-  display: none;
-  flex-basis: 100%;
-  max-height: 220px;
-  overflow-y: auto;
-  padding-top: 4px;
-  margin-top: 2px;
-  border-top: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 14%, transparent);
-}
-
-.urd-tt-glyphrow.visible {
-  display: block;
-}
-
-.urd-tt-glyphhead {
-  font: 600 10px/1.2 system-ui, sans-serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 60%, transparent);
-  padding: 6px 2px 3px;
-}
-
-.urd-tt-glyphgrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
-  gap: 2px;
-}
-
-.urd-text-toolbar .urd-tt-glyphgrid button {
-  font-size: 15px;
-  font-weight: 400;
-}
-
-/* "Custom text color": an A with a rainbow underline */
-.urd-text-toolbar .urd-tt-acolor {
-  display: inline-block;
-  padding: 1px 3px 2px;
-  border-bottom: 3px solid transparent;
-  border-image: linear-gradient(to right, #e05252, #e2b84a, #4ac26b, #4a90e2, #a45ce2) 1;
-}
-
-.urd-text-toolbar.visible {
-  display: flex;
-}
-
-.urd-text-toolbar button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 26px;
-  height: 26px;
-  font: 600 12px/1 system-ui, sans-serif;
-  color: var(--urd-admin-text, #e8eaf0);
-  background: transparent;
-  border: 0;
-  border-radius: 5px;
-  padding: 0 5px;
-  cursor: pointer;
-}
-
-.urd-text-toolbar button:hover {
-  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 12%, transparent);
-}
-
-.urd-tt-sep {
-  width: 1px;
-  height: 18px;
-  margin: 0 3px;
-  background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 18%, transparent);
-}
-
-.urd-tt-color {
-  width: 22px;
-  height: 22px;
-  padding: 1px;
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 30%, transparent);
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.urd-text-toolbar .urd-text-swatch {
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 30%, transparent);
-}
-
-/* Alignment icons: three bars with different alignment */
-.urd-ticon {
-  display: grid;
-  gap: 3px;
-  width: 14px;
-}
-
-.urd-ticon i {
-  display: block;
-  height: 2px;
-  width: 100%;
-  background: currentColor;
-  border-radius: 1px;
-}
-
-.urd-ticon-left i:nth-child(2),
-.urd-ticon-right i:nth-child(2) {
-  width: 60%;
-}
-
-.urd-ticon-right i:nth-child(2) {
-  justify-self: end;
-}
-
-.urd-ticon-center i:nth-child(2) {
-  width: 60%;
-  justify-self: center;
-}
-
-/* List icons: a bullet or number plus a bar per row */
-.urd-licon {
-  display: grid;
-  gap: 3px;
-  width: 14px;
-}
-
-.urd-licon i {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 4px;
-  font-style: normal;
-  font-size: 4px;
-  line-height: 1;
-}
-
-.urd-licon i::before {
-  content: '';
-  flex: 0 0 auto;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.urd-licon-ol i::before {
-  content: none;
-}
-
-.urd-licon i::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  border-radius: 1px;
-  background: currentColor;
-}
-
-.urd-text-toolbar sub {
-  font-size: 8px;
-}
-
-/* The highlight button: an A on an accent-colored marker background; the free variant is outlined */
-.urd-text-toolbar .urd-tt-hl {
-  display: inline-block;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: var(--urd-color-accent);
-  color: var(--urd-color-accent-text, #fff);
-}
-
-.urd-text-toolbar .urd-tt-hl-free {
-  background: transparent;
-  color: var(--urd-admin-text, #e8eaf0);
-  border: 1px dashed color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 45%, transparent);
-}
-
-/* "Remove highlight": an A chip with a red diagonal stroke across it */
-.urd-text-toolbar .urd-tt-hl-none {
-  background: linear-gradient(to top right, transparent 44%, #e05252 44% 56%, transparent 56%);
-  color: var(--urd-admin-text, #e8eaf0);
-  border: 1px solid color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 30%, transparent);
-}
-
-body.urd-chrome-off .urd-text-toolbar {
-  display: none !important;
-}
-
 /* The shared color picker (color-picker.js): a floating card in preview mode */
 .urd-cp {
   position: fixed;
@@ -16055,7 +15727,7 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   border-inline: 1px solid color-mix(in srgb, #ff2d87 45%, transparent);
 }
 
-/* Where the dragged block lands on the phone: a line across the row before or after a block, the cells it will stand in, or the block it is stacked with, in the guides' magenta; while a width is dragged, the cells it will take with their share */
+/* Where the dragged block lands on the phone: a line across the row before or after a block, or the room it will take beside a block or above or below it in its column, in the guides' magenta; while a width is dragged, the cells it will take with their share */
 .urd-preview .urd-phone-land {
   position: absolute;
   z-index: 100000;
@@ -16063,6 +15735,38 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   display: grid;
   place-items: center;
   pointer-events: none;
+}
+
+/* A block dragged on the phone from its words, held still first: the words choose nothing while it moves */
+.urd-preview .urd-hold-drag,
+.urd-preview .urd-hold-drag * {
+  user-select: none !important;
+  cursor: grabbing;
+}
+
+/* Where the dragged block will stand as the section shows the drop's outcome: a dashed box in the guides' magenta, lightly filled */
+.urd-preview .urd-phone-landing {
+  position: absolute;
+  z-index: 99999;
+  box-sizing: border-box;
+  pointer-events: none;
+  border: calc(2px * var(--urd-chrome-scale, 1)) dashed #ff2d87;
+  border-radius: 6px;
+  background: color-mix(in srgb, #ff2d87 12%, transparent);
+}
+
+/* A block lifted with the keys on the phone: shown where it will land, in the landing's outline */
+.urd-preview .urd-block.urd-selected.urd-phone-carried,
+.urd-preview .urd-block.urd-selected.urd-phone-carried:focus {
+  outline: calc(2px * var(--urd-chrome-scale, 1)) dashed #ff2d87;
+  outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
+  border-radius: 6px;
+  background-color: color-mix(in srgb, #ff2d87 12%, transparent);
+}
+
+/* The place the block left, while the preview shows it standing elsewhere */
+.urd-preview .urd-phone-hold.urd-phone-hold-quiet {
+  outline-color: transparent;
 }
 
 /* The mark stands only while there is a landing place to show */
@@ -16096,11 +15800,6 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
 .urd-preview .urd-phone-land[data-kind="cell"] {
   background: color-mix(in srgb, #ff2d87 22%, transparent);
   outline: calc(2px * var(--urd-chrome-scale, 1)) solid #ff2d87;
-  outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
-}
-
-.urd-preview .urd-phone-land[data-kind="into"] {
-  outline: calc(2px * var(--urd-chrome-scale, 1)) dashed #ff2d87;
   outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
 }
 
@@ -18915,6 +18614,35 @@ body.urd-mobile .urd-add-section {
 }
 
 .urd-preview .urd-mobile-pin svg {
+  width: calc(11px * var(--urd-chrome-scale, 1));
+  height: calc(11px * var(--urd-chrome-scale, 1));
+}
+
+/* A block with words of its own on the phone (ADR-0033): the same amber round mark as the pin, with lines of text, beside the pin where the block has one.
+   It takes the pointer for its tooltip; a press on it reaches the block it stands on. */
+.urd-preview .urd-phone-words {
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg)));
+  transform-origin: top left;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 100000;
+  display: grid;
+  place-items: center;
+  width: calc(18px * var(--urd-chrome-scale, 1));
+  height: calc(18px * var(--urd-chrome-scale, 1));
+  border-radius: 50%;
+  background: #e2b84a;
+  color: #1a1508;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.urd-preview .urd-phone-words-beside {
+  left: calc(2px + 21px * var(--urd-chrome-scale, 1));
+}
+
+.urd-preview .urd-phone-words svg {
   width: calc(11px * var(--urd-chrome-scale, 1));
   height: calc(11px * var(--urd-chrome-scale, 1));
 }

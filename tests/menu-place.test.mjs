@@ -7,7 +7,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { placeBesideBlock, clampPlace, wideFits, givesWay, placeByTab } from '../editor/src/lib/menu-place.js';
+import { placeBesideBlock, clampPlace, wideFits, givesWay, placeByTab, placeTextBar } from '../editor/src/lib/menu-place.js';
 
 const VIEW = { w: 1600, h: 1000 };
 const SIZE = { w: 400, h: 600 };
@@ -96,4 +96,22 @@ test('a window opened from a tab stands under a tab, beside an icon or a word, a
   assert.deepEqual(placeByTab(icon, size, view, { beside: true }), { left: 52, top: 472 }, 'beside, lifted to stay inside');
   assert.deepEqual(placeByTab(null, size, view), { left: 1004, top: 64 });
   assert.deepEqual(placeByTab({ left: 1300, top: 48, right: 1380, bottom: 80 }, size, view), { left: 1012, top: 86 }, 'kept inside the right edge');
+});
+
+test('placeTextBar: beside the canvas where the stage has room, on the side with more of it, level with the block; else above it, or below where there is none above', () => {
+  const stage = { left: 400, top: 100, right: 1900, bottom: 1000 };
+  const size = { w: 420, h: 110 };
+  // A phone in the stage's middle: the left on a tie, level with the block.
+  const phone = { left: 960, right: 1340 };
+  const block = { left: 980, top: 400, right: 1320, bottom: 480 };
+  assert.deepEqual(placeTextBar(block, size, phone, stage), { left: 960 - 12 - 420, top: 400, side: 'left' });
+  // More room on the right: there.
+  assert.deepEqual(placeTextBar(block, size, { left: 700, right: 1080 }, stage), { left: 1092, top: 400, side: 'right' });
+  // A block scrolled up past the stage's top: the bar stays inside the stage.
+  assert.equal(placeTextBar({ ...block, top: 20 }, size, phone, stage).top, 108);
+  // A canvas filling the stage: above the block, kept inside the stage's width.
+  const wide = { left: 400, right: 1900 };
+  assert.deepEqual(placeTextBar({ left: 1700, top: 400, right: 1850, bottom: 480 }, size, wide, stage), { left: 1900 - 8 - 420, top: 400 - 12 - 110, side: 'above' });
+  // No room above: below the block.
+  assert.deepEqual(placeTextBar({ left: 600, top: 150, right: 900, bottom: 300 }, size, wide, stage), { left: 600, top: 312, side: 'below' });
 });

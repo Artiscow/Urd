@@ -9,7 +9,7 @@ import { boxStyleCss } from '../box-style.js';
 
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
-import { typedFrames } from '../push-model.js';
+import { typedFrames, PHONE_WORDS } from '../push-model.js';
 import { drawnWidth } from '../render.js';
 import { textDesign, termsDesign, applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
 
@@ -115,9 +115,13 @@ export const textBlock = {
     // Click-and-type: in preview mode (inside the editor's iframe) the text is
     // directly editable, and every change is posted to the editor, which owns
     // the draft. The block id sits on the block element (set by render.js).
-    // Desktop view only: the mobile view is layout adjustment, and text growth
-    // writes the desktop frame.
-    if (ctx.preview && ctx.viewport !== 'mobile') {
+    // In the phone view the words written are the phone's own (ADR-0033): the
+    // edit says so, and the desktop frame is left as it is. A block whose words
+    // the phone cannot keep (PHONE_WORDS, the terms of sale among them) is not
+    // written in the phone view.
+    const phoneView = ctx.viewport === 'mobile';
+    const ownType = ctx.section?.blocks.find((b) => b.id === el.dataset.blockId)?.type ?? 'text';
+    if (ctx.preview && (!phoneView || PHONE_WORDS[ownType])) {
       content.contentEditable = 'true';
       // Where the caret stood as each change began, in characters into the text: sent with the words, so an undo of the typing puts the caret back there.
       let caretBefore = null;
@@ -141,7 +145,8 @@ export const textBlock = {
         // The words are measured with the box at its own height, since the text fills a box taller than them, and converted from the content's zoom (a text set to shrink) to the block's.
         const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
         // A text drawn as questions follows its closed rows (push-model.js foldsIntoQuestions): the editor fits its frame after the typing, so the typing grows nothing here.
-        if (block?.frames?.desktop && design !== 'questions') {
+        // On the phone the words grow the row they stand in, and the desktop frame is not theirs to write.
+        if (!phoneView && block?.frames?.desktop && design !== 'questions') {
           const now = framesKey(ctx.section);
           let start = typingFrom.get(block.id);
           if (!start?.written.includes(now)) {
@@ -191,6 +196,7 @@ export const textBlock = {
           sectionId: ctx.section.id,
           blockId: el.dataset.blockId,
           props: { ...props, html: storedDocHtml(content) },
+          ...(phoneView ? { phone: true } : {}),
           ...(caretBefore === null ? {} : { caret: caretBefore }),
         });
       });

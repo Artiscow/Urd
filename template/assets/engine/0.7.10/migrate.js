@@ -50,8 +50,28 @@ export function lift(data, def) {
   return { ok: true, version, props };
 }
 
+/**
+ * A block's own words on the phone (ADR-0033) lifted with the block: the desktop's props with the phone's words written in go through the block's migrations, and the word props that then differ from the lifted desktop props are the phone's.
+ * So a migration that reshapes a word prop reaches `phoneProps` in the same step, and the stored phoneProps are written lifted at the next publish as the props are.
+ * @param {{type?: string, version: number, props: object, phoneProps?: object}} block
+ * @param {object|undefined} def The block's type definition
+ * @param {object} liftedProps The block's own props, lifted (lift)
+ * @returns {Record<string, string>} The phone's words, lifted; empty where it has none
+ */
+export function liftPhoneWords(block, def, liftedProps) {
+  const words = phoneWordsOf(block?.type, block?.phoneProps);
+  if (!Object.keys(words).length) return {};
+  const lifted = lift({ ...block, props: { ...(block.props ?? {}), ...words } }, def);
+  if (!lifted.ok) return {};
+  const own = {};
+  for (const key of PHONE_WORDS[block.type] ?? []) {
+    if (typeof lifted.props[key] === 'string' && lifted.props[key] !== liftedProps?.[key]) own[key] = lifted.props[key];
+  }
+  return own;
+}
+
 import { liftFooterSocial } from './links-model.js';
-import { fitMoves, SIZE, SIZE_BY_FRAME } from './push-model.js';
+import { fitMoves, SIZE, SIZE_BY_FRAME, PHONE_WORDS, phoneWordsOf } from './push-model.js';
 import { TERMS_DESIGNS } from './doc-look.js';
 
 /** Current version of the page file format (content/pages/*.json). */

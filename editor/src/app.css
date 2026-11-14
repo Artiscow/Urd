@@ -3603,13 +3603,15 @@
     padding-bottom: 1rem;
   }
 
+  /* A row wraps its chips under its name where both do not fit on one line, so the name keeps some of its words and no chip runs past the row */
   .pp-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.25rem 0.45rem;
     min-width: 0;
     min-height: 2.1rem;
-    padding: 0 0.4rem 0 0.25rem;
+    padding: 0.2rem 0.4rem 0.2rem 0.25rem;
     border-radius: 7px;
     background: color-mix(in srgb, currentColor 3%, transparent);
     font-size: 0.82rem;
@@ -3721,7 +3723,7 @@
   }
 
   .pp-name {
-    flex: 1;
+    flex: 1 1 5rem;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -3746,36 +3748,91 @@
     opacity: 0.7;
   }
 
-  /* A chip that gives the row back to the section's order: a place of the block's own in amber, the owner's stack in the accent */
-  .pp-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+  /* A row's marks, together at its end: where the row is too narrow for them beside its name, on a line of their own under it */
+  .pp-ways {
     display: inline-flex;
     flex: none;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 0.25rem;
+    margin-left: auto;
+  }
+
+  .pp-ways:empty {
+    display: none;
+  }
+
+  /* A way the row differs, drawn as the canvas marks the block: a place or words of its own in amber, the owner's stack in the accent; under the pointer or the keyboard's focus it shows the way back */
+  .pp-way:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1.25rem;
+    height: 1.25rem;
     min-height: 0;
-    padding: 0.1rem 0.45rem;
-    border: 1px solid color-mix(in srgb, var(--urd-color-accent) 55%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--urd-color-accent) 14%, transparent);
-    color: inherit;
-    font: inherit;
-    font-size: 0.7rem;
-    font-weight: 600;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #e2b84a;
+    color: #1a1508;
     cursor: pointer;
   }
 
-  .pp-chip:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)):hover {
-    background: color-mix(in srgb, var(--urd-color-accent) 26%, transparent);
+  .pp-way.pp-way-stack:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: var(--urd-color-accent);
+    color: var(--urd-color-accent-text, #052620);
   }
 
-  .pp-chip.pp-chip-own:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
-    border-color: #e2b84a;
-    background: color-mix(in srgb, #e2b84a 22%, transparent);
+  .pp-way > span {
+    grid-area: 1 / 1;
+    display: inline-grid;
+    place-items: center;
   }
 
-  .pp-chip svg {
-    width: 10px;
-    height: 10px;
+  .pp-way svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .pp-way-back {
+    visibility: hidden;
+  }
+
+  .pp-way:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, #e2b84a 85%, white);
+    box-shadow: 0 0 0 2px color-mix(in srgb, #e2b84a 45%, transparent);
+  }
+
+  .pp-way.pp-way-stack:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, var(--urd-color-accent) 85%, white);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+  }
+
+  .pp-way:focus-visible {
+    outline: 2px solid var(--urd-color-accent);
+    outline-offset: 2px;
+  }
+
+  .pp-way:hover .pp-way-is,
+  .pp-way:focus-visible .pp-way-is {
+    visibility: hidden;
+  }
+
+  .pp-way:hover .pp-way-back,
+  .pp-way:focus-visible .pp-way-back {
+    visibility: visible;
+  }
+
+  /* A screen without a pointer that hovers shows the way back at once, so a tap is never a surprise */
+  @media (hover: none) {
+    .pp-way .pp-way-is {
+      visibility: hidden;
+    }
+
+    .pp-way .pp-way-back {
+      visibility: visible;
+    }
   }
 
   .token-input {

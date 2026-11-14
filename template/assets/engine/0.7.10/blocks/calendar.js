@@ -963,9 +963,9 @@ function openCard(dialog, from) {
     event.preventDefault();
     dialog.close('escape');
   }, { signal: watch.signal });
-  // The editor's text toolbar, colour picker and menus lie outside the card and work on its words.
+  // The canvas's colour picker and menus lie outside the card and work on its words; the editor's text bar stands outside the canvas, where this press never reaches.
   document.addEventListener('pointerdown', (event) => {
-    if (dialog.contains(event.target) || event.target.closest?.('.urd-text-toolbar, .urd-cp, .urd-dd-menu')) return;
+    if (dialog.contains(event.target) || event.target.closest?.('.urd-cp, .urd-dd-menu')) return;
     dialog.close();
   }, { capture: true, signal: watch.signal });
   OPEN_CARDS.set(dialog, from);

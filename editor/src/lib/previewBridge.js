@@ -22,6 +22,7 @@
  *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? } (a block moved one place in the phone's reading order: the change phone-moves.js settled it into; coalesce from the keys)
  *                  { type: 'urd-phone-layout', sectionId, change } (a preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js)
  *                  { type: 'urd-hover-block', blockId } (the block under the mouse on the canvas, null for none)
+ *                  { type: 'urd-text-state', blockId, rect, state } (the text being written: its block's box in the canvas and what its selection holds; blockId null when none is, lib/TextToolbar.svelte)
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
@@ -74,6 +75,8 @@
  *                  { type: 'urd-select', blockId, picked? }   (select a block the editor just built, e.g. + New block; `picked` in the editor's lists, brought into view with the focus left in the list)
  *                  { type: 'urd-light', ids }                 (light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away)
  *                  { type: 'urd-deselect' }                   (a press on the stage around the canvas: no block, set or section stays selected)
+ *                  { type: 'urd-text-cmd', cmd, value, focus } (a command of the text bar on the text being written; focus hands the focus back to the text)
+ *                  { type: 'urd-text-end' }                   (the writing of the text ended from the editor: a press outside the text bar)
  *                  { type: 'urd-admin-theme', colors }        (the admin color theme {bg, surface, accent, text}: the editor menus in the preview follow admin, not the site)
  *                  { type: 'urd-templates', templates }               (the template drafts: a list of {id, name, kind, section?, blocks?, page?}; the My templates tab reads them)
  *                  { type: 'urd-insert-template', id }        (the Blocks panel's My templates: insert a block-group template into the active section)
@@ -125,6 +128,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-select-section') handlers.onSelectSection?.(msg);
     if (msg?.type === 'urd-select-block') handlers.onSelectBlock?.(msg);
     if (msg?.type === 'urd-hover-block') handlers.onHoverBlock?.(msg);
+    if (msg?.type === 'urd-text-state') handlers.onTextState?.(msg);
     if (msg?.type === 'urd-menu-area') handlers.onMenuArea?.(msg);
     if (msg?.type === 'urd-block-menu') handlers.onBlockMenu?.(msg);
     if (msg?.type === 'urd-section-menu') handlers.onSectionMenu?.(msg);
@@ -266,6 +270,14 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Nothing selected on the canvas: no block, no set of blocks and no section at work. */
     sendDeselect() {
       post({ type: 'urd-deselect' });
+    },
+    /** A command of the text bar on the text being written; `focus` hands the focus back to the text. */
+    sendTextCommand(cmd, value = null, focus = false) {
+      post({ type: 'urd-text-cmd', cmd, value, focus: Boolean(focus) });
+    },
+    /** The writing of the text ended from the editor. */
+    sendTextEnd() {
+      post({ type: 'urd-text-end' });
     },
     /** Ask the preview for the height a block's content needs; it answers with urd-grow. */
     sendFitBlock(sectionId, blockId, seq = 0) {

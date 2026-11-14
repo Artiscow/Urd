@@ -1,6 +1,6 @@
 /**
  * The canvas's editing chrome takes the admin's theme (0.7.30.7).
- * The text toolbar, the multi-selection bar, the colour picker, the canvas dropdown, the hidden-blocks list and the right-click menu draw their surface, their text, their lines and their marks from the --urd-admin-* variables the editor sends the preview.
+ * The multi-selection bar, the colour picker, the canvas dropdown, the hidden-blocks list and the right-click menu draw their surface, their text, their lines and their marks from the --urd-admin-* variables the editor sends the preview.
  * A colour written out may stand only as a variable's fallback, in a shadow, in a gradient, or in a part that draws colour or danger itself (KEEPS).
  */
 import { test } from 'node:test';
@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { ENGINE_DIR } from './_engine.mjs';
 
 const BASE = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
-const CHROME = /urd-text-toolbar|urd-tt-|urd-multi-toolbar|urd-multi-count|urd-multi-drag|\.urd-cp\b|urd-cp-|urd-dd-|urd-hidden-list|urd-hidden-chip|\.urd-ctx/;
+const CHROME = /urd-multi-toolbar|urd-multi-count|urd-multi-drag|\.urd-cp\b|urd-cp-|urd-dd-|urd-hidden-list|urd-hidden-chip|\.urd-ctx/;
 /** The parts that draw colour or danger themselves: the spectrum's handles and cursor, a deletion's red and an armed item. */
 const KEEPS = /urd-cp-(?:hue|alpha|cursor|del)\b|urd-multi-delete|urd-ctx-(?:danger|armed)\b/;
 /** A colour written out: a hex value, an rgb() or hsl() in either syntax, or a named white or black. */

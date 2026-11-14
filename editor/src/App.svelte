@@ -32,6 +32,7 @@
   import { calendarDesignSource, blockDesignSource, blockDesigns, footerPresetSource, blockPhoneDesignSource, SAME_DESIGN } from './lib/design-sources.js';
   import ColorPicker from './lib/ColorPicker.svelte';
   import FloatingMenu from './menu/FloatingMenu.svelte';
+  import TextToolbar from './lib/TextToolbar.svelte';
   import TopBar from './shell/TopBar.svelte';
   import Rail from './shell/Rail.svelte';
   import CollectionHeading from './panels/collections/CollectionHeading.svelte';
@@ -321,6 +322,8 @@
 {#if ed.blockMenu && (ed.selectedBlock || (ed.blockMenu.section && ed.activeSectionId))}
   <FloatingMenu pos={ed.blockMenu} />
 {/if}
+<!-- The text bar: the tools of a text written on the canvas, over the stage -->
+<TextToolbar />
 
 {#if ed.site && ed.chromeVisible}
   <!-- The Drafts window over the canvas, or its pill, opened from the Drafts tab (state/drafts.svelte.js) -->

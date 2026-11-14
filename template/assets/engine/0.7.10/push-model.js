@@ -154,6 +154,57 @@ export function drawnBlock(block, narrow) {
 }
 
 /**
+ * The props that hold a block's words, by its type: the words the phone can have of its own (`phoneProps`, additive, ADR-0033), written in the phone view and drawn at phone width in the desktop's place.
+ * A list of words (questions, events, rows) is not among them: its items would have to be matched one by one, and one added on the desktop would not reach the phone's copy.
+ */
+export const PHONE_WORDS = { text: ['html'] };
+
+/**
+ * A block's own words on the phone: the keys of its `phoneProps` that hold words for its type, as strings; empty where it has none.
+ * @param {string} type
+ * @param {object|null|undefined} phoneProps
+ * @returns {Record<string, string>}
+ */
+export function phoneWordsOf(type, phoneProps) {
+  const out = {};
+  for (const key of PHONE_WORDS[type] ?? []) {
+    if (typeof phoneProps?.[key] === 'string') out[key] = phoneProps[key];
+  }
+  return out;
+}
+
+/**
+ * The props a block is drawn with in a viewport: on the phone its own words in the desktop's place, everywhere else its props as they are.
+ * @param {{type?: string, props?: object, phoneProps?: object}} block
+ * @param {object} props The block's props, lifted
+ * @param {'desktop'|'mobile'} viewport
+ * @returns {object}
+ */
+export function propsForViewport(block, props, viewport) {
+  if (viewport !== 'mobile') return props;
+  const words = phoneWordsOf(block?.type, block?.phoneProps);
+  return Object.keys(words).length ? { ...props, ...words } : props;
+}
+
+/**
+ * The phone's own words after typing in the phone view: the typed words that differ from the desktop's, the rest left as they were; null where none differs, the block then reading the desktop's words again.
+ * @param {string} type
+ * @param {object} props The block's own props, the desktop's words
+ * @param {object|null|undefined} phoneProps The phone's words as they stand
+ * @param {object} typed The props as the phone view hands them back, its words in them
+ * @returns {Record<string, string>|null}
+ */
+export function phoneWordsChange(type, props, phoneProps, typed) {
+  const next = phoneWordsOf(type, phoneProps);
+  for (const key of PHONE_WORDS[type] ?? []) {
+    if (typeof typed?.[key] !== 'string') continue;
+    if (typed[key] === props?.[key]) delete next[key];
+    else next[key] = typed[key];
+  }
+  return Object.keys(next).length ? next : null;
+}
+
+/**
  * The block types that follow their content and fetch it (a feed, a
  * collection), so their height on the phone is unknown until the content is
  * drawn. The editor measures each at the phone width after an edit and

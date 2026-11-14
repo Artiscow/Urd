@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf } = await engineImport('migrate.js');
+const { lift, liftPhoneWords, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf } = await engineImport('migrate.js');
 const { mapBlock } = await engineImport('blocks/map.js');
 
 const textV3 = {
@@ -529,4 +529,15 @@ test('the space between flowing blocks on the phone: the section\'s own, else th
   assert.equal(mobileGapOf({ size: { mobileGap: 0 } }, { layout: { mobileGap: 24 } }), 0, 'a section\'s own zero stands');
   assert.equal(mobileGapOf({ size: { mobileGap: 400 } }, null), MOBILE_GAP_MAX);
   assert.equal(mobileGapOf({ size: { mobileGap: -8 } }, null), 0);
+});
+
+test('liftPhoneWords: a migration that reshapes a word prop reaches the phone\'s own words, and a word equal to the desktop\'s after it is the desktop\'s', () => {
+  const def = { version: 2, migrations: { 1: (props) => ({ ...props, html: `<div>${props.html}</div>` }) } };
+  const block = { type: 'text', version: 1, props: { html: '<p>Desk</p>', align: 'left' }, phoneProps: { html: '<p>Phone</p>' } };
+  const lifted = lift(block, def);
+  assert.deepEqual(liftPhoneWords(block, def, lifted.props), { html: '<div><p>Phone</p></div>' });
+  assert.deepEqual(liftPhoneWords({ ...block, phoneProps: { html: '<p>Desk</p>' } }, def, lifted.props), {}, 'the same words as the desktop\'s are no words of its own');
+  assert.deepEqual(liftPhoneWords({ ...block, phoneProps: undefined }, def, lifted.props), {});
+  assert.deepEqual(liftPhoneWords(block, undefined, block.props), {}, 'an unknown type keeps no words to draw');
+  assert.equal(block.phoneProps.html, '<p>Phone</p>', 'the stored words are left as they are');
 });
