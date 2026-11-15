@@ -2163,7 +2163,7 @@ Note: the enumeration's last AI row («AI image tasks in the editor») points ba
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Inline on-canvas text editing | EL, SH, WP, DV | Click to type; contextual toolbar | Has: click-and-write with a floating text toolbar | - |
+| Inline on-canvas text editing | EL, SH, WP, DV | Click to type; contextual toolbar | Has: click-and-write with a floating text toolbar, the caret where the first click lands on a block not yet selected (Delivered 0.7.0.90) | - |
 | Bold, italic, underline | WS, WE, WH, SQ, WP | ⌘B / I / U | Has | - |
 | Heading or paragraph shortcuts | SQ, WP | ⌘⌥0-6; Shift+Alt+1-6 | Missing | 0.7.10; 0.7.9: text styles |
 | Text alignment shortcuts | SQ | ⇧⌘L / E / R | Missing | 0.7.10 |

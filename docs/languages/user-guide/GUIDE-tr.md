@@ -35,14 +35,14 @@ Ekranın üç bölümü vardır:
 
 ## İçeriği düzenleme
 
-- **Metin yazma**: bir metin bloğuna tıkla ve doğrudan sayfaya yaz.
+- **Metin yazma**: bir metin bloğunun sözcüklerine tıkla ve doğrudan sayfaya yaz; imleç tıkladığın yerde durur, blok seçili olmasa da ilk tıklamada; hareket eden bir basış bunun yerine bloğu sürükler.
 - **Bir bloğu taşıma**: onu tut ve sürükle. Blok kılavuz çizgilerine oturur (aşağıdaki Izgara bölümüne bak).
 - **Boyutu değiştirme**: bloğun köşesindeki tutamacı sürükle.
 - **Seçili bloğun üstündeki araç çubuğu**:
   - ⠿ taşı (sürükle)
   - katman okları (çizgiye doğru ok, yukarı/aşağı) bloğu en öne ya da en arkaya alır (bloklar üst üste geldiğinde). Not: düzenlerken imlediğin ya da seçtiğin blok her zaman en üstte gösterilir, böylece tutamaçlara erişilebilir - GERÇEK sırayı Temiz görünümde ve yayımlanan sayfada görürsün
   - telefon simgesi: mobilde görünürlük (süsleme), aşağıya bak
-  - × bloğu sil
+  - kırmızı çöp kutusu bloğu siler (geri al onu geri getirir); çubuğun her biçiminde, telefon görünümünde de, ⋮ işaretinden önce durur
 - **Döndürme**: bloğun sağ üst köşesindeki küçük ⟳ dairesini sürükle (15° adımlara oturur; serbest açı için Shift'i basılı tut). Tam derece değeri Özellikler panelinden de girilebilir.
 - **Seçili blokta klavye**: ok tuşları bir ızgara adımı taşır (Shift = 1 px), Delete siler, Esc seçimi kaldırır (sayfanın çevresindeki koyu alana basmak da kaldırır), Ctrl+C, Ctrl+X ve Ctrl+V kopyalar, keser ve yapıştırır (bir kopya başka bir sayfaya da yapıştırılır), Ctrl+D çoğaltır. Bir bölüm seçiliyken ve blok seçili değilken Ctrl+C ve Ctrl+X bölümün tamamını alır, Ctrl+V de kopyalanan bir bölümü seçili olanın altına yapıştırır.
 - **Hizalama çizgileri**: bir bloğu başka bir bloğun kenarına ya da ortasına yaklaştırdığında ikisinin arasında bir çizgi belirir ve blok yerine oturur; bir komşuya olan uzaklık iki komşu arasındaki uzaklığa eşit olduğunda, uzaklıklar içinde sayı olan bantlar olarak gösterilir. Çizgiler bloğu üzerinde tuttuğun bölümden de gelir. Düz yatay ya da düz dikey taşımak için Shift'i, ızgarasız ve çizgisiz tamamen serbest yerleşim için Ctrl'yi (Mac'te Cmd) basılı tut.
@@ -99,7 +99,7 @@ Bir bloğa tıkla ve sürükle-bırak yerine sayılar ve seçeneklerle ince ayar
 
 ## Bölümler
 
-Sayfa, üst üste dizilmiş bölümlerden kurulur. **+ Yeni bölüm** düğmesini almak için iki bölümün sınırına gel: düğme hazır bölüm şablonlarından oluşan bir galeri açar; şablonlar gruplanmıştır ve her birinin kısa bir açıklaması vardır. Tüm şablonlar başlangıç noktalarıdır: ekledikten sonra blokları her zamanki gibi serbestçe düzenlersin ve renkler temanı izler.
+Sayfa, üst üste dizilmiş bölümlerden kurulur. **+ Yeni bölüm** düğmesini almak için iki bölümün sınırına gel: düğme hazır bölüm şablonlarından oluşan bir galeri açar; şablonlar gruplanmıştır ve her birinin kısa bir açıklaması vardır. Tüm şablonlar başlangıç noktalarıdır: ekledikten sonra blokları her zamanki gibi serbestçe düzenlersin ve renkler temanı izler. **Yeni blok** menüsünden, Bloklar panelinden ya da Ctrl+K ile eklenen yeni bir blok, kutusu çizdiği şeye uydurulmuş olarak gelir: sözcükleri ve satırları daha fazla kaydırmadan izin verdiği kadar dar, bir metin 140 px'ten dar değil. Resim, video, harita, şekil, galeri, koleksiyon, ürün kartları, şerit, form, ödeme, ses oynatıcı ve metin kutusu başladıkları boyutu korur; çoğaltılan ya da yapıştırılan bir blok kendi boyutunu korur. Tek bir geri alma yeni bloğu kaldırır.
 
 - **Temeller**: boş bölüm, hero (sola hizalı ya da iki düğmeli ortalanmış), görseller, iletişim, gizlilik ve basit alt bilgi bölümü.
 - **Kartlar ve listeler**: simgeli özellik kartları, haber kartları, tarih rozetli ve kayıt düğmeli etkinlikler, ekip/yönetim, SSS, adım adım, manşet (bir büyük haber + iki küçük) ve ürünler/merch (**Satın al** düğmesini Özellikler panelinde bir ödeme bağlantısına, örneğin Vipps'e yönlendir).

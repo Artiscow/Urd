@@ -933,7 +933,6 @@ export default {
     'cap.about.ribbon-stripes': 'Şeridin üstünde ve altında çizgiler ya da bandın yerinde bir çizgi',
     'menu.toTabs': 'Alanlar sekme olarak',
     'canvas.bar.more': 'Diğer işlemler',
-    'canvas.bar.editText': 'Metni düzenle',
     'canvas.bar.editImage': 'Resmi düzenle',
     'canvas.bar.editCover': 'Kapağı düzenle',
     'opt.toolbarLook.glass-accent': 'Vurgulu cam',

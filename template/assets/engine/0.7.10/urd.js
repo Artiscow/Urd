@@ -551,6 +551,9 @@ function enablePreview(state, opts) {
         if (h > 0) window.parent?.postMessage({ type: 'urd-grow', sectionId: msg.sectionId, blockId: msg.blockId, h, fit: true, seq: msg.seq ?? 0 }, location.origin);
       };
       fitTimers.set(msg.blockId, [500, 1800, 5000].map((wait) => setTimeout(measure, wait)));
+    } else if (msg?.type === 'urd-fit-new' && msg.blockId && Number.isFinite(msg.w)) {
+      // A block just added from «+ New block», the Blocks panel or the palette: its box is fitted to what it draws (add-fit.js).
+      window.UrdPreviewEdit?.fitNewBlock?.(msg.sectionId, msg.blockId, msg.w);
     } else if (msg?.type === 'urd-frames' && msg.sectionId && msg.frames) {
       // The editor has fitted a frame to its content and moved the blocks
       // below: the new frames are put in place without drawing the section

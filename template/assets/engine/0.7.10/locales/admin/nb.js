@@ -936,7 +936,6 @@ export default {
     'cap.about.ribbon-stripes': 'Striper over og under båndet, eller en stripe der båndet står',
     'menu.toTabs': 'Områdene som faner',
     'canvas.bar.more': 'Flere handlinger',
-    'canvas.bar.editText': 'Rediger teksten',
     'canvas.bar.editImage': 'Rediger bildet',
     'canvas.bar.editCover': 'Rediger omslaget',
     'opt.toolbarLook.glass-accent': 'Glass med aksent',

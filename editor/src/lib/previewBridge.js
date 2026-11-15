@@ -50,7 +50,8 @@
  *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
  *                  { type: 'urd-picture-edit', kind, sectionId?, blockId?, index?, collection?, entryId?, frameRatio, frameWidth, frameHeight } (a picture on the canvas asks the image editor to open: an image block's, a video's cover, a gallery picture, a collection entry's or a quote's portrait, with its frame's width over its height and its size in pixels as drawn)
  *                  { type: 'urd-link-edit', value, text }     (the text toolbar's link or Ctrl+K: the link at the caret in the link shape, or null, and the selected words)
- *                  { type: 'urd-add-block', sectionId, block } (block placed from the palette)
+ *                  { type: 'urd-add-block', sectionId, block, fit? } (block placed from the palette, or a plugin block from «+ New block»: fit, a new block whose box is fitted to what it draws; a duplicate has none)
+ *                  { type: 'urd-new-fitted', sectionId, blockId, w, h } (a new block's box fitted to what it draws, the answer to urd-fit-new, sent once as the preview shows the block fitted, add-fit.js)
  *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
  *                  { type: 'urd-request-block', sectionId, kind, at?, files? } ("+ Add block"; at = click point {x in %, y in px}, without = centered; files = the pictures an image or a gallery is made from, picked in the preview)
  *                  { type: 'urd-calendar-designs', sectionId, at? } ("All calendar designs …" in "+ Add block": the design picker, the calendar then placed as a requested block)
@@ -96,6 +97,7 @@
  *                  { type: 'urd-demo-motion' } (let the ribbons roll for a few seconds while editing)
  *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
  *                  { type: 'urd-fit-block', sectionId, blockId, seq } (ask for the height of a block that follows its content, ADR-0025; answered with urd-grow)
+ *                  { type: 'urd-fit-new', sectionId, blockId, w } (a new block's box to be fitted to what it draws, from the width it was added at, sent before its section so the preview draws it hidden until fitted; answered with urd-new-fitted)
  *                  { type: 'urd-frames', sectionId, frames } (frames fitted to their content, block id to desktop frame: put in place without drawing the section again)
  *                  { type: 'urd-text-style', blockId, style } (a font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's)
  */
@@ -143,6 +145,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);
     if (msg?.type === 'urd-link-edit') handlers.onLinkEdit?.(msg);
     if (msg?.type === 'urd-add-block') handlers.onAddBlock?.(msg);
+    if (msg?.type === 'urd-new-fitted') handlers.onNewFitted?.(msg);
     if (msg?.type === 'urd-add-blocks') handlers.onAddBlocks?.(msg);
     if (msg?.type === 'urd-request-block') handlers.onRequestBlock?.(msg);
     if (msg?.type === 'urd-calendar-designs') handlers.onCalendarDesigns?.(msg);
@@ -293,6 +296,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Ask the preview for the height a block's content needs; it answers with urd-grow. */
     sendFitBlock(sectionId, blockId, seq = 0) {
       draftPost({ type: 'urd-fit-block', sectionId, blockId, seq });
+    },
+    /** Asks for a new block's box fitted to what it draws, measured from the width it was added at (`w`, in percent), before its section is sent; answered with urd-new-fitted. */
+    sendFitNew(sectionId, blockId, w) {
+      draftPost({ type: 'urd-fit-new', sectionId, blockId, w });
     },
     /** Frames fitted to their content (block id to desktop frame) and the section's new height, put in place without drawing the section again. */
     sendFrames(sectionId, frames) {

@@ -615,11 +615,13 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [ ] Your own phone layout preset, kept for the site beside the ones Urd ships (weighed in 0.7.3.14's design pass, 13 November 2026, and not built): a small grid of two columns where cells are merged and split, the section's blocks filling them in the phone's order, and «Keep for the site» making it a preset every section can pick.
 - [ ] Static image as background - while you scroll, the image stays still
 - [ ] Slight rework of the phone editor UI design 
+- [ ] Create empty space and increase/decrease the size of a section in phone view
  
 ## URGENT
 - [ ] Need a size editor/control for nav in phone view
-- [ ] add bin button to toolmenu
-- [ ] Fix the boxes around new elements, so that they are not too wide or tall 
+- [x] add bin button to toolmenu, DELIVERED 0.7.0.90 (15 November 2026): the bin on every form of the block's bar, in both views
+- [x] Fix the boxes around new elements, so that they are not too wide or tall, DELIVERED 0.7.0.90 (15 November 2026): a new block shown with its box fitted to what it draws
+- [ ] Toolmenu hover highlight
 
 ## Known Limitations (documented, no fix planned)
 

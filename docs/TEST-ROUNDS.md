@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.90): new blocks fitted, a bin on every block bar, writing at the first click
+
+- [ ] Select a block on the desktop with each «Toolbar» form in Urd settings (Every group, Small panels, Short, Every tool): the bin stands on dark red before ⋮, and a press deletes the block; Ctrl+Z brings it back
+- [ ] In the phone view, select a block: its bar has the bin too, and it deletes; the Delete key still does not delete there
+- [ ] Add a text, a button, a statistic, a quote, share buttons and a countdown from «+ New block»: each appears with its box around what it draws, a text no narrower than about 140 px, and never shows a large box first
+- [ ] Add each calendar (list, cards, month, «Coming up», agenda): each appears at its own width, about as fast as a text, and does not change size after it appears
+- [ ] Add a list calendar and a month calendar: each appears directly in the layout it keeps at its width, with no switch of layout after it appears
+- [ ] Add a picture, a video, a map, a gallery, a text box and a shape: they keep their starting size
+- [ ] Add a block from the Blocks panel and with Ctrl+K: it is fitted the same way; duplicate or paste a block you have resized: the copy keeps its size
+- [ ] Add a block and press Ctrl+Z once: the block is gone in that one step
+- [ ] Select a text: the bar starts with its tools, without «Edit text»; with «Small panels», a text's bar starts with «Settings»
+- [ ] Click into a text on the desktop: the text bar stands in two even rows; in the phone view it stands beside the phone, in more rows where the room is narrow
+- [ ] Click once on the words of a text block that is not selected: the caret stands where you clicked and typing goes in there; press on the words and move: the block is dragged instead
+
 ### Test batch (0.7.3.22.2): the pin mark on pinned blocks only
 
 - [ ] In the phone view, a section with blocks side by side (Om oss's first section): none of them carries a yellow pin, and each placed in columns still has ↺ on its bar

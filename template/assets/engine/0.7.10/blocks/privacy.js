@@ -513,6 +513,8 @@ export const privacyBlock = {
       const model = privacyModel(ctx.site, pages);
       if (!model.analytics && cloudflareBeacon([...document.scripts].map((s) => s.src))) model.analytics = true;
       draw(host, model, props, el.dataset.blockId);
+      // In the editor a new privacy page's fit measures it now that it stands (add-fit.js).
+      if (ctx.preview) el.dispatchEvent(new CustomEvent('urd-drawn'));
     });
     if (Boolean(ctx.preview) && ctx.viewport !== 'mobile') {
       // The help chip (ADR-0008): where the page's facts come from, and when another page's change shows.

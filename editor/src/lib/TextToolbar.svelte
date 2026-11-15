@@ -78,6 +78,58 @@
     return placeTextBar(block, { w: w || 440, h: h || 120 }, canvas, stage);
   });
 
+  /** The widest the bar may stand, in px: the room beside the canvas where it stands beside the phone, else the stage's width; within it the bar stands at two lines' width (twoLines). */
+  const BESIDE_MIN = 300;
+  const roomFor = $derived.by(() => {
+    void resized;
+    const frame = ed.iframeEl;
+    const wrap = ed.frameWrapEl;
+    if (!open || !frame || !wrap) return BESIDE_MIN;
+    const ir = frame.getBoundingClientRect();
+    const stage = wrap.getBoundingClientRect();
+    // The room placeTextBar asks of a bar beside the canvas: its box, the gap to the canvas and the margin to the stage's edge, a pixel to spare.
+    const beside = Math.floor(Math.max(Math.max(ir.left, stage.left) - stage.left, stage.right - Math.min(ir.right, stage.right)) - 22);
+    return beside >= BESIDE_MIN ? beside : Math.floor(stage.width - 16);
+  });
+
+  /** The width that holds the tools' groups in two even lines, the bar's own edges included, in px; 0 until measured. */
+  let twoLines = $state(0);
+
+  /** The bar's padding and border on either side together, which its width holds beside the tools (box-sizing: border-box), a pixel to spare. */
+  const BAR_EDGES = 15;
+
+  /**
+   * The tools' groups flow in two even lines, or more where the room is narrower, wrapping where the width ends: the narrowest width at which they stand in two lines is found from the groups' own widths (each with its divider's room), the split where the longer line is shortest.
+   * A group that opens a line shows no divider before it, its room kept, so the lines never shift back and forth.
+   */
+  function markLineStarts(node) {
+    const mark = () => {
+      const groups = [...node.querySelectorAll('.tb-group')];
+      const widths = groups.map((group) => group.getBoundingClientRect().width + (Number.parseFloat(getComputedStyle(group).marginLeft) || 0));
+      const total = widths.reduce((sum, w) => sum + w, 0);
+      let first = 0;
+      let best = total;
+      for (const w of widths.slice(0, -1)) {
+        first += w;
+        best = Math.min(best, Math.max(first, total - first));
+      }
+      const wanted = Math.ceil(best) + BAR_EDGES;
+      if (total && wanted !== twoLines) twoLines = wanted;
+      let top = null;
+      for (const group of groups) {
+        const at = group.offsetTop;
+        group.classList.toggle('tb-line-start', top !== null && at > top + 2);
+        top = at;
+      }
+    };
+    // The groups are watched too: a group grows or shrinks with what it shows (the font's name) while the tools' box keeps its width.
+    const ro = new ResizeObserver(mark);
+    ro.observe(node);
+    for (const group of node.querySelectorAll('.tb-group')) ro.observe(group);
+    mark();
+    return () => ro.disconnect();
+  }
+
   // The text's writing changed: the sub-row closes.
   $effect(() => {
     void bar.blockId;
@@ -142,7 +194,8 @@
   <!-- The bar holds the mouse's press so the text keeps its focus; its tools are buttons and fields of their own -->
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div class="text-bar" role="toolbar" aria-label={ta('tt.toolbar')} tabindex="-1" bind:this={barEl} bind:offsetWidth={w} bind:offsetHeight={h}
-    style="left: {place.left}px; top: {place.top}px" onmousedown={keepFocus} transition:menuMotion>
+    style="left: {place.left}px; top: {place.top}px; max-width: min({twoLines ? Math.min(roomFor, twoLines) : roomFor}px, calc(100vw - 16px))" onmousedown={keepFocus} transition:menuMotion>
+    <div class="tb-tools" {@attach markLineStarts}>
     <div class="tb-row">
       <span class="tb-group">
         <span class="tb-pick"><Dropdown value={sel.level} options={levels} title={ta('tt.level')} onchange={(v) => bar.run('level', v, true)} /></span>
@@ -192,6 +245,7 @@
         <button type="button" title={ta('tt.clearFormat')} onclick={() => bar.run('clear', null, true)}>{@html CLEAR}</button>
       </span>
     </div>
+    </div>
     {#if sub === 'colour'}
       <!-- The theme's text and accent colours keep following the theme in the words; a colour of its own is a fixed one -->
       <div class="tb-sub tb-colours" transition:rowMotion>
@@ -240,8 +294,8 @@
     z-index: 315;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
     width: max-content;
-    max-width: min(460px, calc(100vw - 16px));
     padding: 4px 6px;
     background: var(--urd-color-surface, #151a23);
     color: var(--urd-color-text, #e8eaf0);
@@ -251,31 +305,42 @@
     font: 600 12px/1 system-ui, sans-serif;
   }
 
-  .tb-row {
+  /* The tools' groups in one flow, wrapping only where the bar's room ends; a row of the markup is no box of its own */
+  .tb-tools {
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 4px;
+    align-items: center;
+    row-gap: 4px;
   }
 
-  .tb-row + .tb-row,
+  .tb-row {
+    display: contents;
+  }
+
   .tb-sub {
     border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
     padding-top: 4px;
     margin-top: 4px;
   }
 
-  /* Groups wrap as a whole, never a lone button on its own line, with a divider between */
+  /* Groups wrap as a whole, never a lone button on its own line, with a divider between; the first group stands at the bar's edge, and one that opens a line keeps its divider's room without the line */
   .tb-group {
     display: inline-flex;
     align-items: center;
     gap: 2px;
-  }
-
-  .tb-group + .tb-group {
     border-left: 1px solid color-mix(in srgb, currentColor 18%, transparent);
     padding-left: 6px;
     margin-left: 2px;
+  }
+
+  .tb-row:first-child > .tb-group:first-child {
+    border-left: 0;
+    padding-left: 0;
+    margin-left: 0;
+  }
+
+  .tb-group:global(.tb-line-start) {
+    border-left-color: transparent;
   }
 
   .text-bar button {

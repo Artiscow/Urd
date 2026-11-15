@@ -8,6 +8,7 @@ import { makeId, termsHtml } from '$engine/sections/presets.js';
 import { termsSeed } from '../lib/site-seed.js';
 import { calDesign } from '$engine/calendar-designs.js';
 import { frameAtPoint } from '$engine/place.js';
+import { fitsWhenAdded, fittedFrame } from '$engine/add-fit.js';
 import { claimAnchors } from '$engine/anchor-model.js';
 import { historyState } from './history.svelte.js';
 import { mediaState } from './media.svelte.js';
@@ -213,11 +214,20 @@ async function requestPlacement(block) {
   if (previewState.bridge) {
     previewState.bridge.sendPlaceBlock(block);
   } else {
-    insertBlock(pageState.targetSection()?.id, block);
+    insertBlock(pageState.targetSection()?.id, block, { fit: true });
   }
 }
 
-function insertBlock(sectionId, block) {
+/** The new blocks waiting for their box fitted to what they draw (add-fit.js), by id: the frame they were added at. */
+const pendingFits = new Map();
+
+/**
+ * A block put in a section as a step of its own. A new block (`fit`, from «+ New block», the Blocks panel or the palette) has its box fitted to what it draws, where its kind's box is not what it draws: the preview measures it (urd-fit-new) and the fit is written as part of this step (handleNewFitted); a pasted or duplicated block keeps its own size.
+ * @param {string} sectionId
+ * @param {object} block
+ * @param {{fit?: boolean}} [options]
+ */
+function insertBlock(sectionId, block, { fit = false } = {}) {
   const section = pageState.store.data.sections.find((s) => s.id === sectionId) ?? pageState.store.data.sections[0];
   if (!section) return;
   historyState.pushHistory('add-block');
@@ -231,8 +241,40 @@ function insertBlock(sectionId, block) {
   pageState.markPinnedBehind(section);
   pageState.store.save();
   historyState.updateDirty();
+  // A new block's fit is asked for before its section is sent, so the preview draws it hidden and shows it fitted.
+  const fits = fit && fitsWhenAdded(block) && previewState.viewMode === 'desktop' && Boolean(block.frames?.desktop);
+  if (fits) {
+    pendingFits.set(block.id, { w: block.frames.desktop.w, h: block.frames.desktop.h });
+    previewState.bridge?.sendFitNew(section.id, block.id, block.frames.desktop.w);
+  }
   previewState.bridge?.sendSection(pageState.pageId, section);
-  // A block that follows its content (ADR-0025) gets its frame fitted to what it shows.
+  // A block that follows its content (ADR-0025) gets its frame fitted to what it shows; a block being fitted as it is added gets it once that fit has come (handleNewFitted).
+  if (!fits) pageState.fitBlockSoon(section.id, block);
+}
+
+/**
+ * A new block's box fitted to what it draws, as the preview measured it before showing it (urd-new-fitted): written into its desktop frame, its horizontal centre kept as the preview kept it, as part of the step that added it, so one undo takes both away.
+ * Only while that step is the last and the block stands as it was added: a block changed meanwhile keeps what the owner made of it, and the preview is given the draft's frame again. An answer without a size (a block not fitted) only finishes the add.
+ */
+function handleNewFitted(msg) {
+  const pending = pendingFits.get(msg.blockId);
+  const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
+  const block = section?.blocks.find((b) => b.id === msg.blockId);
+  const frame = block?.frames?.desktop;
+  pendingFits.delete(msg.blockId);
+  if (!block || !frame) return;
+  const sized = Number.isFinite(msg.w) && Number.isFinite(msg.h);
+  if (sized && pending && historyState.lastHistoryKey === 'add-block' && frame.w === pending.w && frame.h === pending.h) {
+    block.frames.desktop = fittedFrame(frame, msg.w, msg.h);
+    pageState.store.save();
+    historyState.updateDirty();
+    if (pageState.selectedBlock?.blockId === block.id) pageState.syncSelectedBlock();
+    // Nothing is drawn again: the preview shows the block at this frame already, in its copy of the section too, and a drawing would draw a calendar's content anew.
+  } else if (sized) {
+    // A fit the draft no longer takes (the block changed, or the step undone and done again meanwhile) leaves the preview showing a frame the draft does not hold: the section is drawn again from the draft.
+    previewState.bridge?.sendSection(pageState.pageId, section);
+  }
+  // The height of a block that follows its content is fitted at the width it now stands at.
   pageState.fitBlockSoon(section.id, block);
 }
 
@@ -298,7 +340,7 @@ function placeInSection(block, sectionId, at) {
     block.frames.desktop.x = Math.round(((100 - block.frames.desktop.w) / 2) * 100) / 100;
     block.frames.desktop.y = 40;
   }
-  insertBlock(sectionId, block);
+  insertBlock(sectionId, block, { fit: true });
   previewState.bridge?.sendSelect(block.id);
 }
 
@@ -354,4 +396,5 @@ export const blocksState = {
   CAL_KIND_BY_VIEW,
   addCalendarDesign,
   handleRequestBlock,
+  handleNewFitted,
 };

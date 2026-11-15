@@ -1675,9 +1675,25 @@ function keepDesignVariants(cd) {
   designVariants = cd.CAL_DESIGNS.filter((d) => d.id !== 'plain').map((d) => ({ label: d.id, labelKey: d.labelKey, props: { design: d.id, view: d.view } }));
 }
 
-// The editor's block menu lists the designs, so the preview loads the design model up front; a visitor loads it with the first calendar on a page.
+/** The renderer module of each design family, loaded when a calendar draws one (literal paths, so the modules stay out of the visitor closure and the preload list). */
+const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
+
+/** The parser, the design model, the formats and the links every calendar draws with, loaded together on the first render. */
+const calendarParts = () => Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js')]);
+
+/**
+ * Loads what a calendar draws with ahead of the first one, every design's renderer among it, so a calendar added in the editor draws at once; a part that cannot be loaded now is loaded when a calendar draws.
+ * @returns {Promise<void>}
+ */
+function warmCalendar() {
+  return calendarParts().then(() => Promise.all(Object.values(DESIGN_MODULES).map((load) => load()))).then(() => {}, () => {});
+}
+
+// The editor's block menu lists the designs, so the preview loads the design model up front, and what a calendar draws with once the editor is idle (a timer where the browser has no idle callback); a visitor loads it with the first calendar on a page.
 if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('preview')) {
   import('../calendar-designs.js').then(keepDesignVariants, () => {});
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(() => warmCalendar(), { timeout: 3000 });
+  else setTimeout(warmCalendar, 1500);
 }
 
 /* ---------- The block ---------- */
@@ -1697,9 +1713,8 @@ function renderCalendar(el, props, ctx) {
     host.setAttribute('aria-busy', 'true');
     host.appendChild(loadingNode(el, ctx));
   }
-  // The parser and the design model are loaded together, on the first render, and a design's renderer module with them (literal paths, so the modules stay out of the visitor closure and the preload list).
-  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
-  Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js')]).then(async ([ics, cd, cf, maps, links]) => {
+  // The parser and the design model are loaded together, on the first render, and a design's renderer module with them.
+  calendarParts().then(async ([ics, cd, cf, maps, links]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
     // The view switcher draws the week with the week strip, so its module comes along.
@@ -1943,8 +1958,9 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     // A calendar gone from the page (deleted, or drawn anew) leaves the list.
     for (const [id, state] of SHOWN) if (!state.host.isConnected) SHOWN.delete(id);
     SHOWN.set(key, { host, examples, reason, redraw: () => { if (host.isConnected) settle(occurrences, reason, sample); } });
-    // The bar's button reads what the calendar now shows (preview-edit.js exampleButton).
+    // The bar's button reads what the calendar now shows (preview-edit.js exampleButton), and a new calendar's fit measures it now that it stands (urd-drawn, add-fit.js).
     el.dispatchEvent(new CustomEvent('urd-cal-shown'));
+    el.dispatchEvent(new CustomEvent('urd-drawn'));
   };
   const failed = (error) => settle([], () => ta('calendar.feedFailed', { error }), props.sampleOnFail === true);
 

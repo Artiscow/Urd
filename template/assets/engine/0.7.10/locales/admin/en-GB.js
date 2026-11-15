@@ -933,7 +933,6 @@ export default {
     'cap.about.ribbon-stripes': 'Stripes above and below the ribbon, or a stripe in the band\'s place',
     'menu.toTabs': 'Areas as tabs',
     'canvas.bar.more': 'More actions',
-    'canvas.bar.editText': 'Edit text',
     'canvas.bar.editImage': 'Edit image',
     'canvas.bar.editCover': 'Edit cover',
     'opt.toolbarLook.glass-accent': 'Glass with accent',

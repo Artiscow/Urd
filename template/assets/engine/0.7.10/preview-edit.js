@@ -21,6 +21,7 @@
  *                  { type: 'urd-phone-layout', sectionId, change }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js)
  *                  { type: 'urd-hover-block', blockId }  (the block under the mouse, null for none: its row in the Phone panel's list is lit)
  *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] }  (the sections that need a phone review in the phone view, where each stands in the canvas, for the editor to draw their cards beside the phone; sent when they change)
+ *                  { type: 'urd-new-fitted', sectionId, blockId, w, h }  (a new block's box fitted to what it draws, the answer to urd-fit-new, once, as the block is shown: the fitted width in percent and height in px, or null for both where it was not fitted, add-fit.js)
  *                  { type: 'urd-phone-unpin', sectionId, blockId }  (a block pinned on the phone unpinned, from its bar or its menu: back into the phone's order, its cells kept, phone-moves.js unpinned)
  *                  { type: 'urd-phone-seen', sectionIds }  (the sections standing in the phone view's window, at least half of them or half the window, for the editor's phone check before publishing; sent as a section is drawn, and as a scroll changes the sections in sight)
  *                  { type: 'urd-too-narrow', screen }  (a drag, the key carry or a handle greys its block as too narrow for its words, ADR-0034: 'phone' or 'desktop' while it is greyed, null once it is not)
@@ -33,7 +34,7 @@
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
-import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable } from './push-model.js';
+import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX } from './push-model.js';
 import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -68,6 +69,7 @@ import { pathTo, nodeAt } from './caret-path.js';
 import { ta, adminLang } from './i18n.js';
 import { barTools, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, BAR_ICONS } from './bar-tools.js';
 import { textDesign } from './doc-look.js';
+import { addedFloor, narrowestWidth, fittedFrame, pluginFits, DRAWS_LATE } from './add-fit.js';
 
 /**
  * The event's target as an Element. The editing chrome draws its icons as
@@ -82,6 +84,31 @@ function eventTarget(event) {
 
 /** The text a block lets the owner type in on the canvas, whichever editing mode it asked for. */
 const EDITABLE_TEXT = '[contenteditable="true"], [contenteditable="plaintext-only"]';
+
+/**
+ * Writes in a block's words where a press was (x, y in the page's px), as a press released without a drag on a block not yet selected asks: the words the press began on (`pressed`), else those under it, else the block's first, take the focus, and the caret stands at the press through the standard caret at a point (caretPositionFromPoint), or at the end of the words where the browser has no such thing.
+ * @param {HTMLElement} el The block element
+ * @param {number} x
+ * @param {number} y
+ * @param {Element|null} [pressed]
+ */
+function writeAt(el, x, y, pressed = null) {
+  const under = pressed?.isConnected && el.contains(pressed) ? pressed : document.elementFromPoint(x, y)?.closest(EDITABLE_TEXT);
+  const field = under && el.contains(under) ? under : el.querySelector(EDITABLE_TEXT);
+  if (!field) return;
+  field.focus({ preventScroll: true });
+  const range = document.createRange();
+  const at = typeof document.caretPositionFromPoint === 'function' ? document.caretPositionFromPoint(x, y) : null;
+  if (at && field.contains(at.offsetNode)) range.setStart(at.offsetNode, at.offset);
+  else {
+    range.selectNodeContents(field);
+    range.collapse(false);
+  }
+  range.collapse(true);
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+}
 
 /** The layer order: puts the block in front of the section's other blocks or behind them all (the toolbar's arrows, the right-click menu and the keys; layer-order.js). */
 function bumpBlockZ(host, section, block, el, dir) {
@@ -246,19 +273,6 @@ function moreButton(open) {
     contextMenu.leaveSoon();
   });
   return btn;
-}
-
-/** «Edit text» on the bar: the caret at the end of the block's text, where it is written on the page. */
-function editTextIn(el) {
-  const text = el.querySelector('[contenteditable="true"]');
-  if (!text) return;
-  text.focus();
-  const range = document.createRange();
-  range.selectNodeContents(text);
-  range.collapse(false);
-  const sel = window.getSelection();
-  sel?.removeAllRanges();
-  sel?.addRange(range);
 }
 
 /** A button of the bar that opens the editor's menu or one of its small windows: a press on it leaves the menu standing open to the editor, which opens the tool's group inside it or closes it as the press asks (the editor's state/preview.svelte.js). */
@@ -1325,7 +1339,7 @@ export function placeBlock(block, root) {
   frame.y = Math.max(8, Math.round((visibleTop + visibleBottom) / 2 - frame.h / 2));
   frame.x = Math.round(((100 - frame.w) / 2) * 100) / 100;
 
-  post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block });
+  post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block, fit: true });
   // The new block is selected immediately (same pattern as duplicate):
   // the re-render after urd-add-block reads selectedBlockId, the editor
   // follows via urd-select-block, and Ctrl+D/arrow keys work without an
@@ -1847,6 +1861,7 @@ function addBlockAdder(host, section, grid) {
       post({
         type: 'urd-add-block',
         sectionId: section.id,
+        fit: true,
         block: {
           id: makeId('blk'),
           type,
@@ -4650,6 +4665,180 @@ export function selectById(blockId, picked = false) {
   if (picked) el.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 }
 
+/** The blocks just added that wait for their box fitted to what they draw, by id: their section and the width they were added at, in percent (fitNewBlock). */
+const pendingNewFits = new Map();
+
+/** The editing chrome inside a block, which never counts in what it draws. */
+const FIT_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-readout, .urd-hint-chip, .urd-hint-card, .urd-anchor, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words';
+
+/** How far the block's content spills past the boxes that hold it, in px, the editing chrome left out: past its own box, by what stands in it, and past every box inside it. */
+function spill(el) {
+  const box = el.getBoundingClientRect();
+  let sum = 0;
+  for (const child of el.children) {
+    if (child.matches(FIT_CHROME)) continue;
+    const r = child.getBoundingClientRect();
+    if (r.width > 0) sum += Math.max(0, r.right - box.right) + Math.max(0, box.left - r.left);
+  }
+  for (const node of el.querySelectorAll('*')) {
+    if (node.closest(FIT_CHROME)) continue;
+    sum += Math.max(0, node.scrollWidth - node.clientWidth);
+  }
+  return sum;
+}
+
+/** The lines the block's words stand on, every text counted, the editing chrome left out. */
+function lineCount(el) {
+  let lines = 0;
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent.trim() || node.parentElement?.closest(FIT_CHROME)) continue;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    lines += new Set([...range.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top))).size;
+  }
+  return lines;
+}
+
+/**
+ * A block's box fitted to what it draws, at the width it was added at (`startPx`): the narrowest width at which its words stand on no more lines, nothing in it spills sideways and it grows no taller (a grid of cards that would lose a column), no narrower than `floor`, and the height its content needs there, both in px; null where it draws nothing yet.
+ * Content that only gets smaller as the block narrows (a number sized by the block's width) shrinks with it until its words wrap. The block is measured as a visitor sees it (urd-fit-measure, visitorHeights), and stands at its own width again after.
+ * @param {HTMLElement} el The block element
+ * @param {number} startPx
+ * @param {number} floor
+ * @returns {{w: number, h: number}|null}
+ */
+function fittedSize(el, startPx, floor) {
+  const keep = el.style.width;
+  const asVisitor = !el.classList.contains('urd-fit-measure');
+  if (asVisitor) el.classList.add('urd-fit-measure');
+  const at = (w) => {
+    el.style.width = `${w}px`;
+    return { h: visitorHeights(el).resting, lines: lineCount(el), over: spill(el) };
+  };
+  try {
+    const start = at(Math.round(startPx));
+    if (!start.h) return null;
+    const changes = (w) => {
+      const m = at(w);
+      return m.lines > start.lines || m.over > start.over + 1 || m.h > start.h + 1;
+    };
+    const w = narrowestWidth(floor, startPx, changes);
+    return { w, h: at(w).h };
+  } finally {
+    el.style.width = keep;
+    if (asVisitor) el.classList.remove('urd-fit-measure');
+  }
+}
+
+/**
+ * A new block fitted to what it draws (the urd-fit-new message, add-fit.js), which the editor sends before the section that holds it: the block is drawn hidden, fitted before the screen shows it, and shown at its fitted size, so it never changes size once it is seen (beginNewFit).
+ * @param {string} sectionId
+ * @param {string} blockId
+ * @param {number} startW The width it was added at, in percent of the canvas
+ */
+export function fitNewBlock(sectionId, blockId, startW) {
+  pendingNewFits.set(blockId, { sectionId, startW });
+  const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`);
+  if (el?._urdCtx && !isMobile()) beginNewFit(el, el._urdCtx.block);
+}
+
+/** The time between two measures of a plugin's block, whose content may arrive late without saying so, in ms. */
+const NEW_FIT_STEP = 120;
+
+/** The measures a plugin's block is given before it is shown as it stands, and the time a block that says when it has drawn (DRAWS_LATE) is waited for, about four seconds. */
+const NEW_FIT_TRIES = 33;
+const NEW_FIT_WAIT = NEW_FIT_STEP * NEW_FIT_TRIES;
+
+/**
+ * Fits a block just added as it is drawn: hidden until fitted, and measured before the next paint; a block that draws its content later (DRAWS_LATE) before the paint after it says it has drawn (urd-drawn), and a plugin's block that asks to be fitted (pluginFits), whose content may arrive late without saying so, once two measures in a row agree and nothing in it is loading.
+ * A calendar fitted below NARROW_PX turns to its narrow layouts in place, so it stays hidden two frames more and is measured again in them. The fitted frame is drawn on the block (drawFrame), put in the page's copy of the section, the block shown, and the fit sent to the editor (urd-new-fitted), with no size where none is taken, so the editor finishes the add either way; a block drawn again meanwhile carries on in its new element.
+ * @param {HTMLElement} el The block element
+ * @param {object} block The block's data
+ */
+function beginNewFit(el, block) {
+  const pending = pendingNewFits.get(block.id);
+  if (!pending) return;
+  el.style.visibility = 'hidden';
+  const def = window.Urd.blocks.get(block.type);
+  const polls = !DRAWS_LATE.has(block.type) && Boolean(def?.fromPlugin);
+  let last = '';
+  let tries = 0;
+  const host = () => el.closest('.urd-section');
+  const widthOf = () => (host() ? canvasOf(host()).clientWidth : 0);
+  const measureAt = (px, width) => fittedSize(el, px, addedFloor(block, (pending.startW / 100) * width));
+  /** The fitted frame on the block and in the page's copy, its width rounded up so the words never wrap one line more. */
+  const put = (fit, width) => {
+    const frame = fittedFrame(block.frames.desktop, Math.ceil((fit.w / width) * 10000) / 100, fit.h);
+    block.frames.desktop = frame;
+    drawFrame(el, frame);
+    if (host()) syncSectionHeight(host());
+    return frame;
+  };
+  const show = (frame) => {
+    pendingNewFits.delete(block.id);
+    el.style.visibility = '';
+    post({ type: 'urd-new-fitted', sectionId: pending.sectionId, blockId: block.id, w: frame?.w ?? null, h: frame?.h ?? null });
+  };
+  const finish = (fit, width) => {
+    if (!fit || !block.frames?.desktop) {
+      show(null);
+      return;
+    }
+    const frame = put(fit, width);
+    const startPx = (pending.startW / 100) * width;
+    if (block.type !== 'calendar' || startPx < NARROW_PX || fit.w >= NARROW_PX) {
+      show(frame);
+      return;
+    }
+    // The calendar redraws its narrow layouts in the frame after its ruler hears the width: measured again in them, from the width it now stands at.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (!el.isConnected || pendingNewFits.get(block.id) !== pending) return;
+      try {
+        const again = measureAt(fit.w, widthOf());
+        show(again ? put(again, widthOf()) : frame);
+      } catch {
+        show(frame);
+      }
+    }));
+  };
+  const step = () => {
+    if (!el.isConnected || pendingNewFits.get(block.id) !== pending) return;
+    try {
+      const width = widthOf();
+      const fit = width && !el.querySelector('[aria-busy="true"]') ? measureAt((pending.startW / 100) * width, width) : null;
+      const said = fit ? `${fit.w}x${fit.h}` : '';
+      tries += 1;
+      if ((fit && (!polls || said === last)) || tries >= NEW_FIT_TRIES) {
+        finish(fit, width);
+        return;
+      }
+      last = said;
+      setTimeout(step, NEW_FIT_STEP);
+    } catch {
+      // A block that cannot be measured is shown as it was added.
+      show(null);
+    }
+  };
+  if (!pluginFits(def)) {
+    show(null);
+    return;
+  }
+  if (!DRAWS_LATE.has(block.type)) {
+    requestAnimationFrame(step);
+    return;
+  }
+  // Measured in the frame after the block says it has drawn, or, where it never says so, as it stands after the wait.
+  const late = setTimeout(() => requestAnimationFrame(() => {
+    tries = NEW_FIT_TRIES;
+    step();
+  }), NEW_FIT_WAIT);
+  el.addEventListener('urd-drawn', () => {
+    clearTimeout(late);
+    requestAnimationFrame(step);
+  }, { once: true });
+}
+
 /**
  * The blocks a row under the pointer in the editor's lists stands for, lit on the canvas (the urd-light message: the Phone panel's order, a stack lighting all of its blocks); an empty list takes the light away.
  * @param {string[]} ids
@@ -4728,6 +4917,8 @@ function enhanceBlock(el, block, section, grid, host) {
   if (block.decor) el.classList.add('urd-decor');
   // The keyboard handler (arrow keys/Delete) needs the block's context.
   el._urdCtx = { block, section, grid, host };
+  // A block just added waits, hidden, for its box fitted to what it draws (fitNewBlock).
+  if (pendingNewFits.has(block.id) && !isMobile()) beginNewFit(el, block);
 
   const mobile = isMobile();
 
@@ -4898,6 +5089,21 @@ function enhanceBlock(el, block, section, grid, host) {
     el.addEventListener('input', markWords);
   }
 
+  /** The block's bin: it deletes the block at a press, and undo brings it back; on every form of the bar, in both views, before ⋮ (ADR-0019). */
+  const deleteButton = () => {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'urd-edit-delete';
+    deleteBtn.dataset.cap = ta('canvas.cap.delete');
+    deleteBtn.innerHTML = BIN_SVG;
+    deleteBtn.title = ta('canvas.deleteBlock');
+    deleteBtn.addEventListener('click', () => {
+      post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
+      // Without deselecting, a phantom selection of the deleted block would survive in the module state.
+      selectBlock(null);
+    });
+    return deleteBtn;
+  };
+
   // In the phone view the block's design on a phone and its menu are one press away too: the design button opens the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS), its design otherwise, and the gear its menu.
   if (mobile) {
     if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, block.type === 'calendar' || Boolean(PHONE_DESIGNS[block.type])));
@@ -4905,6 +5111,7 @@ function enhanceBlock(el, block, section, grid, host) {
     // With small panels the gear is the word for the settings, as the desktop bar's first word is for a block without its own editor.
     if (TOOL_FORMS.includes(barForm())) barBody.appendChild(barButton(ta('canvas.ctx.settings'), ta('canvas.blockMenu'), () => openBlockSettings(el, section, block), 'urd-edit-lead'));
     else barBody.appendChild(menuButton(el, section, block));
+    barBody.appendChild(deleteButton());
     // The right-click menu under ⋮, as on the desktop's shorter bars: the way to it by touch.
     barBody.appendChild(moreButton((x, y, from) => openContextMenu(el, x, y, from)));
   }
@@ -4946,8 +5153,7 @@ function enhanceBlock(el, block, section, grid, host) {
     return imgBtn;
   };
   const bumpZ = (dir) => bumpBlockZ(host, section, block, el, dir);
-  // Structure (z-order, decor, deletion) is edited in the desktop view;
-  // the mobile view is pure layout adjustment.
+  // The layer order and the phone button stand on the desktop's full bar; the phone view's bar is layout, its bin and its menus.
   if (!mobile && form === 'full') {
     const Z_FRONT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14"/><path d="M12 20V9"/><path d="M7 13l5-5 5 5"/></svg>';
     const Z_BACK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/></svg>';
@@ -4984,36 +5190,24 @@ function enhanceBlock(el, block, section, grid, host) {
     // The design picker one press away, beside the gear, on a block that has designs.
     if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, false));
     barBody.appendChild(menuButton(el, section, block));
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'urd-edit-delete';
-    deleteBtn.dataset.cap = ta('canvas.cap.delete');
-    deleteBtn.innerHTML = BIN_SVG;
-    deleteBtn.title = ta('canvas.deleteBlock');
-    deleteBtn.addEventListener('click', () => {
-      post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
-      // Without deselecting, a phantom selection of the deleted block would survive in the module state.
-      selectBlock(null);
-    });
-    barBody.appendChild(deleteBtn);
+    barBody.appendChild(deleteButton());
   }
 
   // The shorter bars: the acts the full bar holds besides these stand in the right-click menu under ⋮.
   if (!mobile && form !== 'full') {
-    // With small panels the bar starts with a word for the block's main act: the image or cover editor, the text (a text block's or the terms of sale's, both written on the page), or its settings.
+    // With small panels the bar starts with a word for the block's main act: the image or cover editor, or its settings; a text is written where it stands, at a press on its words, so it needs no word of its own.
     const picture = block.type === 'image' || coverEditable;
-    const written = block.type === 'text' || block.type === 'terms';
-    const leadIsSettings = form === 'panels' && !picture && !written;
+    const leadIsSettings = form === 'panels' && !picture;
     if (form === 'panels') {
-      const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : written ? ta('canvas.bar.editText') : ta('canvas.ctx.settings');
-      const tip = picture ? ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage') : leadIsSettings ? ta('canvas.blockMenu') : word;
-      const run = picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : written ? () => editTextIn(el) : () => openBlockSettings(el, section, block);
+      const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : ta('canvas.ctx.settings');
+      const tip = picture ? ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage') : ta('canvas.blockMenu');
+      const run = picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : () => openBlockSettings(el, section, block);
       barBody.appendChild(barButton(word, tip, run, 'urd-edit-lead'));
     }
-    // Every group a tool: the word for the block's own editor where it has one, then a tool for each group of its menu, which the right-click menu under ⋮ follows with the rest.
-    if (form === 'groups' && (picture || written)) {
-      const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : ta('canvas.bar.editText');
-      barBody.appendChild(barButton(word, picture ? ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage') : word, picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : () => editTextIn(el), 'urd-edit-lead'));
+    // Every group a tool: the word for the picture's own editor where it has one, then a tool for each group of its menu, which the right-click menu under ⋮ follows with the rest.
+    if (form === 'groups' && picture) {
+      const word = ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage');
+      barBody.appendChild(barButton(word, ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage'), () => askPictureEditor(coverEditable ? 'cover' : 'image'), 'urd-edit-lead'));
     }
     const place = toolPlacer(barBody, barLook(form));
     if (form === 'short' && picture) barBody.appendChild(imageButton());
@@ -5033,6 +5227,7 @@ function enhanceBlock(el, block, section, grid, host) {
     if (barPhone()) barBody.appendChild(phoneButton());
     // The gear stands on the short bar, and on the bar of tools where nothing else opens the settings (not after the word «Settings», not where every group is a tool), or wherever «Settings gear on the bar» asks for it.
     if (form === 'short' || (form === 'panels' && !leadIsSettings) || barGear()) barBody.appendChild(menuButton(el, section, block));
+    barBody.appendChild(deleteButton());
     barBody.appendChild(moreButton((x, y, from) => openContextMenu(el, x, y, from)));
   }
   // The block's help chip, drawn before its bar, is the bar's last tool, as one drawn after it is (attachHint in hint.js).
@@ -6003,17 +6198,16 @@ function enhanceBlock(el, block, section, grid, host) {
    * dragging. On release the new frame is reported to the editor.
    */
   function wireDrag(handle, kind, opts = {}) {
+    // The words the last press on the desktop began on, in a block not yet selected: released without a drag, the press writes there at once (writeAt).
+    let pressedText = null;
     handle.addEventListener('pointerdown', (event) => {
       if (opts.surface) {
         // In the Clean view a press is the published page's: no block is selected or dragged, so a link, a calendar's event, a document's fold and a links row answer as they do for a visitor, and the texts are plain text (urd.js).
         if (document.body.classList.contains('urd-chrome-off')) return;
         const target = eventTarget(event);
-        // Editable text is only exempt when the block is ALREADY selected
-        // (then the text is being edited). An unselected block drags
-        // freely from the text too - a click without a drag selects it,
-        // another click edits. Every block's own editable text counts: the
-        // rich text block's, and the plain-text cells, numbers, quotes and
-        // events the other blocks mark with plaintext-only.
+        // Editable text is only exempt when the block is ALREADY selected (then the text is being edited).
+        // An unselected block drags freely from the text too: a click without a drag selects it and writes where it was pressed (writeAt).
+        // Every block's own editable text counts: the rich text block's, and the plain-text cells, numbers, quotes and events the other blocks mark with plaintext-only.
         // On the phone a press that moves on those words drags a flowing block all the same (moveToDrag), and the text keeps its click, and its words are chosen by a press held still first.
         if (target?.closest(EDITABLE_TEXT) && selectedBlockId === block.id && multiIds.size <= 1) {
           if (mobile && !Number.isFinite(block.frames.mobile?.row) && event.button === 0) moveToDrag(event);
@@ -6039,8 +6233,10 @@ function enhanceBlock(el, block, section, grid, host) {
         // reference plugin names included: plugin copies in user repos
         // keep them forever (see the compatibility surface in SCHEMA.md).
         if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-cart-button), input, select, textarea, dialog, .urd-collection-editable, .urd-collection-image-edit, .urd-faq-q, .urd-cal-config, .urd-form-config, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
+        pressedText = !mobile && event.button === 0 && !event.shiftKey && !(multiIds.size > 1 && multiIds.has(block.id)) ? target?.closest(EDITABLE_TEXT) ?? null : null;
         event.preventDefault();
       } else {
+        pressedText = null;
         event.preventDefault();
         event.stopPropagation();
         markActiveVisual(host);
@@ -6533,7 +6729,11 @@ function enhanceBlock(el, block, section, grid, host) {
         const unchanged = !started || (current.x === orig.x && current.y === orig.y && current.w === orig.w && current.h === orig.h);
         if (unchanged) settle?.undo();
         dropSticky();
-        if (unchanged) return;
+        if (unchanged) {
+          // A press on a block's words that never became a drag writes there: the block is selected by the press, and the caret stands where it was.
+          if (!started && pressedText) writeAt(el, start.x, start.y, pressedText);
+          return;
+        }
 
         // Group drag: record the whole set as ONE undo step (shared
         // groupKey) and skip section transfer (the set lives in one
