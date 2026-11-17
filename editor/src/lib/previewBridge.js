@@ -28,7 +28,8 @@
  *                  { type: 'urd-hover-block', blockId } (the block under the mouse on the canvas, null for none)
  *                  { type: 'urd-text-state', blockId, rect, state } (the text being written: its block's box in the canvas and what its selection holds; blockId null when none is, lib/TextToolbar.svelte)
  *                  { type: 'urd-block-bar', blockId, rect?, tools? } (in the phone view, the selected block's box and its bar's tools for the bar drawn beside the phone, lib/CanvasBar.svelte; blockId null when none stands)
- *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest } (in the phone view, a menu's rows for the editor to draw, at the point or under the bar's ⋮)
+ *                  { type: 'urd-section-bar', sectionId, rect?, tools? } (the same for the section the mouse was last over, or put at work, 0.7.3.23)
+ *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest } (in the phone view, a menu's rows for the editor to draw, at the point or under the ⋮ of the bar `editor` names, 'block' or 'section')
  *                  { type: 'urd-ctx-close' } / { type: 'urd-ctx-hold' } / { type: 'urd-ctx-hover', over } (that menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
@@ -86,7 +87,8 @@
  *                  { type: 'urd-deselect' }                   (a press on the stage around the canvas: no block, set or section stays selected)
  *                  { type: 'urd-text-cmd', cmd, value, focus } (a command of the text bar on the text being written; focus hands the focus back to the text)
  *                  { type: 'urd-text-end' }                   (the writing of the text ended from the editor: a press outside the text bar)
- *                  { type: 'urd-bar-press', blockId, index, rest } (a tool of the bar drawn beside the phone pressed: the page presses the tool at that place on the block's own bar; rest, the ⋮ opened by a resting mouse)
+ *                  { type: 'urd-bar-press', bar, id, index, rest } (a tool of a bar drawn beside the phone pressed: the page presses the tool at that place on the block's or the section's own bar; rest, the ⋮ opened by a resting mouse)
+ *                  { type: 'urd-section-settings', sectionId } (a section's settings asked for from the Phone panel: the page opens them as the gear on the section's bar does)
  *                  { type: 'urd-ctx-run', index } / { type: 'urd-ctx-closed', focus } (a row of the phone view's menu chosen in the editor, or the menu closed there without one; focus, closed with a key, gives the block its focus back)
  *                  { type: 'urd-admin-theme', colors }        (the admin color theme {bg, surface, accent, text}: the editor menus in the preview follow admin, not the site)
  *                  { type: 'urd-templates', templates }               (the template drafts: a list of {id, name, kind, section?, blocks?, page?}; the My templates tab reads them)
@@ -108,8 +110,8 @@
  *                  { type: 'urd-text-style', blockId, style } (a font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's)
  */
 
-/** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. The review cards' places and the phone view's bar and menu pass so the editor holds what the page last sent; it draws none of them while a draft is looked at. */
-const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards', 'urd-block-bar', 'urd-ctx-close']);
+/** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. The review cards' places and the phone view's bars and menu pass so the editor holds what the page last sent; it draws none of them while a draft is looked at. */
+const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards', 'urd-block-bar', 'urd-section-bar', 'urd-ctx-close']);
 
 /**
  * @param {HTMLIFrameElement} iframe The iframe showing the page with ?preview=1
@@ -142,6 +144,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-hover-block') handlers.onHoverBlock?.(msg);
     if (msg?.type === 'urd-text-state') handlers.onTextState?.(msg);
     if (msg?.type === 'urd-block-bar') handlers.onBlockBar?.(msg);
+    if (msg?.type === 'urd-section-bar') handlers.onSectionBar?.(msg);
     if (msg?.type === 'urd-ctx-menu') handlers.onCtxMenu?.(msg);
     if (msg?.type === 'urd-ctx-close') handlers.onCtxClose?.(msg);
     if (msg?.type === 'urd-ctx-hold') handlers.onCtxHold?.(msg);
@@ -308,9 +311,13 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendTextEnd() {
       post({ type: 'urd-text-end' });
     },
-    /** A tool of the bar drawn beside the phone pressed: the page presses it on the block's own bar; `rest`, the ⋮ opened by a mouse resting on it. */
-    sendBarPress(blockId, index, rest = false) {
-      post({ type: 'urd-bar-press', blockId, index, rest: Boolean(rest) });
+    /** A tool of a bar drawn beside the phone pressed: the page presses it on the block's or the section's own bar (`bar`, 'block' or 'section', and its `id`); `rest`, the ⋮ opened by a mouse resting on it. */
+    sendBarPress(bar, id, index, rest = false) {
+      post({ type: 'urd-bar-press', bar, id, index, rest: Boolean(rest) });
+    },
+    /** A section's settings opened from the editor's own lists (the Phone panel), as the gear on its bar opens them. */
+    sendSectionSettings(sectionId) {
+      post({ type: 'urd-section-settings', sectionId });
     },
     /** A row of the phone view's menu chosen: the page runs it. */
     sendCtxRun(index) {

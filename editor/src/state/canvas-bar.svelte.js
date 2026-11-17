@@ -1,38 +1,43 @@
 /**
- * The phone view's block bar and menus, drawn by the editor beside the phone (lib/CanvasBar.svelte, 0.7.3.19.2): the selected block's box in the canvas and its bar's tools, and a menu's rows, as the preview tells them (urd-block-bar, urd-ctx-menu).
+ * The phone view's bars and menus, drawn by the editor beside the phone (lib/CanvasBar.svelte): the selected block's bar (0.7.3.19.2) and the section's (0.7.3.23), each with its box in the canvas and its tools, and a menu's rows, as the preview tells them (urd-block-bar, urd-section-bar, urd-ctx-menu).
  * The tools and the rows stay the page's own (preview-edit.js pressPhoneBar, runPhoneMenu): a press here is sent back and acts there, so every tool and row does what it does on the page.
  */
 import { previewState } from './preview.svelte.js';
 
-/** The block whose bar stands, or null. */
-let blockId = $state(null);
-/** Its box in the canvas's own px. */
-let rect = $state(null);
-/** Its bar's tools, in the bar's order: {html, text, label, tip, pressed, danger, more, help, opensMenu}. */
-let tools = $state([]);
-/** The menu standing: {label, rows, at, editor, rest}, or null. */
+/** A bar as the preview tells it: its block's or section's id, its box in the canvas's own px, and its tools in the bar's order ({html, text, label, tip, pressed, danger, more, help, opensMenu}). */
+const none = () => ({ id: null, rect: null, tools: [] });
+
+/** The selected block's bar, and the section's. */
+let block = $state(none());
+let section = $state(none());
+/** The menu standing: {label, rows, at, editor, rest}, `editor` the bar whose ⋮ opened it ('block' or 'section') or false, or null. */
 let menu = $state(null);
 /** Whether the pointer is on a ⋮ of the page's that opened the menu by a rest. */
 let pageHover = $state(false);
-/** Where the bar stands in the window, once drawn, for the text bar to stand clear of it: {blockId, left, top, w, h, side}. */
+/** Where each bar stands in the window, once drawn, for the text bar and the review cards to stand clear of it: {id, left, top, w, h, side}. */
 let placed = $state(null);
+let sectionPlaced = $state(null);
 
-/** The preview's word on the selected block's bar in the phone view, or that none stands. */
+/** A bar's word from the preview: where it stands and its tools, or that none stands (its id null). */
+function told(bar, msg, key) {
+  const id = typeof msg?.[key] === 'string' ? msg[key] : null;
+  if (!id) return none();
+  return { id, rect: msg.rect ?? bar.rect, tools: Array.isArray(msg.tools) ? msg.tools : bar.id === id ? bar.tools : [] };
+}
+
 function onBlockBar(msg) {
-  blockId = typeof msg?.blockId === 'string' ? msg.blockId : null;
-  if (!blockId) {
-    rect = null;
-    tools = [];
-    return;
-  }
-  if (msg.rect) rect = msg.rect;
-  if (Array.isArray(msg.tools)) tools = msg.tools;
+  block = told(block, msg, 'blockId');
+}
+
+function onSectionBar(msg) {
+  section = told(section, msg, 'sectionId');
 }
 
 /** A menu of the phone view to draw. */
 function onCtxMenu(msg) {
   if (!Array.isArray(msg?.rows)) return;
-  menu = { label: String(msg.label ?? ''), rows: msg.rows, at: msg.at ?? { x: 0, y: 0 }, editor: msg.editor === true, rest: msg.rest === true };
+  const editor = msg.editor === 'block' || msg.editor === 'section' ? msg.editor : false;
+  menu = { label: String(msg.label ?? ''), rows: msg.rows, at: msg.at ?? { x: 0, y: 0 }, editor, rest: msg.rest === true };
   pageHover = menu.rest && !menu.editor;
 }
 
@@ -51,9 +56,10 @@ function onCtxHover(msg) {
   pageHover = msg?.over === true;
 }
 
-/** A tool of the bar pressed; `rest`, the ⋮ opened by a mouse resting on it. */
-function press(index, rest = false) {
-  if (blockId) previewState.bridge?.sendBarPress(blockId, index, rest);
+/** A tool of a bar pressed ('block' or 'section'); `rest`, the ⋮ opened by a mouse resting on it. */
+function press(kind, index, rest = false) {
+  const id = kind === 'section' ? section.id : block.id;
+  if (id) previewState.bridge?.sendBarPress(kind, id, index, rest);
 }
 
 /** A row of the menu chosen, by its action's place. */
@@ -62,7 +68,7 @@ function run(index) {
   previewState.bridge?.sendCtxRun(index);
 }
 
-/** The menu closed here without a choice; `focus`, closed with a key from a menu opened on the page, gives the page's focus back to its block. */
+/** The menu closed here without a choice; `focus`, closed with a key, gives the page's focus back to the block or section it was opened on. */
 function close(focus = false) {
   if (!menu) return;
   menu = null;
@@ -71,22 +77,26 @@ function close(focus = false) {
 
 /** No bar and no menu: a new canvas, or another page. */
 function reset() {
-  blockId = null;
-  rect = null;
-  tools = [];
+  block = none();
+  section = none();
   menu = null;
   placed = null;
+  sectionPlaced = null;
 }
 
 export const canvasBarState = {
-  get blockId() { return blockId; },
-  get rect() { return rect; },
-  get tools() { return tools; },
+  get block() { return block; },
+  get section() { return section; },
+  /** The selected block's id, for the text bar's place. */
+  get blockId() { return block.id; },
   get menu() { return menu; },
   get pageHover() { return pageHover; },
   get placed() { return placed; },
   set placed(v) { placed = v; },
+  get sectionPlaced() { return sectionPlaced; },
+  set sectionPlaced(v) { sectionPlaced = v; },
   onBlockBar,
+  onSectionBar,
   onCtxMenu,
   onCtxClose,
   onCtxHold,

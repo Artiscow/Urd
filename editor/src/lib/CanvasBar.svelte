@@ -1,31 +1,34 @@
 <script>
-  /* The phone view's block bar and its menus (0.7.3.19.2): drawn over the stage, free of the page's edges and clear of the page, the bar beside the phone level with the selected block (placeTextBar in menu-place.js), a menu at the point it was opened at or under the bar's ⋮.
-     The tools and the rows are the page's own (state/canvas-bar.svelte.js): a press here is pressed there, so each acts as it does on the page. The block keeps its handles and its drag on the page, and a press on the bar leaves the keyboard's focus there. */
+  /* The phone view's bars and menus: drawn over the stage, free of the page's edges and clear of the page; the selected block's bar beside the phone level with the block (0.7.3.19.2), the section's level with the section's top (0.7.3.23), placed by placeTextBar in menu-place.js, and a menu at the point it was opened at or under a bar's ⋮.
+     The tools and the rows are the page's own (state/canvas-bar.svelte.js): a press here is pressed there, so each acts as it does on the page. The block keeps its handles and its drag on the page, and a press on a bar leaves the keyboard's focus there. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
-  import { placeTextBar, clampPlace } from './menu-place.js';
+  import { placeTextBar, placeClearOf, clampPlace } from './menu-place.js';
   import { canvasBarState as cb } from '../state/canvas-bar.svelte.js';
   import { menuMotion } from './motion.svelte.js';
   import { ICONS } from './icons.js';
 
   const ed = getContext('urd-editor');
 
-  let moreEl = $state(null);
+  /** Each bar's ⋮, which a menu it opened hangs from. */
+  const moreEls = $state({ block: null, section: null });
   let menuEl = $state(null);
-  let w = $state(0);
-  let h = $state(0);
+  let bw = $state(0);
+  let bh = $state(0);
+  let sw = $state(0);
+  let sh = $state(0);
   let mw = $state(0);
   let mh = $state(0);
   /** Counted up when the window or the stage changes size, or the stage is panned, so the places are reckoned again. */
   let resized = $state(0);
   /** The row whose removal waits for its second press, by its action's place. */
   let armed = $state(null);
-  /** Whether the mouse is on the menu, and on the bar's ⋮. */
+  /** Whether the mouse is on the menu, and which bar's ⋮ it is on ('block', 'section' or null). */
   let overMenu = $state(false);
-  let overMore = $state(false);
+  let overMore = $state(null);
 
-  const open = $derived(Boolean(cb.blockId && cb.rect && cb.tools.length && ed.viewMode === 'mobile' && ed.chromeVisible && !ed.looking));
-  const menuOpen = $derived(Boolean(cb.menu && ed.viewMode === 'mobile' && ed.chromeVisible && !ed.looking));
+  const shown = $derived(ed.viewMode === 'mobile' && ed.chromeVisible && !ed.looking);
+  const menuOpen = $derived(Boolean(cb.menu && shown));
 
   // A menu of the phone view goes with the view.
   $effect(() => {
@@ -41,35 +44,56 @@
     return { left: ir.left + s * r.left, top: ir.top + s * r.top, right: ir.left + s * r.right, bottom: ir.top + s * r.bottom };
   }
 
-  /** The bar's place: beside the phone, level with the block, where the stage has room, else above the block or below it; none while the block stands outside the part of the canvas in sight. */
-  const place = $derived.by(() => {
+  /** The canvas as it stands in sight in the stage, and the stage, in window px; null without a canvas. */
+  function frameOf() {
     void resized;
     const frame = ed.iframeEl;
     const wrap = ed.frameWrapEl;
-    if (!open || !frame || !wrap) return null;
+    if (!frame || !wrap) return null;
     const ir = frame.getBoundingClientRect();
     const stage = wrap.getBoundingClientRect();
-    const block = toWindow(cb.rect);
-    if (block.bottom <= Math.max(ir.top, stage.top) || block.top >= Math.min(ir.bottom, stage.bottom)) return null;
-    const canvas = { left: Math.max(ir.left, stage.left), right: Math.min(ir.right, stage.right) };
-    return placeTextBar(block, { w: w || 260, h: h || 34 }, canvas, stage);
+    return { stage, canvas: { left: Math.max(ir.left, stage.left), right: Math.min(ir.right, stage.right), top: Math.max(ir.top, stage.top), bottom: Math.min(ir.bottom, stage.bottom) } };
+  }
+
+  /** The section's bar: beside the phone, level with the section's top, or with the top of the canvas where the section begins above it; none while the section stands out of sight. */
+  const sectionPlace = $derived.by(() => {
+    const f = frameOf();
+    if (!f || !shown || !cb.section.id || !cb.section.rect || !cb.section.tools.length) return null;
+    const box = toWindow(cb.section.rect);
+    if (box.bottom <= f.canvas.top || box.top >= f.canvas.bottom) return null;
+    return placeTextBar({ ...box, top: Math.max(box.top, f.canvas.top) }, { w: sw || 200, h: sh || 34 }, f.canvas, f.stage);
   });
 
-  // Where the bar stands, for the text bar to stand under it beside the phone.
+  /** The block's bar: beside the phone, level with the block, where the stage has room, else above the block or below it, clear of the section's bar where the two would meet (placeClearOf); none while the block stands out of sight. */
+  const blockPlace = $derived.by(() => {
+    const f = frameOf();
+    if (!f || !shown || !cb.block.id || !cb.block.rect || !cb.block.tools.length) return null;
+    const box = toWindow(cb.block.rect);
+    if (box.bottom <= f.canvas.top || box.top >= f.canvas.bottom) return null;
+    const held = sectionPlace ? { left: sectionPlace.left, top: sectionPlace.top, w: sw || 200, h: sh || 34 } : null;
+    return placeClearOf(box, { w: bw || 260, h: bh || 34 }, f.canvas, f.stage, [held]);
+  });
+
+  // Where the bars stand, for the text bar and the review cards to stand clear of them beside the phone.
   $effect(() => {
-    cb.placed = place ? { blockId: cb.blockId, left: place.left, top: place.top, w, h, side: place.side } : null;
+    cb.placed = blockPlace ? { blockId: cb.block.id, left: blockPlace.left, top: blockPlace.top, w: bw, h: bh, side: blockPlace.side } : null;
+  });
+  $effect(() => {
+    cb.sectionPlaced = sectionPlace ? { sectionId: cb.section.id, left: sectionPlace.left, top: sectionPlace.top, w: sw, h: sh, side: sectionPlace.side } : null;
   });
 
-  /** The menu's place: under the bar's ⋮ where that opened it, reaching away from the phone, else at the point it was opened at on the page; inside the window. */
+  /** The menu's place: under the ⋮ of the bar that opened it, reaching away from the phone, else at the point it was opened at on the page; inside the window. */
   const menuPlace = $derived.by(() => {
     void resized;
     const m = cb.menu;
     if (!menuOpen || !m) return null;
     const view = { w: window.innerWidth, h: window.innerHeight };
     const size = { w: mw || 220, h: mh || 240 };
-    if (m.editor && moreEl) {
-      const r = moreEl.getBoundingClientRect();
-      return clampPlace({ left: place?.side === 'left' ? r.right - size.w : r.left, top: r.bottom + 4 }, size, view);
+    const more = m.editor ? moreEls[m.editor] : null;
+    if (more) {
+      const r = more.getBoundingClientRect();
+      const side = (m.editor === 'section' ? sectionPlace : blockPlace)?.side;
+      return clampPlace({ left: side === 'left' ? r.right - size.w : r.left, top: r.bottom + 4 }, size, view);
     }
     const at = toWindow({ left: m.at.x, top: m.at.y, right: m.at.x, bottom: m.at.y });
     return at ? clampPlace({ left: at.left, top: at.top }, size, view) : null;
@@ -101,7 +125,7 @@
 
   // A menu a rest opened closes a moment after the mouse has left it and the ⋮ that opened it.
   $effect(() => {
-    if (!cb.menu?.rest || overMenu || overMore || cb.pageHover) return;
+    if (!cb.menu?.rest || overMenu || (overMore && overMore === cb.menu.editor) || cb.pageHover) return;
     const timer = setTimeout(() => cb.close(), 280);
     return () => clearTimeout(timer);
   });
@@ -118,12 +142,12 @@
     return () => window.removeEventListener('keydown', key, true);
   });
 
-  // A press in the editor outside the menu and the bar's ⋮ closes it.
+  // A press in the editor outside the menu and the bars' ⋮ closes it.
   $effect(() => {
     if (!cb.menu) return;
     const press = (event) => {
       const target = event.target instanceof Node ? event.target : null;
-      if (!target || menuEl?.contains(target) || moreEl?.contains(target)) return;
+      if (!target || menuEl?.contains(target) || moreEls.block?.contains(target) || moreEls.section?.contains(target)) return;
       cb.close();
     };
     document.addEventListener('pointerdown', press, true);
@@ -132,28 +156,28 @@
 
   let restTimer = 0;
 
-  /** The mouse resting on the ⋮ opens the menu without the focus, as on the page's bars; a touch opens it at its press. */
-  function moreEnter(event, index) {
+  /** The mouse resting on a bar's ⋮ opens its menu without the focus, as on the page's bars, in place of a menu the other bar's ⋮ opened by a rest; a touch opens it at its press. */
+  function moreEnter(event, kind, index) {
     if (event.pointerType !== 'mouse' || event.buttons) return;
-    overMore = true;
-    if (cb.menu?.editor) return;
+    overMore = kind;
+    if (cb.menu?.editor === kind) return;
     clearTimeout(restTimer);
     restTimer = setTimeout(() => {
-      if (overMore && !cb.menu) cb.press(index, true);
+      if (overMore === kind && (!cb.menu || (cb.menu.rest && cb.menu.editor !== kind))) cb.press(kind, index, true);
     }, 180);
   }
 
   function moreLeave(event) {
     if (event.pointerType !== 'mouse') return;
-    overMore = false;
+    overMore = null;
     clearTimeout(restTimer);
   }
 
-  /** A press on the ⋮: it opens the menu, holds one a rest opened, and closes one it opened. */
-  function morePress(index) {
+  /** A press on a ⋮: it opens its menu, holds one a rest opened, and closes one it opened. */
+  function morePress(kind, index) {
     clearTimeout(restTimer);
-    if (cb.menu?.editor && !cb.menu.rest) cb.close();
-    else cb.press(index);
+    if (cb.menu?.editor === kind && !cb.menu.rest) cb.close();
+    else cb.press(kind, index);
   }
 
   /** A row chosen: a removal asks for a second press, a greyed row does nothing. */
@@ -178,7 +202,7 @@
     else if (event.key === 'Escape' || event.key === 'Tab') { event.preventDefault(); cb.close(true); }
   }
 
-  /** A press on the bar leaves the focus where it is, on the page's block, so its keys go on working there. */
+  /** A press on a bar leaves the focus where it is, on the page, so its keys go on working there. */
   function keepFocus(event) {
     event.preventDefault();
   }
@@ -192,20 +216,35 @@
   }
 </script>
 
-{#if open && place}
-  <!-- The bar holds the mouse's press so the page's block keeps the focus; its tools are buttons of their own -->
+{#snippet tools(kind, list)}
+  {#each list as tool, i (i)}
+    {#if tool.tag}
+      <span class="cb-tag" title={tool.tip || undefined}>{tool.text}</span>
+    {:else if tool.more}
+      <button type="button" class="cb-tool" aria-label={tool.label} aria-haspopup="menu" aria-expanded={cb.menu?.editor === kind} bind:this={moreEls[kind]}
+        onpointerenter={(e) => moreEnter(e, kind, i)} onpointerleave={moreLeave} onclick={() => morePress(kind, i)}>{@html tool.html}</button>
+    {:else}
+      <button type="button" class="cb-tool" class:on={tool.pressed} class:danger={tool.danger} class:word={!tool.html} title={tool.tip || undefined} aria-label={tool.label}
+        aria-pressed={tool.pressed === null ? undefined : tool.pressed} data-opens-menu={tool.opensMenu ? '' : undefined} data-page-pop={tool.pagePop ? '' : undefined} onclick={() => cb.press(kind, i)}>{#if tool.html}{@html tool.html}{:else}{tool.text}{/if}</button>
+    {/if}
+  {/each}
+{/snippet}
+
+<!-- The bars hold the mouse's press so the page keeps the focus; their tools are buttons of their own -->
+{#if sectionPlace}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <div class="canvas-bar" role="toolbar" tabindex="-1" aria-label={ta('canvas.blockTools')} data-canvas-tool bind:offsetWidth={w} bind:offsetHeight={h}
-    style="left: {place.left}px; top: {place.top}px" onmousedown={keepFocus} transition:menuMotion>
-    {#each cb.tools as tool, i (i)}
-      {#if tool.more}
-        <button type="button" class="cb-tool" aria-label={tool.label} aria-haspopup="menu" aria-expanded={Boolean(cb.menu?.editor)} bind:this={moreEl}
-          onpointerenter={(e) => moreEnter(e, i)} onpointerleave={moreLeave} onclick={() => morePress(i)}>{@html tool.html}</button>
-      {:else}
-        <button type="button" class="cb-tool" class:on={tool.pressed} class:danger={tool.danger} class:word={!tool.html} title={tool.tip || undefined} aria-label={tool.label}
-          aria-pressed={tool.pressed === null ? undefined : tool.pressed} data-opens-menu={tool.opensMenu ? '' : undefined} onclick={() => cb.press(i)}>{#if tool.html}{@html tool.html}{:else}{tool.text}{/if}</button>
-      {/if}
-    {/each}
+  <div class="canvas-bar" role="toolbar" tabindex="-1" aria-label={ta('canvas.sectionTools')} data-canvas-tool bind:offsetWidth={sw} bind:offsetHeight={sh}
+    style="left: {sectionPlace.left}px; top: {sectionPlace.top}px" onmousedown={keepFocus} transition:menuMotion>
+    <span class="cb-name">{ta('lbl.section')}</span>
+    {@render tools('section', cb.section.tools)}
+  </div>
+{/if}
+
+{#if blockPlace}
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <div class="canvas-bar" role="toolbar" tabindex="-1" aria-label={ta('canvas.blockTools')} data-canvas-tool bind:offsetWidth={bw} bind:offsetHeight={bh}
+    style="left: {blockPlace.left}px; top: {blockPlace.top}px" onmousedown={keepFocus} transition:menuMotion>
+    {@render tools('block', cb.block.tools)}
   </div>
 {/if}
 
@@ -271,6 +310,20 @@
   .cb-tool.on {
     background: color-mix(in srgb, var(--urd-color-accent, #5f6a75) 18%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--urd-color-accent, #5f6a75) 75%, currentColor);
+  }
+
+  /* The section's link name, as its bar on the page shows it */
+  .cb-tag {
+    padding: 0 6px;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+
+  /* The section's bar names what it is for, faint, before its tools */
+  .cb-name {
+    padding: 0 6px 0 4px;
+    font-weight: 600;
+    opacity: 0.6;
   }
 
   /* A tool of words, the «Settings» of the bar with small panels */

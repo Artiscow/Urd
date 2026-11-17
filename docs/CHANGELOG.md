@@ -8,7 +8,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
-### 0.7.3.19.2 - The phone view's block bar and menus beside the phone - 17 November 2026
+### 0.7.3.23 - A section's settings in one press in the phone view, from its bar beside the phone; Bug Fixes: a double click beside the canvas that selected all of it - 17 November 2026
+
+- In the phone view a section's bar stood on the page over its first block's words, showed only under the pointer and reached past the phone's edge, and a section has no empty surface to press there (BACKLOG 0.7.3.23). The editor draws the section's bar beside the phone, marked «Section» with its link name, level with the top of the section the mouse was last over or the section at work, its gear opening the section's settings in one press (`urd-section-bar`, CanvasBar.svelte); the page keeps its own bar unseen.
+- The block's bar, the text bar and a review card stand clear of the section's bar (`placeClearOf` in menu-place.js).
+- The Phone panel has a gear beside the section it shows, opening the same settings and closing them at a second press (`urd-section-settings`).
+- A double click on the dark stage around the canvas selected the whole canvas and painted it blue (test finding). The stage takes no selection (app.css).
+- 0.7.3.19.3, the element menu beside the phone, is added to the backlog (test finding: in the phone view the settings open over the phone).
+- The guides and ARCHITECTURE.md describe the section's bar beside the phone and the Phone panel's gear, and the HTML shells carry the stylesheet's new stamp.
+
+The independent review before the commit found these:
+
+1. The commit's entries in CHANGELOG, BACKLOG and TEST-ROUNDS were missing: the script writing them stopped at its first step, the 0.7.3.19.2 heading it looked for lacking the commit title's «Bug Fixes». The entries are written, and that heading now matches its commit's title.
+2. The section's bar moved to the section under the mouse while its ⋮ menu stood, the menu's rows still acting on the first section. The bar keeps its section while a menu stands.
+3. «New block here» and «Paste» from the section bar's ⋮ took the phone's top left corner as their point. From the bar beside the phone they act at the section's top, the block landing first in the section.
+4. Where the stage had no room beside the phone, the block's bar and the section's could stand on one spot, and the text bar could cover the section's bar, a review card the block's. Each stands clear of the bars already placed, beside the phone or above and below the block alike.
+5. The rest of the mouse on one bar's ⋮ kept a menu the other bar's ⋮ had opened, and the other's never opened by a rest. Each bar's ⋮ is counted apart.
+6. The block menu, the phone layout cards and the hidden blocks' list a section's bar opens on the page closed only at a press on the page. A press in the editor closes them, a second press on the same tool closes its own, and only one section's block menu stands at a time.
+7. The bars' tools were read off the page once a frame. They are read again only when the page's bar changes (a MutationObserver), the boxes still followed each frame.
+8. The Phone panel's gear opened the section's menu again at a second press. It closes it, as the gear on the section's bar does.
+9. The section's link name no longer showed in the phone view. The bar beside the phone shows it after «Section».
+
+### 0.7.3.19.2 - The phone view's block bar and menus beside the phone; Bug Fixes: «Settings» on the bar that opened the menu again at a second press - 17 November 2026
 
 - In the phone view a block's bar, its ⋮ menu and the right-click menus were drawn on the page, one phone wide, so they were cut off at its edge and covered the page (BACKLOG 0.7.3.19.2). The editor draws the selected block's bar beside the phone, level with the block, and every menu of the canvas beside it or at the pointer (`lib/CanvasBar.svelte`); each press acts on the page's own tool or row (`urd-block-bar`, `urd-bar-press`, `urd-ctx-menu`, `urd-ctx-run`).
 - The bar has every tool but ⠿, the block being dragged by itself there, and the block keeps its handles; a bar shows on the selected block only, not under the pointer.

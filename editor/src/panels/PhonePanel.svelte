@@ -346,9 +346,16 @@
   {#if !sections.length}
     <EmptyState text={ta('phone.noSection')} />
   {:else if section}
-    {#if sections.length > 1}
-      <SelectRow label={ta('lbl.section')} value={section.id} options={sectionOptions} onchange={(id) => pickSection(id)} />
-    {/if}
+    <!-- The section at work, and its settings one press away, as the gear on its bar opens them -->
+    <div class="pp-section">
+      {#if sections.length > 1}
+        <SelectRow label={ta('lbl.section')} value={section.id} options={sectionOptions} onchange={(id) => pickSection(id)} />
+      {:else}
+        <span class="pp-section-name">{sectionOptions[0]?.[1] ?? ''}</span>
+      {/if}
+      <!-- The gear opens the section's menu and closes it at a second press, as the gear on the section's bar does -->
+      <span class="pp-gear" data-opens-menu><IconButton icon={ICONS.gear} label={ta('phone.sectionSettings')} onclick={() => ed.bridge?.sendSectionSettings(section.id)} /></span>
+    </div>
     <PhoneSectionRows />
 
     {#if rows.length}
@@ -416,6 +423,30 @@
 </div>
 
 <style>
+  /* The section at work beside its settings' gear, the gear level with the field */
+  .pp-section {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .pp-section > :global(.row-select) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pp-gear {
+    display: flex;
+  }
+
+  .pp-section-name {
+    flex: 1;
+    min-width: 0;
+    align-self: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
   /* The row's menu at the pointer, over the panel, on the surface of the admin's other menus */
   .pp-menu {
     position: fixed;

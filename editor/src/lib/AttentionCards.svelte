@@ -4,7 +4,8 @@
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { blockWords } from '$engine/anchor-model.js';
-  import { placeTextBar } from './menu-place.js';
+  import { placeClearOf } from './menu-place.js';
+  import { canvasBarState } from '../state/canvas-bar.svelte.js';
   import { ICONS } from './icons.js';
   import { menuMotion } from './motion.svelte.js';
 
@@ -86,7 +87,8 @@
       const r = card.rect;
       const section = { left: ir.left + s * r.left, top: ir.top + s * Math.max(r.top, 0), right: ir.left + s * r.right, bottom: ir.top + s * r.bottom };
       const h = heights[card.sectionId] ?? 96;
-      const place = placeTextBar(section, { w: 260, h }, canvas, stage);
+      // The section's and the block's bars stand beside the phone too (CanvasBar.svelte): the card stands clear of them.
+      const place = placeClearOf(section, { w: 260, h }, canvas, stage, [canvasBarState.sectionPlaced, canvasBarState.placed]);
       const top = Math.max(place.top, below + 8);
       below = top + h;
       out.push({ id: card.sectionId, left: place.left, top, text: reasonText(attention, flagged), when: relativeTime(attention.since) });

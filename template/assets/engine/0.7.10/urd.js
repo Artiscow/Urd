@@ -686,9 +686,12 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-deselect') {
       // A press on the editor's stage around the canvas: nothing stays selected.
       window.UrdPreviewEdit?.deselectAll?.();
-    } else if (msg?.type === 'urd-bar-press' && typeof msg.blockId === 'string' && Number.isInteger(msg.index)) {
-      // A tool of the bar the editor draws in the phone view, pressed there (0.7.3.19.2).
-      window.UrdPreviewEdit?.pressPhoneBar(msg.blockId, msg.index, msg.rest === true);
+    } else if (msg?.type === 'urd-bar-press' && typeof msg.id === 'string' && Number.isInteger(msg.index)) {
+      // A tool of a bar the editor draws in the phone view, the block's or the section's, pressed there (0.7.3.19.2, 0.7.3.23).
+      window.UrdPreviewEdit?.pressPhoneBar(msg.bar === 'section' ? 'section' : 'block', msg.id, msg.index, msg.rest === true);
+    } else if (msg?.type === 'urd-section-settings' && typeof msg.sectionId === 'string') {
+      // A section's settings asked for from the editor's own lists (the Phone panel), opened as its gear opens them.
+      window.UrdPreviewEdit?.openSectionSettingsById(msg.sectionId);
     } else if (msg?.type === 'urd-ctx-run' && Number.isInteger(msg.index)) {
       // A row of the phone view's menu, chosen where the editor draws it.
       window.UrdPreviewEdit?.runPhoneMenu(msg.index);

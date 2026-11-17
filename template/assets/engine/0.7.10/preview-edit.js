@@ -33,7 +33,8 @@
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  *                  { type: 'urd-block-bar', blockId, rect?, tools? }  (in the phone view, the selected block's box in the canvas and its bar's tools, the tools only when they changed, for the editor to draw the bar beside the phone; blockId null when no block's bar stands, 0.7.3.19.2)
- *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest }  (in the phone view, a menu's rows for the editor to draw: at the point `at`, or under the editor's ⋮ with `editor`; `rest` leaves the focus where it is)
+ *                  { type: 'urd-section-bar', sectionId, rect?, tools? }  (the same for the section the mouse was last over, or put at work: its bar beside the phone, 0.7.3.23)
+ *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest }  (in the phone view, a menu's rows for the editor to draw: at the point `at`, or under the ⋮ of the editor's bar `editor` names, 'block' or 'section'; `rest` leaves the focus where it is)
  *                  { type: 'urd-ctx-close' }, { type: 'urd-ctx-hold' }, { type: 'urd-ctx-hover', over }  (the phone view's menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
@@ -259,8 +260,8 @@ function moreButton(open) {
   }, 'urd-edit-more', ta('canvas.cap.more'));
   btn.removeAttribute('title');
   btn.setAttribute('aria-haspopup', 'menu');
-  // The ⋮ of the bar the editor draws in the phone view opens the menu from there, by a press or a rest (pressPhoneBar).
-  btn._urdMenu = (rest) => open(0, 0, { button: btn, rest, editor: true });
+  // The ⋮ of a bar the editor draws in the phone view opens the menu from there, by a press or a rest, under that bar's ⋮ (pressPhoneBar).
+  btn._urdMenu = (rest, bar = 'block') => open(0, 0, { button: btn, rest, editor: bar });
   let restTimer = 0;
   btn.addEventListener('pointerenter', (event) => {
     if (event.pointerType !== 'mouse' || event.buttons) return;
@@ -394,7 +395,7 @@ function showPhoneMenu(el, x, y, label, build, from) {
   const sep = () => rows.push({ sep: true });
   build(item, sep);
   phoneMenu = { el, runs, from };
-  post({ type: 'urd-ctx-menu', label, rows, at: { x, y }, editor: Boolean(from?.editor), rest: Boolean(from?.rest) });
+  post({ type: 'urd-ctx-menu', label, rows, at: { x, y }, editor: from?.editor || false, rest: Boolean(from?.rest) });
   if (phoneMenuWired) return;
   // A scroll of the page, a press elsewhere on it and Escape close the editor's menu, as they close the page's own.
   phoneMenuWired = true;
@@ -437,79 +438,139 @@ export function phoneMenuClosed(focus = false) {
   el.focus({ preventScroll: true });
 }
 
-/** The tools of a block's bar the editor draws in the phone view: every tool but ⠿, whose drag the block's own surface gives there. */
-const phoneBarTools = (el) => [...el.querySelectorAll(':scope > .urd-edit-toolbar .urd-bar-body button')].filter((b) => !b.classList.contains('urd-edit-move'));
+/** The tools of a bar the editor draws in the phone view: a block's every tool but ⠿, whose drag the block's own surface gives there; a section's every button, and its link name. */
+const phoneBarTools = (el, kind = 'block') => (kind === 'section'
+  ? [...el.querySelectorAll(':scope > .urd-section-toolbar :is(button, .urd-anchor-tag)')]
+  : [...el.querySelectorAll(':scope > .urd-edit-toolbar .urd-bar-body button')].filter((b) => !b.classList.contains('urd-edit-move')));
 
-/** A tool as the editor draws it: its drawing or its words, its name and tooltip, whether it is pressed (null for a tool with no such state), removes, is the ⋮ or the help chip, and whether it opens the editor's menu, which a second press closes. */
+/** A tool as the editor draws it: its drawing or its words, its name and tooltip, whether it is pressed (null for a tool with no such state), removes, is the ⋮ or the help chip, whether it opens the editor's menu, which a second press closes, whether it opens a pop-up of the page's own (the block menu, the layout picker, the hidden blocks), which a second press closes too, and whether it is the section's link name, words to read rather than a tool. */
 const toolOf = (btn) => ({
   html: btn.innerHTML.trim().startsWith('<svg') ? btn.innerHTML : '',
   text: btn.innerHTML.trim().startsWith('<svg') ? '' : btn.textContent.trim(),
   label: btn.getAttribute('aria-label') || btn.title || '',
   tip: btn.title || '',
   pressed: btn.hasAttribute('aria-pressed') ? btn.getAttribute('aria-pressed') === 'true' : null,
-  danger: btn.classList.contains('urd-edit-delete'),
+  danger: btn.classList.contains('urd-edit-delete') || btn.classList.contains('urd-sec-delete'),
   more: Boolean(btn._urdMenu),
   help: btn.classList.contains('urd-hint-chip'),
   opensMenu: btn.hasAttribute('data-opens-menu'),
+  pagePop: btn.matches('.urd-sec-add-block, .urd-layout-btn, .urd-hidden-chip'),
+  tag: btn.classList.contains('urd-anchor-tag'),
 });
 
+/** Each bar on the page as watched for changes, and how many it has had, so the editor is sent its tools again only when they change. */
+const phoneBarWatch = { block: { bar: null, version: 0, observer: null }, section: { bar: null, version: 0, observer: null } };
+
+/** The number of changes a bar has had since it was first watched, counted by a MutationObserver. */
+function barVersion(kind, bar) {
+  const watch = phoneBarWatch[kind];
+  if (watch.bar !== bar) {
+    watch.observer ??= new MutationObserver(() => { watch.version += 1; });
+    watch.observer.disconnect();
+    watch.observer.observe(bar, { subtree: true, childList: true, attributes: true, characterData: true });
+    watch.bar = bar;
+    watch.version += 1;
+  }
+  return watch.version;
+}
+
+/** The section whose bar the editor draws in the phone view: the last one the mouse was over on the page, kept while the mouse is off the page so its bar can be reached, or the section last put at work. */
+let phoneBarSectionId = null;
+
 let phoneBarFrame = 0;
-/** What the editor was last told: the block and its bar as drawn, and the block's box. */
-let phoneBarTold = '';
-let phoneBarBox = '';
+/** What the editor was last told of each bar: its block or section and its bar as drawn, and its box. */
+const phoneBarTold = { block: '', section: '' };
+const phoneBarBox = { block: '', section: '' };
 
 /**
- * Tells the editor, once a frame while a block is selected in the phone view, where the block stands in the canvas and what its bar holds (urd-block-bar), the tools only when they changed; and once that no block is, when the selection goes, the block is dragged or scrolled out of the phone's window, a set of blocks is selected or the Clean view hides the handles.
- * Run as the selection changes and a section is drawn; it stops itself when nothing is left to tell.
+ * Tells the editor of one bar where its block or section stands in the canvas and what the bar holds, the tools only when they changed, or that none stands; true while it stands, or is only out of sight for the moment.
+ * @param {'block'|'section'} kind
+ * @param {Element|null} el The selected block, or the section
+ * @param {Element|null} bar Its bar on the page
+ * @param {boolean} held The block is dragged, its bar out of the way
+ */
+function tellPhoneBar(kind, el, bar, held = false) {
+  const type = kind === 'section' ? 'urd-section-bar' : 'urd-block-bar';
+  const key = kind === 'section' ? 'sectionId' : 'blockId';
+  const id = kind === 'section' ? el?.dataset.sectionId : el?.dataset.blockId;
+  const box = el?.getBoundingClientRect();
+  const seen = box && (box.width || box.height) && box.bottom > 0 && box.top < window.innerHeight;
+  if (!el || !bar || !seen || held) {
+    if (phoneBarTold[kind]) post({ type, [key]: null });
+    phoneBarTold[kind] = '';
+    phoneBarBox[kind] = '';
+    return Boolean(el);
+  }
+  const told = `${id}\n${barVersion(kind, bar)}`;
+  const rect = { left: Math.round(box.left), top: Math.round(box.top), right: Math.round(box.right), bottom: Math.round(box.bottom) };
+  const boxText = `${rect.left},${rect.top},${rect.right},${rect.bottom}`;
+  if (told !== phoneBarTold[kind] || boxText !== phoneBarBox[kind]) {
+    post({ type, [key]: id, rect, ...(told !== phoneBarTold[kind] ? { tools: phoneBarTools(el, kind).map(toolOf) } : {}) });
+    phoneBarTold[kind] = told;
+    phoneBarBox[kind] = boxText;
+  }
+  return true;
+}
+
+/**
+ * Tells the editor, once a frame in the phone view, of the two bars it draws beside the phone (urd-block-bar, urd-section-bar): the selected block's, gone while the block is dragged, scrolled out of the phone's window or one of a set; and the section's (phoneBarSectionId); both gone in the Clean view.
+ * Run as the selection changes, the mouse goes over a section and a section is drawn; it stops itself when nothing is left to tell.
  */
 export function watchPhoneBar() {
   if (phoneBarFrame) return;
   const tick = () => {
     phoneBarFrame = 0;
-    const el = isMobile() && selectedBlockId && multiIds.size <= 1 && !document.body.classList.contains('urd-chrome-off')
+    const on = isMobile() && !document.body.classList.contains('urd-chrome-off');
+    const block = on && selectedBlockId && multiIds.size <= 1
       ? document.querySelector(`.urd-block.urd-selected[data-block-id="${CSS.escape(selectedBlockId)}"]`)
       : null;
-    const box = el?.getBoundingClientRect();
-    const bar = el?.querySelector(':scope > .urd-edit-toolbar');
-    const seen = box && box.bottom > 0 && box.top < window.innerHeight;
-    if (!el || !bar || !box || (!box.width && !box.height) || !seen || el.classList.contains('urd-hold-drag')) {
-      if (phoneBarTold) post({ type: 'urd-block-bar', blockId: null });
-      phoneBarTold = '';
-      phoneBarBox = '';
-      // A held block, or one scrolled out of the phone's window, is still selected: the bar comes back as it lands or is scrolled back.
-      if (el) phoneBarFrame = requestAnimationFrame(tick);
-      return;
-    }
-    const told = `${selectedBlockId}\n${bar.innerHTML}`;
-    const rect = { left: Math.round(box.left), top: Math.round(box.top), right: Math.round(box.right), bottom: Math.round(box.bottom) };
-    const boxText = `${rect.left},${rect.top},${rect.right},${rect.bottom}`;
-    if (told !== phoneBarTold || boxText !== phoneBarBox) {
-      post({ type: 'urd-block-bar', blockId: selectedBlockId, rect, ...(told !== phoneBarTold ? { tools: phoneBarTools(el).map(toolOf) } : {}) });
-      phoneBarTold = told;
-      phoneBarBox = boxText;
-    }
-    phoneBarFrame = requestAnimationFrame(tick);
+    const section = on
+      ? (phoneBarSectionId ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(phoneBarSectionId)}"]`) : null) ?? document.querySelector('.urd-section-active')
+      : null;
+    const blockOn = tellPhoneBar('block', block, block?.querySelector(':scope > .urd-edit-toolbar') ?? null, Boolean(block?.classList.contains('urd-hold-drag')));
+    const sectionOn = tellPhoneBar('section', section, section?.querySelector(':scope > .urd-section-toolbar') ?? null);
+    if (blockOn || sectionOn) phoneBarFrame = requestAnimationFrame(tick);
   };
   phoneBarFrame = requestAnimationFrame(tick);
 }
 
+// In the phone view the section the mouse goes over is the one whose bar the editor draws.
+document.addEventListener('pointerover', (event) => {
+  // A menu standing keeps the bar it hangs from, and the section its rows act on.
+  if (event.pointerType !== 'mouse' || !isMobile() || phoneMenu) return;
+  const id = eventTarget(event)?.closest('.urd-section')?.dataset.sectionId;
+  if (!id || id === phoneBarSectionId) return;
+  phoneBarSectionId = id;
+  watchPhoneBar();
+});
+
 /**
- * A press on a tool of the bar the editor draws in the phone view (urd-bar-press): the tool at that place on the selected block's bar is pressed as on the page; the ⋮ opens the block's menu in the editor, by a rest without the focus.
- * @param {string} blockId
+ * A press on a tool of a bar the editor draws in the phone view (urd-bar-press): the tool at that place on the selected block's bar, or the section's, is pressed as on the page; the ⋮ opens its menu in the editor, by a rest without the focus.
+ * @param {'block'|'section'} kind
+ * @param {string} id The block's or the section's id
  * @param {number} index
  * @param {boolean} [rest]
  */
-export function pressPhoneBar(blockId, index, rest = false) {
-  const el = typeof blockId === 'string' ? document.querySelector(`.urd-block.urd-selected[data-block-id="${CSS.escape(blockId)}"]`) : null;
-  const tool = el && isMobile() && Number.isInteger(index) ? phoneBarTools(el)[index] : null;
+export function pressPhoneBar(kind, id, index, rest = false) {
+  if (typeof id !== 'string' || !isMobile() || !Number.isInteger(index)) return;
+  const el = kind === 'section'
+    ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(id)}"]`)
+    : document.querySelector(`.urd-block.urd-selected[data-block-id="${CSS.escape(id)}"]`);
+  const tool = el ? phoneBarTools(el, kind)[index] : null;
   if (!tool) return;
   if (tool._urdMenu) {
     if (phoneMenu?.from?.button === tool) {
       if (phoneMenu.from.rest && !rest) holdPhoneMenu();
       return;
     }
-    tool._urdMenu(rest);
+    tool._urdMenu(rest, kind);
   } else tool.click();
+}
+
+/** A section's settings opened from the editor's own lists (urd-section-settings: the Phone panel's section), as its gear opens them. */
+export function openSectionSettingsById(sectionId) {
+  const host = typeof sectionId === 'string' ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(sectionId)}"]`) : null;
+  if (host?._urdSection) openSectionSettings(host, host._urdSection);
 }
 
 /**
@@ -744,10 +805,12 @@ function openSectionContextMenu(host, x, y, from = null) {
     return n?.querySelector('button') ?? null;
   };
   showContextMenu(host, x, y, ta('canvas.ctx.sectionLabel'), (item, sep) => {
-    item(ta('canvas.ctx.newBlockHere'), keysHere('/'), () => openBlockMenuAt(host, x, y)).classList.add('urd-ctx-first');
+    // Opened from the section's bar the editor draws beside the phone, «here» is the section's top, as the bar stands there; otherwise the point the menu was opened at.
+    const here = from?.editor ? null : { x, y };
+    item(ta('canvas.ctx.newBlockHere'), keysHere('/'), () => (here ? openBlockMenuAt(host, here.x, here.y) : openBlockMenuAt(host))).classList.add('urd-ctx-first');
     // One clipboard: blocks paste at this section, a section lands below it.
     if (clipboard?.kind === 'section') item(ta('canvas.ctx.pasteSection'), keysHere('Ctrl+V'), () => pasteSection(host));
-    else item(ta('canvas.ctx.paste'), keysHere('Ctrl+V'), () => pasteClipboard(clipboard, { x, y, host }), { disabled: !clipboard?.blocks?.length });
+    else item(ta('canvas.ctx.paste'), keysHere('Ctrl+V'), () => pasteClipboard(clipboard, { ...here, host }), { disabled: !clipboard?.blocks?.length });
     sep();
     // The section's settings, in the floating menu as the gear on its bar opens them.
     item(ta('canvas.ctx.sectionSettings'), '', () => openSectionSettings(host, section));
@@ -1146,6 +1209,9 @@ function buildPhoneLayoutCards(section, done) {
  * and Escape. The cards are the desktop's layouts (buildLayoutCards) or the
  * phone's presets (buildPhoneLayoutCards), given as `cardsFor(done)`.
  */
+/** The open layout picker's way to close, for a press in the editor (closeMenus). */
+let closeLayoutPicker = null;
+
 function toggleLayoutPicker(host, cardsFor, titleKey = 'canvas.layoutTitle') {
   const existing = host.querySelector('.urd-layout-strip, .urd-layout-menu');
   document.querySelectorAll('.urd-layout-strip, .urd-layout-menu').forEach((el) => el.remove());
@@ -1167,7 +1233,9 @@ function toggleLayoutPicker(host, cardsFor, titleKey = 'canvas.layoutTitle') {
     document.removeEventListener('pointerdown', outside, true);
     document.removeEventListener('keydown', onKey, true);
     picker.remove();
+    if (closeLayoutPicker === cleanup) closeLayoutPicker = null;
   }
+  closeLayoutPicker = cleanup;
 
   const cards = cardsFor(cleanup);
   if (asMenu) {
@@ -1423,6 +1491,9 @@ export function closeMenus() {
     const wrap = m.closest('.urd-add-block');
     if (wrap) resetBlockAdder(wrap);
   });
+  // The layout picker and the list of hidden blocks a section's bar opens.
+  closeLayoutPicker?.();
+  document.querySelectorAll('.urd-hidden-list').forEach((list) => list.remove());
 }
 
 /**
@@ -1472,8 +1543,8 @@ export function enhanceSection(host, section, grid) {
   addSectionToolbar(host, section, grid);
   // The block menu, in both views: a block added in the phone view stands on the phone only (phoneAdd).
   addBlockAdder(host, section, grid);
-  // A selected block drawn anew in the phone view: the editor's bar is told its new tools.
-  if (selectedBlockId) watchPhoneBar();
+  // A section or a selected block drawn anew in the phone view: the editor's bars are told their new tools.
+  if (isMobile()) watchPhoneBar();
   // Persistent grid display (the grid menu in the editor is open) must
   // survive re-renders of the section.
   if (gridOverlaysOn) showGridOverlay(host, grid, restingGridLook()).classList.add('urd-grid-persistent');
@@ -3615,8 +3686,14 @@ function toggleBlockMenuFrom(host, btn) {
     resetBlockAdder(wrap);
     return;
   }
+  // Another section's block menu closes as this one opens, the press coming from a bar beside the phone that reaches no page press.
+  document.querySelectorAll('.urd-add-block-menu.open').forEach((m) => {
+    const other = m.closest('.urd-add-block');
+    if (other && other !== wrap) resetBlockAdder(other);
+  });
   const rect = host.getBoundingClientRect();
-  const at = btn.getBoundingClientRect();
+  // From the section's bar the editor draws beside the phone, the page's own button is unseen: the menu hangs from the section's top right where it is in sight.
+  const at = btn.getClientRects().length ? btn.getBoundingClientRect() : { right: rect.right - 8, bottom: Math.max(rect.top, 0) + 8 };
   menu._urdAt = null;
   menu._urdPhone = isMobile() ? phoneAdd(phoneDropFirst(host)) : {};
   wrap.style.left = `${Math.round(at.right - rect.left)}px`;
@@ -4446,6 +4523,11 @@ function phoneArrow(event, ctx, el, dir) {
 // Properties stays on the block).
 function markActiveVisual(host) {
   activeSectionId = host?.dataset.sectionId ?? null;
+  // The section put at work is the one whose bar the editor draws in the phone view.
+  if (host) {
+    phoneBarSectionId = activeSectionId;
+    watchPhoneBar();
+  }
   if (activeSectionId !== chosenSectionId) chosenSectionId = null;
   document.querySelectorAll('.urd-section-active').forEach((s) => {
     if (s !== host) s.classList.remove('urd-section-active');
@@ -4873,8 +4955,9 @@ function pasteClipboard(source = clipboard, point = null) {
     else if (copy.phonePlace && (!side || source.sectionId !== sectionId)) delete copy.phonePlace;
   }
   const minBottom = Math.max(...blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
-  // In the phone view the blocks stand on the phone only, from the point the section's menu was opened at, else last.
-  const drop = isMobile() && point ? phoneDropAtPoint(host, host._urdSection, point.x, point.y) : null;
+  // In the phone view the blocks stand on the phone only, from the point the section's menu was opened at, first in the section from its bar beside the phone, else last.
+  const drop = !isMobile() || !point?.host ? null
+    : Number.isFinite(point.x) ? phoneDropAtPoint(host, host._urdSection, point.x, point.y) : phoneDropFirst(host);
   post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [], ...phoneAdd(drop) });
   // The next paste continues from the pasted content (no stacking on top of each other).
   if (source === clipboard) clipboard = { kind: 'blocks', sectionId, blocks: JSON.parse(JSON.stringify(blocks)) };

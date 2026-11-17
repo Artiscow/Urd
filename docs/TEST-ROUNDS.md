@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.23): a section's settings in one press in the phone view
+
+- [ ] In the phone view, move the mouse over a section: its bar stands beside the phone, marked «Section» (with its #link name where it has one), level with the section's top, and nothing of it stands on the page over the first block
+- [ ] Move the mouse from the page to that bar: it stays; press its gear: the section's settings open, and a second press closes them
+- [ ] Move the mouse over another section: the bar moves to it; scroll so a section begins above the phone's top: its bar stands at the top of the phone's part in sight
+- [ ] Press the section bar's ⋮, then move the mouse over another section: the bar and its menu stay with the first section; «New block here» there adds the block first in that section
+- [ ] Rest the mouse on the section bar's ⋮, then on the block bar's ⋮: each menu opens in turn by the rest, and closes as the mouse leaves
+- [ ] Press «New block» and «Phone layout» on the section's bar: each opens on the page, a second press closes it, and a press on the stage or a panel closes it too
+- [ ] Select a section's first block, and write in a text: the block's bar stands under the section's bar and the text bar under both, none covering another; with a narrow window, where there is no room beside the phone, they stand above or below without covering each other
+- [ ] With a section flagged for the phone review, its card stands clear of the section's bar and the block's bar
+- [ ] In the Phone panel, press the gear beside the section: its settings open, and a second press closes them; on a page with one section the gear stands beside its name
+- [ ] Double-click the dark stage beside the phone: nothing turns blue; double-click words on the page: they are still selected there
+- [ ] The desktop view keeps the section's bar on the section, shown under the pointer, as before
+
 ### Test batch (0.7.3.19.2): the phone view's block bar and menus beside the phone
 
 - [ ] In the phone view, select a block: its bar stands beside the phone, level with the block, and none stands on the page; scroll the page: the bar follows the block

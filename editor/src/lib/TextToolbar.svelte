@@ -9,7 +9,7 @@
   import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from '$engine/glyphs.js';
   import Dropdown from './Dropdown.svelte';
   import ColorPicker from './ColorPicker.svelte';
-  import { placeTextBar } from './menu-place.js';
+  import { placeClearOf } from './menu-place.js';
   import { textBarState as bar } from '../state/text-bar.svelte.js';
   import { canvasBarState } from '../state/canvas-bar.svelte.js';
   import { menuMotion, rowMotion } from './motion.svelte.js';
@@ -76,14 +76,8 @@
     const r = bar.rect;
     const block = { left: ir.left + s * r.left, top: ir.top + s * r.top, right: ir.left + s * r.right, bottom: ir.top + s * r.bottom };
     const canvas = { left: Math.max(ir.left, stage.left), right: Math.min(ir.right, stage.right) };
-    const size = { w: w || 440, h: h || 120 };
-    const first = placeTextBar(block, size, canvas, stage);
-    // In the phone view the block's own bar stands by the block too (CanvasBar.svelte): beside the phone on the same side, the text bar stands under it; where the block's bar stands above or below the block, the text bar stands clear of both.
-    const held = canvasBarState.placed;
-    if (!held || held.blockId !== bar.blockId) return first;
-    if (held.side === first.side && (held.side === 'left' || held.side === 'right')) return placeTextBar({ ...block, top: Math.max(block.top, held.top + held.h + 6) }, size, canvas, stage);
-    if (held.side === 'above' || held.side === 'below') return placeTextBar({ ...block, top: Math.min(block.top, held.top), bottom: Math.max(block.bottom, held.top + held.h) }, size, canvas, stage);
-    return first;
+    // In the phone view the block's and the section's bars stand by the canvas too (CanvasBar.svelte): the text bar stands clear of them.
+    return placeClearOf(block, { w: w || 440, h: h || 120 }, canvas, stage, [canvasBarState.placed, canvasBarState.sectionPlaced]);
   });
 
   /** The widest the bar may stand, in px: the room beside the canvas where it stands beside the phone, else the stage's width; within it the bar stands at two lines' width (twoLines). */

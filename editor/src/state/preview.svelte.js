@@ -271,6 +271,7 @@ function onIframeLoad() {
     onHoverBlock: pageState.onHoverBlock,
     onTextState: textBarState.onTextState,
     onBlockBar: canvasBarState.onBlockBar,
+    onSectionBar: canvasBarState.onSectionBar,
     onCtxMenu: canvasBarState.onCtxMenu,
     onCtxClose: canvasBarState.onCtxClose,
     onCtxHold: canvasBarState.onCtxHold,
@@ -534,7 +535,11 @@ export function effects() {
   // A click anywhere in the admin (panels, top bar) closes open menus in
   // the preview; the iframe's own outside-click listeners never see these clicks.
   $effect(() => {
-    const closeMenus = () => bridge?.sendCloseMenus();
+    // A tool beside the phone that opens a pop-up of the page's own toggles it there (CanvasBar.svelte), so its press is left to it.
+    const closeMenus = (event) => {
+      if (event.target instanceof Element && event.target.closest('[data-page-pop]')) return;
+      bridge?.sendCloseMenus();
+    };
     document.addEventListener('pointerdown', closeMenus, true);
     return () => document.removeEventListener('pointerdown', closeMenus, true);
   });

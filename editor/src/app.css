@@ -4727,6 +4727,8 @@
     justify-content: safe center;
     align-items: safe center;
     background: #08090d;            /* letterbox surface around the canvas */
+    /* The surface around the canvas takes no selection, so a double press on it never selects the canvas whole; the page inside keeps its own. */
+    user-select: none;
   }
 
   /* Manual zoom past the surface: then panning MUST be possible to reach the rest. */

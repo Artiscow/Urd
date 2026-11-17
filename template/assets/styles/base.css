@@ -20246,6 +20246,11 @@ body.urd-preview.urd-mobile .urd-block > .urd-edit-toolbar {
   align-items: center;
 }
 
+/* In the phone view the editor draws the section's bar beside the phone (0.7.3.23, editor/src/lib/CanvasBar.svelte), level with the section's top: the page keeps its own unseen, for the editor's presses to press its tools, and the section's first block stays uncovered. */
+body.urd-preview.urd-mobile .urd-section > .urd-section-toolbar {
+  display: none;
+}
+
 /* Each button holds its drawing or its word in the middle, off the text's baseline, and all stand one height */
 .urd-preview .urd-section-toolbar button {
   display: inline-grid;

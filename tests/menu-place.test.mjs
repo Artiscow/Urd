@@ -7,7 +7,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { placeBesideBlock, clampPlace, wideFits, givesWay, placeByTab, placeTextBar } from '../editor/src/lib/menu-place.js';
+import { placeBesideBlock, clampPlace, wideFits, givesWay, placeByTab, placeTextBar, placeClearOf } from '../editor/src/lib/menu-place.js';
 
 const VIEW = { w: 1600, h: 1000 };
 const SIZE = { w: 400, h: 600 };
@@ -114,4 +114,23 @@ test('placeTextBar: beside the canvas where the stage has room, on the side with
   assert.deepEqual(placeTextBar({ left: 1700, top: 400, right: 1850, bottom: 480 }, size, wide, stage), { left: 1900 - 8 - 420, top: 400 - 12 - 110, side: 'above' });
   // No room above: below the block.
   assert.deepEqual(placeTextBar({ left: 600, top: 150, right: 900, bottom: 300 }, size, wide, stage), { left: 600, top: 312, side: 'below' });
+});
+
+test('placeClearOf: beside the canvas a bar moves down under a bar standing where it would go; above or below the block it stands clear of that bar too', () => {
+  const stage = { left: 400, top: 100, right: 1900, bottom: 1000 };
+  const phone = { left: 960, right: 1340 };
+  const size = { w: 300, h: 40 };
+  const block = { left: 980, top: 400, right: 1320, bottom: 480 };
+  // Nothing standing: as placeTextBar.
+  assert.deepEqual(placeClearOf(block, size, phone, stage, []), placeTextBar(block, size, phone, stage));
+  // A section's bar where the block's would go: the block's moves under it.
+  const section = { left: 960 - 12 - 200, top: 390, w: 200, h: 40 };
+  assert.deepEqual(placeClearOf(block, size, phone, stage, [section]), { left: 960 - 12 - 300, top: 436, side: 'left' });
+  // Two bars standing one under the other: under both.
+  const blockBar = { left: 648, top: 436, w: 300, h: 40 };
+  assert.equal(placeClearOf(block, { w: 420, h: 110 }, phone, stage, [section, blockBar]).top, 482);
+  // No room beside: above the block and the bar above it both.
+  const wide = { left: 400, right: 1900 };
+  const above = { left: 980, top: 400 - 12 - 40, w: 300, h: 40 };
+  assert.deepEqual(placeClearOf(block, size, wide, stage, [above]), { left: 980, top: 348 - 12 - 40, side: 'above' });
 });

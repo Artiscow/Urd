@@ -97,6 +97,33 @@ export function placeTextBar(block, size, canvas, stage, { gap = 12, margin = 8 
 }
 
 /**
+ * A box placed by the canvas as placeTextBar places it, kept clear of the boxes already standing there (the phone view's bars, CanvasBar.svelte): beside the canvas it moves down under one it would meet; above or below the block it stands above or below that box as well.
+ * @param {{left: number, top: number, right: number, bottom: number}} block
+ * @param {{w: number, h: number}} size
+ * @param {{left: number, right: number}} canvas
+ * @param {{left: number, top: number, right: number, bottom: number}} stage
+ * @param {Array<{left: number, top: number, w: number, h: number}|null>} held The boxes standing, by their corner and size
+ * @param {{gap?: number}} [opts] The room kept from a box moved past
+ * @returns {{left: number, top: number, side: 'left'|'right'|'above'|'below'}}
+ */
+export function placeClearOf(block, size, canvas, stage, held, { gap = 6 } = {}) {
+  const boxes = held.filter((b) => b && b.w > 0 && b.h > 0);
+  const meeting = (place) => boxes.find((b) => place.left < b.left + b.w && b.left < place.left + size.w && place.top < b.top + b.h && b.top < place.top + size.h);
+  let box = block;
+  let place = placeTextBar(box, size, canvas, stage);
+  // Each box can be passed once, the place moving down or out each time.
+  for (let i = 0; i < boxes.length; i += 1) {
+    const b = meeting(place);
+    if (!b) break;
+    box = place.side === 'left' || place.side === 'right'
+      ? { ...box, top: Math.max(box.top, b.top + b.h + gap) }
+      : { ...box, top: Math.min(box.top, b.top), bottom: Math.max(box.bottom, b.top + b.h) };
+    place = placeTextBar(box, size, canvas, stage);
+  }
+  return place;
+}
+
+/**
  * Where a window opened from a tab stands (the Drafts window): under a tab (`beside` false), beside a rail's icon, a sidebar's word or a menu's row, and at the window's top right where it opened from no tab; kept inside the window.
  * @param {{left: number, top: number, right: number, bottom: number}|null} anchor The tab's box
  * @param {{w: number, h: number}} size
