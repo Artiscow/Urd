@@ -2,6 +2,26 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.16.2): the phone's words for four more blocks, blocks added in the phone view, calendar examples and the view after a reload
+
+- [ ] In the phone view, write in a quote's words, its name and its role, a statistic's label, an audio player's title and a countdown's end words: each block gets the «Edited for the phone» mark, and the desktop view shows the old words
+- [ ] Switch between the desktop and phone views after writing them: the phone keeps its own words
+- [ ] On the desktop, type in a quote's words and then in its name, then switch to the phone view: both changes stand there; type in its words and its role in the phone view: the desktop keeps its own words, and the phone keeps both of its own
+- [ ] In the phone view, try to write in a statistic's number: it cannot be written there
+- [ ] In the phone view, empty an audio player's title: an empty line stays to type a new title in, also after switching views
+- [ ] In the Phone panel, press the mark on one of these blocks' rows: its words are the desktop's again
+- [ ] In the phone view, double-click the empty space between two blocks and pick a block: it lands there, across the row; double-click the empty half beside a half-width block: the new block fills that half
+- [ ] Press «New block» on a section's bar in the phone view: the menu fits the phone, one block to a line, and the block lands first in the section
+- [ ] Right-click an empty spot in the phone view: «New block here» and «Paste» are no longer greyed; copy a block, paste it there, and it lands at that spot
+- [ ] «Duplicate» a half-width block in the phone view, from the canvas's right-click menu and from the element menu: the copy stands half-width on the line below
+- [ ] Double-click the narrow room (a quarter or less) beside a wide picture in the phone view and add a text: it lands on its own line below, not squeezed beside the picture
+- [ ] Add a block from the Blocks panel in the phone view: it lands in the middle of the view
+- [ ] After each add, switch to the desktop view: the new blocks are not there, the section's bar says «… on phones only», and the other blocks stand where they stood
+- [ ] Add a block in the phone view and press Ctrl+Z once: it is gone
+- [ ] On the front page, select the calendar (its feed cannot be fetched locally): it shows the example events, the «Examples» button on its bar is pressed, and its tooltip says why the feed failed; a press shows the empty calendar
+- [ ] Open the Phone panel from the screen view: the phone view opens; switch back to the screen view and reload: the screen view comes back with the Phone panel open
+- [ ] Close the Phone panel and open it again: the phone view opens
+
 ### Test batch (0.7.0.90): new blocks fitted, a bin on every block bar, writing at the first click
 
 - [ ] Select a block on the desktop with each «Toolbar» form in Urd settings (Every group, Small panels, Short, Every tool): the bin stands on dark red before ⋮, and a press deletes the block; Ctrl+Z brings it back

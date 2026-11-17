@@ -209,7 +209,7 @@
         "phoneProps": {
           "type": "object",
           "additionalProperties": { "type": "string" },
-          "description": "The block's own words on the phone (additive field from 0.7.3.16, ADR-0033): word props keyed as in props (PHONE_WORDS in push-model.js: the text block's html), written in the phone view and drawn at phone width in the desktop's place; the desktop keeps props. A key its type does not hold words in is not drawn"
+          "description": "The block's own words on the phone (additive field from 0.7.3.16, ADR-0033): word props keyed as in props (PHONE_WORDS in push-model.js: the text block's html, the quote's text, attribution and role, the statistic's label, the audio player's title and the countdown's doneText), written in the phone view and drawn at phone width in the desktop's place; the desktop keeps props. A key its type does not hold words in is not drawn"
         },
         "sticky": {
           "description": "Pin on scroll (additive field from v0.6; on the phone with phone: true from 0.7.3.10): the block is pinned at the top of the viewport and released when its own section (until: null) or a later section (until: section id) has been passed. With mode 'screen' the block instead docks to a fixed point in the viewport for the whole page",

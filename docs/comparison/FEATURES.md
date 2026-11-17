@@ -2075,7 +2075,7 @@ Urd has two layouts by decision ([ADR-0019](../adr/0019-synced-mobile-model.md))
 | Non-width media conditions | WT | Colour scheme, motion, orientation, pointer | Missing | Not taken: two breakpoints by decision (ADR-0019) |
 | Auto layout or stacks | FR, FS, TI, WS, SQ, DU | Content-driven layout | Missing | Not taken: two breakpoints by decision (ADR-0019) |
 | Scale-proportionally behaviours | WS, TI | Scale, Fixed; auto-scaling | Partial: «Shrink the content» zooms a block in proportion below the design width, on the phone too (Delivered 0.7.3.9), and «Size» at any width (0.7.21.5); no auto-scaling of a whole page | Not taken: a page-wide zoom (ADR-0024 decision 5) |
-| Mobile-only elements | WH, ST, SQ | Add in the mobile view; mobile overrides | Partial: «Only on phones» on any block, set in either view, the desktop section bar listing such blocks (Delivered 0.7.3.8); a new block is still added in the desktop view | 0.7.3.17 (blocks added in the phone view, for the phone only) |
+| Mobile-only elements | WH, ST, SQ | Add in the mobile view; mobile overrides | Has: «Only on phones» on any block, set in either view, the desktop section bar listing such blocks (Delivered 0.7.3.8); a block added in the phone view (the section bar, the section's menu, a double click, the Blocks panel, a paste or a duplicate) stands on phones only, where it was asked for (Delivered 0.7.3.16.2); the phone's own words, cells, height and order as overrides | Delivered 0.7.3.16.2 |
 | Single-column mobile conversion | RM, CA | Single column; cropped or expanded views | Has: the synced row grid | - |
 | Responsive AI fix | WS, WH, FR, FS | One-click responsive; Fix layout; agent | Missing | Not taken |
 | Min/max sizes | FR, WS, WP | Constraints per element | Partial: the shrink floor, and smallest and largest text bounds under «Size» (0.7.21.5); no min or max width or height | Not taken: the dragged width is the block's size (ADR-0025), and the text bounds keep it readable |
@@ -2085,7 +2085,7 @@ Urd has two layouts by decision ([ADR-0019](../adr/0019-synced-mobile-model.md))
 | Per-breakpoint variable values | OX | Variable value per breakpoint | n/a | - |
 | Responsive offcanvas | BR | Direction per breakpoint | n/a | - |
 | Masonry or bento | FR | Layout presets | Partial: masonry as the gallery's mosaic view; no bento | 0.7.9 bento preset |
-| Separate mobile editing | HO, WE, WH, CA, SQ | Independent mobile layout | Has: mobile overrides, mobile review and a phone check before publishing (Delivered 0.7.3.22); beyond the field, a text's words of its own on the phone, written in the phone view (Delivered 0.7.3.16.1, ADR-0033) | - |
+| Separate mobile editing | HO, WE, WH, CA, SQ | Independent mobile layout | Has: mobile overrides, mobile review and a phone check before publishing (Delivered 0.7.3.22); beyond the field, words of their own on the phone for a text, a quote, a statistic's label, an audio player's title and a countdown's end, written in the phone view (Delivered 0.7.3.16.1 and 0.7.3.16.2, ADR-0033) | - |
 
 #### 8. Interactions and motion
 

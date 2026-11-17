@@ -112,23 +112,24 @@ export const countdownBlock = {
       }, 1000);
     }
 
-    if (editable) {
-      // The done text is click-and-type while it is shown; the target is set in the panel.
-      if (target === null || countdownParts(target, Date.now()).done) {
-        try {
-          doneEl.contentEditable = 'plaintext-only';
-        } catch {
-          doneEl.contentEditable = 'true';
-        }
-        doneEl.addEventListener('input', () => {
-          window.parent?.postMessage({
-            type: 'urd-edit',
-            sectionId: ctx.section.id,
-            blockId: el.dataset.blockId,
-            props: { ...props, doneText: doneEl.textContent ?? '' },
-          }, location.origin);
-        });
+    // The done text is click-and-type while it is shown, in the phone view as the phone's own (PHONE_WORDS, ADR-0033); the target is set in the panel.
+    if (ctx.preview && (target === null || countdownParts(target, Date.now()).done)) {
+      try {
+        doneEl.contentEditable = 'plaintext-only';
+      } catch {
+        doneEl.contentEditable = 'true';
       }
+      doneEl.addEventListener('input', () => {
+        window.parent?.postMessage({
+          type: 'urd-edit',
+          sectionId: ctx.section.id,
+          blockId: el.dataset.blockId,
+          props: { ...props, doneText: doneEl.textContent ?? '' },
+          ...(ctx.viewport === 'mobile' ? { phone: true } : {}),
+        }, location.origin);
+      });
+    }
+    if (editable) {
       // The help chip (ADR-0008): the target and the done state need explaining.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;

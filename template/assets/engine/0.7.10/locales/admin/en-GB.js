@@ -2744,6 +2744,7 @@ export default {
     'canvas.mobileReviewed': 'Mark the phone layout as reviewed',
     'canvas.newSection': '+ New section',
     'canvas.addBlock': 'New block in this section',
+    'canvas.addBlockPhone': 'New block in this section, on phones only',
     'canvas.addSection': 'New section below this one',
     'canvas.seam.grow': 'Drag down: the section above grows. Drag up: the section below grows at its top',
     'canvas.seam.growAbove': 'Drag down: the section grows',

@@ -3,7 +3,7 @@
  * The order is shown as a tree of one level (phoneTree): a block alone, or a stack of blocks, the owner's own or a column the rule reads whole.
  * A move is a new order of that tree, settled into the section's data (settle): the stacks as they stand, and either the custom order as listed, or the exception that puts the moved block or stack there, the other blocks keeping their order.
  */
-import { phoneParts } from './phone-order.js';
+import { phoneParts, phoneSetupOf } from './phone-order.js';
 import { phoneCells, PHONE_COLUMNS } from './migrate.js';
 
 /** Whether a block flows in the row grid, rather than standing on rows placed by hand. */
@@ -446,7 +446,14 @@ export function phoneDropAt(boxes, x, y, own = null) {
     if (own && away(own) < away(target)) return null;
     pos = y < target.top ? 'before' : 'after';
   }
-  // The line: the units whose heights overlap the target's, and those overlapping them in turn.
+  const ends = lineOf(boxes, target);
+  return pos === 'before'
+    ? { pos, of: ends[0].id, at: Math.min(...ends.map((b) => b.top)) }
+    : { pos, of: ends[ends.length - 1].id, at: Math.max(...ends.map((b) => b.bottom)) };
+}
+
+/** The units on a unit's line: those whose heights overlap its own, and those overlapping them in turn, in the order of `boxes`. */
+function lineOf(boxes, target) {
   const line = new Set([target]);
   for (let grew = true; grew;) {
     grew = false;
@@ -457,10 +464,20 @@ export function phoneDropAt(boxes, x, y, own = null) {
       }
     }
   }
-  const ends = boxes.filter((b) => line.has(b));
-  return pos === 'before'
-    ? { pos, of: ends[0].id, at: Math.min(...ends.map((b) => b.top)) }
-    : { pos, of: ends[ends.length - 1].id, at: Math.max(...ends.map((b) => b.bottom)) };
+  return boxes.filter((b) => line.has(b));
+}
+
+/**
+ * The drop right after the line a block's unit stands on, as a drop in the gap below that line is (phoneDropAt): where a copy made in the phone view lands, and a block added from the Blocks panel over a block in the middle of the view.
+ * @param {Array<{id: string, top: number, bottom: number, members?: Array<{id: string}>}>} boxes The units' boxes (phoneDropAt)
+ * @param {string} id A block of the unit
+ * @returns {{pos: 'after', of: string, at: number}|null} Null where no unit holds the block
+ */
+export function phoneAfterLine(boxes, id) {
+  const target = boxes.find((b) => b.id === id || b.members?.some((m) => m.id === id));
+  if (!target) return null;
+  const ends = lineOf(boxes, target);
+  return { pos: 'after', of: ends[ends.length - 1].id, at: Math.max(...ends.map((b) => b.bottom)) };
 }
 
 /**
@@ -702,6 +719,40 @@ export function phoneKeyDrops(blocks, rawSetup, blockId) {
   let home = drops.findIndex((drop) => phoneDropChange(blocks, setup, blockId, drop) === null);
   if (home < 0) home = 0;
   return { drops, home };
+}
+
+/** The room left below the desktop's lowest block for a block added in the phone view, in px. */
+const ADDED_GAP = 24;
+
+/**
+ * A section with blocks added in the phone view, which stand on the phone only (0.7.3.17): each shown on phones only (`hideDesktop`) and shown there, flowing in the phone's order with a pin it was copied with let go of, and its desktop frame below every block of the section, the group's own shape kept, so the desktop stays as it is and the block stands clear of the others should it be shown there.
+ * The first lands where `drop` asks, read at the point as a drag's drop is (phoneDropAt, phoneDropChange), and the others after it in turn; without a drop they stand last in the phone's order.
+ * @param {object} section
+ * @param {object[]} added The new blocks, in the order they are read
+ * @param {object|null} [drop] Where the first lands (phoneDropChange)
+ * @returns {object} The section with the blocks in it; the section given is left as it is
+ */
+export function phoneAdded(section, added, drop = null) {
+  const blocks = section?.blocks ?? [];
+  const frames = (list) => list.map((b) => b.frames?.desktop).filter(Boolean);
+  const foot = Math.max(0, ...frames(blocks).map((f) => f.y + f.h));
+  const top = Math.min(...frames(added).map((f) => f.y));
+  const placed = added.map((block) => {
+    const placement = block.frames?.mobile ?? null;
+    const next = { ...block, hideDesktop: true, frames: { ...block.frames, mobile: Number.isFinite(placement?.row) ? unpinned(placement) : placement } };
+    if (next.hideMobile) next.hideMobile = false;
+    const frame = block.frames?.desktop;
+    if (frame) next.frames.desktop = { ...frame, y: Math.round(foot + ADDED_GAP + frame.y - top) };
+    return next;
+  });
+  let next = { ...section, blocks: [...blocks, ...placed] };
+  let at = drop;
+  for (const block of placed) {
+    const change = at ? phoneDropChange(next.blocks, phoneSetupOf(next), block.id, at) : null;
+    if (change) next = phoneChangeApplied(next, change);
+    if (at) at = { pos: 'after', of: block.id };
+  }
+  return next;
 }
 
 /** A flowing block's cells (migrate.js phoneCells), or null. */

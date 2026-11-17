@@ -1295,8 +1295,10 @@ function renderBlock(Urd, el, block, ctx, measured = null) {
       const props = propsForViewport({ ...block, phoneProps }, lifted.props, ctx.viewport);
       const phone = hasPhoneDesign(block.type, props);
       const narrow = phone && (measured ?? isNarrowBlock(el, block, ctx));
-      def.render(el, propsForWidth(block.type, props, narrow), ctx);
-      if (phone) watchPhoneDesign(el, { def, type: block.type, props, block, ctx, narrow });
+      // In the editor the block is told the words the phone holds of its own (`phoneWords`), so a field emptied there still stands to be written in (blocks/audio.js).
+      const blockCtx = ctx.preview && phoneProps ? { ...ctx, phoneWords: phoneProps } : ctx;
+      def.render(el, propsForWidth(block.type, props, narrow), blockCtx);
+      if (phone) watchPhoneDesign(el, { def, type: block.type, props, block, ctx: blockCtx, narrow });
       // Entrance animation and pointer effect are independent fields and
       // can be combined; the pointer effect is the block's own, else the one
       // its section gives every element (pointerEffectOf). Cardwise blocks

@@ -1947,8 +1947,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     if (focused) [...host.querySelectorAll('[data-cal-key]')].find((node) => node.dataset.calKey === focused)?.focus({ preventScroll: true });
   };
 
-  // In the editor the example events can stand in for the calendar's own (its bar's button, preview-edit.js): by the choice made for the session, else while it has no sources, so a new calendar shows its design at once.
-  // A feed that cannot be fetched leaves the calendar empty, with the reason kept for the button's tooltip; the design picker's preview (`sampleOnFail`, set by the editor on the calendar it draws there and never stored) shows the examples at once, so every design stands to be seen.
+  // In the editor the example events stand in for the calendar's own while no calendar is connected that answers: by the choice made for the session on its bar's button (preview-edit.js), else while it has no sources or none of its feeds can be fetched, so its design can be seen and set; the reason a feed failed is kept for the button's tooltip.
   // Visitors see the calendar's own events, or its quiet empty state.
   const key = el.dataset.blockId ?? '';
   const settle = (occurrences, reason = null, sample = !sources.length) => {
@@ -1962,7 +1961,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     el.dispatchEvent(new CustomEvent('urd-cal-shown'));
     el.dispatchEvent(new CustomEvent('urd-drawn'));
   };
-  const failed = (error) => settle([], () => ta('calendar.feedFailed', { error }), props.sampleOnFail === true);
+  const failed = (error) => settle([], () => ta('calendar.feedFailed', { error }), true);
 
   if (!sources.length) {
     // A block whose only sources point at calendars no longer in the registry says so in the button's tooltip.

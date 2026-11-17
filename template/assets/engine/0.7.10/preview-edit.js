@@ -46,7 +46,7 @@ import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
-import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup } from './phone-moves.js';
+import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneAfterLine, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup } from './phone-moves.js';
 import { closeColorPicker } from './color-picker.js';
 import { closeDropdowns } from './dropdown.js';
 import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
@@ -560,7 +560,7 @@ function openNavContextMenu(nav, target, x, y) {
   });
 }
 
-/** The section's menu, on its empty surface: a new block at the point, the clipboard, the section's settings and its own actions. The phone view has the same menu, greyed where an item places on the desktop alone: a new block or pasted blocks at the point, a new section from the adder the phone view does not draw, and the height fitted to the desktop's blocks. */
+/** The section's menu, on its empty surface: a new block at the point, the clipboard, the section's settings and its own actions. The phone view has the same menu, a new block or pasted blocks standing on the phone only, greyed where an item acts on the desktop alone: a new section from the adder the phone view does not draw, and the height fitted to the desktop's blocks. */
 function openSectionContextMenu(host, x, y, from = null) {
   if (document.body.classList.contains('urd-chrome-off')) return;
   const section = host._urdSection;
@@ -579,10 +579,10 @@ function openSectionContextMenu(host, x, y, from = null) {
     return n?.querySelector('button') ?? null;
   };
   showContextMenu(host, x, y, ta('canvas.ctx.sectionLabel'), (item, sep) => {
-    item(ta('canvas.ctx.newBlockHere'), keysHere('/'), () => openBlockMenuAt(host, x, y), { disabled: phone }).classList.add('urd-ctx-first');
+    item(ta('canvas.ctx.newBlockHere'), keysHere('/'), () => openBlockMenuAt(host, x, y)).classList.add('urd-ctx-first');
     // One clipboard: blocks paste at this section, a section lands below it.
     if (clipboard?.kind === 'section') item(ta('canvas.ctx.pasteSection'), keysHere('Ctrl+V'), () => pasteSection(host));
-    else item(ta('canvas.ctx.paste'), keysHere('Ctrl+V'), () => pasteClipboard(), { disabled: phone || !clipboard?.blocks?.length });
+    else item(ta('canvas.ctx.paste'), keysHere('Ctrl+V'), () => pasteClipboard(clipboard, { x, y, host }), { disabled: !clipboard?.blocks?.length });
     sep();
     // The section's settings, in the floating menu as the gear on its bar opens them.
     item(ta('canvas.ctx.sectionSettings'), '', () => openSectionSettings(host, section));
@@ -1083,6 +1083,7 @@ function raiseSmallestUnder(x, y) {
  * a point, the block lands there (_urdAt) and the menu sits at the pointer;
  * without one it opens at its place under the section toolbar. The search
  * field is reset and focused.
+ * In the phone view the point is the block's place in the phone's order (_urdPhone).
  */
 function openBlockMenuAt(host, clientX = null, clientY = null) {
   const wrap = host.querySelector('.urd-add-block');
@@ -1093,8 +1094,10 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
   // the menu itself is a child of the section and is positioned against it.
   // Two different frames.
   const canvasRect = canvasOf(host).getBoundingClientRect();
+  // In the phone view the block stands on the phone only, landing at the point as a block let go there does; without a point, first in the section.
+  menu._urdPhone = isMobile() ? phoneAdd(clientX != null ? phoneDropAtPoint(host, host._urdSection, clientX, clientY) : phoneDropFirst(host)) : {};
   if (clientX != null) {
-    menu._urdAt = {
+    menu._urdAt = isMobile() ? null : {
       x: Math.round(((clientX - canvasRect.left) / canvasRect.width) * 10000) / 100,
       y: Math.round(clientY - canvasRect.top),
     };
@@ -1302,14 +1305,101 @@ export function enhanceSection(host, section, grid) {
     updateMultiToolbar();
   }
   addSectionToolbar(host, section, grid);
-  // Structural changes belong to the desktop view; a section's height is dragged on the seams between the sections (seamGrip).
-  if (!isMobile()) addBlockAdder(host, section, grid);
+  // The block menu, in both views: a block added in the phone view stands on the phone only (phoneAdd).
+  addBlockAdder(host, section, grid);
   // Persistent grid display (the grid menu in the editor is open) must
   // survive re-renders of the section.
   if (gridOverlaysOn) showGridOverlay(host, grid, restingGridLook()).classList.add('urd-grid-persistent');
   // Likewise the guide lines (a re-render removes the overlay elements).
   if (guideOverlaysOn) addGuideOverlays(host);
 }
+
+/**
+ * The units on the phone (phone-moves.js phoneTree: a block alone, or a stack's or a column's blocks), each with its box in the row grid as drawn, from the row grid's corner: where a drag can land, and where a block added at a point lands.
+ * A unit of several blocks carries each one's height, so a drop above or below lands on the block under the pointer.
+ * @param {HTMLElement} host The section
+ * @param {object} section
+ * @param {HTMLElement} flowEl The row grid
+ * @param {string|null} [without] The dragged block, left out
+ * @param {Map<string, {left: number, top: number, width: number, height: number}>|null} [placed] Where the preview shows the blocks
+ */
+function phoneUnitBoxes(host, section, flowEl, without = null, placed = null) {
+  const out = [];
+  /** A block's box: where the preview shows it, else where it stands. */
+  const boxOf = (ids) => {
+    if (!placed) return phoneBoxOf(host, flowEl, ids);
+    const rects = ids.map((id) => placed.get(id)).filter(Boolean);
+    if (!rects.length) return phoneBoxOf(host, flowEl, ids);
+    return { left: Math.min(...rects.map((r) => r.left)), top: Math.min(...rects.map((r) => r.top)), right: Math.max(...rects.map((r) => r.left + r.width)), bottom: Math.max(...rects.map((r) => r.top + r.height)) };
+  };
+  for (const node of phoneTree(section.blocks, phoneSetupOf(section))) {
+    const ids = (node.children ? node.children.map((c) => c.id) : [node.id]).filter((id) => id !== without);
+    const box = boxOf(ids);
+    if (!box) continue;
+    const members = ids.length > 1 ? ids.map((id) => ({ id, ...boxOf([id]) })).filter((m) => Number.isFinite(m.top)) : null;
+    out.push({ id: ids[0], ...box, ...(members ? { members } : {}) });
+  }
+  return out;
+}
+
+/** The box that blocks stand in on the phone together, from the row grid's corner: each block's own, or its slot's where it is pinned; null where none of them is drawn. */
+function phoneBoxOf(host, flowEl, ids) {
+  const fr = flowEl.getBoundingClientRect();
+  const rects = ids.map((id) => {
+    const b = host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`);
+    return (b?._urdStickSlot?.isConnected ? b._urdStickSlot : b)?.getBoundingClientRect() ?? null;
+  }).filter((r) => r && r.height > 0);
+  if (!rects.length) return null;
+  return {
+    left: Math.min(...rects.map((r) => r.left)) - fr.left,
+    top: Math.min(...rects.map((r) => r.top)) - fr.top,
+    right: Math.max(...rects.map((r) => r.right)) - fr.left,
+    bottom: Math.max(...rects.map((r) => r.bottom)) - fr.top,
+  };
+}
+
+/**
+ * Where a block added at a point of a section in the phone view lands (0.7.3.17): the drop a block let go there makes (phoneDropAt), with where the point stands across the row, in columns; null in a section with nothing on the phone.
+ * With `between`, a point over a block lands after its line, as a block from the Blocks panel does in the middle of the view.
+ * @param {HTMLElement} host
+ * @param {object} section
+ * @param {number} clientX
+ * @param {number} clientY
+ * @param {boolean} [between]
+ */
+function phoneDropAtPoint(host, section, clientX, clientY, between = false) {
+  const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
+  if (!flowEl || !section) return null;
+  const fr = flowEl.getBoundingClientRect();
+  const x = clientX - fr.left;
+  const boxes = phoneUnitBoxes(host, section, flowEl);
+  const found = phoneDropAt(boxes, x, clientY - fr.top, null);
+  if (!found) return null;
+  const drop = { ...found, x: (x - fr.width * 0.05) / ((fr.width * 0.9) / PHONE_COLUMNS) };
+  if (drop.pos === 'before' || drop.pos === 'after') return drop;
+  if (between && !drop.free) return phoneAfterLine(boxes, drop.of);
+  // Beside a block or into its column, the new block is tried in the section as the last of it: where it finds no room, as in the gutter between two halves, or would stand narrower than words read well under «Force readable text» (ADR-0034), it lands after the line.
+  const probe = { id: 'urd-new-probe', hideDesktop: true, frames: { desktop: { x: 0, y: Number.MAX_SAFE_INTEGER, w: 100, h: 1 }, mobile: null } };
+  const cells = phoneDropChange([...section.blocks, probe], phoneSetupOf(section), probe.id, drop)?.cells;
+  const narrow = Boolean(cells?.[probe.id]) && forcesReadable(section, 'mobile') && cells[probe.id].cols < leastWordsCols(window.innerWidth);
+  return !cells || narrow ? phoneAfterLine(boxes, drop.of) : drop;
+}
+
+/** Where a block from the Blocks panel lands in the phone view: in the middle of the section's part in view, between its lines. */
+function phoneDropMid(host) {
+  const r = host.getBoundingClientRect();
+  return phoneDropAtPoint(host, host._urdSection, r.left + r.width / 2, (Math.max(r.top, 0) + Math.min(r.bottom, window.innerHeight)) / 2, true);
+}
+
+/** Where a block from the section bar's «New block» lands in the phone view: first in the section, under the bar. */
+function phoneDropFirst(host) {
+  const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
+  const first = flowEl && host._urdSection ? phoneUnitBoxes(host, host._urdSection, flowEl)[0] : null;
+  return first ? { pos: 'before', of: first.id } : null;
+}
+
+/** The phone's place for blocks added in the phone view, as the messages that add them carry it (`phone`): they stand on the phone only, landing where `drop` asks; nothing in the desktop view. */
+const phoneAdd = (drop) => (isMobile() ? { phone: { drop: drop ?? null } } : {});
 
 /**
  * Places a new block from the editor's palette in the middle of the user's
@@ -1332,14 +1422,18 @@ export function placeBlock(block, root) {
   }
   if (!host) return;
 
-  const rect = host.getBoundingClientRect();
-  const visibleTop = Math.max(0, -rect.top);
-  const visibleBottom = Math.max(visibleTop, Math.min(rect.height, window.innerHeight - rect.top));
-  const frame = block.frames.desktop;
-  frame.y = Math.max(8, Math.round((visibleTop + visibleBottom) / 2 - frame.h / 2));
-  frame.x = Math.round(((100 - frame.w) / 2) * 100) / 100;
-
-  post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block, fit: true });
+  if (isMobile()) {
+    // In the phone view the block stands on the phone only, in the middle of the view.
+    post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block, fit: true, ...phoneAdd(phoneDropMid(host)) });
+  } else {
+    const rect = host.getBoundingClientRect();
+    const visibleTop = Math.max(0, -rect.top);
+    const visibleBottom = Math.max(visibleTop, Math.min(rect.height, window.innerHeight - rect.top));
+    const frame = block.frames.desktop;
+    frame.y = Math.max(8, Math.round((visibleTop + visibleBottom) / 2 - frame.h / 2));
+    frame.x = Math.round(((100 - frame.w) / 2) * 100) / 100;
+    post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block, fit: true });
+  }
   // The new block is selected immediately (same pattern as duplicate):
   // the re-render after urd-add-block reads selectedBlockId, the editor
   // follows via urd-select-block, and Ctrl+D/arrow keys work without an
@@ -1577,6 +1671,7 @@ function addBlockAdder(host, section, grid) {
   // lands there. Opened from the section toolbar's «New block», the point is
   // null and the editor centers the block.
   menu._urdAt = null;
+  menu._urdPhone = {};
 
   // The block search (flat hit list). Everything added to the menu is
   // registered in searchables with its visible label and a run that clicks
@@ -1801,13 +1896,13 @@ function addBlockAdder(host, section, grid) {
           const files = [...(input.files ?? [])];
           if (!files.length) return;
           noteRecentKind(kind);
-          post({ type: 'urd-request-block', sectionId: section.id, kind: def.block ?? kind, at, files });
+          post({ type: 'urd-request-block', sectionId: section.id, kind: def.block ?? kind, at, files, ...menu._urdPhone });
         }, { once: true });
         input.click();
       } else if (def.action === 'designs') {
-        post({ type: 'urd-calendar-designs', sectionId: section.id, at });
+        post({ type: 'urd-calendar-designs', sectionId: section.id, at, ...menu._urdPhone });
       } else {
-        post({ type: 'urd-request-block', sectionId: section.id, kind, at });
+        post({ type: 'urd-request-block', sectionId: section.id, kind, at, ...menu._urdPhone });
       }
       resetBlockAdder(wrap);
     });
@@ -1862,6 +1957,7 @@ function addBlockAdder(host, section, grid) {
         type: 'urd-add-block',
         sectionId: section.id,
         fit: true,
+        ...menu._urdPhone,
         block: {
           id: makeId('blk'),
           type,
@@ -1921,7 +2017,7 @@ function addBlockAdder(host, section, grid) {
         // Opened via double-click: the group lands with its top-left corner
         // on the click point; otherwise the stored positions are kept
         // (clamping only).
-        insertBlocksTemplate(tpl, section.id, menu._urdAt);
+        insertBlocksTemplate(tpl, section.id, menu._urdAt, menu._urdPhone);
         resetBlockAdder(wrap);
       });
       templateItems.appendChild(b);
@@ -1957,7 +2053,6 @@ function addBlockAdder(host, section, grid) {
     // click"). Never inside blocks (double-click is word selection/image
     // editor there) or on editing handles.
     host.addEventListener('dblclick', (event) => {
-      if (isMobile()) return;
       const target = event.target instanceof Element ? event.target : null;
       if (!target) return;
       if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-hint-chip, .urd-hint-card')) return;
@@ -3318,25 +3413,26 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(del);
   }
   else bar.appendChild(moreButton((x, y, from) => openSectionContextMenu(host, x, y, from)));
-  // New block and New section, together at the bar's right end: a block in this section, and a section below it.
+  // New block and New section, together at the bar's right end: a block in this section, and a section below it; the phone view adds blocks for the phone only and draws no adder for sections.
+  const adds = document.createElement('span');
+  adds.className = 'urd-sec-adds';
+  const addBlock = document.createElement('button');
+  addBlock.className = 'urd-sec-add-block';
+  addBlock.innerHTML = ADD_BLOCK_SVG;
+  addBlock.title = ta(isMobile() ? 'canvas.addBlockPhone' : 'canvas.addBlock');
+  addBlock.setAttribute('aria-label', addBlock.title);
+  addBlock.addEventListener('click', () => toggleBlockMenuFrom(host, addBlock));
+  adds.append(addBlock);
   if (!isMobile()) {
-    const adds = document.createElement('span');
-    adds.className = 'urd-sec-adds';
-    const block = document.createElement('button');
-    block.className = 'urd-sec-add-block';
-    block.innerHTML = ADD_BLOCK_SVG;
-    block.title = ta('canvas.addBlock');
-    block.setAttribute('aria-label', block.title);
-    block.addEventListener('click', () => toggleBlockMenuFrom(host, block));
     const sec = document.createElement('button');
     sec.className = 'urd-sec-add-section';
     sec.innerHTML = ADD_SECTION_SVG;
     sec.title = ta('canvas.addSection');
     sec.setAttribute('aria-label', sec.title);
     sec.addEventListener('click', () => openSectionGalleryBelow(host));
-    adds.append(block, sec);
-    bar.appendChild(adds);
+    adds.append(sec);
   }
+  bar.appendChild(adds);
 
   // Before the canvas, so it stands at the section's top on the phone as well, where the canvas is in flow.
   if (bar.childElementCount) host.insertBefore(bar, host.querySelector(':scope > .urd-canvas'));
@@ -3354,6 +3450,7 @@ function toggleBlockMenuFrom(host, btn) {
   const rect = host.getBoundingClientRect();
   const at = btn.getBoundingClientRect();
   menu._urdAt = null;
+  menu._urdPhone = isMobile() ? phoneAdd(phoneDropFirst(host)) : {};
   wrap.style.left = `${Math.round(at.right - rect.left)}px`;
   wrap.style.top = `${Math.round(at.bottom - rect.top + 6)}px`;
   wrap.style.right = 'auto';
@@ -4571,15 +4668,17 @@ function copySelection(ctx, cut = false) {
  * otherwise the first. Sent together as urd-add-blocks = ONE undo step,
  * and the new set is selected. A section on the clipboard lands below the
  * active section instead (pasteSection).
+ * From a section's menu (`point`) the blocks go into that section, and in the phone view land at the point the menu was opened at.
  */
-function pasteClipboard(source = clipboard) {
+function pasteClipboard(source = clipboard, point = null) {
   if (source?.kind === 'section') {
     pasteSection();
     return;
   }
   if (!source?.blocks?.length) return;
   const sourceHost = source.sectionId ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(source.sectionId)}"]`) : null;
-  const host = document.querySelector('.urd-section-active')
+  const host = point?.host
+    ?? document.querySelector('.urd-section-active')
     ?? sourceHost
     ?? sectionInView()
     ?? document.querySelector('.urd-section');
@@ -4605,7 +4704,9 @@ function pasteClipboard(source = clipboard) {
     else if (copy.phonePlace && (!side || source.sectionId !== sectionId)) delete copy.phonePlace;
   }
   const minBottom = Math.max(...blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
-  post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
+  // In the phone view the blocks stand on the phone only, from the point the section's menu was opened at, else last.
+  const drop = isMobile() && point ? phoneDropAtPoint(host, host._urdSection, point.x, point.y) : null;
+  post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [], ...phoneAdd(drop) });
   // The next paste continues from the pasted content (no stacking on top of each other).
   if (source === clipboard) clipboard = { kind: 'blocks', sectionId, blocks: JSON.parse(JSON.stringify(blocks)) };
   // The pasted content becomes the new set: the re-render after
@@ -4619,13 +4720,13 @@ function pasteClipboard(source = clipboard) {
   post({ type: 'urd-select-block', sectionId, blockId: selectedBlockId });
 }
 
-/** Insert a block-group template into a section: re-id + anchor/clamp via
- *  the template model (the re-id rule in SCHEMA.md), ONE undo step via
- *  urd-add-blocks, and the inserted content becomes the new set (the same
- *  tail as pasteClipboard). anchor = {x in %, y in px} or null. */
-function insertBlocksTemplate(tpl, sectionId, anchor) {
+/**
+ * Insert a block-group template into a section: re-id + anchor/clamp via the template model (the re-id rule in SCHEMA.md), ONE undo step via urd-add-blocks, and the inserted content becomes the new set (the same tail as pasteClipboard).
+ * anchor = {x in %, y in px} or null; `phone` is the place in the phone view (phoneAdd).
+ */
+function insertBlocksTemplate(tpl, sectionId, anchor, phone = {}) {
   const { blocks, minBottom } = cloneBlocksForInsert(tpl.blocks, makeId, { anchor });
-  post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
+  post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [], ...phone });
   document.querySelectorAll('.urd-block.urd-selected, .urd-block.urd-multi-selected')
     .forEach((b) => b.classList.remove('urd-selected', 'urd-multi-selected'));
   multiSectionId = sectionId;
@@ -4641,7 +4742,7 @@ export function insertTemplate(id) {
   const tpl = templates.find((m) => m.id === id && m.kind === 'blocks' && Array.isArray(m.blocks));
   const host = document.querySelector('.urd-section-active') ?? document.querySelector('.urd-section');
   if (!tpl || !host) return;
-  insertBlocksTemplate(tpl, host.dataset.sectionId, null);
+  insertBlocksTemplate(tpl, host.dataset.sectionId, null, phoneAdd(isMobile() ? phoneDropMid(host) : null));
 }
 
 /** Ctrl+D with a multi-selection: duplicate the set (via the paste flow). */
@@ -4864,11 +4965,18 @@ export function deselectAll() {
   markActiveVisual(null);
 }
 
-/** Duplicate the selected block (the bridge: Ctrl+D with focus in the admin panels). */
+/** Duplicate the selected block (the bridge: «Duplicate» in the element menu, and Ctrl+D with focus in the admin panels, which the editor sends from the desktop view only); in the phone view the copy stands on the phone only (duplicateBlock). */
 export function duplicateSelected() {
-  if (isMobile() || !selectedBlockId) return;
+  if (!selectedBlockId) return;
   const ctx = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?._urdCtx;
   if (ctx) duplicateBlock(ctx.section, ctx.block);
+}
+
+/** The drop right after the line a block stands on in the phone view (phoneAfterLine), or null where it is not drawn there. */
+function phoneDropAfter(section, blockId) {
+  const host = document.querySelector(`.urd-section[data-section-id="${CSS.escape(section.id)}"]`);
+  const flowEl = host && canvasOf(host).querySelector(':scope > .urd-flow');
+  return flowEl ? phoneAfterLine(phoneUnitBoxes(host, section, flowEl), blockId) : null;
 }
 
 /** Duplicate a block: a copy with a new id, slightly offset, in the same section. */
@@ -4883,7 +4991,8 @@ function duplicateBlock(section, block) {
     x: clamp(Math.round((f.x + 2) * 100) / 100, 0, Math.max(0, Math.round((100 - f.w) * 100) / 100)),
     y: f.y + 16,
   };
-  post({ type: 'urd-add-block', sectionId: section.id, block: copy });
+  // In the phone view the copy stands on the phone only, right after the line its block stands on.
+  post({ type: 'urd-add-block', sectionId: section.id, block: copy, ...phoneAdd(isMobile() ? phoneDropAfter(section, block.id) : null) });
   // The duplicate becomes the selected block: the re-render after
   // urd-add-block selects it (enhanceSection reads selectedBlockId), and
   // the editor follows via urd-select-block so the Properties panel shows
@@ -5332,41 +5441,14 @@ function enhanceBlock(el, block, section, grid, host) {
     });
   }
 
-  /** The other units on the phone (phone-moves.js phoneTree: a block alone, or a stack's or a column's blocks), each with its box in the row grid as drawn, without the dragged block: where a drag can land. */
+  /** The other units on the phone, without the dragged block: where a drag can land (phoneUnitBoxes). */
   function unitBoxes(flowEl, placed = null) {
-    const out = [];
-    /** A block's box: where the preview shows it, else where it stands. */
-    const boxOf = (ids) => {
-      if (!placed) return boxOnPhone(flowEl, ids);
-      const rects = ids.map((id) => placed.get(id)).filter(Boolean);
-      if (!rects.length) return boxOnPhone(flowEl, ids);
-      return { left: Math.min(...rects.map((r) => r.left)), top: Math.min(...rects.map((r) => r.top)), right: Math.max(...rects.map((r) => r.left + r.width)), bottom: Math.max(...rects.map((r) => r.top + r.height)) };
-    };
-    for (const node of phoneTree(section.blocks, phoneSetupOf(section))) {
-      const ids = (node.children ? node.children.map((c) => c.id) : [node.id]).filter((id) => id !== block.id);
-      const box = boxOf(ids);
-      if (!box) continue;
-      // A unit of several blocks carries each one's height, so a drop above or below lands on the block under the pointer.
-      const members = ids.length > 1 ? ids.map((id) => ({ id, ...boxOf([id]) })).filter((m) => Number.isFinite(m.top)) : null;
-      out.push({ id: ids[0], ...box, ...(members ? { members } : {}) });
-    }
-    return out;
+    return phoneUnitBoxes(host, section, flowEl, block.id, placed);
   }
 
-  /** The box that blocks stand in on the phone together, from the row grid's corner: each block's own, or its slot's where it is pinned; null where none of them is drawn. */
+  /** The box that blocks stand in on the phone together (phoneBoxOf). */
   function boxOnPhone(flowEl, ids) {
-    const fr = flowEl.getBoundingClientRect();
-    const rects = ids.map((id) => {
-      const b = host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`);
-      return (b?._urdStickSlot?.isConnected ? b._urdStickSlot : b)?.getBoundingClientRect() ?? null;
-    }).filter((r) => r && r.height > 0);
-    if (!rects.length) return null;
-    return {
-      left: Math.min(...rects.map((r) => r.left)) - fr.left,
-      top: Math.min(...rects.map((r) => r.top)) - fr.top,
-      right: Math.max(...rects.map((r) => r.right)) - fr.left,
-      bottom: Math.max(...rects.map((r) => r.bottom)) - fr.top,
-    };
+    return phoneBoxOf(host, flowEl, ids);
   }
 
   /** The phone's eight cell columns drawn over the row grid while a block is dragged or sized there, and the mark of where it lands. */

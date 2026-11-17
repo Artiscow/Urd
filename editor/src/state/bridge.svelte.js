@@ -59,6 +59,11 @@ function handleStickyGroup(msg) {
   shellState.setStatus(ta(msg.on ? 'status.stickyGrouped' : 'status.stickyUngrouped'));
 }
 
+/** A block's words as the draft holds them, the desktop's and the phone's own, handed to the page's copy of its section without drawing it again (urd-block-words). */
+function sendWords(section, block) {
+  previewState.bridge?.sendBlockWords(section.id, block.id, $state.snapshot(block.props), block.phoneProps ? $state.snapshot(block.phoneProps) : null);
+}
+
 /** Click-and-type change from the iframe: update the draft. The iframe
  *  already shows the change, so we do not push back (that would break focus). */
 function handleEdit(msg) {
@@ -79,6 +84,8 @@ function handleEdit(msg) {
     pageState.store.save();
     historyState.updateDirty();
     if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
+    // The page keeps the words in its own copy without drawing the block again, so the caret stays where it is typed and a later drawing (a switch of view) reads them.
+    sendWords(section, block);
     shellState.status = '';
     return;
   }
@@ -101,6 +108,7 @@ function handleEdit(msg) {
   pageState.store.save();
   historyState.updateDirty();
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
+  sendWords(section, block);
   // The image editor requests a rerender on image swap (empty blocks
   // have no img to update live); text editing never does (an echo
   // mid-typing would lose the caret).

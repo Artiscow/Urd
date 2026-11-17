@@ -472,13 +472,30 @@ const PANEL_GROUP_KEYS = ['rail.thisPage', 'rail.site', 'rail.system'];
 /** The panels' names, and the settings panel's (panels/SettingsPanel.svelte), which stands in no group since the gear opens it. */
 const PANEL_LABELS = $derived({ ...Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)])), settings: ta('settings.title') });
 
+/** The panel the admin starts with, until it first stands: it opens with the admin, not at the owner's press (openedAtStart). */
+let startPanel = null;
+
 // The panel and the fold the admin starts with; a remembered id from an older version may name a panel that is gone.
 {
   const panels = PANEL_IDS;
   const start = startPanels({ pref: panelsPref, layout: adminLayout, panels, stored: localStorage.getItem(PANEL_OPEN_KEY), storedFolded: localStorage.getItem(PANEL_FOLDED_KEY) === '1', start: panelsStart });
   activePanel = start.panel;
+  // A panel folded away at the start stands first when the owner unfolds it, which is an opening of their own.
+  startPanel = start.folded ? null : start.panel;
   panelFolded = start.folded;
   if (!panels.includes(panelsStart)) panelsStart = PANELS_START_DEFAULT;
+}
+
+/**
+ * Whether a panel stands because the admin started with it, asked as the panel first stands: the Phone panel shows the phone when the owner opens it, and leaves the view the admin came back to when it opens with the admin (PhonePanel.svelte).
+ * Asked once: any later standing of a panel is the owner's opening.
+ * @param {string} id
+ * @returns {boolean}
+ */
+function openedAtStart(id) {
+  const at = startPanel === id;
+  startPanel = null;
+  return at;
 }
 
 /** «Open panel»: the folded column only in the layouts that keep the column. */
@@ -1155,6 +1172,7 @@ export const shellState = {
   setPanelsStart,
   get PANELS_PREF_OPTIONS() { return PANELS_PREF_OPTIONS; },
   get PANELS_START_OPTIONS() { return PANELS_START_OPTIONS; },
+  openedAtStart,
   get activePanel() { return activePanel; },
   set activePanel(v) {
     if (WINDOW_TABS.includes(v)) {

@@ -399,9 +399,22 @@ test('shrinksOnPhone: «shrink» on a block whose content can wrap, but not on t
   assert.equal(shrinksOnPhone(null), false);
 });
 
-test('PHONE_WORDS: the text block holds its words for the phone in html, and no list of words is among them', () => {
-  assert.deepEqual(PHONE_WORDS, { text: ['html'] });
+test('PHONE_WORDS: a text\'s words, a quote\'s with its name and role, a statistic\'s label, an audio player\'s title and a countdown\'s words for the end; no list of words, and no statistic\'s number', () => {
+  assert.deepEqual(PHONE_WORDS, { text: ['html'], quote: ['text', 'attribution', 'role'], stats: ['label'], audio: ['title'], countdown: ['doneText'] });
   for (const type of ['faq', 'timeline', 'table', 'ribbon', 'calendar']) assert.equal(PHONE_WORDS[type], undefined, type);
+  assert.equal(PHONE_WORDS.stats.includes('value'), false, 'the number is the same fact on every screen');
+});
+
+test('the single words of the other blocks are the phone\'s own the same way a text\'s are', () => {
+  const quote = { type: 'quote', props: { text: 'A long quote for the desktop', attribution: 'Kari', role: 'Leader', variant: 'large' } };
+  const short = phoneWordsChange('quote', quote.props, null, { ...quote.props, text: 'Short' });
+  assert.deepEqual(short, { text: 'Short' });
+  assert.deepEqual(propsForViewport({ ...quote, phoneProps: short }, quote.props, 'mobile'), { ...quote.props, text: 'Short' });
+  assert.equal(propsForViewport({ ...quote, phoneProps: short }, quote.props, 'desktop'), quote.props);
+  const stats = { label: 'Members in the whole of Norway', value: '4800' };
+  assert.deepEqual(phoneWordsChange('stats', stats, null, { ...stats, label: 'Members', value: '9' }), { label: 'Members' }, 'the number typed with it is never the phone\'s');
+  assert.deepEqual(phoneWordsChange('audio', { title: 'Episode 1' }, null, { title: 'Ep. 1' }), { title: 'Ep. 1' });
+  assert.equal(phoneWordsChange('countdown', { doneText: 'Started' }, { doneText: 'Go' }, { doneText: 'Started' }), null, 'written back to the desktop\'s words');
 });
 
 test('phoneWordsOf and propsForViewport: the phone draws its own words in the desktop\'s place, the desktop its props, and a key that holds no words is not drawn', () => {

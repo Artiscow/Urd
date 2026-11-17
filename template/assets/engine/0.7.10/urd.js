@@ -684,6 +684,14 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-deselect') {
       // A press on the editor's stage around the canvas: nothing stays selected.
       window.UrdPreviewEdit?.deselectAll?.();
+    } else if (msg?.type === 'urd-block-words' && msg.sectionId && msg.blockId) {
+      // A block's words written on the page, the desktop's and the phone's own (ADR-0033), as the editor keeps them: put in the page's copy without drawing the block, where the words already stand as typed, so a later drawing reads them.
+      const held = state.page?.sections?.find((s) => s.id === msg.sectionId)?.blocks?.find((b) => b.id === msg.blockId);
+      if (held) {
+        if (msg.props && typeof msg.props === 'object') held.props = msg.props;
+        if (msg.phoneProps && typeof msg.phoneProps === 'object') held.phoneProps = msg.phoneProps;
+        else delete held.phoneProps;
+      }
     } else if (msg?.type === 'urd-phone-pin' && typeof msg.blockId === 'string') {
       // The Phone panel's row menu: the block pinned on the phone where it stands now.
       window.UrdPreviewEdit?.pinOnPhoneAt?.(msg.blockId);

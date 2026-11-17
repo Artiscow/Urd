@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned, phoneAdded, phoneAfterLine } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -752,4 +752,58 @@ test('unpinning keeps the cells and the turn, and drops the rows with what a pin
   assert.deepEqual(unpinned({ x: 10, w: 60, row: 3, rows: 12, rot: 4 }), { rot: 4 });
   assert.equal(unpinned({ x: 10, w: 60, row: 3, rows: 12 }), null);
   assert.equal(unpinned(null), null);
+});
+
+// Blocks added in the phone view (0.7.3.17): shown on phones only, placed at the point as a drop is, the desktop left as it was.
+const fresh = (id, extra = {}) => ({ id, type: 'text', ...extra, frames: { desktop: { x: 30, y: extra.y ?? 40, w: 40, h: extra.h ?? 100 }, mobile: extra.mobile ?? null } });
+
+test('phoneAdded: a block added without a point stands last on the phone, on phones only, its desktop frame below every block', () => {
+  const section = mapSection(['A:1-4', 'B:5-8', 'X']);
+  const next = phoneAdded(section, [fresh('N')]);
+  assert.equal(mapLayout(next), 'A:1-4 B:5-8 | X | N');
+  const added = next.blocks.find((b) => b.id === 'N');
+  assert.equal(added.hideDesktop, true);
+  assert.deepEqual(added.frames.desktop, { x: 30, y: 60 + 10 + 24, w: 40, h: 100 });
+  assert.deepEqual(next.blocks.slice(0, 3), section.blocks, 'the desktop\'s blocks are left as they were');
+  assert.equal(section.blocks.length, 3, 'the section given is left as it is');
+});
+
+test('phoneAdded: a block added at a point lands as a drop there does: in a gap across the row, in the empty room beside a block filling it', () => {
+  assert.equal(mapLayout(phoneAdded(mapSection(['X', 'Y']), [fresh('N')], { pos: 'before', of: 'Y' })), 'X | N | Y');
+  assert.equal(mapLayout(phoneAdded(mapSection(['A:1-4', 'X']), [fresh('N')], { pos: 'right', of: 'A', free: true, x: 6 })), 'A:1-4 N:5-8 | X');
+  assert.equal(mapLayout(phoneAdded(mapSection(['A:1-4', 'B:5-8', 'X']), [fresh('N')], { pos: 'after', of: 'B' })), 'A:1-4 B:5-8 | N | X');
+});
+
+test('phoneAdded: pasted blocks land one after another from the point, their desktop shape kept below the section, shown on phones and unpinned', () => {
+  const pasted = [fresh('P', { y: 300, h: 50, hideMobile: true }), fresh('Q', { y: 380, mobile: { col: 1, cols: 4, row: 2, rows: 6 } })];
+  const next = phoneAdded(mapSection(['X', 'Y']), pasted, { pos: 'before', of: 'Y' });
+  assert.equal(mapLayout(next), 'X | P | Q:1-4 | Y');
+  const [p, q] = ['P', 'Q'].map((id) => next.blocks.find((b) => b.id === id));
+  assert.equal(p.hideMobile, false);
+  assert.deepEqual([p.frames.desktop.y, q.frames.desktop.y], [40 + 10 + 24, 40 + 10 + 24 + 80]);
+  assert.deepEqual(q.frames.mobile, { col: 1, cols: 4 });
+});
+
+test('phoneAdded: a copy that flows on the phone keeps its own placement there; only a pin is let go of', () => {
+  const next = phoneAdded(mapSection(['X']), [fresh('P', { mobile: { x: 10, w: 60, height: 120 } })]);
+  assert.deepEqual(next.blocks.find((b) => b.id === 'P').frames.mobile, { x: 10, w: 60, height: 120 });
+});
+
+test('phoneAdded: in a custom order the new block is listed where it lands', () => {
+  const section = { ...mapSection(['X', 'Y', 'Z']), phoneList: ['Z', 'X', 'Y'] };
+  const next = phoneAdded(section, [fresh('N')], { pos: 'after', of: 'Z' });
+  assert.deepEqual(ids(stackOrder(next.blocks, phoneSetupOf(next))), ['Z', 'N', 'X', 'Y']);
+});
+
+test('phoneAfterLine: after the last unit of the line a block stands on, a stack found by any of its blocks', () => {
+  const boxes = [
+    { id: 'X', left: 0, top: 0, right: 100, bottom: 40 },
+    { id: 'A', left: 0, top: 50, right: 50, bottom: 90 },
+    { id: 'K', left: 50, top: 50, right: 100, bottom: 160, members: [{ id: 'K', top: 50, bottom: 100 }, { id: 'N', top: 100, bottom: 160 }] },
+    { id: 'Y', left: 0, top: 170, right: 100, bottom: 200 },
+  ];
+  assert.deepEqual(phoneAfterLine(boxes, 'A'), { pos: 'after', of: 'K', at: 160 });
+  assert.deepEqual(phoneAfterLine(boxes, 'N'), { pos: 'after', of: 'K', at: 160 });
+  assert.deepEqual(phoneAfterLine(boxes, 'X'), { pos: 'after', of: 'X', at: 40 });
+  assert.equal(phoneAfterLine(boxes, 'Z'), null);
 });

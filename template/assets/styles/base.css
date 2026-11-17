@@ -13422,6 +13422,15 @@ body:has(dialog:modal) {
   display: flex;
 }
 
+/* In the phone view the page is one phone wide: the menu is held to it, at the chrome's scale, and its blocks stand one to a line. */
+.urd-preview.urd-mobile .urd-add-block-menu {
+  width: min(460px, calc((100vw - 16px) / var(--urd-chrome-scale, 1)));
+}
+
+.urd-preview.urd-mobile .urd-abm-items {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* Turned upwards from its chip or the pointer where the room below is too small (the class flip the block toolbar uses, urd-toolbar-under). */
 .urd-preview .urd-add-block-menu.urd-menu-up {
   top: auto;

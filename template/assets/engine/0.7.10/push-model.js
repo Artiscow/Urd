@@ -164,10 +164,10 @@ export function forcesReadable(section, viewport) {
 }
 
 /**
- * The props that hold a block's words, by its type: the words the phone can have of its own (`phoneProps`, additive, ADR-0033), written in the phone view and drawn at phone width in the desktop's place.
- * A list of words (questions, events, rows) is not among them: its items would have to be matched one by one, and one added on the desktop would not reach the phone's copy.
+ * The props that hold a block's words, by its type: the words the phone can have of its own (`phoneProps`, additive, ADR-0033), written in the phone view and drawn at phone width in the desktop's place: a text's words, a quote's with its name and role, a statistic's label, an audio player's title and a countdown's words for when the time is up.
+ * A list of words (questions, events, rows) is not among them: its items would have to be matched one by one, and one added on the desktop would not reach the phone's copy. Nor is a statistic's number, which is the same fact on every screen.
  */
-export const PHONE_WORDS = { text: ['html'] };
+export const PHONE_WORDS = { text: ['html'], quote: ['text', 'attribution', 'role'], stats: ['label'], audio: ['title'], countdown: ['doneText'] };
 
 /**
  * A block's own words on the phone: the keys of its `phoneProps` that hold words for its type, as strings; empty where it has none.

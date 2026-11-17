@@ -39,12 +39,16 @@ export const audioBlock = {
     host.className = 'urd-audio';
     el.appendChild(host);
 
-    if (props.title) {
+    // A title the phone emptied as its own stands in the editor's phone view as an empty line to write in again; visitors see no title.
+    const emptied = Boolean(ctx.preview) && ctx.phoneWords?.title === '';
+    if (props.title || emptied) {
       const title = document.createElement('div');
       title.className = 'urd-audio-title';
-      title.textContent = props.title;
+      title.textContent = props.title ?? '';
+      if (emptied) title.style.minHeight = '1lh';
       host.appendChild(title);
-      if (editable) {
+      // The title is written on the page; in the phone view as the phone's own (PHONE_WORDS, ADR-0033).
+      if (ctx.preview) {
         try {
           title.contentEditable = 'plaintext-only';
         } catch {
@@ -56,6 +60,7 @@ export const audioBlock = {
             sectionId: ctx.section.id,
             blockId: el.dataset.blockId,
             props: { ...props, title: title.textContent ?? '' },
+            ...(ctx.viewport === 'mobile' ? { phone: true } : {}),
           }, location.origin);
         });
       }

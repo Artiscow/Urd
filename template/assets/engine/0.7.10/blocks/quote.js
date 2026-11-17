@@ -94,9 +94,11 @@ export const quoteBlock = {
     body.append(quote, caption);
     host.appendChild(body);
 
-    if (editable) {
-      // Click and type: all three fields are plain text.
-      for (const [node, key] of [[quote, 'text'], [name, 'attribution'], [role, 'role']]) {
+    if (ctx.preview) {
+      // Click and type: all three fields are plain text; in the phone view what is written is the phone's own (PHONE_WORDS, ADR-0033).
+      // Each change hands back the three fields as they stand on the page, so one typed earlier is never handed back as it was drawn.
+      const fields = [[quote, 'text'], [name, 'attribution'], [role, 'role']];
+      for (const [node] of fields) {
         try {
           node.contentEditable = 'plaintext-only';
         } catch {
@@ -107,7 +109,8 @@ export const quoteBlock = {
             type: 'urd-edit',
             sectionId: ctx.section.id,
             blockId: el.dataset.blockId,
-            props: { ...props, [key]: node.textContent ?? '' },
+            props: { ...props, ...Object.fromEntries(fields.map(([field, key]) => [key, field.textContent ?? ''])) },
+            ...(ctx.viewport === 'mobile' ? { phone: true } : {}),
           });
         });
       }

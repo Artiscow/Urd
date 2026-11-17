@@ -108,9 +108,12 @@ export const statsBlock = {
     label.textContent = props.label ?? '';
     host.append(row, label);
 
-    if (editable) {
+    if (ctx.preview) {
       // Click-and-type on the value and the label; prefix and suffix live in the panel.
-      for (const [node, key] of [[value, 'value'], [label, 'label']]) {
+      // In the phone view the label is written as the phone's own (PHONE_WORDS, ADR-0033), and the number, the same fact on every screen, is written on the desktop.
+      // Each change hands back the fields as they stand on the page, so one typed earlier is never handed back as it was drawn.
+      const fields = editable ? [[value, 'value'], [label, 'label']] : [[label, 'label']];
+      for (const [node] of fields) {
         try {
           node.contentEditable = 'plaintext-only';
         } catch {
@@ -121,10 +124,13 @@ export const statsBlock = {
             type: 'urd-edit',
             sectionId: ctx.section.id,
             blockId: el.dataset.blockId,
-            props: { ...props, [key]: node.textContent ?? '' },
+            props: { ...props, ...Object.fromEntries(fields.map(([field, key]) => [key, field.textContent ?? ''])) },
+            ...(ctx.viewport === 'mobile' ? { phone: true } : {}),
           });
         });
       }
+    }
+    if (editable) {
       // The help chip (ADR-0008): count-up is a special function.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;

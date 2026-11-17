@@ -50,11 +50,11 @@
  *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
  *                  { type: 'urd-picture-edit', kind, sectionId?, blockId?, index?, collection?, entryId?, frameRatio, frameWidth, frameHeight } (a picture on the canvas asks the image editor to open: an image block's, a video's cover, a gallery picture, a collection entry's or a quote's portrait, with its frame's width over its height and its size in pixels as drawn)
  *                  { type: 'urd-link-edit', value, text }     (the text toolbar's link or Ctrl+K: the link at the caret in the link shape, or null, and the selected words)
- *                  { type: 'urd-add-block', sectionId, block, fit? } (block placed from the palette, or a plugin block from «+ New block»: fit, a new block whose box is fitted to what it draws; a duplicate has none)
+ *                  { type: 'urd-add-block', sectionId, block, fit?, phone? } (block placed from the palette, or a plugin block from «+ New block»: fit, a new block whose box is fitted to what it draws; a duplicate has none; phone = {drop}, added in the phone view and standing on the phone only, landing where drop asks, phone-moves.js phoneAdded)
  *                  { type: 'urd-new-fitted', sectionId, blockId, w, h } (a new block's box fitted to what it draws, the answer to urd-fit-new, sent once as the preview shows the block fitted, add-fit.js)
- *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
- *                  { type: 'urd-request-block', sectionId, kind, at?, files? } ("+ Add block"; at = click point {x in %, y in px}, without = centered; files = the pictures an image or a gallery is made from, picked in the preview)
- *                  { type: 'urd-calendar-designs', sectionId, at? } ("All calendar designs …" in "+ Add block": the design picker, the calendar then placed as a requested block)
+ *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves, phone? } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
+ *                  { type: 'urd-request-block', sectionId, kind, at?, files?, phone? } ("+ Add block"; at = click point {x in %, y in px}, without = centered; files = the pictures an image or a gallery is made from, picked in the preview)
+ *                  { type: 'urd-calendar-designs', sectionId, at?, phone? } ("All calendar designs …" in "+ Add block": the design picker, the calendar then placed as a requested block)
  *                  { type: 'urd-shortcuts' }                  («?» on the page: the shortcut sheet)
  *                  { type: 'urd-toggle-grid' }                (G on the page: the grid shown or hidden)
  *                  { type: 'urd-palette' }                    (Ctrl/⌘+K on the page outside a text: the command palette)
@@ -79,6 +79,7 @@
  *                  { type: 'urd-select', blockId, picked? }   (select a block the editor just built, e.g. + New block; `picked` in the editor's lists, brought into view with the focus left in the list)
  *                  { type: 'urd-light', ids }                 (light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away)
  *                  { type: 'urd-phone-pin', blockId }         (pin the block on the phone where it stands now: the Phone panel's row menu)
+ *                  { type: 'urd-block-words', sectionId, blockId, props, phoneProps } (a block's words written on the page, the desktop's and the phone's own, as the editor keeps them, put in the page's copy of the section without drawing it again, ADR-0033)
  *                  { type: 'urd-deselect' }                   (a press on the stage around the canvas: no block, set or section stays selected)
  *                  { type: 'urd-text-cmd', cmd, value, focus } (a command of the text bar on the text being written; focus hands the focus back to the text)
  *                  { type: 'urd-text-end' }                   (the writing of the text ended from the editor: a press outside the text bar)
@@ -276,6 +277,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away. */
     sendLight(ids) {
       post({ type: 'urd-light', ids });
+    },
+    /** A block's words written on the page, its props and the phone's own words (null where it has none), for the page's copy of the section, without drawing it again. */
+    sendBlockWords(sectionId, blockId, props, phoneProps) {
+      draftPost({ type: 'urd-block-words', sectionId, blockId, props, phoneProps });
     },
     /** Pins the block on the phone where it stands now (the Phone panel's row menu). */
     sendPhonePin(blockId) {

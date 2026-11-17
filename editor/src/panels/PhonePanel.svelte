@@ -113,9 +113,9 @@
     });
   });
 
-  // The panel shows the phone.
+  // The panel shows the phone as the owner opens it; one the admin starts with leaves the view it came back to.
   onMount(() => {
-    if (ed.viewMode !== 'mobile') ed.deviceId = 'mobile';
+    if (!ed.openedAtStart('phone') && ed.viewMode !== 'mobile') ed.deviceId = 'mobile';
     return () => ed.bridge?.sendLight([]);
   });
 

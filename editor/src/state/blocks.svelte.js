@@ -9,6 +9,7 @@ import { termsSeed } from '../lib/site-seed.js';
 import { calDesign } from '$engine/calendar-designs.js';
 import { frameAtPoint } from '$engine/place.js';
 import { fitsWhenAdded, fittedFrame } from '$engine/add-fit.js';
+import { phoneAdded } from '$engine/phone-moves.js';
 import { claimAnchors } from '$engine/anchor-model.js';
 import { historyState } from './history.svelte.js';
 import { mediaState } from './media.svelte.js';
@@ -218,16 +219,38 @@ async function requestPlacement(block) {
   }
 }
 
+/**
+ * The phone's place a message adding blocks carries (`phone`): sent from the phone view, where blocks added stand on the phone only, with the drop where the first lands (phone-moves.js phoneAdded); null from the desktop view.
+ * @param {{phone?: {drop?: object|null}}} msg
+ * @returns {{drop: object|null}|null}
+ */
+function phoneOf(msg) {
+  const phone = msg?.phone;
+  if (!phone || typeof phone !== 'object') return null;
+  return { drop: phone.drop && typeof phone.drop === 'object' && typeof phone.drop.pos === 'string' ? phone.drop : null };
+}
+
+/** Blocks added in the phone view written into their section (phoneAdded): on phones only, in the phone's order where they were asked for, the desktop as it was. Part of the step that adds them. */
+function addOnPhone(section, blocks, phone) {
+  const next = phoneAdded(section, blocks, phone.drop);
+  section.blocks = next.blocks;
+  for (const key of ['phoneStacks', 'phoneList', 'phoneLoose']) {
+    if (next[key] === undefined) delete section[key];
+    else section[key] = next[key];
+  }
+}
+
 /** The new blocks waiting for their box fitted to what they draw (add-fit.js), by id: the frame they were added at. */
 const pendingFits = new Map();
 
 /**
  * A block put in a section as a step of its own. A new block (`fit`, from «+ New block», the Blocks panel or the palette) has its box fitted to what it draws, where its kind's box is not what it draws: the preview measures it (urd-fit-new) and the fit is written as part of this step (handleNewFitted); a pasted or duplicated block keeps its own size.
+ * A block added in the phone view (`phone`, phoneOf) stands on the phone only, where it was asked for there (addOnPhone), and is not fitted.
  * @param {string} sectionId
  * @param {object} block
- * @param {{fit?: boolean}} [options]
+ * @param {{fit?: boolean, phone?: {drop: object|null}|null}} [options]
  */
-function insertBlock(sectionId, block, { fit = false } = {}) {
+function insertBlock(sectionId, block, { fit = false, phone = null } = {}) {
   const section = pageState.store.data.sections.find((s) => s.id === sectionId) ?? pageState.store.data.sections[0];
   if (!section) return;
   historyState.pushHistory('add-block');
@@ -237,12 +260,16 @@ function insertBlock(sectionId, block, { fit = false } = {}) {
   if (block.frames?.desktop) block.frames.desktop = { ...block.frames.desktop, z: topZ };
   // A name the page already uses arrives as name-2 (a template's block).
   claimAnchors([block], pageState.store.data);
-  section.blocks.push(block);
+  if (phone) {
+    const id = block.id;
+    addOnPhone(section, [block], phone);
+    block = section.blocks.find((b) => b.id === id) ?? block;
+  } else section.blocks.push(block);
   pageState.markPinnedBehind(section);
   pageState.store.save();
   historyState.updateDirty();
   // A new block's fit is asked for before its section is sent, so the preview draws it hidden and shows it fitted.
-  const fits = fit && fitsWhenAdded(block) && previewState.viewMode === 'desktop' && Boolean(block.frames?.desktop);
+  const fits = fit && !phone && fitsWhenAdded(block) && previewState.viewMode === 'desktop' && Boolean(block.frames?.desktop);
   if (fits) {
     pendingFits.set(block.id, { w: block.frames.desktop.w, h: block.frames.desktop.h });
     previewState.bridge?.sendFitNew(section.id, block.id, block.frames.desktop.w);
@@ -283,10 +310,19 @@ function handleNewFitted(msg) {
  *  same time (FAQ pushes the closing line down), in the same step. The
  *  section grows to minBottom when the min height is in px (the item
  *  presets always use px). */
-function insertBlocks(sectionId, blocks, minBottom, moves) {
+function insertBlocks(sectionId, blocks, minBottom, moves, phone = null) {
   const section = pageState.store.data.sections.find((s) => s.id === sectionId);
   if (!section || !blocks?.length) return;
   historyState.pushHistory('add-blocks');
+  // Added in the phone view, the blocks stand on the phone only and the desktop is left as it is.
+  if (phone) {
+    claimAnchors(blocks, pageState.store.data);
+    addOnPhone(section, blocks, phone);
+    pageState.store.save();
+    historyState.updateDirty();
+    previewState.bridge?.sendSection(pageState.pageId, section);
+    return;
+  }
   for (const move of moves ?? []) {
     const block = section.blocks.find((b) => b.id === move.blockId);
     if (block && typeof move.dy === 'number') {
@@ -321,16 +357,17 @@ function addCalendarDesign(id, place = null) {
     ...(design.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}),
     ...(design.limit ? { limit: design.limit } : {}),
   };
-  if (place?.sectionId) placeInSection(block, place.sectionId, place.at);
+  if (place?.sectionId) placeInSection(block, place.sectionId, place.at, place.phone ?? null);
   else requestPlacement(block);
 }
 
 /**
  * A block put in a section: with a click point (`at`, from a double click on the section surface) it lands centred on the point, clamped and snapped (frameAtPoint); without one it is centred horizontally.
+ * Added in the phone view (`phone`, phoneOf), it stands on the phone only, where it was asked for there.
  * The new block is then selected, as from the Blocks panel (the preview learns its id through selectById).
  */
-function placeInSection(block, sectionId, at) {
-  if (at && typeof at.x === 'number' && typeof at.y === 'number') {
+function placeInSection(block, sectionId, at, phone = null) {
+  if (!phone && at && typeof at.x === 'number' && typeof at.y === 'number') {
     const section = pageState.store.data.sections.find((s) => s.id === sectionId);
     const grid = section?.grid ?? siteState.siteDraft.grid;
     const pos = frameAtPoint({ x: at.x, y: at.y, w: block.frames.desktop.w, h: block.frames.desktop.h, grid });
@@ -340,7 +377,7 @@ function placeInSection(block, sectionId, at) {
     block.frames.desktop.x = Math.round(((100 - block.frames.desktop.w) / 2) * 100) / 100;
     block.frames.desktop.y = 40;
   }
-  insertBlock(sectionId, block, { fit: true });
+  insertBlock(sectionId, block, { fit: true, phone });
   previewState.bridge?.sendSelect(block.id);
 }
 
@@ -376,7 +413,7 @@ async function handleRequestBlock(msg) {
     shellState.setStatus(ta('status.blockNotPlaced'), 'error');
     return;
   }
-  placeInSection(block, msg.sectionId, msg.at);
+  placeInSection(block, msg.sectionId, msg.at, phoneOf(msg));
   report?.();
   if (!files.length && msg.kind === 'image') shellState.setStatus(ta('status.imageBlockAdded'));
   if (!files.length && msg.kind === 'gallery') shellState.setStatus(ta('status.galleryBlockAdded'));
@@ -395,6 +432,7 @@ export const blocksState = {
   insertBlocks,
   CAL_KIND_BY_VIEW,
   addCalendarDesign,
+  phoneOf,
   handleRequestBlock,
   handleNewFitted,
 };
