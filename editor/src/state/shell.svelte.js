@@ -166,7 +166,8 @@ async function lookOnPhone(id, sectionId) {
 // menu opened: a press in it, and its own Escape, leave the menu open.
 function onPointerdownWindow(e) {
   if (!pageState.blockMenu) return;
-  if (e.target instanceof Element && e.target.closest('.block-menu, dialog')) return;
+  // A tool of the phone view's bar that opens the menu (CanvasBar.svelte) leaves it to its press, which closes it at a second one, as on the page.
+  if (e.target instanceof Element && e.target.closest('.block-menu, dialog, [data-opens-menu]')) return;
   pageState.blockMenu = null;
 }
 

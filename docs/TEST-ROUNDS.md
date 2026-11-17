@@ -2,6 +2,23 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.19.2): the phone view's block bar and menus beside the phone
+
+- [ ] In the phone view, select a block: its bar stands beside the phone, level with the block, and none stands on the page; scroll the page: the bar follows the block
+- [ ] Press each tool on that bar (the pin, the arrows, ↺, the design, a calendar's examples, Settings, the bin): each does what it did on the block's own bar
+- [ ] Press ⋮ on the bar: the menu opens under it, reaching away from the phone, with the focus on its first row; the arrow keys walk it, Escape closes it, and a row does what it did before
+- [ ] Rest the mouse on ⋮ without pressing: the menu opens without the focus, and closes a moment after the mouse leaves ⋮ and the menu
+- [ ] Right-click a block or a section's empty surface in the phone view: the menu opens at the pointer and is never cut off at the phone's edge; «Delete» asks for a second press where it did before
+- [ ] Drag a block by itself and resize it by its handles in the phone view: both work as before
+- [ ] Click into a text in the phone view: the text bar stands under the block's bar beside the phone
+- [ ] Hover over an unselected block in the phone view: no bar appears until it is selected
+- [ ] The desktop view keeps its bar on the block, and the Clean view hides the bar beside the phone too
+- [ ] Press Settings on the bar beside the phone twice: the block's menu opens, then closes
+- [ ] Select a block and scroll the phone's page until the block is out of sight: the bar beside the phone goes, and comes back as the block is scrolled back
+- [ ] On a block with «?» on its bar in the phone view, press it: the help card opens by the block
+- [ ] Open a block's menu with Shift+F10 in the phone view and press Escape: the menu closes, and the arrow keys still move the block
+- [ ] With a narrow window or a panel open, so there is no room beside the phone, click into a text: the block's bar and the text bar stand above or below the block without covering each other or the words
+
 ### Test batch (0.7.3.16.2): the phone's words for four more blocks, blocks added in the phone view, calendar examples and the view after a reload
 
 - [ ] In the phone view, write in a quote's words, its name and its role, a statistic's label, an audio player's title and a countdown's end words: each block gets the «Edited for the phone» mark, and the desktop view shows the old words

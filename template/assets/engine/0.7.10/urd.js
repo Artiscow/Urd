@@ -533,6 +533,8 @@ function enablePreview(state, opts) {
       // not first at the next scroll.
       refreshSticky();
       refreshNavScroll();
+      // The bar the editor draws for a selected block in the phone view goes and comes back with the handles.
+      window.UrdPreviewEdit?.watchPhoneBar?.();
     } else if (msg?.type === 'urd-fit-block' && msg.blockId) {
       // The editor has edited a block whose height follows its content
       // (ADR-0025) and asks for the height the content needs, so the block's
@@ -684,6 +686,14 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-deselect') {
       // A press on the editor's stage around the canvas: nothing stays selected.
       window.UrdPreviewEdit?.deselectAll?.();
+    } else if (msg?.type === 'urd-bar-press' && typeof msg.blockId === 'string' && Number.isInteger(msg.index)) {
+      // A tool of the bar the editor draws in the phone view, pressed there (0.7.3.19.2).
+      window.UrdPreviewEdit?.pressPhoneBar(msg.blockId, msg.index, msg.rest === true);
+    } else if (msg?.type === 'urd-ctx-run' && Number.isInteger(msg.index)) {
+      // A row of the phone view's menu, chosen where the editor draws it.
+      window.UrdPreviewEdit?.runPhoneMenu(msg.index);
+    } else if (msg?.type === 'urd-ctx-closed') {
+      window.UrdPreviewEdit?.phoneMenuClosed(msg.focus === true);
     } else if (msg?.type === 'urd-block-words' && msg.sectionId && msg.blockId) {
       // A block's words written on the page, the desktop's and the phone's own (ADR-0033), as the editor keeps them: put in the page's copy without drawing the block, where the words already stand as typed, so a later drawing reads them.
       const held = state.page?.sections?.find((s) => s.id === msg.sectionId)?.blocks?.find((b) => b.id === msg.blockId);

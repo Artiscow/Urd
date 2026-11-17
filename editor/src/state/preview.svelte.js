@@ -26,6 +26,7 @@ import { linkState } from './link.svelte.js';
 import { emailLike } from '../lib/link-edit.js';
 import { stoodOf, readStood, keepStood, canvasTop } from '../lib/reload-place.js';
 import { textBarState } from './text-bar.svelte.js';
+import { canvasBarState } from './canvas-bar.svelte.js';
 
 let iframeEl = $state(null);
 
@@ -269,6 +270,11 @@ function onIframeLoad() {
     onSelectBlock: pageState.onSelectBlock,
     onHoverBlock: pageState.onHoverBlock,
     onTextState: textBarState.onTextState,
+    onBlockBar: canvasBarState.onBlockBar,
+    onCtxMenu: canvasBarState.onCtxMenu,
+    onCtxClose: canvasBarState.onCtxClose,
+    onCtxHold: canvasBarState.onCtxHold,
+    onCtxHover: canvasBarState.onCtxHover,
     onBlockMenu: pageState.onBlockMenu,
     onSectionMenu: pageState.onSectionMenu,
     onBlockDesign: pageState.onBlockDesign,
@@ -336,8 +342,9 @@ function scrollOnReady(sectionId) {
 
 /** The engine in the iframe is listening now: send the draft and the current editor state. */
 async function onReady() {
-  // A canvas drawn anew holds no text being written, and reports its review cards again.
+  // A canvas drawn anew holds no text being written and no bar or menu of its own, and reports its review cards again.
   textBarState.reset();
+  canvasBarState.reset();
   attentionCards = [];
   await pageState.pageLoading;
   await pluginsState.pluginsReady;

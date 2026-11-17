@@ -112,7 +112,8 @@ export function openHintCard(anchor, { title, lines = [] }) {
   document.body.appendChild(card);
   openCard = card;
 
-  const rect = anchor.getBoundingClientRect();
+  // A chip on a bar the page does not show (the phone view's, which the editor draws) places the card by its block.
+  const rect = (anchor.getClientRects().length ? anchor : anchor.closest('.urd-block') ?? anchor).getBoundingClientRect();
   // The DRAWN size, which the counter-scale decides: offsetWidth and
   // offsetHeight never see a transform.
   const scale = Number.parseFloat(

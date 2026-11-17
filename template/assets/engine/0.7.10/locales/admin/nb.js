@@ -2748,6 +2748,7 @@ export default {
     'canvas.newSection': '+ Ny seksjon',
     'canvas.addBlock': 'Ny blokk i denne seksjonen',
     'canvas.addBlockPhone': 'Ny blokk i denne seksjonen, bare på telefon',
+    'canvas.blockTools': 'Blokkens verktøy',
     'canvas.addSection': 'Ny seksjon under denne',
     'canvas.seam.grow': 'Dra ned: seksjonen over blir høyere. Dra opp: seksjonen under blir høyere i toppen',
     'canvas.seam.growAbove': 'Dra ned: seksjonen blir høyere',

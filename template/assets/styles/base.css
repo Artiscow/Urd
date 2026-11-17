@@ -19376,6 +19376,11 @@ body.urd-mobile .urd-add-section {
   display: flex;
 }
 
+/* In the phone view the editor draws the selected block's bar beside the phone (0.7.3.19.2, editor/src/lib/CanvasBar.svelte): the page keeps its own unseen, for the editor's presses to press its tools. */
+body.urd-preview.urd-mobile .urd-block > .urd-edit-toolbar {
+  display: none;
+}
+
 .urd-preview .urd-block.urd-selected .urd-edit-resize {
   display: block;
 }

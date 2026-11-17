@@ -27,6 +27,9 @@
  *                  { type: 'urd-phone-layout', sectionId, change } (a preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js)
  *                  { type: 'urd-hover-block', blockId } (the block under the mouse on the canvas, null for none)
  *                  { type: 'urd-text-state', blockId, rect, state } (the text being written: its block's box in the canvas and what its selection holds; blockId null when none is, lib/TextToolbar.svelte)
+ *                  { type: 'urd-block-bar', blockId, rect?, tools? } (in the phone view, the selected block's box and its bar's tools for the bar drawn beside the phone, lib/CanvasBar.svelte; blockId null when none stands)
+ *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest } (in the phone view, a menu's rows for the editor to draw, at the point or under the bar's ⋮)
+ *                  { type: 'urd-ctx-close' } / { type: 'urd-ctx-hold' } / { type: 'urd-ctx-hover', over } (that menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
  *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
@@ -83,6 +86,8 @@
  *                  { type: 'urd-deselect' }                   (a press on the stage around the canvas: no block, set or section stays selected)
  *                  { type: 'urd-text-cmd', cmd, value, focus } (a command of the text bar on the text being written; focus hands the focus back to the text)
  *                  { type: 'urd-text-end' }                   (the writing of the text ended from the editor: a press outside the text bar)
+ *                  { type: 'urd-bar-press', blockId, index, rest } (a tool of the bar drawn beside the phone pressed: the page presses the tool at that place on the block's own bar; rest, the ⋮ opened by a resting mouse)
+ *                  { type: 'urd-ctx-run', index } / { type: 'urd-ctx-closed', focus } (a row of the phone view's menu chosen in the editor, or the menu closed there without one; focus, closed with a key, gives the block its focus back)
  *                  { type: 'urd-admin-theme', colors }        (the admin color theme {bg, surface, accent, text}: the editor menus in the preview follow admin, not the site)
  *                  { type: 'urd-templates', templates }               (the template drafts: a list of {id, name, kind, section?, blocks?, page?}; the My templates tab reads them)
  *                  { type: 'urd-insert-template', id }        (the Blocks panel's My templates: insert a block-group template into the active section)
@@ -103,8 +108,8 @@
  *                  { type: 'urd-text-style', blockId, style } (a font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's)
  */
 
-/** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. The review cards' places pass so the editor holds what the page last sent; it draws no card while a draft is looked at. */
-const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards']);
+/** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. The review cards' places and the phone view's bar and menu pass so the editor holds what the page last sent; it draws none of them while a draft is looked at. */
+const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards', 'urd-block-bar', 'urd-ctx-close']);
 
 /**
  * @param {HTMLIFrameElement} iframe The iframe showing the page with ?preview=1
@@ -136,6 +141,11 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-select-block') handlers.onSelectBlock?.(msg);
     if (msg?.type === 'urd-hover-block') handlers.onHoverBlock?.(msg);
     if (msg?.type === 'urd-text-state') handlers.onTextState?.(msg);
+    if (msg?.type === 'urd-block-bar') handlers.onBlockBar?.(msg);
+    if (msg?.type === 'urd-ctx-menu') handlers.onCtxMenu?.(msg);
+    if (msg?.type === 'urd-ctx-close') handlers.onCtxClose?.(msg);
+    if (msg?.type === 'urd-ctx-hold') handlers.onCtxHold?.(msg);
+    if (msg?.type === 'urd-ctx-hover') handlers.onCtxHover?.(msg);
     if (msg?.type === 'urd-menu-area') handlers.onMenuArea?.(msg);
     if (msg?.type === 'urd-block-menu') handlers.onBlockMenu?.(msg);
     if (msg?.type === 'urd-section-menu') handlers.onSectionMenu?.(msg);
@@ -297,6 +307,18 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** The writing of the text ended from the editor. */
     sendTextEnd() {
       post({ type: 'urd-text-end' });
+    },
+    /** A tool of the bar drawn beside the phone pressed: the page presses it on the block's own bar; `rest`, the ⋮ opened by a mouse resting on it. */
+    sendBarPress(blockId, index, rest = false) {
+      post({ type: 'urd-bar-press', blockId, index, rest: Boolean(rest) });
+    },
+    /** A row of the phone view's menu chosen: the page runs it. */
+    sendCtxRun(index) {
+      post({ type: 'urd-ctx-run', index });
+    },
+    /** The phone view's menu closed in the editor without a choice; `focus`, closed with a key, gives the page's focus back to its block. */
+    sendCtxClosed(focus = false) {
+      post({ type: 'urd-ctx-closed', focus: Boolean(focus) });
     },
     /** Ask the preview for the height a block's content needs; it answers with urd-grow. */
     sendFitBlock(sectionId, blockId, seq = 0) {

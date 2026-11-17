@@ -8,6 +8,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.19.2 - The phone view's block bar and menus beside the phone - 17 November 2026
+
+- In the phone view a block's bar, its ⋮ menu and the right-click menus were drawn on the page, one phone wide, so they were cut off at its edge and covered the page (BACKLOG 0.7.3.19.2). The editor draws the selected block's bar beside the phone, level with the block, and every menu of the canvas beside it or at the pointer (`lib/CanvasBar.svelte`); each press acts on the page's own tool or row (`urd-block-bar`, `urd-bar-press`, `urd-ctx-menu`, `urd-ctx-run`).
+- The bar has every tool but ⠿, the block being dragged by itself there, and the block keeps its handles; a bar shows on the selected block only, not under the pointer.
+- The text bar stands under the block's bar beside the phone, and a block's help card opens by the block.
+- The guides and ARCHITECTURE.md describe the bar and the menus beside the phone, and the HTML shells carry the stylesheet's new stamp.
+
+The independent review before the commit found these:
+
+1. Where the stage had no room beside the phone, the text bar and the block's bar stood on the same spot above or below the block, and a text bar placed above could cover the words. The text bar is placed first, and moved clear of the block's bar only on its side.
+2. «Settings» on the bar, there and on the page in the phone view, closed the block's menu at its press and opened it again, so a second press never closed it. The word, like the gear, now leaves the menu to its press, which closes it the second time; the desktop's word «Settings» on the bar of small panels does the same.
+3. After a look at a saved draft, the bar could come back for a block no longer selected, its tools still acting on it. The bar's and the menu's messages reach the editor during a look, and the page acts on a press only for the selected block.
+4. A selected block scrolled out of the phone's window left its bar at the stage's edge. The bar goes while the block is out of sight and comes back with it.
+5. A press on the bar took the keyboard's focus from the page, and Escape in a menu left it nowhere, so the phone's arrow keys stopped moving the block. The bar leaves the focus on the page, and Escape gives it back to the block; Escape anywhere closes a menu a rest opened.
+6. A menu of the phone view could stay over the desktop canvas after a switch of view with no press. It closes with the view.
+7. Two comments told how the page's bar used to be cut off. They say where the bar is drawn.
+8. The bar's and the menu's removals copied the dark red with no test holding it. The panel-language test pins them, and the menu's bin.
+9. The guides said the right-click menus open beside the bar. They open at the pointer; the ⋮'s menu opens under the bar.
+10. The help card on the bar had no test item. TEST-ROUNDS has one, with the toggle, the scroll, the keys and the narrow stage.
+
 ### 0.7.3.16.2 - Words of its own on the phone for four more blocks, and blocks added in the phone view for the phone only; Bug Fixes: the phone's words lost at a redraw, a calendar empty without its feed, and a reload into the phone view - 17 November 2026
 
 - A quote, a statistic, an audio player and a countdown wrote no words in the phone view (BACKLOG 0.7.3.16.2). The quote's words, name and role, a statistic's label, an audio player's title and a countdown's end words are written there as the phone's own (`PHONE_WORDS` in push-model.js), each with the mark, its way back and the review; a statistic's number stays one for both screens.

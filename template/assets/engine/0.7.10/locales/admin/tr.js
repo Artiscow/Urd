@@ -2745,6 +2745,7 @@ export default {
     'canvas.newSection': '+ Yeni bölüm',
     'canvas.addBlock': 'Bu bölüme yeni blok',
     'canvas.addBlockPhone': 'Bu bölüme yeni blok, yalnızca telefonda',
+    'canvas.blockTools': 'Bloğun araçları',
     'canvas.addSection': 'Bunun altına yeni bölüm',
     'canvas.seam.grow': 'Aşağı sürükle: üstteki bölüm büyür. Yukarı sürükle: alttaki bölüm üstünden büyür',
     'canvas.seam.growAbove': 'Aşağı sürükle: bölüm büyür',

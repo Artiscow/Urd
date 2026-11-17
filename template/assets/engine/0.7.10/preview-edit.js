@@ -32,6 +32,9 @@
  *                  { type: 'urd-toggle-grid' }  (G on the page: the editor shows or hides the grid)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
+ *                  { type: 'urd-block-bar', blockId, rect?, tools? }  (in the phone view, the selected block's box in the canvas and its bar's tools, the tools only when they changed, for the editor to draw the bar beside the phone; blockId null when no block's bar stands, 0.7.3.19.2)
+ *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest }  (in the phone view, a menu's rows for the editor to draw: at the point `at`, or under the editor's ⋮ with `editor`; `rest` leaves the focus where it is)
+ *                  { type: 'urd-ctx-close' }, { type: 'urd-ctx-hold' }, { type: 'urd-ctx-hover', over }  (the phone view's menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX } from './push-model.js';
@@ -236,6 +239,12 @@ function barButton(content, title, run, className = '', cap = '') {
 function moreButton(open) {
   const btn = barButton(MORE_SVG, ta('canvas.bar.more'), () => {
     clearTimeout(restTimer);
+    // In the phone view the menu stands in the editor (showPhoneMenu): a press holds a menu a rest opened, and closes one it opened.
+    if (phoneMenu?.from?.button === btn) {
+      if (phoneMenu.from.rest) holdPhoneMenu();
+      else closeContextMenu(false);
+      return;
+    }
     if (contextMenu?.from?.button === btn) {
       if (contextMenu.from.rest) {
         const { menu } = contextMenu;
@@ -250,9 +259,15 @@ function moreButton(open) {
   }, 'urd-edit-more', ta('canvas.cap.more'));
   btn.removeAttribute('title');
   btn.setAttribute('aria-haspopup', 'menu');
+  // The ⋮ of the bar the editor draws in the phone view opens the menu from there, by a press or a rest (pressPhoneBar).
+  btn._urdMenu = (rest) => open(0, 0, { button: btn, rest, editor: true });
   let restTimer = 0;
   btn.addEventListener('pointerenter', (event) => {
     if (event.pointerType !== 'mouse' || event.buttons) return;
+    if (phoneMenu?.from?.button === btn) {
+      post({ type: 'urd-ctx-hover', over: true });
+      return;
+    }
     if (contextMenu?.from?.button === btn) {
       contextMenu.hover.button = true;
       contextMenu.stay();
@@ -260,7 +275,7 @@ function moreButton(open) {
     }
     clearTimeout(restTimer);
     restTimer = setTimeout(() => {
-      if (!btn.isConnected || contextMenu?.from?.button === btn) return;
+      if (!btn.isConnected || contextMenu?.from?.button === btn || phoneMenu?.from?.button === btn) return;
       const r = btn.getBoundingClientRect();
       open(r.left, r.bottom + 4, { button: btn, rest: true });
     }, 180);
@@ -268,6 +283,7 @@ function moreButton(open) {
   btn.addEventListener('pointerleave', (event) => {
     if (event.pointerType !== 'mouse') return;
     clearTimeout(restTimer);
+    if (phoneMenu?.from?.button === btn) post({ type: 'urd-ctx-hover', over: false });
     if (contextMenu?.from?.button !== btn) return;
     contextMenu.hover.button = false;
     contextMenu.leaveSoon();
@@ -340,6 +356,10 @@ function pasteBlockStyle(section, block) {
 let contextMenu = null;
 
 function closeContextMenu(returnFocus = true) {
+  if (phoneMenu) {
+    phoneMenu = null;
+    post({ type: 'urd-ctx-close' });
+  }
   if (!contextMenu) return;
   const { el, menu, cleanup } = contextMenu;
   contextMenu = null;
@@ -351,12 +371,157 @@ function closeContextMenu(returnFocus = true) {
   }
 }
 
+/*
+ * The phone view's bar and menus, drawn by the editor over the stage beside the phone (0.7.3.19.2, editor/src/lib/CanvasBar.svelte), free of the page's edges and clear of the page.
+ * The page keeps the selected block's bar, unseen (base.css), and tells the editor once a frame where the block stands and what its tools show (urd-block-bar); a press there presses the tool here (pressPhoneBar), so every tool acts as on the page.
+ * A menu, the right-click one or a ⋮'s, is handed to the editor as its rows (urd-ctx-menu), and a row chosen there runs here (runPhoneMenu).
+ */
+
+/** The menu the editor shows for the phone view: its block or section, each row's action by its place, and the ⋮ that opened it as showContextMenu takes it. */
+let phoneMenu = null;
+
+/** The phone view's menu: its rows to the editor, at the point it was opened at, or under the editor's ⋮ where that opened it; a rest leaves the focus where it is. */
+function showPhoneMenu(el, x, y, label, build, from) {
+  const rows = [];
+  const runs = [];
+  const item = (text, key, run, opts = {}) => {
+    const row = { text, key: key || '', run: runs.length, disabled: Boolean(opts.disabled), danger: Boolean(opts.danger), arm: opts.arm ?? '', first: false };
+    rows.push(row);
+    runs.push(run);
+    // The callers mark the first row as the page's menu does (urd-ctx-first): the row Enter would take.
+    return { classList: { add: (name) => { if (name === 'urd-ctx-first') row.first = true; } } };
+  };
+  const sep = () => rows.push({ sep: true });
+  build(item, sep);
+  phoneMenu = { el, runs, from };
+  post({ type: 'urd-ctx-menu', label, rows, at: { x, y }, editor: Boolean(from?.editor), rest: Boolean(from?.rest) });
+  if (phoneMenuWired) return;
+  // A scroll of the page, a press elsewhere on it and Escape close the editor's menu, as they close the page's own.
+  phoneMenuWired = true;
+  window.addEventListener('scroll', () => { if (phoneMenu) closeContextMenu(false); }, { passive: true, capture: true });
+  document.addEventListener('pointerdown', (event) => {
+    if (phoneMenu && !(event.target instanceof Node && phoneMenu.from?.button?.contains(event.target))) closeContextMenu(false);
+  }, true);
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !phoneMenu) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeContextMenu(false);
+  }, true);
+}
+
+/** Whether the page's own ways to close the editor's menu are set. */
+let phoneMenuWired = false;
+
+/** A menu a rest opened, pressed on its ⋮: it stays, with the focus on its first row, and the block or section it belongs to is selected. */
+function holdPhoneMenu() {
+  if (!phoneMenu?.from?.rest) return;
+  phoneMenu.from.rest = false;
+  phoneMenu.from.select?.();
+  post({ type: 'urd-ctx-hold' });
+}
+
+/** A row of the phone view's menu chosen in the editor (urd-ctx-run): its action runs, and the menu is gone. */
+export function runPhoneMenu(index) {
+  const run = phoneMenu?.runs[index];
+  phoneMenu = null;
+  run?.();
+}
+
+/** The editor closed the phone view's menu without a choice (urd-ctx-closed); closed with a key, the focus goes back to the block or section it was opened on, as the page's own menu gives it back. */
+export function phoneMenuClosed(focus = false) {
+  const el = phoneMenu?.el;
+  phoneMenu = null;
+  if (!focus || !el?.isConnected) return;
+  if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+  el.focus({ preventScroll: true });
+}
+
+/** The tools of a block's bar the editor draws in the phone view: every tool but ⠿, whose drag the block's own surface gives there. */
+const phoneBarTools = (el) => [...el.querySelectorAll(':scope > .urd-edit-toolbar .urd-bar-body button')].filter((b) => !b.classList.contains('urd-edit-move'));
+
+/** A tool as the editor draws it: its drawing or its words, its name and tooltip, whether it is pressed (null for a tool with no such state), removes, is the ⋮ or the help chip, and whether it opens the editor's menu, which a second press closes. */
+const toolOf = (btn) => ({
+  html: btn.innerHTML.trim().startsWith('<svg') ? btn.innerHTML : '',
+  text: btn.innerHTML.trim().startsWith('<svg') ? '' : btn.textContent.trim(),
+  label: btn.getAttribute('aria-label') || btn.title || '',
+  tip: btn.title || '',
+  pressed: btn.hasAttribute('aria-pressed') ? btn.getAttribute('aria-pressed') === 'true' : null,
+  danger: btn.classList.contains('urd-edit-delete'),
+  more: Boolean(btn._urdMenu),
+  help: btn.classList.contains('urd-hint-chip'),
+  opensMenu: btn.hasAttribute('data-opens-menu'),
+});
+
+let phoneBarFrame = 0;
+/** What the editor was last told: the block and its bar as drawn, and the block's box. */
+let phoneBarTold = '';
+let phoneBarBox = '';
+
+/**
+ * Tells the editor, once a frame while a block is selected in the phone view, where the block stands in the canvas and what its bar holds (urd-block-bar), the tools only when they changed; and once that no block is, when the selection goes, the block is dragged or scrolled out of the phone's window, a set of blocks is selected or the Clean view hides the handles.
+ * Run as the selection changes and a section is drawn; it stops itself when nothing is left to tell.
+ */
+export function watchPhoneBar() {
+  if (phoneBarFrame) return;
+  const tick = () => {
+    phoneBarFrame = 0;
+    const el = isMobile() && selectedBlockId && multiIds.size <= 1 && !document.body.classList.contains('urd-chrome-off')
+      ? document.querySelector(`.urd-block.urd-selected[data-block-id="${CSS.escape(selectedBlockId)}"]`)
+      : null;
+    const box = el?.getBoundingClientRect();
+    const bar = el?.querySelector(':scope > .urd-edit-toolbar');
+    const seen = box && box.bottom > 0 && box.top < window.innerHeight;
+    if (!el || !bar || !box || (!box.width && !box.height) || !seen || el.classList.contains('urd-hold-drag')) {
+      if (phoneBarTold) post({ type: 'urd-block-bar', blockId: null });
+      phoneBarTold = '';
+      phoneBarBox = '';
+      // A held block, or one scrolled out of the phone's window, is still selected: the bar comes back as it lands or is scrolled back.
+      if (el) phoneBarFrame = requestAnimationFrame(tick);
+      return;
+    }
+    const told = `${selectedBlockId}\n${bar.innerHTML}`;
+    const rect = { left: Math.round(box.left), top: Math.round(box.top), right: Math.round(box.right), bottom: Math.round(box.bottom) };
+    const boxText = `${rect.left},${rect.top},${rect.right},${rect.bottom}`;
+    if (told !== phoneBarTold || boxText !== phoneBarBox) {
+      post({ type: 'urd-block-bar', blockId: selectedBlockId, rect, ...(told !== phoneBarTold ? { tools: phoneBarTools(el).map(toolOf) } : {}) });
+      phoneBarTold = told;
+      phoneBarBox = boxText;
+    }
+    phoneBarFrame = requestAnimationFrame(tick);
+  };
+  phoneBarFrame = requestAnimationFrame(tick);
+}
+
+/**
+ * A press on a tool of the bar the editor draws in the phone view (urd-bar-press): the tool at that place on the selected block's bar is pressed as on the page; the ⋮ opens the block's menu in the editor, by a rest without the focus.
+ * @param {string} blockId
+ * @param {number} index
+ * @param {boolean} [rest]
+ */
+export function pressPhoneBar(blockId, index, rest = false) {
+  const el = typeof blockId === 'string' ? document.querySelector(`.urd-block.urd-selected[data-block-id="${CSS.escape(blockId)}"]`) : null;
+  const tool = el && isMobile() && Number.isInteger(index) ? phoneBarTools(el)[index] : null;
+  if (!tool) return;
+  if (tool._urdMenu) {
+    if (phoneMenu?.from?.button === tool) {
+      if (phoneMenu.from.rest && !rest) holdPhoneMenu();
+      return;
+    }
+    tool._urdMenu(rest);
+  } else tool.click();
+}
+
 /**
  * Shows a menu at (x, y) for `el`, filled by `build(item, sep)`. An item
  * with `arm` asks for a second press, the way the section bar's deletion does (armedButton).
  * `from` is the bar's ⋮ that opened it, if one did (moreButton): a press on it is no press outside, and with `rest`, opened by a mouse resting on the ⋮, the menu leaves the focus where it is and closes a moment after the mouse leaves the ⋮ and the menu.
  */
 function showContextMenu(el, x, y, label, build, from = null) {
+  if (isMobile()) {
+    showPhoneMenu(el, x, y, label, build, from);
+    return;
+  }
   closeContextMenu(false);
   const menu = document.createElement('div');
   menu.className = 'urd-ctx';
@@ -1307,6 +1472,8 @@ export function enhanceSection(host, section, grid) {
   addSectionToolbar(host, section, grid);
   // The block menu, in both views: a block added in the phone view stands on the phone only (phoneAdd).
   addBlockAdder(host, section, grid);
+  // A selected block drawn anew in the phone view: the editor's bar is told its new tools.
+  if (selectedBlockId) watchPhoneBar();
   // Persistent grid display (the grid menu in the editor is open) must
   // survive re-renders of the section.
   if (gridOverlaysOn) showGridOverlay(host, grid, restingGridLook()).classList.add('urd-grid-persistent');
@@ -3179,8 +3346,9 @@ function initTextToolbar() {
         reported = false;
         return;
       }
+      // The block's own bar where it stands over the block; in the phone view the editor draws it, and the page's stands unseen.
       const chrome = block.querySelector(':scope > .urd-edit-toolbar');
-      const chromeTop = chrome && !chrome.classList.contains('urd-toolbar-under') ? chrome.getBoundingClientRect().top : box.top;
+      const chromeTop = chrome?.getClientRects().length && !chrome.classList.contains('urd-toolbar-under') ? chrome.getBoundingClientRect().top : box.top;
       reported = true;
       post({
         type: 'urd-text-state',
@@ -3887,8 +4055,9 @@ function selectBlock(el, opts = {}) {
     if (b !== el) b.classList.remove('urd-selected');
   });
   el?.classList.add('urd-selected');
-  // The bar shows with the selection, and is kept inside the canvas once it is drawn.
+  // The bar shows with the selection, and is kept inside the canvas once it is drawn; in the phone view the editor draws it (watchPhoneBar).
   el?._urdKeepBar?.();
+  watchPhoneBar();
   // The selected block takes the keyboard focus, so the keys on a selected
   // block (the arrows, Delete, 1, 2 and 3, Shift+F10) work right after the
   // click: the press that selects prevents its default, which would
@@ -5218,7 +5387,7 @@ function enhanceBlock(el, block, section, grid, host) {
     if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, block.type === 'calendar' || Boolean(PHONE_DESIGNS[block.type])));
     if (block.type === 'calendar') barBody.appendChild(exampleButton());
     // With small panels the gear is the word for the settings, as the desktop bar's first word is for a block without its own editor.
-    if (TOOL_FORMS.includes(barForm())) barBody.appendChild(barButton(ta('canvas.ctx.settings'), ta('canvas.blockMenu'), () => openBlockSettings(el, section, block), 'urd-edit-lead'));
+    if (TOOL_FORMS.includes(barForm())) barBody.appendChild(opensMenu(barButton(ta('canvas.ctx.settings'), ta('canvas.blockMenu'), () => openBlockSettings(el, section, block), 'urd-edit-lead')));
     else barBody.appendChild(menuButton(el, section, block));
     barBody.appendChild(deleteButton());
     // The right-click menu under ⋮, as on the desktop's shorter bars: the way to it by touch.
@@ -5311,7 +5480,9 @@ function enhanceBlock(el, block, section, grid, host) {
       const word = picture ? ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage') : ta('canvas.ctx.settings');
       const tip = picture ? ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage') : ta('canvas.blockMenu');
       const run = picture ? () => askPictureEditor(coverEditable ? 'cover' : 'image') : () => openBlockSettings(el, section, block);
-      barBody.appendChild(barButton(word, tip, run, 'urd-edit-lead'));
+      // The word «Settings» opens the block's menu and closes it at a second press, as the gear does.
+      const lead = barButton(word, tip, run, 'urd-edit-lead');
+      barBody.appendChild(picture ? lead : opensMenu(lead));
     }
     // Every group a tool: the word for the picture's own editor where it has one, then a tool for each group of its menu, which the right-click menu under ⋮ follows with the rest.
     if (form === 'groups' && picture) {

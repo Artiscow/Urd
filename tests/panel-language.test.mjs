@@ -196,6 +196,11 @@ test('every deletion draws a bin on the dark red, in the admin and on the canvas
   assert.match(readFileSync(new URL(`../template/assets/engine/${ENGINE}/color-picker.js`, import.meta.url), 'utf8'), /del\.innerHTML = BIN_SVG;/, 'a saved colour on the canvas');
   const base = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
   assert.match(base, /\.urd-preview \.urd-ctx-danger \{\s*color: #ffd4d4;\s*background: #5e1c22;/);
+  // The phone view's bar and menus the editor draws for the canvas (CanvasBar.svelte): the block's bin and a menu's removal on the same dark red, the menu's drawing the bin.
+  const canvasBar = readFileSync(new URL('../editor/src/lib/CanvasBar.svelte', import.meta.url), 'utf8');
+  assert.match(canvasBar, /\.cb-tool\.danger \{\s*color: #ffd4d4;\s*background: #5e1c22;/, 'the bin on the bar beside the phone');
+  assert.match(canvasBar, /\.cm-row\.danger \{\s*color: #ffd4d4;\s*background: #5e1c22;/, 'a removal in the menu beside the phone');
+  assert.match(canvasBar, /\{#if row\.danger\}\{@html ICONS\.bin\}\{\/if\}/, 'the menu\'s removal draws the bin');
   assert.match(base, /\.urd-cp-del \{[^}]*background: #5e1c22;/);
 });
 
