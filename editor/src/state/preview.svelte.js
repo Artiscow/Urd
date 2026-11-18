@@ -386,7 +386,7 @@ async function onReady() {
   if (back?.page === pageState.pageId) {
     if (back.blockId) bridge?.sendSelect(back.blockId);
     else if (back.sectionId) {
-      pageState.activeSectionId = back.sectionId;
+      pageState.onSelectSection({ sectionId: back.sectionId });
       bridge?.sendActiveSection(back.sectionId);
     }
     if (back.top) bridge?.sendScrollTo(back.top.sectionId, back.top.offset);

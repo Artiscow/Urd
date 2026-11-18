@@ -3,7 +3,8 @@
      A fold of settings says its value while closed and carries its reset (lib/site-groups.js); a fold of a list says how many it holds; the media's tidy stands in the Updates panel. The state it reads and the functions it writes through come from the editor handle. */
   import { getContext } from 'svelte';
   import { WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, WIDTH_DEFAULT, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP, GUTTER_DEFAULT, WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS, clampWidth, clampGutter, contentBand, presetOf } from '../lib/content-width.js';
-  import { MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf } from '$engine/migrate.js';
+  import { MOBILE_GAP, mobileGapOf } from '$engine/migrate.js';
+  import SitePhoneGap from './site/SitePhoneGap.svelte';
   import Choice from '../lib/Choice.svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import Setting from '../lib/rows/Setting.svelte';
@@ -91,9 +92,6 @@
   const setContentWidth = (w) => setLayout({ contentWidth: w === 'full' ? 'full' : clampWidth(w) }, 'edit:site-width');
 
   const setContentGutter = (g) => setLayout({ gutter: clampGutter(g) }, 'edit:site-gutter');
-
-  /** The space between a section's blocks on the phone, for every section without its own; the standard is stored as no field. */
-  const setMobileGap = (v) => setLayout({ mobileGap: v === MOBILE_GAP ? undefined : v }, 'edit:site-mobile-gap');
 
   function setSiteLang(v) {
     siteMutate('site', () => { siteDraft.site.lang = v; });
@@ -302,10 +300,7 @@
         shown={`${layoutGutter} vw`} oninput={(v) => setContentGutter(v)} />
     </Setting>
     <!-- The space between the blocks on the phone, for every section that has none of its own -->
-    <Setting key="mobileGap">
-      <SliderRow label={ta('lbl.mobileGap')} title={ta('tip.site.mobileGap')} value={mobileGapOf(null, siteDraft)} min={0} max={MOBILE_GAP_MAX} step={4}
-        shown={`${mobileGapOf(null, siteDraft)} px`} oninput={(v) => setMobileGap(v)} />
-    </Setting>
+    <SitePhoneGap />
   </Fold>
 
   <!-- The site's calendars (site.calendars): registered once with their settings, picked by the calendar blocks as references.

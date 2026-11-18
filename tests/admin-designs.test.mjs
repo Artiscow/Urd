@@ -100,7 +100,7 @@ test('a part whose row the Urd settings hide under a design is left without effe
   const rows = SETTINGS_GROUPS.flatMap((g) => g.settings);
   for (const design of ADMIN_DESIGNS) {
     const v = (id) => design.parts[id] ?? partDefault(PARTS.find((p) => p.id === id));
-    const c = { ed: { adminLayout: v('layout'), sidebarFolds: v('sidebarFolds'), panelTabMenus: v('panelTabMenus') === 'on', toolbarPref: v('toolbar'), siteDraft: {} }, menu: { capAddPref: v('capAdd') }, ta: (k) => k };
+    const c = { ed: { adminLayout: v('layout'), sidebarFolds: v('sidebarFolds'), panelTabMenus: v('panelTabMenus') === 'on', toolbarPref: v('toolbar'), phonePanelPref: v('phonePanel'), siteDraft: {} }, menu: { capAddPref: v('capAdd') }, ta: (k) => k };
     for (const part of PARTS.filter((p) => p.setting)) {
       const row = rows.find((r) => r.id === part.setting);
       if (row.when && !row.when(c)) assert.equal(design.parts[part.id], null, `${design.id}.${part.id} has no effect there and must be null`);
@@ -136,7 +136,7 @@ function windowContext() {
   const keep = (key, value, dflt) => (value === dflt ? local.delete(key) : local.set(key, value));
   const ed = {
     adminLayout: 'top-tabs', sidebarFolds: 'tree', panelTabMenus: false, tabMenus: 'groups', tabMenuStay: 'stay', settingsPlace: 'dialog',
-    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'glass-accent', toolbarGearPref: 'on', toolbarPhonePref: 'on', toolbarPhonePlacePref: 'canvas', toolbarDesignPref: 'small', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', pageSettingsPref: 'dialog', collectionsLayout: 'drill', csvPreviewPref: 'dialog',
+    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'glass-accent', toolbarGearPref: 'on', toolbarPhonePref: 'on', toolbarPhonePlacePref: 'canvas', toolbarDesignPref: 'small', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', pageSettingsPref: 'dialog', collectionsLayout: 'drill', csvPreviewPref: 'dialog', phonePanelPref: 'dock', phoneColumnPref: 'table',
     setAdminLayout(v) { this.adminLayout = v; keep('urd-admin-layout', v, 'top-tabs'); },
     setSidebarFolds(v) { this.sidebarFolds = v; keep('urd-sidebar-folds', v, 'tree'); },
     setPanelTabMenus(v) { this.panelTabMenus = v === 'on'; keep('urd-panel-tab-menus', v, 'off'); },
@@ -156,6 +156,8 @@ function windowContext() {
     setPageSettingsPref(v) { this.pageSettingsPref = v; keep('urd-page-settings', v, 'dialog'); },
     setCollectionsLayout(v) { this.collectionsLayout = v; keep('urd-collections-layout', v, 'drill'); },
     setCsvPreview(v) { this.csvPreviewPref = v; keep('urd-csv-preview', v, 'dialog'); },
+    setPhonePanel(v) { this.phonePanelPref = v; keep('urd-phone-panel', v, 'dock'); },
+    setPhoneColumn(v) { this.phoneColumnPref = v; keep('urd-phone-column', v, 'table'); },
   };
   const menu = { formPref: 'wide', foldsPref: 'left', extraPref: 'shown', capListPref: 'list', capAddPref: CAP_ADD_FORMS[0], shortcutsPref: SHORTCUTS_MODES[0], designsPref: 'row' };
   const c = {

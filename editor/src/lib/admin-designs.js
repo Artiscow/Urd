@@ -9,6 +9,7 @@ import { SETTINGS_PLACES } from './settings-model.js';
 import { COLLECTION_LAYOUTS, CSV_PREVIEWS } from './collection-layout.js';
 import { PAGE_SETTINGS_LAYOUTS } from './page-settings.js';
 import { TAB_MENU_STYLES } from './panel-folds.js';
+import { PHONE_PANEL_LAYOUTS, PHONE_COLUMN_LOOKS } from './phone-panel.js';
 import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_GEARS, TOOLBAR_PHONES, TOOLBAR_PHONE_PLACES, TOOLBAR_SIZES, TOOLBAR_DESIGNS, CAP_LISTS, CAP_ADD_FORMS } from '../menu/forms.js';
 
 /** How the panels are reached (Urd settings «Panel navigation»), the first the default: the strip under the top bar. */
@@ -49,6 +50,8 @@ export const PARTS = [
   { id: 'pageSettings', key: 'urd-page-settings', options: PAGE_SETTINGS_LAYOUTS, setting: 'pageSettings' },
   { id: 'collectionsLayout', key: 'urd-collections-layout', options: COLLECTION_LAYOUTS, setting: 'collectionsLayout' },
   { id: 'csvPreview', key: 'urd-csv-preview', options: CSV_PREVIEWS, setting: 'csvPreview' },
+  { id: 'phonePanel', key: 'urd-phone-panel', options: PHONE_PANEL_LAYOUTS, setting: 'phonePanel', labelKey: 'settings.phonePanel', optionKey: 'opt.phonePanel' },
+  { id: 'phoneColumn', key: 'urd-phone-column', options: PHONE_COLUMN_LOOKS, setting: 'phoneColumn', labelKey: 'settings.phoneColumn', optionKey: 'opt.phoneColumn' },
 ];
 
 /** A part's default: its first option. */
@@ -66,7 +69,7 @@ export const ADMIN_DESIGNS = [
     parts: {
       menu: 'wide', folds: 'left', toolbar: 'groups', toolbarLook: 'glass-accent', toolbarGear: 'on', toolbarPhone: 'on', toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'small', designs: 'row', extra: 'shown', capAdd: 'folded', capList: null, shortcuts: 'search',
       layout: 'top-tabs', sidebarFolds: null, panelTabMenus: null, tabMenus: 'groups', tabMenuStay: 'stay', place: 'dialog',
-      addBlockMenu: 'side', layoutPicker: 'strip', linkEditor: 'dialog', pageSettings: 'dialog', collectionsLayout: 'drill', csvPreview: 'dialog',
+      addBlockMenu: 'side', layoutPicker: 'strip', linkEditor: 'dialog', pageSettings: 'dialog', collectionsLayout: 'drill', csvPreview: 'dialog', phonePanel: 'dock', phoneColumn: 'table',
     },
   },
   {
@@ -75,7 +78,7 @@ export const ADMIN_DESIGNS = [
     parts: {
       menu: 'tabs', folds: 'one', toolbar: 'panels', toolbarLook: 'capsule', toolbarGear: 'off', toolbarPhone: 'on', toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'small', designs: 'inline', extra: 'shown', capAdd: 'head', capList: 'list', shortcuts: 'search',
       layout: 'page-tabs', sidebarFolds: null, panelTabMenus: null, tabMenus: 'lines', tabMenuStay: 'close', place: 'dialog',
-      addBlockMenu: 'slim', layoutPicker: 'menu', linkEditor: 'popover', pageSettings: 'dialog', collectionsLayout: 'table', csvPreview: 'dialog',
+      addBlockMenu: 'slim', layoutPicker: 'menu', linkEditor: 'popover', pageSettings: 'dialog', collectionsLayout: 'table', csvPreview: 'dialog', phonePanel: 'dock', phoneColumn: 'table',
     },
   },
   {
@@ -84,7 +87,7 @@ export const ADMIN_DESIGNS = [
     parts: {
       menu: 'docked-tabs', folds: 'left', toolbar: 'short', toolbarLook: 'strip', toolbarGear: null, toolbarPhone: 'on', toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'small', designs: 'inline', extra: 'menu', capAdd: 'head', capList: 'list', shortcuts: 'pinned',
       layout: 'sidebar', sidebarFolds: 'tree', panelTabMenus: null, tabMenus: null, tabMenuStay: null, place: 'panel',
-      addBlockMenu: 'side', layoutPicker: 'strip', linkEditor: 'dialog', pageSettings: 'step', collectionsLayout: 'columns', csvPreview: 'panel',
+      addBlockMenu: 'side', layoutPicker: 'strip', linkEditor: 'dialog', pageSettings: 'step', collectionsLayout: 'columns', csvPreview: 'panel', phonePanel: 'dock', phoneColumn: 'table',
     },
   },
   {
@@ -93,7 +96,7 @@ export const ADMIN_DESIGNS = [
     parts: {
       menu: 'docked', folds: 'all', toolbar: 'full', toolbarLook: 'squares', toolbarGear: null, toolbarPhone: null, toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'full', designs: 'row', extra: 'shown', capAdd: 'head', capList: 'list', shortcuts: 'chips',
       layout: 'rail', sidebarFolds: null, panelTabMenus: null, tabMenus: 'plain', tabMenuStay: 'stay', place: 'sheet',
-      addBlockMenu: 'slim', layoutPicker: 'menu', linkEditor: 'popover', pageSettings: 'table', collectionsLayout: 'table', csvPreview: 'table',
+      addBlockMenu: 'slim', layoutPicker: 'menu', linkEditor: 'popover', pageSettings: 'table', collectionsLayout: 'table', csvPreview: 'table', phonePanel: 'dock', phoneColumn: 'table',
     },
   },
 ];

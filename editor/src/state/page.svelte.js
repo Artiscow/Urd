@@ -307,10 +307,11 @@ function resetPhoneWords(sectionId, blockId) {
 let blockMenu = $state(null);
 
 /** The room for the floating menu (menu/state.svelte.js): measured from
- *  the preview frame's left edge, and again when the window resizes while
- *  the menu is open. */
+ *  the preview frame's left edge to its right, and again when the window
+ *  resizes while the menu is open. */
 function measureMenuRoom() {
-  measureRoom(previewState.frameWrapEl?.getBoundingClientRect().left ?? 0);
+  const frame = previewState.frameWrapEl?.getBoundingClientRect();
+  measureRoom(frame?.left ?? 0, frame?.right);
 }
 
 /** The design picker (DesignPicker) over the editor: 'set' changes the selected calendar's design, 'add' adds a calendar in the chosen design; null = closed. */
@@ -490,6 +491,9 @@ function fitSmallMenu(size, first) {
  */
 function menuPlaceFor(rect, small = false, section = false, { keepForm = false } = {}) {
   const view = { w: window.innerWidth, h: window.innerHeight };
+  const stage = previewState.frameWrapEl?.getBoundingClientRect();
+  // The room a menu placed beside its block stands in: the window, short of a column docked at the stage's right edge (the Phone panel's order, panels/phone/PhoneDock.svelte); a menu the owner dragged may stand anywhere in the window.
+  const room = stage ? { w: Math.min(view.w, stage.right), h: view.h } : view;
   const ir = previewState.iframeEl?.getBoundingClientRect();
   const s = previewState.scale;
   const own = ir ? { left: ir.left + s * rect.left, top: ir.top + s * rect.top, right: ir.left + s * rect.right, bottom: ir.top + s * rect.bottom } : null;
@@ -497,22 +501,21 @@ function menuPlaceFor(rect, small = false, section = false, { keepForm = false }
   const phone = previewState.viewMode === 'mobile' && own;
   const block = phone ? { ...own, left: ir.left, right: ir.right } : own;
   // What the menu keeps clear of: in the phone view the whole phone in sight, so it never stands below the block over the page where the stage has room beside the phone.
-  const stage = previewState.frameWrapEl?.getBoundingClientRect();
   const cover = phone && stage ? { left: ir.left, right: ir.right, top: Math.max(ir.top, stage.top), bottom: Math.min(ir.bottom, stage.bottom) } : block;
   const bars = [canvasBarState.placed, canvasBarState.sectionPlaced].filter((b) => phone && b && b.w > 0 && b.h > 0);
   // The wide menu opened beside a block gives way to one column where that covers clearly less of the block (givesWay); a menu the owner dragged keeps its form, and so does a section's on the desktop.
   if (!small && !keepForm) {
     menu.cramped = false;
-    menu.cramped = givesWay(block, view, { wide: menuIsWide(), wideW: MENU_WIDE_W, narrowW: 400, h: menuSize().h, min: menu.min, dragged: Boolean(menu.place), section: section && !phone, cover, strict: Boolean(phone) });
+    menu.cramped = givesWay(block, room, { wide: menuIsWide(), wideW: MENU_WIDE_W, narrowW: 400, h: menuSize().h, min: menu.min, dragged: Boolean(menu.place), section: section && !phone, cover, strict: Boolean(phone) });
   }
   const size = menuSize(small);
   if (menu.place) return clampPlace(menu.place, size, view, menu.min);
   if (!block) return { left: menu.min, top: 8 };
-  let place = placeBesideBlock(block, size, view, { min: menu.min, first: bars[0]?.side === 'right' ? 'left' : 'right', cover });
+  let place = placeBesideBlock(block, size, room, { min: menu.min, first: bars[0]?.side === 'right' ? 'left' : 'right', cover });
   // Beside the phone on the bars' side, it stands under the bars it would meet.
   for (const bar of bars) {
     if (place.left < bar.left + bar.w && bar.left < place.left + size.w && place.top < bar.top + bar.h && bar.top < place.top + size.h) {
-      place = { ...place, ...clampPlace({ left: place.left, top: bar.top + bar.h + 6 }, size, view, menu.min) };
+      place = { ...place, ...clampPlace({ left: place.left, top: bar.top + bar.h + 6 }, size, room, menu.min) };
     }
   }
   return { left: place.left, top: place.top };

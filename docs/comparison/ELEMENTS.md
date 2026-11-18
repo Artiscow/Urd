@@ -118,7 +118,7 @@ On the canvas, text is edited by clicking and writing. A floating text toolbar a
 - blocks change z-order with «To the front» and «To the back» in the block toolbar, in the right-click menu and in the element menu, Ctrl+Shift+Up and Down, and the layer number in Placement;
 - the Pages panel switches page without reloading the editor.
 
-A smaller block that lies over a larger one cannot be selected today, because hover picks the larger one first (a BACKLOG 0.7.10 finding). The layers panel answers that (E6). The phone order has up and down buttons (0.7.3), Alt with the arrows (Delivered 0.7.3.6) and a list in the Phone panel (Delivered 0.7.3.13), built so the layers panel can take it up.
+A smaller block that lies over a larger one cannot be selected today, because hover picks the larger one first (a BACKLOG 0.7.10 finding). The layers panel answers that (E6). The phone order has up and down buttons (0.7.3), Alt with the arrows (Delivered 0.7.3.6) and a list in the Phone panel (Delivered 0.7.3.13), built so the layers panel can take it up; the whole page's order stands in a column beside the phone, section by section (Delivered 0.7.3.24).
 
 ### Global design
 

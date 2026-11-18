@@ -41,6 +41,7 @@
   import PanelNav from './shell/PanelNav.svelte';
   import PanelStrip from './shell/PanelStrip.svelte';
   import PreviewStage from './shell/PreviewStage.svelte';
+  import PhoneDock from './panels/phone/PhoneDock.svelte';
   import ConfirmDialog from './shell/ConfirmDialog.svelte';
   import PictureEditor from './lib/PictureEditor.svelte';
   import RedirectsDialog from './shell/RedirectsDialog.svelte';
@@ -223,6 +224,10 @@
       <!-- The stage, with the collections table standing over it while a collection is open in that layout, and a CSV import's table over both while it waits; the preview stays mounted underneath -->
       <div class="stage-area">
         <PreviewStage />
+        <!-- The Phone panel's blocks in their order in a column of their own at the stage's right edge, while the panel stands (Urd settings «Phone panel») -->
+        {#if ed.activePanel === 'phone' && ed.phonePanelPref === 'dock' && ed.chromeVisible && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)}
+          <PhoneDock />
+        {/if}
         {#if ed.csvImport?.view === 'table' && ed.chromeVisible}
           <ImportTable />
         {:else if ed.pageSettingsFor && ed.pageSettingsPref === 'table' && ed.chromeVisible}

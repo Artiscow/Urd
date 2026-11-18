@@ -9,8 +9,8 @@
   import { ta } from '$engine/i18n.js';
   import { fontChoices } from '$engine/fonts.js';
   import { ICONS } from '../../lib/icons.js';
-  import { LOGO_SIZE, clampRange } from '../../lib/nav-size.js';
   import { squareBeside } from '../../lib/square-beside.js';
+  import NavLogoPhone from './NavLogoPhone.svelte';
   const ed = getContext('urd-editor');
   const siteDraft = $derived(ed.siteDraft);
   const { compressOrTrim, imageErrorText, setStatus, siteMutate } = ed;
@@ -131,16 +131,7 @@
           value={siteDraft.nav.logo?.size ?? 32}
           onchange={(e) => setLogo({ size: Number(e.target.value) })} />
       </div>
-      <div class="ctl-field" title={ta('tip.nav.logoHeightMobile')}>
-        <span class="mini-label">{ta('lbl.onMobile')}</span>
-        <input type="number" class="tb-num" min={LOGO_SIZE.min} max={LOGO_SIZE.max} placeholder={ta('lbl.navSameAsDesktop')}
-          value={siteDraft.nav.logo?.mobileSize ?? ''}
-          onchange={(e) => {
-            const raw = e.target.value;
-            setLogo({ mobileSize: raw === '' ? undefined : clampRange(raw, LOGO_SIZE, undefined) });
-            e.target.value = siteDraft.nav.logo?.mobileSize ?? '';
-          }} />
-      </div>
+      <NavLogoPhone />
       <div class="ctl-field" title={ta('tip.nav.logoRadius')}>
         <span class="mini-label">{ta('lbl.rounding')}</span>
         <input type="number" class="tb-num" min="0" max="64"

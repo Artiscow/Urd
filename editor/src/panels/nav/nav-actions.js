@@ -142,6 +142,13 @@ export function navFolds(ed) {
     if (sheet) groups.push(siteGroup(() => style()?.sheet, write(() => dropEmpty(style(), 'sheet')), 'nav-mobile', { bg: 'surface', bgOpacity: 0.85, blur: undefined, textColor: undefined }));
     return mergeGroups(...groups);
   }
+  /** The Phone panel's fold of the menu on the phone: the Phone fold's settings, with the logo picture's height on the phone and the launcher's two for the phone, which stand in the Logo and Tools folds here. */
+  function phoneGroup() {
+    const groups = [mobileGroup()];
+    if (nav()?.logo?.show !== false && (nav()?.logo?.type ?? 'text') !== 'text') groups.push(siteGroup(() => nav()?.logo, write(), 'nav-mobile', { mobileSize: undefined }));
+    if (nav()?.launcher?.show === true) groups.push(siteGroup(() => nav()?.launcher, write(), 'nav-mobile', { mobileView: undefined, mobileMax: 6 }));
+    return mergeGroups(...groups);
+  }
   /** The menu the burger opens. */
   const mobileValue = () => ta(style()?.mobileMenu === 'sheet' ? 'opt.mobileMenu.sheet' : 'opt.mobileMenu.dropdown');
 
@@ -198,7 +205,7 @@ export function navFolds(ed) {
   const announcementValue = () => (nav()?.announcement?.show ? nav().announcement.text || ta('common.on') : ta('common.off'));
 
   return {
-    itemsGroup, itemsValue, logoGroup, logoValue, layoutGroup, layoutValue, coloursGroup, coloursValue, mobileGroup, mobileValue,
+    itemsGroup, itemsValue, logoGroup, logoValue, layoutGroup, layoutValue, coloursGroup, coloursValue, mobileGroup, mobileValue, phoneGroup,
     scrollGroup, scrollValue, toolsGroup, toolsValue, announcementGroup, announcementValue,
   };
 }

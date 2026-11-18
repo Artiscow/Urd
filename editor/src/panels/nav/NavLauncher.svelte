@@ -7,7 +7,6 @@
   import LinkField from '../../lib/LinkField.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
-  import SliderRow from '../../lib/rows/SliderRow.svelte';
   import SubHeading from '../../lib/rows/SubHeading.svelte';
   import CardList from '../../lib/rows/CardList.svelte';
   import { ta } from '$engine/i18n.js';
@@ -17,6 +16,7 @@
   import { SIZE_IDS, clampRange } from '../../lib/nav-size.js';
   import { linkOf, setLinkOn } from '../../lib/link-edit.js';
   import { navActions } from './nav-actions.js';
+  import NavLauncherPhone from './NavLauncherPhone.svelte';
   const ed = getContext('urd-editor');
   const siteDraft = $derived(ed.siteDraft);
   const { compressOrTrim, imageErrorText, setStatus, siteMutate } = ed;
@@ -152,22 +152,13 @@
       </div>
     {/each}
   </div>
-  <!-- The mobile menu can carry another design than the desktop panel -->
-  <Setting key="mobileView">
-    <Choice label={ta('lbl.launcherMobileView')} title={ta('tip.nav.launcherMobileView')}
-      value={siteDraft.nav.launcher?.mobileView ?? ''}
-      options={[['', ta('lbl.navSameAsDesktop')], ...launcherViewOptions]}
-      onchange={(v) => setLauncher('mobileView', v || undefined)} />
-  </Setting>
+  <!-- The launcher on the phone: its design and how many shortcuts it shows there -->
+  <NavLauncherPhone />
   <Setting key="longNames">
     <Choice label={ta('lbl.launcherLongNames')} title={ta('tip.nav.launcherLongNames')}
       value={siteDraft.nav.launcher?.longNames ?? 'cut'}
       options={[['cut', ta('opt.launcherLongNames.cut')], ['wrap', ta('opt.launcherLongNames.wrap')]]}
       onchange={(v) => setLauncher('longNames', v === 'cut' ? undefined : v)} />
-  </Setting>
-  <Setting key="mobileMax">
-    <SliderRow label={ta('lbl.launcherMobileMax')} title={ta('tip.nav.launcherMobileMax')} value={siteDraft.nav.launcher?.mobileMax ?? 6} min={1} max={24} step={1}
-      shown={`${siteDraft.nav.launcher?.mobileMax ?? 6}`} oninput={(v) => setLauncher('mobileMax', v === 6 ? undefined : v)} />
   </Setting>
   <Setting key="showTitle">
     <SwitchRow label={ta('lbl.launcherShowTitle')} title={ta('tip.nav.launcherTitle')} checked={siteDraft.nav.launcher?.showTitle !== false}

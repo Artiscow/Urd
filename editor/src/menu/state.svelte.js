@@ -128,10 +128,10 @@ export function menuLayout() {
   return menu.formPref === 'tabs' || menu.formPref === 'docked-tabs' ? 'tabs' : 'narrow';
 }
 
-/** The menu never lies over the panels: measured from the preview frame's left edge. */
-export function measureMenuRoom(left) {
+/** The menu never lies over the panels, nor over a column at the stage's right edge: measured from the preview frame's left edge to its right, the window's where none is given. */
+export function measureMenuRoom(left, right = window.innerWidth) {
   menu.min = Math.round(left) + 8;
-  menu.room = window.innerWidth - menu.min - 8;
+  menu.room = Math.min(Math.round(right), window.innerWidth) - menu.min - 8;
 }
 
 /** The three areas, in the order of the keys 1, 2 and 3. */

@@ -22,6 +22,11 @@ export function menuMotion(node, params = {}) {
   return fly(node, { y: -6, duration: still() ? 0 : (duration ?? 150), ...rest });
 }
 
+/** A column at the stage's edge (panels/phone/PhoneDock.svelte): its width grows from nothing to its own and shrinks back, its content clipped to it. */
+export function dockMotion(node, params = {}) {
+  return slide(node, { axis: 'x', duration: still() ? 0 : 200, ...params });
+}
+
 /** A row that opens in a list: its body grows from nothing to its height, and shrinks back. */
 export function rowMotion(node, params = {}) {
   return slide(node, { duration: still() ? 0 : 200, ...params });

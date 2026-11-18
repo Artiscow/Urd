@@ -100,6 +100,30 @@ const PAGE_SETTINGS = {
   table: topbar() + dim(1, 7, 8, H - 8) + dim(9, 7, 54, H - 8, 0.2) + line(11, 10, 50, 1, 1) + line(11, 14, 10, 2) + acc(26, 14, 2, 2) + line(32, 14, 12, 2) + line(48, 14, 12, 2) + line(11, 19, 10, 2) + line(26, 19, 2, 2) + line(32, 19, 12, 2) + line(48, 19, 12, 2) + line(11, 24, 10, 2) + line(26, 24, 2, 2) + line(32, 24, 12, 2) + line(48, 24, 12, 2) + line(11, 29, 10, 2) + line(26, 29, 2, 2) + line(32, 29, 12, 2),
 };
 
+/** The phone on the stage, in the middle of the room the stage leaves it. */
+const phoneOnStage = (x) => `<rect x="${x}" y="10" width="12" height="27" rx="2" fill="currentColor" opacity="0.24"/>`;
+
+/** Where the Phone panel's blocks in their order stand, drawn in the accent: in a column at the stage's right edge, first in the panel, or in a fold under the panel's settings. */
+const PHONE_PANELS = {
+  dock: topbar() + dim(1, 7, 22, H - 8, 0.22) + line(3, 10, 12, 2) + line(3, 15, 16, 2) + line(3, 20, 14, 2) + line(3, 25, 16, 2) + stage(23) + phoneOnStage(31)
+    + dim(51, 7, 12, H - 8, 0.22) + acc(53, 10, 8, 2) + acc(53, 14, 8, 2) + acc(53, 18, 8, 2) + acc(53, 22, 8, 2) + acc(53, 26, 8, 2),
+  top: topbar() + dim(1, 7, 22, H - 8, 0.22) + acc(3, 10, 16, 2) + acc(3, 14, 16, 2) + acc(3, 18, 16, 2) + acc(3, 22, 16, 2) + line(3, 28, 12, 2) + line(3, 33, 14, 2) + stage(23) + phoneOnStage(37),
+  fold: topbar() + dim(1, 7, 22, H - 8, 0.22) + line(3, 10, 12, 2) + line(3, 15, 14, 2) + line(3, 20, 12, 2) + dim(2, 24, 20, 13, 0.14) + line(3, 25.5, 9, 2)
+    + acc(5, 29, 15, 1.5) + acc(5, 32, 15, 1.5) + acc(5, 35, 15, 1) + stage(23) + phoneOnStage(37),
+};
+
+/** A hairline across the column, and a tinted fill in the accent, for the pictures of the column's looks. */
+const hair = (y, x = 1, w = W - 2) => `<rect x="${x}" y="${y}" width="${w}" height="0.6" fill="currentColor" opacity="0.3"/>`;
+const tint = (x, y, w, h, r = 0) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${ACCENT}" opacity="0.5"/>`;
+const boxed = (x, y, w, h, colour = 'currentColor', o = 0.5) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" stroke="${colour}" opacity="${o}"/>`;
+
+/** How the column at the stage's right edge is drawn, each picture the column itself seen close: two folded sections, the open section at work with two of its blocks, and the section after it. */
+const PHONE_COLUMNS = {
+  table: dim(1, 3, W - 2, 7, 0.2) + line(6, 5.5, 22, 2) + hair(10) + tint(1, 10.6, W - 2, 7) + line(6, 13, 16, 2) + line(13, 21, 26, 2) + hair(25) + line(13, 27.5, 20, 2) + dim(1, 32, W - 2, 7, 0.2) + hair(32) + line(6, 34.5, 18, 2),
+  flat: line(6, 5, 22, 2) + hair(10, 5, 54) + tint(4, 12, 56, 7, 2) + line(6, 14.5, 16, 2) + line(14, 22.5, 24, 2) + line(14, 28, 18, 2) + hair(33, 5, 54) + line(6, 35.5, 18, 2),
+  boxes: boxed(4, 3, 56, 6) + line(7, 5, 20, 2) + boxed(4, 11, 56, 6, ACCENT, 1) + line(7, 13, 16, 2) + dim(8, 19, 52, 5, 0.16) + line(11, 20.5, 24, 2) + dim(8, 25.5, 52, 5, 0.16) + line(11, 27, 18, 2) + boxed(4, 32.5, 56, 6) + line(7, 34.5, 18, 2),
+};
+
 /** How a button answers a press: a button in the middle of each picture, drawn as it stands mid-press, with the feel's own mark. */
 const btn = (x, y, w, h, o = 0.5) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="currentColor" opacity="${o}"/>`;
 const PRESS = {
@@ -317,6 +341,8 @@ const LOOKS = {
   collectionsLayout: COLLECTIONS_LAYOUTS,
   csvPreview: CSV_PREVIEWS,
   pageSettings: PAGE_SETTINGS,
+  phonePanel: PHONE_PANELS,
+  phoneColumn: PHONE_COLUMNS,
   press: PRESS,
   tabMenus: TAB_MENUS,
   sidebarFolds: SIDEBAR_FOLDS,

@@ -3592,10 +3592,10 @@
     overflow-wrap: break-word;
   }
 
-  /* The Phone panel's list (panels/PhonePanel.svelte): one line per block in its phone order, a stack's head over its blocks set in a step, the stack drawn as one tinted card */
+  /* The phone order's list (panels/phone/PhoneOrder.svelte): one line per block in its phone order, a stack's head over its blocks set in a step, the stack drawn as one tinted card */
   .pp-list {
     display: grid;
-    gap: 3px;
+    gap: 4px;
   }
 
   /* The order's list holds the room under its last row, where a dragged row lands last */
@@ -3603,14 +3603,14 @@
     padding-bottom: 1rem;
   }
 
-  /* A row wraps its chips under its name where both do not fit on one line, so the name keeps some of its words and no chip runs past the row */
+  /* A row wraps its chips under its name where both do not fit on one line, so the name keeps some of its words and no chip runs past the row; a row of one line and the room between rows are whole pixels in steps of four, so the rows are drawn alike at the common screen scalings */
   .pp-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.25rem 0.45rem;
     min-width: 0;
-    min-height: 2.1rem;
+    min-height: 32px;
     padding: 0.2rem 0.4rem 0.2rem 0.25rem;
     border-radius: 7px;
     background: color-mix(in srgb, currentColor 3%, transparent);
@@ -3626,6 +3626,21 @@
   .pp-row.pp-hovered {
     background: color-mix(in srgb, var(--urd-color-accent) 18%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--urd-color-accent) 55%, transparent);
+  }
+
+  /* The row of the block selected on the canvas */
+  .pp-row.pp-selected {
+    box-shadow: inset 0 0 0 1px var(--urd-color-accent);
+  }
+
+  /* A block hidden on phones, after the order */
+  .pp-row.pp-off > :not(button) {
+    opacity: 0.5;
+  }
+
+  /* A row brought into view in the column stands clear of the section heading stuck at its top, and of the column's foot */
+  .pp-row {
+    scroll-margin: 2.8rem 0 0.6rem;
   }
 
   .pp-row:focus-visible {

@@ -82,12 +82,12 @@
     cb.sectionPlaced = sectionPlace ? { sectionId: cb.section.id, left: sectionPlace.left, top: sectionPlace.top, w: sw, h: sh, side: sectionPlace.side } : null;
   });
 
-  /** The menu's place: under the ⋮ of the bar that opened it, reaching away from the phone, else at the point it was opened at on the page; inside the window. */
+  /** The menu's place: under the ⋮ of the bar that opened it, reaching away from the phone, else at the point it was opened at on the page; inside the window, short of a column docked at the stage's right edge (panels/phone/PhoneDock.svelte). */
   const menuPlace = $derived.by(() => {
     void resized;
     const m = cb.menu;
     if (!menuOpen || !m) return null;
-    const view = { w: window.innerWidth, h: window.innerHeight };
+    const view = { w: Math.min(window.innerWidth, ed.frameWrapEl?.getBoundingClientRect().right ?? Infinity), h: window.innerHeight };
     const size = { w: mw || 220, h: mh || 240 };
     const more = m.editor ? moreEls[m.editor] : null;
     if (more) {

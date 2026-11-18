@@ -139,6 +139,13 @@ export const SETTINGS_GROUPS = [
         options: (c) => c.ed.COLLECTIONS_LAYOUT_OPTIONS, get: (c) => c.ed.collectionsLayout, set: (c, v) => c.ed.setCollectionsLayout(v) },
       { id: 'csvPreview', part: true, labelKey: 'settings.csvPreview', tipKey: 'tip.settings.csvPreview', kind: 'choice', look: 'csvPreview',
         options: (c) => c.ed.CSV_PREVIEW_OPTIONS, get: (c) => c.ed.csvPreviewPref, set: (c, v) => c.ed.setCsvPreview(v) },
+      // The Phone panel's blocks in their order: in a column of their own at the stage's right edge, by default, first in the panel, or in a fold under its settings.
+      { id: 'phonePanel', part: true, labelKey: 'settings.phonePanel', tipKey: 'tip.settings.phonePanel', kind: 'choice', look: 'phonePanel',
+        options: (c) => c.ed.PHONE_PANEL_OPTIONS, get: (c) => c.ed.phonePanelPref, set: (c, v) => c.ed.setPhonePanel(v) },
+      // How the column on the right is drawn, while the order stands there.
+      { id: 'phoneColumn', part: true, parent: 'phonePanel', labelKey: 'settings.phoneColumn', tipKey: 'tip.settings.phoneColumn', kind: 'choice', look: 'phoneColumn',
+        when: (c) => c.ed.phonePanelPref === 'dock',
+        options: (c) => c.ed.PHONE_COLUMN_OPTIONS, get: (c) => c.ed.phoneColumnPref, set: (c, v) => c.ed.setPhoneColumn(v) },
       { id: 'place', part: true, labelKey: 'settings.place', tipKey: 'tip.settings.place', kind: 'choice', look: 'place',
         options: (c) => c.ed.SETTINGS_PLACE_OPTIONS, get: (c) => c.ed.settingsPlace, set: (c, v) => c.ed.setSettingsPlace(v) },
     ],

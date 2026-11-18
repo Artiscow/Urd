@@ -1,37 +1,34 @@
 <script>
-  /* The Phone panel (0.7.3.13): what is set for the phone in the section at work, gathered in one place; each setting stands in the section's or the block's menu too.
+  /* The Phone panel (0.7.3.13): what is set for the phone, gathered in one place; each setting stands in the Nav or Site panel, or in the section's or the block's menu too.
      The section is the one at work on the canvas; where none is, as the panel opens or another page loads, the topmost one mostly in view, else the first. Another is picked at the top, which brings it into view.
-     Under the section's own rows (PhoneSectionRows) stand its blocks in the order they read on the phone: a block alone, or a stack of blocks that read as one, the owner's own or a column the rule reads whole (phone-moves.js phoneTree).
-     The rows move by the row kit's drag in its tree form, one level deep (lib/nav-drop.js): before or after a row, into a stack, or onto a block alone, which makes a stack of the two; a stack's block leads out of it from the room left of it, and the room under the last row lands a row last. Alt and the arrow keys move the row the focus is in, as the drag would. A row under the pointer lights its blocks on the canvas, and a press selects its block there.
-     A block placed by its own exception carries a chip that gives it back to the section's order, and the owner's stack one that takes it apart. A block under the mouse on the canvas lights its row, and a stack's.
-     A right click on a row, or the menu key, opens the row's menu: a block taken out of its group, or the group undone (phone-moves.js phoneUngroup), greyed where the row stands in no group; and the block pinned where it stands, which the phone view alone measures.
-     Under the order stand the blocks pinned to rows of their own, each with the crossed pin that unpins it back into the order (phone-moves.js unpinned), also from its right click, and the blocks hidden on phones, each with its way back. */
-  import { getContext, onMount, tick, untrack } from 'svelte';
+     Under it stand the folds of the whole site (the menu on the phone from the Nav panel, the space between blocks for every section from the Site panel) and of this section (PhoneSectionRows, one part per fold), with their values while closed.
+     The section's blocks in their order (phone/PhoneOrder.svelte) stand where Urd settings «Phone panel» puts them (lib/phone-panel.js): in a column of their own at the stage's right edge (phone/PhoneDock.svelte, drawn by App.svelte while this panel stands), first in the panel, or in a fold under its settings. */
+  import { getContext, onMount, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
-  import { blockWords, sectionWords } from '$engine/anchor-model.js';
-  import { phoneSetupOf, stackOrder } from '$engine/phone-order.js';
-  import { phoneTree, phoneLand, phoneUngroup, hasPhonePlace, flowing } from '$engine/phone-moves.js';
-  import { phoneCells } from '$engine/migrate.js';
-  import { phoneWordsOf } from '$engine/push-model.js';
-  import { navDropAt, navDropOrNull, canonicalDrop } from '../lib/nav-drop.js';
-  import { RowDrag, slotOut } from '../lib/rows/row-drag.svelte.js';
-  import { dismiss } from '../lib/dismiss.js';
-  import { menuMotion } from '../lib/motion.svelte.js';
-  import { phoneMark } from '$engine/phone-layouts.js';
-  import { ICONS, CAP_ICONS } from '../lib/icons.js';
+  import { sectionWords } from '$engine/anchor-model.js';
+  import { MOBILE_GAP, mobileGapOf } from '$engine/migrate.js';
+  import { ICONS } from '../lib/icons.js';
   import PhoneSectionRows from '../section/PhoneSectionRows.svelte';
+  import PhoneOrder from './phone/PhoneOrder.svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import SubHeading from '../lib/rows/SubHeading.svelte';
   import IconButton from '../lib/rows/IconButton.svelte';
   import EmptyState from '../lib/rows/EmptyState.svelte';
+  import Fold from '../lib/rows/Fold.svelte';
+  import NavMobile from './nav/NavMobile.svelte';
+  import NavLogoPhone from './nav/NavLogoPhone.svelte';
+  import NavLauncherPhone from './nav/NavLauncherPhone.svelte';
+  import SitePhoneGap from './site/SitePhoneGap.svelte';
+  import { navFolds } from './nav/nav-actions.js';
+  import { siteGroup } from '../lib/site-groups.js';
   const ed = getContext('urd-editor');
-
-  /** The canvas's marks (preview-edit.js): a place of the block's own, a pin, and words of its own on the phone, lines of text. */
-  const PLACED_MARK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
-  const WORDS_MARK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h9"/></svg>';
-
-  /** The levels the list holds: a stack's blocks, never a stack inside a stack. */
-  const DEPTH = 1;
+  /** The Nav panel's fold of the menu on the phone: its value while closed and its group of settings to go back from. */
+  const navFold = navFolds(ed);
+  /** The space between blocks on the phone for every section, with its way back to the standard, as the Site panel's width fold holds it. */
+  const gapGroup = () => siteGroup(() => ed.siteDraft.layout, (name, change) => ed.siteMutate(name, () => {
+    change();
+    if (ed.siteDraft.layout && !Object.keys(ed.siteDraft.layout).length) delete ed.siteDraft.layout;
+  }), 'site-phone-gap', { mobileGap: MOBILE_GAP });
 
   /** The open page's sections, read again after every change, every undo and every page loaded, since the page's data is no state of its own. */
   const sections = $derived.by(() => {
@@ -45,40 +42,15 @@
     const found = sections.find((s) => s.id === ed.activeSectionId);
     return found ? { ...found, blocks: found.blocks.slice() } : null;
   });
-  const setup = $derived(section ? phoneSetupOf(section) : null);
-  const tree = $derived(section ? phoneTree(section.blocks, setup) : []);
-  /** Each block's place on the phone, the number it wears on the canvas. */
-  const numbers = $derived(new Map(section ? stackOrder(section.blocks, setup).map((b, i) => [b.id, i + 1]) : []));
-  const byId = $derived(new Map((section?.blocks ?? []).map((b) => [b.id, b])));
-  /** The list's rows: each node of the tree, and under a stack its blocks, keyed by their path. */
-  const rows = $derived(tree.flatMap((node, i) => (node.children
-    ? [{ key: `${i}`, level: 0, node, ids: node.children.map((c) => c.id) },
-      ...node.children.map((c, j) => ({ key: `${i}.${j}`, level: 1, id: c.id, ids: [c.id], kind: node.kind, first: j === 0, last: j === node.children.length - 1 }))]
-    : [{ key: `${i}`, level: 0, id: node.id, ids: [node.id] }])));
-  const pinned = $derived((section?.blocks ?? []).filter((b) => !b.hideMobile && !flowing(b)));
-  const hidden = $derived((section?.blocks ?? []).filter((b) => b.hideMobile));
   const sectionOptions = $derived(sections.map((s, i) => {
     const words = sectionWords(s);
     return [s.id, words ? `${ta('diff.section', { n: i + 1 })}: ${words}` : ta('diff.section', { n: i + 1 })];
   }));
-
-  /** A block's name: its kind and its first words. */
-  function nameOf(block) {
-    const words = blockWords(block);
-    return words ? `${ed.blockLabel(block.type)}: ${words}` : ed.blockLabel(block.type);
-  }
-  /** A block's width on the phone where it stands in cells (migrate.js phoneCells), as «Width on the phone» names it, else null. */
-  function cellsMark(block) {
-    const cells = phoneCells(block?.frames?.mobile);
-    if (!cells) return null;
-    return [2, 4, 6].includes(cells.cols) ? ta(`opt.phoneWidth.${cells.cols}`) : `${cells.cols}/8`;
-  }
-  /** A stack's name: its first block with words, else its first block's kind. */
-  function stackName(ids) {
-    const blocks = ids.map((id) => byId.get(id)).filter(Boolean);
-    const worded = blocks.find((b) => blockWords(b));
-    return worded ? blockWords(worded) : ed.blockLabel(blocks[0]?.type ?? '');
-  }
+  /** The space between the section's blocks on the phone, its own, else the site's, else the standard, with the text that may shrink where «Force readable text» is off, as its fold says while closed. */
+  const spaceValue = $derived.by(() => {
+    const gap = `${mobileGapOf({ size: { mobileGap: ed.sectionMobileGap ?? undefined } }, ed.siteDraft)} px`;
+    return ed.sectionReadable.phone ? gap : `${gap} · ${ta('phone.readableOff')}`;
+  });
 
   /** The section at work, and the canvas showing it: a pick here makes it the canvas's chosen section and brings it into view. */
   function pickSection(id, reveal = true) {
@@ -116,231 +88,8 @@
   // The panel shows the phone as the owner opens it; one the admin starts with leaves the view it came back to.
   onMount(() => {
     if (!ed.openedAtStart('phone') && ed.viewMode !== 'mobile') ed.deviceId = 'mobile';
-    return () => ed.bridge?.sendLight([]);
   });
-
-  /** While a whole stack moves, its first block: the landed row is the stack's own. */
-  let stackHead = null;
-
-  /** A change from the list written into the section, as one undo step, and the key the moved row stands at after it. */
-  function write(change, movedId) {
-    if (!change || !section) return undefined;
-    ed.changeSectionPhone(section.id, change, 'phone-order');
-    const stored = ed.sections.find((s) => s.id === section.id);
-    const next = stored ? phoneTree(stored.blocks, phoneSetupOf(stored)) : [];
-    for (let i = 0; i < next.length; i += 1) {
-      const node = next[i];
-      if (!node.children) {
-        if (node.id === movedId) return `${i}`;
-        continue;
-      }
-      const j = node.children.findIndex((c) => c.id === movedId);
-      if (j >= 0) return movedId === stackHead ? `${i}` : `${i}.${j}`;
-    }
-    return undefined;
-  }
-
-  /** The landing place of a dragged row, reckoned on the rows as seen, as the Nav panel's tree reckons it: over a row its thirds decide, and the room left of a stack's block is the way out of the stack, its grip column being where a drag usually starts; between rows or below the last the nearest row by its midpoint; each place has one name. */
-  function reckon(list, e, dragKey) {
-    const hit = list.find((r) => e.clientY >= r.rect.top && e.clientY <= r.rect.bottom);
-    let drop = null;
-    if (hit) {
-      drop = navDropAt(tree, dragKey, hit.id, e.clientX - hit.rect.left, (e.clientY - hit.rect.top) / hit.rect.height, DEPTH, 0);
-    } else {
-      const next = list.find((r) => r.rect.top + r.rect.height / 2 > e.clientY);
-      const lastTop = [...list].reverse().find((r) => !r.id.includes('.'));
-      if (next) drop = next.id === dragKey ? null : navDropOrNull(tree, dragKey, { key: next.id, pos: 'before' }, DEPTH);
-      else if (lastTop) drop = lastTop.id === dragKey ? null : navDropOrNull(tree, dragKey, { key: lastTop.id, pos: 'after' }, DEPTH);
-    }
-    drop = canonicalDrop(tree, drop);
-    return drop ? { id: drop.key, pos: drop.pos } : null;
-  }
-
-  /** A row landed: the move settled into the section's data (phone-moves.js phoneLand). */
-  function land(from, at) {
-    const row = rows.find((r) => r.key === from);
-    if (!row || !section) return undefined;
-    stackHead = row.node ? row.ids[0] : null;
-    const key = write(phoneLand(section.blocks, setup, from, { key: at.id, pos: at.pos }), row.ids[0]);
-    stackHead = null;
-    return key;
-  }
-
-  /** A dragged row's card: its name and its place, or a stack's name and its count. */
-  function card(key) {
-    const row = rows.find((r) => r.key === key);
-    if (!row) return null;
-    if (row.node) return { name: stackName(row.ids), detail: ta('phone.blocks', { n: row.ids.length }), icon: ICONS.stack };
-    const block = byId.get(row.id);
-    return block ? { name: nameOf(block), detail: String(numbers.get(row.id) ?? '') } : null;
-  }
-
-  const drag = new RowDrag(land, card, { reckon });
-
-  /** Alt and an arrow: the row moves one place among its neighbours, as the drag would land it, and keeps the focus; a stack's first or last block steps out of it. Enter selects the row's block on the canvas, as a press does. */
-  async function moveKeys(e, row) {
-    if (e.key === 'Enter' && e.target === e.currentTarget) {
-      ed.bridge?.sendSelect(row.ids[0], true);
-      return;
-    }
-    if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
-    e.preventDefault();
-    const dir = e.key === 'ArrowUp' ? -1 : 1;
-    const pos = dir < 0 ? 'before' : 'after';
-    const [i, j] = row.key.split('.').map(Number);
-    let drop = null;
-    if (j === undefined) {
-      if (tree[i + dir]) drop = { key: `${i + dir}`, pos };
-    } else {
-      drop = tree[i].children[j + dir] ? { key: `${i}.${j + dir}`, pos } : { key: `${i}`, pos };
-    }
-    if (!drop || !section) return;
-    stackHead = row.node ? row.ids[0] : null;
-    const key = write(phoneLand(section.blocks, setup, row.key, drop), row.ids[0]);
-    stackHead = null;
-    if (!key) return;
-    await tick();
-    document.querySelector(`.pp-list > [data-drag-id="${CSS.escape(key)}"]`)?.focus();
-    drag.landed(key);
-  }
-
-  /** A block's own place taken away: it reads where the section's order puts it. */
-  function backToRule(id) {
-    if (section) ed.changeSectionPhone(section.id, { places: { [id]: null } }, 'phone-order');
-  }
-
-  /** The owner's stack taken apart: its blocks read where the section's order puts them, its first block keeping its place. */
-  function takeApart(ids) {
-    if (section) ed.changeSectionPhone(section.id, { places: {}, stacks: setup.stacks.filter((stack) => !ids.every((id) => stack.includes(id))) }, 'phone-order');
-  }
-
-  /** A press on a row selects its block on the canvas, or a stack's first block. */
-  function pick(e, row) {
-    if (e.target instanceof Element && e.target.closest('button')) return;
-    ed.bridge?.sendSelect(row.ids[0], true);
-  }
-
-  /** The row's menu while it stands open: the row, where it opened, and the row that opened it, which the focus goes back to. */
-  let rowMenu = $state(null);
-
-  /** A right click on a row, or the menu key with the row in focus: the row's menu at the pointer, or under the row's start from the keys. */
-  function openRowMenu(e, r) {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const keyed = e.clientX === 0 && e.clientY === 0;
-    rowMenu = { row: r, x: keyed ? rect.left + 24 : e.clientX, y: keyed ? rect.bottom : e.clientY, opener: e.currentTarget };
-  }
-
-  /** The row's menu placed at its point, kept inside the window, the focus on its first item that acts, else on the menu, so Escape closes it. */
-  function placeRowMenu(node) {
-    if (!rowMenu) return;
-    const { width, height } = node.getBoundingClientRect();
-    node.style.left = `${Math.max(8, Math.min(rowMenu.x, window.innerWidth - width - 8))}px`;
-    node.style.top = `${Math.max(8, Math.min(rowMenu.y, window.innerHeight - height - 8))}px`;
-    (node.querySelector('button:not(:disabled)') ?? node).focus();
-  }
-
-  /** Up and Down move the focus among the menu's items that act, round from the last to the first. */
-  function rowMenuKeys(e) {
-    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-    e.preventDefault();
-    const items = [...e.currentTarget.querySelectorAll('button:not(:disabled)')];
-    if (!items.length) return;
-    const at = items.indexOf(document.activeElement);
-    items[(at + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
-  }
-
-  /** The row's block taken out of its group, or its whole group undone, as one undo step; the focus goes back to the block's row. */
-  async function ungroup(whole) {
-    const r = rowMenu?.row;
-    rowMenu = null;
-    if (!r || !section) return;
-    const change = phoneUngroup(section.blocks, setup, r.ids[0], whole);
-    if (change) ed.changeSectionPhone(section.id, change, 'phone-order');
-    await tick();
-    const key = rows.find((row) => row.id === r.ids[0])?.key;
-    if (key) document.querySelector(`.pp-order > [data-drag-id="${CSS.escape(key)}"]`)?.focus();
-  }
-
-  /** The row's block pinned on the phone where it stands now, which the phone view measures (preview-edit.js pinOnPhoneAt). */
-  function pinRow() {
-    const r = rowMenu?.row;
-    rowMenu = null;
-    if (r?.id) ed.bridge?.sendPhonePin(r.id);
-  }
-
-  /** The pinned row's block unpinned, back into the phone's order with its cells kept; the focus goes to its row there. */
-  async function unpinRow() {
-    const r = rowMenu?.row;
-    rowMenu = null;
-    if (!r?.id || !section) return;
-    ed.handlePhoneUnpin({ sectionId: section.id, blockId: r.id });
-    await tick();
-    const key = rows.find((row) => row.id === r.id)?.key;
-    if (key) document.querySelector(`.pp-order > [data-drag-id="${CSS.escape(key)}"]`)?.focus();
-  }
-
-  /** The blocks a row stands for lit on the canvas while the mouse is on it. */
-  function light(e, row) {
-    if (e.pointerType === 'mouse') ed.bridge?.sendLight(row.ids);
-  }
-
-  const GRIP = '<svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true"><circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/></svg>';
 </script>
-
-<!-- The slot where a dragged row lands, set in to the level it would stand at -->
-{#snippet slot(level)}<div class="row-drag-slot" style:margin-left="{level * 1.3}rem" {@attach drag.slot} out:slotOut></div>{/snippet}
-
-<!-- A way the row differs from what the section and the desktop give it, as the canvas marks it: a round mark that turns into the way back under the pointer or the keyboard's focus (at once on a screen without a pointer that hovers), and takes the difference back at a press; its name is its tooltip, which says both -->
-{#snippet way(kind, tip, icon, onclick)}
-  <button type="button" class="pp-way pp-way-{kind}" title={ta(tip)} aria-label={ta(tip)} {onclick}>
-    <span class="pp-way-is" aria-hidden="true">{@html icon}</span>
-    <span class="pp-way-back" aria-hidden="true">{@html ICONS.reset}</span>
-  </button>
-{/snippet}
-
-<!-- A block's small picture: a mark of its kind -->
-{#snippet mark(block)}<span class="pp-mark" aria-hidden="true"><i class="po-{phoneMark(block)}"></i></span>{/snippet}
-
-{#snippet row(r)}
-  {@const block = r.id ? byId.get(r.id) : null}
-  <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions, a11y_click_events_have_key_events -->
-  <div class="pp-row" class:pp-stack-head={Boolean(r.node)} class:pp-member={r.level === 1} class:pp-member-last={r.last} class:pp-hovered={r.ids.includes(ed.hoveredBlockId)}
-    role="listitem" tabindex="0" data-drag-id={r.key} data-row-level={r.level} aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
-    class:drop-target={drag.drop?.id === r.key && drag.drop.pos === 'into'}
-    {@attach drag.handle(r.key)} onkeydown={(e) => moveKeys(e, r)} onclick={(e) => pick(e, r)} onpointerenter={(e) => light(e, r)} oncontextmenu={(e) => openRowMenu(e, r)}>
-    <span class="pp-grip" aria-hidden="true">{@html GRIP}</span>
-    {#if r.node}
-      <span class="pp-mark pp-stack-icon" title={r.node.kind === 'column' ? ta('tip.phone.column') : undefined}>{@html ICONS.stack}</span>
-      <span class="pp-name">{stackName(r.ids)}<span class="sr-only">, {ta('phone.blocks', { n: r.ids.length })}</span></span>
-      {#if cellsMark(byId.get(r.ids[0]))}<span class="pp-cells" title={ta('lbl.phoneWidth')}>{cellsMark(byId.get(r.ids[0]))}</span>{/if}
-      <span class="pp-ways">
-        {#if !setup.list && hasPhonePlace(byId.get(r.ids[0]), section.blocks, setup)}
-          {@render way('own', 'tip.phone.placed', PLACED_MARK, () => backToRule(r.ids[0]))}
-        {/if}
-        {#if r.node.kind === 'stack'}
-          {@render way('stack', 'tip.phone.stack', ICONS.stack, () => takeApart(r.ids))}
-        {/if}
-      </span>
-    {:else if block}
-      {@render mark(block)}
-      <span class="pp-num">{numbers.get(r.id)}</span>
-      <span class="pp-name">{nameOf(block)}</span>
-      {#if r.level === 0 && cellsMark(block)}<span class="pp-cells" title={ta('lbl.phoneWidth')}>{cellsMark(block)}</span>{/if}
-      {#if block.hideDesktop}<span class="pp-flag" role="img" title={ta('cap.phoneOnly')} aria-label={ta('cap.phoneOnly')}>{@html CAP_ICONS.phoneOnly}</span>{/if}
-      <span class="pp-ways">
-        <!-- A block alone, or a block of a column the rule reads whole, can hold a place of its own; a block of the owner's stack reads where its stack does -->
-        {#if (r.level === 0 || r.kind === 'column') && !setup.list && hasPhonePlace(block, section.blocks, setup)}
-          {@render way('own', 'tip.phone.placed', PLACED_MARK, () => backToRule(r.id))}
-        {/if}
-        <!-- Words of its own on the phone (ADR-0033), with the way back to the desktop's -->
-        {#if Object.keys(phoneWordsOf(block.type, block.phoneProps)).length}
-          {@render way('own', 'tip.phone.ownWords', WORDS_MARK, () => ed.resetPhoneWords(section.id, block.id))}
-        {/if}
-      </span>
-    {/if}
-  </div>
-{/snippet}
 
 <div class="panel-body">
   {#if !sections.length}
@@ -356,68 +105,43 @@
       <!-- The gear opens the section's menu and closes it at a second press, as the gear on the section's bar does -->
       <span class="pp-gear" data-opens-menu><IconButton icon={ICONS.gear} label={ta('phone.sectionSettings')} onclick={() => ed.bridge?.sendSectionSettings(section.id)} /></span>
     </div>
-    <PhoneSectionRows />
-
-    {#if rows.length}
+    {#if ed.phonePanelPref === 'top'}
       <SubHeading text={ta('lbl.phoneBlocks')} />
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="pp-list pp-order" role="list" aria-label={ta('lbl.phoneBlocks')} {@attach drag.list} onpointerleave={() => ed.bridge?.sendLight([])}>
-        {#each rows as r, n (r.node ? r.node.id : r.id)}
-          {#if (r.level === 0 && n === 0 || r.first) && drag.at(r.key, 'before')}{@render slot(r.level)}{/if}
-          {@render row(r)}
-          {#if r.level === 1 ? drag.at(r.key, 'after') : !r.node && (drag.at(r.key, 'after') || drag.at(r.key, 'into'))}{@render slot(drag.drop?.pos === 'into' ? r.level + 1 : r.level)}{/if}
-          {#if r.last && (drag.at(r.key.split('.')[0], 'after') || drag.at(r.key.split('.')[0], 'into'))}{@render slot(drag.drop?.pos === 'into' ? 1 : 0)}{/if}
-        {/each}
-      </div>
-    {:else}
-      <EmptyState text={ta('phone.noBlocks')} />
+      <PhoneOrder />
     {/if}
+  {/if}
 
-    {#if rowMenu}
-      {@const grouped = rowMenu.row.node || rowMenu.row.level === 1}
-      {@const one = rowMenu.row.id ? byId.get(rowMenu.row.id) : null}
-      <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-      <div class="pp-menu" role="group" tabindex="-1" aria-label={ta('phone.rowMenu')} use:dismiss={{ close: () => { rowMenu = null; }, opener: rowMenu.opener }} transition:menuMotion {@attach placeRowMenu} onkeydown={rowMenuKeys}>
-        <button type="button" disabled={rowMenu.row.level !== 1} onclick={() => ungroup(false)}>{ta('phone.takeOut')}</button>
-        <button type="button" disabled={!grouped} onclick={() => ungroup(true)}>{ta('phone.ungroup')}</button>
-        {#if rowMenu.row.pinned}
-          <button type="button" onclick={unpinRow}>{ta('phone.unpin')}</button>
-        {:else}
-          <!-- Pinned where it stands, which only the phone view measures -->
-          <button type="button" disabled={!one || one.hideMobile || ed.viewMode !== 'mobile'} onclick={pinRow}>{ta('phone.pin')}</button>
-        {/if}
-      </div>
+  <!-- The phone settings of the site's other panels, drawn by the same rows as there, so a change shows in both (0.7.3.24): the menu on the phone from the Nav panel, and the space between blocks for every section from the Site panel -->
+  <SubHeading text={ta('phone.wholeSite')} />
+  <Fold id="nav-phone" surface="phone" title={ta('phone.navGroup')} tip={ta('tip.nav.mobileSame')} value={navFold.mobileValue()} group={navFold.phoneGroup()}>
+    <NavMobile />
+    {#if ed.siteDraft.nav?.logo?.show !== false && (ed.siteDraft.nav?.logo?.type ?? 'text') !== 'text'}
+      <NavLogoPhone label={ta('phone.logoHeight')} />
     {/if}
-
-    {#if pinned.length}
-      <SubHeading text={ta('lbl.phonePinned')} />
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="pp-list" role="list" aria-label={ta('lbl.phonePinned')} onpointerleave={() => ed.bridge?.sendLight([])}>
-        {#each pinned as block (block.id)}
-          <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-          <div class="pp-row pp-still" class:pp-hovered={block.id === ed.hoveredBlockId} role="listitem" onclick={(e) => pick(e, { ids: [block.id] })} onpointerenter={(e) => light(e, { ids: [block.id] })}
-            oncontextmenu={(e) => openRowMenu(e, { id: block.id, ids: [block.id], level: 0, pinned: true })}>
-            {@render mark(block)}
-            <span class="pp-num">{numbers.get(block.id)}</span>
-            <span class="pp-name">{nameOf(block)}</span>
-            <IconButton size="sm" quiet icon={ICONS.unpin} label={ta('phone.unpin')} onclick={() => ed.handlePhoneUnpin({ sectionId: section.id, blockId: block.id })} />
-          </div>
-        {/each}
-      </div>
+    {#if ed.siteDraft.nav?.launcher?.show === true}
+      <NavLauncherPhone />
     {/if}
+  </Fold>
+  <Fold id="site-phone" surface="phone" title={ta('phone.siteGap')} value={`${mobileGapOf(null, ed.siteDraft)} px`} group={gapGroup()}>
+    <SitePhoneGap />
+  </Fold>
 
-    {#if hidden.length}
-      <SubHeading text={ta('lbl.phoneHidden')} />
-      <div class="pp-list" role="list" aria-label={ta('lbl.phoneHidden')}>
-        {#each hidden as block (block.id)}
-          <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-          <div class="pp-row pp-still" class:pp-hovered={block.id === ed.hoveredBlockId} role="listitem" onclick={(e) => pick(e, { ids: [block.id] })}>
-            {@render mark(block)}
-            <span class="pp-name">{nameOf(block)}</span>
-            <IconButton size="sm" quiet icon={ICONS.eye} label={ta('tip.phone.show')} onclick={() => ed.handleBlockFlag({ sectionId: section.id, blockId: block.id, hideMobile: false })} />
-          </div>
-        {/each}
-      </div>
+  {#if section}
+    <!-- The section's own settings for the phone, one part per fold, the order's fold right above the list it sorts -->
+    <SubHeading text={ta('phone.thisSection')} />
+    <Fold id="section-space" surface="phone" title={ta('phone.spaceText')} value={spaceValue}>
+      <PhoneSectionRows part="space" />
+    </Fold>
+    <Fold id="section-layout" surface="phone" title={ta('lbl.phoneLayout')} tip={ta('tip.phoneLayout')}>
+      <PhoneSectionRows part="layout" />
+    </Fold>
+    <Fold id="section-order" surface="phone" title={ta('lbl.phoneOrder')} tip={ta('tip.phoneOrder')} value={ta(`opt.phoneOrder.${ed.sectionPhoneOrder}`)}>
+      <PhoneSectionRows part="order" />
+    </Fold>
+    {#if ed.phonePanelPref === 'fold'}
+      <Fold id="order" surface="phone" title={ta('lbl.phoneBlocks')} value={ta('phone.blocks', { n: section.blocks.length })} defaultOpen>
+        <PhoneOrder />
+      </Fold>
     {/if}
   {/if}
 </div>
@@ -445,52 +169,5 @@
     align-self: center;
     font-size: 0.85rem;
     font-weight: 600;
-  }
-
-  /* The row's menu at the pointer, over the panel, on the surface of the admin's other menus */
-  .pp-menu {
-    position: fixed;
-    z-index: 100003;
-    display: grid;
-    gap: 2px;
-    width: max-content;
-    max-width: min(17rem, 80vw);
-    padding: 6px;
-    font-size: 0.85rem;
-    color: var(--urd-color-text, #e8eaf0);
-    background: var(--urd-color-bg, #0f1218);
-    border: 1px solid rgb(255 255 255 / 16%);
-    border-radius: 10px;
-    box-shadow: 0 14px 40px rgb(0 0 0 / 55%);
-  }
-
-  .pp-menu:focus {
-    outline: none;
-  }
-
-  .pp-menu > button {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    min-height: 2rem;
-    padding: 0.4rem 0.6rem;
-    font: inherit;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
-    background: transparent;
-    border: 0;
-    border-radius: 6px;
-  }
-
-  .pp-menu > button:hover:not(:disabled),
-  .pp-menu > button:focus-visible {
-    background: rgb(255 255 255 / 8%);
-    outline: none;
-  }
-
-  .pp-menu > button:disabled {
-    cursor: default;
-    opacity: 0.4;
   }
 </style>

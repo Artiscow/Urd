@@ -2,6 +2,27 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.24): the Phone panel's folds, and the page's block order in a column beside the phone
+
+- [ ] Open the Phone panel: under the section and its gear stand «The whole site» with «The menu» and «Space between blocks», and «This section» with «Space and text», «Phone layout» and «Order on the phone», each fold but «Phone layout» saying its value while closed
+- [ ] Change the menu on the phone in «The menu» and the space in «Space between blocks»: the Nav panel's «Phone» fold and the Site panel's width fold show the same values, and a change made there shows in the Phone panel
+- [ ] With a picture as the logo, and with the launcher shown, «The menu» also holds the logo's height on the phone and the launcher's settings for the phone
+- [ ] With nothing chosen in Urd settings, a column «Blocks in their order» stands at the right of the preview while the Phone panel is open, in the phone view and the desktop view, and goes when another panel opens
+- [ ] Press » in the column: it slides to a slim tab at the edge; press the tab: it opens again; reload: it stands as it was left
+- [ ] The column lists every section of the page under a heading, all open at first; the arrow on a heading folds its section and shows its count of blocks, and the button at the column's top folds or opens them all
+- [ ] Press a heading: it becomes the section at work, the page scrolls to it, and the panel's section and its folds follow; its gear opens the section's settings, and the other headings show their gear under the pointer
+- [ ] Select a block on the page in a folded section far down the list: its section opens, its row is marked (filled in «Table» and «Flat», ringed in «Boxes») and comes into view once the section stands open; scroll the page: the column stays where it is
+- [ ] Scroll a long column: the heading of the section in sight stays at its top; a long section name ends in … on one line, its tooltip saying it whole
+- [ ] A section that needs a phone review carries the phone mark on its heading, also while folded, and loses it when the review is done
+- [ ] Drag a row within its section, and move it with Alt and the arrow keys: it moves as before, in any section; a row released over another section's rows lands where its mark last stood in its own section, never in the other
+- [ ] Pin a block and hide another on phones: they stand after their section's order with no headings, the hidden one dimmed, each with its way back
+- [ ] In Urd settings under «Where things open», «Column look» draws the column as «Table» (bands from edge to edge, the rows as lines), «Flat» or «Boxes», and the row goes while «Phone panel» is on another choice
+- [ ] Choose «Order first»: the column goes, and the blocks of the section at work stand first in the panel under the section; choose «Order in a fold»: they stand in a fold under the section's settings, open at first
+- [ ] With the column open and «Bars in the phone view» on «Beside the phone», open a block's settings: the menu and the bars' menus stand clear of the column
+- [ ] With the column open in the desktop view on a window about 1100 px wide, open a section's settings: the menu stands in one column, clear of the order's column
+- [ ] With a picture as the logo and the launcher shown, change the logo's height on the phone and «Shortcuts shown» in the Phone panel's «The menu»: the launcher's rows show their reset, and the fold's reset takes all of them back
+- [ ] Select a section in the phone view, reload the admin and open the Phone panel: «Order on the phone» and the other folds show that section's own values at once
+
 ### Test batch (0.7.3.19.3): the element menu beside the phone, and where the phone view's bars stand
 
 - [ ] In the phone view with a panel open on a wide window, open a block's settings from its bar, and a section's from its gear: the menu stands beside the phone in one column, level with the block or the section, covering none of the page

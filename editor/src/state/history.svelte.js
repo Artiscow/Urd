@@ -261,7 +261,7 @@ function restoreView(view) {
     bridge?.sendSelect(view.blockId);
     if (view.caret) bridge?.sendCaret(view.caret.blockId ?? view.blockId, view.caret.offset);
   } else if (view.sectionId) {
-    pageState.activeSectionId = view.sectionId;
+    pageState.onSelectSection({ sectionId: view.sectionId });
     bridge?.sendActiveSection(view.sectionId);
   }
 }

@@ -7,6 +7,7 @@ import { TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_SIZES, TOOLBAR_GEARS, TOOLBAR_PHO
 import { relativeLuminance, contrastRatio } from '$engine/theme.js';
 import { liftSiteFile, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
 import { createDraftStore } from '../lib/draftStore.js';
+import { PHONE_PANEL_LAYOUTS, PHONE_COLUMN_LOOKS } from '../lib/phone-panel.js';
 import { tick } from 'svelte';
 import { ICONS } from '../lib/icons.js';
 import { opensShortcuts, togglesGrid } from '../lib/shortcuts.js';
@@ -762,6 +763,18 @@ function setCsvPreview(v) {
 
 const CSV_PREVIEW_OPTIONS = $derived(CSV_PREVIEWS.map((id) => [id, ta(`opt.csvPreview.${id}`)]));
 
+/** Where the Phone panel's blocks in their order stand (lib/phone-panel.js), and whether its column at the stage's right edge stands open or folded to a tab there, which the owner's last fold keeps. */
+let phonePanelPref = $state(storedOf('urd-phone-panel', PHONE_PANEL_LAYOUTS));
+const setPhonePanel = (v) => { phonePanelPref = keepOf('urd-phone-panel', PHONE_PANEL_LAYOUTS, v); };
+const PHONE_PANEL_OPTIONS = $derived(PHONE_PANEL_LAYOUTS.map((id) => [id, ta(`opt.phonePanel.${id}`)]));
+/** How the column at the stage's right edge is drawn (lib/phone-panel.js). */
+let phoneColumnPref = $state(storedOf('urd-phone-column', PHONE_COLUMN_LOOKS));
+const setPhoneColumn = (v) => { phoneColumnPref = keepOf('urd-phone-column', PHONE_COLUMN_LOOKS, v); };
+const PHONE_COLUMN_OPTIONS = $derived(PHONE_COLUMN_LOOKS.map((id) => [id, ta(`opt.phoneColumn.${id}`)]));
+const PHONE_DOCK_STATES = ['open', 'folded'];
+let phoneDockOpen = $state(storedOf('urd-phone-dock', PHONE_DOCK_STATES) === 'open');
+const setPhoneDockOpen = (open) => { phoneDockOpen = keepOf('urd-phone-dock', PHONE_DOCK_STATES, open ? 'open' : 'folded') === 'open'; };
+
 const SETTINGS_PLACE_OPTIONS = $derived(SETTINGS_PLACES.map((id) => [id, ta(`opt.settingsPlace.${id}`)]));
 
 const SETTINGS_PICTURES_OPTIONS = $derived([['pictures', ta('opt.settingsPictures.pictures')], ['words', ta('opt.settingsPictures.words')]]);
@@ -1266,6 +1279,14 @@ export const shellState = {
   get PAGE_SETTINGS_OPTIONS() { return PAGE_SETTINGS_OPTIONS; },
   setCsvPreview,
   get CSV_PREVIEW_OPTIONS() { return CSV_PREVIEW_OPTIONS; },
+  get phonePanelPref() { return phonePanelPref; },
+  setPhonePanel,
+  get PHONE_PANEL_OPTIONS() { return PHONE_PANEL_OPTIONS; },
+  get phoneColumnPref() { return phoneColumnPref; },
+  setPhoneColumn,
+  get PHONE_COLUMN_OPTIONS() { return PHONE_COLUMN_OPTIONS; },
+  get phoneDockOpen() { return phoneDockOpen; },
+  setPhoneDockOpen,
   get settingsPlace() { return settingsPlace; },
   setSettingsPlace,
   get settingsPictures() { return settingsPictures; },
