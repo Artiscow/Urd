@@ -3530,6 +3530,12 @@
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 70%, transparent);
   }
 
+  .po-strip .po-space {
+    height: 6px;
+    background: none;
+    border: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
+  }
+
   .po-strip .po-btn {
     width: 40%;
     height: 5px;
@@ -3568,6 +3574,12 @@
   .pl-sketch .po-pic {
     height: 11px;
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 70%, transparent);
+  }
+
+  .pl-sketch .po-space {
+    height: 6px;
+    background: none;
+    border: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
   }
 
   .pl-sketch .po-btn {
@@ -3713,6 +3725,12 @@
   .pp-mark .po-pic {
     height: 0.8rem;
     background: color-mix(in srgb, var(--urd-color-accent) 70%, transparent);
+  }
+
+  .pp-mark .po-space {
+    height: 6px;
+    background: none;
+    border: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
   }
 
   .pp-mark .po-btn {

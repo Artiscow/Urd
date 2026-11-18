@@ -179,6 +179,8 @@ function blockShapes(type, x, y, w, h, props) {
     return parts.join('');
   }
   if (type === 'shape') return shapeShapes(x, y, w, h, props);
+  // A space draws nothing on the page, and nothing here.
+  if (type === 'spacer') return '';
   if (type === 'button') {
     return rect(x, y, w, h, token('accent', FALLBACK_ACCENT), ` rx="${r1(Math.min(h / 2, 4))}"`);
   }

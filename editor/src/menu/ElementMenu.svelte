@@ -28,7 +28,7 @@
   import { GRID_VIEWS, galleryView as blockGalleryView } from '$engine/gallery-model.js';
   import { blockDesigns, phoneDesignName, phoneDesignOf, pictureList, calendarDesignSource, SAME_DESIGN } from '../lib/design-sources.js';
   import { ta } from '$engine/i18n.js';
-  import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, blockSize, sizeRange } from '$engine/push-model.js';
+  import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, DRAWS_NOTHING, blockSize, sizeRange } from '$engine/push-model.js';
   import { ribbonMotions, colorTokens } from './options.js';
   import { menu, quickChoice, setQuickChoice, chooseArea, MENU_AREAS } from './state.svelte.js';
   import { quickIds, choiceChanged, NO_CHOICE } from '../lib/quick-row.js';
@@ -117,12 +117,15 @@
       items.push({ id: 'subscribe', label: ta('calendar.showSubscribe'), tip: ta('tip.calendar.subscribe'), kind: 'switch', value: b.props.showSubscribe !== false, set: (on) => setBlockProp('showSubscribe', on),
         own: b.props.showSubscribe !== false, reset: () => setBlockProp('showSubscribe', false) });
     }
-    const byWidth = FIT_BY_WIDTH.has(b.type);
-    items.push({ id: 'fit', label: ta('lbl.fit'), tip: ta('tip.fit'), more: FitMin, kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
-      own: b.fit === 'shrink' || b.fit === 'both', reset: () => setBlockFit('wrap'),
-      options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
-        : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
-      set: (v) => setBlockFit(v) });
+    // A block that draws nothing has no content to meet a narrower screen.
+    if (!DRAWS_NOTHING.has(b.type)) {
+      const byWidth = FIT_BY_WIDTH.has(b.type);
+      items.push({ id: 'fit', label: ta('lbl.fit'), tip: ta('tip.fit'), more: FitMin, kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
+        own: b.fit === 'shrink' || b.fit === 'both', reset: () => setBlockFit('wrap'),
+        options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
+          : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
+        set: (v) => setBlockFit(v) });
+    }
     const hidden0 = ed.blockStarts(b.type, 'hideMobile');
     items.push({ id: 'phone', label: ta('lbl.hideMobile'), tip: ta('tip.hideMobile'), kind: 'switch', value: Boolean(b.hideMobile), set: (on) => setBlockHideMobile(on),
       own: Boolean(b.hideMobile) !== hidden0, reset: () => setBlockHideMobile(hidden0) });

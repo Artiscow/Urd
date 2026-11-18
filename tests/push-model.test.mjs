@@ -94,7 +94,7 @@ test('clampFitMin: a share of the design size between 0.01 and 1, default 0.6', 
 });
 
 test('blockSize: the stored size inside the sizes the block may take, 1 for anything else and for the frame-sized types', () => {
-  assert.deepEqual([...SIZE_BY_FRAME].sort(), ['icon', 'image', 'map', 'shape', 'video']);
+  assert.deepEqual([...SIZE_BY_FRAME].sort(), ['icon', 'image', 'map', 'shape', 'spacer', 'video']);
   assert.equal(blockSize({ type: 'text' }), 1);
   assert.equal(blockSize({ type: 'text', size: 0.75 }), 0.75);
   assert.equal(blockSize({ type: 'calendar', size: 0.1 }), SIZE.min);

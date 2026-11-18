@@ -144,6 +144,8 @@ const AREAS = [
  * @returns {Array<{ only: string|null, labelKey: string, area: string, icon: string, design?: boolean }>}
  */
 export function barTools(type, { designs = false, block = null } = {}) {
+  // A space draws nothing: its bar holds its placement alone.
+  if (type === 'spacer') return [{ only: 'area:placement', labelKey: 'props.tabPlacement', area: 'placement', icon: 'arrange' }];
   const groups = (BAR_GROUPS[type] ?? AREAS).filter((g) => !g.when || g.when(block ?? { props: {} }));
   const content = groups.filter((g) => g.area === 'content');
   const style = groups.filter((g) => g.area === 'style');

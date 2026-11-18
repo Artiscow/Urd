@@ -76,6 +76,7 @@ test('phoneLayoutSketch: a preset drawn small, a run of units in the same cells 
     { col: 1, cols: 8, marks: ['head'] },
   ]);
   assert.equal(phoneMark({ type: 'gallery' }), 'pic');
+  assert.equal(phoneMark({ type: 'spacer' }), 'space');
 });
 
 test('phoneLayoutChange: a pair that cannot be read the other way round stands side by side as it reads, and a press that changes nothing is none', () => {

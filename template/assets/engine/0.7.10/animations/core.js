@@ -175,9 +175,9 @@ function applyStagger(host, props, ctx) {
   // own (render.js marks those `data-urd-entrance`); a pointer effect is no
   // entrance, so a block that lifts on pointer still comes in with the wave.
   // Decor blocks are excluded (as in the mobile stacking): they are ornament
-  // and must not delay the content wave.
+  // and must not delay the content wave, nor must a space, which draws nothing.
   const targets = [...host.querySelectorAll('.urd-block')]
-    .filter((el) => !el.dataset.urdEntrance && !el.dataset.decor);
+    .filter((el) => !el.dataset.urdEntrance && !el.dataset.decor && !el.classList.contains('urd-spacer'));
   if (!targets.length) return;
   const delays = props.pattern === 'columns'
     ? staggerColumnDelays(targets.map((el) => el.offsetLeft), step)

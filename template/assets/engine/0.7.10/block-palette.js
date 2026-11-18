@@ -39,6 +39,7 @@ export const PALETTE_KINDS = {
   'cart': { labelKey: 'blocks.cart', tipKey: 'tip.blocks.cart', picture: draw('<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6L20.5 8H7"/>') },
   'checkout': { labelKey: 'blocks.checkout', tipKey: 'tip.blocks.checkout', picture: draw('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>') },
   'ribbon': { labelKey: 'blocks.ribbon', tipKey: 'tip.blocks.ribbon', picture: draw('<path d="M2 9h20v6H2z"/><path d="M5 12h4M15 12h4"/><circle cx="12" cy="12" r=".7"/>') },
+  'spacer': { labelKey: 'blocks.spacer', tipKey: 'tip.blocks.spacer', picture: draw('<path d="M4 4h16M4 20h16"/><path d="M12 8v8M9.5 10.5L12 8l2.5 2.5M9.5 13.5L12 16l2.5-2.5"/>') },
   'shape-line': { labelKey: 'shape.line', picture: draw('<path d="M4 20L20 4"/>') },
   'shape-arrow': { labelKey: 'shape.arrow', picture: draw('<path d="M4 20L20 4M11 4h9v9"/>') },
   'shape-circle': { labelKey: 'shape.circle', picture: draw('<circle cx="12" cy="12" r="8"/>') },
@@ -54,7 +55,7 @@ export const PALETTE_GROUPS = [
   { id: 'events', labelKey: 'blockGroup.events', icon: 'calendar', kinds: ['calendar', 'calendar-designs', 'map', 'countdown'] },
   { id: 'contact', labelKey: 'blockGroup.contact', icon: 'form', kinds: ['form', 'contact', 'share', 'privacy', 'terms'] },
   { id: 'shop', labelKey: 'blockGroup.shop', icon: 'cart', kinds: ['product', 'cart', 'checkout'] },
-  { id: 'decor', labelKey: 'blockGroup.decor', icon: 'shape-circle', kinds: ['ribbon', 'shape-line', 'shape-arrow', 'shape-circle', 'shape-rect', 'shape-triangle'] },
+  { id: 'decor', labelKey: 'blockGroup.decor', icon: 'shape-circle', kinds: ['ribbon', 'shape-line', 'shape-arrow', 'shape-circle', 'shape-rect', 'shape-triangle', 'spacer'] },
 ];
 
 /**

@@ -19,11 +19,12 @@ const LEFT = { col: 1, cols: 4 };
 const RIGHT = { col: 5, cols: 4 };
 
 /**
- * A block's mark in the pictures of the phone's order and layout: a picture, a heading, a button, or text.
+ * A block's mark in the pictures of the phone's order and layout: a picture, a heading, a button, a space, or text.
  * @param {{type: string, props?: object}} block
- * @returns {'pic'|'btn'|'head'|'text'}
+ * @returns {'pic'|'btn'|'head'|'space'|'text'}
  */
 export function phoneMark(block) {
+  if (block.type === 'spacer') return 'space';
   if (['image', 'gallery', 'video', 'map', 'calendar', 'collection', 'product'].includes(block.type)) return 'pic';
   if (block.type === 'button') return 'btn';
   return /^\s*<h[1-6]/i.test(String(block.props?.html ?? '')) ? 'head' : 'text';

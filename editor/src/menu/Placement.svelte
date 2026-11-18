@@ -17,7 +17,7 @@
   import SizeBounds from './SizeBounds.svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
-  import { FIT_BY_WIDTH, FOLLOWS_CONTENT, SIZE, SIZE_BY_FRAME, blockSize, sizeRange } from '$engine/push-model.js';
+  import { FIT_BY_WIDTH, FOLLOWS_CONTENT, SIZE, SIZE_BY_FRAME, DRAWS_NOTHING, blockSize, sizeRange } from '$engine/push-model.js';
   import { DOCK_OPTIONS } from './options.js';
   import AnchorField from '../lib/AnchorField.svelte';
   import { blockWords } from '$engine/anchor-model.js';
@@ -269,7 +269,9 @@
 {#if !SIZE_BY_FRAME.has(selectedBlock.type)}
   {@render menuSize()}
 {/if}
-{@render menuFit()}
+{#if !DRAWS_NOTHING.has(selectedBlock.type)}
+  {@render menuFit()}
+{/if}
 {#snippet menuTarget()}
   <!-- The block's name for links, typed or suggested from its own words -->
   {#key selectedBlock.blockId}

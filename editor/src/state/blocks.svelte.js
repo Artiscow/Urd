@@ -24,7 +24,7 @@ import { shopOn } from '$engine/block-palette.js';
 // bar's typography row).
 
 /** Names of the block types in the panel. */
-const BLOCK_LABELS = $derived({ text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), ribbon: ta('blocks.ribbon'), table: ta('blocks.table'), share: ta('blocks.share'), contact: ta('blocks.contact'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar'), privacy: ta('blocks.privacy'), terms: ta('blocks.terms') });
+const BLOCK_LABELS = $derived({ text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), spacer: ta('blocks.spacer'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), ribbon: ta('blocks.ribbon'), table: ta('blocks.table'), share: ta('blocks.share'), contact: ta('blocks.contact'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar'), privacy: ta('blocks.privacy'), terms: ta('blocks.terms') });
 
 /** The block palette: a new block ready to be dragged where it belongs. */
 /** w in percent of the section width, h in px (physical units). The wide
@@ -40,6 +40,7 @@ const BLOCK_DEFAULTS = $derived({
   'shape-circle': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
   'shape-rect': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 20, h: 110 },
   'shape-triangle': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
+  spacer: { type: 'spacer', props: {}, w: 88.89, h: 48 },
   image: { type: 'image', props: { src: '', alt: '', fit: 'cover', radius: 'md', href: null }, w: 30, h: 220 },
   video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
   map: { type: 'map', props: { location: '', zoom: 15 }, w: 60, h: 360 },

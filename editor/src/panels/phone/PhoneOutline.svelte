@@ -1,10 +1,10 @@
 <script>
   /* The page as it reads on the phone, in the Phone panel's column at the stage's right edge (PhoneDock.svelte): every section under a heading of its own, with its blocks in their order (PhoneOrder.svelte), as an image editor lists its layers in their groups.
-     Every section stands open at first; the arrow on a heading folds its section, the fold kept for the session (lib/folds.svelte.js), and the button in the column's head folds or opens them all.
-     A press on a heading makes its section the one at work, as the panel's picker does, and brings it into view on the canvas; that heading is marked, ringed in boxes and filled in the two other looks, and carries the gear that opens the section's settings, which the other headings show under the pointer, and always on a screen without one. A section flagged for a look on the phone carries the mark the top bar counts, also while folded.
+     Every section stands open at first, its arrow saying so; a fold is kept for the session (lib/folds.svelte.js), and the button in the column's head folds or opens them all.
+     A press on a heading folds or opens its section, and the mouse on a heading lights its section on the canvas. The heading of the section at work, picked on the canvas or in the panel, is marked, ringed in boxes and filled in the two other looks, and carries the gear that opens the section's settings, which the other headings show under the pointer, and always on a screen without one. A section flagged for a look on the phone carries the mark the top bar counts, also while folded.
      Urd settings «Column look» (lib/phone-panel.js) draws it as a table, the standard, flat, or in boxes; the looks differ in how the headings and the rows are drawn, never in what they do.
      The column follows what is selected, never the page's scroll: a block selected on the canvas opens its section and brings its row into view, and a section picked there brings its heading into view. The heading of the section in sight stays at the column's top while its rows scroll. */
-  import { getContext, tick, untrack } from 'svelte';
+  import { getContext, onDestroy, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sectionWords } from '$engine/anchor-model.js';
   import { folds } from '../../lib/folds.svelte.js';
@@ -38,12 +38,26 @@
     for (const s of sections) folds.set(SURFACE, s.id, open);
   }
 
-  /** The section at work, and the canvas showing it, as the panel's picker makes it. */
-  function pick(id) {
-    ed.onSelectSection({ sectionId: id });
-    ed.bridge?.sendActiveSection(id);
-    ed.bridge?.sendScrollSection(id);
+  /** The heading under the mouse, whose section stands lit on the canvas. */
+  let lit = null;
+  /** The section a heading stands for, lit on the canvas while the mouse is on the heading. */
+  function light(e, id) {
+    if (e.pointerType !== 'mouse') return;
+    lit = id;
+    ed.bridge?.sendLight([], id);
   }
+  function unlight() {
+    lit = null;
+    ed.bridge?.sendLight([]);
+  }
+  /** A heading pressed: its section folds or opens, and its light, which the folded list's going takes away, stands again while the mouse stays. */
+  async function toggle(id) {
+    folds.set(SURFACE, id, !isOpen(id));
+    await tick();
+    if (lit === id) ed.bridge?.sendLight([], id);
+  }
+  // The light goes with the column.
+  onDestroy(() => ed.bridge?.sendLight([]));
 
   let scroller = $state(null);
   /** The block selected on the canvas and the section it stands in, by their ids alone, so a change to the block's own settings moves nothing here. */
@@ -94,9 +108,10 @@
     {@const open = isOpen(s.id)}
     <!-- A section's heading and rows in a box of their own, which the heading sticks inside while its rows scroll -->
     <div class="pc-group">
-    <div class="pc-sec" class:pc-at={s.id === atWork} data-section-head={s.id}>
-      <button type="button" class="pc-chev" aria-expanded={open} aria-label={`${ta('diff.section', { n: s.n })}: ${ta('lbl.phoneBlocks')}`} onclick={() => folds.set(SURFACE, s.id, !open)}>{@html open ? ICONS.chevronDown : ICONS.chevronRight}</button>
-      <button type="button" class="pc-name" title={s.words || undefined} aria-current={s.id === atWork ? 'true' : undefined} onclick={() => pick(s.id)}>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="pc-sec" class:pc-at={s.id === atWork} data-section-head={s.id} onpointerenter={(e) => light(e, s.id)} onpointerleave={unlight}>
+      <button type="button" class="pc-name" title={s.words || undefined} aria-expanded={open} aria-current={s.id === atWork ? 'true' : undefined} onclick={() => toggle(s.id)}>
+        <span class="pc-chev" aria-hidden="true">{@html open ? ICONS.chevronDown : ICONS.chevronRight}</span>
         {#if s.words}<span class="pc-n">{s.n}</span><span class="pc-words">{s.words}</span>{:else}<span class="pc-words">{ta('diff.section', { n: s.n })}</span>{/if}
       </button>
       {#if !open}<span class="pc-count" aria-hidden="true">{s.count}</span><span class="sr-only">{ta('phone.blocks', { n: s.count })}</span>{/if}
@@ -191,24 +206,14 @@
     border-color: var(--urd-color-accent);
   }
 
+  /* The arrow says whether the section stands open; a press on the heading's name, its arrow and number included, folds or opens it */
   .pc-chev {
     display: grid;
     flex: none;
     place-items: center;
     width: 1.3rem;
-    height: 1.6rem;
-    padding: 0;
-    color: inherit;
-    cursor: pointer;
-    background: transparent;
-    border: 0;
-    border-radius: 5px;
     opacity: 0.6;
-  }
-
-  .pc-chev:hover,
-  .pc-chev:focus-visible {
-    opacity: 1;
+    pointer-events: none;
   }
 
   .pc-name {
@@ -230,10 +235,41 @@
     border-radius: 5px;
   }
 
-  .pc-name:focus-visible,
-  .pc-chev:focus-visible {
+  /* The name draws no box of its own, nor the admin's button fill under the pointer: the pointer and the keyboard's focus light the whole heading, evenly from edge to edge (the ::before below) */
+  .pc-sec > .pc-name:not(:disabled),
+  .pc-sec > .pc-name:hover:not(:disabled) {
+    align-self: stretch;
+    align-items: center;
+    background: transparent;
+    border-color: transparent;
+    outline: none;
+  }
+
+  .pc-sec::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+  }
+
+  .pc-sec:has(> .pc-name:hover)::before {
+    opacity: 0.06;
+  }
+
+  .pc-sec:has(> .pc-name:focus-visible) {
     outline: 2px solid var(--urd-color-accent);
     outline-offset: -2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pc-sec::before {
+      transition: none;
+    }
   }
 
   .pc-n,

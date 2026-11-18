@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.26.2 - A Space block, and the order column's headings that fold and light their section - 18 November 2026
+
+- Room between two blocks of their own on the phone could only be made for the whole section (BACKLOG 0.7.3.26). A «Space» block makes it: an empty block as tall as its frame or its own phone height, drawing nothing on the published page and hidden from assistive technology, in the editor a hatched box with its height (`blocks/spacer.js`, the Blocks panel's decoration group); its menu leaves out the narrow-screen choice and motion, which have nothing to act on (`DRAWS_NOTHING` in push-model.js).
+- A press on a heading in the order's column made its section the one at work and scrolled the page to it. It folds or opens the section, and the mouse on a heading lights its section on the canvas with a frame and a tint (`urd-light` with `sectionId`, base.css).
+- The heading's own button drew the admin's button fill under the pointer, a box shorter than the heading and off its words. The whole heading is lit evenly instead.
+- SCHEMA.md names the block type, the guides and the comparison's spacer rows describe the block, ARCHITECTURE.md the headings, and the HTML shells preload the block's module and carry the stylesheet's new stamp.
+
+The independent review before the commit found these:
+
+1. The Space block was hidden from assistive technology in the editor too, where it holds its bar and handles. It is hidden on the published page alone.
+2. The block's bar on the canvas still offered Motion, and an empty Content and Style. Its bar holds its placement alone.
+3. A press on a heading took its section's light away while the mouse stayed on it, the folded list's going clearing the canvas's light; and the light could stay when the column went. The light stands again after the press, and goes with the column.
+4. SCHEMA.md did not name the block type. It does.
+5. «Change layout» took a Space block for a picture, and a section's entrance wave gave it a step of its own. Both leave it out.
+6. The phone's order and layout pictures drew it as text, and the section thumbnails as a card. The pictures draw it as a dashed space, the thumbnails not at all.
+7. Three comments told the heading's old press and stood above the wrong rule. They are corrected.
+
 ### 0.7.3.26.1 - Room above and below a section's blocks on the phone, the wheel over the stage, and the width handle beside the phone - 18 November 2026
 
 - A section on the phone stood as tall as its blocks with a fixed 24 px above and below them, and the phone view had no seam to drag (BACKLOG 0.7.3.26). Each section has a room above its first block and below its last on the phone (`size.mobilePadTop`, `size.mobilePadBottom`, `phoneRoomOf` in migrate.js), dragged at the phone view's seams in steps of 4 px (`phoneSeam` in preview-edit.js, `urd-section-phone-room`) and set as «Room above the blocks» and «Room below the blocks» in the section's phone settings; the desktop keeps its height.

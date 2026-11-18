@@ -20,6 +20,7 @@ import { textBlock, termsBlock } from './blocks/text.js';
 import { imageBlock } from './blocks/image.js';
 import { buttonBlock } from './blocks/button.js';
 import { shapeBlock } from './blocks/shape.js';
+import { spacerBlock } from './blocks/spacer.js';
 import { videoBlock } from './blocks/video.js';
 import { iconBlock } from './blocks/icon.js';
 import { collectionBlock } from './blocks/collection.js';
@@ -99,6 +100,7 @@ function registerCore() {
   Urd.blocks.define('image', imageBlock);
   Urd.blocks.define('button', buttonBlock);
   Urd.blocks.define('shape', shapeBlock);
+  Urd.blocks.define('spacer', spacerBlock);
   Urd.blocks.define('video', videoBlock);
   Urd.blocks.define('icon', iconBlock);
   Urd.blocks.define('collection', collectionBlock);
@@ -710,7 +712,7 @@ function enablePreview(state, opts) {
       window.UrdPreviewEdit?.pinOnPhoneAt?.(msg.blockId);
     } else if (msg?.type === 'urd-light' && Array.isArray(msg.ids)) {
       // A row under the pointer in the editor's lists (the Phone panel's order) lights its block, or its stack's blocks.
-      window.UrdPreviewEdit?.lightBlocks?.(msg.ids);
+      window.UrdPreviewEdit?.lightBlocks?.(msg.ids, msg.sectionId);
     } else if (msg?.type === 'urd-plugins') {
       // The editor's plugin draft: load the enabled plugins (the files are
       // already in the repo) and rerender, so plugins work in the preview

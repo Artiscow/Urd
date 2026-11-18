@@ -5,8 +5,8 @@
  */
 import { NARROW_PX, PHONE_DESIGNS } from './push-model.js';
 
-/** The kinds whose box is what they draw, a picture, a film, a map, a shape, a grid of pictures or cards, a moving band, a form and its fields, a player, which keep the size they are added at. */
-export const KEEPS_ADDED_SIZE = new Set(['image', 'video', 'map', 'shape', 'gallery', 'collection', 'product', 'ribbon', 'form', 'checkout', 'audio']);
+/** The kinds whose box is what they draw, a picture, a film, a map, a shape, a grid of pictures or cards, a moving band, a form and its fields, a player, a space, which keep the size they are added at. */
+export const KEEPS_ADDED_SIZE = new Set(['image', 'video', 'map', 'shape', 'gallery', 'collection', 'product', 'ribbon', 'form', 'checkout', 'audio', 'spacer']);
 
 /**
  * Whether a new block's box is fitted to what it draws: every kind but those whose box is what they draw, a text in a box among them.

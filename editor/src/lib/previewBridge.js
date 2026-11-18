@@ -292,8 +292,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
       draftPost({ type: 'urd-select', blockId, picked });
     },
     /** Light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away. */
-    sendLight(ids) {
-      post({ type: 'urd-light', ids });
+    sendLight(ids, sectionId = undefined) {
+      post({ type: 'urd-light', ids, ...(sectionId ? { sectionId } : {}) });
     },
     /** A block's words written on the page, its props and the phone's own words (null where it has none), for the page's copy of the section, without drawing it again. */
     sendBlockWords(sectionId, blockId, props, phoneProps) {

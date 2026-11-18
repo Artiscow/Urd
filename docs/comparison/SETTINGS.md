@@ -396,11 +396,11 @@ Urd has no columns element (ELEMENTS.md #3: n/a): blocks are placed freely on th
 
 ### Spacer or divider
 
-Urd: the line shape and the chapter divider (ELEMENTS.md #6 and #7).
+Urd: the «Space» block, the line shape and the chapter divider (ELEMENTS.md #6 and #7).
 
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
-| A spacer's height | WP, EL, PK, KB, ST | n/a: free placement | - |
+| A spacer's height | WP, EL, PK, KB, ST | Has: the «Space» block's frame, with a height of its own on the phone (Delivered 0.7.3.26.2) | Blocks panel |
 | The line style (solid, dashed, dotted, double) | WP, EL, KB, SP | Partial: solid | 0.7.9 (line styles for the line shape) |
 | Width, thickness and colour | EL, KB, SP, ST | Partial: four theme colours | 0.7.9 (an own colour) |
 | A text or an icon in the line | EL, SP | Partial: a text label | 0.7.9 (an icon in the line) |

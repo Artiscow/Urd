@@ -10,6 +10,7 @@
 import { spotLinks } from '$engine/anchor-model.js';
 import { calDesign, calView, CAL_SWITCH_VIEWS } from '$engine/calendar-designs.js';
 import { linkOf } from '../lib/link-edit.js';
+import { DRAWS_NOTHING } from '$engine/push-model.js';
 
 /** The block's own choice under the pointer: its effect, one an older block keeps as its animation, or 'none' where it declines the effect its section gives every element ('' = none of its own). */
 export const hoverOf = (block, ed) => (block.hover === false ? (block.blocksHoverType ? 'none' : '')
@@ -170,10 +171,11 @@ const BY_ID = new Map(CAPABILITIES.map((cap) => [cap.id, cap]));
 /** The capability with this id, or null. */
 export const capability = (id) => BY_ID.get(id) ?? null;
 
-/** Whether the selected block can carry a capability: its type, and what the capability asks of the view. */
+/** Whether the selected block can carry a capability: its type, and what the capability asks of the view; a block that draws nothing has no motion. */
 export function carries(cap, block, ed) {
   if (!cap || !block) return false;
   if (cap.types && !cap.types.includes(block.type)) return false;
+  if (cap.id === 'motion' && DRAWS_NOTHING.has(block.type)) return false;
   return cap.available ? cap.available(block, ed) : true;
 }
 

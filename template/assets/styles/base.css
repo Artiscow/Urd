@@ -15373,6 +15373,33 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
   border-bottom-right-radius: 0;
 }
 
+/* The space block (blocks/spacer.js): nothing on the published page; in the editor a faint hatched box with its height, so it can be found and taken hold of */
+.urd-preview .urd-spacer {
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 14%, transparent) 0 6px, transparent 6px 12px);
+  outline: 1px dashed color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 55%, transparent);
+  outline-offset: -1px;
+}
+
+.urd-preview.urd-chrome-off .urd-spacer {
+  background: none;
+  outline: 0;
+}
+
+.urd-spacer-size {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 600 11px/1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 85%, currentColor);
+  pointer-events: none;
+}
+
+.urd-preview.urd-chrome-off .urd-spacer-size {
+  display: none;
+}
+
 /* The logo in the phone's bar (nav.style.mobile.logo; the classes come from navClasses at the mobile breakpoint only): in the middle of the bar, or out of it. A logo in the middle stands out of the row, so the tool cluster keeps its outer edge as in a bar without a logo, and its picture needs no margin to keep the bar's height. In the full-screen menu's head the logo stands as always. */
 .urd-nav-logo-center > .urd-nav-logo {
   position: absolute;
@@ -18684,6 +18711,18 @@ body:not(.urd-mobile) .urd-phone-seam,
 .urd-preview .urd-phone-num-own {
   background: #e2b84a;
   color: #1a1508;
+}
+
+/* A section lit from its heading in the order's column: a frame and a tint over the whole section, its background layers and blocks included, so it reads as lit on any background; it takes no press */
+.urd-preview .urd-section.urd-lit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 99997;
+  box-sizing: border-box;
+  border: calc(3px * var(--urd-chrome-scale, 1)) solid var(--urd-admin-accent, #2cc7a8);
+  background: color-mix(in srgb, var(--urd-admin-accent, #2cc7a8) 14%, transparent);
+  pointer-events: none;
 }
 
 /* A block lit from a row under the pointer in the editor's lists (preview-edit.js lightBlocks): the Phone panel's order, a stack lighting all of its blocks */

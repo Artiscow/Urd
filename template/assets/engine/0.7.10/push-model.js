@@ -290,10 +290,14 @@ export const FIT_BY_WIDTH = new Set(['image', 'video', 'shape', 'icon']);
 
 /**
  * The block types whose size is their frame: a picture, a video, a shape, an
- * icon and a map are as large as the box the owner dragged, so a scale of
- * their content would only crop or blur it. Every other type takes «Size».
+ * icon, a map and a space are as large as the box the owner dragged, so a
+ * scale of their content would only crop or blur it, or have nothing to
+ * scale. Every other type takes «Size».
  */
-export const SIZE_BY_FRAME = new Set(['image', 'video', 'shape', 'icon', 'map']);
+export const SIZE_BY_FRAME = new Set(['image', 'video', 'shape', 'icon', 'map', 'spacer']);
+
+/** The block types that draw nothing, a space: a choice of how their content meets a narrower screen, or of its motion, has nothing to act on. */
+export const DRAWS_NOTHING = new Set(['spacer']);
 
 /** The bounds of a block's size: the whole block, text included, drawn smaller or larger than it is, in steps of `step`. */
 export const SIZE = { min: 0.4, max: 2, step: 0.05 };

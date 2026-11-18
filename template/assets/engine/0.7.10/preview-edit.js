@@ -40,7 +40,7 @@
  *                  { type: 'urd-ctx-close' }, { type: 'urd-ctx-hold' }, { type: 'urd-ctx-hover', over }  (the phone view's menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
-import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX } from './push-model.js';
+import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX, DRAWS_NOTHING } from './push-model.js';
 import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight, phoneRoomOf, MOBILE_ROOM_MAX } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -5367,11 +5367,13 @@ function beginNewFit(el, block) {
 }
 
 /**
- * The blocks a row under the pointer in the editor's lists stands for, lit on the canvas (the urd-light message: the Phone panel's order, a stack lighting all of its blocks); an empty list takes the light away.
+ * The blocks a row under the pointer in the editor's lists stands for, lit on the canvas (the urd-light message: the Phone panel's order, a stack lighting all of its blocks), or the section a heading of the order's column stands for; an empty list and no section take the light away.
  * @param {string[]} ids
+ * @param {string} [sectionId]
  */
-export function lightBlocks(ids) {
-  document.querySelectorAll('.urd-block.urd-lit').forEach((el) => el.classList.remove('urd-lit'));
+export function lightBlocks(ids, sectionId) {
+  document.querySelectorAll('.urd-block.urd-lit, .urd-section.urd-lit').forEach((el) => el.classList.remove('urd-lit'));
+  if (typeof sectionId === 'string') document.querySelector(`.urd-section[data-section-id="${CSS.escape(sectionId)}"]`)?.classList.add('urd-lit');
   for (const id of ids) {
     if (typeof id === 'string') document.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.classList.add('urd-lit');
   }
@@ -5757,7 +5759,7 @@ function enhanceBlock(el, block, section, grid, host) {
       }
     } else if (hasDesigns(block)) place(designButton(el, section, block, false), 'style');
     if (form === 'panels') {
-      place(opensMenu(barButton(BAR_ICONS.motion, ta('group.motion'), () => openBlockTool(el, section, block, 'motion', '', 'motion'), '', ta('group.motion'))), 'style');
+      if (!DRAWS_NOTHING.has(block.type)) place(opensMenu(barButton(BAR_ICONS.motion, ta('group.motion'), () => openBlockTool(el, section, block, 'motion', '', 'motion'), '', ta('group.motion'))), 'style');
       place(opensMenu(barButton(BAR_ICONS.arrange, ta('props.tabPlacement'), () => openBlockTool(el, section, block, 'placement', '', 'arrange'), '', ta('props.tabPlacement'))), 'placement');
     }
     // The phone button on the shorter bars where «Phone button on the bar» asks for it, before the gear.

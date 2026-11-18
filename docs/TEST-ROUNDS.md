@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.26.2): a Space block, and the order column's headings that fold and light their section
+
+- [ ] In the phone view, select a block and add «Space» from the Blocks panel's decoration group: a hatched box with «48 px» stands after it on the phone, and the desktop view does not show it
+- [ ] Drag the Space block's lower handle in the phone view: its height and its number follow, and the blocks under it move down
+- [ ] Open the Space block's settings: placement, «Only on phone», «Hide on phone», pinning and the link name stand there, and neither «On narrower screens» nor «Motion» does
+- [ ] Add a Space block in the desktop view: it is a hatched box there, and the blocks keep their places around it
+- [ ] Clean view, and a published page on a phone: the Space block shows nothing, only its room
+- [ ] In the order's column, press a section's heading: it folds or opens, and the section at work and the page's scroll stay as they were
+- [ ] Move the mouse over a heading: its section on the canvas gets a frame and a tint in the admin's accent, gone when the mouse leaves; the heading is lit evenly from edge to edge
+- [ ] The heading's gear still opens the section's settings
+
 ### Test batch (0.7.3.26.1): room above and below a section's blocks on the phone, the wheel over the stage, and the width handle beside the phone
 
 - [ ] In the phone view, move the mouse over a section: the line between it and the next carries a pill, and a tab under it while the pointer is on the grip; the page's first and last lines carry one grip each
