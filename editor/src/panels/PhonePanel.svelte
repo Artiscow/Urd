@@ -6,7 +6,7 @@
   import { getContext, onMount, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sectionWords } from '$engine/anchor-model.js';
-  import { MOBILE_GAP, mobileGapOf } from '$engine/migrate.js';
+  import { MOBILE_GAP, MOBILE_ROOM, mobileGapOf } from '$engine/migrate.js';
   import { ICONS } from '../lib/icons.js';
   import PhoneSectionRows from '../section/PhoneSectionRows.svelte';
   import PhoneOrder from './phone/PhoneOrder.svelte';
@@ -48,6 +48,9 @@
   /** The space between the section's blocks on the phone, its own, else the site's, else the standard, with the text that may shrink where «Force readable text» is off, as its fold says while closed. */
   const spaceValue = $derived.by(() => {
     const gap = `${mobileGapOf({ size: { mobileGap: ed.sectionMobileGap ?? undefined } }, ed.siteDraft)} px`;
+    // The room above and below shows only where the section has its own.
+    const room = ed.sectionPhoneRoom.top !== null || ed.sectionPhoneRoom.bottom !== null ? ` · ${ta('phone.roomValue', { top: ed.sectionPhoneRoom.top ?? MOBILE_ROOM, bottom: ed.sectionPhoneRoom.bottom ?? MOBILE_ROOM })}` : '';
+    if (room) return ed.sectionReadable.phone ? `${gap}${room}` : `${gap}${room} · ${ta('phone.readableOff')}`;
     return ed.sectionReadable.phone ? gap : `${gap} · ${ta('phone.readableOff')}`;
   });
 

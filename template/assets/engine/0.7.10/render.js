@@ -12,7 +12,7 @@
  *    Blocks with row in frames.mobile are pinned to explicit row tracks.
  *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
-import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
+import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, phoneRoomOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
 import { forcesReadable, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
@@ -1072,6 +1072,9 @@ export function renderSection(section, site, host, opts = {}) {
     // The space between the flowing blocks: the section's own, the site's, or the standard.
     const gap = mobileGapOf(section, site);
     flow.style.setProperty('--urd-mobile-gap', `${gap}px`);
+    // The room above the first block and below the last: the section's own, or the standard.
+    const room = phoneRoomOf(section);
+    flow.style.paddingBlock = `${room.top}px ${room.bottom}px`;
     // «Force readable text» off on the phone (ADR-0034): the floor for words in narrow cells is not drawn (base.css).
     if (!forcesReadable(section, 'mobile')) flow.dataset.urdFreeWords = '';
     // On the page before its blocks are drawn, so a spot's id is checked against the section's own blocks too.

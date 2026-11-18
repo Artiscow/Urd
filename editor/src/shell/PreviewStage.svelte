@@ -1,6 +1,6 @@
 <script>
   /* The preview stage: the iframe with the real page, scaled to the device and the zoom, inside the frame that pans when the page is larger than it. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle.
-     A press on the stage around the canvas deselects what is selected on it (ed.clearSelection).
+     A press on the stage around the canvas deselects what is selected on it (ed.clearSelection), and the wheel there scrolls the page in the canvas, as it does over the canvas, while the stage itself has nothing to pan.
      The bar at the canvas's right edge is dragged to set any width (ed.setFreeWidth): the width follows the pointer in canvas px with its number beside it and snaps to the devices' widths and the site's phone breakpoint, which a dashed mark shows on the canvas while the drag runs; the arrow keys step it. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -11,6 +11,8 @@
   let grab = 0;
   let stageEl = $state(null);
   const breakpoint = $derived(ed.siteDraft?.breakpoints?.mobile ?? 640);
+  /** The width handle stands beside the canvas, clear of the page, where the stage leaves room for it at the canvas's right; a canvas as wide as the stage keeps it on its own edge. */
+  const handleOut = $derived((ed.frameW - ed.stageW) / 2 >= 18);
   function onDown(e) {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -44,6 +46,14 @@
     if (e.clientX >= box.left + wrap.clientLeft + wrap.clientWidth || e.clientY >= box.top + wrap.clientTop + wrap.clientHeight) return;
     ed.clearSelection();
   }
+  /** The wheel over the stage around the canvas scrolls the page in it, by as much as over the canvas; a stage that pans (a zoom past the surface) keeps the wheel for itself, and Ctrl or Cmd with the wheel is the browser's zoom. */
+  function onStageWheel(e) {
+    if (ed.canPan || e.ctrlKey || e.metaKey) return;
+    const win = ed.iframeEl?.contentWindow;
+    if (!win) return;
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? win.innerHeight : 1;
+    win.scrollBy({ left: e.deltaX * unit, top: e.deltaY * unit, behavior: 'instant' });
+  }
   function onKey(e) {
     const step = e.shiftKey ? 50 : 10;
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); ed.setFreeWidth(ed.device.width + step); }
@@ -53,7 +63,7 @@
 
 <!-- The stage's press is the pointer's way to deselect; the keyboard's is Esc on the canvas. -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="frame-wrap" class:mobile={ed.viewMode === 'mobile'} class:pan={ed.canPan} class:fold={ed.targetH > 0} class:looking={Boolean(ed.looking)} bind:this={ed.frameWrapEl} onpointerdown={onStagePress}>
+<div class="frame-wrap" class:mobile={ed.viewMode === 'mobile'} class:pan={ed.canPan} class:fold={ed.targetH > 0} class:looking={Boolean(ed.looking)} bind:this={ed.frameWrapEl} onpointerdown={onStagePress} onwheel={onStageWheel}>
   <!-- A saved draft looked at: its banner over the canvas, the canvas framed in amber -->
   <LookBanner />
   <!-- .stage has the SCALED size, so scrolling/centering gets a real
@@ -67,7 +77,7 @@
       style="width:{ed.targetW}px; height:{ed.iframeH}px; transform:scale({ed.scale}); transform-origin:top left"
     ></iframe>
     {#if ed.chromeVisible && !ed.looking}
-      <button type="button" class="stage-handle" title={ta('tip.dragWidth')} aria-label={ta('tip.dragWidth')}
+      <button type="button" class="stage-handle" class:out={handleOut} title={ta('tip.dragWidth')} aria-label={ta('tip.dragWidth')}
         onpointerdown={onDown} onpointermove={onMove} onpointerup={onUp} onpointercancel={onUp} onkeydown={onKey}></button>
       {#if dragging}
         <span class="stage-readout" aria-hidden="true">{ed.device.width} px</span>

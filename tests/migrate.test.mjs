@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift, liftPhoneWords, liftMobileFrame, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf } = await engineImport('migrate.js');
+const { lift, liftPhoneWords, liftMobileFrame, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf, MOBILE_ROOM, MOBILE_ROOM_MAX, phoneRoomOf } = await engineImport('migrate.js');
 const { mapBlock } = await engineImport('blocks/map.js');
 
 const textV3 = {
@@ -545,4 +545,11 @@ test('liftPhoneWords: a migration that reshapes a word prop reaches the phone\'s
 test('liftMobileFrame: a placement with a height of its own on the phone is today\'s shape and is left as it is', () => {
   const placement = { col: 5, cols: 4, height: 96 };
   assert.equal(liftMobileFrame(placement, { x: 0, y: 0, w: 50, h: 120 }), placement);
+});
+
+test('phoneRoomOf: the room above and below a section\'s blocks on the phone, its own or the standard, kept in bounds', () => {
+  assert.deepEqual(phoneRoomOf(undefined), { top: MOBILE_ROOM, bottom: MOBILE_ROOM });
+  assert.deepEqual(phoneRoomOf({ size: { mobilePadTop: 0, mobilePadBottom: 80 } }), { top: 0, bottom: 80 }, 'an own zero stands');
+  assert.deepEqual(phoneRoomOf({ size: { mobilePadTop: -5, mobilePadBottom: 9999 } }), { top: 0, bottom: MOBILE_ROOM_MAX });
+  assert.deepEqual(phoneRoomOf({ size: { mobilePadTop: 'x', mobilePadBottom: 12.6 } }), { top: MOBILE_ROOM, bottom: 13 });
 });

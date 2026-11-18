@@ -28,7 +28,7 @@ export function layoutKey(section) {
     return [block.id, block.hideMobile ? 1 : 0, block.frames?.mobile ?? null, block.phonePlace ?? null,
       grows ? null : round(frame.w), grows ? null : round(frame.h), frame.rot ?? 0];
   }).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-  return JSON.stringify([order, own, setup, section?.size?.mobileGap ?? null, section?.size?.readablePhone ?? null]);
+  return JSON.stringify([order, own, setup, section?.size?.mobileGap ?? null, section?.size?.readablePhone ?? null, section?.size?.mobilePadTop ?? null, section?.size?.mobilePadBottom ?? null]);
 }
 
 /**

@@ -4766,7 +4766,7 @@
     flex: 0 0 auto;
     position: relative;
   }
-  /* The width handle: a bar along the canvas's right edge, inside it so no fit clips it; the readout and the phone breakpoint's mark stand while a drag runs. */
+  /* The width handle: a bar beside the canvas's right edge where the stage has room for it, else along that edge inside the canvas, so no fit clips it; the readout and the phone breakpoint's mark stand while a drag runs. */
   .stage-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     position: absolute;
     top: 0;
@@ -4790,6 +4790,9 @@
     margin-top: -24px;
     border-radius: 2px;
     background: rgb(255 255 255 / 35%);
+  }
+  .stage-handle.out:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    right: -14px;
   }
   .stage-handle:hover::before,
   .stage-handle:focus-visible::before,
@@ -4928,9 +4931,13 @@
     background: #08090d;
   }
 
-  .frame-wrap.mobile .stage {
+  .frame-wrap.mobile.looking .stage::after {
     border-radius: 12px;
-    overflow: hidden;
+  }
+
+  /* The phone's rounded corners are the canvas's own, so the stage clips nothing and the width handle can stand beside it; the radius is drawn before the canvas's scale, so it is set a little larger */
+  .frame-wrap.mobile .stage iframe {
+    border-radius: 15px;
   }
 
   .viewswitch,

@@ -130,6 +130,23 @@ export function mobileGapOf(section, site) {
   return Math.max(0, Math.min(MOBILE_GAP_MAX, Math.round(gap)));
 }
 
+/** The room above a section's first block and below its last on the phone, in px: the standard, which a section's `size.mobilePadTop` and `size.mobilePadBottom` replace. */
+export const MOBILE_ROOM = 24;
+
+/** The most room above or below a section's blocks on the phone that a section can set, in px. */
+export const MOBILE_ROOM_MAX = 240;
+
+/**
+ * The room above a section's first block and below its last on the phone, in px: the section's own (`size.mobilePadTop`, `size.mobilePadBottom`, additive from 0.7.3.26), else MOBILE_ROOM, within 0 to MOBILE_ROOM_MAX.
+ * Pure function, tested.
+ * @param {{size?: {mobilePadTop?: number, mobilePadBottom?: number}}|undefined} section
+ * @returns {{top: number, bottom: number}}
+ */
+export function phoneRoomOf(section) {
+  const of = (value) => (Number.isFinite(value) ? Math.max(0, Math.min(MOBILE_ROOM_MAX, Math.round(value))) : MOBILE_ROOM);
+  return { top: of(section?.size?.mobilePadTop), bottom: of(section?.size?.mobilePadBottom) };
+}
+
 /** Current version of the site.json format. */
 export const SITE_SCHEMA_VERSION = 6;
 

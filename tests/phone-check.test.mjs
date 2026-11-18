@@ -64,7 +64,8 @@ test('the phone\'s own settings changed from the desktop view leave the section 
   const cells = [section('s1', [text('a'), { ...image('b', 100), frames: { desktop: { x: 50, y: 100, w: 40, h: 200 }, mobile: { col: 1, cols: 4 } } }])];
   const rule = [{ ...section('s1', [text('a'), image('b', 100)]), phoneOrder: 'left' }];
   const gap = [{ ...section('s1', [text('a'), image('b', 100)]), size: { mobileGap: 32 } }];
-  for (const changed of [hidden, cells, rule, gap]) assert.deepEqual(uncheckedSections(changed, base), ['s1']);
+  const room = [{ ...section('s1', [text('a'), image('b', 100)]), size: { mobilePadBottom: 80 } }];
+  for (const changed of [hidden, cells, rule, gap, room]) assert.deepEqual(uncheckedSections(changed, base), ['s1']);
 });
 
 test('words and settings are no change of layout', () => {

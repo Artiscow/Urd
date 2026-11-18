@@ -15,6 +15,7 @@
  *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut: the editor keeps it and hands it to the next page the preview loads)
  *                  urd-edit from a text block carries `caret`: the characters into the text where the change began, kept with the undo step
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
+ *                  { type: 'urd-section-phone-room', sectionId, side, px }  (a seam's grip in the phone view: the room above ('top') or below ('bottom') the section's blocks on the phone, 0.7.3.26)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
  *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks, the custom order or blocks taken out of the rule's columns; also a block taken out of its group, or the group undone, from the block's menu; coalesce from the keys, a burst one undo step)
@@ -40,7 +41,7 @@
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX } from './push-model.js';
-import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
+import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight, phoneRoomOf, MOBILE_ROOM_MAX } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
 import { blocksClipboard, sectionClipboard, readClipboard, pastedSection } from './clipboard-model.js';
@@ -2566,6 +2567,129 @@ function wireSeamDrag(btn, part, above, below, grip, index) {
 }
 
 /**
+ * A seam in the phone view (0.7.3.26): a pill on the line that drags the room below the section above (or, on the page's first seam, above the section below), and a tab under it that drags the room above the section below.
+ * The room is the phone's own (size.mobilePadTop and mobilePadBottom, phoneRoomOf in migrate.js), in steps of 4 px, Shift for 1; the flow's padding follows the pointer, and the release writes one urd-section-phone-room. Escape puts it back, and the arrow keys move it a step at a time.
+ * @param {number} index Where the seam stands among the page's seams
+ * @param {HTMLElement|null} aboveHost The section above, with its data
+ * @param {object|null} aboveSection
+ * @param {HTMLElement|null} belowHost The section below, with its data
+ * @param {object|null} belowSection
+ */
+function phoneSeam(index, aboveHost, aboveSection, belowHost, belowSection) {
+  const bar = document.createElement('div');
+  bar.className = 'urd-add-section urd-phone-seam';
+  const grip = document.createElement('div');
+  grip.className = 'urd-seam-grip';
+  const part = (kind, cls, svg, label, host, section, side) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = cls;
+    btn.dataset.seam = kind;
+    btn.setAttribute('aria-label', ta(label));
+    btn.title = ta(label);
+    btn.innerHTML = svg;
+    wirePhoneRoom(btn, host, section, side, grip, index, kind);
+    return btn;
+  };
+  if (aboveHost) grip.append(part('roomBelow', 'urd-seam-pill', GRIP_SVG, 'canvas.phoneSeam.below', aboveHost, aboveSection, 'bottom'));
+  else if (belowHost) grip.append(part('roomAbove', 'urd-seam-pill', GRIP_SVG, 'canvas.phoneSeam.above', belowHost, belowSection, 'top'));
+  if (aboveHost && belowHost) grip.append(part('roomAbove', 'urd-seam-tab urd-seam-down', SEAM_DOWN_SVG, 'canvas.phoneSeam.above', belowHost, belowSection, 'top'));
+  const readout = document.createElement('span');
+  readout.className = 'urd-seam-readout';
+  readout.hidden = true;
+  grip.append(readout);
+  bar.append(grip);
+  return bar;
+}
+
+/** A part of a phone seam's grip: its drag and its keys set one room of one section (phoneSeam). */
+function wirePhoneRoom(btn, host, section, side, grip, index, kind) {
+  const flow = () => host.querySelector('.urd-flow');
+  const now = () => phoneRoomOf(host._urdSection ?? section)[side];
+  const prop = side === 'top' ? 'paddingTop' : 'paddingBottom';
+  const clamp = (value, fine) => Math.max(0, Math.min(MOBILE_ROOM_MAX, fine ? Math.round(value) : Math.round(value / 4) * 4));
+  const tell = (px) => post({ type: 'urd-section-phone-room', sectionId: (host._urdSection ?? section).id, side, px });
+  const show = (px) => {
+    const shown = grip.querySelector('.urd-seam-readout');
+    if (!shown) return;
+    shown.hidden = px === null;
+    if (px !== null) shown.textContent = ta('canvas.phoneSeam.room', { n: String(px) });
+  };
+
+  btn.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    btn.setPointerCapture(event.pointerId);
+    btn.focus({ preventScroll: true });
+    const startY = event.clientY;
+    const start = now();
+    const was = flow()?.style[prop] ?? '';
+    // Every pinned block stands at its place in the section while the drag lasts, as for the desktop's seams.
+    suspendSticky();
+    let value = start;
+    let moved = false;
+    const cursor = dragCursor();
+    grip.classList.add('urd-seam-active');
+    btn.classList.add('urd-seam-on');
+    const onMove = (ev) => {
+      if (!moved && Math.abs(ev.clientY - startY) < 4) return;
+      moved = true;
+      cursor.move(ev.clientY);
+      value = clamp(start + (ev.clientY - startY), ev.shiftKey);
+      const el = flow();
+      if (el) el.style[prop] = `${value}px`;
+      show(value);
+    };
+    const done = () => {
+      btn.removeEventListener('pointermove', onMove);
+      btn.removeEventListener('pointerup', onUp);
+      btn.removeEventListener('pointercancel', cancel);
+      btn.removeEventListener('lostpointercapture', onUp);
+      window.removeEventListener('keydown', onKey, true);
+      cursor.clear();
+      show(null);
+      grip.classList.remove('urd-seam-active');
+      btn.classList.remove('urd-seam-on');
+      resumeSticky();
+    };
+    const onUp = () => {
+      done();
+      if (moved && value !== start) tell(value);
+    };
+    // Escape, or a drag the browser takes away, puts the room back where it began.
+    const cancel = () => {
+      done();
+      const el = flow();
+      if (el) el.style[prop] = was;
+    };
+    const onKey = (ev) => {
+      if (ev.key !== 'Escape') return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      cancel();
+    };
+    btn.addEventListener('pointermove', onMove);
+    btn.addEventListener('pointerup', onUp);
+    btn.addEventListener('pointercancel', cancel);
+    btn.addEventListener('lostpointercapture', onUp);
+    window.addEventListener('keydown', onKey, true);
+  });
+
+  // The arrow keys move the room a step, Shift a pixel, as one change each; the part takes the focus again once the page stands anew.
+  btn.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    event.stopPropagation();
+    const step = event.shiftKey ? 1 : 4;
+    const value = clamp(now() + (event.key === 'ArrowDown' ? step : -step), true);
+    if (value === now()) return;
+    tell(value);
+    setTimeout(() => document.querySelectorAll('.urd-phone-seam')[index]?.querySelector(`[data-seam="${kind}"]`)?.focus({ preventScroll: true }), 150);
+  });
+}
+
+/**
  * Adds "+ New section" bars between (and around) the sections. Called by
  * render.js after every full page render in preview mode.
  *
@@ -2580,9 +2704,13 @@ export function enhancePage(root, page, site) {
   siteNow = site;
   initTextToolbar();
   root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
-  // The mobile view is for adjustment and review, not building structure.
-  if (isMobile()) return;
   const hosts = [...root.querySelectorAll(':scope > .urd-section')];
+  // The phone view builds no structure: its seams carry only the grip of the room above and below the sections' blocks (phoneSeam).
+  if (isMobile()) {
+    hosts.forEach((el, i) => root.insertBefore(phoneSeam(i, hosts[i - 1] ?? null, page.sections[i - 1] ?? null, el, page.sections[i]), el));
+    if (hosts.length) root.appendChild(phoneSeam(hosts.length, hosts.at(-1), page.sections.at(-1), null, null));
+    return;
+  }
   // The bar sits on the seam between two sections and holds the seam's grip (seamGrip) and the gallery of section templates.
   const above = (i) => (i > 0 ? {
     host: hosts[i - 1],

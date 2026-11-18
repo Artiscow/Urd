@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.26.1): room above and below a section's blocks on the phone, the wheel over the stage, and the width handle beside the phone
+
+- [ ] In the phone view, move the mouse over a section: the line between it and the next carries a pill, and a tab under it while the pointer is on the grip; the page's first and last lines carry one grip each
+- [ ] Drag the pill down and up: the room below the section above follows in steps of 4 px with its number beside the grip, Shift giving 1 px; release, and one undo puts it back
+- [ ] Drag the tab: the room above the section below's first block follows the same way; Escape during a drag puts it back
+- [ ] Focus a grip with Tab and press the arrow keys: the room moves a step at a time, and the grip keeps the focus
+- [ ] The section's phone settings («Space and text» in the Phone panel, and the section menu) show «Room above the blocks» and «Room below the blocks» with the same values, each with its way back to 24 px; the fold's value names the room once it is the section's own
+- [ ] The desktop view keeps the section's height, and has no such grips; publish and open the page on a phone: the room stands as set
+- [ ] Turn the mouse wheel over the dark area beside the phone, and beside the desktop canvas: the page scrolls as over the canvas; with a zoom past the surface the wheel pans the stage as before
+- [ ] In the phone view the width handle stands just right of the phone, clear of the page, and drags its width; the phone keeps its rounded corners; in the desktop view the handle stands on the canvas's edge where the canvas fills the stage
+
 ### Test batch (0.7.3.25): the navigation bar's sizes beside the phone, and the logo and a link's touch on the phone
 
 - [ ] In the phone view, move the mouse over the navigation bar, or press it: a bar «Nav» stands beside the phone with the thickness, the logo's size and the text size, each with − and +; the mouse over a section takes it away

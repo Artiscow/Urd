@@ -42,6 +42,7 @@
  *                  { type: 'urd-duplicate-section', sectionId }
  *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut on the page: blocks or a section)
  *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last)
+ *                  { type: 'urd-section-phone-room', sectionId, side, px } (a seam's grip in the phone view: the room above or below the section's blocks there, 0.7.3.26)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? } (moves from the seam grip, for a section changed at its top: [{blockId, dy}] in the same undo step)
  *                  { type: 'urd-undo', redo }                 (Ctrl+Z inside the iframe)
  *                  { type: 'urd-select-section', sectionId }  (active section for the palette)
@@ -139,6 +140,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-clipboard') handlers.onClipboard?.(msg);
     if (msg?.type === 'urd-paste-section') handlers.onPasteSection?.(msg);
     if (msg?.type === 'urd-section-size') handlers.onSectionSize?.(msg);
+    if (msg?.type === 'urd-section-phone-room') handlers.onSectionPhoneRoom?.(msg);
     if (msg?.type === 'urd-undo') handlers.onUndo?.(msg);
     if (msg?.type === 'urd-select-section') handlers.onSelectSection?.(msg);
     if (msg?.type === 'urd-select-block') handlers.onSelectBlock?.(msg);

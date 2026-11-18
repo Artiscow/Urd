@@ -265,6 +265,7 @@ function onIframeLoad() {
     onClipboard: bridgeState.handleClipboard,
     onPasteSection: bridgeState.handlePasteSection,
     onSectionSize: bridgeState.handleSectionSize,
+    onSectionPhoneRoom: (msg) => pageState.setSectionPhoneRoom(msg.side, msg.px, { sectionId: msg.sectionId, own: true }),
     onUndo: (msg) => (msg.redo ? historyState.redo() : historyState.undo()),
     onSelectSection: pageState.onSelectSection,
     onSelectBlock: pageState.onSelectBlock,

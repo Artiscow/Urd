@@ -241,7 +241,7 @@
     <Setting own={!ed.sectionReadable.desktop} reset={() => ed.setSectionReadable('desktop', true)}>
       <SwitchRow label={ta('lbl.readableDesktop')} title={ta('tip.readableDesktop')} checked={ed.sectionReadable.desktop} onchange={(on) => ed.setSectionReadable('desktop', on)} />
     </Setting>
-    <!-- The section's own settings for the phone: the space between its blocks, «Force readable text» on the phone, its rule for their order, and its custom order (PhoneSectionRows, as the Phone panel draws them) -->
+    <!-- The section's own settings for the phone: the space between its blocks, the room above and below them, «Force readable text» on the phone, its rule for their order, and its custom order (PhoneSectionRows, as the Phone panel draws them) -->
     <PhoneSectionRows />
     <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
       <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}

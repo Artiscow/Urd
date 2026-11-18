@@ -18641,9 +18641,15 @@ html:has(body.urd-preview)::-webkit-scrollbar {
 }
 
 /* Mobile view in the editor: the structure tools (the bars on the seams with their grips)
-   are hidden; mobile is for layout adjustment and review */
-body.urd-mobile .urd-add-section {
+   are hidden; mobile is for layout adjustment and review. Its own seams (preview-edit.js
+   phoneSeam) carry only the grip of the room above and below the sections' blocks. */
+body.urd-mobile .urd-add-section:not(.urd-phone-seam) {
   display: none !important;
+}
+
+body:not(.urd-mobile) .urd-phone-seam,
+.urd-preview.urd-chrome-off .urd-phone-seam {
+  display: none;
 }
 
 /* Mobile review (urd-attention on the section): the section needs a pass
@@ -19506,7 +19512,8 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
 .urd-preview .urd-add-section:hover,
 .urd-preview .urd-section:hover + .urd-add-section,
 .urd-preview .urd-add-section:has(+ .urd-section:hover),
-.urd-preview .urd-add-section:has(.urd-seam-active) {
+.urd-preview .urd-add-section:has(.urd-seam-active),
+.urd-preview .urd-phone-seam:focus-within {
   opacity: 1;
   pointer-events: auto;
 }

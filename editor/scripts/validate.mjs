@@ -212,12 +212,14 @@ iconSite.footer = { ...(iconSite.footer ?? { version: 1 }), brand: { ...(iconSit
 // The shop's terms of sale page (site.commerce.termsPage, additive from 0.7.24.2.3), which the template does not ship.
 iconSite.site.commerce = { ...(iconSite.site.commerce ?? {}), termsPage: 'kjopsvilkar' };
 const sharePage = load('template/content/pages/hjem.json');
+// The room above and below a section's blocks on the phone (size.mobilePadTop and mobilePadBottom, additive from 0.7.3.26), which the template's pages do not set.
+sharePage.sections[0].size = { ...(sharePage.sections[0].size ?? {}), mobilePadTop: 0, mobilePadBottom: 96 };
 sharePage.meta = { ...(sharePage.meta ?? {}), og: { image: '/media/images/share.webp', imageSource: keptOriginal } };
 const validatePage = ajv.getSchema(pageSchema.$id);
 for (const [label, ok, errors] of [
   ['synthetic site icon and logos with their kept originals', validateSite(iconSite), validateSite.errors],
   ['synthetic site with the logo on the phone', validateSite(phoneLogoSite), validateSite.errors],
-  ['synthetic share image with its kept original', validatePage(sharePage), validatePage.errors],
+  ['synthetic share image with its kept original, and a section\'s room on the phone', validatePage(sharePage), validatePage.errors],
 ]) {
   if (ok) {
     console.log(`OK    ${label}`);

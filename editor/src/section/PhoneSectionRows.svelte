@@ -1,10 +1,10 @@
 <script>
-  /* The section's own settings for the phone, in the section menu's «Size and grid» and the Phone panel alike: the space between its blocks, «Force readable text» on the phone, its rule for their order, its custom order, and the presets that suggest its layout in the phone's cells.
+  /* The section's own settings for the phone, in the section menu's «Size and grid» and the Phone panel alike: the space between its blocks, the room above and below them, «Force readable text» on the phone, its rule for their order, its custom order, and the presets that suggest its layout in the phone's cells.
      Each rule is drawn as the section's own blocks in its order (phone-order.js), with its stacks and exceptions; the rule and the custom order stand for every section, whatever its blocks, and while a custom order holds, the rule places a block the list does not hold yet.
      `part` draws one part alone, in a fold of the Phone panel that carries its name: the space and the text, the order, or the presets. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
-  import { MOBILE_GAP_MAX, mobileGapOf } from '$engine/migrate.js';
+  import { MOBILE_GAP_MAX, mobileGapOf, MOBILE_ROOM_MAX, phoneRoomOf } from '$engine/migrate.js';
   import { PHONE_ORDERS, stackOrder, phoneSetupOf } from '$engine/phone-order.js';
   import { phoneMark, phoneLayouts, phoneLayoutChange, phoneLayoutSketch } from '$engine/phone-layouts.js';
   import Setting from '../lib/rows/Setting.svelte';
@@ -17,6 +17,8 @@
 
   /** The space between the section's blocks on the phone: its own, else the site's, else the standard. */
   const phoneGap = $derived(mobileGapOf({ size: { mobileGap: ed.sectionMobileGap ?? undefined } }, ed.siteDraft));
+  /** The room above the section's first block and below its last on the phone: its own, else the standard. */
+  const phoneRoom = $derived(phoneRoomOf({ size: { mobilePadTop: ed.sectionPhoneRoom.top ?? undefined, mobilePadBottom: ed.sectionPhoneRoom.bottom ?? undefined } }));
   /** The section at work, read again after every change, every undo and every page loaded, since the page's data is no state of its own: a new copy each time, so what is reckoned from it follows. */
   const section = $derived.by(() => {
     void ed.pageId;
@@ -45,6 +47,15 @@
 <Setting own={ed.sectionMobileGap !== null} reset={() => ed.setSectionMobileGap(null)}>
   <SliderRow label={ta('lbl.mobileGap')} title={ta('tip.props.mobileGap')} value={phoneGap} min={0} max={MOBILE_GAP_MAX} step={4}
     shown={`${phoneGap} px`} oninput={(v) => ed.setSectionMobileGap(v)} />
+</Setting>
+<!-- The room above the first block and below the last on the phone, each with the way back to the standard; the seams on the canvas drag the same -->
+<Setting own={ed.sectionPhoneRoom.top !== null} reset={() => ed.setSectionPhoneRoom('top', null)}>
+  <SliderRow label={ta('lbl.phoneRoomTop')} title={ta('tip.phoneRoomTop')} value={phoneRoom.top} min={0} max={MOBILE_ROOM_MAX} step={4}
+    shown={`${phoneRoom.top} px`} oninput={(v) => ed.setSectionPhoneRoom('top', v)} />
+</Setting>
+<Setting own={ed.sectionPhoneRoom.bottom !== null} reset={() => ed.setSectionPhoneRoom('bottom', null)}>
+  <SliderRow label={ta('lbl.phoneRoomBottom')} title={ta('tip.phoneRoomBottom')} value={phoneRoom.bottom} min={0} max={MOBILE_ROOM_MAX} step={4}
+    shown={`${phoneRoom.bottom} px`} oninput={(v) => ed.setSectionPhoneRoom('bottom', v)} />
 </Setting>
 <!-- «Force readable text» on the phone (ADR-0034): a block with words never narrower than its words read well, and a drop or a handle that would squeeze it greyed -->
 <Setting own={!ed.sectionReadable.phone} reset={() => ed.setSectionReadable('phone', true)}>

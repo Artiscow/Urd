@@ -20,7 +20,7 @@ import { flowing, phoneStackOf } from '$engine/phone-moves.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign, calLimitStart } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
-import { PAGE_SCHEMA_VERSION, liftPageFile, phoneCells, phoneHeight } from '$engine/migrate.js';
+import { PAGE_SCHEMA_VERSION, liftPageFile, phoneCells, phoneHeight, MOBILE_ROOM, MOBILE_ROOM_MAX } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { anchorError, takenAnchors } from '$engine/anchor-model.js';
 import { setLinkOn } from '../lib/link-edit.js';
@@ -1062,6 +1062,9 @@ let sectionMaxWidth = $state('');
 /** Mirror of the active section's own space between its blocks on the phone (`size.mobileGap` in px, null = the site's) */
 let sectionMobileGap = $state(null);
 
+/** Mirror of the active section's own room above its first block and below its last on the phone (`size.mobilePadTop`, `size.mobilePadBottom` in px, null = the standard) */
+let sectionPhoneRoom = $state({ top: null, bottom: null });
+
 /** Mirror of the active section's rule for its order on the phone (`phoneOrder`, phone-order.js) */
 let sectionPhoneOrder = $state('top');
 
@@ -1077,6 +1080,7 @@ function syncSectionMirrors(section) {
   sectionMaxWidth = section?.size?.maxWidth ?? '';
   sectionMobileGap = Number.isFinite(section?.size?.mobileGap) ? section.size.mobileGap : null;
   sectionPhoneOrder = phoneOrderOf(section);
+  sectionPhoneRoom = { top: Number.isFinite(section?.size?.mobilePadTop) ? section.size.mobilePadTop : null, bottom: Number.isFinite(section?.size?.mobilePadBottom) ? section.size.mobilePadBottom : null };
   sectionPhoneFollows = !Array.isArray(section?.phoneList);
   sectionReadable = { phone: forcesReadable(section, 'mobile'), desktop: forcesReadable(section, 'desktop') };
   sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
@@ -1233,6 +1237,28 @@ function setSectionMobileGap(value) {
     if (Number.isFinite(value)) size.mobileGap = value; else delete size.mobileGap;
     s.size = size;
   });
+}
+
+/**
+ * The room above a section's first block ('top') or below its last ('bottom') on the phone, in px; null, or the standard, takes it away.
+ * A slider's moves join one step; `own` (a seam's grip on the canvas) makes the change a step of its own. `sectionId` names the section, the one at work by default.
+ * @param {'top'|'bottom'} side
+ * @param {number|null} value
+ * @param {{sectionId?: string|null, own?: boolean}} [opts]
+ */
+function setSectionPhoneRoom(side, value, { sectionId = activeSectionId, own = false } = {}) {
+  const section = store?.data.sections.find((s) => s.id === sectionId);
+  if (!section || (side !== 'top' && side !== 'bottom')) return;
+  const key = side === 'top' ? 'mobilePadTop' : 'mobilePadBottom';
+  historyState.pushHistory(own ? 'section-phone-room' : `edit:section-phone-room-${side}:${sectionId}`);
+  const size = { ...(section.size ?? {}) };
+  const px = Number.isFinite(value) ? Math.max(0, Math.min(MOBILE_ROOM_MAX, Math.round(value))) : null;
+  if (px === null || px === MOBILE_ROOM) delete size[key]; else size[key] = px;
+  section.size = size;
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+  if (section.id === activeSectionId) syncSectionMirrors(section);
 }
 
 /**
@@ -1800,6 +1826,8 @@ export const pageState = {
   setSectionPhoneFollows,
   changeSectionPhone,
   setSectionMobileGap,
+  setSectionPhoneRoom,
+  get sectionPhoneRoom() { return sectionPhoneRoom; },
   setSectionPhoneOrder,
   get sectionBg() { return sectionBg; },
   set sectionBg(v) { sectionBg = v; },

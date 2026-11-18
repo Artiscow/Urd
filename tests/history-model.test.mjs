@@ -52,6 +52,7 @@ test('stepKind: each kind of change named in words with an icon, a page change m
   assert.equal(stepKind('edit:nudge-mobile-blk-1').labelKey, stepKind('move-block').labelKey);
   // A section's own settings are a section change, and the Site panel's group resets a site change.
   assert.equal(stepKind('edit:section-mobile-gap:sec-1').labelKey, 'history.step.section');
+  assert.equal(stepKind('section-phone-room').labelKey, 'history.step.section', 'a seam drag on the phone is the section\'s step');
   assert.equal(stepKind('site-width').labelKey, 'history.step.site');
   assert.equal(stepKind('site-width:mobileGap:own-step-3').onPage, false);
   assert.equal(stepKind('page-meta:kaker:searchTitle').labelKey, 'history.step.pageSettings');
