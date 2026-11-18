@@ -1,8 +1,5 @@
 /**
- * Where the floating element menu stands (0.7.20.6, proposals J and K on
- * the Design canvas): beside its block, to the right, else to the left,
- * else below it, never over it where the window allows; and where the owner
- * dragged it, kept for the session and clamped into the window.
+ * Where the floating element menu stands (0.7.20.6, proposals J and K on the Design canvas): beside its block, to the right, else to the left (the left first where asked), else below it, never over it where the window allows; and where the owner dragged it, kept for the session and clamped into the window.
  * Whether the wide menu gives way to one column beside its block (wideFits, givesWay, 0.7.33.9).
  * Pure and node-tested; the coordinates are the editor window's.
  */
@@ -26,48 +23,51 @@ function overlap(place, size, block) {
 
 /**
  * Whether the wide menu has its place beside the block: one where it covers none of it, or covers no more than a tenth of the block beyond what the one-column menu would; else the one-column menu stands there instead, covering less.
+ * `cover` is what the menu keeps clear of, the block where none is given; the tenth is the block's all the same, and none with `strict`, as the phone view asks, where any of the page covered is too much.
  * @param {{left: number, top: number, right: number, bottom: number}} block The block in window px
  * @param {{w: number, h: number}} wide The wide menu's box
  * @param {{w: number, h: number}} narrow The one-column menu's box
  * @param {{w: number, h: number}} view The window
- * @param {{min?: number, gap?: number, margin?: number}} [opts]
+ * @param {{min?: number, gap?: number, margin?: number, cover?: {left: number, top: number, right: number, bottom: number}, strict?: boolean}} [opts]
  */
 export function wideFits(block, wide, narrow, view, opts = {}) {
-  const covered = (size) => overlap(placeBesideBlock(block, size, view, opts), size, block);
+  const target = opts.cover ?? block;
+  const covered = (size) => overlap(placeBesideBlock(block, size, view, opts), size, target);
   const wideCovers = covered(wide);
   const area = (block.right - block.left) * (block.bottom - block.top);
-  return wideCovers === 0 || wideCovers - covered(narrow) <= area / 10;
+  return wideCovers === 0 || wideCovers - covered(narrow) <= (opts.strict ? 0 : area / 10);
 }
 
 /**
  * Whether the wide floating menu, opened beside what it was opened at, gives way to one column there: only for a block (a section spans the canvas, so its menu keeps the owner's form), only while the menu stands beside it rather than where the owner dragged it, and only where the wide form lacks its place beside the block (wideFits).
  * @param {{left: number, top: number, right: number, bottom: number}|null} block The block in window px
  * @param {{w: number, h: number}} view The window
- * @param {{ wide: boolean, wideW: number, narrowW: number, h: number, min?: number, dragged?: boolean, section?: boolean }} opts whether the menu would stand wide, the two widths, the menu's height, and the left edge the panels leave free
+ * @param {{ wide: boolean, wideW: number, narrowW: number, h: number, min?: number, dragged?: boolean, section?: boolean, cover?: {left: number, top: number, right: number, bottom: number}, strict?: boolean }} opts whether the menu would stand wide, the two widths, the menu's height, the left edge the panels leave free, and what the menu keeps clear of and how strictly (wideFits)
  */
-export function givesWay(block, view, { wide, wideW, narrowW, h, min = 8, dragged = false, section = false }) {
+export function givesWay(block, view, { wide, wideW, narrowW, h, min = 8, dragged = false, section = false, cover = undefined, strict = false }) {
   if (!wide || !block || dragged || section) return false;
-  return !wideFits(block, { w: Math.min(wideW, view.w - 16), h }, { w: Math.min(narrowW, view.w - 16), h }, view, { min });
+  return !wideFits(block, { w: Math.min(wideW, view.w - 16), h }, { w: Math.min(narrowW, view.w - 16), h }, view, { min, cover, strict });
 }
 
 /**
- * The place beside the block: the first of right, left and below that
- * covers none of it once clamped into the window, else the one that covers
- * the least, so the block stays visible where the window allows.
+ * The place beside the block: the first of right, left and below that covers none of it once clamped into the window, else the one that covers the least, so the block stays visible where the window allows.
+ * `first` 'left' tries the left before the right.
+ * `cover` is what the menu keeps clear of, the block where none is given: in the phone view the whole phone, so the menu stands beside it rather than below the block over the page.
  * @param {{left: number, top: number, right: number, bottom: number}} block The block in window px
  * @param {{w: number, h: number}} size The menu's box
  * @param {{w: number, h: number}} view The window
- * @param {{min?: number, gap?: number, margin?: number}} opts
+ * @param {{min?: number, gap?: number, margin?: number, first?: 'right'|'left', cover?: {left: number, top: number, right: number, bottom: number}}} opts
  * @returns {{left: number, top: number, side: 'right'|'left'|'below'}}
  */
-export function placeBesideBlock(block, size, view, { min = 8, gap = 12, margin = 8 } = {}) {
+export function placeBesideBlock(block, size, view, { min = 8, gap = 12, margin = 8, first = 'right', cover = block } = {}) {
+  const right = ['right', { left: block.right + gap, top: block.top }];
+  const left = ['left', { left: block.left - gap - size.w, top: block.top }];
   const candidates = [
-    ['right', { left: block.right + gap, top: block.top }],
-    ['left', { left: block.left - gap - size.w, top: block.top }],
+    ...(first === 'left' ? [left, right] : [right, left]),
     ['below', { left: block.left, top: block.bottom + gap }],
   ].map(([side, raw]) => {
     const place = clampPlace(raw, size, view, min, margin);
-    return { side, ...place, covers: overlap(place, size, block) };
+    return { side, ...place, covers: overlap(place, size, cover) };
   });
   const best = candidates.find((c) => c.covers === 0) ?? candidates.reduce((a, b) => (b.covers < a.covers ? b : a));
   return { left: best.left, top: best.top, side: best.side };

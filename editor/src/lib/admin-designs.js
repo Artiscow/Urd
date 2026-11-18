@@ -9,7 +9,7 @@ import { SETTINGS_PLACES } from './settings-model.js';
 import { COLLECTION_LAYOUTS, CSV_PREVIEWS } from './collection-layout.js';
 import { PAGE_SETTINGS_LAYOUTS } from './page-settings.js';
 import { TAB_MENU_STYLES } from './panel-folds.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_GEARS, TOOLBAR_PHONES, TOOLBAR_SIZES, TOOLBAR_DESIGNS, CAP_LISTS, CAP_ADD_FORMS } from '../menu/forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_GEARS, TOOLBAR_PHONES, TOOLBAR_PHONE_PLACES, TOOLBAR_SIZES, TOOLBAR_DESIGNS, CAP_LISTS, CAP_ADD_FORMS } from '../menu/forms.js';
 
 /** How the panels are reached (Urd settings «Panel navigation»), the first the default: the strip under the top bar. */
 export const ADMIN_LAYOUTS = ['top-tabs', 'rail', 'sidebar', 'panel-tabs', 'page-tabs'];
@@ -30,6 +30,7 @@ export const PARTS = [
   { id: 'toolbarPhone', key: 'urd-toolbar-phone', options: TOOLBAR_PHONES, setting: 'toolbarPhone', labelKey: 'adminPart.toolbarPhone' },
   { id: 'toolbarDesign', key: 'urd-toolbar-design', options: TOOLBAR_DESIGNS, setting: 'toolbarDesign', labelKey: 'adminPart.toolbarDesign', optionKey: 'opt.toolbarDesign' },
   { id: 'toolbarSize', key: 'urd-toolbar-size', options: TOOLBAR_SIZES, setting: 'toolbarSize', labelKey: 'settings.toolbarSize', optionKey: 'opt.toolbarSize' },
+  { id: 'toolbarPhonePlace', key: 'urd-toolbar-phone-place', options: TOOLBAR_PHONE_PLACES, setting: 'toolbarPhonePlace', labelKey: 'adminPart.toolbarPhonePlace', optionKey: 'opt.toolbarPhonePlace' },
   { id: 'designs', key: 'urd-design-choice', options: DESIGN_CHOICES, setting: 'designs', labelKey: 'adminPart.designs', optionKey: 'opt.designChoice' },
   { id: 'extra', key: 'urd-extra-settings', options: EXTRA_MODES, setting: 'extra', labelKey: 'adminPart.extra', optionKey: 'opt.extraSettings' },
   { id: 'capAdd', key: 'urd-add-capability', options: CAP_ADD_FORMS, setting: 'capAdd', labelKey: 'adminPart.capAdd', optionKey: 'opt.capAdd' },
@@ -63,7 +64,7 @@ export const ADMIN_DESIGNS = [
     id: 'floating',
     labelKey: 'adminDesign.floating',
     parts: {
-      menu: 'wide', folds: 'left', toolbar: 'groups', toolbarLook: 'glass-accent', toolbarGear: 'on', toolbarPhone: 'on', toolbarSize: 'regular', toolbarDesign: 'small', designs: 'row', extra: 'shown', capAdd: 'folded', capList: null, shortcuts: 'search',
+      menu: 'wide', folds: 'left', toolbar: 'groups', toolbarLook: 'glass-accent', toolbarGear: 'on', toolbarPhone: 'on', toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'small', designs: 'row', extra: 'shown', capAdd: 'folded', capList: null, shortcuts: 'search',
       layout: 'top-tabs', sidebarFolds: null, panelTabMenus: null, tabMenus: 'groups', tabMenuStay: 'stay', place: 'dialog',
       addBlockMenu: 'side', layoutPicker: 'strip', linkEditor: 'dialog', pageSettings: 'dialog', collectionsLayout: 'drill', csvPreview: 'dialog',
     },
@@ -72,7 +73,7 @@ export const ADMIN_DESIGNS = [
     id: 'panels',
     labelKey: 'adminDesign.panels',
     parts: {
-      menu: 'tabs', folds: 'one', toolbar: 'panels', toolbarLook: 'capsule', toolbarGear: 'off', toolbarPhone: 'on', toolbarSize: 'regular', toolbarDesign: 'small', designs: 'inline', extra: 'shown', capAdd: 'head', capList: 'list', shortcuts: 'search',
+      menu: 'tabs', folds: 'one', toolbar: 'panels', toolbarLook: 'capsule', toolbarGear: 'off', toolbarPhone: 'on', toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'small', designs: 'inline', extra: 'shown', capAdd: 'head', capList: 'list', shortcuts: 'search',
       layout: 'page-tabs', sidebarFolds: null, panelTabMenus: null, tabMenus: 'lines', tabMenuStay: 'close', place: 'dialog',
       addBlockMenu: 'slim', layoutPicker: 'menu', linkEditor: 'popover', pageSettings: 'dialog', collectionsLayout: 'table', csvPreview: 'dialog',
     },
@@ -81,7 +82,7 @@ export const ADMIN_DESIGNS = [
     id: 'side',
     labelKey: 'adminDesign.side',
     parts: {
-      menu: 'docked-tabs', folds: 'left', toolbar: 'short', toolbarLook: 'strip', toolbarGear: null, toolbarPhone: 'on', toolbarSize: 'regular', toolbarDesign: 'small', designs: 'inline', extra: 'menu', capAdd: 'head', capList: 'list', shortcuts: 'pinned',
+      menu: 'docked-tabs', folds: 'left', toolbar: 'short', toolbarLook: 'strip', toolbarGear: null, toolbarPhone: 'on', toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'small', designs: 'inline', extra: 'menu', capAdd: 'head', capList: 'list', shortcuts: 'pinned',
       layout: 'sidebar', sidebarFolds: 'tree', panelTabMenus: null, tabMenus: null, tabMenuStay: null, place: 'panel',
       addBlockMenu: 'side', layoutPicker: 'strip', linkEditor: 'dialog', pageSettings: 'step', collectionsLayout: 'columns', csvPreview: 'panel',
     },
@@ -90,7 +91,7 @@ export const ADMIN_DESIGNS = [
     id: 'column',
     labelKey: 'adminDesign.column',
     parts: {
-      menu: 'docked', folds: 'all', toolbar: 'full', toolbarLook: 'squares', toolbarGear: null, toolbarPhone: null, toolbarSize: 'regular', toolbarDesign: 'full', designs: 'row', extra: 'shown', capAdd: 'head', capList: 'list', shortcuts: 'chips',
+      menu: 'docked', folds: 'all', toolbar: 'full', toolbarLook: 'squares', toolbarGear: null, toolbarPhone: null, toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'full', designs: 'row', extra: 'shown', capAdd: 'head', capList: 'list', shortcuts: 'chips',
       layout: 'rail', sidebarFolds: null, panelTabMenus: null, tabMenus: 'plain', tabMenuStay: 'stay', place: 'sheet',
       addBlockMenu: 'slim', layoutPicker: 'menu', linkEditor: 'popover', pageSettings: 'table', collectionsLayout: 'table', csvPreview: 'table',
     },

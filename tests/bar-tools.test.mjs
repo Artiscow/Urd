@@ -93,7 +93,7 @@ test('a group the menu draws in some states only is a tool in those states only'
 test('the engine reads the bar\'s choices under the keys and with the options the editor writes', async () => {
   const { PARTS } = await import('../editor/src/lib/admin-designs.js');
   const forms = await import('../editor/src/menu/forms.js');
-  const partOf = { form: 'toolbar', look: 'toolbarLook', gear: 'toolbarGear', phone: 'toolbarPhone', size: 'toolbarSize', design: 'toolbarDesign' };
+  const partOf = { form: 'toolbar', look: 'toolbarLook', gear: 'toolbarGear', phone: 'toolbarPhone', size: 'toolbarSize', design: 'toolbarDesign', place: 'toolbarPhonePlace' };
   for (const [choice, { key, options }] of Object.entries(BAR_CHOICES)) {
     const part = PARTS.find((p) => p.id === partOf[choice]);
     assert.equal(part?.key, key, choice);

@@ -28,6 +28,9 @@ export const TOOL_FORMS = ['panels', 'groups'];
 /** Whether the phone button (shown or hidden on phones) stands on a bar that otherwise leaves it to the right-click menu (every form but the full bar of actions), shown by default. */
 export const TOOLBAR_PHONES = ['on', 'off'];
 
+/** Where the bars on a block and a section stand in the phone view (preview-edit.js phoneBars): on the page as on the desktop, by default, or drawn by the editor beside the phone. */
+export const TOOLBAR_PHONE_PLACES = ['canvas', 'beside'];
+
 /** How large the bar is drawn (preview-edit.js barSize), regular by default: small, regular, medium and large. */
 export const TOOLBAR_SIZES = ['regular', 'small', 'medium', 'large'];
 

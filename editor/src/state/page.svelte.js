@@ -10,6 +10,7 @@ import { folds } from '../lib/folds.svelte.js';
 import { onlyOf } from '../lib/only-group.js';
 import { BAR_ICONS } from '$engine/bar-tools.js';
 import { placeBesideBlock, clampPlace, givesWay } from '../lib/menu-place.js';
+import { canvasBarState } from './canvas-bar.svelte.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
@@ -491,17 +492,30 @@ function menuPlaceFor(rect, small = false, section = false, { keepForm = false }
   const view = { w: window.innerWidth, h: window.innerHeight };
   const ir = previewState.iframeEl?.getBoundingClientRect();
   const s = previewState.scale;
-  const block = ir ? { left: ir.left + s * rect.left, top: ir.top + s * rect.top, right: ir.left + s * rect.right, bottom: ir.top + s * rect.bottom } : null;
-  // The wide menu opened beside a block gives way to one column where that covers clearly less of the block (givesWay); a section's menu, and one the owner dragged, keep their form.
+  const own = ir ? { left: ir.left + s * rect.left, top: ir.top + s * rect.top, right: ir.left + s * rect.right, bottom: ir.top + s * rect.bottom } : null;
+  // In the phone view the menu stands beside the phone, level with what it belongs to, never over the page where the stage has room (0.7.3.19.3): the phone's width stands for the block's, a section's menu gives way to one column there as a block's does, and the menu takes the side away from the bars beside the phone (CanvasBar.svelte).
+  const phone = previewState.viewMode === 'mobile' && own;
+  const block = phone ? { ...own, left: ir.left, right: ir.right } : own;
+  // What the menu keeps clear of: in the phone view the whole phone in sight, so it never stands below the block over the page where the stage has room beside the phone.
+  const stage = previewState.frameWrapEl?.getBoundingClientRect();
+  const cover = phone && stage ? { left: ir.left, right: ir.right, top: Math.max(ir.top, stage.top), bottom: Math.min(ir.bottom, stage.bottom) } : block;
+  const bars = [canvasBarState.placed, canvasBarState.sectionPlaced].filter((b) => phone && b && b.w > 0 && b.h > 0);
+  // The wide menu opened beside a block gives way to one column where that covers clearly less of the block (givesWay); a menu the owner dragged keeps its form, and so does a section's on the desktop.
   if (!small && !keepForm) {
     menu.cramped = false;
-    menu.cramped = givesWay(block, view, { wide: menuIsWide(), wideW: MENU_WIDE_W, narrowW: 400, h: menuSize().h, min: menu.min, dragged: Boolean(menu.place), section });
+    menu.cramped = givesWay(block, view, { wide: menuIsWide(), wideW: MENU_WIDE_W, narrowW: 400, h: menuSize().h, min: menu.min, dragged: Boolean(menu.place), section: section && !phone, cover, strict: Boolean(phone) });
   }
   const size = menuSize(small);
   if (menu.place) return clampPlace(menu.place, size, view, menu.min);
   if (!block) return { left: menu.min, top: 8 };
-  const { left, top } = placeBesideBlock(block, size, view, { min: menu.min });
-  return { left, top };
+  let place = placeBesideBlock(block, size, view, { min: menu.min, first: bars[0]?.side === 'right' ? 'left' : 'right', cover });
+  // Beside the phone on the bars' side, it stands under the bars it would meet.
+  for (const bar of bars) {
+    if (place.left < bar.left + bar.w && bar.left < place.left + size.w && place.top < bar.top + bar.h && bar.top < place.top + size.h) {
+      place = { ...place, ...clampPlace({ left: place.left, top: bar.top + bar.h + 6 }, size, view, menu.min) };
+    }
+  }
+  return { left: place.left, top: place.top };
 }
 
 /** The layer order from the element menu: the selected block in front of its section's other blocks or behind them all, as on the canvas (layer-order.js), in one undo step. */

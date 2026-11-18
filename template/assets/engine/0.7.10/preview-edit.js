@@ -183,6 +183,8 @@ const barGear = () => barChoice(BAR_CHOICES.gear) === 'on';
 const barPhone = () => barChoice(BAR_CHOICES.phone) === 'on';
 /** How large the bar is drawn (Urd settings «Toolbar size»): its class, which base.css sizes the bar by. */
 const barSize = () => barChoice(BAR_CHOICES.size);
+/** Whether the phone view's bars and their menus are drawn by the editor beside the phone (Urd settings «Bars in the phone view»), or stand on the page as on the desktop, as they do by default. */
+const phoneBars = () => isMobile() && barChoice(BAR_CHOICES.place) === 'beside';
 
 /**
  * The bar's look (Urd settings «Toolbar look», kept in the shared localStorage and read at every draw): the class `urd-bar-<look>` on the toolbar, which base.css draws.
@@ -520,7 +522,7 @@ export function watchPhoneBar() {
   if (phoneBarFrame) return;
   const tick = () => {
     phoneBarFrame = 0;
-    const on = isMobile() && !document.body.classList.contains('urd-chrome-off');
+    const on = phoneBars() && !document.body.classList.contains('urd-chrome-off');
     const block = on && selectedBlockId && multiIds.size <= 1
       ? document.querySelector(`.urd-block.urd-selected[data-block-id="${CSS.escape(selectedBlockId)}"]`)
       : null;
@@ -537,7 +539,7 @@ export function watchPhoneBar() {
 // In the phone view the section the mouse goes over is the one whose bar the editor draws.
 document.addEventListener('pointerover', (event) => {
   // A menu standing keeps the bar it hangs from, and the section its rows act on.
-  if (event.pointerType !== 'mouse' || !isMobile() || phoneMenu) return;
+  if (event.pointerType !== 'mouse' || !phoneBars() || phoneMenu) return;
   const id = eventTarget(event)?.closest('.urd-section')?.dataset.sectionId;
   if (!id || id === phoneBarSectionId) return;
   phoneBarSectionId = id;
@@ -552,7 +554,7 @@ document.addEventListener('pointerover', (event) => {
  * @param {boolean} [rest]
  */
 export function pressPhoneBar(kind, id, index, rest = false) {
-  if (typeof id !== 'string' || !isMobile() || !Number.isInteger(index)) return;
+  if (typeof id !== 'string' || !phoneBars() || !Number.isInteger(index)) return;
   const el = kind === 'section'
     ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(id)}"]`)
     : document.querySelector(`.urd-block.urd-selected[data-block-id="${CSS.escape(id)}"]`);
@@ -579,7 +581,7 @@ export function openSectionSettingsById(sectionId) {
  * `from` is the bar's ⋮ that opened it, if one did (moreButton): a press on it is no press outside, and with `rest`, opened by a mouse resting on the ⋮, the menu leaves the focus where it is and closes a moment after the mouse leaves the ⋮ and the menu.
  */
 function showContextMenu(el, x, y, label, build, from = null) {
-  if (isMobile()) {
+  if (phoneBars()) {
     showPhoneMenu(el, x, y, label, build, from);
     return;
   }
@@ -1506,6 +1508,8 @@ export function closeMenus() {
  */
 export function enhanceSection(host, section, grid) {
   host._urdGrid = grid;
+  // Where the phone view's bars stand, read at every drawing as the bar's other choices are: base.css leaves the page's own bars unseen while the editor draws them beside the phone.
+  document.body.classList.toggle('urd-bars-beside', barChoice(BAR_CHOICES.place) === 'beside');
   // The section's data on its element, for the right-click menu on its surface.
   host._urdSection = section;
   for (const el of host.querySelectorAll('.urd-block')) {

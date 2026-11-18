@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.19.3): the element menu beside the phone, and where the phone view's bars stand
+
+- [ ] In the phone view with a panel open on a wide window, open a block's settings from its bar, and a section's from its gear: the menu stands beside the phone in one column, level with the block or the section, covering none of the page
+- [ ] Open the same settings from the right-click menu and from the Phone panel's gear: the menu stands beside the phone the same way
+- [ ] On a narrow window, where the phone leaves too little room beside it, open a block's settings: the menu stands where it covers the least of the phone
+- [ ] The desktop view opens a block's settings beside the block as before, wide where it fits
+- [ ] With nothing chosen in Urd settings, «Bars in the phone view» stands at «On the phone»: in the phone view the block's and the section's bars stand on the page, on hover and on the selected block, with ⠿, and their ⋮ and right-click menus open on the page
+- [ ] Choose «Beside the phone»: the bars and their menus stand beside the phone at once, and the presets row reads as changed with its way back; choose «On the phone» again: they are back on the page
+- [ ] In both choices the text bar stands beside the phone when a text is written
+- [ ] With «Beside the phone» chosen, the 0.7.3.23 and 0.7.3.19.2 batches below hold as written
+
 ### Test batch (0.7.3.23): a section's settings in one press in the phone view
 
 - [ ] In the phone view, move the mouse over a section: its bar stands beside the phone, marked «Section» (with its #link name where it has one), level with the section's top, and nothing of it stands on the page over the first block

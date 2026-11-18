@@ -38,7 +38,7 @@ function ctx() {
     panelTabMenus: false,
     adminLangOptions: () => [['nb', 'Norsk bokmål']],
     adminTheme: 'grey', adminLayout: 'rail', settingsPlace: 'dialog', settingsPictures: 'pictures', adminLangChoice: 'auto',
-    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'squares', toolbarGearPref: 'off', toolbarPhonePref: 'on', toolbarDesignPref: 'small', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
+    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'squares', toolbarGearPref: 'off', toolbarPhonePref: 'on', toolbarPhonePlacePref: 'canvas', toolbarDesignPref: 'small', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', spellcheckPref: 'on', panelsPref: 'remember',
     siteDraft: { admin: {}, analytics: {} },
   };
   const designs = { options: [['floating', 'Floating menu'], ['panels', 'Small panels'], ['side', 'Side panel'], ['column', 'One column']], values: {}, state: { design: 'floating', changed: [] }, apply() {} };

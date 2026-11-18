@@ -136,7 +136,7 @@ function windowContext() {
   const keep = (key, value, dflt) => (value === dflt ? local.delete(key) : local.set(key, value));
   const ed = {
     adminLayout: 'top-tabs', sidebarFolds: 'tree', panelTabMenus: false, tabMenus: 'groups', tabMenuStay: 'stay', settingsPlace: 'dialog',
-    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'glass-accent', toolbarGearPref: 'on', toolbarPhonePref: 'on', toolbarDesignPref: 'small', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', pageSettingsPref: 'dialog', collectionsLayout: 'drill', csvPreviewPref: 'dialog',
+    addBlockMenuPref: 'side', toolbarPref: 'groups', toolbarLookPref: 'glass-accent', toolbarGearPref: 'on', toolbarPhonePref: 'on', toolbarPhonePlacePref: 'canvas', toolbarDesignPref: 'small', toolbarSizePref: 'regular', layoutPickerPref: 'strip', linkEditorPref: 'dialog', pageSettingsPref: 'dialog', collectionsLayout: 'drill', csvPreviewPref: 'dialog',
     setAdminLayout(v) { this.adminLayout = v; keep('urd-admin-layout', v, 'top-tabs'); },
     setSidebarFolds(v) { this.sidebarFolds = v; keep('urd-sidebar-folds', v, 'tree'); },
     setPanelTabMenus(v) { this.panelTabMenus = v === 'on'; keep('urd-panel-tab-menus', v, 'off'); },
@@ -149,6 +149,7 @@ function windowContext() {
     setToolbarGear(v) { this.toolbarGearPref = v; keep('urd-toolbar-gear', v, 'on'); },
     setToolbarSize(v) { this.toolbarSizePref = v; keep('urd-toolbar-size', v, 'regular'); },
     setToolbarPhone(v) { this.toolbarPhonePref = v; keep('urd-toolbar-phone', v, 'on'); },
+    setToolbarPhonePlace(v) { this.toolbarPhonePlacePref = v; keep('urd-toolbar-phone-place', v, 'canvas'); },
     setToolbarDesign(v) { this.toolbarDesignPref = v; keep('urd-toolbar-design', v, 'small'); },
     setLayoutPicker(v) { this.layoutPickerPref = v; keep('urd-layout-picker', v, 'strip'); },
     setLinkEditor(v) { this.linkEditorPref = v; keep('urd-link-editor', v, 'dialog'); },

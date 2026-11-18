@@ -19376,8 +19376,8 @@ body.urd-mobile .urd-add-section {
   display: flex;
 }
 
-/* In the phone view the editor draws the selected block's bar beside the phone (0.7.3.19.2, editor/src/lib/CanvasBar.svelte): the page keeps its own unseen, for the editor's presses to press its tools. */
-body.urd-preview.urd-mobile .urd-block > .urd-edit-toolbar {
+/* In the phone view, where Urd settings «Bars in the phone view» puts the bars beside the phone (urd-bars-beside, preview-edit.js), the editor draws the selected block's bar there (0.7.3.19.2, editor/src/lib/CanvasBar.svelte): the page keeps its own unseen, for the editor's presses to press its tools. */
+body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   display: none;
 }
 
@@ -20246,8 +20246,8 @@ body.urd-preview.urd-mobile .urd-block > .urd-edit-toolbar {
   align-items: center;
 }
 
-/* In the phone view the editor draws the section's bar beside the phone (0.7.3.23, editor/src/lib/CanvasBar.svelte), level with the section's top: the page keeps its own unseen, for the editor's presses to press its tools, and the section's first block stays uncovered. */
-body.urd-preview.urd-mobile .urd-section > .urd-section-toolbar {
+/* In the phone view the editor draws the section's bar beside the phone (0.7.3.23, editor/src/lib/CanvasBar.svelte), level with the section's top, as long as the bars stand beside it (urd-bars-beside): the page keeps its own unseen, for the editor's presses to press its tools, and the section's first block stays uncovered. */
+body.urd-preview.urd-mobile.urd-bars-beside .urd-section > .urd-section-toolbar {
   display: none;
 }
 

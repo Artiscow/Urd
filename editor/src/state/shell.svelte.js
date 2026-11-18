@@ -3,7 +3,7 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { ta } from '$engine/i18n.js';
-import { TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_SIZES, TOOLBAR_GEARS, TOOLBAR_PHONES, TOOLBAR_DESIGNS } from '../menu/forms.js';
+import { TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_SIZES, TOOLBAR_GEARS, TOOLBAR_PHONES, TOOLBAR_PHONE_PLACES, TOOLBAR_DESIGNS } from '../menu/forms.js';
 import { relativeLuminance, contrastRatio } from '$engine/theme.js';
 import { liftSiteFile, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
 import { createDraftStore } from '../lib/draftStore.js';
@@ -834,6 +834,8 @@ let toolbarDesignPref = $state(storedOf('urd-toolbar-design', TOOLBAR_DESIGNS));
 const setToolbarDesign = (v) => { toolbarDesignPref = keepOf('urd-toolbar-design', TOOLBAR_DESIGNS, v); };
 let toolbarSizePref = $state(storedOf('urd-toolbar-size', TOOLBAR_SIZES));
 const setToolbarSize = (v) => { toolbarSizePref = keepOf('urd-toolbar-size', TOOLBAR_SIZES, v); };
+let toolbarPhonePlacePref = $state(storedOf('urd-toolbar-phone-place', TOOLBAR_PHONE_PLACES));
+const setToolbarPhonePlace = (v) => { toolbarPhonePlacePref = keepOf('urd-toolbar-phone-place', TOOLBAR_PHONE_PLACES, v); };
 
 /** The shortcut sheet (lib/ShortcutSheet.svelte): opened by «?» in the panels and on the page, from the Urd settings and from the setup wizard. */
 let shortcutsOpen = $state(false);
@@ -1230,6 +1232,8 @@ export const shellState = {
   setToolbarGear,
   get toolbarPhonePref() { return toolbarPhonePref; },
   setToolbarPhone,
+  get toolbarPhonePlacePref() { return toolbarPhonePlacePref; },
+  setToolbarPhonePlace,
   get toolbarDesignPref() { return toolbarDesignPref; },
   setToolbarDesign,
   get toolbarSizePref() { return toolbarSizePref; },

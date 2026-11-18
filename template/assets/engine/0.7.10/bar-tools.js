@@ -12,7 +12,7 @@
 import { calDesign, calOptionDefs, calOptionShown, calOptions } from './calendar-designs.js';
 
 /**
- * The bar's choices in Urd settings, each kept in the shared localStorage under its key, with its options and the default first: the form, the look, the gear, the phone button, the size, and what the design button opens.
+ * The bar's choices in Urd settings, each kept in the shared localStorage under its key, with its options and the default first: the form, the look, the gear, the phone button, the size, what the design button opens, and where the bars stand in the phone view, on the phone or beside it.
  * The editor writes them as parts of the admin designs (editor/src/lib/admin-designs.js), and tests/bar-tools.test.mjs holds the two lists equal.
  */
 export const BAR_CHOICES = {
@@ -22,6 +22,7 @@ export const BAR_CHOICES = {
   phone: { key: 'urd-toolbar-phone', options: ['on', 'off'] },
   size: { key: 'urd-toolbar-size', options: ['regular', 'small', 'medium', 'large'] },
   design: { key: 'urd-toolbar-design', options: ['small', 'full'] },
+  place: { key: 'urd-toolbar-phone-place', options: ['canvas', 'beside'] },
 };
 
 /** The forms whose tools belong to the menu's areas, which the area looks set apart. */

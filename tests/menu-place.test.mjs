@@ -134,3 +134,28 @@ test('placeClearOf: beside the canvas a bar moves down under a bar standing wher
   const above = { left: 980, top: 400 - 12 - 40, w: 300, h: 40 };
   assert.deepEqual(placeClearOf(block, size, wide, stage, [above]), { left: 980, top: 348 - 12 - 40, side: 'above' });
 });
+
+test('placeBesideBlock: the left first where asked, as the phone view asks away from the bars beside the phone', () => {
+  const view = { w: 1500, h: 900 };
+  const phone = { left: 560, top: 200, right: 950, bottom: 300 };
+  const size = { w: 400, h: 500 };
+  assert.deepEqual(placeBesideBlock(phone, size, view), { left: 962, top: 200, side: 'right' });
+  assert.deepEqual(placeBesideBlock(phone, size, view, { first: 'left' }), { left: 148, top: 200, side: 'left' });
+  // No room on the left: the right all the same.
+  assert.equal(placeBesideBlock({ ...phone, left: 300, right: 690 }, size, view, { first: 'left' }).side, 'right');
+});
+
+test('placeBesideBlock and givesWay: kept clear of the whole phone in the phone view, the menu stands beside it rather than below the block, in one column where only that fits', () => {
+  const view = { w: 1920, h: 1080 };
+  const strip = { left: 909, top: 300, right: 1302, bottom: 400 };
+  const phone = { left: 909, top: 110, right: 1302, bottom: 1080 };
+  // Kept clear of the block alone, the wide menu stands below it, over the page.
+  assert.equal(placeBesideBlock(strip, { w: 660, h: 600 }, view, { min: 383 }).side, 'below');
+  // Kept clear of the phone, the wide menu would cover part of it: the one column stands beside it instead.
+  assert.equal(givesWay(strip, view, { wide: true, wideW: 660, narrowW: 400, h: 600, min: 383, cover: phone }), true);
+  assert.deepEqual(placeBesideBlock(strip, { w: 400, h: 600 }, view, { min: 383, cover: phone }), { left: 1314, top: 300, side: 'right' });
+  // A tall section: its tenth would let the wide menu cover the phone's edge; strict, it gives way all the same.
+  const section = { left: 909, top: 120, right: 1302, bottom: 1060 };
+  assert.equal(givesWay(section, view, { wide: true, wideW: 660, narrowW: 400, h: 600, min: 383, cover: phone }), false);
+  assert.equal(givesWay(section, view, { wide: true, wideW: 660, narrowW: 400, h: 600, min: 383, cover: phone, strict: true }), true);
+});

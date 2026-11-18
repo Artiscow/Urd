@@ -5,7 +5,7 @@
  * Pure, node-tested (tests/settings-model.test.mjs).
  */
 import { panelsPrefIn } from './panels-start.js';
-import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS, CAP_LISTS, CAP_ADD_FORMS, CAP_ADD_LISTS } from '../menu/forms.js';
+import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS, TOOLBAR_PHONE_PLACES, CAP_LISTS, CAP_ADD_FORMS, CAP_ADD_LISTS } from '../menu/forms.js';
 
 /** The element menu's forms as the settings show them: the three beside the block, then the two docked. */
 const MENU_FORM_ORDER = ['wide', 'narrow', 'tabs', 'docked', 'docked-tabs'].filter((id) => MENU_FORMS.includes(id));
@@ -169,6 +169,9 @@ export const SETTINGS_GROUPS = [
       { id: 'toolbarPhone', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarPhone', tipKey: 'tip.adminPart.toolbarPhone', kind: 'seg',
         when: (c) => c.ed.toolbarPref !== 'full',
         options: (c) => [['on', c.ta('opt.showHide.show')], ['off', c.ta('opt.showHide.hide')]], get: (c) => c.ed.toolbarPhonePref, set: (c, v) => c.ed.setToolbarPhone(v) },
+      // Where the bars stand in the phone view: on the page as on the desktop, by default, or beside the phone.
+      { id: 'toolbarPhonePlace', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarPhonePlace', tipKey: 'tip.adminPart.toolbarPhonePlace', kind: 'seg',
+        options: (c) => TOOLBAR_PHONE_PLACES.map((id) => [id, c.ta(`opt.toolbarPhonePlace.${id}`)]), get: (c) => c.ed.toolbarPhonePlacePref, set: (c, v) => c.ed.setToolbarPhonePlace(v) },
       { id: 'addBlockMenu', part: true, labelKey: 'settings.addBlockMenu', tipKey: 'tip.settings.addBlockMenu', kind: 'choice', look: 'addBlock',
         options: (c) => [['side', c.ta('settings.addBlockMenuSide')], ['slim', c.ta('settings.addBlockMenuSlim')]],
         get: (c) => c.ed.addBlockMenuPref, set: (c, v) => c.ed.setAddBlockMenu(v) },
