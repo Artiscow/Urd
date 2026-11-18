@@ -44,8 +44,9 @@ const HINT_CSS = `
 .urd-hint-chip:focus-visible {
   opacity: 0.92; pointer-events: auto;
 }
-/* On a block's bar the chip is the bar's last tool, after the tools, so a bar wider than its block never stands over it: it takes the bar's look, size and colours as the tools do, and shows with the bar. */
-.urd-edit-toolbar .urd-bar-body > .urd-hint-chip {
+/* On a block's bar the chip is the bar's last tool, after the tools, so a bar wider than its block never stands over it: it takes the bar's look, size and colours as the tools do, and shows with the bar. A section's bar holds it the same way. */
+.urd-edit-toolbar .urd-bar-body > .urd-hint-chip,
+.urd-section-toolbar > .urd-hint-chip {
   position: static; transform: none; width: auto;
   opacity: 1; pointer-events: auto;
 }

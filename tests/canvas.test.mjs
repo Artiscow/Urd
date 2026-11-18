@@ -58,8 +58,8 @@ test('.urd-canvas has no property that creates a containing block for fixed', ()
 });
 
 test('neither the desktop section nor the canvas is zoomed: blocks shrink one by one (ADR-0024), never the page', () => {
-  const section = ruleBody(CSS, 'body:not(.urd-mobile) .urd-section');
-  assert.ok(section, 'rule body:not(.urd-mobile) .urd-section is missing');
+  const section = ruleBody(CSS, 'body:not(.urd-mobile) .urd-section:not(.urd-handoff)');
+  assert.ok(section, 'rule body:not(.urd-mobile) .urd-section:not(.urd-handoff) is missing');
   assert.ok(!/(^|;|\s)zoom\s*:/.test(section), 'the page zoom of the withdrawn ADR-0018 addendum must not return');
   const canvas = ruleBody(CSS, '.urd-canvas');
   assert.ok(!/(^|;|\s)zoom\s*:/.test(canvas), 'the canvas is never zoomed');

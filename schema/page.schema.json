@@ -98,7 +98,7 @@
             "mobilePadBottom": { "type": "integer", "minimum": 0, "description": "The room below the section's last block on the phone, in px (additive from 0.7.3.26). Absence = 24." },
             "mobileGap": { "type": "integer", "minimum": 0, "maximum": 96, "description": "The space between the blocks that flow in this section's row grid on the phone, in px (additive from 0.7.3.7, ADR-0019). Absence = the site's layout.mobileGap, else 16." },
             "readablePhone": { "type": "boolean", "description": "«Force readable text» on the phone (additive from 0.7.3.20, ADR-0034): false lets a block with words take any width in the phone's cells. Absence = on: a cell with words too narrow to read well stands across the row." },
-            "readableDesktop": { "type": "boolean", "description": "«Force readable text» on the desktop (additive from 0.7.3.20, ADR-0034): false lets a text's lines run the box's width. Absence = on: a text's lines wrap at 75 characters." }
+            "readableDesktop": { "type": "boolean", "description": "«Force readable text» on the desktop (additive from 0.7.3.20, ADR-0034): false lets a text's lines run the box's width and keeps the section's desktop layout. Absence = on: a text's lines wrap at 75 characters, and under the window width where a text would stand narrower than 140 px the section shows its phone layout." }
           }
         },
         "grid": {

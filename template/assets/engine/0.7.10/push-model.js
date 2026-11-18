@@ -163,6 +163,53 @@ export function forcesReadable(section, viewport) {
   return section?.size?.[viewport === 'mobile' ? 'readablePhone' : 'readableDesktop'] !== false;
 }
 
+/** The narrowest a block with words reads well at, in px (ADR-0034): the phone's floor for words in cells (base.css), the stop of a text's width handle on the desktop, and the line under which a section shows its phone layout (phoneHandoff). */
+export const READABLE_PX = 140;
+
+/** The screen a design is reckoned at, as the editor's standard screen and the design picker's preview reckon a block (block-designs.js designPreviewFrame). */
+const HANDOFF_DESIGN_PX = 1440;
+
+/**
+ * The widest window at which a section shows its phone layout above the phone breakpoint, since a text in it would stand narrower than READABLE_PX on the desktop canvas (ADR-0034); 0 where none would.
+ * The texts are those the desktop's «Force readable text» measures and stops at the floor (render.js: a text block in its plain design); a short word on a button, a basket or a statistic reads well narrower, and a block that redraws itself by its width has a narrow design of its own.
+ * The canvas is the window less the side margin on each side, up to its bound (base.css): the section's own px width, else the site's content width, none where either is full width. A text stands at its share of it and so falls under the floor below a window width of its own; the section takes the widest of its texts'.
+ * A text already narrower than the floor at the design width, the canvas on a 1440 px screen, is the owner's choice and does not count, nor does one hidden on the desktop.
+ * A text that shrinks below the design width instead of wrapping (ADR-0024 decision 6) keeps its lines down to its smallest scale (`fitMin`), so it falls under the floor only where its box is narrower than the floor at that scale; without a design size (a full-width canvas) it wraps as any other.
+ * The page's scrollbar, where it takes room (`scrollbar-gutter: stable` in base.css), narrows the canvas by its width while the media query reads the window with it.
+ * None where the section's desktop «Force readable text» is off, where its own width is in another unit than px (no width to reckon with), or where the width lies at or under the phone breakpoint, where the whole page shows its phone layout already.
+ * @param {object} section
+ * @param {object} site site.json: `layout.contentWidth`, `layout.gutter` (vw) and `breakpoints.mobile`
+ * @param {(block: object) => boolean} hasWords Whether a block's words are measured (render.js: a text block in its plain design)
+ * @param {number} [scrollbar] The width the page's scrollbar takes, in px
+ * @returns {number} The window width in px at and under which the section shows its phone layout, or 0
+ */
+export function phoneHandoff(section, site, hasWords, scrollbar = 0) {
+  if (!forcesReadable(section, 'desktop')) return 0;
+  const gutter = Number(site?.layout?.gutter ?? 6);
+  const share = 1 - (2 * (Number.isFinite(gutter) ? gutter : 6)) / 100;
+  if (!(share > 0)) return 0;
+  const own = section?.size?.maxWidth;
+  const ownPx = typeof own === 'string' && /^\d+(\.\d+)?px$/.test(own) ? parseFloat(own) : 0;
+  if (own && own !== 'full' && !ownPx) return 0;
+  const siteWidth = site?.layout?.contentWidth ?? HANDOFF_DESIGN_PX;
+  const bound = own === 'full' ? 0 : ownPx || (typeof siteWidth === 'number' ? siteWidth : 0);
+  const atDesign = HANDOFF_DESIGN_PX * share;
+  const design = bound ? Math.min(bound, atDesign) : atDesign;
+  const bar = Math.max(0, Number(scrollbar) || 0);
+  let widest = 0;
+  for (const block of section?.blocks ?? []) {
+    const w = Number(block?.frames?.desktop?.w);
+    if (block?.hideDesktop || !(w > 0) || !hasWords(block)) continue;
+    if ((w / 100) * design < READABLE_PX) continue;
+    const floor = bound && (block.fit === 'shrink' || block.fit === 'both') ? READABLE_PX * clampFitMin(block.fitMin) : READABLE_PX;
+    // The window at which the canvas leaves the block its floor: under it, the words stand narrower.
+    const edge = (floor / (w / 100) + bar) / share;
+    widest = Math.max(widest, Math.ceil(edge) - 1);
+  }
+  const breakpoint = Number(site?.breakpoints?.mobile ?? 640);
+  return widest > breakpoint ? widest : 0;
+}
+
 /**
  * The props that hold a block's words, by its type: the words the phone can have of its own (`phoneProps`, additive, ADR-0033), written in the phone view and drawn at phone width in the desktop's place: a text's words, a quote's with its name and role, a statistic's label, an audio player's title and a countdown's words for when the time is up.
  * A list of words (questions, events, rows) is not among them: its items would have to be matched one by one, and one added on the desktop would not reach the phone's copy. Nor is a statistic's number, which is the same fact on every screen.

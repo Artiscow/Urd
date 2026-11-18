@@ -55,7 +55,8 @@ export const textBlock = {
       content.style.setProperty('--urd-text-wrap', props.words === 'whole' ? 'normal' : 'break-word');
     }
     // «Force readable text» on the desktop (ADR-0034): the lines of a plain text wrap at a measure, each paragraph by the text's alignment or its own (base.css); the document designs keep their own layout.
-    if (design === 'plain' && ctx.viewport !== 'mobile' && forcesReadable(ctx.section, 'desktop')) {
+    // A section showing its phone layout on a desktop page (render.js ctx.handoff) keeps it, its row as wide as the desktop's canvas.
+    if (design === 'plain' && (ctx.viewport !== 'mobile' || ctx.handoff) && forcesReadable(ctx.section, 'desktop')) {
       content.dataset.urdMeasure = '';
       content.dataset.urdAlign = props.align === 'center' || props.align === 'right' ? props.align : 'left';
     }

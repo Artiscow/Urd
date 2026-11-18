@@ -547,7 +547,8 @@ function enablePreview(state, opts) {
       for (const timer of fitTimers.get(msg.blockId) ?? []) clearTimeout(timer);
       const measure = () => {
         const el = root.querySelector(`.urd-block[data-block-id="${CSS.escape(msg.blockId)}"]`);
-        if (!el || el.querySelector('[aria-busy="true"]')) return;
+        // A block in a section showing its phone layout on the desktop (render.js urd-handoff) stands in a phone cell, which is no measure of its desktop frame.
+        if (!el || el.closest('.urd-handoff') || el.querySelector('[aria-busy="true"]')) return;
         // Measured as a visitor sees the block at rest: the adders and the
         // placeholders of empty fields are the editor's own and never part of
         // the design's height.

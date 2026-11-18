@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { forcesReadable, PHONE_WORDS, phoneWordsOf, phoneWordsChange, propsForViewport, PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { forcesReadable, phoneHandoff, READABLE_PX, PHONE_WORDS, phoneWordsOf, phoneWordsChange, propsForViewport, PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -444,4 +444,41 @@ test('forcesReadable: «Force readable text» is on for each screen unless the s
   assert.equal(forcesReadable({ size: { readablePhone: false } }, 'desktop'), true);
   assert.equal(forcesReadable({ size: { readableDesktop: false } }, 'desktop'), false);
   assert.equal(forcesReadable({ size: { readableDesktop: true } }, 'desktop'), true);
+});
+
+test('phoneHandoff: a section shows its phone layout under the window width where a block with words would stand narrower than the readable floor', () => {
+  const words = (block) => block.type === 'text';
+  const text = (w, extra = {}) => ({ id: `t${w}`, type: 'text', frames: { desktop: { x: 0, y: 0, w, h: 40 } }, ...extra });
+  const site = { layout: { contentWidth: 1440, gutter: 6 }, breakpoints: { mobile: 640 } };
+  assert.equal(READABLE_PX, 140);
+  // A text at 21 % of the canvas: 140 px at a canvas of 666.7 px, a window of 757.6 px less 6 vw on each side.
+  assert.equal(phoneHandoff({ blocks: [text(21)] }, site, words), 757);
+  // The section takes its narrowest text's width; a picture never counts, nor a text hidden on the desktop.
+  assert.equal(phoneHandoff({ blocks: [text(40), text(21), { id: 'p', type: 'image', frames: { desktop: { x: 0, y: 0, w: 5, h: 40 } } }, text(12, { hideDesktop: true })] }, site, words), 757);
+  // Under the phone breakpoint the whole page is the phone's already.
+  assert.equal(phoneHandoff({ blocks: [text(40)] }, site, words), 0);
+  // «Force readable text» off on the desktop keeps the desktop layout.
+  assert.equal(phoneHandoff({ size: { readableDesktop: false }, blocks: [text(21)] }, site, words), 0);
+  // A text already under the floor at the design width is the owner's choice and does not count.
+  assert.equal(phoneHandoff({ blocks: [text(9)] }, site, words), 0);
+  // A section of its own px width is reckoned against it: 21 % of 800 px is 168 px, under the floor below a window of 757 px still; 15 % of it is 120 px and does not count.
+  assert.equal(phoneHandoff({ size: { maxWidth: '800px' }, blocks: [text(21)] }, site, words), 757);
+  assert.equal(phoneHandoff({ size: { maxWidth: '800px' }, blocks: [text(15)] }, site, words), 0);
+  // A full-width section has no bound and is reckoned at the standard design width; a wider side margin moves the line out.
+  assert.equal(phoneHandoff({ size: { maxWidth: 'full' }, blocks: [text(21)] }, site, words), 757);
+  assert.equal(phoneHandoff({ blocks: [text(21)] }, { ...site, layout: { contentWidth: 1440, gutter: 12 } }, words), 877);
+  // The site's own phone breakpoint, and the standard one without it.
+  assert.equal(phoneHandoff({ blocks: [text(21)] }, { ...site, breakpoints: { mobile: 800 } }, words), 0);
+  assert.equal(phoneHandoff({ blocks: [text(21)] }, {}, words), 757);
+  // The design width is the canvas on a 1440 px screen (1267 px), as the editor and the design picker reckon a block: 10.5 % is 133 px there and does not count.
+  assert.equal(phoneHandoff({ blocks: [text(10.5)] }, site, words), 0);
+  // A text that shrinks keeps its lines down to its smallest scale: its floor is the readable floor at that scale; without a design size it wraps as any other.
+  assert.equal(phoneHandoff({ blocks: [text(21, { fit: 'shrink', fitMin: 0.5 })] }, site, words), 0);
+  assert.equal(phoneHandoff({ blocks: [text(21, { fit: 'shrink', fitMin: 0.9 })] }, site, words), 681);
+  assert.equal(phoneHandoff({ blocks: [text(21, { fit: 'both' })] }, site, words), 0);
+  assert.equal(phoneHandoff({ size: { maxWidth: 'full' }, blocks: [text(21, { fit: 'shrink', fitMin: 0.5 })] }, site, words), 757);
+  // A scrollbar that takes room narrows the canvas by its width while the media query reads the window with it.
+  assert.equal(phoneHandoff({ blocks: [text(21)] }, site, words, 15), 774);
+  // A section width in another unit than px has no width to reckon with.
+  assert.equal(phoneHandoff({ size: { maxWidth: '60rem' }, blocks: [text(21)] }, site, words), 0);
 });

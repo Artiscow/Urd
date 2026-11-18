@@ -18,6 +18,7 @@
  *                  { type: 'urd-section-phone-room', sectionId, side, px }  (a seam's grip in the phone view: the room above ('top') or below ('bottom') the section's blocks on the phone, 0.7.3.26)
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
+ *                  { type: 'urd-edit-on-phone', sectionId }  (a section showing its phone layout in the desktop view, its words too narrow at this width: its bar's «Edit on the phone»)
  *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks, the custom order or blocks taken out of the rule's columns; also a block taken out of its group, or the group undone, from the block's menu; coalesce from the keys, a burst one undo step)
  *                  { type: 'urd-phone-layout', sectionId, change, preset?, follow? }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js, `preset` its id, which asks for «Same height» after it; «Same width» there; or «Same height», the heights its lines are measured to, `follow` where they follow a preset as part of its step)
  *                  { type: 'urd-hover-block', blockId }  (the block under the mouse, null for none: its row in the Phone panel's list is lit)
@@ -40,7 +41,7 @@
  *                  { type: 'urd-ctx-close' }, { type: 'urd-ctx-hold' }, { type: 'urd-ctx-hover', over }  (the phone view's menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
-import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX, DRAWS_NOTHING } from './push-model.js';
+import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX, DRAWS_NOTHING, READABLE_PX } from './push-model.js';
 import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight, phoneRoomOf } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -54,6 +55,7 @@ import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
 import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneAfterLine, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup } from './phone-moves.js';
 import { closeColorPicker } from './color-picker.js';
+import { attachHint } from './hint.js';
 import { closeDropdowns } from './dropdown.js';
 import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { TEXT_BLOCKS, unwrap, stripDescendantProp, applyWholeStyle } from './text-whole.js';
@@ -837,6 +839,8 @@ function openSectionContextMenu(host, x, y, from = null) {
   const section = host._urdSection;
   if (!section) return;
   const phone = isMobile();
+  // A section showing its phone layout in the desktop view (render.js urd-handoff) takes no blocks and keeps its desktop height there: those rows are greyed.
+  const handoff = host.classList.contains('urd-handoff');
   const select = () => {
     selectBlock(null);
     markActiveVisual(host);
@@ -852,17 +856,17 @@ function openSectionContextMenu(host, x, y, from = null) {
   showContextMenu(host, x, y, ta('canvas.ctx.sectionLabel'), (item, sep) => {
     // Opened from the section's bar the editor draws beside the phone, «here» is the section's top, as the bar stands there; otherwise the point the menu was opened at.
     const here = from?.editor ? null : { x, y };
-    item(ta('canvas.ctx.newBlockHere'), keysHere('/'), () => (here ? openBlockMenuAt(host, here.x, here.y) : openBlockMenuAt(host))).classList.add('urd-ctx-first');
+    item(ta('canvas.ctx.newBlockHere'), keysHere('/'), () => (here ? openBlockMenuAt(host, here.x, here.y) : openBlockMenuAt(host)), { disabled: handoff }).classList.add('urd-ctx-first');
     // One clipboard: blocks paste at this section, a section lands below it.
     if (clipboard?.kind === 'section') item(ta('canvas.ctx.pasteSection'), keysHere('Ctrl+V'), () => pasteSection(host));
-    else item(ta('canvas.ctx.paste'), keysHere('Ctrl+V'), () => pasteClipboard(clipboard, { ...here, host }), { disabled: !clipboard?.blocks?.length });
+    else item(ta('canvas.ctx.paste'), keysHere('Ctrl+V'), () => pasteClipboard(clipboard, { ...here, host }), { disabled: handoff || !clipboard?.blocks?.length });
     sep();
     // The section's settings, in the floating menu as the gear on its bar opens them.
     item(ta('canvas.ctx.sectionSettings'), '', () => openSectionSettings(host, section));
     item(ta('canvas.ctx.newSectionBelow'), '', () => adderBelow()?.click(), { disabled: phone || !adderBelow() });
     item(ta('canvas.ctx.sectionUp'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     item(ta('canvas.ctx.sectionDown'), '', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
-    if (host._urdGrid || phone) item(ta('canvas.fitHeight'), '', () => fitSectionHeight(host, section, host._urdGrid), { disabled: phone });
+    if (host._urdGrid || phone) item(ta('canvas.fitHeight'), '', () => fitSectionHeight(host, section, host._urdGrid), { disabled: phone || handoff });
     sep();
     item(ta('canvas.ctx.cutSection'), keysHere('Ctrl+X'), () => copySection(host, true));
     item(ta('canvas.ctx.copySection'), keysHere('Ctrl+C'), () => copySection(host));
@@ -1099,7 +1103,7 @@ const STOP_MARK_PX = 6;
 const LANDING_NEAR_PX = 24;
 
 /** The narrowest a text block can be dragged on the desktop while its section forces readable text (ADR-0034), in px. */
-const READABLE_MIN_PX = 140;
+const READABLE_MIN_PX = READABLE_PX;
 
 /** The blocks greyed as too narrow for their words just now, and the screen whose «Force readable text» greys them. */
 let squeezed = [];
@@ -1642,6 +1646,16 @@ export function enhanceSection(host, section, grid) {
   document.body.classList.toggle('urd-bars-beside', barChoice(BAR_CHOICES.place) === 'beside');
   // The section's data on its element, for the right-click menu on its surface.
   host._urdSection = section;
+  // A section showing its phone layout in the desktop view, since its words would be too narrow at this width (render.js urd-handoff, ADR-0034), is shown and not edited: its canvas takes no press, and its bar opens it in the phone view.
+  if (host.classList.contains('urd-handoff')) {
+    host.querySelector(':scope > .urd-canvas')?.setAttribute('inert', '');
+    // A selection in it ends, so the editor's menu never writes a desktop frame from the phone layout's measure.
+    if (multiSectionId === section.id) clearMulti();
+    if (selectedBlockId && section.blocks.some((b) => b.id === selectedBlockId)) selectBlock(null);
+    if (section.id === activeSectionId) host.classList.add('urd-section-active');
+    addHandoffBar(host, section);
+    return;
+  }
   for (const el of host.querySelectorAll('.urd-block')) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
@@ -1780,17 +1794,18 @@ const phoneAdd = (drop) => (isMobile() ? { phone: { drop: drop ?? null } } : {})
  * editor does not.
  */
 export function placeBlock(block, root) {
-  let host = root.querySelector('.urd-section-active');
+  // A section showing its phone layout in the desktop view (render.js urd-handoff) takes no block there.
+  let host = root.querySelector('.urd-section-active:not(.urd-handoff)');
   if (!host) {
     let best = null;
     let bestDist = Infinity;
-    for (const el of root.querySelectorAll('.urd-section')) {
+    for (const el of root.querySelectorAll('.urd-section:not(.urd-handoff)')) {
       const r = el.getBoundingClientRect();
       if (r.bottom <= 0 || r.top >= window.innerHeight) continue;
       const dist = Math.abs(r.top + r.height / 2 - window.innerHeight / 2);
       if (dist < bestDist) { best = el; bestDist = dist; }
     }
-    host = best ?? root.querySelector('.urd-section');
+    host = best ?? root.querySelector('.urd-section:not(.urd-handoff)');
   }
   if (!host) return;
 
@@ -1866,7 +1881,8 @@ export function toggleGridOverlays(visible, page, site) {
   gridOverlaysOn = visible;
   document.querySelectorAll('.urd-grid-persistent').forEach((el) => el.remove());
   if (!visible || !page || !site) return;
-  for (const host of document.querySelectorAll('.urd-section')) {
+  // A section showing its phone layout in the desktop view has no desktop grid to show.
+  for (const host of document.querySelectorAll('.urd-section:not(.urd-handoff)')) {
     const section = page.sections.find((s) => s.id === host.dataset.sectionId);
     if (!section) continue;
     showGridOverlay(host, section.grid ?? site.grid, restingGridLook()).classList.add('urd-grid-persistent');
@@ -1885,7 +1901,7 @@ export function toggleGuideOverlays(visible) {
   guideOverlaysOn = visible;
   document.querySelectorAll('.urd-page-guide').forEach((el) => el.remove());
   if (!visible) return;
-  document.querySelectorAll('.urd-section').forEach((host) => addGuideOverlays(host));
+  document.querySelectorAll('.urd-section:not(.urd-handoff)').forEach((host) => addGuideOverlays(host));
 }
 
 function addGuideOverlays(host) {
@@ -2475,7 +2491,8 @@ const dockedToScreen = (block) => block.sticky?.mode === 'screen';
 /** A section's state as a seam drag begins, read from the section as it is drawn now (the data and grid enhanceSection keeps on its element, since one section can be drawn again without the page): its height in content px, its blocks with their desktop y and their drawn top, where its content ends and starts, and its own inline height to restore.
  *  The content is measured where each block stands in the section, its frame and the push pass's shift with its drawn height; a block docked to the screen is left out. Called with sticky.js and the push pass suspended, so every block stands at its place in the section. */
 function seamSide(side) {
-  if (!side) return null;
+  // A section showing its phone layout in the desktop view (render.js urd-handoff) keeps its desktop height: the seam acts as if it stood alone on its other side.
+  if (!side || side.host.classList.contains('urd-handoff')) return null;
   const section = side.host._urdSection ?? side.section;
   const grid = side.host._urdGrid ?? side.grid;
   const blocks = [...canvasOf(side.host).querySelectorAll(':scope > .urd-block')].map((el) => {
@@ -2546,7 +2563,7 @@ function wireSeamDrag(btn, part, above, below, grip, index) {
     dyPointer,
     above: a,
     below: b && { heightPx: b.heightPx, blockYs: b.blockYs },
-    grid: (part === 'shrinkBelow' || (part === 'grow' && dyPointer < 0) ? b : a)?.grid ?? (a ?? b).grid ?? { size: 8 },
+    grid: (part === 'shrinkBelow' || (part === 'grow' && dyPointer < 0) ? b : a)?.grid ?? (a ?? b)?.grid ?? { size: 8 },
     free: ev.ctrlKey || ev.metaKey,
     past: ev.altKey,
   });
@@ -3960,6 +3977,44 @@ function addSectionToolbar(host, section, grid) {
   if (bar.childElementCount) host.insertBefore(bar, host.querySelector(':scope > .urd-canvas'));
 }
 
+/**
+ * The bar of a section showing its phone layout in the desktop view (render.js urd-handoff): what it shows and why, the way to edit it in the phone view, and the section's settings and its menu, which hold in both views.
+ * @param {HTMLElement} host
+ * @param {object} section
+ */
+function addHandoffBar(host, section) {
+  const bar = document.createElement('div');
+  bar.className = `urd-section-toolbar urd-handoff-bar urd-bar-size-${barSize()}`;
+  const mark = document.createElement('span');
+  mark.className = 'urd-handoff-mark';
+  mark.innerHTML = HANDOFF_SVG;
+  mark.append(ta('canvas.handoff'));
+  bar.appendChild(mark);
+  attachHint(bar, { title: ta('canvas.handoff'), lines: [ta('canvas.handoffWhy', { n: host.dataset.urdHandoff ?? '' }), ta('canvas.handoffEdit')] });
+  const edit = document.createElement('button');
+  edit.type = 'button';
+  edit.className = 'urd-handoff-edit';
+  edit.textContent = ta('canvas.editOnPhone');
+  // The section is the one at work as the phone view opens, as a press on it would make it.
+  edit.addEventListener('click', () => {
+    setActiveSection(section.id);
+    post({ type: 'urd-edit-on-phone', sectionId: section.id });
+  });
+  bar.appendChild(edit);
+  const gear = document.createElement('button');
+  gear.innerHTML = GEAR_SVG;
+  gear.title = ta('canvas.ctx.sectionSettings');
+  gear.setAttribute('aria-label', gear.title);
+  gear.addEventListener('pointerdown', (event) => event.stopPropagation());
+  gear.addEventListener('click', () => openSectionSettings(host, section));
+  bar.appendChild(opensMenu(gear));
+  bar.appendChild(moreButton((x, y, from) => openSectionContextMenu(host, x, y, from)));
+  host.insertBefore(bar, host.querySelector(':scope > .urd-canvas'));
+}
+
+/** The phone the bar of a section showing its phone layout wears. */
+const HANDOFF_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/></svg>';
+
 /** «New block» on the section toolbar: the block menu opens under the button, its block centred in the section as it is chosen; a second press closes it. */
 function toggleBlockMenuFrom(host, btn) {
   const wrap = host.querySelector(':scope > .urd-add-block');
@@ -4863,7 +4918,8 @@ document.addEventListener('pointerdown', (event) => {
   if (document.body.classList.contains('urd-chrome-off')) return;
   const target = eventTarget(event);
   const host = target?.closest('.urd-section');
-  if (!host) return;
+  // A section showing its phone layout in the desktop view (render.js urd-handoff) has no blocks to gather there.
+  if (!host || host.classList.contains('urd-handoff')) return;
   if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar')) return;
 
   // The marquee rectangle and hit detection are measured against the
@@ -5211,11 +5267,10 @@ function pasteClipboard(source = clipboard, point = null) {
   }
   if (!source?.blocks?.length) return;
   const sourceHost = source.sectionId ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(source.sectionId)}"]`) : null;
-  const host = point?.host
-    ?? document.querySelector('.urd-section-active')
-    ?? sourceHost
-    ?? sectionInView()
-    ?? document.querySelector('.urd-section');
+  // A section showing its phone layout in the desktop view (render.js urd-handoff) takes no blocks there.
+  const usable = (el) => (el && !el.classList.contains('urd-handoff') ? el : null);
+  const host = point?.host ? usable(point.host)
+    : usable(document.querySelector('.urd-section-active')) ?? usable(sourceHost) ?? usable(sectionInView()) ?? document.querySelector('.urd-section:not(.urd-handoff)');
   if (!host) return;
   const sectionId = host.dataset.sectionId;
   const r2 = (v) => Math.round(v * 100) / 100;

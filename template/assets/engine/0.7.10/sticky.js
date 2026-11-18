@@ -181,10 +181,12 @@ function applySticky() {
   for (const members of groups.values()) {
     const lead = members[0];
     const section = lead.closest('.urd-section');
+    // A section showing its phone layout on a desktop page (render.js urd-handoff) pins as the phone does.
+    const phone = mobile || Boolean(section?.classList.contains('urd-handoff'));
     // A transformed section ancestor would make fixed relative to itself
     // (containing block); pinning is then meaningless - stand still.
     const blocked = !section || getComputedStyle(section).transform !== 'none'
-      || (mobile && lead.dataset.stickyMode !== 'screen');
+      || (phone && lead.dataset.stickyMode !== 'screen');
     if (blocked) {
       for (const el of members) release(el);
       continue;
@@ -192,7 +194,7 @@ function applySticky() {
 
     // Mobile screen docking: each block docks on its own against its own
     // measured size (the row grid has no frames to compute group geometry from).
-    if (mobile) {
+    if (phone) {
       const view = { w: document.documentElement.clientWidth, h: window.innerHeight, inset };
       for (const el of members) {
         const base = el._urdStickyBase ?? readGeom(el);

@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.29): a section shows its phone layout where its text would be too narrow
+
+- [ ] On the published Shop FP page, narrow the browser window from 1440 to 700 px: «Categories» shows its phone layout below about 760 to 775 px (the scrollbar's width counts) and its desktop layout above, while the other sections and the navigation bar keep the desktop's down to 640 px
+- [ ] Widen and narrow the window across that width a few times: «Categories» switches each time without a reload
+- [ ] Turn off «Force readable text on the desktop» for «Categories»: the section keeps its desktop layout at 700 px; its tooltip says what the setting does on a narrower window
+- [ ] Shop FP's «Shop» section, with its small basket, keeps its desktop layout down to 640 px
+- [ ] In the editor, set the Screen to an own width of 720 px: «Categories» shows its phone layout, its bar stands without the mouse over it and says «Phone layout at this width», and its «?» names the width (757 px where the canvas has no scrollbar)
+- [ ] A press on a block of that section selects nothing and its text cannot be written in; the gear opens the section's settings, and ⋮ its menu with «New block here», «Paste» and «Fit height» greyed
+- [ ] Select a text in «Categories» at a wide Screen, then narrow the Screen under the width: the selection and its menu end
+- [ ] «Edit on the phone» opens the phone view at the section, marked as the one at work
+- [ ] Drag the seam above or below the switched section: only the neighbouring section changes; with the grid or the guide lines on, the switched section has none
+
 ### Test batch (0.7.3.28): your own phone layout saved for the site, and the folds kept over a reload
 
 - [ ] In the phone view, open a section's «Phone layout» (Phone panel or section menu): «New layout» stands last among the cards, a dashed card with a plus

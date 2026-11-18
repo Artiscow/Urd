@@ -13,7 +13,7 @@
  *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
 import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, phoneRoomOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
-import { forcesReadable, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
+import { forcesReadable, phoneHandoff, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -22,6 +22,7 @@ import { pinsOnPhone, stuckBox, stickyLeads } from './sticky-model.js';
 import { stackOrder, phoneSetupOf, phoneParts } from './phone-order.js';
 import { t } from './i18n.js';
 import { isAnchorName } from './nav-model.js';
+import { textDesign } from './doc-look.js';
 
 /**
  * Draws the background layers (color/gradient/glow/grain/image/slideshow)
@@ -724,6 +725,20 @@ function wirePush(host, section, preview) {
 }
 
 /**
+ * A section drawn in its phone layout has no push pass: the row grid grows with its content.
+ * @param {HTMLElement} host The section element
+ */
+function unwirePush(host) {
+  host._urdPushRo?.disconnect();
+  host._urdPushRo = null;
+  if (host._urdPushRaf) cancelAnimationFrame(host._urdPushRaf);
+  host._urdPushRaf = 0;
+  pushHosts.delete(host);
+  host._urdPushSection = null;
+  delete host.dataset.urdMinHeight;
+}
+
+/**
  * Editing that writes geometry is starting: the push pass stands still, so
  * every block stays where the owner sees it, pushed or not, and nothing
  * jumps when a drag begins. The drag draws its own block with the block's
@@ -826,6 +841,41 @@ export function frameToCss(frame, floorPx = 0) {
 export function autoGrows(block, def) {
   if (block?.type === 'text' || block?.type === 'terms') return true;
   return typeof def?.autoGrow === 'function' ? Boolean(def.autoGrow(block.props ?? {})) : Boolean(def?.autoGrow);
+}
+
+/** Whether a block's words are measured by the desktop's «Force readable text» (ADR-0034 decision 3): a text block in its plain design, whose width handle stops at the readable floor and whose section shows its phone layout under the width it would fall under it (phoneHandoff). */
+function measuredText(block) {
+  return block?.type === 'text' && textDesign(block.props?.design) === 'plain';
+}
+
+/** Whether a block draws words: one that grows with its content and is not sized by its frame, as the row grid marks it (`data-urd-words`). */
+function drawsWords(block, Urd) {
+  return !FIT_BY_WIDTH.has(block?.type) && autoGrows(block, Urd?.blocks?.get(block?.type));
+}
+
+/** The section elements that show their phone layout under a window width, each with what stops its watch. */
+const handoffWatches = new Map();
+
+/**
+ * Watches the window width under which a section shows its phone layout, so it is drawn again as the window crosses it; a section drawn anew drops its earlier watch, and one no longer on the page drops its own.
+ * @param {HTMLElement} host The section element
+ * @param {number} width The width (phoneHandoff), or 0 for none
+ * @param {() => void} redraw
+ */
+function watchHandoff(host, width, redraw) {
+  handoffWatches.get(host)?.abort();
+  handoffWatches.delete(host);
+  for (const [el, watch] of handoffWatches) {
+    if (el.isConnected) continue;
+    watch.abort();
+    handoffWatches.delete(el);
+  }
+  if (!width) return;
+  const watch = new AbortController();
+  handoffWatches.set(host, watch);
+  window.matchMedia(`(max-width: ${width}px)`).addEventListener('change', () => {
+    if (host.isConnected) redraw();
+  }, { signal: watch.signal });
 }
 
 /** A cell holds words, and so stands across the row where too narrow (the floor in base.css), while any of its blocks draws words (`data-urd-words`). */
@@ -1008,15 +1058,28 @@ function placeBlockSpots(el, block, names = []) {
  * @param {object} site site.json
  * @param {HTMLElement} host The section element (cleared and rebuilt)
  * @param {{preview?: boolean, viewport?: 'desktop'|'mobile', measure?: boolean}} [opts] `measure`: a copy drawn out of sight only to be measured (the phone drag's preview in preview-edit.js), drawn as the preview draws its blocks, without the editing layer and without animations, so its blocks stand in their end state.
+ * On the desktop a section whose words would stand narrower than they read well shows its phone layout under that window width (phoneHandoff, ADR-0034), marked `urd-handoff` with the width in `data-urd-handoff`, its texts keeping the desktop's measure, and is drawn again as the window crosses it.
  */
 export function renderSection(section, site, host, opts = {}) {
   const Urd = window.Urd;
   const grid = section.grid ?? site.grid;
-  const viewport = opts.viewport ?? 'desktop';
-  const ctx = { site, section, grid, viewport, preview: Boolean(opts.preview || opts.measure), measure: Boolean(opts.measure) };
+  const asked = opts.viewport ?? 'desktop';
+  // A copy drawn to be measured keeps the view it is asked for.
+  const handoff = asked === 'desktop' && !opts.measure ? phoneHandoff(section, site, measuredText, window.innerWidth - document.documentElement.clientWidth) : 0;
+  watchHandoff(host, handoff, () => {
+    // In the editor the editor sends the section again, since what has been typed since it was drawn lives in its draft.
+    if (opts.preview) window.parent?.postMessage({ type: 'urd-redraw-section', sectionId: section.id }, location.origin);
+    else renderSection(section, site, host, opts);
+  });
+  const viewport = handoff && window.matchMedia(`(max-width: ${handoff}px)`).matches ? 'mobile' : asked;
+  // `handoff`: a section showing its phone layout on a desktop page keeps the desktop's measure on its texts (blocks/text.js), its row being as wide as the desktop's canvas.
+  const ctx = { site, section, grid, viewport, handoff: viewport !== asked, preview: Boolean(opts.preview || opts.measure), measure: Boolean(opts.measure) };
 
   host.className = 'urd-section';
   host.dataset.sectionId = section.id;
+  host.classList.toggle('urd-handoff', viewport !== asked);
+  if (handoff) host.dataset.urdHandoff = String(handoff);
+  else delete host.dataset.urdHandoff;
   // The DOM id makes the section a spot a link lands on by its id (#<section-id>); a name, when it has one, is a marker drawn further down.
   // The jump itself is shaped by base.css and followed by urd.js.
   if (typeof section.id === 'string' && section.id) host.id = section.id;
@@ -1137,7 +1200,7 @@ export function renderSection(section, site, host, opts = {}) {
       const drawn = drawnBlock(block, narrow);
       if (drawn !== block) place(autoGrows(drawn, Urd.blocks.get(block.type)));
       // Words in cells: the cell, the block pinned in cells, or the slot of a block pinned while the page scrolls, stands across the row where too narrow (the floor in base.css).
-      if (autoGrows(drawn, Urd.blocks.get(block.type)) && !FIT_BY_WIDTH.has(block.type)) el.dataset.urdWords = '1';
+      if (drawsWords(drawn, Urd)) el.dataset.urdWords = '1';
       if (pinned && own) el.dataset.cols = String(own.cols);
       if (cell) syncCellWords(cell);
       else if (pinned && own) el.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');
@@ -1201,6 +1264,8 @@ export function renderSection(section, site, host, opts = {}) {
       stickOnPhone(flow, lead, members.map((m) => m.el));
       for (const m of members) zoomOnPhone(m.el, m.block, m.narrow ? 0 : canvas._urdDesignW);
     }
+    // A section drawn on the desktop before (one that has just shown its phone layout) leaves the push pass, which would give it its desktop height back.
+    unwirePush(host);
     host.style.minHeight = 'auto';
   } else {
     // Desktop: absolute positioning from desktop frames.

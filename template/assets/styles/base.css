@@ -88,7 +88,7 @@ img, video {
    create a containing block for position: fixed, and would break pinned and
    viewport-docked blocks (sticky.js). Enforced by tests/canvas.test.mjs. */
 
-body:not(.urd-mobile) .urd-section {
+body:not(.urd-mobile) .urd-section:not(.urd-handoff) {
   --urd-canvas-gutter: var(--urd-canvas-gutter-desktop, 24px);
 }
 
@@ -109,8 +109,11 @@ body:not(.urd-mobile) .urd-section {
 
 /* Mobile auto layout is real document flow, and there the canvas MUST be in flow:
    the section height is `auto` and driven by .urd-flow inside. The nav clearance
-   is the section's padding on both viewports. */
-body.urd-mobile .urd-canvas {
+   is the section's padding on both viewports. A section that shows its phone
+   layout on a desktop page, since its words would be too narrow there
+   (render.js urd-handoff, ADR-0034), is drawn the same way. */
+body.urd-mobile .urd-canvas,
+.urd-section.urd-handoff > .urd-canvas {
   position: relative;
   inset: auto;
   min-height: inherit;
@@ -172,7 +175,8 @@ html {
   scale: -1 1;
 }
 
-body.urd-mobile .urd-divider {
+body.urd-mobile .urd-divider,
+.urd-section.urd-handoff > .urd-divider {
   height: calc(var(--urd-divider-h, 64px) * 0.6);
 }
 
@@ -20412,6 +20416,30 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-section > .urd-section-toolbar 
   font-size: 12px;
   line-height: 1;
   padding: 5px 8px;
+}
+
+/* The bar of a section showing its phone layout in the desktop view, since its words would be too narrow at this width (preview-edit.js addHandoffBar, ADR-0034): it stands whether or not the pointer is in the section, which looks unlike its neighbours; its mark says what is shown, its help chip why, and «Edit on the phone» opens the section there */
+.urd-preview .urd-section > .urd-handoff-bar {
+  display: flex;
+  align-items: center;
+}
+
+.urd-preview .urd-handoff-bar .urd-handoff-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 24px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: var(--urd-admin-accent, #5f6a75);
+  color: var(--urd-admin-accent-text, #fff);
+  font: 600 12px/1 system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.urd-preview .urd-handoff-bar .urd-handoff-mark > svg {
+  flex: none;
 }
 
 /* Clean view: the editor can hide every editing handle, so the page

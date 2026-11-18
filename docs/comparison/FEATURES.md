@@ -990,6 +990,7 @@ The C-IDs below are the ones named in Part 1. C1 to C26, C4b and C7b keep their 
   - Between the content width and the mobile breakpoint the canvas is fluid.
   - The push pass keeps blocks apart ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)), and each block can shrink its content to a floor ([ADR-0025](../adr/0025-the-sizing-model.md)).
   - A proportional page zoom is not taken: a page that only gets smaller adapts nothing ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md) decision 5, [SURVEYS.md](SURVEYS.md#scaling-below-the-design-width-23-september-2026)).
+  - A section whose text would stand narrower than the readable floor shows its phone layout under that window width, while the rest of the page keeps the desktop's ([ADR-0034](../adr/0034-readable-text.md) decision 3, Delivered 0.7.3.29); the field switches the whole page at one width instead.
 
 ### Former numbers
 

@@ -59,8 +59,9 @@ test('the nav clearance is section padding, so an overwritten min-height keeps i
   assert.ok(section, 'rule .urd-section is missing');
   assert.match(section, /box-sizing:\s*content-box/, 'the section must be content-box (min-height excludes the clearance)');
   assert.match(section, /padding-top:\s*var\(--urd-section-clear/, 'the section must carry the clearance as padding');
-  const mobileCanvas = ruleBody(CSS, 'body.urd-mobile .urd-canvas');
-  assert.ok(mobileCanvas, 'rule body.urd-mobile .urd-canvas is missing');
+  // A section showing its phone layout on a desktop page (render.js urd-handoff) has its canvas drawn as the phone's.
+  const mobileCanvas = ruleBody(CSS, 'body.urd-mobile .urd-canvas,\n.urd-section.urd-handoff > .urd-canvas');
+  assert.ok(mobileCanvas, 'rule body.urd-mobile .urd-canvas, .urd-section.urd-handoff > .urd-canvas is missing');
   assert.ok(!/padding-top/.test(mobileCanvas), 'the mobile canvas must not add the clearance a second time');
 });
 

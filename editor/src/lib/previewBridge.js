@@ -49,7 +49,8 @@
  *                  { type: 'urd-select-block', sectionId, blockId } (selected block, null = deselected)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? } (open the block menu at the block; `group` opens that group in its Content area)
  *                  { type: 'urd-section-menu', sectionId, rect }  (open the section's settings in the floating menu, beside the section)
- *                  { type: 'urd-redraw-section', sectionId } (a block with a phone design crossed its width's line: the section is sent again from the draft)
+ *                  { type: 'urd-redraw-section', sectionId } (a block with a phone design crossed its width's line, or a section its hand-off width to the phone layout: the section is sent again from the draft)
+ *                  { type: 'urd-edit-on-phone', sectionId } (a section showing its phone layout in the desktop view, its words too narrow there: «Edit on the phone» on its bar opens it in the phone view)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? } (open the design picker for the block, from the design button on its toolbar; `phone` from the phone view: its design on a phone)
  *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
  *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
@@ -158,6 +159,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-section-menu') handlers.onSectionMenu?.(msg);
     if (msg?.type === 'urd-block-design') handlers.onBlockDesign?.(msg);
     if (msg?.type === 'urd-redraw-section') handlers.onRedrawSection?.(msg);
+    if (msg?.type === 'urd-edit-on-phone') handlers.onEditOnPhone?.(msg);
     if (msg?.type === 'urd-plugin-blocks') handlers.onPluginBlocks?.(msg);
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);

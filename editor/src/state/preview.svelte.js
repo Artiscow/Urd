@@ -254,6 +254,11 @@ function onIframeLoad() {
   bridge = createPreviewBridge(iframeEl, {
     onEdit: bridgeState.handleEdit,
     onRedrawSection: bridgeState.handleRedrawSection,
+    // «Edit on the phone» from a section showing its phone layout in the desktop view: the section at work, in the phone view.
+    onEditOnPhone: (msg) => {
+      pageState.onSelectSection({ sectionId: msg.sectionId });
+      shellState.lookOnPhone(pageState.pageId, msg.sectionId);
+    },
     onPictureEdit: (msg) => pictureEditorState.openPicture(msg),
     onMove: bridgeState.handleMove,
     onGrow: bridgeState.handleGrow,
